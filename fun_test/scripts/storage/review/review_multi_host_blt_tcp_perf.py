@@ -180,13 +180,17 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                              message="Testbed has enough DUTs")
 
         self.csi_perf_enabled = fun_test.get_job_environment_variable("csi_perf")
-        print("self.csi_perf_enabled value is: {}".format(self.csi_perf_enabled))
+        fun_test.log("csi_perf_enabled value is: {}".format(self.csi_perf_enabled))
         if self.csi_perf_enabled:
-            print("self.testbed_config is: {}".format(self.testbed_config))
-            self.f1_ip = self.testbed_config["dut_info"]["0"]["bond_interface_info"]["0"]["0"]["ip"].split('/')[0]
-            print("f1 ip is: {}".format(self.f1_ip))
-            self.perf_listener_host_name = "mktg-server-14"  # TODO: figure this out from the topology spec
-            self.perf_listener_ip = "15.1.14.2"  # TODO: figure this out from the topology spec
+            fun_test.log("self.testbed_config is: {}".format(self.testbed_config))
+            self.csi_f1_ip = self.testbed_config["dut_info"]["0"]["bond_interface_info"]["0"]["0"]["ip"].split('/')[0]
+            fun_test.log("F1 ip used for csi_perf_test: {}".format(self.csi_f1_ip))
+            self.perf_listener_host_name = self.topology_helper.get_available_perf_listener_hosts()
+            fun_test.log("self.perf_listener_host_name is: {}".format(self.perf_listener_host_name))
+            for csi_host_name, csi_perf_host_obj in self.perf_listener_host_name.iteritems():
+                perf_listner_test_interface = csi_perf_host_obj.get_test_interface(index=0)
+                self.perf_listener_ip = perf_listner_test_interface.ip.split('/')[0]
+                fun_test.log("csi perf listener host ip is: {}".format(self.perf_listener_ip))
 
         for i in range(len(self.bootargs)):
             self.bootargs[i] += " --mgmt"
@@ -194,7 +198,7 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                 self.bootargs[i] += " --disable-wu-watchdog"
             if self.csi_perf_enabled:
                 self.bootargs[i] += " --perf csi-local-ip={} csi-remote-ip={} pdtrace-hbm-size-kb={}".format(
-                self.f1_ip, self.perf_listener_ip, self.csi_perf_pdtrace_hbm_size_kb)
+                self.csi_f1_ip, self.perf_listener_ip, self.csi_perf_pdtrace_hbm_size_kb)
 
         # Deploying of DUTs
         for dut_index in self.available_dut_indexes:
@@ -784,14 +788,11 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
             if self.csi_perf_enabled:
                 p = CsiPerfTemplate(perf_collector_host_name=self.perf_listener_host_name,
                                     listener_ip=self.perf_listener_ip, fs=self.fs)
-                p.prepare(f1_index=0)
-                p.start(f1_index=0)
+                p.prepare(f1_index=0, dpcsh_client=self.storage_controller)
+                p.start(f1_index=0, dpc_client=self.storage_controller)
                 try:
-                    dpcsh_client = self.fs.get_dpc_client(f1_index=0, auto_disconnect=True)
-                    # do some activity
-                    # dpcsh_client.json_execute(verb="peek", data="stats/vppkts", command_duration=10)
-                    dpcsh_client.json_execute(verb="echo", command_duration=10)
-
+                    fun_test.log("csi perf stats collection is started")
+                    # dpcsh_client = self.fs.get_dpc_client(f1_index=0, auto_disconnect=True)
                 except Exception as ex:
                     fun_test.critical(str(ex))
 
@@ -906,6 +907,7 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
 
             if self.csi_perf_enabled:
                 p.stop(f1_index=0)
+                fun_test.log("csi perf stats collection is done")
 
             # Checking whether the vp_util stats collection thread is still running...If so stopping it...
             if fun_test.fun_test_threads[stats_thread_id]["thread"].is_alive():
