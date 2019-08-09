@@ -79,7 +79,8 @@
       "ioengine": "libaio",
       "direct": 1,
       "prio": 0,
-      "runtime": 900,
+      //"runtime": 900,
+      "runtime": 120,
       "cpus_allowed_policy": "split",
       "group_reporting": 1,
       "norandommap": "NO_VALUE",
@@ -90,7 +91,8 @@
       "randread"
     ],
     "fio_bs": "4k",
-    "fio_jobs_iodepth": ["(1, 1)", "(32, 1)", "(32, 2)", "(32, 4)"],
+    //"fio_jobs_iodepth": ["(1, 1)", "(32, 1)", "(32, 2)", "(32, 4)"],
+    "fio_jobs_iodepth": ["(32, 2)", "(32, 4)"],
     "fio_job_name": {
       "randread": "nhosts"
     },
