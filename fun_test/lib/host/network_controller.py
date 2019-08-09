@@ -1397,10 +1397,10 @@ class NetworkController(DpcshClient):
         stats = None
         try:
             cmd = "stats/per_vp"
-            fun_test.debug("Getting vp per pkt")
+            fun_test.debug("Getting per VP WU stats")
             result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=cmd, command_duration=self.COMMAND_DURATION)
-            fun_test.simple_assert(expression=result['status'], message="Get vp per pkts stats")
-            fun_test.debug("Per vppkts stats: %s" % result['data'])
+            fun_test.simple_assert(expression=result['status'], message="Get per VP WU stats")
+            fun_test.debug("Per VP WU stats: %s" % result['data'])
             stats = result['data']
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -1680,6 +1680,7 @@ class NetworkController(DpcshClient):
 
 
     def set_nu_benchmark_1(self, fpg=None, mode=None, num_flows=None, flow_le_ddr=None, flow_state_ddr=None,
+                           flow_state_cache=None,
                            sport=None, dport=None, protocol=None, ip_sa=None, ip_da=None, flow_offset=None,
                            flow_inport=None, flow_outport=None, show=None, num_tunnels=None, is_encryption=None,
                            spi=None, tunnel_src=None, tunnel_dst=None, ipsec=None):
@@ -1696,6 +1697,8 @@ class NetworkController(DpcshClient):
                 cmd_args['flow_le_ddr'] = flow_le_ddr
             if flow_state_ddr is not None:
                 cmd_args['flow_state_ddr'] = flow_state_ddr
+            if flow_state_cache is not None:
+                cmd_args['flow_state_cache'] = flow_state_cache
             if sport:
                 cmd_args['sport'] = sport
             if dport:

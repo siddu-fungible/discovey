@@ -94,6 +94,7 @@ export class TestBedComponent implements OnInit {
       return this.service.assets().pipe(switchMap(response => {
         let dutAssets = [];
         let hostAssets = [];
+        let perfListenerAssets = [];
         this.assets = response;
         this.assets.map((asset) => {
           asset.applyingManualLock = false;
@@ -104,8 +105,11 @@ export class TestBedComponent implements OnInit {
           if (asset.type === 'Host') {
             hostAssets.push(asset);
           }
+          if (asset.type === 'Perf Listener') {
+            perfListenerAssets.push(asset);
+          }
         });
-        this.assets = [...dutAssets, ...hostAssets];
+        this.assets = [...dutAssets, ...hostAssets, ...perfListenerAssets];
         return of(true);
       }))
     } else {
@@ -279,7 +283,7 @@ export class TestBedComponent implements OnInit {
       return this.loggerService.error('Please select a user');
     }
     let name = asset.name;
-    this.service.lockAsset(name, asset.selectedUser).subscribe((response) => {
+    this.service.lockAsset(name, asset.type, asset.selectedUser).subscribe((response) => {
       this.loggerService.success(`Asset ${name} lock submitted`);
       asset.applyingManualLock = false;
       asset.selectedUser = null;
@@ -291,7 +295,7 @@ export class TestBedComponent implements OnInit {
 
   unlockAsset(asset) {
     let name = asset.name;
-    this.service.unlockAsset(name).subscribe((response) => {
+    this.service.unlockAsset(name, asset.type).subscribe((response) => {
       this.loggerService.success(`Asset: ${name} unlock submitted`);
       asset.applyingManualLock = false;
       this.refreshAll();

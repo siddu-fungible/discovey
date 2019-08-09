@@ -12,7 +12,7 @@ from collections import OrderedDict
 import re
 
 '''
-script to hit nvme connect swos-5844 issue
+script to verify fix for nvme connect swos-5844 issue
 '''
 
 
@@ -604,7 +604,7 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                             filename=pcap_artifact_file)
 
                     fun_test.test_assert(expression=not nvme_connect_failed,
-                                         message="SWOS-5844: nvme connect hit issue on host {}".format(hostname))
+                                         message="SWOS-5844: nvme connect passed on host {}".format(hostname))
 
                 for i in range(0, self.blt_count):
                     key = self.host_ips[i]
