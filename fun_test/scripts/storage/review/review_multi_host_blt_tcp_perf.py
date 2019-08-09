@@ -183,7 +183,8 @@ class MultiHostVolumePerformanceScript(FunTestScript):
         fun_test.log("csi_perf_enabled value is: {}".format(self.csi_perf_enabled))
         if self.csi_perf_enabled:
             fun_test.log("self.testbed_config is: {}".format(self.testbed_config))
-            self.csi_f1_ip = self.testbed_config["dut_info"]["0"]["bond_interface_info"]["0"]["0"]["ip"].split('/')[0]
+            #  TODO: Get the correct F1 IP
+            self.csi_f1_ip = self.testbed_config["dut_info"]["3"]["bond_interface_info"]["0"]["0"]["ip"].split('/')[0]
             fun_test.log("F1 ip used for csi_perf_test: {}".format(self.csi_f1_ip))
             self.perf_listener_host_name = self.topology_helper.get_available_perf_listener_hosts()
             fun_test.log("self.perf_listener_host_name is: {}".format(self.perf_listener_host_name))
@@ -197,7 +198,8 @@ class MultiHostVolumePerformanceScript(FunTestScript):
             if self.disable_wu_watchdog:
                 self.bootargs[i] += " --disable-wu-watchdog"
             if self.csi_perf_enabled:
-                self.bootargs[i] += " --perf csi-local-ip={} csi-remote-ip={} pdtrace-hbm-size-kb={}".format(
+                #  TODO: Modifying bootargs only for F1_0 as csi_perf on F1_1 is not yet fully supported
+                self.bootargs[0] += " --perf csi-local-ip={} csi-remote-ip={} pdtrace-hbm-size-kb={}".format(
                 self.csi_f1_ip, self.perf_listener_ip, self.csi_perf_pdtrace_hbm_size_kb)
 
         # Deploying of DUTs
@@ -368,7 +370,10 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                                      format(key, self.funcp_spec[0]["container_names"][index], ip))
 
         if self.csi_perf_enabled:
-            csi_perf_host_instance = csi_perf_host_obj.get_instance()
+            # csi_perf_host_instance = csi_perf_host_obj.get_instance()  # TODO: Returning as NoneType
+            csi_perf_host_instance = Linux(host_ip=csi_perf_host_obj.spec["host_ip"],
+                                           ssh_username=csi_perf_host_obj.spec["ssh_username"],
+                                           ssh_password=csi_perf_host_obj.spec["ssh_password"])
             ping_status = csi_perf_host_instance.ping(dst=self.csi_f1_ip)
             fun_test.test_assert(ping_status, "Host {} is able to ping to F1 IP {}".
                                  format(csi_host_name, self.csi_f1_ip))
