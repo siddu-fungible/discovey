@@ -379,7 +379,14 @@ export class SubmitJobComponent implements OnInit {
     if (this.mode === Mode.TRIAGE) {
       this.submitting = "Submitting triage";
       let ctrl = this;
-      this.triageService.add(this.triageType);
+      this.triageService.add(this.triageType,
+        null,
+        this.fromFunOsSha,
+        this.toFunOsSha,
+        this.selectedUser.email,
+        null, payload).subscribe((response) => {
+          
+      });
     }
 
     if (this.mode === Mode.REGULAR) {
