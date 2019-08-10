@@ -80,6 +80,8 @@ class MyScript(FunTestScript):
 
     def cleanup(self):
         fun_test.log("Script-level cleanup")
+        fun_test.shared_variables["topology"].cleanup()
+
 
 
 def configure_endhost_interface(end_host, test_network, interface_name, timeout=30):
@@ -144,7 +146,6 @@ class FunTestCase1(FunTestCase):
 
     def cleanup(self):
         fun_test.log("Testcase cleanup")
-        fun_test.shared_variables["topology"].cleanup()
 
     def run(self):
         fs = fun_test.shared_variables["fs"]
@@ -183,7 +184,6 @@ class FunTestCase2(FunTestCase):
 
     def cleanup(self):
         fun_test.log("Testcase cleanup")
-        fun_test.shared_variables["topology"].cleanup()
 
     def run(self):
         fs = fun_test.shared_variables["fs"]
