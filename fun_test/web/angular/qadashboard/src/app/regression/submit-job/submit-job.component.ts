@@ -98,16 +98,18 @@ export class SubmitJobComponent implements OnInit {
   Mode = Mode;
 
   // For Triaging
-  triageTypes = [{value: 4, description: "Pass or Fail"}, {value: 5, description: "Regex match"}];  //Taken from TriagingTypes
+  triageTypes = [{value: 6, description: "Pass or Fail"}, {value: 7, description: "Regex match"}];  //Taken from TriagingTypes
   gitShasValid: boolean = false;
   validateShasStatus: string = null;
   fromFunOsSha: string = null;
   toFunOsSha: string = null;
   commitsInBetween: string[] = [];
+  triageType: number = null;
 
   constructor(private apiService: ApiService, private logger: LoggerService,
               private title: Title, private route: ActivatedRoute,
               private triageService: TriageService) {
+    this.triageType = this.triageTypes[0].value;
   }
 
   ngOnInit() {
@@ -375,7 +377,9 @@ export class SubmitJobComponent implements OnInit {
     }
 
     if (this.mode === Mode.TRIAGE) {
-      
+      this.submitting = "Submitting triage";
+      let ctrl = this;
+      this.triageService.add(this.triageType);
     }
 
     if (this.mode === Mode.REGULAR) {
