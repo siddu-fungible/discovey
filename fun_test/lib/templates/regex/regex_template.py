@@ -365,11 +365,8 @@ class RegexTemplate(Linux):
                         graph_name = base + "_" + mem + "_graph.json"
                         ptrn = pat_path + prefix
                         try:
-                            print "ONE"
                             if engine == "0":
-                                print "TWO"
                                 if mem == "dflt":
-                                    print "THREE"
                                     op = self.compile_re(j=jstyle, drop_unsupported=" ", e=engine, r=ptrn,
                                                         o=res_path + graph_name, time_out=time_out, target=trgt)
                                 if mem == "rbm":
