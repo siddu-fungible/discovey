@@ -123,10 +123,11 @@
                       <app-section-horizontal-line [text]="'Jenkins params'"></app-section-horizontal-line>
                     </td>
                   </tr>
+
                   <tr>
-                    <td><input (change)="disableAssertions = !disableAssertions" type="checkbox"
-                               name="disable-assertions"
-                               [checked]="disableAssertions"> DISABLE_ASSERTIONS
+                    <td><input (change)="releaseBuild = !releaseBuild" type="checkbox"
+                               name="release-build"
+                               [checked]="releaseBuild"> RELEASE_BUILD
                     </td>
                   </tr>
                   <tr *ngIf="mode === Mode.REGULAR">
@@ -142,6 +143,12 @@
                   </tr>
 
                   <ng-container *ngIf="moreJenkinsOptions">
+                    <tr>
+                      <td><input (change)="disableAssertions = !disableAssertions" type="checkbox"
+                                 name="disable-assertions"
+                                 [checked]="disableAssertions"> DISABLE_ASSERTIONS
+                      </td>
+                    </tr>
                     <tr [@fadeIn]>
                       <td><label for="boot-args">BOOTARGS</label></td>
                       <td><input style='width:100%' id="boot-args" name="boot-args" [(ngModel)]="bootArgs" type="text"
@@ -188,18 +195,6 @@
 
               </ng-container>
 
-              <tr>
-                <td class="no-wrap">
-                  <label>Select a tag: </label>
-                </td>
-                <td>
-                  <div class="field-width">
-                    <ng-multiselect-dropdown [placeholder]="'Select'" [data]="selectTags" [(ngModel)]="selectedTags"
-                                             [settings]="dropdownSettings">
-                    </ng-multiselect-dropdown>
-                  </div>
-                </td>
-              </tr>
             </ng-container>
 
             <tr>
@@ -266,6 +261,20 @@
                 </textarea>
               </td>
             </tr>
+
+            <tr>
+              <td class="no-wrap">
+                <label>Select a tag: </label>
+              </td>
+              <td>
+                <div class="field-width">
+                  <ng-multiselect-dropdown [placeholder]="'Select'" [data]="selectTags" [(ngModel)]="selectedTags"
+                                           [settings]="dropdownSettings">
+                  </ng-multiselect-dropdown>
+                </div>
+              </td>
+            </tr>
+
 
             <tr>
               <td class="no-wrap">

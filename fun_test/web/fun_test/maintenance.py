@@ -287,7 +287,7 @@ if __name__ == "__main__underlay":
             entry.data_sets = json.dumps(overlay_underlay_data_sets)
             entry.save()
 
-if __name__ == "__main__":
+if __name__ == "__main__inspur_charts":
     internal_chart_names = OrderedDict([  # read iops
                                         ("pocs_inspur_8111_8k_rand_read_iodepth_1_iops", 1),
                                         ("pocs_inspur_8111_8k_rand_read_iodepth_8_iops", 8),
@@ -409,7 +409,61 @@ if __name__ == "__main__":
         print ("Data sets: {}".format(data_sets))
 
 
+if __name__ == "__main__":
+    internal_chart_names = OrderedDict([("crypto_dp_tunnel_perf_S1", "pktsize: 354B"),
+                                        ("crypto_ipsec_perf_S1", "pktsize: 354B")])
+    owner_info = "Jitendra Lulla (jitendra.lulla@fungible.com)"
+    source = ""
+    platform = FunPlatform.S1
+    model_name = "TeraMarkCryptoPerformance"
+    description = "TBD"
+    y1_axis_title = PerfUnit.UNIT_GBITS_PER_SEC
+    positive = False
+    output_name = "output_throughput"
 
+    for internal_chart_name in internal_chart_names:
+        if "dp_tunnel_perf" in internal_chart_name:
+            input_app = "crypto_dp_tunnel_throughput"
+            chart_name = "Dp tunnel perf"
+        elif "ipsec_perf" in internal_chart_name:
+            input_app = "ipsec_tunnel_throughput"
+            chart_name = "Ipsec perf"
+        one_data_set = {}
+        data_sets = []
 
+        inputs = {
+            "input_platform": platform,
+            "input_app": input_app
+        }
+        output = {
+            "name": output_name,
+            "unit": y1_axis_title,
+            "min": 0,
+            "max": -1,
+            "expected": -1,
+            "reference": -1
+        }
+        one_data_set["name"] = internal_chart_names[internal_chart_name]
+        one_data_set["inputs"] = inputs
+        one_data_set["output"] = output
+        data_sets.append(one_data_set.copy())
+
+        metric_id = LastMetricId.get_next_id()
+        MetricChart(chart_name=chart_name,
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description=description,
+                    owner_info=owner_info,
+                    source=source,
+                    positive=positive,
+                    y1_axis_title=y1_axis_title,
+                    visualization_unit=y1_axis_title,
+                    metric_model_name=model_name,
+                    platform=platform,
+                    work_in_progress=False).save()
+        print ("Metric id: {}".format(metric_id))
+        print ("Data sets: {}".format(data_sets))
 
 

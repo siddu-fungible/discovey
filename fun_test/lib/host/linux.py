@@ -141,6 +141,8 @@ class Linux(object, ToDictMixin):
             if "ipmi_info" in self.extra_attributes:
                 self.ipmi_info = self.extra_attributes["ipmi_info"]
         fun_test.register_hosts(host=self)
+        self.was_power_cycled = False
+        self.spawn_pid = None
         self.post_init()
 
     @staticmethod
@@ -268,6 +270,7 @@ class Linux(object, ToDictMixin):
                         self.handle = pexpect.spawn("bash",
                                                     env={"TERM": "dumb"},
                                                     maxread=4096)
+                    self.spawn_pid = self.handle.pid
                 else:
                     fun_test.debug(
                         "Attempting Telnet connect to %s username: %s password: %s" % (self.host_ip,
@@ -417,6 +420,7 @@ class Linux(object, ToDictMixin):
                 except (pexpect.EOF, pexpect.TIMEOUT):
                     pass  # We are expecting an intentional timeout
             command_lines = command.split('\n')
+            prompt_terminator_processed = False
             for c in command_lines:
                 self.sendline(c)
                 if wait_until and (len(command_lines) == 1):
@@ -436,17 +440,22 @@ class Linux(object, ToDictMixin):
                         pass
                     buf += self.handle.before.lstrip() + str(self.handle.after).lstrip()
                 elif custom_prompts:
-                    all_prompts_list = custom_prompts.keys()
-                    all_prompts_list.append(self.prompt_terminator)
-                    self.handle.timeout = timeout  # Pexpect does not honor timeouts
-                    i = self.handle.expect(all_prompts_list, timeout=timeout)
-                    if i == (len(all_prompts_list) - 1):
-                        buf = buf + self.handle.before.lstrip()
-                        break
-                    else:
-                        self.sendline(custom_prompts[custom_prompts.keys()[i]])
+                    done = False
+                    max_custom_prompt_timer = FunTimer(max_time=timeout)
+                    while not max_custom_prompt_timer.is_expired():
+                        all_prompts_list = custom_prompts.keys()
+                        all_prompts_list.append(self.prompt_terminator)
+                        self.handle.timeout = timeout  # Pexpect does not honor timeouts
+                        i = self.handle.expect(all_prompts_list, timeout=timeout)
+                        if i == (len(all_prompts_list) - 1):
+                            buf = buf + self.handle.before.lstrip()
+                            prompt_terminator_processed = True
+                            break
+                        else:
+                            self.sendline(custom_prompts[custom_prompts.keys()[i]])
                 try:
-                    self.handle.expect(self.prompt_terminator + r'$', timeout=timeout)
+                    if not prompt_terminator_processed:
+                        self.handle.expect(self.prompt_terminator + r'$', timeout=timeout)
                 except pexpect.EOF:
                     self.disconnect()
                     # return self.command(command=command,
@@ -2135,24 +2144,29 @@ class Linux(object, ToDictMixin):
             result = False
             fun_test.critical("Host: {} is not reachable".format(self.host_ip))
 
+
         if not host_is_up and service_host:
             result = False
 
             if not ipmi_details:
                 if self.ipmi_info:
                     ipmi_details = self.ipmi_info
-                    
+
             if not result and ipmi_details and power_cycle:
                 fun_test.log("Trying IPMI power-cycle".format(self.host_ip))
                 ipmi_host_ip = ipmi_details["host_ip"]
                 ipmi_username = ipmi_details["username"]
                 ipmi_password = ipmi_details["password"]
                 try:
+                    self.was_power_cycled = False
                     service_host.ipmi_power_cycle(host=ipmi_host_ip, user=ipmi_username, passwd=ipmi_password, chassis=True)
                     fun_test.log("IPMI power-cycle complete")
+                    self.was_power_cycled = True
+
                 except Exception as ex:
                     fun_test.critical(str(ex))
                     service_host.ipmi_power_on(host=ipmi_host_ip, user=ipmi_username, passwd=ipmi_password, chassis=True)
+                    self.was_power_cycled = True
                 finally:
                     return self.ensure_host_is_up(max_wait_time=max_wait_time, power_cycle=False)
         return result
@@ -2759,6 +2773,18 @@ class Linux(object, ToDictMixin):
 
         return result
 
+    @fun_test.safe
+    def destroy(self):
+        try:
+            self.disconnect()
+        except:
+            pass
+        try:
+            if self.spawn_pid > 1:
+                fun_test.log("Killing spawn id: {}".format(self.spawn_pid))
+                os.kill(self.spawn_pid, 9)
+        except Exception as ex:
+            pass
 
 class LinuxBackup:
     def __init__(self, linux_obj, source_file_name, backedup_file_name):
@@ -2774,6 +2800,7 @@ class LinuxBackup:
                           ssh_port=self.linux_obj.ssh_port)
         linux_obj.prompt_terminator = self.prompt_terminator
         linux_obj.cp(source_file_name=self.backedup_file_name, destination_file_name=self.source_file_name)
+
 
 
 if __name__ == "__main__":

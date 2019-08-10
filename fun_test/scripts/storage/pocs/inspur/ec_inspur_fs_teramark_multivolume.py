@@ -194,7 +194,7 @@ class ECVolumeLevelScript(FunTestScript):
 
             fun_test.log("Hosts that will be used for current test: {}".format(self.required_hosts.keys()))
 
-            self.host_info = {}
+            self.host_info = OrderedDict()
             self.hosts_test_interfaces = {}
             self.host_handles = {}
             self.host_ips = []
@@ -688,7 +688,8 @@ class ECVolumeLevelTestcase(FunTestCase):
                 pcap_stopped[host_name] = True
                 pcap_pid[host_name] = {}
                 pcap_pid[host_name] = host_handle.tcpdump_capture_start(interface=test_interface,
-                                                             tcpdump_filename="/tmp/nvme_connect.pcap")
+                                                                        tcpdump_filename="/tmp/nvme_connect.pcap",
+                                                                        snaplen=1500)
                 if pcap_pid[host_name]:
                     fun_test.log("Started packet capture in {}".format(host_name))
                     pcap_started[host_name] = True
@@ -755,13 +756,6 @@ class ECVolumeLevelTestcase(FunTestCase):
                         ":".join(self.host_info[host_name]["nvme_block_device_list"])
                     fun_test.shared_variables["host_info"] = self.host_info
                     fun_test.log("Hosts info: {}".format(self.host_info))
-
-            # Stopping the packet capture
-            for host_name in self.host_info:
-                host_handle = self.host_info[host_name]["handle"]
-                if pcap_started[host_name]:
-                    host_handle.tcpdump_capture_stop(process_id=pcap_pid[host_name])
-                    pcap_stopped[host_name] = True
 
             # Setting the syslog level
             command_result = self.storage_controller.poke(props_tree=["params/syslog/level", self.syslog_level],
@@ -857,6 +851,17 @@ class ECVolumeLevelTestcase(FunTestCase):
         aggregate_resultant_stats = {}
 
         start_stats = True
+
+        # Preparing the volume details list containing the list of ditionaries where each dictionary has the details of
+        # an EC volume
+        vol_details = []
+        for num in range(self.ec_info["num_volumes"]):
+            vol_group = {}
+            vol_group[self.ec_info["volume_types"]["ndata"]] = self.ec_info["uuids"][num]["blt"]
+            vol_group[self.ec_info["volume_types"]["ec"]]    = self.ec_info["uuids"][num]["ec"]
+            vol_group[self.ec_info["volume_types"]["jvol"]]  = [self.ec_info["uuids"][num]["jvol"]]
+            vol_group[self.ec_info["volume_types"]["lsv"]]   = self.ec_info["uuids"][num]["lsv"]
+            vol_details.append(vol_group)
 
         for iodepth in self.fio_iodepth:
             fio_result[iodepth] = True
@@ -967,11 +972,20 @@ class ECVolumeLevelTestcase(FunTestCase):
                 resource_bam_post_fix_name = "resource_bam_iodepth_{}.txt".format(iodepth)
                 resource_bam_artifact_file = fun_test.get_test_case_artifact_file_name(
                     post_fix_name=resource_bam_post_fix_name)
-                stats_rbam_thread_id = fun_test.execute_thread_after(time_in_seconds=10,
+                stats_rbam_thread_id = fun_test.execute_thread_after(time_in_seconds=5,
                                                                      func=stats_obj.collect_resource_bam_stats,
                                                                      output_file=resource_bam_artifact_file,
                                                                      interval=self.resource_bam_args["interval"],
                                                                      count=int(mpstat_count), threaded=True)
+                vol_stats_post_fix_name = "vol_stats_iodepth_{}.txt".format(iodepth)
+                vol_stats_artifact_file = fun_test.get_test_case_artifact_file_name(
+                    post_fix_name=vol_stats_post_fix_name)
+                vol_stats_thread_id = fun_test.execute_thread_after(time_in_seconds=10,
+                                                                    func=stats_obj.collect_vol_stats,
+                                                                    vol_details=vol_details,
+                                                                    output_file=vol_stats_artifact_file,
+                                                                    interval=self.vol_stats_args["interval"],
+                                                                    count=int(mpstat_count), threaded=True)
             else:
                 fun_test.critical("Not starting the vp_utils and resource_bam stats collection because of lack of "
                                   "interval and count details")
@@ -1087,8 +1101,14 @@ class ECVolumeLevelTestcase(FunTestCase):
                     stats_obj.stop_all = True
                     stats_obj.stop_resource_bam = True
                     # fun_test.fun_test_threads[stats_rbam_thread_id]["thread"]._Thread__stop()
+                # Checking whether the volume stats collection thread is still running...If so stopping it...
+                if fun_test.fun_test_threads[vol_stats_thread_id]["thread"].is_alive():
+                    fun_test.critical("Volume Stats collection thread is still running...Stopping it now")
+                    stats_obj.stop_all = True
+                    stats_obj.stop_vol_stats = True
                 fun_test.join_thread(fun_test_thread_id=stats_thread_id, sleep_time=1)
                 fun_test.join_thread(fun_test_thread_id=stats_rbam_thread_id, sleep_time=1)
+                fun_test.join_thread(fun_test_thread_id=vol_stats_thread_id, sleep_time=1)
 
                 # Collecting final network stats and finding diff between final and initial stats
                 if self.collect_network_stats:
@@ -1217,8 +1237,10 @@ class ECVolumeLevelTestcase(FunTestCase):
 
             fun_test.add_auxillary_file(description="F1 VP Utilization - IO depth {}".format(row_data_dict["iodepth"]),
                                         filename=vp_util_artifact_file)
-            fun_test.add_auxillary_file(description="F1 Resource bam stats - IO depth {}".format(row_data_dict["iodepth"]),
-                                        filename=resource_bam_artifact_file)
+            fun_test.add_auxillary_file(description="F1 Resource bam stats - IO depth {}".
+                                        format(row_data_dict["iodepth"]), filename=resource_bam_artifact_file)
+            fun_test.add_auxillary_file(description="Volume Stats - IO depth {}".format(row_data_dict["iodepth"]),
+                                        filename=vol_stats_artifact_file)
 
             fun_test.sleep("Waiting in between iterations", self.iter_interval)
 

@@ -190,11 +190,14 @@ class Bmc(Linux):
                              context=self.context)
 
         fun_test.log("Rebooting ComE (Graceful)")
-        reboot_result = come.reboot(max_wait_time=max_wait_time, non_blocking=non_blocking, ipmi_details=ipmi_details)
-        reboot_info_string = "initiated" if non_blocking else "complete"
-        fun_test.test_assert(expression=reboot_result,
-                             message="ComE reboot {} (Graceful)".format(reboot_info_string),
-                             context=self.context)
+        if not come.was_power_cycled:
+            reboot_result = come.reboot(max_wait_time=max_wait_time, non_blocking=non_blocking, ipmi_details=ipmi_details)
+            reboot_info_string = "initiated" if non_blocking else "complete"
+            fun_test.test_assert(expression=reboot_result,
+                                 message="ComE reboot {} (Graceful)".format(reboot_info_string),
+                                 context=self.context)
+        else:
+            fun_test.log("Skipping reboot as ComE was power-cycled")
         return True
 
     def ensure_come_is_up(self, come, max_wait_time=300, power_cycle=True):
@@ -597,6 +600,7 @@ class BootupWorker(Thread):
             self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COMPLETE)
 
         except Exception as ex:
+            fun_test.critical(str(ex))
             fs.set_boot_phase(BootPhases.FS_BRING_UP_ERROR)
             raise ex
 
@@ -611,21 +615,23 @@ class ComEInitializationWorker(Thread):
             self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COME_INITIALIZE_WORKER_THREAD)
             come = self.fs.get_come()
             bmc = self.fs.get_bmc()
-            self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COME_ENSURE_UP)
-            fun_test.test_assert(expression=bmc.ensure_come_is_up(come=come, max_wait_time=300, power_cycle=True),
-                                 message="Ensure ComE is up",
-                                 context=self.fs.context)
+            if not self.fs.get_boot_phase() == BootPhases.FS_BRING_UP_ERROR:
+                self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COME_ENSURE_UP)
+                fun_test.test_assert(expression=bmc.ensure_come_is_up(come=come, max_wait_time=300, power_cycle=True),
+                                     message="Ensure ComE is up",
+                                     context=self.fs.context)
 
-            self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COME_INITIALIZE)
-            fun_test.test_assert(expression=self.fs.come.initialize(disable_f1_index=self.fs.disable_f1_index),
-                                 message="ComE initialized",
-                                 context=self.fs.context)
+            if not self.fs.get_boot_phase() == BootPhases.FS_BRING_UP_ERROR:
+                self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COME_INITIALIZE)
+                fun_test.test_assert(expression=self.fs.come.initialize(disable_f1_index=self.fs.disable_f1_index),
+                                     message="ComE initialized",
+                                     context=self.fs.context)
 
-            # if self.fs.fun_cp_callback:
-            #    fun_test.log("Calling fun CP callback from Fs")
-            #    self.fs.fun_cp_callback(self.fs.get_come())
-            self.fs.come_initialized = True
-            # self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COMPLETE)
+                # if self.fs.fun_cp_callback:
+                #    fun_test.log("Calling fun CP callback from Fs")
+                #    self.fs.fun_cp_callback(self.fs.get_come())
+                self.fs.come_initialized = True
+                # self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COMPLETE)
         except Exception as ex:
             self.fs.set_boot_phase(BootPhases.FS_BRING_UP_ERROR)
             raise ex

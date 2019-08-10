@@ -257,6 +257,10 @@ class FunTest:
         self.hosts = []
         self.closed = False
 
+    def report_message(self, message):  # Used only by FunXml only
+        if self.fun_xml_obj:
+            self.fun_xml_obj.add_message(message=message)
+
     def initialize_output_files(self, absolute_script_file_name):
         # (frame, file_name, line_number, function_name, lines, index) = \
         #    inspect.getouterframes(inspect.currentframe())[2]
@@ -325,6 +329,8 @@ class FunTest:
                 self.build_parameters["BOOTARGS"] = self.build_parameters["BOOTARGS"].replace(self.BOOT_ARGS_REPLACEMENT_STRING, " ")
             if "DISABLE_ASSERTIONS" in user_supplied_build_parameters:
                 self.build_parameters["DISABLE_ASSERTIONS"] = user_supplied_build_parameters["DISABLE_ASSERTIONS"]
+            if "RELEASE_BUILD" in user_supplied_build_parameters:
+                self.build_parameters["RELEASE_BUILD"] = user_supplied_build_parameters["RELEASE_BUILD"]
             if "FUNOS_MAKEFLAGS" in user_supplied_build_parameters:
                 self.build_parameters["FUNOS_MAKEFLAGS"] = user_supplied_build_parameters["FUNOS_MAKEFLAGS"]
             if "BRANCH_FunOS" in user_supplied_build_parameters:
@@ -1441,13 +1447,9 @@ class FunTestScript(object):
             try:
                 if host.handle:
                     try:
-                        host.send_control_c()
-                        host.command("exit")
-                        host.command("exit")
-                        host.command("exit")
+                        host.destroy()
                     except:
                         pass
-                host.disconnect()
                 fun_test.log("Host: {} properly disconnected".format(host))
             except:
                 pass

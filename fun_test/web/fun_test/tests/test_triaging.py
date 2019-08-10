@@ -198,7 +198,8 @@ class TriageStateMachine:
         :return:
         """
         t = self.get_triage()
-        if t.status > TriagingStates.COMPLETED and t.triage_type == TriagingTypes.PASS_OR_FAIL:
+        if t.status > TriagingStates.COMPLETED and (t.triage_type == TriagingTypes.PASS_OR_FAIL or t.triage_type ==
+                                                    TriagingTypes.JENKINS_FUN_OS_ON_DEMAND):
             completed_trials = Triage3Trial.objects.filter(triage_id=t.triage_id, trial_set_id=t.current_trial_set_id, status=TriageTrialStates.COMPLETED).order_by('-submission_date_time')
             trials_in_current_set = Triage3Trial.objects.filter(triage_id=t.triage_id, trial_set_id=t.current_trial_set_id)
 
@@ -303,20 +304,26 @@ class TrialStateMachine:
         trial = self.get_trial()
         status = trial.status
         if status == TriageTrialStates.INIT:
-            jm = JenkinsManager()
-            params = triage.build_parameters
-            params["TAGS"] = "qa_triage," + trial.tag
-            params["RUN_MODE"] = "Batch"
-            params["PRIORITY"] = "low_priority"
-            params["BRANCH_FunOS"] = self.fun_os_sha
-            params["HW_VERSION"] = "rel_081618_svn67816_emu"
-            # params["HW_MODEL"] = "F1DevBoard"
-            # params["PCI_MODE"] = "root_complex"
+            if triage.triage_type != TriagingTypes.JENKINS_FUN_OS_ON_DEMAND:
+                jm = JenkinsManager()
+                params = triage.build_parameters
+                params["TAGS"] = "qa_triage," + trial.tag
+                params["RUN_MODE"] = "Batch"
+                params["PRIORITY"] = "low_priority"
+                params["BRANCH_FunOS"] = self.fun_os_sha
+                params["HW_VERSION"] = "rel_081618_svn67816_emu"
+                # params["HW_MODEL"] = "F1DevBoard"
+                # params["PCI_MODE"] = "root_complex"
+            else:
+                jm = JenkinsManager(job_name="funos/funos_on_demand")
+                params = triage.build_parameters
+                params["BRANCH_FunOS"] = self.fun_os_sha
+
             try:
                 queue_item = jm.build(params=params)
                 build_number = jm.get_build_number(queue_item=queue_item)
-                trial.jenkins_build_number = build_number  #TODO: Failure here
-            except Exception as ex:  #TODO
+                trial.jenkins_build_number = build_number  # TODO: Failure here
+            except Exception as ex:  # TODO
                 pass
             finally:
                 trial.status = TriageTrialStates.BUILDING_ON_JENKINS
@@ -325,22 +332,37 @@ class TrialStateMachine:
             try:
                 if trial.jenkins_build_number < 0:
                     raise Exception("Jenkins build number is invalid")
-                jm = JenkinsManager()
+                if triage.triage_type != TriagingTypes.JENKINS_FUN_OS_ON_DEMAND:
+                    jm = JenkinsManager()
+                else:
+                    jm = JenkinsManager(job_name="funos/funos_on_demand")
                 job_info = jm.get_job_info(build_number=trial.jenkins_build_number)
                 if not job_info["building"]:
                     job_result = job_info["result"]
                     if job_result.lower() == "success":
-                        trial.status = TriageTrialStates.JENKINS_BUILD_COMPLETE
+                        if triage.triage_type != TriagingTypes.JENKINS_FUN_OS_ON_DEMAND:
+                            trial.status = TriageTrialStates.JENKINS_BUILD_COMPLETE
+                        else:
+                            trial.status = TriageTrialStates.PREPARING_RESULTS
+
+                        trial.save()
+                    else:
+                        trial.status = TriageTrialStates.JENKINS_BUILD_FAILED
                         trial.save()
                 pass
             except Exception as ex:
                 self.error(str(ex))
         elif status == TriageTrialStates.JENKINS_BUILD_COMPLETE:
-            lsf_server = LsfStatusServer()  #TODO
-            past_jobs = lsf_server.get_past_jobs_by_tag(add_info_to_db=False, tag=trial.tag)
-            if past_jobs:
-                trial.status = TriageTrialStates.IN_LSF
-                trial.save()
+            if triage.triage_type != TriagingTypes.JENKINS_FUN_OS_ON_DEMAND:
+                lsf_server = LsfStatusServer()  #TODO
+                past_jobs = lsf_server.get_past_jobs_by_tag(add_info_to_db=False, tag=trial.tag)
+                if past_jobs:
+                    trial.status = TriageTrialStates.IN_LSF
+                    trial.save()
+        elif status == TriageTrialStates.JENKINS_BUILD_FAILED:
+            trial.result = RESULTS["FAILED"]
+            trial.status = TriageTrialStates.COMPLETED
+            trial.save()
         elif status == TriageTrialStates.IN_LSF:
             lsf_server = LsfStatusServer()  #TODO
             logger.debug("Getting past jobs by tag")
@@ -359,10 +381,10 @@ class TrialStateMachine:
                         trial.save()
 
         elif status == TriageTrialStates.PREPARING_RESULTS:
-            lsf_server = LsfStatusServer()  # TODO
-            job_info = lsf_server.get_last_job(tag=trial.tag)
-            # import pdb; pdb.set_trace()
             if triage.triage_type == TriagingTypes.REGEX_MATCH:
+                lsf_server = LsfStatusServer()  # TODO
+                job_info = lsf_server.get_last_job(tag=trial.tag)
+                # import pdb; pdb.set_trace()
                 regex_match_found = False
                 if "output_text" in job_info:
                     lines = job_info["output_text"].split("\n")
@@ -415,6 +437,10 @@ class TrialStateMachine:
                     self.error("Error in validating LSF: {}".format(message))
                     trial.save()
                 """
+            elif triage.triage_type == TriagingTypes.JENKINS_FUN_OS_ON_DEMAND:
+                trial.result = RESULTS["PASSED"]
+                trial.status = TriageTrialStates.COMPLETED
+                trial.save()
         return status
 
     def validate_lsf_job(self, trial):

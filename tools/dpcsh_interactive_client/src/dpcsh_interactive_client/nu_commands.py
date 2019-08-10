@@ -1575,6 +1575,28 @@ class PeekCommands(object):
         else:
             self._get_nested_dict_stats(cmd=cmd, grep_regex=grep_regex)
 
+    def get_singleton_table_obj(self, result, prev_result=None, grep=None):
+        if prev_result:
+            table_obj = PrettyTable(['Field Name', 'Counter', 'Counter Diff'])
+            table_obj.align = 'l'
+            diff_result = self._get_difference(result=result, prev_result=prev_result)
+            for key in sorted(result):
+                if grep:
+                    if re.search(grep, key, re.IGNORECASE):
+                        table_obj.add_row([key, result[key], diff_result[key]])
+                else:
+                    table_obj.add_row([key, result[key], diff_result[key]])
+        else:
+            table_obj = PrettyTable(['Field Name', 'Counter'])
+            table_obj.align = 'l'
+            for key in sorted(result):
+                if grep:
+                    if re.search(grep, key, re.IGNORECASE):
+                        table_obj.add_row([key, result[key]])
+                else:
+                    table_obj.add_row([key, result[key]])
+        return table_obj
+
     def peek_cdu_stats(self, grep=None):
         try:
             prev_result = None
@@ -1604,6 +1626,40 @@ class PeekCommands(object):
                                     table_obj.add_row([key, result['cdu_cnts'][key]])
                         prev_result = result['cdu_cnts']
                         print table_obj
+                        print "\n########################  %s ########################\n" % \
+                              str(self._get_timestamp())
+                        time.sleep(TIME_INTERVAL)
+                    else:
+                        print "Empty Result"
+                except KeyboardInterrupt:
+                    self.dpc_client.disconnect()
+                    break
+        except Exception as ex:
+            print "ERROR: %s" % str(ex)
+            self.dpc_client.disconnect()
+
+    def peek_ddr_stats(self, grep=None):
+        try:
+            prev_result = None
+            while True:
+                try:
+                    cmd = "stats/ddr"
+                    result = self.dpc_client.execute(verb='peek', arg_list=[cmd])
+                    master_table_obj = PrettyTable()
+                    master_table_obj.align = "l"
+                    if result:
+                        result = result['ddr_cnts']
+                        for key in sorted(result):
+                            prev_result_dict = prev_result
+                            if prev_result:
+                                prev_result_dict = prev_result[key]
+                            result_dict = result[key]
+                            table_obj = self.get_singleton_table_obj(result=result_dict, prev_result=prev_result_dict,
+                                                                     grep=grep)
+                            master_table_obj.add_row([key, table_obj])
+
+                        prev_result = result
+                        print master_table_obj
                         print "\n########################  %s ########################\n" % \
                               str(self._get_timestamp())
                         time.sleep(TIME_INTERVAL)
@@ -1852,13 +1908,56 @@ class PeekCommands(object):
             print "ERROR: %s" % str(ex)
         return result
 
-    def peek_stats_per_vp(self, cluster_id=None, core_id=None, grep_regex=None, get_result_only=False):
+    def get_required_per_vp_result(self, output_result):
+        result = {}
+        for key, val in output_result.iteritems():
+            if not key.split(":")[2][0] == '1':
+                result[key] = val
+        return result
+
+    def get_filtered_dict(self, output_dict, cluster_id=None, core_id=None, rx=True, tx=True, q=True):
+        rx_key_name = 'wus_received'
+        tx_key_name = 'wus_sent'
+        q_key_name = 'vp_wu_qdepth'
+        current_result = {}
+        dict_keys = output_dict.keys()
+        for key in dict_keys:
+            if (str(cluster_id) is not None) and (str(cluster_id) in key.split(":")[0]):
+                if core_id is not None:
+                    vp_num_list = self._get_vp_numbers_from_core_id(core_id=core_id)
+                    if int(key.split(":")[1]) in vp_num_list:
+                        current_result[key] = output_dict[key]
+                else:
+                    current_result[key] = output_dict[key]
+            elif cluster_id is None:
+                cc_cluster_id = '8'
+                if cc_cluster_id not in key.split(":")[0]:
+                    current_result[key] = output_dict[key]
+        parsed_dict = {}
+        for key, val in current_result.iteritems():
+            parsed_dict[key] = {}
+            for _key in val.keys():
+                if _key == rx_key_name and rx:
+                    parsed_dict[key][rx_key_name] = current_result[key][_key]
+                if _key == tx_key_name and tx:
+                    parsed_dict[key][tx_key_name] = current_result[key][_key]
+                if _key == q_key_name and q:
+                    parsed_dict[key][q_key_name] = current_result[key][_key]
+        return parsed_dict
+
+    def peek_stats_per_vp(self, cluster_id=None, core_id=None, grep_regex=None,
+                          rx=False, tx=False, q=False, get_result_only=False):
         try:
             prev_result = None
+            if rx == False and tx == False and q == False:
+                rx = True
+                tx = True
+                q = True
             while True:
                 try:
                     cmd = "stats/per_vp"
-                    result = self.dpc_client.execute(verb='peek', arg_list=[cmd])
+                    output_result = self.dpc_client.execute(verb='peek', arg_list=[cmd])
+                    result = self.get_required_per_vp_result(output_result)
                     master_table_obj = PrettyTable()
                     master_table_obj.align = 'l'
                     master_table_obj.border = False
@@ -1896,17 +1995,184 @@ class PeekCommands(object):
                                                                         core_id=core_id)
 
                         # Print table for cluster id given
-                        elif cluster_id:
+                        elif cluster_id is not None:
                             result = self._get_cluster_core_parsed_dict(output_dict=result, cluster_id=cluster_id)
 
                         # Print master table
+                        result = self.get_filtered_dict(result, cluster_id=cluster_id, core_id=core_id, rx=rx, tx=tx,
+                                                        q=q)
                         if prev_result:
+                            prev_result = self.get_filtered_dict(prev_result, cluster_id=cluster_id, core_id=core_id, rx=rx,
+                                                                 tx=tx, q=q)
                             self.print_diff_result_single_dict_table_obj(master_table_obj=master_table_obj,
                                                                          result=result, prev_result=prev_result,
                                                                          grep_regex=grep_regex)
                         else:
                             self.print_single_dict_table_obj(master_table_obj=master_table_obj, result=result,
                                                              grep_regex=grep_regex)
+
+                        if get_result_only:
+                            return cmd, master_table_obj
+                        prev_result = result
+                        print master_table_obj
+                        print "\n########################  %s ########################\n" % \
+                              str(self._get_timestamp())
+                        time.sleep(TIME_INTERVAL)
+                    else:
+                        if get_result_only:
+                            return cmd, "Empty Result"
+                        print "Empty Result"
+                except KeyboardInterrupt:
+                    self.dpc_client.disconnect()
+                    break
+        except Exception as ex:
+            print "ERROR: %s" % str(ex)
+            self.dpc_client.disconnect()
+
+    def peek_stats_per_vp_pp(self, cluster_id=None, core_id=None, rx=False, tx=False, q=False, grep_regex=None,
+                          get_result_only=False):
+        try:
+            rx_key_name = 'wus_received'
+            display_rx_key_name = 'rx'
+            tx_key_name = 'wus_sent'
+            display_tx_key_name = 'tx'
+            q_key_name = 'vp_wu_qdepth'
+            display_q_key_name = 'q'
+            prev_result = None
+            if rx == False and tx == False and q == False:
+                rx = True
+                tx = True
+                q = True
+            while True:
+                print "%s = %s" % (display_rx_key_name, rx_key_name)
+                print "%s = %s" % (display_tx_key_name, tx_key_name)
+                print "%s = %s" % (display_q_key_name, q_key_name)
+                try:
+                    cmd = "stats/per_vp"
+                    output_result = self.dpc_client.execute(verb='peek', arg_list=[cmd])
+                    result = self.get_required_per_vp_result(output_result)
+                    if result:
+                        def get_sorted_dict(result):
+                            sorted_dict = OrderedDict()
+                            result_keys = sorted(result)
+                            if len(result_keys) == TOTAL_VPS_PER_CORE * TOTAL_CORES_PER_CLUSTER:
+                                result_keys.insert(0, result_keys[-2])
+                                result_keys.insert(1, result_keys[-1])
+                                del result_keys[-1]
+                                del result_keys[-1]
+                            else:
+                                insert_index = 0
+                                del_index = 22
+                                for x in range(0, TOTAL_CLUSTERS):
+                                    second_insert_index = insert_index + 1
+                                    second_del_index = del_index + 1
+
+                                    result_keys.insert(insert_index, result_keys[del_index])
+                                    del result_keys[del_index + 1]
+                                    result_keys.insert(second_insert_index, result_keys[second_del_index])
+                                    del result_keys[second_del_index + 1]
+
+                                    insert_index = insert_index + 24
+                                    del_index = del_index + 24
+                            for key in result_keys:
+                                sorted_dict[key] = result[key]
+                            return sorted_dict
+
+                        def get_complete_dict(result, tabular_list, prev_result=None):
+                            complete_dict = OrderedDict()
+                            added_cluster_list = []
+                            for item in tabular_list:
+                                complete_dict[item] = []
+                            current_result = result
+                            if prev_result:
+                                current_result = prev_result
+                            for key, val in current_result.iteritems():
+                                cluster_val = key.split(":")[0][2]
+                                vp_val = key.split(":")[1]
+                                final_val = key.split(":")[2][0]
+                                if not int(final_val) == 1:
+                                    if not cluster_val in added_cluster_list:
+                                        if core_id is not None:
+                                            complete_dict[tabular_list[0]].append("%s/%s" % (cluster_val, core_id))
+                                            added_cluster_list.append(cluster_val)
+                                        else:
+                                            for x in range(0, 6):
+                                                complete_dict[tabular_list[0]].append("%s/%s" % (cluster_val, x))
+                                            added_cluster_list.append(cluster_val)
+                                    for _key, _val in val.iteritems():
+                                        for item in tabular_list[1:]:
+                                            if (int(vp_val) % TOTAL_VPS_PER_CORE == int(item.split(":")[0])) and (not 'd_' in item) and (_key == item.split(":")[1]):
+                                                complete_dict[item].append(_val)
+                                                break
+                            if prev_result:
+                                diff_result = self._get_difference(result=result, prev_result=prev_result)
+                                diff_result = get_sorted_dict(diff_result)
+                                for key, val in diff_result.iteritems():
+                                    cluster_val = key.split(":")[0][2]
+                                    vp_val = key.split(":")[1]
+                                    final_val = key.split(":")[2][0]
+                                    if not int(final_val) == 1:
+                                        if not cluster_val in added_cluster_list:
+                                            added_cluster_keys.append(cluster_val)
+                                            complete_dict[tabular_list[0]].append(cluster_val)
+                                        for _key, _val in val.iteritems():
+                                            for item in tabular_list[1:]:
+                                                if (int(vp_val) % TOTAL_VPS_PER_CORE == int(item.split(":")[0])) and (
+                                                'd_' in item) and ('d_' + _key == item.split(":")[1]):
+                                                    complete_dict[item].append(_val)
+                                                    break
+                            return complete_dict
+
+                        def get_tabular_list(table_list, print_key_list, diff=False):
+                            tabular_list = []
+                            for _key in table_list:
+                                for key in print_key_list:
+                                    if not 'Cls/Core' in str(_key):
+                                        tabular_list.append(str(_key) + ":" + key)
+                                        if diff:
+                                            tabular_list.append(str(_key) + ":d_" + key)
+                                    else:
+                                        if 'Cls/Core' not in tabular_list:
+                                            tabular_list.append(_key)
+                            return tabular_list
+
+                        def get_per_vp_dict_table_obj(result, prev_result=None, cluster_id=None, core_id=None):
+
+                            all_keys = result.keys()
+                            row_list = ["Cls/Core", "0", "1", "2", "3"]
+                            single_dict = result[all_keys[0]]
+                            print_key_list = single_dict.keys()
+
+                            diff = False
+                            if prev_result:
+                                diff = True
+                            tabular_list = get_tabular_list(row_list, print_key_list, diff=diff)
+
+                            master_table_obj = PrettyTable()
+                            print_dict = get_complete_dict(result=result, tabular_list=tabular_list,
+                                                           prev_result=prev_result)
+
+                            print_keys = print_dict.keys()
+                            print_keys = [print_key.replace(tx_key_name, display_tx_key_name) for print_key in print_keys]
+                            print_keys = [print_key.replace(rx_key_name, display_rx_key_name) for print_key in
+                                          print_keys]
+                            print_keys = [print_key.replace(q_key_name, display_q_key_name) for print_key in
+                                          print_keys]
+                            print_values = print_dict.values()
+                            for col_name, col_values in zip(print_keys, print_values):
+                                master_table_obj.add_column(col_name, col_values)
+                            return master_table_obj
+
+                        result = self.get_filtered_dict(output_dict=result, cluster_id=cluster_id, core_id=core_id,
+                                                        rx=rx, tx=tx, q=q)
+
+                        if core_id is None:
+                            result = get_sorted_dict(result)
+                        if prev_result:
+                            prev_result = get_sorted_dict(prev_result)
+
+                        master_table_obj = get_per_vp_dict_table_obj(result=result, prev_result=prev_result,
+                                                                     cluster_id=cluster_id, core_id=core_id)
 
                         if get_result_only:
                             return cmd, master_table_obj
@@ -3226,6 +3492,121 @@ class FlowCommands(object):
                         print "\n########################  %s ########################\n" % str(self._get_timestamp())
                         time.sleep(TIME_INTERVAL)
                     else:
+                        print "Empty Result"
+                except KeyboardInterrupt:
+                    self.dpc_client.disconnect()
+                    break
+        except Exception as ex:
+            print "ERROR: %s" % str(ex)
+            self.dpc_client.disconnect()
+
+
+class DebugCommands(PeekCommands):
+
+    def get_filtered_dict(self, output_dict, cluster_id=None, core_id=None):
+        result = OrderedDict()
+        start_key_name = 'CCV'
+        for key, val in output_dict.iteritems():
+            if cluster_id is not None and core_id is not None:
+                key_name = start_key_name + "%s.%s" % (cluster_id, core_id)
+                if key_name in key:
+                    result[key] = val
+            elif cluster_id is not None:
+                key_name = start_key_name + "%s" % (cluster_id)
+                if key_name in key:
+                    result[key] = val
+            else:
+                result = output_dict
+                break
+        return result
+
+    def get_vp_util_table_obj(self, result):
+        master_table_obj = PrettyTable()
+        complete_dict = OrderedDict()
+        rows_list = ["Cls/Core", "0", "1", "2", "3"]
+        for col_name in rows_list:
+            complete_dict[col_name] = []
+        for key, val in result.iteritems():
+            cluster_id = key.split(".")[0][3]
+            core_id = key.split(".")[1]
+            vp_num = key.split(".")[2]
+            for _key in rows_list:
+                if _key == rows_list[0] and cluster_id + '/' + core_id not in complete_dict[_key]:
+                    complete_dict[_key].append(cluster_id + '/' + core_id)
+                else:
+                    if _key == vp_num:
+                        complete_dict[_key].append(val)
+                        break
+
+        print_keys = complete_dict.keys()
+        print_values = complete_dict.values()
+        for col_name, col_values in zip(print_keys, print_values):
+            master_table_obj.add_column(col_name, col_values)
+        return master_table_obj
+
+    def debug_vp_util_pp(self, cluster_id=None, core_id=None, grep_regex=None):
+        try:
+            while True:
+                try:
+                    cmd = "vp_util"
+                    output_dict = OrderedDict()
+                    output = self.dpc_client.execute(verb='debug', arg_list=[cmd])
+                    for key in sorted(output):
+                        output_dict[key] = output[key]
+
+                    if cluster_id is None and core_id is None:
+                        for x in range(0, 6):
+                            for y in range(2, 4):
+                                if x > 3:
+                                    z = 0
+                                    key = 'CCV8.%s.%s' % (x, z)
+                                    output_dict[key] = 'N/A'
+                                    z = 1
+                                    key = 'CCV8.%s.%s' % (x, z)
+                                    output_dict[key] = 'N/A'
+                                key = 'CCV8.%s.%s' % (x, y)
+                                output_dict[key] = 'N/A'
+                    result = self.get_filtered_dict(output_dict=output_dict, cluster_id=cluster_id, core_id=core_id)
+
+                    master_table_obj = self.get_vp_util_table_obj(result=result)
+                    print master_table_obj
+                    print "\n########################  %s ########################\n" % \
+                          str(self._get_timestamp())
+                    time.sleep(TIME_INTERVAL)
+                except KeyboardInterrupt:
+                    self.dpc_client.disconnect()
+                    break
+        except Exception as ex:
+            print "ERROR: %s" % str(ex)
+            self.dpc_client.disconnect()
+
+    def debug_vp_util(self, cluster_id=None, core_id=None, grep_regex=None, get_result_only=False):
+        try:
+            while True:
+                try:
+                    cmd = "vp_util"
+                    output_result = self.dpc_client.execute(verb='debug', arg_list=[cmd])
+                    if output_result:
+                        result = self.get_filtered_dict(output_dict=output_result, cluster_id=cluster_id, core_id=core_id)
+
+                        table_obj = PrettyTable(['Field Name', 'Counters'])
+                        table_obj.align = 'l'
+                        table_obj.sortby = 'Field Name'
+                        for key in sorted(result):
+                            if grep_regex:
+                                if re.search(grep_regex, key, re.IGNORECASE):
+                                    table_obj.add_row([key, result[key]])
+                            else:
+                                table_obj.add_row([key, result[key]])
+                        if get_result_only:
+                            return cmd, table_obj
+                        print table_obj
+                        print "\n########################  %s ########################\n" % \
+                              str(self._get_timestamp())
+                        time.sleep(TIME_INTERVAL)
+                    else:
+                        if get_result_only:
+                            return cmd, "Empty Result"
                         print "Empty Result"
                 except KeyboardInterrupt:
                     self.dpc_client.disconnect()

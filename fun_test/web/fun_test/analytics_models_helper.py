@@ -732,17 +732,17 @@ if __name__ == "__main2__":
 
     # MetricChart(chart_name="Chart 2", data_sets=json.dumps([data_set3]), metric_model_name="Performance1").save()
 
-if __name__ == "__main__":
+if __name__ == "__main__inspur":
 
     # Helper for Inspur 871 (single disk failure)
     value_dict = {
         "date_time": get_data_collection_time(),
         "num_hosts": 1,
-        "num_f1s":1,
+        "num_f1s": 1,
         "base_file_copy_time": 1.32,
-        "copy_time_during_plex_fail":2.13,
-        "file_copy_time_during_rebuild":3.123,
-        "plex_rebuild_time":4.12,
+        "copy_time_during_plex_fail": 2.13,
+        "file_copy_time_during_rebuild": 3.123,
+        "plex_rebuild_time": 4.12,
     }
     unit_dict = {
         "base_file_copy_time_unit":PerfUnit.UNIT_SECS,
@@ -811,3 +811,49 @@ if __name__ == "__main__":
     except Exception as ex:
         fun_test.critical(str(ex))
     print "used generic helper to add an entry"
+
+if __name__ == "__main__":
+
+    dt = datetime.datetime(year=2019, month=7, day=18, hour=2, minute=12, second=33)
+    data = 4
+    for app in ["crypto_dp_tunnel_throughput", "ipsec_tunnel_throughput"]:
+        value_dict = {
+            "date_time": dt,
+            "platform": FunPlatform.S1,
+            "app": app,
+            "throughput": data
+        }
+        unit_dict = {
+            "throughput_unit": PerfUnit.UNIT_GBITS_PER_SEC
+        }
+        model_name = "TeraMarkCryptoPerformance"
+        status = fun_test.PASSED
+        try:
+            generic_helper = ModelHelper(model_name=model_name)
+            generic_helper.set_units(validate=True, **unit_dict)
+            generic_helper.add_entry(**value_dict)
+            generic_helper.set_status(status)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        print ("used generic helper to add an entry")
+
+    for app in ["crypto_dp_tunnel_throughput", "ipsec_tunnel_throughput"]:
+        value_dict = {
+            "date_time": get_data_collection_time(),
+            "platform": FunPlatform.S1,
+            "app": app,
+            "throughput": data
+        }
+        unit_dict = {
+            "throughput_unit": PerfUnit.UNIT_GBITS_PER_SEC
+        }
+        model_name = "TeraMarkCryptoPerformance"
+        status = fun_test.PASSED
+        try:
+            generic_helper = ModelHelper(model_name=model_name)
+            generic_helper.set_units(validate=True, **unit_dict)
+            generic_helper.add_entry(**value_dict)
+            generic_helper.set_status(status)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        print ("used generic helper to add an entry")

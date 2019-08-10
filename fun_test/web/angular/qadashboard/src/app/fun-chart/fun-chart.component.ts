@@ -191,7 +191,9 @@ export class FunChartComponent implements OnInit, OnChanges {
               events: {
 
                 click: function () {
-                  location.href = self.clickUrls[this.category];
+                  if (self.clickUrls){
+                    location.href = self.clickUrls[this.category];
+                  }
                 },
 
                 select: function () {
@@ -221,6 +223,9 @@ export class FunChartComponent implements OnInit, OnChanges {
           enabled: false
         },
       };
+      if (this.backgroundColor) {
+        chartOptions.chart["backgroundColor"] = this.backgroundColor;
+      }
     }
 
     this.chart = new Chart(chartOptions);

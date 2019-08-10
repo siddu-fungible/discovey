@@ -6,6 +6,7 @@ import {TriageService} from "../triage.service";
 import {CommonService} from "../../../services/common/common.service";
 import {LoggerService} from "../../../services/logger/logger.service";
 import {ApiService} from "../../../services/api/api.service";
+import {Title} from "@angular/platform-browser";
 
 class CommitNode {
   funOsSha: string;
@@ -21,7 +22,7 @@ class CommitNode {
   trial: any;
   selected: boolean = false;
   result: string;
-};
+}
 
 
 @Component({
@@ -47,9 +48,10 @@ export class TriageDetailComponent implements OnInit {
               private triageService: TriageService,
               private commonService: CommonService,
               private loggerService: LoggerService,
-              private apiService: ApiService) { }
+              private apiService: ApiService, private title: Title) { }
 
   ngOnInit() {
+    this.title.setTitle("Regression Finder");
     this.route.params.pipe(switchMap((params) => {
       this.triageId = params['id'];
       return this.triageService.triagingStateToString();
@@ -100,7 +102,8 @@ export class TriageDetailComponent implements OnInit {
         commitNode.result = trial.result;
       }
 
-    })
+    });
+
   }
   getCommitsInBetween() {
     return this.triageService.funOsCommits(this.triage.from_fun_os_sha, this.triage.to_fun_os_sha).pipe(switchMap((commits) => {

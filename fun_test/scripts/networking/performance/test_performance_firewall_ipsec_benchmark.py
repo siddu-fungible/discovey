@@ -87,9 +87,9 @@ class ScriptSetup(FunTestScript):
             single_flow_encrypt_IMIX_start_data_mpps = 2.6
             single_flow_encrypt_IMIX_end_data_mpps = 5.6
             single_flow_encrypt_IMIX_step_data_mpps = 0.5
-            multi_flow_decrypt_start_data_mpps = 52
-            multi_flow_decrypt_end_data_mpps = 82
-            multi_flow_decrypt_step_data_mpps = 5
+            multi_flow_decrypt_start_data_mpps = 80
+            multi_flow_decrypt_end_data_mpps = 90
+            multi_flow_decrypt_step_data_mpps = 1
             single_flow_decrypt_start_data_mpps = 2
             single_flow_decrypt_end_data_mpps = 5
             single_flow_decrypt_step_data_mpps = 0.5
@@ -158,8 +158,8 @@ class ScriptSetup(FunTestScript):
         result = network_controller_obj.set_etp(pkt_adj_size=8)
         fun_test.simple_assert(result['status'], "Reset pkt_adj_size to 8")
 
-        output_1 = network_controller_obj.set_nu_benchmark_1(mode=mode, num_flows=num_flows, flow_le_ddr=True,
-                                                             flow_state_ddr=True)
+        output_1 = network_controller_obj.set_nu_benchmark_1(mode=mode, num_flows=num_flows, flow_le_ddr=False,
+                                                             flow_state_ddr=False)
         for fpg in benchmark_ports:
             result = network_controller_obj.set_nu_benchmark_1(mode=mode, fpg=fpg)
             fun_test.simple_assert(result['status'], 'Enable Firewall benchmark')
@@ -186,24 +186,45 @@ class ScriptSetup(FunTestScript):
                                                              flow_inport=20, flow_outport=0, ipsec=True)
 
         # Decrypt
+#        ipsec = network_controller_obj.set_nu_benchmark_1(mode=mode_4, num_tunnels=64, is_encryption=False, spi=4000,
+#                                                          tunnel_src="1.1.1.2", tunnel_dst="1.1.1.1")
+#        output_6 = network_controller_obj.set_nu_benchmark_1(mode=mode_4, sport="0-1", dport="4000-4016", protocol=50,
+#                                                             ip_sa="1.1.1.2", ip_da="1.1.1.1", flow_offset=64,
+#                                                             flow_inport=8, flow_outport=12, ipsec=True)
+#
+#        output_7 = network_controller_obj.set_nu_benchmark_1(mode=mode_4, sport="0-1", dport="4016-4032", protocol=50,
+#                                                             ip_sa="1.1.1.2", ip_da="1.1.1.1", flow_offset=80,
+#                                                             flow_inport=0, flow_outport=20, ipsec=True)
+#
+#        output_8 = network_controller_obj.set_nu_benchmark_1(mode=mode_4, sport="0-1", dport="4032-4048", protocol=50,
+#                                                             ip_sa="1.1.1.2", ip_da="1.1.1.1", flow_offset=96,
+#                                                             flow_inport=12, flow_outport=8, ipsec=True)
+#
+#        output_9 = network_controller_obj.set_nu_benchmark_1(mode=mode_4, sport="0-1", dport="4048-4064", protocol=50,
+#                                                             ip_sa="1.1.1.2", ip_da="1.1.1.1", flow_offset=112,
+#                                                             flow_inport=20, flow_outport=0, ipsec=True)
+
         ipsec = network_controller_obj.set_nu_benchmark_1(mode=mode_4, num_tunnels=64, is_encryption=False, spi=4000,
                                                           tunnel_src="1.1.1.2", tunnel_dst="1.1.1.1")
-        output_6 = network_controller_obj.set_nu_benchmark_1(mode=mode_4, sport="0-1", dport="4000-4016", protocol=50,
-                                                             ip_sa="1.1.1.2", ip_da="1.1.1.1", flow_offset=64,
-                                                             flow_inport=8, flow_outport=12, ipsec=True)
+        for i, f in zip(range(2, 2+16), range(64, 64+16)):
+            output_6 = network_controller_obj.set_nu_benchmark_1(mode=mode_4, sport="0-1", dport="4000-4001", protocol=50,
+                                                                ip_sa="1.1.1.{}".format(i), ip_da="1.1.1.1", flow_offset=f,
+                                                                flow_inport=8, flow_outport=12, ipsec=True)
 
-        output_7 = network_controller_obj.set_nu_benchmark_1(mode=mode_4, sport="0-1", dport="4016-4032", protocol=50,
-                                                             ip_sa="1.1.1.2", ip_da="1.1.1.1", flow_offset=80,
-                                                             flow_inport=0, flow_outport=20, ipsec=True)
+        for i, f in zip(range(2+16, 2+32), range(64+16, 64+32)):
+            output_7 = network_controller_obj.set_nu_benchmark_1(mode=mode_4, sport="0-1", dport="4000-4001", protocol=50,
+                                                                ip_sa="1.1.1.{}".format(i), ip_da="1.1.1.1", flow_offset=f,
+                                                                flow_inport=0, flow_outport=20, ipsec=True)
 
-        output_8 = network_controller_obj.set_nu_benchmark_1(mode=mode_4, sport="0-1", dport="4032-4048", protocol=50,
-                                                             ip_sa="1.1.1.2", ip_da="1.1.1.1", flow_offset=96,
-                                                             flow_inport=12, flow_outport=8, ipsec=True)
+        for i, f in zip(range(2+32, 2+48), range(64+32, 64+48)):
+            output_8 = network_controller_obj.set_nu_benchmark_1(mode=mode_4, sport="0-1", dport="4000-4001", protocol=50,
+                                                                ip_sa="1.1.1.{}".format(i), ip_da="1.1.1.1", flow_offset=f,
+                                                                flow_inport=12, flow_outport=8, ipsec=True)
 
-        output_9 = network_controller_obj.set_nu_benchmark_1(mode=mode_4, sport="0-1", dport="4048-4064", protocol=50,
-                                                             ip_sa="1.1.1.2", ip_da="1.1.1.1", flow_offset=112,
-                                                             flow_inport=20, flow_outport=0, ipsec=True)
-
+        for i, f in zip(range(2+48, 2+64), range(64+48, 64+64)):
+            output_9 = network_controller_obj.set_nu_benchmark_1(mode=mode_4, sport="0-1", dport="4000-4001", protocol=50,
+                                                                ip_sa="1.1.1.{}".format(i), ip_da="1.1.1.1", flow_offset=f,
+                                                                flow_inport=20, flow_outport=0, ipsec=True)
         sf_thr = 500
         sx_thr = 10
         df_thr = 15000

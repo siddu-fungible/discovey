@@ -5,6 +5,7 @@ from lib.host.linux import Linux
 from lib.topology.topology_helper import TopologyHelper
 from lib.host import netperf_manager
 from lib.host.network_controller import NetworkController
+from lib.templates.csi_perf.csi_perf_template import CsiPerfTemplate
 from lib.utilities.funcp_config import FunControlPlaneBringup
 from scripts.networking.funeth.funeth import Funeth, CPU_LIST_HOST, CPU_LIST_VM
 from scripts.networking.tb_configs import tb_configs
@@ -35,9 +36,9 @@ except (KeyError, ValueError):
     #DPC_PROXY_IP = '10.1.40.24'
     #DPC_PROXY_PORT = 40221
     #TB = 'SB5'
-    DPC_PROXY_IP = '10.1.20.22'
+    DPC_PROXY_IP = 'fs11-come'
     DPC_PROXY_PORT = 40220
-    DPC_PROXY_IP2 = '10.1.20.22'
+    DPC_PROXY_IP2 = 'fs11-come'
     DPC_PROXY_PORT2 = 40221
     TB = ''.join(fun_test.get_job_environment_variable('test_bed_type').split('-')).upper()
 
@@ -46,6 +47,7 @@ try:
     if inputs:
         enable_tso = (inputs.get('lso', 1) == 1)  # Enable TSO or not
         control_plane = (inputs.get('control_plane', 0) == 1)  # Use control plane or not
+        update_funcp = (inputs.get('update_funcp', 1) == 1)  # Update FunControlPlane binary or not
         update_driver = (inputs.get('update_driver', 1) == 1)  # Update driver or not
         hu_host_vm = (inputs.get('hu_host_vm', 0) == 1)  # HU host runs VMs or not
         configure_overlay = (inputs.get('configure_overlay', 0) == 1)  # Enable overlay config or not
@@ -58,6 +60,7 @@ try:
     else:
         enable_tso = True  # default True
         control_plane = False  # default False
+        update_funcp = True  # default True
         update_driver = True  # default True
         hu_host_vm = False  # default False
         configure_overlay = False  # default False
@@ -70,11 +73,16 @@ try:
 except:
     enable_tso = True
     control_plane = False
+    update_funcp = True
     update_driver = True
     hu_host_vm = False
     configure_overlay = False
     bootup_funos = True
     cleanup = True
+
+csi_perf_enabled = fun_test.get_job_environment_variable("csi_perf")
+perf_listener_host_name = "poc-server-06"
+perf_listener_ip = "20.1.1.1"
 
 NUM_VFs = 4
 NUM_QUEUES_TX = 8
@@ -162,9 +170,9 @@ def setup_hu_host(funeth_obj, update_driver=True, is_vm=False, tx_offload=True):
     return funsdk_commit, funsdk_bld, driver_commit, driver_bld
 
 
-def setup_funcp(test_bed_type):
+def setup_funcp(test_bed_type, update_funcp=True):
     funcp_obj = FunControlPlaneBringup(fs_name=test_bed_type)
-    funcp_obj.bringup_funcp(prepare_docker=True)
+    funcp_obj.bringup_funcp(prepare_docker=update_funcp)
     # TODO: Make it setup independent
     funcp_obj.assign_mpg_ips(static=True, f1_1_mpg='10.1.20.241', f1_0_mpg='10.1.20.242',
                              f1_0_mpg_netmask="255.255.252.0",
@@ -255,48 +263,49 @@ def configure_overlay(network_controller_obj_f1_0, network_controller_obj_f1_1):
                 for nh_type in ('vxlan_encap', 'vxlan_decap'):
                     nc_obj.overlay_nh_add(nh_type=nh_type, src_vtep=src_vtep, dst_vtep=dst_vtep, vnid=vnid)
                 # flows
-                for flow_type, nh_index in zip(('vxlan_encap', 'vxlan_decap'), (0, 1)):
-                    for sip, dip in zip(src_flows, dst_flows):
-                        if flow_type == 'vxlan_encap':
-                            flow_sip, flow_dip = sip, dip
-                            if nc_obj == nc_obj_src:
-                                flow_sport, flow_dport = 0, netperf_manager.NETSERVER_PORT
-                            elif nc_obj == nc_obj_dst:
-                                flow_sport, flow_dport = netperf_manager.NETSERVER_PORT, 0
-                        elif flow_type == 'vxlan_decap':
-                            flow_sip, flow_dip = dip, sip
-                            if nc_obj == nc_obj_src:
-                                flow_sport, flow_dport = netperf_manager.NETSERVER_PORT, 0
-                            elif nc_obj == nc_obj_dst:
-                                flow_sport, flow_dport = 0, netperf_manager.NETSERVER_PORT
-                        nc_obj.overlay_flow_add(flow_type=flow_type,
-                                                nh_index=nh_index,
-                                                vif=lport_num,
-                                                flow_sip=flow_sip,
-                                                flow_dip=flow_dip,
-                                                flow_sport=flow_sport,
-                                                flow_dport=flow_dport,
-                                                flow_proto=6
-                                                )
-                #for i in CPU_LIST_VM:
-                #    for j in (10000, 20000):  # TODO: for Netperf control (1000x) and data (2000x), remove after port range support is in
-                #        for flow_type, nh_index in zip(('vxlan_encap', 'vxlan_decap'), (0, 1)):
-                #            for sip, dip in zip(src_flows, dst_flows):
-                #                if flow_type == 'vxlan_encap':
-                #                    flow_sip, flow_dip = sip, dip
-                #                else:
-                #                    flow_sip, flow_dip = dip, sip
-                #                # flows
-                #                nc_obj.overlay_flow_add(
-                #                    flow_type=flow_type,
-                #                    nh_index=nh_index,
-                #                    vif=lport_num,
-                #                    flow_sip=flow_sip,
-                #                    flow_dip=flow_dip,
-                #                    flow_sport=i+j,
-                #                    flow_dport=i+j,
-                #                    flow_proto=6
-                #                )
+                #for flow_type, nh_index in zip(('vxlan_encap', 'vxlan_decap'), (0, 1)):
+                #    for sip, dip in zip(src_flows, dst_flows):
+                #        if flow_type == 'vxlan_encap':
+                #            flow_sip, flow_dip = sip, dip
+                #            if nc_obj == nc_obj_src:
+                #                flow_sport, flow_dport = 0, netperf_manager.NETSERVER_PORT
+                #            elif nc_obj == nc_obj_dst:
+                #                flow_sport, flow_dport = netperf_manager.NETSERVER_PORT, 0
+                #        elif flow_type == 'vxlan_decap':
+                #            flow_sip, flow_dip = dip, sip
+                #            if nc_obj == nc_obj_src:
+                #                flow_sport, flow_dport = netperf_manager.NETSERVER_PORT, 0
+                #            elif nc_obj == nc_obj_dst:
+                #                flow_sport, flow_dport = 0, netperf_manager.NETSERVER_PORT
+                #        nc_obj.overlay_flow_add(flow_type=flow_type,
+                #                                nh_index=nh_index,
+                #                                vif=lport_num,
+                #                                flow_sip=flow_sip,
+                #                                flow_dip=flow_dip,
+                #                                flow_sport=flow_sport,
+                #                                flow_dport=flow_dport,
+                #                                flow_proto=6
+                #                                )
+                for i in CPU_LIST_VM:
+                    for j in (netperf_manager.NETSERVER_FIXED_PORT_CONTROL_BASE,
+                              netperf_manager.NETSERVER_FIXED_PORT_DATA_BASE):
+                        for flow_type, nh_index in zip(('vxlan_encap', 'vxlan_decap'), (0, 1)):
+                            for sip, dip in zip(src_flows, dst_flows):
+                                if flow_type == 'vxlan_encap':
+                                    flow_sip, flow_dip = sip, dip
+                                else:
+                                    flow_sip, flow_dip = dip, sip
+                                # flows
+                                nc_obj.overlay_flow_add(
+                                    flow_type=flow_type,
+                                    nh_index=nh_index,
+                                    vif=lport_num,
+                                    flow_sip=flow_sip,
+                                    flow_dip=flow_dip,
+                                    flow_sport=i+j,
+                                    flow_dport=i+j,
+                                    flow_proto=6
+                                )
                 # vif_table
                 for mac_addr in vif_table_mac_entries:
                     nc_obj.overlay_vif_table_add_mac_entry(vnid=vnid, mac_addr=mac_addr, egress_vif=lport_num)
@@ -332,6 +341,8 @@ class FunethSanity(FunTestScript):
                 if test_bed_type == 'fs-48':
                     f1_0_boot_args = "app=hw_hsu_test cc_huid=3 sku=SKU_FS1600_0 retimer=0,1,2 --all_100g --dpc-uart --dpc-server --disable-wu-watchdog"
                     f1_1_boot_args = "app=hw_hsu_test cc_huid=2 sku=SKU_FS1600_1 retimer=0 --all_100g --dpc-uart --dpc-server --disable-wu-watchdog"
+                if csi_perf_enabled:
+                    f1_0_boot_args += " --perf csi-local-ip=29.1.1.2 csi-remote-ip={} pdtrace-hbm-size-kb=204800".format(perf_listener_ip)
                 topology_helper = TopologyHelper()
                 topology_helper.set_dut_parameters(dut_index=0,
                                                    f1_parameters={0: {"boot_args": f1_0_boot_args},
@@ -339,6 +350,8 @@ class FunethSanity(FunTestScript):
                                                    )
             else:
                 boot_args = "app=hw_hsu_test retimer=0,1 --dpc-uart --dpc-server --csr-replay --all_100g --disable-wu-watchdog"
+                if csi_perf_enabled:
+                    boot_args += " --perf csi-local-ip=29.1.1.2 csi-remote-ip={} pdtrace-hbm-size-kb=204800".format(perf_listener_ip)
                 topology_helper = TopologyHelper()
                 topology_helper.set_dut_parameters(dut_index=0,
                                                    custom_boot_args=boot_args)
@@ -369,9 +382,9 @@ class FunethSanity(FunTestScript):
 
         # TODO: make it work for other setup
         if test_bed_type == 'fs-11' and control_plane:
-            setup_funcp(test_bed_type)
+            setup_funcp(test_bed_type, update_funcp=update_funcp)
         elif test_bed_type != 'fs-11' and control_plane:
-            setup_funcp_on_fs(test_bed_type)
+            setup_funcp_on_fs(test_bed_type, update_funcp=update_funcp)
         tb_config_obj = tb_configs.TBConfigs(TB)
         funeth_obj = Funeth(tb_config_obj,
                             fundrv_branch=fundrv_branch,
@@ -379,6 +392,12 @@ class FunethSanity(FunTestScript):
                             fundrv_commit=fundrv_commit,
                             funsdk_commit=funsdk_commit)
         fun_test.shared_variables['funeth_obj'] = funeth_obj
+
+        # perf
+        if csi_perf_enabled:
+            p = CsiPerfTemplate(perf_collector_host_name=perf_listener_host_name, listener_ip=perf_listener_ip, fs=fs)
+            p.prepare(f1_index=0)
+            self.csi_perf_obj = p
 
         # NU host
         setup_nu_host(funeth_obj)
@@ -460,7 +479,7 @@ class FunethSanity(FunTestScript):
                 if cleanup:
                     hu_hosts = topology.get_host_instances_on_ssd_interfaces(dut_index=0)
                     for host_ip, host_info in hu_hosts.iteritems():
-                        host_info["host_obj"].ensure_host_is_up(max_wait_time=0, power_cycle=True)
+                        host_info["host_obj"].ensure_host_is_up(max_wait_time=2, power_cycle=True)
 
             if control_plane:
                 perf_utils.collect_funcp_logs(self.come_linux_obj)
@@ -940,7 +959,7 @@ class FunethTestComeReboot(FunTestCase):
         vf_interface = tb_config_obj.get_hu_vf_interface(hu)
         verify_nu_hu_datapath(funeth_obj, interfaces_excludes=[pf_interface, vf_interface], nu=nu, hu=hu)
 
-        setup_funcp(fun_test.shared_variables["test_bed_type"])
+        setup_funcp(fun_test.shared_variables["test_bed_type"], update_funcp=False)
         #setup_hu_host(funeth_obj, update_driver=False)
         verify_nu_hu_datapath(funeth_obj, nu=nu, hu=hu)
 
@@ -955,9 +974,9 @@ if __name__ == "__main__":
             FunethTestScpHU2NU,
             FunethTestInterfaceFlapPF,
             FunethTestInterfaceFlapVF,
-            FunethTestUnloadDriver,  # TODO: uncomment after EM-914 is fixed
+            FunethTestUnloadDriver,
             FunethTestReboot,
-            FunethTestComeReboot,
+            #FunethTestComeReboot,  # TODO: uncomment after SWLINUX-786 is fixed
     ):
         ts.add_test_case(tc())
     ts.run()

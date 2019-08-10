@@ -1014,6 +1014,12 @@ peek_per_vp_stats_parser.add_argument('-cluster_id', type=int, help="Cluster_id 
 peek_per_vp_stats_parser.add_argument('-core_id', type=int, help="Core_id 0..5", default=None)
 peek_per_vp_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
 
+# New params
+peek_per_vp_stats_parser.add_argument('-rx', type=bool, help="Print Wus received", default=False)
+peek_per_vp_stats_parser.add_argument('-tx', type=bool, help="Print Wus sent", default=False)
+peek_per_vp_stats_parser.add_argument('-q', type=bool, help="Print Wus q depth", default=False)
+peek_per_vp_stats_parser.add_argument('-pp', type=bool, help="PrettyPrint tabular", default=False)
+
 # nwqm stats
 peek_nwqm_stats_parser = peek_stats_parsers.add_parser('nwqm', help="Peek nwqm stats")
 peek_nwqm_stats_parser.add_argument('-grep', help="Grep Regex pattern", default=None)
@@ -1145,6 +1151,10 @@ peek_stats_cdu_parser.add_argument('-grep', help="Grep regex pattern", default=N
 peek_stats_ca_parser = peek_stats_parsers.add_parser('ca', help="Peek ca stats")
 peek_stats_ca_parser.add_argument('-grep', help="Grep regex pattern", default=None)
 
+# Peek stats ddr
+peek_stats_ddr_parser = peek_stats_parsers.add_parser('ddr', help="Peek ddr stats")
+peek_stats_ddr_parser.add_argument('-grep', help="Grep regex pattern", default=None)
+
 # ---------------------------------------------------------------------------------------------------
 # show commands
 
@@ -1193,3 +1203,14 @@ flow_list_parser.add_argument('-grep', help="Grep for specific flow", default=No
 # Flow blocked
 flow_blocked_parser = base_flow_subparsers.add_parser('blocked', help='blocked flows')
 flow_blocked_parser.add_argument('-grep', help="Grep for specific flow", default=None)
+
+# ==================================================================================================
+
+base_debug_parser = ArgumentParser(prog="debug")
+base_debug_subparsers = base_debug_parser.add_subparsers(title="subcommands", help="")
+
+vp_util_parser = base_debug_subparsers.add_parser("vp_util", help="Display vp utilization")
+vp_util_parser.add_argument("-cluster_id", help="Specify cluster id", type=int)
+vp_util_parser.add_argument("-core_id", help="Specify core id", type=int)
+vp_util_parser.add_argument("-pp", help="Pretty Print in tabular")
+vp_util_parser.add_argument('-grep', help="Grep on particular field")

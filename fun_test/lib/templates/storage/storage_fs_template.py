@@ -94,6 +94,7 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
             for i in range(num_vol):
                 plex_to_f1_map[num][mindex] = sc_index
                 mindex += 1
+    ec_info["plex_to_f1_map"] = plex_to_f1_map
 
     # Check if Compression has to be enabled on the Device
     if "compress" in ec_info.keys() and ec_info['compress']:
@@ -598,7 +599,7 @@ class StorageFsTemplate(object):
         if "mode" not in bond_dict:
             bond_dict["mode"] = "802.3ad"
         if "miimon" not in bond_dict:
-            bond_dict["miimon"] = 0
+            bond_dict["miimon"] = 100
         if "xmit_hash_policy" not in bond_dict:
             bond_dict["xmit_hash_policy"] = "layer3+4"
         if "min_links" not in bond_dict:

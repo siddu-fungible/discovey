@@ -69,7 +69,7 @@ export class SubmitJobComponent implements OnInit {
 
   withJenkinsBuild: boolean = true;
 
-  disableAssertions: boolean = true;
+  disableAssertions: boolean = false;
   funOsMakeFlags: string = null;
   branchFunOs: string = null;
   branchFunSdk: string = null;
@@ -77,6 +77,7 @@ export class SubmitJobComponent implements OnInit {
   branchFunHw: string = null;
   skipDasmC: boolean = true;
   branchFunTools: string = null;
+  releaseBuild: boolean = true;
 
   selectedScriptPk: number = null;
   resetScriptSelector: boolean = false;
@@ -345,6 +346,7 @@ export class SubmitJobComponent implements OnInit {
         if (this.bootArgs && this.bootArgs !== "" && this.isTestBedFs()) {
           payload["environment"]["build_parameters"]["BOOTARGS"] = this.bootArgs.replace(/\s+/g, this.BOOT_ARGS_REPLACEMENT_STRING);
         }
+        payload["environment"]["build_parameters"]["RELEASE_BUILD"] = this.releaseBuild;
         payload["environment"]["build_parameters"]["DISABLE_ASSERTIONS"] = this.disableAssertions;
         payload["environment"]["build_parameters"]["FUNOS_MAKEFLAGS"] = this.funOsMakeFlags;
         payload["environment"]["build_parameters"]["BRANCH_FunOS"] = this.branchFunOs;

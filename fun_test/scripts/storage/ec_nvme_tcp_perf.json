@@ -30,7 +30,8 @@
         },
         "f1_loopback_ip": "29.1.1.1"
       }
-    }
+    },
+    "end_host_name":"poc-server-01"
   },
   "EC42FioTcpRead": {
     "ec_info": {
