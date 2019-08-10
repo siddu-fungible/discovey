@@ -431,7 +431,6 @@ class CollectStats(object):
         counts in the table format
         :param vol_details: Takes a list of dictionaries as its value. Each element is a dictionary whose attributes
         will be volumes types and the attribute value the list of volume UUID of that particular volume type.
-        volumes types with the list of volume UUIDS of that vol
         The expected format here is:
             vol_details = [{"VOLUME_TYPE1": [UUID1, UUID2, ...], "VOLUME_TYPE2": [UUID1], ...},
                            {"VOLUME_TYPE1": [UUID1, UUID2, ...], "VOLUME_TYPE2": [UUID1], ...}]
