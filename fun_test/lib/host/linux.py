@@ -803,6 +803,9 @@ class Linux(object, ToDictMixin):
                 m = reg.search(line)
                 if m:
                     files.append({"info": m.group(1), "filename": m.group(2)})
+            if "No such" in line:
+                files = []
+                break
         return files
 
     @fun_test.safe
