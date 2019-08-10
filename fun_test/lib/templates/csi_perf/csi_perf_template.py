@@ -125,6 +125,8 @@ class CsiPerfTemplate():
         if process_ids:
             for process_id in process_ids:
                 self.perf_host.kill_process(signal=9, process_id=process_id, kill_seconds=2)
+        process_ids = self.perf_host.get_process_id_by_pattern(process_pat=PERF_LISTENER, multiple=True)
+
         self.perf_host.command("mv trace_cluster* /tmp")
         command = "python " + PERF_LISTENER_PATH + " --perf-ip={}".format(self.listener_ip)
         if self.listener_port:
