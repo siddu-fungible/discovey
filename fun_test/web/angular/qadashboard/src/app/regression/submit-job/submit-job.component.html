@@ -29,8 +29,8 @@
 
 
             <ng-container *ngIf="mode === Mode.REGULAR || mode === Mode.TRIAGE">
-
-              <tr *ngIf="mode === Mode.TRIAGE">
+              <ng-container *ngIf="mode === Mode.TRIAGE">
+                <tr>
                 <td>
                   <label for="triage_type">Type: </label>
                 </td>
@@ -41,8 +41,7 @@
                   </select>
                 </td>
               </tr>
-
-              <tr>
+                <tr>
                 <td>
                   <label for="from_fun_os_sha">From FunOS commit: </label>
                 </td>
@@ -50,8 +49,7 @@
                   <input style="width: 400px" [(ngModel)]="fromFunOsSha" id="from_fun_os_sha">
                 </td>
               </tr>
-
-              <tr>
+                <tr>
                 <td>
                   <label  for="to_fun_os_sha">To FunOS commit: </label>
                 </td>
@@ -67,6 +65,9 @@
 
                 </td>
              </tr>
+              </ng-container>
+
+
 
 
 
