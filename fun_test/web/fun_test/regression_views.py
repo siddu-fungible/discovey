@@ -201,14 +201,14 @@ def submit_job(request):
                                 description=description,
                                 suite_type=suite_type)
         elif dynamic_suite_spec:
-            queue_dynamic_suite(dynamic_suite_spec=dynamic_suite_spec,
-                                emails=emails,
-                                environment=environment,
-                                inputs=inputs,
-                                test_bed_type=test_bed_type,
-                                original_suite_execution_id=original_suite_execution_id,
-                                build_url=build_url,
-                                submitter_email=submitter_email)
+            job_id = queue_dynamic_suite(dynamic_suite_spec=dynamic_suite_spec,
+                                         emails=emails,
+                                         environment=environment,
+                                         inputs=inputs,
+                                         test_bed_type=test_bed_type,
+                                         original_suite_execution_id=original_suite_execution_id,
+                                         build_url=build_url,
+                                         submitter_email=submitter_email)
     if job_id > 0 and submitter_email:
         submitter_user_name = ""
         try:
