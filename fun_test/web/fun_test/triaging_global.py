@@ -46,6 +46,8 @@ class TriagingTypes(Codes):
     PASS_OR_FAIL_INTEGRATION = 4
     JENKINS_FUN_OS_ON_DEMAND = 5
 
+    INTEGRATION_PASS_OR_FAIL = 6
+    INTEGRATION_REGEX_MATCH = 7
 
 
 if __name__ == "__main__":

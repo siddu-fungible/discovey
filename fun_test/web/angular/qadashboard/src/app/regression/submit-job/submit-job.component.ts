@@ -101,8 +101,8 @@ export class SubmitJobComponent implements OnInit {
   triageTypes = [{value: 6, description: "Pass or Fail"}, {value: 7, description: "Regex match"}];  //Taken from TriagingTypes
   gitShasValid: boolean = false;
   validateShasStatus: string = null;
-  fromFunOsSha: string = null;
-  toFunOsSha: string = null;
+  fromFunOsSha: string = "8751993af1b24e8159a5f2f3fc22480c44fde8c6";
+  toFunOsSha: string = "74e24c8210d8c2ffb09712f9924eb959201dcf46";
   commitsInBetween: string[] = [];
   triageType: number = null;
 
@@ -385,7 +385,11 @@ export class SubmitJobComponent implements OnInit {
         this.toFunOsSha,
         this.selectedUser.email,
         null, payload).subscribe((response) => {
-          
+          ctrl.submitting = null;
+          this.logger.success("Submitted triage");
+      }, error => {
+          this.logger.error("Error submitting triage: " + error);
+          ctrl.submitting = null;
       });
     }
 

@@ -125,6 +125,8 @@ class CsiPerfTemplate():
         if process_ids:
             for process_id in process_ids:
                 self.perf_host.kill_process(signal=9, process_id=process_id, kill_seconds=2)
+        process_ids = self.perf_host.get_process_id_by_pattern(process_pat=PERF_LISTENER, multiple=True)
+
         self.perf_host.command("mv trace_cluster* /tmp")
         command = "python " + PERF_LISTENER_PATH + " --perf-ip={}".format(self.listener_ip)
         if self.listener_port:
@@ -201,7 +203,9 @@ class CsiPerfTemplate():
         for repo_name, values in to_position.iteritems():
             fun_test.simple_assert(self.repo_exists(name=repo_name), "Repo: {} exists".format(repo_name))
             for value in values:
-                source_path = STASH_DIR + "/" + repo_name + "/" + value["source_file_path"]
+                repo_path = STASH_DIR + "/" + repo_name
+                source_path = repo_path + "/" + value["source_file_path"]
+                os.system("cd {}; git pull".format(repo_path))
                 fun_test.simple_assert(os.path.exists(source_path), "Source: {} exists".format(source_path))
                 target_file_path = TOOLS_DIRECTORY + "/" + value["target_file_path"]
                 fun_test.scp(source_file_path=source_path,
@@ -242,5 +246,5 @@ class CsiPerfTemplate():
         return True
 
 if __name__ == "__main__":
-    p = CsiPerfTemplate(perf_collector_host_name="mktg-server-14", listener_ip="123", fs=None, setup_docker=True)
+    p = CsiPerfTemplate(perf_collector_host_name="poc-server-04", listener_ip="123", fs=None, setup_docker=True)
     p.prepare(f1_index=0)

@@ -100,24 +100,28 @@ class MetricChartStatus(models.Model):
 
 
 class Triage3(models.Model):
-    metric_id = models.IntegerField()
+    # Submission
+    metric_id = models.IntegerField(null=True)
     triage_id = models.IntegerField(unique=True)
+    build_parameters = JSONField(null=True)
+    blob = JSONField(default=None, null=True)  # for anything other than Jenkins parameters, like Integration parameters
     triage_type = models.IntegerField(default=TriagingTypes.REGEX_MATCH)
     from_fun_os_sha = models.TextField()  # The initial lower bound
     to_fun_os_sha = models.TextField()    # The initial upper bound
+    submitter_email = models.EmailField(default="john.abraham@fungible.com")
+    regex_match_string = models.TextField(default="")
+
+
     submission_date_time = models.DateTimeField(default=datetime.now)
     status = models.IntegerField(default=TriagingStates.UNKNOWN)
     result = models.TextField(default=TriagingResult.UNKNOWN)
-    build_parameters = JSONField()
 
     current_trial_set_id = models.IntegerField(default=-1)
     current_trial_set_count = models.IntegerField(default=-1)
     current_trial_from_sha = models.TextField(default="")
     current_trial_to_sha = models.TextField(default="")
 
-    submitter_email = models.EmailField(default="john.abraham@fungible.com")
     base_tag = models.TextField(default="qa_triage")
-    regex_match_string = models.TextField(default="")
 
     @staticmethod
     def get_tag(base_tag, other_tag):

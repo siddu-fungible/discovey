@@ -804,6 +804,7 @@ class Linux(object, ToDictMixin):
                 if m:
                     files.append({"info": m.group(1), "filename": m.group(2)})
             if "No such" in line:
+                files = []
                 break
         return files
 
@@ -890,6 +891,7 @@ class Linux(object, ToDictMixin):
                 self.command(command=command)
         except pexpect.ExceptionPexpect:
             pass
+        self.command("")  # This is to ensure that back-ground tasks Exit message is processed before leaving this function
         fun_test.sleep("Waiting for kill to complete", seconds=kill_seconds)
 
     def tshark_capture_start(self):
