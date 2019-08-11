@@ -117,7 +117,6 @@ def triagings(request, triage_id):
             to_fun_os_sha = request_json["to_fun_os_sha"]
             submitter_email = request_json["submitter_email"]
             build_parameters = request_json.get("build_parameters", None)
-            blob = request_json.get("blob", None)
             if triage_type == TriagingTypes.REGEX_MATCH:
                 regex_match_string = request_json["regex_match_string"]
 
@@ -132,8 +131,6 @@ def triagings(request, triage_id):
                         submitter_email=submitter_email)
             if build_parameters is not None:
                 t.build_parameters = build_parameters
-            if blob is not None:
-                t.blob = blob
             if metric_id is not None:
                 t.metric_id = metric_id
             if regex_match_string is not None:

@@ -59,8 +59,7 @@ export class TriageService {
       fromFunOsSha=null,
       toFunOsSha=null,
       submitterEmail=null,
-      buildParameters=null,
-      blob=null) {
+      buildParameters=null) {
     let payload = {};
     payload["triage_type"] = triageType;
     if (regexMatchString) {
@@ -75,9 +74,7 @@ export class TriageService {
     if (submitterEmail) {
       payload["submitter_email"] = submitterEmail;
     }
-    if (blob) {
-      payload["blob"] = blob;
-    }
+
     if (buildParameters) {
       payload["build_parameters"] = buildParameters;
     }

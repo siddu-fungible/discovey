@@ -383,8 +383,7 @@ export class SubmitJobComponent implements OnInit {
         null,
         this.fromFunOsSha,
         this.toFunOsSha,
-        this.selectedUser.email,
-        null, payload).subscribe((response) => {
+        this.selectedUser.email, payload).subscribe((response) => {
           ctrl.submitting = null;
           this.logger.success("Submitted triage");
       }, error => {
