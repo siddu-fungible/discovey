@@ -104,13 +104,12 @@ class Triage3(models.Model):
     metric_id = models.IntegerField(null=True)
     triage_id = models.IntegerField(unique=True)
     build_parameters = JSONField(null=True)
-    blob = JSONField(default=None, null=True)  # for anything other than Jenkins parameters, like Integration parameters
+    # blob = JSONField(default=None, null=True)  # for anything other than Jenkins parameters, like Integration parameters
     triage_type = models.IntegerField(default=TriagingTypes.REGEX_MATCH)
     from_fun_os_sha = models.TextField()  # The initial lower bound
     to_fun_os_sha = models.TextField()    # The initial upper bound
     submitter_email = models.EmailField(default="john.abraham@fungible.com")
     regex_match_string = models.TextField(default="")
-
 
     submission_date_time = models.DateTimeField(default=datetime.now)
     status = models.IntegerField(default=TriagingStates.UNKNOWN)
