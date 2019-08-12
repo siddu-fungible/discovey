@@ -324,6 +324,11 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.simple_assert(False, "Setup Section Status")
 
         table_data_rows = []
+        job_inputs = fun_test.get_job_inputs()
+        collect_artifacts = job_inputs[
+            "collect_artifacts"] if job_inputs and "collect_artifacts" in job_inputs else True
+        poll_interval = job_inputs["poll_interval"] if job_inputs and "poll_interval" in job_inputs else 20
+        ec_details = get_ec_vol_uuids(ec_info=fun_test.shared_variables['ec_info'])
 
         # Going to run the FIO test for the block size and iodepth combo listed in fio_numjobs_iodepth
         fio_result = {}
@@ -336,6 +341,8 @@ class ECVolumeLevelTestcase(FunTestCase):
             for mode in self.fio_modes:
                 fio_num_jobs, fio_iodepth = eval(combo)
                 fio_result[combo][mode] = True
+                fio_output[combo][mode] = {}
+                stats_collector = CollectStats(self.storage_controller)  # required to poll vol stats
                 fio_job_name = "{}_{}_{}".format(self.fio_job_name, mode, fio_iodepth * fio_num_jobs)
                 row_data_dict = {"mode": mode,
                                  "block_size": self.fio_cmd_args["bs"],
@@ -343,8 +350,20 @@ class ECVolumeLevelTestcase(FunTestCase):
                                  "size": "{}G".format(self.ec_info["capacity"] >> 30),
                                  "fio_job_name": fio_job_name}
 
+                if collect_artifacts:
+                    count = (self.fio_cmd_args['runtime'] + poll_interval) / poll_interval
+                    vp_util_artifact_file = fun_test.get_test_case_artifact_file_name(
+                        post_fix_name="{}_vputil_artifact.txt".format(fio_job_name))
+                    vol_stats_artifact_file = fun_test.get_test_case_artifact_file_name(
+                        post_fix_name="{}_volstats_artifact.txt".format(fio_job_name))
+                    thread_info = initiate_stats_collection(storage_controller=self.storage_controller,
+                                                            interval=poll_interval,
+                                                            count=count,
+                                                            vp_util_artifact_file=vp_util_artifact_file,
+                                                            vol_stats_artifact_file=vol_stats_artifact_file,
+                                                            vol_details=ec_details)
+                    active_threads = [thread_info['vp_util_thread_id'],thread_info['vol_stats_thread_id']]
                 # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
-                fio_output[combo][mode] = {}
                 fio_output[combo][mode] = self.end_host.pcie_fio(filename=self.nvme_block_device,
                                                                  rw=mode,
                                                                  numjobs=fio_num_jobs,
@@ -352,6 +371,14 @@ class ECVolumeLevelTestcase(FunTestCase):
                                                                  name=fio_job_name,
                                                                  cpus_allowed=self.numa_cpus,
                                                                  **self.fio_cmd_args)
+                if collect_artifacts:
+                    terminate_stats_collection(stats_ollector_obj=stats_collector, thread_list=active_threads)
+                    fun_test.add_auxillary_file(description="F1 VP Utilization - {0} IO depth {1}".format(
+                        mode, fio_iodepth * fio_num_jobs),
+                        filename=vp_util_artifact_file)
+                    fun_test.add_auxillary_file(description="F1 Volume Stats - {0} IO depth {1}".format(
+                        mode, fio_iodepth * fio_num_jobs),
+                        filename=vol_stats_artifact_file)
                 fun_test.test_assert(fio_output[combo][mode],
                                      "Execute fio '{0}' test with block size:{1}, iodepth: {2} num_jobs: {3}".format(
                                          mode, self.fio_cmd_args["bs"], fio_iodepth, fio_num_jobs))

@@ -73,9 +73,9 @@ import {AnnouncementComponent} from './announcement/announcement.component';
 import { PerformanceSummaryWidgetComponent } from './performance/performance-summary-widget/performance-summary-widget.component';
 import { FunCardComponent } from './fun-card/fun-card.component';
 import { SmokeTestStorageWidgetComponent } from './regression/smoke-test-storage-widget/smoke-test-storage-widget.component';
-import { NetworkSanityWidgetComponent } from './regression/network-sanity-widget/network-sanity-widget.component';
 import { WorkspaceComponent } from './performance/workspace/workspace.component';
 import { ViewWorkspaceComponent } from './performance/workspace/view-workspace/view-workspace.component';
+import { SuiteExecutionWidgetComponent } from './regression/suite-execution-widget/suite-execution-widget.component';
 import { SuiteEditorComponent } from './regression/suite-editor/suite-editor.component';
 import {ModalModule} from "ngb-modal";
 
@@ -136,9 +136,9 @@ import {ModalModule} from "ngb-modal";
     AnnouncementComponent,
     FunCardComponent,
     SmokeTestStorageWidgetComponent,
-    NetworkSanityWidgetComponent,
     WorkspaceComponent,
     ViewWorkspaceComponent,
+    SuiteExecutionWidgetComponent,
     SuiteEditorComponent
   ],
   imports: [

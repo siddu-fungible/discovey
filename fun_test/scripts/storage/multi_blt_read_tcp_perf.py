@@ -765,17 +765,6 @@ class MultiBLTVolumePerformanceTestcase(FunTestCase):
             self.nvme_block_device_str = ':'.join(self.nvme_block_device)
             fun_test.shared_variables["nvme_block_device_str"] = self.nvme_block_device_str
             if self.warm_up_traffic:
-                # Getting VP util stats for debugging fio writes timing out
-                vp_util_post_fix_name = "vp_util_warmup.txt"
-                vp_util_artifact_file = fun_test.get_test_case_artifact_file_name(
-                    post_fix_name=vp_util_post_fix_name)
-                stats_thread_id = fun_test.execute_thread_after(time_in_seconds=1, func=collect_vp_utils_stats,
-                                                                storage_controller=self.storage_controller,
-                                                                output_file=vp_util_artifact_file,
-                                                                interval=60,
-                                                                count=self.warm_up_fio_cmd_args["timeout"] / 60,
-                                                                threaded=True)
-
                 fun_test.log("Initial Write IO to volume, this might take long time depending on fio --size provided")
                 # Adding the allowed CPUs into the fio warmup command
                 host_name = self.host_info.keys()[0]
@@ -793,14 +782,6 @@ class MultiBLTVolumePerformanceTestcase(FunTestCase):
                     fio_output = self.end_host.pcie_fio(filename=self.nvme_block_device_str, **self.warm_up_fio_cmd_args)
                 fun_test.test_assert(fio_output, "Pre-populating the volume")
                 fun_test.log("FIO Command Output:\n{}".format(fio_output))
-
-                if fun_test.fun_test_threads[stats_thread_id]["thread"].is_alive():
-                    fun_test.critical("VP utilization stats collection thread is still running...Stopping it now")
-                    global vp_stats_thread_stop_status
-                    vp_stats_thread_stop_status[self.storage_controller] = True
-                    fun_test.fun_test_threads[stats_thread_id]["thread"]._Thread__stop()
-                fun_test.join_thread(fun_test_thread_id=stats_thread_id, sleep_time=1)
-                fun_test.add_auxillary_file(description="F1 VP Utilization - Warmup", filename=vp_util_artifact_file)
 
                 fun_test.sleep("Sleeping for {} seconds before actual test".format(self.iter_interval),
                                self.iter_interval)

@@ -12,6 +12,7 @@ class ExpandedTopology(ToDictMixin):
         self.hosts = {}
         self.spec = spec
         self.cleaned_up = False
+        self.perf_listener_hosts = {}
 
     def is_cleaned_up(self):
         return self.cleaned_up
@@ -68,6 +69,10 @@ class ExpandedTopology(ToDictMixin):
     def get_host(self, name):
         host = self.hosts.get(name, None)
         return host
+
+    def get_perf_listener_hosts(self):
+        return self.perf_listener_hosts
+
 
     def get_host_by_interface(self,
                               dut_index,

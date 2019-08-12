@@ -1,4 +1,3 @@
-
 import {Component, OnInit, Input, OnChanges, Output, EventEmitter, Renderer2} from '@angular/core';
 import {ApiService} from "../services/api/api.service";
 import {LoggerService} from "../services/logger/logger.service";
@@ -6,6 +5,14 @@ import {from, Observable, of} from "rxjs";
 import {mergeMap, switchMap} from "rxjs/operators";
 import {CommonService} from "../services/common/common.service";
 import {RegressionService} from "../regression/regression.service";
+
+class Suite {
+  id: number
+  result: string;
+  time: string;
+  numPassed: number;
+  numFailed: number;
+}
 
 @Component({
   selector: 'app-test',
@@ -15,15 +22,14 @@ import {RegressionService} from "../regression/regression.service";
 
 
 export class TestComponent implements OnInit {
-  items: any;
-  numList: number[] = [6,1,9];
-  lastTwoTestSuites: any[] = [];
-  lastTwoResults: string[] = [];
-  passed: number = 4;
-  failed: number = 0;
-  result: string;
+  lastTwoSuites: Suite[] = [];
   isDone: boolean = false;
-  numbers: number[] = [0,1];
+  numbers: number[] = [0, 1];
+  iconDict: any = {
+    'PASSED': "/static/media/sun_icon.png",
+    'FAILED': "/static/media/storm_icon.png",
+    'IN_PROGRESS': "/static/media/loading_bars.gif"
+  };
 
 
   constructor(private apiService: ApiService, private logger: LoggerService,
@@ -36,64 +42,71 @@ export class TestComponent implements OnInit {
 
 
   ngOnInit() {
-
-    console.log(this.stateMap);
-    console.log(this.stateStringMap);
-
     new Observable(observer => {
       observer.next(true);
       observer.complete();
       return () => {
       }
     }).pipe(switchMap(response => {
-      return this.fetchData();
-    })).subscribe(response => {
-    }, error => {
-      this.logger.error('Failed to fetch data');
-    });
+        return this.fetchData();
+      }), switchMap(response => {
+        return this.fetchTestCaseExecutions(0);
+      }), switchMap(response => {
+        let temp = this.fetchTestCaseExecutions(1);
+        this.isDone = true;
+        return temp;
+
+      })).subscribe(response => {
+
+      }, error => {
+        this.logger.error('Failed to fetch data');
+      }
+    );
+
+    console.log(this.lastTwoSuites);
 
   }
 
 
   fetchData() {
-    let stateFilter = 'ALL';
-    let count = 0;
-    //completed (passed or failed), killed, aborted (override result w/ failed) --> done
-    //only care about result when completed
-    //separate icon for in progress
-    //use field result
-    //get result of past 2 suites
-    //display date + result of previous test
-    //statemap, statestringmap (in regression service)
-    //scheduler_global.py, suite-detail.component
-    let payload = {tags: '["smoke"]', tag: "smoke"};
-    return this.apiService.post("/regression/suite_executions/" + 10 + "/" + 1 + "/" + stateFilter, payload).pipe(switchMap(response => {
+    return this.apiService.get("/api/v1/regression/suite_executions/?suite_path=networking_funcp_sanity.json").pipe(switchMap(response => {
       for (let i of response.data) {
-        if (this.lastTwoResults.length == 2) {
+        let suite = new Suite();
+        if (this.lastTwoSuites.length == 2) {
           break;
         }
+        if (i.state === this.stateMap.AUTO_SCHEDULED) {
+          continue;
+        } else if (i.state === this.stateMap.COMPLETED) {
+          suite.result = i.result;
+          suite.time = this.trimTime(i.completed_time);
 
-
-        if (i.fields.state == this.stateMap.AUTO_SCHEDULED) {
-        } else if (i.fields.state == this.stateMap.COMPLETED) {
-          this.lastTwoResults.push(i.fields.result);
-          this.lastTwoTestSuites.push(i)
-
-        } else if (i.fields.state < this.stateMap.COMPLETED) {
-          this.lastTwoResults.push('FAILED');
-          this.lastTwoTestSuites.push(i);
+        } else if (i.state < this.stateMap.COMPLETED) {
+          suite.result = 'FAILED';
+          suite.time = this.trimTime(i.completed_time);
         } else {
-          this.lastTwoResults.push('IN_PROGRESS');
-          this.lastTwoTestSuites.push(i);
+          suite.result = 'IN_PROGRESS'
+          suite.time = this.trimTime(i.scheduled_time);
         }
-
+        suite.id = i.execution_id;
+        this.lastTwoSuites.push(suite);
       }
-      this.isDone = true;
+      //this.isDone = true;
       return of(true);
     }));
   }
 
-   trimTime(t) {
+
+  fetchTestCaseExecutions(index) {
+    return this.apiService.get(`/api/v1/regression/test_case_executions/?suite_id=${this.lastTwoSuites[index].id}`).pipe(switchMap(response => {
+      this.lastTwoSuites[index].numFailed = response.data.num_failed;
+      this.lastTwoSuites[index].numPassed = response.data.num_passed;
+
+      return of(true);
+    }));
+  }
+
+  trimTime(t) {
     return this.regressionService.getPrettyLocalizeTime(t);
   }
 }

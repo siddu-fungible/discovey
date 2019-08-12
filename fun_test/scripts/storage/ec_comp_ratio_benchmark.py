@@ -80,6 +80,12 @@ class ECVolumeLevelScript(FunTestScript):
         come = fs.get_come()
         self.storage_controller = StorageController(target_ip=come.host_ip,
                                                     target_port=come.get_dpc_port(self.f1_in_use))
+        if not check_come_health(self.storage_controller):
+            topology = topology_helper.deploy()
+            fun_test.test_assert(topology, "Topology re-deployed")
+            come = topology.get_dut_instance(index=0).get_come()
+            self.storage_controller = StorageController(target_ip=come.host_ip,
+                                                        target_port=come.get_dpc_port(self.f1_in_use))
 
         # Fetching Linux host with test interface name defined
         fpg_connected_hosts = topology.get_host_instances_on_fpg_interfaces(dut_index=0,
@@ -189,7 +195,7 @@ class ECVolumeLevelScript(FunTestScript):
             # Create file system on attached device
             fun_test.test_assert(self.end_host.create_filesystem(fs_type=self.file_system,
                                                                  device=fetch_nvme['nvme_device'],
-                                                                 timeout=self.command_timeout),
+                                                                 timeout=120),
                                  message="Create File System on nvme device: {}".format(fetch_nvme['nvme_device']))
 
             # create mount dir for respective volumes

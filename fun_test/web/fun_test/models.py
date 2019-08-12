@@ -603,7 +603,7 @@ class Daemon(FunModel):
 
 
 class Asset(FunModel):
-    name = models.TextField(unique=True)
+    name = models.TextField()
     type = models.TextField()
     job_ids = JSONField(default=[])
     manual_lock_user = models.TextField(default=None, null=True)
@@ -611,22 +611,27 @@ class Asset(FunModel):
 
     @staticmethod
     def add_update(name, type, job_ids=None):
-        if not Asset.objects.filter(name=name).exists():
-            a = Asset(name=name, type=type)
-            if job_ids:
-                a.job_ids = job_ids
-            a.save()
-        else:
-            a = Asset.objects.get(name=name, type=type)
-            if job_ids:
-                a.job_ids = job_ids
-            a.save()
-
+        try:
+            if not Asset.objects.filter(name=name, type=type).exists():
+                a = Asset(name=name, type=type)
+                if job_ids:
+                    a.job_ids = job_ids
+                a.save()
+            else:
+                a = Asset.objects.get(name=name, type=type)
+                if job_ids:
+                    a.job_ids = job_ids
+                a.save()
+        except Exception as ex:
+            pass
     @staticmethod
     def get(name, type):
         result = None
         if Asset.objects.filter(name=name, type=type).exists():
-            result = Asset.objects.get(name=name, type=type)
+            try:
+                result = Asset.objects.get(name=name, type=type)
+            except Exception as ex:
+                pass
         return result
 
     @staticmethod

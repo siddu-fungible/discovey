@@ -292,8 +292,7 @@
                 <ng-container *ngIf="suiteExecution.fields.suite_type === 'dynamic'">
                   <span (click)="showDetailsClick(suiteExecution)"
                         *ngIf="suiteExecution?.reRunInfo?.reRunInfo.length > 0">
-                    <a href="/regression/suite_detail/
-                      {{ suiteExecution?.reRunInfo.reRunInfo[0].original.suite_execution_id }}">Original: {{ suiteExecution?.reRunInfo.reRunInfo[0].original.suite_execution_id }} </a>
+                    <a href="/regression/suite_detail/{{ suiteExecution?.reRunInfo.reRunInfo[0].original.suite_execution_id }}">Original: {{ suiteExecution?.reRunInfo.reRunInfo[0].original.suite_execution_id }} </a>
                   </span>
                 </ng-container>
               </td>

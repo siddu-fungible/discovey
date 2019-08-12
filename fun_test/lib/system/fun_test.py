@@ -257,6 +257,10 @@ class FunTest:
         self.hosts = []
         self.closed = False
 
+    def report_message(self, message):  # Used only by FunXml only
+        if self.fun_xml_obj:
+            self.fun_xml_obj.add_message(message=message)
+
     def initialize_output_files(self, absolute_script_file_name):
         # (frame, file_name, line_number, function_name, lines, index) = \
         #    inspect.getouterframes(inspect.currentframe())[2]

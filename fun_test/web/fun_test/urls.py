@@ -200,7 +200,7 @@ api_v1_urls = [
     url(r'^regression/test_beds/?(\S+)?$', regression.test_beds),
     url(r'^regression/suite_executions/?(.*)?$', regression.suite_executions),
     url(r'^regression/script_infos/?(.*)?$', regression.script_infos),
-    url(r'^regression/assets/?(.*)?$', regression.assets),
+    url(r'^regression/assets/?(?:(\S+)/(.*))?$', regression.assets),
     url(r'^performance/charts/?(.*)?$', performance.charts),
     url(r'^performance/data$', performance.data),
     url(r'^triages/?(\d+)?$', triaging.triagings),
@@ -214,7 +214,8 @@ api_v1_urls = [
     url(r'^scheduler/directive_types$', scheduler_api.directive_types),
     url(r'^scheduler/directive$', scheduler_api.directive),
     url(r'^scheduler/info$', scheduler_api.info),
-    url(r'^scheduler/state_types$', scheduler_api.state_types)
+    url(r'^scheduler/state_types$', scheduler_api.state_types),
+    url(r'^regression/test_case_executions/(.*)?$', regression.test_case_executions)
 ]
 
 site_under_construction = False

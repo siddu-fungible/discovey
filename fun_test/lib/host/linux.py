@@ -420,6 +420,7 @@ class Linux(object, ToDictMixin):
                 except (pexpect.EOF, pexpect.TIMEOUT):
                     pass  # We are expecting an intentional timeout
             command_lines = command.split('\n')
+            prompt_terminator_processed = False
             for c in command_lines:
                 self.sendline(c)
                 if wait_until and (len(command_lines) == 1):
@@ -439,17 +440,22 @@ class Linux(object, ToDictMixin):
                         pass
                     buf += self.handle.before.lstrip() + str(self.handle.after).lstrip()
                 elif custom_prompts:
-                    all_prompts_list = custom_prompts.keys()
-                    all_prompts_list.append(self.prompt_terminator)
-                    self.handle.timeout = timeout  # Pexpect does not honor timeouts
-                    i = self.handle.expect(all_prompts_list, timeout=timeout)
-                    if i == (len(all_prompts_list) - 1):
-                        buf = buf + self.handle.before.lstrip()
-                        break
-                    else:
-                        self.sendline(custom_prompts[custom_prompts.keys()[i]])
+                    done = False
+                    max_custom_prompt_timer = FunTimer(max_time=timeout)
+                    while not max_custom_prompt_timer.is_expired():
+                        all_prompts_list = custom_prompts.keys()
+                        all_prompts_list.append(self.prompt_terminator)
+                        self.handle.timeout = timeout  # Pexpect does not honor timeouts
+                        i = self.handle.expect(all_prompts_list, timeout=timeout)
+                        if i == (len(all_prompts_list) - 1):
+                            buf = buf + self.handle.before.lstrip()
+                            prompt_terminator_processed = True
+                            break
+                        else:
+                            self.sendline(custom_prompts[custom_prompts.keys()[i]])
                 try:
-                    self.handle.expect(self.prompt_terminator + r'$', timeout=timeout)
+                    if not prompt_terminator_processed:
+                        self.handle.expect(self.prompt_terminator + r'$', timeout=timeout)
                 except pexpect.EOF:
                     self.disconnect()
                     # return self.command(command=command,
@@ -797,6 +803,9 @@ class Linux(object, ToDictMixin):
                 m = reg.search(line)
                 if m:
                     files.append({"info": m.group(1), "filename": m.group(2)})
+            if "No such" in line:
+                files = []
+                break
         return files
 
     @fun_test.safe
@@ -882,6 +891,7 @@ class Linux(object, ToDictMixin):
                 self.command(command=command)
         except pexpect.ExceptionPexpect:
             pass
+        self.command("")  # This is to ensure that back-ground tasks Exit message is processed before leaving this function
         fun_test.sleep("Waiting for kill to complete", seconds=kill_seconds)
 
     def tshark_capture_start(self):
