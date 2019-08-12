@@ -6,6 +6,7 @@
           (keyup)="onChange($event)">
 </textarea>
 <p *ngIf="parseError">JSON is invalid</p>
+<p *ngIf="notArrayOfNumbers">JSON should be an array of numbers</p>
 
 
 

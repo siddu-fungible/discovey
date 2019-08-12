@@ -1,4 +1,4 @@
-import {Component, OnInit, forwardRef, Output, EventEmitter} from '@angular/core';
+import {Component, OnInit, forwardRef, Output, EventEmitter, Input} from '@angular/core';
 import {ControlValueAccessor, NG_VALUE_ACCESSOR, FormControl, Validator, NG_VALIDATORS} from "@angular/forms";
 
 @Component({
@@ -17,11 +17,13 @@ import {ControlValueAccessor, NG_VALUE_ACCESSOR, FormControl, Validator, NG_VALI
       multi: true,
     }]
 })
-export class JsonInputComponent implements OnInit, ControlValueAccessor, Validator {
+export class JsonInputComponent implements OnInit, ControlValueAccessor {
+  @Input() ensureArrayOfNumbers: boolean = false;
   @Output() dataChanged = new EventEmitter<string>();
   data: any = null;
   jsonString: string = null;
   parseError: boolean = false;
+  notArrayOfNumbers: boolean = false;
   propagateChange: any = null;
   public result = {};
 
@@ -42,32 +44,39 @@ export class JsonInputComponent implements OnInit, ControlValueAccessor, Validat
     }
   }
 
-  public validate(c: FormControl) {
-    let val =  (!this.parseError) ? null : {
-      jsonParseError: {
-        valid: false,
-      },
-    };
-    return val;
-  }
-
   public registerOnChange(fn: any) {
     this.propagateChange = fn;
 
+  }
+
+  public isArrayOfNumbers(value) {
+    let result = false;
+    if (Array.isArray(value) && (value.every(it => typeof it === 'number'))) {
+      result = true;
+    }
+    return result;
   }
 
   public onChange(event) {
 
     // get value from text area
     let newValue = event.target.value;
-
+    this.parseError = false;
+    this.notArrayOfNumbers = false;
     try {
       // parse it to json
-      this.data = JSON.parse(newValue);
-      this.parseError = false;
-      this.dataChanged.emit(this.data);
+      if (newValue && newValue.length > 0) {
+        this.data = JSON.parse(newValue);
+        if (this.ensureArrayOfNumbers && !this.isArrayOfNumbers(this.data)) {
+          this.notArrayOfNumbers = true;
+          throw Error(`Not an array of numbers`);
+        } else {
+        }
+        this.dataChanged.emit(this.data);
+      }
     } catch (ex) {
       // set parse error if it fails
+      this.data = null;
       this.parseError = true;
       this.dataChanged.emit(null);
     }
