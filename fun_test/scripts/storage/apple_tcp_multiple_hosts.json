@@ -24,7 +24,7 @@
     "num_ssd": 6,
     "blt_count": 6,
     "blt_details": {"type": "VOL_TYPE_BLK_LOCAL_THIN", "block_size": 4096},
-    "stripe_details": {"ns_id": 1, "type": "VOL_TYPE_BLK_STRIPE", "vol_size": 569083166720,
+    "stripe_details": {"ns_id": 1, "type": "VOL_TYPE_BLK_STRIPE", "vol_size": 1110506744053,
       "block_size": 4096, "stripe_unit": 2},
     "command_timeout": 30,
     "iter_interval": 5,
