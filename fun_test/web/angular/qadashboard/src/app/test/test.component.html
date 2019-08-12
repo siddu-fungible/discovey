@@ -1,29 +1,41 @@
-<div class="card">
+<div class="card" *ngIf="fetched">
   <div class="card-header">
-    Add/Remove Announcements
+    Configure announcements
   </div>
+
   <div class="card-body">
-    <form #announcementForm="ngForm" (ngSubmit)="onSubmit()" novalidate>
-      {{announcementForm.value | json}}
+    <div *ngIf="announcementModel.message; else noDisplay;">
+      Current announcement:&nbsp;{{announcementModel.message}}
+      <app-smart-label [value]="levels[announcementModel.level]">{{announcementModel.level}}</app-smart-label>
+      &nbsp;<i class="fa fa-pencil" style="font-size:20px; color: green" (click)="editing=true"></i>&nbsp;
+      <i (click)="onDeleteAnnouncement()" class="fa fa-trash-o"
+         style="font-size:20px; color: red"></i>
+    </div>
+    <ng-template #noDisplay>
+      No announcement to display &nbsp;<i class="fa fa-pencil" style="font-size:20px; color: green"
+                                          (click)="editing=true"></i>
 
-    <hr />
+    </ng-template>
+    <form *ngIf="editing" #announcementForm="ngForm" (ngSubmit)="onSubmit()" novalidate>
 
-      {{announcementModel | json}}
-
-        <div class="form-group">
+      <div class="form-group">
         <label>Announcement</label>
-        <input type="text" class="form-control" name="message" [(ngModel)]="announcementModel.message">
+        <input type="text" required #message="ngModel" [class.is-invalid]="message.invalid && message.touched"
+               class="form-control" name="message"
+               [(ngModel)]="tempAnnouncementModel.message">
       </div>
 
-      <div class="mb-3">
-        <label>Level Selection</label>
-        <div class="form-check" *ngFor="let level of levels">
-          <input class="form-check-input" [(ngModel)]="announcementModel.level" type="radio" name="level" value="{{level}}">
+      <div class="form-group">
+        <label>Level selection</label>
+        <div class="form-check" *ngFor="let level of level_nums; let index = index">
+          <input class="form-check-input" type="radio" (click)="tempAnnouncementModel.level = level*1;"
+                 name="'john'" [value]="level" [checked]="tempAnnouncementModel.level == level.toString()">
           <label class="form-check-label">{{level}}</label>
         </div>
       </div>
 
-      <button class="btn btn-primary" type="submit">Submit</button>
+      <button class="btn btn-secondary" (click)="onCancel()">Cancel</button>&nbsp;
+      <button [disabled]="announcementForm.form.invalid" class="btn btn-primary" type="submit">Submit</button>
 
     </form>
 

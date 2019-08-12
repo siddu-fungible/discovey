@@ -20,15 +20,19 @@ export class SmartLabelComponent implements OnInit, OnChanges {
   ngOnChanges() {
     if (this.type) {
       this.type = this.type.toLowerCase();
+      console.log('working'); 
     } else {
       if (this.value) {
         if (this.value === "IN_PROGRESS") {
           this.type = "info";
         } else if (this.value === "COMPLETED" || this.value.toLowerCase() === "passed") {
           this.type = "passed";
-        } else if (this.value.toLowerCase() === "failed" || this.value.toLowerCase() === "error" || this.value.toLowerCase() === "aborted" || this.value.toLowerCase() === "killed") {
+        } else if (this.value.toLowerCase() === "failed" || this.value.toLowerCase() === "error" || this.value.toLowerCase() === "aborted" || this.value.toLowerCase() === "killed" || this.value.toLowerCase() === 'danger') {
           this.type = "failed";
-        } else {
+        }
+        else if (this.value.toLowerCase() === 'warning'){
+          this.type = "warning";
+        }else {
           this.type = "info";
         }
       }
