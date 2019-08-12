@@ -340,6 +340,7 @@ class TrialStateMachine:
                 trial.save()
             else:
                 if integration_job_id:
+                    trial.integration_job_id = integration_job_id
                     trial.status = TriageTrialStates.INTEGRATION_SUBMITTED
                     trial.save()
 
@@ -360,7 +361,7 @@ class TrialStateMachine:
 
         elif status == TriageTrialStates.INTEGRATION_QUEUED:
             pass
-        
+
         elif status == TriageTrialStates.INTEGRATION_KILLED:
             pass
 

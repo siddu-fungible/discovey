@@ -141,6 +141,8 @@ class Triage3Trial(models.Model):
     result = models.TextField(default=RESULTS["UNKNOWN"])
     # re_runs = models.BooleanField(default=False)
 
+    integration_job_id = models.IntegerField(default=-1)
+
     def __str__(self):
         return "Trial: Triage: {} Tag: {} Sha: {} Set: {} Status: {}".format(self.triage_id,
                                                                              self.tag,

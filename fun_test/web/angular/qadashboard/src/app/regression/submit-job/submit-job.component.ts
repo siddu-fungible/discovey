@@ -386,6 +386,11 @@ export class SubmitJobComponent implements OnInit {
         this.selectedUser.email, payload).subscribe((response) => {
           ctrl.submitting = null;
           this.logger.success("Submitted triage");
+          let triageId = response;
+          if (triageId > 0) {
+            window.location.href = "regression/triaging/" + triageId;
+          }
+
       }, error => {
           this.logger.error("Error submitting triage: " + error);
           ctrl.submitting = null;
