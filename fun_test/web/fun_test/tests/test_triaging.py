@@ -11,11 +11,12 @@ import sys
 from lib.utilities.git_utilities import GitManager
 from lib.utilities.jenkins_manager import JenkinsManager
 from scheduler.scheduler_helper import queue_job3
-from scheduler.scheduler_global import SchedulingType
+from scheduler.scheduler_global import SchedulingType, JobStatusType
 import logging
 import logging.handlers
 from threading import Thread
 import re
+from web.fun_test.models_helper import get_suite_execution
 
 logger = logging.getLogger("triaging_logger")
 logger.setLevel(logging.DEBUG)
@@ -301,6 +302,35 @@ class TrialStateMachine:
         trial = Triage3Trial.objects.get(triage_id=self.triage_id, fun_os_sha=self.fun_os_sha)
         return trial
 
+    def set_integration_trial_state(self, trial):
+        integration_job_id = trial.integration_job_id
+        suite_execution = get_suite_execution(suite_execution_id=integration_job_id)
+        if suite_execution:
+            if suite_execution.state == JobStatusType.ABORTED:
+                trial.status = TriageTrialStates.INTEGRATION_ABORTED
+            elif suite_execution.state == JobStatusType.KILLED:
+                trial.status = TriageTrialStates.INTEGRATION_KILLED
+            elif suite_execution.state == JobStatusType.IN_PROGRESS:
+                trial.status = TriageTrialStates.INTEGRATION_IN_PROGRESS
+            elif suite_execution.state == JobStatusType.SCHEDULED:
+                trial.status = TriageTrialStates.INTEGRATION_SCHEDULED
+            elif suite_execution.state == JobStatusType.SUBMITTED:
+                trial.status = TriageTrialStates.INTEGRATION_SUBMITTED
+            elif suite_execution.state == JobStatusType.COMPLETED:
+                trial.status = TriageTrialStates.INTEGRATION_COMPLETED
+            elif suite_execution.state == JobStatusType.ERROR:
+                trial.status = TriageTrialStates.INTEGRATION_ERROR
+            elif suite_execution.state == JobStatusType.QUEUED:
+                trial.status = TriageTrialStates.INTEGRATION_QUEUED
+            if suite_execution.state <= JobStatusType.COMPLETED:
+                trial.status = TriageTrialStates.COMPLETED
+                suite_execution_result = trial.result
+                if suite_execution_result != RESULTS["PASSED"]:
+                    trial.result = RESULTS["PASSED"]
+        else:
+            pass
+        trial.save()
+
     def run(self):
         triage = Triage3.objects.get(triage_id=self.triage_id)
         trial = self.get_trial()
@@ -315,6 +345,8 @@ class TrialStateMachine:
                 params["BRANCH_FunOS"] = self.fun_os_sha
             elif triage.triage_type in [TriagingTypes.INTEGRATION_PASS_OR_FAIL, TriagingTypes.INTEGRATION_REGEX_MATCH]:
                 build_parameters = triage.build_parameters
+                build_parameters["environment"]["BRANCH_FunOS"] = self.fun_os_sha
+
                 integration_job_id = queue_job3(suite_path=build_parameters["suite_path"], scheduling_type=SchedulingType.ASAP, submitter_email=build_parameters["submitter_email"], test_bed_type=build_parameters["test_bed_type"], environment=build_parameters["environment"])
             else:
                 jm = JenkinsManager()
@@ -345,25 +377,25 @@ class TrialStateMachine:
                     trial.save()
 
         elif status == TriageTrialStates.INTEGRATION_SUBMITTED:
-            #
-            pass
+            self.set_integration_trial_state(trial)
+
         elif status == TriageTrialStates.INTEGRATION_ABORTED:
-            pass
+            self.set_integration_trial_state(trial)
 
         elif status == TriageTrialStates.INTEGRATION_COMPLETED:
-            pass
+            self.set_integration_trial_state(trial)
 
         elif status == TriageTrialStates.INTEGRATION_SCHEDULED:
-            pass
+            self.set_integration_trial_state(trial)
 
         elif status == TriageTrialStates.INTEGRATION_IN_PROGRESS:
-            pass
+            self.set_integration_trial_state(trial)
 
         elif status == TriageTrialStates.INTEGRATION_QUEUED:
-            pass
+            self.set_integration_trial_state(trial)
 
         elif status == TriageTrialStates.INTEGRATION_KILLED:
-            pass
+            self.set_integration_trial_state(trial)
 
         elif status == TriageTrialStates.BUILDING_ON_JENKINS:
             try:
