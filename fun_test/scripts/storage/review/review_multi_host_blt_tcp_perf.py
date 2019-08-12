@@ -527,8 +527,9 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
         self.host_info = fun_test.shared_variables["host_info"]
         self.host_handles = fun_test.shared_variables["host_handles"]
         self.csi_perf_enabled = fun_test.shared_variables["csi_perf_enabled"]
-        self.perf_listener_host_name = fun_test.shared_variables["perf_listener_host_name"]
-        self.perf_listener_ip = fun_test.shared_variables["perf_listener_ip"]
+        if self.csi_perf_enabled:
+            self.perf_listener_host_name = fun_test.shared_variables["perf_listener_host_name"]
+            self.perf_listener_ip = fun_test.shared_variables["perf_listener_ip"]
         self.host_ips = fun_test.shared_variables["host_ips"]
         self.num_hosts = len(self.host_ips)
         self.end_host = self.host_handles[self.host_ips[0]]
