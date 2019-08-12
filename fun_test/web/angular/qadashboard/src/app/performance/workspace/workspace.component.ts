@@ -162,7 +162,7 @@ export class WorkspaceComponent implements OnInit {
       if (workspaces.length) {
         for (let workspace of workspaces) {
         let newWorkspace = {};
-        newWorkspace["name"] = workspace.name;
+        newWorkspace["name"] = workspace.workspace_name;
         newWorkspace["description"] = workspace.description;
         newWorkspace["interestedMetrics"] = workspace.interested_metrics;
         newWorkspace["editingWorkspace"] = false;
