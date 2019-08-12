@@ -49,6 +49,7 @@ export class TriageDetailComponent implements OnInit {
   showAll: boolean = true;  // Show all potential git commits
   reRuns: any = null;
   currentRerunCommit: any = null;
+  triageTypes: any = null;
 
   FUN_OS_GITHUB_BASE_URL = "https://github.com/fungible-inc/FunOS/commit/";
 
@@ -74,6 +75,9 @@ export class TriageDetailComponent implements OnInit {
       }
       return of(this.triageId);
     })).pipe(switchMap(() => {
+      return this.triageService.getTriageTypes();
+    })).pipe(switchMap((triageTypes) => {
+      this.triageTypes = triageTypes;
       return this.triageService.triages(this.triageId);
     })).pipe(switchMap((triage) => {
       this.triage = triage;
@@ -194,7 +198,7 @@ export class TriageDetailComponent implements OnInit {
   }
 
   restartTrial(commit) {
-    let url = "/api/v1/triages/" + this.triageId + "/trials/" + commit.funOsSha;
+    let url = "/api/v1/triages/" + this.triageId + "/trials?fun_os_sha=" + commit.funOsSha;
     let payload = {"status": 20}; //TODO
     if (commit.hasOwnProperty("trial") && commit.trial) {
       let trial = commit.trial;

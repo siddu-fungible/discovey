@@ -60,7 +60,7 @@
           <th>Set</th>
           <th>Status</th>
           <th>Jenkins</th>
-          <th *ngIf="triage.triage_type !== 5">LSF</th>
+          <th *ngIf="triage.triage_type !== triageTypes.JENKINS_FUN_OS_ON_DEMAND">LSF</th>
           <th>Tag</th>
           <th>Result</th>
           <th>History</th>
@@ -84,7 +84,7 @@
             <td>{{ commit.trialSetId }}</td>
             <td><app-smart-label [value]="triagingTrialStateMap[commit.status]"></app-smart-label></td>
             <td><a target="_blank" *ngIf="commit.jenkinsBuildNumber > 0" href="http://jenkins-sw-master.fungible.local:8080/job/emulation/job/fun_on_demand/{{ commit.jenkinsBuildNumber }}/">link</a></td>
-            <td *ngIf="triage.triage_type !== 5"><a *ngIf="commit.lsfJobId > 0"
+            <td *ngIf="triage.triage_type !== triageTypes.JENKINS_FUN_OS_ON_DEMAND"><a *ngIf="commit.lsfJobId > 0"
                     href="http://palladium-jobs.fungible.local:8080/job/{{ commit.lsfJobId }}" target="_blank">link</a></td>
             <td>{{ commit.tag }}</td>
 
@@ -111,7 +111,7 @@
                     <th>
                       Jenkins
                     </th>
-                    <th *ngIf="triage.triage_type !== 5">
+                    <th *ngIf="triage.triage_type !== triageTypes.JENKINS_FUN_OS_ON_DEMAND">
                       LSF
                     </th>
                     <th>
@@ -132,7 +132,7 @@
                       <a target="_blank" *ngIf="reRun.jenkins_build_number > 0"
                          href="http://jenkins-sw-master.fungible.local:8080/job/emulation/job/fun_on_demand/{{ reRun.jenkins_build_number }}/">link</a>
                     </td>
-                    <td *ngIf="triage.triage_type !== 5">
+                    <td *ngIf="triage.triage_type !== triageTypes.JENKINS_FUN_OS_ON_DEMAND">
                       <a *ngIf="reRun.lsf_job_id > 0"
                     href="http://palladium-jobs.fungible.local:8080/job/{{ reRun.lsf_job_id }}" target="_blank">link</a>
                     </td>
