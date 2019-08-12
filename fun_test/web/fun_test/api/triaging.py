@@ -38,17 +38,6 @@ def trials(request, triage_id, fun_os_sha):
             trials = Triage3Trial.objects.filter(q).order_by('submission_date_time')
             if trials.count():
                 first_trial = trials[0]
-                # TrialReRuns(fun_os_sha=first_trial.fun_os_sha,
-                #                      triage_id=first_trial.triage_id,
-                #                      trial_set_id=first_trial.trial_set_id,
-                #                      status=first_trial.status,
-                #                      jenkins_build_number=first_trial.jenkins_build_number,
-                #                      lsf_job_id=first_trial.lsf_job_id,
-                #                      tag=first_trial.tag,
-                #                      regex_match=first_trial.regex_match,
-                #                      submission_date_time=first_trial.submission_date_time,
-                #                      tags=first_trial.tags,
-                #                      result=first_trial.result).save()
                 request_json = json.loads(request.body)
                 status = request_json.get("status", None)
                 if status is not None:
@@ -96,9 +85,10 @@ def trials(request, triage_id, fun_os_sha):
                           "tag": trial.tag,
                           "regex_match": trial.regex_match,
                           "tags": trial.tags,
-                          "result": trial.result}
-            # if trial.re_runs:
-            #     one_record["history"] =
+                          "result": trial.result,
+                          "trial_id": trial.trial_id,
+                          "parent_trial_id": trial.parent_trial_id,
+                          "active": trial.active}
             result.append(one_record)
     return result
 

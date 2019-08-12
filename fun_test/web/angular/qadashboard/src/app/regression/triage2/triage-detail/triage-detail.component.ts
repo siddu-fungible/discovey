@@ -22,6 +22,9 @@ class CommitNode {
   trial: any;
   selected: boolean = false;
   result: string;
+  trial_id: number;
+  parent_trial_id: number;
+  active: boolean = false;
 }
 
 

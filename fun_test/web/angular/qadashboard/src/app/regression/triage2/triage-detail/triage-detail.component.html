@@ -63,6 +63,7 @@
           <th *ngIf="triage.triage_type !== 5">LSF</th>
           <th>Tag</th>
           <th>Result</th>
+          <th>History</th>
         </tr>
         <tr *ngFor="let commit of commits; let index = index">
 
@@ -88,10 +89,11 @@
             <td>{{ commit.tag }}</td>
 
             <td>
-              <ng-container>
-              </ng-container>
               {{ commit.regexMatch }}
               <app-smart-label [value]="commit.result">{{ commit.result }}</app-smart-label>
+            </td>
+            <td>
+              <a [routerLink]="" (></a>
             </td>
           </ng-container>
 
