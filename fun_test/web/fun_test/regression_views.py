@@ -33,6 +33,7 @@ from lib.utilities.send_mail import send_mail
 from web.fun_test.web_interface import get_suite_detail_url
 from web.fun_test.models import User, SiteConfig
 from web.fun_test.models import SuiteType
+from scheduler.scheduler_global import SchedulingType
 import logging
 import subprocess
 import dateutil.parser
@@ -43,6 +44,7 @@ import glob
 from django.db import transaction
 from django.db.models import Q
 from scheduler.scheduler_global import SchedulerJobPriority, QueueOperations
+from fun_settings import TEAM_REGRESSION_EMAIL
 import datetime
 from django.utils import timezone
 
@@ -122,79 +124,43 @@ def submit_job(request):
         request_json = json.loads(request.body)
 
         # suite path
-        suite_path = None
-        if "suite_path" in request_json:
-            suite_path = request_json["suite_path"]
-
-        submitter_email = "team-regression@fungible.com"
-        if "submitter_email" in request_json:
-            submitter_email = request_json["submitter_email"]
+        suite_path = request_json.get("suite_path", None)
+        submitter_email = request_json.get("submitter_email", "john.abraham@fungible.com")
 
         # script path used for script only submission
-        script_pk = None
-        if "script_pk" in request_json:
-            script_pk = request_json["script_pk"]
+        script_pk = request_json.get("script_pk", None)
 
         # dynamic suite spec
-        original_suite_execution_id = None
-        dynamic_suite_spec = None
-        if "dynamic_suite_spec" in request_json:
-            dynamic_suite_spec = request_json["dynamic_suite_spec"]
-            original_suite_execution_id = request_json["original_suite_execution_id"]
+        dynamic_suite_spec = request_json.get("dynamic_suite_spec", None)
+        original_suite_execution_id = request_json.get("original_suite_execution_id", None)
 
-        build_url = None
-        if "build_url" in request_json:
-            build_url = request_json["build_url"]
-        if not build_url and ("version" in request_json and request_json["version"]):
-            clean_version = re.sub("(\d+)(\D.*)", r'\1', request_json["version"])
+        build_url = request_json.get("build_url", None)
+        version = request_json.get("version", None)
+        if not build_url and version:
+            clean_version = re.sub("(\d+)(\D.*)", r'\1', request_json["version"])     #TODO:
             build_url = DEFAULT_BUILD_URL.replace("latest", clean_version)
 
-        test_bed_type = None
-        if "test_bed_type" in request_json:
-            test_bed_type = request_json["test_bed_type"]
+        test_bed_type = request_json.get("test_bed_type", None)
+        suite_type = request_json.get("suite_type", SuiteType.STATIC)
+        tags = request_json.get("tags", None)
+        emails = request_json.get("emails", None)
+        email_on_fail_only = request_json.get("email_on_fail_only", None)
+        email_list = request_json.get("email_list", None)
+        environment = request_json.get("environment", None)
+        if email_list:
+            emails = request_json["email_list"]                      # TODO:
 
-        suite_type = SuiteType.STATIC
-        if "suite_type" in request_json:
-            suite_type = request_json["suite_type"]
-        tags = None
-        if "tags" in request_json:
-            tags = request_json["tags"]
-        emails = None
-        email_on_fail_only = None
-        environment = None
-        if "environment" in request_json:
-            environment = request_json["environment"]
-        if "emails" in request_json:
-            emails = request_json["emails"]
-        if "email_list" in request_json:
-            emails = request_json["email_list"]
-        if "email_on_fail_only" in request_json:
-            email_on_fail_only = request_json["email_on_fail_only"]
+        scheduling_type = request_json.get("scheduling_type", SchedulingType.ASAP)
+        tz = request_json.get("timezone", "PST")
 
-        scheduling_type = "asap"
-        if "scheduling_type" in request_json:
-            scheduling_type = request_json["scheduling_type"]
-        tz = "PST"
-        if "timezone" in request_json:
-            tz = request_json["timezone"]
-        requested_days = []
-        requested_hour = None
-        requested_minute = None
-        repeat_in_minutes = -1
-
-        inputs = None
-        if "job_inputs" in request_json:
-            inputs = request_json["job_inputs"]
-
-        if "requested_days" in request_json:
-            requested_days = request_json["requested_days"]
+        inputs = request_json.get("job_inputs", None)
+        requested_days = request_json.get("requested_days", [])       # TODO:
+        if requested_days:
             requested_days = [x.lower() for x in requested_days]
-        if "requested_hour" in request_json:
-            requested_hour = request_json["requested_hour"]
-        if "requested_minute" in request_json:
-            requested_minute = request_json["requested_minute"]
-        if "repeat_in_minutes" in request_json:
-            repeat_in_minutes = request_json["repeat_in_minutes"]
+
+        requested_hour = request_json.get("requested_hour", None)
+        requested_minute = request_json.get("requested_minute", None)
+        repeat_in_minutes = request_json.get("repeat_in_minutes", -1)  # TODO:
         description = request_json.get("description", None)
 
         if suite_path:
@@ -235,14 +201,14 @@ def submit_job(request):
                                 description=description,
                                 suite_type=suite_type)
         elif dynamic_suite_spec:
-            queue_dynamic_suite(dynamic_suite_spec=dynamic_suite_spec,
-                                emails=emails,
-                                environment=environment,
-                                inputs=inputs,
-                                test_bed_type=test_bed_type,
-                                original_suite_execution_id=original_suite_execution_id,
-                                build_url=build_url,
-                                submitter_email=submitter_email)
+            job_id = queue_dynamic_suite(dynamic_suite_spec=dynamic_suite_spec,
+                                         emails=emails,
+                                         environment=environment,
+                                         inputs=inputs,
+                                         test_bed_type=test_bed_type,
+                                         original_suite_execution_id=original_suite_execution_id,
+                                         build_url=build_url,
+                                         submitter_email=submitter_email)
     if job_id > 0 and submitter_email:
         submitter_user_name = ""
         try:

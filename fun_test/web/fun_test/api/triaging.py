@@ -100,12 +100,13 @@ def triagings(request, triage_id):
     if request.method == "POST":
         if not triage_id:
             request_json = json.loads(request.body)
-            metric_id = int(request_json["metric_id"])
+            metric_id = request_json.get("metric_id", None)
+
             triage_type = int(request_json.get("triage_type", TriagingTypes.REGEX_MATCH))
             from_fun_os_sha = request_json["from_fun_os_sha"]
             to_fun_os_sha = request_json["to_fun_os_sha"]
             submitter_email = request_json["submitter_email"]
-            build_parameters = request_json["build_parameters"]
+            build_parameters = request_json.get("build_parameters", None)
             if triage_type == TriagingTypes.REGEX_MATCH:
                 regex_match_string = request_json["regex_match_string"]
 
@@ -113,12 +114,15 @@ def triagings(request, triage_id):
 
             regex_match_string = request_json.get("regex_match_string", None)
 
-            t = Triage3(triage_id=triage_id, metric_id=metric_id,
+            t = Triage3(triage_id=triage_id,
                         triage_type=triage_type,
                         from_fun_os_sha=from_fun_os_sha,
                         to_fun_os_sha=to_fun_os_sha,
-                        submitter_email=submitter_email,
-                        build_parameters=build_parameters)
+                        submitter_email=submitter_email)
+            if build_parameters is not None:
+                t.build_parameters = build_parameters
+            if metric_id is not None:
+                t.metric_id = metric_id
             if regex_match_string is not None:
                 t.regex_match_string = regex_match_string
             t.save()

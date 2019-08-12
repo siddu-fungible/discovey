@@ -560,6 +560,12 @@ class Rfc2544Template(SpirentEthernetTrafficTemplate):
             unit_dict = {}
             unit_dict["pps_unit"] = PerfUnit.UNIT_PPS
             unit_dict["throughput_unit"] = PerfUnit.UNIT_MBITS_PER_SEC
+            unit_dict["latency_min_unit"] = PerfUnit.UNIT_USECS
+            unit_dict["latency_max_unit"] = PerfUnit.UNIT_USECS
+            unit_dict["latency_avg_unit"] = PerfUnit.UNIT_USECS
+            unit_dict["jitter_min_unit"] = PerfUnit.UNIT_USECS
+            unit_dict["jitter_max_unit"] = PerfUnit.UNIT_USECS
+            unit_dict["jitter_avg_unit"] = PerfUnit.UNIT_USECS
             add_entry = self.use_model_helper(model_name=model_name, data_dict=output_dict, unit_dict=unit_dict)
             fun_test.simple_assert(add_entry, "Entry added to model %s" % model_name)
             fun_test.add_checkpoint("Entry added to model %s" % model_name)

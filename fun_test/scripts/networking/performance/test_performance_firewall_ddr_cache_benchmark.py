@@ -131,8 +131,6 @@ class ScriptSetup(FunTestScript):
         TIMESTAMP = get_current_time()
 
     def cleanup(self):
-        network_controller_obj.set_etp(pkt_adj_size=24)
-
         if 'fs' in fun_test.shared_variables:
             fs = fun_test.shared_variables['fs']
             fs.cleanup()
@@ -140,7 +138,7 @@ class ScriptSetup(FunTestScript):
 
 class TestL4FirewallPerformanceDDRCache128M(FunTestCase):
     tc_id = 1
-    tcc_file_name = "l4_firewall_128M_flows_throughput.tcc"
+    tcc_file_name = "l4_firewall_ddr_cache_128M_flows_throughput.tcc"
     spray = False
     half_load_latency = False
     num_flows = 128000000
@@ -150,6 +148,7 @@ class TestL4FirewallPerformanceDDRCache128M(FunTestCase):
     test_frame_sizes = [64.0]
     total_test_time = 20
     flow_direction = FLOW_TYPE_NU_LE_VP_NU_L4_FW
+    initial_test_time = 10
 
     def describe(self):
         self.set_test_details(id=self.tc_id,
@@ -244,6 +243,8 @@ class TestL4FirewallPerformanceDDRCache128M(FunTestCase):
             fun_test.log("Starting test for frame size %s" % frame_size)
             # Start one generator at a time and get throughput and pps
             for generator_handle in generator_list:
+                run_time_psw_stats_before = network_controller_obj.peek_psw_global_stats()
+
                 gen_start = self.template_obj.stc_manager.start_generator_command(generator_handle)
                 fun_test.add_checkpoint("Started generator %s" % generator_handle)
 
@@ -253,6 +254,11 @@ class TestL4FirewallPerformanceDDRCache128M(FunTestCase):
                 total_rx_analyzer_fps = 0.0
                 total_tx_generator_throughput = 0.0
                 total_rx_analyzer_throughput = 0.0
+
+                run_time_psw_stats_after = network_controller_obj.peek_psw_global_stats()
+                output = get_psw_diff_counters(hnu_1=False, hnu_2=False, input_list=['main_pkt_drop_eop'],
+                                               psw_stats_nu_1=run_time_psw_stats_before,
+                                               psw_stats_nu_2=run_time_psw_stats_after)
 
                 # Sum pps and throughput seen for tx and rx on each port
                 for port_obj in port_list:
@@ -268,17 +274,9 @@ class TestL4FirewallPerformanceDDRCache128M(FunTestCase):
                     total_tx_generator_throughput += float(int(tx_port_generator_results['GeneratorBitRate']) / 1000000)
                     total_rx_analyzer_throughput += float(int(rx_port_analyzer_results['TotalBitRate']) / 1000000)
 
-                lower_fps_limit = total_tx_generator_fps - frame_threshold
-                upper_fps_limit = total_rx_analyzer_fps + frame_threshold
-                lower_limit_throughput = total_tx_generator_throughput - throughput_threshold
-                upper_limit_throughput = total_rx_analyzer_throughput + throughput_threshold
-
                 # Verify rx stats are within limit with tx
-                if (
-                        total_rx_analyzer_fps >= lower_fps_limit and total_rx_analyzer_fps <= upper_fps_limit and total_rx_analyzer_fps != 0) \
-                        and (
-                        total_rx_analyzer_throughput >= lower_limit_throughput and total_rx_analyzer_throughput <= upper_limit_throughput and
-                        total_rx_analyzer_throughput != 0.0):
+                main_pkt_drop = int(output["input"]['main_pkt_drop_eop'])
+                if main_pkt_drop <= 10:
                     result['pps'] = total_rx_analyzer_fps
                     result['throughput'] = total_rx_analyzer_throughput
                     started_generators.append(generator_handle)
