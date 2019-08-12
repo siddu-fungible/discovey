@@ -203,6 +203,7 @@ api_v1_urls = [
     url(r'^performance/data$', performance.data),
     url(r'^triages/?(\d+)?$', triaging.triagings),
     url(r'^triages/(\d+)/trials/?(\S+)?$', triaging.trials),
+    url(r'^triages/(\d+)/reruns/?(\d+)?$', triaging.trial_reruns),
     url(r'^triage_states$', triaging.triaging_states),
     url(r'^triage_trial_set/(\d+)$', triaging.trial_set),
     url(r'^triaging_trial_states$', triaging.triaging_trial_states),

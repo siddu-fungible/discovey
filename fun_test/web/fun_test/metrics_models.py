@@ -139,9 +139,9 @@ class Triage3Trial(models.Model):
     submission_date_time = models.DateTimeField(default=datetime.now)
     tags = JSONField(default=[])  # for re-runs
     result = models.TextField(default=RESULTS["UNKNOWN"])
-    trial_id = models.IntegerField(default=-1)
-    parent_trial_id = models.IntegerField(default=-1)
-    active = models.BooleanField(default=False)
+    original_id = models.IntegerField(default=-1)
+    active = models.BooleanField(default=True)
+    reruns = models.BooleanField(default=False)
 
     integration_job_id = models.IntegerField(default=-1)
 

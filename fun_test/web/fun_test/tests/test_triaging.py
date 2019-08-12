@@ -118,7 +118,7 @@ class TriageStateMachine:
                                  triage_id=self.triage_id,
                                  trial_set_id=t.current_trial_set_id,
                                  status=TriagingStates.INIT,
-                                 submission_date_time=get_current_time())
+                                 submission_date_time=get_current_time(), active=True, reruns=False)
             base_tag = t.base_tag
             trial_tag = self.get_trial_tag(base_tag="qa_triage", fun_os_sha=fun_os_sha)
             trial.tag = trial_tag

@@ -65,9 +65,9 @@
           <th>Result</th>
           <th>History</th>
         </tr>
-        <tr *ngFor="let commit of commits; let index = index">
+        <ng-container *ngFor="let commit of commits; let index = index">
 
-          <ng-container *ngIf="commit.selectedForTrial || showAll">
+          <tr *ngIf="commit.selectedForTrial || showAll">
             <td>
               <input type="checkbox" [checked]="commit.selected" [(ngModel)]="commit.selected">
             </td>
@@ -92,12 +92,67 @@
               {{ commit.regexMatch }}
               <app-smart-label [value]="commit.result">{{ commit.result }}</app-smart-label>
             </td>
-            <td>
-              <a [routerLink]="" (></a>
+            <td *ngIf="commit.reruns">
+              <a *ngIf="!commit.showReruns" [routerLink]="" (click)="showReruns(commit)">Show</a>
+              <a *ngIf="commit.showReruns" [routerLink]="" (click)="hideReruns(commit)">Hide</a>
             </td>
-          </ng-container>
+          </tr>
+          <tr *ngIf="commit.showReruns">
+            <td colspan="11" class="flex-container">
+              <div class="card-header">
+                Reruns
+              </div>
+              <div class="card-body">
+                <table class="table">
+                  <tr>
+                    <th>
+                      Set
+                    </th>
+                    <th>
+                      Jenkins
+                    </th>
+                    <th *ngIf="triage.triage_type !== 5">
+                      LSF
+                    </th>
+                    <th>
+                      Tag
+                    </th>
+                    <th>
+                      Status
+                    </th>
+                    <th>
+                      Result
+                    </th>
+                  </tr>
+                  <tr *ngFor="let reRun of reRuns">
+                    <td>
+                      {{ reRun.trial_set_id }}
+                    </td>
+                    <td>
+                      <a target="_blank" *ngIf="reRun.jenkins_build_number > 0"
+                         href="http://jenkins-sw-master.fungible.local:8080/job/emulation/job/fun_on_demand/{{ reRun.jenkins_build_number }}/">link</a>
+                    </td>
+                    <td *ngIf="triage.triage_type !== 5">
+                      <a *ngIf="reRun.lsf_job_id > 0"
+                    href="http://palladium-jobs.fungible.local:8080/job/{{ reRun.lsf_job_id }}" target="_blank">link</a>
+                    </td>
+                    <td>
+                      {{ reRun.tag }}
+                    </td>
+                    <td>
+                      <app-smart-label [value]="triagingTrialStateMap[reRun.status]"></app-smart-label>
+                    </td>
+                    <td>
+                      <app-smart-label [value]="reRun.result">{{ reRun.result }}</app-smart-label>
+                    </td>
+                  </tr>
+                </table>
+              </div>
 
-        </tr>
+            </td>
+          </tr>
+
+        </ng-container>
       </table>
     </div>
   </div>

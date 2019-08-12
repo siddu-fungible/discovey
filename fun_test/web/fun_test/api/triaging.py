@@ -34,9 +34,15 @@ def trials(request, triage_id, fun_os_sha):
     result = None
     if request.method == "POST":
         if fun_os_sha:
-            q = Q(triage_id=triage_id, fun_os_sha=fun_os_sha)
+            q = Q(triage_id=triage_id, fun_os_sha=fun_os_sha, active=True)
             trials = Triage3Trial.objects.filter(q).order_by('submission_date_time')
             if trials.count():
+                first_trial = trials[0]
+                first_trial.active = False
+                first_trial.reruns = False
+                first_trial.original_id = first_trial.id
+                first_trial.pk = None
+                first_trial.save()
                 first_trial = trials[0]
                 request_json = json.loads(request.body)
                 status = request_json.get("status", None)
@@ -54,7 +60,11 @@ def trials(request, triage_id, fun_os_sha):
                     triage.status = TriagingStates.IN_PROGRESS
                     triage.save()
                 first_trial.result = RESULTS["UNKNOWN"]
-                # first_trial.re_runs = True
+                first_trial.reruns = True
+                first_trial.active = True
+                first_trial.jenkins_build_number = -1
+                first_trial.lsf_job_id = -1
+                first_trial.submission_date_time = get_current_time()
                 first_trial.save()
             else:
                 request_json = json.loads(request.body)
@@ -64,12 +74,12 @@ def trials(request, triage_id, fun_os_sha):
                                      triage_id=triage_id,
                                      trial_set_id=t.current_trial_set_id,
                                      status=TriagingStates.INIT,
-                                     submission_date_time=get_current_time())
+                                     submission_date_time=get_current_time(), active=True, reruns=False)
                 trial_tag = get_trial_tag(base_tag="qa_triage", triage_id=triage_id, fun_os_sha=fun_os_sha)
                 trial.tag = trial_tag
                 trial.save()
     elif request.method == "GET":
-        q = Q(triage_id=triage_id)
+        q = Q(triage_id=triage_id, active=True)
         if fun_os_sha:
             q = q & Q(fun_os_sha=fun_os_sha)
         trials = Triage3Trial.objects.filter(q).order_by('-submission_date_time')
@@ -86,9 +96,43 @@ def trials(request, triage_id, fun_os_sha):
                           "regex_match": trial.regex_match,
                           "tags": trial.tags,
                           "result": trial.result,
-                          "trial_id": trial.trial_id,
-                          "parent_trial_id": trial.parent_trial_id,
-                          "active": trial.active}
+                          "id": trial.id,
+                          "original_id": trial.original_id,
+                          "active": trial.active,
+                          "reruns": trial.reruns,
+                          "submission_date_time": trial.submission_date_time}
+            result.append(one_record)
+    return result
+
+
+@csrf_exempt
+@api_safe_json_response
+def trial_reruns(request, triage_id, original_id):
+    triage_id = int(triage_id)
+    result = None
+    if request.method == "GET":
+        q = Q(triage_id=triage_id, active=False)
+        if original_id:
+            q = q & Q(original_id=original_id)
+        trials = Triage3Trial.objects.filter(q).order_by('-submission_date_time')
+        for trial in trials:
+            if result is None:
+                result = []
+            one_record = {"triage_id": trial.triage_id,
+                          "fun_os_sha": trial.fun_os_sha,
+                          "trial_set_id": trial.trial_set_id,
+                          "status": trial.status,
+                          "jenkins_build_number": trial.jenkins_build_number,
+                          "lsf_job_id": trial.lsf_job_id,
+                          "tag": trial.tag,
+                          "regex_match": trial.regex_match,
+                          "tags": trial.tags,
+                          "result": trial.result,
+                          "id": trial.id,
+                          "original_id": trial.original_id,
+                          "active": trial.active,
+                          "reruns": trial.reruns,
+                          "submission_date_time": trial.submission_date_time}
             result.append(one_record)
     return result
 
@@ -107,8 +151,6 @@ def triagings(request, triage_id):
             to_fun_os_sha = request_json["to_fun_os_sha"]
             submitter_email = request_json["submitter_email"]
             build_parameters = request_json.get("build_parameters", None)
-            if triage_type == TriagingTypes.REGEX_MATCH:
-                regex_match_string = request_json["regex_match_string"]
 
             triage_id = LastTriageId.get_next_id()
 
