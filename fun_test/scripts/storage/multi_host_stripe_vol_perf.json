@@ -19,7 +19,7 @@
     "ethernet_adapter": "Mellanox",
     "override_numa_node": {"override": true, "override_node": "NUMA node0 CPU(s)"}
   },
-  "RandReadXFS": {
+  "RandReadStripe": {
     "syslog": 2,
     "num_ssd": 6,
     "blt_count": 6,
