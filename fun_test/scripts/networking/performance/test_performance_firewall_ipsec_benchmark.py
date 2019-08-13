@@ -480,6 +480,19 @@ class TestL4IPsecPerformance(FunTestCase):
                                                                              timestamp=TIMESTAMP)
             fun_test.add_checkpoint("Added result for frame size %s" % frame_size)
 
+            data_dict = OrderedDict()
+            data_dict["flow_type"] = self.flow_direction
+            data_dict["frame_size"] = frame_size
+            data_dict["pps"] = result[stream]["pps"]
+            data_dict["throughput"] = result[stream]['throughput']
+
+            tabular_data.append(data_dict)
+
+            table_add = template_obj.create_performance_table(result=tabular_data,
+                                                              table_name="Performance numbers IPSec",
+                                                              spirent_rfc=False)
+            fun_test.add_checkpoint(table_add)
+
             # Run traffic for remaining time if no significant drops are seen
             if result[stream]['pps'] > 0.0:
                 update_attributes = {"Load": working_load}
@@ -531,19 +544,6 @@ class TestL4IPsecPerformance(FunTestCase):
                 for traffic_streamblock in current_test_streamblocks:
                     template_obj.stc_manager.update_stream_block(traffic_streamblock, update_attributes)
                 fun_test.log("Updated frame load to %s" % default_load_pps)
-
-                data_dict = {}
-                data_dict["flow_type"] = self.flow_direction
-                data_dict["frame_size"] = frame_size
-                data_dict["pps"] = result[stream]["pps"]
-                data_dict["throughput"] =  result[stream]['throughput']
-
-                tabular_data.append(data_dict)
-
-        table_add = template_obj.create_performance_table(result=tabular_data,
-                                                          table_name="Performance numbers for IPSec",
-                                                          spirent_rfc=False)
-        fun_test.add_checkpoint(table_add)
 
         for stream in test_streams:
             fun_test.test_assert_expected(expected=0, actual=result[stream]['main_pkt_drop_eop'],

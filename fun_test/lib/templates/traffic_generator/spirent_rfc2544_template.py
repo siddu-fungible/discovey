@@ -322,7 +322,7 @@ class Rfc2544Template(SpirentEthernetTrafficTemplate):
             table_columns = first_entry.keys()
             table_data['headers'] = table_columns
             rows = []
-            for entry in result_list[1:]:
+            for entry in result_list:
                 row = []
                 for key in table_columns:
                     row.append(entry[key])
@@ -333,21 +333,21 @@ class Rfc2544Template(SpirentEthernetTrafficTemplate):
         return table_data
 
     def create_performance_table(self, result, table_name, spirent_rfc=True):
-        result = False
+        output = False
         try:
             if not spirent_rfc:
                 panel_header = "Non spirent rfc performance details"
-                table_data = self._non_spirent_table_data(result_dict=result)
+                table_data = self._non_spirent_table_data(result_list=result)
             else:
                 panel_header = "RFC-2544 Performance Detailed Summary"
                 table_data = self._get_table_data(result_dict=result)
             fun_test.add_table(panel_header=panel_header,
                                table_name=table_name,
                                table_data=table_data)
-            result = True
+            output = True
         except Exception as ex:
             fun_test.critical(str(ex))
-        return result
+        return output
 
     def _get_list_of_records(self, summary_result):
         records = []
