@@ -28,6 +28,7 @@ class CommitNode {
   reruns: boolean = false;
   submissionDateTime: any = null;
   showReruns: boolean = false;
+  integrationJobId: number = null;
 }
 
 
@@ -118,6 +119,7 @@ export class TriageDetailComponent implements OnInit {
         commitNode.originalId = trial.original_id;
         commitNode.active = trial.active;
         commitNode.submissionDateTime = trial.submission_date_time;
+        commitNode.integrationJobId = trial.integration_job_id;
       }
 
     });
@@ -139,6 +141,7 @@ export class TriageDetailComponent implements OnInit {
         commitNode.regexMatch = null;
         commitNode.triageId = null;
         commitNode.trial = null;
+        commitNode.integrationJobId = null;
         this.commitMap[commitNode.funOsSha] = commitNode;
         this.commits.push(commitNode);
       });

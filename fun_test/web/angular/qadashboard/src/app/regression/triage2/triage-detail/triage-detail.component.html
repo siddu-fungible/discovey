@@ -59,8 +59,9 @@
           <th>Sha</th>
           <th>Set</th>
           <th>Status</th>
-          <th>Jenkins</th>
-          <th *ngIf="triage.triage_type !== triageTypes.JENKINS_FUN_OS_ON_DEMAND">LSF</th>
+          <th *ngIf="(triage.triage_type !== triageTypes.INTEGRATION_PASS_OR_FAIL) && (triage.triage_type !== triageTypes.INTEGRATION_REGEX_MATCH)">Jenkins</th>
+          <th *ngIf="(triage.triage_type !== triageTypes.INTEGRATION_PASS_OR_FAIL) && (triage.triage_type !== triageTypes.INTEGRATION_REGEX_MATCH) && (triage.triage_type !== triageTypes.JENKINS_FUN_OS_ON_DEMAND)">LSF</th>
+          <th *ngIf="(triage.triage_type === triageTypes.INTEGRATION_PASS_OR_FAIL) || (triage.triage_type === triageTypes.INTEGRATION_REGEX_MATCH)">Suite</th>
           <th>Tag</th>
           <th>Result</th>
           <th>History</th>
@@ -83,9 +84,13 @@
             <td><a target="_blank" href="{{ FUN_OS_GITHUB_BASE_URL }}/{{ commit.funOsSha }}">{{ getShortSha(commit.funOsSha) }}</a></td>
             <td>{{ commit.trialSetId }}</td>
             <td><app-smart-label [value]="triagingTrialStateMap[commit.status]"></app-smart-label></td>
-            <td><a target="_blank" *ngIf="commit.jenkinsBuildNumber > 0" href="http://jenkins-sw-master.fungible.local:8080/job/emulation/job/fun_on_demand/{{ commit.jenkinsBuildNumber }}/">link</a></td>
-            <td *ngIf="triage.triage_type !== triageTypes.JENKINS_FUN_OS_ON_DEMAND"><a *ngIf="commit.lsfJobId > 0"
+            <td *ngIf="(triage.triage_type !== triageTypes.INTEGRATION_PASS_OR_FAIL) && (triage.triage_type !== triageTypes.INTEGRATION_REGEX_MATCH)"><a target="_blank" *ngIf="commit.jenkinsBuildNumber > 0" href="http://jenkins-sw-master.fungible.local:8080/job/emulation/job/fun_on_demand/{{ commit.jenkinsBuildNumber }}/">link</a></td>
+            <td *ngIf="(triage.triage_type !== triageTypes.INTEGRATION_PASS_OR_FAIL) && (triage.triage_type !== triageTypes.INTEGRATION_REGEX_MATCH) && (triage.triage_type !== triageTypes.JENKINS_FUN_OS_ON_DEMAND)"><a *ngIf="commit.lsfJobId > 0"
                     href="http://palladium-jobs.fungible.local:8080/job/{{ commit.lsfJobId }}" target="_blank">link</a></td>
+
+            <td *ngIf="(triage.triage_type === triageTypes.INTEGRATION_PASS_OR_FAIL) || (triage.triage_type === triageTypes.INTEGRATION_REGEX_MATCH)">
+              <a target="_blank" href="/regression/suite_detail/{{ commit.integrationJobId }}">{{ commit.integrationJobId }}</a>
+            </td>
             <td>{{ commit.tag }}</td>
 
             <td>

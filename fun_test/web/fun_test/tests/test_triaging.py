@@ -345,9 +345,15 @@ class TrialStateMachine:
                 params["BRANCH_FunOS"] = self.fun_os_sha
             elif triage.triage_type in [TriagingTypes.INTEGRATION_PASS_OR_FAIL, TriagingTypes.INTEGRATION_REGEX_MATCH]:
                 build_parameters = triage.build_parameters
-                build_parameters["environment"]["BRANCH_FunOS"] = self.fun_os_sha
+                build_parameters["environment"]["build_parameters"]["BRANCH_FunOS"] = self.fun_os_sha
+                tags = ["integration_triage", trial.tag]
 
-                integration_job_id = queue_job3(suite_path=build_parameters["suite_path"], scheduling_type=SchedulingType.ASAP, submitter_email=build_parameters["submitter_email"], test_bed_type=build_parameters["test_bed_type"], environment=build_parameters["environment"])
+                integration_job_id = queue_job3(suite_path=build_parameters["suite_path"],
+                                                scheduling_type=SchedulingType.ASAP,
+                                                submitter_email=build_parameters["submitter_email"],
+                                                test_bed_type=build_parameters["test_bed_type"],
+                                                environment=build_parameters["environment"],
+                                                tags=tags)
             else:
                 jm = JenkinsManager()
                 params = triage.build_parameters
@@ -573,4 +579,4 @@ if __name__ == "__main__":
 
             except Exception as ex:
                 logger.exception(ex)
-        time.sleep(60)
+        time.sleep(5)

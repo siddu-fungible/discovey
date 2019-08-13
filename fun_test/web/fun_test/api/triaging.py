@@ -102,7 +102,8 @@ def trials(request, triage_id):
                           "original_id": trial.original_id,
                           "active": trial.active,
                           "reruns": trial.reruns,
-                          "submission_date_time": trial.submission_date_time}
+                          "submission_date_time": trial.submission_date_time,
+                          "integration_job_id": trial.integration_job_id}
             result.append(one_record)
     return result
 
