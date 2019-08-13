@@ -193,16 +193,15 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                 perf_listner_test_interface = csi_perf_host_obj.get_test_interface(index=0)
                 self.perf_listener_ip = perf_listner_test_interface.ip.split('/')[0]
                 fun_test.log("csi perf listener host ip is: {}".format(self.perf_listener_ip))
+            # adding csi perf bootargs if csi_perf is enabled
+            #  TODO: Modifying bootargs only for F1_0 as csi_perf on F1_1 is not yet fully supported
+            self.bootargs[0] += " --perf csi-local-ip={} csi-remote-ip={} pdtrace-hbm-size-kb={}".format(
+                self.csi_f1_ip, self.perf_listener_ip, self.csi_perf_pdtrace_hbm_size_kb)
 
         for i in range(len(self.bootargs)):
             self.bootargs[i] += " --mgmt"
             if self.disable_wu_watchdog:
                 self.bootargs[i] += " --disable-wu-watchdog"
-            # adding csi perf bootargs if csi_perf is enabled
-            if self.csi_perf_enabled:
-                #  TODO: Modifying bootargs only for F1_0 as csi_perf on F1_1 is not yet fully supported
-                self.bootargs[0] += " --perf csi-local-ip={} csi-remote-ip={} pdtrace-hbm-size-kb={}".format(
-                self.csi_f1_ip, self.perf_listener_ip, self.csi_perf_pdtrace_hbm_size_kb)
 
         # Deploying of DUTs
         for dut_index in self.available_dut_indexes:
@@ -528,8 +527,9 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
         self.host_info = fun_test.shared_variables["host_info"]
         self.host_handles = fun_test.shared_variables["host_handles"]
         self.csi_perf_enabled = fun_test.shared_variables["csi_perf_enabled"]
-        self.perf_listener_host_name = fun_test.shared_variables["perf_listener_host_name"]
-        self.perf_listener_ip = fun_test.shared_variables["perf_listener_ip"]
+        if self.csi_perf_enabled:
+            self.perf_listener_host_name = fun_test.shared_variables["perf_listener_host_name"]
+            self.perf_listener_ip = fun_test.shared_variables["perf_listener_ip"]
         self.host_ips = fun_test.shared_variables["host_ips"]
         self.num_hosts = len(self.host_ips)
         self.end_host = self.host_handles[self.host_ips[0]]
@@ -795,7 +795,7 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
         # Starting csi perf stats collection if it's set
         if self.csi_perf_enabled:
             csi_perf_obj = CsiPerfTemplate(perf_collector_host_name=str(self.perf_listener_host_name),
-                                           listener_ip=self.perf_listener_ip, fs=self.fs[0])
+                                           listener_ip=self.perf_listener_ip, fs=self.fs[0], listener_port=4420) #Temp change for testing
             csi_perf_obj.prepare(f1_index=0)
             csi_perf_obj.start(f1_index=0, dpc_client=self.storage_controller)
             try:
