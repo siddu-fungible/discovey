@@ -315,11 +315,33 @@ class Rfc2544Template(SpirentEthernetTrafficTemplate):
             fun_test.critical(str(ex))
         return table_data
 
-    def create_performance_table(self, result_dict, table_name):
+    def _non_spirent_table_data(self, result_list):
+        table_data = {'headers': [], 'rows': []}
+        try:
+            first_entry = result_list[0]
+            table_columns = first_entry.keys()
+            table_data['headers'] = table_columns
+            rows = []
+            for entry in result_list[1:]:
+                row = []
+                for key in table_columns:
+                    row.append(entry[key])
+                rows.append(row)
+            table_data['rows'] = rows
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return table_data
+
+    def create_performance_table(self, result, table_name, spirent_rfc=True):
         result = False
         try:
-            table_data = self._get_table_data(result_dict=result_dict)
-            fun_test.add_table(panel_header="RFC-2544 Performance Detailed Summary",
+            if not spirent_rfc:
+                panel_header = "Non spirent rfc performance details"
+                table_data = self._non_spirent_table_data(result_dict=result)
+            else:
+                panel_header = "RFC-2544 Performance Detailed Summary"
+                table_data = self._get_table_data(result_dict=result)
+            fun_test.add_table(panel_header=panel_header,
                                table_name=table_name,
                                table_data=table_data)
             result = True
