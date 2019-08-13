@@ -96,8 +96,12 @@
             <td>{{ commit.tag }}</td>
 
             <td>
-              {{ commit.regexMatch }}
-              <app-smart-label [value]="commit.result">{{ commit.result }}</app-smart-label>
+              <ng-container *ngIf="((triage.triage_type == triageTypes.INTEGRATION_REGEX_MATCH) || (triage.triage_type == triageTypes.REGEX_MATCH)); else regularResult">
+                {{ commit.regexMatch }}
+              </ng-container>
+              <ng-template #regularResult>
+                <app-smart-label [value]="commit.result">{{ commit.result }}</app-smart-label>
+              </ng-template>
             </td>
             <td *ngIf="commit.reruns">
               <a *ngIf="!commit.showReruns" [routerLink]="" (click)="showReruns(commit)">Show</a>
