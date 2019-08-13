@@ -17,7 +17,7 @@ export class AnnouncementFormComponent implements OnInit {
   @ViewChild('announcementForm') formValues;
   editing: boolean = false;
   levels = {'1': 'info', '2': 'warning', '3': 'danger'};
-  level_nums = Object.keys(this.levels);
+  levelNums = Object.keys(this.levels);
   announcementModel = new Announcement('', null);
   tempAnnouncementModel = new Announcement('', null);
   emptyAnnouncement = new Announcement('', 1);
@@ -54,7 +54,6 @@ export class AnnouncementFormComponent implements OnInit {
     if (confirm('Are you sure you want to delete current announcement?')) {
       this.apiService.put('/api/v1/site_configs', this.emptyAnnouncement).subscribe(response => {
         this.logger.success('Successfully deleted!');
-        //window.location.reload();
       }, error => {
         this.logger.error("Deletion failed");
       });
