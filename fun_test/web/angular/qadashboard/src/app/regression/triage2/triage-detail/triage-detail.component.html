@@ -7,6 +7,7 @@
       <th>Result</th>
       <th>Submitter</th>
       <th>Type</th>
+      <th *ngIf="triage.triage_type == triageTypes.INTEGRATION_REGEX_MATCH || triage.triage_type == triageTypes.REGEX_MATCH">Regex</th>
       <th>From FunOS commit</th>
       <th>To FunOS commit</th>
       <th>Submission date</th>
@@ -31,6 +32,7 @@
       <td><app-smart-label [value]="triage.result"></app-smart-label></td>
       <td>{{ triage.submitter_email }}</td>
       <td>{{ triage.triage_type }}</td>
+      <td *ngIf="triage.triage_type == triageTypes.INTEGRATION_REGEX_MATCH || triage.triage_type == triageTypes.REGEX_MATCH">{{ triage.regex_match_string }}</td>
       <td><a target="_blank" href="{{ FUN_OS_GITHUB_BASE_URL }}/{{ triage.from_fun_os_sha }}">{{ getShortSha(triage.from_fun_os_sha) }}</a></td>
       <td><a target="_blank" href="{{ FUN_OS_GITHUB_BASE_URL }}/{{ triage.to_fun_os_sha }}">{{ getShortSha(triage.to_fun_os_sha) }}</a></td>
       <td>{{ prettyTime(triage.submission_date_time) }}</td>
