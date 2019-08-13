@@ -1,17 +1,19 @@
 import {Component, OnInit, Input, OnChanges, Output, EventEmitter, Renderer2, ViewChild} from '@angular/core';
-import {ApiService} from "../services/api/api.service";
-import {LoggerService} from "../services/logger/logger.service";
-import {CommonService} from "../services/common/common.service";
-import {RegressionService} from "../regression/regression.service";
-import {Announcement} from "./announcement";
+import {ApiService} from "../../../services/api/api.service";
+import {LoggerService} from "../../../services/logger/logger.service";
+import {CommonService} from "../../../services/common/common.service";
+import {RegressionService} from "../../../regression/regression.service";
+import { Announcement } from "./announcement";
+
 
 @Component({
-  selector: 'app-test',
-  templateUrl: './test.component.html',
-  styleUrls: ['./test.component.css']
+  selector: 'app-announcement-form',
+  templateUrl: './announcement-form.component.html',
+  styleUrls: ['./announcement-form.component.css']
 })
 
-export class TestComponent implements OnInit {
+
+export class AnnouncementFormComponent implements OnInit {
   @ViewChild('announcementForm') formValues;
   editing: boolean = false;
   levels = {'1': 'info', '2': 'warning', '3': 'danger'};

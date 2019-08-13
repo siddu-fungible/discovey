@@ -20,7 +20,6 @@ export class SmartLabelComponent implements OnInit, OnChanges {
   ngOnChanges() {
     if (this.type) {
       this.type = this.type.toLowerCase();
-      console.log('working'); 
     } else {
       if (this.value) {
         if (this.value === "IN_PROGRESS") {
