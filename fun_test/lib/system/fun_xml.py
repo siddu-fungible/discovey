@@ -803,9 +803,9 @@ class TestSection(GenericElement):
 
     def log(self, log, newline=True):
         if newline:
-            self.saved_log = self.saved_log + "\n" + log
+            self.saved_log = self.saved_log.decode('utf-8', "replace") + "\n" + log
         else:
-            self.saved_log = self.saved_log + log
+            self.saved_log = self.saved_log.decode('utf-8', "replace") + log
 
     def get(self):
         return self
