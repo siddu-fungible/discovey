@@ -29,7 +29,7 @@
         <label>Level selection</label>
         <div class="form-check" *ngFor="let level of level_nums; let index = index">
           <input class="form-check-input" type="radio" (click)="tempAnnouncementModel.level = level*1;"
-                 name="'john'" [value]="level" [checked]="tempAnnouncementModel.level == level.toString()">
+                 name="'level'" [value]="level" [checked]="tempAnnouncementModel.level == level.toString()">
           <label class="form-check-label">{{level}}</label>
         </div>
       </div>
