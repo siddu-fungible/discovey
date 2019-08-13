@@ -139,7 +139,9 @@ class Triage3Trial(models.Model):
     submission_date_time = models.DateTimeField(default=datetime.now)
     tags = JSONField(default=[])  # for re-runs
     result = models.TextField(default=RESULTS["UNKNOWN"])
-    # re_runs = models.BooleanField(default=False)
+    original_id = models.IntegerField(default=-1)
+    active = models.BooleanField(default=True)
+    reruns = models.BooleanField(default=False)
 
     integration_job_id = models.IntegerField(default=-1)
 
@@ -153,27 +155,6 @@ class Triage3Trial(models.Model):
     def __repr__(self):
         return self.__str__()
 
-# class TrialReRuns(models.Model):
-#     triage_id = models.IntegerField()
-#     fun_os_sha = models.TextField()
-#     trial_set_id = models.IntegerField(default=-1)
-#     status = models.IntegerField(default=TriagingStates.UNKNOWN)
-#     jenkins_build_number = models.IntegerField(default=-1)
-#     lsf_job_id = models.IntegerField(default=-1)
-#     tag = models.TextField(default="")
-#     regex_match = models.TextField(default="")
-#     submission_date_time = models.DateTimeField(default=datetime.now)
-#     tags = JSONField(default=[])  # for re-runs
-#     result = models.TextField(default=RESULTS["UNKNOWN"])
-#
-#     def __str__(self):
-#         return "Trial: Triage: {} Tag: {} Sha: {} Set: {} Status: {}".format(self.triage_id,
-#                                                                              self.tag,
-#                                                                              self.fun_os_sha,
-#                                                                              self.trial_set_id,
-#                                                                              TriageTrialStates().code_to_string(self.status))
-#     def __repr__(self):
-#         return self.__str__()
 
 class TimestampField(serializers.Field):
     def to_representation(self, value):
@@ -729,14 +710,14 @@ class LastTriageId(models.Model):
         last.save()
         return last.last_id
 
-class LastTriageFlowId(models.Model):
+class LastTrialId(models.Model):
     last_id = models.IntegerField(unique=True, default=100)
 
     @staticmethod
     def get_next_id():
-        if not LastTriageFlowId.objects.count():
-            LastTriageFlowId().save()
-        last = LastTriageFlowId.objects.all().last()
+        if not LastTrialId.objects.count():
+            LastTrialId().save()
+        last = LastTrialId.objects.all().last()
         last.last_id = last.last_id + 1
         last.save()
         return last.last_id

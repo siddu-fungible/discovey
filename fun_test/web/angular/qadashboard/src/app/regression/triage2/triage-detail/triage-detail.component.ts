@@ -1,6 +1,6 @@
 import {Component, Input, OnInit} from '@angular/core';
 import {ActivatedRoute} from "@angular/router";
-import {of} from "rxjs";
+import {Observable, of} from "rxjs";
 import {switchMap} from "rxjs/operators";
 import {TriageService} from "../triage.service";
 import {CommonService} from "../../../services/common/common.service";
@@ -22,6 +22,12 @@ class CommitNode {
   trial: any;
   selected: boolean = false;
   result: string;
+  id: number;
+  originalId: number;
+  active: boolean = true;
+  reruns: boolean = false;
+  submissionDateTime: any = null;
+  showReruns: boolean = false;
 }
 
 
@@ -41,6 +47,9 @@ export class TriageDetailComponent implements OnInit {
   commitMap: any = {};
   commitFetchStatus: string = null;
   showAll: boolean = true;  // Show all potential git commits
+  reRuns: any = null;
+  currentRerunCommit: any = null;
+  triageTypes: any = null;
 
   FUN_OS_GITHUB_BASE_URL = "https://github.com/fungible-inc/FunOS/commit/";
 
@@ -48,7 +57,8 @@ export class TriageDetailComponent implements OnInit {
               private triageService: TriageService,
               private commonService: CommonService,
               private loggerService: LoggerService,
-              private apiService: ApiService, private title: Title) { }
+              private apiService: ApiService, private title: Title) {
+  }
 
   ngOnInit() {
     this.title.setTitle("Regression Finder");
@@ -60,13 +70,16 @@ export class TriageDetailComponent implements OnInit {
       return this.triageService.triagingTrialStateToString();
     })).pipe(switchMap((triagingTrialStateMap) => {
       this.triagingTrialStateMap = triagingTrialStateMap;
-      for(let key of Object.keys(this.triagingStateMap)) {
+      for (let key of Object.keys(this.triagingStateMap)) {
         this.triagingStringToCodeMap[this.triagingStateMap[key]] = key;
       }
       return of(this.triageId);
     })).pipe(switchMap(() => {
+      return this.triageService.getTriageTypes();
+    })).pipe(switchMap((triageTypes) => {
+      this.triageTypes = triageTypes;
       return this.triageService.triages(this.triageId);
-    })).pipe(switchMap( (triage) => {
+    })).pipe(switchMap((triage) => {
       this.triage = triage;
       this.commitFetchStatus = "Fetching Git commit info";
       return this.getCommitsInBetween();
@@ -100,11 +113,17 @@ export class TriageDetailComponent implements OnInit {
         commitNode.triageId = trial.triage_id;
         commitNode.trial = trial; // to store the whole trial object
         commitNode.result = trial.result;
+        commitNode.reruns = trial.reruns;
+        commitNode.id = trial.id;
+        commitNode.originalId = trial.original_id;
+        commitNode.active = trial.active;
+        commitNode.submissionDateTime = trial.submission_date_time;
       }
 
     });
 
   }
+
   getCommitsInBetween() {
     return this.triageService.funOsCommits(this.triage.from_fun_os_sha, this.triage.to_fun_os_sha).pipe(switchMap((commits) => {
 
@@ -126,6 +145,33 @@ export class TriageDetailComponent implements OnInit {
       this.commitFetchStatus = null;
       return of(true);
     }));
+  }
+
+  showReruns(commit): void {
+    if (this.currentRerunCommit) {
+      this.hideReruns(this.currentRerunCommit);
+    }
+    new Observable(observer => {
+      observer.next(true);
+      return () => {
+      }
+    }).pipe(switchMap(() => {
+      return this.triageService.trialReRuns(this.triageId, commit.id);
+    })).pipe(switchMap((reRuns) => {
+      this.reRuns = reRuns;
+      commit.showReruns = true;
+      this.currentRerunCommit = commit;
+      return of(true);
+    })).subscribe(() => {
+    }, error => {
+      this.loggerService.error(error);
+    });
+
+  }
+
+  hideReruns(commit): void {
+    commit.showReruns = false;
+    this.reRuns = null;
   }
 
   getShortSha(sha) {
@@ -152,7 +198,7 @@ export class TriageDetailComponent implements OnInit {
   }
 
   restartTrial(commit) {
-    let url = "/api/v1/triages/" + this.triageId + "/trials/" + commit.funOsSha;
+    let url = "/api/v1/triages/" + this.triageId + "/trials?fun_os_sha=" + commit.funOsSha;
     let payload = {"status": 20}; //TODO
     if (commit.hasOwnProperty("trial") && commit.trial) {
       let trial = commit.trial;
@@ -173,7 +219,7 @@ export class TriageDetailComponent implements OnInit {
     })
   }
 
-  getNumberOfSelections () {
+  getNumberOfSelections() {
     let numSelections = 0;
     this.commits.forEach((commit) => {
       if (commit.selected) {
