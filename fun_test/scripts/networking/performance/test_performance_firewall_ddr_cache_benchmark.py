@@ -36,7 +36,7 @@ class ScriptSetup(FunTestScript):
 
         if not f1_index:
             f1_index = 1
-        if fun_test.get_job_environment_variable('test_bed_type') == 'fs':
+        if 'fs' in fun_test.get_job_environment_variable('test_bed_type'):
             bootargs = 'app=hw_hsu_test sku=SKU_FS1600_0 --dpc-server --dis-stats --dpc-uart --csr-replay --all_100g --disable-wu-watchdog \
                                     override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303'
             # fs = Fs.get(disable_f1_index=f1_index)
