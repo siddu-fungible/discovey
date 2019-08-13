@@ -1105,6 +1105,21 @@ def get_per_vp_dict_table_obj(result, prev_result):
         master_table_obj.add_column(col_name, col_values)
     return master_table_obj
 
+def remove_entries_per_vp_dict(result_dict, cc_entries=True):
+    output_dict = {}
+    result_keys = result_dict.keys()
+    new_result_keys = []
+    if cc_entries:
+        for key in result_keys:
+            if not key.split(":")[0][2] == '8':
+                new_result_keys.append(key)
+    else:
+        new_result_keys = result_keys
+    for key in new_result_keys:
+        if not key.split(":")[2][0] == '1':
+            output_dict[key] = result_dict[key]
+
+    return output_dict
 
 def populate_per_vp_output_file(network_controller_obj, filename, display_output=False):
     output = False
@@ -1112,8 +1127,10 @@ def populate_per_vp_output_file(network_controller_obj, filename, display_output
         lines = list()
 
         prev_result = network_controller_obj.peek_per_vp_stats()
+        prev_result = remove_entries_per_vp_dict(prev_result)
         fun_test.sleep("Let per vp be grepped", seconds=1)
         result = network_controller_obj.peek_per_vp_stats()
+        result = remove_entries_per_vp_dict(result)
         master_table_obj = get_per_vp_dict_table_obj(result=result, prev_result=prev_result)
         lines.append("\n########################  %s ########################\n" % str(get_timestamp()))
         lines.append(master_table_obj.get_string())
