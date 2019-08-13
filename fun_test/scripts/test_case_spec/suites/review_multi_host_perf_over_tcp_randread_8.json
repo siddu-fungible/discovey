@@ -10,5 +10,5 @@
       }
     }
   },
-  {"path": "storage/review/review_multi_host_blt_tcp_perf.py", "inputs": {"blt_count": 8, "num_hosts": 8}}
+  {"path": "storage/review/review_multi_host_blt_tcp_perf.py", "test_case_ids": [1], "inputs": {"blt_count": 8, "num_hosts": 8}}
 ]
