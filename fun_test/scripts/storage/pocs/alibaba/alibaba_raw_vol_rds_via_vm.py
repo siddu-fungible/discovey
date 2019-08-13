@@ -198,7 +198,7 @@ class RawVolumeRemotePerfTestcase(FunTestCase):
             udev_services = ["systemd-udevd-control.socket", "systemd-udevd-kernel.socket", "systemd-udevd"]
             for service in udev_services:
                 service_status = host_obj.systemctl(service_name=service, action="stop")
-            host_obj.command(command="echo 4 | sudo tee /sys/module/nvme/parameters/io_queue_depth ")
+            #host_obj.command(command="echo 4 | sudo tee /sys/module/nvme/parameters/io_queue_depth ")
             # fun_test.test_assert(service_status, "Stopping {} service".format(service))
 
             # Configure storage controller for DPU 1 (since we are testing SSD on DPU 1)
