@@ -71,10 +71,28 @@ export class WorkspaceComponent implements OnInit {
 
   openEditWorkspace(content, workspace) {
     this.currentWorkspace = workspace;
-    this.modalService.open(content, {ariaLabelledBy: 'modal-edit-workspace', size: 'lg'}).result.then((result) => {
-      // this.modalService.dismissAll();
-    }, (reason) => {
-      this.fetchWorkspacesAfterEditing();
+    new Observable(observer => {
+      observer.next(true);
+      observer.complete();
+      return () => {
+      }
+    }).pipe(
+      switchMap(response => {
+        return this.fetchUsers();
+      })).pipe(
+      switchMap(response => {
+        return this.modalService.open(content, {
+          ariaLabelledBy: 'modal-edit-workspace',
+          size: 'lg'
+        }).result.then((result) => {
+          // this.modalService.dismissAll();
+        }, (reason) => {
+          this.fetchWorkspacesAfterEditing();
+        });
+      })).subscribe(response => {
+      console.log("fetched users");
+    }, error => {
+      this.loggerService.error("Unable to fetch users");
     });
   }
 
@@ -105,7 +123,7 @@ export class WorkspaceComponent implements OnInit {
     payload["metric_id"] = metricId;
     this.apiService.post("/metrics/chart_info", payload).subscribe((response) => {
       let chartInfo = response.data;
-    },error => {
+    }, error => {
       this.loggerService.error("workspace-component: chart_info");
     });
     return result;
@@ -118,7 +136,7 @@ export class WorkspaceComponent implements OnInit {
     }));
   }
 
-    onUserChange(newUser): void {
+  onUserChange(newUser): void {
     let url = "/performance/workspace/" + newUser.email;
     this.router.navigateByUrl(url);
   }
@@ -161,24 +179,24 @@ export class WorkspaceComponent implements OnInit {
       this.profile = [];
       if (workspaces.length) {
         for (let workspace of workspaces) {
-        let newWorkspace = {};
-        newWorkspace["name"] = workspace.workspace_name;
-        newWorkspace["description"] = workspace.description;
-        newWorkspace["interestedMetrics"] = workspace.interested_metrics;
-        newWorkspace["editingWorkspace"] = false;
-        newWorkspace["editingDescription"] = false;
-        if (this.currentWorkspace && this.currentWorkspace.name === newWorkspace["name"]) {
-          this.currentWorkspace.interestedMetrics = newWorkspace["interestedMetrics"];
+          let newWorkspace = {};
+          newWorkspace["name"] = workspace.workspace_name;
+          newWorkspace["description"] = workspace.description;
+          newWorkspace["interestedMetrics"] = workspace.interested_metrics;
+          newWorkspace["editingWorkspace"] = false;
+          newWorkspace["editingDescription"] = false;
+          if (this.currentWorkspace && this.currentWorkspace.name === newWorkspace["name"]) {
+            this.currentWorkspace.interestedMetrics = newWorkspace["interestedMetrics"];
+          }
+          this.profile.push(newWorkspace);
         }
-        this.profile.push(newWorkspace);
-      }
       }
       this.showWorkspace = true;
       return of(true);
     }));
   }
 
-    createWorkspace(): void {
+  createWorkspace(): void {
     let error = false;
     if (this.workspaceName === null || this.workspaceName.trim() === "") {
       this.createError = "Enter some workspace name";
@@ -219,7 +237,7 @@ export class WorkspaceComponent implements OnInit {
     }
   }
 
-    fetchWorkspacesAfterEditing(): void {
+  fetchWorkspacesAfterEditing(): void {
     new Observable(observer => {
       observer.next(true);
       observer.complete();
