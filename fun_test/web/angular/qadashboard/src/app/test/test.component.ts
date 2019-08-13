@@ -72,7 +72,6 @@ export class TestComponent implements OnInit {
       this.tempAnnouncementModel.level = this.announcementModel.level;
       this.tempAnnouncementModel = {...this.tempAnnouncementModel};
       this.currentLevel = this.levels[this.announcementModel.level];
-      console.log(this.currentLevel);
       this.fetched = true;
     }, error => {
       this.logger.error("Unable to fetch announcements");
