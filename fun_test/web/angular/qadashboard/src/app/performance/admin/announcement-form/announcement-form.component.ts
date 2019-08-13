@@ -3,7 +3,7 @@ import {ApiService} from "../../../services/api/api.service";
 import {LoggerService} from "../../../services/logger/logger.service";
 import {CommonService} from "../../../services/common/common.service";
 import {RegressionService} from "../../../regression/regression.service";
-import { Announcement } from "./announcement";
+import {Announcement} from "./announcement";
 
 
 @Component({
