@@ -234,6 +234,7 @@ class TestL4FirewallPerformanceDDRCache128M(FunTestCase):
         fun_test.log("Streamblock object to be used in test for latency and jitter numbers is %s" % first_streamblock)
 
         # Test all frame sizes
+        tabular_data = []
         for frame_size in self.test_frame_sizes:
             result["pps"] = 0.0
             result["throughput"] = 0.0
@@ -276,7 +277,7 @@ class TestL4FirewallPerformanceDDRCache128M(FunTestCase):
 
                 # Verify rx stats are within limit with tx
                 main_pkt_drop = int(output["input"]['main_pkt_drop_eop'])
-                if main_pkt_drop <= 10:
+                if main_pkt_drop <= 10 and total_rx_analyzer_fps > 0.0:
                     result['pps'] = total_rx_analyzer_fps
                     result['throughput'] = total_rx_analyzer_throughput
                     started_generators.append(generator_handle)
@@ -308,6 +309,20 @@ class TestL4FirewallPerformanceDDRCache128M(FunTestCase):
             jitter_dict = self.template_obj.get_jitter_values_for_streamblock(
                 streamblock_handle=first_streamblock,
                 rx_streamblock_subscribe_handle=subscribe_results["rx_summary_subscribe"], change_mode_jitter=True)
+
+            data_dict = {}
+            data_dict["flow_type"] = self.flow_direction
+            data_dict["frame_size"] = frame_size
+            data_dict["pps"] = result["pps"]
+            data_dict["throughput"] = result['throughput']
+            data_dict["latency_min"] = latency_dict["latency_min"]
+            data_dict["latency_min"] = latency_dict["latency_max"]
+            data_dict["latency_min"] = latency_dict["latency_avg"]
+            tabular_data.append(data_dict)
+            table_add = self.template_obj.create_performance_table(result=tabular_data,
+                                                              table_name="Performance numbers for DDR Cache",
+                                                              spirent_rfc=False)
+            fun_test.add_checkpoint(table_add)
 
             add_result = self.template_obj.populate_non_rfc_performance_json_file(flow_type=self.flow_direction,
                                                                                   frame_size=frame_size,
