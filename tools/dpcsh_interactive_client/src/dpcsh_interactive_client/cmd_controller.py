@@ -888,6 +888,10 @@ class CmdController(Cmd):
         grep = args.grep
         self._peek_cmd_obj.peek_ca_stats(grep=grep)
 
+    def peek_ddr_stats(self, args):
+        grep = args.grep
+        self._peek_cmd_obj.peek_ddr_stats(grep=grep)
+
     def peek_hu_stats(self, args):
         grep_regex = args.grep
         self._peek_cmd_obj.peek_stats_hu(grep_regex=grep_regex)
@@ -1198,6 +1202,7 @@ class CmdController(Cmd):
     peek_wus_stats_parser.set_defaults(func=peek_wus_stats)
     peek_stats_cdu_parser.set_defaults(func=peek_cdu_stats)
     peek_stats_ca_parser.set_defaults(func=peek_ca_stats)
+    peek_stats_ddr_parser.set_defaults(func=peek_ddr_stats)
 
     # Storage Peek Commands
     peek_stats_ssds_parser.set_defaults(func=peek_stats_ssds)
@@ -1287,7 +1292,7 @@ class CmdController(Cmd):
 
 
 if __name__ == '__main__':
-    cmd_obj = CmdController(target_ip="10.1.20.132", target_port=40220, verbose=False)
+    cmd_obj = CmdController(target_ip="10.1.21.8", target_port=40220, verbose=False)
     cmd_obj.cmdloop(intro="hello")
 
 

@@ -94,6 +94,7 @@
     "mpstat_args": {"interval": 60, "output_file": "/tmp/mpstat.out", "cpu_list": "ALL"},
     "vp_util_args": {"interval": 60},
     "resource_bam_args": {"interval": 60},
+    "vol_stats_args": {"interval": 60},
     "collect_network_stats": true
   },
   "RandRead8kBlocks": {
@@ -146,6 +147,7 @@
     "mpstat_args": {"interval": 60, "output_file": "/tmp/mpstat.out", "cpu_list": "ALL"},
     "vp_util_args": {"interval": 60},
     "resource_bam_args": {"interval": 60},
+    "vol_stats_args": {"interval": 60},
     "collect_network_stats": true
   },
   "RandWrite8kBlocks": {
@@ -198,6 +200,7 @@
     "mpstat_args": {"interval": 60, "output_file": "/tmp/mpstat.out", "cpu_list": "ALL"},
     "vp_util_args": {"interval": 60},
     "resource_bam_args": {"interval": 60},
+    "vol_stats_args": {"interval": 60},
     "collect_network_stats": true
   },
   "SequentialReadWrite1024kBlocks": {

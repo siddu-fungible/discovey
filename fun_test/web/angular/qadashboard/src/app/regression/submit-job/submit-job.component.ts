@@ -9,6 +9,13 @@ import {animate, state, style, transition, trigger} from "@angular/animations";
 import {switchMap} from "rxjs/operators";
 import {of} from "rxjs";
 import {ActivatedRoute} from "@angular/router";
+import {TriageService} from "../triage2/triage.service";
+
+class Mode {
+  static REGULAR = "REGULAR";
+  static TASK = "TASK";
+  static TRIAGE = "TRIAGE"
+}
 
 @Component({
   selector: 'app-submit-job',
@@ -81,16 +88,28 @@ export class SubmitJobComponent implements OnInit {
   users: any = null;
   BOOT_ARGS_REPLACEMENT_STRING: string = "rpl_:";
   description: string = null;
-  type: string = "regular"; // some other type like task
+  //type: string = "regular"; // some other type like task
   queryParams: any = null;
   jobInputs: string = null; // input dictionary to be sent to the scheduler
 
   csiPerf: boolean = false;
   moreJenkinsOptions: boolean = false;
+  mode: Mode = Mode.REGULAR;
+  Mode = Mode;
 
+  // For Triaging
+  triageTypes = [{value: 6, description: "Pass or Fail"}, {value: 7, description: "Regex match"}];  //Taken from TriagingTypes
+  gitShasValid: boolean = false;
+  validateShasStatus: string = null;
+  fromFunOsSha: string = "8751993af1b24e8159a5f2f3fc22480c44fde8c6";
+  toFunOsSha: string = "74e24c8210d8c2ffb09712f9924eb959201dcf46";
+  commitsInBetween: string[] = [];
+  triageType: number = null;
 
   constructor(private apiService: ApiService, private logger: LoggerService,
-              private title: Title, private route: ActivatedRoute) {
+              private title: Title, private route: ActivatedRoute,
+              private triageService: TriageService) {
+    this.triageType = this.triageTypes[0].value;
   }
 
   ngOnInit() {
@@ -119,7 +138,7 @@ export class SubmitJobComponent implements OnInit {
     this.getQueryParam().subscribe((response) => {
       this.queryParams = response;
       let queryParamString = "";
-      if (this.type === "task") {
+      if (this.mode === Mode.TASK) {
         queryParamString = "?suite_type=task";
       }
       this.apiService.get("/regression/suites" + queryParamString).subscribe((result) => {
@@ -144,11 +163,31 @@ export class SubmitJobComponent implements OnInit {
 
   getQueryParam() {
     return this.route.queryParams.pipe(switchMap(params => {
-      if (params.hasOwnProperty('type')) {
-        this.type = params["type"];
+      if (params.hasOwnProperty('mode')) {
+        this.mode = params["mode"];
       }
       return of(params);
     }))
+  }
+
+  validateShas() {
+    if ((!this.fromFunOsSha) || (!this.toFunOsSha)) {
+      return this.logger.error("Git commits are invalid");
+    }
+    let url = "/api/v1/git_commits_fun_os/" + this.fromFunOsSha + "/" + this.toFunOsSha;
+    this.validateShasStatus = "Validating commits";
+    this.apiService.get(url).subscribe((response) => {
+      this.commitsInBetween = response.data;
+      if (this.commitsInBetween && this.commitsInBetween.length) {
+        this.gitShasValid = true;
+        this.validateShasStatus = null;
+
+      }
+    }, error => {
+      this.logger.error("Git commits are invalid");
+      this.validateShasStatus = null;
+
+    })
   }
 
 
@@ -337,18 +376,45 @@ export class SubmitJobComponent implements OnInit {
       payload["description"] = this.description;
     }
 
-    this.submitting = "Submitting job";
-    let ctrl = this;
-    this.apiService.post('/regression/submit_job', payload).subscribe(function (result) {
-      self.jobId = parseInt(result.data);
-      window.location.href = "/regression/suite_detail/" + self.jobId;
-      ctrl.logger.success(`Job: ${self.jobId} Submitted`);
-      console.log("Job: " + self.jobId + " Submitted");
-      ctrl.submitting = null;
-    }, error => {
-      self.logger.error("Unable to submit job");
-      ctrl.submitting = null;
-    });
+    if (this.mode === Mode.TRIAGE) {
+      this.submitting = "Submitting triage";
+      let ctrl = this;
+      this.triageService.add(this.triageType,
+        null,
+        this.fromFunOsSha,
+        this.toFunOsSha,
+        this.selectedUser.email, payload).subscribe((response) => {
+          ctrl.submitting = null;
+          this.logger.success("Submitted triage");
+          let triageId = response;
+          if (triageId > 0) {
+            window.location.href = "regression/triaging/" + triageId;
+          }
+
+      }, error => {
+          this.logger.error("Error submitting triage: " + error);
+          ctrl.submitting = null;
+      });
+    }
+
+    if (this.mode === Mode.REGULAR) {
+      this.submitting = "Submitting job";
+      let ctrl = this;
+      this.apiService.post('/regression/submit_job', payload).subscribe(function (result) {
+        self.jobId = parseInt(result.data);
+        window.location.href = "/regression/suite_detail/" + self.jobId;
+        ctrl.logger.success(`Job: ${self.jobId} Submitted`);
+        console.log("Job: " + self.jobId + " Submitted");
+        ctrl.submitting = null;
+      }, error => {
+        self.logger.error("Unable to submit job");
+        ctrl.submitting = null;
+      });
+    }
+
+
+
+
   }
 
   singleSelectPkEvent(pk) {

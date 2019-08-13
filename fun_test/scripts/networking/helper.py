@@ -3,6 +3,7 @@ import re
 from lib.system.utils import MultiProcessingTasks
 from prettytable import PrettyTable
 from datetime import datetime
+from collections import OrderedDict
 
 FRAMES_RECEIVED_OK = "aFramesReceivedOK"
 FRAMES_TRANSMITTED_OK = "aFramesTransmittedOK"
@@ -879,17 +880,55 @@ def populate_pc_resource_output_file(network_controller_obj, filename, pc_id, di
         fun_test.critical(str(ex))
     return output
 
+
+def get_vp_util_table_obj(result):
+    master_table_obj = PrettyTable()
+    complete_dict = OrderedDict()
+    rows_list = ["Cls/Core", "0", "1", "2", "3"]
+    for col_name in rows_list:
+        complete_dict[col_name] = []
+    for key, val in result.iteritems():
+        cluster_id = key.split(".")[0][3]
+        core_id = key.split(".")[1]
+        vp_num = key.split(".")[2]
+        for _key in rows_list:
+            if _key == rows_list[0] and cluster_id + '/' + core_id not in complete_dict[_key]:
+                complete_dict[_key].append(cluster_id + '/' + core_id)
+            else:
+                if _key == vp_num:
+                    complete_dict[_key].append(val)
+                    break
+
+    print_keys = complete_dict.keys()
+    print_values = complete_dict.values()
+    for col_name, col_values in zip(print_keys, print_values):
+        master_table_obj.add_column(col_name, col_values)
+    return master_table_obj
+
+
 def populate_vp_util_output_file(network_controller_obj, filename, display_output=False):
     output = False
     try:
-        filtered_dict = {}
         lines = list()
 
-        result = network_controller_obj.debug_vp_util()
-        for key, val in sorted(result.iteritems()):
-            if "CCV1" in key or "CCV2" in key:
-                filtered_dict[key] = val
-        master_table_obj = get_single_dict_stats(result=filtered_dict)
+        output_dict = OrderedDict()
+        output = network_controller_obj.debug_vp_util()
+        for key in sorted(output):
+            output_dict[key] = output[key]
+
+        for x in range(0, 6):
+            for y in range(2, 4):
+                if x > 3:
+                    z = 0
+                    key = 'CCV8.%s.%s' % (x, z)
+                    output_dict[key] = 'N/A'
+                    z = 1
+                    key = 'CCV8.%s.%s' % (x, z)
+                    output_dict[key] = 'N/A'
+                key = 'CCV8.%s.%s' % (x, y)
+                output_dict[key] = 'N/A'
+
+        master_table_obj = get_vp_util_table_obj(result=output_dict)
         lines.append("\n########################  %s ########################\n" % str(get_timestamp()))
         lines.append(master_table_obj.get_string())
         lines.append('\n\n\n')
@@ -912,17 +951,187 @@ def populate_vp_util_output_file(network_controller_obj, filename, display_outpu
     return output
 
 
+def get_sorted_dict(result):
+    sorted_dict = OrderedDict()
+    result_keys = sorted(result)
+    insert_index = 0
+    del_index = 22
+    for x in range(0, 8):
+        second_insert_index = insert_index + 1
+        second_del_index = del_index + 1
+
+        result_keys.insert(insert_index, result_keys[del_index])
+        del result_keys[del_index + 1]
+        result_keys.insert(second_insert_index, result_keys[second_del_index])
+        del result_keys[second_del_index + 1]
+
+        insert_index = insert_index + 24
+        del_index = del_index + 24
+    for key in result_keys:
+        sorted_dict[key] = result[key]
+    return sorted_dict
+
+
+def _get_difference(result, prev_result):
+    """
+    :param result: Should be dict or dict of dict
+    :param prev_result: Should be dict or dict of dict
+    :return: dict or dict of dict
+    """
+    diff_result = {}
+    for key in result:
+        if type(result[key]) == dict:
+            diff_result[key] = {}
+            for _key in result[key]:
+                if key in prev_result and _key in prev_result[key]:
+                    if type(result[key][_key]) == dict:
+                        diff_result[key][_key] = {}
+                        for inner_key in result[key][_key]:
+                            if inner_key in prev_result[key][_key]:
+                                diff_value = result[key][_key][inner_key] - prev_result[key][_key][inner_key]
+                                diff_result[key][_key][inner_key] = diff_value
+                            else:
+                                diff_result[key][_key][inner_key] = 0
+                    else:
+                        diff_value = result[key][_key] - prev_result[key][_key]
+                        diff_result[key][_key] = diff_value
+                else:
+                    diff_result[key][_key] = 0
+        elif type(result[key]) == str:
+            diff_result[key] = result[key]
+        else:
+            if key in prev_result:
+                if type(result[key]) == list:
+                    diff_result[key] = result[key]
+                    continue
+                diff_value = result[key] - prev_result[key]
+                diff_result[key] = diff_value
+            else:
+                diff_result[key] = 0
+
+    return diff_result
+
+
+
+def get_complete_dict(result, tabular_list, prev_result):
+    core_id = None
+    complete_dict = OrderedDict()
+    added_cluster_list = []
+    for item in tabular_list:
+        complete_dict[item] = []
+    current_result = result
+    if prev_result:
+        current_result = prev_result
+    for key, val in current_result.iteritems():
+        cluster_val = key.split(":")[0][2]
+        vp_val = key.split(":")[1]
+        final_val = key.split(":")[2][0]
+        if not int(final_val) == 1:
+            if not cluster_val in added_cluster_list:
+                if core_id is not None:
+                    complete_dict[tabular_list[0]].append("%s/%s" % (cluster_val, core_id))
+                    added_cluster_list.append(cluster_val)
+                else:
+                    for x in range(0, 6):
+                        complete_dict[tabular_list[0]].append("%s/%s" % (cluster_val, x))
+                    added_cluster_list.append(cluster_val)
+            for _key, _val in val.iteritems():
+                for item in tabular_list[1:]:
+                    if (int(vp_val) % 4 == int(item.split(":")[0])) and (not 'd_' in item) and (
+                            _key == item.split(":")[1]):
+                        complete_dict[item].append(_val)
+                        break
+    if prev_result:
+        diff_result = _get_difference(result=result, prev_result=prev_result)
+        diff_result = get_sorted_dict(diff_result)
+        for key, val in diff_result.iteritems():
+            cluster_val = key.split(":")[0][2]
+            vp_val = key.split(":")[1]
+            final_val = key.split(":")[2][0]
+            if not int(final_val) == 1:
+                if not cluster_val in added_cluster_list:
+                    added_cluster_list.append(cluster_val)
+                    complete_dict[tabular_list[0]].append(cluster_val)
+                for _key, _val in val.iteritems():
+                    for item in tabular_list[1:]:
+                        if (int(vp_val) % 4 == int(item.split(":")[0])) and (
+                                'd_' in item) and ('d_' + _key == item.split(":")[1]):
+                            complete_dict[item].append(_val)
+                            break
+    return complete_dict
+
+
+def get_tabular_list(table_list, print_key_list, diff=False):
+    tabular_list = []
+    for _key in table_list:
+        for key in print_key_list:
+            if not 'Cls/Core' in str(_key):
+                tabular_list.append(str(_key) + ":" + key)
+                if diff:
+                    tabular_list.append(str(_key) + ":d_" + key)
+            else:
+                if 'Cls/Core' not in tabular_list:
+                    tabular_list.append(_key)
+    return tabular_list
+
+
+def get_per_vp_dict_table_obj(result, prev_result):
+    rx_key_name = 'wus_received'
+    display_rx_key_name = 'rx'
+    tx_key_name = 'wus_sent'
+    display_tx_key_name = 'tx'
+    q_key_name = 'vp_wu_qdepth'
+    display_q_key_name = 'q'
+    all_keys = result.keys()
+    row_list = ["Cls/Core", "0", "1", "2", "3"]
+    single_dict = result[all_keys[0]]
+    print_key_list = single_dict.keys()
+
+    diff = True
+    tabular_list = get_tabular_list(row_list, print_key_list, diff=diff)
+
+    master_table_obj = PrettyTable()
+    print_dict = get_complete_dict(result=result, tabular_list=tabular_list,
+                                   prev_result=prev_result)
+
+    print_keys = print_dict.keys()
+    print_keys = [print_key.replace(tx_key_name, display_tx_key_name) for print_key in print_keys]
+    print_keys = [print_key.replace(rx_key_name, display_rx_key_name) for print_key in
+                  print_keys]
+    print_keys = [print_key.replace(q_key_name, display_q_key_name) for print_key in
+                  print_keys]
+    print_values = print_dict.values()
+    for col_name, col_values in zip(print_keys, print_values):
+        master_table_obj.add_column(col_name, col_values)
+    return master_table_obj
+
+def remove_entries_per_vp_dict(result_dict, cc_entries=True):
+    output_dict = {}
+    result_keys = result_dict.keys()
+    new_result_keys = []
+    if cc_entries:
+        for key in result_keys:
+            if not key.split(":")[0][2] == '8':
+                new_result_keys.append(key)
+    else:
+        new_result_keys = result_keys
+    for key in new_result_keys:
+        if not key.split(":")[2][0] == '1':
+            output_dict[key] = result_dict[key]
+
+    return output_dict
+
 def populate_per_vp_output_file(network_controller_obj, filename, display_output=False):
     output = False
     try:
-        filtered_dict = {}
         lines = list()
 
+        prev_result = network_controller_obj.peek_per_vp_stats()
+        prev_result = remove_entries_per_vp_dict(prev_result)
+        fun_test.sleep("Let per vp be grepped", seconds=1)
         result = network_controller_obj.peek_per_vp_stats()
-        for key, val in sorted(result.iteritems()):
-            if "FA1" in key or "FA2" in key:
-                filtered_dict[key] = val
-        master_table_obj = get_nested_dict_stats(result=filtered_dict)
+        result = remove_entries_per_vp_dict(result)
+        master_table_obj = get_per_vp_dict_table_obj(result=result, prev_result=prev_result)
         lines.append("\n########################  %s ########################\n" % str(get_timestamp()))
         lines.append(master_table_obj.get_string())
         lines.append('\n\n\n')

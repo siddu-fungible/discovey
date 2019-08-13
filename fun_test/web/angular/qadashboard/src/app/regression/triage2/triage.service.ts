@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import {ApiService} from "../../services/api/api.service";
-import {of} from "rxjs";
+import {from, of} from "rxjs";
 import {switchMap} from "rxjs/operators";
 
 enum TriagingStates {
@@ -54,8 +54,45 @@ export class TriageService {
     }))
   }
 
+  add(triageType,
+      regexMatchString=null,
+      fromFunOsSha=null,
+      toFunOsSha=null,
+      submitterEmail=null,
+      buildParameters=null) {
+    let payload = {};
+    payload["triage_type"] = triageType;
+    if (regexMatchString) {
+      payload["regex_match_string"] = regexMatchString;
+    }
+    if (fromFunOsSha) {
+      payload["from_fun_os_sha"] = fromFunOsSha;
+    }
+    if (toFunOsSha) {
+      payload["to_fun_os_sha"] = toFunOsSha;
+    }
+    if (submitterEmail) {
+      payload["submitter_email"] = submitterEmail;
+    }
+
+    if (buildParameters) {
+      payload["build_parameters"] = buildParameters;
+    }
+    let url = "/api/v1/triages";
+    return this.apiService.post(url, payload).pipe(switchMap((response) => {
+      return of(response.data);
+    }));
+  }
+
   trials(triageId, funOsSha) {
     let url = "/api/v1/triages/" + triageId + "/trials";
+    return this.apiService.get(url).pipe(switchMap((response) => {
+      return of(response.data);
+    }));
+  }
+
+  trialReRuns(triageId, originalId) {
+    let url = "/api/v1/triages/" + triageId + "/trials?original_id=" + originalId;
     return this.apiService.get(url).pipe(switchMap((response) => {
       return of(response.data);
     }));
@@ -81,6 +118,8 @@ export class TriageService {
     let payload = {"status": TriagingStates.COMPLETED};
     return this.apiService.post(url, payload);
   }
+
+
 
 
 }

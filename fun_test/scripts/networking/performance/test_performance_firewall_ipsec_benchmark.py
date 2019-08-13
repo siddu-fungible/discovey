@@ -87,9 +87,9 @@ class ScriptSetup(FunTestScript):
             single_flow_encrypt_IMIX_start_data_mpps = 2.6
             single_flow_encrypt_IMIX_end_data_mpps = 5.6
             single_flow_encrypt_IMIX_step_data_mpps = 0.5
-            multi_flow_decrypt_start_data_mpps = 52
-            multi_flow_decrypt_end_data_mpps = 82
-            multi_flow_decrypt_step_data_mpps = 5
+            multi_flow_decrypt_start_data_mpps = 80
+            multi_flow_decrypt_end_data_mpps = 90
+            multi_flow_decrypt_step_data_mpps = 1
             single_flow_decrypt_start_data_mpps = 2
             single_flow_decrypt_end_data_mpps = 5
             single_flow_decrypt_step_data_mpps = 0.5
@@ -158,8 +158,8 @@ class ScriptSetup(FunTestScript):
         result = network_controller_obj.set_etp(pkt_adj_size=8)
         fun_test.simple_assert(result['status'], "Reset pkt_adj_size to 8")
 
-        output_1 = network_controller_obj.set_nu_benchmark_1(mode=mode, num_flows=num_flows, flow_le_ddr=True,
-                                                             flow_state_ddr=True)
+        output_1 = network_controller_obj.set_nu_benchmark_1(mode=mode, num_flows=num_flows, flow_le_ddr=False,
+                                                             flow_state_ddr=False)
         for fpg in benchmark_ports:
             result = network_controller_obj.set_nu_benchmark_1(mode=mode, fpg=fpg)
             fun_test.simple_assert(result['status'], 'Enable Firewall benchmark')
@@ -353,7 +353,9 @@ class TestL4IPsecPerformance(FunTestCase):
             handles = template_obj.stc_manager.get_stream_handle_list(port_handle)
             handle_list.extend(handles)
 
+        tabular_data = []
         for stream in test_streams:
+            fun_test.add_checkpoint("Start test for %s" % stream)
             update_attributes = {"Load": default_load_pps}
             for traffic_streamblock in handle_list:
                 template_obj.stc_manager.update_stream_block(traffic_streamblock, update_attributes)
@@ -409,7 +411,6 @@ class TestL4IPsecPerformance(FunTestCase):
                 frame_size = FRAME_SIZE_IMIX
                 self.flow_direction = IPSEC_DECRYPT_SINGLE_TUNNEL
 
-
             current_data = start_data
             continue_higher = True
             while current_data <= end_data and continue_higher:
@@ -450,12 +451,13 @@ class TestL4IPsecPerformance(FunTestCase):
                                                psw_stats_nu_1=run_time_psw_stats_before, psw_stats_nu_2=run_time_psw_stats_after)
 
                 main_pkt_drop = int(output["input"]['main_pkt_drop_eop'])
-                if main_pkt_drop <= 10:
+                if main_pkt_drop <= 10 and total_rx_analyzer_fps > 0.0:
                     result[stream]['pps'] = total_rx_analyzer_fps
                     result[stream]['throughput'] = self.calculate_throughput(current_data, frame_size)
                     fun_test.log("Max fps and throughput seen when pps %s are running is %s and %s" % (
                         total_rate, result[stream]['pps'], result[stream]['throughput']))
                     working_load = single_port_rate
+                    fun_test.add_checkpoint("%s passed for stream %s" % (total_rate, stream))
                 else:
                     fun_test.log("main pkt eop drop seen is %s" % main_pkt_drop)
                     fun_test.log("Difference seen for pps Tx: %s and Rx: %s for frame %s at rate %s" % (total_tx_generator_fps, total_rx_analyzer_fps,
@@ -477,6 +479,19 @@ class TestL4IPsecPerformance(FunTestCase):
                                                                              filename=OUTPUT_JSON_FILE_NAME,
                                                                              timestamp=TIMESTAMP)
             fun_test.add_checkpoint("Added result for frame size %s" % frame_size)
+
+            data_dict = OrderedDict()
+            data_dict["flow_type"] = self.flow_direction
+            data_dict["frame_size"] = frame_size
+            data_dict["pps"] = result[stream]["pps"]
+            data_dict["throughput"] = result[stream]['throughput']
+
+            tabular_data.append(data_dict)
+
+            table_add = template_obj.create_performance_table(result=tabular_data,
+                                                              table_name="Performance numbers IPSec",
+                                                              spirent_rfc=False)
+            fun_test.add_checkpoint(table_add)
 
             # Run traffic for remaining time if no significant drops are seen
             if result[stream]['pps'] > 0.0:

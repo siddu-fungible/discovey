@@ -370,7 +370,12 @@ export class RegressionSummaryComponent implements OnInit {
   }
 
   scriptPathToPk(scriptPath) {
-    return this.scriptInfoMap[scriptPath].entry.pk;
+    try {
+      return this.scriptInfoMap[scriptPath].entry.pk;
+
+    } catch (err) {
+      let i = 0;
+    }
   }
 
   showPointDetails(pointInfo): void {
