@@ -604,7 +604,7 @@ def redis_del_fcp_ftep(linux_obj, ws='/scratch'):
         linux_obj.command('{} "redis-cli < {}"'.format(cmd_prefix, chk_file))
 
 
-def collect_funcp_logs(linux_obj, path='/scratch'):
+def collect_funcp_logs(linux_obj, path='/scratch/opt/fungible/logs'):
     """Populate the FunCP log files to job log dir"""
     output = linux_obj.command('cd {}; ls -l *.log'.format(path))
     log_files = re.findall(r'(\S+.log)', output)
