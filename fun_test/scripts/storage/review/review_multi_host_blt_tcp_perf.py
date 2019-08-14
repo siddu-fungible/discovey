@@ -186,7 +186,7 @@ class MultiHostVolumePerformanceScript(FunTestScript):
         if self.csi_perf_enabled:
             fun_test.log("testbed_config: {}".format(self.testbed_config))
             #  TODO: Get the correct F1 IP
-            self.csi_f1_ip = self.testbed_config["dut_info"][self.available_dut_indexes[0]]["bond_interface_info"]["0"]["0"]["ip"].split('/')[0]
+            self.csi_f1_ip = self.testbed_config["dut_info"][str(self.available_dut_indexes[0])]["bond_interface_info"]["0"]["0"]["ip"].split('/')[0]
             fun_test.log("F1 ip used for csi_perf_test: {}".format(self.csi_f1_ip))
             self.perf_listener_host = self.topology_helper.get_available_perf_listener_hosts()
             fun_test.log("perf_listener_host used for current test: {}".format(self.perf_listener_host))
