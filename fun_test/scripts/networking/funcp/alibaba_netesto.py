@@ -10,6 +10,7 @@ import json
 import pprint
 import pandas as pd
 from StringIO import StringIO
+result_links = {}
 
 
 class SetupBringup(alibaba_fcp_setup.ScriptSetup):
@@ -409,7 +410,9 @@ class FunPerformance(FunTestCase):
         fun_test.log('Final Results:\n{}'.format(pprint.pformat(result)))
 
 
-class RunNetesto(FunTestCase):
+class RunNetesto0G1RR(FunTestCase):
+    script_name = 'script.ali_0g_1rr'
+
     def describe(self):
         self.set_test_details(id=2, summary="HU HU Non FCP perf",
                               steps="""
@@ -431,7 +434,7 @@ class RunNetesto(FunTestCase):
         netesto_controller = Linux(host_ip="cab03-qa-03", ssh_username="localadmin", ssh_password="Precious1*")
         netesto_controller.command("cd ~/netesto_controller/netesto/local")
         fun_test.sleep(message="Sleep before tests start", seconds=10)
-        netesto_controller.sudo_command(command="./netesto.py -d < fun_scripts/script.alibaba_hu-hu", timeout=600)
+        netesto_controller.sudo_command(command="./netesto.py -d < fun_scripts/%s" % self.script_name, timeout=600)
 
         netesto_process = netesto_controller.command("cat counter; echo").strip()
         if netesto_process != "":
@@ -457,10 +460,15 @@ class RunNetesto(FunTestCase):
             fun_test.log("\n======================================")
             fun_test.log("Link for throughput and Latency graphs")
             fun_test.log("======================================\n")
-            fun_test.log("Throughput :  http://10.1.105.194/Chart.js/fun_plots/netesto_tp_%s.html" % netesto_process)
-            fun_test.log("Latency :  http://10.1.105.194/Chart.js/fun_plots/netesto_latency_%s.html" % netesto_process)
-            fun_test.log("Aggregate :  http://10.1.105.194/Chart.js/fun_plots/aggregate_%s.csv" % netesto_process)
+            tp = "Throughput :  http://10.1.105.194/Chart.js/fun_plots/netesto_tp_%s.html" % netesto_process
+            latency = "Latency :  http://10.1.105.194/Chart.js/fun_plots/netesto_latency_%s.html" % netesto_process
+            aggregate = "Aggregate :  http://10.1.105.194/Chart.js/fun_plots/aggregate_%s.csv" % netesto_process
+            fun_test.log(tp)
+            fun_test.log(latency)
+            fun_test.log(aggregate)
             fun_test.log(message="No of incomplete streams = %s" % df[df['Duration'] < 57].count(1).count())
+            result_links['RunNetesto20per1rr'] = {'result_id': netesto_process, 'throughput_graph': tp,
+                                                  'latency_graph': latency, 'aggregate_csv': aggregate}
 
     def cleanup(self):
         pass
@@ -494,7 +502,6 @@ def netstat(linux):
 if __name__ == '__main__':
     ts = SetupBringup()
     # ts = ScriptSetup2()
-    ts.add_test_case(RunNetesto())
-
+    ts.add_test_case(RunNetesto0G1RR())
 
     ts.run()
