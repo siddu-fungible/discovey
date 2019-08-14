@@ -82,6 +82,7 @@ class SetupBringup(alibaba_fcp_setup.ScriptSetup):
 
     def cleanup(self):
         super(SetupBringup, self).cleanup()
+        print result_links
 
 
 class ScriptSetup2(FunTestScript):
