@@ -14,8 +14,8 @@ import {Announcement} from "../../../announcement/announcement";
 export class AnnouncementFormComponent implements OnInit {
   @ViewChild('announcementForm') formValues;
   editing: boolean = false;
-  levels = {'1': 'info', '2': 'warning', '3': 'danger'};
-  levelNums = Object.keys(this.levels);
+  levels = {1: 'info', 2: 'warning', 3: 'danger'};
+  levelNums = [1, 2, 3];
   announcementModel = new Announcement('', null);
   tempAnnouncementModel = new Announcement('', null);
   emptyAnnouncement = new Announcement('', 1);
