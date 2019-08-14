@@ -91,7 +91,7 @@ enum Mode {
 export class PerformanceComponent implements OnInit {
   @Input() selectMode: boolean = false;
   @Input() userProfileEmail: string = null;
-  @Input() workspaceName: string = null;
+  @Input() workspaceId: number = null;
   @Input() interestedMetrics: any = null;
   @Input() description: string = null;
   @Output() submitted: EventEmitter<boolean> = new EventEmitter();
@@ -300,11 +300,11 @@ export class PerformanceComponent implements OnInit {
       });
       if (this.selectMode && this.interestedMetrics) {
         for (let flatNode of this.flatNodes) {
-          for (let metricId of this.interestedMetrics) {
-            if (flatNode.node.metricId in metricId) {
+          for (let metric of this.interestedMetrics) {
+            if (flatNode.node.metricId === metric.metric_id) {
               flatNode.showAddLeaf = true;
               flatNode.track = true;
-              flatNode.subscribe = metricId[flatNode.node.metricId].subscribe;
+              flatNode.subscribe = metric.subscribe;
             }
           }
 
@@ -1031,18 +1031,20 @@ export class PerformanceComponent implements OnInit {
     for (let flatNode of flatNodes) {
       if (!(flatNode.node.metricId in metricDetails)) {
         let lineage = this.getStringLineage(flatNode.lineage);
-        metricDetails[flatNode.node.metricId] = {"subscribe": flatNode.subscribe, "track": flatNode.track,
-          "lineage": lineage, "chartName": flatNode.node.chartName, "score": flatNode.node.lastScore, "category": 'General'};
+        metricDetails[flatNode.node.metricId] = {"metric_id": flatNode.node.metricId, "subscribe": flatNode.subscribe, "track": flatNode.track,
+          "lineage": lineage, "chart_name": flatNode.node.chartName, "category": 'General'};
       }
     }
-    this.workspace.push(metricDetails);
+    Object.keys(metricDetails).forEach(id => {
+      this.workspace.push(metricDetails[id]);
+    });
 
     let payload = {};
     payload["email"] = this.userProfileEmail;
-    payload["name"] = this.workspaceName;
+    payload["workspace_id"] = this.workspaceId;
     payload["interested_metrics"] = this.workspace;
     payload["description"] = this.description;
-    this.apiService.post("/api/v1/workspaces", payload).subscribe(response => {
+    this.apiService.post("/api/v1/workspaces/" + this.workspaceId + "/interested_metrics", payload).subscribe(response => {
       console.log("submitted successfully");
       this.submitted.emit(true);
     }, error => {

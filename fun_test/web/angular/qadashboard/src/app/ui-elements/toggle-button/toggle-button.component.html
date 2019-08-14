@@ -1,6 +1,6 @@
 <label class="switch" style="margin: 0;
                 vertical-align: middle; padding: 0">
-  <input type="checkbox" [checked]="checked"
+  <input type="checkbox" [checked]="checked" [disabled]="disabled ? 'disabled': null"
          (change)="onChange()" class="switch" data-toggle="toggle">
   <span class="slider round"></span>
 </label>

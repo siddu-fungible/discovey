@@ -195,6 +195,7 @@ users_urls = [
 
 api_v1_urls = [
     url(r'^users/?(.*)?$', users.users),
+    url(r'^workspaces/(\d+)/interested_metrics$', users.interested_metrics),
     url(r'^workspaces/(.*)/(.*)$', users.workspaces),
     url(r'^workspaces/?(.*)?$', users.workspaces),
     url(r'^regression/test_beds/?(\S+)?$', regression.test_beds),

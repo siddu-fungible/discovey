@@ -110,9 +110,6 @@
                 Chart name
               </th>
               <th style="width: 10%">
-                Last score
-              </th>
-              <th style="width: 10%">
                 Track
               </th>
               <th style="width: 10%">
@@ -125,26 +122,23 @@
 
               </th>
             </tr>
-            <tr *ngFor="let metric of currentWorkspace.interestedMetrics[0] | keyvalue">
+            <tr *ngFor="let metric of currentWorkspace.interestedMetrics">
               <td>
-                {{ metric.value['chartName'] }}
+                {{ metric['chart_name'] }}
               </td>
               <td>
-                {{ metric.value['score'] }}
+                <app-toggle-button [checked]="metric['track']"
+                                   (changed)="onChangeTrack($event, metric.metric_id)"></app-toggle-button>
               </td>
               <td>
-                <app-toggle-button [checked]="metric.value['track']"
-                                   (changed)="onChangeTrack($event, metric.key)"></app-toggle-button>
+                <app-toggle-button [checked]="metric['subscribe']"
+                                   (changed)="onChangeSubscribeTo($event, metric.metric_id)"></app-toggle-button>
               </td>
               <td>
-                <app-toggle-button [checked]="metric.value['subscribe']"
-                                   (changed)="onChangeSubscribeTo($event, metric.key)"></app-toggle-button>
-              </td>
-              <td>
-                {{ metric.value["lineage"] }}
+                {{ metric["lineage"] }}
               </td>
               <td style="text-align: center">
-                <a [routerLink]="" (click)="deleteMetricInWorkspace(metric.key)">Delete</a>
+                <a [routerLink]="" (click)="deleteMetricInWorkspace(metric.metric_id)">Delete</a>
               </td>
             </tr>
           </table>
@@ -160,7 +154,7 @@
            style="height: auto; justify-content: left">
         <div class="card-body">
           <app-performance [selectMode]="true" [userProfileEmail]="selectedUser.email"
-                           [workspaceName]="currentWorkspace.name"
+                           [workspaceId]="currentWorkspace.workspaceId"
                            [interestedMetrics]="currentWorkspace.interestedMetrics" [description]="currentWorkspace.description"
                            (submitted)="updateStatus($event, currentWorkspace)"></app-performance>
         </div>
@@ -185,7 +179,15 @@
     </div>
     <div class=card-body>
       <div>
-        <table *ngIf="profile.length > 0" class="table table-borderless" style="margin: 20px; width: 30%;">
+        <table *ngIf="profile.length > 0" class="table table-borderless" style="margin: 20px; width: 70%;">
+          <tr>
+            <th></th>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Created date</th>
+            <th>Modified date</th>
+            <th></th>
+          </tr>
           <tr *ngFor="let workspace of profile">
             <td style="width: 10%;">
               <a [routerLink]="" (click)="openWorkspace(workspace)">View</a> | <a [routerLink]=""
@@ -197,6 +199,12 @@
             </td>
             <td style="width: 20%">
               {{ workspace.description }}
+            </td>
+            <td>
+              {{ workspace.createdDate }}
+            </td>
+            <td>
+              {{ workspace.modifiedDate }}
             </td>
             <td style="width: 10%">
               <a [routerLink]="" (click)="openDeleteWorkspace(deleteWorkspace, workspace)">Delete</a>

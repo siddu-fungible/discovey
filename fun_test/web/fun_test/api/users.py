@@ -50,10 +50,6 @@ def workspaces(request, email, workspace_name=None):
             description = request_json["description"]
         else:
             description = ""
-        if "interested_metrics" in request_json:
-            interested_metrics = request_json["interested_metrics"]
-        else:
-            interested_metrics = []
         try:
             entry = PerformanceUserWorkspaces.objects.get(email=email, workspace_name=name)
             if entry:
@@ -68,43 +64,62 @@ def workspaces(request, email, workspace_name=None):
         result = entry.to_dict()
     elif request.method == "GET":
         if workspace_name:
-            workspaces = PerformanceUserWorkspaces.objects.filter(email=email, name=workspace_name)
+            workspaces = PerformanceUserWorkspaces.objects.filter(email=email, workspace_name=workspace_name).order_by(
+                "-date_modified")
         else:
-            workspaces = PerformanceUserWorkspaces.objects.filter(email=email)
+            workspaces = PerformanceUserWorkspaces.objects.filter(email=email).order_by("-date_modified")
         for workspace in workspaces:
             result.append(workspace.to_dict())
     elif request.method == "DELETE":
         workspaces = PerformanceUserWorkspaces.objects.filter(email=email)
         for workspace in workspaces:
-            if workspace.name == workspace_name:
+            if workspace.workspace_name == workspace_name:
                 workspace.delete()
                 break
     return result
 
 @csrf_exempt
 @api_safe_json_response
-def interested_metrics(request, email, workspace_id=None):
+def interested_metrics(request, workspace_id=None):
     result = []
     if request.method == "POST":
         request_json = json.loads(request.body)
         email = request_json["email"]
         workspace_id = request_json["workspace_id"]
         interested_metrics = request_json["interested_metrics"]
-        metrics = interested_metrics[0]
 
-        for metric in metrics:
-            metric_id = metric
-            score = metrics[metric].score
-            chart_name = metrics[metric].chart_name
-            subscribe = metrics[metric].subscribe
-            track = metrics[metric].track
-            lineage = metrics[metric].lineage
-            category = metrics[metric].category
+        for metric in interested_metrics:
+            metric_id = metric["metric_id"]
+            chart_name = metric["chart_name"]
+            subscribe = metric["subscribe"]
+            track = metric["track"]
+            lineage = metric["lineage"]
+            category = metric["category"]
             try:
-                entry = InterestedMetrics.objects.get(workspace_id= workspace_id, metric_id=metric_id)
+                entry = InterestedMetrics.objects.get(workspace_id=workspace_id, metric_id=metric_id)
+                entry.subscribe = subscribe
+                entry.track = track
+                entry.category = category
+                entry.lineage = lineage
+                entry.save()
+                result.append(entry.to_dict())
             except ObjectDoesNotExist:
-                entry = InterestedMetrics(workspace_id=workspace_id, email=email, metric_id=metric_id, score=score,
-                                          chart_name=chart_name, )
+                entry = InterestedMetrics(workspace_id=workspace_id, email=email, metric_id=metric_id,
+                                          chart_name=chart_name, subscribe=subscribe, track=track, category=category,
+                                          lineage=lineage)
+                entry.save()
+                result.append(entry.to_dict())
+    elif request.method == "GET":
+        interested_metrics = InterestedMetrics.objects.filter(workspace_id=workspace_id)
+        for metric in interested_metrics:
+            result.append(metric.to_dict())
+    elif request.method == "DELETE":
+        metric_id = request.GET.get("metric_id", None)
+        if metric_id:
+            entry = InterestedMetrics.objects.get(workspace_id=workspace_id, metric_id=metric_id)
+            entry.delete()
+    return result
+
 
 
 
