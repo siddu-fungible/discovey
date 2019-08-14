@@ -19,8 +19,7 @@ def site_configs(request):
         request_json = json.loads(request.body)
         if "announcement" in request_json:
             site_config.announcement = request_json["announcement"]
-        if "announcement_level" in request_json:
-            site_config.announcement_level = request_json["announcement_level"]
-
+        if "announcementLevel" in request_json:
+            site_config.announcement_level = request_json["announcementLevel"]
         site_config.save()
     return result

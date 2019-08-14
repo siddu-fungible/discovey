@@ -1,3 +1,3 @@
 export class Announcement {
-  constructor(public announcement: string, public announcement_level: number){}
+  constructor(public announcement: string, public announcementLevel: number){}
 }

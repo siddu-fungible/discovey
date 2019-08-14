@@ -44,7 +44,7 @@ export class AnnouncementFormComponent implements OnInit {
   onCancel() {
     this.editing = false;
     this.tempAnnouncementModel.announcement = this.announcementModel.announcement;
-    this.tempAnnouncementModel.announcement_level = this.announcementModel.announcement_level;
+    this.tempAnnouncementModel.announcementLevel = this.announcementModel.announcementLevel;
   }
 
   onDeleteAnnouncement() {
@@ -65,11 +65,11 @@ export class AnnouncementFormComponent implements OnInit {
   refresh() {
     this.apiService.get('/api/v1/site_configs').subscribe((response) => {
       this.announcementModel.announcement = response.data.announcement;
-      this.announcementModel.announcement_level = response.data.announcement_level;
+      this.announcementModel.announcementLevel = response.data.announcement_level;
       this.tempAnnouncementModel.announcement = this.announcementModel.announcement;
-      this.tempAnnouncementModel.announcement_level = this.announcementModel.announcement_level;
+      this.tempAnnouncementModel.announcementLevel = this.announcementModel.announcementLevel;
       this.tempAnnouncementModel = {...this.tempAnnouncementModel};
-      this.currentLevel = this.levels[this.announcementModel.announcement_level];
+      this.currentLevel = this.levels[this.announcementModel.announcementLevel];
       this.fetched = true;
     }, error => {
       this.logger.error("Unable to fetch announcements");

@@ -6,7 +6,7 @@
   <div class="card-body">
     <div *ngIf="announcementModel.announcement; else noDisplay;">
       Current announcement:&nbsp;{{announcementModel.announcement}}
-      <app-smart-label [value]="currentLevel">{{announcementModel.announcement_level}}</app-smart-label>
+      <app-smart-label [value]="currentLevel">{{announcementModel.announcementLevel}}</app-smart-label>
       &nbsp;<i class="fa fa-pencil" style="font-size:20px; color: green" (click)="editing=true"></i>&nbsp;
       <i (click)="onDeleteAnnouncement()" class="fa fa-trash-o" style="font-size:20px; color: red"></i>
     </div>
@@ -24,7 +24,7 @@
       <div class="form-group">
         <label>Level selection</label>
         <div class="form-check" *ngFor="let level of levelNums">
-          <input class="form-check-input" type="radio" (click)="tempAnnouncementModel.announcement_level = level;" name="'level'" [value]="level" [checked]="tempAnnouncementModel.announcement_level == level.toString()">
+          <input class="form-check-input" type="radio" (click)="tempAnnouncementModel.announcementLevel = level;" name="'level'" [value]="level" [checked]="tempAnnouncementModel.announcementLevel == level.toString()">
           <label class="form-check-label">{{level}}</label>
         </div>
       </div>
