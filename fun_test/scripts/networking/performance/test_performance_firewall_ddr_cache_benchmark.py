@@ -36,14 +36,16 @@ class ScriptSetup(FunTestScript):
 
         if not f1_index:
             f1_index = 1
-        if 'fs' in fun_test.get_job_environment_variable('test_bed_type'):
-            bootargs = 'app=hw_hsu_test sku=SKU_FS1600_0 --dpc-server --dis-stats --dpc-uart --csr-replay --all_100g --disable-wu-watchdog \
-                                    override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303'
-            # fs = Fs.get(disable_f1_index=f1_index)
-            fs = Fs.get(disable_f1_index=f1_index, boot_args=bootargs)
-            dpc_server_ip = fs.come_mgmt_ip
-            fun_test.shared_variables['fs'] = fs
-            fun_test.test_assert(fs.bootup(reboot_bmc=False), 'FS bootup')
+        test_bed_type = fun_test.get_job_environment_variable('test_bed_type')
+        if test_bed_type:
+            if 'fs' in test_bed_type:
+                bootargs = 'app=hw_hsu_test sku=SKU_FS1600_0 --dpc-server --dis-stats --dpc-uart --csr-replay --all_100g --disable-wu-watchdog \
+                                        override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303'
+                # fs = Fs.get(disable_f1_index=f1_index)
+                fs = Fs.get(disable_f1_index=f1_index, boot_args=bootargs)
+                dpc_server_ip = fs.come_mgmt_ip
+                fun_test.shared_variables['fs'] = fs
+                fun_test.test_assert(fs.bootup(reboot_bmc=False), 'FS bootup')
 
         private_branch_funos = fun_test.get_build_parameter(parameter='BRANCH_FunOS')
         if private_branch_funos:
