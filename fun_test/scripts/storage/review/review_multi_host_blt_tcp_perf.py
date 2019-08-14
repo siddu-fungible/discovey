@@ -172,6 +172,7 @@ class MultiHostVolumePerformanceScript(FunTestScript):
         elif self.testbed_type == "suite-based":
             self.topology_helper = TopologyHelper()
             self.available_dut_indexes = self.topology_helper.get_available_duts().keys()
+            fun_test.log("Available DUT Indexes: {}".format(self.available_dut_indexes))
             self.required_hosts = self.topology_helper.get_available_hosts()
             self.testbed_config = self.topology_helper.spec
             self.total_available_duts = len(self.available_dut_indexes)
@@ -185,7 +186,7 @@ class MultiHostVolumePerformanceScript(FunTestScript):
         if self.csi_perf_enabled:
             fun_test.log("testbed_config: {}".format(self.testbed_config))
             #  TODO: Get the correct F1 IP
-            self.csi_f1_ip = self.testbed_config["dut_info"]["3"]["bond_interface_info"]["0"]["0"]["ip"].split('/')[0]
+            self.csi_f1_ip = self.testbed_config["dut_info"][self.available_dut_indexes[0]]["bond_interface_info"]["0"]["0"]["ip"].split('/')[0]
             fun_test.log("F1 ip used for csi_perf_test: {}".format(self.csi_f1_ip))
             self.perf_listener_host = self.topology_helper.get_available_perf_listener_hosts()
             fun_test.log("perf_listener_host used for current test: {}".format(self.perf_listener_host))
