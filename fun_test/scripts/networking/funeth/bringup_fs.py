@@ -6,15 +6,15 @@ from scripts.networking.helper import *
 from lib.utilities.funcp_config import *
 
 fs = "fs-11"
-image = "s_22145_funos-f1.stripped.gz"
+image = "s_22692_funos-f1.stripped.gz"
 
 # CSR replay
 boot_args_f1_0 = "app=hw_hsu_test retimer=0,1 --dpc-uart --dpc-server --csr-replay --all_100g --disable-wu-watchdog"
 boot_args_f1_1 = "app=hw_hsu_test retimer=0,1 --dpc-uart --dpc-server --csr-replay --all_100g --disable-wu-watchdog"
 
 # With FunCP
-boot_args_f1_0 = "app=mdt_test,load_mods,hw_hsu_test --serial cc_huid=3 sku=SKU_FS1600_0 retimer=0,1 --all_100g --dpc-server --dpc-uart --disable-wu-watchdog"
-boot_args_f1_1 = "app=mdt_test,load_mods,hw_hsu_test --serial cc_huid=2 sku=SKU_FS1600_1 retimer=0,1 --all_100g --dpc-server --dpc-uart --disable-wu-watchdog"
+#boot_args_f1_0 = "app=mdt_test,load_mods,hw_hsu_test --serial cc_huid=3 sku=SKU_FS1600_0 retimer=0,1 --all_100g --dpc-server --dpc-uart --disable-wu-watchdog"
+#boot_args_f1_1 = "app=mdt_test,load_mods,hw_hsu_test --serial cc_huid=2 sku=SKU_FS1600_1 retimer=0,1 --all_100g --dpc-server --dpc-uart --disable-wu-watchdog"
 
 # Juniper IPSec
 #boot_args_f1_0 = "app=hw_hsu_test --dpc-uart --dpc-server --csr-replay --all_100g --disable-wu-watchdog override={NetworkUnit/VP:[{nu_bm_alloc_clusters:255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303"

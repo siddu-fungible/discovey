@@ -104,12 +104,13 @@ export class SubmitJobComponent implements OnInit {
   fromFunOsSha: string = "8751993af1b24e8159a5f2f3fc22480c44fde8c6";
   toFunOsSha: string = "74e24c8210d8c2ffb09712f9924eb959201dcf46";
   commitsInBetween: string[] = [];
-  triageType: number = null;
+  currentTriageType: number = null;
+  regexMatchString: string = null;
 
   constructor(private apiService: ApiService, private logger: LoggerService,
               private title: Title, private route: ActivatedRoute,
               private triageService: TriageService) {
-    this.triageType = this.triageTypes[0].value;
+    this.currentTriageType = this.triageTypes[0].value;
   }
 
   ngOnInit() {
@@ -379,8 +380,8 @@ export class SubmitJobComponent implements OnInit {
     if (this.mode === Mode.TRIAGE) {
       this.submitting = "Submitting triage";
       let ctrl = this;
-      this.triageService.add(this.triageType,
-        null,
+      this.triageService.add(this.currentTriageType,
+        this.regexMatchString,
         this.fromFunOsSha,
         this.toFunOsSha,
         this.selectedUser.email, payload).subscribe((response) => {
@@ -442,6 +443,8 @@ export class SubmitJobComponent implements OnInit {
     this.jobInputs = jobInputs;
   }
 
-
+  test() {
+    console.log(this.currentTriageType);
+  }
 
 }
