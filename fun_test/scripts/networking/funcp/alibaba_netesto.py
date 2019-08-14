@@ -453,7 +453,7 @@ class RunNetesto(FunTestCase):
             netesto_controller.sudo_command("mv netesto1.html netesto_latency_%s.html" % netesto_process)
             netesto_controller.sudo_command("mv ~/netesto_controller/netesto/local/fun_plots/aggregate.csv "
                                             "/var/www/html/Chart.js/fun_plots/aggregate_%s.csv" % netesto_process)
-
+            netesto_controller.disconnect()
             fun_test.log("\n======================================")
             fun_test.log("Link for throughput and Latency graphs")
             fun_test.log("======================================\n")
@@ -481,6 +481,7 @@ def netesto_client(host, ssh_username="localadmin", ssh_password="Precious1*"):
     fun_test.test_assert(expression=check_netesto, message="Make sure netesto is running on %s" % linux_obj)
     netstat(linux_obj)
     # TODO : include netstat -st command output before and after the runs on clients/servers
+    linux_obj.disconnect()
 
 
 def netstat(linux):
