@@ -446,7 +446,7 @@ class RunNetesto0G1RR(FunTestCase):
             data = StringIO(csv_results)
             df = pd.read_csv(data)
             print df
-            fun_test.critical(message="No of incomplete streams = %s" % df[df['Duration'] < 60].count(1).count())
+            fun_test.critical(message="No of incomplete streams = %s" % df[df['Duration'] < 57].count(1).count())
 
             netesto_controller.sudo_command(
                 "cp -r ~/netesto_controller/netesto/local/%s /var/www/html/" % netesto_process)
@@ -461,15 +461,16 @@ class RunNetesto0G1RR(FunTestCase):
             fun_test.log("\n======================================")
             fun_test.log("Link for throughput and Latency graphs")
             fun_test.log("======================================\n")
-            tp = "Throughput :  http://10.1.105.194/Chart.js/fun_plots/netesto_tp_%s.html" % netesto_process
-            latency = "Latency :  http://10.1.105.194/Chart.js/fun_plots/netesto_latency_%s.html" % netesto_process
-            aggregate = "Aggregate :  http://10.1.105.194/Chart.js/fun_plots/aggregate_%s.csv" % netesto_process
-            fun_test.log(tp)
-            fun_test.log(latency)
-            fun_test.log(aggregate)
+            tp = "http://10.1.105.194/Chart.js/fun_plots/netesto_tp_%s.html" % netesto_process
+            latency = "http://10.1.105.194/Chart.js/fun_plots/netesto_latency_%s.html" % netesto_process
+            aggregate = "http://10.1.105.194/Chart.js/fun_plots/aggregate_%s.csv" % netesto_process
+            fun_test.log("Throughput :  %s" % tp)
+            fun_test.log("Latency :  %s" % latency)
+            fun_test.log("Aggregate :  %s" % aggregate)
             fun_test.log(message="No of incomplete streams = %s" % df[df['Duration'] < 57].count(1).count())
             result_links['RunNetesto20per1rr'] = {'result_id': netesto_process, 'throughput_graph': tp,
-                                                  'latency_graph': latency, 'aggregate_csv': aggregate}
+                                                  'latency_graph': latency, 'aggregate_csv': aggregate,
+                                                  'incomplete_connections': df[df['Duration'] < 57].count(1).count()}
 
     def cleanup(self):
         pass
