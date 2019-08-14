@@ -899,28 +899,25 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                     thread_count += 1
 
             fun_test.sleep("Fio threads started", 10)
-
-            fun_test.sleep("Waiting for IO to be fully active", 120)
             # Starting csi perf stats collection if it's set
             if self.csi_perf_enabled:
-                if (mode == "randread" and fio_iodepth in self.csi_perf_iodepth) or (
-                        mode == "randwrite" and fio_iodepth in self.csi_perf_iodepth):
-                    csi_perf_obj = CsiPerfTemplate(perf_collector_host_name=str(self.perf_listener_host_name),
-                                                   listener_ip=self.perf_listener_ip, fs=self.fs[0],
-                                                   listener_port=4420)  # Temp change for testing
-                    csi_perf_obj.prepare(f1_index=0)
-                    csi_perf_obj.start(f1_index=0, dpc_client=self.storage_controller)
+                if row_data_dict["iodepth"] in self.csi_perf_iodepth:
                     try:
+                        fun_test.sleep("for IO to be fully active", 120)
+                        csi_perf_obj = CsiPerfTemplate(perf_collector_host_name=str(self.perf_listener_host_name),
+                                                       listener_ip=self.perf_listener_ip, fs=self.fs[0],
+                                                       listener_port=4420)  # Temp change for testing
+                        csi_perf_obj.prepare(f1_index=0)
+                        csi_perf_obj.start(f1_index=0, dpc_client=self.storage_controller)
                         fun_test.log("csi perf stats collection is started")
                         # dpcsh_client = self.fs.get_dpc_client(f1_index=0, auto_disconnect=True)
+                        fun_test.sleep("Allowing CSI performance data to be collected", 300)
+                        csi_perf_obj.stop(f1_index=0, dpc_client=self.storage_controller)
+                        fun_test.log("CSI perf stats collection is done")
                     except Exception as ex:
                         fun_test.critical(str(ex))
-
-                    fun_test.sleep("Allowing csi performance data to be collected", 300)
-                    csi_perf_obj.stop(f1_index=0, dpc_client=self.storage_controller)
-                    fun_test.log("csi perf stats collection is done")
                 else:
-                    fun_test.log("Skipping csi perf collection for current iodepth {}".format(fio_iodepth))
+                    fun_test.log("Skipping CSI perf collection for current iodepth {}".format(fio_iodepth))
             else:
                 fun_test.log("CSI perf collection is not enabled, hence skipping it for current test")
 
