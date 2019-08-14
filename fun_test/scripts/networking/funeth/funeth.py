@@ -11,7 +11,7 @@ CPU_LIST_HOST = range(8, 16)  # Host's CPU ids used for traffic, which are in sa
 CPU_LIST_VM = range(0, 8)  # VM's CPU ids used for traffic
 COALESCE_RX_USECS = 8
 COALESCE_TX_USECS = 16
-COALESCE_RX_FRAMES = 128
+COALESCE_RX_FRAMES = 127
 COALESCE_TX_FRAMES = 32
 
 
@@ -670,10 +670,9 @@ class Funeth:
                                   re.DOTALL)
                 if match:
                     if disable:
-                        result &= (match.group(1), match.group(2), match.group(3), match.group(4) == 0, 1, 0, 1)
+                        result &= (match.group(1), match.group(2), match.group(3), match.group(4)) == (0, 1, 0, 1)
                     else:
-                        result &= (match.group(1), match.group(2), match.group(3), match.group(4) ==
-                                   COALESCE_RX_USECS, COALESCE_RX_FRAMES, COALESCE_TX_USECS, COALESCE_TX_FRAMES)
+                        result &= (match.group(1), match.group(2), match.group(3), match.group(4)) == (COALESCE_RX_USECS, COALESCE_RX_FRAMES, COALESCE_TX_USECS, COALESCE_TX_FRAMES)
                 else:
                     result &= False
         return result
@@ -708,3 +707,4 @@ class Funeth:
                              target_file_path=artifact_file_name)
                 fun_test.add_auxillary_file(description="{} {}".format(log_file.split('.')[0], linux_obj.host_ip),
                                             filename=artifact_file_name)
+
