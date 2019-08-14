@@ -101,15 +101,16 @@ export class SubmitJobComponent implements OnInit {
   triageTypes = [{value: 6, description: "Pass or Fail"}, {value: 7, description: "Regex match"}];  //Taken from TriagingTypes
   gitShasValid: boolean = false;
   validateShasStatus: string = null;
-  fromFunOsSha: string = "8751993af1b24e8159a5f2f3fc22480c44fde8c6";
-  toFunOsSha: string = "74e24c8210d8c2ffb09712f9924eb959201dcf46";
+  fromFunOsSha: string = ""; //"8751993af1b24e8159a5f2f3fc22480c44fde8c6";
+  toFunOsSha: string = ""; //"74e24c8210d8c2ffb09712f9924eb959201dcf46";
   commitsInBetween: string[] = [];
-  triageType: number = null;
+  currentTriageType: number = null;
+  regexMatchString: string = null;
 
   constructor(private apiService: ApiService, private logger: LoggerService,
               private title: Title, private route: ActivatedRoute,
               private triageService: TriageService) {
-    this.triageType = this.triageTypes[0].value;
+    this.currentTriageType = this.triageTypes[0].value;
   }
 
   ngOnInit() {
@@ -377,10 +378,14 @@ export class SubmitJobComponent implements OnInit {
     }
 
     if (this.mode === Mode.TRIAGE) {
+      if (!this.fromFunOsSha || !this.toFunOsSha) {
+        this.logger.error("Please fill both From & To FunOS commit");
+        return;
+      }
       this.submitting = "Submitting triage";
       let ctrl = this;
-      this.triageService.add(this.triageType,
-        null,
+      this.triageService.add(this.currentTriageType,
+        this.regexMatchString,
         this.fromFunOsSha,
         this.toFunOsSha,
         this.selectedUser.email, payload).subscribe((response) => {
@@ -442,6 +447,8 @@ export class SubmitJobComponent implements OnInit {
     this.jobInputs = jobInputs;
   }
 
-
+  test() {
+    console.log(this.currentTriageType);
+  }
 
 }

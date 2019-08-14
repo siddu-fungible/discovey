@@ -169,7 +169,8 @@ def triagings(request, triage_id):
                           "build_parameters": triage.build_parameters,
                           "status": triage.status,
                           "result": triage.result,
-                          "submission_date_time": triage.submission_date_time}
+                          "submission_date_time": triage.submission_date_time,
+                          "regex_match_string": triage.regex_match_string}
             if not triage_id:
                 result.append(one_record)
             else:

@@ -1202,10 +1202,10 @@ def run_dpcsh_commands(template_obj, sequencer_handle, network_controller_obj, s
                                              filename=artifact_resource_pc_2_file, pc_id=2, display_output=display_output)
             populate_resource_bam_output_file(network_controller_obj=network_controller_obj, filename=artifact_bam_stats_file)
             populate_vp_util_output_file(network_controller_obj=network_controller_obj, filename=artifact_vp_util_file)
-            populate_per_vp_output_file(network_controller_obj=network_controller_obj, filename=artifact_per_vp_file)
             populate_ddr_output_file(network_controller_obj=network_controller_obj, filename=artifact_ddr_file)
             populate_cdu_output_file(network_controller_obj=network_controller_obj, filename=artifact_cdu_file)
             populate_ca_output_file(network_controller_obj=network_controller_obj, filename=artifact_ca_file)
+            populate_per_vp_output_file(network_controller_obj=network_controller_obj, filename=artifact_per_vp_file)
             fun_test.log_module_filter_disable()
 
             fun_test.sleep("Sleep for %s secs before next iteration of populating dpcsh stats" % sleep_time, seconds=sleep_time)
@@ -1255,11 +1255,11 @@ def populate_stats_file(network_controller_obj, test_time, generic_file_name_par
             populate_pc_resource_output_file(network_controller_obj=network_controller_obj,
                                              filename=artifact_resource_pc_2_file, pc_id=2, display_output=display_output)
             populate_resource_bam_output_file(network_controller_obj=network_controller_obj, filename=artifact_bam_stats_file)
-            populate_vp_util_output_file(network_controller_obj=network_controller_obj, filename=artifact_vp_util_file)
-            populate_per_vp_output_file(network_controller_obj=network_controller_obj, filename=artifact_per_vp_file)
             populate_ddr_output_file(network_controller_obj=network_controller_obj, filename=artifact_ddr_file)
+            populate_vp_util_output_file(network_controller_obj=network_controller_obj, filename=artifact_vp_util_file)
             populate_cdu_output_file(network_controller_obj=network_controller_obj, filename=artifact_cdu_file)
             populate_ca_output_file(network_controller_obj=network_controller_obj, filename=artifact_ca_file)
+            populate_per_vp_output_file(network_controller_obj=network_controller_obj, filename=artifact_per_vp_file)
             fun_test.log_module_filter_disable()
 
             fun_test.sleep("Sleep for %s secs before next iteration of populating dpcsh stats" % sleep_time, seconds=sleep_time)
