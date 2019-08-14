@@ -1,9 +1,7 @@
-import {Component, OnInit, Input, OnChanges, Output, EventEmitter, Renderer2, ViewChild} from '@angular/core';
+import {Component, OnInit, ViewChild} from '@angular/core';
 import {ApiService} from "../../../services/api/api.service";
 import {LoggerService} from "../../../services/logger/logger.service";
-import {CommonService} from "../../../services/common/common.service";
-import {RegressionService} from "../../../regression/regression.service";
-import {Announcement} from "./announcement";
+import {Announcement} from "../../../announcement/announcement";
 
 
 @Component({
@@ -24,8 +22,7 @@ export class AnnouncementFormComponent implements OnInit {
   fetched: boolean = false;
   currentLevel: number;
 
-  constructor(private apiService: ApiService, private logger: LoggerService,
-              private renderer: Renderer2, private commonService: CommonService, private regressionService: RegressionService) {
+  constructor(private apiService: ApiService, private logger: LoggerService) {
   }
 
 
@@ -46,8 +43,8 @@ export class AnnouncementFormComponent implements OnInit {
 
   onCancel() {
     this.editing = false;
-    this.tempAnnouncementModel.message = this.announcementModel.message;
-    this.tempAnnouncementModel.level = this.announcementModel.level;
+    this.tempAnnouncementModel.announcement = this.announcementModel.announcement;
+    this.tempAnnouncementModel.announcement_level = this.announcementModel.announcement_level;
   }
 
   onDeleteAnnouncement() {
@@ -67,12 +64,12 @@ export class AnnouncementFormComponent implements OnInit {
 
   refresh() {
     this.apiService.get('/api/v1/site_configs').subscribe((response) => {
-      this.announcementModel.message = response.data.announcement;
-      this.announcementModel.level = response.data.announcement_level;
-      this.tempAnnouncementModel.message = this.announcementModel.message;
-      this.tempAnnouncementModel.level = this.announcementModel.level;
+      this.announcementModel.announcement = response.data.announcement;
+      this.announcementModel.announcement_level = response.data.announcement_level;
+      this.tempAnnouncementModel.announcement = this.announcementModel.announcement;
+      this.tempAnnouncementModel.announcement_level = this.announcementModel.announcement_level;
       this.tempAnnouncementModel = {...this.tempAnnouncementModel};
-      this.currentLevel = this.levels[this.announcementModel.level];
+      this.currentLevel = this.levels[this.announcementModel.announcement_level];
       this.fetched = true;
     }, error => {
       this.logger.error("Unable to fetch announcements");

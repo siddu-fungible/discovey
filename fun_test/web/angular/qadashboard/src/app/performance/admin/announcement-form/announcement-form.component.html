@@ -1,35 +1,30 @@
-<div class="card" *ngIf="fetched">
+<div class="card">
   <div class="card-header">
     Configure announcements
   </div>
 
   <div class="card-body">
-    <div *ngIf="announcementModel.message; else noDisplay;">
-      Current announcement:&nbsp;{{announcementModel.message}}
-      <app-smart-label [value]="currentLevel">{{announcementModel.level}}</app-smart-label>
+    <div *ngIf="announcementModel.announcement; else noDisplay;">
+      Current announcement:&nbsp;{{announcementModel.announcement}}
+      <app-smart-label [value]="currentLevel">{{announcementModel.announcement_level}}</app-smart-label>
       &nbsp;<i class="fa fa-pencil" style="font-size:20px; color: green" (click)="editing=true"></i>&nbsp;
-      <i (click)="onDeleteAnnouncement()" class="fa fa-trash-o"
-         style="font-size:20px; color: red"></i>
+      <i (click)="onDeleteAnnouncement()" class="fa fa-trash-o" style="font-size:20px; color: red"></i>
     </div>
     <ng-template #noDisplay>
-      No announcement to display &nbsp;<i class="fa fa-pencil" style="font-size:20px; color: green"
-                                          (click)="editing=true"></i>
+      No announcement to display &nbsp;<i class="fa fa-pencil" style="font-size:20px; color: green" (click)="editing=true"></i>
 
     </ng-template>
     <form *ngIf="editing" #announcementForm="ngForm" (ngSubmit)="onSubmit()" novalidate>
 
       <div class="form-group">
         <label>Announcement</label>
-        <input type="text" required #message="ngModel" [class.is-invalid]="message.invalid && message.touched"
-               class="form-control" name="message"
-               [(ngModel)]="tempAnnouncementModel.message">
+        <input type="text" required #message="ngModel" [class.is-invalid]="message.invalid && message.touched" class="form-control" name="message" [(ngModel)]="tempAnnouncementModel.announcement">
       </div>
 
       <div class="form-group">
         <label>Level selection</label>
-        <div class="form-check" *ngFor="let level of levelNums; let index = index">
-          <input class="form-check-input" type="radio" (click)="tempAnnouncementModel.level = level*1;"
-                 name="'level'" [value]="level" [checked]="tempAnnouncementModel.level == level.toString()">
+        <div class="form-check" *ngFor="let level of levelNums">
+          <input class="form-check-input" type="radio" (click)="tempAnnouncementModel.announcement_level = level*1;" name="'level'" [value]="level" [checked]="tempAnnouncementModel.announcement_level == level.toString()">
           <label class="form-check-label">{{level}}</label>
         </div>
       </div>

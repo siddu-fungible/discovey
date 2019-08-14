@@ -17,10 +17,10 @@ def site_configs(request):
     if request.method == "PUT":
         site_config = SiteConfig.objects.all()[0]
         request_json = json.loads(request.body)
-        if "message" in request_json:
-            site_config.announcement = request_json["message"]
-        if "level" in request_json:
-            site_config.announcement_level = request_json["level"]
+        if "announcement" in request_json:
+            site_config.announcement = request_json["announcement"]
+        if "announcement_level" in request_json:
+            site_config.announcement_level = request_json["announcement_level"]
 
         site_config.save()
     return result
