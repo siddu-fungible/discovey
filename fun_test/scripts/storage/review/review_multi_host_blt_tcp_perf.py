@@ -172,6 +172,7 @@ class MultiHostVolumePerformanceScript(FunTestScript):
         elif self.testbed_type == "suite-based":
             self.topology_helper = TopologyHelper()
             self.available_dut_indexes = self.topology_helper.get_available_duts().keys()
+            fun_test.log("Available DUT Indexes: {}".format(self.available_dut_indexes))
             self.required_hosts = self.topology_helper.get_available_hosts()
             self.testbed_config = self.topology_helper.spec
             self.total_available_duts = len(self.available_dut_indexes)
@@ -185,7 +186,7 @@ class MultiHostVolumePerformanceScript(FunTestScript):
         if self.csi_perf_enabled:
             fun_test.log("testbed_config: {}".format(self.testbed_config))
             #  TODO: Get the correct F1 IP
-            self.csi_f1_ip = self.testbed_config["dut_info"]["3"]["bond_interface_info"]["0"]["0"]["ip"].split('/')[0]
+            self.csi_f1_ip = self.testbed_config["dut_info"][self.available_dut_indexes[0]]["bond_interface_info"]["0"]["0"]["ip"].split('/')[0]
             fun_test.log("F1 ip used for csi_perf_test: {}".format(self.csi_f1_ip))
             self.perf_listener_host = self.topology_helper.get_available_perf_listener_hosts()
             fun_test.log("perf_listener_host used for current test: {}".format(self.perf_listener_host))
@@ -527,8 +528,9 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
         self.host_info = fun_test.shared_variables["host_info"]
         self.host_handles = fun_test.shared_variables["host_handles"]
         self.csi_perf_enabled = fun_test.shared_variables["csi_perf_enabled"]
-        self.perf_listener_host_name = fun_test.shared_variables["perf_listener_host_name"]
-        self.perf_listener_ip = fun_test.shared_variables["perf_listener_ip"]
+        if self.csi_perf_enabled:
+            self.perf_listener_host_name = fun_test.shared_variables["perf_listener_host_name"]
+            self.perf_listener_ip = fun_test.shared_variables["perf_listener_ip"]
         self.host_ips = fun_test.shared_variables["host_ips"]
         self.num_hosts = len(self.host_ips)
         self.end_host = self.host_handles[self.host_ips[0]]
@@ -791,18 +793,6 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                            "fio_job_name"]
         table_data_rows = []
 
-        # Starting csi perf stats collection if it's set
-        if self.csi_perf_enabled:
-            csi_perf_obj = CsiPerfTemplate(perf_collector_host_name=str(self.perf_listener_host_name),
-                                           listener_ip=self.perf_listener_ip, fs=self.fs[0], listener_port=4420) #Temp change for testing
-            csi_perf_obj.prepare(f1_index=0)
-            csi_perf_obj.start(f1_index=0, dpc_client=self.storage_controller)
-            try:
-                fun_test.log("csi perf stats collection is started")
-                # dpcsh_client = self.fs.get_dpc_client(f1_index=0, auto_disconnect=True)
-            except Exception as ex:
-                fun_test.critical(str(ex))
-
         for combo in self.fio_jobs_iodepth:
             thread_id = {}
             end_host_thread = {}
@@ -909,6 +899,28 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                     thread_count += 1
 
             fun_test.sleep("Fio threads started", 10)
+            # Starting csi perf stats collection if it's set
+            if self.csi_perf_enabled:
+                if row_data_dict["iodepth"] in self.csi_perf_iodepth:
+                    try:
+                        fun_test.sleep("for IO to be fully active", 120)
+                        csi_perf_obj = CsiPerfTemplate(perf_collector_host_name=str(self.perf_listener_host_name),
+                                                       listener_ip=self.perf_listener_ip, fs=self.fs[0],
+                                                       listener_port=4420)  # Temp change for testing
+                        csi_perf_obj.prepare(f1_index=0)
+                        csi_perf_obj.start(f1_index=0, dpc_client=self.storage_controller)
+                        fun_test.log("csi perf stats collection is started")
+                        # dpcsh_client = self.fs.get_dpc_client(f1_index=0, auto_disconnect=True)
+                        fun_test.sleep("Allowing CSI performance data to be collected", 300)
+                        csi_perf_obj.stop(f1_index=0, dpc_client=self.storage_controller)
+                        fun_test.log("CSI perf stats collection is done")
+                    except Exception as ex:
+                        fun_test.critical(str(ex))
+                else:
+                    fun_test.log("Skipping CSI perf collection for current iodepth {}".format(fio_iodepth))
+            else:
+                fun_test.log("CSI perf collection is not enabled, hence skipping it for current test")
+
             for i in range(1, self.blt_count + 1):
                 fun_test.log("Joining fio thread {}".format(i))
                 fun_test.join_thread(fun_test_thread_id=thread_id[i])
@@ -965,10 +977,6 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
 
             table_data_rows.append(row_data_list)
             # post_results("Multi_host_TCP", test_method, *row_data_list)
-
-        if self.csi_perf_enabled:
-            csi_perf_obj.stop(f1_index=0, dpc_client=self.storage_controller)
-            fun_test.log("csi perf stats collection is done")
 
         table_data = {"headers": table_data_headers, "rows": table_data_rows}
         fun_test.add_table(panel_header="Multiple hosts over TCP Perf Table", table_name=self.summary, table_data=table_data)

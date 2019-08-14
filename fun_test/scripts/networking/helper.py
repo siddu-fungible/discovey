@@ -1105,6 +1105,21 @@ def get_per_vp_dict_table_obj(result, prev_result):
         master_table_obj.add_column(col_name, col_values)
     return master_table_obj
 
+def remove_entries_per_vp_dict(result_dict, cc_entries=True):
+    output_dict = {}
+    result_keys = result_dict.keys()
+    new_result_keys = []
+    if cc_entries:
+        for key in result_keys:
+            if not key.split(":")[0][2] == '8':
+                new_result_keys.append(key)
+    else:
+        new_result_keys = result_keys
+    for key in new_result_keys:
+        if not key.split(":")[2][0] == '1':
+            output_dict[key] = result_dict[key]
+
+    return output_dict
 
 def populate_per_vp_output_file(network_controller_obj, filename, display_output=False):
     output = False
@@ -1112,8 +1127,10 @@ def populate_per_vp_output_file(network_controller_obj, filename, display_output
         lines = list()
 
         prev_result = network_controller_obj.peek_per_vp_stats()
+        prev_result = remove_entries_per_vp_dict(prev_result)
         fun_test.sleep("Let per vp be grepped", seconds=1)
         result = network_controller_obj.peek_per_vp_stats()
+        result = remove_entries_per_vp_dict(result)
         master_table_obj = get_per_vp_dict_table_obj(result=result, prev_result=prev_result)
         lines.append("\n########################  %s ########################\n" % str(get_timestamp()))
         lines.append(master_table_obj.get_string())
@@ -1185,10 +1202,10 @@ def run_dpcsh_commands(template_obj, sequencer_handle, network_controller_obj, s
                                              filename=artifact_resource_pc_2_file, pc_id=2, display_output=display_output)
             populate_resource_bam_output_file(network_controller_obj=network_controller_obj, filename=artifact_bam_stats_file)
             populate_vp_util_output_file(network_controller_obj=network_controller_obj, filename=artifact_vp_util_file)
-            populate_per_vp_output_file(network_controller_obj=network_controller_obj, filename=artifact_per_vp_file)
             populate_ddr_output_file(network_controller_obj=network_controller_obj, filename=artifact_ddr_file)
             populate_cdu_output_file(network_controller_obj=network_controller_obj, filename=artifact_cdu_file)
             populate_ca_output_file(network_controller_obj=network_controller_obj, filename=artifact_ca_file)
+            populate_per_vp_output_file(network_controller_obj=network_controller_obj, filename=artifact_per_vp_file)
             fun_test.log_module_filter_disable()
 
             fun_test.sleep("Sleep for %s secs before next iteration of populating dpcsh stats" % sleep_time, seconds=sleep_time)
@@ -1238,11 +1255,11 @@ def populate_stats_file(network_controller_obj, test_time, generic_file_name_par
             populate_pc_resource_output_file(network_controller_obj=network_controller_obj,
                                              filename=artifact_resource_pc_2_file, pc_id=2, display_output=display_output)
             populate_resource_bam_output_file(network_controller_obj=network_controller_obj, filename=artifact_bam_stats_file)
-            populate_vp_util_output_file(network_controller_obj=network_controller_obj, filename=artifact_vp_util_file)
-            populate_per_vp_output_file(network_controller_obj=network_controller_obj, filename=artifact_per_vp_file)
             populate_ddr_output_file(network_controller_obj=network_controller_obj, filename=artifact_ddr_file)
+            populate_vp_util_output_file(network_controller_obj=network_controller_obj, filename=artifact_vp_util_file)
             populate_cdu_output_file(network_controller_obj=network_controller_obj, filename=artifact_cdu_file)
             populate_ca_output_file(network_controller_obj=network_controller_obj, filename=artifact_ca_file)
+            populate_per_vp_output_file(network_controller_obj=network_controller_obj, filename=artifact_per_vp_file)
             fun_test.log_module_filter_disable()
 
             fun_test.sleep("Sleep for %s secs before next iteration of populating dpcsh stats" % sleep_time, seconds=sleep_time)

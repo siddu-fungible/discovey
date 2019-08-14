@@ -35,12 +35,25 @@
                   <label for="triage_type">Type: </label>
                 </td>
                 <td>
-                  <select class="form-control" id="triage_type">
+                  <select class="form-control" id="triage_type" [(ngModel)]="currentTriageType" (ngModelChange)="test()">
+
                     <option *ngFor="let triageType of triageTypes" [value]="triageType.value">{{ triageType.description }}
                     </option>
                   </select>
+
+
                 </td>
               </tr>
+                <tr *ngIf="triageTypes && (currentTriageType == 7)">
+                  <td>
+                    <label for="regex_match_string">Regex match string: </label>
+                  </td>
+                  <td>
+                    <div class="form-group">
+                      <input style="width: 400px" id="regex_match_string" [(ngModel)]="regexMatchString">
+                    </div>
+                  </td>
+                </tr>
                 <tr>
                 <td>
                   <label for="from_fun_os_sha">From FunOS commit: </label>

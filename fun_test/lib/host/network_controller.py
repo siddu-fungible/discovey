@@ -1396,6 +1396,7 @@ class NetworkController(DpcshClient):
     def peek_per_vp_stats(self):
         stats = None
         try:
+            self.COMMAND_DURATION = 10
             cmd = "stats/per_vp"
             fun_test.debug("Getting per VP WU stats")
             result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=cmd, command_duration=self.COMMAND_DURATION)

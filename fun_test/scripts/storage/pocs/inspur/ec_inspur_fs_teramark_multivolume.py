@@ -660,6 +660,7 @@ class ECVolumeLevelTestcase(FunTestCase):
 
             fun_test.shared_variables["ec"]["setup_created"] = True
             fun_test.shared_variables["ctrlr_uuid"] = self.ctrlr_uuid
+            fun_test.shared_variables["ec_info"] = self.ec_info
 
             # disabling the error_injection for the EC volume
             command_result = {}
@@ -830,6 +831,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                            "readlatency9999", "fio_job_name"]
         table_data_rows = []
 
+        self.ec_info = fun_test.shared_variables["ec_info"]
         # Checking whether the job's inputs argument is having the list of io_depths to be used in this test.
         # If so, override the script default with the user provided config
         job_inputs = fun_test.get_job_inputs()
