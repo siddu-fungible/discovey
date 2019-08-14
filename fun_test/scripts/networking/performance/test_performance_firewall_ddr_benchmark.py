@@ -238,7 +238,7 @@ class TestFirewallPerformance(FunTestCase):
             table_name = "Performance Numbers for %s flow " % self.flow_direction
             if self.spray:
                 table_name += " Spray Enable"
-            result = self.template_obj.create_performance_table(result_dict=result_dict['summary_result'],
+            result = self.template_obj.create_performance_table(result=result_dict['summary_result'],
                                                                 table_name=table_name)
             fun_test.add_checkpoint(checkpoint)
 

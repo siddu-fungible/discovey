@@ -1,5 +1,5 @@
 from web.web_global import api_safe_json_response
-from fun_global import get_current_time
+from fun_global import get_current_time, RESULTS
 from django.views.decorators.csrf import csrf_exempt
 from web.fun_test.metrics_models import Triage3, Triage3Trial, LastTriageId
 from web.fun_test.triaging_global import TriageTrialStates, TriagingStates, TriagingTypes
@@ -29,16 +29,23 @@ def get_trial_tag(base_tag, triage_id, fun_os_sha):  #TODO
 
 @csrf_exempt
 @api_safe_json_response
-def trials(request, triage_id, fun_os_sha):
+def trials(request, triage_id):
     triage_id = int(triage_id)
     result = None
     if request.method == "POST":
+        request_json = json.loads(request.body)
+        fun_os_sha = request.GET.get("fun_os_sha", None)
         if fun_os_sha:
-            q = Q(triage_id=triage_id, fun_os_sha=fun_os_sha)
+            q = Q(triage_id=triage_id, fun_os_sha=fun_os_sha, active=True)
             trials = Triage3Trial.objects.filter(q).order_by('submission_date_time')
             if trials.count():
                 first_trial = trials[0]
-                request_json = json.loads(request.body)
+                first_trial.active = False
+                first_trial.reruns = False
+                first_trial.original_id = first_trial.id
+                first_trial.pk = None
+                first_trial.save()
+                first_trial = trials[0]
                 status = request_json.get("status", None)
                 if status is not None:
                     first_trial.status = int(status)
@@ -53,21 +60,28 @@ def trials(request, triage_id, fun_os_sha):
                     triage = Triage3.objects.get(triage_id=triage_id)
                     triage.status = TriagingStates.IN_PROGRESS
                     triage.save()
+                first_trial.result = RESULTS["UNKNOWN"]
+                first_trial.reruns = True
+                first_trial.active = True
+                first_trial.jenkins_build_number = -1
+                first_trial.lsf_job_id = -1
+                first_trial.submission_date_time = get_current_time()
                 first_trial.save()
             else:
-                request_json = json.loads(request.body)
                 t = Triage3.objects.get(triage_id=triage_id)
                 fun_os_sha = request_json["fun_os_sha"]
                 trial = Triage3Trial(fun_os_sha=fun_os_sha,
                                      triage_id=triage_id,
                                      trial_set_id=t.current_trial_set_id,
                                      status=TriagingStates.INIT,
-                                     submission_date_time=get_current_time())
+                                     submission_date_time=get_current_time(), active=True, reruns=False)
                 trial_tag = get_trial_tag(base_tag="qa_triage", triage_id=triage_id, fun_os_sha=fun_os_sha)
                 trial.tag = trial_tag
                 trial.save()
     elif request.method == "GET":
-        q = Q(triage_id=triage_id)
+        fun_os_sha = request.GET.get("fun_os_sha", None)
+        original_id = request.GET.get("original_id", -1)
+        q = Q(triage_id=triage_id, original_id=original_id)
         if fun_os_sha:
             q = q & Q(fun_os_sha=fun_os_sha)
         trials = Triage3Trial.objects.filter(q).order_by('-submission_date_time')
@@ -83,7 +97,13 @@ def trials(request, triage_id, fun_os_sha):
                           "tag": trial.tag,
                           "regex_match": trial.regex_match,
                           "tags": trial.tags,
-                          "result": trial.result}
+                          "result": trial.result,
+                          "id": trial.id,
+                          "original_id": trial.original_id,
+                          "active": trial.active,
+                          "reruns": trial.reruns,
+                          "submission_date_time": trial.submission_date_time,
+                          "integration_job_id": trial.integration_job_id}
             result.append(one_record)
     return result
 
@@ -95,25 +115,27 @@ def triagings(request, triage_id):
     if request.method == "POST":
         if not triage_id:
             request_json = json.loads(request.body)
-            metric_id = int(request_json["metric_id"])
-            triage_type = request_json.get("triage_type", TriagingTypes.REGEX_MATCH)
+            metric_id = request_json.get("metric_id", None)
+
+            triage_type = int(request_json.get("triage_type", TriagingTypes.REGEX_MATCH))
             from_fun_os_sha = request_json["from_fun_os_sha"]
             to_fun_os_sha = request_json["to_fun_os_sha"]
             submitter_email = request_json["submitter_email"]
-            build_parameters = request_json["build_parameters"]
-            if triage_type == TriagingTypes.REGEX_MATCH:
-                regex_match_string = request_json["regex_match_string"]
+            build_parameters = request_json.get("build_parameters", None)
 
             triage_id = LastTriageId.get_next_id()
 
             regex_match_string = request_json.get("regex_match_string", None)
 
-            t = Triage3(triage_id=triage_id, metric_id=metric_id,
+            t = Triage3(triage_id=triage_id,
                         triage_type=triage_type,
                         from_fun_os_sha=from_fun_os_sha,
                         to_fun_os_sha=to_fun_os_sha,
-                        submitter_email=submitter_email,
-                        build_parameters=build_parameters)
+                        submitter_email=submitter_email)
+            if build_parameters is not None:
+                t.build_parameters = build_parameters
+            if metric_id is not None:
+                t.metric_id = metric_id
             if regex_match_string is not None:
                 t.regex_match_string = regex_match_string
             t.save()
@@ -147,7 +169,8 @@ def triagings(request, triage_id):
                           "build_parameters": triage.build_parameters,
                           "status": triage.status,
                           "result": triage.result,
-                          "submission_date_time": triage.submission_date_time}
+                          "submission_date_time": triage.submission_date_time,
+                          "regex_match_string": triage.regex_match_string}
             if not triage_id:
                 result.append(one_record)
             else:

@@ -100,8 +100,8 @@ class GitManager:
                 response = r.json()
                 # response = [x for x in response if len(x["parents"]) > 1]
                 # results = [x for x in results if x["commit"]["message"].startswith("Merge")]
-                # results = [x for x in results if x["commit"]["message"].startswith("Merge")]
-                response = [Commit(sha=x["sha"], date=x["commit"]["committer"]["date"]) for x in response]
+                results = [x for x in response if x["commit"]["message"].startswith("Merge")]
+                response = [Commit(sha=x["sha"], date=x["commit"]["committer"]["date"]) for x in results]
                 all_commits.extend(response)
         return all_commits
 

@@ -7,6 +7,7 @@
       <th>Result</th>
       <th>Submitter</th>
       <th>Type</th>
+      <th *ngIf="triage.triage_type == triageTypes.INTEGRATION_REGEX_MATCH || triage.triage_type == triageTypes.REGEX_MATCH">Regex</th>
       <th>From FunOS commit</th>
       <th>To FunOS commit</th>
       <th>Submission date</th>
@@ -31,6 +32,7 @@
       <td><app-smart-label [value]="triage.result"></app-smart-label></td>
       <td>{{ triage.submitter_email }}</td>
       <td>{{ triage.triage_type }}</td>
+      <td *ngIf="triage.triage_type == triageTypes.INTEGRATION_REGEX_MATCH || triage.triage_type == triageTypes.REGEX_MATCH">{{ triage.regex_match_string }}</td>
       <td><a target="_blank" href="{{ FUN_OS_GITHUB_BASE_URL }}/{{ triage.from_fun_os_sha }}">{{ getShortSha(triage.from_fun_os_sha) }}</a></td>
       <td><a target="_blank" href="{{ FUN_OS_GITHUB_BASE_URL }}/{{ triage.to_fun_os_sha }}">{{ getShortSha(triage.to_fun_os_sha) }}</a></td>
       <td>{{ prettyTime(triage.submission_date_time) }}</td>
@@ -40,9 +42,11 @@
   </table>
 
   <fun-spinner [status]="commitFetchStatus"></fun-spinner>
-  <button *ngIf="commits && commits.length > 0" class="btn btn-outline-primary" (click)="trySubset()">Try a subset</button>
+  <button *ngIf="commits && commits.length > 0 && triage" class="btn btn-outline-primary"
+          (click)="trySubset()">Try a
+    subset</button>
 
-  <div class="card">
+  <div *ngIf="triage" class="card">
     <div class="card-header">
       Trials&nbsp;
       <span>&nbsp;&nbsp;Show all commits: &nbsp;&nbsp;</span>
@@ -57,14 +61,16 @@
           <th>Sha</th>
           <th>Set</th>
           <th>Status</th>
-          <th>Jenkins</th>
-          <th>LSF</th>
+          <th *ngIf="(triage.triage_type !== triageTypes.INTEGRATION_PASS_OR_FAIL) && (triage.triage_type !== triageTypes.INTEGRATION_REGEX_MATCH)">Jenkins</th>
+          <th *ngIf="(triage.triage_type !== triageTypes.INTEGRATION_PASS_OR_FAIL) && (triage.triage_type !== triageTypes.INTEGRATION_REGEX_MATCH) && (triage.triage_type !== triageTypes.JENKINS_FUN_OS_ON_DEMAND)">LSF</th>
+          <th *ngIf="(triage.triage_type === triageTypes.INTEGRATION_PASS_OR_FAIL) || (triage.triage_type === triageTypes.INTEGRATION_REGEX_MATCH)">Suite</th>
           <th>Tag</th>
           <th>Result</th>
+          <th>History</th>
         </tr>
-        <tr *ngFor="let commit of commits; let index = index">
+        <ng-container *ngFor="let commit of commits; let index = index">
 
-          <ng-container *ngIf="commit.selectedForTrial || showAll">
+          <tr *ngIf="commit.selectedForTrial || showAll">
             <td>
               <input type="checkbox" [checked]="commit.selected" [(ngModel)]="commit.selected">
             </td>
@@ -80,19 +86,84 @@
             <td><a target="_blank" href="{{ FUN_OS_GITHUB_BASE_URL }}/{{ commit.funOsSha }}">{{ getShortSha(commit.funOsSha) }}</a></td>
             <td>{{ commit.trialSetId }}</td>
             <td><app-smart-label [value]="triagingTrialStateMap[commit.status]"></app-smart-label></td>
-            <td><a target="_blank" *ngIf="commit.jenkinsBuildNumber > 0" href="http://jenkins-sw-master.fungible.local:8080/job/emulation/job/fun_on_demand/{{ commit.jenkinsBuildNumber }}/">link</a></td>
-            <td><a *ngIf="commit.lsfJobId > 0" href="http://palladium-jobs.fungible.local:8080/job/{{ commit.lsfJobId }}" target="_blank">link</a></td>
+            <td *ngIf="(triage.triage_type !== triageTypes.INTEGRATION_PASS_OR_FAIL) && (triage.triage_type !== triageTypes.INTEGRATION_REGEX_MATCH)"><a target="_blank" *ngIf="commit.jenkinsBuildNumber > 0" href="http://jenkins-sw-master.fungible.local:8080/job/emulation/job/fun_on_demand/{{ commit.jenkinsBuildNumber }}/">link</a></td>
+            <td *ngIf="(triage.triage_type !== triageTypes.INTEGRATION_PASS_OR_FAIL) && (triage.triage_type !== triageTypes.INTEGRATION_REGEX_MATCH) && (triage.triage_type !== triageTypes.JENKINS_FUN_OS_ON_DEMAND)"><a *ngIf="commit.lsfJobId > 0"
+                    href="http://palladium-jobs.fungible.local:8080/job/{{ commit.lsfJobId }}" target="_blank">link</a></td>
+
+            <td *ngIf="(triage.triage_type === triageTypes.INTEGRATION_PASS_OR_FAIL) || (triage.triage_type === triageTypes.INTEGRATION_REGEX_MATCH)">
+              <a target="_blank" href="/regression/suite_detail/{{ commit.integrationJobId }}">{{ commit.integrationJobId }}</a>
+            </td>
             <td>{{ commit.tag }}</td>
 
             <td>
-              <ng-container>
+              <ng-container *ngIf="((triage.triage_type == triageTypes.INTEGRATION_REGEX_MATCH) || (triage.triage_type == triageTypes.REGEX_MATCH)); else regularResult">
+                {{ commit.regexMatch }}
               </ng-container>
-              {{ commit.regexMatch }}
-              <app-smart-label [value]="commit.result">{{ commit.result }}</app-smart-label>
+              <ng-template #regularResult>
+                <app-smart-label [value]="commit.result">{{ commit.result }}</app-smart-label>
+              </ng-template>
             </td>
-          </ng-container>
+            <td *ngIf="commit.reruns">
+              <a *ngIf="!commit.showReruns" [routerLink]="" (click)="showReruns(commit)">Show</a>
+              <a *ngIf="commit.showReruns" [routerLink]="" (click)="hideReruns(commit)">Hide</a>
+            </td>
+          </tr>
+          <tr *ngIf="commit.showReruns">
+            <td colspan="11" class="flex-container">
+              <div class="card-header">
+                Reruns
+              </div>
+              <div class="card-body">
+                <table class="table">
+                  <tr>
+                    <th>
+                      Set
+                    </th>
+                    <th>
+                      Jenkins
+                    </th>
+                    <th *ngIf="triage.triage_type !== triageTypes.JENKINS_FUN_OS_ON_DEMAND">
+                      LSF
+                    </th>
+                    <th>
+                      Tag
+                    </th>
+                    <th>
+                      Status
+                    </th>
+                    <th>
+                      Result
+                    </th>
+                  </tr>
+                  <tr *ngFor="let reRun of reRuns">
+                    <td>
+                      {{ reRun.trial_set_id }}
+                    </td>
+                    <td>
+                      <a target="_blank" *ngIf="reRun.jenkins_build_number > 0"
+                         href="http://jenkins-sw-master.fungible.local:8080/job/emulation/job/fun_on_demand/{{ reRun.jenkins_build_number }}/">link</a>
+                    </td>
+                    <td *ngIf="triage.triage_type !== triageTypes.JENKINS_FUN_OS_ON_DEMAND">
+                      <a *ngIf="reRun.lsf_job_id > 0"
+                    href="http://palladium-jobs.fungible.local:8080/job/{{ reRun.lsf_job_id }}" target="_blank">link</a>
+                    </td>
+                    <td>
+                      {{ reRun.tag }}
+                    </td>
+                    <td>
+                      <app-smart-label [value]="triagingTrialStateMap[reRun.status]"></app-smart-label>
+                    </td>
+                    <td>
+                      <app-smart-label [value]="reRun.result">{{ reRun.result }}</app-smart-label>
+                    </td>
+                  </tr>
+                </table>
+              </div>
 
-        </tr>
+            </td>
+          </tr>
+
+        </ng-container>
       </table>
     </div>
   </div>

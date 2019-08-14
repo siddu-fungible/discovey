@@ -12,6 +12,7 @@ from web.fun_test.metrics_models import MetricChart, LastMetricId
 from web.fun_test.metrics_lib import *
 import json
 import os
+import traceback
 
 site_state = None
 
@@ -77,13 +78,16 @@ class SiteState():
             for asset_type, assets in assets_required.iteritems():
                 print asset_type, assets
                 for asset in assets:
-                    (o, created) = Asset.objects.get_or_create(type=asset_type,
-                                                               name=asset)
-                    if not created:
-                        o.test_beds = []
-                    if test_bed_name not in o.test_beds:
-                        o.test_beds.append(test_bed_name)
-                    o.save()
+                    try:
+                        (o, created) = Asset.objects.get_or_create(type=asset_type,
+                                                                   name=asset)
+                        if not created:
+                            o.test_beds = []
+                        if test_bed_name not in o.test_beds:
+                            o.test_beds.append(test_bed_name)
+                        o.save()
+                    except Exception as ex:
+                        print "Exception: {} {}".format(str(ex), traceback.format_exc())
         if fun_test_was_disabled:
             os.environ["DISABLE_FUN_TEST"] = "1"
 

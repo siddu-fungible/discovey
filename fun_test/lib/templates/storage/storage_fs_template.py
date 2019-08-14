@@ -379,6 +379,9 @@ class FunCpDockerContainer(Linux):
     def _connect(self):
         super(FunCpDockerContainer, self)._connect()
 
+        # the below set_prompt_terminator is the temporary workaround of the recent FunCP docker container change
+        # Recently while logging into the docker container it gets logged in as root user
+        self.set_prompt_terminator(self.CUSTOM_PROMPT_TERMINATOR)
         self.command("docker exec -it {} bash".format(self.name))
         self.clean()
         self.set_prompt_terminator(self.CUSTOM_PROMPT_TERMINATOR)
@@ -460,7 +463,7 @@ class StorageFsTemplate(object):
             fun_test.critical("{} dir does not exists".format(self.FUNSDK_DIR))
             return result
         self.come_obj.command("cd {}".format(self.FUNSDK_DIR))
-        self.come_obj.sudo_command("git pull", timeout=self.DEFAULT_TIMEOUT)
+        self.come_obj.command("git pull", timeout=self.DEFAULT_TIMEOUT)
         if self.come_obj.exit_status() == 0:
             result = True
         return result
@@ -489,11 +492,18 @@ class StorageFsTemplate(object):
         if mode:
             cmd += " --{}".format(mode)
         response = self.come_obj.command(cmd, timeout=self.DEPLOY_TIMEOUT)
+        # Have to uncomment the below checklist after the FunCP changes gets solidified
+        """
         sections = ['Bring up Control Plane',
                     'Device 1dad:',
                     'move fpg interface to f0 docker',
                     'libfunq bind  End',
                     'move fpg interface to f1 docker',
+                    'Bring up Control Plane dockers']
+        """
+        sections = ['Bring up Control Plane',
+                    'Device 1dad:',
+                    'libfunq bind  End',
                     'Bring up Control Plane dockers']
 
         for sect in sections:
@@ -599,7 +609,7 @@ class StorageFsTemplate(object):
         if "mode" not in bond_dict:
             bond_dict["mode"] = "802.3ad"
         if "miimon" not in bond_dict:
-            bond_dict["miimon"] = 0
+            bond_dict["miimon"] = 100
         if "xmit_hash_policy" not in bond_dict:
             bond_dict["xmit_hash_policy"] = "layer3+4"
         if "min_links" not in bond_dict:

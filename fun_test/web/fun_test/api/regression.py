@@ -13,6 +13,8 @@ from scheduler.scheduler_global import JobStatusType
 from scheduler.scheduler_helper import kill_job
 from django.core.exceptions import ObjectDoesNotExist
 from asset.asset_global import AssetType
+from web.fun_test.models import Module
+from web.fun_test.fun_serializer import model_instance_to_dict
 from web.fun_test.models_helper import _get_suite_executions
 from fun_global import RESULTS
 
@@ -237,7 +239,7 @@ def script_infos(request, pk):
 
 @csrf_exempt
 @api_safe_json_response
-def assets(request, name):
+def assets(request, name, asset_type):
     result = None
     if request.method == "GET":
         if not name:
@@ -253,7 +255,7 @@ def assets(request, name):
     elif request.method == "PUT":
         request_json = json.loads(request.body)
         try:
-            asset = Asset.objects.get(name=name)
+            asset = Asset.objects.get(name=name, type=asset_type)
             original_manual_lock_user = asset.manual_lock_user
             if "manual_lock_user" in request_json:
                 asset.manual_lock_user = request_json.get("manual_lock_user")
@@ -266,6 +268,25 @@ def assets(request, name):
                 send_mail(to_addresses=to_addresses, subject="{} {}".format(asset.name, lock_or_unlock))
             asset.save()
             result = True
-        except:
+        except Exception as ex:
             pass #TODO
     return result
+
+
+@csrf_exempt
+@api_safe_json_response
+def categories(request):
+    result = []
+    all_categories = Module.objects.all().order_by('name')
+    for category in all_categories:
+        result.append(model_instance_to_dict(category))
+    return result
+
+@csrf_exempt
+@api_safe_json_response
+def sub_categories(request):
+    pass
+
+if __name__ == "__main__":
+    from web.fun_test.django_interactive import *
+    print categories(None)

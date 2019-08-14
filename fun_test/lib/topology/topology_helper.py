@@ -68,6 +68,17 @@ class TopologyHelper:
                 fun_test.simple_assert(host_spec, "Retrieve host-spec for {}".format(host_name))
                 self.expanded_topology.hosts[host_name] = Host(name=host_name, spec=host_spec)
 
+        disabled_perf_listener_hosts = spec.get("disabled_perf_listener_hosts", [])
+        if "perf_listener_host_info" in spec:
+            perf_listener_hosts = spec["perf_listener_host_info"]
+            for host_name in perf_listener_hosts:
+                if host_name in disabled_perf_listener_hosts:
+                    fun_test.log("Disabling Perf listener Host: {}".format(host_name))
+                    continue
+                host_spec = fun_test.get_asset_manager().get_host_spec(name=host_name)
+                fun_test.simple_assert(host_spec, "Retrieve host-spec for {}".format(host_name))
+                self.expanded_topology.perf_listener_hosts[host_name] = Host(name=host_name, spec=host_spec)
+
         if "switch_info" in spec:
             switches = spec["switch_info"]
             for switch_name, switch_spec in switches.items():
@@ -205,6 +216,12 @@ class TopologyHelper:
         if not self.expanded_topology:
             self.expanded_topology = self.get_expanded_topology()
         return self.expanded_topology.get_hosts()
+
+    @fun_test.safe
+    def get_available_perf_listener_hosts(self):
+        if not self.expanded_topology:
+            self.expanded_topology = self.get_expanded_topology()
+        return self.expanded_topology.get_perf_listener_hosts()
 
     @fun_test.safe
     def set_dut_parameters(self, dut_index=None, **kwargs):

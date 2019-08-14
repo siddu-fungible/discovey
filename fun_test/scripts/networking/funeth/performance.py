@@ -43,7 +43,7 @@ FLOW_TYPES_DICT = OrderedDict([
 TOOLS = ('netperf',)
 PROTOCOLS = ('tcp', )  # TODO: add UDP
 FRAME_SIZES = (1500,)  # It's actually IP packet size in bytes
-NUM_FLOWS = (1, 8, 4, 2, 16, )  # TODO: May add more
+NUM_FLOWS = (1, 8, 4, 2, 16, 32)  # TODO: May add more
 NUM_HOSTS = (1, 2, )  # Number of PCIe hosts, TODO: may keep 2 hosts only in the future
 FPG_MTU_DEFAULT = 1518
 PERF_RESULT_KEYS = (nm.THROUGHPUT,
@@ -411,8 +411,8 @@ class FunethPerformanceBase(FunTestCase):
         fun_test.simple_assert(pingable, '{} ping {} with packet size {}'.format(
             linux_obj_src.host_ip, dip, frame_size))
         fun_test.simple_assert(not sth_stuck_before, 'Something is stuck before test')
-        fun_test.test_assert(passed, 'Get throughput/pps/latency test result')
         fun_test.simple_assert(not sth_stuck_after, 'Something is stuck after test')
+        fun_test.test_assert(passed, 'Get throughput/pps/latency test result')
 
 
 def create_testcases(id, summary, steps, flow_type, tool, protocol, num_flows, num_hosts, frame_size):

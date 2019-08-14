@@ -34,7 +34,7 @@ class CsiPerfOperation:
 
 
 class CsiPerfTemplate():
-    def __init__(self, perf_collector_host_name, listener_ip, fs, setup_docker=False):
+    def __init__(self, perf_collector_host_name, listener_ip, fs, setup_docker=False, listener_port=None):
         self.perf_collector_host_name = perf_collector_host_name
         self.perf_host = None
         self.perf_listener_process_id = None
@@ -46,6 +46,7 @@ class CsiPerfTemplate():
         self.base_job_directory = TOOLS_DIRECTORY + "/trace_jobs"
         self.setup_docker = setup_docker
         self.prepare_complete = False
+        self.listener_port = listener_port
 
     def ensure_docker_images_exist(self):
         docker_images_output = self.perf_host.sudo_command("docker images")
@@ -115,7 +116,7 @@ class CsiPerfTemplate():
         self.perf_host.command("mkdir -p {}/odp".format(job_directory))
         self.perf_host.command("mkdir -p {}/odp/trace_dumps".format(job_directory))
 
-    def start(self, f1_index=0):
+    def start(self, f1_index=0, dpc_client=None):
         fun_test.simple_assert(self.prepare_complete, "Please call prepare() before calling start")
         fun_test.add_checkpoint("CSI perf before start")
         self.instance += 1
@@ -124,19 +125,24 @@ class CsiPerfTemplate():
         if process_ids:
             for process_id in process_ids:
                 self.perf_host.kill_process(signal=9, process_id=process_id, kill_seconds=2)
+        process_ids = self.perf_host.get_process_id_by_pattern(process_pat=PERF_LISTENER, multiple=True)
+
         self.perf_host.command("mv trace_cluster* /tmp")
         command = "python " + PERF_LISTENER_PATH + " --perf-ip={}".format(self.listener_ip)
+        if self.listener_port:
+            command += " --perf-port={}".format(self.listener_port)
         self.perf_listener_process_id = self.perf_host.start_bg_process(command, output_file="/tmp/perf_listener_f1_{}.log".format(f1_index))
 
-        dpc_client = self.fs.get_dpc_client(f1_index=f1_index, auto_disconnect=True)
+        if not dpc_client:
+            dpc_client = self.fs.get_dpc_client(f1_index=f1_index, auto_disconnect=True)
         dpc_client.json_execute(verb="perf", data="reinit", command_duration=4)
         dpc_client.json_execute(verb="perf", data="start", command_duration=4)
         fun_test.add_checkpoint("CSI perf started")
 
-
-    def stop(self, f1_index=0):
+    def stop(self, f1_index=0, dpc_client=None):
         fun_test.add_checkpoint("CSI perf before stop")
-        dpc_client = self.fs.get_dpc_client(f1_index=f1_index, auto_disconnect=True)
+        if not dpc_client:
+            dpc_client = self.fs.get_dpc_client(f1_index=f1_index, auto_disconnect=True)
         dpc_client.json_execute(verb="perf", data="stop", command_duration=4)
         dpc_client.json_execute(verb="perf", data="offload", command_duration=4)
         fun_test.sleep("Wait for offload to complete", seconds=120)
@@ -144,10 +150,13 @@ class CsiPerfTemplate():
         uart_log_path = self.fs.get_uart_log_file(f1_index=f1_index, post_fix=self.instance)
         self.move_uart_log(uart_log_path=uart_log_path, f1_index=f1_index)
         fun_test.add_checkpoint("CSI perf after stop")
-        fun_test.report_message("CSI perf traces are at trace job directory: {}".format(self.base_job_directory))
+        fun_test.report_message("CSI perf traces are at trace job directory: {}".format(self.job_directory))
         fun_test.report_message("CSI perf host: {} username: {} password: {}".format(self.perf_host.host_ip,
                                                                                      self.perf_host.ssh_username,
                                                                                      self.perf_host.ssh_password))
+        fun_test.report_message("CSI perf base job directory: {}".format(self.base_job_directory))
+        fun_test.report_message("CSI perf: to process perf: #./process_perf.sh {}".format(self.job_directory))
+        fun_test.report_message("CSI perf: to view perf: #./view_perf.sh {}".format(self.base_job_directory))
 
     def move_trace_files(self, source_directory, job_directory):
         trace_files = self.perf_host.list_files("{}/trace_cluster*".format(source_directory))
@@ -194,7 +203,9 @@ class CsiPerfTemplate():
         for repo_name, values in to_position.iteritems():
             fun_test.simple_assert(self.repo_exists(name=repo_name), "Repo: {} exists".format(repo_name))
             for value in values:
-                source_path = STASH_DIR + "/" + repo_name + "/" + value["source_file_path"]
+                repo_path = STASH_DIR + "/" + repo_name
+                source_path = repo_path + "/" + value["source_file_path"]
+                os.system("cd {}; git pull".format(repo_path))
                 fun_test.simple_assert(os.path.exists(source_path), "Source: {} exists".format(source_path))
                 target_file_path = TOOLS_DIRECTORY + "/" + value["target_file_path"]
                 fun_test.scp(source_file_path=source_path,
@@ -206,8 +217,12 @@ class CsiPerfTemplate():
         return result
 
     def do_setup_docker(self):
-        pass
-        fun_test.simple_assert(self.perf_host.command_exists("docker"), "Docker installed")
+        user = self.perf_host.command("echo $USER")
+        user = user.strip()
+        # fun_test.simple_assert(self.perf_host.command_exists("docker"), "Docker installed")
+        self.perf_host.sudo_command("usermod -aG docker {}".format(user))
+        self.perf_host.sudo_command("setfacl -m user:{}:rw /var/run/docker.sock".format(user))
+
         commands = ["timeout 5 openssl s_client -showcerts -connect docker.fungible.com:443 | tee /tmp/cert.log",
                     "cat /tmp/cert.log | sed -n '/-----BEGIN CERTIFICATE-----/,/-----END CERTIFICATE-----/p' > /tmp/cert.pem"]
         for command in commands:
@@ -220,9 +235,9 @@ class CsiPerfTemplate():
         self.perf_host.enter_sudo()
         for sudo_command in sudo_commands:
             self.perf_host.command(sudo_command, custom_prompts={'Trust new certificates from certificate authorities?': 'yes', "Certificates to activate:": "fun_cert.crt"})
+        self.perf_host.command("apt-get update")
         self.perf_host.command("apt install -y docker.io")
         self.perf_host.exit_sudo()
-        self.perf_host.sudo_command("usermod -aG docker $USER")
         self.perf_host.command("service docker stop", custom_prompts={"Password:": self.perf_host.ssh_password})
         self.perf_host.command("service docker start", custom_prompts={"Password:": self.perf_host.ssh_password})
         docker_commands = ["docker pull docker.fungible.com/perf_processing", "docker pull docker.fungible.com/perf_server"]
@@ -231,5 +246,5 @@ class CsiPerfTemplate():
         return True
 
 if __name__ == "__main__":
-    p = CsiPerfTemplate(perf_collector_host_name="poc-server-06", listener_ip="123", fs=None)
+    p = CsiPerfTemplate(perf_collector_host_name="poc-server-04", listener_ip="123", fs=None, setup_docker=True)
     p.prepare(f1_index=0)

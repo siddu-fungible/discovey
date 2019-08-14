@@ -67,9 +67,9 @@ class RawVolumePerfScript(FunTestScript):
         global funcp_obj, servers_mode, servers_list, fs_name
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
         f1_0_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --dpc-server --all_100g --serial --dpc-uart " \
-                         "--dis-stats retimer=0 --mgmt --disable-wu-watchdog syslog=2"
+                         "--dis-stats retimer=0 --mgmt --disable-wu-watchdog syslog=2 workload=storage"
         f1_1_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 --dpc-server --all_100g --serial --dpc-uart " \
-                         "--dis-stats retimer=0 --mgmt --disable-wu-watchdog syslog=2"
+                         "--dis-stats retimer=0 --mgmt --disable-wu-watchdog syslog=2 workload=storage"
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
         # fs_name = "fs-45"
         funcp_obj = FunControlPlaneBringup(fs_name=self.server_key["fs"][fs_name]["fs-name"])
@@ -198,7 +198,7 @@ class RawVolumeRemotePerfTestcase(FunTestCase):
             udev_services = ["systemd-udevd-control.socket", "systemd-udevd-kernel.socket", "systemd-udevd"]
             for service in udev_services:
                 service_status = host_obj.systemctl(service_name=service, action="stop")
-            host_obj.command(command="echo 4 | sudo tee /sys/module/nvme/parameters/io_queue_depth ")
+            #host_obj.command(command="echo 4 | sudo tee /sys/module/nvme/parameters/io_queue_depth ")
             # fun_test.test_assert(service_status, "Stopping {} service".format(service))
 
             # Configure storage controller for DPU 1 (since we are testing SSD on DPU 1)
