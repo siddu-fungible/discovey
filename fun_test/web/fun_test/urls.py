@@ -139,6 +139,7 @@ metric_urls = [
     url(r'^charts_info$', metrics_views.charts_info),
     url(r'^chart_info$', metrics_views.chart_info),
     url(r'^data$', metrics_views.data),
+    url(r'^recent_data$', metrics_views.get_recent_data),
     url(r'^past_status$', metrics_views.get_past_build_status),
     url(r'^first_degrade$', metrics_views.get_first_degrade),
     url(r'^data_by_model$', metrics_views.get_data_by_model),
