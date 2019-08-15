@@ -66,7 +66,7 @@ export class AnnouncementFormComponent implements OnInit {
     this.apiService.get('/api/v1/site_configs').subscribe((response) => {
       this.announcementModel.announcement = response.data.announcement;
       this.announcementModel.announcementLevel = response.data.announcement_level;
-      this.tempAnnouncementModel = this.announcementModel;
+      this.tempAnnouncementModel = {...this.announcementModel};
       this.currentLevel = this.levels[this.announcementModel.announcementLevel];
     }, error => {
       this.logger.error("Unable to fetch announcements");
