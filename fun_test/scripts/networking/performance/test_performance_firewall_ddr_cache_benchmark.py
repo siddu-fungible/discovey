@@ -36,14 +36,16 @@ class ScriptSetup(FunTestScript):
 
         if not f1_index:
             f1_index = 1
-        if 'fs' in fun_test.get_job_environment_variable('test_bed_type'):
-            bootargs = 'app=hw_hsu_test sku=SKU_FS1600_0 --dpc-server --dis-stats --dpc-uart --csr-replay --all_100g --disable-wu-watchdog \
-                                    override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303'
-            # fs = Fs.get(disable_f1_index=f1_index)
-            fs = Fs.get(disable_f1_index=f1_index, boot_args=bootargs)
-            dpc_server_ip = fs.come_mgmt_ip
-            fun_test.shared_variables['fs'] = fs
-            fun_test.test_assert(fs.bootup(reboot_bmc=False), 'FS bootup')
+        test_bed_type = fun_test.get_job_environment_variable('test_bed_type')
+        if test_bed_type:
+            if 'fs' in test_bed_type:
+                bootargs = 'app=hw_hsu_test sku=SKU_FS1600_0 --dpc-server --dis-stats --dpc-uart --csr-replay --all_100g --disable-wu-watchdog \
+                                        override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303'
+                # fs = Fs.get(disable_f1_index=f1_index)
+                fs = Fs.get(disable_f1_index=f1_index, boot_args=bootargs)
+                dpc_server_ip = fs.come_mgmt_ip
+                fun_test.shared_variables['fs'] = fs
+                fun_test.test_assert(fs.bootup(reboot_bmc=False), 'FS bootup')
 
         private_branch_funos = fun_test.get_build_parameter(parameter='BRANCH_FunOS')
         if private_branch_funos:
@@ -283,6 +285,9 @@ class TestL4FirewallPerformanceDDRCache128M(FunTestCase):
                     started_generators.append(generator_handle)
                     fun_test.log("Max fps and throughput seen when generators %s are running is %s and %s" % (
                         started_generators, result['pps'], result['throughput']))
+                    fun_test.add_checkpoint("Traffic for %s passed" % total_rx_analyzer_fps)
+                    if len(started_generators) == len(generator_list):
+                        fun_test.log("Traffic from all ports is running")
                 else:
                     # Stop traffic if failures are seen
                     if len(started_generators) == 0:
@@ -310,14 +315,14 @@ class TestL4FirewallPerformanceDDRCache128M(FunTestCase):
                 streamblock_handle=first_streamblock,
                 rx_streamblock_subscribe_handle=subscribe_results["rx_summary_subscribe"], change_mode_jitter=True)
 
-            data_dict = {}
+            data_dict = OrderedDict()
             data_dict["flow_type"] = self.flow_direction
             data_dict["frame_size"] = frame_size
             data_dict["pps"] = result["pps"]
             data_dict["throughput"] = result['throughput']
             data_dict["latency_min"] = latency_dict["latency_min"]
-            data_dict["latency_min"] = latency_dict["latency_max"]
-            data_dict["latency_min"] = latency_dict["latency_avg"]
+            data_dict["latency_max"] = latency_dict["latency_max"]
+            data_dict["latency_avg"] = latency_dict["latency_avg"]
             tabular_data.append(data_dict)
             table_add = self.template_obj.create_performance_table(result=tabular_data,
                                                               table_name="Performance numbers for DDR Cache",

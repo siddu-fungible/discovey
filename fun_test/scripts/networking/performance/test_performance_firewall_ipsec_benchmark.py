@@ -75,10 +75,10 @@ class ScriptSetup(FunTestScript):
             if 'test_streams' in inputs:
                 test_streams = inputs['test_streams']
 
-            multi_flow_encrypt_64B_start_data_mpps = 60
-            multi_flow_encrypt_64B_end_data_mpps = 100
+            multi_flow_encrypt_64B_start_data_mpps = 70
+            multi_flow_encrypt_64B_end_data_mpps = 120
             multi_flow_encrypt_64B_step_data_mpps = 5
-            multi_flow_encrypt_IMIX_start_data_mpps = 59
+            multi_flow_encrypt_IMIX_start_data_mpps = 75
             multi_flow_encrypt_IMIX_end_data_mpps = 100
             multi_flow_encrypt_IMIX_step_data_mpps = 5
             single_flow_encrypt_64B_start_data_mpps = 2.6
@@ -88,10 +88,10 @@ class ScriptSetup(FunTestScript):
             single_flow_encrypt_IMIX_end_data_mpps = 5.6
             single_flow_encrypt_IMIX_step_data_mpps = 0.5
             multi_flow_decrypt_start_data_mpps = 80
-            multi_flow_decrypt_end_data_mpps = 90
+            multi_flow_decrypt_end_data_mpps = 120
             multi_flow_decrypt_step_data_mpps = 1
             single_flow_decrypt_start_data_mpps = 2
-            single_flow_decrypt_end_data_mpps = 5
+            single_flow_decrypt_end_data_mpps = 10
             single_flow_decrypt_step_data_mpps = 0.5
 
             if 'multi_flow_encrypt_64B_start_data_mpps' in inputs:
@@ -458,6 +458,9 @@ class TestL4IPsecPerformance(FunTestCase):
                         total_rate, result[stream]['pps'], result[stream]['throughput']))
                     working_load = single_port_rate
                     fun_test.add_checkpoint("%s passed for stream %s" % (total_rate, stream))
+
+                    if current_data == end_data:
+                        fun_test.log("Max mpps value mentioned has reached for %s viz. %s" % (stream, current_data))
                 else:
                     fun_test.log("main pkt eop drop seen is %s" % main_pkt_drop)
                     fun_test.log("Difference seen for pps Tx: %s and Rx: %s for frame %s at rate %s" % (total_tx_generator_fps, total_rx_analyzer_fps,
@@ -546,8 +549,8 @@ class TestL4IPsecPerformance(FunTestCase):
                 fun_test.log("Updated frame load to %s" % default_load_pps)
 
         for stream in test_streams:
-            fun_test.test_assert_expected(expected=0, actual=result[stream]['main_pkt_drop_eop'],
-                                          message="Check no psw main_pkt_drop_eop seen for %s" % stream)
+            fun_test.test_assert(result[stream]['main_pkt_drop_eop'] <= 10,
+                                 message="Check no psw main_pkt_drop_eop seen for %s" % stream)
             fun_test.test_assert_expected(expected=0, actual=result[stream][VP_PACKETS_NU_LE_LOOKUP_MISS],
                                           message="Check no le lookup miss seen for %s" % stream)
 

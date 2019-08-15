@@ -1,14 +1,14 @@
 {
     "fs": { 
           "fs-15": {
-              "bootargs_f1_0": "app=hw_hsu_test cc_huid=3 --all_25g --dpc-server --dpc-uart --disable-wu-watchdog",
-              "bootargs_f1_1": "app=hw_hsu_test cc_huid=2 --all_25g --dpc-server --dpc-uart --disable-wu-watchdog",
+              "bootargs_f1_0": "app=hw_hsu_test cc_huid=3 --all_25g  --dpc-server --dpc-uart --disable-wu-watchdog",
+              "bootargs_f1_1": "app=hw_hsu_test cc_huid=2 --all_25g  --dpc-server --dpc-uart --disable-wu-watchdog",
               "fs_list":["fs-15"],
               "fs-15": {
                   "gatewayip": "10.1.20.1",
                   "abtract_config_f1_0": "/abstract_config/FS-15-F1-0_abstract_cfg.json",
                   "abtract_config_f1_1": "/abstract_config/FS-15-F1-1_abstract_cfg.json",
-                  "prepare_docker":false,
+                  "prepare_docker":true,
                   "mpg0":"10.1.23.34",
                   "mpg0_netmask":"255.255.252.0",
                   "mpg1":"10.1.23.35",

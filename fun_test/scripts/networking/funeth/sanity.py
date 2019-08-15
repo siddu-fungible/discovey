@@ -399,12 +399,12 @@ class FunethSanity(FunTestScript):
             p.prepare(f1_index=0)
             self.csi_perf_obj = p
 
-        # NU host
-        setup_nu_host(funeth_obj)
-
         # HU host
         self.funsdk_commit, self.funsdk_bld, self.driver_commit, self.driver_bld = setup_hu_host(
             funeth_obj, update_driver=update_driver)
+
+        # NU host
+        setup_nu_host(funeth_obj)
 
         # HU host VMs
         if hu_host_vm:
