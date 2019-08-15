@@ -1,4 +1,4 @@
-<div class="component container-fluid">
+<div class="component container-fluid" style="padding-top: 10px">
   <label>Select module</label>&nbsp;
   <select [(ngModel)]="selectedModule" style="width: 100px" (change)="moduleChange()">
     <option [ngValue]="key.name" *ngFor="let key of modules">{{ key.name }}</option>
@@ -24,4 +24,7 @@
       </table>
     </div>
   </div>
+
+  <app-announcement-form></app-announcement-form>
+
 </div>

@@ -78,6 +78,7 @@ import { ViewWorkspaceComponent } from './performance/workspace/view-workspace/v
 import { SuiteExecutionWidgetComponent } from './regression/suite-execution-widget/suite-execution-widget.component';
 import { SuiteEditorComponent } from './regression/suite-editor/suite-editor.component';
 import {ModalModule} from "ngb-modal";
+import { AnnouncementFormComponent } from './performance/admin/announcement-form/announcement-form.component';
 
 
 @NgModule({
@@ -139,7 +140,8 @@ import {ModalModule} from "ngb-modal";
     WorkspaceComponent,
     ViewWorkspaceComponent,
     SuiteExecutionWidgetComponent,
-    SuiteEditorComponent
+    SuiteEditorComponent,
+    AnnouncementFormComponent
   ],
   imports: [
     BsDropdownModule,
