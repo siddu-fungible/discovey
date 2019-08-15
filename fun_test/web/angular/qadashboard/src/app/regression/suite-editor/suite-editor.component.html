@@ -1,18 +1,16 @@
 <form [formGroup]="newSuiteEntryForm" class="fun-form">
 
   <label class="fun-form-label">Script path:</label>
-    <input type="text" formControlName="path" style="width: 500px">
+  <input type="text" formControlName="path" style="width: 500px">
 
 
   <label class="fun-form-label">Test-case IDs (in JSON array format. Ex: [2, 3]):</label>
-    <app-json-input (dataChanged)="testCaseIdsChanged($event)" [numRows]="1" ></app-json-input>
+  <app-json-input (dataChanged)="testCaseIdsChanged($event)" [numRows]="1"></app-json-input>
 
   <label class="fun-form-label">Inputs (in JSON dictionary format. Ex: {{ inputsExample }}):</label>
-  <app-json-input (dataChanged)="inputsChanged($event)" [numRows]="6" ></app-json-input>
+  <app-json-input (dataChanged)="inputsChanged($event)" [numRows]="6"></app-json-input>
 
   <button class="fun-button-add">Add custom test-bed spec</button>
-
-
 
 
 </form>
@@ -24,23 +22,23 @@
   </select>
 
 
-   <input type="radio" value="CustomDutSelection.NUM_DUTS" formControlName="customDutSelection"> Specify number of DUTs
+  <input type="radio" value="CustomDutSelection.NUM_DUTS" formControlName="customDutSelection"> Specify number of DUTs
   &nbsp;&nbsp;&nbsp;
-   <input type="radio" value="CustomDutSelection.SPECIFIC_DUTS" formControlName="customDutSelection"> Specify list of DUTs
+  <input type="radio" value="CustomDutSelection.SPECIFIC_DUTS" formControlName="customDutSelection"> Specify list of
+  DUTs
+
+  <div *ngIf="customDutSelection.value === CustomDutSelection.NUM_DUTS">
+    <label class="fun-form-label">Specify number of DUTs:</label>
+    <input type="number" class="fun-form-field">
+  </div>
 
     <!--div>
-      <label class="fun-form-label">Specificy number of DUTs:</label>
-      <input type="number" [(ngModel)]="numDuts" class="fun-form-field">
-    </div>
-
-    <div>
       <label class="fun-form-label">Select a specific DUT:</label>
       <select *ngIf="assets" [(ngModel)]="selectedDutAsset">
         <option *ngFor="let asset of dutAssets">{{ asset.name }}</option>
       </select>
 
     </div-->
-
 
 
 </form>
