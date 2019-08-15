@@ -107,31 +107,30 @@ export class ViewWorkspaceComponent implements OnInit {
       this.data.push(temp);
     }
     let dateTime = new Date();
-    this.fetchData(metric, dateTime, "today");
-    dateTime.setDate(dateTime.getDate() - 1);
-    this.fetchData(metric, dateTime, "yesterday");
 
-    // new Observable(observer => {
-    //   observer.next(true);
-    //   observer.complete();
-    //   return () => {
-    //   }
-    // }).pipe(
-    //   switchMap(response => {
-    //     return this.fetchData(metric, dateTime, "today");
-    //   }),
-    //   switchMap(response => {
-    //     dateTime.setDate(dateTime.getDate() - 1);
-    //     return this.fetchData(metric, dateTime, "yesterday");
-    //   }),
-    //   switchMap(response => {
-    //     metric["report"] = this.data;
-    //     return of(true);
-    //   })).subscribe(response => {
-    //   console.log("fetched today and yesterday data");
-    // }, error => {
-    //   this.loggerService.error("Unable to fetch today and yesterday data");
-    // });
+    new Observable(observer => {
+      observer.next(true);
+      observer.complete();
+      return () => {
+      }
+    }).pipe(
+      switchMap(response => {
+        return this.fetchData(metric, dateTime, "today");
+      }),
+      switchMap(response => {
+        dateTime.setDate(dateTime.getDate() - 1);
+        return this.fetchData(metric, dateTime, "yesterday");
+      }),
+      switchMap(response => {
+        metric["report"] = this.data;
+        return of(true);
+      })).subscribe(response => {
+      console.log("fetched today and yesterday data");
+      this.showChartTable = true;
+      this.status = null;
+    }, error => {
+      this.loggerService.error("Unable to fetch today and yesterday data");
+    });
 
   }
 
@@ -140,7 +139,7 @@ export class ViewWorkspaceComponent implements OnInit {
     let from_epoch = times[0];
     let to_epoch = times[1];
     console.log(times);
-    this.apiService.get("/metrics/recent_data?metric_id=" + metric["metric_id"] + "&from_epoch=" + from_epoch + "&to_epoch=" + to_epoch).subscribe(response => {
+    return this.apiService.get("/api/v1/performance/report_data?metric_id=" + metric["metric_id"] + "&from_epoch=" + from_epoch + "&to_epoch=" + to_epoch).pipe(switchMap(response => {
       let data = response.data;
       for (let oneData of data) {
         for (let dataSet of this.data) {
@@ -150,12 +149,8 @@ export class ViewWorkspaceComponent implements OnInit {
           }
         }
       }
-      this.showChartTable = true;
-      this.status = null;
-      // return of(true);
-    }, error => {
-      this.loggerService.error("fetching recent data failed");
-    })
+      return of(true);
+    }));
   }
 
   fetchScores(): any {

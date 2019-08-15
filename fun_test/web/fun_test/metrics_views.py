@@ -754,36 +754,6 @@ def data(request):
 
     return data
 
-@csrf_exempt
-@api_safe_json_response
-def get_recent_data(request):
-    data = []
-    metric_id = request.GET.get("metric_id", None)
-    from_date = float(request.GET.get("from_epoch", None))
-    to_date = float(request.GET.get("to_epoch", None))
-    if metric_id and from_date and to_date:
-        chart = MetricChart.objects.get(metric_id=metric_id)
-        model = app_config.get_metric_models()[chart.metric_model_name]
-        to_time = datetime.fromtimestamp(to_date)
-        from_time = datetime.fromtimestamp(from_date)
-        date_range = [from_time, to_time]
-        data_sets = json.loads(chart.data_sets)
-        for data_set in data_sets:
-            inputs = data_set["inputs"]
-            d = {}
-            for input_name, input_value in inputs.iteritems():
-                d[input_name] = input_value
-            results = model.objects.filter(input_date_time__range=date_range, **d).order_by(
-                "-input_date_time")
-            if len(results):
-                result = results[0]
-                output_name = data_set["output"]["name"]
-                value = getattr(result, output_name)
-                unit = getattr(result, output_name + "_unit")
-                temp = {"name": data_set["name"], "value": value, "unit": unit}
-                data.append(temp)
-    return data
-
 
 @csrf_exempt
 @api_safe_json_response

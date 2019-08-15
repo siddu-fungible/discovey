@@ -93,11 +93,11 @@ export class CommonService {
     dateTime.setHours(23);
     dateTime.setMinutes(59);
     dateTime.setSeconds(59);
-    let toEpoch = dateTime.getTime() / 1000;
+    let toEpoch = dateTime.getTime();
     dateTime.setHours(0);
     dateTime.setMinutes(0);
     dateTime.setSeconds(1);
-    let fromEpoch = dateTime.getTime() / 1000;
+    let fromEpoch = dateTime.getTime();
     return [fromEpoch, toEpoch];
   }
 
