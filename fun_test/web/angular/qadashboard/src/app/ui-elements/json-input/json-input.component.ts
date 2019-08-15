@@ -20,6 +20,7 @@ import {ControlValueAccessor, NG_VALUE_ACCESSOR, FormControl, Validator, NG_VALI
 export class JsonInputComponent implements OnInit, ControlValueAccessor {
   @Input() ensureArrayOfNumbers: boolean = false;
   @Output() dataChanged = new EventEmitter<string>();
+  @Input() numRows: number = 6; // number of rows for the text-area
   data: any = null;
   jsonString: string = null;
   parseError: boolean = false;
@@ -90,5 +91,6 @@ export class JsonInputComponent implements OnInit, ControlValueAccessor {
   onJsonDataChanged(event) {
 
   }
+
 
 }

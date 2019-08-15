@@ -1,6 +1,6 @@
 <textarea [ngClass]="{'invalid-input': parseError}"
           style="width: 100%"
-          rows="6"
+          rows="{{ numRows }}"
           [value]="jsonString"
           (change)="onChange($event)"
           (keyup)="onChange($event)">

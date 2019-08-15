@@ -547,14 +547,17 @@ tr.text-center > th {
 
 /* Forms */
 .fun-form {
-  font-family: "Times New Roman", Times, serif;
   margin: 10px
 }
+
+.fun-form-field {
+  display: block;
+}
+
 .fun-form .fun-form-label {
   margin-top: 5px;
-  font-size: 12px;
+  /*font-size: 12px;*/
   display: block;
-  font-weight: bold;
 }
 
 /* Button */
@@ -568,4 +571,23 @@ tr.text-center > th {
   padding-bottom: unset;
   font-size: 14px;
   border: darkblue 0.5px;
+}
+
+.fun-button-add {
+  padding: 6px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  border: darkblue 0.5px;
+  background-color: #337ab7;
+  color: white;
+  cursor: pointer;
+  min-width: 50px;
+  border-radius: 2px;
+}
+
+.fun-button-add:hover {
+  background-color: #43374a;
+  color: white;
+  cursor: pointer;
+
 }

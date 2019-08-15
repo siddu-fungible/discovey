@@ -1,10 +1,17 @@
 import {Component, OnInit} from '@angular/core';
 import {FormControl, FormGroup} from "@angular/forms";
+import {TestBedService} from "../test-bed/test-bed.service";
+import {Observable, of} from "rxjs";
+import {switchMap} from "rxjs/operators";
 
 class SuiteEntry {
   path: string;
   test_case_ids: number[] = null;
   inputs: any = null
+}
+enum CustomDutSelection {  // used by the Custom test-bed spec modal
+  NUM_DUTS,
+  SPECIFIC_DUTS
 }
 
 @Component({
@@ -13,16 +20,80 @@ class SuiteEntry {
   styleUrls: ['./suite-editor.component.css']
 })
 export class SuiteEditorComponent implements OnInit {
+  testCaseIds: number[] = null;
+  inputs: any = null;
+  customTestBedSpec: any = null;
+  addingCustomTestBedSpec: boolean = true;
+  inputsExample: string = '{"abc":123}';
+  testBeds: any = null;
+  selectedTestBed: any = null;
+  assets: any = null;
+  dutAssets: any = [];
+  hostAssets: any = [];
+  perfListenerAssets: any = [];
+  selectedDutAsset: any = null;
+  numDuts: number = -1;
+  CustomDutSelection = CustomDutSelection;
   newSuiteEntryForm = new FormGroup({
     path: new FormControl(''),
     testCaseIds: new FormControl(''),
     inputs: new FormControl('')
   });
 
-  constructor() {
+  customTestBedSpecForm = new FormGroup({
+    customDutSelection: new FormControl(),
+    selectedTestBed: new FormControl()
+  });
+
+  constructor(private testBedService: TestBedService) {
+
   }
 
   ngOnInit() {
+    new Observable(observer => {
+      observer.next(true);
+      return () => {
+
+      }
+    }).pipe(switchMap((response) => {
+      return this.testBedService.testBeds();
+    })).pipe(switchMap(response => {
+      this.testBeds = response;
+      return this.testBedService.assets();
+    })).pipe(switchMap(response => {
+      this.assets = response;
+      this.assets.forEach((asset) => {
+        if (asset.type === 'DUT') {
+          this.dutAssets.push(asset);
+        }
+        if (asset.type === 'Host') {
+          this.hostAssets.push(asset)
+        }
+        if (asset.type === 'Perf Listener') {
+          this.perfListenerAssets.push(asset);
+        }
+
+      });
+
+      return of(true);
+    })).subscribe();
   }
 
+  testCaseIdsChanged(testCaseIds) {
+    this.testCaseIds = testCaseIds;
+  }
+
+  inputsChanged(inputs) {
+    this.inputs = inputs;
+  }
+
+  customTestBedSpecChanged(customTestBedSpec) {
+    this.customTestBedSpec = customTestBedSpec;
+  }
+
+  test() {
+    //console.log(this.selectedTestBed);
+    console.log(this.customTestBedSpecForm.get("selectedTestBed").value);
+    console.log(this.customTestBedSpecForm.get("customDutSelection").value);
+  }
 }
