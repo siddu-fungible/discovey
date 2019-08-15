@@ -14,7 +14,7 @@ import {Announcement} from "../../../announcement/announcement";
 export class AnnouncementFormComponent implements OnInit {
   @ViewChild('announcementForm') formValues;
   editing: boolean = false;
-  levels = {1: 'info', 2: 'warning', 3: 'danger'};
+  LEVELS = {1: 'info', 2: 'warning', 3: 'danger'};
   levelNums : number[] = [];
   announcementModel = new Announcement('', null);
   tempAnnouncementModel = new Announcement('', null);
@@ -27,7 +27,7 @@ export class AnnouncementFormComponent implements OnInit {
 
 
   ngOnInit() {
-    Object.keys(this.levels).forEach((level) => {
+    Object.keys(this.LEVELS).forEach((level) => {
       this.levelNums.push(parseInt(level));
     });
     this.refresh();
@@ -69,7 +69,7 @@ export class AnnouncementFormComponent implements OnInit {
       this.announcementModel.announcement = response.data.announcement;
       this.announcementModel.announcementLevel = response.data.announcement_level;
       this.tempAnnouncementModel = {...this.announcementModel};
-      this.currentLevel = this.levels[this.announcementModel.announcementLevel];
+      this.currentLevel = this.LEVELS[this.announcementModel.announcementLevel];
     }, error => {
       this.logger.error("Unable to fetch announcements");
     })
