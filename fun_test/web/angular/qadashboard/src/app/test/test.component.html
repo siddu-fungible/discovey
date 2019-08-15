@@ -1,0 +1,18 @@
+
+
+
+
+<div *ngIf="fetched" style="width: 50%">
+  <ng-multiselect-dropdown
+  [placeholder]="'Select users'"
+  [data]="submitter_emails"
+  [(ngModel)]="selectedItems"
+  [settings]="dropdownSettings"
+  (onSelect)="onItemSelect($event)"
+  (onSelectAll)="onSelectAll($event)"
+>
+</ng-multiselect-dropdown>
+
+</div>
+
+
