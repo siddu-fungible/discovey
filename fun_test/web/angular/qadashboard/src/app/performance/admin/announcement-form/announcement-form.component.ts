@@ -15,7 +15,7 @@ export class AnnouncementFormComponent implements OnInit {
   @ViewChild('announcementForm') formValues;
   editing: boolean = false;
   levels = {1: 'info', 2: 'warning', 3: 'danger'};
-  levelNums = [1, 2, 3];
+  levelNums : number[] = [];
   announcementModel = new Announcement('', null);
   tempAnnouncementModel = new Announcement('', null);
   emptyAnnouncement = new Announcement('', 1);
@@ -27,8 +27,10 @@ export class AnnouncementFormComponent implements OnInit {
 
 
   ngOnInit() {
+    Object.keys(this.levels).forEach((level) => {
+      this.levelNums.push(parseInt(level));
+    });
     this.refresh();
-
   }
 
   onSubmit() {
