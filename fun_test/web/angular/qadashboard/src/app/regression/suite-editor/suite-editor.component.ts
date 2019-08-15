@@ -1,5 +1,5 @@
 import {Component, OnInit} from '@angular/core';
-import {FormControl, FormGroup} from "@angular/forms";
+import {FormControl, FormGroup, Validators} from "@angular/forms";
 import {TestBedService} from "../test-bed/test-bed.service";
 import {Observable, of} from "rxjs";
 import {switchMap} from "rxjs/operators";
@@ -34,6 +34,7 @@ export class SuiteEditorComponent implements OnInit {
   selectedDutAsset: any = null;
   numDuts: number = -1;
   CustomDutSelection = CustomDutSelection;
+  MAX_NUM_DUTS = 10;
   newSuiteEntryForm = new FormGroup({
     path: new FormControl(''),
     testCaseIds: new FormControl(''),
@@ -42,7 +43,8 @@ export class SuiteEditorComponent implements OnInit {
 
   customTestBedSpecForm = new FormGroup({
     customDutSelection: new FormControl(),
-    selectedTestBed: new FormControl()
+    selectedTestBed: new FormControl(),
+    numDuts: new FormControl('', [Validators.max(10)])
   });
 
   constructor(private testBedService: TestBedService) {
@@ -77,6 +79,15 @@ export class SuiteEditorComponent implements OnInit {
 
       return of(true);
     })).subscribe();
+
+    this.customTestBedSpecForm.get('customDutSelection').valueChanges.subscribe(selection => {
+      if (selection == CustomDutSelection.SPECIFIC_DUTS.toString()) {
+        this.customTestBedSpecForm.get('numDuts').disable();
+      } else {
+        this.customTestBedSpecForm.get('numDuts').enable();
+
+      }
+    })
   }
 
   testCaseIdsChanged(testCaseIds) {
@@ -95,5 +106,7 @@ export class SuiteEditorComponent implements OnInit {
     //console.log(this.selectedTestBed);
     console.log(this.customTestBedSpecForm.get("selectedTestBed").value);
     console.log(this.customTestBedSpecForm.get("customDutSelection").value);
+        console.log(this.customTestBedSpecForm.get("numDuts").value);
+
   }
 }

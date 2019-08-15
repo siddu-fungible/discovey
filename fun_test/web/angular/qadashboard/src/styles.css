@@ -560,6 +560,13 @@ tr.text-center > th {
   display: block;
 }
 
+input[disabled].fun-form-input  {
+  color: #DCDAD1;
+  padding: 2px;
+  margin: 0 0 0 0;
+  background-color: lightgrey;
+}
+
 /* Button */
 .btn.submit-button {
   padding-top: unset;
