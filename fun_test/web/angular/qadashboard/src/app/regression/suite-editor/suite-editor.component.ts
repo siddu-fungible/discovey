@@ -107,6 +107,7 @@ export class SuiteEditorComponent implements OnInit {
     console.log(this.customTestBedSpecForm.get("selectedTestBed").value);
     console.log(this.customTestBedSpecForm.get("customDutSelection").value);
         console.log(this.customTestBedSpecForm.get("numDuts").value);
+        console.log(this.customTestBedSpecForm.get("numDuts").valid);
 
   }
 }
