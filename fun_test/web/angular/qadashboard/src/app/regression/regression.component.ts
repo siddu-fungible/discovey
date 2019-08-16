@@ -119,7 +119,6 @@ export class RegressionComponent implements OnInit {
   }
 
   ngOnInit() {
-    console.log(this._flatten(['a', 'b', 'c']));
     this.searchForm = this.fb.group({
       submitters: [[]],
       executionId: [''],
@@ -221,7 +220,7 @@ export class RegressionComponent implements OnInit {
       let fb = new FilterButton(key, this.queryParameters[key], this.stateStringMap);
       this.filterButtons.push(fb);
     }
-    console.log(this.filterButtons);
+    //console.log(this.filterButtons);
   }
 
   prepareBaseQueryParams(userSuppliedParams) {
@@ -298,7 +297,6 @@ export class RegressionComponent implements OnInit {
     //userParams = [{'submitter_email': 'john.a@fungible.com'},{'submitter_email': 'ashwin.s@fungible.com'}];
     let queryParams = {};
     for (let userParam of userParams) {
-      console.log(userParam);
       let key = Object.keys(userParam)[0];
       if (key == 'submitter_email' && Array.isArray(userParam[key])) {
         queryParams[key] = this._flatten(userParam[key]);
@@ -560,11 +558,9 @@ export class RegressionComponent implements OnInit {
   }
 
   onItemSelect(item: any) {
-    console.log(item);
   }
 
   onSelectAll(items: any) {
-    console.log(items);
   }
 
   get submitters() {
@@ -574,11 +570,9 @@ export class RegressionComponent implements OnInit {
   onSubmit() {
     console.log(this.searchForm.get('suiteName'));
     this.navigateByQueryParams([{
-      submitter_email: this.searchForm.controls.submitters.value,
-      suite_path: this.searchForm.controls.suiteName.value
+      submitter_email: this.searchForm.controls.submitters.value},
+      {suite_path: this.searchForm.controls.suiteName.value
     }]);
-    //this.navigateByQueryParams({suite_path: this.searchForm.controls.suiteName.value});
-    console.log('submitted');
   }
 
   _flatten(items) {
