@@ -34,10 +34,10 @@ class SetupBringup(alibaba_fcp_setup.ScriptSetup):
 
         fun_test.log("Configure irq affinity")
         for hu in funeth_obj.hu_hosts:
-            # funeth_obj.configure_irq_affinity(hu, tx_or_rx='tx', cpu_list=funeth.CPU_LIST_HOST)
-            # funeth_obj.configure_irq_affinity(hu, tx_or_rx='rx', cpu_list=funeth.CPU_LIST_HOST)
+            funeth_obj.configure_irq_affinity(hu, tx_or_rx='tx', cpu_list=funeth.CPU_LIST_HOST)
+            funeth_obj.configure_irq_affinity(hu, tx_or_rx='rx', cpu_list=funeth.CPU_LIST_HOST)
             funeth_obj.interrupt_coalesce(hu, disable=True)
-            lock_cpu_freq(funeth_obj=funeth_obj, hu=hu)
+            # lock_cpu_freq(funeth_obj=funeth_obj, hu=hu)
 
         for nu in funeth_obj.nu_hosts:
             linux_obj = funeth_obj.linux_obj_dict[nu]
@@ -417,7 +417,7 @@ class RunNetesto0G1RR(FunTestCase):
     script_name = 'script.ali_0g_1rr'
 
     def describe(self):
-        self.set_test_details(id=2, summary="HU HU Non FCP perf",
+        self.set_test_details(id=1, summary="1 RR connection with 0 stream connections",
                               steps="""
 
                                       """)
