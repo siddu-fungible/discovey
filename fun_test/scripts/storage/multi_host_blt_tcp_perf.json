@@ -29,6 +29,7 @@
       "override": true,
       "override_node": "NUMA node0 CPU(s)"
     },
+    "csi_perf_pdtrace_hbm_size_kb": 204800,
     "csr_network": {
       "0": {
         "test_interface_ip": "20.1.1.1/24",
@@ -100,7 +101,8 @@
       "(32, 2)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
       "(32, 4)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}}
     },
-    "host_count": 1
+    "host_count": 1,
+    "csi_perf_iodepth": [32]
   },
   "MultiHostFioRandWrite": {
     "num_ssd": 12,
@@ -150,6 +152,7 @@
       "(16, 1)": {"randwrite": {"write": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
       "(32, 1)": {"randwrite": {"write": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}}
     },
-    "host_count": 1
+    "host_count": 1,
+    "csi_perf_iodepth": [16]
   }
 }

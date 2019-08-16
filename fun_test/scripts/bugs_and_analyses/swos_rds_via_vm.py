@@ -8,6 +8,8 @@ from scripts.networking.funcp.helper import *
 from scripts.networking.funeth.sanity import Funeth
 from lib.utilities.funcp_config import *
 from fun_global import PerfUnit, FunPlatform
+from scripts.networking.helper import *
+from scripts.networking.helper import *
 
 '''
 Script to track the performance of various read write combination with multiple (12) local thin block volumes using FIO
@@ -98,9 +100,9 @@ class RawVolumePerfScript(FunTestScript):
                                  f1_1_mpg=self.server_key["fs"][fs_name]["mpg_ips"]["mpg1"],
                                  f1_0_mpg=self.server_key["fs"][fs_name]["mpg_ips"]["mpg0"])
 
-        abstract_json_file0 = fun_test.get_script_parent_directory() + '/abstract_config/' + \
+        abstract_json_file0 = fun_test.get_script_parent_directory() + '/' + \
                               self.server_key["fs"][fs_name]["abstract_configs"]["F1-0"]
-        abstract_json_file1 = fun_test.get_script_parent_directory() + '/abstract_config/' + \
+        abstract_json_file1 = fun_test.get_script_parent_directory() + '/' + \
                               self.server_key["fs"][fs_name]["abstract_configs"]["F1-1"]
 
         funcp_obj.funcp_abstract_config(abstract_config_f1_0=abstract_json_file0,
@@ -206,6 +208,7 @@ class RawVolumeRemotePerfTestcase(FunTestCase):
                                                          target_port=servers_with_vms[server]["dpc_port_local"])
             storage_controller_dpu_1 = StorageController(target_ip=fs_spec['come']['mgmt_ip'],
                                                          target_port=servers_with_vms[server]["dpc_port_remote"])
+            self.storage_controller = storage_controller_dpu_1
 
             print("\n")
             print("===================================")
@@ -314,6 +317,9 @@ class RawVolumeRemotePerfTestcase(FunTestCase):
                 fun_test.test_assert(command_result["status"], "Creating RDS volume with uuid {}".
                                      format(rds_blk_vol_dpu_0))
                 result_dict[vm]["rds_blk_vol_dpu_0"] = rds_blk_vol_dpu_0
+                self.vol_details = []
+                self.vol_details.append({"VOL_TYPE_BLK_RDS": rds_blk_vol_dpu_0})
+                print("Volume_details...")
 
                 print("\n")
                 print("===================================================")
@@ -354,7 +360,7 @@ class RawVolumeRemotePerfTestcase(FunTestCase):
                 fun_test.shared_variables["vm_obj"] = self.vm_obj
 
                 # Run warmup
-                if self.warm_up_traffic:
+                """if self.warm_up_traffic:
                     fun_test.log(
                         "Initial Write IO to volume, this might take long time depending on fio --size provided")
                     for i in range(0, 2):
@@ -366,7 +372,7 @@ class RawVolumeRemotePerfTestcase(FunTestCase):
                     fun_test.sleep("Sleeping for {} seconds before actual test".format(self.iter_interval),
                                    self.iter_interval)
 
-                i += 1
+                i += 1"""
 
     def run(self):
         testcase = self.__class__.__name__
@@ -383,22 +389,7 @@ class RawVolumeRemotePerfTestcase(FunTestCase):
         initial_stats = {}
         final_stats = {}
         diff_stats = {}
-
-        table_data_headers = ["Block Size", "IO Depth", "Numjobs", "Size", "Test", "Operation",
-                              "Write IOPS", "Read IOPS", "Write Throughput in MB/s", "Read Throughput in MB/s",
-                              "Avg Write Latency in uSecs", "Write Latency 90 Percentile in uSecs",
-                              "Write Latency 95 Percentile in uSecs",
-                              "Write Latency 99 Percentile in uSecs", "Write Latency 99.99 Percentile in uSecs",
-                              "Avg Read Latency in uSecs", "Read Latency 90 Percentile in uSecs",
-                              "Read Latency 95 Percentile in uSecs",
-                              "Read Latency 99 Percentile in uSecs", "Read Latency 99.99 Percentile in uSecs"]
-        table_data_cols = ["block_size", "io_depth", "num_threads", "io_size", "test", "operation",
-                           "write_iops", "read_iops", "write_throughput", "read_throughput",
-                           "write_avg_latency", "write_90_latency", "write_95_latency",
-                           "write_99_latency", "write_99_99_latency",
-                           "read_avg_latency", "read_90_latency", "read_95_latency",
-                           "read_99_latency", "read_99_99_latency"]
-        table_data_rows = []
+        start_stats = True
 
         self.vm_obj = fun_test.shared_variables["vm_obj"]
 
@@ -416,6 +407,26 @@ class RawVolumeRemotePerfTestcase(FunTestCase):
             initial_stats[combo] = {}
             final_stats[combo] = {}
             diff_stats[combo] = {}
+            interval = 5
+            count = 5
+            if start_stats:
+                stats_obj = CollectStats(self.storage_controller)
+                vp_util_post_fix_name = "vp_util_iodepth_{}.txt".format(self.fio_jobs_iodepth)
+                vp_util_artifact_file = fun_test.get_test_case_artifact_file_name(post_fix_name=vp_util_post_fix_name)
+                stats_thread_id = fun_test.execute_thread_after(time_in_seconds=5,
+                                                                func=stats_obj.collect_vp_utils_stats,
+                                                                output_file=vp_util_artifact_file,
+                                                                interval=interval,
+                                                                count=count, threaded=True)
+                vol_stats_post_fix_name = "vol_stats_iodepth_{}.txt".format(self.fio_jobs_iodepth)
+                vol_stats_artifact_file = fun_test.get_test_case_artifact_file_name(
+                    post_fix_name=vol_stats_post_fix_name)
+                vol_stats_thread_id = fun_test.execute_thread_after(time_in_seconds=10,
+                                                                    func=stats_obj.collect_vol_stats,
+                                                                    vol_details=self.vol_details,
+                                                                    output_file=vol_stats_artifact_file,
+                                                                    interval=interval,
+                                                                    count=count, threaded=True)
             for mode in self.fio_modes:
                 fio_result[combo][mode] = True
                 internal_result[combo][mode] = True
@@ -473,18 +484,6 @@ class RawVolumeRemotePerfTestcase(FunTestCase):
                         value_dict["write_95_latency"] = stats["latency95"]
                         value_dict["write_99_99_latency"] = stats["latency9999"]
                         value_dict["write_99_latency"] = stats["latency99"]
-                row_data_list = []
-                for i in table_data_cols:
-                    if i not in value_dict:
-                        row_data_list.append(-1)
-                    else:
-                        row_data_list.append(value_dict[i])
-                table_data_rows.append(row_data_list)
-                #post_results(value_dict)
-
-        table_data = {"headers": table_data_headers, "rows": table_data_rows}
-        fun_test.add_table(panel_header="Ali BMV BLT over PCIe Perf Table", table_name=self.summary,
-                           table_data=table_data)
 
         # Posting the final status of the test result
         test_result = True

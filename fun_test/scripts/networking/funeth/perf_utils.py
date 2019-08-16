@@ -242,11 +242,11 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict,  v
         output = nc_obj.peek_fcp_global_stats()
         output_list.append({'FCB': output})
 
-        # FCP tunnel 192
-        tunnel_id = 192
+        # FCP tunnel
+        tunnel_id = 195
         fun_test.log('{} dpc: Get FCP tunnel {} stats'.format(f1, tunnel_id))
         output = nc_obj.peek_fcp_tunnel_stats(tunnel_id)
-        output_list.append({'FCP tunnel {}'.format(192): output})
+        output_list.append({'FCP tunnel {}'.format(tunnel_id): output})
 
         # PSW
         fun_test.log('{} dpc: Get PSW stats'.format(f1))
@@ -263,7 +263,7 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict,  v
         output = nc_obj.peek_wro_global_stats()
         output_list.append({'WRO': output})
 
-        # WRO tunnel 192
+        # WRO tunnel
         fun_test.log('{} dpc: Get WRO tunnel {} stats'.format(f1, tunnel_id))
         output = nc_obj.peek_wro_tunnel_stats(tunnel_id)
         output_list.append({'WRO tunnel {}'.format(tunnel_id): output})
