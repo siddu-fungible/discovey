@@ -2,7 +2,7 @@ import {Component, Input, OnInit} from '@angular/core';
 import {ApiService} from "../../../services/api/api.service";
 import {CommonService} from "../../../services/common/common.service";
 import {LoggerService} from "../../../services/logger/logger.service";
-import {from, Observable, of} from "rxjs";
+import {forkJoin, from, Observable, of} from "rxjs";
 import {concatMap, mergeMap, switchMap} from "rxjs/operators";
 import {ActivatedRoute, Router} from "@angular/router";
 import {Location} from '@angular/common';
@@ -123,12 +123,7 @@ export class ViewWorkspaceComponent implements OnInit {
     this.setData(metric);
     let self = this;
     let dateTime = new Date();
-    return new Observable(observer => {
-      observer.next(true);
-      observer.complete();
-      return () => {
-      }
-    }).pipe(
+    return of(true).pipe(
       switchMap(response => {
         return this.fetchData(metric, dateTime, "today");
       }),
@@ -197,8 +192,17 @@ export class ViewWorkspaceComponent implements OnInit {
   }
 
   fetchReports(): any {
-    return from(this.workspace.interested_metrics).pipe(
-      mergeMap(metric => this.fetchTodayAndYesterdayData(metric)));
+
+    const resultObservables = [];
+
+    this.workspace.interested_metrics.forEach(metric => {
+      resultObservables.push(this.fetchTodayAndYesterdayData(metric));
+    });
+    return forkJoin(resultObservables);
+
+
+    //return from(this.workspace.interested_metrics).pipe(
+    //  mergeMap(metric => this.fetchTodayAndYesterdayData(metric)));
     // for (let metric of this.workspace.interested_metrics) {
     //   if (!metric["report"]) {
     //     this.fetchTodayAndYesterdayData(metric);
@@ -215,7 +219,7 @@ export class ViewWorkspaceComponent implements OnInit {
   generateReport(): void {
     new Observable(observer => {
       observer.next(true);
-      observer.complete();
+      //observer.complete();
       return () => {
       }
     }).pipe(
