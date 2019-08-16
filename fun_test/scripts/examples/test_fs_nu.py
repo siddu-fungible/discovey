@@ -23,7 +23,7 @@ class MyScript(FunTestScript):
 
         test_bed_type = fun_test.get_job_environment_variable("test_bed_type")
         if test_bed_type == "fs-11":
-            perf_listener_host_name = "poc-server-06"
+            perf_listener_host_name = "poc-server-11"
         csi_perf_enabled = fun_test.get_job_environment_variable("csi_perf")
         if csi_perf_enabled:
             f1_parameters[0]["boot_args"] = f1_parameters[0]["boot_args"] + " --perf csi-local-ip=29.1.1.2 csi-remote-ip={} pdtrace-hbm-size-kb=204800".format(perf_listener_ip)
@@ -70,9 +70,23 @@ class MyScript(FunTestScript):
                 "f1_loopback_ip": "29.1.1.1"
             }
         }
+
+        if test_bed_type == "fs-11":
+            csr_network["0"] = {
+                "test_interface_ip": "9.0.8.1/24",
+                "test_interface_mac": "3c:fd:fe:ca:17:dd",
+                "test_net_route": {
+                    "net": "29.1.1.0/24",
+                    "gw": "9.0.8.2",
+                    "arp": "00:de:ad:be:ef:00"
+                },
+                "f1_loopback_ip": "29.1.1.1"
+            }
         interface_name = "fpg0"
         if test_bed_type == "fs-21":
             interface_name = end_host.extra_attributes["test_interface_name"]
+        if test_bed_type == "fs-11":
+            interface_name = "qfx"
         configure_endhost_interface(end_host=end_host, test_network=csr_network["0"], interface_name=interface_name)
 
         fun_test.shared_variables["fs"] = fs
