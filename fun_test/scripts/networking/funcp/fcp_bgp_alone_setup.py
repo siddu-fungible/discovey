@@ -76,7 +76,7 @@ class BringupSetup(FunTestCase):
             print  datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
             # Bringup FunCP
             fun_test.test_assert(expression=funcp_obj.bringup_funcp(
-                prepare_docker=testbed_info['fs'][test_bed_type][fs_name]['prepare_docker']), message="Bringup FunCP")
+                prepare_docker=testbed_info['fs'][test_bed_type][fs_name]['prepare_docker'], ep =True), message="Bringup FunCP")
             print "\n\n\n Booting of Control Plane  ended\n\n\n"
             print  datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
 

@@ -66,7 +66,8 @@ class ScriptSetup(FunTestScript):
         print  datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
 
         for fs_name in testbed_info['fs'][test_bed_type]["fs_list"]:
-            funcp_obj = FunControlPlaneBringup(fs_name=fs_name, hostprefix=fs_name)
+            #funcp_obj = FunControlPlaneBringup(fs_name=fs_name, hostprefix=fs_name)
+            funcp_obj = FunControlPlaneBringup(fs_name=fs_name)
             print "\n\n\n Booting of Control Plane  Started\n\n\n"
             print  datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
             # Bringup FunCP
