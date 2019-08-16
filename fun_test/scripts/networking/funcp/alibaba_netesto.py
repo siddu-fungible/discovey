@@ -417,7 +417,7 @@ class RunNetesto0G1RR(FunTestCase):
     script_name = 'script.ali_0g_1rr'
 
     def describe(self):
-        self.set_test_details(id=2, summary="HU HU Non FCP perf",
+        self.set_test_details(id=1, summary="1 RR connection with 0 stream connections",
                               steps="""
 
                                       """)
