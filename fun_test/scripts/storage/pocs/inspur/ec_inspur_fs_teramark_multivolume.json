@@ -21,6 +21,7 @@
     "reboot_timeout": 600,
     "ethernet_adapter": "Mellanox",
     "override_numa_node": {"override": true, "override_node": "NUMA node0 CPU(s)"},
+    "csi_perf_pdtrace_hbm_size_kb": 204800,
     "csr_network": {
       "0": {
         "test_interface_ip": "20.1.1.1/24",
@@ -95,7 +96,8 @@
     "vp_util_args": {"interval": 60},
     "resource_bam_args": {"interval": 60},
     "vol_stats_args": {"interval": 60},
-    "collect_network_stats": true
+    "collect_network_stats": true,
+    "csi_perf_iodepth": [64]
   },
   "RandRead8kBlocks": {
     "ec_info": {
@@ -148,7 +150,8 @@
     "vp_util_args": {"interval": 60},
     "resource_bam_args": {"interval": 60},
     "vol_stats_args": {"interval": 60},
-    "collect_network_stats": true
+    "collect_network_stats": true,
+    "csi_perf_iodepth": [64]
   },
   "RandWrite8kBlocks": {
     "ec_info": {
@@ -201,7 +204,8 @@
     "vp_util_args": {"interval": 60},
     "resource_bam_args": {"interval": 60},
     "vol_stats_args": {"interval": 60},
-    "collect_network_stats": true
+    "collect_network_stats": true,
+    "csi_perf_iodepth": [64]
   },
   "SequentialReadWrite1024kBlocks": {
     "ec_info": {

@@ -8,6 +8,8 @@ from lib.templates.storage.storage_fs_template import *
 from scripts.storage.storage_helper import *
 from scripts.networking.helper import *
 from collections import OrderedDict, Counter
+from lib.templates.csi_perf.csi_perf_template import CsiPerfTemplate
+from lib.host.linux import Linux
 
 '''
 Script to track the Inspur Performance Cases of various read write combination of Erasure Coded volume using FIO
@@ -163,6 +165,27 @@ class ECVolumeLevelScript(FunTestScript):
 
         if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
                 self.testbed_config["workarounds"]["enable_funcp"]:
+
+            # Code to collect csi_perf if it's set
+            self.csi_perf_enabled = fun_test.get_job_environment_variable("csi_perf")
+            fun_test.log("csi_perf_enabled is set as: {} for current run".format(self.csi_perf_enabled))
+            if self.csi_perf_enabled:
+                fun_test.log("testbed_config: {}".format(self.testbed_config))
+                self.csi_f1_ip = \
+                self.testbed_config["dut_info"][str(self.available_dut_indexes[0])]["bond_interface_info"]["0"]["0"][
+                    "ip"].split('/')[0]
+                fun_test.log("F1 ip used for csi_perf_test: {}".format(self.csi_f1_ip))
+                self.perf_listener_host = self.topology_helper.get_available_perf_listener_hosts()
+                fun_test.log("perf_listener_host used for current test: {}".format(self.perf_listener_host))
+                for self.perf_listener_host_name, csi_perf_host_obj in self.perf_listener_host.iteritems():
+                    perf_listner_test_interface = csi_perf_host_obj.get_test_interface(index=0)
+                    self.perf_listener_ip = perf_listner_test_interface.ip.split('/')[0]
+                    fun_test.log("csi perf listener host ip is: {}".format(self.perf_listener_ip))
+                # adding csi perf bootargs if csi_perf is enabled
+                #  TODO: Modifying bootargs only for F1_0 as csi_perf on F1_1 is not yet fully supported
+                self.bootargs[0] += " --perf csi-local-ip={} csi-remote-ip={} pdtrace-hbm-size-kb={}".format(
+                    self.csi_f1_ip, self.perf_listener_ip, self.csi_perf_pdtrace_hbm_size_kb)
+
             for i in range(len(self.bootargs)):
                 self.bootargs[i] += " --mgmt"
                 if self.disable_wu_watchdog:
@@ -303,6 +326,10 @@ class ECVolumeLevelScript(FunTestScript):
             fun_test.shared_variables["syslog_level"] = self.syslog_level
             fun_test.shared_variables["db_log_time"] = self.db_log_time
             fun_test.shared_variables["host_info"] = self.host_info
+            fun_test.shared_variables["csi_perf_enabled"] = self.csi_perf_enabled
+            if self.csi_perf_enabled:
+                fun_test.shared_variables["perf_listener_host_name"] = self.perf_listener_host_name
+                fun_test.shared_variables["perf_listener_ip"] = self.perf_listener_ip
 
             for host_name in self.host_info:
                 host_handle = self.host_info[host_name]["handle"]
@@ -332,6 +359,16 @@ class ECVolumeLevelScript(FunTestScript):
                     ping_status = host_handle.ping(dst=ip, max_percentage_loss=80)
                     fun_test.test_assert(ping_status, "Host {} is able to ping to {}'s bond interface IP {}".
                                          format(host_name, self.funcp_spec[0]["container_names"][index], ip))
+
+            # Ensuring perf_host is able to ping F1 IP
+            if self.csi_perf_enabled:
+                # csi_perf_host_instance = csi_perf_host_obj.get_instance()  # TODO: Returning as NoneType
+                csi_perf_host_instance = Linux(host_ip=csi_perf_host_obj.spec["host_ip"],
+                                               ssh_username=csi_perf_host_obj.spec["ssh_username"],
+                                               ssh_password=csi_perf_host_obj.spec["ssh_password"])
+                ping_status = csi_perf_host_instance.ping(dst=self.csi_f1_ip)
+                fun_test.test_assert(ping_status, "Host {} is able to ping to F1 IP {}".
+                                     format(self.perf_listener_host_name, self.csi_f1_ip))
 
         elif "workarounds" in self.testbed_config and "csr_replay" in self.testbed_config["workarounds"] and \
                 self.testbed_config["workarounds"]["csr_replay"]:
@@ -599,6 +636,10 @@ class ECVolumeLevelTestcase(FunTestCase):
             self.test_network["f1_loopback_ip"] = self.f1_ips
             self.num_duts = fun_test.shared_variables["num_duts"]
             self.num_hosts = len(self.host_info)
+            self.csi_perf_enabled = fun_test.shared_variables["csi_perf_enabled"]
+            if self.csi_perf_enabled:
+                self.perf_listener_host_name = fun_test.shared_variables["perf_listener_host_name"]
+                self.perf_listener_ip = fun_test.shared_variables["perf_listener_ip"]
         elif "workarounds" in self.testbed_config and "csr_replay" in self.testbed_config["workarounds"] and \
                 self.testbed_config["workarounds"]["csr_replay"]:
             self.fs = fun_test.shared_variables["fs"]
@@ -1076,6 +1117,28 @@ class ECVolumeLevelTestcase(FunTestCase):
                 end_time = time.time()
                 time_taken = end_time - start_time
                 fun_test.log("Time taken to start an FIO job on a host {}: {}".format(host_name, time_taken))
+
+            # Starting csi perf stats collection if it's set
+            if self.csi_perf_enabled:
+                if row_data_dict["iodepth"] in self.csi_perf_iodepth:
+                    try:
+                        fun_test.sleep("for IO to be fully active", 20)
+                        csi_perf_obj = CsiPerfTemplate(perf_collector_host_name=str(self.perf_listener_host_name),
+                                                       listener_ip=self.perf_listener_ip, fs=self.fs[0],
+                                                       listener_port=4420)  # Temp change for testing
+                        csi_perf_obj.prepare(f1_index=0)
+                        csi_perf_obj.start(f1_index=0, dpc_client=self.storage_controller)
+                        fun_test.log("csi perf stats collection is started")
+                        # dpcsh_client = self.fs.get_dpc_client(f1_index=0, auto_disconnect=True)
+                        fun_test.sleep("Allowing CSI performance data to be collected", 120)
+                        csi_perf_obj.stop(f1_index=0, dpc_client=self.storage_controller)
+                        fun_test.log("CSI perf stats collection is done")
+                    except Exception as ex:
+                        fun_test.critical(str(ex))
+                else:
+                    fun_test.log("Skipping CSI perf collection for current iodepth {}".format(fio_iodepth))
+            else:
+                fun_test.log("CSI perf collection is not enabled, hence skipping it for current test")
 
             # Waiting for all the FIO test threads to complete
             try:
