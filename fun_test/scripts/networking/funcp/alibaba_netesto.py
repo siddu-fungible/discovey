@@ -36,7 +36,9 @@ class SetupBringup(alibaba_fcp_setup.ScriptSetup):
         for hu in funeth_obj.hu_hosts:
             funeth_obj.configure_irq_affinity(hu, tx_or_rx='tx', cpu_list=funeth.CPU_LIST_HOST)
             funeth_obj.configure_irq_affinity(hu, tx_or_rx='rx', cpu_list=funeth.CPU_LIST_HOST)
-            funeth_obj.interrupt_coalesce(hu, disable=False)
+            funeth_obj.interrupt_coalesce(hu, disable=True)
+            # lock_cpu_freq(funeth_obj=funeth_obj, hu=hu)
+
         for nu in funeth_obj.nu_hosts:
             linux_obj = funeth_obj.linux_obj_dict[nu]
             perf_utils.mlx5_irq_affinity(linux_obj)
@@ -415,7 +417,7 @@ class RunNetesto0G1RR(FunTestCase):
     script_name = 'script.ali_0g_1rr'
 
     def describe(self):
-        self.set_test_details(id=2, summary="HU HU Non FCP perf",
+        self.set_test_details(id=1, summary="1 RR connection with 0 stream connections",
                               steps="""
 
                                       """)
@@ -500,6 +502,17 @@ def netstat(linux):
     fun_test.log("======================================")
     linux.command(command="netstat -st")
 
+
+def lock_cpu_freq(funeth_obj, hu):
+    linux_obj = funeth_obj.linux_obj_dict[hu]
+    linux_obj.sudo_command(command="for i in {0..31}; do echo performance > "
+                                   "/sys/devices/system/cpu/cpu$i/cpufreq/scaling_governor; done")
+    linux_obj.command(command="cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor")
+    linux_obj.sudo_command(command="cpupower idle-set -e 0")
+    for i in range(1, 5):
+        linux_obj.sudo_command(command="cpupower idle-set -d %s" %i)
+    linux_obj.sudo_command("cpupower monitor")
+    linux_obj.disconnect()
 
 if __name__ == '__main__':
     ts = SetupBringup()

@@ -880,6 +880,24 @@ def populate_pc_resource_output_file(network_controller_obj, filename, pc_id, di
         fun_test.critical(str(ex))
     return output
 
+def _format_data_output(val):
+    if val == "N/A":
+        return val
+    val = "{:.0f}".format(val * 100)
+    if val >= '90':
+        val = "\033[92m " + val + " \033[0m"
+    return val
+
+
+def _format_non_zero_values(list_of_lists):
+    index_list = []
+    for cls, vp_0, vp_1, vp_2, vp_3 in zip(list_of_lists[0],list_of_lists[1],list_of_lists[2],list_of_lists[3],list_of_lists[4]):
+        if (vp_0 == '0' and vp_1 == '0' and vp_2 == '0' and vp_3 == '0') or (vp_0 == 'N/A' and vp_1 == 'N/A' and vp_2 == 'N/A' and vp_3 == 'N/A'):
+            index_list.append(list_of_lists[0].index(cls))
+    for index in sorted(index_list, reverse=True):
+        for list in list_of_lists:
+            del list[index]
+    return list_of_lists
 
 def get_vp_util_table_obj(result):
     master_table_obj = PrettyTable()
@@ -888,6 +906,7 @@ def get_vp_util_table_obj(result):
     for col_name in rows_list:
         complete_dict[col_name] = []
     for key, val in result.iteritems():
+        val = _format_data_output(val)
         cluster_id = key.split(".")[0][3]
         core_id = key.split(".")[1]
         vp_num = key.split(".")[2]
@@ -901,6 +920,7 @@ def get_vp_util_table_obj(result):
 
     print_keys = complete_dict.keys()
     print_values = complete_dict.values()
+    print_values = _format_non_zero_values(print_values)
     for col_name, col_values in zip(print_keys, print_values):
         master_table_obj.add_column(col_name, col_values)
     return master_table_obj
