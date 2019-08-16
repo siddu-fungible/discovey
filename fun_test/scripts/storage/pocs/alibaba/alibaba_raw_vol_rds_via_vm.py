@@ -480,7 +480,7 @@ class RawVolumeRemotePerfTestcase(FunTestCase):
                     else:
                         row_data_list.append(value_dict[i])
                 table_data_rows.append(row_data_list)
-                post_results(value_dict)
+                #post_results(value_dict)
 
         table_data = {"headers": table_data_headers, "rows": table_data_rows}
         fun_test.add_table(panel_header="Ali BMV BLT over PCIe Perf Table", table_name=self.summary,
