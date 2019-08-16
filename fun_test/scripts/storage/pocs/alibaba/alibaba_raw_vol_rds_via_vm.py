@@ -67,9 +67,9 @@ class RawVolumePerfScript(FunTestScript):
         global funcp_obj, servers_mode, servers_list, fs_name
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
         f1_0_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --dpc-server --all_100g --serial --dpc-uart " \
-                         "--dis-stats retimer=0 --mgmt --disable-wu-watchdog syslog=2 workload=storage"
+                         "retimer=0 --mgmt --disable-wu-watchdog syslog=2 workload=storage"
         f1_1_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 --dpc-server --all_100g --serial --dpc-uart " \
-                         "--dis-stats retimer=0 --mgmt --disable-wu-watchdog syslog=2 workload=storage"
+                         "retimer=0 --mgmt --disable-wu-watchdog syslog=2 workload=storage"
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
         # fs_name = "fs-45"
         funcp_obj = FunControlPlaneBringup(fs_name=self.server_key["fs"][fs_name]["fs-name"])
@@ -446,7 +446,6 @@ class RawVolumeRemotePerfTestcase(FunTestCase):
                                                                bs=fio_block_size,
                                                                iodepth=fio_iodepth,
                                                                name=fio_job_name,
-                                                               size=str(file_size_in_gb) + "G",
                                                                cpus_allowed=cpus_allowed,
                                                                **self.fio_cmd_args)
 
