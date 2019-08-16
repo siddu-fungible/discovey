@@ -409,7 +409,7 @@ if __name__ == "__main__inspur_charts":
         print ("Data sets: {}".format(data_sets))
 
 
-if __name__ == "__main__":
+if __name__ == "__main__crypto":
     internal_chart_names = OrderedDict([("crypto_dp_tunnel_perf_S1", "pktsize: 354B"),
                                         ("crypto_ipsec_perf_S1", "pktsize: 354B")])
     owner_info = "Jitendra Lulla (jitendra.lulla@fungible.com)"
@@ -467,3 +467,25 @@ if __name__ == "__main__":
         print ("Data sets: {}".format(data_sets))
 
 
+if __name__ == "__main__":
+    # Add the 6 vol field for inspur 8_11 F1s = 6 charts
+    metric_ids = [743, 744, 746, 745, 750, 751, 753, 752]
+    for metric_id in metric_ids:
+        chart = MetricChart.objects.get(metric_id=metric_id)
+        data_sets = json.loads(chart.data_sets)
+        copy_data_sets = data_sets[:]
+        for one_data_set in copy_data_sets:
+            input_fio_job_name = one_data_set['inputs']['input_fio_job_name']
+            name = one_data_set['name']
+            output = one_data_set['output']
+
+            one_data_set["inputs"]["input_fio_job_name"] = re.sub(r'vol_1', 'vol_6', input_fio_job_name)
+            one_data_set["name"] = re.sub(r'1 vol', '6 vol', name)
+            output["reference"] = -1
+            output["min"] = 0
+            output["max"] = -1
+
+        data_sets = json.loads(chart.data_sets)
+        data_sets += copy_data_sets
+        chart.data_sets = json.dumps(data_sets)
+        chart.save()
