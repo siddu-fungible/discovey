@@ -34,9 +34,8 @@
     <label class="fun-form-label">Number of DUTs:</label>
     <input formControlName="numDuts" type="number" max="10" class="fun-form-field fun-form-input">
     <div *ngIf="!customTestBedSpecForm.controls.numDuts.valid && (customTestBedSpecForm.controls.numDuts.touched || customTestBedSpecForm.controls.numDuts.dirty)">
-      Hi
-      <div *ngIf="numDuts.errors?.max">
-        Too many DUTs
+      <div *ngIf="customTestBedSpecForm.controls.numDuts.errors.max">
+        <app-ul-error-panel [messages]="['Too many DUTs. max:' +  MAX_NUM_DUTS ]"></app-ul-error-panel>
       </div>
     </div></div>
 

@@ -76,6 +76,7 @@ import { SmokeTestStorageWidgetComponent } from './regression/smoke-test-storage
 import { SuiteExecutionWidgetComponent } from './regression/suite-execution-widget/suite-execution-widget.component';
 import { SuiteEditorComponent } from './regression/suite-editor/suite-editor.component';
 import {ModalModule} from "ngb-modal";
+import { UlErrorPanelComponent } from './ui-elements/ul-error-panel/ul-error-panel.component';
 
 
 @NgModule({
@@ -135,7 +136,8 @@ import {ModalModule} from "ngb-modal";
     FunCardComponent,
     SmokeTestStorageWidgetComponent,
     SuiteExecutionWidgetComponent,
-    SuiteEditorComponent
+    SuiteEditorComponent,
+    UlErrorPanelComponent
   ],
   imports: [
     BsDropdownModule,
