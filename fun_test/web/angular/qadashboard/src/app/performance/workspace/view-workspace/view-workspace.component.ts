@@ -2,8 +2,8 @@ import {Component, Input, OnInit} from '@angular/core';
 import {ApiService} from "../../../services/api/api.service";
 import {CommonService} from "../../../services/common/common.service";
 import {LoggerService} from "../../../services/logger/logger.service";
-import {Observable, of} from "rxjs";
-import {switchMap} from "rxjs/operators";
+import {from, Observable, of} from "rxjs";
+import {concatMap, mergeMap, switchMap} from "rxjs/operators";
 import {ActivatedRoute, Router} from "@angular/router";
 import {Location} from '@angular/common';
 import {Title} from "@angular/platform-browser";
@@ -22,7 +22,6 @@ export class ViewWorkspaceComponent implements OnInit {
   showGrids: boolean = false;
   showChartTable: boolean = false;
   status: string = null;
-  outputNames: any = [];
   currentChart: any = null;
   data: any = [];
 
@@ -84,31 +83,47 @@ export class ViewWorkspaceComponent implements OnInit {
 
   closeChartTable(): void {
     this.showChartTable = false;
-    this.currentChart.selected = false;
-  }
-
-  openChartTable(metric): void {
     if (this.currentChart) {
       this.currentChart.selected = false;
     }
-    this.data = [];
+  }
+
+  openChartTable(metric): void {
+    this.closeChartTable();
     this.status = "Fetching data";
     this.currentChart = metric;
     this.currentChart.selected = true;
+    if (!metric["report"]) {
+      let obsObj = this.fetchTodayAndYesterdayData(metric);
+      obsObj.subscribe(response => {
+        console.log("fetched today and yesterday data");
+      }, error => {
+        this.loggerService.error("Unable to fetch today and yesterday data when opened chart");
+      });
+    }
+    this.showChartTable = true;
+    this.status = null;
+
+  }
+
+  setData(metric): void {
+    metric["data"] = [];
     let dataSets = metric["data_sets"];
-    this.outputNames = {};
     for (let dataSet of dataSets) {
-      this.outputNames[dataSet["name"]] = dataSet["output"]["name"];
       let temp = {};
       temp["name"] = dataSet["name"];
       temp["today"] = null;
       temp["yesterday"] = null;
       temp["unit"] = null;
-      this.data.push(temp);
+      metric["data"].push(temp);
     }
-    let dateTime = new Date();
+  }
 
-    new Observable(observer => {
+  fetchTodayAndYesterdayData(metric): any {
+    this.setData(metric);
+    let self = this;
+    let dateTime = new Date();
+    return new Observable(observer => {
       observer.next(true);
       observer.complete();
       return () => {
@@ -122,27 +137,21 @@ export class ViewWorkspaceComponent implements OnInit {
         return this.fetchData(metric, dateTime, "yesterday");
       }),
       switchMap(response => {
-        metric["report"] = this.data;
+        metric["report"] = metric["data"];
         return of(true);
-      })).subscribe(response => {
-      console.log("fetched today and yesterday data");
-      this.showChartTable = true;
-      this.status = null;
-    }, error => {
-      this.loggerService.error("Unable to fetch today and yesterday data");
-    });
-
+      }));
   }
 
   fetchData(metric, dateTime, key): any {
     let times = this.commonService.getEpochBounds(dateTime);
     let from_epoch = times[0];
     let to_epoch = times[1];
+    let self = this;
     console.log(times);
-    return this.apiService.get("/api/v1/performance/report_data?metric_id=" + metric["metric_id"] + "&from_epoch=" + from_epoch + "&to_epoch=" + to_epoch).pipe(switchMap(response => {
+    return this.apiService.get("/api/v1/performance/report_data?metric_id=" + metric["metric_id"] + "&from_epoch_ms=" + from_epoch + "&to_epoch_ms=" + to_epoch).pipe(switchMap(response => {
       let data = response.data;
       for (let oneData of data) {
-        for (let dataSet of this.data) {
+        for (let dataSet of metric["data"]) {
           if (dataSet["name"] == oneData["name"]) {
             dataSet[key] = oneData["value"];
             dataSet["unit"] = oneData["unit"];
@@ -165,6 +174,8 @@ export class ViewWorkspaceComponent implements OnInit {
         metric["model_name"] = response.data["metric_model_name"];
         metric["data_sets"] = response.data["data_sets"];
         metric["selected"] = false;
+        metric["report"] = null;
+        metric["data"] = [];
       }, error => {
         this.loggerService.error("failed fetching the chart info while viewing workspace");
       });
@@ -183,6 +194,42 @@ export class ViewWorkspaceComponent implements OnInit {
       this.showWorkspace = true;
       return of(true);
     }));
+  }
+
+  fetchReports(): any {
+    return from(this.workspace.interested_metrics).pipe(
+      mergeMap(metric => this.fetchTodayAndYesterdayData(metric)));
+    // for (let metric of this.workspace.interested_metrics) {
+    //   if (!metric["report"]) {
+    //     this.fetchTodayAndYesterdayData(metric);
+    //   }
+    // }
+    // return of(true);
+  }
+
+  sendReports(): any {
+    return of(true);
+
+  }
+
+  generateReport(): void {
+    new Observable(observer => {
+      observer.next(true);
+      observer.complete();
+      return () => {
+      }
+    }).pipe(
+      switchMap(response => {
+        return this.fetchReports();
+      }),
+      switchMap(response => {
+        return this.sendReports();
+      })).subscribe(response => {
+      console.log("generated report and sent to " + this.email);
+    }, error => {
+      this.loggerService.error("Unable to generate report");
+    });
+
   }
 
 }

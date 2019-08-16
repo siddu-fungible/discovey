@@ -1,16 +1,21 @@
 <!--shows the charts for a particular workspace-->
 <div *ngIf="showWorkspace" class="card card-primary">
   <div class="card-header">
-    <h5 style="text-align: center; margin: 0"><b><a [routerLink]="" class="fa fa-angle-double-left"
+    <h5 style="text-align: center; margin: 0"><a [routerLink]=""
                                                     style="font-size:
       large;
-        float: left" (click)="goBack()">&nbsp;Back</a></b>
+        float: left" (click)="goBack()"><i class="fa fa-hand-o-left" style="color: black"></i>&nbsp;Back</a>
       <span>{{ workspace.workspace_name }}</span></h5>
-      <a *ngIf="!showGrids" [routerLink]="" (click)="showGrids = true">+ Show charts</a>
-  <a *ngIf="showGrids" [routerLink]="" (click)="showGrids = false">- Hide charts</a>
+      <a *ngIf="!showGrids" [routerLink]="" (click)="showGrids = true"><i class="fa fa-plus-circle"
+                                                                          style="color: black"></i> Show
+        charts</a>
+  <a *ngIf="showGrids" [routerLink]="" (click)="showGrids = false"><i class="fa fa-minus-circle"
+                                                                          style="color: black"></i> Hide charts</a> | <button
+    class="btn btn-sm btn-outline-dark" (click)="generateReport()">Generate
+    report</button>
   </div>
   <div class="card-body flex-container">
-    <div style="flex: 0 0 50%; padding: 10px">
+    <div class="card" style="flex: 1 1 50%; padding: 10px;">
       <table style="width: 100%">
         <tr style="vertical-align: top">
           <th style="width: 30%">
@@ -59,8 +64,9 @@
     </div>
 
     <fun-spinner [status]="status"></fun-spinner>
-    <div *ngIf="showChartTable" style="flex: 0 0 50%; vertical-align: top; padding: 10px">
-      <b>Chart name: </b>{{ currentChart.chart_name }} <a [routerLink]="" (click)="closeChartTable()">Close</a>
+    <div *ngIf="showChartTable" class="card" style="flex: 1 1 50%; vertical-align: top; padding: 10px;">
+      <span><b>Chart name: </b>{{ currentChart.chart_name }} <a [routerLink]="" (click)="closeChartTable()">
+        Close</a></span>
       <table style="width: 80%">
         <tr>
           <th style="width: 20%">
@@ -76,7 +82,7 @@
             Unit
           </th>
         </tr>
-        <tr *ngFor="let oneData of data">
+        <tr *ngFor="let oneData of currentChart.data">
           <td>
             {{ oneData.name }}
           </td>
@@ -93,16 +99,24 @@
       </table>
     </div>
   </div>
-  <div *ngIf="showGrids" class="card-body flex-container">
+  <div *ngIf="showGrids" class="flex-container">
     <ng-container *ngFor="let row of workspace.interested_metrics">
-      <div style="flex: 0 0 50%; padding-bottom: 10px;">
-        <table>
+      <div style="flex: 0 0 45%; padding-bottom: 10px;">
+        <table align="center">
           <tr>
             <td>
               <b>Lineage:</b>
             </td>
             <td>
               {{ row['lineage'] }}
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <b>Score:</b>
+            </td>
+            <td>
+              {{ row['last_good_score'] }}
             </td>
           </tr>
         </table>
