@@ -402,23 +402,23 @@ class RawVolumeRemotePerfTestcase(FunTestCase):
 
         self.vm_obj = fun_test.shared_variables["vm_obj"]
 
-        for mode in self.fio_modes:
-            fio_result[mode] = {}
-            internal_result[mode] = {}
-            fio_output[mode] = {}
-            initial_volume_status[mode] = {}
-            final_volume_status[mode] = {}
-            diff_volume_stats[mode] = {}
-            initial_stats[mode] = {}
-            final_stats[mode] = {}
-            diff_stats[mode] = {}
-            for combo in self.fio_jobs_iodepth:
-                tmp = combo.split(',')
-                fio_block_size = self.fio_bs
-                fio_numjobs = tmp[0].strip('() ')
-                fio_iodepth = tmp[1].strip('() ')
-                fio_result[mode][combo] = True
-                internal_result[mode][combo] = True
+        for combo in self.fio_jobs_iodepth:
+            tmp = combo.split(',')
+            fio_block_size = self.fio_bs
+            fio_numjobs = tmp[0].strip('() ')
+            fio_iodepth = tmp[1].strip('() ')
+            fio_result[combo] = {}
+            internal_result[combo] = {}
+            fio_output[combo] = {}
+            initial_volume_status[combo] = {}
+            final_volume_status[combo] = {}
+            diff_volume_stats[combo] = {}
+            initial_stats[combo] = {}
+            final_stats[combo] = {}
+            diff_stats[combo] = {}
+            for mode in self.fio_modes:
+                fio_result[combo][mode] = True
+                internal_result[combo][mode] = True
                 value_dict = {}
                 value_dict["test"] = mode
                 value_dict["block_size"] = fio_block_size
@@ -428,19 +428,18 @@ class RawVolumeRemotePerfTestcase(FunTestCase):
                 value_dict["io_size"] = str(file_size_in_gb) + "GB"
                 value_dict["num_ssd"] = 1
                 value_dict["num_volume"] = 1
+            #for mode in self.fio_modes:
 
                 fun_test.log("Running FIO {} only test for block size: {} using num_jobs: {}, IO depth: {}".
                              format(mode, fio_block_size, fio_numjobs, fio_iodepth))
-
                 cpus_allowed = "0-15"
-
                 fun_test.log("Running FIO...")
                 fio_job_name = "fio_tcp_" + mode + "_" + "blt" + "_" + fio_numjobs + "_" + fio_iodepth + "_" + \
                                self.fio_job_name[mode]
                 # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
-                fio_output[mode][combo] = {}
+                fio_output[combo][mode] = {}
                 fio_filename = fun_test.shared_variables["nvme_block_device"]
-                fio_output[mode][combo] = self.vm_obj.pcie_fio(filename=fio_filename,
+                fio_output[combo][mode] = self.vm_obj.pcie_fio(filename=fio_filename,
                                                                numjobs=fio_numjobs,
                                                                rw=mode,
                                                                bs=fio_block_size,
@@ -448,16 +447,13 @@ class RawVolumeRemotePerfTestcase(FunTestCase):
                                                                name=fio_job_name,
                                                                cpus_allowed=cpus_allowed,
                                                                **self.fio_cmd_args)
-
                 fun_test.log("FIO Command Output:")
-                fun_test.log(fio_output[mode][combo])
-                fun_test.test_assert(fio_output[mode][combo], "Fio {} test for numjobs {} & iodepth {}".
+                fun_test.log(fio_output[combo][mode])
+                fun_test.test_assert(fio_output[combo][mode], "Fio {} test for numjobs {} & iodepth {}".
                                      format(mode, fio_numjobs, fio_iodepth))
-
                 fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval),
                                self.iter_interval)
-
-                for op, stats in fio_output[mode][combo].items():
+                for op, stats in fio_output[combo][mode].items():
                     # TODO: "operation" gets overwritten here; Set operation based on mode
                     if op == "read":
                         value_dict["operation"] = op
@@ -477,7 +473,6 @@ class RawVolumeRemotePerfTestcase(FunTestCase):
                         value_dict["write_95_latency"] = stats["latency95"]
                         value_dict["write_99_99_latency"] = stats["latency9999"]
                         value_dict["write_99_latency"] = stats["latency99"]
-
                 row_data_list = []
                 for i in table_data_cols:
                     if i not in value_dict:
@@ -485,8 +480,7 @@ class RawVolumeRemotePerfTestcase(FunTestCase):
                     else:
                         row_data_list.append(value_dict[i])
                 table_data_rows.append(row_data_list)
-
-                post_results(value_dict)
+                #post_results(value_dict)
 
         table_data = {"headers": table_data_headers, "rows": table_data_rows}
         fun_test.add_table(panel_header="Ali BMV BLT over PCIe Perf Table", table_name=self.summary,
@@ -498,7 +492,7 @@ class RawVolumeRemotePerfTestcase(FunTestCase):
         fun_test.log(internal_result)
         for combo in self.fio_jobs_iodepth:
             for mode in self.fio_modes:
-                if not fio_result[mode][combo] or not internal_result[mode][combo]:
+                if not fio_result[combo][mode] or not internal_result[combo][mode]:
                     test_result = False
 
         fun_test.log("Test Result: {}".format(test_result))
