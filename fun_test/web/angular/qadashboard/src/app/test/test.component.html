@@ -3,7 +3,7 @@
 
   <form [formGroup]="searchForm">
 
-    <div class="form-group" *ngIf="fetched" style="width: 50%; margin-bottom: 10px; margin-top: 10px">
+    <div class="form-group" *ngIf="fetched" (ngSubmit)="onSubmit()" style="width: 50%; margin-bottom: 10px; margin-top: 10px">
       <label>Submitters</label>
       <ng-multiselect-dropdown
         [placeholder]="'Select users'"

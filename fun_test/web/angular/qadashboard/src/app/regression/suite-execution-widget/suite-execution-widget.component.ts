@@ -27,8 +27,8 @@ export class SuiteExecutionWidgetComponent implements OnInit {
   isDone: boolean = false;
   numbers: number[] = [0, 1];
   iconDict: any = {
-    'PASSED': "/static/media/sun_icon.png",
-    'FAILED': "/static/media/storm_icon.png",
+    'PASSED': "https://ssl.gstatic.com/onebox/weather/64/sunny.png",
+    'FAILED': "https://ssl.gstatic.com/onebox/weather/64/thunderstorms.png",
     'IN_PROGRESS': "/static/media/loading_bars.gif"
   };
 

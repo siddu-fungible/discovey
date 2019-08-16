@@ -14,6 +14,8 @@ import {Observable, of} from "rxjs";
 import {switchMap} from "rxjs/operators";
 import {UserService} from "../services/user/user.service";
 import {NgbModal, ModalDismissReasons} from '@ng-bootstrap/ng-bootstrap';
+import {FormGroup} from "@angular/forms";
+import { FormBuilder } from "@angular/forms";
 
 class FilterButton {
   displayString: string = null;
@@ -86,6 +88,12 @@ export class RegressionComponent implements OnInit {
   filterButtons: FilterButton [] = [];
   userMap: any = null;
   showingTestBeds: boolean = false;
+    searchForm : FormGroup;
+  dropdownList = [];
+  selectedItems = [];
+  dropdownSettings = {};
+  submitter_emails : any = [];
+  fetched : boolean = false;
 
   // Re-run options
   reRunOptionsReRunFailed: boolean = false;
@@ -102,12 +110,27 @@ export class RegressionComponent implements OnInit {
               private regressionService: RegressionService,
               private router: Router,
               private userService: UserService,
+              private fb: FormBuilder,
               private modalService: NgbModal) {
     this.stateStringMap = this.regressionService.stateStringMap;
     this.stateMap = this.regressionService.stateMap;
   }
 
   ngOnInit() {
+     this.searchForm = this.fb.group({
+    submitters: [[]],
+    executionId: [''],
+    suiteName: ['']
+  });
+     this.dropdownSettings = {
+      singleSelection: false,
+      idField: 'item_id',
+      textField: 'item_text',
+      selectAllText: 'Select All',
+      unSelectAllText: 'UnSelect All',
+      itemsShowLimit: 3,
+      allowSearchFilter: true
+    };
     this.title.setTitle('Regression');
     if (this.route.snapshot.data["tags"]) {
       this.tags = this.route.snapshot.data["tags"];
@@ -178,6 +201,10 @@ export class RegressionComponent implements OnInit {
 
     this.userService.getUserMap().subscribe((response) => {
       this.userMap = response;
+      for (let user of Object.keys(this.userMap)){
+        this.submitter_emails.push(user);
+      }
+      this.fetched = true;
     }, error => {
       this.logger.error("Unable to fetch usermap");
     });
@@ -518,4 +545,21 @@ export class RegressionComponent implements OnInit {
   togglereUseBuildImage() {
     this.reUseBuildImage = !this.reUseBuildImage;
   }
+
+    onItemSelect(item: any) {
+    console.log(item);
+  }
+
+  onSelectAll(items: any) {
+    console.log(items);
+  }
+
+  get submitters() {
+    return this.searchForm.get('submitters');
+  }
+
+    onSubmit() {
+    console.log('submitted');
+  }
+
 }
