@@ -268,7 +268,7 @@ setups = {
         'rf'   : [ '10.1.104.108', 'Administrator', 'superuser' ],
         'ipmi' : [ '10.1.104.108', 'admin', 'admin' ],
         'fpga' : [ '10.1.104.102', 'root', 'root' ],
-        'come' : [ '10.1.104.112', 'fun', '123' ]
+        'come' : [ '10.1.104.111', 'fun', '123' ]
     },
    'FS65' : {
         'bmc'  : [ '10.1.104.164', 'sysadmin', 'superuser' ],
@@ -290,6 +290,20 @@ setups = {
         'ipmi' : [ '10.1.107.61', 'admin', 'admin' ],
         'fpga' : [ '10.1.107.55', 'root', 'root' ],
         'come' : [ '10.1.104.136', 'fun', '123' ]
+    },
+   'FS32' : {
+        'bmc'  : [ '10.80.4.156', 'sysadmin', 'superuser' ],
+        'rf'   : [ '10.80.4.156', 'Administrator', 'superuser' ],
+        'ipmi' : [ '10.80.4.156', 'admin', 'admin' ],
+        'fpga' : [ '10.80.4.157', 'root', '""' ],
+        'come' : [ '10.80.4.158', 'fun', '123' ]
+    },
+   'FS37' : {
+        'bmc'  : [ 'fs37-bmc.fungible.local', 'sysadmin', 'superuser' ],
+        'rf'   : [ 'fs37-bmc.fungible.local', 'Administrator', 'superuser' ],
+        'ipmi' : [ 'fs37-bmc.fungible.local', 'admin', 'admin' ],
+        'fpga' : [ 'fs37-fpga.fungible.local', 'root', '""' ],
+        'come' : [ 'fs37-come.fungible.local', 'fun', '123' ]
     },
 }
 
