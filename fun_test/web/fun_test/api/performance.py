@@ -66,13 +66,15 @@ def data(request):
 def report_data(request):
     data = []
     metric_id = request.GET.get("metric_id", None)
-    from_date = float(request.GET.get("from_epoch", None))
-    to_date = float(request.GET.get("to_epoch", None))
-    if metric_id and from_date and to_date:
+    from_epoch_ms = int(request.GET.get("from_epoch_ms", None))
+    to_epoch_ms = int(request.GET.get("to_epoch_ms", None))
+    if metric_id and from_epoch_ms and to_epoch_ms:
         chart = MetricChart.objects.get(metric_id=metric_id)
         model = app_config.get_metric_models()[chart.metric_model_name]
-        to_time = datetime.fromtimestamp(to_date)
-        from_time = datetime.fromtimestamp(from_date)
+        from_epoch = float(from_epoch_ms / 1000)
+        to_epoch = float(to_epoch_ms / 1000)
+        to_time = datetime.fromtimestamp(to_epoch)
+        from_time = datetime.fromtimestamp(from_epoch)
         date_range = [from_time, to_time]
         data_sets = json.loads(chart.data_sets)
         for data_set in data_sets:
