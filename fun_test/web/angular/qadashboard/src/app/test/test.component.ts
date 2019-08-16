@@ -170,7 +170,7 @@ export class TestComponent implements OnInit {
         }
         return this.apiService.post(url, payload).pipe(switchMap((result) => {
           this.suiteExecutionsCount = (parseInt(result.data));
-          this.setPage(1);
+          //this.setPage(1);
           return of(true);
         }))
       })

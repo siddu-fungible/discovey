@@ -15,13 +15,14 @@ import {switchMap} from "rxjs/operators";
 import {UserService} from "../services/user/user.service";
 import {NgbModal, ModalDismissReasons} from '@ng-bootstrap/ng-bootstrap';
 import {FormGroup} from "@angular/forms";
-import { FormBuilder } from "@angular/forms";
+import {FormBuilder} from "@angular/forms";
 
 class FilterButton {
   displayString: string = null;
   filterKey: string = null;
   filterValue: string = null;
   stateStringMap = null;
+
   constructor(filterKey, filterValue, stateStringMap) {
     this.filterKey = filterKey;
     this.filterValue = filterValue;
@@ -50,7 +51,7 @@ class FilterButton {
     this.displayString = `${keyString}=${keyValue}`;
   }
 
-  setData(filterKey, filterValue): void  {
+  setData(filterKey, filterValue): void {
     this.filterKey = filterKey;
     this.filterValue = filterValue;
   }
@@ -65,6 +66,7 @@ enum Filter {
   SUBMITTED = "SUBMITTED",
   AUTO_SCHEDULED = "AUTO_SCHEDULED"
 }
+
 @Component({
   selector: 'app-regression',
   templateUrl: './regression.component.html',
@@ -88,12 +90,12 @@ export class RegressionComponent implements OnInit {
   filterButtons: FilterButton [] = [];
   userMap: any = null;
   showingTestBeds: boolean = false;
-    searchForm : FormGroup;
+  searchForm: FormGroup;
   dropdownList = [];
   selectedItems = [];
   dropdownSettings = {};
-  submitter_emails : any = [];
-  fetched : boolean = false;
+  submitter_emails: any = [];
+  fetched: boolean = false;
 
   // Re-run options
   reRunOptionsReRunFailed: boolean = false;
@@ -117,12 +119,13 @@ export class RegressionComponent implements OnInit {
   }
 
   ngOnInit() {
-     this.searchForm = this.fb.group({
-    submitters: [[]],
-    executionId: [''],
-    suiteName: ['']
-  });
-     this.dropdownSettings = {
+    console.log(this._flatten(['a', 'b', 'c']));
+    this.searchForm = this.fb.group({
+      submitters: [[]],
+      executionId: [''],
+      suiteName: ['']
+    });
+    this.dropdownSettings = {
       singleSelection: false,
       idField: 'item_id',
       textField: 'item_text',
@@ -157,7 +160,7 @@ export class RegressionComponent implements OnInit {
           this.setFilterButtons();
           return of(response);
         }))
-      }),switchMap((response) => {
+      }), switchMap((response) => {
         if (response.hasOwnProperty('submitter_email')) {
           payload["submitter_email"] = response.submitter_email;
         }
@@ -201,7 +204,7 @@ export class RegressionComponent implements OnInit {
 
     this.userService.getUserMap().subscribe((response) => {
       this.userMap = response;
-      for (let user of Object.keys(this.userMap)){
+      for (let user of Object.keys(this.userMap)) {
         this.submitter_emails.push(user);
       }
       this.fetched = true;
@@ -272,7 +275,7 @@ export class RegressionComponent implements OnInit {
     let executionId = suiteExecution.fields.execution_id;
     if (confirm(`Are you sure you want to delete ${executionId}`)) {
       let url = "/api/v1/regression/suite_executions/" + executionId;
-        this.apiService.delete(url).subscribe(response => {
+      this.apiService.delete(url).subscribe(response => {
         this.logger.success(`Suite: ${executionId} deletion request submitted`);
         window.location.reload();
       }, error => {
@@ -292,8 +295,18 @@ export class RegressionComponent implements OnInit {
   }
 
   navigateByQueryParams(userParams) {
-    let queryParams = this.prepareBaseQueryParams(userParams);
-    this.router.navigate(['/regression'], {queryParams: queryParams});
+    //userParams = [{'submitter_email': 'john.a@fungible.com'},{'submitter_email': 'ashwin.s@fungible.com'}];
+    let queryParams = {};
+    for (let userParam of userParams) {
+      console.log(userParam);
+      let key = Object.keys(userParam)[0];
+      if (key == 'submitter_email' && Array.isArray(userParam[key])) {
+        queryParams[key] = this._flatten(userParam[key]);
+      } else {
+        queryParams[key] = userParam[key];
+      }
+    }
+    this.router.navigate(['/regression'], {queryParams: this.prepareBaseQueryParams(queryParams)});
   }
 
   navigateByQuery(state) {
@@ -372,16 +385,16 @@ export class RegressionComponent implements OnInit {
   getReRunInfo(suiteExecution) {
     if (suiteExecution.fields.suite_type === 'regular') {
       this.reRunService.getOriginalSuiteReRunInfo(suiteExecution.fields.execution_id).subscribe(response => {
-      suiteExecution["reRunInfo"] = response;
+        suiteExecution["reRunInfo"] = response;
       }, error => {
 
       })
     } else if (suiteExecution.fields.suite_type === 'dynamic') {
-        this.reRunService.getReRunSuiteInfo(suiteExecution.fields.execution_id).subscribe(response => {
+      this.reRunService.getReRunSuiteInfo(suiteExecution.fields.execution_id).subscribe(response => {
         suiteExecution["reRunInfo"] = response;
-        }, error => {
+      }, error => {
 
-        })
+      })
     }
 
   }
@@ -427,7 +440,7 @@ export class RegressionComponent implements OnInit {
     }*/
   }
 
-  reRunClick(suiteExecutionId, suitePath, resultFilter=null, reUseBuildImage=null) {
+  reRunClick(suiteExecutionId, suitePath, resultFilter = null, reUseBuildImage = null) {
     this.reRunService.submitReRun(suiteExecutionId, suitePath, resultFilter, null, reUseBuildImage).subscribe(response => {
       this.logger.success("Re-run request submitted");
       window.location.href = "/regression";
@@ -513,7 +526,7 @@ export class RegressionComponent implements OnInit {
   onChangeAutoSchedule(checked, suiteExecution) {
     let enabled = checked;
     this.regressionService.disableAutoSchedule(suiteExecution.fields.execution_id, !checked).subscribe((response) => {
-     this.logger.success("Suite disabled");
+      this.logger.success("Suite disabled");
     }, error => {
       this.logger.error("Unable to disable suite");
     })
@@ -528,7 +541,7 @@ export class RegressionComponent implements OnInit {
         this.reRunClick(suiteExecution.fields.execution_id, suiteExecution.fields.suite_path, null, this.reUseBuildImage);
       }
       if (this.reRunOptionsReRunFailed) {
-        this.reRunClick(suiteExecution.fields.execution_id, suiteExecution.fields.suite_path,['FAILED', 'NOT_RUN'], this.reUseBuildImage)
+        this.reRunClick(suiteExecution.fields.execution_id, suiteExecution.fields.suite_path, ['FAILED', 'NOT_RUN'], this.reUseBuildImage)
       }
 
     }, (reason) => {
@@ -546,7 +559,7 @@ export class RegressionComponent implements OnInit {
     this.reUseBuildImage = !this.reUseBuildImage;
   }
 
-    onItemSelect(item: any) {
+  onItemSelect(item: any) {
     console.log(item);
   }
 
@@ -558,8 +571,25 @@ export class RegressionComponent implements OnInit {
     return this.searchForm.get('submitters');
   }
 
-    onSubmit() {
+  onSubmit() {
+    console.log(this.searchForm.get('suiteName'));
+    this.navigateByQueryParams([{
+      submitter_email: this.searchForm.controls.submitters.value,
+      suite_path: this.searchForm.controls.suiteName.value
+    }]);
+    //this.navigateByQueryParams({suite_path: this.searchForm.controls.suiteName.value});
     console.log('submitted');
+  }
+
+  _flatten(items) {
+    let itemString = '';
+    for (let i = 0; i < items.length; ++i) {
+      itemString += items[i];
+      if (items[i + 1]) {
+        itemString += ',';
+      }
+    }
+    return itemString;
   }
 
 }
