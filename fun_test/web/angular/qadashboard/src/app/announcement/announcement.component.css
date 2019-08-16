@@ -3,13 +3,19 @@
 }
 
 .announcement-info {
-  background-color: #FFFDDE;
-  border:thin solid #EDDD00
+  background-color: #e7f5ff;
+  border:thin solid #d0ebff;
+}
+
+
+.announcement-warning {
+  background-color: #fff3bf;
+  border: thin solid #ffec99;
+
 }
 
 .announcement-danger {
-  background-color: rgba(255, 107, 36, 0.2);
-  border:thin solid #ed3336;
-  color: red;
+  background-color: #ffc9c9;
+  border:thin solid #ffa8a8;
 }
 
