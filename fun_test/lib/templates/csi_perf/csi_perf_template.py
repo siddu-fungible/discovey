@@ -246,5 +246,5 @@ class CsiPerfTemplate():
         return True
 
 if __name__ == "__main__":
-    p = CsiPerfTemplate(perf_collector_host_name="poc-server-04", listener_ip="123", fs=None, setup_docker=True)
+    p = CsiPerfTemplate(perf_collector_host_name="poc-server-11", listener_ip="123", fs=None, setup_docker=True)
     p.prepare(f1_index=0)

@@ -2,11 +2,7 @@
   {"info":
     {"custom_test_bed_spec":
       {"base_test_bed": "fs-inspur",
-        "asset_request": {"DUT": {"num": 1}, "Host": {"num": 2}}},
-      "Perf Listener": {
-        "names": [
-          "mktg-server-14"
-        ]
+        "asset_request": {"DUT": {"num": 1}, "Host": {"num": 2}, "Perf Listener": {"names": ["mktg-server-14"]}}
       }
     }
   },
