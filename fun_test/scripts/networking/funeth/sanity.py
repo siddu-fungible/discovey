@@ -51,8 +51,9 @@ try:
         update_driver = (inputs.get('update_driver', 1) == 1)  # Update driver or not
         hu_host_vm = (inputs.get('hu_host_vm', 0) == 1)  # HU host runs VMs or not
         configure_overlay = (inputs.get('configure_overlay', 0) == 1)  # Enable overlay config or not
-        bootup_funos = (inputs.get('bootup_funos', 1) == 1)  # Boot up FunOS or not
         cleanup = (inputs.get('cleanup', 1) == 1)  # Clean up funeth and control plane or not
+        ol_offload = (inputs.get('ol_offload', 0) == 1)  # Enable overlay TSO/checksum offload or not
+        bootup_funos = (inputs.get('bootup_funos', 1) == 1)  # Boot up FunOS or not
         fundrv_branch = inputs.get('fundrv_branch', None)
         fundrv_commit = inputs.get('fundrv_commit', None)
         funsdk_branch = inputs.get('funsdk_branch', None)
@@ -64,6 +65,7 @@ try:
         update_driver = True  # default True
         hu_host_vm = False  # default False
         configure_overlay = False  # default False
+        ol_offload = False  # default False
         bootup_funos = True  # default True
         cleanup = True  # default True
         fundrv_branch = None
@@ -77,6 +79,7 @@ except:
     update_driver = True
     hu_host_vm = False
     configure_overlay = False
+    ol_offload = False
     bootup_funos = True
     cleanup = True
 
@@ -429,7 +432,7 @@ class FunethSanity(FunTestScript):
             fun_test.sleep("Sleeping for a while waiting for VMs to come up", seconds=10)
 
             setup_hu_host(funeth_obj=funeth_obj_ul_vm, update_driver=update_driver, is_vm=True)
-            setup_hu_host(funeth_obj=funeth_obj_ol_vm, update_driver=update_driver, is_vm=True, tx_offload=False)
+            setup_hu_host(funeth_obj=funeth_obj_ol_vm, update_driver=update_driver, is_vm=True, tx_offload=ol_offload)
 
             # Configure overlay
             if configure_overlay:
