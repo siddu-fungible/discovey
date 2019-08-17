@@ -216,9 +216,10 @@ export class RegressionComponent implements OnInit {
   setFilterButtons() {
     this.filterButtons = [];
     for (let key in this.queryParameters) {
-
-      let fb = new FilterButton(key, this.queryParameters[key], this.stateStringMap);
+      if (this.queryParameters[key]) {
+        let fb = new FilterButton(key, this.queryParameters[key], this.stateStringMap);
       this.filterButtons.push(fb);
+      }
     }
     //console.log(this.filterButtons);
   }
@@ -315,9 +316,10 @@ export class RegressionComponent implements OnInit {
 
   getQueryParam() {
     return this.route.queryParams.pipe(switchMap(params => {
-      if (params.hasOwnProperty('tag')) {
+      if (params.hasOwnProperty('tag') && params["tag"]) {
         this.tags = '["' + params["tag"] + '"]';
       }
+      console.log(params);
       return of(params);
     }))
   }
@@ -568,7 +570,6 @@ export class RegressionComponent implements OnInit {
   }
 
   onSubmit() {
-    console.log(this.searchForm.get('suiteName'));
     this.navigateByQueryParams([{
       submitter_email: this.searchForm.controls.submitters.value},
       {suite_path: this.searchForm.controls.suiteName.value
