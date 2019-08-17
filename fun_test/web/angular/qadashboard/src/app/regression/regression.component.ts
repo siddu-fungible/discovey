@@ -315,11 +315,11 @@ export class RegressionComponent implements OnInit {
   }
 
   getQueryParam() {
+    console.log(this.route.queryParams);
     return this.route.queryParams.pipe(switchMap(params => {
-      if (params.hasOwnProperty('tag') && params["tag"]) {
+      if (params.hasOwnProperty('tag')) {
         this.tags = '["' + params["tag"] + '"]';
       }
-      console.log(params);
       return of(params);
     }))
   }
@@ -570,10 +570,14 @@ export class RegressionComponent implements OnInit {
   }
 
   onSubmit() {
-    this.navigateByQueryParams([{
-      submitter_email: this.searchForm.controls.submitters.value},
-      {suite_path: this.searchForm.controls.suiteName.value
-    }]);
+    let queryParams = [];
+    if (this.searchForm.controls.suiteName.value) {
+      queryParams.push({"suite_name": this.searchForm.controls.suiteName.value});
+    }
+    if (this.searchForm.controls.submitters.value) {
+      queryParams.push({"submitter_email": this.searchForm.controls.submitters.value});
+    }
+    this.navigateByQueryParams(queryParams);
   }
 
   _flatten(items) {
