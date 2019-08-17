@@ -1,4 +1,4 @@
 [
-  {"info": {"custom_test_bed_spec": {"base_test_bed": "fs-inspur", "asset_request": {"DUT": {"num": 1}, "Host": {"num": 8}}}, "Perf Listener": {"names": ["mktg-server-14"]}}},
+  {"info": {"custom_test_bed_spec": {"base_test_bed": "fs-inspur", "asset_request": {"DUT": {"num": 1}, "Host": {"num": 8}, "Perf Listener": {"names": ["mktg-server-14"]}}}}},
   {"path": "storage/pocs/inspur/ec_inspur_fs_teramark_multivolume.py", "test_case_ids": [1], "inputs": {"num_volumes": 8, "num_hosts": 8}}
 ]
