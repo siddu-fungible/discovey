@@ -11,3 +11,10 @@
   color: black !important;
   font-weight: 600;
 }
+
+.text-red {
+  color: red;
+}
+.text-green {
+  color: green;
+}

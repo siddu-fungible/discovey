@@ -24,6 +24,7 @@ export class ViewWorkspaceComponent implements OnInit {
   status: string = null;
   currentChart: any = null;
   data: any = [];
+  atomicUrl: string = "/performance/atomic/";
 
   constructor(private apiService: ApiService, private commonService: CommonService, private loggerService: LoggerService,
               private route: ActivatedRoute, private router: Router, private location: Location, private title: Title) {
@@ -103,7 +104,6 @@ export class ViewWorkspaceComponent implements OnInit {
     }
     this.showChartTable = true;
     this.status = null;
-
   }
 
   setData(metric): void {
@@ -115,6 +115,11 @@ export class ViewWorkspaceComponent implements OnInit {
       temp["today"] = null;
       temp["yesterday"] = null;
       temp["unit"] = null;
+      temp["percentage"] = null;
+      temp["chart_name"] = metric["chart_name"];
+      temp["url"] = this.atomicUrl + metric["metric_id"];
+      temp["lineage"] = metric["lineage"];
+      temp["metric_id"] = metric["metric_id"];
       metric["data"].push(temp);
     }
   }
@@ -123,18 +128,37 @@ export class ViewWorkspaceComponent implements OnInit {
     this.setData(metric);
     let self = this;
     let dateTime = new Date();
+    dateTime.setDate(dateTime.getDate() - 1);
     return of(true).pipe(
       switchMap(response => {
         return this.fetchData(metric, dateTime, "today");
       }),
       switchMap(response => {
-        dateTime.setDate(dateTime.getDate() - 1);
+        dateTime.setDate(dateTime.getDate() - 2);
         return this.fetchData(metric, dateTime, "yesterday");
       }),
       switchMap(response => {
+        this.calculatePercentage(metric);
         metric["report"] = metric["data"];
         return of(true);
       }));
+  }
+
+  calculatePercentage(metric): void {
+    for (let dataSet of metric["data"]) {
+      let percentage = "NA";
+      if (dataSet["today"] && dataSet["yesterday"]) {
+        let today = Number(dataSet["today"]);
+        let yesterday = Number(dataSet["yesterday"]);
+        let percentNum = (((today - yesterday) / yesterday) * 100);
+        if (percentNum >= 0) {
+          percentage = "+" + percentNum.toFixed(2) + "%";
+        } else {
+          percentage = percentNum.toFixed(2) + "%";
+        }
+      }
+      dataSet["percentage"] = percentage;
+    }
   }
 
   fetchData(metric, dateTime, key): any {
@@ -192,28 +216,41 @@ export class ViewWorkspaceComponent implements OnInit {
   }
 
   fetchReports(): any {
-
     const resultObservables = [];
-
     this.workspace.interested_metrics.forEach(metric => {
-      resultObservables.push(this.fetchTodayAndYesterdayData(metric));
+      if (!metric["report"]) {
+        resultObservables.push(this.fetchTodayAndYesterdayData(metric));
+      }
     });
-    return forkJoin(resultObservables);
+    if (resultObservables.length > 0) {
+      return forkJoin(resultObservables);
+    } else {
+      return of(true);
+    }
 
-
-    //return from(this.workspace.interested_metrics).pipe(
-    //  mergeMap(metric => this.fetchTodayAndYesterdayData(metric)));
-    // for (let metric of this.workspace.interested_metrics) {
-    //   if (!metric["report"]) {
-    //     this.fetchTodayAndYesterdayData(metric);
-    //   }
-    // }
-    // return of(true);
   }
 
   sendReports(): any {
-    return of(true);
-
+    let payload = {};
+    let reports = [];
+    this.workspace.interested_metrics.forEach(metric => {
+      let report = {};
+      report[metric["chart_name"]] = metric["report"];
+      reports.push(report);
+    });
+    payload["reports"] = reports;
+    payload["email"] = this.email;
+    let today = new Date();
+    let m =  ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    payload["subject"] = "Daily TeraMark status update - " + String(today.getDate()) + " " + String(m[today.getMonth()]);
+    return this.apiService.post('/api/v1/performance/report_data', payload).pipe(switchMap(response => {
+      if (response.data["status"]) {
+        this.loggerService.success("sent report email successfully to " + this.email);
+      } else {
+        this.loggerService.error("sending email fialed");
+      }
+      return of(true);
+    }));
   }
 
   generateReport(): void {
