@@ -23,21 +23,30 @@
 
 
   <div style="padding-top: 10px;">
-    <input type="radio" value="{{ CustomDutSelection.NUM_DUTS }}" formControlName="customDutSelection"> Specify number of DUTs
+    <input [checked]="customTestBedSpecForm.controls.customDutSelection.value == CustomDutSelection.NUM_DUTS" type="radio" value="{{ CustomDutSelection.NUM_DUTS }}" formControlName="customDutSelection"> Specify number of DUTs
     &nbsp;&nbsp;&nbsp;
-    <input type="radio" value="{{ CustomDutSelection.SPECIFIC_DUTS }}" formControlName="customDutSelection"> Specify list of
+    <input [checked]="customTestBedSpecForm.controls.customDutSelection.value == CustomDutSelection.SPECIFIC_DUTS" type="radio" value="{{ CustomDutSelection.SPECIFIC_DUTS }}" formControlName="customDutSelection"> Specify list of
     DUTs
   </div>
 
 
-  <div>
+  <div *ngIf="customTestBedSpecForm.controls.customDutSelection.value == CustomDutSelection.NUM_DUTS">
     <label class="fun-form-label">Number of DUTs:</label>
     <input formControlName="numDuts" type="number" max="10" class="fun-form-field fun-form-input">
     <div *ngIf="!customTestBedSpecForm.controls.numDuts.valid && (customTestBedSpecForm.controls.numDuts.touched || customTestBedSpecForm.controls.numDuts.dirty)">
       <div *ngIf="customTestBedSpecForm.controls.numDuts.errors.max">
-        <app-ul-error-panel [messages]="['Too many DUTs. max:' +  MAX_NUM_DUTS ]"></app-ul-error-panel>
+        <app-ul-error-panel [messages]="['Too many DUTs. max: ' +  MAX_NUM_DUTS ]"></app-ul-error-panel>
       </div>
-    </div></div>
+    </div>
+  </div>
+
+  <div *ngIf="customTestBedSpecForm.controls.customDutSelection.value == CustomDutSelection.SPECIFIC_DUTS">
+      <div class="field-width">
+        <ng-multiselect-dropdown [placeholder]="'Select'" [data]="dutAssets" formControlName="selectedDuts" [settings]="dropdownSettings">
+        </ng-multiselect-dropdown>
+      </div>
+  </div>
+
 
     <!--div>
       <label class="fun-form-label">Select a specific DUT:</label>

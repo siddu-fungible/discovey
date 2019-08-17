@@ -35,6 +35,8 @@ export class SuiteEditorComponent implements OnInit {
   numDuts: number = -1;
   CustomDutSelection = CustomDutSelection;
   MAX_NUM_DUTS = 10;
+  dropdownSettings = {};
+
   newSuiteEntryForm = new FormGroup({
     path: new FormControl(''),
     testCaseIds: new FormControl(''),
@@ -42,9 +44,11 @@ export class SuiteEditorComponent implements OnInit {
   });
 
   customTestBedSpecForm = new FormGroup({
-    customDutSelection: new FormControl(),
+    customDutSelection: new FormControl(CustomDutSelection.NUM_DUTS),
     selectedTestBed: new FormControl(),
-    numDuts: new FormControl('', [Validators.max(10)])
+    numDuts: new FormControl('', [Validators.max(10)]),
+    selectedDuts: new FormControl()
+
   });
 
   constructor(private testBedService: TestBedService) {
@@ -66,7 +70,7 @@ export class SuiteEditorComponent implements OnInit {
       this.assets = response;
       this.assets.forEach((asset) => {
         if (asset.type === 'DUT') {
-          this.dutAssets.push(asset);
+          this.dutAssets.push(asset.name);
         }
         if (asset.type === 'Host') {
           this.hostAssets.push(asset)
