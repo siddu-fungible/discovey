@@ -53,15 +53,13 @@ hu3:
     default:
       interfaces:
         - hu1-f0:
-            ipv4_addr: 18.1.2.2
+            ipv4_addr: 18.1.1.3
             ipv4_netmask: 255.255.255.0
       routes:
-      - prefix: 19.1.1.0/24
-        nexthop: 18.1.2.1
-      - prefix: 18.1.1.0/24
-        nexthop: 18.1.2.1
-      - prefix: 20.1.1.0/24
-        nexthop: 18.1.2.1
+        - prefix: 19.1.1.0/24
+          nexthop: 18.1.1.1
+        - prefix: 20.1.1.0/24
+          nexthop: 18.1.1.1
 
 hu4:
   hostname: cab02-qa-08
@@ -75,12 +73,10 @@ hu4:
     default:
       interfaces:
         - hu3-f0:
-            ipv4_addr: 19.1.2.2
+            ipv4_addr: 19.1.1.3
             ipv4_netmask: 255.255.255.0
       routes:
       - prefix: 18.1.1.0/24
-        nexthop: 19.1.2.1
-      - prefix: 19.1.1.0/24
-        nexthop: 19.1.2.1
+        nexthop: 19.1.1.1
       - prefix: 20.1.1.0/24
-        nexthop: 19.1.2.1
+        nexthop: 19.1.1.1
