@@ -56,14 +56,14 @@ class BringupSetup(FunTestCase):
         f1_1_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 --dpc-server --all_100g --serial --dpc-uart " \
                          "--dis-stats retimer=0,1 --mgmt --disable-wu-watchdog"
 
-        # funcp_obj = FunControlPlaneBringup(fs_name=self.server_key["fs"][fs_name]["fs-name"])
-        # funcp_obj.cleanup_funcp()
+        funcp_obj = FunControlPlaneBringup(fs_name=self.server_key["fs"][fs_name]["fs-name"])
+        funcp_obj.cleanup_funcp()
         servers_mode = self.server_key["fs"][fs_name]["hosts"]
         servers_list = []
 
         for server in servers_mode:
             print server
-            #critical_log(expression=rmmod_funeth_host(hostname=server), message="rmmod funeth on host")
+            critical_log(expression=rmmod_funeth_host(hostname=server), message="rmmod funeth on host")
             servers_list.append(server)
         print(servers_list)
 
@@ -76,11 +76,11 @@ class BringupSetup(FunTestCase):
         fun_test.test_assert(topology, "Topology deployed")
 
         # Bringup FunCP
-        # fun_test.test_assert(expression=funcp_obj.bringup_funcp(prepare_docker=False), message="Bringup FunCP")
+        fun_test.test_assert(expression=funcp_obj.bringup_funcp(prepare_docker=False), message="Bringup FunCP")
         # Assign MPG IPs from dhcp
-        """funcp_obj.assign_mpg_ips(static=self.server_key["fs"][fs_name]["mpg_ips"]["static"],
+        funcp_obj.assign_mpg_ips(static=self.server_key["fs"][fs_name]["mpg_ips"]["static"],
                                  f1_1_mpg=self.server_key["fs"][fs_name]["mpg_ips"]["mpg1"],
-                                 f1_0_mpg=self.server_key["fs"][fs_name]["mpg_ips"]["mpg0"])"""
+                                 f1_0_mpg=self.server_key["fs"][fs_name]["mpg_ips"]["mpg0"])
 
         # funcp_obj.fetch_mpg_ips() #Only if not running the full script"""
 
@@ -141,7 +141,7 @@ class NicEmulation(FunTestCase):
                 fun_test.add_checkpoint("<b><font color='red'><PCIE link did not come up in %s mode</font></b>"
                                         % servers_mode[server])
         # install drivers on PCIE connected servers
-        tb_config_obj = tb_configs.TBConfigs(str(fs_name))
+        tb_config_obj = tb_configs.TBConfigs(str('FS45'))
         funeth_obj = Funeth(tb_config_obj)
         fun_test.shared_variables['funeth_obj'] = funeth_obj
         setup_hu_host(funeth_obj, update_driver=False, sriov=4, num_queues=1)
@@ -608,8 +608,8 @@ class RemoteSSDTest(StorageConfiguration):
 
 if __name__ == '__main__':
     ts = ScriptSetup()
-    # ts.add_test_case(BringupSetup())
-    #ts.add_test_case(NicEmulation())
+    ts.add_test_case(BringupSetup())
+    ts.add_test_case(NicEmulation())
     ts.add_test_case(LocalSSDTest())
 
 #   ts.add_test_case(RemoteSSDTest())
