@@ -1,6 +1,8 @@
+{% for report in allReports %}
+{% for key, dataSets in report.items() %}
+<b>{{ key }}</b><br>
 <table>
     <tr style="background-color: #337ab7">
-        <th>Chart name</th>
         <th>Link to charts</th>
         <th>Dataset name</th>
         <th>Yesterday</th>
@@ -8,13 +10,8 @@
         <th>Percentage change</th>
         <th>Unit</th>
     </tr>
-    {% for report in allReports %}
-    {% for key, dataSets in report.items() %}
     {% for dataSet in dataSets %}
     <tr>
-        <td>
-            {{ key }}
-        </td>
         <td>
             <a href="{{ dataSet.url }}" target="_blank">Link</a>
         </td>
@@ -35,6 +32,6 @@
         </td>
     </tr>
     {% endfor %}
-    {% endfor %}
-    {% endfor %}
 </table>
+{% endfor %}
+{% endfor %}

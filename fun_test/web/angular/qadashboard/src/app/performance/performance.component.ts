@@ -1019,9 +1019,9 @@ export class PerformanceComponent implements OnInit {
   getStringLineage(lineages): string {
     let result = "";
     for (let lineage of lineages[0]) {
-      result += lineage.chartName + "->";
+      result += lineage.chartName + "/";
     }
-    return result.slice(0, -2);//to remove the arrow after the last chart name
+    return result.slice(0, -1);//to remove the slash after the last chart name
   }
 
   submitInterestedMetrics(): void {

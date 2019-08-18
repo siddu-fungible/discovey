@@ -7,6 +7,7 @@ import {concatMap, mergeMap, switchMap} from "rxjs/operators";
 import {ActivatedRoute, Router} from "@angular/router";
 import {Location} from '@angular/common';
 import {Title} from "@angular/platform-browser";
+import {PerformanceService} from "../../performance.service";
 
 @Component({
   selector: 'view-workspace',
@@ -24,10 +25,10 @@ export class ViewWorkspaceComponent implements OnInit {
   status: string = null;
   currentChart: any = null;
   data: any = [];
-  atomicUrl: string = "/performance/atomic/";
+  atomicUrl: string = "http://integration.fungible.local/performance/atomic/";
 
   constructor(private apiService: ApiService, private commonService: CommonService, private loggerService: LoggerService,
-              private route: ActivatedRoute, private router: Router, private location: Location, private title: Title) {
+              private route: ActivatedRoute, private router: Router, private location: Location, private title: Title, private perfService: PerformanceService) {
   }
 
   ngOnInit() {
@@ -52,9 +53,10 @@ export class ViewWorkspaceComponent implements OnInit {
             return this.fetchScores();
           }),
           switchMap(response => {
-            return this.fetchBuildInfo();
+            return this.perfService.fetchBuildInfo();
           })).subscribe(response => {
           console.log("fetched workspace and buildInfo from URL");
+          this.showWorkspace = true;
         }, error => {
           this.loggerService.error("Unable to initialize workspace");
         });
@@ -200,19 +202,6 @@ export class ViewWorkspaceComponent implements OnInit {
       });
     }
     return of(true);
-  }
-
-  //populates buildInfo
-  fetchBuildInfo(): any {
-    return this.apiService.get('/regression/build_to_date_map').pipe(switchMap(response => {
-      this.buildInfo = {};
-      Object.keys(response.data).forEach((key) => {
-        let localizedKey = this.commonService.convertToLocalTimezone(key);
-        this.buildInfo[this.commonService.addLeadingZeroesToDate(localizedKey)] = response.data[key];
-      });
-      this.showWorkspace = true;
-      return of(true);
-    }));
   }
 
   fetchReports(): any {
