@@ -1063,7 +1063,7 @@
             "type": "INTERFACE_TYPE_PCIE",
             "hosts": 1,
             "host_info": {
-              "name": "cab03-qa-08"
+              "name": "cab02-qa-08"
             }
           },
           "21": {
