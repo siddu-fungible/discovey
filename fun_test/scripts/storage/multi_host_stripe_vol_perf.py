@@ -789,7 +789,7 @@ class MultiHostStripeVolumeTestCase(FunTestCase):
                         row_data_dict[op + field] = (actual, int(round((value * (1 - self.fio_pass_threshold)))),
                                                      int((value * (1 + self.fio_pass_threshold))))
 
-            row_data_dict["fio_job_name"] = "fio_randread_stripe_multiple_tcp"
+            row_data_dict["fio_job_name"] = "fio_randread_stripe_multi_host_tcp_direct"
             row_data_dict["readiops"] = int(round(collective_tps))
             row_data_dict["readbw"] = int(round(collective_kbs_read / 1000))
 
@@ -802,10 +802,10 @@ class MultiHostStripeVolumeTestCase(FunTestCase):
                     row_data_list.append(row_data_dict[i])
 
             table_data_rows.append(row_data_list)
-            post_results("Stripe_TCP_Multiple_Host_Perf", test_method, *row_data_list)
+            post_results("Stripe_multi_host_tcp_direct", test_method, *row_data_list)
 
         table_data = {"headers": table_data_headers, "rows": table_data_rows}
-        fun_test.add_table(panel_header="Stripe TCP RandRead Multi-Host Perf Table", table_name=self.summary,
+        fun_test.add_table(panel_header="Stripe RandRead Multi-Host TCP Direct Perf Table", table_name=self.summary,
                            table_data=table_data)
 
         # Posting the final status of the test result
