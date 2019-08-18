@@ -2113,7 +2113,7 @@ class PeekCommands(object):
                                     final_val = key.split(":")[2][0]
                                     if not int(final_val) == 1:
                                         if not cluster_val in added_cluster_list:
-                                            added_cluster_keys.append(cluster_val)
+                                            added_cluster_list.append(cluster_val)
                                             complete_dict[tabular_list[0]].append(cluster_val)
                                         for _key, _val in val.iteritems():
                                             for item in tabular_list[1:]:
@@ -3258,8 +3258,9 @@ class ShowCommands(PeekCommands):
             filepath = tmp_path + filename
             command_dict['fae stats'] = self.peek_fae_stats(get_result_only=True)
             command_dict['vppkts stats'] = self.peek_vp_stats(get_result_only=True)
-            command_dict['per_vp stats'] = self.peek_stats_per_vp(get_result_only=True)
-            command_dict['pervppkts stats'] = self.peek_pervppkts_stats(get_result_only=True)
+            command_dict['per_vp stats'] = self.peek_stats_per_vp_pp(get_result_only=True)
+            for i in range(9):
+                command_dict['pervppkts stats'] = self.peek_pervppkts_stats(cluster_id=i, get_result_only=True)
             command_dict['nwqm stats'] = self.peek_nwqm_stats(get_result_only=True)
             command_dict['nhp stats'] = self.peek_nhp_stats(get_result_only=True)
             command_dict['sse stats'] = self.peek_sse_stats(get_result_only=True)
@@ -3417,6 +3418,76 @@ class FlowCommands(object):
                             table_obj.add_row([key, inner_table])
 
         return table_obj
+
+    def _get_core_id_vp_num(self, val):
+        core_id = None
+        vp_num = None
+        try:
+            vp_num = int(val) % TOTAL_VPS_PER_CORE
+            core_id = (int(val)/TOTAL_VPS_PER_CORE) - 2
+        except Exception as ex:
+            print "ERROR: %s" % str(ex)
+        return core_id, vp_num
+
+    def _get_callee_list(self, result):
+        callee_list = []
+        for key, val in result.iteritems():
+            if str(key) == '3.2.2':
+                if isinstance(val, dict):
+                    for _key, _val in val.iteritems():
+                        if isinstance(_val, list):
+                            for value in _val:
+                                if 'callee' in value:
+                                    callee_list.append(value['callee'])
+                                break
+        return callee_list
+
+    def get_flow_list_pp(self, grep_regex=None):
+        try:
+            while True:
+                try:
+                    cmd = "list"
+                    result = self.dpc_client.execute(verb='flow', arg_list=[cmd])
+                    callee_list = self._get_callee_list(result)
+                    master_table_obj = PrettyTable()
+
+                    first_column_name = "Cls/Core/VP"
+                    row_list = []
+                    row_list.append(first_column_name)
+                    resultant_dict = {}
+                    new_callee_list = []
+                    for callee in callee_list:
+                        if not callee['module'] in row_list:
+                            row_list.append(callee['module'])
+                        cluster_id = callee['dest'].split(":")[0][2]
+                        core_id, vp_num = self._get_core_id_vp_num(callee['dest'].split(":")[1])
+                        key_name = "%s/%s/%s" % (cluster_id, core_id, vp_num)
+                        callee['dest'] = key_name
+                        new_callee_list.append(callee)
+                    new_callee_list = sorted(new_callee_list, key=lambda i: i['dest'])
+
+                    for row_name in row_list:
+                        resultant_dict[row_name] = []
+
+                    for callee in new_callee_list:
+                        for row_val in row_list:
+                            default_val = None
+                            if (row_val == first_column_name) and (not callee['dest'] in resultant_dict[row_val]):
+                                resultant_dict[row_val].append(callee['dest'])
+                            elif row_val == callee['module'] and (not resultant_dict[row_val] is None):
+                                resultant_dict[row_val].append(callee['id'])
+                            else:
+                                resultant_dict[row_val].append(default_val)
+                    print_keys = resultant_dict.keys()
+                    print_values = resultant_dict.values()
+                    for col_name, col_values in zip(print_keys, print_values):
+                        master_table_obj.add_column(col_name, col_values)
+                    print master_table_obj
+                except KeyboardInterrupt:
+                    self.dpc_client.disconnect()
+        except Exception as ex:
+            print "ERROR: %s" % str(ex)
+            self.dpc_client.disconnect()
 
     def get_flow_list(self, grep_regex=None):
         try:
