@@ -4,7 +4,7 @@ import {LoggerService} from "../services/logger/logger.service";
 import {Title} from "@angular/platform-browser";
 import {CommonService} from "../services/common/common.service";
 import {ActivatedRoute, Router} from "@angular/router";
-import {of} from "rxjs";
+import {Observable, of} from "rxjs";
 import {switchMap} from "rxjs/operators";
 import {PerformanceService} from "./performance.service";
 
@@ -196,28 +196,21 @@ export class PerformanceComponent implements OnInit {
       this.miniGridMaxHeight = '25%';
     }
     this.buildInfo = null;
-    this.fetchBuildInfo();
+    new Observable(observer => {
+      observer.next(true);
+      observer.complete();
+      return () => {
+      }
+    }).pipe(
+      switchMap(response => {
+        return this.service.fetchBuildInfo();
+      })).subscribe(response => {
+      console.log("fetched buildInfo");
+    }, error => {
+      this.loggerService.error("Unable to fetch buildInfo");
+    });
     this.fetchDag();
 
-    /*
-    fromEvent(window, 'popstate')
-  .subscribe((e) => {
-    console.log(e, 'back button: ' + this.location.path());
-  });*/
-
-  }
-
-  //populates buildInfo
-  fetchBuildInfo(): void {
-    this.apiService.get('/regression/build_to_date_map').subscribe((response) => {
-      this.buildInfo = {};
-      Object.keys(response.data).forEach((key) => {
-        let localizedKey = this.commonService.convertToLocalTimezone(key);
-        this.buildInfo[this.commonService.addLeadingZeroesToDate(localizedKey)] = response.data[key];
-      });
-    }, error => {
-      this.loggerService.error("regression/build_to_date_map");
-    });
   }
 
   getDefaultQueryPath() {
@@ -1031,8 +1024,10 @@ export class PerformanceComponent implements OnInit {
     for (let flatNode of flatNodes) {
       if (!(flatNode.node.metricId in metricDetails)) {
         let lineage = this.getStringLineage(flatNode.lineage);
-        metricDetails[flatNode.node.metricId] = {"metric_id": flatNode.node.metricId, "subscribe": flatNode.subscribe, "track": flatNode.track,
-          "lineage": lineage, "chart_name": flatNode.node.chartName, "category": 'General'};
+        metricDetails[flatNode.node.metricId] = {
+          "metric_id": flatNode.node.metricId, "subscribe": flatNode.subscribe, "track": flatNode.track,
+          "lineage": lineage, "chart_name": flatNode.node.chartName, "category": 'General'
+        };
       }
     }
     Object.keys(metricDetails).forEach(id => {
