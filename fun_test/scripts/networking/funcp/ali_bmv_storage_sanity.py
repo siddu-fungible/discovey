@@ -1,4 +1,4 @@
-﻿from lib.system.fun_test import *
+from lib.system.fun_test import *
 from scripts.networking.nu_config_manager import *
 from lib.host.network_controller import *
 from scripts.networking.helper import *
@@ -141,7 +141,10 @@ class NicEmulation(FunTestCase):
                 fun_test.add_checkpoint("<b><font color='red'><PCIE link did not come up in %s mode</font></b>"
                                         % servers_mode[server])
         # install drivers on PCIE connected servers
-        tb_config_obj = tb_configs.TBConfigs(str('FS45'))
+        tb_file = str(fs_name)
+        if fs_name == "fs-alibaba-demo":
+            tb_file = "FS45"
+        tb_config_obj = tb_configs.TBConfigs(tb_file)
         funeth_obj = Funeth(tb_config_obj)
         fun_test.shared_variables['funeth_obj'] = funeth_obj
         setup_hu_host(funeth_obj, update_driver=False, sriov=4, num_queues=1)
