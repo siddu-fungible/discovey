@@ -3595,7 +3595,7 @@ class DebugCommands(PeekCommands):
         if val == "N/A":
             return val
         val = "{:.0f}".format(val * 100)
-        if val >= '90':
+        if int(val) >= 90:
             val = "\033[92m " + val + " \033[0m"
         return val
 
