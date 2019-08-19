@@ -11,11 +11,11 @@ import {Title} from "@angular/platform-browser";
 import {PerformanceService} from "../performance.service";
 
 @Component({
-  selector: 'app-workspace',
-  templateUrl: './workspace.component.html',
-  styleUrls: ['./workspace.component.css']
+  selector: 'performance-workspace',
+  templateUrl: './performance-workspace.component.html',
+  styleUrls: ['./performance-workspace.component.css']
 })
-export class WorkspaceComponent implements OnInit {
+export class PerformanceWorkspaceComponent implements OnInit {
   users: any = null;
   selectedUser: any = null;
   showWorkspace: boolean = false;

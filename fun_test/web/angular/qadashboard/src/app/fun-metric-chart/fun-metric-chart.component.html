@@ -66,7 +66,7 @@
             </td>
             <td *ngIf="point.name==='Associated suites'" class="word-break">
               <a *ngFor="let value of point.value"
-                [routerLink]="" (click)="openSuiteUrl(value)">{{ value }}
+                 [routerLink]="" (click)="openSuiteUrl(value)">{{ value }}
               </a>
             </td>
             <td
@@ -177,7 +177,7 @@
           </a>
         </span>
         <div *ngIf="showingConfigure">
-          <p style="margin-top: 10px; margin-bottom: 0"><b>Metric ID: </b>{{metricId}}</p>
+          <p style="margin-top: 10px; margin-bottom: 0"><b>Metric ID: </b>{{ metricId }}</p>
           <table class="table table-nonfluid table-borderless">
             <tr>
               <th>Name</th>
@@ -186,8 +186,8 @@
               <th>Max</th>
               <ng-container *ngIf="leaf">
                 <th>Expected</th>
-              <th>Reference</th>
-              <th>Unit</th>
+                <th>Reference</th>
+                <th>Unit</th>
               </ng-container>
             </tr>
             <tr *ngFor="let dataSet of previewDataSets">
@@ -198,13 +198,13 @@
               <td><input type="number" [(ngModel)]="dataSet.output.max" [value]="dataSet.output.max"
                          style="width: 100px"></td>
               <ng-container *ngIf="leaf">
-              <td><input type="number" [(ngModel)]="dataSet.output.expected"
-                         [value]="dataSet.output.expected"
-                         style="width: 100px"></td>
-              <td><input type="number" [(ngModel)]="dataSet.output.reference"
-                         [value]="dataSet.output.reference"
-                         style="width: 100px"></td>
-              <td>{{ dataSet.output.unit }}</td>
+                <td><input type="number" [(ngModel)]="dataSet.output.expected"
+                           [value]="dataSet.output.expected"
+                           style="width: 100px"></td>
+                <td><input type="number" [(ngModel)]="dataSet.output.reference"
+                           [value]="dataSet.output.reference"
+                           style="width: 100px"></td>
+                <td>{{ dataSet.output.unit }}</td>
               </ng-container>
             </tr>
           </table>
@@ -239,11 +239,11 @@
             </tr>
           </table>
           <ng-container *ngIf="leaf">
-          <p><input type="checkbox" [checked]="negativeGradient"
-                              [(ngModel)]="inner.negativeGradient">&nbsp;Negative
-            gradient
-          </p>
-          <p><input type="checkbox" [checked]="leaf" [(ngModel)]="inner.leaf">&nbsp;Leaf</p>
+            <p><input type="checkbox" [checked]="negativeGradient"
+                      [(ngModel)]="inner.negativeGradient">&nbsp;Negative
+              gradient
+            </p>
+            <p><input type="checkbox" [checked]="leaf" [(ngModel)]="inner.leaf">&nbsp;Leaf</p>
           </ng-container>
           <p class="no-margin"><a target="_blank" href="/admin/fun_test/metricchart/{{ chartInfo.pk }}/change/">Admin
             link</a></p>

@@ -95,7 +95,7 @@ export class PerformanceComponent implements OnInit {
   @Input() interestedMetrics: any = null;
   @Input() description: string = null;
   @Output() submitted: EventEmitter<boolean> = new EventEmitter();
-  workspace: any = [];
+  updatedInterestedMetrics: any = [];
 
   numGridColumns: number;
   lastStatusUpdateTime: any;
@@ -1020,7 +1020,7 @@ export class PerformanceComponent implements OnInit {
   submitInterestedMetrics(): void {
     let flatNodes = this.getInterestedNodes();
     let metricDetails = {};
-    this.workspace = [];
+    this.updatedInterestedMetrics = [];
     for (let flatNode of flatNodes) {
       if (!(flatNode.node.metricId in metricDetails)) {
         let lineage = this.getStringLineage(flatNode.lineage);
@@ -1031,13 +1031,13 @@ export class PerformanceComponent implements OnInit {
       }
     }
     Object.keys(metricDetails).forEach(id => {
-      this.workspace.push(metricDetails[id]);
+      this.updatedInterestedMetrics.push(metricDetails[id]);
     });
 
     let payload = {};
     payload["email"] = this.userProfileEmail;
     payload["workspace_id"] = this.workspaceId;
-    payload["interested_metrics"] = this.workspace;
+    payload["interested_metrics"] = this.updatedInterestedMetrics;
     payload["description"] = this.description;
     this.apiService.post("/api/v1/workspaces/" + this.workspaceId + "/interested_metrics", payload).subscribe(response => {
       console.log("submitted successfully");
@@ -1050,8 +1050,8 @@ export class PerformanceComponent implements OnInit {
 
   getInterestedNodes = () => {
     return this.flatNodes.filter(flatNode => {
-      return flatNode.track || flatNode.subscribe
-    })
+      return flatNode.track || flatNode.subscribe;
+    });
   };
 
   removeFromList(metricId): void {

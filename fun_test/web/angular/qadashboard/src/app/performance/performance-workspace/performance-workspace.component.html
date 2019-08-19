@@ -17,7 +17,7 @@
       </td>
     </tr>
   </table>
-  <!--deleting workspace template-->
+  <!--deleting performance-workspace template-->
   <ng-template #deleteWorkspace let-modal>
     <div class="modal-header">
       <h4 class="modal-title" id="modal-title">Delete workspace</h4>
@@ -38,7 +38,7 @@
       <button type="button" class="btn btn-outline-danger" (click)="modal.dismiss('No click')">No</button>
     </div>
   </ng-template>
-  <!--Adding workspace template-->
+  <!--Adding performance-workspace template-->
   <ng-template #addWorkspace let-modal>
     <div class="modal-header">
       <h4 class="modal-title" id="modal-add-workspace">Add Workspace</h4>
@@ -79,7 +79,7 @@
       <button type="button" class="btn btn-outline-success btn-sm" (click)="createWorkspace()">Create</button>&nbsp;
     </div>
   </ng-template>
-  <!--editing workspace template-->
+  <!--editing performance-workspace template-->
   <ng-template #editWorkspace let-modal>
     <div class="modal-header">
       <h4 class="modal-title" id="modal-edit-workspace">Edit Workspace - {{ currentWorkspace.name }}</h4>

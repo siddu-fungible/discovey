@@ -136,7 +136,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   public pointClickCallback: Function;
 
   constructor(private apiService: ApiService, private loggerService: LoggerService, private route: ActivatedRoute,
-              private commonService: CommonService, private perfService: PerformanceService) {
+              private commonService: CommonService, private performanceService: PerformanceService) {
   }
 
   ngOnInit() {
@@ -168,7 +168,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         }
       }).pipe(
         switchMap(response => {
-          return this.perfService.fetchBuildInfo();
+          return this.performanceService.fetchBuildInfo();
         })).subscribe(response => {
         console.log("fetched buildInfo");
       }, error => {

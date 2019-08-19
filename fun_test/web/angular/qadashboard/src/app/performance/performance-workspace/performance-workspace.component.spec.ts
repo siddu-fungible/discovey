@@ -1,20 +1,20 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { WorkspaceComponent } from './workspace.component';
+import { PerformanceWorkspaceComponent } from './performance-workspace.component';
 
 describe('WorkspaceComponent', () => {
-  let component: WorkspaceComponent;
-  let fixture: ComponentFixture<WorkspaceComponent>;
+  let component: PerformanceWorkspaceComponent;
+  let fixture: ComponentFixture<PerformanceWorkspaceComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ WorkspaceComponent ]
+      declarations: [ PerformanceWorkspaceComponent ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(WorkspaceComponent);
+    fixture = TestBed.createComponent(PerformanceWorkspaceComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
