@@ -8,6 +8,7 @@ from scripts.storage.funcp_deploy import FunCpDockerContainer
 from lib.topology.topology_helper import TopologyHelper
 from lib.templates.storage.storage_fs_template import *
 from scripts.storage.storage_helper import *
+from scripts.networking.helper import *
 from collections import OrderedDict
 from lib.templates.csi_perf.csi_perf_template import CsiPerfTemplate
 
@@ -185,7 +186,6 @@ class MultiHostVolumePerformanceScript(FunTestScript):
         fun_test.log("csi_perf_enabled is set as: {} for current run".format(self.csi_perf_enabled))
         if self.csi_perf_enabled:
             fun_test.log("testbed_config: {}".format(self.testbed_config))
-            #  TODO: Get the correct F1 IP
             self.csi_f1_ip = self.testbed_config["dut_info"][str(self.available_dut_indexes[0])]["bond_interface_info"]["0"]["0"]["ip"].split('/')[0]
             fun_test.log("F1 ip used for csi_perf_test: {}".format(self.csi_f1_ip))
             self.perf_listener_host = self.topology_helper.get_available_perf_listener_hosts()
@@ -341,8 +341,9 @@ class MultiHostVolumePerformanceScript(FunTestScript):
         fun_test.shared_variables["syslog_level"] = self.syslog
         fun_test.shared_variables["db_log_time"] = self.db_log_time
         fun_test.shared_variables["csi_perf_enabled"] = self.csi_perf_enabled
-        fun_test.shared_variables["perf_listener_host_name"] = self.perf_listener_host_name
-        fun_test.shared_variables["perf_listener_ip"] = self.perf_listener_ip
+        if self.csi_perf_enabled:
+            fun_test.shared_variables["perf_listener_host_name"] = self.perf_listener_host_name
+            fun_test.shared_variables["perf_listener_ip"] = self.perf_listener_ip
 
         for key in self.host_handles:
             # Ensure all hosts are up after reboot
@@ -399,21 +400,22 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                 for i in range(0, fun_test.shared_variables["blt_count"], 1):
                     cur_uuid = fun_test.shared_variables["thin_uuid"][i]
                     command_result = self.storage_controller.detach_volume_from_controller(
-                        ctrlr_uuid=self.ctrlr_uuid, ns_id=i + 1, command_duration=self.command_timeout)
+                        ctrlr_uuid=self.ctrlr_uuid[i], ns_id=i + 1, command_duration=self.command_timeout)
                     fun_test.test_assert(command_result["status"], "Detaching BLT volume on DUT")
 
                     command_result = self.storage_controller.delete_volume(uuid=cur_uuid,
+                                                                           type=str(self.blt_details['type']),
                                                                            command_duration=self.command_timeout)
                     fun_test.test_assert(command_result["status"], "Deleting BLT {} with uuid {} on DUT".
                                          format(i + 1, cur_uuid))
 
-                # Deleting the controller
-                command_result = self.storage_controller.delete_controller(ctrlr_uuid=self.ctrlr_uuid,
-                                                                           command_duration=self.command_timeout)
-                fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "Storage Controller Delete")
-
-            except:
+                    # Deleting the controller
+                    command_result = self.storage_controller.delete_controller(ctrlr_uuid=self.ctrlr_uuid[i],
+                                                                               command_duration=self.command_timeout)
+                    fun_test.log(command_result)
+                    fun_test.test_assert(command_result["status"], "Storage Controller Delete")
+            except Exception as ex:
+                fun_test.critical(str(ex))
                 fun_test.log("Clean-up of volumes failed.")
 
         try:
@@ -549,6 +551,10 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
         fun_test.log("Provided job inputs: {}".format(job_inputs))
         if "blt_count" in job_inputs:
             self.blt_count = job_inputs["blt_count"]
+        if "post_results" in job_inputs:
+            self.post_results = job_inputs["post_results"]
+        else:
+            self.post_results = False
 
         if ("blt" not in fun_test.shared_variables or not fun_test.shared_variables["blt"]["setup_created"]) \
                 and (not fun_test.shared_variables["blt"]["warmup_done"]) :
@@ -621,12 +627,13 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                     command_duration=self.command_timeout)
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Attaching BLT volume {} to controller {}".
-                                    format(self.thin_uuid_list[i], cur_uuid))
+                                     format(self.thin_uuid_list[i], cur_uuid))
                 self.vol_list[i]["vol_name"] = self.nvme_device + "n" + str(ns_id)
                 self.nvme_block_device.append(self.vol_list[i]["vol_name"])
                 self.vol_list[i]["ns_id"] = ns_id
 
             fun_test.shared_variables["nvme_block_device_list"] = self.nvme_block_device
+            fun_test.shared_variables["ctrlr_uuid"] = self.ctrlr_uuid
 
             for i in range(0, self.blt_count):
                 key = self.host_ips[i]
@@ -773,12 +780,11 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
         fio_result = {}
         fio_output = {}
         internal_result = {}
-        initial_volume_status = {}
-        final_volume_status = {}
-        diff_volume_stats = {}
         initial_stats = {}
         final_stats = {}
-        diff_stats = {}
+        resultant_stats = {}
+
+        start_stats = True
 
         table_data_headers = ["Block Size", "IO Depth", "Size", "Operation", "Write IOPS", "Read IOPS",
                               "Write Throughput in MB/s", "Read Throughput in MB/s", "Write Latency in uSecs",
@@ -792,6 +798,12 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                            "readclatency", "readlatency90", "readlatency95", "readlatency99", "readlatency9999",
                            "fio_job_name"]
         table_data_rows = []
+
+        # Preparing the volume details list containing the list of dictionaries
+        vol_details = []
+        vol_group = {}
+        vol_group[self.blt_details["type"]] = fun_test.shared_variables["thin_uuid"]
+        vol_details.append(vol_group)
 
         for combo in self.fio_jobs_iodepth:
             thread_id = {}
@@ -807,12 +819,9 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                 fio_output[combo] = {}
                 final_fio_output[combo] = {}
                 internal_result[combo] = {}
-                initial_volume_status[combo] = {}
-                final_volume_status[combo] = {}
-                diff_volume_stats[combo] = {}
                 initial_stats[combo] = {}
                 final_stats[combo] = {}
-                diff_stats[combo] = {}
+                resultant_stats[combo] = {}
 
                 end_host_thread[thread_count] = self.host_handles[key].clone()
 
@@ -872,15 +881,57 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                                                                     cpus_allowed=cpus_allowed,
                                                                     **self.fio_cmd_args)
                     """
-                    vp_util_post_fix_name = "vp_util_numjobs_iodepth_{}_{}_{}.txt".\
-                        format(fio_numjobs, fio_iodepth, mode)
-                    vp_util_artifact_file = fun_test.get_test_case_artifact_file_name(
-                        post_fix_name=vp_util_post_fix_name)
-                    stats_thread_id = fun_test.execute_thread_after(time_in_seconds=1, func=collect_vp_utils_stats,
-                                                                    storage_controller=self.storage_controller,
-                                                                    output_file=vp_util_artifact_file,
-                                                                    interval=60,
-                                                                    count=self.fio_cmd_args["runtime"]/60, threaded=True)
+                    # Collecting initial network stats
+                    if self.collect_network_stats:
+                        try:
+                            initial_stats[combo][
+                                "peek_psw_global_stats"] = self.storage_controller.peek_psw_global_stats()
+                            initial_stats[combo]["peek_vp_packets"] = self.storage_controller.peek_vp_packets()
+                            initial_stats[combo]["cdu"] = self.storage_controller.peek_cdu_stats()
+                            initial_stats[combo]["ca"] = self.storage_controller.peek_ca_stats()
+                            command_result = self.storage_controller.peek(props_tree="stats/eqm", legacy=False,
+                                                                          command_duration=self.command_timeout)
+                            if "status" in command_result and command_result["status"]:
+                                initial_stats[combo]["eqm_stats"] = command_result["data"]
+                            else:
+                                initial_stats[combo]["eqm_stats"] = {}
+                            fun_test.log("\nInitial stats collected for numjobs: {} iodepth: {} after iteration: "
+                                         "\n{}\n".format(fio_numjobs, fio_iodepth, initial_stats[combo]))
+                        except Exception as ex:
+                            fun_test.critical(str(ex))
+
+                    if start_stats:
+                        stats_obj = CollectStats(self.storage_controller)
+                        stats_count = self.fio_cmd_args["runtime"] / self.vp_util_args["interval"],
+                        vp_util_post_fix_name = "vp_util_numjobs_iodepth_{}_{}_{}.txt".\
+                            format(fio_numjobs, fio_iodepth, mode)
+                        vp_util_artifact_file = fun_test.get_test_case_artifact_file_name(
+                            post_fix_name=vp_util_post_fix_name)
+                        stats_thread_id = fun_test.execute_thread_after(time_in_seconds=1,
+                                                                        func=stats_obj.collect_vp_utils_stats,
+                                                                        output_file=vp_util_artifact_file,
+                                                                        interval=self.vp_util_args["interval"],
+                                                                        count=stats_count, threaded=True)
+                        resource_bam_post_fix_name = "resource_bam_iodepth_{}_{}_{}.txt".format(fio_numjobs, fio_iodepth,
+                                                                                                mode)
+                        resource_bam_artifact_file = fun_test.get_test_case_artifact_file_name(
+                            post_fix_name=resource_bam_post_fix_name)
+                        stats_rbam_thread_id = fun_test.execute_thread_after(time_in_seconds=5,
+                                                                             func=stats_obj.collect_resource_bam_stats,
+                                                                             output_file=resource_bam_artifact_file,
+                                                                             interval=self.resource_bam_args["interval"],
+                                                                             count=stats_count, threaded=True)
+                        vol_stats_post_fix_name = "vol_stats_iodepth_{}_{}_{}.txt".format(fio_numjobs, fio_iodepth, mode)
+                        vol_stats_artifact_file = fun_test.get_test_case_artifact_file_name(
+                            post_fix_name=vol_stats_post_fix_name)
+                        vol_stats_thread_id = fun_test.execute_thread_after(time_in_seconds=10,
+                                                                            func=stats_obj.collect_vol_stats,
+                                                                            vol_details=vol_details,
+                                                                            output_file=vol_stats_artifact_file,
+                                                                            interval=self.vol_stats_args["interval"],
+                                                                            count=stats_count, threaded=True)
+                    else:
+                        fun_test.critical("Not starting the vp_utils and resource_bam stats collection")
 
                     thread_id[thread_count] = fun_test.execute_thread_after(time_in_seconds=wait_time,
                                                                             func=fio_parser,
@@ -921,29 +972,112 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
             else:
                 fun_test.log("CSI perf collection is not enabled, hence skipping it for current test")
 
-            for i in range(1, self.blt_count + 1):
-                fun_test.log("Joining fio thread {}".format(i))
-                fun_test.join_thread(fun_test_thread_id=thread_id[i])
-                fun_test.log("FIO Command Output:")
-                fun_test.log(fun_test.shared_variables["fio"][i])
-                fun_test.test_assert(fun_test.shared_variables["fio"][i], "Fio threaded test")
-                fio_output[combo][mode][i] = {}
-                fio_output[combo][mode][i] = fun_test.shared_variables["fio"][i]
-            final_fio_output[combo][mode] = fio_output[combo][mode][1]
+            try:
+                for i in range(1, self.blt_count + 1):
+                    fun_test.log("Joining fio thread {}".format(i))
+                    fun_test.join_thread(fun_test_thread_id=thread_id[i])
+                    fun_test.log("FIO Command Output:")
+                    fun_test.log(fun_test.shared_variables["fio"][i])
+                    fun_test.test_assert(fun_test.shared_variables["fio"][i], "Fio threaded test")
+                    fio_output[combo][mode][i] = {}
+                    fio_output[combo][mode][i] = fun_test.shared_variables["fio"][i]
+                final_fio_output[combo][mode] = fio_output[combo][mode][1]
+            except Exception as ex:
+                fun_test.critical(str(ex))
+                fun_test.log("FIO Command Output for volume {}:\n {}".format(i, fio_output[combo][mode][i]))
+            finally:
+                # Checking whether the vp_util stats collection thread is still running...If so stopping it...
+                if fun_test.fun_test_threads[stats_thread_id]["thread"].is_alive():
+                    fun_test.critical("VP utilization stats collection thread is still running...Stopping it now")
+                    stats_obj.stop_all = True
+                    stats_obj.stop_vp_utils = True
+                    # fun_test.fun_test_threads[stats_thread_id]["thread"]._Thread__stop()
+                # Checking whether the resource bam stats collection thread is still running...If so stopping it...
+                if fun_test.fun_test_threads[stats_rbam_thread_id]["thread"].is_alive():
+                    fun_test.critical("Resource bam stats collection thread is still running...Stopping it now")
+                    stats_obj.stop_all = True
+                    stats_obj.stop_resource_bam = True
+                    # fun_test.fun_test_threads[stats_rbam_thread_id]["thread"]._Thread__stop()
+                # Checking whether the volume stats collection thread is still running...If so stopping it...
+                if fun_test.fun_test_threads[vol_stats_thread_id]["thread"].is_alive():
+                    fun_test.critical("Volume Stats collection thread is still running...Stopping it now")
+                    stats_obj.stop_all = True
+                    stats_obj.stop_vol_stats = True
+                fun_test.join_thread(fun_test_thread_id=stats_thread_id, sleep_time=1)
+                fun_test.join_thread(fun_test_thread_id=stats_rbam_thread_id, sleep_time=1)
+                fun_test.join_thread(fun_test_thread_id=vol_stats_thread_id, sleep_time=1)
 
-            # Checking whether the vp_util stats collection thread is still running...If so stopping it...
-            if fun_test.fun_test_threads[stats_thread_id]["thread"].is_alive():
-                fun_test.critical("VP utilization stats collection thread is still running...Stopping it now")
-                global vp_stats_thread_stop_status
-                vp_stats_thread_stop_status[self.storage_controller] = True
-                fun_test.fun_test_threads[stats_thread_id]["thread"]._Thread__stop()
-            fun_test.join_thread(fun_test_thread_id=stats_thread_id, sleep_time=1)
-            fun_test.add_auxillary_file(description="F1 VP Utilization - Numjobs {}, IO depth {}".
-                                        format(row_data_dict["num_jobs"], row_data_dict["iodepth"]),
-                                        filename=vp_util_artifact_file)
+                fun_test.add_auxillary_file(description="F1 VP Utilization - IO depth {}".format(
+                    row_data_dict["iodepth"]),filename=vp_util_artifact_file)
+                fun_test.add_auxillary_file(description="F1 Resource bam stats - IO depth {}".
+                                            format(row_data_dict["iodepth"]), filename=resource_bam_artifact_file)
+                fun_test.add_auxillary_file(description="Volume Stats - IO depth {}".format(row_data_dict["iodepth"]),
+                                            filename=vol_stats_artifact_file)
 
-            fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval),
-                               self.iter_interval)
+                # Collecting final network stats and finding diff between final and initial stats
+                if self.collect_network_stats:
+                    try:
+                        final_stats[combo]["peek_psw_global_stats"] = self.storage_controller.peek_psw_global_stats()
+                        final_stats[combo]["peek_vp_packets"] = self.storage_controller.peek_vp_packets()
+                        final_stats[combo]["cdu"] = self.storage_controller.peek_cdu_stats()
+                        final_stats[combo]["ca"] = self.storage_controller.peek_ca_stats()
+                        command_result = self.storage_controller.peek(props_tree="stats/eqm", legacy=False,
+                                                                      command_duration=self.command_timeout)
+                        if "status" in command_result and command_result["status"]:
+                            final_stats[combo]["eqm_stats"] = command_result["data"]
+                        else:
+                            final_stats[combo]["eqm_stats"] = {}
+                        fun_test.log("\nFinal stats collected for numjobs: {} iodepth: {} after IO: \n{}\n".format(
+                            fio_numjobs, fio_iodepth, initial_stats[combo]))
+                    except Exception as ex:
+                        fun_test.critical(str(ex))
+
+                    # Stats diff between final stats and initial stats
+                    resultant_stats[combo]["peek_psw_global_stats"] = {}
+                    if final_stats[combo]["peek_psw_global_stats"] and initial_stats[combo][
+                        "peek_psw_global_stats"]:
+                        resultant_stats[combo]["peek_psw_global_stats"] = get_diff_stats(
+                            new_stats=final_stats[combo]["peek_psw_global_stats"],
+                            old_stats=initial_stats[combo]["peek_psw_global_stats"])
+                    fun_test.log("\nStat difference for peek_psw_global_stats at the end iteration for numjobs: {} "
+                                 "iodepth: {} is: \n{}\n".format(fio_numjobs, fio_iodepth,
+                                                                json.dumps(resultant_stats[combo]["peek_psw_global_stats"],
+                                                                           indent=2)))
+
+                    resultant_stats[combo]["peek_vp_packets"] = {}
+                    if final_stats[combo]["peek_vp_packets"] and initial_stats[combo]["peek_vp_packets"]:
+                        resultant_stats[combo]["peek_vp_packets"] = get_diff_stats(
+                            new_stats=final_stats[combo]["peek_vp_packets"],
+                            old_stats=initial_stats[combo]["peek_vp_packets"])
+                    fun_test.log(
+                        "\nStat difference for peek_vp_packets at the end iteration for numjobs: {} iodepth: {} is: "
+                        "\n{}\n".format(fio_numjobs, fio_iodepth, json.dumps(resultant_stats[combo]["peek_vp_packets"],
+                                                                             indent=2)))
+
+                    resultant_stats[combo]["cdu"] = {}
+                    if final_stats[combo]["cdu"] and initial_stats[combo]["cdu"]:
+                        resultant_stats[combo]["cdu"] = get_diff_stats(
+                            new_stats=final_stats[combo]["cdu"], old_stats=initial_stats[combo]["cdu"])
+                    fun_test.log("\nStat difference for cdu at the end iteration for numjobs: {} iodepth: {} is: "
+                                 "\n{}\n".format(fio_numjobs, fio_iodepth, json.dumps(resultant_stats[combo]["cdu"],
+                                                                                      indent=2)))
+
+                    resultant_stats[combo]["ca"] = {}
+                    if final_stats[combo]["ca"] and initial_stats[combo]["ca"]:
+                        resultant_stats[combo]["ca"] = get_diff_stats(
+                            new_stats=final_stats[combo]["ca"], old_stats=initial_stats[combo]["ca"])
+                    fun_test.log("\nStat difference for ca at the end iteration for numjobs: {} iodepth: {} is: \n{}\n".
+                        format(fio_numjobs, fio_iodepth, json.dumps(resultant_stats[combo]["ca"], indent=2)))
+
+                    resultant_stats[combo]["eqm_stats"] = {}
+                    if final_stats[combo]["eqm_stats"] and initial_stats[combo]["eqm_stats"]:
+                        resultant_stats[combo]["eqm_stats"] = get_diff_stats(
+                            new_stats=final_stats[combo]["eqm_stats"], old_stats=initial_stats[combo]["eqm_stats"])
+                    fun_test.log("\nStat difference for eqm_stats at the end iteration for numjobs: {} iodepth: {}: "
+                                 "\n{}\n".format(fio_numjobs, fio_iodepth,
+                                                 json.dumps(resultant_stats[combo]["eqm_stats"], indent=2)))
+
+            fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval), self.iter_interval)
 
             for i in range(2, self.blt_count + 1):
                 # Boosting the fio output with the testbed performance multiplier
@@ -976,7 +1110,9 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                     row_data_list.append(row_data_dict[i])
 
             table_data_rows.append(row_data_list)
-            # post_results("Multi_host_TCP", test_method, *row_data_list)
+            if self.post_results:
+                fun_test.log("Posting results on dashboard")
+                post_results("Multi_host_TCP", test_method, *row_data_list)
 
         table_data = {"headers": table_data_headers, "rows": table_data_rows}
         fun_test.add_table(panel_header="Multiple hosts over TCP Perf Table", table_name=self.summary, table_data=table_data)
@@ -995,6 +1131,7 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
     def cleanup(self):
         pass
 
+
 class MultiHostFioRandRead(MultiHostVolumePerformanceTestcase):
 
     def describe(self):
@@ -1009,6 +1146,16 @@ class MultiHostFioRandRead(MultiHostVolumePerformanceTestcase):
         remote host and check the performance are inline with the expected threshold. 
         ''')
 
+    def setup(self):
+        super(MultiHostFioRandRead, self).setup()
+
+    def run(self):
+        super(MultiHostFioRandRead, self).run()
+
+    def cleanup(self):
+        super(MultiHostFioRandRead, self).cleanup()
+
+
 class MultiHostFioRandWrite(MultiHostVolumePerformanceTestcase):
 
     def describe(self):
@@ -1022,6 +1169,16 @@ class MultiHostFioRandWrite(MultiHostVolumePerformanceTestcase):
         4. Run the FIO Random write test(without verify) for various block size and IO depth from the 
         remote host and check the performance are inline with the expected threshold. 
         ''')
+
+    def setup(self):
+        super(MultiHostFioRandWrite, self).setup()
+
+    def run(self):
+        super(MultiHostFioRandWrite, self).run()
+
+    def cleanup(self):
+        super(MultiHostFioRandWrite, self).cleanup()
+
 
 if __name__ == "__main__":
 
