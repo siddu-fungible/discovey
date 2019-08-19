@@ -1002,8 +1002,11 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                     stats_obj.stop_vol_stats = True
 
                 stats_obj.stop_all = True
+                fun_test.log("Joining vp util stats thread: {}".format(stats_thread_id))
                 fun_test.join_thread(fun_test_thread_id=stats_thread_id, sleep_time=1)
+                fun_test.log("Joining resource bam stats thread: {}".format(stats_rbam_thread_id))
                 fun_test.join_thread(fun_test_thread_id=stats_rbam_thread_id, sleep_time=1)
+                fun_test.log("Joining volume stats thread: {}".format(vol_stats_thread_id))
                 fun_test.join_thread(fun_test_thread_id=vol_stats_thread_id, sleep_time=1)
 
                 fun_test.add_auxillary_file(description="F1 VP Utilization - IO depth {}".format(
