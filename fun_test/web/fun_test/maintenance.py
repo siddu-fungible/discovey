@@ -467,7 +467,7 @@ if __name__ == "__main__crypto":
         print ("Data sets: {}".format(data_sets))
 
 
-if __name__ == "__main__":
+if __name__ == "__main_added_6vol__":
     # Add the 6 vol field for inspur 8_11 F1s = 6 charts
     metric_ids = [743, 744, 746, 745, 750, 751, 753, 752]
     for metric_id in metric_ids:
@@ -489,3 +489,7 @@ if __name__ == "__main__":
         data_sets += copy_data_sets
         chart.data_sets = json.dumps(data_sets)
         chart.save()
+
+if __name__ == "__main__":
+    internal_chart_name_local_ssd = "alibaba_bmv_storage_local_ssd_random_read"
+    chart = MetricChart.objects.get(internal_chart_name=internal_chart_name_local_ssd)
