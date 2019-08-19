@@ -386,7 +386,8 @@
   {
     "name": "fs-66",
     "workarounds": {
-      "skip_funeth_come_power_cycle": true
+      "skip_funeth_come_power_cycle": true,
+       "disable_u_boot_version_validation": true
       },
     "gateway_ip": "10.1.105.1",
     "bmc": {
