@@ -143,6 +143,7 @@ export class SubmitJobComponent implements OnInit {
       if (this.mode === Mode.TASK) {
         queryParamString = "?suite_type=task";
       }
+
       this.apiService.get("/regression/suites" + queryParamString).subscribe((result) => {
         let suitesInfo = result.data;
         self.suitesInfo = suitesInfo;
@@ -167,6 +168,9 @@ export class SubmitJobComponent implements OnInit {
     return this.route.queryParams.pipe(switchMap(params => {
       if (params.hasOwnProperty('mode')) {
         this.mode = params["mode"];
+        if (this.mode === Mode.TRIAGE) {
+          this.dryRun = true;
+        }
       }
       return of(params);
     }))
