@@ -35,7 +35,10 @@ export class SuiteEditorComponent implements OnInit {
   numDuts: number = -1;
   CustomDutSelection = CustomDutSelection;
   MAX_NUM_DUTS = 10;
-  dropdownSettings = {};
+  dropDownSettings = {};
+  assetTypes: any = null;
+  assetsByAssetType: any = {};
+
 
   newSuiteEntryForm = new FormGroup({
     path: new FormControl(''),
@@ -65,20 +68,19 @@ export class SuiteEditorComponent implements OnInit {
       return this.testBedService.testBeds();
     })).pipe(switchMap(response => {
       this.testBeds = response;
+      return this.testBedService.assetTypes();
+    })).pipe(switchMap(response => {
+      this.assetTypes = response;
+      this.assetTypes.forEach(assetType => {
+        this.assetsByAssetType[assetType] = [];
+      });
+
       return this.testBedService.assets();
     })).pipe(switchMap(response => {
       this.assets = response;
-      this.assets.forEach((asset) => {
-        if (asset.type === 'DUT') {
-          this.dutAssets.push(asset.name);
-        }
-        if (asset.type === 'Host') {
-          this.hostAssets.push(asset)
-        }
-        if (asset.type === 'Perf Listener') {
-          this.perfListenerAssets.push(asset);
-        }
 
+      this.assets.forEach((asset) => {
+        this.assetsByAssetType[asset.type].push(asset.name);
       });
 
       return of(true);
@@ -110,8 +112,8 @@ export class SuiteEditorComponent implements OnInit {
     //console.log(this.selectedTestBed);
     console.log(this.customTestBedSpecForm.get("selectedTestBed").value);
     console.log(this.customTestBedSpecForm.get("customDutSelection").value);
-        console.log(this.customTestBedSpecForm.get("numDuts").value);
-        console.log(this.customTestBedSpecForm.get("numDuts").valid);
+    console.log(this.customTestBedSpecForm.get("numDuts").value);
+    console.log(this.customTestBedSpecForm.get("selectedDuts").value);
 
   }
 }
