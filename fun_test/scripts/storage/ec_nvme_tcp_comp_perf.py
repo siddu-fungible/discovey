@@ -4,6 +4,7 @@ from lib.system import utils
 from lib.topology.topology_helper import TopologyHelper
 from storage_helper import *
 import fun_global
+import copy
 
 '''
 Script to track the Storage Performance different reads for Compression enabled Erasure Coded volume using FIO.
@@ -80,7 +81,7 @@ class ECVolumeLevelScript(FunTestScript):
             self.num_volume = 1
 
         test_network = self.csr_network[str(fpg_inteface_index)]
-        remote_ip = test_network["test_interface_ip"].split('/')[0]
+        remote_ip = test_network["test_interface_ip"].split("/")[0]
 
         fun_test.shared_variables["test_network"] = test_network
         fun_test.shared_variables["end_host"] = self.end_host
@@ -210,7 +211,6 @@ class ECVolumeLevelTestcase(FunTestCase):
         test_method = testcase[4:]
         fun_test.simple_assert(self.nvme_block_device, message="Nvme block device fetched")
         warm_up_fio_cmd_args = self.warm_up_fio_cmd_args
-        fio_cmd_args = self.fio_cmd_args
 
         for param in self.test_parameters:
             warm_up_fio_cmd_args["buffer_compress_percentage"] = param["compress_percent"]
@@ -227,16 +227,19 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fio_output[combo] = {}
 
                 for mode in self.fio_modes:
-                    fio_job_name = "{}_{}_{}pctcomp_{}".format(self.fio_job_name,
-                                                               mode,
-                                                               param["compress_percent"],
-                                                               (fio_num_jobs * fio_iodepth))
+                    fio_cmd_args = copy.copy(self.fio_cmd_args)
+                    fio_cmd_args["rw"] = mode
+                    fio_cmd_args["numjobs"] = fio_num_jobs
+                    fio_cmd_args["iodepth"] = fio_iodepth
+                    fio_cmd_args["cpus_allowed"] = self.numa_cpus
+                    fio_cmd_args["name"] = "{}_{}_{}pctcomp_{}".format(self.fio_job_name,
+                                                                       mode,
+                                                                       param["compress_percent"],
+                                                                       (fio_num_jobs * fio_iodepth))
+                    if mode == "write":
+                        fio_cmd_args["buffer_pattern"] = warm_up_fio_cmd_args["buffer_pattern"]
+                        fio_cmd_args["buffer_compress_percentage"] = param['compress_percent']
                     fio_output[combo][mode] = self.end_host.pcie_fio(filename=self.nvme_block_device,
-                                                                     rw=mode,
-                                                                     numjobs=fio_num_jobs,
-                                                                     iodepth=fio_iodepth,
-                                                                     name=fio_job_name,
-                                                                     cpus_allowed=self.numa_cpus,
                                                                      **fio_cmd_args)
                     fun_test.test_assert(fio_output[combo][mode],
                                          message="Execute fio with mode:{0}, iodepth: {1}, num_jobs: {2} "
@@ -248,11 +251,14 @@ class ECVolumeLevelTestcase(FunTestCase):
                                      "block_size": fio_cmd_args["bs"],
                                      "iodepth": fio_iodepth * fio_num_jobs,
                                      "size": "{}G".format(self.ec_info["capacity"] >> 30),
-                                     "fio_job_name": fio_job_name}
+                                     "fio_job_name": fio_cmd_args["name"]}
 
-                    if mode == 'read' or mode == 'randread':
-                        for key in fio_output[combo][mode]['write']:
-                            fio_output[combo][mode]['write'][key] = -1
+                    if mode == "read" or mode == "randread":
+                        for key in fio_output[combo][mode]["write"]:
+                            fio_output[combo][mode]["write"][key] = -1
+                    elif mode == "write":
+                        for key in fio_output[combo][mode]["read"]:
+                            fio_output[combo][mode]["read"][key] = -1
 
                     for op, stats in fio_output[combo][mode].items():
                         for field, value in stats.items():
@@ -287,17 +293,17 @@ class ECVolumeLevelTestcase(FunTestCase):
 
             table_data = {"headers": fio_perf_table_header, "rows": table_data_rows}
             fun_test.add_table(panel_header=self.summary,
-                               table_name=param['name'],
+                               table_name=param["name"],
                                table_data=table_data)
 
     def cleanup(self):
         try:
             # disconnect volume from controller
-            ctlr_uuid = fun_test.shared_variables['ctlr_uuid']
+            ctlr_uuid = fun_test.shared_variables["ctlr_uuid"]
             fun_test.test_assert(self.storage_controller.detach_volume_from_controller(
                 ctrlr_uuid=ctlr_uuid,
                 ns_id=self.ns_id,
-                command_duration=self.command_timeout)['status'],
+                command_duration=self.command_timeout)["status"],
                                  message="Detach nsid: {} from controller: {}".format(self.ns_id, ctlr_uuid))
             fun_test.test_assert(self.storage_controller.unconfigure_ec_volume(ec_info=self.ec_info,
                                                                                command_timeout=self.command_timeout),
