@@ -1395,6 +1395,11 @@
               },
               {
                 "metric_model_name": "ChannelParallPerformance",
+                "name": "channel_parall_performance_100",
+                "label": "Channel Parall Speed, N=100"
+              },
+              {
+                "metric_model_name": "ChannelParallPerformance",
                 "name": "channel_parall_performance_1000",
                 "label": "Channel Parall Speed, N=1000"
               }
