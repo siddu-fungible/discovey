@@ -941,7 +941,7 @@
     "num_host": 1,
     "num_vf": 0,
     "f1_num_vf": 0,
-    "num_namespace": 8,
+    "num_namespace": 16,
     "capacity": 21453864960,
     "block_size": 4096,
     "controllers": {},
@@ -960,9 +960,11 @@
     "io_servers": ["cab03-qa-01", "cab03-qa-06", "cab03-qa-02"],
     "mode": [
       "write",
-      "read"
+      "read",
+      "randwrite",
+      "randread"
     ],
-    "num_jobs": 1,
+    "num_jobs": 4,
     "iodepth": 16
   },
   "RemoteSSDTest": {
