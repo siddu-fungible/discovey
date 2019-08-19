@@ -497,7 +497,7 @@ tr.text-center > th {
 
 .link-span-secondary-active {
   background-color: darkgrey;
-  color: white;
+  color: white !important;
 }
 
 .span-selected {

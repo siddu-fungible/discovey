@@ -471,8 +471,10 @@ def _get_suite_executions(execution_id=None,
     if submitter_email:
         if ',' in submitter_email:
             submitter_email_parts = submitter_email.strip().split(',')
+            q1 = Q()
             for submitter_email_part in submitter_email_parts:
-                q = q | Q(submitter_email=submitter_email_part)
+                q1 = q1 | Q(submitter_email=submitter_email_part)
+            q = q & q1
         else:
             q = q & Q(submitter_email=submitter_email)
     if test_bed_type:
@@ -480,8 +482,10 @@ def _get_suite_executions(execution_id=None,
     if suite_path:
         if ',' in suite_path:
             suite_path_parts = suite_path.strip().split(',')
+            q1 = Q()
             for suite_path_part in suite_path_parts:
-                q = q | Q(suite_path=suite_path_part)
+                q1 = q1 | Q(suite_path=suite_path_part)
+            q = q & q1
         else:
             q = q & Q(suite_path=suite_path)
     if execution_id is not None:

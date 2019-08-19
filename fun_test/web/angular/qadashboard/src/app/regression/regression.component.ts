@@ -92,18 +92,6 @@ enum Filter {
       ]),
       state('*', style({ opacity: 1.0 })),
     ])]
-  // animations: [
-  //   trigger('simpleFadeAnimation', [
-  //
-  //     state('in', style({opacity: 1})),
-  //     transition(':enter', [
-  //       style({opacity: 0}),
-  //       animate(1600 )
-  //     ]),
-  //     transition(':leave',
-  //       animate(1600, style({opacity: 0, backgroundColor: 'white'})))
-  //   ])
-  // ]
 })
 
 export class RegressionComponent implements OnInit {
@@ -126,9 +114,8 @@ export class RegressionComponent implements OnInit {
   userMap: any = null;
   showingTestBeds: boolean = false;
   searchForm: FormGroup;
-  dropdownList = [];
   selectedItems = [];
-  dropdownSettings = {};
+  dropDownSettings = {};
   submitterEmails: any = [];
   fetchedUsers: boolean = false;
   fetchedSuites: boolean = false;
@@ -163,18 +150,13 @@ export class RegressionComponent implements OnInit {
       suiteName: ['']
     }, {validator: this.atLeastOneValidator});
 
-    //this.searchForm.setErrors({required: true});
-    this.searchForm.valueChanges.subscribe(newValue => {
-      // if (newValue.submitters || newValue.suiteName) {
-      //   this.searchForm.setErrors(null);
-      // } else {
-      //   this.searchForm.setErrors({required: true});
-      // }
-    });
+    // this.searchForm.valueChanges.subscribe(newValue => {
+    //
+    // });
 
 
 
-    this.dropdownSettings = {
+    this.dropDownSettings = {
       singleSelection: false,
       idField: 'item_id',
       textField: 'item_text',
@@ -498,7 +480,7 @@ export class RegressionComponent implements OnInit {
     }*/
   }
 
-  reRunClick(suiteExecutionId, suitePath, resultFilter = null, reUseBuildImage = null) {
+  reRunClick(suiteExecutionId, suitePath, resultFilter=null, reUseBuildImage=null) {
     this.reRunService.submitReRun(suiteExecutionId, suitePath, resultFilter, null, reUseBuildImage).subscribe(response => {
       this.logger.success("Re-run request submitted");
       window.location.href = "/regression";
@@ -645,7 +627,7 @@ export class RegressionComponent implements OnInit {
     this.searchForm.reset();
   }
 
-    onCancel() {
+  onCancel() {
     this.searching = false;
     this.searchForm.reset();
   }
