@@ -252,9 +252,15 @@
             </tr>
 
             <tr>
-              <td><input (change)="csiPerf = !csiPerf" type="checkbox"
+              <td colspan="2"><input (change)="csiPerf = !csiPerf" type="checkbox"
                          name="csi-perf"
                          [checked]="csiPerf"> Enable CSI perf
+              </td>
+            </tr>
+            <tr>
+              <td colspan="2"><input (change)="dryRun = !dryRun" type="checkbox"
+                         name="dry-run"
+                         [checked]="dryRun"> Dry run (Don't update performance DB)
               </td>
             </tr>
             <tr>

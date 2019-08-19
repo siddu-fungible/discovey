@@ -390,11 +390,11 @@ class CollectStats(object):
                         fun_test.log("Stopping VP Utils stats collection thread")
                         break
                     self.socket_lock.acquire()
-                    dpcsh_result = self.storage_controller.debug_vp_util(command_timeout=command_timeout)
+                    vp_util_result = self.storage_controller.debug_vp_util(command_timeout=command_timeout)
                     self.socket_lock.release()
-                    # fun_test.simple_assert(dpcsh_result["status"], "Pulling VP Utilization")
-                    if dpcsh_result["status"] and dpcsh_result["data"] is not None:
-                        vp_util = dpcsh_result["data"]
+                    # fun_test.simple_assert(vp_util_result["status"], "Pulling VP Utilization")
+                    if vp_util_result["status"] and vp_util_result["data"] is not None:
+                        vp_util = vp_util_result["data"]
                     else:
                         vp_util = {}
 
@@ -453,10 +453,10 @@ class CollectStats(object):
                         fun_test.log("Stopping Resource BAM stats collection thread")
                         break
                     self.socket_lock.acquire()
-                    dpcsh_result = self.storage_controller.peek_resource_bam_stats(command_timeout=command_timeout)
+                    bam_result = self.storage_controller.peek_resource_bam_stats(command_timeout=command_timeout)
                     self.socket_lock.release()
-                    if dpcsh_result["status"] and dpcsh_result["data"] is not None:
-                        resource_bam_stats = dpcsh_result["data"]
+                    if bam_result["status"] and bam_result["data"] is not None:
+                        resource_bam_stats = bam_result["data"]
                     else:
                         resource_bam_stats = {}
 
@@ -501,11 +501,11 @@ class CollectStats(object):
                         fun_test.log("Stopping Volume stats collection thread")
                         break
                     self.socket_lock.acquire()
-                    dpcsh_result = self.storage_controller.peek(props_tree="storage/volumes",
+                    vol_stats_result = self.storage_controller.peek(props_tree="storage/volumes",
                                                                 command_duration=command_timeout)
                     self.socket_lock.release()
-                    if dpcsh_result["status"] and dpcsh_result["data"] is not None:
-                        all_vol_stats = dpcsh_result["data"]
+                    if vol_stats_result["status"] and vol_stats_result["data"] is not None:
+                        all_vol_stats = vol_stats_result["data"]
                     else:
                         all_vol_stats = {}
 

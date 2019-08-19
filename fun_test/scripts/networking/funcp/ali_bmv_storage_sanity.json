@@ -4,7 +4,8 @@
 
       "cab02-qa-05": "x16",
       "cab02-qa-06": "x16",
-      "cab02-qa-07": "x8"
+      "cab02-qa-07": "x8",
+      "cab02-qa-08": "x16"
 
     },
     "fs-31": {
@@ -13,7 +14,8 @@
     "fs-60": {
       "cab02-qa-01": "x8",
       "cab02-qa-02": "x16",
-      "cab02-qa-03": "x16"
+      "cab02-qa-03": "x16",
+      "cab02-qa-04": "x16"
     },
      "fs-7": {
        "fs-name":"fs-7",
@@ -46,7 +48,9 @@
        "fs-name":"fs-66",
     "hosts" : {
       "cab03-qa-04": "x16",
-      "cab03-qa-05": "x16"
+      "cab03-qa-05": "x16",
+      "cab03-qa-07": "x16",
+      "cab02-qa-04": "x16"
     },
       "mpg_ips":{
         "static":true,
@@ -67,8 +71,10 @@
           "F1-1":["4.1.1.1"]
        },
        "host_pings":{
-         "cab03-qa-05":["14.1.1.1", "30.1.1.2"],
-         "cab03-qa-04":["15.1.1.1", "30.1.1.2"]
+         "cab03-qa-05":["14.1.1.1"],
+         "cab03-qa-07":["14.1.1.1"],
+         "cab03-qa-04":["15.1.1.1"],
+         "cab02-qa-04":["15.1.1.1"]
        },
     "abstract_configs":{
       "F1-0":"fs66_configs_f1_0.json",
@@ -82,34 +88,34 @@
       "F1-0": {
         "1": {
           "gateway": "2.1.1.1",
-          "port": "fpg0",
+          "port": "fpg4",
           "route": "15.1.1.0/24"
         },
         "2": {
           "gateway": "2.1.1.1",
-          "port": "fpg0",
+          "port": "fpg4",
           "route": "30.1.1.0/24"
         },
         "3": {
           "gateway": "2.1.1.1",
-          "port": "fpg0",
+          "port": "fpg4",
           "route": "2.1.2.0/24"
         }
       },
       "F1-1": {
         "1": {
           "gateway": "2.1.2.1",
-          "port": "fpg0",
+          "port": "fpg4",
           "route": "14.1.1.0/24"
         },
         "2": {
           "gateway": "2.1.2.1",
-          "port": "fpg0",
+          "port": "fpg4",
           "route": "30.1.1.0/24"
         },
         "3": {
           "gateway": "2.1.2.1",
-          "port": "fpg0",
+          "port": "fpg4",
           "route": "2.1.1.0/24"
         }
       }
@@ -120,6 +126,7 @@
             "fs-name":"fs-45",
     "hosts" : {
       "cab03-qa-01": "x16",
+      "cab03-qa-06": "x16",
       "cab03-qa-02": "x16"
     },
           "nu_host":{"cab03-qa-03":"30.1.1.2"},
@@ -858,8 +865,9 @@
           "F1-1":["1.1.2.1"]
        },
        "host_pings":{
-         "cab03-qa-01":["18.1.1.1", "30.1.1.2"],
-         "cab03-qa-02":["19.1.1.1", "30.1.1.2"]
+         "cab03-qa-01":["18.1.1.1", "19.1.1.2","18.1.1.3"],
+         "cab03-qa-02":["19.1.1.1","18.1.1.2","18.1.1.3"],
+         "cab03-qa-06":["18.1.1.1","18.1.1.2","19.1.1.2"]
        },
     "abstract_configs":{
       "F1-0":"alibaba_bmv_configs_f1_0.json",
@@ -928,28 +936,35 @@
   "LocalSSDTest": {
     "come_ip": "10.1.105.165",
     "dpc_p0": 40220,
+    "dpc_p1": 40221,
     "command_timeout": "5",
     "num_host": 1,
     "num_vf": 0,
     "f1_num_vf": 0,
-    "num_namespace": 1,
-    "capacity": 5368709120,
+    "num_namespace": 16,
+    "capacity": 21453864960,
     "block_size": 4096,
     "controllers": {},
     "ip": "18.1.1.1",
     "port": 4420,
     "huid": 2,
+    "f0_huids" : [2,1],
+    "f1_huids" : [1,3],
     "ctlid": 0,
     "fnid": 2,
     "transport": "PCI",
     "uname": "localadmin",
     "pwd": "Precious1*",
-    "server": "cab03-qa-01",
+    "server": ["cab03-qa-01", "cab03-qa-06"],
+    "server_f1": ["cab03-qa-02"],
+    "io_servers": ["cab03-qa-01", "cab03-qa-06", "cab03-qa-02"],
     "mode": [
       "write",
-      "read"
+      "read",
+      "randwrite",
+      "randread"
     ],
-    "num_jobs": 1,
+    "num_jobs": 4,
     "iodepth": 16
   },
   "RemoteSSDTest": {
