@@ -404,6 +404,7 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                     fun_test.test_assert(command_result["status"], "Detaching BLT volume on DUT")
 
                     command_result = self.storage_controller.delete_volume(uuid=cur_uuid,
+                                                                           type=str(self.blt_details['type']),
                                                                            command_duration=self.command_timeout)
                     fun_test.test_assert(command_result["status"], "Deleting BLT {} with uuid {} on DUT".
                                          format(i + 1, cur_uuid))
@@ -413,8 +414,8 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                                                                                command_duration=self.command_timeout)
                     fun_test.log(command_result)
                     fun_test.test_assert(command_result["status"], "Storage Controller Delete")
-
-            except:
+            except Exception as ex:
+                fun_test.critical(str(ex))
                 fun_test.log("Clean-up of volumes failed.")
 
         try:
@@ -626,7 +627,7 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                     command_duration=self.command_timeout)
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Attaching BLT volume {} to controller {}".
-                                    format(self.thin_uuid_list[i], cur_uuid))
+                                     format(self.thin_uuid_list[i], cur_uuid))
                 self.vol_list[i]["vol_name"] = self.nvme_device + "n" + str(ns_id)
                 self.nvme_block_device.append(self.vol_list[i]["vol_name"])
                 self.vol_list[i]["ns_id"] = ns_id
@@ -801,7 +802,7 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
         # Preparing the volume details list containing the list of dictionaries
         vol_details = []
         vol_group = {}
-        vol_group[self.blt_details["type"]] = self.thin_uuid_list
+        vol_group[self.blt_details["type"]] = fun_test.shared_variables["thin_uuid"]
         vol_details.append(vol_group)
 
         for combo in self.fio_jobs_iodepth:
@@ -1006,6 +1007,13 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                 fun_test.join_thread(fun_test_thread_id=stats_rbam_thread_id, sleep_time=1)
                 fun_test.join_thread(fun_test_thread_id=vol_stats_thread_id, sleep_time=1)
 
+                fun_test.add_auxillary_file(description="F1 VP Utilization - IO depth {}".format(
+                    row_data_dict["iodepth"]),filename=vp_util_artifact_file)
+                fun_test.add_auxillary_file(description="F1 Resource bam stats - IO depth {}".
+                                            format(row_data_dict["iodepth"]), filename=resource_bam_artifact_file)
+                fun_test.add_auxillary_file(description="Volume Stats - IO depth {}".format(row_data_dict["iodepth"]),
+                                            filename=vol_stats_artifact_file)
+
                 # Collecting final network stats and finding diff between final and initial stats
                 if self.collect_network_stats:
                     try:
@@ -1138,6 +1146,15 @@ class MultiHostFioRandRead(MultiHostVolumePerformanceTestcase):
         remote host and check the performance are inline with the expected threshold. 
         ''')
 
+    def setup(self):
+        super(MultiHostFioRandRead, self).setup()
+
+    def run(self):
+        super(MultiHostFioRandRead, self).run()
+
+    def cleanup(self):
+        super(MultiHostFioRandRead, self).cleanup()
+
 
 class MultiHostFioRandWrite(MultiHostVolumePerformanceTestcase):
 
@@ -1152,6 +1169,15 @@ class MultiHostFioRandWrite(MultiHostVolumePerformanceTestcase):
         4. Run the FIO Random write test(without verify) for various block size and IO depth from the 
         remote host and check the performance are inline with the expected threshold. 
         ''')
+
+    def setup(self):
+        super(MultiHostFioRandWrite, self).setup()
+
+    def run(self):
+        super(MultiHostFioRandWrite, self).run()
+
+    def cleanup(self):
+        super(MultiHostFioRandWrite, self).cleanup()
 
 
 if __name__ == "__main__":
