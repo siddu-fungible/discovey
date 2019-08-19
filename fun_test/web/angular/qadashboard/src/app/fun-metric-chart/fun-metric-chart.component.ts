@@ -544,7 +544,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     payload["visualization_unit"] = this.changingVizUnit;
     payload["set_expected"] = this.expectedOperation;
     this.apiService.post('/metrics/update_chart', payload).subscribe((data) => {
-      if (data) {
+      if (data.data) {
         this.editingDescription = false;
         this.editingOwner = false;
         this.editingSource = false;
