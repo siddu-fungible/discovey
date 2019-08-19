@@ -116,8 +116,7 @@ class DpcshClient(object):
             fun_test.critical("dpcsh_client: command: {}".format(msg))
             result["error_message"] = msg
         except Exception as ex:
-            fun_test.critical(str(ex))
-            fun_test.critical("result from read:" + str(output))
+            fun_test.critical("result from read:" + str(output) + " Exception: {}".format(str(ex)))
             result["error_message"] = str(ex)
         if not result["status"]:
             fun_test.log("Command failed: " + fun_test.dict_to_json_string(result))
