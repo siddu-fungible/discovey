@@ -144,7 +144,7 @@ class NicEmulation(FunTestCase):
         tb_config_obj = tb_configs.TBConfigs(str('FS45'))
         funeth_obj = Funeth(tb_config_obj)
         fun_test.shared_variables['funeth_obj'] = funeth_obj
-        setup_hu_host(funeth_obj, update_driver=False, sriov=4, num_queues=1)
+        setup_hu_host(funeth_obj, update_driver=True, sriov=4, num_queues=1)
 
         # get ethtool output
         get_ethtool_on_hu_host(funeth_obj)
