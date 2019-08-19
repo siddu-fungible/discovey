@@ -37,6 +37,25 @@ def invalidate_goodness_cache():
         chart.save()
 
 
+def save_entry(entry):
+    dry_run = fun_test.get_job_environment_variable("dry_run")
+    if not dry_run:
+        entry.save()
+    else:
+        try:
+            fun_test.log("Dry run. Printing potential db entry")
+
+            result = {}
+            fields = entry._meta.get_fields()
+            for field in fields:
+                result[field.name] = getattr(entry, field.name)
+
+            for key, value in result.iteritems():
+                fun_test.log("DB entry: {}: {}".format(key, value))
+        except Exception as ex:
+            fun_test.critical(str(ex))
+    return
+
 def get_data_collection_time(tag=None):
     if tag:
         data_collection_time = get_current_time()
@@ -114,11 +133,11 @@ class MetricHelper(object):
             for k, v in outputs.iteritems():
                 if hasattr(o, k):
                     setattr(o, k, v)
-            o.save()
+            save_entry(o)
             return None
         except ObjectDoesNotExist:
             o = self.model(**kwargs)
-            o.save()
+            save_entry(o)
             return o.id
 
     def get_entry(self, **kwargs):
@@ -211,7 +230,7 @@ class VolumePerformanceHelper(MetricHelper):
             entry.output_read_bw = read_bw
             entry.output_write_latency = write_latency
             entry.output_read_latency = read_latency
-            entry.save()
+            save_entry(entry)
         except ObjectDoesNotExist:
             pass
             one_entry = VolumePerformance(key=key,
@@ -227,7 +246,7 @@ class VolumePerformanceHelper(MetricHelper):
                                           output_read_bw=read_bw,
                                           output_write_latency=write_latency,
                                           output_read_latency=read_latency)
-            one_entry.save()
+            save_entry(one_entry)
 
 
 class VolumePerformanceEmulationHelper(MetricHelper):
@@ -305,6 +324,7 @@ class BltVolumePerformanceHelper(MetricHelper):
                   read_99_latency_unit="usecs", read_99_99_latency_unit="usecs", write_99_99_latency_unit="usecs",
                   version=-1):
         try:
+
             if version == -1:
                 version = str(fun_test.get_version())
             entry = BltVolumePerformance.objects.get(input_date_time=date_time,
@@ -346,7 +366,7 @@ class BltVolumePerformanceHelper(MetricHelper):
             entry.output_read_95_latency_unit = read_95_latency_unit
             entry.output_read_99_latency_unit = read_99_latency_unit
             entry.output_read_99_99_latency_unit = read_99_99_latency_unit
-            entry.save()
+            save_entry(entry)
         except ObjectDoesNotExist:
             fun_test.log("Adding new entry into model using helper")
             one_entry = BltVolumePerformance(input_date_time=date_time,
@@ -388,19 +408,21 @@ class BltVolumePerformanceHelper(MetricHelper):
                                              output_read_95_latency_unit=read_95_latency_unit,
                                              output_read_99_latency_unit=read_99_latency_unit,
                                              output_read_99_99_latency_unit=read_99_99_latency_unit)
-            one_entry.save()
+            save_entry(one_entry)
             try:
-                fun_test.log("Entering the jenkins job id map entry for {} and  {}".format(date_time, version))
-                completion_date = timezone.localtime(one_entry.input_date_time)
-                suite_execution_id = fun_test.get_suite_execution_id()
-                add_jenkins_job_id_map(jenkins_job_id=0,
-                                       fun_sdk_branch="",
-                                       git_commit="",
-                                       software_date=0,
-                                       hardware_version="",
-                                       build_properties="", lsf_job_id="",
-                                       sdk_version=version, build_date=completion_date,
-                                       suite_execution_id=suite_execution_id)
+                dry_run = fun_test.get_job_environment_variable("dry_run")
+                if not dry_run:
+                    fun_test.log("Entering the jenkins job id map entry for {} and  {}".format(date_time, version))
+                    completion_date = timezone.localtime(one_entry.input_date_time)
+                    suite_execution_id = fun_test.get_suite_execution_id()
+                    add_jenkins_job_id_map(jenkins_job_id=0,
+                                           fun_sdk_branch="",
+                                           git_commit="",
+                                           software_date=0,
+                                           hardware_version="",
+                                           build_properties="", lsf_job_id="",
+                                           sdk_version=version, build_date=completion_date,
+                                           suite_execution_id=suite_execution_id)
             except Exception as ex:
                 fun_test.critical(str(ex))
 
@@ -523,7 +545,7 @@ class ModelHelper(MetricHelper):
                     setattr(m_obj, "status", status)
                 if not self.units:
                     raise Exception('No units provided. Please provide the required units')
-                m_obj.save()
+                save_entry(m_obj)
                 result = True
             else:
                 raise Exception("Set status failed")

@@ -574,7 +574,7 @@ def mlx5_irq_affinity(linux_obj):
     linux_obj.command(';'.join(cmds_cat))
 
 
-def redis_del_fcp_ftep(linux_obj, ws='/scratch'):
+def redis_del_fcp_ftep(linux_obj, ws='/scratch/opt/fungible'):
     """In redis, delete FCP FTEP to tear down FCP tunnel."""
     # TODO: make it setup independent
     ftep_dict = {

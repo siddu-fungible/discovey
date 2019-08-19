@@ -143,6 +143,26 @@
       "password": "ADMIN"
     }
   },
+    "cab03-qa-06": {
+    "host_ip": "cab03-qa-06",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "cab03-qa-06-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
+  },
+  "cab03-qa-07": {
+    "host_ip": "cab03-qa-07",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "cab03-qa-07-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
+  },
   "regression_service_host": {
     "host_ip": "qa-ubuntu-02",
     "ssh_username": "auto_admin",

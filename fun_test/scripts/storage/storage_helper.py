@@ -8,7 +8,7 @@ from lib.host.storage_controller import StorageController
 from lib.system import utils
 from threading import Lock
 
-DPCSH_COMMAND_TIMEOUT = 5
+DPCSH_COMMAND_TIMEOUT = 30
 
 fio_perf_table_header = ["Block Size", "IO Depth", "Size", "Operation", "Write IOPS", "Read IOPS",
                          "Write Throughput in KB/s", "Read Throughput in KB/s", "Write Latency in uSecs",
@@ -24,6 +24,17 @@ fio_perf_table_cols = ["block_size", "iodepth", "size", "mode", "writeiops", "re
 
 vp_stats_thread_stop_status = {}
 resource_bam_stats_thread_stop_status = {}
+
+
+class colors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
 
 
 def post_results(volume, test, log_time, num_ssd, num_volumes, block_size, io_depth, size, operation, write_iops,
@@ -343,6 +354,19 @@ def collect_resource_bam_stats(storage_controller, output_file, interval=10, cou
     return output
 
 
+def _convert_vp_util(value):
+    value = "{:.0f}".format(value * 100)
+    """
+    if int(value) >= 50:
+        value = colors.WARNING + str(value) + colors.ENDC
+    elif int(value) >= 75:
+        value = colors.BOLD + colors.WARNING + str(value) + colors.ENDC
+    elif int(value) >= 90:
+        value = colors.BOLD + colors.FAIL + str(value) + colors.ENDC
+    """
+    return value
+
+
 class CollectStats(object):
     def __init__(self, storage_controller):
         self.storage_controller = storage_controller
@@ -355,7 +379,7 @@ class CollectStats(object):
     def collect_vp_utils_stats(self, output_file, interval=10, count=3, non_zero_stats_only=True, threaded=False,
                                command_timeout=DPCSH_COMMAND_TIMEOUT):
         output = False
-        column_headers = ["VP", "Utilization"]
+        column_headers = ["Cluster/Core", "Thread 0", "Thread 1", "Thread 2", "Thread 3"]
 
         try:
             with open(output_file, 'a') as f:
@@ -366,22 +390,45 @@ class CollectStats(object):
                         fun_test.log("Stopping VP Utils stats collection thread")
                         break
                     self.socket_lock.acquire()
-                    dpcsh_result = self.storage_controller.debug_vp_util(command_timeout=command_timeout)
+                    vp_util_result = self.storage_controller.debug_vp_util(command_timeout=command_timeout)
                     self.socket_lock.release()
-                    # fun_test.simple_assert(dpcsh_result["status"], "Pulling VP Utilization")
-                    if dpcsh_result["status"] and dpcsh_result["data"] is not None:
-                        vp_util = dpcsh_result["data"]
+                    # fun_test.simple_assert(vp_util_result["status"], "Pulling VP Utilization")
+                    if vp_util_result["status"] and vp_util_result["data"] is not None:
+                        vp_util = vp_util_result["data"]
                     else:
                         vp_util = {}
 
-                    if non_zero_stats_only:
-                        filtered_vp_util = OrderedDict()
-                        for key, value in sorted(vp_util.iteritems()):
-                            if value != 0.0 or value != 0:
-                                filtered_vp_util[key] = value
-                        vp_util = filtered_vp_util
+                    # Grouping the output based on its cluster & core level. That is, all the four hardware threads
+                    # utilization will be added into a list and assigned to it attribute having its cluster and core
+                    filtered_vp_util = OrderedDict()
+                    for key, value in sorted(vp_util.iteritems()):
+                        cluster_id = key.split(".")[0][3]
+                        core_id = key.split(".")[1]
+                        new_key = "{}/{}".format(cluster_id, core_id)
+                        if new_key not in filtered_vp_util:
+                            filtered_vp_util[new_key] = []
+                        filtered_vp_util[new_key].append(_convert_vp_util(value))
 
-                    table_data = build_simple_table(data=vp_util, column_headers=column_headers)
+                    # Filling the gap for the central cluster which has only 2 threads in a core
+                    for core in range(4):
+                        for thread in range(2, 4):
+                            key = "8/{}".format(core)
+                            if key in filtered_vp_util and type(filtered_vp_util[key]) is list:
+                                filtered_vp_util[key].append("N/A")
+
+                    # Eliminate the cluster/core whose threads is at 0% utilization
+                    if non_zero_stats_only:
+                        for key, value in filtered_vp_util.items():
+                            delete_key = True
+                            for thread_util in value:
+                                if thread_util != "0" and thread_util != "N/A":
+                                    delete_key = False
+                                    break
+                            if delete_key:
+                                del(filtered_vp_util[key])
+
+                    table_data = build_simple_table(data=filtered_vp_util, column_headers=column_headers,
+                                                    split_values_to_columns=True)
                     lines.append("\n########################  {} ########################\n".format(time.ctime()))
                     lines.append(table_data.get_string())
                     lines.append("\n\n")
@@ -406,10 +453,10 @@ class CollectStats(object):
                         fun_test.log("Stopping Resource BAM stats collection thread")
                         break
                     self.socket_lock.acquire()
-                    dpcsh_result = self.storage_controller.peek_resource_bam_stats(command_timeout=command_timeout)
+                    bam_result = self.storage_controller.peek_resource_bam_stats(command_timeout=command_timeout)
                     self.socket_lock.release()
-                    if dpcsh_result["status"] and dpcsh_result["data"] is not None:
-                        resource_bam_stats = dpcsh_result["data"]
+                    if bam_result["status"] and bam_result["data"] is not None:
+                        resource_bam_stats = bam_result["data"]
                     else:
                         resource_bam_stats = {}
 
@@ -451,14 +498,14 @@ class CollectStats(object):
                 timer = FunTimer(max_time=interval * count)
                 while not timer.is_expired():
                     if threaded and (self.stop_vol_stats or self.stop_all):
-                        fun_test.log("Stopping VP Utils stats collection thread")
+                        fun_test.log("Stopping Volume stats collection thread")
                         break
                     self.socket_lock.acquire()
-                    dpcsh_result = self.storage_controller.peek(props_tree="storage/volumes",
+                    vol_stats_result = self.storage_controller.peek(props_tree="storage/volumes",
                                                                 command_duration=command_timeout)
                     self.socket_lock.release()
-                    if dpcsh_result["status"] and dpcsh_result["data"] is not None:
-                        all_vol_stats = dpcsh_result["data"]
+                    if vol_stats_result["status"] and vol_stats_result["data"] is not None:
+                        all_vol_stats = vol_stats_result["data"]
                     else:
                         all_vol_stats = {}
 
