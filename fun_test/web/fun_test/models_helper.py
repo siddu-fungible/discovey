@@ -478,7 +478,12 @@ def _get_suite_executions(execution_id=None,
     if test_bed_type:
         q = q & Q(test_bed_type=test_bed_type)
     if suite_path:
-        q = q & Q(suite_path=suite_path)
+        if ',' in suite_path:
+            suite_path_parts = suite_path.strip().split(',')
+            for suite_path_part in suite_path_parts:
+                q = q | Q(suite_path=suite_path_part)
+        else:
+            q = q & Q(suite_path=suite_path)
     if execution_id is not None:
         q = q
     else:

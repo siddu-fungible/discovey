@@ -12,8 +12,13 @@
     </div>
   </div>
 
-  <div class="container-fluid">
-    Search Jobs
+
+  <!-- button ng-click="test()">Test</button -->
+  <div class="card card-primary">
+    <div class="card-header"><b>Suite Executions</b>
+
+      <div class="container-fluid">
+    Search jobs
 
     <form [formGroup]="searchForm" (ngSubmit)="onSubmit()">
 
@@ -63,11 +68,6 @@
 <!--    {{searchForm.status | json}}-->
 <!--    {{searchForm.value | json}}-->
   </div>
-
-
-  <!-- button ng-click="test()">Test</button -->
-  <div class="card card-primary">
-    <div class="card-header"><b>Suite Executions</b>
       &nbsp;&nbsp;
       <ng-container *ngIf="filterButtons.length > 0">
         Filters:
