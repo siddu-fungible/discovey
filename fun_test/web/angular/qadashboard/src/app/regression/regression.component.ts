@@ -74,6 +74,7 @@ enum Filter {
 })
 
 export class RegressionComponent implements OnInit {
+  searching: boolean = false;
   pager: any = {};
   suiteExecutionsCount: number;
   recordsPerPage: number;
@@ -589,6 +590,10 @@ export class RegressionComponent implements OnInit {
       queryParams.push({"submitter_email": this.searchForm.controls.submitters.value});
     }
     this.navigateByQueryParams(queryParams);
+  }
+
+    onCancel() {
+    this.searching = false;
   }
 
   _flatten(items) {

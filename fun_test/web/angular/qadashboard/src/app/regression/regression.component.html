@@ -16,58 +16,47 @@
   <!-- button ng-click="test()">Test</button -->
   <div class="card card-primary">
     <div class="card-header"><b>Suite Executions</b>
-
-      <div class="container-fluid">
-    Search jobs
-
-    <form [formGroup]="searchForm" (ngSubmit)="onSubmit()">
-
-      <div class="form-group" *ngIf="fetchedUsers" style="width: 50%; margin-bottom: 10px; margin-top: 10px">
-        <label>Submitters</label>
-        <ng-multiselect-dropdown
-          [placeholder]="'Select users'"
-          [data]="submitterEmails"
-          [settings]="dropdownSettings"
-          (onSelect)="onItemSelect($event)"
-          (onSelectAll)="onSelectAll($event)"
-          formControlName="submitters">
-        </ng-multiselect-dropdown>
-
+      <div>
+        Search Jobs &nbsp;<i class="fa fa-search" style="font-size:20px; color: blue" (click)="searching=true"></i>
       </div>
 
-      <div class="form-group" *ngIf="fetchedSuites" style="width: 50%; margin-bottom: 10px; margin-top: 10px">
-        <label>Suite paths</label>
-        <ng-multiselect-dropdown
-          [placeholder]="'Select suite paths'"
-          [data]="suitesInfoKeys"
-          [settings]="dropdownSettings"
-          (onSelect)="onItemSelect($event)"
-          (onSelectAll)="onSelectAll($event)"
-          formControlName="suiteName">
-        </ng-multiselect-dropdown>
+      <div *ngIf="searching" class="container-fluid">
+
+
+        <form [formGroup]="searchForm" (ngSubmit)="onSubmit()">
+
+          <div class="form-group" *ngIf="fetchedUsers" style="width: 50%; margin-bottom: 10px; margin-top: 10px">
+            <label>Submitters</label>
+            <ng-multiselect-dropdown
+              [placeholder]="'Select users'"
+              [data]="submitterEmails"
+              [settings]="dropdownSettings"
+              (onSelect)="onItemSelect($event)"
+              (onSelectAll)="onSelectAll($event)"
+              formControlName="submitters">
+            </ng-multiselect-dropdown>
+
+          </div>
+
+          <div class="form-group" *ngIf="fetchedSuites" style="width: 50%; margin-bottom: 10px; margin-top: 10px">
+            <label>Suite paths</label>
+            <ng-multiselect-dropdown
+              [placeholder]="'Select suite paths'"
+              [data]="suitesInfoKeys"
+              [settings]="dropdownSettings"
+              (onSelect)="onItemSelect($event)"
+              (onSelectAll)="onSelectAll($event)"
+              formControlName="suiteName">
+            </ng-multiselect-dropdown>
+
+          </div>
+
+          <span class="pseudo-anchor" (click)="onCancel()">Cancel</span> &nbsp;&nbsp;
+          <button class="btn btn-success submit-button" [disabled]="!searchForm.valid" type="submit">Submit</button>
+
+        </form>
 
       </div>
-
-<!--      <div class="form-group" style="width: 50%">-->
-<!--        <label>Suite Execution ID</label>-->
-<!--        <input type="text" formControlName="executionId" class="form-control">-->
-<!--      </div>-->
-
-<!--      <div class="form-group" style="width: 50%">-->
-<!--        <label>Suite Name</label>-->
-<!--        <input type="text" formControlName="suiteName" class="form-control">-->
-<!--      </div>-->
-
-
-
-      <span class="pseudo-anchor">Cancel</span> &nbsp;&nbsp;
-      <button class="btn btn-success submit-button" [disabled]="!searchForm.valid" type="submit">Submit</button>
-
-    </form>
-
-<!--    {{searchForm.status | json}}-->
-<!--    {{searchForm.value | json}}-->
-  </div>
       &nbsp;&nbsp;
       <ng-container *ngIf="filterButtons.length > 0">
         Filters:
