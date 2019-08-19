@@ -52,7 +52,8 @@ def _deploy_bmc():
         else:
             with cd('/mnt/sdmmc0p1/_install'):
                 with settings(hide('stdout', 'stderr')):
-                    run('wget http://vnc-remote-01.fungible.local:9669/pkgs/for-f1/pyserial-install.tar')
+                    run('wget -O pyserial-install.tar http://vnc-shared-06.fungible.local:9669/pkgs/for-f1/pyserial-install.tar')
+
                     run('tar xvf pyserial-install.tar')
                     run('rm -f pyserial-install.tar')
                     print "[%s] essentials installed on ... \n" % (env.host_string)
@@ -331,7 +332,7 @@ def resetF(index=0):
     run('/home/root/f1reset -s {} 0 && sleep 2 && /home/root/f1reset -s {} 1 && /home/root/f1reset -g && sleep 1'.format(index, index), shell=False)
 
 @roles('bmc')
-#@task
+@task
 def check_serial_sockets():
     """ check if tcp sockets are running to replay serial interfaces /dev/ttySD """
     with settings( hide('stderr', 'running'), warn_only=True ):

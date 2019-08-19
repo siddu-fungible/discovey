@@ -74,7 +74,8 @@
     },
     "fio_modes": [
       "read",
-      "randread"
+      "randread",
+      "write"
     ],
     "test_parameters": [
       {
@@ -146,7 +147,8 @@
     },
     "fio_modes": [
       "read",
-      "randread"
+      "randread",
+      "write"
     ],
     "test_parameters": [
       {

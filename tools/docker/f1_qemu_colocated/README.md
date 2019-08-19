@@ -29,6 +29,8 @@ docker run -d -p3220:22 -p2220:2220 --privileged --name="$container_name" f1_col
 
 
 where sdk-url=http://dochub.fungible.local/doc/jenkins/funos/latest/Linux
+Latest run: sudo docker build . -t f1_colocated_qemu:v05_10 --build-arg DOCKHUB_FUNGIBLE_LOCAL=10.1.20.99 --build-arg HOST_OS_TGZ=fungible_ubuntu.tgz
+
 ```
 Changelog:
 
