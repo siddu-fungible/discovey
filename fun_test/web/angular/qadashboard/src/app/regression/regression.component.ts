@@ -94,8 +94,11 @@ export class RegressionComponent implements OnInit {
   dropdownList = [];
   selectedItems = [];
   dropdownSettings = {};
-  submitter_emails: any = [];
-  fetched: boolean = false;
+  submitterEmails: any = [];
+  fetchedUsers: boolean = false;
+  fetchedSuites: boolean = false;
+  suitesInfo: any;
+  suitesInfoKeys: any = [];
 
   // Re-run options
   reRunOptionsReRunFailed: boolean = false;
@@ -201,12 +204,21 @@ export class RegressionComponent implements OnInit {
       });
     }
 
+    this.suites().subscribe((response) => {
+      this.suitesInfo = response;
+      for (let suites of Object.keys(this.suitesInfo)) {
+        this.suitesInfoKeys.push(suites);
+      }
+      this.suitesInfoKeys.sort();
+      this.fetchedSuites = true;
+    });
+
     this.userService.getUserMap().subscribe((response) => {
       this.userMap = response;
       for (let user of Object.keys(this.userMap)) {
-        this.submitter_emails.push(user);
+        this.submitterEmails.push(user);
       }
-      this.fetched = true;
+      this.fetchedUsers = true;
     }, error => {
       this.logger.error("Unable to fetch usermap");
     });
@@ -218,7 +230,7 @@ export class RegressionComponent implements OnInit {
     for (let key in this.queryParameters) {
       if (this.queryParameters[key]) {
         let fb = new FilterButton(key, this.queryParameters[key], this.stateStringMap);
-      this.filterButtons.push(fb);
+        this.filterButtons.push(fb);
       }
     }
     //console.log(this.filterButtons);
@@ -299,7 +311,7 @@ export class RegressionComponent implements OnInit {
     let queryParams = {};
     for (let userParam of userParams) {
       let key = Object.keys(userParam)[0];
-      if (key == 'submitter_email' && Array.isArray(userParam[key])) {
+      if ((key == 'submitter_email' || key == 'suite_path') && Array.isArray(userParam[key])) {
         queryParams[key] = this._flatten(userParam[key]);
       } else {
         queryParams[key] = userParam[key];
@@ -315,7 +327,6 @@ export class RegressionComponent implements OnInit {
   }
 
   getQueryParam() {
-    console.log(this.route.queryParams);
     return this.route.queryParams.pipe(switchMap(params => {
       if (params.hasOwnProperty('tag')) {
         this.tags = '["' + params["tag"] + '"]';
@@ -571,10 +582,10 @@ export class RegressionComponent implements OnInit {
 
   onSubmit() {
     let queryParams = [];
-    if (this.searchForm.controls.suiteName.value) {
-      queryParams.push({"suite_name": this.searchForm.controls.suiteName.value});
+    if (this.searchForm.controls.suiteName.value != "") {
+      queryParams.push({"suite_path": this.searchForm.controls.suiteName.value});
     }
-    if (this.searchForm.controls.submitters.value) {
+    if (this.searchForm.controls.submitters.value != "") {
       queryParams.push({"submitter_email": this.searchForm.controls.submitters.value});
     }
     this.navigateByQueryParams(queryParams);
@@ -591,4 +602,12 @@ export class RegressionComponent implements OnInit {
     return itemString;
   }
 
+
+  suites() {
+    return this.apiService.get("/regression/suites").pipe(switchMap((response) => {
+      return of(response.data);
+    }))
+  }
+
 }
+

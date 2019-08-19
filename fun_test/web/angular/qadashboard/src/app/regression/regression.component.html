@@ -17,16 +17,28 @@
 
     <form [formGroup]="searchForm" (ngSubmit)="onSubmit()">
 
-      <div class="form-group" *ngIf="fetched" style="width: 50%; margin-bottom: 10px; margin-top: 10px">
+      <div class="form-group" *ngIf="fetchedUsers" style="width: 50%; margin-bottom: 10px; margin-top: 10px">
         <label>Submitters</label>
         <ng-multiselect-dropdown
           [placeholder]="'Select users'"
-          [data]="submitter_emails"
-          [(ngModel)]="selectedItems"
+          [data]="submitterEmails"
           [settings]="dropdownSettings"
           (onSelect)="onItemSelect($event)"
           (onSelectAll)="onSelectAll($event)"
           formControlName="submitters">
+        </ng-multiselect-dropdown>
+
+      </div>
+
+      <div class="form-group" *ngIf="fetchedSuites" style="width: 50%; margin-bottom: 10px; margin-top: 10px">
+        <label>Suite paths</label>
+        <ng-multiselect-dropdown
+          [placeholder]="'Select suite paths'"
+          [data]="suitesInfoKeys"
+          [settings]="dropdownSettings"
+          (onSelect)="onItemSelect($event)"
+          (onSelectAll)="onSelectAll($event)"
+          formControlName="suiteName">
         </ng-multiselect-dropdown>
 
       </div>
@@ -36,10 +48,10 @@
 <!--        <input type="text" formControlName="executionId" class="form-control">-->
 <!--      </div>-->
 
-      <div class="form-group" style="width: 50%">
-        <label>Suite Name</label>
-        <input type="text" formControlName="suiteName" class="form-control">
-      </div>
+<!--      <div class="form-group" style="width: 50%">-->
+<!--        <label>Suite Name</label>-->
+<!--        <input type="text" formControlName="suiteName" class="form-control">-->
+<!--      </div>-->
 
 
 
