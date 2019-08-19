@@ -1,41 +1,16 @@
-<div class="container-fluid">
-  Search Jobs
 
-  <form [formGroup]="searchForm">
 
-    <div class="form-group" *ngIf="fetched" (ngSubmit)="onSubmit()" style="width: 50%; margin-bottom: 10px; margin-top: 10px">
-      <label>Submitters</label>
-      <ng-multiselect-dropdown
-        [placeholder]="'Select users'"
-        [data]="submitter_emails"
-        [(ngModel)]="selectedItems"
-        [settings]="dropdownSettings"
-        (onSelect)="onItemSelect($event)"
-        (onSelectAll)="onSelectAll($event)"
-        formControlName="submitters">
-      </ng-multiselect-dropdown>
+<h3>Fade-In and Fade-Out animation</h3>
 
-    </div>
+<button (click)="addItem()">Add List</button>
+<button (click)="removeItem()">Remove List</button>
 
-    <div class="form-group" style="width: 50%">
-      <label>Suite Execution ID</label>
-      <input type="text" formControlName="executionId" class="form-control">
-    </div>
-
-    <div class="form-group" style="width: 50%">
-      <label>Suite Name</label>
-      <input type="text" formControlName="suiteName" class="form-control">
-    </div>
-
-    <button (click)="loadAPIData()" class="btn btn-secondary ml-2" type="button">Cancel</button>&nbsp;
-
-    <button class="btn btn-primary" [disabled]="!searchForm.valid" type="submit">Search</button>
-
-  </form>
-
-  {{searchForm.status | json}}
-  {{searchForm.value | json}}
+<div style="width:200px; margin-left: 20px">
+  <ul>
+    <li *ngFor="let list of listItem" [@fadeInOut]>
+      {{list}}
+    </li>
+  </ul>
 </div>
-
 
 

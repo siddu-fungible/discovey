@@ -1,7 +1,7 @@
 import {
   Component,
   OnInit,
-  Input
+  Input, ViewChild
 } from '@angular/core';
 import {PagerService} from "../services/pager/pager.service";
 import {ApiService} from "../services/api/api.service";
@@ -15,7 +15,14 @@ import {switchMap} from "rxjs/operators";
 import {UserService} from "../services/user/user.service";
 import {NgbModal, ModalDismissReasons} from '@ng-bootstrap/ng-bootstrap';
 import {FormGroup} from "@angular/forms";
-import {FormBuilder} from "@angular/forms";
+import {FormBuilder, Validators, AbstractControl} from "@angular/forms";
+import {
+  trigger,
+  state,
+  style,
+  animate,
+  transition,
+} from '@angular/animations';
 
 class FilterButton {
   displayString: string = null;
@@ -29,6 +36,8 @@ class FilterButton {
     this.stateStringMap = stateStringMap;
     this._setDisplayString();
   }
+
+
 
   _setDisplayString() {
     let keyString = this.filterKey;
@@ -57,6 +66,8 @@ class FilterButton {
   }
 }
 
+
+
 enum Filter {
   ALL = "ALL",
   COMPLETED = "COMPLETED",
@@ -70,10 +81,23 @@ enum Filter {
 @Component({
   selector: 'app-regression',
   templateUrl: './regression.component.html',
-  styleUrls: ['./regression.component.css']
+  styleUrls: ['./regression.component.css'],
+  // animations: [
+  //   trigger('simpleFadeAnimation', [
+  //
+  //     state('in', style({opacity: 1})),
+  //     transition(':enter', [
+  //       style({opacity: 0}),
+  //       animate(1600 )
+  //     ]),
+  //     transition(':leave',
+  //       animate(1600, style({opacity: 0, backgroundColor: 'white'})))
+  //   ])
+  // ]
 })
 
 export class RegressionComponent implements OnInit {
+  @ViewChild('searchForm') formValues;
   searching: boolean = false;
   pager: any = {};
   suiteExecutionsCount: number;
@@ -127,7 +151,19 @@ export class RegressionComponent implements OnInit {
       submitters: [[]],
       executionId: [''],
       suiteName: ['']
+    }, {validator: this.atLeastOneValidator});
+
+    //this.searchForm.setErrors({required: true});
+    this.searchForm.valueChanges.subscribe(newValue => {
+      // if (newValue.submitters || newValue.suiteName) {
+      //   this.searchForm.setErrors(null);
+      // } else {
+      //   this.searchForm.setErrors({required: true});
+      // }
     });
+
+
+
     this.dropdownSettings = {
       singleSelection: false,
       idField: 'item_id',
@@ -581,7 +617,12 @@ export class RegressionComponent implements OnInit {
     return this.searchForm.get('submitters');
   }
 
+  get suiteName() {
+    return this.searchForm.get('suiteName');
+  }
+
   onSubmit() {
+    this.searching = false;
     let queryParams = [];
     if (this.searchForm.controls.suiteName.value != "") {
       queryParams.push({"suite_path": this.searchForm.controls.suiteName.value});
@@ -589,11 +630,18 @@ export class RegressionComponent implements OnInit {
     if (this.searchForm.controls.submitters.value != "") {
       queryParams.push({"submitter_email": this.searchForm.controls.submitters.value});
     }
+
     this.navigateByQueryParams(queryParams);
+    this.searchForm.reset();
   }
 
     onCancel() {
     this.searching = false;
+    this.searchForm.reset();
+  }
+
+  onSearch() {
+    this.searching = true;
   }
 
   _flatten(items) {
@@ -612,6 +660,19 @@ export class RegressionComponent implements OnInit {
     return this.apiService.get("/regression/suites").pipe(switchMap((response) => {
       return of(response.data);
     }))
+  }
+
+  atLeastOneValidator(group: FormGroup): { [key: string]: boolean } | null {
+      const submitters = group.get('submitters');
+      const suiteName = group.get('suiteName');
+      console.log(suiteName);
+      console.log(submitters);
+      if (suiteName.value != "" || submitters.value != "") {
+        return null;
+      }
+      else {
+        return {'atLeastOne': true};
+      }
   }
 
 }
