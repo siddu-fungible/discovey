@@ -1,28 +1,36 @@
 <form [formGroup]="newSuiteEntryForm" class="fun-form">
 
-  <label class="fun-form-label">Script path:</label>
-  <input type="text" formControlName="path" style="width: 500px">
+  <div class="fun-form-field-container">
+    <label class="fun-form-label">Script path:</label>
+    <input type="text" formControlName="path" style="width: 500px">
+  </div>
 
 
-  <label class="fun-form-label">Test-case IDs (in JSON array format. Ex: [2, 3]):</label>
-  <app-json-input (dataChanged)="testCaseIdsChanged($event)" [numRows]="1"></app-json-input>
+  <div class="fun-form-field-container">
+    <label class="fun-form-label">Test-case IDs (in JSON array format. Ex: [2, 3]):</label>
+    <app-json-input (dataChanged)="testCaseIdsChanged($event)" [numRows]="1"></app-json-input>
+  </div>
 
-  <label class="fun-form-label">Inputs (in JSON dictionary format. Ex: {{ inputsExample }}):</label>
-  <app-json-input (dataChanged)="inputsChanged($event)" [numRows]="6"></app-json-input>
+  <div class="fun-form-field-container">
+    <label class="fun-form-label">Inputs (in JSON dictionary format. Ex: {{ inputsExample }}):</label>
+    <app-json-input (dataChanged)="inputsChanged($event)" [numRows]="6"></app-json-input>
+  </div>
 
   <button class="fun-button-add">Add custom test-bed spec</button>
 
 
 </form>
 <form class="fun-form" [formGroup]="customTestBedSpecForm">
-  <label class="fun-form-label">Select a base test-bed:</label>
-  <select *ngIf="testBeds" formControlName="selectedTestBed" class="fun-form-field">
-    <option [value]="null">-- select --</option>
-    <option *ngFor="let testBed of testBeds">{{ testBed.name }}</option>
-  </select>
 
+  <div class="fun-form-field-container">
+    <label class="fun-form-label">Select a base test-bed:</label>
+    <select *ngIf="testBeds" formControlName="selectedTestBed" class="fun-form-field">
+      <option [value]="null">-- select --</option>
+      <option *ngFor="let testBed of testBeds">{{ testBed.name }}</option>
+    </select>
+  </div>
 
-  <div style="padding-top: 10px;">
+  <div class="fun-form-field-container">
     <input [checked]="customTestBedSpecForm.controls.customDutSelection.value == CustomDutSelection.NUM_DUTS" type="radio" value="{{ CustomDutSelection.NUM_DUTS }}" formControlName="customDutSelection"> Specify number of DUTs
     &nbsp;&nbsp;&nbsp;
     <input [checked]="customTestBedSpecForm.controls.customDutSelection.value == CustomDutSelection.SPECIFIC_DUTS" type="radio" value="{{ CustomDutSelection.SPECIFIC_DUTS }}" formControlName="customDutSelection"> Specify list of
@@ -31,7 +39,6 @@
 
 
   <div *ngIf="customTestBedSpecForm.controls.customDutSelection.value == CustomDutSelection.NUM_DUTS">
-    <label class="fun-form-label">Number of DUTs:</label>
     <input formControlName="numDuts" type="number" max="10" class="fun-form-field fun-form-input">
     <div *ngIf="!customTestBedSpecForm.controls.numDuts.valid && (customTestBedSpecForm.controls.numDuts.touched || customTestBedSpecForm.controls.numDuts.dirty)">
       <div *ngIf="customTestBedSpecForm.controls.numDuts.errors.max">
@@ -41,7 +48,7 @@
   </div>
 
   <div *ngIf="customTestBedSpecForm.controls.customDutSelection.value == CustomDutSelection.SPECIFIC_DUTS">
-      <div class="field-width">
+      <div class="field-width fun-form-field">
         <ng-multiselect-dropdown [placeholder]="'Select'" [data]="dutAssets" formControlName="selectedDuts" [settings]="dropdownSettings">
         </ng-multiselect-dropdown>
       </div>

@@ -549,7 +549,11 @@ tr.text-center > th {
 .fun-form {
   margin: 10px
 }
+.fun-form-field-container {
+  margin-top: 15px;
+  margin-bottom: 5px;
 
+}
 .fun-form-field {
   display: block;
 }
@@ -597,4 +601,8 @@ input[disabled].fun-form-input  {
   color: white;
   cursor: pointer;
 
+}
+
+label {
+  margin-bottom: unset;
 }
