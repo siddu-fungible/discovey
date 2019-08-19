@@ -24,16 +24,12 @@ export class SmokeTestStorageWidgetComponent implements OnInit {
   lastTwoSuites: Suite[] = [];
   isDone: boolean = false;
   numbers: number[] = [0, 1];
-  // iconDict: any = {
-  //   'PASSED': "/static/media/sun_icon.png",
-  //   'FAILED': "/static/media/storm_icon.png",
-  //   'IN_PROGRESS': "/static/media/loading_bars.gif"
-  // };
   iconDict: any = {
-    'PASSED': "https://ssl.gstatic.com/onebox/weather/64/sunny.png",
-    'FAILED': "https://ssl.gstatic.com/onebox/weather/64/thunderstorms.png",
+    'PASSED': "/static/media/sun_icon.png",
+    'FAILED': "/static/media/storm_icon.png",
     'IN_PROGRESS': "/static/media/loading_bars.gif"
   };
+
 
 
   constructor(private apiService: ApiService, private logger: LoggerService,
