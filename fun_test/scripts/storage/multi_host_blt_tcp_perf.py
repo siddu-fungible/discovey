@@ -989,20 +989,19 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                 # Checking whether the vp_util stats collection thread is still running...If so stopping it...
                 if fun_test.fun_test_threads[stats_thread_id]["thread"].is_alive():
                     fun_test.critical("VP utilization stats collection thread is still running...Stopping it now")
-                    stats_obj.stop_all = True
                     stats_obj.stop_vp_utils = True
                     # fun_test.fun_test_threads[stats_thread_id]["thread"]._Thread__stop()
                 # Checking whether the resource bam stats collection thread is still running...If so stopping it...
                 if fun_test.fun_test_threads[stats_rbam_thread_id]["thread"].is_alive():
                     fun_test.critical("Resource bam stats collection thread is still running...Stopping it now")
-                    stats_obj.stop_all = True
                     stats_obj.stop_resource_bam = True
                     # fun_test.fun_test_threads[stats_rbam_thread_id]["thread"]._Thread__stop()
                 # Checking whether the volume stats collection thread is still running...If so stopping it...
                 if fun_test.fun_test_threads[vol_stats_thread_id]["thread"].is_alive():
                     fun_test.critical("Volume Stats collection thread is still running...Stopping it now")
-                    stats_obj.stop_all = True
                     stats_obj.stop_vol_stats = True
+
+                stats_obj.stop_all = True
                 fun_test.join_thread(fun_test_thread_id=stats_thread_id, sleep_time=1)
                 fun_test.join_thread(fun_test_thread_id=stats_rbam_thread_id, sleep_time=1)
                 fun_test.join_thread(fun_test_thread_id=vol_stats_thread_id, sleep_time=1)
