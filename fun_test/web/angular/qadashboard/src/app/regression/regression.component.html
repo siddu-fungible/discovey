@@ -46,13 +46,12 @@
               (click)="onStateFilterClick(stateMap.SUBMITTED)">Submitted</span>&nbsp;
         <span class="pseudo-anchor" [ngClass]="{'filter-selected': stateFilterString === filter.AUTO_SCHEDULED}"
               (click)="onStateFilterClick(stateMap.AUTO_SCHEDULED)">Auto-scheduled</span>&nbsp;
-        <span class="pseudo-anchor" (click)="onSearch()">
+        <span class="pseudo-anchor link-span-secondary" [ngClass]="{'link-span-secondary-active' : searching}" (click)="onSearch()">
           Advanced search &nbsp;<i class="fa fa-search" style="font-size:14px; color: blue"></i>
         </span>
 
       </div>
-
-      <div *ngIf="searching" >
+      <div *ngIf="searching" [@fadeIn]>
 
 
         <form [formGroup]="searchForm" (ngSubmit)="onSubmit()">
@@ -88,7 +87,9 @@
           <button class="btn btn-success submit-button" [disabled]="!searchForm.valid" type="submit">Submit</button>
         </form>
 
+
       </div>
+
 
       <div class="text-center">
         <!-- pager -->

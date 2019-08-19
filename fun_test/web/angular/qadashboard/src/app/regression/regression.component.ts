@@ -82,6 +82,16 @@ enum Filter {
   selector: 'app-regression',
   templateUrl: './regression.component.html',
   styleUrls: ['./regression.component.css'],
+  animations: [trigger('fadeIn', [
+      transition(':enter', [
+        style({ opacity: 0 }),
+        animate(300)
+      ]),
+      transition(':leave', [
+        animate(1, style({ opacity: 1.0 }))
+      ]),
+      state('*', style({ opacity: 1.0 })),
+    ])]
   // animations: [
   //   trigger('simpleFadeAnimation', [
   //
@@ -667,13 +677,10 @@ export class RegressionComponent implements OnInit {
       const suiteName = group.get('suiteName');
       console.log(suiteName);
       console.log(submitters);
-      if (suiteName.value != "" || submitters.value != "") {
-        return null;
-      }
-      else {
+      if ((suiteName.value == "" || suiteName.value == null) && (submitters.value == "" || submitters.value == null)) {
         return {'atLeastOne': true};
       }
+      return null;
   }
-
 }
 
