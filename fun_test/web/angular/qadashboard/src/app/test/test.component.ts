@@ -7,83 +7,38 @@ import {FormControl, FormGroup} from "@angular/forms";
 import {FormBuilder, Validators} from "@angular/forms";
 import {NgMultiSelectDropDownModule} from 'ng-multiselect-dropdown';
 import {UserService} from "../services/user/user.service";
+import {ActivatedRoute, Router} from "@angular/router";
+import {Observable, of} from "rxjs";
+import {switchMap} from "rxjs/operators";
+import { trigger, state, style, animate, transition } from '@angular/animations';
+
 
 
 @Component({
   selector: 'app-test',
   templateUrl: './test.component.html',
-  styleUrls: ['./test.component.css']
+  styleUrls: ['./test.component.css'],
+  animations: [
+    trigger('fadeInOut', [
+      state('void', style({
+        opacity: 0
+      })),
+      transition('void <=> *', animate(500))
+    ])
+  ]
 })
 
-export class TestComponent implements OnInit {
-  //form model
-  // registrationForm = new FormGroup({
-  //   userName: new FormControl('Rohan'),
-  //   password: new FormControl(''),
-  //   confirmPassword: new FormControl('')
-  // });
+export class TestComponent {
 
-  registrationForm = this.fb.group({
-    userName: ['Rohan'],
-    password: [''],
-    confirmPassword: ['']
-  })
+  listItem = [];
+  list_order: number = 1;
 
-
-  constructor(private apiService: ApiService, private logger: LoggerService, private userService: UserService,
-              private renderer: Renderer2, private commonService: CommonService, private regressionService: RegressionService,
-              private fb: FormBuilder) {
+  addItem() {
+    var listitem = "ListItem " + this.list_order;
+    this.list_order++;
+    this.listItem.push(listitem);
   }
-
-
-  dropdownList = [];
-  selectedItems = [];
-  dropdownSettings = {};
-  userMap: any = null;
-  submitter_emails : any = [];
-  fetched : boolean = false;
-
-
-
-  ngOnInit() {
-    this.userService.getUserMap().subscribe((response) => {
-      this.userMap = response;
-      for (let user of Object.keys(this.userMap)){
-        this.submitter_emails.push(user);
-      }
-      this.fetched = true;
-    }, error => {
-      this.logger.error("Unable to fetch usermap");
-    });
-    this.dropdownList = [
-      {item_id: 1, item_text: 'Mumbai'},
-      {item_id: 2, item_text: 'Bangaluru'},
-      {item_id: 3, item_text: 'Pune'},
-      {item_id: 4, item_text: 'Navsari'},
-      {item_id: 5, item_text: 'New Delhi'}
-    ];
-
-    this.dropdownSettings = {
-      singleSelection: false,
-      idField: 'item_id',
-      textField: 'item_text',
-      selectAllText: 'Select All',
-      unSelectAllText: 'UnSelect All',
-      itemsShowLimit: 3,
-      allowSearchFilter: true
-    };
+  removeItem() {
+    this.listItem.length -= 1;
   }
-
-  onItemSelect(item: any) {
-    console.log(item);
-  }
-
-  onSelectAll(items: any) {
-    console.log(items);
-  }
-
 }
-
-
-
-
