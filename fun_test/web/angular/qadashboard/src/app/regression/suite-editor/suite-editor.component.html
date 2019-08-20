@@ -31,30 +31,30 @@
   </div>
 
 
-  <ng-container *ngFor="let assetType of assetTypes">
-    <div class="fun-form-field-container">
-      <input [checked]="customTestBedSpecForm.controls.customDutSelection.value == CustomDutSelection.NUM_DUTS" type="radio" value="{{ CustomDutSelection.NUM_DUTS }}" formControlName="customDutSelection"> Specify number of {{ assetType }}s
+    <ng-container>
+      <div class="fun-form-field-container">
+      <input [checked]="customTestBedSpecForm.controls.customDutSelection.value == CustomDutSelection.NUM_DUTS" type="radio" value="{{ CustomDutSelection.NUM_DUTS }}" formControlName="customDutSelection"> Specify number of DUTs
       &nbsp;&nbsp;&nbsp;
       <input [checked]="customTestBedSpecForm.controls.customDutSelection.value == CustomDutSelection.SPECIFIC_DUTS" type="radio" value="{{ CustomDutSelection.SPECIFIC_DUTS }}" formControlName="customDutSelection"> Specify list of
-      {{ assetType }}s
+      DUTs
     </div>
-
-    <div *ngIf="customTestBedSpecForm.controls.customDutSelection.value == CustomDutSelection.NUM_DUTS">
-      <input formControlName="numDuts" type="number" max="10" class="fun-form-field fun-form-input">
+       <input formControlName="numDuts" type="number" max="10" class="fun-form-field fun-form-input">
       <div *ngIf="!customTestBedSpecForm.controls.numDuts.valid && (customTestBedSpecForm.controls.numDuts.touched || customTestBedSpecForm.controls.numDuts.dirty)">
         <div *ngIf="customTestBedSpecForm.controls.numDuts.errors.max">
           <app-ul-error-panel [messages]="['Too many DUTs. max: ' +  MAX_NUM_DUTS ]"></app-ul-error-panel>
         </div>
       </div>
     </div>
-
-    <div *ngIf="customTestBedSpecForm.controls.customDutSelection.value == CustomDutSelection.SPECIFIC_DUTS">
+      <div *ngIf="customTestBedSpecForm.controls.customDutSelection.value == CustomDutSelection.SPECIFIC_DUTS">
         <div class="field-width fun-form-field">
           <ng-multiselect-dropdown [placeholder]="'Select'" [data]="dutAssets" formControlName="selectedDuts" [settings]="dropDownSettings">
           </ng-multiselect-dropdown>
         </div>
     </div>
-  </ng-container>
+    </ng-container>
+
+
+
 
 
 

@@ -9,10 +9,11 @@ class SuiteEntry {
   test_case_ids: number[] = null;
   inputs: any = null
 }
-enum CustomDutSelection {  // used by the Custom test-bed spec modal
-  NUM_DUTS,
-  SPECIFIC_DUTS
+enum CustomAssetSelection {  // used by the Custom test-bed spec modal
+  NUM,
+  SPECIFIC
 }
+
 
 @Component({
   selector: 'app-suite-editor',
@@ -28,13 +29,17 @@ export class SuiteEditorComponent implements OnInit {
   testBeds: any = null;
   selectedTestBed: any = null;
   assets: any = null;
+
   dutAssets: any = [];
   hostAssets: any = [];
   perfListenerAssets: any = [];
-  selectedDutAsset: any = null;
-  numDuts: number = -1;
-  CustomDutSelection = CustomDutSelection;
+
+
+  CustomAssetSelection = CustomAssetSelection;
+
   MAX_NUM_DUTS = 10;
+  MAX_NUM_HOSTS = 20;
+  MAX_NUM_PERF_LISTENER_HOSTS = 2;
   dropDownSettings = {};
   assetTypes: any = null;
   assetsByAssetType: any = {};
@@ -47,10 +52,20 @@ export class SuiteEditorComponent implements OnInit {
   });
 
   customTestBedSpecForm = new FormGroup({
-    customDutSelection: new FormControl(CustomDutSelection.NUM_DUTS),
     selectedTestBed: new FormControl(),
-    numDuts: new FormControl('', [Validators.max(10)]),
-    selectedDuts: new FormControl()
+
+    customDutSelection: new FormControl(CustomAssetSelection.NUM),
+    numDuts: new FormControl('', [Validators.max(this.MAX_NUM_DUTS)]),
+    selectedDuts: new FormControl(),
+
+    customHostSelection: new FormControl(CustomAssetSelection.NUM),
+    selectedHosts: new FormControl(),
+    numHosts: new FormControl('', [Validators.max(this.MAX_NUM_HOSTS)]),
+
+    customPerfListenerHostSelection: new FormControl(CustomAssetSelection.NUM),
+    selectedPerfListenerHosts: new FormControl(),
+    numPerfListenerHosts: new FormControl('', [Validators.max(this.MAX_NUM_PERF_LISTENER_HOSTS)]),
+
 
   });
 
@@ -71,29 +86,68 @@ export class SuiteEditorComponent implements OnInit {
       return this.testBedService.assetTypes();
     })).pipe(switchMap(response => {
       this.assetTypes = response;
-      this.assetTypes.forEach(assetType => {
-        this.assetsByAssetType[assetType] = [];
-      });
 
       return this.testBedService.assets();
     })).pipe(switchMap(response => {
       this.assets = response;
 
-      this.assets.forEach((asset) => {
-        this.assetsByAssetType[asset.type].push(asset.name);
-      });
+
 
       return of(true);
-    })).subscribe();
+    })).subscribe(response => {
+      this.prepareFormGroup();
+    });
+
+
+
 
     this.customTestBedSpecForm.get('customDutSelection').valueChanges.subscribe(selection => {
-      if (selection == CustomDutSelection.SPECIFIC_DUTS.toString()) {
+      if (selection == CustomAssetSelection.SPECIFIC.toString()) {
+        this.customTestBedSpecForm.get('numDuts').disable();
+      } else {
+        this.customTestBedSpecForm.get('numDuts').enable();
+
+      }
+    });
+
+    this.customTestBedSpecForm.get('customHostSelection').valueChanges.subscribe(selection => {
+      if (selection == CustomAssetSelection.SPECIFIC.toString()) {
         this.customTestBedSpecForm.get('numDuts').disable();
       } else {
         this.customTestBedSpecForm.get('numDuts').enable();
 
       }
     })
+
+  }
+
+  _getAssetSelectionKey(flatName) {
+    return `${flatName}Selection`;
+  }
+
+  _getNumAssetsKey(flatName) {
+    return `${flatName}NumAssets`;
+  }
+
+  _getSpecificAssetsKey(flatName) {
+    return `${flatName}SpecificAssets`;
+  }
+
+  prepareFormGroup() {
+    let group = {};
+    group["selectedTestBed"] = new FormControl();
+
+    this.assetTypes.forEach(assetType => {
+      let flatName = this._flattenName(assetType);
+      let assetSelectionKey = this._getAssetSelectionKey(flatName);
+      let numAssetsKey = this._getNumAssetsKey(flatName);
+      let specificAssetsKey = this._getSpecificAssetsKey(flatName);
+      group(assetSelectionKey) = new
+    })
+  }
+
+  _flattenName(name: string): string {  /* flatten DUT to dut, Perf Listener to "perf_listener"*/
+    return name.toLowerCase().replace(" ", "_");
   }
 
   testCaseIdsChanged(testCaseIds) {
