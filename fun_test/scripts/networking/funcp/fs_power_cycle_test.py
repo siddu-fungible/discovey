@@ -213,7 +213,6 @@ class LocalSSDTest(StorageConfiguration):
                                            runtime=60,
                                            prio=0,
                                            direct=1,
-                                           verify="md5",
                                            timeout=120)
                 arg1.disconnect()
 
