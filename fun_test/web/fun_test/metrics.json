@@ -1132,6 +1132,7 @@
             "metric_model_name": "MetricContainer",
             "name": "Volume Type",
             "label": "Volume Type",
+            "disable": true,
             "children": [
               {
                 "metric_model_name": "MetricContainer",
@@ -1213,6 +1214,7 @@
             "metric_model_name": "MetricContainer",
             "name": "Filter",
             "label": "Filter",
+            "disable": true,
             "children": [
               {
                 "metric_model_name": "MetricContainer",
