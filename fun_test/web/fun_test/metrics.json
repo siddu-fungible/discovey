@@ -1132,6 +1132,7 @@
             "metric_model_name": "MetricContainer",
             "name": "Volume Type",
             "label": "Volume Type",
+            "disable": true,
             "children": [
               {
                 "metric_model_name": "MetricContainer",
@@ -1213,6 +1214,7 @@
             "metric_model_name": "MetricContainer",
             "name": "Filter",
             "label": "Filter",
+            "disable": true,
             "children": [
               {
                 "metric_model_name": "MetricContainer",
@@ -3105,7 +3107,7 @@
                       {
                         "metric_model_name": "MetricContainer",
                         "name": "durable_vol_ec_compression_pcie_write",
-                        "label": "Write",
+                        "label": "Sequential Write",
                         "children": [
                           {
                             "metric_model_name": "BltVolumePerformance",
@@ -3163,7 +3165,7 @@
                       {
                         "metric_model_name": "MetricContainer",
                         "name": "durable_vol_ec_compression_nvme_tcp_write",
-                        "label": "Write",
+                        "label": "Sequential Write",
                         "children": [
                           {
                             "metric_model_name": "BltVolumePerformance",
