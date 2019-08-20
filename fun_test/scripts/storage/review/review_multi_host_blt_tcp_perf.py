@@ -819,7 +819,37 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
             iostat_thread = {}
             thread_count = 1
             final_fio_output = {}
-            stats_obj = {}
+            tmp = combo.split(',')
+            fio_numjobs = tmp[0].strip('() ')
+            fio_iodepth = tmp[1].strip('() ')
+
+            stats_obj = CollectStats(self.storage_controller)
+            stats_count = self.fio_cmd_args["runtime"] / self.vp_util_args["interval"],
+
+            vp_util_post_fix_name = "vp_util_numjobs_iodepth_{}_{}.txt".format(fio_numjobs, fio_iodepth)
+            vp_util_artifact_file = fun_test.get_test_case_artifact_file_name(post_fix_name=vp_util_post_fix_name)
+            vp_util_thread_id = fun_test.execute_thread_after(time_in_seconds=1, func=stats_obj.collect_vp_utils_stats,
+                                                              output_file=vp_util_artifact_file,
+                                                              interval=self.vp_util_args["interval"],
+                                                              count=stats_count, threaded=True)
+            fun_test.log("Current vp_util stats collection thread id: {}".format(vp_util_thread_id))
+            resource_bam_post_fix_name = "resource_bam_iodepth_{}_{}.txt".format(fio_numjobs, fio_iodepth)
+            resource_bam_artifact_file = fun_test.get_test_case_artifact_file_name(post_fix_name=
+                                                                                   resource_bam_post_fix_name)
+            stats_rbam_thread_id = fun_test.execute_thread_after(time_in_seconds=5,
+                                                                 func=stats_obj.collect_resource_bam_stats,
+                                                                 output_file=resource_bam_artifact_file,
+                                                                 interval=self.resource_bam_args["interval"],
+                                                                 count=stats_count, threaded=True)
+            fun_test.log("Current bam stats collection thread id: {}".format(stats_rbam_thread_id))
+            vol_stats_post_fix_name = "vol_stats_iodepth_{}_{}.txt".format(fio_numjobs, fio_iodepth)
+            vol_stats_artifact_file = fun_test.get_test_case_artifact_file_name(post_fix_name=vol_stats_post_fix_name)
+            vol_stats_thread_id = fun_test.execute_thread_after(time_in_seconds=10, func=stats_obj.collect_vol_stats,
+                                                                vol_details=vol_details,
+                                                                output_file=vol_stats_artifact_file,
+                                                                interval=self.vol_stats_args["interval"],
+                                                                count=stats_count, threaded=True)
+            fun_test.log("Current volume stats collection thread id: {}".format(vol_stats_thread_id))
 
             for i in range(0, self.blt_count):
                 key = self.host_ips[i]
@@ -835,10 +865,10 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                 end_host_thread[thread_count] = self.host_handles[key].clone()
 
                 for mode in self.fio_modes:
-                    tmp = combo.split(',')
+                    # tmp = combo.split(',')
                     fio_block_size = self.fio_bs
-                    fio_numjobs = tmp[0].strip('() ')
-                    fio_iodepth = tmp[1].strip('() ')
+                    # fio_numjobs = tmp[0].strip('() ')
+                    # fio_iodepth = tmp[1].strip('() ')
                     fio_result[combo][mode] = True
                     internal_result[combo][mode] = True
                     row_data_dict = {}
@@ -890,36 +920,6 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                                                                     cpus_allowed=cpus_allowed,
                                                                     **self.fio_cmd_args)
                     """
-                    stats_obj[i] = CollectStats(self.storage_controller)
-                    stats_count = self.fio_cmd_args["runtime"] / self.vp_util_args["interval"],
-                    vp_util_post_fix_name = "vp_util_numjobs_iodepth_{}_{}_{}.txt".\
-                        format(fio_numjobs, fio_iodepth, mode)
-                    vp_util_artifact_file = fun_test.get_test_case_artifact_file_name(
-                        post_fix_name=vp_util_post_fix_name)
-                    stats_thread_id = fun_test.execute_thread_after(time_in_seconds=1,
-                                                                    func=stats_obj[i].collect_vp_utils_stats,
-                                                                    output_file=vp_util_artifact_file,
-                                                                    interval=self.vp_util_args["interval"],
-                                                                    count=stats_count, threaded=True)
-                    resource_bam_post_fix_name = "resource_bam_iodepth_{}_{}_{}.txt".format(fio_numjobs, fio_iodepth,
-                                                                                            mode)
-                    resource_bam_artifact_file = fun_test.get_test_case_artifact_file_name(
-                        post_fix_name=resource_bam_post_fix_name)
-                    stats_rbam_thread_id = fun_test.execute_thread_after(time_in_seconds=5,
-                                                                         func=stats_obj[i].collect_resource_bam_stats,
-                                                                         output_file=resource_bam_artifact_file,
-                                                                         interval=self.resource_bam_args["interval"],
-                                                                         count=stats_count, threaded=True)
-                    vol_stats_post_fix_name = "vol_stats_iodepth_{}_{}_{}.txt".format(fio_numjobs, fio_iodepth, mode)
-                    vol_stats_artifact_file = fun_test.get_test_case_artifact_file_name(
-                        post_fix_name=vol_stats_post_fix_name)
-                    vol_stats_thread_id = fun_test.execute_thread_after(time_in_seconds=10,
-                                                                        func=stats_obj[i].collect_vol_stats,
-                                                                        vol_details=vol_details,
-                                                                        output_file=vol_stats_artifact_file,
-                                                                        interval=self.vol_stats_args["interval"],
-                                                                        count=stats_count, threaded=True)
-
                     thread_id[thread_count] = fun_test.execute_thread_after(time_in_seconds=wait_time,
                                                                             func=fio_parser,
                                                                             arg1=end_host_thread[thread_count],
@@ -932,7 +932,6 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                                                                             name=fio_job_name,
                                                                             cpus_allowed=cpus_allowed,
                                                                             **self.fio_cmd_args)
-
                     fun_test.sleep("Fio threadzz", seconds=1)
                     thread_count += 1
 
@@ -959,8 +958,8 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
             else:
                 fun_test.log("CSI perf collection is not enabled, hence skipping it for current test")
 
-            for i in range(1, self.blt_count + 1):
-                try:
+            try:
+                for i in range(1, self.blt_count + 1):
                     fun_test.log("Joining fio thread {}".format(i))
                     fun_test.join_thread(fun_test_thread_id=thread_id[i])
                     fun_test.log("FIO Command Output:")
@@ -968,27 +967,28 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                     fun_test.test_assert(fun_test.shared_variables["fio"][i], "Fio threaded test")
                     fio_output[combo][mode][i] = {}
                     fio_output[combo][mode][i] = fun_test.shared_variables["fio"][i]
-                except Exception as ex:
-                    fun_test.critical(str(ex))
-                    fun_test.log("FIO Command Output for volume {}:\n {}".format(i, fio_output[combo][mode][i]))
-                finally:
-                    # Checking whether the vp_util stats collection thread is still running...If so stopping it...
-                    if fun_test.fun_test_threads[stats_thread_id]["thread"].is_alive():
-                        fun_test.critical("VP utilization stats collection thread is still running...Stopping it now")
-                        stats_obj[i].stop_vp_utils = True
-                        # fun_test.fun_test_threads[stats_thread_id]["thread"]._Thread__stop()
-                    # Checking whether the resource bam stats collection thread is still running...If so stopping it...
-                    if fun_test.fun_test_threads[stats_rbam_thread_id]["thread"].is_alive():
-                        fun_test.critical("Resource bam stats collection thread is still running...Stopping it now")
-                        stats_obj[i].stop_resource_bam = True
-                        # fun_test.fun_test_threads[stats_rbam_thread_id]["thread"]._Thread__stop()
-                    # Checking whether the volume stats collection thread is still running...If so stopping it...
-                    if fun_test.fun_test_threads[vol_stats_thread_id]["thread"].is_alive():
-                        fun_test.critical("Volume Stats collection thread is still running...Stopping it now")
-                        stats_obj[i].stop_vol_stats = True
+                final_fio_output[combo][mode] = fio_output[combo][mode][1]
+            except Exception as ex:
+                fun_test.critical(str(ex))
+                fun_test.log("FIO Command Output for volume {}:\n {}".format(i, fio_output[combo][mode][i]))
+            finally:
+                # Checking whether the vp_util stats collection thread is still running...If so stopping it...
+                if fun_test.fun_test_threads[vp_util_thread_id]["thread"].is_alive():
+                    fun_test.critical("VP utilization stats collection thread is still running...Stopping it now")
+                    stats_obj.stop_vp_utils = True
+                    # fun_test.fun_test_threads[vp_util_thread_id]["thread"]._Thread__stop()
+                # Checking whether the resource bam stats collection thread is still running...If so stopping it...
+                if fun_test.fun_test_threads[stats_rbam_thread_id]["thread"].is_alive():
+                    fun_test.critical("Resource bam stats collection thread is still running...Stopping it now")
+                    stats_obj.stop_resource_bam = True
+                    # fun_test.fun_test_threads[stats_rbam_thread_id]["thread"]._Thread__stop()
+                # Checking whether the volume stats collection thread is still running...If so stopping it...
+                if fun_test.fun_test_threads[vol_stats_thread_id]["thread"].is_alive():
+                    fun_test.critical("Volume Stats collection thread is still running...Stopping it now")
+                    stats_obj.stop_vol_stats = True
 
-                fun_test.log("Joining vp util stats thread: {}".format(stats_thread_id))
-                fun_test.join_thread(fun_test_thread_id=stats_thread_id, sleep_time=1)
+                fun_test.log("Joining vp util stats thread: {}".format(vp_util_thread_id))
+                fun_test.join_thread(fun_test_thread_id=vp_util_thread_id, sleep_time=1)
                 fun_test.log("Joining resource bam stats thread: {}".format(stats_rbam_thread_id))
                 fun_test.join_thread(fun_test_thread_id=stats_rbam_thread_id, sleep_time=1)
                 fun_test.log("Joining volume stats thread: {}".format(vol_stats_thread_id))
@@ -1001,10 +1001,10 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
             fun_test.add_auxillary_file(description="Volume Stats - IO depth {}".format(row_data_dict["iodepth"]),
                                         filename=vol_stats_artifact_file)
 
-            final_fio_output[combo][mode] = fio_output[combo][mode][1]
             fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval), self.iter_interval)
 
             for i in range(2, self.blt_count + 1):
+                fun_test.test_assert(fio_output[combo][mode][i], "Fio threaded test")
                 # Boosting the fio output with the testbed performance multiplier
                 multiplier = 1
                 for op, stats in self.expected_fio_result[combo][mode].items():
