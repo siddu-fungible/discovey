@@ -434,6 +434,82 @@ def _make_gateway(index=0):
     a,b,c,d = socket.gethostbyname(ip).split('.')
     return '.'.join([a, b, c, '1'])
 
+## flash image ##
+@roles('bmc')
+@task
+def flashF(index=0, force=False, type=None, image=None, version=None):
+    """ flash image of chip[index] over type tftp with provided arguments """
+    global child
+    CCHUID = 3 - int(index)
+    #bootargs = 'cc_huid={} sku=SKU_FS1600_{} app=fw_upgrade boot-reserved=0x2000000@0x12000000 '.format(CCHUID, index)
+    if force:
+        bootargs = 'app=fw_upgrade --active boot-reserved=0x2000000@0x12000000 '
+    else:
+        bootargs = 'app=fw_upgrade boot-reserved=0x2000000@0x12000000 '
+    #print bootargs
+
+    command = 'tftpboot'
+    if image and version:
+        sys.exit("image-path and version are multually exclusive ...")
+
+    if version:
+        if type not in [ 'eepr', 'host', 'emmc' ]:
+            sys.exit("image-type %s not-supported only=['eepr', 'host', 'emmc' ] ..." % type)
+        elif type == 'eepr':
+            fimage='funsdk-release/{}/eeprom_fs1600_{}_packed.bin'.format(version, index)
+        elif type == 'host':
+            fimage='funsdk-release/{}/host_firmware_packed.bin'.format(version)
+        elif type == 'emmc':
+            fimage='funsdk-release/{}/emmc_image.bin'.format(version)
+        else:
+            sys.exit("image-type %s not-supported ..." % type)
+    elif image:
+        fimage = image
+
+    with settings(hide('stdout', 'stderr')):
+        try:
+            local('wget -O /tmp/wgetfile http://vnc-shared-06.fungible.local:9669/{}'.format(fimage))
+        except:
+            sys.exit("ERROR: image not present in release directory ...")
+
+    st = os.stat('/tmp/wgetfile')
+    fsize = st.st_size
+    bootargs += 'fw-upgrade-{}={}@0xa800000080000000'.format(type, fsize)
+    print bootargs
+
+    child = connectF(index, True)
+    child.sendline ('echo connected to chip={} ...'.format(index))
+    child.expect ('\nf1 # ')
+    child.sendline ('setenv ethaddr %s' % _mac_random_mac(index))
+    child.expect ('\nf1 # ')
+    child.sendline ('setenv autoload no')
+    child.expect ('\nf1 # ')
+    child.sendline ('lmpg;lfw;ltrain;ls;')
+    child.expect ('\nf1 # ')
+    child.sendline ('setenv gatewayip %s' % _make_gateway(index))
+    child.expect ('\nf1 # ')
+    child.sendline ('dhcp')
+    child.expect ('\nf1 # ')
+    child.sendline ('setenv serverip {}'.format(env.TFTPSERVER))
+    child.expect ('\nf1 # ')
+    child.sendline ('setenv bootargs {}'.format(bootargs))
+    child.expect ('\nf1 # ')
+    child.sendline ('setenv bootcmd ""')
+    child.expect ('\nf1 # ')
+    child.sendline ('printenv')
+    child.expect ('\nf1 # ')
+    child.sendline('{} 0xa800000080000000 {}:{};'.format(command, env.TFTPSERVER, fimage))
+    child.expect ('\nf1 # ')
+    child.sendline('{} 0xffffffff99000000 {}:funsdk-release/latest/funos-f1.stripped;'.format(command, env.TFTPSERVER))
+    child.expect ('\nf1 # ')
+    child.sendline('bootelf -p 0xffffffff99000000;')
+    try:
+        child.expect ('\nf1 # ', timeout=30)
+    except:
+        SESSION_ACTIVE_MSG = "\n\ntimeout: Seem DPU are actively flashed image. monitor nc {} 999{}\n\n".format(env.host, index)
+        sys.exit(SESSION_ACTIVE_MSG)
+        child.close()
+
 @roles('bmc')
 @task
 def imageF(index=0, image=NFSPATH, type='nfs'):
