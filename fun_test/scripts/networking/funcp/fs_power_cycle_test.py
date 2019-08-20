@@ -33,9 +33,9 @@ class SetupBringup(FunTestScript):
             servers_list.append(server)
         print(servers_list)
 
-        # self.reboot_fpga(fs_spec['fpga']['mgmt_ip'])
+        self.reboot_fpga(fs_spec['fpga']['mgmt_ip'])
 
-        # fun_test.sleep(message="Waiting for FS reboot", seconds=400)
+        fun_test.sleep(message="Waiting for FS reboot", seconds=400)
         retry_count = 0
         while True:
             fpga_linux = Linux(host_ip=fs_spec['fpga']['mgmt_ip'], ssh_username='root', ssh_password="root")
