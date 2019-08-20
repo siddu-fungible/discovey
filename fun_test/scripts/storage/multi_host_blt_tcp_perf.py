@@ -397,19 +397,19 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                 self.ctrlr_uuid = fun_test.shared_variables["ctrlr_uuid"]
                 ns_id = 1  # ns_id is 1 since there is 1 vol per controller
 
+                # Setting the syslog level back to 6
+                command_result = self.storage_controller.poke("params/syslog/level 6")
+                fun_test.test_assert(command_result["status"], "Setting syslog level to 6")
+
+                command_result = self.storage_controller.peek("params/syslog/level")
+                fun_test.test_assert_expected(expected=6, actual=command_result["data"],
+                                              message="Checking syslog level set to 6")
+
                 # Deleting the volumes
                 for i in range(0, fun_test.shared_variables["blt_count"], 1):
                     cur_uuid = fun_test.shared_variables["thin_uuid"][i]
                     key = self.host_ips[i]
                     nqn = fun_test.shared_variables["vol_list"][i]["nqn"]
-
-                    # Setting the syslog level back to 6
-                    command_result = self.storage_controller.poke("params/syslog/level 6")
-                    fun_test.test_assert(command_result["status"], "Setting syslog level to 6")
-
-                    command_result = self.storage_controller.peek("params/syslog/level")
-                    fun_test.test_assert_expected(expected=6, actual=command_result["data"],
-                                                  message="Checking syslog level set to 6")
 
                     # Executing NVMe disconnect from all the hosts
                     nvme_disconnect_cmd = "nvme disconnect -n {}".format(nqn)
