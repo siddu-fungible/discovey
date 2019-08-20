@@ -169,6 +169,9 @@ class LocalSSDTest(StorageConfiguration):
 
     def setup(self):
         config = "LocalSSDTest"
+        fs_name = fun_test.get_job_environment_variable('test_bed_type')
+        if fs_name == 'fs-66':
+            config = "LocalSSDTestFS66"
         super(LocalSSDTest, self).setup(config)
 
     def run(self):
