@@ -10,7 +10,7 @@ import {Title} from "@angular/platform-browser";
 import {ReRunService} from "./re-run.service";
 import {LoggerService} from '../services/logger/logger.service';
 import {RegressionService} from "./regression.service";
-import {Observable, of} from "rxjs";
+import {Observable, of, merge} from "rxjs";
 import {switchMap} from "rxjs/operators";
 import {UserService} from "../services/user/user.service";
 import {NgbModal, ModalDismissReasons} from '@ng-bootstrap/ng-bootstrap';
@@ -97,6 +97,8 @@ enum Filter {
 export class RegressionComponent implements OnInit {
   @ViewChild('searchForm') formValues;
   searching: boolean = false;
+  searchingByExecutionId: boolean = false;
+  disableDropdowns: boolean = false;
   pager: any = {};
   suiteExecutionsCount: number;
   recordsPerPage: number;
@@ -146,13 +148,55 @@ export class RegressionComponent implements OnInit {
   ngOnInit() {
     this.searchForm = this.fb.group({
       submitters: [[]],
-      executionId: [''],
-      suiteName: ['']
+      executionId: [{value: '',disabled: true}],
+      suiteName: [''],
+      searchByExecutionId: ['']
     }, {validator: this.atLeastOneValidator});
 
-    // this.searchForm.valueChanges.subscribe(newValue => {
-    //
+    this.searchForm.get('searchByExecutionId').valueChanges
+      .subscribe(v => {
+        if (v){
+          this.searchingByExecutionId = true;
+          this.searchForm.controls.submitters.setValue('');
+          this.searchForm.controls.suiteName.setValue('');
+          this.searchForm.get('executionId').enable();
+        }
+        else{
+          this.searchingByExecutionId = false;
+          this.searchForm.get('executionId').disable();
+        }
+      });
+
+
+    // this.searchForm.get('suiteName').valueChanges.subscribe(value=> {
+    //   console.log(value);
+    //   if (value != "" && value != null){
+    //     console.log('disabling exec id');
+    //     this.searchForm.get('executionId').disable();
+    //   }
+    //   else{
+    //     this.searchForm.get('executionId').enable();
+    //   }
     // });
+
+    // this.searchForm.get('submitters').valueChanges.subscribe(value=> {
+    //   if (value !== ''){
+    //     console.log('disabling exec id');
+    //     this.disableExecId = true;
+    //   }
+    // });
+
+
+
+    // merge(this.searchForm.get('suiteName').valueChanges,
+    //   this.searchForm.get('submitters').valueChanges)
+    //   .subscribe(value => {
+    //     if (value == [[]]){
+    //       console.log('enable exec id');
+    //     }
+    //   });
+    //
+    //
 
 
 
@@ -163,7 +207,7 @@ export class RegressionComponent implements OnInit {
       selectAllText: 'Select All',
       unSelectAllText: 'UnSelect All',
       itemsShowLimit: 3,
-      allowSearchFilter: true
+      allowSearchFilter: true,
     };
     this.title.setTitle('Regression');
     if (this.route.snapshot.data["tags"]) {
@@ -640,7 +684,7 @@ export class RegressionComponent implements OnInit {
     let itemString = '';
     for (let i = 0; i < items.length; ++i) {
       itemString += items[i];
-      if (items[i + 1]) {
+      if (i != (items.length - 1)) {
         itemString += ',';
       }
     }
@@ -657,12 +701,11 @@ export class RegressionComponent implements OnInit {
   atLeastOneValidator(group: FormGroup): { [key: string]: boolean } | null {
       const submitters = group.get('submitters');
       const suiteName = group.get('suiteName');
-      console.log(suiteName);
-      console.log(submitters);
       if ((suiteName.value == "" || suiteName.value == null) && (submitters.value == "" || submitters.value == null)) {
         return {'atLeastOne': true};
       }
       return null;
   }
+
 }
 
