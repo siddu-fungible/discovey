@@ -173,10 +173,9 @@ export class RegressionComponent implements OnInit {
     this.recordsPerPage = 50;
     this.logDir = null;
     this.suiteExecutionsCount = 0;
-    let payload = {};
-    if (this.tags) {
+    /*if (this.tags) {
       payload["tags"] = this.tags;
-    }
+    }*/
     let self = this;
     new Observable(observer => {
       observer.next(true);
@@ -192,6 +191,8 @@ export class RegressionComponent implements OnInit {
           return of(response);
         }))
       }), switchMap((response) => {
+        let payload = {};
+
         if (response.hasOwnProperty('submitter_email')) {
           payload["submitter_email"] = response.submitter_email;
         }
