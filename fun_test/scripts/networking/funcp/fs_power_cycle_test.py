@@ -13,9 +13,9 @@ import json
 from scripts.networking.funcp.ali_bmv_storage_sanity import *
 
 
-
 class SetupBringup(FunTestScript):
     server_key = {}
+
     def describe(self):
         self.set_test_details(steps="""
                     
@@ -37,7 +37,9 @@ class SetupBringup(FunTestScript):
 
         self.reboot_fpga(fs_spec['fpga']['mgmt_ip'])
 
-        fun_test.sleep(message="Waiting for FS reboot", seconds=400)
+        come_linux = Linux(host_ip=fs_spec['come']['mgmt_ip'], ssh_username='fun', ssh_password="123")
+        come_linux.ensure_host_is_up(max_wait_time=300, power_cycle=False)
+
         retry_count = 0
         while True:
             fpga_linux = Linux(host_ip=fs_spec['fpga']['mgmt_ip'], ssh_username='root', ssh_password="root")
@@ -45,7 +47,6 @@ class SetupBringup(FunTestScript):
                 fpga_linux.disconnect()
                 linux_home = Linux(host_ip="qa-ubuntu-02", ssh_username="auto_admin", ssh_password="fun123")
                 if linux_home.ping(dst=fs_spec['bmc']['mgmt_ip']):
-                    come_linux = Linux(host_ip=fs_spec['come']['mgmt_ip'], ssh_username='fun', ssh_password="123")
                     if come_linux.check_ssh():
                         come_linux.disconnect()
                         break
@@ -189,7 +190,7 @@ class LocalSSDTest(StorageConfiguration):
             self.host.command("sudo nvme list")
             device = self.host.command("sudo nvme list | grep nvme | sed -n 1p | awk {'print $1'}").strip()
             fun_test.test_assert(device, message="nvme device visible on host")
-            i +=1
+            i += 1
 
         self.storage_controller = StorageController(target_ip=self.come_ip, target_port=self.dpc_p1)
         self.dpu = 1
@@ -209,10 +210,11 @@ class LocalSSDTest(StorageConfiguration):
                                            numjobs=self.num_jobs,
                                            iodepth=self.iodepth,
                                            name="fio_" + str(rw_mode),
-                                           runtime=360,
+                                           runtime=60,
                                            prio=0,
                                            direct=1,
-                                           timeout=400)
+                                           verify="md5",
+                                           timeout=120)
                 arg1.disconnect()
 
         threads_list = []
