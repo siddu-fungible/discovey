@@ -165,19 +165,25 @@ class StorageController(NetworkController, DpcshClient):
                 volume_dict["params"][key] = kwargs[key]
         return self.json_execute(verb=self.mode, data=volume_dict, command_duration=command_duration)
 
-    def peek(self, props_tree, legacy=True, command_duration=TIMEOUT):
-        if legacy:
-            props_tree = "peek " + props_tree
-            return self.command(props_tree, legacy=True, command_duration=command_duration)
-        else:
-            return self.json_execute(verb="peek", data=props_tree, command_duration=command_duration)
+    def peek(self, props_tree, legacy=True, chunk=4096, command_duration=TIMEOUT):
+        try:
+            if legacy:
+                props_tree = "peek " + props_tree
+                return self.command(props_tree, legacy=True, chunk=chunk, command_duration=command_duration)
+            else:
+                return self.json_execute(verb="peek", data=props_tree, chunk=chunk, command_duration=command_duration)
+        except Exception as ex:
+            fun_test.critical(str(ex))
 
     def poke(self, props_tree, legacy=True, command_duration=TIMEOUT):
-        if legacy:
-            props_tree = "poke " + props_tree
-            return self.command(props_tree, legacy=True, command_duration=command_duration)
-        else:
-            return self.json_execute(verb="poke", data=props_tree, command_duration=command_duration)
+        try:
+            if legacy:
+                props_tree = "poke " + props_tree
+                return self.command(props_tree, legacy=True, command_duration=command_duration)
+            else:
+                return self.json_execute(verb="poke", data=props_tree, command_duration=command_duration)
+        except Exception as ex:
+            fun_test.critical(str(ex))
 
     def fail_volume(self, command_duration=TIMEOUT, **kwargs):
         volume_dict = {}
