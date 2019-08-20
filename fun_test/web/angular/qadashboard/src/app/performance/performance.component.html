@@ -1,5 +1,5 @@
 <fun-spinner [status]="status"></fun-spinner>
-<div *ngIf="status === null" class="component container">
+<div class="component container">
   <div [ngClass]="{'row both-cols': !selectMode}">
     <!-- left side of the performance page containing tree structure -->
     <div [ngClass]="{'col-lg-5 col-md-5 col-xxl-4 col-xl-5 left-col': !selectMode}">
@@ -183,7 +183,7 @@
       </button>
     </div>
     <!-- right side of the perf page dispalying the charts -->
-    <div *ngIf="!selectMode" class="col-lg-7 col-md-7 col-xxl-5 col-xl-7 right-col">
+    <div [ngClass]="{'col-lg-7 col-md-7 col-xxl-5 col-xl-7 right-col' : !selectMode}">
       <div *ngIf="mode === modeType.ShowingBugPanel && showBugPanel">
         <summary-jira-info [bugInfoUrl]="'/common/bug_info'" [data]="jiraList"
                            [allowDelete]="false" [allowContext]="true" [allowAdd]="false"

@@ -4,7 +4,9 @@
     <h5 style="text-align: center; margin: 0"><a [routerLink]=""
                                                     style="font-size:
       large;
-        float: left" (click)="goBack()"><i class="fa fa-hand-o-left" style="color: black"></i>&nbsp;Back</a>
+        float: left" (click)="goBack()">
+      <!--<i class="fa fa-hand-o-left" style="color: black"></i>&nbsp;-->
+      Back</a>
       <span>{{ workspace.workspace_name }}</span></h5>
       <a *ngIf="!showGrids" [routerLink]="" (click)="showGrids = true"><i class="fa fa-plus-circle"
                                                                           style="color: black"></i> Show
@@ -65,8 +67,8 @@
 
     <fun-spinner [status]="status"></fun-spinner>
     <div *ngIf="showChartTable" class="card" style="flex: 1 1 50%; vertical-align: top; padding: 10px;">
-      <span><b>Chart name: </b>{{ currentChart.chart_name }} <a [routerLink]="" (click)="closeChartTable()">
-        Close</a></span>
+      <span><b>Chart name: </b>{{ currentChart.chart_name }}
+      <a style="float: right" [routerLink]="" (click)="closeChartTable()">Close</a></span>
       <table style="width: 100%">
         <tr>
           <th style="width: 30%">
