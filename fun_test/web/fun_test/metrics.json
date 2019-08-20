@@ -3101,6 +3101,23 @@
                             "label": "IOPS"
                           }
                         ]
+                      },
+                      {
+                        "metric_model_name": "MetricContainer",
+                        "name": "durable_vol_ec_compression_pcie_write",
+                        "label": "Write",
+                        "children": [
+                          {
+                            "metric_model_name": "BltVolumePerformance",
+                            "name": "durable_vol_ec_comp_pcie_write_latency",
+                            "label": "Latency"
+                          },
+                          {
+                            "metric_model_name": "BltVolumePerformance",
+                            "name": "durable_vol_ec_comp_pcie_write_iops",
+                            "label": "IOPS"
+                          }
+                        ]
                       }
                     ]
                   },
@@ -3139,6 +3156,23 @@
                           {
                             "metric_model_name": "BltVolumePerformance",
                             "name": "rand_read_4kb1vol12ssd_durable_volume_ec_nvmetcp_output_iops",
+                            "label": "IOPS"
+                          }
+                        ]
+                      },
+                      {
+                        "metric_model_name": "MetricContainer",
+                        "name": "durable_vol_ec_compression_nvme_tcp_write",
+                        "label": "Write",
+                        "children": [
+                          {
+                            "metric_model_name": "BltVolumePerformance",
+                            "name": "durable_vol_ec_comp_nvme_tcp_write_latency",
+                            "label": "Latency"
+                          },
+                          {
+                            "metric_model_name": "BltVolumePerformance",
+                            "name": "durable_vol_ec_comp_nvme_tcp_write_iops",
                             "label": "IOPS"
                           }
                         ]
