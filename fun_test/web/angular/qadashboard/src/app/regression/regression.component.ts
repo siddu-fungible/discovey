@@ -1,7 +1,7 @@
 import {
   Component,
   OnInit,
-  Input
+  Input, ViewChild
 } from '@angular/core';
 import {PagerService} from "../services/pager/pager.service";
 import {ApiService} from "../services/api/api.service";
@@ -14,18 +14,30 @@ import {Observable, of} from "rxjs";
 import {switchMap} from "rxjs/operators";
 import {UserService} from "../services/user/user.service";
 import {NgbModal, ModalDismissReasons} from '@ng-bootstrap/ng-bootstrap';
+import {FormGroup} from "@angular/forms";
+import {FormBuilder, Validators, AbstractControl} from "@angular/forms";
+import {
+  trigger,
+  state,
+  style,
+  animate,
+  transition,
+} from '@angular/animations';
 
 class FilterButton {
   displayString: string = null;
   filterKey: string = null;
   filterValue: string = null;
   stateStringMap = null;
+
   constructor(filterKey, filterValue, stateStringMap) {
     this.filterKey = filterKey;
     this.filterValue = filterValue;
     this.stateStringMap = stateStringMap;
     this._setDisplayString();
   }
+
+
 
   _setDisplayString() {
     let keyString = this.filterKey;
@@ -48,11 +60,13 @@ class FilterButton {
     this.displayString = `${keyString}=${keyValue}`;
   }
 
-  setData(filterKey, filterValue): void  {
+  setData(filterKey, filterValue): void {
     this.filterKey = filterKey;
     this.filterValue = filterValue;
   }
 }
+
+
 
 enum Filter {
   ALL = "ALL",
@@ -63,13 +77,26 @@ enum Filter {
   SUBMITTED = "SUBMITTED",
   AUTO_SCHEDULED = "AUTO_SCHEDULED"
 }
+
 @Component({
   selector: 'app-regression',
   templateUrl: './regression.component.html',
-  styleUrls: ['./regression.component.css']
+  styleUrls: ['./regression.component.css'],
+  animations: [trigger('fadeIn', [
+      transition(':enter', [
+        style({ opacity: 0 }),
+        animate(300)
+      ]),
+      transition(':leave', [
+        animate(1, style({ opacity: 1.0 }))
+      ]),
+      state('*', style({ opacity: 1.0 })),
+    ])]
 })
 
 export class RegressionComponent implements OnInit {
+  @ViewChild('searchForm') formValues;
+  searching: boolean = false;
   pager: any = {};
   suiteExecutionsCount: number;
   recordsPerPage: number;
@@ -86,6 +113,14 @@ export class RegressionComponent implements OnInit {
   filterButtons: FilterButton [] = [];
   userMap: any = null;
   showingTestBeds: boolean = false;
+  searchForm: FormGroup;
+  selectedItems = [];
+  dropDownSettings = {};
+  submitterEmails: any = [];
+  fetchedUsers: boolean = false;
+  fetchedSuites: boolean = false;
+  suitesInfo: any;
+  suitesInfoKeys: any = [];
 
   // Re-run options
   reRunOptionsReRunFailed: boolean = false;
@@ -102,12 +137,34 @@ export class RegressionComponent implements OnInit {
               private regressionService: RegressionService,
               private router: Router,
               private userService: UserService,
+              private fb: FormBuilder,
               private modalService: NgbModal) {
     this.stateStringMap = this.regressionService.stateStringMap;
     this.stateMap = this.regressionService.stateMap;
   }
 
   ngOnInit() {
+    this.searchForm = this.fb.group({
+      submitters: [[]],
+      executionId: [''],
+      suiteName: ['']
+    }, {validator: this.atLeastOneValidator});
+
+    // this.searchForm.valueChanges.subscribe(newValue => {
+    //
+    // });
+
+
+
+    this.dropDownSettings = {
+      singleSelection: false,
+      idField: 'item_id',
+      textField: 'item_text',
+      selectAllText: 'Select All',
+      unSelectAllText: 'UnSelect All',
+      itemsShowLimit: 3,
+      allowSearchFilter: true
+    };
     this.title.setTitle('Regression');
     if (this.route.snapshot.data["tags"]) {
       this.tags = this.route.snapshot.data["tags"];
@@ -134,7 +191,7 @@ export class RegressionComponent implements OnInit {
           this.setFilterButtons();
           return of(response);
         }))
-      }),switchMap((response) => {
+      }), switchMap((response) => {
         if (response.hasOwnProperty('submitter_email')) {
           payload["submitter_email"] = response.submitter_email;
         }
@@ -176,8 +233,21 @@ export class RegressionComponent implements OnInit {
       });
     }
 
+    this.suites().subscribe((response) => {
+      this.suitesInfo = response;
+      for (let suites of Object.keys(this.suitesInfo)) {
+        this.suitesInfoKeys.push(suites);
+      }
+      this.suitesInfoKeys.sort();
+      this.fetchedSuites = true;
+    });
+
     this.userService.getUserMap().subscribe((response) => {
       this.userMap = response;
+      for (let user of Object.keys(this.userMap)) {
+        this.submitterEmails.push(user);
+      }
+      this.fetchedUsers = true;
     }, error => {
       this.logger.error("Unable to fetch usermap");
     });
@@ -187,11 +257,12 @@ export class RegressionComponent implements OnInit {
   setFilterButtons() {
     this.filterButtons = [];
     for (let key in this.queryParameters) {
-
-      let fb = new FilterButton(key, this.queryParameters[key], this.stateStringMap);
-      this.filterButtons.push(fb);
+      if (this.queryParameters[key]) {
+        let fb = new FilterButton(key, this.queryParameters[key], this.stateStringMap);
+        this.filterButtons.push(fb);
+      }
     }
-    console.log(this.filterButtons);
+    //console.log(this.filterButtons);
   }
 
   prepareBaseQueryParams(userSuppliedParams) {
@@ -245,7 +316,7 @@ export class RegressionComponent implements OnInit {
     let executionId = suiteExecution.fields.execution_id;
     if (confirm(`Are you sure you want to delete ${executionId}`)) {
       let url = "/api/v1/regression/suite_executions/" + executionId;
-        this.apiService.delete(url).subscribe(response => {
+      this.apiService.delete(url).subscribe(response => {
         this.logger.success(`Suite: ${executionId} deletion request submitted`);
         window.location.reload();
       }, error => {
@@ -265,8 +336,17 @@ export class RegressionComponent implements OnInit {
   }
 
   navigateByQueryParams(userParams) {
-    let queryParams = this.prepareBaseQueryParams(userParams);
-    this.router.navigate(['/regression'], {queryParams: queryParams});
+    //userParams = [{'submitter_email': 'john.a@fungible.com'},{'submitter_email': 'ashwin.s@fungible.com'}];
+    let queryParams = {};
+    for (let userParam of userParams) {
+      let key = Object.keys(userParam)[0];
+      if ((key == 'submitter_email' || key == 'suite_path') && Array.isArray(userParam[key])) {
+        queryParams[key] = this._flatten(userParam[key]);
+      } else {
+        queryParams[key] = userParam[key];
+      }
+    }
+    this.router.navigate(['/regression'], {queryParams: this.prepareBaseQueryParams(queryParams)});
   }
 
   navigateByQuery(state) {
@@ -345,16 +425,16 @@ export class RegressionComponent implements OnInit {
   getReRunInfo(suiteExecution) {
     if (suiteExecution.fields.suite_type === 'regular') {
       this.reRunService.getOriginalSuiteReRunInfo(suiteExecution.fields.execution_id).subscribe(response => {
-      suiteExecution["reRunInfo"] = response;
+        suiteExecution["reRunInfo"] = response;
       }, error => {
 
       })
     } else if (suiteExecution.fields.suite_type === 'dynamic') {
-        this.reRunService.getReRunSuiteInfo(suiteExecution.fields.execution_id).subscribe(response => {
+      this.reRunService.getReRunSuiteInfo(suiteExecution.fields.execution_id).subscribe(response => {
         suiteExecution["reRunInfo"] = response;
-        }, error => {
+      }, error => {
 
-        })
+      })
     }
 
   }
@@ -486,7 +566,7 @@ export class RegressionComponent implements OnInit {
   onChangeAutoSchedule(checked, suiteExecution) {
     let enabled = checked;
     this.regressionService.disableAutoSchedule(suiteExecution.fields.execution_id, !checked).subscribe((response) => {
-     this.logger.success("Suite disabled");
+      this.logger.success("Suite disabled");
     }, error => {
       this.logger.error("Unable to disable suite");
     })
@@ -501,7 +581,7 @@ export class RegressionComponent implements OnInit {
         this.reRunClick(suiteExecution.fields.execution_id, suiteExecution.fields.suite_path, null, this.reUseBuildImage);
       }
       if (this.reRunOptionsReRunFailed) {
-        this.reRunClick(suiteExecution.fields.execution_id, suiteExecution.fields.suite_path,['FAILED', 'NOT_RUN'], this.reUseBuildImage)
+        this.reRunClick(suiteExecution.fields.execution_id, suiteExecution.fields.suite_path, ['FAILED', 'NOT_RUN'], this.reUseBuildImage)
       }
 
     }, (reason) => {
@@ -518,4 +598,71 @@ export class RegressionComponent implements OnInit {
   togglereUseBuildImage() {
     this.reUseBuildImage = !this.reUseBuildImage;
   }
+
+  onItemSelect(item: any) {
+  }
+
+  onSelectAll(items: any) {
+  }
+
+  get submitters() {
+    return this.searchForm.get('submitters');
+  }
+
+  get suiteName() {
+    return this.searchForm.get('suiteName');
+  }
+
+  onSubmit() {
+    this.searching = false;
+    let queryParams = [];
+    if (this.searchForm.controls.suiteName.value != "") {
+      queryParams.push({"suite_path": this.searchForm.controls.suiteName.value});
+    }
+    if (this.searchForm.controls.submitters.value != "") {
+      queryParams.push({"submitter_email": this.searchForm.controls.submitters.value});
+    }
+
+    this.navigateByQueryParams(queryParams);
+    this.searchForm.reset();
+  }
+
+  onCancel() {
+    this.searching = false;
+    this.searchForm.reset();
+  }
+
+  onSearch() {
+    this.searching = true;
+  }
+
+  _flatten(items) {
+    let itemString = '';
+    for (let i = 0; i < items.length; ++i) {
+      itemString += items[i];
+      if (items[i + 1]) {
+        itemString += ',';
+      }
+    }
+    return itemString;
+  }
+
+
+  suites() {
+    return this.apiService.get("/regression/suites").pipe(switchMap((response) => {
+      return of(response.data);
+    }))
+  }
+
+  atLeastOneValidator(group: FormGroup): { [key: string]: boolean } | null {
+      const submitters = group.get('submitters');
+      const suiteName = group.get('suiteName');
+      console.log(suiteName);
+      console.log(submitters);
+      if ((suiteName.value == "" || suiteName.value == null) && (submitters.value == "" || submitters.value == null)) {
+        return {'atLeastOne': true};
+      }
+      return null;
+  }
 }
+
