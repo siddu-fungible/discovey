@@ -60,6 +60,10 @@ class DpcshClient(object):
                     break
             else:
                 output += buffer
+        dry_run = fun_test.get_job_environment_variable("dry_run")
+        if dry_run:
+            if "\n" in output:
+                fun_test.log("slash n in output. Output: S: {} xxx E".format(output))
         return output
 
     def _connect(self):
@@ -95,7 +99,7 @@ class DpcshClient(object):
                 try:
                     json_output = json.loads(actual_output.strip())
                 except:
-                    fun_test.debug("Unable to parse JSON data")
+                    fun_test.critical("Unable to parse JSON data")
                     json_output = output
                 result["status"] = True
 
@@ -109,11 +113,10 @@ class DpcshClient(object):
                     or result["data"] is None:
                 result["status"] = False
         except socket.error, msg:
-            print msg
+            fun_test.critical("dpcsh_client: command: {}".format(msg))
             result["error_message"] = msg
         except Exception as ex:
-            print (str(ex))
-            print ("result from read:" + str(output))
+            fun_test.critical("result from read:" + str(output) + " Exception: {}".format(str(ex)))
             result["error_message"] = str(ex)
         if not result["status"]:
             fun_test.log("Command failed: " + fun_test.dict_to_json_string(result))
