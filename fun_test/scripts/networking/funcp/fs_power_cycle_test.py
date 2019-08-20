@@ -22,7 +22,37 @@ class SetupBringup(FunTestScript):
                               """)
 
     def setup(self):
-        pass
+        self.server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() +
+                                                 '/ali_bmv_storage_sanity.json')
+        fs_name = fun_test.get_job_environment_variable('test_bed_type')
+        fs_spec = fun_test.get_asset_manager().get_fs_by_name(str(self.server_key["fs"][fs_name]["fs-name"]))
+        servers_mode = self.server_key["fs"][fs_name]["hosts"]
+        servers_list = []
+
+        for server in servers_mode:
+            print server
+            critical_log(expression=rmmod_funeth_host(hostname=server), message="rmmod funeth on host")
+            servers_list.append(server)
+        print(servers_list)
+
+        self.reboot_fpga(fs_spec['fpga']['mgmt_ip'])
+
+        fun_test.sleep(message="Waiting for FS reboot", seconds=400)
+        retry_count = 0
+        while True:
+            fpga_linux = Linux(host_ip=fs_spec['fpga']['mgmt_ip'], ssh_username='root', ssh_password="root")
+            if fpga_linux.check_ssh():
+                fpga_linux.disconnect()
+                linux_home = Linux(host_ip="qa-ubuntu-02", ssh_username="auto_admin", ssh_password="fun123")
+                if linux_home.ping(dst=fs_spec['bmc']['mgmt_ip']):
+                    come_linux = Linux(host_ip=fs_spec['come']['mgmt_ip'], ssh_username='fun', ssh_password="123")
+                    if come_linux.check_ssh():
+                        come_linux.disconnect()
+                        break
+            retry_count += 1
+            fun_test.sleep(message="Waiting for FS reboot", seconds=30)
+            if retry_count > 20:
+                fun_test.test_assert(message="Can't reach FS components", expression=False)
 
     def cleanup(self):
         pass
@@ -210,7 +240,7 @@ class LocalSSDTest(StorageConfiguration):
 
 if __name__ == '__main__':
     ts = SetupBringup()
-    # ts.add_test_case(BootF1())
-    # ts.add_test_case(TestHostPCIeLanes())
+    ts.add_test_case(BootF1())
+    ts.add_test_case(TestHostPCIeLanes())
     ts.add_test_case(LocalSSDTest())
     ts.run()
