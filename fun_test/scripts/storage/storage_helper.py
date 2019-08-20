@@ -501,8 +501,8 @@ class CollectStats(object):
                         fun_test.log("Stopping Volume stats collection thread")
                         break
                     self.socket_lock.acquire()
-                    vol_stats_result = self.storage_controller.peek(props_tree="storage/volumes",
-                                                                command_duration=command_timeout)
+                    vol_stats_result = self.storage_controller.peek(props_tree="storage/volumes", legacy=False,
+                                                                    chunk=8192, command_duration=command_timeout)
                     self.socket_lock.release()
                     if vol_stats_result["status"] and vol_stats_result["data"] is not None:
                         all_vol_stats = vol_stats_result["data"]

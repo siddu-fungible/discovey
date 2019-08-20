@@ -53,6 +53,7 @@ try:
         configure_overlay = (inputs.get('configure_overlay', 0) == 1)  # Enable overlay config or not
         cleanup = (inputs.get('cleanup', 1) == 1)  # Clean up funeth and control plane or not
         ol_offload = (inputs.get('ol_offload', 0) == 1)  # Enable overlay TSO/checksum offload or not
+        nu_all_clusters = (inputs.get('nu_all_clusters', 0) == 1)  # Enable NU to use all the clusters or not
         bootup_funos = (inputs.get('bootup_funos', 1) == 1)  # Boot up FunOS or not
         fundrv_branch = inputs.get('fundrv_branch', None)
         fundrv_commit = inputs.get('fundrv_commit', None)
@@ -66,6 +67,7 @@ try:
         hu_host_vm = False  # default False
         configure_overlay = False  # default False
         ol_offload = False  # default False
+        nu_all_clusters = False  # default False
         bootup_funos = True  # default True
         cleanup = True  # default True
         fundrv_branch = None
@@ -80,6 +82,7 @@ except:
     hu_host_vm = False
     configure_overlay = False
     ol_offload = False
+    nu_all_clusters = False
     bootup_funos = True
     cleanup = True
 
@@ -346,6 +349,9 @@ class FunethSanity(FunTestScript):
                     f1_1_boot_args = "app=hw_hsu_test cc_huid=2 sku=SKU_FS1600_1 retimer=0 --all_100g --dpc-uart --dpc-server --disable-wu-watchdog"
                 if csi_perf_enabled:
                     f1_0_boot_args += " --perf csi-local-ip=29.1.1.2 csi-remote-ip={} pdtrace-hbm-size-kb=204800".format(perf_listener_ip)
+                if nu_all_clusters:
+                    f1_0_boot_args += ' override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]}'
+                    f1_1_boot_args += ' override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]}'
                 topology_helper = TopologyHelper()
                 topology_helper.set_dut_parameters(dut_index=0,
                                                    f1_parameters={0: {"boot_args": f1_0_boot_args},
@@ -355,6 +361,8 @@ class FunethSanity(FunTestScript):
                 boot_args = "app=hw_hsu_test retimer=0,1 --dpc-uart --dpc-server --csr-replay --all_100g --disable-wu-watchdog"
                 if csi_perf_enabled:
                     boot_args += " --perf csi-local-ip=29.1.1.2 csi-remote-ip={} pdtrace-hbm-size-kb=204800".format(perf_listener_ip)
+                if nu_all_clusters:
+                    boot_args += ' override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]}'
                 topology_helper = TopologyHelper()
                 topology_helper.set_dut_parameters(dut_index=0,
                                                    custom_boot_args=boot_args)
