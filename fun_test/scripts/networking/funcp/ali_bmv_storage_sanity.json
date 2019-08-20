@@ -956,8 +956,8 @@
     "uname": "localadmin",
     "pwd": "Precious1*",
     "server": ["cab03-qa-01", "cab03-qa-06"],
-    "server_f1": ["cab03-qa-02"],
-    "io_servers": ["cab03-qa-01", "cab03-qa-06", "cab03-qa-02"],
+    "server_f1": ["cab03-qa-02", "cab02-qa-08"],
+    "io_servers": ["cab03-qa-01", "cab03-qa-06", "cab03-qa-02", "cab02-qa-08"],
     "mode": [
       "write",
       "read",
