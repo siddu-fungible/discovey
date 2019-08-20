@@ -57,7 +57,7 @@ class SetupBringup(FunTestScript):
 
     def reboot_fpga(self, fpga_ip):
         linux_obj = Linux(host_ip=fpga_ip, ssh_username='root', ssh_password='root')
-        linux_obj.command(command="reboot")
+        linux_obj.reboot()
 
 
 class BootF1(FunTestCase):
