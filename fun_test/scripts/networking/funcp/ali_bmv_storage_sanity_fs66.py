@@ -11,7 +11,6 @@ from lib.system import utils
 from lib.topology.topology_helper import TopologyHelper
 
 
-
 class ScriptSetup(FunTestScript):
     server_key = {}
 
@@ -52,9 +51,9 @@ class BringupSetup(FunTestCase):
         global funcp_obj, servers_mode, servers_list, fs_name
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
         f1_0_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --dpc-server --all_100g --serial --dpc-uart " \
-                         "retimer=0,1 --mgmt --disable-wu-watchdog syslog=5 workload=storage"
+                         "retimer=0,1 --mgmt --disable-wu-watchdog syslog=2 workload=storage"
         f1_1_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 --dpc-server --all_100g --serial --dpc-uart " \
-                         "retimer=0,1 --mgmt --disable-wu-watchdog syslog=5 workload=storage"
+                         "retimer=0,1 --mgmt --disable-wu-watchdog syslog=2 workload=storage"
 
         funcp_obj = FunControlPlaneBringup(fs_name=self.server_key["fs"][fs_name]["fs-name"])
         funcp_obj.cleanup_funcp()
@@ -147,7 +146,7 @@ class NicEmulation(FunTestCase):
         tb_config_obj = tb_configs.TBConfigs(tb_file)
         funeth_obj = Funeth(tb_config_obj)
         fun_test.shared_variables['funeth_obj'] = funeth_obj
-        setup_hu_host(funeth_obj, update_driver=True, sriov=4, num_queues=1)
+        setup_hu_host(funeth_obj, update_driver=False, sriov=4, num_queues=1)
 
         # get ethtool output
         get_ethtool_on_hu_host(funeth_obj)
@@ -515,7 +514,7 @@ class LocalSSDTest(StorageConfiguration):
             self.host.command("sudo nvme list")
             device = self.host.command("sudo nvme list | grep nvme | sed -n 1p | awk {'print $1'}").strip()
             fun_test.test_assert(device, message="nvme device visible on host")
-            i +=1
+            i += 1
 
         self.storage_controller = StorageController(target_ip=self.come_ip, target_port=self.dpc_p1)
         self.dpu = 1
@@ -528,7 +527,7 @@ class LocalSSDTest(StorageConfiguration):
             device = self.host.command("sudo nvme list | grep nvme | sed -n 1p | awk {'print $1'}").strip()
             fun_test.test_assert(device, message="nvme device visible on host")
             i += 1
-
+        """
         def runfio(arg1, device):
             for rw_mode in self.mode:
                 fio_result = arg1.pcie_fio(filename=device, rw=rw_mode,
@@ -540,23 +539,36 @@ class LocalSSDTest(StorageConfiguration):
                                            direct=1,
                                            timeout=1900)
                 arg1.disconnect()
+        """
+        # TODO : Seeing lot of memory consumed(32G) on server with 8 disk & 4 IOdepth on host connected to F1_1
+        # retimer=0 need to revisit it using below way of running test.
+        def runfio(arg1, device):
+            for rw_mode in self.mode:
+                job_file = "/home/localadmin/mks/fio_{}_jf.txt".format(rw_mode)
+                result = arg1.sudo_command("fio {}".format(job_file), timeout=3000)
+                if "bad bits" in result.lower() or "verify failed" in result.lower():
+                    fun_test.critical(False, "Data verification failed for {} test".format(rw_mode))
 
-        threads_list = []
-        hosts = self.storage_config['io_servers']
-        print(hosts)
-        for servers in hosts:
-            self.host = Linux(host_ip=servers, ssh_username=self.uname, ssh_password=self.pwd)
-            device = self.host.command("sudo nvme list -o normal | awk -F ' ' '{print $1}' | grep -i nvme0").\
-                replace("\r", '')
-            device_list = device.replace("\n", ":").rstrip(":")
-            thread_id = fun_test.execute_thread_after(time_in_seconds=2, func=runfio,
-                                                      arg1=self.host, device=device_list)
-            fun_test.sleep("Threadzz started", 2)
-            threads_list.append(thread_id)
+        for iter in range(1, 3):
+            threads_list = []
+            hosts = self.storage_config['io_servers']
+            print "=========================="
+            print "ITERATION " + str(iter)
+            print "=========================="
+            for servers in hosts:
+                self.host = Linux(host_ip=servers, ssh_username=self.uname, ssh_password=self.pwd)
+                device = self.host.command("sudo nvme list -o normal | awk -F ' ' '{print $1}' | grep -i nvme0").\
+                    replace("\r", '')
+                self.host.sudo_command("sync && echo 3 > /proc/sys/vm/drop_caches")
+                device_list = device.replace("\n", ":").rstrip(":")
+                thread_id = fun_test.execute_thread_after(time_in_seconds=2, func=runfio,
+                                                          arg1=self.host, device=device_list)
+                fun_test.sleep("Threadzz started", 2)
+                threads_list.append(thread_id)
 
-        fun_test.sleep("Sleeping between thread join...", seconds=10)
-        for thread_id in threads_list:
-            fun_test.join_thread(fun_test_thread_id=thread_id, sleep_time=1)
+            fun_test.sleep("Sleeping between thread join...", seconds=10)
+            for thread_id in threads_list:
+                fun_test.join_thread(fun_test_thread_id=thread_id, sleep_time=1)
 
         # self.storage_controller.disconnect()
 

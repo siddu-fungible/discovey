@@ -1,9 +1,0 @@
-[
-  {"info":
-    {"custom_test_bed_spec":
-      {"base_test_bed": "fs-inspur",
-        "asset_request": {"DUT": {"num": 1}, "Host": {"num": 2}}}
-    }
-  },
-  {"path": "storage/review/review_multi_host_blt_tcp_perf.py", "inputs": {"blt_count": 2, "num_hosts": 2}}
-]

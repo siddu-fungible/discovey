@@ -31,6 +31,7 @@ export class SmokeTestStorageWidgetComponent implements OnInit {
   };
 
 
+
   constructor(private apiService: ApiService, private logger: LoggerService,
               private renderer: Renderer2, private commonService: CommonService, private regressionService: RegressionService) {
 
