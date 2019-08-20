@@ -126,6 +126,8 @@ class BootF1(FunTestCase):
 
 
 class TestHostPCIeLanes(FunTestCase):
+    server_key = {}
+
     def describe(self):
         self.set_test_details(id=2, summary="Test PCIe speeds for HU servers",
                               steps="""
@@ -135,18 +137,15 @@ class TestHostPCIeLanes(FunTestCase):
                                       """)
 
     def setup(self):
-        pass
+        self.server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() +
+                                                      '/ali_bmv_storage_sanity.json')
 
     def run(self):
-        testbed_info = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() + '/testbed_inputs.json')
-        test_bed_type = fun_test.get_job_environment_variable('test_bed_type')
-        for fs_name in testbed_info['fs'][test_bed_type]["fs_list"]:
-            server_key = fun_test.parse_file_to_json(
-                fun_test.get_script_parent_directory() + '/fs_connected_servers.json')
-            servers_mode = server_key["fs"][fs_name]
-            for server in servers_mode:
-                result = verify_host_pcie_link(hostname=server, mode=servers_mode[server], reboot=False)
-                fun_test.test_assert(expression=(result == "1"), message="Make sure that PCIe links on host %s went up"
+        fs_name = fun_test.get_job_environment_variable('test_bed_type')
+        servers_mode = self.server_key["fs"][fs_name]["hosts"]
+        for server in servers_mode:
+            result = verify_host_pcie_link(hostname=server, mode=servers_mode[server], reboot=False)
+            fun_test.test_assert(expression=(result == "1"), message="Make sure that PCIe links on host %s went up"
                                                                          % server)
 
     def cleanup(self):
