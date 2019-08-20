@@ -443,9 +443,11 @@ class CollectStats(object):
     def collect_per_vp_stats(self, output_file, interval=10, count=3, threaded=False, include_cc=False,
                              display_diff=True, command_timeout=DPCSH_COMMAND_TIMEOUT):
         output = False
+        per_vp_stats_key = ["wus_received", "vp_wu_qdepth", "wus_sent"]
+        per_vp_stats_header = ["rx", "qd", "tx"]
         column_headers = ["Cluster/Core"]
         for thread in range(4):
-            for header in ["rx", "qd", "tx"]:
+            for header in per_vp_stats_header:
                 column_headers.append("{}:{}".format(thread, header))
                 if display_diff:
                     column_headers.append("{}:{}_diff".format(thread, header))
@@ -454,10 +456,9 @@ class CollectStats(object):
                 timer = FunTimer(max_time=interval * count)
                 while not timer.is_expired():
                     lines = []
-
                     # Checking whether to continue/stop this threaded execution
                     if threaded and (self.stop_per_vp_stats or self.stop_all):
-                        fun_test.log("Stopping VP Utils stats collection thread")
+                        fun_test.log("Stopping per VP stats collection thread")
                         break
 
                     # Pulling the per_vp stats once or twice with one second interval based on the display_diff
@@ -475,17 +476,52 @@ class CollectStats(object):
 
                     if display_diff:
                         if final_per_vp_output["status"] and final_per_vp_output["data"] is not None:
-                            final_per_vp_stats = initial_per_vp_output["data"]
+                            final_per_vp_stats = final_per_vp_output["data"]
                         else:
                             final_per_vp_stats = {}
 
-                    table_data = build_simple_table(data=filtered_vp_util, column_headers=column_headers,
+                    # Removing the Central Cluster(if needed) and the redundant entries
+                    filtered_initial_per_vp_stats = OrderedDict()
+                    filtered_final_per_vp_stats = OrderedDict()
+                    for key in sorted(initial_per_vp_stats):
+                        if not include_cc:
+                            if not key.split(":")[0][2] == '8' and not key.split(":")[2][0] == '1':
+                                filtered_initial_per_vp_stats[key] = initial_per_vp_stats[key]
+                                if display_diff and key in final_per_vp_stats:
+                                    filtered_final_per_vp_stats[key] = final_per_vp_stats[key]
+                        else:
+                            if not key.split(":")[2][0] == '1':
+                                filtered_initial_per_vp_stats[key] = initial_per_vp_stats[key]
+                                if display_diff and key in final_per_vp_stats:
+                                    filtered_final_per_vp_stats[key] = final_per_vp_stats[key]
+
+                    processed_per_vp_stats = OrderedDict()
+                    # Sorting the keys using the cluster ID(FA*0*:10:0[VP]) as the primary key and the
+                    # core ID(FA0:*10*:0[VP]) as the secondary key
+                    for key in sorted(filtered_initial_per_vp_stats, key= lambda key: (int(key.split(":")[0][2]),
+                                                                                       int(key.split(":")[1]))):
+                        cluster_id = key.split(":")[0][2]
+                        core_id = (int(key.split(":")[1]) / 4) - 2
+                        thread_id = int(key.split(":")[1]) % 4
+                        new_key = "{}/{}".format(cluster_id, core_id)
+                        if new_key not in processed_per_vp_stats:
+                            processed_per_vp_stats[new_key] = []
+                        for subkey in per_vp_stats_key:
+                            if display_diff:
+                                if key in filtered_final_per_vp_stats:
+                                    processed_per_vp_stats[new_key].append(filtered_final_per_vp_stats[key][subkey])
+                                    processed_per_vp_stats[new_key].append(filtered_final_per_vp_stats[key][subkey] -
+                                                                           filtered_initial_per_vp_stats[key][subkey])
+                            else:
+                                processed_per_vp_stats[new_key].append(filtered_initial_per_vp_stats[key][subkey])
+
+                    table_data = build_simple_table(data=processed_per_vp_stats, column_headers=column_headers,
                                                     split_values_to_columns=True)
                     lines.append("\n########################  {} ########################\n".format(time.ctime()))
                     lines.append(table_data.get_string())
                     lines.append("\n\n")
                     f.writelines(lines)
-                    fun_test.sleep("for the next iteration - VP utils stats collection", seconds=interval)
+                    fun_test.sleep("for the next iteration - per VP stats collection", seconds=interval)
             output = True
         except Exception as ex:
             fun_test.critical(str(ex))
