@@ -166,40 +166,7 @@ export class RegressionComponent implements OnInit {
           this.searchForm.get('executionId').disable();
         }
       });
-
-
-    // this.searchForm.get('suiteName').valueChanges.subscribe(value=> {
-    //   console.log(value);
-    //   if (value != "" && value != null){
-    //     console.log('disabling exec id');
-    //     this.searchForm.get('executionId').disable();
-    //   }
-    //   else{
-    //     this.searchForm.get('executionId').enable();
-    //   }
-    // });
-
-    // this.searchForm.get('submitters').valueChanges.subscribe(value=> {
-    //   if (value !== ''){
-    //     console.log('disabling exec id');
-    //     this.disableExecId = true;
-    //   }
-    // });
-
-
-
-    // merge(this.searchForm.get('suiteName').valueChanges,
-    //   this.searchForm.get('submitters').valueChanges)
-    //   .subscribe(value => {
-    //     if (value == [[]]){
-    //       console.log('enable exec id');
-    //     }
-    //   });
-    //
-    //
-
-
-
+    
     this.dropDownSettings = {
       singleSelection: false,
       idField: 'item_id',
@@ -701,7 +668,13 @@ export class RegressionComponent implements OnInit {
   atLeastOneValidator(group: FormGroup): { [key: string]: boolean } | null {
       const submitters = group.get('submitters');
       const suiteName = group.get('suiteName');
-      if ((suiteName.value == "" || suiteName.value == null) && (submitters.value == "" || submitters.value == null)) {
+      const searchByExecutionId = group.get('searchByExecutionId');
+      const executionId = group.get('executionId');
+      console.log(searchByExecutionId.value);
+      if (((suiteName.value == "" || suiteName.value == null) && (submitters.value == "" || submitters.value == null)) && searchByExecutionId.value == false) {
+        return {'atLeastOne': true};
+      }
+      else if (searchByExecutionId.value == true && (executionId.value == "" || executionId.value == null)){
         return {'atLeastOne': true};
       }
       return null;
