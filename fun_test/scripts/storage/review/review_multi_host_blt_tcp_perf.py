@@ -399,6 +399,16 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                 # Deleting the volumes
                 for i in range(0, fun_test.shared_variables["blt_count"], 1):
                     cur_uuid = fun_test.shared_variables["thin_uuid"][i]
+                    key = self.host_ips[i]
+                    nqn = fun_test.shared_variables["vol_list"][i]["nqn"]
+
+                    # Executing NVMe disconnect from all the hosts
+                    nvme_disconnect_cmd = "nvme disconnect -n {}".format(nqn)
+                    nvme_disconnect_output = self.host_handles[key].sudo_command(command=nvme_disconnect_cmd, timeout=60)
+                    nvme_disconnect_exit_status = self.host_handles[key].exit_status()
+                    fun_test.test_assert_expected(expected=0, actual=nvme_disconnect_exit_status,
+                                                  message="NVME Disconnect Status")
+
                     command_result = self.storage_controller.detach_volume_from_controller(
                         ctrlr_uuid=self.ctrlr_uuid[i], ns_id=i + 1, command_duration=self.command_timeout)
                     fun_test.test_assert(command_result["status"], "Detaching BLT volume on DUT")
@@ -977,7 +987,6 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                         fun_test.critical("Volume Stats collection thread is still running...Stopping it now")
                         stats_obj[i].stop_vol_stats = True
 
-                    stats_obj[i].stop_all = True
                 fun_test.log("Joining vp util stats thread: {}".format(stats_thread_id))
                 fun_test.join_thread(fun_test_thread_id=stats_thread_id, sleep_time=1)
                 fun_test.log("Joining resource bam stats thread: {}".format(stats_rbam_thread_id))
