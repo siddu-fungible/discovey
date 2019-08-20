@@ -36,7 +36,7 @@ def post_results(value_dict):
     value_dict["volume_type"] = "BLT"
     value_dict["platform"] = FunPlatform.F1
     value_dict["version"] = fun_test.get_version()
-    model_name = "AlibabaPerformance"
+    model_name = "AlibabaBmvRemoteSsdPerformance"
     status = fun_test.PASSED
     try:
         generic_helper = ModelHelper(model_name=model_name)
@@ -480,10 +480,10 @@ class RawVolumeRemotePerfTestcase(FunTestCase):
                     else:
                         row_data_list.append(value_dict[i])
                 table_data_rows.append(row_data_list)
-                #post_results(value_dict)
+                post_results(value_dict)
 
         table_data = {"headers": table_data_headers, "rows": table_data_rows}
-        fun_test.add_table(panel_header="Ali BMV BLT over PCIe Perf Table", table_name=self.summary,
+        fun_test.add_table(panel_header="Ali BMV BLT over RDS Perf Table", table_name=self.summary,
                            table_data=table_data)
 
         # Posting the final status of the test result
