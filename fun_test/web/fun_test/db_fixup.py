@@ -205,7 +205,10 @@ def set_chart_status_details(chart, result):
         chart_status_entries[0].git_commit = chart.last_git_commit
         chart_status_entries[0].save()
         result["last_good_score"] = chart_status_entries[0].score
-        result["penultimate_good_score"] = chart_status_entries[1].score
+        if (len(chart_status_entries) >= 2):
+            result["penultimate_good_score"] = chart_status_entries[1].score
+        else:
+            result["penultimate_good_score"] = chart_status_entries[0].score
         result["copied_score_disposition"] = chart_status_entries[0].copied_score_disposition
         result["copied_score"] = chart_status_entries[0].copied_score
     chart.score_cache_valid = True
