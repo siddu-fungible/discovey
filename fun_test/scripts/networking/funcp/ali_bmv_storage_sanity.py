@@ -52,9 +52,9 @@ class BringupSetup(FunTestCase):
         global funcp_obj, servers_mode, servers_list, fs_name
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
         f1_0_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --dpc-server --all_100g --serial --dpc-uart " \
-                         "retimer=0,1 --mgmt --disable-wu-watchdog syslog=2 workload=storage"
+                         "retimer=0,1 --mgmt --disable-wu-watchdog syslog=5 workload=storage"
         f1_1_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 --dpc-server --all_100g --serial --dpc-uart " \
-                         "retimer=0,1 --mgmt --disable-wu-watchdog syslog=2 workload=storage"
+                         "retimer=0,1 --mgmt --disable-wu-watchdog syslog=5 workload=storage"
 
         funcp_obj = FunControlPlaneBringup(fs_name=self.server_key["fs"][fs_name]["fs-name"])
         funcp_obj.cleanup_funcp()
@@ -141,7 +141,10 @@ class NicEmulation(FunTestCase):
                 fun_test.add_checkpoint("<b><font color='red'><PCIE link did not come up in %s mode</font></b>"
                                         % servers_mode[server])
         # install drivers on PCIE connected servers
-        tb_config_obj = tb_configs.TBConfigs(str('FS45'))
+        tb_file = str(fs_name)
+        if fs_name == "fs-alibaba-demo":
+            tb_file = "FS45"
+        tb_config_obj = tb_configs.TBConfigs(tb_file)
         funeth_obj = Funeth(tb_config_obj)
         fun_test.shared_variables['funeth_obj'] = funeth_obj
         setup_hu_host(funeth_obj, update_driver=True, sriov=4, num_queues=1)
