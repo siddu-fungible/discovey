@@ -373,6 +373,7 @@ class CollectStats(object):
         self.socket_lock = Lock()
         self.stop_all = False
         self.stop_vp_utils = False
+        self.stop_per_vp_stats = False
         self.stop_resource_bam = False
         self.stop_vol_stats = False
 
@@ -390,11 +391,11 @@ class CollectStats(object):
                         fun_test.log("Stopping VP Utils stats collection thread")
                         break
                     self.socket_lock.acquire()
-                    vp_util_result = self.storage_controller.debug_vp_util(command_timeout=command_timeout)
+                    vp_utils_result = self.storage_controller.debug_vp_util(command_timeout=command_timeout)
                     self.socket_lock.release()
                     # fun_test.simple_assert(vp_util_result["status"], "Pulling VP Utilization")
-                    if vp_util_result["status"] and vp_util_result["data"] is not None:
-                        vp_util = vp_util_result["data"]
+                    if vp_utils_result["status"] and vp_utils_result["data"] is not None:
+                        vp_util = vp_utils_result["data"]
                     else:
                         vp_util = {}
 
@@ -426,6 +427,57 @@ class CollectStats(object):
                                     break
                             if delete_key:
                                 del(filtered_vp_util[key])
+
+                    table_data = build_simple_table(data=filtered_vp_util, column_headers=column_headers,
+                                                    split_values_to_columns=True)
+                    lines.append("\n########################  {} ########################\n".format(time.ctime()))
+                    lines.append(table_data.get_string())
+                    lines.append("\n\n")
+                    f.writelines(lines)
+                    fun_test.sleep("for the next iteration - VP utils stats collection", seconds=interval)
+            output = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return output
+
+    def collect_per_vp_stats(self, output_file, interval=10, count=3, threaded=False, include_cc=False,
+                             display_diff=True, command_timeout=DPCSH_COMMAND_TIMEOUT):
+        output = False
+        column_headers = ["Cluster/Core"]
+        for thread in range(4):
+            for header in ["rx", "qd", "tx"]:
+                column_headers.append("{}:{}".format(thread, header))
+                if display_diff:
+                    column_headers.append("{}:{}_diff".format(thread, header))
+        try:
+            with open(output_file, 'a') as f:
+                timer = FunTimer(max_time=interval * count)
+                while not timer.is_expired():
+                    lines = []
+
+                    # Checking whether to continue/stop this threaded execution
+                    if threaded and (self.stop_per_vp_stats or self.stop_all):
+                        fun_test.log("Stopping VP Utils stats collection thread")
+                        break
+
+                    # Pulling the per_vp stats once or twice with one second interval based on the display_diff
+                    self.socket_lock.acquire()
+                    initial_per_vp_output = self.storage_controller.peek_per_vp_stats(command_timeout=command_timeout)
+                    if display_diff:
+                        fun_test.sleep("to get one more per_vp stats to find the diff", 1)
+                        final_per_vp_output = self.storage_controller.peek_per_vp_stats(command_timeout=command_timeout)
+                    self.socket_lock.release()
+
+                    if initial_per_vp_output["status"] and initial_per_vp_output["data"] is not None:
+                        initial_per_vp_stats = initial_per_vp_output["data"]
+                    else:
+                        initial_per_vp_stats = {}
+
+                    if display_diff:
+                        if final_per_vp_output["status"] and final_per_vp_output["data"] is not None:
+                            final_per_vp_stats = initial_per_vp_output["data"]
+                        else:
+                            final_per_vp_stats = {}
 
                     table_data = build_simple_table(data=filtered_vp_util, column_headers=column_headers,
                                                     split_values_to_columns=True)
@@ -502,7 +554,7 @@ class CollectStats(object):
                         break
                     self.socket_lock.acquire()
                     vol_stats_result = self.storage_controller.peek(props_tree="storage/volumes",
-                                                                command_duration=command_timeout)
+                                                                    command_duration=command_timeout)
                     self.socket_lock.release()
                     if vol_stats_result["status"] and vol_stats_result["data"] is not None:
                         all_vol_stats = vol_stats_result["data"]
