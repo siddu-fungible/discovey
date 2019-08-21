@@ -16,6 +16,9 @@ import re
 import struct
 
 
+fun_test.enable_profiling()
+
+
 try:
     job_environment = fun_test.get_job_environment()
     DPC_PROXY_IP = str(job_environment['UART_HOST'])
