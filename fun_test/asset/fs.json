@@ -321,24 +321,6 @@
     }
   },
   {
-    "name": "fs-63",
-    "bmc": {
-      "mgmt_ip": "fs63-bmc",
-      "mgmt_ssh_username": "sysadmin",
-      "mgmt_ssh_password": "superuser"
-    },
-    "fpga": {
-      "mgmt_ip": "fs63-fpga",
-      "mgmt_ssh_username": "root",
-      "mgmt_ssh_password": "root"
-    },
-    "come": {
-      "mgmt_ip": "10.1.107.118",
-      "mgmt_ssh_username": "fun",
-      "mgmt_ssh_password": "123"
-    }
-  },
-  {
     "name": "fs-60",
     "workarounds": {
       "retimer_workaround": true
@@ -356,6 +338,24 @@
     },
     "come": {
       "mgmt_ip": "10.1.105.171",
+      "mgmt_ssh_username": "fun",
+      "mgmt_ssh_password": "123"
+    }
+  },
+  {
+    "name": "fs-63",
+    "bmc": {
+      "mgmt_ip": "fs63-bmc",
+      "mgmt_ssh_username": "sysadmin",
+      "mgmt_ssh_password": "superuser"
+    },
+    "fpga": {
+      "mgmt_ip": "fs63-fpga",
+      "mgmt_ssh_username": "root",
+      "mgmt_ssh_password": "root"
+    },
+    "come": {
+      "mgmt_ip": "fs63-come",
       "mgmt_ssh_username": "fun",
       "mgmt_ssh_password": "123"
     }
