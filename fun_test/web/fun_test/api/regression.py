@@ -287,6 +287,11 @@ def categories(request):
 def sub_categories(request):
     pass
 
+@csrf_exempt
+@api_safe_json_response
+def asset_types(request):
+    return AssetType().all_strings_to_code()
+
 if __name__ == "__main__":
     from web.fun_test.django_interactive import *
     print categories(None)
