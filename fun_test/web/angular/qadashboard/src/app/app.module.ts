@@ -73,7 +73,13 @@ import {AnnouncementComponent} from './announcement/announcement.component';
 import { PerformanceSummaryWidgetComponent } from './performance/performance-summary-widget/performance-summary-widget.component';
 import { FunCardComponent } from './fun-card/fun-card.component';
 import { SmokeTestStorageWidgetComponent } from './regression/smoke-test-storage-widget/smoke-test-storage-widget.component';
-import { NetworkSanityWidgetComponent } from './regression/network-sanity-widget/network-sanity-widget.component';
+import { PerformanceWorkspaceComponent } from './performance/performance-workspace/performance-workspace.component';
+import { PerformanceViewWorkspaceComponent } from './performance/performance-workspace/performance-view-workspace/performance-view-workspace.component';
+import { SuiteExecutionWidgetComponent } from './regression/suite-execution-widget/suite-execution-widget.component';
+import { SuiteEditorComponent } from './regression/suite-editor/suite-editor.component';
+import {ModalModule} from "ngb-modal";
+import { AnnouncementFormComponent } from './performance/admin/announcement-form/announcement-form.component';
+
 
 @NgModule({
   declarations: [
@@ -131,7 +137,11 @@ import { NetworkSanityWidgetComponent } from './regression/network-sanity-widget
     AnnouncementComponent,
     FunCardComponent,
     SmokeTestStorageWidgetComponent,
-    NetworkSanityWidgetComponent
+    PerformanceWorkspaceComponent,
+    PerformanceViewWorkspaceComponent,
+    SuiteExecutionWidgetComponent,
+    SuiteEditorComponent,
+    AnnouncementFormComponent
   ],
   imports: [
     BsDropdownModule,
@@ -150,7 +160,8 @@ import { NetworkSanityWidgetComponent } from './regression/network-sanity-widget
     NgbModule,
     NgbTooltipModule,
     NgxJsonViewerModule,
-    ToasterModule.forRoot()
+    ToasterModule.forRoot(),
+    ModalModule
   ],
 
   providers: [ApiService, LoggerService],

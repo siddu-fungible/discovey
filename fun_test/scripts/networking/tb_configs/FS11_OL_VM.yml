@@ -19,6 +19,8 @@ nu:
           nexthop: 20.1.1.2
         - prefix: 21.1.1.0/24
           nexthop: 20.1.1.2
+        - prefix: 29.1.1.0/24  # for perf
+          nexthop: 20.1.1.2
 
 nu2:
   hostname: poc-server-07

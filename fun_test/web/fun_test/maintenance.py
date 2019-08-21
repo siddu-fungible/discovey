@@ -9,6 +9,7 @@ from fun_global import ChartType, FunChartType
 from web.fun_test.metrics_models import *
 from collections import OrderedDict
 from web.fun_test.metrics_lib import MetricLib
+from web.fun_test.models import *
 
 METRICS_BASE_DATA_FILE = WEB_ROOT_DIR + "/metrics.json"
 
@@ -183,6 +184,7 @@ if __name__ == "__main_s1_teramarks__":
                 result = set_internal_name(tera_mark)
                 print json.dumps(result)
 
+
 if __name__ == "__main_l4_firewall__":
     internal_chart_names = ["l4_firewall_flow_128m_flows_throughput", "l4_firewall_flow_128m_flows_pps",
                             "l4_firewall_flow_128m_flows_latency_full_load", "l4_firewall_flow_128m_flows_latency_half_load"]
@@ -261,7 +263,7 @@ if __name__ == "__main_qd256__":
                         platform=FunPlatform.F1).save()
     print "added charts for 256 qdepth latency"
 
-if __name__ == "__main__":
+if __name__ == "__main__underlay":
     entries = MetricChart.objects.filter(leaf=True)
     for entry in entries:
         if ("underlay" in entry.internal_chart_name or "overlay" in entry.internal_chart_name) and \
@@ -287,6 +289,374 @@ if __name__ == "__main__":
             entry.data_sets = json.dumps(overlay_underlay_data_sets)
             entry.save()
 
+if __name__ == "__main_inspur__":
+    internal_chart_names = OrderedDict([  # read iops
+                                        ("pocs_inspur_8111_8k_rand_read_iodepth_1_iops", 1),
+                                        ("pocs_inspur_8111_8k_rand_read_iodepth_8_iops", 8),
+                                        ("pocs_inspur_8111_8k_rand_read_iodepth_16_iops", 16),
+                                        ("pocs_inspur_8111_8k_rand_read_iodepth_32_iops", 32),
+                                        ("pocs_inspur_8111_8k_rand_read_iodepth_64_iops", 64),
+                                        ("pocs_inspur_8111_8k_rand_read_iodepth_96_iops", 96),
+                                        ("pocs_inspur_8111_8k_rand_read_iodepth_128_iops", 128),
+                                        # write iops
+                                        ("pocs_inspur_8111_8k_rand_write_iodepth_1_iops", 1),
+                                        ("pocs_inspur_8111_8k_rand_write_iodepth_8_iops", 8),
+                                        ("pocs_inspur_8111_8k_rand_write_iodepth_16_iops", 16),
+                                        ("pocs_inspur_8111_8k_rand_write_iodepth_32_iops", 32),
+                                        ("pocs_inspur_8111_8k_rand_write_iodepth_64_iops", 64),
+                                        ("pocs_inspur_8111_8k_rand_write_iodepth_96_iops", 96),
+                                        ("pocs_inspur_8111_8k_rand_write_iodepth_128_iops", 128),
+                                        # read latency
+                                        ("pocs_inspur_8111_8k_rand_read_iodepth_1_latency", 1),
+                                        ("pocs_inspur_8111_8k_rand_read_iodepth_8_latency", 8),
+                                        ("pocs_inspur_8111_8k_rand_read_iodepth_16_latency", 16),
+                                        ("pocs_inspur_8111_8k_rand_read_iodepth_32_latency", 32),
+                                        ("pocs_inspur_8111_8k_rand_read_iodepth_64_latency", 64),
+                                        ("pocs_inspur_8111_8k_rand_read_iodepth_96_latency", 96),
+                                        ("pocs_inspur_8111_8k_rand_read_iodepth_128_latency", 128),
+                                        # write latency
+                                        ("pocs_inspur_8111_8k_rand_write_iodepth_1_latency", 1),
+                                        ("pocs_inspur_8111_8k_rand_write_iodepth_8_latency", 8),
+                                        ("pocs_inspur_8111_8k_rand_write_iodepth_16_latency", 16),
+                                        ("pocs_inspur_8111_8k_rand_write_iodepth_32_latency", 32),
+                                        ("pocs_inspur_8111_8k_rand_write_iodepth_64_latency", 64),
+                                        ("pocs_inspur_8111_8k_rand_write_iodepth_96_latency", 96),
+                                        ("pocs_inspur_8111_8k_rand_write_iodepth_128_latency", 128),
+                                        ])
 
+    owner_info = "Ravi Hulle (ravi.hulle@fungible.com)"
+    source = "https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/storage/" \
+             "ec_inspur_fs_teramark_multivolume.py"
+    platform = FunPlatform.F1
+    model_name = "BltVolumePerformance"
+    description = "TBD"
+
+    for internal_chart_name in internal_chart_names:
+        iodepth = internal_chart_names[internal_chart_name]
+        if "read" in internal_chart_name:
+            mode = "read"
+        elif "write" in internal_chart_name:
+            mode = "write"
+        if "iops" in internal_chart_name:
+            field = "iops"
+            add_name = ""
+            y1_axis_title = PerfUnit.UNIT_OPS
+            positive = False
+            chart_name = "IOPS, QDepth={}".format(iodepth)
+        elif "latency" in internal_chart_name:
+            field = "avg_latency"
+            add_name = "-avg"
+            y1_axis_title = PerfUnit.UNIT_USECS
+            positive = True
+            chart_name = "Latency, QDepth={}".format(iodepth)
+
+        one_data_set = {}
+        data_sets = []
+
+        output_name = "output_{}_{}".format(mode, field)
+
+        if iodepth == 1 or iodepth == 8 or iodepth == 16:
+            fio_job_name = "inspur_8k_random_{}_{}".format(mode, iodepth)
+            naming = "{}{}(1 vol)".format(mode, add_name)
+            input_fio_job_names = OrderedDict([(fio_job_name, naming)])
+        elif iodepth == 32 or iodepth == 64 or iodepth == 128 or iodepth == 96:
+            if iodepth == 96:
+                volumes_list = [4, 8]
+            else:
+                volumes_list = [1, 4, 8]
+            input_fio_job_names = OrderedDict()
+            for vol in volumes_list:
+                if vol == 1:
+                    fio_job_name = "inspur_8k_random_{}_{}".format(mode, iodepth)
+                else:
+                    fio_job_name = "inspur_8k_random_{}_iodepth_{}_vol_{}".format(mode, iodepth, vol)
+
+                input_fio_job_names[fio_job_name] = "{}{}({} vol)".format(mode, add_name, vol)
+
+        for input_fio_job_name in input_fio_job_names:
+            inputs = {
+                "input_platform": platform,
+                "input_fio_job_name": input_fio_job_name
+            }
+
+            output = {
+                "name": output_name,
+                "unit": y1_axis_title,
+                "min": 0,
+                "max": -1,
+                "expected": -1,
+                "reference": -1
+            }
+            one_data_set["name"] = input_fio_job_names[input_fio_job_name]
+            one_data_set["inputs"] = inputs
+            one_data_set["output"] = output
+            data_sets.append(one_data_set.copy())
+
+        metric_id = LastMetricId.get_next_id()
+        MetricChart(chart_name=chart_name,
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description=description,
+                    owner_info=owner_info,
+                    source=source,
+                    positive=positive,
+                    y1_axis_title=y1_axis_title,
+                    visualization_unit=y1_axis_title,
+                    metric_model_name=model_name,
+                    platform=platform,
+                    work_in_progress=False).save()
+        print ("Metric id: {}".format(metric_id))
+        print ("Data sets: {}".format(data_sets))
+
+
+if __name__ == "__main_crypto_s1__":
+    internal_chart_names = OrderedDict([("crypto_dp_tunnel_perf_S1", "pktsize: 354B"),
+                                        ("crypto_ipsec_perf_S1", "pktsize: 354B")])
+    owner_info = "Jitendra Lulla (jitendra.lulla@fungible.com)"
+    source = ""
+    platform = FunPlatform.S1
+    model_name = "TeraMarkCryptoPerformance"
+    description = "TBD"
+    y1_axis_title = PerfUnit.UNIT_GBITS_PER_SEC
+    positive = False
+    output_name = "output_throughput"
+
+    for internal_chart_name in internal_chart_names:
+        if "dp_tunnel_perf" in internal_chart_name:
+            input_app = "crypto_dp_tunnel_throughput"
+            chart_name = "Dp tunnel perf"
+        elif "ipsec_perf" in internal_chart_name:
+            input_app = "ipsec_tunnel_throughput"
+            chart_name = "Ipsec perf"
+        one_data_set = {}
+        data_sets = []
+
+        inputs = {
+            "input_platform": platform,
+            "input_app": input_app
+        }
+        output = {
+            "name": output_name,
+            "unit": y1_axis_title,
+            "min": 0,
+            "max": -1,
+            "expected": -1,
+            "reference": -1
+        }
+        one_data_set["name"] = internal_chart_names[internal_chart_name]
+        one_data_set["inputs"] = inputs
+        one_data_set["output"] = output
+        data_sets.append(one_data_set.copy())
+
+        metric_id = LastMetricId.get_next_id()
+        MetricChart(chart_name=chart_name,
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description=description,
+                    owner_info=owner_info,
+                    source=source,
+                    positive=positive,
+                    y1_axis_title=y1_axis_title,
+                    visualization_unit=y1_axis_title,
+                    metric_model_name=model_name,
+                    platform=platform,
+                    work_in_progress=False).save()
+        print ("Metric id: {}".format(metric_id))
+        print ("Data sets: {}".format(data_sets))
+
+
+if __name__ == "__main_6vol_6f1_inspur__":
+    # Add the 6 vol field for inspur 8_11 F1s = 6 charts
+    metric_ids = [743, 744, 746, 745, 750, 751, 753, 752]
+    for metric_id in metric_ids:
+        chart = MetricChart.objects.get(metric_id=metric_id)
+        data_sets = json.loads(chart.data_sets)
+        copy_data_sets = data_sets[:]
+        for one_data_set in copy_data_sets:
+            input_fio_job_name = one_data_set['inputs']['input_fio_job_name']
+            name = one_data_set['name']
+            output = one_data_set['output']
+
+            one_data_set["inputs"]["input_fio_job_name"] = re.sub(r'vol_1', 'vol_6', input_fio_job_name)
+            one_data_set["name"] = re.sub(r'1 vol', '6 vol', name)
+            output["reference"] = -1
+            output["min"] = 0
+            output["max"] = -1
+
+        data_sets = json.loads(chart.data_sets)
+        data_sets += copy_data_sets
+        chart.data_sets = json.dumps(data_sets)
+        chart.save()
+
+if __name__ == "__main_alibaba_remote_ssd__":
+    names = ["alibaba_bmv_storage_local_ssd_random_write", "alibaba_bmv_storage_local_ssd_random_read"]
+    base_line_date = datetime(year=2019, month=8, day=11, minute=0, hour=0, second=0)
+    for internal_chart_name in names:
+        container_chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
+        container_chart.base_line_data = base_line_date
+        container_chart.save()
+        children = json.loads(container_chart.children)
+        for child in children:
+            chart = MetricChart.objects.get(metric_id=int(child))
+            chart.base_line_date = base_line_date
+            chart.save()
+            internal_chart_name = chart.internal_chart_name
+            internal_name = internal_chart_name.replace("local", "remote")
+            data_sets = json.loads(chart.data_sets)
+            for data_set in data_sets:
+                data_set["output"]["expected"] = -1
+                data_set["output"]["reference"] = -1
+            metric_id = LastMetricId.get_next_id()
+            MetricChart(chart_name=chart.chart_name,
+                        metric_id=metric_id,
+                        internal_chart_name=internal_name,
+                        data_sets=json.dumps(data_sets),
+                        leaf=True,
+                        description=chart.description,
+                        owner_info="Divya Krishnankutty (divya.krishnankutty@fungible.com)",
+                        source="https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/storage/pocs/alibaba/alibaba_raw_vol_rds_via_vm.py",
+                        positive=chart.positive,
+                        y1_axis_title=chart.y1_axis_title,
+                        visualization_unit=chart.visualization_unit,
+                        metric_model_name="AlibabaBmvRemoteSsdPerformance",
+                        base_line_date=base_line_date,
+                        work_in_progress=False,
+                        platform=FunPlatform.F1).save()
+    print "added charts for remote ssd and reset the baseline for local ssd charts"
+
+if __name__ == "__main__channel_parall_performance":
+    internal_chart_name = "channel_parall_performance_1000"
+    chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
+    internal_name = internal_chart_name.replace("1000", "100")
+    chart_name = chart.chart_name.replace("1000", "100")
+    data_sets = json.loads(chart.data_sets)
+    for data_set in data_sets:
+        data_set["name"] = "100"
+        data_set["inputs"]["input_number_channels"] = 100
+        data_set["inputs"]["input_platform"] = FunPlatform.F1
+        data_set["output"]["expected"] = -1
+        data_set["output"]["reference"] = -1
+    metric_id = LastMetricId.get_next_id()
+    MetricChart(chart_name=chart_name,
+                metric_id=metric_id,
+                internal_chart_name=internal_name,
+                data_sets=json.dumps(data_sets),
+                leaf=True,
+                description=chart.description,
+                owner_info=chart.owner_info,
+                source=chart.source,
+                positive=chart.positive,
+                y1_axis_title=chart.y1_axis_title,
+                visualization_unit=chart.visualization_unit,
+                metric_model_name=chart.metric_model_name,
+                base_line_date=chart.base_line_date,
+                work_in_progress=False,
+                platform=FunPlatform.F1).save()
+    internal_chart_names = ["channel_parall_performance_1000", "channel_parall_performance_4_8_16"]
+    for internal_chart_name in internal_chart_names:
+        chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
+        data_sets = json.loads(chart.data_sets)
+        for data_set in data_sets:
+            data_set["inputs"]["input_platform"] = FunPlatform.F1
+        chart.data_sets = json.dumps(data_sets)
+        chart.save()
+    print "added channel parall chart for n=100"
+
+
+if __name__ == "__main__":
+    internal_chart_names = OrderedDict([("durable_vol_ec_comp_nvme_tcp_write_iops", "nvme iops"),
+                                        ("durable_vol_ec_comp_pcie_write_iops", "pcie iops"),
+                                        ("durable_vol_ec_comp_nvme_tcp_write_latency", "nvme latency"),
+                                        ("durable_vol_ec_comp_pcie_write_latency", "pcie latency")
+                                        ])
+    owner_info = "Aamir Shaikh (aamir.shaikh@fungible.com)"
+    platform = FunPlatform.F1
+    model_name = "BltVolumePerformance"
+    description = "TBD"
+    base_line_date = datetime(year=2019, month=8, day=20, minute=0, hour=0, second=0)
+
+    for internal_chart_name in internal_chart_names:
+        one_data_set = {}
+        data_sets = []
+        field = internal_chart_names[internal_chart_name]
+
+        if "nvme" in field:
+            inputs_list = OrderedDict([("ec_nvme_tcp_write_1pctcomp_128", "1%"),
+                                       ("ec_nvme_tcp_write_50pctcomp_128", "50%"),
+                                       ("ec_nvme_tcp_write_80pctcomp_128", "80%")])
+            source = "https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/storage/" \
+                     "ec_nvme_tcp_comp_perf.py"
+            if "iops" in field:
+                y1_axis_title = PerfUnit.UNIT_OPS
+                chart_name = "Write IOPS NVME/TCP"
+                output_name = "output_write_iops"
+                positive = False
+            else:
+                y1_axis_title = PerfUnit.UNIT_USECS
+                chart_name = "Write Latency NVME/TCP"
+                output_name = "output_write_avg_latency"
+                positive = True
+
+        elif "pcie" in field:
+            inputs_list = OrderedDict([("ec_fio_25G_write_1", "1%"),
+                                       ("ec_fio_25G_write_50", "50%"),
+                                       ("ec_fio_25G_write_80", "80%")])
+
+            source = "https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/storage/" \
+                     "ec_volume_fs_comp_perf.py"
+            if "iops" in field:
+                y1_axis_title = PerfUnit.UNIT_KOPS
+                chart_name = "Write IOPS PCIe"
+                output_name = "output_write_iops"
+                positive = False
+            else:
+                y1_axis_title = PerfUnit.UNIT_USECS
+                chart_name = "Write Latency PCIe"
+                output_name = "output_write_avg_latency"
+                positive = True
+
+        output = {
+            "name": output_name,
+            "unit": y1_axis_title,
+            "min": 0,
+            "max": -1,
+            "expected": -1,
+            "reference": -1
+        }
+        for input_fio_job_name in inputs_list:
+            inputs = {
+                "input_platform": platform,
+                "input_fio_job_name": input_fio_job_name
+            }
+
+            one_data_set["name"] = inputs_list[input_fio_job_name]
+            one_data_set["inputs"] = inputs
+            one_data_set["output"] = output
+            data_sets.append(one_data_set.copy())
+
+        metric_id = LastMetricId.get_next_id()
+        MetricChart(chart_name=chart_name,
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description=description,
+                    owner_info=owner_info,
+                    source=source,
+                    positive=positive,
+                    y1_axis_title=y1_axis_title,
+                    visualization_unit=y1_axis_title,
+                    metric_model_name=model_name,
+                    platform=platform,
+                    base_line_date=base_line_date,
+                    work_in_progress=False).save()
+        print ("Metric id: {}".format(metric_id))
+        print ("Data sets: {}".format(data_sets))
+        for i in data_sets:
+            print i
 
 

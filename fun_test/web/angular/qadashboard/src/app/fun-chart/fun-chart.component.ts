@@ -25,9 +25,11 @@ export class FunChartComponent implements OnInit, OnChanges {
   @Input() enableLegend: boolean = true;
   @Input() backgroundColor: string = null;
   @Input() seriesColors: string[] = null;
-
+  @Input() clickUrls;
+  @Input() chartHeight;
   chart: any;
   point: any = null;
+
 
   constructor() {
   }
@@ -147,6 +149,7 @@ export class FunChartComponent implements OnInit, OnChanges {
     } else if (this.chartType === 'vertical_colored_bar_chart') {
       chartOptions = {
         chart: {
+          height: this.chartHeight,
           type: "column"
         },
         title: {
@@ -186,6 +189,13 @@ export class FunChartComponent implements OnInit, OnChanges {
             },
             point: {
               events: {
+
+                click: function () {
+                  if (self.clickUrls){
+                    location.href = self.clickUrls[this.category];
+                  }
+                },
+
                 select: function () {
                   if (self.pointClickCallback) {
                     let metadata = null;
@@ -213,6 +223,9 @@ export class FunChartComponent implements OnInit, OnChanges {
           enabled: false
         },
       };
+      if (this.backgroundColor) {
+        chartOptions.chart["backgroundColor"] = this.backgroundColor;
+      }
     }
 
     this.chart = new Chart(chartOptions);

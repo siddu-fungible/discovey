@@ -93,7 +93,8 @@
     },
     "fio_modes": [
       "read",
-      "randread"
+      "randread",
+      "write"
     ],
     "fio_numjobs_iodepth": [
       "(16, 8)"

@@ -84,17 +84,17 @@
       "skip_funeth_come_power_cycle": true
     },
     "bmc": {
-      "mgmt_ip": "10.1.21.16",
+      "mgmt_ip": "fs11-bmc",
       "mgmt_ssh_username": "sysadmin",
       "mgmt_ssh_password": "superuser"
     },
     "fpga": {
-      "mgmt_ip": "10.1.20.17",
+      "mgmt_ip": "fs11-fpga",
       "mgmt_ssh_username": "root",
       "mgmt_ssh_password": "root"
     },
     "come": {
-      "mgmt_ip": "10.1.20.22",
+      "mgmt_ip": "fs11-come",
       "mgmt_ssh_username": "fun",
       "mgmt_ssh_password": "123"
     }
@@ -141,7 +141,9 @@
   {
     "name": "fs-45",
     "workarounds": {
-      "retimer_workaround": true
+      "retimer_workaround": true,
+      "skip_funeth_come_power_cycle": true,
+       "disable_u_boot_version_validation": true
     },
     "gateway_ip": "10.1.105.1",
     "bmc": {
@@ -341,20 +343,41 @@
     }
   },
   {
-    "name": "fs-65",
-    "gateway_ip": "10.1.104.1",
+    "name": "fs-63",
     "bmc": {
-      "mgmt_ip": "10.1.104.164",
+      "mgmt_ip": "fs63-bmc",
       "mgmt_ssh_username": "sysadmin",
       "mgmt_ssh_password": "superuser"
     },
     "fpga": {
-      "mgmt_ip": "10.1.104.110",
+      "mgmt_ip": "fs63-fpga",
       "mgmt_ssh_username": "root",
       "mgmt_ssh_password": "root"
     },
     "come": {
-      "mgmt_ip": "10.1.104.166",
+      "mgmt_ip": "fs63-come",
+      "mgmt_ssh_username": "fun",
+      "mgmt_ssh_password": "123"
+    }
+  },
+  {
+    "name": "fs-65",
+    "gateway_ip": "10.1.20.1",
+    "workarounds": {
+      "skip_funeth_come_power_cycle": true
+    },
+    "bmc": {
+      "mgmt_ip": "10.1.20.170",
+      "mgmt_ssh_username": "sysadmin",
+      "mgmt_ssh_password": "superuser"
+    },
+    "fpga": {
+      "mgmt_ip": "10.1.20.179",
+      "mgmt_ssh_username": "root",
+      "mgmt_ssh_password": "root"
+    },
+    "come": {
+      "mgmt_ip": "10.1.20.26",
       "mgmt_ssh_username": "fun",
       "mgmt_ssh_password": "123"
     }
@@ -384,7 +407,8 @@
   {
     "name": "fs-66",
     "workarounds": {
-      "skip_funeth_come_power_cycle": true
+      "skip_funeth_come_power_cycle": true,
+       "disable_u_boot_version_validation": true
       },
     "gateway_ip": "10.1.105.1",
     "bmc": {

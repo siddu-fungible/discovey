@@ -29,6 +29,7 @@
       "override": true,
       "override_node": "NUMA node0 CPU(s)"
     },
+    "csi_perf_pdtrace_hbm_size_kb": 204800,
     "csr_network": {
       "0": {
         "test_interface_ip": "20.1.1.1/24",
@@ -71,10 +72,8 @@
     "iter_interval": 2,
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {
-      "rw": "randwrite", "bs": "4k",
-      "iodepth": 32, "numjobs": 1,
-      "ioengine": "libaio", "direct": 1, "prio": 0, "cpus_allowed": "1-19",
-      "size": "100%", "timeout": 7200
+      "rw": "randwrite", "bs": "4k", "iodepth": 32, "numjobs": 1, "ioengine": "libaio", "direct": 1, "prio": 0,
+      "cpus_allowed_policy": "split", "size": "100%", "timeout": 3600
     },
     "fio_cmd_args": {
       "ioengine": "libaio",
@@ -102,7 +101,12 @@
       "(32, 2)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
       "(32, 4)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}}
     },
-    "host_count": 1
+    "host_count": 1,
+    "vp_util_args": {"interval": 60},
+    "resource_bam_args": {"interval": 60},
+    "vol_stats_args": {"interval": 60},
+    "collect_network_stats": true,
+    "csi_perf_iodepth": [32]
   },
   "MultiHostFioRandWrite": {
     "num_ssd": 12,
@@ -123,10 +127,8 @@
     "iter_interval": 2,
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {
-      "rw": "randwrite", "bs": "4k",
-      "iodepth": 32, "numjobs": 1,
-      "ioengine": "libaio", "direct": 1, "prio": 0, "cpus_allowed": "1-19",
-      "size": "100%", "timeout": 7200
+      "rw": "randwrite", "bs": "4k", "iodepth": 32, "numjobs": 1, "ioengine": "libaio", "direct": 1, "prio": 0,
+      "cpus_allowed_policy": "split", "size": "100%", "timeout": 3600
     },
     "fio_cmd_args": {
       "ioengine": "libaio",
@@ -154,6 +156,11 @@
       "(16, 1)": {"randwrite": {"write": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
       "(32, 1)": {"randwrite": {"write": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}}
     },
-    "host_count": 1
+    "host_count": 1,
+    "vp_util_args": {"interval": 60},
+    "resource_bam_args": {"interval": 60},
+    "vol_stats_args": {"interval": 60},
+    "collect_network_stats": true,
+    "csi_perf_iodepth": [16]
   }
 }

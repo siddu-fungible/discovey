@@ -116,6 +116,8 @@ class ECVolumeLevelScript(FunTestScript):
             self.update_workspace = job_inputs["update_workspace"]
         if "update_deploy_script" in job_inputs:
             self.update_deploy_script = job_inputs["update_deploy_script"]
+        if "syslog_level" in job_inputs:
+            self.syslog_level = job_inputs["syslog_level"]
         if "disable_wu_watchdog" in job_inputs:
             self.disable_wu_watchdog = job_inputs["disable_wu_watchdog"]
         else:
@@ -195,7 +197,7 @@ class ECVolumeLevelScript(FunTestScript):
 
         fun_test.log("Hosts that will be used for current test: {}".format(self.required_hosts.keys()))
 
-        self.host_info = {}
+        self.host_info = OrderedDict()
         self.hosts_test_interfaces = {}
         self.host_ips = []
         for host_name, host_obj in self.required_hosts.items():
@@ -466,6 +468,10 @@ class ECVolumeLevelTestcase(FunTestCase):
             self.ec_info["num_volumes"] = job_inputs["num_volumes"]
         if "vol_size" in job_inputs:
             self.ec_info["capacity"] = job_inputs["vol_size"]
+        if "post_results" in job_inputs:
+            self.post_results = job_inputs["post_results"]
+        else:
+            self.post_results = False
 
         if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
                 self.testbed_config["workarounds"]["enable_funcp"]:
@@ -601,7 +607,8 @@ class ECVolumeLevelTestcase(FunTestCase):
                 pcap_stopped[host_name] = True
                 pcap_pid[host_name] = {}
                 pcap_pid[host_name] = host_handle.tcpdump_capture_start(interface=test_interface,
-                                                             tcpdump_filename="/tmp/nvme_connect.pcap")
+                                                                        tcpdump_filename="/tmp/nvme_connect.pcap",
+                                                                        snaplen=1500)
                 if pcap_pid[host_name]:
                     fun_test.log("Started packet capture in {}".format(host_name))
                     pcap_started[host_name] = True
@@ -621,32 +628,24 @@ class ECVolumeLevelTestcase(FunTestCase):
                         if host_ip in self.ec_info[sc_obj]:
                             # Building nvme connect command
                             if not hasattr(self, "io_queues") or (hasattr(self, "io_queues") and self.io_queues == 0):
-                                nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {} -q {}". \
-                                    format(self.attach_transport.lower(), self.f1_ips[sc_index],
-                                           str(self.transport_port),
-                                           self.ec_info[sc_obj][host_ip][self.attach_transport]["nqn"],
-                                           self.host_info[host_name]["ip"])
+                                nvme_connect_status = host_handle.nvme_connect(
+                                    target_ip=self.f1_ips[sc_index],
+                                    nvme_subsystem=self.ec_info[sc_obj][host_ip][self.attach_transport]["nqn"],
+                                    port=self.transport_port, transport=self.attach_transport,
+                                    hostnqn=self.host_info[host_name]["ip"])
                             else:
-                                nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {} -i {} -q {}". \
-                                    format(self.attach_transport.lower(), self.f1_ips[sc_index],
-                                           str(self.transport_port),
-                                           self.ec_info[sc_obj][host_ip][self.attach_transport]["nqn"],
-                                           str(self.io_queues), self.host_info[host_name]["ip"])
-                            try:
-                                nvme_connect_output = host_handle.sudo_command(command=nvme_connect_cmd, timeout=60)
-                                nvme_connect_exit_status = host_handle.exit_status()
-                                fun_test.log("nvme_connect_output output is: {}".format(nvme_connect_output))
-                                if nvme_connect_exit_status and pcap_started[host_name]:
-                                    host_handle.tcpdump_capture_stop(process_id=pcap_pid[host_name])
-                                    pcap_stopped[host_name] = True
-                            except Exception as ex:
-                                # Stopping the packet capture if it is started
-                                if pcap_started[host_name]:
-                                    host_handle.tcpdump_capture_stop(process_id=pcap_pid[host_name])
-                                    pcap_stopped[host_name] = True
+                                nvme_connect_status = host_handle.nvme_connect(
+                                    target_ip=self.f1_ips[sc_index],
+                                    nvme_subsystem=self.ec_info[sc_obj][host_ip][self.attach_transport]["nqn"],
+                                    port=self.transport_port, transport=self.attach_transport,
+                                    io_queues=self.io_queues, hostnqn=self.host_info[host_name]["ip"])
 
-                            fun_test.test_assert_expected(expected=0, actual=nvme_connect_exit_status,
-                                                          message="{} - NVME Connect Status".format(host_name))
+                            if pcap_started[host_name]:
+                                host_handle.tcpdump_capture_stop(process_id=pcap_pid[host_name])
+                                pcap_stopped[host_name] = True
+
+                            fun_test.test_assert(nvme_connect_status,
+                                                 message="{} - NVME Connect Status".format(host_name))
 
                     lsblk_output = host_handle.lsblk("-b")
                     fun_test.simple_assert(lsblk_output, "Listing available volumes")
@@ -993,7 +992,9 @@ class ECVolumeLevelTestcase(FunTestCase):
                 else:
                     row_data_list.append(row_data_dict[i])
             table_data_rows.append(row_data_list)
-            post_results("Inspur Performance Test", test_method, *row_data_list)
+            if self.post_results:
+                fun_test.log("Posting results on dashboard")
+                post_results("Inspur Performance Test", test_method, *row_data_list)
 
             # Checking if mpstat process is still running...If so killing it...
             for host_name in self.host_info:
@@ -1041,7 +1042,7 @@ class ECVolumeLevelTestcase(FunTestCase):
 class RandReadWrite8kBlocks(ECVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Inspur TC 8.11.1: 8k data block random read/write IOPS performance of Multiple"
+                              summary="Inspur TC 8.11.1.1: 8k data block random read/write IOPS performance of Multiple"
                                       " EC volume",
                               steps="""
         1. Bring up F1 in FS1600
@@ -1064,9 +1065,61 @@ class RandReadWrite8kBlocks(ECVolumeLevelTestcase):
         super(RandReadWrite8kBlocks, self).cleanup()
 
 
-class SequentialReadWrite1024kBlocks(ECVolumeLevelTestcase):
+class RandRead8kBlocks(ECVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=2,
+                              summary="Inspur TC 8.11.1.2: 8k data block random read IOPS performance of Multiple"
+                                      " EC volume",
+                              steps="""
+        1. Bring up F1 in FS1600
+        2. Bring up and configure Remote Host
+        3. Create 6 BLT volumes on dut instance.
+        4. Create a 4:2 EC volume on top of the 6 BLT volumes.
+        5. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
+        6. Export (Attach) the above EC or LS volume based on use_lsv config to the Remote Host 
+        7. Run warm-up traffic using FIO
+        8. Run the Performance for 8k transfer size Random read IOPS
+        """)
+
+    def setup(self):
+        super(RandRead8kBlocks, self).setup()
+
+    def run(self):
+        super(RandRead8kBlocks, self).run()
+
+    def cleanup(self):
+        super(RandRead8kBlocks, self).cleanup()
+
+
+class RandWrite8kBlocks(ECVolumeLevelTestcase):
+    def describe(self):
+        self.set_test_details(id=3,
+                              summary="Inspur TC 8.11.1.3: 8k data block random write IOPS performance of Multiple"
+                                      " EC volume",
+                              steps="""
+        1. Bring up F1 in FS1600
+        2. Bring up and configure Remote Host
+        3. Create 6 BLT volumes on dut instance.
+        4. Create a 4:2 EC volume on top of the 6 BLT volumes.
+        5. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
+        6. Export (Attach) the above EC or LS volume based on use_lsv config to the Remote Host 
+        7. Run warm-up traffic using FIO
+        8. Run the Performance for 8k transfer size Random write IOPS
+        """)
+
+    def setup(self):
+        super(RandWrite8kBlocks, self).setup()
+
+    def run(self):
+        super(RandWrite8kBlocks, self).run()
+
+    def cleanup(self):
+        super(RandWrite8kBlocks, self).cleanup()
+
+
+class SequentialReadWrite1024kBlocks(ECVolumeLevelTestcase):
+    def describe(self):
+        self.set_test_details(id=4,
                               summary="Inspur TC 8.11.2: 1024k data block sequential write IOPS performance"
                                       "of Multiple EC volume",
                               steps="""
@@ -1092,7 +1145,7 @@ class SequentialReadWrite1024kBlocks(ECVolumeLevelTestcase):
 
 class MixedRandReadWriteIOPS(ECVolumeLevelTestcase):
     def describe(self):
-        self.set_test_details(id=3,
+        self.set_test_details(id=5,
                               summary="Inspur TC 8.11.3: Integrated model read/write IOPS performance of Multiple"
                                       " EC volume",
                               steps="""
@@ -1118,7 +1171,7 @@ class MixedRandReadWriteIOPS(ECVolumeLevelTestcase):
 
 class OLTPModelReadWriteIOPS(ECVolumeLevelTestcase):
     def describe(self):
-        self.set_test_details(id=4,
+        self.set_test_details(id=6,
                               summary="Inspur TC 8.11.4: OLTP Model read/read IOPS performance of Multiple EC volume",
                               steps="""
         1. Bring up F1 in FS1600
@@ -1143,7 +1196,7 @@ class OLTPModelReadWriteIOPS(ECVolumeLevelTestcase):
 
 class OLAPModelReadWriteIOPS(ECVolumeLevelTestcase):
     def describe(self):
-        self.set_test_details(id=5,
+        self.set_test_details(id=7,
                               summary="Inspur TC 8.11.5: OLAP Model read/write IOPS performance of Multiple EC volume",
                               steps="""
         1. Bring up F1 in FS1600
@@ -1169,6 +1222,8 @@ class OLAPModelReadWriteIOPS(ECVolumeLevelTestcase):
 if __name__ == "__main__":
     ecscript = ECVolumeLevelScript()
     ecscript.add_test_case(RandReadWrite8kBlocks())
+    ecscript.add_test_case(RandRead8kBlocks())
+    ecscript.add_test_case(RandWrite8kBlocks())
     # ecscript.add_test_case(SequentialReadWrite1024kBlocks())
     # ecscript.add_test_case(MixedRandReadWriteIOPS())
     # ecscript.add_test_case(OLTPModelReadWriteIOPS())

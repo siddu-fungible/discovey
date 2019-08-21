@@ -18,7 +18,7 @@ export class ReRunService {
   constructor(private apiService: ApiService, private loggerService: LoggerService) {
   }
 
-  submitReRun(suiteExecutionId, suitePath, resultFilter=null, scriptFilter=null) {
+  submitReRun(suiteExecutionId, suitePath, resultFilter=null, scriptFilter=null, reUseBuildImage=null) {
     this.suitePath = suitePath;
     let submit$ = new Observable(observer => {
       observer.next(true);
@@ -41,7 +41,7 @@ export class ReRunService {
         return this.prepareSuite();
       }),
       switchMap((scriptItems) => {
-        return this.submitJob(scriptItems, suiteExecutionId);
+        return this.submitJob(scriptItems, suiteExecutionId, reUseBuildImage);
       })/*, catchError(err => {
         return of(err);
       })*/
@@ -133,7 +133,7 @@ export class ReRunService {
 
   }
 
-  submitJob(scriptItems, suiteExecutionId) {
+  submitJob(scriptItems, suiteExecutionId, reUseBuildImage=null) {
 
     let payload = {dynamic_suite_spec: scriptItems,
       version: this.reRunVersion,
@@ -141,6 +141,17 @@ export class ReRunService {
       emails: this.archivedJobSpec["emails"],
       submitter_email: this.archivedJobSpec["submitter_email"],
       environment: this.archivedJobSpec["environment"]};
+
+    if (!reUseBuildImage) {
+      let environment = this.archivedJobSpec.environment;
+      if (environment.hasOwnProperty("with_jenkins_build") && environment.with_jenkins_build) {
+
+        if (reUseBuildImage === false && environment.hasOwnProperty("tftp_image_path")) {
+          delete environment["tftp_image_path"];
+        }
+      }
+    }
+
     if (this.archivedJobSpec.hasOwnProperty("inputs")) {
       try {
         payload["job_inputs"] = JSON.parse(this.archivedJobSpec["inputs"]);

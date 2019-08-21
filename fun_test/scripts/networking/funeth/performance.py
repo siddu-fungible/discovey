@@ -43,7 +43,7 @@ FLOW_TYPES_DICT = OrderedDict([
 TOOLS = ('netperf',)
 PROTOCOLS = ('tcp', )  # TODO: add UDP
 FRAME_SIZES = (1500,)  # It's actually IP packet size in bytes
-NUM_FLOWS = (1, 8, 4, 2, 16, )  # TODO: May add more
+NUM_FLOWS = (1, 8, 4, 2, 16, 32)  # TODO: May add more
 NUM_HOSTS = (1, 2, )  # Number of PCIe hosts, TODO: may keep 2 hosts only in the future
 FPG_MTU_DEFAULT = 1518
 PERF_RESULT_KEYS = (nm.THROUGHPUT,
@@ -83,11 +83,16 @@ class FunethPerformance(sanity.FunethSanity):
         driver_commit = super(FunethPerformance, self).__getattribute__('driver_commit')
         driver_bld =  super(FunethPerformance, self).__getattribute__('driver_bld')
         come_linux_obj = super(FunethPerformance, self).__getattribute__('come_linux_obj')
+        if sanity.csi_perf_enabled:
+            csi_perf_obj = super(FunethPerformance, self).__getattribute__('csi_perf_obj')
+        else:
+            csi_perf_obj = None
         fun_test.shared_variables['funsdk_commit'] = funsdk_commit
         fun_test.shared_variables['funsdk_bld'] = funsdk_bld
         fun_test.shared_variables['driver_commit'] = driver_commit
         fun_test.shared_variables['driver_bld'] = driver_bld
         fun_test.shared_variables['come_linux_obj'] = come_linux_obj
+        fun_test.shared_variables['csi_perf_obj'] = csi_perf_obj
 
         tb_config_obj = tb_configs.TBConfigs(TB)
         funeth_obj = funeth.Funeth(tb_config_obj)
@@ -299,7 +304,8 @@ class FunethPerformanceBase(FunTestCase):
                  'suffix': suffix,
                  'cpu_list_server': cpu_list_server,
                  'cpu_list_client': cpu_list_client,
-                 #'fixed_netperf_port': True if 'OL_VM' in flow_type.upper() else False,  # TODO: Remove after SWOS-5645
+                 'fixed_netperf_port': True if 'OL_VM' in flow_type.upper() else False,  # TODO: Remove after SWOS-5645
+                 'csi_perf_obj': fun_test.shared_variables['csi_perf_obj'],
                  }
             )
 
@@ -405,8 +411,8 @@ class FunethPerformanceBase(FunTestCase):
         fun_test.simple_assert(pingable, '{} ping {} with packet size {}'.format(
             linux_obj_src.host_ip, dip, frame_size))
         fun_test.simple_assert(not sth_stuck_before, 'Something is stuck before test')
-        fun_test.test_assert(passed, 'Get throughput/pps/latency test result')
         fun_test.simple_assert(not sth_stuck_after, 'Something is stuck after test')
+        fun_test.test_assert(passed, 'Get throughput/pps/latency test result')
 
 
 def create_testcases(id, summary, steps, flow_type, tool, protocol, num_flows, num_hosts, frame_size):

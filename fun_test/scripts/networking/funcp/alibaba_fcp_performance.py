@@ -81,36 +81,6 @@ class SetupBringup(alibaba_fcp_setup.ScriptSetup):
         super(SetupBringup, self).cleanup()
 
 
-class HuHuNonFCP(performance.FunethPerformanceBase):
-    def describe(self):
-        self.set_test_details(id=1, summary="HU HU perf",
-                              steps="""
-                                      
-                                      """)
-
-    def setup(self):
-        pass
-
-    def run(self):
-        topology = fun_test.shared_variables["topology"]
-        for i in range(0, 2):
-            fs = topology.get_dut_instance(index=i)
-
-            come_obj = fs.get_come()
-            # Delete FCP FTEP for 1st host
-            if i == 0:
-                perf_utils.redis_del_fcp_ftep(come_obj)
-            else:
-                fun_test.shared_variables['come_linux_obj'] = come_obj
-
-        performance.FunethPerformanceBase._run(self, flow_type="HU_HU_NFCP_2F1", num_flows=8, num_hosts=4, frame_size=1500,
-                                               duration=30)
-
-    def cleanup(self):
-        pass
-
-
-
 class ScriptSetup2(FunTestScript):
     server_key = {}
 
@@ -195,13 +165,61 @@ class FunPerformance(FunTestCase):
     TOOLS = ('netperf',)
     PROTOCOLS = ('tcp',)  # TODO: add UDP
 
+    def redis_del_fcp_ftep(self, linux_obj):
+        """In redis, delete FCP FTEP to tear down FCP tunnel."""
+        # TODO: make it setup independent
+        contents = ""
+        if linux_obj.host_ip == 'fs60-come':
+            ftep_dict = {
+                'F1-0': r"openconfig-fcp:fcp-tunnel[ftep=\'7.7.7.7\']"
+            }
+            contents = "SELECT 1 \nDEL \"openconfig-fcp:fcp-tunnel[ftep='7.7.7.7']\""
+        elif linux_obj.host_ip == 'fs48-come':
+            ftep_dict = {
+                'F1-0': r"openconfig-fcp:fcp-tunnel[ftep=\'9.9.9.9\']"
+            }
+            contents = "SELECT 1 \nDEL \"openconfig-fcp:fcp-tunnel[ftep='9.9.9.9']\""
+        else:
+            ftep_dict = {
+                'F1-0': r"openconfig-fcp:fcp-tunnel[ftep=\'9.9.9.9\']",
+                'F1-1': r"openconfig-fcp:fcp-tunnel[ftep=\'7.7.7.7\']"
+            }
+        for k in ftep_dict:
+            cmd_prefix = 'docker exec {} bash -c'.format(k)
+            cmd_op = 'DEL "{}"'.format(ftep_dict[k])
+            cmd_chk = 'KEYS *fcp-tunnel*'
+            chk_file = 'check_{}'.format(k)
+            del_file = 'del_{}'.format(k)
+
+            # check
+            cmds = ['SELECT 1', cmd_chk]
+            linux_obj.command('{0} "rm {1}; touch {1}"'.format(cmd_prefix, chk_file))
+            for cmd in cmds:
+                linux_obj.command('{} \"echo {} >> {}\"'.format(cmd_prefix, cmd, chk_file))
+            linux_obj.command('{} "cat {}"'.format(cmd_prefix, chk_file))
+
+            # del
+            lin = FunCpDockerContainer(host_ip=linux_obj.host_ip, ssh_username="fun", ssh_password="123", name=k)
+            lin.create_file(del_file, contents=contents)
+            fun_test.log("Check and delete FCP FTEP to tear down FCP tunnel in {}".format(k))
+            linux_obj.command('{} "redis-cli < {}"'.format(cmd_prefix, chk_file))
+            linux_obj.command('{} "redis-cli < {}"'.format(cmd_prefix, del_file))
+            linux_obj.command('{} "redis-cli < {}"'.format(cmd_prefix, chk_file))
+
     def _run(self, tool='netperf', protocol='tcp', flow_type="HU_HU_FCP", num_flows=8, num_hosts=4, frame_size=1500, duration=30):
         funeth_obj = fun_test.shared_variables['funeth_obj']
         cpu_list_client = funeth.CPU_LIST_HOST
         cpu_list_server = funeth.CPU_LIST_HOST
         # TODO: Add new way of taking NFCP path
         if flow_type.startswith('HU_HU_NFCP_2F1'):
-            perf_utils.redis_del_fcp_ftep(fun_test.shared_variables['come_linux_obj'])
+            ftep_dict = {
+                'F1-0': r"openconfig-fcp:fcp-tunnel[ftep=\'9.9.9.9\']"
+            }
+            self.redis_del_fcp_ftep(Linux(host_ip="fs48-come", ssh_password="123", ssh_username="fun"))
+            ftep_dict = {
+                'F1-0': r"openconfig-fcp:fcp-tunnel[ftep=\'7.7.7.7\']"
+            }
+            self.redis_del_fcp_ftep(Linux(host_ip="fs60-come", ssh_password="123", ssh_username="fun"))
         perf_manager_obj = fun_test.shared_variables['netperf_manager_obj']
         host_pairs = []
         bi_dir = False  # TODO: enable bi-direction
@@ -391,7 +409,7 @@ class FunPerformance(FunTestCase):
 
 class HuHuFCP(FunPerformance):
     def describe(self):
-        self.set_test_details(id=1, summary="HU HU perf",
+        self.set_test_details(id=1, summary="HU HU FCP perf",
                               steps="""
 
                                       """)
@@ -440,10 +458,29 @@ class NuHu(FunPerformance):
         pass
 
 
+class HuHuNonFCP(FunPerformance):
+    def describe(self):
+        self.set_test_details(id=2, summary="HU HU Non FCP perf",
+                              steps="""
+
+                                      """)
+
+    def setup(self):
+        pass
+
+    def run(self):
+        FunPerformance._run(self, flow_type="HU_HU_NFCP_2F1", num_flows=8, num_hosts=4, frame_size=1500, duration=30)
+
+    def cleanup(self):
+        pass
+
+
 if __name__ == '__main__':
     ts = SetupBringup()
+
     ts.add_test_case(HuHuFCP())
+    ts.add_test_case(HuHuNonFCP())
     ts.add_test_case(HuNu())
     ts.add_test_case(NuHu())
-    # ts.add_test_case(HuHuNonFCP())
+
     ts.run()

@@ -29,7 +29,7 @@ class PalladiumTc(FunTestCase):
     hw_model = "S1_Compute"
     max_duration = 900
     disable_assertions = "true"
-    hw_version = "rel_06152019"
+    hw_version = "rel_08012019"
     run_target = "palladium"
     extra_emails = None
 
@@ -104,7 +104,6 @@ class EcTeramarkTc(PalladiumTc):
     note = "EC teramark app on S1"
     hw_model = "S1_Compute"
     max_duration = 1800
-    hw_version = "rel_06152019"
 
     def describe(self):
         self.set_test_details(id=3,
@@ -147,12 +146,13 @@ class NfaTeramarkTc(PalladiumTc):
             3. Steps 3
                                   """)
 
+
 class JpegTeramarkTc(PalladiumTc):
     boot_args = "app=jpeg_perf_test"
     tags = "qa_s1_jpeg_teramark"
     note = "JPEG teramark app on S1"
     fun_os_make_flags = "XDATA_LISTS=/project/users/ashaikh/qa_test_inputs/jpeg_perf_inputs/perf_input.list"
-    extra_emails = ["aamir.shaikh@fungible.com"]
+    extra_emails = ["aamir.shaikh@fungible.com", "abhishek.dikshit@fungible.com", "hara.bandhakavi@fungible.com"]
 
     def describe(self):
         self.set_test_details(id=6,
@@ -162,6 +162,7 @@ class JpegTeramarkTc(PalladiumTc):
             2. Steps 2
             3. Steps 3
                                   """)
+
 
 class ZipTeramarkTc(PalladiumTc):
     boot_args = "app=deflate_perf_multi,lzma_perf_multi --serial"
@@ -178,6 +179,7 @@ class ZipTeramarkTc(PalladiumTc):
             2. Steps 2
             3. Steps 3
                                   """)
+
 
 if __name__ == "__main__":
     myscript = MyScript()

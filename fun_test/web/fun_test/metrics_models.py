@@ -100,24 +100,27 @@ class MetricChartStatus(models.Model):
 
 
 class Triage3(models.Model):
-    metric_id = models.IntegerField()
+    # Submission
+    metric_id = models.IntegerField(null=True)
     triage_id = models.IntegerField(unique=True)
+    build_parameters = JSONField(null=True)
+    # blob = JSONField(default=None, null=True)  # for anything other than Jenkins parameters, like Integration parameters
     triage_type = models.IntegerField(default=TriagingTypes.REGEX_MATCH)
     from_fun_os_sha = models.TextField()  # The initial lower bound
     to_fun_os_sha = models.TextField()    # The initial upper bound
+    submitter_email = models.EmailField(default="john.abraham@fungible.com")
+    regex_match_string = models.TextField(default="")
+
     submission_date_time = models.DateTimeField(default=datetime.now)
     status = models.IntegerField(default=TriagingStates.UNKNOWN)
     result = models.TextField(default=TriagingResult.UNKNOWN)
-    build_parameters = JSONField()
 
     current_trial_set_id = models.IntegerField(default=-1)
     current_trial_set_count = models.IntegerField(default=-1)
     current_trial_from_sha = models.TextField(default="")
     current_trial_to_sha = models.TextField(default="")
 
-    submitter_email = models.EmailField(default="john.abraham@fungible.com")
     base_tag = models.TextField(default="qa_triage")
-    regex_match_string = models.TextField(default="")
 
     @staticmethod
     def get_tag(base_tag, other_tag):
@@ -136,6 +139,11 @@ class Triage3Trial(models.Model):
     submission_date_time = models.DateTimeField(default=datetime.now)
     tags = JSONField(default=[])  # for re-runs
     result = models.TextField(default=RESULTS["UNKNOWN"])
+    original_id = models.IntegerField(default=-1)
+    active = models.BooleanField(default=True)
+    reruns = models.BooleanField(default=False)
+
+    integration_job_id = models.IntegerField(default=-1)
 
     def __str__(self):
         return "Trial: Triage: {} Tag: {} Sha: {} Set: {} Status: {}".format(self.triage_id,
@@ -702,14 +710,14 @@ class LastTriageId(models.Model):
         last.save()
         return last.last_id
 
-class LastTriageFlowId(models.Model):
+class LastTrialId(models.Model):
     last_id = models.IntegerField(unique=True, default=100)
 
     @staticmethod
     def get_next_id():
-        if not LastTriageFlowId.objects.count():
-            LastTriageFlowId().save()
-        last = LastTriageFlowId.objects.all().last()
+        if not LastTrialId.objects.count():
+            LastTrialId().save()
+        last = LastTrialId.objects.all().last()
         last.last_id = last.last_id + 1
         last.save()
         return last.last_id
@@ -935,6 +943,68 @@ class BltVolumePerformance(models.Model):
 
 
 class AlibabaPerformance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_volume_type = models.TextField(verbose_name="Volume type")
+    input_test = models.TextField(verbose_name="Test type")
+
+    input_block_size = models.TextField(verbose_name="Block size")
+    input_io_depth = models.IntegerField(verbose_name="IO depth")
+    input_io_size = models.TextField(verbose_name="IO size")
+    input_operation = models.TextField(verbose_name="Operation type")
+    input_num_ssd = models.IntegerField(verbose_name="Number of SSD(s)")
+    input_num_volume = models.IntegerField(verbose_name="Number of volume(s)")
+    input_num_threads = models.IntegerField(verbose_name="Threads")
+    input_platform = models.TextField(default=FunPlatform.F1)
+    input_version = models.CharField(verbose_name="Version", max_length=50, default="")
+    output_write_iops = models.IntegerField(verbose_name="Write IOPS", default=-1)
+    output_read_iops = models.IntegerField(verbose_name="Read IOPS", default=-1)
+    output_write_throughput = models.FloatField(verbose_name="Write throughput", default=-1)
+    output_read_throughput = models.FloatField(verbose_name="Read throughput", default=-1)
+    output_write_avg_latency = models.IntegerField(verbose_name="Write avg latency", default=-1)
+    output_write_90_latency = models.IntegerField(verbose_name="Write 90% latency", default=-1)
+    output_write_95_latency = models.IntegerField(verbose_name="Write 95% latency", default=-1)
+    output_write_99_99_latency = models.IntegerField(verbose_name="Write 99.99% latency", default=-1)
+    output_write_99_latency = models.IntegerField(verbose_name="Write 99% latency", default=-1)
+    output_read_avg_latency = models.IntegerField(verbose_name="Read avg latency", default=-1)
+    output_read_90_latency = models.IntegerField(verbose_name="Read 90% latency", default=-1)
+    output_read_95_latency = models.IntegerField(verbose_name="Read 95% latency", default=-1)
+    output_read_99_99_latency = models.IntegerField(verbose_name="Read 99.99% latency", default=-1)
+    output_read_99_latency = models.IntegerField(verbose_name="Read 99% latency", default=-1)
+
+    output_write_iops_unit = models.TextField(default=PerfUnit.UNIT_OPS)
+    output_read_iops_unit = models.TextField(default=PerfUnit.UNIT_OPS)
+    output_write_throughput_unit = models.TextField(default=PerfUnit.UNIT_MBITS_PER_SEC)
+    output_read_throughput_unit = models.TextField(default=PerfUnit.UNIT_MBITS_PER_SEC)
+    output_write_avg_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_write_90_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_write_95_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_write_99_99_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_write_99_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_read_avg_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_read_90_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_read_95_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_read_99_99_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_read_99_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    tag = "analytics"
+
+    def __str__(self):
+        return "{}:{}:{}:{}:{}:{}:{}:{}".format(self.input_date_time,
+                                                self.input_volume_type,
+                                                self.input_test,
+                                                self.input_block_size,
+                                                self.input_io_size,
+                                                self.input_operation,
+                                                self.output_write_iops,
+                                                self.output_read_iops,
+                                                self.output_write_throughput,
+                                                self.output_write_avg_latency,
+                                                self.output_read_avg_latency)
+
+
+class AlibabaBmvRemoteSsdPerformance(models.Model):
     interpolation_allowed = models.BooleanField(default=False)
     interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
@@ -2934,140 +3004,3 @@ class InspurDataReconstructionPerformance(models.Model):
     def __str__(self):
         return (str(self.__dict__))
 
-
-'''
-ANALYTICS_MAP = {
-    "Performance1": {
-        "model": Performance1,
-        "module": "networking",
-        "component": "general",
-        "verbose_name": "Performance 1 ..."
-    },
-    "UnitTestPerformance": {
-        "model": UnitTestPerformance,
-        "module": "system",
-        "component": "general",
-        "verbose_name": "UnitTestPerformance"
-    },
-
-    "PerformanceBlt": {
-        "model": PerformanceBlt,
-        "module": "storage",
-        "component": "general",
-        "verbose_name": "Block Local Thin Performance"
-    },
-
-    "PerformanceIkv": {
-        "model": PerformanceIkv,
-        "module": "storage",
-        "component": "general",
-        "verbose_name": "IKV PUT Performance"
-    },
-
-    "VolumePerformance": {
-        "model": VolumePerformance,
-        "module": "storage",
-        "component": "general",
-        "verbose_name": "Volume Performance"
-    },
-
-    "AllocSpeedPerformance": {
-        "model": AllocSpeedPerformance,
-        "module": "system",
-        "component": "general",
-        "verbose_name": "Alloc Speed Performance"
-    },
-
-    "WuLatencyAllocStack": {
-        "model": WuLatencyAllocStack,
-        "module": "system",
-        "component": "general",
-        "verbose_name": "WU Latency Test: Alloc stack"
-    },
-    "WuLatencyUngated": {
-        "model": WuLatencyUngated,
-        "module": "system",
-        "component": "general",
-        "verbose_name": "WU Latency Test: Ungated"
-    },
-    "EcPerformance": {
-        "model": EcPerformance,
-        "module": "storage",
-        "component": "general",
-        "verbose_name": "EC Performance"
-
-    },
-    "BcopyPerformance": {
-        "model": BcopyPerformance,
-        "module": "system",
-        "component": "general",
-        "verbose_name": "BCopy Performance"
-    },
-    "BcopyFloodDmaPerformance": {
-        "model": BcopyFloodDmaPerformance,
-        "module": "system",
-        "component": "general",
-        "verbose_name": "BCopy Flood DMA Performance"
-    },
-    "JenkinsJobIdMap": {
-        "model": JenkinsJobIdMap,
-        "module": "system",
-        "component": "general",
-        "verbose_name": "Jenkids Job Id map"
-    },
-    "LsvZipCryptoPerformance": {
-        "model": LsvZipCryptoPerformance,
-        "module": "storage",
-        "component": "general",
-        "verbose_name": "LSV Zip Crypto Performance"
-    },
-    "EcVolPerformance": {
-        "model": EcVolPerformance,
-        "module": "storage",
-        "component": "general",
-        "verbose_name": "EC Vol Performance"
-    },
-    "NuTransitPerformance": {
-        "model": NuTransitPerformance,
-        "module": "networking",
-        "component": "general",
-        "verbose_name": "NU Transit Performance"
-    },
-    "VoltestPerformance": {
-        "model": VoltestPerformance,
-        "module": "storage",
-        "component": "general",
-        "verbose_name": "Voltest Performance"
-    },
-    "WuDispatchTestPerformance": {
-        "model": WuDispatchTestPerformance,
-        "module": "system",
-        "component": "general",
-        "verbose_name": "WU Dispatch Performance Test"
-    },
-    "WuSendSpeedTestPerformance": {
-        "model": WuSendSpeedTestPerformance,
-        "module": "system",
-        "component": "general",
-        "verbose_name": "WU Dispatch Performance Test"
-    },
-    "HuRawVolumePerformance": {
-        "model": HuRawVolumePerformance,
-        "module": "storage",
-        "component": "general",
-        "verbose_name": "HU Raw Volume Performance"
-    },
-    "FunMagentPerformanceTest": {
-        "model": FunMagentPerformanceTest,
-        "module": "system",
-        "component": "general",
-        "verbose_name": "Fun Magent Performance test"
-    },
-    "ShaxPerformance": {
-        "model": ShaxPerformance,
-        "module": "security",
-        "component": "general",
-        "verbose_name": "Shax Performance"
-    }
-}
-'''

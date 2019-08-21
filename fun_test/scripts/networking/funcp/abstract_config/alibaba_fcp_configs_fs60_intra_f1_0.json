@@ -1,6 +1,6 @@
 {
     "Description": "F1-0-FS-60_Intrarack_abstract",
-    "F1Index" : 1,
+    "F1Index" : 3,
     "Interfaces" : [
 	{ 
 	    "name" : "fpg12",

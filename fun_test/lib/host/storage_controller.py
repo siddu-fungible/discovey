@@ -99,7 +99,7 @@ class StorageController(NetworkController, DpcshClient):
                        "params": {"huid": huid, "ctlid": ctlid, "fnid": fnid, "nsid": ns_id, "uuid": uuid}}
         return self.json_execute(verb=self.mode, data=detach_dict, command_duration=command_duration)
 
-    def create_rds_volume(self, capacity, block_size, uuid, name, remote_ip, remote_nsid, command_duration=TIMEOUT):
+    def create_rds_volume(self, capacity, block_size, uuid, name, remote_ip, port, remote_nsid, command_duration=TIMEOUT):
         create_dict = {"class": "volume",
                        "opcode": "VOL_ADMIN_OPCODE_CREATE",
                        "params": {"type": "VOL_TYPE_BLK_RDS",
@@ -108,6 +108,7 @@ class StorageController(NetworkController, DpcshClient):
                                   "uuid": uuid,
                                   "name": name,
                                   "remote_ip": remote_ip,
+                                  "port": port,
                                   "remote_nsid": remote_nsid}}
         return self.json_execute(verb=self.mode, data=create_dict, command_duration=command_duration)
 
@@ -164,19 +165,25 @@ class StorageController(NetworkController, DpcshClient):
                 volume_dict["params"][key] = kwargs[key]
         return self.json_execute(verb=self.mode, data=volume_dict, command_duration=command_duration)
 
-    def peek(self, props_tree, legacy=True, command_duration=TIMEOUT):
-        if legacy:
-            props_tree = "peek " + props_tree
-            return self.command(props_tree, legacy=True, command_duration=command_duration)
-        else:
-            return self.json_execute(verb="peek", data=props_tree, command_duration=command_duration)
+    def peek(self, props_tree, legacy=True, chunk=4096, command_duration=TIMEOUT):
+        try:
+            if legacy:
+                props_tree = "peek " + props_tree
+                return self.command(props_tree, legacy=True, chunk=chunk, command_duration=command_duration)
+            else:
+                return self.json_execute(verb="peek", data=props_tree, chunk=chunk, command_duration=command_duration)
+        except Exception as ex:
+            fun_test.critical(str(ex))
 
     def poke(self, props_tree, legacy=True, command_duration=TIMEOUT):
-        if legacy:
-            props_tree = "poke " + props_tree
-            return self.command(props_tree, legacy=True, command_duration=command_duration)
-        else:
-            return self.json_execute(verb="poke", data=props_tree, command_duration=command_duration)
+        try:
+            if legacy:
+                props_tree = "poke " + props_tree
+                return self.command(props_tree, legacy=True, command_duration=command_duration)
+            else:
+                return self.json_execute(verb="poke", data=props_tree, command_duration=command_duration)
+        except Exception as ex:
+            fun_test.critical(str(ex))
 
     def fail_volume(self, command_duration=TIMEOUT, **kwargs):
         volume_dict = {}
@@ -276,7 +283,7 @@ class StorageController(NetworkController, DpcshClient):
                     command_result = self.create_volume(
                         type=ec_info["volume_types"][vtype], capacity=ec_info["volume_capacity"][num][vtype],
                         block_size=ec_info["volume_block"][vtype], name=vtype + "_" + this_uuid[-4:], uuid=this_uuid,
-                        group_id=num+1, command_duration=command_timeout)
+                        group_id=num+3, command_duration=command_timeout)
                     fun_test.log(command_result)
                     fun_test.test_assert(command_result["status"],
                                          "Creating {} {} {} {} {} bytes volume on DUT instance".
@@ -290,7 +297,7 @@ class StorageController(NetworkController, DpcshClient):
                 type=ec_info["volume_types"]["ec"], capacity=ec_info["volume_capacity"][num]["ec"],
                 block_size=ec_info["volume_block"]["ec"], name="ec_" + this_uuid[-4:], uuid=this_uuid,
                 ndata=ec_info["ndata"], nparity=ec_info["nparity"], pvol_id=ec_info["uuids"][num]["blt"],
-                group_id=num+1, command_duration=command_timeout)
+                group_id=num+3, command_duration=command_timeout)
             fun_test.test_assert(command_result["status"], "Creating {} {}:{} {} bytes EC volume on DUT instance".
                                  format(num, ec_info["ndata"], ec_info["nparity"],
                                         ec_info["volume_capacity"][num]["ec"]))
@@ -303,7 +310,7 @@ class StorageController(NetworkController, DpcshClient):
                 command_result = self.create_volume(
                     type=ec_info["volume_types"]["jvol"], capacity=ec_info["volume_capacity"][num]["jvol"],
                     block_size=ec_info["volume_block"]["jvol"], name="jvol_" + this_uuid[-4:],
-                    uuid=ec_info["uuids"][num]["jvol"], group_id=num+1, command_duration=command_timeout)
+                    uuid=ec_info["uuids"][num]["jvol"], group_id=num+3, command_duration=command_timeout)
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Creating {} {} bytes Journal volume on DUT instance".
                                      format(num, ec_info["volume_capacity"][num]["jvol"]))
@@ -322,7 +329,7 @@ class StorageController(NetworkController, DpcshClient):
                                                         compress=ec_info['compress'],
                                                         zip_effort=ec_info['zip_effort'],
                                                         zip_filter=ec_info['zip_filter'],
-                                                        group_id=num+1,
+                                                        group_id=num+3,
                                                         command_duration=command_timeout)
                 else:
                     command_result = self.create_volume(type=ec_info["volume_types"]["lsv"],
@@ -331,7 +338,7 @@ class StorageController(NetworkController, DpcshClient):
                                                         name="lsv_" + this_uuid[-4:], uuid=this_uuid,
                                                         group=ec_info["ndata"], jvol_uuid=ec_info["uuids"][num]["jvol"],
                                                         pvol_id=ec_info["uuids"][num]["ec"],
-                                                        group_id=num+1,
+                                                        group_id=num+3,
                                                         command_duration=command_timeout)
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Creating {} {} bytes LS volume on DUT instance".

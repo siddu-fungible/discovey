@@ -1,5 +1,6 @@
 <div class="component">
-  <span style="margin-left: 20px" (click)="showingTestBeds = !showingTestBeds" class="pseudo-anchor">{{ !showingTestBeds? "+ Show": "- Hide" }} test-beds</span>
+  <span style="margin-left: 20px" (click)="showingTestBeds = !showingTestBeds"
+        class="pseudo-anchor">{{ !showingTestBeds? "+ Show": "- Hide" }} test-beds</span>
   <app-test-bed *ngIf="showingTestBeds" [embed]="true"></app-test-bed>
 
   <div class="card">
@@ -45,8 +46,66 @@
               (click)="onStateFilterClick(stateMap.SUBMITTED)">Submitted</span>&nbsp;
         <span class="pseudo-anchor" [ngClass]="{'filter-selected': stateFilterString === filter.AUTO_SCHEDULED}"
               (click)="onStateFilterClick(stateMap.AUTO_SCHEDULED)">Auto-scheduled</span>&nbsp;
+        <span class="pseudo-anchor link-span-secondary" [ngClass]="{'link-span-secondary-active' : searching}" (click)="onSearch()">
+          Advanced search &nbsp;<i class="fa fa-search" style="font-size:14px; color: blue"></i>
+        </span>
 
       </div>
+      <div *ngIf="searching" [@fadeIn] class="card" >
+        <div class="card-body">
+          <form [formGroup]="searchForm" (ngSubmit)="onSubmit()">
+            <div>
+              <div  *ngIf="fetchedUsers" style="width: 50%; margin-bottom: 10px; margin-top: 10px">
+              <label>Submitters</label>
+              <ng-multiselect-dropdown
+                [placeholder]="'Select users'"
+                [data]="submitterEmails"
+                [settings]="dropDownSettings"
+                (onSelect)="onItemSelect($event)"
+                (onSelectAll)="onSelectAll($event)"
+                formControlName="submitters" [ngClass]="{'disabled' : searchingByExecutionId}">
+              </ng-multiselect-dropdown>
+
+            </div>
+
+            <div  *ngIf="fetchedSuites" style="width: 50%; margin-bottom: 10px; margin-top: 10px">
+              <label>Suite paths</label>
+              <ng-multiselect-dropdown
+                [placeholder]="'Select suite paths'"
+                [data]="suitesInfoKeys"
+                [settings]="dropDownSettings"
+                (onSelect)="onItemSelect($event)"
+                (onSelectAll)="onSelectAll($event)"
+                formControlName="suiteName" [class.is-invalid]="searchForm.errors?.atLeastOne" [ngClass]="{'disabled' : searchingByExecutionId}">
+              </ng-multiselect-dropdown>
+
+            </div>
+
+            </div>
+            <br>
+
+            <div  style="width: 50%">
+              <div style="border: none; font-size: 14px;">
+                <label class="checkbox-inline">
+                  <input type="checkbox" formControlName="searchByExecutionId" (click)="onSelectSuiteExecutionId()">&nbsp;Search by suite execution
+                </label>
+              </div>
+            </div>
+
+            <div style="width: 50%">
+              <label>Suite execution id&nbsp;&nbsp;</label>
+              <input type="text" formControlName="executionId">
+            </div>
+
+            <span class="pseudo-anchor" (click)="onCancel()">Cancel</span> &nbsp;
+
+            <button class="btn btn-success submit-button" [disabled]="!searchForm.valid" type="submit" (click)="executionReload()">Submit</button>
+          </form>
+        </div>
+
+
+      </div>
+
 
       <div class="text-center">
         <!-- pager -->
@@ -77,10 +136,10 @@
       <table class="table table-hover table-responsive table-bordered"
              *ngIf="stateFilterString !== filter.AUTO_SCHEDULED">
         <tr style="text-align: center">
-          <th></th>
           <th>ID</th>
           <th>Result</th>
           <th>State</th>
+          <th>Actions</th>
           <th tooltip [tooltipContentString]="'Test-cases that passed'" placement="top">
             <label class="badge badge-success">P</label>
           </th>
@@ -98,11 +157,11 @@
           <th>Started at</th>
           <th>Submitter</th>
           <th>Suite/Script</th>
-          <th>Actions</th>
           <th>Re-runs</th>
           <th>Test-bed</th>
           <th>Jenkins params</th>
           <th>Tags</th>
+          <th></th>
 
         </tr>
         <tr *ngIf="suiteExecutionsCount === 0">
@@ -114,13 +173,6 @@
 
           <ng-container *ngIf="suiteExecution.fields.state != stateMap.AUTO_SCHEDULED">
             <tr style="text-align: center">
-              <td>
-                <ng-container>
-                  <i (click)="onDeleteSuiteExecution(suiteExecution)" class="fa fa-trash-o"
-                     style="font-size:20px; color: red"></i>
-                </ng-container>
-              </td>
-
               <td>
                 <a [routerLink]="'/regression/suite_detail/' + suiteExecution.fields.execution_id">
                   {{ suiteExecution.fields.execution_id }}
@@ -168,6 +220,87 @@
                 </ng-container>
 
               </td>
+              <td>
+                <div ngbDropdown class="dropdown" *ngIf="suiteExecution.fields.suite_type ==='regular'">
+                  <a class="dropdown-toggle" role="button" aria-haspopup="true"
+                     aria-expanded="false" ngbDropdownToggle>...
+                  </a>
+                  <div ngbDropdownMenu class="dropdown-menu" aria-labelledby="navbarDropdown">
+                    <ng-template #content let-modal>
+                      <div class="card">
+                        <div class="card-header">
+                          Re-run options
+                        </div>
+                        <div class="card-body">
+                          <div class="re-run-div">
+                            <button (click)="toggleReRunOptions()" class="btn click-button" [ngClass]="{'btn-primary': reRunOptionsReRunAll, 'btn-outline-primary': !reRunOptionsReRunAll}" ><i class="fa" [ngClass]="{'fa-check': reRunOptionsReRunAll}"></i> Re-run all</button>
+                          </div>
+                          <div class="re-run-div">
+                            <button (click)="toggleReRunOptions()" class="btn click-button" [ngClass]="{'btn-primary': reRunOptionsReRunFailed, 'btn-outline-primary': !reRunOptionsReRunFailed}"><i class="fa" [ngClass]="{'fa-check': reRunOptionsReRunFailed}"></i> Re-run failed</button>
+                          </div>
+                          <div class="re-run-div">
+                            <button (click)="togglereUseBuildImage()" class="btn click-button" [ngClass]="{'btn-primary': reUseBuildImage, 'btn-outline-primary': !reUseBuildImage}"><i class="fa" [ngClass]="{'fa-check': reUseBuildImage}"></i>Re-use Jenkins build image</button> (From the original run)
+                          </div>
+                          <div>
+                          </div>
+
+                          <app-section-horizontal-line></app-section-horizontal-line>
+                          <div style="display: flex; justify-content: flex-end">
+                            <span class="pseudo-anchor" (click)="modal.dismiss('Cross click')">Cancel</span> &nbsp;&nbsp;
+                            <button class="btn btn-success submit-button" (click)="modal.close(suiteExecution)">Submit</button>
+                          </div>
+                        </div>
+
+                      </div>
+
+                    </ng-template>
+                    <ng-container>
+                      <span
+                        (click)="reRunClick(suiteExecution.fields.execution_id, suiteExecution.fields.suite_path, null, false)"
+                        class="dropdown-item anchor-button pseudo-anchor">
+                        Re-run all
+                        <span class="dropdown-item-sub-text"> (This will rebuild the image on Jenkins again)</span>
+                      </span>
+                      <span
+                          (click)="reRunClick(suiteExecution.fields.execution_id, suiteExecution.fields.suite_path, ['FAILED', 'NOT_RUN'], false)"
+                          class="dropdown-item anchor-button pseudo-anchor">
+                        Re-run failed
+                        <span class="dropdown-item-sub-text"> (This will rebuild the image on Jenkins again)</span>
+                      </span>
+                      <span *ngIf="suiteExecution.fields.test_bed_type !== 'simulation'"
+                        (click)="reRunClick(suiteExecution.fields.execution_id, suiteExecution.fields.suite_path, null, true)"
+                        class="dropdown-item anchor-button pseudo-anchor">
+                        Quick re-run all
+                        <span class="dropdown-item-sub-text"> (This will not rebuild the image on Jenkins again. Instead, it will re-use the image from original job)</span>
+                      </span>
+                      <span *ngIf="suiteExecution.fields.test_bed_type !== 'simulation'"
+                        (click)="reRunClick(suiteExecution.fields.execution_id, suiteExecution.fields.suite_path, ['FAILED', 'NOT_RUN'], true)"
+                        class="dropdown-item anchor-button pseudo-anchor">
+                        Quick re-run failed
+                        <span class="dropdown-item-sub-text"> (This will not rebuild the image on Jenkins again. Instead, it will re-use the image from original job)</span>
+                      </span>
+                    </ng-container>
+
+                    <span *ngIf="suiteExecution.fields.state > stateMap.COMPLETED"
+                          (click)="killClick(suiteExecution.fields.execution_id)"
+                          class="dropdown-item anchor-button pseudo-anchor">Kill
+                    </span>
+                  </div>
+                </div>
+
+                <div ngbDropdown class="dropdown"
+                     *ngIf="suiteExecution.fields.suite_type ==='dynamic' && suiteExecution.fields.state > stateMap.COMPLETED">
+                  <a class="dropdown-toggle" role="button" aria-haspopup="true"
+                     aria-expanded="false" ngbDropdownToggle>...
+                  </a>
+                  <div ngbDropdownMenu class="dropdown-menu" aria-labelledby="navbarDropdown">
+
+                    <span *ngIf="suiteExecution.fields.state > stateMap.COMPLETED"
+                          (click)="killClick(suiteExecution.fields.execution_id)"
+                          class="dropdown-item anchor-button pseudo-anchor">Kill</span>
+                  </div>
+                </div>
+              </td>
               <td>{{ suiteExecution.num_passed }}</td>
               <td>{{ suiteExecution.num_failed }}</td>
               <td>{{ suiteExecution.num_not_run }}</td>
@@ -181,79 +314,49 @@
               </td>
               <td>
               <span class="pseudo-anchor"
-                    (click)="navigateByQueryParams({submitter_email: suiteExecution.fields.submitter_email})">{{ userMap[suiteExecution.fields.submitter_email]?.first_name }} {{ userMap[suiteExecution.fields.submitter_email]?.last_name.charAt(0)}}
+                    (click)="navigateByQueryParams([{submitter_email: suiteExecution.fields.submitter_email}])">{{ userMap[suiteExecution.fields.submitter_email]?.first_name }} {{ userMap[suiteExecution.fields.submitter_email]?.last_name.charAt(0)}}
               </span>
               </td>
 
               <td>
                 <ng-container *ngIf="suiteExecution.fields.suite_type === 'dynamic'; else regularSuitePath">
                   <span class="pseudo-anchor"
-                        (click)="navigateByQueryParams({suite_path: getReRunOriginalSuitePath(suiteExecution)})">Re({{ getReRunOriginalSuitePath(suiteExecution)}})</span>
-                  &nbsp;&nbsp;<small><span (click)="showDetailsClick(suiteExecution)" class="pseudo-anchor">...details</span></small>
+                        (click)="navigateByQueryParams([{suite_path: getReRunOriginalSuitePath(suiteExecution)}])">Re({{ getReRunOriginalSuitePath(suiteExecution)}})</span>
+                  &nbsp;&nbsp;<small><span (click)="showDetailsClick(suiteExecution)"
+                                           class="pseudo-anchor">...details</span></small>
                   <small>{{ suiteExecution.fields.description }}</small>
 
                 </ng-container>
                 <ng-template #regularSuitePath>
                   <span class="pseudo-anchor"
-                        (click)="navigateByQueryParams({suite_path: suiteExecution.fields.suite_path})">{{ suiteExecution.fields?.suite_path?.length > 0 ? suiteExecution.fields.suite_path: suiteExecution.fields.script_path }}
+                        (click)="navigateByQueryParams([{suite_path: suiteExecution.fields.suite_path}])">{{ suiteExecution.fields?.suite_path?.length > 0 ? suiteExecution.fields.suite_path: suiteExecution.fields.script_path }}
                   </span>
-                  &nbsp;&nbsp;<small><span (click)="showDetailsClick(suiteExecution)" class="pseudo-anchor">...details</span></small>
+                  &nbsp;&nbsp;<small><span (click)="showDetailsClick(suiteExecution)"
+                                           class="pseudo-anchor">...details</span></small>
                   <p *ngIf="suiteExecution.fields.description">
                     <small>{{ suiteExecution.fields.description }}</small>
                   </p>
                 </ng-template>
 
               </td>
-              <td>
-                <div ngbDropdown class="dropdown" *ngIf="suiteExecution.fields.suite_type ==='regular'">
-                  <a class="dropdown-toggle" role="button" aria-haspopup="true"
-                     aria-expanded="false" ngbDropdownToggle>...
-                  </a>
-                  <div ngbDropdownMenu class="dropdown-menu" aria-labelledby="navbarDropdown">
-                    <ng-container>
-                    <span
-                      (click)="reRunClick(suiteExecution.fields.execution_id, suiteExecution.fields.suite_path)"
-                      class="dropdown-item anchor-button pseudo-anchor">
-                      Re-run all</span>
-                      <span
-                        (click)="reRunClick(suiteExecution.fields.execution_id, suiteExecution.fields.suite_path, ['FAILED', 'NOT_RUN'])"
-                        class="dropdown-item anchor-button pseudo-anchor">
-                       Re-run failed</span>
-                    </ng-container>
-                    <span *ngIf="suiteExecution.fields.state > stateMap.COMPLETED"
-                          (click)="killClick(suiteExecution.fields.execution_id)"
-                          class="dropdown-item anchor-button pseudo-anchor">Kill</span>
-                  </div>
-                </div>
 
-                <div ngbDropdown class="dropdown"
-                     *ngIf="suiteExecution.fields.suite_type ==='dynamic' && suiteExecution.fields.state > stateMap.COMPLETED">
-                  <a class="dropdown-toggle" role="button" aria-haspopup="true"
-                     aria-expanded="false" ngbDropdownToggle>...
-                  </a>
-                  <div ngbDropdownMenu class="dropdown-menu" aria-labelledby="navbarDropdown">
-                    <span (click)="killClick(suiteExecution.fields.execution_id)"
-                          class="dropdown-item anchor-button pseudo-anchor">Kill</span>
-                  </div>
-                </div>
-              </td>
               <td>
-              <span (click)="showDetailsClick(suiteExecution)" *ngIf="suiteExecution?.reRunInfo?.numActive"
-                    class="text-color-red">Active: <span
-                class="pseudo-anchor">{{ suiteExecution?.reRunInfo?.numActive }}</span></span>
+                <span (click)="showDetailsClick(suiteExecution)" *ngIf="suiteExecution?.reRunInfo?.numActive"
+                      class="text-color-red">Active: <span
+                  class="pseudo-anchor">{{ suiteExecution?.reRunInfo?.numActive }}</span></span>
                 &nbsp;<span (click)="showDetailsClick(suiteExecution)" *ngIf="suiteExecution?.reRunInfo?.numCompleted "
                             class="text-color-green">Completed: <span
                 class="pseudo-anchor">{{ suiteExecution?.reRunInfo?.numCompleted }}</span></span>
                 <ng-container *ngIf="suiteExecution.fields.suite_type === 'dynamic'">
-                <span (click)="showDetailsClick(suiteExecution)"
-                      *ngIf="suiteExecution?.reRunInfo?.reRunInfo.length > 0">
-                  <a href="/regression/suite_detail/{{ suiteExecution?.reRunInfo.reRunInfo[0].original.suite_execution_id }}">Original: {{ suiteExecution?.reRunInfo.reRunInfo[0].original.suite_execution_id }} </a>
-                </span>
+                  <span (click)="showDetailsClick(suiteExecution)"
+                        *ngIf="suiteExecution?.reRunInfo?.reRunInfo.length > 0">
+                    <a href="/regression/suite_detail/{{ suiteExecution?.reRunInfo.reRunInfo[0].original.suite_execution_id }}">Original: {{ suiteExecution?.reRunInfo.reRunInfo[0].original.suite_execution_id }} </a>
+                  </span>
                 </ng-container>
               </td>
               <td>
                 <span class="pseudo-anchor"
-                      (click)="navigateByQueryParams({test_bed_type: suiteExecution.fields.test_bed_type})">{{ suiteExecution.fields.test_bed_type }}</span>
+                      (click)="navigateByQueryParams([{test_bed_type: suiteExecution.fields.test_bed_type}])">{{ suiteExecution.fields.test_bed_type }}</span>
               </td>
               <td>
                 <span *ngIf="suiteExecution?.BRANCH_FunOS"
@@ -262,8 +365,14 @@
               </td>
               <td>
                 <label *ngFor="let tag of getTagList(suiteExecution.fields.tags)" class="badge badge-primary">
-                  <span style="cursor: pointer" (click)="navigateByQueryParams({tag: tag})">{{ tag }}</span>
+                  <span style="cursor: pointer" (click)="navigateByQueryParams([{tag: tag}])">{{ tag }}</span>
                 </label>
+              </td>
+              <td>
+                <ng-container>
+                  <i (click)="onDeleteSuiteExecution(suiteExecution)" class="fa fa-trash-o"
+                     style="font-size:20px; color: red"></i>
+                </ng-container>
               </td>
             </tr>
             <tr *ngIf="suiteExecution.showingDetails">
@@ -280,9 +389,14 @@
                                   [reRunInfo]="suiteExecution.reRunInfo"></app-re-run-panel>
               </td>
             </tr>
+
           </ng-container>
 
+
+
+
         </ng-container>
+
       </table>
       <table class="table" *ngIf="stateFilterString === filter.AUTO_SCHEDULED">
         <tr>
@@ -308,7 +422,8 @@
             <td>{{ suiteExecution.fields.submitter_email }}</td>
             <td>
               {{ suiteExecution.fields.suite_type === 'dynamic'? 'Re(' + getReRunOriginalSuitePath(suiteExecution) + ')' : suiteExecution.fields.suite_path }}
-              &nbsp;&nbsp;<small><span (click)="showDetailsClick(suiteExecution)" class="pseudo-anchor">...details</span></small>
+              &nbsp;&nbsp;<small><span (click)="showDetailsClick(suiteExecution)"
+                                       class="pseudo-anchor">...details</span></small>
 
             </td>
 
@@ -325,30 +440,30 @@
             </ng-container>
             <td>{{ suiteExecution.fields.test_bed_type }}</td>
             <td>
-              <app-toggle-button [checked]="!suiteExecution.fields?.disable_schedule" (changed)="onChangeAutoSchedule($event, suiteExecution)"></app-toggle-button>
+              <app-toggle-button [checked]="!suiteExecution.fields?.disable_schedule"
+                                 (changed)="onChangeAutoSchedule($event, suiteExecution)"></app-toggle-button>
             </td>
 
           </tr>
           <tr *ngIf="suiteExecution.showingDetails">
-              <td colspan="8">
-                <ng-container *ngIf="(suiteExecution.parsedInputs | keyvalue)?.length">
-                  <div><b>Inputs</b></div>
+            <td colspan="8">
+              <ng-container *ngIf="(suiteExecution.parsedInputs | keyvalue)?.length">
+                <div><b>Inputs</b></div>
 
-                  <ngx-json-viewer [json]="suiteExecution.parsedInputs" [expanded]="false"></ngx-json-viewer>
-                </ng-container>
-                <ng-container *ngIf="(suiteExecution.parsedEnvironment | keyvalue)?.length">
-                  <div><b>Environment</b></div>
+                <ngx-json-viewer [json]="suiteExecution.parsedInputs" [expanded]="false"></ngx-json-viewer>
+              </ng-container>
+              <ng-container *ngIf="(suiteExecution.parsedEnvironment | keyvalue)?.length">
+                <div><b>Environment</b></div>
 
-                  <ngx-json-viewer [json]="suiteExecution.parsedEnvironment" [expanded]="false"></ngx-json-viewer>
-                </ng-container>
-                <app-re-run-panel *ngIf="suiteExecution.reRunInfo"
-                                  [reRunInfo]="suiteExecution.reRunInfo"></app-re-run-panel>
-              </td>
-            </tr>
+                <ngx-json-viewer [json]="suiteExecution.parsedEnvironment" [expanded]="false"></ngx-json-viewer>
+              </ng-container>
+              <app-re-run-panel *ngIf="suiteExecution.reRunInfo"
+                                [reRunInfo]="suiteExecution.reRunInfo"></app-re-run-panel>
+            </td>
+          </tr>
         </ng-container>
       </table>
     </div>
   </div>
 
 </div>
-

@@ -563,12 +563,19 @@ def test_host_fio(host, username="localadmin", password="Precious1*", strict=Fal
         critical_log(expression=fio_dict, message="Fio Result")
 
 
-def reload_nvme_driver(host, username="localadmin", password="Precious1*"):
+def reload_nvme_driver(host, username="localadmin", password="Precious1*", ns_id=1):
     host_obj = Linux(host_ip=host, ssh_username=username, ssh_password=password,
                      connect_retry_timeout_max=60)
     host_obj.sudo_command("rmmod nvme; rmmod nvme_core", timeout=120)
     fun_test.sleep("Waiting for 10 seconds before loading driver", 10)
     host_obj.sudo_command("modprobe nvme")
+
+    # Check if volume exists
+    lsblk_output = host_obj.lsblk()
+    volume_name = "nvme0n" + str(ns_id)
+    fun_test.test_assert(volume_name in lsblk_output, "{} device available".format(volume_name))
+    fun_test.test_assert_expected(expected="disk", actual=lsblk_output[volume_name]["type"],
+                                  message="{} device type check".format(volume_name))
 
 
 def get_nvme_dev(host, username="localadmin", password="Precious1*"):
