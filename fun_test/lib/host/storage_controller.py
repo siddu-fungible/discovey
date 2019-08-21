@@ -422,6 +422,13 @@ class StorageController(NetworkController, DpcshClient):
         except Exception as ex:
             fun_test.critical(str(ex))
 
+    def peek_per_vp_stats(self, command_timeout=TIMEOUT):
+        try:
+            cmd = "stats/per_vp"
+            return self.json_execute(verb="peek", data=cmd, command_duration=command_timeout)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
 
 if __name__ == "__main__":
     sc = StorageController(target_ip="10.1.20.67", target_port=40220)
