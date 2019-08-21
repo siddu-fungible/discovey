@@ -37,9 +37,6 @@ export class SuiteEditorComponent implements OnInit {
 
   CustomAssetSelection = CustomAssetSelection;
 
-  MAX_NUM_DUTS = 10;
-  MAX_NUM_HOSTS = 20;
-  MAX_NUM_PERF_LISTENER_HOSTS = 2;
   dropDownSettings = {};
   assetTypes: any = null;
   flattenedAssetTypeNames: string[] = [];
@@ -98,6 +95,9 @@ export class SuiteEditorComponent implements OnInit {
     })).subscribe(response => {
       this.customTestBedSpecForm = this.prepareFormGroup();
       let i = 0;
+      this.customTestBedSpecForm.get('selectedTestBed').valueChanges.subscribe(selection => {
+        this.selectedTestBed = selection;
+      })
     });
 
 
@@ -142,16 +142,24 @@ export class SuiteEditorComponent implements OnInit {
     Object.keys(this.assetTypes).forEach(assetTypeKey => {
       let flatName = this._flattenName(assetTypeKey);
       this.flattenedAssetTypeNames.push(flatName);
-      this.flattenedAssetTypeNameMap[flatName] = this.assetTypes[assetTypeKey];
+      this.flattenedAssetTypeNameMap[flatName] = {name: this.assetTypes[assetTypeKey], data: null};
       let assetSelectionKey = this._getAssetSelectionKey(flatName);
       let numAssetsKey = this._getNumAssetsKey(flatName);
       let specificAssetsKey = this._getSpecificAssetsKey(flatName);
       group[assetSelectionKey] = new FormControl(CustomAssetSelection.NUM);
       group[numAssetsKey] = new FormControl();
       group[specificAssetsKey] = new FormControl();
-    })
+      this.flattenedAssetTypeNameMap[flatName].data = [];
+      this.assets.forEach(asset => {
+        if (asset.type === this.assetTypes[assetTypeKey]) {
+          this.flattenedAssetTypeNameMap[flatName].data.push(asset.name);
+        }
+      })
+
+    });
     return new FormGroup(group);
   }
+
 
   _flattenName(name: string): string {  /* flatten DUT to dut, Perf Listener to "perf_listener"*/
     return name.toLowerCase().replace(" ", "_");
@@ -170,8 +178,9 @@ export class SuiteEditorComponent implements OnInit {
   }
 
   test() {
-    //console.log(this.selectedTestBed);
-    // console.log(this.customTestBedSpecForm.get("selectedTestBed").value);
+    //console.log(this.selectedTestBed.value);
+     console.log(this.selectedTestBed);
+     console.log(this.customTestBedSpecForm.get("selectedTestBed").value);
     // console.log(this.customTestBedSpecForm.get("customDutSelection").value);
     // console.log(this.customTestBedSpecForm.get("numDuts").value);
     // console.log(this.customTestBedSpecForm.get("selectedDuts").value);
