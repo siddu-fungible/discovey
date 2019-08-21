@@ -163,7 +163,7 @@ class PingTest(FunTestCase):
     server_key = {}
 
     def describe(self):
-        self.set_test_details(id=4, summary="Test Pings and CHeck Port Stats",
+        self.set_test_details(id=3, summary="Test Pings and CHeck Port Stats",
                               steps="""
                                       1. SSH into each host
                                       2. Check PCIe link
@@ -238,7 +238,7 @@ class TestHostPCIeLanes(FunTestCase):
 
 class LocalSSDTest(StorageConfiguration):
     def describe(self):
-        self.set_test_details(id=3,
+        self.set_test_details(id=4,
                               summary="Run fio traffic on locally attached SSD",
                               steps="""
                                       1. Create BLT volume
@@ -341,6 +341,6 @@ if __name__ == '__main__':
     ts = SetupBringup()
     ts.add_test_case(BootF1())
     ts.add_test_case(TestHostPCIeLanes())
-    ts.add_test_case(LocalSSDTest())
     ts.add_test_case(PingTest())
+    ts.add_test_case(LocalSSDTest())
     ts.run()
