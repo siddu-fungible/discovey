@@ -10,7 +10,7 @@ import {Title} from "@angular/platform-browser";
 import {ReRunService} from "./re-run.service";
 import {LoggerService} from '../services/logger/logger.service';
 import {RegressionService} from "./regression.service";
-import {Observable, of} from "rxjs";
+import {Observable, of, merge} from "rxjs";
 import {switchMap} from "rxjs/operators";
 import {UserService} from "../services/user/user.service";
 import {NgbModal, ModalDismissReasons} from '@ng-bootstrap/ng-bootstrap';
@@ -97,6 +97,7 @@ enum Filter {
 export class RegressionComponent implements OnInit {
   @ViewChild('searchForm') formValues;
   searching: boolean = false;
+  searchingByExecutionId: boolean = false;
   pager: any = {};
   suiteExecutionsCount: number;
   recordsPerPage: number;
@@ -146,15 +147,22 @@ export class RegressionComponent implements OnInit {
   ngOnInit() {
     this.searchForm = this.fb.group({
       submitters: [[]],
-      executionId: [''],
-      suiteName: ['']
+      executionId: [{value: '',disabled: true}],
+      suiteName: [''],
+      searchByExecutionId: ['']
     }, {validator: this.atLeastOneValidator});
 
-    // this.searchForm.valueChanges.subscribe(newValue => {
-    //
-    // });
-
-
+    this.searchForm.get('searchByExecutionId').valueChanges
+      .subscribe(v => {
+        if (v){
+          this.searchingByExecutionId = true;
+          this.searchForm.get('executionId').enable();
+        }
+        else{
+          this.searchingByExecutionId = false;
+          this.searchForm.get('executionId').disable();
+        }
+      });
 
     this.dropDownSettings = {
       singleSelection: false,
@@ -163,7 +171,7 @@ export class RegressionComponent implements OnInit {
       selectAllText: 'Select All',
       unSelectAllText: 'UnSelect All',
       itemsShowLimit: 3,
-      allowSearchFilter: true
+      allowSearchFilter: true,
     };
     this.title.setTitle('Regression');
     if (this.route.snapshot.data["tags"]) {
@@ -633,15 +641,33 @@ export class RegressionComponent implements OnInit {
     this.searchForm.reset();
   }
 
+  onSelectSuiteExecutionId() {
+    this.searchForm.controls.submitters.setValue('');
+    this.searchForm.controls.suiteName.setValue('');
+  }
+
   onSearch() {
-    this.searching = true;
+    if (this.searching == true){
+      this.onCancel();
+    }
+    else {
+      this.searching = true;
+    }
+  }
+
+  executionReload() {
+    let executionId = this.searchForm.get('executionId').value;
+    if (this.searchingByExecutionId == true && !(executionId == "" || executionId == null)){
+      window.open("/regression/suite_detail/" + executionId, '_blank');
+    }
+
   }
 
   _flatten(items) {
     let itemString = '';
     for (let i = 0; i < items.length; ++i) {
       itemString += items[i];
-      if (items[i + 1]) {
+      if (i != (items.length - 1)) {
         itemString += ',';
       }
     }
@@ -658,12 +684,16 @@ export class RegressionComponent implements OnInit {
   atLeastOneValidator(group: FormGroup): { [key: string]: boolean } | null {
       const submitters = group.get('submitters');
       const suiteName = group.get('suiteName');
-      console.log(suiteName);
-      console.log(submitters);
-      if ((suiteName.value == "" || suiteName.value == null) && (submitters.value == "" || submitters.value == null)) {
+      const searchByExecutionId = group.get('searchByExecutionId');
+      const executionId = group.get('executionId');
+      console.log(searchByExecutionId.value);
+      if (((suiteName.value == "" || suiteName.value == null) && (submitters.value == "" || submitters.value == null)) && searchByExecutionId.value == false) {
+        return {'atLeastOne': true};
+      }
+      else if (searchByExecutionId.value == true && (executionId.value == "" || executionId.value == null)){
         return {'atLeastOne': true};
       }
       return null;
   }
-}
 
+}
