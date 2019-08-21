@@ -89,4 +89,18 @@ export class CommonService {
     return keyString;
   }
 
+  getEpochBounds(dateTime): number[] {
+    dateTime.setHours(23);
+    dateTime.setMinutes(59);
+    dateTime.setSeconds(59);
+    dateTime.setMilliseconds(0);
+    let toEpoch = dateTime.getTime();
+    dateTime.setHours(0);
+    dateTime.setMinutes(0);
+    dateTime.setSeconds(1);
+    dateTime.setMilliseconds(0);
+    let fromEpoch = dateTime.getTime();
+    return [fromEpoch, toEpoch];
+  }
+
 }

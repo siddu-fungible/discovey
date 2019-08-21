@@ -1,0 +1,37 @@
+{% for report in all_reports %}
+{% for key, data_sets in report.items() %}
+<b>{{ key }}</b><br>
+<table>
+    <tr style="background-color: #337ab7; color: white">
+        <th>Link to chart</th>
+        <th>Dataset name</th>
+        <th>Yesterday</th>
+        <th>Today</th>
+        <th>Percentage change</th>
+        <th>Unit</th>
+    </tr>
+    {% for data_set in data_sets %}
+    <tr>
+        <td>
+            <a href="{{ data_set.url }}" target="_blank">Link</a>
+        </td>
+        <td>
+            {{ data_set.name }}
+        </td>
+        <td>
+            {{ data_set.yesterday }}
+        </td>
+        <td>
+            {{ data_set.today }}
+        </td>
+        <td>
+            {{ data_set.percentage }}
+        </td>
+        <td>
+            {{ data_set.unit }}
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+{% endfor %}
+{% endfor %}

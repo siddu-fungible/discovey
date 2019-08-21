@@ -1,0 +1,218 @@
+<div class="component">
+  <table class="table table-nonfluid table-borderless" style="margin: 20px">
+    <tr>
+      <td class="no-wrap">
+        <label for="submitter" class="required-label">User:</label>
+      </td>
+      <td>
+        <select id="submitter" [(ngModel)]="selectedUser" (ngModelChange)="onUserChange($event)">
+          <option *ngFor="let user of users" [ngValue]="user">{{
+            user.first_name }} {{
+            user.last_name }}
+            ({{ user.email }})
+          </option>
+        </select>
+        &nbsp;
+        <a href="/users" target="_blank">Can't find your name? Add user</a>
+      </td>
+    </tr>
+  </table>
+  <!--deleting performance-workspace template-->
+  <ng-template #deleteWorkspace let-modal>
+    <div class="modal-header">
+      <h4 class="modal-title" id="modal-title">Delete workspace</h4>
+      <button type="button" class="close" aria-describedby="modal-title" (click)="modal.dismiss('Cross click')">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p><strong>Are you sure you want to delete <span class="text-primary">"{{ deletingWorkspace.name }}"</span>
+        workspace
+        ?</strong></p>
+      <p>All information associated to this user workspace will be permanently deleted.
+        <span class="text-danger">This operation can not be undone.</span>
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline-success" (click)="onDeleteWorkspace(deletingWorkspace)">Yes</button>
+      <button type="button" class="btn btn-outline-danger" (click)="modal.dismiss('No click')">No</button>
+    </div>
+  </ng-template>
+  <!--Adding performance-workspace template-->
+  <ng-template #addWorkspace let-modal>
+    <div class="modal-header">
+      <h4 class="modal-title" id="modal-add-workspace">Add Workspace</h4>
+      <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+    <div class="modal-body">
+      <form>
+        <div class="form-group">
+          <table style="width: 100%">
+            <tr>
+              <td>
+                Workspace name:
+              </td>
+              <td style="width: 70%">
+                <input type="text" [(ngModel)]="workspaceName" style="vertical-align: middle; width: 100%;"
+                       name="workspaceName">
+              </td>
+            </tr>
+            <tr>
+              <td>
+                Description:
+              </td>
+              <td>
+                <textarea rows="5" [(ngModel)]="description" style="vertical-align: middle; width: 100%"
+                          name="description"></textarea>
+              </td>
+            </tr>
+          </table>
+        </div>
+      </form>
+      <p *ngIf="createError">
+        <label style="color: red">{{ createError }}</label>
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline-success btn-sm" (click)="createWorkspace()">Create</button>&nbsp;
+    </div>
+  </ng-template>
+  <!--editing performance-workspace template-->
+  <ng-template #editWorkspace let-modal>
+    <div class="modal-header">
+      <h4 class="modal-title" id="modal-edit-workspace">Edit Workspace - {{ currentWorkspace.name }}</h4>
+      <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="edit-description">
+          <b>Description: </b><a *ngIf="!currentWorkspace.editingDescription"
+                                 (click)="currentWorkspace.editingDescription = true"><i
+          class="fa fa-pencil"></i></a>
+        <i *ngIf="currentWorkspace.editingDescription" class="fa fa-check fa-fw tick-color"
+           (click)="currentWorkspace.editingDescription = false"></i>
+        <br>
+          <div *ngIf="!currentWorkspace.editingDescription" [innerHTML]="currentWorkspace.description | safeHtml"></div>
+          <textarea *ngIf="currentWorkspace.editingDescription" rows="5" [(ngModel)]="currentWorkspace.description" style="min-width:
+          100%;"></textarea>
+        </div>
+      <div class="card" style="height: auto; justify-content: left;">
+        <div class="card-header">
+          Tracked metrics
+        </div>
+        <div class="card-body">
+          <table style="width: 100%">
+            <tr>
+              <th style="width: 30%">
+                Chart name
+              </th>
+              <th style="width: 10%">
+                Track
+              </th>
+              <th style="width: 10%">
+                Subscribe to alerts
+              </th>
+              <th style="width: 30%">
+                Lineage
+              </th>
+              <th style="width: 10%">
+
+              </th>
+            </tr>
+            <tr *ngFor="let metric of currentWorkspace.interestedMetrics">
+              <td>
+                {{ metric['chart_name'] }}
+              </td>
+              <td>
+                <app-toggle-button [checked]="metric['track']"
+                                   (changed)="onChangeTrack($event, metric.metric_id)"></app-toggle-button>
+              </td>
+              <td>
+                <app-toggle-button [checked]="metric['subscribe']"
+                                   (changed)="onChangeSubscribeTo($event, metric.metric_id)"></app-toggle-button>
+              </td>
+              <td>
+                {{ metric["lineage"] }}
+              </td>
+              <td style="text-align: center">
+                <a [routerLink]="" (click)="deleteMetricInWorkspace(metric.metric_id)">Delete</a>
+              </td>
+            </tr>
+          </table>
+          <a *ngIf="!currentWorkspace.editingWorkspace" [routerLink]=""
+             (click)="currentWorkspace.editingWorkspace = true">Add
+            metrics</a>
+          <a *ngIf="currentWorkspace.editingWorkspace" [routerLink]=""
+             (click)="currentWorkspace.editingWorkspace = false">Close editing</a>
+        </div>
+
+      </div>
+      <div *ngIf="currentWorkspace.editingWorkspace" class="card"
+           style="height: auto; justify-content: left">
+        <div class="card-body">
+          <app-performance [selectMode]="true" [userProfileEmail]="selectedUser.email"
+                           [workspaceId]="currentWorkspace.workspaceId"
+                           [interestedMetrics]="currentWorkspace.interestedMetrics" [description]="currentWorkspace.description"
+                           (editedWorkspace)="updateStatus($event, currentWorkspace)"></app-performance>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button *ngIf="!currentWorkspace.editingWorkspace" type="button"
+              class="btn btn-outline-success btn-sm"
+              (click)="saveWorkspace()">Save
+      </button>&nbsp;
+      <button type="button" class="btn btn-outline-danger btn-sm" (click)="modal.dismiss('Cancel')">
+        Cancel
+      </button>
+    </div>
+  </ng-template>
+  <!--shows the list of workspaces for an user-->
+  <div *ngIf="showWorkspace" class="card">
+    <div class="card-header">
+      <h5 class="card-title">{{ selectedUser.first_name }}&nbsp;{{ selectedUser.last_name }}</h5>
+      <h6 class="card-subtitle">{{ selectedUser.email }} <a [routerLink]="" (click)="openAddWorkspace(addWorkspace)">Add
+        workspace</a></h6>
+    </div>
+    <div class=card-body>
+      <div>
+        <table *ngIf="profile.length > 0" class="table table-borderless" style="margin: 20px; width: 70%;">
+          <tr>
+            <th></th>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Created date</th>
+            <th>Modified date</th>
+            <th></th>
+          </tr>
+          <tr *ngFor="let workspace of profile">
+            <td style="width: 10%;">
+              <a [routerLink]="" (click)="openWorkspace(workspace)">View</a> | <a [routerLink]=""
+                                                                                  (click)="openEditWorkspace(editWorkspace, workspace)">
+              Edit</a>
+            </td>
+            <td style="width: 10%">
+              {{ workspace.name }}
+            </td>
+            <td style="width: 20%">
+              {{ workspace.description }}
+            </td>
+            <td>
+              {{ workspace.createdDate }}
+            </td>
+            <td>
+              {{ workspace.modifiedDate }}
+            </td>
+            <td style="width: 10%">
+              <a [routerLink]="" (click)="openDeleteWorkspace(deleteWorkspace, workspace)">Delete</a>
+            </td>
+          </tr>
+        </table>
+        <p *ngIf="profile.length === 0">No workspaces added</p>
+      </div>
+    </div>
+  </div>
+</div>

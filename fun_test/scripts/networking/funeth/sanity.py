@@ -479,13 +479,8 @@ class FunethSanity(FunTestScript):
                         fun_test.log("Unload funeth driver")
                         funeth_obj.unload()
 
-                # Temp workaround to clean up idel ssh sessions
-                funeth_obj = fun_test.shared_variables['funeth_obj']
-                for nu in funeth_obj.nu_hosts:
-                    linux_obj = funeth_obj.linux_obj_dict[nu]
-                    cmd = 'pkill sshd'
-                    fun_test.log("{} in {}".format(cmd, linux_obj.host_ip))
-                    linux_obj.command(cmd)
+                for linux_obj in funeth_obj.linux_obj_dict.values():
+                    linux_obj.disconnect()
             except:
                 if cleanup:
                     hu_hosts = topology.get_host_instances_on_ssd_interfaces(dut_index=0)
