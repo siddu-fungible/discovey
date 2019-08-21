@@ -9,7 +9,7 @@ import re
 IB_WRITE_BANDWIDTH_TEST = "ib_write_bw"
 IB_WRITE_LATENCY_TEST = "ib_write_lat"
 LD_LIBRARY_PATH = "/mnt/ws/fungible-rdma-core/build/lib/"
-PATH = "/home/localadmin/mks/performance-workspace/fungible-rdma-core/build/bin/:/mnt/ws/fungible-perftest/"
+PATH = "/home/localadmin/mks/workspace/fungible-rdma-core/build/bin/:/mnt/ws/fungible-perftest/"
 
 
 class RdmaClient(Linux):
