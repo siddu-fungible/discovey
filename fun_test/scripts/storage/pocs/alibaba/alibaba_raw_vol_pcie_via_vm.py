@@ -67,9 +67,9 @@ class RawVolumePerfScript(FunTestScript):
         global funcp_obj, servers_mode, servers_list, fs_name
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
         f1_0_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --dpc-server --all_100g --serial --dpc-uart " \
-                         "--dis-stats retimer=0 --mgmt --disable-wu-watchdog syslog=2"
+                         "retimer=0 --mgmt --disable-wu-watchdog syslog=2 workload=storage"
         f1_1_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 --dpc-server --all_100g --serial --dpc-uart " \
-                         "--dis-stats retimer=0 --mgmt --disable-wu-watchdog syslog=2"
+                         "retimer=0 --mgmt --disable-wu-watchdog syslog=2 workload=storage"
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
         # fs_name = "fs-45"
         funcp_obj = FunControlPlaneBringup(fs_name=self.server_key["fs"][fs_name]["fs-name"])
@@ -367,7 +367,6 @@ class RawVolumeLocalPerfTestcase(FunTestCase):
                                                                  bs=fio_block_size,
                                                                  iodepth=fio_iodepth,
                                                                  name=fio_job_name,
-                                                                 size=str(file_size_in_gb) + "G",
                                                                  cpus_allowed=cpus_allowed,
                                                                  **self.fio_cmd_args)
 
@@ -432,7 +431,7 @@ class LocalSSDVM(RawVolumeLocalPerfTestcase):
 
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Random Read performance for 1 volumes on TCP "
+                              summary="Random Read/Write performance for 1 volumes on TCP "
                                       "with different levels of numjobs & iodepth & block size 4K",
                               steps='''
         1. Create 1 BLT volumes on F1 attached

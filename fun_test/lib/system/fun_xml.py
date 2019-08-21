@@ -249,12 +249,14 @@ class DocumentationContent:
         row = [str(id), summary, steps]
         self.generic_table.add_row(row)
 
-class PageContent:
 
+class PageContent:
     def __init__(self, summary_chart=True, enable_bugs=True, variants=None):
         self.summary_chart = summary_chart
         self.enable_bugs = enable_bugs
         self.variants = variants
+        self.messages = []
+
         self.tree = GenericElement("div", id="wrapper", class_name="tab-pane active")
         self.tree.set("role", "tabpanel")
         self.side_wrapper = GenericElement("div", id="sidebar-wrapper")
@@ -267,7 +269,6 @@ class PageContent:
         self.results = collections.OrderedDict()
         for r in RESULT_TYPES:
             self.results[r] = 0
-
 
     def get_header_nav(self):
         header_nav = GenericElement("nav") # navbar navbar-fixed-top")
@@ -388,8 +389,23 @@ class PageContent:
         # self.page_content_wrapper.append(container_fluid_class)
         # self.tree.append(self.page_content_wrapper)
         self.panel_group = self.get_panel_group()
+
+        # self.panel_group.append(self.messages_panel)
+
         page_content_wrapper.append(self.panel_group)
         return page_content_wrapper
+
+    def get_messages_panel(self):
+        panel = GenericElement("div", class_name="messages-div")
+        self.messages_panel = GenericElement("ul", id="messages")
+        panel.append(self.messages_panel)
+        return panel
+
+    def add_message(self, message):
+        self.messages.append(message)
+        message_div = GenericElement("li")
+        message_div.text = message
+        self.messages_panel.append(message_div)
 
     def get_panel_group(self):
         panel_group = GenericElement("div", id="panel-group")
@@ -397,6 +413,8 @@ class PageContent:
         glyph_button = GenericElement("span", id="summary_collapse", class_name="fa fa-caret-square-o-left")
         glyph_button.text = ''
         panel_anchor.append(glyph_button)
+        self.messages_panel = self.get_messages_panel()
+        panel_group.append(self.messages_panel)
         panel_group.append(panel_anchor)
         # self.tree.append(self.panel_group)
         return panel_group
@@ -785,9 +803,9 @@ class TestSection(GenericElement):
 
     def log(self, log, newline=True):
         if newline:
-            self.saved_log = self.saved_log + "\n" + log
+            self.saved_log = self.saved_log.decode('utf-8', "ignore") + "\n" + log
         else:
-            self.saved_log = self.saved_log + log
+            self.saved_log = self.saved_log.decode('utf-8', "ignore") + log
 
     def get(self):
         return self
@@ -877,6 +895,10 @@ class FunXml:
 
         self.summary_chart = summary_chart
         self.ts = None
+
+
+    def add_message(self, message):
+        self.result_page_content.add_message(message=message)
 
     def add_auxillary_file(self, description, auxillary_file):
         self.aux_page_content.add_file(description=description, filename=auxillary_file)

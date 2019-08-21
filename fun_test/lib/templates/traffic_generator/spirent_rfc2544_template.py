@@ -315,17 +315,39 @@ class Rfc2544Template(SpirentEthernetTrafficTemplate):
             fun_test.critical(str(ex))
         return table_data
 
-    def create_performance_table(self, result_dict, table_name):
-        result = False
+    def _non_spirent_table_data(self, result_list):
+        table_data = {'headers': [], 'rows': []}
         try:
-            table_data = self._get_table_data(result_dict=result_dict)
-            fun_test.add_table(panel_header="RFC-2544 Performance Detailed Summary",
-                               table_name=table_name,
-                               table_data=table_data)
-            result = True
+            first_entry = result_list[0]
+            table_columns = first_entry.keys()
+            table_data['headers'] = table_columns
+            rows = []
+            for entry in result_list:
+                row = []
+                for key in table_columns:
+                    row.append(entry[key])
+                rows.append(row)
+            table_data['rows'] = rows
         except Exception as ex:
             fun_test.critical(str(ex))
-        return result
+        return table_data
+
+    def create_performance_table(self, result, table_name, spirent_rfc=True):
+        output = False
+        try:
+            if not spirent_rfc:
+                panel_header = "Non spirent rfc performance details"
+                table_data = self._non_spirent_table_data(result_list=result)
+            else:
+                panel_header = "RFC-2544 Performance Detailed Summary"
+                table_data = self._get_table_data(result_dict=result)
+            fun_test.add_table(panel_header=panel_header,
+                               table_name=table_name,
+                               table_data=table_data)
+            output = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return output
 
     def _get_list_of_records(self, summary_result):
         records = []
@@ -560,6 +582,12 @@ class Rfc2544Template(SpirentEthernetTrafficTemplate):
             unit_dict = {}
             unit_dict["pps_unit"] = PerfUnit.UNIT_PPS
             unit_dict["throughput_unit"] = PerfUnit.UNIT_MBITS_PER_SEC
+            unit_dict["latency_min_unit"] = PerfUnit.UNIT_USECS
+            unit_dict["latency_max_unit"] = PerfUnit.UNIT_USECS
+            unit_dict["latency_avg_unit"] = PerfUnit.UNIT_USECS
+            unit_dict["jitter_min_unit"] = PerfUnit.UNIT_USECS
+            unit_dict["jitter_max_unit"] = PerfUnit.UNIT_USECS
+            unit_dict["jitter_avg_unit"] = PerfUnit.UNIT_USECS
             add_entry = self.use_model_helper(model_name=model_name, data_dict=output_dict, unit_dict=unit_dict)
             fun_test.simple_assert(add_entry, "Entry added to model %s" % model_name)
             fun_test.add_checkpoint("Entry added to model %s" % model_name)

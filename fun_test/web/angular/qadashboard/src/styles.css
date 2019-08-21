@@ -479,6 +479,27 @@ tr.text-center > th {
   border: 0.5px;
 }
 
+.link-span-secondary {
+  background-color: lightgrey;
+  border-radius: 3px;
+  color: #274466;
+  display: inline-block;
+  font: .75em/2 SFMono-Regular,Consolas,Liberation Mono,Menlo,Courier,monospace;
+  padding: 0 5px;
+  position: relative;
+  white-space: nowrap;
+  border: 0.5px;
+}
+
+.link-span-secondary:hover {
+  cursor: pointer;
+}
+
+.link-span-secondary-active {
+  background-color: darkgrey;
+  color: white !important;
+}
+
 .span-selected {
   background-color: rgba(230, 255, 0, 0.26);
   border-radius: 3px;
@@ -544,3 +565,28 @@ tr.text-center > th {
   opacity: 1;
 }
 
+
+/* Forms */
+.fun-form {
+  font-family: "Times New Roman", Times, serif;
+  margin: 10px
+}
+.fun-form .fun-form-label {
+  margin-top: 5px;
+  font-size: 12px;
+  display: block;
+  font-weight: bold;
+}
+
+/* Button */
+.btn.submit-button {
+  padding-top: unset;
+  padding-bottom: unset;
+}
+
+.btn.click-button {
+  padding-top: unset;
+  padding-bottom: unset;
+  font-size: 14px;
+  border: darkblue 0.5px;
+}

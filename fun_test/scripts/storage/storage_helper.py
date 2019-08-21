@@ -6,8 +6,9 @@ import time
 from collections import OrderedDict
 from lib.host.storage_controller import StorageController
 from lib.system import utils
+from threading import Lock
 
-DPCSH_COMMAND_TIMEOUT = 5
+DPCSH_COMMAND_TIMEOUT = 30
 
 fio_perf_table_header = ["Block Size", "IO Depth", "Size", "Operation", "Write IOPS", "Read IOPS",
                          "Write Throughput in KB/s", "Read Throughput in KB/s", "Write Latency in uSecs",
@@ -23,6 +24,18 @@ fio_perf_table_cols = ["block_size", "iodepth", "size", "mode", "writeiops", "re
 
 vp_stats_thread_stop_status = {}
 resource_bam_stats_thread_stop_status = {}
+
+
+class colors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
 
 def post_results(volume, test, log_time, num_ssd, num_volumes, block_size, io_depth, size, operation, write_iops,
                  read_iops,
@@ -223,14 +236,20 @@ def configure_endhost_interface(end_host, test_network, interface_name, timeout=
                                   message="Adding static ARP to F1 route")
 
 
-def build_simple_table(data, column_headers=[]):
+def build_simple_table(data, column_headers=[], split_values_to_columns=False):
     simple_table = PrettyTable(column_headers)
     simple_table.align = 'l'
     simple_table.border = True
     simple_table.header = True
     try:
         for key in sorted(data):
-            simple_table.add_row([key, data[key]])
+            row_data = []
+            if type(data[key]) is list and split_values_to_columns:
+                row_data.append(key)
+                row_data.extend(data[key])
+            else:
+                row_data = [key, data[key]]
+            simple_table.add_row(row_data)
     except Exception as ex:
         fun_test.critical(str(ex))
     return simple_table
@@ -335,17 +354,32 @@ def collect_resource_bam_stats(storage_controller, output_file, interval=10, cou
     return output
 
 
+def _convert_vp_util(value):
+    value = "{:.0f}".format(value * 100)
+    """
+    if int(value) >= 50:
+        value = colors.WARNING + str(value) + colors.ENDC
+    elif int(value) >= 75:
+        value = colors.BOLD + colors.WARNING + str(value) + colors.ENDC
+    elif int(value) >= 90:
+        value = colors.BOLD + colors.FAIL + str(value) + colors.ENDC
+    """
+    return value
+
+
 class CollectStats(object):
     def __init__(self, storage_controller):
         self.storage_controller = storage_controller
+        self.socket_lock = Lock()
         self.stop_all = False
         self.stop_vp_utils = False
         self.stop_resource_bam = False
+        self.stop_vol_stats = False
 
     def collect_vp_utils_stats(self, output_file, interval=10, count=3, non_zero_stats_only=True, threaded=False,
                                command_timeout=DPCSH_COMMAND_TIMEOUT):
         output = False
-        column_headers = ["VP", "Utilization"]
+        column_headers = ["Cluster/Core", "Thread 0", "Thread 1", "Thread 2", "Thread 3"]
 
         try:
             with open(output_file, 'a') as f:
@@ -355,21 +389,46 @@ class CollectStats(object):
                     if threaded and (self.stop_vp_utils or self.stop_all):
                         fun_test.log("Stopping VP Utils stats collection thread")
                         break
-                    dpcsh_result = self.storage_controller.debug_vp_util(command_timeout=command_timeout)
-                    # fun_test.simple_assert(dpcsh_result["status"], "Pulling VP Utilization")
-                    if dpcsh_result["status"] and dpcsh_result["data"] is not None:
-                        vp_util = dpcsh_result["data"]
+                    self.socket_lock.acquire()
+                    vp_util_result = self.storage_controller.debug_vp_util(command_timeout=command_timeout)
+                    self.socket_lock.release()
+                    # fun_test.simple_assert(vp_util_result["status"], "Pulling VP Utilization")
+                    if vp_util_result["status"] and vp_util_result["data"] is not None:
+                        vp_util = vp_util_result["data"]
                     else:
                         vp_util = {}
 
-                    if non_zero_stats_only:
-                        filtered_vp_util = OrderedDict()
-                        for key, value in sorted(vp_util.iteritems()):
-                            if value != 0.0 or value != 0:
-                                filtered_vp_util[key] = value
-                        vp_util = filtered_vp_util
+                    # Grouping the output based on its cluster & core level. That is, all the four hardware threads
+                    # utilization will be added into a list and assigned to it attribute having its cluster and core
+                    filtered_vp_util = OrderedDict()
+                    for key, value in sorted(vp_util.iteritems()):
+                        cluster_id = key.split(".")[0][3]
+                        core_id = key.split(".")[1]
+                        new_key = "{}/{}".format(cluster_id, core_id)
+                        if new_key not in filtered_vp_util:
+                            filtered_vp_util[new_key] = []
+                        filtered_vp_util[new_key].append(_convert_vp_util(value))
 
-                    table_data = build_simple_table(data=vp_util, column_headers=column_headers)
+                    # Filling the gap for the central cluster which has only 2 threads in a core
+                    for core in range(4):
+                        for thread in range(2, 4):
+                            key = "8/{}".format(core)
+                            if key in filtered_vp_util and type(filtered_vp_util[key]) is list:
+                                filtered_vp_util[key].append("N/A")
+
+                    # Eliminate the cluster/core whose threads is at 0% utilization
+                    if non_zero_stats_only:
+                        for key, value in filtered_vp_util.items():
+                            delete_key = True
+                            for thread_util in value:
+                                if thread_util != "0" and thread_util != "N/A":
+                                    delete_key = False
+                                    break
+                            if delete_key:
+                                del(filtered_vp_util[key])
+
+                    table_data = build_simple_table(data=filtered_vp_util, column_headers=column_headers,
+                                                    split_values_to_columns=True)
                     lines.append("\n########################  {} ########################\n".format(time.ctime()))
                     lines.append(table_data.get_string())
                     lines.append("\n\n")
@@ -393,9 +452,11 @@ class CollectStats(object):
                     if threaded and (self.stop_resource_bam or self.stop_all):
                         fun_test.log("Stopping Resource BAM stats collection thread")
                         break
-                    dpcsh_result = self.storage_controller.peek_resource_bam_stats(command_timeout=command_timeout)
-                    if dpcsh_result["status"] and dpcsh_result["data"] is not None:
-                        resource_bam_stats = dpcsh_result["data"]
+                    self.socket_lock.acquire()
+                    bam_result = self.storage_controller.peek_resource_bam_stats(command_timeout=command_timeout)
+                    self.socket_lock.release()
+                    if bam_result["status"] and bam_result["data"] is not None:
+                        resource_bam_stats = bam_result["data"]
                     else:
                         resource_bam_stats = {}
 
@@ -409,3 +470,145 @@ class CollectStats(object):
         except Exception as ex:
             fun_test.critical(str(ex))
         return output
+
+    def collect_vol_stats(self, output_file, vol_details, interval=10, count=3, non_zero_stats_only=True,
+                          threaded=False, command_timeout=DPCSH_COMMAND_TIMEOUT):
+        """
+        :param output_file: File name in which the volume stats collected at every given interval for given number of
+        counts in the table format
+        :param vol_details: Takes a list of dictionaries as its value. Each element is a dictionary whose attributes
+        will be volumes types and the attribute value the list of volume UUID of that particular volume type.
+        The expected format here is:
+            vol_details = [{"VOLUME_TYPE1": [UUID1, UUID2, ...], "VOLUME_TYPE2": [UUID1], ...},
+                           {"VOLUME_TYPE1": [UUID1, UUID2, ...], "VOLUME_TYPE2": [UUID1], ...}]
+        For Example:
+            vol_details = [{"VOL_TYPE_BLK_THIN_LOCAL": [UUID1, UUID2, ...], "VOL_TYPE_BLK_EC": [UUID1]},
+                           {"VOL_TYPE_BLK_THIN_LOCAL": [UUID1, UUID2, ...], "VOL_TYPE_BLK_EC": [UUID1]}]
+        :param interval:
+        :param count:
+        :param non_zero_stats_only:
+        :param threaded:
+        :param command_timeout:
+        :return:
+        """
+        output = False
+
+        try:
+            with open(output_file, 'a') as f:
+                timer = FunTimer(max_time=interval * count)
+                while not timer.is_expired():
+                    if threaded and (self.stop_vol_stats or self.stop_all):
+                        fun_test.log("Stopping Volume stats collection thread")
+                        break
+                    self.socket_lock.acquire()
+                    vol_stats_result = self.storage_controller.peek(props_tree="storage/volumes", legacy=False,
+                                                                    chunk=8192, command_duration=command_timeout)
+                    self.socket_lock.release()
+                    if vol_stats_result["status"] and vol_stats_result["data"] is not None:
+                        all_vol_stats = vol_stats_result["data"]
+                    else:
+                        all_vol_stats = {}
+
+                    lines = "\n########################  {} ########################\n".format(time.ctime())
+                    f.writelines(lines)
+                    # Extracting the required volume stats from the complete peek storage/volumes output
+                    for vol_group in vol_details:
+                        lines = []
+                        column_headers = ["Stats"]
+                        for vol_type, vol_uuids in sorted(vol_group.iteritems()):
+                            vol_type = vol_type[13:]
+                            for vol_uuid in vol_uuids:
+                                column_headers.append(vol_type + "/" + vol_uuid[-8:])
+
+                        vol_stats = {}
+                        for vol_type, vol_uuids in sorted(vol_group.iteritems()):
+                            if vol_type not in vol_stats:
+                                vol_stats[vol_type] = {}
+                            for vol_uuid in vol_uuids:
+                                if vol_uuid not in vol_stats[vol_type]:
+                                    vol_stats[vol_type][vol_uuid] = {}
+                                if vol_type in all_vol_stats and vol_uuid in all_vol_stats[vol_type]:
+                                    vol_stats[vol_type][vol_uuid] = all_vol_stats[vol_type][vol_uuid]["stats"]
+
+                        all_attributes = set()
+                        for vol_type, vol_uuids in sorted(vol_group.iteritems()):
+                            for vol_uuid in vol_uuids:
+                                all_attributes |= set(sorted(vol_stats[vol_type][vol_uuid]))
+
+                        combined_vol_stats = {}
+                        for attribute in all_attributes:
+                            if attribute not in combined_vol_stats:
+                                combined_vol_stats[attribute] = []
+                            for vol_type, vol_uuids in sorted(vol_group.iteritems()):
+                                for vol_uuid in vol_uuids:
+                                    combined_vol_stats[attribute].append(vol_stats[vol_type][vol_uuid].
+                                                                         get(attribute, "-"))
+                        table_data = build_simple_table(data=combined_vol_stats, column_headers=column_headers,
+                                                        split_values_to_columns=True)
+                        lines.append(table_data.get_string())
+                        lines.append("\n\n")
+                        f.writelines(lines)
+                    fun_test.sleep("for the next iteration - Volume stats collection", seconds=interval)
+            output = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return output
+
+
+def get_ec_vol_uuids(ec_info):
+    ec_details = []
+    for num in range(ec_info["num_volumes"]):
+        vol_group = {ec_info["volume_types"]["ndata"]: ec_info["uuids"][num]["blt"],
+                     ec_info["volume_types"]["ec"]: ec_info["uuids"][num]["ec"],
+                     ec_info["volume_types"]["jvol"]: [ec_info["uuids"][num]["jvol"]],
+                     ec_info["volume_types"]["lsv"]: ec_info["uuids"][num]["lsv"]}
+        ec_details.append(vol_group)
+    return ec_details
+
+
+def initiate_stats_collection(storage_controller, interval, count, vp_util_artifact_file=None,
+                              vol_stats_artifact_file=None, bam_stats_articat_file=None, vol_details=None):
+    stats_collector = CollectStats(storage_controller=storage_controller)
+    result = {'status': False,
+              'vp_util_thread_id': None,
+              'vol_stats_thread_id': None,
+              'bam_stats_thread_id': None}
+    if vp_util_artifact_file:
+        result['vp_util_thread_id'] = fun_test.execute_thread_after(time_in_seconds=0.5,
+                                                                    func=stats_collector.collect_vp_utils_stats,
+                                                                    output_file=vp_util_artifact_file,
+                                                                    interval=interval,
+                                                                    count=count,
+                                                                    threaded=True)
+    if vol_stats_artifact_file:
+        result['vol_stats_thread_id'] = fun_test.execute_thread_after(time_in_seconds=interval / 3,
+                                                                      func=stats_collector.collect_vol_stats,
+                                                                      output_file=vol_stats_artifact_file,
+                                                                      vol_details=vol_details,
+                                                                      interval=interval,
+                                                                      count=count,
+                                                                      threaded=True)
+    if bam_stats_articat_file:
+        result['bam_stats_thread_id'] = fun_test.execute_thread_after(time_in_seconds=(interval * 2) / 3,
+                                                                      func=stats_collector.collect_resource_bam_stats,
+                                                                      output_file=bam_stats_articat_file,
+                                                                      interval=interval,
+                                                                      count=count,
+                                                                      threaded=True)
+    result['status'] = True
+    return result
+
+
+def terminate_stats_collection(stats_ollector_obj, thread_list):
+    for thread in thread_list:
+        fun_test.join_thread(fun_test_thread_id=thread, sleep_time=1)
+
+    reset_collector = False
+    for thread in thread_list:
+        if fun_test.fun_test_threads[thread]["thread"].is_alive():
+            reset_collector = True
+    if reset_collector:
+        stats_ollector_obj.stop_all = True
+        stats_ollector_obj.stop_vol_stats = True
+        stats_ollector_obj.stop_vp_utils = True
+        stats_ollector_obj.stop_resource_bam = True

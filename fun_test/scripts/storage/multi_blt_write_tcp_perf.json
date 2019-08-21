@@ -1,8 +1,8 @@
 {
   "GlobalSetup": {
     "bootargs": [
-      "app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --serial --dpc-server --dpc-uart --all_100g --nofreeze --disable-wu-watchdog",
-      "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 --serial --dpc-server --dpc-uart --all_100g --nofreeze --disable-wu-watchdog"
+      "app=mdt_test,load_mods,hw_hsu_test cc_huid=3 workload=storage --serial --dpc-server --dpc-uart --all_100g --nofreeze --disable-wu-watchdog",
+      "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 workload=storage --serial --dpc-server --dpc-uart --all_100g --nofreeze --disable-wu-watchdog"
     ],
     "dut_start_index": 0,
     "host_start_index": 0,
@@ -87,14 +87,14 @@
       "write"
     ],
     "fio_bs": "4k",
-    "fio_jobs_iodepth": ["(1, 1)", "(16, 8)"],
+    "fio_jobs_iodepth": ["(1, 1)", "(32, 4)"],
     "fio_job_name": {
       "write": "scaling"
     },
     "nvme_device": "/dev/nvme0",
     "expected_fio_result": {
       "(1, 1)": {"write": {"write": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
-      "(16, 8)": {"write": {"write": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}}
+      "(32, 4)": {"write": {"write": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}}
     },
     "host_count": 1
   },
@@ -133,14 +133,14 @@
       "randwrite"
     ],
     "fio_bs": "4k",
-    "fio_jobs_iodepth": ["(1, 1)", "(16, 4)"],
+    "fio_jobs_iodepth": ["(1, 1)", "(32, 2)"],
     "fio_job_name": {
       "randwrite": "scaling"
     },
     "nvme_device": "/dev/nvme0",
     "expected_fio_result": {
       "(1, 1)": {"randwrite": {"write": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
-      "(16, 4)": {"randwrite": {"write": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}}
+      "(32, 2)": {"randwrite": {"write": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}}
       },
     "host_count": 1
   },

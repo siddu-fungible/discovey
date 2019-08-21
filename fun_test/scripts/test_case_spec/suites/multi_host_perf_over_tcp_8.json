@@ -5,5 +5,5 @@
         "asset_request": {"DUT": {"num": 1}, "Host": {"num": 8}}}
     }
   },
-  {"path": "storage/multi_host_blt_tcp_perf.py", "inputs": {"blt_count": 8, "num_hosts": 8}}
+  {"path": "storage/multi_host_blt_tcp_perf.py", "inputs": {"blt_count": 8, "num_hosts": 8, "post_results": true}}
 ]

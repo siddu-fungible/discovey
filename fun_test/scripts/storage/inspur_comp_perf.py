@@ -307,6 +307,12 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.simple_assert(False, "Setup Section Status")
 
         stats_table_lst = []
+        job_inputs = fun_test.get_job_inputs()
+        collect_artifacts = job_inputs[
+            "collect_artifacts"] if job_inputs and "collect_artifacts" in job_inputs else True
+        poll_interval = job_inputs["poll_interval"] if job_inputs and "poll_interval" in job_inputs else 30
+        ec_details = get_ec_vol_uuids(ec_info=self.ec_info)
+        stats_collector = CollectStats(self.storage_controller)  # required to poll vol stats
         for param in self.test_parameters:
             self.warm_up_fio_cmd_args['buffer_compress_percentage'] = param['compress_percent']
             fun_test.test_assert(self.end_host.pcie_fio(filename=self.nvme_block_device,
@@ -326,6 +332,24 @@ class ECVolumeLevelTestcase(FunTestCase):
                     fun_test.sleep("Wait between iterations", 2)
                     fio_job_name = "{}_{}_{}pctcomp_{}".format(self.fio_job_name, mode, param['compress_percent'],
                                                                (fio_num_jobs * fio_iodepth))
+                    if collect_artifacts:
+                        count = (self.fio_cmd_args["runtime"] + poll_interval) / poll_interval
+                        vp_util_artifact_file = fun_test.get_test_case_artifact_file_name(
+                            post_fix_name="{}_vputil_artifact.txt".format(fio_job_name))
+                        vol_stats_artifact_file = fun_test.get_test_case_artifact_file_name(
+                            post_fix_name="{}_vol_stats_artifact.txt".format(fio_job_name))
+                        bam_stats_artifact_file = fun_test.get_test_case_artifact_file_name(
+                            post_fix_name="{}_bam_stats_artifact.txt".format(fio_job_name))
+                        thread_info = initiate_stats_collection(storage_controller=self.storage_controller,
+                                                                interval=poll_interval,
+                                                                count=count,
+                                                                vp_util_artifact_file=vp_util_artifact_file,
+                                                                vol_stats_artifact_file=vol_stats_artifact_file,
+                                                                bam_stats_articat_file=bam_stats_artifact_file,
+                                                                vol_details=ec_details)
+                    active_threads = [thread_info['vp_util_thread_id'], thread_info['vol_stats_thread_id'],
+                                      thread_info['bam_stats_thread_id']]
+
                     fio_output[combo][mode] = self.end_host.pcie_fio(filename=self.nvme_block_device,
                                                                      rw=mode,
                                                                      numjobs=fio_num_jobs,
@@ -333,6 +357,17 @@ class ECVolumeLevelTestcase(FunTestCase):
                                                                      name=fio_job_name,
                                                                      cpus_allowed=self.numa_cpus,
                                                                      **self.fio_cmd_args)
+                    if collect_artifacts:
+                        terminate_stats_collection(stats_ollector_obj=stats_collector, thread_list=active_threads)
+                        fun_test.add_auxillary_file(description="F1 VP Utilization - {0} IO depth {1}".format(
+                            mode, fio_num_jobs * fio_iodepth),
+                            filename=vp_util_artifact_file)
+                        fun_test.add_auxillary_file(description="F1 Volume Stats - {0} IO depth {1}".format(
+                            mode, fio_num_jobs * fio_iodepth),
+                            filename=vol_stats_artifact_file)
+                        fun_test.add_auxillary_file(description="F1 Bam Stats - {0} IO depth {1}".format(
+                            mode, fio_num_jobs * fio_iodepth),
+                            filename=bam_stats_artifact_file)
                     fun_test.test_assert(fio_output[combo][mode],
                                          message="Execute fio with mode:{0}, iodepth: {1}, num_jobs: {2} "
                                                  "and cpus: {3}".format(mode, fio_iodepth, fio_num_jobs,

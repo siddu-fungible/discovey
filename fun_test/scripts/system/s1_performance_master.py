@@ -130,23 +130,6 @@ class WuLatencyAllocStackPerformanceS1Tc(PalladiumPerformanceTc):
                               summary="Wu Latency Alloc Stack Test on S1",
                               steps="Steps 1")
 
-class PrepareDbTc(FunTestCase):
-    def describe(self):
-        self.set_test_details(id=100,
-                              summary="Prepare Status Db on S1",
-                              steps="Steps 1")
-
-    def setup(self):
-        pass
-
-    def run(self):
-        chart_names = [FunPlatform.S1, "All metrics"]
-        prepare_status_db(chart_names=chart_names)
-        TimeKeeper.set_time(name=LAST_ANALYTICS_DB_STATUS_UPDATE, time=get_current_time())
-
-    def cleanup(self):
-        pass
-
 
 class EcPerformanceS1Tc(PalladiumPerformanceTc):
     tag = TERAMARK_EC_S1
@@ -194,7 +177,6 @@ if __name__ == "__main__":
     myscript.add_test_case(AllocSpeedPerformanceS1Tc())
     myscript.add_test_case(WuLatencyUngatedPerformanceS1Tc())
     myscript.add_test_case(WuLatencyAllocStackPerformanceS1Tc())
-    # myscript.add_test_case(PrepareDbTc())
     myscript.add_test_case(EcPerformanceS1Tc())
     myscript.add_test_case(TeraMarkJpegPerformanceS1Tc())
     # myscript.add_test_case(TeraMarkZipPerformanceS1Tc())

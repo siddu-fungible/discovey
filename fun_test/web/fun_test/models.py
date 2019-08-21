@@ -515,7 +515,14 @@ class JobQueue(models.Model):
     job_id = models.IntegerField(unique=True)
     test_bed_type = models.TextField(default="", null=True)
     message = models.TextField(default="", null=True)
+    pre_emption_allowed = models.NullBooleanField(default=True)  # Mainly used for suite-based test-beds.
+    # if a suite-based item is on top of the queue, if pre_emption allowed is disabled, all suite-based items of
+    # lower-priority in the queue will not be considered for de-queueing until the highest priority ones get de-queued
+    suspend = models.NullBooleanField(default=False)  # if set, the queued item is not eligible for de-queue
 
+
+    def is_suite_based(self):
+        return self.test_bed_type == "suite-based"
 
 class KilledJob(models.Model):
     job_id = models.IntegerField(unique=True)
@@ -529,6 +536,32 @@ class User(FunModel):
 
     def __str__(self):
         return "{} {} {}".format(self.first_name, self.last_name, self.email)
+
+class PerformanceUserWorkspaces(FunModel):
+    email = models.EmailField(max_length=60)
+    workspace_name = models.TextField(default="")
+    description = models.TextField(default="")
+    date_created = models.DateTimeField(default=datetime.now)
+    date_modified = models.DateTimeField(default=datetime.now)
+
+    def __str__(self):
+        return (str(self.__dict__))
+
+
+class InterestedMetrics(FunModel):
+    workspace_id = models.IntegerField()
+    email = models.EmailField(max_length=60)
+    metric_id = models.IntegerField()
+    subscribe = models.BooleanField(default=False)
+    track = models.BooleanField(default=False)
+    chart_name = models.TextField(default='')
+    category = models.TextField(default='')
+    lineage = models.TextField(default="")
+    date_created = models.DateTimeField(default=datetime.now)
+    date_modified = models.DateTimeField(default=datetime.now)
+
+    def __str__(self):
+        return (str(self.__dict__))
 
 
 class Daemon(FunModel):
@@ -556,7 +589,7 @@ class Daemon(FunModel):
 
 
 class Asset(FunModel):
-    name = models.TextField(unique=True)
+    name = models.TextField()
     type = models.TextField()
     job_ids = JSONField(default=[])
     manual_lock_user = models.TextField(default=None, null=True)
@@ -564,22 +597,27 @@ class Asset(FunModel):
 
     @staticmethod
     def add_update(name, type, job_ids=None):
-        if not Asset.objects.filter(name=name).exists():
-            a = Asset(name=name, type=type)
-            if job_ids:
-                a.job_ids = job_ids
-            a.save()
-        else:
-            a = Asset.objects.get(name=name, type=type)
-            if job_ids:
-                a.job_ids = job_ids
-            a.save()
-
+        try:
+            if not Asset.objects.filter(name=name, type=type).exists():
+                a = Asset(name=name, type=type)
+                if job_ids:
+                    a.job_ids = job_ids
+                a.save()
+            else:
+                a = Asset.objects.get(name=name, type=type)
+                if job_ids:
+                    a.job_ids = job_ids
+                a.save()
+        except Exception as ex:
+            pass
     @staticmethod
     def get(name, type):
         result = None
         if Asset.objects.filter(name=name, type=type).exists():
-            result = Asset.objects.get(name=name, type=type)
+            try:
+                result = Asset.objects.get(name=name, type=type)
+            except Exception as ex:
+                pass
         return result
 
     @staticmethod

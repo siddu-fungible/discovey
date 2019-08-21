@@ -8,6 +8,8 @@ from fun_global import RESULTS
 from dateutil.parser import parse
 from fun_global import FunPlatform, PerfUnit
 from lib.system.fun_test import *
+from web.fun_test.models_helper import add_jenkins_job_id_map
+from web.fun_test.metrics_models import *
 
 app_config = apps.get_app_config(app_label='fun_test')
 
@@ -103,6 +105,10 @@ class MetricParser():
             return self.teramark_jpeg(logs=logs, date_time=date_time, platform=platform)
         elif "BootTime" in model_name:
             return self.boot_time(logs=logs, date_time=date_time, platform=platform)
+        elif "NuTransit" in model_name:
+            return self.teramark_nu_transit(logs=logs, date_time=date_time, platform=platform, model_name=model_name)
+        elif "TeraMarkZip" in model_name:
+            return self.teramark_zip(logs=logs, date_time=date_time, platform=platform)
         else:
             return {}
 
@@ -113,6 +119,17 @@ class MetricParser():
         for key, value in metrics.iteritems():
             d[key] = value
         return d
+
+    def add_version_to_jenkins_job_id_map(self, date_time, version):
+        suite_execution_id = fun_test.get_suite_execution_id()
+        add_jenkins_job_id_map(jenkins_job_id=0,
+                               fun_sdk_branch="",
+                               git_commit="",
+                               software_date=0,
+                               hardware_version="",
+                               build_properties="", lsf_job_id="",
+                               sdk_version=version, build_date=date_time, suite_execution_id=suite_execution_id,
+                               add_associated_suites=False)
 
     def flow_test(self, logs, date_time):
         match_found = False
@@ -1519,4 +1536,102 @@ class MetricParser():
         self.result["status"] = self.status == RESULTS["PASSED"]
         fun_test.log("Result :{}".format(self.result, indent=4))
         return self.result
+
+    def teramark_nu_transit(self, logs, date_time, platform, model_name):
+        self.initialize()
+        self.metrics["input_platform"] = platform
+        nu_transit_flow_types = {"FCP_HNU_HNU": "HNU_HNU_FCP"}
+
+        for file in logs:
+            for line in file:
+                if "flow_type" in line:
+                    if line["flow_type"] in nu_transit_flow_types:
+                        line["flow_type"] = nu_transit_flow_types[line["flow_type"]]
+                        self.match_found = True
+                    self.metrics["input_flow_type"] = line["flow_type"].replace("FPG", "NU")
+                    self.metrics["input_mode"] = line.get("mode", "")
+                    self.metrics["input_version"] = line["version"]
+                    self.metrics["input_frame_size"] = line["frame_size"]
+                    date_time = self.get_time_from_timestamp(line["timestamp"])
+                    self.metrics["output_throughput"] = (float(
+                        line["throughput"]) / 1000) if "throughput" in line and line[
+                        "throughput"] != -1 else -1
+                    self.metrics["output_pps"] = (float(
+                        line["pps"]) / 1000000) if "pps" in line and line[
+                        "pps"] != -1 else -1
+                    self.metrics["output_latency_max"] = line.get("latency_max", -1)
+                    self.metrics["output_latency_min"] = line.get("latency_min", -1)
+                    self.metrics["output_latency_avg"] = line.get("latency_avg", -1)
+                    if model_name == "NuTransitPerformance":
+                        self.metrics["output_latency_P99"] = line.get("latency_P99", -1)
+                        self.metrics["output_latency_P90"] = line.get("latency_P90", -1)
+                        self.metrics["output_latency_P50"] = line.get("latency_P50", -1)
+                    else:
+                        self.metrics["input_half_load_latency"] = line.get("half_load_latency", False)
+                    self.metrics["input_num_flows"] = line.get("num_flows", 512000)
+                    self.metrics["input_offloads"] = line.get("offloads", False)
+                    self.metrics["input_protocol"] = line.get("protocol", "UDP")
+                    self.metrics["output_jitter_max"] = line.get("jitter_max", -1)
+                    self.metrics["output_jitter_min"] = line.get("jitter_min", -1)
+                    self.metrics["output_jitter_avg"] = line.get("jitter_avg", -1)
+                    fun_test.log(
+                        "flow type: {}, latency: {}, bandwidth: {}, frame size: {}, jitters: {}, pps: {}".format(
+                            self.metrics["input_flow_type"], self.metrics["output_latency_avg"],
+                            self.metrics["output_throughput"],
+                            self.metrics["input_frame_size"], self.metrics["output_jitter_avg"],
+                            self.metrics["output_pps"]))
+                    self.status = RESULTS["PASSED"]
+                    d = self.metrics_to_dict(metrics=self.metrics, result=self.status, date_time=date_time)
+                    self.result["data"].append(d)
+                    if date_time.year >= 2019:
+                        metric_model = app_config.get_metric_models()[model_name]
+                        MetricHelper(model=metric_model).add_entry(**d)
+                        self.add_version_to_jenkins_job_id_map(date_time=date_time,
+                                                               version=self.metrics["input_version"])
+
+            self.result["match_found"] = self.match_found
+            self.result["status"] = self.status == RESULTS["PASSED"]
+            fun_test.log("Result :{}".format(self.result))
+            return self.result
+
+    def teramark_zip(self, logs, date_time, platform):
+        metrics = collections.OrderedDict()
+        metrics['input_platform'] = platform
+        teramark_begin = False
+        for line in logs:
+            if "TeraMark Begin" in line:
+                teramark_begin = True
+            if "TeraMark End" in line:
+                teramark_begin = False
+            if teramark_begin:
+                m = re.search(
+                    r'{"Type":\s+"(?P<type>\S+)",\s+"Operation":\s+(?P<operation>\S+),\s+"Effort":\s+(?P<effort>\S+),'
+                    r'.*\s+"Duration"\s+:\s+(?P<latency_json>{.*}),\s+"Throughput":\s+(?P<throughput_json>{.*})}', line)
+                if m:
+                    input_type = m.group("type")
+                    input_operation = m.group("operation")
+                    input_effort = int(m.group("effort"))
+                    bandwidth_json = json.loads(m.group("throughput_json"))
+                    output_bandwidth_avg = bandwidth_json['value']
+                    output_bandwidth_avg_unit = bandwidth_json["unit"]
+                    latency_json = json.loads(m.group("latency_json"))
+                    output_latency_avg = latency_json['value']
+                    output_latency_unit = latency_json["unit"]
+
+                    fun_test.log("type: {}, operation: {}, effort: {}, stats {}".format(input_type, input_operation,
+                                                                                        input_effort,
+                                                                                        bandwidth_json))
+                    metrics["input_type"] = input_type
+                    metrics["input_operation"] = input_operation
+                    metrics["input_effort"] = input_effort
+                    metrics["output_bandwidth_avg"] = output_bandwidth_avg
+                    metrics["output_bandwidth_avg_unit"] = output_bandwidth_avg_unit
+                    metrics["output_latency_avg"] = output_latency_avg
+                    metrics["output_latency_avg_unit"] = output_latency_unit
+                    d = self.metrics_to_dict(metrics=metrics, result=fun_test.PASSED, date_time=date_time)
+                    if input_type == "Deflate":
+                        MetricHelper(model=eval("TeraMarkZipDeflatePerformance")).add_entry(**d)
+                    else:
+                        MetricHelper(model=eval("TeraMarkZipLzmaPerformance")).add_entry(**d)
+
 

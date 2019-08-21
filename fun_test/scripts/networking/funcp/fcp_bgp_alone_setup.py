@@ -41,7 +41,7 @@ class BringupSetup(FunTestCase):
         pass
 
     def run(self):
-        testbed_info = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() + '/testbed_inputs.json')
+        testbed_info = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() + '/fcp_bgp_alone.json')
         test_bed_type = fun_test.get_job_environment_variable('test_bed_type')
         tftp_image_path = fun_test.get_job_environment_variable('tftp_image_path')
         fun_test.shared_variables["test_bed_type"] = test_bed_type
@@ -76,7 +76,7 @@ class BringupSetup(FunTestCase):
             print  datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
             # Bringup FunCP
             fun_test.test_assert(expression=funcp_obj.bringup_funcp(
-                prepare_docker=testbed_info['fs'][test_bed_type][fs_name]['prepare_docker']), message="Bringup FunCP")
+                prepare_docker=testbed_info['fs'][test_bed_type][fs_name]['prepare_docker'], ep =True), message="Bringup FunCP")
             print "\n\n\n Booting of Control Plane  ended\n\n\n"
             print  datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
 

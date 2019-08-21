@@ -2,13 +2,15 @@ import { Injectable } from '@angular/core';
 import {ApiService} from "../services/api/api.service";
 import {of} from "rxjs";
 import {switchMap} from "rxjs/operators";
+import {CommonService} from "../services/common/common.service";
 
 @Injectable({
   providedIn: 'root'
 })
 export class PerformanceService {
+  buildInfo: any = null;
 
-  constructor(private apiService: ApiService) { }
+  constructor(private apiService: ApiService, private commonService: CommonService) { }
 
   chartInfo(metricId) {
     let payload = {"metric_id": metricId};
@@ -69,6 +71,18 @@ export class PerformanceService {
         result["passedGitCommit"] = data.passed_git_commit;
       }
       return of(result);
+    }));
+  }
+
+    //populates buildInfo
+  fetchBuildInfo(): any {
+    return this.apiService.get('/regression/build_to_date_map').pipe(switchMap(response => {
+      this.buildInfo = {};
+      Object.keys(response.data).forEach((key) => {
+        let localizedKey = this.commonService.convertToLocalTimezone(key);
+        this.buildInfo[this.commonService.addLeadingZeroesToDate(localizedKey)] = response.data[key];
+      });
+      return of(true);
     }));
   }
 

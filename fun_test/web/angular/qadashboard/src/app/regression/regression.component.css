@@ -32,7 +32,29 @@ a {
   font-weight: bold;
 }
 
+.disabled {
+  pointer-events: none;
+  color: lightgrey;
+}
+
 .pseudo-anchor:hover {
   cursor: pointer;
   color: black;
+}
+
+.re-run-div {
+  padding: 5px;
+  font-size: 14px;
+}
+
+.btn {
+  border: solid black 1px !important;
+}
+
+span > .dropdown-item {
+  font-size: 14px;
+}
+
+.dropdown-item-sub-text {
+  font-size: 12px;
 }
