@@ -297,7 +297,8 @@ class LocalSSDTest(StorageConfiguration):
                 job_file = op+"/mks/fio_{}_jf.txt".format(rw_mode)
                 result = arg1.sudo_command("fio {}".format(job_file), timeout=30000)
                 if "bad bits" in result.lower() or "verify failed" in result.lower():
-                    fun_test.critical(False, "Data verification failed for {} test".format(rw_mode))
+                    fun_test.test_assert(expression=False,
+                                         message="Data verification failed for {} test".format(rw_mode))
             arg1.disconnect()
         # def runfio(arg1, device):
         #     for rw_mode in self.mode:
