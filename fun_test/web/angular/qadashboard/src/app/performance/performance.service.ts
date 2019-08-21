@@ -77,12 +77,18 @@ export class PerformanceService {
     //populates buildInfo
   fetchBuildInfo(): any {
     return this.apiService.get('/regression/build_to_date_map').pipe(switchMap(response => {
-      this.buildInfo = {};
-      Object.keys(response.data).forEach((key) => {
+      if (this.buildInfo) {
+        return of(this.buildInfo)
+      } else {
+        this.buildInfo = {};
+        Object.keys(response.data).forEach((key) => {
         let localizedKey = this.commonService.convertToLocalTimezone(key);
         this.buildInfo[this.commonService.addLeadingZeroesToDate(localizedKey)] = response.data[key];
-      });
-      return of(true);
+        });
+        return of(this.buildInfo);
+      }
+
+
     }));
   }
 

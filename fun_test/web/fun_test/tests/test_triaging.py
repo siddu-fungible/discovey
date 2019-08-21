@@ -126,12 +126,12 @@ class TriageStateMachine:
             logger.debug("Started trial for {}".format(fun_os_sha))
             active = True
         else:
-            trial = Triage3Trial.objects.get(triage_id=t.triage_id, fun_os_sha=fun_os_sha)
+            trial = Triage3Trial.objects.get(triage_id=t.triage_id, fun_os_sha=fun_os_sha, active=True)
             trial.trial_set_id = t.current_trial_set_id
             trial.save()
             if trial.status < TriageTrialStates.COMPLETED:
                 active = True
-            logger.debug("Skipping trial for {} as it was already complete".format(fun_os_sha))
+            logger.debug("Skipping trial for {} as it was already in progress".format(fun_os_sha))
         return active
 
     def start_trial_set(self, from_fun_os_sha, to_fun_os_sha):
@@ -299,7 +299,7 @@ class TrialStateMachine:
         return "T: {} S: {}".format(self.triage_id, self.fun_os_sha)
 
     def get_trial(self):
-        trial = Triage3Trial.objects.get(triage_id=self.triage_id, fun_os_sha=self.fun_os_sha)
+        trial = Triage3Trial.objects.get(triage_id=self.triage_id, fun_os_sha=self.fun_os_sha, active=True)
         return trial
 
     def set_integration_trial_state(self, triage, trial):
