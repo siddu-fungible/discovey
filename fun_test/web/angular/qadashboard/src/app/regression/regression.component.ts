@@ -641,7 +641,7 @@ export class RegressionComponent implements OnInit {
     this.searchForm.reset();
   }
 
-  onTest() {
+  onSelectSuiteExecutionId() {
     this.searchForm.controls.submitters.setValue('');
     this.searchForm.controls.suiteName.setValue('');
   }
@@ -650,7 +650,7 @@ export class RegressionComponent implements OnInit {
     if (this.searching == true){
       this.onCancel();
     }
-    else{
+    else {
       this.searching = true;
     }
   }
@@ -658,7 +658,7 @@ export class RegressionComponent implements OnInit {
   executionReload() {
     let executionId = this.searchForm.get('executionId').value;
     if (this.searchingByExecutionId == true && !(executionId == "" || executionId == null)){
-      window.open("/regression/suite_detail/" + executionId,'_blank');
+      window.open("/regression/suite_detail/" + executionId, '_blank');
     }
 
   }
