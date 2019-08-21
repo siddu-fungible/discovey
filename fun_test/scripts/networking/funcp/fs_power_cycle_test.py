@@ -158,14 +158,55 @@ class BootF1(FunTestCase):
         fun_test.shared_variables['funeth_obj'] = funeth_obj
         setup_hu_host(funeth_obj, update_driver=True, sriov=4, num_queues=1)
 
-        ping_dict = self.server_key["fs"][fs_name]["host_pings"]
-        for host in ping_dict:
-            test_host_pings(host=host, ips=ping_dict[host])
-        fun_test.sleep(message="Wait for host to check ping again", seconds=30)
+
+class PingTest(FunTestCase):
+    server_key = {}
+
+    def describe(self):
+        self.set_test_details(id=4, summary="Test PCIe speeds for HU servers",
+                              steps="""
+                                      1. SSH into each host
+                                      2. Check PCIe link
+                                      3. Make sure PCIe link speed is correct
+                                      """)
+
+    def setup(self):
+        self.server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() +
+                                                      '/ali_bmv_storage_sanity.json')
+
+    def run(self):
+        fs_name = fun_test.get_job_environment_variable('test_bed_type')
+        topology = fun_test.shared_variables["topology"]
+        fs_name = fun_test.get_job_environment_variable('test_bed_type')
+        fs_spec = fun_test.get_asset_manager().get_fs_by_name(str(self.server_key["fs"][fs_name]["fs-name"]))
+        print("\n================================")
+        print("F1_0 DPC Stats")
+        print("================================\n")
+        network_controller_obj = NetworkController(dpc_server_ip=fs_spec['come']['mgmt_ip'],
+                                                   dpc_server_port=40220)
+        network_controller_obj.peek_fpg_port_stats(port_num=0)
+        network_controller_obj.peek_fpg_port_stats(port_num=4)
+        network_controller_obj.port_link_status()
+        network_controller_obj.disconnect()
+        print("\n================================")
+        print("F1_1 DPC Stats")
+        print("================================\n")
+
+        network_controller_obj = NetworkController(dpc_server_ip=fs_spec['come']['mgmt_ip'],
+                                                   dpc_server_port=40221)
+        network_controller_obj.peek_fpg_port_stats(port_num=0)
+        network_controller_obj.peek_fpg_port_stats(port_num=4)
+        network_controller_obj.port_link_status()
+        network_controller_obj.disconnect()
         # Ping hosts
         ping_dict = self.server_key["fs"][fs_name]["host_pings"]
         for host in ping_dict:
-            test_host_pings(host=host, ips=ping_dict[host], strict=True)
+            test_host_pings(host=host, ips=ping_dict[host], ping_count=1000, ping_interval=0.1, strict=True)
+        fun_test.sleep(message="Wait for host to check ping again", seconds=30)
+
+
+    def cleanup(self):
+        pass
 
 
 class TestHostPCIeLanes(FunTestCase):
@@ -252,17 +293,25 @@ class LocalSSDTest(StorageConfiguration):
 
         def runfio(arg1, device):
             for rw_mode in self.mode:
-                hostname = arg1.command("hostname")
-                fio_result = arg1.pcie_fio(filename=device, rw=rw_mode,
-                                           numjobs=self.num_jobs,
-                                           iodepth=self.iodepth,
-                                           name="fio_" + str(rw_mode),
-                                           runtime=300,
-                                           prio=0,
-                                           direct=1,
-                                           timeout=460)
-                fun_test.test_assert(fio_result, "Fio {} test on {}".format(rw_mode, hostname))
-                arg1.disconnect()
+                op = arg1.command(command="cd ~; pwd").strip()
+                job_file = op+"/mks/fio_{}_jf.txt".format(rw_mode)
+                result = arg1.sudo_command("fio {}".format(job_file), timeout=3000)
+                if "bad bits" in result.lower() or "verify failed" in result.lower():
+                    fun_test.critical(False, "Data verification failed for {} test".format(rw_mode))
+            arg1.disconnect()
+        # def runfio(arg1, device):
+        #     for rw_mode in self.mode:
+        #         hostname = arg1.command("hostname")
+        #         fio_result = arg1.pcie_fio(filename=device, rw=rw_mode,
+        #                                    numjobs=self.num_jobs,
+        #                                    iodepth=self.iodepth,
+        #                                    name="fio_" + str(rw_mode),
+        #                                    runtime=300,
+        #                                    prio=0,
+        #                                    direct=1,
+        #                                    timeout=460)
+        #         fun_test.test_assert(fio_result, "Fio {} test on {}".format(rw_mode, hostname))
+        #         arg1.disconnect()
 
         threads_list = []
         hosts = self.storage_config['io_servers']
@@ -292,4 +341,5 @@ if __name__ == '__main__':
     ts.add_test_case(BootF1())
     ts.add_test_case(TestHostPCIeLanes())
     ts.add_test_case(LocalSSDTest())
+    ts.add_test_case(PingTest())
     ts.run()
