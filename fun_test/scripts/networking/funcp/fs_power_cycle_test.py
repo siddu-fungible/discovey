@@ -163,7 +163,7 @@ class PingTest(FunTestCase):
     server_key = {}
 
     def describe(self):
-        self.set_test_details(id=4, summary="Test PCIe speeds for HU servers",
+        self.set_test_details(id=4, summary="Test Pings and CHeck Port Stats",
                               steps="""
                                       1. SSH into each host
                                       2. Check PCIe link
