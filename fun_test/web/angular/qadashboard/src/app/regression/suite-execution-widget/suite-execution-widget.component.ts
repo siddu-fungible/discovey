@@ -25,7 +25,7 @@ export class SuiteExecutionWidgetComponent implements OnInit {
   @Input() titleUrl: string;
   lastTwoSuites: Suite[] = [];
   isDone: boolean = false;
-  hideText: boolean = false;
+  notRunText: boolean = false;
   numbers: number[] = [0, 1];
   iconDict: any = {
     'PASSED': "/static/media/sun_icon.png",
@@ -80,8 +80,8 @@ export class SuiteExecutionWidgetComponent implements OnInit {
         if (i.state === this.stateMap.AUTO_SCHEDULED) {
           continue;
         }
-        if (this.lastTwoSuites.length == 0){
-          historyTime = new Date(this.commonService.convertToLocalTimezone(i.started_time));
+        if (this.lastTwoSuites.length == 0) { //only need historyTime for first entry
+          historyTime = new Date(i.started_time);
         }
         if (i.state === this.stateMap.COMPLETED) {
           suite.result = i.result;
@@ -102,7 +102,7 @@ export class SuiteExecutionWidgetComponent implements OnInit {
       if (!this.commonService.isSameDay(today, historyTime)){
         this.lastTwoSuites[1] = {...this.lastTwoSuites[0]};
         this.lastTwoSuites[0].result = 'NOT_RUN';
-        this.hideText = true;
+        this.notRunText = true;
       }
       this.isDone = true;
       return of(true);

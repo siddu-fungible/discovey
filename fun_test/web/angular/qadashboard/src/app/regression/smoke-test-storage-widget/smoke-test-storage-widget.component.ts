@@ -23,7 +23,7 @@ export class SmokeTestStorageWidgetComponent implements OnInit {
 
   lastTwoSuites: Suite[] = [];
   isDone: boolean = false;
-  hideText: boolean = false;
+  notRunText: boolean = false;
   numbers: number[] = [0, 1];
   iconDict: any = {
     'PASSED': "/static/media/sun_icon.png",
@@ -77,8 +77,8 @@ export class SmokeTestStorageWidgetComponent implements OnInit {
         if (i.fields.state === this.stateMap.AUTO_SCHEDULED) {
           continue;
         }
-        if (this.lastTwoSuites.length == 0){
-          historyTime = new Date(this.commonService.convertToLocalTimezone((i.fields.started_time)));
+        if (this.lastTwoSuites.length == 0) { //only need historyTime for first entry
+          historyTime = new Date(i.fields.started_time);
         }
         if (i.fields.state === this.stateMap.COMPLETED) {
           suite.result = i.fields.result;
@@ -98,7 +98,7 @@ export class SmokeTestStorageWidgetComponent implements OnInit {
       if (!this.commonService.isSameDay(today, historyTime)){
         this.lastTwoSuites[1] = {...this.lastTwoSuites[0]};
         this.lastTwoSuites[0].result = 'NOT_RUN';
-        this.hideText = true;
+        this.notRunText = true;
       }
       this.isDone = true;
       return of(true);
