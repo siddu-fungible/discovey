@@ -60,7 +60,7 @@ class SetupBringup(FunTestScript):
 
     def reboot_fpga(self, fpga_ip):
         linux_obj = Linux(host_ip=fpga_ip, ssh_username='root', ssh_password='root')
-        linux_obj.reboot()
+        linux_obj.reboot(max_wait_time=240)
 
 
 class BootF1(FunTestCase):
@@ -94,6 +94,46 @@ class BootF1(FunTestCase):
         topology = topology_helper.deploy()
         fun_test.shared_variables["topology"] = topology
         fun_test.test_assert(topology, "Topology deployed")
+
+        # Check SSD link & count
+        match_strings = "Gen3x4|Gen3x2|backend: 4 devices up"
+        for f1index in 0, 1:
+            uart_path = topology.get_dut_instance(index=0).get_uart_log_file(f1_index=f1index)
+            uart_content = os.popen("cat %s" % uart_path).read()
+            match_str_list = re.findall(r'{}'.format(match_strings), uart_content, re.IGNORECASE)
+            gen3x4_count = match_str_list.count("Gen3x4")
+            gen3x2_count = match_str_list.count("Gen3x2")
+            backend_vol = match_str_list.count("backend: 4 devices up")
+            fun_test.log_section("SSD Details on F1_{}".format(f1index))
+            fun_test.log("SSD in Gen3x4 : {}".format(gen3x4_count))
+            fun_test.log("SSD in Gen3x2 : {}".format(gen3x2_count))
+            if backend_vol != 1:
+                fun_test.critical("Error in volume count detected by FunOS")
+            for line in uart_content.split("\n"):
+                if "INFO volume_manager \"backend:" in line:
+                    if "devices up" in line:
+                        backend_dev = line.split("backend:", 1)[1]
+                        count = re.findall("\d+", backend_dev)
+                        # count = re.search(r'backend:\s+(?P<count>\d+)', line)
+                        fun_test.add_checkpoint(checkpoint="Backend devices up", expected=4, actual=int(count[0]))
+                    elif "devices are already up" in line:
+                        backend_dev = line.split("backend:", 1)[1]
+                        count = re.findall("\d+", backend_dev)
+                        fun_test.add_checkpoint(checkpoint="Backend devices already up",
+                                                expected=4, actual=int(count[0]))
+            if gen3x4_count == 8:
+                fun_test.add_checkpoint("Gen3x4 SSD count on F1_{}".format(f1index),
+                                        "PASSED", expected=8, actual=gen3x4_count)
+            else:
+                fun_test.add_checkpoint("Gen3x4 SSD count on F1_{}".format(f1index),
+                                        "FAILED", expected=8, actual=gen3x4_count)
+            if gen3x2_count == 0:
+                fun_test.add_checkpoint("Gen3x2 SSD count on F1_{}".format(f1index),
+                                        "PASSED", expected=0, actual=gen3x2_count)
+            else:
+                fun_test.add_checkpoint("Gen3x2 SSD count on F1_{}".format(f1index),
+                                        "FAILED", expected=0, actual=gen3x2_count)
+
         funcp_obj = FunControlPlaneBringup(fs_name=self.server_key["fs"][fs_name]["fs-name"])
         fun_test.test_assert(expression=funcp_obj.bringup_funcp(prepare_docker=False), message="Bringup FunCP")
         funcp_obj.assign_mpg_ips(static=self.server_key["fs"][fs_name]["mpg_ips"]["static"],
@@ -109,7 +149,7 @@ class BootF1(FunTestCase):
         funcp_obj.add_routes_on_f1(routes_dict=self.server_key["fs"][fs_name]["static_routes"])
         fun_test.sleep(message="Waiting before ping tests", seconds=10)
         funcp_obj.test_cc_pings_fs()
-
+        
         tb_file = str(fs_name)
         if fs_name == "fs-alibaba-demo":
             tb_file = "FS45"
@@ -181,6 +221,9 @@ class LocalSSDTest(StorageConfiguration):
         self.ctrl_type = "PCI"
         self.vol_attach_type = "local"
         self.storage_controller = StorageController(target_ip=self.come_ip, target_port=self.dpc_p0)
+        # Revert syslog to 3
+        command_result = self.storage_controller.poke("params/syslog/level 3")
+        fun_test.test_assert(command_result["status"], "Setting syslog level to 3")
         self.dpu = 0
         super(LocalSSDTest, self).run()
         server = self.storage_config['server']
@@ -193,6 +236,9 @@ class LocalSSDTest(StorageConfiguration):
             i += 1
 
         self.storage_controller = StorageController(target_ip=self.come_ip, target_port=self.dpc_p1)
+        # Revert syslog to 3
+        command_result = self.storage_controller.poke("params/syslog/level 3")
+        fun_test.test_assert(command_result["status"], "Setting syslog level to 3")
         self.dpu = 1
         super(LocalSSDTest, self).run()
         server = self.storage_config['server_f1']
@@ -206,14 +252,16 @@ class LocalSSDTest(StorageConfiguration):
 
         def runfio(arg1, device):
             for rw_mode in self.mode:
+                hostname = arg1.command("hostname")
                 fio_result = arg1.pcie_fio(filename=device, rw=rw_mode,
                                            numjobs=self.num_jobs,
                                            iodepth=self.iodepth,
                                            name="fio_" + str(rw_mode),
-                                           runtime=60,
+                                           runtime=300,
                                            prio=0,
                                            direct=1,
-                                           timeout=120)
+                                           timeout=460)
+                fun_test.test_assert(fio_result, "Fio {} test on {}".format(rw_mode, hostname))
                 arg1.disconnect()
 
         threads_list = []
