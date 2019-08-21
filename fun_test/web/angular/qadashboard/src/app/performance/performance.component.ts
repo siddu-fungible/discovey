@@ -89,12 +89,13 @@ enum Mode {
 })
 
 export class PerformanceComponent implements OnInit {
-  @Input() selectMode: boolean = false;
-  @Input() userProfileEmail: string = null;
-  @Input() workspaceId: number = null;
-  @Input() interestedMetrics: any = null;
-  @Input() description: string = null;
-  @Output() submitted: EventEmitter<boolean> = new EventEmitter();
+  //used for workspace editing
+  @Input() selectMode: boolean = false; //allows only to select metrics and not display any charts
+  @Input() userProfileEmail: string = null; //the current workspace user email
+  @Input() workspaceId: number = null; //current workspace Id
+  @Input() interestedMetrics: any = null; //metrics already part of the workspace
+  @Input() description: string = null; //workspace description
+  @Output() editedWorkspace: EventEmitter<boolean> = new EventEmitter(); //successful submission of metrics to DB
   updatedInterestedMetrics: any = [];
 
   numGridColumns: number;
@@ -1041,9 +1042,9 @@ export class PerformanceComponent implements OnInit {
     payload["description"] = this.description;
     this.apiService.post("/api/v1/workspaces/" + this.workspaceId + "/interested_metrics", payload).subscribe(response => {
       console.log("submitted successfully");
-      this.submitted.emit(true);
+      this.editedWorkspace.emit(true);
     }, error => {
-      this.submitted.emit(false);
+      this.editedWorkspace.emit(false);
       this.loggerService.error("Unable to submit interested metrics");
     });
   }
