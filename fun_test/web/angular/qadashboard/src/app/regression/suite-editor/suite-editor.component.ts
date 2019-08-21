@@ -142,7 +142,9 @@ export class SuiteEditorComponent implements OnInit {
       let assetSelectionKey = this._getAssetSelectionKey(flatName);
       let numAssetsKey = this._getNumAssetsKey(flatName);
       let specificAssetsKey = this._getSpecificAssetsKey(flatName);
-      group(assetSelectionKey) = new
+      group[assetSelectionKey] = new FormControl(CustomAssetSelection.NUM);
+      group[numAssetsKey] = new FormControl();
+      group[specificAssetsKey] = new FormControl();
     })
   }
 

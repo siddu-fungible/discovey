@@ -31,7 +31,12 @@
   </div>
 
 
-    <ng-container>
+  <ng-container *ngFor="let assetType of assetTypes">
+    <input type="radio" value="{{ CustomAssetSelection.NUM }}" > Specify number of {{ assetType }}s
+    <input type="radio" value="{{ CustomAssetSelection.SPECIFIC }}" > Specify number of {{ assetType }}s
+
+  </ng-container>
+    <!--ng-container>
       <div class="fun-form-field-container">
       <input [checked]="customTestBedSpecForm.controls.customDutSelection.value == CustomDutSelection.NUM_DUTS" type="radio" value="{{ CustomDutSelection.NUM_DUTS }}" formControlName="customDutSelection"> Specify number of DUTs
       &nbsp;&nbsp;&nbsp;
@@ -51,7 +56,7 @@
           </ng-multiselect-dropdown>
         </div>
     </div>
-    </ng-container>
+    </ng-container-->
 
 
 
