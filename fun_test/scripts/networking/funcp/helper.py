@@ -147,7 +147,10 @@ def test_host_pings(host, ips, username="localadmin", password="Precious1*", str
     linux_obj = Linux(host_ip=host, ssh_username=username, ssh_password=password)
     for hosts in ips:
         linux_obj.command(command="ifconfig -a")
-        result = linux_obj.ping(dst=hosts, interval=ping_interval, count=ping_count)
+        ping_timeout = 60
+        if ping_count > ping_timeout:
+            ping_timeout = ping_count+10
+        result = linux_obj.ping(dst=hosts, interval=ping_interval, count=ping_count, timeout=ping_timeout)
         if result:
             fun_test.log("%s can reach %s" % (host, hosts))
         else:
