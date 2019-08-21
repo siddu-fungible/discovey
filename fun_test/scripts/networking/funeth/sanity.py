@@ -200,7 +200,7 @@ class FunCPSetup:
         self.funcp_obj = FunControlPlaneBringup(fs_name=test_bed_type)
         self.update_funcp = update_funcp
 
-    def bringup(self):
+    def bringup(self, fs):
         self.funcp_obj.bringup_funcp(prepare_docker=self.update_funcp)
         # TODO: Make it setup independent
         self.funcp_obj.assign_mpg_ips(static=True, f1_1_mpg='10.1.20.241', f1_0_mpg='10.1.20.242',
@@ -417,7 +417,7 @@ class FunethSanity(FunTestScript):
         #if test_bed_type == 'fs-11' and control_plane:
         #    setup_funcp(test_bed_type, update_funcp=update_funcp)
         if test_bed_type != 'fs-11' and control_plane:
-            setup_funcp_on_fs(test_bed_type, update_funcp=update_funcp)
+            setup_funcp_on_fs(test_bed_type)
         tb_config_obj = tb_configs.TBConfigs(TB)
         funeth_obj = Funeth(tb_config_obj,
                             fundrv_branch=fundrv_branch,
