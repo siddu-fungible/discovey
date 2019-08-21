@@ -130,13 +130,12 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
     this.setData(metric);
     let self = this;
     let dateTime = new Date();
-    dateTime.setDate(dateTime.getDate() - 1);
     return of(true).pipe(
       switchMap(response => {
         return this.fetchData(metric, dateTime, "today");
       }),
       switchMap(response => {
-        dateTime.setDate(dateTime.getDate() - 2);
+        dateTime.setDate(dateTime.getDate() - 1);
         return this.fetchData(metric, dateTime, "yesterday");
       }),
       switchMap(response => {
