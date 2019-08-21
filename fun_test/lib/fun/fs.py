@@ -595,7 +595,7 @@ class BootupWorker(Thread):
             if self.fs.fun_cp_callback:
                 fs.set_boot_phase(BootPhases.FS_BRING_UP_CALL_FUNCP_CALLBACK)
                 fun_test.log("Calling fun CP callback from Fs")
-                self.fs.fun_cp_callback(self.fs.get_come())
+                self.fs.fun_cp_callback(self)
             self.fs.come_initialized = True
             self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COMPLETE)
 
