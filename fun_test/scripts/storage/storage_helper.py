@@ -450,7 +450,7 @@ class CollectStats(object):
             for header in per_vp_stats_header:
                 column_headers.append("{}:{}".format(thread, header))
                 if display_diff:
-                    column_headers.append("{}:{}_diff".format(thread, header))
+                    column_headers.append("{}:{}_d".format(thread, header))
         try:
             with open(output_file, 'a') as f:
                 timer = FunTimer(max_time=interval * count)
