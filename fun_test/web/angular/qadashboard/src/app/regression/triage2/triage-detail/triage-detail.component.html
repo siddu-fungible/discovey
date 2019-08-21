@@ -119,11 +119,14 @@
                     <th>
                       Set
                     </th>
-                    <th>
+                    <th *ngIf="(triage.triage_type != triageTypes.INTEGRATION_REGEX_MATCH) && (triage.triage_type != triageTypes.INTEGRATION_PASS_FAIL)">
                       Jenkins
                     </th>
-                    <th *ngIf="triage.triage_type !== triageTypes.JENKINS_FUN_OS_ON_DEMAND">
+                    <th *ngIf="(triage.triage_type !== triageTypes.JENKINS_FUN_OS_ON_DEMAND) && (triage.triage_type !== triageTypes.INTEGRATION_REGEX_MATCH) && (triage.triage_type !== triageTypes.INTEGRATION_PASS_FAIL)">
                       LSF
+                    </th>
+                    <th *ngIf="(triage.triage_type == triageTypes.INTEGRATION_REGEX_MATCH) || (triage.triage_type == triageTypes.INTEGRATION_PASS_FAIL)">
+                      Suite
                     </th>
                     <th>
                       Tag
@@ -139,14 +142,17 @@
                     <td>
                       {{ reRun.trial_set_id }}
                     </td>
-                    <td>
+                    <td *ngIf="(triage.triage_type != triageTypes.INTEGRATION_REGEX_MATCH) && (triage.triage_type != triageTypes.INTEGRATION_PASS_FAIL)">
                       <a target="_blank" *ngIf="reRun.jenkins_build_number > 0"
                          href="http://jenkins-sw-master.fungible.local:8080/job/emulation/job/fun_on_demand/{{ reRun.jenkins_build_number }}/">link</a>
                     </td>
                     <td *ngIf="triage.triage_type !== triageTypes.JENKINS_FUN_OS_ON_DEMAND">
-                      <a *ngIf="reRun.lsf_job_id > 0"
-                    href="http://palladium-jobs.fungible.local:8080/job/{{ reRun.lsf_job_id }}" target="_blank">link</a>
+                      <a *ngIf="reRun.lsf_job_id > 0" href="http://palladium-jobs.fungible.local:8080/job/{{ reRun.lsf_job_id }}" target="_blank">link</a>
                     </td>
+                    <td *ngIf="(triage.triage_type === triageTypes.INTEGRATION_PASS_OR_FAIL) || (triage.triage_type === triageTypes.INTEGRATION_REGEX_MATCH)">
+                      <a target="_blank" href="/regression/suite_detail/{{ reRun.integration_job_id }}">{{ reRun.integration_job_id }}</a>
+                    </td>
+
                     <td>
                       {{ reRun.tag }}
                     </td>
