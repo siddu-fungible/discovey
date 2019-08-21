@@ -65,6 +65,7 @@ def trials(request, triage_id):
                 first_trial.active = True
                 first_trial.jenkins_build_number = -1
                 first_trial.lsf_job_id = -1
+                first_trial.integration_job_id = -1
                 first_trial.submission_date_time = get_current_time()
                 first_trial.save()
             else:

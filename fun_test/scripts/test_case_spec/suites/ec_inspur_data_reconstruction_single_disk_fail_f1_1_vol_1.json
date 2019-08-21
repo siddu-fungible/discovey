@@ -1,4 +1,4 @@
 [
   {"info": {"custom_test_bed_spec": {"base_test_bed": "fs-inspur", "asset_request": {"DUT": {"num": 1}, "Host": {"num": 1}}}}},
-  {"path": "storage/pocs/inspur/ec_inspur_single_drive_failure_with_rebuild.py"}
+  {"path": "storage/pocs/inspur/ec_inspur_data_reconstruction_single_disk_fail.py", "inputs": {"post_results": true}}
 ]

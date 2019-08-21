@@ -1,6 +1,6 @@
 from lib.system.fun_test import *
 from lib.system import utils
-from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper, get_data_collection_time
+from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper, ModelHelper, get_data_collection_time
 from lib.fun.fs import Fs
 import re
 from lib.topology.topology_helper import TopologyHelper
@@ -8,11 +8,10 @@ from lib.templates.storage.storage_fs_template import *
 from scripts.storage.storage_helper import *
 from scripts.networking.helper import *
 from collections import OrderedDict, Counter
-from lib.templates.csi_perf.csi_perf_template import CsiPerfTemplate
-from lib.host.linux import Linux
+from fun_global import PerfUnit, FunPlatform
 
 '''
-Script to track the Inspur Performance Cases of various read write combination of Erasure Coded volume using FIO
+Script for Inspur Functional Testing of Data Reconstruction With Disk Disk Failure and monitor Performance impact
 '''
 
 
@@ -23,9 +22,10 @@ def fio_parser(arg1, host_index, **kwargs):
     arg1.disconnect()
 
 
-def post_results(volume, test, num_host, block_size, io_depth, size, operation, write_iops, read_iops, write_bw, read_bw,
-                 write_latency, write_90_latency, write_95_latency, write_99_latency, write_99_99_latency, read_latency,
-                 read_90_latency, read_95_latency, read_99_latency, read_99_99_latency, fio_job_name):
+def post_results(volume, test, num_host, block_size, io_depth, size, operation, write_iops, read_iops, write_bw,
+                 read_bw, write_latency, write_90_latency, write_95_latency, write_99_latency, write_99_99_latency,
+                 read_latency, read_90_latency, read_95_latency, read_99_latency, read_99_99_latency, plex_rebuild_time,
+                 fio_job_name):
     for i in ["write_iops", "read_iops", "write_bw", "read_bw", "write_latency", "write_90_latency", "write_95_latency",
               "write_99_latency", "write_99_99_latency", "read_latency", "read_90_latency", "read_95_latency",
               "read_99_latency", "read_99_99_latency", "fio_job_name"]:
@@ -59,7 +59,30 @@ def post_results(volume, test, num_host, block_size, io_depth, size, operation, 
     fun_test.log("Result: {}".format(result))
 
 
-class ECVolumeLevelScript(FunTestScript):
+def add_to_data_base(value_dict):
+    unit_dict = {
+        "write_iops_unit": PerfUnit.UNIT_OPS, "read_iops_unit": PerfUnit.UNIT_OPS,
+        "write_throughput_unit": PerfUnit.UNIT_MBYTES_PER_SEC, "read_throughput_unit": PerfUnit.UNIT_MBYTES_PER_SEC,
+        "write_avg_latency_unit": PerfUnit.UNIT_USECS, "write_90_latency_unit": PerfUnit.UNIT_USECS,
+        "write_95_latency_unit": PerfUnit.UNIT_USECS, "write_99_99_latency_unit": PerfUnit.UNIT_USECS,
+        "write_99_latency_unit": PerfUnit.UNIT_USECS, "read_avg_latency_unit": PerfUnit.UNIT_USECS,
+        "read_90_latency_unit": PerfUnit.UNIT_USECS, "read_95_latency_unit": PerfUnit.UNIT_USECS,
+        "read_99_99_latency_unit": PerfUnit.UNIT_USECS, "read_99_latency_unit": PerfUnit.UNIT_USECS,
+        "plex_rebuild_time_unit": PerfUnit.UNIT_SECS
+    }
+
+    model_name = "InspurDataReconstructionPerformance"
+    status = fun_test.PASSED
+    try:
+        generic_helper = ModelHelper(model_name=model_name)
+        generic_helper.set_units(validate=True, **unit_dict)
+        generic_helper.add_entry(**value_dict)
+        generic_helper.set_status(status)
+    except Exception as ex:
+        fun_test.critical(str(ex))
+
+
+class DataReconstructOnDiskFailScript(FunTestScript):
     def describe(self):
         self.set_test_details(steps="""
         1. Deploy the topology. Bring up F1 with funos 
@@ -165,27 +188,6 @@ class ECVolumeLevelScript(FunTestScript):
 
         if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
                 self.testbed_config["workarounds"]["enable_funcp"]:
-
-            # Code to collect csi_perf if it's set
-            self.csi_perf_enabled = fun_test.get_job_environment_variable("csi_perf")
-            fun_test.log("csi_perf_enabled is set as: {} for current run".format(self.csi_perf_enabled))
-            if self.csi_perf_enabled:
-                fun_test.log("testbed_config: {}".format(self.testbed_config))
-                self.csi_f1_ip = \
-                self.testbed_config["dut_info"][str(self.available_dut_indexes[0])]["bond_interface_info"]["0"]["0"][
-                    "ip"].split('/')[0]
-                fun_test.log("F1 ip used for csi_perf_test: {}".format(self.csi_f1_ip))
-                self.perf_listener_host = self.topology_helper.get_available_perf_listener_hosts()
-                fun_test.log("perf_listener_host used for current test: {}".format(self.perf_listener_host))
-                for self.perf_listener_host_name, csi_perf_host_obj in self.perf_listener_host.iteritems():
-                    perf_listner_test_interface = csi_perf_host_obj.get_test_interface(index=0)
-                    self.perf_listener_ip = perf_listner_test_interface.ip.split('/')[0]
-                    fun_test.log("csi perf listener host ip is: {}".format(self.perf_listener_ip))
-                # adding csi perf bootargs if csi_perf is enabled
-                #  TODO: Modifying bootargs only for F1_0 as csi_perf on F1_1 is not yet fully supported
-                self.bootargs[0] += " --perf csi-local-ip={} csi-remote-ip={} pdtrace-hbm-size-kb={}".format(
-                    self.csi_f1_ip, self.perf_listener_ip, self.csi_perf_pdtrace_hbm_size_kb)
-
             for i in range(len(self.bootargs)):
                 self.bootargs[i] += " --mgmt"
                 if self.disable_wu_watchdog:
@@ -199,7 +201,7 @@ class ECVolumeLevelScript(FunTestScript):
             fun_test.test_assert(self.topology, "Topology deployed")
 
             # Datetime required for daily Dashboard data filter
-            self.db_log_time = get_data_collection_time(tag="ec_inspur_fs_teramark_single_f1")
+            self.db_log_time = get_data_collection_time()
             fun_test.log("Data collection time: {}".format(self.db_log_time))
 
             # Retrieving all Hosts list and filtering required hosts and forming required object lists out of it
@@ -217,7 +219,7 @@ class ECVolumeLevelScript(FunTestScript):
 
             fun_test.log("Hosts that will be used for current test: {}".format(self.required_hosts.keys()))
 
-            self.host_info = OrderedDict()
+            self.host_info = {}
             self.hosts_test_interfaces = {}
             self.host_handles = {}
             self.host_ips = []
@@ -247,7 +249,8 @@ class ECVolumeLevelScript(FunTestScript):
                 host_handle = self.host_info[host_name]["handle"]
                 if self.override_numa_node["override"]:
                     host_numa_cpus_filter = host_handle.lscpu(self.override_numa_node["override_node"])
-                    self.host_info[host_name]["host_numa_cpus"] = host_numa_cpus_filter[self.override_numa_node["override_node"]]
+                    self.host_info[host_name]["host_numa_cpus"] = host_numa_cpus_filter[
+                        self.override_numa_node["override_node"]]
                 else:
                     self.host_info[host_name]["host_numa_cpus"] = fetch_numa_cpus(host_handle, self.ethernet_adapter)
 
@@ -326,23 +329,12 @@ class ECVolumeLevelScript(FunTestScript):
             fun_test.shared_variables["syslog_level"] = self.syslog_level
             fun_test.shared_variables["db_log_time"] = self.db_log_time
             fun_test.shared_variables["host_info"] = self.host_info
-            fun_test.shared_variables["csi_perf_enabled"] = self.csi_perf_enabled
-            if self.csi_perf_enabled:
-                fun_test.shared_variables["perf_listener_host_name"] = self.perf_listener_host_name
-                fun_test.shared_variables["perf_listener_ip"] = self.perf_listener_ip
 
             for host_name in self.host_info:
                 host_handle = self.host_info[host_name]["handle"]
                 # Ensure all hosts are up after reboot
                 fun_test.test_assert(host_handle.ensure_host_is_up(max_wait_time=self.reboot_timeout),
                                      message="Ensure Host {} is reachable after reboot".format(host_name))
-
-                # TODO: enable after mpstat check is added
-                """
-                # Check and install systat package
-                install_sysstat_pkg = host_handle.install_package(pkg="sysstat")
-                fun_test.test_assert(expression=install_sysstat_pkg, message="sysstat package available")
-                """
                 # Ensure required modules are loaded on host server, if not load it
                 for module in self.load_modules:
                     module_check = host_handle.lsmod(module)
@@ -360,141 +352,17 @@ class ECVolumeLevelScript(FunTestScript):
                     fun_test.test_assert(ping_status, "Host {} is able to ping to {}'s bond interface IP {}".
                                          format(host_name, self.funcp_spec[0]["container_names"][index], ip))
 
-            # Ensuring perf_host is able to ping F1 IP
-            if self.csi_perf_enabled:
-                # csi_perf_host_instance = csi_perf_host_obj.get_instance()  # TODO: Returning as NoneType
-                csi_perf_host_instance = Linux(host_ip=csi_perf_host_obj.spec["host_ip"],
-                                               ssh_username=csi_perf_host_obj.spec["ssh_username"],
-                                               ssh_password=csi_perf_host_obj.spec["ssh_password"])
-                ping_status = csi_perf_host_instance.ping(dst=self.csi_f1_ip)
-                fun_test.test_assert(ping_status, "Host {} is able to ping to F1 IP {}".
-                                     format(self.perf_listener_host_name, self.csi_f1_ip))
-
-        elif "workarounds" in self.testbed_config and "csr_replay" in self.testbed_config["workarounds"] and \
-                self.testbed_config["workarounds"]["csr_replay"]:
-
-            for i in range(len(self.bootargs)):
-                self.bootargs[i] += " --csr-replay"
-                if self.disable_wu_watchdog:
-                    self.bootargs[i] += " --disable-wu-watchdog"
-
-            self.topology_helper.set_dut_parameters(f1_parameters={0: {"boot_args": self.bootargs[0]},
-                                                                   1: {"boot_args": self.bootargs[1]}})
-            self.topology = self.topology_helper.deploy()
-            fun_test.test_assert(self.topology, "Topology deployed")
-
-            self.fs = self.topology.get_dut_instance(index=0)
-            self.f1 = self.fs.get_f1(index=self.f1_in_use)
-            self.db_log_time = get_data_collection_time()
-            fun_test.log("Data collection time: {}".format(self.db_log_time))
-
-            self.storage_controller = self.f1.get_dpc_storage_controller()
-
-            # Fetching Linux host with test interface name defined
-            fpg_connected_hosts = self.topology.get_host_instances_on_fpg_interfaces(dut_index=0, f1_index=self.f1_in_use)
-            for host_ip, host_info in fpg_connected_hosts.iteritems():
-                if self.testbed_type == "fs-6" and host_ip != "poc-server-01":
-                    continue
-                if "test_interface_name" in host_info["host_obj"].extra_attributes:
-                    self.end_host = host_info["host_obj"]
-                    self.test_interface_name = self.end_host.extra_attributes["test_interface_name"]
-                    self.fpg_inteface_index = host_info["interfaces"][self.f1_in_use].index
-                    fun_test.log("Test Interface is connected to FPG Index: {}".format(self.fpg_inteface_index))
-                    break
-            else:
-                fun_test.test_assert(False, "Host found with Test Interface")
-
-            self.test_network = self.csr_network[str(self.fpg_inteface_index)]
-            fun_test.shared_variables["end_host"] = self.end_host
-            fun_test.shared_variables["topology"] = self.topology
-            fun_test.shared_variables["fs"] = self.fs
-            fun_test.shared_variables["f1_in_use"] = self.f1_in_use
-            fun_test.shared_variables["test_network"] = self.test_network
-            fun_test.shared_variables["syslog_level"] = self.syslog_level
-            fun_test.shared_variables["db_log_time"] = self.db_log_time
-            fun_test.shared_variables["storage_controller"] = self.storage_controller
-
-            # Fetching NUMA node from Network host for mentioned Ethernet Adapter card
-            if self.override_numa_node["override_node"]:
-                self.numa_cpus_filter = self.end_host.lscpu(self.override_numa_node["override_node"])
-                self.numa_cpus = self.numa_cpus_filter[self.override_numa_node["override_node"]]
-            else:
-                self.numa_cpus = fetch_numa_cpus(self.end_host, self.ethernet_adapter)
-
-            # Calculating the number of CPUs available in the given numa
-            self.total_numa_cpus = 0
-            for cpu_group in self.numa_cpus.split(","):
-                cpu_range = cpu_group.split("-")
-                self.total_numa_cpus += len(range(int(cpu_range[0]), int(cpu_range[1]))) + 1
-
-            fun_test.log("Total CPUs: {}".format(self.total_numa_cpus))
-            fun_test.shared_variables["numa_cpus"] = self.numa_cpus
-            fun_test.shared_variables["total_numa_cpus"] = self.total_numa_cpus
-
-            # Configuring Linux host
-            host_up_status = self.end_host.reboot(timeout=self.command_timeout, max_wait_time=self.reboot_timeout,
-                                                  reboot_initiated_wait_time=self.reboot_timeout)
-            fun_test.test_assert(host_up_status, "End Host {} is up".format(self.end_host.host_ip))
-
-            interface_ip_config = "ip addr add {} dev {}".format(self.test_network["test_interface_ip"],
-                                                                 self.test_interface_name)
-            interface_mac_config = "ip link set {} address {}".format(self.test_interface_name,
-                                                                      self.test_network["test_interface_mac"])
-            link_up_cmd = "ip link set {} up".format(self.test_interface_name)
-            static_arp_cmd = "arp -s {} {}".format(self.test_network["test_net_route"]["gw"],
-                                                   self.test_network["test_net_route"]["arp"])
-
-            interface_ip_config_status = self.end_host.sudo_command(command=interface_ip_config,
-                                                                    timeout=self.command_timeout)
-            fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(),
-                                          message="Configuring test interface IP address")
-
-            interface_mac_status = self.end_host.sudo_command(command=interface_mac_config,
-                                                              timeout=self.command_timeout)
-            fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(),
-                                          message="Assigning MAC to test interface")
-
-            link_up_status = self.end_host.sudo_command(command=link_up_cmd, timeout=self.command_timeout)
-            fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(),
-                                          message="Bringing up test link")
-
-            interface_up_status = self.end_host.ifconfig_up_down(interface=self.test_interface_name,
-                                                                 action="up")
-            fun_test.test_assert(interface_up_status, "Bringing up test interface")
-
-            route_add_status = self.end_host.ip_route_add(network=self.test_network["test_net_route"]["net"],
-                                                          gateway=self.test_network["test_net_route"]["gw"],
-                                                          outbound_interface=self.test_interface_name,
-                                                          timeout=self.command_timeout)
-            fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(), message="Adding route to F1")
-
-            arp_add_status = self.end_host.sudo_command(command=static_arp_cmd, timeout=self.command_timeout)
-            fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(),
-                                          message="Adding static ARP to F1 route")
-
-            # Loading the nvme and nvme_tcp modules
-            for module in self.load_modules:
-                module_check = self.end_host.lsmod(module)
-                if not module_check:
-                    self.end_host.modprobe(module)
-                    module_check = self.end_host.lsmod(module)
-                    fun_test.sleep("Loading {} module".format(module))
-                fun_test.simple_assert(module_check, "{} module is loaded".format(module))
-
         fun_test.shared_variables["testbed_config"] = self.testbed_config
 
     def cleanup(self):
 
         come_reboot = False
+
         if fun_test.shared_variables["ec"]["setup_created"]:
             if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
                     self.testbed_config["workarounds"]["enable_funcp"]:
                 self.fs = self.fs_obj[0]
                 self.storage_controller = fun_test.shared_variables["sc_obj"][self.f1_in_use]
-            elif "workarounds" in self.testbed_config and "csr_replay" in self.testbed_config["workarounds"] and \
-                    self.testbed_config["workarounds"]["csr_replay"]:
-                self.fs = fun_test.shared_variables["fs"]
-                self.storage_controller = fun_test.shared_variables["storage_controller"]
             try:
                 self.ec_info = fun_test.shared_variables["ec_info"]
                 self.attach_transport = fun_test.shared_variables["attach_transport"]
@@ -521,7 +389,6 @@ class ECVolumeLevelScript(FunTestScript):
                     nvme_disconnect_exit_status = host_handle.exit_status()
                     fun_test.test_assert_expected(expected=0, actual=nvme_disconnect_exit_status,
                                                   message="{} - NVME Disconnect Status".format(host_name))
-
                 # Detaching all the EC/LS volumes to the external server
                 for num in xrange(self.ec_info["num_volumes"]):
                     command_result = self.storage_controller.detach_volume_from_controller(
@@ -532,10 +399,9 @@ class ECVolumeLevelScript(FunTestScript):
                 # Unconfiguring all the LSV/EC and it's plex volumes
                 self.storage_controller.unconfigure_ec_volume(ec_info=self.ec_info,
                                                               command_timeout=self.command_timeout)
-
                 # Deleting all the storage controller
                 for index in xrange(len(self.host_info)):
-                    command_result = self.storage_controller.delete_controller(ctrlr_uuid=self.ctrlr_uuid[index],
+                    command_result = self.storage_controller.delete_controller(ctrlr_uuid=self.ctrlr_uuid,
                                                                                command_duration=self.command_timeout)
                     fun_test.test_assert(command_result["status"], "Deleting Storage Controller {}".
                                          format(self.ctrlr_uuid[index]))
@@ -565,10 +431,11 @@ class ECVolumeLevelScript(FunTestScript):
         except Exception as ex:
             fun_test.critical(str(ex))
 
+
         self.topology.cleanup()
 
 
-class ECVolumeLevelTestcase(FunTestCase):
+class DataReconstructOnDiskFailTestcase(FunTestCase):
 
     def describe(self):
         pass
@@ -617,15 +484,11 @@ class ECVolumeLevelTestcase(FunTestCase):
             self.ec_info["num_volumes"] = job_inputs["num_volumes"]
         if "vol_size" in job_inputs:
             self.ec_info["capacity"] = job_inputs["vol_size"]
-        if "post_results" in job_inputs:
-            self.post_results = job_inputs["post_results"]
-        else:
-            self.post_results = False
 
         if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
                 self.testbed_config["workarounds"]["enable_funcp"]:
             self.f1_in_use = fun_test.shared_variables["f1_in_use"]
-            self.fs = fun_test.shared_variables["fs_obj"]
+            self.fs_obj = fun_test.shared_variables["fs_obj"]
             self.come_obj = fun_test.shared_variables["come_obj"]
             self.f1 = fun_test.shared_variables["f1_obj"][0][0]
             self.storage_controller = fun_test.shared_variables["sc_obj"][self.f1_in_use]
@@ -636,21 +499,7 @@ class ECVolumeLevelTestcase(FunTestCase):
             self.test_network["f1_loopback_ip"] = self.f1_ips
             self.num_duts = fun_test.shared_variables["num_duts"]
             self.num_hosts = len(self.host_info)
-            self.csi_perf_enabled = fun_test.shared_variables["csi_perf_enabled"]
-            if self.csi_perf_enabled:
-                self.perf_listener_host_name = fun_test.shared_variables["perf_listener_host_name"]
-                self.perf_listener_ip = fun_test.shared_variables["perf_listener_ip"]
-        elif "workarounds" in self.testbed_config and "csr_replay" in self.testbed_config["workarounds"] and \
-                self.testbed_config["workarounds"]["csr_replay"]:
-            self.fs = fun_test.shared_variables["fs"]
-            self.end_host = fun_test.shared_variables["end_host"]
-            self.test_network = fun_test.shared_variables["test_network"]
-            self.f1_in_use = fun_test.shared_variables["f1_in_use"]
-            self.storage_controller = fun_test.shared_variables["storage_controller"]
-            self.numa_cpus = fun_test.shared_variables["numa_cpus"]
-            self.total_numa_cpus = fun_test.shared_variables["total_numa_cpus"]
-            self.remote_ip = self.test_network["test_interface_ip"].split('/')[0]
-            fun_test.shared_variables["remote_ip"] = self.remote_ip
+            self.db_log_time = fun_test.shared_variables["db_log_time"]
 
         if "ec" not in fun_test.shared_variables or not fun_test.shared_variables["ec"]["setup_created"]:
             fun_test.shared_variables["ec"] = {}
@@ -671,6 +520,25 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.log("EC details after configuring EC Volume:")
             for k, v in self.ec_info.items():
                 fun_test.log("{}: {}".format(k, v))
+
+            if self.rebuild_on_spare_volume:
+                num = self.test_volume_start_index
+                vtype = "ndata"
+                self.spare_vol_uuid = utils.generate_uuid()
+                self.ec_info["uuids"][num][vtype].append(self.spare_vol_uuid)
+                self.ec_info["uuids"][num]["blt"].append(self.spare_vol_uuid)
+                command_result = self.storage_controller.create_volume(
+                    type=self.ec_info["volume_types"][vtype], capacity=self.ec_info["volume_capacity"][num][vtype],
+                    block_size=self.ec_info["volume_block"][vtype], name=vtype + "_" + self.spare_vol_uuid[-4:],
+                    uuid=self.spare_vol_uuid, group_id=num + 1, command_duration=self.command_timeout)
+                fun_test.log(command_result)
+                fun_test.test_assert(
+                    command_result["status"], "Creating Spare Volume {} {} {} {} bytes volume on DUT instance".
+                        format(num, vtype, self.ec_info["volume_types"][vtype],
+                               self.ec_info["volume_capacity"][num][vtype]))
+                fun_test.log("EC details after Creating Spare Plex for rebuild:")
+                for k, v in self.ec_info.items():
+                    fun_test.log("{}: {}".format(k, v))
 
             # Attaching/Exporting all the EC/LS volumes to the external server
             self.ctrlr_uuid = []
@@ -701,7 +569,6 @@ class ECVolumeLevelTestcase(FunTestCase):
 
             fun_test.shared_variables["ec"]["setup_created"] = True
             fun_test.shared_variables["ctrlr_uuid"] = self.ctrlr_uuid
-            fun_test.shared_variables["ec_info"] = self.ec_info
 
             # disabling the error_injection for the EC volume
             command_result = {}
@@ -730,8 +597,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 pcap_stopped[host_name] = True
                 pcap_pid[host_name] = {}
                 pcap_pid[host_name] = host_handle.tcpdump_capture_start(interface=test_interface,
-                                                                        tcpdump_filename="/tmp/nvme_connect.pcap",
-                                                                        snaplen=1500)
+                                                                        tcpdump_filename="/tmp/nvme_connect.pcap")
                 if pcap_pid[host_name]:
                     fun_test.log("Started packet capture in {}".format(host_name))
                     pcap_started[host_name] = True
@@ -748,30 +614,30 @@ class ECVolumeLevelTestcase(FunTestCase):
                     if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
                             self.testbed_config["workarounds"]["enable_funcp"]:
                         if not hasattr(self, "io_queues") or (hasattr(self, "io_queues") and self.io_queues == 0):
-                            nvme_connect_status = host_handle.nvme_connect(
-                                target_ip=self.test_network["f1_loopback_ip"], nvme_subsystem=self.nvme_subsystem,
-                                port=self.transport_port, transport=self.attach_transport,
-                                hostnqn=self.host_info[host_name]["ip"][0])
+                            nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {} -q {}". \
+                                format(self.attach_transport.lower(), self.test_network["f1_loopback_ip"],
+                                       str(self.transport_port), self.nvme_subsystem,
+                                       self.host_info[host_name]["ip"][0])
                         else:
-                            nvme_connect_status = host_handle.nvme_connect(
-                                target_ip=self.test_network["f1_loopback_ip"], nvme_subsystem=self.nvme_subsystem,
-                                port=self.transport_port, transport=self.attach_transport, io_queues=self.io_queues,
-                                hostnqn=self.host_info[host_name]["ip"][0])
-                    else:
-                        if not hasattr(self, "io_queues") or (hasattr(self, "io_queues") and self.io_queues == 0):
-                            nvme_connect_status = host_handle.nvme_connect(
-                                target_ip=self.test_network["f1_loopback_ip"], nvme_subsystem=self.nvme_subsystem,
-                                port=self.transport_port, transport=self.attach_transport)
-                        else:
-                            nvme_connect_status = host_handle.nvme_connect(
-                                target_ip=self.test_network["f1_loopback_ip"], nvme_subsystem=self.nvme_subsystem,
-                                port=self.transport_port, transport=self.attach_transport, io_queues=self.io_queues)
+                            nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {} -i {} -q {}". \
+                                format(self.attach_transport.lower(), self.test_network["f1_loopback_ip"],
+                                       str(self.transport_port), self.nvme_subsystem, str(self.io_queues),
+                                       self.host_info[host_name]["ip"][0])
+                    try:
+                        nvme_connect_output = host_handle.sudo_command(command=nvme_connect_cmd, timeout=60)
+                        nvme_connect_exit_status = host_handle.exit_status()
+                        fun_test.log("nvme_connect_output output is: {}".format(nvme_connect_output))
+                        if nvme_connect_exit_status and pcap_started[host_name]:
+                            host_handle.tcpdump_capture_stop(process_id=pcap_pid[host_name])
+                            pcap_stopped[host_name] = True
+                    except Exception as ex:
+                        # Stopping the packet capture if it is started
+                        if pcap_started[host_name]:
+                            host_handle.tcpdump_capture_stop(process_id=pcap_pid[host_name])
+                            pcap_stopped[host_name] = True
 
-                    if pcap_started[host_name]:
-                        host_handle.tcpdump_capture_stop(process_id=pcap_pid[host_name])
-                        pcap_stopped[host_name] = True
-
-                    fun_test.test_assert(nvme_connect_status, message="{} - NVME Connect Status".format(host_name))
+                    fun_test.test_assert_expected(expected=0, actual=nvme_connect_exit_status,
+                                                  message="{} - NVME Connect Status".format(host_name))
 
                     lsblk_output = host_handle.lsblk("-b")
                     fun_test.simple_assert(lsblk_output, "Listing available volumes")
@@ -798,6 +664,13 @@ class ECVolumeLevelTestcase(FunTestCase):
                         ":".join(self.host_info[host_name]["nvme_block_device_list"])
                     fun_test.shared_variables["host_info"] = self.host_info
                     fun_test.log("Hosts info: {}".format(self.host_info))
+
+            # Stopping the packet capture
+            for host_name in self.host_info:
+                host_handle = self.host_info[host_name]["handle"]
+                if pcap_started[host_name]:
+                    host_handle.tcpdump_capture_stop(process_id=pcap_pid[host_name])
+                    pcap_stopped[host_name] = True
 
             # Setting the syslog level
             command_result = self.storage_controller.poke(props_tree=["params/syslog/level", self.syslog_level],
@@ -851,7 +724,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                         fun_test.log("FIO Command Output:\n{}".format(fio_output))
                         fun_test.test_assert(fio_output, "Volume warmup on host {}".format(host_name))
 
-                fun_test.sleep("before actual test",self.iter_interval)
+                fun_test.sleep("before actual test", self.iter_interval)
                 fun_test.shared_variables["ec"]["warmup_io_completed"] = True
 
     def run(self):
@@ -865,14 +738,13 @@ class ECVolumeLevelTestcase(FunTestCase):
                               "Write Latency 99 Percentile in uSecs", "Write Latency 99.99 Percentile in uSecs",
                               "Read Latency in uSecs", "Read Latency 90 Percentile in uSecs",
                               "Read Latency 95 Percentile in uSecs", "Read Latency 99 Percentile in uSecs",
-                              "Read Latency 99.99 Percentile in uSecs", "fio_job_name"]
+                              "Read Latency 99.99 Percentile in uSecs", "Plex Rebuild Time in sec", "fio_job_name"]
         table_data_cols = ["num_hosts", "block_size", "iodepth", "size", "mode", "writeiops", "readiops", "writebw",
                            "readbw", "writeclatency", "writelatency90", "writelatency95", "writelatency99",
                            "writelatency9999", "readclatency", "readlatency90", "readlatency95", "readlatency99",
-                           "readlatency9999", "fio_job_name"]
+                           "readlatency9999", "plex_rebuild_time", "fio_job_name"]
         table_data_rows = []
 
-        self.ec_info = fun_test.shared_variables["ec_info"]
         # Checking whether the job's inputs argument is having the list of io_depths to be used in this test.
         # If so, override the script default with the user provided config
         job_inputs = fun_test.get_job_inputs()
@@ -883,6 +755,45 @@ class ECVolumeLevelTestcase(FunTestCase):
 
         if not isinstance(self.fio_iodepth, list):
             self.fio_iodepth = [self.fio_iodepth]
+
+        # Test Preparation
+        # Checking whether the ec_info is having the drive and device ID for the EC's plex volumes
+        # Else going to extract the same
+        if "device_id" not in self.ec_info:
+            fun_test.log("Drive and Device ID of the EC volume's plex volumes are not available in the ec_info..."
+                         "So going to pull that info")
+            self.ec_info["drive_uuid"] = {}
+            self.ec_info["device_id"] = {}
+            for num in xrange(self.ec_info["num_volumes"]):
+                self.ec_info["drive_uuid"][num] = []
+                self.ec_info["device_id"][num] = []
+                for blt_uuid in self.ec_info["uuids"][num]["blt"]:
+                    blt_props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", "VOL_TYPE_BLK_LOCAL_THIN",
+                                                             blt_uuid, "stats")
+                    blt_stats = self.storage_controller.peek(blt_props_tree)
+                    fun_test.simple_assert(blt_stats["status"], "Stats of BLT Volume {}".format(blt_uuid))
+                    if "drive_uuid" in blt_stats["data"]:
+                        self.ec_info["drive_uuid"][num].append(blt_stats["data"]["drive_uuid"])
+                    else:
+                        fun_test.simple_assert(blt_stats["data"].get("drive_uuid"), "Drive UUID of BLT volume {}".
+                                               format(blt_uuid))
+                    drive_props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", "VOL_TYPE_BLK_LOCAL_THIN",
+                                                               "drives", blt_stats["data"]["drive_uuid"])
+                    drive_stats = self.storage_controller.peek(drive_props_tree)
+                    fun_test.simple_assert(drive_stats["status"], "Stats of the drive {}".
+                                           format(blt_stats["data"]["drive_uuid"]))
+                    if "drive_id" in drive_stats["data"]:
+                        self.ec_info["device_id"][num].append(drive_stats["data"]["drive_id"])
+                    else:
+                        fun_test.simple_assert(drive_stats["data"].get("drive_id"), "Device ID of the drive {}".
+                                               format(blt_stats["data"]["drive_uuid"]))
+
+        fun_test.log("EC plex volumes UUID      : {}".
+                     format(self.ec_info["uuids"][self.test_volume_start_index]["blt"]))
+        fun_test.log("EC plex volumes drive UUID: {}".
+                     format(self.ec_info["drive_uuid"][self.test_volume_start_index]))
+        fun_test.log("EC plex volumes device ID : {}".
+                     format(self.ec_info["device_id"][self.test_volume_start_index]))
 
         # Going to run the FIO test for the block size and iodepth combo listed in fio_iodepth
         fio_result = {}
@@ -895,17 +806,6 @@ class ECVolumeLevelTestcase(FunTestCase):
 
         start_stats = True
 
-        # Preparing the volume details list containing the list of ditionaries where each dictionary has the details of
-        # an EC volume
-        vol_details = []
-        for num in range(self.ec_info["num_volumes"]):
-            vol_group = {}
-            vol_group[self.ec_info["volume_types"]["ndata"]] = self.ec_info["uuids"][num]["blt"]
-            vol_group[self.ec_info["volume_types"]["ec"]]    = self.ec_info["uuids"][num]["ec"]
-            vol_group[self.ec_info["volume_types"]["jvol"]]  = [self.ec_info["uuids"][num]["jvol"]]
-            vol_group[self.ec_info["volume_types"]["lsv"]]   = self.ec_info["uuids"][num]["lsv"]
-            vol_details.append(vol_group)
-
         for iodepth in self.fio_iodepth:
             fio_result[iodepth] = True
             fio_output[iodepth] = {}
@@ -914,6 +814,8 @@ class ECVolumeLevelTestcase(FunTestCase):
             fio_cmd_args = {}
             mpstat_pid = {}
             mpstat_artifact_file = {}
+            iostat_pid = {}
+            iostat_artifact_file = {}
             initial_stats[iodepth] = {}
             final_stats[iodepth] = {}
             resultant_stats[iodepth] = {}
@@ -941,9 +843,12 @@ class ECVolumeLevelTestcase(FunTestCase):
             # Computing the interval and duration that the mpstat/vp_util stats needs to be collected
             if "runtime" not in self.fio_cmd_args:
                 mpstat_count = self.fio_cmd_args["timeout"] / self.mpstat_args["interval"]
+                iostat_count = self.fio_cmd_args["timeout"] / self.iostat_args["interval"]
             elif "runtime" in self.fio_cmd_args and "ramp_time" in self.fio_cmd_args:
                 mpstat_count = ((self.fio_cmd_args["runtime"] + self.fio_cmd_args["ramp_time"]) /
                                 self.mpstat_args["interval"])
+                iostat_count = ((self.fio_cmd_args["runtime"] + self.fio_cmd_args["ramp_time"]) /
+                                self.iostat_args["interval"])
             elif "multiple_jobs" in self.fio_cmd_args:
                 match = re.search("--ramp_time=(\d+).*--runtime=(\d+)|--runtime=(\d+).*--ramp_time=(\d+)",
                                   self.fio_cmd_args["multiple_jobs"])
@@ -957,6 +862,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                     if match.group(4) != None:
                         ramp_time = match.group(4)
                     mpstat_count = (int(runtime) + int(ramp_time)) / self.mpstat_args["interval"]
+                    iostat_count = (int(runtime) + int(ramp_time)) / self.iostat_args["interval"]
                 else:
                     start_stats = False
             else:
@@ -993,6 +899,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                     initial_stats[iodepth]["ca"] = self.storage_controller.peek_ca_stats()
                     command_result = self.storage_controller.peek(props_tree="stats/eqm", legacy=False,
                                                                   command_duration=self.command_timeout)
+                    # fun_test.test_assert(command_result["status"], "Collecting eqm stats for iodepth {}".format(iodepth))
                     if "status" in command_result and command_result["status"]:
                         initial_stats[iodepth]["eqm_stats"] = command_result["data"]
                     else:
@@ -1015,27 +922,11 @@ class ECVolumeLevelTestcase(FunTestCase):
                 resource_bam_post_fix_name = "resource_bam_iodepth_{}.txt".format(iodepth)
                 resource_bam_artifact_file = fun_test.get_test_case_artifact_file_name(
                     post_fix_name=resource_bam_post_fix_name)
-                stats_rbam_thread_id = fun_test.execute_thread_after(time_in_seconds=5,
+                stats_rbam_thread_id = fun_test.execute_thread_after(time_in_seconds=10,
                                                                      func=stats_obj.collect_resource_bam_stats,
                                                                      output_file=resource_bam_artifact_file,
                                                                      interval=self.resource_bam_args["interval"],
                                                                      count=int(mpstat_count), threaded=True)
-                vol_stats_post_fix_name = "vol_stats_iodepth_{}.txt".format(iodepth)
-                vol_stats_artifact_file = fun_test.get_test_case_artifact_file_name(
-                    post_fix_name=vol_stats_post_fix_name)
-                vol_stats_thread_id = fun_test.execute_thread_after(time_in_seconds=10,
-                                                                    func=stats_obj.collect_vol_stats,
-                                                                    vol_details=vol_details,
-                                                                    output_file=vol_stats_artifact_file,
-                                                                    interval=self.vol_stats_args["interval"],
-                                                                    count=int(mpstat_count), threaded=True)
-                per_vp_post_fix_name = "per_vp_iodepth_{}.txt".format(iodepth)
-                per_vp_artifact_file = fun_test.get_test_case_artifact_file_name(post_fix_name=per_vp_post_fix_name)
-                per_vp_stats_thread_id = fun_test.execute_thread_after(time_in_seconds=15,
-                                                                       func=stats_obj.collect_per_vp_stats,
-                                                                       output_file=per_vp_artifact_file,
-                                                                       interval=self.vp_util_args["interval"],
-                                                                       count=int(mpstat_count), threaded=True)
             else:
                 fun_test.critical("Not starting the vp_utils and resource_bam stats collection because of lack of "
                                   "interval and count details")
@@ -1077,29 +968,40 @@ class ECVolumeLevelTestcase(FunTestCase):
                 # Calling the mpstat method to collect the mpstats for the current iteration in all the hosts used in
                 # the test
                 mpstat_cpu_list = self.mpstat_args["cpu_list"]  # To collect mpstat for all CPU's: recommended
-                fun_test.log("Collecting mpstat in {}".format(host_name))
                 if start_stats:
+                    fun_test.log("Collecting mpstat in {}".format(host_name))
                     mpstat_post_fix_name = "{}_mpstat_iodepth_{}.txt".format(host_name, row_data_dict["iodepth"])
                     mpstat_artifact_file[host_name] = fun_test.get_test_case_artifact_file_name(
                         post_fix_name=mpstat_post_fix_name)
                     mpstat_pid[host_name] = host_handle.mpstat(cpu_list=mpstat_cpu_list,
-                                                                 output_file=self.mpstat_args["output_file"],
-                                                                 interval=self.mpstat_args["interval"],
-                                                                 count=int(mpstat_count))
+                                                               output_file=self.mpstat_args["output_file"],
+                                                               interval=self.mpstat_args["interval"],
+                                                               count=int(mpstat_count))
+
+                    # Calling the iostat method to collect the iostat for the while performing IO (copying file)
+                    fun_test.log("Collecting iostat on {}".format(host_name))
+                    iostat_post_fix_name = "{}_iostat_iodepth_{}.txt".format(host_name, row_data_dict["iodepth"])
+                    iostat_artifact_file[host_name] = fun_test.get_test_case_artifact_file_name(
+                        post_fix_name=iostat_post_fix_name)
+                    iostat_pid[host_name] = host_handle.iostat(
+                        device=",".join(self.host_info[host_name]["nvme_block_device_list"]),
+                        output_file=self.iostat_args["output_file"], interval=self.iostat_args["interval"],
+                        count=int(iostat_count))
                 else:
-                    fun_test.critical("Not starting the mpstats collection because of lack of interval and count "
-                                      "details")
+                    fun_test.critical("Not starting the mpstats & iostat collection because of lack of interval and"
+                                      "count details")
 
                 # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
                 fun_test.log("Running FIO {} test with the block size: {} and IO depth: {} Num jobs: {} for the EC".
                              format(row_data_dict["mode"], fio_block_size, fio_iodepth, fio_num_jobs * global_num_jobs))
-                if self.ec_info["num_volumes"] != 1:
-                    fio_job_name = "{}_iodepth_{}_vol_{}".format(self.fio_job_name, row_data_dict["iodepth"],
-                                                                 self.ec_info["num_volumes"])
-                else:
-                    fio_job_name = "{}_{}".format(self.fio_job_name, row_data_dict["iodepth"])
-
+                try:
+                    fio_job_name = "{}_iodepth_{}_vol_{}_host_{}_f1_{}".\
+                        format(self.fio_job_name, row_data_dict["iodepth"],
+                               self.ec_info["num_volumes"], self.num_hosts, self.num_f1s)
+                except Exception as ex:
+                    fun_test.critical(str(ex))
                 fun_test.log("fio_job_name used for current iteration: {}".format(fio_job_name))
+                fun_test.log("\nStarting FIO at: {}\n".format(time.ctime()))
                 if "multiple_jobs" in self.fio_cmd_args:
                     fio_cmd_args["multiple_jobs"] = self.fio_cmd_args["multiple_jobs"].format(
                         host_numa_cpus, global_num_jobs, fio_iodepth, self.ec_info["capacity"] / global_num_jobs)
@@ -1125,28 +1027,101 @@ class ECVolumeLevelTestcase(FunTestCase):
                 time_taken = end_time - start_time
                 fun_test.log("Time taken to start an FIO job on a host {}: {}".format(host_name, time_taken))
 
-            # Starting csi perf stats collection if it's set
-            if self.csi_perf_enabled:
-                if row_data_dict["iodepth"] in self.csi_perf_iodepth:
-                    try:
-                        fun_test.sleep("for IO to be fully active", 20)
-                        csi_perf_obj = CsiPerfTemplate(perf_collector_host_name=str(self.perf_listener_host_name),
-                                                       listener_ip=self.perf_listener_ip, fs=self.fs[0],
-                                                       listener_port=4420)  # Temp change for testing
-                        csi_perf_obj.prepare(f1_index=0)
-                        csi_perf_obj.start(f1_index=0, dpc_client=self.storage_controller)
-                        fun_test.log("csi perf stats collection is started")
-                        # dpcsh_client = self.fs.get_dpc_client(f1_index=0, auto_disconnect=True)
-                        fun_test.sleep("Allowing CSI performance data to be collected", 120)
-                        csi_perf_obj.stop(f1_index=0, dpc_client=self.storage_controller)
-                        fun_test.log("CSI perf stats collection is done")
-                    except Exception as ex:
-                        fun_test.critical(str(ex))
-                else:
-                    fun_test.log("Skipping CSI perf collection for current iodepth {}".format(fio_iodepth))
-            else:
-                fun_test.log("CSI perf collection is not enabled, hence skipping it for current test")
+            ''' Trigger Plex / Drive failure & Rebuild operation here '''
+            # Check whether the drive failure needs to be triggered
+            if hasattr(self, "trigger_failure") and self.trigger_failure:
+                # Sleep for sometime before triggering the drive failure
+                wait_time = self.trigger_failure_wait_time
+                '''
+                if hasattr(self, "failure_start_time_ratio"):
+                    wait_time = int(round(self.fio_cmd_args["timeout"] * self.failure_start_time_ratio))
+                '''
+                fun_test.sleep(message="Sleeping for {} seconds before inducing a drive failure".format(wait_time),
+                               seconds=wait_time)
+                # Check whether the drive index to be failed is given or not. If not pick a random one
+                if self.failure_mode == "random" or not hasattr(self, "failure_drive_index"):
+                    self.failure_drive_index = []
+                    for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
+                        self.failure_drive_index.append(random.randint(0, self.ec_info["ndata"] +
+                                                                       self.ec_info["nparity"] - 1))
+                # Triggering the drive failure
+                for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
+                    fail_uuid = self.ec_info["uuids"][num]["blt"][self.failure_drive_index[num - self.test_volume_start_index]]
+                    fail_device = self.ec_info["device_id"][num][self.failure_drive_index[num - self.test_volume_start_index]]
+                    if self.fail_drive:
+                        ''' Marking drive as failed '''
+                        fun_test.log("Initiating drive failure")
+                        device_fail_status = self.storage_controller.disable_device(
+                            device_id=fail_device, command_duration=self.command_timeout)
+                        fun_test.test_assert(device_fail_status["status"], "Disabling Device ID {}".format(fail_device))
+                        # Validate if Device is marked as Failed
+                        device_props_tree = "{}/{}/{}/{}/{}".format("storage", "devices", "nvme", "ssds", fail_device)
+                        device_stats = self.storage_controller.peek(device_props_tree)
+                        fun_test.simple_assert(device_stats["status"], "Device {} stats command".format(fail_device))
+                        fun_test.test_assert_expected(expected="DEV_FAILED_ERR_INJECT",
+                                                      actual=device_stats["data"]["device state"],
+                                                      message="Device ID {} is marked as Failed".format(fail_device))
+                        ''' Marking drive as failed '''
+                    else:
+                        ''' Marking Plex as failed '''
+                        fun_test.log("Initiating Plex failure")
+                        volume_fail_status = self.storage_controller.fail_volume(uuid=fail_uuid)
+                        fun_test.test_assert(volume_fail_status["status"], "Disabling Plex UUID {}".format(fail_uuid))
+                        # Validate if volume is marked as Failed
+                        device_props_tree = "{}/{}/{}/{}".format("storage", "volumes", "VOL_TYPE_BLK_LOCAL_THIN",
+                                                                 fail_uuid)
+                        volume_stats = self.storage_controller.peek(device_props_tree)
+                        fun_test.test_assert_expected(
+                            expected=1, actual=volume_stats["data"]["stats"]["fault_injection"],
+                            message="Plex is marked as Failed")
+                        ''' Marking Plex as failed '''
 
+                    fun_test.log("\nPlex/Drive Failure is injected at: {}\n".format(time.ctime()))
+                    fun_test.sleep("After injecting failure in drive/plex & wait before initiating rebuild",
+                                   self.trigger_rebuild_wait_time)
+                    if not self.rebuild_on_spare_volume:
+                        if self.fail_drive:
+                            ''' Marking drive as online '''
+                            device_up_status = self.storage_controller.enable_device(
+                                device_id=fail_device, command_duration=self.command_timeout)
+                            fun_test.test_assert(device_up_status["status"],
+                                                 "Enabling Device ID {}".format(fail_device))
+                            device_props_tree = "{}/{}/{}/{}/{}".format("storage", "devices", "nvme", "ssds",
+                                                                        fail_device)
+                            device_stats = self.storage_controller.peek(device_props_tree)
+                            fun_test.simple_assert(device_stats["status"],
+                                                   "Device {} stats command".format(fail_device))
+                            fun_test.test_assert_expected(
+                                expected="DEV_ONLINE", actual=device_stats["data"]["device state"],
+                                message="Device ID {} is Enabled again".format(fail_device))
+                            ''' Marking drive as online '''
+                        else:
+                            ''' Marking Plex as online '''
+                            volume_fail_status = self.storage_controller.fail_volume(uuid=fail_uuid)
+                            fun_test.test_assert(volume_fail_status["status"], "Re-enabling Volume UUID {}".
+                                                 format(fail_uuid))
+                            # Validate if Volume is enabled again
+                            device_props_tree = "{}/{}/{}/{}".format("storage", "volumes", "VOL_TYPE_BLK_LOCAL_THIN",
+                                                                     fail_uuid)
+                            volume_stats = self.storage_controller.peek(device_props_tree)
+                            fun_test.test_assert_expected(expected=0,
+                                                          actual=volume_stats["data"]["stats"]["fault_injection"],
+                                                          message="Plex is marked as online")
+                            ''' Marking Plex as online '''
+                    # Rebuild failed plex
+                    if self.rebuild_on_spare_volume:
+                        spare_uuid = self.spare_vol_uuid
+                        fun_test.log("Rebuilding on spare volume: {}".format(spare_uuid))
+                    else:
+                        spare_uuid = fail_uuid
+                        fun_test.log("Rebuilding on failed volume: {}".format(spare_uuid))
+                    rebuild_device = self.storage_controller.plex_rebuild(
+                        subcmd="ISSUE", type=self.ec_info["volume_types"]["ec"],
+                        uuid=self.ec_info["uuids"][num]["ec"][num - self.test_volume_start_index],
+                        failed_uuid=fail_uuid, spare_uuid=spare_uuid, rate=self.rebuild_rate)
+                    fun_test.test_assert(rebuild_device["status"], "Rebuilding Plex {}".format(fail_uuid))
+                    fun_test.log("\nPlex/Drive Rebuild is started at: {}\n".format(time.ctime()))
+            ''' Triggering plex failure and reconstruct'''
             # Waiting for all the FIO test threads to complete
             try:
                 fun_test.log("Test Thread IDs: {}".format(test_thread_id))
@@ -1173,19 +1148,8 @@ class ECVolumeLevelTestcase(FunTestCase):
                     stats_obj.stop_all = True
                     stats_obj.stop_resource_bam = True
                     # fun_test.fun_test_threads[stats_rbam_thread_id]["thread"]._Thread__stop()
-                # Checking whether the volume stats collection thread is still running...If so stopping it...
-                if fun_test.fun_test_threads[vol_stats_thread_id]["thread"].is_alive():
-                    fun_test.critical("Volume Stats collection thread is still running...Stopping it now")
-                    stats_obj.stop_all = True
-                    stats_obj.stop_vol_stats = True
-                if fun_test.fun_test_threads[per_vp_stats_thread_id]["thread"].is_alive():
-                    fun_test.critical("Per VP Stats collection thread is still running...Stopping it now")
-                    stats_obj.stop_all = True
-                    stats_obj.stop_per_vp_stats = True
                 fun_test.join_thread(fun_test_thread_id=stats_thread_id, sleep_time=1)
                 fun_test.join_thread(fun_test_thread_id=stats_rbam_thread_id, sleep_time=1)
-                fun_test.join_thread(fun_test_thread_id=vol_stats_thread_id, sleep_time=1)
-                fun_test.join_thread(fun_test_thread_id=per_vp_stats_thread_id, sleep_time=1)
 
                 # Collecting final network stats and finding diff between final and initial stats
                 if self.collect_network_stats:
@@ -1207,7 +1171,8 @@ class ECVolumeLevelTestcase(FunTestCase):
 
                     # Stats diff between final stats and initial stats
                     resultant_stats[iodepth]["peek_psw_global_stats"] = {}
-                    if final_stats[iodepth]["peek_psw_global_stats"] and initial_stats[iodepth]["peek_psw_global_stats"]:
+                    if final_stats[iodepth]["peek_psw_global_stats"] and initial_stats[iodepth][
+                        "peek_psw_global_stats"]:
                         resultant_stats[iodepth]["peek_psw_global_stats"] = get_diff_stats(
                             new_stats=final_stats[iodepth]["peek_psw_global_stats"],
                             old_stats=initial_stats[iodepth]["peek_psw_global_stats"])
@@ -1251,6 +1216,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                                                                                     indent=2)))
                     '''
 
+            fun_test.log("\nFIO run is completed at: {}\n".format(time.ctime()))
             # Summing up the FIO stats from all the hosts
             for index, host_name in enumerate(self.host_info):
                 fun_test.test_assert(fun_test.shared_variables["fio"][index],
@@ -1261,9 +1227,52 @@ class ECVolumeLevelTestcase(FunTestCase):
                     if op not in aggr_fio_output[iodepth]:
                         aggr_fio_output[iodepth][op] = {}
                     aggr_fio_output[iodepth][op] = Counter(aggr_fio_output[iodepth][op]) + \
-                                           Counter(fun_test.shared_variables["fio"][index][op])
+                                                   Counter(fun_test.shared_variables["fio"][index][op])
 
             fun_test.log("Aggregated FIO Command Output:\n{}".format(aggr_fio_output[iodepth]))
+
+            # Parsing f1 uart log file to search rebuild start and finish time
+            '''
+            log file output:
+            [2537.762236 2.2.3] CRIT ecvol "UUID: 98cc5a18ea501fb0 plex: 5 under rebuild total failed:1"
+            [2774.291395 2.2.3] ALERT ecvol "storage/flvm/ecvol/ecvol.c:3312:ecvol_rebuild_done_process_push() Rebuild operation complete for plex:5"
+            [2774.292149 2.2.3] CRIT ecvol "UUID: 98cc5a18ea501fb0 plex: 5 marked active total failed:0"
+            '''
+            try:
+                bmc_handle = self.fs_obj[0].get_bmc()
+                uart_log_file = self.fs_obj[0].get_bmc().get_f1_uart_log_filename(f1_index=self.f1_in_use)
+                fun_test.log("F1 UART Log file used to check Rebuild operation status: {}".format(uart_log_file))
+                search_pattern = "'under rebuild total failed'"
+                output = bmc_handle.command("grep -c {} {}".format(search_pattern, uart_log_file,
+                                                                   timeout=self.command_timeout))
+                fun_test.test_assert_expected(expected=1, actual=int(output.rstrip()),
+                                              message="Rebuild operation is started")
+                rebuild_start_time = bmc_handle.command("grep {} {} | cut -d ' ' -f 1 | cut -d '[' -f 2".format(
+                    search_pattern, uart_log_file, timeout=self.command_timeout))
+                rebuild_start_time = int(round(float(rebuild_start_time.rstrip())))
+                fun_test.log("Rebuild operation started at : {}".format(rebuild_start_time))
+
+                timer = FunTimer(max_time=self.rebuild_timeout)
+                while not timer.is_expired():
+                    search_pattern = "'Rebuild operation complete for plex'"
+                    fun_test.sleep("Waiting for plex rebuild to complete", seconds=self.status_interval)
+                    output = bmc_handle.command("grep -c {} {}".format(search_pattern, uart_log_file,
+                                                                       timeout=self.command_timeout))
+                    if int(output.rstrip()) == 1:
+                        rebuild_stop_time = bmc_handle.command("grep {} {} | cut -d ' ' -f 1 | cut -d '[' -f 2".
+                                                               format(search_pattern, uart_log_file,
+                                                                      timeout=self.command_timeout))
+                        rebuild_stop_time = int(round(float(rebuild_stop_time.rstrip())))
+                        fun_test.log("Rebuild operation completed at: {}".format(rebuild_stop_time))
+                        fun_test.log("Rebuild operation on plex {} is completed".format(spare_uuid))
+                        break
+                else:
+                    fun_test.test_assert(False, "Rebuild operation on plex {} completed".format(spare_uuid))
+                rebuild_time = rebuild_stop_time - rebuild_start_time
+                fun_test.log("Time taken to rebuild plex: {}".format(rebuild_time))
+                row_data_dict["plex_rebuild_time"] = rebuild_time
+            except Exception as ex:
+                fun_test.critical(str(ex))
 
             for op, stats in aggr_fio_output[iodepth].items():
                 for field, value in stats.items():
@@ -1293,9 +1302,32 @@ class ECVolumeLevelTestcase(FunTestCase):
                 else:
                     row_data_list.append(row_data_dict[i])
             table_data_rows.append(row_data_list)
-            if self.post_results:
-                fun_test.log("Posting results on dashboard")
-                post_results("Inspur Performance Test", test_method, *row_data_list)
+            # post_results("Inspur Performance Test", test_method, *row_data_list)
+
+            value_dict = {
+                "date_time": self.db_log_time,
+                "platform": FunPlatform.F1,
+                "version": fun_test.get_version(),
+                "num_hosts": self.num_hosts,
+                "block_size": row_data_dict["block_size"],
+                "operation": row_data_dict["mode"],
+                "write_iops": row_data_dict["writeiops"],
+                "read_iops": row_data_dict["readiops"],
+                "write_throughput": row_data_dict["writebw"],
+                "read_throughput": row_data_dict["readbw"],
+                "write_avg_latency": row_data_dict["writeclatency"],
+                "write_90_latency": row_data_dict["writelatency90"],
+                "write_95_latency": row_data_dict["writelatency95"],
+                "write_99_99_latency": row_data_dict["writelatency9999"],
+                "write_99_latency": row_data_dict["writelatency99"],
+                "read_avg_latency": row_data_dict["readclatency"],
+                "read_90_latency": row_data_dict["readlatency90"],
+                "read_95_latency": row_data_dict["readlatency95"],
+                "read_99_99_latency": row_data_dict["readlatency9999"],
+                "read_99_latency": row_data_dict["readlatency99"],
+                "plex_rebuild_time": row_data_dict["plex_rebuild_time"]
+            }
+            add_to_data_base(value_dict)
 
             # Checking if mpstat process is still running...If so killing it...
             for host_name in self.host_info:
@@ -1312,19 +1344,29 @@ class ECVolumeLevelTestcase(FunTestCase):
                                             format(host_name, row_data_dict["iodepth"]),
                                             filename=mpstat_artifact_file[host_name])
 
+                # Checking if iostat process is still running...If so killing it...
+                iostat_pid_check = host_handle.get_process_id("iostat")
+                if iostat_pid_check and int(iostat_pid_check) == int(iostat_pid[host_name]):
+                    host_handle.kill_process(process_id=int(iostat_pid_check))
+                # Saving the iostat output to the iostat_artifact_file file
+                fun_test.scp(source_port=host_handle.ssh_port, source_username=host_handle.ssh_username,
+                             source_password=host_handle.ssh_password, source_ip=host_handle.host_ip,
+                             source_file_path=self.iostat_args["output_file"],
+                             target_file_path=iostat_artifact_file[host_name])
+                fun_test.add_auxillary_file(description="Host {} IOStat Usage - IO depth {}".
+                                            format(host_name, row_data_dict["iodepth"]),
+                                            filename=iostat_artifact_file[host_name])
+
             fun_test.add_auxillary_file(description="F1 VP Utilization - IO depth {}".format(row_data_dict["iodepth"]),
                                         filename=vp_util_artifact_file)
-            fun_test.add_auxillary_file(description="F1 Resource bam stats - IO depth {}".
-                                        format(row_data_dict["iodepth"]), filename=resource_bam_artifact_file)
-            fun_test.add_auxillary_file(description="Volume Stats - IO depth {}".format(row_data_dict["iodepth"]),
-                                        filename=vol_stats_artifact_file)
-            fun_test.add_auxillary_file(description="F1 Per VP Stats - IO depth {}".format(row_data_dict["iodepth"]),
-                                        filename=per_vp_artifact_file)
+            fun_test.add_auxillary_file(
+                description="F1 Resource bam stats - IO depth {}".format(row_data_dict["iodepth"]),
+                filename=resource_bam_artifact_file)
 
             fun_test.sleep("Waiting in between iterations", self.iter_interval)
 
-            table_data = {"headers": table_data_headers, "rows": table_data_rows}
-            fun_test.add_table(panel_header="Performance Table", table_name=self.summary, table_data=table_data)
+        table_data = {"headers": table_data_headers, "rows": table_data_rows}
+        fun_test.add_table(panel_header="Performance Table", table_name=self.summary, table_data=table_data)
 
         # Posting the final status of the test result
         fun_test.log(fio_result)
@@ -1339,11 +1381,10 @@ class ECVolumeLevelTestcase(FunTestCase):
         pass
 
 
-class RandReadWrite8kBlocks(ECVolumeLevelTestcase):
+class DataReconstructionSingleDiskFailure(DataReconstructOnDiskFailTestcase):
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Inspur TC 8.11.1.1: 8k data block random read/write IOPS performance of Multiple"
-                                      " EC volume",
+                              summary="Inspur TC 8.7.5: Data reconstruction on single disk fail on EC volume",
                               steps="""
         1. Bring up F1 in FS1600
         2. Bring up and configure Remote Host
@@ -1353,179 +1394,21 @@ class RandReadWrite8kBlocks(ECVolumeLevelTestcase):
         6. Export (Attach) the above EC or LS volume based on use_lsv config to the Remote Host 
         7. Run warm-up traffic using FIO
         8. Run the Performance for 8k transfer size Random read/write IOPS
+        9. Trigger Disk Failure/ Plex Failure
+        10. Note down the Performance numbers during Disk/Plex Failure and check performance degradation
         """)
 
     def setup(self):
-        super(RandReadWrite8kBlocks, self).setup()
+        super(DataReconstructionSingleDiskFailure, self).setup()
 
     def run(self):
-        super(RandReadWrite8kBlocks, self).run()
+        super(DataReconstructionSingleDiskFailure, self).run()
 
     def cleanup(self):
-        super(RandReadWrite8kBlocks, self).cleanup()
-
-
-class RandRead8kBlocks(ECVolumeLevelTestcase):
-    def describe(self):
-        self.set_test_details(id=2,
-                              summary="Inspur TC 8.11.1.2: 8k data block random read IOPS performance of Multiple"
-                                      " EC volume",
-                              steps="""
-        1. Bring up F1 in FS1600
-        2. Bring up and configure Remote Host
-        3. Create 6 BLT volumes on dut instance.
-        4. Create a 4:2 EC volume on top of the 6 BLT volumes.
-        5. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
-        6. Export (Attach) the above EC or LS volume based on use_lsv config to the Remote Host 
-        7. Run warm-up traffic using FIO
-        8. Run the Performance for 8k transfer size Random read IOPS
-        """)
-
-    def setup(self):
-        super(RandRead8kBlocks, self).setup()
-
-    def run(self):
-        super(RandRead8kBlocks, self).run()
-
-    def cleanup(self):
-        super(RandRead8kBlocks, self).cleanup()
-
-
-class RandWrite8kBlocks(ECVolumeLevelTestcase):
-    def describe(self):
-        self.set_test_details(id=3,
-                              summary="Inspur TC 8.11.1.3: 8k data block random write IOPS performance of Multiple"
-                                      " EC volume",
-                              steps="""
-        1. Bring up F1 in FS1600
-        2. Bring up and configure Remote Host
-        3. Create 6 BLT volumes on dut instance.
-        4. Create a 4:2 EC volume on top of the 6 BLT volumes.
-        5. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
-        6. Export (Attach) the above EC or LS volume based on use_lsv config to the Remote Host 
-        7. Run warm-up traffic using FIO
-        8. Run the Performance for 8k transfer size Random write IOPS
-        """)
-
-    def setup(self):
-        super(RandWrite8kBlocks, self).setup()
-
-    def run(self):
-        super(RandWrite8kBlocks, self).run()
-
-    def cleanup(self):
-        super(RandWrite8kBlocks, self).cleanup()
-
-
-class SequentialReadWrite1024kBlocks(ECVolumeLevelTestcase):
-    def describe(self):
-        self.set_test_details(id=4,
-                              summary="Inspur TC 8.11.2: 1024k data block sequential write IOPS performance"
-                                      "of Multiple EC volume",
-                              steps="""
-        1. Bring up F1 in FS1600
-        2. Bring up and configure Remote Host
-        3. Create 6 BLT volumes on dut instance.
-        4. Create a 4:2 EC volume on top of the 6 BLT volumes.
-        5. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
-        6. Export (Attach) the above EC or LS volume based on use_lsv config to the Remote Host 
-        7. Run warm-up traffic using FIO
-        8. Run the Performance for 1024k transfer size Sequential write IOPS
-        """)
-
-    def setup(self):
-        super(SequentialReadWrite1024kBlocks, self).setup()
-
-    def run(self):
-        super(SequentialReadWrite1024kBlocks, self).run()
-
-    def cleanup(self):
-        super(SequentialReadWrite1024kBlocks, self).cleanup()
-
-
-class MixedRandReadWriteIOPS(ECVolumeLevelTestcase):
-    def describe(self):
-        self.set_test_details(id=5,
-                              summary="Inspur TC 8.11.3: Integrated model read/write IOPS performance of Multiple"
-                                      " EC volume",
-                              steps="""
-        1. Bring up F1 in FS1600
-        2. Bring up and configure Remote Host
-        3. Create 6 BLT volumes on dut instance.
-        4. Create a 4:2 EC volume on top of the 6 BLT volumes.
-        5. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
-        6. Export (Attach) the above EC or LS volume based on use_lsv config to the Remote Host 
-        7. Run warm-up traffic using FIO
-        8. Run the Performance for Integrated Model read/write IOPS
-        """)
-
-    def setup(self):
-        super(MixedRandReadWriteIOPS, self).setup()
-
-    def run(self):
-        super(MixedRandReadWriteIOPS, self).run()
-
-    def cleanup(self):
-        super(MixedRandReadWriteIOPS, self).cleanup()
-
-
-class OLTPModelReadWriteIOPS(ECVolumeLevelTestcase):
-    def describe(self):
-        self.set_test_details(id=6,
-                              summary="Inspur TC 8.11.4: OLTP Model read/read IOPS performance of Multiple EC volume",
-                              steps="""
-        1. Bring up F1 in FS1600
-        2. Bring up and configure Remote Host
-        3. Create 6 BLT volumes on dut instance.
-        4. Create a 4:2 EC volume on top of the 6 BLT volumes.
-        5. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
-        6. Export (Attach) the above EC or LS volume based on use_lsv config to the Remote Host 
-        7. Run warm-up traffic using FIO
-        8. Run the Performance for OLTP model read/write IOPS
-        """)
-
-    def setup(self):
-        super(OLTPModelReadWriteIOPS, self).setup()
-
-    def run(self):
-        super(OLTPModelReadWriteIOPS, self).run()
-
-    def cleanup(self):
-        super(OLTPModelReadWriteIOPS, self).cleanup()
-
-
-class OLAPModelReadWriteIOPS(ECVolumeLevelTestcase):
-    def describe(self):
-        self.set_test_details(id=7,
-                              summary="Inspur TC 8.11.5: OLAP Model read/write IOPS performance of Multiple EC volume",
-                              steps="""
-        1. Bring up F1 in FS1600
-        2. Bring up and configure Remote Host
-        3. Create 6 BLT volumes on dut instance.
-        4. Create a 4:2 EC volume on top of the 6 BLT volumes.
-        5. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
-        6. Export (Attach) the above EC or LS volume based on use_lsv config to the Remote Host 
-        7. Run warm-up traffic using FIO
-        8. Run the Performance for OLAP model Random read/write IOPS
-        """)
-
-    def setup(self):
-        super(OLAPModelReadWriteIOPS, self).setup()
-
-    def run(self):
-        super(OLAPModelReadWriteIOPS, self).run()
-
-    def cleanup(self):
-        super(OLAPModelReadWriteIOPS, self).cleanup()
+        super(DataReconstructionSingleDiskFailure, self).cleanup()
 
 
 if __name__ == "__main__":
-    ecscript = ECVolumeLevelScript()
-    ecscript.add_test_case(RandReadWrite8kBlocks())
-    ecscript.add_test_case(RandRead8kBlocks())
-    ecscript.add_test_case(RandWrite8kBlocks())
-    # ecscript.add_test_case(SequentialReadWrite1024kBlocks())
-    # ecscript.add_test_case(MixedRandReadWriteIOPS())
-    # ecscript.add_test_case(OLTPModelReadWriteIOPS())
-    # ecscript.add_test_case(OLAPModelReadWri`teIOPS())
+    ecscript = DataReconstructOnDiskFailScript()
+    ecscript.add_test_case(DataReconstructionSingleDiskFailure())
     ecscript.run()
