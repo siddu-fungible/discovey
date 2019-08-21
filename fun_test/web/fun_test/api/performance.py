@@ -100,6 +100,7 @@ def report_data(request):
         reports = request_json["reports"]
         email = request_json["email"]
         subject = request_json["subject"]
+        print reports
         file_loader = FileSystemLoader(JINJA_TEMPLATE_DIR)
         env = Environment(loader=file_loader)
         template = env.get_template('performance_report.html')

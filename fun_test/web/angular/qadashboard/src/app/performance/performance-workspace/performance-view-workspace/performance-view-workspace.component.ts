@@ -26,6 +26,8 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
   currentChart: any = null;
   data: any = [];
   atomicUrl: string = "http://integration.fungible.local/performance/atomic/";
+  reportGenerated: boolean = false;
+  subject: string = null;
 
   constructor(private apiService: ApiService, private commonService: CommonService, private loggerService: LoggerService,
               private route: ActivatedRoute, private router: Router, private location: Location, private title: Title, private perfService: PerformanceService) {
@@ -55,7 +57,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
           switchMap(response => {
             return this.perfService.fetchBuildInfo();
           })).subscribe(response => {
-            this.buildInfo = response;
+          this.buildInfo = response;
           console.log("fetched workspace and buildInfo from URL");
           this.showWorkspace = true;
         }, error => {
@@ -120,8 +122,8 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
       temp["unit"] = null;
       temp["percentage"] = null;
       temp["chart_name"] = metric["chart_name"];
-      temp["url"] = this.atomicUrl + metric["metric_id"];
       temp["lineage"] = metric["lineage"];
+      temp["comments"] = null;
       temp["metric_id"] = metric["metric_id"];
       metric["data"].push(temp);
     }
@@ -168,7 +170,6 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
     let from_epoch = times[0];
     let to_epoch = times[1];
     let self = this;
-    console.log(times);
     return this.apiService.get("/api/v1/performance/report_data?metric_id=" + metric["metric_id"] + "&from_epoch_ms=" + from_epoch + "&to_epoch_ms=" + to_epoch).pipe(switchMap(response => {
       let data = response.data;
       for (let oneData of data) {
@@ -197,6 +198,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
         metric["selected"] = false;
         metric["report"] = null;
         metric["data"] = [];
+        metric["url"] = this.atomicUrl + metric["metric_id"];
       }, error => {
         this.loggerService.error("failed fetching the chart info while viewing workspace");
       });
@@ -224,22 +226,22 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
     let reports = [];
     this.workspace.interested_metrics.forEach(metric => {
       let report = {};
-      report[metric["chart_name"]] = metric["report"];
+      report["chart_name"] = metric["chart_name"];
+      report["lineage"] = metric["lineage"];
+      report["url"] = metric["url"];
+      report["report"] = metric["report"];
       reports.push(report);
     });
     payload["reports"] = reports;
     payload["email"] = this.email;
-    let today = new Date();
-    let m =  ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-    payload["subject"] = "Daily TeraMark status update - " + String(today.getDate()) + " " + String(m[today.getMonth()]);
-    return this.apiService.post('/api/v1/performance/report_data', payload).pipe(switchMap(response => {
+    payload["subject"] = this.subject;
+    this.apiService.post('/api/v1/performance/report_data', payload).subscribe(response => {
       if (response.data["status"]) {
         this.loggerService.success("sent report email successfully to " + this.email);
       } else {
         this.loggerService.error("sending email failed");
       }
-      return of(true);
-    }));
+    });
   }
 
   generateReport(): void {
@@ -251,11 +253,11 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
     }).pipe(
       switchMap(response => {
         return this.fetchReports();
-      }),
-      switchMap(response => {
-        return this.sendReports();
       })).subscribe(response => {
-      console.log("generated report and sent to " + this.email);
+      let today = new Date();
+      let m = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      this.subject = "Performance status report - " + String(today.getDate()) + " " + String(m[today.getMonth()]);
+      this.reportGenerated = true;
     }, error => {
       this.loggerService.error("Unable to generate report");
     });

@@ -1,6 +1,6 @@
 from web.web_global import api_safe_json_response
 from django.views.decorators.csrf import csrf_exempt
-from web.fun_test.models import User, PerformanceUserWorkspaces
+from web.fun_test.models import User, PerformanceUserWorkspaces, InterestedMetrics
 from django.core.exceptions import ObjectDoesNotExist
 import json
 from fun_global import get_current_time
@@ -71,6 +71,9 @@ def workspaces(request, email, workspace_name=None):
         workspaces = PerformanceUserWorkspaces.objects.filter(email=email)
         for workspace in workspaces:
             if workspace.workspace_name == workspace_name:
+                interested_metrics = InterestedMetrics.objects.filter(workspace_id=workspace.id)
+                if len(interested_metrics):
+                    interested_metrics.all().delete()
                 workspace.delete()
                 break
     return result

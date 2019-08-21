@@ -2,20 +2,22 @@
 <div *ngIf="showWorkspace" class="card card-primary">
   <div class="card-header">
     <h5 style="text-align: center; margin: 0"><a [routerLink]=""
-                                                    style="font-size:
+                                                 style="font-size:
       large;
         float: left" (click)="goBack()">
       <!--<i class="fa fa-hand-o-left" style="color: black"></i>&nbsp;-->
       Back</a>
       <span>{{ workspace.workspace_name }}</span></h5>
-      <a *ngIf="!showGrids" [routerLink]="" (click)="showGrids = true"><i class="fa fa-plus-circle"
-                                                                          style="color: black"></i> Show
-        charts</a>
-  <a *ngIf="showGrids" [routerLink]="" (click)="showGrids = false"><i class="fa fa-minus-circle"
-                                                                          style="color: black"></i> Hide charts</a> | <button
-    *ngIf="workspace.interested_metrics.length > 0" class="btn btn-sm btn-outline-dark"
-    (click)="generateReport()">Generate
-    report</button>
+    <a *ngIf="!showGrids" [routerLink]="" (click)="showGrids = true"><i class="fa fa-plus-circle"
+                                                                        style="color: black"></i> Show
+      charts</a>
+    <a *ngIf="showGrids" [routerLink]="" (click)="showGrids = false"><i class="fa fa-minus-circle"
+                                                                        style="color: black"></i> Hide charts</a> |
+    <button
+      *ngIf="workspace.interested_metrics.length > 0" class="btn btn-sm btn-outline-dark"
+      (click)="generateReport()">Generate
+      report
+    </button>
   </div>
   <div class="card-body flex-container">
     <div class="card" style="flex: 1 1 50%; padding: 10px;">
@@ -99,7 +101,7 @@
             {{ oneData.today }}
           </td>
           <td *ngIf="oneData.percentage"
-            [ngClass]="{'text-red': oneData.percentage.includes('-'), 'text-green': oneData.percentage.includes('+')}">
+              [ngClass]="{'text-red': oneData.percentage.includes('-'), 'text-green': oneData.percentage.includes('+')}">
             {{ oneData.percentage }}
           </td>
           <td>
@@ -109,6 +111,64 @@
       </table>
     </div>
   </div>
+  <ng-container *ngIf="reportGenerated">
+    <div class="card" style="margin: 10px; padding: 5px;">
+      <b>Subject: </b><input style="max-width: 50%" type="text" [(ngModel)]="subject"/><br>
+      <div *ngFor="let row of workspace.interested_metrics">
+        {{ row["chart_name"] }} - Lineage: {{ row["lineage"] }}<br>
+        Link to chart: <a href="{{ atomicUrl + row['metric_id'] }}" target="_blank">Link</a>
+        <table class="table table-bordered" style="max-width: 50%">
+          <tr>
+            <th style="width: 10%">
+              Name
+            </th>
+            <th style="width: 10%">
+              Yesterday
+            </th>
+            <th style="width: 10%">
+              Today
+            </th>
+            <th style="width: 10%">
+              Percentage
+            </th>
+            <th style="width: 10%">
+              Unit
+            </th>
+            <th>
+              Comments
+            </th>
+          </tr>
+          <tr *ngFor="let dataSet of row['report']">
+            <td>
+              {{ dataSet.name }}
+            </td>
+            <td>
+              {{ dataSet.yesterday }}
+            </td>
+            <td>
+              {{ dataSet.today }}
+            </td>
+            <td>
+              {{ dataSet.percentage }}
+            </td>
+            <td>
+              {{ dataSet.unit }}
+            </td>
+            <td>
+              <textarea [(ngModel)]="dataSet.comments" style="vertical-align: middle; width: 100%"></textarea>
+            </td>
+          </tr>
+        </table>
+      </div>
+      <span>
+      <a [routerLink]="" (click)="reportGenerated = false">Cancel</a>
+      <button
+        class="btn btn-sm btn-success" style="margin: 5px;"
+        (click)="sendReports()">Send
+    </button>
+    </span>
+    </div>
+  </ng-container>
   <div *ngIf="showGrids" class="flex-container">
     <ng-container *ngFor="let row of workspace.interested_metrics">
       <div style="flex: 0 0 45%; padding-bottom: 10px;">
