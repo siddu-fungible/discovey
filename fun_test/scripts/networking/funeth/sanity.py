@@ -192,6 +192,24 @@ def setup_funcp(test_bed_type, update_funcp=True):
     # TODO: sanity check of control plane
 
 
+class FunCPSetup:
+    def __init__(self, test_bed_type, update_funcp=True):
+        self.funcp_obj = FunControlPlaneBringup(fs_name=test_bed_type)
+        self.update_funcp = update_funcp
+
+    def bringup(self):
+        self.funcp_obj.bringup_funcp(prepare_docker=self.update_funcp)
+        # TODO: Make it setup independent
+        self.funcp_obj.assign_mpg_ips(static=True, f1_1_mpg='10.1.20.241', f1_0_mpg='10.1.20.242',
+                                      f1_0_mpg_netmask="255.255.252.0",
+                                      f1_1_mpg_netmask="255.255.252.0"
+                                      )
+        abstract_json_file_f1_0 = '{}/networking/tb_configs/FS11_F1_0.json'.format(SCRIPTS_DIR)
+        abstract_json_file_f1_1 = '{}/networking/tb_configs/FS11_F1_1.json'.format(SCRIPTS_DIR)
+        self.funcp_obj.funcp_abstract_config(abstract_config_f1_0=abstract_json_file_f1_0,
+                                             abstract_config_f1_1=abstract_json_file_f1_1)
+
+
 def setup_funcp_on_fs(test_bed_type):
 
     testbed_info = fun_test.parse_file_to_json(SCRIPTS_DIR +
@@ -352,11 +370,12 @@ class FunethSanity(FunTestScript):
                 if nu_all_clusters:
                     f1_0_boot_args += ' override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]}'
                     f1_1_boot_args += ' override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]}'
+                funcp_setup_obj = FunCPSetup(test_bed_type=test_bed_type, update_funcp=update_funcp)
                 topology_helper = TopologyHelper()
                 topology_helper.set_dut_parameters(dut_index=0,
                                                    f1_parameters={0: {"boot_args": f1_0_boot_args},
-                                                                  1: {"boot_args": f1_1_boot_args}}
-                                                   )
+                                                                  1: {"boot_args": f1_1_boot_args}},
+                                                   fun_cp_callback=funcp_setup_obj.bringup)
             else:
                 boot_args = "app=hw_hsu_test retimer=0,1 --dpc-uart --dpc-server --csr-replay --all_100g --disable-wu-watchdog"
                 if csi_perf_enabled:
@@ -392,9 +411,9 @@ class FunethSanity(FunTestScript):
         fun_test.shared_variables['network_controller_obj'] = network_controller_obj_f1_0
 
         # TODO: make it work for other setup
-        if test_bed_type == 'fs-11' and control_plane:
-            setup_funcp(test_bed_type, update_funcp=update_funcp)
-        elif test_bed_type != 'fs-11' and control_plane:
+        #if test_bed_type == 'fs-11' and control_plane:
+        #    setup_funcp(test_bed_type, update_funcp=update_funcp)
+        if test_bed_type != 'fs-11' and control_plane:
             setup_funcp_on_fs(test_bed_type, update_funcp=update_funcp)
         tb_config_obj = tb_configs.TBConfigs(TB)
         funeth_obj = Funeth(tb_config_obj,
