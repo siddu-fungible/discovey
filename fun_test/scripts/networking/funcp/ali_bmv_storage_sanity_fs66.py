@@ -545,9 +545,11 @@ class LocalSSDTest(StorageConfiguration):
         def runfio(arg1, device):
             for rw_mode in self.mode:
                 job_file = "/home/localadmin/mks/fio_{}_jf.txt".format(rw_mode)
-                result = arg1.sudo_command("fio {}".format(job_file), timeout=3000)
+                host_name = arg1.command("hostname")
+                result = arg1.sudo_command("fio {}".format(job_file), timeout=30000)
                 if "bad bits" in result.lower() or "verify failed" in result.lower():
-                    fun_test.critical(False, "Data verification failed for {} test".format(rw_mode))
+                    fun_test.critical(False, "Data verification failed for {} test on {}".
+                                      format(rw_mode, host_name))
 
         for iter in range(1, 3):
             threads_list = []
