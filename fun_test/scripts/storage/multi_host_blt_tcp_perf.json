@@ -102,6 +102,10 @@
       "(32, 4)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}}
     },
     "host_count": 1,
+    "vp_util_args": {"interval": 60},
+    "resource_bam_args": {"interval": 60},
+    "vol_stats_args": {"interval": 60},
+    "collect_network_stats": true,
     "csi_perf_iodepth": [32]
   },
   "MultiHostFioRandWrite": {
@@ -153,6 +157,10 @@
       "(32, 1)": {"randwrite": {"write": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}}
     },
     "host_count": 1,
+    "vp_util_args": {"interval": 60},
+    "resource_bam_args": {"interval": 60},
+    "vol_stats_args": {"interval": 60},
+    "collect_network_stats": true,
     "csi_perf_iodepth": [16]
   }
 }

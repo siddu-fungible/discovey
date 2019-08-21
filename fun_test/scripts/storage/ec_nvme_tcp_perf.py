@@ -356,11 +356,14 @@ class ECVolumeLevelTestcase(FunTestCase):
                         post_fix_name="{}_vputil_artifact.txt".format(fio_job_name))
                     vol_stats_artifact_file = fun_test.get_test_case_artifact_file_name(
                         post_fix_name="{}_volstats_artifact.txt".format(fio_job_name))
+                    bam_stats_artifact_file = fun_test.get_test_case_artifact_file_name(
+                        post_fix_name="{}_bam_stats_artifact.txt".format(fio_job_name))
                     thread_info = initiate_stats_collection(storage_controller=self.storage_controller,
                                                             interval=poll_interval,
                                                             count=count,
                                                             vp_util_artifact_file=vp_util_artifact_file,
                                                             vol_stats_artifact_file=vol_stats_artifact_file,
+                                                            bam_stats_articat_file=bam_stats_artifact_file,
                                                             vol_details=ec_details)
                     active_threads = [thread_info['vp_util_thread_id'],thread_info['vol_stats_thread_id']]
                 # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
@@ -379,6 +382,9 @@ class ECVolumeLevelTestcase(FunTestCase):
                     fun_test.add_auxillary_file(description="F1 Volume Stats - {0} IO depth {1}".format(
                         mode, fio_iodepth * fio_num_jobs),
                         filename=vol_stats_artifact_file)
+                    fun_test.add_auxillary_file(description="F1 Bam Stats - {0} IO depth {1}".format(
+                        mode, fio_iodepth * fio_num_jobs),
+                        filename=bam_stats_artifact_file)
                 fun_test.test_assert(fio_output[combo][mode],
                                      "Execute fio '{0}' test with block size:{1}, iodepth: {2} num_jobs: {3}".format(
                                          mode, self.fio_cmd_args["bs"], fio_iodepth, fio_num_jobs))

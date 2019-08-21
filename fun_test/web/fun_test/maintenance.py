@@ -526,7 +526,7 @@ if __name__ == "__main_alibaba_remote_ssd__":
                         platform=FunPlatform.F1).save()
     print "added charts for remote ssd and reset the baseline for local ssd charts"
 
-if __name__ == "__main__":
+if __name__ == "__main__channel_parall_performance":
     internal_chart_name = "channel_parall_performance_1000"
     chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
     internal_name = internal_chart_name.replace("1000", "100")
@@ -563,4 +563,98 @@ if __name__ == "__main__":
         chart.data_sets = json.dumps(data_sets)
         chart.save()
     print "added channel parall chart for n=100"
+
+
+if __name__ == "__main__":
+    internal_chart_names = OrderedDict([("durable_vol_ec_comp_nvme_tcp_write_iops", "nvme iops"),
+                                        ("durable_vol_ec_comp_pcie_write_iops", "pcie iops"),
+                                        ("durable_vol_ec_comp_nvme_tcp_write_latency", "nvme latency"),
+                                        ("durable_vol_ec_comp_pcie_write_latency", "pcie latency")
+                                        ])
+    owner_info = "Aamir Shaikh (aamir.shaikh@fungible.com)"
+    platform = FunPlatform.F1
+    model_name = "BltVolumePerformance"
+    description = "TBD"
+    base_line_date = datetime(year=2019, month=8, day=20, minute=0, hour=0, second=0)
+
+    for internal_chart_name in internal_chart_names:
+        one_data_set = {}
+        data_sets = []
+        field = internal_chart_names[internal_chart_name]
+
+        if "nvme" in field:
+            inputs_list = OrderedDict([("ec_nvme_tcp_write_1pctcomp_128", "1%"),
+                                       ("ec_nvme_tcp_write_50pctcomp_128", "50%"),
+                                       ("ec_nvme_tcp_write_80pctcomp_128", "80%")])
+            source = "https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/storage/" \
+                     "ec_nvme_tcp_comp_perf.py"
+            if "iops" in field:
+                y1_axis_title = PerfUnit.UNIT_OPS
+                chart_name = "Write IOPS NVME/TCP"
+                output_name = "output_write_iops"
+                positive = False
+            else:
+                y1_axis_title = PerfUnit.UNIT_USECS
+                chart_name = "Write Latency NVME/TCP"
+                output_name = "output_write_avg_latency"
+                positive = True
+
+        elif "pcie" in field:
+            inputs_list = OrderedDict([("ec_fio_25G_write_1", "1%"),
+                                       ("ec_fio_25G_write_50", "50%"),
+                                       ("ec_fio_25G_write_80", "80%")])
+
+            source = "https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/storage/" \
+                     "ec_volume_fs_comp_perf.py"
+            if "iops" in field:
+                y1_axis_title = PerfUnit.UNIT_KOPS
+                chart_name = "Write IOPS PCIe"
+                output_name = "output_write_iops"
+                positive = False
+            else:
+                y1_axis_title = PerfUnit.UNIT_USECS
+                chart_name = "Write Latency PCIe"
+                output_name = "output_write_avg_latency"
+                positive = True
+
+        output = {
+            "name": output_name,
+            "unit": y1_axis_title,
+            "min": 0,
+            "max": -1,
+            "expected": -1,
+            "reference": -1
+        }
+        for input_fio_job_name in inputs_list:
+            inputs = {
+                "input_platform": platform,
+                "input_fio_job_name": input_fio_job_name
+            }
+
+            one_data_set["name"] = inputs_list[input_fio_job_name]
+            one_data_set["inputs"] = inputs
+            one_data_set["output"] = output
+            data_sets.append(one_data_set.copy())
+
+        metric_id = LastMetricId.get_next_id()
+        MetricChart(chart_name=chart_name,
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description=description,
+                    owner_info=owner_info,
+                    source=source,
+                    positive=positive,
+                    y1_axis_title=y1_axis_title,
+                    visualization_unit=y1_axis_title,
+                    metric_model_name=model_name,
+                    platform=platform,
+                    base_line_date=base_line_date,
+                    work_in_progress=False).save()
+        print ("Metric id: {}".format(metric_id))
+        print ("Data sets: {}".format(data_sets))
+        for i in data_sets:
+            print i
+
 

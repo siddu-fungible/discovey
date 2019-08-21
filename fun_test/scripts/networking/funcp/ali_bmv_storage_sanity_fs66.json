@@ -58,7 +58,8 @@
         "mpg1":"10.1.105.182"
       },
          "nu_host":{"cab03-qa-03":"30.1.1.2"},
-         "hu_host":{"cab03-qa-04":"15.1.1.2", "cab03-qa-05":"14.1.1.2"},
+         "hu_host":{"cab03-qa-04":"15.1.1.2", "cab03-qa-05":"14.1.1.2", "cab02-qa-04":"15.1.1.3",
+                    "cab03-qa-07":"14.1.1.3"},
          "nu_host_data_ip":["30.1.1.2"],
          "hu_host_data_ip_f1_0":["14.1.1.2"],
          "hu_host_data_ip_f1_1":["15.1.1.2"],
@@ -127,8 +128,7 @@
     "hosts" : {
       "cab03-qa-01": "x16",
       "cab03-qa-06": "x16",
-      "cab03-qa-02": "x16",
-      "cab02-qa-08": "x16"
+      "cab03-qa-02": "x16"
     },
           "nu_host":{"cab03-qa-03":"30.1.1.2"},
          "hu_host":{"cab03-qa-02":"19.1.1.2", "cab03-qa-01":"18.1.1.2"},
@@ -868,8 +868,7 @@
        "host_pings":{
          "cab03-qa-01":["18.1.1.1", "19.1.1.2","18.1.1.3"],
          "cab03-qa-02":["19.1.1.1","18.1.1.2","18.1.1.3"],
-         "cab03-qa-06":["18.1.1.1","18.1.1.2","19.1.1.2"],
-         "cab02-qa-08":["19.1.1.1","18.1.1.2","18.1.1.3","19.1.1.2"]
+         "cab03-qa-06":["18.1.1.1","18.1.1.2","19.1.1.2"]
        },
     "abstract_configs":{
       "F1-0":"alibaba_bmv_configs_f1_0.json",
@@ -934,7 +933,8 @@
     "num_jobs": 1,
     "iodepth": 16
   },
-  "LocalSSDTestFS66": {
+
+  "LocalSSDTest": {
     "come_ip": "10.1.105.178",
     "dpc_p0": 40220,
     "dpc_p1": 40221,
@@ -943,41 +943,7 @@
     "num_vf": 0,
     "f1_num_vf": 0,
     "num_namespace": 16,
-    "capacity": 21453864960,
-    "block_size": 4096,
-    "controllers": {},
-    "ip": "14.1.1.1",
-    "port": 4420,
-    "huid": 2,
-    "f0_huids" : [2,1],
-    "f1_huids" : [1,3],
-    "ctlid": 0,
-    "fnid": 2,
-    "transport": "PCI",
-    "uname": "localadmin",
-    "pwd": "Precious1*",
-    "server": ["cab03-qa-05", "cab03-qa-07"],
-    "server_f1": ["cab03-qa-04", "cab02-qa-04"],
-    "io_servers": ["cab03-qa-05", "cab03-qa-07", "cab03-qa-04", "cab02-qa-04"],
-    "mode": [
-      "write",
-      "read",
-      "randwrite",
-      "randread"
-    ],
-    "num_jobs": 4,
-    "iodepth": 16
-  },
-  "LocalSSDTest": {
-    "come_ip": "10.1.105.165",
-    "dpc_p0": 40220,
-    "dpc_p1": 40221,
-    "command_timeout": "5",
-    "num_host": 1,
-    "num_vf": 0,
-    "f1_num_vf": 0,
-    "num_namespace": 16,
-    "capacity": 21453864960,
+    "capacity": 240048406528,
     "block_size": 4096,
     "controllers": {},
     "ip": "18.1.1.1",
@@ -990,9 +956,9 @@
     "transport": "PCI",
     "uname": "localadmin",
     "pwd": "Precious1*",
-    "server": ["cab03-qa-01", "cab03-qa-06"],
-    "server_f1": ["cab03-qa-02", "cab02-qa-08"],
-    "io_servers": ["cab03-qa-01", "cab03-qa-06", "cab03-qa-02", "cab02-qa-08"],
+    "server": ["cab03-qa-05", "cab03-qa-07"],
+    "server_f1": ["cab03-qa-04", "cab02-qa-04"],
+    "io_servers": ["cab03-qa-05", "cab03-qa-04", "cab03-qa-07", "cab02-qa-04"],
     "mode": [
       "write",
       "read",
