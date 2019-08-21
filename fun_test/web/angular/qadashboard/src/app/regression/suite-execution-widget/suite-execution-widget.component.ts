@@ -25,11 +25,13 @@ export class SuiteExecutionWidgetComponent implements OnInit {
   @Input() titleUrl: string;
   lastTwoSuites: Suite[] = [];
   isDone: boolean = false;
+  hideText: boolean = false;
   numbers: number[] = [0, 1];
   iconDict: any = {
     'PASSED': "/static/media/sun_icon.png",
     'FAILED': "/static/media/storm_icon.png",
-    'IN_PROGRESS': "/static/media/loading_bars.gif"
+    'IN_PROGRESS': "/static/media/loading_bars.gif",
+    'NOT_RUN': "/static/media/not_run_icon.png"
   };
 
   constructor(private apiService: ApiService, private logger: LoggerService,
@@ -67,6 +69,8 @@ export class SuiteExecutionWidgetComponent implements OnInit {
 
 
   fetchSuiteExecutions() {
+    let today = new Date();
+    let historyTime: Date;
     return this.apiService.get("/api/v1/regression/suite_executions/" + this.dataUrl).pipe(switchMap(response => {
       for (let i of response.data) {
         let suite = new Suite();
@@ -75,7 +79,11 @@ export class SuiteExecutionWidgetComponent implements OnInit {
         }
         if (i.state === this.stateMap.AUTO_SCHEDULED) {
           continue;
-        } else if (i.state === this.stateMap.COMPLETED) {
+        }
+        if (this.lastTwoSuites.length == 0){
+          historyTime = new Date(this.commonService.convertToLocalTimezone(i.started_time));
+        }
+        if (i.state === this.stateMap.COMPLETED) {
           suite.result = i.result;
           suite.time = this.trimTime(i.completed_time);
 
@@ -86,10 +94,17 @@ export class SuiteExecutionWidgetComponent implements OnInit {
           suite.result = 'IN_PROGRESS'
           suite.time = this.trimTime(i.started_time);
         }
+
         suite.id = i.execution_id;
+
         this.lastTwoSuites.push(suite);
       }
-      //this.isDone = true;
+      if (!this.commonService.isSameDay(today, historyTime)){
+        this.lastTwoSuites[1] = {...this.lastTwoSuites[0]};
+        this.lastTwoSuites[0].result = 'NOT_RUN';
+        this.hideText = true;
+      }
+      this.isDone = true;
       return of(true);
     }));
   }
@@ -107,4 +122,5 @@ export class SuiteExecutionWidgetComponent implements OnInit {
   trimTime(t) {
     return this.regressionService.getPrettyLocalizeTime(t);
   }
+
 }
