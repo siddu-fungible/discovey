@@ -206,6 +206,7 @@ export class PerformanceComponent implements OnInit {
       switchMap(response => {
         return this.service.fetchBuildInfo();
       })).subscribe(response => {
+        this.buildInfo = response;
       console.log("fetched buildInfo");
     }, error => {
       this.loggerService.error("Unable to fetch buildInfo");
