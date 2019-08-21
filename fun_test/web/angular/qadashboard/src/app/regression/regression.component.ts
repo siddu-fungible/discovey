@@ -98,7 +98,6 @@ export class RegressionComponent implements OnInit {
   @ViewChild('searchForm') formValues;
   searching: boolean = false;
   searchingByExecutionId: boolean = false;
-  disableDropdowns: boolean = false;
   pager: any = {};
   suiteExecutionsCount: number;
   recordsPerPage: number;
