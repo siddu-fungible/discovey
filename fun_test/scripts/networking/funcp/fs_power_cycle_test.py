@@ -201,8 +201,7 @@ class PingTest(FunTestCase):
         # Ping hosts
         ping_dict = self.server_key["fs"][fs_name]["host_pings"]
         for host in ping_dict:
-            test_host_pings(host=host, ips=ping_dict[host], ping_count=1000, ping_interval=0.1, strict=True)
-        fun_test.sleep(message="Wait for host to check ping again", seconds=30)
+            test_host_pings(host=host, ips=ping_dict[host], ping_count=500, ping_interval=0.2, strict=True)
 
     def cleanup(self):
         pass
