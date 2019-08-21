@@ -20,7 +20,7 @@
 
 
 </form>
-<form class="fun-form" [formGroup]="customTestBedSpecForm">
+<form *ngIf="customTestBedSpecForm" class="fun-form" [formGroup]="customTestBedSpecForm">
 
   <div class="fun-form-field-container">
     <label class="fun-form-label">Select a base test-bed:</label>
@@ -31,10 +31,11 @@
   </div>
 
 
-  <ng-container *ngFor="let assetType of assetTypes">
-    <input type="radio" value="{{ CustomAssetSelection.NUM }}" > Specify number of {{ assetType }}s
-    <input type="radio" value="{{ CustomAssetSelection.SPECIFIC }}" > Specify number of {{ assetType }}s
-
+  <ng-container *ngFor="let flattenedAssetTypeName of flattenedAssetTypeNames">
+    <div class="fun-card">
+      <input [checked]="customTestBedSpecForm.controls[_getAssetSelectionKey(flattenedAssetTypeName)].value == CustomAssetSelection.NUM" type="radio" value="{{ CustomAssetSelection.NUM }}" name="{{ flattenedAssetTypeName }}"> Specify number of {{ flattenedAssetTypeNameMap[flattenedAssetTypeName] }}s
+      <input [checked]="customTestBedSpecForm.controls[_getAssetSelectionKey(flattenedAssetTypeName)].value == CustomAssetSelection.SPECIFIC" type="radio" value="{{ CustomAssetSelection.SPECIFIC }}" name="{{ flattenedAssetTypeName }}"> Specify number of {{ flattenedAssetTypeNameMap[flattenedAssetTypeName] }}s
+    </div>
   </ng-container>
     <!--ng-container>
       <div class="fun-form-field-container">

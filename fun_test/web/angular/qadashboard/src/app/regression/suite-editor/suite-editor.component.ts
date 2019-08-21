@@ -42,7 +42,8 @@ export class SuiteEditorComponent implements OnInit {
   MAX_NUM_PERF_LISTENER_HOSTS = 2;
   dropDownSettings = {};
   assetTypes: any = null;
-  assetsByAssetType: any = {};
+  flattenedAssetTypeNames: string[] = [];
+  flattenedAssetTypeNameMap: any = {};
 
 
   newSuiteEntryForm = new FormGroup({
@@ -51,7 +52,7 @@ export class SuiteEditorComponent implements OnInit {
     inputs: new FormControl('')
   });
 
-  customTestBedSpecForm = new FormGroup({
+  customTestBedSpecForm = null; /*new FormGroup({
     selectedTestBed: new FormControl(),
 
     customDutSelection: new FormControl(CustomAssetSelection.NUM),
@@ -67,7 +68,7 @@ export class SuiteEditorComponent implements OnInit {
     numPerfListenerHosts: new FormControl('', [Validators.max(this.MAX_NUM_PERF_LISTENER_HOSTS)]),
 
 
-  });
+  });*/
 
   constructor(private testBedService: TestBedService) {
 
@@ -95,12 +96,13 @@ export class SuiteEditorComponent implements OnInit {
 
       return of(true);
     })).subscribe(response => {
-      this.prepareFormGroup();
+      this.customTestBedSpecForm = this.prepareFormGroup();
+      let i = 0;
     });
 
 
 
-
+    /*
     this.customTestBedSpecForm.get('customDutSelection').valueChanges.subscribe(selection => {
       if (selection == CustomAssetSelection.SPECIFIC.toString()) {
         this.customTestBedSpecForm.get('numDuts').disable();
@@ -117,7 +119,7 @@ export class SuiteEditorComponent implements OnInit {
         this.customTestBedSpecForm.get('numDuts').enable();
 
       }
-    })
+    })*/
 
   }
 
@@ -137,8 +139,10 @@ export class SuiteEditorComponent implements OnInit {
     let group = {};
     group["selectedTestBed"] = new FormControl();
 
-    this.assetTypes.forEach(assetType => {
-      let flatName = this._flattenName(assetType);
+    Object.keys(this.assetTypes).forEach(assetTypeKey => {
+      let flatName = this._flattenName(assetTypeKey);
+      this.flattenedAssetTypeNames.push(flatName);
+      this.flattenedAssetTypeNameMap[flatName] = this.assetTypes[assetTypeKey];
       let assetSelectionKey = this._getAssetSelectionKey(flatName);
       let numAssetsKey = this._getNumAssetsKey(flatName);
       let specificAssetsKey = this._getSpecificAssetsKey(flatName);
@@ -146,6 +150,7 @@ export class SuiteEditorComponent implements OnInit {
       group[numAssetsKey] = new FormControl();
       group[specificAssetsKey] = new FormControl();
     })
+    return new FormGroup(group);
   }
 
   _flattenName(name: string): string {  /* flatten DUT to dut, Perf Listener to "perf_listener"*/
@@ -166,10 +171,12 @@ export class SuiteEditorComponent implements OnInit {
 
   test() {
     //console.log(this.selectedTestBed);
-    console.log(this.customTestBedSpecForm.get("selectedTestBed").value);
-    console.log(this.customTestBedSpecForm.get("customDutSelection").value);
-    console.log(this.customTestBedSpecForm.get("numDuts").value);
-    console.log(this.customTestBedSpecForm.get("selectedDuts").value);
+    // console.log(this.customTestBedSpecForm.get("selectedTestBed").value);
+    // console.log(this.customTestBedSpecForm.get("customDutSelection").value);
+    // console.log(this.customTestBedSpecForm.get("numDuts").value);
+    // console.log(this.customTestBedSpecForm.get("selectedDuts").value);
+    console.log(this.flattenedAssetTypeNames);
+    console.log(this.flattenedAssetTypeNameMap);
 
   }
 }
