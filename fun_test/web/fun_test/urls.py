@@ -195,12 +195,16 @@ users_urls = [
 
 api_v1_urls = [
     url(r'^users/?(.*)?$', users.users),
+    url(r'^workspaces/(\d+)/interested_metrics$', performance.interested_metrics),
+    url(r'^workspaces/(.*)/(.*)$', users.workspaces),
+    url(r'^workspaces/?(.*)?$', users.workspaces),
     url(r'^regression/test_beds/?(\S+)?$', regression.test_beds),
     url(r'^regression/suite_executions/?(.*)?$', regression.suite_executions),
     url(r'^regression/script_infos/?(.*)?$', regression.script_infos),
     url(r'^regression/assets/?(?:(\S+)/(.*))?$', regression.assets),
     url(r'^performance/charts/?(.*)?$', performance.charts),
     url(r'^performance/data$', performance.data),
+    url(r'^performance/report_data', performance.report_data),
     url(r'^triages/?(\d+)?$', triaging.triagings),
     url(r'^triages/(\d+)/trials$', triaging.trials),
     url(r'^triage_states$', triaging.triaging_states),

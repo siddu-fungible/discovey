@@ -1942,3 +1942,14 @@ class NetworkController(DpcshClient):
         except Exception as ex:
             fun_test.critical(str(ex))
         return output
+
+    def port_link_status(self):
+        result = None
+        try:
+            cmd = ['linkstatus']
+            result = self.json_execute(verb='port', data=cmd)
+            fun_test.simple_assert(result['status'], "Port LinkStatus Command")
+            result = result['data']
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result

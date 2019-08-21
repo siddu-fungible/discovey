@@ -120,65 +120,69 @@ class SiteState():
                                             internal_chart_name="All metrics",
                                             leaf=False, metric_id=LastMetricId.get_next_id())
         m = None
-        children = []
-        if "children" in metric:
-            children = metric["children"]
+        disable = False
+        if "disable" in metric:
+            disable = metric["disable"]
+        if not disable:
+            children = []
+            if "children" in metric:
+                children = metric["children"]
 
-        description = "TBD"
-        try:
-            metric_model_name = "MetricContainer"
-
-            if "metric_model_name" in metric:
-                metric_model_name = metric["metric_model_name"]
-            m = MetricChart.objects.get(metric_model_name=metric_model_name, internal_chart_name=metric["name"])
-            m.chart_name = metric["label"]
-            m.save()
-            if description and not m.description:
-                m.description = description
-                m.save()
-
-        except ObjectDoesNotExist:
-            data_sets = []
-            one_data_set = {}
-            one_data_set["name"] = "Scores"
-            one_data_set["output"] = {"min": 0, "max": 200}
-            data_sets.append(one_data_set)
-            m = MetricChart(metric_model_name="MetricContainer",
-                                internal_chart_name=metric["name"],
-                                chart_name=metric["label"],
-                                leaf=False, metric_id=LastMetricId.get_next_id(),
-                                description=description, data_sets=json.dumps(data_sets))
-            m.save()
-        if "reference" in metric and metric["reference"]:
-            pass
-        else:
+            description = "TBD"
             try:
-                m.children = "[]"
-            except Exception as ex:
+                metric_model_name = "MetricContainer"
+
+                if "metric_model_name" in metric:
+                    metric_model_name = metric["metric_model_name"]
+                m = MetricChart.objects.get(metric_model_name=metric_model_name, internal_chart_name=metric["name"])
+                m.chart_name = metric["label"]
+                m.save()
+                if description and not m.description:
+                    m.description = description
+                    m.save()
+
+            except ObjectDoesNotExist:
+                data_sets = []
+                one_data_set = {}
+                one_data_set["name"] = "Scores"
+                one_data_set["output"] = {"min": 0, "max": 200}
+                data_sets.append(one_data_set)
+                m = MetricChart(metric_model_name="MetricContainer",
+                                    internal_chart_name=metric["name"],
+                                    chart_name=metric["label"],
+                                    leaf=False, metric_id=LastMetricId.get_next_id(),
+                                    description=description, data_sets=json.dumps(data_sets))
+                m.save()
+            if "reference" in metric and metric["reference"]:
                 pass
-            # m.children_weights = "{}"
-            m.save()
-            for child in children:
-                c = self._do_register_metric(metric=child)
-                if c:
-                    m.add_child(child_id=c.metric_id)
-                    if "metric_model_name" in child and child["metric_model_name"] != "MetricContainer":
-                        all_metrics_chart.add_child(child_id=c.metric_id)
-                        all_metrics_chart.add_child_weight(child_id=c.metric_id, weight=1)
-            m.save()
-        if "extensible_references" in metric:
-            references = metric["extensible_references"]
-            if len(references):
-                for reference in references:
-                    try:
-                        reference_chart = MetricChart.objects.get(metric_model_name="MetricContainer", internal_chart_name=reference)
-                        reference_children = json.loads(reference_chart.children)
-                        for child in reference_children:
-                            m.add_child(child_id=child)
-                        m.save()
-                    except Exception as ex:
-                        pass
-        m.fix_children_weights()
+            else:
+                try:
+                    m.children = "[]"
+                except Exception as ex:
+                    pass
+                # m.children_weights = "{}"
+                m.save()
+                for child in children:
+                    c = self._do_register_metric(metric=child)
+                    if c:
+                        m.add_child(child_id=c.metric_id)
+                        if "metric_model_name" in child and child["metric_model_name"] != "MetricContainer":
+                            all_metrics_chart.add_child(child_id=c.metric_id)
+                            all_metrics_chart.add_child_weight(child_id=c.metric_id, weight=1)
+                m.save()
+            if "extensible_references" in metric:
+                references = metric["extensible_references"]
+                if len(references):
+                    for reference in references:
+                        try:
+                            reference_chart = MetricChart.objects.get(metric_model_name="MetricContainer", internal_chart_name=reference)
+                            reference_children = json.loads(reference_chart.children)
+                            for child in reference_children:
+                                m.add_child(child_id=child)
+                            m.save()
+                        except Exception as ex:
+                            pass
+            m.fix_children_weights()
 
         return m
 
