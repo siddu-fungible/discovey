@@ -54,8 +54,8 @@
       <div *ngIf="searching" [@fadeIn] class="card" >
         <div class="card-body">
           <form [formGroup]="searchForm" (ngSubmit)="onSubmit()">
-            <div *ngIf="!searchingByExecutionId" [@fadeIn]>
-              <div class="form-group" *ngIf="fetchedUsers" style="width: 50%; margin-bottom: 10px; margin-top: 10px">
+            <div>
+              <div  *ngIf="fetchedUsers" style="width: 50%; margin-bottom: 10px; margin-top: 10px">
               <label>Submitters</label>
               <ng-multiselect-dropdown
                 [placeholder]="'Select users'"
@@ -63,12 +63,12 @@
                 [settings]="dropDownSettings"
                 (onSelect)="onItemSelect($event)"
                 (onSelectAll)="onSelectAll($event)"
-                formControlName="submitters">
+                formControlName="submitters" [ngClass]="{'disabled' : searchingByExecutionId}">
               </ng-multiselect-dropdown>
 
             </div>
 
-            <div class="form-group" *ngIf="fetchedSuites" style="width: 50%; margin-bottom: 10px; margin-top: 10px">
+            <div  *ngIf="fetchedSuites" style="width: 50%; margin-bottom: 10px; margin-top: 10px">
               <label>Suite paths</label>
               <ng-multiselect-dropdown
                 [placeholder]="'Select suite paths'"
@@ -76,29 +76,30 @@
                 [settings]="dropDownSettings"
                 (onSelect)="onItemSelect($event)"
                 (onSelectAll)="onSelectAll($event)"
-                formControlName="suiteName" [class.is-invalid]="searchForm.errors?.atLeastOne">
+                formControlName="suiteName" [class.is-invalid]="searchForm.errors?.atLeastOne" [ngClass]="{'disabled' : searchingByExecutionId}">
               </ng-multiselect-dropdown>
 
             </div>
 
             </div>
+            <br>
 
-            <div class="form-group" style="width: 50%">
-              <div class="form-control" style="border: none; font-size: 14px;">
+            <div  style="width: 50%">
+              <div style="border: none; font-size: 14px;">
                 <label class="checkbox-inline">
-                  <input type="checkbox" formControlName="searchByExecutionId">&nbsp;Search by suite execution
+                  <input type="checkbox" formControlName="searchByExecutionId" (click)="onTest()">&nbsp;Search by suite execution
                 </label>
               </div>
             </div>
 
-            <div class="form-group" style="width: 50%">
-              <label>Suite execution id</label>
-              <input type="text" formControlName="executionId" class="form-control">
+            <div style="width: 50%">
+              <label>Suite execution id&nbsp;&nbsp;</label>
+              <input type="text" formControlName="executionId">
             </div>
 
             <span class="pseudo-anchor" (click)="onCancel()">Cancel</span> &nbsp;
 
-            <button class="btn btn-success submit-button" [disabled]="!searchForm.valid" type="submit">Submit</button>
+            <button class="btn btn-success submit-button" [disabled]="!searchForm.valid" type="submit" (click)="executionReload()">Submit</button>
           </form>
         </div>
 
@@ -466,4 +467,3 @@
   </div>
 
 </div>
-

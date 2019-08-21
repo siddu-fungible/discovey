@@ -157,8 +157,6 @@ export class RegressionComponent implements OnInit {
       .subscribe(v => {
         if (v){
           this.searchingByExecutionId = true;
-          this.searchForm.controls.submitters.setValue('');
-          this.searchForm.controls.suiteName.setValue('');
           this.searchForm.get('executionId').enable();
         }
         else{
@@ -166,7 +164,7 @@ export class RegressionComponent implements OnInit {
           this.searchForm.get('executionId').disable();
         }
       });
-    
+
     this.dropDownSettings = {
       singleSelection: false,
       idField: 'item_id',
@@ -643,8 +641,26 @@ export class RegressionComponent implements OnInit {
     this.searchForm.reset();
   }
 
+  onTest() {
+    this.searchForm.controls.submitters.setValue('');
+    this.searchForm.controls.suiteName.setValue('');
+  }
+
   onSearch() {
-    this.searching = true;
+    if (this.searching == true){
+      this.onCancel();
+    }
+    else{
+      this.searching = true;
+    }
+  }
+
+  executionReload() {
+    let executionId = this.searchForm.get('executionId').value;
+    if (this.searchingByExecutionId == true && !(executionId == "" || executionId == null)){
+      window.open("/regression/suite_detail/" + executionId,'_blank');
+    }
+
   }
 
   _flatten(items) {
@@ -681,4 +697,3 @@ export class RegressionComponent implements OnInit {
   }
 
 }
-
