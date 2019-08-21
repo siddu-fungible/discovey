@@ -139,7 +139,9 @@ def chart_info(request):
                   "source": chart.source,
                   "base_line_date": chart.base_line_date,
                   "visualization_unit": chart.visualization_unit,
-                  "pk": chart.pk}
+                  "pk": chart.pk,
+                  "last_good_score": chart.last_good_score,
+                  "penultimate_good_score": chart.penultimate_good_score}
         for markers in milestones:
             markers_dict[markers.milestone_name] = markers.milestone_date
         result["milestone_markers"] = markers_dict
