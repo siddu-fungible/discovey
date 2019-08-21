@@ -23,7 +23,7 @@ class SetupBringup(FunTestScript):
 
     def setup(self):
         self.server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() +
-                                                 '/ali_bmv_storage_sanity.json')
+                                                      '/ali_bmv_storage_sanity.json')
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
         fs_spec = fun_test.get_asset_manager().get_fs_by_name(str(self.server_key["fs"][fs_name]["fs-name"]))
         servers_mode = self.server_key["fs"][fs_name]["hosts"]
@@ -96,6 +96,11 @@ class BootF1(FunTestCase):
         fun_test.test_assert(topology, "Topology deployed")
 
         # Check SSD link & count
+        ssd_up_count_fail = False
+        ssd_already_up_count_fail = False
+        gen3x2_fail = False
+        gen3x4_fail = False
+
         match_strings = "Gen3x4|Gen3x2|backend: 4 devices up"
         for f1index in 0, 1:
             uart_path = topology.get_dut_instance(index=0).get_uart_log_file(f1_index=f1index)
@@ -116,23 +121,30 @@ class BootF1(FunTestCase):
                         count = re.findall("\d+", backend_dev)
                         # count = re.search(r'backend:\s+(?P<count>\d+)', line)
                         fun_test.add_checkpoint(checkpoint="Backend devices up", expected=4, actual=int(count[0]))
+                        if int(count[0]) != 4:
+                            ssd_up_count_fail = True
                     elif "devices are already up" in line:
                         backend_dev = line.split("backend:", 1)[1]
                         count = re.findall("\d+", backend_dev)
                         fun_test.add_checkpoint(checkpoint="Backend devices already up",
                                                 expected=4, actual=int(count[0]))
+                        if int(count[0]) != 4:
+                            ssd_already_up_count_fail = True
+
             if gen3x4_count == 8:
                 fun_test.add_checkpoint("Gen3x4 SSD count on F1_{}".format(f1index),
                                         "PASSED", expected=8, actual=gen3x4_count)
             else:
                 fun_test.add_checkpoint("Gen3x4 SSD count on F1_{}".format(f1index),
                                         "FAILED", expected=8, actual=gen3x4_count)
+                gen3x4_fail = True
             if gen3x2_count == 0:
                 fun_test.add_checkpoint("Gen3x2 SSD count on F1_{}".format(f1index),
                                         "PASSED", expected=0, actual=gen3x2_count)
             else:
                 fun_test.add_checkpoint("Gen3x2 SSD count on F1_{}".format(f1index),
                                         "FAILED", expected=0, actual=gen3x2_count)
+                gen3x2_fail = True
         '''
         funcp_obj = FunControlPlaneBringup(fs_name=self.server_key["fs"][fs_name]["fs-name"])
         fun_test.test_assert(expression=funcp_obj.bringup_funcp(prepare_docker=False), message="Bringup FunCP")
@@ -158,6 +170,10 @@ class BootF1(FunTestCase):
         fun_test.shared_variables['funeth_obj'] = funeth_obj
         setup_hu_host(funeth_obj, update_driver=True, sriov=4, num_queues=1)
         '''
+
+        if ssd_already_up_count_fail or ssd_up_count_fail or gen3x4_fail or gen3x2_fail:
+            fun_test.test_assert(False, "SSD checks failed")
+
 
 class PingTest(FunTestCase):
     server_key = {}
@@ -228,7 +244,7 @@ class TestHostPCIeLanes(FunTestCase):
         for server in servers_mode:
             result = verify_host_pcie_link(hostname=server, mode=servers_mode[server], reboot=False)
             fun_test.test_assert(expression=(result == "1"), message="Make sure that PCIe links on host %s went up"
-                                                                         % server)
+                                                                     % server)
 
     def cleanup(self):
         pass
@@ -299,6 +315,10 @@ class LocalSSDTest(StorageConfiguration):
                 if "bad bits" in result.lower() or "verify failed" in result.lower():
                     fun_test.test_assert(expression=False,
                                          message="Data verification failed for {} test on {}".
+                                         format(rw_mode, host_name))
+                if "func=io_u error" in result.lower() or "invalid" in result.lower():
+                    fun_test.test_assert(expression=False,
+                                         message="Error strings found for {} test on {}".
                                          format(rw_mode, host_name))
             arg1.disconnect()
         # def runfio(arg1, device):
