@@ -204,7 +204,6 @@ class PingTest(FunTestCase):
             test_host_pings(host=host, ips=ping_dict[host], ping_count=1000, ping_interval=0.1, strict=True)
         fun_test.sleep(message="Wait for host to check ping again", seconds=30)
 
-
     def cleanup(self):
         pass
 
@@ -293,12 +292,14 @@ class LocalSSDTest(StorageConfiguration):
 
         def runfio(arg1, device):
             for rw_mode in self.mode:
+                host_name = arg1.command("hostname")
                 op = arg1.command(command="cd ~; pwd").strip()
                 job_file = op+"/mks/fio_{}_jf.txt".format(rw_mode)
                 result = arg1.sudo_command("fio {}".format(job_file), timeout=30000)
                 if "bad bits" in result.lower() or "verify failed" in result.lower():
                     fun_test.test_assert(expression=False,
-                                         message="Data verification failed for {} test".format(rw_mode))
+                                         message="Data verification failed for {} test on {}".
+                                         format(rw_mode, host_name))
             arg1.disconnect()
         # def runfio(arg1, device):
         #     for rw_mode in self.mode:
