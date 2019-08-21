@@ -74,7 +74,7 @@ import { PerformanceSummaryWidgetComponent } from './performance/performance-sum
 import { FunCardComponent } from './fun-card/fun-card.component';
 import { SmokeTestStorageWidgetComponent } from './regression/smoke-test-storage-widget/smoke-test-storage-widget.component';
 import { PerformanceWorkspaceComponent } from './performance/performance-workspace/performance-workspace.component';
-import { ViewWorkspaceComponent } from './performance/performance-workspace/view-workspace/view-workspace.component';
+import { PerformanceViewWorkspaceComponent } from './performance/performance-workspace/performance-view-workspace/performance-view-workspace.component';
 import { SuiteExecutionWidgetComponent } from './regression/suite-execution-widget/suite-execution-widget.component';
 import { SuiteEditorComponent } from './regression/suite-editor/suite-editor.component';
 import {ModalModule} from "ngb-modal";
@@ -138,7 +138,7 @@ import { AnnouncementFormComponent } from './performance/admin/announcement-form
     FunCardComponent,
     SmokeTestStorageWidgetComponent,
     PerformanceWorkspaceComponent,
-    ViewWorkspaceComponent,
+    PerformanceViewWorkspaceComponent,
     SuiteExecutionWidgetComponent,
     SuiteEditorComponent,
     AnnouncementFormComponent

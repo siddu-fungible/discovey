@@ -192,7 +192,7 @@ export class PerformanceWorkspaceComponent implements OnInit {
           newWorkspace["description"] = workspace.description;
           newWorkspace["editingWorkspace"] = false;
           newWorkspace["editingDescription"] = false;
-          newWorkspace["workspaceId"] = workspace.workspace_id;
+          newWorkspace["workspaceId"] = workspace.id;
           newWorkspace["createdDate"] = workspace.date_created;
           newWorkspace["modifiedDate"] = workspace.date_modified;
           if (this.currentWorkspace && this.currentWorkspace.name === newWorkspace["name"]) {

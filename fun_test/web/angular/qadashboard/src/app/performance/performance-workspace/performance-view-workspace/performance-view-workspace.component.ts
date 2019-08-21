@@ -11,10 +11,10 @@ import {PerformanceService} from "../../performance.service";
 
 @Component({
   selector: 'view-workspace',
-  templateUrl: './view-workspace.component.html',
-  styleUrls: ['./view-workspace.component.css']
+  templateUrl: './performance-view-workspace.component.html',
+  styleUrls: ['./performance-view-workspace.component.css']
 })
-export class ViewWorkspaceComponent implements OnInit {
+export class PerformanceViewWorkspaceComponent implements OnInit {
   buildInfo: any = null;
   workspaceName: string = null;
   email: string = null;
@@ -47,7 +47,7 @@ export class ViewWorkspaceComponent implements OnInit {
             return this.fetchWorkspaces();
           }),
           switchMap(response => {
-            return this.fetchInterestedMetrics(this.workspace.workspace_id);
+            return this.fetchInterestedMetrics(this.workspace.id);
           }),
           switchMap(response => {
             return this.fetchScores();
@@ -236,7 +236,7 @@ export class ViewWorkspaceComponent implements OnInit {
       if (response.data["status"]) {
         this.loggerService.success("sent report email successfully to " + this.email);
       } else {
-        this.loggerService.error("sending email fialed");
+        this.loggerService.error("sending email failed");
       }
       return of(true);
     }));

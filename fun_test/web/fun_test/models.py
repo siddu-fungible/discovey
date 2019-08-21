@@ -538,7 +538,6 @@ class User(FunModel):
         return "{} {} {}".format(self.first_name, self.last_name, self.email)
 
 class PerformanceUserWorkspaces(FunModel):
-    workspace_id = models.IntegerField(unique=True)
     email = models.EmailField(max_length=60)
     workspace_name = models.TextField(default="")
     description = models.TextField(default="")
@@ -547,18 +546,6 @@ class PerformanceUserWorkspaces(FunModel):
 
     def __str__(self):
         return (str(self.__dict__))
-
-class LastWorkspaceId(models.Model):
-    last_id = models.IntegerField(unique=True, default=100)
-
-    @staticmethod
-    def get_next_id():
-        if not LastWorkspaceId.objects.count():
-            LastWorkspaceId().save()
-        last = LastWorkspaceId.objects.all().last()
-        last.last_id = last.last_id + 1
-        last.save()
-        return last.last_id
 
 
 class InterestedMetrics(FunModel):

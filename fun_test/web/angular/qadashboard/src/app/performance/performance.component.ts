@@ -1054,7 +1054,7 @@ export class PerformanceComponent implements OnInit {
     });
   };
 
-  removeFromList(metricId): void {
+  removeFromInterestedList(metricId): void {
     for (let flatNode of this.flatNodes) {
       if (flatNode.node.metricId == metricId) {
         flatNode.track = false;

@@ -13,7 +13,8 @@
         charts</a>
   <a *ngIf="showGrids" [routerLink]="" (click)="showGrids = false"><i class="fa fa-minus-circle"
                                                                           style="color: black"></i> Hide charts</a> | <button
-    class="btn btn-sm btn-outline-dark" (click)="generateReport()">Generate
+    *ngIf="workspace.interested_metrics.length > 0" class="btn btn-sm btn-outline-dark"
+    (click)="generateReport()">Generate
     report</button>
   </div>
   <div class="card-body flex-container">

@@ -2,7 +2,9 @@ from web.fun_test.metrics_models import *
 from django.views.decorators.csrf import csrf_exempt
 from lib.utilities.send_mail import *
 from jinja2 import Environment, FileSystemLoader, Template
-
+from web.fun_test.models import InterestedMetrics
+from django.db.models import Q
+from web.web_global import JINJA_TEMPLATE_DIR
 
 @csrf_exempt
 @api_safe_json_response
@@ -98,11 +100,54 @@ def report_data(request):
         reports = request_json["reports"]
         email = request_json["email"]
         subject = request_json["subject"]
-        this_dir = os.path.dirname(os.path.abspath(__file__))
-        file_loader = FileSystemLoader(this_dir + "/templates")
+        file_loader = FileSystemLoader(JINJA_TEMPLATE_DIR)
         env = Environment(loader=file_loader)
         template = env.get_template('performance_report.html')
-        print reports
-        content = template.render(allReports=reports)
+        content = template.render(all_reports=reports)
         data = send_mail(to_addresses=[email], subject=subject, content=content)
     return data
+
+@csrf_exempt
+@api_safe_json_response
+def interested_metrics(request, workspace_id=None):
+    result = []
+    if request.method == "POST":
+        request_json = json.loads(request.body)
+        email = request_json["email"]
+        workspace_id = request_json["workspace_id"]
+        interested_metrics = request_json["interested_metrics"]
+
+        for metric in interested_metrics:
+            metric_id = metric["metric_id"]
+            chart_name = metric["chart_name"]
+            subscribe = metric["subscribe"]
+            track = metric["track"]
+            lineage = metric["lineage"]
+            category = metric["category"]
+            try:
+                q = Q(workspace_id=workspace_id, metric_id=metric_id)
+                entry = InterestedMetrics.objects.get(q)
+                entry.subscribe = subscribe
+                entry.track = track
+                entry.category = category
+                entry.lineage = lineage
+                entry.save()
+                result.append(entry.to_dict())
+            except ObjectDoesNotExist:
+                entry = InterestedMetrics(workspace_id=workspace_id, email=email, metric_id=metric_id,
+                                          chart_name=chart_name, subscribe=subscribe, track=track, category=category,
+                                          lineage=lineage)
+                entry.save()
+                result.append(entry.to_dict())
+    elif request.method == "GET":
+        q = Q(workspace_id=workspace_id)
+        interested_metrics = InterestedMetrics.objects.filter(q)
+        for metric in interested_metrics:
+            result.append(metric.to_dict())
+    elif request.method == "DELETE":
+        metric_id = request.GET.get("metric_id", None)
+        if metric_id:
+            q = Q(workspace_id=workspace_id, metric_id=metric_id)
+            entry = InterestedMetrics.objects.get(q)
+            entry.delete()
+    return result
