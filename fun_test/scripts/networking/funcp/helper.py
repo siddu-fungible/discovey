@@ -138,7 +138,8 @@ def power_cycle_host(hostname):
     linux_obj.sudo_command("ipmitool -I lanplus -H %s-ilo -U ADMIN -P ADMIN chassis power on" % hostname)
 
 
-def test_host_pings(host, ips, username="localadmin", password="Precious1*", strict=False):
+def test_host_pings(host, ips, username="localadmin", password="Precious1*", strict=False, ping_interval=1,
+                    ping_count=5):
     fun_test.log("")
     fun_test.log("================")
     fun_test.log("Pings from Hosts")
@@ -146,7 +147,7 @@ def test_host_pings(host, ips, username="localadmin", password="Precious1*", str
     linux_obj = Linux(host_ip=host, ssh_username=username, ssh_password=password)
     for hosts in ips:
         linux_obj.command(command="ifconfig -a")
-        result = linux_obj.ping(dst=hosts)
+        result = linux_obj.ping(dst=hosts, interval=ping_interval, count=ping_count)
         if result:
             fun_test.log("%s can reach %s" % (host, hosts))
         else:

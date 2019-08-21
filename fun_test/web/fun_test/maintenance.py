@@ -9,6 +9,7 @@ from fun_global import ChartType, FunChartType
 from web.fun_test.metrics_models import *
 from collections import OrderedDict
 from web.fun_test.metrics_lib import MetricLib
+from web.fun_test.models import *
 
 METRICS_BASE_DATA_FILE = WEB_ROOT_DIR + "/metrics.json"
 
@@ -183,6 +184,7 @@ if __name__ == "__main_s1_teramarks__":
                 result = set_internal_name(tera_mark)
                 print json.dumps(result)
 
+
 if __name__ == "__main_l4_firewall__":
     internal_chart_names = ["l4_firewall_flow_128m_flows_throughput", "l4_firewall_flow_128m_flows_pps",
                             "l4_firewall_flow_128m_flows_latency_full_load", "l4_firewall_flow_128m_flows_latency_half_load"]
@@ -287,7 +289,7 @@ if __name__ == "__main__underlay":
             entry.data_sets = json.dumps(overlay_underlay_data_sets)
             entry.save()
 
-if __name__ == "__main__inspur_charts":
+if __name__ == "__main_inspur__":
     internal_chart_names = OrderedDict([  # read iops
                                         ("pocs_inspur_8111_8k_rand_read_iodepth_1_iops", 1),
                                         ("pocs_inspur_8111_8k_rand_read_iodepth_8_iops", 8),
@@ -409,7 +411,7 @@ if __name__ == "__main__inspur_charts":
         print ("Data sets: {}".format(data_sets))
 
 
-if __name__ == "__main__crypto":
+if __name__ == "__main_crypto_s1__":
     internal_chart_names = OrderedDict([("crypto_dp_tunnel_perf_S1", "pktsize: 354B"),
                                         ("crypto_ipsec_perf_S1", "pktsize: 354B")])
     owner_info = "Jitendra Lulla (jitendra.lulla@fungible.com)"
@@ -467,7 +469,7 @@ if __name__ == "__main__crypto":
         print ("Data sets: {}".format(data_sets))
 
 
-if __name__ == "__main_added_6vol__":
+if __name__ == "__main_6vol_6f1_inspur__":
     # Add the 6 vol field for inspur 8_11 F1s = 6 charts
     metric_ids = [743, 744, 746, 745, 750, 751, 753, 752]
     for metric_id in metric_ids:

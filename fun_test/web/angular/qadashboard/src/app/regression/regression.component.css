@@ -32,6 +32,11 @@ a {
   font-weight: bold;
 }
 
+.disabled {
+  pointer-events: none;
+  color: lightgrey;
+}
+
 .pseudo-anchor:hover {
   cursor: pointer;
   color: black;
