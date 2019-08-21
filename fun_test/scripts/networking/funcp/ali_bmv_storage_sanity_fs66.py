@@ -544,9 +544,10 @@ class LocalSSDTest(StorageConfiguration):
         # retimer=0 need to revisit it using below way of running test.
         def runfio(arg1, device):
             for rw_mode in self.mode:
+                self.host.sudo_command("sync && echo 3 > /proc/sys/vm/drop_caches")
                 job_file = "/home/localadmin/mks/fio_{}_jf.txt".format(rw_mode)
                 host_name = arg1.command("hostname")
-                result = arg1.sudo_command("fio {}".format(job_file), timeout=30000)
+                result = arg1.sudo_command("fio {} --output-format=json".format(job_file), timeout=30000)
                 if "bad bits" in result.lower() or "verify failed" in result.lower():
                     fun_test.critical(False, "Data verification failed for {} test on {}".
                                       format(rw_mode, host_name))
@@ -561,7 +562,6 @@ class LocalSSDTest(StorageConfiguration):
                 self.host = Linux(host_ip=servers, ssh_username=self.uname, ssh_password=self.pwd)
                 device = self.host.command("sudo nvme list -o normal | awk -F ' ' '{print $1}' | grep -i nvme0").\
                     replace("\r", '')
-                self.host.sudo_command("sync && echo 3 > /proc/sys/vm/drop_caches")
                 device_list = device.replace("\n", ":").rstrip(":")
                 thread_id = fun_test.execute_thread_after(time_in_seconds=2, func=runfio,
                                                           arg1=self.host, device=device_list)
