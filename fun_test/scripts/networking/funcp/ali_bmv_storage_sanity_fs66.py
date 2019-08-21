@@ -19,7 +19,7 @@ class ScriptSetup(FunTestScript):
 
     def setup(self):
         self.server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() +
-                                                      '/ali_bmv_storage_sanity.json')
+                                                      '/ali_bmv_storage_sanity_fs66.json')
 
     def cleanup(self):
         fun_test.shared_variables["topology"].cleanup()
@@ -42,7 +42,7 @@ class BringupSetup(FunTestCase):
 
     def setup(self):
         self.server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() +
-                                                      '/ali_bmv_storage_sanity.json')
+                                                      '/ali_bmv_storage_sanity_fs66.json')
 
     def run(self):
         # Last working parameter:
@@ -107,7 +107,7 @@ class NicEmulation(FunTestCase):
     def setup(self):
 
         self.server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() +
-                                                      '/ali_bmv_storage_sanity.json')
+                                                      '/ali_bmv_storage_sanity_fs66.json')
 
     def run(self):
         # execute abstract Configs
@@ -173,7 +173,7 @@ class StorageConfiguration(FunTestCase):
         testcase = self.__class__.__name__
         benchmark_parsing = True
         benchmark_file = ""
-        benchmark_file = fun_test.get_script_parent_directory() + '/ali_bmv_storage_sanity.json'
+        benchmark_file = fun_test.get_script_parent_directory() + '/ali_bmv_storage_sanity_fs66.json'
         # fun_test.log("Benchmark file being used: {}".format(benchmark_file))
 
         benchmark_dict = {}
@@ -189,7 +189,7 @@ class StorageConfiguration(FunTestCase):
             setattr(self, k, v)
 
         self.server_key = fun_test.parse_file_to_json(
-            fun_test.get_script_parent_directory() + '/ali_bmv_storage_sanity.json')
+            fun_test.get_script_parent_directory() + '/ali_bmv_storage_sanity_fs66.json')
         self.storage_config = self.server_key[config]
         server = []
         server = self.storage_config['server']
