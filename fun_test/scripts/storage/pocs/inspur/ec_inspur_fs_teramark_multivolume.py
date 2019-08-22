@@ -1034,6 +1034,13 @@ class ECVolumeLevelTestcase(FunTestCase):
                                                                     output_file=vol_stats_artifact_file,
                                                                     interval=self.vol_stats_args["interval"],
                                                                     count=int(mpstat_count), threaded=True)
+                per_vp_post_fix_name = "per_vp_iodepth_{}.txt".format(iodepth)
+                per_vp_artifact_file = fun_test.get_test_case_artifact_file_name(post_fix_name=per_vp_post_fix_name)
+                per_vp_stats_thread_id = fun_test.execute_thread_after(time_in_seconds=15,
+                                                                       func=stats_obj.collect_per_vp_stats,
+                                                                       output_file=per_vp_artifact_file,
+                                                                       interval=self.vp_util_args["interval"],
+                                                                       count=int(mpstat_count), threaded=True)
             else:
                 fun_test.critical("Not starting the vp_utils and resource_bam stats collection because of lack of "
                                   "interval and count details")
@@ -1176,9 +1183,14 @@ class ECVolumeLevelTestcase(FunTestCase):
                     fun_test.critical("Volume Stats collection thread is still running...Stopping it now")
                     stats_obj.stop_all = True
                     stats_obj.stop_vol_stats = True
+                if fun_test.fun_test_threads[per_vp_stats_thread_id]["thread"].is_alive():
+                    fun_test.critical("Per VP Stats collection thread is still running...Stopping it now")
+                    stats_obj.stop_all = True
+                    stats_obj.stop_per_vp_stats = True
                 fun_test.join_thread(fun_test_thread_id=stats_thread_id, sleep_time=1)
                 fun_test.join_thread(fun_test_thread_id=stats_rbam_thread_id, sleep_time=1)
                 fun_test.join_thread(fun_test_thread_id=vol_stats_thread_id, sleep_time=1)
+                fun_test.join_thread(fun_test_thread_id=per_vp_stats_thread_id, sleep_time=1)
 
                 # Collecting final network stats and finding diff between final and initial stats
                 if self.collect_network_stats:
@@ -1312,6 +1324,8 @@ class ECVolumeLevelTestcase(FunTestCase):
                                         format(row_data_dict["iodepth"]), filename=resource_bam_artifact_file)
             fun_test.add_auxillary_file(description="Volume Stats - IO depth {}".format(row_data_dict["iodepth"]),
                                         filename=vol_stats_artifact_file)
+            fun_test.add_auxillary_file(description="F1 Per VP Stats - IO depth {}".format(row_data_dict["iodepth"]),
+                                        filename=per_vp_artifact_file)
 
             fun_test.sleep("Waiting in between iterations", self.iter_interval)
 

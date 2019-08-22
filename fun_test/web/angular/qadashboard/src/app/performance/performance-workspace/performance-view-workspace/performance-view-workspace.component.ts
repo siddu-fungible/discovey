@@ -55,6 +55,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
           switchMap(response => {
             return this.perfService.fetchBuildInfo();
           })).subscribe(response => {
+            this.buildInfo = response;
           console.log("fetched workspace and buildInfo from URL");
           this.showWorkspace = true;
         }, error => {

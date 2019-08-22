@@ -170,6 +170,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         switchMap(response => {
           return this.performanceService.fetchBuildInfo();
         })).subscribe(response => {
+          this.buildInfo = response;
         console.log("fetched buildInfo");
       }, error => {
         this.loggerService.error("Unable to fetch buildInfo");
