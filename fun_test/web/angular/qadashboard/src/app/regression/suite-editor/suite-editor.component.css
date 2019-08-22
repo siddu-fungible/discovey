@@ -28,7 +28,7 @@ label {
 
 .fun-form .fun-form-label {
   margin-top: 5px;
-  /*font-size: 12px;*/
+  font-size: 14px;
   display: block;
 }
 
@@ -37,4 +37,22 @@ input[disabled].fun-form-input  {
   padding: 2px;
   margin: 0 0 0 0;
   background-color: lightgrey;
+}
+
+
+.fun-button-submit {
+  color: #fff;
+  background-color: #28a745;
+  border-color: #28a745;
+}
+
+
+.fun-cancel-link {
+  color: red;
+  font-size: 12px;
+}
+
+.fun-cancel-link:hover {
+  text-decoration: underline;
+  cursor: pointer;
 }
