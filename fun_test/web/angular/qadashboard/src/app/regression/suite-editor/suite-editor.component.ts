@@ -106,7 +106,7 @@ export class SuiteEditorComponent implements OnInit {
           let specificAssetsKey = this._getSpecificAssetsKey(flatName);
           this.customTestBedSpecForm.controls[specificAssetsKey].setValue('');
           this.customTestBedSpecForm.controls[numAssetsKey].setValue('');
-          this.customTestBedSpecForm.controls[assetSelectionKey].setValue(CustomAssetSelection.NUM);
+          this.customTestBedSpecForm.controls[assetSelectionKey].setValue(CustomAssetSelection.NUM.toString());
 
         })
 
@@ -195,19 +195,22 @@ export class SuiteEditorComponent implements OnInit {
   }
 
   test() {
+    console.log(this.customTestBedSpecForm.get(this._getAssetSelectionKey("dut")).value);
     //console.log(this.selectedTestBed.value);
-     console.log(this.selectedTestBed);
-     console.log(this.customTestBedSpecForm.get("selectedTestBed").value);
+     //console.log(this.selectedTestBed);
+     //console.log(this.customTestBedSpecForm.get("selectedTestBed").value);
     // console.log(this.customTestBedSpecForm.get("customDutSelection").value);
     // console.log(this.customTestBedSpecForm.get("numDuts").value);
     // console.log(this.customTestBedSpecForm.get("selectedDuts").value);
-    console.log(this.flattenedAssetTypeNames);
-    console.log(this.flattenedAssetTypeNameMap);
+    //console.log(this.flattenedAssetTypeNames);
+    //console.log(this.flattenedAssetTypeNameMap);
 
   }
 
   onClickCustomTestBedSpec(content) {
-    this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title'}).result.then((suiteExecution) => {
+    this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title'}).result.then((dontCare) => {
+      console.log("Ready to submit");
+      let customTestBedSpec = {};
 
     }, ((reason) => {
       console.log("Rejected");
