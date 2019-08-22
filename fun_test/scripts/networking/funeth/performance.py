@@ -324,7 +324,7 @@ class FunethPerformanceBase(FunTestCase):
                                                         version,
                                                         when='before')
 
-        if pingable and not sth_stuck_before:
+        if pingable and not any(i for i in sth_stuck_before):
 
             # TODO: calculate dpc stats collection duration and add it to test duration*2
             perf_utils.collect_host_stats(funeth_obj, version, when='before', duration=duration*5)
@@ -339,7 +339,7 @@ class FunethPerformanceBase(FunTestCase):
                                                            when='after')
             # Collect host stats after dpc stats to give enough time for mpstat collection
             perf_utils.collect_host_stats(funeth_obj, version, when='after')
-            if sth_stuck_after:
+            if any(i for i in sth_stuck_after):
                 result = {}
         else:
             result = {}
@@ -413,8 +413,18 @@ class FunethPerformanceBase(FunTestCase):
         tc_ids.append(fun_test.current_test_case_id)
         fun_test.simple_assert(pingable, '{} ping {} with packet size {}'.format(
             linux_obj_src.host_ip, dip, frame_size))
-        fun_test.simple_assert(not sth_stuck_before, 'Something is stuck before test')
-        fun_test.simple_assert(not sth_stuck_after, 'Something is stuck after test')
+
+        # Check if something is stuck/blocked, or unexpected
+        when = 'before'
+        for is_etp_queue_stuck, is_flow_blocked, is_parser_stuck, is_vp_stuck, is_wropkt_timeout_skip in (
+                sth_stuck_before, sth_stuck_after):
+            fun_test.simple_assert(not is_etp_queue_stuck, 'ETP queue is stuck {} test'.format(when))
+            fun_test.simple_assert(not is_flow_blocked, 'Flow is blocked {} test'.format(when))
+            fun_test.simple_assert(not is_parser_stuck, 'Parser is stuck {} test'.format(when))
+            fun_test.simple_assert(not is_vp_stuck, 'VP is stuck {} test'.format(when))
+            fun_test.simple_assert(not is_wropkt_timeout_skip, 'WROPKT_TIMEOUT_SKIP happens {} test'.format(when))
+            when = 'after'
+
         fun_test.test_assert(passed, 'Get throughput/pps/latency test result')
 
 
