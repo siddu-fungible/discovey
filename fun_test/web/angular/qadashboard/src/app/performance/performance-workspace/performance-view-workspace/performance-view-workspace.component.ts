@@ -121,10 +121,6 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
       temp["yesterday"] = null;
       temp["unit"] = null;
       temp["percentage"] = null;
-      temp["chart_name"] = metric["chart_name"];
-      temp["lineage"] = metric["lineage"];
-      temp["comments"] = null;
-      temp["metric_id"] = metric["metric_id"];
       metric["data"].push(temp);
     }
   }
@@ -195,6 +191,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
         metric["penultimate_good_score"] = penultimateGoodScore;
         metric["model_name"] = response.data["metric_model_name"];
         metric["data_sets"] = response.data["data_sets"];
+        metric["jira_ids"] = response.data["jira_ids"];
         metric["selected"] = false;
         metric["report"] = null;
         metric["data"] = [];

@@ -141,7 +141,8 @@ def chart_info(request):
                   "visualization_unit": chart.visualization_unit,
                   "pk": chart.pk,
                   "last_good_score": chart.last_good_score,
-                  "penultimate_good_score": chart.penultimate_good_score}
+                  "penultimate_good_score": chart.penultimate_good_score,
+                  "jira_ids": chart.jira_ids}
         for markers in milestones:
             markers_dict[markers.milestone_name] = markers.milestone_date
         result["milestone_markers"] = markers_dict
