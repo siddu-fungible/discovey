@@ -133,7 +133,7 @@ class BootF1(FunTestCase):
             else:
                 fun_test.add_checkpoint("Gen3x2 SSD count on F1_{}".format(f1index),
                                         "FAILED", expected=0, actual=gen3x2_count)
-        '''
+
         funcp_obj = FunControlPlaneBringup(fs_name=self.server_key["fs"][fs_name]["fs-name"])
         fun_test.test_assert(expression=funcp_obj.bringup_funcp(prepare_docker=False), message="Bringup FunCP")
         funcp_obj.assign_mpg_ips(static=self.server_key["fs"][fs_name]["mpg_ips"]["static"],
@@ -157,7 +157,7 @@ class BootF1(FunTestCase):
         funeth_obj = Funeth(tb_config_obj)
         fun_test.shared_variables['funeth_obj'] = funeth_obj
         setup_hu_host(funeth_obj, update_driver=True, sriov=4, num_queues=1)
-        '''
+
 
 class PingTest(FunTestCase):
     server_key = {}
