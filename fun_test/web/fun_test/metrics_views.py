@@ -917,6 +917,12 @@ def validate_jira(jira_id):
         return None
     return None
 
+def add_bugs(chart, jira_id):
+    jira_ids = json.loads(chart.jira_ids)
+    if jira_id not in jira_ids:
+        jira_ids.append(jira_id)
+        chart.jira_ids = json.dumps(jira_ids)
+        chart.save()
 
 @csrf_exempt
 @api_safe_json_response
@@ -927,14 +933,14 @@ def jiras(request, metric_id, jira_id=None):
             request_json = json.loads(request.body)
             jira_id = request_json["jira_id"]
             c = MetricChart.objects.get(metric_id=metric_id)
+            children = json.loads(c.children)
             if jira_id:
                 jira_info = validate_jira(jira_id)
                 if jira_info:
-                    jira_ids = json.loads(c.jira_ids)
-                    if jira_id not in jira_ids:
-                        jira_ids.append(jira_id)
-                        c.jira_ids = json.dumps(jira_ids)
-                        c.save()
+                    add_bugs(chart=c, jira_id=jira_id)
+                    for child in children:
+                        child_chart = MetricChart.objects.get(metric_id=int(child))
+                        add_bugs(chart=child_chart, jira_id=jira_id)
                 else:
                     raise ObjectDoesNotExist
             result = "Ok"
@@ -960,12 +966,20 @@ def jiras(request, metric_id, jira_id=None):
     if request.method == "DELETE":
         try:
             c = MetricChart.objects.get(metric_id=metric_id)
+            children = json.loads(c.children)
             if jira_id:
                 jira_ids = json.loads(c.jira_ids)
                 if jira_id in jira_ids:
                     jira_ids.remove(jira_id)
                     c.jira_ids = json.dumps(jira_ids)
                     c.save()
+                for child in children:
+                    child_chart = MetricChart.objects.get(metric_id=int(child))
+                    jira_ids = json.loads(child_chart.jira_ids)
+                    if jira_id in jira_ids:
+                        jira_ids.remove(jira_id)
+                        child_chart.jira_ids = json.dumps(jira_ids)
+                        child_chart.save()
             result = True
         except ObjectDoesNotExist:
             logger.critical("No data found - Deleting jira ids for metric id {}".format(metric_id))
