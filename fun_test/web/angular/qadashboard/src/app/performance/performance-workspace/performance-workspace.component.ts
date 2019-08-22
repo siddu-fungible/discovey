@@ -224,6 +224,9 @@ export class PerformanceWorkspaceComponent implements OnInit {
     if (this.workspaceName === null || this.workspaceName.trim() === "") {
       this.createError = "Enter some workspace name";
       error = true;
+    } else if (this.description === null || this.description.trim() === "") {
+      this.createError = "Enter some description";
+      error = true;
     } else {
       this.workspaceName = this.workspaceName.trim();
       for (let ws of this.profile) {
