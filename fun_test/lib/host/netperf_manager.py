@@ -250,7 +250,9 @@ class NetperfManager:
                 ns = arg_dict.get('ns', None)
                 cpu_list_server = sorted(arg_dict.get('cpu_list_server'))[::-1]  # reversed order
                 cpu_list_client = sorted(arg_dict.get('cpu_list_client'))[::-1]  # reversed order
-                netperf_port_delta = arg_dict.get('netperf_port_delta', 0) + test_id*1000
+                netperf_port_delta = arg_dict.get('netperf_port_delta', 0)
+                if netperf_port_delta:
+                    netperf_port_delta += test_id*1000
                 csi_perf_obj = arg_dict.get('csi_perf_obj', None)
 
                 if test_id == 2:
