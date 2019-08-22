@@ -53,7 +53,7 @@
         <ng-container
           *ngIf="customTestBedSpecForm.controls[_getAssetSelectionKey(flattenedAssetTypeName)].value == CustomAssetSelection.SPECIFIC">
           <ng-multiselect-dropdown [placeholder]="'Select'"
-                                   [data]="flattenedAssetTypeNameMap[flattenedAssetTypeName].data"
+                                   [data]="filterAssetsBySelectedTestBed(flattenedAssetTypeNameMap[flattenedAssetTypeName].data)"
                                    formControlName="{{ _getSpecificAssetsKey(flattenedAssetTypeName) }}"
                                    [settings]="dropDownSettings">
           </ng-multiselect-dropdown>

@@ -97,6 +97,18 @@ export class SuiteEditorComponent implements OnInit {
       let i = 0;
       this.customTestBedSpecForm.get('selectedTestBed').valueChanges.subscribe(selection => {
         this.selectedTestBed = selection;
+
+        Object.keys(this.assetTypes).forEach(assetTypeKey => {
+          let flatName = this._flattenName(assetTypeKey);
+          let assetSelectionKey = this._getAssetSelectionKey(flatName);
+          let numAssetsKey = this._getNumAssetsKey(flatName);
+          let specificAssetsKey = this._getSpecificAssetsKey(flatName);
+          this.customTestBedSpecForm.controls[specificAssetsKey].setValue('');
+          this.customTestBedSpecForm.controls[numAssetsKey].setValue('');
+          this.customTestBedSpecForm.controls[assetSelectionKey].setValue(CustomAssetSelection.NUM);
+
+        })
+
       })
     });
 
@@ -152,7 +164,7 @@ export class SuiteEditorComponent implements OnInit {
       this.flattenedAssetTypeNameMap[flatName].data = [];
       this.assets.forEach(asset => {
         if (asset.type === this.assetTypes[assetTypeKey]) {
-          this.flattenedAssetTypeNameMap[flatName].data.push(asset.name);
+          this.flattenedAssetTypeNameMap[flatName].data.push(asset);
         }
       })
 
@@ -175,6 +187,10 @@ export class SuiteEditorComponent implements OnInit {
 
   customTestBedSpecChanged(customTestBedSpec) {
     this.customTestBedSpec = customTestBedSpec;
+  }
+
+  filterAssetsBySelectedTestBed(allAssets) {  // Only choose assets that belong to the selected test-bed
+    return allAssets.filter(asset => asset.test_beds.indexOf(this.selectedTestBed) > -1).map(o => { return o.name });
   }
 
   test() {
