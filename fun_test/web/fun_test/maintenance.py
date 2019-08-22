@@ -740,21 +740,21 @@ if __name__ == "__main__":
             one_data_set["output"] = output
             data_sets.append(one_data_set.copy())
 
-        # metric_id = LastMetricId.get_next_id()
-        # MetricChart(chart_name=chart_name,
-        #             metric_id=metric_id,
-        #             internal_chart_name=internal_chart_name,
-        #             data_sets=json.dumps(data_sets),
-        #             leaf=True,
-        #             description=description,
-        #             owner_info=owner_info,
-        #             source=source,
-        #             positive=positive,
-        #             y1_axis_title=y1_axis_title,
-        #             visualization_unit=y1_axis_title,
-        #             metric_model_name=model_name,
-        #             platform=platform,
-        #             base_line_date=base_line_date,
-        #             work_in_progress=False).save()
-        # print ("Metric id: {}".format(metric_id))
+        metric_id = LastMetricId.get_next_id()
+        MetricChart(chart_name=chart_name,
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description=description,
+                    owner_info=owner_info,
+                    source=source,
+                    positive=positive,
+                    y1_axis_title=y1_axis_title,
+                    visualization_unit=y1_axis_title,
+                    metric_model_name=model_name,
+                    platform=platform,
+                    base_line_date=base_line_date,
+                    work_in_progress=False).save()
+        print ("Metric id: {}".format(metric_id))
         print ("Data sets: {}".format(data_sets))
