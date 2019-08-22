@@ -2063,6 +2063,10 @@ class PeekCommands(object):
                     output_result = self.dpc_client.execute(verb='peek', arg_list=[cmd])
                     result_dict = self.get_required_per_vp_result(output_result)
                     for key in sorted(result_dict):
+                        if key == '0':
+                            print "\n************* Displaying table for low prio ************ \n"
+                        else:
+                            print "\n************* Displaying table for high prio ************ \n"
                         result = result_dict[key]
                         prev_result = prev_result_dict[key]
                         if result:
@@ -2144,13 +2148,65 @@ class PeekCommands(object):
                                 for _key in table_list:
                                     for key in print_key_list:
                                         if not 'Cls/Core' in str(_key):
-                                            tabular_list.append(str(_key) + "_" + key_type + ":" + key)
+                                            tabular_list.append(str(_key) + ":" + key)
                                             if diff:
-                                                tabular_list.append(str(_key) + "_" + key_type + ":d_" + key)
+                                                tabular_list.append(str(_key) + ":d_" + key)
                                         else:
                                             if not any('Cls/Core' in s for s in tabular_list):
                                                 tabular_list.append(_key)
                                 return tabular_list
+
+                            def eliminate_zero_val_rows(print_keys, print_values):
+                                diff_indexes = []
+
+                                # Find all diff columns
+                                for key in print_keys:
+                                    if 'd_' in key:
+                                        diff_indexes.append(print_keys.index(key))
+                                if diff_indexes:
+                                    del_indexes = []
+                                    # Check all lists simultaneously if their diff value is 0 and note its index
+                                    for i in range(len(print_values[0])):
+                                        zero_val = []
+                                        for index in diff_indexes:
+                                            if print_values[index][i] == 0:
+                                                zero_val.append(True)
+                                            else:
+                                                zero_val.append(False)
+                                                break
+                                        if len(set(zero_val)) == 1 and zero_val[0]:
+                                            del_indexes.append(i)
+                                    # Check if del indexes and delete those from all lists
+                                    del_indexes.reverse()
+                                    for val_list in print_values:
+                                        for del_index in del_indexes:
+                                            del val_list[del_index]
+                                return print_values
+
+                            def eliminate_zero_val_cols(print_keys, print_values):
+                                diff_indexes = []
+                                del_indexes = []
+                                # Find all diff columns
+                                for key in print_keys:
+                                    if 'd_' in key:
+                                        diff_indexes.append(print_keys.index(key))
+                                if diff_indexes:
+                                    # Compare index list and index - 1 list and see if all elements are 0.
+                                    # If so then delete those 2 columns from print_keys and print_values
+                                    for index in diff_indexes:
+                                        diff_check_len = len(set(print_values[index]))
+                                        diff_check_val = print_values[index][0]
+                                        nor_check_len = len(set(print_values[index - 1]))
+                                        nor_check_val = print_values[index - 1][0]
+                                        if diff_check_len == 1 and diff_check_val == 0 and nor_check_len == 1 and nor_check_val == 0:
+                                            del_indexes.append(index - 1)
+                                            del_indexes.append(index)
+                                if del_indexes:
+                                    del_indexes.reverse()
+                                    for del_col in del_indexes:
+                                        del print_keys[del_col]
+                                        del print_values[del_col]
+                                return print_values
 
                             def get_per_vp_dict_table_obj(result, prev_result=None, cluster_id=None, core_id=None):
                                 all_keys = result.keys()
@@ -2181,6 +2237,15 @@ class PeekCommands(object):
                                 print_keys = [print_key.replace(q_key_name, display_q_key_name) for print_key in
                                               print_keys]
                                 print_values = print_dict.values()
+
+                                print_values = eliminate_zero_val_rows(print_keys, print_values)
+                                all_empty_list = True
+                                for print_val_list in print_values:
+                                    if print_val_list:
+                                        all_empty_list = False
+                                        break
+                                if not all_empty_list:
+                                    print_values = eliminate_zero_val_cols(print_keys, print_values)
                                 for col_name, col_values in zip(print_keys, print_values):
                                     master_table_obj.add_column(col_name, col_values)
                                 return master_table_obj
@@ -2200,13 +2265,14 @@ class PeekCommands(object):
                                 return cmd, master_table_obj
                             prev_result_dict[key] = result
                             print master_table_obj
-                            print "\n########################  %s ########################\n" % \
-                                  str(self._get_timestamp())
+
                             time.sleep(TIME_INTERVAL)
                         else:
                             if get_result_only:
                                 return cmd, "Empty Result"
                             print "Empty Result"
+                    print "\n########################  %s ########################\n" % \
+                          str(self._get_timestamp())
                 except KeyboardInterrupt:
                     self.dpc_client.disconnect()
                     break
