@@ -243,7 +243,7 @@ def start_vm(funeth_obj_hosts, funeth_obj_vms):
                     linux_obj.sudo_command(cmd)
 
 
-def configure_overlay(network_controller_obj_f1_0, network_controller_obj_f1_1):
+def dpcsh_configure_overlay(network_controller_obj_f1_0, network_controller_obj_f1_1):
 
     # TODO: Define overlay args in config file
     overlay_config_dict = {
@@ -466,7 +466,7 @@ class FunethSanity(FunTestScript):
 
             # Configure overlay
             if configure_overlay:
-                configure_overlay(network_controller_obj_f1_0, network_controller_obj_f1_1)
+                dpcsh_configure_overlay(network_controller_obj_f1_0, network_controller_obj_f1_1)
                 network_controller_obj_f1_0.disconnect()
                 network_controller_obj_f1_1.disconnect()
 
