@@ -316,23 +316,24 @@ def dpcsh_configure_overlay(network_controller_obj_f1_0, network_controller_obj_
                 for i in CPU_LIST_VM:
                     for j in (netperf_manager.NETSERVER_FIXED_PORT_CONTROL_BASE,
                               netperf_manager.NETSERVER_FIXED_PORT_DATA_BASE):
-                        for flow_type, nh_index in zip(('vxlan_encap', 'vxlan_decap'), (0, 1)):
-                            for sip, dip in zip(src_flows, dst_flows):
-                                if flow_type == 'vxlan_encap':
-                                    flow_sip, flow_dip = sip, dip
-                                else:
-                                    flow_sip, flow_dip = dip, sip
-                                # flows
-                                nc_obj.overlay_flow_add(
-                                    flow_type=flow_type,
-                                    nh_index=nh_index,
-                                    vif=lport_num,
-                                    flow_sip=flow_sip,
-                                    flow_dip=flow_dip,
-                                    flow_sport=i+j,
-                                    flow_dport=i+j,
-                                    flow_proto=6
-                                )
+                        for d in range(11000, 11021) + range(12000, 12021):  # HU_HU_FCP_OL_VM, 11xxx, HU_HU_NFCP_OL_VM: 12xxx
+                            for flow_type, nh_index in zip(('vxlan_encap', 'vxlan_decap'), (0, 1)):
+                                for sip, dip in zip(src_flows, dst_flows):
+                                    if flow_type == 'vxlan_encap':
+                                        flow_sip, flow_dip = sip, dip
+                                    else:
+                                        flow_sip, flow_dip = dip, sip
+                                    # flows
+                                    nc_obj.overlay_flow_add(
+                                        flow_type=flow_type,
+                                        nh_index=nh_index,
+                                        vif=lport_num,
+                                        flow_sip=flow_sip,
+                                        flow_dip=flow_dip,
+                                        flow_sport=i+j+d,
+                                        flow_dport=i+j+d,
+                                        flow_proto=6
+                                    )
                 # vif_table
                 for mac_addr in vif_table_mac_entries:
                     nc_obj.overlay_vif_table_add_mac_entry(vnid=vnid, mac_addr=mac_addr, egress_vif=lport_num)
