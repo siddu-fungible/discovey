@@ -146,7 +146,7 @@ class BootF1(FunTestCase):
                                         "FAILED", expected=0, actual=gen3x2_count)
 
                 gen3x2_fail = True
-
+        '''
         funcp_obj = FunControlPlaneBringup(fs_name=self.server_key["fs"][fs_name]["fs-name"])
         fun_test.test_assert(expression=funcp_obj.bringup_funcp(prepare_docker=False), message="Bringup FunCP")
         funcp_obj.assign_mpg_ips(static=self.server_key["fs"][fs_name]["mpg_ips"]["static"],
@@ -170,7 +170,7 @@ class BootF1(FunTestCase):
         funeth_obj = Funeth(tb_config_obj)
         fun_test.shared_variables['funeth_obj'] = funeth_obj
         setup_hu_host(funeth_obj, update_driver=True, sriov=4, num_queues=1)
-
+        '''
 
         if ssd_already_up_count_fail or ssd_up_count_fail or gen3x4_fail or gen3x2_fail:
             fun_test.test_assert(False, "SSD checks failed")
