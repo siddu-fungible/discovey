@@ -500,6 +500,13 @@ tr.text-center > th {
   color: white !important;
 }
 
+.fun-cancel-link {
+  color: red;
+  font-size: 12px;
+  padding-right: 5px;
+}
+
+
 .span-selected {
   background-color: rgba(230, 255, 0, 0.26);
   border-radius: 3px;
@@ -597,10 +604,23 @@ tr.text-center > th {
   background-color: #43374a;
   color: white;
   cursor: pointer;
+}
 
+.fun-button-submit {
+  color: #fff;
+  background-color: #28a745;
+  border-color: #28a745;
+  padding: 6px;
+  padding-top: 8px;
+  padding-bottom: 8px;
 }
 
 label {
   margin-bottom: unset;
   display: unset;
+}
+
+.fun-cancel-link:hover {
+  text-decoration: underline;
+  cursor: pointer;
 }

@@ -40,19 +40,3 @@ input[disabled].fun-form-input  {
 }
 
 
-.fun-button-submit {
-  color: #fff;
-  background-color: #28a745;
-  border-color: #28a745;
-}
-
-
-.fun-cancel-link {
-  color: red;
-  font-size: 12px;
-}
-
-.fun-cancel-link:hover {
-  text-decoration: underline;
-  cursor: pointer;
-}
