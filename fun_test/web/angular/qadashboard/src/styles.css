@@ -589,14 +589,12 @@ tr.text-center > th {
 }
 
 .fun-button-add {
-  padding: 6px;
-  padding-top: 8px;
-  padding-bottom: 8px;
+  padding: 5px;
   border: darkblue 0.5px;
   background-color: #337ab7;
   color: white;
   cursor: pointer;
-  min-width: 50px;
+  min-width: 100px;
   border-radius: 2px;
 }
 
@@ -610,9 +608,9 @@ tr.text-center > th {
   color: #fff;
   background-color: #28a745;
   border-color: #28a745;
-  padding: 6px;
-  padding-top: 8px;
-  padding-bottom: 8px;
+  padding: 5px;
+  border-radius: 2px;
+  min-width: 100px;
 }
 
 label {
