@@ -621,6 +621,8 @@ class StorageFsTemplate(object):
             fun_test.simple_assert(not container_obj.exit_status(), "Disabling interface {}".format(interface_name))
 
         # Configuring the bond interface name
+        bond_del_cmd = "sudo ip link del %(name)s" % bond_dict
+        container_obj.command(bond_del_cmd)
         bond_cmd = "sudo ip link add %(name)s type bond mode %(mode)s miimon %(miimon)s xmit_hash_policy " \
                    "%(xmit_hash_policy)s min_links %(min_links)s" % bond_dict
         container_obj.command(bond_cmd)

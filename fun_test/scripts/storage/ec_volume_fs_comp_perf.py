@@ -3,6 +3,7 @@ from lib.topology.topology_helper import TopologyHelper
 from lib.fun.fs import Fs
 from storage_helper import *
 import fun_global
+import copy
 
 VOL_TYPE = "EC_COMP_FS_VOL"
 
@@ -79,8 +80,8 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.shared_variables["end_host"] = end_host
         fun_test.shared_variables["topology"] = topology
         fun_test.shared_variables["storage_controller"] = storage_controller
-        fun_test.shared_variables['nsid'] = 0
-        fun_test.shared_variables['db_log_time'] = get_current_time()
+        fun_test.shared_variables["nsid"] = 0
+        fun_test.shared_variables["db_log_time"] = get_current_time()
         fun_test.shared_variables["num_ssd"] = self.num_ssd
         fun_test.shared_variables["num_volume"] = self.num_volume
 
@@ -94,13 +95,13 @@ class ECVolumeLevelScript(FunTestScript):
                                                                        huid=self.huid,
                                                                        ctlid=self.ctlid,
                                                                        fnid=self.fnid,
-                                                                       command_duration=self.command_timeout)['status'],
+                                                                       command_duration=self.command_timeout)["status"],
                              message="Create Controller with UUID: {}".format(ctrlr_uuid))
         fun_test.shared_variables["ctrlr_uuid"] = ctrlr_uuid
 
     def cleanup(self):
         try:
-            ctrlr_uuid = fun_test.shared_variables['ctrlr_uuid']
+            ctrlr_uuid = fun_test.shared_variables["ctrlr_uuid"]
             # Detaching all the EC/LS volumes to the external server
 
             fun_test.test_assert(self.storage_controller.delete_controller(ctrlr_uuid=ctrlr_uuid,
@@ -155,8 +156,8 @@ class ECVolumeLevelTestcase(FunTestCase):
 
         # fetch nvme device
         fetch_nvme = fetch_nvme_device(end_host=self.end_host, nsid=self.ns_id)
-        fun_test.test_assert(fetch_nvme['status'], message="Check: nvme device visible on end host")
-        self.nvme_device = fetch_nvme['nvme_device']
+        fun_test.test_assert(fetch_nvme["status"], message="Check: nvme device visible on end host")
+        self.nvme_device = fetch_nvme["nvme_device"]
 
         # set syslog level
         set_syslog_level(self.storage_controller, self.syslog_level)
@@ -165,41 +166,80 @@ class ECVolumeLevelTestcase(FunTestCase):
         table_data_header = None
         testcase = self.__class__.__name__
         stats_table_lst = []
-        job_perfix = self.read_fio_cmd_args['name']
+        job_perfix = self.read_fio_cmd_args["name"]
+        job_inputs = fun_test.get_job_inputs()
+        collect_artifacts = job_inputs["collect_artifacts"] if job_inputs and "collect_artifacts" in job_inputs else True
+        poll_interval = job_inputs["poll_interval"] if job_inputs and "poll_interval" in job_inputs else 30
+        ec_details = get_ec_vol_uuids(ec_info=self.ec_info)
+        stats_collector = CollectStats(self.storage_controller)  # required to poll vol stats
+
         for test in self.test_parameters:
 
             set_header = True
             table_rows = []
             # Perform Writes With specified % of Compressible data
-            self.write_fio_cmd_args['buffer_compress_percentage'] = test['compress_percent']
+            self.write_fio_cmd_args["buffer_compress_percentage"] = test["compress_percent"]
             fun_test.test_assert(self.end_host.pcie_fio(filename=self.nvme_device, **self.write_fio_cmd_args),
                                  message="Execute {0} write on nvme device {1} compress percentage: {2}%".format(
-                                     self.write_fio_cmd_args['size'],
+                                     self.write_fio_cmd_args["size"],
                                      self.nvme_device,
-                                     self.write_fio_cmd_args['buffer_compress_percentage']))
+                                     self.write_fio_cmd_args["buffer_compress_percentage"]))
             # Do seq and rand read for the writes
             for mode in self.fio_modes:
-                self.read_fio_cmd_args['rw'] = mode
-                self.read_fio_cmd_args['name'] = "{0}_{1}_{2}".format(job_perfix,
-                                                                      mode,
-                                                                      self.write_fio_cmd_args[
-                                                                          'buffer_compress_percentage'])
-                fio_read_output = self.end_host.pcie_fio(filename=self.nvme_device, **self.read_fio_cmd_args)
-                fun_test.test_assert(fio_read_output,
-                                     message="Execute {0} {1} on nvme device {2} ".format(
-                                         self.read_fio_cmd_args['size'],
-                                         self.read_fio_cmd_args['rw'],
+                fio_cmd_args = copy.copy(self.read_fio_cmd_args)
+                fio_cmd_args["rw"] = mode
+                fio_cmd_args["name"] = "{0}_{1}_{2}".format(job_perfix,
+                                                            mode,
+                                                            test["compress_percent"])
+                if mode == "write":
+                    fio_cmd_args["buffer_pattern"] = self.write_fio_cmd_args["buffer_pattern"]
+                    fio_cmd_args["buffer_compress_percentage"] = test["compress_percent"]
+                if collect_artifacts:
+                    count = (fio_cmd_args["runtime"] + poll_interval) / poll_interval
+                    vp_util_artifact_file = fun_test.get_test_case_artifact_file_name(
+                        post_fix_name="{}_vputil_artifact.txt".format(fio_cmd_args["name"]))
+                    vol_stats_artifact_file = fun_test.get_test_case_artifact_file_name(
+                        post_fix_name="{}_vol_stats_artifact.txt".format(fio_cmd_args["name"]))
+                    bam_stats_artifact_file = fun_test.get_test_case_artifact_file_name(
+                        post_fix_name="{}_bam_stats_artifact.txt".format(fio_cmd_args["name"]))
+
+                    thread_info = initiate_stats_collection(storage_controller=self.storage_controller,
+                                                            interval=poll_interval,
+                                                            count=count,
+                                                            vp_util_artifact_file=vp_util_artifact_file,
+                                                            vol_stats_artifact_file=vol_stats_artifact_file,
+                                                            bam_stats_articat_file=bam_stats_artifact_file,
+                                                            vol_details=ec_details)
+                    active_threads = [thread_info['vp_util_thread_id'], thread_info['vol_stats_thread_id'], thread_info['bam_stats_thread_id']]
+                fio_perf_output = self.end_host.pcie_fio(filename=self.nvme_device, **fio_cmd_args)
+                if collect_artifacts:
+                    terminate_stats_collection(stats_ollector_obj=stats_collector, thread_list=active_threads)
+                    fun_test.add_auxillary_file(description="F1 VP Utilization - {0} IO depth {1}".format(
+                        mode, fio_cmd_args["iodepth"] * fio_cmd_args["numjobs"]),
+                        filename=vp_util_artifact_file)
+                    fun_test.add_auxillary_file(description="F1 Volume Stats - {0} IO depth {1}".format(
+                        mode, fio_cmd_args["iodepth"] * fio_cmd_args["numjobs"]),
+                        filename=vol_stats_artifact_file)
+                    fun_test.add_auxillary_file(description="F1 Bam Stats - {0} IO depth {1}".format(
+                        mode, fio_cmd_args["iodepth"] * fio_cmd_args["numjobs"]),
+                        filename=bam_stats_artifact_file)
+                fun_test.test_assert(fio_perf_output,
+                                     message="Execute {0} {1} for duration {2} on nvme device {3} ".format(
+                                         fio_cmd_args["size"],
+                                         fio_cmd_args["rw"],
+                                         fio_cmd_args["runtime"],
                                          self.nvme_device))
-                perf_stats = parse_perf_stats(fio_read_output['read'])
+                perf_stats = parse_perf_stats(fio_perf_output["write"]) if mode == "write" else parse_perf_stats(
+                    fio_perf_output["read"])
                 if set_header:
                     set_header = False
                     table_data_header = sorted(perf_stats.keys())
                 table_row1 = [perf_stats[key] for key in table_data_header]
-                perf_stats['block_size'] = self.read_fio_cmd_args['bs']
-                perf_stats['iodepth'] = self.read_fio_cmd_args['iodepth']
-                perf_stats['operation'] = self.read_fio_cmd_args['rw']
-                perf_stats['job_name'] = self.read_fio_cmd_args['name']
-                perf_stats['size'] = self.read_fio_cmd_args['size']
+                perf_stats["block_size"] = fio_cmd_args["bs"]
+                perf_stats["iodepth"] = fio_cmd_args["iodepth"]
+                perf_stats["operation"] = fio_cmd_args["rw"]
+                perf_stats["job_name"] = fio_cmd_args["name"]
+                perf_stats["size"] = fio_cmd_args["size"]
 
                 if fun_global.is_production_mode() and fun_test.shared_variables["post_result"]:
                     fun_test.log("Updating the following stats on database: {}".format(perf_stats))
@@ -208,34 +248,34 @@ class ECVolumeLevelTestcase(FunTestCase):
                 table_rows.append(table_row1)
             table_data_header.insert(0, "")  # Align Table according to rows
             table_data = {"headers": table_data_header, "rows": table_rows}
-            stats_table_lst.append({'table_name': test['name'], 'table_data': table_data})
+            stats_table_lst.append({"table_name": test["name"], "table_data": table_data})
 
         # Print Tabulated Stats
         panel_header = testcase + " Performance Stats"
         for stats in stats_table_lst:
             fun_test.add_table(panel_header=panel_header,
-                               table_name=stats['table_name'], table_data=stats['table_data'])
+                               table_name=stats["table_name"], table_data=stats["table_data"])
 
     def post_results(self, test, test_stats):
         blt = BltVolumePerformanceHelper()
 
-        blt.add_entry(date_time=fun_test.shared_variables['db_log_time'],
+        blt.add_entry(date_time=fun_test.shared_variables["db_log_time"],
                       volume=VOL_TYPE,
                       test=test,
-                      block_size=test_stats['block_size'],
-                      io_depth=test_stats['iodepth'],
-                      size=test_stats['size'],
-                      operation=test_stats['operation'],
+                      block_size=test_stats["block_size"],
+                      io_depth=test_stats["iodepth"],
+                      size=test_stats["size"],
+                      operation=test_stats["operation"],
                       num_ssd=fun_test.shared_variables["num_ssd"],
                       num_volume=fun_test.shared_variables["num_volume"],
-                      fio_job_name=test_stats['job_name'],
-                      read_iops=test_stats['iops'],
-                      read_throughput=test_stats['bw'],
-                      read_avg_latency=test_stats['latency'],
-                      read_90_latency=test_stats['latency90'],
-                      read_95_latency=test_stats['latency95'],
-                      read_99_latency=test_stats['latency99'],
-                      read_99_99_latency=test_stats['latency9999'],
+                      fio_job_name=test_stats["job_name"],
+                      read_iops=test_stats["iops"],
+                      read_throughput=test_stats["bw"],
+                      read_avg_latency=test_stats["latency"],
+                      read_90_latency=test_stats["latency90"],
+                      read_95_latency=test_stats["latency95"],
+                      read_99_latency=test_stats["latency99"],
+                      read_99_99_latency=test_stats["latency9999"],
                       read_iops_unit="ops",
                       read_throughput_unit="MBps",
                       read_avg_latency_unit="usecs",
@@ -250,7 +290,7 @@ class ECVolumeLevelTestcase(FunTestCase):
         fun_test.test_assert(self.storage_controller.detach_volume_from_controller(
             ctrlr_uuid=ctrlr_uuid,
             ns_id=self.ns_id,
-            command_duration=self.command_timeout)['status'],
+            command_duration=self.command_timeout)["status"],
                              message="Detach nsid: {} from controller: {}".format(self.ns_id, ctrlr_uuid))
         self.storage_controller.unconfigure_ec_volume(ec_info=self.ec_info,
                                                       command_timeout=self.command_timeout)

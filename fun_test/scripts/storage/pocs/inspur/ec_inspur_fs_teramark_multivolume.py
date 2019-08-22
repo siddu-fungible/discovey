@@ -8,6 +8,8 @@ from lib.templates.storage.storage_fs_template import *
 from scripts.storage.storage_helper import *
 from scripts.networking.helper import *
 from collections import OrderedDict, Counter
+from lib.templates.csi_perf.csi_perf_template import CsiPerfTemplate
+from lib.host.linux import Linux
 
 '''
 Script to track the Inspur Performance Cases of various read write combination of Erasure Coded volume using FIO
@@ -21,7 +23,8 @@ def fio_parser(arg1, host_index, **kwargs):
     arg1.disconnect()
 
 
-def post_results(volume, test, num_host, block_size, io_depth, size, operation, write_iops, read_iops, write_bw, read_bw,
+def post_results(volume, test, num_host, block_size, io_depth, size, operation, write_iops, read_iops, write_bw,
+                 read_bw,
                  write_latency, write_90_latency, write_95_latency, write_99_latency, write_99_99_latency, read_latency,
                  read_90_latency, read_95_latency, read_99_latency, read_99_99_latency, fio_job_name):
     for i in ["write_iops", "read_iops", "write_bw", "read_bw", "write_latency", "write_90_latency", "write_95_latency",
@@ -163,6 +166,28 @@ class ECVolumeLevelScript(FunTestScript):
 
         if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
                 self.testbed_config["workarounds"]["enable_funcp"]:
+
+            # Code to collect csi_perf if it's set
+            self.csi_perf_enabled = fun_test.get_job_environment_variable("csi_perf")
+            fun_test.log("csi_perf_enabled is set as: {} for current run".format(self.csi_perf_enabled))
+            if self.csi_perf_enabled:
+                fun_test.log("testbed_config: {}".format(self.testbed_config))
+                self.csi_f1_ip = \
+                    self.testbed_config["dut_info"][str(self.available_dut_indexes[0])]["bond_interface_info"]["0"][
+                        "0"][
+                        "ip"].split('/')[0]
+                fun_test.log("F1 ip used for csi_perf_test: {}".format(self.csi_f1_ip))
+                self.perf_listener_host = self.topology_helper.get_available_perf_listener_hosts()
+                fun_test.log("perf_listener_host used for current test: {}".format(self.perf_listener_host))
+                for self.perf_listener_host_name, csi_perf_host_obj in self.perf_listener_host.iteritems():
+                    perf_listner_test_interface = csi_perf_host_obj.get_test_interface(index=0)
+                    self.perf_listener_ip = perf_listner_test_interface.ip.split('/')[0]
+                    fun_test.log("csi perf listener host ip is: {}".format(self.perf_listener_ip))
+                # adding csi perf bootargs if csi_perf is enabled
+                #  TODO: Modifying bootargs only for F1_0 as csi_perf on F1_1 is not yet fully supported
+                self.bootargs[0] += " --perf csi-local-ip={} csi-remote-ip={} pdtrace-hbm-size-kb={}".format(
+                    self.csi_f1_ip, self.perf_listener_ip, self.csi_perf_pdtrace_hbm_size_kb)
+
             for i in range(len(self.bootargs)):
                 self.bootargs[i] += " --mgmt"
                 if self.disable_wu_watchdog:
@@ -185,6 +210,7 @@ class ECVolumeLevelScript(FunTestScript):
                 fun_test.log("Available hosts are: {}".format(hosts))
                 required_host_index = []
                 self.required_hosts = OrderedDict()
+
                 for i in xrange(self.host_start_index, self.host_start_index + self.num_hosts):
                     required_host_index.append(i)
                 fun_test.debug("Host index required for scripts: {}".format(required_host_index))
@@ -224,7 +250,8 @@ class ECVolumeLevelScript(FunTestScript):
                 host_handle = self.host_info[host_name]["handle"]
                 if self.override_numa_node["override"]:
                     host_numa_cpus_filter = host_handle.lscpu(self.override_numa_node["override_node"])
-                    self.host_info[host_name]["host_numa_cpus"] = host_numa_cpus_filter[self.override_numa_node["override_node"]]
+                    self.host_info[host_name]["host_numa_cpus"] = host_numa_cpus_filter[
+                        self.override_numa_node["override_node"]]
                 else:
                     self.host_info[host_name]["host_numa_cpus"] = fetch_numa_cpus(host_handle, self.ethernet_adapter)
 
@@ -303,6 +330,10 @@ class ECVolumeLevelScript(FunTestScript):
             fun_test.shared_variables["syslog_level"] = self.syslog_level
             fun_test.shared_variables["db_log_time"] = self.db_log_time
             fun_test.shared_variables["host_info"] = self.host_info
+            fun_test.shared_variables["csi_perf_enabled"] = self.csi_perf_enabled
+            if self.csi_perf_enabled:
+                fun_test.shared_variables["perf_listener_host_name"] = self.perf_listener_host_name
+                fun_test.shared_variables["perf_listener_ip"] = self.perf_listener_ip
 
             for host_name in self.host_info:
                 host_handle = self.host_info[host_name]["handle"]
@@ -333,6 +364,16 @@ class ECVolumeLevelScript(FunTestScript):
                     fun_test.test_assert(ping_status, "Host {} is able to ping to {}'s bond interface IP {}".
                                          format(host_name, self.funcp_spec[0]["container_names"][index], ip))
 
+            # Ensuring perf_host is able to ping F1 IP
+            if self.csi_perf_enabled:
+                # csi_perf_host_instance = csi_perf_host_obj.get_instance()  # TODO: Returning as NoneType
+                csi_perf_host_instance = Linux(host_ip=csi_perf_host_obj.spec["host_ip"],
+                                               ssh_username=csi_perf_host_obj.spec["ssh_username"],
+                                               ssh_password=csi_perf_host_obj.spec["ssh_password"])
+                ping_status = csi_perf_host_instance.ping(dst=self.csi_f1_ip)
+                fun_test.test_assert(ping_status, "Host {} is able to ping to F1 IP {}".
+                                     format(self.perf_listener_host_name, self.csi_f1_ip))
+
         elif "workarounds" in self.testbed_config and "csr_replay" in self.testbed_config["workarounds"] and \
                 self.testbed_config["workarounds"]["csr_replay"]:
 
@@ -354,7 +395,8 @@ class ECVolumeLevelScript(FunTestScript):
             self.storage_controller = self.f1.get_dpc_storage_controller()
 
             # Fetching Linux host with test interface name defined
-            fpg_connected_hosts = self.topology.get_host_instances_on_fpg_interfaces(dut_index=0, f1_index=self.f1_in_use)
+            fpg_connected_hosts = self.topology.get_host_instances_on_fpg_interfaces(dut_index=0,
+                                                                                     f1_index=self.f1_in_use)
             for host_ip, host_info in fpg_connected_hosts.iteritems():
                 if self.testbed_type == "fs-6" and host_ip != "poc-server-01":
                     continue
@@ -580,6 +622,8 @@ class ECVolumeLevelTestcase(FunTestCase):
             self.ec_info["num_volumes"] = job_inputs["num_volumes"]
         if "vol_size" in job_inputs:
             self.ec_info["capacity"] = job_inputs["vol_size"]
+        if "io_queues" in job_inputs:
+            self.io_queues = job_inputs["io_queues"]
         if "post_results" in job_inputs:
             self.post_results = job_inputs["post_results"]
         else:
@@ -599,6 +643,10 @@ class ECVolumeLevelTestcase(FunTestCase):
             self.test_network["f1_loopback_ip"] = self.f1_ips
             self.num_duts = fun_test.shared_variables["num_duts"]
             self.num_hosts = len(self.host_info)
+            self.csi_perf_enabled = fun_test.shared_variables["csi_perf_enabled"]
+            if self.csi_perf_enabled:
+                self.perf_listener_host_name = fun_test.shared_variables["perf_listener_host_name"]
+                self.perf_listener_ip = fun_test.shared_variables["perf_listener_ip"]
         elif "workarounds" in self.testbed_config and "csr_replay" in self.testbed_config["workarounds"] and \
                 self.testbed_config["workarounds"]["csr_replay"]:
             self.fs = fun_test.shared_variables["fs"]
@@ -810,7 +858,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                         fun_test.log("FIO Command Output:\n{}".format(fio_output))
                         fun_test.test_assert(fio_output, "Volume warmup on host {}".format(host_name))
 
-                fun_test.sleep("before actual test",self.iter_interval)
+                fun_test.sleep("before actual test", self.iter_interval)
                 fun_test.shared_variables["ec"]["warmup_io_completed"] = True
 
     def run(self):
@@ -860,9 +908,9 @@ class ECVolumeLevelTestcase(FunTestCase):
         for num in range(self.ec_info["num_volumes"]):
             vol_group = {}
             vol_group[self.ec_info["volume_types"]["ndata"]] = self.ec_info["uuids"][num]["blt"]
-            vol_group[self.ec_info["volume_types"]["ec"]]    = self.ec_info["uuids"][num]["ec"]
-            vol_group[self.ec_info["volume_types"]["jvol"]]  = [self.ec_info["uuids"][num]["jvol"]]
-            vol_group[self.ec_info["volume_types"]["lsv"]]   = self.ec_info["uuids"][num]["lsv"]
+            vol_group[self.ec_info["volume_types"]["ec"]] = self.ec_info["uuids"][num]["ec"]
+            vol_group[self.ec_info["volume_types"]["jvol"]] = [self.ec_info["uuids"][num]["jvol"]]
+            vol_group[self.ec_info["volume_types"]["lsv"]] = self.ec_info["uuids"][num]["lsv"]
             vol_details.append(vol_group)
 
         for iodepth in self.fio_iodepth:
@@ -988,6 +1036,13 @@ class ECVolumeLevelTestcase(FunTestCase):
                                                                     output_file=vol_stats_artifact_file,
                                                                     interval=self.vol_stats_args["interval"],
                                                                     count=int(mpstat_count), threaded=True)
+                per_vp_post_fix_name = "per_vp_iodepth_{}.txt".format(iodepth)
+                per_vp_artifact_file = fun_test.get_test_case_artifact_file_name(post_fix_name=per_vp_post_fix_name)
+                per_vp_stats_thread_id = fun_test.execute_thread_after(time_in_seconds=15,
+                                                                       func=stats_obj.collect_per_vp_stats,
+                                                                       output_file=per_vp_artifact_file,
+                                                                       interval=self.vp_util_args["interval"],
+                                                                       count=int(mpstat_count), threaded=True)
             else:
                 fun_test.critical("Not starting the vp_utils and resource_bam stats collection because of lack of "
                                   "interval and count details")
@@ -1035,9 +1090,9 @@ class ECVolumeLevelTestcase(FunTestCase):
                     mpstat_artifact_file[host_name] = fun_test.get_test_case_artifact_file_name(
                         post_fix_name=mpstat_post_fix_name)
                     mpstat_pid[host_name] = host_handle.mpstat(cpu_list=mpstat_cpu_list,
-                                                                 output_file=self.mpstat_args["output_file"],
-                                                                 interval=self.mpstat_args["interval"],
-                                                                 count=int(mpstat_count))
+                                                               output_file=self.mpstat_args["output_file"],
+                                                               interval=self.mpstat_args["interval"],
+                                                               count=int(mpstat_count))
                 else:
                     fun_test.critical("Not starting the mpstats collection because of lack of interval and count "
                                       "details")
@@ -1077,6 +1132,28 @@ class ECVolumeLevelTestcase(FunTestCase):
                 time_taken = end_time - start_time
                 fun_test.log("Time taken to start an FIO job on a host {}: {}".format(host_name, time_taken))
 
+            # Starting csi perf stats collection if it's set
+            if self.csi_perf_enabled:
+                if row_data_dict["iodepth"] in self.csi_perf_iodepth:
+                    try:
+                        fun_test.sleep("for IO to be fully active", 20)
+                        csi_perf_obj = CsiPerfTemplate(perf_collector_host_name=str(self.perf_listener_host_name),
+                                                       listener_ip=self.perf_listener_ip, fs=self.fs[0],
+                                                       listener_port=4420)  # Temp change for testing
+                        csi_perf_obj.prepare(f1_index=0)
+                        csi_perf_obj.start(f1_index=0, dpc_client=self.storage_controller)
+                        fun_test.log("csi perf stats collection is started")
+                        # dpcsh_client = self.fs.get_dpc_client(f1_index=0, auto_disconnect=True)
+                        fun_test.sleep("Allowing CSI performance data to be collected", 120)
+                        csi_perf_obj.stop(f1_index=0, dpc_client=self.storage_controller)
+                        fun_test.log("CSI perf stats collection is done")
+                    except Exception as ex:
+                        fun_test.critical(str(ex))
+                else:
+                    fun_test.log("Skipping CSI perf collection for current iodepth {}".format(fio_iodepth))
+            else:
+                fun_test.log("CSI perf collection is not enabled, hence skipping it for current test")
+
             # Waiting for all the FIO test threads to complete
             try:
                 fun_test.log("Test Thread IDs: {}".format(test_thread_id))
@@ -1108,9 +1185,14 @@ class ECVolumeLevelTestcase(FunTestCase):
                     fun_test.critical("Volume Stats collection thread is still running...Stopping it now")
                     stats_obj.stop_all = True
                     stats_obj.stop_vol_stats = True
+                if fun_test.fun_test_threads[per_vp_stats_thread_id]["thread"].is_alive():
+                    fun_test.critical("Per VP Stats collection thread is still running...Stopping it now")
+                    stats_obj.stop_all = True
+                    stats_obj.stop_per_vp_stats = True
                 fun_test.join_thread(fun_test_thread_id=stats_thread_id, sleep_time=1)
                 fun_test.join_thread(fun_test_thread_id=stats_rbam_thread_id, sleep_time=1)
                 fun_test.join_thread(fun_test_thread_id=vol_stats_thread_id, sleep_time=1)
+                fun_test.join_thread(fun_test_thread_id=per_vp_stats_thread_id, sleep_time=1)
 
                 # Collecting final network stats and finding diff between final and initial stats
                 if self.collect_network_stats:
@@ -1132,7 +1214,8 @@ class ECVolumeLevelTestcase(FunTestCase):
 
                     # Stats diff between final stats and initial stats
                     resultant_stats[iodepth]["peek_psw_global_stats"] = {}
-                    if final_stats[iodepth]["peek_psw_global_stats"] and initial_stats[iodepth]["peek_psw_global_stats"]:
+                    if final_stats[iodepth]["peek_psw_global_stats"] and initial_stats[iodepth][
+                        "peek_psw_global_stats"]:
                         resultant_stats[iodepth]["peek_psw_global_stats"] = get_diff_stats(
                             new_stats=final_stats[iodepth]["peek_psw_global_stats"],
                             old_stats=initial_stats[iodepth]["peek_psw_global_stats"])
@@ -1186,7 +1269,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                     if op not in aggr_fio_output[iodepth]:
                         aggr_fio_output[iodepth][op] = {}
                     aggr_fio_output[iodepth][op] = Counter(aggr_fio_output[iodepth][op]) + \
-                                           Counter(fun_test.shared_variables["fio"][index][op])
+                                                   Counter(fun_test.shared_variables["fio"][index][op])
 
             fun_test.log("Aggregated FIO Command Output:\n{}".format(aggr_fio_output[iodepth]))
 
@@ -1243,6 +1326,8 @@ class ECVolumeLevelTestcase(FunTestCase):
                                         format(row_data_dict["iodepth"]), filename=resource_bam_artifact_file)
             fun_test.add_auxillary_file(description="Volume Stats - IO depth {}".format(row_data_dict["iodepth"]),
                                         filename=vol_stats_artifact_file)
+            fun_test.add_auxillary_file(description="F1 Per VP Stats - IO depth {}".format(row_data_dict["iodepth"]),
+                                        filename=per_vp_artifact_file)
 
             fun_test.sleep("Waiting in between iterations", self.iter_interval)
 
@@ -1450,5 +1535,5 @@ if __name__ == "__main__":
     # ecscript.add_test_case(SequentialReadWrite1024kBlocks())
     # ecscript.add_test_case(MixedRandReadWriteIOPS())
     # ecscript.add_test_case(OLTPModelReadWriteIOPS())
-    # ecscript.add_test_case(OLAPModelReadWri`teIOPS())
+    # ecscript.add_test_case(OLAPModelReadWriteIOPS())
     ecscript.run()

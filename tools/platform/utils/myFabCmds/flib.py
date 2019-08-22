@@ -52,7 +52,8 @@ def _deploy_bmc():
         else:
             with cd('/mnt/sdmmc0p1/_install'):
                 with settings(hide('stdout', 'stderr')):
-                    run('wget http://vnc-remote-01.fungible.local:9669/pkgs/for-f1/pyserial-install.tar')
+                    run('wget -O pyserial-install.tar http://vnc-shared-06.fungible.local:9669/pkgs/for-f1/pyserial-install.tar')
+
                     run('tar xvf pyserial-install.tar')
                     run('rm -f pyserial-install.tar')
                     print "[%s] essentials installed on ... \n" % (env.host_string)
@@ -331,7 +332,7 @@ def resetF(index=0):
     run('/home/root/f1reset -s {} 0 && sleep 2 && /home/root/f1reset -s {} 1 && /home/root/f1reset -g && sleep 1'.format(index, index), shell=False)
 
 @roles('bmc')
-#@task
+@task
 def check_serial_sockets():
     """ check if tcp sockets are running to replay serial interfaces /dev/ttySD """
     with settings( hide('stderr', 'running'), warn_only=True ):
@@ -364,6 +365,18 @@ def disable_pcie(bus=None):
     for pf in pfs.splitlines():
         sudo('echo 1 > /sys/bus/pci/devices/0000:%s/remove'%pf)
 
+
+@roles('bmc')
+@task
+def stop_serial_sockets():
+    """ kill and restart the relay socket for serial consoles on BMC """
+    with settings(hide('stdout'), warn_only=True ):
+        run("ps -ef | grep -v grep | grep tcp_serial | grep ttyS0 | awk '{print $2}' | xargs kill -9")
+        run("ps -ef | grep -v grep | grep tcp_serial | grep ttyS2 | awk '{print $2}' | xargs kill -9")
+        time.sleep(3)
+        run("ps -ef | grep tcp_serial")
+        time.sleep(3)
+
 @roles('bmc')
 @task
 def restart_serial_sockets():
@@ -395,6 +408,8 @@ def connectF(index=0, reset=False, force=True):
                 i = child.expect (['\nAutoboot in 5 seconds.', '\nf1 # '])
                 if i==0:
                     child.sendline ('noboot')
+                else:
+                    child.sendline ('echo pass')
                 child.expect ('\nf1 # ')
             except:
                 SESSION_ERROR_MSG = "\n\nspawn error: check why serial sockets are failing on {}\n\n".format(env.host) 

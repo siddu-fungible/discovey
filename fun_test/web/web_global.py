@@ -5,11 +5,14 @@ import os
 from django.conf import settings
 # from web.fun_test.session_log import SessionLog, add_session_log
 # from django.core.handlers.wsgi import WSGIRequest
+from fun_settings import WEB_ROOT_DIR
 
 DB_ENGINE_TYPE_POSTGRES = "DB_ENGINE_TYPE_POSTGRES"
 DB_ENGINE_TYPE_SQLITE = "DB_ENGINE_TYPE_SQLITE"
 
 PRIMARY_SETTINGS_FILE = "web.fun_test.settings"
+API_URL = WEB_ROOT_DIR + "/api"
+JINJA_TEMPLATE_DIR = API_URL + "/templates"
 
 
 def initialize_result(failed=False):

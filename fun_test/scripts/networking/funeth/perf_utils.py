@@ -180,6 +180,7 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict,  v
     is_etp_queue_stuck = False
     is_flow_blocked = False
     is_eqm_not_dequeued = False
+    is_wropkt_timeout_skip = False
     for nc_obj in network_controller_objs:
         output_list = []
         f1 = 'F1_{}'.format(network_controller_objs.index(nc_obj))
@@ -242,11 +243,11 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict,  v
         output = nc_obj.peek_fcp_global_stats()
         output_list.append({'FCB': output})
 
-        # FCP tunnel 192
-        tunnel_id = 192
+        # FCP tunnel
+        tunnel_id = 195
         fun_test.log('{} dpc: Get FCP tunnel {} stats'.format(f1, tunnel_id))
         output = nc_obj.peek_fcp_tunnel_stats(tunnel_id)
-        output_list.append({'FCP tunnel {}'.format(192): output})
+        output_list.append({'FCP tunnel {}'.format(tunnel_id): output})
 
         # PSW
         fun_test.log('{} dpc: Get PSW stats'.format(f1))
@@ -258,12 +259,14 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict,  v
         output = nc_obj.peek_erp_global_stats()
         output_list.append({'ERP': output})
 
-        # WRO
+        # WRO - Check WROPKT_TIMEOUT_SKIP
         fun_test.log('{} dpc: Get WRO stats'.format(f1))
         output = nc_obj.peek_wro_global_stats()
         output_list.append({'WRO': output})
+        if output['global'].get('WROPKT_TIMEOUT_SKIP'):
+            is_wropkt_timeout_skip = True
 
-        # WRO tunnel 192
+        # WRO tunnel
         fun_test.log('{} dpc: Get WRO tunnel {} stats'.format(f1, tunnel_id))
         output = nc_obj.peek_wro_tunnel_stats(tunnel_id)
         output_list.append({'WRO tunnel {}'.format(tunnel_id): output})
@@ -355,7 +358,7 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict,  v
     for nc_obj in network_controller_objs:
         nc_obj.disconnect()
 
-    if is_vp_stuck or is_parser_stuck or is_etp_queue_stuck or is_flow_blocked:
+    if is_vp_stuck or is_parser_stuck or is_etp_queue_stuck or is_flow_blocked or is_wropkt_timeout_skip:
         if eqm_output.get(
                 "EFI->EQC Enqueue Interface valid", None) != eqm_output.get("EQC->EFI Dequeue Interface valid", None):
             is_eqm_not_dequeued = True
@@ -370,6 +373,8 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict,  v
             messages.append('Flow blocked')
         if is_eqm_not_dequeued:
             messages.append('EQM not dequeued')
+        if is_wropkt_timeout_skip:
+            messages.append('WROPKT_TIMEOUT_SKIP happened')
         fun_test.critical('; '.join(messages))
 
         return True
@@ -574,7 +579,7 @@ def mlx5_irq_affinity(linux_obj):
     linux_obj.command(';'.join(cmds_cat))
 
 
-def redis_del_fcp_ftep(linux_obj, ws='/scratch'):
+def redis_del_fcp_ftep(linux_obj, ws='/scratch/opt/fungible'):
     """In redis, delete FCP FTEP to tear down FCP tunnel."""
     # TODO: make it setup independent
     ftep_dict = {

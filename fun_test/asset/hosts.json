@@ -85,6 +85,14 @@
       "password": "ADMIN"
     }
   },
+  "poc-server-11": {
+    "host_ip": "poc-server-11",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "csi_perf": {
+      "tools_directory": "/home/localadmin"
+    }
+  },
   "cab03-qa-01": {
     "host_ip": "cab03-qa-01",
     "ssh_username": "localadmin",
@@ -131,6 +139,26 @@
     "ssh_password": "Precious1*",
     "ipmi_info": {
       "host_ip": "cab03-qa-05-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
+  },
+    "cab03-qa-06": {
+    "host_ip": "cab03-qa-06",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "cab03-qa-06-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
+  },
+  "cab03-qa-07": {
+    "host_ip": "cab03-qa-07",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "cab03-qa-07-ilo",
       "username": "ADMIN",
       "password": "ADMIN"
     }

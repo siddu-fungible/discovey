@@ -537,6 +537,32 @@ class User(FunModel):
     def __str__(self):
         return "{} {} {}".format(self.first_name, self.last_name, self.email)
 
+class PerformanceUserWorkspaces(FunModel):
+    email = models.EmailField(max_length=60)
+    workspace_name = models.TextField(default="")
+    description = models.TextField(default="")
+    date_created = models.DateTimeField(default=datetime.now)
+    date_modified = models.DateTimeField(default=datetime.now)
+
+    def __str__(self):
+        return (str(self.__dict__))
+
+
+class InterestedMetrics(FunModel):
+    workspace_id = models.IntegerField()
+    email = models.EmailField(max_length=60)
+    metric_id = models.IntegerField()
+    subscribe = models.BooleanField(default=False)
+    track = models.BooleanField(default=False)
+    chart_name = models.TextField(default='')
+    category = models.TextField(default='')
+    lineage = models.TextField(default="")
+    date_created = models.DateTimeField(default=datetime.now)
+    date_modified = models.DateTimeField(default=datetime.now)
+
+    def __str__(self):
+        return (str(self.__dict__))
+
 
 class Daemon(FunModel):
     name = models.TextField(unique=True)

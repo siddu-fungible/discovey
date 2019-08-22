@@ -139,7 +139,9 @@ def chart_info(request):
                   "source": chart.source,
                   "base_line_date": chart.base_line_date,
                   "visualization_unit": chart.visualization_unit,
-                  "pk": chart.pk}
+                  "pk": chart.pk,
+                  "last_good_score": chart.last_good_score,
+                  "penultimate_good_score": chart.penultimate_good_score}
         for markers in milestones:
             markers_dict[markers.milestone_name] = markers.milestone_date
         result["milestone_markers"] = markers_dict
@@ -914,42 +916,6 @@ def validate_jira(jira_id):
     except Exception:
         return None
     return None
-
-
-@csrf_exempt
-@api_safe_json_response
-def delete_jira_info(request, metric_id, jira_id):
-    try:
-        c = MetricChart.objects.get(metric_id=metric_id)
-        if jira_id:
-            jira_ids = json.loads(c.jira_ids)
-            if jira_id in jira_ids:
-                jira_ids.remove(jira_id)
-                c.jira_ids = json.dumps(jira_ids)
-                c.save()
-    except ObjectDoesNotExist:
-        logger.critical("No data found - Deleting jira ids for metric id {}".format(metric_id))
-    return "Ok"
-
-
-@csrf_exempt
-@api_safe_json_response
-def fetch_jira_info(request, metric_id):
-    jira_info = {}
-    try:
-        c = MetricChart.objects.get(metric_id=metric_id)
-        if c.jira_ids:
-            jira_ids = json.loads(c.jira_ids)
-            for jira_id in jira_ids:
-                jira_response = validate_jira(jira_id)
-                jira_data = {}
-                jira_data["id"] = jira_id
-                jira_data["summary"] = jira_response.fields.summary if jira_response else None
-                jira_data["status"] = jira_response.fields.status if jira_response else None
-                jira_info[jira_id] = jira_data if jira_response else None
-    except ObjectDoesNotExist:
-        logger.critical("No data found - fetching jira ids for metric id {}".format(metric_id))
-    return jira_info
 
 
 @csrf_exempt

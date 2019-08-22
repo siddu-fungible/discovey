@@ -1,12 +1,14 @@
 import os
 import django
+from web.web_global import PRIMARY_SETTINGS_FILE
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", PRIMARY_SETTINGS_FILE)
+django.setup()
 import json
 import random, pytz
 from dateutil.parser import parse
 import re
 from fun_global import *
 from datetime import datetime
-from web.web_global import PRIMARY_SETTINGS_FILE
 from django.apps import apps
 from fun_global import get_localized_time
 from web.fun_test.settings import COMMON_WEB_LOGGER_NAME
@@ -15,11 +17,9 @@ from fun_settings import MAIN_WEB_APP
 
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 from datetime import datetime, timedelta
-
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", PRIMARY_SETTINGS_FILE)
-django.setup()
 from web.fun_test.site_state import *
 from web.fun_test.metrics_models import MetricChart, MileStoneMarkers, LastMetricId
+app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 
 
 class MetricLib():
@@ -238,8 +238,46 @@ class MetricLib():
         chart.data_sets = json.dumps(data_sets)
         chart.save()
 
+    def delete_jira_info(self, chart, jira_id):
+        try:
+            if jira_id:
+                jira_ids = json.loads(chart.jira_ids)
+                if jira_id in jira_ids:
+                    jira_ids.remove(jira_id)
+                    chart.jira_ids = json.dumps(jira_ids)
+                    chart.save()
+        except ObjectDoesNotExist:
+            logger.critical("No data found - Deleting jira id {}".format(jira_id))
+        return "Ok"
+
+    def validate_jira(self, jira_id):
+        project_name, id = jira_id.split('-')
+        jira_obj = app_config.get_jira_manager()
+        query = 'project="' + str(project_name) + '" and id="' + str(jira_id) + '"'
+        try:
+            jira_valid = jira_obj.get_issues_by_jql(jql=query)
+            if jira_valid:
+                jira_valid = jira_valid[0]
+                return jira_valid
+        except Exception:
+            return None
+        return None
+
+    def remove_resolved_bugs(self):
+        charts = MetricChart.objects.all()
+        closed_status = ["Resolved", "Closed", "Done"]
+        for chart in charts:
+            jira_ids = json.loads(chart.jira_ids)
+            if (len(jira_ids)):
+                for jira_id in jira_ids:
+                    jira_info = self.validate_jira(jira_id=jira_id)
+                    if jira_info:
+                        if jira_info.fields.status.name in closed_status:
+                            print chart.chart_name, jira_id
+                            self.delete_jira_info(chart=chart, jira_id=jira_id)
+
 if __name__ == "__main__":
     ml = MetricLib()
-    ml.update_weights_for_wip()
+    ml.remove_resolved_bugs()
 
 

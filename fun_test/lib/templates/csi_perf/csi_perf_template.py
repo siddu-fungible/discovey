@@ -16,7 +16,7 @@ TOOLS_DIRECTORY = "/home/localadmin"
 PERF_LISTENER = "perf_listener.py"
 PERF_LISTENER_PATH = TOOLS_DIRECTORY + "/" + PERF_LISTENER
 FUNOS_F1_NAME = "funos-f1"
-MAX_TRACE_JOB_DIRECTORIES = 5
+MAX_TRACE_JOB_DIRECTORIES = 50
 EXPECTED_TOOLS = ["process_perf.sh", "view_perf.sh", "listener_lib.py", "perf_listener.py"]
 EXPECTED_DOCKER_IMAGES = ["docker.fungible.com/perf_processing", "docker.fungible.com/perf_server"]
 EXPECTED_TOOL_LOCATIONS = {"PalladiumOnDemand": [
@@ -246,5 +246,5 @@ class CsiPerfTemplate():
         return True
 
 if __name__ == "__main__":
-    p = CsiPerfTemplate(perf_collector_host_name="poc-server-04", listener_ip="123", fs=None, setup_docker=True)
+    p = CsiPerfTemplate(perf_collector_host_name="poc-server-11", listener_ip="123", fs=None, setup_docker=True)
     p.prepare(f1_index=0)

@@ -1,4 +1,4 @@
 [
   {"info": {"tags": ["networking-funeth-performance"]}},
-  {"path": "networking/funeth/performance.py", "test_case_ids": [11000, 11001, 11002, 12000, 12001, 12002], "inputs": {"debug": 0, "control_plane": 1, "hu_host_vm": 1, "configure_overlay": 1}}
+  {"path": "networking/funeth/performance.py", "test_case_ids": [12000, 12001, 12002], "inputs": {"debug": 0, "control_plane": 1, "hu_host_vm": 1, "configure_overlay": 1}}
 ]
