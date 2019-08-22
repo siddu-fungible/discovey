@@ -23,7 +23,7 @@ class SetupBringup(FunTestScript):
 
     def setup(self):
         self.server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() +
-                                                      '/ali_bmv_storage_sanity.json')
+                                                 '/ali_bmv_storage_sanity.json')
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
         fs_spec = fun_test.get_asset_manager().get_fs_by_name(str(self.server_key["fs"][fs_name]["fs-name"]))
         servers_mode = self.server_key["fs"][fs_name]["hosts"]
@@ -144,8 +144,9 @@ class BootF1(FunTestCase):
             else:
                 fun_test.add_checkpoint("Gen3x2 SSD count on F1_{}".format(f1index),
                                         "FAILED", expected=0, actual=gen3x2_count)
+
                 gen3x2_fail = True
-        '''
+
         funcp_obj = FunControlPlaneBringup(fs_name=self.server_key["fs"][fs_name]["fs-name"])
         fun_test.test_assert(expression=funcp_obj.bringup_funcp(prepare_docker=False), message="Bringup FunCP")
         funcp_obj.assign_mpg_ips(static=self.server_key["fs"][fs_name]["mpg_ips"]["static"],
@@ -169,7 +170,7 @@ class BootF1(FunTestCase):
         funeth_obj = Funeth(tb_config_obj)
         fun_test.shared_variables['funeth_obj'] = funeth_obj
         setup_hu_host(funeth_obj, update_driver=True, sriov=4, num_queues=1)
-        '''
+
 
         if ssd_already_up_count_fail or ssd_up_count_fail or gen3x4_fail or gen3x2_fail:
             fun_test.test_assert(False, "SSD checks failed")

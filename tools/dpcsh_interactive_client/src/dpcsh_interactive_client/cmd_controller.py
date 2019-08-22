@@ -994,7 +994,17 @@ class CmdController(Cmd):
 
     def get_flow_list(self, args):
         grep_regex = args.grep
-        self._flow_cmd_obj.get_flow_list(grep_regex=grep_regex)
+        pp = args.pp
+        hu_id = args.hu_id
+        tx = args.tx
+        rx = args.rx
+        if tx is None and rx is None:
+            tx=1
+            rx=1
+        if args.pp:
+            self._flow_cmd_obj.get_flow_list_pp(hu_id=hu_id, tx=tx, rx=rx, grep_regex=grep_regex)
+        else:
+            self._flow_cmd_obj.get_flow_list(grep_regex=grep_regex)
 
     def get_flow_blocked(self, args):
         grep_regex = args.grep
@@ -1292,7 +1302,7 @@ class CmdController(Cmd):
 
 
 if __name__ == '__main__':
-    cmd_obj = CmdController(target_ip="10.1.21.8", target_port=40220, verbose=False)
+    cmd_obj = CmdController(target_ip="10.1.20.26", target_port=40220, verbose=False)
     cmd_obj.cmdloop(intro="hello")
 
 

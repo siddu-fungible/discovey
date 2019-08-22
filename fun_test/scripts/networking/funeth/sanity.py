@@ -16,6 +16,9 @@ import re
 import struct
 
 
+fun_test.enable_profiling()
+
+
 try:
     job_environment = fun_test.get_job_environment()
     DPC_PROXY_IP = str(job_environment['UART_HOST'])
@@ -192,6 +195,24 @@ def setup_funcp(test_bed_type, update_funcp=True):
     # TODO: sanity check of control plane
 
 
+class FunCPSetup:
+    def __init__(self, test_bed_type, update_funcp=True):
+        self.funcp_obj = FunControlPlaneBringup(fs_name=test_bed_type)
+        self.update_funcp = update_funcp
+
+    def bringup(self, fs):
+        self.funcp_obj.bringup_funcp(prepare_docker=self.update_funcp)
+        # TODO: Make it setup independent
+        self.funcp_obj.assign_mpg_ips(static=True, f1_1_mpg='10.1.20.241', f1_0_mpg='10.1.20.242',
+                                      f1_0_mpg_netmask="255.255.252.0",
+                                      f1_1_mpg_netmask="255.255.252.0"
+                                      )
+        abstract_json_file_f1_0 = '{}/networking/tb_configs/FS11_F1_0.json'.format(SCRIPTS_DIR)
+        abstract_json_file_f1_1 = '{}/networking/tb_configs/FS11_F1_1.json'.format(SCRIPTS_DIR)
+        self.funcp_obj.funcp_abstract_config(abstract_config_f1_0=abstract_json_file_f1_0,
+                                             abstract_config_f1_1=abstract_json_file_f1_1)
+
+
 def setup_funcp_on_fs(test_bed_type):
 
     testbed_info = fun_test.parse_file_to_json(SCRIPTS_DIR +
@@ -222,7 +243,7 @@ def start_vm(funeth_obj_hosts, funeth_obj_vms):
                     linux_obj.sudo_command(cmd)
 
 
-def configure_overlay(network_controller_obj_f1_0, network_controller_obj_f1_1):
+def dpcsh_configure_overlay(network_controller_obj_f1_0, network_controller_obj_f1_1):
 
     # TODO: Define overlay args in config file
     overlay_config_dict = {
@@ -295,23 +316,24 @@ def configure_overlay(network_controller_obj_f1_0, network_controller_obj_f1_1):
                 for i in CPU_LIST_VM:
                     for j in (netperf_manager.NETSERVER_FIXED_PORT_CONTROL_BASE,
                               netperf_manager.NETSERVER_FIXED_PORT_DATA_BASE):
-                        for flow_type, nh_index in zip(('vxlan_encap', 'vxlan_decap'), (0, 1)):
-                            for sip, dip in zip(src_flows, dst_flows):
-                                if flow_type == 'vxlan_encap':
-                                    flow_sip, flow_dip = sip, dip
-                                else:
-                                    flow_sip, flow_dip = dip, sip
-                                # flows
-                                nc_obj.overlay_flow_add(
-                                    flow_type=flow_type,
-                                    nh_index=nh_index,
-                                    vif=lport_num,
-                                    flow_sip=flow_sip,
-                                    flow_dip=flow_dip,
-                                    flow_sport=i+j,
-                                    flow_dport=i+j,
-                                    flow_proto=6
-                                )
+                        for d in range(11000, 11021) + range(12000, 12021):  # HU_HU_FCP_OL_VM, 11xxx, HU_HU_NFCP_OL_VM: 12xxx
+                            for flow_type, nh_index in zip(('vxlan_encap', 'vxlan_decap'), (0, 1)):
+                                for sip, dip in zip(src_flows, dst_flows):
+                                    if flow_type == 'vxlan_encap':
+                                        flow_sip, flow_dip = sip, dip
+                                    else:
+                                        flow_sip, flow_dip = dip, sip
+                                    # flows
+                                    nc_obj.overlay_flow_add(
+                                        flow_type=flow_type,
+                                        nh_index=nh_index,
+                                        vif=lport_num,
+                                        flow_sip=flow_sip,
+                                        flow_dip=flow_dip,
+                                        flow_sport=i+j+d,
+                                        flow_dport=i+j+d,
+                                        flow_proto=6
+                                    )
                 # vif_table
                 for mac_addr in vif_table_mac_entries:
                     nc_obj.overlay_vif_table_add_mac_entry(vnid=vnid, mac_addr=mac_addr, egress_vif=lport_num)
@@ -352,11 +374,12 @@ class FunethSanity(FunTestScript):
                 if nu_all_clusters:
                     f1_0_boot_args += ' override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]}'
                     f1_1_boot_args += ' override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]}'
+                funcp_setup_obj = FunCPSetup(test_bed_type=test_bed_type, update_funcp=update_funcp)
                 topology_helper = TopologyHelper()
                 topology_helper.set_dut_parameters(dut_index=0,
                                                    f1_parameters={0: {"boot_args": f1_0_boot_args},
-                                                                  1: {"boot_args": f1_1_boot_args}}
-                                                   )
+                                                                  1: {"boot_args": f1_1_boot_args}},
+                                                   fun_cp_callback=funcp_setup_obj.bringup)
             else:
                 boot_args = "app=hw_hsu_test retimer=0,1 --dpc-uart --dpc-server --csr-replay --all_100g --disable-wu-watchdog"
                 if csi_perf_enabled:
@@ -392,10 +415,10 @@ class FunethSanity(FunTestScript):
         fun_test.shared_variables['network_controller_obj'] = network_controller_obj_f1_0
 
         # TODO: make it work for other setup
-        if test_bed_type == 'fs-11' and control_plane:
-            setup_funcp(test_bed_type, update_funcp=update_funcp)
-        elif test_bed_type != 'fs-11' and control_plane:
-            setup_funcp_on_fs(test_bed_type, update_funcp=update_funcp)
+        #if test_bed_type == 'fs-11' and control_plane:
+        #    setup_funcp(test_bed_type, update_funcp=update_funcp)
+        if test_bed_type != 'fs-11' and control_plane:
+            setup_funcp_on_fs(test_bed_type)
         tb_config_obj = tb_configs.TBConfigs(TB)
         funeth_obj = Funeth(tb_config_obj,
                             fundrv_branch=fundrv_branch,
@@ -444,7 +467,7 @@ class FunethSanity(FunTestScript):
 
             # Configure overlay
             if configure_overlay:
-                configure_overlay(network_controller_obj_f1_0, network_controller_obj_f1_1)
+                dpcsh_configure_overlay(network_controller_obj_f1_0, network_controller_obj_f1_1)
                 network_controller_obj_f1_0.disconnect()
                 network_controller_obj_f1_1.disconnect()
 
