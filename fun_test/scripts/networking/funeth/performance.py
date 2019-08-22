@@ -83,6 +83,7 @@ class FunethPerformance(sanity.FunethSanity):
         driver_commit = super(FunethPerformance, self).__getattribute__('driver_commit')
         driver_bld =  super(FunethPerformance, self).__getattribute__('driver_bld')
         come_linux_obj = super(FunethPerformance, self).__getattribute__('come_linux_obj')
+        funeth_obj = super(FunethPerformance, self).__getattribute__('funeth_obj')
         if sanity.csi_perf_enabled:
             csi_perf_obj = super(FunethPerformance, self).__getattribute__('csi_perf_obj')
         else:
@@ -94,8 +95,8 @@ class FunethPerformance(sanity.FunethSanity):
         fun_test.shared_variables['come_linux_obj'] = come_linux_obj
         fun_test.shared_variables['csi_perf_obj'] = csi_perf_obj
 
-        tb_config_obj = tb_configs.TBConfigs(TB)
-        funeth_obj = funeth.Funeth(tb_config_obj)
+        #tb_config_obj = tb_configs.TBConfigs(TB)
+        #funeth_obj = funeth.Funeth(tb_config_obj)
         fun_test.shared_variables['funeth_obj'] = funeth_obj
         linux_objs = funeth_obj.linux_obj_dict.values()
 
@@ -114,10 +115,12 @@ class FunethPerformance(sanity.FunethSanity):
 
         # HU host is VM
         if sanity.hu_host_vm:
-            tb_config_obj_ul_vm = tb_configs.TBConfigs(tb_configs.get_tb_name_vm(TB, 'ul'))
-            tb_config_obj_ol_vm = tb_configs.TBConfigs(tb_configs.get_tb_name_vm(TB, 'ol'))
-            funeth_obj_ul_vm = funeth.Funeth(tb_config_obj_ul_vm)
-            funeth_obj_ol_vm = funeth.Funeth(tb_config_obj_ol_vm)
+            #tb_config_obj_ul_vm = tb_configs.TBConfigs(tb_configs.get_tb_name_vm(TB, 'ul'))
+            #tb_config_obj_ol_vm = tb_configs.TBConfigs(tb_configs.get_tb_name_vm(TB, 'ol'))
+            #funeth_obj_ul_vm = funeth.Funeth(tb_config_obj_ul_vm)
+            #funeth_obj_ol_vm = funeth.Funeth(tb_config_obj_ol_vm)
+            funeth_obj_ul_vm = super(FunethPerformance, self).__getattribute__('funeth_obj_ul_vm')
+            funeth_obj_ol_vm = super(FunethPerformance, self).__getattribute__('funeth_obj_ol_vm')
             fun_test.shared_variables['funeth_obj_ul_vm'] = funeth_obj_ul_vm
             fun_test.shared_variables['funeth_obj_ol_vm'] = funeth_obj_ol_vm
 
