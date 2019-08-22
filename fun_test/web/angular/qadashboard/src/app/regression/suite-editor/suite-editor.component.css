@@ -1,0 +1,40 @@
+.fun-form-input-field-label {
+  font-size: 14px;
+}
+
+.fun-form-inline-field {
+  margin-right: 10px;
+}
+
+label {
+  font-size: 14px;
+}
+
+
+/* Forms */
+.fun-form {
+  margin: 10px
+}
+.fun-form-field-container {
+  margin-top: 15px;
+  margin-bottom: 5px;
+
+}
+.fun-form-field {
+  display: block;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.fun-form .fun-form-label {
+  margin-top: 5px;
+  /*font-size: 12px;*/
+  display: block;
+}
+
+input[disabled].fun-form-input  {
+  color: #DCDAD1;
+  padding: 2px;
+  margin: 0 0 0 0;
+  background-color: lightgrey;
+}

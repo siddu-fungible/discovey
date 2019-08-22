@@ -3,6 +3,7 @@ import {FormControl, FormGroup, Validators} from "@angular/forms";
 import {TestBedService} from "../test-bed/test-bed.service";
 import {Observable, of} from "rxjs";
 import {switchMap} from "rxjs/operators";
+import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
 
 class SuiteEntry {
   path: string;
@@ -67,7 +68,7 @@ export class SuiteEditorComponent implements OnInit {
 
   });*/
 
-  constructor(private testBedService: TestBedService) {
+  constructor(private testBedService: TestBedService, private modalService: NgbModal) {
 
   }
 
@@ -203,5 +204,14 @@ export class SuiteEditorComponent implements OnInit {
     console.log(this.flattenedAssetTypeNames);
     console.log(this.flattenedAssetTypeNameMap);
 
+  }
+
+  onClickCustomTestBedSpec(content) {
+    this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title'}).result.then((suiteExecution) => {
+
+    }, ((reason) => {
+      console.log("Rejected");
+      //this.closeResult = `Dismissed ${this.getDismissReason(reason)}`;
+    }));
   }
 }

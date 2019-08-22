@@ -545,31 +545,7 @@ tr.text-center > th {
 }
 
 
-/* Forms */
-.fun-form {
-  margin: 10px
-}
-.fun-form-field-container {
-  margin-top: 15px;
-  margin-bottom: 5px;
 
-}
-.fun-form-field {
-  display: block;
-}
-
-.fun-form .fun-form-label {
-  margin-top: 5px;
-  /*font-size: 12px;*/
-  display: block;
-}
-
-input[disabled].fun-form-input  {
-  color: #DCDAD1;
-  padding: 2px;
-  margin: 0 0 0 0;
-  background-color: lightgrey;
-}
 
 /* Button */
 .btn.submit-button {
@@ -605,4 +581,5 @@ input[disabled].fun-form-input  {
 
 label {
   margin-bottom: unset;
+  display: unset;
 }
