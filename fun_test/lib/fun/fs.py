@@ -48,6 +48,7 @@ class BootPhases:
     FS_BRING_UP_CALL_FUNCP_CALLBACK = "FS_BRING_UP_CALL_FUNCP_CALLBACK"
     FS_BRING_UP_COME_INITIALIZE = "FS_BRING_UP_COME_INITIALIZE"
     FS_BRING_UP_COME_INITIALIZE_WORKER_THREAD = "FS_BRING_UP_COME_INITIALIZE_WORKER_THREAD"
+    FS_BRING_UP_COME_INITIALIZED = "FS_BRING_UP_COME_INITIALIZED"
     FS_BRING_UP_COMPLETE = "FS_BRING_UP_COMPLETE"
     FS_BRING_UP_ERROR = "FS_BRING_UP_ERROR"
 
@@ -571,6 +572,7 @@ class BootupWorker(Thread):
             self.worker.run()
             for f1_index, f1 in fs.f1s.iteritems():
                 f1.set_dpc_port(come.get_dpc_port(f1_index))
+            self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COME_INITIALIZED)
             try:
                 fs.get_bmc().disconnect()
                 fun_test.log(message="BMC disconnect", context=self.context)
@@ -581,22 +583,11 @@ class BootupWorker(Thread):
 
             come = self.fs.get_come()
             bmc = self.fs.get_bmc()
-            """
-            fun_test.test_assert(expression=bmc.ensure_come_is_up(come=come, max_wait_time=300, power_cycle=True),
-                                 message="Ensure ComE is up",
-                                 context=self.fs.context)
-
-            self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COME_INITIALIZE)
-            fun_test.test_assert(expression=self.fs.come.initialize(disable_f1_index=self.fs.disable_f1_index),
-                                 message="ComE initialized",
-                                 context=self.fs.context)
-            """
 
             if self.fs.fun_cp_callback:
                 fs.set_boot_phase(BootPhases.FS_BRING_UP_CALL_FUNCP_CALLBACK)
                 fun_test.log("Calling fun CP callback from Fs")
                 self.fs.fun_cp_callback(self)
-            self.fs.come_initialized = True
             self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COMPLETE)
 
         except Exception as ex:
@@ -627,11 +618,7 @@ class ComEInitializationWorker(Thread):
                                      message="ComE initialized",
                                      context=self.fs.context)
 
-                # if self.fs.fun_cp_callback:
-                #    fun_test.log("Calling fun CP callback from Fs")
-                #    self.fs.fun_cp_callback(self.fs.get_come())
                 self.fs.come_initialized = True
-                # self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COMPLETE)
         except Exception as ex:
             self.fs.set_boot_phase(BootPhases.FS_BRING_UP_ERROR)
             raise ex
@@ -1137,6 +1124,9 @@ class Fs(object, ToDictMixin):
     def is_ready(self):
         fun_test.log(message="Boot-phase: {}".format(self.get_boot_phase()), context=self.context)
         return self.boot_phase == BootPhases.FS_BRING_UP_COMPLETE
+
+    def is_come_ready(self):
+        return self.come_initialized
 
     def come_reset(self, power_cycle=None, non_blocking=None, max_wait_time=300):
         return self.bmc.come_reset(come=self.get_come(),
