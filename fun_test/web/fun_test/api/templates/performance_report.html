@@ -3,6 +3,8 @@
     <style>
         table {
             border: solid 1px black;
+            border-collapse: collapse;
+            width: 80% !important;
         }
 
         th {
@@ -10,22 +12,28 @@
         }
 
         .header {
-            background-color: #595959;
-            color: white;
+            background-color: #bfbfbf;
+            color: black;
         }
 
         .header-text {
-            font-weight: lighter;
             text-align: center;
         }
-        .row-border td{
+
+        .row-border td {
             border-bottom: 1px solid black;
+            text-align: center;
+        }
+
+        .all-border td{
+            border: solid 1px black;
             text-align: center;
         }
     </style>
 </head>
+<body>
 {% for report in all_reports %}
-<h3>{{ report.lineage }}</h3><br>
+<h3>{{ report.lineage }}</h3>
 <b>Chart name: </b>{{ report.chart_name }}<br>
 <b>Link to chart: </b><a href="{{ report.url }}" target="_blank">Link</a><br>
 <b>Bugs: </b>
@@ -36,7 +44,7 @@
 <br>
 <table>
     <tr class="header">
-        <th class="header-text" rowspan="2">Dataset name</th>
+        <th class="header-text" rowspan="2">Series name</th>
         <th class="header-text" rowspan="2">Unit</th>
         <th class="header-text" rowspan="2">Yesterday</th>
         <th class="header-text" rowspan="2">Today</th>
@@ -66,7 +74,7 @@
         </td>
     </tr>
     {% for data in data_set.history %}
-    <tr>
+    <tr class="all-border">
         <td>{{ data.date }}</td>
         <td>{{ data.value }}</td>
     </tr>
@@ -76,4 +84,5 @@
 <br>
 <br>
 {% endfor %}
+</body>
 </html>
