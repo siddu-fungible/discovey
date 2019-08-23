@@ -58,7 +58,7 @@ class CheckCOMe(FunTestCase):
     come_linux = None
 
     def describe(self):
-        self.set_test_details(id=1, summary="Reboot COMe and CHeck Fungible PFs",
+        self.set_test_details(id=2, summary="Reboot COMe and CHeck Fungible PFs",
                               steps="""
 
                                       """)
@@ -79,6 +79,84 @@ class CheckCOMe(FunTestCase):
         pass
 
 
+class CheckSSDSpeed(FunTestCase):
+
+    def describe(self):
+        self.set_test_details(id=1, summary="Check SSD Linkspeed and count",
+                              steps="""
+
+                                      """)
+
+    def setup(self):
+
+        # TODO: FS33 F1_1 takes longer time to boot
+        fun_test.sleep("Waiting for FunOS Boot to complete", seconds=180)
+
+    def run(self):
+        # Check SSD link & count
+        fs_0 = fun_test.shared_variables['fs_object']
+        ssd_up_count_fail = False
+        ssd_already_up_count_fail = False
+        gen3x2_fail = False
+        gen3x4_fail = False
+        f1_0_ssd_count = 4
+        f1_1_ssd_count = 4
+
+        match_strings = "Gen3x4|Gen3x2"
+        for f1index in 0, 1:
+            uart_path = fs_0.get_uart_log_file(f1_index=f1index)
+            uart_content = os.popen("cat %s" % uart_path).read()
+            match_str_list = re.findall(r'{}'.format(match_strings), uart_content, re.IGNORECASE)
+            gen3x4_count = match_str_list.count("Gen3x4")
+            gen3x2_count = match_str_list.count("Gen3x2")
+            fun_test.log_section("SSD Details on F1_{}".format(f1index))
+            fun_test.log("SSD in Gen3x4 : {}".format(gen3x4_count))
+            fun_test.log("SSD in Gen3x2 : {}".format(gen3x2_count))
+
+            counter_name = "f1_{}_ssd_count".format(f1index)
+            ssd_count = eval(counter_name)
+
+            for line in uart_content.split("\n"):
+                if "INFO volume_manager \"backend:" in line:
+                    if "devices up" in line:
+                        match_count = re.search(r'backend:\s+(?P<count>\d+)', line)
+                        if match_count:
+                            actual_ssd_count = int(match_count.group('count'))
+                            fun_test.add_checkpoint(checkpoint="F1_{} backend devices up".format(f1index),
+                                                    expected=ssd_count, actual=actual_ssd_count)
+                            if actual_ssd_count != ssd_count:
+                                ssd_up_count_fail = True
+                    elif "devices are already up" in line:
+                        match_count = re.search(r'backend:\s+(?P<count>\d+)', line)
+                        if match_count:
+                            actual_ssd_up_count = int(match_count.group('count'))
+                            fun_test.add_checkpoint(checkpoint="F1_{} backend devices already up".format(f1index),
+                                                    expected=ssd_count, actual=actual_ssd_up_count)
+                            if actual_ssd_up_count != ssd_count:
+                                ssd_already_up_count_fail = True
+
+            if gen3x4_count / 2 == 4:
+                fun_test.add_checkpoint("Gen3x4 SSD count on F1_{}".format(f1index),
+                                        "PASSED", expected=ssd_count, actual=gen3x4_count)
+            else:
+                fun_test.add_checkpoint("Gen3x4 SSD count on F1_{}".format(f1index),
+                                        "FAILED", expected=ssd_count, actual=gen3x4_count)
+                gen3x4_fail = True
+            if gen3x2_count == 0:
+                fun_test.add_checkpoint("Gen3x2 SSD count on F1_{}".format(f1index),
+                                        "PASSED", expected=0, actual=gen3x2_count)
+            else:
+                fun_test.add_checkpoint("Gen3x2 SSD count on F1_{}".format(f1index),
+                                        "FAILED", expected=0, actual=gen3x2_count)
+
+                gen3x2_fail = True
+
+        if ssd_already_up_count_fail or ssd_up_count_fail or gen3x4_fail or gen3x2_fail:
+            fun_test.test_assert(False, "SSD checks failed")
+
+    def cleanup(self):
+        pass
+
 class F1reset(FunTestScript):
     come_linux = None
 
@@ -95,67 +173,11 @@ class F1reset(FunTestScript):
         fs_0 = Fs.get(fs_spec=fs_spec, tftp_image_path=boot_image, boot_args="abc")
         fun_test.test_assert(fs_0.bmc_initialize(), "BMC initialize") # starts netcat
         fun_test.test_assert(fs_0.set_f1s(), "Set F1s")
-
+        fun_test.shared_variables['fs_object'] = fs_0
         for f1index in 0, 1:
             fs_0.bmc.start_uart_log_listener(f1_index=f1index, serial_device=None)
 
         fun_test.test_assert(fs_0.fpga_initialize(), "FPGA initiaize")
-
-        fun_test.sleep("Waiting for FunOS Boot", seconds=10)
-        # Check SSD link & count
-        ssd_up_count_fail = False
-        ssd_already_up_count_fail = False
-        gen3x2_fail = False
-        gen3x4_fail = False
-
-        match_strings = "Gen3x4|Gen3x2|backend: 4 devices up"
-        for f1index in 0, 1:
-            uart_path = fs_0.get_uart_log_file(f1_index=f1index)
-            uart_content = os.popen("cat %s" % uart_path).read()
-            match_str_list = re.findall(r'{}'.format(match_strings), uart_content, re.IGNORECASE)
-            gen3x4_count = match_str_list.count("Gen3x4")
-            gen3x2_count = match_str_list.count("Gen3x2")
-            backend_vol = match_str_list.count("backend: 4 devices up")
-            fun_test.log_section("SSD Details on F1_{}".format(f1index))
-            fun_test.log("SSD in Gen3x4 : {}".format(gen3x4_count))
-            fun_test.log("SSD in Gen3x2 : {}".format(gen3x2_count))
-            # if backend_vol != 1:
-            #     fun_test.critical("Error in volume count detected by FunOS")
-            for line in uart_content.split("\n"):
-                if "INFO volume_manager \"backend:" in line:
-                    if "devices up" in line:
-                        backend_dev = line.split("backend:", 1)[1]
-                        count = re.findall("\d+", backend_dev)
-                        # count = re.search(r'backend:\s+(?P<count>\d+)', line)
-                        fun_test.add_checkpoint(checkpoint="Backend devices up", expected=4, actual=int(count[0]))
-                        if int(count[0]) != 4:
-                            ssd_up_count_fail = True
-                    elif "devices are already up" in line:
-                        backend_dev = line.split("backend:", 1)[1]
-                        count = re.findall("\d+", backend_dev)
-                        fun_test.add_checkpoint(checkpoint="Backend devices already up",
-                                                expected=4, actual=int(count[0]))
-                        if int(count[0]) != 4:
-                            ssd_already_up_count_fail = True
-
-            if gen3x4_count == 8:
-                fun_test.add_checkpoint("Gen3x4 SSD count on F1_{}".format(f1index),
-                                        "PASSED", expected=8, actual=gen3x4_count)
-            else:
-                fun_test.add_checkpoint("Gen3x4 SSD count on F1_{}".format(f1index),
-                                        "FAILED", expected=8, actual=gen3x4_count)
-                gen3x4_fail = True
-            if gen3x2_count == 0:
-                fun_test.add_checkpoint("Gen3x2 SSD count on F1_{}".format(f1index),
-                                        "PASSED", expected=0, actual=gen3x2_count)
-            else:
-                fun_test.add_checkpoint("Gen3x2 SSD count on F1_{}".format(f1index),
-                                        "FAILED", expected=0, actual=gen3x2_count)
-
-                gen3x2_fail = True
-
-        if ssd_already_up_count_fail or ssd_up_count_fail or gen3x4_fail or gen3x2_fail:
-            fun_test.test_assert(False, "SSD checks failed")
 
     def cleanup(self):
         pass
@@ -173,6 +195,7 @@ if __name__ == '__main__':
         fun_test.shared_variables["f1_reset"] = f1_reset
     if f1_reset:
         ts = F1reset()
+        ts.add_test_case(CheckSSDSpeed())
         print "F1 reset"
     else:
         ts = SetupBringup()
