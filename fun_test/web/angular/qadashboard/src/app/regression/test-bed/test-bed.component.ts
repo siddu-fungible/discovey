@@ -308,7 +308,7 @@ export class TestBedComponent implements OnInit {
     })
   }
 
-  onSubmit(testBed) {
+  onSubmitDescription(testBed) {
     let payload = {description: testBed.description};
     this.apiService.put('/api/v1/regression/test_beds/' + testBed.id, payload).subscribe((response) => {
       this.loggerService.success('Successfully updated!');
@@ -318,12 +318,12 @@ export class TestBedComponent implements OnInit {
     testBed.editingMode = false;
   }
 
-  editDescription(testBed) {
+  onEditDescription(testBed) {
     this.tempDescription = testBed.description;
     testBed.editingMode = true;
   }
 
-  onCancel(testBed) {
+  onCancelDescription(testBed) {
     testBed.description = this.tempDescription;
     testBed.editingMode = false;
   }
