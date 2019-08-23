@@ -425,6 +425,7 @@ class FunethSanity(FunTestScript):
                             funsdk_branch=funsdk_branch,
                             fundrv_commit=fundrv_commit,
                             funsdk_commit=funsdk_commit)
+        self.funeth_obj = funeth_obj
         fun_test.shared_variables['funeth_obj'] = funeth_obj
 
         # perf
@@ -454,6 +455,8 @@ class FunethSanity(FunTestScript):
                                       funsdk_branch=funsdk_branch,
                                       fundrv_commit=fundrv_commit,
                                       funsdk_commit=funsdk_commit)
+            self.funeth_obj_ul_vm = funeth_obj_ul_vm
+            self.funeth_obj_ol_vm = funeth_obj_ol_vm
             fun_test.shared_variables['funeth_obj_ul_vm'] = funeth_obj_ul_vm
             fun_test.shared_variables['funeth_obj_ol_vm'] = funeth_obj_ol_vm
 
@@ -528,8 +531,10 @@ def collect_stats(when='before'):
     version = fun_test.get_version()
     fun_test.log('Collect stats via DPC and save to file {} test'.format(when))
     fun_test.log_module_filter("random_module")
-    perf_utils.collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict, version, when=when)
-    fun_test.log_module_filter_disable()
+    try:
+        perf_utils.collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict, version, when=when)
+    except:
+        fun_test.log_module_filter_disable()
 
 
 def verify_nu_hu_datapath(funeth_obj, packet_count=5, packet_size=84, interfaces_excludes=[], nu='nu', hu='hu'):

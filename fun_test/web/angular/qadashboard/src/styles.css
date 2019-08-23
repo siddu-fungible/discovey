@@ -500,6 +500,13 @@ tr.text-center > th {
   color: white !important;
 }
 
+.fun-cancel-link {
+  color: red;
+  font-size: 12px;
+  padding-right: 5px;
+}
+
+
 .span-selected {
   background-color: rgba(230, 255, 0, 0.26);
   border-radius: 3px;
@@ -582,14 +589,12 @@ tr.text-center > th {
 }
 
 .fun-button-add {
-  padding: 6px;
-  padding-top: 8px;
-  padding-bottom: 8px;
+  padding: 5px;
   border: darkblue 0.5px;
   background-color: #337ab7;
   color: white;
   cursor: pointer;
-  min-width: 50px;
+  min-width: 100px;
   border-radius: 2px;
 }
 
@@ -597,10 +602,23 @@ tr.text-center > th {
   background-color: #43374a;
   color: white;
   cursor: pointer;
+}
 
+.fun-button-submit {
+  color: #fff;
+  background-color: #28a745;
+  border-color: #28a745;
+  padding: 5px;
+  border-radius: 2px;
+  min-width: 100px;
 }
 
 label {
   margin-bottom: unset;
   display: unset;
+}
+
+.fun-cancel-link:hover {
+  text-decoration: underline;
+  cursor: pointer;
 }
