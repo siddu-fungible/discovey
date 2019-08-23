@@ -39,8 +39,8 @@ export class TestBedComponent implements OnInit {
   refreshing: string = null;
   userMap: any = null;
   editingDescription: boolean = false;
-  currentDescription: string;
-  descriptionDict = {};
+  tempDescription: string;
+
 
   constructor(private regressionService: RegressionService,
               private apiService: ApiService,
@@ -128,7 +128,6 @@ export class TestBedComponent implements OnInit {
         testBed['editingMode'] = false;
         let numExecutions = -1;
         let executionId = -1;
-        this.descriptionDict[testBed.id] = testBed.description;
         this.automationStatus[testBed.name] = {numExecutions: numExecutions,
           executionId: executionId};
 
@@ -309,23 +308,23 @@ export class TestBedComponent implements OnInit {
     })
   }
 
-  edit(testBed) {
-    testBed.editingMode = true;
-  }
-
   onSubmit(testBed) {
-    let payload = {description: this.currentDescription};
+    let payload = {description: testBed.description};
     this.apiService.put('/api/v1/regression/test_beds/' + testBed.id, payload).subscribe((response) => {
       this.loggerService.success('Successfully updated!');
     }, error => {
       this.loggerService.error("Unable to update description");
     });
-    this.currentDescription = "";
     testBed.editingMode = false;
   }
 
-  toggleEdit(testBed) {
-    this.currentDescription = this.descriptionDict[testBed.id];
-    testBed.editingMode = !testBed.editingMode;
+  onEdit(testBed) {
+    this.tempDescription = testBed.description;
+    testBed.editingMode = true;
+  }
+
+  onCancel(testBed) {
+    testBed.description = this.tempDescription;
+    testBed.editingMode = false;
   }
 }
