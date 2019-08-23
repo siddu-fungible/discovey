@@ -72,7 +72,7 @@ class FunTestCase2(FunTestCase):
         come = fs.get_come()
         come.setup_tools()
         #mfun_test.shared_variables["fs"] = fs
-        fs.cleanup()
+        topology.cleanup()
 
 if __name__ == "__main__":
     myscript = MyScript()

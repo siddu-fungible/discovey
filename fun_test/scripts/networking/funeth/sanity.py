@@ -16,6 +16,9 @@ import re
 import struct
 
 
+fun_test.enable_profiling()
+
+
 try:
     job_environment = fun_test.get_job_environment()
     DPC_PROXY_IP = str(job_environment['UART_HOST'])
@@ -53,6 +56,7 @@ try:
         configure_overlay = (inputs.get('configure_overlay', 0) == 1)  # Enable overlay config or not
         cleanup = (inputs.get('cleanup', 1) == 1)  # Clean up funeth and control plane or not
         ol_offload = (inputs.get('ol_offload', 0) == 1)  # Enable overlay TSO/checksum offload or not
+        nu_all_clusters = (inputs.get('nu_all_clusters', 0) == 1)  # Enable NU to use all the clusters or not
         bootup_funos = (inputs.get('bootup_funos', 1) == 1)  # Boot up FunOS or not
         fundrv_branch = inputs.get('fundrv_branch', None)
         fundrv_commit = inputs.get('fundrv_commit', None)
@@ -66,6 +70,7 @@ try:
         hu_host_vm = False  # default False
         configure_overlay = False  # default False
         ol_offload = False  # default False
+        nu_all_clusters = False  # default False
         bootup_funos = True  # default True
         cleanup = True  # default True
         fundrv_branch = None
@@ -80,6 +85,7 @@ except:
     hu_host_vm = False
     configure_overlay = False
     ol_offload = False
+    nu_all_clusters = False
     bootup_funos = True
     cleanup = True
 
@@ -189,6 +195,24 @@ def setup_funcp(test_bed_type, update_funcp=True):
     # TODO: sanity check of control plane
 
 
+class FunCPSetup:
+    def __init__(self, test_bed_type, update_funcp=True):
+        self.funcp_obj = FunControlPlaneBringup(fs_name=test_bed_type)
+        self.update_funcp = update_funcp
+
+    def bringup(self, fs):
+        self.funcp_obj.bringup_funcp(prepare_docker=self.update_funcp)
+        # TODO: Make it setup independent
+        self.funcp_obj.assign_mpg_ips(static=True, f1_1_mpg='10.1.20.241', f1_0_mpg='10.1.20.242',
+                                      f1_0_mpg_netmask="255.255.252.0",
+                                      f1_1_mpg_netmask="255.255.252.0"
+                                      )
+        abstract_json_file_f1_0 = '{}/networking/tb_configs/FS11_F1_0.json'.format(SCRIPTS_DIR)
+        abstract_json_file_f1_1 = '{}/networking/tb_configs/FS11_F1_1.json'.format(SCRIPTS_DIR)
+        self.funcp_obj.funcp_abstract_config(abstract_config_f1_0=abstract_json_file_f1_0,
+                                             abstract_config_f1_1=abstract_json_file_f1_1)
+
+
 def setup_funcp_on_fs(test_bed_type):
 
     testbed_info = fun_test.parse_file_to_json(SCRIPTS_DIR +
@@ -219,7 +243,7 @@ def start_vm(funeth_obj_hosts, funeth_obj_vms):
                     linux_obj.sudo_command(cmd)
 
 
-def configure_overlay(network_controller_obj_f1_0, network_controller_obj_f1_1):
+def dpcsh_configure_overlay(network_controller_obj_f1_0, network_controller_obj_f1_1):
 
     # TODO: Define overlay args in config file
     overlay_config_dict = {
@@ -346,15 +370,21 @@ class FunethSanity(FunTestScript):
                     f1_1_boot_args = "app=hw_hsu_test cc_huid=2 sku=SKU_FS1600_1 retimer=0 --all_100g --dpc-uart --dpc-server --disable-wu-watchdog"
                 if csi_perf_enabled:
                     f1_0_boot_args += " --perf csi-local-ip=29.1.1.2 csi-remote-ip={} pdtrace-hbm-size-kb=204800".format(perf_listener_ip)
+                if nu_all_clusters:
+                    f1_0_boot_args += ' override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]}'
+                    f1_1_boot_args += ' override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]}'
+                funcp_setup_obj = FunCPSetup(test_bed_type=test_bed_type, update_funcp=update_funcp)
                 topology_helper = TopologyHelper()
                 topology_helper.set_dut_parameters(dut_index=0,
                                                    f1_parameters={0: {"boot_args": f1_0_boot_args},
-                                                                  1: {"boot_args": f1_1_boot_args}}
-                                                   )
+                                                                  1: {"boot_args": f1_1_boot_args}},
+                                                   fun_cp_callback=funcp_setup_obj.bringup)
             else:
                 boot_args = "app=hw_hsu_test retimer=0,1 --dpc-uart --dpc-server --csr-replay --all_100g --disable-wu-watchdog"
                 if csi_perf_enabled:
                     boot_args += " --perf csi-local-ip=29.1.1.2 csi-remote-ip={} pdtrace-hbm-size-kb=204800".format(perf_listener_ip)
+                if nu_all_clusters:
+                    boot_args += ' override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]}'
                 topology_helper = TopologyHelper()
                 topology_helper.set_dut_parameters(dut_index=0,
                                                    custom_boot_args=boot_args)
@@ -384,9 +414,9 @@ class FunethSanity(FunTestScript):
         fun_test.shared_variables['network_controller_obj'] = network_controller_obj_f1_0
 
         # TODO: make it work for other setup
-        if test_bed_type == 'fs-11' and control_plane:
-            setup_funcp(test_bed_type, update_funcp=update_funcp)
-        elif test_bed_type != 'fs-11' and control_plane:
+        #if test_bed_type == 'fs-11' and control_plane:
+        #    setup_funcp(test_bed_type, update_funcp=update_funcp)
+        if test_bed_type != 'fs-11' and control_plane:
             setup_funcp_on_fs(test_bed_type, update_funcp=update_funcp)
         tb_config_obj = tb_configs.TBConfigs(TB)
         funeth_obj = Funeth(tb_config_obj,
@@ -394,6 +424,7 @@ class FunethSanity(FunTestScript):
                             funsdk_branch=funsdk_branch,
                             fundrv_commit=fundrv_commit,
                             funsdk_commit=funsdk_commit)
+        self.funeth_obj = funeth_obj
         fun_test.shared_variables['funeth_obj'] = funeth_obj
 
         # perf
@@ -423,6 +454,8 @@ class FunethSanity(FunTestScript):
                                       funsdk_branch=funsdk_branch,
                                       fundrv_commit=fundrv_commit,
                                       funsdk_commit=funsdk_commit)
+            self.funeth_obj_ul_vm = funeth_obj_ul_vm
+            self.funeth_obj_ol_vm = funeth_obj_ol_vm
             fun_test.shared_variables['funeth_obj_ul_vm'] = funeth_obj_ul_vm
             fun_test.shared_variables['funeth_obj_ol_vm'] = funeth_obj_ol_vm
 
@@ -436,7 +469,7 @@ class FunethSanity(FunTestScript):
 
             # Configure overlay
             if configure_overlay:
-                configure_overlay(network_controller_obj_f1_0, network_controller_obj_f1_1)
+                dpcsh_configure_overlay(network_controller_obj_f1_0, network_controller_obj_f1_1)
                 network_controller_obj_f1_0.disconnect()
                 network_controller_obj_f1_1.disconnect()
 
@@ -471,13 +504,8 @@ class FunethSanity(FunTestScript):
                         fun_test.log("Unload funeth driver")
                         funeth_obj.unload()
 
-                # Temp workaround to clean up idel ssh sessions
-                funeth_obj = fun_test.shared_variables['funeth_obj']
-                for nu in funeth_obj.nu_hosts:
-                    linux_obj = funeth_obj.linux_obj_dict[nu]
-                    cmd = 'pkill sshd'
-                    fun_test.log("{} in {}".format(cmd, linux_obj.host_ip))
-                    linux_obj.command(cmd)
+                for linux_obj in funeth_obj.linux_obj_dict.values():
+                    linux_obj.disconnect()
             except:
                 if cleanup:
                     hu_hosts = topology.get_host_instances_on_ssd_interfaces(dut_index=0)
@@ -502,8 +530,10 @@ def collect_stats(when='before'):
     version = fun_test.get_version()
     fun_test.log('Collect stats via DPC and save to file {} test'.format(when))
     fun_test.log_module_filter("random_module")
-    perf_utils.collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict, version, when=when)
-    fun_test.log_module_filter_disable()
+    try:
+        perf_utils.collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict, version, when=when)
+    except:
+        fun_test.log_module_filter_disable()
 
 
 def verify_nu_hu_datapath(funeth_obj, packet_count=5, packet_size=84, interfaces_excludes=[], nu='nu', hu='hu'):

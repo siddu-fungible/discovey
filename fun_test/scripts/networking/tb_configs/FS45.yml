@@ -76,7 +76,7 @@ hu4:
             ipv4_addr: 19.1.1.3
             ipv4_netmask: 255.255.255.0
       routes:
-      - prefix: 18.1.1.0/24
-        nexthop: 19.1.1.1
-      - prefix: 20.1.1.0/24
-        nexthop: 19.1.1.1
+        - prefix: 18.1.1.0/24
+          nexthop: 19.1.1.1
+
+

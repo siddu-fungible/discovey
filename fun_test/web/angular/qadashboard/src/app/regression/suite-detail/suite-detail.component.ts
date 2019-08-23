@@ -411,4 +411,5 @@ export class SuiteDetailComponent implements OnInit {
   }
 
 
+
 }

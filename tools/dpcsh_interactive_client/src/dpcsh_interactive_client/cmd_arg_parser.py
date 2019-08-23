@@ -1198,6 +1198,10 @@ base_flow_subparsers = base_flow_parser.add_subparsers(title="subcommands", help
 
 # Flow list
 flow_list_parser = base_flow_subparsers.add_parser('list', help='List flows')
+flow_list_parser.add_argument("-pp", help="Pretty Print output", default=False)
+flow_list_parser.add_argument("-tx", help="Only prints tx data", default=None)
+flow_list_parser.add_argument("-rx", help="Only prints rx data", default=None)
+flow_list_parser.add_argument("-hu_id", help="hu_id in x.x.x format", type=str, default=None)
 flow_list_parser.add_argument('-grep', help="Grep for specific flow", default=None)
 
 # Flow blocked

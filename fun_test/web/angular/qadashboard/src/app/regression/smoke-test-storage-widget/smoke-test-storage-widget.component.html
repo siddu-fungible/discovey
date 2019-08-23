@@ -5,6 +5,7 @@
     [textTitle]="'passed: ' + lastTwoSuites[0].numPassed + ' failed: ' + lastTwoSuites[0].numFailed"
     [tooltipText]="lastTwoSuites[0].result"
     [text]="lastTwoSuites[0].time + ' (current run)'"
+    [hideText]="notRunText"
     [footerIcon]="iconDict[lastTwoSuites[1].result]"
     [footerTooltipText]="lastTwoSuites[1].result"
     [enableFooter]="true"

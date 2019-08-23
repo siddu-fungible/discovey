@@ -1,10 +1,10 @@
-import {Component, Injector, OnInit, Renderer2, ViewChild} from '@angular/core';
+import {Component, Injector, OnInit, Renderer2, ViewChild, Input, Output, EventEmitter} from '@angular/core';
 import {ApiService} from "../services/api/api.service";
 import {LoggerService} from "../services/logger/logger.service";
 import {Title} from "@angular/platform-browser";
 import {CommonService} from "../services/common/common.service";
 import {ActivatedRoute, Router} from "@angular/router";
-import {of} from "rxjs";
+import {Observable, of} from "rxjs";
 import {switchMap} from "rxjs/operators";
 import {PerformanceService} from "./performance.service";
 
@@ -64,6 +64,9 @@ class FlatNode {
   children: FlatNode[] = [];
   lineage: any = [];
   special: boolean = false;
+  showAddLeaf: boolean = false;
+  track: boolean = false;
+  subscribe: boolean = false;
 
   addChild(flatNode: FlatNode) {
     this.children.push(flatNode);
@@ -86,6 +89,15 @@ enum Mode {
 })
 
 export class PerformanceComponent implements OnInit {
+  //used for workspace editing
+  @Input() selectMode: boolean = false; //allows only to select metrics and not display any charts
+  @Input() userProfileEmail: string = null; //the current workspace user email
+  @Input() workspaceId: number = null; //current workspace Id
+  @Input() interestedMetrics: any = null; //metrics already part of the workspace
+  @Input() description: string = null; //workspace description
+  @Output() editedWorkspace: EventEmitter<boolean> = new EventEmitter(); //successful submission of metrics to DB
+  updatedInterestedMetrics: any = [];
+
   numGridColumns: number;
   lastStatusUpdateTime: any;
   mode: Mode = Mode.None;
@@ -184,30 +196,23 @@ export class PerformanceComponent implements OnInit {
       this.miniGridMaxWidth = '25%';
       this.miniGridMaxHeight = '25%';
     }
-    this.status = null;
     this.buildInfo = null;
-    this.fetchBuildInfo();
+    new Observable(observer => {
+      observer.next(true);
+      observer.complete();
+      return () => {
+      }
+    }).pipe(
+      switchMap(response => {
+        return this.service.fetchBuildInfo();
+      })).subscribe(response => {
+        this.buildInfo = response;
+      console.log("fetched buildInfo");
+    }, error => {
+      this.loggerService.error("Unable to fetch buildInfo");
+    });
     this.fetchDag();
 
-    /*
-    fromEvent(window, 'popstate')
-  .subscribe((e) => {
-    console.log(e, 'back button: ' + this.location.path());
-  });*/
-
-  }
-
-  //populates buildInfo
-  fetchBuildInfo(): void {
-    this.apiService.get('/regression/build_to_date_map').subscribe((response) => {
-      this.buildInfo = {};
-      Object.keys(response.data).forEach((key) => {
-        let localizedKey = this.commonService.convertToLocalTimezone(key);
-        this.buildInfo[this.commonService.addLeadingZeroesToDate(localizedKey)] = response.data[key];
-      });
-    }, error => {
-      this.loggerService.error("regression/build_to_date_map");
-    });
   }
 
   getDefaultQueryPath() {
@@ -288,6 +293,19 @@ export class PerformanceComponent implements OnInit {
 
         }
       });
+      if (this.selectMode && this.interestedMetrics) {
+        for (let flatNode of this.flatNodes) {
+          for (let metric of this.interestedMetrics) {
+            if (flatNode.node.metricId === metric.metric_id) {
+              flatNode.showAddLeaf = true;
+              flatNode.track = true;
+              flatNode.subscribe = metric.subscribe;
+            }
+          }
+
+        }
+      }
+      this.status = null;
 
     }, error => {
       this.loggerService.error("fetchDag");
@@ -964,32 +982,7 @@ export class PerformanceComponent implements OnInit {
 
 
   showAtomicMetric = (flatNode) => {
-    this.chartReady = false;
-    if (this.currentNode && this.currentNode.showAddJira) {
-      this.currentNode.showAddJira = false;
-    }
-    if (this.currentFlatNode && this.currentFlatNode.showJiraInfo) {
-      this.currentFlatNode.showJiraInfo = false;
-    }
-    if (this.currentFlatNode && this.currentFlatNode.showGitInfo) {
-      this.currentFlatNode.showGitInfo = false;
-    }
-    this.showBugPanel = false;
-    this.currentNode = flatNode.node;
-    this.currentFlatNode = flatNode;
-    this.currentNode.showAddJira = true;
-    this.mode = Mode.ShowingAtomicMetric;
-    this.expandNode(flatNode);
-    this.commonService.scrollTo("chart-info");
-    this.chartReady = true;
-    this.navigateByQuery(flatNode);
-    this.fetchChartInfo(flatNode);
-
-  };
-
-
-  showNonAtomicMetric = (flatNode) => {
-    if (flatNode.node.metricModelName && flatNode.node.chartName !== "All metrics") {
+    if (!this.selectMode) {
       this.chartReady = false;
       if (this.currentNode && this.currentNode.showAddJira) {
         this.currentNode.showAddJira = false;
@@ -1002,23 +995,130 @@ export class PerformanceComponent implements OnInit {
       }
       this.showBugPanel = false;
       this.currentNode = flatNode.node;
-      if (this.currentNode && this.currentNode.companionCharts) {
-        this.currentNode.companionCharts = [...this.currentNode.companionCharts];
-      }
       this.currentFlatNode = flatNode;
-      this.mode = Mode.ShowingNonAtomicMetric;
+      this.currentNode.showAddJira = true;
+      this.mode = Mode.ShowingAtomicMetric;
       this.expandNode(flatNode);
-      this.prepareGridNodes(flatNode.node);
       this.commonService.scrollTo("chart-info");
       this.chartReady = true;
-    } else {
-      this.chartReady = false;
-      this.expandNode(flatNode);
-      this.chartReady = true;
-    }
-    if (!flatNode.special)
       this.navigateByQuery(flatNode);
-    this.fetchChartInfo(flatNode);
+      this.fetchChartInfo(flatNode);
+    } else {
+      flatNode.showAddLeaf = true;
+      this.currentNode = flatNode.node;
+      this.currentFlatNode = flatNode;
+    }
+
+  };
+
+  getStringLineage(lineages): string {
+    let result = "";
+    for (let lineage of lineages[0]) {
+      result += lineage.chartName + "/";
+    }
+    return result.slice(0, -1);//to remove the slash after the last chart name
+  }
+
+  submitInterestedMetrics(): void {
+    let flatNodes = this.getInterestedNodes();
+    let metricDetails = {};
+    this.updatedInterestedMetrics = [];
+    for (let flatNode of flatNodes) {
+      if (!(flatNode.node.metricId in metricDetails)) {
+        let lineage = this.getStringLineage(flatNode.lineage);
+        metricDetails[flatNode.node.metricId] = {
+          "metric_id": flatNode.node.metricId, "subscribe": flatNode.subscribe, "track": flatNode.track,
+          "lineage": lineage, "chart_name": flatNode.node.chartName, "category": 'General'
+        };
+      }
+    }
+    Object.keys(metricDetails).forEach(id => {
+      this.updatedInterestedMetrics.push(metricDetails[id]);
+    });
+
+    let payload = {};
+    payload["email"] = this.userProfileEmail;
+    payload["workspace_id"] = this.workspaceId;
+    payload["interested_metrics"] = this.updatedInterestedMetrics;
+    payload["description"] = this.description;
+    this.apiService.post("/api/v1/workspaces/" + this.workspaceId + "/interested_metrics", payload).subscribe(response => {
+      console.log("submitted successfully");
+      this.editedWorkspace.emit(true);
+    }, error => {
+      this.editedWorkspace.emit(false);
+      this.loggerService.error("Unable to submit interested metrics");
+    });
+  }
+
+  getInterestedNodes = () => {
+    return this.flatNodes.filter(flatNode => {
+      return flatNode.track || flatNode.subscribe;
+    });
+  };
+
+  removeFromInterestedList(metricId): void {
+    for (let flatNode of this.flatNodes) {
+      if (flatNode.node.metricId == metricId) {
+        flatNode.track = false;
+        flatNode.subscribe = false;
+        flatNode.showAddLeaf = false;
+      }
+    }
+  }
+
+  onChangeSubscribeTo(subscribed, metricId): void {
+    for (let flatNode of this.flatNodes) {
+      if (flatNode.node.metricId == metricId) {
+        flatNode.subscribe = subscribed;
+      }
+    }
+  }
+
+  onChangeTrack(tracking, metricId): void {
+    for (let flatNode of this.flatNodes) {
+      if (flatNode.node.metricId == metricId) {
+        flatNode.track = tracking;
+      }
+    }
+  }
+
+  showNonAtomicMetric = (flatNode) => {
+    if (!this.selectMode) {
+      if (flatNode.node.metricModelName && flatNode.node.chartName !== "All metrics") {
+        this.chartReady = false;
+        if (this.currentNode && this.currentNode.showAddJira) {
+          this.currentNode.showAddJira = false;
+        }
+        if (this.currentFlatNode && this.currentFlatNode.showJiraInfo) {
+          this.currentFlatNode.showJiraInfo = false;
+        }
+        if (this.currentFlatNode && this.currentFlatNode.showGitInfo) {
+          this.currentFlatNode.showGitInfo = false;
+        }
+        this.showBugPanel = false;
+        this.currentNode = flatNode.node;
+        if (this.currentNode && this.currentNode.companionCharts) {
+          this.currentNode.companionCharts = [...this.currentNode.companionCharts];
+        }
+        this.currentFlatNode = flatNode;
+        this.mode = Mode.ShowingNonAtomicMetric;
+        this.expandNode(flatNode);
+        this.prepareGridNodes(flatNode.node);
+        this.commonService.scrollTo("chart-info");
+        this.chartReady = true;
+      } else {
+        this.chartReady = false;
+        this.expandNode(flatNode);
+        this.chartReady = true;
+      }
+      if (!flatNode.special)
+        this.navigateByQuery(flatNode);
+      this.fetchChartInfo(flatNode);
+    } else {
+      this.expandNode(flatNode);
+      this.currentNode = flatNode.node;
+      this.currentFlatNode = flatNode;
+    }
   };
 
   navigateByQuery(flatNode) {

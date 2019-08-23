@@ -73,9 +73,12 @@ import {AnnouncementComponent} from './announcement/announcement.component';
 import { PerformanceSummaryWidgetComponent } from './performance/performance-summary-widget/performance-summary-widget.component';
 import { FunCardComponent } from './fun-card/fun-card.component';
 import { SmokeTestStorageWidgetComponent } from './regression/smoke-test-storage-widget/smoke-test-storage-widget.component';
+import { PerformanceWorkspaceComponent } from './performance/performance-workspace/performance-workspace.component';
+import { PerformanceViewWorkspaceComponent } from './performance/performance-workspace/performance-view-workspace/performance-view-workspace.component';
 import { SuiteExecutionWidgetComponent } from './regression/suite-execution-widget/suite-execution-widget.component';
 import { SuiteEditorComponent } from './regression/suite-editor/suite-editor.component';
 import {ModalModule} from "ngb-modal";
+import { UlErrorPanelComponent } from './ui-elements/ul-error-panel/ul-error-panel.component';
 import { AnnouncementFormComponent } from './performance/admin/announcement-form/announcement-form.component';
 
 
@@ -135,8 +138,11 @@ import { AnnouncementFormComponent } from './performance/admin/announcement-form
     AnnouncementComponent,
     FunCardComponent,
     SmokeTestStorageWidgetComponent,
+    PerformanceWorkspaceComponent,
+    PerformanceViewWorkspaceComponent,
     SuiteExecutionWidgetComponent,
     SuiteEditorComponent,
+    UlErrorPanelComponent,
     AnnouncementFormComponent
   ],
   imports: [

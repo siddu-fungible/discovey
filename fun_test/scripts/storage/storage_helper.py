@@ -373,6 +373,7 @@ class CollectStats(object):
         self.socket_lock = Lock()
         self.stop_all = False
         self.stop_vp_utils = False
+        self.stop_per_vp_stats = False
         self.stop_resource_bam = False
         self.stop_vol_stats = False
 
@@ -390,11 +391,11 @@ class CollectStats(object):
                         fun_test.log("Stopping VP Utils stats collection thread")
                         break
                     self.socket_lock.acquire()
-                    dpcsh_result = self.storage_controller.debug_vp_util(command_timeout=command_timeout)
+                    vp_utils_result = self.storage_controller.debug_vp_util(command_timeout=command_timeout)
                     self.socket_lock.release()
-                    # fun_test.simple_assert(dpcsh_result["status"], "Pulling VP Utilization")
-                    if dpcsh_result["status"] and dpcsh_result["data"] is not None:
-                        vp_util = dpcsh_result["data"]
+                    # fun_test.simple_assert(vp_util_result["status"], "Pulling VP Utilization")
+                    if vp_utils_result["status"] and vp_utils_result["data"] is not None:
+                        vp_util = vp_utils_result["data"]
                     else:
                         vp_util = {}
 
@@ -439,6 +440,93 @@ class CollectStats(object):
             fun_test.critical(str(ex))
         return output
 
+    def collect_per_vp_stats(self, output_file, interval=10, count=3, threaded=False, include_cc=False,
+                             display_diff=True, command_timeout=DPCSH_COMMAND_TIMEOUT):
+        output = False
+        per_vp_stats_key = ["wus_received", "vp_wu_qdepth", "wus_sent"]
+        per_vp_stats_header = ["rx", "qd", "tx"]
+        column_headers = ["Cluster/Core"]
+        for thread in range(4):
+            for header in per_vp_stats_header:
+                column_headers.append("{}:{}".format(thread, header))
+                if display_diff:
+                    column_headers.append("{}:{}_d".format(thread, header))
+        try:
+            with open(output_file, 'a') as f:
+                timer = FunTimer(max_time=interval * count)
+                while not timer.is_expired():
+                    lines = []
+                    # Checking whether to continue/stop this threaded execution
+                    if threaded and (self.stop_per_vp_stats or self.stop_all):
+                        fun_test.log("Stopping per VP stats collection thread")
+                        break
+
+                    # Pulling the per_vp stats once or twice with one second interval based on the display_diff
+                    self.socket_lock.acquire()
+                    initial_per_vp_output = self.storage_controller.peek_per_vp_stats(command_timeout=command_timeout)
+                    if display_diff:
+                        fun_test.sleep("to get one more per_vp stats to find the diff", 1)
+                        final_per_vp_output = self.storage_controller.peek_per_vp_stats(command_timeout=command_timeout)
+                    self.socket_lock.release()
+
+                    if initial_per_vp_output["status"] and initial_per_vp_output["data"] is not None:
+                        initial_per_vp_stats = initial_per_vp_output["data"]
+                    else:
+                        initial_per_vp_stats = {}
+
+                    if display_diff:
+                        if final_per_vp_output["status"] and final_per_vp_output["data"] is not None:
+                            final_per_vp_stats = final_per_vp_output["data"]
+                        else:
+                            final_per_vp_stats = {}
+
+                    # Removing the Central Cluster(if needed) and the redundant entries
+                    filtered_initial_per_vp_stats = OrderedDict()
+                    filtered_final_per_vp_stats = OrderedDict()
+                    for key in sorted(initial_per_vp_stats):
+                        if not include_cc:
+                            if not key.split(":")[0][2] == '8' and not key.split(":")[2][0] == '1':
+                                filtered_initial_per_vp_stats[key] = initial_per_vp_stats[key]
+                                if display_diff and key in final_per_vp_stats:
+                                    filtered_final_per_vp_stats[key] = final_per_vp_stats[key]
+                        else:
+                            if not key.split(":")[2][0] == '1':
+                                filtered_initial_per_vp_stats[key] = initial_per_vp_stats[key]
+                                if display_diff and key in final_per_vp_stats:
+                                    filtered_final_per_vp_stats[key] = final_per_vp_stats[key]
+
+                    processed_per_vp_stats = OrderedDict()
+                    # Sorting the keys using the cluster ID(FA*0*:10:0[VP]) as the primary key and the
+                    # core ID(FA0:*10*:0[VP]) as the secondary key
+                    for key in sorted(filtered_initial_per_vp_stats, key= lambda key: (int(key.split(":")[0][2]),
+                                                                                       int(key.split(":")[1]))):
+                        cluster_id = key.split(":")[0][2]
+                        core_id = (int(key.split(":")[1]) / 4) - 2
+                        thread_id = int(key.split(":")[1]) % 4
+                        new_key = "{}/{}".format(cluster_id, core_id)
+                        if new_key not in processed_per_vp_stats:
+                            processed_per_vp_stats[new_key] = []
+                        for subkey in per_vp_stats_key:
+                            if display_diff:
+                                if key in filtered_final_per_vp_stats:
+                                    processed_per_vp_stats[new_key].append(filtered_final_per_vp_stats[key][subkey])
+                                    processed_per_vp_stats[new_key].append(filtered_final_per_vp_stats[key][subkey] -
+                                                                           filtered_initial_per_vp_stats[key][subkey])
+                            else:
+                                processed_per_vp_stats[new_key].append(filtered_initial_per_vp_stats[key][subkey])
+
+                    table_data = build_simple_table(data=processed_per_vp_stats, column_headers=column_headers,
+                                                    split_values_to_columns=True)
+                    lines.append("\n########################  {} ########################\n".format(time.ctime()))
+                    lines.append(table_data.get_string())
+                    lines.append("\n\n")
+                    f.writelines(lines)
+                    fun_test.sleep("for the next iteration - per VP stats collection", seconds=interval)
+            output = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return output
+
     def collect_resource_bam_stats(self, output_file, interval=10, count=3, threaded=False,
                                    command_timeout=DPCSH_COMMAND_TIMEOUT):
         output = False
@@ -453,10 +541,10 @@ class CollectStats(object):
                         fun_test.log("Stopping Resource BAM stats collection thread")
                         break
                     self.socket_lock.acquire()
-                    dpcsh_result = self.storage_controller.peek_resource_bam_stats(command_timeout=command_timeout)
+                    bam_result = self.storage_controller.peek_resource_bam_stats(command_timeout=command_timeout)
                     self.socket_lock.release()
-                    if dpcsh_result["status"] and dpcsh_result["data"] is not None:
-                        resource_bam_stats = dpcsh_result["data"]
+                    if bam_result["status"] and bam_result["data"] is not None:
+                        resource_bam_stats = bam_result["data"]
                     else:
                         resource_bam_stats = {}
 
@@ -501,11 +589,11 @@ class CollectStats(object):
                         fun_test.log("Stopping Volume stats collection thread")
                         break
                     self.socket_lock.acquire()
-                    dpcsh_result = self.storage_controller.peek(props_tree="storage/volumes",
-                                                                command_duration=command_timeout)
+                    vol_stats_result = self.storage_controller.peek(props_tree="storage/volumes", legacy=False,
+                                                                    chunk=8192, command_duration=command_timeout)
                     self.socket_lock.release()
-                    if dpcsh_result["status"] and dpcsh_result["data"] is not None:
-                        all_vol_stats = dpcsh_result["data"]
+                    if vol_stats_result["status"] and vol_stats_result["data"] is not None:
+                        all_vol_stats = vol_stats_result["data"]
                     else:
                         all_vol_stats = {}
 

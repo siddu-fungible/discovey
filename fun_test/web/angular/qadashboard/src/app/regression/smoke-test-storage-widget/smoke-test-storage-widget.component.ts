@@ -23,12 +23,15 @@ export class SmokeTestStorageWidgetComponent implements OnInit {
 
   lastTwoSuites: Suite[] = [];
   isDone: boolean = false;
+  notRunText: boolean = false;
   numbers: number[] = [0, 1];
   iconDict: any = {
     'PASSED': "/static/media/sun_icon.png",
     'FAILED': "/static/media/storm_icon.png",
-    'IN_PROGRESS': "/static/media/loading_bars.gif"
+    'IN_PROGRESS': "/static/media/loading_bars.gif",
+    'NOT_RUN': "/static/media/not_run_icon.png"
   };
+
 
 
   constructor(private apiService: ApiService, private logger: LoggerService,
@@ -59,6 +62,8 @@ export class SmokeTestStorageWidgetComponent implements OnInit {
 
 
   fetchData() {
+    let today = new Date();
+    let historyTime = new Date;
     let stateFilter = 'ALL';
     let payload = {tags: '["smoke"]', tag: "smoke"};
     let recordsPerPage = 10;
@@ -71,7 +76,11 @@ export class SmokeTestStorageWidgetComponent implements OnInit {
         }
         if (i.fields.state === this.stateMap.AUTO_SCHEDULED) {
           continue;
-        } else if (i.fields.state === this.stateMap.COMPLETED) {
+        }
+        if (this.lastTwoSuites.length == 0) { //only need historyTime for first entry
+          historyTime = new Date(i.fields.started_time);
+        }
+        if (i.fields.state === this.stateMap.COMPLETED) {
           suite.result = i.fields.result;
           suite.time = this.trimTime(i.fields.completed_time);
 
@@ -86,6 +95,11 @@ export class SmokeTestStorageWidgetComponent implements OnInit {
         suite.numPassed = i.num_passed;
         this.lastTwoSuites.push(suite);
       }
+      if (!this.commonService.isSameDay(today, historyTime)){
+        this.lastTwoSuites[1] = {...this.lastTwoSuites[0]};
+        this.lastTwoSuites[0].result = 'NOT_RUN';
+        this.notRunText = true;
+      }
       this.isDone = true;
       return of(true);
     }));
@@ -95,4 +109,3 @@ export class SmokeTestStorageWidgetComponent implements OnInit {
     return this.regressionService.getPrettyLocalizeTime(t);
   }
 }
-

@@ -93,6 +93,8 @@ export class SubmitJobComponent implements OnInit {
   jobInputs: string = null; // input dictionary to be sent to the scheduler
 
   csiPerf: boolean = false;
+  dryRun: boolean = false;
+  hbmDump: boolean = false;
   moreJenkinsOptions: boolean = false;
   mode: Mode = Mode.REGULAR;
   Mode = Mode;
@@ -142,6 +144,7 @@ export class SubmitJobComponent implements OnInit {
       if (this.mode === Mode.TASK) {
         queryParamString = "?suite_type=task";
       }
+
       this.apiService.get("/regression/suites" + queryParamString).subscribe((result) => {
         let suitesInfo = result.data;
         self.suitesInfo = suitesInfo;
@@ -166,6 +169,9 @@ export class SubmitJobComponent implements OnInit {
     return this.route.queryParams.pipe(switchMap(params => {
       if (params.hasOwnProperty('mode')) {
         this.mode = params["mode"];
+        if (this.mode === Mode.TRIAGE) {
+          this.dryRun = true;
+        }
       }
       return of(params);
     }))
@@ -371,6 +377,14 @@ export class SubmitJobComponent implements OnInit {
 
     if (this.csiPerf) {
       payload["environment"]["csi_perf"] = this.csiPerf;
+    }
+
+    if (this.dryRun) {
+      payload["environment"]["dry_run"] = this.dryRun;
+    }
+
+    if (this.hbmDump) {
+      payload["environment"]["hbm_dump"] = this.hbmDump;
     }
 
     if (this.description) {
