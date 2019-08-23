@@ -106,10 +106,4 @@ export class CommonService {
     return [fromEpoch, toEpoch];
   }
 
-  getDateString(): string {
-    let today = new Date();
-    let m = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    return String(today.getDate()) + " " + String(m[today.getMonth()]);
-  }
-
 }

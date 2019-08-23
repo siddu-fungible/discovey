@@ -284,7 +284,7 @@ export class PerformanceWorkspaceComponent implements OnInit {
     payload["email"] = this.selectedUser.email;
     payload["name"] = this.workspaceName;
     payload["description"] = this.description;
-    return this.apiService.post("/api/v1/performance/workspaces/", payload).pipe(switchMap(response => {
+    return this.apiService.post("/api/v1/performance/workspaces", payload).pipe(switchMap(response => {
       console.log("created/edited workspace successfully");
       return of(true);
     }));
