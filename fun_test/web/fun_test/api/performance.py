@@ -66,7 +66,7 @@ def data(request):
 
 @csrf_exempt
 @api_safe_json_response
-def report_data(request):
+def metrics_data(request):
     data = []
     if request.method == "GET":
         metric_id = request.GET.get("metric_id", None)

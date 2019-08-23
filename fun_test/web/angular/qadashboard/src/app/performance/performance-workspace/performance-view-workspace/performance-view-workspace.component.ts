@@ -25,9 +25,9 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
   status: string = null;
   currentChart: any = null;
   data: any = [];
-  atomicUrl: string = "/performance/atomic/";
-  jiraUrl: string = "http://jira/browse/";
-  workspaceURL: string = "/performance/workspace/";
+  atomicUrl: string = "/performance/atomic";
+  jiraUrl: string = "http://jira/browse";
+  workspaceURL: string = "/performance/workspace";
   reportGenerated: boolean = false;
   subject: string = null;
 
@@ -76,18 +76,18 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
   }
 
   backToWorkspaces(): void {
-    this.router.navigateByUrl(this.workspaceURL + this.email);
+    this.router.navigateByUrl(this.workspaceURL + "/" + this.email);
   }
 
   fetchWorkspaces(): any {
-    return this.apiService.get("/api/v1/workspaces/" + this.email + "/" + this.workspaceName).pipe(switchMap(response => {
+    return this.apiService.get("/api/v1/performance/workspaces/" + this.email + "/" + this.workspaceName).pipe(switchMap(response => {
       this.workspace = response.data[0];
       return of(true);
     }));
   }
 
   fetchInterestedMetrics(workspaceId): any {
-    return this.apiService.get("/api/v1/workspaces/" + workspaceId + "/interested_metrics").pipe(switchMap(response => {
+    return this.apiService.get("/api/v1/performance/workspaces/" + workspaceId + "/interested_metrics").pipe(switchMap(response => {
       this.workspace.interested_metrics = response.data;
       return of(true);
     }));
@@ -173,7 +173,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
     let from_epoch = times[0];
     let to_epoch = times[1];
     let self = this;
-    return this.apiService.get("/api/v1/performance/report_data?metric_id=" + metric["metric_id"] + "&from_epoch_ms=" + from_epoch + "&to_epoch_ms=" + to_epoch).pipe(switchMap(response => {
+    return this.apiService.get("/api/v1/performance/metrics_data?metric_id=" + metric["metric_id"] + "&from_epoch_ms=" + from_epoch + "&to_epoch_ms=" + to_epoch).pipe(switchMap(response => {
       let data = response.data;
       for (let oneData of data) {
         for (let dataSet of metric["data"]) {
@@ -202,7 +202,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
         metric["selected"] = false;
         metric["report"] = null;
         metric["data"] = [];
-        metric["url"] = this.atomicUrl + metric["metric_id"];
+        metric["url"] = this.atomicUrl + "/" + metric["metric_id"];
       }, error => {
         this.loggerService.error("failed fetching the chart info while viewing workspace");
       });
@@ -237,18 +237,19 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
   }
 
   fetchHistoricalData(metric): any {
-    return this.apiService.get("/api/v1/performance/report_data?metric_id=" + metric["metric_id"] + "&order_by=-input_date_time&count=5").pipe(switchMap(response => {
+    return this.apiService.get("/api/v1/performance/metrics_data?metric_id=" + metric["metric_id"] + "&order_by=-input_date_time&count=5").pipe(switchMap(response => {
       let data = response.data;
-      for (let oneData of data) {
-        for (let dataSet of metric["data"]) {
+      for (let dataSet of metric["data"]) {
+        dataSet["history"] = [];
+        for (let oneData of data) {
           if (dataSet["name"] == oneData["name"]) {
             let hData = {};
             hData["date"] = oneData["date_time"];
             hData["value"] = oneData["value"];
             dataSet["history"].push(hData);
-            dataSet["rows"] = dataSet["history"].length;
           }
         }
+        dataSet["rows"] = dataSet["history"].length;
       }
       return of(true);
     }));
@@ -269,7 +270,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
     payload["reports"] = reports;
     payload["email"] = this.email;
     payload["subject"] = this.subject;
-    return this.apiService.post('/api/v1/performance/report_data', payload).pipe(switchMap(response => {
+    return this.apiService.post('/api/v1/performance/reports', payload).pipe(switchMap(response => {
       return of(response.data);
     }));
   }
@@ -287,9 +288,8 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
       switchMap(response => {
         return this.fetchHistory();
       })).subscribe(response => {
-      let today = new Date();
-      let m = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-      this.subject = "Performance status report - " + String(today.getDate()) + " " + String(m[today.getMonth()]);
+      let dateString = this.commonService.getDateString();
+      this.subject = "Performance status report - " + dateString;
       this.reportGenerated = true;
     }, error => {
       this.loggerService.error("Unable to generate report");
@@ -302,7 +302,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
     payload["email"] = this.email;
     payload["workspace_id"] = this.workspace.id;
     payload["interested_metrics"] = this.workspace.interested_metrics;
-    return this.apiService.post("/api/v1/workspaces/" + this.workspace.id + "/interested_metrics", payload).pipe(switchMap(response => {
+    return this.apiService.post("/api/v1/performance/workspaces/" + this.workspace.id + "/interested_metrics", payload).pipe(switchMap(response => {
       return of(true);
     }));
   }

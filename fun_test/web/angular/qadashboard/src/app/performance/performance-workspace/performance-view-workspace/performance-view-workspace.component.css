@@ -19,17 +19,3 @@
 .text-green {
   color: green;
 }
-
-.floatLeft {
-  width: 50%;
-  float: left;
-}
-
-.floatRight {
-  width: 50%;
-  float: right;
-}
-
-.table-container {
-  overflow: hidden;
-}

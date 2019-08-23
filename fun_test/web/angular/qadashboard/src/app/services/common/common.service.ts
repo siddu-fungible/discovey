@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import {Injectable} from '@angular/core';
 import {Observable} from "rxjs";
 
 @Injectable({
@@ -7,6 +7,7 @@ import {Observable} from "rxjs";
 export class CommonService {
   newAlert: boolean = false;
   announcementAvailable: boolean = false;
+
   constructor() {
 
   }
@@ -32,7 +33,8 @@ export class CommonService {
     return new Observable(observer => {
       //observer.next(this.newAlert);
       setInterval(() => observer.next(this.newAlert), 1000);
-      return () => {};
+      return () => {
+      };
     })
   }
 
@@ -59,7 +61,8 @@ export class CommonService {
   monitorAnnouncements() {
     return new Observable(observer => {
       setInterval(() => observer.next(this.announcementAvailable), 1000);
-      return () => {};
+      return () => {
+      };
     })
   }
 
@@ -101,6 +104,12 @@ export class CommonService {
     dateTime.setMilliseconds(0);
     let fromEpoch = dateTime.getTime();
     return [fromEpoch, toEpoch];
+  }
+
+  getDateString(): string {
+    let today = new Date();
+    let m = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    return String(today.getDate()) + " " + String(m[today.getMonth()]);
   }
 
 }

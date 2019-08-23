@@ -139,7 +139,7 @@
                 {{ metric["lineage"] }}
               </td>
               <td style="text-align: center">
-                <a [routerLink]="" (click)="deleteMetricInWorkspace(metric.metric_id)">Delete</a>
+                <span class="pseudo-anchor" (click)="deleteMetricInWorkspace(metric.metric_id)">Delete</span>
               </td>
             </tr>
           </table>
@@ -170,8 +170,8 @@
   <div *ngIf="showWorkspace" class="card">
     <div class="card-header">
       <h5 class="card-title">{{ selectedUser.first_name }}&nbsp;{{ selectedUser.last_name }}</h5>
-      <h6 class="card-subtitle">{{ selectedUser.email }} <a [routerLink]="" (click)="openAddWorkspace(addWorkspace)">Add
-        workspace</a></h6>
+      <h6 class="card-subtitle">{{ selectedUser.email }} <span class="pseudo-anchor" (click)="openAddWorkspace(addWorkspace)">Add
+        workspace</span></h6>
     </div>
     <div class=card-body>
       <div>
@@ -186,9 +186,9 @@
           </tr>
           <tr *ngFor="let workspace of profile">
             <td style="width: 10%;">
-              <a [routerLink]="" (click)="openWorkspace(workspace)">View</a> | <a [routerLink]=""
+              <span class="pseudo-anchor" (click)="openWorkspace(workspace)">View</span> | <span class="pseudo-anchor"
                                                                                   (click)="openEditWorkspace(editWorkspace, workspace)">
-              Edit</a>
+              Edit</span>
             </td>
             <td style="width: 10%">
               {{ workspace.name }}
@@ -203,7 +203,7 @@
               {{ workspace.modifiedDate }}
             </td>
             <td style="width: 10%">
-              <a [routerLink]="" (click)="openDeleteWorkspace(deleteWorkspace, workspace)">Delete</a>
+              <span class="pseudo-anchor" (click)="openDeleteWorkspace(deleteWorkspace, workspace)">Delete</span>
             </td>
           </tr>
         </table>
