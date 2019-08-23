@@ -25,7 +25,16 @@
 
               <tr *ngFor="let testBed of testBeds">
                 <td><a href="/regression?test_bed_type={{ testBed.name }}">{{ testBed.name }}</a></td>
-                <td [innerHtml]="testBed.description | safeHtml"></td>
+                <td  class="hover-cell"><span [innerHtml]="testBed.description  | safeHtml"></span>&nbsp;&nbsp;<i class="fa fa-pencil hover-icon" style="font-size:14px; float: right" (click)="edit(testBed)"></i>&nbsp;
+
+                  <div *ngIf="testBed.editing_mode">
+                    <br>
+                    <textarea rows="3" [(ngModel)]="currentDescription" style="min-width: 100%;"></textarea>
+                    <button class="btn-sm btn-success" (click)="onSubmit(testBed)">Submit</button>
+                    <a style="padding: 5px;" (click)="toggleEdit(testBed)">Cancel</a>
+                  </div>
+
+                </td>
                 <td>
                   <span class="badge badge-danger"
                         *ngIf="automationStatus[testBed.name]?.numExecutions > 0; else freeAutomationStatus">In use</span>
