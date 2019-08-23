@@ -25,7 +25,9 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
   status: string = null;
   currentChart: any = null;
   data: any = [];
-  atomicUrl: string = "http://integration.fungible.local/performance/atomic/";
+  atomicUrl: string = "/performance/atomic/";
+  jiraUrl: string = "http://jira/browse/";
+  workspaceURL: string = "/performance/workspace/";
   reportGenerated: boolean = false;
   subject: string = null;
 
@@ -71,6 +73,10 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
 
   goBack(): void {
     this.location.back();
+  }
+
+  backToWorkspaces(): void {
+    this.router.navigateByUrl(this.workspaceURL + this.email);
   }
 
   fetchWorkspaces(): any {
@@ -121,6 +127,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
       temp["yesterday"] = null;
       temp["unit"] = null;
       temp["percentage"] = null;
+      temp["history"] = [];
       metric["data"].push(temp);
     }
   }
@@ -215,10 +222,39 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
     } else {
       return of(true);
     }
-
   }
 
-  sendReports(): any {
+  fetchHistory(): any {
+    const resultObservables = [];
+    this.workspace.interested_metrics.forEach(metric => {
+      resultObservables.push(this.fetchHistoricalData(metric));
+    });
+    if (resultObservables.length > 0) {
+      return forkJoin(resultObservables);
+    } else {
+      return of(true);
+    }
+  }
+
+  fetchHistoricalData(metric): any {
+    return this.apiService.get("/api/v1/performance/report_data?metric_id=" + metric["metric_id"] + "&order_by=-input_date_time&count=5").pipe(switchMap(response => {
+      let data = response.data;
+      for (let oneData of data) {
+        for (let dataSet of metric["data"]) {
+          if (dataSet["name"] == oneData["name"]) {
+            let hData = {};
+            hData["date"] = oneData["date_time"];
+            hData["value"] = oneData["value"];
+            dataSet["history"].push(hData);
+            dataSet["rows"] = dataSet["history"].length;
+          }
+        }
+      }
+      return of(true);
+    }));
+  }
+
+  sendEmail(): any {
     let payload = {};
     let reports = [];
     this.workspace.interested_metrics.forEach(metric => {
@@ -226,19 +262,16 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
       report["chart_name"] = metric["chart_name"];
       report["lineage"] = metric["lineage"];
       report["url"] = metric["url"];
+      report["comments"] = metric["comments"];
       report["report"] = metric["report"];
       reports.push(report);
     });
     payload["reports"] = reports;
     payload["email"] = this.email;
     payload["subject"] = this.subject;
-    this.apiService.post('/api/v1/performance/report_data', payload).subscribe(response => {
-      if (response.data["status"]) {
-        this.loggerService.success("sent report email successfully to " + this.email);
-      } else {
-        this.loggerService.error("sending email failed");
-      }
-    });
+    return this.apiService.post('/api/v1/performance/report_data', payload).pipe(switchMap(response => {
+      return of(response.data);
+    }));
   }
 
   generateReport(): void {
@@ -250,6 +283,9 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
     }).pipe(
       switchMap(response => {
         return this.fetchReports();
+      }),
+      switchMap(response => {
+        return this.fetchHistory();
       })).subscribe(response => {
       let today = new Date();
       let m = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -259,6 +295,40 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
       this.loggerService.error("Unable to generate report");
     });
 
+  }
+
+  saveComments(): any {
+    let payload = {};
+    payload["email"] = this.email;
+    payload["workspace_id"] = this.workspace.id;
+    payload["interested_metrics"] = this.workspace.interested_metrics;
+    return this.apiService.post("/api/v1/workspaces/" + this.workspace.id + "/interested_metrics", payload).pipe(switchMap(response => {
+      return of(true);
+    }));
+  }
+
+  sendReports(): void {
+    new Observable(observer => {
+      observer.next(true);
+      //observer.complete();
+      return () => {
+      }
+    }).pipe(
+      switchMap(response => {
+        return this.saveComments();
+      }),
+      switchMap(response => {
+        return this.sendEmail();
+      })).subscribe(response => {
+      if (response["status"]) {
+        this.loggerService.success("sent report email successfully to " + this.email);
+      } else {
+        this.loggerService.error("sending email failed");
+      }
+
+    }, error => {
+      this.loggerService.error("sending email failed");
+    });
   }
 
 }

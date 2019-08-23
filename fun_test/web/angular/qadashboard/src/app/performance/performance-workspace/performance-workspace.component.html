@@ -89,16 +89,17 @@
     </div>
     <div class="modal-body">
       <div class="edit-description">
-          <b>Description: </b><a *ngIf="!currentWorkspace.editingDescription"
-                                 (click)="currentWorkspace.editingDescription = true"><i
-          class="fa fa-pencil"></i></a>
+        <b>Description: </b><a *ngIf="!currentWorkspace.editingDescription"
+                               (click)="currentWorkspace.editingDescription = true"><i
+        class="fa fa-pencil"></i></a>
         <i *ngIf="currentWorkspace.editingDescription" class="fa fa-check fa-fw tick-color"
            (click)="currentWorkspace.editingDescription = false"></i>
         <br>
-          <div *ngIf="!currentWorkspace.editingDescription" [innerHTML]="currentWorkspace.description | safeHtml"></div>
-          <textarea *ngIf="currentWorkspace.editingDescription" rows="5" [(ngModel)]="currentWorkspace.description" style="min-width:
+        <div *ngIf="!currentWorkspace.editingDescription" [innerHTML]="currentWorkspace.description | safeHtml"></div>
+        <textarea *ngIf="currentWorkspace.editingDescription" rows="5" [(ngModel)]="currentWorkspace.description"
+                  style="min-width:
           100%;"></textarea>
-        </div>
+      </div>
       <div class="card" style="height: auto; justify-content: left;">
         <div class="card-header">
           Tracked metrics
@@ -109,12 +110,12 @@
               <th style="width: 30%">
                 Chart name
               </th>
-              <th style="width: 10%">
-                Track
-              </th>
-              <th style="width: 10%">
-                Subscribe to alerts
-              </th>
+              <!--<th style="width: 10%">-->
+              <!--Track-->
+              <!--</th>-->
+              <!--<th style="width: 10%">-->
+              <!--Subscribe to alerts-->
+              <!--</th>-->
               <th style="width: 30%">
                 Lineage
               </th>
@@ -126,14 +127,14 @@
               <td>
                 {{ metric['chart_name'] }}
               </td>
-              <td>
-                <app-toggle-button [checked]="metric['track']"
-                                   (changed)="onChangeTrack($event, metric.metric_id)"></app-toggle-button>
-              </td>
-              <td>
-                <app-toggle-button [checked]="metric['subscribe']"
-                                   (changed)="onChangeSubscribeTo($event, metric.metric_id)"></app-toggle-button>
-              </td>
+              <!--<td>-->
+              <!--<app-toggle-button [checked]="metric['track']"-->
+              <!--(changed)="onChangeTrack($event, metric.metric_id)"></app-toggle-button>-->
+              <!--</td>-->
+              <!--<td>-->
+              <!--<app-toggle-button [checked]="metric['subscribe']"-->
+              <!--(changed)="onChangeSubscribeTo($event, metric.metric_id)"></app-toggle-button>-->
+              <!--</td>-->
               <td>
                 {{ metric["lineage"] }}
               </td>
@@ -142,11 +143,9 @@
               </td>
             </tr>
           </table>
-          <a *ngIf="!currentWorkspace.editingWorkspace" [routerLink]=""
-             (click)="currentWorkspace.editingWorkspace = true">Add
-            metrics</a>
-          <a *ngIf="currentWorkspace.editingWorkspace" [routerLink]=""
-             (click)="currentWorkspace.editingWorkspace = false">Close editing</a>
+          <button *ngIf="!currentWorkspace.editingWorkspace" class="fun-button-add"
+                  (click)="currentWorkspace.editingWorkspace = true">Add metrics
+          </button>
         </div>
 
       </div>
@@ -155,18 +154,15 @@
         <div class="card-body">
           <app-performance [selectMode]="true" [userProfileEmail]="selectedUser.email"
                            [workspaceId]="currentWorkspace.workspaceId"
-                           [interestedMetrics]="currentWorkspace.interestedMetrics" [description]="currentWorkspace.description"
+                           [interestedMetrics]="currentWorkspace.interestedMetrics"
+                           [description]="currentWorkspace.description"
                            (editedWorkspace)="updateStatus($event, currentWorkspace)"></app-performance>
         </div>
       </div>
     </div>
     <div class="modal-footer">
-      <button *ngIf="!currentWorkspace.editingWorkspace" type="button"
-              class="btn btn-outline-success btn-sm"
-              (click)="saveWorkspace()">Save
-      </button>&nbsp;
-      <button type="button" class="btn btn-outline-danger btn-sm" (click)="modal.dismiss('Cancel')">
-        Cancel
+      <span class="fun-cancel-link" (click)="modal.dismiss('Cancel')">Cancel</span>
+      <button *ngIf="!currentWorkspace.editingWorkspace" class="fun-button-submit" (click)="saveWorkspace()">Save
       </button>
     </div>
   </ng-template>

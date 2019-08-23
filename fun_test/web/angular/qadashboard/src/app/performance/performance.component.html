@@ -52,15 +52,16 @@
                    (click)="showAtomicMetric(flatNode)">{{ flatNode.node.chartName }}</a><span
                 *ngIf="flatNode.node.workInProgress">&nbsp;<app-smart-label [value]="'work in progress'"
                                                                             [type]="'warning'"></app-smart-label></span>
-                <span *ngIf="flatNode.showAddLeaf">&nbsp;&nbsp;&nbsp;Subscribe:&nbsp;
-
-                  <app-toggle-button [checked]="flatNode.subscribe"
-                                     (changed)="onChangeSubscribeTo($event, flatNode.node.metricId)"></app-toggle-button>
+                <span *ngIf="flatNode.showAddLeaf">
+                  &nbsp;&nbsp;
+                  <!--&nbsp;Subscribe:&nbsp;-->
+                  <!--<app-toggle-button [checked]="flatNode.subscribe"-->
+                                     <!--(changed)="onChangeSubscribeTo($event, flatNode.node.metricId)"></app-toggle-button>-->
                   &nbsp;Track:&nbsp;
                   <app-toggle-button [checked]="flatNode.track"
                                      (changed)="onChangeTrack($event, flatNode.node.metricId)"></app-toggle-button>&nbsp;
-                  <i class="fa fa-times fa-fw close-color"
-                     (click)="removeFromInterestedList(flatNode.node.metricId)"></i>
+                  <!--<i class="fa fa-times fa-fw close-color"-->
+                     <!--(click)="removeFromInterestedList(flatNode.node.metricId)"></i>-->
                </span>
 
               </ng-container>
@@ -178,9 +179,8 @@
           </tr>
         </ng-container>
       </table>
-      <button *ngIf="selectMode" type="button" class="btn btn-success btn-sm" (click)="submitInterestedMetrics()">
-        Submit
-      </button>
+      <span class="fun-cancel-link" (click)="cancelInterestedMetrics()">Cancel</span>
+      <button *ngIf="selectMode" class="fun-button-submit" (click)="submitInterestedMetrics()">Submit</button>
     </div>
     <!-- right side of the perf page dispalying the charts -->
     <div [ngClass]="{'col-lg-7 col-md-7 col-xxl-5 col-xl-7 right-col' : !selectMode}">

@@ -22,7 +22,6 @@ export class PerformanceWorkspaceComponent implements OnInit {
   profile: any = null;
   editingWorkspace: boolean = false;
   workspaceName: string = null;
-  grids: any = [];
   gridLength: number = 0;
   createError: string = null;
   currentWorkspace: any = null;
@@ -323,8 +322,9 @@ export class PerformanceWorkspaceComponent implements OnInit {
   updateStatus(submitted, workspace): void {
     if (submitted) {
       workspace.editingWorkspace = false;
-      this.grids = [];
       this.fetchWorkspacesAfterEditing();
+    } else {
+      workspace.editingWorkspace = false;
     }
   }
 
@@ -340,7 +340,6 @@ export class PerformanceWorkspaceComponent implements OnInit {
         return this.fetchInterestedMetrics(workspace.workspaceId);
       })).pipe(
       switchMap(response => {
-        this.grids = [...workspace["interestedMetrics"]];
         let url = "/performance/workspace/" + this.selectedUser.email + "/" + this.currentWorkspace.name;
         this.router.navigateByUrl(url);
         return of(true);

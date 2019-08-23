@@ -1,23 +1,16 @@
 <!--shows the charts for a particular workspace-->
+<div style="padding: 20px"><a [routerLink]="" (click)="backToWorkspaces()"><< Back to workspaces</a></div>
 <div *ngIf="showWorkspace" class="card card-primary">
   <div class="card-header">
-    <h5 style="text-align: center; margin: 0"><a [routerLink]=""
-                                                 style="font-size:
-      large;
-        float: left" (click)="goBack()">
-      <!--<i class="fa fa-hand-o-left" style="color: black"></i>&nbsp;-->
-      Back</a>
-      <span>{{ workspace.workspace_name }}</span></h5>
-    <a *ngIf="!showGrids" [routerLink]="" (click)="showGrids = true"><i class="fa fa-plus-circle"
-                                                                        style="color: black"></i> Show
-      charts</a>
-    <a *ngIf="showGrids" [routerLink]="" (click)="showGrids = false"><i class="fa fa-minus-circle"
-                                                                        style="color: black"></i> Hide charts</a> |
-    <button
-      *ngIf="workspace.interested_metrics.length > 0" class="btn btn-sm btn-outline-dark"
-      (click)="generateReport()">Generate
-      report
-    </button>
+    <h5 class="card-title" style="margin: 0;">{{ workspace.workspace_name }}</h5>
+    <a *ngIf="!showGrids" [routerLink]="" (click)="showGrids = true">Show charts</a>
+    <a *ngIf="showGrids" [routerLink]="" (click)="showGrids = false">Hide charts</a> |
+    <a *ngIf="workspace.interested_metrics.length > 0 && !reportGenerated" [routerLink]=""
+      (click)="generateReport()">Show report
+    </a>
+    <a *ngIf="workspace.interested_metrics.length > 0 && reportGenerated" [routerLink]=""
+      (click)="reportGenerated = false">Hide report
+    </a>
   </div>
   <div class="card-body flex-container">
     <div class="card" style="flex: 1 1 50%; padding: 10px;">
@@ -26,12 +19,12 @@
           <th style="width: 30%">
             Chart name
           </th>
-          <th style="width: 10%">
-            Track
-          </th>
-          <th style="width: 10%">
-            Subscribe to alerts
-          </th>
+          <!--<th style="width: 10%">-->
+            <!--Track-->
+          <!--</th>-->
+          <!--<th style="width: 10%">-->
+            <!--Subscribe to alerts-->
+          <!--</th>-->
           <th style="width: 10%">
             Yesterday's score
           </th>
@@ -47,14 +40,14 @@
             <a [ngClass]="{highlight:metric.selected}" [routerLink]="" (click)="openChartTable(metric)">{{
               metric['chart_name'] }}</a>
           </td>
-          <td>
-            <app-toggle-button [checked]="metric['track']" [disabled]="true"
-            ></app-toggle-button>
-          </td>
-          <td>
-            <app-toggle-button [checked]="metric['subscribe']" [disabled]="true"
-            ></app-toggle-button>
-          </td>
+          <!--<td>-->
+            <!--<app-toggle-button [checked]="metric['track']" [disabled]="true"-->
+            <!--&gt;</app-toggle-button>-->
+          <!--</td>-->
+          <!--<td>-->
+            <!--<app-toggle-button [checked]="metric['subscribe']" [disabled]="true"-->
+            <!--&gt;</app-toggle-button>-->
+          <!--</td>-->
           <td>
             {{ metric["penultimate_good_score"] }}
           </td>
@@ -115,52 +108,70 @@
     <div class="card" style="margin: 10px; padding: 5px;">
       <b>Subject: </b><input style="max-width: 50%" type="text" [(ngModel)]="subject"/><br>
       <div *ngFor="let row of workspace.interested_metrics">
-        {{ row["chart_name"] }} - Lineage: {{ row["lineage"] }}<br>
-        Link to chart: <a href="{{ atomicUrl + row['metric_id'] }}" target="_blank">Link</a><br>
-        Comments: <textarea [(ngModel)]="row['comments']" style="vertical-align: middle; max-width: 50%"></textarea>
-        <table class="table table-bordered" style="max-width: 50%">
-          <tr>
-            <th style="width: 10%">
+        <div style="vertical-align: middle; width: 50%">
+          {{ row["chart_name"] }} - Lineage: {{ row["lineage"] }}<br>
+          Link to chart: <a href="{{ atomicUrl + row['metric_id'] }}" target="_blank">Link</a><br>
+          Comments: <textarea [(ngModel)]="row['comments']" style="width: 100%"></textarea>
+        </div>
+        <table class="table table-bordered" style="max-width: 50%; margin: 0">
+          <tr style="text-align: center; vertical-align: middle">
+            <th rowspan="2">
               Name
             </th>
-            <th style="width: 10%">
+            <th rowspan="2">
               Yesterday
             </th>
-            <th style="width: 10%">
+            <th rowspan="2">
               Today
             </th>
-            <th style="width: 10%">
+            <th rowspan="2">
               Percentage
             </th>
-            <th style="width: 10%">
+            <th rowspan="2">
               Unit
             </th>
+            <th colspan="2">
+              History
+            </th>
           </tr>
-          <tr *ngFor="let dataSet of row['report']">
-            <td>
+          <tr style="text-align: center; vertical-align: middle">
+            <th>Date</th>
+            <th>Value</th>
+          </tr>
+          <ng-container *ngFor="let dataSet of row['report']">
+             <tr>
+            <td [attr.rowspan]="dataSet['rows'] + 1">
               {{ dataSet.name }}
             </td>
-            <td>
+            <td [attr.rowspan]="dataSet['rows'] + 1">
               {{ dataSet.yesterday }}
             </td>
-            <td>
+            <td [attr.rowspan]="dataSet['rows'] + 1">
               {{ dataSet.today }}
             </td>
-            <td>
+            <td [attr.rowspan]="dataSet['rows'] + 1"
+                [ngClass]="{'text-red': dataSet.percentage.includes('-'), 'text-green': dataSet.percentage.includes('+')}">
               {{ dataSet.percentage }}
             </td>
-            <td>
+            <td [attr.rowspan]="dataSet['rows'] + 1">
               {{ dataSet.unit }}
             </td>
           </tr>
+            <tr *ngFor="let data of dataSet['history']">
+            <td>{{ data.date }}</td>
+            <td>{{ data.value }}</td>
+          </tr>
+          </ng-container>
         </table>
+        <div style="vertical-align: middle; width: 50%">
+          Bugs: <span
+          *ngFor="let jiraId of row['jira_ids']"><a href="{{ jiraUrl + jiraId }}" target="_blank">{{ jiraId }}</a></span>
+        </div>
+        <br>
       </div>
       <span>
-      <a [routerLink]="" (click)="reportGenerated = false">Cancel</a>
-      <button
-        class="btn btn-sm btn-success" style="margin: 5px;"
-        (click)="sendReports()">Send
-    </button>
+        <span class="fun-cancel-link" (click)="reportGenerated = false">Cancel</span>
+        <button class="fun-button-submit" (click)="sendReports()">Send report</button>
     </span>
     </div>
   </ng-container>
