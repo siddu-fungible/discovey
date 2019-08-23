@@ -1,0 +1,1 @@
+python networking/funeth/sanity.py --environment='{"test_bed_type":"fs-11","bootup_funos":0}' --test_case_ids 1

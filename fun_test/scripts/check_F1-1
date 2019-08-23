@@ -1,0 +1,2 @@
+DEL openconfig-fcp:fcp-tunnel[ftep='9.0.0.1']
+DEL openconfig-fcp:fcp-tunnel[ftep='9.0.0.1']

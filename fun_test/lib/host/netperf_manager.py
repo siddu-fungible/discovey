@@ -5,8 +5,8 @@ import re
 
 
 NETSERVER_PORT = 12865
-NETSERVER_FIXED_PORT_CONTROL_BASE = 10000
-NETSERVER_FIXED_PORT_DATA_BASE = 20000
+NETSERVER_FIXED_PORT_CONTROL_BASE = 30000
+NETSERVER_FIXED_PORT_DATA_BASE = 40000
 THROUGHPUT = 'throughput'
 LATENCY = 'latency'
 PPS = 'pps'
@@ -251,8 +251,6 @@ class NetperfManager:
                 cpu_list_server = sorted(arg_dict.get('cpu_list_server'))[::-1]  # reversed order
                 cpu_list_client = sorted(arg_dict.get('cpu_list_client'))[::-1]  # reversed order
                 netperf_port_delta = arg_dict.get('netperf_port_delta', 0)
-                if netperf_port_delta:
-                    netperf_port_delta += test_id*1000
                 csi_perf_obj = arg_dict.get('csi_perf_obj', None)
 
                 if test_id == 2:
@@ -269,7 +267,7 @@ class NetperfManager:
                     netserver_cpu_list.append(netserver_cpu)
                     mp_task_obj.add_task(
                         func=do_test,
-                        func_args=(linux_obj, dip, protocol, duration, frame_size, cpu, measure_latency, sip, ns, netperf_port_delta),
+                        func_args=(linux_obj, dip, protocol, duration, frame_size, cpu, measure_latency, sip, ns, netperf_port_delta+test_id),
                         task_key='{}_{}_{}'.format(direction, dip, i))
                 if test_id == 3:
                     #if num_flows == 1:
@@ -278,11 +276,11 @@ class NetperfManager:
                     measure_latency = True
                     mp_task_obj.add_task(
                         func=do_test,
-                        func_args=(linux_obj, dip, protocol, duration, frame_size, cpu, measure_latency, sip, ns, netperf_port_delta),
+                        func_args=(linux_obj, dip, protocol, duration, frame_size, cpu, measure_latency, sip, ns, netperf_port_delta+test_id),
                         task_key='{}_{}_{}_latency'.format(direction, dip, i))
 
                 # Start netserver
-                if not self.start_netserver(linux_obj_dst, cpu_list=netserver_cpu_list, netperf_port_delta=netperf_port_delta):
+                if not self.start_netserver(linux_obj_dst, cpu_list=netserver_cpu_list, netperf_port_delta=netperf_port_delta+test_id):
                     fun_test.critical('Failed to start netserver!')
                     netserver_ready = False
                     break
