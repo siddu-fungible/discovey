@@ -318,7 +318,7 @@ export class TestBedComponent implements OnInit {
     testBed.editingMode = false;
   }
 
-  onEdit(testBed) {
+  editDescription(testBed) {
     this.tempDescription = testBed.description;
     testBed.editingMode = true;
   }

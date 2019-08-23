@@ -25,7 +25,7 @@
 
               <tr *ngFor="let testBed of testBeds">
                 <td><a href="/regression?test_bed_type={{ testBed.name }}">{{ testBed.name }}</a></td>
-                <td class="hover-cell"><span [innerHtml]="testBed.description  | safeHtml"></span>&nbsp;&nbsp;<i class="fa fa-pencil hover-icon" style="font-size:14px; float: right" (click)="onEdit(testBed)"></i>&nbsp;
+                <td class="hover-cell"><span [innerHtml]="testBed.description  | safeHtml"></span>&nbsp;&nbsp;<i class="fa fa-pencil hover-icon" style="font-size:14px; float: right" (click)="editDescription(testBed)"></i>&nbsp;
 
                   <div *ngIf="testBed.editingMode">
                     <br>
