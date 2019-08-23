@@ -698,17 +698,21 @@ class ComE(Linux):
         fun_test.simple_assert(funq_bind_device, "funq_bind_device found for {}".format(f1_index))
         bus_number = self._get_bus_number(pcie_device_id=funq_bind_device)
 
-        artifact_file_name = fun_test.get_test_case_artifact_file_name(post_fix_name="hbm_dump_f1_{}.txt".format(f1_index))
+        artifact_file_name = fun_test.get_test_case_artifact_file_name(post_fix_name="hbm_dump_f1_{}.bin".format(f1_index))
         artifact_file_name = "{}/{}".format(self.HBM_DUMP_DIRECTORY, self._get_context_prefix(os.path.basename(artifact_file_name)))
         if funq_bind_device:
             pass
         command = "{}/{} -a 0x100000 -s 0x40000000 -b /sys/bus/pci/devices/0000:0{}:00.2/resource2 -f -o {}".format(self.HBM_TOOL_DIRECTORY, self.HBM_TOOL, bus_number, artifact_file_name)
         self.sudo_command(command, timeout=10 * 60)
         fun_test.test_assert(self.list_files(artifact_file_name), "HBM dump file created")
-        fun_test.log("HBM dump file: {}".format(artifact_file_name))
+        tar_artifact_file_name = artifact_file_name + ".tgz"
+        command = "tar -cvzf {} {} --remove-files".format(tar_artifact_file_name, artifact_file_name)
+        self.sudo_command(command, timeout=60)
+        fun_test.test_assert(self.list_files(tar_artifact_file_name), "HBM dump file tgz created")
+        fun_test.log("HBM dump tgz file: {}".format(tar_artifact_file_name))
         self.list_files(path="{}".format(self.HBM_DUMP_DIRECTORY))
         fun_test.report_message("ComE IP: {}, username: {} password: {}".format(self.host_ip, self.ssh_username, self.ssh_password))
-        fun_test.report_message("HBM dump for F1_{} available at {}".format(f1_index, artifact_file_name))
+        fun_test.report_message("HBM dump for F1_{} available at {}".format(f1_index, tar_artifact_file_name))
 
     def setup_hbm_tools(self):
         tool_path = "{}/{}".format(STASH_DIR, self.HBM_TOOL)
