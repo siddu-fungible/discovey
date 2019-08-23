@@ -571,6 +571,8 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
         fun_test.log("Provided job inputs: {}".format(job_inputs))
         if "blt_count" in job_inputs:
             self.blt_count = job_inputs["blt_count"]
+        if "nvme_io_queues" in job_inputs:
+            self.nvme_io_queues = job_inputs["nvme_io_queues"]
         if "post_results" in job_inputs:
             self.post_results = job_inputs["post_results"]
         else:
@@ -686,13 +688,13 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                     self.host_handles[key].modprobe("nvme_fabrics")
 
                 self.host_handles[key].start_bg_process(command="sudo tcpdump -i enp216s0 -w nvme_connect_auto.pcap")
-                if hasattr(self, "nvme_io_q"):
+                if hasattr(self, "nvme_io_queues") and self.nvme_io_queues != 0:
                     command_result = self.host_handles[key].sudo_command(
                         "nvme connect -t {} -a {} -s {} -n {} -i {} -q {}".format(unicode.lower(self.transport_type),
                                                                                   self.test_network["f1_loopback_ip"],
                                                                                   self.transport_port,
                                                                                   nqn,
-                                                                                  self.nvme_io_q,
+                                                                                  self.nvme_io_queues,
                                                                                   self.host_ips[i]))
                     fun_test.log(command_result)
                 else:
