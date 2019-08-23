@@ -644,6 +644,8 @@ class ComE(Linux):
     HBM_TOOL_DIRECTORY = "/home/fun/hbm_dump_tool"
     HBM_TOOL = "hbm_dump_pcie"
 
+    MAX_HBM_DUMPS = 200
+
     def __init__(self, **kwargs):
         super(ComE, self).__init__(**kwargs)
         self.original_context_description = None
@@ -665,7 +667,7 @@ class ComE(Linux):
         fun_test.test_assert(expression=self.is_dpc_ready(), message="DPC ready", context=self.context)
         self.hbm_dump_enabled = fun_test.get_job_environment_variable("hbm_dump")
         if self.hbm_dump_enabled:
-            self.setup_hbm_tools()
+            fun_test.test_assert(self.setup_hbm_tools(), "HBM tools and dump directory ready")
 
         return True
 
@@ -722,8 +724,11 @@ class ComE(Linux):
         fun_test.scp(source_file_path=tool_path, target_ip=self.host_ip, target_username=self.ssh_username, target_password=self.ssh_password, target_file_path=target_file_path)
         fun_test.simple_assert(self.list_files(target_file_path), "HBM tool copied")
         self.command("mkdir -p {}".format(self.HBM_DUMP_DIRECTORY))
-        self.sudo_command("rm -rf {}/*hbm_dump*txt".format(self.HBM_DUMP_DIRECTORY))
-
+        tgzs = "{}/*tgz".format(self.HBM_DUMP_DIRECTORY)
+        num_tgzs = len(self.list_files(tgzs))
+        fun_test.simple_assert(num_tgzs < self.MAX_HBM_DUMPS, "Only {} dump tgzs are allowed. Please delete a few old ones".format(self.MAX_HBM_DUMPS))
+        # self.sudo_command("rm -rf {}/*hbm_dump*txt".format(self.HBM_DUMP_DIRECTORY))
+        return True
 
     def setup_tools(self):
         if not self.command_exists("fio"):
