@@ -151,6 +151,7 @@ class CheckSSDSpeed(FunTestCase):
 
                 gen3x2_fail = True
 
+
         if ssd_already_up_count_fail or ssd_up_count_fail or gen3x4_fail or gen3x2_fail:
             fun_test.test_assert(False, "SSD checks failed")
 
@@ -180,7 +181,12 @@ class F1reset(FunTestScript):
         fun_test.test_assert(fs_0.fpga_initialize(), "FPGA initiaize")
 
     def cleanup(self):
-        pass
+        fs_0 = fun_test.shared_variables['fs_object']
+        for f1index in 0, 1:
+            uart_path = fs_0.get_uart_log_file(f1_index=f1index)
+            fun_test.add_auxillary_file(
+                description="F1-{} Uart Logs".format(f1index),
+                filename=uart_path)
 
 
 if __name__ == '__main__':
