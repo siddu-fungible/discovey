@@ -7,6 +7,7 @@ from fun_settings import TFTP_SERVER_IP, FUN_TEST_LIB_UTILITIES_DIR, INTEGRATION
 from lib.utilities.netcat import Netcat
 from lib.system.utils import ToDictMixin
 from lib.host.apc_pdu import ApcPdu
+from fun_settings import STASH_DIR
 
 from threading import Thread
 from datetime import datetime
@@ -111,6 +112,7 @@ class Bmc(Linux):
             self.original_context_description = self.context.description
         self.setup_support_files = setup_support_files
         self.nc = {}  # nc connections to serial proxy indexed by f1_index
+        self.hbm_dump_enabled = fun_test.get_job_environment_variable("hbm_dump")
 
     @fun_test.safe
     def ping(self,
@@ -232,8 +234,14 @@ class Bmc(Linux):
         self.uart_log_listener_process_ids.append(process_id)
 
     def _get_boot_args_for_index(self, boot_args, f1_index):
-        return "sku=SKU_FS1600_{} ".format(f1_index) + boot_args
-
+        s = "sku=SKU_FS1600_{} ".format(f1_index) + boot_args
+        if self.hbm_dump_enabled:
+            if "cc_huid" not in s:
+                huid = 3
+                if f1_index == 1:
+                    huid = 2
+                s += " cc_huid={}".format(huid)
+        return s
     def setup_serial_proxy_connection(self, f1_index):
         self.nc[f1_index] = Netcat(ip=self.host_ip, port=self.SERIAL_PROXY_PORTS[f1_index])
         nc = self.nc[f1_index]
@@ -458,6 +466,7 @@ class Bmc(Linux):
         for f1_index in range(self.NUM_F1S):
             if self.disable_f1_index is not None and f1_index == self.disable_f1_index:
                 continue
+
             log_listener_processes = self.get_process_id_by_pattern(self.UART_LOG_LISTENER_FILE + ".*_{}.*txt".format(f1_index), multiple=True)
             for log_listener_process in log_listener_processes:
                 self.kill_process(signal=15, process_id=int(log_listener_process))
@@ -631,11 +640,16 @@ class ComE(Linux):
     NUM_F1S = 2
     NVME_CMD_TIMEOUT = 600000
 
+    HBM_DUMP_DIRECTORY = "/home/fun/hbm_dumps"
+    HBM_TOOL_DIRECTORY = "/home/fun/hbm_dump_tool"
+    HBM_TOOL = "hbm_dump_pcie"
+
     def __init__(self, **kwargs):
         super(ComE, self).__init__(**kwargs)
         self.original_context_description = None
         if self.context:
             self.original_context_description = self.context.description
+        self.hbm_dump_enabled = False
 
     def initialize(self, reset=False, disable_f1_index=None):
         self.disable_f1_index = disable_f1_index
@@ -649,7 +663,18 @@ class ComE(Linux):
         fun_test.test_assert(expression=self.detect_pfs(), message="Fungible PFs detected", context=self.context)
         fun_test.test_assert(expression=self.setup_dpc(), message="Setup DPC", context=self.context)
         fun_test.test_assert(expression=self.is_dpc_ready(), message="DPC ready", context=self.context)
+        self.hbm_dump_enabled = fun_test.get_job_environment_variable("hbm_dump")
+        if self.hbm_dump_enabled:
+            self.setup_hbm_tools()
+
         return True
+
+    def _get_bus_number(self, pcie_device_id):
+        bus_number = None
+        parts = pcie_device_id.split(":")
+        if parts:
+            bus_number = int(parts[0])
+        return bus_number
 
     def get_dpc_port(self, f1_index):
         return self.DEFAULT_DPC_PORT[f1_index]
@@ -659,19 +684,42 @@ class ComE(Linux):
         self.command("cd {}".format(working_directory))
         self.command("mkdir -p workspace; cd workspace")
         self.command("export WORKSPACE=$PWD")
-        # self.command(
-        #     "wget http://10.1.20.99/doc/jenkins/funcontrolplane/latest/functrlp_palladium.tgz")
-        # files = self.list_files("functrlp_palladium.tgz")
-        # fun_test.test_assert(len(files), "functrlp_palladium.tgz downloaded")
         self.command("wget http://10.1.20.99/doc/jenkins/funsdk/latest/Linux/dpcsh.tgz")
         fun_test.test_assert(expression=self.list_files("dpcsh.tgz"),
                              message="dpcsh.tgz downloaded",
                              context=self.context)
-        # self.command("mkdir -p FunControlPlane FunSDK")
         self.command("mkdir -p FunSDK")
-        # self.command("tar -zxvf functrlp_palladium.tgz -C ../workspace/FunControlPlane")
         self.command("tar -zxvf dpcsh.tgz -C ../workspace/FunSDK")
+
         return True
+
+    def hbm_dump(self, f1_index):
+        funq_bind_device = self.funq_bind_device.get(f1_index, None)
+        fun_test.simple_assert(funq_bind_device, "funq_bind_device found for {}".format(f1_index))
+        bus_number = self._get_bus_number(pcie_device_id=funq_bind_device)
+
+        artifact_file_name = fun_test.get_test_case_artifact_file_name(post_fix_name="hbm_dump_f1_{}.txt".format(f1_index))
+        artifact_file_name = "{}/{}".format(self.HBM_DUMP_DIRECTORY, self._get_context_prefix(os.path.basename(artifact_file_name)))
+        if funq_bind_device:
+            pass
+        command = "{}/{} -a 0x100000 -s 0x40000000 -b /sys/bus/pci/devices/0000:0{}:00.2/resource2 -f -o {}".format(self.HBM_TOOL_DIRECTORY, self.HBM_TOOL, bus_number, artifact_file_name)
+        self.sudo_command(command, timeout=10 * 60)
+        fun_test.test_assert(self.list_files(artifact_file_name), "HBM dump file created")
+        fun_test.log("HBM dump file: {}".format(artifact_file_name))
+        self.list_files(path="{}".format(self.HBM_DUMP_DIRECTORY))
+        fun_test.report_message("ComE IP: {}, username: {} password: {}".format(self.host_ip, self.ssh_username, self.ssh_password))
+        fun_test.report_message("HBM dump for F1_{} available at {}".format(f1_index, artifact_file_name))
+
+    def setup_hbm_tools(self):
+        tool_path = "{}/{}".format(STASH_DIR, self.HBM_TOOL)
+        fun_test.simple_assert(os.path.exists(tool_path), "Ensure HBM tool exists at {} (locally)".format(tool_path))
+        self.command("mkdir -p {}".format(self.HBM_TOOL_DIRECTORY))
+        target_file_path = "{}/{}".format(self.HBM_TOOL_DIRECTORY, self.HBM_TOOL)
+        fun_test.scp(source_file_path=tool_path, target_ip=self.host_ip, target_username=self.ssh_username, target_password=self.ssh_password, target_file_path=target_file_path)
+        fun_test.simple_assert(self.list_files(target_file_path), "HBM tool copied")
+        self.command("mkdir -p {}".format(self.HBM_DUMP_DIRECTORY))
+        self.sudo_command("rm -rf {}/*hbm_dump*txt".format(self.HBM_DUMP_DIRECTORY))
+
 
     def setup_tools(self):
         if not self.command_exists("fio"):
@@ -782,6 +830,10 @@ class ComE(Linux):
         for f1_index in range(self.NUM_F1S):
             if f1_index == self.disable_f1_index:
                 continue
+
+            if self.hbm_dump_enabled:
+                self.hbm_dump(f1_index=f1_index)
+
             artifact_file_name = fun_test.get_test_case_artifact_file_name(self._get_context_prefix("f1_{}_dpc_log.txt".format(f1_index)))
             fun_test.scp(source_file_path=self.get_dpc_log_path(f1_index=f1_index), source_ip=self.host_ip, source_password=self.ssh_password, source_username=self.ssh_username, target_file_path=artifact_file_name)
             fun_test.add_auxillary_file(description=self._get_context_prefix("F1_{} DPC Log").format(f1_index),
@@ -941,6 +993,7 @@ class Fs(object, ToDictMixin):
     def cleanup(self):
         self.get_bmc().cleanup()
         self.get_come().cleanup()
+
 
         try:
             self.get_bmc().disconnect()
@@ -1319,5 +1372,6 @@ if __name__ == "__main2__":
 
 
 if __name__ == "__main__":
-    come = ComE(host_ip="fs21-come.fungible.local", ssh_username="fun", ssh_password="123")
-    print come.setup_tools()
+    come = ComE(host_ip="fs63-come.fungible.local", ssh_username="fun", ssh_password="123")
+    come.setup_hbm_tools()
+    #print come.setup_tools()
