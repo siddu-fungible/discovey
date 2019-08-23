@@ -170,9 +170,14 @@ export class SuiteEditorComponent implements OnInit {
       })
 
     });
-    return new FormGroup(group);
+    let fg = new FormGroup(group);
+    fg.setValidators(this.customTestBedSpecValidator);
+    return fg;
   }
 
+  customTestBedSpecValidator(group: FormGroup): { [key: string]: boolean } | null {
+    return {'valid': false};
+  }
 
   _flattenName(name: string): string {  /* flatten DUT to dut, Perf Listener to "perf_listener"*/
     return name.toLowerCase().replace(" ", "_");
@@ -211,6 +216,9 @@ export class SuiteEditorComponent implements OnInit {
     this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title'}).result.then((dontCare) => {
       console.log("Ready to submit");
       let customTestBedSpec = {};
+      if (!this.customTestBedSpecForm.get('selectedTestBed')) {
+        return
+      }
       
 
     }, ((reason) => {
