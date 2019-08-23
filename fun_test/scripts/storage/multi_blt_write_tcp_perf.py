@@ -584,6 +584,13 @@ class MultiBLTVolumePerformanceTestcase(FunTestCase):
         self.nvme_block_device = self.nvme_device + "0n" + str(self.blt_details["ns_id"])
         self.volume_name = self.nvme_block_device.replace("/dev/", "")
 
+        job_inputs = fun_test.get_job_inputs()
+        if not job_inputs:
+            job_inputs = {}
+        fun_test.log("Provided job inputs: {}".format(job_inputs))
+        if "nvme_io_queues" in job_inputs:
+            self.nvme_io_queues = job_inputs["nvme_io_queues"]
+
         if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
                 self.testbed_config["workarounds"]["enable_funcp"]:
             self.fs = fun_test.shared_variables["fs_objs"]
@@ -720,14 +727,14 @@ class MultiBLTVolumePerformanceTestcase(FunTestCase):
                                           message="Checking syslog level")
 
             fun_test.sleep("x86 Config done", seconds=10)
-            if hasattr(self, "nvme_io_q"):
+            if hasattr(self, "nvme_io_queues") and self.nvme_io_queues != 0:
                 command_result = self.end_host.sudo_command(
                     "nvme connect -t {} -a {} -s {} -n {} -i {} -q {}".
                         format(unicode.lower(self.transport_type),
                                self.test_network["f1_loopback_ip"],
                                str(self.transport_port),
                                self.nqn,
-                               self.nvme_io_q,
+                               self.nvme_io_queues,
                                self.remote_ip))
                 fun_test.log(command_result)
             else:

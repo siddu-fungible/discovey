@@ -307,7 +307,7 @@ class FunethPerformanceBase(FunTestCase):
                  'suffix': suffix,
                  'cpu_list_server': cpu_list_server,
                  'cpu_list_client': cpu_list_client,
-                 'netperf_port_delta': fun_test.current_test_case_id if 'OL_VM' in flow_type.upper() else 0,  # TODO: Remove after SWOS-5645
+                 'fixed_netperf_port': True if 'OL_VM' in flow_type.upper() else False,  # TODO: Remove after SWOS-5645
                  'csi_perf_obj': fun_test.shared_variables['csi_perf_obj'],
                  }
             )
@@ -324,7 +324,7 @@ class FunethPerformanceBase(FunTestCase):
                                                         version,
                                                         when='before')
 
-        if pingable and not any(i for i in sth_stuck_before):
+        if pingable and not any(i for i in sth_stuck_before[:-1]):  # Still test if is_wropkt_timeout_skip is True
 
             # TODO: calculate dpc stats collection duration and add it to test duration*2
             perf_utils.collect_host_stats(funeth_obj, version, when='before', duration=duration*5)
@@ -339,8 +339,8 @@ class FunethPerformanceBase(FunTestCase):
                                                            when='after')
             # Collect host stats after dpc stats to give enough time for mpstat collection
             perf_utils.collect_host_stats(funeth_obj, version, when='after')
-            if any(i for i in sth_stuck_after):
-                result = {}
+            #if any(i for i in sth_stuck_after):
+            #    result = {}
         else:
             result = {}
 
