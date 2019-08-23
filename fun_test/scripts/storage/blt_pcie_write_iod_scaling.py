@@ -6,6 +6,7 @@ from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper
 from fun_settings import REGRESSION_USER, REGRESSION_USER_PASSWORD
 from lib.fun.f1 import F1
 from lib.fun.fs import Fs
+from storage_helper import *
 from datetime import datetime
 from lib.templates.storage.fio_performance_helper import FioPerfHelper
 
@@ -273,19 +274,28 @@ class BLTVolumePerformanceTestcase(FunTestCase):
 
             # Checking that the above created BLT volume is visible to the end host
             fun_test.sleep("Sleeping for couple of seconds for the volume to accessible to the host", 5)
-            self.volume_name = self.nvme_device.replace("/dev/", "") + "n" + str(self.volume_details["ns_id"])
-            lsblk_output = self.end_host.lsblk()
-            fun_test.test_assert(self.volume_name in lsblk_output, "{} device available".format(self.volume_name))
-            fun_test.test_assert_expected(expected="disk", actual=lsblk_output[self.volume_name]["type"],
-                                          message="{} device type check".format(self.volume_name))
 
+            fetch_nvme = fetch_nvme_device(self.end_host, self.volume_details["ns_id"])
+            fun_test.test_assert(fetch_nvme['status'], message="Check: nvme device visible on end host")
+            self.nvme_block_device = fetch_nvme['nvme_device']
+            fun_test.shared_variables["nvme_device"] = fetch_nvme['nvme_device']
+
+            # Writing Preconditioning the vol ezfio logic
+            if self.warm_up_traffic:
+                for i in xrange(2):
+                    fun_test.log("Write IO to volume, this might take long time depending on fio --size provided")
+                    fio_output = self.end_host.pcie_fio(filename=self.nvme_block_device, **self.warm_up_fio_cmd_args)
+                    fun_test.log("FIO Command Output:\n{}".format(fio_output))
+                    fun_test.test_assert(fio_output, "Pre-populating the volume")
+                    fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval),
+                                   self.iter_interval)
             fun_test.shared_variables["blt"]["setup_created"] = True
 
     def run(self):
 
         testcase = self.__class__.__name__
         test_method = testcase[3:]
-
+        self.nvme_block_device = fun_test.shared_variables["nvme_device"]
         # Going to run the FIO test for the block size and iodepth combo listed in fio_jobs_iodepth in both write only
         # & read only modes
         fio_result = {}
