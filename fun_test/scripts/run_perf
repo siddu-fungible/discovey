@@ -1,1 +1,0 @@
-python networking/funeth/performance.py --environment='{"test_bed_type":"fs-11"}' --inputs='{"bootup_funos":0,"cleanup":0,"control_plane":1,"update_driver":0,"hu_host_vm":0,"configure_overlay":0}' --test_case_ids 4000

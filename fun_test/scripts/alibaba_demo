@@ -1,4 +1,0 @@
-#!/bin/bash
-
-python networking/funcp/alibaba_bmv_setup_configuration.py --environment='{"test_bed_type":"fs-alibaba-demo","tftp_image_path":"funos-f1.stripped.gz.ali_demo2"}'
-
