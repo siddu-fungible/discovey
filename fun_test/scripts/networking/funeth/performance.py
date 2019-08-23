@@ -83,6 +83,7 @@ class FunethPerformance(sanity.FunethSanity):
         driver_commit = super(FunethPerformance, self).__getattribute__('driver_commit')
         driver_bld =  super(FunethPerformance, self).__getattribute__('driver_bld')
         come_linux_obj = super(FunethPerformance, self).__getattribute__('come_linux_obj')
+        funeth_obj = super(FunethPerformance, self).__getattribute__('funeth_obj')
         if sanity.csi_perf_enabled:
             csi_perf_obj = super(FunethPerformance, self).__getattribute__('csi_perf_obj')
         else:
@@ -94,8 +95,8 @@ class FunethPerformance(sanity.FunethSanity):
         fun_test.shared_variables['come_linux_obj'] = come_linux_obj
         fun_test.shared_variables['csi_perf_obj'] = csi_perf_obj
 
-        tb_config_obj = tb_configs.TBConfigs(TB)
-        funeth_obj = funeth.Funeth(tb_config_obj)
+        #tb_config_obj = tb_configs.TBConfigs(TB)
+        #funeth_obj = funeth.Funeth(tb_config_obj)
         fun_test.shared_variables['funeth_obj'] = funeth_obj
         linux_objs = funeth_obj.linux_obj_dict.values()
 
@@ -114,10 +115,12 @@ class FunethPerformance(sanity.FunethSanity):
 
         # HU host is VM
         if sanity.hu_host_vm:
-            tb_config_obj_ul_vm = tb_configs.TBConfigs(tb_configs.get_tb_name_vm(TB, 'ul'))
-            tb_config_obj_ol_vm = tb_configs.TBConfigs(tb_configs.get_tb_name_vm(TB, 'ol'))
-            funeth_obj_ul_vm = funeth.Funeth(tb_config_obj_ul_vm)
-            funeth_obj_ol_vm = funeth.Funeth(tb_config_obj_ol_vm)
+            #tb_config_obj_ul_vm = tb_configs.TBConfigs(tb_configs.get_tb_name_vm(TB, 'ul'))
+            #tb_config_obj_ol_vm = tb_configs.TBConfigs(tb_configs.get_tb_name_vm(TB, 'ol'))
+            #funeth_obj_ul_vm = funeth.Funeth(tb_config_obj_ul_vm)
+            #funeth_obj_ol_vm = funeth.Funeth(tb_config_obj_ol_vm)
+            funeth_obj_ul_vm = super(FunethPerformance, self).__getattribute__('funeth_obj_ul_vm')
+            funeth_obj_ol_vm = super(FunethPerformance, self).__getattribute__('funeth_obj_ol_vm')
             fun_test.shared_variables['funeth_obj_ul_vm'] = funeth_obj_ul_vm
             fun_test.shared_variables['funeth_obj_ol_vm'] = funeth_obj_ol_vm
 
@@ -321,7 +324,7 @@ class FunethPerformanceBase(FunTestCase):
                                                         version,
                                                         when='before')
 
-        if pingable and not sth_stuck_before:
+        if pingable and not any(i for i in sth_stuck_before):
 
             # TODO: calculate dpc stats collection duration and add it to test duration*2
             perf_utils.collect_host_stats(funeth_obj, version, when='before', duration=duration*5)
@@ -336,8 +339,8 @@ class FunethPerformanceBase(FunTestCase):
                                                            when='after')
             # Collect host stats after dpc stats to give enough time for mpstat collection
             perf_utils.collect_host_stats(funeth_obj, version, when='after')
-            if sth_stuck_after:
-                result = {}
+            #if any(i for i in sth_stuck_after):
+            #    result = {}
         else:
             result = {}
 
@@ -410,8 +413,18 @@ class FunethPerformanceBase(FunTestCase):
         tc_ids.append(fun_test.current_test_case_id)
         fun_test.simple_assert(pingable, '{} ping {} with packet size {}'.format(
             linux_obj_src.host_ip, dip, frame_size))
-        fun_test.simple_assert(not sth_stuck_before, 'Something is stuck before test')
-        fun_test.simple_assert(not sth_stuck_after, 'Something is stuck after test')
+
+        # Check if something is stuck/blocked, or unexpected
+        when = 'before'
+        for is_etp_queue_stuck, is_flow_blocked, is_parser_stuck, is_vp_stuck, is_wropkt_timeout_skip in (
+                sth_stuck_before, sth_stuck_after):
+            fun_test.simple_assert(not is_etp_queue_stuck, 'ETP queue is stuck {} test'.format(when))
+            fun_test.simple_assert(not is_flow_blocked, 'Flow is blocked {} test'.format(when))
+            fun_test.simple_assert(not is_parser_stuck, 'Parser is stuck {} test'.format(when))
+            fun_test.simple_assert(not is_vp_stuck, 'VP is stuck {} test'.format(when))
+            fun_test.simple_assert(not is_wropkt_timeout_skip, 'WROPKT_TIMEOUT_SKIP happens {} test'.format(when))
+            when = 'after'
+
         fun_test.test_assert(passed, 'Get throughput/pps/latency test result')
 
 

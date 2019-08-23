@@ -377,9 +377,7 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict,  v
             messages.append('WROPKT_TIMEOUT_SKIP happened')
         fun_test.critical('; '.join(messages))
 
-        return True
-    else:
-        return False
+    return is_etp_queue_stuck, is_flow_blocked, is_parser_stuck, is_vp_stuck, is_wropkt_timeout_skip
     #return fpg_tx_pkts, fpg_tx_bytes, fpg_rx_pkts, fpg_rx_bytes
 
 
