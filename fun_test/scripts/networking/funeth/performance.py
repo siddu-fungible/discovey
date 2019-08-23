@@ -324,7 +324,7 @@ class FunethPerformanceBase(FunTestCase):
                                                         version,
                                                         when='before')
 
-        if pingable and not any(i for i in sth_stuck_before):
+        if pingable and not any(i for i in sth_stuck_before[:-1]):  # Still test if is_wropkt_timeout_skip is True
 
             # TODO: calculate dpc stats collection duration and add it to test duration*2
             perf_utils.collect_host_stats(funeth_obj, version, when='before', duration=duration*5)
