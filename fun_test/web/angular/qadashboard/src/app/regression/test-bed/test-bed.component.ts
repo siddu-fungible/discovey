@@ -40,6 +40,7 @@ export class TestBedComponent implements OnInit {
   userMap: any = null;
   editingDescription: boolean = false;
   currentDescription: string;
+  descriptionDict = {};
 
   constructor(private regressionService: RegressionService,
               private apiService: ApiService,
@@ -127,6 +128,7 @@ export class TestBedComponent implements OnInit {
         testBed['editingMode'] = false;
         let numExecutions = -1;
         let executionId = -1;
+        this.descriptionDict[testBed.id] = testBed.description;
         this.automationStatus[testBed.name] = {numExecutions: numExecutions,
           executionId: executionId};
 
@@ -323,6 +325,7 @@ export class TestBedComponent implements OnInit {
   }
 
   toggleEdit(testBed) {
+    this.currentDescription = this.descriptionDict[testBed.id];
     testBed.editingMode = !testBed.editingMode;
   }
 }
