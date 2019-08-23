@@ -468,8 +468,8 @@ class ECVolumeLevelTestcase(FunTestCase):
             self.ec_info["num_volumes"] = job_inputs["num_volumes"]
         if "vol_size" in job_inputs:
             self.ec_info["capacity"] = job_inputs["vol_size"]
-        if "io_queues" in job_inputs:
-            self.io_queues = job_inputs["io_queues"]
+        if "nvme_io_queues" in job_inputs:
+            self.nvme_io_queues = job_inputs["nvme_io_queues"]
         if "post_results" in job_inputs:
             self.post_results = job_inputs["post_results"]
         else:
@@ -629,7 +629,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                     for sc_index, sc_obj in enumerate(self.sc_obj):
                         if host_ip in self.ec_info[sc_obj]:
                             # Building nvme connect command
-                            if not hasattr(self, "io_queues") or (hasattr(self, "io_queues") and self.io_queues == 0):
+                            if not hasattr(self, "nvme_io_queues") or (hasattr(self, "nvme_io_queues") and self.nvme_io_queues == 0):
                                 nvme_connect_status = host_handle.nvme_connect(
                                     target_ip=self.f1_ips[sc_index],
                                     nvme_subsystem=self.ec_info[sc_obj][host_ip][self.attach_transport]["nqn"],
@@ -640,7 +640,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                                     target_ip=self.f1_ips[sc_index],
                                     nvme_subsystem=self.ec_info[sc_obj][host_ip][self.attach_transport]["nqn"],
                                     port=self.transport_port, transport=self.attach_transport,
-                                    io_queues=self.io_queues, hostnqn=self.host_info[host_name]["ip"])
+                                    nvme_io_queues=self.nvme_io_queues, hostnqn=self.host_info[host_name]["ip"])
 
                             if pcap_started[host_name]:
                                 host_handle.tcpdump_capture_stop(process_id=pcap_pid[host_name])

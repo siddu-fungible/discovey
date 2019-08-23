@@ -622,8 +622,8 @@ class ECVolumeLevelTestcase(FunTestCase):
             self.ec_info["num_volumes"] = job_inputs["num_volumes"]
         if "vol_size" in job_inputs:
             self.ec_info["capacity"] = job_inputs["vol_size"]
-        if "io_queues" in job_inputs:
-            self.io_queues = job_inputs["io_queues"]
+        if "nvme_io_queues" in job_inputs:
+            self.nvme_io_queues = job_inputs["nvme_io_queues"]
         if "post_results" in job_inputs:
             self.post_results = job_inputs["post_results"]
         else:
@@ -754,7 +754,8 @@ class ECVolumeLevelTestcase(FunTestCase):
                     # Checking nvme-connect status
                     if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
                             self.testbed_config["workarounds"]["enable_funcp"]:
-                        if not hasattr(self, "io_queues") or (hasattr(self, "io_queues") and self.io_queues == 0):
+                        if not hasattr(self, "nvme_io_queues") or (
+                                hasattr(self, "nvme_io_queues") and self.nvme_io_queues == 0):
                             nvme_connect_status = host_handle.nvme_connect(
                                 target_ip=self.test_network["f1_loopback_ip"], nvme_subsystem=self.nvme_subsystem,
                                 port=self.transport_port, transport=self.attach_transport,
@@ -762,17 +763,20 @@ class ECVolumeLevelTestcase(FunTestCase):
                         else:
                             nvme_connect_status = host_handle.nvme_connect(
                                 target_ip=self.test_network["f1_loopback_ip"], nvme_subsystem=self.nvme_subsystem,
-                                port=self.transport_port, transport=self.attach_transport, io_queues=self.io_queues,
+                                port=self.transport_port, transport=self.attach_transport,
+                                nvme_io_queues=self.nvme_io_queues,
                                 hostnqn=self.host_info[host_name]["ip"][0])
                     else:
-                        if not hasattr(self, "io_queues") or (hasattr(self, "io_queues") and self.io_queues == 0):
+                        if not hasattr(self, "nvme_io_queues") or (
+                                hasattr(self, "nvme_io_queues") and self.nvme_io_queues == 0):
                             nvme_connect_status = host_handle.nvme_connect(
                                 target_ip=self.test_network["f1_loopback_ip"], nvme_subsystem=self.nvme_subsystem,
                                 port=self.transport_port, transport=self.attach_transport)
                         else:
                             nvme_connect_status = host_handle.nvme_connect(
                                 target_ip=self.test_network["f1_loopback_ip"], nvme_subsystem=self.nvme_subsystem,
-                                port=self.transport_port, transport=self.attach_transport, io_queues=self.io_queues)
+                                port=self.transport_port, transport=self.attach_transport,
+                                nvme_io_queues=self.nvme_io_queues)
 
                     if pcap_started[host_name]:
                         host_handle.tcpdump_capture_stop(process_id=pcap_pid[host_name])

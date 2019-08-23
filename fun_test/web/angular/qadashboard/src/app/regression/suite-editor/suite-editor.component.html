@@ -75,7 +75,7 @@
           </div>
         </ng-container>
         <span class="fun-cancel-link" (click)="modal.dismiss('Cross click')">Cancel</span>
-        <button class="fun-button-submit">Submit</button>
+        <button [ngClass]="{'fun-button-disabled' : !customTestBedSpecForm.errors?.valid}" class="fun-button-submit" (click)="modal.close(true)">Submit</button>
 
       </ng-container>
 
