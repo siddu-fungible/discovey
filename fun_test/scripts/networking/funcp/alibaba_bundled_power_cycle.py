@@ -13,7 +13,7 @@ import json
 from scripts.networking.funcp.ali_bmv_storage_sanity import *
 
 
-class SetupBringup(FunTestScript):
+class PowerCycle(FunTestScript):
     server_key = {}
 
     def describe(self):
@@ -45,6 +45,8 @@ class SetupBringup(FunTestScript):
             fun_test.sleep(message="Waiting for FS reboot", seconds=30)
             if retry_count > 20:
                 fun_test.test_assert(message="Can't reach FS components", expression=False)
+
+        fun_test.sleep(message="waiting for FunOS boot", seconds=60)
 
     def cleanup(self):
         pass
@@ -204,7 +206,7 @@ if __name__ == '__main__':
         ts.add_test_case(CheckSSDSpeed())
         print "F1 reset"
     else:
-        ts = SetupBringup()
+        ts = PowerCycle()
 
     ts.add_test_case(CheckCOMe())
     ts.run()
