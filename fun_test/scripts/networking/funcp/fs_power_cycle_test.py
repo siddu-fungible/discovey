@@ -100,43 +100,48 @@ class BootF1(FunTestCase):
         ssd_already_up_count_fail = False
         gen3x2_fail = False
         gen3x4_fail = False
+        f1_0_ssd_count = 4
+        f1_1_ssd_count = 4
 
-        match_strings = "Gen3x4|Gen3x2|backend: 4 devices up"
+        match_strings = "Gen3x4|Gen3x2"
         for f1index in 0, 1:
             uart_path = topology.get_dut_instance(index=0).get_uart_log_file(f1_index=f1index)
             uart_content = os.popen("cat %s" % uart_path).read()
             match_str_list = re.findall(r'{}'.format(match_strings), uart_content, re.IGNORECASE)
             gen3x4_count = match_str_list.count("Gen3x4")
             gen3x2_count = match_str_list.count("Gen3x2")
-            backend_vol = match_str_list.count("backend: 4 devices up")
             fun_test.log_section("SSD Details on F1_{}".format(f1index))
             fun_test.log("SSD in Gen3x4 : {}".format(gen3x4_count))
             fun_test.log("SSD in Gen3x2 : {}".format(gen3x2_count))
-            if backend_vol != 1:
-                fun_test.critical("Error in volume count detected by FunOS")
+
+            counter_name = "f1_{}_ssd_count".format(f1index)
+            ssd_count = eval(counter_name)
+
             for line in uart_content.split("\n"):
                 if "INFO volume_manager \"backend:" in line:
                     if "devices up" in line:
-                        backend_dev = line.split("backend:", 1)[1]
-                        count = re.findall("\d+", backend_dev)
-                        # count = re.search(r'backend:\s+(?P<count>\d+)', line)
-                        fun_test.add_checkpoint(checkpoint="Backend devices up", expected=4, actual=int(count[0]))
-                        if int(count[0]) != 4:
-                            ssd_up_count_fail = True
+                        match_count = re.search(r'backend:\s+(?P<count>\d+)', line)
+                        if match_count:
+                            actual_ssd_count = int(match_count.group('count'))
+                            fun_test.add_checkpoint(checkpoint="F1_{} backend devices up".format(f1index),
+                                                    expected=ssd_count, actual=actual_ssd_count)
+                            if actual_ssd_count != ssd_count:
+                                ssd_up_count_fail = True
                     elif "devices are already up" in line:
-                        backend_dev = line.split("backend:", 1)[1]
-                        count = re.findall("\d+", backend_dev)
-                        fun_test.add_checkpoint(checkpoint="Backend devices already up",
-                                                expected=4, actual=int(count[0]))
-                        if int(count[0]) != 4:
-                            ssd_already_up_count_fail = True
+                        match_count = re.search(r'backend:\s+(?P<count>\d+)', line)
+                        if match_count:
+                            actual_ssd_up_count = int(match_count.group('count'))
+                            fun_test.add_checkpoint(checkpoint="F1_{} backend devices already up".format(f1index),
+                                                    expected=ssd_count, actual=actual_ssd_up_count)
+                            if actual_ssd_up_count != ssd_count:
+                                ssd_already_up_count_fail = True
 
-            if gen3x4_count == 8:
+            if gen3x4_count/2 == 4:
                 fun_test.add_checkpoint("Gen3x4 SSD count on F1_{}".format(f1index),
-                                        "PASSED", expected=8, actual=gen3x4_count)
+                                        "PASSED", expected=ssd_count, actual=gen3x4_count)
             else:
                 fun_test.add_checkpoint("Gen3x4 SSD count on F1_{}".format(f1index),
-                                        "FAILED", expected=8, actual=gen3x4_count)
+                                        "FAILED", expected=ssd_count, actual=gen3x4_count)
                 gen3x4_fail = True
             if gen3x2_count == 0:
                 fun_test.add_checkpoint("Gen3x2 SSD count on F1_{}".format(f1index),
@@ -312,7 +317,8 @@ class LocalSSDTest(StorageConfiguration):
                 host_name = arg1.command("hostname")
                 op = arg1.command(command="cd ~; pwd").strip()
                 job_file = op+"/mks/fio_{}_jf.txt".format(rw_mode)
-                result = arg1.sudo_command("fio {} --output-format=json".format(job_file), timeout=30000)
+                result = arg1.sudo_command("fio {} --output-format=json --cpus_allowed=8-15".
+                                           format(job_file), timeout=30000)
                 if "bad bits" in result.lower() or "verify failed" in result.lower():
                     fun_test.test_assert(expression=False,
                                          message="Data verification failed for {} test on {}".
