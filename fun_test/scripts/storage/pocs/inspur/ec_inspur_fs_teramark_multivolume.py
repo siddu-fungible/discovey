@@ -494,7 +494,6 @@ class ECVolumeLevelScript(FunTestScript):
     def cleanup(self):
 
         come_reboot = False
-        '''
         if fun_test.shared_variables["ec"]["setup_created"]:
             if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
                     self.testbed_config["workarounds"]["enable_funcp"]:
@@ -573,8 +572,6 @@ class ECVolumeLevelScript(FunTestScript):
                 self.fs.come_reset(max_wait_time=self.reboot_timeout)
         except Exception as ex:
             fun_test.critical(str(ex))
-
-        '''
         self.topology.cleanup()
 
 
