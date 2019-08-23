@@ -1099,6 +1099,7 @@ export class PerformanceComponent implements OnInit {
         }
         this.showBugPanel = false;
         this.currentNode = flatNode.node;
+        this.currentNode.showAddJira = true;
         if (this.currentNode && this.currentNode.companionCharts) {
           this.currentNode.companionCharts = [...this.currentNode.companionCharts];
         }

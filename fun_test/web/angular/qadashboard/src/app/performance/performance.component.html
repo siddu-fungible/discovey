@@ -134,7 +134,7 @@
             <td *ngIf="flatNode.special && !selectMode">
               &nbsp;
             </td>
-            <td *ngIf="flatNode.node.leaf && !flatNode.special && !selectMode">
+            <td *ngIf="!flatNode.special && !selectMode">
                 <span *ngIf="flatNode.node.numBugs > 0" (click)="flatNode.showJiraInfo = !flatNode.showJiraInfo"
                       class="badge no-padding badge-light bug-badge">Bugs<sup><span class="text-color-red">{{ flatNode.node.numBugs }}</span>
                 </sup></span>
