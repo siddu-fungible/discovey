@@ -211,6 +211,7 @@ export class SuiteEditorComponent implements OnInit {
     this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title'}).result.then((dontCare) => {
       console.log("Ready to submit");
       let customTestBedSpec = {};
+      
 
     }, ((reason) => {
       console.log("Rejected");
