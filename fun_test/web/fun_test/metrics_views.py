@@ -917,6 +917,21 @@ def validate_jira(jira_id):
         return None
     return None
 
+def add_bugs_to_children(chart, jira_id):
+    chart.add_bugs(jira_id=jira_id)
+    children = json.loads(chart.children)
+    if len(children):
+        for child in children:
+            child_chart = MetricChart.objects.get(metric_id=int(child))
+            add_bugs_to_children(chart=child_chart, jira_id=jira_id)
+
+def remove_bugs_from_children(chart, jira_id):
+    chart.remove_bugs(jira_id=jira_id)
+    children = json.loads(chart.children)
+    if len(children):
+        for child in children:
+            child_chart = MetricChart.objects.get(metric_id=int(child))
+            remove_bugs_from_children(chart=child_chart, jira_id=jira_id)
 
 @csrf_exempt
 @api_safe_json_response
@@ -930,11 +945,7 @@ def jiras(request, metric_id, jira_id=None):
             if jira_id:
                 jira_info = validate_jira(jira_id)
                 if jira_info:
-                    jira_ids = json.loads(c.jira_ids)
-                    if jira_id not in jira_ids:
-                        jira_ids.append(jira_id)
-                        c.jira_ids = json.dumps(jira_ids)
-                        c.save()
+                    add_bugs_to_children(chart=c, jira_id=jira_id)
                 else:
                     raise ObjectDoesNotExist
             result = "Ok"
@@ -961,11 +972,7 @@ def jiras(request, metric_id, jira_id=None):
         try:
             c = MetricChart.objects.get(metric_id=metric_id)
             if jira_id:
-                jira_ids = json.loads(c.jira_ids)
-                if jira_id in jira_ids:
-                    jira_ids.remove(jira_id)
-                    c.jira_ids = json.dumps(jira_ids)
-                    c.save()
+                remove_bugs_from_children(chart=c, jira_id=jira_id)
             result = True
         except ObjectDoesNotExist:
             logger.critical("No data found - Deleting jira ids for metric id {}".format(metric_id))

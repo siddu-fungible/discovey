@@ -235,6 +235,20 @@ class MetricChart(models.Model):
         self.children_weights = json.dumps(children_weights)
         self.save()
 
+    def add_bugs(self, jira_id):
+        jira_ids = json.loads(self.jira_ids)
+        if jira_id not in jira_ids:
+            jira_ids.append(jira_id)
+            self.jira_ids = json.dumps(jira_ids)
+            self.save()
+
+    def remove_bugs(self, jira_id):
+        jira_ids = json.loads(self.jira_ids)
+        if jira_id in jira_ids:
+            jira_ids.remove(jira_id)
+            self.jira_ids = json.dumps(jira_ids)
+            self.save()
+
     def fix_children_weights(self):
         children = json.loads(self.children)
         children_weights = json.loads(self.children_weights)
