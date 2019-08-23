@@ -74,6 +74,7 @@ def test_beds(request, id):
         extension_hour = None
         extension_minute = None
         submitter_email = None
+        description = None
         if "manual_lock_extension_hour" in request_json:
             extension_hour = request_json["manual_lock_extension_hour"]
         if "manual_lock_extension_minute" in request_json:
@@ -81,6 +82,8 @@ def test_beds(request, id):
         if "manual_lock_submitter_email" in request_json:
             submitter_email = request_json["manual_lock_submitter_email"]
             test_bed.manual_lock_submitter = submitter_email
+        if "description" in request_json:
+            test_bed.description = request_json["description"]
 
         this_is_extension_request = False
         if extension_hour is not None and extension_minute is not None:
@@ -94,7 +97,8 @@ def test_beds(request, id):
         if test_bed.manual_lock:
             manual_locked, error_message, manual_lock_user, assets_required = am.check_test_bed_manual_locked(test_bed_name=test_bed.name)
             if manual_locked and not this_is_extension_request:
-                raise Exception(error_message)
+                #raise Exception(error_message)
+                pass
             else:
                 if submitter_email:
                     am.manual_lock_assets(user=submitter_email, assets=assets_required)
@@ -286,6 +290,11 @@ def categories(request):
 @api_safe_json_response
 def sub_categories(request):
     pass
+
+@csrf_exempt
+@api_safe_json_response
+def asset_types(request):
+    return AssetType().all_strings_to_code()
 
 if __name__ == "__main__":
     from web.fun_test.django_interactive import *

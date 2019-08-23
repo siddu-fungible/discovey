@@ -16,6 +16,9 @@ import re
 import struct
 
 
+fun_test.enable_profiling()
+
+
 try:
     job_environment = fun_test.get_job_environment()
     DPC_PROXY_IP = str(job_environment['UART_HOST'])
@@ -197,7 +200,7 @@ class FunCPSetup:
         self.funcp_obj = FunControlPlaneBringup(fs_name=test_bed_type)
         self.update_funcp = update_funcp
 
-    def bringup(self):
+    def bringup(self, fs):
         self.funcp_obj.bringup_funcp(prepare_docker=self.update_funcp)
         # TODO: Make it setup independent
         self.funcp_obj.assign_mpg_ips(static=True, f1_1_mpg='10.1.20.241', f1_0_mpg='10.1.20.242',
@@ -240,7 +243,7 @@ def start_vm(funeth_obj_hosts, funeth_obj_vms):
                     linux_obj.sudo_command(cmd)
 
 
-def configure_overlay(network_controller_obj_f1_0, network_controller_obj_f1_1):
+def dpcsh_configure_overlay(network_controller_obj_f1_0, network_controller_obj_f1_1):
 
     # TODO: Define overlay args in config file
     overlay_config_dict = {
@@ -421,6 +424,7 @@ class FunethSanity(FunTestScript):
                             funsdk_branch=funsdk_branch,
                             fundrv_commit=fundrv_commit,
                             funsdk_commit=funsdk_commit)
+        self.funeth_obj = funeth_obj
         fun_test.shared_variables['funeth_obj'] = funeth_obj
 
         # perf
@@ -450,6 +454,8 @@ class FunethSanity(FunTestScript):
                                       funsdk_branch=funsdk_branch,
                                       fundrv_commit=fundrv_commit,
                                       funsdk_commit=funsdk_commit)
+            self.funeth_obj_ul_vm = funeth_obj_ul_vm
+            self.funeth_obj_ol_vm = funeth_obj_ol_vm
             fun_test.shared_variables['funeth_obj_ul_vm'] = funeth_obj_ul_vm
             fun_test.shared_variables['funeth_obj_ol_vm'] = funeth_obj_ol_vm
 
@@ -463,7 +469,7 @@ class FunethSanity(FunTestScript):
 
             # Configure overlay
             if configure_overlay:
-                configure_overlay(network_controller_obj_f1_0, network_controller_obj_f1_1)
+                dpcsh_configure_overlay(network_controller_obj_f1_0, network_controller_obj_f1_1)
                 network_controller_obj_f1_0.disconnect()
                 network_controller_obj_f1_1.disconnect()
 
@@ -524,8 +530,10 @@ def collect_stats(when='before'):
     version = fun_test.get_version()
     fun_test.log('Collect stats via DPC and save to file {} test'.format(when))
     fun_test.log_module_filter("random_module")
-    perf_utils.collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict, version, when=when)
-    fun_test.log_module_filter_disable()
+    try:
+        perf_utils.collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict, version, when=when)
+    except:
+        fun_test.log_module_filter_disable()
 
 
 def verify_nu_hu_datapath(funeth_obj, packet_count=5, packet_size=84, interfaces_excludes=[], nu='nu', hu='hu'):

@@ -57,3 +57,4 @@ def string_to_json(input_string):
         print "Tried to JSON parse: {}".format(input_string)
         raise ex
     return result
+
