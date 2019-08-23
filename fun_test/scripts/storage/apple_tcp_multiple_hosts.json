@@ -31,6 +31,7 @@
     "create_file_system": true,
     "transport_type": "tcp",
     "transport_port": 1099,
+    "nvme_io_queues": 16,
     "nvme_device": "/dev/nvme0",
     "iostat_details": { "interval": 2},
     "fio_jobs_iodepth": ["(32, 1)"],

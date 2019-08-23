@@ -110,9 +110,6 @@ class StripeVolumeLevelScript(FunTestScript):
             self.update_workspace = False
         if not hasattr(self, "update_deploy_script"):
             self.update_deploy_script = False
-        if not hasattr(self, "nvme_io_q"):
-            nvme_io_q = False
-            fun_test.shared_variables["io_q"] = False
 
             # Using Parameters passed during execution, this will override global and config parameters
         job_inputs = fun_test.get_job_inputs()
@@ -127,9 +124,6 @@ class StripeVolumeLevelScript(FunTestScript):
             self.update_workspace = job_inputs["update_workspace"]
         if "update_deploy_script" in job_inputs:
             self.update_deploy_script = job_inputs["update_deploy_script"]
-        if "nvme_io_q" in job_inputs:
-            fun_test.shared_variables["nvme_io_q"] = job_inputs["nvme_io_q"]
-            fun_test.shared_variables["io_q"] = True
 
         self.num_duts = int(round(float(self.num_f1s) / self.num_f1_per_fs))
         fun_test.log("Num DUTs for current test: {}".format(self.num_duts))
@@ -422,6 +416,14 @@ class StripeVolumeTestCase(FunTestCase):
         self.volume_name = self.nvme_block_device.replace("/dev/", "")
         fun_test.shared_variables["nvme_block_device"] = self.nvme_block_device
 
+        job_inputs = fun_test.get_job_inputs()
+        if not job_inputs:
+            job_inputs = {}
+        if "nvme_io_queues" in job_inputs:
+            self.nvme_io_queues = job_inputs["nvme_io_queues"]
+        if "nvme_io_q" in job_inputs:
+            self.nvme_io_queues = job_inputs["nvme_io_q"]
+
         self.fs = fun_test.shared_variables["fs_objs"]
         self.come_obj = fun_test.shared_variables["come_obj"]
         self.f1 = fun_test.shared_variables["f1_objs"][0][0]
@@ -537,14 +539,13 @@ class StripeVolumeTestCase(FunTestCase):
                     self.host_handles[key].sudo_command("tuned-adm profile network-throughput && tuned-adm active")
 
                 self.host_handles[key].start_bg_process(command="sudo tcpdump -i enp216s0 -w nvme_connect_auto.pcap")
-                if fun_test.shared_variables["io_q"]:
-                    user_io_q = fun_test.shared_variables["nvme_io_q"]
+                if hasattr(self, "nvme_io_queues") and self.nvme_io_queues != 0:
                     command_result = self.host_handles[key].sudo_command(
                         "nvme connect -t {} -a {} -s {} -n {} -i {} -q {}".format(unicode.lower(self.transport_type),
                                                                                   self.test_network["f1_loopback_ip"],
                                                                                   self.transport_port,
                                                                                   self.nqn,
-                                                                                  user_io_q,
+                                                                                  self.nvme_io_queues,
                                                                                   remote_ip))
                     fun_test.log(command_result)
                 else:
