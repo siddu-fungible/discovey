@@ -97,7 +97,8 @@
     "resource_bam_args": {"interval": 60},
     "vol_stats_args": {"interval": 60},
     "collect_network_stats": true,
-    "csi_perf_iodepth": [64]
+    "csi_perf_iodepth": [64],
+    "cal_amplification": true
   },
   "RandRead8kBlocks": {
     "ec_info": {
@@ -151,7 +152,8 @@
     "resource_bam_args": {"interval": 60},
     "vol_stats_args": {"interval": 60},
     "collect_network_stats": true,
-    "csi_perf_iodepth": [64]
+    "csi_perf_iodepth": [64],
+    "cal_amplification": true
   },
   "RandWrite8kBlocks": {
     "ec_info": {
@@ -205,7 +207,8 @@
     "resource_bam_args": {"interval": 60},
     "vol_stats_args": {"interval": 60},
     "collect_network_stats": true,
-    "csi_perf_iodepth": [64]
+    "csi_perf_iodepth": [64],
+    "cal_amplification": true
   },
   "SequentialReadWrite1024kBlocks": {
     "ec_info": {

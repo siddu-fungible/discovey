@@ -923,6 +923,7 @@ class ECVolumeLevelTestcase(FunTestCase):
             vol_group[self.ec_info["volume_types"]["jvol"]] = [self.ec_info["uuids"][num]["jvol"]]
             vol_group[self.ec_info["volume_types"]["lsv"]] = self.ec_info["uuids"][num]["lsv"]
             vol_details.append(vol_group)
+        fun_test.log("vol_details is: {}".format(vol_details))
 
         for iodepth in self.fio_iodepth:
             fio_result[iodepth] = True
@@ -1215,7 +1216,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 if self.cal_amplification:
                     final_vol_stat[iodepth] = self.storage_controller.peek(
                         props_tree="storage/volumes", legacy=False, chunk=8192, command_duration=self.command_timeout)
-                    fun_test.test_assert(final_vol_stat[iodepth], "Stats collected after test")
+                    fun_test.test_assert(final_vol_stat[iodepth], "Stats collected after the test")
                     fun_test.log("Final vol stats in script: {}".format(final_vol_stat[iodepth]))
 
                 # Collecting final network stats and finding diff between final and initial stats
@@ -1324,7 +1325,13 @@ class ECVolumeLevelTestcase(FunTestCase):
                 '''
                 try:
                     if initial_vol_stat[iodepth] is not None or final_vol_stat[iodepth] is not None:
-                        curr_stats_diff = vol_stats_diff(initial_vol_stat[iodepth], final_vol_stat[iodepth], vol_details)
+                        fun_test.log("\ninitial_vol_stat[{}] is: {}\n".format(iodepth,
+                                                                              initial_vol_stat[iodepth]["data"]))
+                        fun_test.log("\nfinal_vol_stat[{}] is: {}\n".format(iodepth, final_vol_stat[iodepth]["data"]))
+                        fun_test.log("\nvol_detail is: {}\n".format(vol_details))
+                        curr_stats_diff = vol_stats_diff(initial_vol_stats=initial_vol_stat[iodepth]["data"],
+                                                         final_vol_stats=final_vol_stat[iodepth]["data"],
+                                                         vol_details=vol_details)
                         fun_test.simple_assert(curr_stats_diff["status"],
                                                "Stats diff required to measure amplification")
 
@@ -1340,10 +1347,10 @@ class ECVolumeLevelTestcase(FunTestCase):
                         except Exception as ex:
                             fun_test.critical(str(ex))
 
-                        write_amp_vol_stat = pbw / lbw
+                        write_amp_vol_stat = float(pbw) / float(lbw)
                         fun_test.log("Write amplification calculated with volume stats is: {} for iodepth: {}".format(
                             write_amp_vol_stat, iodepth))
-                        write_amp_app_stat = pbw / lbw_app
+                        write_amp_app_stat = float(pbw) / float(lbw_app)
                         fun_test.log("Write amplification calculated with app stats is: {} for iodepth: {}".format(
                             write_amp_app_stat, iodepth))
 
@@ -1362,27 +1369,26 @@ class ECVolumeLevelTestcase(FunTestCase):
                         except Exception as ex:
                             fun_test.critical(str(ex))
 
-                        read_amp_vol_stat = pbr / lbr
+                        read_amp_vol_stat = float(pbr) / float(lbr)
                         fun_test.log("Read amplification calculated with volume stats is: {} for iodepth: {}".format(
                             read_amp_vol_stat, iodepth))
-                        read_amp_app_stat = pbr / lbr_app
+                        read_amp_app_stat = float(pbr) / float(lbr_app)
                         fun_test.log("Read amplification calculated with app stats is: {} for iodepth: {}".format(
                             read_amp_app_stat, iodepth))
 
                         row_data_dict["aggr_amp_vol_stats"] = read_amp_vol_stat
                         row_data_dict["write_amp_app_stats"] = read_amp_app_stat
 
-                        total_amp_vol_stats = (pbw + pbr) / (lbw + lbr)
+                        total_amp_vol_stats = float(pbw + pbr) / float(lbw + lbr)
                         fun_test.log(
                             "Total Read+Write amplification calculated with volume stats is: {} for iodepth: {}".
-                            format(total_amp_vol_stats, iodepth))
-                        total_amp_app_stats = (pbw + pbr) / (lbw_app + lbr_app)
+                                format(total_amp_vol_stats, iodepth))
+                        total_amp_app_stats = float(pbw + pbr) / float(lbw_app + lbr_app)
                         fun_test.log("Total Read+Write amplification calculated with app stats is: {} for iodepth: {}".
                                      format(total_amp_app_stats, iodepth))
 
                         row_data_dict["read_amp_app_stats"] = total_amp_vol_stats
                         row_data_dict["aggr_amp_app_stats"] = total_amp_app_stats
-
                 except Exception as ex:
                     fun_test.critical(str(ex))
 

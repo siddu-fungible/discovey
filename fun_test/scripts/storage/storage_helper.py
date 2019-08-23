@@ -714,7 +714,8 @@ def vol_stats_diff(initial_vol_stats, final_vol_stats, vol_details):
     stats_diff = {}
     # blt_combined_stat = {}
     total_diff = {}
-    stats_exclude_list = ["drive_uuid", "extent_size", "fault_injection", "flvm_block_size", "flvm_vol_size_blocks", "se_size"]
+    stats_exclude_list = ["drive_uuid", "extent_size", "fault_injection", "flvm_block_size", "flvm_vol_size_blocks",
+                          "se_size"]
     aggregated_diff_stats_list = ["write_bytes", "read_bytes"]
     try:
         # Forming a dictionary for provided vol_details
@@ -758,8 +759,8 @@ def vol_stats_diff(initial_vol_stats, final_vol_stats, vol_details):
                     for stats_field in aggregated_diff_stats_list:
                         if stats_field not in total_diff[vol_type]:
                             total_diff[vol_type][stats_field] = 0
-                        total_diff[vol_type][stats_field] = total_diff[vol_type][stats_field] + stats_diff[i][vol_type][vol_uuid][stats_field]
-
+                        total_diff[vol_type][stats_field] = total_diff[vol_type][stats_field] + \
+                                                            stats_diff[i][vol_type][vol_uuid][stats_field]
         result["status"] = True
         result["stats_diff"] = stats_diff
         result["total_diff"] = total_diff
