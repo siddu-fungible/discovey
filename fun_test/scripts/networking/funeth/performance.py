@@ -307,7 +307,7 @@ class FunethPerformanceBase(FunTestCase):
                  'suffix': suffix,
                  'cpu_list_server': cpu_list_server,
                  'cpu_list_client': cpu_list_client,
-                 'netperf_port_delta': fun_test.current_test_case_id if 'OL_VM' in flow_type.upper() else 0,  # TODO: Remove after SWOS-5645
+                 'fixed_netperf_port': True if 'OL_VM' in flow_type.upper() else False,  # TODO: Remove after SWOS-5645
                  'csi_perf_obj': fun_test.shared_variables['csi_perf_obj'],
                  }
             )
