@@ -471,7 +471,7 @@ class CollectStats(object):
             fun_test.critical(str(ex))
         return output
 
-    def collect_vol_stats(self, output_file, vol_details, interval=10, count=3, non_zero_stats_only=True,
+    def collect_vol_stats(self, vol_details, output_file="/dev/null", interval=10, count=3, non_zero_stats_only=True,
                           threaded=False, command_timeout=DPCSH_COMMAND_TIMEOUT):
         """
         :param output_file: File name in which the volume stats collected at every given interval for given number of
@@ -612,3 +612,71 @@ def terminate_stats_collection(stats_ollector_obj, thread_list):
         stats_ollector_obj.stop_vol_stats = True
         stats_ollector_obj.stop_vp_utils = True
         stats_ollector_obj.stop_resource_bam = True
+
+
+def vol_stats_diff(initial_vol_stats, final_vol_stats, vol_details):
+    """
+    :param initial_vol_stats: volume stats collected at the start of test
+    :param final_vol_stats: volume stats collected at the end of test
+    :param vol_details: list of dictionary containing volume details, type, uuid
+    :return: dictionary, with status, stats_diff and total_diff
+    """
+    result = {"status": False, "stats_diff": None, "total_diff": None}
+    dict_vol_details = {}
+    stats_diff = {}
+    # blt_combined_stat = {}
+    total_diff = {}
+    stats_exclude_list = ["drive_uuid", "extent_size", "fault_injection", "flvm_block_size", "flvm_vol_size_blocks", "se_size"]
+    aggregated_diff_stats_list = ["write_bytes", "read_bytes"]
+    try:
+        # Forming a dictionary for provided vol_details
+        for x in range(len(vol_details)):
+            dict_vol_details[x] = vol_details[x]
+        for i, vol_group in dict_vol_details.iteritems():
+            stats_diff[i] = {}
+            # blt_combined_stat[i] = {}
+            for vol_type, vol_uuids in sorted(vol_group.iteritems()):
+                if vol_type not in stats_diff:
+                    stats_diff[i][vol_type] = {}
+                for vol_uuid in vol_uuids:
+                    if vol_uuid not in stats_diff[i][vol_type]:
+                        stats_diff[i][vol_type][vol_uuid] = {}
+                    if (vol_type in final_vol_stats and vol_uuid in final_vol_stats[vol_type]) and (
+                            vol_type in initial_vol_stats and vol_uuid in initial_vol_stats[vol_type]):
+                        for stats_field in set(final_vol_stats[vol_type][vol_uuid]["stats"]) - set(stats_exclude_list):
+                            # if stats_field not in blt_combined_stat[i]:
+                            #    blt_combined_stat[i][stats_field] = 0
+                            stats_diff[i][vol_type][vol_uuid][stats_field] = \
+                                final_vol_stats[vol_type][vol_uuid]["stats"][stats_field] - initial_vol_stats[
+                                    vol_type][vol_uuid]["stats"][stats_field]
+                            # To have agrregated BLT stats under each EC volume,
+                            # all volumes BLT stats are collected in total_diff
+                            #
+                            # if vol_type == "VOL_TYPE_BLK_LOCAL_THIN":
+                            #    if blt_combined_stat[i][stats_field] == 0:
+                            #        stats_diff[i][vol_type]['blt_combined'] = {}
+                            #        stats_diff[i][vol_type]['blt_combined'][stats_field] = {}
+                            #    blt_combined_stat[i][stats_field] = blt_combined_stat[i][stats_field] + \
+                            #                                        stats_diff[i][vol_type][vol_uuid][stats_field]
+                            #    stats_diff[i][vol_type]['blt_combined'][stats_field] = blt_combined_stat[i][
+                            #        stats_field]
+
+        for i, vol_group in stats_diff.iteritems():
+            for vol_type, vol_uuids in sorted(vol_group.iteritems()):
+                if vol_type not in total_diff:
+                    total_diff[vol_type] = {}
+                for vol_uuid in vol_uuids:
+                    # if vol_uuid != "blt_combined":
+                    for stats_field in aggregated_diff_stats_list:
+                        if stats_field not in total_diff[vol_type]:
+                            total_diff[vol_type][stats_field] = 0
+                        total_diff[vol_type][stats_field] = total_diff[vol_type][stats_field] + stats_diff[i][vol_type][vol_uuid][stats_field]
+
+        result["status"] = True
+        result["stats_diff"] = stats_diff
+        result["total_diff"] = total_diff
+    except Exception as ex:
+        fun_test.critical(str(ex))
+        result["status"] = False
+
+    return result

@@ -25,10 +25,13 @@ def fio_parser(arg1, host_index, **kwargs):
 
 def post_results(volume, test, num_host, block_size, io_depth, size, operation, write_iops, read_iops, write_bw, read_bw,
                  write_latency, write_90_latency, write_95_latency, write_99_latency, write_99_99_latency, read_latency,
-                 read_90_latency, read_95_latency, read_99_latency, read_99_99_latency, fio_job_name):
+                 read_90_latency, read_95_latency, read_99_latency, read_99_99_latency, fio_job_name,
+                 write_amp_vol_stats, read_amp_vol_stats, aggr_amp_vol_stats, write_amp_app_stats, read_amp_app_stats,
+                 aggr_amp_app_stats):
     for i in ["write_iops", "read_iops", "write_bw", "read_bw", "write_latency", "write_90_latency", "write_95_latency",
               "write_99_latency", "write_99_99_latency", "read_latency", "read_90_latency", "read_95_latency",
-              "read_99_latency", "read_99_99_latency", "fio_job_name"]:
+              "read_99_latency", "read_99_99_latency", "fio_job_name", "write_amp_vol_stats", "read_amp_vol_stats",
+              "aggr_amp_vol_stats", "write_amp_app_stats", "read_amp_app_stats", "aggr_amp_app_stats"]:
         if eval("type({}) is tuple".format(i)):
             exec ("{0} = {0}[0]".format(i))
 
@@ -486,6 +489,7 @@ class ECVolumeLevelScript(FunTestScript):
     def cleanup(self):
 
         come_reboot = False
+        '''
         if fun_test.shared_variables["ec"]["setup_created"]:
             if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
                     self.testbed_config["workarounds"]["enable_funcp"]:
@@ -565,6 +569,7 @@ class ECVolumeLevelScript(FunTestScript):
         except Exception as ex:
             fun_test.critical(str(ex))
 
+        '''
         self.topology.cleanup()
 
 
@@ -865,11 +870,15 @@ class ECVolumeLevelTestcase(FunTestCase):
                               "Write Latency 99 Percentile in uSecs", "Write Latency 99.99 Percentile in uSecs",
                               "Read Latency in uSecs", "Read Latency 90 Percentile in uSecs",
                               "Read Latency 95 Percentile in uSecs", "Read Latency 99 Percentile in uSecs",
-                              "Read Latency 99.99 Percentile in uSecs", "fio_job_name"]
+                              "Read Latency 99.99 Percentile in uSecs", "fio_job_name", "Write Amplification Vol Stats",
+                              "Read Amplification Vol Stats", "Aggregated Amplification Vol Stats",
+                              "Write Amplification App Stats", "Read Amplification App Stats",
+                              "Aggregated Amplification App Stats"]
         table_data_cols = ["num_hosts", "block_size", "iodepth", "size", "mode", "writeiops", "readiops", "writebw",
                            "readbw", "writeclatency", "writelatency90", "writelatency95", "writelatency99",
                            "writelatency9999", "readclatency", "readlatency90", "readlatency95", "readlatency99",
-                           "readlatency9999", "fio_job_name"]
+                           "readlatency9999", "fio_job_name", "write_amp_vol_stats", "read_amp_vol_stats",
+                           "aggr_amp_vol_stats", "write_amp_app_stats", "read_amp_app_stats", "aggr_amp_app_stats"]
         table_data_rows = []
 
         self.ec_info = fun_test.shared_variables["ec_info"]
@@ -892,6 +901,8 @@ class ECVolumeLevelTestcase(FunTestCase):
         final_stats = {}
         resultant_stats = {}
         aggregate_resultant_stats = {}
+        initial_vol_stat = {}
+        final_vol_stat = {}
 
         start_stats = True
 
@@ -918,6 +929,8 @@ class ECVolumeLevelTestcase(FunTestCase):
             final_stats[iodepth] = {}
             resultant_stats[iodepth] = {}
             aggregate_resultant_stats[iodepth] = {}
+            initial_vol_stat[iodepth] = {}
+            final_vol_stat[iodepth] = {}
 
             test_thread_id = {}
             host_clone = {}
@@ -1029,6 +1042,11 @@ class ECVolumeLevelTestcase(FunTestCase):
                                                                     output_file=vol_stats_artifact_file,
                                                                     interval=self.vol_stats_args["interval"],
                                                                     count=int(mpstat_count), threaded=True)
+                if self.cal_amplification:
+                    initial_vol_stat[iodepth] = self.storage_controller.peek(
+                        props_tree="storage/volumes", legacy=False, chunk=8192, command_duration=self.command_timeout)
+                    fun_test.test_assert(initial_vol_stat[iodepth], "Stats collected before the test")
+                    fun_test.log("Initial vol stats in script: {}".format(initial_vol_stat[iodepth]))
             else:
                 fun_test.critical("Not starting the vp_utils and resource_bam stats collection because of lack of "
                                   "interval and count details")
@@ -1175,6 +1193,12 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.join_thread(fun_test_thread_id=stats_rbam_thread_id, sleep_time=1)
                 fun_test.join_thread(fun_test_thread_id=vol_stats_thread_id, sleep_time=1)
 
+                if self.cal_amplification:
+                    final_vol_stat[iodepth] = self.storage_controller.peek(
+                        props_tree="storage/volumes", legacy=False, chunk=8192, command_duration=self.command_timeout)
+                    fun_test.test_assert(final_vol_stat[iodepth], "Stats collected after test")
+                    fun_test.log("Final vol stats in script: {}".format(final_vol_stat[iodepth]))
+
                 # Collecting final network stats and finding diff between final and initial stats
                 if self.collect_network_stats:
                     try:
@@ -1272,6 +1296,75 @@ class ECVolumeLevelTestcase(FunTestCase):
                 continue
 
             row_data_dict["fio_job_name"] = fio_job_name
+            if self.cal_amplification:
+                '''
+                WA = PBW (Physical Bytes Written) / LBW (Logical Bytes Written)
+                PBW = Sum of bytes written in each BLT that is member of the Durable volume.
+                LBW = Bytes written from the test app.  Should be same as reported by the Top level volume (e.g. LSV).
+                '''
+                try:
+                    if initial_vol_stat[iodepth] is not None or final_vol_stat[iodepth] is not None:
+                        curr_stats_diff = vol_stats_diff(initial_vol_stat[iodepth], final_vol_stat[iodepth], vol_details)
+                        fun_test.simple_assert(curr_stats_diff["status"],
+                                               "Stats diff required to measure amplification")
+
+                        pbw = curr_stats_diff["total_diff"]["VOL_TYPE_BLK_LOCAL_THIN"]["write_bytes"]
+                        fun_test.log("Physical Bytes Written, collected from volume stats: {} for iodepth: {}".format(
+                            pbw, iodepth))
+                        lbw = curr_stats_diff["total_diff"]["VOL_TYPE_BLK_LSV"]["write_bytes"]
+                        fun_test.log("Logical Bytes Written, collected from volume stats: {} for iodepth: {}".format(
+                            lbw, iodepth))
+                        try:
+                            lbw_app = aggr_fio_output[iodepth]['write']["io_bytes"]
+                            fun_test.log("Logical written bytes by app: {} for iodepth: {}".format(lbw_app, iodepth))
+                        except Exception as ex:
+                            fun_test.critical(str(ex))
+
+                        write_amp_vol_stat = pbw / lbw
+                        fun_test.log("Write amplification calculated with volume stats is: {} for iodepth: {}".format(
+                            write_amp_vol_stat, iodepth))
+                        write_amp_app_stat = pbw / lbw_app
+                        fun_test.log("Write amplification calculated with app stats is: {} for iodepth: {}".format(
+                            write_amp_app_stat, iodepth))
+
+                        row_data_dict["write_amp_vol_stats"] = write_amp_vol_stat
+                        row_data_dict["read_amp_vol_stats"] = write_amp_app_stat
+
+                        pbr = curr_stats_diff["total_diff"]["VOL_TYPE_BLK_LOCAL_THIN"]["read_bytes"]
+                        fun_test.log("Physical Bytes Read, collected from volume stats: {} for iodepth: {}".format(
+                            pbr, iodepth))
+                        lbr = curr_stats_diff["total_diff"]["VOL_TYPE_BLK_LSV"]["read_bytes"]
+                        fun_test.log("Logical Bytes Read, collected from volume stats: {} for iodepth: {}".format(
+                            lbr, iodepth))
+                        try:
+                            lbr_app = aggr_fio_output[iodepth]['read']["io_bytes"]
+                            fun_test.log("Logical bytes Read by app: {} for iodepth: {}".format(lbr_app, iodepth))
+                        except Exception as ex:
+                            fun_test.critical(str(ex))
+
+                        read_amp_vol_stat = pbr / lbr
+                        fun_test.log("Read amplification calculated with volume stats is: {} for iodepth: {}".format(
+                            read_amp_vol_stat, iodepth))
+                        read_amp_app_stat = pbr / lbr_app
+                        fun_test.log("Read amplification calculated with app stats is: {} for iodepth: {}".format(
+                            read_amp_app_stat, iodepth))
+
+                        row_data_dict["aggr_amp_vol_stats"] = read_amp_vol_stat
+                        row_data_dict["write_amp_app_stats"] = read_amp_app_stat
+
+                        total_amp_vol_stats = (pbw + pbr) / (lbw + lbr)
+                        fun_test.log(
+                            "Total Read+Write amplification calculated with volume stats is: {} for iodepth: {}".
+                            format(total_amp_vol_stats, iodepth))
+                        total_amp_app_stats = (pbw + pbr) / (lbw_app + lbr_app)
+                        fun_test.log("Total Read+Write amplification calculated with app stats is: {} for iodepth: {}".
+                                     format(total_amp_app_stats, iodepth))
+
+                        row_data_dict["read_amp_app_stats"] = total_amp_vol_stats
+                        row_data_dict["aggr_amp_app_stats"] = total_amp_app_stats
+
+                except Exception as ex:
+                    fun_test.critical(str(ex))
 
             # Building the table raw for this variation
             row_data_list = []
