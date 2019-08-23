@@ -219,8 +219,8 @@ class NetperfManager:
         #for measure_latency in (False, True):
         # Test - 1: throughput only, 2: latency only, 3: latency under throughput load
         #for test in (1, 2, 3, ):
-        for test_id in (2, 3, ):
-            if test_id == 2:
+        for test in (2, 3, ):
+            if test == 2:
                 for perf_tuning_obj in self.perf_tuning_objs:
                     perf_tuning_obj.cpu_governor(lock_freq=True)
                     perf_tuning_obj.mlnx_tune(profile='LOW_LATENCY_VMA')
@@ -253,7 +253,7 @@ class NetperfManager:
                 netperf_port_delta = arg_dict.get('netperf_port_delta', 0)
                 csi_perf_obj = arg_dict.get('csi_perf_obj', None)
 
-                if test_id == 2:
+                if test == 2:
                     num_processes = 1
                     measure_latency = True
                 else:
@@ -267,20 +267,20 @@ class NetperfManager:
                     netserver_cpu_list.append(netserver_cpu)
                     mp_task_obj.add_task(
                         func=do_test,
-                        func_args=(linux_obj, dip, protocol, duration, frame_size, cpu, measure_latency, sip, ns, netperf_port_delta+test_id),
+                        func_args=(linux_obj, dip, protocol, duration, frame_size, cpu, measure_latency, sip, ns, netperf_port_delta),
                         task_key='{}_{}_{}'.format(direction, dip, i))
-                if test_id == 3:
+                if test == 3:
                     #if num_flows == 1:
                     #    cpu -= 1
                     #    cpu_list.append(cpu)
                     measure_latency = True
                     mp_task_obj.add_task(
                         func=do_test,
-                        func_args=(linux_obj, dip, protocol, duration, frame_size, cpu, measure_latency, sip, ns, netperf_port_delta+test_id),
+                        func_args=(linux_obj, dip, protocol, duration, frame_size, cpu, measure_latency, sip, ns, netperf_port_delta),
                         task_key='{}_{}_{}_latency'.format(direction, dip, i))
 
                 # Start netserver
-                if not self.start_netserver(linux_obj_dst, cpu_list=netserver_cpu_list, netperf_port_delta=netperf_port_delta+test_id):
+                if not self.start_netserver(linux_obj_dst, cpu_list=netserver_cpu_list, netperf_port_delta=netperf_port_delta):
                     fun_test.critical('Failed to start netserver!')
                     netserver_ready = False
                     break
@@ -290,7 +290,7 @@ class NetperfManager:
             if not netserver_ready:
                 break
 
-            if test_id == 3:  # +1 for latency under load
+            if test == 3:  # +1 for latency under load
                 # Get perf for throughput test, no need to latency only test
                 if csi_perf_obj:
                     csi_perf_obj.start(f1_index=0)
@@ -316,7 +316,7 @@ class NetperfManager:
                         rdict[direction].append(mp_task_obj.get_result('{}_{}_{}_latency'.format(direction, dip, i)))
                 fun_test.log('NetperfManager aggregated netperf result of {}\n{}'.format(direction, rdict[direction]))
 
-                if test_id == 2:
+                if test == 2:
                     lat_dict = rdict[direction][-1]  # latency result is the last element
                     for k, v in lat_dict.items():
                         result[direction].update(
@@ -324,7 +324,7 @@ class NetperfManager:
                         )
                     fun_test.log('NetperfManager latency result\n{}'.format(result))
 
-                elif test_id == 1:
+                elif test == 1:
                     throughput = sum(r.get(THROUGHPUT) for r in rdict[direction] if r.get(THROUGHPUT) != NA)
                     if not throughput:
                         result[direction].update(
@@ -338,7 +338,7 @@ class NetperfManager:
                         )
                     fun_test.log('NetperfManager throughput result\n{}'.format(result))
 
-                elif test_id == 3:
+                elif test == 3:
                     # throughput
                     throughput = sum(r.get(THROUGHPUT) for r in rdict[direction] if r.get(THROUGHPUT, NA) != NA)
                     if not throughput:
