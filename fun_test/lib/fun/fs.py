@@ -725,7 +725,7 @@ class ComE(Linux):
         fun_test.simple_assert(self.list_files(target_file_path), "HBM tool copied")
         self.command("mkdir -p {}".format(self.HBM_DUMP_DIRECTORY))
         tgzs = "{}/*tgz".format(self.HBM_DUMP_DIRECTORY)
-        num_tgzs = self.list_files(tgzs)
+        num_tgzs = len(self.list_files(tgzs))
         fun_test.simple_assert(num_tgzs < self.MAX_HBM_DUMPS, "Only {} dump tgzs are allowed. Please delete a few old ones".format(self.MAX_HBM_DUMPS))
         # self.sudo_command("rm -rf {}/*hbm_dump*txt".format(self.HBM_DUMP_DIRECTORY))
         return True
