@@ -94,6 +94,7 @@ export class SubmitJobComponent implements OnInit {
 
   csiPerf: boolean = false;
   dryRun: boolean = false;
+  hbmDump: boolean = false;
   moreJenkinsOptions: boolean = false;
   mode: Mode = Mode.REGULAR;
   Mode = Mode;
@@ -380,6 +381,10 @@ export class SubmitJobComponent implements OnInit {
 
     if (this.dryRun) {
       payload["environment"]["dry_run"] = this.dryRun;
+    }
+
+    if (this.hbmDump) {
+      payload["environment"]["hbm_dump"] = this.hbmDump;
     }
 
     if (this.description) {
