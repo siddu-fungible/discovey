@@ -4,53 +4,76 @@
         table {
             border: solid 1px black;
         }
+
         th {
             padding: 5px;
         }
-        #header {
-            background-color: #337ab7;
+
+        .header {
+            background-color: #595959;
             color: white;
+        }
+
+        .header-text {
+            font-weight: lighter;
+            text-align: center;
+        }
+        .row-border td{
+            border-bottom: 1px solid black;
+            text-align: center;
         }
     </style>
 </head>
 {% for report in all_reports %}
+<h3>{{ report.lineage }}</h3><br>
 <b>Chart name: </b>{{ report.chart_name }}<br>
-<b>Lineage: </b>{{ report.lineage }}<br>
 <b>Link to chart: </b><a href="{{ report.url }}" target="_blank">Link</a><br>
 <b>Bugs: </b>
 {% for jira_id in report.jira_ids %}
-<a href="{{ 'http://jira/browse/' + jira_id }}" target="_blank">jira_id</a>
-{% endfor %}}
+<a href="{{ 'http://jira/browse/' + jira_id }}" target="_blank">{{ jira_id }}</a>
+{% endfor %}<br>
 <b>Comments: </b>{{ report.comments }}
 <br>
 <table>
-    <tr id="header">
-        <th>Dataset name</th>
-        <th>Yesterday</th>
-        <th>Today</th>
-        <th>Percentage change</th>
-        <th>Unit</th>
+    <tr class="header">
+        <th class="header-text" rowspan="2">Dataset name</th>
+        <th class="header-text" rowspan="2">Unit</th>
+        <th class="header-text" rowspan="2">Yesterday</th>
+        <th class="header-text" rowspan="2">Today</th>
+        <th class="header-text" rowspan="2">Percentage change</th>
+        <th class="header-text" colspan="2">History</th>
+    </tr>
+    <tr class="header">
+        <th class="header-text">Date</th>
+        <th class="header-text">Value</th>
     </tr>
     {% for data_set in report.report %}
-    <tr>
-        <td>
+    <tr class="row-border">
+        <td rowspan="{{ data_set.rows }}">
             {{ data_set.name }}
         </td>
-        <td>
-            {{ data_set.yesterday }}
-        </td>
-        <td>
-            {{ data_set.today }}
-        </td>
-        <td>
-            {{ data_set.percentage }}
-        </td>
-        <td>
+        <td rowspan="{{ data_set.rows }}">
             {{ data_set.unit }}
         </td>
+        <td rowspan="{{ data_set.rows }}">
+            {{ data_set.yesterday }}
+        </td>
+        <td rowspan="{{ data_set.rows }}">
+            {{ data_set.today }}
+        </td>
+        <td rowspan="{{ data_set.rows }}">
+            {{ data_set.percentage }}
+        </td>
+    </tr>
+    {% for data in data_set.history %}
+    <tr>
+        <td>{{ data.date }}</td>
+        <td>{{ data.value }}</td>
     </tr>
     {% endfor %}
+    {% endfor %}
 </table>
+<br>
 <br>
 {% endfor %}
 </html>

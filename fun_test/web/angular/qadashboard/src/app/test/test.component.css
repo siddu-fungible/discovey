@@ -2,3 +2,10 @@
   margin: 10px;
   padding: 10px;
 }
+
+.hover-cell .hover-icon {
+  visibility: hidden;
+}
+.hover-cell:hover .hover-icon {
+  visibility: visible;
+}

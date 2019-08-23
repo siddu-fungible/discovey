@@ -6,10 +6,10 @@
     <span class="pseudo-anchor" *ngIf="!showGrids" (click)="showGrids = true">Show charts</span>
     <span class="pseudo-anchor" *ngIf="showGrids" (click)="showGrids = false">Hide charts</span> |
     <span class="pseudo-anchor" *ngIf="workspace.interested_metrics.length > 0 && !reportGenerated"
-      (click)="generateReport()">Show report
+          (click)="generateReport()">Show report
     </span>
     <span class="pseudo-anchor" *ngIf="workspace.interested_metrics.length > 0 && reportGenerated"
-      (click)="reportGenerated = false">Hide report
+          (click)="reportGenerated = false">Hide report
     </span>
   </div>
   <div class="card-body flex-container">
@@ -20,10 +20,10 @@
             Chart name
           </th>
           <!--<th style="width: 10%">-->
-            <!--Track-->
+          <!--Track-->
           <!--</th>-->
           <!--<th style="width: 10%">-->
-            <!--Subscribe to alerts-->
+          <!--Subscribe to alerts-->
           <!--</th>-->
           <th style="width: 10%">
             Yesterday's score
@@ -41,12 +41,12 @@
               metric['chart_name'] }}</span>
           </td>
           <!--<td>-->
-            <!--<app-toggle-button [checked]="metric['track']" [disabled]="true"-->
-            <!--&gt;</app-toggle-button>-->
+          <!--<app-toggle-button [checked]="metric['track']" [disabled]="true"-->
+          <!--&gt;</app-toggle-button>-->
           <!--</td>-->
           <!--<td>-->
-            <!--<app-toggle-button [checked]="metric['subscribe']" [disabled]="true"-->
-            <!--&gt;</app-toggle-button>-->
+          <!--<app-toggle-button [checked]="metric['subscribe']" [disabled]="true"-->
+          <!--&gt;</app-toggle-button>-->
           <!--</td>-->
           <td>
             {{ metric["penultimate_good_score"] }}
@@ -109,14 +109,17 @@
       <b>Subject: </b><input style="max-width: 50%" type="text" [(ngModel)]="subject"/><br>
       <div *ngFor="let interestedMetric of workspace.interested_metrics">
         <div style="vertical-align: middle; width: 50%">
-          {{ interestedMetric.chart_name }} - Lineage: {{ interestedMetric.lineage }}<br>
+          {{ interestedMetric.chart_name }} - {{ interestedMetric.lineage }}<br>
           Link to chart: <a href="{{ atomicUrl + '/' + interestedMetric.metric_id }}" target="_blank">Link</a><br>
           Comments: <textarea [(ngModel)]="interestedMetric.comments" style="width: 100%"></textarea>
         </div>
         <table class="table table-bordered" style="max-width: 50%; margin: 0">
-          <tr style="text-align: center; vertical-align: middle">
+          <tr style="vertical-align: middle">
             <th rowspan="2">
               Name
+            </th>
+            <th rowspan="2">
+              Unit
             </th>
             <th rowspan="2">
               Yesterday
@@ -127,40 +130,37 @@
             <th rowspan="2">
               Percentage
             </th>
-            <th rowspan="2">
-              Unit
-            </th>
             <th colspan="2">
               History
             </th>
           </tr>
-          <tr style="text-align: center; vertical-align: middle">
+          <tr style="vertical-align: middle">
             <th>Date</th>
             <th>Value</th>
           </tr>
           <ng-container *ngFor="let dataSet of interestedMetric.report">
-             <tr>
-            <td [attr.rowspan]="dataSet['rows'] + 1">
-              {{ dataSet.name }}
-            </td>
-            <td [attr.rowspan]="dataSet['rows'] + 1">
-              {{ dataSet.yesterday }}
-            </td>
-            <td [attr.rowspan]="dataSet['rows'] + 1">
-              {{ dataSet.today }}
-            </td>
-            <td [attr.rowspan]="dataSet['rows'] + 1"
-                [ngClass]="{'text-red': dataSet.percentage.includes('-'), 'text-green': dataSet.percentage.includes('+')}">
-              {{ dataSet.percentage }}
-            </td>
-            <td [attr.rowspan]="dataSet['rows'] + 1">
-              {{ dataSet.unit }}
-            </td>
-          </tr>
+            <tr>
+              <td [attr.rowspan]="dataSet['rows']">
+                {{ dataSet.name }}
+              </td>
+              <td [attr.rowspan]="dataSet['rows']">
+                {{ dataSet.unit }}
+              </td>
+              <td [attr.rowspan]="dataSet['rows']">
+                {{ dataSet.yesterday }}
+              </td>
+              <td [attr.rowspan]="dataSet['rows']">
+                {{ dataSet.today }}
+              </td>
+              <td [attr.rowspan]="dataSet['rows']"
+                  [ngClass]="{'text-red': dataSet.percentage.includes('-'), 'text-green': dataSet.percentage.includes('+')}">
+                {{ dataSet.percentage }}
+              </td>
+            </tr>
             <tr *ngFor="let data of dataSet['history']">
-            <td>{{ data.date }}</td>
-            <td>{{ data.value }}</td>
-          </tr>
+              <td>{{ data.date }}</td>
+              <td>{{ data.value }}</td>
+            </tr>
           </ng-container>
         </table>
         <div style="vertical-align: middle; width: 50%">
@@ -197,7 +197,8 @@
             </td>
           </tr>
         </table>
-        <fun-metric-chart [id]="interestedMetric['metric_id']" [minimal]="'true'" [buildInfo]="buildInfo"></fun-metric-chart>
+        <fun-metric-chart [id]="interestedMetric['metric_id']" [minimal]="'true'"
+                          [buildInfo]="buildInfo"></fun-metric-chart>
       </div>
     </ng-container>
     <div class="closed-section"></div>

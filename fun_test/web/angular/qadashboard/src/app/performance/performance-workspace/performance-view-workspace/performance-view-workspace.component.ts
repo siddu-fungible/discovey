@@ -25,7 +25,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
   status: string = null;
   currentChart: any = null;
   data: any = [];
-  atomicUrl: string = "/performance/atomic";
+  atomicUrl: string = "http://integration.fungible.local/performance/atomic";
   jiraUrl: string = "http://jira/browse";
   workspaceURL: string = "/performance/workspace";
   reportGenerated: boolean = false;
@@ -244,12 +244,12 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
         for (let oneData of data) {
           if (dataSet["name"] == oneData["name"]) {
             let hData = {};
-            hData["date"] = oneData["date_time"];
+            hData["date"] = this.commonService.getPrettyLocalizeTime(oneData["date_time"]);
             hData["value"] = oneData["value"];
             dataSet["history"].push(hData);
           }
         }
-        dataSet["rows"] = dataSet["history"].length;
+        dataSet["rows"] = dataSet["history"].length + 1;
       }
       return of(true);
     }));
@@ -264,6 +264,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
       report["lineage"] = metric["lineage"];
       report["url"] = metric["url"];
       report["comments"] = metric["comments"];
+      report["jira_ids"] = metric["jira_ids"];
       report["report"] = metric["report"];
       reports.push(report);
     });

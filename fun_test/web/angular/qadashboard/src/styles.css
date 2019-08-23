@@ -618,11 +618,17 @@ tr.text-center > th {
   text-decoration: underline;
 }
 
+.fun-button-disabled {
+  pointer-events: none;
+  color: lightgrey;
+}
+
 label {
   margin-bottom: unset;
   display: unset;
 }
 
+/* links */
 .fun-cancel-link:hover {
   text-decoration: underline;
   cursor: pointer;
