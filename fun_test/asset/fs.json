@@ -147,17 +147,17 @@
     },
     "gateway_ip": "10.1.105.1",
     "bmc": {
-      "mgmt_ip": "10.1.105.163",
+      "mgmt_ip": "10.1.105.60",
       "mgmt_ssh_username": "sysadmin",
       "mgmt_ssh_password": "superuser"
     },
     "fpga": {
-      "mgmt_ip": "10.1.105.164",
+      "mgmt_ip": "10.1.105.62",
       "mgmt_ssh_username": "root",
       "mgmt_ssh_password": "root"
     },
     "come": {
-      "mgmt_ip": "10.1.105.165",
+      "mgmt_ip": "10.1.105.76",
       "mgmt_ssh_username": "fun",
       "mgmt_ssh_password": "123"
     }
@@ -415,17 +415,17 @@
       },
     "gateway_ip": "10.1.105.1",
     "bmc": {
-      "mgmt_ip": "fs66-bmc",
+      "mgmt_ip": "10.1.105.61",
       "mgmt_ssh_username": "sysadmin",
       "mgmt_ssh_password": "superuser"
     },
     "fpga": {
-      "mgmt_ip": "fs66-fpga",
+      "mgmt_ip": "10.1.105.64",
       "mgmt_ssh_username": "root",
       "mgmt_ssh_password": "root"
     },
     "come": {
-      "mgmt_ip": "fs66-come",
+      "mgmt_ip": "10.1.105.72",
       "mgmt_ssh_username": "fun",
       "mgmt_ssh_password": "123"
     }
