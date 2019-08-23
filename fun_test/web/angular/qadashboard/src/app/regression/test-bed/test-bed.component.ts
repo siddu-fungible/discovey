@@ -124,7 +124,7 @@ export class TestBedComponent implements OnInit {
     return this.regressionService.fetchTestbeds().pipe(switchMap(response => {
       this.testBeds = response;
       this.testBeds.map(testBed => {
-        testBed['editing_mode'] = false;
+        testBed['editingMode'] = false;
         let numExecutions = -1;
         let executionId = -1;
         this.automationStatus[testBed.name] = {numExecutions: numExecutions,
@@ -308,7 +308,7 @@ export class TestBedComponent implements OnInit {
   }
 
   edit(testBed) {
-    testBed.editing_mode = true;
+    testBed.editingMode = true;
   }
 
   onSubmit(testBed) {
@@ -319,10 +319,10 @@ export class TestBedComponent implements OnInit {
       this.loggerService.error("Unable to update description");
     });
     this.currentDescription = "";
-    testBed.editing_mode = false;
+    testBed.editingMode = false;
   }
 
   toggleEdit(testBed) {
-    testBed.editing_mode = !testBed.editing_mode;
+    testBed.editingMode = !testBed.editingMode;
   }
 }
