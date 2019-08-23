@@ -314,7 +314,7 @@ class NetperfManager:
                 for dip in dip_list:
                     for i in range(0, num_processes):
                         rdict[direction].append(mp_task_obj.get_result('{}_{}_{}'.format(direction, dip, i)))
-                    if test_id == 3:
+                    if test == 3:
                         rdict[direction].append(mp_task_obj.get_result('{}_{}_{}_latency'.format(direction, dip, i)))
                 fun_test.log('NetperfManager aggregated netperf result of {}\n{}'.format(direction, rdict[direction]))
 
