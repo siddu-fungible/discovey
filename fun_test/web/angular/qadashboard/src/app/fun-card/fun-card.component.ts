@@ -24,6 +24,7 @@ export class FunCardComponent implements OnInit {
   @Input() iconLink: string;
   @Input() tooltipText: string;
   @Input() text: string;
+  @Input() hideText: string;
   @Input() footerTextTitle: string;
   @Input() footerText: string;
   @Input() footerIconLink: string;

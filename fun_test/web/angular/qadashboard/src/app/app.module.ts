@@ -78,6 +78,7 @@ import { PerformanceViewWorkspaceComponent } from './performance/performance-wor
 import { SuiteExecutionWidgetComponent } from './regression/suite-execution-widget/suite-execution-widget.component';
 import { SuiteEditorComponent } from './regression/suite-editor/suite-editor.component';
 import {ModalModule} from "ngb-modal";
+import { UlErrorPanelComponent } from './ui-elements/ul-error-panel/ul-error-panel.component';
 import { AnnouncementFormComponent } from './performance/admin/announcement-form/announcement-form.component';
 
 
@@ -141,6 +142,7 @@ import { AnnouncementFormComponent } from './performance/admin/announcement-form
     PerformanceViewWorkspaceComponent,
     SuiteExecutionWidgetComponent,
     SuiteEditorComponent,
+    UlErrorPanelComponent,
     AnnouncementFormComponent
   ],
   imports: [
