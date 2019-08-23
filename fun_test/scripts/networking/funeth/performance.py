@@ -339,8 +339,8 @@ class FunethPerformanceBase(FunTestCase):
                                                            when='after')
             # Collect host stats after dpc stats to give enough time for mpstat collection
             perf_utils.collect_host_stats(funeth_obj, version, when='after')
-            if any(i for i in sth_stuck_after):
-                result = {}
+            #if any(i for i in sth_stuck_after):
+            #    result = {}
         else:
             result = {}
 
