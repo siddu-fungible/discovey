@@ -425,6 +425,7 @@ class FunethSanity(FunTestScript):
                             funsdk_branch=funsdk_branch,
                             fundrv_commit=fundrv_commit,
                             funsdk_commit=funsdk_commit)
+        self.funeth_obj = funeth_obj
         fun_test.shared_variables['funeth_obj'] = funeth_obj
 
         # perf
@@ -454,6 +455,8 @@ class FunethSanity(FunTestScript):
                                       funsdk_branch=funsdk_branch,
                                       fundrv_commit=fundrv_commit,
                                       funsdk_commit=funsdk_commit)
+            self.funeth_obj_ul_vm = funeth_obj_ul_vm
+            self.funeth_obj_ol_vm = funeth_obj_ol_vm
             fun_test.shared_variables['funeth_obj_ul_vm'] = funeth_obj_ul_vm
             fun_test.shared_variables['funeth_obj_ol_vm'] = funeth_obj_ol_vm
 
