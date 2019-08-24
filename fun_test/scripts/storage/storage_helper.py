@@ -652,15 +652,23 @@ class CollectStats(object):
                 if func == "vp_utils":
                     stats_collect_details[func]["thread_id"] = fun_test.execute_thread_after(
                         time_in_seconds=start_time, func=self.collect_vp_utils_stats, **arg)
+                    fun_test.log("Started the VP utilization stats collection thread having the ID: {}".
+                                 format(stats_collect_details[func]["thread_id"]))
                 if func == "per_vp":
                     stats_collect_details[func]["thread_id"] = fun_test.execute_thread_after(
                         time_in_seconds=start_time, func=self.collect_per_vp_stats, **arg)
+                    fun_test.log("Started the per VP utilization stats collection thread having the ID: {}".
+                                 format(stats_collect_details[func]["thread_id"]))
                 if func == "resource_bam_args":
                     stats_collect_details[func]["thread_id"] = fun_test.execute_thread_after(
                         time_in_seconds=start_time, func=self.collect_resource_bam_stats, **arg)
+                    fun_test.log("Started the BAM stats collection thread having the ID: {}".
+                                 format(stats_collect_details[func]["thread_id"]))
                 if func == "vol_stats":
                     stats_collect_details[func]["thread_id"] = fun_test.execute_thread_after(
                         time_in_seconds=start_time, func=self.collect_vol_stats, **arg)
+                    fun_test.log("Started the Volume stats collection thread having the ID: {}".
+                                 format(stats_collect_details[func]["thread_id"]))
                 start_time += start_dealy
         except Exception as ex:
             fun_test.critical(str(ex))
