@@ -96,10 +96,12 @@
               <label>Suite execution id&nbsp;&nbsp;</label>
               <input type="text" formControlName="executionId">
             </div>
+            <div style="padding: 5px">
+              <span class="fun-cancel-link" (click)="onCancel()">Cancel</span> &nbsp;
+              <button class="fun-button-submit" [disabled]="!searchForm.valid" (click)="executionReload()">Submit
+              </button>
+            </div>
 
-            <span class="pseudo-anchor" (click)="onCancel()">Cancel</span> &nbsp;
-
-            <button class="btn btn-success submit-button" [disabled]="!searchForm.valid" type="submit" (click)="executionReload()">Submit</button>
           </form>
         </div>
 

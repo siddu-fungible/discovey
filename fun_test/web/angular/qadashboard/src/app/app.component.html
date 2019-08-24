@@ -18,12 +18,13 @@
   <div class="collapse navbar-collapse" id="qa-dashboard-navbar">
     <ul class="navbar-nav mr-auto">
       <li class="nav-item">
-        <a class="nav-link" href="/performance" style="color: white;background-color: #337ab7" role="button">Performance</a>
+        <a class="nav-link" href="/performance" style="color: white;background-color: #337ab7"
+           role="button">Performance</a>
       </li>
 
       <li ngbDropdown class="nav-item dropdown">
         <a [routerLink]="" id="navbarDropdown" style="color: white;background-color: #337ab7"
-           class="nav-link dropdown-toggle"role="button" aria-haspopup="true"
+           class="nav-link dropdown-toggle" role="button" aria-haspopup="true"
            aria-expanded="false" ngbDropdownToggle>Regression</a>
         <div ngbDropdownMenu class="dropdown-menu" aria-labelledby="navbarDropdown">
           <a class="dropdown-item" href="/regression/summary">Summary</a>
@@ -50,21 +51,20 @@
           <a class="dropdown-item" href="/initialize">Initialize</a>
         </div>
       </li>
-
-      <li class="nav-item">
-        <a class="nav-link" href="/performance/workspace" style="color: white;background-color: #337ab7" role="button">
-          My workspace</a>
-      </li>
     </ul>
-        <ul class="navbar-nav">
-      <li><i [routerLink]="['/common/logs']" class="fa fa-bell fa-2x" style="color: gold;      text-shadow: 0 0 3px #000;" aria-hidden="true" *ngIf="showAlert"></i>&nbsp;
-          <a [routerLink]="['/common/logs']" role="button" style="color: white;background-color: #337ab7">Logs</a>
+    <ul class="navbar-nav">
+      <li class="nav-item" style="text-align: center"><i [routerLink]="['/common/logs']" class="fa fa-bell fa-2x"
+             style="color: gold;      text-shadow: 0 0 3px #000;" aria-hidden="true" *ngIf="showAlert"></i>
+        &nbsp;<a [routerLink]="['/common/logs']" role="button" style="color: white;background-color: #337ab7">Logs</a>
+      </li>
+      <li class="nav-item" style="padding-left: 10px">
+        <i [routerLink]="['/performance/workspace']" role="button" class="fa fa-user-circle-o fa-2x"
+             style="color: white; text-shadow: 0 0 3px #000;"></i>&nbsp;
       </li>
     </ul>
 
   </div>
 </nav>
-
 
 
 <div>

@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import {Injectable} from '@angular/core';
 import {Observable} from "rxjs";
 
 @Injectable({
@@ -7,6 +7,7 @@ import {Observable} from "rxjs";
 export class CommonService {
   newAlert: boolean = false;
   announcementAvailable: boolean = false;
+
   constructor() {
 
   }
@@ -32,7 +33,8 @@ export class CommonService {
     return new Observable(observer => {
       //observer.next(this.newAlert);
       setInterval(() => observer.next(this.newAlert), 1000);
-      return () => {};
+      return () => {
+      };
     })
   }
 
@@ -59,7 +61,8 @@ export class CommonService {
   monitorAnnouncements() {
     return new Observable(observer => {
       setInterval(() => observer.next(this.announcementAvailable), 1000);
-      return () => {};
+      return () => {
+      };
     })
   }
 
@@ -67,6 +70,16 @@ export class CommonService {
     let result = t;
     try {
       result = this.convertToLocalTimezone(t).toLocaleString().replace(/\..*$/, "");
+    } catch (e) {
+      console.log(e);
+    }
+    return result;
+  }
+
+  getShortDate(t) {
+    let result = t;
+    try {
+      result = t.toLocaleString().replace(/\..*$/, "");
     } catch (e) {
       console.log(e);
     }

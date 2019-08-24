@@ -4809,6 +4809,7 @@
                             "metric_model_name": "MetricContainer",
                             "name": "alibaba_bmv_networking_overlay_host_host_fcp_2",
                             "label": "Host->Host FCP (2 F1s)",
+                            "disable": true,
                             "children": [
                               {
                                 "metric_model_name": "MetricContainer",

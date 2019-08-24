@@ -502,7 +502,7 @@ tr.text-center > th {
 
 .fun-cancel-link {
   color: red;
-  font-size: 12px;
+  font-size: 15px;
   padding-right: 5px;
 }
 
@@ -611,6 +611,11 @@ tr.text-center > th {
   padding: 5px;
   border-radius: 2px;
   min-width: 100px;
+}
+
+.fun-button-submit:hover {
+  cursor: pointer;
+  text-decoration: underline;
 }
 
 .fun-button-disabled {
