@@ -76,6 +76,8 @@ class CheckCOMe(FunTestCase):
         output = self.come_linux.command('lspci -d 1dad:')
         fun_test.test_assert(re.search(r'Ethernet controller: (?:Device 1dad:00f1|Fungible Device 00f1)', output),
                              message="Check ethernet device")
+        fun_test.test_assert(re.search('04:00.0', output), message="Check F1_0")
+        fun_test.test_assert(re.search('06:00.0', output), message="Check F1_0")
 
     def cleanup(self):
         pass

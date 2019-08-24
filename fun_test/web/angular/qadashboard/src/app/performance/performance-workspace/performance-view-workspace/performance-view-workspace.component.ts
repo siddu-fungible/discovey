@@ -25,7 +25,11 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
   status: string = null;
   currentChart: any = null;
   data: any = [];
-  atomicUrl: string = "http://integration.fungible.local/performance/atomic/";
+  atomicUrl: string = "http://integration.fungible.local/performance/atomic";
+  jiraUrl: string = "http://jira/browse";
+  workspaceURL: string = "/performance/workspace";
+  reportGenerated: boolean = false;
+  subject: string = null;
 
   constructor(private apiService: ApiService, private commonService: CommonService, private loggerService: LoggerService,
               private route: ActivatedRoute, private router: Router, private location: Location, private title: Title, private perfService: PerformanceService) {
@@ -55,7 +59,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
           switchMap(response => {
             return this.perfService.fetchBuildInfo();
           })).subscribe(response => {
-            this.buildInfo = response;
+          this.buildInfo = response;
           console.log("fetched workspace and buildInfo from URL");
           this.showWorkspace = true;
         }, error => {
@@ -71,15 +75,19 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
     this.location.back();
   }
 
+  backToWorkspaces(): void {
+    this.router.navigateByUrl(this.workspaceURL + "/" + this.email);
+  }
+
   fetchWorkspaces(): any {
-    return this.apiService.get("/api/v1/workspaces/" + this.email + "/" + this.workspaceName).pipe(switchMap(response => {
+    return this.apiService.get("/api/v1/performance/workspaces/" + this.email + "/" + this.workspaceName).pipe(switchMap(response => {
       this.workspace = response.data[0];
       return of(true);
     }));
   }
 
   fetchInterestedMetrics(workspaceId): any {
-    return this.apiService.get("/api/v1/workspaces/" + workspaceId + "/interested_metrics").pipe(switchMap(response => {
+    return this.apiService.get("/api/v1/performance/workspaces/" + workspaceId + "/interested_metrics").pipe(switchMap(response => {
       this.workspace.interested_metrics = response.data;
       return of(true);
     }));
@@ -119,10 +127,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
       temp["yesterday"] = null;
       temp["unit"] = null;
       temp["percentage"] = null;
-      temp["chart_name"] = metric["chart_name"];
-      temp["url"] = this.atomicUrl + metric["metric_id"];
-      temp["lineage"] = metric["lineage"];
-      temp["metric_id"] = metric["metric_id"];
+      temp["history"] = [];
       metric["data"].push(temp);
     }
   }
@@ -168,8 +173,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
     let from_epoch = times[0];
     let to_epoch = times[1];
     let self = this;
-    console.log(times);
-    return this.apiService.get("/api/v1/performance/report_data?metric_id=" + metric["metric_id"] + "&from_epoch_ms=" + from_epoch + "&to_epoch_ms=" + to_epoch).pipe(switchMap(response => {
+    return this.apiService.get("/api/v1/performance/metrics_data?metric_id=" + metric["metric_id"] + "&from_epoch_ms=" + from_epoch + "&to_epoch_ms=" + to_epoch).pipe(switchMap(response => {
       let data = response.data;
       for (let oneData of data) {
         for (let dataSet of metric["data"]) {
@@ -194,9 +198,11 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
         metric["penultimate_good_score"] = penultimateGoodScore;
         metric["model_name"] = response.data["metric_model_name"];
         metric["data_sets"] = response.data["data_sets"];
+        metric["jira_ids"] = response.data["jira_ids"];
         metric["selected"] = false;
         metric["report"] = null;
         metric["data"] = [];
+        metric["url"] = this.atomicUrl + "/" + metric["metric_id"];
       }, error => {
         this.loggerService.error("failed fetching the chart info while viewing workspace");
       });
@@ -216,29 +222,57 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
     } else {
       return of(true);
     }
-
   }
 
-  sendReports(): any {
+  fetchHistory(): any {
+    const resultObservables = [];
+    this.workspace.interested_metrics.forEach(metric => {
+      resultObservables.push(this.fetchHistoricalData(metric));
+    });
+    if (resultObservables.length > 0) {
+      return forkJoin(resultObservables);
+    } else {
+      return of(true);
+    }
+  }
+
+  fetchHistoricalData(metric): any {
+    return this.apiService.get("/api/v1/performance/metrics_data?metric_id=" + metric["metric_id"] + "&order_by=-input_date_time&count=5").pipe(switchMap(response => {
+      let data = response.data;
+      for (let dataSet of metric["data"]) {
+        dataSet["history"] = [];
+        for (let oneData of data) {
+          if (dataSet["name"] == oneData["name"]) {
+            let hData = {};
+            hData["date"] = this.commonService.getPrettyLocalizeTime(oneData["date_time"]);
+            hData["value"] = oneData["value"];
+            dataSet["history"].push(hData);
+          }
+        }
+        dataSet["rows"] = dataSet["history"].length + 1;
+      }
+      return of(true);
+    }));
+  }
+
+  sendEmail(): any {
     let payload = {};
     let reports = [];
     this.workspace.interested_metrics.forEach(metric => {
       let report = {};
-      report[metric["chart_name"]] = metric["report"];
+      report["chart_name"] = metric["chart_name"];
+      report["lineage"] = metric["lineage"];
+      report["url"] = metric["url"];
+      report["comments"] = metric["comments"];
+      report["jira_ids"] = metric["jira_ids"];
+      report["report"] = metric["report"];
       reports.push(report);
     });
     payload["reports"] = reports;
     payload["email"] = this.email;
-    let today = new Date();
-    let m =  ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-    payload["subject"] = "Daily TeraMark status update - " + String(today.getDate()) + " " + String(m[today.getMonth()]);
-    return this.apiService.post('/api/v1/performance/report_data', payload).pipe(switchMap(response => {
-      if (response.data["status"]) {
-        this.loggerService.success("sent report email successfully to " + this.email);
-      } else {
-        this.loggerService.error("sending email failed");
-      }
-      return of(true);
+    payload["subject"] = this.subject;
+    return this.apiService.post('/api/v1/performance/reports', payload).pipe(switchMap(response => {
+      return of(response.data);
     }));
   }
 
@@ -253,13 +287,50 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
         return this.fetchReports();
       }),
       switchMap(response => {
-        return this.sendReports();
+        return this.fetchHistory();
       })).subscribe(response => {
-      console.log("generated report and sent to " + this.email);
+        let t = new Date();
+      let dateString = this.commonService.getShortDate(t);
+      this.subject = "Performance status report - " + dateString;
+      this.reportGenerated = true;
     }, error => {
       this.loggerService.error("Unable to generate report");
     });
 
+  }
+
+  saveComments(): any {
+    let payload = {};
+    payload["email"] = this.email;
+    payload["workspace_id"] = this.workspace.id;
+    payload["interested_metrics"] = this.workspace.interested_metrics;
+    return this.apiService.post("/api/v1/performance/workspaces/" + this.workspace.id + "/interested_metrics", payload).pipe(switchMap(response => {
+      return of(true);
+    }));
+  }
+
+  sendReports(): void {
+    new Observable(observer => {
+      observer.next(true);
+      //observer.complete();
+      return () => {
+      }
+    }).pipe(
+      switchMap(response => {
+        return this.saveComments();
+      }),
+      switchMap(response => {
+        return this.sendEmail();
+      })).subscribe(response => {
+      if (response["status"]) {
+        this.loggerService.success("sent report email successfully to " + this.email);
+      } else {
+        this.loggerService.error("sending email failed");
+      }
+
+    }, error => {
+      this.loggerService.error("sending email failed");
+    });
   }
 
 }

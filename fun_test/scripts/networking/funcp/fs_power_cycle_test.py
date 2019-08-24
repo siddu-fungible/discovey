@@ -111,8 +111,8 @@ class BootF1(FunTestCase):
             gen3x4_count = match_str_list.count("Gen3x4")
             gen3x2_count = match_str_list.count("Gen3x2")
             fun_test.log_section("SSD Details on F1_{}".format(f1index))
-            fun_test.log("SSD in Gen3x4 : {}".format(gen3x4_count))
-            fun_test.log("SSD in Gen3x2 : {}".format(gen3x2_count))
+            fun_test.log("SSD in Gen3x4 : {}".format(gen3x4_count/2))
+            fun_test.log("SSD in Gen3x2 : {}".format(gen3x2_count/2))
 
             counter_name = "f1_{}_ssd_count".format(f1index)
             ssd_count = eval(counter_name)
@@ -138,10 +138,10 @@ class BootF1(FunTestCase):
 
             if gen3x4_count/2 == 4:
                 fun_test.add_checkpoint("Gen3x4 SSD count on F1_{}".format(f1index),
-                                        "PASSED", expected=ssd_count, actual=gen3x4_count)
+                                        "PASSED", expected=ssd_count, actual=gen3x4_count/2)
             else:
                 fun_test.add_checkpoint("Gen3x4 SSD count on F1_{}".format(f1index),
-                                        "FAILED", expected=ssd_count, actual=gen3x4_count)
+                                        "FAILED", expected=ssd_count, actual=gen3x4_count/2)
                 gen3x4_fail = True
             if gen3x2_count == 0:
                 fun_test.add_checkpoint("Gen3x2 SSD count on F1_{}".format(f1index),

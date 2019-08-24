@@ -38,6 +38,9 @@ export class TestBedComponent implements OnInit {
   driver = null;
   refreshing: string = null;
   userMap: any = null;
+  editingDescription: boolean = false;
+  tempDescription: string;
+
 
   constructor(private regressionService: RegressionService,
               private apiService: ApiService,
@@ -122,9 +125,9 @@ export class TestBedComponent implements OnInit {
     return this.regressionService.fetchTestbeds().pipe(switchMap(response => {
       this.testBeds = response;
       this.testBeds.map(testBed => {
+        testBed['editingMode'] = false;
         let numExecutions = -1;
         let executionId = -1;
-
         this.automationStatus[testBed.name] = {numExecutions: numExecutions,
           executionId: executionId};
 
@@ -303,5 +306,25 @@ export class TestBedComponent implements OnInit {
     }, error => {
       this.loggerService.error(`Unable to unlock asset: ${name}`);
     })
+  }
+
+  onSubmitDescription(testBed) {
+    let payload = {description: testBed.description};
+    this.apiService.put('/api/v1/regression/test_beds/' + testBed.id, payload).subscribe((response) => {
+      this.loggerService.success('Successfully updated!');
+    }, error => {
+      this.loggerService.error("Unable to update description");
+    });
+    testBed.editingMode = false;
+  }
+
+  onEditDescription(testBed) {
+    this.tempDescription = testBed.description;
+    testBed.editingMode = true;
+  }
+
+  onCancelDescription(testBed) {
+    testBed.description = this.tempDescription;
+    testBed.editingMode = false;
   }
 }

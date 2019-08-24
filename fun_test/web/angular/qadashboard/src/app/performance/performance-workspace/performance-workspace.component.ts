@@ -22,7 +22,6 @@ export class PerformanceWorkspaceComponent implements OnInit {
   profile: any = null;
   editingWorkspace: boolean = false;
   workspaceName: string = null;
-  grids: any = [];
   gridLength: number = 0;
   createError: string = null;
   currentWorkspace: any = null;
@@ -108,7 +107,7 @@ export class PerformanceWorkspaceComponent implements OnInit {
   }
 
   fetchInterestedMetrics(workspaceId): any {
-    return this.apiService.get("/api/v1/workspaces/" + workspaceId + "/interested_metrics").pipe(switchMap(response => {
+    return this.apiService.get("/api/v1/performance/workspaces/" + workspaceId + "/interested_metrics").pipe(switchMap(response => {
       this.currentWorkspace["interestedMetrics"] = response.data;
       return of(true);
     }));
@@ -182,7 +181,7 @@ export class PerformanceWorkspaceComponent implements OnInit {
   }
 
   fetchWorkspaces(user): any {
-    return this.apiService.get("/api/v1/workspaces/" + user.email).pipe(switchMap(response => {
+    return this.apiService.get("/api/v1/performance/workspaces/" + user.email).pipe(switchMap(response => {
       let workspaces = response.data;
       this.profile = [];
       if (workspaces.length) {
@@ -223,6 +222,9 @@ export class PerformanceWorkspaceComponent implements OnInit {
     let error = false;
     if (this.workspaceName === null || this.workspaceName.trim() === "") {
       this.createError = "Enter some workspace name";
+      error = true;
+    } else if (this.description === null || this.description.trim() === "") {
+      this.createError = "Enter some description";
       error = true;
     } else {
       this.workspaceName = this.workspaceName.trim();
@@ -282,14 +284,14 @@ export class PerformanceWorkspaceComponent implements OnInit {
     payload["email"] = this.selectedUser.email;
     payload["name"] = this.workspaceName;
     payload["description"] = this.description;
-    return this.apiService.post("/api/v1/workspaces/", payload).pipe(switchMap(response => {
+    return this.apiService.post("/api/v1/performance/workspaces", payload).pipe(switchMap(response => {
       console.log("created/edited workspace successfully");
       return of(true);
     }));
   }
 
   deleteMetricInWorkspace(metricId): void {
-    this.apiService.delete("/api/v1/workspaces/" + this.currentWorkspace.workspaceId + "/interested_metrics?metric_id=" + metricId).subscribe(response => {
+    this.apiService.delete("/api/v1/performance/workspaces/" + this.currentWorkspace.workspaceId + "/interested_metrics?metric_id=" + metricId).subscribe(response => {
       this.loggerService.success(`deleted ${metricId}`);
       new Observable(observer => {
         observer.next(true);
@@ -308,7 +310,7 @@ export class PerformanceWorkspaceComponent implements OnInit {
   }
 
   onDeleteWorkspace(workspace) {
-    this.apiService.delete("/api/v1/workspaces/" + this.selectedUser.email + "/" + workspace.name).subscribe(response => {
+    this.apiService.delete("/api/v1/performance/workspaces/" + this.selectedUser.email + "/" + workspace.name).subscribe(response => {
       this.loggerService.success(`Deleted ${this.selectedUser.email} ${workspace.name}`);
       this.fetchWorkspacesAfterEditing();
       this.modalService.dismissAll();
@@ -320,8 +322,9 @@ export class PerformanceWorkspaceComponent implements OnInit {
   updateStatus(submitted, workspace): void {
     if (submitted) {
       workspace.editingWorkspace = false;
-      this.grids = [];
       this.fetchWorkspacesAfterEditing();
+    } else {
+      workspace.editingWorkspace = false;
     }
   }
 
@@ -337,7 +340,6 @@ export class PerformanceWorkspaceComponent implements OnInit {
         return this.fetchInterestedMetrics(workspace.workspaceId);
       })).pipe(
       switchMap(response => {
-        this.grids = [...workspace["interestedMetrics"]];
         let url = "/performance/workspace/" + this.selectedUser.email + "/" + this.currentWorkspace.name;
         this.router.navigateByUrl(url);
         return of(true);
@@ -379,7 +381,7 @@ export class PerformanceWorkspaceComponent implements OnInit {
     payload["email"] = this.selectedUser.email;
     payload["workspace_id"] = this.currentWorkspace.workspaceId;
     payload["interested_metrics"] = this.currentWorkspace.interestedMetrics;
-    return this.apiService.post("/api/v1/workspaces/" + this.currentWorkspace.workspaceId + "/interested_metrics", payload).pipe(switchMap(response => {
+    return this.apiService.post("/api/v1/performance/workspaces/" + this.currentWorkspace.workspaceId + "/interested_metrics", payload).pipe(switchMap(response => {
       console.log("Edited interested metrics for the current workspace successfully");
       return of(true);
     }));

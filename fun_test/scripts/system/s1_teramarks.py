@@ -30,7 +30,7 @@ class PalladiumTc(FunTestCase):
     max_duration = 900
     disable_assertions = "true"
     hw_version = "rel_08012019"
-    run_target = "palladium"
+    run_target = "protium_s"
     extra_emails = None
 
     def describe(self):
