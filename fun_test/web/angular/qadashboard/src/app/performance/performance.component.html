@@ -179,7 +179,7 @@
           </tr>
         </ng-container>
       </table>
-      <span class="fun-cancel-link" (click)="cancelInterestedMetrics()">Cancel</span>
+      <span *ngIf="selectMode" class="fun-cancel-link" (click)="cancelInterestedMetrics()">Cancel</span>
       <button *ngIf="selectMode" class="fun-button-submit" (click)="submitInterestedMetrics()">Submit</button>
     </div>
     <!-- right side of the perf page dispalying the charts -->
