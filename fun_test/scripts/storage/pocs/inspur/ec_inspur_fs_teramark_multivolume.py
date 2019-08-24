@@ -1022,6 +1022,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                         self.stats_collect_details[func]["vol_details"] = vol_details
                 fun_test.log("Different stats collection thread details for the current IO depth {} before starting "
                              "them:\n{}".format(iodepth, self.stats_collect_details))
+                self.storage_controller.verbose = False
                 stats_obj = CollectStats(self.storage_controller)
                 stats_obj.start(file_suffix=file_suffix, **self.stats_collect_details)
                 fun_test.log("Different stats collection thread details for the current IO depth {} after starting "
@@ -1152,6 +1153,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                                                                        fun_test.shared_variables["fio"][index]))
             finally:
                 stats_obj.stop(**self.stats_collect_details)
+                self.storage_controller.verbose = True
 
                 # Collecting final network stats and finding diff between final and initial stats
                 if self.collect_network_stats:
