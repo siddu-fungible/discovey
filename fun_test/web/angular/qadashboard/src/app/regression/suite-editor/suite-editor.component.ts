@@ -105,8 +105,8 @@ export class SuiteEditorComponent implements OnInit {
           let assetSelectionKey = this._getAssetSelectionKey(flatName);
           let numAssetsKey = this._getNumAssetsKey(flatName);
           let specificAssetsKey = this._getSpecificAssetsKey(flatName);
-          this.customTestBedSpecForm.controls[specificAssetsKey].setValue('');
-          this.customTestBedSpecForm.controls[numAssetsKey].setValue('');
+          this.customTestBedSpecForm.controls[specificAssetsKey].setValue(null);
+          this.customTestBedSpecForm.controls[numAssetsKey].setValue(null);
           this.customTestBedSpecForm.controls[assetSelectionKey].setValue(CustomAssetSelection.NUM.toString());
 
         })
@@ -191,16 +191,9 @@ export class SuiteEditorComponent implements OnInit {
 
         for (let key of Object.keys(this.assetTypes)) {
           let flatName = this._flattenName(key);
-          let assetSelectionKey = this._getAssetSelectionKey(flatName);
-          let numAssetsKey = this._getNumAssetsKey(flatName);
-          let specificAssetsKey = this._getSpecificAssetsKey(flatName);
-          let assetSelection = group.get(assetSelectionKey).value;
-          let numAssets = parseInt(group.get(numAssetsKey).value);
-          console.log(numAssets);
-          if (!isNaN(numAssets)) {
-            totalAssets += numAssets;
-          }
-          let specificAssets = group.get(specificAssetsKey).value;
+          let readOut = this._readOutCustomTestBedSpecForm(flatName);
+          totalAssets += readOut["numAssets"];
+          let specificAssets = readOut["specificAssets"];
           if (specificAssets) {
             totalAssets += specificAssets.length;
           }
@@ -256,14 +249,33 @@ export class SuiteEditorComponent implements OnInit {
 
   }
 
+  _readOutCustomTestBedSpecForm(flatName) {
+    let result = {};
+    let assetSelectionKey = this._getAssetSelectionKey(flatName);
+    let numAssetsKey = this._getNumAssetsKey(flatName);
+    let specificAssetsKey = this._getSpecificAssetsKey(flatName);
+
+    let assetSelection = this.customTestBedSpecForm.get(assetSelectionKey).value;
+    result["assetSelection"] = assetSelection;
+
+    let numAssets = parseInt(this.customTestBedSpecForm.get(numAssetsKey).value);
+    if (isNaN(numAssets)) {
+      numAssets = 0;
+    }
+    result["numAssets"] = numAssets;
+    let specificAssets = this.customTestBedSpecForm.get(specificAssetsKey).value;
+    result["specificAssets"] = specificAssets;
+
+    return result;
+  }
+
   onClickCustomTestBedSpec(content) {
     this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title'}).result.then((dontCare) => {
       console.log("Ready to submit");
       let customTestBedSpec = {};
-      if (!this.customTestBedSpecForm.get('selectedTestBed')) {
-        return
-      }
-      
+      let selectedTestBed = this.customTestBedSpecForm.get("selectedTestBed").value;
+
+
 
     }, ((reason) => {
       console.log("Rejected");
