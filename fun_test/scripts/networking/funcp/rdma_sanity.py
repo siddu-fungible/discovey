@@ -17,13 +17,20 @@ class ScriptSetup(FunTestScript):
                                                       '/fs_connected_servers.json')
 
     def cleanup(self):
-        # host_obj = fun_test.shared_variables["hosts_obj"]
+        f10_hosts = fun_test.shared_variables["f10_hosts"]
+        f11_hosts = fun_test.shared_variables["f11_hosts"]
+        f10_host_count = fun_test.shared_variables["host_len_f10"]
+        f11_host_count = fun_test.shared_variables["host_len_f11"]
+        for x in xrange(0, f10_host_count):
+            f10_hosts[x]["handle"].disconnect()
+        for x in xrange(0, f11_host_count):
+            f11_hosts[x]["handle"].disconnect()
 
         # Check if funeth is loaded or else bail out
         # for obj in host_obj:
         #     host_obj[obj][0].sudo_command("rmmod funrdma")
         # fun_test.log("Unload funrdma drivers")
-        pass
+        # pass
         # funcp_obj.cleanup_funcp()
         # for server in servers_mode:
         #     critical_log(expression=rmmod_funeth_host(hostname=server), message="rmmod funeth on host")
@@ -353,8 +360,7 @@ class SrpingLoopBack(FunTestCase):
             f10_server_result = f10_host_roce.parse_test_log(f10_host_server["output_file"], tool="srping")
             f10_client_result = f10_host_roce.parse_test_log(f10_host_client["output_file"], tool="srping",
                                                              client_cmd=True)
-            f10_hosts[0]["handle"].disconnect()
-            f10_hosts[0]["handle"].disconnect()
+
             fun_test.simple_assert(f10_server_result, "F10_host server result for size {}".format(size))
             fun_test.simple_assert(f10_client_result, "F10_host client result for size {}".format(size))
 
@@ -370,8 +376,6 @@ class SrpingLoopBack(FunTestCase):
             f11_server_result = f11_host_roce.parse_test_log(f11_host_server["output_file"], tool="srping")
             f11_client_result = f11_host_roce.parse_test_log(f11_host_client["output_file"], tool="srping",
                                                              client_cmd=True)
-            f11_hosts[0]["handle"].disconnect()
-            f11_hosts[0]["handle"].disconnect()
             fun_test.simple_assert(f11_server_result, "f11_host server result for size {}".format(size))
             fun_test.simple_assert(f11_client_result, "f11_host client result for size {}".format(size))
 
@@ -445,8 +449,6 @@ class RpingLoopBack(FunTestCase):
             f10_server_result = f10_host_roce.parse_test_log(f10_host_server["output_file"], tool="rping")
             f10_client_result = f10_host_roce.parse_test_log(f10_host_client["output_file"], tool="rping",
                                                              client_cmd=True)
-            f10_hosts[0]["handle"].disconnect()
-            f10_hosts[0]["handle"].disconnect()
             fun_test.simple_assert(f10_server_result, "F10_host server result for size {}".format(size))
             fun_test.simple_assert(f10_client_result, "F10_host client result for size {}".format(size))
 
@@ -462,8 +464,6 @@ class RpingLoopBack(FunTestCase):
             f11_server_result = f11_host_roce.parse_test_log(f11_host_server["output_file"], tool="rping")
             f11_client_result = f11_host_roce.parse_test_log(f11_host_client["output_file"], tool="rping",
                                                              client_cmd=True)
-            f11_hosts[0]["handle"].disconnect()
-            f11_hosts[0]["handle"].disconnect()
             fun_test.simple_assert(f11_server_result, "f11_host server result for size {}".format(size))
             fun_test.simple_assert(f11_client_result, "f11_host client result for size {}".format(size))
 
@@ -543,9 +543,8 @@ class SrpingSeqIoTest(FunTestCase):
                 if f11_pid_there == 60:
                     f11_hosts[0]["handle"].kill_process(process_id=f11_host_test["cmd_pid"])
             f10_host_result = f10_host_roce.parse_test_log(f10_host_test["output_file"], tool="srping")
-            f11_host_result = f11_host_roce.parse_test_log(f11_host_test["output_file"], tool="srping", client_cmd=True)
-            f10_hosts[0]["handle"].disconnect()
-            f11_hosts[0]["handle"].disconnect()
+            f11_host_result = f11_host_roce.parse_test_log(f11_host_test["output_file"], tool="srping",
+                                                           client_cmd=True)
             fun_test.simple_assert(f10_host_result, "F10_host result for size {}".format(size))
             fun_test.simple_assert(f11_host_result, "F11_host result for size {}".format(size))
 
@@ -639,8 +638,6 @@ class RpingSeqIoTest(FunTestCase):
                     f11_hosts[0]["handle"].kill_process(process_id=f11_host_test["cmd_pid"])
             f10_host_result = f10_host_roce.parse_test_log(f10_host_test["output_file"], tool="rping")
             f11_host_result = f11_host_roce.parse_test_log(f11_host_test["output_file"], tool="rping", client_cmd=True)
-            f10_hosts[0]["handle"].disconnect()
-            f11_hosts[0]["handle"].disconnect()
             fun_test.simple_assert(f10_host_result, "F10_host result for size {}".format(size))
             fun_test.simple_assert(f11_host_result, "F11_host result for size {}".format(size))
 
@@ -737,8 +734,6 @@ class IbBwSeqIoTest(FunTestCase):
                 f10_host_result = f10_host_roce.parse_test_log(f10_host_test["output_file"], tool="ib_bw")
                 f11_host_result = f11_host_roce.parse_test_log(f11_host_test["output_file"], tool="ib_bw",
                                                                client_cmd=True)
-                f10_hosts[0]["handle"].disconnect()
-                f11_hosts[0]["handle"].disconnect()
                 fun_test.simple_assert(f10_host_result, "F10_host {} result of size {}".format(test, size))
                 fun_test.simple_assert(f11_host_result, "F11_host {} result of size {}".format(test, size))
 
@@ -864,8 +859,6 @@ class IbLatSeqIoTest(FunTestCase):
                 f10_host_result = f10_host_roce.parse_test_log(f10_host_test["output_file"], tool="ib_lat")
                 f11_host_result = f11_host_roce.parse_test_log(f11_host_test["output_file"], tool="ib_lat",
                                                                client_cmd=True)
-                f10_hosts[0]["handle"].disconnect()
-                f11_hosts[0]["handle"].disconnect()
                 fun_test.simple_assert(f10_host_result, "F10_host {} result of size {}".format(test, size))
                 fun_test.simple_assert(f11_host_result, "F11_host {} result of size {}".format(test, size))
 
