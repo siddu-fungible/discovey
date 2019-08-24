@@ -1,21 +1,16 @@
 <!--shows the charts for a particular workspace-->
+<div style="padding: 20px"><span class="pseudo-anchor" (click)="backToWorkspaces()"><< Back to workspaces</span></div>
 <div *ngIf="showWorkspace" class="card card-primary">
   <div class="card-header">
-    <h5 style="text-align: center; margin: 0"><a [routerLink]=""
-                                                    style="font-size:
-      large;
-        float: left" (click)="goBack()">
-      <!--<i class="fa fa-hand-o-left" style="color: black"></i>&nbsp;-->
-      Back</a>
-      <span>{{ workspace.workspace_name }}</span></h5>
-      <a *ngIf="!showGrids" [routerLink]="" (click)="showGrids = true"><i class="fa fa-plus-circle"
-                                                                          style="color: black"></i> Show
-        charts</a>
-  <a *ngIf="showGrids" [routerLink]="" (click)="showGrids = false"><i class="fa fa-minus-circle"
-                                                                          style="color: black"></i> Hide charts</a> | <button
-    *ngIf="workspace.interested_metrics.length > 0" class="btn btn-sm btn-outline-dark"
-    (click)="generateReport()">Generate
-    report</button>
+    <h5 class="card-title" style="margin: 0;">{{ workspace.workspace_name }}</h5>
+    <span class="pseudo-anchor" *ngIf="!showGrids" (click)="showGrids = true">Show charts</span>
+    <span class="pseudo-anchor" *ngIf="showGrids" (click)="showGrids = false">Hide charts</span> |
+    <span class="pseudo-anchor" *ngIf="workspace.interested_metrics.length > 0 && !reportGenerated"
+          (click)="generateReport()">Show report
+    </span>
+    <span class="pseudo-anchor" *ngIf="workspace.interested_metrics.length > 0 && reportGenerated"
+          (click)="reportGenerated = false">Hide report
+    </span>
   </div>
   <div class="card-body flex-container">
     <div class="card" style="flex: 1 1 50%; padding: 10px;">
@@ -24,12 +19,12 @@
           <th style="width: 30%">
             Chart name
           </th>
-          <th style="width: 10%">
-            Track
-          </th>
-          <th style="width: 10%">
-            Subscribe to alerts
-          </th>
+          <!--<th style="width: 10%">-->
+          <!--Track-->
+          <!--</th>-->
+          <!--<th style="width: 10%">-->
+          <!--Subscribe to alerts-->
+          <!--</th>-->
           <th style="width: 10%">
             Yesterday's score
           </th>
@@ -42,17 +37,17 @@
         </tr>
         <tr *ngFor="let metric of workspace.interested_metrics">
           <td>
-            <a [ngClass]="{highlight:metric.selected}" [routerLink]="" (click)="openChartTable(metric)">{{
-              metric['chart_name'] }}</a>
+            <span class="pseudo-anchor" [ngClass]="{highlight:metric.selected}" (click)="openChartTable(metric)">{{
+              metric['chart_name'] }}</span>
           </td>
-          <td>
-            <app-toggle-button [checked]="metric['track']" [disabled]="true"
-            ></app-toggle-button>
-          </td>
-          <td>
-            <app-toggle-button [checked]="metric['subscribe']" [disabled]="true"
-            ></app-toggle-button>
-          </td>
+          <!--<td>-->
+          <!--<app-toggle-button [checked]="metric['track']" [disabled]="true"-->
+          <!--&gt;</app-toggle-button>-->
+          <!--</td>-->
+          <!--<td>-->
+          <!--<app-toggle-button [checked]="metric['subscribe']" [disabled]="true"-->
+          <!--&gt;</app-toggle-button>-->
+          <!--</td>-->
           <td>
             {{ metric["penultimate_good_score"] }}
           </td>
@@ -69,7 +64,7 @@
     <fun-spinner [status]="status"></fun-spinner>
     <div *ngIf="showChartTable" class="card" style="flex: 1 1 50%; vertical-align: top; padding: 10px;">
       <span><b>Chart name: </b>{{ currentChart.chart_name }}
-      <a style="float: right" [routerLink]="" (click)="closeChartTable()">Close</a></span>
+      <span class="pseudo-anchor" style="float: right" (click)="closeChartTable()">Close</span></span>
       <table style="width: 100%">
         <tr>
           <th style="width: 30%">
@@ -99,7 +94,7 @@
             {{ oneData.today }}
           </td>
           <td *ngIf="oneData.percentage"
-            [ngClass]="{'text-red': oneData.percentage.includes('-'), 'text-green': oneData.percentage.includes('+')}">
+              [ngClass]="{'text-red': oneData.percentage.includes('-'), 'text-green': oneData.percentage.includes('+')}">
             {{ oneData.percentage }}
           </td>
           <td>
@@ -109,8 +104,80 @@
       </table>
     </div>
   </div>
+  <ng-container *ngIf="reportGenerated">
+    <div class="card" style="margin: 10px; padding: 5px;">
+      <b>Subject: </b><input style="max-width: 50%" type="text" [(ngModel)]="subject"/><br>
+      <div *ngFor="let interestedMetric of workspace.interested_metrics">
+        <div style="vertical-align: middle; width: 50%">
+          {{ interestedMetric.chart_name }} - {{ interestedMetric.lineage }}<br>
+          Link to chart: <a href="{{ atomicUrl + '/' + interestedMetric.metric_id }}" target="_blank">Link</a><br>
+          Comments: <textarea [(ngModel)]="interestedMetric.comments" style="width: 100%"></textarea>
+        </div>
+        <table class="table table-bordered" style="max-width: 50%; margin: 0">
+          <tr style="vertical-align: middle">
+            <th rowspan="2">
+              Series name
+            </th>
+            <th rowspan="2">
+              Unit
+            </th>
+            <th rowspan="2">
+              Yesterday
+            </th>
+            <th rowspan="2">
+              Today
+            </th>
+            <th rowspan="2">
+              Percentage
+            </th>
+            <th colspan="2">
+              History
+            </th>
+          </tr>
+          <tr style="vertical-align: middle">
+            <th>Date</th>
+            <th>Value</th>
+          </tr>
+          <ng-container *ngFor="let dataSet of interestedMetric.report">
+            <tr>
+              <td [attr.rowspan]="dataSet['rows']">
+                {{ dataSet.name }}
+              </td>
+              <td [attr.rowspan]="dataSet['rows']">
+                {{ dataSet.unit }}
+              </td>
+              <td [attr.rowspan]="dataSet['rows']">
+                {{ dataSet.yesterday }}
+              </td>
+              <td [attr.rowspan]="dataSet['rows']">
+                {{ dataSet.today }}
+              </td>
+              <td [attr.rowspan]="dataSet['rows']"
+                  [ngClass]="{'text-red': dataSet.percentage.includes('-'), 'text-green': dataSet.percentage.includes('+')}">
+                {{ dataSet.percentage }}
+              </td>
+            </tr>
+            <tr *ngFor="let data of dataSet['history']">
+              <td>{{ data.date }}</td>
+              <td>{{ data.value }}</td>
+            </tr>
+          </ng-container>
+        </table>
+        <div style="vertical-align: middle; width: 50%">
+          Bugs: <span
+          *ngFor="let jiraId of interestedMetric.jira_ids"><a href="{{ jiraUrl + '/' + jiraId }}" target="_blank">{{
+          jiraId }}</a></span>
+        </div>
+        <br>
+      </div>
+      <span>
+        <span class="fun-cancel-link" (click)="reportGenerated = false">Cancel</span>
+        <button class="fun-button-submit" (click)="sendReports()">Send report</button>
+    </span>
+    </div>
+  </ng-container>
   <div *ngIf="showGrids" class="flex-container">
-    <ng-container *ngFor="let row of workspace.interested_metrics">
+    <ng-container *ngFor="let interestedMetric of workspace.interested_metrics">
       <div style="flex: 0 0 45%; padding-bottom: 10px;">
         <table align="center">
           <tr>
@@ -118,7 +185,7 @@
               <b>Lineage:</b>
             </td>
             <td>
-              {{ row['lineage'] }}
+              {{ interestedMetric.lineage }}
             </td>
           </tr>
           <tr>
@@ -126,11 +193,12 @@
               <b>Score:</b>
             </td>
             <td>
-              {{ row['last_good_score'] }}
+              {{ interestedMetric.last_good_score }}
             </td>
           </tr>
         </table>
-        <fun-metric-chart [id]="row['metric_id']" [minimal]="'true'" [buildInfo]="buildInfo"></fun-metric-chart>
+        <fun-metric-chart [id]="interestedMetric['metric_id']" [minimal]="'true'"
+                          [buildInfo]="buildInfo"></fun-metric-chart>
       </div>
     </ng-container>
     <div class="closed-section"></div>

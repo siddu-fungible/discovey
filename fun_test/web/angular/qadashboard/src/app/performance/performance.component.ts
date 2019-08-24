@@ -1028,7 +1028,7 @@ export class PerformanceComponent implements OnInit {
         let lineage = this.getStringLineage(flatNode.lineage);
         metricDetails[flatNode.node.metricId] = {
           "metric_id": flatNode.node.metricId, "subscribe": flatNode.subscribe, "track": flatNode.track,
-          "lineage": lineage, "chart_name": flatNode.node.chartName, "category": 'General'
+          "lineage": lineage, "chart_name": flatNode.node.chartName, "category": 'General', "comments": ''
         };
       }
     }
@@ -1040,14 +1040,16 @@ export class PerformanceComponent implements OnInit {
     payload["email"] = this.userProfileEmail;
     payload["workspace_id"] = this.workspaceId;
     payload["interested_metrics"] = this.updatedInterestedMetrics;
-    payload["description"] = this.description;
     this.apiService.post("/api/v1/workspaces/" + this.workspaceId + "/interested_metrics", payload).subscribe(response => {
       console.log("submitted successfully");
       this.editedWorkspace.emit(true);
     }, error => {
-      this.editedWorkspace.emit(false);
       this.loggerService.error("Unable to submit interested metrics");
     });
+  }
+
+  cancelInterestedMetrics(): void {
+    this.editedWorkspace.emit(false);
   }
 
   getInterestedNodes = () => {
