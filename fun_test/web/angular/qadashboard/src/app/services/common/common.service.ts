@@ -76,6 +76,16 @@ export class CommonService {
     return result;
   }
 
+  getShortDate(t) {
+    let result = t;
+    try {
+      result = t.toLocaleString().replace(/\..*$/, "");
+    } catch (e) {
+      console.log(e);
+    }
+    return result;
+  }
+
   addLeadingZeroesToDate(localDate): string {
     let localDateString = (localDate.getDate() < 10 ? '0' : '') + localDate.getDate();
     let localMonthString = ((localDate.getMonth() + 1) < 10 ? '0' : '') + (localDate.getMonth() + 1);

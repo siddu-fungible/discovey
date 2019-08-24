@@ -289,7 +289,8 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
       switchMap(response => {
         return this.fetchHistory();
       })).subscribe(response => {
-      let dateString = this.commonService.getPrettyLocalizeTime(new Date());
+        let t = new Date();
+      let dateString = this.commonService.getShortDate(t);
       this.subject = "Performance status report - " + dateString;
       this.reportGenerated = true;
     }, error => {
