@@ -61,12 +61,12 @@ class BringupSetup(FunTestCase):
         if not job_inputs:
             job_inputs = {}
         fun_test.log("Provided job inputs: {}".format(job_inputs))
-        if "deploy_status" in job_inputs:
-            deploy_status = job_inputs["deploy_status"]
-            fun_test.shared_variables["deploy_status"] = deploy_status
+        if "deploy_setup" in job_inputs:
+            deploy_setup = job_inputs["deploy_setup"]
+            fun_test.shared_variables["deploy_setup"] = deploy_setup
         else:
-            deploy_status = True
-            fun_test.shared_variables["deploy_status"] = deploy_status
+            deploy_setup = True
+            fun_test.shared_variables["deploy_setup"] = deploy_setup
         if "quick_sanity" in job_inputs:
             quick_sanity = job_inputs["quick_sanity"]
             fun_test.shared_variables["quick_sanity"] = quick_sanity
@@ -84,7 +84,7 @@ class BringupSetup(FunTestCase):
             enable_bgp = False
             fun_test.shared_variables["enable_bgp"] = enable_bgp
 
-        if deploy_status:
+        if deploy_setup:
             funcp_obj = FunControlPlaneBringup(fs_name=self.server_key["fs"][fs_name]["fs-name"])
             funcp_obj.cleanup_funcp()
             servers_mode = self.server_key["fs"][fs_name]["hosts"]
@@ -199,7 +199,7 @@ class NicEmulation(FunTestCase):
         else:
             abstract_key = "abstract_configs"
 
-        if fun_test.shared_variables["deploy_status"]:
+        if fun_test.shared_variables["deploy_setup"]:
             fun_test.log("Using abstract_key {}".format(abstract_key))
             # execute abstract Configs
             abstract_json_file0 = fun_test.get_script_parent_directory() + '/abstract_config/' + \
