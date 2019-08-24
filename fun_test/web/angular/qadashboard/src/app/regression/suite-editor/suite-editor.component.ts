@@ -43,6 +43,7 @@ export class SuiteEditorComponent implements OnInit {
   flattenedAssetTypeNames: string[] = [];
   flattenedAssetTypeNameMap: any = {};
 
+  customTestBedSpecFormErrorMessage = null;
 
   newSuiteEntryForm = new FormGroup({
     path: new FormControl(''),
@@ -171,12 +172,55 @@ export class SuiteEditorComponent implements OnInit {
 
     });
     let fg = new FormGroup(group);
-    fg.setValidators(this.customTestBedSpecValidator);
+    fg.setValidators(this.customTestBedSpecValidator.bind(this));
     return fg;
   }
 
   customTestBedSpecValidator(group: FormGroup): { [key: string]: boolean } | null {
-    return {'valid': false};
+    this.customTestBedSpecFormErrorMessage = null;
+    let valid = true;
+    if (group.pristine) {
+
+    } else {
+      if (!group.get("selectedTestBed").value) {
+        valid = false;
+        this.customTestBedSpecFormErrorMessage = "Please select a test-bed";
+
+      } else {
+        let totalAssets = 0;
+
+        for (let key of Object.keys(this.assetTypes)) {
+          let flatName = this._flattenName(key);
+          let assetSelectionKey = this._getAssetSelectionKey(flatName);
+          let numAssetsKey = this._getNumAssetsKey(flatName);
+          let specificAssetsKey = this._getSpecificAssetsKey(flatName);
+          let assetSelection = group.get(assetSelectionKey).value;
+          let numAssets = parseInt(group.get(numAssetsKey).value);
+          console.log(numAssets);
+          if (!isNaN(numAssets)) {
+            totalAssets += numAssets;
+          }
+          let specificAssets = group.get(specificAssetsKey).value;
+          if (specificAssets) {
+            totalAssets += specificAssets.length;
+          }
+        }
+
+        if (!totalAssets) {
+          valid = false;
+          this.customTestBedSpecFormErrorMessage = "At least one asset must be selected";
+        }
+      }
+
+
+    }
+
+
+
+
+
+
+    return {'valid': valid};
   }
 
   _flattenName(name: string): string {  /* flatten DUT to dut, Perf Listener to "perf_listener"*/
