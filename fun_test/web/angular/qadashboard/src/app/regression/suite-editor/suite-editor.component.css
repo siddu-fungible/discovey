@@ -45,3 +45,13 @@ input[disabled].fun-form-input  {
   display: block;
   font-weight: bold;
 }
+
+
+.fun-attribute-label {
+  font-weight: bold;
+  margin-right: 10px;
+}
+
+.fun-attribute-section {
+  margin: 10px;
+}

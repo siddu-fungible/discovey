@@ -101,7 +101,8 @@ export class SuiteEditorComponent implements OnInit {
 
       this.customTestBedSpecForm.statusChanges.subscribe(status => {
         if (status === "VALID") {
-          this.prepareCustomTestBedSpecValidated();
+        } else {
+          this.customTestBedValidated = null;
         }
 
       })
@@ -133,7 +134,7 @@ export class SuiteEditorComponent implements OnInit {
 
   prepareCustomTestBedSpecValidated() {
     this.customTestBedValidated = {};
-    this.customTestBedValidated["base_test_bed"] = this.customTestBedSpecForm.get("selectedTestBed").value;
+    this.customTestBedValidated["base_test_bed"] = this.customTestBedSpecForm.get("selectedTestBed").value.name;
     let payload = {};
     let assetRequests = [];
     for (let key of Object.keys(this.assetTypes)) {
@@ -308,7 +309,19 @@ export class SuiteEditorComponent implements OnInit {
     this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title'}).result.then((dontCare) => {
       console.log("Ready to submit");
       let customTestBedSpec = {};
+      this.prepareCustomTestBedSpecValidated();
 
+    }, ((reason) => {
+      console.log("Rejected");
+      //this.closeResult = `Dismissed ${this.getDismissReason(reason)}`;
+    }));
+  }
+
+  onEditCustomTestBedSpec(content) {
+    this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title'}).result.then((dontCare) => {
+      console.log("Ready to submit");
+      let customTestBedSpec = {};
+      this.prepareCustomTestBedSpecValidated();
 
     }, ((reason) => {
       console.log("Rejected");

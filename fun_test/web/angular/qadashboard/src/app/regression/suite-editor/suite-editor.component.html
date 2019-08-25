@@ -16,23 +16,26 @@
     <app-json-input (dataChanged)="inputsChanged($event)" [numRows]="6"></app-json-input>
   </div>
 
-  <button class="fun-button-add" (click)="onAddCustomTestBedSpec(customTestBedSpecModalContent)">Add custom test-bed spec
+  <button *ngIf="!customTestBedValidated" class="fun-button-add" (click)="onAddCustomTestBedSpec(customTestBedSpecModalContent)">Add custom test-bed spec
   </button>
-
+  <button *ngIf="customTestBedValidated" class="fun-button-add" (click)="onEditCustomTestBedSpec(customTestBedSpecModalContent)">Edit custom test-bed spec
+  </button>
 
 </form>
 
 
 <ng-template #customTestBedSpecModalContent let-modal>
   <div style="margin: 10px">
-    <h3>Adding a custom test-bed</h3>
+    <div class="modal-header">
+      Adding custom test-bed spec
+    </div>
     <div style="display: flex">
       <form *ngIf="customTestBedSpecForm" class="fun-form" [formGroup]="customTestBedSpecForm">
       <div class="fun-form-field-container">
         <label class="fun-form-label">Select a base test-bed:</label>
         <select *ngIf="testBeds" formControlName="selectedTestBed" class="fun-form-field">
           <option [ngValue]="null">-- select --</option>
-          <option *ngFor="let testBed of testBeds">{{ testBed.name }}</option>
+          <option [ngValue]="testBed" *ngFor="let testBed of testBeds">{{ testBed.name }}</option>
         </select>
       </div>
 
@@ -70,6 +73,7 @@
               <ng-container
                 *ngIf="customTestBedSpecForm.controls[_getAssetSelectionKey(flattenedAssetTypeName)].value == CustomAssetSelection.SPECIFIC">
                 <ng-multiselect-dropdown [placeholder]="'Select'"
+                                         [data]="filterAssetsBySelectedTestBed(customTestBedSpecForm.controls.selectedTestBed?.value.name, flattenedAssetTypeNameMap[flattenedAssetTypeName].data)"
                                          [data]="filterAssetsBySelectedTestBed(customTestBedSpecForm.controls.selectedTestBed?.value, flattenedAssetTypeNameMap[flattenedAssetTypeName].data)"
                                          formControlName="{{ _getSpecificAssetsKey(flattenedAssetTypeName) }}"
                                          [settings]="dropDownSettings">
@@ -95,21 +99,25 @@
 </ng-template>
 
 <ng-container *ngIf="customTestBedSpecForm?.valid && customTestBedValidated">
-  <span class="fun-attribute-section-header">Custom test-bed spec</span>
-  <table>
-    <tr>
-      <td>Base test-bed</td>
-      <td>{{ customTestBedValidated.base_test_bed }}</td>
-    </tr>
-    <ng-container *ngFor="let asset_request of customTestBedValidated.asset_request| keyvalue">
+  <div class="fun-attribute-section">
+    <!--span class="fun-attribute-section-header">Custom test-bed spec</span-->
+    <app-section-horizontal-line [text]="'Custom test-bed spec'"></app-section-horizontal-line>
+    <table>
       <tr>
-        <td>{{ asset_request.key }}</td>
-        <td *ngIf="_hasKey(asset_request.value, 'num')">Num: {{ asset_request.value.num }}</td>
-        <td *ngIf="_hasKey(asset_request.value, 'names')">Specific: {{ asset_request.value.names | json }}</td>
-
+        <td><span class="fun-attribute-label">Base test-bed</span></td>
+        <td>{{ customTestBedValidated.base_test_bed }}</td>
       </tr>
-    </ng-container>
-  </table>
+      <ng-container *ngFor="let asset_request of customTestBedValidated.asset_request| keyvalue">
+        <tr>
+          <td><span class="fun-attribute-label">{{ asset_request.key }}</span></td>
+          <td *ngIf="_hasKey(asset_request.value, 'num')">Num: {{ asset_request.value.num }}</td>
+          <td *ngIf="_hasKey(asset_request.value, 'names')">Specific instances: {{ asset_request.value.names | json }}</td>
+
+        </tr>
+      </ng-container>
+    </table>
+  </div>
+
 
 </ng-container>
 
