@@ -135,6 +135,7 @@ export class SuiteEditorComponent implements OnInit {
     this.customTestBedValidated = {};
     this.customTestBedValidated["base_test_bed"] = this.customTestBedSpecForm.get("selectedTestBed").value;
     let payload = {};
+    let assetRequests = [];
     for (let key of Object.keys(this.assetTypes)) {
       let flatName = this._flattenName(key);
       let readOut = this._readOutCustomTestBedSpecForm(flatName);
@@ -154,11 +155,21 @@ export class SuiteEditorComponent implements OnInit {
         totalAssets += readOut["specificAssets"].length;
       }
       if (totalAssets) {
-        payload[this.flattenedAssetTypeNameMap[flatName].name] = ref;
+        let key = this.flattenedAssetTypeNameMap[flatName].name;
+        let tempDict = {};
+        tempDict[key] = ref;
+        assetRequests.push(tempDict);
       }
     }
+    if (assetRequests.length) {
+      payload["asset_request"] = {};
+      assetRequests.forEach(assetRequest => {
+        let thisKey = Object.keys(assetRequest)[0];
+        payload["asset_request"][thisKey] = assetRequest[thisKey];
+      })
+    }
+    this.customTestBedValidated["asset_request"] = payload["asset_request"];
     console.log(payload);
-
 
   }
 
@@ -289,7 +300,9 @@ export class SuiteEditorComponent implements OnInit {
     return result;
   }
 
-
+  _hasKey(o, key) {
+    return Object.keys(o).indexOf(key) > -1;
+  }
 
   onAddCustomTestBedSpec(content) {
     this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title'}).result.then((dontCare) => {
