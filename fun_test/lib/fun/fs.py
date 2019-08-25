@@ -7,6 +7,7 @@ from fun_settings import TFTP_SERVER_IP, FUN_TEST_LIB_UTILITIES_DIR, INTEGRATION
 from lib.utilities.netcat import Netcat
 from lib.system.utils import ToDictMixin
 from lib.host.apc_pdu import ApcPdu
+from fun_settings import STASH_DIR
 
 from threading import Thread
 from datetime import datetime
@@ -48,6 +49,7 @@ class BootPhases:
     FS_BRING_UP_CALL_FUNCP_CALLBACK = "FS_BRING_UP_CALL_FUNCP_CALLBACK"
     FS_BRING_UP_COME_INITIALIZE = "FS_BRING_UP_COME_INITIALIZE"
     FS_BRING_UP_COME_INITIALIZE_WORKER_THREAD = "FS_BRING_UP_COME_INITIALIZE_WORKER_THREAD"
+    FS_BRING_UP_COME_INITIALIZED = "FS_BRING_UP_COME_INITIALIZED"
     FS_BRING_UP_COMPLETE = "FS_BRING_UP_COMPLETE"
     FS_BRING_UP_ERROR = "FS_BRING_UP_ERROR"
 
@@ -110,6 +112,7 @@ class Bmc(Linux):
             self.original_context_description = self.context.description
         self.setup_support_files = setup_support_files
         self.nc = {}  # nc connections to serial proxy indexed by f1_index
+        self.hbm_dump_enabled = fun_test.get_job_environment_variable("hbm_dump")
 
     @fun_test.safe
     def ping(self,
@@ -231,8 +234,14 @@ class Bmc(Linux):
         self.uart_log_listener_process_ids.append(process_id)
 
     def _get_boot_args_for_index(self, boot_args, f1_index):
-        return "sku=SKU_FS1600_{} ".format(f1_index) + boot_args
-
+        s = "sku=SKU_FS1600_{} ".format(f1_index) + boot_args
+        if self.hbm_dump_enabled:
+            if "cc_huid" not in s:
+                huid = 3
+                if f1_index == 1:
+                    huid = 2
+                s += " cc_huid={}".format(huid)
+        return s
     def setup_serial_proxy_connection(self, f1_index):
         self.nc[f1_index] = Netcat(ip=self.host_ip, port=self.SERIAL_PROXY_PORTS[f1_index])
         nc = self.nc[f1_index]
@@ -457,6 +466,7 @@ class Bmc(Linux):
         for f1_index in range(self.NUM_F1S):
             if self.disable_f1_index is not None and f1_index == self.disable_f1_index:
                 continue
+
             log_listener_processes = self.get_process_id_by_pattern(self.UART_LOG_LISTENER_FILE + ".*_{}.*txt".format(f1_index), multiple=True)
             for log_listener_process in log_listener_processes:
                 self.kill_process(signal=15, process_id=int(log_listener_process))
@@ -571,6 +581,7 @@ class BootupWorker(Thread):
             self.worker.run()
             for f1_index, f1 in fs.f1s.iteritems():
                 f1.set_dpc_port(come.get_dpc_port(f1_index))
+            self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COME_INITIALIZED)
             try:
                 fs.get_bmc().disconnect()
                 fun_test.log(message="BMC disconnect", context=self.context)
@@ -581,22 +592,11 @@ class BootupWorker(Thread):
 
             come = self.fs.get_come()
             bmc = self.fs.get_bmc()
-            """
-            fun_test.test_assert(expression=bmc.ensure_come_is_up(come=come, max_wait_time=300, power_cycle=True),
-                                 message="Ensure ComE is up",
-                                 context=self.fs.context)
-
-            self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COME_INITIALIZE)
-            fun_test.test_assert(expression=self.fs.come.initialize(disable_f1_index=self.fs.disable_f1_index),
-                                 message="ComE initialized",
-                                 context=self.fs.context)
-            """
 
             if self.fs.fun_cp_callback:
                 fs.set_boot_phase(BootPhases.FS_BRING_UP_CALL_FUNCP_CALLBACK)
                 fun_test.log("Calling fun CP callback from Fs")
-                self.fs.fun_cp_callback(self.fs.get_come())
-            self.fs.come_initialized = True
+                self.fs.fun_cp_callback(self)
             self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COMPLETE)
 
         except Exception as ex:
@@ -627,11 +627,7 @@ class ComEInitializationWorker(Thread):
                                      message="ComE initialized",
                                      context=self.fs.context)
 
-                # if self.fs.fun_cp_callback:
-                #    fun_test.log("Calling fun CP callback from Fs")
-                #    self.fs.fun_cp_callback(self.fs.get_come())
                 self.fs.come_initialized = True
-                # self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COMPLETE)
         except Exception as ex:
             self.fs.set_boot_phase(BootPhases.FS_BRING_UP_ERROR)
             raise ex
@@ -644,11 +640,18 @@ class ComE(Linux):
     NUM_F1S = 2
     NVME_CMD_TIMEOUT = 600000
 
+    HBM_DUMP_DIRECTORY = "/home/fun/hbm_dumps"
+    HBM_TOOL_DIRECTORY = "/home/fun/hbm_dump_tool"
+    HBM_TOOL = "hbm_dump_pcie"
+
+    MAX_HBM_DUMPS = 200
+
     def __init__(self, **kwargs):
         super(ComE, self).__init__(**kwargs)
         self.original_context_description = None
         if self.context:
             self.original_context_description = self.context.description
+        self.hbm_dump_enabled = False
 
     def initialize(self, reset=False, disable_f1_index=None):
         self.disable_f1_index = disable_f1_index
@@ -662,7 +665,18 @@ class ComE(Linux):
         fun_test.test_assert(expression=self.detect_pfs(), message="Fungible PFs detected", context=self.context)
         fun_test.test_assert(expression=self.setup_dpc(), message="Setup DPC", context=self.context)
         fun_test.test_assert(expression=self.is_dpc_ready(), message="DPC ready", context=self.context)
+        self.hbm_dump_enabled = fun_test.get_job_environment_variable("hbm_dump")
+        if self.hbm_dump_enabled:
+            fun_test.test_assert(self.setup_hbm_tools(), "HBM tools and dump directory ready")
+
         return True
+
+    def _get_bus_number(self, pcie_device_id):
+        bus_number = None
+        parts = pcie_device_id.split(":")
+        if parts:
+            bus_number = int(parts[0])
+        return bus_number
 
     def get_dpc_port(self, f1_index):
         return self.DEFAULT_DPC_PORT[f1_index]
@@ -672,18 +686,48 @@ class ComE(Linux):
         self.command("cd {}".format(working_directory))
         self.command("mkdir -p workspace; cd workspace")
         self.command("export WORKSPACE=$PWD")
-        # self.command(
-        #     "wget http://10.1.20.99/doc/jenkins/funcontrolplane/latest/functrlp_palladium.tgz")
-        # files = self.list_files("functrlp_palladium.tgz")
-        # fun_test.test_assert(len(files), "functrlp_palladium.tgz downloaded")
         self.command("wget http://10.1.20.99/doc/jenkins/funsdk/latest/Linux/dpcsh.tgz")
         fun_test.test_assert(expression=self.list_files("dpcsh.tgz"),
                              message="dpcsh.tgz downloaded",
                              context=self.context)
-        # self.command("mkdir -p FunControlPlane FunSDK")
         self.command("mkdir -p FunSDK")
-        # self.command("tar -zxvf functrlp_palladium.tgz -C ../workspace/FunControlPlane")
         self.command("tar -zxvf dpcsh.tgz -C ../workspace/FunSDK")
+
+        return True
+
+    def hbm_dump(self, f1_index):
+        funq_bind_device = self.funq_bind_device.get(f1_index, None)
+        fun_test.simple_assert(funq_bind_device, "funq_bind_device found for {}".format(f1_index))
+        bus_number = self._get_bus_number(pcie_device_id=funq_bind_device)
+
+        artifact_file_name = fun_test.get_test_case_artifact_file_name(post_fix_name="hbm_dump_f1_{}.bin".format(f1_index))
+        artifact_file_name = "{}/{}".format(self.HBM_DUMP_DIRECTORY, self._get_context_prefix(os.path.basename(artifact_file_name)))
+        if funq_bind_device:
+            pass
+        command = "{}/{} -a 0x100000 -s 0x40000000 -b /sys/bus/pci/devices/0000:0{}:00.2/resource2 -f -o {}".format(self.HBM_TOOL_DIRECTORY, self.HBM_TOOL, bus_number, artifact_file_name)
+        self.sudo_command(command, timeout=10 * 60)
+        fun_test.test_assert(self.list_files(artifact_file_name), "HBM dump file created")
+        tar_artifact_file_name = artifact_file_name + ".tgz"
+        command = "tar -cvzf {} {} --remove-files".format(tar_artifact_file_name, artifact_file_name)
+        self.sudo_command(command, timeout=60)
+        fun_test.test_assert(self.list_files(tar_artifact_file_name), "HBM dump file tgz created")
+        fun_test.log("HBM dump tgz file: {}".format(tar_artifact_file_name))
+        self.list_files(path="{}".format(self.HBM_DUMP_DIRECTORY))
+        fun_test.report_message("ComE IP: {}, username: {} password: {}".format(self.host_ip, self.ssh_username, self.ssh_password))
+        fun_test.report_message("HBM dump for F1_{} available at {}".format(f1_index, tar_artifact_file_name))
+
+    def setup_hbm_tools(self):
+        tool_path = "{}/{}".format(STASH_DIR, self.HBM_TOOL)
+        fun_test.simple_assert(os.path.exists(tool_path), "Ensure HBM tool exists at {} (locally)".format(tool_path))
+        self.command("mkdir -p {}".format(self.HBM_TOOL_DIRECTORY))
+        target_file_path = "{}/{}".format(self.HBM_TOOL_DIRECTORY, self.HBM_TOOL)
+        fun_test.scp(source_file_path=tool_path, target_ip=self.host_ip, target_username=self.ssh_username, target_password=self.ssh_password, target_file_path=target_file_path)
+        fun_test.simple_assert(self.list_files(target_file_path), "HBM tool copied")
+        self.command("mkdir -p {}".format(self.HBM_DUMP_DIRECTORY))
+        tgzs = "{}/*tgz".format(self.HBM_DUMP_DIRECTORY)
+        num_tgzs = len(self.list_files(tgzs))
+        fun_test.simple_assert(num_tgzs < self.MAX_HBM_DUMPS, "Only {} dump tgzs are allowed. Please delete a few old ones".format(self.MAX_HBM_DUMPS))
+        # self.sudo_command("rm -rf {}/*hbm_dump*txt".format(self.HBM_DUMP_DIRECTORY))
         return True
 
     def setup_tools(self):
@@ -795,6 +839,10 @@ class ComE(Linux):
         for f1_index in range(self.NUM_F1S):
             if f1_index == self.disable_f1_index:
                 continue
+
+            if self.hbm_dump_enabled:
+                self.hbm_dump(f1_index=f1_index)
+
             artifact_file_name = fun_test.get_test_case_artifact_file_name(self._get_context_prefix("f1_{}_dpc_log.txt".format(f1_index)))
             fun_test.scp(source_file_path=self.get_dpc_log_path(f1_index=f1_index), source_ip=self.host_ip, source_password=self.ssh_password, source_username=self.ssh_username, target_file_path=artifact_file_name)
             fun_test.add_auxillary_file(description=self._get_context_prefix("F1_{} DPC Log").format(f1_index),
@@ -954,6 +1002,7 @@ class Fs(object, ToDictMixin):
     def cleanup(self):
         self.get_bmc().cleanup()
         self.get_come().cleanup()
+
 
         try:
             self.get_bmc().disconnect()
@@ -1137,6 +1186,9 @@ class Fs(object, ToDictMixin):
     def is_ready(self):
         fun_test.log(message="Boot-phase: {}".format(self.get_boot_phase()), context=self.context)
         return self.boot_phase == BootPhases.FS_BRING_UP_COMPLETE
+
+    def is_come_ready(self):
+        return self.come_initialized
 
     def come_reset(self, power_cycle=None, non_blocking=None, max_wait_time=300):
         return self.bmc.come_reset(come=self.get_come(),
@@ -1329,5 +1381,6 @@ if __name__ == "__main2__":
 
 
 if __name__ == "__main__":
-    come = ComE(host_ip="fs21-come.fungible.local", ssh_username="fun", ssh_password="123")
-    print come.setup_tools()
+    come = ComE(host_ip="fs63-come.fungible.local", ssh_username="fun", ssh_password="123")
+    come.setup_hbm_tools()
+    #print come.setup_tools()

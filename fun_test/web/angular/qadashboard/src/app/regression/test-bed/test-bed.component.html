@@ -25,7 +25,19 @@
 
               <tr *ngFor="let testBed of testBeds">
                 <td><a href="/regression?test_bed_type={{ testBed.name }}">{{ testBed.name }}</a></td>
-                <td [innerHtml]="testBed.description | safeHtml"></td>
+                <td class="hover-cell"><span [innerHtml]="testBed.description  | safeHtml"></span>&nbsp;&nbsp;<i class="fa fa-pencil hover-icon" style="font-size:14px; float: right" (click)="onEditDescription(testBed)"></i>&nbsp;
+
+                  <div *ngIf="testBed.editingMode">
+                    <br>
+                    <textarea rows="3" [(ngModel)]="testBed.description" style="min-width: 100%;"></textarea>
+                    <div style="display: flex; justify-content: flex-start; align-items: center">
+                      <span><i class="fa fa-check fa-fw tick-color" (click)="onSubmitDescription(testBed)"></i></span>
+                      <span><i class="fa fa-times fa-fw close-color" (click)="onCancelDescription(testBed)"></i></span>
+                    </div>
+
+                  </div>
+
+                </td>
                 <td>
                   <span class="badge badge-danger"
                         *ngIf="automationStatus[testBed.name]?.numExecutions > 0; else freeAutomationStatus">In use</span>
@@ -183,8 +195,6 @@
                 </span>
 
               </ng-container>
-
-
 
             </td>
             <td>

@@ -1,16 +1,207 @@
+<div [ngClass]="{'component': !embed}">
+  <fun-spinner [status]="refreshing"></fun-spinner>
+  <div *ngIf="!refreshing" class="container1">
+    <div class="row">
+      <div class="col">
+        <div class="card">
+          <div class="card-header">
+            Test-beds
+          </div>
+          <div class="card-body">
+            <table class="table table-bordered">
+              <tr>
+                <th class="text-center" rowspan="2">Name</th>
+                <th class="text-center" rowspan="2">Description</th>
+                <th class="text-center" colspan="2">Regression lock</th>
+                <th class="text-center" colspan="3">Manual lock</th>
+              </tr>
+              <tr>
+                <th class="text-center">Status</th>
+                <th class="text-center">Locked by</th>
+                <th class="text-center">Status</th>
+                <th class="text-center">Expiration time</th>
+                <th class="text-center">Locked by</th>
+              </tr>
+
+              <tr *ngFor="let testBed of testBeds">
+                <td><a href="/regression?test_bed_type={{ testBed.name }}">{{ testBed.name }}</a></td>
+                <td  class="hover-cell"><span [innerHtml]="testBed.description  | safeHtml"></span>&nbsp;&nbsp;<i class="fa fa-pencil hover-icon" style="font-size:14px; float: right" (click)="edit(testBed)"></i>&nbsp;
+                  <div *ngIf="testBed.editing_mode">
+                    <br>
+                    <textarea rows="3" [(ngModel)]="currentDescription" style="min-width: 100%;"></textarea>
+                    <button class="btn-sm btn-success" (click)="onSubmit(testBed)">Submit</button>
+                    <a style="padding: 5px;" (click)="toggleEdit(testBed)">Cancel</a>
+                  </div>
+                </td>
+                <td>
+                  <span class="badge badge-danger"
+                        *ngIf="automationStatus[testBed.name]?.numExecutions > 0; else freeAutomationStatus">In use</span>
+                  <ng-template #freeAutomationStatus>
+                    <span class="badge badge-success">Free</span>
+                  </ng-template>
+                </td>
+                <td>
+                  <a *ngIf="automationStatus[testBed.name].numExecutions > 0" target="_blank"
+                     href="/regression/suite_detail/{{ automationStatus[testBed.name].executionId }}">Suite:
+                    {{ automationStatus[testBed.name].executionId }}</a>
+                  <ng-container *ngIf="automationStatus[testBed.name].assetInUse">
+                    Asset in use: {{ automationStatus[testBed.name].assetInUse }}
+                  </ng-container>
+                </td>
+                <td>
+                  <span class="badge badge-danger"
+                        *ngIf="manualStatus[testBed.name].manualLock || assetLevelManualLockStatus[testBed.name]?.asset_level_manual_locked; else freeManualStatus">In use</span>
+
+                  <ng-container *ngIf="manualStatus[testBed.name].manualLock">
+                    <span class="pseudo-anchor" (click)="currentTestBed = testBed; onUnLock(testBed)"> Un-lock</span>
+                  </ng-container>
+
+                  <ng-template #freeManualStatus>
+                    <span class="badge badge-success">Free</span>
+                    <ng-container *ngIf="!manualStatus[testBed.name].manualLock">&nbsp;
+                      <span class="pseudo-anchor" (click)="currentTestBed = testBed; onLock(testBed)">Lock</span>
+                      &nbsp;
+                    </ng-container>
+                  </ng-template>
+                </td>
+                <td>
+                  <ng-container *ngIf="manualStatus[testBed.name].manualLock">
+
+                    &nbsp;
+                    <span>{{ getPrettyTime(manualStatus[testBed.name].manualLockExpiryTime) }}</span>
+                    <ng-container *ngIf="isLockExpired(testBed)">
+                      &nbsp;
+                      <span class="badge badge-danger" *ngIf="manualStatus[testBed.name].manualLock"> Expired</span>
+                      &nbsp;
+                      <span class="pseudo-anchor"
+                            (click)="currentTestBed = testBed; onExtendTime(testBed)"> Extend slot</span>
+
+                    </ng-container>
+
+                  </ng-container>
+                </td>
+                <td>
+                  <ng-container *ngIf="manualStatus[testBed.name].manualLock">
+                    {{ userMap[manualStatus[testBed.name].manualLockSubmitter].first_name }} {{ userMap[manualStatus[testBed.name].manualLockSubmitter].last_name.charAt(0)}}
+                  </ng-container>
+                  <ng-container *ngIf="assetLevelManualLockStatus[testBed.name]?.asset_level_manual_locked">
+                    {{ assetLevelManualLockStatus[testBed.name].error_message }}
+                  </ng-container>
+                </td>
+              </tr>
+
+            </table>
+
+          </div>
+        </div>
+      </div>
+      <div class="col" *ngIf="currentEditMode !== EditMode.NONE">
+        <div class="card">
+          <div class="card-header">
+            {{ lockPanelHeader }}
+            <span style="float:right;" (click)="onCloseLockPanel()" class="pseudo-anchor">Close</span>
+          </div>
+          <div class="card-body">
 
 
-<h3>Fade-In and Fade-Out animation</h3>
+            <table>
 
-<button (click)="addItem()">Add List</button>
-<button (click)="removeItem()">Remove List</button>
+              <tr *ngIf="currentEditMode === EditMode.MANUAL_LOCK_INITIAL">
+                <td class="no-wrap">
+                  <label for="submitter">Submitter</label>
+                </td>
+                <td>
+                  <select id="submitter" [(ngModel)]="selectedUser">
+                    <option *ngFor="let user of users" [ngValue]="user">{{ user.first_name }} {{ user.last_name }}
+                      ({{ user.email }})
+                    </option>
+                  </select>
+                  &nbsp;
+                  <a href="/users" target="_blank">Add user</a>
+                </td>
+              </tr>
+              <tr>
+              </tr>
+              <tr>
+                <td colspan="2">
+                  <table>
+                    <tr>
+                      <td>HH:MM (Duration from now)</td>
+                      <td>
+                        <ngb-timepicker style="display: inline-flex" id="scheduling-time-picker"
+                                        [(ngModel)]="schedulingTime"></ngb-timepicker>
+                      </td>
+                    </tr>
+                  </table>
 
-<div style="width:200px; margin-left: 20px">
-  <ul>
-    <li *ngFor="let list of listItem" [@fadeInOut]>
-      {{list}}
-    </li>
-  </ul>
+                </td>
+              </tr>
+              <tr>
+                <button *ngIf="currentEditMode === EditMode.MANUAL_LOCK_INITIAL " class="btn btn-sm btn-outline-success"
+                        (click)="onLockSubmit()"> Submit
+                </button>
+                <button *ngIf="currentEditMode === EditMode.MANUAL_LOCK_UPDATE_EXPIRATION "
+                        class="btn btn-sm btn-outline-success" (click)="onExtendTimeSubmit()"> Submit
+                </button>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <ng-container *ngIf="!embed && !refreshing">
+    <div class="card">
+      <div class="card-header">
+        Assets
+      </div>
+      <div class="card-body">
+        <table class="table table-bordered table-nonfluid">
+          <tr>
+            <th>Name</th>
+            <th>Belongs to</th>
+            <th>Type</th>
+            <th>Manual-lock</th>
+            <th>Suites</th>
+          </tr>
+          <tr *ngFor="let asset of assets">
+            <td>{{ asset.name }}</td>
+            <td>
+              <ng-container *ngFor="let testBed of asset.test_beds">
+                {{ testBed }},&nbsp;
+              </ng-container>
+            </td>
+            <td>{{ asset.type }}</td>
+            <td>{{ asset.manual_lock_user }}
+              <span *ngIf="asset.manual_lock_user" class="pseudo-anchor"
+                    (click)="unlockAsset(asset)"> Un-lock</span>
+              <span *ngIf="!asset.applyingManualLock && !asset.manual_lock_user" class="pseudo-anchor" (click)="asset.applyingManualLock = true">Apply manual-lock</span>
+              <ng-container *ngIf="asset.applyingManualLock && !asset.manual_lock_user">
+                Applying manual-lock
+              </ng-container>
+              <select *ngIf="asset.applyingManualLock" id="assetSelectedUser" [(ngModel)]="asset.selectedUser">
+                <option *ngFor="let user of users" [ngValue]="user.email">{{ user.email }}
+                </option>
+              </select>
+              <ng-container *ngIf="asset.applyingManualLock">
+                <span><i class="fa fa-check fa-fw tick-color" (click)="lockAsset(asset)"></i>
+                </span>
+                <span><i class="fa fa-times fa-fw close-color" (click)="asset.applyingManualLock = false; asset.selectedUser = null"></i>
+                </span>
+
+              </ng-container>
+
+
+
+            </td>
+            <td>
+              <ng-container *ngFor="let jobId of asset.job_ids">
+                <a href="/regression/suite_detail/{{ jobId }}">{{ jobId }}</a>&nbsp;
+              </ng-container>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </ng-container>
 </div>
-
-

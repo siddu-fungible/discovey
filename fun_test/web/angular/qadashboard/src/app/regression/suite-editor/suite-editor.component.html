@@ -1,11 +1,98 @@
-<form [formGroup]="newTaskForm" class="fun-form">
+<form [formGroup]="newSuiteEntryForm" class="fun-form">
 
-  <label class="fun-form-label">First Name:</label>
-    <input type="text" formControlName="firstName">
+  <div class="fun-form-field-container">
+    <label class="fun-form-label">Script path:</label>
+    <input type="text" formControlName="path" style="width: 500px">
+  </div>
 
 
-  <label class="fun-form-label">Last Name:</label>
-    <input type="text" formControlName="lastName">
+  <div class="fun-form-field-container">
+    <label class="fun-form-label">Test-case IDs (in JSON array format. Ex: [2, 3]):</label>
+    <app-json-input (dataChanged)="testCaseIdsChanged($event)" [numRows]="1"></app-json-input>
+  </div>
+
+  <div class="fun-form-field-container">
+    <label class="fun-form-label">Inputs (in JSON dictionary format. Ex: {{ inputsExample }}):</label>
+    <app-json-input (dataChanged)="inputsChanged($event)" [numRows]="6"></app-json-input>
+  </div>
+
+  <button class="fun-button-add" (click)="onClickCustomTestBedSpec(customTestBedSpecModalContent)">Add custom test-bed spec
+  </button>
 
 
 </form>
+<ng-template #customTestBedSpecModalContent let-modal>
+  <div style="margin: 10px">
+    <h3>Adding a custom test-bed</h3>
+    <div style="display: flex">
+      <form *ngIf="customTestBedSpecForm" class="fun-form" [formGroup]="customTestBedSpecForm">
+      <div class="fun-form-field-container">
+        <label class="fun-form-label">Select a base test-bed:</label>
+        <select *ngIf="testBeds" formControlName="selectedTestBed" class="fun-form-field">
+          <option [ngValue]="null">-- select --</option>
+          <option *ngFor="let testBed of testBeds">{{ testBed.name }}</option>
+        </select>
+      </div>
+
+
+        <ng-container *ngIf="selectedTestBed">
+          <h5>Assets:</h5>
+          <ng-container *ngFor="let flattenedAssetTypeName of flattenedAssetTypeNames">
+            <div class="fun-card">
+              <div class="fun-form-field">
+                <label class="fun-form-input-field-label" for="{{ _getAssetSelectionKey(flattenedAssetTypeName) }}">
+                  Specify number of
+                  {{ flattenedAssetTypeNameMap[flattenedAssetTypeName].name }}s </label>
+                <input class="fun-form-input-field fun-form-inline-field"
+                       formControlName="{{ _getAssetSelectionKey(flattenedAssetTypeName) }}"
+                       [checked]="customTestBedSpecForm.controls[_getAssetSelectionKey(flattenedAssetTypeName)].value == CustomAssetSelection.NUM"
+                       type="radio" value="{{ CustomAssetSelection.NUM }}">
+
+                <label class="fun-form-input-field-label" for="{{ _getAssetSelectionKey(flattenedAssetTypeName) }}">
+                  Specify a list of
+                  {{ flattenedAssetTypeNameMap[flattenedAssetTypeName].name }}s </label>
+                <input class="fun-form-input-field fun-form-inline-field"
+                       formControlName="{{ _getAssetSelectionKey(flattenedAssetTypeName) }}"
+                       [checked]="customTestBedSpecForm.controls[_getAssetSelectionKey(flattenedAssetTypeName)].value == CustomAssetSelection.SPECIFIC"
+                       type="radio" value="{{ CustomAssetSelection.SPECIFIC }}">
+
+
+              </div>
+
+
+              <ng-container
+                *ngIf="customTestBedSpecForm.controls[_getAssetSelectionKey(flattenedAssetTypeName)].value == CustomAssetSelection.NUM">
+                <input formControlName="{{ _getNumAssetsKey(flattenedAssetTypeName) }}" type="number"
+                       class="fun-form-field fun-form-input">
+              </ng-container>
+
+              <ng-container
+                *ngIf="customTestBedSpecForm.controls[_getAssetSelectionKey(flattenedAssetTypeName)].value == CustomAssetSelection.SPECIFIC">
+                <ng-multiselect-dropdown [placeholder]="'Select'"
+                                         [data]="filterAssetsBySelectedTestBed(flattenedAssetTypeNameMap[flattenedAssetTypeName].data)"
+                                         formControlName="{{ _getSpecificAssetsKey(flattenedAssetTypeName) }}"
+                                         [settings]="dropDownSettings">
+                </ng-multiselect-dropdown>
+              </ng-container>
+
+            </div>
+          </ng-container>
+          <span class="fun-cancel-link" (click)="modal.dismiss('Cross click')">Cancel</span>
+          <button [ngClass]="{'fun-button-disabled' : !customTestBedSpecForm.errors?.valid}" class="fun-button-add" (click)="modal.close(true)">Add</button>
+
+        </ng-container>
+        <br>
+        <br>
+        <app-messages-panel *ngIf="!customTestBedSpecForm.errors?.valid" [messages]="[customTestBedSpecFormErrorMessage]" [type]="'INFO'">
+
+        </app-messages-panel>
+
+      </form>
+
+    </div>
+  </div>
+
+</ng-template>
+
+
+<button (click)="test()">Test</button>

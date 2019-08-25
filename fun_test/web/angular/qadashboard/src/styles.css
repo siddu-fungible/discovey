@@ -500,6 +500,13 @@ tr.text-center > th {
   color: white !important;
 }
 
+.fun-cancel-link {
+  color: red;
+  font-size: 15px;
+  padding-right: 5px;
+}
+
+
 .span-selected {
   background-color: rgba(230, 255, 0, 0.26);
   border-radius: 3px;
@@ -566,17 +573,7 @@ tr.text-center > th {
 }
 
 
-/* Forms */
-.fun-form {
-  font-family: "Times New Roman", Times, serif;
-  margin: 10px
-}
-.fun-form .fun-form-label {
-  margin-top: 5px;
-  font-size: 12px;
-  display: block;
-  font-weight: bold;
-}
+
 
 /* Button */
 .btn.submit-button {
@@ -589,4 +586,50 @@ tr.text-center > th {
   padding-bottom: unset;
   font-size: 14px;
   border: darkblue 0.5px;
+}
+
+.fun-button-add {
+  padding: 5px;
+  border: darkblue 0.5px;
+  background-color: #337ab7;
+  color: white;
+  cursor: pointer;
+  min-width: 100px;
+  border-radius: 2px;
+}
+
+.fun-button-add:hover {
+  background-color: #43374a;
+  color: white;
+  cursor: pointer;
+}
+
+.fun-button-submit {
+  color: #fff;
+  background-color: #28a745;
+  border-color: #28a745;
+  padding: 5px;
+  border-radius: 2px;
+  min-width: 100px;
+}
+
+.fun-button-submit:hover {
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.fun-button-disabled {
+  pointer-events: none;
+  color: lightgrey;
+}
+
+label {
+  margin-bottom: unset;
+  display: unset;
+}
+
+/* links */
+.fun-cancel-link:hover {
+  text-decoration: underline;
+  cursor: pointer;
 }

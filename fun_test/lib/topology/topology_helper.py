@@ -339,11 +339,10 @@ class TopologyHelper:
             """
             Give up time is function of number of DUTs but for now lets keep it 10 minutes
             """
-            f1_bringup_all_duts_time = 60 * 10
+            f1_bringup_all_duts_time = 60 * 20
             f1_bringup_all_duts_timer = FunTimer(max_time=f1_bringup_all_duts_time)
             fun_test.simple_assert(peer_allocation_duts or simulation_mode_found, "At least one DUT is required")
             while not simulation_mode_found and peer_allocation_duts and not f1_bringup_all_duts_timer.is_expired() and not fun_test.closed:
-
 
                 fun_test.sleep("allocate_topology: Waiting for F1 bringup on all DUTs", seconds=10)
                 for dut_obj in peer_allocation_duts:
@@ -361,7 +360,7 @@ class TopologyHelper:
                         # fun_test.log("DUT: {} bootup not complete".format(dut_instance))
                         continue
                     """
-                    if not dut_instance.is_ready():
+                    if not dut_instance.is_come_ready():
                         if f1_bringup_all_duts_timer.is_expired():
                             fun_test.critical("FS Bring up error (External Trigger)")
                             dut_instance.set_boot_phase(BootPhases.FS_BRING_UP_ERROR)
