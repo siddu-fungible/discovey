@@ -16,7 +16,7 @@
     <app-json-input (dataChanged)="inputsChanged($event)" [numRows]="6"></app-json-input>
   </div>
 
-  <button class="fun-button-add" (click)="onClickCustomTestBedSpec(customTestBedSpecModalContent)">Add custom test-bed spec
+  <button class="fun-button-add" (click)="onAddCustomTestBedSpec(customTestBedSpecModalContent)">Add custom test-bed spec
   </button>
 
 
@@ -94,12 +94,12 @@
 
 </ng-template>
 
-<ng-container *ngIf="customTestBedSpecForm?.valid">
+<ng-container *ngIf="customTestBedSpecForm?.valid && customTestBedValidated">
   <span class="fun-attribute-section-header">Custom test-bed spec</span>
   <table>
       <tr>
         <td>Base test-bed</td>
-        <td>{{ customTestBedSpecForm.controls['selectedTestBed'].value }}</td>
+        <td>{{ customTestBedValidated.base_test_bed }}</td>
       </tr>
     </table>
   <ng-container *ngFor="let flattenedAssetTypeName of flattenedAssetTypeNames">

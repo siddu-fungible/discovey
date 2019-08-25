@@ -1,5 +1,5 @@
 import {Component, OnInit} from '@angular/core';
-import {FormControl, FormGroup, Validators} from "@angular/forms";
+import {AbstractControl, FormControl, FormGroup, Validators} from "@angular/forms";
 import {TestBedService} from "../test-bed/test-bed.service";
 import {Observable, of} from "rxjs";
 import {switchMap} from "rxjs/operators";
@@ -52,6 +52,8 @@ export class SuiteEditorComponent implements OnInit {
 
   customTestBedSpecForm = null;
 
+  customTestBedValidated = null;
+
   constructor(private testBedService: TestBedService, private modalService: NgbModal) {
 
   }
@@ -95,7 +97,15 @@ export class SuiteEditorComponent implements OnInit {
 
         })
 
+      });
+
+      this.customTestBedSpecForm.statusChanges.subscribe(status => {
+        if (status === "VALID") {
+          this.prepareCustomTestBedSpecValidated();
+        }
+
       })
+
     });
 
 
@@ -118,6 +128,37 @@ export class SuiteEditorComponent implements OnInit {
 
       }
     })*/
+
+  }
+
+  prepareCustomTestBedSpecValidated() {
+    this.customTestBedValidated = {};
+    this.customTestBedValidated["base_test_bed"] = this.customTestBedSpecForm.get("selectedTestBed").value;
+    let payload = {};
+    for (let key of Object.keys(this.assetTypes)) {
+      let flatName = this._flattenName(key);
+      let readOut = this._readOutCustomTestBedSpecForm(flatName);
+      //console.log(readOut);
+
+      let ref = {};
+      //let ref = payload[this.flattenedAssetTypeNameMap[flatName].name];
+      let totalAssets = 0;
+      if (readOut["numAssets"] > 0) {
+        ref["num"] = readOut["numAssets"];
+        totalAssets += readOut["numAssets"];
+      }
+
+      let specificAssets = readOut["specificAssets"];
+      if (specificAssets && specificAssets.length > 0) {
+        ref["names"] = readOut["specificAssets"];
+        totalAssets += readOut["specificAssets"].length;
+      }
+      if (totalAssets) {
+        payload[this.flattenedAssetTypeNameMap[flatName].name] = ref;
+      }
+    }
+    console.log(payload);
+
 
   }
 
@@ -250,23 +291,11 @@ export class SuiteEditorComponent implements OnInit {
 
 
 
-  onClickCustomTestBedSpec(content) {
+  onAddCustomTestBedSpec(content) {
     this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title'}).result.then((dontCare) => {
       console.log("Ready to submit");
       let customTestBedSpec = {};
-      let selectedTestBed = this.customTestBedSpecForm.get("selectedTestBed").value;
-      for (let key of Object.keys(this.assetTypes)) {
-        let flatName = this._flattenName(key);
-        let readOut = this._readOutCustomTestBedSpecForm(flatName);
-        console.log(readOut);
-        let payload = {};
-        payload[this.flattenedAssetTypeNameMap[flatName].name] = {};
-        let ref = payload[this.flattenedAssetTypeNameMap[flatName].name];
-        if (readOut["numAssets"] > 0) {
-          ref["num"] = readOut["numAssets"];
-        }
-        //if (readOut[])
-      }
+
 
     }, ((reason) => {
       console.log("Rejected");
