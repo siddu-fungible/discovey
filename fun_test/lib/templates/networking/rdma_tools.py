@@ -234,7 +234,11 @@ class Rocetools:
                         return False
                 return True
         elif tool == "ib_bw":
-            content = self.host.command("grep -i 'bytes' -A 3 {} | tail -1".format(filepath))
+            if perf:
+                grep_line = 3
+            else:
+                grep_line = 1
+            content = self.host.command("grep -i 'bytes' -A {} {} | tail -1".format(grep_line, filepath))
             lines = content.split()
             size = lines[0]
             iterations = lines[1]
@@ -247,11 +251,10 @@ class Rocetools:
             if perf:
                 return lines
         elif tool == "ib_lat":
-            content = self.host.command("grep -i 'bytes' -A 3 {} | tail -1".format(filepath))
-            lines = content.split()
-            size = lines[0]
-            iterations = lines[1]
             if perf:
+                content = self.host.command("grep -i 'bytes' -A 3 {} | tail -1".format(filepath))
+                lines = content.split()
+                size = lines[0]
                 iterations = lines[4]
                 t_mix = lines[5]
                 t_max = lines[6]
@@ -261,6 +264,9 @@ class Rocetools:
                 t_99 = lines[10]
                 t_9999 = lines[11]
             else:
+                content = self.host.command("grep -i 'bytes' -A 1 {} | tail -1".format(filepath))
+                lines = content.split()
+                size = lines[0]
                 t_mix = lines[2]
                 t_max = lines[3]
                 t_typical = lines[4]

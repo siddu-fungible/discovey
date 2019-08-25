@@ -534,7 +534,7 @@ class SrpingSeqIoTest(FunTestCase):
             f11_host_test = f11_host_roce.srping_test(size=size, count=10, debug=True, server_ip=f10_hosts[0]["ipaddr"])
             while f10_hosts[0]["handle"].process_exists(process_id=f10_host_test["cmd_pid"]):
                 fun_test.sleep("Srping test on f10_host", 2)
-                f10_pid_there += 1
+                f10_pid_there += 1  # Counter to check before initiating kill
                 if f10_pid_there == 60:
                     f10_hosts[0]["handle"].kill_process(process_id=f10_host_test["cmd_pid"])
             while f11_hosts[0]["handle"].process_exists(process_id=f10_host_test["cmd_pid"]):
