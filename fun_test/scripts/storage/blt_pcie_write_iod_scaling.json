@@ -12,7 +12,7 @@
     "fio_bs": "4k",
     "warm_up_fio_cmd_args": {
       "bs": "4k", "iodepth": 256, "size": "100%", "fill_device": 1,
-      "rw": "write", "direct": 1, "prio": 0,"timeout": 1800
+      "rw": "write", "direct": 1, "prio": 0,"timeout": 2400
     },
     "fio_cmd_args": {
       "size": "1490G", "direct": 1, "prio": 0,
@@ -45,7 +45,7 @@
     "fio_bs": "4k",
     "warm_up_fio_cmd_args": {
       "bs": "4k", "iodepth": 256, "size": "100%", "fill_device": 1,
-      "rw": "randwrite", "direct": 1, "prio": 0,"timeout": 1800,
+      "rw": "randwrite", "direct": 1, "prio": 0,"timeout": 2400,
       "norandommap": "NO_VALUE", "randrepeat": 0
     },
     "fio_cmd_args": {
