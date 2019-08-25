@@ -28,6 +28,7 @@ export class ScriptSelectorComponent implements OnInit, OnChanges {
   singleSelectNode = null;
   selectionMode = false;
   savedSingleSelectNode = null;
+  refreshingStatus = null;
   @Input() resetEvent: any = null;
   @Output() singleSelectPk: EventEmitter<number> = new EventEmitter();
 
@@ -35,7 +36,17 @@ export class ScriptSelectorComponent implements OnInit, OnChanges {
   constructor(private apiService: ApiService, private logger: LoggerService) {
   }
 
+  resetState() {
+    this.flatNodes = [];
+    this.nodeIdMap = {};
+    this.singleSelectNode = null;
+    this.savedSingleSelectNode = null;
+    this.parsedData = {};
+    this.data = {};
+  }
+
   fetchScripts() {
+    this.resetState();
     this.apiService.get('/regression/scripts').subscribe(response => {
       this.data = response.data;
       this.parseIt();
@@ -163,7 +174,19 @@ export class ScriptSelectorComponent implements OnInit, OnChanges {
     this.singleSelectNode = node;
     if (this.singleSelectNode) {
       this.singleSelectPk.emit(this.singleSelectNode.pk);
+      this.selectionMode = false;
     }
+  }
+
+  onRefreshFiles() {
+    let url = "/api/v1/regression/scripts";
+    let payload = {"operation": "fix_missing_scripts"};
+    this.refreshingStatus = "Refreshing files. This might take 2 minutes";
+
+    this.apiService.post(url, payload).subscribe(response => {
+      this.refreshingStatus = null;
+      this.fetchScripts();
+    }, error => {this.logger.error("Unable to refresh files");})
   }
 
 }

@@ -636,3 +636,13 @@ label {
   text-decoration: underline;
   cursor: pointer;
 }
+
+
+.fun-action-link {  /* for spans that look like links. these do not include cancel and delete */
+  color: #1e6cff;
+}
+
+.fun-action-link:hover {
+  cursor: pointer;
+  color: black;
+}
