@@ -21,6 +21,8 @@
 
 
 </form>
+
+
 <ng-template #customTestBedSpecModalContent let-modal>
   <div style="margin: 10px">
     <h3>Adding a custom test-bed</h3>
@@ -34,8 +36,7 @@
         </select>
       </div>
 
-
-        <ng-container *ngIf="selectedTestBed">
+        <ng-container *ngIf="customTestBedSpecForm.controls.selectedTestBed?.value">
           <h5>Assets:</h5>
           <ng-container *ngFor="let flattenedAssetTypeName of flattenedAssetTypeNames">
             <div class="fun-card">
@@ -69,7 +70,7 @@
               <ng-container
                 *ngIf="customTestBedSpecForm.controls[_getAssetSelectionKey(flattenedAssetTypeName)].value == CustomAssetSelection.SPECIFIC">
                 <ng-multiselect-dropdown [placeholder]="'Select'"
-                                         [data]="filterAssetsBySelectedTestBed(flattenedAssetTypeNameMap[flattenedAssetTypeName].data)"
+                                         [data]="filterAssetsBySelectedTestBed(selectedTestBed, flattenedAssetTypeNameMap[flattenedAssetTypeName].data)"
                                          formControlName="{{ _getSpecificAssetsKey(flattenedAssetTypeName) }}"
                                          [settings]="dropDownSettings">
                 </ng-multiselect-dropdown>
@@ -78,11 +79,11 @@
             </div>
           </ng-container>
           <span class="fun-cancel-link" (click)="modal.dismiss('Cross click')">Cancel</span>
-          <button [ngClass]="{'fun-button-disabled' : !customTestBedSpecForm.errors?.valid}" class="fun-button-add" (click)="modal.close(true)">Add</button>
+          <button [ngClass]="{'fun-button-disabled' : !customTestBedSpecForm.valid}" class="fun-button-add" (click)="modal.close(true)">Add</button>
 
         </ng-container>
         <br>
-        <app-messages-panel *ngIf="!customTestBedSpecForm.errors?.valid" [messages]="[customTestBedSpecFormErrorMessage]" [type]="'INFO'">
+        <app-messages-panel *ngIf="customTestBedSpecForm.errors?.errorMessage" [messages]="[customTestBedSpecForm.errors.errorMessage]" [type]="'INFO'">
 
         </app-messages-panel>
 
@@ -93,5 +94,17 @@
 
 </ng-template>
 
+<ng-container *ngIf="customTestBedSpecForm?.valid">
+  <span class="fun-attribute-section-header">Custom test-bed spec</span>
+  <table>
+      <tr>
+        <td>Base test-bed</td>
+        <td>{{ customTestBedSpecForm.controls['selectedTestBed'].value }}</td>
+      </tr>
+    </table>
+  <ng-container *ngFor="let flattenedAssetTypeName of flattenedAssetTypeNames">
+
+  </ng-container>
+</ng-container>
 
 <button (click)="test()">Test</button>

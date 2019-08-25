@@ -28,7 +28,6 @@ export class SuiteEditorComponent implements OnInit {
   addingCustomTestBedSpec: boolean = true;
   inputsExample: string = '{"abc":123}';
   testBeds: any = null;
-  selectedTestBed: any = null;
   assets: any = null;
 
   dutAssets: any = [];
@@ -51,27 +50,12 @@ export class SuiteEditorComponent implements OnInit {
     inputs: new FormControl('')
   });
 
-  customTestBedSpecForm = null; /*new FormGroup({
-    selectedTestBed: new FormControl(),
-
-    customDutSelection: new FormControl(CustomAssetSelection.NUM),
-    numDuts: new FormControl('', [Validators.max(this.MAX_NUM_DUTS)]),
-    selectedDuts: new FormControl(),
-
-    customHostSelection: new FormControl(CustomAssetSelection.NUM),
-    selectedHosts: new FormControl(),
-    numHosts: new FormControl('', [Validators.max(this.MAX_NUM_HOSTS)]),
-
-    customPerfListenerHostSelection: new FormControl(CustomAssetSelection.NUM),
-    selectedPerfListenerHosts: new FormControl(),
-    numPerfListenerHosts: new FormControl('', [Validators.max(this.MAX_NUM_PERF_LISTENER_HOSTS)]),
-
-
-  });*/
+  customTestBedSpecForm = null;
 
   constructor(private testBedService: TestBedService, private modalService: NgbModal) {
 
   }
+
 
   ngOnInit() {
     new Observable(observer => {
@@ -98,7 +82,7 @@ export class SuiteEditorComponent implements OnInit {
       this.customTestBedSpecForm = this.prepareFormGroup();
       let i = 0;
       this.customTestBedSpecForm.get('selectedTestBed').valueChanges.subscribe(selection => {
-        this.selectedTestBed = selection;
+        //this.selectedTestBed = selection;
 
         Object.keys(this.assetTypes).forEach(assetTypeKey => {
           let flatName = this._flattenName(assetTypeKey);
@@ -177,7 +161,7 @@ export class SuiteEditorComponent implements OnInit {
   }
 
   customTestBedSpecValidator(group: FormGroup): { [key: string]: boolean } | null {
-    this.customTestBedSpecFormErrorMessage = null;
+    let errorMessage = null;
     let valid = true;
     if (group.pristine) {
 
@@ -201,19 +185,14 @@ export class SuiteEditorComponent implements OnInit {
 
         if (!totalAssets) {
           valid = false;
-          this.customTestBedSpecFormErrorMessage = "At least one asset must be selected";
+          errorMessage = "At least one asset must be selected";
         }
       }
 
 
     }
 
-
-
-
-
-
-    return {'valid': valid};
+    return valid? null: {'errorMessage': errorMessage};
   }
 
   _flattenName(name: string): string {  /* flatten DUT to dut, Perf Listener to "perf_listener"*/
@@ -232,15 +211,15 @@ export class SuiteEditorComponent implements OnInit {
     this.customTestBedSpec = customTestBedSpec;
   }
 
-  filterAssetsBySelectedTestBed(allAssets) {  // Only choose assets that belong to the selected test-bed
-    return allAssets.filter(asset => asset.test_beds.indexOf(this.selectedTestBed) > -1).map(o => { return o.name });
+  filterAssetsBySelectedTestBed(selectedTestBed, allAssets) {  // Only choose assets that belong to the selected test-bed
+    return allAssets.filter(asset => asset.test_beds.indexOf(selectedTestBed) > -1).map(o => { return o.name });
   }
 
   test() {
-    console.log(this.customTestBedSpecForm.get(this._getAssetSelectionKey("dut")).value);
+    //console.log(this.customTestBedSpecForm.get(this._getAssetSelectionKey("dut")).value);
     //console.log(this.selectedTestBed.value);
      //console.log(this.selectedTestBed);
-     //console.log(this.customTestBedSpecForm.get("selectedTestBed").value);
+    console.log(this.customTestBedSpecForm.get("selectedTestBed").value);
     // console.log(this.customTestBedSpecForm.get("customDutSelection").value);
     // console.log(this.customTestBedSpecForm.get("numDuts").value);
     // console.log(this.customTestBedSpecForm.get("selectedDuts").value);
@@ -269,13 +248,25 @@ export class SuiteEditorComponent implements OnInit {
     return result;
   }
 
+
+
   onClickCustomTestBedSpec(content) {
     this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title'}).result.then((dontCare) => {
       console.log("Ready to submit");
       let customTestBedSpec = {};
       let selectedTestBed = this.customTestBedSpecForm.get("selectedTestBed").value;
-
-
+      for (let key of Object.keys(this.assetTypes)) {
+        let flatName = this._flattenName(key);
+        let readOut = this._readOutCustomTestBedSpecForm(flatName);
+        console.log(readOut);
+        let payload = {};
+        payload[this.flattenedAssetTypeNameMap[flatName].name] = {};
+        let ref = payload[this.flattenedAssetTypeNameMap[flatName].name];
+        if (readOut["numAssets"] > 0) {
+          ref["num"] = readOut["numAssets"];
+        }
+        //if (readOut[])
+      }
 
     }, ((reason) => {
       console.log("Rejected");

@@ -40,5 +40,8 @@ input[disabled].fun-form-input  {
 }
 
 
-.disabled {
+.fun-attribute-section-header {
+  font-size: 14px;
+  display: block;
+  font-weight: bold;
 }
