@@ -263,8 +263,8 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict,  v
         fun_test.log('{} dpc: Get WRO stats'.format(f1))
         output = nc_obj.peek_wro_global_stats()
         output_list.append({'WRO': output})
-        if output['global'].get('WROPKT_TIMEOUT_SKIP'):
-            is_wropkt_timeout_skip = True
+        #if output['global'].get('WROPKT_TIMEOUT_SKIP'):
+        #    is_wropkt_timeout_skip = True
 
         # WRO tunnel
         fun_test.log('{} dpc: Get WRO tunnel {} stats'.format(f1, tunnel_id))

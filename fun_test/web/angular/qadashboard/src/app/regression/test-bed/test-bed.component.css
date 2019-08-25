@@ -17,3 +17,10 @@ table > tbody > tr > th, table > tbody > tr > td {
     align-items: center;
     justify-content: space-around;
 }
+
+.hover-cell .hover-icon {
+  visibility: hidden;
+}
+.hover-cell:hover .hover-icon {
+  visibility: visible;
+}

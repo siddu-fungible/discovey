@@ -559,6 +559,7 @@ class InterestedMetrics(FunModel):
     lineage = models.TextField(default="")
     date_created = models.DateTimeField(default=datetime.now)
     date_modified = models.DateTimeField(default=datetime.now)
+    comments = models.TextField(default="")
 
     def __str__(self):
         return (str(self.__dict__))

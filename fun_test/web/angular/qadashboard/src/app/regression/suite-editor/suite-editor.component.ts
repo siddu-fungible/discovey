@@ -43,6 +43,7 @@ export class SuiteEditorComponent implements OnInit {
   flattenedAssetTypeNames: string[] = [];
   flattenedAssetTypeNameMap: any = {};
 
+  customTestBedSpecFormErrorMessage = null;
 
   newSuiteEntryForm = new FormGroup({
     path: new FormControl(''),
@@ -106,7 +107,7 @@ export class SuiteEditorComponent implements OnInit {
           let specificAssetsKey = this._getSpecificAssetsKey(flatName);
           this.customTestBedSpecForm.controls[specificAssetsKey].setValue('');
           this.customTestBedSpecForm.controls[numAssetsKey].setValue('');
-          this.customTestBedSpecForm.controls[assetSelectionKey].setValue(CustomAssetSelection.NUM);
+          this.customTestBedSpecForm.controls[assetSelectionKey].setValue(CustomAssetSelection.NUM.toString());
 
         })
 
@@ -170,9 +171,57 @@ export class SuiteEditorComponent implements OnInit {
       })
 
     });
-    return new FormGroup(group);
+    let fg = new FormGroup(group);
+    fg.setValidators(this.customTestBedSpecValidator.bind(this));
+    return fg;
   }
 
+  customTestBedSpecValidator(group: FormGroup): { [key: string]: boolean } | null {
+    this.customTestBedSpecFormErrorMessage = null;
+    let valid = true;
+    if (group.pristine) {
+
+    } else {
+      if (!group.get("selectedTestBed").value) {
+        valid = false;
+        this.customTestBedSpecFormErrorMessage = "Please select a test-bed";
+
+      } else {
+        let totalAssets = 0;
+
+        for (let key of Object.keys(this.assetTypes)) {
+          let flatName = this._flattenName(key);
+          let assetSelectionKey = this._getAssetSelectionKey(flatName);
+          let numAssetsKey = this._getNumAssetsKey(flatName);
+          let specificAssetsKey = this._getSpecificAssetsKey(flatName);
+          let assetSelection = group.get(assetSelectionKey).value;
+          let numAssets = parseInt(group.get(numAssetsKey).value);
+          console.log(numAssets);
+          if (!isNaN(numAssets)) {
+            totalAssets += numAssets;
+          }
+          let specificAssets = group.get(specificAssetsKey).value;
+          if (specificAssets) {
+            totalAssets += specificAssets.length;
+          }
+        }
+
+        if (!totalAssets) {
+          valid = false;
+          this.customTestBedSpecFormErrorMessage = "At least one asset must be selected";
+        }
+      }
+
+
+    }
+
+
+
+
+
+
+    return {'valid': valid};
+  }
 
   _flattenName(name: string): string {  /* flatten DUT to dut, Perf Listener to "perf_listener"*/
     return name.toLowerCase().replace(" ", "_");
@@ -195,19 +244,26 @@ export class SuiteEditorComponent implements OnInit {
   }
 
   test() {
+    console.log(this.customTestBedSpecForm.get(this._getAssetSelectionKey("dut")).value);
     //console.log(this.selectedTestBed.value);
-     console.log(this.selectedTestBed);
-     console.log(this.customTestBedSpecForm.get("selectedTestBed").value);
+     //console.log(this.selectedTestBed);
+     //console.log(this.customTestBedSpecForm.get("selectedTestBed").value);
     // console.log(this.customTestBedSpecForm.get("customDutSelection").value);
     // console.log(this.customTestBedSpecForm.get("numDuts").value);
     // console.log(this.customTestBedSpecForm.get("selectedDuts").value);
-    console.log(this.flattenedAssetTypeNames);
-    console.log(this.flattenedAssetTypeNameMap);
+    //console.log(this.flattenedAssetTypeNames);
+    //console.log(this.flattenedAssetTypeNameMap);
 
   }
 
   onClickCustomTestBedSpec(content) {
-    this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title'}).result.then((suiteExecution) => {
+    this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title'}).result.then((dontCare) => {
+      console.log("Ready to submit");
+      let customTestBedSpec = {};
+      if (!this.customTestBedSpecForm.get('selectedTestBed')) {
+        return
+      }
+      
 
     }, ((reason) => {
       console.log("Rejected");
