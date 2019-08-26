@@ -23,19 +23,19 @@ table > tbody > tr > th, table > tbody > tr > td {
   border: 1px solid #000;
 }
 
-tr {
+.test-bed-table tr {
   border-top: 1px solid #000;
 }
 
-tr + tr {
+.test-bed-table tr + tr {
   border-top: 1px solid lightgrey;
 }
 
-td {
+.test-bed-table td {
   border-left: 1px solid #000;
 }
 
-td + td {
+.test-bed-table td + td {
   border-left: 1px solid lightgrey;
 }
 
