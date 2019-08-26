@@ -24,6 +24,7 @@ enum EditMode {
 export class TestBedComponent implements OnInit {
   @Input() embed: boolean = false;
   schedulingTime = {hour: 1, minute: 1};
+  addedTime: number;
   testBeds: any [] = null;
   automationStatus = {};
   manualStatus = {};
@@ -215,7 +216,19 @@ export class TestBedComponent implements OnInit {
 
   onAddTime(testBed) {
     this.currentEditMode = this.EditMode.MANUAL_LOCK_ADD_TIME;
+    this.setLockPanelHeader(`for ${testBed.name}`);
+  }
 
+  onAddTimeSubmit() {
+    let url = "/api/v1/regression.test_beds" + this.currentTestBed.id;
+    let payload = {operation: 'add_time', operation_value: this.addedTime};
+    this.apiService.post(url, payload).subscribe(response => {
+      this.loggerService.success("Time successfully added");
+      this.refreshTestBeds();
+      this.currentEditMode = EditMode.NONE;
+    }, error => {
+      this.loggerService.error("Unable to add time");
+    })
   }
 
   onExtendTimeSubmit() {
@@ -259,6 +272,11 @@ export class TestBedComponent implements OnInit {
       }
 
     })
+  }
+
+
+  onCancelLockPanel() {
+    this.currentEditMode = this.EditMode.NONE;
   }
 
   onCloseLockPanel() {

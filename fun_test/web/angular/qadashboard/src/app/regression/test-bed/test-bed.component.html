@@ -80,6 +80,7 @@
                       &nbsp;
                       <span class="pseudo-anchor"
                             (click)="currentTestBed = testBed; onExtendTime(testBed)"> Extend slot</span>
+                      <span class="pseudo-anchor" (click)="currentTestBed=testBed; onAddTime(testBed)">Add time</span>
 
                     </ng-container>
 
@@ -104,12 +105,12 @@
         <div class="card">
           <div class="card-header">
             {{ lockPanelHeader }}
-            <span style="float:right;" (click)="onCloseLockPanel()" class="pseudo-anchor">Close</span>
           </div>
           <div class="card-body">
+            <ng-container [ngSwitch]="currentEditMode">
 
 
-            <table *ngIf="currentEditMode !== EditMode.MANUAL_LOCK_ADD_TIME">
+            <table *ngSwitchCase="EditMode.MANUAL_LOCK_UPDATE_EXPIRATION || EditMode.MANUAL_LOCK_INITIAL">
 
               <tr *ngIf="currentEditMode === EditMode.MANUAL_LOCK_INITIAL">
                 <td class="no-wrap">
@@ -142,6 +143,7 @@
                 </td>
               </tr>
               <tr>
+                <span class="fun-cancel-link" (click)="onCancelLockPanel()">Cancel</span> &nbsp;
                 <button *ngIf="currentEditMode === EditMode.MANUAL_LOCK_INITIAL " class="btn btn-sm btn-outline-success"
                         (click)="onLockSubmit()"> Submit
                 </button>
@@ -151,10 +153,21 @@
               </tr>
             </table>
 
-            <table *ngIf="currentEditMode === EditMode.MANUAL_LOCK_ADD_TIME">
-              test test
-            </table>
+            <div *ngSwitchCase="EditMode.MANUAL_LOCK_ADD_TIME">
+              <div style="width: 50%">
+              <label>Hours&nbsp;</label>
+              <input type="number" m [(ngModel)]="addedTime">
+            </div>
+            <div style="padding: 5px">
+              <span class="fun-cancel-link" (click)="onCancelLockPanel()">Cancel</span> &nbsp;
+              <button class="fun-button-submit">Submit
+              </button>
+            </div>
 
+              {{addedTime}}
+
+            </div>
+            </ng-container>
           </div>
         </div>
       </div>
