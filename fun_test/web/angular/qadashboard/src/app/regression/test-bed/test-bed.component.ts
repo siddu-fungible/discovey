@@ -12,7 +12,8 @@ import {UserService} from "../../services/user/user.service";
 enum EditMode {
   NONE = 0,
   MANUAL_LOCK_INITIAL = "Set manual lock",
-  MANUAL_LOCK_UPDATE_EXPIRATION = "Update manual lock expiration"
+  MANUAL_LOCK_UPDATE_EXPIRATION = "Update manual lock expiration",
+  MANUAL_LOCK_ADD_TIME = "Add time to manual lock"
 }
 
 @Component({
@@ -209,6 +210,11 @@ export class TestBedComponent implements OnInit {
   onExtendTime(testBed) {
     this.currentEditMode = this.EditMode.MANUAL_LOCK_UPDATE_EXPIRATION;
     this.setLockPanelHeader(`for ${testBed.name}`);
+
+  }
+
+  onAddTime(testBed) {
+    this.currentEditMode = this.EditMode.MANUAL_LOCK_ADD_TIME;
 
   }
 

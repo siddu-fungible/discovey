@@ -109,7 +109,7 @@
           <div class="card-body">
 
 
-            <table>
+            <table *ngIf="currentEditMode !== EditMode.MANUAL_LOCK_ADD_TIME">
 
               <tr *ngIf="currentEditMode === EditMode.MANUAL_LOCK_INITIAL">
                 <td class="no-wrap">
@@ -150,6 +150,11 @@
                 </button>
               </tr>
             </table>
+
+            <table *ngIf="currentEditMode === EditMode.MANUAL_LOCK_ADD_TIME">
+              test test
+            </table>
+
           </div>
         </div>
       </div>
