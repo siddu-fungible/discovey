@@ -647,6 +647,9 @@ class CollectStats(object):
             start_time = 1
             start_dealy = 5
             for func, arg in stats_collect_details.iteritems():
+                # Delete the "thread_id" attribute(if any) lingering from the previous call
+                if "thread_id" in arg:
+                    del(stats_collect_details[func]["thread_id"])
                 post_fix_name = "{}_{}".format(func, file_suffix)
                 stats_collect_details[func]["output_file"] = fun_test.get_test_case_artifact_file_name(post_fix_name)
                 if func == "vp_utils":
