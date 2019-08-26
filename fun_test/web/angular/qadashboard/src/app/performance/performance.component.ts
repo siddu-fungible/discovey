@@ -1040,7 +1040,7 @@ export class PerformanceComponent implements OnInit {
     payload["email"] = this.userProfileEmail;
     payload["workspace_id"] = this.workspaceId;
     payload["interested_metrics"] = this.updatedInterestedMetrics;
-    this.apiService.post("/api/v1/workspaces/" + this.workspaceId + "/interested_metrics", payload).subscribe(response => {
+    this.apiService.post("/api/v1/performance/workspaces/" + this.workspaceId + "/interested_metrics", payload).subscribe(response => {
       console.log("submitted successfully");
       this.editedWorkspace.emit(true);
     }, error => {
