@@ -1,0 +1,9 @@
+{
+  "JuniperFfaDflt4": {
+    "jsons":["correct_all_lsu_4.json"],
+    "XDATA_LISTS": "/project/users/jlulla/runtime/jnpr_ffa/correct_jenkins_4.list",
+    "description":"Jnpr DFA dflt",
+    "rbm_size": "1m"
+  }
+}
+
