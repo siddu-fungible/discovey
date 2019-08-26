@@ -378,7 +378,7 @@ class CollectStats(object):
         self.stop_vol_stats = False
 
     def collect_vp_utils_stats(self, output_file, interval=10, count=3, non_zero_stats_only=True, threaded=True,
-                               command_timeout=DPCSH_COMMAND_TIMEOUT):
+                               chunk=8192, command_timeout=DPCSH_COMMAND_TIMEOUT):
         output = False
         column_headers = ["Cluster/Core", "Thread 0", "Thread 1", "Thread 2", "Thread 3"]
 
@@ -391,7 +391,7 @@ class CollectStats(object):
                         fun_test.log("Stopping VP Utils stats collection thread")
                         break
                     self.socket_lock.acquire()
-                    vp_utils_result = self.storage_controller.debug_vp_util(command_timeout=command_timeout)
+                    vp_utils_result = self.storage_controller.debug_vp_util(chunk=chunk, command_timeout=command_timeout)
                     self.socket_lock.release()
                     # fun_test.simple_assert(vp_util_result["status"], "Pulling VP Utilization")
                     if vp_utils_result["status"] and vp_utils_result["data"] is not None:
@@ -440,7 +440,7 @@ class CollectStats(object):
             fun_test.critical(str(ex))
         return output
 
-    def collect_per_vp_stats(self, output_file, interval=10, count=3, threaded=True, include_cc=False,
+    def collect_per_vp_stats(self, output_file, interval=10, count=3, threaded=True, include_cc=False, chunk=8192,
                              display_diff=True, command_timeout=DPCSH_COMMAND_TIMEOUT):
         output = False
         per_vp_stats_key = ["wus_received", "vp_wu_qdepth", "wus_sent"]
@@ -463,10 +463,12 @@ class CollectStats(object):
 
                     # Pulling the per_vp stats once or twice with one second interval based on the display_diff
                     self.socket_lock.acquire()
-                    initial_per_vp_output = self.storage_controller.peek_per_vp_stats(command_timeout=command_timeout)
+                    initial_per_vp_output = self.storage_controller.peek(props_tree="stats/per_vp", legacy=False,
+                                                                         chunk=chunk, command_duration=command_timeout)
                     if display_diff:
                         fun_test.sleep("to get one more per_vp stats to find the diff", 1)
-                        final_per_vp_output = self.storage_controller.peek_per_vp_stats(command_timeout=command_timeout)
+                        final_per_vp_output = self.storage_controller.peek(props_tree="stats/per_vp", legacy=False,
+                                                                           chunk=chunk, command_duration=command_timeout)
                     self.socket_lock.release()
 
                     if initial_per_vp_output["status"] and initial_per_vp_output["data"] is not None:
@@ -559,7 +561,7 @@ class CollectStats(object):
             fun_test.critical(str(ex))
         return output
 
-    def collect_vol_stats(self, output_file, vol_details, interval=10, count=3, non_zero_stats_only=True,
+    def collect_vol_stats(self, output_file, vol_details, interval=10, count=3, non_zero_stats_only=True, chunk=8192,
                           threaded=True, command_timeout=DPCSH_COMMAND_TIMEOUT):
         """
         :param output_file: File name in which the volume stats collected at every given interval for given number of
@@ -590,7 +592,7 @@ class CollectStats(object):
                         break
                     self.socket_lock.acquire()
                     vol_stats_result = self.storage_controller.peek(props_tree="storage/volumes", legacy=False,
-                                                                    chunk=8192, command_duration=command_timeout)
+                                                                    chunk=chunk, command_duration=command_timeout)
                     self.socket_lock.release()
                     if vol_stats_result["status"] and vol_stats_result["data"] is not None:
                         all_vol_stats = vol_stats_result["data"]
