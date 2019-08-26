@@ -704,7 +704,9 @@ class ComE(Linux):
         artifact_file_name = "{}/{}".format(self.HBM_DUMP_DIRECTORY, self._get_context_prefix(os.path.basename(artifact_file_name)))
         if funq_bind_device:
             pass
-        command = "{}/{} -a 0x100000 -s 0x40000000 -b /sys/bus/pci/devices/0000:0{}:00.2/resource2 -f -o {}".format(self.HBM_TOOL_DIRECTORY, self.HBM_TOOL, bus_number, artifact_file_name)
+        resource_path = "/sys/bus/pci/devices/0000:0{}:00.2/resource2".format(bus_number)
+        self.sudo_command("ls -ltr {}".format(resource_path))
+        command = "{}/{} -a 0x100000 -s 0x40000000 -b {} -f -o {}".format(self.HBM_TOOL_DIRECTORY, self.HBM_TOOL, resource_path, artifact_file_name)
         self.sudo_command(command, timeout=10 * 60)
         fun_test.test_assert(self.list_files(artifact_file_name), "HBM dump file created")
         tar_artifact_file_name = artifact_file_name + ".tgz"
@@ -840,9 +842,12 @@ class ComE(Linux):
             if f1_index == self.disable_f1_index:
                 continue
 
-            if self.hbm_dump_enabled:
-                self.hbm_dump(f1_index=f1_index)
+            try:
+                if self.hbm_dump_enabled:
+                    self.hbm_dump(f1_index=f1_index)
 
+            except Exception as ex:
+                fun_test.critical(str(ex))
             artifact_file_name = fun_test.get_test_case_artifact_file_name(self._get_context_prefix("f1_{}_dpc_log.txt".format(f1_index)))
             fun_test.scp(source_file_path=self.get_dpc_log_path(f1_index=f1_index), source_ip=self.host_ip, source_password=self.ssh_password, source_username=self.ssh_username, target_file_path=artifact_file_name)
             fun_test.add_auxillary_file(description=self._get_context_prefix("F1_{} DPC Log").format(f1_index),

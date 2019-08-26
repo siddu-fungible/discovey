@@ -504,8 +504,11 @@ class FunethSanity(FunTestScript):
                         fun_test.log("Unload funeth driver")
                         funeth_obj.unload()
 
-                for linux_obj in funeth_obj.linux_obj_dict.values():
-                    linux_obj.disconnect()
+                # Close ssh sessions
+                for funeth_obj_desc in funeth_obj_descs:
+                    funeth_obj = fun_test.shared_variables[funeth_obj_desc]
+                    for linux_obj in funeth_obj.linux_obj_dict.values():
+                        linux_obj.disconnect()
             except:
                 if cleanup:
                     hu_hosts = topology.get_host_instances_on_ssd_interfaces(dut_index=0)

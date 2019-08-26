@@ -1267,19 +1267,6 @@ class NetworkController(DpcshClient):
             fun_test.critical(str(ex))
         return result
 
-    def peek_bam_stats(self):
-        stats = None
-        try:
-            cmd = "stats/bam"
-            fun_test.debug("Getting bam stats")
-            result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=cmd, command_duration=self.COMMAND_DURATION)
-            fun_test.simple_assert(expression=result['status'], message="Get bam stats")
-            fun_test.debug("BAM stats: %s" % result['data'])
-            stats = result['data']
-        except Exception as ex:
-            fun_test.critical(str(ex))
-        return stats
-
     def peek_resource_bam_stats(self):
         stats = None
         try:

@@ -8,19 +8,19 @@
             Test-beds
           </div>
           <div class="card-body">
-            <table class="table table-bordered">
+            <table class="test-bed-table table-nonfluid">
               <tr>
-                <th class="text-center" rowspan="2">Name</th>
-                <th class="text-center" rowspan="2">Description</th>
-                <th class="text-center" colspan="2">Regression lock</th>
-                <th class="text-center" colspan="3">Manual lock</th>
+                <th class="text-center test-bed-header" rowspan="2">Name</th>
+                <th class="text-center test-bed-header" rowspan="2">Description</th>
+                <th class="text-center test-bed-header" colspan="2"><i class="fa fa-cogs" style="font-size:14px"></i>&nbsp;Regression lock</th>
+                <th class="text-center test-bed-header" colspan="3"><i class="fa fa-male" style="font-size: 14px"></i>&nbsp;Manual lock</th>
               </tr>
               <tr>
-                <th class="text-center">Status</th>
-                <th class="text-center">Locked by</th>
-                <th class="text-center">Status</th>
-                <th class="text-center">Expiration time</th>
-                <th class="text-center">Locked by</th>
+                <th class="text-center test-bed-sub-header">Status</th>
+                <th class="text-center test-bed-sub-header">Locked by</th>
+                <th class="text-center test-bed-sub-header">Status</th>
+                <th class="text-center test-bed-sub-header">Expiration time</th>
+                <th class="text-center test-bed-sub-header">Locked by</th>
               </tr>
 
               <tr *ngFor="let testBed of testBeds">
