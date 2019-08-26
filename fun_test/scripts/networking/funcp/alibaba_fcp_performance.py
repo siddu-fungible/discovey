@@ -492,8 +492,8 @@ if __name__ == '__main__':
     ts = SetupBringup()
 
     ts.add_test_case(HuHuFCP())
-    ts.add_test_case(HuHuNonFCP())
-    ts.add_test_case(HuNu())
-    ts.add_test_case(NuHu())
+    # ts.add_test_case(HuHuNonFCP())
+    # ts.add_test_case(HuNu())
+    # ts.add_test_case(NuHu())
 
     ts.run()
