@@ -6,6 +6,12 @@ table > tbody > tr > th, table > tbody > tr > td {
   text-align: center;
 }
 
+table {
+  white-space: nowrap;
+}
+
+
+
 
 
 .ngb-tp-hour, .ngb-tp-meridian, .ngb-tp-minute, .ngb-tp-second {
