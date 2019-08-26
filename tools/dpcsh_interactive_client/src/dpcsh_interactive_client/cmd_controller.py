@@ -674,10 +674,6 @@ class CmdController(Cmd):
         grep_regex = args.grep
         self._peek_cmd_obj.peek_wro_stats(mode='hnu', tunnel_id=tunnel_id, grep_regex=grep_regex)
 
-    def peek_bam_stats(self, args):
-        grep_regex = args.grep
-        self._peek_cmd_obj.peek_bam_stats(grep_regex=grep_regex)
-
     def peek_fwd_stats(self, args):
         grep_regex = args.grep
         self._peek_cmd_obj.peek_fwd_stats(grep_regex=grep_regex)
@@ -1170,7 +1166,6 @@ class CmdController(Cmd):
     peek_fcp_stats_parser.set_defaults(func=peek_fcp_tunnel_stats)
     peek_wro_nu_stats_parser.set_defaults(func=peek_wro_nu_stats)
     peek_wro_hnu_stats_parser.set_defaults(func=peek_wro_hnu_stats)
-    peek_bam_stats_parser.set_defaults(func=peek_bam_stats)
     peek_fwd_stats_parser.set_defaults(func=peek_fwd_stats)
     peek_erp_hnu_stats_parser.set_defaults(func=peek_erp_hnu_stats)
     peek_erp_nu_stats_parser.set_defaults(func=peek_erp_nu_stats)

@@ -5,7 +5,7 @@ from web.fun_test.models import TestBed, Asset
 from django.db.models import Q
 from web.fun_test.models import SuiteExecution, TestCaseExecution, TestbedNotificationEmails
 from web.fun_test.models import ScriptInfo, RegresssionScripts
-from fun_settings import TEAM_REGRESSION_EMAIL
+from fun_settings import TEAM_REGRESSION_EMAIL, SCRIPTS_DIR
 import json
 from lib.utilities.send_mail import send_mail
 from datetime import datetime, timedelta
@@ -17,6 +17,9 @@ from web.fun_test.models import Module
 from web.fun_test.fun_serializer import model_instance_to_dict
 from web.fun_test.models_helper import _get_suite_executions
 from fun_global import RESULTS
+import os
+import fnmatch
+
 
 
 @csrf_exempt
@@ -295,6 +298,50 @@ def sub_categories(request):
 @api_safe_json_response
 def asset_types(request):
     return AssetType().all_strings_to_code()
+
+
+def _fix_missing_scripts():
+    missing_scripts = []
+    for root, dir_names, file_names in os.walk(SCRIPTS_DIR):
+        for file_name in fnmatch.filter(file_names, '*.py'):
+            full_path = os.path.join(root, file_name)
+            try:
+                f = open(full_path, "r")
+                contents = f.read()
+                if "if __name__ == \"__main__\"" in contents:
+                    relative_path = full_path.replace(SCRIPTS_DIR, "")
+                    if not RegresssionScripts.objects.filter(script_path=relative_path).exists():
+                        missing_scripts.append(relative_path)
+
+            except:
+                pass  # TODO
+
+    for missing_script in missing_scripts:
+        module = "general"
+        if "accelerators" in missing_script:
+            module = "accelerators"
+        if "security" in missing_script:
+            module = "security"
+        if "networking" in missing_script:
+            module = "networking"
+        if "system" in missing_script:
+            module = "system"
+        print module, missing_script
+        RegresssionScripts(script_path=missing_script, modules=json.dumps([module])).save()
+
+
+@csrf_exempt
+@api_safe_json_response
+def scripts(request):
+    result = None
+    if request.method == "POST":
+        request_json = json.loads(request.body)
+        operation = request_json.get("operation", None)
+        if operation == "fix_missing_scripts":
+            _fix_missing_scripts()
+            result = True
+    return result
+
 
 if __name__ == "__main__":
     from web.fun_test.django_interactive import *

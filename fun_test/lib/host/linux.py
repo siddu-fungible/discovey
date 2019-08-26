@@ -1015,6 +1015,7 @@ class Linux(object, ToDictMixin):
         if self.handle:
             self.handle.close()
         self.handle = None
+        fun_test.log("Disconnecting: {}".format(self.spawn_pid))
         return True
 
     def _set_paths(self):

@@ -285,7 +285,7 @@ def get_vp_pkts_stats_values(network_controller_obj):
 def get_bam_stats_values(network_controller_obj):
     result = None
     try:
-        output = network_controller_obj.peek_bam_stats()
+        output = network_controller_obj.peek_resource_bam_stats()
         fun_test.simple_assert(output, "Ensure bam stats are grepped")
         result = parse_result_dict(output)
     except Exception as ex:

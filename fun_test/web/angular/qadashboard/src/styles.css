@@ -596,6 +596,7 @@ tr.text-center > th {
   cursor: pointer;
   min-width: 100px;
   border-radius: 2px;
+  margin-right: 10px;
 }
 
 .fun-button-add:hover {
@@ -611,6 +612,8 @@ tr.text-center > th {
   padding: 5px;
   border-radius: 2px;
   min-width: 100px;
+  margin-right: 10px;
+
 }
 
 .fun-button-submit:hover {
@@ -632,4 +635,26 @@ label {
 .fun-cancel-link:hover {
   text-decoration: underline;
   cursor: pointer;
+}
+
+
+.fun-action-link {  /* for spans that look like links. these do not include cancel and delete */
+  color: #1e6cff;
+}
+
+.fun-action-link:hover {
+  cursor: pointer;
+  color: black;
+}
+
+.component {
+  padding-top: 5px;
+  margin-left: 10px;
+}
+
+/*input*/
+.fun-input-disabled {
+  pointer-events: none;
+  color: lightgrey;
+  background-color: rgba(0,0,0,.125)
 }
