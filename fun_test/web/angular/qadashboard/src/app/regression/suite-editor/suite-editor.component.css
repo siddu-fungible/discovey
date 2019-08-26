@@ -70,9 +70,3 @@ input[disabled].fun-form-input  {
   padding: 5px;
 }
 
-.hover-cell .hover-icon {
-  visibility: hidden;
-}
-.hover-cell:hover .hover-icon {
-  visibility: visible;
-}

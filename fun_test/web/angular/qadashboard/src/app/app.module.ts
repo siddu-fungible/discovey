@@ -81,6 +81,7 @@ import {ModalModule} from "ngb-modal";
 import { UlErrorPanelComponent } from './ui-elements/ul-error-panel/ul-error-panel.component';
 import { AnnouncementFormComponent } from './performance/admin/announcement-form/announcement-form.component';
 import { MessagesPanelComponent } from './ui-elements/messages-panel/messages-panel.component';
+import { TextareaInputComponent } from './ui-elements/textarea-input/textarea-input.component';
 
 
 @NgModule({
@@ -145,7 +146,8 @@ import { MessagesPanelComponent } from './ui-elements/messages-panel/messages-pa
     SuiteEditorComponent,
     UlErrorPanelComponent,
     AnnouncementFormComponent,
-    MessagesPanelComponent
+    MessagesPanelComponent,
+    TextareaInputComponent
   ],
   imports: [
     BsDropdownModule,
