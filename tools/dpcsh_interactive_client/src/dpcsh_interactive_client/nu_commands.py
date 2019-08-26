@@ -1496,10 +1496,6 @@ class PeekCommands(object):
         else:
             self._display_stats(cmd=cmd, grep_regex=grep_regex, get_result_only=get_result_only)
 
-    def peek_bam_stats(self, grep_regex=None):
-        cmd = "stats/bam"
-        self._display_stats(cmd=cmd, grep_regex=grep_regex)
-
     def peek_fwd_stats(self, grep_regex=None, get_result_only=False):
         cmd = "stats/fwd/flex"
         if get_result_only:

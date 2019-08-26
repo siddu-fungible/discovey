@@ -234,24 +234,28 @@ class Rocetools:
                         return False
                 return True
         elif tool == "ib_bw":
-            content = self.host.command("grep -i 'bytes' -A 3 {} | tail -1".format(filepath))
+            if perf:
+                grep_line = 3
+            else:
+                grep_line = 1
+            content = self.host.command("grep -i 'bytes' -A {} {} | tail -1".format(grep_line, filepath))
             lines = content.split()
             size = lines[0]
             iterations = lines[1]
             bw_peak = lines[2]
             bw_avg = lines[3]
             pps = lines[4]
-            if bw_avg == 0 or bw_avg == 0.00:
-                fun_test.critical("BW is zero!!")
+            if bw_avg == 0.0 or bw_avg == 0.0 or iterations == 0:
+                self.host.command("dmesg")
+                fun_test.test_assert(False, "BW test failed as result is zero!!")
                 return False
             if perf:
                 return lines
         elif tool == "ib_lat":
-            content = self.host.command("grep -i 'bytes' -A 3 {} | tail -1".format(filepath))
-            lines = content.split()
-            size = lines[0]
-            iterations = lines[1]
             if perf:
+                content = self.host.command("grep -i 'bytes' -A 3 {} | tail -1".format(filepath))
+                lines = content.split()
+                size = lines[0]
                 iterations = lines[4]
                 t_mix = lines[5]
                 t_max = lines[6]
@@ -261,6 +265,10 @@ class Rocetools:
                 t_99 = lines[10]
                 t_9999 = lines[11]
             else:
+                content = self.host.command("grep -i 'bytes' -A 1 {} | tail -1".format(filepath))
+                lines = content.split()
+                size = lines[0]
+                iterations = lines[1]
                 t_mix = lines[2]
                 t_max = lines[3]
                 t_typical = lines[4]
@@ -268,8 +276,9 @@ class Rocetools:
                 t_stdev = lines[6]
                 t_99 = lines[7]
                 t_9999 = lines[8]
-            if t_mix == 0.00 or t_max == 0.00 or t_avg == 0.00:
-                fun_test.critical("Latency is zero!!")
+            if t_mix == 0.0 or t_max == 0.0 or t_avg == 0.0 or iterations == 0:
+                self.host.command("dmesg")
+                fun_test.test_assert(False, "Latency test failed as result is zero!!")
                 return False
             if perf:
                 return lines

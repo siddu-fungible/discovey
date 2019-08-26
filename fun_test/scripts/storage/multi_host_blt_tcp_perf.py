@@ -573,6 +573,11 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
             self.blt_count = job_inputs["blt_count"]
         if "nvme_io_queues" in job_inputs:
             self.nvme_io_queues = job_inputs["nvme_io_queues"]
+        if "warm_up_traffic" in job_inputs:
+            self.warm_up_traffic = job_inputs["warm_up_traffic"]
+        if "runtime" in job_inputs:
+            self.fio_cmd_args["runtime"] = job_inputs["runtime"]
+            self.fio_cmd_args["timeout"] = self.fio_cmd_args["runtime"] + 60
         if "post_results" in job_inputs:
             self.post_results = job_inputs["post_results"]
         else:
