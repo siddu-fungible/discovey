@@ -8,19 +8,19 @@
             Test-beds
           </div>
           <div class="card-body">
-            <table class="table table-bordered table-nonfluid">
+            <table class="test-bed-table table-nonfluid">
               <tr>
-                <th class="text-center" rowspan="2">Name</th>
-                <th class="text-center" rowspan="2">Description</th>
-                <th class="text-center" colspan="2">Regression lock</th>
-                <th class="text-center" colspan="3">Manual lock</th>
+                <th class="text-center" rowspan="2" style="border: black solid 1px">Name</th>
+                <th class="text-center" rowspan="2" style="border: black solid 1px">Description</th>
+                <th class="text-center" colspan="2" style="border: black solid 1px">Regression lock</th>
+                <th class="text-center" colspan="3" style="border: black solid 1px">Manual lock</th>
               </tr>
               <tr>
-                <th class="text-center">Status</th>
-                <th class="text-center">Locked by</th>
-                <th class="text-center">Status</th>
-                <th class="text-center">Expiration time</th>
-                <th class="text-center">Locked by</th>
+                <th class="text-center" style="border-bottom: black solid 1px; border-right: black solid 1px">Status</th>
+                <th class="text-center" style="border-bottom: black solid 1px; border-right: black solid 1px">Locked by</th>
+                <th class="text-center" style="border-bottom: black solid 1px; border-right: black solid 1px">Status</th>
+                <th class="text-center" style="border-bottom: black solid 1px; border-right: black solid 1px">Expiration time</th>
+                <th class="text-center" style="border-bottom: black solid 1px; border-right: black solid 1px">Locked by</th>
               </tr>
 
               <tr *ngFor="let testBed of testBeds">

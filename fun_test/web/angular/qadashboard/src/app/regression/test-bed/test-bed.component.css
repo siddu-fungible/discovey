@@ -6,10 +6,25 @@ table > tbody > tr > th, table > tbody > tr > td {
   text-align: center;
 }
 
-table {
-  white-space: nowrap;
+.test-bed-table tbody tr td:nth-child(1) {
+  border-left: black solid 1px;
 }
 
+.test-bed-table tbody tr td:nth-child(2) {
+  border-right: black solid 1px;
+}
+
+.test-bed-table tbody tr td:nth-child(4) {
+  border-right: black solid 1px;
+}
+
+.test-bed-table tbody tr td:nth-child(7) {
+  border-right: black solid 1px;
+}
+
+.test-bed-table tr:nth-last-child(1) {
+  border-bottom: black solid 1px;
+}
 
 
 
