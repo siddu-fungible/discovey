@@ -2,15 +2,21 @@
   "BLTFioSeqRead": {
     "num_ssd": 1,
     "num_volume": 1,
-    "blt_details": {"ns_id": 1, "type": "VOL_TYPE_BLK_LOCAL_THIN", "capacity": 1099511627776, "block_size": 4096,
+    "blt_details": {"ns_id": 1, "type": "VOL_TYPE_BLK_LOCAL_THIN", "capacity": 1600277970944, "block_size": 4096,
                        "name": "thin-block1"},
     "controllers": 1,
     "command_timeout": 30,
     "iter_interval": 3,
     "warm_up_traffic": 1,
     "fio_bs": "4k",
-    "warm_up_fio_cmd_args": {"bs": "4k", "iodepth": 256, "fill_device": 1, "rw": "randwrite", "direct": 1, "prio": 0,"timeout": 1800},
-    "fio_cmd_args": {"size": "100%", "direct": 1, "prio":  0, "runtime": 120, "timeout": 130, "cpus_allowed_policy": "split", "norandommap": "NO_VALUE", "randrepeat": 0},
+    "warm_up_fio_cmd_args": {
+      "bs": "4k", "iodepth": 256, "size": "100%", "fill_device": 1,
+      "rw": "write", "direct": 1, "prio": 0, "timeout": 2400
+    },
+    "fio_cmd_args": {
+      "size": "1490G", "direct": 1, "prio":  0,
+      "runtime": 120, "timeout": 180,
+      "group_reporting": 1},
     "fio_modes": ["read"],
     "optimum_iodepth_list": [32,64,128,256],
     "default_run_time": 120,
@@ -34,15 +40,24 @@
   "BLTFioRandRead": {
     "num_ssd": 1,
     "num_volume": 1,
-    "blt_details": {"ns_id": 1, "type": "VOL_TYPE_BLK_LOCAL_THIN", "capacity": 1099511627776, "block_size": 4096,
+    "blt_details": {"ns_id": 1, "type": "VOL_TYPE_BLK_LOCAL_THIN", "capacity": 1600277970944, "block_size": 4096,
                        "name": "thin-block1"},
     "controllers": 1,
     "command_timeout": 30,
     "iter_interval": 1,
     "warm_up_traffic": 1,
     "fio_bs": "4k",
-    "warm_up_fio_cmd_args": {"bs": "4k", "iodepth": 256, "fill_device": 1, "rw": "randwrite", "direct": 1, "prio": 0,"timeout": 1800},
-    "fio_cmd_args": {"size": "100%", "direct": 1, "prio":  0, "runtime": 120, "timeout": 130, "cpus_allowed_policy": "split", "norandommap": "NO_VALUE", "randrepeat": 0},
+    "warm_up_fio_cmd_args": {
+      "bs": "4k", "iodepth": 256, "size": "100%", "fill_device": 1,
+      "rw": "randwrite", "direct": 1, "prio": 0, "timeout": 2400,
+      "norandommap": "NO_VALUE", "randrepeat": 0
+    },
+    "fio_cmd_args": {
+      "size": "1490G", "direct": 1, "prio":  0,
+      "runtime": 120, "timeout": 180,
+      "norandommap": "NO_VALUE", "randrepeat": 0,
+      "group_reporting": 1
+    },
     "fio_modes": ["randread"],
     "optimum_iodepth_list": [32,64,128, 256],
     "default_run_time": 120,
