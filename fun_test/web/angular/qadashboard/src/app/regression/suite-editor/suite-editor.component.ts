@@ -1,5 +1,5 @@
 import {Component, OnInit} from '@angular/core';
-import {FormControl, FormGroup, Validators} from "@angular/forms";
+import {AbstractControl, FormControl, FormGroup, Validators} from "@angular/forms";
 import {TestBedService} from "../test-bed/test-bed.service";
 import {Observable, of} from "rxjs";
 import {switchMap} from "rxjs/operators";
@@ -28,8 +28,8 @@ export class SuiteEditorComponent implements OnInit {
   addingCustomTestBedSpec: boolean = true;
   inputsExample: string = '{"abc":123}';
   testBeds: any = null;
-  selectedTestBed: any = null;
   assets: any = null;
+  addingScript: boolean = null;
 
   dutAssets: any = [];
   hostAssets: any = [];
@@ -43,34 +43,15 @@ export class SuiteEditorComponent implements OnInit {
   flattenedAssetTypeNames: string[] = [];
   flattenedAssetTypeNameMap: any = {};
 
-
-  newSuiteEntryForm = new FormGroup({
-    path: new FormControl(''),
-    testCaseIds: new FormControl(''),
-    inputs: new FormControl('')
-  });
-
-  customTestBedSpecForm = null; /*new FormGroup({
-    selectedTestBed: new FormControl(),
-
-    customDutSelection: new FormControl(CustomAssetSelection.NUM),
-    numDuts: new FormControl('', [Validators.max(this.MAX_NUM_DUTS)]),
-    selectedDuts: new FormControl(),
-
-    customHostSelection: new FormControl(CustomAssetSelection.NUM),
-    selectedHosts: new FormControl(),
-    numHosts: new FormControl('', [Validators.max(this.MAX_NUM_HOSTS)]),
-
-    customPerfListenerHostSelection: new FormControl(CustomAssetSelection.NUM),
-    selectedPerfListenerHosts: new FormControl(),
-    numPerfListenerHosts: new FormControl('', [Validators.max(this.MAX_NUM_PERF_LISTENER_HOSTS)]),
-
-
-  });*/
+  customTestBedSpecFormErrorMessage = null;
+  currentScriptPath: string = null;
+  customTestBedSpecForm = null;
+  customTestBedValidated = null;
 
   constructor(private testBedService: TestBedService, private modalService: NgbModal) {
 
   }
+
 
   ngOnInit() {
     new Observable(observer => {
@@ -97,20 +78,29 @@ export class SuiteEditorComponent implements OnInit {
       this.customTestBedSpecForm = this.prepareFormGroup();
       let i = 0;
       this.customTestBedSpecForm.get('selectedTestBed').valueChanges.subscribe(selection => {
-        this.selectedTestBed = selection;
+        //this.selectedTestBed = selection;
 
         Object.keys(this.assetTypes).forEach(assetTypeKey => {
           let flatName = this._flattenName(assetTypeKey);
           let assetSelectionKey = this._getAssetSelectionKey(flatName);
           let numAssetsKey = this._getNumAssetsKey(flatName);
           let specificAssetsKey = this._getSpecificAssetsKey(flatName);
-          this.customTestBedSpecForm.controls[specificAssetsKey].setValue('');
-          this.customTestBedSpecForm.controls[numAssetsKey].setValue('');
+          this.customTestBedSpecForm.controls[specificAssetsKey].setValue(null);
+          this.customTestBedSpecForm.controls[numAssetsKey].setValue(null);
           this.customTestBedSpecForm.controls[assetSelectionKey].setValue(CustomAssetSelection.NUM.toString());
 
         })
 
+      });
+
+      this.customTestBedSpecForm.statusChanges.subscribe(status => {
+        if (status === "VALID") {
+        } else {
+          this.customTestBedValidated = null;
+        }
+
       })
+
     });
 
 
@@ -133,6 +123,48 @@ export class SuiteEditorComponent implements OnInit {
 
       }
     })*/
+
+  }
+
+  prepareCustomTestBedSpecValidated() {
+    this.customTestBedValidated = {};
+    this.customTestBedValidated["base_test_bed"] = this.customTestBedSpecForm.get("selectedTestBed").value.name;
+    let payload = {};
+    let assetRequests = [];
+    for (let key of Object.keys(this.assetTypes)) {
+      let flatName = this._flattenName(key);
+      let readOut = this._readOutCustomTestBedSpecForm(flatName);
+      //console.log(readOut);
+
+      let ref = {};
+      //let ref = payload[this.flattenedAssetTypeNameMap[flatName].name];
+      let totalAssets = 0;
+      if (readOut["numAssets"] > 0) {
+        ref["num"] = readOut["numAssets"];
+        totalAssets += readOut["numAssets"];
+      }
+
+      let specificAssets = readOut["specificAssets"];
+      if (specificAssets && specificAssets.length > 0) {
+        ref["names"] = readOut["specificAssets"];
+        totalAssets += readOut["specificAssets"].length;
+      }
+      if (totalAssets) {
+        let key = this.flattenedAssetTypeNameMap[flatName].name;
+        let tempDict = {};
+        tempDict[key] = ref;
+        assetRequests.push(tempDict);
+      }
+    }
+    if (assetRequests.length) {
+      payload["asset_request"] = {};
+      assetRequests.forEach(assetRequest => {
+        let thisKey = Object.keys(assetRequest)[0];
+        payload["asset_request"][thisKey] = assetRequest[thisKey];
+      })
+    }
+    this.customTestBedValidated["asset_request"] = payload["asset_request"];
+    console.log(payload);
 
   }
 
@@ -171,12 +203,43 @@ export class SuiteEditorComponent implements OnInit {
 
     });
     let fg = new FormGroup(group);
-    fg.setValidators(this.customTestBedSpecValidator);
+    fg.setValidators(this.customTestBedSpecValidator.bind(this));
     return fg;
   }
 
   customTestBedSpecValidator(group: FormGroup): { [key: string]: boolean } | null {
-    return {'valid': false};
+    let errorMessage = null;
+    let valid = true;
+    if (group.pristine) {
+
+    } else {
+      if (!group.get("selectedTestBed").value) {
+        valid = false;
+        this.customTestBedSpecFormErrorMessage = "Please select a test-bed";
+
+      } else {
+        let totalAssets = 0;
+
+        for (let key of Object.keys(this.assetTypes)) {
+          let flatName = this._flattenName(key);
+          let readOut = this._readOutCustomTestBedSpecForm(flatName);
+          totalAssets += readOut["numAssets"];
+          let specificAssets = readOut["specificAssets"];
+          if (specificAssets) {
+            totalAssets += specificAssets.length;
+          }
+        }
+
+        if (!totalAssets) {
+          valid = false;
+          errorMessage = "At least one asset must be selected";
+        }
+      }
+
+
+    }
+
+    return valid? null: {'errorMessage': errorMessage};
   }
 
   _flattenName(name: string): string {  /* flatten DUT to dut, Perf Listener to "perf_listener"*/
@@ -195,15 +258,15 @@ export class SuiteEditorComponent implements OnInit {
     this.customTestBedSpec = customTestBedSpec;
   }
 
-  filterAssetsBySelectedTestBed(allAssets) {  // Only choose assets that belong to the selected test-bed
-    return allAssets.filter(asset => asset.test_beds.indexOf(this.selectedTestBed) > -1).map(o => { return o.name });
+  filterAssetsBySelectedTestBed(selectedTestBed, allAssets) {  // Only choose assets that belong to the selected test-bed
+    return allAssets.filter(asset => asset.test_beds.indexOf(selectedTestBed) > -1).map(o => { return o.name });
   }
 
   test() {
-    console.log(this.customTestBedSpecForm.get(this._getAssetSelectionKey("dut")).value);
+    //console.log(this.customTestBedSpecForm.get(this._getAssetSelectionKey("dut")).value);
     //console.log(this.selectedTestBed.value);
      //console.log(this.selectedTestBed);
-     //console.log(this.customTestBedSpecForm.get("selectedTestBed").value);
+    console.log(this.customTestBedSpecForm.get("selectedTestBed").value);
     // console.log(this.customTestBedSpecForm.get("customDutSelection").value);
     // console.log(this.customTestBedSpecForm.get("numDuts").value);
     // console.log(this.customTestBedSpecForm.get("selectedDuts").value);
@@ -212,18 +275,70 @@ export class SuiteEditorComponent implements OnInit {
 
   }
 
-  onClickCustomTestBedSpec(content) {
+  _readOutCustomTestBedSpecForm(flatName) {
+    let result = {};
+    let assetSelectionKey = this._getAssetSelectionKey(flatName);
+    let numAssetsKey = this._getNumAssetsKey(flatName);
+    let specificAssetsKey = this._getSpecificAssetsKey(flatName);
+
+    let assetSelection = this.customTestBedSpecForm.get(assetSelectionKey).value;
+    result["assetSelection"] = assetSelection;
+
+    let numAssets = parseInt(this.customTestBedSpecForm.get(numAssetsKey).value);
+    if (isNaN(numAssets)) {
+      numAssets = 0;
+    }
+    result["numAssets"] = numAssets;
+    let specificAssets = this.customTestBedSpecForm.get(specificAssetsKey).value;
+    result["specificAssets"] = specificAssets;
+
+    return result;
+  }
+
+  _hasKey(o, key) {
+    return Object.keys(o).indexOf(key) > -1;
+  }
+
+  onAddCustomTestBedSpec(content) {
     this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title'}).result.then((dontCare) => {
       console.log("Ready to submit");
       let customTestBedSpec = {};
-      if (!this.customTestBedSpecForm.get('selectedTestBed')) {
-        return
-      }
-      
+      this.prepareCustomTestBedSpecValidated();
 
     }, ((reason) => {
       console.log("Rejected");
       //this.closeResult = `Dismissed ${this.getDismissReason(reason)}`;
     }));
+  }
+
+  onEditCustomTestBedSpec(content) {
+    this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title'}).result.then((dontCare) => {
+      console.log("Ready to submit");
+      let customTestBedSpec = {};
+      this.prepareCustomTestBedSpecValidated();
+
+    }, ((reason) => {
+      console.log("Rejected");
+      //this.closeResult = `Dismissed ${this.getDismissReason(reason)}`;
+    }));
+  }
+
+  singleSelectScriptPathEvent(scriptPath) {
+    if (scriptPath) {
+      this.currentScriptPath = scriptPath;
+    }
+    //console.log(scriptPath);
+  }
+
+  onAddScript() {
+    this.addingScript = true;
+  }
+
+  onSubmitNewSuiteEntry() {
+
+  }
+
+  onCancelNewSuiteEntry() {
+    this.addingScript = false;
   }
 }

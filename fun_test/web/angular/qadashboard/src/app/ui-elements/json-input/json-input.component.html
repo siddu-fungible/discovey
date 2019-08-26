@@ -1,4 +1,4 @@
-<textarea [ngClass]="{'invalid-input': parseError}"
+<textarea [ngClass]="{'invalid-input': parseError, 'fun-input-disabled': disabled}"
           style="width: 100%"
           rows="{{ numRows }}"
           [value]="jsonString"

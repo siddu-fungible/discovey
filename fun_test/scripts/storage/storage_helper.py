@@ -377,8 +377,8 @@ class CollectStats(object):
         self.stop_resource_bam = False
         self.stop_vol_stats = False
 
-    def collect_vp_utils_stats(self, output_file, interval=10, count=3, non_zero_stats_only=True, threaded=False,
-                               command_timeout=DPCSH_COMMAND_TIMEOUT):
+    def collect_vp_utils_stats(self, output_file, interval=10, count=3, non_zero_stats_only=True, threaded=True,
+                               chunk=8192, command_timeout=DPCSH_COMMAND_TIMEOUT):
         output = False
         column_headers = ["Cluster/Core", "Thread 0", "Thread 1", "Thread 2", "Thread 3"]
 
@@ -391,7 +391,7 @@ class CollectStats(object):
                         fun_test.log("Stopping VP Utils stats collection thread")
                         break
                     self.socket_lock.acquire()
-                    vp_utils_result = self.storage_controller.debug_vp_util(command_timeout=command_timeout)
+                    vp_utils_result = self.storage_controller.debug_vp_util(chunk=chunk, command_timeout=command_timeout)
                     self.socket_lock.release()
                     # fun_test.simple_assert(vp_util_result["status"], "Pulling VP Utilization")
                     if vp_utils_result["status"] and vp_utils_result["data"] is not None:
@@ -440,7 +440,7 @@ class CollectStats(object):
             fun_test.critical(str(ex))
         return output
 
-    def collect_per_vp_stats(self, output_file, interval=10, count=3, threaded=False, include_cc=False,
+    def collect_per_vp_stats(self, output_file, interval=10, count=3, threaded=True, include_cc=False, chunk=8192,
                              display_diff=True, command_timeout=DPCSH_COMMAND_TIMEOUT):
         output = False
         per_vp_stats_key = ["wus_received", "vp_wu_qdepth", "wus_sent"]
@@ -463,10 +463,12 @@ class CollectStats(object):
 
                     # Pulling the per_vp stats once or twice with one second interval based on the display_diff
                     self.socket_lock.acquire()
-                    initial_per_vp_output = self.storage_controller.peek_per_vp_stats(command_timeout=command_timeout)
+                    initial_per_vp_output = self.storage_controller.peek(props_tree="stats/per_vp", legacy=False,
+                                                                         chunk=chunk, command_duration=command_timeout)
                     if display_diff:
                         fun_test.sleep("to get one more per_vp stats to find the diff", 1)
-                        final_per_vp_output = self.storage_controller.peek_per_vp_stats(command_timeout=command_timeout)
+                        final_per_vp_output = self.storage_controller.peek(props_tree="stats/per_vp", legacy=False,
+                                                                           chunk=chunk, command_duration=command_timeout)
                     self.socket_lock.release()
 
                     if initial_per_vp_output["status"] and initial_per_vp_output["data"] is not None:
@@ -527,7 +529,7 @@ class CollectStats(object):
             fun_test.critical(str(ex))
         return output
 
-    def collect_resource_bam_stats(self, output_file, interval=10, count=3, threaded=False,
+    def collect_resource_bam_stats(self, output_file, interval=10, count=3, threaded=True,
                                    command_timeout=DPCSH_COMMAND_TIMEOUT):
         output = False
         column_headers = ["Field Name", "Counters"]
@@ -559,8 +561,8 @@ class CollectStats(object):
             fun_test.critical(str(ex))
         return output
 
-    def collect_vol_stats(self, output_file, vol_details, interval=10, count=3, non_zero_stats_only=True,
-                          threaded=False, command_timeout=DPCSH_COMMAND_TIMEOUT):
+    def collect_vol_stats(self, output_file, vol_details, interval=10, count=3, non_zero_stats_only=True, chunk=8192,
+                          threaded=True, command_timeout=DPCSH_COMMAND_TIMEOUT):
         """
         :param output_file: File name in which the volume stats collected at every given interval for given number of
         counts in the table format
@@ -590,7 +592,7 @@ class CollectStats(object):
                         break
                     self.socket_lock.acquire()
                     vol_stats_result = self.storage_controller.peek(props_tree="storage/volumes", legacy=False,
-                                                                    chunk=8192, command_duration=command_timeout)
+                                                                    chunk=chunk, command_duration=command_timeout)
                     self.socket_lock.release()
                     if vol_stats_result["status"] and vol_stats_result["data"] is not None:
                         all_vol_stats = vol_stats_result["data"]
@@ -641,6 +643,81 @@ class CollectStats(object):
         except Exception as ex:
             fun_test.critical(str(ex))
         return output
+
+    def start(self, file_suffix, **stats_collect_details):
+        try:
+            start_time = 1
+            start_dealy = 5
+            for func, arg in stats_collect_details.iteritems():
+                # Delete the "thread_id" attribute(if any) lingering from the previous call
+                if "thread_id" in arg:
+                    del(stats_collect_details[func]["thread_id"])
+                post_fix_name = "{}_{}".format(func, file_suffix)
+                stats_collect_details[func]["output_file"] = fun_test.get_test_case_artifact_file_name(post_fix_name)
+                if func == "vp_utils":
+                    stats_collect_details[func]["thread_id"] = fun_test.execute_thread_after(
+                        time_in_seconds=start_time, func=self.collect_vp_utils_stats, **arg)
+                    fun_test.log("Started the VP utilization stats collection thread having the ID: {}".
+                                 format(stats_collect_details[func]["thread_id"]))
+                if func == "per_vp":
+                    stats_collect_details[func]["thread_id"] = fun_test.execute_thread_after(
+                        time_in_seconds=start_time, func=self.collect_per_vp_stats, **arg)
+                    fun_test.log("Started the per VP utilization stats collection thread having the ID: {}".
+                                 format(stats_collect_details[func]["thread_id"]))
+                if func == "resource_bam_args":
+                    stats_collect_details[func]["thread_id"] = fun_test.execute_thread_after(
+                        time_in_seconds=start_time, func=self.collect_resource_bam_stats, **arg)
+                    fun_test.log("Started the BAM stats collection thread having the ID: {}".
+                                 format(stats_collect_details[func]["thread_id"]))
+                if func == "vol_stats":
+                    stats_collect_details[func]["thread_id"] = fun_test.execute_thread_after(
+                        time_in_seconds=start_time, func=self.collect_vol_stats, **arg)
+                    fun_test.log("Started the Volume stats collection thread having the ID: {}".
+                                 format(stats_collect_details[func]["thread_id"]))
+                start_time += start_dealy
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+    def stop(self, **stats_collect_details):
+
+        # If the threads are still running, then set their stop flag
+        for func, arg in stats_collect_details.iteritems():
+            thread_id = arg.get("thread_id")
+            if thread_id and fun_test.fun_test_threads[thread_id]["thread"].is_alive():
+                if func == "vp_utils":
+                    fun_test.critical("VP utilization stats collection thread having the ID {} is still running..."
+                                      "Stopping it now".format(thread_id))
+                    self.stop_vp_utils = True
+                if func == "per_vp":
+                    fun_test.critical("Per VP Stats collection thread having the ID {} is still running...Stopping it "
+                                      "now".format(thread_id))
+                    self.stop_per_vp_stats = True
+                if func == "resource_bam_args":
+                    fun_test.critical("Resource bam stats collection thread having the ID {} is still running..."
+                                      "Stopping it now".format(thread_id))
+                    self.stop_resource_bam = True
+                if func == "vol_stats":
+                    fun_test.critical("Volume Stats collection thread having the ID {} is still running...Stopping "
+                                      "it now".format(thread_id))
+                    self.stop_vol_stats = True
+
+        # Wait for the threads to complete
+        for func, arg in stats_collect_details.iteritems():
+            thread_id = arg.get("thread_id")
+            if thread_id:
+                if func == "vp_utils":
+                    fun_test.critical("Waiting for the VP utilization stats collection thread having the ID {} to "
+                                      "complete...".format(thread_id))
+                if func == "per_vp":
+                    fun_test.critical("Waiting for the Per VP Stats collection thread having the ID {} to "
+                                      "complete...".format(thread_id))
+                if func == "resource_bam_args":
+                    fun_test.critical("Waiting for the Resource bam stats collection thread having the ID {} to "
+                                      "complete...".format(thread_id))
+                if func == "vol_stats":
+                    fun_test.critical("Waiting for the Volume Stats collection thread having the ID {} to "
+                                      "complete...".format(thread_id))
+                fun_test.join_thread(fun_test_thread_id=thread_id, sleep_time=1)
 
 
 def get_ec_vol_uuids(ec_info):

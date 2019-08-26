@@ -80,6 +80,7 @@ import { SuiteEditorComponent } from './regression/suite-editor/suite-editor.com
 import {ModalModule} from "ngb-modal";
 import { UlErrorPanelComponent } from './ui-elements/ul-error-panel/ul-error-panel.component';
 import { AnnouncementFormComponent } from './performance/admin/announcement-form/announcement-form.component';
+import { MessagesPanelComponent } from './ui-elements/messages-panel/messages-panel.component';
 
 
 @NgModule({
@@ -143,7 +144,8 @@ import { AnnouncementFormComponent } from './performance/admin/announcement-form
     SuiteExecutionWidgetComponent,
     SuiteEditorComponent,
     UlErrorPanelComponent,
-    AnnouncementFormComponent
+    AnnouncementFormComponent,
+    MessagesPanelComponent
   ],
   imports: [
     BsDropdownModule,

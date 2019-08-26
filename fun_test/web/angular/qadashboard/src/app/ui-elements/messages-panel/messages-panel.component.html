@@ -1,0 +1,5 @@
+<div class="messages-panel" [ngClass]="{'messages-panel-danger': type == MessageTypes.DANGER, 'messages-panel-info': type == MessageTypes.INFO}">
+  <ul>
+    <li *ngFor="let message of messages">{{ message }}
+  </ul>
+</div>

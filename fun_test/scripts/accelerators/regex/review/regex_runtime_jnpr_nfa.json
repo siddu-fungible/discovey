@@ -1,0 +1,15 @@
+{
+  "JuniperNfaDflt10": {
+    "jsons":["correct_all_lsu_10.json"],
+    "XDATA_LISTS": "/project/users/jlulla/runtime/jnpr_nfa/correct_jenkins_10.list",
+    "description":"Jnpr NFA dflt",
+    "rbm_size": "1m"
+  },
+  "JuniperNfaDflt1": {
+    "jsons":["correct_all_lsu_1.json"],
+    "XDATA_LISTS": "/project/users/jlulla/runtime/jnpr_nfa/correct_jenkins_1.list",
+    "description":"Jnpr NFA dflt",
+    "rbm_size": "1m"
+  }
+}
+

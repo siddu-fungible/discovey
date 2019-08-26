@@ -944,10 +944,6 @@ peek_wro_hnu_stats_parser = peek_wro_stats_parsers.add_parser('hnu', help="Peek 
 peek_wro_hnu_stats_parser.add_argument('-tunnel', type=int, help="Tunnel ID", default=None)
 peek_wro_hnu_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
 
-# bam stats
-peek_bam_stats_parser = peek_stats_parsers.add_parser('bam', help="NU Peek bam Stats")
-peek_bam_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
-
 # fwd stats
 peek_fwd_stats_parser = peek_stats_parsers.add_parser('fwd', help="NU Peek FWD Stats")
 peek_fwd_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)

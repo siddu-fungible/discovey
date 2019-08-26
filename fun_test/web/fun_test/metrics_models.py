@@ -235,6 +235,20 @@ class MetricChart(models.Model):
         self.children_weights = json.dumps(children_weights)
         self.save()
 
+    def add_bugs(self, jira_id):
+        jira_ids = json.loads(self.jira_ids)
+        if jira_id not in jira_ids:
+            jira_ids.append(jira_id)
+            self.jira_ids = json.dumps(jira_ids)
+            self.save()
+
+    def remove_bugs(self, jira_id):
+        jira_ids = json.loads(self.jira_ids)
+        if jira_id in jira_ids:
+            jira_ids.remove(jira_id)
+            self.jira_ids = json.dumps(jira_ids)
+            self.save()
+
     def fix_children_weights(self):
         children = json.loads(self.children)
         children_weights = json.loads(self.children_weights)
@@ -2773,6 +2787,9 @@ class AlibabaRdmaPerformance(models.Model):
     input_operation = models.TextField(verbose_name="operation type", default="")
     input_size_latency = models.IntegerField(verbose_name="latency size in bytes", default=-1)
     input_size_bandwidth = models.IntegerField(verbose_name="bandwidth size in bytes", default=-1)
+    input_qp = models.IntegerField(verbose_name="QP", default=-1)
+    input_fcp = models.BooleanField(default=False)
+    input_mtu = models.IntegerField(verbose_name="MTU", default=-1)
     
     output_read_avg_latency = models.FloatField(verbose_name="read average latency (usec)", default=-1)
     output_write_avg_latency = models.FloatField(verbose_name="write average latency (usec)", default=-1)

@@ -4111,68 +4111,769 @@
                 "children": [
                   {
                     "metric_model_name": "MetricContainer",
-                    "name": "alibaba_rdma_host",
+                    "name": "alibaba_rdma_host_nfcp_2f1",
                     "label": "Host->Host NFCP (2F1s)",
                     "children": [
                       {
                         "metric_model_name": "MetricContainer",
-                        "name": "alibaba_rdma_host_host_2F1s_ib_write",
-                        "label": "IB_Write",
+                        "name": "alibaba_rdma_host_nfcp_2f1_mtu_1500",
+                        "label": "MTU 1500",
                         "children": [
                           {
                             "metric_model_name": "MetricContainer",
-                            "name": "alibaba_rdma_host_host_2F1s_ib_write_latency",
-                            "label": "Latency",
+                            "name": "alibaba_rdma_host_nfcp_2f1_mtu_1500_ibwrite",
+                            "label": "IB Write",
                             "children": [
                               {
-                                "metric_model_name": "AlibabaRdmaPerformance",
-                                "name": "ib_write_latency_size_1b",
-                                "label": "Size_1B",
-                                "children": []
+                                "metric_model_name": "MetricContainer",
+                                "name": "alibaba_rdma_host_nfcp_2f1_mtu_1500_ibwrite_bandwidth",
+                                "label": "Bandwidth",
+                                "children": [
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_nfcp_f1_2_mtu_1500_write_bandwidth_size_1",
+                                    "label": "Size 1",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_nfcp_f1_2_mtu_1500_write_bandwidth_size_128",
+                                    "label": "Size 128",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_nfcp_f1_2_mtu_1500_write_bandwidth_size_256",
+                                    "label": "Size 256",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_nfcp_f1_2_mtu_1500_write_bandwidth_size_512",
+                                    "label": "Size 512",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_nfcp_f1_2_mtu_1500_write_bandwidth_size_1024",
+                                    "label": "Size 1024",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_nfcp_f1_2_mtu_1500_write_bandwidth_size_4096",
+                                    "label": "Size 4096",
+                                    "children": []
+                                  }
+                                ]
                               },
                               {
-                                "metric_model_name": "AlibabaRdmaPerformance",
-                                "name": "ib_write_latency_size_128b",
-                                "label": "Size_128B",
-                                "children": []
+                                "metric_model_name": "MetricContainer",
+                                "name": "alibaba_rdma_host_nfcp_2f1_mtu_1500_ibwrite_packet_rate",
+                                "label": "Packet rate",
+                                "children": [
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_nfcp_f1_2_mtu_1500_write_packet_rate_size_1",
+                                    "label": "Size 1",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_nfcp_f1_2_mtu_1500_write_packet_rate_size_128",
+                                    "label": "Size 128",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_nfcp_f1_2_mtu_1500_write_packet_rate_size_256",
+                                    "label": "Size 256",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_nfcp_f1_2_mtu_1500_write_packet_rate_size_512",
+                                    "label": "Size 512",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_nfcp_f1_2_mtu_1500_write_packet_rate_size_1024",
+                                    "label": "Size 1024",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_nfcp_f1_2_mtu_1500_write_packet_rate_size_4096",
+                                    "label": "Size 4096",
+                                    "children": []
+                                  }
+                                ]
                               },
                               {
-                                "metric_model_name": "AlibabaRdmaPerformance",
-                                "name": "ib_write_latency_size_256b",
-                                "label": "Size_256B",
-                                "children": []
-                              },
-                              {
-                                "metric_model_name": "AlibabaRdmaPerformance",
-                                "name": "ib_write_latency_size_512b",
-                                "label": "Size_512B",
-                                "children": []
-                              },
-                              {
-                                "metric_model_name": "AlibabaRdmaPerformance",
-                                "name": "ib_write_latency_size_1024b",
-                                "label": "Size_1024B",
-                                "children": []
-                              },
-                              {
-                                "metric_model_name": "AlibabaRdmaPerformance",
-                                "name": "ib_write_latency_size_4096b",
-                                "label": "Size_4096B",
-                                "children": []
+                                "metric_model_name": "MetricContainer",
+                                "name": "alibaba_rdma_host_nfcp_2f1_mtu_1500_ibwrite_latency",
+                                "label": "Latency",
+                                "children": [
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_nfcp_f1_2_mtu_1500_write_latency_size_1",
+                                    "label": "Size 1",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_nfcp_f1_2_mtu_1500_write_latency_size_128",
+                                    "label": "Size 128",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_nfcp_f1_2_mtu_1500_write_latency_size_256",
+                                    "label": "Size 256",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_nfcp_f1_2_mtu_1500_write_latency_size_512",
+                                    "label": "Size 512",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_nfcp_f1_2_mtu_1500_write_latency_size_1024",
+                                    "label": "Size 1024",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_nfcp_f1_2_mtu_1500_write_latency_size_4096",
+                                    "label": "Size 4096",
+                                    "children": []
+                                  }
+                                ]
                               }
                             ]
                           },
                           {
-                            "metric_model_name": "AlibabaRdmaPerformance",
-                            "name": "rdma_ib_write_bw",
-                            "label": "Bandwidth",
-                            "children": []
+                            "metric_model_name": "MetricContainer",
+                            "name": "alibaba_rdma_host_nfcp_2f1_mtu_1500_ibread",
+                            "label": "IB read",
+                            "children": [
+                              {
+                                "metric_model_name": "MetricContainer",
+                                "name": "alibaba_rdma_host_nfcp_2f1_mtu_1500_ibread_bandwidth",
+                                "label": "Bandwidth",
+                                "children": [
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_nfcp_f1_2_mtu_1500_read_bandwidth_size_1",
+                                    "label": "Size 1",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_nfcp_f1_2_mtu_1500_read_bandwidth_size_128",
+                                    "label": "Size 128",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_nfcp_f1_2_mtu_1500_read_bandwidth_size_256",
+                                    "label": "Size 256",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_nfcp_f1_2_mtu_1500_read_bandwidth_size_512",
+                                    "label": "Size 512",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_nfcp_f1_2_mtu_1500_read_bandwidth_size_1024",
+                                    "label": "Size 1024",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_nfcp_f1_2_mtu_1500_read_bandwidth_size_4096",
+                                    "label": "Size 4096",
+                                    "children": []
+                                  }
+                                ]
+                              },
+                              {
+                                "metric_model_name": "MetricContainer",
+                                "name": "alibaba_rdma_host_nfcp_2f1_mtu_1500_ibread_packet_rate",
+                                "label": "Packet rate",
+                                "children": [
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_nfcp_f1_2_mtu_1500_read_packet_rate_size_1",
+                                    "label": "Size 1",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_nfcp_f1_2_mtu_1500_read_packet_rate_size_128",
+                                    "label": "Size 128",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_nfcp_f1_2_mtu_1500_read_packet_rate_size_256",
+                                    "label": "Size 256",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_nfcp_f1_2_mtu_1500_read_packet_rate_size_512",
+                                    "label": "Size 512",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_nfcp_f1_2_mtu_1500_read_packet_rate_size_1024",
+                                    "label": "Size 1024",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_nfcp_f1_2_mtu_1500_read_packet_rate_size_4096",
+                                    "label": "Size 4096",
+                                    "children": []
+                                  }
+                                ]
+                              },
+                              {
+                                "metric_model_name": "MetricContainer",
+                                "name": "alibaba_rdma_host_nfcp_2f1_mtu_1500_ibread_latency",
+                                "label": "Latency",
+                                "children": [
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_nfcp_f1_2_mtu_1500_read_latency_size_1",
+                                    "label": "Size 1",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_nfcp_f1_2_mtu_1500_read_latency_size_128",
+                                    "label": "Size 128",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_nfcp_f1_2_mtu_1500_read_latency_size_256",
+                                    "label": "Size 256",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_nfcp_f1_2_mtu_1500_read_latency_size_512",
+                                    "label": "Size 512",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_nfcp_f1_2_mtu_1500_read_latency_size_1024",
+                                    "label": "Size 1024",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_nfcp_f1_2_mtu_1500_read_latency_size_4096",
+                                    "label": "Size 4096",
+                                    "children": []
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "metric_model_name": "MetricContainer",
+                        "name": "alibaba_rdma_host_nfcp_2f1_mtu_9000",
+                        "label": "MTU 9000",
+                        "children": [
+                          {
+                            "metric_model_name": "MetricContainer",
+                            "name": "alibaba_rdma_host_nfcp_2f1_mtu_9000_ibwrite",
+                            "label": "IB Write",
+                            "children": [
+                              {
+                                "metric_model_name": "MetricContainer",
+                                "name": "alibaba_rdma_host_nfcp_2f1_mtu_9000_ibwrite_bandwidth",
+                                "label": "Bandwidth",
+                                "children": [
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_nfcp_f1_2_mtu_9000_write_bandwidth_size_4096",
+                                    "label": "Size 4096",
+                                    "children": []
+                                  }
+                                ]
+                              },
+                              {
+                                "metric_model_name": "MetricContainer",
+                                "name": "alibaba_rdma_host_nfcp_2f1_mtu_9000_ibwrite_packet_rate",
+                                "label": "Packet rate",
+                                "children": [
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_nfcp_f1_2_mtu_9000_write_packet_rate_size_4096",
+                                    "label": "Size 4096",
+                                    "children": []
+                                  }
+                                ]
+                              },
+                              {
+                                "metric_model_name": "MetricContainer",
+                                "name": "alibaba_rdma_host_nfcp_2f1_mtu_9000_ibwrite_latency",
+                                "label": "Latency",
+                                "children": [
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_nfcp_f1_2_mtu_9000_write_latency_size_4096",
+                                    "label": "Size 4096",
+                                    "children": []
+                                  }
+                                ]
+                              }
+                            ]
                           },
                           {
-                            "metric_model_name": "AlibabaRdmaPerformance",
-                            "name": "rdma_ib_msg_rate",
-                            "label": "Packet rate",
-                            "children": []
+                            "metric_model_name": "MetricContainer",
+                            "name": "alibaba_rdma_host_nfcp_2f1_mtu_9000_ibread",
+                            "label": "IB read",
+                            "children": [
+                              {
+                                "metric_model_name": "MetricContainer",
+                                "name": "alibaba_rdma_host_nfcp_2f1_mtu_9000_ibread_bandwidth",
+                                "label": "Bandwidth",
+                                "children": [
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_nfcp_f1_2_mtu_9000_read_bandwidth_size_4096",
+                                    "label": "Size 4096",
+                                    "children": []
+                                  }
+                                ]
+                              },
+                              {
+                                "metric_model_name": "MetricContainer",
+                                "name": "alibaba_rdma_host_nfcp_2f1_mtu_9000_ibread_packet_rate",
+                                "label": "Packet rate",
+                                "children": [
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_nfcp_f1_2_mtu_9000_read_packet_rate_size_4096",
+                                    "label": "Size 4096",
+                                    "children": []
+                                  }
+                                ]
+                              },
+                              {
+                                "metric_model_name": "MetricContainer",
+                                "name": "alibaba_rdma_host_nfcp_2f1_mtu_9000_ibread_latency",
+                                "label": "Latency",
+                                "children": [
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_nfcp_f1_2_mtu_9000_read_latency_size_4096",
+                                    "label": "Size 4096",
+                                    "children": []
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "metric_model_name": "MetricContainer",
+                    "name": "alibaba_rdma_host_fcp_2f1",
+                    "label": "Host->Host FCP (2F1s)",
+                    "children": [
+                      {
+                        "metric_model_name": "MetricContainer",
+                        "name": "alibaba_rdma_host_fcp_2f1_mtu_1500",
+                        "label": "MTU 1500",
+                        "children": [
+                          {
+                            "metric_model_name": "MetricContainer",
+                            "name": "alibaba_rdma_host_fcp_2f1_mtu_1500_ibwrite",
+                            "label": "IB Write",
+                            "children": [
+                              {
+                                "metric_model_name": "MetricContainer",
+                                "name": "alibaba_rdma_host_fcp_2f1_mtu_1500_ibwrite_bandwidth",
+                                "label": "Bandwidth",
+                                "children": [
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_fcp_f1_2_mtu_1500_write_bandwidth_size_1",
+                                    "label": "Size 1",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_fcp_f1_2_mtu_1500_write_bandwidth_size_128",
+                                    "label": "Size 128",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_fcp_f1_2_mtu_1500_write_bandwidth_size_256",
+                                    "label": "Size 256",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_fcp_f1_2_mtu_1500_write_bandwidth_size_512",
+                                    "label": "Size 512",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_fcp_f1_2_mtu_1500_write_bandwidth_size_1024",
+                                    "label": "Size 1024",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_fcp_f1_2_mtu_1500_write_bandwidth_size_4096",
+                                    "label": "Size 4096",
+                                    "children": []
+                                  }
+                                ]
+                              },
+                              {
+                                "metric_model_name": "MetricContainer",
+                                "name": "alibaba_rdma_host_fcp_2f1_mtu_1500_ibwrite_packet_rate",
+                                "label": "Packet rate",
+                                "children": [
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_fcp_f1_2_mtu_1500_write_packet_rate_size_1",
+                                    "label": "Size 1",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_fcp_f1_2_mtu_1500_write_packet_rate_size_128",
+                                    "label": "Size 128",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_fcp_f1_2_mtu_1500_write_packet_rate_size_256",
+                                    "label": "Size 256",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_fcp_f1_2_mtu_1500_write_packet_rate_size_512",
+                                    "label": "Size 512",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_fcp_f1_2_mtu_1500_write_packet_rate_size_1024",
+                                    "label": "Size 1024",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_fcp_f1_2_mtu_1500_write_packet_rate_size_4096",
+                                    "label": "Size 4096",
+                                    "children": []
+                                  }
+                                ]
+                              },
+                              {
+                                "metric_model_name": "MetricContainer",
+                                "name": "alibaba_rdma_host_fcp_2f1_mtu_1500_ibwrite_latency",
+                                "label": "Latency",
+                                "children": [
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_fcp_f1_2_mtu_1500_write_latency_size_1",
+                                    "label": "Size 1",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_fcp_f1_2_mtu_1500_write_latency_size_128",
+                                    "label": "Size 128",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_fcp_f1_2_mtu_1500_write_latency_size_256",
+                                    "label": "Size 256",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_fcp_f1_2_mtu_1500_write_latency_size_512",
+                                    "label": "Size 512",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_fcp_f1_2_mtu_1500_write_latency_size_1024",
+                                    "label": "Size 1024",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_fcp_f1_2_mtu_1500_write_latency_size_4096",
+                                    "label": "Size 4096",
+                                    "children": []
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          {
+                            "metric_model_name": "MetricContainer",
+                            "name": "alibaba_rdma_host_fcp_2f1_mtu_1500_ibread",
+                            "label": "IB read",
+                            "children": [
+                              {
+                                "metric_model_name": "MetricContainer",
+                                "name": "alibaba_rdma_host_fcp_2f1_mtu_1500_ibread_bandwidth",
+                                "label": "Bandwidth",
+                                "children": [
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_fcp_f1_2_mtu_1500_read_bandwidth_size_1",
+                                    "label": "Size 1",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_fcp_f1_2_mtu_1500_read_bandwidth_size_128",
+                                    "label": "Size 128",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_fcp_f1_2_mtu_1500_read_bandwidth_size_256",
+                                    "label": "Size 256",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_fcp_f1_2_mtu_1500_read_bandwidth_size_512",
+                                    "label": "Size 512",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_fcp_f1_2_mtu_1500_read_bandwidth_size_1024",
+                                    "label": "Size 1024",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_fcp_f1_2_mtu_1500_read_bandwidth_size_4096",
+                                    "label": "Size 4096",
+                                    "children": []
+                                  }
+                                ]
+                              },
+                              {
+                                "metric_model_name": "MetricContainer",
+                                "name": "alibaba_rdma_host_fcp_2f1_mtu_1500_ibread_packet_rate",
+                                "label": "Packet rate",
+                                "children": [
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_nfcp_f1_2_mtu_1500_read_packet_rate_size_1",
+                                    "label": "Size 1",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_fcp_f1_2_mtu_1500_read_packet_rate_size_128",
+                                    "label": "Size 128",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_fcp_f1_2_mtu_1500_read_packet_rate_size_256",
+                                    "label": "Size 256",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_fcp_f1_2_mtu_1500_read_packet_rate_size_512",
+                                    "label": "Size 512",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_fcp_f1_2_mtu_1500_read_packet_rate_size_1024",
+                                    "label": "Size 1024",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_fcp_f1_2_mtu_1500_read_packet_rate_size_4096",
+                                    "label": "Size 4096",
+                                    "children": []
+                                  }
+                                ]
+                              },
+                              {
+                                "metric_model_name": "MetricContainer",
+                                "name": "alibaba_rdma_host_fcp_2f1_mtu_1500_ibread_latency",
+                                "label": "Latency",
+                                "children": [
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_fcp_f1_2_mtu_1500_read_latency_size_1",
+                                    "label": "Size 1",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_fcp_f1_2_mtu_1500_read_latency_size_128",
+                                    "label": "Size 128",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_nfcp_f1_2_mtu_1500_read_latency_size_256",
+                                    "label": "Size 256",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_fcp_f1_2_mtu_1500_read_latency_size_512",
+                                    "label": "Size 512",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_fcp_f1_2_mtu_1500_read_latency_size_1024",
+                                    "label": "Size 1024",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_fcp_f1_2_mtu_1500_read_latency_size_4096",
+                                    "label": "Size 4096",
+                                    "children": []
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "metric_model_name": "MetricContainer",
+                        "name": "alibaba_rdma_host_fcp_2f1_mtu_9000",
+                        "label": "MTU 9000",
+                        "children": [
+                          {
+                            "metric_model_name": "MetricContainer",
+                            "name": "alibaba_rdma_host_fcp_2f1_mtu_9000_ibwrite",
+                            "label": "IB Write",
+                            "children": [
+                              {
+                                "metric_model_name": "MetricContainer",
+                                "name": "alibaba_rdma_host_fcp_2f1_mtu_9000_ibwrite_bandwidth",
+                                "label": "Bandwidth",
+                                "children": [
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_fcp_f1_2_mtu_9000_write_bandwidth_size_4096",
+                                    "label": "Size 4096",
+                                    "children": []
+                                  }
+                                ]
+                              },
+                              {
+                                "metric_model_name": "MetricContainer",
+                                "name": "alibaba_rdma_host_fcp_2f1_mtu_9000_ibwrite_packet_rate",
+                                "label": "Packet rate",
+                                "children": [
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_fcp_f1_2_mtu_9000_write_packet_rate_size_4096",
+                                    "label": "Size 4096",
+                                    "children": []
+                                  }
+                                ]
+                              },
+                              {
+                                "metric_model_name": "MetricContainer",
+                                "name": "alibaba_rdma_host_fcp_2f1_mtu_9000_ibwrite_latency",
+                                "label": "Latency",
+                                "children": [
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_fcp_f1_2_mtu_9000_write_latency_size_4096",
+                                    "label": "Size 4096",
+                                    "children": []
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          {
+                            "metric_model_name": "MetricContainer",
+                            "name": "alibaba_rdma_host_fcp_2f1_mtu_9000_ibread",
+                            "label": "IB read",
+                            "children": [
+                              {
+                                "metric_model_name": "MetricContainer",
+                                "name": "alibaba_rdma_host_fcp_2f1_mtu_9000_ibread_bandwidth",
+                                "label": "Bandwidth",
+                                "children": [
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_fcp_f1_2_mtu_9000_read_bandwidth_size_4096",
+                                    "label": "Size 4096",
+                                    "children": []
+                                  }
+                                ]
+                              },
+                              {
+                                "metric_model_name": "MetricContainer",
+                                "name": "alibaba_rdma_host_fcp_2f1_mtu_9000_ibread_packet_rate",
+                                "label": "Packet rate",
+                                "children": [
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_fcp_f1_2_mtu_9000_read_packet_rate_size_4096",
+                                    "label": "Size 4096",
+                                    "children": []
+                                  }
+                                ]
+                              },
+                              {
+                                "metric_model_name": "MetricContainer",
+                                "name": "alibaba_rdma_host_fcp_2f1_mtu_9000_ibread_latency",
+                                "label": "Latency",
+                                "children": [
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "alibaba_rdma_fcp_f1_2_mtu_9000_read_latency_size_4096",
+                                    "label": "Size 4096",
+                                    "children": []
+                                  }
+                                ]
+                              }
+                            ]
                           }
                         ]
                       }
@@ -4809,6 +5510,7 @@
                             "metric_model_name": "MetricContainer",
                             "name": "alibaba_bmv_networking_overlay_host_host_fcp_2",
                             "label": "Host->Host FCP (2 F1s)",
+                            "disable": true,
                             "children": [
                               {
                                 "metric_model_name": "MetricContainer",

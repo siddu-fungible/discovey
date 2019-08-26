@@ -1,0 +1,15 @@
+{
+  "SnortNfaDflt1_20": {
+    "jsons":["all_lsu_1_20.json"],
+    "XDATA_LISTS": "/project/users/jlulla/runtime/snort_nfa/jenkins.list",
+    "description":"SNORT NFA dflt Graphs 1 - 20",
+    "rbm_size": "1m"
+  },
+  "SnortNfaDflt40_50": {
+    "jsons":["all_lsu_40_50.json"],
+    "XDATA_LISTS": "/project/users/jlulla/runtime/snort_nfa/jenkins.list",
+    "description":"SNORT NFA dflt Graphs 40 - 50",
+    "rbm_size": "1m"
+  }
+}
+
