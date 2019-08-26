@@ -381,9 +381,13 @@ class BwTest(FunTestCase):
                                                                                     self.mtu))
         if not self.fcp:
             come_obj.command(
-                "echo DEL \\\"openconfig-fcp:fcp-tunnel[ftep=\\\'4.4.4.4\\\']\\\" > /scratch/opt/fungible/f10_del")
+                "echo SELECT 1 > /scratch/opt/fungible/f10_del")
             come_obj.command(
-                "echo DEL \\\"openconfig-fcp:fcp-tunnel[ftep=\\\'3.3.3.3\\\']\\\" > /scratch/opt/fungible/f11_del")
+                "echo DEL \\\"openconfig-fcp:fcp-tunnel[ftep=\\\'4.4.4.4\\\']\\\" >> /scratch/opt/fungible/f10_del")
+            come_obj.command(
+                "echo SELECT 1 > /scratch/opt/fungible/f11_del")
+            come_obj.command(
+                "echo DEL \\\"openconfig-fcp:fcp-tunnel[ftep=\\\'3.3.3.3\\\']\\\" >> /scratch/opt/fungible/f11_del")
             come_obj.command("docker exec F1-0 bash -c \"redis-cli < f10_del\"")
             come_obj.command("docker exec F1-1 bash -c \"redis-cli < f11_del\"")
             fun_test.sleep("Removed FTEP", seconds=5)
@@ -522,9 +526,13 @@ class LatencyTest(FunTestCase):
         if not self.fcp:
             come_obj = Linux(host_ip="fs66-come", ssh_username="fun", ssh_password="123")
             come_obj.command(
-                "echo DEL \\\"openconfig-fcp:fcp-tunnel[ftep=\\\'4.4.4.4\\\']\\\" > /scratch/opt/fungible/f10_del")
+                "echo SELECT 1 > /scratch/opt/fungible/f10_del")
             come_obj.command(
-                "echo DEL \\\"openconfig-fcp:fcp-tunnel[ftep=\\\'3.3.3.3\\\']\\\" > /scratch/opt/fungible/f11_del")
+                "echo DEL \\\"openconfig-fcp:fcp-tunnel[ftep=\\\'4.4.4.4\\\']\\\" >> /scratch/opt/fungible/f10_del")
+            come_obj.command(
+                "echo SELECT 1 > /scratch/opt/fungible/f11_del")
+            come_obj.command(
+                "echo DEL \\\"openconfig-fcp:fcp-tunnel[ftep=\\\'3.3.3.3\\\']\\\" >> /scratch/opt/fungible/f11_del")
             come_obj.command("docker exec F1-0 bash -c \"redis-cli < f10_del\"")
             come_obj.command("docker exec F1-1 bash -c \"redis-cli < f11_del\"")
 
@@ -642,6 +650,7 @@ class LatWriteFcp1500(LatencyTest):
 
 class BwWriteFcp9000(BwTest):
     rt = "write"
+    fcp = True
     mtu = 9000
     io_size = [4096]
 
