@@ -29,6 +29,7 @@ export class SuiteEditorComponent implements OnInit {
   inputsExample: string = '{"abc":123}';
   testBeds: any = null;
   assets: any = null;
+  addingScript: boolean = null;
 
   dutAssets: any = [];
   hostAssets: any = [];
@@ -43,17 +44,8 @@ export class SuiteEditorComponent implements OnInit {
   flattenedAssetTypeNameMap: any = {};
 
   customTestBedSpecFormErrorMessage = null;
-
   currentScriptPath: string = null;
-
-  newSuiteEntryForm = new FormGroup({
-    path: new FormControl(''),
-    testCaseIds: new FormControl(''),
-    inputs: new FormControl('')
-  });
-
   customTestBedSpecForm = null;
-
   customTestBedValidated = null;
 
   constructor(private testBedService: TestBedService, private modalService: NgbModal) {
@@ -334,8 +326,19 @@ export class SuiteEditorComponent implements OnInit {
   singleSelectScriptPathEvent(scriptPath) {
     if (scriptPath) {
       this.currentScriptPath = scriptPath;
-      this.newSuiteEntryForm.get('executionId').disable()
     }
     //console.log(scriptPath);
+  }
+
+  onAddScript() {
+    this.addingScript = true;
+  }
+
+  onSubmitNewSuiteEntry() {
+
+  }
+
+  onCancelNewSuiteEntry() {
+    this.addingScript = false;
   }
 }

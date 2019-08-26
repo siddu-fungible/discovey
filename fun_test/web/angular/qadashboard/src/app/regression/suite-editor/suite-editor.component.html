@@ -1,27 +1,42 @@
 <div class="component">
-  <form [formGroup]="newSuiteEntryForm" class="fun-form">
 
-    <div class="fun-form-field-container">
-      <app-script-selector [selectionText]="'script'" (singleSelectScriptPath)="singleSelectScriptPathEvent($event)"></app-script-selector>
+  <button class="fun-button-add" (click)="onAddScript()">Add a script
+  </button>
+
+  <span *ngIf="!customTestBedValidated" class="fun-action-link" (click)="onAddCustomTestBedSpec(customTestBedSpecModalContent)">Add custom test-bed spec
+  </span>
+  <span *ngIf="customTestBedValidated" class="fun-action-link" (click)="onEditCustomTestBedSpec(customTestBedSpecModalContent)">Edit custom test-bed spec
+  </span>
+
+  <div class="fun-panel" *ngIf="addingScript">
+    <div class="fun-panel-header">
+       Adding a script
+    </div>
+    <div class="fun-panel-body">
+      <form class="fun-form">
+
+        <div class="fun-form-field-container">
+          <app-script-selector [selectionText]="'script'" (singleSelectScriptPath)="singleSelectScriptPathEvent($event)"></app-script-selector>
+        </div>
+
+        <div class="fun-form-field-container">
+          <label class="fun-form-label">Test-case IDs (in JSON array format. Ex: [2, 3]):</label>
+          <app-json-input [disabled]="!currentScriptPath" (dataChanged)="testCaseIdsChanged($event)" [numRows]="1"></app-json-input>
+        </div>
+
+        <div class="fun-form-field-container">
+          <label class="fun-form-label">Inputs (in JSON dictionary format. Ex: {{ inputsExample }}):</label>
+          <app-json-input [disabled]="!currentScriptPath" (dataChanged)="inputsChanged($event)" [numRows]="6"></app-json-input>
+        </div>
+      </form>
+
+      <span class="fun-cancel-link" (click)="onCancelNewSuiteEntry()">Cancel</span> &nbsp;
+      <button class="fun-button-submit" [ngClass]="{'fun-button-disabled': !currentScriptPath}" (click)="onSubmitNewSuiteEntry()">Submit</button>
     </div>
 
 
-    <div class="fun-form-field-container">
-      <label class="fun-form-label">Test-case IDs (in JSON array format. Ex: [2, 3]):</label>
-      <app-json-input [disabled]="!currentScriptPath" (dataChanged)="testCaseIdsChanged($event)" [numRows]="1"></app-json-input>
-    </div>
+  </div>
 
-    <div class="fun-form-field-container">
-      <label class="fun-form-label">Inputs (in JSON dictionary format. Ex: {{ inputsExample }}):</label>
-      <app-json-input [disabled]="!currentScriptPath" (dataChanged)="inputsChanged($event)" [numRows]="6"></app-json-input>
-    </div>
-
-    <button *ngIf="!customTestBedValidated" class="fun-button-add" (click)="onAddCustomTestBedSpec(customTestBedSpecModalContent)">Add custom test-bed spec
-    </button>
-    <button *ngIf="customTestBedValidated" class="fun-button-add" (click)="onEditCustomTestBedSpec(customTestBedSpecModalContent)">Edit custom test-bed spec
-    </button>
-
-  </form>
 
 
   <ng-template #customTestBedSpecModalContent let-modal>

@@ -648,12 +648,13 @@ label {
 }
 
 .component {
-  padding-top: 5px
+  padding-top: 5px;
+  margin-left: 10px;
 }
 
 /*input*/
 .fun-input-disabled {
   pointer-events: none;
   color: lightgrey;
-  background-color: lightgrey;
+  background-color: rgba(0,0,0,.125)
 }
