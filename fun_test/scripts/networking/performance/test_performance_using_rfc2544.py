@@ -213,7 +213,7 @@ class TestTransitPerformance(FunTestCase):
         network_controller_obj.peek_vp_packets()
 
         fun_test.log("Fetching BAM stats before test")
-        network_controller_obj.peek_bam_stats()
+        network_controller_obj.peek_resource_bam_stats()
 
         checkpoint = "Start Sequencer"
         result = self.template_obj.start_sequencer()
@@ -234,7 +234,7 @@ class TestTransitPerformance(FunTestCase):
         network_controller_obj.peek_vp_packets()
 
         fun_test.log("Fetching BAM stats after test")
-        network_controller_obj.peek_bam_stats()
+        network_controller_obj.peek_resource_bam_stats()
 
         fun_test.log("Fetching per VP stats after traffic")
         network_controller_obj.peek_per_vp_stats()
