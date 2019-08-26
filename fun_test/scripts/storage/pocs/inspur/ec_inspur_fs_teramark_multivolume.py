@@ -562,6 +562,8 @@ class ECVolumeLevelScript(FunTestScript):
             except Exception as ex:
                 fun_test.critical(str(ex))
                 come_reboot = True
+        '''
+        # disabling COMe reboot in cleanup section as, setup bring-up handles it through COMe power-cycle
         try:
             if come_reboot:
                 self.fs.fpga_initialize()
@@ -569,6 +571,7 @@ class ECVolumeLevelScript(FunTestScript):
                 self.fs.come_reset(max_wait_time=self.reboot_timeout)
         except Exception as ex:
             fun_test.critical(str(ex))
+        '''
 
         self.topology.cleanup()
 
@@ -624,6 +627,9 @@ class ECVolumeLevelTestcase(FunTestCase):
             self.ec_info["capacity"] = job_inputs["vol_size"]
         if "nvme_io_queues" in job_inputs:
             self.nvme_io_queues = job_inputs["nvme_io_queues"]
+        if "warmup_bs" in job_inputs:
+            self.warm_up_fio_cmd_args["bs"] = job_inputs["warmup_bs"]
+            self.warm_up_fio_cmd_args["timeout"] = 7200
         if "post_results" in job_inputs:
             self.post_results = job_inputs["post_results"]
         else:
