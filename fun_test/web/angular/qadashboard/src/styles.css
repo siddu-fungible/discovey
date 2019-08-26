@@ -646,3 +646,14 @@ label {
   cursor: pointer;
   color: black;
 }
+
+.component {
+  padding-top: 5px
+}
+
+/*input*/
+.fun-input-disabled {
+  pointer-events: none;
+  color: lightgrey;
+  background-color: lightgrey;
+}

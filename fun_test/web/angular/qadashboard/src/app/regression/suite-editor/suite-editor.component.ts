@@ -44,6 +44,8 @@ export class SuiteEditorComponent implements OnInit {
 
   customTestBedSpecFormErrorMessage = null;
 
+  currentScriptPath: string = null;
+
   newSuiteEntryForm = new FormGroup({
     path: new FormControl(''),
     testCaseIds: new FormControl(''),
@@ -327,5 +329,13 @@ export class SuiteEditorComponent implements OnInit {
       console.log("Rejected");
       //this.closeResult = `Dismissed ${this.getDismissReason(reason)}`;
     }));
+  }
+
+  singleSelectScriptPathEvent(scriptPath) {
+    if (scriptPath) {
+      this.currentScriptPath = scriptPath;
+      this.newSuiteEntryForm.get('executionId').disable()
+    }
+    //console.log(scriptPath);
   }
 }

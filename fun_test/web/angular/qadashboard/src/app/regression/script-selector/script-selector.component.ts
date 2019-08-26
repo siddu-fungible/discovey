@@ -5,6 +5,7 @@ import {LoggerService} from "../../services/logger/logger.service";
 class Node {
   uId: number;  // unique Id
   scriptPath: string;
+  fullScriptPath: string;
   pk: number = null;
   childrenIds = null;
   indent: number = 0;
@@ -30,8 +31,9 @@ export class ScriptSelectorComponent implements OnInit, OnChanges {
   savedSingleSelectNode = null;
   refreshingStatus = null;
   @Input() resetEvent: any = null;
+  @Input() selectionText: string = "file";
   @Output() singleSelectPk: EventEmitter<number> = new EventEmitter();
-
+  @Output() singleSelectScriptPath: EventEmitter<string> = new EventEmitter();
 
   constructor(private apiService: ApiService, private logger: LoggerService) {
   }
@@ -90,7 +92,7 @@ export class ScriptSelectorComponent implements OnInit, OnChanges {
 
   }
 
-  addParts(remainingParts, parsedDataReference, pk, show=false) {
+  addParts(remainingParts, parsedDataReference, pk, show=false, fullScriptPath=null) {
     let firstToken = remainingParts[0];
     let thisNode = null;
     if (!parsedDataReference.children.hasOwnProperty(firstToken)) {
@@ -100,6 +102,7 @@ export class ScriptSelectorComponent implements OnInit, OnChanges {
       newNode.uId = this.getUid();
       newNode.indent = parsedDataReference.indent + 1;
       newNode.show = show;
+      newNode.fullScriptPath = fullScriptPath;
       newNode.childrenIds = new Set();
       if (newNode.scriptPath.endsWith(".py")) {
         newNode.leaf = true;
@@ -117,7 +120,7 @@ export class ScriptSelectorComponent implements OnInit, OnChanges {
       }
 
       let newArray = remainingParts.slice(1, remainingParts.length);
-      thisNode.childrenIds.add(this.addParts(newArray, newReference, pk).uId);
+      thisNode.childrenIds.add(this.addParts(newArray, newReference, pk, false, fullScriptPath).uId);
     }
     return thisNode;
   }
@@ -163,7 +166,7 @@ export class ScriptSelectorComponent implements OnInit, OnChanges {
       let parts = this.data[index].script_path.split("/");
       let newArray = parts.slice(1, parts.length);
       let pk = this.data[index].pk;
-      rootNode.childrenIds.add(this.addParts(newArray, this.parsedData["root"], pk,true).uId);
+      rootNode.childrenIds.add(this.addParts(newArray, this.parsedData["root"], pk,true, this.data[index].script_path).uId);
     }
     this.flattenNode(rootNode);
     let i = 0;
@@ -174,6 +177,7 @@ export class ScriptSelectorComponent implements OnInit, OnChanges {
     this.singleSelectNode = node;
     if (this.singleSelectNode) {
       this.singleSelectPk.emit(this.singleSelectNode.pk);
+      this.singleSelectScriptPath.emit(this.nodeIdMap[this.singleSelectNode.uId].fullScriptPath);
       this.selectionMode = false;
     }
   }

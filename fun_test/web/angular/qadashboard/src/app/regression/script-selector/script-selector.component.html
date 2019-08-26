@@ -1,5 +1,5 @@
 
-<button (click)="selectClick()" class="fun-button-add">{{ singleSelectNode? "Re-select": "Select" }} a file</button>
+<button (click)="selectClick()" class="fun-button-add">{{ singleSelectNode? "Modify " + selectionText + " selection": "Select a " + selectionText }}</button>
 <span class="span-selected" *ngIf="singleSelectNode" style="display: inline-block">Selected file: {{ singleSelectNode.scriptPath }}&nbsp;</span>
 
 <table class="table" *ngIf="selectionMode">
