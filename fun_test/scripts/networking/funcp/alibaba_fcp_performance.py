@@ -304,23 +304,29 @@ class FunPerformance(FunTestCase):
         if len(network_controller_objs) == 4:
             network_controller_objs_fs1 = network_controller_objs[:len(network_controller_objs) // 2]
             network_controller_objs_fs2 = network_controller_objs[:len(network_controller_objs) // 2:]
-            sth_stuck_before &= perf_utils.collect_dpc_stats(network_controller_objs_fs1,
-                                                             fpg_interfaces,
-                                                             fpg_intf_dict,
-                                                             version,
-                                                             when='before')
-            sth_stuck_before &= perf_utils.collect_dpc_stats(network_controller_objs_fs2,
-                                                             fpg_interfaces,
-                                                             fpg_intf_dict,
-                                                             version,
-                                                             when='before')
+            sth_stuck_result = perf_utils.collect_dpc_stats(network_controller_objs_fs1,
+                                                            fpg_interfaces,
+                                                            fpg_intf_dict,
+                                                            version,
+                                                            when='before')
+            for i in sth_stuck_result[:-1]:
+                sth_stuck_before &= i
+            sth_stuck_result = perf_utils.collect_dpc_stats(network_controller_objs_fs2,
+                                                            fpg_interfaces,
+                                                            fpg_intf_dict,
+                                                            version,
+                                                            when='before')
+            for i in sth_stuck_result[:-1]:
+                sth_stuck_before &= i
         elif len(network_controller_objs) == 2:
 
-            sth_stuck_before &= perf_utils.collect_dpc_stats(network_controller_objs,
+            sth_stuck_result = perf_utils.collect_dpc_stats(network_controller_objs,
                                                              fpg_interfaces,
                                                              fpg_intf_dict,
                                                              version,
                                                              when='before')
+            for i in sth_stuck_result[:-1]:
+                sth_stuck_before &= i
 
         if pingable and not sth_stuck_before:
 
@@ -334,23 +340,30 @@ class FunPerformance(FunTestCase):
             if len(network_controller_objs) == 4:
                 network_controller_objs_fs1 = network_controller_objs[:len(network_controller_objs) // 2]
                 network_controller_objs_fs2 = network_controller_objs[:len(network_controller_objs) // 2:]
-                sth_stuck_after &= perf_utils.collect_dpc_stats(network_controller_objs_fs1,
+                sth_stuck_result = perf_utils.collect_dpc_stats(network_controller_objs_fs1,
                                                                  fpg_interfaces,
                                                                  fpg_intf_dict,
                                                                  version,
                                                                  when='after')
-                sth_stuck_after &= perf_utils.collect_dpc_stats(network_controller_objs_fs2,
-                                                                 fpg_interfaces,
-                                                                 fpg_intf_dict,
-                                                                 version,
-                                                                 when='after')
+                for i in sth_stuck_result[:-1]:
+                    sth_stuck_after &= i
+                sth_stuck_result = perf_utils.collect_dpc_stats(network_controller_objs_fs2,
+                                                                fpg_interfaces,
+                                                                fpg_intf_dict,
+                                                                version,
+                                                                when='after')
+                for i in sth_stuck_result[:-1]:
+                    sth_stuck_after &= i
+
             elif len(network_controller_objs) == 2:
 
-                sth_stuck_after &= perf_utils.collect_dpc_stats(network_controller_objs,
-                                                                 fpg_interfaces,
-                                                                 fpg_intf_dict,
-                                                                 version,
-                                                                 when='after')
+                sth_stuck_result = perf_utils.collect_dpc_stats(network_controller_objs,
+                                                                fpg_interfaces,
+                                                                fpg_intf_dict,
+                                                                version,
+                                                                when='after')
+                for i in sth_stuck_result[:-1]:
+                    sth_stuck_after &= i
             # Collect host stats after dpc stats to give enough time for mpstat collection
             perf_utils.collect_host_stats(funeth_obj, version, when='after')
             if sth_stuck_after:
