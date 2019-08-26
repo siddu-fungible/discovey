@@ -455,7 +455,7 @@ class BwTest(FunTestCase):
                     "qp": qp_count,
                     "mtu": self.mtu
                 }
-                # add_to_data_base(value_dict)
+                add_to_data_base(value_dict)
 
                 table_data = {"headers": table_data_headers, "rows": table_data_rows}
 
@@ -599,7 +599,7 @@ class LatencyTest(FunTestCase):
                 "mtu": self.mtu,
                 "fcp": self.fcp
             }
-            # add_to_data_base(value_dict)
+            add_to_data_base(value_dict)
             table_data = {"headers": table_data_headers, "rows": table_data_rows}
 
         fun_test.add_table(panel_header="{} Latency Test, MTU : {}, FCP : {}".
