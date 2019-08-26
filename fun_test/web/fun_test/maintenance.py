@@ -659,7 +659,7 @@ if __name__ == "__main__durable_ec_vol":
         for i in data_sets:
             print i
 
-if __name__ == "__main__":
+if __name__ == "__main__inspur_charts":
     internal_chart_names = OrderedDict([  # read iops
                                         ("pocs_inspur_8111_8k_rand_read_iodepth_32_iops_f1_6", 32),
                                         ("pocs_inspur_8111_8k_rand_read_iodepth_64_iops_f1_6", 64),
@@ -758,3 +758,196 @@ if __name__ == "__main__":
                     work_in_progress=False).save()
         print ("Metric id: {}".format(metric_id))
         print ("Data sets: {}".format(data_sets))
+
+
+if __name__ == "__main__":
+
+    # Alibaba rdma latency charts
+
+    internal_chart_names = OrderedDict([
+        ("alibaba_rdma_nfcp_f1_2_mtu_1500_write_latency", {"fcp": False, "mtu": 1500, "mode": "write"}),
+        ("alibaba_rdma_nfcp_f1_2_mtu_1500_read_latency", {"fcp": False, "mtu": 1500, "mode": "read"}),
+        ("alibaba_rdma_nfcp_f1_2_mtu_9000_write_latency", {"fcp": False, "mtu": 9000, "mode": "write"}),
+        ("alibaba_rdma_nfcp_f1_2_mtu_9000_read_latency", {"fcp": False, "mtu": 9000, "mode": "read"}),
+        ("alibaba_rdma_fcp_f1_2_mtu_1500_write_latency", {"fcp": True, "mtu": 1500, "mode": "write"}),
+        ("alibaba_rdma_fcp_f1_2_mtu_1500_read_latency", {"fcp": True, "mtu": 1500, "mode": "read"}),
+        ("alibaba_rdma_fcp_f1_2_mtu_9000_write_latency", {"fcp": True, "mtu": 9000, "mode": "write"}),
+        ("alibaba_rdma_fcp_f1_2_mtu_9000_read_latency", {"fcp": True, "mtu": 9000, "mode": "read"}),
+    ])
+
+    model_name = "AlibabaRdmaPerformance"
+    description = "TBD"
+    owner_info = "Manu K S  (manu.ks@fungible.com)"
+    source = "https://github.com/fungible-inc/Integration/blob/93cbceb27e5be0dfb3b79325c813d36789c5fe3d/fun_test" \
+             "/scripts/networking/funcp/rdma_write_perf.py"
+    positive = True
+    y1_axis_title = PerfUnit.UNIT_USECS
+    platform = FunPlatform.F1
+
+    for internal_chart_name in internal_chart_names:
+        dict_data = internal_chart_names[internal_chart_name]
+        fcp = dict_data['fcp']
+        mtu = dict_data['mtu']
+        mode = dict_data['mode']
+        if mtu == 1500:
+            size_list = [1, 128, 256, 512, 1024, 4096]
+        else:
+            size_list = [4096]
+        for size in size_list:
+            one_data_set = {}
+            data_sets = []
+            modified_internal_chart_name = internal_chart_name + "_size_{}".format(size)
+            chart_name = "IB {} latency, size {}B".format(mode, size)
+            inputs = {
+                "input_size_latency": size,
+                "input_platform": platform,
+                "input_operation": mode,
+                "input_fcp": fcp,
+                "input_mtu": mtu,
+                "input_size_bandwidth": -1
+            }
+            output_names = OrderedDict([("output_{}_min_latency".format(mode), "min"),
+                                        ("output_{}_max_latency".format(mode), "max"),
+                                        ("output_{}_avg_latency".format(mode), "avg"),
+                                        ("output_{}_99_latency".format(mode), "99%"),
+                                        ("output_{}_99_99_latency".format(mode), "99.99%")])
+            for output_name in output_names:
+                output = {
+                    "name": output_name,
+                    "unit": PerfUnit.UNIT_USECS,
+                    "min": 0,
+                    "max": -1,
+                    "expected": -1,
+                    "reference": -1
+                }
+
+                one_data_set["name"] = output_names[output_name]
+                one_data_set["inputs"] = inputs
+                one_data_set["output"] = output
+                data_sets.append(one_data_set.copy())
+
+            metric_id = LastMetricId.get_next_id()
+            MetricChart(chart_name=chart_name,
+                        metric_id=metric_id,
+                        internal_chart_name=modified_internal_chart_name,
+                        data_sets=json.dumps(data_sets),
+                        leaf=True,
+                        description=description,
+                        owner_info=owner_info,
+                        source=source,
+                        positive=positive,
+                        y1_axis_title=y1_axis_title,
+                        visualization_unit=y1_axis_title,
+                        metric_model_name=model_name,
+                        platform=platform,
+                        work_in_progress=False).save()
+
+            print ("Metric id: {}".format(metric_id))
+            print ("Data sets: {}".format(data_sets))
+            for i in data_sets:
+                print i
+
+    # Alibaba rdma Bandwidth and packet rates charts
+
+    internal_chart_names = OrderedDict([
+        ("alibaba_rdma_nfcp_f1_2_mtu_1500_write_bandwidth", {"fcp": False, "mtu":1500,"mode":"write", "field": "bandwidth"}),
+        ("alibaba_rdma_nfcp_f1_2_mtu_1500_read_bandwidth", {"fcp": False, "mtu":1500, "mode": "read", "field": "bandwidth"}, ),
+        ("alibaba_rdma_nfcp_f1_2_mtu_9000_write_bandwidth", {"fcp": False, "mtu":9000, "mode": "write", "field": "bandwidth"}),
+        ("alibaba_rdma_nfcp_f1_2_mtu_9000_read_bandwidth", {"fcp": False, "mtu":9000, "mode": "read", "field": "bandwidth"}),
+        ("alibaba_rdma_fcp_f1_2_mtu_1500_write_bandwidth", {"fcp": True, "mtu": 1500, "mode": "write", "field": "bandwidth"}),
+        ("alibaba_rdma_fcp_f1_2_mtu_1500_read_bandwidth", {"fcp": True, "mtu": 1500, "mode": "read", "field": "bandwidth"}),
+        ("alibaba_rdma_fcp_f1_2_mtu_9000_write_bandwidth", {"fcp": True, "mtu": 9000, "mode": "write", "field": "bandwidth"}),
+        ("alibaba_rdma_fcp_f1_2_mtu_9000_read_bandwidth", {"fcp": True, "mtu": 9000, "mode": "read", "field": "bandwidth"}),
+        ("alibaba_rdma_nfcp_f1_2_mtu_1500_write_packet_rate", {"fcp": False, "mtu": 1500, "mode": "write", "field": "packet_size"}),
+        ("alibaba_rdma_nfcp_f1_2_mtu_1500_read_packet_rate", {"fcp": False, "mtu": 1500, "mode": "read", "field": "packet_size"}),
+        ("alibaba_rdma_nfcp_f1_2_mtu_9000_write_packet_rate", {"fcp": False, "mtu": 9000, "mode": "write", "field": "packet_size"}),
+        ("alibaba_rdma_nfcp_f1_2_mtu_9000_read_packet_rate", {"fcp": False, "mtu": 9000, "mode": "read", "field": "packet_size"}),
+        ("alibaba_rdma_fcp_f1_2_mtu_1500_write_packet_rate", {"fcp": True, "mtu": 1500, "mode": "write", "field": "packet_size"}),
+        ("alibaba_rdma_fcp_f1_2_mtu_1500_read_packet_rate", {"fcp": True, "mtu": 1500, "mode": "read", "field": "packet_size"}),
+        ("alibaba_rdma_fcp_f1_2_mtu_9000_write_packet_rate", {"fcp": True, "mtu": 9000, "mode": "write", "field": "packet_size"}),
+        ("alibaba_rdma_fcp_f1_2_mtu_9000_read_packet_rate", {"fcp": True, "mtu": 9000, "mode": "read", "field": "packet_size"})
+    ])
+    model_name = "AlibabaRdmaPerformance"
+    description = "TBD"
+    owner_info = "Manu K S  (manu.ks@fungible.com)"
+    positive = False
+    platform = FunPlatform.F1
+
+    for internal_chart_name in internal_chart_names:
+        dict_data = internal_chart_names[internal_chart_name]
+        fcp = dict_data['fcp']
+        mtu = dict_data['mtu']
+        mode = dict_data['mode']
+        field = dict_data['field']
+        if field == "bandwidth":
+            y1_axis_title = PerfUnit.UNIT_GBITS_PER_SEC
+            output_name = "output_{}_bandwidth".format(mode)
+            chart_name = "IB {} {} {} bandwidth".format(mode, fcp, mtu)
+
+        elif field == "packet_size":
+            y1_axis_title = PerfUnit.UNIT_MPPS
+            output_name = "output_{}_msg_rate".format(mode)
+            chart_name = "IB {} {} {} message rate".format(mode, fcp, mtu)
+
+        if mtu == 1500:
+            bw_size_list = [1, 128, 256, 512, 1024, 4096]
+        elif mtu == 9000:
+            bw_size_list = [4096]
+
+        if mode == 'write':
+            source = "https://github.com/fungible-inc/Integration/blob/93cbceb27e5be0dfb3b79325c813d36789c5fe3d/fun_test/" \
+                     "scripts/networking/funcp/rdma_write_perf.py"
+        else:
+            source = ""
+
+        qp_list = [1, 2, 4, 8, 16, 32]
+        for bw_size in bw_size_list:
+            data_sets = []
+            internal_chart_name_size = internal_chart_name + "_size_{}".format(bw_size)
+            chart_name_size = chart_name + " size{}".format(bw_size)
+            for qp in qp_list:
+                one_data_set = {}
+                inputs = {
+                    "input_size_bandwidth": bw_size,
+                    "input_platform": platform,
+                    "input_operation": mode,
+                    "input_size_latency": -1,
+                    "input_fcp": fcp,
+                    "input_qp": qp,
+                    "input_mtu": mtu
+                }
+
+                output = {
+                    "name": output_name,
+                    "unit": y1_axis_title,
+                    "min": 0,
+                    "max": -1,
+                    "expected": -1,
+                    "reference": -1
+                }
+                name = "qp {}".format(qp)
+                one_data_set["name"] = name
+                one_data_set["inputs"] = inputs
+                one_data_set["output"] = output
+                data_sets.append(one_data_set.copy())
+
+            metric_id = LastMetricId.get_next_id()
+            MetricChart(chart_name=chart_name_size,
+                        metric_id=metric_id,
+                        internal_chart_name=internal_chart_name_size,
+                        data_sets=json.dumps(data_sets),
+                        leaf=True,
+                        description=description,
+                        owner_info=owner_info,
+                        source=source,
+                        positive=positive,
+                        y1_axis_title=y1_axis_title,
+                        visualization_unit=y1_axis_title,
+                        metric_model_name=model_name,
+                        platform=platform,
+                        work_in_progress=False).save()
+
+            print ("Metric id: {}".format(metric_id))
+            print ("Data sets: {}".format(data_sets))
+            for i in data_sets:
+                print i
