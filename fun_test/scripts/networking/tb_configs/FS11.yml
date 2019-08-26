@@ -40,7 +40,7 @@ nu2:
 
 # HU host - the keyword must start with "hu"
 hu:
-  hostname: poc-server-05
+  hostname: poc-server-10
   username: localadmin
   password: Precious1*
   mgmt_interface: eno1
@@ -66,7 +66,7 @@ hu:
           mac_addr: 00:de:ad:be:ef:21
 
 hu2:
-  hostname: poc-server-10
+  hostname: poc-server-05
   username: localadmin
   password: Precious1*
   mgmt_interface: eno1
