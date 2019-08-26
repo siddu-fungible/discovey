@@ -1,5 +1,17 @@
 <div class="component">
 
+  <span class="hover-cell"><span [innerHtml]="currentDescription  | safeHtml"></span>&nbsp;
+    <i class="fa fa-pencil hover-icon" style="font-size:14px;" (click)="onEditDescription(testBed)"></i>&nbsp;
+
+    <ng-container *ngIf="editingDescription">
+      <textarea rows="1" [(ngModel)]="currentDescription" style="min-width: 100%;"></textarea>
+      <div style="display: flex; justify-content: flex-start; align-items: center">
+        <span><i class="fa fa-check fa-fw tick-color" (click)="editingDescription = false"></i></span>
+        <span><i class="fa fa-times fa-fw close-color" (click)="currentDescription = originalDescription; editingDescription = false"></i></span>
+      </div>
+    </ng-container>
+
+  </span>
   <button class="fun-button-add" (click)="onAddScript()">Add a script
   </button>
 

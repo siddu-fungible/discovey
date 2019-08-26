@@ -45,8 +45,12 @@ export class SuiteEditorComponent implements OnInit {
 
   customTestBedSpecFormErrorMessage = null;
   currentScriptPath: string = null;
+  currentDescription: string = "Some suite name";
+  originalDescription: string = null;
   customTestBedSpecForm = null;
   customTestBedValidated = null;
+
+  editingDescription: boolean = false;
 
   constructor(private testBedService: TestBedService, private modalService: NgbModal) {
 
@@ -340,5 +344,10 @@ export class SuiteEditorComponent implements OnInit {
 
   onCancelNewSuiteEntry() {
     this.addingScript = false;
+  }
+
+  onEditDescription() {
+    this.editingDescription = true;
+    this.originalDescription = this.currentDescription;
   }
 }

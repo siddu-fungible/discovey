@@ -664,7 +664,6 @@ class Suite(models.Model):
     name = models.TextField(default="TBD")
     categories = JSONField(default=[])
     sub_categories = JSONField(default=[])
-
     short_description = models.TextField(default="")
     long_description = models.TextField(default="")
     tags = JSONField(default=[])

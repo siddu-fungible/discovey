@@ -69,3 +69,10 @@ input[disabled].fun-form-input  {
 .fun-panel-body {
   padding: 5px;
 }
+
+.hover-cell .hover-icon {
+  visibility: hidden;
+}
+.hover-cell:hover .hover-icon {
+  visibility: visible;
+}
