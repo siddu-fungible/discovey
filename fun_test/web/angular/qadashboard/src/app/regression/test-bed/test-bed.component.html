@@ -10,17 +10,17 @@
           <div class="card-body">
             <table class="test-bed-table table-nonfluid">
               <tr>
-                <th class="text-center" rowspan="2" style="border: black solid 1px">Name</th>
-                <th class="text-center" rowspan="2" style="border: black solid 1px">Description</th>
-                <th class="text-center" colspan="2" style="border: black solid 1px">Regression lock</th>
-                <th class="text-center" colspan="3" style="border: black solid 1px">Manual lock</th>
+                <th class="text-center test-bed-header" rowspan="2">Name</th>
+                <th class="text-center test-bed-header" rowspan="2">Description</th>
+                <th class="text-center test-bed-header" colspan="2"><i class="fa fa-cogs" style="font-size:14px"></i>&nbsp;Regression lock</th>
+                <th class="text-center test-bed-header" colspan="3"><i class="fa fa-male" style="font-size: 14px"></i>&nbsp;Manual lock</th>
               </tr>
               <tr>
-                <th class="text-center" style="border-bottom: black solid 1px; border-right: black solid 1px">Status</th>
-                <th class="text-center" style="border-bottom: black solid 1px; border-right: black solid 1px">Locked by</th>
-                <th class="text-center" style="border-bottom: black solid 1px; border-right: black solid 1px">Status</th>
-                <th class="text-center" style="border-bottom: black solid 1px; border-right: black solid 1px">Expiration time</th>
-                <th class="text-center" style="border-bottom: black solid 1px; border-right: black solid 1px">Locked by</th>
+                <th class="text-center test-bed-subheader">Status</th>
+                <th class="text-center test-bed-subheader">Locked by</th>
+                <th class="text-center test-bed-subheader">Status</th>
+                <th class="text-center test-bed-subheader">Expiration time</th>
+                <th class="text-center test-bed-subheader">Locked by</th>
               </tr>
 
               <tr *ngFor="let testBed of testBeds">
