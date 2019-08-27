@@ -2,6 +2,7 @@ from lib.system.fun_test import fun_test
 import os
 import types, collections, json, commentjson
 from pathos.multiprocessing import ProcessingPool, cpu_count
+from pathos.threading import ThreadPool
 import uuid
 
 
@@ -49,8 +50,11 @@ class MultiProcessingTasks:
         self.task_list.append((func, func_args, func_kwargs, task_key))
 
     @fun_test.safe
-    def run(self, max_parallel_processes=cpu_count(), parallel=True):
-        p = ProcessingPool(nodes=max_parallel_processes)
+    def run(self, max_parallel_processes=cpu_count(), parallel=True, threading=False):
+        if threading:
+            p = ThreadPool(nodes=max_parallel_processes)
+        else:
+            p = ProcessingPool(nodes=max_parallel_processes)
         p_func = p.apipe if parallel else p.pipe
 
         for func_args in self.task_list:
