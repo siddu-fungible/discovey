@@ -67,7 +67,8 @@ input[disabled].fun-form-input  {
 }
 
 .fun-panel-body {
-  padding: 5px;
+  padding: 10px
+
 }
 
 .fun-attribute {

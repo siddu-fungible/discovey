@@ -22,7 +22,7 @@
   </div>
 
 
-  <div style="display: flex; flex-direction: row;">
+  <div *ngIf="!addingScript" style="display: flex; flex-direction: row;">
     <button class="fun-button-add" (click)="onAddScript()">Add a script</button>
     <button *ngIf="!customTestBedValidated" class="fun-button-add" (click)="onAddCustomTestBedSpec(customTestBedSpecModalContent)">Add custom test-bed spec</button>
     <button *ngIf="customTestBedValidated" class="fun-button-add" (click)="onEditCustomTestBedSpec(customTestBedSpecModalContent)">Edit custom test-bed spec</button>
@@ -51,7 +51,7 @@
         </div>
       </form>
 
-      <span class="fun-cancel-link" (click)="onCancelNewSuiteEntry()">Cancel</span> &nbsp;
+      <span class="fun-cancel-link" (click)="onCancelNewSuiteEntry()">Cancel</span>
       <button class="fun-button-submit" [ngClass]="{'fun-button-disabled': !currentScriptPath}" (click)="onSubmitNewSuiteEntry()">Submit</button>
     </div>
 
