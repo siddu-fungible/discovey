@@ -79,7 +79,7 @@
                       <span class="badge badge-danger" *ngIf="manualStatus[testBed.name].manualLock"> Expired</span>
                       &nbsp;
                       <span class="pseudo-anchor"
-                            (click)="currentTestBed = testBed; onExtendTime(testBed)"> Extend slot</span>
+                            (click)="currentTestBed = testBed; onExtendTime(testBed)"> Extend slot &nbsp;</span>
                       <span class="pseudo-anchor" (click)="currentTestBed=testBed; onAddTime(testBed)">Add time</span>
 
                     </ng-container>
@@ -143,12 +143,12 @@
                 </td>
               </tr>
               <tr>
-                <span class="fun-cancel-link" (click)="onCancelLockPanel()">Cancel</span> &nbsp;
-                <button *ngIf="currentEditMode === EditMode.MANUAL_LOCK_INITIAL " class="btn btn-sm btn-outline-success"
+                <span class="fun-cancel-link" (click)="onCancelLockPanel()">Cancel</span>
+                <button *ngIf="currentEditMode === EditMode.MANUAL_LOCK_INITIAL " class="fun-button-submit"
                         (click)="onLockSubmit()"> Submit
                 </button>
                 <button *ngIf="currentEditMode === EditMode.MANUAL_LOCK_UPDATE_EXPIRATION "
-                        class="btn btn-sm btn-outline-success" (click)="onExtendTimeSubmit()"> Submit
+                        class="fun-button-submit" (click)="onExtendTimeSubmit()"> Submit
                 </button>
               </tr>
             </table>
@@ -159,8 +159,8 @@
               <input type="number" m [(ngModel)]="addedTime">
             </div>
             <div style="padding: 5px">
-              <span class="fun-cancel-link" (click)="onCancelLockPanel()">Cancel</span> &nbsp;
-              <button class="fun-button-submit">Submit
+              <span class="fun-cancel-link" (click)="onCancelLockPanel()">Cancel</span>
+              <button class="fun-button-submit" (click)="onAddTimeSubmit()">Submit
               </button>
             </div>
 
