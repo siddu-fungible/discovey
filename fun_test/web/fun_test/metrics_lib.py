@@ -158,11 +158,11 @@ class MetricLib():
 
     def create_chart(self, **kwargs):
         metric_id = LastMetricId.get_next_id()
-        MetricChart(chart_name=kwargs["chart_name"],
+        chart = MetricChart(chart_name=kwargs["chart_name"],
                     metric_id=metric_id,
-                    internal_chart_name=kwargs["internal_chart_name"],
+                    internal_chart_name=metric_id,
                     data_sets=json.dumps(kwargs["data_sets"]),
-                    leaf=True,
+                    leaf=kwargs["leaf"],
                     description=kwargs["description"],
                     owner_info=kwargs["owner_info"],
                     source=kwargs["source"],
@@ -171,10 +171,16 @@ class MetricLib():
                     visualization_unit=kwargs["visualization_unit"],
                     metric_model_name=kwargs["metric_model_name"],
                     base_line_date=kwargs["base_line_date"],
-                    work_in_progress=False).save()
-        MileStoneMarkers(metric_id=metric_id,
-                         milestone_date=datetime(year=2018, month=9, day=16),
-                         milestone_name="Tape-out").save()
+                    work_in_progress=kwargs["work_in_progress"],
+                    children=kwargs["children"],
+                    jira_ids=kwargs["jira_ids"],
+                    platform=kwargs["platform"],
+                    peer_ids=kwargs["peer_ids"],
+                    creator=kwargs["creator"],
+                    workspace_ids=kwargs["workspace_ids"])
+        chart.save()
+        return chart
+
 
     def set_inputs_data_sets(self, data_sets, **kwargs):
         for data_set in data_sets:
@@ -275,6 +281,7 @@ class MetricLib():
                         if jira_info.fields.status.name in closed_status:
                             print chart.chart_name, jira_id
                             self.delete_jira_info(chart=chart, jira_id=jira_id)
+
 
 if __name__ == "__main__":
     ml = MetricLib()

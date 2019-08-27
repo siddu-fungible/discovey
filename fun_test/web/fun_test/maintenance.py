@@ -12,6 +12,7 @@ from web.fun_test.metrics_lib import MetricLib
 from web.fun_test.models import *
 
 METRICS_BASE_DATA_FILE = WEB_ROOT_DIR + "/metrics.json"
+ml = MetricLib()
 
 if __name__ == "__main__rand_read_qd_multi_host":
     internal_read_chart_names = ["rand_read_qd_multi_host_nvmetcp_output_iops",
@@ -35,7 +36,8 @@ if __name__ == "__main__rand_read_qd_multi_host":
                         "nhosts", "vol_12")
                 one_data_set = {}
                 one_data_set["name"] = "qd128"
-                one_data_set["inputs"] = {"input_platform": FunPlatform.F1, "input_fio_job_name": "fio_tcp_randread_blt_32_4_vol_12"}
+                one_data_set["inputs"] = {"input_platform": FunPlatform.F1,
+                                          "input_fio_job_name": "fio_tcp_randread_blt_32_4_vol_12"}
                 one_data_set["output"] = {"name": "output_read_iops", "min": 0, "max": -1, "expected": -1,
                                           "reference": -1,
                                           "unit": PerfUnit.UNIT_OPS}
@@ -163,7 +165,6 @@ if __name__ == "__main__rand_read_qd_multi_host":
                         platform=FunPlatform.F1).save()
     print "added charts f0r 2,4,8 volumes"
 
-
 if __name__ == "__main_s1_teramarks__":
     with open(METRICS_BASE_DATA_FILE, "r") as f:
         metrics = json.load(f)
@@ -184,10 +185,10 @@ if __name__ == "__main_s1_teramarks__":
                 result = set_internal_name(tera_mark)
                 print json.dumps(result)
 
-
 if __name__ == "__main_l4_firewall__":
     internal_chart_names = ["l4_firewall_flow_128m_flows_throughput", "l4_firewall_flow_128m_flows_pps",
-                            "l4_firewall_flow_128m_flows_latency_full_load", "l4_firewall_flow_128m_flows_latency_half_load"]
+                            "l4_firewall_flow_128m_flows_latency_full_load",
+                            "l4_firewall_flow_128m_flows_latency_half_load"]
     for internal_chart_name in internal_chart_names:
         chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
         temp_data_sets = json.loads(chart.data_sets)
@@ -291,38 +292,38 @@ if __name__ == "__main__underlay":
 
 if __name__ == "__main_inspur__":
     internal_chart_names = OrderedDict([  # read iops
-                                        ("pocs_inspur_8111_8k_rand_read_iodepth_1_iops", 1),
-                                        ("pocs_inspur_8111_8k_rand_read_iodepth_8_iops", 8),
-                                        ("pocs_inspur_8111_8k_rand_read_iodepth_16_iops", 16),
-                                        ("pocs_inspur_8111_8k_rand_read_iodepth_32_iops", 32),
-                                        ("pocs_inspur_8111_8k_rand_read_iodepth_64_iops", 64),
-                                        ("pocs_inspur_8111_8k_rand_read_iodepth_96_iops", 96),
-                                        ("pocs_inspur_8111_8k_rand_read_iodepth_128_iops", 128),
-                                        # write iops
-                                        ("pocs_inspur_8111_8k_rand_write_iodepth_1_iops", 1),
-                                        ("pocs_inspur_8111_8k_rand_write_iodepth_8_iops", 8),
-                                        ("pocs_inspur_8111_8k_rand_write_iodepth_16_iops", 16),
-                                        ("pocs_inspur_8111_8k_rand_write_iodepth_32_iops", 32),
-                                        ("pocs_inspur_8111_8k_rand_write_iodepth_64_iops", 64),
-                                        ("pocs_inspur_8111_8k_rand_write_iodepth_96_iops", 96),
-                                        ("pocs_inspur_8111_8k_rand_write_iodepth_128_iops", 128),
-                                        # read latency
-                                        ("pocs_inspur_8111_8k_rand_read_iodepth_1_latency", 1),
-                                        ("pocs_inspur_8111_8k_rand_read_iodepth_8_latency", 8),
-                                        ("pocs_inspur_8111_8k_rand_read_iodepth_16_latency", 16),
-                                        ("pocs_inspur_8111_8k_rand_read_iodepth_32_latency", 32),
-                                        ("pocs_inspur_8111_8k_rand_read_iodepth_64_latency", 64),
-                                        ("pocs_inspur_8111_8k_rand_read_iodepth_96_latency", 96),
-                                        ("pocs_inspur_8111_8k_rand_read_iodepth_128_latency", 128),
-                                        # write latency
-                                        ("pocs_inspur_8111_8k_rand_write_iodepth_1_latency", 1),
-                                        ("pocs_inspur_8111_8k_rand_write_iodepth_8_latency", 8),
-                                        ("pocs_inspur_8111_8k_rand_write_iodepth_16_latency", 16),
-                                        ("pocs_inspur_8111_8k_rand_write_iodepth_32_latency", 32),
-                                        ("pocs_inspur_8111_8k_rand_write_iodepth_64_latency", 64),
-                                        ("pocs_inspur_8111_8k_rand_write_iodepth_96_latency", 96),
-                                        ("pocs_inspur_8111_8k_rand_write_iodepth_128_latency", 128),
-                                        ])
+        ("pocs_inspur_8111_8k_rand_read_iodepth_1_iops", 1),
+        ("pocs_inspur_8111_8k_rand_read_iodepth_8_iops", 8),
+        ("pocs_inspur_8111_8k_rand_read_iodepth_16_iops", 16),
+        ("pocs_inspur_8111_8k_rand_read_iodepth_32_iops", 32),
+        ("pocs_inspur_8111_8k_rand_read_iodepth_64_iops", 64),
+        ("pocs_inspur_8111_8k_rand_read_iodepth_96_iops", 96),
+        ("pocs_inspur_8111_8k_rand_read_iodepth_128_iops", 128),
+        # write iops
+        ("pocs_inspur_8111_8k_rand_write_iodepth_1_iops", 1),
+        ("pocs_inspur_8111_8k_rand_write_iodepth_8_iops", 8),
+        ("pocs_inspur_8111_8k_rand_write_iodepth_16_iops", 16),
+        ("pocs_inspur_8111_8k_rand_write_iodepth_32_iops", 32),
+        ("pocs_inspur_8111_8k_rand_write_iodepth_64_iops", 64),
+        ("pocs_inspur_8111_8k_rand_write_iodepth_96_iops", 96),
+        ("pocs_inspur_8111_8k_rand_write_iodepth_128_iops", 128),
+        # read latency
+        ("pocs_inspur_8111_8k_rand_read_iodepth_1_latency", 1),
+        ("pocs_inspur_8111_8k_rand_read_iodepth_8_latency", 8),
+        ("pocs_inspur_8111_8k_rand_read_iodepth_16_latency", 16),
+        ("pocs_inspur_8111_8k_rand_read_iodepth_32_latency", 32),
+        ("pocs_inspur_8111_8k_rand_read_iodepth_64_latency", 64),
+        ("pocs_inspur_8111_8k_rand_read_iodepth_96_latency", 96),
+        ("pocs_inspur_8111_8k_rand_read_iodepth_128_latency", 128),
+        # write latency
+        ("pocs_inspur_8111_8k_rand_write_iodepth_1_latency", 1),
+        ("pocs_inspur_8111_8k_rand_write_iodepth_8_latency", 8),
+        ("pocs_inspur_8111_8k_rand_write_iodepth_16_latency", 16),
+        ("pocs_inspur_8111_8k_rand_write_iodepth_32_latency", 32),
+        ("pocs_inspur_8111_8k_rand_write_iodepth_64_latency", 64),
+        ("pocs_inspur_8111_8k_rand_write_iodepth_96_latency", 96),
+        ("pocs_inspur_8111_8k_rand_write_iodepth_128_latency", 128),
+    ])
 
     owner_info = "Ravi Hulle (ravi.hulle@fungible.com)"
     source = "https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/storage/" \
@@ -410,7 +411,6 @@ if __name__ == "__main_inspur__":
         print ("Metric id: {}".format(metric_id))
         print ("Data sets: {}".format(data_sets))
 
-
 if __name__ == "__main_crypto_s1__":
     internal_chart_names = OrderedDict([("crypto_dp_tunnel_perf_S1", "pktsize: 354B"),
                                         ("crypto_ipsec_perf_S1", "pktsize: 354B")])
@@ -467,7 +467,6 @@ if __name__ == "__main_crypto_s1__":
                     work_in_progress=False).save()
         print ("Metric id: {}".format(metric_id))
         print ("Data sets: {}".format(data_sets))
-
 
 if __name__ == "__main_6vol_6f1_inspur__":
     # Add the 6 vol field for inspur 8_11 F1s = 6 charts
@@ -566,7 +565,6 @@ if __name__ == "__main__channel_parall_performance":
         chart.save()
     print "added channel parall chart for n=100"
 
-
 if __name__ == "__main__durable_ec_vol":
     internal_chart_names = OrderedDict([("durable_vol_ec_comp_nvme_tcp_write_iops", "nvme iops"),
                                         ("durable_vol_ec_comp_pcie_write_iops", "pcie iops"),
@@ -661,26 +659,26 @@ if __name__ == "__main__durable_ec_vol":
 
 if __name__ == "__main__inspur_charts":
     internal_chart_names = OrderedDict([  # read iops
-                                        ("pocs_inspur_8111_8k_rand_read_iodepth_32_iops_f1_6", 32),
-                                        ("pocs_inspur_8111_8k_rand_read_iodepth_64_iops_f1_6", 64),
-                                        ("pocs_inspur_8111_8k_rand_read_iodepth_96_iops_f1_6", 96),
-                                        ("pocs_inspur_8111_8k_rand_read_iodepth_128_iops_f1_6", 128),
-                                        # write iops
-                                        ("pocs_inspur_8111_8k_rand_write_iodepth_32_iops_f1_6", 32),
-                                        ("pocs_inspur_8111_8k_rand_write_iodepth_64_iops_f1_6", 64),
-                                        ("pocs_inspur_8111_8k_rand_write_iodepth_96_iops_f1_6", 96),
-                                        ("pocs_inspur_8111_8k_rand_write_iodepth_128_iops_f1_6", 128),
-                                        # read latency
-                                        ("pocs_inspur_8111_8k_rand_read_iodepth_32_latency_f1_6", 32),
-                                        ("pocs_inspur_8111_8k_rand_read_iodepth_64_latency_f1_6", 64),
-                                        ("pocs_inspur_8111_8k_rand_read_iodepth_96_latency_f1_6", 96),
-                                        ("pocs_inspur_8111_8k_rand_read_iodepth_128_latency_f1_6", 128),
-                                        # write latency
-                                        ("pocs_inspur_8111_8k_rand_write_iodepth_32_latency_f1_6", 32),
-                                        ("pocs_inspur_8111_8k_rand_write_iodepth_64_latency_f1_6", 64),
-                                        ("pocs_inspur_8111_8k_rand_write_iodepth_96_latency_f1_6", 96),
-                                        ("pocs_inspur_8111_8k_rand_write_iodepth_128_latency_f1_6", 128),
-                                        ])
+        ("pocs_inspur_8111_8k_rand_read_iodepth_32_iops_f1_6", 32),
+        ("pocs_inspur_8111_8k_rand_read_iodepth_64_iops_f1_6", 64),
+        ("pocs_inspur_8111_8k_rand_read_iodepth_96_iops_f1_6", 96),
+        ("pocs_inspur_8111_8k_rand_read_iodepth_128_iops_f1_6", 128),
+        # write iops
+        ("pocs_inspur_8111_8k_rand_write_iodepth_32_iops_f1_6", 32),
+        ("pocs_inspur_8111_8k_rand_write_iodepth_64_iops_f1_6", 64),
+        ("pocs_inspur_8111_8k_rand_write_iodepth_96_iops_f1_6", 96),
+        ("pocs_inspur_8111_8k_rand_write_iodepth_128_iops_f1_6", 128),
+        # read latency
+        ("pocs_inspur_8111_8k_rand_read_iodepth_32_latency_f1_6", 32),
+        ("pocs_inspur_8111_8k_rand_read_iodepth_64_latency_f1_6", 64),
+        ("pocs_inspur_8111_8k_rand_read_iodepth_96_latency_f1_6", 96),
+        ("pocs_inspur_8111_8k_rand_read_iodepth_128_latency_f1_6", 128),
+        # write latency
+        ("pocs_inspur_8111_8k_rand_write_iodepth_32_latency_f1_6", 32),
+        ("pocs_inspur_8111_8k_rand_write_iodepth_64_latency_f1_6", 64),
+        ("pocs_inspur_8111_8k_rand_write_iodepth_96_latency_f1_6", 96),
+        ("pocs_inspur_8111_8k_rand_write_iodepth_128_latency_f1_6", 128),
+    ])
 
     owner_info = "Ravi Hulle (ravi.hulle@fungible.com)"
     source = "https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/storage/" \
@@ -759,8 +757,7 @@ if __name__ == "__main__inspur_charts":
         print ("Metric id: {}".format(metric_id))
         print ("Data sets: {}".format(data_sets))
 
-
-if __name__ == "__main__":
+if __name__ == "__main__alibaba_rdma__":
 
     # Alibaba rdma latency charts
 
@@ -850,22 +847,38 @@ if __name__ == "__main__":
     # Alibaba rdma Bandwidth and packet rates charts
 
     internal_chart_names = OrderedDict([
-        ("alibaba_rdma_nfcp_f1_2_mtu_1500_write_bandwidth", {"fcp": False, "mtu":1500,"mode":"write", "field": "bandwidth"}),
-        ("alibaba_rdma_nfcp_f1_2_mtu_1500_read_bandwidth", {"fcp": False, "mtu":1500, "mode": "read", "field": "bandwidth"}, ),
-        ("alibaba_rdma_nfcp_f1_2_mtu_9000_write_bandwidth", {"fcp": False, "mtu":9000, "mode": "write", "field": "bandwidth"}),
-        ("alibaba_rdma_nfcp_f1_2_mtu_9000_read_bandwidth", {"fcp": False, "mtu":9000, "mode": "read", "field": "bandwidth"}),
-        ("alibaba_rdma_fcp_f1_2_mtu_1500_write_bandwidth", {"fcp": True, "mtu": 1500, "mode": "write", "field": "bandwidth"}),
-        ("alibaba_rdma_fcp_f1_2_mtu_1500_read_bandwidth", {"fcp": True, "mtu": 1500, "mode": "read", "field": "bandwidth"}),
-        ("alibaba_rdma_fcp_f1_2_mtu_9000_write_bandwidth", {"fcp": True, "mtu": 9000, "mode": "write", "field": "bandwidth"}),
-        ("alibaba_rdma_fcp_f1_2_mtu_9000_read_bandwidth", {"fcp": True, "mtu": 9000, "mode": "read", "field": "bandwidth"}),
-        ("alibaba_rdma_nfcp_f1_2_mtu_1500_write_packet_rate", {"fcp": False, "mtu": 1500, "mode": "write", "field": "packet_size"}),
-        ("alibaba_rdma_nfcp_f1_2_mtu_1500_read_packet_rate", {"fcp": False, "mtu": 1500, "mode": "read", "field": "packet_size"}),
-        ("alibaba_rdma_nfcp_f1_2_mtu_9000_write_packet_rate", {"fcp": False, "mtu": 9000, "mode": "write", "field": "packet_size"}),
-        ("alibaba_rdma_nfcp_f1_2_mtu_9000_read_packet_rate", {"fcp": False, "mtu": 9000, "mode": "read", "field": "packet_size"}),
-        ("alibaba_rdma_fcp_f1_2_mtu_1500_write_packet_rate", {"fcp": True, "mtu": 1500, "mode": "write", "field": "packet_size"}),
-        ("alibaba_rdma_fcp_f1_2_mtu_1500_read_packet_rate", {"fcp": True, "mtu": 1500, "mode": "read", "field": "packet_size"}),
-        ("alibaba_rdma_fcp_f1_2_mtu_9000_write_packet_rate", {"fcp": True, "mtu": 9000, "mode": "write", "field": "packet_size"}),
-        ("alibaba_rdma_fcp_f1_2_mtu_9000_read_packet_rate", {"fcp": True, "mtu": 9000, "mode": "read", "field": "packet_size"})
+        ("alibaba_rdma_nfcp_f1_2_mtu_1500_write_bandwidth",
+         {"fcp": False, "mtu": 1500, "mode": "write", "field": "bandwidth"}),
+        ("alibaba_rdma_nfcp_f1_2_mtu_1500_read_bandwidth",
+         {"fcp": False, "mtu": 1500, "mode": "read", "field": "bandwidth"},),
+        ("alibaba_rdma_nfcp_f1_2_mtu_9000_write_bandwidth",
+         {"fcp": False, "mtu": 9000, "mode": "write", "field": "bandwidth"}),
+        ("alibaba_rdma_nfcp_f1_2_mtu_9000_read_bandwidth",
+         {"fcp": False, "mtu": 9000, "mode": "read", "field": "bandwidth"}),
+        ("alibaba_rdma_fcp_f1_2_mtu_1500_write_bandwidth",
+         {"fcp": True, "mtu": 1500, "mode": "write", "field": "bandwidth"}),
+        ("alibaba_rdma_fcp_f1_2_mtu_1500_read_bandwidth",
+         {"fcp": True, "mtu": 1500, "mode": "read", "field": "bandwidth"}),
+        ("alibaba_rdma_fcp_f1_2_mtu_9000_write_bandwidth",
+         {"fcp": True, "mtu": 9000, "mode": "write", "field": "bandwidth"}),
+        ("alibaba_rdma_fcp_f1_2_mtu_9000_read_bandwidth",
+         {"fcp": True, "mtu": 9000, "mode": "read", "field": "bandwidth"}),
+        ("alibaba_rdma_nfcp_f1_2_mtu_1500_write_packet_rate",
+         {"fcp": False, "mtu": 1500, "mode": "write", "field": "packet_size"}),
+        ("alibaba_rdma_nfcp_f1_2_mtu_1500_read_packet_rate",
+         {"fcp": False, "mtu": 1500, "mode": "read", "field": "packet_size"}),
+        ("alibaba_rdma_nfcp_f1_2_mtu_9000_write_packet_rate",
+         {"fcp": False, "mtu": 9000, "mode": "write", "field": "packet_size"}),
+        ("alibaba_rdma_nfcp_f1_2_mtu_9000_read_packet_rate",
+         {"fcp": False, "mtu": 9000, "mode": "read", "field": "packet_size"}),
+        ("alibaba_rdma_fcp_f1_2_mtu_1500_write_packet_rate",
+         {"fcp": True, "mtu": 1500, "mode": "write", "field": "packet_size"}),
+        ("alibaba_rdma_fcp_f1_2_mtu_1500_read_packet_rate",
+         {"fcp": True, "mtu": 1500, "mode": "read", "field": "packet_size"}),
+        ("alibaba_rdma_fcp_f1_2_mtu_9000_write_packet_rate",
+         {"fcp": True, "mtu": 9000, "mode": "write", "field": "packet_size"}),
+        ("alibaba_rdma_fcp_f1_2_mtu_9000_read_packet_rate",
+         {"fcp": True, "mtu": 9000, "mode": "read", "field": "packet_size"})
     ])
     model_name = "AlibabaRdmaPerformance"
     description = "TBD"
@@ -951,3 +964,136 @@ if __name__ == "__main__":
             print ("Data sets: {}".format(data_sets))
             for i in data_sets:
                 print i
+
+
+def create_container(chart_name, owner_info, source, platform, base_line_date, workspace_ids):
+    data_sets = []
+    one_data_set = {}
+    one_data_set["name"] = "Scores"
+    one_data_set["output"] = {"min": 0, "max": 200}
+    data_sets.append(one_data_set)
+    metric_id = LastMetricId.get_next_id()
+    kwargs = {}
+    kwargs["chart_name"] = chart_name
+    kwargs["data_sets"] = json.dumps(data_sets)
+    kwargs["leaf"] = False
+    kwargs["description"] = "TBD"
+    kwargs["owner_info"] = owner_info
+    kwargs["source"] = source
+    kwargs["positive"] = True
+    kwargs["y1_axis_title"] = ""
+    kwargs["visualization_unit"] = ""
+    kwargs["metric_model_name"] = "MetricContainer"
+    kwargs["base_line_date"] = base_line_date
+    kwargs["work_in_progress"] = False
+    kwargs["children"] = "[]"
+    kwargs["jira_ids"] = "[]"
+    kwargs["platform"] = platform
+    kwargs["peer_ids"] = "[]"
+    kwargs["creator"] = TEAM_REGRESSION_EMAIL
+    kwargs["workspace_ids"] = workspace_ids
+
+    return ml.create_chart(**kwargs)
+
+def create_leaf(chart_name, data_sets, leaf, description, owner_info, source,
+                positive, y1_axis_title, visualization_unit, metric_model_name, base_line_date,
+                work_in_progress, children, jira_ids, platform, peer_ids, creator, workspace_ids):
+    kwargs = {}
+    kwargs["chart_name"] = chart_name
+    kwargs["data_sets"] = json.dumps(data_sets)
+    kwargs["leaf"] = leaf
+    kwargs["description"] = description
+    kwargs["owner_info"] = owner_info
+    kwargs["source"] = source
+    kwargs["positive"] = positive
+    kwargs["y1_axis_title"] = y1_axis_title
+    kwargs["visualization_unit"] = visualization_unit
+    kwargs["metric_model_name"] = metric_model_name
+    kwargs["base_line_date"] = base_line_date
+    kwargs["work_in_progress"] = work_in_progress
+    kwargs["children"] = json.dumps(children)
+    kwargs["jira_ids"] = json.dumps(jira_ids)
+    kwargs["platform"] = platform
+    kwargs["peer_ids"] = json.dumps(peer_ids)
+    kwargs["creator"] = creator
+    kwargs["workspace_ids"] = workspace_ids
+
+    return ml.create_chart(**kwargs)
+
+def new_dict(chart):
+    dict = OrderedDict()
+    dict["name"] = chart.internal_chart_name
+    dict["label"] = chart.chart_name
+    dict["metric_model_name"] = chart.metric_model_name
+    dict["children"] = []
+    return dict
+
+def get_dict(chart):
+    root_dict = new_dict(chart=chart)
+    children = json.loads(chart.children)
+    for child in children:
+        child_chart = MetricChart.objects.get(metric_id=int(child))
+        child_dict = get_dict(chart=child_chart)
+        root_dict["children"].append(child_dict)
+    return root_dict
+
+
+if __name__ == "__main__":
+    dag = {}
+    owner_info = "Radhika Naik (radhika.naik@fungible.com)"
+    source = "Unknown"
+    root_node = "Stripe Volume"
+    types = ["NVMe/TCP"]
+    hosts = ["Multi Host"]
+    operations = ["Random Read", "Random Write"]
+    qdepths = [16, 32, 64, 128, 256]
+    base_line_date = datetime(year=2019, month=8, day=20, minute=0, hour=0, second=0)
+    root_chart = create_container(chart_name=root_node, platform=FunPlatform.F1, owner_info=owner_info,
+                                  source=source, base_line_date=base_line_date, workspace_ids=[1527])
+    for type in types:
+        type_chart = create_container(chart_name=type, platform=FunPlatform.F1, owner_info=owner_info,
+                                      source=source, base_line_date=base_line_date, workspace_ids=[])
+        root_chart.add_child(child_id=type_chart.metric_id)
+        for host in hosts:
+            host_chart = create_container(chart_name=host, platform=FunPlatform.F1, owner_info=owner_info,
+                                          source=source, base_line_date=base_line_date, workspace_ids=[])
+            type_chart.add_child(child_id=host_chart.metric_id)
+            for operation in operations:
+                operation_chart = create_container(chart_name=operation, platform=FunPlatform.F1,
+                                                   owner_info=owner_info,
+                                                   source=source, base_line_date=base_line_date, workspace_ids=[])
+                host_chart.add_child(child_id=operation_chart.metric_id)
+                iops_chart = create_leaf(chart_name="IOPS", data_sets=[], leaf=True, description="TBD",
+                                         owner_info=owner_info, source=source,
+                                         positive=True, y1_axis_title=PerfUnit.UNIT_OPS,
+                                         visualization_unit=PerfUnit.UNIT_OPS,
+                                         metric_model_name="AlibabaPerformance",
+                                         base_line_date=base_line_date,
+                                         work_in_progress=False, children=[], jira_ids=[], platform=FunPlatform.F1,
+                                         peer_ids=[], creator=TEAM_REGRESSION_EMAIL,
+                                         workspace_ids=[])
+                iops_chart.fix_children_weights()
+                operation_chart.add_child(child_id=iops_chart.metric_id)
+                for qdepth in qdepths:
+                    chart_name = "Latency, QDepth=" + str(qdepth)
+                    latency_chart = create_leaf(chart_name=chart_name, data_sets=[], leaf=True, description="TBD",
+                                             owner_info=owner_info, source=source,
+                                             positive=False, y1_axis_title=PerfUnit.UNIT_USECS,
+                                             visualization_unit=PerfUnit.UNIT_USECS,
+                                             metric_model_name="AlibabaPerformance",
+                                             base_line_date=base_line_date,
+                                             work_in_progress=False, children=[], jira_ids=[], platform=FunPlatform.F1,
+                                             peer_ids=[], creator=TEAM_REGRESSION_EMAIL,
+                                             workspace_ids=[])
+                    latency_chart.fix_children_weights()
+                    operation_chart.add_child(child_id=latency_chart.metric_id)
+                operation_chart.fix_children_weights()
+            host_chart.fix_children_weights()
+        type_chart.fix_children_weights()
+    root_chart.fix_children_weights()
+    final_dict = get_dict(chart=root_chart)
+    print json.dumps(final_dict)
+
+
+
+

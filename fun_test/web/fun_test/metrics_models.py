@@ -211,6 +211,7 @@ class MetricChart(models.Model):
     platform = models.TextField(default=FunPlatform.F1)
     companion_charts = ArrayField(models.IntegerField(default=-1), default=[], blank=True)
     creator = models.TextField(default=TEAM_REGRESSION_EMAIL)
+    workspace_ids = JSONField(default=[])
 
     def __str__(self):
         return "{}: {} : {} : {}".format(self.internal_chart_name, self.chart_name, self.metric_model_name, self.metric_id)

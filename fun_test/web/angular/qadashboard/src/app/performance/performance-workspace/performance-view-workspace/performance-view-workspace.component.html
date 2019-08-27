@@ -3,8 +3,10 @@
 <div *ngIf="showWorkspace" class="card card-primary">
   <div class="card-header">
     <h5 class="card-title" style="margin: 0;">{{ workspace.workspace_name }}</h5>
-    <span class="pseudo-anchor" *ngIf="!showGrids" (click)="showGrids = true">Show charts</span>
-    <span class="pseudo-anchor" *ngIf="showGrids" (click)="showGrids = false">Hide charts</span> |
+    <span class="pseudo-anchor" *ngIf="workspace.interested_metrics.length > 0 && !showGrids"
+          (click)="showGrids = true">Show charts</span>
+    <span class="pseudo-anchor" *ngIf="workspace.interested_metrics.length > 0 && showGrids"
+          (click)="showGrids = false">Hide charts</span> |
     <span class="pseudo-anchor" *ngIf="workspace.interested_metrics.length > 0 && !reportGenerated"
           (click)="generateReport()">Show report
     </span>
