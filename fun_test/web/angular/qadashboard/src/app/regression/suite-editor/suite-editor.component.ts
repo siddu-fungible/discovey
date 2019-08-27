@@ -4,12 +4,9 @@ import {TestBedService} from "../test-bed/test-bed.service";
 import {Observable, of} from "rxjs";
 import {switchMap} from "rxjs/operators";
 import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
+import {SuiteEditorService, Suite, SuiteEntry} from "./suite-editor.service";
 
-class SuiteEntry {
-  path: string;
-  test_case_ids: number[] = null;
-  inputs: any = null
-}
+
 enum CustomAssetSelection {  // used by the Custom test-bed spec modal
   NUM,
   SPECIFIC
@@ -59,7 +56,7 @@ export class SuiteEditorComponent implements OnInit {
 
   tags: string = null;
 
-  constructor(private testBedService: TestBedService, private modalService: NgbModal) {
+  constructor(private testBedService: TestBedService, private modalService: NgbModal, private service: SuiteEditorService) {
 
   }
 
@@ -347,8 +344,21 @@ export class SuiteEditorComponent implements OnInit {
     this.addingScript = true;
   }
 
-  onSubmitNewSuiteEntry() {
+  _clearNewSuiteEntry() {
+    this.currentScriptPath = null;
+    this.inputs = null;
+    this.testCaseIds = null;
+  }
 
+  onSubmitNewSuiteEntry() {
+    console.log("Submitting new suite entry");
+    this.addingScript = false;
+    let suiteEntry = new SuiteEntry();
+    suiteEntry.script_path = this.currentScriptPath;
+    suiteEntry.inputs = this.inputs;
+    suiteEntry.test_case_ids = this.testCaseIds;
+    console.log(suiteEntry);
+    this._clearNewSuiteEntry();
   }
 
   onCancelNewSuiteEntry() {
