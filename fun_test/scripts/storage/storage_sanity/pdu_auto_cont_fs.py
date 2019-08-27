@@ -6,7 +6,6 @@ from lib.host.storage_controller import StorageController
 from lib.fun.fs import Fs
 from scripts.storage.storage_helper import *
 from lib.host.apc_pdu import ApcPdu
-from time import sleep
 
 '''
 Power cycle FS multiple times and each time check if basic functions are fine
@@ -22,7 +21,6 @@ class BLTVolumeSanityScript(FunTestScript):
         """)
 
     def setup(self):
-
 
         config_file = fun_test.get_script_name_without_ext() + ".json"
         fun_test.log("Config file being used: {}".format(config_file))
@@ -42,7 +40,7 @@ class BLTVolumeSanityScript(FunTestScript):
                 setattr(self, k, v)
 
         if not hasattr(self, "no_of_powercycles"):
-            self.no_of_powercycles= 100
+            self.no_of_powercycles = 100
 
         fun_test.log("Global Config: {}".format(self.__dict__))
 
@@ -68,46 +66,51 @@ class BLTVolumeSanityScript(FunTestScript):
         fun_test.simple_assert(expression=apc_info, context=None, message='apc info details are correctl fed')
         outlet_no = apc_info.pop("outlet_number")
 
-        print ('host_ip {} username {} password {}'.format(apc_info['host_ip'], apc_info['username'], apc_info['password']))
+        print ('host_ip {} username {} password {}'.format(apc_info['host_ip'], apc_info['username'],
+                                                           apc_info['password']))
 
         for pc_no in range(0, self.no_of_powercycles):
 
             fun_test.log("Iteation no: {} out of {}".format(pc_no + 1, self.no_of_powercycles))
-            apc_pdu = ApcPdu(host_ip = str(apc_info['host_ip']), username = str(apc_info['username']), password = str(apc_info['password']))
+            apc_pdu = ApcPdu(host_ip=str(apc_info['host_ip']), username=str(apc_info['username']),
+                             password=str(apc_info['password']))
 
-            sleep (5)
+            fun_test.sleep(message="Wait for few seconds after connect with apc power rack", seconds=5)
+
             apc_outlet_off_msg = apc_pdu.outlet_off(outlet_no)
             fun_test.log("APC PDU outlet off mesg {}".format(apc_outlet_off_msg))
-            sleep (5)
+            fun_test.sleep(message="Wait for few seconds after switching off fs outlet", seconds=5)
+
             apc_outlet_on_msg = apc_pdu.outlet_on(outlet_no)
             fun_test.log("APC PDU outlet on mesg {}".format(apc_outlet_on_msg))
-            sleep (5)
+            fun_test.sleep(message="Wait for few seconds after switching on fs outlet", seconds=5)
 
             apc_outlet_status_msg = apc_pdu.outlet_status(outlet_no)
 
             outlet_status = re.search(r"^olStatus.*Outlet\s+{}\s+.*(ON|OFF)".format(str(outlet_no)),
-                    apc_outlet_status_msg, re.IGNORECASE|re.DOTALL|re.MULTILINE);
+                                      apc_outlet_status_msg, re.IGNORECASE | re.DOTALL | re.MULTILINE);
             fun_test.simple_assert(expression=outlet_status.groups()[0] == 'On', context=None,
-                                    message="Power did not come back after pdu port reboot")
+                                   message="Power did not come back after pdu port reboot")
 
-            fun_test.log("Check if platform components are up")
-            sleep(180)
+            fun_test.sleep(message="Wait for 180 seconds before Checking if platform components are up", seconds=180)
+
             fun_test.log("Check for fpga if it is up")
-
             fun_test.test_assert(expression=fs.get_fpga().ensure_host_is_up(max_wait_time=180),
-                             context=fs.context, message="FPGA reachable after APC power-cycle")
+                                 context=fs.context, message="FPGA reachable after APC power-cycle")
             fun_test.log("fpga is up")
+
             fun_test.log("Check if BMC is up")
             fun_test.test_assert(expression=fs.get_bmc().ensure_host_is_up(max_wait_time=180),
-                             context=fs.context, message="BMC reachable after APC power-cycle")
+                                 context=fs.context, message="BMC reachable after APC power-cycle")
             fun_test.log("BMC is up")
+
             fun_test.log("Check if COMe is up")
             fun_test.test_assert(expression=fs.get_come().ensure_host_is_up(max_wait_time=180),
-                                                                        message="ComE reachable after APC power-cycle")
+                                 message="ComE reachable after APC power-cycle")
             fun_test.log("COMe is up")
 
             topology_helper.set_dut_parameters(dut_index=0, custom_boot_args=self.bootargs,
-                                           disable_f1_index=self.disable_f1_index)
+                                               disable_f1_index=self.disable_f1_index)
             fun_test.shared_variables['topology'] = topology_helper.expanded_topology
             topology = topology_helper.deploy()
             fun_test.test_assert(topology, "Topology deployed")
@@ -119,6 +122,7 @@ class BLTVolumeSanityScript(FunTestScript):
 
     def cleanup(self):
         pass
+
 
 class BltPciSanityTestcase(FunTestCase):
     def describe(self):
@@ -154,6 +158,7 @@ class PduMultiPowerCycle(BltPciSanityTestcase):
         2. Check if COMe, FPGA and BMC are up
         3. Update FS to latest FW
         4. Check if all the PFs are visible from COMe.''')
+
 
 if __name__ == "__main__":
     bltscript = BLTVolumeSanityScript()
