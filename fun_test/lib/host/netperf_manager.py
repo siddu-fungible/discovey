@@ -298,7 +298,7 @@ class NetperfManager:
                 if csi_perf_obj:
                     csi_perf_obj.stop(f1_index=0)
             else:
-                mp_task_obj.run(max_parallel_processes=num_processes*len(direction_list))
+                mp_task_obj.run(max_parallel_processes=num_processes*len(direction_list), threading=True)
 
             rdict = {}
             for direction in direction_list:
