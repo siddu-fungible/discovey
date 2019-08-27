@@ -66,3 +66,14 @@ table > tbody > tr > th, table > tbody > tr > td {
 .hover-cell:hover .hover-icon {
   visibility: visible;
 }
+
+.flex-container {
+  display: flex;
+  justify-content: flex-start;
+  flex-direction: row;
+  padding: 10px;
+}
+
+.flex-container > div {
+  margin: 10px;
+}

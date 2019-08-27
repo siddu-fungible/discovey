@@ -8,6 +8,7 @@ import {CommonService} from "../../services/common/common.service";
 import {error} from "util";
 import {TestBedService} from "./test-bed.service";
 import {UserService} from "../../services/user/user.service";
+import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
 
 enum EditMode {
   NONE = 0,
@@ -44,12 +45,14 @@ export class TestBedComponent implements OnInit {
   tempDescription: string;
 
 
+
   constructor(private regressionService: RegressionService,
               private apiService: ApiService,
               private loggerService: LoggerService,
               private commonService: CommonService,
               private service: TestBedService,
-              private userService: UserService
+              private userService: UserService,
+              private modalService: NgbModal
   ) { }
 
   ngOnInit() {
@@ -210,16 +213,18 @@ export class TestBedComponent implements OnInit {
 
   onExtendTime(testBed) {
     this.currentEditMode = this.EditMode.MANUAL_LOCK_UPDATE_EXPIRATION;
+    testBed['addClick'] = false;
     this.setLockPanelHeader(`for ${testBed.name}`);
 
   }
 
   onAddTime(testBed) {
     this.currentEditMode = this.EditMode.MANUAL_LOCK_ADD_TIME;
+    testBed['extendClick'] = false;
     this.setLockPanelHeader(`for ${testBed.name}`);
   }
 
-  onAddTimeSubmit() {
+  onAddTimeSubmit(testbed) {
     let url = "/api/v1/regression/test_beds/" + this.currentTestBed.id;
     let payload = {manual_lock_extension_hour: this.addedTime, manual_lock_extension_minute: 0};
     this.apiService.put(url, payload).subscribe(response => {
@@ -228,10 +233,11 @@ export class TestBedComponent implements OnInit {
       this.currentEditMode = EditMode.NONE;
     }, error => {
       this.loggerService.error("Unable to add time");
-    })
+    });
+    testbed['addClick'] = false;
   }
 
-  onExtendTimeSubmit() {
+  onExtendTimeSubmit(testBed) {
     let url = "/api/v1/regression/test_beds/" + this.currentTestBed.id;
     let payload = {manual_lock_extension_hour: this.schedulingTime.hour,
     manual_lock_extension_minute: this.schedulingTime.minute};
@@ -241,7 +247,8 @@ export class TestBedComponent implements OnInit {
       this.currentEditMode = EditMode.NONE;
     }, error => {
       this.loggerService.error("Unable to extend lock");
-    })
+    });
+    testBed['extendClick'] = false;
   }
 
 
@@ -275,12 +282,10 @@ export class TestBedComponent implements OnInit {
   }
 
 
-  onCancelLockPanel() {
+  onCancelLockPanel(testBed) {
     this.currentEditMode = this.EditMode.NONE;
-  }
-
-  onCloseLockPanel() {
-    this.currentEditMode = this.EditMode.NONE;
+    testBed['extendClick'] = false;
+    testBed['addClick'] = false;
   }
 
   getUsers() {

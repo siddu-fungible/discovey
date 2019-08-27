@@ -479,23 +479,24 @@ tr.text-center > th {
   border: 0.5px;
 }
 
-.link-span-secondary {
-  background-color: lightgrey;
+.fun-button-secondary {
+  background-color: #eee;
   border-radius: 3px;
   color: #274466;
   display: inline-block;
-  font: .75em/2 SFMono-Regular,Consolas,Liberation Mono,Menlo,Courier,monospace;
+  font-family: Arial;
+  font-color: #333;
   padding: 0 5px;
   position: relative;
   white-space: nowrap;
   border: 0.5px;
 }
 
-.link-span-secondary:hover {
+.fun-button-secondary:hover {
   cursor: pointer;
 }
 
-.link-span-secondary-active {
+.fun-button-secondary-active {
   background-color: darkgrey;
   color: white !important;
 }
