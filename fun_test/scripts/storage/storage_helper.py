@@ -562,7 +562,7 @@ class CollectStats(object):
         return output
 
     def collect_vol_stats(self, vol_details, output_file="/dev/null", interval=10, count=3, non_zero_stats_only=True,
-                          chunk=8192, threaded=False, command_timeout=DPCSH_COMMAND_TIMEOUT):
+                          chunk=8192, threaded=True, command_timeout=DPCSH_COMMAND_TIMEOUT):
         """
         :param output_file: File name in which the volume stats collected at every given interval for given number of
         counts in the table format
@@ -579,6 +579,7 @@ class CollectStats(object):
         :param non_zero_stats_only:
         :param threaded:
         :param command_timeout:
+        :param chunk:
         :return:
         """
         output = False
