@@ -70,3 +70,7 @@ input[disabled].fun-form-input  {
   padding: 5px;
 }
 
+.fun-attribute {
+  display: block;
+  margin: 5px;
+}

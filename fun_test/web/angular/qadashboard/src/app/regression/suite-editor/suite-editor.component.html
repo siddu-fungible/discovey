@@ -1,25 +1,33 @@
 <div class="component">
 
-  <div>
+  <div class="fun-attribute">
     <span class="fun-attribute-label">Suite name:</span>
     <app-textarea-input [initialValue]="name" (valueChanged)="onNameChangedEvent($event)"></app-textarea-input>
   </div>
 
-  <div>
+  <div class="fun-attribute">
     <span class="fun-attribute-label">Short description:</span>
     <app-textarea-input [initialValue]="shortDescription" (valueChanged)="onShortDescriptionChangedEvent($event)" [numRows]="4"></app-textarea-input>
   </div>
 
-
-
-  <div>
-    <button class="fun-button-add" (click)="onAddScript()">Add a script</button>
+  <div style="max-width: 800px;" class="fun-attribute">
+    <span class="fun-attribute-label">Categories:</span>
+    <ng-multiselect-dropdown style="display: inline-block" [placeholder]="'Select'" [data]="availableCategories" [settings]="dropDownSettings" [(ngModel)]="selectedCategories">
+    </ng-multiselect-dropdown>
   </div>
 
-  <span *ngIf="!customTestBedValidated" class="fun-action-link" (click)="onAddCustomTestBedSpec(customTestBedSpecModalContent)">Add custom test-bed spec
-  </span>
-  <span *ngIf="customTestBedValidated" class="fun-action-link" (click)="onEditCustomTestBedSpec(customTestBedSpecModalContent)">Edit custom test-bed spec
-  </span>
+  <div class="fun-attribute">
+    <span class="fun-attribute-label">Tags: (Comma separated)</span>
+    <input type="text" [(ngModel)]="tags">
+  </div>
+
+
+  <div style="display: flex; flex-direction: row;">
+    <button class="fun-button-add" (click)="onAddScript()">Add a script</button>
+    <button *ngIf="!customTestBedValidated" class="fun-button-add" (click)="onAddCustomTestBedSpec(customTestBedSpecModalContent)">Add custom test-bed spec</button>
+    <button *ngIf="customTestBedValidated" class="fun-button-add" (click)="onEditCustomTestBedSpec(customTestBedSpecModalContent)">Edit custom test-bed spec</button>
+  </div>
+
 
   <div class="fun-panel" *ngIf="addingScript">
     <div class="fun-panel-header">
@@ -102,7 +110,6 @@
                   *ngIf="customTestBedSpecForm.controls[_getAssetSelectionKey(flattenedAssetTypeName)].value == CustomAssetSelection.SPECIFIC">
                   <ng-multiselect-dropdown [placeholder]="'Select'"
                                            [data]="filterAssetsBySelectedTestBed(customTestBedSpecForm.controls.selectedTestBed?.value.name, flattenedAssetTypeNameMap[flattenedAssetTypeName].data)"
-                                           [data]="filterAssetsBySelectedTestBed(customTestBedSpecForm.controls.selectedTestBed?.value, flattenedAssetTypeNameMap[flattenedAssetTypeName].data)"
                                            formControlName="{{ _getSpecificAssetsKey(flattenedAssetTypeName) }}"
                                            [settings]="dropDownSettings">
                   </ng-multiselect-dropdown>

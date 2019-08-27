@@ -52,6 +52,12 @@ export class SuiteEditorComponent implements OnInit {
   customTestBedSpecForm = null;
   customTestBedValidated = null;
 
+  availableCategories: string [] = ["networking", "storage", "accelerators", "security", "system"];
+  availableSubCategories: string [] = ["general"];
+  selectedCategories: string [] = null;
+  selectedSubCategories: string [] = null;
+
+  tags: string = null;
 
   constructor(private testBedService: TestBedService, private modalService: NgbModal) {
 
@@ -261,7 +267,7 @@ export class SuiteEditorComponent implements OnInit {
 
   customTestBedSpecChanged(customTestBedSpec) {
     this.customTestBedSpec = customTestBedSpec;
-  }
+  }cd
 
   filterAssetsBySelectedTestBed(selectedTestBed, allAssets) {  // Only choose assets that belong to the selected test-bed
     return allAssets.filter(asset => asset.test_beds.indexOf(selectedTestBed) > -1).map(o => { return o.name });
@@ -271,12 +277,14 @@ export class SuiteEditorComponent implements OnInit {
     //console.log(this.customTestBedSpecForm.get(this._getAssetSelectionKey("dut")).value);
     //console.log(this.selectedTestBed.value);
      //console.log(this.selectedTestBed);
-    console.log(this.customTestBedSpecForm.get("selectedTestBed").value);
+    //console.log(this.customTestBedSpecForm.get("selectedTestBed").value);
     // console.log(this.customTestBedSpecForm.get("customDutSelection").value);
     // console.log(this.customTestBedSpecForm.get("numDuts").value);
     // console.log(this.customTestBedSpecForm.get("selectedDuts").value);
     //console.log(this.flattenedAssetTypeNames);
     //console.log(this.flattenedAssetTypeNameMap);
+    console.log(this.selectedCategories);
+    console.log(this.tags);
 
   }
 
@@ -354,5 +362,6 @@ export class SuiteEditorComponent implements OnInit {
   onShortDescriptionChangedEvent(shortDescription) {
     this.shortDescription = shortDescription;
   }
+
 
 }
