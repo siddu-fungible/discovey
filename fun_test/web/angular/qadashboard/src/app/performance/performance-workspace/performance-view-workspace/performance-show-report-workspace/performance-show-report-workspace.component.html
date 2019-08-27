@@ -1,0 +1,85 @@
+<div class="card" style="margin: 10px; padding: 5px;">
+  <b>Subject: </b><input style="max-width: 50%" type="text" [(ngModel)]="subject"/><br>
+  <div *ngFor="let interestedMetric of workspace.interested_metrics">
+    <div style="vertical-align: middle; width: 50%">
+      {{ interestedMetric.chart_name }} - {{ interestedMetric.lineage }}<br>
+      Link to chart: <a href="{{ interestedMetric.url }}" target="_blank">Link</a><br>
+      Comments: <textarea [(ngModel)]="interestedMetric.comments" style="width: 100%"></textarea>
+    </div>
+    <table class="table table-bordered" style="max-width: 50%; margin: 0">
+      <tr style="vertical-align: middle; border-bottom: solid black 1px">
+        <th rowspan="2">
+          Series name
+        </th>
+        <th rowspan="2">
+          Unit
+        </th>
+        <th rowspan="2">
+          Yesterday <br><span style="font-size: smaller">{{ interestedMetric.report[0].yesterdayDate }}</span>
+        </th>
+        <th rowspan="2">
+          Today <br><span style="font-size: smaller">{{ interestedMetric.report[0].todayDate }}</span>
+        </th>
+        <th rowspan="2">
+          Percentage change (today and yesterday)
+        </th>
+        <th rowspan="2">
+          Percentage change (last 2 values)
+        </th>
+        <th colspan="2">
+          History
+        </th>
+      </tr>
+      <tr style="vertical-align: middle">
+        <th>Date</th>
+        <th>Value</th>
+      </tr>
+      <ng-container *ngFor="let dataSet of interestedMetric.report">
+        <tr>
+          <td [attr.rowspan]="dataSet['rows']">
+            {{ dataSet.name }}
+          </td>
+          <td [attr.rowspan]="dataSet['rows']">
+            {{ dataSet.unit }}
+          </td>
+          <td [attr.rowspan]="dataSet['rows']">
+            {{ dataSet.yesterday }}
+          </td>
+          <td [attr.rowspan]="dataSet['rows']">
+            {{ dataSet.today }}
+          </td>
+          <td *ngIf="dataSet.percentage && interestedMetric.positive" [attr.rowspan]="dataSet['rows']"
+              [ngClass]="{'text-red': dataSet.percentage.includes('-'), 'text-green': dataSet.percentage.includes('+')}">
+            {{ dataSet.percentage }}
+          </td>
+          <td *ngIf="dataSet.percentage && !interestedMetric.positive" [attr.rowspan]="dataSet['rows']"
+              [ngClass]="{'text-green': dataSet.percentage.includes('-'), 'text-red': dataSet.percentage.includes('+')}">
+            {{ dataSet.percentage }}
+          </td>
+          <td *ngIf="dataSet.percentage_history && interestedMetric.positive" [attr.rowspan]="dataSet['rows']"
+              [ngClass]="{'text-red': dataSet.percentage_history.includes('-'), 'text-green': dataSet.percentage_history.includes('+')}">
+            {{ dataSet.percentage_history }}
+          </td>
+          <td *ngIf="dataSet.percentage_history && !interestedMetric.positive" [attr.rowspan]="dataSet['rows']"
+              [ngClass]="{'text-green': dataSet.percentage_history.includes('-'), 'text-red': dataSet.percentage_history.includes('+')}">
+            {{ dataSet.percentage_history }}
+          </td>
+        </tr>
+        <tr *ngFor="let data of dataSet['history']">
+          <td>{{ data.date }}</td>
+          <td>{{ data.value }}</td>
+        </tr>
+      </ng-container>
+    </table>
+    <div style="vertical-align: middle; width: 50%">
+      Bugs: <span
+      *ngFor="let jiraId of interestedMetric.jira_ids"><a href="{{ jiraUrl + '/' + jiraId }}" target="_blank">{{
+          jiraId }}</a></span>
+    </div>
+    <br>
+  </div>
+  <span>
+        <span class="fun-cancel-link" (click)="reportGenerated.emit(false)">Cancel</span>
+        <button class="fun-button-submit" (click)="sendReports()">Send report</button>
+    </span>
+</div>

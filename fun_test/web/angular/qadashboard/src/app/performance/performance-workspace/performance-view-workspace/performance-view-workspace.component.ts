@@ -145,14 +145,14 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
         return this.fetchData(metric, dateTime, "yesterday");
       }),
       switchMap(response => {
-        this.calculatePercentage(metric);
+        this.calculatePercentage(metric["data"]);
         metric["report"] = metric["data"];
         return of(true);
       }));
   }
 
-  calculatePercentage(metric): void {
-    for (let dataSet of metric["data"]) {
+  calculatePercentage(dataSets): void {
+    for (let dataSet of dataSets) {
       let percentage = "NA";
       if (dataSet["today"] && dataSet["yesterday"]) {
         let today = Number(dataSet["today"]);
@@ -252,6 +252,18 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
           }
         }
         dataSet["rows"] = dataSet["history"].length + 1;
+        let percentage = "NA";
+        if (dataSet["history"].length >= 2) {
+          let last_value = Number(dataSet["history"][0].value);
+          let penultimate_value = Number(dataSet["history"][1].value);
+          let percentNum = (((last_value - penultimate_value) / penultimate_value) * 100);
+          if (percentNum >= 0) {
+            percentage = "+" + percentNum.toFixed(2) + "%";
+          } else {
+            percentage = percentNum.toFixed(2) + "%";
+          }
+        }
+        dataSet["percentage_history"] = percentage;
       }
       return of(true);
     }));
@@ -270,7 +282,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
       switchMap(response => {
         return this.fetchHistory();
       })).subscribe(response => {
-        let t = new Date();
+      let t = new Date();
       let dateString = this.commonService.getShortDate(t);
       this.subject = "Performance status report - " + dateString;
       this.reportGenerated = true;
