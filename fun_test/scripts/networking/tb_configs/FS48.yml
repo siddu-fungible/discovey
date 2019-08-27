@@ -108,7 +108,7 @@ hu4:
   namespaces:	
     default:	
       interfaces:	
-      - hu1-f0:	
+        - hu1-f0:
           mac_addr: 00:de:ad:be:ef:11	
           ipv4_addr: 42.1.1.2	
           ipv4_netmask: 255.255.255.0	
