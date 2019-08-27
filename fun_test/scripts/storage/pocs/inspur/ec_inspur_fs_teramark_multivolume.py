@@ -631,7 +631,6 @@ class ECVolumeLevelTestcase(FunTestCase):
             self.nvme_io_queues = job_inputs["nvme_io_queues"]
         if "warmup_bs" in job_inputs:
             self.warm_up_fio_cmd_args["bs"] = job_inputs["warmup_bs"]
-            self.warm_up_fio_cmd_args["timeout"] = 7200
         if "post_results" in job_inputs:
             self.post_results = job_inputs["post_results"]
         else:
