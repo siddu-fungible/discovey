@@ -29,6 +29,12 @@
             border: solid 1px black;
             text-align: center;
         }
+        .text-green {
+            color: green;
+        }
+        .text-red {
+            color: red;
+        }
     </style>
 </head>
 <body>
@@ -69,9 +75,26 @@
         <td rowspan="{{ data_set.rows }}">
             {{ data_set.today }}
         </td>
-        <td rowspan="{{ data_set.rows }}">
+        {% if report.positive == true && '+' in data_set.percentage %}
+        <td class="text-green" rowspan="{{ data_set.rows }}">
             {{ data_set.percentage }}
         </td>
+        {% endif %}
+        {% if report.positive == true && '-' in data_set.percentage %}
+        <td class="text-red" rowspan="{{ data_set.rows }}">
+            {{ data_set.percentage }}
+        </td>
+        {% endif %}
+        {% if report.positive == false && '+' in data_set.percentage %}
+        <td class="text-red" rowspan="{{ data_set.rows }}">
+            {{ data_set.percentage }}
+        </td>
+        {% endif %}
+        {% if report.positive == false && '-' in data_set.percentage %}
+        <td class="text-green" rowspan="{{ data_set.rows }}">
+            {{ data_set.percentage }}
+        </td>
+        {% endif %}
     </tr>
     {% for data in data_set.history %}
     <tr class="all-border">

@@ -127,7 +127,6 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
       temp["yesterday"] = null;
       temp["unit"] = null;
       temp["percentage"] = null;
-      temp["positive"] = metric["positive"];
       temp["history"] = [];
       metric["data"].push(temp);
     }
@@ -180,6 +179,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
         for (let dataSet of metric["data"]) {
           if (dataSet["name"] == oneData["name"]) {
             dataSet[key] = oneData["value"];
+            dataSet[key + "Date"] = this.commonService.getPrettyLocalizeTime(oneData["date_time"]);
             dataSet["unit"] = oneData["unit"];
           }
         }
@@ -202,6 +202,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
         metric["jira_ids"] = response.data["jira_ids"];
         metric["selected"] = false;
         metric["report"] = null;
+        metric["positive"] = response.data["positive"];
         metric["data"] = [];
         metric["url"] = this.atomicUrl + "/" + metric["metric_id"];
       }, error => {
@@ -256,27 +257,6 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
     }));
   }
 
-  sendEmail(): any {
-    let payload = {};
-    let reports = [];
-    this.workspace.interested_metrics.forEach(metric => {
-      let report = {};
-      report["chart_name"] = metric["chart_name"];
-      report["lineage"] = metric["lineage"];
-      report["url"] = metric["url"];
-      report["comments"] = metric["comments"];
-      report["jira_ids"] = metric["jira_ids"];
-      report["report"] = metric["report"];
-      reports.push(report);
-    });
-    payload["reports"] = reports;
-    payload["email"] = this.email;
-    payload["subject"] = this.subject;
-    return this.apiService.post('/api/v1/performance/reports', payload).pipe(switchMap(response => {
-      return of(response.data);
-    }));
-  }
-
   generateReport(): void {
     new Observable(observer => {
       observer.next(true);
@@ -298,40 +278,6 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
       this.loggerService.error("Unable to generate report");
     });
 
-  }
-
-  saveComments(): any {
-    let payload = {};
-    payload["email"] = this.email;
-    payload["workspace_id"] = this.workspace.id;
-    payload["interested_metrics"] = this.workspace.interested_metrics;
-    return this.apiService.post("/api/v1/performance/workspaces/" + this.workspace.id + "/interested_metrics", payload).pipe(switchMap(response => {
-      return of(true);
-    }));
-  }
-
-  sendReports(): void {
-    new Observable(observer => {
-      observer.next(true);
-      //observer.complete();
-      return () => {
-      }
-    }).pipe(
-      switchMap(response => {
-        return this.saveComments();
-      }),
-      switchMap(response => {
-        return this.sendEmail();
-      })).subscribe(response => {
-      if (response["status"]) {
-        this.loggerService.success("sent report email successfully to " + this.email);
-      } else {
-        this.loggerService.error("sending email failed");
-      }
-
-    }, error => {
-      this.loggerService.error("sending email failed");
-    });
   }
 
 }

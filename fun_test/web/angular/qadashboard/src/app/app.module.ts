@@ -81,6 +81,8 @@ import {ModalModule} from "ngb-modal";
 import { UlErrorPanelComponent } from './ui-elements/ul-error-panel/ul-error-panel.component';
 import { AnnouncementFormComponent } from './performance/admin/announcement-form/announcement-form.component';
 import { MessagesPanelComponent } from './ui-elements/messages-panel/messages-panel.component';
+import { PerformanceShowChartsWorkspaceComponent } from './performance/performance-workspace/performance-view-workspace/performance-show-charts-workspace/performance-show-charts-workspace.component';
+import { PerformanceShowReportWorkspaceComponent } from './performance/performance-workspace/performance-view-workspace/performance-show-report-workspace/performance-show-report-workspace.component';
 
 
 @NgModule({
@@ -145,7 +147,9 @@ import { MessagesPanelComponent } from './ui-elements/messages-panel/messages-pa
     SuiteEditorComponent,
     UlErrorPanelComponent,
     AnnouncementFormComponent,
-    MessagesPanelComponent
+    MessagesPanelComponent,
+    PerformanceShowChartsWorkspaceComponent,
+    PerformanceShowReportWorkspaceComponent
   ],
   imports: [
     BsDropdownModule,
