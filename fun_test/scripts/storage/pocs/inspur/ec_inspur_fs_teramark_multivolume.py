@@ -1032,15 +1032,16 @@ class ECVolumeLevelTestcase(FunTestCase):
             # Starting the thread to collect the vp_utils stats and resource_bam stats for the current iteration
             if start_stats:
                 file_suffix = "iodepth_{}.txt".format(iodepth)
-                for func, arg in self.stats_collect_details.iteritems():
-                    self.stats_collect_details[func]["count"] = int(mpstat_count)
+                for index, stat_detail in enumerate(self.stats_collect_details):
+                    func = stat_detail.keys()[0]
+                    self.stats_collect_details[index][func]["count"] = int(mpstat_count)
                     if func == "vol_stats":
-                        self.stats_collect_details[func]["vol_details"] = vol_details
+                        self.stats_collect_details[index][func]["vol_details"] = vol_details
                 fun_test.log("Different stats collection thread details for the current IO depth {} before starting "
                              "them:\n{}".format(iodepth, self.stats_collect_details))
                 self.storage_controller.verbose = False
                 stats_obj = CollectStats(self.storage_controller)
-                stats_obj.start(file_suffix=file_suffix, **self.stats_collect_details)
+                stats_obj.start(file_suffix, self.stats_collect_details)
                 fun_test.log("Different stats collection thread details for the current IO depth {} after starting "
                              "them:\n{}".format(iodepth,self.stats_collect_details))
             else:

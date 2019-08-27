@@ -444,7 +444,7 @@ class CollectStats(object):
                              display_diff=True, command_timeout=DPCSH_COMMAND_TIMEOUT):
         output = False
         per_vp_stats_key = ["wus_received", "vp_wu_qdepth", "wus_sent"]
-        per_vp_stats_header = ["rx", "qd", "tx"]
+        per_vp_stats_header = ["rx", "lo_q", "hi_q", "tx"]
         column_headers = ["Cluster/Core"]
         for thread in range(4):
             for header in per_vp_stats_header:
@@ -482,40 +482,60 @@ class CollectStats(object):
                         else:
                             final_per_vp_stats = {}
 
-                    # Removing the Central Cluster(if needed) and the redundant entries
+                    # Removing the Central Cluster(if needed) and the redundant WU received and sent from the high queue
+                    loop_per_vp_stats = final_per_vp_stats if final_per_vp_stats else initial_per_vp_stats
                     filtered_initial_per_vp_stats = OrderedDict()
                     filtered_final_per_vp_stats = OrderedDict()
-                    for key in sorted(initial_per_vp_stats):
-                        if not include_cc:
-                            if not key.split(":")[0][2] == '8' and not key.split(":")[2][0] == '1':
-                                filtered_initial_per_vp_stats[key] = initial_per_vp_stats[key]
-                                if display_diff and key in final_per_vp_stats:
-                                    filtered_final_per_vp_stats[key] = final_per_vp_stats[key]
+                    for key in sorted(loop_per_vp_stats):
+                        if key.split(":")[0][2] == '8' and not include_cc:
+                            continue
+                        if display_diff:
+                            filtered_initial_per_vp_stats[key] = initial_per_vp_stats.get(key, {})
+                            filtered_final_per_vp_stats[key] = final_per_vp_stats.get(key, {})
                         else:
-                            if not key.split(":")[2][0] == '1':
-                                filtered_initial_per_vp_stats[key] = initial_per_vp_stats[key]
-                                if display_diff and key in final_per_vp_stats:
-                                    filtered_final_per_vp_stats[key] = final_per_vp_stats[key]
+                            filtered_final_per_vp_stats[key] = final_per_vp_stats.get(key, {})
 
                     processed_per_vp_stats = OrderedDict()
                     # Sorting the keys using the cluster ID(FA*0*:10:0[VP]) as the primary key and the
                     # core ID(FA0:*10*:0[VP]) as the secondary key
-                    for key in sorted(filtered_initial_per_vp_stats, key= lambda key: (int(key.split(":")[0][2]),
-                                                                                       int(key.split(":")[1]))):
+                    for key in sorted(filtered_final_per_vp_stats, key=lambda key: (int(key.split(":")[0][2]),
+                                                                                    int(key.split(":")[1]))):
                         cluster_id = key.split(":")[0][2]
                         core_id = (int(key.split(":")[1]) / 4) - 2
                         thread_id = int(key.split(":")[1]) % 4
+                        queue_id = int(key.split(":")[2][0])
+                        if queue_id == 1:
+                            continue
                         new_key = "{}/{}".format(cluster_id, core_id)
                         if new_key not in processed_per_vp_stats:
                             processed_per_vp_stats[new_key] = []
                         for subkey in per_vp_stats_key:
                             if display_diff:
-                                if key in filtered_final_per_vp_stats:
+                                if key in filtered_initial_per_vp_stats:
                                     processed_per_vp_stats[new_key].append(filtered_final_per_vp_stats[key][subkey])
                                     processed_per_vp_stats[new_key].append(filtered_final_per_vp_stats[key][subkey] -
                                                                            filtered_initial_per_vp_stats[key][subkey])
+                                else:
+                                    processed_per_vp_stats[new_key].append(filtered_final_per_vp_stats[key][subkey])
+                                    processed_per_vp_stats[new_key].append("N/A")
                             else:
-                                processed_per_vp_stats[new_key].append(filtered_initial_per_vp_stats[key][subkey])
+                                processed_per_vp_stats[new_key].append(filtered_final_per_vp_stats[key][subkey])
+                            # Add the high queue depth and its difference as well
+                            if subkey == "vp_wu_qdepth":
+                                nextkey = key.replace("0[VP]", "1[VP]")
+                                if display_diff:
+                                    if nextkey in filtered_initial_per_vp_stats:
+                                        processed_per_vp_stats[new_key].append(
+                                            filtered_final_per_vp_stats[nextkey][subkey])
+                                        processed_per_vp_stats[new_key].append(
+                                            filtered_final_per_vp_stats[nextkey][subkey] -
+                                            filtered_initial_per_vp_stats[nextkey][subkey])
+                                    else:
+                                        processed_per_vp_stats[new_key].append(
+                                            filtered_final_per_vp_stats[nextkey][subkey])
+                                        processed_per_vp_stats[new_key].append("N/A")
+                                else:
+                                    processed_per_vp_stats[new_key].append(filtered_final_per_vp_stats[nextkey][subkey])
 
                     table_data = build_simple_table(data=processed_per_vp_stats, column_headers=column_headers,
                                                     split_values_to_columns=True)
@@ -645,79 +665,85 @@ class CollectStats(object):
             fun_test.critical(str(ex))
         return output
 
-    def start(self, file_suffix, **stats_collect_details):
+    def start(self, file_suffix, stats_collect_details):
         try:
             start_time = 1
             start_dealy = 5
-            for func, arg in stats_collect_details.iteritems():
-                # Delete the "thread_id" attribute(if any) lingering from the previous call
+            for index, stat_detail in enumerate(stats_collect_details):
+                func = stat_detail.keys()[0]
+                arg = stat_detail[func]
                 if "thread_id" in arg:
-                    del(stats_collect_details[func]["thread_id"])
+                    del(stats_collect_details[index][func]["thread_id"])
                 post_fix_name = "{}_{}".format(func, file_suffix)
-                stats_collect_details[func]["output_file"] = fun_test.get_test_case_artifact_file_name(post_fix_name)
+                stats_collect_details[index][func]["output_file"] = \
+                    fun_test.get_test_case_artifact_file_name(post_fix_name)
                 if func == "vp_utils":
-                    stats_collect_details[func]["thread_id"] = fun_test.execute_thread_after(
+                    stats_collect_details[index][func]["thread_id"] = fun_test.execute_thread_after(
                         time_in_seconds=start_time, func=self.collect_vp_utils_stats, **arg)
                     fun_test.log("Started the VP utilization stats collection thread having the ID: {}".
-                                 format(stats_collect_details[func]["thread_id"]))
+                                 format(stats_collect_details[index][func]["thread_id"]))
                 if func == "per_vp":
-                    stats_collect_details[func]["thread_id"] = fun_test.execute_thread_after(
+                    stats_collect_details[index][func]["thread_id"] = fun_test.execute_thread_after(
                         time_in_seconds=start_time, func=self.collect_per_vp_stats, **arg)
                     fun_test.log("Started the per VP utilization stats collection thread having the ID: {}".
-                                 format(stats_collect_details[func]["thread_id"]))
+                                 format(stats_collect_details[index][func]["thread_id"]))
                 if func == "resource_bam_args":
-                    stats_collect_details[func]["thread_id"] = fun_test.execute_thread_after(
+                    stats_collect_details[index][func]["thread_id"] = fun_test.execute_thread_after(
                         time_in_seconds=start_time, func=self.collect_resource_bam_stats, **arg)
                     fun_test.log("Started the BAM stats collection thread having the ID: {}".
-                                 format(stats_collect_details[func]["thread_id"]))
+                                 format(stats_collect_details[index][func]["thread_id"]))
                 if func == "vol_stats":
-                    stats_collect_details[func]["thread_id"] = fun_test.execute_thread_after(
+                    stats_collect_details[index][func]["thread_id"] = fun_test.execute_thread_after(
                         time_in_seconds=start_time, func=self.collect_vol_stats, **arg)
                     fun_test.log("Started the Volume stats collection thread having the ID: {}".
-                                 format(stats_collect_details[func]["thread_id"]))
+                                 format(stats_collect_details[index][func]["thread_id"]))
                 start_time += start_dealy
         except Exception as ex:
             fun_test.critical(str(ex))
 
-    def stop(self, **stats_collect_details):
+    def stop(self, stats_collect_details):
 
         # If the threads are still running, then set their stop flag
-        for func, arg in stats_collect_details.iteritems():
+        for index, stat_detail in enumerate(stats_collect_details):
+            func = stat_detail.keys()[0]
+            arg = stat_detail[func]
             thread_id = arg.get("thread_id")
             if thread_id and fun_test.fun_test_threads[thread_id]["thread"].is_alive():
                 if func == "vp_utils":
-                    fun_test.critical("VP utilization stats collection thread having the ID {} is still running..."
-                                      "Stopping it now".format(thread_id))
+                    fun_test.log("VP utilization stats collection thread having the ID {} is still running..."
+                                 "Stopping it now".format(thread_id))
                     self.stop_vp_utils = True
                 if func == "per_vp":
-                    fun_test.critical("Per VP Stats collection thread having the ID {} is still running...Stopping it "
-                                      "now".format(thread_id))
+                    fun_test.log("Per VP Stats collection thread having the ID {} is still running...Stopping it "
+                                 "now".format(thread_id))
                     self.stop_per_vp_stats = True
                 if func == "resource_bam_args":
-                    fun_test.critical("Resource bam stats collection thread having the ID {} is still running..."
-                                      "Stopping it now".format(thread_id))
+                    fun_test.log("Resource bam stats collection thread having the ID {} is still running..."
+                                 "Stopping it now".format(thread_id))
                     self.stop_resource_bam = True
                 if func == "vol_stats":
-                    fun_test.critical("Volume Stats collection thread having the ID {} is still running...Stopping "
-                                      "it now".format(thread_id))
+                    fun_test.log("Volume Stats collection thread having the ID {} is still running...Stopping "
+                                 "it now".format(thread_id))
                     self.stop_vol_stats = True
 
         # Wait for the threads to complete
-        for func, arg in stats_collect_details.iteritems():
+        for index, stat_detail in enumerate(stats_collect_details):
+            func = stat_detail.keys()[0]
+            arg = stat_detail[func]
             thread_id = arg.get("thread_id")
             if thread_id:
                 if func == "vp_utils":
-                    fun_test.critical("Waiting for the VP utilization stats collection thread having the ID {} to "
-                                      "complete...".format(thread_id))
+                    fun_test.log("Waiting for the VP utilization stats collection thread having the ID {} to "
+                                 "complete...".format(thread_id))
                 if func == "per_vp":
-                    fun_test.critical("Waiting for the Per VP Stats collection thread having the ID {} to "
-                                      "complete...".format(thread_id))
+                    fun_test.log("Waiting for the Per VP Stats collection thread having the ID {} to "
+                                 "complete...".format(thread_id))
                 if func == "resource_bam_args":
-                    fun_test.critical("Waiting for the Resource bam stats collection thread having the ID {} to "
-                                      "complete...".format(thread_id))
+                    fun_test.log("Waiting for the Resource bam stats collection thread having the ID {} to "
+                                 "complete...".format(thread_id))
                 if func == "vol_stats":
-                    fun_test.critical("Waiting for the Volume Stats collection thread having the ID {} to "
-                                      "complete...".format(thread_id))
+                    fun_test.log("Waiting for the Volume Stats collection thread having the ID {} to "
+                                 "complete...".format(thread_id))
                 fun_test.join_thread(fun_test_thread_id=thread_id, sleep_time=1)
 
 

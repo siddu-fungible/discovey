@@ -842,16 +842,17 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
             fio_iodepth = tmp[1].strip('() ')
 
             file_suffix = "{}_iodepth_{}.txt".format(self.test_mode, (int(fio_iodepth) * int(fio_numjobs)))
-            for func, arg in self.stats_collect_details.iteritems():
-                self.stats_collect_details[func]["count"] = int(
-                    self.fio_cmd_args["runtime"] / self.stats_collect_details[func]["interval"])
+            for index, stat_detail in enumerate(self.stats_collect_details):
+                func = stat_detail.keys()[0]
+                self.stats_collect_details[index][func]["count"] = int(self.fio_cmd_args["runtime"] /
+                                                                       self.stats_collect_details[func]["interval"])
                 if func == "vol_stats":
-                    self.stats_collect_details[func]["vol_details"] = vol_details
+                    self.stats_collect_details[index][func]["vol_details"] = vol_details
             fun_test.log("Different stats collection thread details for the current IO depth {} before starting "
                          "them:\n{}".format((int(fio_iodepth) * int(fio_numjobs)), self.stats_collect_details))
             self.storage_controller.verbose = False
             stats_obj = CollectStats(self.storage_controller)
-            stats_obj.start(file_suffix=file_suffix, **self.stats_collect_details)
+            stats_obj.start(file_suffix, self.stats_collect_details)
             fun_test.log("Different stats collection thread details for the current IO depth {} after starting "
                          "them:\n{}".format((int(fio_iodepth) * int(fio_numjobs)), self.stats_collect_details))
 
