@@ -418,6 +418,11 @@ def do_test(linux_obj, dip, protocol='tcp', duration=30, frame_size=800, cpu=Non
     # Turn off offload
     #linux_obj.sudo_command('ethtool --offload {} rx off tx off sg off tso off gso off gro off'.format(interface))
 
+    try:
+        fun_test.log("1.Spawn PID: {}".format(linux_obj.spawn_pid))
+    except Exception as ex:
+        fun_test.critical(ex)
+
     if measure_latency:
         result = {
             LATENCY_MIN: NA,
