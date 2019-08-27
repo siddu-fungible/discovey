@@ -127,6 +127,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
       temp["yesterday"] = null;
       temp["unit"] = null;
       temp["percentage"] = null;
+      temp["positive"] = metric["positive"];
       temp["history"] = [];
       metric["data"].push(temp);
     }

@@ -77,7 +77,7 @@
             Today
           </th>
           <th style="width: 10%">
-            Percentage
+            Percentage change
           </th>
           <th style="width: 10%">
             Unit
@@ -93,8 +93,12 @@
           <td>
             {{ oneData.today }}
           </td>
-          <td *ngIf="oneData.percentage"
+          <td *ngIf="oneData.percentage && oneData.positive"
               [ngClass]="{'text-red': oneData.percentage.includes('-'), 'text-green': oneData.percentage.includes('+')}">
+            {{ oneData.percentage }}
+          </td>
+          <td *ngIf="oneData.percentage && !oneData.positive"
+              [ngClass]="{'text-green': oneData.percentage.includes('-'), 'text-red': oneData.percentage.includes('+')}">
             {{ oneData.percentage }}
           </td>
           <td>
