@@ -2,17 +2,17 @@
 
   <div class="fun-attribute">
     <span class="fun-attribute-label">Suite name:</span>
-    <app-textarea-input [initialValue]="name" (valueChanged)="onNameChangedEvent($event)"></app-textarea-input>
+    <app-textarea-input [initialValue]="suite?.name" (valueChanged)="onNameChangedEvent($event)"></app-textarea-input>
   </div>
 
   <div class="fun-attribute">
     <span class="fun-attribute-label">Short description:</span>
-    <app-textarea-input [initialValue]="shortDescription" (valueChanged)="onShortDescriptionChangedEvent($event)" [numRows]="4"></app-textarea-input>
+    <app-textarea-input [initialValue]="suite?.short_description" (valueChanged)="onShortDescriptionChangedEvent($event)" [numRows]="4"></app-textarea-input>
   </div>
 
   <div style="max-width: 800px;" class="fun-attribute">
     <span class="fun-attribute-label">Categories:</span>
-    <ng-multiselect-dropdown style="display: inline-block" [placeholder]="'Select'" [data]="availableCategories" [settings]="dropDownSettings" [(ngModel)]="selectedCategories">
+    <ng-multiselect-dropdown style="display: inline-block" [placeholder]="'Select'" [data]="availableCategories" [settings]="dropDownSettings" [(ngModel)]="suite.categories">
     </ng-multiselect-dropdown>
   </div>
 
@@ -155,6 +155,26 @@
 
 
   </ng-container>
+
+  <ng-container *ngIf="suite">
+    {{ suiteEntry | json }}
+    <table>
+      <tr>
+        <th>Script</th>
+        <th>Inputs</th>
+        <th>Test-case IDs</th>
+      </tr>
+      <ng-container *ngFor="let suiteEntry of suite.entries">
+        <tr>
+          <td>{{ suiteEntry.script_path }}</td>
+          <td>{{ suiteEntry.inputs }}</td>
+          <td>{{ suiteEntry.test_case_ids }}</td>
+        </tr>
+
+      </ng-container>
+    </table>
+  </ng-container>
+
 
   <button (click)="test()">Test</button>
 

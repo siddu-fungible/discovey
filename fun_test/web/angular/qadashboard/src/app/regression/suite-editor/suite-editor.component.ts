@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, Input, OnInit} from '@angular/core';
 import {AbstractControl, FormControl, FormGroup, Validators} from "@angular/forms";
 import {TestBedService} from "../test-bed/test-bed.service";
 import {Observable, of} from "rxjs";
@@ -19,6 +19,7 @@ enum CustomAssetSelection {  // used by the Custom test-bed spec modal
   styleUrls: ['./suite-editor.component.css']
 })
 export class SuiteEditorComponent implements OnInit {
+  @Input() id: number = null;
   testCaseIds: number[] = null;
   inputs: any = null;
   customTestBedSpec: any = null;
@@ -51,10 +52,11 @@ export class SuiteEditorComponent implements OnInit {
 
   availableCategories: string [] = ["networking", "storage", "accelerators", "security", "system"];
   availableSubCategories: string [] = ["general"];
-  selectedCategories: string [] = null;
+  //selectedCategories: string [] = null;
   selectedSubCategories: string [] = null;
 
   tags: string = null;
+  suite: Suite = null;
 
   constructor(private testBedService: TestBedService, private modalService: NgbModal, private service: SuiteEditorService) {
 
@@ -62,6 +64,10 @@ export class SuiteEditorComponent implements OnInit {
 
 
   ngOnInit() {
+
+    if (!this.id) {
+      this.suite = new Suite();
+    }
     new Observable(observer => {
       observer.next(true);
       return () => {
@@ -280,7 +286,7 @@ export class SuiteEditorComponent implements OnInit {
     // console.log(this.customTestBedSpecForm.get("selectedDuts").value);
     //console.log(this.flattenedAssetTypeNames);
     //console.log(this.flattenedAssetTypeNameMap);
-    console.log(this.selectedCategories);
+    //console.log(this.selectedCategories);
     console.log(this.tags);
 
   }
@@ -358,6 +364,7 @@ export class SuiteEditorComponent implements OnInit {
     suiteEntry.inputs = this.inputs;
     suiteEntry.test_case_ids = this.testCaseIds;
     console.log(suiteEntry);
+    this.suite.addEntry(suiteEntry);
     this._clearNewSuiteEntry();
   }
 
@@ -366,11 +373,11 @@ export class SuiteEditorComponent implements OnInit {
   }
 
   onNameChangedEvent(name) {
-    this.name = name;
+    this.suite.name = name;
   }
 
   onShortDescriptionChangedEvent(shortDescription) {
-    this.shortDescription = shortDescription;
+    this.suite.short_description = shortDescription;
   }
 
 
