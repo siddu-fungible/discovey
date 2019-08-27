@@ -487,6 +487,8 @@ class DataReconstructOnDiskFailTestcase(FunTestCase):
             self.ec_info["num_volumes"] = job_inputs["num_volumes"]
         if "vol_size" in job_inputs:
             self.ec_info["capacity"] = job_inputs["vol_size"]
+        if "warmup_bs" in job_inputs:
+            self.warm_up_fio_cmd_args["bs"] = job_inputs["warmup_bs"]
 
         if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
                 self.testbed_config["workarounds"]["enable_funcp"]:
