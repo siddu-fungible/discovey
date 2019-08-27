@@ -431,7 +431,7 @@ class HuHuFCP(FunPerformance):
         pass
 
     def run(self):
-        FunPerformance._run(self, flow_type="HU_HU_FCP", num_flows=8, num_hosts=4, frame_size=1500, duration=30)
+        FunPerformance._run(self, flow_type="HU_HU_FCP", num_flows=8, num_hosts=2, frame_size=1500, duration=30)
 
     def cleanup(self):
         pass

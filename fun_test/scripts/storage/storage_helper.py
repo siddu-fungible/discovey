@@ -378,7 +378,7 @@ class CollectStats(object):
         self.stop_vol_stats = False
 
     def collect_vp_utils_stats(self, output_file, interval=10, count=3, non_zero_stats_only=True, threaded=True,
-                               command_timeout=DPCSH_COMMAND_TIMEOUT):
+                               chunk=8192, command_timeout=DPCSH_COMMAND_TIMEOUT):
         output = False
         column_headers = ["Cluster/Core", "Thread 0", "Thread 1", "Thread 2", "Thread 3"]
 
@@ -391,7 +391,7 @@ class CollectStats(object):
                         fun_test.log("Stopping VP Utils stats collection thread")
                         break
                     self.socket_lock.acquire()
-                    vp_utils_result = self.storage_controller.debug_vp_util(command_timeout=command_timeout)
+                    vp_utils_result = self.storage_controller.debug_vp_util(chunk=chunk, command_timeout=command_timeout)
                     self.socket_lock.release()
                     # fun_test.simple_assert(vp_util_result["status"], "Pulling VP Utilization")
                     if vp_utils_result["status"] and vp_utils_result["data"] is not None:
@@ -440,7 +440,7 @@ class CollectStats(object):
             fun_test.critical(str(ex))
         return output
 
-    def collect_per_vp_stats(self, output_file, interval=10, count=3, threaded=True, include_cc=False,
+    def collect_per_vp_stats(self, output_file, interval=10, count=3, threaded=True, include_cc=False, chunk=8192,
                              display_diff=True, command_timeout=DPCSH_COMMAND_TIMEOUT):
         output = False
         per_vp_stats_key = ["wus_received", "vp_wu_qdepth", "wus_sent"]
@@ -463,10 +463,12 @@ class CollectStats(object):
 
                     # Pulling the per_vp stats once or twice with one second interval based on the display_diff
                     self.socket_lock.acquire()
-                    initial_per_vp_output = self.storage_controller.peek_per_vp_stats(command_timeout=command_timeout)
+                    initial_per_vp_output = self.storage_controller.peek(props_tree="stats/per_vp", legacy=False,
+                                                                         chunk=chunk, command_duration=command_timeout)
                     if display_diff:
                         fun_test.sleep("to get one more per_vp stats to find the diff", 1)
-                        final_per_vp_output = self.storage_controller.peek_per_vp_stats(command_timeout=command_timeout)
+                        final_per_vp_output = self.storage_controller.peek(props_tree="stats/per_vp", legacy=False,
+                                                                           chunk=chunk, command_duration=command_timeout)
                     self.socket_lock.release()
 
                     if initial_per_vp_output["status"] and initial_per_vp_output["data"] is not None:
@@ -559,8 +561,8 @@ class CollectStats(object):
             fun_test.critical(str(ex))
         return output
 
-    def collect_vol_stats(self, output_file, vol_details, interval=10, count=3, non_zero_stats_only=True,
-                          threaded=True, command_timeout=DPCSH_COMMAND_TIMEOUT):
+    def collect_vol_stats(self, vol_details, output_file="/dev/null", interval=10, count=3, non_zero_stats_only=True,
+                          chunk=8192, threaded=True, command_timeout=DPCSH_COMMAND_TIMEOUT):
         """
         :param output_file: File name in which the volume stats collected at every given interval for given number of
         counts in the table format
@@ -577,6 +579,7 @@ class CollectStats(object):
         :param non_zero_stats_only:
         :param threaded:
         :param command_timeout:
+        :param chunk:
         :return:
         """
         output = False
@@ -590,7 +593,7 @@ class CollectStats(object):
                         break
                     self.socket_lock.acquire()
                     vol_stats_result = self.storage_controller.peek(props_tree="storage/volumes", legacy=False,
-                                                                    chunk=8192, command_duration=command_timeout)
+                                                                    chunk=chunk, command_duration=command_timeout)
                     self.socket_lock.release()
                     if vol_stats_result["status"] and vol_stats_result["data"] is not None:
                         all_vol_stats = vol_stats_result["data"]
@@ -775,3 +778,72 @@ def terminate_stats_collection(stats_ollector_obj, thread_list):
         stats_ollector_obj.stop_vol_stats = True
         stats_ollector_obj.stop_vp_utils = True
         stats_ollector_obj.stop_resource_bam = True
+
+
+def vol_stats_diff(initial_vol_stats, final_vol_stats, vol_details):
+    """
+    :param initial_vol_stats: volume stats collected at the start of test
+    :param final_vol_stats: volume stats collected at the end of test
+    :param vol_details: list of dictionary containing volume details, type, uuid
+    :return: dictionary, with status, stats_diff and total_diff
+    """
+    result = {"status": False, "stats_diff": None, "total_diff": None}
+    dict_vol_details = {}
+    stats_diff = {}
+    # blt_combined_stat = {}
+    total_diff = {}
+    stats_exclude_list = ["drive_uuid", "extent_size", "fault_injection", "flvm_block_size", "flvm_vol_size_blocks",
+                          "se_size"]
+    aggregated_diff_stats_list = ["write_bytes", "read_bytes"]
+    try:
+        # Forming a dictionary for provided vol_details
+        for x in range(len(vol_details)):
+            dict_vol_details[x] = vol_details[x]
+        for i, vol_group in dict_vol_details.iteritems():
+            stats_diff[i] = {}
+            # blt_combined_stat[i] = {}
+            for vol_type, vol_uuids in sorted(vol_group.iteritems()):
+                if vol_type not in stats_diff:
+                    stats_diff[i][vol_type] = {}
+                for vol_uuid in vol_uuids:
+                    if vol_uuid not in stats_diff[i][vol_type]:
+                        stats_diff[i][vol_type][vol_uuid] = {}
+                    if (vol_type in final_vol_stats and vol_uuid in final_vol_stats[vol_type]) and (
+                            vol_type in initial_vol_stats and vol_uuid in initial_vol_stats[vol_type]):
+                        for stats_field in set(final_vol_stats[vol_type][vol_uuid]["stats"]) - set(stats_exclude_list):
+                            # if stats_field not in blt_combined_stat[i]:
+                            #    blt_combined_stat[i][stats_field] = 0
+                            stats_diff[i][vol_type][vol_uuid][stats_field] = \
+                                final_vol_stats[vol_type][vol_uuid]["stats"][stats_field] - initial_vol_stats[
+                                    vol_type][vol_uuid]["stats"][stats_field]
+                            # To have agrregated BLT stats under each EC volume,
+                            # all volumes BLT stats are collected in total_diff
+                            #
+                            # if vol_type == "VOL_TYPE_BLK_LOCAL_THIN":
+                            #    if blt_combined_stat[i][stats_field] == 0:
+                            #        stats_diff[i][vol_type]['blt_combined'] = {}
+                            #        stats_diff[i][vol_type]['blt_combined'][stats_field] = {}
+                            #    blt_combined_stat[i][stats_field] = blt_combined_stat[i][stats_field] + \
+                            #                                        stats_diff[i][vol_type][vol_uuid][stats_field]
+                            #    stats_diff[i][vol_type]['blt_combined'][stats_field] = blt_combined_stat[i][
+                            #        stats_field]
+
+        for i, vol_group in stats_diff.iteritems():
+            for vol_type, vol_uuids in sorted(vol_group.iteritems()):
+                if vol_type not in total_diff:
+                    total_diff[vol_type] = {}
+                for vol_uuid in vol_uuids:
+                    # if vol_uuid != "blt_combined":
+                    for stats_field in aggregated_diff_stats_list:
+                        if stats_field not in total_diff[vol_type]:
+                            total_diff[vol_type][stats_field] = 0
+                        total_diff[vol_type][stats_field] = total_diff[vol_type][stats_field] + \
+                                                            stats_diff[i][vol_type][vol_uuid][stats_field]
+        result["status"] = True
+        result["stats_diff"] = stats_diff
+        result["total_diff"] = total_diff
+    except Exception as ex:
+        fun_test.critical(str(ex))
+        result["status"] = False
+
+    return result

@@ -520,6 +520,8 @@ class ECVolumeLevelTestcase(FunTestCase):
         job_inputs = fun_test.get_job_inputs()
         if not job_inputs:
             job_inputs = {}
+        if "warmup_bs" in job_inputs:
+            self.warm_up_fio_cmd_args["bs"] = job_inputs["warmup_bs"]
         if "post_results" in job_inputs:
             self.post_results = job_inputs["post_results"]
         else:

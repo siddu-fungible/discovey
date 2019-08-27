@@ -62,7 +62,7 @@
   {
     "name": "fs-15",
     "bmc": {
-      "mgmt_ip": "10.1.20.112",
+      "mgmt_ip": "10.1.20.26",
       "mgmt_ssh_username": "sysadmin",
       "mgmt_ssh_password": "superuser"
     },

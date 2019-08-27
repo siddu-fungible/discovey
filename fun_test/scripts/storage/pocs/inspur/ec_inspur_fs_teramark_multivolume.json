@@ -95,7 +95,8 @@
     "mpstat_args": {"interval": 60, "output_file": "/tmp/mpstat.out", "cpu_list": "ALL"},
     "stats_collect_details": {"vp_utils": {"interval": 60}, "per_vp": {"interval": 60}, "resource_bam_args": {"interval": 60}, "vol_stats": {"interval": 60}},
     "collect_network_stats": true,
-    "csi_perf_iodepth": [64]
+    "csi_perf_iodepth": [64],
+    "cal_amplification": true
   },
   "RandRead8kBlocks": {
     "ec_info": {
@@ -147,7 +148,8 @@
     "mpstat_args": {"interval": 60, "output_file": "/tmp/mpstat.out", "cpu_list": "ALL"},
     "stats_collect_details": {"vp_utils": {"interval": 60}, "per_vp": {"interval": 60}, "resource_bam_args": {"interval": 60}, "vol_stats": {"interval": 60}},
     "collect_network_stats": true,
-    "csi_perf_iodepth": [64]
+    "csi_perf_iodepth": [64],
+    "cal_amplification": true
   },
   "RandWrite8kBlocks": {
     "ec_info": {
@@ -199,7 +201,8 @@
     "mpstat_args": {"interval": 60, "output_file": "/tmp/mpstat.out", "cpu_list": "ALL"},
     "stats_collect_details": {"vp_utils": {"interval": 60}, "per_vp": {"interval": 60}, "resource_bam_args": {"interval": 60}, "vol_stats": {"interval": 60}},
     "collect_network_stats": true,
-    "csi_perf_iodepth": [64]
+    "csi_perf_iodepth": [64],
+    "cal_amplification": true
   },
   "SequentialReadWrite1024kBlocks": {
     "ec_info": {
