@@ -21,10 +21,7 @@
           Today <br><span style="font-size: smaller">{{ interestedMetric.report[0].todayDate }}</span>
         </th>
         <th rowspan="2">
-          Percentage change (today and yesterday)
-        </th>
-        <th rowspan="2">
-          Percentage change (last 2 values)
+          Percentage change
         </th>
         <th colspan="2">
           History
@@ -56,18 +53,15 @@
               [ngClass]="{'text-green': dataSet.percentage.includes('-'), 'text-red': dataSet.percentage.includes('+')}">
             {{ dataSet.percentage }}
           </td>
-          <td *ngIf="dataSet.percentage_history && interestedMetric.positive" [attr.rowspan]="dataSet['rows']"
-              [ngClass]="{'text-red': dataSet.percentage_history.includes('-'), 'text-green': dataSet.percentage_history.includes('+')}">
-            {{ dataSet.percentage_history }}
-          </td>
-          <td *ngIf="dataSet.percentage_history && !interestedMetric.positive" [attr.rowspan]="dataSet['rows']"
-              [ngClass]="{'text-green': dataSet.percentage_history.includes('-'), 'text-red': dataSet.percentage_history.includes('+')}">
-            {{ dataSet.percentage_history }}
-          </td>
         </tr>
-        <tr *ngFor="let data of dataSet['history']">
+        <tr *ngFor="let data of dataSet['history']; let i = index">
           <td>{{ data.date }}</td>
-          <td>{{ data.value }}</td>
+          <td>{{ data.value }}
+            <span *ngIf="dataSet.percentage_history && interestedMetric.positive && i == 0"
+                  [ngClass]="{'text-red': dataSet.percentage_history.includes('-'), 'text-green': dataSet.percentage_history.includes('+')}"><br>{{ dataSet.percentage_history }}</span>
+            <span *ngIf="dataSet.percentage_history && !interestedMetric.positive && i == 0"
+                  [ngClass]="{'text-green': dataSet.percentage_history.includes('-'), 'text-red': dataSet.percentage_history.includes('+')}"><br>{{ dataSet.percentage_history }}</span>
+          </td>
         </tr>
       </ng-container>
     </table>
