@@ -6,12 +6,54 @@ table > tbody > tr > th, table > tbody > tr > td {
   text-align: center;
 }
 
+.test-bed-table tbody tr td:nth-child(1) {
+  border-left: black solid 1px;
+}
+
+.test-bed-table tbody tr td:nth-child(2) {
+  border-right: black solid 1px;
+}
+
+.test-bed-table tbody tr td:nth-child(4) {
+  border-right: black solid 1px;
+}
+
+
+.test-bed-table {
+  border: 1px solid #000;
+}
+
+.test-bed-table tr {
+  border-top: 1px solid #000;
+}
+
+.test-bed-table tr + tr {
+  border-top: 1px solid lightgrey;
+}
+
+.test-bed-table td {
+  border-left: 1px solid #000;
+}
+
+.test-bed-table td + td {
+  border-left: 1px solid lightgrey;
+}
+
+.test-bed-header {
+  border: solid black 1px;
+  background-color: rgba(230, 230, 230, 0.71);
+}
+
+.test-bed-sub-header {
+  border: solid black 1px;
+  background-color: rgba(102, 210, 255, 0.3);
+}
 
 
 .ngb-tp-hour, .ngb-tp-meridian, .ngb-tp-minute, .ngb-tp-second {
-    display: -ms-flexbox;
-    display: flex;
-    -ms-flex-direction: column;
+  display: -ms-flexbox;
+  display: flex;
+  -ms-flex-direction: column;
     flex-direction: column;
     -ms-flex-align: center;
     align-items: center;
