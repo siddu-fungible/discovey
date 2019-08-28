@@ -43,6 +43,7 @@ export class TestBedComponent implements OnInit {
   userMap: any = null;
   editingDescription: boolean = false;
   tempDescription: string;
+  tempNote: string;
 
 
 
@@ -354,6 +355,29 @@ export class TestBedComponent implements OnInit {
   onEditDescription(testBed) {
     this.tempDescription = testBed.description;
     testBed.editingMode = true;
+  }
+
+  onEditNote(testBed) {
+    testBed['editingNote'] = true;
+
+  }
+
+  onSubmitNote(testBed) {
+    let payload = {note: this.tempNote};
+    this.apiService.put('/api/v1/regression/test_beds/' + testBed.id, payload).subscribe((response) => {
+      this.loggerService.success('Successfully updated!');
+    }, error => {
+      this.loggerService.error("Unable to update description");
+    });
+    testBed.editingNote = false;
+    this.tempNote = "";
+
+  }
+
+  onCancelNote(testBed) {
+    testBed.editingNote = false;
+    this.tempNote = "";
+
   }
 
   onCancelDescription(testBed) {

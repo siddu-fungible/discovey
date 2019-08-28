@@ -87,6 +87,8 @@ def test_beds(request, id):
             test_bed.manual_lock_submitter = submitter_email
         if "description" in request_json:
             test_bed.description = request_json["description"]
+        if "note" in request_json:
+            test_bed.note = request_json["note"]
 
         this_is_extension_request = False
         if extension_hour is not None and extension_minute is not None:
