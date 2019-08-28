@@ -2,7 +2,7 @@ import {Injectable, OnInit} from '@angular/core';
 import {ApiService} from "../services/api/api.service";
 import {LoggerService} from "../services/logger/logger.service";
 import {catchError, switchMap} from 'rxjs/operators';
-import {forkJoin, observable, Observable, of} from "rxjs";
+import {forkJoin, observable, Observable, of, throwError} from "rxjs";
 
 @Injectable({
   providedIn: 'root'
@@ -165,7 +165,7 @@ getPrettyLocalizeTime(t) {
     }))
   }
 
-  tags(): Observable<string[]> | {} {
+  tags(): Observable<string[]> {
     return this.apiService.get('/regression/tags').pipe(switchMap(response => {
       let data = JSON.parse(response.data);
       let i = 1;
@@ -175,7 +175,7 @@ getPrettyLocalizeTime(t) {
       }
       return of(parsedTags);
     }), catchError(error => {
-      throw (["Unable to fetch tags"]);
+      return throwError(error);
     }))
   }
 
