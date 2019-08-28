@@ -660,6 +660,21 @@ label {
   background-color: rgba(0,0,0,.125)
 }
 
+/*table*/
+.fun-table {
+  border: solid lightgrey 1px;
+}
+
+.fun-table tr td.fun-table-header {
+  background-color: #e7e7e7;
+}
+.fun-table tr td {
+  padding: 5px;
+}
+
+.lockModal .modal-dialog {
+  max-width: 850px;
+}
 
 
 
