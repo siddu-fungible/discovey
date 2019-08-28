@@ -89,9 +89,9 @@ setups = {
         'come' : [ '10.1.20.179', 'fun', '123' ]
     },
     'FS15' : {
-        'bmc'  : [ '10.1.20.112', 'sysadmin', 'superuser' ],
-        'rf'   : [ '10.1.20.112', 'Administrator', 'superuser' ],
-        'ipmi' : [ '10.1.20.112', 'admin', 'admin' ],
+        'bmc'  : [ '10.1.20.26', 'sysadmin', 'superuser' ],
+        'rf'   : [ '10.1.20.26', 'Administrator', 'superuser' ],
+        'ipmi' : [ '10.1.20.26', 'admin', 'admin' ],
         'fpga' : [ '10.1.20.140', 'root', '""' ],
         'come' : [ '10.1.20.170', 'fun', '123' ]
     },
