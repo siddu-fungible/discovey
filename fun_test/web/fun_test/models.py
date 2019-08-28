@@ -664,11 +664,19 @@ class Suite(models.Model):
     name = models.TextField(default="TBD")
     categories = JSONField(default=[])
     sub_categories = JSONField(default=[])
-
     short_description = models.TextField(default="")
     long_description = models.TextField(default="")
     tags = JSONField(default=[])
-    custom_test_bed_spec = JSONField(default=None)
+    custom_test_bed_spec = JSONField(default=None, null=True)
+    entries = JSONField(default=None)
+
+    def to_dict(self):
+        result = {}
+        fields = self._meta.get_fields()
+        for field in fields:
+            result[field.name] = getattr(self, field.name)
+        return result
+
 
 
 class TaskStatus(models.Model):

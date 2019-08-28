@@ -30,6 +30,7 @@ import {PerformanceTableComponent} from "./performance/performance-table/perform
 import {PerformanceWorkspaceComponent} from './performance/performance-workspace/performance-workspace.component';
 import {PerformanceViewWorkspaceComponent} from "./performance/performance-workspace/performance-view-workspace/performance-view-workspace.component";
 import {SuiteEditorComponent} from "./regression/suite-editor/suite-editor.component";
+import {SuitesViewComponent} from "./regression/suite-editor/suites-view/suites-view.component";
 
 export function regressionHome(url: UrlSegment[]) {
   return url[0].path.endsWith("regression");
@@ -57,6 +58,7 @@ const routes: Routes = [
   {path: 'regression/script_history_page/:scriptId', component: ScriptHistoryComponent},
   {path: 'regression/job_spec_detail/:id', component: JobSpecComponent},
   {path: 'regression/suite_editor', component: SuiteEditorComponent},
+  {path: 'regression/suites_view', component: SuitesViewComponent},
   {path: 'regression', component: RegressionComponent},
   {path: 'regression/scheduler/admin', component: SchedulerAdminComponent},
   {path: 'common/alerts', component: AlertsComponent},
