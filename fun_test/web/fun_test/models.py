@@ -667,7 +667,7 @@ class Suite(models.Model):
     short_description = models.TextField(default="")
     long_description = models.TextField(default="")
     tags = JSONField(default=[])
-    custom_test_bed_spec = JSONField(default=None)
+    custom_test_bed_spec = JSONField(default=None, null=True)
     entries = JSONField(default=None)
 
 
