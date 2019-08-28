@@ -671,7 +671,7 @@ class CollectStats(object):
     def collect_vppkts_stats(self, output_file="/dev/null", interval=10, count=3, threaded=True, chunk=8192,
                              display_diff=True, command_timeout=DPCSH_COMMAND_TIMEOUT):
         output = False
-        column_headers = ["VP Pkts Stats", "Counters", "Diff Stats"]
+        column_headers = ["VP Pkts Stats", "Counters"]
         self.curr_vppkts_stats = {}
         result_vppkts_stats = OrderedDict()
         if display_diff:
