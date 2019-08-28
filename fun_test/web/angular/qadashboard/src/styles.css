@@ -422,10 +422,9 @@ input:checked + .slider:before {
   color: green;
 }
 
-.text-color-green {
-  color: green;
+.text-size-smaller {
+  font-size: smaller;
 }
-
 
 .passed-table-cell {
   background-color: #9ACD32;

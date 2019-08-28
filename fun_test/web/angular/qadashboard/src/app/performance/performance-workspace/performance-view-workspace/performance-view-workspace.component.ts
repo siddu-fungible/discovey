@@ -32,7 +32,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
   subject: string = null;
 
   constructor(private apiService: ApiService, private commonService: CommonService, private loggerService: LoggerService,
-              private route: ActivatedRoute, private router: Router, private location: Location, private title: Title, private perfService: PerformanceService) {
+              private route: ActivatedRoute, private router: Router, private location: Location, private title: Title, private performanceService: PerformanceService) {
   }
 
   ngOnInit() {
@@ -57,7 +57,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
             return this.fetchScores();
           }),
           switchMap(response => {
-            return this.perfService.fetchBuildInfo();
+            return this.performanceService.fetchBuildInfo();
           })).subscribe(response => {
           this.buildInfo = response;
           console.log("fetched workspace and buildInfo from URL");
@@ -158,10 +158,9 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
         let today = Number(dataSet["today"]);
         let yesterday = Number(dataSet["yesterday"]);
         let percentNum = (((today - yesterday) / yesterday) * 100);
+        percentage = percentNum.toFixed(2) + "%";
         if (percentNum >= 0) {
           percentage = "+" + percentNum.toFixed(2) + "%";
-        } else {
-          percentage = percentNum.toFixed(2) + "%";
         }
       }
       dataSet["percentage"] = percentage;
@@ -200,6 +199,11 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
         metric["model_name"] = response.data["metric_model_name"];
         metric["data_sets"] = response.data["data_sets"];
         metric["jira_ids"] = response.data["jira_ids"];
+        let jiraList = {};
+        for (let jiraId of metric["jira_ids"]) {
+          jiraList[jiraId] = {};
+        }
+        metric["jira_list"] = jiraList;
         metric["selected"] = false;
         metric["report"] = null;
         metric["positive"] = response.data["positive"];
@@ -254,13 +258,12 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
         dataSet["rows"] = dataSet["history"].length + 1;
         let percentage = "NA";
         if (dataSet["history"].length >= 2) {
-          let last_value = Number(dataSet["history"][0].value);
-          let penultimate_value = Number(dataSet["history"][1].value);
-          let percentNum = (((last_value - penultimate_value) / penultimate_value) * 100);
+          let lastValue = Number(dataSet["history"][0].value);
+          let penultimateValue = Number(dataSet["history"][1].value);
+          let percentNum = (((lastValue - penultimateValue) / penultimateValue) * 100);
+          percentage = percentNum.toFixed(2) + "%";
           if (percentNum >= 0) {
             percentage = "+" + percentNum.toFixed(2) + "%";
-          } else {
-            percentage = percentNum.toFixed(2) + "%";
           }
         }
         dataSet["percentage_history"] = percentage;

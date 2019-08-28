@@ -3,6 +3,7 @@ import {switchMap} from "rxjs/operators";
 import {Observable, of} from "rxjs";
 import {ApiService} from "../../../../services/api/api.service";
 import {LoggerService} from "../../../../services/logger/logger.service";
+import {PerformanceService} from "../../../performance.service";
 
 @Component({
   selector: 'performance-show-report',
@@ -16,19 +17,18 @@ export class PerformanceShowReportWorkspaceComponent implements OnInit {
   @Output() reportGenerated: EventEmitter<boolean> = new EventEmitter();
   jiraUrl: string = "http://jira/browse";
 
-  constructor(private apiService: ApiService, private loggerService: LoggerService) { }
+  constructor(private apiService: ApiService, private loggerService: LoggerService, private performanceService: PerformanceService) {
+  }
 
   ngOnInit() {
   }
 
-    saveComments(): any {
+  saveComments(): any {
     let payload = {};
     payload["email"] = this.email;
     payload["workspace_id"] = this.workspace.id;
     payload["interested_metrics"] = this.workspace.interested_metrics;
-    return this.apiService.post("/api/v1/performance/workspaces/" + this.workspace.id + "/interested_metrics", payload).pipe(switchMap(response => {
-      return of(true);
-    }));
+    this.performanceService.saveInterestedMetrics(this.workspace.id, payload)
   }
 
   sendReports(): void {
@@ -55,7 +55,7 @@ export class PerformanceShowReportWorkspaceComponent implements OnInit {
     });
   }
 
-    sendEmail(): any {
+  sendEmail(): any {
     let payload = {};
     let reports = [];
     this.workspace.interested_metrics.forEach(metric => {
@@ -72,9 +72,7 @@ export class PerformanceShowReportWorkspaceComponent implements OnInit {
     payload["reports"] = reports;
     payload["email"] = this.email;
     payload["subject"] = this.subject;
-    return this.apiService.post('/api/v1/performance/reports', payload).pipe(switchMap(response => {
-      return of(response.data);
-    }));
+    this.performanceService.sendEmail(payload);
   }
 
 }

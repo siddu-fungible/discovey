@@ -92,4 +92,16 @@ export class PerformanceService {
     }));
   }
 
+  saveInterestedMetrics(workspace_id, payload): any {
+    return this.apiService.post("/api/v1/performance/workspaces/" + workspace_id + "/interested_metrics", payload).pipe(switchMap(response => {
+      return of(true);
+    }));
+  }
+
+  sendEmail(payload): any {
+    return this.apiService.post('/api/v1/performance/reports', payload).pipe(switchMap(response => {
+      return of(response.data);
+    }));
+  }
+
 }
