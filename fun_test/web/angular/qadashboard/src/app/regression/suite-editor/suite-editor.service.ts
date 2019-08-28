@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import {ApiService} from "../../services/api/api.service";
 import {LoggerService} from "../../services/logger/logger.service";
 import {catchError, switchMap} from "rxjs/operators";
-import {of} from "rxjs";
+import {Observable, of} from "rxjs";
 
 interface SuiteEntryInterface {
   script_path: string;
@@ -51,12 +51,15 @@ export class SuiteEditorService {
   constructor(private apiService: ApiService, private loggerService: LoggerService) { }
 
   suites() {
-
+    return this.apiService.get("/api/v1/regression/suites").pipe(switchMap(response => {
+      return of(response.data);
+    }), catchError(error => {
+      throw error;
+    }))
   }
 
   add(suite: SuiteInterface) {
-    let payload = suite;
-    return this.apiService.post("/api/v1/regression/suites", payload).pipe(switchMap(response => {
+    return this.apiService.post("/api/v1/regression/suites", suite).pipe(switchMap(response => {
       return of(true);
 
     }), catchError(error => {

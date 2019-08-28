@@ -82,6 +82,7 @@ import { UlErrorPanelComponent } from './ui-elements/ul-error-panel/ul-error-pan
 import { AnnouncementFormComponent } from './performance/admin/announcement-form/announcement-form.component';
 import { MessagesPanelComponent } from './ui-elements/messages-panel/messages-panel.component';
 import { TextareaInputComponent } from './ui-elements/textarea-input/textarea-input.component';
+import { SuitesViewComponent } from './regression/suite-editor/suites-view/suites-view.component';
 
 
 @NgModule({
@@ -147,7 +148,8 @@ import { TextareaInputComponent } from './ui-elements/textarea-input/textarea-in
     UlErrorPanelComponent,
     AnnouncementFormComponent,
     MessagesPanelComponent,
-    TextareaInputComponent
+    TextareaInputComponent,
+    SuitesViewComponent
   ],
   imports: [
     BsDropdownModule,

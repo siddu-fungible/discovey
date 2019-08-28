@@ -348,6 +348,14 @@ def scripts(request):
 @api_safe_json_response
 def suites(request, id):
     result = None
+    if request.method == "GET":
+        if not id:
+            all_suites = Suite.objects.all()
+            if all_suites.count():
+                result = []
+                for suite in all_suites:
+                    result.append(suite.to_dict())
+
     if request.method == "POST":
         if not id:
             # must be a new object

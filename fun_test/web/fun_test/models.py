@@ -670,6 +670,14 @@ class Suite(models.Model):
     custom_test_bed_spec = JSONField(default=None, null=True)
     entries = JSONField(default=None)
 
+    def to_dict(self):
+        result = {}
+        fields = self._meta.get_fields()
+        for field in fields:
+            result[field.name] = getattr(self, field.name)
+        return result
+
+
 
 class TaskStatus(models.Model):
     path = models.TextField(unique=True, default="")

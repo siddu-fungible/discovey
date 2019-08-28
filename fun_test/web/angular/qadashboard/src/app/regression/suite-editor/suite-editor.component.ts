@@ -57,7 +57,7 @@ export class SuiteEditorComponent implements OnInit {
   //selectedCategories: string [] = null;
   selectedSubCategories: string [] = null;
 
-  availableTags: any = null;
+  availableTags: string[] = null;
 
   tags: string = null;
   suite: Suite = null;
