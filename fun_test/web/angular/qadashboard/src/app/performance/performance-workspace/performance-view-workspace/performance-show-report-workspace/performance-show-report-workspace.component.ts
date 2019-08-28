@@ -28,7 +28,7 @@ export class PerformanceShowReportWorkspaceComponent implements OnInit {
     payload["email"] = this.email;
     payload["workspace_id"] = this.workspace.id;
     payload["interested_metrics"] = this.workspace.interested_metrics;
-    this.performanceService.saveInterestedMetrics(this.workspace.id, payload)
+    return this.performanceService.saveInterestedMetrics(this.workspace.id, payload)
   }
 
   sendReports(): void {
@@ -72,7 +72,7 @@ export class PerformanceShowReportWorkspaceComponent implements OnInit {
     payload["reports"] = reports;
     payload["email"] = this.email;
     payload["subject"] = this.subject;
-    this.performanceService.sendEmail(payload);
+    return this.performanceService.sendEmail(payload);
   }
 
 }
