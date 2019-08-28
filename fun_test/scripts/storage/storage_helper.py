@@ -847,3 +847,7 @@ def vol_stats_diff(initial_vol_stats, final_vol_stats, vol_details):
         result["status"] = False
 
     return result
+
+
+def divide(n, d):
+    return n/d if d else 0
