@@ -2,7 +2,6 @@ from lib.system.fun_test import *
 from lib.system import utils
 from lib.topology.topology_helper import TopologyHelper
 from lib.host.storage_controller import StorageController
-
 from lib.fun.fs import Fs
 from scripts.storage.storage_helper import *
 from lib.host.apc_pdu import ApcPdu
@@ -12,7 +11,7 @@ Power cycle FS multiple times and each time check if basic functions are fine
 '''
 
 
-class BLTVolumeSanityScript(FunTestScript):
+class PowerCycleFsWithPDU(FunTestScript):
     def describe(self):
         self.set_test_details(steps="""
         1. Deploy the topology. i.e Bring up FS
@@ -45,33 +44,43 @@ class BLTVolumeSanityScript(FunTestScript):
         fun_test.log("Global Config: {}".format(self.__dict__))
 
         topology_helper = TopologyHelper()
-        topology_helper.set_dut_parameters(dut_index=0, custom_boot_args=self.bootargs,
-                                           disable_f1_index=self.disable_f1_index)
-        fun_test.shared_variables['topology'] = topology_helper.expanded_topology
+        available_dut_indexes = topology_helper.get_available_duts().keys()
+        for dut_index in available_dut_indexes:
+            topology_helper.set_dut_parameters(dut_index=dut_index,
+                                               f1_parameters={0: {"boot_args": self.bootargs[0]},
+                                                                   1: {"boot_args": self.bootargs[1]}})
         topology = topology_helper.deploy()
         fun_test.test_assert(topology, "Topology deployed")
 
-        fs = topology.get_dut_instance(index=0)
+        fs_obj = []
+        for dut_index in available_dut_indexes:
+            fs_obj.append(topology.get_dut_instance(index=dut_index))
+        fs = fs_obj.pop()
 
         am = fun_test.get_asset_manager()
         test_bed_type = fun_test.get_job_environment_variable("test_bed_type")
         fun_test.log("Testbed-type: {}".format(test_bed_type))
-        test_bed_spec = am.get_test_bed_spec(name=test_bed_type)
-        fun_test.simple_assert(test_bed_spec, "Test-bed spec for {}".format(test_bed_spec))
+
+        if test_bed_type == "suite-based":
+            test_bed = topology.spec["dut_info"]["0"]["dut"]
+        else:
+            test_bed = test_bed_type
+
+        test_bed_spec = am.get_test_bed_spec(name=test_bed)
+        fun_test.simple_assert(test_bed_spec, "Test-bed spec for {} is {}".format(test_bed_type, test_bed_spec))
         dut_name = test_bed_spec["dut_info"]["0"]["dut"]
         fs_spec = am.get_fs_by_name(dut_name)
-        fun_test.simple_assert(fs_spec, "FS spec for {}".format(dut_name))
+        fun_test.simple_assert(fs_spec, "FS spec for {} is {}".format(dut_name, fs_spec))
         apc_info = fs_spec.get("apc_info", None)  # Used for power-cycling the entire FS
 
         fun_test.simple_assert(expression=apc_info, context=None, message='apc info details are correctl fed')
         outlet_no = apc_info.pop("outlet_number")
-
         print ('host_ip {} username {} password {}'.format(apc_info['host_ip'], apc_info['username'],
                                                            apc_info['password']))
 
         for pc_no in range(0, self.no_of_powercycles):
 
-            fun_test.log("Iteation no: {} out of {}".format(pc_no + 1, self.no_of_powercycles))
+            fun_test.log("Iteration no: {} out of {}".format(pc_no + 1, self.no_of_powercycles))
             apc_pdu = ApcPdu(host_ip=str(apc_info['host_ip']), username=str(apc_info['username']),
                              password=str(apc_info['password']))
 
@@ -109,9 +118,10 @@ class BLTVolumeSanityScript(FunTestScript):
                                  message="ComE reachable after APC power-cycle")
             fun_test.log("COMe is up")
 
-            topology_helper.set_dut_parameters(dut_index=0, custom_boot_args=self.bootargs,
-                                               disable_f1_index=self.disable_f1_index)
-            fun_test.shared_variables['topology'] = topology_helper.expanded_topology
+            for dut_index in available_dut_indexes:
+                topology_helper.set_dut_parameters(dut_index=dut_index,
+                                                   f1_parameters={0: {"boot_args": self.bootargs[0]},
+                                                                  1: {"boot_args": self.bootargs[1]}})
             topology = topology_helper.deploy()
             fun_test.test_assert(topology, "Topology deployed")
 
@@ -161,7 +171,7 @@ class PduMultiPowerCycle(BltPciSanityTestcase):
 
 
 if __name__ == "__main__":
-    bltscript = BLTVolumeSanityScript()
-    bltscript.add_test_case(PduMultiPowerCycle())
+    pcscript = PowerCycleFsWithPDU()
+    pcscript.add_test_case(PduMultiPowerCycle())
 
-    bltscript.run()
+    pcscript.run()
