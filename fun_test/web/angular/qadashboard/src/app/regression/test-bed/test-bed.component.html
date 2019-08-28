@@ -181,7 +181,7 @@
 <!--                <i class="fa fa-pencil hover-icon" style="font-size:14px; float: right" (click)="onEditNote(testBed)"></i>&nbsp;-->
                  <span class="pseudo-anchor fun-button-secondary" [ngClass]="{'fun-button-secondary-active' : testBed.editingNote}" (click)="testBed.editingNote = true; onEditNote(testBed)"> Edit note</span>&nbsp;
 
-                <div *ngIf="testBed.note" style="text-align: center">Note:&nbsp;{{testBed.note}}</div>
+                <div *ngIf="testBed.note" style="text-align: center">Note:&nbsp;<span [innerHtml]="testBed.note | safeHtml"></span></div>
                 <div *ngIf="testBed.editingNote">
                   <br>
                   <textarea rows="3" [(ngModel)]="testBed.note" style="min-width: 100%;"></textarea>
