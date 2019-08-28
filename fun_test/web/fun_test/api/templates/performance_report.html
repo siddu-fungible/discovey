@@ -25,9 +25,17 @@
             text-align: center;
         }
 
-        .all-border td{
+        .all-border td {
             border: solid 1px black;
             text-align: center;
+        }
+
+        .text-green {
+            color: green;
+        }
+
+        .text-red {
+            color: red;
         }
     </style>
 </head>
@@ -46,8 +54,10 @@
     <tr class="header">
         <th class="header-text" rowspan="2">Series name</th>
         <th class="header-text" rowspan="2">Unit</th>
-        <th class="header-text" rowspan="2">Yesterday</th>
-        <th class="header-text" rowspan="2">Today</th>
+        <th class="header-text" rowspan="2">Yesterday <br><span style="font-size: smaller">{{
+            report.report[0].yesterdayDate }}</span></th>
+        <th class="header-text" rowspan="2">Today <br><span style="font-size: smaller">{{
+            report.report[0].todayDate }}</span></th>
         <th class="header-text" rowspan="2">Percentage change</th>
         <th class="header-text" colspan="2">History</th>
     </tr>
@@ -69,14 +79,59 @@
         <td rowspan="{{ data_set.rows }}">
             {{ data_set.today }}
         </td>
+        {% if (report.positive == true) and ('+' in data_set.percentage) %}
+        <td class="text-green" rowspan="{{ data_set.rows }}">
+            {{ data_set.percentage }}
+        </td>
+        {% elif (report.positive == true) and ('-' in data_set.percentage) %}
+        <td class="text-red" rowspan="{{ data_set.rows }}">
+            {{ data_set.percentage }}
+        </td>
+        {% elif (report.positive == false) and ('+' in data_set.percentage) %}
+        <td class="text-red" rowspan="{{ data_set.rows }}">
+            {{ data_set.percentage }}
+        </td>
+        {% elif (report.positive == false) and ('-' in data_set.percentage) %}
+        <td class="text-green" rowspan="{{ data_set.rows }}">
+            {{ data_set.percentage }}
+        </td>
+        {% else %}
         <td rowspan="{{ data_set.rows }}">
             {{ data_set.percentage }}
         </td>
+        {% endif %}
     </tr>
     {% for data in data_set.history %}
     <tr class="all-border">
         <td>{{ data.date }}</td>
-        <td>{{ data.value }}</td>
+        <td>{{ data.value }}
+            {% if (report.positive == true) and ('+' in data_set.percentage_history) and (loop.index == 1) %}
+            <br>
+            <span class="text-green">
+            {{ data_set.percentage_history }}
+        </span>
+            {% elif (report.positive == true) and ('-' in data_set.percentage_history) and (loop.index == 1) %}
+            <br>
+            <span class="text-red">
+            {{ data_set.percentage_history }}
+        </span>
+            {% elif (report.positive == false) and ('+' in data_set.percentage_history) and (loop.index == 1) %}
+            <br>
+            <span class="text-red">
+            {{ data_set.percentage_history }}
+        </span>
+            {% elif (report.positive == false) and ('-' in data_set.percentage_history) and (loop.index == 1) %}
+            <br>
+            <span class="text-green">
+            {{ data_set.percentage_history }}
+        </span>
+            {% elif loop.index == 1 %}
+            <br>
+            <span>
+            {{ data_set.percentage_history }}
+        </span>
+            {% endif %}
+        </td>
     </tr>
     {% endfor %}
     {% endfor %}
