@@ -165,7 +165,7 @@ getPrettyLocalizeTime(t) {
     }))
   }
 
-  tags(): Observable<string[]> {
+  tags(): Observable<string[]> | {} {
     return this.apiService.get('/regression/tags').pipe(switchMap(response => {
       let data = JSON.parse(response.data);
       let i = 1;
