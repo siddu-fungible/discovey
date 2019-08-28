@@ -93,7 +93,7 @@
     "full_run_iodepth": [32, 64, 96, 128],
     "fio_job_name": "inspur_8k_random_read_write",
     "mpstat_args": {"interval": 60, "output_file": "/tmp/mpstat.out", "cpu_list": "ALL"},
-    "stats_collect_details": [{"vp_utils": {"interval": 60}}, {"per_vp": {"interval": 60}}, {"resource_bam_args": {"interval": 60}}, {"vol_stats": {"interval": 60}}],
+    "stats_collect_details": [{"vp_utils": {"interval": 60}}, {"per_vp": {"interval": 60}}, {"resource_bam_args": {"interval": 60}}, {"vol_stats": {"interval": 60}}, {"vppkts_stats": {"interval": 60}}, {"psw_stats": {"interval": 60, "nu": true}}],
     "collect_network_stats": true,
     "csi_perf_iodepth": [64],
     "cal_amplification": true
@@ -146,7 +146,7 @@
     "full_run_iodepth": [32, 64, 96, 128],
     "fio_job_name": "inspur_8k_random_read",
     "mpstat_args": {"interval": 60, "output_file": "/tmp/mpstat.out", "cpu_list": "ALL"},
-    "stats_collect_details": {"vp_utils": {"interval": 60}, "per_vp": {"interval": 60}, "resource_bam_args": {"interval": 60}, "vol_stats": {"interval": 60}},
+    "stats_collect_details": [{"vp_utils": {"interval": 60}}, {"per_vp": {"interval": 60}}, {"resource_bam_args": {"interval": 60}}, {"vol_stats": {"interval": 60}}, {"vppkts_stats": {"interval": 60}}, {"psw_stats": {"interval": 60, "nu": true}}],
     "collect_network_stats": true,
     "csi_perf_iodepth": [64],
     "cal_amplification": true
@@ -199,7 +199,7 @@
     "full_run_iodepth": [32, 64, 96, 128],
     "fio_job_name": "inspur_8k_random_write",
     "mpstat_args": {"interval": 60, "output_file": "/tmp/mpstat.out", "cpu_list": "ALL"},
-    "stats_collect_details": {"vp_utils": {"interval": 60}, "per_vp": {"interval": 60}, "resource_bam_args": {"interval": 60}, "vol_stats": {"interval": 60}},
+    "stats_collect_details": [{"vp_utils": {"interval": 60}}, {"per_vp": {"interval": 60}}, {"resource_bam_args": {"interval": 60}}, {"vol_stats": {"interval": 60}}, {"vppkts_stats": {"interval": 60}}, {"psw_stats": {"interval": 60, "nu": true}}],
     "collect_network_stats": true,
     "csi_perf_iodepth": [64],
     "cal_amplification": true

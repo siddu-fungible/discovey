@@ -1175,7 +1175,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.log("FIO Command Output from {}:\n {}".format(host_name,
                                                                        fun_test.shared_variables["fio"][index]))
             finally:
-                stats_obj.stop(**self.stats_collect_details)
+                stats_obj.stop(self.stats_collect_details)
                 self.storage_controller.verbose = True
 
                 if self.cal_amplification:

@@ -973,7 +973,7 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                 fun_test.critical(str(ex))
                 fun_test.log("FIO Command Output for volume {}:\n {}".format(i, fio_output[combo][mode][i]))
             finally:
-                stats_obj.stop(**self.stats_collect_details)
+                stats_obj.stop(self.stats_collect_details)
                 self.storage_controller.verbose = True
 
             for func, arg in self.stats_collect_details.iteritems():

@@ -24,6 +24,7 @@ fio_perf_table_cols = ["block_size", "iodepth", "size", "mode", "writeiops", "re
 
 vp_stats_thread_stop_status = {}
 resource_bam_stats_thread_stop_status = {}
+unpacked_stats = {}
 
 
 class colors:
@@ -376,6 +377,8 @@ class CollectStats(object):
         self.stop_per_vp_stats = False
         self.stop_resource_bam = False
         self.stop_vol_stats = False
+        self.stop_vppkts_stats = False
+        self.stop_psw_stats = False
 
     def collect_vp_utils_stats(self, output_file, interval=10, count=3, non_zero_stats_only=True, threaded=True,
                                chunk=8192, command_timeout=DPCSH_COMMAND_TIMEOUT):
@@ -665,6 +668,117 @@ class CollectStats(object):
             fun_test.critical(str(ex))
         return output
 
+    def collect_vppkts_stats(self, output_file="/dev/null", interval=10, count=3, threaded=True, chunk=8192,
+                             display_diff=True, command_timeout=DPCSH_COMMAND_TIMEOUT):
+        output = False
+        column_headers = ["VP Pkts Stats", "Counters", "Diff Stats"]
+        self.curr_vppkts_stats = {}
+        result_vppkts_stats = OrderedDict()
+        if display_diff:
+            column_headers.append("Diff Stats")
+
+        try:
+            with open(output_file, 'a') as f:
+                timer = FunTimer(max_time=interval * count)
+                while not timer.is_expired():
+                    lines = []
+                    if threaded and (self.stop_vppkts_stats or self.stop_all):
+                        fun_test.log("Stopping VP Pkts stats collection thread")
+                        break
+                    self.socket_lock.acquire()
+                    vppkts_result = self.storage_controller.peek(props_tree="stats/vppkts", legacy=False,
+                                                                 chunk=chunk, command_duration=command_timeout)
+                    self.socket_lock.release()
+                    if vppkts_result["status"] and vppkts_result["data"] is not None:
+                        vppkts_stats = vppkts_result["data"]
+                        for key, value in vppkts_stats.iteritems():
+                            if value != 0:
+                                self.curr_vppkts_stats[key] = value
+                    if display_diff:
+                        if not hasattr(self, "prev_vppkts_stats"):
+                            self.prev_vppkts_stats = self.curr_vppkts_stats
+                        diff_vppkts_stats = get_diff_results(old_result=self.prev_vppkts_stats,
+                                                             new_result=self.curr_vppkts_stats)
+                    for key, value in self.curr_vppkts_stats.iteritems():
+                        if key not in result_vppkts_stats:
+                            result_vppkts_stats[key] = []
+                        result_vppkts_stats[key].append(value)
+                        if display_diff:
+                            result_vppkts_stats[key].append(diff_vppkts_stats[key])
+
+                    table_data = build_simple_table(data=result_vppkts_stats, column_headers=column_headers,
+                                                    split_values_to_columns=True)
+                    lines.append("\n########################  {} ########################\n".format(time.ctime()))
+                    lines.append(table_data.get_string())
+                    lines.append("\n\n")
+                    f.writelines(lines)
+                    self.prev_vppkts_stats = self.curr_vppkts_stats
+                    fun_test.sleep("for the next iteration - VP Pkts stats collection", seconds=interval)
+                output = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return output
+
+    def collect_psw_stats(self, output_file="/dev/null", interval=10, count=3, threaded=True, chunk=8192, nu=False,
+                          hnu=False, display_diff=True, command_timeout=10):
+        output = False
+        column_headers = ["PSW HNU/NU Stats", "Value"]
+        self.curr_psw_stats = {}
+        result_psw_stats = OrderedDict()
+        if display_diff:
+            column_headers.append("Diff Stats")
+
+        if nu and not hnu:
+            props_tree = "stats/psw/nu"
+        elif hnu and not nu:
+            props_tree = "stats/psw/hnu"
+        else:
+            props_tree = "stats/psw"
+
+        try:
+            with open(output_file, 'a') as f:
+                timer = FunTimer(max_time=interval * count)
+                while not timer.is_expired():
+                    lines = []
+                    if threaded and (self.stop_psw_stats or self.stop_all):
+                        fun_test.log("Stopping PSW stats collection thread")
+                        break
+                    self.socket_lock.acquire()
+                    psw_result = self.storage_controller.peek(props_tree=props_tree, legacy=False,
+                                                              chunk=chunk, command_duration=command_timeout)
+                    self.socket_lock.release()
+                    if psw_result["status"] and psw_result["data"] is not None:
+                        psw_stats = psw_result["data"]
+
+                        unpacked_psw_stats = unpack_nested_dict(input_dict=psw_stats)
+                        for key, value in unpacked_psw_stats.iteritems():
+                            if value != "0":
+                                self.curr_psw_stats[key] = value
+                        if display_diff:
+                            if not hasattr(self, "prev_psw_stats"):
+                                self.prev_psw_stats = self.curr_psw_stats
+                            diff_psw_stats = get_diff_results(old_result=self.prev_psw_stats,
+                                                              new_result=self.curr_psw_stats)
+                        for key, value in self.curr_psw_stats.iteritems():
+                            if key not in result_psw_stats:
+                                result_psw_stats[key] = []
+                            result_psw_stats[key].append(value)
+                            if display_diff:
+                                result_psw_stats[key].append(diff_psw_stats[key])
+
+                    table_data = build_simple_table(data=result_psw_stats, column_headers=column_headers,
+                                                    split_values_to_columns=True)
+                    lines.append("\n########################  {} ########################\n".format(time.ctime()))
+                    lines.append(table_data.get_string())
+                    lines.append("\n\n")
+                    f.writelines(lines)
+                    self.prev_psw_stats = self.curr_psw_stats
+                    fun_test.sleep("for the next iteration - PSW stats collection", seconds=interval)
+                output = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return output
+
     def start(self, file_suffix, stats_collect_details):
         try:
             start_time = 1
@@ -697,6 +811,16 @@ class CollectStats(object):
                         time_in_seconds=start_time, func=self.collect_vol_stats, **arg)
                     fun_test.log("Started the Volume stats collection thread having the ID: {}".
                                  format(stats_collect_details[index][func]["thread_id"]))
+                if func == "vppkts_stats":
+                    stats_collect_details[index][func]["thread_id"] = fun_test.execute_thread_after(
+                        time_in_seconds=start_time, func=self.collect_vppkts_stats, **arg)
+                    fun_test.log("Started the VP Pkts stats collection thread having the ID: {}".
+                                 format(stats_collect_details[index][func]["thread_id"]))
+                if func == "psw_stats":
+                    stats_collect_details[index][func]["thread_id"] = fun_test.execute_thread_after(
+                        time_in_seconds=start_time, func=self.collect_psw_stats, **arg)
+                    fun_test.log("Started the PSW stats collection thread having the ID: {}".
+                                 format(stats_collect_details[index][func]["thread_id"]))
                 start_time += start_dealy
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -725,6 +849,14 @@ class CollectStats(object):
                     fun_test.log("Volume Stats collection thread having the ID {} is still running...Stopping "
                                  "it now".format(thread_id))
                     self.stop_vol_stats = True
+                if func == "vppkts_stats":
+                    fun_test.critical("VP Pkts Stats collection thread having the ID {} is still running...Stopping "
+                                      "it now".format(thread_id))
+                    self.stop_vppkts_stats = True
+                if func == "psw_stats":
+                    fun_test.critical("PSW stats collection thread having the ID {} is still running...Stopping "
+                                      "it now".format(thread_id))
+                    self.stop_psw_stats = True
 
         # Wait for the threads to complete
         for index, stat_detail in enumerate(stats_collect_details):
@@ -744,6 +876,12 @@ class CollectStats(object):
                 if func == "vol_stats":
                     fun_test.log("Waiting for the Volume Stats collection thread having the ID {} to "
                                  "complete...".format(thread_id))
+                if func == "vppkts_stats":
+                    fun_test.critical("Waiting for the VP Pkts Stats collection thread having the ID {} to "
+                                      "complete...".format(thread_id))
+                if func == "psw_stats":
+                    fun_test.critical("Waiting for the PSW Stats collection thread having the ID {} to "
+                                      "complete...".format(thread_id))
                 fun_test.join_thread(fun_test_thread_id=thread_id, sleep_time=1)
 
 
@@ -873,3 +1011,39 @@ def vol_stats_diff(initial_vol_stats, final_vol_stats, vol_details):
         result["status"] = False
 
     return result
+
+
+def unpack_nested_dict(input_dict, prefix=''):
+    for key, value in sorted(input_dict.items()):
+        if isinstance(value, dict):
+            unpack_nested_dict(value, '{}{}_'.format(prefix, key))
+        else:
+            unpacked_stats["{}{}".format(prefix, key)] = "{}".format(value)
+    return unpacked_stats
+
+
+def get_diff_results(old_result, new_result):
+    result = {}
+    try:
+        for key, val in new_result.iteritems():
+            if isinstance(val, dict):
+                result[key] = get_diff_results(old_result=old_result[key], new_result=new_result[key])
+            if isinstance(val, list):
+                result[key] = []
+                try:
+                    result[key].append(map(subtract, val, old_result[key]))
+                except Exception as ex:
+                    fun_test.critical(str(ex))
+            else:
+                if not key in old_result:
+                    old_result[key] = 0
+                result[key] = new_result[key] - old_result[key]
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return result
+
+
+def subtract(a, b):
+    a = 0 if not a else a
+    b = 0 if not b else b
+    return a - b
