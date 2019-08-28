@@ -335,7 +335,7 @@ class MetricLib():
         kwargs["workspace_ids"] = workspace_ids
         return self.create_chart(**kwargs)
 
-    def new_dict(self, chart):
+    def _get_new_dict(self, chart):
         dict = OrderedDict()
         dict["name"] = chart.internal_chart_name
         dict["label"] = chart.chart_name
@@ -344,7 +344,7 @@ class MetricLib():
         return dict
 
     def get_dict(self, chart):
-        root_dict = self.new_dict(chart=chart)
+        root_dict = self._get_new_dict(chart=chart)
         children = json.loads(chart.children)
         for child in children:
             child_chart = MetricChart.objects.get(metric_id=int(child))
