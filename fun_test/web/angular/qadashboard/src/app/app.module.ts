@@ -83,6 +83,8 @@ import { AnnouncementFormComponent } from './performance/admin/announcement-form
 import { MessagesPanelComponent } from './ui-elements/messages-panel/messages-panel.component';
 import { PerformanceShowChartsWorkspaceComponent } from './performance/performance-workspace/performance-view-workspace/performance-show-charts-workspace/performance-show-charts-workspace.component';
 import { PerformanceShowReportWorkspaceComponent } from './performance/performance-workspace/performance-view-workspace/performance-show-report-workspace/performance-show-report-workspace.component';
+import { TextareaInputComponent } from './ui-elements/textarea-input/textarea-input.component';
+import { SuitesViewComponent } from './regression/suite-editor/suites-view/suites-view.component';
 
 
 @NgModule({
@@ -149,7 +151,9 @@ import { PerformanceShowReportWorkspaceComponent } from './performance/performan
     AnnouncementFormComponent,
     MessagesPanelComponent,
     PerformanceShowChartsWorkspaceComponent,
-    PerformanceShowReportWorkspaceComponent
+    PerformanceShowReportWorkspaceComponent,
+    TextareaInputComponent,
+    SuitesViewComponent
   ],
   imports: [
     BsDropdownModule,

@@ -8,11 +8,13 @@ import {CommonService} from "../../services/common/common.service";
 import {error} from "util";
 import {TestBedService} from "./test-bed.service";
 import {UserService} from "../../services/user/user.service";
+import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
 
 enum EditMode {
   NONE = 0,
   MANUAL_LOCK_INITIAL = "Set manual lock",
-  MANUAL_LOCK_UPDATE_EXPIRATION = "Update manual lock expiration"
+  MANUAL_LOCK_UPDATE_EXPIRATION = "Update manual lock expiration",
+  MANUAL_LOCK_ADD_TIME = "Add time to manual lock"
 }
 
 @Component({
@@ -23,6 +25,7 @@ enum EditMode {
 export class TestBedComponent implements OnInit {
   @Input() embed: boolean = false;
   schedulingTime = {hour: 1, minute: 1};
+  addedTime: number;
   testBeds: any [] = null;
   automationStatus = {};
   manualStatus = {};
@@ -38,8 +41,9 @@ export class TestBedComponent implements OnInit {
   driver = null;
   refreshing: string = null;
   userMap: any = null;
-  editingDescription: boolean = false;
   tempDescription: string;
+  tempNote: string;
+
 
 
   constructor(private regressionService: RegressionService,
@@ -47,7 +51,8 @@ export class TestBedComponent implements OnInit {
               private loggerService: LoggerService,
               private commonService: CommonService,
               private service: TestBedService,
-              private userService: UserService
+              private userService: UserService,
+              private modalService: NgbModal
   ) { }
 
   ngOnInit() {
@@ -125,7 +130,8 @@ export class TestBedComponent implements OnInit {
     return this.regressionService.fetchTestbeds().pipe(switchMap(response => {
       this.testBeds = response;
       this.testBeds.map(testBed => {
-        testBed['editingMode'] = false;
+        testBed.editingDescription = false;
+        testBed.editingNote = false;
         let numExecutions = -1;
         let executionId = -1;
         this.automationStatus[testBed.name] = {numExecutions: numExecutions,
@@ -186,9 +192,12 @@ export class TestBedComponent implements OnInit {
     this.lockPanelHeader = `${this.currentEditMode} ${string}`;
   }
 
-  onLock(testBed) {
+  onLock(content, testBed) {
     this.currentEditMode = this.EditMode.MANUAL_LOCK_INITIAL;
     this.setLockPanelHeader(`for ${testBed.name}`);
+    this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title', size: 'lg', backdrop: 'static'});
+
+
   }
 
   onUnLock(testBed) {
@@ -197,8 +206,8 @@ export class TestBedComponent implements OnInit {
       let payload = {manual_lock: false};
       this.apiService.put(url, payload).subscribe(response => {
         this.loggerService.success(`Unlock submitted for ${testBed.name}`);
-        window.location.reload();
-        //this.refreshTestBeds();
+        //window.location.reload();
+        this.refreshTestBeds();
       }, error => {
         this.loggerService.error(`Unlock ${testBed.name} failed`);
       })
@@ -206,13 +215,34 @@ export class TestBedComponent implements OnInit {
     }
   }
 
-  onExtendTime(testBed) {
+  onExtendTime(content, testBed) {
     this.currentEditMode = this.EditMode.MANUAL_LOCK_UPDATE_EXPIRATION;
     this.setLockPanelHeader(`for ${testBed.name}`);
+    this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title', backdrop: 'static'});
+
 
   }
 
-  onExtendTimeSubmit() {
+  onAddTime(content, testBed) {
+    this.currentEditMode = this.EditMode.MANUAL_LOCK_ADD_TIME;
+    this.setLockPanelHeader(`for ${testBed.name}`);
+    this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title', backdrop: 'static'});
+  }
+
+  onAddTimeSubmit(testBed) {
+    let url = "/api/v1/regression/test_beds/" + this.currentTestBed.id;
+    let payload = {manual_lock_extension_hour: this.addedTime, manual_lock_extension_minute: 0};
+    this.apiService.put(url, payload).subscribe(response => {
+      this.loggerService.success("Time successfully added");
+      this.refreshTestBeds();
+      this.currentEditMode = EditMode.NONE;
+    }, error => {
+      this.loggerService.error("Unable to add time");
+    });
+    testBed.addClick = false;
+  }
+
+  onExtendTimeSubmit(testBed) {
     let url = "/api/v1/regression/test_beds/" + this.currentTestBed.id;
     let payload = {manual_lock_extension_hour: this.schedulingTime.hour,
     manual_lock_extension_minute: this.schedulingTime.minute};
@@ -222,7 +252,8 @@ export class TestBedComponent implements OnInit {
       this.currentEditMode = EditMode.NONE;
     }, error => {
       this.loggerService.error("Unable to extend lock");
-    })
+    });
+    testBed.extendClick = false;
   }
 
 
@@ -242,8 +273,8 @@ export class TestBedComponent implements OnInit {
       this.selectedUser = null;
       this.schedulingTime.hour = 1;
       this.schedulingTime.minute = 1;
-      //this.refreshTestBeds();
-      window.location.reload();
+      this.refreshTestBeds();
+      //window.location.reload();
       this.currentEditMode = EditMode.NONE;
     }, error => {
       if (error.value instanceof ApiResponse) {
@@ -255,8 +286,11 @@ export class TestBedComponent implements OnInit {
     })
   }
 
-  onCloseLockPanel() {
+
+  onCancelLockPanel(testBed) {
     this.currentEditMode = this.EditMode.NONE;
+    testBed.extendClick = false;
+    testBed.addClick = false;
   }
 
   getUsers() {
@@ -315,16 +349,40 @@ export class TestBedComponent implements OnInit {
     }, error => {
       this.loggerService.error("Unable to update description");
     });
-    testBed.editingMode = false;
+    testBed.editingDescription = false;
   }
 
   onEditDescription(testBed) {
     this.tempDescription = testBed.description;
-    testBed.editingMode = true;
+    testBed.editingDescription = true;
+  }
+
+  onEditNote(testBed) {
+    this.tempNote = testBed.note;
+    testBed.editingNote = true;
+
+  }
+
+  onSubmitNote(testBed) {
+    let payload = {note: testBed.note};
+    this.apiService.put('/api/v1/regression/test_beds/' + testBed.id, payload).subscribe((response) => {
+      this.loggerService.success('Successfully updated!');
+    }, error => {
+      this.loggerService.error("Unable to update note");
+    });
+    testBed.editingNote = false;
+    this.tempNote = "";
+
+  }
+
+  onCancelNote(testBed) {
+    testBed.note = this.tempNote;
+    testBed.editingNote = false;
+
   }
 
   onCancelDescription(testBed) {
     testBed.description = this.tempDescription;
-    testBed.editingMode = false;
+    testBed.editingDescription = false;
   }
 }

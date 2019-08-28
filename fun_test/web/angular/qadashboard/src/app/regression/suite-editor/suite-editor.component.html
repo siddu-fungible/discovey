@@ -1,12 +1,34 @@
 <div class="component">
 
-  <button class="fun-button-add" (click)="onAddScript()">Add a script
-  </button>
+  <div class="fun-attribute">
+    <span class="fun-attribute-label">Suite name:</span>
+    <app-textarea-input [initialValue]="suite?.name" (valueChanged)="onNameChangedEvent($event)"></app-textarea-input>
+  </div>
 
-  <span *ngIf="!customTestBedValidated" class="fun-action-link" (click)="onAddCustomTestBedSpec(customTestBedSpecModalContent)">Add custom test-bed spec
-  </span>
-  <span *ngIf="customTestBedValidated" class="fun-action-link" (click)="onEditCustomTestBedSpec(customTestBedSpecModalContent)">Edit custom test-bed spec
-  </span>
+  <div class="fun-attribute">
+    <span class="fun-attribute-label">Short description:</span>
+    <app-textarea-input [initialValue]="suite?.short_description" (valueChanged)="onShortDescriptionChangedEvent($event)" [numRows]="4"></app-textarea-input>
+  </div>
+
+  <div style="max-width: 800px;" class="fun-attribute">
+    <span class="fun-attribute-label">Categories:</span>
+    <ng-multiselect-dropdown style="display: inline-block; width: 500px;" [placeholder]="'Select'" [data]="availableCategories" [settings]="dropDownSettings" [(ngModel)]="suite.categories">
+    </ng-multiselect-dropdown>
+  </div>
+
+  <div class="fun-attribute">
+    <span class="fun-attribute-label">Tags:</span>
+    <ng-multiselect-dropdown style="display: inline-block; width: 500px;" [placeholder]="'Select'" [data]="availableTags" [settings]="dropDownSettings" [(ngModel)]="suite.tags">
+    </ng-multiselect-dropdown>
+  </div>
+
+
+  <div *ngIf="!addingScript" style="display: flex; flex-direction: row;">
+    <button class="fun-button-add" (click)="onAddScript()">Add a script</button>
+    <button *ngIf="!customTestBedValidated" class="fun-button-add" (click)="onAddCustomTestBedSpec(customTestBedSpecModalContent)">Add custom test-bed spec</button>
+    <button *ngIf="customTestBedValidated" class="fun-button-add" (click)="onEditCustomTestBedSpec(customTestBedSpecModalContent)">Edit custom test-bed spec</button>
+  </div>
+
 
   <div class="fun-panel" *ngIf="addingScript">
     <div class="fun-panel-header">
@@ -30,8 +52,8 @@
         </div>
       </form>
 
-      <span class="fun-cancel-link" (click)="onCancelNewSuiteEntry()">Cancel</span> &nbsp;
-      <button class="fun-button-submit" [ngClass]="{'fun-button-disabled': !currentScriptPath}" (click)="onSubmitNewSuiteEntry()">Submit</button>
+      <span class="fun-cancel-link" (click)="onCancelNewSuiteEntry()">Cancel</span>
+      <button class="fun-button-submit" [ngClass]="{'fun-button-disabled': !currentScriptPath}" (click)="onSubmitNewSuiteEntry()">Add</button>
     </div>
 
 
@@ -89,7 +111,6 @@
                   *ngIf="customTestBedSpecForm.controls[_getAssetSelectionKey(flattenedAssetTypeName)].value == CustomAssetSelection.SPECIFIC">
                   <ng-multiselect-dropdown [placeholder]="'Select'"
                                            [data]="filterAssetsBySelectedTestBed(customTestBedSpecForm.controls.selectedTestBed?.value.name, flattenedAssetTypeNameMap[flattenedAssetTypeName].data)"
-                                           [data]="filterAssetsBySelectedTestBed(customTestBedSpecForm.controls.selectedTestBed?.value, flattenedAssetTypeNameMap[flattenedAssetTypeName].data)"
                                            formControlName="{{ _getSpecificAssetsKey(flattenedAssetTypeName) }}"
                                            [settings]="dropDownSettings">
                   </ng-multiselect-dropdown>
@@ -135,6 +156,27 @@
 
 
   </ng-container>
+
+  <ng-container *ngIf="suite">
+    {{ suiteEntry | json }}
+    <table>
+      <tr>
+        <th>Script</th>
+        <th>Inputs</th>
+        <th>Test-case IDs</th>
+      </tr>
+      <ng-container *ngFor="let suiteEntry of suite.entries">
+        <tr>
+          <td>{{ suiteEntry.script_path }}</td>
+          <td>{{ suiteEntry.inputs }}</td>
+          <td>{{ suiteEntry.test_case_ids }}</td>
+        </tr>
+
+      </ng-container>
+    </table>
+  </ng-container>
+
+  <button [ngClass]="{'fun-button-disabled' : suite?.entries?.length < 1}" class="fun-button-submit" (click)="onSubmitSuite()">Submit</button>
 
   <button (click)="test()">Test</button>
 
