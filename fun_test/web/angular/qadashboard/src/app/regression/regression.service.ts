@@ -165,7 +165,7 @@ getPrettyLocalizeTime(t) {
     }))
   }
 
-  tags() {
+  tags(): Observable<string[]> {
     return this.apiService.get('/regression/tags').pipe(switchMap(response => {
       let data = JSON.parse(response.data);
       let i = 1;
@@ -175,7 +175,7 @@ getPrettyLocalizeTime(t) {
       }
       return of(parsedTags);
     }), catchError(error => {
-      throw(error);
+      throw (["Unable to fetch tags"]);
     }))
   }
 
