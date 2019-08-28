@@ -6,7 +6,7 @@
     "syslog_level": 2,
     "command_timeout": 30,
     "reboot_timeout": 300,
-    "no_of_powercycles": 40,
+    "no_of_powercycles": 5,
     "huid": 3,
     "ctlid": 2,
     "fnid": 2,
