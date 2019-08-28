@@ -194,11 +194,7 @@ export class TestBedComponent implements OnInit {
   onLock(content, testBed) {
     this.currentEditMode = this.EditMode.MANUAL_LOCK_INITIAL;
     this.setLockPanelHeader(`for ${testBed.name}`);
-    this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title', windowClass: 'lockModal', backdrop: 'static'}).result.then((dontCare) => {
-
-    }, ((reason) => {
-      //this.closeResult = `Dismissed ${this.getDismissReason(reason)}`;
-    }));
+    this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title', windowClass: 'lockModal', backdrop: 'static'});
 
 
   }
@@ -209,8 +205,8 @@ export class TestBedComponent implements OnInit {
       let payload = {manual_lock: false};
       this.apiService.put(url, payload).subscribe(response => {
         this.loggerService.success(`Unlock submitted for ${testBed.name}`);
-        window.location.reload();
-        //this.refreshTestBeds();
+        //window.location.reload();
+        this.refreshTestBeds();
       }, error => {
         this.loggerService.error(`Unlock ${testBed.name} failed`);
       })
@@ -221,12 +217,7 @@ export class TestBedComponent implements OnInit {
   onExtendTime(content, testBed) {
     this.currentEditMode = this.EditMode.MANUAL_LOCK_UPDATE_EXPIRATION;
     this.setLockPanelHeader(`for ${testBed.name}`);
-    this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title', backdrop: 'static'}).result.then((dontCare) => {
-      testBed['addClick'] = false;
-
-    }, ((reason) => {
-      //this.closeResult = `Dismissed ${this.getDismissReason(reason)}`;
-    }));
+    this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title', backdrop: 'static'});
 
 
   }
@@ -234,13 +225,7 @@ export class TestBedComponent implements OnInit {
   onAddTime(content, testBed) {
     this.currentEditMode = this.EditMode.MANUAL_LOCK_ADD_TIME;
     this.setLockPanelHeader(`for ${testBed.name}`);
-    this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title', backdrop: 'static'}).result.then((dontCare) => {
-      testBed['extendClick'] = false;
-
-
-    }, ((reason) => {
-      //this.closeResult = `Dismissed ${this.getDismissReason(reason)}`;
-    }));
+    this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title', backdrop: 'static'});
   }
 
   onAddTimeSubmit(testbed) {
