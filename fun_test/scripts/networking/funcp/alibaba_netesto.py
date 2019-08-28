@@ -34,9 +34,15 @@ class SetupBringup(alibaba_fcp_setup.ScriptSetup):
 
         fun_test.log("Configure irq affinity")
         for hu in funeth_obj.hu_hosts:
-            funeth_obj.configure_irq_affinity(hu, tx_or_rx='tx', cpu_list=funeth.CPU_LIST_HOST)
-            funeth_obj.configure_irq_affinity(hu, tx_or_rx='rx', cpu_list=funeth.CPU_LIST_HOST)
-            funeth_obj.interrupt_coalesce(hu, disable=True)
+            if hu == 'hu5':
+                funeth_obj.configure_irq_affinity(hu, tx_or_rx='tx', cpu_list=range(8, 16))
+                funeth_obj.configure_irq_affinity(hu, tx_or_rx='tx', cpu_list=range(8, 16))
+                funeth_obj.interrupt_coalesce(hu, disable=True)
+            else:
+                funeth_obj.configure_irq_affinity(hu, tx_or_rx='tx', cpu_list=range(0, 8))
+                funeth_obj.configure_irq_affinity(hu, tx_or_rx='rx', cpu_list=range(0, 8))
+            if hu == 'hu6':
+                funeth_obj.interrupt_coalesce(hu, disable=True)
             # lock_cpu_freq(funeth_obj=funeth_obj, hu=hu)
 
         for nu in funeth_obj.nu_hosts:

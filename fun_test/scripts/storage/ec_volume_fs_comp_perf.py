@@ -165,7 +165,7 @@ class ECVolumeLevelTestcase(FunTestCase):
     def run(self):
         table_data_header = None
         testcase = self.__class__.__name__
-        stats_table_lst = []
+        test_method = testcase[4:]
         job_perfix = self.read_fio_cmd_args["name"]
         job_inputs = fun_test.get_job_inputs()
         collect_artifacts = job_inputs["collect_artifacts"] if job_inputs and "collect_artifacts" in job_inputs else True
@@ -185,6 +185,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                                      self.nvme_device,
                                      self.write_fio_cmd_args["buffer_compress_percentage"]))
             # Do seq and rand read for the writes
+            table_data_rows = []
             for mode in self.fio_modes:
                 fio_cmd_args = copy.copy(self.read_fio_cmd_args)
                 fio_cmd_args["rw"] = mode
@@ -229,60 +230,53 @@ class ECVolumeLevelTestcase(FunTestCase):
                                          fio_cmd_args["rw"],
                                          fio_cmd_args["runtime"],
                                          self.nvme_device))
-                perf_stats = parse_perf_stats(fio_perf_output["write"]) if mode == "write" else parse_perf_stats(
-                    fio_perf_output["read"])
-                if set_header:
-                    set_header = False
-                    table_data_header = sorted(perf_stats.keys())
-                table_row1 = [perf_stats[key] for key in table_data_header]
-                perf_stats["block_size"] = fio_cmd_args["bs"]
-                perf_stats["iodepth"] = fio_cmd_args["iodepth"]
-                perf_stats["operation"] = fio_cmd_args["rw"]
-                perf_stats["job_name"] = fio_cmd_args["name"]
-                perf_stats["size"] = fio_cmd_args["size"]
+                row_data_dict = {"mode": mode,
+                                 "block_size": fio_cmd_args["bs"],
+                                 "iodepth": fio_cmd_args["iodepth"] * fio_cmd_args["numjobs"],
+                                 "size": "{}G".format(self.ec_info["capacity"] >> 30),
+                                 "fio_job_name": fio_cmd_args["name"]}
+                if mode == "read" or mode == "randread":
+                    for key in fio_perf_output["write"]:
+                        fio_perf_output["write"][key] = -1
+                elif mode == "write":
+                    for key in fio_perf_output["read"]:
+                        fio_perf_output["read"][key] = -1
 
+                for op, stats in fio_perf_output.items():
+                    for field, value in stats.items():
+                        if field == "iops":
+                            fio_perf_output[op][field] = int(round(value))
+                        if field == "bw":
+                            # Converting the KBps to MBps
+                            fio_perf_output[op][field] = int(round(value / 1000))
+                        if field == "latency":
+                            fio_perf_output[op][field] = int(round(value))
+                        row_data_dict[op + field] = fio_perf_output[op][field]
+                if not fio_perf_output:
+                    fio_perf_output = False
+                    fun_test.critical("No output from FIO test, hence moving to the next variation")
+                    continue
+
+                row_data_list = []
+                for i in fio_perf_table_cols:
+                    if i not in row_data_dict:
+                        row_data_list.append(-1)
+                    else:
+                        row_data_list.append(row_data_dict[i])
+
+                table_data_rows.append(row_data_list)
                 if fun_global.is_production_mode() and fun_test.shared_variables["post_result"]:
-                    fun_test.log("Updating the following stats on database: {}".format(perf_stats))
-                    self.post_results(test=testcase, test_stats=perf_stats)  # publish only compression stats on db
-                table_row1.insert(0, "<b>{}</b>".format(mode.capitalize()))
-                table_rows.append(table_row1)
-            table_data_header.insert(0, "")  # Align Table according to rows
-            table_data = {"headers": table_data_header, "rows": table_rows}
-            stats_table_lst.append({"table_name": test["name"], "table_data": table_data})
+                    post_results(testcase,
+                                 test_method,
+                                 fun_test.shared_variables["db_log_time"],
+                                 fun_test.shared_variables["num_ssd"],
+                                 fun_test.shared_variables["num_volume"],
+                                 *row_data_list)
 
-        # Print Tabulated Stats
-        panel_header = testcase + " Performance Stats"
-        for stats in stats_table_lst:
-            fun_test.add_table(panel_header=panel_header,
-                               table_name=stats["table_name"], table_data=stats["table_data"])
-
-    def post_results(self, test, test_stats):
-        blt = BltVolumePerformanceHelper()
-
-        blt.add_entry(date_time=fun_test.shared_variables["db_log_time"],
-                      volume=VOL_TYPE,
-                      test=test,
-                      block_size=test_stats["block_size"],
-                      io_depth=test_stats["iodepth"],
-                      size=test_stats["size"],
-                      operation=test_stats["operation"],
-                      num_ssd=fun_test.shared_variables["num_ssd"],
-                      num_volume=fun_test.shared_variables["num_volume"],
-                      fio_job_name=test_stats["job_name"],
-                      read_iops=test_stats["iops"],
-                      read_throughput=test_stats["bw"],
-                      read_avg_latency=test_stats["latency"],
-                      read_90_latency=test_stats["latency90"],
-                      read_95_latency=test_stats["latency95"],
-                      read_99_latency=test_stats["latency99"],
-                      read_99_99_latency=test_stats["latency9999"],
-                      read_iops_unit="ops",
-                      read_throughput_unit="MBps",
-                      read_avg_latency_unit="usecs",
-                      read_90_latency_unit="usecs",
-                      read_95_latency_unit="usecs",
-                      read_99_latency_unit="usecs",
-                      read_99_99_latency_unit="usecs")
+            table_data = {"headers": fio_perf_table_header, "rows": table_data_rows}
+            fun_test.add_table(panel_header=testcase + " Performance Stats",
+                               table_name=test["name"],
+                               table_data=table_data)
 
     def cleanup(self):
         # detach volume from controller

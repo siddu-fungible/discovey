@@ -7,9 +7,11 @@ import sys
 import os
 import time
 from lib.system.fun_test import fun_test, FunTimer
+from fun_global import get_current_time
 from lib.system.utils import ToDictMixin
 import json
 import copy
+import traceback
 
 class NoLogger:
     def __init__(self):
@@ -94,6 +96,7 @@ class Linux(object, ToDictMixin):
     IPTABLES_PROTOCOL_TCP = "tcp"
 
     TO_DICT_VARS = ["host_ip", "ssh_username", "ssh_password", "ssh_port"]
+    DEBUG_LOG_FILE = "/tmp/linux_debug.txt"
 
     def __init__(self,
                  host_ip,
@@ -338,9 +341,20 @@ class Linux(object, ToDictMixin):
             if not self._set_paths():
                 raise Exception("Unable to set paths")
             result = True
+            self._add_to_debug_log()
         else:
             self.handle = None
         return result
+
+    def _add_to_debug_log(self):
+        # IN-478
+        try:
+            s = "{} {}\n".format(get_current_time(), traceback.format_stack())
+            f = open(self.DEBUG_LOG_FILE, "a+")
+            f.write(s)
+            f.close()
+        except:
+            pass
 
     def _set_term_settings(self):
         self.command("shopt -s checkwinsize")

@@ -35,7 +35,8 @@ if __name__ == "__main__rand_read_qd_multi_host":
                         "nhosts", "vol_12")
                 one_data_set = {}
                 one_data_set["name"] = "qd128"
-                one_data_set["inputs"] = {"input_platform": FunPlatform.F1, "input_fio_job_name": "fio_tcp_randread_blt_32_4_vol_12"}
+                one_data_set["inputs"] = {"input_platform": FunPlatform.F1,
+                                          "input_fio_job_name": "fio_tcp_randread_blt_32_4_vol_12"}
                 one_data_set["output"] = {"name": "output_read_iops", "min": 0, "max": -1, "expected": -1,
                                           "reference": -1,
                                           "unit": PerfUnit.UNIT_OPS}
@@ -163,7 +164,6 @@ if __name__ == "__main__rand_read_qd_multi_host":
                         platform=FunPlatform.F1).save()
     print "added charts f0r 2,4,8 volumes"
 
-
 if __name__ == "__main_s1_teramarks__":
     with open(METRICS_BASE_DATA_FILE, "r") as f:
         metrics = json.load(f)
@@ -184,10 +184,10 @@ if __name__ == "__main_s1_teramarks__":
                 result = set_internal_name(tera_mark)
                 print json.dumps(result)
 
-
 if __name__ == "__main_l4_firewall__":
     internal_chart_names = ["l4_firewall_flow_128m_flows_throughput", "l4_firewall_flow_128m_flows_pps",
-                            "l4_firewall_flow_128m_flows_latency_full_load", "l4_firewall_flow_128m_flows_latency_half_load"]
+                            "l4_firewall_flow_128m_flows_latency_full_load",
+                            "l4_firewall_flow_128m_flows_latency_half_load"]
     for internal_chart_name in internal_chart_names:
         chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
         temp_data_sets = json.loads(chart.data_sets)
@@ -291,38 +291,38 @@ if __name__ == "__main__underlay":
 
 if __name__ == "__main_inspur__":
     internal_chart_names = OrderedDict([  # read iops
-                                        ("pocs_inspur_8111_8k_rand_read_iodepth_1_iops", 1),
-                                        ("pocs_inspur_8111_8k_rand_read_iodepth_8_iops", 8),
-                                        ("pocs_inspur_8111_8k_rand_read_iodepth_16_iops", 16),
-                                        ("pocs_inspur_8111_8k_rand_read_iodepth_32_iops", 32),
-                                        ("pocs_inspur_8111_8k_rand_read_iodepth_64_iops", 64),
-                                        ("pocs_inspur_8111_8k_rand_read_iodepth_96_iops", 96),
-                                        ("pocs_inspur_8111_8k_rand_read_iodepth_128_iops", 128),
-                                        # write iops
-                                        ("pocs_inspur_8111_8k_rand_write_iodepth_1_iops", 1),
-                                        ("pocs_inspur_8111_8k_rand_write_iodepth_8_iops", 8),
-                                        ("pocs_inspur_8111_8k_rand_write_iodepth_16_iops", 16),
-                                        ("pocs_inspur_8111_8k_rand_write_iodepth_32_iops", 32),
-                                        ("pocs_inspur_8111_8k_rand_write_iodepth_64_iops", 64),
-                                        ("pocs_inspur_8111_8k_rand_write_iodepth_96_iops", 96),
-                                        ("pocs_inspur_8111_8k_rand_write_iodepth_128_iops", 128),
-                                        # read latency
-                                        ("pocs_inspur_8111_8k_rand_read_iodepth_1_latency", 1),
-                                        ("pocs_inspur_8111_8k_rand_read_iodepth_8_latency", 8),
-                                        ("pocs_inspur_8111_8k_rand_read_iodepth_16_latency", 16),
-                                        ("pocs_inspur_8111_8k_rand_read_iodepth_32_latency", 32),
-                                        ("pocs_inspur_8111_8k_rand_read_iodepth_64_latency", 64),
-                                        ("pocs_inspur_8111_8k_rand_read_iodepth_96_latency", 96),
-                                        ("pocs_inspur_8111_8k_rand_read_iodepth_128_latency", 128),
-                                        # write latency
-                                        ("pocs_inspur_8111_8k_rand_write_iodepth_1_latency", 1),
-                                        ("pocs_inspur_8111_8k_rand_write_iodepth_8_latency", 8),
-                                        ("pocs_inspur_8111_8k_rand_write_iodepth_16_latency", 16),
-                                        ("pocs_inspur_8111_8k_rand_write_iodepth_32_latency", 32),
-                                        ("pocs_inspur_8111_8k_rand_write_iodepth_64_latency", 64),
-                                        ("pocs_inspur_8111_8k_rand_write_iodepth_96_latency", 96),
-                                        ("pocs_inspur_8111_8k_rand_write_iodepth_128_latency", 128),
-                                        ])
+        ("pocs_inspur_8111_8k_rand_read_iodepth_1_iops", 1),
+        ("pocs_inspur_8111_8k_rand_read_iodepth_8_iops", 8),
+        ("pocs_inspur_8111_8k_rand_read_iodepth_16_iops", 16),
+        ("pocs_inspur_8111_8k_rand_read_iodepth_32_iops", 32),
+        ("pocs_inspur_8111_8k_rand_read_iodepth_64_iops", 64),
+        ("pocs_inspur_8111_8k_rand_read_iodepth_96_iops", 96),
+        ("pocs_inspur_8111_8k_rand_read_iodepth_128_iops", 128),
+        # write iops
+        ("pocs_inspur_8111_8k_rand_write_iodepth_1_iops", 1),
+        ("pocs_inspur_8111_8k_rand_write_iodepth_8_iops", 8),
+        ("pocs_inspur_8111_8k_rand_write_iodepth_16_iops", 16),
+        ("pocs_inspur_8111_8k_rand_write_iodepth_32_iops", 32),
+        ("pocs_inspur_8111_8k_rand_write_iodepth_64_iops", 64),
+        ("pocs_inspur_8111_8k_rand_write_iodepth_96_iops", 96),
+        ("pocs_inspur_8111_8k_rand_write_iodepth_128_iops", 128),
+        # read latency
+        ("pocs_inspur_8111_8k_rand_read_iodepth_1_latency", 1),
+        ("pocs_inspur_8111_8k_rand_read_iodepth_8_latency", 8),
+        ("pocs_inspur_8111_8k_rand_read_iodepth_16_latency", 16),
+        ("pocs_inspur_8111_8k_rand_read_iodepth_32_latency", 32),
+        ("pocs_inspur_8111_8k_rand_read_iodepth_64_latency", 64),
+        ("pocs_inspur_8111_8k_rand_read_iodepth_96_latency", 96),
+        ("pocs_inspur_8111_8k_rand_read_iodepth_128_latency", 128),
+        # write latency
+        ("pocs_inspur_8111_8k_rand_write_iodepth_1_latency", 1),
+        ("pocs_inspur_8111_8k_rand_write_iodepth_8_latency", 8),
+        ("pocs_inspur_8111_8k_rand_write_iodepth_16_latency", 16),
+        ("pocs_inspur_8111_8k_rand_write_iodepth_32_latency", 32),
+        ("pocs_inspur_8111_8k_rand_write_iodepth_64_latency", 64),
+        ("pocs_inspur_8111_8k_rand_write_iodepth_96_latency", 96),
+        ("pocs_inspur_8111_8k_rand_write_iodepth_128_latency", 128),
+    ])
 
     owner_info = "Ravi Hulle (ravi.hulle@fungible.com)"
     source = "https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/storage/" \
@@ -410,7 +410,6 @@ if __name__ == "__main_inspur__":
         print ("Metric id: {}".format(metric_id))
         print ("Data sets: {}".format(data_sets))
 
-
 if __name__ == "__main_crypto_s1__":
     internal_chart_names = OrderedDict([("crypto_dp_tunnel_perf_S1", "pktsize: 354B"),
                                         ("crypto_ipsec_perf_S1", "pktsize: 354B")])
@@ -467,7 +466,6 @@ if __name__ == "__main_crypto_s1__":
                     work_in_progress=False).save()
         print ("Metric id: {}".format(metric_id))
         print ("Data sets: {}".format(data_sets))
-
 
 if __name__ == "__main_6vol_6f1_inspur__":
     # Add the 6 vol field for inspur 8_11 F1s = 6 charts
@@ -566,7 +564,6 @@ if __name__ == "__main__channel_parall_performance":
         chart.save()
     print "added channel parall chart for n=100"
 
-
 if __name__ == "__main__durable_ec_vol":
     internal_chart_names = OrderedDict([("durable_vol_ec_comp_nvme_tcp_write_iops", "nvme iops"),
                                         ("durable_vol_ec_comp_pcie_write_iops", "pcie iops"),
@@ -661,26 +658,26 @@ if __name__ == "__main__durable_ec_vol":
 
 if __name__ == "__main__inspur_charts":
     internal_chart_names = OrderedDict([  # read iops
-                                        ("pocs_inspur_8111_8k_rand_read_iodepth_32_iops_f1_6", 32),
-                                        ("pocs_inspur_8111_8k_rand_read_iodepth_64_iops_f1_6", 64),
-                                        ("pocs_inspur_8111_8k_rand_read_iodepth_96_iops_f1_6", 96),
-                                        ("pocs_inspur_8111_8k_rand_read_iodepth_128_iops_f1_6", 128),
-                                        # write iops
-                                        ("pocs_inspur_8111_8k_rand_write_iodepth_32_iops_f1_6", 32),
-                                        ("pocs_inspur_8111_8k_rand_write_iodepth_64_iops_f1_6", 64),
-                                        ("pocs_inspur_8111_8k_rand_write_iodepth_96_iops_f1_6", 96),
-                                        ("pocs_inspur_8111_8k_rand_write_iodepth_128_iops_f1_6", 128),
-                                        # read latency
-                                        ("pocs_inspur_8111_8k_rand_read_iodepth_32_latency_f1_6", 32),
-                                        ("pocs_inspur_8111_8k_rand_read_iodepth_64_latency_f1_6", 64),
-                                        ("pocs_inspur_8111_8k_rand_read_iodepth_96_latency_f1_6", 96),
-                                        ("pocs_inspur_8111_8k_rand_read_iodepth_128_latency_f1_6", 128),
-                                        # write latency
-                                        ("pocs_inspur_8111_8k_rand_write_iodepth_32_latency_f1_6", 32),
-                                        ("pocs_inspur_8111_8k_rand_write_iodepth_64_latency_f1_6", 64),
-                                        ("pocs_inspur_8111_8k_rand_write_iodepth_96_latency_f1_6", 96),
-                                        ("pocs_inspur_8111_8k_rand_write_iodepth_128_latency_f1_6", 128),
-                                        ])
+        ("pocs_inspur_8111_8k_rand_read_iodepth_32_iops_f1_6", 32),
+        ("pocs_inspur_8111_8k_rand_read_iodepth_64_iops_f1_6", 64),
+        ("pocs_inspur_8111_8k_rand_read_iodepth_96_iops_f1_6", 96),
+        ("pocs_inspur_8111_8k_rand_read_iodepth_128_iops_f1_6", 128),
+        # write iops
+        ("pocs_inspur_8111_8k_rand_write_iodepth_32_iops_f1_6", 32),
+        ("pocs_inspur_8111_8k_rand_write_iodepth_64_iops_f1_6", 64),
+        ("pocs_inspur_8111_8k_rand_write_iodepth_96_iops_f1_6", 96),
+        ("pocs_inspur_8111_8k_rand_write_iodepth_128_iops_f1_6", 128),
+        # read latency
+        ("pocs_inspur_8111_8k_rand_read_iodepth_32_latency_f1_6", 32),
+        ("pocs_inspur_8111_8k_rand_read_iodepth_64_latency_f1_6", 64),
+        ("pocs_inspur_8111_8k_rand_read_iodepth_96_latency_f1_6", 96),
+        ("pocs_inspur_8111_8k_rand_read_iodepth_128_latency_f1_6", 128),
+        # write latency
+        ("pocs_inspur_8111_8k_rand_write_iodepth_32_latency_f1_6", 32),
+        ("pocs_inspur_8111_8k_rand_write_iodepth_64_latency_f1_6", 64),
+        ("pocs_inspur_8111_8k_rand_write_iodepth_96_latency_f1_6", 96),
+        ("pocs_inspur_8111_8k_rand_write_iodepth_128_latency_f1_6", 128),
+    ])
 
     owner_info = "Ravi Hulle (ravi.hulle@fungible.com)"
     source = "https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/storage/" \
@@ -759,8 +756,7 @@ if __name__ == "__main__inspur_charts":
         print ("Metric id: {}".format(metric_id))
         print ("Data sets: {}".format(data_sets))
 
-
-if __name__ == "__main__":
+if __name__ == "__main_alibaba_rdma__":
 
     # Alibaba rdma latency charts
 
@@ -850,22 +846,38 @@ if __name__ == "__main__":
     # Alibaba rdma Bandwidth and packet rates charts
 
     internal_chart_names = OrderedDict([
-        ("alibaba_rdma_nfcp_f1_2_mtu_1500_write_bandwidth", {"fcp": False, "mtu":1500,"mode":"write", "field": "bandwidth"}),
-        ("alibaba_rdma_nfcp_f1_2_mtu_1500_read_bandwidth", {"fcp": False, "mtu":1500, "mode": "read", "field": "bandwidth"}, ),
-        ("alibaba_rdma_nfcp_f1_2_mtu_9000_write_bandwidth", {"fcp": False, "mtu":9000, "mode": "write", "field": "bandwidth"}),
-        ("alibaba_rdma_nfcp_f1_2_mtu_9000_read_bandwidth", {"fcp": False, "mtu":9000, "mode": "read", "field": "bandwidth"}),
-        ("alibaba_rdma_fcp_f1_2_mtu_1500_write_bandwidth", {"fcp": True, "mtu": 1500, "mode": "write", "field": "bandwidth"}),
-        ("alibaba_rdma_fcp_f1_2_mtu_1500_read_bandwidth", {"fcp": True, "mtu": 1500, "mode": "read", "field": "bandwidth"}),
-        ("alibaba_rdma_fcp_f1_2_mtu_9000_write_bandwidth", {"fcp": True, "mtu": 9000, "mode": "write", "field": "bandwidth"}),
-        ("alibaba_rdma_fcp_f1_2_mtu_9000_read_bandwidth", {"fcp": True, "mtu": 9000, "mode": "read", "field": "bandwidth"}),
-        ("alibaba_rdma_nfcp_f1_2_mtu_1500_write_packet_rate", {"fcp": False, "mtu": 1500, "mode": "write", "field": "packet_size"}),
-        ("alibaba_rdma_nfcp_f1_2_mtu_1500_read_packet_rate", {"fcp": False, "mtu": 1500, "mode": "read", "field": "packet_size"}),
-        ("alibaba_rdma_nfcp_f1_2_mtu_9000_write_packet_rate", {"fcp": False, "mtu": 9000, "mode": "write", "field": "packet_size"}),
-        ("alibaba_rdma_nfcp_f1_2_mtu_9000_read_packet_rate", {"fcp": False, "mtu": 9000, "mode": "read", "field": "packet_size"}),
-        ("alibaba_rdma_fcp_f1_2_mtu_1500_write_packet_rate", {"fcp": True, "mtu": 1500, "mode": "write", "field": "packet_size"}),
-        ("alibaba_rdma_fcp_f1_2_mtu_1500_read_packet_rate", {"fcp": True, "mtu": 1500, "mode": "read", "field": "packet_size"}),
-        ("alibaba_rdma_fcp_f1_2_mtu_9000_write_packet_rate", {"fcp": True, "mtu": 9000, "mode": "write", "field": "packet_size"}),
-        ("alibaba_rdma_fcp_f1_2_mtu_9000_read_packet_rate", {"fcp": True, "mtu": 9000, "mode": "read", "field": "packet_size"})
+        ("alibaba_rdma_nfcp_f1_2_mtu_1500_write_bandwidth",
+         {"fcp": False, "mtu": 1500, "mode": "write", "field": "bandwidth"}),
+        ("alibaba_rdma_nfcp_f1_2_mtu_1500_read_bandwidth",
+         {"fcp": False, "mtu": 1500, "mode": "read", "field": "bandwidth"},),
+        ("alibaba_rdma_nfcp_f1_2_mtu_9000_write_bandwidth",
+         {"fcp": False, "mtu": 9000, "mode": "write", "field": "bandwidth"}),
+        ("alibaba_rdma_nfcp_f1_2_mtu_9000_read_bandwidth",
+         {"fcp": False, "mtu": 9000, "mode": "read", "field": "bandwidth"}),
+        ("alibaba_rdma_fcp_f1_2_mtu_1500_write_bandwidth",
+         {"fcp": True, "mtu": 1500, "mode": "write", "field": "bandwidth"}),
+        ("alibaba_rdma_fcp_f1_2_mtu_1500_read_bandwidth",
+         {"fcp": True, "mtu": 1500, "mode": "read", "field": "bandwidth"}),
+        ("alibaba_rdma_fcp_f1_2_mtu_9000_write_bandwidth",
+         {"fcp": True, "mtu": 9000, "mode": "write", "field": "bandwidth"}),
+        ("alibaba_rdma_fcp_f1_2_mtu_9000_read_bandwidth",
+         {"fcp": True, "mtu": 9000, "mode": "read", "field": "bandwidth"}),
+        ("alibaba_rdma_nfcp_f1_2_mtu_1500_write_packet_rate",
+         {"fcp": False, "mtu": 1500, "mode": "write", "field": "packet_size"}),
+        ("alibaba_rdma_nfcp_f1_2_mtu_1500_read_packet_rate",
+         {"fcp": False, "mtu": 1500, "mode": "read", "field": "packet_size"}),
+        ("alibaba_rdma_nfcp_f1_2_mtu_9000_write_packet_rate",
+         {"fcp": False, "mtu": 9000, "mode": "write", "field": "packet_size"}),
+        ("alibaba_rdma_nfcp_f1_2_mtu_9000_read_packet_rate",
+         {"fcp": False, "mtu": 9000, "mode": "read", "field": "packet_size"}),
+        ("alibaba_rdma_fcp_f1_2_mtu_1500_write_packet_rate",
+         {"fcp": True, "mtu": 1500, "mode": "write", "field": "packet_size"}),
+        ("alibaba_rdma_fcp_f1_2_mtu_1500_read_packet_rate",
+         {"fcp": True, "mtu": 1500, "mode": "read", "field": "packet_size"}),
+        ("alibaba_rdma_fcp_f1_2_mtu_9000_write_packet_rate",
+         {"fcp": True, "mtu": 9000, "mode": "write", "field": "packet_size"}),
+        ("alibaba_rdma_fcp_f1_2_mtu_9000_read_packet_rate",
+         {"fcp": True, "mtu": 9000, "mode": "read", "field": "packet_size"})
     ])
     model_name = "AlibabaRdmaPerformance"
     description = "TBD"
@@ -951,3 +963,110 @@ if __name__ == "__main__":
             print ("Data sets: {}".format(data_sets))
             for i in data_sets:
                 print i
+
+if __name__ == "__main__":
+    date_time = parser.parse("2019-08-27 04:45:25.582587-07:00")
+    volume = "Multi_host_TCP"
+    block_size = "4k"
+    size = "128GB"
+    num_ssd = 12
+    num_volume = 12
+
+    test = "tiHostFioRandRead"
+    operation = "randread"
+    read_values = [[1, 103321.475198, 413281, 106, 118, 118, 120, 146, "fio_tcp_randread_blt_1_1_vol_12"],
+              [32, 2728469.774469, 10913873, 133, 170, 189, 234, 387, "fio_tcp_randread_blt_32_1_vol_12"],
+              [64, 4541224.44247, 18164891, 161, 218, 248, 328, 593, "fio_tcp_randread_blt_32_2_vol_12"],
+              [128, 5257247.213338999, 21028982, 285, 397, 475, 780, 1513, "fio_tcp_randread_blt_32_4_vol_12"]]
+
+    for value in read_values:
+        one_entry = BltVolumePerformance(input_date_time=date_time,
+                                         input_volume_type=volume,
+                                         input_test=test,
+                                         input_block_size=block_size,
+                                         input_io_depth=value[0],
+                                         input_io_size=size,
+                                         input_operation=operation,
+                                         input_num_ssd=num_ssd,
+                                         input_num_volume=num_volume,
+                                         input_fio_job_name=value[8],
+                                         input_version=-1,
+                                         output_write_iops=-1,
+                                         output_read_iops=value[1],
+                                         output_write_throughput=-1,
+                                         output_read_throughput=value[2],
+                                         output_write_avg_latency=-1,
+                                         output_read_avg_latency=value[3],
+                                         output_write_90_latency=-1,
+                                         output_write_95_latency=-1,
+                                         output_write_99_latency=-1,
+                                         output_write_99_99_latency=-1,
+                                         output_read_90_latency=value[4],
+                                         output_read_95_latency=value[5],
+                                         output_read_99_latency=value[6],
+                                         output_read_99_99_latency=value[7],
+                                         output_write_iops_unit=PerfUnit.UNIT_OPS,
+                                         output_read_iops_unit=PerfUnit.UNIT_OPS,
+                                         output_write_throughput_unit=PerfUnit.UNIT_MBYTES_PER_SEC,
+                                         output_read_throughput_unit=PerfUnit.UNIT_MBYTES_PER_SEC,
+                                         output_write_avg_latency_unit=PerfUnit.UNIT_USECS,
+                                         output_read_avg_latency_unit=PerfUnit.UNIT_USECS,
+                                         output_write_90_latency_unit=PerfUnit.UNIT_USECS,
+                                         output_write_95_latency_unit=PerfUnit.UNIT_USECS,
+                                         output_write_99_latency_unit=PerfUnit.UNIT_USECS,
+                                         output_write_99_99_latency_unit=PerfUnit.UNIT_USECS,
+                                         output_read_90_latency_unit=PerfUnit.UNIT_USECS,
+                                         output_read_95_latency_unit=PerfUnit.UNIT_USECS,
+                                         output_read_99_latency_unit=PerfUnit.UNIT_USECS,
+                                         output_read_99_99_latency_unit=PerfUnit.UNIT_USECS).save()
+
+    test = "tiHostFioRandWrite"
+    operation = "randwrite"
+    write_values = [[1, 228194.69089600001, 912772, 43, 43, 44, 60, 189, "fio_tcp_randwrite_blt_1_1_vol_12"],
+                   [8, 1343489.0677180002, 5373950, 61, 100, 122, 163, 468, "fio_tcp_randwrite_blt_8_1_vol_12"],
+                   [16, 2076670.642782, 8306677, 82, 137, 157, 211, 630, "fio_tcp_randwrite_blt_16_1_vol_12"],
+                   [32, 2917874.290518, 11671490, 124, 179, 206, 308, 1792, "fio_tcp_randwrite_blt_32_1_vol_12"]]
+
+    for value in write_values:
+        one_entry = BltVolumePerformance(input_date_time=date_time,
+                                         input_volume_type=volume,
+                                         input_test=test,
+                                         input_block_size=block_size,
+                                         input_io_depth=value[0],
+                                         input_io_size=size,
+                                         input_operation=operation,
+                                         input_num_ssd=num_ssd,
+                                         input_num_volume=num_volume,
+                                         input_fio_job_name=value[8],
+                                         input_version=-1,
+                                         output_write_iops=value[1],
+                                         output_read_iops=-1,
+                                         output_write_throughput=value[2],
+                                         output_read_throughput=-1,
+                                         output_write_avg_latency=value[3],
+                                         output_read_avg_latency=-1,
+                                         output_write_90_latency=value[4],
+                                         output_write_95_latency=value[5],
+                                         output_write_99_latency=value[6],
+                                         output_write_99_99_latency=value[7],
+                                         output_read_90_latency=-1,
+                                         output_read_95_latency=-1,
+                                         output_read_99_latency=-1,
+                                         output_read_99_99_latency=-1,
+                                         output_write_iops_unit=PerfUnit.UNIT_OPS,
+                                         output_read_iops_unit=PerfUnit.UNIT_OPS,
+                                         output_write_throughput_unit=PerfUnit.UNIT_MBYTES_PER_SEC,
+                                         output_read_throughput_unit=PerfUnit.UNIT_MBYTES_PER_SEC,
+                                         output_write_avg_latency_unit=PerfUnit.UNIT_USECS,
+                                         output_read_avg_latency_unit=PerfUnit.UNIT_USECS,
+                                         output_write_90_latency_unit=PerfUnit.UNIT_USECS,
+                                         output_write_95_latency_unit=PerfUnit.UNIT_USECS,
+                                         output_write_99_latency_unit=PerfUnit.UNIT_USECS,
+                                         output_write_99_99_latency_unit=PerfUnit.UNIT_USECS,
+                                         output_read_90_latency_unit=PerfUnit.UNIT_USECS,
+                                         output_read_95_latency_unit=PerfUnit.UNIT_USECS,
+                                         output_read_99_latency_unit=PerfUnit.UNIT_USECS,
+                                         output_read_99_99_latency_unit=PerfUnit.UNIT_USECS).save()
+
+    print "added data for 12 hosts 12 volumes manually"
+

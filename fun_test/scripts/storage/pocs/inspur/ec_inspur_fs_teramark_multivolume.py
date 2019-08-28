@@ -1341,7 +1341,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                         fun_test.log("Read amplification calculated with app stats is: {} for iodepth: {}".format(
                             read_amp_app_stat, iodepth))
 
-                        row_data_dict["read_amp_vol_stat"] = read_amp_vol_stat
+                        row_data_dict["read_amp_vol_stats"] = read_amp_vol_stat
                         row_data_dict["read_amp_app_stats"] = read_amp_app_stat
 
                         aggr_amp_vol_stats = float(pbw + pbr) / float(lbw + lbr)

@@ -62,7 +62,7 @@
   {
     "name": "fs-15",
     "bmc": {
-      "mgmt_ip": "10.1.20.112",
+      "mgmt_ip": "10.1.20.26",
       "mgmt_ssh_username": "sysadmin",
       "mgmt_ssh_password": "superuser"
     },
@@ -179,6 +179,12 @@
       "mgmt_ip": "10.1.105.153",
       "mgmt_ssh_username": "fun",
       "mgmt_ssh_password": "123"
+    },
+      "apc_info": {
+      "host_ip": "10.1.105.249",
+      "username": "localadmin",
+      "password": "Precious1*",
+      "outlet_number": 7
     }
   },
   {
@@ -198,6 +204,12 @@
       "mgmt_ip": "10.1.105.156",
       "mgmt_ssh_username": "fun",
       "mgmt_ssh_password": "123"
+    },
+      "apc_info": {
+      "host_ip": "10.1.105.249",
+      "username": "localadmin",
+      "password": "Precious1*",
+      "outlet_number": 15
     }
   },
   {
@@ -217,6 +229,12 @@
       "mgmt_ip": "10.1.105.159",
       "mgmt_ssh_username": "fun",
       "mgmt_ssh_password": "123"
+    },
+    "apc_info": {
+      "host_ip": "10.1.105.249",
+      "username": "localadmin",
+      "password": "Precious1*",
+      "outlet_number": 17
     }
   },
   {
@@ -236,6 +254,12 @@
       "mgmt_ip": "10.1.105.162",
       "mgmt_ssh_username": "fun",
       "mgmt_ssh_password": "123"
+    },
+      "apc_info": {
+      "host_ip": "10.1.105.249",
+      "username": "localadmin",
+      "password": "Precious1*",
+      "outlet_number": 20
     }
   },
   {
@@ -282,6 +306,12 @@
       "mgmt_ip": "10.1.105.73",
       "mgmt_ssh_username": "fun",
       "mgmt_ssh_password": "123"
+    },
+    "apc_info": {
+      "host_ip": "10.1.105.249",
+      "username": "localadmin",
+      "password": "Precious1*",
+      "outlet_number": 1
     }
   },
   {
