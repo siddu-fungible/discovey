@@ -39,6 +39,7 @@ def test_beds(request, id):
                 t = {"name": test_bed.name,
                      "description": test_bed.description,
                      "id": test_bed.id,
+                     "note": test_bed.note,
                      "manual_lock": test_bed.manual_lock,
                      "manual_lock_expiry_time": str(test_bed.manual_lock_expiry_time),
                      "manual_lock_submitter": test_bed.manual_lock_submitter}
@@ -58,6 +59,7 @@ def test_beds(request, id):
             result = {"name": t.name,
                       "description": t.description,
                       "id": t.id,
+                      "note": t.note,
                       "manual_lock": t.manual_lock,
                       "manual_lock_expiry_time": str(t.manual_lock_expiry_time),
                       "manual_lock_submitter": t.manual_lock_submitter}
@@ -88,6 +90,8 @@ def test_beds(request, id):
             test_bed.manual_lock_submitter = submitter_email
         if "description" in request_json:
             test_bed.description = request_json["description"]
+        if "note" in request_json:
+            test_bed.note = request_json["note"]
 
         this_is_extension_request = False
         if extension_hour is not None and extension_minute is not None:
@@ -125,6 +129,9 @@ def test_beds(request, id):
             send_mail(to_addresses=to_addresses, subject=subject, content=content)
         pass
     return result
+
+
+
 
 @csrf_exempt
 @api_safe_json_response

@@ -85,6 +85,7 @@ class CatalogTestCase(models.Model):
 class TestBed(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(null=True, blank=True)
+    note = models.TextField(null=True, blank=True)
     manual_lock = models.BooleanField(default=False)
     manual_lock_expiry_time = models.DateTimeField(default=datetime.now)
     manual_lock_submitter = models.EmailField(null=True, blank=True)
