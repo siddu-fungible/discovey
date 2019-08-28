@@ -87,13 +87,11 @@ export class PerformanceService {
         });
         return of(this.buildInfo);
       }
-
-
     }));
   }
 
-  saveInterestedMetrics(workspace_id, payload): any {
-    return this.apiService.post("/api/v1/performance/workspaces/" + workspace_id + "/interested_metrics", payload).pipe(switchMap(response => {
+  saveInterestedMetrics(workspaceId, payload): any {
+    return this.apiService.post("/api/v1/performance/workspaces/" + workspaceId + "/interested_metrics", payload).pipe(switchMap(response => {
       return of(true);
     }));
   }
