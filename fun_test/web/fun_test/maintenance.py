@@ -12,6 +12,7 @@ from web.fun_test.metrics_lib import MetricLib
 from web.fun_test.models import *
 
 METRICS_BASE_DATA_FILE = WEB_ROOT_DIR + "/metrics.json"
+ml = MetricLib()
 
 if __name__ == "__main__rand_read_qd_multi_host":
     internal_read_chart_names = ["rand_read_qd_multi_host_nvmetcp_output_iops",
@@ -964,7 +965,7 @@ if __name__ == "__main_alibaba_rdma__":
             for i in data_sets:
                 print i
 
-if __name__ == "__main__":
+if __name__ == "__main_manual_db_entry__":
     date_time = parser.parse("2019-08-27 04:45:25.582587-07:00")
     volume = "Multi_host_TCP"
     block_size = "4k"
@@ -1069,4 +1070,48 @@ if __name__ == "__main__":
                                          output_read_99_99_latency_unit=PerfUnit.UNIT_USECS).save()
 
     print "added data for 12 hosts 12 volumes manually"
+
+def set_offloads_hu(chart):
+    base_line_date = datetime(year=2019, month=8, day=20, minute=0, hour=0, second=0)
+    if chart:
+        if chart.leaf:
+            internal_chart_name = chart.internal_chart_name + "_non_lso"
+            data_sets = json.loads(chart.data_sets)
+            for data_set in data_sets:
+                data_set["inputs"]["input_offloads"] = True
+            chart.data_sets = json.dumps(data_sets)
+            chart.save()
+            for data_set in data_sets:
+                data_set["inputs"]["input_offloads"] = False
+                data_set["output"]["reference"] = -1
+            ml.create_leaf(chart_name=chart.chart_name, internal_chart_name=internal_chart_name, data_sets=data_sets,
+                           leaf=True, description=chart.description,
+                        owner_info=chart.owner_info, source=chart.source,
+                        positive=chart.positive, y1_axis_title=chart.y1_axis_title,
+                        visualization_unit=chart.visualization_unit,
+                        metric_model_name=chart.metric_model_name,
+                        base_line_date=base_line_date,
+                        work_in_progress=False, children=[], jira_ids=[], platform=FunPlatform.F1,
+                        peer_ids=[], creator=TEAM_REGRESSION_EMAIL,
+                        workspace_ids=[])
+        else:
+            internal_chart_name = chart.internal_chart_name + "_non_lso"
+            ml.create_container(chart_name=chart.chart_name, internal_chart_name=internal_chart_name,
+                                platform=FunPlatform.F1,
+                             owner_info=chart.owner_info,
+                             source=chart.source, base_line_date=base_line_date, workspace_ids=[])
+            children = json.loads(chart.children)
+            for child in children:
+                child_chart = MetricChart.objects.get(metric_id=int(child))
+                set_offloads_hu(chart=child_chart)
+
+
+if __name__ == "__main__":
+    metric_id = 1055
+    chart = MetricChart.objects.get(metric_id=metric_id)
+    set_offloads_hu(chart=chart)
+    print "added hu_nu_nfcp non lso"
+
+
+
 
