@@ -5,7 +5,7 @@
       <td class="fun-table-header">Description</td>
     </tr>
     <tr *ngFor="let suite of suites">
-      <td>{{ suite.name }}</td>
+      <td><a [routerLink]="'/regression/suite_editor/' + suite.id">{{ suite.name }}</a></td>
       <td>{{ suite.short_decription }}</td>
     </tr>
   </table>

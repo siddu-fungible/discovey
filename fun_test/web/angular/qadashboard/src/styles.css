@@ -662,13 +662,28 @@ label {
 /*table*/
 .fun-table {
   border: solid lightgrey 1px;
+  border-collapse: collapse;
+  border-top: solid lightgrey 1px;
+  border-bottom: solid lightgrey 1px;
+  border-left: solid lightgrey 1px;
+  border-right: solid lightgrey 1px;
+
 }
 
 .fun-table tr td.fun-table-header {
   background-color: #e7e7e7;
+  border-top: solid lightgrey 1px;
+  border-bottom: solid lightgrey 1px;
+  border-left: solid lightgrey 1px;
+  border-right: solid lightgrey 1px;
 }
 .fun-table tr td {
   padding: 5px;
+    border-top: solid lightgrey 1px;
+  border-bottom: solid lightgrey 1px;
+  border-left: solid lightgrey 1px;
+  border-right: solid lightgrey 1px;
+
 }
 
 

@@ -362,34 +362,35 @@ def suites(request, id):
                 result = []
                 for suite in all_suites:
                     result.append(suite.to_dict())
+        else:
+            result = Suite.objects.get(id=id).to_dict()
 
     if request.method == "POST":
         if not id:
-            # must be a new object
-            request_json = json.loads(request.body)
-            suite = request_json
-            suite_entries = suite["entries"]
             s = Suite()
-            name = request_json.get("name", None)
-            short_description = request_json.get("short_description", None)
-            categories = request_json.get("categories", None)
-            tags = request_json.get("tags", None)
-            custom_test_bed_spec = request_json.get("custom_test_bed_spec", None)
-            suite_entries = request_json.get("entries", None)
-            if name:
-                s.name = name
-            if short_description:
-                s.short_description = short_description
-            if categories:
-                s.categories = categories
-            if tags:
-                s.tags = tags
-            if custom_test_bed_spec:
-                s.custom_test_bed_spec = custom_test_bed_spec
-            if suite_entries:
-                s.entries = suite_entries
-            s.save()
-            pass
+        else:
+            s = Suite.objects.get(id=id)
+        request_json = json.loads(request.body)
+        name = request_json.get("name", None)
+        short_description = request_json.get("short_description", None)
+        categories = request_json.get("categories", None)
+        tags = request_json.get("tags", None)
+        custom_test_bed_spec = request_json.get("custom_test_bed_spec", None)
+        suite_entries = request_json.get("entries", None)
+        if name is not None:
+            s.name = name
+        if short_description is not None:
+            s.short_description = short_description
+        if categories is not None:
+            s.categories = categories
+        if tags is not None:
+            s.tags = tags
+        if custom_test_bed_spec is not None:
+            s.custom_test_bed_spec = custom_test_bed_spec
+        if suite_entries is not None:
+            s.entries = suite_entries
+        s.save()
+
     return result
 
 if __name__ == "__main__":

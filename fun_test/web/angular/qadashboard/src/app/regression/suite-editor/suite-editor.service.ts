@@ -50,8 +50,12 @@ export class SuiteEditorService {
 
   constructor(private apiService: ApiService, private loggerService: LoggerService) { }
 
-  suites() {
-    return this.apiService.get("/api/v1/regression/suites").pipe(switchMap(response => {
+  suites(id=null) {
+    let url = "/api/v1/regression/suites";
+    if (id) {
+      url += `${id}`;
+    }
+    return this.apiService.get(url).pipe(switchMap(response => {
       return of(response.data);
     }), catchError(error => {
       throw error;
@@ -60,6 +64,15 @@ export class SuiteEditorService {
 
   add(suite: SuiteInterface) {
     return this.apiService.post("/api/v1/regression/suites", suite).pipe(switchMap(response => {
+      return of(true);
+
+    }), catchError(error => {
+      throw error;
+    }))
+  }
+
+  replace(suite: SuiteInterface, id: number) {
+    return this.apiService.post("/api/v1/regression/suites/" + id, suite).pipe(switchMap(response => {
       return of(true);
 
     }), catchError(error => {
