@@ -360,6 +360,9 @@ class NetperfManager:
                         )
                     fun_test.log('NetperfManager latency under load result\n{}'.format(result))
 
+            if fixed_netperf_port:
+                fun_test.sleep("Sleeping for 60 sec waiting for TCP TIME_WAIT to CLOSE", seconds=60)
+
         result_cooked = {}
         for direction in result:
             for k, v in result[direction].items():
@@ -446,7 +449,6 @@ def do_test(linux_obj, dip, protocol='tcp', duration=30, frame_size=800, cpu=Non
             t = 'TCP_STREAM'
     send_size = get_send_size(protocol, frame_size)
     if fixed_netperf_port:
-        linux_obj.sudo_command('echo 1 > /proc/sys/net/ipv4/tcp_fin_timeout')  # reduce TIME-WAIT to close TCP faster
         if not measure_latency:
             # cmd = 'netperf -t {} -H {} -v 2 -l {} -f m -j -- -k "THROUGHPUT" -m {}'.format(t, dip, duration, send_size)
             cmd = 'netperf -t {0} -H {1} -v 2 -l {2} -f m -j -p {3},{3} -- -k "THROUGHPUT" -P {4}'.format(
@@ -460,7 +462,6 @@ def do_test(linux_obj, dip, protocol='tcp', duration=30, frame_size=800, cpu=Non
                 t, dip, duration, NETSERVER_FIXED_PORT_CONTROL_BASE+cpu, NETSERVER_FIXED_PORT_DATA_BASE+cpu)
             pat = r'MIN_LATENCY=(\d+\.\d+|\d+).*?MEAN_LATENCY=(\d+\.\d+|\d+).*?P50_LATENCY=(\d+\.\d+|\d+).*?P90_LATENCY=(\d+\.\d+|\d+).*?P99_LATENCY=(\d+\.\d+|\d+).*?MAX_LATENCY=(\d+\.\d+|\d+)'
     else:
-        linux_obj.sudo_command('echo 60 > /proc/sys/net/ipv4/tcp_fin_timeout')  # default 60
         if not measure_latency:
             #cmd = 'netperf -t {} -H {} -v 2 -l {} -f m -j -- -k "THROUGHPUT" -m {}'.format(t, dip, duration, send_size)
             cmd = 'netperf -t {} -H {} -v 2 -l {} -f m -j -- -k "THROUGHPUT"'.format(t, dip, duration)

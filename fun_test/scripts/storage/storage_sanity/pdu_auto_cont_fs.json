@@ -1,0 +1,21 @@
+{
+  "GlobalSetup": {
+    "bootargs": ["app=mdt_test,load_mods,hw_hsu_test cc_huid=3 workload=storage --serial --dpc-server --dpc-uart --all_100g --nofreeze",
+      "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 workload=storage --serial --dpc-server --dpc-uart --all_100g --nofreeze"],
+    "disable_f1_index": 1,
+    "f1_in_use": 0,
+    "syslog_level": 2,
+    "command_timeout": 30,
+    "reboot_timeout": 300,
+    "no_of_powercycles": 40,
+    "huid": 3,
+    "ctlid": 2,
+    "fnid": 2,
+    "iter_interval": 2,
+    "ns_id": 1,
+    "transport": "PCI"
+  },
+  "PduMultiPowerCycle": {
+    "fio_job_name": "blt_tcp_sanity"
+  }
+}

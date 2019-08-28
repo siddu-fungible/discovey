@@ -85,6 +85,7 @@ class CatalogTestCase(models.Model):
 class TestBed(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(null=True, blank=True)
+    note = models.TextField(null=True, blank=True)
     manual_lock = models.BooleanField(default=False)
     manual_lock_expiry_time = models.DateTimeField(default=datetime.now)
     manual_lock_submitter = models.EmailField(null=True, blank=True)
@@ -664,11 +665,19 @@ class Suite(models.Model):
     name = models.TextField(default="TBD")
     categories = JSONField(default=[])
     sub_categories = JSONField(default=[])
-
     short_description = models.TextField(default="")
     long_description = models.TextField(default="")
     tags = JSONField(default=[])
-    custom_test_bed_spec = JSONField(default=None)
+    custom_test_bed_spec = JSONField(default=None, null=True)
+    entries = JSONField(default=None)
+
+    def to_dict(self):
+        result = {}
+        fields = self._meta.get_fields()
+        for field in fields:
+            result[field.name] = getattr(self, field.name)
+        return result
+
 
 
 class TaskStatus(models.Model):

@@ -757,8 +757,7 @@ if __name__ == "__main__inspur_charts":
         print ("Metric id: {}".format(metric_id))
         print ("Data sets: {}".format(data_sets))
 
-if __name__ == "__main__alibaba_rdma__":
-
+if __name__ == "__main_alibaba_rdma__":
     # Alibaba rdma latency charts
 
     internal_chart_names = OrderedDict([
@@ -965,78 +964,153 @@ if __name__ == "__main__alibaba_rdma__":
             for i in data_sets:
                 print i
 
+if __name__ == "__main_manual_db_entry__":
+    date_time = parser.parse("2019-08-27 04:45:25.582587-07:00")
+    volume = "Multi_host_TCP"
+    block_size = "4k"
+    size = "128GB"
+    num_ssd = 12
+    num_volume = 12
 
-def create_container(chart_name, owner_info, source, platform, base_line_date, workspace_ids):
-    data_sets = []
-    one_data_set = {}
-    one_data_set["name"] = "Scores"
-    one_data_set["output"] = {"min": 0, "max": 200}
-    data_sets.append(one_data_set)
-    metric_id = LastMetricId.get_next_id()
-    kwargs = {}
-    kwargs["chart_name"] = chart_name
-    kwargs["data_sets"] = json.dumps(data_sets)
-    kwargs["leaf"] = False
-    kwargs["description"] = "TBD"
-    kwargs["owner_info"] = owner_info
-    kwargs["source"] = source
-    kwargs["positive"] = True
-    kwargs["y1_axis_title"] = ""
-    kwargs["visualization_unit"] = ""
-    kwargs["metric_model_name"] = "MetricContainer"
-    kwargs["base_line_date"] = base_line_date
-    kwargs["work_in_progress"] = False
-    kwargs["children"] = "[]"
-    kwargs["jira_ids"] = "[]"
-    kwargs["platform"] = platform
-    kwargs["peer_ids"] = "[]"
-    kwargs["creator"] = TEAM_REGRESSION_EMAIL
-    kwargs["workspace_ids"] = workspace_ids
+    test = "tiHostFioRandRead"
+    operation = "randread"
+    read_values = [[1, 103321.475198, 413281, 106, 118, 118, 120, 146, "fio_tcp_randread_blt_1_1_vol_12"],
+                   [32, 2728469.774469, 10913873, 133, 170, 189, 234, 387, "fio_tcp_randread_blt_32_1_vol_12"],
+                   [64, 4541224.44247, 18164891, 161, 218, 248, 328, 593, "fio_tcp_randread_blt_32_2_vol_12"],
+                   [128, 5257247.213338999, 21028982, 285, 397, 475, 780, 1513, "fio_tcp_randread_blt_32_4_vol_12"]]
 
-    return ml.create_chart(**kwargs)
+    for value in read_values:
+        one_entry = BltVolumePerformance(input_date_time=date_time,
+                                         input_volume_type=volume,
+                                         input_test=test,
+                                         input_block_size=block_size,
+                                         input_io_depth=value[0],
+                                         input_io_size=size,
+                                         input_operation=operation,
+                                         input_num_ssd=num_ssd,
+                                         input_num_volume=num_volume,
+                                         input_fio_job_name=value[8],
+                                         input_version=-1,
+                                         output_write_iops=-1,
+                                         output_read_iops=value[1],
+                                         output_write_throughput=-1,
+                                         output_read_throughput=value[2],
+                                         output_write_avg_latency=-1,
+                                         output_read_avg_latency=value[3],
+                                         output_write_90_latency=-1,
+                                         output_write_95_latency=-1,
+                                         output_write_99_latency=-1,
+                                         output_write_99_99_latency=-1,
+                                         output_read_90_latency=value[4],
+                                         output_read_95_latency=value[5],
+                                         output_read_99_latency=value[6],
+                                         output_read_99_99_latency=value[7],
+                                         output_write_iops_unit=PerfUnit.UNIT_OPS,
+                                         output_read_iops_unit=PerfUnit.UNIT_OPS,
+                                         output_write_throughput_unit=PerfUnit.UNIT_MBYTES_PER_SEC,
+                                         output_read_throughput_unit=PerfUnit.UNIT_MBYTES_PER_SEC,
+                                         output_write_avg_latency_unit=PerfUnit.UNIT_USECS,
+                                         output_read_avg_latency_unit=PerfUnit.UNIT_USECS,
+                                         output_write_90_latency_unit=PerfUnit.UNIT_USECS,
+                                         output_write_95_latency_unit=PerfUnit.UNIT_USECS,
+                                         output_write_99_latency_unit=PerfUnit.UNIT_USECS,
+                                         output_write_99_99_latency_unit=PerfUnit.UNIT_USECS,
+                                         output_read_90_latency_unit=PerfUnit.UNIT_USECS,
+                                         output_read_95_latency_unit=PerfUnit.UNIT_USECS,
+                                         output_read_99_latency_unit=PerfUnit.UNIT_USECS,
+                                         output_read_99_99_latency_unit=PerfUnit.UNIT_USECS).save()
 
-def create_leaf(chart_name, data_sets, leaf, description, owner_info, source,
-                positive, y1_axis_title, visualization_unit, metric_model_name, base_line_date,
-                work_in_progress, children, jira_ids, platform, peer_ids, creator, workspace_ids):
-    kwargs = {}
-    kwargs["chart_name"] = chart_name
-    kwargs["data_sets"] = json.dumps(data_sets)
-    kwargs["leaf"] = leaf
-    kwargs["description"] = description
-    kwargs["owner_info"] = owner_info
-    kwargs["source"] = source
-    kwargs["positive"] = positive
-    kwargs["y1_axis_title"] = y1_axis_title
-    kwargs["visualization_unit"] = visualization_unit
-    kwargs["metric_model_name"] = metric_model_name
-    kwargs["base_line_date"] = base_line_date
-    kwargs["work_in_progress"] = work_in_progress
-    kwargs["children"] = json.dumps(children)
-    kwargs["jira_ids"] = json.dumps(jira_ids)
-    kwargs["platform"] = platform
-    kwargs["peer_ids"] = json.dumps(peer_ids)
-    kwargs["creator"] = creator
-    kwargs["workspace_ids"] = workspace_ids
+    test = "tiHostFioRandWrite"
+    operation = "randwrite"
+    write_values = [[1, 228194.69089600001, 912772, 43, 43, 44, 60, 189, "fio_tcp_randwrite_blt_1_1_vol_12"],
+                    [8, 1343489.0677180002, 5373950, 61, 100, 122, 163, 468, "fio_tcp_randwrite_blt_8_1_vol_12"],
+                    [16, 2076670.642782, 8306677, 82, 137, 157, 211, 630, "fio_tcp_randwrite_blt_16_1_vol_12"],
+                    [32, 2917874.290518, 11671490, 124, 179, 206, 308, 1792, "fio_tcp_randwrite_blt_32_1_vol_12"]]
 
-    return ml.create_chart(**kwargs)
+    for value in write_values:
+        one_entry = BltVolumePerformance(input_date_time=date_time,
+                                         input_volume_type=volume,
+                                         input_test=test,
+                                         input_block_size=block_size,
+                                         input_io_depth=value[0],
+                                         input_io_size=size,
+                                         input_operation=operation,
+                                         input_num_ssd=num_ssd,
+                                         input_num_volume=num_volume,
+                                         input_fio_job_name=value[8],
+                                         input_version=-1,
+                                         output_write_iops=value[1],
+                                         output_read_iops=-1,
+                                         output_write_throughput=value[2],
+                                         output_read_throughput=-1,
+                                         output_write_avg_latency=value[3],
+                                         output_read_avg_latency=-1,
+                                         output_write_90_latency=value[4],
+                                         output_write_95_latency=value[5],
+                                         output_write_99_latency=value[6],
+                                         output_write_99_99_latency=value[7],
+                                         output_read_90_latency=-1,
+                                         output_read_95_latency=-1,
+                                         output_read_99_latency=-1,
+                                         output_read_99_99_latency=-1,
+                                         output_write_iops_unit=PerfUnit.UNIT_OPS,
+                                         output_read_iops_unit=PerfUnit.UNIT_OPS,
+                                         output_write_throughput_unit=PerfUnit.UNIT_MBYTES_PER_SEC,
+                                         output_read_throughput_unit=PerfUnit.UNIT_MBYTES_PER_SEC,
+                                         output_write_avg_latency_unit=PerfUnit.UNIT_USECS,
+                                         output_read_avg_latency_unit=PerfUnit.UNIT_USECS,
+                                         output_write_90_latency_unit=PerfUnit.UNIT_USECS,
+                                         output_write_95_latency_unit=PerfUnit.UNIT_USECS,
+                                         output_write_99_latency_unit=PerfUnit.UNIT_USECS,
+                                         output_write_99_99_latency_unit=PerfUnit.UNIT_USECS,
+                                         output_read_90_latency_unit=PerfUnit.UNIT_USECS,
+                                         output_read_95_latency_unit=PerfUnit.UNIT_USECS,
+                                         output_read_99_latency_unit=PerfUnit.UNIT_USECS,
+                                         output_read_99_99_latency_unit=PerfUnit.UNIT_USECS).save()
 
-def new_dict(chart):
-    dict = OrderedDict()
-    dict["name"] = chart.internal_chart_name
-    dict["label"] = chart.chart_name
-    dict["metric_model_name"] = chart.metric_model_name
-    dict["children"] = []
-    return dict
+    print "added data for 12 hosts 12 volumes manually"
 
-def get_dict(chart):
-    root_dict = new_dict(chart=chart)
-    children = json.loads(chart.children)
-    for child in children:
-        child_chart = MetricChart.objects.get(metric_id=int(child))
-        child_dict = get_dict(chart=child_chart)
-        root_dict["children"].append(child_dict)
-    return root_dict
 
+def set_offloads_hu(chart):
+    base_line_date = datetime(year=2019, month=8, day=20, minute=0, hour=0, second=0)
+    if chart:
+        if chart.leaf:
+            internal_chart_name = chart.internal_chart_name + "_non_lso"
+            data_sets = json.loads(chart.data_sets)
+            for data_set in data_sets:
+                data_set["inputs"]["input_offloads"] = True
+            chart.data_sets = json.dumps(data_sets)
+            chart.save()
+            for data_set in data_sets:
+                data_set["inputs"]["input_offloads"] = False
+                data_set["output"]["reference"] = -1
+            ml.create_leaf(chart_name=chart.chart_name, internal_chart_name=internal_chart_name, data_sets=data_sets,
+                           leaf=True, description=chart.description,
+                           owner_info=chart.owner_info, source=chart.source,
+                           positive=chart.positive, y1_axis_title=chart.y1_axis_title,
+                           visualization_unit=chart.visualization_unit,
+                           metric_model_name=chart.metric_model_name,
+                           base_line_date=base_line_date,
+                           work_in_progress=False, children=[], jira_ids=[], platform=FunPlatform.F1,
+                           peer_ids=[], creator=TEAM_REGRESSION_EMAIL,
+                           workspace_ids=[])
+        else:
+            internal_chart_name = chart.internal_chart_name + "_non_lso"
+            ml.create_container(chart_name=chart.chart_name, internal_chart_name=internal_chart_name,
+                                platform=FunPlatform.F1,
+                                owner_info=chart.owner_info,
+                                source=chart.source, base_line_date=base_line_date, workspace_ids=[])
+            children = json.loads(chart.children)
+            for child in children:
+                child_chart = MetricChart.objects.get(metric_id=int(child))
+                set_offloads_hu(chart=child_chart)
+
+
+if __name__ == "__main_non_lso__":
+    metric_id = 1055
+    chart = MetricChart.objects.get(metric_id=metric_id)
+    set_offloads_hu(chart=chart)
+    print "added hu_nu_nfcp non lso"
 
 if __name__ == "__main__":
     dag = {}
@@ -1048,52 +1122,56 @@ if __name__ == "__main__":
     operations = ["Random Read", "Random Write"]
     qdepths = [16, 32, 64, 128, 256]
     base_line_date = datetime(year=2019, month=8, day=20, minute=0, hour=0, second=0)
-    root_chart = create_container(chart_name=root_node, platform=FunPlatform.F1, owner_info=owner_info,
-                                  source=source, base_line_date=base_line_date, workspace_ids=[1527])
+    root_chart = ml.create_container(chart_name=root_node, internal_chart_name=root_node, platform=FunPlatform.F1,
+                                     owner_info=owner_info,
+                                     source=source, base_line_date=base_line_date, workspace_ids=[1527])
     for type in types:
-        type_chart = create_container(chart_name=type, platform=FunPlatform.F1, owner_info=owner_info,
-                                      source=source, base_line_date=base_line_date, workspace_ids=[])
+        type_chart = ml.create_container(chart_name=type, internal_chart_name=type,
+                                         platform=FunPlatform.F1,
+                                         owner_info=owner_info,
+                                         source=source, base_line_date=base_line_date, workspace_ids=[])
         root_chart.add_child(child_id=type_chart.metric_id)
         for host in hosts:
-            host_chart = create_container(chart_name=host, platform=FunPlatform.F1, owner_info=owner_info,
-                                          source=source, base_line_date=base_line_date, workspace_ids=[])
+            host_chart = ml.create_container(chart_name=host, internal_chart_name=host, platform=FunPlatform.F1,
+                                             owner_info=owner_info,
+                                             source=source, base_line_date=base_line_date, workspace_ids=[])
             type_chart.add_child(child_id=host_chart.metric_id)
             for operation in operations:
-                operation_chart = create_container(chart_name=operation, platform=FunPlatform.F1,
-                                                   owner_info=owner_info,
-                                                   source=source, base_line_date=base_line_date, workspace_ids=[])
+                operation_chart = ml.create_container(chart_name=operation, internal_chart_name=operation,
+                                                      platform=FunPlatform.F1,
+                                                      owner_info=owner_info,
+                                                      source=source, base_line_date=base_line_date, workspace_ids=[])
                 host_chart.add_child(child_id=operation_chart.metric_id)
-                iops_chart = create_leaf(chart_name="IOPS", data_sets=[], leaf=True, description="TBD",
-                                         owner_info=owner_info, source=source,
-                                         positive=True, y1_axis_title=PerfUnit.UNIT_OPS,
-                                         visualization_unit=PerfUnit.UNIT_OPS,
-                                         metric_model_name="AlibabaPerformance",
-                                         base_line_date=base_line_date,
-                                         work_in_progress=False, children=[], jira_ids=[], platform=FunPlatform.F1,
-                                         peer_ids=[], creator=TEAM_REGRESSION_EMAIL,
-                                         workspace_ids=[])
+                iops_chart = ml.create_leaf(chart_name="IOPS", internal_chart_name="IOPS", data_sets=[], leaf=True,
+                                            description="TBD",
+                                            owner_info=owner_info, source=source,
+                                            positive=True, y1_axis_title=PerfUnit.UNIT_OPS,
+                                            visualization_unit=PerfUnit.UNIT_OPS,
+                                            metric_model_name="AlibabaPerformance",
+                                            base_line_date=base_line_date,
+                                            work_in_progress=False, children=[], jira_ids=[], platform=FunPlatform.F1,
+                                            peer_ids=[], creator=TEAM_REGRESSION_EMAIL,
+                                            workspace_ids=[])
                 iops_chart.fix_children_weights()
                 operation_chart.add_child(child_id=iops_chart.metric_id)
                 for qdepth in qdepths:
                     chart_name = "Latency, QDepth=" + str(qdepth)
-                    latency_chart = create_leaf(chart_name=chart_name, data_sets=[], leaf=True, description="TBD",
-                                             owner_info=owner_info, source=source,
-                                             positive=False, y1_axis_title=PerfUnit.UNIT_USECS,
-                                             visualization_unit=PerfUnit.UNIT_USECS,
-                                             metric_model_name="AlibabaPerformance",
-                                             base_line_date=base_line_date,
-                                             work_in_progress=False, children=[], jira_ids=[], platform=FunPlatform.F1,
-                                             peer_ids=[], creator=TEAM_REGRESSION_EMAIL,
-                                             workspace_ids=[])
+                    latency_chart = ml.create_leaf(chart_name=chart_name, internal_chart_name=chart_name, data_sets=[],
+                                                   leaf=True, description="TBD",
+                                                   owner_info=owner_info, source=source,
+                                                   positive=False, y1_axis_title=PerfUnit.UNIT_USECS,
+                                                   visualization_unit=PerfUnit.UNIT_USECS,
+                                                   metric_model_name="AlibabaPerformance",
+                                                   base_line_date=base_line_date,
+                                                   work_in_progress=False, children=[], jira_ids=[],
+                                                   platform=FunPlatform.F1,
+                                                   peer_ids=[], creator=TEAM_REGRESSION_EMAIL,
+                                                   workspace_ids=[])
                     latency_chart.fix_children_weights()
                     operation_chart.add_child(child_id=latency_chart.metric_id)
                 operation_chart.fix_children_weights()
             host_chart.fix_children_weights()
         type_chart.fix_children_weights()
     root_chart.fix_children_weights()
-    final_dict = get_dict(chart=root_chart)
+    final_dict = ml.get_dict(chart=root_chart)
     print json.dumps(final_dict)
-
-
-
-

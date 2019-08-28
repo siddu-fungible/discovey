@@ -133,6 +133,94 @@
               },
               {
                 "metric_model_name": "MetricContainer",
+                "name": "host_to_network_hu_non_lso",
+                "label": "HU (non-LSO)",
+                "children": [
+                  {
+                    "metric_model_name": "MetricContainer",
+                    "name": "HU_NU_NFCP_1TCP_offloads_disabled_non_lso",
+                    "label": "1 TCP Flow(s), 1 Host(s)",
+                    "children": [
+                      {
+                        "metric_model_name": "HuThroughputPerformance",
+                        "name": "HU_NU_NFCP_1TCP_offloads_disabled_output_throughput_non_lso",
+                        "label": "Throughput"
+                      },
+                      {
+                        "metric_model_name": "HuThroughputPerformance",
+                        "name": "HU_NU_NFCP_1TCP_offloads_disabled_output_pps_non_lso",
+                        "label": "Packets per sec"
+                      },
+                      {
+                        "metric_model_name": "HuLatencyPerformance",
+                        "name": "HU_NU_NFCP_1TCP_offloads_disabled_output_latency_non_lso",
+                        "label": "Latency"
+                      },
+                      {
+                        "metric_model_name": "HuLatencyUnderLoadPerformance",
+                        "name": "HU_NU_NFCP_1TCP_offloads_disabled_output_latency_under_load_non_lso",
+                        "label": "Latency under load"
+                      }
+                    ]
+                  },
+                  {
+                    "metric_model_name": "MetricContainer",
+                    "name": "HU_NU_NFCP_8TCP_offloads_disabled_non_lso",
+                    "label": "8 TCP Flow(s), 1 Host(s)",
+                    "children": [
+                      {
+                        "metric_model_name": "HuThroughputPerformance",
+                        "name": "HU_NU_NFCP_8TCP_offloads_disabled_output_throughput_non_lso",
+                        "label": "Throughput"
+                      },
+                      {
+                        "metric_model_name": "HuThroughputPerformance",
+                        "name": "HU_NU_NFCP_8TCP_offloads_disabled_output_pps_non_lso",
+                        "label": "Packets per sec"
+                      },
+                      {
+                        "metric_model_name": "HuLatencyPerformance",
+                        "name": "HU_NU_NFCP_8TCP_offloads_disabled_output_latency_non_lso",
+                        "label": "Latency"
+                      },
+                      {
+                        "metric_model_name": "HuLatencyUnderLoadPerformance",
+                        "name": "HU_NU_NFCP_8TCP_offloads_disabled_output_latency_under_load_non_lso",
+                        "label": "Latency under load"
+                      }
+                    ]
+                  },
+                  {
+                    "metric_model_name": "MetricContainer",
+                    "name": "HU_NU_NFCP_8TCP_offloads_disabled_2hosts_non_lso",
+                    "label": "8 TCP Flow(s), 2 Host(s)",
+                    "children": [
+                      {
+                        "metric_model_name": "HuThroughputPerformance",
+                        "name": "HU_NU_NFCP_8TCP_offloads_disabled_2hosts_output_throughput_non_lso",
+                        "label": "Throughput"
+                      },
+                      {
+                        "metric_model_name": "HuThroughputPerformance",
+                        "name": "HU_NU_NFCP_8TCP_offloads_disabled_2hosts_output_pps_non_lso",
+                        "label": "Packets per sec"
+                      },
+                      {
+                        "metric_model_name": "HuLatencyPerformance",
+                        "name": "HU_NU_NFCP_8TCP_offloads_disabled_2hosts_output_latency_non_lso",
+                        "label": "Latency"
+                      },
+                      {
+                        "metric_model_name": "HuLatencyUnderLoadPerformance",
+                        "name": "HU_NU_NFCP_8TCP_offloads_disabled_2hosts_output_latency_under_load_non_lso",
+                        "label": "Latency under load"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "metric_model_name": "MetricContainer",
                 "name": "host_to_network_hnu",
                 "label": "HNU",
                 "children": [
@@ -4894,182 +4982,208 @@
                       {
                         "metric_model_name": "MetricContainer",
                         "name": "alibaba_bmv_storage_local_ssd",
-                        "label": "Local-SSD",
+                        "label": "Local",
                         "children": [
                           {
                             "metric_model_name": "MetricContainer",
-                            "name": "alibaba_bmv_storage_local_ssd_random_read",
-                            "label": "Random Read",
+                            "name": "alibaba_bmv_storage_local_ssd_1",
+                            "label": "1 SSD(s)",
                             "children": [
                               {
-                                "metric_model_name": "AlibabaPerformance",
-                                "name": "bmv_storage_local_ssd_random_read_iops",
-                                "label": "IOPS"
+                                "metric_model_name": "MetricContainer",
+                                "name": "alibaba_bmv_storage_local_ssd_random_read",
+                                "label": "Random Read",
+                                "children": [
+                                  {
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "name": "bmv_storage_local_ssd_random_read_iops",
+                                    "label": "IOPS"
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "name": "bmv_storage_local_ssd_random_read_qd1_latency",
+                                    "label": "Latency, Qdepth=1"
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "name": "bmv_storage_local_ssd_random_read_qd16_latency",
+                                    "label": "Latency, Qdepth=16"
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "name": "bmv_storage_local_ssd_random_read_qd32_latency",
+                                    "label": "Latency, Qdepth=32"
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "name": "bmv_storage_local_ssd_random_read_qd64_latency",
+                                    "label": "Latency, Qdepth=64"
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "name": "bmv_storage_local_ssd_random_read_qd128_latency",
+                                    "label": "Latency, Qdepth=128"
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "name": "bmv_storage_local_ssd_random_read_qd256_latency",
+                                    "label": "Latency, Qdepth=256"
+                                  }
+                                ]
                               },
                               {
-                                "metric_model_name": "AlibabaPerformance",
-                                "name": "bmv_storage_local_ssd_random_read_qd1_latency",
-                                "label": "Latency, Qdepth=1"
-                              },
-                              {
-                                "metric_model_name": "AlibabaPerformance",
-                                "name": "bmv_storage_local_ssd_random_read_qd16_latency",
-                                "label": "Latency, Qdepth=16"
-                              },
-                              {
-                                "metric_model_name": "AlibabaPerformance",
-                                "name": "bmv_storage_local_ssd_random_read_qd32_latency",
-                                "label": "Latency, Qdepth=32"
-                              },
-                              {
-                                "metric_model_name": "AlibabaPerformance",
-                                "name": "bmv_storage_local_ssd_random_read_qd64_latency",
-                                "label": "Latency, Qdepth=64"
-                              },
-                              {
-                                "metric_model_name": "AlibabaPerformance",
-                                "name": "bmv_storage_local_ssd_random_read_qd128_latency",
-                                "label": "Latency, Qdepth=128"
-                              },
-                              {
-                                "metric_model_name": "AlibabaPerformance",
-                                "name": "bmv_storage_local_ssd_random_read_qd256_latency",
-                                "label": "Latency, Qdepth=256"
+                                "metric_model_name": "MetricContainer",
+                                "name": "alibaba_bmv_storage_local_ssd_random_write",
+                                "label": "Random Write",
+                                "children": [
+                                  {
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "name": "bmv_storage_local_ssd_random_write_iops",
+                                    "label": "IOPS"
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "name": "bmv_storage_local_ssd_random_write_qd1_latency",
+                                    "label": "Latency, Qdepth=1"
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "name": "bmv_storage_local_ssd_random_write_qd16_latency",
+                                    "label": "Latency, Qdepth=16"
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "name": "bmv_storage_local_ssd_random_write_qd32_latency",
+                                    "label": "Latency, Qdepth=32"
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "name": "bmv_storage_local_ssd_random_write_qd64_latency",
+                                    "label": "Latency, Qdepth=64"
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "name": "bmv_storage_local_ssd_random_write_qd128_latency",
+                                    "label": "Latency, Qdepth=128"
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "name": "bmv_storage_local_ssd_random_write_qd256_latency",
+                                    "label": "Latency, Qdepth=256"
+                                  }
+                                ]
                               }
                             ]
                           },
                           {
                             "metric_model_name": "MetricContainer",
-                            "name": "alibaba_bmv_storage_local_ssd_random_write",
-                            "label": "Random Write",
-                            "children": [
-                              {
-                                "metric_model_name": "AlibabaPerformance",
-                                "name": "bmv_storage_local_ssd_random_write_iops",
-                                "label": "IOPS"
-                              },
-                              {
-                                "metric_model_name": "AlibabaPerformance",
-                                "name": "bmv_storage_local_ssd_random_write_qd1_latency",
-                                "label": "Latency, Qdepth=1"
-                              },
-                              {
-                                "metric_model_name": "AlibabaPerformance",
-                                "name": "bmv_storage_local_ssd_random_write_qd16_latency",
-                                "label": "Latency, Qdepth=16"
-                              },
-                              {
-                                "metric_model_name": "AlibabaPerformance",
-                                "name": "bmv_storage_local_ssd_random_write_qd32_latency",
-                                "label": "Latency, Qdepth=32"
-                              },
-                              {
-                                "metric_model_name": "AlibabaPerformance",
-                                "name": "bmv_storage_local_ssd_random_write_qd64_latency",
-                                "label": "Latency, Qdepth=64"
-                              },
-                              {
-                                "metric_model_name": "AlibabaPerformance",
-                                "name": "bmv_storage_local_ssd_random_write_qd128_latency",
-                                "label": "Latency, Qdepth=128"
-                              },
-                              {
-                                "metric_model_name": "AlibabaPerformance",
-                                "name": "bmv_storage_local_ssd_random_write_qd256_latency",
-                                "label": "Latency, Qdepth=256"
-                              }
-                            ]
+                            "name": "alibaba_bmv_storage_local_ssd_4",
+                            "label": "4 SSD(s)",
+                            "children": []
                           }
                         ]
                       },
                       {
                         "metric_model_name": "MetricContainer",
                         "name": "alibaba_bmv_storage_remote_ssd",
-                        "label": "Remote-SSD",
+                        "label": "Remote",
                         "children": [
                           {
                             "metric_model_name": "MetricContainer",
-                            "name": "alibaba_bmv_storage_remote_ssd_random_read",
-                            "label": "Random Read",
+                            "name": "alibaba_bmv_storage_remote_ssd_1",
+                            "label": "1 SSD(s)",
                             "children": [
                               {
-                                "metric_model_name": "AlibabaBmvRemoteSsdPerformance",
-                                "name": "bmv_storage_remote_ssd_random_read_iops",
-                                "label": "IOPS"
+                                "metric_model_name": "MetricContainer",
+                                "name": "alibaba_bmv_storage_remote_ssd_random_read",
+                                "label": "Random Read",
+                                "children": [
+                                  {
+                                    "metric_model_name": "AlibabaBmvRemoteSsdPerformance",
+                                    "name": "bmv_storage_remote_ssd_random_read_iops",
+                                    "label": "IOPS"
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaBmvRemoteSsdPerformance",
+                                    "name": "bmv_storage_remote_ssd_random_read_qd1_latency",
+                                    "label": "Latency, Qdepth=1"
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaBmvRemoteSsdPerformance",
+                                    "name": "bmv_storage_remote_ssd_random_read_qd16_latency",
+                                    "label": "Latency, Qdepth=16"
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaBmvRemoteSsdPerformance",
+                                    "name": "bmv_storage_remote_ssd_random_read_qd32_latency",
+                                    "label": "Latency, Qdepth=32"
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaBmvRemoteSsdPerformance",
+                                    "name": "bmv_storage_remote_ssd_random_read_qd64_latency",
+                                    "label": "Latency, Qdepth=64"
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaBmvRemoteSsdPerformance",
+                                    "name": "bmv_storage_remote_ssd_random_read_qd128_latency",
+                                    "label": "Latency, Qdepth=128"
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaBmvRemoteSsdPerformance",
+                                    "name": "bmv_storage_remote_ssd_random_read_qd256_latency",
+                                    "label": "Latency, Qdepth=256"
+                                  }
+                                ]
                               },
                               {
-                                "metric_model_name": "AlibabaBmvRemoteSsdPerformance",
-                                "name": "bmv_storage_remote_ssd_random_read_qd1_latency",
-                                "label": "Latency, Qdepth=1"
-                              },
-                              {
-                                "metric_model_name": "AlibabaBmvRemoteSsdPerformance",
-                                "name": "bmv_storage_remote_ssd_random_read_qd16_latency",
-                                "label": "Latency, Qdepth=16"
-                              },
-                              {
-                                "metric_model_name": "AlibabaBmvRemoteSsdPerformance",
-                                "name": "bmv_storage_remote_ssd_random_read_qd32_latency",
-                                "label": "Latency, Qdepth=32"
-                              },
-                              {
-                                "metric_model_name": "AlibabaBmvRemoteSsdPerformance",
-                                "name": "bmv_storage_remote_ssd_random_read_qd64_latency",
-                                "label": "Latency, Qdepth=64"
-                              },
-                              {
-                                "metric_model_name": "AlibabaBmvRemoteSsdPerformance",
-                                "name": "bmv_storage_remote_ssd_random_read_qd128_latency",
-                                "label": "Latency, Qdepth=128"
-                              },
-                              {
-                                "metric_model_name": "AlibabaBmvRemoteSsdPerformance",
-                                "name": "bmv_storage_remote_ssd_random_read_qd256_latency",
-                                "label": "Latency, Qdepth=256"
+                                "metric_model_name": "MetricContainer",
+                                "name": "alibaba_bmv_storage_remote_ssd_random_write",
+                                "label": "Random Write",
+                                "children": [
+                                  {
+                                    "metric_model_name": "AlibabaBmvRemoteSsdPerformance",
+                                    "name": "bmv_storage_remote_ssd_random_write_iops",
+                                    "label": "IOPS"
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaBmvRemoteSsdPerformance",
+                                    "name": "bmv_storage_remote_ssd_random_write_qd1_latency",
+                                    "label": "Latency, Qdepth=1"
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaBmvRemoteSsdPerformance",
+                                    "name": "bmv_storage_remote_ssd_random_write_qd16_latency",
+                                    "label": "Latency, Qdepth=16"
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaBmvRemoteSsdPerformance",
+                                    "name": "bmv_storage_remote_ssd_random_write_qd32_latency",
+                                    "label": "Latency, Qdepth=32"
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaBmvRemoteSsdPerformance",
+                                    "name": "bmv_storage_remote_ssd_random_write_qd64_latency",
+                                    "label": "Latency, Qdepth=64"
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaBmvRemoteSsdPerformance",
+                                    "name": "bmv_storage_remote_ssd_random_write_qd128_latency",
+                                    "label": "Latency, Qdepth=128"
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaBmvRemoteSsdPerformance",
+                                    "name": "bmv_storage_remote_ssd_random_write_qd256_latency",
+                                    "label": "Latency, Qdepth=256"
+                                  }
+                                ]
                               }
                             ]
                           },
                           {
                             "metric_model_name": "MetricContainer",
-                            "name": "alibaba_bmv_storage_remote_ssd_random_write",
-                            "label": "Random Write",
-                            "children": [
-                              {
-                                "metric_model_name": "AlibabaBmvRemoteSsdPerformance",
-                                "name": "bmv_storage_remote_ssd_random_write_iops",
-                                "label": "IOPS"
-                              },
-                              {
-                                "metric_model_name": "AlibabaBmvRemoteSsdPerformance",
-                                "name": "bmv_storage_remote_ssd_random_write_qd1_latency",
-                                "label": "Latency, Qdepth=1"
-                              },
-                              {
-                                "metric_model_name": "AlibabaBmvRemoteSsdPerformance",
-                                "name": "bmv_storage_remote_ssd_random_write_qd16_latency",
-                                "label": "Latency, Qdepth=16"
-                              },
-                              {
-                                "metric_model_name": "AlibabaBmvRemoteSsdPerformance",
-                                "name": "bmv_storage_remote_ssd_random_write_qd32_latency",
-                                "label": "Latency, Qdepth=32"
-                              },
-                              {
-                                "metric_model_name": "AlibabaBmvRemoteSsdPerformance",
-                                "name": "bmv_storage_remote_ssd_random_write_qd64_latency",
-                                "label": "Latency, Qdepth=64"
-                              },
-                              {
-                                "metric_model_name": "AlibabaBmvRemoteSsdPerformance",
-                                "name": "bmv_storage_remote_ssd_random_write_qd128_latency",
-                                "label": "Latency, Qdepth=128"
-                              },
-                              {
-                                "metric_model_name": "AlibabaBmvRemoteSsdPerformance",
-                                "name": "bmv_storage_remote_ssd_random_write_qd256_latency",
-                                "label": "Latency, Qdepth=256"
-                              }
-                            ]
+                            "name": "alibaba_bmv_storage_remote_ssd_4",
+                            "label": "4 SSD(s)",
+                            "children": []
                           }
                         ]
                       }
@@ -5229,6 +5343,7 @@
                                   {
                                     "metric_model_name": "HuLatencyUnderLoadPerformance",
                                     "name": "NU_HU_NFCP_8TCP_offloads_disabled_2hosts_output_latency_under_load_underlay",
+
                                     "label": "Latency under load"
                                   }
                                 ]
@@ -5439,6 +5554,7 @@
                                   {
                                     "metric_model_name": "HuLatencyUnderLoadPerformance",
                                     "name": "HU_HU_NFCP_2f1_8TCP_1H_offloads_enabled_output_latency_under_load_underlay",
+
                                     "label": "Latency under load"
                                   }
                                 ]
@@ -5466,6 +5582,7 @@
                                   {
                                     "metric_model_name": "HuLatencyUnderLoadPerformance",
                                     "name": "HU_HU_NFCP_2f1_8TCP_2H_offloads_enabled_output_latency_under_load_underlay",
+
                                     "label": "Latency under load"
                                   }
                                 ]
@@ -5493,6 +5610,7 @@
                                   {
                                     "metric_model_name": "HuLatencyUnderLoadPerformance",
                                     "name": "HU_HU_NFCP_2f1_1TCP_1H_offloads_enabled_output_latency_under_load_underlay",
+
                                     "label": "Latency under load"
                                   }
                                 ]

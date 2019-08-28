@@ -1,0 +1,4 @@
+[
+  {"info": {"custom_test_bed_spec": {"base_test_bed": "fs-inspur", "asset_request": {"DUT": {"num": 1}}}}},
+  {"path": "storage/storage_sanity/pdu_auto_cont_fs.py"}
+]
