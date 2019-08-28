@@ -41,7 +41,6 @@ export class TestBedComponent implements OnInit {
   driver = null;
   refreshing: string = null;
   userMap: any = null;
-  editingDescription: boolean = false;
   tempDescription: string;
   tempNote: string;
 
@@ -131,7 +130,8 @@ export class TestBedComponent implements OnInit {
     return this.regressionService.fetchTestbeds().pipe(switchMap(response => {
       this.testBeds = response;
       this.testBeds.map(testBed => {
-        testBed['editingMode'] = false;
+        testBed.editingDescription = false;
+        testBed.editingNote = false;
         let numExecutions = -1;
         let executionId = -1;
         this.automationStatus[testBed.name] = {numExecutions: numExecutions,
@@ -195,7 +195,7 @@ export class TestBedComponent implements OnInit {
   onLock(content, testBed) {
     this.currentEditMode = this.EditMode.MANUAL_LOCK_INITIAL;
     this.setLockPanelHeader(`for ${testBed.name}`);
-    this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title', windowClass: 'lockModal', backdrop: 'static'});
+    this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title', size: 'lg', backdrop: 'static'});
 
 
   }
@@ -349,25 +349,26 @@ export class TestBedComponent implements OnInit {
     }, error => {
       this.loggerService.error("Unable to update description");
     });
-    testBed.editingMode = false;
+    testBed.editingDescription = false;
   }
 
   onEditDescription(testBed) {
     this.tempDescription = testBed.description;
-    testBed.editingMode = true;
+    testBed.editingDescription = true;
   }
 
   onEditNote(testBed) {
-    testBed['editingNote'] = true;
+    this.tempNote = testBed.note;
+    testBed.editingNote = true;
 
   }
 
   onSubmitNote(testBed) {
-    let payload = {note: this.tempNote};
+    let payload = {note: testBed.note};
     this.apiService.put('/api/v1/regression/test_beds/' + testBed.id, payload).subscribe((response) => {
       this.loggerService.success('Successfully updated!');
     }, error => {
-      this.loggerService.error("Unable to update description");
+      this.loggerService.error("Unable to update note");
     });
     testBed.editingNote = false;
     this.tempNote = "";
@@ -375,13 +376,13 @@ export class TestBedComponent implements OnInit {
   }
 
   onCancelNote(testBed) {
+    testBed.note = this.tempNote;
     testBed.editingNote = false;
-    this.tempNote = "";
 
   }
 
   onCancelDescription(testBed) {
     testBed.description = this.tempDescription;
-    testBed.editingMode = false;
+    testBed.editingDescription = false;
   }
 }

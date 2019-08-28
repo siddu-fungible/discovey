@@ -31,7 +31,7 @@
               class="fa fa-pencil hover-icon" style="font-size:14px; float: right"
               (click)="onEditDescription(testBed)"></i>&nbsp;
 
-              <div *ngIf="testBed.editingMode">
+              <div *ngIf="testBed.editingDescription">
                 <br>
                 <textarea rows="3" [(ngModel)]="testBed.description" style="min-width: 100%;"></textarea>
                 <div style="display: flex; justify-content: flex-start; align-items: center">
@@ -82,14 +82,14 @@
                   <span class="badge badge-danger" *ngIf="manualStatus[testBed.name].manualLock"> Expired</span>
                   &nbsp;
                   <span class="pseudo-anchor fun-button-secondary"
-                        [ngClass]="{'fun-button-secondary-active' : testBed['extendClick']}"
-                        (click)="testBed['extendClick'] = true; currentTestBed = testBed; onExtendTime(extendSlotModalContent, testBed)"> Extend slot </span>&nbsp;
+                        [ngClass]="{'fun-button-secondary-active' : testBed.extendClick}"
+                        (click)="testBed.extendClick = true; currentTestBed = testBed; onExtendTime(extendSlotModalContent, testBed)"> Extend slot </span>&nbsp;
 
                 </ng-container>
 
                 <span class="pseudo-anchor fun-button-secondary"
-                      [ngClass]="{'fun-button-secondary-active' : testBed['addClick']}"
-                      (click)="testBed['addClick'] = true; currentTestBed=testBed; onAddTime(addTimeModalContent, testBed)">Add time</span>
+                      [ngClass]="{'fun-button-secondary-active' : testBed.addClick}"
+                      (click)="testBed.addClick = true; currentTestBed=testBed; onAddTime(addTimeModalContent, testBed)">Add time</span>
 
               </ng-container>
 
@@ -101,9 +101,7 @@
                 <table style="float:left">
                   <tr>
                     <td class="no-wrap">
-                      <label for="submitter">Submitter</label>
-                    </td>
-                    <td>
+                      <label for="submitter">Submitter&nbsp;</label>
                       <select id="submitter" [(ngModel)]="selectedUser">
                         <option *ngFor="let user of users" [ngValue]="user">{{ user.first_name }} {{ user.last_name }}
                           ({{ user.email }})
@@ -181,15 +179,14 @@
               <ng-container *ngIf="manualStatus[testBed.name].manualLock">
                 {{ userMap[manualStatus[testBed.name].manualLockSubmitter].first_name }} {{ userMap[manualStatus[testBed.name].manualLockSubmitter].last_name.charAt(0)}}
                 <i class="fa fa-pencil hover-icon" style="font-size:14px; float: right" (click)="onEditNote(testBed)"></i>&nbsp;
-                <div *ngIf="testBed['editingNote']">
-                  Note:&nbsp;{{tempNote}}
-                <br>
-                <textarea rows="3" [(ngModel)]="tempNote" style="min-width: 100%;"></textarea>
-                <div style="display: flex; justify-content: flex-start; align-items: center">
-                  <span><i class="fa fa-check fa-fw tick-color" (click)="onSubmitNote(testBed)"></i></span>
-                  <span><i class="fa fa-times fa-fw close-color" (click)="onCancelNote(testBed)"></i></span>
-                </div>
-
+                <div *ngIf="testBed.note">Note:&nbsp;{{testBed.note}}</div>
+                <div *ngIf="testBed.editingNote">
+                  <br>
+                  <textarea rows="3" [(ngModel)]="testBed.note" style="min-width: 100%;"></textarea>
+                  <div style="display: flex; justify-content: flex-start; align-items: center">
+                    <span><i class="fa fa-check fa-fw tick-color" (click)="onSubmitNote(testBed)"></i></span>
+                    <span><i class="fa fa-times fa-fw close-color" (click)="onCancelNote(testBed)"></i></span>
+                  </div>
               </div>
               </ng-container>
               <ng-container *ngIf="assetLevelManualLockStatus[testBed.name]?.asset_level_manual_locked">
