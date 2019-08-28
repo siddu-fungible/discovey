@@ -5,6 +5,8 @@ import {Observable, of} from "rxjs";
 import {switchMap} from "rxjs/operators";
 import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
 import {SuiteEditorService, Suite, SuiteEntry} from "./suite-editor.service";
+import {RegressionService} from "../regression.service";
+import {LoggerService} from "../../services/logger/logger.service";
 
 
 enum CustomAssetSelection {  // used by the Custom test-bed spec modal
@@ -55,10 +57,12 @@ export class SuiteEditorComponent implements OnInit {
   //selectedCategories: string [] = null;
   selectedSubCategories: string [] = null;
 
+  availableTags: string [];
+
   tags: string = null;
   suite: Suite = null;
 
-  constructor(private testBedService: TestBedService, private modalService: NgbModal, private service: SuiteEditorService) {
+  constructor(private testBedService: TestBedService, private modalService: NgbModal, private service: SuiteEditorService, private regressionService: RegressionService, private loggerService: LoggerService) {
 
   }
 
@@ -73,7 +77,10 @@ export class SuiteEditorComponent implements OnInit {
       return () => {
 
       }
-    }).pipe(switchMap((response) => {
+    }).pipe(switchMap(response => {
+      return this.regressionService.tags();
+    })).pipe(switchMap((response) => {
+      this.availableTags = response;
       return this.testBedService.testBeds();
     })).pipe(switchMap(response => {
       this.testBeds = response;
@@ -270,7 +277,7 @@ export class SuiteEditorComponent implements OnInit {
 
   customTestBedSpecChanged(customTestBedSpec) {
     this.customTestBedSpec = customTestBedSpec;
-  }cd
+  }
 
   filterAssetsBySelectedTestBed(selectedTestBed, allAssets) {  // Only choose assets that belong to the selected test-bed
     return allAssets.filter(asset => asset.test_beds.indexOf(selectedTestBed) > -1).map(o => { return o.name });
@@ -287,7 +294,7 @@ export class SuiteEditorComponent implements OnInit {
     //console.log(this.flattenedAssetTypeNames);
     //console.log(this.flattenedAssetTypeNameMap);
     //console.log(this.selectedCategories);
-    console.log(this.tags);
+    console.log(this.suite);
 
   }
 
@@ -380,5 +387,10 @@ export class SuiteEditorComponent implements OnInit {
     this.suite.short_description = shortDescription;
   }
 
+  onSubmitSuite() {
+    this.service.add(this.suite).subscribe(response => {
+      this.loggerService.success("Added suite");
+    })
+  }
 
 }

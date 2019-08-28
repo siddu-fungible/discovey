@@ -668,6 +668,7 @@ class Suite(models.Model):
     long_description = models.TextField(default="")
     tags = JSONField(default=[])
     custom_test_bed_spec = JSONField(default=None)
+    entries = JSONField(default=None)
 
 
 class TaskStatus(models.Model):

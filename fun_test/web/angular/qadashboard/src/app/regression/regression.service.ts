@@ -165,4 +165,18 @@ getPrettyLocalizeTime(t) {
     }))
   }
 
+  tags() {
+    return this.apiService.get('/regression/tags').pipe(switchMap(response => {
+      let data = JSON.parse(response.data);
+      let i = 1;
+      let parsedTags: string [] = [];
+      for (let item of data) {
+        parsedTags.push(item.fields.tag);
+      }
+      return of(parsedTags);
+    }), catchError(error => {
+      throw(error);
+    }))
+  }
+
 }
