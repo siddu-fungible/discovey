@@ -1289,70 +1289,68 @@ class ECVolumeLevelTestcase(FunTestCase):
                 '''
                 try:
                     if initial_vol_stat[iodepth] or final_vol_stat[iodepth]:
-                        fun_test.log("\ninitial_vol_stat[{}] is: {}\n".format(iodepth,
-                                                                              initial_vol_stat[iodepth]["data"]))
+                        fun_test.log("\ninitial_vol_stat[{}] is: {}\n".
+                                     format(iodepth, initial_vol_stat[iodepth]["data"]))
                         fun_test.log("\nfinal_vol_stat[{}] is: {}\n".format(iodepth, final_vol_stat[iodepth]["data"]))
-                        fun_test.log("\nvol_detail is: {}\n".format(vol_details))
+                        fun_test.log("\nvol_details: {}\n".format(vol_details))
                         curr_stats_diff = vol_stats_diff(initial_vol_stats=initial_vol_stat[iodepth]["data"],
                                                          final_vol_stats=final_vol_stat[iodepth]["data"],
                                                          vol_details=vol_details)
-                        fun_test.simple_assert(curr_stats_diff["status"],
-                                               "Stats diff required to measure amplification")
+                        fun_test.simple_assert(curr_stats_diff["status"], "Stats diff to measure amplification")
 
                         pbw = curr_stats_diff["total_diff"]["VOL_TYPE_BLK_LOCAL_THIN"]["write_bytes"]
-                        fun_test.log("Physical Bytes Written, collected from volume stats: {} for iodepth: {}".format(
-                            pbw, iodepth))
                         lbw = curr_stats_diff["total_diff"]["VOL_TYPE_BLK_LSV"]["write_bytes"]
-                        fun_test.log("Logical Bytes Written, collected from volume stats: {} for iodepth: {}".format(
-                            lbw, iodepth))
-                        try:
-                            lbw_app = aggr_fio_output[iodepth]['write']["io_bytes"]
-                            fun_test.log("Logical written bytes by app: {} for iodepth: {}".format(lbw_app, iodepth))
-                        except Exception as ex:
-                            fun_test.critical(str(ex))
-
-                        write_amp_vol_stat = float(pbw) / float(lbw)
-                        fun_test.log("Write amplification calculated with volume stats is: {} for iodepth: {}".format(
-                            write_amp_vol_stat, iodepth))
-                        write_amp_app_stat = float(pbw) / float(lbw_app)
-                        fun_test.log("Write amplification calculated with app stats is: {} for iodepth: {}".format(
-                            write_amp_app_stat, iodepth))
-
-                        row_data_dict["write_amp_vol_stats"] = write_amp_vol_stat
-                        row_data_dict["write_amp_app_stats"] = write_amp_app_stat
-
+                        lbw_app = aggr_fio_output[iodepth]['write']["io_bytes"]
                         pbr = curr_stats_diff["total_diff"]["VOL_TYPE_BLK_LOCAL_THIN"]["read_bytes"]
-                        fun_test.log("Physical Bytes Read, collected from volume stats: {} for iodepth: {}".format(
-                            pbr, iodepth))
                         lbr = curr_stats_diff["total_diff"]["VOL_TYPE_BLK_LSV"]["read_bytes"]
-                        fun_test.log("Logical Bytes Read, collected from volume stats: {} for iodepth: {}".format(
-                            lbr, iodepth))
-                        try:
-                            lbr_app = aggr_fio_output[iodepth]['read']["io_bytes"]
-                            fun_test.log("Logical bytes Read by app: {} for iodepth: {}".format(lbr_app, iodepth))
-                        except Exception as ex:
-                            fun_test.critical(str(ex))
+                        lbr_app = aggr_fio_output[iodepth]['read']["io_bytes"]
 
-                        read_amp_vol_stat = float(pbr) / float(lbr)
-                        fun_test.log("Read amplification calculated with volume stats is: {} for iodepth: {}".format(
-                            read_amp_vol_stat, iodepth))
-                        read_amp_app_stat = float(pbr) / float(lbr_app)
-                        fun_test.log("Read amplification calculated with app stats is: {} for iodepth: {}".format(
-                            read_amp_app_stat, iodepth))
+                        fun_test.log("Iodepth: {}\nPhysical Bytes Written from volume stats: {}"
+                                     "\nLogical Bytes Written from volume stats: {}\nLogical written bytes by app: {}"
+                                     "\nPhysical Bytes Read from volume stats: {}"
+                                     "\nLogical Bytes Read from volume stats: {}\nLogical bytes Read by app: {}\n".
+                                     format(iodepth, pbw, lbw, lbw_app, pbr, lbr, lbr_app))
+                        if lbw != 0:
+                            write_amp_vol_stat = "{0:.2f}".format(float(pbw) / float(lbw))
+                            row_data_dict["write_amp_vol_stats"] = write_amp_vol_stat
+                        else:
+                            row_data_dict["write_amp_vol_stats"] = 0
+                        fun_test.log("Write amplification calculated with volume stats: {}".format(write_amp_vol_stat))
+                        if lbw_app != 0:
+                            write_amp_app_stat = "{0:.2f}".format(float(pbw) / float(lbw_app))
+                            row_data_dict["write_amp_app_stats"] = write_amp_app_stat
+                        else:
+                            row_data_dict["write_amp_app_stats"] = 0
+                        fun_test.log("Write amplification calculated with app stats: {}".format(write_amp_app_stat))
 
-                        row_data_dict["read_amp_vol_stats"] = read_amp_vol_stat
-                        row_data_dict["read_amp_app_stats"] = read_amp_app_stat
+                        if lbr != 0:
+                            read_amp_vol_stat = "{0:.2f}".format(float(pbr) / float(lbr))
+                            row_data_dict["read_amp_vol_stats"] = read_amp_vol_stat
+                        else:
+                            row_data_dict["read_amp_vol_stats"] = 0
+                        fun_test.log("Read amplification calculated with volume stats: {}".format(read_amp_vol_stat))
+                        if lbr_app != 0:
+                            read_amp_app_stat = "{0:.2f}".format(float(pbr) / float(lbr_app))
+                            row_data_dict["read_amp_app_stats"] = read_amp_app_stat
+                        else:
+                            row_data_dict["read_amp_app_stats"] = 0
+                        fun_test.log("Read amplification calculated with app stats is: {}".format(read_amp_app_stat))
 
-                        aggr_amp_vol_stats = float(pbw + pbr) / float(lbw + lbr)
-                        fun_test.log(
-                            "Total Read+Write amplification calculated with volume stats is: {} for iodepth: {}".
-                                format(aggr_amp_vol_stats, iodepth))
-                        aggr_amp_app_stats = float(pbw + pbr) / float(lbw_app + lbr_app)
-                        fun_test.log("Total Read+Write amplification calculated with app stats is: {} for iodepth: {}".
+                        if (lbw + lbr) != 0:
+                            aggr_amp_vol_stats = "{0:.2f}".format(float(pbw + pbr) / float(lbw + lbr))
+                            row_data_dict["aggr_amp_vol_stats"] = aggr_amp_vol_stats
+                        else:
+                            row_data_dict["aggr_amp_vol_stats"] = 0
+                        fun_test.log("Aggregated Read+Write amplification calculated with volume stats: {}".
+                                     format(aggr_amp_vol_stats))
+
+                        if (lbw_app + lbr_app) != 0:
+                            aggr_amp_app_stats = "{0:.2f}".format(float(pbw + pbr) / float(lbw_app + lbr_app))
+                            row_data_dict["aggr_amp_app_stats"] = aggr_amp_app_stats
+                        else:
+                            row_data_dict["aggr_amp_app_stats"] = 0
+                        fun_test.log("Aggregated Read+Write amplification calculated with app stats: {}".
                                      format(aggr_amp_app_stats, iodepth))
-
-                        row_data_dict["aggr_amp_vol_stats"] = aggr_amp_vol_stats
-                        row_data_dict["aggr_amp_app_stats"] = aggr_amp_app_stats
                 except Exception as ex:
                     fun_test.critical(str(ex))
 
