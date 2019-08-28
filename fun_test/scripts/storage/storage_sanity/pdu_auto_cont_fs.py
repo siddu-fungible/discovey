@@ -56,11 +56,17 @@ class BLTVolumeSanityScript(FunTestScript):
         am = fun_test.get_asset_manager()
         test_bed_type = fun_test.get_job_environment_variable("test_bed_type")
         fun_test.log("Testbed-type: {}".format(test_bed_type))
-        test_bed_spec = am.get_test_bed_spec(name=test_bed_type)
-        fun_test.simple_assert(test_bed_spec, "Test-bed spec for {}".format(test_bed_spec))
+
+        if test_bed_type == "suite-based":
+            test_bed = topology.spec["dut_info"]["0"]["dut"]
+        else:
+            test_bed = test_bed_type
+
+        test_bed_spec = am.get_test_bed_spec(name=test_bed)
+        fun_test.simple_assert(test_bed_spec, "Test-bed spec for {} is {}".format(test_bed_type, test_bed_spec))
         dut_name = test_bed_spec["dut_info"]["0"]["dut"]
         fs_spec = am.get_fs_by_name(dut_name)
-        fun_test.simple_assert(fs_spec, "FS spec for {}".format(dut_name))
+        fun_test.simple_assert(fs_spec, "FS spec for {} is {}".format(dut_name, fs_spec))
         apc_info = fs_spec.get("apc_info", None)  # Used for power-cycling the entire FS
 
         fun_test.simple_assert(expression=apc_info, context=None, message='apc info details are correctl fed')
@@ -71,7 +77,7 @@ class BLTVolumeSanityScript(FunTestScript):
 
         for pc_no in range(0, self.no_of_powercycles):
 
-            fun_test.log("Iteation no: {} out of {}".format(pc_no + 1, self.no_of_powercycles))
+            fun_test.log("Iteration no: {} out of {}".format(pc_no + 1, self.no_of_powercycles))
             apc_pdu = ApcPdu(host_ip=str(apc_info['host_ip']), username=str(apc_info['username']),
                              password=str(apc_info['password']))
 
