@@ -1,8 +1,6 @@
 <div [ngClass]="{'component': !embed}">
   <fun-spinner [status]="refreshing"></fun-spinner>
   <div *ngIf="!refreshing" class="flex-container">
-    <!--    <div class="row">-->
-    <!--      <div class="col">-->
     <div class="card">
       <div class="card-header">
         Test-beds
@@ -44,9 +42,8 @@
               </div>
 
             </td>
-            <td style="padding: 5px">
-                  <span class="badge badge-danger"
-                        *ngIf="automationStatus[testBed.name]?.numExecutions > 0; else freeAutomationStatus">In use</span>
+            <td>
+              <span class="badge badge-danger" *ngIf="automationStatus[testBed.name]?.numExecutions > 0; else freeAutomationStatus">In use</span>
               <ng-template #freeAutomationStatus>
                 <span class="badge badge-success">Free</span>
               </ng-template>
@@ -70,7 +67,7 @@
               <ng-template #freeManualStatus>
                 <span class="badge badge-success">Free</span>
                 <ng-container *ngIf="!manualStatus[testBed.name].manualLock">&nbsp;
-                  <span class="pseudo-anchor" (click)="currentTestBed = testBed; onLock(testBed)">Lock</span>
+                  <span class="pseudo-anchor" (click)="currentTestBed = testBed; onLock(lockModalContent, testBed)">Lock</span>
                   &nbsp;
                 </ng-container>
               </ng-template>
@@ -86,15 +83,99 @@
                   &nbsp;
                   <span class="pseudo-anchor fun-button-secondary"
                         [ngClass]="{'fun-button-secondary-active' : testBed['extendClick']}"
-                        (click)="testBed['extendClick'] = true; currentTestBed = testBed; onExtendTime(testBed)"> Extend slot </span>&nbsp;
+                        (click)="testBed['extendClick'] = true; currentTestBed = testBed; onExtendTime(extendSlotModalContent, testBed)"> Extend slot </span>&nbsp;
 
                 </ng-container>
 
                 <span class="pseudo-anchor fun-button-secondary"
                       [ngClass]="{'fun-button-secondary-active' : testBed['addClick']}"
-                      (click)="testBed['addClick'] = true; currentTestBed=testBed; onAddTime(testBed)">Add time</span>
+                      (click)="testBed['addClick'] = true; currentTestBed=testBed; onAddTime(addTimeModalContent, testBed)">Add time</span>
 
               </ng-container>
+
+              <ng-template #lockModalContent let-modal>
+                <div class="modal-header">
+                  {{lockPanelHeader}}
+                </div>
+                <div class="modal-body">
+                <table style="float:left">
+                  <tr>
+                    <td class="no-wrap">
+                      <label for="submitter">Submitter</label>
+                    </td>
+                    <td>
+                      <select id="submitter" [(ngModel)]="selectedUser">
+                        <option *ngFor="let user of users" [ngValue]="user">{{ user.first_name }} {{ user.last_name }}
+                          ({{ user.email }})
+                        </option>
+                      </select>
+                      &nbsp;
+                      <a href="/users" target="_blank">Add user</a>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td colspan="2">
+                      <table>
+                        <tr>
+                          <td>HH:MM (Duration from now)</td>
+                          <td>
+                            <ngb-timepicker style="display: inline-flex"
+                                            [(ngModel)]="schedulingTime"></ngb-timepicker>
+                          </td>
+                        </tr>
+                      </table>
+
+                    </td>
+                  </tr>
+                  <tr>
+                    <span class="fun-cancel-link" (click)="modal.dismiss(); onCancelLockPanel(currentTestBed)">Cancel</span>
+                    <button class="fun-button-submit" (click)="modal.close(true); onLockSubmit()"> Submit</button>
+                  </tr>
+                </table>
+                  </div>
+              </ng-template>
+
+              <ng-template #extendSlotModalContent let-modal>
+                <div class="modal-header">
+                  {{lockPanelHeader}}
+                </div>
+                <div class="modal-body">
+                  <table>
+                    <tr>
+                      <td colspan="2">
+                        <table>
+                          <tr>
+                            <td>HH:MM (Duration from now)</td>
+                            <td>
+                              <ngb-timepicker style="display: inline-flex" [(ngModel)]="schedulingTime"></ngb-timepicker>
+                            </td>
+                          </tr>
+                        </table>
+
+                      </td>
+                    </tr>
+                    <tr>
+                      <span class="fun-cancel-link" (click)="modal.dismiss(); onCancelLockPanel(currentTestBed)">Cancel</span>
+                      <button class="fun-button-submit" (click)="modal.close(true); onExtendTimeSubmit(currentTestBed)"> Submit</button>
+                    </tr>
+                  </table>
+
+                </div>
+              </ng-template>
+
+              <ng-template #addTimeModalContent let-modal>
+                <div class="modal-header">
+                  {{lockPanelHeader}}
+                  </div>
+                  <div class="modal-body">
+                    <label>Hours&nbsp;</label>
+                    <input type="number" [(ngModel)]="addedTime">
+                      <div style="padding: 5px">
+                      <span class="fun-cancel-link" (click)="modal.dismiss(); onCancelLockPanel(currentTestBed)">Cancel</span>
+                      <button class="fun-button-submit" (click)="modal.close(true); onAddTimeSubmit(currentTestBed)">Submit</button>
+                    </div>
+                  </div>
+              </ng-template>
             </td>
             <td>
               <ng-container *ngIf="manualStatus[testBed.name].manualLock">
@@ -110,76 +191,10 @@
 
       </div>
     </div>
-    <div *ngIf="currentEditMode !== EditMode.NONE">
-      <div class="card">
-        <div class="card-header">
-          {{ lockPanelHeader }}
-        </div>
-        <div class="card-body">
-
-
-          <table *ngIf="currentEditMode !== EditMode.MANUAL_LOCK_ADD_TIME">
-
-            <tr *ngIf="currentEditMode === EditMode.MANUAL_LOCK_INITIAL">
-              <td class="no-wrap">
-                <label for="submitter">Submitter</label>
-              </td>
-              <td>
-                <select id="submitter" [(ngModel)]="selectedUser">
-                  <option *ngFor="let user of users" [ngValue]="user">{{ user.first_name }} {{ user.last_name }}
-                    ({{ user.email }})
-                  </option>
-                </select>
-                &nbsp;
-                <a href="/users" target="_blank">Add user</a>
-              </td>
-            </tr>
-            <tr>
-            </tr>
-            <tr *ngIf="currentEditMode !== EditMode.MANUAL_LOCK_ADD_TIME">
-              <td colspan="2">
-                <table>
-                  <tr>
-                    <td>HH:MM (Duration from now)</td>
-                    <td>
-                      <ngb-timepicker style="display: inline-flex" id="scheduling-time-picker"
-                                      [(ngModel)]="schedulingTime"></ngb-timepicker>
-                    </td>
-                  </tr>
-                </table>
-
-              </td>
-            </tr>
-            <tr>
-              <span class="fun-cancel-link" (click)="onCancelLockPanel(currentTestBed)">Cancel</span>
-              <button *ngIf="currentEditMode === EditMode.MANUAL_LOCK_INITIAL " class="fun-button-submit"
-                      (click)="onLockSubmit()"> Submit
-              </button>
-              <button *ngIf="currentEditMode === EditMode.MANUAL_LOCK_UPDATE_EXPIRATION "
-                      class="fun-button-submit" (click)="onExtendTimeSubmit(currentTestBed)"> Submit
-              </button>
-            </tr>
-          </table>
-
-          <div *ngIf="currentEditMode === EditMode.MANUAL_LOCK_ADD_TIME">
-            <div style="width: 50%">
-              <label>Hours&nbsp;</label>
-              <input type="number" [(ngModel)]="addedTime">
-            </div>
-            <div style="padding: 5px">
-              <span class="fun-cancel-link" (click)="onCancelLockPanel(currentTestBed)">Cancel</span>
-              <button class="fun-button-submit" (click)="onAddTimeSubmit(currentTestBed)">Submit
-              </button>
-            </div>
-
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 
 </div>
-<!--  </div>-->
+
 <div class="flex-container">
   <ng-container *ngIf="!embed && !refreshing">
     <div class="card">
@@ -238,4 +253,3 @@
 
 </div>
 
-<!--</div>-->

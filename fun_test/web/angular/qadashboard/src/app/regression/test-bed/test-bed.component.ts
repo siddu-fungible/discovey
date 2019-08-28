@@ -191,9 +191,16 @@ export class TestBedComponent implements OnInit {
     this.lockPanelHeader = `${this.currentEditMode} ${string}`;
   }
 
-  onLock(testBed) {
+  onLock(content, testBed) {
     this.currentEditMode = this.EditMode.MANUAL_LOCK_INITIAL;
     this.setLockPanelHeader(`for ${testBed.name}`);
+    this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title', windowClass: 'lockModal', backdrop: 'static'}).result.then((dontCare) => {
+
+    }, ((reason) => {
+      //this.closeResult = `Dismissed ${this.getDismissReason(reason)}`;
+    }));
+
+
   }
 
   onUnLock(testBed) {
@@ -211,17 +218,29 @@ export class TestBedComponent implements OnInit {
     }
   }
 
-  onExtendTime(testBed) {
+  onExtendTime(content, testBed) {
     this.currentEditMode = this.EditMode.MANUAL_LOCK_UPDATE_EXPIRATION;
-    testBed['addClick'] = false;
     this.setLockPanelHeader(`for ${testBed.name}`);
+    this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title', backdrop: 'static'}).result.then((dontCare) => {
+      testBed['addClick'] = false;
+
+    }, ((reason) => {
+      //this.closeResult = `Dismissed ${this.getDismissReason(reason)}`;
+    }));
+
 
   }
 
-  onAddTime(testBed) {
+  onAddTime(content, testBed) {
     this.currentEditMode = this.EditMode.MANUAL_LOCK_ADD_TIME;
-    testBed['extendClick'] = false;
     this.setLockPanelHeader(`for ${testBed.name}`);
+    this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title', backdrop: 'static'}).result.then((dontCare) => {
+      testBed['extendClick'] = false;
+
+
+    }, ((reason) => {
+      //this.closeResult = `Dismissed ${this.getDismissReason(reason)}`;
+    }));
   }
 
   onAddTimeSubmit(testbed) {
@@ -268,8 +287,8 @@ export class TestBedComponent implements OnInit {
       this.selectedUser = null;
       this.schedulingTime.hour = 1;
       this.schedulingTime.minute = 1;
-      //this.refreshTestBeds();
-      window.location.reload();
+      this.refreshTestBeds();
+      //window.location.reload();
       this.currentEditMode = EditMode.NONE;
     }, error => {
       if (error.value instanceof ApiResponse) {

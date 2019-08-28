@@ -77,3 +77,7 @@ table > tbody > tr > th, table > tbody > tr > td {
 .flex-container > div {
   margin: 10px;
 }
+
+.fun-button-submit {
+  margin: 5px;
+}
