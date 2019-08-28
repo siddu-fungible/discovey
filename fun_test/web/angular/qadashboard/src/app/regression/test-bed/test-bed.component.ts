@@ -229,7 +229,7 @@ export class TestBedComponent implements OnInit {
     this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title', backdrop: 'static'});
   }
 
-  onAddTimeSubmit(testbed) {
+  onAddTimeSubmit(testBed) {
     let url = "/api/v1/regression/test_beds/" + this.currentTestBed.id;
     let payload = {manual_lock_extension_hour: this.addedTime, manual_lock_extension_minute: 0};
     this.apiService.put(url, payload).subscribe(response => {
@@ -239,7 +239,7 @@ export class TestBedComponent implements OnInit {
     }, error => {
       this.loggerService.error("Unable to add time");
     });
-    testbed['addClick'] = false;
+    testBed.addClick = false;
   }
 
   onExtendTimeSubmit(testBed) {
@@ -253,7 +253,7 @@ export class TestBedComponent implements OnInit {
     }, error => {
       this.loggerService.error("Unable to extend lock");
     });
-    testBed['extendClick'] = false;
+    testBed.extendClick = false;
   }
 
 
@@ -289,8 +289,8 @@ export class TestBedComponent implements OnInit {
 
   onCancelLockPanel(testBed) {
     this.currentEditMode = this.EditMode.NONE;
-    testBed['extendClick'] = false;
-    testBed['addClick'] = false;
+    testBed.extendClick = false;
+    testBed.addClick = false;
   }
 
   getUsers() {

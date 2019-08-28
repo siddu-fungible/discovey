@@ -42,7 +42,7 @@
               </div>
 
             </td>
-            <td>
+            <td style="padding: 10px">
               <span class="badge badge-danger" *ngIf="automationStatus[testBed.name]?.numExecutions > 0; else freeAutomationStatus">In use</span>
               <ng-template #freeAutomationStatus>
                 <span class="badge badge-success">Free</span>
@@ -56,7 +56,7 @@
                 Asset in use: {{ automationStatus[testBed.name].assetInUse }}
               </ng-container>
             </td>
-            <td style="padding: 5px">
+            <td style="padding: 10px">
                   <span class="badge badge-danger"
                         *ngIf="manualStatus[testBed.name].manualLock || assetLevelManualLockStatus[testBed.name]?.asset_level_manual_locked; else freeManualStatus">In use</span>
 
@@ -178,8 +178,10 @@
             <td class="hover-cell">
               <ng-container *ngIf="manualStatus[testBed.name].manualLock">
                 {{ userMap[manualStatus[testBed.name].manualLockSubmitter].first_name }} {{ userMap[manualStatus[testBed.name].manualLockSubmitter].last_name.charAt(0)}}
-                <i class="fa fa-pencil hover-icon" style="font-size:14px; float: right" (click)="onEditNote(testBed)"></i>&nbsp;
-                <div *ngIf="testBed.note">Note:&nbsp;{{testBed.note}}</div>
+<!--                <i class="fa fa-pencil hover-icon" style="font-size:14px; float: right" (click)="onEditNote(testBed)"></i>&nbsp;-->
+                 <span class="pseudo-anchor fun-button-secondary" [ngClass]="{'fun-button-secondary-active' : testBed.editingNote}" (click)="testBed.editingNote = true; onEditNote(testBed)"> Edit note</span>&nbsp;
+
+                <div *ngIf="testBed.note" style="text-align: center">Note:&nbsp;{{testBed.note}}</div>
                 <div *ngIf="testBed.editingNote">
                   <br>
                   <textarea rows="3" [(ngModel)]="testBed.note" style="min-width: 100%;"></textarea>
