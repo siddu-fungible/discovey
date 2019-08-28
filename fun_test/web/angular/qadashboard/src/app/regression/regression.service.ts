@@ -175,7 +175,7 @@ getPrettyLocalizeTime(t) {
       }
       return of(parsedTags);
     }), catchError(error => {
-      throw(error);
+      throw([error]);
     }))
   }
 
