@@ -263,7 +263,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
           let percentNum = (((lastValue - penultimateValue) / penultimateValue) * 100);
           percentage = percentNum.toFixed(2) + "%";
           if (percentNum >= 0) {
-            percentage = "+" + percentNum.toFixed(2) + "%";
+            percentage = "+" + percentage;
           }
         }
         dataSet["percentage_history"] = percentage;
