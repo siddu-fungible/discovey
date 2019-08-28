@@ -59,7 +59,8 @@
     "blt_details": {
       "ns_id": 1,
       "type": "VOL_TYPE_BLK_LOCAL_THIN",
-      "capacity": 137438953472,
+      // "capacity": 137438953472,
+      "capacity": 68719476736,
       "block_size": 4096
     },
     "controllers": 1,
@@ -72,8 +73,8 @@
     "iter_interval": 2,
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {
-      "rw": "randwrite", "bs": "4k", "iodepth": 32, "numjobs": 1, "ioengine": "libaio", "direct": 1, "prio": 0,
-      "cpus_allowed_policy": "split", "size": "100%", "timeout": 3600
+      "multiple_jobs": "--rw=randwrite --bs=4k --iodepth=32 --numjobs=1 --ioengine=libaio --direct=1 --prio=0 --cpus_allowed_policy=split --size=100%",
+      "timeout": 3600
     },
     "fio_cmd_args": {
       "ioengine": "libaio",
@@ -84,23 +85,24 @@
       "group_reporting": 1,
       "norandommap": "NO_VALUE",
       "randrepeat": 0,
-      "timeout": 1200
+      "timeout": 960
     },
     "fio_modes": [
       "randread"
     ],
     "fio_bs": "4k",
-    "fio_jobs_iodepth": ["(1, 1)", "(32, 1)", "(32, 2)", "(32, 4)", "(32, 8)"],
+    // "fio_jobs_iodepth": ["(1, 1)", "(32, 1)", "(32, 2)", "(32, 4)", "(32, 8)"],
+    "fio_jobs_iodepth": ["(32, 1)"],
     "fio_job_name": {
       "randread": "nhosts"
     },
-    "nvme_device": "/dev/nvme0",
+    "nvme_device": "/dev/nvme",
     "expected_fio_result": {
-      "(1, 1)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
-      "(32, 1)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
-      "(32, 2)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
-      "(32, 4)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
-      "(32, 8)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}}
+      // "(1, 1)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
+      "(32, 1)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}}
+      // "(32, 2)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
+      // "(32, 4)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
+      // "(32, 8)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}}
     },
     "host_count": 1,
     "stats_collect_details": {"vp_utils": {"interval": 60}, "per_vp": {"interval": 60}, "resource_bam_args": {"interval": 60}, "vol_stats": {"interval": 60}},
