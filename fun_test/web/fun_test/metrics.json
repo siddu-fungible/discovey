@@ -133,6 +133,94 @@
               },
               {
                 "metric_model_name": "MetricContainer",
+                "name": "host_to_network_hu_non_lso",
+                "label": "HU (non-LSO)",
+                "children": [
+                  {
+                    "metric_model_name": "MetricContainer",
+                    "name": "HU_NU_NFCP_1TCP_offloads_disabled_non_lso",
+                    "label": "1 TCP Flow(s), 1 Host(s)",
+                    "children": [
+                      {
+                        "metric_model_name": "HuThroughputPerformance",
+                        "name": "HU_NU_NFCP_1TCP_offloads_disabled_output_throughput_non_lso",
+                        "label": "Throughput"
+                      },
+                      {
+                        "metric_model_name": "HuThroughputPerformance",
+                        "name": "HU_NU_NFCP_1TCP_offloads_disabled_output_pps_non_lso",
+                        "label": "Packets per sec"
+                      },
+                      {
+                        "metric_model_name": "HuLatencyPerformance",
+                        "name": "HU_NU_NFCP_1TCP_offloads_disabled_output_latency_non_lso",
+                        "label": "Latency"
+                      },
+                      {
+                        "metric_model_name": "HuLatencyUnderLoadPerformance",
+                        "name": "HU_NU_NFCP_1TCP_offloads_disabled_output_latency_under_load_non_lso",
+                        "label": "Latency under load"
+                      }
+                    ]
+                  },
+                  {
+                    "metric_model_name": "MetricContainer",
+                    "name": "HU_NU_NFCP_8TCP_offloads_disabled_non_lso",
+                    "label": "8 TCP Flow(s), 1 Host(s)",
+                    "children": [
+                      {
+                        "metric_model_name": "HuThroughputPerformance",
+                        "name": "HU_NU_NFCP_8TCP_offloads_disabled_output_throughput_non_lso",
+                        "label": "Throughput"
+                      },
+                      {
+                        "metric_model_name": "HuThroughputPerformance",
+                        "name": "HU_NU_NFCP_8TCP_offloads_disabled_output_pps_non_lso",
+                        "label": "Packets per sec"
+                      },
+                      {
+                        "metric_model_name": "HuLatencyPerformance",
+                        "name": "HU_NU_NFCP_8TCP_offloads_disabled_output_latency_non_lso",
+                        "label": "Latency"
+                      },
+                      {
+                        "metric_model_name": "HuLatencyUnderLoadPerformance",
+                        "name": "HU_NU_NFCP_8TCP_offloads_disabled_output_latency_under_load_non_lso",
+                        "label": "Latency under load"
+                      }
+                    ]
+                  },
+                  {
+                    "metric_model_name": "MetricContainer",
+                    "name": "HU_NU_NFCP_8TCP_offloads_disabled_2hosts_non_lso",
+                    "label": "8 TCP Flow(s), 2 Host(s)",
+                    "children": [
+                      {
+                        "metric_model_name": "HuThroughputPerformance",
+                        "name": "HU_NU_NFCP_8TCP_offloads_disabled_2hosts_output_throughput_non_lso",
+                        "label": "Throughput"
+                      },
+                      {
+                        "metric_model_name": "HuThroughputPerformance",
+                        "name": "HU_NU_NFCP_8TCP_offloads_disabled_2hosts_output_pps_non_lso",
+                        "label": "Packets per sec"
+                      },
+                      {
+                        "metric_model_name": "HuLatencyPerformance",
+                        "name": "HU_NU_NFCP_8TCP_offloads_disabled_2hosts_output_latency_non_lso",
+                        "label": "Latency"
+                      },
+                      {
+                        "metric_model_name": "HuLatencyUnderLoadPerformance",
+                        "name": "HU_NU_NFCP_8TCP_offloads_disabled_2hosts_output_latency_under_load_non_lso",
+                        "label": "Latency under load"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "metric_model_name": "MetricContainer",
                 "name": "host_to_network_hnu",
                 "label": "HNU",
                 "children": [
