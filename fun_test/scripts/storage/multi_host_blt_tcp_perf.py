@@ -1116,5 +1116,5 @@ if __name__ == "__main__":
 
     bltscript = MultiHostVolumePerformanceScript()
     bltscript.add_test_case(MultiHostFioRandRead())
-    # bltscript.add_test_case(MultiHostFioRandWrite())
+    bltscript.add_test_case(MultiHostFioRandWrite())
     bltscript.run()
