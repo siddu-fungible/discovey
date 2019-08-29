@@ -497,8 +497,8 @@ class FunControlPlaneBringup:
         self.docker_names = map(lambda s: s.strip(),
                                 linux_obj_come.command(command="docker ps --format '{{.Names}}'").split("\r\n"))
         if verify_2_dockers:
-            fun_test.test_assert_expected(expected=2, actual=len(self.docker_names),
-                                          message="Make sure 2 dockers are up")
+            fun_test.test_assert_expected(expected=True, actual=(len(self.docker_names) >= 2),
+                                          message="Make sure at least 2 dockers are up")
         self.docker_names_got = True
         linux_obj_come.disconnect()
 
