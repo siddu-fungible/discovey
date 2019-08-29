@@ -244,7 +244,7 @@ class Bmc(Linux):
                 s += " cc_huid={}".format(huid)
         return s
 
-    def setup_serial_proxy_connection(self, f1_index, auto_boot):
+    def setup_serial_proxy_connection(self, f1_index, auto_boot=False):
         self.nc[f1_index] = Netcat(ip=self.host_ip, port=self.SERIAL_PROXY_PORTS[f1_index])
         nc = self.nc[f1_index]
         write_on_trigger = None
