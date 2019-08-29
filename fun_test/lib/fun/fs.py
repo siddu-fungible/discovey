@@ -1149,7 +1149,7 @@ class Fs(object, ToDictMixin):
                             boot_args = self.f1_parameters[f1_index]["boot_args"]
                 fun_test.test_assert(self.get_bmc().setup_serial_proxy_connection(f1_index=f1_index, auto_boot=self.auto_boot),
                                      "Setup nc serial proxy connection")
-                fs.get_fpga().reset_f1(f1_index=f1_index)
+                self.get_fpga().reset_f1(f1_index=f1_index)
 
                 if self.validate_u_boot_version:
                     fun_test.test_assert(self.bmc.validate_u_boot_version(f1_index=f1_index, minimum_date=self.MIN_U_BOOT_DATE), "Validate preamble")
