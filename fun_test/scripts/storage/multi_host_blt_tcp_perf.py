@@ -976,21 +976,22 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                 stats_obj.stop(self.stats_collect_details)
                 self.storage_controller.verbose = True
 
-            for func, arg in self.stats_collect_details.iteritems():
-                filename = arg.get("output_file")
-                if filename:
-                    if func == "vp_utils":
-                        fun_test.add_auxillary_file(description="F1 VP Utilization - {} - IO depth {}".
-                                                    format(mode, row_data_dict["iodepth"]), filename=filename)
-                    if func == "per_vp":
-                        fun_test.add_auxillary_file(description="F1 Per VP Stats - {} - IO depth {}".
-                                                    format(mode, row_data_dict["iodepth"]), filename=filename)
-                    if func == "resource_bam_args":
-                        fun_test.add_auxillary_file(description="F1 Resource bam stats - {} - IO depth {}".
-                                                    format(mode, row_data_dict["iodepth"]), filename=filename)
-                    if func == "vol_stats":
-                        fun_test.add_auxillary_file(description="Volume Stats - {} - IO depth {}".
-                                                    format(mode, row_data_dict["iodepth"]), filename=filename)
+            for index, value in enumerate(self.stats_collect_details):
+                for func, arg in value.iteritems():
+                    filename = arg.get("output_file")
+                    if filename:
+                        if func == "vp_utils":
+                            fun_test.add_auxillary_file(description="F1 VP Utilization - {} - IO depth {}".
+                                                        format(mode, row_data_dict["iodepth"]), filename=filename)
+                        if func == "per_vp":
+                            fun_test.add_auxillary_file(description="F1 Per VP Stats - {} - IO depth {}".
+                                                        format(mode, row_data_dict["iodepth"]), filename=filename)
+                        if func == "resource_bam_args":
+                            fun_test.add_auxillary_file(description="F1 Resource bam stats - {} - IO depth {}".
+                                                        format(mode, row_data_dict["iodepth"]), filename=filename)
+                        if func == "vol_stats":
+                            fun_test.add_auxillary_file(description="Volume Stats - {} - IO depth {}".
+                                                        format(mode, row_data_dict["iodepth"]), filename=filename)
 
             fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval), self.iter_interval)
 

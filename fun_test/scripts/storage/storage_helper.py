@@ -1018,7 +1018,7 @@ def unpack_nested_dict(input_dict, prefix=''):
         if isinstance(value, dict):
             unpack_nested_dict(value, '{}{}_'.format(prefix, key))
         else:
-            unpacked_stats["{}{}".format(prefix, key)] = "{}".format(value)
+            unpacked_stats["{}{}".format(prefix, key)] = value
     return unpacked_stats
 
 
