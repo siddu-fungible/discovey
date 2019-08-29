@@ -76,14 +76,8 @@
       "timeout": 3600
     },
     "fio_cmd_args": {
-      "ioengine": "libaio",
-      "direct": 1,
-      "prio": 0,
+      "multiple_jobs": "--ioengine=libaio --direct=1 --prio=0 --cpus_allowed_policy=split --group_reporting=1 --norandommap --randrepeat=0",
       "runtime": 900,
-      "cpus_allowed_policy": "split",
-      "group_reporting": 1,
-      "norandommap": "NO_VALUE",
-      "randrepeat": 0,
       "timeout": 960
     },
     "fio_modes": [
@@ -130,14 +124,8 @@
       "timeout": 3600
     },
     "fio_cmd_args": {
-      "ioengine": "libaio",
-      "direct": 1,
-      "prio": 0,
+      "multiple_jobs": "--ioengine=libaio --direct=1 --prio=0 --cpus_allowed_policy=split --group_reporting=1 --norandommap --randrepeat=0",
       "runtime": 900,
-      "cpus_allowed_policy": "split",
-      "group_reporting": 1,
-      "norandommap": "NO_VALUE",
-      "randrepeat": 0,
       "timeout": 960
     },
     "fio_modes": [
