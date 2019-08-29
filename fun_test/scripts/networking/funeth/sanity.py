@@ -313,7 +313,7 @@ def dpcsh_configure_overlay(network_controller_obj_f1_0, network_controller_obj_
                 #                                flow_dport=flow_dport,
                 #                                flow_proto=6
                 #                                )
-                for i in CPU_LIST_VM:
+                for i in reversed(CPU_LIST_VM) + [reversed(CPU_LIST_VM)[-1]-1]:  # last one - 1 is for TCP_RR
                     for j in (netperf_manager.NETSERVER_FIXED_PORT_CONTROL_BASE,
                               netperf_manager.NETSERVER_FIXED_PORT_DATA_BASE):
                         for flow_type, nh_index in zip(('vxlan_encap', 'vxlan_decap'), (0, 1)):

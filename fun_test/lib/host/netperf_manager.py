@@ -451,8 +451,9 @@ def do_test(linux_obj, dip, protocol='tcp', duration=30, frame_size=800, cpu=Non
     if fixed_netperf_port:
         if not measure_latency:
             # cmd = 'netperf -t {} -H {} -v 2 -l {} -f m -j -- -k "THROUGHPUT" -m {}'.format(t, dip, duration, send_size)
+            # for TCP_RR, make port NETSERVER_FIXED_PORT_CONTROL_BASE+cpu-1 to avoid conflict with TCP_STREAM
             cmd = 'netperf -t {0} -H {1} -v 2 -l {2} -f m -j -p {3},{3} -- -k "THROUGHPUT" -P {4}'.format(
-                t, dip, duration, NETSERVER_FIXED_PORT_CONTROL_BASE+cpu, NETSERVER_FIXED_PORT_DATA_BASE+cpu)
+                t, dip, duration, NETSERVER_FIXED_PORT_CONTROL_BASE+cpu-1, NETSERVER_FIXED_PORT_DATA_BASE+cpu-1)
             pat = r'THROUGHPUT=(\d+)'
             pat = r'THROUGHPUT=(\d+\.\d+|\d+)'
         else:
