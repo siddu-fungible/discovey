@@ -102,16 +102,17 @@ export class SuiteEditorComponent implements OnInit {
     this.route.params.subscribe(params => {
       if (params["id"]) {
         this.id = params["id"];
-        if (!this.id) {
-          this.suite = new Suite();
-
-        } else {
-          this.service.suites(this.id).subscribe(response => {
-            this.suite = response;
-            this.refreshAll();
-          })
-        }
       }
+      if (!this.id) {
+        this.suite = new Suite();
+
+      } else {
+        this.service.suites(this.id).subscribe(response => {
+          this.suite = response;
+          this.refreshAll();
+        })
+      }
+
     });
 
 

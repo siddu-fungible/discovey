@@ -3,17 +3,17 @@
   <table>
     <tr>
       <td class="fun-attribute-label">Suite name:</td>
-      <td class="fun-attribute"><app-textarea-input [initialValue]="suite?.name" (valueChanged)="onNameChangedEvent($event)"></app-textarea-input></td>
+      <td class="fun-attribute"><app-textarea-input [hoverHide]="false" [initialValue]="suite?.name" (valueChanged)="onNameChangedEvent($event)"></app-textarea-input></td>
     </tr>
 
     <tr>
       <td class="fun-attribute-label">Short description:</td>
-      <td class="fun-attribute"><app-textarea-input [initialValue]="suite?.short_description" (valueChanged)="onShortDescriptionChangedEvent($event)" [numRows]="4"></app-textarea-input></td>
+      <td class="fun-attribute"><app-textarea-input [hoverHide]="false" [initialValue]="suite?.short_description" (valueChanged)="onShortDescriptionChangedEvent($event)" [numRows]="4"></app-textarea-input></td>
     </tr>
 
     <tr>
       <td class="fun-attribute-label">Categories:</td>
-      <td class="fun-attribute">
+      <td class="fun-attribute" style="width: 200px">
         <ng-multiselect-dropdown [placeholder]="'Select'" [data]="availableCategories" [settings]="dropDownSettings" [(ngModel)]="suite.categories">
       </ng-multiselect-dropdown>
       </td>
@@ -21,8 +21,8 @@
 
     <tr>
       <td class="fun-attribute-label">Tags:</td>
-      <td class="fun-attribute">
-        <ng-multiselect-dropdown [placeholder]="'Select'" [data]="availableTags" [settings]="dropDownSettings" [(ngModel)]="suite.tags">
+      <td class="fun-attribute" style="width: 200px">
+        <ng-multiselect-dropdown [placeholder]="'Select'"  [data]="availableTags" [settings]="dropDownSettings" [(ngModel)]="suite.tags">
       </ng-multiselect-dropdown>
       </td>
     </tr>
@@ -182,7 +182,7 @@
     </table>
   </ng-container>
 
-  <button [ngClass]="{'fun-button-disabled' : suite?.entries?.length < 1 && !suite?.name}" class="fun-button-submit" (click)="onSubmitSuite()">Submit</button>
+  <button [ngClass]="{'fun-button-disabled' : suite?.entries?.length < 1 || !suite?.name}" class="fun-button-submit" (click)="onSubmitSuite()">Submit</button>
 
   <button (click)="test()">Test</button>
 
