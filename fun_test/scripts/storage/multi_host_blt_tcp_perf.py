@@ -393,8 +393,9 @@ class MultiHostVolumePerformanceScript(FunTestScript):
             self.storage_controller = fun_test.shared_variables["sc_obj"][0]
             try:
                 self.blt_details = fun_test.shared_variables["blt_details"]
+                self.thin_uuid_list = fun_test.shared_variables["thin_uuid"]
                 self.ctrlr_uuid = fun_test.shared_variables["ctrlr_uuid"]
-                ns_id = 1  # ns_id is 1 since there is 1 vol per controller
+                self.nqn_list = fun_test.shared_variables["nqn_list"]
 
                 # Setting the syslog level back to 6
                 command_result = self.storage_controller.poke("params/syslog/level 6")
@@ -404,35 +405,40 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                 fun_test.test_assert_expected(expected=6, actual=command_result["data"],
                                               message="Checking syslog level set to 6")
 
-                # Deleting the volumes
-                for i in range(0, fun_test.shared_variables["blt_count"], 1):
-                    cur_uuid = fun_test.shared_variables["thin_uuid"][i]
-                    key = self.host_ips[i]
-                    nqn = fun_test.shared_variables["nqn_list"][i]
+                # Executing NVMe disconnect from all the hosts
+                for index, host_name in enumerate(self.host_info):
+                    host_handle = self.host_info[host_name]["handle"]
+                    nqn = self.nqn_list[index]
 
-                    # Executing NVMe disconnect from all the hosts
                     nvme_disconnect_cmd = "nvme disconnect -n {}".format(nqn)
-                    nvme_disconnect_output = self.host_handles[key].sudo_command(command=nvme_disconnect_cmd,
-                                                                                 timeout=60)
-                    nvme_disconnect_exit_status = self.host_handles[key].exit_status()
+                    nvme_disconnect_output = host_handle.sudo_command(command=nvme_disconnect_cmd, timeout=60)
+                    nvme_disconnect_exit_status = host_handle.exit_status()
                     fun_test.test_assert_expected(expected=0, actual=nvme_disconnect_exit_status,
-                                                  message="NVME Disconnect Status")
+                                                  message="Host {} - NVME Disconnect Status".format(host_name))
 
+                # Detaching and deleting the volume
+                for i, vol_uuid in enumerate(self.thin_uuid_list):
+                    num_hosts = len(self.host_info)
+                    ctrlr_index = i % num_hosts
+                    ns_id = (i / num_hosts) + 1
                     command_result = self.storage_controller.detach_volume_from_controller(
-                        ctrlr_uuid=self.ctrlr_uuid[i], ns_id=ns_id, command_duration=self.command_timeout)
-                    fun_test.test_assert(command_result["status"], "Detaching BLT volume on DUT")
+                        ctrlr_uuid=self.ctrlr_uuid[ctrlr_index], ns_id=ns_id, command_duration=self.command_timeout)
+                    fun_test.test_assert(command_result["status"], "Detaching BLT volume {} from controller {}".
+                                         format(vol_uuid, self.ctrlr_uuid[ctrlr_index]))
 
-                    command_result = self.storage_controller.delete_volume(uuid=cur_uuid,
+                    command_result = self.storage_controller.delete_volume(uuid=vol_uuid,
                                                                            type=str(self.blt_details['type']),
                                                                            command_duration=self.command_timeout)
                     fun_test.test_assert(command_result["status"], "Deleting BLT {} with uuid {} on DUT".
-                                         format(i + 1, cur_uuid))
+                                         format(i + 1, vol_uuid))
 
-                    # Deleting the controller
-                    command_result = self.storage_controller.delete_controller(ctrlr_uuid=self.ctrlr_uuid[i],
+                # Deleting the controller
+                for index, host_name in enumerate(self.host_info):
+                    command_result = self.storage_controller.delete_controller(ctrlr_uuid=self.ctrlr_uuid[index],
                                                                                command_duration=self.command_timeout)
                     fun_test.log(command_result)
-                    fun_test.test_assert(command_result["status"], "Storage Controller Delete")
+                    fun_test.test_assert(command_result["status"], "Deleting storage controller {}".
+                                         format(self.ctrlr_uuid[index]))
             except Exception as ex:
                 fun_test.critical(str(ex))
                 fun_test.log("Clean-up of volumes failed.")
@@ -805,7 +811,8 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                         fun_test.join_thread(fun_test_thread_id=thread_id[index])
                         fun_test.log("FIO Command Output:")
                         fun_test.log(fun_test.shared_variables["fio"][index])
-                        fun_test.test_assert(fun_test.shared_variables["fio"][index], "Fio threaded warmup test")
+                        fun_test.test_assert(fun_test.shared_variables["fio"][index], "Volume warmup on host {}".
+                                             format(host_name))
                         fio_output[index] = {}
                         fio_output[index] = fun_test.shared_variables["fio"][index]
                         fun_test.shared_variables["blt"]["warmup_done"] = True
@@ -971,10 +978,12 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                     fun_test.join_thread(fun_test_thread_id=thread_id[i])
                     fun_test.log("FIO Command Output:")
                     fun_test.log(fun_test.shared_variables["fio"][i])
-                    fun_test.test_assert(fun_test.shared_variables["fio"][i], "Fio threaded test")
+                    fun_test.test_assert(fun_test.shared_variables["fio"][i],
+                                         "Fio {} test with IO depth {} in host {}".
+                                         format(mode, int(fio_iodepth) * int(fio_numjobs), host_name))
                     fio_output[combo][mode][i] = {}
                     fio_output[combo][mode][i] = fun_test.shared_variables["fio"][i]
-                final_fio_output[combo][mode] = fio_output[combo][mode][1]
+                final_fio_output[combo][mode] = fio_output[combo][mode][0]
             except Exception as ex:
                 fun_test.critical(str(ex))
                 fun_test.log("FIO Command Output for volume {}:\n {}".format(i, fio_output[combo][mode][i]))
@@ -1000,7 +1009,7 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
 
             fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval), self.iter_interval)
 
-            for i in range(2, self.blt_count + 1):
+            for i in range(1, len(self.host_info)):
                 fun_test.test_assert(fio_output[combo][mode][i], "Fio threaded test")
                 # Boosting the fio output with the testbed performance multiplier
                 multiplier = 1
@@ -1036,9 +1045,9 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                 fun_test.log("Posting results on dashboard")
                 post_results("Multi_host_TCP", test_method, *row_data_list)
 
-        table_data = {"headers": table_data_headers, "rows": table_data_rows}
-        fun_test.add_table(panel_header="Multiple hosts over TCP Perf Table", table_name=self.summary,
-                           table_data=table_data)
+            table_data = {"headers": table_data_headers, "rows": table_data_rows}
+            fun_test.add_table(panel_header="Multiple hosts over TCP Perf Table", table_name=self.summary,
+                               table_data=table_data)
 
         # Posting the final status of the test result
         test_result = True
