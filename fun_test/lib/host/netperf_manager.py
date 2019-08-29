@@ -295,11 +295,11 @@ class NetperfManager:
                 # Get perf for throughput test, no need to latency only test
                 if csi_perf_obj:
                     csi_perf_obj.start(f1_index=0)
-                mp_task_obj.run(max_parallel_processes=(num_processes+1)*len(direction_list), threading=True)
+                mp_task_obj.run(max_parallel_processes=(num_processes+1)*len(direction_list))
                 if csi_perf_obj:
                     csi_perf_obj.stop(f1_index=0)
             else:
-                mp_task_obj.run(max_parallel_processes=num_processes*len(direction_list), threading=True)
+                mp_task_obj.run(max_parallel_processes=num_processes*len(direction_list))
 
             rdict = {}
             for direction in direction_list:
