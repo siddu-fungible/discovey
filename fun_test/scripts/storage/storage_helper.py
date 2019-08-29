@@ -1047,3 +1047,7 @@ def subtract(a, b):
     a = 0 if not a else a
     b = 0 if not b else b
     return a - b
+
+
+def divide(n, d):
+    return n/d if d else 0

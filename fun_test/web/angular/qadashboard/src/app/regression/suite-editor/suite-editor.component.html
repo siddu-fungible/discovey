@@ -1,26 +1,32 @@
-<div class="component">
+<div class="component" *ngIf="suite">
 
-  <div class="fun-attribute">
-    <span class="fun-attribute-label">Suite name:</span>
-    <app-textarea-input [initialValue]="suite?.name" (valueChanged)="onNameChangedEvent($event)"></app-textarea-input>
-  </div>
+  <table>
+    <tr>
+      <td class="fun-attribute-label">Suite name:</td>
+      <td class="fun-attribute"><app-textarea-input [hoverHide]="false" [initialValue]="suite?.name" (valueChanged)="onNameChangedEvent($event)"></app-textarea-input></td>
+    </tr>
 
-  <div class="fun-attribute">
-    <span class="fun-attribute-label">Short description:</span>
-    <app-textarea-input [initialValue]="suite?.short_description" (valueChanged)="onShortDescriptionChangedEvent($event)" [numRows]="4"></app-textarea-input>
-  </div>
+    <tr>
+      <td class="fun-attribute-label">Short description:</td>
+      <td class="fun-attribute"><app-textarea-input [hoverHide]="false" [initialValue]="suite?.short_description" (valueChanged)="onShortDescriptionChangedEvent($event)" [numRows]="4"></app-textarea-input></td>
+    </tr>
 
-  <div style="max-width: 800px;" class="fun-attribute">
-    <span class="fun-attribute-label">Categories:</span>
-    <ng-multiselect-dropdown style="display: inline-block; width: 500px;" [placeholder]="'Select'" [data]="availableCategories" [settings]="dropDownSettings" [(ngModel)]="suite.categories">
-    </ng-multiselect-dropdown>
-  </div>
+    <tr>
+      <td class="fun-attribute-label">Categories:</td>
+      <td class="fun-attribute" style="width: 200px">
+        <ng-multiselect-dropdown [placeholder]="'Select'" [data]="availableCategories" [settings]="dropDownSettings" [(ngModel)]="suite.categories">
+      </ng-multiselect-dropdown>
+      </td>
+    </tr>
 
-  <div class="fun-attribute">
-    <span class="fun-attribute-label">Tags:</span>
-    <ng-multiselect-dropdown style="display: inline-block; width: 500px;" [placeholder]="'Select'" [data]="availableTags" [settings]="dropDownSettings" [(ngModel)]="suite.tags">
-    </ng-multiselect-dropdown>
-  </div>
+    <tr>
+      <td class="fun-attribute-label">Tags:</td>
+      <td class="fun-attribute" style="width: 200px">
+        <ng-multiselect-dropdown [placeholder]="'Select'"  [data]="availableTags" [settings]="dropDownSettings" [(ngModel)]="suite.tags">
+      </ng-multiselect-dropdown>
+      </td>
+    </tr>
+  </table>
 
 
   <div *ngIf="!addingScript" style="display: flex; flex-direction: row;">
@@ -159,11 +165,11 @@
 
   <ng-container *ngIf="suite">
     {{ suiteEntry | json }}
-    <table>
+    <table class="fun-table">
       <tr>
-        <th>Script</th>
-        <th>Inputs</th>
-        <th>Test-case IDs</th>
+        <td class="fun-table-header">Script</td>
+        <td class="fun-table-header">Inputs</td>
+        <td class="fun-table-header">Test-case IDs</td>
       </tr>
       <ng-container *ngFor="let suiteEntry of suite.entries">
         <tr>
@@ -176,7 +182,7 @@
     </table>
   </ng-container>
 
-  <button [ngClass]="{'fun-button-disabled' : suite?.entries?.length < 1}" class="fun-button-submit" (click)="onSubmitSuite()">Submit</button>
+  <button [ngClass]="{'fun-button-disabled' : suite?.entries?.length < 1 || !suite?.name}" class="fun-button-submit" (click)="onSubmitSuite()">Submit</button>
 
   <button (click)="test()">Test</button>
 

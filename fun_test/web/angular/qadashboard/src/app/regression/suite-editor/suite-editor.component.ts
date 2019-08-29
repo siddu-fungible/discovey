@@ -7,6 +7,7 @@ import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
 import {SuiteEditorService, Suite, SuiteEntry} from "./suite-editor.service";
 import {RegressionService} from "../regression.service";
 import {LoggerService} from "../../services/logger/logger.service";
+import {ActivatedRoute} from "@angular/router";
 
 
 enum CustomAssetSelection {  // used by the Custom test-bed spec modal
@@ -61,21 +62,24 @@ export class SuiteEditorComponent implements OnInit {
 
   tags: string = null;
   suite: Suite = null;
+  driver = null;
 
-  constructor(private testBedService: TestBedService, private modalService: NgbModal, private service: SuiteEditorService, private regressionService: RegressionService, private loggerService: LoggerService) {
+  constructor(private testBedService: TestBedService,
+              private modalService: NgbModal,
+              private service: SuiteEditorService,
+              private regressionService: RegressionService,
+              private loggerService: LoggerService,
+              private route: ActivatedRoute) {
 
   }
 
 
   ngOnInit() {
 
-    if (!this.id) {
-      this.suite = new Suite();
-    }
-    new Observable(observer => {
+
+    this.driver = new Observable(observer => {
       observer.next(true);
       return () => {
-
       }
     }).pipe(switchMap(response => {
       return this.regressionService.tags();
@@ -91,11 +95,33 @@ export class SuiteEditorComponent implements OnInit {
       return this.testBedService.assets();
     })).pipe(switchMap(response => {
       this.assets = response;
-
-
-
       return of(true);
-    })).subscribe(response => {
+    }));
+
+
+    this.route.params.subscribe(params => {
+      if (params["id"]) {
+        this.id = params["id"];
+      }
+      if (!this.id) {
+        this.suite = new Suite();
+
+      } else {
+        this.service.suites(this.id).subscribe(response => {
+          this.suite = response;
+          this.refreshAll();
+        })
+      }
+
+    });
+
+
+
+
+  }
+
+  refreshAll() {
+    this.driver.subscribe(response => {
       this.customTestBedSpecForm = this.prepareFormGroup();
       let i = 0;
       this.customTestBedSpecForm.get('selectedTestBed').valueChanges.subscribe(selection => {
@@ -123,28 +149,6 @@ export class SuiteEditorComponent implements OnInit {
       })
 
     });
-
-
-
-    /*
-    this.customTestBedSpecForm.get('customDutSelection').valueChanges.subscribe(selection => {
-      if (selection == CustomAssetSelection.SPECIFIC.toString()) {
-        this.customTestBedSpecForm.get('numDuts').disable();
-      } else {
-        this.customTestBedSpecForm.get('numDuts').enable();
-
-      }
-    });
-
-    this.customTestBedSpecForm.get('customHostSelection').valueChanges.subscribe(selection => {
-      if (selection == CustomAssetSelection.SPECIFIC.toString()) {
-        this.customTestBedSpecForm.get('numDuts').disable();
-      } else {
-        this.customTestBedSpecForm.get('numDuts').enable();
-
-      }
-    })*/
-
   }
 
   prepareCustomTestBedSpecValidated() {
@@ -388,9 +392,16 @@ export class SuiteEditorComponent implements OnInit {
   }
 
   onSubmitSuite() {
-    this.service.add(this.suite).subscribe(response => {
-      this.loggerService.success("Added suite");
-    })
+    if (!this.id) {
+      this.service.add(this.suite).subscribe(response => {
+        this.loggerService.success("Added suite");
+      })
+    } else {
+      this.service.replace(this.suite, this.id).subscribe(response => {
+        this.loggerService.success("Updated suite");
+      })
+    }
+
   }
 
 }

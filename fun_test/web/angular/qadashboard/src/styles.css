@@ -422,10 +422,9 @@ input:checked + .slider:before {
   color: green;
 }
 
-.text-color-green {
-  color: green;
+.text-size-smaller {
+  font-size: smaller;
 }
-
 
 .passed-table-cell {
   background-color: #9ACD32;
@@ -479,23 +478,24 @@ tr.text-center > th {
   border: 0.5px;
 }
 
-.link-span-secondary {
-  background-color: lightgrey;
+.fun-button-secondary {
+  background-color: #eee;
   border-radius: 3px;
   color: #274466;
   display: inline-block;
-  font: .75em/2 SFMono-Regular,Consolas,Liberation Mono,Menlo,Courier,monospace;
+  font-family: Arial;
+  font-color: #333;
   padding: 0 5px;
   position: relative;
   white-space: nowrap;
   border: 0.5px;
 }
 
-.link-span-secondary:hover {
+.fun-button-secondary:hover {
   cursor: pointer;
 }
 
-.link-span-secondary-active {
+.fun-button-secondary-active {
   background-color: darkgrey;
   color: white !important;
 }
@@ -659,15 +659,31 @@ label {
   background-color: rgba(0,0,0,.125)
 }
 
-
 /*table*/
 .fun-table {
   border: solid lightgrey 1px;
+  border-collapse: collapse;
+  border-top: solid lightgrey 1px;
+  border-bottom: solid lightgrey 1px;
+  border-left: solid lightgrey 1px;
+  border-right: solid lightgrey 1px;
+
 }
 
 .fun-table tr td.fun-table-header {
   background-color: #e7e7e7;
+  border-top: solid lightgrey 1px;
+  border-bottom: solid lightgrey 1px;
+  border-left: solid lightgrey 1px;
+  border-right: solid lightgrey 1px;
 }
 .fun-table tr td {
   padding: 5px;
+    border-top: solid lightgrey 1px;
+  border-bottom: solid lightgrey 1px;
+  border-left: solid lightgrey 1px;
+  border-right: solid lightgrey 1px;
+
 }
+
+

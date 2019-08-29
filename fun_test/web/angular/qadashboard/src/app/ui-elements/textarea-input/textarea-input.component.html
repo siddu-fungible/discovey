@@ -1,7 +1,7 @@
 <div style="display: inline-flex; align-items: flex-start; flex-direction: column">
-  <div class="hover-cell">
+  <div [ngClass]="{'hover-cell': hoverHide}">
     <span [innerHtml]="tempValue| safeHtml"></span>&nbsp;
-    <i class="fa fa-pencil hover-icon" style="font-size:14px;" (click)="onEdit()"></i>
+    <i class="fa fa-pencil" [ngClass]="{'hover-icon': hoverHide}" style="font-size:14px;" (click)="onEdit()"></i>
   </div>
 
 

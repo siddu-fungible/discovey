@@ -31,7 +31,7 @@ export class PerformanceWorkspaceComponent implements OnInit {
 
   constructor(private loggerService: LoggerService, private  apiService: ApiService, private router: Router,
               private route: ActivatedRoute, private commonService: CommonService, private modalService: NgbModal,
-              private title: Title, private perfService: PerformanceService) {
+              private title: Title, private performanceService: PerformanceService) {
   }
 
   ngOnInit() {

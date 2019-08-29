@@ -57,6 +57,7 @@ const routes: Routes = [
   {path: 'regression/suite_detail/:suiteId', component: SuiteDetailComponent},
   {path: 'regression/script_history_page/:scriptId', component: ScriptHistoryComponent},
   {path: 'regression/job_spec_detail/:id', component: JobSpecComponent},
+  {path: 'regression/suite_editor/:id', component: SuiteEditorComponent},
   {path: 'regression/suite_editor', component: SuiteEditorComponent},
   {path: 'regression/suites_view', component: SuitesViewComponent},
   {path: 'regression', component: RegressionComponent},
