@@ -1132,7 +1132,7 @@ class Fs(object, ToDictMixin):
                 fun_test.test_assert(expression=self.funeth_reset(), message="Funeth ComE power-cycle ref: IN-373")
     
             for f1_index, f1 in self.f1s.iteritems():
-                fun_test.test_assert(self.bmc.setup_serial_proxy_connection(f1_index=f1_index),
+                fun_test.test_assert(self.bmc.setup_serial_proxy_connection(f1_index=f1_index, auto_boot=self.auto_boot),
                                      "Setup nc serial proxy connection")
     
             self.set_boot_phase(BootPhases.FS_BRING_UP_FPGA_INITIALIZE)
