@@ -34,6 +34,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
   workspaceMetrics: number[] = [];
   showDag: boolean = false;
   selectMode: any = SelectMode.showAttachDag;
+  allMetricIds: number[] = [];
 
   constructor(private apiService: ApiService, private commonService: CommonService, private loggerService: LoggerService,
               private route: ActivatedRoute, private router: Router, private location: Location, private title: Title, private performanceService: PerformanceService) {
@@ -101,17 +102,23 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
 
   fetchMetricIdsByWorkspace(workspaceId): any {
     return this.apiService.get("/api/v1/performance/workspaces/" + workspaceId + "/metric_ids").pipe(switchMap(response => {
+      this.allMetricIds = [];
       this.workspaceMetrics = response.data;
+      let metrics = [];
+      for (let metric of this.workspace.interested_metrics) {
+        metrics.push(metric["metric_id"])
+      }
+      this.allMetricIds = metrics.concat(this.workspaceMetrics);
       return of(true);
     }));
   }
 
-  fetchWorkspaceDags(workspaceId): any {
-    return this.apiService.get("/api/v1/performance/workspaces/" + workspaceId + "/dags").pipe(switchMap(response => {
-      this.workspace.interested_metrics = response.data;
-      return of(true);
-    }));
-  }
+  // fetchWorkspaceDags(workspaceId): any {
+  //   return this.apiService.get("/api/v1/performance/workspaces/" + workspaceId + "/dags").pipe(switchMap(response => {
+  //     this.workspace.interested_metrics = response.data;
+  //     return of(true);
+  //   }));
+  // }
 
   fetchInterestedMetrics(workspaceId): any {
     return this.apiService.get("/api/v1/performance/workspaces/" + workspaceId + "/interested_metrics").pipe(switchMap(response => {
