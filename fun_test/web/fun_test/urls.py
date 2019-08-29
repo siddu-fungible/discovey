@@ -199,6 +199,7 @@ api_v1_urls = [
     url(r'^performance/workspaces/(.*)/(.*)$', users.workspaces),
     url(r'^performance/workspaces/?(.*)?$', users.workspaces),
     url(r'^regression/test_beds/?(\S+)?$', regression.test_beds),
+    url(r'^regression/suites/?(.*)?$', regression.suites),
     url(r'^regression/suite_executions/?(.*)?$', regression.suite_executions),
     url(r'^regression/script_infos/?(.*)?$', regression.script_infos),
     url(r'^regression/scripts$', regression.scripts),

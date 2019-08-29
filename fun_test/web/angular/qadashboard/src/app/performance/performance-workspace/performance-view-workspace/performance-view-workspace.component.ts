@@ -32,7 +32,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
   subject: string = null;
 
   constructor(private apiService: ApiService, private commonService: CommonService, private loggerService: LoggerService,
-              private route: ActivatedRoute, private router: Router, private location: Location, private title: Title, private perfService: PerformanceService) {
+              private route: ActivatedRoute, private router: Router, private location: Location, private title: Title, private performanceService: PerformanceService) {
   }
 
   ngOnInit() {
@@ -57,7 +57,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
             return this.fetchScores();
           }),
           switchMap(response => {
-            return this.perfService.fetchBuildInfo();
+            return this.performanceService.fetchBuildInfo();
           })).subscribe(response => {
           this.buildInfo = response;
           console.log("fetched workspace and buildInfo from URL");
@@ -145,23 +145,22 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
         return this.fetchData(metric, dateTime, "yesterday");
       }),
       switchMap(response => {
-        this.calculatePercentage(metric);
+        this.calculatePercentage(metric["data"]);
         metric["report"] = metric["data"];
         return of(true);
       }));
   }
 
-  calculatePercentage(metric): void {
-    for (let dataSet of metric["data"]) {
+  calculatePercentage(dataSets): void {
+    for (let dataSet of dataSets) {
       let percentage = "NA";
       if (dataSet["today"] && dataSet["yesterday"]) {
         let today = Number(dataSet["today"]);
         let yesterday = Number(dataSet["yesterday"]);
         let percentNum = (((today - yesterday) / yesterday) * 100);
+        percentage = percentNum.toFixed(2) + "%";
         if (percentNum >= 0) {
           percentage = "+" + percentNum.toFixed(2) + "%";
-        } else {
-          percentage = percentNum.toFixed(2) + "%";
         }
       }
       dataSet["percentage"] = percentage;
@@ -179,6 +178,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
         for (let dataSet of metric["data"]) {
           if (dataSet["name"] == oneData["name"]) {
             dataSet[key] = oneData["value"];
+            dataSet[key + "Date"] = this.commonService.getPrettyLocalizeTime(oneData["date_time"]);
             dataSet["unit"] = oneData["unit"];
           }
         }
@@ -199,8 +199,14 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
         metric["model_name"] = response.data["metric_model_name"];
         metric["data_sets"] = response.data["data_sets"];
         metric["jira_ids"] = response.data["jira_ids"];
+        let jiraList = {};
+        for (let jiraId of metric["jira_ids"]) {
+          jiraList[jiraId] = {};
+        }
+        metric["jira_list"] = jiraList;
         metric["selected"] = false;
         metric["report"] = null;
+        metric["positive"] = response.data["positive"];
         metric["data"] = [];
         metric["url"] = this.atomicUrl + "/" + metric["metric_id"];
       }, error => {
@@ -250,29 +256,19 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
           }
         }
         dataSet["rows"] = dataSet["history"].length + 1;
+        let percentage = "NA";
+        if (dataSet["history"].length >= 2) {
+          let lastValue = Number(dataSet["history"][0].value);
+          let penultimateValue = Number(dataSet["history"][1].value);
+          let percentNum = (((lastValue - penultimateValue) / penultimateValue) * 100);
+          percentage = percentNum.toFixed(2) + "%";
+          if (percentNum >= 0) {
+            percentage = "+" + percentage;
+          }
+        }
+        dataSet["percentage_history"] = percentage;
       }
       return of(true);
-    }));
-  }
-
-  sendEmail(): any {
-    let payload = {};
-    let reports = [];
-    this.workspace.interested_metrics.forEach(metric => {
-      let report = {};
-      report["chart_name"] = metric["chart_name"];
-      report["lineage"] = metric["lineage"];
-      report["url"] = metric["url"];
-      report["comments"] = metric["comments"];
-      report["jira_ids"] = metric["jira_ids"];
-      report["report"] = metric["report"];
-      reports.push(report);
-    });
-    payload["reports"] = reports;
-    payload["email"] = this.email;
-    payload["subject"] = this.subject;
-    return this.apiService.post('/api/v1/performance/reports', payload).pipe(switchMap(response => {
-      return of(response.data);
     }));
   }
 
@@ -289,7 +285,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
       switchMap(response => {
         return this.fetchHistory();
       })).subscribe(response => {
-        let t = new Date();
+      let t = new Date();
       let dateString = this.commonService.getShortDate(t);
       this.subject = "Performance status report - " + dateString;
       this.reportGenerated = true;
@@ -297,40 +293,6 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
       this.loggerService.error("Unable to generate report");
     });
 
-  }
-
-  saveComments(): any {
-    let payload = {};
-    payload["email"] = this.email;
-    payload["workspace_id"] = this.workspace.id;
-    payload["interested_metrics"] = this.workspace.interested_metrics;
-    return this.apiService.post("/api/v1/performance/workspaces/" + this.workspace.id + "/interested_metrics", payload).pipe(switchMap(response => {
-      return of(true);
-    }));
-  }
-
-  sendReports(): void {
-    new Observable(observer => {
-      observer.next(true);
-      //observer.complete();
-      return () => {
-      }
-    }).pipe(
-      switchMap(response => {
-        return this.saveComments();
-      }),
-      switchMap(response => {
-        return this.sendEmail();
-      })).subscribe(response => {
-      if (response["status"]) {
-        this.loggerService.success("sent report email successfully to " + this.email);
-      } else {
-        this.loggerService.error("sending email failed");
-      }
-
-    }, error => {
-      this.loggerService.error("sending email failed");
-    });
   }
 
 }

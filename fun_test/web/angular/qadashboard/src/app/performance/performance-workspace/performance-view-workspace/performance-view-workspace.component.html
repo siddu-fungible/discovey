@@ -1,4 +1,4 @@
-<!--shows the charts for a particular workspace-->
+<!--shows the data for a particular workspace-->
 <div style="padding: 20px"><span class="pseudo-anchor" (click)="backToWorkspaces()"><< Back to workspaces</span></div>
 <div *ngIf="showWorkspace" class="card card-primary">
   <div class="card-header">
@@ -13,6 +13,7 @@
     </span>
   </div>
   <div class="card-body flex-container">
+     <!--showing list of charts in the workspace-->
     <div class="card" style="flex: 1 1 50%; padding: 10px;">
       <table style="width: 100%">
         <tr style="vertical-align: top">
@@ -62,22 +63,23 @@
     </div>
 
     <fun-spinner [status]="status"></fun-spinner>
+     <!--showing chart report in the right on the workspace-->
     <div *ngIf="showChartTable" class="card" style="flex: 1 1 50%; vertical-align: top; padding: 10px;">
       <span><b>Chart name: </b>{{ currentChart.chart_name }}
       <span class="pseudo-anchor" style="float: right" (click)="closeChartTable()">Close</span></span>
       <table style="width: 100%">
-        <tr>
+        <tr style="border-bottom: solid black 1px">
           <th style="width: 30%">
             Name
           </th>
           <th style="width: 20%">
-            Yesterday
+            Yesterday <br><span style="font-size: smaller">{{ currentChart.data[0].yesterdayDate }}</span>
           </th>
           <th style="width: 20%">
-            Today
+            Today <br><span style="font-size: smaller">{{ currentChart.data[0].todayDate }}</span>
           </th>
           <th style="width: 10%">
-            Percentage
+            Percentage change
           </th>
           <th style="width: 10%">
             Unit
@@ -93,8 +95,12 @@
           <td>
             {{ oneData.today }}
           </td>
-          <td *ngIf="oneData.percentage"
+          <td *ngIf="oneData.percentage && currentChart.positive"
               [ngClass]="{'text-red': oneData.percentage.includes('-'), 'text-green': oneData.percentage.includes('+')}">
+            {{ oneData.percentage }}
+          </td>
+          <td *ngIf="oneData.percentage && !currentChart.positive"
+              [ngClass]="{'text-green': oneData.percentage.includes('-'), 'text-red': oneData.percentage.includes('+')}">
             {{ oneData.percentage }}
           </td>
           <td>
@@ -104,103 +110,15 @@
       </table>
     </div>
   </div>
+
+   <!--showing reports in the workspace-->
   <ng-container *ngIf="reportGenerated">
-    <div class="card" style="margin: 10px; padding: 5px;">
-      <b>Subject: </b><input style="max-width: 50%" type="text" [(ngModel)]="subject"/><br>
-      <div *ngFor="let interestedMetric of workspace.interested_metrics">
-        <div style="vertical-align: middle; width: 50%">
-          {{ interestedMetric.chart_name }} - {{ interestedMetric.lineage }}<br>
-          Link to chart: <a href="{{ atomicUrl + '/' + interestedMetric.metric_id }}" target="_blank">Link</a><br>
-          Comments: <textarea [(ngModel)]="interestedMetric.comments" style="width: 100%"></textarea>
-        </div>
-        <table class="table table-bordered" style="max-width: 50%; margin: 0">
-          <tr style="vertical-align: middle">
-            <th rowspan="2">
-              Series name
-            </th>
-            <th rowspan="2">
-              Unit
-            </th>
-            <th rowspan="2">
-              Yesterday
-            </th>
-            <th rowspan="2">
-              Today
-            </th>
-            <th rowspan="2">
-              Percentage
-            </th>
-            <th colspan="2">
-              History
-            </th>
-          </tr>
-          <tr style="vertical-align: middle">
-            <th>Date</th>
-            <th>Value</th>
-          </tr>
-          <ng-container *ngFor="let dataSet of interestedMetric.report">
-            <tr>
-              <td [attr.rowspan]="dataSet['rows']">
-                {{ dataSet.name }}
-              </td>
-              <td [attr.rowspan]="dataSet['rows']">
-                {{ dataSet.unit }}
-              </td>
-              <td [attr.rowspan]="dataSet['rows']">
-                {{ dataSet.yesterday }}
-              </td>
-              <td [attr.rowspan]="dataSet['rows']">
-                {{ dataSet.today }}
-              </td>
-              <td [attr.rowspan]="dataSet['rows']"
-                  [ngClass]="{'text-red': dataSet.percentage.includes('-'), 'text-green': dataSet.percentage.includes('+')}">
-                {{ dataSet.percentage }}
-              </td>
-            </tr>
-            <tr *ngFor="let data of dataSet['history']">
-              <td>{{ data.date }}</td>
-              <td>{{ data.value }}</td>
-            </tr>
-          </ng-container>
-        </table>
-        <div style="vertical-align: middle; width: 50%">
-          Bugs: <span
-          *ngFor="let jiraId of interestedMetric.jira_ids"><a href="{{ jiraUrl + '/' + jiraId }}" target="_blank">{{
-          jiraId }}</a></span>
-        </div>
-        <br>
-      </div>
-      <span>
-        <span class="fun-cancel-link" (click)="reportGenerated = false">Cancel</span>
-        <button class="fun-button-submit" (click)="sendReports()">Send report</button>
-    </span>
-    </div>
+    <performance-show-report [workspace]="workspace" [email]="email" [subject]="subject"
+                             (reportGenerated)="reportGenerated = false"></performance-show-report>
   </ng-container>
-  <div *ngIf="showGrids" class="flex-container">
-    <ng-container *ngFor="let interestedMetric of workspace.interested_metrics">
-      <div style="flex: 0 0 45%; padding-bottom: 10px;">
-        <table align="center">
-          <tr>
-            <td>
-              <b>Lineage:</b>
-            </td>
-            <td>
-              {{ interestedMetric.lineage }}
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <b>Score:</b>
-            </td>
-            <td>
-              {{ interestedMetric.last_good_score }}
-            </td>
-          </tr>
-        </table>
-        <fun-metric-chart [id]="interestedMetric['metric_id']" [minimal]="'true'"
-                          [buildInfo]="buildInfo"></fun-metric-chart>
-      </div>
-    </ng-container>
-    <div class="closed-section"></div>
-  </div>
+
+  <!--showing charts in the workspace-->
+  <ng-container *ngIf="showGrids">
+    <performance-show-charts [workspace]="workspace" [buildInfo]="buildInfo"></performance-show-charts>
+  </ng-container>
 </div>

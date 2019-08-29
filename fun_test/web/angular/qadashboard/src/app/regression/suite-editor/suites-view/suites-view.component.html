@@ -1,0 +1,12 @@
+<div class="component">
+  <table class="fun-table">
+    <tr>
+      <td class="fun-table-header">Name</td>
+      <td class="fun-table-header">Description</td>
+    </tr>
+    <tr *ngFor="let suite of suites">
+      <td><a [routerLink]="'/regression/suite_editor/' + suite.id">{{ suite.name }}</a></td>
+      <td>{{ suite.short_decription }}</td>
+    </tr>
+  </table>
+</div>

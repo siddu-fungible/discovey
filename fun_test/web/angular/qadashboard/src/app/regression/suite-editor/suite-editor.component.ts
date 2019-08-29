@@ -1,15 +1,15 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, Input, OnInit} from '@angular/core';
 import {AbstractControl, FormControl, FormGroup, Validators} from "@angular/forms";
 import {TestBedService} from "../test-bed/test-bed.service";
 import {Observable, of} from "rxjs";
 import {switchMap} from "rxjs/operators";
 import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
+import {SuiteEditorService, Suite, SuiteEntry} from "./suite-editor.service";
+import {RegressionService} from "../regression.service";
+import {LoggerService} from "../../services/logger/logger.service";
+import {ActivatedRoute} from "@angular/router";
 
-class SuiteEntry {
-  path: string;
-  test_case_ids: number[] = null;
-  inputs: any = null
-}
+
 enum CustomAssetSelection {  // used by the Custom test-bed spec modal
   NUM,
   SPECIFIC
@@ -22,6 +22,7 @@ enum CustomAssetSelection {  // used by the Custom test-bed spec modal
   styleUrls: ['./suite-editor.component.css']
 })
 export class SuiteEditorComponent implements OnInit {
+  @Input() id: number = null;
   testCaseIds: number[] = null;
   inputs: any = null;
   customTestBedSpec: any = null;
@@ -45,21 +46,45 @@ export class SuiteEditorComponent implements OnInit {
 
   customTestBedSpecFormErrorMessage = null;
   currentScriptPath: string = null;
+
+  name: string = "Some suite name";
+  shortDescription: string = "Short description";
+
   customTestBedSpecForm = null;
   customTestBedValidated = null;
 
-  constructor(private testBedService: TestBedService, private modalService: NgbModal) {
+  availableCategories: string [] = ["networking", "storage", "accelerators", "security", "system"];
+  availableSubCategories: string [] = ["general"];
+  //selectedCategories: string [] = null;
+  selectedSubCategories: string [] = null;
+
+  availableTags: string[] = null;
+
+  tags: string = null;
+  suite: Suite = null;
+  driver = null;
+
+  constructor(private testBedService: TestBedService,
+              private modalService: NgbModal,
+              private service: SuiteEditorService,
+              private regressionService: RegressionService,
+              private loggerService: LoggerService,
+              private route: ActivatedRoute) {
 
   }
 
 
   ngOnInit() {
-    new Observable(observer => {
+
+
+    this.driver = new Observable(observer => {
       observer.next(true);
       return () => {
-
       }
-    }).pipe(switchMap((response) => {
+    }).pipe(switchMap(response => {
+      return this.regressionService.tags();
+    })).pipe(switchMap((response) => {
+      this.availableTags = response;
       return this.testBedService.testBeds();
     })).pipe(switchMap(response => {
       this.testBeds = response;
@@ -70,11 +95,33 @@ export class SuiteEditorComponent implements OnInit {
       return this.testBedService.assets();
     })).pipe(switchMap(response => {
       this.assets = response;
-
-
-
       return of(true);
-    })).subscribe(response => {
+    }));
+
+
+    this.route.params.subscribe(params => {
+      if (params["id"]) {
+        this.id = params["id"];
+      }
+      if (!this.id) {
+        this.suite = new Suite();
+
+      } else {
+        this.service.suites(this.id).subscribe(response => {
+          this.suite = response;
+          this.refreshAll();
+        })
+      }
+
+    });
+
+
+
+
+  }
+
+  refreshAll() {
+    this.driver.subscribe(response => {
       this.customTestBedSpecForm = this.prepareFormGroup();
       let i = 0;
       this.customTestBedSpecForm.get('selectedTestBed').valueChanges.subscribe(selection => {
@@ -102,28 +149,6 @@ export class SuiteEditorComponent implements OnInit {
       })
 
     });
-
-
-
-    /*
-    this.customTestBedSpecForm.get('customDutSelection').valueChanges.subscribe(selection => {
-      if (selection == CustomAssetSelection.SPECIFIC.toString()) {
-        this.customTestBedSpecForm.get('numDuts').disable();
-      } else {
-        this.customTestBedSpecForm.get('numDuts').enable();
-
-      }
-    });
-
-    this.customTestBedSpecForm.get('customHostSelection').valueChanges.subscribe(selection => {
-      if (selection == CustomAssetSelection.SPECIFIC.toString()) {
-        this.customTestBedSpecForm.get('numDuts').disable();
-      } else {
-        this.customTestBedSpecForm.get('numDuts').enable();
-
-      }
-    })*/
-
   }
 
   prepareCustomTestBedSpecValidated() {
@@ -266,12 +291,14 @@ export class SuiteEditorComponent implements OnInit {
     //console.log(this.customTestBedSpecForm.get(this._getAssetSelectionKey("dut")).value);
     //console.log(this.selectedTestBed.value);
      //console.log(this.selectedTestBed);
-    console.log(this.customTestBedSpecForm.get("selectedTestBed").value);
+    //console.log(this.customTestBedSpecForm.get("selectedTestBed").value);
     // console.log(this.customTestBedSpecForm.get("customDutSelection").value);
     // console.log(this.customTestBedSpecForm.get("numDuts").value);
     // console.log(this.customTestBedSpecForm.get("selectedDuts").value);
     //console.log(this.flattenedAssetTypeNames);
     //console.log(this.flattenedAssetTypeNameMap);
+    //console.log(this.selectedCategories);
+    console.log(this.suite);
 
   }
 
@@ -334,11 +361,47 @@ export class SuiteEditorComponent implements OnInit {
     this.addingScript = true;
   }
 
-  onSubmitNewSuiteEntry() {
+  _clearNewSuiteEntry() {
+    this.currentScriptPath = null;
+    this.inputs = null;
+    this.testCaseIds = null;
+  }
 
+  onSubmitNewSuiteEntry() {
+    console.log("Submitting new suite entry");
+    this.addingScript = false;
+    let suiteEntry = new SuiteEntry();
+    suiteEntry.script_path = this.currentScriptPath;
+    suiteEntry.inputs = this.inputs;
+    suiteEntry.test_case_ids = this.testCaseIds;
+    console.log(suiteEntry);
+    this.suite.addEntry(suiteEntry);
+    this._clearNewSuiteEntry();
   }
 
   onCancelNewSuiteEntry() {
     this.addingScript = false;
   }
+
+  onNameChangedEvent(name) {
+    this.suite.name = name;
+  }
+
+  onShortDescriptionChangedEvent(shortDescription) {
+    this.suite.short_description = shortDescription;
+  }
+
+  onSubmitSuite() {
+    if (!this.id) {
+      this.service.add(this.suite).subscribe(response => {
+        this.loggerService.success("Added suite");
+      })
+    } else {
+      this.service.replace(this.suite, this.id).subscribe(response => {
+        this.loggerService.success("Updated suite");
+      })
+    }
+
+  }
+
 }

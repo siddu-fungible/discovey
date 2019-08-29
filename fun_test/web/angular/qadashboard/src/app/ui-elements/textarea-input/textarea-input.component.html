@@ -1,0 +1,15 @@
+<div style="display: inline-flex; align-items: flex-start; flex-direction: column">
+  <div [ngClass]="{'hover-cell': hoverHide}">
+    <span [innerHtml]="tempValue| safeHtml"></span>&nbsp;
+    <i class="fa fa-pencil" [ngClass]="{'hover-icon': hoverHide}" style="font-size:14px;" (click)="onEdit()"></i>
+  </div>
+
+
+  <div *ngIf="editing" style="align-self: stretch">
+    <textarea rows="{{ numRows }}" [(ngModel)]="tempValue" style="width: 100%;"></textarea>
+    <div >
+      <span><i class="fa fa-check fa-fw tick-color" (click)="onSubmit()"></i></span>
+      <span><i class="fa fa-times fa-fw close-color" (click)="onCancel()"></i></span>
+    </div>
+  </div>
+</div>
