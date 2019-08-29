@@ -21,6 +21,7 @@ logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 from datetime import datetime, timedelta
 from web.fun_test.site_state import *
 from web.fun_test.metrics_models import MetricChart, MileStoneMarkers, LastMetricId
+from fun_settings import TEAM_REGRESSION_EMAIL
 
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 
@@ -163,7 +164,7 @@ class MetricLib():
         metric_id = LastMetricId.get_next_id()
         chart = MetricChart(chart_name=kwargs["chart_name"],
                             metric_id=metric_id,
-                            internal_chart_name=kwargs["internal_chart_name"],
+                            internal_chart_name=metric_id,
                             data_sets=kwargs["data_sets"],
                             leaf=kwargs["leaf"],
                             description=kwargs["description"],

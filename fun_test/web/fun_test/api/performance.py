@@ -180,3 +180,79 @@ def interested_metrics(request, workspace_id=None):
             entry = InterestedMetrics.objects.get(q)
             entry.delete()
     return result
+
+
+@csrf_exempt
+@api_safe_json_response
+def metric_ids(request, workspace_id=None):
+    result = []
+    if request.method == "GET":
+        charts = MetricChart.objects.all()
+        for chart in charts:
+            workspace_ids = chart.workspace_ids
+            if int(workspace_id) in workspace_ids:
+                result.append(chart.metric_id)
+    return result
+
+
+@csrf_exempt
+@api_safe_json_response
+def dags(request, workspace_id=None):
+    result = []
+    if request.method == "POST":
+        request_json = json.loads(request.body)
+        email = request_json["email"]
+        workspace_id = request_json["workspace_id"]
+        interested_metrics = request_json["interested_metrics"]
+
+        #total entries in interested metrics and deleting the ones which are not tracked
+        interested_entries = InterestedMetrics.objects.filter(workspace_id=workspace_id)
+        if len(interested_entries):
+            for entry in interested_entries:
+                delete = False
+                for metric in interested_metrics:
+                    metric_id = metric["metric_id"]
+                    if entry.metric_id == metric["metric_id"]:
+                        delete = False
+                        break
+                    else:
+                        delete = True
+                if delete:
+                    entry.delete()
+
+        for metric in interested_metrics:
+            metric_id = metric["metric_id"]
+            chart_name = metric["chart_name"]
+            subscribe = metric["subscribe"]
+            track = metric["track"]
+            lineage = metric["lineage"]
+            category = metric["category"]
+            comments = metric["comments"]
+            try:
+                q = Q(workspace_id=workspace_id, metric_id=metric_id)
+                entry = InterestedMetrics.objects.get(q)
+                entry.subscribe = subscribe
+                entry.track = track
+                entry.category = category
+                entry.lineage = lineage
+                entry.comments = comments
+                entry.save()
+                result.append(entry.to_dict())
+            except ObjectDoesNotExist:
+                entry = InterestedMetrics(workspace_id=workspace_id, email=email, metric_id=metric_id,
+                                          chart_name=chart_name, subscribe=subscribe, track=track, category=category,
+                                          lineage=lineage, comments=comments)
+                entry.save()
+                result.append(entry.to_dict())
+    elif request.method == "GET":
+        q = Q(workspace_id=workspace_id)
+        interested_metrics = InterestedMetrics.objects.filter(q)
+        for metric in interested_metrics:
+            result.append(metric.to_dict())
+    elif request.method == "DELETE":
+        metric_id = request.GET.get("metric_id", None)
+        if metric_id:
+            q = Q(workspace_id=workspace_id, metric_id=metric_id)
+            entry = InterestedMetrics.objects.get(q)
+            entry.delete()
+    return result

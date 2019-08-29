@@ -152,7 +152,7 @@
       <div *ngIf="currentWorkspace.editingWorkspace" class="card"
            style="height: auto; justify-content: left">
         <div class="card-body">
-          <app-performance [selectMode]="true" [userProfileEmail]="selectedUser.email"
+          <app-performance [selectMode]="selectMode" [userProfileEmail]="selectedUser.email"
                            [workspaceId]="currentWorkspace.workspaceId"
                            [interestedMetrics]="currentWorkspace.interestedMetrics"
                            [description]="currentWorkspace.description"

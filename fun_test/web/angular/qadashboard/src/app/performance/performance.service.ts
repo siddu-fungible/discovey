@@ -4,9 +4,17 @@ import {of} from "rxjs";
 import {switchMap} from "rxjs/operators";
 import {CommonService} from "../services/common/common.service";
 
+export enum SelectMode {
+  None = 0,
+  ShowMainSite = 1,
+  ShowEditWorkspace = 2,
+  showAttachDag = 3
+}
+
 @Injectable({
   providedIn: 'root'
 })
+
 export class PerformanceService {
   buildInfo: any = null;
 

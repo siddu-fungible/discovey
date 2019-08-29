@@ -160,6 +160,7 @@ metric_urls = [
     url(r'^table_view/(.*)$', metrics_views.table_view),
     url(r'^test$', metrics_views.test),
     url(r'^scores', metrics_views.scores),
+    url(r'^part_dag$', metrics_views.part_dag),
     url(r'^dag$', metrics_views.dag),
     url(r'^get_triage_info$', metrics_views.get_triage_info),
     url(r'^get_triage_info_from_commits$', metrics_views.get_triage_info_from_commits),
@@ -196,6 +197,7 @@ users_urls = [
 api_v1_urls = [
     url(r'^users/?(.*)?$', users.users),
     url(r'^performance/workspaces/(\d+)/interested_metrics$', performance.interested_metrics),
+    url(r'^performance/workspaces/(\d+)/metric_ids$', performance.metric_ids),
     url(r'^performance/workspaces/(.*)/(.*)$', users.workspaces),
     url(r'^performance/workspaces/?(.*)?$', users.workspaces),
     url(r'^regression/test_beds/?(\S+)?$', regression.test_beds),

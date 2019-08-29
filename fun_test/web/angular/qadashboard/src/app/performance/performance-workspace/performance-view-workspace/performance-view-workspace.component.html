@@ -3,19 +3,39 @@
 <div *ngIf="showWorkspace" class="card card-primary">
   <div class="card-header">
     <h5 class="card-title" style="margin: 0;">{{ workspace.workspace_name }}</h5>
-    <span class="pseudo-anchor" *ngIf="workspace.interested_metrics.length > 0 && !showGrids"
-          (click)="showGrids = true">Show charts</span>
-    <span class="pseudo-anchor" *ngIf="workspace.interested_metrics.length > 0 && showGrids"
-          (click)="showGrids = false">Hide charts</span> |
-    <span class="pseudo-anchor" *ngIf="workspace.interested_metrics.length > 0 && !reportGenerated"
-          (click)="generateReport()">Show report
-    </span>
-    <span class="pseudo-anchor" *ngIf="workspace.interested_metrics.length > 0 && reportGenerated"
-          (click)="reportGenerated = false">Hide report
-    </span>
+    <ul class="nav nav-tabs card-header-tabs" role="tablist">
+      <li class="nav-item">
+        <span class="nav-link pseudo-anchor"
+              role="tab" *ngIf="workspace.interested_metrics.length > 0 && !showGrids"
+              (click)="showCharts()">Show charts</span>
+        <span class="nav-link active pseudo-anchor" role="tab"
+              *ngIf="workspace.interested_metrics.length > 0 && showGrids"
+              (click)="showGrids = false">Hide charts</span>
+      </li>
+      <li class="nav-item">
+        <span class="nav-link pseudo-anchor"
+                    role="tab" *ngIf="workspace.interested_metrics.length > 0 && !reportGenerated"
+                    (click)="generateReport()">Show report
+        </span>
+        <span class="nav-link active pseudo-anchor" role="tab"
+              *ngIf="workspace.interested_metrics.length > 0 && reportGenerated"
+              (click)="reportGenerated = false">Hide report
+        </span>
+      </li>
+      <li class="nav-item">
+        <span class="nav-link pseudo-anchor"
+                    role="tab" *ngIf="workspaceMetrics.length > 0 && !showDag"
+                    (click)="viewDag()">View DAG
+        </span>
+        <span class="nav-link active pseudo-anchor" role="tab"
+              *ngIf="workspaceMetrics.length > 0 && showDag"
+              (click)="showDag = false">Hide DAG
+        </span>
+      </li>
+    </ul>
   </div>
-  <div class="card-body flex-container">
-     <!--showing list of charts in the workspace-->
+  <div *ngIf="!reportGenerated && !showGrids && !showDag" class="card-body flex-container">
+    <!--showing list of charts in the workspace-->
     <div class="card" style="flex: 1 1 50%; padding: 10px;">
       <table style="width: 100%">
         <tr style="vertical-align: top">
@@ -65,7 +85,7 @@
     </div>
 
     <fun-spinner [status]="status"></fun-spinner>
-     <!--showing chart report in the right on the workspace-->
+    <!--showing chart report in the right on the workspace-->
     <div *ngIf="showChartTable" class="card" style="flex: 1 1 50%; vertical-align: top; padding: 10px;">
       <span><b>Chart name: </b>{{ currentChart.chart_name }}
       <span class="pseudo-anchor" style="float: right" (click)="closeChartTable()">Close</span></span>
@@ -113,14 +133,19 @@
     </div>
   </div>
 
-   <!--showing reports in the workspace-->
-  <ng-container *ngIf="reportGenerated">
+  <!--showing reports in the workspace-->
+  <ng-container class="card-body tab-pane" role="tabpanel" *ngIf="reportGenerated">
     <performance-show-report [workspace]="workspace" [email]="email" [subject]="subject"
                              (reportGenerated)="reportGenerated = false"></performance-show-report>
   </ng-container>
 
   <!--showing charts in the workspace-->
-  <ng-container *ngIf="showGrids">
+  <ng-container class="card-body tab-pane" role="tabpanel" *ngIf="showGrids">
     <performance-show-charts [workspace]="workspace" [buildInfo]="buildInfo"></performance-show-charts>
+  </ng-container>
+
+  <!--showing dag in the view dag of workspace-->
+  <ng-container class="card-body tab-pane" role="tabpanel" *ngIf="showDag && workspaceMetrics.length > 0">
+   <app-performance [selectMode]="selectMode" [metricIds]="workspaceMetrics"></app-performance>
   </ng-container>
 </div>

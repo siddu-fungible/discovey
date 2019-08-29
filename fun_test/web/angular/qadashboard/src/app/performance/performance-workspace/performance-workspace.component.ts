@@ -9,6 +9,7 @@ import {CommonService} from "../../services/common/common.service";
 import {NgbModal, ModalDismissReasons} from '@ng-bootstrap/ng-bootstrap';
 import {Title} from "@angular/platform-browser";
 import {PerformanceService} from "../performance.service";
+import {SelectMode} from "../performance.service";
 
 @Component({
   selector: 'performance-workspace',
@@ -25,6 +26,7 @@ export class PerformanceWorkspaceComponent implements OnInit {
   gridLength: number = 0;
   createError: string = null;
   currentWorkspace: any = null;
+  selectMode: any = SelectMode.ShowEditWorkspace;
 
   description: string = null;
   deletingWorkspace: any = null;
