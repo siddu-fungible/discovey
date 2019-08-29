@@ -368,6 +368,176 @@ def _convert_vp_util(value):
     return value
 
 
+def get_ec_vol_uuids(ec_info):
+    ec_details = []
+    for num in range(ec_info["num_volumes"]):
+        vol_group = {ec_info["volume_types"]["ndata"]: ec_info["uuids"][num]["blt"],
+                     ec_info["volume_types"]["ec"]: ec_info["uuids"][num]["ec"],
+                     ec_info["volume_types"]["jvol"]: [ec_info["uuids"][num]["jvol"]],
+                     ec_info["volume_types"]["lsv"]: ec_info["uuids"][num]["lsv"]}
+        ec_details.append(vol_group)
+    return ec_details
+
+
+def initiate_stats_collection(storage_controller, interval, count, vp_util_artifact_file=None,
+                              vol_stats_artifact_file=None, bam_stats_articat_file=None, vol_details=None):
+    stats_collector = CollectStats(storage_controller=storage_controller)
+    result = {'status': False,
+              'vp_util_thread_id': None,
+              'vol_stats_thread_id': None,
+              'bam_stats_thread_id': None}
+    if vp_util_artifact_file:
+        result['vp_util_thread_id'] = fun_test.execute_thread_after(time_in_seconds=0.5,
+                                                                    func=stats_collector.collect_vp_utils_stats,
+                                                                    output_file=vp_util_artifact_file,
+                                                                    interval=interval,
+                                                                    count=count,
+                                                                    threaded=True)
+    if vol_stats_artifact_file:
+        result['vol_stats_thread_id'] = fun_test.execute_thread_after(time_in_seconds=interval / 3,
+                                                                      func=stats_collector.collect_vol_stats,
+                                                                      output_file=vol_stats_artifact_file,
+                                                                      vol_details=vol_details,
+                                                                      interval=interval,
+                                                                      count=count,
+                                                                      threaded=True)
+    if bam_stats_articat_file:
+        result['bam_stats_thread_id'] = fun_test.execute_thread_after(time_in_seconds=(interval * 2) / 3,
+                                                                      func=stats_collector.collect_resource_bam_stats,
+                                                                      output_file=bam_stats_articat_file,
+                                                                      interval=interval,
+                                                                      count=count,
+                                                                      threaded=True)
+    result['status'] = True
+    return result
+
+
+def terminate_stats_collection(stats_ollector_obj, thread_list):
+    for thread in thread_list:
+        fun_test.join_thread(fun_test_thread_id=thread, sleep_time=1)
+
+    reset_collector = False
+    for thread in thread_list:
+        if fun_test.fun_test_threads[thread]["thread"].is_alive():
+            reset_collector = True
+    if reset_collector:
+        stats_ollector_obj.stop_all = True
+        stats_ollector_obj.stop_vol_stats = True
+        stats_ollector_obj.stop_vp_utils = True
+        stats_ollector_obj.stop_resource_bam = True
+
+
+def vol_stats_diff(initial_vol_stats, final_vol_stats, vol_details):
+    """
+    :param initial_vol_stats: volume stats collected at the start of test
+    :param final_vol_stats: volume stats collected at the end of test
+    :param vol_details: list of dictionary containing volume details, type, uuid
+    :return: dictionary, with status, stats_diff and total_diff
+    """
+    result = {"status": False, "stats_diff": None, "total_diff": None}
+    dict_vol_details = {}
+    stats_diff = {}
+    # blt_combined_stat = {}
+    total_diff = {}
+    stats_exclude_list = ["drive_uuid", "extent_size", "fault_injection", "flvm_block_size", "flvm_vol_size_blocks",
+                          "se_size"]
+    aggregated_diff_stats_list = ["write_bytes", "read_bytes"]
+    try:
+        # Forming a dictionary for provided vol_details
+        for x in range(len(vol_details)):
+            dict_vol_details[x] = vol_details[x]
+        for i, vol_group in dict_vol_details.iteritems():
+            stats_diff[i] = {}
+            # blt_combined_stat[i] = {}
+            for vol_type, vol_uuids in sorted(vol_group.iteritems()):
+                if vol_type not in stats_diff:
+                    stats_diff[i][vol_type] = {}
+                for vol_uuid in vol_uuids:
+                    if vol_uuid not in stats_diff[i][vol_type]:
+                        stats_diff[i][vol_type][vol_uuid] = {}
+                    if (vol_type in final_vol_stats and vol_uuid in final_vol_stats[vol_type]) and (
+                            vol_type in initial_vol_stats and vol_uuid in initial_vol_stats[vol_type]):
+                        for stats_field in set(final_vol_stats[vol_type][vol_uuid]["stats"]) - set(stats_exclude_list):
+                            # if stats_field not in blt_combined_stat[i]:
+                            #    blt_combined_stat[i][stats_field] = 0
+                            stats_diff[i][vol_type][vol_uuid][stats_field] = \
+                                final_vol_stats[vol_type][vol_uuid]["stats"][stats_field] - initial_vol_stats[
+                                    vol_type][vol_uuid]["stats"][stats_field]
+                            # To have agrregated BLT stats under each EC volume,
+                            # all volumes BLT stats are collected in total_diff
+                            #
+                            # if vol_type == "VOL_TYPE_BLK_LOCAL_THIN":
+                            #    if blt_combined_stat[i][stats_field] == 0:
+                            #        stats_diff[i][vol_type]['blt_combined'] = {}
+                            #        stats_diff[i][vol_type]['blt_combined'][stats_field] = {}
+                            #    blt_combined_stat[i][stats_field] = blt_combined_stat[i][stats_field] + \
+                            #                                        stats_diff[i][vol_type][vol_uuid][stats_field]
+                            #    stats_diff[i][vol_type]['blt_combined'][stats_field] = blt_combined_stat[i][
+                            #        stats_field]
+
+        for i, vol_group in stats_diff.iteritems():
+            for vol_type, vol_uuids in sorted(vol_group.iteritems()):
+                if vol_type not in total_diff:
+                    total_diff[vol_type] = {}
+                for vol_uuid in vol_uuids:
+                    # if vol_uuid != "blt_combined":
+                    for stats_field in aggregated_diff_stats_list:
+                        if stats_field not in total_diff[vol_type]:
+                            total_diff[vol_type][stats_field] = 0
+                        total_diff[vol_type][stats_field] = total_diff[vol_type][stats_field] + \
+                                                            stats_diff[i][vol_type][vol_uuid][stats_field]
+        result["status"] = True
+        result["stats_diff"] = stats_diff
+        result["total_diff"] = total_diff
+    except Exception as ex:
+        fun_test.critical(str(ex))
+        result["status"] = False
+
+    return result
+
+
+def unpack_nested_dict(input_dict, prefix=''):
+    for key, value in sorted(input_dict.items()):
+        if isinstance(value, dict):
+            unpack_nested_dict(value, '{}{}_'.format(prefix, key))
+        else:
+            unpacked_stats["{}{}".format(prefix, key)] = value
+    return unpacked_stats
+
+
+def get_diff_results(old_result, new_result):
+    result = {}
+    try:
+        for key, val in new_result.iteritems():
+            if isinstance(val, dict):
+                result[key] = get_diff_results(old_result=old_result[key], new_result=new_result[key])
+            if isinstance(val, list):
+                result[key] = []
+                try:
+                    result[key].append(map(subtract, val, old_result[key]))
+                except Exception as ex:
+                    fun_test.critical(str(ex))
+            else:
+                if not key in old_result:
+                    old_result[key] = 0
+                print("In get_diff_results, new_result[key] is: {} of type: {} and old_result[key] is: {} of type: {}".
+                      format(new_result[key], type(new_result[key]), old_result[key], type(old_result[key])))
+                result[key] = new_result[key] - old_result[key]
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return result
+
+
+def subtract(a, b):
+    a = 0 if not a else a
+    b = 0 if not b else b
+    return a - b
+
+
+def divide(n, d):
+    return n/d if d else 0
+
+
 class CollectStats(object):
     def __init__(self, storage_controller):
         self.storage_controller = storage_controller
@@ -379,6 +549,15 @@ class CollectStats(object):
         self.stop_vol_stats = False
         self.stop_vppkts_stats = False
         self.stop_psw_stats = False
+        self.stop_fcp_stats = False
+        self.stop_wro_stats = False
+        self.stop_erp_stats = False
+        self.stop_etp_stats = False
+        self.stop_eqm_stats = False
+        self.stop_hu_stats = False
+        self.stop_ddr_stats = False
+        self.stop_ca_stats = False
+        self.stop_cdu_stats = False
 
     def collect_vp_utils_stats(self, output_file, interval=10, count=3, non_zero_stats_only=True, threaded=True,
                                chunk=8192, command_timeout=DPCSH_COMMAND_TIMEOUT):
@@ -668,12 +847,11 @@ class CollectStats(object):
             fun_test.critical(str(ex))
         return output
 
-    def collect_vppkts_stats(self, output_file="/dev/null", interval=10, count=3, threaded=True, chunk=8192,
-                             display_diff=True, command_timeout=DPCSH_COMMAND_TIMEOUT):
+    def collect_vppkts_stats(self, output_file="/dev/null", interval=10, count=3, threaded=True,
+                             non_zero_stats_only=True, display_diff=True, chunk=8192,
+                             command_timeout=DPCSH_COMMAND_TIMEOUT):
         output = False
         column_headers = ["VP Pkts Stats", "Counters"]
-        self.curr_vppkts_stats = {}
-        result_vppkts_stats = OrderedDict()
         if display_diff:
             column_headers.append("Diff Stats")
 
@@ -689,42 +867,51 @@ class CollectStats(object):
                     vppkts_result = self.storage_controller.peek(props_tree="stats/vppkts", legacy=False,
                                                                  chunk=chunk, command_duration=command_timeout)
                     self.socket_lock.release()
-                    if vppkts_result["status"] and vppkts_result["data"] is not None:
+
+                    self.new_vppkts_stats = {}
+                    if vppkts_result["status"] and vppkts_result["data"]:
                         vppkts_stats = vppkts_result["data"]
-                        for key, value in vppkts_stats.iteritems():
-                            if value != 0:
-                                self.curr_vppkts_stats[key] = value
+                        if non_zero_stats_only:
+                            for key, value in vppkts_stats.iteritems():
+                                if value != 0:
+                                    self.new_vppkts_stats[key] = value
+                        else:
+                            self.new_vppkts_stats = vppkts_stats
+
                     if display_diff:
-                        if not hasattr(self, "prev_vppkts_stats"):
-                            self.prev_vppkts_stats = self.curr_vppkts_stats
-                        diff_vppkts_stats = get_diff_results(old_result=self.prev_vppkts_stats,
-                                                             new_result=self.curr_vppkts_stats)
-                    for key, value in self.curr_vppkts_stats.iteritems():
+                        if not hasattr(self, "old_vppkts_stats"):
+                            self.old_vppkts_stats = self.new_vppkts_stats
+                        diff_vppkts_stats = get_diff_results(old_result=self.old_vppkts_stats,
+                                                             new_result=self.new_vppkts_stats)
+                    self.old_vppkts_stats = self.new_vppkts_stats
+
+                    result_vppkts_stats = OrderedDict()
+                    for key, value in sorted(self.new_vppkts_stats.iteritems()):
                         if key not in result_vppkts_stats:
                             result_vppkts_stats[key] = []
                         result_vppkts_stats[key].append(value)
                         if display_diff:
                             result_vppkts_stats[key].append(diff_vppkts_stats[key])
 
+                    print("result_vppkts_stats: {}".format(result_vppkts_stats))
                     table_data = build_simple_table(data=result_vppkts_stats, column_headers=column_headers,
                                                     split_values_to_columns=True)
                     lines.append("\n########################  {} ########################\n".format(time.ctime()))
                     lines.append(table_data.get_string())
                     lines.append("\n\n")
                     f.writelines(lines)
-                    self.prev_vppkts_stats = self.curr_vppkts_stats
                     fun_test.sleep("for the next iteration - VP Pkts stats collection", seconds=interval)
                 output = True
         except Exception as ex:
             fun_test.critical(str(ex))
         return output
 
-    def collect_psw_stats(self, output_file="/dev/null", interval=10, count=3, threaded=True, chunk=8192, nu=False,
-                          hnu=False, display_diff=True, command_timeout=10):
+    def collect_psw_stats(self, output_file="/dev/null", interval=10, count=3, threaded=True,
+                          non_zero_stats_only=True, chunk=8192, nu=False, hnu=False, display_diff=True,
+                          command_timeout=10):
         output = False
         column_headers = ["PSW HNU/NU Stats", "Value"]
-        self.curr_psw_stats = {}
-        result_psw_stats = OrderedDict()
+
         if display_diff:
             column_headers.append("Diff Stats")
 
@@ -747,33 +934,633 @@ class CollectStats(object):
                     psw_result = self.storage_controller.peek(props_tree=props_tree, legacy=False,
                                                               chunk=chunk, command_duration=command_timeout)
                     self.socket_lock.release()
-                    if psw_result["status"] and psw_result["data"] is not None:
+
+                    self.new_psw_stats = {}
+                    if psw_result["status"] and psw_result["data"]:
                         psw_stats = psw_result["data"]
 
                         unpacked_psw_stats = unpack_nested_dict(input_dict=psw_stats)
-                        for key, value in unpacked_psw_stats.iteritems():
-                            if value != "0":
-                                self.curr_psw_stats[key] = value
-                        if display_diff:
-                            if not hasattr(self, "prev_psw_stats"):
-                                self.prev_psw_stats = self.curr_psw_stats
-                            diff_psw_stats = get_diff_results(old_result=self.prev_psw_stats,
-                                                              new_result=self.curr_psw_stats)
-                        for key, value in self.curr_psw_stats.iteritems():
-                            if key not in result_psw_stats:
-                                result_psw_stats[key] = []
-                            result_psw_stats[key].append(value)
-                            if display_diff:
-                                result_psw_stats[key].append(diff_psw_stats[key])
+                        if non_zero_stats_only:
+                            for key, value in unpacked_psw_stats.iteritems():
+                                if value != "0":
+                                    self.new_psw_stats[key] = value
+                        else:
+                            self.new_psw_stats = unpacked_psw_stats
 
+                    if display_diff:
+                        if not hasattr(self, "old_psw_stats"):
+                            self.old_psw_stats = self.new_psw_stats
+                        diff_psw_stats = get_diff_results(old_result=self.old_psw_stats,
+                                                          new_result=self.new_psw_stats)
+                    self.old_psw_stats = self.new_psw_stats
+
+                    result_psw_stats = OrderedDict()
+                    for key, value in sorted(self.new_psw_stats.iteritems()):
+                        if key not in result_psw_stats:
+                            result_psw_stats[key] = []
+                        result_psw_stats[key].append(value)
+                        if display_diff:
+                            result_psw_stats[key].append(diff_psw_stats[key])
+
+                    print("result_psw_stats: {}".format(result_psw_stats))
                     table_data = build_simple_table(data=result_psw_stats, column_headers=column_headers,
                                                     split_values_to_columns=True)
                     lines.append("\n########################  {} ########################\n".format(time.ctime()))
                     lines.append(table_data.get_string())
                     lines.append("\n\n")
                     f.writelines(lines)
-                    self.prev_psw_stats = self.curr_psw_stats
                     fun_test.sleep("for the next iteration - PSW stats collection", seconds=interval)
+                output = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return output
+
+    def collect_fcp_stats(self, output_file="/dev/null", interval=10, count=3, threaded=True,
+                          non_zero_stats_only=True, chunk=8192, nu=False, hnu=False, display_diff=True,
+                          command_timeout=10):
+        output = False
+        column_headers = ["FCP HNU/NU Stats", "Value"]
+
+        if display_diff:
+            column_headers.append("Diff Stats")
+
+        if nu and not hnu:
+            props_tree = "stats/fcp/nu"
+        elif hnu and not nu:
+            props_tree = "stats/fcp/hnu"
+        else:
+            props_tree = "stats/fcp"
+
+        try:
+            with open(output_file, 'a') as f:
+                timer = FunTimer(max_time=interval * count)
+                while not timer.is_expired():
+                    lines = []
+                    if threaded and (self.stop_fcp_stats or self.stop_all):
+                        fun_test.log("Stopping FCP stats collection thread")
+                        break
+                    self.socket_lock.acquire()
+                    fcp_result = self.storage_controller.peek(props_tree=props_tree, legacy=False,
+                                                              chunk=chunk, command_duration=command_timeout)
+                    self.socket_lock.release()
+
+                    self.new_fcp_stats = {}
+                    if fcp_result["status"] and fcp_result["data"]:
+                        fcp_stats = fcp_result["data"]
+
+                        unpacked_fcp_stats = unpack_nested_dict(input_dict=fcp_stats)
+                        if non_zero_stats_only:
+                            for key, value in unpacked_fcp_stats.iteritems():
+                                if value != "0":
+                                    self.new_fcp_stats[key] = value
+                        else:
+                            self.new_fcp_stats = unpacked_fcp_stats
+
+                    if display_diff:
+                        if not hasattr(self, "old_fcp_stats"):
+                            self.old_fcp_stats = self.new_fcp_stats
+                        diff_fcp_stats = get_diff_results(old_result=self.old_fcp_stats,
+                                                          new_result=self.new_fcp_stats)
+                    self.old_fcp_stats = self.new_fcp_stats
+
+                    result_fcp_stats = OrderedDict()
+                    for key, value in sorted(self.new_fcp_stats.iteritems()):
+                        if key not in result_fcp_stats:
+                            result_fcp_stats[key] = []
+                        result_fcp_stats[key].append(value)
+                        if display_diff:
+                            result_fcp_stats[key].append(diff_fcp_stats[key])
+
+                    print("result_fcp_stats: {}".format(result_fcp_stats))
+                    table_data = build_simple_table(data=result_fcp_stats, column_headers=column_headers,
+                                                    split_values_to_columns=True)
+                    lines.append("\n########################  {} ########################\n".format(time.ctime()))
+                    lines.append(table_data.get_string())
+                    lines.append("\n\n")
+                    f.writelines(lines)
+                    fun_test.sleep("for the next iteration - FCP stats collection", seconds=interval)
+                output = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return output
+
+    def collect_wro_stats(self, output_file="/dev/null", interval=10, count=3, threaded=True,
+                          non_zero_stats_only=True, chunk=8192, nu=False, hnu=False, display_diff=True,
+                          command_timeout=10):
+        output = False
+        column_headers = ["WRO HNU/NU Stats", "Value"]
+
+        if display_diff:
+            column_headers.append("Diff Stats")
+
+        if nu and not hnu:
+            props_tree = "stats/wro/nu"
+        elif hnu and not nu:
+            props_tree = "stats/wro/hnu"
+        else:
+            props_tree = "stats/wro"
+
+        try:
+            with open(output_file, 'a') as f:
+                timer = FunTimer(max_time=interval * count)
+                while not timer.is_expired():
+                    lines = []
+                    if threaded and (self.stop_wro_stats or self.stop_all):
+                        fun_test.log("Stopping WRO stats collection thread")
+                        break
+                    self.socket_lock.acquire()
+                    wro_result = self.storage_controller.peek(props_tree=props_tree, legacy=False,
+                                                              chunk=chunk, command_duration=command_timeout)
+                    self.socket_lock.release()
+
+                    self.new_wro_stats = {}
+                    if wro_result["status"] and wro_result["data"]:
+                        wro_stats = wro_result["data"]
+
+                        unpacked_wro_stats = unpack_nested_dict(input_dict=wro_stats)
+                        if non_zero_stats_only:
+                            for key, value in unpacked_wro_stats.iteritems():
+                                if value != "0":
+                                    self.new_wro_stats[key] = value
+                        else:
+                            self.new_wro_stats = unpacked_wro_stats
+
+                    if display_diff:
+                        if not hasattr(self, "old_wro_stats"):
+                            self.old_wro_stats = self.new_wro_stats
+                        diff_wro_stats = get_diff_results(old_result=self.old_wro_stats,
+                                                          new_result=self.new_wro_stats)
+                    self.old_wro_stats = self.new_wro_stats
+
+                    result_wro_stats = OrderedDict()
+                    for key, value in sorted(self.new_wro_stats.iteritems()):
+                        if key not in result_wro_stats:
+                            result_wro_stats[key] = []
+                        result_wro_stats[key].append(value)
+                        if display_diff:
+                            result_wro_stats[key].append(diff_wro_stats[key])
+
+                    print("result_wro_stats: {}".format(result_wro_stats))
+                    table_data = build_simple_table(data=result_wro_stats, column_headers=column_headers,
+                                                    split_values_to_columns=True)
+                    lines.append("\n########################  {} ########################\n".format(time.ctime()))
+                    lines.append(table_data.get_string())
+                    lines.append("\n\n")
+                    f.writelines(lines)
+                    fun_test.sleep("for the next iteration - WRO stats collection", seconds=interval)
+                output = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return output
+
+    def collect_erp_stats(self, output_file="/dev/null", interval=10, count=3, threaded=True,
+                          non_zero_stats_only=True, chunk=8192, nu=False, hnu=False, display_diff=True,
+                          command_timeout=10):
+        output = False
+        column_headers = ["ERP HNU/NU Stats", "Value"]
+
+        if display_diff:
+            column_headers.append("Diff Stats")
+
+        if nu and not hnu:
+            props_tree = "stats/erp/nu"
+        elif hnu and not nu:
+            props_tree = "stats/erp/hnu"
+        else:
+            props_tree = "stats/erp"
+
+        try:
+            with open(output_file, 'a') as f:
+                timer = FunTimer(max_time=interval * count)
+                while not timer.is_expired():
+                    lines = []
+                    if threaded and (self.stop_erp_stats or self.stop_all):
+                        fun_test.log("Stopping ERP stats collection thread")
+                        break
+                    self.socket_lock.acquire()
+                    erp_result = self.storage_controller.peek(props_tree=props_tree, legacy=False,
+                                                              chunk=chunk, command_duration=command_timeout)
+                    self.socket_lock.release()
+
+                    self.new_erp_stats = {}
+                    if erp_result["status"] and erp_result["data"]:
+                        erp_stats = erp_result["data"]
+
+                        unpacked_erp_stats = unpack_nested_dict(input_dict=erp_stats)
+                        if non_zero_stats_only:
+                            for key, value in unpacked_erp_stats.iteritems():
+                                if value != "0":
+                                    self.new_erp_stats[key] = value
+                        else:
+                            self.new_erp_stats = unpacked_erp_stats
+
+                    if display_diff:
+                        if not hasattr(self, "old_erp_stats"):
+                            self.old_erp_stats = self.new_erp_stats
+                        diff_erp_stats = get_diff_results(old_result=self.old_erp_stats,
+                                                          new_result=self.new_erp_stats)
+                    self.old_erp_stats = self.new_erp_stats
+
+                    result_erp_stats = OrderedDict()
+                    for key, value in sorted(self.new_erp_stats.iteritems()):
+                        if key not in result_erp_stats:
+                            result_erp_stats[key] = []
+                        result_erp_stats[key].append(value)
+                        if display_diff:
+                            result_erp_stats[key].append(diff_erp_stats[key])
+
+                    print("result_erp_stats: {}".format(result_erp_stats))
+                    table_data = build_simple_table(data=result_erp_stats, column_headers=column_headers,
+                                                    split_values_to_columns=True)
+                    lines.append("\n########################  {} ########################\n".format(time.ctime()))
+                    lines.append(table_data.get_string())
+                    lines.append("\n\n")
+                    f.writelines(lines)
+                    fun_test.sleep("for the next iteration - ERP stats collection", seconds=interval)
+                output = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return output
+
+    def collect_etp_stats(self, output_file="/dev/null", interval=10, count=3, threaded=True,
+                          non_zero_stats_only=True, chunk=8192, nu=False, hnu=False, display_diff=True,
+                          command_timeout=10):
+        output = False
+        column_headers = ["ETP HNU/NU Stats", "Value"]
+
+        if display_diff:
+            column_headers.append("Diff Stats")
+
+        if nu and not hnu:
+            props_tree = "stats/etp/nu"
+        elif hnu and not nu:
+            props_tree = "stats/etp/hnu"
+        else:
+            props_tree = "stats/etp"
+
+        try:
+            with open(output_file, 'a') as f:
+                timer = FunTimer(max_time=interval * count)
+                while not timer.is_expired():
+                    lines = []
+                    if threaded and (self.stop_etp_stats or self.stop_all):
+                        fun_test.log("Stopping ETP stats collection thread")
+                        break
+                    self.socket_lock.acquire()
+                    etp_result = self.storage_controller.peek(props_tree=props_tree, legacy=False,
+                                                              chunk=chunk, command_duration=command_timeout)
+                    self.socket_lock.release()
+
+                    self.new_etp_stats = {}
+                    if etp_result["status"] and etp_result["data"]:
+                        etp_stats = etp_result["data"]
+
+                        unpacked_etp_stats = unpack_nested_dict(input_dict=etp_stats)
+                        if non_zero_stats_only:
+                            for key, value in unpacked_etp_stats.iteritems():
+                                if value != "0":
+                                    self.new_etp_stats[key] = value
+                        else:
+                            self.new_etp_stats = unpacked_etp_stats
+
+                    if display_diff:
+                        if not hasattr(self, "old_etp_stats"):
+                            self.old_etp_stats = self.new_etp_stats
+                        diff_etp_stats = get_diff_results(old_result=self.old_etp_stats,
+                                                          new_result=self.new_etp_stats)
+                    self.old_etp_stats = self.new_etp_stats
+
+                    result_etp_stats = OrderedDict()
+                    for key, value in sorted(self.new_etp_stats.iteritems()):
+                        if key not in result_etp_stats:
+                            result_etp_stats[key] = []
+                        result_etp_stats[key].append(value)
+                        if display_diff:
+                            result_etp_stats[key].append(diff_etp_stats[key])
+
+                    print("result_etp_stats: {}".format(result_etp_stats))
+                    table_data = build_simple_table(data=result_etp_stats, column_headers=column_headers,
+                                                    split_values_to_columns=True)
+                    lines.append("\n########################  {} ########################\n".format(time.ctime()))
+                    lines.append(table_data.get_string())
+                    lines.append("\n\n")
+                    f.writelines(lines)
+                    fun_test.sleep("for the next iteration - ETP stats collection", seconds=interval)
+                output = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return output
+
+    def collect_eqm_stats(self, output_file="/dev/null", interval=10, count=3, threaded=True,
+                          non_zero_stats_only=True, chunk=8192, display_diff=True, command_timeout=10):
+        output = False
+        column_headers = ["EQM Stats", "Value"]
+
+        if display_diff:
+            column_headers.append("Diff Stats")
+
+        props_tree = "stats/eqm"
+
+        try:
+            with open(output_file, 'a') as f:
+                timer = FunTimer(max_time=interval * count)
+                while not timer.is_expired():
+                    lines = []
+                    if threaded and (self.stop_eqm_stats or self.stop_all):
+                        fun_test.log("Stopping EQM stats collection thread")
+                        break
+                    self.socket_lock.acquire()
+                    eqm_result = self.storage_controller.peek(props_tree=props_tree, legacy=False,
+                                                              chunk=chunk, command_duration=command_timeout)
+                    self.socket_lock.release()
+
+                    self.new_eqm_stats = {}
+                    if eqm_result["status"] and eqm_result["data"]:
+                        eqm_stats = eqm_result["data"]
+
+                        unpacked_eqm_stats = unpack_nested_dict(input_dict=eqm_stats)
+                        if non_zero_stats_only:
+                            for key, value in unpacked_eqm_stats.iteritems():
+                                if value != "0":
+                                    self.new_eqm_stats[key] = value
+                        else:
+                            self.new_eqm_stats = unpacked_eqm_stats
+
+                    if display_diff:
+                        if not hasattr(self, "old_eqm_stats"):
+                            self.old_eqm_stats = self.new_eqm_stats
+                        diff_eqm_stats = get_diff_results(old_result=self.old_eqm_stats,
+                                                          new_result=self.new_eqm_stats)
+                    self.old_eqm_stats = self.new_eqm_stats
+
+                    result_eqm_stats = OrderedDict()
+                    for key, value in sorted(self.new_eqm_stats.iteritems()):
+                        if key not in result_eqm_stats:
+                            result_eqm_stats[key] = []
+                        result_eqm_stats[key].append(value)
+                        if display_diff:
+                            result_eqm_stats[key].append(diff_eqm_stats[key])
+
+                    print("result_eqm_stats: {}".format(result_eqm_stats))
+                    table_data = build_simple_table(data=result_eqm_stats, column_headers=column_headers,
+                                                    split_values_to_columns=True)
+                    lines.append("\n########################  {} ########################\n".format(time.ctime()))
+                    lines.append(table_data.get_string())
+                    lines.append("\n\n")
+                    f.writelines(lines)
+                    fun_test.sleep("for the next iteration - EQM stats collection", seconds=interval)
+                output = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return output
+
+    def collect_hu_stats(self, output_file="/dev/null", interval=10, count=3, threaded=True,
+                          non_zero_stats_only=True, chunk=8192, display_diff=True, command_timeout=10):
+        output = False
+        column_headers = ["HU Stats", "Value"]
+
+        if display_diff:
+            column_headers.append("Diff Stats")
+
+        props_tree = "stats/hu"
+
+        try:
+            with open(output_file, 'a') as f:
+                timer = FunTimer(max_time=interval * count)
+                while not timer.is_expired():
+                    lines = []
+                    if threaded and (self.stop_hu_stats or self.stop_all):
+                        fun_test.log("Stopping HU stats collection thread")
+                        break
+                    self.socket_lock.acquire()
+                    hu_result = self.storage_controller.peek(props_tree=props_tree, legacy=False,
+                                                              chunk=chunk, command_duration=command_timeout)
+                    self.socket_lock.release()
+
+                    self.new_hu_stats = {}
+                    if hu_result["status"] and hu_result["data"]:
+                        hu_stats = hu_result["data"]
+
+                        unpacked_hu_stats = unpack_nested_dict(input_dict=hu_stats)
+                        if non_zero_stats_only:
+                            for key, value in unpacked_hu_stats.iteritems():
+                                if value != "0":
+                                    self.new_hu_stats[key] = value
+                        else:
+                            self.new_hu_stats = unpacked_hu_stats
+
+                    if display_diff:
+                        if not hasattr(self, "old_hu_stats"):
+                            self.old_hu_stats = self.new_hu_stats
+                        diff_hu_stats = get_diff_results(old_result=self.old_hu_stats,
+                                                          new_result=self.new_hu_stats)
+                    self.old_hu_stats = self.new_hu_stats
+
+                    result_hu_stats = OrderedDict()
+                    for key, value in sorted(self.new_hu_stats.iteritems()):
+                        if key not in result_hu_stats:
+                            result_hu_stats[key] = []
+                        result_hu_stats[key].append(value)
+                        if display_diff:
+                            result_hu_stats[key].append(diff_hu_stats[key])
+
+                    print("result_hu_stats: {}".format(result_hu_stats))
+                    table_data = build_simple_table(data=result_hu_stats, column_headers=column_headers,
+                                                    split_values_to_columns=True)
+                    lines.append("\n########################  {} ########################\n".format(time.ctime()))
+                    lines.append(table_data.get_string())
+                    lines.append("\n\n")
+                    f.writelines(lines)
+                    fun_test.sleep("for the next iteration - HU stats collection", seconds=interval)
+                output = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return output
+
+    def collect_ddr_stats(self, output_file="/dev/null", interval=10, count=3, threaded=True,
+                          non_zero_stats_only=True, chunk=8192, display_diff=True, command_timeout=10):
+        output = False
+        column_headers = ["DDR Stats", "Value"]
+
+        if display_diff:
+            column_headers.append("Diff Stats")
+
+        props_tree = "stats/ddr"
+
+        try:
+            with open(output_file, 'a') as f:
+                timer = FunTimer(max_time=interval * count)
+                while not timer.is_expired():
+                    lines = []
+                    if threaded and (self.stop_ddr_stats or self.stop_all):
+                        fun_test.log("Stopping DDR stats collection thread")
+                        break
+                    self.socket_lock.acquire()
+                    ddr_result = self.storage_controller.peek(props_tree=props_tree, legacy=False,
+                                                              chunk=chunk, command_duration=command_timeout)
+                    self.socket_lock.release()
+
+                    self.new_ddr_stats = {}
+                    if ddr_result["status"] and ddr_result["data"]:
+                        ddr_stats = ddr_result["data"]
+
+                        unpacked_ddr_stats = unpack_nested_dict(input_dict=ddr_stats)
+                        if non_zero_stats_only:
+                            for key, value in unpacked_ddr_stats.iteritems():
+                                if value != "0":
+                                    self.new_ddr_stats[key] = value
+                        else:
+                            self.new_ddr_stats = unpacked_ddr_stats
+
+                    if display_diff:
+                        if not hasattr(self, "old_ddr_stats"):
+                            self.old_ddr_stats = self.new_ddr_stats
+                        diff_ddr_stats = get_diff_results(old_result=self.old_ddr_stats,
+                                                          new_result=self.new_ddr_stats)
+                    self.old_ddr_stats = self.new_ddr_stats
+
+                    result_ddr_stats = OrderedDict()
+                    for key, value in sorted(self.new_ddr_stats.iteritems()):
+                        if key not in result_ddr_stats:
+                            result_ddr_stats[key] = []
+                        result_ddr_stats[key].append(value)
+                        if display_diff:
+                            result_ddr_stats[key].append(diff_ddr_stats[key])
+
+                    print("result_ddr_stats: {}".format(result_ddr_stats))
+                    table_data = build_simple_table(data=result_ddr_stats, column_headers=column_headers,
+                                                    split_values_to_columns=True)
+                    lines.append("\n########################  {} ########################\n".format(time.ctime()))
+                    lines.append(table_data.get_string())
+                    lines.append("\n\n")
+                    f.writelines(lines)
+                    fun_test.sleep("for the next iteration - DDR stats collection", seconds=interval)
+                output = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return output
+
+    def collect_ca_stats(self, output_file="/dev/null", interval=10, count=3, threaded=True,
+                          non_zero_stats_only=True, chunk=8192, display_diff=True, command_timeout=10):
+        output = False
+        column_headers = ["CA Stats", "Value"]
+
+        if display_diff:
+            column_headers.append("Diff Stats")
+
+        props_tree = "stats/ca"
+
+        try:
+            with open(output_file, 'a') as f:
+                timer = FunTimer(max_time=interval * count)
+                while not timer.is_expired():
+                    lines = []
+                    if threaded and (self.stop_ca_stats or self.stop_all):
+                        fun_test.log("Stopping CA stats collection thread")
+                        break
+                    self.socket_lock.acquire()
+                    ca_result = self.storage_controller.peek(props_tree=props_tree, legacy=False,
+                                                              chunk=chunk, command_duration=command_timeout)
+                    self.socket_lock.release()
+
+                    self.new_ca_stats = {}
+                    if ca_result["status"] and ca_result["data"]:
+                        ca_stats = ca_result["data"]
+
+                        unpacked_ca_stats = unpack_nested_dict(input_dict=ca_stats)
+                        if non_zero_stats_only:
+                            for key, value in unpacked_ca_stats.iteritems():
+                                if value != "0":
+                                    self.new_ca_stats[key] = value
+                        else:
+                            self.new_ca_stats = unpacked_ca_stats
+
+                    if display_diff:
+                        if not hasattr(self, "old_ca_stats"):
+                            self.old_ca_stats = self.new_ca_stats
+                        diff_ca_stats = get_diff_results(old_result=self.old_ca_stats,
+                                                          new_result=self.new_ca_stats)
+                    self.old_ca_stats = self.new_ca_stats
+
+                    result_ca_stats = OrderedDict()
+                    for key, value in sorted(self.new_ca_stats.iteritems()):
+                        if key not in result_ca_stats:
+                            result_ca_stats[key] = []
+                        result_ca_stats[key].append(value)
+                        if display_diff:
+                            result_ca_stats[key].append(diff_ca_stats[key])
+
+                    print("result_ca_stats: {}".format(result_ca_stats))
+                    table_data = build_simple_table(data=result_ca_stats, column_headers=column_headers,
+                                                    split_values_to_columns=True)
+                    lines.append("\n########################  {} ########################\n".format(time.ctime()))
+                    lines.append(table_data.get_string())
+                    lines.append("\n\n")
+                    f.writelines(lines)
+                    fun_test.sleep("for the next iteration - CA stats collection", seconds=interval)
+                output = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return output
+
+    def collect_cdu_stats(self, output_file="/dev/null", interval=10, count=3, threaded=True,
+                          non_zero_stats_only=True, chunk=8192, display_diff=True, command_timeout=10):
+        output = False
+        column_headers = ["CDU Stats", "Value"]
+
+        if display_diff:
+            column_headers.append("Diff Stats")
+
+        props_tree = "stats/cdu"
+
+        try:
+            with open(output_file, 'a') as f:
+                timer = FunTimer(max_time=interval * count)
+                while not timer.is_expired():
+                    lines = []
+                    if threaded and (self.stop_cdu_stats or self.stop_all):
+                        fun_test.log("Stopping CDU stats collection thread")
+                        break
+                    self.socket_lock.acquire()
+                    cdu_result = self.storage_controller.peek(props_tree=props_tree, legacy=False,
+                                                              chunk=chunk, command_duration=command_timeout)
+                    self.socket_lock.release()
+
+                    self.new_cdu_stats = {}
+                    if cdu_result["status"] and cdu_result["data"]:
+                        cdu_stats = cdu_result["data"]
+
+                        unpacked_cdu_stats = unpack_nested_dict(input_dict=cdu_stats)
+                        if non_zero_stats_only:
+                            for key, value in unpacked_cdu_stats.iteritems():
+                                if value != "0":
+                                    self.new_cdu_stats[key] = value
+                        else:
+                            self.new_cdu_stats = unpacked_cdu_stats
+
+                    if display_diff:
+                        if not hasattr(self, "old_cdu_stats"):
+                            self.old_cdu_stats = self.new_cdu_stats
+                        diff_cdu_stats = get_diff_results(old_result=self.old_cdu_stats,
+                                                          new_result=self.new_cdu_stats)
+                    self.old_cdu_stats = self.new_cdu_stats
+
+                    result_cdu_stats = OrderedDict()
+                    for key, value in sorted(self.new_cdu_stats.iteritems()):
+                        if key not in result_cdu_stats:
+                            result_cdu_stats[key] = []
+                        result_cdu_stats[key].append(value)
+                        if display_diff:
+                            result_cdu_stats[key].append(diff_cdu_stats[key])
+
+                    print("result_cdu_stats: {}".format(result_cdu_stats))
+                    table_data = build_simple_table(data=result_cdu_stats, column_headers=column_headers,
+                                                    split_values_to_columns=True)
+                    lines.append("\n########################  {} ########################\n".format(time.ctime()))
+                    lines.append(table_data.get_string())
+                    lines.append("\n\n")
+                    f.writelines(lines)
+                    fun_test.sleep("for the next iteration - CDU stats collection", seconds=interval)
                 output = True
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -821,6 +1608,51 @@ class CollectStats(object):
                         time_in_seconds=start_time, func=self.collect_psw_stats, **arg)
                     fun_test.log("Started the PSW stats collection thread having the ID: {}".
                                  format(stats_collect_details[index][func]["thread_id"]))
+                if func == "fcp_stats":
+                    stats_collect_details[index][func]["thread_id"] = fun_test.execute_thread_after(
+                        time_in_seconds=start_time, func=self.collect_fcp_stats, **arg)
+                    fun_test.log("Started the FCP stats collection thread having the ID: {}".
+                                 format(stats_collect_details[index][func]["thread_id"]))
+                if func == "wro_stats":
+                    stats_collect_details[index][func]["thread_id"] = fun_test.execute_thread_after(
+                        time_in_seconds=start_time, func=self.collect_wro_stats, **arg)
+                    fun_test.log("Started the WRO stats collection thread having the ID: {}".
+                                 format(stats_collect_details[index][func]["thread_id"]))
+                if func == "erp_stats":
+                    stats_collect_details[index][func]["thread_id"] = fun_test.execute_thread_after(
+                        time_in_seconds=start_time, func=self.collect_erp_stats, **arg)
+                    fun_test.log("Started the ERP stats collection thread having the ID: {}".
+                                 format(stats_collect_details[index][func]["thread_id"]))
+                if func == "etp_stats":
+                    stats_collect_details[index][func]["thread_id"] = fun_test.execute_thread_after(
+                        time_in_seconds=start_time, func=self.collect_etp_stats, **arg)
+                    fun_test.log("Started the ETP stats collection thread having the ID: {}".
+                                 format(stats_collect_details[index][func]["thread_id"]))
+                if func == "eqm_stats":
+                    stats_collect_details[index][func]["thread_id"] = fun_test.execute_thread_after(
+                        time_in_seconds=start_time, func=self.collect_eqm_stats, **arg)
+                    fun_test.log("Started the EQM stats collection thread having the ID: {}".
+                                 format(stats_collect_details[index][func]["thread_id"]))
+                if func == "hu_stats":
+                    stats_collect_details[index][func]["thread_id"] = fun_test.execute_thread_after(
+                        time_in_seconds=start_time, func=self.collect_hu_stats, **arg)
+                    fun_test.log("Started the HU stats collection thread having the ID: {}".
+                                 format(stats_collect_details[index][func]["thread_id"]))
+                if func == "ddr_stats":
+                    stats_collect_details[index][func]["thread_id"] = fun_test.execute_thread_after(
+                        time_in_seconds=start_time, func=self.collect_ddr_stats, **arg)
+                    fun_test.log("Started the DDR stats collection thread having the ID: {}".
+                                 format(stats_collect_details[index][func]["thread_id"]))
+                if func == "ca_stats":
+                    stats_collect_details[index][func]["thread_id"] = fun_test.execute_thread_after(
+                        time_in_seconds=start_time, func=self.collect_ca_stats, **arg)
+                    fun_test.log("Started the CA stats collection thread having the ID: {}".
+                                 format(stats_collect_details[index][func]["thread_id"]))
+                if func == "cdu_stats":
+                    stats_collect_details[index][func]["thread_id"] = fun_test.execute_thread_after(
+                        time_in_seconds=start_time, func=self.collect_cdu_stats, **arg)
+                    fun_test.log("Started the CDU stats collection thread having the ID: {}".
+                                 format(stats_collect_details[index][func]["thread_id"]))
                 start_time += start_dealy
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -850,13 +1682,49 @@ class CollectStats(object):
                                  "it now".format(thread_id))
                     self.stop_vol_stats = True
                 if func == "vppkts_stats":
-                    fun_test.critical("VP Pkts Stats collection thread having the ID {} is still running...Stopping "
-                                      "it now".format(thread_id))
+                    fun_test.log("VP Pkts Stats collection thread having the ID {} is still running...Stopping "
+                                 "it now".format(thread_id))
                     self.stop_vppkts_stats = True
                 if func == "psw_stats":
-                    fun_test.critical("PSW stats collection thread having the ID {} is still running...Stopping "
-                                      "it now".format(thread_id))
+                    fun_test.log("PSW stats collection thread having the ID {} is still running...Stopping "
+                                 "it now".format(thread_id))
                     self.stop_psw_stats = True
+                if func == "fcp_stats":
+                    fun_test.log("FCP stats collection thread having the ID {} is still running...Stopping "
+                                 "it now".format(thread_id))
+                    self.stop_fcp_stats = True
+                if func == "wro_stats":
+                    fun_test.log("WRO stats collection thread having the ID {} is still running...Stopping "
+                                 "it now".format(thread_id))
+                    self.stop_wro_stats = True
+                if func == "erp_stats":
+                    fun_test.log("ERP stats collection thread having the ID {} is still running...Stopping "
+                                 "it now".format(thread_id))
+                    self.stop_erp_stats = True
+                if func == "etp_stats":
+                    fun_test.log("ETP stats collection thread having the ID {} is still running...Stopping "
+                                 "it now".format(thread_id))
+                    self.stop_etp_stats = True
+                if func == "eqm_stats":
+                    fun_test.log("EQM stats collection thread having the ID {} is still running...Stopping "
+                                 "it now".format(thread_id))
+                    self.stop_eqm_stats = True
+                if func == "hu_stats":
+                    fun_test.log("HU stats collection thread having the ID {} is still running...Stopping "
+                                 "it now".format(thread_id))
+                    self.stop_hu_stats = True
+                if func == "ddr_stats":
+                    fun_test.log("DDR stats collection thread having the ID {} is still running...Stopping "
+                                 "it now".format(thread_id))
+                    self.stop_ddr_stats = True
+                if func == "ca_stats":
+                    fun_test.log("CA stats collection thread having the ID {} is still running...Stopping "
+                                 "it now".format(thread_id))
+                    self.stop_ca_stats = True
+                if func == "cdu_stats":
+                    fun_test.log("CDU stats collection thread having the ID {} is still running...Stopping "
+                                 "it now".format(thread_id))
+                    self.stop_cdu_stats = True
 
         # Wait for the threads to complete
         for index, stat_detail in enumerate(stats_collect_details):
@@ -877,177 +1745,36 @@ class CollectStats(object):
                     fun_test.log("Waiting for the Volume Stats collection thread having the ID {} to "
                                  "complete...".format(thread_id))
                 if func == "vppkts_stats":
-                    fun_test.critical("Waiting for the VP Pkts Stats collection thread having the ID {} to "
-                                      "complete...".format(thread_id))
+                    fun_test.log("Waiting for the VP Pkts Stats collection thread having the ID {} to "
+                                 "complete...".format(thread_id))
                 if func == "psw_stats":
-                    fun_test.critical("Waiting for the PSW Stats collection thread having the ID {} to "
-                                      "complete...".format(thread_id))
+                    fun_test.log("Waiting for the PSW Stats collection thread having the ID {} to "
+                                 "complete...".format(thread_id))
+                if func == "fcp_stats":
+                    fun_test.log("Waiting for the FCP Stats collection thread having the ID {} to "
+                                 "complete...".format(thread_id))
+                if func == "wro_stats":
+                    fun_test.log("Waiting for the WRO Stats collection thread having the ID {} to "
+                                 "complete...".format(thread_id))
+                if func == "erp_stats":
+                    fun_test.log("Waiting for the ERP Stats collection thread having the ID {} to "
+                                 "complete...".format(thread_id))
+                if func == "etp_stats":
+                    fun_test.log("Waiting for the ETP Stats collection thread having the ID {} to "
+                                 "complete...".format(thread_id))
+                if func == "eqm_stats":
+                    fun_test.log("Waiting for the EQM Stats collection thread having the ID {} to "
+                                 "complete...".format(thread_id))
+                if func == "hu_stats":
+                    fun_test.log("Waiting for the HU Stats collection thread having the ID {} to "
+                                 "complete...".format(thread_id))
+                if func == "ddr_stats":
+                    fun_test.log("Waiting for the DDR Stats collection thread having the ID {} to "
+                                 "complete...".format(thread_id))
+                if func == "ca_stats":
+                    fun_test.log("Waiting for the CA Stats collection thread having the ID {} to "
+                                 "complete...".format(thread_id))
+                if func == "cdu_stats":
+                    fun_test.log("Waiting for the CDU Stats collection thread having the ID {} to "
+                                 "complete...".format(thread_id))
                 fun_test.join_thread(fun_test_thread_id=thread_id, sleep_time=1)
-
-
-def get_ec_vol_uuids(ec_info):
-    ec_details = []
-    for num in range(ec_info["num_volumes"]):
-        vol_group = {ec_info["volume_types"]["ndata"]: ec_info["uuids"][num]["blt"],
-                     ec_info["volume_types"]["ec"]: ec_info["uuids"][num]["ec"],
-                     ec_info["volume_types"]["jvol"]: [ec_info["uuids"][num]["jvol"]],
-                     ec_info["volume_types"]["lsv"]: ec_info["uuids"][num]["lsv"]}
-        ec_details.append(vol_group)
-    return ec_details
-
-
-def initiate_stats_collection(storage_controller, interval, count, vp_util_artifact_file=None,
-                              vol_stats_artifact_file=None, bam_stats_articat_file=None, vol_details=None):
-    stats_collector = CollectStats(storage_controller=storage_controller)
-    result = {'status': False,
-              'vp_util_thread_id': None,
-              'vol_stats_thread_id': None,
-              'bam_stats_thread_id': None}
-    if vp_util_artifact_file:
-        result['vp_util_thread_id'] = fun_test.execute_thread_after(time_in_seconds=0.5,
-                                                                    func=stats_collector.collect_vp_utils_stats,
-                                                                    output_file=vp_util_artifact_file,
-                                                                    interval=interval,
-                                                                    count=count,
-                                                                    threaded=True)
-    if vol_stats_artifact_file:
-        result['vol_stats_thread_id'] = fun_test.execute_thread_after(time_in_seconds=interval / 3,
-                                                                      func=stats_collector.collect_vol_stats,
-                                                                      output_file=vol_stats_artifact_file,
-                                                                      vol_details=vol_details,
-                                                                      interval=interval,
-                                                                      count=count,
-                                                                      threaded=True)
-    if bam_stats_articat_file:
-        result['bam_stats_thread_id'] = fun_test.execute_thread_after(time_in_seconds=(interval * 2) / 3,
-                                                                      func=stats_collector.collect_resource_bam_stats,
-                                                                      output_file=bam_stats_articat_file,
-                                                                      interval=interval,
-                                                                      count=count,
-                                                                      threaded=True)
-    result['status'] = True
-    return result
-
-
-def terminate_stats_collection(stats_ollector_obj, thread_list):
-    for thread in thread_list:
-        fun_test.join_thread(fun_test_thread_id=thread, sleep_time=1)
-
-    reset_collector = False
-    for thread in thread_list:
-        if fun_test.fun_test_threads[thread]["thread"].is_alive():
-            reset_collector = True
-    if reset_collector:
-        stats_ollector_obj.stop_all = True
-        stats_ollector_obj.stop_vol_stats = True
-        stats_ollector_obj.stop_vp_utils = True
-        stats_ollector_obj.stop_resource_bam = True
-
-
-def vol_stats_diff(initial_vol_stats, final_vol_stats, vol_details):
-    """
-    :param initial_vol_stats: volume stats collected at the start of test
-    :param final_vol_stats: volume stats collected at the end of test
-    :param vol_details: list of dictionary containing volume details, type, uuid
-    :return: dictionary, with status, stats_diff and total_diff
-    """
-    result = {"status": False, "stats_diff": None, "total_diff": None}
-    dict_vol_details = {}
-    stats_diff = {}
-    # blt_combined_stat = {}
-    total_diff = {}
-    stats_exclude_list = ["drive_uuid", "extent_size", "fault_injection", "flvm_block_size", "flvm_vol_size_blocks",
-                          "se_size"]
-    aggregated_diff_stats_list = ["write_bytes", "read_bytes"]
-    try:
-        # Forming a dictionary for provided vol_details
-        for x in range(len(vol_details)):
-            dict_vol_details[x] = vol_details[x]
-        for i, vol_group in dict_vol_details.iteritems():
-            stats_diff[i] = {}
-            # blt_combined_stat[i] = {}
-            for vol_type, vol_uuids in sorted(vol_group.iteritems()):
-                if vol_type not in stats_diff:
-                    stats_diff[i][vol_type] = {}
-                for vol_uuid in vol_uuids:
-                    if vol_uuid not in stats_diff[i][vol_type]:
-                        stats_diff[i][vol_type][vol_uuid] = {}
-                    if (vol_type in final_vol_stats and vol_uuid in final_vol_stats[vol_type]) and (
-                            vol_type in initial_vol_stats and vol_uuid in initial_vol_stats[vol_type]):
-                        for stats_field in set(final_vol_stats[vol_type][vol_uuid]["stats"]) - set(stats_exclude_list):
-                            # if stats_field not in blt_combined_stat[i]:
-                            #    blt_combined_stat[i][stats_field] = 0
-                            stats_diff[i][vol_type][vol_uuid][stats_field] = \
-                                final_vol_stats[vol_type][vol_uuid]["stats"][stats_field] - initial_vol_stats[
-                                    vol_type][vol_uuid]["stats"][stats_field]
-                            # To have agrregated BLT stats under each EC volume,
-                            # all volumes BLT stats are collected in total_diff
-                            #
-                            # if vol_type == "VOL_TYPE_BLK_LOCAL_THIN":
-                            #    if blt_combined_stat[i][stats_field] == 0:
-                            #        stats_diff[i][vol_type]['blt_combined'] = {}
-                            #        stats_diff[i][vol_type]['blt_combined'][stats_field] = {}
-                            #    blt_combined_stat[i][stats_field] = blt_combined_stat[i][stats_field] + \
-                            #                                        stats_diff[i][vol_type][vol_uuid][stats_field]
-                            #    stats_diff[i][vol_type]['blt_combined'][stats_field] = blt_combined_stat[i][
-                            #        stats_field]
-
-        for i, vol_group in stats_diff.iteritems():
-            for vol_type, vol_uuids in sorted(vol_group.iteritems()):
-                if vol_type not in total_diff:
-                    total_diff[vol_type] = {}
-                for vol_uuid in vol_uuids:
-                    # if vol_uuid != "blt_combined":
-                    for stats_field in aggregated_diff_stats_list:
-                        if stats_field not in total_diff[vol_type]:
-                            total_diff[vol_type][stats_field] = 0
-                        total_diff[vol_type][stats_field] = total_diff[vol_type][stats_field] + \
-                                                            stats_diff[i][vol_type][vol_uuid][stats_field]
-        result["status"] = True
-        result["stats_diff"] = stats_diff
-        result["total_diff"] = total_diff
-    except Exception as ex:
-        fun_test.critical(str(ex))
-        result["status"] = False
-
-    return result
-
-
-def unpack_nested_dict(input_dict, prefix=''):
-    for key, value in sorted(input_dict.items()):
-        if isinstance(value, dict):
-            unpack_nested_dict(value, '{}{}_'.format(prefix, key))
-        else:
-            unpacked_stats["{}{}".format(prefix, key)] = value
-    return unpacked_stats
-
-
-def get_diff_results(old_result, new_result):
-    result = {}
-    try:
-        for key, val in new_result.iteritems():
-            if isinstance(val, dict):
-                result[key] = get_diff_results(old_result=old_result[key], new_result=new_result[key])
-            if isinstance(val, list):
-                result[key] = []
-                try:
-                    result[key].append(map(subtract, val, old_result[key]))
-                except Exception as ex:
-                    fun_test.critical(str(ex))
-            else:
-                if not key in old_result:
-                    old_result[key] = 0
-                result[key] = new_result[key] - old_result[key]
-    except Exception as ex:
-        fun_test.critical(str(ex))
-    return result
-
-
-def subtract(a, b):
-    a = 0 if not a else a
-    b = 0 if not b else b
-    return a - b
-
-
-def divide(n, d):
-    return n/d if d else 0
