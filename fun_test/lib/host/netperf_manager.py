@@ -193,6 +193,7 @@ class NetperfManager:
                 cmds = []
                 for c in cpu_list:
                     cmds.append('taskset -c {} netserver -p {}'.format(c, c+NETSERVER_FIXED_PORT_CONTROL_BASE))  # Netperf control ports
+                cmds.append('taskset -c {} netserver -p {}'.format(c, c-1+NETSERVER_FIXED_PORT_CONTROL_BASE))  # for TCP_RR
                 cmd = ';'.join(cmds)
         else:
             if cpu_list:
