@@ -8,6 +8,7 @@ import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
 export class TextareaInputComponent implements OnInit {
   @Input() initialValue: string = null;
   @Input() numRows: number = 1; // number of rows of the text-area
+  @Input() hoverHide: boolean = true; // The pencil shows only if you hover
   tempValue: string = null;
   editing: boolean = false;
   @Output() valueChanged = new EventEmitter<string>();

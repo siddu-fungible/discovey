@@ -27,6 +27,7 @@ Possible workarounds:
 class BootPhases:
     U_BOOT_INIT = "u-boot: init"
     U_BOOT_MICROCOM_STARTED = "u-boot: microcom started"
+    U_BOOT_SET_NO_AUTOLOAD = "u-boot: setenv autoload no"
     U_BOOT_TRAIN = "u-boot: train"
     U_BOOT_SET_ETH_ADDR = "u-boot: set ethaddr"
     U_BOOT_SET_GATEWAY_IP = "u-boot: set gatewayip"
@@ -68,7 +69,7 @@ class Fpga(Linux):
             if f1_index == self.disable_f1_index:
                 continue
             self.reset_f1(f1_index=f1_index)
-        fun_test.sleep(message="FPGA reset", seconds=5, context=self.context)
+        # fun_test.sleep(message="FPGA reset", seconds=5, context=self.context)
 
         result = True
         return result
@@ -242,29 +243,35 @@ class Bmc(Linux):
                     huid = 2
                 s += " cc_huid={}".format(huid)
         return s
-    def setup_serial_proxy_connection(self, f1_index):
+
+    def setup_serial_proxy_connection(self, f1_index, auto_boot=False):
         self.nc[f1_index] = Netcat(ip=self.host_ip, port=self.SERIAL_PROXY_PORTS[f1_index])
         nc = self.nc[f1_index]
-        fun_test.execute_thread_after(0, nc.read_until, expected_data=self.U_BOOT_F1_PROMPT, timeout=20)
+        write_on_trigger = None
+        if not auto_boot:
+            write_on_trigger = {"Autoboot in": "noboot"}
+        fun_test.execute_thread_after(0, nc.read_until, expected_data=self.U_BOOT_F1_PROMPT, timeout=20, write_on_trigger=write_on_trigger)
         # output = nc.read_until(expected_data=self.U_BOOT_F1_PROMPT, timeout=2)
         # fun_test.log(message=output, context=self.context)
 
         return True
 
-    def validate_u_boot_version(self, f1_index, minimum_date):
-        result = False
+    def get_preamble(self, f1_index):
         nc = self.nc[f1_index]
-        nc.stop_reading()
         fun_test.sleep("Reading preamble")
+        nc.stop_reading()
         output = nc.get_buffer()
         fun_test.log(message=output, context=self.context)
+        return output
 
+    def validate_u_boot_version(self, output, minimum_date):
+        result = False
         m = re.search("U-Boot\s+\S+\s+\((.*)\s+-", output)  # Based on U-Boot 2017.01-00000-bld_6654 (May 29 2019 - 05:38:02 +0000)
         if m:
             try:
                 this_date = datetime.strptime(m.group(1), "%b %d %Y")
                 fun_test.add_checkpoint("u-boot date: {}".format(this_date))
-                fun_test.log("Mininum u-boot build date: {}".format(minimum_date))
+                fun_test.log("Minimum u-boot build date: {}".format(minimum_date))
                 fun_test.test_assert(this_date >= minimum_date, "Valid u-boot build date")
                 result = True
             except Exception as ex:
@@ -281,7 +288,12 @@ class Bmc(Linux):
         result = None
 
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_INIT)
+        self.u_boot_command(command="",
+                            timeout=5,
+                            expected=self.U_BOOT_F1_PROMPT,
+                            f1_index=index)
 
+        self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_SET_NO_AUTOLOAD)
         self.u_boot_command(command="setenv autoload no",
                             timeout=15,
                             expected=self.U_BOOT_F1_PROMPT,
@@ -540,26 +552,31 @@ class BootupWorker(Thread):
                 fs.set_boot_phase(BootPhases.FS_BRING_UP_FUNETH_UNLOAD_COME_POWER_CYCLE)
                 fun_test.test_assert(expression=fs.funeth_reset(), message="Funeth ComE power-cycle ref: IN-373")
 
-            for f1_index, f1 in fs.f1s.iteritems():
-                fun_test.test_assert(bmc.setup_serial_proxy_connection(f1_index=f1_index),
-                                     "Setup nc serial proxy connection")
+            # for f1_index, f1 in fs.f1s.iteritems():
 
-            fs.set_boot_phase(BootPhases.FS_BRING_UP_FPGA_INITIALIZE)
-            fun_test.test_assert(expression=fs.fpga_initialize(), message="FPGA initiaize", context=self.context)
+
+            # fs.set_boot_phase(BootPhases.FS_BRING_UP_FPGA_INITIALIZE)
+            # fun_test.test_assert(expression=fs.fpga_initialize(), message="FPGA initiaize", context=self.context)
 
             fs.set_boot_phase(BootPhases.FS_BRING_UP_U_BOOT)
             for f1_index, f1 in fs.f1s.iteritems():
                 if f1_index == fs.disable_f1_index:
                     continue
                 boot_args = fs.boot_args
+                fun_test.test_assert(bmc.setup_serial_proxy_connection(f1_index=f1_index, auto_boot=self.fs.auto_boot),
+                                     "Setup nc serial proxy connection")
+                fs.get_fpga().reset_f1(f1_index=f1_index)
                 if fs.f1_parameters:
                     if f1_index in fs.f1_parameters:
                         if "boot_args" in fs.f1_parameters[f1_index]:
                             boot_args = fs.f1_parameters[f1_index]["boot_args"]
+
+                preamble = bmc.get_preamble(f1_index=f1_index)
                 if fs.validate_u_boot_version:
                     fun_test.test_assert(
-                        bmc.validate_u_boot_version(f1_index=f1_index, minimum_date=fs.MIN_U_BOOT_DATE),
+                        bmc.validate_u_boot_version(output=preamble, minimum_date=fs.MIN_U_BOOT_DATE),
                         "Validate preamble")
+
                 fun_test.test_assert(
                     expression=bmc.u_boot_load_image(index=f1_index, tftp_image_path=fs.tftp_image_path,
                                                           boot_args=boot_args, gateway_ip=fs.gateway_ip),
@@ -919,7 +936,8 @@ class Fs(object, ToDictMixin):
                  apc_info=None,
                  fun_cp_callback=None,
                  skip_funeth_come_power_cycle=None,
-                 spec=None):
+                 spec=None,
+                 auto_boot=False):
         self.spec = spec
         self.bmc_mgmt_ip = bmc_mgmt_ip
         self.bmc_mgmt_ssh_username = bmc_mgmt_ssh_username
@@ -962,6 +980,7 @@ class Fs(object, ToDictMixin):
         self.come_initialized = False
 
         self.csi_perf_templates = {}
+        self.auto_boot = auto_boot
 
     def get_tftp_image_path(self):
         return self.tftp_image_path
@@ -1111,13 +1130,10 @@ class Fs(object, ToDictMixin):
             if not self.skip_funeth_come_power_cycle:
                 self.set_boot_phase(BootPhases.FS_BRING_UP_FUNETH_UNLOAD_COME_POWER_CYCLE)
                 fun_test.test_assert(expression=self.funeth_reset(), message="Funeth ComE power-cycle ref: IN-373")
+
     
-            for f1_index, f1 in self.f1s.iteritems():
-                fun_test.test_assert(self.bmc.setup_serial_proxy_connection(f1_index=f1_index),
-                                     "Setup nc serial proxy connection")
-    
-            self.set_boot_phase(BootPhases.FS_BRING_UP_FPGA_INITIALIZE)
-            fun_test.test_assert(expression=self.fpga_initialize(), message="FPGA initiaize", context=self.context)
+            # self.set_boot_phase(BootPhases.FS_BRING_UP_FPGA_INITIALIZE)
+            # fun_test.test_assert(expression=self.fpga_initialize(), message="FPGA initiaize", context=self.context)
     
             self.set_boot_phase(BootPhases.FS_BRING_UP_U_BOOT)
             for f1_index, f1 in self.f1s.iteritems():
@@ -1128,8 +1144,13 @@ class Fs(object, ToDictMixin):
                     if f1_index in self.f1_parameters:
                         if "boot_args" in self.f1_parameters[f1_index]:
                             boot_args = self.f1_parameters[f1_index]["boot_args"]
+                fun_test.test_assert(self.get_bmc().setup_serial_proxy_connection(f1_index=f1_index, auto_boot=self.auto_boot),
+                                     "Setup nc serial proxy connection")
+                self.get_fpga().reset_f1(f1_index=f1_index)
+                preamble = self.get_bmc().get_preamble(f1_index=f1_index)
                 if self.validate_u_boot_version:
-                    fun_test.test_assert(self.bmc.validate_u_boot_version(f1_index=f1_index, minimum_date=self.MIN_U_BOOT_DATE), "Validate preamble")
+                    fun_test.test_assert(self.bmc.validate_u_boot_version(output=preamble, minimum_date=self.MIN_U_BOOT_DATE), "Validate preamble")
+
                 fun_test.test_assert(expression=self.bmc.u_boot_load_image(index=f1_index, tftp_image_path=self.tftp_image_path, boot_args=boot_args, gateway_ip=self.gateway_ip),
                                      message="U-Bootup f1: {} complete".format(f1_index),
                                      context=self.context)
