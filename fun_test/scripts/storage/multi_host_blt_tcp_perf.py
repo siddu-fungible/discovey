@@ -938,13 +938,22 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                                                                     cpus_allowed=cpus_allowed,
                                                                     **self.fio_cmd_args)
                     """
+                    # Building the FIO command
+                    fio_cmd_args = {}
+
+                    runtime_global_args = " --runtime={} --cpus_allowed={} --bs={} --rw={} --numjobs={} --iodepth={}".\
+                        format(self.fio_cmd_args["runtime"], cpus_allowed, fio_block_size, mode, fio_numjobs,
+                               fio_iodepth)
+                    jobs = ""
+                    for id, device in enumerate(self.host_info[host_name]["nvme_block_device_list"]):
+                        jobs += " --name=vol{} --filename={}".format(id + 1, device)
+
+                    fio_cmd_args["multiple_jobs"] = self.fio_cmd_args["multiple_jobs"] + runtime_global_args + jobs
+                    fio_cmd_args["timeout"] = self.fio_cmd_args["timeout"]
+
                     thread_id[i] = fun_test.execute_thread_after(time_in_seconds=wait_time,
                                                                  func=fio_parser, arg1=end_host_thread[i],
-                                                                 host_index=i,
-                                                                 filename=self.host_info[host_name]["fio_filename"],
-                                                                 rw=mode, numjobs=fio_numjobs, bs=fio_block_size,
-                                                                 iodepth=fio_iodepth, name=fio_job_name,
-                                                                 cpus_allowed=cpus_allowed, **self.fio_cmd_args)
+                                                                 host_index=i, filename="nofile", **fio_cmd_args)
 
                     fun_test.sleep("Fio threadzz", seconds=1)
 
