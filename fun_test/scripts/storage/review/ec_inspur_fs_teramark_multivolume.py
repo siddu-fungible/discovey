@@ -1606,7 +1606,7 @@ class OLAPModelReadWriteIOPS(ECVolumeLevelTestcase):
 if __name__ == "__main__":
     ecscript = ECVolumeLevelScript()
     ecscript.add_test_case(RandReadWrite8kBlocks())
-    # ecscript.add_test_case(RandRead8kBlocks())
+    ecscript.add_test_case(RandRead8kBlocks())
     # ecscript.add_test_case(RandWrite8kBlocks())
     # ecscript.add_test_case(SequentialReadWrite1024kBlocks())
     # ecscript.add_test_case(MixedRandReadWriteIOPS())

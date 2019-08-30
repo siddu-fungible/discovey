@@ -950,8 +950,7 @@ class CollectStats(object):
                     if display_diff:
                         if not hasattr(self, "old_psw_stats"):
                             self.old_psw_stats = self.new_psw_stats
-                        diff_psw_stats = get_diff_results(old_result=self.old_psw_stats,
-                                                          new_result=self.new_psw_stats)
+                        diff_psw_stats = get_diff_results(old_result=self.old_psw_stats, new_result=self.new_psw_stats)
                     self.old_psw_stats = self.new_psw_stats
 
                     result_psw_stats = OrderedDict()
@@ -1019,8 +1018,7 @@ class CollectStats(object):
                     if display_diff:
                         if not hasattr(self, "old_fcp_stats"):
                             self.old_fcp_stats = self.new_fcp_stats
-                        diff_fcp_stats = get_diff_results(old_result=self.old_fcp_stats,
-                                                          new_result=self.new_fcp_stats)
+                        diff_fcp_stats = get_diff_results(old_result=self.old_fcp_stats, new_result=self.new_fcp_stats)
                     self.old_fcp_stats = self.new_fcp_stats
 
                     result_fcp_stats = OrderedDict()
@@ -1088,8 +1086,7 @@ class CollectStats(object):
                     if display_diff:
                         if not hasattr(self, "old_wro_stats"):
                             self.old_wro_stats = self.new_wro_stats
-                        diff_wro_stats = get_diff_results(old_result=self.old_wro_stats,
-                                                          new_result=self.new_wro_stats)
+                        diff_wro_stats = get_diff_results(old_result=self.old_wro_stats, new_result=self.new_wro_stats)
                     self.old_wro_stats = self.new_wro_stats
 
                     result_wro_stats = OrderedDict()
@@ -1157,8 +1154,7 @@ class CollectStats(object):
                     if display_diff:
                         if not hasattr(self, "old_erp_stats"):
                             self.old_erp_stats = self.new_erp_stats
-                        diff_erp_stats = get_diff_results(old_result=self.old_erp_stats,
-                                                          new_result=self.new_erp_stats)
+                        diff_erp_stats = get_diff_results(old_result=self.old_erp_stats, new_result=self.new_erp_stats)
                     self.old_erp_stats = self.new_erp_stats
 
                     result_erp_stats = OrderedDict()
@@ -1226,8 +1222,7 @@ class CollectStats(object):
                     if display_diff:
                         if not hasattr(self, "old_etp_stats"):
                             self.old_etp_stats = self.new_etp_stats
-                        diff_etp_stats = get_diff_results(old_result=self.old_etp_stats,
-                                                          new_result=self.new_etp_stats)
+                        diff_etp_stats = get_diff_results(old_result=self.old_etp_stats, new_result=self.new_etp_stats)
                     self.old_etp_stats = self.new_etp_stats
 
                     result_etp_stats = OrderedDict()
@@ -1289,8 +1284,7 @@ class CollectStats(object):
                     if display_diff:
                         if not hasattr(self, "old_eqm_stats"):
                             self.old_eqm_stats = self.new_eqm_stats
-                        diff_eqm_stats = get_diff_results(old_result=self.old_eqm_stats,
-                                                          new_result=self.new_eqm_stats)
+                        diff_eqm_stats = get_diff_results(old_result=self.old_eqm_stats, new_result=self.new_eqm_stats)
                     self.old_eqm_stats = self.new_eqm_stats
 
                     result_eqm_stats = OrderedDict()
@@ -1315,7 +1309,7 @@ class CollectStats(object):
         return output
 
     def collect_hu_stats(self, output_file="/dev/null", interval=10, count=3, threaded=True,
-                          non_zero_stats_only=True, chunk=8192, display_diff=True, command_timeout=10):
+                         non_zero_stats_only=True, chunk=8192, display_diff=True, command_timeout=10):
         output = False
         column_headers = ["HU Stats", "Value"]
 
@@ -1333,8 +1327,8 @@ class CollectStats(object):
                         fun_test.log("Stopping HU stats collection thread")
                         break
                     self.socket_lock.acquire()
-                    hu_result = self.storage_controller.peek(props_tree=props_tree, legacy=False,
-                                                              chunk=chunk, command_duration=command_timeout)
+                    hu_result = self.storage_controller.peek(props_tree=props_tree, legacy=False, chunk=chunk,
+                                                             command_duration=command_timeout)
                     self.socket_lock.release()
 
                     self.new_hu_stats = {}
@@ -1352,8 +1346,7 @@ class CollectStats(object):
                     if display_diff:
                         if not hasattr(self, "old_hu_stats"):
                             self.old_hu_stats = self.new_hu_stats
-                        diff_hu_stats = get_diff_results(old_result=self.old_hu_stats,
-                                                          new_result=self.new_hu_stats)
+                        diff_hu_stats = get_diff_results(old_result=self.old_hu_stats, new_result=self.new_hu_stats)
                     self.old_hu_stats = self.new_hu_stats
 
                     result_hu_stats = OrderedDict()
@@ -1415,8 +1408,7 @@ class CollectStats(object):
                     if display_diff:
                         if not hasattr(self, "old_ddr_stats"):
                             self.old_ddr_stats = self.new_ddr_stats
-                        diff_ddr_stats = get_diff_results(old_result=self.old_ddr_stats,
-                                                          new_result=self.new_ddr_stats)
+                        diff_ddr_stats = get_diff_results(old_result=self.old_ddr_stats, new_result=self.new_ddr_stats)
                     self.old_ddr_stats = self.new_ddr_stats
 
                     result_ddr_stats = OrderedDict()
@@ -1441,7 +1433,7 @@ class CollectStats(object):
         return output
 
     def collect_ca_stats(self, output_file="/dev/null", interval=10, count=3, threaded=True,
-                          non_zero_stats_only=True, chunk=8192, display_diff=True, command_timeout=10):
+                         non_zero_stats_only=True, chunk=8192, display_diff=True, command_timeout=10):
         output = False
         column_headers = ["CA Stats", "Value"]
 
@@ -1459,8 +1451,8 @@ class CollectStats(object):
                         fun_test.log("Stopping CA stats collection thread")
                         break
                     self.socket_lock.acquire()
-                    ca_result = self.storage_controller.peek(props_tree=props_tree, legacy=False,
-                                                              chunk=chunk, command_duration=command_timeout)
+                    ca_result = self.storage_controller.peek(props_tree=props_tree, legacy=False, chunk=chunk,
+                                                             command_duration=command_timeout)
                     self.socket_lock.release()
 
                     self.new_ca_stats = {}
@@ -1478,8 +1470,7 @@ class CollectStats(object):
                     if display_diff:
                         if not hasattr(self, "old_ca_stats"):
                             self.old_ca_stats = self.new_ca_stats
-                        diff_ca_stats = get_diff_results(old_result=self.old_ca_stats,
-                                                          new_result=self.new_ca_stats)
+                        diff_ca_stats = get_diff_results(old_result=self.old_ca_stats, new_result=self.new_ca_stats)
                     self.old_ca_stats = self.new_ca_stats
 
                     result_ca_stats = OrderedDict()
@@ -1541,8 +1532,7 @@ class CollectStats(object):
                     if display_diff:
                         if not hasattr(self, "old_cdu_stats"):
                             self.old_cdu_stats = self.new_cdu_stats
-                        diff_cdu_stats = get_diff_results(old_result=self.old_cdu_stats,
-                                                          new_result=self.new_cdu_stats)
+                        diff_cdu_stats = get_diff_results(old_result=self.old_cdu_stats, new_result=self.new_cdu_stats)
                     self.old_cdu_stats = self.new_cdu_stats
 
                     result_cdu_stats = OrderedDict()
