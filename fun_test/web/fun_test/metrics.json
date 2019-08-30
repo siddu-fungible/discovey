@@ -616,6 +616,7 @@
                         "metric_model_name": "MetricContainer",
                         "name": "juniper_tls",
                         "label": "TLS",
+                        "disable": true,
                         "children": [
                           {
                             "metric_model_name": "MetricContainer",
