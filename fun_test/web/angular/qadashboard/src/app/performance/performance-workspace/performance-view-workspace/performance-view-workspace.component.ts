@@ -35,6 +35,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
   showDag: boolean = false;
   selectMode: any = SelectMode.showAttachDag;
   allMetricIds: number[] = [];
+  interestedMetrics: number[] = [];
 
   constructor(private apiService: ApiService, private commonService: CommonService, private loggerService: LoggerService,
               private route: ActivatedRoute, private router: Router, private location: Location, private title: Title, private performanceService: PerformanceService) {
@@ -104,11 +105,11 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
     return this.apiService.get("/api/v1/performance/workspaces/" + workspaceId + "/metric_ids").pipe(switchMap(response => {
       this.allMetricIds = [];
       this.workspaceMetrics = response.data;
-      let metrics = [];
+      this.interestedMetrics = [];
       for (let metric of this.workspace.interested_metrics) {
-        metrics.push(metric["metric_id"])
+        this.interestedMetrics.push(metric["metric_id"])
       }
-      this.allMetricIds = metrics.concat(this.workspaceMetrics);
+      this.allMetricIds = this.interestedMetrics.concat(this.workspaceMetrics);
       return of(true);
     }));
   }

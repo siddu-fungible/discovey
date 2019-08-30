@@ -1,6 +1,6 @@
 <fun-spinner [status]="status"></fun-spinner>
 <div class="component container">
-  <div [ngClass]="{'row both-cols': selectMode !== selectModeType.ShowEditWorkspace}">
+  <div [ngClass]="{'row': selectMode !== selectModeType.ShowEditWorkspace}">
     <!-- left side of the performance page containing tree structure -->
     <div [ngClass]="{'col-lg-5 col-md-5 col-xxl-4 col-xl-5 left-col': selectMode !== selectModeType.ShowEditWorkspace}">
       <table class="table table-nonfluid">

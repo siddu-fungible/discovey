@@ -264,7 +264,7 @@ export class PerformanceComponent implements OnInit {
 
   fetchDag(): void {
     let url = "/metrics/dag";
-    if (this.selectMode == SelectMode.showAttachDag) {
+    if (this.metricIds) {
       url = "/metrics/part_dag" + "?metric_ids=" + String(this.metricIds);
     }
     // Fetch the DAG
