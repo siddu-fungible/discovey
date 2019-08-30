@@ -72,19 +72,13 @@
     "iter_interval": 2,
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {
-      "rw": "randwrite", "bs": "4k", "iodepth": 32, "numjobs": 1, "ioengine": "libaio", "direct": 1, "prio": 0,
-      "cpus_allowed_policy": "split", "size": "100%", "timeout": 3600
+      "multiple_jobs": "--rw=randwrite --bs=4k --iodepth=32 --numjobs=1 --ioengine=libaio --direct=1 --prio=0 --cpus_allowed_policy=split --size=100%",
+      "timeout": 3600
     },
     "fio_cmd_args": {
-      "ioengine": "libaio",
-      "direct": 1,
-      "prio": 0,
+      "multiple_jobs": "--ioengine=libaio --direct=1 --prio=0 --cpus_allowed_policy=split --group_reporting=1 --norandommap --randrepeat=0",
       "runtime": 900,
-      "cpus_allowed_policy": "split",
-      "group_reporting": 1,
-      "norandommap": "NO_VALUE",
-      "randrepeat": 0,
-      "timeout": 1200
+      "timeout": 960
     },
     "fio_modes": [
       "randread"
@@ -94,7 +88,7 @@
     "fio_job_name": {
       "randread": "nhosts"
     },
-    "nvme_device": "/dev/nvme0",
+    "nvme_device": "/dev/nvme",
     "expected_fio_result": {
       "(1, 1)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
       "(32, 1)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
@@ -126,19 +120,13 @@
     "iter_interval": 2,
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {
-      "rw": "randwrite", "bs": "4k", "iodepth": 32, "numjobs": 1, "ioengine": "libaio", "direct": 1, "prio": 0,
-      "cpus_allowed_policy": "split", "size": "100%", "timeout": 3600
+      "multiple_jobs": "--rw=randwrite --bs=4k --iodepth=32 --numjobs=1 --ioengine=libaio --direct=1 --prio=0 --cpus_allowed_policy=split --size=100%",
+      "timeout": 3600
     },
     "fio_cmd_args": {
-      "ioengine": "libaio",
-      "direct": 1,
-      "prio": 0,
+      "multiple_jobs": "--ioengine=libaio --direct=1 --prio=0 --cpus_allowed_policy=split --group_reporting=1 --norandommap --randrepeat=0",
       "runtime": 900,
-      "cpus_allowed_policy": "split",
-      "group_reporting": 1,
-      "norandommap": "NO_VALUE",
-      "randrepeat": 0,
-      "timeout": 1200
+      "timeout": 960
     },
     "fio_modes": [
       "randwrite"
@@ -148,7 +136,7 @@
     "fio_job_name": {
       "randwrite": "nhosts"
     },
-    "nvme_device": "/dev/nvme0",
+    "nvme_device": "/dev/nvme",
     "expected_fio_result": {
       "(1, 1)": {"randwrite": {"write": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
       "(8, 1)": {"randwrite": {"write": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},

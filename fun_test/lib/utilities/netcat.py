@@ -14,7 +14,7 @@ class Netcat:
     def read(self, length=1024):
         return self.socket.recv(length)
 
-    def read_until(self, expected_data, timeout=15):
+    def read_until(self, expected_data, timeout=15, write_on_trigger=None):
         self.stop_reading_trigger = False
         self.buffer = ""
         if timeout:
@@ -36,6 +36,14 @@ class Netcat:
                             self.socket.settimeout(timeout)
                         new_data = s.recv(1024)
                         self.buffer += new_data
+                        if write_on_trigger:
+                            remove_list = []
+                            for key, value in write_on_trigger.iteritems():
+                                if key in self.buffer:
+                                    self.write(value)
+                                    remove_list.append(key)
+                            for key in remove_list:
+                                del write_on_trigger[key]
                     if not new_data or expected_data in self.buffer:
                         return_from_function = True
                         break
