@@ -2,7 +2,7 @@
     "fs": { 
           "fs-alibaba": {
               "bootargs_f1_0": "app=hw_hsu_test cc_huid=3 --all_100g --disable-wu-watchdog --dpc-server --dpc-uart retimer=0,1,2",
-              "bootargs_f1_1": "app=hw_hsu_test cc_huid=2 --all_100g --disable-wu-watchdog --dpc-server --dpc-uart retimer=0",
+              "bootargs_f1_1": "app=hw_hsu_test cc_huid=2 --all_100g --disable-wu-watchdog --dpc-server --dpc-uart retimer",
               "fs_list":["fs-48","fs-60"],
               "fs-48": {
                   "gatewayip": "10.1.105.1",
