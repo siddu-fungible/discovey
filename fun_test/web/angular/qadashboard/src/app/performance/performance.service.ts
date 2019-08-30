@@ -8,7 +8,8 @@ export enum SelectMode {
   None = 0,
   ShowMainSite = 1,
   ShowEditWorkspace = 2,
-  showAttachDag = 3
+  ShowViewWorkspace = 3,
+  ShowAttachDag = 4
 }
 
 @Injectable({

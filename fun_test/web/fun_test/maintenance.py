@@ -1124,7 +1124,7 @@ if __name__ == "__main__":
     base_line_date = datetime(year=2019, month=8, day=20, minute=0, hour=0, second=0)
     root_chart = ml.create_container(chart_name=root_node, internal_chart_name=root_node, platform=FunPlatform.F1,
                                      owner_info=owner_info,
-                                     source=source, base_line_date=base_line_date, workspace_ids=[1648])
+                                     source=source, base_line_date=base_line_date, workspace_ids=[1891])
     for type in types:
         type_chart = ml.create_container(chart_name=type, internal_chart_name=type,
                                          platform=FunPlatform.F1,

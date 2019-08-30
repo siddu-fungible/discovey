@@ -25,17 +25,17 @@
       <li class="nav-item">
         <span class="nav-link pseudo-anchor"
                     role="tab" *ngIf="workspaceMetrics.length > 0 && !showDag"
-                    (click)="viewDag()">View DAG
+                    (click)="viewDag()">View unattached DAG
         </span>
         <span class="nav-link active pseudo-anchor" role="tab"
               *ngIf="workspaceMetrics.length > 0 && showDag"
-              (click)="showDag = false">Hide DAG
+              (click)="showDag = false">Hide unattached DAG
         </span>
       </li>
     </ul>
   </div>
-  <div *ngIf="!reportGenerated && !showGrids && !showDag" class="card-body">
-    <app-performance [selectMode]="selectMode" [metricIds]="allMetricIds"></app-performance>
+  <div *ngIf="!reportGenerated && !showGrids && !showDag && workspace.interested_metrics.length > 0" class="card-body">
+    <app-performance [selectMode]="selectModeType.ShowViewWorkspace" [metricIds]="interestedMetrics"></app-performance>
     <!--<app-performance [selectMode]="selectMode" [metricIds]="workspaceMetrics"></app-performance>-->
     <!--showing list of charts in the workspace-->
     <!--<div class="card" style="flex: 1 1 50%; padding: 10px;">-->
@@ -148,6 +148,6 @@
 
   <!--showing dag in the view dag of workspace-->
   <ng-container class="card-body tab-pane" role="tabpanel" *ngIf="showDag && workspaceMetrics.length > 0">
-   <app-performance [selectMode]="selectMode" [metricIds]="workspaceMetrics"></app-performance>
+   <app-performance [selectMode]="selectModeType.ShowAttachDag" [metricIds]="workspaceMetrics"></app-performance>
   </ng-container>
 </div>

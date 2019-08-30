@@ -188,7 +188,9 @@ export class PerformanceComponent implements OnInit {
 
   ngOnInit() {
     console.log("Component Init");
-    this.title.setTitle('Performance');
+    if (this.selectMode == SelectMode.ShowMainSite) {
+      this.title.setTitle('Performance');
+    }
     this.status = "Loading";
     this.numGridColumns = 2;
     this.miniGridMaxWidth = '50%';
@@ -209,7 +211,7 @@ export class PerformanceComponent implements OnInit {
       switchMap(response => {
         return this.service.fetchBuildInfo();
       })).subscribe(response => {
-        this.buildInfo = response;
+      this.buildInfo = response;
       console.log("fetched buildInfo");
     }, error => {
       this.loggerService.error("Unable to fetch buildInfo");
@@ -275,31 +277,33 @@ export class PerformanceComponent implements OnInit {
         this.walkDag(dag, lineage);
       }
       //total container should always appear
-      this.f1Node = this.flatNodes[0];
-      this.f1Node.hide = false;
-      this.getQueryPath().subscribe(queryPath => {
-        let queryExists = false;
-        if (!queryPath) {
-          queryPath = this.getDefaultQueryPath(this.f1Node);
-        } else {
-          queryExists = true;
-        }
-        if (this.queryPath !== (this.gotoQueryBaseUrl + queryPath)) {
-          this.queryPath = this.gotoQueryBaseUrl + queryPath;
-          let pathGuid = this.pathToGuid(this.queryPath);
-          let targetFlatNode = this.guIdFlatNodeMap[pathGuid];
-          this.expandNode(targetFlatNode);
-
-          if (queryExists) {
-            if (targetFlatNode.node.leaf) {
-              this.showAtomicMetric(targetFlatNode);
-            } else {
-              this.showNonAtomicMetric(targetFlatNode);
-            }
+      if (this.selectMode == SelectMode.ShowMainSite) {
+        this.f1Node = this.flatNodes[0];
+        this.f1Node.hide = false;
+        this.getQueryPath().subscribe(queryPath => {
+          let queryExists = false;
+          if (!queryPath) {
+            queryPath = this.getDefaultQueryPath(this.f1Node);
+          } else {
+            queryExists = true;
           }
+          if (this.queryPath !== (this.gotoQueryBaseUrl + queryPath)) {
+            this.queryPath = this.gotoQueryBaseUrl + queryPath;
+            let pathGuid = this.pathToGuid(this.queryPath);
+            let targetFlatNode = this.guIdFlatNodeMap[pathGuid];
+            this.expandNode(targetFlatNode);
 
-        }
-      });
+            if (queryExists) {
+              if (targetFlatNode.node.leaf) {
+                this.showAtomicMetric(targetFlatNode);
+              } else {
+                this.showNonAtomicMetric(targetFlatNode);
+              }
+            }
+
+          }
+        });
+      }
       if (this.selectMode == SelectMode.ShowEditWorkspace && this.interestedMetrics) {
         for (let flatNode of this.flatNodes) {
           for (let metric of this.interestedMetrics) {
@@ -993,7 +997,7 @@ export class PerformanceComponent implements OnInit {
 
 
   showAtomicMetric = (flatNode) => {
-    if (this.selectMode == SelectMode.ShowMainSite) {
+    if (this.selectMode == SelectMode.ShowMainSite || this.selectMode == SelectMode.ShowViewWorkspace) {
       this.chartReady = false;
       if (this.currentNode && this.currentNode.showAddJira) {
         this.currentNode.showAddJira = false;
@@ -1012,7 +1016,9 @@ export class PerformanceComponent implements OnInit {
       this.expandNode(flatNode);
       this.commonService.scrollTo("chart-info");
       this.chartReady = true;
-      this.navigateByQuery(flatNode);
+      if (this.selectMode == SelectMode.ShowMainSite) {
+        this.navigateByQuery(flatNode);
+      }
       this.fetchChartInfo(flatNode);
     } else if (this.selectMode == SelectMode.ShowEditWorkspace) {
       flatNode.showAddLeaf = true;
