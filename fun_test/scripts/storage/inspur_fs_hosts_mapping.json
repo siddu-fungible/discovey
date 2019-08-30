@@ -465,6 +465,120 @@
       "mktg-server-14"
     ]
   },
+  "fs-56": {
+    "workarounds": {
+      "enable_funcp": true
+    },
+    "dut_info": {
+      "0": {
+        "type": "DUT_TYPE_FSU",
+        "dut": "fs-56",
+        "bond_interface_info": {
+          "0": {
+            "0": {
+              "type": "INTERFACE_TYPE_ETHERNET_BOND",
+              "fpg_slaves": [
+                0,
+                4,
+                8,
+                12
+              ],
+              "ip": "15.56.1.2/24",
+              "route": [
+                {
+                  "network": "15.0.0.0/8",
+                  "gateway": "15.56.1.1"
+                }
+              ]
+            }
+          },
+          "1": {
+            "0": {
+              "type": "INTERFACE_TYPE_ETHERNET_BOND",
+              "fpg_slaves": [
+                0,
+                4,
+                8,
+                12
+              ],
+              "ip": "15.56.2.2/24",
+              "route": [
+                {
+                  "network": "15.0.0.0/8",
+                  "gateway": "15.56.2.1"
+                }
+              ]
+            }
+          }
+        },
+        "fpg_interface_info": {
+          "0": {
+            "0": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "switch_info": {
+                "name": "qfx-1",
+                "port": "et-0/0/26"
+              }
+            },
+            "4": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "switch_info": {
+                "name": "qfx-1",
+                "port": "et-0/0/27"
+              }
+            },
+            "8": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "switch_info": {
+                "name": "qfx-1",
+                "port": "et-0/0/24"
+              }
+            },
+            "12": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "switch_info": {
+                "name": "qfx-1",
+                "port": "et-0/0/25"
+              }
+            }
+          },
+          "1": {
+            "0": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "switch_info": {
+                "name": "qfx-1",
+                "port": "et-0/0/34"
+              }
+            },
+            "4": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "switch_info": {
+                "name": "qfx-1",
+                "port": "et-0/0/35"
+              }
+            },
+            "8": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "switch_info": {
+                "name": "qfx-1",
+                "port": "et-0/0/32"
+              }
+            },
+            "12": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "switch_info": {
+                "name": "qfx-1",
+                "port": "et-0/0/33"
+              }
+            }
+          }
+        }
+      }
+    },
+    "host_info": [
+      "mktg-server-14"
+    ]
+  },
   "fs-inspur": {
     "workarounds": {
       "enable_funcp": true
