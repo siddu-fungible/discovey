@@ -97,7 +97,7 @@ class JenkinsManager():
             new_params["EXTRA_EMAIL"] = emails
 
         result = self.jenkins_server.build_job(self.job_name, new_params)
-        fun_test.sleep(message="Waiting for build to be queued", seconds=10)
+        fun_test.sleep(message="Waiting for build to be queued", seconds=20)
         queue_item = result
         if wait_time_for_build_complete is not None:
             result = None
