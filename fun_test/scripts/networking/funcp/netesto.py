@@ -7,15 +7,26 @@ from StringIO import StringIO
 def netesto_client(host, ssh_username="localadmin", ssh_password="Precious1*"):
     linux_obj = Linux(host_ip=host, ssh_username=ssh_username, ssh_password=ssh_password)
     linux_obj.sudo_command(command="killall netserver; killall netesto.py; killall tcpdump")
-    linux_obj.sudo_command(command="echo 5 > /proc/sys/net/ipv4/tcp_fin_timeout")
-    linux_obj.sudo_command(command="echo 1 > /proc/sys/net/ipv4/tcp_tw_recycle")
-    linux_obj.sudo_command(command="echo 1 > /proc/sys/net/ipv4/tcp_tw_reuse")
-    linux_obj.sudo_command(command="sysctl -w net.ipv4.tcp_rmem='10000 262144 33554432'")
-    linux_obj.sudo_command(command="sysctl -w net.ipv4.tcp_wmem='10000 262144 33554432'")
+    # linux_obj.sudo_command(command="sudo ufw disable;iptables -X;iptables -t nat -F;iptables -t nat -X;iptables -t mangle -F;iptables -t mangle -X;iptables -P INPUT ACCEPT;iptables -P OUTPUT ACCEPT;iptables -P FORWARD ACCEPT;iptables -F;iptables -L")
+    # linux_obj.sudo_command(command="sysctl -w net.core.rmem_max=4194304;sysctl -w net.core.wmem_max=4194304;sysctl -w net.core.rmem_default=4194304;sysctl -w net.core.wmem_default=4194304;sysctl -w net.core.optmem_max=4194304")
+    # linux_obj.sudo_command(command="sysctl -w net.ipv4.tcp_rmem=\"4096 87380 4194304\";sysctl -w net.ipv4.tcp_wmem=\"4096 65536 4194304\";sysctl -w net.ipv4.tcp_timestamps=0;sysctl -w net.ipv4.tcp_sack=1;sysctl -w net.core.netdev_max_backlog=250000;sysctl -w net.ipv4.tcp_low_latency=1;sysctl -w net.ipv4.tcp_adv_win_scale=1;sysctl -w net.ipv4.route.flush=1")
+    #linux_obj.sudo_command(command="echo 5 > /proc/sys/net/ipv4/tcp_fin_timeout")
+
+    #linux_obj.sudo_command(command="echo 1 > /proc/sys/net/ipv4/tcp_tw_recycle")
+    #linux_obj.sudo_command(command="echo 1 > /proc/sys/net/ipv4/tcp_tw_reuse")
+    #linux_obj.sudo_command(command="sysctl -w net.ipv4.tcp_rmem='10000 262144 33554432'")
+    #linux_obj.sudo_command(command="sysctl -w net.ipv4.tcp_wmem='10000 262144 33554432'")
+    #linux_obj.sudo_command(command="sysctl -w net.ipv4.tcp_rmem='10000 262144 33554432'")
+    #linux_obj.sudo_command(command="sysctl -w net.ipv4.tcp_wmem='10000 262144 33554432'")
+    #linux_obj.sudo_command(command="sysctl -w sysctl -w net.ipv4.tcp_mem '33554432 33554432 33554432'")
     # linux_obj.sudo_command(command="sysctl -w fs.file-max=10000000")
-    # fun_test.sleep(message="Waiting for process kills", seconds=10)
+    # linux_obj.sudo_command(command="sysctl -w net.core.netdev_max_backlog=250000;sysctl -w net.ipv4.tcp_low_latency=1;")
+    # linux_obj.sudo_command(command="sysctl -w net.ipv4.route.flush=1")
+    fun_test.sleep(message="start tcpdump now", seconds=10)
     linux_obj.command("cd ~/netesto/netesto/remote")
-    netesto_id = linux_obj.start_bg_process(command="./netesto.py -d -s")
+    linux_obj.sudo_command("./numa_script.py")
+
+    netesto_id = linux_obj.start_bg_process(command="taskset -c 0,1,2,3,4,5,6,7 ./netesto.py -d -s")
     check_netesto = linux_obj.process_exists(process_id=netesto_id)
     fun_test.test_assert(expression=check_netesto, message="Make sure netesto is running on %s" % linux_obj)
     netstat(linux_obj)
@@ -50,7 +61,7 @@ if __name__ == '__main__':
         netesto_controller.command("cd ~/netesto_controller/netesto/local/fun_plots")
         netesto_controller.sudo_command(command="./aggregate.py %s" % netesto_process, timeout=150)
         csv_results = netesto_controller.command("cat aggregate.csv")
-        # print csv_results
+        print csv_results
         data = StringIO(csv_results)
         df = pd.read_csv(data)
         print df
