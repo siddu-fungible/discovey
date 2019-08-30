@@ -14,8 +14,8 @@
     <tr>
       <td class="fun-attribute-label">Categories:</td>
       <td class="fun-attribute" style="width: 200px">
-        <ng-multiselect-dropdown [placeholder]="'Select'" [data]="availableCategories" [settings]="dropDownSettings" [(ngModel)]="suite.categories">
-      </ng-multiselect-dropdown>
+        <ng-multiselect-dropdown [placeholder]="'Select'" [data]="availableCategories" [settings]="dropDownSettings" [(ngModel)]="suite.categories" (onSelect)="onSelect($event)">
+        </ng-multiselect-dropdown>
       </td>
     </tr>
 
@@ -23,7 +23,7 @@
       <td class="fun-attribute-label">Tags:</td>
       <td class="fun-attribute" style="width: 200px">
         <ng-multiselect-dropdown [placeholder]="'Select'"  [data]="availableTags" [settings]="dropDownSettings" [(ngModel)]="suite.tags">
-      </ng-multiselect-dropdown>
+        </ng-multiselect-dropdown>
       </td>
     </tr>
   </table>
@@ -182,7 +182,7 @@
     </table>
   </ng-container>
 
-  <button [ngClass]="{'fun-button-disabled' : suite?.entries?.length < 1 || !suite?.name}" class="fun-button-submit" (click)="onSubmitSuite()">Submit</button>
+  <button [ngClass]="{'fun-button-disabled' : suite?.entries?.length < 1 || !suite?.name || editorPristine}" class="fun-button-submit" (click)="onSubmitSuite()">Submit</button>
 
   <button (click)="test()">Test</button>
 

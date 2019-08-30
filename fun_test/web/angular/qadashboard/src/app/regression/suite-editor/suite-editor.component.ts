@@ -64,6 +64,8 @@ export class SuiteEditorComponent implements OnInit {
   suite: Suite = null;
   driver = null;
 
+  editorPristine: boolean = true;
+
   constructor(private testBedService: TestBedService,
               private modalService: NgbModal,
               private service: SuiteEditorService,
@@ -109,9 +111,10 @@ export class SuiteEditorComponent implements OnInit {
       } else {
         this.service.suites(this.id).subscribe(response => {
           this.suite = response;
-          this.refreshAll();
         })
       }
+      this.refreshAll();
+
 
     });
 
@@ -189,6 +192,7 @@ export class SuiteEditorComponent implements OnInit {
       })
     }
     this.customTestBedValidated["asset_request"] = payload["asset_request"];
+    this.suite.custom_test_bed_spec = this.customTestBedValidated;
     console.log(payload);
 
   }
@@ -205,20 +209,64 @@ export class SuiteEditorComponent implements OnInit {
     return `${flatName}SpecificAssets`;
   }
 
+  _getTestBedByName(name) {
+    let result = null;
+    for (let i = 0; i < this.testBeds.length; i++) {
+      if (this.testBeds[i].name === name) {
+        result = this.testBeds[i];
+        break;
+      }
+    }
+    return result;
+  }
+
   prepareFormGroup() {
     let group = {};
+
     group["selectedTestBed"] = new FormControl();
+    if (this.suite) {
+      if (Object.keys(this.suite.custom_test_bed_spec).indexOf('base_test_bed')) {
+        let baseTestBed = this.suite.custom_test_bed_spec.base_test_bed;
+        group["selectedTestBed"].setValue(this._getTestBedByName(baseTestBed));
+      }
+    }
 
     Object.keys(this.assetTypes).forEach(assetTypeKey => {
       let flatName = this._flattenName(assetTypeKey);
       this.flattenedAssetTypeNames.push(flatName);
+      let assetTypeValue = this.assetTypes[assetTypeKey];
       this.flattenedAssetTypeNameMap[flatName] = {name: this.assetTypes[assetTypeKey], data: null};
       let assetSelectionKey = this._getAssetSelectionKey(flatName);
       let numAssetsKey = this._getNumAssetsKey(flatName);
       let specificAssetsKey = this._getSpecificAssetsKey(flatName);
+
+
+
       group[assetSelectionKey] = new FormControl(CustomAssetSelection.NUM);
       group[numAssetsKey] = new FormControl();
       group[specificAssetsKey] = new FormControl();
+      if (this.suite.custom_test_bed_spec.hasOwnProperty('asset_request')) {
+        let assetRequest = this.suite.custom_test_bed_spec.asset_request;
+        if (assetRequest.hasOwnProperty(assetTypeValue)) {
+          let num = null;
+          let names = null;
+          if (assetRequest[assetTypeValue].hasOwnProperty("num")) {
+            num = assetRequest[assetTypeValue]["num"];
+          }
+          if (assetRequest[assetTypeValue].hasOwnProperty("names")) {
+            names = assetRequest[assetTypeValue]["names"]
+          }
+          if (num !== null) {
+            group[assetSelectionKey].setValue(CustomAssetSelection.NUM);
+            group[numAssetsKey].setValue(num);
+          } else {
+            group[assetSelectionKey].setValue(CustomAssetSelection.SPECIFIC);
+            group[specificAssetsKey].setValue(names);
+          }
+        }
+      }
+
+
       this.flattenedAssetTypeNameMap[flatName].data = [];
       this.assets.forEach(asset => {
         if (asset.type === this.assetTypes[assetTypeKey]) {
@@ -279,9 +327,6 @@ export class SuiteEditorComponent implements OnInit {
     this.inputs = inputs;
   }
 
-  customTestBedSpecChanged(customTestBedSpec) {
-    this.customTestBedSpec = customTestBedSpec;
-  }
 
   filterAssetsBySelectedTestBed(selectedTestBed, allAssets) {  // Only choose assets that belong to the selected test-bed
     return allAssets.filter(asset => asset.test_beds.indexOf(selectedTestBed) > -1).map(o => { return o.name });
@@ -385,16 +430,19 @@ export class SuiteEditorComponent implements OnInit {
 
   onNameChangedEvent(name) {
     this.suite.name = name;
+    this.editorPristine = false;
   }
 
   onShortDescriptionChangedEvent(shortDescription) {
     this.suite.short_description = shortDescription;
+    this.editorPristine = false;
   }
 
   onSubmitSuite() {
     if (!this.id) {
       this.service.add(this.suite).subscribe(response => {
         this.loggerService.success("Added suite");
+        this.editorPristine = true;
       })
     } else {
       this.service.replace(this.suite, this.id).subscribe(response => {
@@ -404,4 +452,8 @@ export class SuiteEditorComponent implements OnInit {
 
   }
 
+  onSelect() {
+    //console.log("Filter change");
+    this.editorPristine = false;
+  }
 }
