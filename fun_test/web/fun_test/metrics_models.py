@@ -173,7 +173,7 @@ class MetricChart(models.Model):
     last_build_date = models.DateTimeField(verbose_name="last_build_date", default=datetime.now)
     data_sets = models.TextField(default="[]")
     chart_name = models.TextField()
-    internal_chart_name = models.TextField(default="UNKNOWN", unique=True)
+    internal_chart_name = models.TextField(default="UNKNOWN")
     metric_model_name = models.TextField(default="Performance1")
     description = models.TextField(default="TBD")
     metric_id = models.IntegerField(default=10)

@@ -265,7 +265,7 @@ export class PerformanceComponent implements OnInit {
   fetchDag(): void {
     let url = "/metrics/dag";
     if (this.metricIds) {
-      url = "/metrics/part_dag" + "?metric_ids=" + String(this.metricIds);
+      url = "/metrics/dag" + "?metric_ids=" + String(this.metricIds);
     }
     // Fetch the DAG
     this.apiService.get(url).subscribe(response => {
@@ -575,7 +575,7 @@ export class PerformanceComponent implements OnInit {
       this.s1Node = thisFlatNode;
       lineage = [];
     }
-    if (this.metricIds.includes(newNode.metricId)) {
+    if (this.metricIds && this.metricIds.includes(newNode.metricId)) {
       thisFlatNode.hide = false;
       lineage = [];
     }

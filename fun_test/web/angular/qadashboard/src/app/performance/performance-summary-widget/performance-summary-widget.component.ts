@@ -57,7 +57,7 @@ export class PerformanceSummaryWidgetComponent implements OnInit {
 
 
   fetchDag() {
-    return this.apiService.get("/metrics/dag" + "?levels=1" + "&chart_names=F1").pipe(switchMap((response) => {
+    return this.apiService.get("/metrics/dag" + "?levels=1" + "&metric_ids=101").pipe(switchMap((response) => {
       let dag = response.data[0].children_info;
       for (let i in dag) {
         this.x1Values.push(dag[i].chart_name);

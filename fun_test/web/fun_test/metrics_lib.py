@@ -164,7 +164,7 @@ class MetricLib():
         metric_id = LastMetricId.get_next_id()
         chart = MetricChart(chart_name=kwargs["chart_name"],
                             metric_id=metric_id,
-                            internal_chart_name=metric_id,
+                            internal_chart_name=kwargs["internal_chart_name"],
                             data_sets=kwargs["data_sets"],
                             leaf=kwargs["leaf"],
                             description=kwargs["description"],

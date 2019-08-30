@@ -160,7 +160,6 @@ metric_urls = [
     url(r'^table_view/(.*)$', metrics_views.table_view),
     url(r'^test$', metrics_views.test),
     url(r'^scores', metrics_views.scores),
-    url(r'^part_dag$', metrics_views.part_dag),
     url(r'^dag$', metrics_views.dag),
     url(r'^get_triage_info$', metrics_views.get_triage_info),
     url(r'^get_triage_info_from_commits$', metrics_views.get_triage_info_from_commits),

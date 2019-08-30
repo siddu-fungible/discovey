@@ -869,30 +869,15 @@ def traverse_dag(levels, metric_id, metric_chart_entries, sort_by_name=True):
 def dag(request):
     result = []
     levels = int(request.GET.get("levels", 15))
-    chart_names = request.GET.getlist("chart_names", ["F1", "S1", "All metrics"])
-    metric_model_name = "MetricContainer"
-    metric_chart_entries = {}
-    for chart_name in chart_names:
-        if chart_name == "All metrics":
-            sort_by_name = True
-        else:
-            sort_by_name = False
-        chart = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=chart_name)
-        metric_chart_entries[chart.metric_id] = chart
-        result.append(traverse_dag(levels=levels, metric_id=chart.metric_id, sort_by_name=sort_by_name, metric_chart_entries=metric_chart_entries))
-    return result
-
-@csrf_exempt
-@api_safe_json_response
-def part_dag(request):
-    result = []
-    levels = int(request.GET.get("levels", 15))
-    metric_ids = request.GET.get("metric_ids", 101)
+    metric_ids = request.GET.get("metric_ids", 101,122,591)
     if ',' in metric_ids:
         metric_ids = metric_ids.strip().split(',')
     metric_chart_entries = {}
-    sort_by_name = False
     for metric_id in metric_ids:
+        if metric_id == 122:
+            sort_by_name = True
+        else:
+            sort_by_name = False
         chart = MetricChart.objects.get(metric_id=metric_id)
         metric_chart_entries[chart.metric_id] = chart
         result.append(traverse_dag(levels=levels, metric_id=chart.metric_id, sort_by_name=sort_by_name, metric_chart_entries=metric_chart_entries))
