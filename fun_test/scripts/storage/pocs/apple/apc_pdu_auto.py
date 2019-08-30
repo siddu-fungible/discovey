@@ -18,7 +18,7 @@ class ApcPduScript(FunTestScript):
 
 
 class ApcPduTestcase(FunTestCase):
-    NUMBER_OF_ITERATIONS = 1
+    NUMBER_OF_ITERATIONS = 30
 
     def describe(self):
         self.set_test_details(id=1,
