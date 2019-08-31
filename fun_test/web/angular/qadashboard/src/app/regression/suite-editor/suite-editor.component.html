@@ -139,10 +139,32 @@
   </ng-template>
 
 
-      <!--span class="fun-attribute-section-header">Custom test-bed spec</span-->
-  <app-section-horizontal-line [text]="'Custom test-bed spec'"></app-section-horizontal-line>
+  <ng-container *ngIf="suite">
+  <table class="fun-table">
+    <tr>
+      <td class="fun-table-header">Script</td>
+      <td class="fun-table-header">Inputs</td>
+      <td class="fun-table-header">Test-case IDs</td>
+      <td class="fun-table-header"></td>
+    </tr>
+    <ng-container *ngFor="let suiteEntry of suite.entries; let index=index">
+      <tr>
+        <td>{{ suiteEntry.script_path }}</td>
+        <td>{{ suiteEntry.inputs | json }}</td>
+        <td>{{ suiteEntry.test_case_ids | json }}</td>
+        <td>
+          <i style="display: inline; color: red" class="fun-icon fa fa-trash" (click)="onDeleteSuiteEntry(index)"></i>
+        </td>
+      </tr>
 
-  <ng-container *ngIf="customTestBedValidated">
+    </ng-container>
+  </table>
+
+</ng-container>
+
+
+  <ng-container *ngIf="customTestBedValidated else noCustomTestBedSpec">
+    <app-section-horizontal-line [text]="'Custom test-bed spec'"></app-section-horizontal-line>
     <div style="display: flex">
       <table>
         <tr>
@@ -163,30 +185,11 @@
     </div>
   </ng-container>
 
-
-
-  <ng-container *ngIf="suite">
-  {{ suiteEntry | json }}
-  <table class="fun-table">
-    <tr>
-      <td class="fun-table-header">Script</td>
-      <td class="fun-table-header">Inputs</td>
-      <td class="fun-table-header">Test-case IDs</td>
-    </tr>
-    <ng-container *ngFor="let suiteEntry of suite.entries">
-      <tr>
-        <td>{{ suiteEntry.script_path }}</td>
-        <td>{{ suiteEntry.inputs }}</td>
-        <td>{{ suiteEntry.test_case_ids }}</td>
-      </tr>
-
-    </ng-container>
-  </table>
-
-</ng-container>
-
-  <button [ngClass]="{'fun-button-disabled' : suite?.entries?.length < 1 || !suite?.name }" class="fun-button-submit" (click)="onSubmitSuite()">Submit</button>
+  <ng-template #noCustomTestBedSpec>
+    <button class="fun-button-add" (click)="onAddCustomTestBedSpec(customTestBedSpecModalContent)">Add custom test-bed</button>
+  </ng-template>
 
   <!--button (click)="test()">Test</button-->
+  <button [ngClass]="{'fun-button-disabled' : suite?.entries?.length < 1 || !suite?.name }" class="fun-button-submit" (click)="onSubmitSuite()">Submit</button>
 
 </div>

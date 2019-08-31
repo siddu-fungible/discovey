@@ -159,7 +159,7 @@ export class SuiteEditorComponent implements OnInit {
   }
 
   prepareCustomTestBedSpecValidated() {
-    this.customTestBedValidated = {};
+    this.customTestBedValidated = null;
     let baseTestBed = null;
     let selectedTestBedValue = this.customTestBedSpecForm.get("selectedTestBed").value;
 
@@ -477,5 +477,10 @@ export class SuiteEditorComponent implements OnInit {
   onSelect() {
     //console.log("Filter change");
     this.editorPristine = false;
+  }
+
+
+  onDeleteSuiteEntry(index) {
+    this.suite.entries.splice(index, 1);
   }
 }
