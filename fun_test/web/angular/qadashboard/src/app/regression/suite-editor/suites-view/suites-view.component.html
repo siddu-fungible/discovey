@@ -6,7 +6,7 @@
     </tr>
     <tr *ngFor="let suite of suites">
       <td><a [routerLink]="'/regression/suite_editor/' + suite.id">{{ suite.name }}</a></td>
-      <td>{{ suite.short_decription }}</td>
+      <td>{{ suite.short_description }}</td>
     </tr>
   </table>
 </div>
