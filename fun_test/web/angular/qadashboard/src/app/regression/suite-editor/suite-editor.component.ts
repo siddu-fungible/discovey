@@ -110,14 +110,17 @@ export class SuiteEditorComponent implements OnInit {
       }
       if (!this.id) {
         this.suite = new Suite();
+        this.refreshAll();
 
       } else {
         this.service.suite(this.id).subscribe(response => {
           this.suite = response;
           console.log(this.suite.constructor.name);
-        })
+          this.refreshAll();
+
+        });
       }
-      this.refreshAll();
+
 
 
     });
@@ -169,6 +172,7 @@ export class SuiteEditorComponent implements OnInit {
       baseTestBed = selectedTestBedValue.name;
     }
     if (baseTestBed) {
+      this.customTestBedValidated = {};
       this.customTestBedValidated["base_test_bed"] = this.customTestBedSpecForm.get("selectedTestBed").value.name;
       let payload = {};
       let assetRequests = [];

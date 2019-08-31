@@ -727,3 +727,17 @@ label {
 .fun-icon {
   margin: 5px;
 }
+
+.fun-flex-container {
+  display: flex;
+}
+
+.fun-disabled {
+  pointer-events: none;
+  color: lightgrey;
+}
+
+.fun-pager-active {
+  text-decoration: underline;
+  font-weight: bold;
+}

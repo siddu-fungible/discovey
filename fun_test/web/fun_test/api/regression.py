@@ -18,6 +18,7 @@ from web.fun_test.fun_serializer import model_instance_to_dict
 from web.fun_test.models_helper import _get_suite_executions
 from web.fun_test.models import Suite
 from fun_global import RESULTS
+from django.core import paginator
 import os
 import fnmatch
 
@@ -357,12 +358,28 @@ def suites(request, id):
     result = None
     if request.method == "GET":
         if not id:
-            all_suites = Suite.objects.all()
-            if all_suites.count():
-                result = []
-                for suite in all_suites:
-                    result.append(suite.to_dict())
+            get_count = request.GET.get("get_count", None)
+            q = Q()
+            categories = request.GET.get("categories", None)
+            if categories is not None:
+                categories = categories.split(",")
+                for category in categories:
+                    q &= Q(categories__contains=category)
+            all_suites = Suite.objects.filter(q)
+            if get_count is None:
+                records_per_page = request.GET.get("records_per_page", None)
+                page = request.GET.get("page", None)
+                if records_per_page is not None:
+                    p = paginator.Paginator(all_suites, records_per_page)
+                    all_suites = p.page(page)
+                    result = []
+                    for suite in all_suites:
+                        result.append(suite.to_dict())
+
+            else:
+                result = all_suites.count()
         else:
+            id = int(id)
             result = Suite.objects.get(id=id).to_dict()
 
     if request.method == "POST":
