@@ -14,7 +14,7 @@
     <tr>
       <td class="fun-attribute-label">Categories:</td>
       <td class="fun-attribute" style="width: 200px">
-        <ng-multiselect-dropdown [placeholder]="'Select'" [data]="availableCategories" [settings]="dropDownSettings" [(ngModel)]="suite.categories" (onSelect)="onSelect($event)">
+        <ng-multiselect-dropdown [placeholder]="'Select'" [data]="availableCategories" [settings]="dropDownSettings" [(ngModel)]="suite.categories">
         </ng-multiselect-dropdown>
       </td>
     </tr>
@@ -31,8 +31,6 @@
 
   <div *ngIf="!addingScript" style="display: flex; flex-direction: row;">
     <button class="fun-button-add" (click)="onAddScript()">Add a script</button>
-    <button *ngIf="!customTestBedValidated" class="fun-button-add" (click)="onAddCustomTestBedSpec(customTestBedSpecModalContent)">Add custom test-bed spec</button>
-    <button *ngIf="customTestBedValidated" class="fun-button-add" (click)="onEditCustomTestBedSpec(customTestBedSpecModalContent)">Edit custom test-bed spec</button>
   </div>
 
 
@@ -140,10 +138,12 @@
 
   </ng-template>
 
-  <ng-container *ngIf="customTestBedSpecForm?.valid && customTestBedValidated">
-    <div class="fun-attribute-section">
+
       <!--span class="fun-attribute-section-header">Custom test-bed spec</span-->
-      <app-section-horizontal-line [text]="'Custom test-bed spec'"></app-section-horizontal-line>
+  <app-section-horizontal-line [text]="'Custom test-bed spec'"></app-section-horizontal-line>
+
+  <ng-container *ngIf="customTestBedValidated">
+    <div style="display: flex">
       <table>
         <tr>
           <td><span class="fun-attribute-label">Base test-bed</span></td>
@@ -154,36 +154,39 @@
             <td><span class="fun-attribute-label">{{ asset_request.key }}</span></td>
             <td *ngIf="_hasKey(asset_request.value, 'num')">Num: {{ asset_request.value.num }}</td>
             <td *ngIf="_hasKey(asset_request.value, 'names')">Specific instances: {{ asset_request.value.names | json }}</td>
-
           </tr>
         </ng-container>
       </table>
+      <i style="display: inline;" class="fun-icon fa fa-pencil" (click)="onEditCustomTestBedSpec(customTestBedSpecModalContent)"></i>
+      <i style="display: inline; color: red" class="fun-icon fa fa-trash" (click)="onDeleteCustomTestBedSpec(customTestBedSpecModalContent)"></i>
+
     </div>
-
-
   </ng-container>
+
+
 
   <ng-container *ngIf="suite">
-    {{ suiteEntry | json }}
-    <table class="fun-table">
+  {{ suiteEntry | json }}
+  <table class="fun-table">
+    <tr>
+      <td class="fun-table-header">Script</td>
+      <td class="fun-table-header">Inputs</td>
+      <td class="fun-table-header">Test-case IDs</td>
+    </tr>
+    <ng-container *ngFor="let suiteEntry of suite.entries">
       <tr>
-        <td class="fun-table-header">Script</td>
-        <td class="fun-table-header">Inputs</td>
-        <td class="fun-table-header">Test-case IDs</td>
+        <td>{{ suiteEntry.script_path }}</td>
+        <td>{{ suiteEntry.inputs }}</td>
+        <td>{{ suiteEntry.test_case_ids }}</td>
       </tr>
-      <ng-container *ngFor="let suiteEntry of suite.entries">
-        <tr>
-          <td>{{ suiteEntry.script_path }}</td>
-          <td>{{ suiteEntry.inputs }}</td>
-          <td>{{ suiteEntry.test_case_ids }}</td>
-        </tr>
 
-      </ng-container>
-    </table>
-  </ng-container>
+    </ng-container>
+  </table>
 
-  <button [ngClass]="{'fun-button-disabled' : suite?.entries?.length < 1 || !suite?.name || editorPristine}" class="fun-button-submit" (click)="onSubmitSuite()">Submit</button>
+</ng-container>
 
-  <button (click)="test()">Test</button>
+  <button [ngClass]="{'fun-button-disabled' : suite?.entries?.length < 1 || !suite?.name }" class="fun-button-submit" (click)="onSubmitSuite()">Submit</button>
+
+  <!--button (click)="test()">Test</button-->
 
 </div>

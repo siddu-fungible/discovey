@@ -377,16 +377,11 @@ def suites(request, id):
         tags = request_json.get("tags", None)
         custom_test_bed_spec = request_json.get("custom_test_bed_spec", None)
         suite_entries = request_json.get("entries", None)
-        if name is not None:
-            s.name = name
-        if short_description is not None:
-            s.short_description = short_description
-        if categories is not None:
-            s.categories = categories
-        if tags is not None:
-            s.tags = tags
-        if custom_test_bed_spec is not None:
-            s.custom_test_bed_spec = custom_test_bed_spec
+        s.name = name
+        s.short_description = short_description
+        s.categories = categories
+        s.tags = tags
+        s.custom_test_bed_spec = custom_test_bed_spec
         if suite_entries is not None:
             s.entries = suite_entries
         s.save()

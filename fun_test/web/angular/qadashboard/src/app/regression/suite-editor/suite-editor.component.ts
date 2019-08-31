@@ -109,8 +109,9 @@ export class SuiteEditorComponent implements OnInit {
         this.suite = new Suite();
 
       } else {
-        this.service.suites(this.id).subscribe(response => {
+        this.service.suite(this.id).subscribe(response => {
           this.suite = response;
+          console.log(this.suite.constructor.name);
         })
       }
       this.refreshAll();
@@ -126,6 +127,9 @@ export class SuiteEditorComponent implements OnInit {
   refreshAll() {
     this.driver.subscribe(response => {
       this.customTestBedSpecForm = this.prepareFormGroup();
+      if (this.suite) {
+        this.prepareCustomTestBedSpecValidated();
+      }
       let i = 0;
       this.customTestBedSpecForm.get('selectedTestBed').valueChanges.subscribe(selection => {
         //this.selectedTestBed = selection;
@@ -156,45 +160,51 @@ export class SuiteEditorComponent implements OnInit {
 
   prepareCustomTestBedSpecValidated() {
     this.customTestBedValidated = {};
-    this.customTestBedValidated["base_test_bed"] = this.customTestBedSpecForm.get("selectedTestBed").value.name;
-    let payload = {};
-    let assetRequests = [];
-    for (let key of Object.keys(this.assetTypes)) {
-      let flatName = this._flattenName(key);
-      let readOut = this._readOutCustomTestBedSpecForm(flatName);
-      //console.log(readOut);
+    let baseTestBed = null;
+    let selectedTestBedValue = this.customTestBedSpecForm.get("selectedTestBed").value;
 
-      let ref = {};
-      //let ref = payload[this.flattenedAssetTypeNameMap[flatName].name];
-      let totalAssets = 0;
-      if (readOut["numAssets"] > 0) {
-        ref["num"] = readOut["numAssets"];
-        totalAssets += readOut["numAssets"];
-      }
-
-      let specificAssets = readOut["specificAssets"];
-      if (specificAssets && specificAssets.length > 0) {
-        ref["names"] = readOut["specificAssets"];
-        totalAssets += readOut["specificAssets"].length;
-      }
-      if (totalAssets) {
-        let key = this.flattenedAssetTypeNameMap[flatName].name;
-        let tempDict = {};
-        tempDict[key] = ref;
-        assetRequests.push(tempDict);
-      }
+    if (selectedTestBedValue) {
+      baseTestBed = selectedTestBedValue.name;
     }
-    if (assetRequests.length) {
-      payload["asset_request"] = {};
-      assetRequests.forEach(assetRequest => {
-        let thisKey = Object.keys(assetRequest)[0];
-        payload["asset_request"][thisKey] = assetRequest[thisKey];
-      })
-    }
-    this.customTestBedValidated["asset_request"] = payload["asset_request"];
-    this.suite.custom_test_bed_spec = this.customTestBedValidated;
-    console.log(payload);
+    if (baseTestBed) {
+      this.customTestBedValidated["base_test_bed"] = this.customTestBedSpecForm.get("selectedTestBed").value.name;
+      let payload = {};
+      let assetRequests = [];
+      for (let key of Object.keys(this.assetTypes)) {
+        let flatName = this._flattenName(key);
+        let readOut = this._readOutCustomTestBedSpecForm(flatName);
+        //console.log(readOut);
 
+        let ref = {};
+        //let ref = payload[this.flattenedAssetTypeNameMap[flatName].name];
+        let totalAssets = 0;
+        if (readOut["numAssets"] > 0) {
+          ref["num"] = readOut["numAssets"];
+          totalAssets += readOut["numAssets"];
+        }
+
+        let specificAssets = readOut["specificAssets"];
+        if (specificAssets && specificAssets.length > 0) {
+          ref["names"] = readOut["specificAssets"];
+          totalAssets += readOut["specificAssets"].length;
+        }
+        if (totalAssets) {
+          let key = this.flattenedAssetTypeNameMap[flatName].name;
+          let tempDict = {};
+          tempDict[key] = ref;
+          assetRequests.push(tempDict);
+        }
+      }
+      if (assetRequests.length) {
+        payload["asset_request"] = {};
+        assetRequests.forEach(assetRequest => {
+          let thisKey = Object.keys(assetRequest)[0];
+          payload["asset_request"][thisKey] = assetRequest[thisKey];
+        })
+      }
+      this.customTestBedValidated["asset_request"] = payload["asset_request"];
+      this.suite.custom_test_bed_spec = this.customTestBedValidated;
+    }
   }
 
   _getAssetSelectionKey(flatName) {
@@ -224,7 +234,7 @@ export class SuiteEditorComponent implements OnInit {
     let group = {};
 
     group["selectedTestBed"] = new FormControl();
-    if (this.suite) {
+    if (this.suite && this.suite.custom_test_bed_spec) {
       if (Object.keys(this.suite.custom_test_bed_spec).indexOf('base_test_bed')) {
         let baseTestBed = this.suite.custom_test_bed_spec.base_test_bed;
         group["selectedTestBed"].setValue(this._getTestBedByName(baseTestBed));
@@ -245,7 +255,7 @@ export class SuiteEditorComponent implements OnInit {
       group[assetSelectionKey] = new FormControl(CustomAssetSelection.NUM);
       group[numAssetsKey] = new FormControl();
       group[specificAssetsKey] = new FormControl();
-      if (this.suite.custom_test_bed_spec.hasOwnProperty('asset_request')) {
+      if (this.suite.custom_test_bed_spec && this.suite.custom_test_bed_spec.hasOwnProperty('asset_request')) {
         let assetRequest = this.suite.custom_test_bed_spec.asset_request;
         if (assetRequest.hasOwnProperty(assetTypeValue)) {
           let num = null;
@@ -296,7 +306,11 @@ export class SuiteEditorComponent implements OnInit {
         for (let key of Object.keys(this.assetTypes)) {
           let flatName = this._flattenName(key);
           let readOut = this._readOutCustomTestBedSpecForm(flatName);
-          totalAssets += readOut["numAssets"];
+          let numAssets = readOut["numAssets"];
+          if (isNaN(numAssets)) {
+            numAssets = 0;
+          }
+          totalAssets += numAssets;
           let specificAssets = readOut["specificAssets"];
           if (specificAssets) {
             totalAssets += specificAssets.length;
@@ -356,14 +370,16 @@ export class SuiteEditorComponent implements OnInit {
     let assetSelection = this.customTestBedSpecForm.get(assetSelectionKey).value;
     result["assetSelection"] = assetSelection;
 
-    let numAssets = parseInt(this.customTestBedSpecForm.get(numAssetsKey).value);
-    if (isNaN(numAssets)) {
-      numAssets = 0;
+    if (parseInt(assetSelection) === CustomAssetSelection.NUM) {
+      let numAssets = parseInt(this.customTestBedSpecForm.get(numAssetsKey).value);
+      if (isNaN(numAssets)) {
+        numAssets = 0;
+      }
+      result["numAssets"] = numAssets;
+    } else {
+      let specificAssets = this.customTestBedSpecForm.get(specificAssetsKey).value;
+      result["specificAssets"] = specificAssets;
     }
-    result["numAssets"] = numAssets;
-    let specificAssets = this.customTestBedSpecForm.get(specificAssetsKey).value;
-    result["specificAssets"] = specificAssets;
-
     return result;
   }
 
@@ -393,6 +409,12 @@ export class SuiteEditorComponent implements OnInit {
       console.log("Rejected");
       //this.closeResult = `Dismissed ${this.getDismissReason(reason)}`;
     }));
+  }
+
+  onDeleteCustomTestBedSpec() {
+    this.customTestBedSpecForm.reset();
+    this.customTestBedValidated = null;
+    this.suite.custom_test_bed_spec = null;
   }
 
   singleSelectScriptPathEvent(scriptPath) {

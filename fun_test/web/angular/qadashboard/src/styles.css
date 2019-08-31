@@ -661,6 +661,8 @@ label {
 
 /*table*/
 .fun-table {
+  margin-top: 10px;
+  margin-bottom: 10px;
   border: solid lightgrey 1px;
   border-collapse: collapse;
   border-top: solid lightgrey 1px;
@@ -679,7 +681,7 @@ label {
 }
 .fun-table tr td {
   padding: 5px;
-    border-top: solid lightgrey 1px;
+  border-top: solid lightgrey 1px;
   border-bottom: solid lightgrey 1px;
   border-left: solid lightgrey 1px;
   border-right: solid lightgrey 1px;

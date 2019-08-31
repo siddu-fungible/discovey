@@ -75,3 +75,7 @@ input[disabled].fun-form-input  {
   display: block;
   margin: 5px;
 }
+
+.fun-icon {
+  margin: 5px;
+}
