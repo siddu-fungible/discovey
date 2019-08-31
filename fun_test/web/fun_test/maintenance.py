@@ -1132,10 +1132,9 @@ if __name__ == "__main__":
                                   'expected': -1,
                                   'unit': PerfUnit.UNIT_OPS}
         data_sets.append(one_data_set)
+        print(data_sets)
         chart.data_sets = json.dumps(data_sets)
-        # chart.save()
-        for i in data_sets:
-            print i
+        chart.save()
 
     # Latency charts
 
@@ -1149,10 +1148,6 @@ if __name__ == "__main__":
             each_data_set["output"]["reference"] = -1
         internal_chart_name = chart.internal_chart_name.replace("qd1", "qd256")
         chart_name = "Latency, QDepth=256"
-        print(chart_name)
-        print (internal_chart_name)
-        for i in data_sets:
-            print i
         latency_charts = ml.create_leaf(chart_name=chart_name,
                                         internal_chart_name=internal_chart_name,
                                         data_sets=data_sets,
@@ -1161,8 +1156,8 @@ if __name__ == "__main__":
                                         owner_info=chart.owner_info,
                                         source=chart.source,
                                         positive=chart.positive,
-                                        y1_axis_title=chart.y1_axis_title,
-                                        visualization_unit=chart.y1_axis_title,
+                                        y1_axis_title=chart.visualization_unit,
+                                        visualization_unit=chart.visualization_unit,
                                         metric_model_name=chart.metric_model_name,
                                         base_line_date=chart.base_line_date,
                                         work_in_progress=False,
