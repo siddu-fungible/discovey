@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import {SuiteEditorService, Suite} from "../suite-editor.service";
-import {of} from "rxjs";
+import {Observable, of} from "rxjs";
 import {switchMap} from "rxjs/operators";
 import {LoggerService} from "../../../services/logger/logger.service";
 
@@ -15,10 +15,16 @@ export class SuitesViewComponent implements OnInit {
   constructor(private service: SuiteEditorService, private loggerService: LoggerService) { }
   suites: Suite[] = null;
   availableCategories: string[] = null;
+  selectedCategories: string[] = null;
   dropDownSettings = {};
+  driver: Observable<any> = null;
 
   ngOnInit() {
-    of(true).pipe(switchMap(() => {
+    this.driver =
+    of(true).pipe(switchMap(response => {
+      return this.service.categories();
+    })).pipe(switchMap(response => {
+      this.availableCategories = response;
       return this.service.suites();
     })).pipe(switchMap(response => {
       this.suites = response;
@@ -26,9 +32,31 @@ export class SuitesViewComponent implements OnInit {
         suite["dirty"] = false;
         suite["originalCategories"] = suite.categories;
       });
-      return this.service.categories();
-    })).subscribe(response => {
-      this.availableCategories = response;
+      this.suites = this.suites.filter(suite => {
+        let result = false;
+        if (!this.selectedCategories || this.selectedCategories.length === 0) {
+          result = true;
+        } else if (this.selectedCategories.length > 0) {
+          for (let index = 0; index < this.selectedCategories.length; index++) {
+            if (suite.categories.indexOf(this.selectedCategories[index]) > -1) {
+              result = true;
+              break;
+            }
+          }
+        }
+        return result;
+      });
+      return of(true);
+    }));
+    this.refreshAll();
+
+  }
+
+  refreshAll() {
+    this.driver.subscribe(response => {
+
+    }, error=> {
+      this.loggerService.error("Unable to initialize view component");
     })
   }
 
@@ -44,6 +72,11 @@ export class SuitesViewComponent implements OnInit {
   onDismissCategories(suite) {
     suite.categories = suite.originalCategories;
     suite.dirty = false;
+  }
+
+  onChangeSelectedCategories() {
+    console.log(this.selectedCategories);
+    this.refreshAll();
   }
 
 }

@@ -1,4 +1,25 @@
 <div class="component">
+
+  <div class="fun-panel">
+    <div class="fun-panel-header">Filters</div>
+    <div class="fun-panel-body">
+      <table>
+      <tr>
+        <td class="fun-attribute-label">Categories:</td>
+        <td class="fun-attribute" style="width: 200px">
+          <ng-multiselect-dropdown [placeholder]="'Select'" [data]="availableCategories" [settings]="dropDownSettings" [(ngModel)]="selectedCategories"
+                                   (onSelect)="onChangeSelectedCategories()"
+                                   (onDeSelect)="onChangeSelectedCategories()"
+                                   (onSelectAll)="onChangeSelectedCategories()"
+                                   (onDeSelectAll)="onChangeSelectedCategories()">
+          </ng-multiselect-dropdown>
+        </td>
+      </tr>
+    </table>
+    </div>
+  </div>
+
+
   <table class="fun-table">
     <tr>
       <td class="fun-table-header">Name</td>
