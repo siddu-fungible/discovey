@@ -87,5 +87,9 @@ export class SuiteEditorService {
     }))
   }
 
+  categories(): Observable<string []> {
+    return of(["networking", "storage", "accelerators", "security", "system"]);
+  }
+
 
 }

@@ -3,10 +3,30 @@
     <tr>
       <td class="fun-table-header">Name</td>
       <td class="fun-table-header">Description</td>
+      <td class="fun-table-header">Categories</td>
     </tr>
     <tr *ngFor="let suite of suites">
       <td><a [routerLink]="'/regression/suite_editor/' + suite.id">{{ suite.name }}</a></td>
       <td>{{ suite.short_description }}</td>
+      <td>
+        <div style="display: flex">
+          <ng-multiselect-dropdown [placeholder]="'Select'" [data]="availableCategories" [settings]="dropDownSettings" [(ngModel)]="suite.categories"
+                    (onSelect)="suite.dirty = true"
+                    (onDeSelect)="suite.dirty = true"
+                    (onSelectAll)="suite.dirty = true"
+                    (onDeSelectAll)="suite.dirty = true">
+          </ng-multiselect-dropdown>
+          <div style="padding: 10px">
+            <ng-container *ngIf="suite.dirty">
+            <span><i class="fa fa-check fa-fw tick-color" (click)="onSubmitCategories(suite)"></i></span>
+            <span><i class="fa fa-times fa-fw close-color" (click)="onDismissCategories(suite)"></i></span>
+            </ng-container>
+          </div>
+
+        </div>
+
+      </td>
+
     </tr>
   </table>
 </div>

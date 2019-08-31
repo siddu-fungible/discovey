@@ -53,7 +53,7 @@ export class SuiteEditorComponent implements OnInit {
   customTestBedSpecForm = null;
   customTestBedValidated = null;
 
-  availableCategories: string [] = ["networking", "storage", "accelerators", "security", "system"];
+  availableCategories: string [] = null;
   availableSubCategories: string [] = ["general"];
   //selectedCategories: string [] = null;
   selectedSubCategories: string [] = null;
@@ -84,6 +84,9 @@ export class SuiteEditorComponent implements OnInit {
       return () => {
       }
     }).pipe(switchMap(response => {
+      return this.service.categories();
+    })).pipe(switchMap(response => {
+      this.availableCategories = response;
       return this.regressionService.tags();
     })).pipe(switchMap((response) => {
       this.availableTags = response;
@@ -119,10 +122,9 @@ export class SuiteEditorComponent implements OnInit {
 
     });
 
-
-
-
   }
+
+
 
   refreshAll() {
     this.driver.subscribe(response => {
