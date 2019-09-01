@@ -596,7 +596,7 @@ tr.text-center > th {
   cursor: pointer;
   min-width: 100px;
   border-radius: .25rem;
-  margin-right: 10px;
+  margin: 5px;
 }
 
 .fun-button-add:hover {
@@ -612,7 +612,8 @@ tr.text-center > th {
   padding: 5px;
   border-radius: 2px;
   min-width: 100px;
-  margin-right: 10px;
+  margin: 5px;
+
 
 }
 
@@ -688,4 +689,56 @@ label {
 
 }
 
+.fun-panel {
+  margin-top: 10px;
+  border: 1px solid rgba(0,0,0,.125);
+}
 
+.fun-panel-header {
+  padding: 5px;
+  background-color: rgba(0,0,0,.03);
+}
+
+.fun-panel-body {
+  padding: 10px
+
+}
+
+.fun-attribute-section-header {
+  font-size: 14px;
+  display: block;
+  font-weight: bold;
+}
+
+
+.fun-attribute-label {
+  font-weight: bold;
+  margin-right: 10px;
+}
+
+.fun-attribute-section {
+  margin: 10px;
+}
+
+.fun-attribute {
+  display: block;
+  margin: 5px;
+}
+
+.fun-icon {
+  margin: 5px;
+}
+
+.fun-flex-container {
+  display: flex;
+}
+
+.fun-disabled {
+  pointer-events: none;
+  color: lightgrey;
+}
+
+.fun-pager-active {
+  text-decoration: underline;
+  font-weight: bold;
+}

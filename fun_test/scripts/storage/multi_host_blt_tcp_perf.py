@@ -866,8 +866,8 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
             file_suffix = "{}_iodepth_{}.txt".format(self.test_mode, (int(fio_iodepth) * int(fio_numjobs)))
             for index, stat_detail in enumerate(self.stats_collect_details):
                 func = stat_detail.keys()[0]
-                self.stats_collect_details[index][func]["count"] = int(self.fio_cmd_args["runtime"] /
-                                                                       self.stats_collect_details[func]["interval"])
+                self.stats_collect_details[index][func]["count"] = int(
+                    self.fio_cmd_args["runtime"] / self.stats_collect_details[index][func]["interval"])
                 if func == "vol_stats":
                     self.stats_collect_details[index][func]["vol_details"] = vol_details
             fun_test.log("Different stats collection thread details for the current IO depth {} before starting "

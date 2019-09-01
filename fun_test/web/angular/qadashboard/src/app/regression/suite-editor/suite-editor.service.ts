@@ -54,10 +54,29 @@ export class SuiteEditorService {
 
   constructor(private apiService: ApiService, private loggerService: LoggerService) { }
 
-  suites(id=null): Observable<Suite[]>{
+  suites(recordsPerPage=null, page=null, selectedCategories=null): Observable<Suite[]> {
     let url = "/api/v1/regression/suites";
+    if (recordsPerPage) {
+      url += `?records_per_page=${recordsPerPage}&page=${page}`;
+    }
+    if (selectedCategories && selectedCategories.length > 0) {
+      let s = "";
+      selectedCategories.forEach(selectedCategory => {
+        s += selectedCategory + ","
+      });
+      s = s.replace(/,$/, '');
+      url += `&categories=${s};`
+    }
+
     return this.apiService.get(url).pipe(switchMap(response => {
       return of<Suite[]>(response.data);
+    }))
+  }
+
+  suitesCount(): Observable<number> {
+    let url = "/api/v1/regression/suites?get_count=true";
+    return this.apiService.get(url).pipe(switchMap(response => {
+      return of<number>(response.data);
     }))
   }
 
@@ -66,6 +85,7 @@ export class SuiteEditorService {
     if (id) {
       url += `${id}`;
     }
+
     return this.apiService.get(url).pipe(map(response => new Suite(response.data)));
   }
 
@@ -85,6 +105,10 @@ export class SuiteEditorService {
     }), catchError(error => {
       throw error;
     }))
+  }
+
+  categories(): Observable<string []> {
+    return of(["networking", "storage", "accelerators", "security", "system"]);
   }
 
 

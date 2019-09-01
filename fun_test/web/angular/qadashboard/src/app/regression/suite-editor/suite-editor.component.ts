@@ -53,7 +53,7 @@ export class SuiteEditorComponent implements OnInit {
   customTestBedSpecForm = null;
   customTestBedValidated = null;
 
-  availableCategories: string [] = ["networking", "storage", "accelerators", "security", "system"];
+  availableCategories: string [] = null;
   availableSubCategories: string [] = ["general"];
   //selectedCategories: string [] = null;
   selectedSubCategories: string [] = null;
@@ -84,6 +84,9 @@ export class SuiteEditorComponent implements OnInit {
       return () => {
       }
     }).pipe(switchMap(response => {
+      return this.service.categories();
+    })).pipe(switchMap(response => {
+      this.availableCategories = response;
       return this.regressionService.tags();
     })).pipe(switchMap((response) => {
       this.availableTags = response;
@@ -107,22 +110,24 @@ export class SuiteEditorComponent implements OnInit {
       }
       if (!this.id) {
         this.suite = new Suite();
+        this.refreshAll();
 
       } else {
         this.service.suite(this.id).subscribe(response => {
           this.suite = response;
           console.log(this.suite.constructor.name);
-        })
+          this.refreshAll();
+
+        });
       }
-      this.refreshAll();
+
 
 
     });
 
-
-
-
   }
+
+
 
   refreshAll() {
     this.driver.subscribe(response => {
@@ -159,7 +164,7 @@ export class SuiteEditorComponent implements OnInit {
   }
 
   prepareCustomTestBedSpecValidated() {
-    this.customTestBedValidated = {};
+    this.customTestBedValidated = null;
     let baseTestBed = null;
     let selectedTestBedValue = this.customTestBedSpecForm.get("selectedTestBed").value;
 
@@ -167,6 +172,7 @@ export class SuiteEditorComponent implements OnInit {
       baseTestBed = selectedTestBedValue.name;
     }
     if (baseTestBed) {
+      this.customTestBedValidated = {};
       this.customTestBedValidated["base_test_bed"] = this.customTestBedSpecForm.get("selectedTestBed").value.name;
       let payload = {};
       let assetRequests = [];
@@ -477,5 +483,10 @@ export class SuiteEditorComponent implements OnInit {
   onSelect() {
     //console.log("Filter change");
     this.editorPristine = false;
+  }
+
+
+  onDeleteSuiteEntry(index) {
+    this.suite.entries.splice(index, 1);
   }
 }

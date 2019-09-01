@@ -520,8 +520,6 @@ def get_diff_results(old_result, new_result):
             else:
                 if not key in old_result:
                     old_result[key] = 0
-                print("In get_diff_results, new_result[key] is: {} of type: {} and old_result[key] is: {} of type: {}".
-                      format(new_result[key], type(new_result[key]), old_result[key], type(old_result[key])))
                 result[key] = new_result[key] - old_result[key]
     except Exception as ex:
         fun_test.critical(str(ex))
@@ -893,7 +891,6 @@ class CollectStats(object):
                         if display_diff:
                             result_vppkts_stats[key].append(diff_vppkts_stats[key])
 
-                    print("result_vppkts_stats: {}".format(result_vppkts_stats))
                     table_data = build_simple_table(data=result_vppkts_stats, column_headers=column_headers,
                                                     split_values_to_columns=True)
                     lines.append("\n########################  {} ########################\n".format(time.ctime()))
@@ -961,7 +958,6 @@ class CollectStats(object):
                         if display_diff:
                             result_psw_stats[key].append(diff_psw_stats[key])
 
-                    print("result_psw_stats: {}".format(result_psw_stats))
                     table_data = build_simple_table(data=result_psw_stats, column_headers=column_headers,
                                                     split_values_to_columns=True)
                     lines.append("\n########################  {} ########################\n".format(time.ctime()))
@@ -1029,7 +1025,6 @@ class CollectStats(object):
                         if display_diff:
                             result_fcp_stats[key].append(diff_fcp_stats[key])
 
-                    print("result_fcp_stats: {}".format(result_fcp_stats))
                     table_data = build_simple_table(data=result_fcp_stats, column_headers=column_headers,
                                                     split_values_to_columns=True)
                     lines.append("\n########################  {} ########################\n".format(time.ctime()))
@@ -1097,7 +1092,6 @@ class CollectStats(object):
                         if display_diff:
                             result_wro_stats[key].append(diff_wro_stats[key])
 
-                    print("result_wro_stats: {}".format(result_wro_stats))
                     table_data = build_simple_table(data=result_wro_stats, column_headers=column_headers,
                                                     split_values_to_columns=True)
                     lines.append("\n########################  {} ########################\n".format(time.ctime()))
@@ -1165,7 +1159,6 @@ class CollectStats(object):
                         if display_diff:
                             result_erp_stats[key].append(diff_erp_stats[key])
 
-                    print("result_erp_stats: {}".format(result_erp_stats))
                     table_data = build_simple_table(data=result_erp_stats, column_headers=column_headers,
                                                     split_values_to_columns=True)
                     lines.append("\n########################  {} ########################\n".format(time.ctime()))
@@ -1233,7 +1226,6 @@ class CollectStats(object):
                         if display_diff:
                             result_etp_stats[key].append(diff_etp_stats[key])
 
-                    print("result_etp_stats: {}".format(result_etp_stats))
                     table_data = build_simple_table(data=result_etp_stats, column_headers=column_headers,
                                                     split_values_to_columns=True)
                     lines.append("\n########################  {} ########################\n".format(time.ctime()))
@@ -1295,7 +1287,6 @@ class CollectStats(object):
                         if display_diff:
                             result_eqm_stats[key].append(diff_eqm_stats[key])
 
-                    print("result_eqm_stats: {}".format(result_eqm_stats))
                     table_data = build_simple_table(data=result_eqm_stats, column_headers=column_headers,
                                                     split_values_to_columns=True)
                     lines.append("\n########################  {} ########################\n".format(time.ctime()))
@@ -1357,7 +1348,6 @@ class CollectStats(object):
                         if display_diff:
                             result_hu_stats[key].append(diff_hu_stats[key])
 
-                    print("result_hu_stats: {}".format(result_hu_stats))
                     table_data = build_simple_table(data=result_hu_stats, column_headers=column_headers,
                                                     split_values_to_columns=True)
                     lines.append("\n########################  {} ########################\n".format(time.ctime()))
@@ -1419,7 +1409,6 @@ class CollectStats(object):
                         if display_diff:
                             result_ddr_stats[key].append(diff_ddr_stats[key])
 
-                    print("result_ddr_stats: {}".format(result_ddr_stats))
                     table_data = build_simple_table(data=result_ddr_stats, column_headers=column_headers,
                                                     split_values_to_columns=True)
                     lines.append("\n########################  {} ########################\n".format(time.ctime()))
@@ -1481,7 +1470,6 @@ class CollectStats(object):
                         if display_diff:
                             result_ca_stats[key].append(diff_ca_stats[key])
 
-                    print("result_ca_stats: {}".format(result_ca_stats))
                     table_data = build_simple_table(data=result_ca_stats, column_headers=column_headers,
                                                     split_values_to_columns=True)
                     lines.append("\n########################  {} ########################\n".format(time.ctime()))
@@ -1543,7 +1531,6 @@ class CollectStats(object):
                         if display_diff:
                             result_cdu_stats[key].append(diff_cdu_stats[key])
 
-                    print("result_cdu_stats: {}".format(result_cdu_stats))
                     table_data = build_simple_table(data=result_cdu_stats, column_headers=column_headers,
                                                     split_values_to_columns=True)
                     lines.append("\n########################  {} ########################\n".format(time.ctime()))

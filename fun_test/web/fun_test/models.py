@@ -16,6 +16,7 @@ from django.contrib.postgres.fields import JSONField, ArrayField
 import json
 from asset.asset_global import AssetType
 from rest_framework.serializers import ModelSerializer
+from django.utils import timezone
 
 
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
@@ -663,13 +664,15 @@ class SuiteItems(models.Model):
 
 class Suite(models.Model):
     name = models.TextField(default="TBD")
-    categories = JSONField(default=[])
-    sub_categories = JSONField(default=[])
-    short_description = models.TextField(default="")
-    long_description = models.TextField(default="")
-    tags = JSONField(default=[])
+    categories = JSONField(default=[], null=True)
+    sub_categories = JSONField(default=[], null=True)
+    short_description = models.TextField(default="", null=True)
+    long_description = models.TextField(default="", null=True)
+    tags = JSONField(default=[], null=True)
     custom_test_bed_spec = JSONField(default=None, null=True)
     entries = JSONField(default=None)
+    created_date = models.DateTimeField(default=timezone.now)
+    modified_date = models.DateTimeField(default=timezone.now)
 
     def to_dict(self):
         result = {}
@@ -678,6 +681,11 @@ class Suite(models.Model):
             result[field.name] = getattr(self, field.name)
         return result
 
+    def add_entry(self, entry):
+        if self.entries is None:
+            self.entries = []
+        self.entries.append(entry)
+        self.save()
 
 
 class TaskStatus(models.Model):
