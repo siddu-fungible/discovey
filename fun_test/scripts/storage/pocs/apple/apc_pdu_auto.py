@@ -68,13 +68,12 @@ class ApcPduTestcase(FunTestCase):
         for pc_no in range(self.NUMBER_OF_ITERATIONS):
             try:
                 self.pc_no = pc_no
+                fun_test.add_checkpoint(checkpoint="ITERATION : {}".format(pc_no))
                 while True:
                     result = self.apc_pdu_reboot()
                     if result:
                         break
                     fun_test.sleep("sleeping for 300 sec before next try", seconds=300)
-
-                fun_test.add_checkpoint(checkpoint="ITERATION : {}".format(pc_no))
 
                 fun_test.log("Checking if BMC is UP")
                 qa_02_handle = Linux(host_ip="qa-ubuntu-02", ssh_username="auto_admin", ssh_password="fun123")
@@ -124,31 +123,38 @@ class ApcPduTestcase(FunTestCase):
         result = False
         try:
             fun_test.log("Iteation no: {} out of {}".format(self.pc_no + 1, self.NUMBER_OF_ITERATIONS))
-            apc_pdu = ApcPdu(host_ip=str(self.apc_info['host_ip']), username=str(self.apc_info['username']),
-                             password=str(self.apc_info['password']))
+            apc_pdu = ApcPdu(host_ip=self.apc_info['host_ip'], username=self.apc_info['username'],
+                             password=self.apc_info['password'])
             fun_test.sleep(message="Wait for few seconds after connect with apc power rack", seconds=5)
 
             apc_outlet_off_msg = apc_pdu.outlet_off(self.outlet_no)
             fun_test.log("APC PDU outlet off mesg {}".format(apc_outlet_off_msg))
+            outlet_off = self.match_success(apc_outlet_off_msg)
+
             fun_test.sleep(message="Wait for few seconds after switching off fs outlet", seconds=5)
 
             apc_outlet_on_msg = apc_pdu.outlet_on(self.outlet_no)
             fun_test.log("APC PDU outlet on mesg {}".format(apc_outlet_on_msg))
+            outlet_on = self.match_success(apc_outlet_on_msg)
             fun_test.sleep(message="Wait for few seconds after switching on fs outlet", seconds=5)
 
-            apc_outlet_status_msg = apc_pdu.outlet_status(self.outlet_no)
-
-            outlet_status = re.search(r"^olStatus.*Outlet\s+{}\s+.*(ON|OFF)".format(str(self.outlet_no)),
-                                      apc_outlet_status_msg, re.IGNORECASE | re.DOTALL | re.MULTILINE)
-            fun_test.simple_assert(expression=outlet_status.groups()[0] == 'On', context=None,
-                                   message="Power did not come back after pdu port reboot")
-
+            if outlet_off and outlet_on:
+                result = True
+            else:
+                result = False
+            fun_test.add_checkpoint("Powercycle FS", self.to_str(result), True, result)
             fun_test.sleep(message="Wait for 360 seconds before Checking if platform components are up", seconds=360)
             apc_pdu.disconnect()
-            result = True
         except:
             fun_test.log("Error: unable to connect to ApcPdu")
 
+        return result
+
+    def match_success(self, output_message):
+        result = False
+        match_success = re.search(r'Success', output_message)
+        if match_success:
+            result = True
         return result
 
     def cleanup(self):
