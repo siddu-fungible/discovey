@@ -14,6 +14,8 @@ from datetime import datetime
 import re
 import os
 
+ERROR_REGEXES = ["MUD_MCI_NON_FATAL_INTR_STAT", "Welcome"]
+
 """
 Possible workarounds:
     "workarounds": {
@@ -494,12 +496,32 @@ class Bmc(Linux):
                     content = f.read()
                     f.seek(0, 0)
                     f.write(self.u_boot_logs[f1_index] + '\n' + content)
-
+                self.post_process_uart_log(f1_index=f1_index, file_name=artifact_file_name)
                 fun_test.add_auxillary_file(description=self._get_context_prefix("F1_{} UART log").format(f1_index),
                                             filename=artifact_file_name)
         if self.context:
             fun_test.add_auxillary_file(description=self._get_context_prefix("bringup"),
                                         filename=self.context.output_file_path)
+
+
+    def post_process_uart_log(self, f1_index, file_name):
+        try:
+            fun_test.log("Post-processing UART log F1: {}".format(f1_index))
+            regex = ""
+            for error_regex in ERROR_REGEXES:
+                regex += "{}|".format(error_regex)
+            regex = regex.rstrip("|")
+            with open(file_name, "r") as f:
+                content = f.read()
+                m = re.search(regex, content)
+                if m:
+                    full_match = m.group(0)
+                    fun_test.critical("ERROR Regex matched: {}".format(full_match))
+                    error_message = "Regression: ERROR REGEX Matched: {} Job-ID: {} F1_{} Context: {}".format(full_match, fun_test.get_suite_execution_id(), f1_index, self._get_context_prefix(data="error"))
+                    fun_test.send_mail(subject=error_message, content=error_message)
+
+        except Exception as ex:
+            fun_test.critical(ex)
 
 
     def get_f1_device_paths(self):
