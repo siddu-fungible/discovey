@@ -14,7 +14,7 @@ from datetime import datetime
 import re
 import os
 
-ERROR_REGEXES = ["MUD_MCI_NON_FATAL_INTR_STAT", "Welcome"]
+ERROR_REGEXES = ["MUD_MCI_NON_FATAL_INTR_STAT"]
 
 """
 Possible workarounds:
