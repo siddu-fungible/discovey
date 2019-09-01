@@ -664,11 +664,11 @@ class SuiteItems(models.Model):
 
 class Suite(models.Model):
     name = models.TextField(default="TBD")
-    categories = JSONField(default=[])
-    sub_categories = JSONField(default=[])
-    short_description = models.TextField(default="")
-    long_description = models.TextField(default="")
-    tags = JSONField(default=[])
+    categories = JSONField(default=[], null=True)
+    sub_categories = JSONField(default=[], null=True)
+    short_description = models.TextField(default="", null=True)
+    long_description = models.TextField(default="", null=True)
+    tags = JSONField(default=[], null=True)
     custom_test_bed_spec = JSONField(default=None, null=True)
     entries = JSONField(default=None)
     created_date = models.DateTimeField(default=timezone.now)

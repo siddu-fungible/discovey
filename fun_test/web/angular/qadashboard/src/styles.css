@@ -596,7 +596,7 @@ tr.text-center > th {
   cursor: pointer;
   min-width: 100px;
   border-radius: .25rem;
-  margin-right: 10px;
+  margin: 5px;
 }
 
 .fun-button-add:hover {
@@ -612,7 +612,8 @@ tr.text-center > th {
   padding: 5px;
   border-radius: 2px;
   min-width: 100px;
-  margin-right: 10px;
+  margin: 5px;
+
 
 }
 
