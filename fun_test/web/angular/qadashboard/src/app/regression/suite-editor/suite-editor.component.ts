@@ -4,11 +4,10 @@ import {TestBedService} from "../test-bed/test-bed.service";
 import {Observable, of} from "rxjs";
 import {switchMap} from "rxjs/operators";
 import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
-import {SuiteEditorService, Suite, SuiteEntry} from "./suite-editor.service";
+import {SuiteEditorService, Suite, SuiteEntry, SuiteMode} from "./suite-editor.service";
 import {RegressionService} from "../regression.service";
 import {LoggerService} from "../../services/logger/logger.service";
 import {ActivatedRoute} from "@angular/router";
-
 
 enum CustomAssetSelection {  // used by the Custom test-bed spec modal
   NUM,
@@ -23,6 +22,9 @@ enum CustomAssetSelection {  // used by the Custom test-bed spec modal
 })
 export class SuiteEditorComponent implements OnInit {
   @Input() id: number = null;
+  mode: SuiteMode = SuiteMode.SUITE;
+  SuiteMode = SuiteMode;
+
   testCaseIds: number[] = null;
   inputs: any = null;
   customTestBedSpec: any = null;
@@ -84,6 +86,8 @@ export class SuiteEditorComponent implements OnInit {
       return () => {
       }
     }).pipe(switchMap(response => {
+      return this.getQueryParam();
+    })).pipe(switchMap(response => {
       return this.service.categories();
     })).pipe(switchMap(response => {
       this.availableCategories = response;
@@ -128,6 +132,14 @@ export class SuiteEditorComponent implements OnInit {
   }
 
 
+  getQueryParam() {
+    return this.route.queryParams.pipe(switchMap(params => {
+      if (params.hasOwnProperty('mode')) {
+        this.mode = params["mode"];
+      }
+      return of(params);
+    }))
+  }
 
   refreshAll() {
     this.driver.subscribe(response => {
