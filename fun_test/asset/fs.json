@@ -503,5 +503,26 @@
       "mgmt_ssh_username": "fun",
       "mgmt_ssh_password": "123"
     }
+  },
+  {
+    "name": "fs-53",
+    "gateway_ip": "10.1.105.1",
+    "bmc": {
+      "mgmt_ip": "10.1.105.145",
+      "mgmt_ssh_username": "sysadmin",
+      "mgmt_ssh_password": "superuser"
+    },
+    "fpga": {
+      "fpga_use_telnet": true,
+      "terminal_ip": "cab01-terminal",
+      "terminal_port": 7002,
+      "terminal_username": "root",
+      "terminal_password": ""
+    },
+    "come": {
+      "mgmt_ip": "10.1.105.147",
+      "mgmt_ssh_username": "fun",
+      "mgmt_ssh_password": "123"
+    }
   }
 ]
