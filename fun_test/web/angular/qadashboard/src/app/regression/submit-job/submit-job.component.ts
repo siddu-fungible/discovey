@@ -10,6 +10,7 @@ import {switchMap} from "rxjs/operators";
 import {of} from "rxjs";
 import {ActivatedRoute} from "@angular/router";
 import {TriageService} from "../triage2/triage.service";
+import {SuiteEditorService} from "../suite-editor/suite-editor.service";
 
 class Mode {
   static REGULAR = "REGULAR";
@@ -111,7 +112,8 @@ export class SubmitJobComponent implements OnInit {
 
   constructor(private apiService: ApiService, private logger: LoggerService,
               private title: Title, private route: ActivatedRoute,
-              private triageService: TriageService) {
+              private triageService: TriageService,
+              private suiteEditorService: SuiteEditorService) {
     this.currentTriageType = this.triageTypes[0].value;
   }
 
@@ -145,6 +147,7 @@ export class SubmitJobComponent implements OnInit {
         queryParamString = "?suite_type=task";
       }
 
+      /*
       this.apiService.get("/regression/suites" + queryParamString).subscribe((result) => {
         let suitesInfo = result.data;
         self.suitesInfo = suitesInfo;
@@ -153,7 +156,14 @@ export class SubmitJobComponent implements OnInit {
           self.suitesInfoKeys.push(suites);
         }
         self.suitesInfoKeys.sort();
-      });
+      });*/
+
+      this.suiteEditorService.suites(null, 400, 1, null, null).subscribe(response => {
+        self.suitesInfo = response;
+        self.suitesInfo.forEach(suite => {
+          self.suitesInfoKeys.push(suite.name);
+        })
+      })
 
     });
 
