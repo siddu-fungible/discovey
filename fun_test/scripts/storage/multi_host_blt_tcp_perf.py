@@ -579,6 +579,8 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
         fun_test.log("Provided job inputs: {}".format(job_inputs))
         if "blt_count" in job_inputs:
             self.blt_count = job_inputs["blt_count"]
+        if "capacity" in job_inputs:
+            self.blt_details["capacity"] = job_inputs["capacity"]
         if "nvme_io_queues" in job_inputs:
             self.nvme_io_queues = job_inputs["nvme_io_queues"]
         if "warm_up_traffic" in job_inputs:

@@ -4,6 +4,13 @@ import {LoggerService} from "../../services/logger/logger.service";
 import {catchError, switchMap, map} from "rxjs/operators";
 import {Observable, of, throwError} from "rxjs";
 
+
+export class SuiteMode {
+  static SUITE = "SUITE";
+  static TASK = "TASK";
+}
+
+
 interface SuiteEntryInterface {
   script_path: string;
   inputs: string[];
