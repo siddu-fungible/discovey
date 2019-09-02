@@ -73,7 +73,7 @@
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {
       "multiple_jobs": "--rw=randwrite --bs=4k --iodepth=32 --numjobs=1 --ioengine=libaio --direct=1 --prio=0 --cpus_allowed_policy=split --size=100%",
-      "timeout": 3600
+      "timeout": 5400
     },
     "fio_cmd_args": {
       "multiple_jobs": "--ioengine=libaio --direct=1 --prio=0 --cpus_allowed_policy=split --group_reporting=1 --norandommap --randrepeat=0",
@@ -121,7 +121,7 @@
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {
       "multiple_jobs": "--rw=randwrite --bs=4k --iodepth=32 --numjobs=1 --ioengine=libaio --direct=1 --prio=0 --cpus_allowed_policy=split --size=100%",
-      "timeout": 3600
+      "timeout": 5400
     },
     "fio_cmd_args": {
       "multiple_jobs": "--ioengine=libaio --direct=1 --prio=0 --cpus_allowed_policy=split --group_reporting=1 --norandommap --randrepeat=0",
