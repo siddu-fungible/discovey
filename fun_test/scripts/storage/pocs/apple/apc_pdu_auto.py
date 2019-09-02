@@ -4,7 +4,7 @@ from lib.host.apc_pdu import ApcPdu
 import re
 from lib.fun.fs import ComE, Bmc
 from lib.host.linux import Linux
-from lib.host.storage_controller import StorageController
+
 
 class ApcPduScript(FunTestScript):
     def describe(self):
