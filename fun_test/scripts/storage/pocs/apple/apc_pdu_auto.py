@@ -86,7 +86,8 @@ class ApcPduTestcase(FunTestCase):
                 topology_helper = TopologyHelper()
                 topology_helper.set_dut_parameters(f1_parameters={0: {"boot_args": self.f1_0_boot_args},
                                                                   1: {"boot_args": self.f1_1_boot_args}},
-                                                   skip_funeth_come_power_cycle=True
+                                                   skip_funeth_come_power_cycle=True,
+                                                   dut_index=0
                                                    )
                 topology = topology_helper.deploy()
                 fun_test.test_assert(topology, "Topology deployed")
@@ -110,7 +111,7 @@ class ApcPduTestcase(FunTestCase):
             except:
                 fun_test.log("Error in running the iteration: {}".format(self.pc_no))
 
-            # fun_test.sleep("Sleeping for 10s before next iteration", seconds=10)
+            fun_test.sleep("Sleeping for 10s before next iteration", seconds=10)
 
     @staticmethod
     def to_str(boolean_data):
@@ -118,7 +119,7 @@ class ApcPduTestcase(FunTestCase):
             return FunTest.PASSED
         return FunTest.FAILED
 
-    def apc_pdu_reboot(self, come_handle, wait_time=360):
+    def apc_pdu_reboot(self, come_handle):
         '''
         1. check COMe is up, if up than power off.
         2. check COMe now, if its down tha power on
