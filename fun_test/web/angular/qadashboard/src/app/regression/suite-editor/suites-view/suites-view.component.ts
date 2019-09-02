@@ -1,7 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import {SuiteEditorService, Suite} from "../suite-editor.service";
-import {Observable, of} from "rxjs";
-import {switchMap} from "rxjs/operators";
+import {Observable, of, Subject} from "rxjs";
+import {debounceTime, distinctUntilChanged, switchMap} from "rxjs/operators";
 import {LoggerService} from "../../../services/logger/logger.service";
 import {PagerService} from "../../../services/pager/pager.service";
 
@@ -12,8 +12,6 @@ import {PagerService} from "../../../services/pager/pager.service";
   styleUrls: ['./suites-view.component.css']
 })
 export class SuitesViewComponent implements OnInit {
-
-  constructor(private service: SuiteEditorService, private loggerService: LoggerService, private pagerService: PagerService) { }
   suites: Suite[] = null;
   availableCategories: string[] = null;
   selectedCategories: string[] = null;
@@ -23,47 +21,41 @@ export class SuitesViewComponent implements OnInit {
   RECORDS_PER_PAGE: number = 20;
   currentPage = 1;
   pager: any = {};
+  byNameSearchText: string = null;
+  status: string = null;
+
+
+  constructor(private service: SuiteEditorService, private loggerService: LoggerService, private pagerService: PagerService) {
+
+
+
+  }
+
 
   ngOnInit() {
     this.driver =
-    of(true).pipe(switchMap(response => {
-      return this.service.categories();
-    })).pipe(switchMap(response => {
-      this.availableCategories = response;
-      return this.service.suitesCount();
-    })).pipe(switchMap(suiteCount => {
-      this.suitesCount = suiteCount;
-      return this.service.suites(this.RECORDS_PER_PAGE, this.currentPage, this.selectedCategories);
-    })).pipe(switchMap(response => {
-      this.suites = response;
-      this.suites.map(suite => {
-        suite["dirty"] = false;
-        suite["originalCategories"] = suite.categories;
-      });
-      this.pager = this.pagerService.getPager(this.suitesCount, this.currentPage, this.RECORDS_PER_PAGE);
-      /*
-      this.suites = this.suites.filter(suite => {
-        let result = false;
-        if (!this.selectedCategories || this.selectedCategories.length === 0) {
-          result = true;
-        } else if (this.selectedCategories.length > 0) {
-          for (let index = 0; index < this.selectedCategories.length; index++) {
-            if (suite.categories.indexOf(this.selectedCategories[index]) > -1) {
-              result = true;
-              break;
-            }
-          }
-        }
-        return result;
-      });*/
-      return of(true);
-    }));
+      of(true).pipe(switchMap(response => {
+        return this.service.categories();
+      })).pipe(switchMap(response => {
+        this.availableCategories = response;
+        return this.service.suites<number>(true, this.RECORDS_PER_PAGE, this.currentPage, this.selectedCategories, this.byNameSearchText);
+      })).pipe(switchMap(suiteCount => {
+        this.suitesCount = suiteCount;
+        this.pager = this.pagerService.getPager(this.suitesCount, this.currentPage, this.RECORDS_PER_PAGE);
+        return this.service.suites<Suite[]>(null, this.RECORDS_PER_PAGE, this.currentPage, this.selectedCategories, this.byNameSearchText);
+      })).pipe(switchMap(response => {
+        this.suites = response;
+        this.suites.map(suite => {
+          suite["dirty"] = false;
+          suite["originalCategories"] = suite.categories;
+        });
+        return of(true);
+      }));
     this.refreshAll();
 
   }
 
   setPage(page) {
-
     if (page === 0 || (page > this.pager.endPage)) {
       return;
     }
@@ -72,10 +64,14 @@ export class SuitesViewComponent implements OnInit {
   }
 
   refreshAll() {
+    this.status = "Refreshing suites";
+    console.log(this.status);
     this.driver.subscribe(response => {
-
-    }, error=> {
+      this.status = null;
+    }, error => {
       this.loggerService.error("Unable to initialize view component");
+      this.status = null;
+
     })
   }
 
@@ -105,6 +101,12 @@ export class SuitesViewComponent implements OnInit {
     }, error => {
       this.loggerService.error("Unable to update short description");
     })
+  }
+
+  onSearchText(searchText) {
+    this.byNameSearchText = searchText;
+    //console.log(this.byNameSearchText);
+    this.refreshAll();
   }
 
 }
