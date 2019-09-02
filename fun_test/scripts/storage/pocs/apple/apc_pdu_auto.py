@@ -45,6 +45,9 @@ class ApcPduTestcase(FunTestCase):
                 come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
                                    ssh_username=self.fs['come']['mgmt_ssh_username'],
                                    ssh_password=self.fs['come']['mgmt_ssh_password'])
+                qa_02_handle = Linux(host_ip="qa-ubuntu-02", ssh_username="auto_admin", ssh_password="fun123")
+                qa_02_handle.destroy()
+
                 fun_test.add_checkpoint(checkpoint="ITERATION : {}".format(pc_no))
 
                 fs_reboot = self.apc_pdu_reboot(come_handle)
@@ -66,7 +69,7 @@ class ApcPduTestcase(FunTestCase):
                 fun_test.add_checkpoint("FS reboot using APC PDU", self.to_str(reboot_sucess), True, reboot_sucess)
 
                 fun_test.log("Checking if BMC is UP")
-                qa_02_handle = Linux(host_ip="qa-ubuntu-02", ssh_username="auto_admin", ssh_password="fun123")
+
                 bmc_up = qa_02_handle.ping(dst=self.fs['bmc']['mgmt_ip'])
                 fun_test.add_checkpoint("BMC is UP",
                                         self.to_str(bmc_up), True, bmc_up)
@@ -122,6 +125,7 @@ class ApcPduTestcase(FunTestCase):
         result = False
         try:
             fun_test.log("Iteation no: {} out of {}".format(self.pc_no + 1, self.NUMBER_OF_ITERATIONS))
+
             come_up = come_handle.is_host_up()
             come_handle.destroy()
             fun_test.add_checkpoint("COMe is UP (before powercycle)",
