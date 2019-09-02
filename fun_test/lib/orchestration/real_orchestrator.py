@@ -30,6 +30,7 @@ class RealOrchestrator(Orchestrator, ToDictMixin):
             boot_args = dut_obj.spec.get("custom_boot_args", None)
             f1_parameters = dut_obj.spec.get("f1_parameters", None)
             fun_cp_callback = dut_obj.spec.get("fun_cp_callback", None)
+            skip_funeth_come_power_cycle = dut_obj.spec.get("skip_funeth_come_power_cycle", None)
 
             artifact_file_name = fun_test.get_test_case_artifact_file_name("DUT_{}_{}_bring_up.txt".format(dut_index, dut_name))
             context_description = "DUT:{}:{}".format(dut_index, dut_name)
@@ -39,7 +40,9 @@ class RealOrchestrator(Orchestrator, ToDictMixin):
                             boot_args=boot_args,
                             f1_parameters=f1_parameters,
                             context=context,
-                            fun_cp_callback=fun_cp_callback, power_cycle_come=True)
+                            fun_cp_callback=fun_cp_callback,
+                            power_cycle_come=True,
+                            skip_funeth_come_power_cycle=skip_funeth_come_power_cycle)
             self.dut_instance = fs_obj
             # Start Fs
             fun_test.test_assert(fs_obj.bootup(non_blocking=True, threaded=True), "FS bootup non-blocking initiated")

@@ -1082,7 +1082,8 @@ class Fs(object, ToDictMixin):
             setup_bmc_support_files=None,
             fun_cp_callback=None,
             power_cycle_come=False,
-            already_deployed=False):  #TODO
+            already_deployed=False,
+            skip_funeth_come_power_cycle=None):  #TODO
         if not fs_spec:
             am = fun_test.get_asset_manager()
             test_bed_type = fun_test.get_job_environment_variable("test_bed_type")
@@ -1109,7 +1110,8 @@ class Fs(object, ToDictMixin):
         gateway_ip = fs_spec.get("gateway_ip", None)
         workarounds = fs_spec.get("workarounds", {})
         retimer_workaround = workarounds.get("retimer_workaround", None)
-        skip_funeth_come_power_cycle = workarounds.get("skip_funeth_come_power_cycle", None)
+        skip_funeth_come_power_cycle = skip_funeth_come_power_cycle or workarounds.get("skip_funeth_come_power_cycle", None)
+
         apc_info = fs_spec.get("apc_info", None)  # Used for power-cycling the entire FS
         return Fs(bmc_mgmt_ip=bmc_spec["mgmt_ip"],
                   bmc_mgmt_ssh_username=bmc_spec["mgmt_ssh_username"],
