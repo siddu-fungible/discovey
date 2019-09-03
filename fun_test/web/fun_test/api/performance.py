@@ -184,12 +184,19 @@ def interested_metrics(request, workspace_id=None):
 
 @csrf_exempt
 @api_safe_json_response
-def metric_charts(request):
+def metric_charts(request, metric_id=None):
     result = []
     if request.method == "GET":
         workspace_id = request.GET.get("workspace_id", None)
+        q = None
         if workspace_id:
-            charts = MetricChart.objects.filter(workspace_ids__contains=int(workspace_id))
-        for chart in charts:
-            result.append(chart.metric_id)
+            q = Q(workspace_ids__contains=int(workspace_id))
+        if metric_id:
+            q = Q(metric_id=metric_id)
+        if q:
+            charts = MetricChart.objects.filter(q)
+            for chart in charts:
+                chart_dict = {}
+                chart_dict["metric_id"] = chart.metric_id
+                result.append(chart_dict)
     return result

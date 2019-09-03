@@ -58,7 +58,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
           }),
           switchMap(response => {
             this.workspace = response;
-            return this.performanceService.getInterestedMetrics(this.workspace.id);
+            return this.performanceService.interestedMetrics(this.workspace.id);
           }),
           switchMap(response => {
             this.workspace.interested_metrics = response;
@@ -69,7 +69,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
           }),
           switchMap(response => {
             this.buildInfo = response;
-            return this.performanceService.metricCharts(this.workspace.id);
+            return this.performanceService.metricCharts(null, this.workspace.id);
           }),).subscribe(response => {
           console.log("fetched workspace and buildInfo from URL");
           this.setMetricIds(response);
@@ -100,7 +100,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
      this.allMetricIds = [];
     this.workspaceMetrics = [];
     for (let chart of charts) {
-      this.workspaceMetrics.push(Number(chart));
+      this.workspaceMetrics.push(Number(chart["metric_id"]));
     }
     this.interestedMetrics = [];
     for (let metric of this.workspace.interested_metrics) {

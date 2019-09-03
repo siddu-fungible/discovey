@@ -112,7 +112,7 @@ export class PerformanceService {
     }));
   }
 
-  metricCharts(workspaceId): any {
+  metricCharts(metricId, workspaceId): any {
     return this.apiService.get("/api/v1/performance/metric_charts" + "?workspace_id=" + workspaceId).pipe(switchMap(response => {
       return of(response.data);
     }));
@@ -124,14 +124,14 @@ export class PerformanceService {
     }));
   }
 
-  getInterestedMetrics(workspaceId): any {
+  interestedMetrics(workspaceId): any {
     return this.apiService.get("/api/v1/performance/workspaces/" + workspaceId + "/interested_metrics").pipe(switchMap(response => {
       return of(response.data);
     }));
   }
 
   getWorkspaces(email, workspaceName): any {
-    return this.apiService.get("/api/v1/performance/workspaces/" + email + "/" + workspaceName).pipe(switchMap(response => {
+    return this.apiService.get("/api/v1/performance/workspaces?email=" + email + "&workspace_name=" + workspaceName).pipe(switchMap(response => {
       return of(response.data[0]);
     }));
   }

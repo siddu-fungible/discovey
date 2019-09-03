@@ -183,7 +183,7 @@ export class PerformanceWorkspaceComponent implements OnInit {
   }
 
   fetchWorkspaces(user): any {
-    return this.apiService.get("/api/v1/performance/workspaces/" + user.email).pipe(switchMap(response => {
+    return this.apiService.get("/api/v1/performance/workspaces?email=" + user.email).pipe(switchMap(response => {
       let workspaces = response.data;
       this.profile = [];
       if (workspaces.length) {
@@ -312,7 +312,7 @@ export class PerformanceWorkspaceComponent implements OnInit {
   }
 
   onDeleteWorkspace(workspace) {
-    this.apiService.delete("/api/v1/performance/workspaces/" + this.selectedUser.email + "/" + workspace.name).subscribe(response => {
+    this.apiService.delete("/api/v1/performance/workspaces?email=" + this.selectedUser.email + "&workspace_name=" + workspace.name).subscribe(response => {
       this.loggerService.success(`Deleted ${this.selectedUser.email} ${workspace.name}`);
       this.fetchWorkspacesAfterEditing();
       this.modalService.dismissAll();

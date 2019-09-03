@@ -1,10 +1,10 @@
 <fun-spinner [status]="status"></fun-spinner>
 <div class="component container">
-  <div [ngClass]="{'row': selectMode !== selectModeType.ShowEditWorkspace}">
+  <div [ngClass]="{'row': selectMode !== SelectMode.ShowEditWorkspace}">
     <!-- left side of the performance page containing tree structure -->
-    <div [ngClass]="{'col-lg-5 col-md-5 col-xxl-4 col-xl-5 left-col': selectMode !== selectModeType.ShowEditWorkspace}">
+    <div [ngClass]="{'col-lg-5 col-md-5 col-xxl-4 col-xl-5 left-col': selectMode !== SelectMode.ShowEditWorkspace}">
       <table class="table table-nonfluid">
-        <tr *ngIf="selectMode !== selectModeType.ShowEditWorkspace && this.selectMode !== selectModeType.ShowAttachDag">
+        <tr *ngIf="selectMode !== SelectMode.ShowEditWorkspace && this.selectMode !== SelectMode.ShowAttachDag">
           <th class="text-center">Aspect</th>
           <th id="score-info" class="text-center">
             <label class="no-margin" data-placement="right" triggers="click"
@@ -84,7 +84,7 @@
               </a>
             </span>
             </td>
-            <td *ngIf="!flatNode.special && selectMode !== selectModeType.ShowEditWorkspace && this.selectMode !== selectModeType.ShowAttachDag" class="text-center">
+            <td *ngIf="!flatNode.special && selectMode !== SelectMode.ShowEditWorkspace && this.selectMode !== SelectMode.ShowAttachDag" class="text-center">
               <div class="score-label">
                 <span style="vertical-align: top;">
                     <span *ngIf="flatNode.node.chartName!='All metrics'">
@@ -113,28 +113,28 @@
                 {{ flatNode.node.lastScore | number: '1.1-1' }}
               </div>
             </td>
-            <td *ngIf="flatNode.special && selectMode !== selectModeType.ShowEditWorkspace && this.selectMode !== selectModeType.ShowAttachDag">
+            <td *ngIf="flatNode.special && selectMode !== SelectMode.ShowEditWorkspace && this.selectMode !== SelectMode.ShowAttachDag">
               &nbsp;
             </td>
-            <td class="text-center" *ngIf="selectMode !== selectModeType.ShowEditWorkspace && this.selectMode !== selectModeType.ShowAttachDag">
+            <td class="text-center" *ngIf="selectMode !== SelectMode.ShowEditWorkspace && this.selectMode !== SelectMode.ShowAttachDag">
               <span *ngIf="!flatNode.node.leaf">{{ flatNode.node.numLeaves }}</span>
             </td>
 
-            <td *ngIf="!flatNode.node.leaf && !flatNode.special && selectMode !== selectModeType.ShowEditWorkspace && this.selectMode !== selectModeType.ShowAttachDag">
+            <td *ngIf="!flatNode.node.leaf && !flatNode.special && selectMode !== SelectMode.ShowEditWorkspace && this.selectMode !== SelectMode.ShowAttachDag">
               <span *ngIf="flatNode.node.degrades.size !== 0"><i class='fa fa-arrow-down aspect-trend-icon fa-icon-red'>:</i>{{ flatNode.node.degrades.size }}</span>
               <a *ngIf="flatNode.node.failures.size !== 0" style="color: black; cursor: pointer">
                 <span *ngIf="flatNode.node.degrades.size !== 0">&nbsp;</span><span (click)="openBugPanel(flatNode)"><i
                 class='fa fa-times fa-icon-red'>:</i>{{ flatNode.node.failures.size }}</span></a>
             </td>
-            <td *ngIf="flatNode.node.leaf && flatNode.node.lastNumBuildFailed > 0 && !flatNode.special && selectMode !== selectModeType.ShowEditWorkspace && this.selectMode !== selectModeType.ShowAttachDag">
+            <td *ngIf="flatNode.node.leaf && flatNode.node.lastNumBuildFailed > 0 && !flatNode.special && selectMode !== SelectMode.ShowEditWorkspace && this.selectMode !== SelectMode.ShowAttachDag">
               Bld:<label (mouseenter)="fetchChartInfo(flatNode)" tooltip [tooltipContentCallback]="tooltipCallback"
                          [tooltipContentCallbackArg]="flatNode" placement="right" delay="1" id="1"
                          class="badge failed-label no-margin badge-danger">FAILED</label>
             </td>
-            <td *ngIf="flatNode.special && selectMode !== selectModeType.ShowEditWorkspace && this.selectMode !== selectModeType.ShowAttachDag">
+            <td *ngIf="flatNode.special && selectMode !== SelectMode.ShowEditWorkspace && this.selectMode !== SelectMode.ShowAttachDag">
               &nbsp;
             </td>
-            <td *ngIf="!flatNode.special && selectMode !== selectModeType.ShowEditWorkspace && this.selectMode !== selectModeType.ShowAttachDag">
+            <td *ngIf="!flatNode.special && selectMode !== SelectMode.ShowEditWorkspace && this.selectMode !== SelectMode.ShowAttachDag">
                 <span *ngIf="flatNode.node.numBugs > 0" (click)="flatNode.showJiraInfo = !flatNode.showJiraInfo"
                       class="badge no-padding badge-light bug-badge">Bugs<sup><span class="text-color-red">{{ flatNode.node.numBugs }}</span>
                 </sup></span>
@@ -143,7 +143,7 @@
                 <span *ngIf="!flatNode.showJiraInfo" class="plus-minus">+</span>
                   <span *ngIf="flatNode.showJiraInfo" class="plus-minus">-</span></span>
             </td>
-            <td *ngIf="flatNode.special && selectMode !== selectModeType.ShowEditWorkspace && this.selectMode !== selectModeType.ShowAttachDag">
+            <td *ngIf="flatNode.special && selectMode !== SelectMode.ShowEditWorkspace && this.selectMode !== SelectMode.ShowAttachDag">
               &nbsp;
             </td>
             <ng-template #TrendInfo>
@@ -169,7 +169,7 @@
               </div>
             </ng-template>
           </tr>
-          <tr *ngIf="flatNode.showJiraInfo && selectMode !== selectModeType.ShowEditWorkspace && this.selectMode !== selectModeType.ShowAttachDag">
+          <tr *ngIf="flatNode.showJiraInfo && selectMode !== SelectMode.ShowEditWorkspace && this.selectMode !== SelectMode.ShowAttachDag">
             <td colspan="6">
               <!--<span [innerHTML]="getIndentHtml(flatNode) | safeHtml"></span>-->
               <jira-info [apiUrl]="'/metrics/jiras/' + flatNode.node.metricId"
@@ -179,13 +179,13 @@
           </tr>
         </ng-container>
       </table>
-      <span *ngIf="selectMode == selectModeType.ShowEditWorkspace" class="fun-cancel-link" (click)="cancelInterestedMetrics()">Cancel</span>
-      <button *ngIf="selectMode == selectModeType.ShowEditWorkspace" class="fun-button-submit"
+      <span *ngIf="selectMode == SelectMode.ShowEditWorkspace" class="fun-cancel-link" (click)="cancelInterestedMetrics()">Cancel</span>
+      <button *ngIf="selectMode == SelectMode.ShowEditWorkspace" class="fun-button-submit"
               (click)="submitInterestedMetrics()">Submit
       </button>
     </div>
     <!-- right side of the perf page dispalying the charts -->
-    <div [ngClass]="{'col-lg-7 col-md-7 col-xxl-5 col-xl-7 right-col' : selectMode !== selectModeType.ShowEditWorkspace}">
+    <div [ngClass]="{'col-lg-7 col-md-7 col-xxl-5 col-xl-7 right-col' : selectMode !== SelectMode.ShowEditWorkspace}">
       <div *ngIf="mode === modeType.ShowingBugPanel && showBugPanel">
         <summary-jira-info [bugInfoUrl]="'/common/bug_info'" [data]="jiraList"
                            [allowDelete]="false" [allowContext]="true" [allowAdd]="false"

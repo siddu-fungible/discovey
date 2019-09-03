@@ -91,7 +91,7 @@ enum Mode {
 
 export class PerformanceComponent implements OnInit {
   //used for workspace editing
-  @Input() selectMode: any = SelectMode.ShowMainSite; //allows only to select metrics and not display any charts
+  @Input() selectMode: SelectMode = SelectMode.ShowMainSite; //allows only to select metrics and not display any charts
   @Input() userProfileEmail: string = null; //the current workspace user email
   @Input() workspaceId: number = null; //current workspace Id
   @Input() interestedMetrics: any = null; //metrics already part of the workspace
@@ -99,7 +99,7 @@ export class PerformanceComponent implements OnInit {
   @Output() editedWorkspace: EventEmitter<boolean> = new EventEmitter(); //successful submission of metrics to DB
   @Input() metricIds: number[] = null;
   updatedInterestedMetrics: any = [];
-  selectModeType: any = SelectMode;
+  SelectMode = SelectMode;
 
   numGridColumns: number;
   lastStatusUpdateTime: any;
