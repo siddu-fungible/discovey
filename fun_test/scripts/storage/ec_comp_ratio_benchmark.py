@@ -193,9 +193,20 @@ class ECVolumeLevelScript(FunTestScript):
             configured_vols[effort]['nvme_device'] = fetch_nvme['nvme_device']
 
             # Create file system on attached device
-            fun_test.test_assert(self.end_host.create_filesystem(fs_type=self.file_system,
-                                                                 device=fetch_nvme['nvme_device'],
-                                                                 timeout=120),
+            for i in xrange(2):  # Try mkfs twice first time it might fail due to crash in nvme device
+                try:
+                    resp = self.end_host.create_filesystem(fs_type=self.file_system,
+                                                           device=fetch_nvme['nvme_device'],
+                                                           timeout=210)
+                    if resp:
+                        break
+                    else:
+                        fun_test.sleep(
+                            message="mkfs failed on first attempt for device: {} ".format(fetch_nvme['nvme_device']),
+                            seconds=15)
+                except Exception as ex:
+                    fun_test.critical(ex.message)
+            fun_test.test_assert(resp,
                                  message="Create File System on nvme device: {}".format(fetch_nvme['nvme_device']))
 
             # create mount dir for respective volumes
