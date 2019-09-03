@@ -597,5 +597,105 @@
         }
       }
     }
+  },
+  "cab04-qa-01": {
+    "host_ip": "cab04-qa-01",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "cab04-qa-01-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    },
+    "test_interface_info": {
+      "0": {
+        "name": "enp216s0f1",
+        "ip": "15.1.15.7/24",
+        "switch_info": {
+          "name": "qfx-3",
+          "port": "et-0/0/14:0"
+        }
+      }
+    }
+  },
+  "cab04-qa-02": {
+    "host_ip": "cab04-qa-02",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "cab04-qa-02-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    },
+    "test_interface_info": {
+      "0": {
+        "name": "enp216s0f1",
+        "ip": "15.1.15.8/24",
+        "switch_info": {
+          "name": "qfx-3",
+          "port": "et-0/0/14:2"
+        }
+      }
+    }
+  },
+  "cab04-qa-03": {
+    "host_ip": "cab04-qa-03",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "cab04-qa-03-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    },
+    "test_interface_info": {
+      "0": {
+        "name": "enp216s0f1",
+        "ip": "15.1.15.9/24",
+        "switch_info": {
+          "name": "qfx-3",
+          "port": "et-0/0/21:0"
+        }
+      }
+    }
+  },
+  "cab04-qa-04": {
+    "host_ip": "cab04-qa-04",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "cab04-qa-04-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    },
+    "test_interface_info": {
+      "0": {
+        "name": "enp216s0f1",
+        "ip": "15.1.15.10/24",
+        "switch_info": {
+          "name": "qfx-3",
+          "port": "et-0/0/21:1"
+        }
+      }
+    }
+  },
+  "cab04-qa-05": {
+    "host_ip": "cab04-qa-05",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "cab04-qa-05-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    },
+    "test_interface_info": {
+      "0": {
+        "name": "enp216s0f1",
+        "ip": "15.1.15.11/24",
+        "switch_info": {
+          "name": "qfx-3",
+          "port": "et-0/0/21:2"
+        }
+      }
+    }
   }
 }
