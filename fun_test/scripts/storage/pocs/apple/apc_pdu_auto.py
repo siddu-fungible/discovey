@@ -39,10 +39,8 @@ class ApcPduTestcase(FunTestCase):
         self.outlet_no = self.apc_info.get("outlet_number", None)
 
         # if you are loading the image every time you boot up
-        self.f1_0_boot_args = "app=mdt_test,load_mods workload=storage --serial --memvol --dpc-server" \
-                              " --dpc-uart --csr-replay --all_100g --nofreeze"
-        self.f1_1_boot_args = "app=mdt_test,load_mods workload=storage --serial --memvol --dpc-server" \
-                              " --dpc-uart --csr-replay --all_100g --nofreeze"
+        self.f1_0_boot_args = "app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze"
+        self.f1_1_boot_args = self.f1_0_boot_args
         print(json.dumps(self.fs, indent=4))
 
     def run(self):
