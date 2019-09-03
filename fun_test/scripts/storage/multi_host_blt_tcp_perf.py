@@ -1019,6 +1019,39 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                         if func == "vol_stats":
                             fun_test.add_auxillary_file(description="Volume Stats - {} - IO depth {}".
                                                         format(mode, row_data_dict["iodepth"]), filename=filename)
+                        if func == "vppkts_stats":
+                            fun_test.add_auxillary_file(description="VP Pkts Stats - {} - IO depth {}".
+                                                        format(mode, row_data_dict["iodepth"]), filename=filename)
+                        if func == "psw_stats":
+                            fun_test.add_auxillary_file(description="PSW Stats - {} - IO depth {}".
+                                                        format(mode, row_data_dict["iodepth"]), filename=filename)
+                        if func == "fcp_stats":
+                            fun_test.add_auxillary_file(description="FCP Stats - {} - IO depth {}".
+                                                        format(mode, row_data_dict["iodepth"]), filename=filename)
+                        if func == "wro_stats":
+                            fun_test.add_auxillary_file(description="WRO Stats - {} - IO depth {}".
+                                                        format(mode, row_data_dict["iodepth"]), filename=filename)
+                        if func == "erp_stats":
+                            fun_test.add_auxillary_file(description="ERP Stats - {} IO depth {}".
+                                                        format(mode, row_data_dict["iodepth"]), filename=filename)
+                        if func == "etp_stats":
+                            fun_test.add_auxillary_file(description="ETP Stats - {} IO depth {}".
+                                                        format(mode, row_data_dict["iodepth"]), filename=filename)
+                        if func == "eqm_stats":
+                            fun_test.add_auxillary_file(description="EQM Stats - {} - IO depth {}".
+                                                        format(mode, row_data_dict["iodepth"]), filename=filename)
+                        if func == "hu_stats":
+                            fun_test.add_auxillary_file(description="HU Stats - {} - IO depth {}".
+                                                        format(mode, row_data_dict["iodepth"]), filename=filename)
+                        if func == "ddr_stats":
+                            fun_test.add_auxillary_file(description="DDR Stats - {} - IO depth {}".
+                                                        format(mode, row_data_dict["iodepth"]), filename=filename)
+                        if func == "ca_stats":
+                            fun_test.add_auxillary_file(description="CA Stats - {} IO depth {}".
+                                                        format(mode, row_data_dict["iodepth"]), filename=filename)
+                        if func == "cdu_stats":
+                            fun_test.add_auxillary_file(description="CDU Stats - {} - IO depth {}".
+                                                        format(mode, row_data_dict["iodepth"]), filename=filename)
 
             fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval), self.iter_interval)
 
