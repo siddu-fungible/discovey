@@ -7,6 +7,7 @@ import {ActivatedRoute, Router} from "@angular/router";
 import {Observable, of} from "rxjs";
 import {switchMap} from "rxjs/operators";
 import {PerformanceService} from "./performance.service";
+import {SelectMode} from "./performance.service";
 
 
 class ChildInfo {
@@ -90,13 +91,15 @@ enum Mode {
 
 export class PerformanceComponent implements OnInit {
   //used for workspace editing
-  @Input() selectMode: boolean = false; //allows only to select metrics and not display any charts
+  @Input() selectMode: SelectMode = SelectMode.ShowMainSite; //allows only to select metrics and not display any charts
   @Input() userProfileEmail: string = null; //the current workspace user email
   @Input() workspaceId: number = null; //current workspace Id
   @Input() interestedMetrics: any = null; //metrics already part of the workspace
   @Input() description: string = null; //workspace description
   @Output() editedWorkspace: EventEmitter<boolean> = new EventEmitter(); //successful submission of metrics to DB
+  @Input() metricIds: number[] = null;
   updatedInterestedMetrics: any = [];
+  SelectMode = SelectMode;
 
   numGridColumns: number;
   lastStatusUpdateTime: any;
@@ -185,7 +188,9 @@ export class PerformanceComponent implements OnInit {
 
   ngOnInit() {
     console.log("Component Init");
-    this.title.setTitle('Performance');
+    if (this.selectMode == SelectMode.ShowMainSite) {
+      this.title.setTitle('Performance');
+    }
     this.status = "Loading";
     this.numGridColumns = 2;
     this.miniGridMaxWidth = '50%';
@@ -206,7 +211,7 @@ export class PerformanceComponent implements OnInit {
       switchMap(response => {
         return this.service.fetchBuildInfo();
       })).subscribe(response => {
-        this.buildInfo = response;
+      this.buildInfo = response;
       console.log("fetched buildInfo");
     }, error => {
       this.loggerService.error("Unable to fetch buildInfo");
@@ -215,8 +220,8 @@ export class PerformanceComponent implements OnInit {
 
   }
 
-  getDefaultQueryPath() {
-    return "F1";
+  getDefaultQueryPath(flatNode) {
+    return flatNode.node.chartName;
   }
 
   getQueryPath() {
@@ -260,40 +265,47 @@ export class PerformanceComponent implements OnInit {
   }
 
   fetchDag(): void {
+    let url = "/metrics/dag";
+    if (this.metricIds) {
+      url = "/metrics/dag" + "?root_metric_ids=" + String(this.metricIds);
+    }
     // Fetch the DAG
-    this.apiService.get("/metrics/dag").subscribe(response => {
+    this.apiService.get(url).subscribe(response => {
       this.dag = response.data;
       let lineage = [];
       for (let dag of this.dag) {
         this.walkDag(dag, lineage);
       }
       //total container should always appear
-      this.f1Node = this.flatNodes[0];
-      this.f1Node.hide = false;
-      this.getQueryPath().subscribe(queryPath => {
-        let queryExists = false;
-        if (!queryPath) {
-          queryPath = this.getDefaultQueryPath();
-        } else {
-          queryExists = true;
-        }
-        if (this.queryPath !== (this.gotoQueryBaseUrl + queryPath)) {
-          this.queryPath = this.gotoQueryBaseUrl + queryPath;
-          let pathGuid = this.pathToGuid(this.queryPath);
-          let targetFlatNode = this.guIdFlatNodeMap[pathGuid];
-          this.expandNode(targetFlatNode);
-
-          if (queryExists) {
-            if (targetFlatNode.node.leaf) {
-              this.showAtomicMetric(targetFlatNode);
-            } else {
-              this.showNonAtomicMetric(targetFlatNode);
-            }
+      if (this.selectMode == SelectMode.ShowMainSite) {
+        this.f1Node = this.flatNodes[0];
+        this.f1Node.hide = false;
+        this.getQueryPath().subscribe(queryPath => {
+          let queryExists = false;
+          if (!queryPath) {
+            queryPath = this.getDefaultQueryPath(this.f1Node);
+          } else {
+            queryExists = true;
           }
+          if (this.queryPath !== (this.gotoQueryBaseUrl + queryPath)) {
+            this.queryPath = this.gotoQueryBaseUrl + queryPath;
+            let pathGuid = this.pathToGuid(this.queryPath);
+            let targetFlatNode = this.guIdFlatNodeMap[pathGuid];
+            this.expandNode(targetFlatNode);
 
-        }
-      });
-      if (this.selectMode && this.interestedMetrics) {
+            if (queryExists) {
+              if (targetFlatNode.node.leaf) {
+                this.showAtomicMetric(targetFlatNode);
+              } else {
+                this.showNonAtomicMetric(targetFlatNode);
+              }
+            }
+
+          }
+        });
+      }
+      if (this.selectMode == SelectMode.ShowEditWorkspace && this.interestedMetrics) {
+        this.flatNodes[0].hide = false;
         for (let flatNode of this.flatNodes) {
           for (let metric of this.interestedMetrics) {
             if (flatNode.node.metricId === metric.metric_id) {
@@ -566,6 +578,10 @@ export class PerformanceComponent implements OnInit {
     if (newNode.chartName === "S1") {
       thisFlatNode.hide = false;
       this.s1Node = thisFlatNode;
+      lineage = [];
+    }
+    if (this.metricIds && this.metricIds.includes(newNode.metricId)) {
+      thisFlatNode.hide = false;
       lineage = [];
     }
     this.guIdFlatNodeMap[thisFlatNode.gUid] = thisFlatNode;
@@ -982,7 +998,7 @@ export class PerformanceComponent implements OnInit {
 
 
   showAtomicMetric = (flatNode) => {
-    if (!this.selectMode) {
+    if (this.selectMode == SelectMode.ShowMainSite || this.selectMode == SelectMode.ShowViewWorkspace) {
       this.chartReady = false;
       if (this.currentNode && this.currentNode.showAddJira) {
         this.currentNode.showAddJira = false;
@@ -1001,14 +1017,23 @@ export class PerformanceComponent implements OnInit {
       this.expandNode(flatNode);
       this.commonService.scrollTo("chart-info");
       this.chartReady = true;
-      this.navigateByQuery(flatNode);
+      if (this.selectMode == SelectMode.ShowMainSite) {
+        this.navigateByQuery(flatNode);
+      }
       this.fetchChartInfo(flatNode);
-    } else {
+    } else if (this.selectMode == SelectMode.ShowEditWorkspace) {
       flatNode.showAddLeaf = true;
       this.currentNode = flatNode.node;
       this.currentFlatNode = flatNode;
+    } else {
+      this.currentNode = flatNode.node;
+      this.currentFlatNode = flatNode;
+      this.mode = Mode.ShowingAtomicMetric;
+      this.expandNode(flatNode);
+      this.commonService.scrollTo("chart-info");
+      this.chartReady = true;
+      this.fetchChartInfo(flatNode);
     }
-
   };
 
   getStringLineage(lineages): string {
@@ -1085,7 +1110,7 @@ export class PerformanceComponent implements OnInit {
   }
 
   showNonAtomicMetric = (flatNode) => {
-    if (!this.selectMode) {
+    if (this.selectMode == SelectMode.ShowMainSite) {
       if (flatNode.node.metricModelName && flatNode.node.chartName !== "All metrics") {
         this.chartReady = false;
         if (this.currentNode && this.currentNode.showAddJira) {

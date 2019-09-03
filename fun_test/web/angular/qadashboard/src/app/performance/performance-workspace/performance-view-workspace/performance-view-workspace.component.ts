@@ -8,6 +8,7 @@ import {ActivatedRoute, Router} from "@angular/router";
 import {Location} from '@angular/common';
 import {Title} from "@angular/platform-browser";
 import {PerformanceService} from "../../performance.service";
+import {SelectMode} from "../../performance.service";
 
 @Component({
   selector: 'view-workspace',
@@ -30,6 +31,11 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
   workspaceURL: string = "/performance/workspace";
   reportGenerated: boolean = false;
   subject: string = null;
+  workspaceMetrics: number[] = [];
+  showDag: boolean = false;
+  selectMode: any = SelectMode;
+  allMetricIds: number[] = [];
+  interestedMetrics: number[] = [];
 
   constructor(private apiService: ApiService, private commonService: CommonService, private loggerService: LoggerService,
               private route: ActivatedRoute, private router: Router, private location: Location, private title: Title, private performanceService: PerformanceService) {
@@ -48,20 +54,25 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
           }
         }).pipe(
           switchMap(response => {
-            return this.fetchWorkspaces();
+            return this.performanceService.getWorkspaces(this.email, this.workspaceName);
           }),
           switchMap(response => {
-            return this.fetchInterestedMetrics(this.workspace.id);
+            this.workspace = response;
+            return this.performanceService.interestedMetrics(this.workspace.id);
           }),
           switchMap(response => {
+            this.workspace.interested_metrics = response;
             return this.fetchScores();
           }),
           switchMap(response => {
             return this.performanceService.fetchBuildInfo();
-          })).subscribe(response => {
-          this.buildInfo = response;
+          }),
+          switchMap(response => {
+            this.buildInfo = response;
+            return this.performanceService.metricCharts(null, this.workspace.id);
+          }),).subscribe(response => {
           console.log("fetched workspace and buildInfo from URL");
-          this.showWorkspace = true;
+          this.setMetricIds(response);
         }, error => {
           this.loggerService.error("Unable to initialize workspace");
         });
@@ -75,23 +86,30 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
     this.location.back();
   }
 
+  viewDag(): void {
+    this.showDag = true;
+    this.reportGenerated = false;
+    this.showGrids = false;
+  }
+
   backToWorkspaces(): void {
     this.router.navigateByUrl(this.workspaceURL + "/" + this.email);
   }
 
-  fetchWorkspaces(): any {
-    return this.apiService.get("/api/v1/performance/workspaces/" + this.email + "/" + this.workspaceName).pipe(switchMap(response => {
-      this.workspace = response.data[0];
-      return of(true);
-    }));
+  setMetricIds(charts): void {
+     this.allMetricIds = [];
+    this.workspaceMetrics = [];
+    for (let chart of charts) {
+      this.workspaceMetrics.push(Number(chart.metric_id));
+    }
+    this.interestedMetrics = [];
+    for (let metric of this.workspace.interested_metrics) {
+      this.interestedMetrics.push(metric["metric_id"])
+    }
+    this.allMetricIds = this.interestedMetrics.concat(this.workspaceMetrics);
+    this.showWorkspace = true;
   }
 
-  fetchInterestedMetrics(workspaceId): any {
-    return this.apiService.get("/api/v1/performance/workspaces/" + workspaceId + "/interested_metrics").pipe(switchMap(response => {
-      this.workspace.interested_metrics = response.data;
-      return of(true);
-    }));
-  }
 
   closeChartTable(): void {
     this.showChartTable = false;
@@ -169,22 +187,20 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
 
   fetchData(metric, dateTime, key): any {
     let times = this.commonService.getEpochBounds(dateTime);
-    let from_epoch = times[0];
-    let to_epoch = times[1];
+    let fromEpoch = times[0];
+    let toEpoch = times[1];
     let self = this;
-    return this.apiService.get("/api/v1/performance/metrics_data?metric_id=" + metric["metric_id"] + "&from_epoch_ms=" + from_epoch + "&to_epoch_ms=" + to_epoch).pipe(switchMap(response => {
-      let data = response.data;
-      for (let oneData of data) {
-        for (let dataSet of metric["data"]) {
-          if (dataSet["name"] == oneData["name"]) {
-            dataSet[key] = oneData["value"];
-            dataSet[key + "Date"] = this.commonService.getPrettyLocalizeTime(oneData["date_time"]);
-            dataSet["unit"] = oneData["unit"];
-          }
+    let data = this.performanceService.metricsData(metric["metric_id"], fromEpoch, toEpoch);
+    for (let oneData of data) {
+      for (let dataSet of metric["data"]) {
+        if (dataSet["name"] == oneData["name"]) {
+          dataSet[key] = oneData["value"];
+          dataSet[key + "Date"] = this.commonService.getPrettyLocalizeTime(oneData["date_time"]);
+          dataSet["unit"] = oneData["unit"];
         }
       }
-      return of(true);
-    }));
+    }
+    return of(true);
   }
 
   fetchScores(): any {
@@ -289,10 +305,18 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
       let dateString = this.commonService.getShortDate(t);
       this.subject = "Performance status report - " + dateString;
       this.reportGenerated = true;
+      this.showGrids = false;
+      this.showDag = false;
     }, error => {
       this.loggerService.error("Unable to generate report");
     });
 
+  }
+
+  showCharts(): void {
+    this.showGrids = true;
+    this.reportGenerated = false;
+    this.showDag = false;
   }
 
 }
