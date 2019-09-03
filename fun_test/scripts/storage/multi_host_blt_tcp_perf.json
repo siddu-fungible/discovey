@@ -59,7 +59,7 @@
     "blt_details": {
       "ns_id": 1,
       "type": "VOL_TYPE_BLK_LOCAL_THIN",
-      "capacity": 137438953472,
+      "capacity": 1600277970944,
       "block_size": 4096
     },
     "controllers": 1,
@@ -72,8 +72,8 @@
     "iter_interval": 2,
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {
-      "multiple_jobs": "--rw=randwrite --bs=4k --iodepth=32 --numjobs=1 --ioengine=libaio --direct=1 --prio=0 --cpus_allowed_policy=split --size=100%",
-      "timeout": 3600
+      "multiple_jobs": "--rw=randwrite --bs=4k --iodepth=16 --numjobs=1 --ioengine=libaio --direct=1 --prio=0 --cpus_allowed_policy=split --size=100%",
+      "timeout": 7200
     },
     "fio_cmd_args": {
       "multiple_jobs": "--ioengine=libaio --direct=1 --prio=0 --cpus_allowed_policy=split --group_reporting=1 --norandommap --randrepeat=0",
@@ -97,8 +97,8 @@
       "(32, 8)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}}
     },
     "host_count": 1,
-    "stats_collect_details": [{"vp_utils": {"interval": 60}}, {"per_vp": {"interval": 60}}, {"resource_bam_args": {"interval": 60}}, {"vol_stats": {"interval": 60}}],
-    "collect_network_stats": true,
+    "stats_collect_details": [{"vp_utils": {"interval": 60}}, {"per_vp": {"interval": 60}}, {"resource_bam_args": {"interval": 60}}, {"vol_stats": {"interval": 60}}, {"vppkts_stats": {"interval": 60}}, {"psw_stats": {"interval": 60, "nu": true}}, {"fcp_stats": {"interval": 60, "nu": true}}, {"wro_stats": {"interval": 60, "nu": true}}, {"erp_stats": {"interval": 60, "nu": true}}, {"etp_stats": {"interval": 60, "nu": true}}, {"eqm_stats": {"interval": 60}}, {"hu_stats": {"interval": 60}}, {"ddr_stats": {"interval": 60}}, {"ca_stats": {"interval": 60}}, {"cdu_stats": {"interval": 60}}],
+    "collect_network_stats": false,
     "csi_perf_iodepth": [32]
   },
   "MultiHostFioRandWrite": {
@@ -107,7 +107,7 @@
     "blt_details": {
       "ns_id": 1,
       "type": "VOL_TYPE_BLK_LOCAL_THIN",
-      "capacity": 137438953472,
+      "capacity": 1600277970944,
       "block_size": 4096
     },
     "controllers": 1,
@@ -120,8 +120,8 @@
     "iter_interval": 2,
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {
-      "multiple_jobs": "--rw=randwrite --bs=4k --iodepth=32 --numjobs=1 --ioengine=libaio --direct=1 --prio=0 --cpus_allowed_policy=split --size=100%",
-      "timeout": 3600
+      "multiple_jobs": "--rw=randwrite --bs=4k --iodepth=16 --numjobs=1 --ioengine=libaio --direct=1 --prio=0 --cpus_allowed_policy=split --size=100%",
+      "timeout": 7200
     },
     "fio_cmd_args": {
       "multiple_jobs": "--ioengine=libaio --direct=1 --prio=0 --cpus_allowed_policy=split --group_reporting=1 --norandommap --randrepeat=0",
@@ -144,8 +144,8 @@
       "(32, 1)": {"randwrite": {"write": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}}
     },
     "host_count": 1,
-    "stats_collect_details": [{"vp_utils": {"interval": 60}}, {"per_vp": {"interval": 60}}, {"resource_bam_args": {"interval": 60}}, {"vol_stats": {"interval": 60}}],
-    "collect_network_stats": true,
+    "stats_collect_details": [{"vp_utils": {"interval": 60}}, {"per_vp": {"interval": 60}}, {"resource_bam_args": {"interval": 60}}, {"vol_stats": {"interval": 60}}, {"vppkts_stats": {"interval": 60}}, {"psw_stats": {"interval": 60, "nu": true}}, {"fcp_stats": {"interval": 60, "nu": true}}, {"wro_stats": {"interval": 60, "nu": true}}, {"erp_stats": {"interval": 60, "nu": true}}, {"etp_stats": {"interval": 60, "nu": true}}, {"eqm_stats": {"interval": 60}}, {"hu_stats": {"interval": 60}}, {"ddr_stats": {"interval": 60}}, {"ca_stats": {"interval": 60}}, {"cdu_stats": {"interval": 60}}],
+    "collect_network_stats": false,
     "csi_perf_iodepth": [16]
   }
 }

@@ -256,49 +256,6 @@ def build_simple_table(data, column_headers=[], split_values_to_columns=False):
     return simple_table
 
 
-def collect_vp_utils_stats(storage_controller, output_file, interval=10, count=3, non_zero_stats_only=True,
-                           threaded=False, command_timeout=DPCSH_COMMAND_TIMEOUT):
-    output = False
-    column_headers = ["VP", "Utilization"]
-
-    # If threaded is enabled
-    if threaded:
-        global vp_stats_thread_stop_status
-        vp_stats_thread_stop_status[storage_controller] = False
-    try:
-        with open(output_file, 'a') as f:
-            timer = FunTimer(max_time=interval * count)
-            while not timer.is_expired():
-                lines = []
-                dpcsh_result = storage_controller.debug_vp_util(command_timeout=command_timeout)
-                # fun_test.simple_assert(dpcsh_result["status"], "Pulling VP Utilization")
-                if dpcsh_result["status"] and dpcsh_result["data"] is not None:
-                    vp_util = dpcsh_result["data"]
-                else:
-                    vp_util = {}
-
-                if non_zero_stats_only:
-                    filtered_vp_util = OrderedDict()
-                    for key, value in sorted(vp_util.iteritems()):
-                        if value != 0.0 or value != 0:
-                            filtered_vp_util[key] = value
-                    vp_util = filtered_vp_util
-
-                table_data = build_simple_table(data=vp_util, column_headers=column_headers)
-                lines.append("\n########################  {} ########################\n".format(time.ctime()))
-                lines.append(table_data.get_string())
-                lines.append("\n\n")
-                f.writelines(lines)
-                if threaded and vp_stats_thread_stop_status[storage_controller]:
-                    fun_test.log("I was asked to stop....So I'm exiting now...")
-                    break
-                fun_test.sleep("for the next iteration", seconds=interval)
-        output = True
-    except Exception as ex:
-        fun_test.critical(str(ex))
-    return output
-
-
 def check_come_health(storage_controller):
     blt_vol_info = {
         "type": "VOL_TYPE_BLK_LOCAL_THIN",
@@ -318,41 +275,6 @@ def check_come_health(storage_controller):
     except Exception as ex:
         fun_test.critical(ex.message)
     return result
-
-
-def collect_resource_bam_stats(storage_controller, output_file, interval=10, count=3, threaded=False,
-                               command_timeout=DPCSH_COMMAND_TIMEOUT):
-    output = False
-    column_headers = ["Field Name", "Counters"]
-
-    # If threaded is enabled
-    if threaded:
-        global resource_bam_stats_thread_stop_status
-        resource_bam_stats_thread_stop_status[storage_controller] = False
-    try:
-        with open(output_file, 'a') as f:
-            timer = FunTimer(max_time=interval * count)
-            while not timer.is_expired():
-                lines = []
-                dpcsh_result = storage_controller.peek_resource_bam_stats(command_timeout=command_timeout)
-                if dpcsh_result["status"] and dpcsh_result["data"] is not None:
-                    resource_bam_stats = dpcsh_result["data"]
-                else:
-                    resource_bam_stats = {}
-
-                table_data = build_simple_table(data=resource_bam_stats, column_headers=column_headers)
-                lines.append("\n########################  {} ########################\n".format(time.ctime()))
-                lines.append(table_data.get_string())
-                lines.append("\n\n")
-                f.writelines(lines)
-                if threaded and resource_bam_stats_thread_stop_status[storage_controller]:
-                    fun_test.log("Resource BAM stats collection was asked to stop....So exiting now...")
-                    break
-                fun_test.sleep("for the next iteration - Resource BAM stats collection", seconds=interval)
-        output = True
-    except Exception as ex:
-        fun_test.critical(str(ex))
-    return output
 
 
 def _convert_vp_util(value):
@@ -511,7 +433,7 @@ def get_diff_results(old_result, new_result):
         for key, val in new_result.iteritems():
             if isinstance(val, dict):
                 result[key] = get_diff_results(old_result=old_result[key], new_result=new_result[key])
-            if isinstance(val, list):
+            elif isinstance(val, list):
                 result[key] = []
                 try:
                     result[key].append(map(subtract, val, old_result[key]))
@@ -643,43 +565,37 @@ class CollectStats(object):
 
                     # Pulling the per_vp stats once or twice with one second interval based on the display_diff
                     self.socket_lock.acquire()
-                    initial_per_vp_output = self.storage_controller.peek(props_tree="stats/per_vp", legacy=False,
-                                                                         chunk=chunk, command_duration=command_timeout)
-                    if display_diff:
-                        fun_test.sleep("to get one more per_vp stats to find the diff", 1)
-                        final_per_vp_output = self.storage_controller.peek(props_tree="stats/per_vp", legacy=False,
-                                                                           chunk=chunk, command_duration=command_timeout)
+                    per_vp_result = self.storage_controller.peek(props_tree="stats/per_vp", legacy=False, chunk=chunk,
+                                                                 command_duration=command_timeout)
                     self.socket_lock.release()
 
-                    if initial_per_vp_output["status"] and initial_per_vp_output["data"] is not None:
-                        initial_per_vp_stats = initial_per_vp_output["data"]
+                    if per_vp_result["status"] and per_vp_result["data"] is not None:
+                        self.new_per_vp_stats = per_vp_result["data"]
                     else:
-                        initial_per_vp_stats = {}
+                        self.new_per_vp_stats = {}
 
                     if display_diff:
-                        if final_per_vp_output["status"] and final_per_vp_output["data"] is not None:
-                            final_per_vp_stats = final_per_vp_output["data"]
-                        else:
-                            final_per_vp_stats = {}
+                        if not hasattr(self, "old_per_vp_stats"):
+                            self.old_per_vp_stats = self.new_per_vp_stats
+                        diff_per_vp_stats = get_diff_results(old_result=self.old_per_vp_stats,
+                                                             new_result=self.new_per_vp_stats)
+                        self.old_per_vp_stats = self.new_per_vp_stats
 
                     # Removing the Central Cluster(if needed) and the redundant WU received and sent from the high queue
-                    loop_per_vp_stats = final_per_vp_stats if final_per_vp_stats else initial_per_vp_stats
-                    filtered_initial_per_vp_stats = OrderedDict()
-                    filtered_final_per_vp_stats = OrderedDict()
-                    for key in sorted(loop_per_vp_stats):
+                    filtered_new_per_vp_stats = OrderedDict()
+                    filtered_diff_per_vp_stats = OrderedDict()
+                    for key in sorted(self.new_per_vp_stats):
                         if key.split(":")[0][2] == '8' and not include_cc:
                             continue
+                        filtered_new_per_vp_stats[key] = self.new_per_vp_stats.get(key, {})
                         if display_diff:
-                            filtered_initial_per_vp_stats[key] = initial_per_vp_stats.get(key, {})
-                            filtered_final_per_vp_stats[key] = final_per_vp_stats.get(key, {})
-                        else:
-                            filtered_final_per_vp_stats[key] = final_per_vp_stats.get(key, {})
+                            filtered_diff_per_vp_stats[key] = diff_per_vp_stats.get(key, {})
 
                     processed_per_vp_stats = OrderedDict()
                     # Sorting the keys using the cluster ID(FA*0*:10:0[VP]) as the primary key and the
                     # core ID(FA0:*10*:0[VP]) as the secondary key
-                    for key in sorted(filtered_final_per_vp_stats, key=lambda key: (int(key.split(":")[0][2]),
-                                                                                    int(key.split(":")[1]))):
+                    for key in sorted(filtered_new_per_vp_stats, key=lambda key: (int(key.split(":")[0][2]),
+                                                                                  int(key.split(":")[1]))):
                         cluster_id = key.split(":")[0][2]
                         core_id = (int(key.split(":")[1]) / 4) - 2
                         thread_id = int(key.split(":")[1]) % 4
@@ -690,32 +606,21 @@ class CollectStats(object):
                         if new_key not in processed_per_vp_stats:
                             processed_per_vp_stats[new_key] = []
                         for subkey in per_vp_stats_key:
+                            processed_per_vp_stats[new_key].append(filtered_new_per_vp_stats[key][subkey])
                             if display_diff:
-                                if key in filtered_initial_per_vp_stats:
-                                    processed_per_vp_stats[new_key].append(filtered_final_per_vp_stats[key][subkey])
-                                    processed_per_vp_stats[new_key].append(filtered_final_per_vp_stats[key][subkey] -
-                                                                           filtered_initial_per_vp_stats[key][subkey])
+                                if key in filtered_diff_per_vp_stats:
+                                    processed_per_vp_stats[new_key].append(filtered_diff_per_vp_stats[key][subkey])
                                 else:
-                                    processed_per_vp_stats[new_key].append(filtered_final_per_vp_stats[key][subkey])
                                     processed_per_vp_stats[new_key].append("N/A")
-                            else:
-                                processed_per_vp_stats[new_key].append(filtered_final_per_vp_stats[key][subkey])
                             # Add the high queue depth and its difference as well
                             if subkey == "vp_wu_qdepth":
                                 nextkey = key.replace("0[VP]", "1[VP]")
+                                processed_per_vp_stats[new_key].append(filtered_new_per_vp_stats[nextkey][subkey])
                                 if display_diff:
-                                    if nextkey in filtered_initial_per_vp_stats:
-                                        processed_per_vp_stats[new_key].append(
-                                            filtered_final_per_vp_stats[nextkey][subkey])
-                                        processed_per_vp_stats[new_key].append(
-                                            filtered_final_per_vp_stats[nextkey][subkey] -
-                                            filtered_initial_per_vp_stats[nextkey][subkey])
+                                    if nextkey in filtered_diff_per_vp_stats:
+                                        processed_per_vp_stats[new_key].append(filtered_diff_per_vp_stats[nextkey][subkey])
                                     else:
-                                        processed_per_vp_stats[new_key].append(
-                                            filtered_final_per_vp_stats[nextkey][subkey])
                                         processed_per_vp_stats[new_key].append("N/A")
-                                else:
-                                    processed_per_vp_stats[new_key].append(filtered_final_per_vp_stats[nextkey][subkey])
 
                     table_data = build_simple_table(data=processed_per_vp_stats, column_headers=column_headers,
                                                     split_values_to_columns=True)
