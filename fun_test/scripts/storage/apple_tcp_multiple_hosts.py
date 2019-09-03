@@ -492,6 +492,7 @@ class StripeVolumeTestCase(FunTestCase):
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Create Stripe Vol with uuid {} on DUT".
                                  format(self.stripe_uuid))
+            fun_test.shared_variables["stripe_uuid"] = self.stripe_uuid
 
             # Create TCP controller for each host attached to FS
             self.ctrlr_uuid = []
@@ -612,6 +613,7 @@ class StripeVolumeTestCase(FunTestCase):
 
         testcase = self.__class__.__name__
         test_method = testcase[3:]
+        self.test_mode = testcase[:8]
         self.num_hosts = fun_test.shared_variables["num_hosts"]
 
         # Going to run the FIO test for the numjobs and iodepth combo listed in fio_jobs_iodepth in random readonly
@@ -632,6 +634,13 @@ class StripeVolumeTestCase(FunTestCase):
                            "fio_job_name"]
         table_data_rows = []
 
+        # Preparing the volume details list containing the list of dictionaries
+        vol_details = []
+        vol_group = {}
+        vol_group[self.blt_details["type"]] = fun_test.shared_variables["thin_uuid"]
+        vol_group[self.stripe_details["type"]] = fun_test.shared_variables["stripe_uuid"] = self.stripe_uuid
+        vol_details.append(vol_group)
+
         # If you are using mmap then make sure you use a large timeout value for the test as fio instance takes 2-3min
         # after runtime to exit out.
         for combo in self.fio_jobs_iodepth:
@@ -639,10 +648,28 @@ class StripeVolumeTestCase(FunTestCase):
             end_host_thread = {}
             iostat_thread = {}
             thread_count = 1
+            tmp = combo.split(',')
+            fio_numjobs = tmp[0].strip('() ')
+            fio_iodepth = tmp[1].strip('() ')
 
             # Read EQM stats
             before_read_eqm = {}
             before_read_eqm = self.storage_controller.peek(props_tree="stats/eqm")
+
+            file_suffix = "{}_iodepth_{}.txt".format(self.test_mode, (int(fio_iodepth) * int(fio_numjobs)))
+            for index, stat_detail in enumerate(self.stats_collect_details):
+                func = stat_detail.keys()[0]
+                self.stats_collect_details[index][func]["count"] = int(
+                    self.fio_cmd_args["runtime"] / self.stats_collect_details[index][func]["interval"])
+                if func == "vol_stats":
+                    self.stats_collect_details[index][func]["vol_details"] = vol_details
+            fun_test.log("Different stats collection thread details for the current IO depth {} before starting "
+                         "them:\n{}".format((int(fio_iodepth) * int(fio_numjobs)), self.stats_collect_details))
+            self.storage_controller.verbose = False
+            stats_obj = CollectStats(self.storage_controller)
+            stats_obj.start(file_suffix, self.stats_collect_details)
+            fun_test.log("Different stats collection thread details for the current IO depth {} after starting "
+                         "them:\n{}".format((int(fio_iodepth) * int(fio_numjobs)), self.stats_collect_details))
 
             for key in self.final_host_ips:
                 fio_result[combo] = {}
@@ -653,11 +680,8 @@ class StripeVolumeTestCase(FunTestCase):
 
                 for mode in self.fio_modes:
 
-                    tmp = combo.split(',')
                     fio_block_size = "4k"
                     plain_block_size = int(re.sub("\D", "", fio_block_size))
-                    fio_numjobs = tmp[0].strip('() ')
-                    fio_iodepth = tmp[1].strip('() ')
                     fio_result[combo][mode] = True
                     internal_result[combo][mode] = True
                     row_data_dict = {}
@@ -713,14 +737,86 @@ class StripeVolumeTestCase(FunTestCase):
                     thread_count += 1
 
             fun_test.sleep("Fio threads started", 10)
-            for x in range(1, self.num_hosts + 1, 1):
-                fun_test.log("Joining fio thread {}".format(x))
-                fun_test.join_thread(fun_test_thread_id=thread_id[x])
-                fun_test.log("FIO Command Output:")
-                fun_test.log(fun_test.shared_variables["fio"][x])
-                fun_test.test_assert(fun_test.shared_variables["fio"][x], "Fio threaded test")
-                fio_output[combo][mode][x] = {}
-                fio_output[combo][mode][x] = fun_test.shared_variables["fio"][x]
+            try:
+                for x in range(1, self.num_hosts + 1, 1):
+                    fun_test.log("Joining fio thread {}".format(x))
+                    fun_test.join_thread(fun_test_thread_id=thread_id[x])
+                    fun_test.log("FIO Command Output:")
+                    fun_test.log(fun_test.shared_variables["fio"][x])
+                    fun_test.test_assert(fun_test.shared_variables["fio"][x], "Fio threaded test")
+                    fio_output[combo][mode][x] = {}
+                    fio_output[combo][mode][x] = fun_test.shared_variables["fio"][x]
+            except Exception as ex:
+                fun_test.critical(str(ex))
+                fun_test.log("FIO Command Output for volume {}:\n {}".format(x, fio_output[combo][mode][x]))
+            finally:
+                stats_obj.stop(self.stats_collect_details)
+                self.storage_controller.verbose = True
+
+            for index, value in enumerate(self.stats_collect_details):
+                for func, arg in value.iteritems():
+                    filename = arg.get("output_file")
+                    if filename:
+                        if func == "vp_utils":
+                            fun_test.add_auxillary_file(description="F1 VP Utilization - {} - IO depth {}".
+                                                        format(mode, (int(fio_iodepth) * int(fio_numjobs))),
+                                                        filename=filename)
+                        if func == "per_vp":
+                            fun_test.add_auxillary_file(description="F1 Per VP Stats - {} - IO depth {}".
+                                                        format(mode, (int(fio_iodepth) * int(fio_numjobs))),
+                                                        filename=filename)
+                        if func == "resource_bam_args":
+                            fun_test.add_auxillary_file(description="F1 Resource bam stats - {} - IO depth {}".
+                                                        format(mode, (int(fio_iodepth) * int(fio_numjobs))),
+                                                        filename=filename)
+                        if func == "vol_stats":
+                            fun_test.add_auxillary_file(description="Volume Stats - {} - IO depth {}".
+                                                        format(mode, (int(fio_iodepth) * int(fio_numjobs))),
+                                                        filename=filename)
+                        if func == "vppkts_stats":
+                            fun_test.add_auxillary_file(description="VP Pkts Stats - {} - IO depth {}".
+                                                        format(mode, (int(fio_iodepth) * int(fio_numjobs))),
+                                                        filename=filename)
+                        if func == "psw_stats":
+                            fun_test.add_auxillary_file(description="PSW Stats - {} - IO depth {}".
+                                                        format(mode, (int(fio_iodepth) * int(fio_numjobs))),
+                                                        filename=filename)
+                        if func == "fcp_stats":
+                            fun_test.add_auxillary_file(description="FCP Stats - {} - IO depth {}".
+                                                        format(mode, (int(fio_iodepth) * int(fio_numjobs))),
+                                                        filename=filename)
+                        if func == "wro_stats":
+                            fun_test.add_auxillary_file(description="WRO Stats - {} - IO depth {}".
+                                                        format(mode, (int(fio_iodepth) * int(fio_numjobs))),
+                                                        filename=filename)
+                        if func == "erp_stats":
+                            fun_test.add_auxillary_file(description="ERP Stats - {} IO depth {}".
+                                                        format(mode, (int(fio_iodepth) * int(fio_numjobs))),
+                                                        filename=filename)
+                        if func == "etp_stats":
+                            fun_test.add_auxillary_file(description="ETP Stats - {} IO depth {}".
+                                                        format(mode, (int(fio_iodepth) * int(fio_numjobs))),
+                                                        filename=filename)
+                        if func == "eqm_stats":
+                            fun_test.add_auxillary_file(description="EQM Stats - {} - IO depth {}".
+                                                        format(mode, (int(fio_iodepth) * int(fio_numjobs))),
+                                                        filename=filename)
+                        if func == "hu_stats":
+                            fun_test.add_auxillary_file(description="HU Stats - {} - IO depth {}".
+                                                        format(mode, (int(fio_iodepth) * int(fio_numjobs))),
+                                                        filename=filename)
+                        if func == "ddr_stats":
+                            fun_test.add_auxillary_file(description="DDR Stats - {} - IO depth {}".
+                                                        format(mode, (int(fio_iodepth) * int(fio_numjobs))),
+                                                        filename=filename)
+                        if func == "ca_stats":
+                            fun_test.add_auxillary_file(description="CA Stats - {} IO depth {}".
+                                                        format(mode, (int(fio_iodepth) * int(fio_numjobs))),
+                                                        filename=filename)
+                        if func == "cdu_stats":
+                            fun_test.add_auxillary_file(description="CDU Stats - {} - IO depth {}".
+                                                        format(mode, (int(fio_iodepth) * int(fio_numjobs))),
+                                                        filename=filename)
 
             after_read_eqm = {}
             after_read_eqm = self.storage_controller.peek(props_tree="stats/eqm")
