@@ -38,7 +38,7 @@ export class SubmitJobComponent implements OnInit {
   scheduleInMinutes: number;
   scheduleInMinutesRadio: boolean;
   buildUrl: string;
-  selectedSuite: string = null;
+  selectedSuite: any = null;
   selectedInfo: any;
   jobId: number;
   suitesInfo: any;
@@ -253,7 +253,7 @@ export class SubmitJobComponent implements OnInit {
   }
 
   changedValue(selectedSuite) {
-    this.selectedInfo = this.suitesInfo[selectedSuite];
+    this.selectedInfo = selectedSuite; //this.suitesInfo[selectedSuite];
     this.selectedScriptPk = null;
     this.resetScriptSelector = true;
   }
@@ -473,6 +473,10 @@ export class SubmitJobComponent implements OnInit {
 
   test() {
     console.log(this.currentTriageType);
+  }
+
+  _hasKey(o, key) {
+    return Object.keys(o).indexOf(key) > -1;
   }
 
 }

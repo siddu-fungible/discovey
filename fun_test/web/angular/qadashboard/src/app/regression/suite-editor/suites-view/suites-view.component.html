@@ -62,7 +62,7 @@
       <td><a [routerLink]="'/regression/suite_editor/' + suite.id">{{ suite.name }}</a></td>
       <td>
         <app-textarea-input [hoverHide]="false" [initialValue]="suite?.short_description"
-                            (valueChanged)="onShortDescriptionChangedEvent($event, suiteIndex)"
+                            (valueChanged)="onShortDescriptionChangedEvent($event, suite)"
                             [numRows]="4"></app-textarea-input>
       </td>
       <td>
