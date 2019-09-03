@@ -191,7 +191,7 @@ def metric_charts(request):
         if workspace_id:
             charts = MetricChart.objects.filter(workspace_ids__contains=int(workspace_id))
         for chart in charts:
-            result.append(chart)
+            result.append(chart.metric_id)
     return result
 
 

@@ -54,23 +54,25 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
           }
         }).pipe(
           switchMap(response => {
-            return this.fetchWorkspaces();
+            return this.performanceService.getWorkspaces(this.email, this.workspaceName);
           }),
           switchMap(response => {
-            return this.fetchInterestedMetrics(this.workspace.id);
+            this.workspace = response;
+            return this.performanceService.getInterestedMetrics(this.workspace.id);
           }),
           switchMap(response => {
+            this.workspace.interested_metrics = response;
             return this.fetchScores();
           }),
           switchMap(response => {
             return this.performanceService.fetchBuildInfo();
           }),
           switchMap(response => {
-            return this.fetchMetricIdsByWorkspace(this.workspace.id);
+            this.buildInfo = response;
+            return this.performanceService.metricCharts(this.workspace.id);
           }),).subscribe(response => {
-          this.buildInfo = response;
           console.log("fetched workspace and buildInfo from URL");
-          this.showWorkspace = true;
+          this.setMetricIds(response);
         }, error => {
           this.loggerService.error("Unable to initialize workspace");
         });
@@ -94,30 +96,20 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
     this.router.navigateByUrl(this.workspaceURL + "/" + this.email);
   }
 
-  fetchWorkspaces(): any {
-    this.workspace = this.performanceService.getWorkspaces(this.email, this.workspaceName);
-    return of(true);
-  }
-
-  fetchMetricIdsByWorkspace(workspaceId): any {
-    let charts = this.performanceService.metricCharts(workspaceId);
-    this.allMetricIds = [];
+  setMetricIds(charts): void {
+     this.allMetricIds = [];
     this.workspaceMetrics = [];
     for (let chart of charts) {
-      this.workspaceMetrics.push(chart.metric_id);
+      this.workspaceMetrics.push(Number(chart));
     }
     this.interestedMetrics = [];
     for (let metric of this.workspace.interested_metrics) {
       this.interestedMetrics.push(metric["metric_id"])
     }
     this.allMetricIds = this.interestedMetrics.concat(this.workspaceMetrics);
-    return of(true);
+    this.showWorkspace = true;
   }
 
-  fetchInterestedMetrics(workspaceId): any {
-    this.workspace.interested_metrics = this.performanceService.getInterestedMetrics(workspaceId);
-    return of(true);
-  }
 
   closeChartTable(): void {
     this.showChartTable = false;
