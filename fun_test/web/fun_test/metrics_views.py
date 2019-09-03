@@ -869,7 +869,7 @@ def traverse_dag(levels, metric_id, metric_chart_entries, sort_by_name=True):
 def dag(request):
     result = []
     levels = int(request.GET.get("levels", 15))
-    metric_ids = request.GET.get("metric_ids", '101,122,591')
+    metric_ids = request.GET.get("starting_metrics", '101,122,591')
     if ',' in metric_ids:
         metric_ids = metric_ids.strip().split(',')
     else:

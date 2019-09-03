@@ -33,7 +33,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
   subject: string = null;
   workspaceMetrics: number[] = [];
   showDag: boolean = false;
-  selectModeType: any = SelectMode;
+  selectMode: any = SelectMode;
   allMetricIds: number[] = [];
   interestedMetrics: number[] = [];
 
@@ -95,34 +95,28 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
   }
 
   fetchWorkspaces(): any {
-    return this.apiService.get("/api/v1/performance/workspaces/" + this.email + "/" + this.workspaceName).pipe(switchMap(response => {
-      this.workspace = response.data[0];
-      return of(true);
-    }));
+    this.workspace = this.performanceService.getWorkspaces(this.email, this.workspaceName);
+    return of(true);
   }
 
   fetchMetricIdsByWorkspace(workspaceId): any {
-    return this.apiService.get("/api/v1/performance/metric_charts" + "?workspace_id=" + workspaceId).pipe(switchMap(response => {
-      this.allMetricIds = [];
-      this.workspaceMetrics = [];
-      let charts = response.data;
-      for (let chart of charts) {
-        this.workspaceMetrics.push(chart.metric_id);
-      }
-      this.interestedMetrics = [];
-      for (let metric of this.workspace.interested_metrics) {
-        this.interestedMetrics.push(metric["metric_id"])
-      }
-      this.allMetricIds = this.interestedMetrics.concat(this.workspaceMetrics);
-      return of(true);
-    }));
+    let charts = this.performanceService.metricCharts(workspaceId);
+    this.allMetricIds = [];
+    this.workspaceMetrics = [];
+    for (let chart of charts) {
+      this.workspaceMetrics.push(chart.metric_id);
+    }
+    this.interestedMetrics = [];
+    for (let metric of this.workspace.interested_metrics) {
+      this.interestedMetrics.push(metric["metric_id"])
+    }
+    this.allMetricIds = this.interestedMetrics.concat(this.workspaceMetrics);
+    return of(true);
   }
 
   fetchInterestedMetrics(workspaceId): any {
-    return this.apiService.get("/api/v1/performance/workspaces/" + workspaceId + "/interested_metrics").pipe(switchMap(response => {
-      this.workspace.interested_metrics = response.data;
-      return of(true);
-    }));
+    this.workspace.interested_metrics = this.performanceService.getInterestedMetrics(workspaceId);
+    return of(true);
   }
 
   closeChartTable(): void {
@@ -201,22 +195,20 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
 
   fetchData(metric, dateTime, key): any {
     let times = this.commonService.getEpochBounds(dateTime);
-    let from_epoch = times[0];
-    let to_epoch = times[1];
+    let fromEpoch = times[0];
+    let toEpoch = times[1];
     let self = this;
-    return this.apiService.get("/api/v1/performance/metrics_data?metric_id=" + metric["metric_id"] + "&from_epoch_ms=" + from_epoch + "&to_epoch_ms=" + to_epoch).pipe(switchMap(response => {
-      let data = response.data;
-      for (let oneData of data) {
-        for (let dataSet of metric["data"]) {
-          if (dataSet["name"] == oneData["name"]) {
-            dataSet[key] = oneData["value"];
-            dataSet[key + "Date"] = this.commonService.getPrettyLocalizeTime(oneData["date_time"]);
-            dataSet["unit"] = oneData["unit"];
-          }
+    let data = this.performanceService.metricsData(metric["metric_id"], fromEpoch, toEpoch);
+    for (let oneData of data) {
+      for (let dataSet of metric["data"]) {
+        if (dataSet["name"] == oneData["name"]) {
+          dataSet[key] = oneData["value"];
+          dataSet[key + "Date"] = this.commonService.getPrettyLocalizeTime(oneData["date_time"]);
+          dataSet["unit"] = oneData["unit"];
         }
       }
-      return of(true);
-    }));
+    }
+    return of(true);
   }
 
   fetchScores(): any {

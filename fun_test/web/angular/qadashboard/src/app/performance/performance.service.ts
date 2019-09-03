@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import {Injectable} from '@angular/core';
 import {ApiService} from "../services/api/api.service";
 import {of} from "rxjs";
 import {switchMap} from "rxjs/operators";
@@ -19,7 +19,8 @@ export enum SelectMode {
 export class PerformanceService {
   buildInfo: any = null;
 
-  constructor(private apiService: ApiService, private commonService: CommonService) { }
+  constructor(private apiService: ApiService, private commonService: CommonService) {
+  }
 
   chartInfo(metricId) {
     let payload = {"metric_id": metricId};
@@ -74,7 +75,7 @@ export class PerformanceService {
         result["passedJenkinsJobId"] = data.passed_jenkins_job_id;
       }
       if (data.passed_lsf_job_id && data.passed_lsf_job_id !== -1) {
-        result["passedLsfJobId"] =  data.passed_lsf_job_id;
+        result["passedLsfJobId"] = data.passed_lsf_job_id;
       }
       if (data.passed_git_commit && data.passed_git_commit !== "") {
         result["passedGitCommit"] = data.passed_git_commit;
@@ -83,7 +84,7 @@ export class PerformanceService {
     }));
   }
 
-    //populates buildInfo
+  //populates buildInfo
   fetchBuildInfo(): any {
     return this.apiService.get('/regression/build_to_date_map').pipe(switchMap(response => {
       if (this.buildInfo) {
@@ -91,8 +92,8 @@ export class PerformanceService {
       } else {
         this.buildInfo = {};
         Object.keys(response.data).forEach((key) => {
-        let localizedKey = this.commonService.convertToLocalTimezone(key);
-        this.buildInfo[this.commonService.addLeadingZeroesToDate(localizedKey)] = response.data[key];
+          let localizedKey = this.commonService.convertToLocalTimezone(key);
+          this.buildInfo[this.commonService.addLeadingZeroesToDate(localizedKey)] = response.data[key];
         });
         return of(this.buildInfo);
       }
@@ -108,6 +109,30 @@ export class PerformanceService {
   sendEmail(payload): any {
     return this.apiService.post('/api/v1/performance/reports', payload).pipe(switchMap(response => {
       return of(response.data);
+    }));
+  }
+
+  metricCharts(workspaceId): any {
+    return this.apiService.get("/api/v1/performance/metric_charts" + "?workspace_id=" + workspaceId).pipe(switchMap(response => {
+      return of(response.data);
+    }));
+  }
+
+  metricsData(metricId, fromEpoch, toEpoch): any {
+    return this.apiService.get("/api/v1/performance/metrics_data?metric_id=" + metricId + "&from_epoch_ms=" + fromEpoch + "&to_epoch_ms=" + toEpoch).pipe(switchMap(response => {
+      return of(response.data);
+    }));
+  }
+
+  getInterestedMetrics(workspaceId): any {
+    return this.apiService.get("/api/v1/performance/workspaces/" + workspaceId + "/interested_metrics").pipe(switchMap(response => {
+      return of(response.data);
+    }));
+  }
+
+  getWorkspaces(email, workspaceName): any {
+    return this.apiService.get("/api/v1/performance/workspaces/" + email + "/" + workspaceName).pipe(switchMap(response => {
+      return of(response.data[0]);
     }));
   }
 

@@ -267,7 +267,7 @@ export class PerformanceComponent implements OnInit {
   fetchDag(): void {
     let url = "/metrics/dag";
     if (this.metricIds) {
-      url = "/metrics/dag" + "?metric_ids=" + String(this.metricIds);
+      url = "/metrics/dag" + "?starting_metrics=" + String(this.metricIds);
     }
     // Fetch the DAG
     this.apiService.get(url).subscribe(response => {
