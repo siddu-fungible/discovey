@@ -414,37 +414,41 @@
       </div>
     </div>
     </div>
-    <div *ngIf="selectedInfo" style="flex: 1 1 auto">
+    <div *ngIf="selectedSuite" style="flex: 1 1 auto">
 
       <div class="card">
-        <div class="card-header">{{ selectedInfo.name }}</div>
+        <div class="card-header">{{ selectedSuite.name }}</div>
         <div class="card-body">
-          <p>{{ selectedInfo.short_description }}</p>
-          <div class="fun-attribute-label">Tags</div>{{ selectedInfo.tags | json }}
-          <div class="fun-attribute-label">Categories</div>{{ selectedInfo.categories | json }}
+          <p>{{ selectedSuite.short_description }}</p>
+          <span class="fun-attribute">
+            <span class="fun-attribute-label">Tags</span> {{ _listToString(selectedSuite.tags) }}
+          </span>
+          <span class="fun-attribute">
+            <span class="fun-attribute-label">Categories</span> {{ _listToString(selectedSuite.categories) }}
+          </span>
 
           <table class="table table-bordered">
             <tr>
               <th>Script path</th>
               <th>Inputs</th>
-              <th>Tags</th>
+              <th>Test-case IDs</th>
             </tr>
-            <tr *ngFor="let scriptEntry of selectedInfo.entries; index as i">
+            <tr *ngFor="let scriptEntry of selectedSuite.entries; index as i">
               <td>{{ i }}: {{ scriptEntry.script_path }}</td>
-              <td>{{ scriptEntry.inputs | json }}</td>
-              <td>{{ scriptEntry.test_case_ids | json }}</td>
+              <td>{{ scriptEntry.inputs }}</td>
+              <td>{{ scriptEntry.test_case_ids }}</td>
             </tr>
           </table>
 
-          <ng-container *ngIf="selectedInfo?.custom_test_bed_spec">
+          <ng-container *ngIf="selectedSuite?.custom_test_bed_spec">
             <app-section-horizontal-line [text]="'Custom test-bed spec'"></app-section-horizontal-line>
             <div style="display: flex">
               <table>
                 <tr>
                   <td><span class="fun-attribute-label">Base test-bed</span></td>
-                  <td>{{ selectedInfo?.custom_test_bed_spec?.base_test_bed }}</td>
+                  <td>{{ selectedSuite?.custom_test_bed_spec?.base_test_bed }}</td>
                 </tr>
-                <ng-container *ngFor="let asset_request of selectedInfo?.custom_test_bed_spec?.asset_request| keyvalue">
+                <ng-container *ngFor="let asset_request of selectedSuite?.custom_test_bed_spec?.asset_request| keyvalue">
                   <tr>
                     <td><span class="fun-attribute-label">{{ asset_request.key }}</span></td>
                     <td *ngIf="_hasKey(asset_request.value, 'num')">Num: {{ asset_request.value.num }}</td>

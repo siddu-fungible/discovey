@@ -39,7 +39,7 @@ export class SubmitJobComponent implements OnInit {
   scheduleInMinutesRadio: boolean;
   buildUrl: string;
   selectedSuite: any = null;
-  selectedInfo: any;
+  //selectedInfo: any;
   jobId: number;
   suitesInfo: any;
   selectedTags: any[] = [];
@@ -136,7 +136,7 @@ export class SubmitJobComponent implements OnInit {
     this.scheduleInMinutesRadio = true;
     this.buildUrl = "http://dochub.fungible.local/doc/jenkins/funsdk/latest/";
     this.selectedSuite = null;
-    this.selectedInfo = null;
+    //this.selectedInfo = null;
     this.schedulingOptions = false;
     this.jobId = null;
     let self = this;
@@ -253,9 +253,18 @@ export class SubmitJobComponent implements OnInit {
   }
 
   changedValue(selectedSuite) {
-    this.selectedInfo = selectedSuite; //this.suitesInfo[selectedSuite];
+    this.selectedSuite = selectedSuite;
     this.selectedScriptPk = null;
     this.resetScriptSelector = true;
+  }
+
+  _listToString(l) {
+    let s = "";
+    l.forEach(listElement => {
+      s += listElement + ",";
+    });
+    s = s.replace(/,$/, "");
+    return s;
   }
 
   parseScriptInfo(scriptInfo) {
@@ -448,8 +457,7 @@ export class SubmitJobComponent implements OnInit {
 
   singleSelectPkEvent(pk) {
     console.log("Pk: " + pk);
-    this.selectedSuite = "";
-    this.selectedInfo = null;
+    this.selectedSuite = null;
     this.selectedScriptPk = pk;
   }
 
