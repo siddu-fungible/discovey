@@ -59,7 +59,7 @@
     "blt_details": {
       "ns_id": 1,
       "type": "VOL_TYPE_BLK_LOCAL_THIN",
-      "capacity": 137438953472,
+      "capacity": 1600277970944,
       "block_size": 4096
     },
     "controllers": 1,
@@ -72,8 +72,8 @@
     "iter_interval": 2,
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {
-      "multiple_jobs": "--rw=randwrite --bs=4k --iodepth=32 --numjobs=1 --ioengine=libaio --direct=1 --prio=0 --cpus_allowed_policy=split --size=100%",
-      "timeout": 5400
+      "multiple_jobs": "--rw=randwrite --bs=4k --iodepth=16 --numjobs=1 --ioengine=libaio --direct=1 --prio=0 --cpus_allowed_policy=split --size=100%",
+      "timeout": 7200
     },
     "fio_cmd_args": {
       "multiple_jobs": "--ioengine=libaio --direct=1 --prio=0 --cpus_allowed_policy=split --group_reporting=1 --norandommap --randrepeat=0",
@@ -107,7 +107,7 @@
     "blt_details": {
       "ns_id": 1,
       "type": "VOL_TYPE_BLK_LOCAL_THIN",
-      "capacity": 137438953472,
+      "capacity": 1600277970944,
       "block_size": 4096
     },
     "controllers": 1,
@@ -120,8 +120,8 @@
     "iter_interval": 2,
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {
-      "multiple_jobs": "--rw=randwrite --bs=4k --iodepth=32 --numjobs=1 --ioengine=libaio --direct=1 --prio=0 --cpus_allowed_policy=split --size=100%",
-      "timeout": 5400
+      "multiple_jobs": "--rw=randwrite --bs=4k --iodepth=16 --numjobs=1 --ioengine=libaio --direct=1 --prio=0 --cpus_allowed_policy=split --size=100%",
+      "timeout": 7200
     },
     "fio_cmd_args": {
       "multiple_jobs": "--ioengine=libaio --direct=1 --prio=0 --cpus_allowed_policy=split --group_reporting=1 --norandommap --randrepeat=0",
