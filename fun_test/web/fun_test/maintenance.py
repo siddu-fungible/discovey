@@ -1106,11 +1106,70 @@ def set_offloads_hu(chart):
                 set_offloads_hu(chart=child_chart)
 
 
-if __name__ == "__main_non_lso__":
+if __name__ == "__main__set_offloads":
     metric_id = 1055
     chart = MetricChart.objects.get(metric_id=metric_id)
     set_offloads_hu(chart=chart)
     print "added hu_nu_nfcp non lso"
+
+if __name__ == "__main_qdepth256__":
+    # IOPS charts
+    iops_metric_ids = [1075, 1076, 1077, 843]
+    for metric_id in iops_metric_ids:
+        chart = MetricChart.objects.get(metric_id=metric_id)
+        print(chart.chart_name)
+        data_sets = json.loads(chart.data_sets)
+        one_data_set = data_sets[0].copy()
+        inputs = one_data_set["inputs"].copy()
+        input_fio_job_name = inputs["input_fio_job_name"]
+        inputs["input_fio_job_name"] = input_fio_job_name.replace("1_1", "32_8")
+        one_data_set["inputs"] = inputs
+        one_data_set["name"] = "qd256"
+        one_data_set["output"] = {'name': 'output_read_iops',
+                                  'reference': -1,
+                                  'min': 0,
+                                  'max': -1,
+                                  'expected': -1,
+                                  'unit': PerfUnit.UNIT_OPS}
+        data_sets.append(one_data_set)
+        print(data_sets)
+        chart.data_sets = json.dumps(data_sets)
+        chart.save()
+
+    # Latency charts
+
+    latency_metric_ids = [1078, 1079, 1080, 845]
+    for metric_id in latency_metric_ids:
+        chart = MetricChart.objects.get(metric_id=metric_id)
+        data_sets = json.loads(chart.data_sets)
+        for each_data_set in data_sets:
+            input_fio_job_name = each_data_set["inputs"]["input_fio_job_name"]
+            each_data_set["inputs"]["input_fio_job_name"] = input_fio_job_name.replace("1_1", "32_8")
+            each_data_set["output"]["reference"] = -1
+        internal_chart_name = chart.internal_chart_name.replace("qd1", "qd256")
+        chart_name = "Latency, QDepth=256"
+        latency_charts = ml.create_leaf(chart_name=chart_name,
+                                        internal_chart_name=internal_chart_name,
+                                        data_sets=data_sets,
+                                        leaf=True,
+                                        description=chart.description,
+                                        owner_info=chart.owner_info,
+                                        source=chart.source,
+                                        positive=chart.positive,
+                                        y1_axis_title=chart.visualization_unit,
+                                        visualization_unit=chart.visualization_unit,
+                                        metric_model_name=chart.metric_model_name,
+                                        base_line_date=chart.base_line_date,
+                                        work_in_progress=False,
+                                        children=[],
+                                        jira_ids=[],
+                                        platform=chart.platform,
+                                        peer_ids=[],
+                                        creator=TEAM_REGRESSION_EMAIL,
+                                        workspace_ids=[])
+
+        final_dict = ml.get_dict(chart=latency_charts)
+        print json.dumps(final_dict, indent=4)
 
 if __name__ == "__main__":
     dag = {}
@@ -1175,3 +1234,4 @@ if __name__ == "__main__":
     root_chart.fix_children_weights()
     final_dict = ml.get_dict(chart=root_chart)
     print json.dumps(final_dict)
+

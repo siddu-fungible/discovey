@@ -11,5 +11,6 @@
   {"path": "accelerators/erasure_coding/palladium_ec_teramark.py"},
   {"path": "storage/f1_flowtest.py"},
   {"path": "storage/f1_vf_sanity.py"},
-  {"path": "accelerators/regex/regex_apps.py"}  
+  {"path": "accelerators/regex/regex_apps.py"},  
+  {"path": "accelerators/regex/review/regex_runtime_jnpr_nfa.py"}
 ]

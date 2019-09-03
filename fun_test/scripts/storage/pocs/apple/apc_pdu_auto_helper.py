@@ -147,7 +147,7 @@ def get_dpcsh_data_for_cmds(come_handle, cmd, f1=0):
     try:
         come_handle.enter_sudo()
         come_handle.command("cd /scratch/FunSDK/bin/Linux")
-        run_cmd = "./dpcsh --pcie_nvme_sock=/dev/nvme{} --nvme_cmd_timeout=60 --nocli {}".format(f1, cmd)
+        run_cmd = "./dpcsh --pcie_nvme_sock=/dev/nvme{} --nvme_cmd_timeout=60000 --nocli {}".format(f1, cmd)
         output = come_handle.command(run_cmd)
         result = parse_dpcsh_output(output)
         come_handle.exit_sudo()
