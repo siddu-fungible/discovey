@@ -43,7 +43,7 @@ class SetupBringup(alibaba_fcp_setup.ScriptSetup):
                 funeth_obj.configure_irq_affinity(hu, tx_or_rx='rx', cpu_list=range(0, 8))
             if hu == 'hu6':
                 funeth_obj.interrupt_coalesce(hu, disable=True)
-            # lock_cpu_freq(funeth_obj=funeth_obj, hu=hu)
+            lock_cpu_freq(funeth_obj=funeth_obj, hu=hu)
 
         for nu in funeth_obj.nu_hosts:
             linux_obj = funeth_obj.linux_obj_dict[nu]
