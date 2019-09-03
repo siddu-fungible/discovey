@@ -191,15 +191,14 @@ def metric_charts(request, metric_id=None):
     result = []
     if request.method == "GET":
         workspace_id = request.GET.get("workspace_id", None)
-        q = None
+        q = Q()
         if workspace_id:
             q = Q(workspace_ids__contains=int(workspace_id))
         if metric_id:
             q = Q(metric_id=metric_id)
-        if q:
-            charts = MetricChart.objects.filter(q)
-            for chart in charts:
-                chart_dict = {}
-                chart_dict["metric_id"] = chart.metric_id
-                result.append(chart_dict)
+        charts = MetricChart.objects.filter(q)
+        for chart in charts:
+            chart_dict = {}
+            chart_dict["metric_id"] = chart.metric_id
+            result.append(chart_dict)
     return result

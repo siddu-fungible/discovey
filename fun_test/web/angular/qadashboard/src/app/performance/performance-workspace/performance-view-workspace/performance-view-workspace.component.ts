@@ -100,7 +100,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
      this.allMetricIds = [];
     this.workspaceMetrics = [];
     for (let chart of charts) {
-      this.workspaceMetrics.push(Number(chart["metric_id"]));
+      this.workspaceMetrics.push(Number(chart.metric_id));
     }
     this.interestedMetrics = [];
     for (let metric of this.workspace.interested_metrics) {
