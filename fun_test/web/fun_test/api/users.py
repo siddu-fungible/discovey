@@ -37,7 +37,7 @@ def users(request, id):
 
 @csrf_exempt
 @api_safe_json_response
-def workspaces(request, email, workspace_name=None):
+def workspaces(request):
     result = []
     if request.method == "POST":
         request_json = json.loads(request.body)

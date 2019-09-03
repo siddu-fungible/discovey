@@ -305,6 +305,7 @@ export class PerformanceComponent implements OnInit {
         });
       }
       if (this.selectMode == SelectMode.ShowEditWorkspace && this.interestedMetrics) {
+        this.flatNodes[0].hide = false;
         for (let flatNode of this.flatNodes) {
           for (let metric of this.interestedMetrics) {
             if (flatNode.node.metricId === metric.metric_id) {

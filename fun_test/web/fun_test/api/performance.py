@@ -6,6 +6,7 @@ from web.fun_test.models import InterestedMetrics
 from django.db.models import Q
 from web.web_global import JINJA_TEMPLATE_DIR
 
+
 @csrf_exempt
 @api_safe_json_response
 def charts(request, id):
@@ -64,6 +65,7 @@ def data(request):
             result[filter_name] = data_set_dict
     return result
 
+
 @csrf_exempt
 @api_safe_json_response
 def metrics_data(request):
@@ -119,6 +121,7 @@ def metrics_data(request):
         data = send_mail(to_addresses=[email], subject=subject, content=content)
     return data
 
+
 @csrf_exempt
 @api_safe_json_response
 def interested_metrics(request, workspace_id=None):
@@ -129,7 +132,7 @@ def interested_metrics(request, workspace_id=None):
         workspace_id = request_json["workspace_id"]
         interested_metrics = request_json["interested_metrics"]
 
-        #total entries in interested metrics and deleting the ones which are not tracked
+        # total entries in interested metrics and deleting the ones which are not tracked
         interested_entries = InterestedMetrics.objects.filter(workspace_id=workspace_id)
         if len(interested_entries):
             for entry in interested_entries:
