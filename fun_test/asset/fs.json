@@ -486,7 +486,7 @@
     "name": "fs-34",
     "workarounds": {
       "skip_funeth_come_power_cycle": true
-      },
+    },
     "gateway_ip": "10.1.105.1",
     "bmc": {
       "mgmt_ip": "10.1.105.61",
@@ -513,7 +513,10 @@
       "mgmt_ssh_password": "superuser"
     },
     "fpga": {
-      "fpga_use_telnet": true,
+      "mgmt_ip": "",
+      "mgmt_ssh_username": "",
+      "mgmt_ssh_password": "",
+      "use_telnet": true,
       "terminal_ip": "cab01-terminal",
       "terminal_port": 7002,
       "terminal_username": "root",
