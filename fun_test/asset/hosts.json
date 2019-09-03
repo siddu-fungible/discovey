@@ -512,8 +512,8 @@
         "name": "enp216s0",
         "ip": "15.1.15.2/24",
         "switch_info": {
-          "name": "qfx-1",
-          "port": "et-0/0/59"
+          "name": "qfx-3",
+          "port": "et-0/0/24"
         }
       }
     }
@@ -530,10 +530,10 @@
     "test_interface_info": {
       "0": {
         "name": "enp216s0",
-        "ip": "15.1.16.2/24",
+        "ip": "15.1.15.3/24",
         "switch_info": {
-          "name": "qfx-1",
-          "port": "et-0/0/57"
+          "name": "qfx-3",
+          "port": "et-0/0/25"
         }
       }
     }
@@ -550,10 +550,10 @@
     "test_interface_info": {
       "0": {
         "name": "enp216s0",
-        "ip": "15.1.17.2/24",
+        "ip": "15.1.15.4/24",
         "switch_info": {
-          "name": "qfx-1",
-          "port": "et-0/0/58"
+          "name": "qfx-3",
+          "port": "et-0/0/26"
         }
       }
     }
@@ -570,10 +570,10 @@
     "test_interface_info": {
       "0": {
         "name": "enp216s0",
-        "ip": "15.1.18.2/24",
+        "ip": "15.1.15.5/24",
         "switch_info": {
-          "name": "qfx-1",
-          "port": "et-0/0/56"
+          "name": "qfx-3",
+          "port": "et-0/0/27"
         }
       }
     }
@@ -590,10 +590,10 @@
     "test_interface_info": {
       "0": {
         "name": "enp216s0",
-        "ip": "15.1.19.2/24",
+        "ip": "15.1.15.6/24",
         "switch_info": {
-          "name": "qfx-1",
-          "port": "et-0/0/39"
+          "name": "qfx-3",
+          "port": "et-0/0/28"
         }
       }
     }
