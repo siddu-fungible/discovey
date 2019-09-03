@@ -257,6 +257,7 @@ class FunTest:
         self.topologies = []
         self.hosts = []
         self.closed = False
+        self.enable_profiling()
 
     def report_message(self, message):  # Used only by FunXml only
         if self.fun_xml_obj:
