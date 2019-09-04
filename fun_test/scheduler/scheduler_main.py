@@ -295,7 +295,6 @@ class QueueWorker(Thread):
                                              state=JobStatusType.IN_PROGRESS)
 
         lock_assets(job_id=job_id, assets=assets_required)
-        t.initialize()
         # t.start()
         # t.run()
         return t
@@ -456,6 +455,7 @@ class SuiteWorker(Thread):
 
                 self.job_version = version
                 self.abort_on_failure_requested = False
+                self.prepare_tags()
                 try:
                     self.prepare_script_items()
                 except Exception as ex:
@@ -626,7 +626,6 @@ class SuiteWorker(Thread):
 
     def prepare_script_items(self):
         script_items = []
-        all_tags = self.job_tags
         if self.job_suite_id and (self.job_suite_type == SuiteType.STATIC or self.job_suite_type == SuiteType.TASK):
             script_items = self.get_scripts(suite_id=self.job_suite_id)
         elif self.job_script_path:
@@ -634,9 +633,9 @@ class SuiteWorker(Thread):
         elif self.job_suite_type == SuiteType.DYNAMIC:
             script_items = self.get_scripts(suite_id=self.job_suite_id)
 
-        script_paths = map(lambda f: SCRIPTS_DIR + "/" + f["script_path"], filter(lambda f: "info" not in f, script_items))
+        script_paths = [SCRIPTS_DIR + "/" + x["script_path"] for x in script_items]
         if self.job_suite_type == SuiteType.TASK:
-            script_paths = map(lambda f: TASKS_DIR + "/" + f["script_path"], filter(lambda f: "info" not in f, script_items))
+            script_paths = [TASKS_DIR + "/" + x["script_path"] for x in script_items]
 
         scripts_exist, error_message = self.ensure_scripts_exists(script_paths)
         if not scripts_exist:
@@ -647,15 +646,31 @@ class SuiteWorker(Thread):
         self.debug("Starting executing scripts")
 
         # TODO: Update tags
-        models_helper.update_suite_execution(suite_execution_id=self.job_id,
-                                             tags=all_tags,
-                                             build_url=self.job_build_url,
-                                             version=self.job_version)
+        suite_execution = models_helper.get_suite_execution(suite_execution_id=self.job_id)
+        if suite_execution.auto_scheduled_execution_id > -1:
+            try:
+                pass
+            except:
+                pass
+
+
         self.script_items = script_items
         if not self.script_items:
             self.abort_suite("No scripts detected in suite")
 
         return self.script_items
+
+    def prepare_tags(self):
+        all_tags = self.job_tags
+        if self.job_suite_id:
+            suite = Suite.objects.get(id=self.job_suite_id)
+            if suite.tags:
+                all_tags.extend(suite.tags)
+        models_helper.update_suite_execution(suite_execution_id=self.job_id,
+                                             tags=all_tags,
+                                             build_url=self.job_build_url,
+                                             version=self.job_version)
+
 
     def run_next(self):
         if not self.initialized:

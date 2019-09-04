@@ -329,6 +329,7 @@ def queue_job3(suite_id=None,
         is_auto_scheduled_job = is_auto_scheduled(scheduling_type=scheduling_type, repeat_in_minutes=repeat_in_minutes)
         job_state = JobStatusType.AUTO_SCHEDULED if is_auto_scheduled_job else JobStatusType.SUBMITTED
 
+        suite_execution = None
         suite_execution = models_helper.add_suite_execution(submitted_time=get_current_time(),
                                                             scheduled_time=get_current_time(),
                                                             completed_time=get_current_time(),
