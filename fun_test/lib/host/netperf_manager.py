@@ -255,6 +255,7 @@ class NetperfManager:
                 cpu_list_client = sorted(arg_dict.get('cpu_list_client'))[::-1]  # reversed order
                 fixed_netperf_port = arg_dict.get('fixed_netperf_port', False)
                 csi_perf_obj = arg_dict.get('csi_perf_obj', None)
+                threading = arg_dict.get('threading', False)
 
                 if test == TEST_LATENCY_ONLY:
                     num_processes = 1
@@ -296,11 +297,11 @@ class NetperfManager:
                 # Get perf for throughput test, no need to latency only test
                 if csi_perf_obj:
                     csi_perf_obj.start(f1_index=0)
-                mp_task_obj.run(max_parallel_processes=(num_processes+1)*len(direction_list))
+                mp_task_obj.run(max_parallel_processes=(num_processes+1)*len(direction_list), threading=threading)
                 if csi_perf_obj:
                     csi_perf_obj.stop(f1_index=0)
             else:
-                mp_task_obj.run(max_parallel_processes=num_processes*len(direction_list))
+                mp_task_obj.run(max_parallel_processes=num_processes*len(direction_list), threading=threading)
 
             rdict = {}
             for direction in direction_list:

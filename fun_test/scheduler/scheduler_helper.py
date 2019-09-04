@@ -557,8 +557,9 @@ def move_to_queue_head(job_id):
         for queue_entry in queue_entries:
             queue_entry.priority += 1
             if queue_entry.priority > high:
-                raise SchedulerException("Unable to change priority. Job-id: {}, high mark: {}".format(job_id, high))
-            queue_entry.save()
+                scheduler_logger.exception("Unable to change priority. Job-id: {}, high mark: {}".format(job_id, high))
+            else:
+                queue_entry.save()
         this_job_queue_entry.priority = low
         this_job_queue_entry.save()
 
@@ -574,11 +575,11 @@ def move_to_higher_queue(job_id):
         next_priority_category = SchedulerJobPriority.HIGH
 
     if priority_category == SchedulerJobPriority.HIGH:
-        raise SchedulerException("Job-Id: {} already in high priority category")
-
-    next_priority_value = get_next_priority_value(next_priority_category)
-    this_job_queue_entry.priority = next_priority_value
-    this_job_queue_entry.save()
+        scheduler_logger.exception(SchedulerException("Job-Id: {} already in high priority category"))
+    else:
+        next_priority_value = get_next_priority_value(next_priority_category)
+        this_job_queue_entry.priority = next_priority_value
+        this_job_queue_entry.save()
 
 
 def swap_priorities(job1, job2):

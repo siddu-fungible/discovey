@@ -1,6 +1,7 @@
 import os
 import django
 from web.web_global import PRIMARY_SETTINGS_FILE
+
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", PRIMARY_SETTINGS_FILE)
 django.setup()
 import json
@@ -20,6 +21,8 @@ logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 from datetime import datetime, timedelta
 from web.fun_test.site_state import *
 from web.fun_test.metrics_models import MetricChart, MileStoneMarkers, LastMetricId
+from fun_settings import TEAM_REGRESSION_EMAIL
+
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 
 
@@ -177,7 +180,8 @@ class MetricLib():
                             jira_ids=kwargs["jira_ids"],
                             platform=kwargs["platform"],
                             peer_ids=kwargs["peer_ids"],
-                            creator=kwargs["creator"])
+                            creator=kwargs["creator"],
+                            workspace_ids=kwargs["workspace_ids"])
         chart.save()
         return chart
 
@@ -282,7 +286,7 @@ class MetricLib():
                             self.delete_jira_info(chart=chart, jira_id=jira_id)
 
     def create_container(self, chart_name, internal_chart_name, owner_info, source, platform, base_line_date, \
-                                                            workspace_ids):
+                         workspace_ids):
         data_sets = []
         one_data_set = {}
         one_data_set["name"] = "Scores"
@@ -356,5 +360,3 @@ class MetricLib():
 if __name__ == "__main__":
     ml = MetricLib()
     ml.remove_resolved_bugs()
-
-

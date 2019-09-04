@@ -758,7 +758,6 @@ if __name__ == "__main__inspur_charts":
         print ("Data sets: {}".format(data_sets))
 
 if __name__ == "__main_alibaba_rdma__":
-
     # Alibaba rdma latency charts
 
     internal_chart_names = OrderedDict([
@@ -976,9 +975,9 @@ if __name__ == "__main_manual_db_entry__":
     test = "tiHostFioRandRead"
     operation = "randread"
     read_values = [[1, 103321.475198, 413281, 106, 118, 118, 120, 146, "fio_tcp_randread_blt_1_1_vol_12"],
-              [32, 2728469.774469, 10913873, 133, 170, 189, 234, 387, "fio_tcp_randread_blt_32_1_vol_12"],
-              [64, 4541224.44247, 18164891, 161, 218, 248, 328, 593, "fio_tcp_randread_blt_32_2_vol_12"],
-              [128, 5257247.213338999, 21028982, 285, 397, 475, 780, 1513, "fio_tcp_randread_blt_32_4_vol_12"]]
+                   [32, 2728469.774469, 10913873, 133, 170, 189, 234, 387, "fio_tcp_randread_blt_32_1_vol_12"],
+                   [64, 4541224.44247, 18164891, 161, 218, 248, 328, 593, "fio_tcp_randread_blt_32_2_vol_12"],
+                   [128, 5257247.213338999, 21028982, 285, 397, 475, 780, 1513, "fio_tcp_randread_blt_32_4_vol_12"]]
 
     for value in read_values:
         one_entry = BltVolumePerformance(input_date_time=date_time,
@@ -1024,9 +1023,9 @@ if __name__ == "__main_manual_db_entry__":
     test = "tiHostFioRandWrite"
     operation = "randwrite"
     write_values = [[1, 228194.69089600001, 912772, 43, 43, 44, 60, 189, "fio_tcp_randwrite_blt_1_1_vol_12"],
-                   [8, 1343489.0677180002, 5373950, 61, 100, 122, 163, 468, "fio_tcp_randwrite_blt_8_1_vol_12"],
-                   [16, 2076670.642782, 8306677, 82, 137, 157, 211, 630, "fio_tcp_randwrite_blt_16_1_vol_12"],
-                   [32, 2917874.290518, 11671490, 124, 179, 206, 308, 1792, "fio_tcp_randwrite_blt_32_1_vol_12"]]
+                    [8, 1343489.0677180002, 5373950, 61, 100, 122, 163, 468, "fio_tcp_randwrite_blt_8_1_vol_12"],
+                    [16, 2076670.642782, 8306677, 82, 137, 157, 211, 630, "fio_tcp_randwrite_blt_16_1_vol_12"],
+                    [32, 2917874.290518, 11671490, 124, 179, 206, 308, 1792, "fio_tcp_randwrite_blt_32_1_vol_12"]]
 
     for value in write_values:
         one_entry = BltVolumePerformance(input_date_time=date_time,
@@ -1071,6 +1070,7 @@ if __name__ == "__main_manual_db_entry__":
 
     print "added data for 12 hosts 12 volumes manually"
 
+
 def set_offloads_hu(chart):
     base_line_date = datetime(year=2019, month=8, day=20, minute=0, hour=0, second=0)
     if chart:
@@ -1086,20 +1086,20 @@ def set_offloads_hu(chart):
                 data_set["output"]["reference"] = -1
             ml.create_leaf(chart_name=chart.chart_name, internal_chart_name=internal_chart_name, data_sets=data_sets,
                            leaf=True, description=chart.description,
-                        owner_info=chart.owner_info, source=chart.source,
-                        positive=chart.positive, y1_axis_title=chart.y1_axis_title,
-                        visualization_unit=chart.visualization_unit,
-                        metric_model_name=chart.metric_model_name,
-                        base_line_date=base_line_date,
-                        work_in_progress=False, children=[], jira_ids=[], platform=FunPlatform.F1,
-                        peer_ids=[], creator=TEAM_REGRESSION_EMAIL,
-                        workspace_ids=[])
+                           owner_info=chart.owner_info, source=chart.source,
+                           positive=chart.positive, y1_axis_title=chart.y1_axis_title,
+                           visualization_unit=chart.visualization_unit,
+                           metric_model_name=chart.metric_model_name,
+                           base_line_date=base_line_date,
+                           work_in_progress=False, children=[], jira_ids=[], platform=FunPlatform.F1,
+                           peer_ids=[], creator=TEAM_REGRESSION_EMAIL,
+                           workspace_ids=[])
         else:
             internal_chart_name = chart.internal_chart_name + "_non_lso"
             ml.create_container(chart_name=chart.chart_name, internal_chart_name=internal_chart_name,
                                 platform=FunPlatform.F1,
-                             owner_info=chart.owner_info,
-                             source=chart.source, base_line_date=base_line_date, workspace_ids=[])
+                                owner_info=chart.owner_info,
+                                source=chart.source, base_line_date=base_line_date, workspace_ids=[])
             children = json.loads(chart.children)
             for child in children:
                 child_chart = MetricChart.objects.get(metric_id=int(child))
@@ -1112,7 +1112,7 @@ if __name__ == "__main__set_offloads":
     set_offloads_hu(chart=chart)
     print "added hu_nu_nfcp non lso"
 
-if __name__ == "__main__":
+if __name__ == "__main_qdepth256__":
     # IOPS charts
     iops_metric_ids = [1075, 1076, 1077, 843]
     for metric_id in iops_metric_ids:
@@ -1171,7 +1171,67 @@ if __name__ == "__main__":
         final_dict = ml.get_dict(chart=latency_charts)
         print json.dumps(final_dict, indent=4)
 
-
-
-
+if __name__ == "__main__":
+    dag = {}
+    owner_info = "Radhika Naik (radhika.naik@fungible.com)"
+    source = "Unknown"
+    root_node = "Stripe Volume"
+    types = ["NVMe/TCP"]
+    hosts = ["Multi Host"]
+    operations = ["Random Read", "Random Write"]
+    qdepths = [16, 32, 64, 128, 256]
+    base_line_date = datetime(year=2019, month=8, day=20, minute=0, hour=0, second=0)
+    root_chart = ml.create_container(chart_name=root_node, internal_chart_name=root_node, platform=FunPlatform.F1,
+                                     owner_info=owner_info,
+                                     source=source, base_line_date=base_line_date, workspace_ids=[1891])
+    for type in types:
+        type_chart = ml.create_container(chart_name=type, internal_chart_name=type,
+                                         platform=FunPlatform.F1,
+                                         owner_info=owner_info,
+                                         source=source, base_line_date=base_line_date, workspace_ids=[])
+        root_chart.add_child(child_id=type_chart.metric_id)
+        for host in hosts:
+            host_chart = ml.create_container(chart_name=host, internal_chart_name=host, platform=FunPlatform.F1,
+                                             owner_info=owner_info,
+                                             source=source, base_line_date=base_line_date, workspace_ids=[])
+            type_chart.add_child(child_id=host_chart.metric_id)
+            for operation in operations:
+                operation_chart = ml.create_container(chart_name=operation, internal_chart_name=operation,
+                                                      platform=FunPlatform.F1,
+                                                      owner_info=owner_info,
+                                                      source=source, base_line_date=base_line_date, workspace_ids=[])
+                host_chart.add_child(child_id=operation_chart.metric_id)
+                iops_chart = ml.create_leaf(chart_name="IOPS", internal_chart_name="IOPS", data_sets=[], leaf=True,
+                                            description="TBD",
+                                            owner_info=owner_info, source=source,
+                                            positive=True, y1_axis_title=PerfUnit.UNIT_OPS,
+                                            visualization_unit=PerfUnit.UNIT_OPS,
+                                            metric_model_name="AlibabaPerformance",
+                                            base_line_date=base_line_date,
+                                            work_in_progress=False, children=[], jira_ids=[], platform=FunPlatform.F1,
+                                            peer_ids=[], creator=TEAM_REGRESSION_EMAIL,
+                                            workspace_ids=[])
+                iops_chart.fix_children_weights()
+                operation_chart.add_child(child_id=iops_chart.metric_id)
+                for qdepth in qdepths:
+                    chart_name = "Latency, QDepth=" + str(qdepth)
+                    latency_chart = ml.create_leaf(chart_name=chart_name, internal_chart_name=chart_name, data_sets=[],
+                                                   leaf=True, description="TBD",
+                                                   owner_info=owner_info, source=source,
+                                                   positive=False, y1_axis_title=PerfUnit.UNIT_USECS,
+                                                   visualization_unit=PerfUnit.UNIT_USECS,
+                                                   metric_model_name="AlibabaPerformance",
+                                                   base_line_date=base_line_date,
+                                                   work_in_progress=False, children=[], jira_ids=[],
+                                                   platform=FunPlatform.F1,
+                                                   peer_ids=[], creator=TEAM_REGRESSION_EMAIL,
+                                                   workspace_ids=[])
+                    latency_chart.fix_children_weights()
+                    operation_chart.add_child(child_id=latency_chart.metric_id)
+                operation_chart.fix_children_weights()
+            host_chart.fix_children_weights()
+        type_chart.fix_children_weights()
+    root_chart.fix_children_weights()
+    final_dict = ml.get_dict(chart=root_chart)
+    print json.dumps(final_dict)
 
