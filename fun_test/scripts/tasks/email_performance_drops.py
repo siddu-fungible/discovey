@@ -6,8 +6,10 @@ import json
 from django.apps import apps
 from fun_settings import MAIN_WEB_APP
 from datetime import datetime
+from django.utils import timezone
 from web.web_global import JINJA_TEMPLATE_DIR
 from jinja2 import Environment, FileSystemLoader, Template
+from fun_global import get_current_time, get_localized_time
 
 
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
@@ -35,8 +37,8 @@ def set_dict(entries, data_set_dict):
     data_set_dict["yesterday"] = getattr(entries[1], output_name)
     data_set_dict["today_unit"] = getattr(entries[0], output_name + "_unit")
     data_set_dict["yesterday_unit"] = getattr(entries[1], output_name + "_unit")
-    data_set_dict["today_date"] = str(getattr(entries[0], "input_date_time"))
-    data_set_dict["yesterday_date"] = str(getattr(entries[1], "input_date_time"))
+    data_set_dict["today_date"] = str(timezone.localtime(getattr(entries[0], "input_date_time")))
+    data_set_dict["yesterday_date"] = str(timezone.localtime(getattr(entries[1], "input_date_time")))
 
 def set_percentage(data_set_dict, report, percentage):
     percentage = str(percentage) + '%'
@@ -83,15 +85,15 @@ if __name__ == "__main__":
                 reports.append(report)
         if len(reports):
             print reports
-            # subject = "Performance drop report - " + str(datetime.now())
-            # try:
-            #     data = send_email(email=email, subject=subject, reports=reports)
-            #     if not data.status:
-            #         raise Exception("sending email failed to - {}".format(email))
-            #     else:
-            #         print "sent email successfully to - {}".format(email)
-            # except Exception as ex:
-            #     print str(ex)
+            subject = "Performance drop report - " + str(get_current_time())
+            try:
+                data = send_email(email=email, subject=subject, reports=reports)
+                if not data.status:
+                    raise Exception("sending email failed to - {}".format(email))
+                else:
+                    print "sent email successfully to - {}".format(email)
+            except Exception as ex:
+                print str(ex)
 
 
 
