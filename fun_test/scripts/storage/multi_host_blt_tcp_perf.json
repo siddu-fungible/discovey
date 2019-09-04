@@ -77,14 +77,17 @@
     },
     "fio_cmd_args": {
       "multiple_jobs": "--ioengine=libaio --direct=1 --prio=0 --cpus_allowed_policy=split --group_reporting=1 --norandommap --randrepeat=0",
-      "runtime": 900,
-      "timeout": 960
+      "runtime": 300,
+      "timeout": 330
     },
     "fio_modes": [
       "randread"
     ],
     "fio_bs": "4k",
     "fio_jobs_iodepth": ["(1, 1)", "(32, 1)", "(32, 2)", "(32, 4)", "(32, 8)"],
+    "full_run_iodepth": [128],
+    "fio_full_run_time": 1200,
+    "fio_full_run_timeout": 1230,
     "fio_job_name": {
       "randread": "nhosts"
     },
@@ -125,14 +128,17 @@
     },
     "fio_cmd_args": {
       "multiple_jobs": "--ioengine=libaio --direct=1 --prio=0 --cpus_allowed_policy=split --group_reporting=1 --norandommap --randrepeat=0",
-      "runtime": 900,
-      "timeout": 960
+      "runtime": 300,
+      "timeout": 330
     },
     "fio_modes": [
       "randwrite"
     ],
     "fio_bs": "4k",
     "fio_jobs_iodepth": ["(1, 1)", "(8, 1)", "(16, 1)", "(32, 1)"],
+    "full_run_iodepth": [32],
+    "fio_full_run_time": 1200,
+    "fio_full_run_timeout": 1230,
     "fio_job_name": {
       "randwrite": "nhosts"
     },
