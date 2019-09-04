@@ -356,12 +356,7 @@ class SuiteWorker(Thread):
     def __init__(self, job_spec):
         super(SuiteWorker, self).__init__()
         self.job_spec = job_spec
-        self.job_suite_path = None
-        if job_spec.suite_path:
-            self.job_suite_path = job_spec.suite_path
-            self.job_suite_path = re.sub(r'.json', '', self.job_suite_path)
-            self.job_suite_path += ".json"
-
+        self.job_suite_id = job_spec.suite_id
         self.job_suite_type = job_spec.suite_type
         self.job_id = job_spec.execution_id
         self.job_dir = None
@@ -370,7 +365,6 @@ class SuiteWorker(Thread):
         self.job_build_url = "http://dochub.fungible.local/doc/jenkins/funsdk/latest/"
         self.job_test_bed_type = None
         self.job_scheduling_type = job_spec.scheduling_type
-
         self.job_tags = json.loads(job_spec.tags)
 
         self.job_script_path = None
@@ -419,7 +413,6 @@ class SuiteWorker(Thread):
         self.suite_shutdown = False  # run-time
         self.abort_on_failure_requested = False  # run-time
         self.summary_extra_message = ""
-        self.at_least_one_failure = False  # run-time # done
         self.shutdown_reason = None
         self.last_script_path = None  # run-time # done
         self.current_script_item_index = 0  # run-time  # done
@@ -524,7 +517,12 @@ class SuiteWorker(Thread):
             else:
                 item["tags"] = tags
 
-    def get_scripts(self, suite_execution_id, suite_file=None, dynamic_suite_spec=None, suite_type=SuiteType.STATIC):
+    def get_scripts(self, suite_id=None, dynamic_suite_spec=None):
+
+        suite = Suite.objects.get(id=suite_id)
+        return suite.entries
+
+        """
         all_tags = []
         items = []
         if suite_file:
@@ -544,8 +542,8 @@ class SuiteWorker(Thread):
         if suite_execution:
             suite_execution_tags = json.loads(suite_execution.tags)
             all_tags.extend(suite_execution_tags)
-
-        return items, all_tags
+        """
+        return items
 
     def abort_suite(self, error_message):
         self.shutdown_reason = ShutdownReason.ABORTED
@@ -620,9 +618,6 @@ class SuiteWorker(Thread):
         self.debug("After finalize")
 
         suite_executions = models_helper._get_suite_executions(execution_id=self.job_id, save_test_case_info=True)
-        if self.at_least_one_failure:
-            self.debug("At least one failure was found")
-            models_helper.update_suite_execution(suite_execution_id=self.job_id, result=RESULTS["FAILED"])
         send_summary_mail(job_id=self.job_id,
                           extra_message=self.summary_extra_message)
         models_helper.update_suite_execution(suite_execution_id=self.job_id,
@@ -635,19 +630,12 @@ class SuiteWorker(Thread):
     def prepare_script_items(self):
         script_items = []
         all_tags = self.job_tags
-        if self.job_suite_path and self.job_suite_type == SuiteType.STATIC:
-            script_items, all_tags = self.get_scripts(suite_execution_id=self.job_id,
-                                                      suite_file=self.job_suite_path)
-
-        elif self.job_suite_path and self.job_suite_type == SuiteType.TASK:
-            script_items, all_tags = self.get_scripts(suite_execution_id=self.job_id,
-                                                      suite_file=self.job_suite_path,
-                                                      suite_type=self.job_suite_type)
+        if self.job_suite_id and (self.job_suite_type == SuiteType.STATIC or self.job_suite_type == SuiteType.TASK):
+            script_items = self.get_scripts(suite_id=self.job_suite_id)
         elif self.job_script_path:
             script_items.append({"path": self.job_script_path})
         elif self.job_suite_type == SuiteType.DYNAMIC:
-            script_items, all_tags = self.get_scripts(suite_execution_id=self.job_id,
-                                                      dynamic_suite_spec=self.job_dynamic_suite_spec)
+            script_items = self.get_scripts(suite_id=self.job_suite_id)
 
         script_paths = map(lambda f: SCRIPTS_DIR + "/" + f["path"], filter(lambda f: "info" not in f, script_items))
         if self.job_suite_type == SuiteType.TASK:
@@ -661,6 +649,7 @@ class SuiteWorker(Thread):
         map(lambda f: self.local_scheduler_logger.debug("{}: {}".format(f[0], f[1])), enumerate(script_paths))
         self.debug("Starting executing scripts")
 
+        # TODO: Update tags
         suite_path = self.job_suite_path if self.job_suite_path else self.job_script_path
         models_helper.update_suite_execution(suite_execution_id=self.job_id,
                                              tags=all_tags,
@@ -788,8 +777,6 @@ class SuiteWorker(Thread):
 
         except Exception as ex:
             self.error("Script error {}, exception: {}".format(script_item, str(ex)))
-            self.at_least_one_failure = True
-            self.update_suite_run_time("at_least_one_failure", self.at_least_one_failure)
             self.set_next_script_item_index()
 
     def is_suite_completed(self):

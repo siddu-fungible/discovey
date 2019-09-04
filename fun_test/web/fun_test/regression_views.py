@@ -125,6 +125,7 @@ def submit_job(request):
 
         # suite path
         suite_path = request_json.get("suite_path", None)
+        suite_id = request_json.get("suite_id", None)
         submitter_email = request_json.get("submitter_email", "john.abraham@fungible.com")
 
         # script path used for script only submission
@@ -163,8 +164,9 @@ def submit_job(request):
         repeat_in_minutes = request_json.get("repeat_in_minutes", -1)  # TODO:
         description = request_json.get("description", None)
 
-        if suite_path:
-            job_id = queue_job3(suite_path=suite_path,
+        # if suite_path:
+        if suite_id:
+            job_id = queue_job3(suite_id=suite_id,
                                 build_url=build_url,
                                 tags=tags,
                                 emails=emails,
