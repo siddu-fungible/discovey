@@ -18,36 +18,9 @@ export class ReRunService {
   constructor(private apiService: ApiService, private loggerService: LoggerService) {
   }
 
-  submitReRun(suiteExecutionId, suitePath, resultFilter=null, scriptFilter=null, reUseBuildImage=null) {
-    this.suitePath = suitePath;
-    let submit$ = new Observable(observer => {
-      observer.next(true);
-      observer.complete();
-      //observer.error("Error");
-      return () => {
-      };
-
-    }).pipe(
-      switchMap(response => {
-          return this.fetchArchivedJob(suiteExecutionId);
-      }),
-      switchMap((response) => {
-        return this.fetchSuiteContents(suiteExecutionId, suitePath);
-      }),
-      switchMap(() => {
-        return this.fetchSuiteExecutionApplyFilter(suiteExecutionId, resultFilter, scriptFilter);
-      }),
-      switchMap(() => {
-        return this.prepareSuite();
-      }),
-      switchMap((scriptItems) => {
-        return this.submitJob(scriptItems, suiteExecutionId, reUseBuildImage);
-      })/*, catchError(err => {
-        return of(err);
-      })*/
-    )
-    ;
-    return submit$;
+  submitReRun(suiteExecution, resultFilter=null, scriptFilter=null, reUseBuildImage=null) {
+    let payload = {suite_execution_id: suiteExecution.execution_id, suite_id: suiteExecution.suite_id, result_filter: resultFilter, script_filter: scriptFilter, re_use_build_image: reUseBuildImage};
+    return this.apiService.post('/api/v1/regression/re_run_job', payload);
   }
 
 

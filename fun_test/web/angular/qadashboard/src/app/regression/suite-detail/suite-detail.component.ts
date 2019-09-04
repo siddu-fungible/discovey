@@ -267,7 +267,7 @@ export class SuiteDetailComponent implements OnInit {
 
 
   reRunClick(suiteExecutionId, suitePath, resultFilter=null, scriptFilter=null, reUseBuildImage=null) {
-    this.reRunService.submitReRun(suiteExecutionId, suitePath, resultFilter, scriptFilter, reUseBuildImage).subscribe(response => {
+    this.reRunService.submitReRun(this.suiteExecution.fields.suite_id, suitePath, resultFilter, scriptFilter, reUseBuildImage).subscribe(response => {
       alert("Re-run submitted");
       window.location.href = "/regression";
     }, error => {
@@ -392,7 +392,7 @@ export class SuiteDetailComponent implements OnInit {
         this.reRunClick(suiteExecution.fields.execution_id, suiteExecution.fields.suite_path, null, scriptPath, this.reUseBuildImage);
       }
       if (this.reRunOptionsReRunFailed) {
-        this.reRunClick(suiteExecution.fields.execution_id, suiteExecution.fields.suite_path,['FAILED', 'NOT_RUN'], scriptPath, this.reUseBuildImage)
+        this.reRunClick(suiteExecution.fields.execution_id, suiteExecution.fields.suite_path,['FAILED'], scriptPath, this.reUseBuildImage)
       }
 
     }, (reason) => {

@@ -203,6 +203,7 @@ api_v1_urls = [
     url(r'^regression/suite_executions/?(.*)?$', regression.suite_executions),
     url(r'^regression/script_infos/?(.*)?$', regression.script_infos),
     url(r'^regression/scripts$', regression.scripts),
+    url(r'^regression/re_run_job$', regression.re_run_job),
     url(r'^regression/assets/?(?:(\S+)/(.*))?$', regression.assets),
     url(r'^regression/asset_types$', regression.asset_types),
     url(r'^performance/charts/?(.*)?$', performance.charts),
