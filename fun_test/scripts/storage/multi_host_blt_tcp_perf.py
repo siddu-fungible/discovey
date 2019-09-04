@@ -941,18 +941,24 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                                                                     cpus_allowed=cpus_allowed,
                                                                     **self.fio_cmd_args)
                     """
+                    # Deciding the FIO runtime based on the current IO depth
+                    if row_data_dict["iodepth"] in self.full_run_iodepth:
+                        fio_runtime = self.fio_full_run_time
+                        fio_timeout = self.fio_full_run_timeout
+                    else:
+                        fio_runtime = self.fio_cmd_args["runtime"]
+                        fio_timeout = self.fio_cmd_args["timeout"]
                     # Building the FIO command
                     fio_cmd_args = {}
 
                     runtime_global_args = " --runtime={} --cpus_allowed={} --bs={} --rw={} --numjobs={} --iodepth={}".\
-                        format(self.fio_cmd_args["runtime"], cpus_allowed, fio_block_size, mode, fio_numjobs,
-                               fio_iodepth)
+                        format(fio_runtime, cpus_allowed, fio_block_size, mode, fio_numjobs, fio_iodepth)
                     jobs = ""
                     for id, device in enumerate(self.host_info[host_name]["nvme_block_device_list"]):
                         jobs += " --name=vol{} --filename={}".format(id + 1, device)
 
                     fio_cmd_args["multiple_jobs"] = self.fio_cmd_args["multiple_jobs"] + runtime_global_args + jobs
-                    fio_cmd_args["timeout"] = self.fio_cmd_args["timeout"]
+                    fio_cmd_args["timeout"] = fio_timeout
 
                     thread_id[i] = fun_test.execute_thread_after(time_in_seconds=wait_time,
                                                                  func=fio_parser, arg1=end_host_thread[i],
