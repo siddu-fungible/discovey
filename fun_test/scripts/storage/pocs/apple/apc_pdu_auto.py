@@ -23,12 +23,12 @@ class ApcPduTestcase(FunTestCase):
 
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Test",
+                              summary="Powercycle test",
                               steps="""
-                              1. power down and wait for 5 sec.
-                              2. power on and wait untill COMe comes up.
-                              3. Check BMC, COMe, SSd's, ports.
-                              4. repeat the above steps for given number of iterations.
+                                1. Reboot the FS.
+                                2. Check if COMe is up, than we check for BMC, FPGA.
+                                3. Load the images and bring F1 up.
+                                4. now check for SSD's and NU & HNU ports validation. 
                               """)
 
     def setup(self):
@@ -39,16 +39,18 @@ class ApcPduTestcase(FunTestCase):
         self.outlet_no = self.apc_info.get("outlet_number", None)
 
         # if you are loading the image every time you boot up
-        # "app=hw_hsu_test --dpc-server --dpc-uart --csr-replay --serdesinit --all_100g"
-        # the one thats working:  app=mdt_test,load_mods,hw_hsu_test cc_huid=3 workload=storage --serial
-        # --memvol --dpc-uart --all_100g --nofreeze --mgmt --disable-wu-watchdog
-        self.f1_0_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=3 workload=storage --serial" \
-                              " --memvol --dpc-server --dpc-uart --all_100g --nofreeze"
-        self.f1_1_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 workload=storage --serial" \
-                              " --memvol --dpc-server --dpc-uart --all_100g --nofreeze"
+        self.f1_0_boot_args = "app=hw_hsu_test cc_huid=3 sku=SKU_FS1600_0 --all_100g --dis-stats --disable-wu-watchdog --dpc-server --dpc-uart"
+        self.f1_1_boot_args = "app=hw_hsu_test cc_huid=2 sku=SKU_FS1600_1 --all_100g --dis-stats --disable-wu-watchdog --dpc-server --dpc-uart"
         print(json.dumps(self.fs, indent=4))
 
     def run(self):
+        '''
+        1. Reboot the FS.
+        2. Check if COMe is up, than we check for BMC, FPGA.
+        3. Load the images and bring F1 up.
+        4. now check for SSD's and NU & HNU ports validation.
+        :return:
+        '''
         for pc_no in range(self.NUMBER_OF_ITERATIONS):
             self.pc_no = pc_no
 
@@ -89,7 +91,6 @@ class ApcPduTestcase(FunTestCase):
             fpga_up = fpga_handle.ensure_host_is_up()
             fun_test.test_assert(fpga_up, "FPGA is UP")
 
-
             come_handle.destroy()
             qa_02_handle.destroy()
             fpga_handle.destroy()
@@ -129,12 +130,13 @@ class ApcPduTestcase(FunTestCase):
             fun_test.log("Checking the cores")
             come_handle.command("ls /opt/fungible/cores")
             come_handle.destroy()
+            qa_02_handle.destroy()
 
             fun_test.sleep("Sleeping for 10s before next iteration", seconds=10)
 
     def apc_pdu_reboot(self, come_handle):
         '''
-        1. check COMe is up, if up than power off.
+        1. check if COMe is up, than power off.
         2. check COMe now, if its down tha power on
         :param come_handle:
         :return:
