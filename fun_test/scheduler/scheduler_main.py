@@ -763,7 +763,8 @@ class SuiteWorker(Thread):
 
                 if self.job_test_case_ids:
                     popens.append("--test_case_ids=" + ','.join(str(v) for v in self.job_test_case_ids))
-                if "test_case_ids" in script_item:
+                script_level_test_case_ids = script_item.get("test_case_ids", None)
+                if script_level_test_case_ids:
                     popens.append("--test_case_ids=" + ','.join(str(v) for v in script_item["test_case_ids"]))
                 if "re_run_info" in script_item:
                     popens.append("--re_run_info={}".format(json.dumps(script_item["re_run_info"])))
