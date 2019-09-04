@@ -224,10 +224,8 @@
           </td>
         </tr>
         <tr *ngIf="suiteSelectionMode === 'BY_SUITE'">
-          <td class="no-wrap">
+          <td class="no-wrap" colspan="2">
             <label for="suite-select" class="required-label">Select a suite</label>
-          </td>
-          <td>
             <div class="fun-panel">
               <div class="fun-panel-header">Filters</div>
               <div class="fun-panel-body">
@@ -258,8 +256,8 @@
               <option [ngValue]="suite" *ngFor="let suite of suitesInfo">
                 {{ suite.name }}
               </option>
-
             </select>
+
           </td>
         </tr>
         <tr *ngIf="suiteSelectionMode === 'BY_SCRIPT'">
@@ -341,11 +339,11 @@
       </table>
       <div style="padding: 5px;">
         <ng-container *ngIf="!submitting">
-          <button [disabled]="!selectedInfo && !selectedScriptPk"
-                  [ngClass]="{'disabled': !selectedInfo && !selectedScriptPk}" (click)="submitClick()"
+          <button [disabled]="!selectedSuite && !selectedScriptPk"
+                  [ngClass]="{'disabled': !selectedSuite && !selectedScriptPk}" (click)="submitClick()"
                   class="btn btn-primary">Submit
           </button>
-          <button *ngIf="selectedInfo && !(suiteSelectionMode !== 'BY_SCRIPT')" (click)="ngOnInit()"
+          <button *ngIf="selectedSuite && !(suiteSelectionMode !== 'BY_SCRIPT')" (click)="ngOnInit()"
                   class="btn">Clear
           </button>
         </ng-container>

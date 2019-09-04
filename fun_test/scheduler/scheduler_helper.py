@@ -346,37 +346,37 @@ def queue_job3(suite_id=None,
             else:
                 scheduler_logger.error("Suite is dynamic, but original_suite_execution_id is missing")
 
-            suite_execution.suite_path = final_suite_name
-            suite_execution.script_path = script_path
-            suite_execution.dynamic_suite_spec = json.dumps(dynamic_suite_spec)
-            suite_execution.suite_type = suite_type
-            suite_execution.scheduling_type = scheduling_type
+        suite_execution.suite_path = final_suite_name
+        suite_execution.script_path = script_path
+        suite_execution.dynamic_suite_spec = json.dumps(dynamic_suite_spec)
+        suite_execution.suite_type = suite_type
+        suite_execution.scheduling_type = scheduling_type
 
-            suite_execution.requested_days = json.dumps(requested_days)
-            suite_execution.requested_hour = requested_hour
-            suite_execution.requested_minute = requested_minute
-            suite_execution.timezone_string = timezone_string
-            suite_execution.repeat_in_minutes = repeat_in_minutes
+        suite_execution.requested_days = json.dumps(requested_days)
+        suite_execution.requested_hour = requested_hour
+        suite_execution.requested_minute = requested_minute
+        suite_execution.timezone_string = timezone_string
+        suite_execution.repeat_in_minutes = repeat_in_minutes
 
-            suite_execution.tags = json.dumps(tags)
-            suite_execution.emails = json.dumps(emails)
-            suite_execution.email_on_failure_only = email_on_fail_only if email_on_fail_only else False
+        suite_execution.tags = json.dumps(tags)
+        suite_execution.emails = json.dumps(emails)
+        suite_execution.email_on_failure_only = email_on_fail_only if email_on_fail_only else False
 
-            suite_execution.environment = json.dumps(environment)
-            suite_execution.inputs = json.dumps(inputs)
-            suite_execution.build_url = build_url
-            suite_execution.version = version
-            suite_execution.requested_priority_category = requested_priority_category
-            suite_execution.description = description
+        suite_execution.environment = json.dumps(environment)
+        suite_execution.inputs = json.dumps(inputs)
+        suite_execution.build_url = build_url
+        suite_execution.version = version
+        suite_execution.requested_priority_category = requested_priority_category
+        suite_execution.description = description
 
-            job_spec_valid, error_message = validate_spec(spec=suite_execution)
-            if not job_spec_valid:
-                raise SchedulerException("Invalid job spec: {}, Error message: {}".format(suite_execution, error_message))
-            suite_execution.is_auto_scheduled_job = is_auto_scheduled_job
-            # print ("queue_job_3: {}".format(suite_execution.execution_id))
-            suite_execution.save()
+        job_spec_valid, error_message = validate_spec(spec=suite_execution)
+        if not job_spec_valid:
+            raise SchedulerException("Invalid job spec: {}, Error message: {}".format(suite_execution, error_message))
+        suite_execution.is_auto_scheduled_job = is_auto_scheduled_job
+        # print ("queue_job_3: {}".format(suite_execution.execution_id))
+        suite_execution.save()
 
-            result = suite_execution.execution_id
+        result = suite_execution.execution_id
 
     except Exception as ex:
         scheduler_logger.exception(str(ex))

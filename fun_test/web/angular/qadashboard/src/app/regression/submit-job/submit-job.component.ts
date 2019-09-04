@@ -333,7 +333,7 @@ export class SubmitJobComponent implements OnInit {
     this.jobId = null;
     let payload = {};
     if (this.suiteSelectionMode === 'BY_SUITE') {
-      payload["suite_path"] = this.selectedSuite;
+      payload["suite_id"] = this.selectedSuite.id;
     } else {
       payload["script_pk"] = this.selectedScriptPk;
     }

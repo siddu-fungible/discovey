@@ -570,18 +570,15 @@ class SuiteWorker(Thread):
         self.local_scheduler_logger.exception(message)
 
     def get_script_inputs(self, script_item):
-        script_inputs = {}
-        if "inputs" in script_item:
-            script_inputs = script_item["inputs"]
+        script_inputs = script_item.get("inputs", None)
         job_inputs = self.job_inputs
-        if not script_inputs and job_inputs:
-            script_inputs = {}
-        try:
-            if job_inputs:
-                script_inputs.update(job_inputs)
-        except:
-            pass
-        return script_inputs
+        final_inputs = {}
+        if job_inputs:
+            final_inputs.update(job_inputs)
+        if script_inputs:
+            final_inputs.update(script_inputs)
+
+        return final_inputs
 
     def poll_script(self, script_path):
         crashed = False
@@ -637,9 +634,9 @@ class SuiteWorker(Thread):
         elif self.job_suite_type == SuiteType.DYNAMIC:
             script_items = self.get_scripts(suite_id=self.job_suite_id)
 
-        script_paths = map(lambda f: SCRIPTS_DIR + "/" + f["path"], filter(lambda f: "info" not in f, script_items))
+        script_paths = map(lambda f: SCRIPTS_DIR + "/" + f["script_path"], filter(lambda f: "info" not in f, script_items))
         if self.job_suite_type == SuiteType.TASK:
-            script_paths = map(lambda f: TASKS_DIR + "/" + f["path"], filter(lambda f: "info" not in f, script_items))
+            script_paths = map(lambda f: TASKS_DIR + "/" + f["script_path"], filter(lambda f: "info" not in f, script_items))
 
         scripts_exist, error_message = self.ensure_scripts_exists(script_paths)
         if not scripts_exist:
@@ -650,12 +647,10 @@ class SuiteWorker(Thread):
         self.debug("Starting executing scripts")
 
         # TODO: Update tags
-        suite_path = self.job_suite_path if self.job_suite_path else self.job_script_path
         models_helper.update_suite_execution(suite_execution_id=self.job_id,
                                              tags=all_tags,
                                              build_url=self.job_build_url,
-                                             version=self.job_version,
-                                             suite_path=suite_path)
+                                             version=self.job_version)
         self.script_items = script_items
         if not self.script_items:
             self.abort_suite("No scripts detected in suite")
@@ -714,9 +709,9 @@ class SuiteWorker(Thread):
 
     def start_script(self, script_item, script_item_index):
         # print ("Start_script: {}".format(script_item))
-        script_path = SCRIPTS_DIR + "/" + script_item["path"]
+        script_path = SCRIPTS_DIR + "/" + script_item["script_path"]
         if self.job_suite_type == SuiteType.TASK:
-            script_path = TASKS_DIR + "/" + script_item["path"]
+            script_path = TASKS_DIR + "/" + script_item["script_path"]
         self.last_script_path = script_path
         self.update_suite_run_time("last_script_path", self.last_script_path)
 
