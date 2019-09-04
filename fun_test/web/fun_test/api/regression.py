@@ -408,6 +408,46 @@ def suites(request, id):
 
     return result
 
+@csrf_exempt
+@api_safe_json_response
+def re_run_job(request):
+    if request.method == "POST":
+        request_json = json.loads(request.body)
+        original_suite_execution_id = request_json.get("original_suite_execution_id", None)
+        script_filter = request_json.get("script_filter", None)
+        result_filter = request_json.get("result_filter", None)
+        test_case_executions = TestCaseExecution.objects.filter(suite_execution_id=original_suite_execution_id)
+        re_run_info = {}
+        for test_case_execution in test_case_executions:
+            script_path = test_case_execution.script_path
+            if script_filter:
+                if script_path not in script_filter:
+                    continue
+
+            if result_filter and (result_filter != test_case_execution.result):
+                continue
+            if script_path not in re_run_info:
+                re_run_info[script_path] = []
+            re_run_info[script_path].append(test_case_execution.test_case_id)
+        suite_id = request_json.get("suite_id", None)
+        re_use_build_image = request_json.get("re_use_build_image", None)
+        original_suite_execution = SuiteExecution.objects.get(execution_id=original_suite_execution_id)
+
+        original_environment = original_suite_execution.environment
+        with_jenkins_build = original_environment.get("with_jenkins_build", None)
+        if with_jenkins_build:
+            tftp_image_path = original_environment.get("tftp_image_path", None)
+            if tftp_image_path and not re_use_build_image:
+                del original_environment["tftp_image_path"]
+
+        new_suite_execution = original_suite_execution
+        new_suite_execution.pk = None
+        new_suite_execution.execution_id = 0
+
+
+        if suite_id:
+            pass
+
 if __name__ == "__main__":
     from web.fun_test.django_interactive import *
     print categories(None)
