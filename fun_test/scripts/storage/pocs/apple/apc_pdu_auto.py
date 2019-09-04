@@ -39,7 +39,7 @@ class ApcPduTestcase(FunTestCase):
         self.outlet_no = self.apc_info.get("outlet_number", None)
 
         # if you are loading the image every time you boot up
-        self.f1_0_boot_args = "app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze"
+        self.f1_0_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=3 workload=storage --serial --memvol --dpc-server --dpc-uart --all_100g --nofreeze"
         self.f1_1_boot_args = self.f1_0_boot_args
         print(json.dumps(self.fs, indent=4))
 
@@ -59,7 +59,7 @@ class ApcPduTestcase(FunTestCase):
             fs_reboot = self.apc_pdu_reboot(come_handle)
 
             fun_test.log("Checking if COMe is UP")
-            come_up = come_handle.ensure_host_is_up(max_wait_time=350)
+            come_up = come_handle.ensure_host_is_up(max_wait_time=600)
             fun_test.test_assert(come_up, "COMe is UP")
 
             fun_test.log("Checking if BMC is UP")
@@ -125,7 +125,7 @@ class ApcPduTestcase(FunTestCase):
         try:
             fun_test.log("Iteation no: {} out of {}".format(self.pc_no + 1, self.NUMBER_OF_ITERATIONS))
 
-            come_up = come_handle.is_host_up()
+            come_up = come_handle.ensure_host_is_up()
             come_handle.destroy()
             fun_test.add_checkpoint("COMe is UP (before powercycle)",
                                     self.to_str(come_up), True, come_up)
@@ -139,7 +139,7 @@ class ApcPduTestcase(FunTestCase):
             fun_test.test_assert(outlet_off, "Power down FS")
 
             fun_test.sleep(message="Wait for few seconds after switching off fs outlet", seconds=5)
-            come_down = not (come_handle.is_host_up(max_wait_time=30))
+            come_down = not (come_handle.ensure_host_is_up(max_wait_time=30))
             come_handle.destroy()
             fun_test.test_assert(come_down, "COMe is Down")
 
