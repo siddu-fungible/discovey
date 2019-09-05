@@ -97,7 +97,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
   }
 
   setMetricIds(charts): void {
-     this.allMetricIds = [];
+    this.allMetricIds = [];
     this.workspaceMetrics = [];
     for (let chart of charts) {
       this.workspaceMetrics.push(Number(chart.metric_id));
@@ -190,17 +190,19 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
     let fromEpoch = times[0];
     let toEpoch = times[1];
     let self = this;
-    let data = this.performanceService.metricsData(metric["metric_id"], fromEpoch, toEpoch);
-    for (let oneData of data) {
-      for (let dataSet of metric["data"]) {
-        if (dataSet["name"] == oneData["name"]) {
-          dataSet[key] = oneData["value"];
-          dataSet[key + "Date"] = this.commonService.getPrettyLocalizeTime(oneData["date_time"]);
-          dataSet["unit"] = oneData["unit"];
+    return this.apiService.get("/api/v1/performance/metrics_data?metric_id=" + metric["metric_id"] + "&from_epoch_ms=" + fromEpoch + "&to_epoch_ms=" + toEpoch).pipe(switchMap(response => {
+      let data = response.data;
+      for (let oneData of data) {
+        for (let dataSet of metric["data"]) {
+          if (dataSet["name"] == oneData["name"]) {
+            dataSet[key] = oneData["value"];
+            dataSet[key + "Date"] = this.commonService.getPrettyLocalizeTime(oneData["date_time"]);
+            dataSet["unit"] = oneData["unit"];
+          }
         }
       }
-    }
-    return of(true);
+      return of(true);
+    }));
   }
 
   fetchScores(): any {
