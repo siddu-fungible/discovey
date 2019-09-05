@@ -31,7 +31,7 @@ def send_email(email, subject, reports):
     content = template.render(all_reports=reports)
     return send_mail(to_addresses=[email], subject=subject, content=content)
 
-def set_dict(entries, data_set_dict):
+def set_dict(entries, data_set_dict, output_name, name):
     data_set_dict["name"] = name
     data_set_dict["today"] = getattr(entries[0], output_name)
     data_set_dict["yesterday"] = getattr(entries[1], output_name)
@@ -72,7 +72,7 @@ if __name__ == "__main__":
                 name = data_set["name"]
                 if len(entries) == 2:
                     data_set_dict = {}
-                    set_dict(entries=entries, data_set_dict=data_set_dict)
+                    set_dict(entries=entries, data_set_dict=data_set_dict, output_name=output_name, name=name)
                     if data_set_dict["today"] and data_set_dict["yesterday"]:
                         percentage = calculate_percentage(current=data_set_dict["today"], previous=data_set_dict[
                             "yesterday"])
