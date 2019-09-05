@@ -10,7 +10,7 @@
                            [allowDelete]="false" [allowContext]="false" [allowAdd]="false"></summary-jira-info>
       Comments: <textarea [(ngModel)]="interestedMetric.comments" style="width: 100%"></textarea>
     </div>
-    <table class="table table-bordered" style="max-width: 50%; margin: 0">
+    <table *ngIf="interestedMetric.leaf" class="table table-bordered" style="max-width: 50%; margin: 0">
       <tr style="vertical-align: middle; border-bottom: solid black 1px">
         <th rowspan="2">
           Series name

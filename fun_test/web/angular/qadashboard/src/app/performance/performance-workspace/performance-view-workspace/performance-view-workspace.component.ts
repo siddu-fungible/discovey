@@ -217,6 +217,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
         metric["model_name"] = response.data["metric_model_name"];
         metric["data_sets"] = response.data["data_sets"];
         metric["jira_ids"] = response.data["jira_ids"];
+        metric["leaf"] = response.data["leaf"];
         let jiraList = {};
         for (let jiraId of metric["jira_ids"]) {
           jiraList[jiraId] = {};
@@ -237,7 +238,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
   fetchReports(): any {
     const resultObservables = [];
     this.workspace.interested_metrics.forEach(metric => {
-      if (!metric["report"]) {
+      if (!metric["report"] && metric["leaf"]) {
         resultObservables.push(this.fetchTodayAndYesterdayData(metric));
       }
     });
@@ -251,7 +252,9 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
   fetchHistory(): any {
     const resultObservables = [];
     this.workspace.interested_metrics.forEach(metric => {
-      resultObservables.push(this.fetchHistoricalData(metric));
+      if (metric["leaf"]) {
+        resultObservables.push(this.fetchHistoricalData(metric));
+      }
     });
     if (resultObservables.length > 0) {
       return forkJoin(resultObservables);
