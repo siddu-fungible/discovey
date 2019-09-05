@@ -1059,7 +1059,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 initial_vol_stat[iodepth] = self.storage_controller.peek(
                     props_tree="storage/volumes", legacy=False, chunk=8192, command_duration=self.command_timeout)
                 fun_test.test_assert(initial_vol_stat[iodepth], "Volume stats collected before the test")
-                fun_test.debug("Initial vol stats in script: {}".format(initial_vol_stat[iodepth]))
+                fun_test.log("Initial vol stats in script: {}".format(initial_vol_stat[iodepth]))
 
                 initial_rcnvme_stat[iodepth] = self.storage_controller.peek(
                     props_tree="storage/devices/nvme/ssds", legacy=False, chunk=8192,
@@ -1195,7 +1195,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                     final_vol_stat[iodepth] = self.storage_controller.peek(
                         props_tree="storage/volumes", legacy=False, chunk=8192, command_duration=self.command_timeout)
                     fun_test.test_assert(final_vol_stat[iodepth], "Stats collected after the test")
-                    fun_test.debug("Final vol stats in script: {}".format(final_vol_stat[iodepth]))
+                    fun_test.log("Final vol stats in script: {}".format(final_vol_stat[iodepth]))
 
                     final_rcnvme_stat[iodepth] = self.storage_controller.peek(
                         props_tree="storage/devices/nvme/ssds", legacy=False, chunk=8192,
