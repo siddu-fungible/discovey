@@ -164,16 +164,33 @@ class JpegTeramarkTc(PalladiumTc):
                                   """)
 
 
-class ZipTeramarkTc(PalladiumTc):
-    boot_args = "app=deflate_perf_multi,lzma_perf_multi --serial"
+class ZipDeflateTeramarkTc(PalladiumTc):
+    boot_args = "app=deflate_perf_multi nflows=30 niterations=30 npcs=1 --platforms1"
     tags = "qa_s1_zip_teramark"
-    note = "ZIP teramark app on S1"
+    note = "ZIP deflate teramark app on S1"
     fun_os_make_flags = "XDATA_LISTS=/project/users/ashaikh/qa_test_inputs/zip_inputs/compress_perf_input.list"
     max_duration = 2700
 
     def describe(self):
         self.set_test_details(id=7,
-                              summary="Schedule Zip teramark app on Jenkins",
+                              summary="Schedule Zip Deflate teramark app on Jenkins",
+                              steps="""
+            1. Steps 1
+            2. Steps 2
+            3. Steps 3
+                                  """)
+
+
+class ZipLzmaTeramarkTc(PalladiumTc):
+    boot_args = "lzma_perf_multi nflows=30 niterations=30 npcs=1 --platforms1"
+    tags = "qa_s1_zip_teramark"
+    note = "ZIP lzma teramark app on S1"
+    fun_os_make_flags = "XDATA_LISTS=/project/users/ashaikh/qa_test_inputs/zip_inputs/compress_perf_input.list"
+    max_duration = 2700
+
+    def describe(self):
+        self.set_test_details(id=8,
+                              summary="Schedule Zip Lzma teramark app on Jenkins",
                               steps="""
             1. Steps 1
             2. Steps 2
@@ -189,5 +206,7 @@ if __name__ == "__main__":
     # myscript.add_test_case(DfaTeramarkTc())
     # myscript.add_test_case(NfaTeramarkTc())
     myscript.add_test_case(JpegTeramarkTc())
-    # myscript.add_test_case(ZipTeramarkTc())
+    myscript.add_test_case(ZipDeflateTeramarkTc())
+    myscript.add_test_case(ZipLzmaTeramarkTc())
+
     myscript.run()
