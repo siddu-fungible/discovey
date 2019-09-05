@@ -359,7 +359,6 @@ def vol_stats_diff(initial_vol_stats, final_vol_stats, vol_details):
     result = {"status": False, "stats_diff": None, "total_diff": None}
     dict_vol_details = {}
     stats_diff = {}
-    # blt_combined_stat = {}
     total_diff = {}
     stats_exclude_list = ["drive_uuid", "extent_size", "fault_injection", "flvm_block_size", "flvm_vol_size_blocks",
                           "se_size"]
@@ -424,7 +423,7 @@ def get_results_diff(old_result, new_result):
                     result[key].append(map(subtract, val, old_result[key]))
                 except Exception as ex:
                     fun_test.critical(str(ex))
-            elif isinstance(val, str):
+            elif isinstance(val, str) or isinstance(val, unicode):
                 continue
             else:
                 if not key in old_result:

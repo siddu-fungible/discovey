@@ -1064,7 +1064,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 initial_rcnvme_stat[iodepth] = self.storage_controller.peek(
                     props_tree="storage/devices/nvme/ssds", legacy=False, chunk=8192,
                     command_duration=self.command_timeout)
-                fun_test.test_assert(initial_rcnvme_stat[iodepth], "rcnvme stats collected before the test")
+                fun_test.test_assert(initial_rcnvme_stat[iodepth]["status"], "rcnvme stats collected before the test")
                 fun_test.log("Initial rcnvme stats in script: {}".format(initial_rcnvme_stat[iodepth]))
 
             for index, host_name in enumerate(self.host_info):
@@ -1200,7 +1200,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                     final_rcnvme_stat[iodepth] = self.storage_controller.peek(
                         props_tree="storage/devices/nvme/ssds", legacy=False, chunk=8192,
                         command_duration=self.command_timeout)
-                    fun_test.test_assert(final_rcnvme_stat[iodepth], "rcnvme stats collected after the test")
+                    fun_test.test_assert(final_rcnvme_stat[iodepth]["status"], "rcnvme stats collected after the test")
                     fun_test.log("Final rcnvme stats in script: {}".format(final_rcnvme_stat[iodepth]))
 
                 # Collecting final network stats and finding diff between final and initial stats
@@ -1350,8 +1350,8 @@ class ECVolumeLevelTestcase(FunTestCase):
                         rcnvme_diff_stats = {}
 
                         # Retrieving diff of stats of all ssds
-                        rcnvme_diff_stats = get_results_diff(old_result=initial_rcnvme_stat[iodepth],
-                                                             new_result=final_rcnvme_stat[iodepth])
+                        rcnvme_diff_stats = get_results_diff(old_result=initial_rcnvme_stat[iodepth]["data"],
+                                                             new_result=final_rcnvme_stat[iodepth]["data"])
                         fun_test.simple_assert(rcnvme_diff_stats, "rcnvme diff stats to measure amplification")
                         # Aggregating all ssds stats
                         for i in range(len(rcnvme_diff_stats)):
