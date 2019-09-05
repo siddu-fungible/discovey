@@ -1496,10 +1496,6 @@ class PeekCommands(object):
         else:
             self._display_stats(cmd=cmd, grep_regex=grep_regex, get_result_only=get_result_only)
 
-    def peek_bam_stats(self, grep_regex=None):
-        cmd = "stats/bam"
-        self._display_stats(cmd=cmd, grep_regex=grep_regex)
-
     def peek_fwd_stats(self, grep_regex=None, get_result_only=False):
         cmd = "stats/fwd/flex"
         if get_result_only:
@@ -1910,19 +1906,22 @@ class PeekCommands(object):
 
     def get_required_per_vp_result(self, output_result):
         result = {}
-        result['0'] = {}
-        result['1'] = {}
         for key, val in output_result.iteritems():
-            if not key.split(":")[2][0] == '1':
-                result['0'][key] = val
-            else:
-                result['1'][key] = val
+            if key.split(":")[2][0] == '0':
+                result[key] = {}
+                result[key]['low_q_depth'] = val['vp_wu_qdepth']
+                new_key = key.replace(":1[VP]", ":0[VP]")
+                result[key]['high_q_depth'] = output_result[new_key]['vp_wu_qdepth']
+                for _key, _val in val.iteritems():
+                    result[key][_key] = _val
+                del result[key]['vp_wu_qdepth']
         return result
 
     def get_filtered_dict(self, output_dict, cluster_id=None, core_id=None, rx=True, tx=True, q=True):
         rx_key_name = 'wus_received'
         tx_key_name = 'wus_sent'
-        q_key_name = 'vp_wu_qdepth'
+        low_q_key_name = 'low_q_depth'
+        high_q_key_name = 'high_q_depth'
         current_result = {}
         dict_keys = output_dict.keys()
         for key in dict_keys:
@@ -1945,8 +1944,10 @@ class PeekCommands(object):
                     parsed_dict[key][rx_key_name] = current_result[key][_key]
                 if _key == tx_key_name and tx:
                     parsed_dict[key][tx_key_name] = current_result[key][_key]
-                if _key == q_key_name and q:
-                    parsed_dict[key][q_key_name] = current_result[key][_key]
+                if _key == low_q_key_name and q:
+                    parsed_dict[key][low_q_key_name] = current_result[key][_key]
+                if _key == high_q_key_name and q:
+                    parsed_dict[key][high_q_key_name] = current_result[key][_key]
         return parsed_dict
 
     def peek_stats_per_vp(self, cluster_id=None, core_id=None, grep_regex=None,
@@ -2045,11 +2046,11 @@ class PeekCommands(object):
             display_rx_key_name = 'rx'
             tx_key_name = 'wus_sent'
             display_tx_key_name = 'tx'
-            q_key_name = 'vp_wu_qdepth'
-            display_q_key_name = 'q'
-            prev_result_dict = {}
-            prev_result_dict['0'] = None
-            prev_result_dict['1'] = None
+            lo_q_key_name = 'low_q_depth'
+            display_lo_q_key_name = 'lo_q'
+            hi_q_key_name = 'high_q_depth'
+            display_hi_q_key_name = 'hi_q'
+            prev_result = None
             if rx == False and tx == False and q == False:
                 rx = True
                 tx = True
@@ -2057,222 +2058,213 @@ class PeekCommands(object):
             while True:
                 print "%s = %s" % (display_rx_key_name, rx_key_name)
                 print "%s = %s" % (display_tx_key_name, tx_key_name)
-                print "%s = %s" % (display_q_key_name, q_key_name)
+                print "%s = %s" % (display_lo_q_key_name, lo_q_key_name)
+                print "%s = %s" % (display_hi_q_key_name, hi_q_key_name)
                 try:
                     cmd = "stats/per_vp"
                     output_result = self.dpc_client.execute(verb='peek', arg_list=[cmd])
-                    result_dict = self.get_required_per_vp_result(output_result)
-                    for key in sorted(result_dict):
-                        if key == '0':
-                            print "\n************* Displaying table for low prio ************ \n"
-                        else:
-                            print "\n************* Displaying table for high prio ************ \n"
-                        result = result_dict[key]
-                        prev_result = prev_result_dict[key]
-                        if result:
-                            def get_sorted_dict(result):
-                                sorted_dict = OrderedDict()
-                                result_keys = sorted(result)
-                                if len(result_keys) == TOTAL_VPS_PER_CORE * TOTAL_CORES_PER_CLUSTER:
-                                    result_keys.insert(0, result_keys[-2])
-                                    result_keys.insert(1, result_keys[-1])
-                                    del result_keys[-1]
-                                    del result_keys[-1]
-                                else:
-                                    insert_index = 0
-                                    del_index = 22
-                                    for x in range(0, TOTAL_CLUSTERS):
-                                        second_insert_index = insert_index + 1
-                                        second_del_index = del_index + 1
+                    result = self.get_required_per_vp_result(output_result)
+                    if result:
+                        def get_sorted_dict(result):
+                            sorted_dict = OrderedDict()
+                            result_keys = sorted(result)
+                            if len(result_keys) == TOTAL_VPS_PER_CORE * TOTAL_CORES_PER_CLUSTER:
+                                result_keys.insert(0, result_keys[-2])
+                                result_keys.insert(1, result_keys[-1])
+                                del result_keys[-1]
+                                del result_keys[-1]
+                            else:
+                                insert_index = 0
+                                del_index = 22
+                                for x in range(0, TOTAL_CLUSTERS):
+                                    second_insert_index = insert_index + 1
+                                    second_del_index = del_index + 1
 
-                                        result_keys.insert(insert_index, result_keys[del_index])
-                                        del result_keys[del_index + 1]
-                                        result_keys.insert(second_insert_index, result_keys[second_del_index])
-                                        del result_keys[second_del_index + 1]
+                                    result_keys.insert(insert_index, result_keys[del_index])
+                                    del result_keys[del_index + 1]
+                                    result_keys.insert(second_insert_index, result_keys[second_del_index])
+                                    del result_keys[second_del_index + 1]
 
-                                        insert_index = insert_index + 24
-                                        del_index = del_index + 24
-                                for key in result_keys:
-                                    sorted_dict[key] = result[key]
-                                return sorted_dict
+                                    insert_index = insert_index + 24
+                                    del_index = del_index + 24
+                            for key in result_keys:
+                                sorted_dict[key] = result[key]
+                            return sorted_dict
 
-                            def get_complete_dict(result, tabular_list, prev_result=None):
-                                complete_dict = OrderedDict()
-                                added_cluster_list = []
-                                for item in tabular_list:
-                                    complete_dict[item] = []
-                                current_result = result
-                                if prev_result:
-                                    current_result = prev_result
-                                for key, val in current_result.iteritems():
+                        def get_complete_dict(result, tabular_list, prev_result=None):
+                            complete_dict = OrderedDict()
+                            added_cluster_list = []
+                            for item in tabular_list:
+                                complete_dict[item] = []
+                            current_result = result
+                            if prev_result:
+                                current_result = prev_result
+                            for key, val in current_result.iteritems():
+                                cluster_val = key.split(":")[0][2]
+                                vp_val = key.split(":")[1]
+                                if not cluster_val in added_cluster_list:
+                                    if core_id is not None:
+                                        complete_dict[tabular_list[0]].append("%s/%s" % (cluster_val, core_id))
+                                        added_cluster_list.append(cluster_val)
+                                    else:
+                                        for x in range(0, 6):
+                                            complete_dict[tabular_list[0]].append("%s/%s" % (cluster_val, x))
+                                        added_cluster_list.append(cluster_val)
+                                for _key, _val in val.iteritems():
+                                    for item in tabular_list[1:]:
+                                        if (int(vp_val) % TOTAL_VPS_PER_CORE == int(item.split(":")[0][0])) and (not 'd_' in item) and (_key == item.split(":")[1]):
+                                            complete_dict[item].append(_val)
+                                            break
+                            if prev_result:
+                                diff_result = self._get_difference(result=result, prev_result=prev_result)
+                                diff_result = get_sorted_dict(diff_result)
+                                for key, val in diff_result.iteritems():
                                     cluster_val = key.split(":")[0][2]
                                     vp_val = key.split(":")[1]
-                                    final_val = key.split(":")[2][0]
                                     if not cluster_val in added_cluster_list:
-                                        if core_id is not None:
-                                            complete_dict[tabular_list[0]].append("%s/%s" % (cluster_val, core_id))
-                                            added_cluster_list.append(cluster_val)
-                                        else:
-                                            for x in range(0, 6):
-                                                complete_dict[tabular_list[0]].append("%s/%s" % (cluster_val, x))
-                                            added_cluster_list.append(cluster_val)
+                                        added_cluster_list.append(cluster_val)
+                                        complete_dict[tabular_list[0]].append(cluster_val)
                                     for _key, _val in val.iteritems():
                                         for item in tabular_list[1:]:
-                                            if (int(vp_val) % TOTAL_VPS_PER_CORE == int(item.split(":")[0][0])) and (not 'd_' in item) and (_key == item.split(":")[1]):
+                                            if (int(vp_val) % TOTAL_VPS_PER_CORE == int(item.split(":")[0][0])) and (
+                                            'd_' in item) and ('d_' + _key == item.split(":")[1]):
                                                 complete_dict[item].append(_val)
                                                 break
-                                if prev_result:
-                                    diff_result = self._get_difference(result=result, prev_result=prev_result)
-                                    diff_result = get_sorted_dict(diff_result)
-                                    for key, val in diff_result.iteritems():
-                                        cluster_val = key.split(":")[0][2]
-                                        vp_val = key.split(":")[1]
-                                        final_val = key.split(":")[2][0]
-                                        if not cluster_val in added_cluster_list:
-                                            added_cluster_list.append(cluster_val)
-                                            complete_dict[tabular_list[0]].append(cluster_val)
-                                        for _key, _val in val.iteritems():
-                                            for item in tabular_list[1:]:
-                                                if (int(vp_val) % TOTAL_VPS_PER_CORE == int(item.split(":")[0][0])) and (
-                                                'd_' in item) and ('d_' + _key == item.split(":")[1]):
-                                                    complete_dict[item].append(_val)
-                                                    break
-                                return complete_dict
+                            return complete_dict
 
-                            def get_tabular_list(table_list, print_key_list, diff=False, low=False):
-                                tabular_list = []
-                                if low:
-                                    key_type = "lo"
-                                else:
-                                    key_type = "hi"
-                                for _key in table_list:
-                                    for key in print_key_list:
-                                        if not 'Cls/Core' in str(_key):
-                                            tabular_list.append(str(_key) + ":" + key)
-                                            if diff:
-                                                tabular_list.append(str(_key) + ":d_" + key)
-                                        else:
-                                            if not any('Cls/Core' in s for s in tabular_list):
-                                                tabular_list.append(_key)
-                                return tabular_list
+                        def get_tabular_list(table_list, print_key_list, diff=False):
+                            tabular_list = []
+                            for _key in table_list:
+                                for key in print_key_list:
+                                    if not 'Cls/Core' in str(_key):
+                                        tabular_list.append(str(_key) + ":" + key)
+                                        if diff:
+                                            tabular_list.append(str(_key) + ":d_" + key)
+                                    else:
+                                        if not any('Cls/Core' in s for s in tabular_list):
+                                            tabular_list.append(_key)
+                            return tabular_list
 
-                            def eliminate_zero_val_rows(print_keys, print_values):
-                                diff_indexes = []
+                        def eliminate_zero_val_rows(print_keys, print_values):
+                            diff_indexes = []
 
-                                # Find all diff columns
-                                for key in print_keys:
-                                    if 'd_' in key:
-                                        diff_indexes.append(print_keys.index(key))
-                                if diff_indexes:
-                                    del_indexes = []
-                                    # Check all lists simultaneously if their diff value is 0 and note its index
-                                    for i in range(len(print_values[0])):
-                                        zero_val = []
-                                        for index in diff_indexes:
-                                            if print_values[index][i] == 0:
-                                                zero_val.append(True)
-                                            else:
-                                                zero_val.append(False)
-                                                break
-                                        if len(set(zero_val)) == 1 and zero_val[0]:
-                                            del_indexes.append(i)
-                                    # Check if del indexes and delete those from all lists
-                                    del_indexes.reverse()
-                                    for val_list in print_values:
-                                        for del_index in del_indexes:
-                                            del val_list[del_index]
-                                return print_values
-
-                            def eliminate_zero_val_cols(print_keys, print_values):
-                                diff_indexes = []
+                            # Find all diff columns
+                            for key in print_keys:
+                                if 'd_' in key:
+                                    diff_indexes.append(print_keys.index(key))
+                            if diff_indexes:
                                 del_indexes = []
-                                # Find all diff columns
-                                for key in print_keys:
-                                    if 'd_' in key:
-                                        diff_indexes.append(print_keys.index(key))
-                                if diff_indexes:
-                                    # Compare index list and index - 1 list and see if all elements are 0.
-                                    # If so then delete those 2 columns from print_keys and print_values
+                                # Check all lists simultaneously if their diff value is 0 and note its index
+                                for i in range(len(print_values[0])):
+                                    zero_val = []
                                     for index in diff_indexes:
-                                        diff_check_len = len(set(print_values[index]))
-                                        diff_check_val = print_values[index][0]
-                                        nor_check_len = len(set(print_values[index - 1]))
-                                        nor_check_val = print_values[index - 1][0]
-                                        if diff_check_len == 1 and diff_check_val == 0 and nor_check_len == 1 and nor_check_val == 0:
-                                            del_indexes.append(index - 1)
-                                            del_indexes.append(index)
-                                if del_indexes:
-                                    del_indexes.reverse()
-                                    for del_col in del_indexes:
-                                        del print_keys[del_col]
-                                        del print_values[del_col]
-                                return print_values
+                                        if print_values[index][i] == 0:
+                                            zero_val.append(True)
+                                        else:
+                                            zero_val.append(False)
+                                            break
+                                    if len(set(zero_val)) == 1 and zero_val[0]:
+                                        del_indexes.append(i)
+                                # Check if del indexes and delete those from all lists
+                                del_indexes.reverse()
+                                for val_list in print_values:
+                                    for del_index in del_indexes:
+                                        del val_list[del_index]
+                            return print_values
 
-                            def get_per_vp_dict_table_obj(result, prev_result=None, cluster_id=None, core_id=None):
-                                all_keys = result.keys()
-                                cluster_core_key = "Cls/Core"
-                                prio_val = all_keys[0].split(":")[2][0]
-                                if prio_val == '0':
-                                    low = True
-                                else:
-                                    low = False
-                                row_list = [cluster_core_key, "0", "1", "2", "3"]
-                                single_dict = result[all_keys[0]]
-                                print_key_list = single_dict.keys()
+                        def eliminate_zero_val_cols(print_keys, print_values):
+                            diff_indexes = []
+                            del_indexes = []
+                            # Find all diff columns
+                            for key in print_keys:
+                                # TODO: Not removing column for q depth
+                                if 'd_' in key and not '_q' in key:
+                                    diff_indexes.append(print_keys.index(key))
+                            if diff_indexes:
+                                # Compare index list and index - 1 list and see if all elements are 0.
+                                # If so then delete those 2 columns from print_keys and print_values
+                                for index in diff_indexes:
+                                    diff_check_len = len(set(print_values[index]))
+                                    diff_check_val = print_values[index][0]
+                                    nor_check_len = len(set(print_values[index - 1]))
+                                    nor_check_val = print_values[index - 1][0]
+                                    if diff_check_len == 1 and diff_check_val == 0 and nor_check_len == 1 and nor_check_val == 0:
+                                        del_indexes.append(index - 1)
+                                        del_indexes.append(index)
+                            if del_indexes:
+                                del_indexes.reverse()
+                                for del_col in del_indexes:
+                                    del print_keys[del_col]
+                                    del print_values[del_col]
+                            return print_values
 
-                                diff = False
-                                if prev_result:
-                                    diff = True
+                        def get_per_vp_dict_table_obj(result, prev_result=None):
+                            all_keys = result.keys()
+                            cluster_core_key = "Cls/Core"
+                            row_list = [cluster_core_key, "0", "1", "2", "3"]
 
-                                tabular_list = get_tabular_list(row_list, print_key_list, diff=diff, low=low)
+                            print_key_list = []
+                            if rx:
+                                print_key_list.append(rx_key_name)
+                            if tx:
+                                print_key_list.append(tx_key_name)
+                            if q:
+                                print_key_list.append(lo_q_key_name)
+                                print_key_list.append(hi_q_key_name)
 
-                                master_table_obj = PrettyTable()
-                                print_dict = get_complete_dict(result=result, tabular_list=tabular_list,
-                                                               prev_result=prev_result)
-
-                                print_keys = print_dict.keys()
-                                print_keys = [print_key.replace(tx_key_name, display_tx_key_name) for print_key in print_keys]
-                                print_keys = [print_key.replace(rx_key_name, display_rx_key_name) for print_key in
-                                              print_keys]
-                                print_keys = [print_key.replace(q_key_name, display_q_key_name) for print_key in
-                                              print_keys]
-                                print_values = print_dict.values()
-
-                                print_values = eliminate_zero_val_rows(print_keys, print_values)
-                                all_empty_list = True
-                                for print_val_list in print_values:
-                                    if print_val_list:
-                                        all_empty_list = False
-                                        break
-                                if not all_empty_list:
-                                    print_values = eliminate_zero_val_cols(print_keys, print_values)
-                                for col_name, col_values in zip(print_keys, print_values):
-                                    master_table_obj.add_column(col_name, col_values)
-                                return master_table_obj
-
-                            result = self.get_filtered_dict(output_dict=result, cluster_id=cluster_id, core_id=core_id,
-                                                            rx=rx, tx=tx, q=q)
-
-                            if core_id is None:
-                                result = get_sorted_dict(result)
+                            diff = False
                             if prev_result:
-                                prev_result = get_sorted_dict(prev_result)
+                                diff = True
 
-                            master_table_obj = get_per_vp_dict_table_obj(result=result, prev_result=prev_result,
-                                                                         cluster_id=cluster_id, core_id=core_id)
+                            tabular_list = get_tabular_list(row_list, print_key_list, diff=diff)
 
-                            if get_result_only:
-                                return cmd, master_table_obj
-                            prev_result_dict[key] = result
-                            print master_table_obj
+                            master_table_obj = PrettyTable()
+                            print_dict = get_complete_dict(result=result, tabular_list=tabular_list,
+                                                           prev_result=prev_result)
 
-                            time.sleep(TIME_INTERVAL)
-                        else:
-                            if get_result_only:
-                                return cmd, "Empty Result"
-                            print "Empty Result"
-                    print "\n########################  %s ########################\n" % \
-                          str(self._get_timestamp())
+                            print_keys = print_dict.keys()
+                            print_keys = [print_key.replace(tx_key_name, display_tx_key_name) for print_key in print_keys]
+                            print_keys = [print_key.replace(rx_key_name, display_rx_key_name) for print_key in
+                                          print_keys]
+                            print_keys = [print_key.replace(lo_q_key_name, display_lo_q_key_name) for print_key in
+                                          print_keys]
+                            print_keys = [print_key.replace(hi_q_key_name, display_hi_q_key_name) for print_key in
+                                          print_keys]
+                            print_values = print_dict.values()
+
+                            print_values = eliminate_zero_val_rows(print_keys, print_values)
+                            all_empty_list = True
+                            for print_val_list in print_values:
+                                if print_val_list:
+                                    all_empty_list = False
+                                    break
+                            if not all_empty_list:
+                                print_values = eliminate_zero_val_cols(print_keys, print_values)
+                            for col_name, col_values in zip(print_keys, print_values):
+                                master_table_obj.add_column(col_name, col_values)
+                            return master_table_obj
+
+                        result = self.get_filtered_dict(output_dict=result, cluster_id=cluster_id, core_id=core_id,
+                                                        rx=rx, tx=tx, q=q)
+
+                        if core_id is None:
+                            result = get_sorted_dict(result)
+                        if prev_result:
+                            prev_result = get_sorted_dict(prev_result)
+
+                        master_table_obj = get_per_vp_dict_table_obj(result=result, prev_result=prev_result)
+
+                        if get_result_only:
+                            return cmd, master_table_obj
+                        prev_result = result
+                        print master_table_obj
+                        print "\n########################  %s ########################\n" % \
+                              str(self._get_timestamp())
+                        time.sleep(TIME_INTERVAL)
+                    else:
+                        if get_result_only:
+                            return cmd, "Empty Result"
+                        print "Empty Result"
                 except KeyboardInterrupt:
                     self.dpc_client.disconnect()
                     break
@@ -3541,6 +3533,7 @@ class FlowCommands(object):
                         output['eth_pkts'] = queue['packets']
                         output['eth_bytes'] = queue['bytes']
                     elif module_name == 'epcq':
+                        output['epcq_vp'] = queue['flow']['dest']
                         output['cqe_count'] = queue['cqe_count']
                     elif module_name == 'virtual_interface':
                         output['vi_vp'] = queue['flow']['dest']
@@ -3553,6 +3546,7 @@ class FlowCommands(object):
         output = {}
         for key, val in result.iteritems():
             if isinstance(val, dict):
+                # TODO: Remove ethernet and virtual interface in below condition if needed
                 if 'epsq' in val.keys() and 'epcq' in val.keys() and 'ethernet' in val.keys() and 'virtual_interface' in val.keys():
                     output[key] = OrderedDict()
                     epsqs = val['epsq']
@@ -3580,6 +3574,8 @@ class FlowCommands(object):
                                     output[key][_val['id']]['eth_bytes'] = eth_bytes
 
                                     # Virtual Interface
+                                    # TODO: Remove virtual interface for now
+                                    '''
                                     vi = self._get_info_for_id(vis, _val['id'], module_name='virtual_interface')
                                     vi_vp = None
                                     vi_pkts = None
@@ -3591,8 +3587,10 @@ class FlowCommands(object):
                                     output[key][_val['id']]['vi_vp'] = vi_vp
                                     output[key][_val['id']]['vi_pkts'] = vi_pkts
                                     output[key][_val['id']]['vi_bytes'] = vi_bytes
+                                    '''
                                 elif queue == 'epcq':
                                     epcq = self._get_info_for_id(epcqs, _val['id'], module_name='epcq')
+                                    output[key][_val['id']]['epcq_vp'] = epcq['epcq_vp']
                                     output[key][_val['id']]['epcq_cqe_cnt'] = epcq['cqe_count']
                                     '''
                                     vi = self._get_info_for_id(vis, _val['id'], module_name='virtual_interface')
@@ -3617,14 +3615,12 @@ class FlowCommands(object):
                 master_table_obj.add_row(all_vals)
         print master_table_obj
 
-
     def get_flow_list_pp(self, hu_id=None, tx=None, rx=None, grep_regex=None):
         try:
             while True:
                 try:
                     cmd = "list"
-                    #output = self.dpc_client.execute(verb='flow', arg_list=[cmd])
-                    output = json.load(open('flow_2.json'))
+                    output = self.dpc_client.execute(verb='flow', arg_list=[cmd])
                     if output:
                         result = output
                         if hu_id:
@@ -3632,48 +3628,19 @@ class FlowCommands(object):
                             result[hu_id] = output[hu_id]
 
                         if tx:
+                            print "\n********** Displaying tx table below **********\n"
                             tx_parsed_dict = self.get_queue_parsed_dict(result, queue='ethernet')
-                            self._print_flow_list_table(tx_parsed_dict)
+                            if tx_parsed_dict:
+                                self._print_flow_list_table(tx_parsed_dict)
+                            else:
+                                print "No entries found for ethernet"
                         if rx:
+                            print "\n********** Displaying rx table below **********\n"
                             rx_parsed_dict = self.get_queue_parsed_dict(result, queue='epcq')
-                            self._print_flow_list_table(rx_parsed_dict)
-                        '''
-                        callee_list = self._get_callee_list(result)
-                        master_table_obj = PrettyTable()
-
-                        first_column_name = "Cls/Core/VP"
-                        row_list = []
-                        row_list.append(first_column_name)
-                        resultant_dict = {}
-                        new_callee_list = []
-                        for callee in callee_list:
-                            if not callee['module'] in row_list:
-                                row_list.append(callee['module'])
-                            cluster_id = callee['dest'].split(":")[0][2]
-                            core_id, vp_num = self._get_core_id_vp_num(callee['dest'].split(":")[1])
-                            key_name = "%s/%s/%s" % (cluster_id, core_id, vp_num)
-                            callee['dest'] = key_name
-                            new_callee_list.append(callee)
-                        new_callee_list = sorted(new_callee_list, key=lambda i: i['dest'])
-
-                        for row_name in row_list:
-                            resultant_dict[row_name] = []
-
-                        for callee in new_callee_list:
-                            for row_val in row_list:
-                                default_val = None
-                                if (row_val == first_column_name) and (not callee['dest'] in resultant_dict[row_val]):
-                                    resultant_dict[row_val].append(callee['dest'])
-                                elif row_val == callee['module'] and (not resultant_dict[row_val] is None):
-                                    resultant_dict[row_val].append(callee['id'])
-                                else:
-                                    resultant_dict[row_val].append(default_val)
-                        print_keys = resultant_dict.keys()
-                        print_values = resultant_dict.values()
-                        for col_name, col_values in zip(print_keys, print_values):
-                            master_table_obj.add_column(col_name, col_values)
-                        print master_table_obj
-                        '''
+                            if rx_parsed_dict:
+                                self._print_flow_list_table(rx_parsed_dict)
+                            else:
+                                print "No entries found for epcq"
                 except KeyboardInterrupt:
                     self.dpc_client.disconnect()
         except Exception as ex:
@@ -3794,7 +3761,7 @@ class DebugCommands(PeekCommands):
     def _format_non_zero_values(self, list_of_lists):
         index_list = []
         for cls, vp_0, vp_1, vp_2, vp_3 in zip(list_of_lists[0],list_of_lists[1],list_of_lists[2],list_of_lists[3],list_of_lists[4]):
-            if (vp_0 == '0' and vp_1 == '0' and vp_2 == '0' and vp_3 == '0') or ((vp_0 == 'N/A' or vp_0 == '0') and (vp_1 == 'N/A' or vp_1 == '0-') and vp_2 == 'N/A' and vp_3 == 'N/A'):
+            if (vp_0 == '0' and vp_1 == '0' and vp_2 == '0' and vp_3 == '0') or ((vp_0 == 'N/A' or vp_0 == '0') and (vp_1 == 'N/A' or vp_1 == '0') and vp_2 == 'N/A' and vp_3 == 'N/A'):
                 index_list.append(list_of_lists[0].index(cls))
         for index in sorted(index_list, reverse=True):
             for list in list_of_lists:
@@ -3861,7 +3828,10 @@ class DebugCommands(PeekCommands):
                     self.dpc_client.disconnect()
                     break
         except Exception as ex:
-            print "ERROR: %s" % str(ex)
+            if str(ex) == 'Column length 0 does not match number of rows 4!':
+                print "1st data set captured. Please re-run the command"
+            else:
+                print "ERROR: %s" % str(ex)
             self.dpc_client.disconnect()
 
     def debug_vp_util(self, cluster_id=None, core_id=None, grep_regex=None, get_result_only=False):

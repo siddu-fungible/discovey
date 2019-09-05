@@ -57,6 +57,10 @@ class Funeth:
         """Set env WORKSPACE, which is used in fungible-host-driver compilation."""
         for hu in self.hu_hosts:
             self.linux_obj_dict[hu].command('WSTMP=$WORKSPACE; export WORKSPACE=%s' % self.ws)
+            try:
+                fun_test.log("Spawn PID: {}".format(self.linux_obj_dict[hu].spawn_pid))
+            except Exception as ex:
+                fun_test.critical(ex)
 
     def cleanup_workspace(self):
         """Restore old WORKSPACE if exists."""

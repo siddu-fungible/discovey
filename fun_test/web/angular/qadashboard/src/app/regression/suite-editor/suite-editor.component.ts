@@ -1,15 +1,14 @@
-import {Component, OnInit} from '@angular/core';
-import {FormControl, FormGroup, Validators} from "@angular/forms";
+import {Component, Input, OnInit} from '@angular/core';
+import {AbstractControl, FormControl, FormGroup, Validators} from "@angular/forms";
 import {TestBedService} from "../test-bed/test-bed.service";
 import {Observable, of} from "rxjs";
 import {switchMap} from "rxjs/operators";
 import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
+import {SuiteEditorService, Suite, SuiteEntry, SuiteMode} from "./suite-editor.service";
+import {RegressionService} from "../regression.service";
+import {LoggerService} from "../../services/logger/logger.service";
+import {ActivatedRoute} from "@angular/router";
 
-class SuiteEntry {
-  path: string;
-  test_case_ids: number[] = null;
-  inputs: any = null
-}
 enum CustomAssetSelection {  // used by the Custom test-bed spec modal
   NUM,
   SPECIFIC
@@ -22,14 +21,18 @@ enum CustomAssetSelection {  // used by the Custom test-bed spec modal
   styleUrls: ['./suite-editor.component.css']
 })
 export class SuiteEditorComponent implements OnInit {
+  @Input() id: number = null;
+  mode: SuiteMode = SuiteMode.SUITE;
+  SuiteMode = SuiteMode;
+
   testCaseIds: number[] = null;
   inputs: any = null;
   customTestBedSpec: any = null;
   addingCustomTestBedSpec: boolean = true;
   inputsExample: string = '{"abc":123}';
   testBeds: any = null;
-  selectedTestBed: any = null;
   assets: any = null;
+  addingScript: boolean = null;
 
   dutAssets: any = [];
   hostAssets: any = [];
@@ -43,42 +46,54 @@ export class SuiteEditorComponent implements OnInit {
   flattenedAssetTypeNames: string[] = [];
   flattenedAssetTypeNameMap: any = {};
 
+  customTestBedSpecFormErrorMessage = null;
+  currentScriptPath: string = null;
 
-  newSuiteEntryForm = new FormGroup({
-    path: new FormControl(''),
-    testCaseIds: new FormControl(''),
-    inputs: new FormControl('')
-  });
+  name: string = "Some suite name";
+  shortDescription: string = "Short description";
 
-  customTestBedSpecForm = null; /*new FormGroup({
-    selectedTestBed: new FormControl(),
+  customTestBedSpecForm = null;
+  customTestBedValidated = null;
 
-    customDutSelection: new FormControl(CustomAssetSelection.NUM),
-    numDuts: new FormControl('', [Validators.max(this.MAX_NUM_DUTS)]),
-    selectedDuts: new FormControl(),
+  availableCategories: string [] = null;
+  availableSubCategories: string [] = ["general"];
+  //selectedCategories: string [] = null;
+  selectedSubCategories: string [] = null;
 
-    customHostSelection: new FormControl(CustomAssetSelection.NUM),
-    selectedHosts: new FormControl(),
-    numHosts: new FormControl('', [Validators.max(this.MAX_NUM_HOSTS)]),
+  availableTags: string[] = null;
 
-    customPerfListenerHostSelection: new FormControl(CustomAssetSelection.NUM),
-    selectedPerfListenerHosts: new FormControl(),
-    numPerfListenerHosts: new FormControl('', [Validators.max(this.MAX_NUM_PERF_LISTENER_HOSTS)]),
+  tags: string = null;
+  suite: Suite = null;
+  driver = null;
 
+  editorPristine: boolean = true;
 
-  });*/
-
-  constructor(private testBedService: TestBedService, private modalService: NgbModal) {
+  constructor(private testBedService: TestBedService,
+              private modalService: NgbModal,
+              private service: SuiteEditorService,
+              private regressionService: RegressionService,
+              private loggerService: LoggerService,
+              private route: ActivatedRoute) {
 
   }
 
+
   ngOnInit() {
-    new Observable(observer => {
+
+
+    this.driver = new Observable(observer => {
       observer.next(true);
       return () => {
-
       }
-    }).pipe(switchMap((response) => {
+    }).pipe(switchMap(response => {
+      return this.getQueryParam();
+    })).pipe(switchMap(response => {
+      return this.service.categories();
+    })).pipe(switchMap(response => {
+      this.availableCategories = response;
+      return this.regressionService.tags();
+    })).pipe(switchMap((response) => {
+      this.availableTags = response;
       return this.testBedService.testBeds();
     })).pipe(switchMap(response => {
       this.testBeds = response;
@@ -89,51 +104,125 @@ export class SuiteEditorComponent implements OnInit {
       return this.testBedService.assets();
     })).pipe(switchMap(response => {
       this.assets = response;
-
-
-
       return of(true);
-    })).subscribe(response => {
+    }));
+
+
+    this.route.params.subscribe(params => {
+      if (params["id"]) {
+        this.id = params["id"];
+      }
+      if (!this.id) {
+        this.suite = new Suite();
+        this.refreshAll();
+
+      } else {
+        this.service.suite(this.id).subscribe(response => {
+          this.suite = response;
+          console.log(this.suite.constructor.name);
+          this.refreshAll();
+
+        });
+      }
+
+
+
+    });
+
+  }
+
+
+  getQueryParam() {
+    return this.route.queryParams.pipe(switchMap(params => {
+      if (params.hasOwnProperty('mode')) {
+        this.mode = params["mode"];
+      }
+      return of(params);
+    }))
+  }
+
+  refreshAll() {
+    this.driver.subscribe(response => {
       this.customTestBedSpecForm = this.prepareFormGroup();
+      if (this.suite) {
+        this.prepareCustomTestBedSpecValidated();
+      }
       let i = 0;
       this.customTestBedSpecForm.get('selectedTestBed').valueChanges.subscribe(selection => {
-        this.selectedTestBed = selection;
+        //this.selectedTestBed = selection;
 
         Object.keys(this.assetTypes).forEach(assetTypeKey => {
           let flatName = this._flattenName(assetTypeKey);
           let assetSelectionKey = this._getAssetSelectionKey(flatName);
           let numAssetsKey = this._getNumAssetsKey(flatName);
           let specificAssetsKey = this._getSpecificAssetsKey(flatName);
-          this.customTestBedSpecForm.controls[specificAssetsKey].setValue('');
-          this.customTestBedSpecForm.controls[numAssetsKey].setValue('');
-          this.customTestBedSpecForm.controls[assetSelectionKey].setValue(CustomAssetSelection.NUM);
+          this.customTestBedSpecForm.controls[specificAssetsKey].setValue(null);
+          this.customTestBedSpecForm.controls[numAssetsKey].setValue(null);
+          this.customTestBedSpecForm.controls[assetSelectionKey].setValue(CustomAssetSelection.NUM.toString());
 
         })
 
+      });
+
+      this.customTestBedSpecForm.statusChanges.subscribe(status => {
+        if (status === "VALID") {
+        } else {
+          this.customTestBedValidated = null;
+        }
+
       })
+
     });
+  }
 
+  prepareCustomTestBedSpecValidated() {
+    this.customTestBedValidated = null;
+    let baseTestBed = null;
+    let selectedTestBedValue = this.customTestBedSpecForm.get("selectedTestBed").value;
 
+    if (selectedTestBedValue) {
+      baseTestBed = selectedTestBedValue.name;
+    }
+    if (baseTestBed) {
+      this.customTestBedValidated = {};
+      this.customTestBedValidated["base_test_bed"] = this.customTestBedSpecForm.get("selectedTestBed").value.name;
+      let payload = {};
+      let assetRequests = [];
+      for (let key of Object.keys(this.assetTypes)) {
+        let flatName = this._flattenName(key);
+        let readOut = this._readOutCustomTestBedSpecForm(flatName);
+        //console.log(readOut);
 
-    /*
-    this.customTestBedSpecForm.get('customDutSelection').valueChanges.subscribe(selection => {
-      if (selection == CustomAssetSelection.SPECIFIC.toString()) {
-        this.customTestBedSpecForm.get('numDuts').disable();
-      } else {
-        this.customTestBedSpecForm.get('numDuts').enable();
+        let ref = {};
+        //let ref = payload[this.flattenedAssetTypeNameMap[flatName].name];
+        let totalAssets = 0;
+        if (readOut["numAssets"] > 0) {
+          ref["num"] = readOut["numAssets"];
+          totalAssets += readOut["numAssets"];
+        }
 
+        let specificAssets = readOut["specificAssets"];
+        if (specificAssets && specificAssets.length > 0) {
+          ref["names"] = readOut["specificAssets"];
+          totalAssets += readOut["specificAssets"].length;
+        }
+        if (totalAssets) {
+          let key = this.flattenedAssetTypeNameMap[flatName].name;
+          let tempDict = {};
+          tempDict[key] = ref;
+          assetRequests.push(tempDict);
+        }
       }
-    });
-
-    this.customTestBedSpecForm.get('customHostSelection').valueChanges.subscribe(selection => {
-      if (selection == CustomAssetSelection.SPECIFIC.toString()) {
-        this.customTestBedSpecForm.get('numDuts').disable();
-      } else {
-        this.customTestBedSpecForm.get('numDuts').enable();
-
+      if (assetRequests.length) {
+        payload["asset_request"] = {};
+        assetRequests.forEach(assetRequest => {
+          let thisKey = Object.keys(assetRequest)[0];
+          payload["asset_request"][thisKey] = assetRequest[thisKey];
+        })
       }
-    })*/
-
+      this.customTestBedValidated["asset_request"] = payload["asset_request"];
+      this.suite.custom_test_bed_spec = this.customTestBedValidated;
+    }
   }
 
   _getAssetSelectionKey(flatName) {
@@ -148,20 +237,64 @@ export class SuiteEditorComponent implements OnInit {
     return `${flatName}SpecificAssets`;
   }
 
+  _getTestBedByName(name) {
+    let result = null;
+    for (let i = 0; i < this.testBeds.length; i++) {
+      if (this.testBeds[i].name === name) {
+        result = this.testBeds[i];
+        break;
+      }
+    }
+    return result;
+  }
+
   prepareFormGroup() {
     let group = {};
+
     group["selectedTestBed"] = new FormControl();
+    if (this.suite && this.suite.custom_test_bed_spec) {
+      if (Object.keys(this.suite.custom_test_bed_spec).indexOf('base_test_bed')) {
+        let baseTestBed = this.suite.custom_test_bed_spec.base_test_bed;
+        group["selectedTestBed"].setValue(this._getTestBedByName(baseTestBed));
+      }
+    }
 
     Object.keys(this.assetTypes).forEach(assetTypeKey => {
       let flatName = this._flattenName(assetTypeKey);
       this.flattenedAssetTypeNames.push(flatName);
+      let assetTypeValue = this.assetTypes[assetTypeKey];
       this.flattenedAssetTypeNameMap[flatName] = {name: this.assetTypes[assetTypeKey], data: null};
       let assetSelectionKey = this._getAssetSelectionKey(flatName);
       let numAssetsKey = this._getNumAssetsKey(flatName);
       let specificAssetsKey = this._getSpecificAssetsKey(flatName);
+
+
+
       group[assetSelectionKey] = new FormControl(CustomAssetSelection.NUM);
       group[numAssetsKey] = new FormControl();
       group[specificAssetsKey] = new FormControl();
+      if (this.suite.custom_test_bed_spec && this.suite.custom_test_bed_spec.hasOwnProperty('asset_request')) {
+        let assetRequest = this.suite.custom_test_bed_spec.asset_request;
+        if (assetRequest.hasOwnProperty(assetTypeValue)) {
+          let num = null;
+          let names = null;
+          if (assetRequest[assetTypeValue].hasOwnProperty("num")) {
+            num = assetRequest[assetTypeValue]["num"];
+          }
+          if (assetRequest[assetTypeValue].hasOwnProperty("names")) {
+            names = assetRequest[assetTypeValue]["names"]
+          }
+          if (num !== null) {
+            group[assetSelectionKey].setValue(CustomAssetSelection.NUM);
+            group[numAssetsKey].setValue(num);
+          } else {
+            group[assetSelectionKey].setValue(CustomAssetSelection.SPECIFIC);
+            group[specificAssetsKey].setValue(names);
+          }
+        }
+      }
+
+
       this.flattenedAssetTypeNameMap[flatName].data = [];
       this.assets.forEach(asset => {
         if (asset.type === this.assetTypes[assetTypeKey]) {
@@ -170,9 +303,49 @@ export class SuiteEditorComponent implements OnInit {
       })
 
     });
-    return new FormGroup(group);
+    let fg = new FormGroup(group);
+    fg.setValidators(this.customTestBedSpecValidator.bind(this));
+    return fg;
   }
 
+  customTestBedSpecValidator(group: FormGroup): { [key: string]: boolean } | null {
+    let errorMessage = null;
+    let valid = true;
+    if (group.pristine) {
+
+    } else {
+      if (!group.get("selectedTestBed").value) {
+        valid = false;
+        this.customTestBedSpecFormErrorMessage = "Please select a test-bed";
+
+      } else {
+        let totalAssets = 0;
+
+        for (let key of Object.keys(this.assetTypes)) {
+          let flatName = this._flattenName(key);
+          let readOut = this._readOutCustomTestBedSpecForm(flatName);
+          let numAssets = readOut["numAssets"];
+          if (isNaN(numAssets)) {
+            numAssets = 0;
+          }
+          totalAssets += numAssets;
+          let specificAssets = readOut["specificAssets"];
+          if (specificAssets) {
+            totalAssets += specificAssets.length;
+          }
+        }
+
+        if (!totalAssets) {
+          valid = false;
+          errorMessage = "At least one asset must be selected";
+        }
+      }
+
+
+    }
+
+    return valid? null: {'errorMessage': errorMessage};
+  }
 
   _flattenName(name: string): string {  /* flatten DUT to dut, Perf Listener to "perf_listener"*/
     return name.toLowerCase().replace(" ", "_");
@@ -186,32 +359,146 @@ export class SuiteEditorComponent implements OnInit {
     this.inputs = inputs;
   }
 
-  customTestBedSpecChanged(customTestBedSpec) {
-    this.customTestBedSpec = customTestBedSpec;
-  }
 
-  filterAssetsBySelectedTestBed(allAssets) {  // Only choose assets that belong to the selected test-bed
-    return allAssets.filter(asset => asset.test_beds.indexOf(this.selectedTestBed) > -1).map(o => { return o.name });
+  filterAssetsBySelectedTestBed(selectedTestBed, allAssets) {  // Only choose assets that belong to the selected test-bed
+    return allAssets.filter(asset => asset.test_beds.indexOf(selectedTestBed) > -1).map(o => { return o.name });
   }
 
   test() {
+    //console.log(this.customTestBedSpecForm.get(this._getAssetSelectionKey("dut")).value);
     //console.log(this.selectedTestBed.value);
-     console.log(this.selectedTestBed);
-     console.log(this.customTestBedSpecForm.get("selectedTestBed").value);
+     //console.log(this.selectedTestBed);
+    //console.log(this.customTestBedSpecForm.get("selectedTestBed").value);
     // console.log(this.customTestBedSpecForm.get("customDutSelection").value);
     // console.log(this.customTestBedSpecForm.get("numDuts").value);
     // console.log(this.customTestBedSpecForm.get("selectedDuts").value);
-    console.log(this.flattenedAssetTypeNames);
-    console.log(this.flattenedAssetTypeNameMap);
+    //console.log(this.flattenedAssetTypeNames);
+    //console.log(this.flattenedAssetTypeNameMap);
+    //console.log(this.selectedCategories);
+    console.log(this.suite);
 
   }
 
-  onClickCustomTestBedSpec(content) {
-    this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title'}).result.then((suiteExecution) => {
+  _readOutCustomTestBedSpecForm(flatName) {
+    let result = {};
+    let assetSelectionKey = this._getAssetSelectionKey(flatName);
+    let numAssetsKey = this._getNumAssetsKey(flatName);
+    let specificAssetsKey = this._getSpecificAssetsKey(flatName);
+
+    let assetSelection = this.customTestBedSpecForm.get(assetSelectionKey).value;
+    result["assetSelection"] = assetSelection;
+
+    if (parseInt(assetSelection) === CustomAssetSelection.NUM) {
+      let numAssets = parseInt(this.customTestBedSpecForm.get(numAssetsKey).value);
+      if (isNaN(numAssets)) {
+        numAssets = 0;
+      }
+      result["numAssets"] = numAssets;
+    } else {
+      let specificAssets = this.customTestBedSpecForm.get(specificAssetsKey).value;
+      result["specificAssets"] = specificAssets;
+    }
+    return result;
+  }
+
+  _hasKey(o, key) {
+    return Object.keys(o).indexOf(key) > -1;
+  }
+
+  onAddCustomTestBedSpec(content) {
+    this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title'}).result.then((dontCare) => {
+      console.log("Ready to submit");
+      let customTestBedSpec = {};
+      this.prepareCustomTestBedSpecValidated();
 
     }, ((reason) => {
       console.log("Rejected");
       //this.closeResult = `Dismissed ${this.getDismissReason(reason)}`;
     }));
+  }
+
+  onEditCustomTestBedSpec(content) {
+    this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title'}).result.then((dontCare) => {
+      console.log("Ready to submit");
+      let customTestBedSpec = {};
+      this.prepareCustomTestBedSpecValidated();
+
+    }, ((reason) => {
+      console.log("Rejected");
+      //this.closeResult = `Dismissed ${this.getDismissReason(reason)}`;
+    }));
+  }
+
+  onDeleteCustomTestBedSpec() {
+    this.customTestBedSpecForm.reset();
+    this.customTestBedValidated = null;
+    this.suite.custom_test_bed_spec = null;
+  }
+
+  singleSelectScriptPathEvent(scriptPath) {
+    if (scriptPath) {
+      this.currentScriptPath = scriptPath;
+    }
+    //console.log(scriptPath);
+  }
+
+  onAddScript() {
+    this.addingScript = true;
+  }
+
+  _clearNewSuiteEntry() {
+    this.currentScriptPath = null;
+    this.inputs = null;
+    this.testCaseIds = null;
+  }
+
+  onSubmitNewSuiteEntry() {
+    console.log("Submitting new suite entry");
+    this.addingScript = false;
+    let suiteEntry = new SuiteEntry();
+    suiteEntry.script_path = this.currentScriptPath;
+    suiteEntry.inputs = this.inputs;
+    suiteEntry.test_case_ids = this.testCaseIds;
+    console.log(suiteEntry);
+    this.suite.addEntry(suiteEntry);
+    this._clearNewSuiteEntry();
+  }
+
+  onCancelNewSuiteEntry() {
+    this.addingScript = false;
+  }
+
+  onNameChangedEvent(name) {
+    this.suite.name = name;
+    this.editorPristine = false;
+  }
+
+  onShortDescriptionChangedEvent(shortDescription) {
+    this.suite.short_description = shortDescription;
+    this.editorPristine = false;
+  }
+
+  onSubmitSuite() {
+    if (!this.id) {
+      this.service.add(this.suite).subscribe(response => {
+        this.loggerService.success("Added suite");
+        this.editorPristine = true;
+      })
+    } else {
+      this.service.replace(this.suite, this.id).subscribe(response => {
+        this.loggerService.success("Updated suite");
+      })
+    }
+
+  }
+
+  onSelect() {
+    //console.log("Filter change");
+    this.editorPristine = false;
+  }
+
+
+  onDeleteSuiteEntry(index) {
+    this.suite.entries.splice(index, 1);
   }
 }

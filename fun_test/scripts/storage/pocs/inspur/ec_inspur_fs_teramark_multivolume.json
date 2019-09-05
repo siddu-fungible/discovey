@@ -80,7 +80,7 @@
     "ctlid": 0,
     "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
     "nvme_device": "/dev/nvme",
-    "io_queues": 16,
+    "nvme_io_queues": 16,
     "warm_up_traffic": 1,
     "parallel_warm_up": false,
     "warm_up_fio_cmd_args": {"bs": "1024k", "iodepth": 1, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "timeout": 3600},
@@ -93,11 +93,10 @@
     "full_run_iodepth": [32, 64, 96, 128],
     "fio_job_name": "inspur_8k_random_read_write",
     "mpstat_args": {"interval": 60, "output_file": "/tmp/mpstat.out", "cpu_list": "ALL"},
-    "vp_util_args": {"interval": 60},
-    "resource_bam_args": {"interval": 60},
-    "vol_stats_args": {"interval": 60},
-    "collect_network_stats": true,
-    "csi_perf_iodepth": [64]
+    "stats_collect_details": [{"vp_utils": {"interval": 60}}, {"per_vp": {"interval": 60}}, {"resource_bam_args": {"interval": 60}}, {"vol_stats": {"interval": 60}}, {"vppkts_stats": {"interval": 60}}, {"psw_stats": {"interval": 60, "nu": true}}, {"fcp_stats": {"interval": 60, "nu": true}}, {"wro_stats": {"interval": 60, "nu": true}}, {"erp_stats": {"interval": 60, "nu": true}}, {"etp_stats": {"interval": 60, "nu": true}}, {"eqm_stats": {"interval": 60}}, {"hu_stats": {"interval": 60}}, {"ddr_stats": {"interval": 60}}, {"ca_stats": {"interval": 60}}, {"cdu_stats": {"interval": 60}}],
+    "collect_network_stats": false,
+    "csi_perf_iodepth": [64],
+    "cal_amplification": true
   },
   "RandRead8kBlocks": {
     "ec_info": {
@@ -134,7 +133,7 @@
     "ctlid": 0,
     "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
     "nvme_device": "/dev/nvme",
-    "io_queues": 16,
+    "nvme_io_queues": 16,
     "warm_up_traffic": 1,
     "parallel_warm_up": false,
     "warm_up_fio_cmd_args": {"bs": "1024k", "iodepth": 1, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "timeout": 3600},
@@ -147,11 +146,10 @@
     "full_run_iodepth": [32, 64, 96, 128],
     "fio_job_name": "inspur_8k_random_read",
     "mpstat_args": {"interval": 60, "output_file": "/tmp/mpstat.out", "cpu_list": "ALL"},
-    "vp_util_args": {"interval": 60},
-    "resource_bam_args": {"interval": 60},
-    "vol_stats_args": {"interval": 60},
-    "collect_network_stats": true,
-    "csi_perf_iodepth": [64]
+    "stats_collect_details": [{"vp_utils": {"interval": 60}}, {"per_vp": {"interval": 60}}, {"resource_bam_args": {"interval": 60}}, {"vol_stats": {"interval": 60}}, {"vppkts_stats": {"interval": 60}}, {"psw_stats": {"interval": 60, "nu": true}}, {"fcp_stats": {"interval": 60, "nu": true}}, {"wro_stats": {"interval": 60, "nu": true}}, {"erp_stats": {"interval": 60, "nu": true}}, {"etp_stats": {"interval": 60, "nu": true}}, {"eqm_stats": {"interval": 60}}, {"hu_stats": {"interval": 60}}, {"ddr_stats": {"interval": 60}}, {"ca_stats": {"interval": 60}}, {"cdu_stats": {"interval": 60}}],
+    "collect_network_stats": false,
+    "csi_perf_iodepth": [64],
+    "cal_amplification": true
   },
   "RandWrite8kBlocks": {
     "ec_info": {
@@ -188,7 +186,7 @@
     "ctlid": 0,
     "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
     "nvme_device": "/dev/nvme",
-    "io_queues": 16,
+    "nvme_io_queues": 16,
     "warm_up_traffic": 1,
     "parallel_warm_up": false,
     "warm_up_fio_cmd_args": {"bs": "1024k", "iodepth": 1, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "timeout": 3600},
@@ -201,11 +199,11 @@
     "full_run_iodepth": [32, 64, 96, 128],
     "fio_job_name": "inspur_8k_random_write",
     "mpstat_args": {"interval": 60, "output_file": "/tmp/mpstat.out", "cpu_list": "ALL"},
-    "vp_util_args": {"interval": 60},
-    "resource_bam_args": {"interval": 60},
-    "vol_stats_args": {"interval": 60},
-    "collect_network_stats": true,
-    "csi_perf_iodepth": [64]
+    "stats_collect_details": [{"vp_utils": {"interval": 60}}, {"per_vp": {"interval": 60}}, {"resource_bam_args": {"interval": 60}}, {"vol_stats": {"interval": 60}}, {"vppkts_stats": {"interval": 60}}, {"psw_stats": {"interval": 60, "nu": true}}, {"fcp_stats": {"interval": 60, "nu": true}}, {"wro_stats": {"interval": 60, "nu": true}}, {"erp_stats": {"interval": 60, "nu": true}}, {"etp_stats": {"interval": 60, "nu": true}}, {"eqm_stats": {"interval": 60}}, {"hu_stats": {"interval": 60}}, {"ddr_stats": {"interval": 60}}, {"ca_stats": {"interval": 60}}, {"cdu_stats": {"interval": 60}}],
+    "stats_collect_details": [{"vp_utils": {"interval": 60}}, {"per_vp": {"interval": 60}}, {"resource_bam_args": {"interval": 60}}, {"vol_stats": {"interval": 60}}],
+    "collect_network_stats": false,
+    "csi_perf_iodepth": [64],
+    "cal_amplification": true
   },
   "SequentialReadWrite1024kBlocks": {
     "ec_info": {
@@ -242,7 +240,7 @@
     "ctlid": 0,
     "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
     "nvme_device": "/dev/nvme",
-    "io_queues": 16,
+    "nvme_io_queues": 16,
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {"bs": "1024k", "iodepth": 1, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "timeout": 2100},
     "fio_cmd_args": {"bs": "1024k", "size": "100%", "direct": 1, "prio": 0, "rwmixread": 70, "ramp_time": 10, "runtime": 120, "cpus_allowed_policy": "split", "timeout": 150},
@@ -286,7 +284,7 @@
     "ctlid": 0,
     "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
     "nvme_device": "/dev/nvme",
-    "io_queues": 16,
+    "nvme_io_queues": 16,
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {"bs": "1024k", "iodepth": 1, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "timeout": 2100},
     "fio_cmd_args": {"bssplit": "8k/50:1024k/50", "size": "100%", "direct": 1, "prio": 0, "rwmixread": 80, "percentage_random": "100%", "ramp_time": 10, "runtime": 120, "cpus_allowed_policy": "split", "timeout": 150},
@@ -341,7 +339,7 @@
     "perf_run_config_file": "inspur_oltp_model_read_write_vdbench",
     "perf_run_timeout": 180,
     "nvme_device": "/dev/nvme",
-    "io_queues": 16
+    "nvme_io_queues": 16
   },
   "OLAPModelReadWriteIOPS": {
     "ec_info": {
@@ -389,6 +387,6 @@
     "perf_run_config_file": "inspur_olap_model_read_write_vdbench",
     "perf_run_timeout": 180,
     "nvme_device": "/dev/nvme",
-    "io_queues": 16
+    "nvme_io_queues": 16
   }
 }

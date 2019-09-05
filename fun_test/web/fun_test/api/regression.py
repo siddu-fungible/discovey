@@ -5,7 +5,7 @@ from web.fun_test.models import TestBed, Asset
 from django.db.models import Q
 from web.fun_test.models import SuiteExecution, TestCaseExecution, TestbedNotificationEmails
 from web.fun_test.models import ScriptInfo, RegresssionScripts
-from fun_settings import TEAM_REGRESSION_EMAIL
+from fun_settings import TEAM_REGRESSION_EMAIL, SCRIPTS_DIR
 import json
 from lib.utilities.send_mail import send_mail
 from datetime import datetime, timedelta
@@ -16,7 +16,12 @@ from asset.asset_global import AssetType
 from web.fun_test.models import Module
 from web.fun_test.fun_serializer import model_instance_to_dict
 from web.fun_test.models_helper import _get_suite_executions
+from web.fun_test.models import Suite
 from fun_global import RESULTS
+from django.core import paginator
+import os
+import fnmatch
+
 
 
 @csrf_exempt
@@ -35,6 +40,7 @@ def test_beds(request, id):
                 t = {"name": test_bed.name,
                      "description": test_bed.description,
                      "id": test_bed.id,
+                     "note": test_bed.note,
                      "manual_lock": test_bed.manual_lock,
                      "manual_lock_expiry_time": str(test_bed.manual_lock_expiry_time),
                      "manual_lock_submitter": test_bed.manual_lock_submitter}
@@ -54,6 +60,7 @@ def test_beds(request, id):
             result = {"name": t.name,
                       "description": t.description,
                       "id": t.id,
+                      "note": t.note,
                       "manual_lock": t.manual_lock,
                       "manual_lock_expiry_time": str(t.manual_lock_expiry_time),
                       "manual_lock_submitter": t.manual_lock_submitter}
@@ -74,6 +81,7 @@ def test_beds(request, id):
         extension_hour = None
         extension_minute = None
         submitter_email = None
+        description = None
         if "manual_lock_extension_hour" in request_json:
             extension_hour = request_json["manual_lock_extension_hour"]
         if "manual_lock_extension_minute" in request_json:
@@ -81,6 +89,10 @@ def test_beds(request, id):
         if "manual_lock_submitter_email" in request_json:
             submitter_email = request_json["manual_lock_submitter_email"]
             test_bed.manual_lock_submitter = submitter_email
+        if "description" in request_json:
+            test_bed.description = request_json["description"]
+        if "note" in request_json:
+            test_bed.note = request_json["note"]
 
         this_is_extension_request = False
         if extension_hour is not None and extension_minute is not None:
@@ -94,7 +106,8 @@ def test_beds(request, id):
         if test_bed.manual_lock:
             manual_locked, error_message, manual_lock_user, assets_required = am.check_test_bed_manual_locked(test_bed_name=test_bed.name)
             if manual_locked and not this_is_extension_request:
-                raise Exception(error_message)
+                #raise Exception(error_message)
+                pass
             else:
                 if submitter_email:
                     am.manual_lock_assets(user=submitter_email, assets=assets_required)
@@ -117,6 +130,9 @@ def test_beds(request, id):
             send_mail(to_addresses=to_addresses, subject=subject, content=content)
         pass
     return result
+
+
+
 
 @csrf_exempt
 @api_safe_json_response
@@ -291,6 +307,103 @@ def sub_categories(request):
 @api_safe_json_response
 def asset_types(request):
     return AssetType().all_strings_to_code()
+
+
+def _fix_missing_scripts():
+    missing_scripts = []
+    for root, dir_names, file_names in os.walk(SCRIPTS_DIR):
+        for file_name in fnmatch.filter(file_names, '*.py'):
+            full_path = os.path.join(root, file_name)
+            try:
+                f = open(full_path, "r")
+                contents = f.read()
+                if "if __name__ == \"__main__\"" in contents:
+                    relative_path = full_path.replace(SCRIPTS_DIR, "")
+                    if not RegresssionScripts.objects.filter(script_path=relative_path).exists():
+                        missing_scripts.append(relative_path)
+
+            except:
+                pass  # TODO
+
+    for missing_script in missing_scripts:
+        module = "general"
+        if "accelerators" in missing_script:
+            module = "accelerators"
+        if "security" in missing_script:
+            module = "security"
+        if "networking" in missing_script:
+            module = "networking"
+        if "system" in missing_script:
+            module = "system"
+        print module, missing_script
+        RegresssionScripts(script_path=missing_script, modules=json.dumps([module])).save()
+
+
+@csrf_exempt
+@api_safe_json_response
+def scripts(request):
+    result = None
+    if request.method == "POST":
+        request_json = json.loads(request.body)
+        operation = request_json.get("operation", None)
+        if operation == "fix_missing_scripts":
+            _fix_missing_scripts()
+            result = True
+    return result
+
+
+@csrf_exempt
+@api_safe_json_response
+def suites(request, id):
+    result = None
+    if request.method == "GET":
+        if not id:
+            get_count = request.GET.get("get_count", None)
+            q = Q()
+            categories = request.GET.get("categories", None)
+            if categories is not None:
+                categories = categories.split(",")
+                for category in categories:
+                    q &= Q(categories__contains=category)
+            all_suites = Suite.objects.filter(q)
+            if get_count is None:
+                records_per_page = request.GET.get("records_per_page", None)
+                page = request.GET.get("page", None)
+                if records_per_page is not None:
+                    p = paginator.Paginator(all_suites, records_per_page)
+                    all_suites = p.page(page)
+                    result = []
+                    for suite in all_suites:
+                        result.append(suite.to_dict())
+
+            else:
+                result = all_suites.count()
+        else:
+            id = int(id)
+            result = Suite.objects.get(id=id).to_dict()
+
+    if request.method == "POST":
+        if not id:
+            s = Suite()
+        else:
+            s = Suite.objects.get(id=id)
+        request_json = json.loads(request.body)
+        name = request_json.get("name", None)
+        short_description = request_json.get("short_description", None)
+        categories = request_json.get("categories", None)
+        tags = request_json.get("tags", None)
+        custom_test_bed_spec = request_json.get("custom_test_bed_spec", None)
+        suite_entries = request_json.get("entries", None)
+        s.name = name
+        s.short_description = short_description
+        s.categories = categories
+        s.tags = tags
+        s.custom_test_bed_spec = custom_test_bed_spec
+        if suite_entries is not None:
+            s.entries = suite_entries
+        s.save()
+
+    return result
 
 if __name__ == "__main__":
     from web.fun_test.django_interactive import *

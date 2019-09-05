@@ -118,6 +118,10 @@ ERR_TRAP_COPP_PRSR_OL_V4_VER_METER_ID = 54
 ERR_TRAP_COPP_PRSR_OL_V6_VER_METER_ID = 55
 ERR_TRAP_COPP_PRSR_OL_IHL_METER_ID = 56
 ERR_TRAP_COPP_PRSR_IP_FLAG_ZERO_METER_ID = 57
+TOTAL_CLUSTERS = 8
+TOTAL_CORES_PER_CLUSTER = 6
+TOTAL_VPS_PER_CORE = 4
+START_VP_NUMBER = 8
 
 
 psw_global_stats_counter_names = {'orm_drop': 'orm_drop', 'grm_sx_drop': 'grm_sx_drop',
@@ -285,7 +289,7 @@ def get_vp_pkts_stats_values(network_controller_obj):
 def get_bam_stats_values(network_controller_obj):
     result = None
     try:
-        output = network_controller_obj.peek_bam_stats()
+        output = network_controller_obj.peek_resource_bam_stats()
         fun_test.simple_assert(output, "Ensure bam stats are grepped")
         result = parse_result_dict(output)
     except Exception as ex:
@@ -972,27 +976,6 @@ def populate_vp_util_output_file(network_controller_obj, filename, display_outpu
     return output
 
 
-def get_sorted_dict(result):
-    sorted_dict = OrderedDict()
-    result_keys = sorted(result)
-    insert_index = 0
-    del_index = 22
-    for x in range(0, 8):
-        second_insert_index = insert_index + 1
-        second_del_index = del_index + 1
-
-        result_keys.insert(insert_index, result_keys[del_index])
-        del result_keys[del_index + 1]
-        result_keys.insert(second_insert_index, result_keys[second_del_index])
-        del result_keys[second_del_index + 1]
-
-        insert_index = insert_index + 24
-        del_index = del_index + 24
-    for key in result_keys:
-        sorted_dict[key] = result[key]
-    return sorted_dict
-
-
 def _get_difference(result, prev_result):
     """
     :param result: Should be dict or dict of dict
@@ -1033,7 +1016,6 @@ def _get_difference(result, prev_result):
     return diff_result
 
 
-
 def get_complete_dict(result, tabular_list, prev_result):
     core_id = None
     complete_dict = OrderedDict()
@@ -1046,39 +1028,35 @@ def get_complete_dict(result, tabular_list, prev_result):
     for key, val in current_result.iteritems():
         cluster_val = key.split(":")[0][2]
         vp_val = key.split(":")[1]
-        final_val = key.split(":")[2][0]
-        if not int(final_val) == 1:
-            if not cluster_val in added_cluster_list:
-                if core_id is not None:
-                    complete_dict[tabular_list[0]].append("%s/%s" % (cluster_val, core_id))
-                    added_cluster_list.append(cluster_val)
-                else:
-                    for x in range(0, 6):
-                        complete_dict[tabular_list[0]].append("%s/%s" % (cluster_val, x))
-                    added_cluster_list.append(cluster_val)
-            for _key, _val in val.iteritems():
-                for item in tabular_list[1:]:
-                    if (int(vp_val) % 4 == int(item.split(":")[0])) and (not 'd_' in item) and (
-                            _key == item.split(":")[1]):
-                        complete_dict[item].append(_val)
-                        break
+        if not cluster_val in added_cluster_list:
+            if core_id is not None:
+                complete_dict[tabular_list[0]].append("%s/%s" % (cluster_val, core_id))
+                added_cluster_list.append(cluster_val)
+            else:
+                for x in range(0, 6):
+                    complete_dict[tabular_list[0]].append("%s/%s" % (cluster_val, x))
+                added_cluster_list.append(cluster_val)
+        for _key, _val in val.iteritems():
+            for item in tabular_list[1:]:
+                if (int(vp_val) % TOTAL_VPS_PER_CORE == int(item.split(":")[0][0])) and (not 'd_' in item) and (
+                        _key == item.split(":")[1]):
+                    complete_dict[item].append(_val)
+                    break
     if prev_result:
         diff_result = _get_difference(result=result, prev_result=prev_result)
         diff_result = get_sorted_dict(diff_result)
         for key, val in diff_result.iteritems():
             cluster_val = key.split(":")[0][2]
             vp_val = key.split(":")[1]
-            final_val = key.split(":")[2][0]
-            if not int(final_val) == 1:
-                if not cluster_val in added_cluster_list:
-                    added_cluster_list.append(cluster_val)
-                    complete_dict[tabular_list[0]].append(cluster_val)
-                for _key, _val in val.iteritems():
-                    for item in tabular_list[1:]:
-                        if (int(vp_val) % 4 == int(item.split(":")[0])) and (
-                                'd_' in item) and ('d_' + _key == item.split(":")[1]):
-                            complete_dict[item].append(_val)
-                            break
+            if not cluster_val in added_cluster_list:
+                added_cluster_list.append(cluster_val)
+                complete_dict[tabular_list[0]].append(cluster_val)
+            for _key, _val in val.iteritems():
+                for item in tabular_list[1:]:
+                    if (int(vp_val) % TOTAL_VPS_PER_CORE == int(item.split(":")[0][0])) and (
+                            'd_' in item) and ('d_' + _key == item.split(":")[1]):
+                        complete_dict[item].append(_val)
+                        break
     return complete_dict
 
 
@@ -1096,13 +1074,115 @@ def get_tabular_list(table_list, print_key_list, diff=False):
     return tabular_list
 
 
+def eliminate_zero_val_rows(print_keys, print_values):
+    diff_indexes = []
+
+    # Find all diff columns
+    for key in print_keys:
+        if 'd_' in key:
+            diff_indexes.append(print_keys.index(key))
+    if diff_indexes:
+        del_indexes = []
+        # Check all lists simultaneously if their diff value is 0 and note its index
+        for i in range(len(print_values[0])):
+            zero_val = []
+            for index in diff_indexes:
+                if print_values[index][i] == 0:
+                    zero_val.append(True)
+                else:
+                    zero_val.append(False)
+                    break
+            if len(set(zero_val)) == 1 and zero_val[0]:
+                del_indexes.append(i)
+        # Check if del indexes and delete those from all lists
+        del_indexes.reverse()
+        for val_list in print_values:
+            for del_index in del_indexes:
+                del val_list[del_index]
+    return print_values
+
+
+def eliminate_zero_val_cols(print_keys, print_values):
+    diff_indexes = []
+    del_indexes = []
+    # Find all diff columns
+    for key in print_keys:
+        # TODO: Not removing column for q depth
+        if 'd_' in key and not '_q' in key:
+            diff_indexes.append(print_keys.index(key))
+    if diff_indexes:
+        # Compare index list and index - 1 list and see if all elements are 0.
+        # If so then delete those 2 columns from print_keys and print_values
+        for index in diff_indexes:
+            diff_check_len = len(set(print_values[index]))
+            diff_check_val = print_values[index][0]
+            nor_check_len = len(set(print_values[index - 1]))
+            nor_check_val = print_values[index - 1][0]
+            if diff_check_len == 1 and diff_check_val == 0 and nor_check_len == 1 and nor_check_val == 0:
+                del_indexes.append(index - 1)
+                del_indexes.append(index)
+    if del_indexes:
+        del_indexes.reverse()
+        for del_col in del_indexes:
+            del print_keys[del_col]
+            del print_values[del_col]
+    return print_values
+
+def _get_vp_numbers_from_core_id(core_id):
+    result = []
+    try:
+        start_vp_num = START_VP_NUMBER
+        if core_id != 0:
+            start_vp_num = START_VP_NUMBER + TOTAL_VPS_PER_CORE * core_id
+        end_vp_num = start_vp_num + TOTAL_VPS_PER_CORE
+        result = range(start_vp_num, end_vp_num, 1)
+    except Exception as ex:
+        print "ERROR: %s" % str(ex)
+    return result
+
+def get_filtered_dict(output_dict, cluster_id=None, core_id=None, rx=True, tx=True, q=True):
+    rx_key_name = 'wus_received'
+    tx_key_name = 'wus_sent'
+    low_q_key_name = 'low_q_depth'
+    high_q_key_name = 'high_q_depth'
+    current_result = {}
+    dict_keys = output_dict.keys()
+    for key in dict_keys:
+        if (str(cluster_id) is not None) and (str(cluster_id) in key.split(":")[0]):
+            if core_id is not None:
+                vp_num_list = _get_vp_numbers_from_core_id(core_id=core_id)
+                if int(key.split(":")[1]) in vp_num_list:
+                    current_result[key] = output_dict[key]
+            else:
+                current_result[key] = output_dict[key]
+        elif cluster_id is None:
+            cc_cluster_id = '8'
+            if cc_cluster_id not in key.split(":")[0]:
+                current_result[key] = output_dict[key]
+    parsed_dict = {}
+    for key, val in current_result.iteritems():
+        parsed_dict[key] = {}
+        for _key in val.keys():
+            if _key == rx_key_name and rx:
+                parsed_dict[key][rx_key_name] = current_result[key][_key]
+            if _key == tx_key_name and tx:
+                parsed_dict[key][tx_key_name] = current_result[key][_key]
+            if _key == low_q_key_name and q:
+                parsed_dict[key][low_q_key_name] = current_result[key][_key]
+            if _key == high_q_key_name and q:
+                parsed_dict[key][high_q_key_name] = current_result[key][_key]
+    return parsed_dict
+
+
 def get_per_vp_dict_table_obj(result, prev_result):
     rx_key_name = 'wus_received'
     display_rx_key_name = 'rx'
     tx_key_name = 'wus_sent'
     display_tx_key_name = 'tx'
-    q_key_name = 'vp_wu_qdepth'
-    display_q_key_name = 'q'
+    lo_q_key_name = 'low_q_depth'
+    display_lo_q_key_name = 'lo_q'
+    hi_q_key_name = 'high_q_depth'
+    display_hi_q_key_name = 'hi_q'
     all_keys = result.keys()
     row_list = ["Cls/Core", "0", "1", "2", "3"]
     single_dict = result[all_keys[0]]
@@ -1119,28 +1199,62 @@ def get_per_vp_dict_table_obj(result, prev_result):
     print_keys = [print_key.replace(tx_key_name, display_tx_key_name) for print_key in print_keys]
     print_keys = [print_key.replace(rx_key_name, display_rx_key_name) for print_key in
                   print_keys]
-    print_keys = [print_key.replace(q_key_name, display_q_key_name) for print_key in
+    print_keys = [print_key.replace(lo_q_key_name, display_lo_q_key_name) for print_key in
+                  print_keys]
+    print_keys = [print_key.replace(hi_q_key_name, display_hi_q_key_name) for print_key in
                   print_keys]
     print_values = print_dict.values()
+
+    print_values = eliminate_zero_val_rows(print_keys, print_values)
+    all_empty_list = True
+    for print_val_list in print_values:
+        if print_val_list:
+            all_empty_list = False
+            break
+    if not all_empty_list:
+        print_values = eliminate_zero_val_cols(print_keys, print_values)
     for col_name, col_values in zip(print_keys, print_values):
         master_table_obj.add_column(col_name, col_values)
     return master_table_obj
 
-def remove_entries_per_vp_dict(result_dict, cc_entries=True):
-    output_dict = {}
-    result_keys = result_dict.keys()
-    new_result_keys = []
-    if cc_entries:
-        for key in result_keys:
-            if not key.split(":")[0][2] == '8':
-                new_result_keys.append(key)
-    else:
-        new_result_keys = result_keys
-    for key in new_result_keys:
-        if not key.split(":")[2][0] == '1':
-            output_dict[key] = result_dict[key]
+def get_required_per_vp_result(output_result):
+    result = {}
+    for key, val in output_result.iteritems():
+        if key.split(":")[2][0] == '0':
+            result[key] = {}
+            result[key]['low_q_depth'] = val['vp_wu_qdepth']
+            new_key = key.replace(":1[VP]", ":0[VP]")
+            result[key]['high_q_depth'] = output_result[new_key]['vp_wu_qdepth']
+            for _key, _val in val.iteritems():
+                result[key][_key] = _val
+            del result[key]['vp_wu_qdepth']
+    return result
 
-    return output_dict
+def get_sorted_dict(result):
+    sorted_dict = OrderedDict()
+    result_keys = sorted(result)
+    if len(result_keys) == TOTAL_VPS_PER_CORE * TOTAL_CORES_PER_CLUSTER:
+        result_keys.insert(0, result_keys[-2])
+        result_keys.insert(1, result_keys[-1])
+        del result_keys[-1]
+        del result_keys[-1]
+    else:
+        insert_index = 0
+        del_index = 22
+        for x in range(0, TOTAL_CLUSTERS):
+            second_insert_index = insert_index + 1
+            second_del_index = del_index + 1
+
+            result_keys.insert(insert_index, result_keys[del_index])
+            del result_keys[del_index + 1]
+            result_keys.insert(second_insert_index, result_keys[second_del_index])
+            del result_keys[second_del_index + 1]
+
+            insert_index = insert_index + 24
+            del_index = del_index + 24
+    for key in result_keys:
+        sorted_dict[key] = result[key]
+    return sorted_dict
 
 def populate_per_vp_output_file(network_controller_obj, filename, display_output=False):
     output = False
@@ -1148,10 +1262,14 @@ def populate_per_vp_output_file(network_controller_obj, filename, display_output
         lines = list()
 
         prev_result = network_controller_obj.peek_per_vp_stats()
-        prev_result = remove_entries_per_vp_dict(prev_result)
+        prev_result = get_required_per_vp_result(prev_result)
+        prev_result = get_filtered_dict(output_dict=prev_result)
+        prev_result = get_sorted_dict(prev_result)
         fun_test.sleep("Let per vp be grepped", seconds=1)
         result = network_controller_obj.peek_per_vp_stats()
-        result = remove_entries_per_vp_dict(result)
+        result = get_required_per_vp_result(result)
+        result = get_filtered_dict(output_dict=result)
+        result = get_sorted_dict(result)
         master_table_obj = get_per_vp_dict_table_obj(result=result, prev_result=prev_result)
         lines.append("\n########################  %s ########################\n" % str(get_timestamp()))
         lines.append(master_table_obj.get_string())

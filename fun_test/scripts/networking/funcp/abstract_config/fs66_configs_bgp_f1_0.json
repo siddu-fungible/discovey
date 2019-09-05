@@ -4,7 +4,7 @@
     "F1Index" : 1,
     "Interfaces" : [
         {
-            "name" : "fpg4",
+            "name" : "fpg0",
             "mtu": 9000,
             "address" : "3.1.1.2",
             "prefix length" : 24,

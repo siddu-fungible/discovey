@@ -1,138 +1,153 @@
-<!--shows the charts for a particular workspace-->
+<!--shows the data for a particular workspace-->
+<div style="padding: 20px"><span class="pseudo-anchor" (click)="backToWorkspaces()"><< Back to workspaces</span></div>
 <div *ngIf="showWorkspace" class="card card-primary">
   <div class="card-header">
-    <h5 style="text-align: center; margin: 0"><a [routerLink]=""
-                                                    style="font-size:
-      large;
-        float: left" (click)="goBack()">
-      <!--<i class="fa fa-hand-o-left" style="color: black"></i>&nbsp;-->
-      Back</a>
-      <span>{{ workspace.workspace_name }}</span></h5>
-      <a *ngIf="!showGrids" [routerLink]="" (click)="showGrids = true"><i class="fa fa-plus-circle"
-                                                                          style="color: black"></i> Show
-        charts</a>
-  <a *ngIf="showGrids" [routerLink]="" (click)="showGrids = false"><i class="fa fa-minus-circle"
-                                                                          style="color: black"></i> Hide charts</a> | <button
-    *ngIf="workspace.interested_metrics.length > 0" class="btn btn-sm btn-outline-dark"
-    (click)="generateReport()">Generate
-    report</button>
+    <h5 class="card-title" style="margin: 0;">{{ workspace.workspace_name }}</h5>
+    <ul class="nav nav-tabs card-header-tabs" role="tablist">
+      <li *ngIf="workspace.interested_metrics.length > 0" class="nav-item">
+        <span class="nav-link pseudo-anchor"
+              role="tab" *ngIf="!showGrids"
+              (click)="showCharts()">Show charts</span>
+        <span class="nav-link active pseudo-anchor" role="tab"
+              *ngIf="showGrids"
+              (click)="showGrids = false">Hide charts</span>
+      </li>
+      <li *ngIf="workspace.interested_metrics.length > 0" class="nav-item">
+        <span class="nav-link pseudo-anchor"
+                    role="tab" *ngIf="!reportGenerated"
+                    (click)="generateReport()">Show report
+        </span>
+        <span class="nav-link active pseudo-anchor" role="tab"
+              *ngIf="reportGenerated"
+              (click)="reportGenerated = false">Hide report
+        </span>
+      </li>
+      <li *ngIf="workspaceMetrics.length > 0" class="nav-item">
+        <span class="nav-link pseudo-anchor"
+                    role="tab" *ngIf="!showDag"
+                    (click)="viewDag()">View unattached DAG
+        </span>
+        <span class="nav-link active pseudo-anchor" role="tab"
+              *ngIf="showDag"
+              (click)="showDag = false">Hide unattached DAG
+        </span>
+      </li>
+    </ul>
   </div>
-  <div class="card-body flex-container">
-    <div class="card" style="flex: 1 1 50%; padding: 10px;">
-      <table style="width: 100%">
-        <tr style="vertical-align: top">
-          <th style="width: 30%">
-            Chart name
-          </th>
-          <th style="width: 10%">
-            Track
-          </th>
-          <th style="width: 10%">
-            Subscribe to alerts
-          </th>
-          <th style="width: 10%">
-            Yesterday's score
-          </th>
-          <th style="width: 10%">
-            Today's score
-          </th>
-          <th style="width: 30%">
-            Lineage
-          </th>
-        </tr>
-        <tr *ngFor="let metric of workspace.interested_metrics">
-          <td>
-            <a [ngClass]="{highlight:metric.selected}" [routerLink]="" (click)="openChartTable(metric)">{{
-              metric['chart_name'] }}</a>
-          </td>
-          <td>
-            <app-toggle-button [checked]="metric['track']" [disabled]="true"
-            ></app-toggle-button>
-          </td>
-          <td>
-            <app-toggle-button [checked]="metric['subscribe']" [disabled]="true"
-            ></app-toggle-button>
-          </td>
-          <td>
-            {{ metric["penultimate_good_score"] }}
-          </td>
-          <td>
-            {{ metric["last_good_score"] }}
-          </td>
-          <td>
-            {{ metric["lineage"] }}
-          </td>
-        </tr>
-      </table>
-    </div>
+  <div *ngIf="!reportGenerated && !showGrids && !showDag && workspace.interested_metrics.length > 0" class="card-body">
+    <app-performance [selectMode]="selectMode.ShowViewWorkspace" [metricIds]="interestedMetrics"></app-performance>
+    <!--<app-performance [selectMode]="selectMode" [metricIds]="workspaceMetrics"></app-performance>-->
+    <!--showing list of charts in the workspace-->
+    <!--<div class="card" style="flex: 1 1 50%; padding: 10px;">-->
+      <!--<table style="width: 100%">-->
+        <!--<tr style="vertical-align: top">-->
+          <!--<th style="width: 30%">-->
+            <!--Chart name-->
+          <!--</th>-->
+          <!--&lt;!&ndash;<th style="width: 10%">&ndash;&gt;-->
+          <!--&lt;!&ndash;Track&ndash;&gt;-->
+          <!--&lt;!&ndash;</th>&ndash;&gt;-->
+          <!--&lt;!&ndash;<th style="width: 10%">&ndash;&gt;-->
+          <!--&lt;!&ndash;Subscribe to alerts&ndash;&gt;-->
+          <!--&lt;!&ndash;</th>&ndash;&gt;-->
+          <!--<th style="width: 10%">-->
+            <!--Yesterday's score-->
+          <!--</th>-->
+          <!--<th style="width: 10%">-->
+            <!--Today's score-->
+          <!--</th>-->
+          <!--<th style="width: 30%">-->
+            <!--Lineage-->
+          <!--</th>-->
+        <!--</tr>-->
+        <!--<tr *ngFor="let metric of workspace.interested_metrics">-->
+          <!--<td>-->
+            <!--<span class="pseudo-anchor" [ngClass]="{highlight:metric.selected}" (click)="openChartTable(metric)">{{-->
+              <!--metric['chart_name'] }}</span>-->
+          <!--</td>-->
+          <!--&lt;!&ndash;<td>&ndash;&gt;-->
+          <!--&lt;!&ndash;<app-toggle-button [checked]="metric['track']" [disabled]="true"&ndash;&gt;-->
+          <!--&lt;!&ndash;&gt;</app-toggle-button>&ndash;&gt;-->
+          <!--&lt;!&ndash;</td>&ndash;&gt;-->
+          <!--&lt;!&ndash;<td>&ndash;&gt;-->
+          <!--&lt;!&ndash;<app-toggle-button [checked]="metric['subscribe']" [disabled]="true"&ndash;&gt;-->
+          <!--&lt;!&ndash;&gt;</app-toggle-button>&ndash;&gt;-->
+          <!--&lt;!&ndash;</td>&ndash;&gt;-->
+          <!--<td>-->
+            <!--{{ metric["penultimate_good_score"] }}-->
+          <!--</td>-->
+          <!--<td>-->
+            <!--{{ metric["last_good_score"] }}-->
+          <!--</td>-->
+          <!--<td>-->
+            <!--{{ metric["lineage"] }}-->
+          <!--</td>-->
+        <!--</tr>-->
+      <!--</table>-->
+    <!--</div>-->
 
-    <fun-spinner [status]="status"></fun-spinner>
-    <div *ngIf="showChartTable" class="card" style="flex: 1 1 50%; vertical-align: top; padding: 10px;">
-      <span><b>Chart name: </b>{{ currentChart.chart_name }}
-      <a style="float: right" [routerLink]="" (click)="closeChartTable()">Close</a></span>
-      <table style="width: 100%">
-        <tr>
-          <th style="width: 30%">
-            Name
-          </th>
-          <th style="width: 20%">
-            Yesterday
-          </th>
-          <th style="width: 20%">
-            Today
-          </th>
-          <th style="width: 10%">
-            Percentage
-          </th>
-          <th style="width: 10%">
-            Unit
-          </th>
-        </tr>
-        <tr *ngFor="let oneData of currentChart.data">
-          <td>
-            {{ oneData.name }}
-          </td>
-          <td>
-            {{ oneData.yesterday }}
-          </td>
-          <td>
-            {{ oneData.today }}
-          </td>
-          <td *ngIf="oneData.percentage"
-            [ngClass]="{'text-red': oneData.percentage.includes('-'), 'text-green': oneData.percentage.includes('+')}">
-            {{ oneData.percentage }}
-          </td>
-          <td>
-            {{ oneData.unit }}
-          </td>
-        </tr>
-      </table>
-    </div>
+    <!--<fun-spinner [status]="status"></fun-spinner>-->
+    <!--showing chart report in the right on the workspace-->
+    <!--<div *ngIf="showChartTable" class="card" style="flex: 1 1 50%; vertical-align: top; padding: 10px;">-->
+      <!--<span><b>Chart name: </b>{{ currentChart.chart_name }}-->
+      <!--<span class="pseudo-anchor" style="float: right" (click)="closeChartTable()">Close</span></span>-->
+      <!--<table style="width: 100%">-->
+        <!--<tr style="border-bottom: solid black 1px">-->
+          <!--<th style="width: 30%">-->
+            <!--Name-->
+          <!--</th>-->
+          <!--<th style="width: 20%">-->
+            <!--Yesterday <br><span style="font-size: smaller">{{ currentChart.data[0].yesterdayDate }}</span>-->
+          <!--</th>-->
+          <!--<th style="width: 20%">-->
+            <!--Today <br><span style="font-size: smaller">{{ currentChart.data[0].todayDate }}</span>-->
+          <!--</th>-->
+          <!--<th style="width: 10%">-->
+            <!--Percentage change-->
+          <!--</th>-->
+          <!--<th style="width: 10%">-->
+            <!--Unit-->
+          <!--</th>-->
+        <!--</tr>-->
+        <!--<tr *ngFor="let oneData of currentChart.data">-->
+          <!--<td>-->
+            <!--{{ oneData.name }}-->
+          <!--</td>-->
+          <!--<td>-->
+            <!--{{ oneData.yesterday }}-->
+          <!--</td>-->
+          <!--<td>-->
+            <!--{{ oneData.today }}-->
+          <!--</td>-->
+          <!--<td *ngIf="oneData.percentage && currentChart.positive"-->
+              <!--[ngClass]="{'text-red': oneData.percentage.includes('-'), 'text-green': oneData.percentage.includes('+')}">-->
+            <!--{{ oneData.percentage }}-->
+          <!--</td>-->
+          <!--<td *ngIf="oneData.percentage && !currentChart.positive"-->
+              <!--[ngClass]="{'text-green': oneData.percentage.includes('-'), 'text-red': oneData.percentage.includes('+')}">-->
+            <!--{{ oneData.percentage }}-->
+          <!--</td>-->
+          <!--<td>-->
+            <!--{{ oneData.unit }}-->
+          <!--</td>-->
+        <!--</tr>-->
+      <!--</table>-->
+    <!--</div>-->
   </div>
-  <div *ngIf="showGrids" class="flex-container">
-    <ng-container *ngFor="let row of workspace.interested_metrics">
-      <div style="flex: 0 0 45%; padding-bottom: 10px;">
-        <table align="center">
-          <tr>
-            <td>
-              <b>Lineage:</b>
-            </td>
-            <td>
-              {{ row['lineage'] }}
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <b>Score:</b>
-            </td>
-            <td>
-              {{ row['last_good_score'] }}
-            </td>
-          </tr>
-        </table>
-        <fun-metric-chart [id]="row['metric_id']" [minimal]="'true'" [buildInfo]="buildInfo"></fun-metric-chart>
-      </div>
-    </ng-container>
-    <div class="closed-section"></div>
-  </div>
+
+  <!--showing reports in the workspace-->
+  <ng-container class="card-body tab-pane" role="tabpanel" *ngIf="reportGenerated">
+    <performance-show-report [workspace]="workspace" [email]="email" [subject]="subject"
+                             (reportGenerated)="reportGenerated = false"></performance-show-report>
+  </ng-container>
+
+  <!--showing charts in the workspace-->
+  <ng-container class="card-body tab-pane" role="tabpanel" *ngIf="showGrids">
+    <performance-show-charts [workspace]="workspace" [buildInfo]="buildInfo"></performance-show-charts>
+  </ng-container>
+
+  <!--showing dag in the view dag of workspace-->
+  <ng-container class="card-body tab-pane" role="tabpanel" *ngIf="showDag && workspaceMetrics.length > 0">
+   <app-performance [selectMode]="selectMode.ShowAttachDag" [metricIds]="workspaceMetrics"></app-performance>
+  </ng-container>
 </div>

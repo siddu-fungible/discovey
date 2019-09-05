@@ -80,6 +80,11 @@ import { SuiteEditorComponent } from './regression/suite-editor/suite-editor.com
 import {ModalModule} from "ngb-modal";
 import { UlErrorPanelComponent } from './ui-elements/ul-error-panel/ul-error-panel.component';
 import { AnnouncementFormComponent } from './performance/admin/announcement-form/announcement-form.component';
+import { MessagesPanelComponent } from './ui-elements/messages-panel/messages-panel.component';
+import { PerformanceShowChartsWorkspaceComponent } from './performance/performance-workspace/performance-view-workspace/performance-show-charts-workspace/performance-show-charts-workspace.component';
+import { PerformanceShowReportWorkspaceComponent } from './performance/performance-workspace/performance-view-workspace/performance-show-report-workspace/performance-show-report-workspace.component';
+import { TextareaInputComponent } from './ui-elements/textarea-input/textarea-input.component';
+import { SuitesViewComponent } from './regression/suite-editor/suites-view/suites-view.component';
 
 
 @NgModule({
@@ -143,7 +148,12 @@ import { AnnouncementFormComponent } from './performance/admin/announcement-form
     SuiteExecutionWidgetComponent,
     SuiteEditorComponent,
     UlErrorPanelComponent,
-    AnnouncementFormComponent
+    AnnouncementFormComponent,
+    MessagesPanelComponent,
+    PerformanceShowChartsWorkspaceComponent,
+    PerformanceShowReportWorkspaceComponent,
+    TextareaInputComponent,
+    SuitesViewComponent
   ],
   imports: [
     BsDropdownModule,

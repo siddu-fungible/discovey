@@ -14,6 +14,8 @@ from datetime import datetime
 import re
 import os
 
+ERROR_REGEXES = ["MUD_MCI_NON_FATAL_INTR_STAT"]
+
 """
 Possible workarounds:
     "workarounds": {
@@ -27,6 +29,7 @@ Possible workarounds:
 class BootPhases:
     U_BOOT_INIT = "u-boot: init"
     U_BOOT_MICROCOM_STARTED = "u-boot: microcom started"
+    U_BOOT_SET_NO_AUTOLOAD = "u-boot: setenv autoload no"
     U_BOOT_TRAIN = "u-boot: train"
     U_BOOT_SET_ETH_ADDR = "u-boot: set ethaddr"
     U_BOOT_SET_GATEWAY_IP = "u-boot: set gatewayip"
@@ -42,6 +45,7 @@ class BootPhases:
     FS_BRING_UP_FUNETH_UNLOAD_COME_POWER_CYCLE = "FS_BRING_UP_FUNETH_UNLOAD_COME_POWER_CYCLE"
     FS_BRING_UP_BMC_INITIALIZE = "FS_BRING_UP_BMC_INITIALIZE"
     FS_BRING_UP_FPGA_INITIALIZE = "FS_BRING_UP_FPGA_INITIALIZE"
+    FS_BRING_UP_RESET_F1 = "FS_BRING_UP_RESET_F1"
     FS_BRING_UP_U_BOOT = "FS_BRING_UP_U_BOOT"
     FS_BRING_UP_U_BOOT_COMPLETE = "FS_BRING_UP_U_BOOT_COMPLETE"
     FS_BRING_UP_COME_REBOOT_INITIATE = "FS_BRING_UP_COME_REBOOT_INITIATE"
@@ -68,7 +72,7 @@ class Fpga(Linux):
             if f1_index == self.disable_f1_index:
                 continue
             self.reset_f1(f1_index=f1_index)
-        fun_test.sleep(message="FPGA reset", seconds=5, context=self.context)
+        # fun_test.sleep(message="FPGA reset", seconds=5, context=self.context)
 
         result = True
         return result
@@ -242,34 +246,78 @@ class Bmc(Linux):
                     huid = 2
                 s += " cc_huid={}".format(huid)
         return s
-    def setup_serial_proxy_connection(self, f1_index):
+
+    def setup_serial_proxy_connection(self, f1_index, auto_boot=False):
         self.nc[f1_index] = Netcat(ip=self.host_ip, port=self.SERIAL_PROXY_PORTS[f1_index])
         nc = self.nc[f1_index]
-        fun_test.execute_thread_after(0, nc.read_until, expected_data=self.U_BOOT_F1_PROMPT, timeout=20)
+        write_on_trigger = None
+        if not auto_boot:
+            write_on_trigger = {"Autoboot in": "noboot"}
+        fun_test.execute_thread_after(0, nc.read_until, expected_data=self.U_BOOT_F1_PROMPT, timeout=20, write_on_trigger=write_on_trigger)
         # output = nc.read_until(expected_data=self.U_BOOT_F1_PROMPT, timeout=2)
         # fun_test.log(message=output, context=self.context)
 
         return True
 
-    def validate_u_boot_version(self, f1_index, minimum_date):
-        result = False
+    def get_preamble(self, f1_index):
         nc = self.nc[f1_index]
-        nc.stop_reading()
         fun_test.sleep("Reading preamble")
+        nc.stop_reading()
         output = nc.get_buffer()
         fun_test.log(message=output, context=self.context)
+        return output
 
+    def validate_u_boot_version(self, output, minimum_date):
+        result = False
         m = re.search("U-Boot\s+\S+\s+\((.*)\s+-", output)  # Based on U-Boot 2017.01-00000-bld_6654 (May 29 2019 - 05:38:02 +0000)
         if m:
             try:
                 this_date = datetime.strptime(m.group(1), "%b %d %Y")
                 fun_test.add_checkpoint("u-boot date: {}".format(this_date))
-                fun_test.log("Mininum u-boot build date: {}".format(minimum_date))
+                fun_test.log("Minimum u-boot build date: {}".format(minimum_date))
                 fun_test.test_assert(this_date >= minimum_date, "Valid u-boot build date")
                 result = True
             except Exception as ex:
                 fun_test.critical("Unable to parse u-boot build date")
         return result
+
+    def reset_f1(self, f1_index=0, keep_low=False):
+        # Workaround for cases where autoboot is enabled, but we want to do tftpboot
+        """
+        gpiotool $F1_RESET_0 --set-dir-output &>/dev/null
+        gpiotool $F1_RESET_1 --set-dir-output &>/dev/null
+
+        if [ $RESET -eq 0 ]; then
+            printf "F1 reset: 0\n"
+            gpiotool $F1_RESET_0 --set-data-low &>/dev/null
+            gpiotool $F1_RESET_1 --set-data-low &>/dev/null
+        fi
+
+        if [ $RESET -eq 1 ]; then
+            printf "F1 reset: 1\n"
+            gpiotool $F1_RESET_0 --set-data-high &>/dev/null
+            sleep 5
+            gpiotool $F1_RESET_1 --set-data-high &>/dev/null
+        fi
+
+        :param f1_index:
+        :return:
+        """
+        gpio_pin = 149
+        if f1_index == 1:
+            gpio_pin = 150
+
+        gpio_command = "gpiotool {} --set-dir-output &>/dev/null".format(gpio_pin)
+        self.command(gpio_command)
+        gpio_command = "gpiotool {} --set-data-low &>/dev/null".format(gpio_pin)
+        self.command(gpio_command)
+        fun_test.sleep("After F1 reset")
+        if not keep_low:
+            gpio_command = "gpiotool {} --set-dir-output &>/dev/null".format(gpio_pin)
+            self.command(gpio_command)
+            gpio_command = "gpiotool {} --set-data-high &>/dev/null".format(gpio_pin)
+            self.command(gpio_command)
+            fun_test.sleep("After removing F1 reset")
 
     def u_boot_load_image(self,
                           index,
@@ -281,7 +329,12 @@ class Bmc(Linux):
         result = None
 
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_INIT)
+        self.u_boot_command(command="",
+                            timeout=5,
+                            expected=self.U_BOOT_F1_PROMPT,
+                            f1_index=index)
 
+        self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_SET_NO_AUTOLOAD)
         self.u_boot_command(command="setenv autoload no",
                             timeout=15,
                             expected=self.U_BOOT_F1_PROMPT,
@@ -335,11 +388,11 @@ class Bmc(Linux):
 
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_ELF)
         output = self.u_boot_command(command="bootelf -p {}".format(self.ELF_ADDRESS), timeout=80, f1_index=index, expected="CRIT hw_hsu_test \"this space intentionally left blank.\"")
-        m = re.search(r'Version=(\S+), Branch=(\S+)', output)
+        m = re.search(r'FunSDK Version=(\S+), ', output) # Branch=(\S+)', output)
         if m:
             version = m.group(1)
-            branch = m.group(2)
-            fun_test.add_checkpoint(checkpoint="Version: {}, branch: {}".format(version, branch), context=self.context)
+            # branch = m.group(2)
+            fun_test.add_checkpoint(checkpoint="SDK Version: {}".format(version), context=self.context)
             fun_test.set_version(version=version.replace("bld_", ""))
 
         sections = ['Welcome to FunOS', 'NETWORK_START', 'DPC_SERVER_STARTED', 'PCI_STARTED']
@@ -482,12 +535,32 @@ class Bmc(Linux):
                     content = f.read()
                     f.seek(0, 0)
                     f.write(self.u_boot_logs[f1_index] + '\n' + content)
-
+                self.post_process_uart_log(f1_index=f1_index, file_name=artifact_file_name)
                 fun_test.add_auxillary_file(description=self._get_context_prefix("F1_{} UART log").format(f1_index),
                                             filename=artifact_file_name)
         if self.context:
             fun_test.add_auxillary_file(description=self._get_context_prefix("bringup"),
                                         filename=self.context.output_file_path)
+
+
+    def post_process_uart_log(self, f1_index, file_name):
+        try:
+            fun_test.log("Post-processing UART log F1: {}".format(f1_index))
+            regex = ""
+            for error_regex in ERROR_REGEXES:
+                regex += "{}|".format(error_regex)
+            regex = regex.rstrip("|")
+            with open(file_name, "r") as f:
+                content = f.read()
+                m = re.search(regex, content)
+                if m:
+                    full_match = m.group(0)
+                    fun_test.critical("ERROR Regex matched: {}".format(full_match))
+                    error_message = "Regression: ERROR REGEX Matched: {} Job-ID: {} F1_{} Context: {}".format(full_match, fun_test.get_suite_execution_id(), f1_index, self._get_context_prefix(data="error"))
+                    fun_test.send_mail(subject=error_message, content=error_message)
+
+        except Exception as ex:
+            fun_test.critical(ex)
 
 
     def get_f1_device_paths(self):
@@ -527,6 +600,7 @@ class BootupWorker(Thread):
     def run(self):
         fs = self.fs
         bmc = self.fs.get_bmc()
+        fpga = self.fs.get_fpga()
         try:
             fs.set_boot_phase(BootPhases.FS_BRING_UP_BMC_INITIALIZE)
             fun_test.test_assert(expression=fs.bmc_initialize(), message="BMC initialize", context=self.context)
@@ -540,26 +614,28 @@ class BootupWorker(Thread):
                 fs.set_boot_phase(BootPhases.FS_BRING_UP_FUNETH_UNLOAD_COME_POWER_CYCLE)
                 fun_test.test_assert(expression=fs.funeth_reset(), message="Funeth ComE power-cycle ref: IN-373")
 
-            for f1_index, f1 in fs.f1s.iteritems():
-                fun_test.test_assert(bmc.setup_serial_proxy_connection(f1_index=f1_index),
-                                     "Setup nc serial proxy connection")
-
-            fs.set_boot_phase(BootPhases.FS_BRING_UP_FPGA_INITIALIZE)
-            fun_test.test_assert(expression=fs.fpga_initialize(), message="FPGA initiaize", context=self.context)
-
             fs.set_boot_phase(BootPhases.FS_BRING_UP_U_BOOT)
             for f1_index, f1 in fs.f1s.iteritems():
                 if f1_index == fs.disable_f1_index:
                     continue
                 boot_args = fs.boot_args
+                fun_test.test_assert(bmc.setup_serial_proxy_connection(f1_index=f1_index, auto_boot=self.fs.auto_boot),
+                                     "Setup nc serial proxy connection")
+                if fpga:
+                    fpga.reset_f1(f1_index=f1_index)
+                else:
+                    fs.get_bmc().reset_f1(f1_index=f1_index)
                 if fs.f1_parameters:
                     if f1_index in fs.f1_parameters:
                         if "boot_args" in fs.f1_parameters[f1_index]:
                             boot_args = fs.f1_parameters[f1_index]["boot_args"]
+
+                preamble = bmc.get_preamble(f1_index=f1_index)
                 if fs.validate_u_boot_version:
                     fun_test.test_assert(
-                        bmc.validate_u_boot_version(f1_index=f1_index, minimum_date=fs.MIN_U_BOOT_DATE),
+                        bmc.validate_u_boot_version(output=preamble, minimum_date=fs.MIN_U_BOOT_DATE),
                         "Validate preamble")
+
                 fun_test.test_assert(
                     expression=bmc.u_boot_load_image(index=f1_index, tftp_image_path=fs.tftp_image_path,
                                                           boot_args=boot_args, gateway_ip=fs.gateway_ip),
@@ -585,7 +661,8 @@ class BootupWorker(Thread):
             try:
                 fs.get_bmc().disconnect()
                 fun_test.log(message="BMC disconnect", context=self.context)
-                fs.get_fpga().disconnect()
+                if fpga:
+                    fpga.disconnect()
                 fs.get_come().disconnect()
             except:
                 pass
@@ -644,6 +721,8 @@ class ComE(Linux):
     HBM_TOOL_DIRECTORY = "/home/fun/hbm_dump_tool"
     HBM_TOOL = "hbm_dump_pcie"
 
+    MAX_HBM_DUMPS = 200
+
     def __init__(self, **kwargs):
         super(ComE, self).__init__(**kwargs)
         self.original_context_description = None
@@ -665,7 +744,7 @@ class ComE(Linux):
         fun_test.test_assert(expression=self.is_dpc_ready(), message="DPC ready", context=self.context)
         self.hbm_dump_enabled = fun_test.get_job_environment_variable("hbm_dump")
         if self.hbm_dump_enabled:
-            self.setup_hbm_tools()
+            fun_test.test_assert(self.setup_hbm_tools(), "HBM tools and dump directory ready")
 
         return True
 
@@ -702,7 +781,9 @@ class ComE(Linux):
         artifact_file_name = "{}/{}".format(self.HBM_DUMP_DIRECTORY, self._get_context_prefix(os.path.basename(artifact_file_name)))
         if funq_bind_device:
             pass
-        command = "{}/{} -a 0x100000 -s 0x40000000 -b /sys/bus/pci/devices/0000:0{}:00.2/resource2 -f -o {}".format(self.HBM_TOOL_DIRECTORY, self.HBM_TOOL, bus_number, artifact_file_name)
+        resource_path = "/sys/bus/pci/devices/0000:0{}:00.2/resource2".format(bus_number)
+        self.sudo_command("ls -ltr {}".format(resource_path))
+        command = "{}/{} -a 0x100000 -s 0x40000000 -b {} -f -o {}".format(self.HBM_TOOL_DIRECTORY, self.HBM_TOOL, resource_path, artifact_file_name)
         self.sudo_command(command, timeout=10 * 60)
         fun_test.test_assert(self.list_files(artifact_file_name), "HBM dump file created")
         tar_artifact_file_name = artifact_file_name + ".tgz"
@@ -722,8 +803,11 @@ class ComE(Linux):
         fun_test.scp(source_file_path=tool_path, target_ip=self.host_ip, target_username=self.ssh_username, target_password=self.ssh_password, target_file_path=target_file_path)
         fun_test.simple_assert(self.list_files(target_file_path), "HBM tool copied")
         self.command("mkdir -p {}".format(self.HBM_DUMP_DIRECTORY))
-        self.sudo_command("rm -rf {}/*hbm_dump*txt".format(self.HBM_DUMP_DIRECTORY))
-
+        tgzs = "{}/*tgz".format(self.HBM_DUMP_DIRECTORY)
+        num_tgzs = len(self.list_files(tgzs))
+        fun_test.simple_assert(num_tgzs < self.MAX_HBM_DUMPS, "Only {} dump tgzs are allowed. Please delete a few old ones".format(self.MAX_HBM_DUMPS))
+        # self.sudo_command("rm -rf {}/*hbm_dump*txt".format(self.HBM_DUMP_DIRECTORY))
+        return True
 
     def setup_tools(self):
         if not self.command_exists("fio"):
@@ -835,9 +919,12 @@ class ComE(Linux):
             if f1_index == self.disable_f1_index:
                 continue
 
-            if self.hbm_dump_enabled:
-                self.hbm_dump(f1_index=f1_index)
+            try:
+                if self.hbm_dump_enabled:
+                    self.hbm_dump(f1_index=f1_index)
 
+            except Exception as ex:
+                fun_test.critical(str(ex))
             artifact_file_name = fun_test.get_test_case_artifact_file_name(self._get_context_prefix("f1_{}_dpc_log.txt".format(f1_index)))
             fun_test.scp(source_file_path=self.get_dpc_log_path(f1_index=f1_index), source_ip=self.host_ip, source_password=self.ssh_password, source_username=self.ssh_username, target_file_path=artifact_file_name)
             fun_test.add_auxillary_file(description=self._get_context_prefix("F1_{} DPC Log").format(f1_index),
@@ -909,7 +996,8 @@ class Fs(object, ToDictMixin):
                  apc_info=None,
                  fun_cp_callback=None,
                  skip_funeth_come_power_cycle=None,
-                 spec=None):
+                 spec=None,
+                 auto_boot=False):
         self.spec = spec
         self.bmc_mgmt_ip = bmc_mgmt_ip
         self.bmc_mgmt_ssh_username = bmc_mgmt_ssh_username
@@ -952,6 +1040,7 @@ class Fs(object, ToDictMixin):
         self.come_initialized = False
 
         self.csi_perf_templates = {}
+        self.auto_boot = auto_boot
 
     def get_tftp_image_path(self):
         return self.tftp_image_path
@@ -976,7 +1065,9 @@ class Fs(object, ToDictMixin):
     def post_bootup(self):
         self.get_bmc().reset_context()
         self.get_come().reset_context()
-        self.get_fpga().reset_context()
+        fpga = self.get_fpga()
+        if fpga:
+            fpga.reset_context()
         self.reset_context()
 
     def reset_context(self):
@@ -1002,8 +1093,10 @@ class Fs(object, ToDictMixin):
         try:
             self.get_bmc().disconnect()
             fun_test.log(message="BMC disconnect", context=self.context)
-            self.get_fpga().disconnect()
-            fun_test.log(message="FPGA disconnect", context=self.context)
+            fpga = self.get_fpga()
+            if fpga:
+                fpga.disconnect()
+                fun_test.log(message="FPGA disconnect", context=self.context)
             self.get_come().disconnect()
             fun_test.log(message="ComE disconnect", context=self.context)
         except:
@@ -1031,7 +1124,8 @@ class Fs(object, ToDictMixin):
             setup_bmc_support_files=None,
             fun_cp_callback=None,
             power_cycle_come=False,
-            already_deployed=False):  #TODO
+            already_deployed=False,
+            skip_funeth_come_power_cycle=None):  #TODO
         if not fs_spec:
             am = fun_test.get_asset_manager()
             test_bed_type = fun_test.get_job_environment_variable("test_bed_type")
@@ -1058,7 +1152,8 @@ class Fs(object, ToDictMixin):
         gateway_ip = fs_spec.get("gateway_ip", None)
         workarounds = fs_spec.get("workarounds", {})
         retimer_workaround = workarounds.get("retimer_workaround", None)
-        skip_funeth_come_power_cycle = workarounds.get("skip_funeth_come_power_cycle", None)
+        skip_funeth_come_power_cycle = skip_funeth_come_power_cycle or workarounds.get("skip_funeth_come_power_cycle", None)
+
         apc_info = fs_spec.get("apc_info", None)  # Used for power-cycling the entire FS
         return Fs(bmc_mgmt_ip=bmc_spec["mgmt_ip"],
                   bmc_mgmt_ssh_username=bmc_spec["mgmt_ssh_username"],
@@ -1086,6 +1181,7 @@ class Fs(object, ToDictMixin):
                   spec=fs_spec)
 
     def bootup(self, reboot_bmc=False, power_cycle_come=True, non_blocking=False, threaded=False):
+        fpga = self.get_fpga()
         if not threaded:
 
             self.set_boot_phase(BootPhases.FS_BRING_UP_BMC_INITIALIZE)
@@ -1101,14 +1197,7 @@ class Fs(object, ToDictMixin):
             if not self.skip_funeth_come_power_cycle:
                 self.set_boot_phase(BootPhases.FS_BRING_UP_FUNETH_UNLOAD_COME_POWER_CYCLE)
                 fun_test.test_assert(expression=self.funeth_reset(), message="Funeth ComE power-cycle ref: IN-373")
-    
-            for f1_index, f1 in self.f1s.iteritems():
-                fun_test.test_assert(self.bmc.setup_serial_proxy_connection(f1_index=f1_index),
-                                     "Setup nc serial proxy connection")
-    
-            self.set_boot_phase(BootPhases.FS_BRING_UP_FPGA_INITIALIZE)
-            fun_test.test_assert(expression=self.fpga_initialize(), message="FPGA initiaize", context=self.context)
-    
+
             self.set_boot_phase(BootPhases.FS_BRING_UP_U_BOOT)
             for f1_index, f1 in self.f1s.iteritems():
                 if f1_index == self.disable_f1_index:
@@ -1118,8 +1207,19 @@ class Fs(object, ToDictMixin):
                     if f1_index in self.f1_parameters:
                         if "boot_args" in self.f1_parameters[f1_index]:
                             boot_args = self.f1_parameters[f1_index]["boot_args"]
+                fun_test.test_assert(self.get_bmc().setup_serial_proxy_connection(f1_index=f1_index, auto_boot=self.auto_boot),
+                                     "Setup nc serial proxy connection")
+
+                self.set_boot_phase(BootPhases.FS_BRING_UP_RESET_F1)
+                if fpga:
+                    fpga.reset_f1(f1_index=f1_index)
+                else:
+                    bmc = self.get_bmc()
+                    bmc.reset_f1(f1_index=f1_index)
+                preamble = self.get_bmc().get_preamble(f1_index=f1_index)
                 if self.validate_u_boot_version:
-                    fun_test.test_assert(self.bmc.validate_u_boot_version(f1_index=f1_index, minimum_date=self.MIN_U_BOOT_DATE), "Validate preamble")
+                    fun_test.test_assert(self.bmc.validate_u_boot_version(output=preamble, minimum_date=self.MIN_U_BOOT_DATE), "Validate preamble")
+
                 fun_test.test_assert(expression=self.bmc.u_boot_load_image(index=f1_index, tftp_image_path=self.tftp_image_path, boot_args=boot_args, gateway_ip=self.gateway_ip),
                                      message="U-Bootup f1: {} complete".format(f1_index),
                                      context=self.context)
@@ -1155,7 +1255,8 @@ class Fs(object, ToDictMixin):
             try:
                 self.get_bmc().disconnect()
                 fun_test.log(message="BMC disconnect", context=self.context)
-                self.get_fpga().disconnect()
+                if fpga:
+                    fpga.disconnect()
                 self.get_come().disconnect()
             except:
                 pass
@@ -1207,17 +1308,18 @@ class Fs(object, ToDictMixin):
 
     def funeth_reset(self):
         fpga = self.get_fpga()
-
+        bmc = self.get_bmc()
         for f1_index, f1 in self.f1s.iteritems():
-            fpga.reset_f1(f1_index=f1_index, keep_low=True)
+            if fpga:
+                fpga.reset_f1(f1_index=f1_index, keep_low=True)
+            else:
+                bmc.reset_f1(f1_index=f1_index, keep_low=True)
         fun_test.add_checkpoint("Reset and hold F1")
 
-        bmc = self.get_bmc()
         fun_test.test_assert(bmc.come_power_cycle(), "Trigger ComE power-cycle")
         come = self.get_come()
         fun_test.test_assert(come.ensure_host_is_up(max_wait_time=300), "Ensure ComE is up")
         return True
-
 
     def get_bmc(self, disable_f1_index=None):
         if not self.bmc:
@@ -1233,12 +1335,13 @@ class Fs(object, ToDictMixin):
 
     def get_fpga(self):
         if not self.fpga:
-            self.fpga = Fpga(host_ip=self.fpga_mgmt_ip,
-                             ssh_username=self.fpga_mgmt_ssh_username,
-                             ssh_password=self.fpga_mgmt_ssh_password,
-                             set_term_settings=True,
-                             disable_f1_index=self.disable_f1_index,
-                             context=self.context)
+            if self.fpga_mgmt_ip:
+                self.fpga = Fpga(host_ip=self.fpga_mgmt_ip,
+                                 ssh_username=self.fpga_mgmt_ssh_username,
+                                 ssh_password=self.fpga_mgmt_ssh_password,
+                                 set_term_settings=True,
+                                 disable_f1_index=self.disable_f1_index,
+                                 context=self.context)
         return self.fpga
 
     def get_come(self):
@@ -1340,8 +1443,10 @@ class Fs(object, ToDictMixin):
             apc_pdu.disconnect()
         except:
             pass
-        fun_test.test_assert(expression=self.get_fpga().ensure_host_is_up(max_wait_time=120),
-                             context=self.context, message="FPGA reachable after APC power-cycle")
+        fpga = self.get_fpga()
+        if fpga:
+            fun_test.test_assert(expression=self.get_fpga().ensure_host_is_up(max_wait_time=120),
+                                 context=self.context, message="FPGA reachable after APC power-cycle")
         fun_test.test_assert(expression=self.get_bmc().ensure_host_is_up(max_wait_time=120),
                              context=self.context, message="BMC reachable after APC power-cycle")
         fun_test.test_assert(expression=self.get_come().ensure_host_is_up(max_wait_time=120,

@@ -180,7 +180,7 @@ class MyScript(FunTestScript):
                 SOAK_DMA_MEMCPY_NON_COH, SOAK_DMA_MEMSET, RCNVME_READ, RCNVME_RANDOM_READ, RCNVME_WRITE,
                 RCNVME_RANDOM_WRITE, TERAMARK_CRYPTO_SINGLE_TUNNEL, TERAMARK_CRYPTO_MULTI_TUNNEL, RCNVME_READ_ALL,
                 RCNVME_RANDOM_READ_ALL, RCNVME_WRITE_ALL,
-                RCNVME_RANDOM_WRITE_ALL, TLS_1_TUNNEL, TLS_32_TUNNEL, TLS_64_TUNNEL, SOAK_DMA_MEMCPY_THRESHOLD,
+                RCNVME_RANDOM_WRITE_ALL, SOAK_DMA_MEMCPY_THRESHOLD,
                 IPSEC_ENC_SINGLE_TUNNEL, IPSEC_ENC_MULTI_TUNNEL, IPSEC_DEC_MULTI_TUNNEL, IPSEC_DEC_SINGLE_TUNNEL,
                 VOLTEST_LSV, VOLTEST_LSV_4, CHANNEL_PARALL, SOAK_FLOWS_BUSY_LOOP, SOAK_FLOWS_MEMCPY, VOLTEST_BLT_1,
                 VOLTEST_BLT_8, VOLTEST_BLT_12, TERAMARK_EC_S1, TERAMARK_JPEG_S1, TERAMARK_ZIP_S1]
@@ -1029,9 +1029,6 @@ if __name__ == "__main__":
     myscript.add_test_case(RcnvmeRandomReadAllPerformanceTc())
     myscript.add_test_case(RcnvmeWriteAllPerformanceTc())
     myscript.add_test_case(RcnvmeRandomWriteAllPerformanceTc())
-    myscript.add_test_case(JuniperTlsSingleTunnelPerformanceTc())
-    myscript.add_test_case(JuniperTls32TunnelPerformanceTc())
-    myscript.add_test_case(JuniperTls64TunnelPerformanceTc())
     myscript.add_test_case(SoakDmaMemcpyThresholdPerformanceTc())
     myscript.add_test_case(WuLatencyUngatedPerformanceTc())
     myscript.add_test_case(WuLatencyAllocStackPerformanceTc())

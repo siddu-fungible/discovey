@@ -21,6 +21,7 @@ export class JsonInputComponent implements OnInit, ControlValueAccessor {
   @Input() ensureArrayOfNumbers: boolean = false;
   @Output() dataChanged = new EventEmitter<string>();
   @Input() numRows: number = 6; // number of rows for the text-area
+  @Input() disabled: boolean = false;
   data: any = null;
   jsonString: string = null;
   parseError: boolean = false;

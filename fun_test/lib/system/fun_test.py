@@ -19,6 +19,7 @@ from uuid import uuid4
 import getpass
 from threading import Thread
 from inspect import getargspec
+from lib.utilities.send_mail import send_mail
 
 
 class TestException(Exception):
@@ -256,6 +257,7 @@ class FunTest:
         self.topologies = []
         self.hosts = []
         self.closed = False
+        self.enable_profiling()
 
     def report_message(self, message):  # Used only by FunXml only
         if self.fun_xml_obj:
@@ -1176,6 +1178,9 @@ class FunTest:
     def add_auxillary_file(self, description, filename):
         base_name = os.path.basename(filename)
         self.fun_xml_obj.add_auxillary_file(description=description, auxillary_file=base_name)
+
+    def send_mail(self, subject, content, to_addresses=["john.abraham@fungible.com"]):
+        send_mail(to_addresses=to_addresses, subject=subject, content=content)
 
     def scp(self,
             source_file_path,

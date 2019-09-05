@@ -1,6 +1,7 @@
 import os
 import django
 from web.web_global import PRIMARY_SETTINGS_FILE
+
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", PRIMARY_SETTINGS_FILE)
 django.setup()
 import json
@@ -14,11 +15,14 @@ from fun_global import get_localized_time
 from web.fun_test.settings import COMMON_WEB_LOGGER_NAME
 import logging
 from fun_settings import MAIN_WEB_APP
+from collections import OrderedDict
 
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 from datetime import datetime, timedelta
 from web.fun_test.site_state import *
 from web.fun_test.metrics_models import MetricChart, MileStoneMarkers, LastMetricId
+from fun_settings import TEAM_REGRESSION_EMAIL
+
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 
 
@@ -158,23 +162,28 @@ class MetricLib():
 
     def create_chart(self, **kwargs):
         metric_id = LastMetricId.get_next_id()
-        MetricChart(chart_name=kwargs["chart_name"],
-                    metric_id=metric_id,
-                    internal_chart_name=kwargs["internal_chart_name"],
-                    data_sets=json.dumps(kwargs["data_sets"]),
-                    leaf=True,
-                    description=kwargs["description"],
-                    owner_info=kwargs["owner_info"],
-                    source=kwargs["source"],
-                    positive=kwargs["positive"],
-                    y1_axis_title=kwargs["y1_axis_title"],
-                    visualization_unit=kwargs["visualization_unit"],
-                    metric_model_name=kwargs["metric_model_name"],
-                    base_line_date=kwargs["base_line_date"],
-                    work_in_progress=False).save()
-        MileStoneMarkers(metric_id=metric_id,
-                         milestone_date=datetime(year=2018, month=9, day=16),
-                         milestone_name="Tape-out").save()
+        chart = MetricChart(chart_name=kwargs["chart_name"],
+                            metric_id=metric_id,
+                            internal_chart_name=kwargs["internal_chart_name"],
+                            data_sets=kwargs["data_sets"],
+                            leaf=kwargs["leaf"],
+                            description=kwargs["description"],
+                            owner_info=kwargs["owner_info"],
+                            source=kwargs["source"],
+                            positive=kwargs["positive"],
+                            y1_axis_title=kwargs["y1_axis_title"],
+                            visualization_unit=kwargs["visualization_unit"],
+                            metric_model_name=kwargs["metric_model_name"],
+                            base_line_date=kwargs["base_line_date"],
+                            work_in_progress=kwargs["work_in_progress"],
+                            children=kwargs["children"],
+                            jira_ids=kwargs["jira_ids"],
+                            platform=kwargs["platform"],
+                            peer_ids=kwargs["peer_ids"],
+                            creator=kwargs["creator"],
+                            workspace_ids=kwargs["workspace_ids"])
+        chart.save()
+        return chart
 
     def set_inputs_data_sets(self, data_sets, **kwargs):
         for data_set in data_sets:
@@ -276,8 +285,78 @@ class MetricLib():
                             print chart.chart_name, jira_id
                             self.delete_jira_info(chart=chart, jira_id=jira_id)
 
+    def create_container(self, chart_name, internal_chart_name, owner_info, source, platform, base_line_date, \
+                         workspace_ids):
+        data_sets = []
+        one_data_set = {}
+        one_data_set["name"] = "Scores"
+        one_data_set["output"] = {"min": 0, "max": 200}
+        data_sets.append(one_data_set)
+        kwargs = {}
+        kwargs["chart_name"] = chart_name
+        kwargs["internal_chart_name"] = internal_chart_name
+        kwargs["data_sets"] = json.dumps(data_sets)
+        kwargs["leaf"] = False
+        kwargs["description"] = "TBD"
+        kwargs["owner_info"] = owner_info
+        kwargs["source"] = source
+        kwargs["positive"] = True
+        kwargs["y1_axis_title"] = ""
+        kwargs["visualization_unit"] = ""
+        kwargs["metric_model_name"] = "MetricContainer"
+        kwargs["base_line_date"] = base_line_date
+        kwargs["work_in_progress"] = False
+        kwargs["children"] = "[]"
+        kwargs["jira_ids"] = "[]"
+        kwargs["platform"] = platform
+        kwargs["peer_ids"] = "[]"
+        kwargs["creator"] = TEAM_REGRESSION_EMAIL
+        kwargs["workspace_ids"] = workspace_ids
+        return self.create_chart(**kwargs)
+
+    def create_leaf(self, chart_name, internal_chart_name, data_sets, leaf, description, owner_info, source,
+                    positive, y1_axis_title, visualization_unit, metric_model_name, base_line_date,
+                    work_in_progress, children, jira_ids, platform, peer_ids, creator, workspace_ids):
+        kwargs = {}
+        kwargs["chart_name"] = chart_name
+        kwargs["internal_chart_name"] = internal_chart_name
+        kwargs["data_sets"] = json.dumps(data_sets)
+        kwargs["leaf"] = leaf
+        kwargs["description"] = description
+        kwargs["owner_info"] = owner_info
+        kwargs["source"] = source
+        kwargs["positive"] = positive
+        kwargs["y1_axis_title"] = y1_axis_title
+        kwargs["visualization_unit"] = visualization_unit
+        kwargs["metric_model_name"] = metric_model_name
+        kwargs["base_line_date"] = base_line_date
+        kwargs["work_in_progress"] = work_in_progress
+        kwargs["children"] = json.dumps(children)
+        kwargs["jira_ids"] = json.dumps(jira_ids)
+        kwargs["platform"] = platform
+        kwargs["peer_ids"] = json.dumps(peer_ids)
+        kwargs["creator"] = creator
+        kwargs["workspace_ids"] = workspace_ids
+        return self.create_chart(**kwargs)
+
+    def _get_new_dict(self, chart):
+        dict = OrderedDict()
+        dict["name"] = chart.internal_chart_name
+        dict["label"] = chart.chart_name
+        dict["metric_model_name"] = chart.metric_model_name
+        dict["children"] = []
+        return dict
+
+    def get_dict(self, chart):
+        root_dict = self._get_new_dict(chart=chart)
+        children = json.loads(chart.children)
+        for child in children:
+            child_chart = MetricChart.objects.get(metric_id=int(child))
+            child_dict = self.get_dict(chart=child_chart)
+            root_dict["children"].append(child_dict)
+        return root_dict
+
+
 if __name__ == "__main__":
     ml = MetricLib()
     ml.remove_resolved_bugs()
-
-

@@ -179,7 +179,7 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.test_assert(self.topology, "Topology deployed")
 
         # Datetime required for daily Dashboard data filter
-        self.db_log_time = get_data_collection_time(tag="ec_inspur_fs_teramark_single_f1")
+        self.db_log_time = get_data_collection_time(tag="ec_inspur_fs_teramark_multi_f1")
         fun_test.log("Data collection time: {}".format(self.db_log_time))
 
         # Retrieving all Hosts list and filtering required hosts and forming required object lists out of it
@@ -409,6 +409,8 @@ class ECVolumeLevelScript(FunTestScript):
             except Exception as ex:
                 fun_test.critical(str(ex))
                 come_reboot = True
+        '''
+        # disabling COMe reboot in cleanup section as, setup bring-up handles it through COMe power-cycle
         try:
             if come_reboot:
                 self.fs.fpga_initialize()
@@ -416,6 +418,7 @@ class ECVolumeLevelScript(FunTestScript):
                 self.fs.come_reset(max_wait_time=self.reboot_timeout)
         except Exception as ex:
             fun_test.critical(str(ex))
+        '''
 
         self.topology.cleanup()
 
@@ -468,8 +471,10 @@ class ECVolumeLevelTestcase(FunTestCase):
             self.ec_info["num_volumes"] = job_inputs["num_volumes"]
         if "vol_size" in job_inputs:
             self.ec_info["capacity"] = job_inputs["vol_size"]
-        if "io_queues" in job_inputs:
-            self.io_queues = job_inputs["io_queues"]
+        if "nvme_io_queues" in job_inputs:
+            self.nvme_io_queues = job_inputs["nvme_io_queues"]
+        if "warmup_bs" in job_inputs:
+            self.warm_up_fio_cmd_args["bs"] = job_inputs["warmup_bs"]
         if "post_results" in job_inputs:
             self.post_results = job_inputs["post_results"]
         else:
@@ -629,7 +634,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                     for sc_index, sc_obj in enumerate(self.sc_obj):
                         if host_ip in self.ec_info[sc_obj]:
                             # Building nvme connect command
-                            if not hasattr(self, "io_queues") or (hasattr(self, "io_queues") and self.io_queues == 0):
+                            if not hasattr(self, "nvme_io_queues") or (hasattr(self, "nvme_io_queues") and self.nvme_io_queues == 0):
                                 nvme_connect_status = host_handle.nvme_connect(
                                     target_ip=self.f1_ips[sc_index],
                                     nvme_subsystem=self.ec_info[sc_obj][host_ip][self.attach_transport]["nqn"],
@@ -640,7 +645,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                                     target_ip=self.f1_ips[sc_index],
                                     nvme_subsystem=self.ec_info[sc_obj][host_ip][self.attach_transport]["nqn"],
                                     port=self.transport_port, transport=self.attach_transport,
-                                    io_queues=self.io_queues, hostnqn=self.host_info[host_name]["ip"])
+                                    nvme_io_queues=self.nvme_io_queues, hostnqn=self.host_info[host_name]["ip"])
 
                             if pcap_started[host_name]:
                                 host_handle.tcpdump_capture_stop(process_id=pcap_pid[host_name])

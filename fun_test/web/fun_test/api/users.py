@@ -1,6 +1,6 @@
 from web.web_global import api_safe_json_response
 from django.views.decorators.csrf import csrf_exempt
-from web.fun_test.models import User, PerformanceUserWorkspaces
+from web.fun_test.models import User, PerformanceUserWorkspaces, InterestedMetrics
 from django.core.exceptions import ObjectDoesNotExist
 import json
 from fun_global import get_current_time
@@ -37,29 +37,31 @@ def users(request, id):
 
 @csrf_exempt
 @api_safe_json_response
-def workspaces(request, email, workspace_name=None):
+def workspaces(request):
     result = []
     if request.method == "POST":
         request_json = json.loads(request.body)
         email = request_json["email"]
-        name = request_json["name"]
+        workspace_name = request_json["name"]
         if "description" in request_json:
             description = request_json["description"]
         else:
             description = ""
         try:
-            q = Q(email=email, workspace_name=name)
+            q = Q(email=email, workspace_name=workspace_name)
             entry = PerformanceUserWorkspaces.objects.get(q)
             if entry:
                 entry.description = description
                 entry.date_modified = get_current_time()
                 entry.save()
         except ObjectDoesNotExist:
-            entry = PerformanceUserWorkspaces(email=email, workspace_name=name,
+            entry = PerformanceUserWorkspaces(email=email, workspace_name=workspace_name,
                                               description=description)
             entry.save()
         result = entry.to_dict()
     elif request.method == "GET":
+        workspace_name = request.GET.get("workspace_name", None)
+        email = request.GET.get("email", None)
         if workspace_name:
             q = Q(email=email, workspace_name=workspace_name)
         else:
@@ -68,9 +70,14 @@ def workspaces(request, email, workspace_name=None):
         for workspace in workspaces:
             result.append(workspace.to_dict())
     elif request.method == "DELETE":
+        workspace_name = request.GET.get("workspace_name", None)
+        email = request.GET.get("email", None)
         workspaces = PerformanceUserWorkspaces.objects.filter(email=email)
         for workspace in workspaces:
             if workspace.workspace_name == workspace_name:
+                interested_metrics = InterestedMetrics.objects.filter(workspace_id=workspace.id)
+                if len(interested_metrics):
+                    interested_metrics.all().delete()
                 workspace.delete()
                 break
     return result

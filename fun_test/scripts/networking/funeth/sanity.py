@@ -58,6 +58,7 @@ try:
         ol_offload = (inputs.get('ol_offload', 0) == 1)  # Enable overlay TSO/checksum offload or not
         nu_all_clusters = (inputs.get('nu_all_clusters', 0) == 1)  # Enable NU to use all the clusters or not
         bootup_funos = (inputs.get('bootup_funos', 1) == 1)  # Boot up FunOS or not
+        threading = (inputs.get('threading', 0) == 1)  # Use threading in multi task or not
         fundrv_branch = inputs.get('fundrv_branch', None)
         fundrv_commit = inputs.get('fundrv_commit', None)
         funsdk_branch = inputs.get('funsdk_branch', None)
@@ -72,6 +73,7 @@ try:
         ol_offload = False  # default False
         nu_all_clusters = False  # default False
         bootup_funos = True  # default True
+        threading = False   # default False
         cleanup = True  # default True
         fundrv_branch = None
         fundrv_commit = None
@@ -87,6 +89,7 @@ except:
     ol_offload = False
     nu_all_clusters = False
     bootup_funos = True
+    threading = False
     cleanup = True
 
 csi_perf_enabled = fun_test.get_job_environment_variable("csi_perf")
@@ -313,7 +316,7 @@ def dpcsh_configure_overlay(network_controller_obj_f1_0, network_controller_obj_
                 #                                flow_dport=flow_dport,
                 #                                flow_proto=6
                 #                                )
-                for i in CPU_LIST_VM:
+                for i in CPU_LIST_VM[::-1] + [(CPU_LIST_VM)[::-1][-1]-1]:  # last one - 1 is for TCP_RR
                     for j in (netperf_manager.NETSERVER_FIXED_PORT_CONTROL_BASE,
                               netperf_manager.NETSERVER_FIXED_PORT_DATA_BASE):
                         for flow_type, nh_index in zip(('vxlan_encap', 'vxlan_decap'), (0, 1)):
@@ -433,6 +436,9 @@ class FunethSanity(FunTestScript):
             p.prepare(f1_index=0)
             self.csi_perf_obj = p
 
+        # threading
+        self.threading = threading
+
         # HU host
         self.funsdk_commit, self.funsdk_bld, self.driver_commit, self.driver_bld = setup_hu_host(
             funeth_obj, update_driver=update_driver)
@@ -504,8 +510,11 @@ class FunethSanity(FunTestScript):
                         fun_test.log("Unload funeth driver")
                         funeth_obj.unload()
 
-                for linux_obj in funeth_obj.linux_obj_dict.values():
-                    linux_obj.disconnect()
+                # Close ssh sessions
+                for funeth_obj_desc in funeth_obj_descs:
+                    funeth_obj = fun_test.shared_variables[funeth_obj_desc]
+                    for linux_obj in funeth_obj.linux_obj_dict.values():
+                        linux_obj.disconnect()
             except:
                 if cleanup:
                     hu_hosts = topology.get_host_instances_on_ssd_interfaces(dut_index=0)

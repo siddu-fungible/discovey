@@ -141,7 +141,8 @@ def chart_info(request):
                   "visualization_unit": chart.visualization_unit,
                   "pk": chart.pk,
                   "last_good_score": chart.last_good_score,
-                  "penultimate_good_score": chart.penultimate_good_score}
+                  "penultimate_good_score": chart.penultimate_good_score,
+                  "jira_ids": json.loads(chart.jira_ids)}
         for markers in milestones:
             markers_dict[markers.milestone_name] = markers.milestone_date
         result["milestone_markers"] = markers_dict
@@ -478,7 +479,7 @@ def get_triage_info_from_commits(request):
 
 def same_day(from_to_date, current_date):
     return (from_to_date.day == current_date.day) and (from_to_date.month == current_date.month) and (
-                from_to_date.year == current_date.year)
+            from_to_date.year == current_date.year)
 
 
 @csrf_exempt
@@ -853,14 +854,12 @@ def traverse_dag(levels, metric_id, metric_chart_entries, sort_by_name=True):
             else:
                 child_chart = MetricChart.objects.get(metric_id=child_id)
                 metric_chart_entries[child_id] = child_chart
-            children_info[child_chart.metric_id] = traverse_dag(levels, metric_id=child_chart.metric_id, metric_chart_entries=metric_chart_entries)
+            children_info[child_chart.metric_id] = traverse_dag(levels, metric_id=child_chart.metric_id,
+                                                                metric_chart_entries=metric_chart_entries)
         if sort_by_name:
             result["children"] = map(lambda item: item[0],
                                      sorted(children_info.iteritems(), key=lambda d: d[1]['chart_name']))
     return result
-
-
-
 
 
 @csrf_exempt
@@ -868,19 +867,23 @@ def traverse_dag(levels, metric_id, metric_chart_entries, sort_by_name=True):
 def dag(request):
     result = []
     levels = int(request.GET.get("levels", 15))
-    chart_names = request.GET.getlist("chart_names", ["F1", "S1", "All metrics"])
-    metric_model_name = "MetricContainer"
+    # metric ids are used instead of chart names for F1, S1 and all metrics
+    metric_ids = request.GET.get("root_metric_ids", '101,591,122')  # 101=F1, 122=All Metrics, 591-S1
+    if ',' in metric_ids:
+        metric_ids = metric_ids.strip().split(',')
+    else:
+        metric_ids = [int(metric_ids)]
     metric_chart_entries = {}
-    for chart_name in chart_names:
-        if chart_name == "All metrics":
+    for metric_id in metric_ids:
+        if metric_id == 122:
             sort_by_name = True
         else:
             sort_by_name = False
-        chart = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=chart_name)
+        chart = MetricChart.objects.get(metric_id=metric_id)
         metric_chart_entries[chart.metric_id] = chart
-        result.append(traverse_dag(levels=levels, metric_id=chart.metric_id, sort_by_name=sort_by_name, metric_chart_entries=metric_chart_entries))
+        result.append(traverse_dag(levels=levels, metric_id=chart.metric_id, sort_by_name=sort_by_name,
+                                   metric_chart_entries=metric_chart_entries))
     return result
-
 
 
 @csrf_exempt
@@ -918,6 +921,24 @@ def validate_jira(jira_id):
     return None
 
 
+def add_bugs_to_children(chart, jira_id):
+    chart.add_bugs(jira_id=jira_id)
+    children = json.loads(chart.children)
+    if len(children):
+        for child in children:
+            child_chart = MetricChart.objects.get(metric_id=int(child))
+            add_bugs_to_children(chart=child_chart, jira_id=jira_id)
+
+
+def remove_bugs_from_children(chart, jira_id):
+    chart.remove_bugs(jira_id=jira_id)
+    children = json.loads(chart.children)
+    if len(children):
+        for child in children:
+            child_chart = MetricChart.objects.get(metric_id=int(child))
+            remove_bugs_from_children(chart=child_chart, jira_id=jira_id)
+
+
 @csrf_exempt
 @api_safe_json_response
 def jiras(request, metric_id, jira_id=None):
@@ -930,11 +951,7 @@ def jiras(request, metric_id, jira_id=None):
             if jira_id:
                 jira_info = validate_jira(jira_id)
                 if jira_info:
-                    jira_ids = json.loads(c.jira_ids)
-                    if jira_id not in jira_ids:
-                        jira_ids.append(jira_id)
-                        c.jira_ids = json.dumps(jira_ids)
-                        c.save()
+                    add_bugs_to_children(chart=c, jira_id=jira_id)
                 else:
                     raise ObjectDoesNotExist
             result = "Ok"
@@ -961,11 +978,7 @@ def jiras(request, metric_id, jira_id=None):
         try:
             c = MetricChart.objects.get(metric_id=metric_id)
             if jira_id:
-                jira_ids = json.loads(c.jira_ids)
-                if jira_id in jira_ids:
-                    jira_ids.remove(jira_id)
-                    c.jira_ids = json.dumps(jira_ids)
-                    c.save()
+                remove_bugs_from_children(chart=c, jira_id=jira_id)
             result = True
         except ObjectDoesNotExist:
             logger.critical("No data found - Deleting jira ids for metric id {}".format(metric_id))

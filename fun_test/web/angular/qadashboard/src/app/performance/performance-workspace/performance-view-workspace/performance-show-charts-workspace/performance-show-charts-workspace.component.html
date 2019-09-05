@@ -1,0 +1,27 @@
+<div class="flex-container">
+  <ng-container *ngFor="let interestedMetric of workspace.interested_metrics">
+    <div style="flex: 0 0 45%; padding-bottom: 10px;">
+      <table align="center">
+        <tr>
+          <td>
+            <b>Lineage:</b>
+          </td>
+          <td>
+            {{ interestedMetric.lineage }}
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <b>Score:</b>
+          </td>
+          <td>
+            {{ interestedMetric.last_good_score }}
+          </td>
+        </tr>
+      </table>
+      <fun-metric-chart [id]="interestedMetric['metric_id']" [minimal]="'true'"
+                        [buildInfo]="buildInfo"></fun-metric-chart>
+    </div>
+  </ng-container>
+  <div class="closed-section"></div>
+</div>

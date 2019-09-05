@@ -423,6 +423,8 @@ class DataReconstructOnDiskFailScript(FunTestScript):
             except Exception as ex:
                 fun_test.critical(str(ex))
                 come_reboot = True
+        '''
+        # disabling COMe reboot in cleanup section as, setup bring-up handles it through COMe power-cycle
         try:
             if come_reboot:
                 self.fs.fpga_initialize()
@@ -430,6 +432,7 @@ class DataReconstructOnDiskFailScript(FunTestScript):
                 self.fs.come_reset(max_wait_time=self.reboot_timeout)
         except Exception as ex:
             fun_test.critical(str(ex))
+        '''
 
 
         self.topology.cleanup()
@@ -484,6 +487,8 @@ class DataReconstructOnDiskFailTestcase(FunTestCase):
             self.ec_info["num_volumes"] = job_inputs["num_volumes"]
         if "vol_size" in job_inputs:
             self.ec_info["capacity"] = job_inputs["vol_size"]
+        if "warmup_bs" in job_inputs:
+            self.warm_up_fio_cmd_args["bs"] = job_inputs["warmup_bs"]
 
         if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
                 self.testbed_config["workarounds"]["enable_funcp"]:

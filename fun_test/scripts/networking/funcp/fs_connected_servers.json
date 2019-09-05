@@ -82,34 +82,34 @@
       "F1-0": {
         "1": {
           "gateway": "2.1.1.1",
-          "port": "fpg0",
+          "port": "fpg4",
           "route": "15.1.1.0/24"
         },
         "2": {
           "gateway": "2.1.1.1",
-          "port": "fpg0",
+          "port": "fpg4",
           "route": "30.1.1.0/24"
         },
         "3": {
           "gateway": "2.1.1.1",
-          "port": "fpg0",
+          "port": "fpg4",
           "route": "2.1.2.0/24"
         }
       },
       "F1-1": {
         "1": {
           "gateway": "2.1.2.1",
-          "port": "fpg0",
+          "port": "fpg4",
           "route": "14.1.1.0/24"
         },
         "2": {
           "gateway": "2.1.2.1",
-          "port": "fpg0",
+          "port": "fpg4",
           "route": "30.1.1.0/24"
         },
         "3": {
           "gateway": "2.1.2.1",
-          "port": "fpg0",
+          "port": "fpg4",
           "route": "2.1.1.0/24"
         }
       }

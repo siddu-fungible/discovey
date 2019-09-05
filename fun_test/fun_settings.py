@@ -59,7 +59,7 @@ REGRESSION_SERVER_DOMAIN_NAME = "integration.fungible.local"
 SCHEDULER_PID = "/tmp/fun_test_scheduler.pid"
 
 REGRESSION_USER = "regression"
-REGRESSION_USER_PASSWORD = "R3gr35510n123"
+REGRESSION_USER_PASSWORD = "Ac310bac13r"
 
 MAIN_WEB_APP = 'fun_test'
 

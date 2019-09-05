@@ -163,7 +163,7 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.test_assert(self.topology, "Topology deployed")
 
         # Datetime required for daily Dashboard data filter
-        self.db_log_time = get_data_collection_time(tag="ec_inspur_fs_teramark_single_f1")
+        self.db_log_time = get_data_collection_time(tag="ec_inspur_fs_teramark_multi_f1")
         fun_test.log("Data collection time: {}".format(self.db_log_time))
 
         # Retrieving all Hosts list and filtering required hosts and forming required object lists out of it
@@ -353,6 +353,8 @@ class ECVolumeLevelScript(FunTestScript):
                 fun_test.critical(str(ex))
                 come_reboot = True
 
+            '''
+            # disabling COMe reboot in cleanup section as, setup bring-up handles it through COMe power-cycle
             try:
                 if come_reboot:
                     self.fs_obj[index].fpga_initialize()
@@ -360,6 +362,7 @@ class ECVolumeLevelScript(FunTestScript):
                     self.fs_obj[index].come_reset(max_wait_time=self.reboot_timeout)
             except Exception as ex:
                 fun_test.critical(str(ex))
+            '''
 
         fun_test.sleep("Allowing buffer time before clean-up", 30)
         self.topology.cleanup()

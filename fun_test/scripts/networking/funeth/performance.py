@@ -88,12 +88,14 @@ class FunethPerformance(sanity.FunethSanity):
             csi_perf_obj = super(FunethPerformance, self).__getattribute__('csi_perf_obj')
         else:
             csi_perf_obj = None
+        threading = super(FunethPerformance, self).__getattribute__('threading')
         fun_test.shared_variables['funsdk_commit'] = funsdk_commit
         fun_test.shared_variables['funsdk_bld'] = funsdk_bld
         fun_test.shared_variables['driver_commit'] = driver_commit
         fun_test.shared_variables['driver_bld'] = driver_bld
         fun_test.shared_variables['come_linux_obj'] = come_linux_obj
         fun_test.shared_variables['csi_perf_obj'] = csi_perf_obj
+        fun_test.shared_variables['threading'] = threading
 
         #tb_config_obj = tb_configs.TBConfigs(TB)
         #funeth_obj = funeth.Funeth(tb_config_obj)
@@ -309,6 +311,7 @@ class FunethPerformanceBase(FunTestCase):
                  'cpu_list_client': cpu_list_client,
                  'fixed_netperf_port': True if 'OL_VM' in flow_type.upper() else False,  # TODO: Remove after SWOS-5645
                  'csi_perf_obj': fun_test.shared_variables['csi_perf_obj'],
+                 'threading': fun_test.shared_variables['threading'],
                  }
             )
 

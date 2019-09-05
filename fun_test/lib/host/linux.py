@@ -7,9 +7,11 @@ import sys
 import os
 import time
 from lib.system.fun_test import fun_test, FunTimer
+from fun_global import get_current_time
 from lib.system.utils import ToDictMixin
 import json
 import copy
+import traceback
 
 class NoLogger:
     def __init__(self):
@@ -94,6 +96,7 @@ class Linux(object, ToDictMixin):
     IPTABLES_PROTOCOL_TCP = "tcp"
 
     TO_DICT_VARS = ["host_ip", "ssh_username", "ssh_password", "ssh_port"]
+    DEBUG_LOG_FILE = "/tmp/linux_debug.txt"
 
     def __init__(self,
                  host_ip,
@@ -338,9 +341,20 @@ class Linux(object, ToDictMixin):
             if not self._set_paths():
                 raise Exception("Unable to set paths")
             result = True
+            self._add_to_debug_log()
         else:
             self.handle = None
         return result
+
+    def _add_to_debug_log(self):
+        # IN-478
+        try:
+            s = "{} {}\n".format(get_current_time(), traceback.format_stack())
+            f = open(self.DEBUG_LOG_FILE, "a+")
+            f.write(s)
+            f.close()
+        except:
+            pass
 
     def _set_term_settings(self):
         self.command("shopt -s checkwinsize")
@@ -1015,6 +1029,7 @@ class Linux(object, ToDictMixin):
         if self.handle:
             self.handle.close()
         self.handle = None
+        fun_test.log("Disconnecting: {}".format(self.spawn_pid))
         return True
 
     def _set_paths(self):
@@ -1847,8 +1862,9 @@ class Linux(object, ToDictMixin):
             # Populating the resultant fio_dict dictionary
             for operation in ["write", "read"]:
                 fio_dict[operation] = {}
-                for stat in ["bw", "iops", "latency", "clatency", "latency90", "latency95", "latency99",
-                             "latency9950", "latency9999"]:
+                stat_list = ["bw", "iops", "io_bytes", "latency", "clatency", "latency90", "latency95",
+                             "latency99","latency9950", "latency9999"]
+                for stat in stat_list:
                     if stat not in ("latency", "clatency", "latency90", "latency95", "latency99", "latency9950",
                                     "latency9999"):
                         fio_dict[operation][stat] = fio_result_dict["jobs"][0][operation][stat]
@@ -2747,13 +2763,13 @@ class Linux(object, ToDictMixin):
 
         return iostat_output
 
-    def nvme_connect(self, target_ip, nvme_subsystem, port=1099, transport="tcp", io_queues=None, hostnqn=None,
+    def nvme_connect(self, target_ip, nvme_subsystem, port=1099, transport="tcp", nvme_io_queues=None, hostnqn=None,
                      retries=2, timeout=61):
         result = False
         nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {}".format(transport.lower(), target_ip, port,
                                                                          nvme_subsystem)
-        if io_queues:
-            nvme_connect_cmd += " -i {}".format(io_queues)
+        if nvme_io_queues:
+            nvme_connect_cmd += " -i {}".format(nvme_io_queues)
         if hostnqn:
             nvme_connect_cmd += " -q {}".format(hostnqn)
 

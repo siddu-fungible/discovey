@@ -26,10 +26,13 @@ def fio_parser(arg1, host_index, **kwargs):
 def post_results(volume, test, num_host, block_size, io_depth, size, operation, write_iops, read_iops, write_bw,
                  read_bw,
                  write_latency, write_90_latency, write_95_latency, write_99_latency, write_99_99_latency, read_latency,
-                 read_90_latency, read_95_latency, read_99_latency, read_99_99_latency, fio_job_name):
+                 read_90_latency, read_95_latency, read_99_latency, read_99_99_latency, fio_job_name,
+                 write_amp_vol_stats, read_amp_vol_stats, aggr_amp_vol_stats, write_amp_app_stats, read_amp_app_stats,
+                 aggr_amp_app_stats):
     for i in ["write_iops", "read_iops", "write_bw", "read_bw", "write_latency", "write_90_latency", "write_95_latency",
               "write_99_latency", "write_99_99_latency", "read_latency", "read_90_latency", "read_95_latency",
-              "read_99_latency", "read_99_99_latency", "fio_job_name"]:
+              "read_99_latency", "read_99_99_latency", "fio_job_name", "write_amp_vol_stats", "read_amp_vol_stats",
+              "aggr_amp_vol_stats", "write_amp_app_stats", "read_amp_app_stats", "aggr_amp_app_stats"]:
         if eval("type({}) is tuple".format(i)):
             exec ("{0} = {0}[0]".format(i))
 
@@ -562,6 +565,8 @@ class ECVolumeLevelScript(FunTestScript):
             except Exception as ex:
                 fun_test.critical(str(ex))
                 come_reboot = True
+        '''
+        # disabling COMe reboot in cleanup section as, setup bring-up handles it through COMe power-cycle
         try:
             if come_reboot:
                 self.fs.fpga_initialize()
@@ -569,7 +574,7 @@ class ECVolumeLevelScript(FunTestScript):
                 self.fs.come_reset(max_wait_time=self.reboot_timeout)
         except Exception as ex:
             fun_test.critical(str(ex))
-
+        '''
         self.topology.cleanup()
 
 
@@ -622,8 +627,10 @@ class ECVolumeLevelTestcase(FunTestCase):
             self.ec_info["num_volumes"] = job_inputs["num_volumes"]
         if "vol_size" in job_inputs:
             self.ec_info["capacity"] = job_inputs["vol_size"]
-        if "io_queues" in job_inputs:
-            self.io_queues = job_inputs["io_queues"]
+        if "nvme_io_queues" in job_inputs:
+            self.nvme_io_queues = job_inputs["nvme_io_queues"]
+        if "warmup_bs" in job_inputs:
+            self.warm_up_fio_cmd_args["bs"] = job_inputs["warmup_bs"]
         if "post_results" in job_inputs:
             self.post_results = job_inputs["post_results"]
         else:
@@ -754,7 +761,8 @@ class ECVolumeLevelTestcase(FunTestCase):
                     # Checking nvme-connect status
                     if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
                             self.testbed_config["workarounds"]["enable_funcp"]:
-                        if not hasattr(self, "io_queues") or (hasattr(self, "io_queues") and self.io_queues == 0):
+                        if not hasattr(self, "nvme_io_queues") or (
+                                hasattr(self, "nvme_io_queues") and self.nvme_io_queues == 0):
                             nvme_connect_status = host_handle.nvme_connect(
                                 target_ip=self.test_network["f1_loopback_ip"], nvme_subsystem=self.nvme_subsystem,
                                 port=self.transport_port, transport=self.attach_transport,
@@ -762,17 +770,20 @@ class ECVolumeLevelTestcase(FunTestCase):
                         else:
                             nvme_connect_status = host_handle.nvme_connect(
                                 target_ip=self.test_network["f1_loopback_ip"], nvme_subsystem=self.nvme_subsystem,
-                                port=self.transport_port, transport=self.attach_transport, io_queues=self.io_queues,
+                                port=self.transport_port, transport=self.attach_transport,
+                                nvme_io_queues=self.nvme_io_queues,
                                 hostnqn=self.host_info[host_name]["ip"][0])
                     else:
-                        if not hasattr(self, "io_queues") or (hasattr(self, "io_queues") and self.io_queues == 0):
+                        if not hasattr(self, "nvme_io_queues") or (
+                                hasattr(self, "nvme_io_queues") and self.nvme_io_queues == 0):
                             nvme_connect_status = host_handle.nvme_connect(
                                 target_ip=self.test_network["f1_loopback_ip"], nvme_subsystem=self.nvme_subsystem,
                                 port=self.transport_port, transport=self.attach_transport)
                         else:
                             nvme_connect_status = host_handle.nvme_connect(
                                 target_ip=self.test_network["f1_loopback_ip"], nvme_subsystem=self.nvme_subsystem,
-                                port=self.transport_port, transport=self.attach_transport, io_queues=self.io_queues)
+                                port=self.transport_port, transport=self.attach_transport,
+                                nvme_io_queues=self.nvme_io_queues)
 
                     if pcap_started[host_name]:
                         host_handle.tcpdump_capture_stop(process_id=pcap_pid[host_name])
@@ -872,11 +883,15 @@ class ECVolumeLevelTestcase(FunTestCase):
                               "Write Latency 99 Percentile in uSecs", "Write Latency 99.99 Percentile in uSecs",
                               "Read Latency in uSecs", "Read Latency 90 Percentile in uSecs",
                               "Read Latency 95 Percentile in uSecs", "Read Latency 99 Percentile in uSecs",
-                              "Read Latency 99.99 Percentile in uSecs", "fio_job_name"]
+                              "Read Latency 99.99 Percentile in uSecs", "fio_job_name", "Write Amplification Vol Stats",
+                              "Read Amplification Vol Stats", "Aggregated Amplification Vol Stats",
+                              "Write Amplification App Stats", "Read Amplification App Stats",
+                              "Aggregated Amplification App Stats"]
         table_data_cols = ["num_hosts", "block_size", "iodepth", "size", "mode", "writeiops", "readiops", "writebw",
                            "readbw", "writeclatency", "writelatency90", "writelatency95", "writelatency99",
                            "writelatency9999", "readclatency", "readlatency90", "readlatency95", "readlatency99",
-                           "readlatency9999", "fio_job_name"]
+                           "readlatency9999", "fio_job_name", "write_amp_vol_stats", "read_amp_vol_stats",
+                           "aggr_amp_vol_stats", "write_amp_app_stats", "read_amp_app_stats", "aggr_amp_app_stats"]
         table_data_rows = []
 
         self.ec_info = fun_test.shared_variables["ec_info"]
@@ -899,6 +914,8 @@ class ECVolumeLevelTestcase(FunTestCase):
         final_stats = {}
         resultant_stats = {}
         aggregate_resultant_stats = {}
+        initial_vol_stat = {}
+        final_vol_stat = {}
 
         start_stats = True
 
@@ -912,6 +929,7 @@ class ECVolumeLevelTestcase(FunTestCase):
             vol_group[self.ec_info["volume_types"]["jvol"]] = [self.ec_info["uuids"][num]["jvol"]]
             vol_group[self.ec_info["volume_types"]["lsv"]] = self.ec_info["uuids"][num]["lsv"]
             vol_details.append(vol_group)
+        fun_test.log("vol_details is: {}".format(vol_details))
 
         for iodepth in self.fio_iodepth:
             fio_result[iodepth] = True
@@ -925,6 +943,8 @@ class ECVolumeLevelTestcase(FunTestCase):
             final_stats[iodepth] = {}
             resultant_stats[iodepth] = {}
             aggregate_resultant_stats[iodepth] = {}
+            initial_vol_stat[iodepth] = {}
+            final_vol_stat[iodepth] = {}
 
             test_thread_id = {}
             host_clone = {}
@@ -1011,41 +1031,28 @@ class ECVolumeLevelTestcase(FunTestCase):
 
             # Starting the thread to collect the vp_utils stats and resource_bam stats for the current iteration
             if start_stats:
+                file_suffix = "iodepth_{}.txt".format(iodepth)
+                for index, stat_detail in enumerate(self.stats_collect_details):
+                    func = stat_detail.keys()[0]
+                    self.stats_collect_details[index][func]["count"] = int(mpstat_count)
+                    if func == "vol_stats":
+                        self.stats_collect_details[index][func]["vol_details"] = vol_details
+                fun_test.log("Different stats collection thread details for the current IO depth {} before starting "
+                             "them:\n{}".format(iodepth, self.stats_collect_details))
+                self.storage_controller.verbose = False
                 stats_obj = CollectStats(self.storage_controller)
-                vp_util_post_fix_name = "vp_util_iodepth_{}.txt".format(iodepth)
-                vp_util_artifact_file = fun_test.get_test_case_artifact_file_name(post_fix_name=vp_util_post_fix_name)
-                stats_thread_id = fun_test.execute_thread_after(time_in_seconds=1,
-                                                                func=stats_obj.collect_vp_utils_stats,
-                                                                output_file=vp_util_artifact_file,
-                                                                interval=self.vp_util_args["interval"],
-                                                                count=int(mpstat_count), threaded=True)
-                resource_bam_post_fix_name = "resource_bam_iodepth_{}.txt".format(iodepth)
-                resource_bam_artifact_file = fun_test.get_test_case_artifact_file_name(
-                    post_fix_name=resource_bam_post_fix_name)
-                stats_rbam_thread_id = fun_test.execute_thread_after(time_in_seconds=5,
-                                                                     func=stats_obj.collect_resource_bam_stats,
-                                                                     output_file=resource_bam_artifact_file,
-                                                                     interval=self.resource_bam_args["interval"],
-                                                                     count=int(mpstat_count), threaded=True)
-                vol_stats_post_fix_name = "vol_stats_iodepth_{}.txt".format(iodepth)
-                vol_stats_artifact_file = fun_test.get_test_case_artifact_file_name(
-                    post_fix_name=vol_stats_post_fix_name)
-                vol_stats_thread_id = fun_test.execute_thread_after(time_in_seconds=10,
-                                                                    func=stats_obj.collect_vol_stats,
-                                                                    vol_details=vol_details,
-                                                                    output_file=vol_stats_artifact_file,
-                                                                    interval=self.vol_stats_args["interval"],
-                                                                    count=int(mpstat_count), threaded=True)
-                per_vp_post_fix_name = "per_vp_iodepth_{}.txt".format(iodepth)
-                per_vp_artifact_file = fun_test.get_test_case_artifact_file_name(post_fix_name=per_vp_post_fix_name)
-                per_vp_stats_thread_id = fun_test.execute_thread_after(time_in_seconds=15,
-                                                                       func=stats_obj.collect_per_vp_stats,
-                                                                       output_file=per_vp_artifact_file,
-                                                                       interval=self.vp_util_args["interval"],
-                                                                       count=int(mpstat_count), threaded=True)
+                stats_obj.start(file_suffix, self.stats_collect_details)
+                fun_test.log("Different stats collection thread details for the current IO depth {} after starting "
+                             "them:\n{}".format(iodepth,self.stats_collect_details))
             else:
                 fun_test.critical("Not starting the vp_utils and resource_bam stats collection because of lack of "
                                   "interval and count details")
+
+            if self.cal_amplification:
+                initial_vol_stat[iodepth] = self.storage_controller.peek(
+                    props_tree="storage/volumes", legacy=False, chunk=8192, command_duration=self.command_timeout)
+                fun_test.test_assert(initial_vol_stat[iodepth], "Stats collected before the test")
+                fun_test.log("Initial vol stats in script: {}".format(initial_vol_stat[iodepth]))
 
             for index, host_name in enumerate(self.host_info):
                 start_time = time.time()
@@ -1168,31 +1175,14 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.log("FIO Command Output from {}:\n {}".format(host_name,
                                                                        fun_test.shared_variables["fio"][index]))
             finally:
-                # Checking whether the vp_util stats collection thread is still running...If so stopping it...
-                if fun_test.fun_test_threads[stats_thread_id]["thread"].is_alive():
-                    fun_test.critical("VP utilization stats collection thread is still running...Stopping it now")
-                    stats_obj.stop_all = True
-                    stats_obj.stop_vp_utils = True
-                    # fun_test.fun_test_threads[stats_thread_id]["thread"]._Thread__stop()
-                # Checking whether the resource bam stats collection thread is still running...If so stopping it...
-                if fun_test.fun_test_threads[stats_rbam_thread_id]["thread"].is_alive():
-                    fun_test.critical("Resource bam stats collection thread is still running...Stopping it now")
-                    stats_obj.stop_all = True
-                    stats_obj.stop_resource_bam = True
-                    # fun_test.fun_test_threads[stats_rbam_thread_id]["thread"]._Thread__stop()
-                # Checking whether the volume stats collection thread is still running...If so stopping it...
-                if fun_test.fun_test_threads[vol_stats_thread_id]["thread"].is_alive():
-                    fun_test.critical("Volume Stats collection thread is still running...Stopping it now")
-                    stats_obj.stop_all = True
-                    stats_obj.stop_vol_stats = True
-                if fun_test.fun_test_threads[per_vp_stats_thread_id]["thread"].is_alive():
-                    fun_test.critical("Per VP Stats collection thread is still running...Stopping it now")
-                    stats_obj.stop_all = True
-                    stats_obj.stop_per_vp_stats = True
-                fun_test.join_thread(fun_test_thread_id=stats_thread_id, sleep_time=1)
-                fun_test.join_thread(fun_test_thread_id=stats_rbam_thread_id, sleep_time=1)
-                fun_test.join_thread(fun_test_thread_id=vol_stats_thread_id, sleep_time=1)
-                fun_test.join_thread(fun_test_thread_id=per_vp_stats_thread_id, sleep_time=1)
+                stats_obj.stop(self.stats_collect_details)
+                self.storage_controller.verbose = True
+
+                if self.cal_amplification:
+                    final_vol_stat[iodepth] = self.storage_controller.peek(
+                        props_tree="storage/volumes", legacy=False, chunk=8192, command_duration=self.command_timeout)
+                    fun_test.test_assert(final_vol_stat[iodepth], "Stats collected after the test")
+                    fun_test.log("Final vol stats in script: {}".format(final_vol_stat[iodepth]))
 
                 # Collecting final network stats and finding diff between final and initial stats
                 if self.collect_network_stats:
@@ -1292,6 +1282,51 @@ class ECVolumeLevelTestcase(FunTestCase):
                 continue
 
             row_data_dict["fio_job_name"] = fio_job_name
+            if self.cal_amplification:
+                '''
+                WA = PBW (Physical Bytes Written) / LBW (Logical Bytes Written)
+                PBW = Sum of bytes written in each BLT that is member of the Durable volume.
+                LBW = Bytes written from the test app.  Should be same as reported by the Top level volume (e.g. LSV).
+                '''
+                try:
+                    if initial_vol_stat[iodepth] or final_vol_stat[iodepth]:
+                        fun_test.log("\ninitial_vol_stat[{}] is: {}\n".
+                                     format(iodepth, initial_vol_stat[iodepth]["data"]))
+                        fun_test.log("\nfinal_vol_stat[{}] is: {}\n".format(iodepth, final_vol_stat[iodepth]["data"]))
+                        fun_test.log("\nvol_details: {}\n".format(vol_details))
+                        curr_stats_diff = vol_stats_diff(initial_vol_stats=initial_vol_stat[iodepth]["data"],
+                                                         final_vol_stats=final_vol_stat[iodepth]["data"],
+                                                         vol_details=vol_details)
+                        fun_test.simple_assert(curr_stats_diff["status"], "Stats diff to measure amplification")
+
+                        pbw = curr_stats_diff["total_diff"]["VOL_TYPE_BLK_LOCAL_THIN"]["write_bytes"]
+                        lbw = curr_stats_diff["total_diff"]["VOL_TYPE_BLK_LSV"]["write_bytes"]
+                        lbw_app = aggr_fio_output[iodepth]['write']["io_bytes"]
+                        pbr = curr_stats_diff["total_diff"]["VOL_TYPE_BLK_LOCAL_THIN"]["read_bytes"]
+                        lbr = curr_stats_diff["total_diff"]["VOL_TYPE_BLK_LSV"]["read_bytes"]
+                        lbr_app = aggr_fio_output[iodepth]['read']["io_bytes"]
+
+                        fun_test.log("Iodepth: {}\nPhysical Bytes Written from volume stats: {}"
+                                     "\nLogical Bytes Written from volume stats: {}\nLogical written bytes by app: {}"
+                                     "\nPhysical Bytes Read from volume stats: {}"
+                                     "\nLogical Bytes Read from volume stats: {}\nLogical bytes Read by app: {}\n".
+                                     format(iodepth, pbw, lbw, lbw_app, pbr, lbr, lbr_app))
+
+                        row_data_dict["write_amp_vol_stats"] = "{0:.2f}".format(divide(n=float(pbw), d=lbw))
+                        row_data_dict["write_amp_app_stats"] = "{0:.2f}".format(divide(n=float(pbw), d=lbw_app))
+                        row_data_dict["read_amp_vol_stats"] = "{0:.2f}".format(divide(n=float(pbr), d=lbr))
+                        row_data_dict["read_amp_app_stats"] = "{0:.2f}".format(divide(n=float(pbr), d=lbr_app))
+                        row_data_dict["aggr_amp_vol_stats"] = "{0:.2f}".format(
+                            divide(n=float(float(pbw + pbr)), d=(lbw + lbr)))
+                        row_data_dict["aggr_amp_app_stats"] = "{0:.2f}".format(
+                            divide(n=float(float(pbw + pbr)), d=(lbw_app + lbr_app)))
+
+                        for key, val in row_data_dict.iteritems():
+                            if key.__contains__("_amp_"):
+                                fun_test.log("{} is:\t {}".format(key, val))
+
+                except Exception as ex:
+                    fun_test.critical(str(ex))
 
             # Building the table raw for this variation
             row_data_list = []
@@ -1320,14 +1355,55 @@ class ECVolumeLevelTestcase(FunTestCase):
                                             format(host_name, row_data_dict["iodepth"]),
                                             filename=mpstat_artifact_file[host_name])
 
-            fun_test.add_auxillary_file(description="F1 VP Utilization - IO depth {}".format(row_data_dict["iodepth"]),
-                                        filename=vp_util_artifact_file)
-            fun_test.add_auxillary_file(description="F1 Resource bam stats - IO depth {}".
-                                        format(row_data_dict["iodepth"]), filename=resource_bam_artifact_file)
-            fun_test.add_auxillary_file(description="Volume Stats - IO depth {}".format(row_data_dict["iodepth"]),
-                                        filename=vol_stats_artifact_file)
-            fun_test.add_auxillary_file(description="F1 Per VP Stats - IO depth {}".format(row_data_dict["iodepth"]),
-                                        filename=per_vp_artifact_file)
+            for index, value in enumerate(self.stats_collect_details):
+                for func, arg in value.iteritems():
+                    filename = arg.get("output_file")
+                    if filename:
+                        if func == "vp_utils":
+                            fun_test.add_auxillary_file(description="F1 VP Utilization - IO depth {}".
+                                                        format(row_data_dict["iodepth"]), filename=filename)
+                        if func == "per_vp":
+                            fun_test.add_auxillary_file(description="F1 Per VP Stats - IO depth {}".
+                                                        format(row_data_dict["iodepth"]), filename=filename)
+                        if func == "resource_bam_args":
+                            fun_test.add_auxillary_file(description="F1 Resource bam stats - IO depth {}".
+                                                        format(row_data_dict["iodepth"]), filename=filename)
+                        if func == "vol_stats":
+                            fun_test.add_auxillary_file(description="Volume Stats - IO depth {}".
+                                                        format(row_data_dict["iodepth"]), filename=filename)
+                        if func == "vppkts_stats":
+                            fun_test.add_auxillary_file(description="VP Pkts Stats - IO depth {}".
+                                                        format(row_data_dict["iodepth"]), filename=filename)
+                        if func == "psw_stats":
+                            fun_test.add_auxillary_file(description="PSW Stats - IO depth {}".
+                                                        format(row_data_dict["iodepth"]), filename=filename)
+                        if func == "fcp_stats":
+                            fun_test.add_auxillary_file(description="FCP Stats - IO depth {}".
+                                                        format(row_data_dict["iodepth"]), filename=filename)
+                        if func == "wro_stats":
+                            fun_test.add_auxillary_file(description="WRO Stats - IO depth {}".
+                                                        format(row_data_dict["iodepth"]), filename=filename)
+                        if func == "erp_stats":
+                            fun_test.add_auxillary_file(description="ERP Stats - IO depth {}".
+                                                        format(row_data_dict["iodepth"]), filename=filename)
+                        if func == "etp_stats":
+                            fun_test.add_auxillary_file(description="ETP Stats - IO depth {}".
+                                                        format(row_data_dict["iodepth"]), filename=filename)
+                        if func == "eqm_stats":
+                            fun_test.add_auxillary_file(description="EQM Stats - IO depth {}".
+                                                        format(row_data_dict["iodepth"]), filename=filename)
+                        if func == "hu_stats":
+                            fun_test.add_auxillary_file(description="HU Stats - IO depth {}".
+                                                        format(row_data_dict["iodepth"]), filename=filename)
+                        if func == "ddr_stats":
+                            fun_test.add_auxillary_file(description="DDR Stats - IO depth {}".
+                                                        format(row_data_dict["iodepth"]), filename=filename)
+                        if func == "ca_stats":
+                            fun_test.add_auxillary_file(description="CA Stats - IO depth {}".
+                                                        format(row_data_dict["iodepth"]), filename=filename)
+                        if func == "cdu_stats":
+                            fun_test.add_auxillary_file(description="CDU Stats - IO depth {}".
+                                                        format(row_data_dict["iodepth"]), filename=filename)
 
             fun_test.sleep("Waiting in between iterations", self.iter_interval)
 

@@ -16,6 +16,7 @@ from django.contrib.postgres.fields import JSONField, ArrayField
 import json
 from asset.asset_global import AssetType
 from rest_framework.serializers import ModelSerializer
+from django.utils import timezone
 
 
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
@@ -85,6 +86,7 @@ class CatalogTestCase(models.Model):
 class TestBed(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(null=True, blank=True)
+    note = models.TextField(null=True, blank=True)
     manual_lock = models.BooleanField(default=False)
     manual_lock_expiry_time = models.DateTimeField(default=datetime.now)
     manual_lock_submitter = models.EmailField(null=True, blank=True)
@@ -559,6 +561,7 @@ class InterestedMetrics(FunModel):
     lineage = models.TextField(default="")
     date_created = models.DateTimeField(default=datetime.now)
     date_modified = models.DateTimeField(default=datetime.now)
+    comments = models.TextField(default="")
 
     def __str__(self):
         return (str(self.__dict__))
@@ -661,13 +664,29 @@ class SuiteItems(models.Model):
 
 class Suite(models.Model):
     name = models.TextField(default="TBD")
-    categories = JSONField(default=[])
-    sub_categories = JSONField(default=[])
+    tyoe = models.TextField(default="SUITE")   # Other types are TASK
+    categories = JSONField(default=[], null=True)
+    sub_categories = JSONField(default=[], null=True)
+    short_description = models.TextField(default="", null=True)
+    long_description = models.TextField(default="", null=True)
+    tags = JSONField(default=[], null=True)
+    custom_test_bed_spec = JSONField(default=None, null=True)
+    entries = JSONField(default=None)
+    created_date = models.DateTimeField(default=timezone.now)
+    modified_date = models.DateTimeField(default=timezone.now)
 
-    short_description = models.TextField(default="")
-    long_description = models.TextField(default="")
-    tags = JSONField(default=[])
-    custom_test_bed_spec = JSONField(default=None)
+    def to_dict(self):
+        result = {}
+        fields = self._meta.get_fields()
+        for field in fields:
+            result[field.name] = getattr(self, field.name)
+        return result
+
+    def add_entry(self, entry):
+        if self.entries is None:
+            self.entries = []
+        self.entries.append(entry)
+        self.save()
 
 
 class TaskStatus(models.Model):

@@ -1,0 +1,80 @@
+<div class="component">
+
+  <div class="fun-panel">
+    <div class="fun-panel-header">Filters</div>
+    <div class="fun-panel-body">
+      <table>
+      <tr>
+        <td class="fun-attribute-label">Categories:</td>
+        <td class="fun-attribute" style="width: 200px">
+          <ng-multiselect-dropdown [placeholder]="'Select'" [data]="availableCategories" [settings]="dropDownSettings" [(ngModel)]="selectedCategories"
+                                   (onSelect)="onChangeSelectedCategories()"
+                                   (onDeSelect)="onChangeSelectedCategories()"
+                                   (onSelectAll)="onChangeSelectedCategories()"
+                                   (onDeSelectAll)="onChangeSelectedCategories()">
+          </ng-multiselect-dropdown>
+        </td>
+      </tr>
+    </table>
+    </div>
+  </div>
+
+  <a routerLink="/regression/suite_editor"><button class="fun-button-add">Add a suite</button></a>
+
+  <div class="fun-flex-container">
+    <!-- pager -->
+    <div id="page-div" *ngIf="pager.pages && pager.pages.length">
+      <span *ngIf="pager.currentPage > 1" [ngClass]="{'fun-disabled': pager.currentPage === 1}">
+      <a [routerLink]="" (click)="setPage(1)">First </a>
+      </span>
+      <span *ngIf="pager.currentPage > 1" [ngClass]="{'fun-disabled': pager.currentPage === 1}">
+      <a [routerLink]="" (click)="setPage(pager.currentPage - 1)">Previous </a>
+      </span>
+      <ng-container *ngFor="let page of pager.pages">
+        <span class="pseudo-anchor" (click)="setPage(page)"
+              [ngClass]="{'fun-pager-active':pager.currentPage === page}">{{ page }}</span>&nbsp;
+      </ng-container>
+      <span *ngIf="pager.currentPage < pager.totalPages"
+            [ngClass]="{'fun-disabled': pager.currentPage === pager.totalPages}">
+      <a [routerLink]="" (click)="setPage(pager.currentPage + 1)">Next </a>
+      </span>
+      <span *ngIf="pager.currentPage < pager.totalPages"
+            [ngClass]="{'fun-disabled': pager.currentPage === pager.totalPages}">
+      <a [routerLink]="" (click)="setPage(pager.totalPages)">Last </a>
+      </span>
+    </div>
+  </div>
+
+  <table class="fun-table">
+    <tr>
+      <td class="fun-table-header">Name</td>
+      <td class="fun-table-header">Description</td>
+      <td class="fun-table-header">Categories</td>
+    </tr>
+    <tr *ngFor="let suite of suites; let suiteIndex=index">
+      <td><a [routerLink]="'/regression/suite_editor/' + suite.id">{{ suite.name }}</a></td>
+      <td>
+      <app-textarea-input [hoverHide]="false" [initialValue]="suite?.short_description" (valueChanged)="onShortDescriptionChangedEvent($event, suiteIndex)" [numRows]="4"></app-textarea-input>
+      </td>
+      <td>
+        <div style="display: flex">
+          <ng-multiselect-dropdown [placeholder]="'Select'" [data]="availableCategories" [settings]="dropDownSettings" [(ngModel)]="suite.categories"
+                    (onSelect)="suite.dirty = true"
+                    (onDeSelect)="suite.dirty = true"
+                    (onSelectAll)="suite.dirty = true"
+                    (onDeSelectAll)="suite.dirty = true">
+          </ng-multiselect-dropdown>
+          <div style="padding: 10px">
+            <ng-container *ngIf="suite.dirty">
+            <span><i class="fa fa-check fa-fw tick-color" (click)="onSubmitCategories(suite)"></i></span>
+            <span><i class="fa fa-times fa-fw close-color" (click)="onDismissCategories(suite)"></i></span>
+            </ng-container>
+          </div>
+
+        </div>
+
+      </td>
+
+    </tr>
+  </table>
+</div>
