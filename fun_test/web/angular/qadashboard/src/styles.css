@@ -527,7 +527,7 @@ tr.text-center > th {
   text-align: left;
   color: #000000;
   /*padding: 3px 8px;*/
-  background: #fff8ba;
+  background: white;
   z-index: 1000;
   opacity: 0;
   border: 1px solid;
@@ -547,26 +547,26 @@ tr.text-center > th {
   top: 100%;
   left: 50%;
   margin-left: -5px;
-  border-color: black transparent transparent transparent;
+  border-color: lightgrey transparent transparent transparent;
 }
 .fun-tooltip-bottom:after {
   bottom: 100%;
   left: 50%;
   margin-left: -5px;
-  border-color: transparent transparent black transparent;
+  border-color: transparent transparent lightgrey transparent;
 }
 .fun-tooltip-left:after {
   top: 50%;
   left: 100%;
   margin-top: -5px;
-  border-color: transparent transparent transparent black;
+  border-color: transparent transparent transparent lightgrey;
 }
 .fun-tooltip-right:after {
   top: 50%;
   right: 100%;
   margin-top: -5px;
   border-width: 5px;
-  border-color: transparent black transparent transparent;
+  border-color: transparent lightgrey transparent transparent;
 }
 .fun-tooltip-show {
   opacity: 1;
