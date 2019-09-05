@@ -431,7 +431,7 @@ class StripeVolumeTestCase(FunTestCase):
                                             (1024 ** 3)) + "G"
         if "runtime" in job_inputs:
             self.fio_cmd_args["runtime"] = job_inputs["runtime"]
-            self.fio_cmd_args["timeout"] = int(job_inputs["runtime"]) + 60
+            self.fio_cmd_args["timeout"] = int(job_inputs["runtime"]) + 120
 
         self.fs = fun_test.shared_variables["fs_objs"]
         self.come_obj = fun_test.shared_variables["come_obj"]
