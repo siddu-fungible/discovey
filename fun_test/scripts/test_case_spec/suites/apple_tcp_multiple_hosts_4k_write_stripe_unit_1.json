@@ -5,6 +5,5 @@
         "asset_request": {"DUT": {"num": 1}, "Host": {"num": 10}}}
     }
   },
-  {"path": "storage/apple_tcp_multiple_hosts_4k_rand_write_stripe_unit_1.py"},
   {"path": "storage/apple_tcp_multiple_hosts_4k_seq_write_stripe_unit_1.py"}
 ]

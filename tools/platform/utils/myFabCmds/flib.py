@@ -437,15 +437,11 @@ def _make_gateway(index=0):
 ## flash image ##
 @roles('bmc')
 @task
-def flashF(index=0, force=False, type=None, image=None, version=None):
+def flashF(index=0, flags=False, type=None, image=None, version=None):
     """ flash image of chip[index] over type tftp with provided arguments """
     global child
     CCHUID = 3 - int(index)
-    #bootargs = 'cc_huid={} sku=SKU_FS1600_{} app=fw_upgrade boot-reserved=0x2000000@0x12000000 '.format(CCHUID, index)
-    if force:
-        bootargs = 'app=fw_upgrade --active boot-reserved=0x2000000@0x12000000 '
-    else:
-        bootargs = 'app=fw_upgrade boot-reserved=0x2000000@0x12000000 '
+    bootargs = 'cc_huid={} sku=SKU_FS1600_{} app=fw_upgrade syslog=6 boot-reserved=0x2000000@0x12000000 '.format(CCHUID, index)
     #print bootargs
 
     command = 'tftpboot'
@@ -453,14 +449,20 @@ def flashF(index=0, force=False, type=None, image=None, version=None):
         sys.exit("image-path and version are multually exclusive ...")
 
     if version:
-        if type not in [ 'eepr', 'host', 'emmc' ]:
-            sys.exit("image-type %s not-supported only=['eepr', 'host', 'emmc' ] ..." % type)
+        if type not in [ 'pufr', 'frmw', 'eepr', 'host', 'emmc', 'sbpf' ]:
+            sys.exit("image-type %s not-supported only=['pufr', 'frmw', 'sbpf', 'eepr', 'host', 'emmc' ] ..." % type)
         elif type == 'eepr':
             fimage='funsdk-release/{}/eeprom_fs1600_{}_packed.bin'.format(version, index)
         elif type == 'host':
             fimage='funsdk-release/{}/host_firmware_packed.bin'.format(version)
         elif type == 'emmc':
             fimage='funsdk-release/{}/emmc_image.bin'.format(version)
+        elif type == 'sbpf':
+            fimage='funsdk-release/{}/esecure_firmware_all.bin'.format(version)
+        elif type == 'pufr':
+            fimage='funsdk-release/{}/esecure_puf_rom_packed.bin'.format(version)
+        elif type == 'frmw':
+            fimage='funsdk-release/{}/esecure_firmware_packed.bin'.format(version)
         else:
             sys.exit("image-type %s not-supported ..." % type)
     elif image:
@@ -474,7 +476,8 @@ def flashF(index=0, force=False, type=None, image=None, version=None):
 
     st = os.stat('/tmp/wgetfile')
     fsize = st.st_size
-    bootargs += 'fw-upgrade-{}={}@0xa800000080000000'.format(type, fsize)
+    FLAGS = "" if not flags else ":%s" % flags
+    bootargs += 'fw-upgrade-{}={}@0xa800000080000000{}'.format(type, fsize, FLAGS)
     print bootargs
 
     child = connectF(index, True)
