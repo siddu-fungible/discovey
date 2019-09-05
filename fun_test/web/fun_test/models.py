@@ -184,8 +184,8 @@ class SuiteExecution(models.Model):
     build_done = models.BooleanField(default=False)
     auto_scheduled_execution_id = models.IntegerField(default=-1)
     disable_schedule = models.BooleanField(default=False)
-    assets_used = JSONField(default={})
-    run_time = JSONField(default={})
+    assets_used = JSONField(default={}, null=True)
+    run_time = JSONField(default={}, null=True)
     is_re_run = models.NullBooleanField(default=False)
     re_run_info = JSONField(default={}, null=True)
 
@@ -248,7 +248,7 @@ class LastSuiteExecution(models.Model):
         else:
             LastSuiteExecution(last_suite_execution_id=10).save()
 
-
+        return LastSuiteExecution.objects.first().last_suite_execution_id
 class LastTestCaseExecution(models.Model):
     last_test_case_execution_id = models.IntegerField(unique=True, default=10)
 

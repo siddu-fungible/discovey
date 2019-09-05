@@ -425,7 +425,7 @@ def re_run_job(request):
                 if script_path not in script_filter:
                     continue
 
-            if result_filter and (result_filter != test_case_execution.result):
+            if result_filter and (test_case_execution.result not in result_filter):
                 continue
             if script_path not in re_run_info:
                 re_run_info[script_path] = {}
@@ -434,12 +434,17 @@ def re_run_job(request):
         re_use_build_image = request_json.get("re_use_build_image", None)
         original_suite_execution = SuiteExecution.objects.get(execution_id=original_suite_execution_id)
 
-        original_environment = original_suite_execution.environment
-        with_jenkins_build = original_environment.get("with_jenkins_build", None)
-        if with_jenkins_build:
-            tftp_image_path = original_environment.get("tftp_image_path", None)
-            if tftp_image_path and not re_use_build_image:
-                del original_environment["tftp_image_path"]
+        original_environment = None
+        try:
+            original_environment = json.loads(original_suite_execution.environment)
+        except:
+            pass
+        if original_environment:
+            with_jenkins_build = original_environment.get("with_jenkins_build", None)
+            if with_jenkins_build:
+                tftp_image_path = original_environment.get("tftp_image_path", None)
+                if tftp_image_path and not re_use_build_image:
+                    del original_environment["tftp_image_path"]
 
         new_suite_execution = original_suite_execution
         new_suite_execution.pk = None
@@ -452,10 +457,11 @@ def re_run_job(request):
         new_suite_execution.finalized = False
         new_suite_execution.preserve_logs = False
         new_suite_execution.state = JobStatusType.SUBMITTED
-        new_suite_execution.run_time = None
+        new_suite_execution.run_time = {}
         new_suite_execution.assets_used = None
         new_suite_execution.test_case_execution_ids = json.dumps([])
         new_suite_execution.is_re_run = True
+        new_suite_execution.re_run_info = re_run_info
         new_suite_execution.save()
 
         SuiteReRunInfo(original_suite_execution_id=original_suite_execution_id,

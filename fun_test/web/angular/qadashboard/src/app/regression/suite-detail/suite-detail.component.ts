@@ -267,7 +267,7 @@ export class SuiteDetailComponent implements OnInit {
 
 
   reRunClick(suiteExecutionId, suitePath, resultFilter=null, scriptFilter=null, reUseBuildImage=null) {
-    this.reRunService.submitReRun(this.suiteExecution.fields.suite_id, suitePath, resultFilter, scriptFilter, reUseBuildImage).subscribe(response => {
+    this.reRunService.submitReRun(suiteExecutionId, this.suiteExecution.fields.suite_id, resultFilter, scriptFilter, reUseBuildImage).subscribe(response => {
       alert("Re-run submitted");
       window.location.href = "/regression";
     }, error => {

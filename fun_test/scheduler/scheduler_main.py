@@ -613,9 +613,9 @@ class SuiteWorker(Thread):
         elif self.job_suite_type == SuiteType.DYNAMIC:
             script_items = self.get_scripts(suite_id=self.job_suite_id)
 
-        script_paths = [SCRIPTS_DIR + "/" + x["script_path"] for x in script_items]
+        script_paths = [SCRIPTS_DIR + "/" + x["script_path"].lstrip("/") for x in script_items]
         if self.job_suite_type == SuiteType.TASK:
-            script_paths = [TASKS_DIR + "/" + x["script_path"] for x in script_items]
+            script_paths = [TASKS_DIR + "/" + x["script_path"].lstrip("/") for x in script_items]
 
         scripts_exist, error_message = self.ensure_scripts_exists(script_paths)
         if not scripts_exist:
@@ -704,9 +704,9 @@ class SuiteWorker(Thread):
 
     def start_script(self, script_item, script_item_index):
         # print ("Start_script: {}".format(script_item))
-        script_path = SCRIPTS_DIR + "/" + script_item["script_path"]
+        script_path = SCRIPTS_DIR + "/" + script_item["script_path"].lstrip("/")
         if self.job_suite_type == SuiteType.TASK:
-            script_path = TASKS_DIR + "/" + script_item["script_path"]
+            script_path = TASKS_DIR + "/" + script_item["script_path"].lstrip("/")
         self.last_script_path = script_path
         self.update_suite_run_time("last_script_path", self.last_script_path)
 
@@ -750,10 +750,9 @@ class SuiteWorker(Thread):
                     re_run_info = {}
                     if self.job_re_run_info:
                         if relative_path in self.job_re_run_info:
-                            re_run_info
+                            re_run_info = self.job_re_run_info[relative_path]
 
-                if "re_run_info" in script_item:
-                    popens.append("--re_run_info={}".format(json.dumps(script_item["re_run_info"])))
+                popens.append("--re_run_info={}".format(json.dumps(re_run_info)))
                 if self.job_environment:
                     popens.append("--environment={}".format(json.dumps(self.job_environment)))  # TODO: validate
 

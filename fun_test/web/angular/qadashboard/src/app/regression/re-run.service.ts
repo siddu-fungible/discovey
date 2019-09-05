@@ -18,8 +18,8 @@ export class ReRunService {
   constructor(private apiService: ApiService, private loggerService: LoggerService) {
   }
 
-  submitReRun(suiteExecution, resultFilter=null, scriptFilter=null, reUseBuildImage=null) {
-    let payload = {suite_execution_id: suiteExecution.execution_id, suite_id: suiteExecution.suite_id, result_filter: resultFilter, script_filter: scriptFilter, re_use_build_image: reUseBuildImage};
+  submitReRun(suiteExecutionId, suiteId, resultFilter=null, scriptFilter=null, reUseBuildImage=null) {
+    let payload = {original_suite_execution_id: suiteExecutionId, suite_id: suiteId, result_filter: resultFilter, script_filter: scriptFilter, re_use_build_image: reUseBuildImage};
     return this.apiService.post('/api/v1/regression/re_run_job', payload);
   }
 
