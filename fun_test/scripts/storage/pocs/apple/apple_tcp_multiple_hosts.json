@@ -9,7 +9,7 @@
     "funcp_mode": "ep",
     "num_f1_per_fs": 1,
     "num_f1s": 1,
-    "num_hosts": 8,
+    "num_hosts": 10,
     "fpg_int_prefix": "fpg",
     "load_modules": ["nvme_tcp"],
     "syslog": 2,
