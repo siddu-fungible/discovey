@@ -19,7 +19,7 @@ class ApcPduScript(FunTestScript):
 
 
 class ApcPduTestcase(FunTestCase):
-    NUMBER_OF_ITERATIONS = 10
+    NUMBER_OF_ITERATIONS = 50
 
     def describe(self):
         self.set_test_details(id=1,
@@ -33,7 +33,6 @@ class ApcPduTestcase(FunTestCase):
 
     def setup(self):
         fs_name = fun_test.get_job_environment_variable("test_bed_type")
-        # fs_name = "fs-41"
         self.fs = AssetManager().get_fs_by_name(fs_name)
         self.apc_info = self.fs.get("apc_info", None)
         self.outlet_no = self.apc_info.get("outlet_number", None)
@@ -66,7 +65,11 @@ class ApcPduTestcase(FunTestCase):
 
             fun_test.add_checkpoint(checkpoint="ITERATION : {}".format(pc_no))
 
-            self.apc_pdu_reboot(come_handle)
+            self.apc_pdu_reboot(come_handle, fpga_handle)
+
+            fun_test.log("Checking if FPGA is up")
+            fpga_up = fpga_handle.ensure_host_is_up(max_wait_time=600)
+            fun_test.test_assert(fpga_up, "FPGA is UP")
 
             fun_test.log("Checking if COMe is UP")
             come_up = come_handle.ensure_host_is_up(max_wait_time=600)
@@ -80,22 +83,18 @@ class ApcPduTestcase(FunTestCase):
                 up_time_min = int(up_time.group(1))
                 if up_time_min <= 5:
                     up_time_less_than_5 = True
-            fun_test.test_assert(up_time_less_than_5, "COMe 'uptime' less than 5 min")
+            fun_test.test_assert(up_time_less_than_5, "COMe 'up-time' less than 5 min")
 
             fun_test.log("Checking if BMC is UP")
             bmc_up = qa_02_handle.ping(dst=self.fs['bmc']['mgmt_ip'])
             fun_test.test_assert(bmc_up, "BMC is UP")
-            qa_02_handle.destroy()
-
-            fun_test.log("Checking if FPGA is up")
-            fpga_up = fpga_handle.ensure_host_is_up()
-            fun_test.test_assert(fpga_up, "FPGA is UP")
 
             come_handle.destroy()
             qa_02_handle.destroy()
             fpga_handle.destroy()
 
-            # Since we are going to load the image now, so kill all the handles.
+            # Since we are going to load the image now, so kill all the handles before
+            # this otherwise some issue might come in.
 
             topology_helper = TopologyHelper()
             topology_helper.set_dut_parameters(f1_parameters={0: {"boot_args": self.f1_0_boot_args},
@@ -134,7 +133,7 @@ class ApcPduTestcase(FunTestCase):
 
             fun_test.sleep("Sleeping for 10s before next iteration", seconds=10)
 
-    def apc_pdu_reboot(self, come_handle):
+    def apc_pdu_reboot(self, come_handle, fpga_handle):
         '''
         1. check if COMe is up, than power off.
         2. check COMe now, if its down tha power on
@@ -143,10 +142,18 @@ class ApcPduTestcase(FunTestCase):
         '''
         fun_test.log("Iteration no: {} out of {}".format(self.pc_no + 1, self.NUMBER_OF_ITERATIONS))
 
+        fun_test.log("Checking if FPGA is up")
+        fpga_up = fpga_handle.ensure_host_is_up()
+        fun_test.add_checkpoint("FPGA is UP (before switching off fs outlet)",
+                                self.to_str(fpga_up), True, fpga_up)
+        fpga_handle.destroy()
+
+        fun_test.log("Checking if COMe is UP")
         come_up = come_handle.ensure_host_is_up()
-        come_handle.destroy()
-        fun_test.add_checkpoint("COMe is UP (before powercycle)",
+        fun_test.add_checkpoint("COMe is UP (before switching off fs outlet)",
                                 self.to_str(come_up), True, come_up)
+        come_handle.destroy()
+
         apc_pdu = ApcPdu(host_ip=self.apc_info['host_ip'], username=self.apc_info['username'],
                          password=self.apc_info['password'])
         fun_test.sleep(message="Wait for few seconds after connect with apc power rack", seconds=5)
@@ -157,9 +164,16 @@ class ApcPduTestcase(FunTestCase):
         fun_test.test_assert(outlet_off, "Power down FS")
 
         fun_test.sleep(message="Wait for few seconds after switching off fs outlet", seconds=5)
+
+        fun_test.log("Checking if FPGA is down")
+        fpga_down = not (fpga_handle.ensure_host_is_up(max_wait_time=30))
+        fun_test.test_assert(fpga_down, "FPGA is Down")
+        fpga_handle.destroy()
+
+        fun_test.log("Checking if COMe is down")
         come_down = not (come_handle.ensure_host_is_up(max_wait_time=30))
-        come_handle.destroy()
         fun_test.test_assert(come_down, "COMe is Down")
+        come_handle.destroy()
 
         apc_outlet_on_msg = apc_pdu.outlet_on(self.outlet_no)
         fun_test.log("APC PDU outlet on message {}".format(apc_outlet_on_msg))
