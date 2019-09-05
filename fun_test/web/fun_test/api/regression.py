@@ -428,8 +428,8 @@ def re_run_job(request):
             if result_filter and (result_filter != test_case_execution.result):
                 continue
             if script_path not in re_run_info:
-                re_run_info[script_path] = []
-            re_run_info[script_path].append(test_case_execution.test_case_id)
+                re_run_info[script_path] = {}
+            re_run_info[script_path][test_case_execution.test_case_id] = {"test_case_execution_id": test_case_execution.execution_id}
         suite_id = request_json.get("suite_id", None)
         re_use_build_image = request_json.get("re_use_build_image", None)
         original_suite_execution = SuiteExecution.objects.get(execution_id=original_suite_execution_id)

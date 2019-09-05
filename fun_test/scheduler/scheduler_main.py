@@ -407,6 +407,9 @@ class SuiteWorker(Thread):
         self.local_scheduler_logger = None
         self.log_handler = None
         self.script_items = None
+        self.job_re_run_info = job_spec.re_run_info
+        self.job_is_re_run = job_spec.is_re_run
+
 
         self.current_script_process = None  # run-time # done
         self.suite_shutdown = False  # run-time
@@ -521,29 +524,6 @@ class SuiteWorker(Thread):
 
         suite = Suite.objects.get(id=suite_id)
         return suite.entries
-
-        """
-        all_tags = []
-        items = []
-        if suite_file:
-            suite_spec = parse_suite(suite_name=suite_file, suite_type=suite_type)
-            suite_level_tags = get_suite_level_tags(suite_spec=suite_spec)
-            all_tags.extend(suite_level_tags)
-            items = suite_spec
-        else:
-            suite_spec = json.loads(dynamic_suite_spec)
-            suite_level_tags = get_suite_level_tags(suite_spec=suite_spec)
-            all_tags.extend(suite_level_tags)
-            items = suite_spec
-
-        all_tags = list(set(all_tags))
-        self.apply_tags_to_items(items=items, tags=all_tags)
-        suite_execution = models_helper.get_suite_execution(suite_execution_id=suite_execution_id)
-        if suite_execution:
-            suite_execution_tags = json.loads(suite_execution.tags)
-            all_tags.extend(suite_execution_tags)
-        """
-        return items
 
     def abort_suite(self, error_message):
         self.shutdown_reason = ShutdownReason.ABORTED
@@ -766,6 +746,12 @@ class SuiteWorker(Thread):
                 script_level_test_case_ids = script_item.get("test_case_ids", None)
                 if script_level_test_case_ids:
                     popens.append("--test_case_ids=" + ','.join(str(v) for v in script_item["test_case_ids"]))
+                if self.job_is_re_run:
+                    re_run_info = {}
+                    if self.job_re_run_info:
+                        if relative_path in self.job_re_run_info:
+                            re_run_info
+
                 if "re_run_info" in script_item:
                     popens.append("--re_run_info={}".format(json.dumps(script_item["re_run_info"])))
                 if self.job_environment:

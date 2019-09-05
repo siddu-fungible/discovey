@@ -308,8 +308,10 @@ def queue_job3(suite_id=None,
     if not inputs:
         inputs = {}
 
+    suite_execution = None
     try:
         suite_path = None
+
         if suite_type == SuiteType.DYNAMIC:
             try:
                 original_suite = Suite.objects.get(id=original_suite_execution_id)
@@ -329,7 +331,7 @@ def queue_job3(suite_id=None,
         is_auto_scheduled_job = is_auto_scheduled(scheduling_type=scheduling_type, repeat_in_minutes=repeat_in_minutes)
         job_state = JobStatusType.AUTO_SCHEDULED if is_auto_scheduled_job else JobStatusType.SUBMITTED
 
-        suite_execution = None
+
         suite_execution = models_helper.add_suite_execution(submitted_time=get_current_time(),
                                                             scheduled_time=get_current_time(),
                                                             completed_time=get_current_time(),
@@ -387,31 +389,6 @@ def queue_job3(suite_id=None,
         # TODO: Remove suite execution entry
     # print("Job Id: {} suite: {} Submitted".format(suite_execution.execution_id, suite_path))
     return result
-
-
-
-def get_archived_file_name(suite_execution_id):
-    glob_str = ARCHIVED_JOBS_DIR + "/{}.{}".format(suite_execution_id,
-                                                   ARCHIVED_JOB_EXTENSION)
-    files = glob.glob(glob_str)
-    return files[0]
-
-
-
-def re_queue_job(suite_execution_id,
-                 test_case_execution_id=None,
-                 suite_path=None,
-                 script_path=None):
-    archived_job_file = get_archived_file_name(suite_execution_id=suite_execution_id)
-    job_spec = parse_file_to_json(file_name=archived_job_file)
-    if test_case_execution_id:
-        job_spec["test_case_ids"] = [test_case_execution_id]
-        job_spec["suite_path"] = suite_path
-        job_spec["script_path"] = script_path
-        if "email_list" in job_spec:
-            job_spec["email_list"] = job_spec["email_list"]
-    job_spec["scheduling_type"] = SchedulingType.ASAP
-    return queue_job2(job_spec=job_spec)
 
 
 def parse_file_to_json(file_name):

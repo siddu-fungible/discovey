@@ -187,6 +187,7 @@ class SuiteExecution(models.Model):
     assets_used = JSONField(default={})
     run_time = JSONField(default={})
     is_re_run = models.NullBooleanField(default=False)
+    re_run_info = JSONField(default={}, null=True)
 
     def __str__(self):
         s = "Suite: {} {} state: {}".format(self.execution_id, self.suite_path, self.state)
