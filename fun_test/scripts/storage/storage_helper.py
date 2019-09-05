@@ -359,7 +359,6 @@ def vol_stats_diff(initial_vol_stats, final_vol_stats, vol_details):
     result = {"status": False, "stats_diff": None, "total_diff": None}
     dict_vol_details = {}
     stats_diff = {}
-    # blt_combined_stat = {}
     total_diff = {}
     stats_exclude_list = ["drive_uuid", "extent_size", "fault_injection", "flvm_block_size", "flvm_vol_size_blocks",
                           "se_size"]
@@ -370,7 +369,6 @@ def vol_stats_diff(initial_vol_stats, final_vol_stats, vol_details):
             dict_vol_details[x] = vol_details[x]
         for i, vol_group in dict_vol_details.iteritems():
             stats_diff[i] = {}
-            # blt_combined_stat[i] = {}
             for vol_type, vol_uuids in sorted(vol_group.iteritems()):
                 if vol_type not in stats_diff:
                     stats_diff[i][vol_type] = {}
@@ -380,29 +378,15 @@ def vol_stats_diff(initial_vol_stats, final_vol_stats, vol_details):
                     if (vol_type in final_vol_stats and vol_uuid in final_vol_stats[vol_type]) and (
                             vol_type in initial_vol_stats and vol_uuid in initial_vol_stats[vol_type]):
                         for stats_field in set(final_vol_stats[vol_type][vol_uuid]["stats"]) - set(stats_exclude_list):
-                            # if stats_field not in blt_combined_stat[i]:
-                            #    blt_combined_stat[i][stats_field] = 0
                             stats_diff[i][vol_type][vol_uuid][stats_field] = \
                                 final_vol_stats[vol_type][vol_uuid]["stats"][stats_field] - initial_vol_stats[
                                     vol_type][vol_uuid]["stats"][stats_field]
-                            # To have agrregated BLT stats under each EC volume,
-                            # all volumes BLT stats are collected in total_diff
-                            #
-                            # if vol_type == "VOL_TYPE_BLK_LOCAL_THIN":
-                            #    if blt_combined_stat[i][stats_field] == 0:
-                            #        stats_diff[i][vol_type]['blt_combined'] = {}
-                            #        stats_diff[i][vol_type]['blt_combined'][stats_field] = {}
-                            #    blt_combined_stat[i][stats_field] = blt_combined_stat[i][stats_field] + \
-                            #                                        stats_diff[i][vol_type][vol_uuid][stats_field]
-                            #    stats_diff[i][vol_type]['blt_combined'][stats_field] = blt_combined_stat[i][
-                            #        stats_field]
 
         for i, vol_group in stats_diff.iteritems():
             for vol_type, vol_uuids in sorted(vol_group.iteritems()):
                 if vol_type not in total_diff:
                     total_diff[vol_type] = {}
                 for vol_uuid in vol_uuids:
-                    # if vol_uuid != "blt_combined":
                     for stats_field in aggregated_diff_stats_list:
                         if stats_field not in total_diff[vol_type]:
                             total_diff[vol_type][stats_field] = 0
@@ -427,18 +411,20 @@ def unpack_nested_dict(input_dict, prefix=''):
     return unpacked_stats
 
 
-def get_diff_results(old_result, new_result):
+def get_results_diff(old_result, new_result):
     result = {}
     try:
         for key, val in new_result.iteritems():
             if isinstance(val, dict):
-                result[key] = get_diff_results(old_result=old_result[key], new_result=new_result[key])
+                result[key] = get_results_diff(old_result=old_result[key], new_result=new_result[key])
             elif isinstance(val, list):
                 result[key] = []
                 try:
                     result[key].append(map(subtract, val, old_result[key]))
                 except Exception as ex:
                     fun_test.critical(str(ex))
+            elif isinstance(val, str) or isinstance(val, unicode):
+                continue
             else:
                 if not key in old_result:
                     old_result[key] = 0
@@ -577,7 +563,7 @@ class CollectStats(object):
                     if display_diff:
                         if not hasattr(self, "old_per_vp_stats"):
                             self.old_per_vp_stats = self.new_per_vp_stats
-                        diff_per_vp_stats = get_diff_results(old_result=self.old_per_vp_stats,
+                        diff_per_vp_stats = get_results_diff(old_result=self.old_per_vp_stats,
                                                              new_result=self.new_per_vp_stats)
                         self.old_per_vp_stats = self.new_per_vp_stats
 
@@ -784,7 +770,7 @@ class CollectStats(object):
                     if display_diff:
                         if not hasattr(self, "old_vppkts_stats"):
                             self.old_vppkts_stats = self.new_vppkts_stats
-                        diff_vppkts_stats = get_diff_results(old_result=self.old_vppkts_stats,
+                        diff_vppkts_stats = get_results_diff(old_result=self.old_vppkts_stats,
                                                              new_result=self.new_vppkts_stats)
                     self.old_vppkts_stats = self.new_vppkts_stats
 
@@ -852,7 +838,7 @@ class CollectStats(object):
                     if display_diff:
                         if not hasattr(self, "old_psw_stats"):
                             self.old_psw_stats = self.new_psw_stats
-                        diff_psw_stats = get_diff_results(old_result=self.old_psw_stats, new_result=self.new_psw_stats)
+                        diff_psw_stats = get_results_diff(old_result=self.old_psw_stats, new_result=self.new_psw_stats)
                     self.old_psw_stats = self.new_psw_stats
 
                     result_psw_stats = OrderedDict()
@@ -919,7 +905,7 @@ class CollectStats(object):
                     if display_diff:
                         if not hasattr(self, "old_fcp_stats"):
                             self.old_fcp_stats = self.new_fcp_stats
-                        diff_fcp_stats = get_diff_results(old_result=self.old_fcp_stats, new_result=self.new_fcp_stats)
+                        diff_fcp_stats = get_results_diff(old_result=self.old_fcp_stats, new_result=self.new_fcp_stats)
                     self.old_fcp_stats = self.new_fcp_stats
 
                     result_fcp_stats = OrderedDict()
@@ -986,7 +972,7 @@ class CollectStats(object):
                     if display_diff:
                         if not hasattr(self, "old_wro_stats"):
                             self.old_wro_stats = self.new_wro_stats
-                        diff_wro_stats = get_diff_results(old_result=self.old_wro_stats, new_result=self.new_wro_stats)
+                        diff_wro_stats = get_results_diff(old_result=self.old_wro_stats, new_result=self.new_wro_stats)
                     self.old_wro_stats = self.new_wro_stats
 
                     result_wro_stats = OrderedDict()
@@ -1053,7 +1039,7 @@ class CollectStats(object):
                     if display_diff:
                         if not hasattr(self, "old_erp_stats"):
                             self.old_erp_stats = self.new_erp_stats
-                        diff_erp_stats = get_diff_results(old_result=self.old_erp_stats, new_result=self.new_erp_stats)
+                        diff_erp_stats = get_results_diff(old_result=self.old_erp_stats, new_result=self.new_erp_stats)
                     self.old_erp_stats = self.new_erp_stats
 
                     result_erp_stats = OrderedDict()
@@ -1120,7 +1106,7 @@ class CollectStats(object):
                     if display_diff:
                         if not hasattr(self, "old_etp_stats"):
                             self.old_etp_stats = self.new_etp_stats
-                        diff_etp_stats = get_diff_results(old_result=self.old_etp_stats, new_result=self.new_etp_stats)
+                        diff_etp_stats = get_results_diff(old_result=self.old_etp_stats, new_result=self.new_etp_stats)
                     self.old_etp_stats = self.new_etp_stats
 
                     result_etp_stats = OrderedDict()
@@ -1181,7 +1167,7 @@ class CollectStats(object):
                     if display_diff:
                         if not hasattr(self, "old_eqm_stats"):
                             self.old_eqm_stats = self.new_eqm_stats
-                        diff_eqm_stats = get_diff_results(old_result=self.old_eqm_stats, new_result=self.new_eqm_stats)
+                        diff_eqm_stats = get_results_diff(old_result=self.old_eqm_stats, new_result=self.new_eqm_stats)
                     self.old_eqm_stats = self.new_eqm_stats
 
                     result_eqm_stats = OrderedDict()
@@ -1242,7 +1228,7 @@ class CollectStats(object):
                     if display_diff:
                         if not hasattr(self, "old_hu_stats"):
                             self.old_hu_stats = self.new_hu_stats
-                        diff_hu_stats = get_diff_results(old_result=self.old_hu_stats, new_result=self.new_hu_stats)
+                        diff_hu_stats = get_results_diff(old_result=self.old_hu_stats, new_result=self.new_hu_stats)
                     self.old_hu_stats = self.new_hu_stats
 
                     result_hu_stats = OrderedDict()
@@ -1303,7 +1289,7 @@ class CollectStats(object):
                     if display_diff:
                         if not hasattr(self, "old_ddr_stats"):
                             self.old_ddr_stats = self.new_ddr_stats
-                        diff_ddr_stats = get_diff_results(old_result=self.old_ddr_stats, new_result=self.new_ddr_stats)
+                        diff_ddr_stats = get_results_diff(old_result=self.old_ddr_stats, new_result=self.new_ddr_stats)
                     self.old_ddr_stats = self.new_ddr_stats
 
                     result_ddr_stats = OrderedDict()
@@ -1364,7 +1350,7 @@ class CollectStats(object):
                     if display_diff:
                         if not hasattr(self, "old_ca_stats"):
                             self.old_ca_stats = self.new_ca_stats
-                        diff_ca_stats = get_diff_results(old_result=self.old_ca_stats, new_result=self.new_ca_stats)
+                        diff_ca_stats = get_results_diff(old_result=self.old_ca_stats, new_result=self.new_ca_stats)
                     self.old_ca_stats = self.new_ca_stats
 
                     result_ca_stats = OrderedDict()
@@ -1425,7 +1411,7 @@ class CollectStats(object):
                     if display_diff:
                         if not hasattr(self, "old_cdu_stats"):
                             self.old_cdu_stats = self.new_cdu_stats
-                        diff_cdu_stats = get_diff_results(old_result=self.old_cdu_stats, new_result=self.new_cdu_stats)
+                        diff_cdu_stats = get_results_diff(old_result=self.old_cdu_stats, new_result=self.new_cdu_stats)
                     self.old_cdu_stats = self.new_cdu_stats
 
                     result_cdu_stats = OrderedDict()
