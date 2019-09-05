@@ -2591,6 +2591,18 @@
                   },
                   {
                     "metric_model_name": "MetricContainer",
+                    "name": "alibaba_bmv_storage_local_ssd",
+                    "label": "Local",
+                    "reference": true
+                  },
+                  {
+                    "metric_model_name": "MetricContainer",
+                    "name": "alibaba_bmv_storage_remote_ssd",
+                    "label": "Remote",
+                    "reference": true
+                  },
+                  {
+                    "metric_model_name": "MetricContainer",
                     "name": "4kb_12_volume_12_ssd_raw_block_nvmetcp",
                     "label": "NVMe/TCP - Single host",
                     "children": [
