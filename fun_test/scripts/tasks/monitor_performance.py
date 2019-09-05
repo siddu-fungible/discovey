@@ -92,7 +92,7 @@ class EmailPerformanceDrop(PerformanceTc):
             for metric in metrics:
                 metric_id = metric.metric_id
                 chart = MetricChart.objects.get(metric_id=metric_id)
-                data_sets = json.loads(chart.data_sets)
+                data_sets = chart.get_data_sets()
                 metric_model_name = chart.metric_model_name
                 metric_model = self.app_config.get_metric_models()[metric_model_name]
                 report = {}
