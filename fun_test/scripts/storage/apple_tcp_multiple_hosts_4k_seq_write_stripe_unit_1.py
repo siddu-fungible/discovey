@@ -320,6 +320,8 @@ class StripeVolumeLevelScript(FunTestScript):
                                      format(key, self.funcp_spec[0]["container_names"][index], ip))
 
     def cleanup(self):
+	pass
+	'''
         # Umount and disconnect from host
         try:
             self.final_host_ips = fun_test.shared_variables["final_host_ips"]
@@ -339,7 +341,7 @@ class StripeVolumeLevelScript(FunTestScript):
             fun_test.log("Storage controller disconnect failed")
         fun_test.sleep("Allowing buffer time before clean-up", 30)
         self.topology.cleanup()
-
+	'''
 
 class StripeVolumeTestCase(FunTestCase):
     def describe(self):
