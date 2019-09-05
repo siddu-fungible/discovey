@@ -28,11 +28,12 @@ def post_results(volume, test, num_host, block_size, io_depth, size, operation, 
                  write_latency, write_90_latency, write_95_latency, write_99_latency, write_99_99_latency, read_latency,
                  read_90_latency, read_95_latency, read_99_latency, read_99_99_latency, fio_job_name,
                  write_amp_vol_stats, read_amp_vol_stats, aggr_amp_vol_stats, write_amp_app_stats, read_amp_app_stats,
-                 aggr_amp_app_stats):
+                 aggr_amp_app_stats, write_amp_rcnvme_stats, read_amp_rcnvme_stats, aggr_amp_rcnvme_stats):
     for i in ["write_iops", "read_iops", "write_bw", "read_bw", "write_latency", "write_90_latency", "write_95_latency",
               "write_99_latency", "write_99_99_latency", "read_latency", "read_90_latency", "read_95_latency",
               "read_99_latency", "read_99_99_latency", "fio_job_name", "write_amp_vol_stats", "read_amp_vol_stats",
-              "aggr_amp_vol_stats", "write_amp_app_stats", "read_amp_app_stats", "aggr_amp_app_stats"]:
+              "aggr_amp_vol_stats", "write_amp_app_stats", "read_amp_app_stats", "aggr_amp_app_stats",
+              "write_amp_rcnvme_stats", "read_amp_rcnvme_stats", "aggr_amp_rcnvme_stats"]:
         if eval("type({}) is tuple".format(i)):
             exec ("{0} = {0}[0]".format(i))
 
@@ -886,12 +887,14 @@ class ECVolumeLevelTestcase(FunTestCase):
                               "Read Latency 99.99 Percentile in uSecs", "fio_job_name", "Write Amplification Vol Stats",
                               "Read Amplification Vol Stats", "Aggregated Amplification Vol Stats",
                               "Write Amplification App Stats", "Read Amplification App Stats",
-                              "Aggregated Amplification App Stats"]
+                              "Aggregated Amplification App Stats", "Write Amplification rcnvme Stats",
+                              "Read Amplification rcnvme Stats", "Aggregated Amplification rcnvme Stats"]
         table_data_cols = ["num_hosts", "block_size", "iodepth", "size", "mode", "writeiops", "readiops", "writebw",
                            "readbw", "writeclatency", "writelatency90", "writelatency95", "writelatency99",
                            "writelatency9999", "readclatency", "readlatency90", "readlatency95", "readlatency99",
                            "readlatency9999", "fio_job_name", "write_amp_vol_stats", "read_amp_vol_stats",
-                           "aggr_amp_vol_stats", "write_amp_app_stats", "read_amp_app_stats", "aggr_amp_app_stats"]
+                           "aggr_amp_vol_stats", "write_amp_app_stats", "read_amp_app_stats", "aggr_amp_app_stats",
+                           "write_amp_rcnvme_stats", "read_amp_rcnvme_stats", "aggr_amp_rcnvme_stats"]
         table_data_rows = []
 
         self.ec_info = fun_test.shared_variables["ec_info"]
@@ -916,6 +919,8 @@ class ECVolumeLevelTestcase(FunTestCase):
         aggregate_resultant_stats = {}
         initial_vol_stat = {}
         final_vol_stat = {}
+        initial_rcnvme_stat = {}
+        final_rcnvme_stat = {}
 
         start_stats = True
 
@@ -945,6 +950,8 @@ class ECVolumeLevelTestcase(FunTestCase):
             aggregate_resultant_stats[iodepth] = {}
             initial_vol_stat[iodepth] = {}
             final_vol_stat[iodepth] = {}
+            initial_rcnvme_stat[iodepth] = {}
+            final_rcnvme_stat[iodepth] = {}
 
             test_thread_id = {}
             host_clone = {}
@@ -1051,8 +1058,14 @@ class ECVolumeLevelTestcase(FunTestCase):
             if self.cal_amplification:
                 initial_vol_stat[iodepth] = self.storage_controller.peek(
                     props_tree="storage/volumes", legacy=False, chunk=8192, command_duration=self.command_timeout)
-                fun_test.test_assert(initial_vol_stat[iodepth], "Stats collected before the test")
+                fun_test.test_assert(initial_vol_stat[iodepth], "Volume stats collected before the test")
                 fun_test.log("Initial vol stats in script: {}".format(initial_vol_stat[iodepth]))
+
+                initial_rcnvme_stat[iodepth] = self.storage_controller.peek(
+                    props_tree="storage/devices/nvme/ssds", legacy=False, chunk=8192,
+                    command_duration=self.command_timeout)
+                fun_test.test_assert(initial_rcnvme_stat[iodepth]["status"], "rcnvme stats collected before the test")
+                fun_test.log("Initial rcnvme stats in script: {}".format(initial_rcnvme_stat[iodepth]))
 
             for index, host_name in enumerate(self.host_info):
                 start_time = time.time()
@@ -1183,6 +1196,12 @@ class ECVolumeLevelTestcase(FunTestCase):
                         props_tree="storage/volumes", legacy=False, chunk=8192, command_duration=self.command_timeout)
                     fun_test.test_assert(final_vol_stat[iodepth], "Stats collected after the test")
                     fun_test.log("Final vol stats in script: {}".format(final_vol_stat[iodepth]))
+
+                    final_rcnvme_stat[iodepth] = self.storage_controller.peek(
+                        props_tree="storage/devices/nvme/ssds", legacy=False, chunk=8192,
+                        command_duration=self.command_timeout)
+                    fun_test.test_assert(final_rcnvme_stat[iodepth]["status"], "rcnvme stats collected after the test")
+                    fun_test.log("Final rcnvme stats in script: {}".format(final_rcnvme_stat[iodepth]))
 
                 # Collecting final network stats and finding diff between final and initial stats
                 if self.collect_network_stats:
@@ -1320,13 +1339,40 @@ class ECVolumeLevelTestcase(FunTestCase):
                             divide(n=float(float(pbw + pbr)), d=(lbw + lbr)))
                         row_data_dict["aggr_amp_app_stats"] = "{0:.2f}".format(
                             divide(n=float(float(pbw + pbr)), d=(lbw_app + lbr_app)))
-
-                        for key, val in row_data_dict.iteritems():
-                            if key.__contains__("_amp_"):
-                                fun_test.log("{} is:\t {}".format(key, val))
-
                 except Exception as ex:
                     fun_test.critical(str(ex))
+
+                # Calculating amplification based on rcnvme stats
+                try:
+                    if initial_rcnvme_stat[iodepth] or final_rcnvme_stat[iodepth]:
+                        pbr_rcnvme = 0
+                        pbw_rcnvme = 0
+                        rcnvme_diff_stats = {}
+
+                        # Retrieving diff of stats of all ssds
+                        rcnvme_diff_stats = get_results_diff(old_result=initial_rcnvme_stat[iodepth]["data"],
+                                                             new_result=final_rcnvme_stat[iodepth]["data"])
+                        fun_test.simple_assert(rcnvme_diff_stats, "rcnvme diff stats to measure amplification")
+                        # Aggregating all ssds stats
+                        for i in range(len(rcnvme_diff_stats)):
+                            pbr_rcnvme += rcnvme_diff_stats[str(i)]["rcnvme_read_bytes"]
+                            pbw_rcnvme += rcnvme_diff_stats[str(i)]["rcnvme_write_bytes"]
+                        fun_test.log("Iodepth: {}\nPhysical Bytes Written from rcnvme stats: {}\n"
+                                     "Physical Bytes Read from rcnvme stats: {}".format(iodepth, pbw_rcnvme,
+                                                                                        pbr_rcnvme))
+
+                        row_data_dict["write_amp_rcnvme_stats"] = "{0:.2f}".format(divide(n=float(pbw_rcnvme),
+                                                                                          d=lbw_app))
+                        row_data_dict["read_amp_rcnvme_stats"] = "{0:.2f}".format(divide(n=float(pbr_rcnvme),
+                                                                                         d=lbr_app))
+                        row_data_dict["aggr_amp_rcnvme_stats"] = "{0:.2f}".format(
+                            divide(n=float(float(pbw_rcnvme + pbr_rcnvme)), d=(lbw_app + lbr_app)))
+                except Exception as ex:
+                    fun_test.critical(str(ex))
+
+                for key, val in row_data_dict.iteritems():
+                    if key.__contains__("_amp_"):
+                        fun_test.log("{} is:\t {}".format(key, val))
 
             # Building the table raw for this variation
             row_data_list = []
