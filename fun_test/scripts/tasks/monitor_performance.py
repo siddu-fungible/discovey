@@ -10,7 +10,7 @@ from django.utils import timezone
 from web.web_global import JINJA_TEMPLATE_DIR
 from jinja2 import Environment, FileSystemLoader
 from fun_global import get_current_time
-
+from web.fun_test.web_interface import get_performance_url
 
 
 class MyScript(FunTestScript):
@@ -31,7 +31,7 @@ class MyScript(FunTestScript):
 class PerformanceTc(FunTestCase):
     app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
     workspace_ids = [1480]
-    atomic_url = "http://integration.fungible.local/performance/atomic/"
+    atomic_url = get_performance_url() + "/atomic"
     negative_threshold = -5
     positive_threshold = 5
     email_list = [TEAM_REGRESSION_EMAIL]
@@ -98,7 +98,7 @@ class EmailPerformanceDrop(PerformanceTc):
                 report = {}
                 report["chart_name"] = metric.chart_name
                 report["lineage"] = metric.lineage
-                report["url"] = self.atomic_url + str(metric.metric_id)
+                report["url"] = self.atomic_url + "/" + str(metric.metric_id)
                 report["positive"] = chart.positive
                 report["data_sets"] = []
                 email = metric.email
