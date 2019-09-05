@@ -409,7 +409,8 @@ class StorageFsTemplate(object):
         self.come_obj = come_obj
         self.container_info = {}
 
-    def deploy_funcp_container(self, update_deploy_script=True, update_workspace=True, mode=None):
+    def deploy_funcp_container(self, update_deploy_script=True, update_workspace=True, mode=None,
+                               launch_resp_parse=False):
         # check if come is up
         result = {'status': False, 'container_info': {}, 'container_names': []}
         self.mode = mode
@@ -431,7 +432,10 @@ class StorageFsTemplate(object):
         launch_resp = self.launch_funcp_containers(mode)
         if not launch_resp:
             fun_test.critical("FunCP container launch failed")
-            return result
+            if launch_resp_parse:
+                pass
+            else:
+                return result
 
         # get container names.
         get_containers = self.get_container_names()
