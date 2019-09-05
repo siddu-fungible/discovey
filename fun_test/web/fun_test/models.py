@@ -186,6 +186,7 @@ class SuiteExecution(models.Model):
     disable_schedule = models.BooleanField(default=False)
     assets_used = JSONField(default={})
     run_time = JSONField(default={})
+    is_re_run = models.NullBooleanField(default=False)
 
     def __str__(self):
         s = "Suite: {} {} state: {}".format(self.execution_id, self.suite_path, self.state)
@@ -235,6 +236,16 @@ class SuiteExecutionSerializer(serializers.Serializer):
 
 class LastSuiteExecution(models.Model):
     last_suite_execution_id = models.IntegerField(unique=True, default=10)
+
+    @staticmethod
+    def get_next():
+        all = LastSuiteExecution.objects.all()
+        if all.count():
+            first = LastSuiteExecution.objects.first()
+            first.last_suite_execution_id += 1
+            first.save()
+        else:
+            LastSuiteExecution(last_suite_execution_id=10).save()
 
 
 class LastTestCaseExecution(models.Model):

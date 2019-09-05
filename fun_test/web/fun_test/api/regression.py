@@ -3,8 +3,9 @@ from web.web_global import api_safe_json_response
 from django.views.decorators.csrf import csrf_exempt
 from web.fun_test.models import TestBed, Asset
 from django.db.models import Q
-from web.fun_test.models import SuiteExecution, TestCaseExecution, TestbedNotificationEmails
-from web.fun_test.models import ScriptInfo, RegresssionScripts
+from web.fun_test.models import SuiteExecution, TestCaseExecution, TestbedNotificationEmails, LastSuiteExecution
+from web.fun_test.models import ScriptInfo, RegresssionScripts, SuiteReRunInfo
+from scheduler.scheduler_global import SchedulerStates
 from fun_settings import TEAM_REGRESSION_EMAIL, SCRIPTS_DIR
 import json
 from lib.utilities.send_mail import send_mail
@@ -442,8 +443,23 @@ def re_run_job(request):
 
         new_suite_execution = original_suite_execution
         new_suite_execution.pk = None
-        new_suite_execution.execution_id = 0
+        new_suite_execution.execution_id = LastSuiteExecution.get_next()
+        new_suite_execution.submitted_time = get_current_time()
+        new_suite_execution.scheduled_time = get_current_time()
+        new_suite_execution.completed_time = get_current_time()
+        new_suite_execution.started_time = get_current_time()
+        new_suite_execution.result = RESULTS["UNKNOWN"]
+        new_suite_execution.finalized = False
+        new_suite_execution.preserve_logs = False
+        new_suite_execution.state = JobStatusType.SUBMITTED
+        new_suite_execution.run_time = None
+        new_suite_execution.assets_used = None
+        new_suite_execution.test_case_execution_ids = json.dumps([])
+        new_suite_execution.is_re_run = True
+        new_suite_execution.save()
 
+        SuiteReRunInfo(original_suite_execution_id=original_suite_execution_id,
+                       re_run_suite_execution_id=new_suite_execution.execution_id).save()
 
         if suite_id:
             pass
