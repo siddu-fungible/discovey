@@ -122,6 +122,7 @@ class EmailPerformanceDrop(PerformanceTc):
                     reports.append(report)
             if len(reports):
                 print reports
+                status = fun_test.FAILED
                 subject = "Performance drop report - " + str(get_current_time())
                 try:
                     data = self._send_email(email=email, subject=subject, reports=reports)
@@ -132,9 +133,7 @@ class EmailPerformanceDrop(PerformanceTc):
                 except Exception as ex:
                     status = fun_test.FAILED
                     fun_test.critical(str(ex))
-            else:
-                status = fun_test.FAILED
-        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=status, message="Test result")
+        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=status, message="No degraded metrics")
 
 
 if __name__ == "__main__":
