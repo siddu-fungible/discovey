@@ -12,6 +12,7 @@ class ExpandedTopology(ToDictMixin):
         self.hosts = {}
         self.spec = spec
         self.cleaned_up = False
+        self.perf_listener_hosts = {}
 
     def is_cleaned_up(self):
         return self.cleaned_up
@@ -68,6 +69,33 @@ class ExpandedTopology(ToDictMixin):
     def get_host(self, name):
         host = self.hosts.get(name, None)
         return host
+
+    def get_perf_listener_hosts(self):
+        return self.perf_listener_hosts
+
+
+    def get_host_by_interface(self,
+                              dut_index,
+                              host_index=None,
+                              fpg_interface_index=None,
+                              pcie_interface_index=None,
+                              f1_index=0):
+        host = None
+        dut = self.get_dut(index=dut_index)
+        fun_test.simple_assert(dut, "Fetch dut by index: {}".format(dut_index))
+        if pcie_interface_index is not None:
+            host = dut.get_host_on_interface(interface_index=pcie_interface_index, host_index=host_index)
+        return host
+
+    def get_pcie_hosts_on_interfaces(self, dut_index):
+        dut = self.get_dut(index=dut_index)
+        fun_test.simple_assert(dut, "Fetch dut by index: {}".format(dut_index))
+        hosts = {}
+        pcie_interfaces = dut.get_pcie_interfaces()
+        for pcie_interface_index, pcie_interface in pcie_interfaces.iteritems():
+            host = dut.get_host_on_interface_obj(pcie_interface, host_index=0)
+            hosts[pcie_interface_index] = host
+        return hosts
 
     def get_host_instance(self,
                           dut_index,

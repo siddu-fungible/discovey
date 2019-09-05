@@ -108,13 +108,24 @@ def rmmod_funeth_host(hostname, username="localadmin", password="Precious1*"):
             fun_test.sleep(seconds=15, message="waiting for host")
     funeth_op = ""
     try:
+        rdma_op = linux_obj.command(command="lsmod | grep funrdma")
+        if "funrdma" in rdma_op:
+            funrdma_rm = linux_obj.sudo_command("rmmod funrdma")
+            result = "ERROR" not in funrdma_rm
+            critical_log(expression=result, message="FunRDMA removed succesfully")
+            if not result:
+                return False
         funeth_op = linux_obj.command(command="lsmod | grep funeth")
         if "funeth" not in funeth_op:
             return True
         else:
             funeth_rm = linux_obj.sudo_command("rmmod funeth")
-            critical_log(expression="ERROR" not in funeth_rm, message="Funeth removed succesfully")
-            return True
+            result = "ERROR" not in funeth_rm
+            critical_log(expression=result, message="Funeth removed succesfully")
+            if result:
+                return True
+            else:
+                return False
     except:
         return False
 
@@ -127,7 +138,8 @@ def power_cycle_host(hostname):
     linux_obj.sudo_command("ipmitool -I lanplus -H %s-ilo -U ADMIN -P ADMIN chassis power on" % hostname)
 
 
-def test_host_pings(host, ips, username="localadmin", password="Precious1*", strict=False):
+def test_host_pings(host, ips, username="localadmin", password="Precious1*", strict=False, ping_interval=1,
+                    ping_count=5):
     fun_test.log("")
     fun_test.log("================")
     fun_test.log("Pings from Hosts")
@@ -135,7 +147,10 @@ def test_host_pings(host, ips, username="localadmin", password="Precious1*", str
     linux_obj = Linux(host_ip=host, ssh_username=username, ssh_password=password)
     for hosts in ips:
         linux_obj.command(command="ifconfig -a")
-        result = linux_obj.ping(dst=hosts)
+        ping_timeout = 60
+        if ping_count > ping_timeout:
+            ping_timeout = ping_count+10
+        result = linux_obj.ping(dst=hosts, interval=ping_interval, count=ping_count, timeout=ping_timeout)
         if result:
             fun_test.log("%s can reach %s" % (host, hosts))
         else:
@@ -143,6 +158,20 @@ def test_host_pings(host, ips, username="localadmin", password="Precious1*", str
                 fun_test.test_assert(False, 'Cannot ping host')
             else:
                 fun_test.critical("%s cannot reach %s" % (host, hosts))
+
+
+def setup_nu_host(funeth_obj):
+    if not funeth_obj.nu_hosts:
+        return
+    for nu in funeth_obj.nu_hosts:
+        linux_obj = funeth_obj.linux_obj_dict[nu]
+
+        fun_test.test_assert(linux_obj.is_host_up(), 'NU host {} is up'.format(linux_obj.host_ip))
+        fun_test.test_assert(funeth_obj.configure_interfaces(nu), 'Configure NU host {} interface'.format(
+            linux_obj.host_ip))
+        fun_test.test_assert(funeth_obj.configure_ipv4_routes(nu, configure_gw_arp=False),
+                             'Configure NU host {} IPv4 routes'.format(
+            linux_obj.host_ip))
 
 
 def setup_hu_host(funeth_obj, update_driver=True, sriov=4, num_queues=4):
@@ -538,12 +567,19 @@ def test_host_fio(host, username="localadmin", password="Precious1*", strict=Fal
         critical_log(expression=fio_dict, message="Fio Result")
 
 
-def reload_nvme_driver(host, username="localadmin", password="Precious1*"):
+def reload_nvme_driver(host, username="localadmin", password="Precious1*", ns_id=1):
     host_obj = Linux(host_ip=host, ssh_username=username, ssh_password=password,
                      connect_retry_timeout_max=60)
     host_obj.sudo_command("rmmod nvme; rmmod nvme_core", timeout=120)
     fun_test.sleep("Waiting for 10 seconds before loading driver", 10)
     host_obj.sudo_command("modprobe nvme")
+
+    # Check if volume exists
+    lsblk_output = host_obj.lsblk()
+    volume_name = "nvme0n" + str(ns_id)
+    fun_test.test_assert(volume_name in lsblk_output, "{} device available".format(volume_name))
+    fun_test.test_assert_expected(expected="disk", actual=lsblk_output[volume_name]["type"],
+                                  message="{} device type check".format(volume_name))
 
 
 def get_nvme_dev(host, username="localadmin", password="Precious1*"):

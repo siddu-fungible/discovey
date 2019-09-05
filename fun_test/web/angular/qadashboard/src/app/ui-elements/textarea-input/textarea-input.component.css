@@ -1,0 +1,6 @@
+.hover-cell .hover-icon {
+  visibility: hidden;
+}
+.hover-cell:hover .hover-icon {
+  visibility: visible;
+}

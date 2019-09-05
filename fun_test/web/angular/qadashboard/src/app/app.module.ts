@@ -71,6 +71,21 @@ import {RegressionSummaryWidgetComponent} from './regression/regression-summary-
 import {NgxJsonViewerModule} from "ngx-json-viewer";
 import {AnnouncementComponent} from './announcement/announcement.component';
 import { PerformanceSummaryWidgetComponent } from './performance/performance-summary-widget/performance-summary-widget.component';
+import { FunCardComponent } from './fun-card/fun-card.component';
+import { SmokeTestStorageWidgetComponent } from './regression/smoke-test-storage-widget/smoke-test-storage-widget.component';
+import { PerformanceWorkspaceComponent } from './performance/performance-workspace/performance-workspace.component';
+import { PerformanceViewWorkspaceComponent } from './performance/performance-workspace/performance-view-workspace/performance-view-workspace.component';
+import { SuiteExecutionWidgetComponent } from './regression/suite-execution-widget/suite-execution-widget.component';
+import { SuiteEditorComponent } from './regression/suite-editor/suite-editor.component';
+import {ModalModule} from "ngb-modal";
+import { UlErrorPanelComponent } from './ui-elements/ul-error-panel/ul-error-panel.component';
+import { AnnouncementFormComponent } from './performance/admin/announcement-form/announcement-form.component';
+import { MessagesPanelComponent } from './ui-elements/messages-panel/messages-panel.component';
+import { PerformanceShowChartsWorkspaceComponent } from './performance/performance-workspace/performance-view-workspace/performance-show-charts-workspace/performance-show-charts-workspace.component';
+import { PerformanceShowReportWorkspaceComponent } from './performance/performance-workspace/performance-view-workspace/performance-show-report-workspace/performance-show-report-workspace.component';
+import { TextareaInputComponent } from './ui-elements/textarea-input/textarea-input.component';
+import { SuitesViewComponent } from './regression/suite-editor/suites-view/suites-view.component';
+
 
 @NgModule({
   declarations: [
@@ -125,7 +140,20 @@ import { PerformanceSummaryWidgetComponent } from './performance/performance-sum
     ToggleButtonComponent,
     RegressionSummaryWidgetComponent,
     PerformanceSummaryWidgetComponent,
-    AnnouncementComponent
+    AnnouncementComponent,
+    FunCardComponent,
+    SmokeTestStorageWidgetComponent,
+    PerformanceWorkspaceComponent,
+    PerformanceViewWorkspaceComponent,
+    SuiteExecutionWidgetComponent,
+    SuiteEditorComponent,
+    UlErrorPanelComponent,
+    AnnouncementFormComponent,
+    MessagesPanelComponent,
+    PerformanceShowChartsWorkspaceComponent,
+    PerformanceShowReportWorkspaceComponent,
+    TextareaInputComponent,
+    SuitesViewComponent
   ],
   imports: [
     BsDropdownModule,
@@ -144,7 +172,8 @@ import { PerformanceSummaryWidgetComponent } from './performance/performance-sum
     NgbModule,
     NgbTooltipModule,
     NgxJsonViewerModule,
-    ToasterModule.forRoot()
+    ToasterModule.forRoot(),
+    ModalModule
   ],
 
   providers: [ApiService, LoggerService],

@@ -135,7 +135,7 @@ class MultiBLTVolumePerformanceScript(FunTestScript):
             fun_test.log("{} Testbed Config: {}".format(self.testbed_type, self.testbed_config))
             self.fs_hosts_map = utils.parse_file_to_json(SCRIPTS_DIR + "/storage/inspur_fs_hosts_mapping.json")
             self.available_hosts = self.fs_hosts_map[self.testbed_type]["host_info"]
-            self.full_dut_indexes = self.testbed_config["dut_info"]
+            self.full_dut_indexes = [int(i) for i in sorted(self.testbed_config["dut_info"].keys())]
             # Skipping DUTs not required for this test
             self.skip_dut_list = []
             for index in xrange(0, self.dut_start_index):
@@ -488,6 +488,8 @@ class MultiBLTVolumePerformanceScript(FunTestScript):
                 fun_test.critical(str(ex))
                 come_reboot = True
 
+        '''
+        # disabling COMe reboot in cleanup section as, setup bring-up handles it through COMe power-cycle
         try:
             if come_reboot:
                 self.fs.fpga_initialize()
@@ -495,6 +497,7 @@ class MultiBLTVolumePerformanceScript(FunTestScript):
                 self.fs.come_reset(max_wait_time=self.reboot_timeout)
         except Exception as ex:
             fun_test.critical(str(ex))
+        '''
 
         fun_test.log("FS cleanup")
         if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
@@ -583,6 +586,13 @@ class MultiBLTVolumePerformanceTestcase(FunTestCase):
 
         self.nvme_block_device = self.nvme_device + "0n" + str(self.blt_details["ns_id"])
         self.volume_name = self.nvme_block_device.replace("/dev/", "")
+
+        job_inputs = fun_test.get_job_inputs()
+        if not job_inputs:
+            job_inputs = {}
+        fun_test.log("Provided job inputs: {}".format(job_inputs))
+        if "nvme_io_queues" in job_inputs:
+            self.nvme_io_queues = job_inputs["nvme_io_queues"]
 
         if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
                 self.testbed_config["workarounds"]["enable_funcp"]:
@@ -720,14 +730,14 @@ class MultiBLTVolumePerformanceTestcase(FunTestCase):
                                           message="Checking syslog level")
 
             fun_test.sleep("x86 Config done", seconds=10)
-            if hasattr(self, "nvme_io_q"):
+            if hasattr(self, "nvme_io_queues") and self.nvme_io_queues != 0:
                 command_result = self.end_host.sudo_command(
                     "nvme connect -t {} -a {} -s {} -n {} -i {} -q {}".
                         format(unicode.lower(self.transport_type),
                                self.test_network["f1_loopback_ip"],
                                str(self.transport_port),
                                self.nqn,
-                               self.nvme_io_q,
+                               self.nvme_io_queues,
                                self.remote_ip))
                 fun_test.log(command_result)
             else:

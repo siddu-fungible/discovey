@@ -5,12 +5,21 @@ import os, sys
 
 
 class DpcshClient(object):
-    def __init__(self, mode="storage", target_ip=None, target_port=None, verbose=True):
+    def __init__(self, mode="storage", target_ip=None, target_port=None, verbose=True, auto_disconnect=False):
+        """
+
+        :param mode:
+        :param target_ip:
+        :param target_port:
+        :param verbose:
+        :param auto_disconnect: If set dpcsh client will auto disconnect after each command
+        """
         self.target_ip = target_ip
         self.target_port = target_port
         self.sock = None
         self.mode = mode
         self.verbose = verbose
+        self.auto_disconnect = auto_disconnect
 
     def sendall(self, data, command_duration=1):
         start = time.time()
@@ -51,6 +60,10 @@ class DpcshClient(object):
                     break
             else:
                 output += buffer
+        dry_run = fun_test.get_job_environment_variable("dry_run")
+        if dry_run:
+            if "\n" in output:
+                fun_test.log("slash n in output. Output: S: {} xxx E".format(output))
         return output
 
     def _connect(self):
@@ -66,7 +79,7 @@ class DpcshClient(object):
         self.sock = None
         return True
 
-    def command(self, command, legacy=False, command_duration=2, sleep_duration=2, chunk=4096):
+    def command(self, command, legacy=False, command_duration=2, sleep_duration=0.1, chunk=4096):
         result = {"status": False, "data": None, "error_message": None, "command": command}
         output = ""
         try:
@@ -86,7 +99,7 @@ class DpcshClient(object):
                 try:
                     json_output = json.loads(actual_output.strip())
                 except:
-                    fun_test.debug("Unable to parse JSON data")
+                    fun_test.critical("Unable to parse JSON data")
                     json_output = output
                 result["status"] = True
 
@@ -100,16 +113,17 @@ class DpcshClient(object):
                     or result["data"] is None:
                 result["status"] = False
         except socket.error, msg:
-            print msg
+            fun_test.critical("dpcsh_client: command: {}".format(msg))
             result["error_message"] = msg
         except Exception as ex:
-            print (str(ex))
-            print ("result from read:" + str(output))
+            fun_test.critical("result from read:" + str(output) + " Exception: {}".format(str(ex)))
             result["error_message"] = str(ex)
         if not result["status"]:
             fun_test.log("Command failed: " + fun_test.dict_to_json_string(result))
         if self.verbose:
             self.print_result(result=result)
+        if self.auto_disconnect:
+            self.disconnect()
         return result
 
     def _parse_actual_output(self, output):
@@ -125,7 +139,7 @@ class DpcshClient(object):
         fun_test.log("Data: {}". format(json.dumps(result["data"], indent=4)))
         fun_test.log("Raw output: {}".format(result["raw_output"]))
 
-    def json_execute(self, verb, data=None, command_duration=1, sleep_duration=2, tid=0, chunk=4096):
+    def json_execute(self, verb, data=None, command_duration=1, sleep_duration=0.1, tid=0, chunk=4096):
         jdict = None
         if data:
             if type(data) is not list:
@@ -141,3 +155,27 @@ class DpcshClient(object):
     def json_command(self, data, action="", additional_info="", command_duration=1):
         return self.command('#!sh {} {} {} {}'.format(self.mode, action, json.dumps(data), additional_info),
                             command_duration=command_duration)
+
+
+if __name__ == "__main__":
+    d = DpcshClient(target_ip="fs21-come.fungible.local", target_port=40220, auto_disconnect=True)
+    d.json_execute(verb="perf", data="reinit", command_duration=4)
+    d = DpcshClient(target_ip="fs21-come.fungible.local", target_port=40220, auto_disconnect=True)
+
+    d.json_execute(verb="perf", data="start", command_duration=4)
+    d = DpcshClient(target_ip="fs21-come.fungible.local", target_port=40220, auto_disconnect=True)
+
+    d.disconnect()
+    d = DpcshClient(target_ip="fs21-come.fungible.local", target_port=40220, auto_disconnect=True)
+    # d = DpcshClient(target_ip="fs21-come.fungible.local", target_port=40220)
+
+    d.json_execute(verb="peek", data="stats/vppkts", command_duration=4)
+    d = DpcshClient(target_ip="fs21-come.fungible.local", target_port=40220, auto_disconnect=True)
+
+    d = DpcshClient(target_ip="fs21-come.fungible.local", target_port=40220, auto_disconnect=True)
+    d.json_execute(verb="perf", data="stop", command_duration=4)
+
+    d = DpcshClient(target_ip="fs21-come.fungible.local", target_port=40220, auto_disconnect=True)
+    d.json_execute(verb="perf", data="offload", command_duration=4)
+
+    # d.command("peek help", legacy=False)

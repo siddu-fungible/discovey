@@ -1,6 +1,6 @@
 <div class="component">
 
-  <form [formGroup]="submissionForm">
+  <form style="padding-top: 10px;" [formGroup]="submissionForm">
     <div class="form-group">
       <label class="control-label col-sm-2" for="submitter">Submitter: </label>
       <select class="form-control" id="submitter" formControlName="submitter">
@@ -18,7 +18,7 @@
       </select>
     </div>
 
-    <div class="form-group" *ngIf="triageTypes && submissionForm.value.triage_type == triageTypes.REGEX_MATCH">
+    <div class="form-group" *ngIf="triageTypes && (submissionForm.value.triage_type == triageTypes.REGEX_MATCH || submissionForm.value.triage_type == triageTypes.INTEGRATION_REGEX_MATCH)">
       <label class="control-label col-sm-2" for="regex_match_string">Regex match string: </label>
       <input style="width: 400px" formControlName="regex_match_string" id="regex_match_string">
     </div>
@@ -27,6 +27,7 @@
       <label class="control-label col-sm-2" for="metric_id">Metric ID: </label>
       <input style="width: 300px" formControlName="metric_id" id="metric_id">
     </div>
+
 
     <div class="form-group">
       <label class="control-label col-sm-2" for="from_fun_os_sha">From FunOS commit: </label>
@@ -46,10 +47,11 @@
         <span *ngIf="gitShasValid"><i class="fa fa-check fa-fw tick-color"></i>Git commits are valid</span>
       </div>
     </div>
-
-
   </form>
-  <app-jenkins-form (data)="jenkinsParametersChanged($event)"></app-jenkins-form>
+
+
+  <app-jenkins-form *ngIf="triageTypes && submissionForm.value" [triagingType]="submissionForm.value.triage_type"
+                    (data)="jenkinsParametersChanged($event)"></app-jenkins-form>
 
 
   <ng-container *ngIf="gitShasValid">

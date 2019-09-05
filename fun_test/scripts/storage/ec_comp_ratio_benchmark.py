@@ -80,6 +80,12 @@ class ECVolumeLevelScript(FunTestScript):
         come = fs.get_come()
         self.storage_controller = StorageController(target_ip=come.host_ip,
                                                     target_port=come.get_dpc_port(self.f1_in_use))
+        if not check_come_health(self.storage_controller):
+            topology = topology_helper.deploy()
+            fun_test.test_assert(topology, "Topology re-deployed")
+            come = topology.get_dut_instance(index=0).get_come()
+            self.storage_controller = StorageController(target_ip=come.host_ip,
+                                                        target_port=come.get_dpc_port(self.f1_in_use))
 
         # Fetching Linux host with test interface name defined
         fpg_connected_hosts = topology.get_host_instances_on_fpg_interfaces(dut_index=0,
@@ -187,9 +193,20 @@ class ECVolumeLevelScript(FunTestScript):
             configured_vols[effort]['nvme_device'] = fetch_nvme['nvme_device']
 
             # Create file system on attached device
-            fun_test.test_assert(self.end_host.create_filesystem(fs_type=self.file_system,
-                                                                 device=fetch_nvme['nvme_device'],
-                                                                 timeout=self.command_timeout),
+            for i in xrange(2):  # Try mkfs twice first time it might fail due to crash in nvme device
+                try:
+                    resp = self.end_host.create_filesystem(fs_type=self.file_system,
+                                                           device=fetch_nvme['nvme_device'],
+                                                           timeout=210)
+                    if resp:
+                        break
+                    else:
+                        fun_test.sleep(
+                            message="mkfs failed on first attempt for device: {} ".format(fetch_nvme['nvme_device']),
+                            seconds=15)
+                except Exception as ex:
+                    fun_test.critical(ex.message)
+            fun_test.test_assert(resp,
                                  message="Create File System on nvme device: {}".format(fetch_nvme['nvme_device']))
 
             # create mount dir for respective volumes
@@ -282,7 +299,7 @@ class ECVolumeLevelTestcase(FunTestCase):
         end_host_tmp_dir = "/tmp/"
         lsv_uuid = test_case_info['lsv_uuid']
 
-        end_host.flush_cache_mem(timeout=120)
+        end_host.flush_cache_mem(timeout=200)
         init_write_count = get_lsv_write_count(storage_controller, lsv_uuid)
 
         table_rows = []
@@ -296,7 +313,7 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.test_assert(end_host.check_file_directory_exists(corpus_dest_path),
                                  message="Check corpus got copied to mount dir",
                                  ignore_on_success=True)
-            end_host.flush_cache_mem(timeout=120)
+            end_host.flush_cache_mem(timeout=200)
 
             curr_write_count = get_lsv_write_count(storage_controller, lsv_uuid)
             comp_size = curr_write_count - init_write_count

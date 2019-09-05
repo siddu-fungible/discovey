@@ -1,35 +1,4 @@
-from fun_global import RESULTS
-
-class Codes:
-    def __init__(self):
-        self.non_callable_attributes = [f for f in dir(self) if not callable(getattr(self, f))]
-        self.non_callable_attributes = [x for x in self.non_callable_attributes if not x.startswith("__")]
-        self.code_to_string_map = {}
-        for non_callable_attribute in self.non_callable_attributes:
-            value = getattr(self, non_callable_attribute)
-            if type(value) is int:
-                self.code_to_string_map[value] = non_callable_attribute
-        self.string_to_code_map = {}
-        for non_callable_attribute in self.non_callable_attributes:
-            value = getattr(self, non_callable_attribute)
-            self.string_to_code_map[non_callable_attribute] = value
-
-
-    def code_to_string(self, code):
-        return self.code_to_string_map.get(code, "Unknown")
-
-    def all_codes_to_string(self):
-        return self.code_to_string_map
-
-    def all_strings_to_code(self):
-        return self.string_to_code_map
-
-    def to_json(self):
-        result = []
-        for non_callable_attribute in self.non_callable_attributes:
-            value = getattr(self, non_callable_attribute)
-            result.append(value)
-        return result
+from fun_global import RESULTS, Codes
 
 
 class TriagingStates(Codes):
@@ -58,6 +27,19 @@ class TriageTrialStates(Codes):
     QUEUED_ON_LSF = 60
     RUNNING_ON_LSF = 70
     PREPARING_RESULTS = 80
+    JENKINS_BUILD_FAILED = 90
+
+    INTEGRATION_UNKNOWN = 100
+    INTEGRATION_ERROR = 110
+    INTEGRATION_KILLED = 120
+    INTEGRATION_ABORTED = 130
+    INTEGRATION_COMPLETED = 140
+    INTEGRATION_AUTO_SCHEDULED = 150
+    INTEGRATION_SUBMITTED = 160
+    INTEGRATION_SCHEDULED = 170
+    INTEGRATION_QUEUED = 180
+    INTEGRATION_IN_PROGRESS = 190
+
 
 
 
@@ -73,7 +55,9 @@ class TriagingTypes(Codes):
     PASS_OR_FAIL = 1
     SCORE = 2
     REGEX_MATCH = 3
-
+    JENKINS_FUN_OS_ON_DEMAND = 5
+    INTEGRATION_PASS_OR_FAIL = 6
+    INTEGRATION_REGEX_MATCH = 7
 
 
 if __name__ == "__main__":

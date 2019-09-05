@@ -1,0 +1,13 @@
+[
+  {"info":
+    {"custom_test_bed_spec":
+      {"base_test_bed": "fs-inspur",
+        "asset_request": {"DUT": {"names": ["fs-44"]},
+          "Host": {"num": 1},
+          "Perf Listener": {
+            "names": ["mktg-server-14"]
+          }}
+
+    }
+  }}, {"path": "examples/sanity.py", "test_case_ids": [1], "inputs": {"blt_count": 8, "num_hosts": 8}}
+]

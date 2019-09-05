@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import {Injectable} from '@angular/core';
 import {Observable} from "rxjs";
 
 @Injectable({
@@ -6,6 +6,8 @@ import {Observable} from "rxjs";
 })
 export class CommonService {
   newAlert: boolean = false;
+  announcementAvailable: boolean = false;
+
   constructor() {
 
   }
@@ -31,7 +33,8 @@ export class CommonService {
     return new Observable(observer => {
       //observer.next(this.newAlert);
       setInterval(() => observer.next(this.newAlert), 1000);
-      return () => {};
+      return () => {
+      };
     })
   }
 
@@ -47,6 +50,21 @@ export class CommonService {
       d1.getDate() === d2.getDate();
   }
 
+  setAnnouncement() {
+    this.announcementAvailable = true;
+  }
+
+  clearAnnouncement() {
+    this.announcementAvailable = false;
+  }
+
+  monitorAnnouncements() {
+    return new Observable(observer => {
+      setInterval(() => observer.next(this.announcementAvailable), 1000);
+      return () => {
+      };
+    })
+  }
 
   getPrettyLocalizeTime(t) {
     let result = t;
@@ -57,4 +75,45 @@ export class CommonService {
     }
     return result;
   }
+
+  getShortDate(t) {
+    let result = t;
+    try {
+      result = t.toLocaleString().replace(/\..*$/, "");
+    } catch (e) {
+      console.log(e);
+    }
+    return result;
+  }
+
+  addLeadingZeroesToDate(localDate): string {
+    let localDateString = (localDate.getDate() < 10 ? '0' : '') + localDate.getDate();
+    let localMonthString = ((localDate.getMonth() + 1) < 10 ? '0' : '') + (localDate.getMonth() + 1);
+    let localYearString = String(localDate.getFullYear());
+    // let keySplitString = localDate.toLocaleString("default", {hourCycle: "h24"}).split(" ");
+    // let timeString = keySplitString[1].split(":");
+    let localHour = (localDate.getHours());
+    let localMinutes = (localDate.getMinutes());
+    let localSeconds = (localDate.getSeconds());
+    let hour = ((Number(localHour) < 10) ? '0' : '') + localHour + ":";
+    let minutes = ((Number(localMinutes) < 10) ? '0' : '') + localMinutes + ":";
+    let seconds = ((Number(localSeconds) < 10) ? '0' : '') + localSeconds;
+    let keyString = localMonthString + "/" + localDateString + "/" + localYearString + ", " + hour + minutes + seconds;
+    return keyString;
+  }
+
+  getEpochBounds(dateTime): number[] {
+    dateTime.setHours(23);
+    dateTime.setMinutes(59);
+    dateTime.setSeconds(59);
+    dateTime.setMilliseconds(0);
+    let toEpoch = dateTime.getTime();
+    dateTime.setHours(0);
+    dateTime.setMinutes(0);
+    dateTime.setSeconds(1);
+    dateTime.setMilliseconds(0);
+    let fromEpoch = dateTime.getTime();
+    return [fromEpoch, toEpoch];
+  }
+
 }

@@ -1,8 +1,8 @@
 {
   "GlobalSetup": {
     "bootargs": [
-      "app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --serial --dpc-server --dpc-uart --all_100g --nofreeze --disable-wu-watchdog",
-      "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 --serial --dpc-server --dpc-uart --all_100g --nofreeze --disable-wu-watchdog"
+      "app=mdt_test,load_mods,hw_hsu_test cc_huid=3 workload=storage --serial --dpc-server --dpc-uart --all_100g --nofreeze --disable-wu-watchdog",
+      "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 workload=storage --serial --dpc-server --dpc-uart --all_100g --nofreeze --disable-wu-watchdog"
     ],
     "dut_start_index": 0,
     "host_start_index": 0,
@@ -67,11 +67,12 @@
     "nqn": "nqn1",
     "transport_type": "tcp",
     "transport_port": 1099,
+    "nvme_io_queues": 16,
     "command_timeout": 30,
     "iter_interval": 2,
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {
-      "multiple_jobs": "--ioengine=libaio --size=100% --direct=1 --prio=0 --bs=64k --iodepth=1 --rw=write --cpus_allowed=0-19",
+      "multiple_jobs": "--ioengine=libaio --size=100% --direct=1 --prio=0 --bs=64k --iodepth=1 --rw=write --cpus_allowed_policy=split",
       "timeout": 7200
     },
     "fio_cmd_args": {
@@ -87,14 +88,14 @@
       "read"
     ],
     "fio_bs": "4k",
-    "fio_jobs_iodepth": ["(1, 1)", "(16, 8)"],
+    "fio_jobs_iodepth": ["(1, 1)", "(32, 4)"],
     "fio_job_name": {
       "read": "scaling"
     },
     "nvme_device": "/dev/nvme0",
     "expected_fio_result": {
       "(1, 1)": {"read": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
-      "(16, 8)": {"read": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}}
+      "(32, 4)": {"read": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}}
     },
     "host_count": 1
   },
@@ -113,11 +114,12 @@
     "nqn": "nqn1",
     "transport_type": "tcp",
     "transport_port": 1099,
+    "nvme_io_queues": 16,
     "command_timeout": 30,
     "iter_interval": 2,
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {
-      "multiple_jobs": "--ioengine=libaio --size=100% --direct=1 --prio=0 --bs=64k --iodepth=1 --rw=write --cpus_allowed=0-19",
+      "multiple_jobs": "--ioengine=libaio --size=100% --direct=1 --prio=0 --bs=64k --iodepth=1 --rw=write --cpus_allowed_policy=split",
       "timeout": 7200
     },
     "fio_cmd_args": {
@@ -133,14 +135,14 @@
       "randread"
     ],
     "fio_bs": "4k",
-    "fio_jobs_iodepth": ["(1, 1)", "(16, 8)"],
+    "fio_jobs_iodepth": ["(1, 1)", "(32, 4)"],
     "fio_job_name": {
       "randread": "scaling"
     },
     "nvme_device": "/dev/nvme0",
     "expected_fio_result": {
       "(1, 1)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
-      "(16, 8)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}}
+      "(32, 4)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}}
     },
     "host_count": 1
   },
@@ -158,11 +160,12 @@
     "nqn": "nqn1",
     "transport_type": "tcp",
     "transport_port": 1099,
+    "nvme_io_queues": 16,
     "command_timeout": 30,
     "iter_interval": 2,
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {
-      "multiple_jobs": "--ioengine=libaio --size=100% --direct=1 --prio=0 --bs=64k --iodepth=1 --rw=write --cpus_allowed=0-19",
+      "multiple_jobs": "--ioengine=libaio --size=100% --direct=1 --prio=0 --bs=64k --iodepth=1 --rw=write --cpus_allowed=0-19 --cpus_allowed_policy=split",
       "timeout": 7200
     },
     "fio_cmd_args": {
@@ -203,11 +206,12 @@
     "nqn": "nqn1",
     "transport_type": "tcp",
     "transport_port": 1099,
+    "nvme_io_queues": 16,
     "command_timeout": 30,
     "iter_interval": 2,
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {
-      "multiple_jobs": "--ioengine=libaio --size=100% --direct=1 --prio=0 --bs=64k --iodepth=1 --rw=write --cpus_allowed=0-19",
+      "multiple_jobs": "--ioengine=libaio --size=100% --direct=1 --prio=0 --bs=64k --iodepth=1 --rw=write --cpus_allowed_policy=split",
       "timeout": 7200
     },
     "fio_cmd_args": {

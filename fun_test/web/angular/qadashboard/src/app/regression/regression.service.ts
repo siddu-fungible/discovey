@@ -2,7 +2,7 @@ import {Injectable, OnInit} from '@angular/core';
 import {ApiService} from "../services/api/api.service";
 import {LoggerService} from "../services/logger/logger.service";
 import {catchError, switchMap} from 'rxjs/operators';
-import {forkJoin, observable, Observable, of} from "rxjs";
+import {forkJoin, observable, Observable, of, throwError} from "rxjs";
 
 @Injectable({
   providedIn: 'root'
@@ -80,12 +80,17 @@ export class RegressionService implements OnInit{
     return new Date(epochValue);
   }
 
-  getPrettyLocalizeTime(t) {
-    let localTime = this.convertToLocalTimezone(t);
-    let s = `${localTime.getMonth() + 1}/${localTime.getDate()} ${localTime.getHours()}:${localTime.getMinutes()}`;
-    //return this.convertToLocalTimezone(t).toLocaleString().replace(/\..*$/, "");
-    return s;
+getPrettyLocalizeTime(t) {
+  let minutePrefix = '';
+  let localTime = this.convertToLocalTimezone(t);
+  if (localTime.getMinutes() < 10){
+    minutePrefix += '0';
   }
+  let s = `${localTime.getMonth() + 1}/${localTime.getDate()} ${localTime.getHours()}:${minutePrefix}${localTime.getMinutes()}`;
+  //return this.convertToLocalTimezone(t).toLocaleString().replace(/\..*$/, "");
+  return s;
+}
+
 
   getTestCaseExecution(executionId) {
     return this.apiService.get('/regression/test_case_execution_info/' + executionId).pipe(switchMap((response) => {
@@ -157,6 +162,20 @@ export class RegressionService implements OnInit{
     let payload = {"disable_schedule": disable_schedule};
     return this.apiService.put("/api/v1/regression/suite_executions/" + suiteId, payload).pipe(switchMap(response => {
       return of(true);
+    }))
+  }
+
+  tags(): Observable<string[]> {
+    return this.apiService.get('/regression/tags').pipe(switchMap(response => {
+      let data = JSON.parse(response.data);
+      let i = 1;
+      let parsedTags: string [] = [];
+      for (let item of data) {
+        parsedTags.push(item.fields.tag);
+      }
+      return of(parsedTags);
+    }), catchError(error => {
+      return throwError(error);
     }))
   }
 

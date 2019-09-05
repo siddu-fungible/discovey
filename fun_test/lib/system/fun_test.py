@@ -19,6 +19,7 @@ from uuid import uuid4
 import getpass
 from threading import Thread
 from inspect import getargspec
+from lib.utilities.send_mail import send_mail
 
 
 class TestException(Exception):
@@ -53,7 +54,7 @@ class FunTimer:
         return current_time - self.start_time
 
     def remaining_time(self):
-        return (self.start_time + self.max_time) - time.time()
+        return self.max_time - self.elapsed_time()
 
 class FunTestThread(Thread):
     def __init__(self, func, **kwargs):
@@ -200,7 +201,18 @@ class FunTest:
             self.selected_test_case_ids = [int(x) for x in args.test_case_ids.split(",")]
         re_run_info = self.get_re_run_info()
         if re_run_info:
-            self.selected_test_case_ids = [int(x) for x in re_run_info.keys()]
+            re_run_ids = [int(x) for x in re_run_info]
+            if self.selected_test_case_ids:
+
+                ordered_list = []
+                for selected_id in self.selected_test_case_ids:
+                    for re_run_id in re_run_ids:
+                        if int(selected_id) == int(re_run_id):
+                            ordered_list.append(re_run_id)
+                self.selected_test_case_ids = ordered_list
+            else:
+                # scheduler never sent test_case_ids
+                self.selected_test_case_ids = sorted(re_run_ids)
             # print("***" + str(self.selected_test_case_ids))
         if not self.logs_dir:
             self.logs_dir = LOGS_DIR
@@ -245,6 +257,11 @@ class FunTest:
         self.topologies = []
         self.hosts = []
         self.closed = False
+        self.enable_profiling()
+
+    def report_message(self, message):  # Used only by FunXml only
+        if self.fun_xml_obj:
+            self.fun_xml_obj.add_message(message=message)
 
     def initialize_output_files(self, absolute_script_file_name):
         # (frame, file_name, line_number, function_name, lines, index) = \
@@ -314,6 +331,8 @@ class FunTest:
                 self.build_parameters["BOOTARGS"] = self.build_parameters["BOOTARGS"].replace(self.BOOT_ARGS_REPLACEMENT_STRING, " ")
             if "DISABLE_ASSERTIONS" in user_supplied_build_parameters:
                 self.build_parameters["DISABLE_ASSERTIONS"] = user_supplied_build_parameters["DISABLE_ASSERTIONS"]
+            if "RELEASE_BUILD" in user_supplied_build_parameters:
+                self.build_parameters["RELEASE_BUILD"] = user_supplied_build_parameters["RELEASE_BUILD"]
             if "FUNOS_MAKEFLAGS" in user_supplied_build_parameters:
                 self.build_parameters["FUNOS_MAKEFLAGS"] = user_supplied_build_parameters["FUNOS_MAKEFLAGS"]
             if "BRANCH_FunOS" in user_supplied_build_parameters:
@@ -366,6 +385,12 @@ class FunTest:
         run_time = models_helper.get_suite_run_time(execution_id=self.suite_execution_id)
         result = run_time.get(name, None)
         return result
+
+    def set_suite_run_time_environment_variable(self, variable, value):
+        if self.suite_execution_id:
+            suite_execution = models_helper.get_suite_execution(suite_execution_id=self.suite_execution_id)
+            if suite_execution:
+                suite_execution.add_run_time_variable(variable, value)
 
     def get_job_environment_variable(self, variable):
         result = None
@@ -1069,10 +1094,11 @@ class FunTest:
         checkpoint = self._get_context_prefix(context=context, message=checkpoint)
         if self.profiling:
             checkpoint = "{:.2f} {}".format(self.profiling_timer.elapsed_time(), checkpoint)
-        self.fun_xml_obj.add_checkpoint(checkpoint=checkpoint,
-                                        result=result,
-                                        expected=expected,
-                                        actual=actual)
+        if self.fun_xml_obj:
+            self.fun_xml_obj.add_checkpoint(checkpoint=checkpoint,
+                                            result=result,
+                                            expected=expected,
+                                            actual=actual)
 
     def exit_gracefully(self, sig, _):
         self.critical("Unexpected Exit")
@@ -1152,6 +1178,9 @@ class FunTest:
     def add_auxillary_file(self, description, filename):
         base_name = os.path.basename(filename)
         self.fun_xml_obj.add_auxillary_file(description=description, auxillary_file=base_name)
+
+    def send_mail(self, subject, content, to_addresses=["john.abraham@fungible.com"]):
+        send_mail(to_addresses=to_addresses, subject=subject, content=content)
 
     def scp(self,
             source_file_path,
@@ -1349,6 +1378,17 @@ class FunTestScript(object):
 
             ids = set()
             fun_test.log("Test-case count: {}".format(len(self.test_cases)))
+
+
+            if fun_test.selected_test_case_ids:
+                new_test_cases = []
+                for selected_test_case_id in fun_test.selected_test_case_ids:
+                    for test_case in self.test_cases:
+                        test_case.describe()
+                        if test_case.id == selected_test_case_id:
+                            new_test_cases.append(test_case)
+                self.test_cases = new_test_cases
+
             for test_case in self.test_cases:
                 test_case.describe()
                 if test_case.id in ids:
@@ -1410,7 +1450,12 @@ class FunTestScript(object):
     def _cleanup_hosts(self):
         for host in fun_test.get_hosts():
             try:
-                host.disconnect()
+                if host.handle:
+                    try:
+                        host.destroy()
+                    except:
+                        pass
+                fun_test.log("Host: {} properly disconnected".format(host))
             except:
                 pass
 

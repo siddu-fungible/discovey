@@ -11,7 +11,7 @@ CPU_LIST_HOST = range(8, 16)  # Host's CPU ids used for traffic, which are in sa
 CPU_LIST_VM = range(0, 8)  # VM's CPU ids used for traffic
 COALESCE_RX_USECS = 8
 COALESCE_TX_USECS = 16
-COALESCE_RX_FRAMES = 128
+COALESCE_RX_FRAMES = 127
 COALESCE_TX_FRAMES = 32
 
 
@@ -57,6 +57,10 @@ class Funeth:
         """Set env WORKSPACE, which is used in fungible-host-driver compilation."""
         for hu in self.hu_hosts:
             self.linux_obj_dict[hu].command('WSTMP=$WORKSPACE; export WORKSPACE=%s' % self.ws)
+            try:
+                fun_test.log("Spawn PID: {}".format(self.linux_obj_dict[hu].spawn_pid))
+            except Exception as ex:
+                fun_test.critical(ex)
 
     def cleanup_workspace(self):
         """Restore old WORKSPACE if exists."""
@@ -239,7 +243,7 @@ class Funeth:
         result = True
         for hu in self.hu_hosts:
             self.linux_obj_dict[hu].sudo_command(
-                'cd {0}; insmod funeth.ko {1} num_queues={2}'.format(drvdir, " ".join(_modparams), num_queues),
+                'cd {0}; insmod fun_core.ko; insmod funeth.ko {1} num_queues={2}'.format(drvdir, " ".join(_modparams), num_queues),
                 timeout=300)
 
             #fun_test.sleep('Sleep for a while to wait for funeth driver loaded', 5)
@@ -254,7 +258,7 @@ class Funeth:
                 self.linux_obj_dict[hu].command('echo "{0}" | sudo tee {1}/sriov_numvfs'.format(sriov, sriov_en),
                                                 timeout=300)
                 #fun_test.sleep('Sleep for a while to wait for sriov enabled', 5)
-                self.linux_obj_dict[hu].command('ifconfig -a')
+            self.linux_obj_dict[hu].command('ifconfig -a')
 
             output1 = self.linux_obj_dict[hu].command('lsmod | grep funeth')
             output2 = self.linux_obj_dict[hu].command('ifconfig %s' % pf_intf)
@@ -296,16 +300,24 @@ class Funeth:
             cmds.extend(
                 ['ifconfig {} {} netmask {}'.format(intf, ipv4_addr, ipv4_netmask),
                  'ifconfig {} up'.format(intf),
-                 'ifconfig {}'.format(intf),
+                 #'ifconfig {}'.format(intf),
                 ]
             )
+            cmd_chk = 'ifconfig {}'.format(intf)
             if ns:
                 cmds = ['ip netns add {}'.format(ns), 'ip link set {} netns {}'.format(intf, ns)] + cmds
             for cmd in cmds:
                 if ns is None or 'netns' in cmd:
-                    output = self.linux_obj_dict[nu_or_hu].command('sudo {}'.format(cmd))
+                    self.linux_obj_dict[nu_or_hu].command('sudo {}'.format(cmd))
                 else:
-                    output = self.linux_obj_dict[nu_or_hu].command('sudo ip netns exec {} {}'.format(ns, cmd))
+                    self.linux_obj_dict[nu_or_hu].command('sudo ip netns exec {} {}'.format(ns, cmd))
+
+            fun_test.sleep('Wait for 2 seconds', 2)
+            if ns is None:
+                output = self.linux_obj_dict[nu_or_hu].command('sudo {}'.format(cmd_chk))
+            else:
+                output = self.linux_obj_dict[nu_or_hu].command('sudo ip netns exec {} {}'.format(ns, cmd_chk))
+
             # Ubuntu 16.04
             if self.tb_config_obj.is_alias(nu_or_hu, intf):
                 match = re.search(r'UP.*RUNNING.*inet addr:{}.*Mask:{}'.format(ipv4_addr, ipv4_netmask), output, re.DOTALL)
@@ -334,6 +346,34 @@ class Funeth:
         result = True
         for ns in self.tb_config_obj.get_namespaces(nu_or_hu):
             result &= self.configure_namespace_interfaces(nu_or_hu, ns)
+
+        return result
+
+    def enable_namespace_interfaces_tx_offload(self, nu_or_hu, ns=None, disable=False):
+        """Enable interfaces Tx offload in a namespace."""
+        result = True
+        op = 'off' if disable else 'on'
+        for intf in self.tb_config_obj.get_interfaces(nu_or_hu, ns):
+            cmd = 'ethtool -K {} tx {}'.format(intf, op)
+            cmd_chk = 'ethtool -k {}'.format(intf)
+            if ns is None or 'netns' in cmd:
+                cmds = ['sudo {}; {}'.format(cmd, cmd_chk)]
+            else:
+                cmds = ['sudo ip netns exec {0} {1}; sudo ip netns exec {0} {2}'.format(ns, cmd, cmd_chk)]
+            if ns:
+                cmds = ['sudo ip netns add {}'.format(ns), 'sudo ip link set {} netns {}'.format(intf, ns)] + cmds
+            output = self.linux_obj_dict[nu_or_hu].command(';'.join(cmds))
+
+            match = re.search(r'tx-checksum-ip-generic: {0}.*tcp-segmentation-offload: {0}'.format(op), output, re.DOTALL)
+            result &= match is not None
+
+        return result
+
+    def enable_tx_offload(self, nu_or_hu, disable=False):
+        """Enable Tx offload to the interfaces."""
+        result = True
+        for ns in self.tb_config_obj.get_namespaces(nu_or_hu):
+            result &= self.enable_namespace_interfaces_tx_offload(nu_or_hu, ns, disable=disable)
 
         return result
 
@@ -634,10 +674,9 @@ class Funeth:
                                   re.DOTALL)
                 if match:
                     if disable:
-                        result &= (match.group(1), match.group(2), match.group(3), match.group(4) == 0, 1, 0, 1)
+                        result &= (match.group(1), match.group(2), match.group(3), match.group(4)) == (0, 1, 0, 1)
                     else:
-                        result &= (match.group(1), match.group(2), match.group(3), match.group(4) ==
-                                   COALESCE_RX_USECS, COALESCE_RX_FRAMES, COALESCE_TX_USECS, COALESCE_TX_FRAMES)
+                        result &= (match.group(1), match.group(2), match.group(3), match.group(4)) == (COALESCE_RX_USECS, COALESCE_RX_FRAMES, COALESCE_TX_USECS, COALESCE_TX_FRAMES)
                 else:
                     result &= False
         return result
@@ -654,7 +693,7 @@ class Funeth:
                              source_username=linux_obj.ssh_username,
                              source_password=linux_obj.ssh_password,
                              target_file_path=artifact_file_name)
-                fun_test.add_auxillary_file(description="{} Log".format(log_file.split('.')[0]),
+                fun_test.add_auxillary_file(description="{} {}".format(log_file.split('.')[0], linux_obj.host_ip),
                                             filename=artifact_file_name)
 
     def collect_dmesg(self):
@@ -670,5 +709,6 @@ class Funeth:
                              source_username=linux_obj.ssh_username,
                              source_password=linux_obj.ssh_password,
                              target_file_path=artifact_file_name)
-                fun_test.add_auxillary_file(description="{} Log".format(log_file.split('.')[0]),
+                fun_test.add_auxillary_file(description="{} {}".format(log_file.split('.')[0], linux_obj.host_ip),
                                             filename=artifact_file_name)
+

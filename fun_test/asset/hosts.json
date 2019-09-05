@@ -33,10 +33,22 @@
     "ssh_password": "Precious1*",
     "test_interface_name": "enp175s0"
   },
+  "poc-server-04": {
+    "host_ip": "poc-server-04",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "test_interface_name": "enp216s0",
+    "csi_perf": {
+      "tools_directory": "/home/localadmin"
+    }
+  },
   "poc-server-06": {
     "host_ip": "poc-server-06",
     "ssh_username": "localadmin",
-    "ssh_password": "Precious1*"
+    "ssh_password": "Precious1*",
+    "csi_perf": {
+      "tools_directory": "/home/localadmin"
+    }
   },
   "poc-server-07": {
     "host_ip": "poc-server-07",
@@ -71,6 +83,14 @@
       "host_ip": "poc-server-10-ilo",
       "username": "ADMIN",
       "password": "ADMIN"
+    }
+  },
+  "poc-server-11": {
+    "host_ip": "poc-server-11",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "csi_perf": {
+      "tools_directory": "/home/localadmin"
     }
   },
   "cab03-qa-01": {
@@ -119,6 +139,26 @@
     "ssh_password": "Precious1*",
     "ipmi_info": {
       "host_ip": "cab03-qa-05-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
+  },
+    "cab03-qa-06": {
+    "host_ip": "cab03-qa-06",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "cab03-qa-06-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
+  },
+  "cab03-qa-07": {
+    "host_ip": "cab03-qa-07",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "cab03-qa-07-ilo",
       "username": "ADMIN",
       "password": "ADMIN"
     }
@@ -438,6 +478,16 @@
       "password": "ADMIN"
     }
   },
+     "systems-lab-01": {
+    "host_ip": "10.1.44.43",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "systems-lab-01-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
+  },
   "cab02-qa-08": {
     "host_ip": "cab02-qa-08",
     "ssh_username": "localadmin",
@@ -446,6 +496,206 @@
       "host_ip": "cab02-qa-08-ilo",
       "username": "ADMIN",
       "password": "ADMIN"
+    }
+  },
+  "cab02-qa-09": {
+    "host_ip": "cab02-qa-09",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "cab02-qa-09-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    },
+    "test_interface_info": {
+      "0": {
+        "name": "enp216s0",
+        "ip": "15.1.15.2/24",
+        "switch_info": {
+          "name": "qfx-3",
+          "port": "et-0/0/24"
+        }
+      }
+    }
+  },
+  "cab02-qa-10": {
+    "host_ip": "cab02-qa-10",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "cab02-qa-10-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    },
+    "test_interface_info": {
+      "0": {
+        "name": "enp216s0",
+        "ip": "15.1.15.3/24",
+        "switch_info": {
+          "name": "qfx-3",
+          "port": "et-0/0/25"
+        }
+      }
+    }
+  },
+  "cab02-qa-11": {
+    "host_ip": "cab02-qa-11",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "cab02-qa-11-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    },
+    "test_interface_info": {
+      "0": {
+        "name": "enp216s0",
+        "ip": "15.1.15.4/24",
+        "switch_info": {
+          "name": "qfx-3",
+          "port": "et-0/0/26"
+        }
+      }
+    }
+  },
+  "cab02-qa-12": {
+    "host_ip": "cab02-qa-12",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "cab02-qa-12-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    },
+    "test_interface_info": {
+      "0": {
+        "name": "enp216s0",
+        "ip": "15.1.15.5/24",
+        "switch_info": {
+          "name": "qfx-3",
+          "port": "et-0/0/27"
+        }
+      }
+    }
+  },
+  "cab02-qa-13": {
+    "host_ip": "cab02-qa-13",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "cab02-qa-13-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    },
+    "test_interface_info": {
+      "0": {
+        "name": "enp216s0",
+        "ip": "15.1.15.6/24",
+        "switch_info": {
+          "name": "qfx-3",
+          "port": "et-0/0/28"
+        }
+      }
+    }
+  },
+  "cab04-qa-01": {
+    "host_ip": "cab04-qa-01",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "cab04-qa-01-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    },
+    "test_interface_info": {
+      "0": {
+        "name": "enp216s0f1",
+        "ip": "15.1.15.7/24",
+        "switch_info": {
+          "name": "qfx-3",
+          "port": "et-0/0/14:0"
+        }
+      }
+    }
+  },
+  "cab04-qa-02": {
+    "host_ip": "cab04-qa-02",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "cab04-qa-02-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    },
+    "test_interface_info": {
+      "0": {
+        "name": "enp216s0f1",
+        "ip": "15.1.15.8/24",
+        "switch_info": {
+          "name": "qfx-3",
+          "port": "et-0/0/14:2"
+        }
+      }
+    }
+  },
+  "cab04-qa-03": {
+    "host_ip": "cab04-qa-03",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "cab04-qa-03-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    },
+    "test_interface_info": {
+      "0": {
+        "name": "enp216s0f1",
+        "ip": "15.1.15.9/24",
+        "switch_info": {
+          "name": "qfx-3",
+          "port": "et-0/0/21:0"
+        }
+      }
+    }
+  },
+  "cab04-qa-04": {
+    "host_ip": "cab04-qa-04",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "cab04-qa-04-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    },
+    "test_interface_info": {
+      "0": {
+        "name": "enp216s0f1",
+        "ip": "15.1.15.10/24",
+        "switch_info": {
+          "name": "qfx-3",
+          "port": "et-0/0/21:1"
+        }
+      }
+    }
+  },
+  "cab04-qa-05": {
+    "host_ip": "cab04-qa-05",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "cab04-qa-05-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    },
+    "test_interface_info": {
+      "0": {
+        "name": "enp216s0f1",
+        "ip": "15.1.15.11/24",
+        "switch_info": {
+          "name": "qfx-3",
+          "port": "et-0/0/21:2"
+        }
+      }
     }
   }
 }

@@ -1,6 +1,27 @@
 router_mac:
   00:de:ad:be:ef:00
 
+# NU host - the keyword must start with "nu"
+nu:
+  hostname: cab03-qa-03
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: eno1
+  namespaces:
+    default:
+      interfaces:
+        - enp6s0:
+            ipv4_addr: 20.1.1.2
+            ipv4_netmask: 255.255.255.0
+      routes:
+        - prefix: 42.1.1.0/24
+          nexthop: 20.1.1.1
+        - prefix: 41.1.1.0/24
+          nexthop: 20.1.1.1
+        - prefix: 43.1.1.0/24
+          nexthop: 20.1.1.1
+        - prefix: 44.1.1.0/24
+          nexthop: 20.1.1.1
 # HU host
 hu:
   hostname: cab02-qa-05
@@ -75,28 +96,3 @@ hu3:
         nexthop: 41.1.1.1
       - prefix: 20.1.1.0/24
         nexthop: 41.1.1.1
-
-hu4:
-  hostname: cab02-qa-08
-  username: localadmin
-  password: Precious1*
-  mgmt_interface: eno1
-  pcie_width: 16
-  pf_interface: hu1-f0
-  vf_interface: hu1-f8
-  namespaces:
-    default:
-      interfaces:
-      - hu1-f0:
-          mac_addr: 00:de:ad:be:ef:11
-          ipv4_addr: 42.1.1.2
-          ipv4_netmask: 255.255.255.0
-      routes:
-      - prefix: 41.1.1.0/24
-        nexthop: 42.1.1.1
-      - prefix: 43.1.1.0/24
-        nexthop: 42.1.1.1
-      - prefix: 44.1.1.0/24
-        nexthop: 42.1.1.1
-      - prefix: 20.1.1.0/24
-        nexthop: 42.1.1.1

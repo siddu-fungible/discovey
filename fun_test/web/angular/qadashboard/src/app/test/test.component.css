@@ -1,18 +1,11 @@
-.arrow {
-  border: solid black;
-  border-width: 0 3px 3px 0;
-  display: inline-block;
-  padding: 3px;
+.div {
+  margin: 10px;
+  padding: 10px;
 }
 
-.arrow-right {
-
-  transform: rotate(-45deg);
-  -webkit-transform: rotate(-45deg);
+.hover-cell .hover-icon {
+  visibility: hidden;
 }
-
-.arrow-down {
-  transform: rotate(45deg);
-  -webkit-transform: rotate(45deg);
+.hover-cell:hover .hover-icon {
+  visibility: visible;
 }
-

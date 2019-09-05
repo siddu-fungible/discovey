@@ -26,6 +26,7 @@ from . import demo_views
 from web.fun_test.api import users
 from web.fun_test.api import regression, triaging, performance
 from web.fun_test.api import site_config
+from web.fun_test.api import scheduler_api
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.views.generic import RedirectView
 from fun_global import is_development_mode
@@ -194,20 +195,33 @@ users_urls = [
 
 api_v1_urls = [
     url(r'^users/?(.*)?$', users.users),
+    url(r'^performance/workspaces/(\d+)/interested_metrics$', performance.interested_metrics),
+    url(r'^performance/metric_charts/?(\d+)?$', performance.metric_charts),
+    url(r'^performance/workspaces', users.workspaces),
     url(r'^regression/test_beds/?(\S+)?$', regression.test_beds),
+    url(r'^regression/suites/?(\d+)?$', regression.suites),
     url(r'^regression/suite_executions/?(.*)?$', regression.suite_executions),
     url(r'^regression/script_infos/?(.*)?$', regression.script_infos),
-    url(r'^regression/assets/?(.*)?$', regression.assets),
+    url(r'^regression/scripts$', regression.scripts),
+    url(r'^regression/assets/?(?:(\S+)/(.*))?$', regression.assets),
+    url(r'^regression/asset_types$', regression.asset_types),
     url(r'^performance/charts/?(.*)?$', performance.charts),
     url(r'^performance/data$', performance.data),
+    url(r'^performance/reports', performance.metrics_data),
+    url(r'^performance/metrics_data', performance.metrics_data),
     url(r'^triages/?(\d+)?$', triaging.triagings),
-    url(r'^triages/(\d+)/trials/?(\S+)?$', triaging.trials),
+    url(r'^triages/(\d+)/trials$', triaging.trials),
     url(r'^triage_states$', triaging.triaging_states),
     url(r'^triage_trial_set/(\d+)$', triaging.trial_set),
     url(r'^triaging_trial_states$', triaging.triaging_trial_states),
     url(r'^triage_types$', triaging.triaging_types),
     url(r'^git_commits_fun_os/(\S+)/(\S+)$', triaging.git_commits_fun_os),
-    url(r'^site_config', site_config.site_configs)
+    url(r'^site_configs$', site_config.site_configs),
+    url(r'^scheduler/directive_types$', scheduler_api.directive_types),
+    url(r'^scheduler/directive$', scheduler_api.directive),
+    url(r'^scheduler/info$', scheduler_api.info),
+    url(r'^scheduler/state_types$', scheduler_api.state_types),
+    url(r'^regression/test_case_executions/(.*)?$', regression.test_case_executions)
 ]
 
 site_under_construction = False

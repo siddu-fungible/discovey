@@ -49,7 +49,7 @@ class ScriptSetup(FunTestScript):
 
 
     def cleanup(self):
-        funcp_obj.cleanup_funcp()
+        # funcp_obj.cleanup_funcp()
         fun_test.shared_variables["topology"].cleanup()
         # pass
 
@@ -145,17 +145,35 @@ class NicEmulation(FunTestCase):
     def run(self):
 
         # install drivers on PCIE connected servers
-        tb_config_obj = tb_configs.TBConfigs(str(fs_name))
-        funeth_obj = Funeth(tb_config_obj)
-        fun_test.shared_variables['funeth_obj'] = funeth_obj
-        setup_hu_host(funeth_obj, update_driver=True, sriov=4, num_queues=1)
-        get_ethtool_on_hu_host(funeth_obj)
-
         if fs_name == "fs-alibaba-demo":
+
+            tb_config_obj = tb_configs.TBConfigs(str(fs_name))
+            funeth_obj = Funeth(tb_config_obj)
+            fun_test.shared_variables['funeth_obj'] = funeth_obj
+            setup_hu_host(funeth_obj, update_driver=True, sriov=32, num_queues=8)
+            get_ethtool_on_hu_host(funeth_obj)
+
             tb_config_obj = tb_configs.TBConfigs(str(fs_name)+"2")
             funeth_obj = Funeth(tb_config_obj)
             fun_test.shared_variables['funeth_obj'] = funeth_obj
             setup_hu_host(funeth_obj, update_driver=True, sriov=4, num_queues=4)
+            get_ethtool_on_hu_host(funeth_obj)
+
+            print("\n=================")
+            print ("Enable NVMe VFs:")
+            print("=================")
+            for server in self.server_key["fs"][fs_name]["vm_config"]:
+                critical_log(enable_nvme_vfs
+                             (host=server,
+                              pcie_vfs_count=self.server_key["fs"][fs_name]["vm_config"][server]["pcie_vfs"]),
+                             message="NVMe VFs enabled")
+
+        else:
+
+            tb_config_obj = tb_configs.TBConfigs(str(fs_name))
+            funeth_obj = Funeth(tb_config_obj)
+            fun_test.shared_variables['funeth_obj'] = funeth_obj
+            setup_hu_host(funeth_obj, update_driver=True, sriov=4, num_queues=1)
             get_ethtool_on_hu_host(funeth_obj)
 
     def cleanup(self):

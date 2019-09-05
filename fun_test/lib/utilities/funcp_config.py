@@ -56,10 +56,15 @@ class FunControlPlaneBringup:
         fun_test.test_assert(fs_0.bmc_initialize(), "BMC initialize")
         fun_test.test_assert(fs_0.set_f1s(), "Set F1s")
         fun_test.test_assert(fs_0.fpga_initialize(), "FPGA initiaize")
+
+        fun_test.test_assert(fs_0.bmc.setup_serial_proxy_connection(f1_index=0),
+                                 "Setup nc serial proxy connection")
         fun_test.test_assert(fs_0.bmc.u_boot_load_image(index=0, tftp_image_path=fs_0.tftp_image_path,
                                                         boot_args=fs_0.boot_args, gateway_ip=gatewayip),
                              "U-Bootup f1: {} complete".format(0))
         fs_0.bmc.start_uart_log_listener(f1_index=0, serial_device=None)
+        fun_test.test_assert(fs_0.bmc.setup_serial_proxy_connection(f1_index=1),
+                             "Setup nc serial proxy connection")
         fun_test.test_assert(
             fs_0.bmc.u_boot_load_image(index=1, tftp_image_path=fs_1.tftp_image_path, boot_args=fs_1.boot_args,
                                        gateway_ip=gatewayip),
@@ -103,6 +108,8 @@ class FunControlPlaneBringup:
         fun_test.test_assert(fs_0.bmc_initialize(), "BMC initialize")
         fun_test.test_assert(fs_0.set_f1s(), "Set F1s")
         fun_test.test_assert(fs_0.fpga_initialize(), "FPGA initiaize")
+        fun_test.test_assert(fs_0.bmc.setup_serial_proxy_connection(f1_index=0),
+                                 "Setup nc serial proxy connection")
         fun_test.test_assert(fs_0.bmc.u_boot_load_image(index=0, tftp_image_path=fs_0.tftp_image_path,
                                                         boot_args=fs_0.boot_args, gateway_ip=gatewayip),
                              "U-Bootup f1: {} complete".format(0))
@@ -144,6 +151,8 @@ class FunControlPlaneBringup:
         fun_test.test_assert(fs.bmc_initialize(), "BMC initialize")
         fun_test.test_assert(fs.set_f1s(), "Set F1s")
         fun_test.test_assert(fs.fpga_initialize(), "FPGA initiaize")
+        fun_test.test_assert(fs_0.bmc.setup_serial_proxy_connection(f1_index=1),
+                             "Setup nc serial proxy connection")
         fun_test.test_assert(fs.bmc.u_boot_load_image(index=1, tftp_image_path=fs.tftp_image_path,
                                                         boot_args=fs.boot_args, gateway_ip=gatewayip),
                              "U-Bootup f1: {} complete".format(1))
@@ -206,10 +215,10 @@ class FunControlPlaneBringup:
             setup_docker_output = linux_obj_come.command(command=(setup_docker_command + " --ep"), timeout=1200)
         else:
             setup_docker_output = linux_obj_come.command(command=setup_docker_command, timeout=1200)
-        sections = ['Bring up Control Plane', 'Device 1dad:', 'move fpg interface to f0 docker',
-                    'libfunq bind  End', 'move fpg interface to f1 docker', 'Bring up Control Plane dockers']
-        for section in sections:
-            fun_test.test_assert(section in setup_docker_output, "{} seen".format(section))
+        #sections = ['Bring up Control Plane', 'Device 1dad:', 'move fpg interface to f0 docker',
+        #            'libfunq bind  End', 'move fpg interface to f1 docker', 'Bring up Control Plane dockers']
+        #for section in sections:
+        #    fun_test.test_assert(section in setup_docker_output, "{} seen".format(section))
         linux_obj_come.disconnect()
         self._get_docker_names()
         if ep:
@@ -235,6 +244,10 @@ class FunControlPlaneBringup:
             linux_obj = Linux(host_ip=self.fs_spec['come']['mgmt_ip'],
                               ssh_username=self.fs_spec['come']['mgmt_ssh_username'],
                               ssh_password=self.fs_spec['come']['mgmt_ssh_password'])
+        # Make sure API server is active
+        fun_test.test_assert(expression=linux_obj.get_process_id_by_pattern(process_pat="apisvr"),
+                             message="API server active")
+
         if update_funcp_folder:
             # linux_obj.command('WSTMP=$WORKSPACE; export WORKSPACE=%s' % workspace)
             funcp_obj = funcp.FunControlPlane(linux_obj, ws=workspace)
@@ -248,6 +261,16 @@ class FunControlPlaneBringup:
             self.abstract_configs_f1_1 = fun_test.parse_file_to_json(abstract_config_f1_1)
 
         for f1 in self.mpg_ips:
+
+            # ping MPG IPs before executing abstract config
+            ping_mpg = linux_obj.ping(self.mpg_ips[f1])
+
+            if not ping_mpg:
+                fun_test.sleep(message="Waiting to retry mpg ping")
+                ping_mpg = linux_obj.ping(self.mpg_ips[f1], count=15)
+
+            fun_test.test_assert(expression=ping_mpg, message="Ping MPG IP %s from COMe" % self.mpg_ips[f1])
+
             file_contents = None
             file_name = str(f1).strip() + "_abstract.json"
             if str(f1.split("-")[-1]) == "0":
@@ -268,7 +291,6 @@ class FunControlPlaneBringup:
                                                  " --json ./abstract_cfg/" + file_name)
             fun_test.test_assert(expression="returned non-zero exit status" not in execute_abstract,
                                  message="Execute abstract config on %s" % f1)
-        fun_test.sleep(message="Waiting for protocol coneverge", seconds=15)
 
         linux_obj.disconnect()
 
@@ -287,29 +309,51 @@ class FunControlPlaneBringup:
 
             linux_containers[docker_name].command(command="sudo ifconfig mpg up", timeout=300)
 
-            if not static:
-                random_mac = [0x00, 0xf1, 0x1d, random.randint(0x00, 0x7f), random.randint(0x00, 0xff),
+            random_mac = [0x00, 0xf1, 0x1d, random.randint(0x00, 0x7f), random.randint(0x00, 0xff),
                               random.randint(0x00, 0xff)]
-                mac = ':'.join(map(lambda x: "%02x" % x, random_mac))
-                fun_test.test_assert(expression=mac, message="Generate Random MAC")
+            mac = ':'.join(map(lambda x: "%02x" % x, random_mac))
+            fun_test.test_assert(expression=mac, message="Generate Random MAC")
 
-                try:
-                    linux_containers[docker_name].command(command="sudo ifconfig mpg hw ether " + mac, timeout=60)
+            try:
+                linux_containers[docker_name].command(command="sudo ifconfig mpg hw ether " + mac, timeout=60)
 
-                except:
-                    linux_containers[docker_name].command(command="ifconfig mpg")
-                    op = linux_containers[docker_name].command(command="ifconfig mpg").split('\r\n')
-                    for line in op:
-                        ether = False
-                        for word in line.split():
-                            if "ether" == word:
-                                ether = True
-                                continue
-                            if ether:
-                                fun_test.test_assert_expected(expected=mac, actual=word,
-                                                              message="Make sure MAC is updated "
-                                                                      "on %s" % docker_name)
-                                break
+            except:
+                linux_containers[docker_name].command(command="ifconfig mpg")
+                op = linux_containers[docker_name].command(command="ifconfig mpg").split('\r\n')
+                for line in op:
+                    ether = False
+                    for word in line.split():
+                        if "ether" == word:
+                            ether = True
+                            continue
+                        if ether:
+                            fun_test.test_assert_expected(expected=mac, actual=word,
+                                                          message="Make sure MAC is updated "
+                                                                  "on %s" % docker_name)
+
+            if not static:
+                #random_mac = [0x00, 0xf1, 0x1d, random.randint(0x00, 0x7f), random.randint(0x00, 0xff),
+                #              random.randint(0x00, 0xff)]
+                #mac = ':'.join(map(lambda x: "%02x" % x, random_mac))
+                #fun_test.test_assert(expression=mac, message="Generate Random MAC")
+
+                #try:
+                #    linux_containers[docker_name].command(command="sudo ifconfig mpg hw ether " + mac, timeout=60)
+
+                #except:
+                #    linux_containers[docker_name].command(command="ifconfig mpg")
+                #    op = linux_containers[docker_name].command(command="ifconfig mpg").split('\r\n')
+                #    for line in op:
+                #        ether = False
+                #        for word in line.split():
+                #            if "ether" == word:
+                #                ether = True
+                #                continue
+                #            if ether:
+                #                fun_test.test_assert_expected(expected=mac, actual=word,
+                #                                              message="Make sure MAC is updated "
+                #                                                      "on %s" % docker_name)
+                #                break
                 linux_containers[docker_name].sudo_command(command="dhclient -v -i mpg", timeout=300)
 
             else:
@@ -451,10 +495,10 @@ class FunControlPlaneBringup:
         docker_output = linux_obj_come.command(command="docker ps -a")
         print "\n" + docker_output
         self.docker_names = map(lambda s: s.strip(),
-                                linux_obj_come.command(command="docker ps --format '{{.Names}}'").split("\r\n"))
+                                linux_obj_come.command(command="docker ps --format '{{.Names}}' | grep F1").split("\r\n"))
         if verify_2_dockers:
-            fun_test.test_assert_expected(expected=2, actual=len(self.docker_names),
-                                          message="Make sure 2 dockers are up")
+            fun_test.test_assert_expected(expected=True, actual=(len(self.docker_names) >= 2),
+                                          message="Make sure at least 2 dockers are up")
         self.docker_names_got = True
         linux_obj_come.disconnect()
 
@@ -473,8 +517,8 @@ class FunControlPlaneBringup:
                 linux_obj = FunCpDockerContainer(name=host.rstrip(), host_ip=self.fs_spec['come']['mgmt_ip'],
                                                  ssh_username=self.fs_spec['come']['mgmt_ssh_username'],
                                                  ssh_password=self.fs_spec['come']['mgmt_ssh_password'])
-                fun_test.simple_assert((self.is_valid_ip(ip=self.vlan1_ips[host.rstrip()]) and
-                                       self.is_valid_ip(self.vlan1_ips[docker])), "Ensure valid vlan ip address")
+                #fun_test.simple_assert((self.is_valid_ip(ip=self.vlan1_ips[host.rstrip()]) and
+                #                       self.is_valid_ip(self.vlan1_ips[docker])), "Ensure valid vlan ip address")
                 output = linux_obj.command("sudo ping -c 5 -i %s -I %s %s " % (interval,
                                                                                self.vlan1_ips[host.rstrip()],
                                                                                self.vlan1_ips[docker]))
@@ -517,8 +561,8 @@ class FunControlPlaneBringup:
             for ips in dest_ips:
                 result = False
                 percentage_loss = 100
-                fun_test.simple_assert((self.is_valid_ip(self.vlan1_ips[host.rstrip()]) and self.is_valid_ip(ips)),
-                                       "Ensure valid vlan ip address")
+                #fun_test.simple_assert((self.is_valid_ip(self.vlan1_ips[host.rstrip()]) and self.is_valid_ip(ips)),
+                #                       "Ensure valid vlan ip address")
                 if from_vlan:
                     command = "sudo ping -c 5 -i %s -I %s  %s " % (interval, self.vlan1_ips[host.rstrip()], ips)
                 else:
@@ -882,13 +926,13 @@ class FunControlPlaneBringup:
                             for fpg in remote_spine_links:
                                 stats = get_dut_output_stats_value(
                                     result_stats=remote_dpc_obj.peek_fpg_port_stats(port_num=fpg),
-                                    stat_type=OCTETS_RECEIVED_OK)
+                                    stat_type=OCTETS_RECEIVED_OK, tx=False)
                                 remote_spine_links_bytes['before'][fpg] = stats
 
                             for fpg in remote_fabric_links:
                                 stats = get_dut_output_stats_value(
                                     result_stats=remote_dpc_obj.peek_fpg_port_stats(port_num=fpg),
-                                    stat_type=OCTETS_RECEIVED_OK)
+                                    stat_type=OCTETS_RECEIVED_OK, tx=False)
                                 remote_fabric_links_bytes['before'][fpg] = stats
 
                             checkpoint = "hping from %s to %s" % (host['ip'], hu_interface_ip)
@@ -911,9 +955,9 @@ class FunControlPlaneBringup:
                             fun_test.log("Source F1 FCP Diff stats: %s" % source_diff_stats)
                             fun_test.log("Remote F1 FCP Diff stats: %s" % remote_diff_stats)
 
-                            #fun_test.simple_assert(self.validate_fcp_stats_remote_local_f1(
-                            #    src_diff_stats=source_diff_stats, remote_diff_stats=remote_diff_stats,
-                            #    tolerance_in_percent=0.1), checkpoint)
+                            fun_test.simple_assert(self.validate_fcp_stats_remote_local_f1(
+                                src_diff_stats=source_diff_stats, remote_diff_stats=remote_diff_stats,
+                                tolerance_in_percent=0.1), checkpoint)
 
                             checkpoint = "Validate Source F1 vppkts stats"
                             src_vp_stats = get_vp_pkts_stats_values(network_controller_obj=source_dpc_obj)
@@ -925,11 +969,10 @@ class FunControlPlaneBringup:
                                                           ignore_on_success=True)
                             fun_test.log("VP HU OUT: %s and VP NU ETP OUT: %s" % (diff_stats[VP_PACKETS_OUT_HU],
                                                                                   diff_stats[VP_PACKETS_OUT_NU_ETP]))
-                            fun_test.simple_assert(expression=(diff_stats[VP_PACKETS_OUT_HU] >= count and
-                                                               diff_stats[VP_PACKETS_OUT_NU_ETP] >= count),
-                                                   message=checkpoint)
-                            ''' 
-                            checkpoint = "Assert Disabled: SWOS-5865 Validate Source F1 FPG spine and fabric links stats with tolerance of %s " \
+                           # fun_test.simple_assert(expression=(diff_stats[VP_PACKETS_OUT_HU] >= count and
+                           #                                    diff_stats[VP_PACKETS_OUT_NU_ETP] >= count),
+                           #                        message=checkpoint)
+                            checkpoint = "Validate Source F1 FPG spine and fabric links stats with tolerance of %s " \
                                          "percent" % tolerance_in_percent
                             for spine in spine_links:
                                 stats = get_dut_output_stats_value(
@@ -945,11 +988,11 @@ class FunControlPlaneBringup:
                                 source_fabric_links_bytes['after'][fabric] = stats
                                 source_fabric_links_bytes['diff'][fabric] = stats - source_fabric_links_bytes['before'][
                                     fabric]
-                            #fun_test.simple_assert(self.validate_spine_fabric_fpg_stats(
-                            #    spine_stats=source_spine_links_bytes, fabric_stats=source_fabric_links_bytes,
-                            #    tolerance_in_percent=tolerance_in_percent), checkpoint)
+                            fun_test.simple_assert(self.validate_spine_fabric_fpg_stats(
+                                spine_stats=source_spine_links_bytes, fabric_stats=source_fabric_links_bytes,
+                                tolerance_in_percent=5.0), checkpoint)
 
-                            checkpoint = "Assert Disabled: SWOS-5865 Validate Source F1 FPG spine and fabric links stats with tolerance of %s " \
+                            checkpoint = " Validate Remote F1 FPG spine and fabric links stats with tolerance of %s " \
                                          "percent" % tolerance_in_percent
                             for spine in remote_spine_links:
                                 stats = get_dut_output_stats_value(
@@ -965,9 +1008,9 @@ class FunControlPlaneBringup:
                                 remote_fabric_links_bytes['after'][fab] = stats
                                 remote_fabric_links_bytes['diff'][fab] = stats - remote_fabric_links_bytes['before'][
                                     fab]
-                            #fun_test.simple_assert(self.validate_spine_fabric_fpg_stats(
-                            #    spine_stats=remote_spine_links_bytes, fabric_stats=remote_fabric_links_bytes,
-                            #    tolerance_in_percent=tolerance_in_percent), checkpoint)
+                            fun_test.simple_assert(self.validate_spine_fabric_fpg_stats(
+                                spine_stats=remote_spine_links_bytes, fabric_stats=remote_fabric_links_bytes,
+                                tolerance_in_percent=5.0), checkpoint)
 
                             checkpoint = "Validate Source F1 vppkts stats"
                             src_vp_stats = get_vp_pkts_stats_values(network_controller_obj=source_dpc_obj)
@@ -979,14 +1022,13 @@ class FunControlPlaneBringup:
                                                           ignore_on_success=True)
                             fun_test.log("VP HU OUT: %s and VP NU ETP OUT: %s" % (diff_stats[VP_PACKETS_OUT_HU],
                                                                                   diff_stats[VP_PACKETS_OUT_NU_ETP]))
-                            fun_test.simple_assert(expression=(diff_stats[VP_PACKETS_OUT_HU] >= count and
-                                                               diff_stats[VP_PACKETS_OUT_NU_ETP] >= count),
-                                                   message=checkpoint)
-                             ''' 
+                            #fun_test.simple_assert(expression=(diff_stats[VP_PACKETS_OUT_HU] >= count and
+                            #                                   diff_stats[VP_PACKETS_OUT_NU_ETP] >= count),
+                            #                       message=checkpoint)
 
+                        remote_dpc_obj.disconnect()
                     linux_obj.disconnect()
                     source_dpc_obj.disconnect()
-                    remote_dpc_obj.disconnect()
             result = True
         except Exception as ex:
             fun_test.critical(str(ex))

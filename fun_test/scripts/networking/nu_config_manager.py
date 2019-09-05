@@ -22,6 +22,7 @@ class NuConfigManager(object):
     SAMPLE_FLOW_TYPE = "sample_flow"
     ACL_FLOW_TYPE = "acl_flow"
     FLOW_DIRECTION_NU_NU = "NU_NU"
+    FLOW_DIRECTION_NU_NU_100G = "NU_NU_100G"
     FLOW_DIRECTION_FPG_CC = "NU_CC"
     FLOW_DIRECTION_CC_FPG = "CC_NU"
     FLOW_DIRECTION_HU_CC = "HU_CC"

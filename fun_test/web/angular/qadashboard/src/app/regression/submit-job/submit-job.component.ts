@@ -5,11 +5,32 @@ import {LoggerService} from "../../services/logger/logger.service";
 import {Title} from "@angular/platform-browser";
 import {Sort} from "@angular/material";
 import {Validators} from "@angular/forms";
+import {animate, state, style, transition, trigger} from "@angular/animations";
+import {switchMap} from "rxjs/operators";
+import {of} from "rxjs";
+import {ActivatedRoute} from "@angular/router";
+import {TriageService} from "../triage2/triage.service";
+
+class Mode {
+  static REGULAR = "REGULAR";
+  static TASK = "TASK";
+  static TRIAGE = "TRIAGE"
+}
 
 @Component({
   selector: 'app-submit-job',
   templateUrl: './submit-job.component.html',
-  styleUrls: ['./submit-job.component.css']
+  styleUrls: ['./submit-job.component.css'],
+  animations:    [trigger('fadeIn', [
+      transition(':enter', [
+        style({ opacity: 0 }),
+        animate(300)
+      ]),
+      transition(':leave', [
+        animate(1, style({ opacity: 1.0 }))
+      ]),
+      state('*', style({ opacity: 1.0 })),
+    ])]
 })
 export class SubmitJobComponent implements OnInit {
   DEFAULT_TEST_BED: string = "fs-6";
@@ -48,7 +69,7 @@ export class SubmitJobComponent implements OnInit {
 
   withJenkinsBuild: boolean = true;
 
-  disableAssertions: boolean = true;
+  disableAssertions: boolean = false;
   funOsMakeFlags: string = null;
   branchFunOs: string = null;
   branchFunSdk: string = null;
@@ -56,6 +77,7 @@ export class SubmitJobComponent implements OnInit {
   branchFunHw: string = null;
   skipDasmC: boolean = true;
   branchFunTools: string = null;
+  releaseBuild: boolean = true;
 
   selectedScriptPk: number = null;
   resetScriptSelector: boolean = false;
@@ -66,15 +88,31 @@ export class SubmitJobComponent implements OnInit {
   users: any = null;
   BOOT_ARGS_REPLACEMENT_STRING: string = "rpl_:";
   description: string = null;
-
-
+  //type: string = "regular"; // some other type like task
+  queryParams: any = null;
   jobInputs: string = null; // input dictionary to be sent to the scheduler
 
+  csiPerf: boolean = false;
+  dryRun: boolean = false;
+  hbmDump: boolean = false;
+  moreJenkinsOptions: boolean = false;
+  mode: Mode = Mode.REGULAR;
+  Mode = Mode;
 
-
+  // For Triaging
+  triageTypes = [{value: 6, description: "Pass or Fail"}, {value: 7, description: "Regex match"}];  //Taken from TriagingTypes
+  gitShasValid: boolean = false;
+  validateShasStatus: string = null;
+  fromFunOsSha: string = ""; //"8751993af1b24e8159a5f2f3fc22480c44fde8c6";
+  toFunOsSha: string = ""; //"74e24c8210d8c2ffb09712f9924eb959201dcf46";
+  commitsInBetween: string[] = [];
+  currentTriageType: number = null;
+  regexMatchString: string = null;
 
   constructor(private apiService: ApiService, private logger: LoggerService,
-              private title: Title) {
+              private title: Title, private route: ActivatedRoute,
+              private triageService: TriageService) {
+    this.currentTriageType = this.triageTypes[0].value;
   }
 
   ngOnInit() {
@@ -100,16 +138,25 @@ export class SubmitJobComponent implements OnInit {
     this.schedulingOptions = false;
     this.jobId = null;
     let self = this;
-    this.apiService.get("/regression/suites").subscribe((result) => {
-      let suitesInfo = result.data;
-      self.suitesInfo = suitesInfo;
-
-      for (let suites of Object.keys(suitesInfo)) {
-        self.suitesInfoKeys.push(suites);
+    this.getQueryParam().subscribe((response) => {
+      this.queryParams = response;
+      let queryParamString = "";
+      if (this.mode === Mode.TASK) {
+        queryParamString = "?suite_type=task";
       }
-      self.suitesInfoKeys.sort();
+
+      this.apiService.get("/regression/suites" + queryParamString).subscribe((result) => {
+        let suitesInfo = result.data;
+        self.suitesInfo = suitesInfo;
+
+        for (let suites of Object.keys(suitesInfo)) {
+          self.suitesInfoKeys.push(suites);
+        }
+        self.suitesInfoKeys.sort();
+      });
 
     });
+
     this.selectedTags = [];
     this.tags = [];
     this.fetchUsers();
@@ -117,6 +164,39 @@ export class SubmitJobComponent implements OnInit {
     this.fetchTestBeds();
     this.emailOnFailOnly = false;
   }
+
+  getQueryParam() {
+    return this.route.queryParams.pipe(switchMap(params => {
+      if (params.hasOwnProperty('mode')) {
+        this.mode = params["mode"];
+        if (this.mode === Mode.TRIAGE) {
+          this.dryRun = true;
+        }
+      }
+      return of(params);
+    }))
+  }
+
+  validateShas() {
+    if ((!this.fromFunOsSha) || (!this.toFunOsSha)) {
+      return this.logger.error("Git commits are invalid");
+    }
+    let url = "/api/v1/git_commits_fun_os/" + this.fromFunOsSha + "/" + this.toFunOsSha;
+    this.validateShasStatus = "Validating commits";
+    this.apiService.get(url).subscribe((response) => {
+      this.commitsInBetween = response.data;
+      if (this.commitsInBetween && this.commitsInBetween.length) {
+        this.gitShasValid = true;
+        this.validateShasStatus = null;
+
+      }
+    }, error => {
+      this.logger.error("Git commits are invalid");
+      this.validateShasStatus = null;
+
+    })
+  }
+
 
   onItemSelect (item:any): void {
     console.log(item);
@@ -238,6 +318,7 @@ export class SubmitJobComponent implements OnInit {
     payload["email_on_fail_only"] = this.emailOnFailOnly;
     payload["test_bed_type"] = this.selectedTestBedType;
     payload["submitter_email"] = this.selectedUser.email;
+
     if (this.emails) {
       this.emails = this.emails.split(",");
       payload["email_list"] = this.emails
@@ -255,7 +336,10 @@ export class SubmitJobComponent implements OnInit {
     if (this.selectedTestBedType) {
       payload["environment"]["test_bed_type"] = this.selectedTestBedType; //TODO: this is not needed after scheduler_v2
     }
-
+    /*if (this.type) {
+      payload["suite_type"] = this.type;
+      payload["environment"]["test_bed_type"] = "tasks"
+    }*/
 
     if (this.isTestBedFs()) {
       if (!this.withJenkinsBuild) {
@@ -271,6 +355,7 @@ export class SubmitJobComponent implements OnInit {
         if (this.bootArgs && this.bootArgs !== "" && this.isTestBedFs()) {
           payload["environment"]["build_parameters"]["BOOTARGS"] = this.bootArgs.replace(/\s+/g, this.BOOT_ARGS_REPLACEMENT_STRING);
         }
+        payload["environment"]["build_parameters"]["RELEASE_BUILD"] = this.releaseBuild;
         payload["environment"]["build_parameters"]["DISABLE_ASSERTIONS"] = this.disableAssertions;
         payload["environment"]["build_parameters"]["FUNOS_MAKEFLAGS"] = this.funOsMakeFlags;
         payload["environment"]["build_parameters"]["BRANCH_FunOS"] = this.branchFunOs;
@@ -290,22 +375,65 @@ export class SubmitJobComponent implements OnInit {
       payload["environment"]["private_funos_tgz_url"] = this.privateFunosTgzUrl;
     }
 
+    if (this.csiPerf) {
+      payload["environment"]["csi_perf"] = this.csiPerf;
+    }
+
+    if (this.dryRun) {
+      payload["environment"]["dry_run"] = this.dryRun;
+    }
+
+    if (this.hbmDump) {
+      payload["environment"]["hbm_dump"] = this.hbmDump;
+    }
+
     if (this.description) {
       payload["description"] = this.description;
     }
 
-    this.submitting = "Submitting job";
-    let ctrl = this;
-    this.apiService.post('/regression/submit_job', payload).subscribe(function (result) {
-      self.jobId = parseInt(result.data);
-      window.location.href = "/regression/suite_detail/" + self.jobId;
-      ctrl.logger.success(`Job: ${self.jobId} Submitted`);
-      console.log("Job: " + self.jobId + " Submitted");
-      ctrl.submitting = null;
-    }, error => {
-      self.logger.error("Unable to submit job");
-      ctrl.submitting = null;
-    });
+    if (this.mode === Mode.TRIAGE) {
+      if (!this.fromFunOsSha || !this.toFunOsSha) {
+        this.logger.error("Please fill both From & To FunOS commit");
+        return;
+      }
+      this.submitting = "Submitting triage";
+      let ctrl = this;
+      this.triageService.add(this.currentTriageType,
+        this.regexMatchString,
+        this.fromFunOsSha,
+        this.toFunOsSha,
+        this.selectedUser.email, payload).subscribe((response) => {
+          ctrl.submitting = null;
+          this.logger.success("Submitted triage");
+          let triageId = response;
+          if (triageId > 0) {
+            window.location.href = "regression/triaging/" + triageId;
+          }
+
+      }, error => {
+          this.logger.error("Error submitting triage: " + error);
+          ctrl.submitting = null;
+      });
+    }
+
+    if (this.mode === Mode.REGULAR) {
+      this.submitting = "Submitting job";
+      let ctrl = this;
+      this.apiService.post('/regression/submit_job', payload).subscribe(function (result) {
+        self.jobId = parseInt(result.data);
+        window.location.href = "/regression/suite_detail/" + self.jobId;
+        ctrl.logger.success(`Job: ${self.jobId} Submitted`);
+        console.log("Job: " + self.jobId + " Submitted");
+        ctrl.submitting = null;
+      }, error => {
+        self.logger.error("Unable to submit job");
+        ctrl.submitting = null;
+      });
+    }
+
+
+
+
   }
 
   singleSelectPkEvent(pk) {
@@ -333,6 +461,8 @@ export class SubmitJobComponent implements OnInit {
     this.jobInputs = jobInputs;
   }
 
-
+  test() {
+    console.log(this.currentTriageType);
+  }
 
 }

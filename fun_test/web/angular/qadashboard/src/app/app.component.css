@@ -13,3 +13,8 @@ body, .dropdown-item{
 nav {
   height: 70px;
 }
+
+
+.component-margin {
+  margin-top: 70px;
+}

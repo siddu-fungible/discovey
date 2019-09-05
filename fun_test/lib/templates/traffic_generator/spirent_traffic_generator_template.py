@@ -322,6 +322,28 @@ class StreamBlock(object):
         self._spirent_handle = handle
 
 
+
+class FrameLengthDistributor(object):
+    HEADER_TYPE = "ethernetpause:PauseMacControl"
+    _spirent_handle = None
+
+    def __init__(self, op_code="0001", pause_time=0, reserved=""):
+        self.opCode = op_code
+        self.pauseTime = pause_time
+        self.reserved = reserved
+
+    def get_attributes_dict(self):
+        attributes = {}
+        for key in vars(self):
+            if "_spirent" in key:
+                continue
+            attributes[key] = getattr(self, key)
+        return attributes
+
+    def update_stream_block_object(self, **kwargs):
+        self.__dict__.update(**kwargs)
+
+
 class GeneratorConfig(object):
     INTER_FRAME_GAP_UNIT_PERCENT_LINE_RATE = "PERCENT_LINE_RATE"
     INTER_FRAME_GAP_UNIT_FRAMES_PER_SECOND = "FRAMES_PER_SECOND"

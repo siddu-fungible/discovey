@@ -8,8 +8,8 @@ import psutil
 import logging.handlers
 import sys
 import web.fun_test.models_helper as models_helper
-from web.fun_test.web_interface import get_suite_detail_url
-from fun_settings import JOBS_DIR, ARCHIVED_JOBS_DIR, LOGS_DIR, WEB_STATIC_DIR, SUITES_DIR
+from web.fun_test.web_interface import get_suite_detail_url, set_annoucement, clear_announcements
+from fun_settings import JOBS_DIR, ARCHIVED_JOBS_DIR, LOGS_DIR, WEB_STATIC_DIR, SUITES_DIR, TASKS_DIR
 from fun_settings import TEAM_REGRESSION_EMAIL
 from fun_global import RESULTS, get_current_time
 from lib.utilities.send_mail import send_mail
@@ -17,7 +17,9 @@ from django.utils.timezone import activate
 from fun_settings import TIME_ZONE
 from web.fun_test.models import SchedulerInfo
 from scheduler.scheduler_global import SchedulerStates, SuiteType, SchedulingType, JobStatusType
+from scheduler.scheduler_global import SchedulerDirectiveTypes
 from web.fun_test.models import SchedulerJobPriority, JobQueue, KilledJob, TestCaseExecution, TestbedNotificationEmails
+from web.fun_test.models import SchedulerDirective
 from asset.asset_global import AssetType
 from web.fun_test.models import Asset
 from web.fun_test.models import TestBed, User
@@ -135,7 +137,6 @@ def get_periodic_scheduling_time_in_seconds(days, requested_hour, requested_minu
             if extra_seconds >= 0:
                 break
 
-
         if requested_day > current_day_of_week:
             # process something
             derived_time = now.replace(hour=requested_hour, minute=requested_minute)
@@ -225,10 +226,13 @@ def validate_spec(spec):
         error_message = "scheduling type cannot be empty"
     return valid, error_message
 
-def parse_suite(suite_name=None, dynamic_suite_file=None):
+
+def parse_suite(suite_name=None, dynamic_suite_file=None, suite_type=SuiteType.STATIC):
     suite_file_name = None
     if not dynamic_suite_file:
         suite_file_name = SUITES_DIR + "/" + suite_name
+        if suite_type == SuiteType.TASK:
+            suite_file_name = TASKS_DIR + "/" + suite_name
     else:
         suite_file_name = dynamic_suite_file
     if not suite_file_name.endswith(".json"):
@@ -543,8 +547,9 @@ def move_to_queue_head(job_id):
         for queue_entry in queue_entries:
             queue_entry.priority += 1
             if queue_entry.priority > high:
-                raise SchedulerException("Unable to change priority. Job-id: {}, high mark: {}".format(job_id, high))
-            queue_entry.save()
+                scheduler_logger.exception("Unable to change priority. Job-id: {}, high mark: {}".format(job_id, high))
+            else:
+                queue_entry.save()
         this_job_queue_entry.priority = low
         this_job_queue_entry.save()
 
@@ -560,11 +565,11 @@ def move_to_higher_queue(job_id):
         next_priority_category = SchedulerJobPriority.HIGH
 
     if priority_category == SchedulerJobPriority.HIGH:
-        raise SchedulerException("Job-Id: {} already in high priority category")
-
-    next_priority_value = get_next_priority_value(next_priority_category)
-    this_job_queue_entry.priority = next_priority_value
-    this_job_queue_entry.save()
+        scheduler_logger.exception(SchedulerException("Job-Id: {} already in high priority category"))
+    else:
+        next_priority_value = get_next_priority_value(next_priority_category)
+        this_job_queue_entry.priority = next_priority_value
+        this_job_queue_entry.save()
 
 
 def swap_priorities(job1, job2):
@@ -676,6 +681,17 @@ def un_lock_assets(job_id):
     assets = Asset.objects.filter(job_ids__contains=[job_id])
     for asset in assets:
         asset.job_ids = asset.remove_job_id(job_id=job_id)
+
+
+def pause():
+    SchedulerDirective.remove(directive=SchedulerDirectiveTypes.UNPAUSE_QUEUE_WORKER)
+    SchedulerDirective.add(directive=SchedulerDirectiveTypes.PAUSE_QUEUE_WORKER)
+
+
+def unpause():
+    SchedulerDirective.remove(directive=SchedulerDirectiveTypes.PAUSE_QUEUE_WORKER)
+    SchedulerDirective.add(directive=SchedulerDirectiveTypes.UNPAUSE_QUEUE_WORKER)
+
 
 class DatetimeEncoder(json.JSONEncoder):
     def default(self, obj):

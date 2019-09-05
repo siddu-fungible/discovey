@@ -21,7 +21,22 @@ class CmdController(Cmd):
         self._show_cmd_obj = ShowCommands(dpc_client=self.dpc_client)
         self._meter_cmd_obj = MeterCommands(dpc_client=self.dpc_client)
         self._flow_cmd_obj = FlowCommands(dpc_client=self.dpc_client)
+        self._debug_cmd_obj = DebugCommands(dpc_client=self.dpc_client)
         self._storage_peek_obj = StoragePeekCommands(dpc_client=self.dpc_client)
+
+    def check_cluster_id_range(self, cluster_id):
+        result = True
+        if not ((int(cluster_id) <= 7) and (int(cluster_id) >= 0)):
+            print "Enter cluster id between 0 and 7. You entered %s" % cluster_id
+            result = False
+        return result
+
+    def check_core_id_range(self, core_id):
+        result = True
+        if not ((core_id <= 5) and (core_id >= 0)):
+            print "Enter core id between 0 and 5. You entered %s" % core_id
+            result = False
+        return result
 
     def set_system_time_interval(self, args):
         time_interval = args.time
@@ -659,10 +674,6 @@ class CmdController(Cmd):
         grep_regex = args.grep
         self._peek_cmd_obj.peek_wro_stats(mode='hnu', tunnel_id=tunnel_id, grep_regex=grep_regex)
 
-    def peek_bam_stats(self, args):
-        grep_regex = args.grep
-        self._peek_cmd_obj.peek_bam_stats(grep_regex=grep_regex)
-
     def peek_fwd_stats(self, args):
         grep_regex = args.grep
         self._peek_cmd_obj.peek_fwd_stats(grep_regex=grep_regex)
@@ -711,8 +722,27 @@ class CmdController(Cmd):
 
     def peek_per_vp_stats(self, args):
         grep_regex = args.grep
-        vp_num = args.vp_num
-        self._peek_cmd_obj.peek_stats_per_vp(vp_number=vp_num, grep_regex=grep_regex)
+        pp = args.pp
+        rx = args.rx
+        tx = args.tx
+        q = args.q
+        cluster_id = args.cluster_id
+        core_id = args.core_id
+        cid_flag = True
+        core_id_flag = True
+        if cluster_id is not None:
+            cid_flag = self.check_cluster_id_range(cluster_id=cluster_id)
+        if core_id is not None:
+            core_id_flag = self.check_core_id_range(core_id=core_id)
+        if core_id and (cluster_id is None):
+            print "Please enter value for cluster_id with core_id"
+            return self.dpc_client.disconnect()
+        if cid_flag and core_id_flag and pp:
+            self._peek_cmd_obj.peek_stats_per_vp_pp(cluster_id=cluster_id, core_id=core_id, rx=rx, tx=tx, q=q,
+                                                    grep_regex=grep_regex)
+        elif cid_flag and core_id_flag:
+            self._peek_cmd_obj.peek_stats_per_vp(cluster_id=cluster_id, core_id=core_id, rx=rx, tx=tx, q=q,
+                                                 grep_regex=grep_regex)
 
     def peek_nwqm_stats(self, args):
         grep_regex = args.grep
@@ -730,10 +760,20 @@ class CmdController(Cmd):
         self._peek_cmd_obj.peek_mpg_stats()
 
     def peek_pervppkts_stats(self, args):
-        cluster_id = args.cluster_id
         grep_regex = args.grep
-        vp_num = args.vp_num
-        self._peek_cmd_obj.peek_pervppkts_stats(vp_number=vp_num, cluster_id=cluster_id, grep_regex=grep_regex)
+        cluster_id = args.cluster_id
+        core_id = args.core_id
+        cid_flag = True
+        core_id_flag = True
+        if cluster_id is not None:
+            cid_flag = self.check_cluster_id_range(cluster_id=cluster_id)
+        if core_id is not None:
+            core_id_flag = self.check_core_id_range(core_id=core_id)
+        if core_id and not cluster_id:
+            print "Please enter value for cluster_id with "
+            return self.dpc_client.disconnect()
+        if cid_flag and core_id_flag:
+            self._peek_cmd_obj.peek_pervppkts_stats(cluster_id=cluster_id, core_id=core_id, grep_regex=grep_regex)
 
     def peek_stats_nhp(self, args):
         grep_regex = args.grep
@@ -746,7 +786,18 @@ class CmdController(Cmd):
     def peek_pc_resource_stats(self, args):
         grep_regex = args.grep
         cluster_id = args.cluster_id
-        self._peek_cmd_obj.peek_pc_resource_stats(cluster_id=cluster_id, grep_regex=grep_regex)
+        core_id = args.core_id
+        cid_flag = True
+        core_id_flag = True
+        if cluster_id is not None:
+            cid_flag = self.check_cluster_id_range(cluster_id=cluster_id)
+        if core_id is not None:
+            core_id_flag = self.check_core_id_range(core_id=core_id)
+        if core_id and not cluster_id:
+            print "Please enter value for cluster_id with "
+            return self.dpc_client.disconnect()
+        if cid_flag and core_id_flag:
+            self._peek_cmd_obj.peek_pc_resource_stats(cluster_id=cluster_id, core_id=core_id, grep_regex=grep_regex)
 
     def peek_cc_resource_stats(self, args):
         grep_regex = args.grep
@@ -824,6 +875,18 @@ class CmdController(Cmd):
 
     def peek_wus_stats(self, args):
         self._peek_cmd_obj.peek_stats_wus()
+
+    def peek_cdu_stats(self, args):
+        grep = args.grep
+        self._peek_cmd_obj.peek_cdu_stats(grep=grep)
+
+    def peek_ca_stats(self, args):
+        grep = args.grep
+        self._peek_cmd_obj.peek_ca_stats(grep=grep)
+
+    def peek_ddr_stats(self, args):
+        grep = args.grep
+        self._peek_cmd_obj.peek_ddr_stats(grep=grep)
 
     def peek_hu_stats(self, args):
         grep_regex = args.grep
@@ -927,11 +990,41 @@ class CmdController(Cmd):
 
     def get_flow_list(self, args):
         grep_regex = args.grep
-        self._flow_cmd_obj.get_flow_list(grep_regex=grep_regex)
+        pp = args.pp
+        hu_id = args.hu_id
+        tx = args.tx
+        rx = args.rx
+        if tx is None and rx is None:
+            tx=1
+            rx=1
+        if args.pp:
+            self._flow_cmd_obj.get_flow_list_pp(hu_id=hu_id, tx=tx, rx=rx, grep_regex=grep_regex)
+        else:
+            self._flow_cmd_obj.get_flow_list(grep_regex=grep_regex)
 
     def get_flow_blocked(self, args):
         grep_regex = args.grep
         self._flow_cmd_obj.get_flow_blocked(grep_regex=grep_regex)
+
+    def debug_vp_util(self, args):
+        grep_regex = args.grep
+        pp = args.pp
+        cluster_id = args.cluster_id
+        core_id = args.core_id
+        cid_flag = True
+        core_id_flag = True
+        if cluster_id is not None:
+            cid_flag = self.check_cluster_id_range(cluster_id=cluster_id)
+        if core_id is not None:
+            core_id_flag = self.check_core_id_range(core_id=core_id)
+        if core_id and (cluster_id is None):
+            print "Please enter value for cluster_id with core_id"
+            return self.dpc_client.disconnect()
+
+        if cid_flag and core_id_flag and pp:
+            self._debug_cmd_obj.debug_vp_util_pp(cluster_id=cluster_id, core_id=core_id, grep_regex=grep_regex)
+        elif cid_flag and core_id_flag:
+            self._debug_cmd_obj.debug_vp_util(cluster_id=cluster_id, core_id=core_id, grep_regex=grep_regex)
 
     # Set handler functions for the sub commands
 
@@ -1073,7 +1166,6 @@ class CmdController(Cmd):
     peek_fcp_stats_parser.set_defaults(func=peek_fcp_tunnel_stats)
     peek_wro_nu_stats_parser.set_defaults(func=peek_wro_nu_stats)
     peek_wro_hnu_stats_parser.set_defaults(func=peek_wro_hnu_stats)
-    peek_bam_stats_parser.set_defaults(func=peek_bam_stats)
     peek_fwd_stats_parser.set_defaults(func=peek_fwd_stats)
     peek_erp_hnu_stats_parser.set_defaults(func=peek_erp_hnu_stats)
     peek_erp_nu_stats_parser.set_defaults(func=peek_erp_nu_stats)
@@ -1113,6 +1205,9 @@ class CmdController(Cmd):
     peek_wustacks_stats_parser.set_defaults(func=peek_wustacks_stats)
     peek_hu_stats_parser.set_defaults(func=peek_hu_stats)
     peek_wus_stats_parser.set_defaults(func=peek_wus_stats)
+    peek_stats_cdu_parser.set_defaults(func=peek_cdu_stats)
+    peek_stats_ca_parser.set_defaults(func=peek_ca_stats)
+    peek_stats_ddr_parser.set_defaults(func=peek_ddr_stats)
 
     # Storage Peek Commands
     peek_stats_ssds_parser.set_defaults(func=peek_stats_ssds)
@@ -1137,6 +1232,9 @@ class CmdController(Cmd):
     # -------------- Flow Command Handlers ----------------
     flow_list_parser.set_defaults(func=get_flow_list)
     flow_blocked_parser.set_defaults(func=get_flow_blocked)
+
+    # -------------- Debug Command Handlers -----------------
+    vp_util_parser.set_defaults(func=debug_vp_util)
 
     @with_argparser(base_set_parser)
     def do_set(self, args):
@@ -1186,16 +1284,20 @@ class CmdController(Cmd):
         else:
             self.do_help('flow')
 
+    @with_argparser(base_debug_parser)
+    def do_debug(self, args):
+        func = getattr(args, 'func', None)
+        if func is not None:
+            func(self, args)
+        else:
+            self.do_help('debug')
+
     def __del__(self):
         self.dpc_client.disconnect()
 
 
-
-
-
-
 if __name__ == '__main__':
-    cmd_obj = CmdController(target_ip="10.1.105.165", target_port=40220, verbose=False)
+    cmd_obj = CmdController(target_ip="10.1.20.26", target_port=40220, verbose=False)
     cmd_obj.cmdloop(intro="hello")
 
 

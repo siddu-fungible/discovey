@@ -3,6 +3,7 @@ import re
 from lib.system.utils import MultiProcessingTasks
 from prettytable import PrettyTable
 from datetime import datetime
+from collections import OrderedDict
 
 FRAMES_RECEIVED_OK = "aFramesReceivedOK"
 FRAMES_TRANSMITTED_OK = "aFramesTransmittedOK"
@@ -117,6 +118,10 @@ ERR_TRAP_COPP_PRSR_OL_V4_VER_METER_ID = 54
 ERR_TRAP_COPP_PRSR_OL_V6_VER_METER_ID = 55
 ERR_TRAP_COPP_PRSR_OL_IHL_METER_ID = 56
 ERR_TRAP_COPP_PRSR_IP_FLAG_ZERO_METER_ID = 57
+TOTAL_CLUSTERS = 8
+TOTAL_CORES_PER_CLUSTER = 6
+TOTAL_VPS_PER_CORE = 4
+START_VP_NUMBER = 8
 
 
 psw_global_stats_counter_names = {'orm_drop': 'orm_drop', 'grm_sx_drop': 'grm_sx_drop',
@@ -284,7 +289,7 @@ def get_vp_pkts_stats_values(network_controller_obj):
 def get_bam_stats_values(network_controller_obj):
     result = None
     try:
-        output = network_controller_obj.peek_bam_stats()
+        output = network_controller_obj.peek_resource_bam_stats()
         fun_test.simple_assert(output, "Ensure bam stats are grepped")
         result = parse_result_dict(output)
     except Exception as ex:
@@ -879,17 +884,76 @@ def populate_pc_resource_output_file(network_controller_obj, filename, pc_id, di
         fun_test.critical(str(ex))
     return output
 
+
+def _format_data_output(val):
+    if val == "N/A":
+        return val
+    val = "{:.0f}".format(val * 100)
+    if int(val) >= 90:
+        val = "\033[92m " + val + " \033[0m"
+    return val
+
+
+def _format_non_zero_values(list_of_lists):
+    index_list = []
+    for cls, vp_0, vp_1, vp_2, vp_3 in zip(list_of_lists[0],list_of_lists[1],list_of_lists[2],list_of_lists[3],list_of_lists[4]):
+        if (vp_0 == '0' and vp_1 == '0' and vp_2 == '0' and vp_3 == '0') or (vp_0 == 'N/A' and vp_1 == 'N/A' and vp_2 == 'N/A' and vp_3 == 'N/A'):
+            index_list.append(list_of_lists[0].index(cls))
+    for index in sorted(index_list, reverse=True):
+        for list in list_of_lists:
+            del list[index]
+    return list_of_lists
+
+def get_vp_util_table_obj(result):
+    master_table_obj = PrettyTable()
+    complete_dict = OrderedDict()
+    rows_list = ["Cls/Core", "0", "1", "2", "3"]
+    for col_name in rows_list:
+        complete_dict[col_name] = []
+    for key, val in result.iteritems():
+        val = _format_data_output(val)
+        cluster_id = key.split(".")[0][3]
+        core_id = key.split(".")[1]
+        vp_num = key.split(".")[2]
+        for _key in rows_list:
+            if _key == rows_list[0] and cluster_id + '/' + core_id not in complete_dict[_key]:
+                complete_dict[_key].append(cluster_id + '/' + core_id)
+            else:
+                if _key == vp_num:
+                    complete_dict[_key].append(val)
+                    break
+
+    print_keys = complete_dict.keys()
+    print_values = complete_dict.values()
+    print_values = _format_non_zero_values(print_values)
+    for col_name, col_values in zip(print_keys, print_values):
+        master_table_obj.add_column(col_name, col_values)
+    return master_table_obj
+
+
 def populate_vp_util_output_file(network_controller_obj, filename, display_output=False):
     output = False
     try:
-        filtered_dict = {}
         lines = list()
 
-        result = network_controller_obj.debug_vp_util()
-        for key, val in sorted(result.iteritems()):
-            if "CCV1" in key or "CCV2" in key:
-                filtered_dict[key] = val
-        master_table_obj = get_single_dict_stats(result=filtered_dict)
+        output_dict = OrderedDict()
+        output = network_controller_obj.debug_vp_util()
+        for key in sorted(output):
+            output_dict[key] = output[key]
+
+        for x in range(0, 6):
+            for y in range(2, 4):
+                if x > 3:
+                    z = 0
+                    key = 'CCV8.%s.%s' % (x, z)
+                    output_dict[key] = 'N/A'
+                    z = 1
+                    key = 'CCV8.%s.%s' % (x, z)
+                    output_dict[key] = 'N/A'
+                key = 'CCV8.%s.%s' % (x, y)
+                output_dict[key] = 'N/A'
+
+        master_table_obj = get_vp_util_table_obj(result=output_dict)
         lines.append("\n########################  %s ########################\n" % str(get_timestamp()))
         lines.append(master_table_obj.get_string())
         lines.append('\n\n\n')
@@ -912,17 +976,301 @@ def populate_vp_util_output_file(network_controller_obj, filename, display_outpu
     return output
 
 
+def _get_difference(result, prev_result):
+    """
+    :param result: Should be dict or dict of dict
+    :param prev_result: Should be dict or dict of dict
+    :return: dict or dict of dict
+    """
+    diff_result = {}
+    for key in result:
+        if type(result[key]) == dict:
+            diff_result[key] = {}
+            for _key in result[key]:
+                if key in prev_result and _key in prev_result[key]:
+                    if type(result[key][_key]) == dict:
+                        diff_result[key][_key] = {}
+                        for inner_key in result[key][_key]:
+                            if inner_key in prev_result[key][_key]:
+                                diff_value = result[key][_key][inner_key] - prev_result[key][_key][inner_key]
+                                diff_result[key][_key][inner_key] = diff_value
+                            else:
+                                diff_result[key][_key][inner_key] = 0
+                    else:
+                        diff_value = result[key][_key] - prev_result[key][_key]
+                        diff_result[key][_key] = diff_value
+                else:
+                    diff_result[key][_key] = 0
+        elif type(result[key]) == str:
+            diff_result[key] = result[key]
+        else:
+            if key in prev_result:
+                if type(result[key]) == list:
+                    diff_result[key] = result[key]
+                    continue
+                diff_value = result[key] - prev_result[key]
+                diff_result[key] = diff_value
+            else:
+                diff_result[key] = 0
+
+    return diff_result
+
+
+def get_complete_dict(result, tabular_list, prev_result):
+    core_id = None
+    complete_dict = OrderedDict()
+    added_cluster_list = []
+    for item in tabular_list:
+        complete_dict[item] = []
+    current_result = result
+    if prev_result:
+        current_result = prev_result
+    for key, val in current_result.iteritems():
+        cluster_val = key.split(":")[0][2]
+        vp_val = key.split(":")[1]
+        if not cluster_val in added_cluster_list:
+            if core_id is not None:
+                complete_dict[tabular_list[0]].append("%s/%s" % (cluster_val, core_id))
+                added_cluster_list.append(cluster_val)
+            else:
+                for x in range(0, 6):
+                    complete_dict[tabular_list[0]].append("%s/%s" % (cluster_val, x))
+                added_cluster_list.append(cluster_val)
+        for _key, _val in val.iteritems():
+            for item in tabular_list[1:]:
+                if (int(vp_val) % TOTAL_VPS_PER_CORE == int(item.split(":")[0][0])) and (not 'd_' in item) and (
+                        _key == item.split(":")[1]):
+                    complete_dict[item].append(_val)
+                    break
+    if prev_result:
+        diff_result = _get_difference(result=result, prev_result=prev_result)
+        diff_result = get_sorted_dict(diff_result)
+        for key, val in diff_result.iteritems():
+            cluster_val = key.split(":")[0][2]
+            vp_val = key.split(":")[1]
+            if not cluster_val in added_cluster_list:
+                added_cluster_list.append(cluster_val)
+                complete_dict[tabular_list[0]].append(cluster_val)
+            for _key, _val in val.iteritems():
+                for item in tabular_list[1:]:
+                    if (int(vp_val) % TOTAL_VPS_PER_CORE == int(item.split(":")[0][0])) and (
+                            'd_' in item) and ('d_' + _key == item.split(":")[1]):
+                        complete_dict[item].append(_val)
+                        break
+    return complete_dict
+
+
+def get_tabular_list(table_list, print_key_list, diff=False):
+    tabular_list = []
+    for _key in table_list:
+        for key in print_key_list:
+            if not 'Cls/Core' in str(_key):
+                tabular_list.append(str(_key) + ":" + key)
+                if diff:
+                    tabular_list.append(str(_key) + ":d_" + key)
+            else:
+                if 'Cls/Core' not in tabular_list:
+                    tabular_list.append(_key)
+    return tabular_list
+
+
+def eliminate_zero_val_rows(print_keys, print_values):
+    diff_indexes = []
+
+    # Find all diff columns
+    for key in print_keys:
+        if 'd_' in key:
+            diff_indexes.append(print_keys.index(key))
+    if diff_indexes:
+        del_indexes = []
+        # Check all lists simultaneously if their diff value is 0 and note its index
+        for i in range(len(print_values[0])):
+            zero_val = []
+            for index in diff_indexes:
+                if print_values[index][i] == 0:
+                    zero_val.append(True)
+                else:
+                    zero_val.append(False)
+                    break
+            if len(set(zero_val)) == 1 and zero_val[0]:
+                del_indexes.append(i)
+        # Check if del indexes and delete those from all lists
+        del_indexes.reverse()
+        for val_list in print_values:
+            for del_index in del_indexes:
+                del val_list[del_index]
+    return print_values
+
+
+def eliminate_zero_val_cols(print_keys, print_values):
+    diff_indexes = []
+    del_indexes = []
+    # Find all diff columns
+    for key in print_keys:
+        # TODO: Not removing column for q depth
+        if 'd_' in key and not '_q' in key:
+            diff_indexes.append(print_keys.index(key))
+    if diff_indexes:
+        # Compare index list and index - 1 list and see if all elements are 0.
+        # If so then delete those 2 columns from print_keys and print_values
+        for index in diff_indexes:
+            diff_check_len = len(set(print_values[index]))
+            diff_check_val = print_values[index][0]
+            nor_check_len = len(set(print_values[index - 1]))
+            nor_check_val = print_values[index - 1][0]
+            if diff_check_len == 1 and diff_check_val == 0 and nor_check_len == 1 and nor_check_val == 0:
+                del_indexes.append(index - 1)
+                del_indexes.append(index)
+    if del_indexes:
+        del_indexes.reverse()
+        for del_col in del_indexes:
+            del print_keys[del_col]
+            del print_values[del_col]
+    return print_values
+
+def _get_vp_numbers_from_core_id(core_id):
+    result = []
+    try:
+        start_vp_num = START_VP_NUMBER
+        if core_id != 0:
+            start_vp_num = START_VP_NUMBER + TOTAL_VPS_PER_CORE * core_id
+        end_vp_num = start_vp_num + TOTAL_VPS_PER_CORE
+        result = range(start_vp_num, end_vp_num, 1)
+    except Exception as ex:
+        print "ERROR: %s" % str(ex)
+    return result
+
+def get_filtered_dict(output_dict, cluster_id=None, core_id=None, rx=True, tx=True, q=True):
+    rx_key_name = 'wus_received'
+    tx_key_name = 'wus_sent'
+    low_q_key_name = 'low_q_depth'
+    high_q_key_name = 'high_q_depth'
+    current_result = {}
+    dict_keys = output_dict.keys()
+    for key in dict_keys:
+        if (str(cluster_id) is not None) and (str(cluster_id) in key.split(":")[0]):
+            if core_id is not None:
+                vp_num_list = _get_vp_numbers_from_core_id(core_id=core_id)
+                if int(key.split(":")[1]) in vp_num_list:
+                    current_result[key] = output_dict[key]
+            else:
+                current_result[key] = output_dict[key]
+        elif cluster_id is None:
+            cc_cluster_id = '8'
+            if cc_cluster_id not in key.split(":")[0]:
+                current_result[key] = output_dict[key]
+    parsed_dict = {}
+    for key, val in current_result.iteritems():
+        parsed_dict[key] = {}
+        for _key in val.keys():
+            if _key == rx_key_name and rx:
+                parsed_dict[key][rx_key_name] = current_result[key][_key]
+            if _key == tx_key_name and tx:
+                parsed_dict[key][tx_key_name] = current_result[key][_key]
+            if _key == low_q_key_name and q:
+                parsed_dict[key][low_q_key_name] = current_result[key][_key]
+            if _key == high_q_key_name and q:
+                parsed_dict[key][high_q_key_name] = current_result[key][_key]
+    return parsed_dict
+
+
+def get_per_vp_dict_table_obj(result, prev_result):
+    rx_key_name = 'wus_received'
+    display_rx_key_name = 'rx'
+    tx_key_name = 'wus_sent'
+    display_tx_key_name = 'tx'
+    lo_q_key_name = 'low_q_depth'
+    display_lo_q_key_name = 'lo_q'
+    hi_q_key_name = 'high_q_depth'
+    display_hi_q_key_name = 'hi_q'
+    all_keys = result.keys()
+    row_list = ["Cls/Core", "0", "1", "2", "3"]
+    single_dict = result[all_keys[0]]
+    print_key_list = single_dict.keys()
+
+    diff = True
+    tabular_list = get_tabular_list(row_list, print_key_list, diff=diff)
+
+    master_table_obj = PrettyTable()
+    print_dict = get_complete_dict(result=result, tabular_list=tabular_list,
+                                   prev_result=prev_result)
+
+    print_keys = print_dict.keys()
+    print_keys = [print_key.replace(tx_key_name, display_tx_key_name) for print_key in print_keys]
+    print_keys = [print_key.replace(rx_key_name, display_rx_key_name) for print_key in
+                  print_keys]
+    print_keys = [print_key.replace(lo_q_key_name, display_lo_q_key_name) for print_key in
+                  print_keys]
+    print_keys = [print_key.replace(hi_q_key_name, display_hi_q_key_name) for print_key in
+                  print_keys]
+    print_values = print_dict.values()
+
+    print_values = eliminate_zero_val_rows(print_keys, print_values)
+    all_empty_list = True
+    for print_val_list in print_values:
+        if print_val_list:
+            all_empty_list = False
+            break
+    if not all_empty_list:
+        print_values = eliminate_zero_val_cols(print_keys, print_values)
+    for col_name, col_values in zip(print_keys, print_values):
+        master_table_obj.add_column(col_name, col_values)
+    return master_table_obj
+
+def get_required_per_vp_result(output_result):
+    result = {}
+    for key, val in output_result.iteritems():
+        if key.split(":")[2][0] == '0':
+            result[key] = {}
+            result[key]['low_q_depth'] = val['vp_wu_qdepth']
+            new_key = key.replace(":1[VP]", ":0[VP]")
+            result[key]['high_q_depth'] = output_result[new_key]['vp_wu_qdepth']
+            for _key, _val in val.iteritems():
+                result[key][_key] = _val
+            del result[key]['vp_wu_qdepth']
+    return result
+
+def get_sorted_dict(result):
+    sorted_dict = OrderedDict()
+    result_keys = sorted(result)
+    if len(result_keys) == TOTAL_VPS_PER_CORE * TOTAL_CORES_PER_CLUSTER:
+        result_keys.insert(0, result_keys[-2])
+        result_keys.insert(1, result_keys[-1])
+        del result_keys[-1]
+        del result_keys[-1]
+    else:
+        insert_index = 0
+        del_index = 22
+        for x in range(0, TOTAL_CLUSTERS):
+            second_insert_index = insert_index + 1
+            second_del_index = del_index + 1
+
+            result_keys.insert(insert_index, result_keys[del_index])
+            del result_keys[del_index + 1]
+            result_keys.insert(second_insert_index, result_keys[second_del_index])
+            del result_keys[second_del_index + 1]
+
+            insert_index = insert_index + 24
+            del_index = del_index + 24
+    for key in result_keys:
+        sorted_dict[key] = result[key]
+    return sorted_dict
+
 def populate_per_vp_output_file(network_controller_obj, filename, display_output=False):
     output = False
     try:
-        filtered_dict = {}
         lines = list()
 
+        prev_result = network_controller_obj.peek_per_vp_stats()
+        prev_result = get_required_per_vp_result(prev_result)
+        prev_result = get_filtered_dict(output_dict=prev_result)
+        prev_result = get_sorted_dict(prev_result)
+        fun_test.sleep("Let per vp be grepped", seconds=1)
         result = network_controller_obj.peek_per_vp_stats()
-        for key, val in sorted(result.iteritems()):
-            if "FA1" in key or "FA2" in key:
-                filtered_dict[key] = val
-        master_table_obj = get_nested_dict_stats(result=filtered_dict)
+        result = get_required_per_vp_result(result)
+        result = get_filtered_dict(output_dict=result)
+        result = get_sorted_dict(result)
+        master_table_obj = get_per_vp_dict_table_obj(result=result, prev_result=prev_result)
         lines.append("\n########################  %s ########################\n" % str(get_timestamp()))
         lines.append(master_table_obj.get_string())
         lines.append('\n\n\n')
@@ -945,7 +1293,8 @@ def populate_per_vp_output_file(network_controller_obj, filename, display_output
     return output
 
 
-def run_dpcsh_commands(template_obj, sequencer_handle, network_controller_obj, test_type, single_flow, half_load_latency,test_time, display_output=False):
+def run_dpcsh_commands(template_obj, sequencer_handle, network_controller_obj, single_flow, half_load_latency,test_time,
+                       test_type=None, display_output=False):
     try:
         sequencer_passed = False
         version = fun_test.get_version()
@@ -956,20 +1305,34 @@ def run_dpcsh_commands(template_obj, sequencer_handle, network_controller_obj, t
         if half_load_latency:
             latency = "half_load_latency"
         flow_latency = "%s_%s" % (flow, latency)
-        sleep_time = int(test_time/10)
+        time_delta = 10
+        sleep_time = int(test_time/time_delta)
+        total_stream_runs = 3
+        total_trails = 6
+        max_loop_count = total_stream_runs * total_trails * time_delta
 
-        resource_pc_1_file = str(version) + "_" + str(test_type) + "_" + flow_latency + '_resource_pc_1.txt'
-        resource_pc_2_file = str(version) + "_" + str(test_type) + "_" + flow_latency + '_resource_pc_2.txt'
-        bam_stats_file = str(version) + "_" + str(test_type) + "_" + flow_latency + '_bam.txt'
-        vp_util_file = str(version) + "_" + str(test_type) + "_" + flow_latency + "_vp_util.txt"
-        per_vp_file = str(version) + "_" + str(test_type) + "_" + flow_latency + "_per_vp.txt"
+        common_file_name = str(version) + "_" + flow_latency
+        if test_type:
+            str(version) + "_" + str(test_type) + "_" + flow_latency
+        resource_pc_1_file = common_file_name + '_resource_pc_1.txt'
+        resource_pc_2_file = common_file_name + '_resource_pc_2.txt'
+        bam_stats_file = common_file_name + '_bam.txt'
+        vp_util_file = common_file_name + "_vp_util.txt"
+        per_vp_file = common_file_name + "_per_vp.txt"
+        ddr_stats_file = common_file_name + "_ddr.txt"
+        cdu_stats_file = common_file_name + "_cdu.txt"
+        ca_stats_file = common_file_name + "_ca.txt"
 
         artifact_resource_pc_1_file = fun_test.get_test_case_artifact_file_name(post_fix_name=resource_pc_1_file)
         artifact_resource_pc_2_file = fun_test.get_test_case_artifact_file_name(post_fix_name=resource_pc_2_file)
         artifact_bam_stats_file = fun_test.get_test_case_artifact_file_name(post_fix_name=bam_stats_file)
         artifact_vp_util_file = fun_test.get_test_case_artifact_file_name(post_fix_name=vp_util_file)
         artifact_per_vp_file = fun_test.get_test_case_artifact_file_name(post_fix_name=per_vp_file)
+        artifact_ddr_file = fun_test.get_test_case_artifact_file_name(post_fix_name=ddr_stats_file)
+        artifact_cdu_file = fun_test.get_test_case_artifact_file_name(post_fix_name=cdu_stats_file)
+        artifact_ca_file = fun_test.get_test_case_artifact_file_name(post_fix_name=ca_stats_file)
 
+        start_counter = 0
         while not sequencer_passed:
             fun_test.log_module_filter("random_module")
             populate_pc_resource_output_file(network_controller_obj=network_controller_obj,
@@ -978,6 +1341,9 @@ def run_dpcsh_commands(template_obj, sequencer_handle, network_controller_obj, t
                                              filename=artifact_resource_pc_2_file, pc_id=2, display_output=display_output)
             populate_resource_bam_output_file(network_controller_obj=network_controller_obj, filename=artifact_bam_stats_file)
             populate_vp_util_output_file(network_controller_obj=network_controller_obj, filename=artifact_vp_util_file)
+            populate_ddr_output_file(network_controller_obj=network_controller_obj, filename=artifact_ddr_file)
+            populate_cdu_output_file(network_controller_obj=network_controller_obj, filename=artifact_cdu_file)
+            populate_ca_output_file(network_controller_obj=network_controller_obj, filename=artifact_ca_file)
             populate_per_vp_output_file(network_controller_obj=network_controller_obj, filename=artifact_per_vp_file)
             fun_test.log_module_filter_disable()
 
@@ -987,6 +1353,58 @@ def run_dpcsh_commands(template_obj, sequencer_handle, network_controller_obj, t
             if state.lower() == template_obj.PASSED.lower():
                 sequencer_passed = True
                 fun_test.log("Sequencer passed. Stopping dpcsh commands")
+            elif start_counter >= max_loop_count:
+                sequencer_passed = True
+                fun_test.log("Sequencer did not stop in expected time. Forcefully looping out")
+            start_counter += 1
+
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return True
+
+def populate_stats_file(network_controller_obj, test_time, generic_file_name_part, display_output=False):
+    try:
+        version = fun_test.get_version()
+        sleep_time_factor = 10
+        sleep_time = int(test_time/sleep_time_factor)
+
+        resource_pc_1_file = str(version) + "_" + generic_file_name_part + '_resource_pc_1.txt'
+        resource_pc_2_file = str(version) + "_" + generic_file_name_part + '_resource_pc_2.txt'
+        bam_stats_file = str(version) + "_" + generic_file_name_part + '_bam.txt'
+        vp_util_file = str(version) + "_" + generic_file_name_part + "_vp_util.txt"
+        per_vp_file = str(version) + "_" + generic_file_name_part + "_per_vp.txt"
+        ddr_stats_file = str(version) + "_" + generic_file_name_part + "_ddr.txt"
+        cdu_stats_file = str(version) + "_" + generic_file_name_part + "_cdu.txt"
+        ca_stats_file = str(version) + "_" + generic_file_name_part + "_ca.txt"
+
+        artifact_resource_pc_1_file = fun_test.get_test_case_artifact_file_name(post_fix_name=resource_pc_1_file)
+        artifact_resource_pc_2_file = fun_test.get_test_case_artifact_file_name(post_fix_name=resource_pc_2_file)
+        artifact_bam_stats_file = fun_test.get_test_case_artifact_file_name(post_fix_name=bam_stats_file)
+        artifact_vp_util_file = fun_test.get_test_case_artifact_file_name(post_fix_name=vp_util_file)
+        artifact_per_vp_file = fun_test.get_test_case_artifact_file_name(post_fix_name=per_vp_file)
+        artifact_ddr_file = fun_test.get_test_case_artifact_file_name(post_fix_name=ddr_stats_file)
+        artifact_cdu_file = fun_test.get_test_case_artifact_file_name(post_fix_name=cdu_stats_file)
+        artifact_ca_file = fun_test.get_test_case_artifact_file_name(post_fix_name=ca_stats_file)
+
+        start_counter = 0
+        while not start_counter == sleep_time_factor:
+            fun_test.log_module_filter("random_module")
+            populate_pc_resource_output_file(network_controller_obj=network_controller_obj,
+                                             filename=artifact_resource_pc_1_file, pc_id=1, display_output=display_output)
+            populate_pc_resource_output_file(network_controller_obj=network_controller_obj,
+                                             filename=artifact_resource_pc_2_file, pc_id=2, display_output=display_output)
+            populate_resource_bam_output_file(network_controller_obj=network_controller_obj, filename=artifact_bam_stats_file)
+            populate_ddr_output_file(network_controller_obj=network_controller_obj, filename=artifact_ddr_file)
+            populate_vp_util_output_file(network_controller_obj=network_controller_obj, filename=artifact_vp_util_file)
+            populate_cdu_output_file(network_controller_obj=network_controller_obj, filename=artifact_cdu_file)
+            populate_ca_output_file(network_controller_obj=network_controller_obj, filename=artifact_ca_file)
+            populate_per_vp_output_file(network_controller_obj=network_controller_obj, filename=artifact_per_vp_file)
+            fun_test.log_module_filter_disable()
+
+            fun_test.sleep("Sleep for %s secs before next iteration of populating dpcsh stats" % sleep_time, seconds=sleep_time)
+
+            start_counter += 1
+        fun_test.log("Population of file stats completed")
 
     except Exception as ex:
         fun_test.critical(str(ex))
@@ -1053,3 +1471,117 @@ def populate_resource_bam_output_file(network_controller_obj, filename, display_
     except Exception as ex:
         fun_test.critical(str(ex))
     return output
+
+
+def populate_ddr_output_file(network_controller_obj, filename, display_output=False):
+    output = False
+    try:
+        lines = list()
+
+        result_1 = network_controller_obj.peek_ddr_stats()
+        fun_test.sleep("Let time go for another second", seconds=1)
+        result_2 = network_controller_obj.peek_ddr_stats()
+        result = get_diff_results(old_result=result_1, new_result=result_2)
+        lines.append("\n########################  %s ########################\n" % str(get_timestamp()))
+        for key, val in result.iteritems():
+
+            master_table_obj = get_nested_dict_stats(result=val)
+            lines.append(master_table_obj.get_string())
+
+            with open(filename, 'a') as f:
+                f.writelines(lines)
+
+            description = "DDR stats"
+            fun_test.add_auxillary_file(description=description, filename=filename)
+
+            if display_output:
+                fun_test.log_disable_timestamps()
+                fun_test.log_section("DDR result")
+                for line in lines:
+                    fun_test.log(line)
+                fun_test.log_enable_timestamps()
+        lines.append('\n\n\n')
+        output = True
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return output
+
+
+def populate_cdu_output_file(network_controller_obj, filename, display_output=False):
+    output = False
+    try:
+        lines = list()
+
+        result = network_controller_obj.peek_cdu_stats()
+        fun_test.sleep("Let time go for another second", seconds=1)
+        result = network_controller_obj.peek_cdu_stats()
+        master_table_obj = get_nested_dict_stats(result=result)
+        lines.append("\n########################  %s ########################\n" % str(get_timestamp()))
+        lines.append(master_table_obj.get_string())
+        lines.append('\n\n\n')
+
+        with open(filename, 'a') as f:
+            f.writelines(lines)
+
+        description = "CDU stats"
+        fun_test.add_auxillary_file(description=description, filename=filename)
+
+        if display_output:
+            fun_test.log_disable_timestamps()
+            fun_test.log_section("CDU result")
+            for line in lines:
+                fun_test.log(line)
+            fun_test.log_enable_timestamps()
+        output = True
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return output
+
+
+def populate_ca_output_file(network_controller_obj, filename, display_output=False):
+    output = False
+    try:
+        lines = list()
+
+        result_1 = network_controller_obj.peek_ca_stats()
+        fun_test.sleep("Let time go for another second", seconds=1)
+        result_2 = network_controller_obj.peek_ca_stats()
+        result = get_diff_results(old_result=result_1, new_result=result_2)
+        lines.append("\n########################  %s ########################\n" % str(get_timestamp()))
+        for key, val in result.iteritems():
+
+            master_table_obj = get_nested_dict_stats(result=val)
+            lines.append(master_table_obj.get_string())
+
+            with open(filename, 'a') as f:
+                f.writelines(lines)
+
+            description = "CA stats"
+            fun_test.add_auxillary_file(description=description, filename=filename)
+
+            if display_output:
+                fun_test.log_disable_timestamps()
+                fun_test.log_section("CA result")
+                for line in lines:
+                    fun_test.log(line)
+                fun_test.log_enable_timestamps()
+        lines.append('\n\n\n')
+        output = True
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return output
+
+
+def get_diff_results(old_result, new_result):
+    result = {}
+    try:
+        for key, val in new_result.iteritems():
+            if isinstance(val, dict):
+                result[key] = get_diff_results(old_result=old_result[key], new_result=new_result[key])
+            else:
+                if not key in old_result:
+                    old_result[key] = 0
+                result[key] = new_result[key] - old_result[key]
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return result

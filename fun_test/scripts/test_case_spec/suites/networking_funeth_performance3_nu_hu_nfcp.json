@@ -1,4 +1,4 @@
 [
   {"info": {"tags": ["networking-funeth-performance"]}},
-  {"path": "networking/funeth/performance.py", "test_case_ids": [2000, 2001, 2002, 2003, 2004], "inputs": {"debug": 1}}
+  {"path": "networking/funeth/performance.py", "test_case_ids": [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008], "inputs": {"debug": 1}}
 ]

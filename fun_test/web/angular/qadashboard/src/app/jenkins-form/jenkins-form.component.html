@@ -1,4 +1,6 @@
-<form class="form-horizontal" [formGroup]="submissionForm">
+<form *ngIf="triagingType && triageTypes && triagingType != triageTypes.JENKINS_FUN_OS_ON_DEMAND"
+      class="form-horizontal"
+      [formGroup]="submissionForm">
   <div class="form-group">
     <label class="control-label col-sm-2" for="boot_args">BOOTARGS: </label>
     <input style="width: 600px" formControlName="BOOTARGS" id="boot_args"/>
@@ -33,5 +35,28 @@
     <input style="width: 200px" formControlName="PCI_MODE" id="pci_mode"/>
   </div>
 
+  <div class="form-group">
+    <label class="control-label col-sm-2" for="remote_script">REMOTE_SCRIPT: </label>
+    <input style="width: 200px" formControlName="REMOTE_SCRIPT" id="remote_script"/>
+  </div>
+
+  <div class="form-group">
+    <label class="control-label col-sm-2" for="hw_version">HW_VERSION: </label>
+    <input style="width: 200px" formControlName="HW_VERSION" id="hw_version"/>
+  </div>
+
 </form>
 
+<form *ngIf="triagingType && triageTypes && triagingType == triageTypes.JENKINS_FUN_OS_ON_DEMAND"
+      class="form-horizontal"
+      [formGroup]="submissionForm">
+  <div class="form-group">
+    <label class="control-label col-sm-2" for="test_script">Test script: </label>
+    <input style="width: 600px" formControlName="TEST_SCRIPT" id="test_script"/>
+  </div>
+  <div class="form-group">
+    <label class="control-label col-sm-2" for="test_script_loop">Test script loop: </label>
+    <input style="width: 600px" formControlName="TEST_SCRIPT_LOOP" id="test_script_loop"/>
+  </div>
+
+</form>

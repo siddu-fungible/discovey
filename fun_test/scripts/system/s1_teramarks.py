@@ -29,8 +29,8 @@ class PalladiumTc(FunTestCase):
     hw_model = "S1_Compute"
     max_duration = 900
     disable_assertions = "true"
-    hw_version = "rel_06152019"
-    run_target = "palladium"
+    hw_version = "rel_08012019"
+    run_target = "protium_s"
     extra_emails = None
 
     def describe(self):
@@ -99,10 +99,11 @@ class PkeTeramarkTc(PalladiumTc):
 
 
 class EcTeramarkTc(PalladiumTc):
-    boot_args = "app=qa_ec_stress min_ndata=8 max_ndata=8 min_nparity=4 max_nparity=4 min_stridelen=4096 max_stridelen=4096 syslog=2 --seq_fail --enable_multi_pcs num_pcs=8"
+    boot_args = "app=qa_ec_stress min_ndata=8 max_ndata=8 min_nparity=4 max_nparity=4 min_stridelen=4096 max_stridelen=4096 --seq_fail syslog=2 num_pcs=1 --noload --test-exit-fast"
     tags = "qa_s1_ec_teramark"
     note = "EC teramark app on S1"
-    max_duration = 2700
+    hw_model = "S1_Compute"
+    max_duration = 1800
 
     def describe(self):
         self.set_test_details(id=3,
@@ -145,12 +146,13 @@ class NfaTeramarkTc(PalladiumTc):
             3. Steps 3
                                   """)
 
+
 class JpegTeramarkTc(PalladiumTc):
     boot_args = "app=jpeg_perf_test"
     tags = "qa_s1_jpeg_teramark"
     note = "JPEG teramark app on S1"
     fun_os_make_flags = "XDATA_LISTS=/project/users/ashaikh/qa_test_inputs/jpeg_perf_inputs/perf_input.list"
-    extra_emails = ["aamir.shaikh@fungible.com"]
+    extra_emails = ["aamir.shaikh@fungible.com", "abhishek.dikshit@fungible.com", "hara.bandhakavi@fungible.com"]
 
     def describe(self):
         self.set_test_details(id=6,
@@ -160,6 +162,7 @@ class JpegTeramarkTc(PalladiumTc):
             2. Steps 2
             3. Steps 3
                                   """)
+
 
 class ZipTeramarkTc(PalladiumTc):
     boot_args = "app=deflate_perf_multi,lzma_perf_multi --serial"
@@ -177,6 +180,7 @@ class ZipTeramarkTc(PalladiumTc):
             3. Steps 3
                                   """)
 
+
 if __name__ == "__main__":
     myscript = MyScript()
     # myscript.add_test_case(CryptoTeramarkTc())
@@ -185,5 +189,5 @@ if __name__ == "__main__":
     # myscript.add_test_case(DfaTeramarkTc())
     # myscript.add_test_case(NfaTeramarkTc())
     myscript.add_test_case(JpegTeramarkTc())
-    myscript.add_test_case(ZipTeramarkTc())
+    # myscript.add_test_case(ZipTeramarkTc())
     myscript.run()

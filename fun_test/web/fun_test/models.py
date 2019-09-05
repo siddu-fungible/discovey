@@ -16,6 +16,7 @@ from django.contrib.postgres.fields import JSONField, ArrayField
 import json
 from asset.asset_global import AssetType
 from rest_framework.serializers import ModelSerializer
+from django.utils import timezone
 
 
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
@@ -28,6 +29,7 @@ TAG_LENGTH = 50
 class SiteConfig(models.Model):
     version = models.IntegerField(default=101)
     announcement = models.TextField(default="", null=True, blank=True)
+    announcement_level = models.IntegerField(default=1)
 
     def bump_version(self):
         self.version += 1
@@ -84,6 +86,7 @@ class CatalogTestCase(models.Model):
 class TestBed(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(null=True, blank=True)
+    note = models.TextField(null=True, blank=True)
     manual_lock = models.BooleanField(default=False)
     manual_lock_expiry_time = models.DateTimeField(default=datetime.now)
     manual_lock_submitter = models.EmailField(null=True, blank=True)
@@ -166,6 +169,7 @@ class SuiteExecution(models.Model):
     emails = models.TextField(default="[]", null=True)  # email addresses to send reports to
     email_on_failure_only = models.BooleanField(default=False)
     finalized = models.BooleanField(default=False)
+    preserve_logs = models.NullBooleanField(default=False, null=True)  # Preserve logs do not archive
 
     """
     Execution
@@ -321,7 +325,11 @@ class CatalogTestCaseExecution(models.Model):
 
 class Module(models.Model):
     name = models.TextField(unique=True)
-    verbose_name = models.TextField(default="Verbose Name")
+    verbose_name = models.TextField(default="Verbose name")
+
+class SubModules(FunModel):   # Say Module: Networking, sub-module: PSW
+    name = models.TextField(unique=True)
+    verbose_name = models.TextField(default="Verbose name")
 
 class JenkinsJobIdMap(models.Model):
     jenkins_job_id = models.IntegerField()
@@ -329,7 +337,6 @@ class JenkinsJobIdMap(models.Model):
     git_commit = models.TextField(default="")
     software_date = models.IntegerField(default=0)
     hardware_version = models.TextField(default="")
-    completion_date = models.TextField(default="")
     build_properties = models.TextField(default="")
     lsf_job_id = models.TextField(default="")
     sdk_version = models.TextField(default="")
@@ -338,7 +345,7 @@ class JenkinsJobIdMap(models.Model):
     associated_suites = ArrayField(models.IntegerField(default=-1), default=[])
 
     def __str__(self):
-        return "{} {} {} {}".format(self.completion_date, self.jenkins_job_id, self.fun_sdk_branch, self.hardware_version)
+        return "{} {} {} {}".format(self.build_date, self.jenkins_job_id, self.fun_sdk_branch, self.hardware_version)
 
 class JenkinsJobIdMapSerializer(ModelSerializer):
     class Meta:
@@ -434,7 +441,6 @@ class ScriptInfo(models.Model):
     bug = models.TextField(default="")
 
 
-
 class SchedulerInfo(models.Model):
     """
     A place to store scheduler state such as time started, time restarted, current state
@@ -443,6 +449,57 @@ class SchedulerInfo(models.Model):
     last_start_time = models.DateTimeField(default=datetime.now)
     last_restart_request_time = models.DateTimeField(default=datetime.now)
     main_loop_heartbeat = models.IntegerField(default=0)
+
+    def to_dict(self):
+        result = {}
+        fields = self._meta.get_fields()
+        for field in fields:
+            result[field.name] = getattr(self, field.name)
+        return result
+
+class SchedulerDirective(models.Model):
+    """
+    Stores actions that need to be completed by the scheduler.
+    Usually the web-interface would request such actions
+    """
+    date_time = models.DateTimeField(default=datetime.now)
+    directive = models.IntegerField(default=-1)
+    active = models.BooleanField(default=True)   # Usually set after Directive has been processed
+
+    def disable(self):
+        self.active = False
+        self.save()
+
+    def enable(self):
+        self.active = True
+        self.save()
+
+    @staticmethod
+    def get_recent():
+        directives = SchedulerDirective.objects.all().order_by('date_time')
+        recent = None
+        if directives:
+            recent = directives.last()
+        return recent
+
+    @staticmethod
+    def remove_recent():
+        last_directive = SchedulerDirective.get_recent()
+        if last_directive:
+            last_directive.delete()
+
+    @staticmethod
+    def remove(directive):
+        objects = SchedulerDirective.objects.filter(directive=directive)
+        if objects:
+            objects.delete()
+
+    @staticmethod
+    def add(directive):
+        SchedulerDirective.objects.update_or_create(directive=directive, defaults={'date_time': datetime.now()})
+
+
+
 
 class SuiteReRunInfo(models.Model):
     """
@@ -460,7 +517,14 @@ class JobQueue(models.Model):
     job_id = models.IntegerField(unique=True)
     test_bed_type = models.TextField(default="", null=True)
     message = models.TextField(default="", null=True)
+    pre_emption_allowed = models.NullBooleanField(default=True)  # Mainly used for suite-based test-beds.
+    # if a suite-based item is on top of the queue, if pre_emption allowed is disabled, all suite-based items of
+    # lower-priority in the queue will not be considered for de-queueing until the highest priority ones get de-queued
+    suspend = models.NullBooleanField(default=False)  # if set, the queued item is not eligible for de-queue
 
+
+    def is_suite_based(self):
+        return self.test_bed_type == "suite-based"
 
 class KilledJob(models.Model):
     job_id = models.IntegerField(unique=True)
@@ -474,6 +538,33 @@ class User(FunModel):
 
     def __str__(self):
         return "{} {} {}".format(self.first_name, self.last_name, self.email)
+
+class PerformanceUserWorkspaces(FunModel):
+    email = models.EmailField(max_length=60)
+    workspace_name = models.TextField(default="")
+    description = models.TextField(default="")
+    date_created = models.DateTimeField(default=datetime.now)
+    date_modified = models.DateTimeField(default=datetime.now)
+
+    def __str__(self):
+        return (str(self.__dict__))
+
+
+class InterestedMetrics(FunModel):
+    workspace_id = models.IntegerField()
+    email = models.EmailField(max_length=60)
+    metric_id = models.IntegerField()
+    subscribe = models.BooleanField(default=False)
+    track = models.BooleanField(default=False)
+    chart_name = models.TextField(default='')
+    category = models.TextField(default='')
+    lineage = models.TextField(default="")
+    date_created = models.DateTimeField(default=datetime.now)
+    date_modified = models.DateTimeField(default=datetime.now)
+    comments = models.TextField(default="")
+
+    def __str__(self):
+        return (str(self.__dict__))
 
 
 class Daemon(FunModel):
@@ -501,7 +592,7 @@ class Daemon(FunModel):
 
 
 class Asset(FunModel):
-    name = models.TextField(unique=True)
+    name = models.TextField()
     type = models.TextField()
     job_ids = JSONField(default=[])
     manual_lock_user = models.TextField(default=None, null=True)
@@ -509,22 +600,27 @@ class Asset(FunModel):
 
     @staticmethod
     def add_update(name, type, job_ids=None):
-        if not Asset.objects.filter(name=name).exists():
-            a = Asset(name=name, type=type)
-            if job_ids:
-                a.job_ids = job_ids
-            a.save()
-        else:
-            a = Asset.objects.get(name=name, type=type)
-            if job_ids:
-                a.job_ids = job_ids
-            a.save()
-
+        try:
+            if not Asset.objects.filter(name=name, type=type).exists():
+                a = Asset(name=name, type=type)
+                if job_ids:
+                    a.job_ids = job_ids
+                a.save()
+            else:
+                a = Asset.objects.get(name=name, type=type)
+                if job_ids:
+                    a.job_ids = job_ids
+                a.save()
+        except Exception as ex:
+            pass
     @staticmethod
     def get(name, type):
         result = None
         if Asset.objects.filter(name=name, type=type).exists():
-            result = Asset.objects.get(name=name, type=type)
+            try:
+                result = Asset.objects.get(name=name, type=type)
+            except Exception as ex:
+                pass
         return result
 
     @staticmethod
@@ -558,6 +654,71 @@ class Asset(FunModel):
         if self.manual_lock_user == manual_lock_user:
             self.manual_lock_user = None
             self.save()
+
+
+class SuiteItems(models.Model):
+    script_path = models.TextField()
+    inputs = JSONField(default=None)
+    test_case_ids = ArrayField(models.IntegerField(default=-1), default=None)
+
+
+class Suite(models.Model):
+    name = models.TextField(default="TBD")
+    tyoe = models.TextField(default="SUITE")   # Other types are TASK
+    categories = JSONField(default=[], null=True)
+    sub_categories = JSONField(default=[], null=True)
+    short_description = models.TextField(default="", null=True)
+    long_description = models.TextField(default="", null=True)
+    tags = JSONField(default=[], null=True)
+    custom_test_bed_spec = JSONField(default=None, null=True)
+    entries = JSONField(default=None)
+    created_date = models.DateTimeField(default=timezone.now)
+    modified_date = models.DateTimeField(default=timezone.now)
+
+    def to_dict(self):
+        result = {}
+        fields = self._meta.get_fields()
+        for field in fields:
+            result[field.name] = getattr(self, field.name)
+        return result
+
+    def add_entry(self, entry):
+        if self.entries is None:
+            self.entries = []
+        self.entries.append(entry)
+        self.save()
+
+
+class TaskStatus(models.Model):
+    path = models.TextField(unique=True, default="")
+    name = models.TextField(unique=True)
+    last_counter = models.IntegerField(default=0)
+    state = models.TextField(default="")   # Job status type
+    """ 
+    Tasks logs switch between index 0 and index 1.
+    One of these is the previous log and the other is
+    is the current log
+    """
+    date_time = models.DateTimeField(default=datetime.now)
+
+    @staticmethod
+    def set_state(path, name, state=JobStatusType.UNKNOWN):
+        TaskStatus.objects.update_or_create(path=path, name=name, defaults={"state": state, "date_time": get_current_time()})
+
+    @staticmethod
+    def get(path, name, state=JobStatusType.UNKNOWN):
+        obj, _ = TaskStatus.objects.update_or_create(path=path, name=name, defaults={"state": state, "date_time": get_current_time()})
+        return obj
+
+    @staticmethod
+    def get_state(path, name):
+        state = None
+        try:
+            t = TaskStatus.objects.get(path=path, name=name)
+            state = t.state
+        except ObjectDoesNotExist:
+            logger.error("Task status: {} {} Object does not exist".format(path, name))
+        return state
 
 
 class TestbedNotificationEmails(FunModel):

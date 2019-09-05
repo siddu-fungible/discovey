@@ -131,7 +131,7 @@ class AssetManager:
         for asset_type, assets_for_type in assets_required.iteritems():
             for asset_for_type in assets_for_type:
                 try:
-                    this_asset = Asset.objects.get(name=asset_for_type)
+                    this_asset = Asset.objects.get(name=asset_for_type, type=asset_type)
                     if this_asset.manual_lock_user:
                         asset_level_manual_locked, error_message, manual_lock_user = True, "Asset: {} manual locked by: {}".format(asset_for_type, this_asset.manual_lock_user), this_asset.manual_lock_user
                 except ObjectDoesNotExist:
@@ -154,7 +154,7 @@ class AssetManager:
         for asset_type, assets_for_type in assets_required.iteritems():
             for asset_for_type in assets_for_type:
                 try:
-                    this_asset = Asset.objects.get(name=asset_for_type)
+                    this_asset = Asset.objects.get(name=asset_for_type, type=asset_type)
                     job_ids = this_asset.job_ids
                     # print "Asset job-ids: {}, TB: {}".format(job_ids, test_bed_type)
                     if job_ids:
@@ -202,7 +202,7 @@ class AssetManager:
         assets_required_for_test_bed = None
         if test_bed_type not in self.PSEUDO_TEST_BEDS:
             assets_required_for_test_bed = self.get_assets_required(test_bed_name=test_bed_type)
-            if "fs-42" in test_bed_type:
+            if "fs-41" in test_bed_type:
                 print ("TB: {}".format(test_bed_type))
             in_use, error_message, used_by_suite_id, asset_in_use = self.check_assets_in_use(test_bed_type=test_bed_type, assets_required=assets_required_for_test_bed)
 
@@ -230,9 +230,17 @@ class AssetManager:
         if manual_lock_info:
             result["status"] = False
             result["message"] = "Test-bed: {} manual locked by: {}".format(test_bed_type, manual_lock_info["manual_lock_submitter"])
+            if in_use:  # Check if the required internal resources are used by another run
+                result["internal_asset_in_use"] = True
+                result["internal_asset_in_use_suite_id"] = used_by_suite_id
+                result["internal_asset"] = asset_in_use
         elif asset_level_manual_locked:
             result["status"] = False
             result["message"] = asset_level_error_message
+            if in_use:  # Check if the required internal resources are used by another run
+                result["internal_asset_in_use"] = True
+                result["internal_asset_in_use_suite_id"] = used_by_suite_id
+                result["internal_asset"] = asset_in_use
         elif in_progress_count >= credits:
             result["status"] = False
             result["message"] = "Test-bed: {0} locked by Suite: <a href='/regression/suite_detail/{1}'>{1}</a>".format(test_bed_type, in_progress_suites[0].execution_id)
@@ -266,6 +274,15 @@ class AssetManager:
         return result
 
     @fun_test.safe
+    def get_linux_host(self, name):
+        from lib.host.linux import Linux
+        host_spec = self.get_host_spec(name=name)
+        host = None
+        if host_spec:
+            host = Linux(**host_spec)
+        return host
+
+    @fun_test.safe
     def get_regression_service_host_spec(self):
         host_spec = self.get_host_spec(name=REGRESSION_SERVICE_HOST)
         return host_spec
@@ -277,7 +294,7 @@ class AssetManager:
             for asset in assets_for_type:
                 try:
                     Asset.add_update(name=asset, type=asset_type)
-                    a = Asset.objects.get(name=asset)
+                    a = Asset.objects.get(name=asset, type=asset_type)
                     a.manual_lock_user = user
                     a.save()
                 except Exception as ex:   #TODO
@@ -297,7 +314,7 @@ class AssetManager:
         for asset_type, assets_for_type in assets.items():
             for asset in assets_for_type:
                 try:
-                    a = Asset.objects.get(name=asset, manual_lock_user=user)
+                    a = Asset.objects.get(name=asset, manual_lock_user=user, type=asset_type)
                     a.manual_lock_user = None
                     a.save()
                 except Exception as ex:   #TODO
@@ -320,37 +337,52 @@ class AssetManager:
             hosts = topology.get_hosts()
             host_names = [host_obj.name for name, host_obj in hosts.iteritems()]
             assets_required[AssetType.HOST] = host_names
+
+            perf_listener_hosts = topology.get_perf_listener_hosts()
+            host_names = [host_obj.name for name, host_obj in perf_listener_hosts.iteritems()]
+            assets_required[AssetType.PERFORMANCE_LISTENER_HOST] = host_names
         return assets_required
 
     @fun_test.safe
     def is_asset_available(self, asset):
         pass
 
-
     @fun_test.safe
     def _disable_assets_in_test_bed_spec(self,
                                          test_bed_spec,
-                                         duts_to_disable=None,
-                                         duts_to_enable=None,
-                                         hosts_to_disable=None,
-                                         hosts_to_enable=None):
-        if "dut_info" in test_bed_spec:
-            dut_info = test_bed_spec["dut_info"]
-            for dut_index, dut_spec in dut_info.iteritems():
-                if "dut" in dut_spec:
-                    if duts_to_enable and dut_spec["dut"] not in duts_to_enable:
-                        dut_spec["disabled"] = True
-                    if duts_to_disable and dut_spec["dut"] in duts_to_disable:
-                        dut_spec["disabled"] = True
+                                         asset_type,
+                                         to_disable=None,
+                                         to_enable=None):
+        if asset_type == AssetType.DUT:
+            if "dut_info" in test_bed_spec:
+                dut_info = test_bed_spec["dut_info"]
+                for dut_index, dut_spec in dut_info.iteritems():
+                    if "dut" in dut_spec:
+                        if to_enable and dut_spec["dut"] not in to_enable:
+                            dut_spec["disabled"] = True
+                        if to_disable and dut_spec["dut"] in to_disable:
+                            dut_spec["disabled"] = True
 
-        disabled_hosts = []
-        if "host_info" in test_bed_spec:
-            for host in test_bed_spec["host_info"]:
-                if hosts_to_disable and host in hosts_to_disable:
-                    disabled_hosts.append(host)
-                if hosts_to_enable and host not in hosts_to_enable:
-                    disabled_hosts.append(host)
-        test_bed_spec["disabled_hosts"] = disabled_hosts
+        if asset_type == AssetType.HOST:
+            disabled_hosts = []
+            if "host_info" in test_bed_spec:
+                for host in test_bed_spec["host_info"]:
+                    if to_disable and host in to_disable:
+                        disabled_hosts.append(host)
+                    if to_enable and host not in to_enable:
+                        disabled_hosts.append(host)
+            test_bed_spec["disabled_hosts"] = disabled_hosts
+
+        if asset_type == AssetType.PERFORMANCE_LISTENER_HOST:
+            disabled_perf_listener_hosts = []
+            if "perf_listener_host_info" in test_bed_spec:
+                for host in test_bed_spec["perf_listener_host_info"]:
+                    if to_disable and host in to_disable:
+                        disabled_perf_listener_hosts.append(host)
+                    if to_enable and host not in to_enable:
+                        disabled_perf_listener_hosts.append(host)
+            test_bed_spec["disabled_perf_listener_hosts"] = disabled_perf_listener_hosts
+
         return test_bed_spec
 
     @fun_test.safe
@@ -358,7 +390,7 @@ class AssetManager:
         result = {"status": True,
                   "message": "",
                   "custom_test_bed_spec": None,
-                  "assets_required": {AssetType.DUT: [], AssetType.HOST: []}}
+                  "assets_required": {AssetType.DUT: [], AssetType.HOST: [], AssetType.PERFORMANCE_LISTENER_HOST: []}}
         from web.fun_test.models import Asset
         from web.fun_test.models_helper import is_suite_in_progress
         from django.core.exceptions import ObjectDoesNotExist
@@ -371,35 +403,28 @@ class AssetManager:
         asset_request = custom_spec.get("asset_request", None)
         fun_test.simple_assert(asset_request, "asset_request in custom_spec")
 
-        assets_required_config = {AssetType.DUT: {}, AssetType.HOST: {}}
+        assets_required_config = {AssetType.DUT: {}, AssetType.HOST: {}, AssetType.PERFORMANCE_LISTENER_HOST: {}}
 
-        if AssetType.DUT in asset_request:
-            dut_info = asset_request[AssetType.DUT]
-            num_duts_required = dut_info.get("num", None)
-            specific_duts = dut_info.get("names", None)
-            if specific_duts:
-                num_duts_required = len(specific_duts)
-            assets_required_config[AssetType.DUT] = {"num_required": num_duts_required, "specific": specific_duts}
-
-        if AssetType.HOST in asset_request:
-            host_info = asset_request[AssetType.HOST]
-            num_hosts_required = host_info.get("num", None)
-            specific_hosts = host_info.get("names", None)
-            if specific_hosts:
-                num_hosts_required = len(specific_hosts)
-            assets_required_config[AssetType.HOST] = {"num_required": num_hosts_required, "specific": specific_hosts}
+        all_asset_types = [AssetType.DUT, AssetType.HOST, AssetType.PERFORMANCE_LISTENER_HOST]
+        for asset_type in all_asset_types:
+            if asset_type in asset_request:
+                info = asset_request[asset_type]
+                num_required = info.get("num", None)
+                specifics = info.get("names", None)
+                if specifics:
+                    num_required = len(specifics)
+                assets_required_config[asset_type] = {"num_required": num_required, "specific": specifics}
 
         asset_category_unavailable = False
         error_message = ""
 
-        for asset_type in [AssetType.DUT, AssetType.HOST]:
+        for asset_type in all_asset_types:
             if asset_category_unavailable:
                 break
             num_assets_available = 0
             num_assets_required = assets_required_config[asset_type].get("num_required", None)
 
             if num_assets_required is not None:
-                # print "Num Duts: {}".format(num_duts_required)
 
                 assets_in_test_bed = self.get_assets_required(test_bed_name=base_test_bed_name)
 
@@ -414,7 +439,7 @@ class AssetManager:
                         continue
                     asset = None
                     try:
-                        asset = Asset.objects.get(name=asset_in_test_bed)
+                        asset = Asset.objects.get(name=asset_in_test_bed, type=asset_type)
                     except ObjectDoesNotExist:
                         pass
                     in_progress = False
@@ -442,16 +467,11 @@ class AssetManager:
                     asset_category_unavailable = True
                     break
                 elif num_assets_required <= num_assets_available:
-                    if asset_type == AssetType.DUT:
-                        self._disable_assets_in_test_bed_spec(test_bed_spec=test_bed_spec,
-                                                              duts_to_disable=unavailable_assets,
-                                                              duts_to_enable=available_assets)
-                        result["assets_required"][AssetType.DUT].extend(available_assets)
-                    if asset_type == AssetType.HOST:
-                        self._disable_assets_in_test_bed_spec(test_bed_spec=test_bed_spec,
-                                                              hosts_to_disable=unavailable_assets,
-                                                              hosts_to_enable=available_assets)
-                        result["assets_required"][AssetType.HOST].extend(available_assets)
+                    self._disable_assets_in_test_bed_spec(test_bed_spec=test_bed_spec,
+                                                          asset_type=asset_type,
+                                                          to_disable=unavailable_assets,
+                                                          to_enable=available_assets)
+                    result["assets_required"][asset_type].extend(available_assets)
 
         if asset_category_unavailable:
             result["status"] = False

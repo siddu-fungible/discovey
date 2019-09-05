@@ -12,6 +12,8 @@ import {CommonService} from "../../services/common/common.service";
 })
 export class PerformanceSummaryWidgetComponent implements OnInit {
 
+  clickUrls: any = {};
+
 
   y1Values: any = [];
   x1Values: any = [];
@@ -55,10 +57,11 @@ export class PerformanceSummaryWidgetComponent implements OnInit {
 
 
   fetchDag() {
-    return this.apiService.get("/metrics/dag" + "?levels=1" + "&chart_names=F1").pipe(switchMap((response) => {
+    return this.apiService.get("/metrics/dag" + "?levels=1" + "&root_metric_ids=101").pipe(switchMap((response) => {
       let dag = response.data[0].children_info;
       for (let i in dag) {
         this.x1Values.push(dag[i].chart_name);
+        this.clickUrls[dag[i].chart_name] = '/performance?goto=F1%2F' + dag[i].chart_name;
         let recentScore = dag[i].last_two_scores[0];
         recentScore = +recentScore.toFixed(2);
         if (recentScore <= 50) {

@@ -254,6 +254,15 @@ class SpirentManager(object):
             fun_test.critical(str(ex))
         return self.project_handle
 
+    def create_frame_length_distribution(self):
+        frame_length_dist_handle = None
+        try:
+            under = self.project_handle
+            frame_length_dist_handle = self.stc.create("FrameLengthDistribution", under=under)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return frame_length_dist_handle
+
     def create_port(self, location, use_default_host=False, apply_config=False):
         port = None
         try:
@@ -424,6 +433,7 @@ class SpirentManager(object):
             if type(stream_blocks_list) == list:
                 stream_blocks = ' '.join(stream_blocks_list)
             self.stc.perform("StreamBlockStartCommand", StreamBlockList=stream_blocks)
+            self.apply_configuration()
             result = True
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -531,10 +541,11 @@ class SpirentManager(object):
             fun_test.critical(str(ex))
         return stream_dict
 
-    def get_stream_handle_list(self):
+    def get_stream_handle_list(self, port_handle):
         stream_handles = []
         try:
-            stream_handles = self.stc.get(self.project_handle, "children-streamblock")
+            stream_handles = self.stc.get(port_handle, "children-streamblock")
+            stream_handles = stream_handles.split(' ')
         except Exception as ex:
             fun_test.critical(str(ex))
         return stream_handles
@@ -655,6 +666,7 @@ class SpirentManager(object):
         result = False
         try:
             output = self.stc.perform("GeneratorStartCommand", GeneratorList=generator_handles)
+            self.apply_configuration()
             if output['State'] == "COMPLETED":
                 result = True
         except Exception as ex:
@@ -691,6 +703,7 @@ class SpirentManager(object):
                 if re.match(regex, output):
                     parent = self.stc.get(output, "parent")
                     if parent == generator_handle:
+                        self.refresh_result_view(output)
                         result = self.stc.get(output)
                         break
         except Exception as ex:
@@ -811,6 +824,7 @@ class SpirentManager(object):
                 if re.match(regex, output):
                     parent = self.stc.get(output, "parent")
                     if parent == analyzer_handle:
+                        self.refresh_result_view(output)
                         result = self.stc.get(output)
                         break
         except Exception as ex:
@@ -1362,6 +1376,20 @@ class SpirentManager(object):
             fun_test.debug("Adding %s FEC on %s port" % (fec_obj, port_handle))
             result = self.stc.create(fec_obj, under=port_handle, **attributes)
             fun_test.simple_assert(result, "Applying FEC settings")
+            self.apply_configuration()
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def update_range_modifier_object(self, streamblock_handle, attributes):
+        result = None
+        try:
+            child = self.get_object_children(streamblock_handle)
+            for child_type in child:
+                if 'rangemodifier' in child_type:
+                    range_modfier_handle = child_type
+                    break
+            self.stc.config(range_modfier_handle, **attributes)
             self.apply_configuration()
         except Exception as ex:
             fun_test.critical(str(ex))

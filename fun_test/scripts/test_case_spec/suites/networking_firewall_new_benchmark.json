@@ -1,0 +1,4 @@
+[
+  {"path": "networking/performance/test_performance_l4_firewall_128M.py", "inputs": {"speed": "SPEED_100G", "disable_f1_index": 1}},
+  {"path": "networking/performance/test_performance_l4_firewall_4M.py", "inputs": {"speed": "SPEED_100G", "disable_f1_index": 1}}
+]

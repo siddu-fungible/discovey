@@ -13,7 +13,7 @@ from lib.system.utils import parse_file_to_json
 from lib.host.linux import Linux
 from lib.host.router import Router
 from lib.topology.host import Host
-from lib.fun.fs import ComE
+from lib.fun.fs import ComE, BootPhases
 
 
 class TopologyHelper:
@@ -39,9 +39,11 @@ class TopologyHelper:
     @fun_test.safe
     def get_expanded_topology(self):
         spec = self.spec
-
+        is_mode_simulation = False
         if not self.spec:
             test_bed_name = fun_test.get_job_environment_variable(variable="test_bed_type")
+            if test_bed_name == "simulation":
+                is_mode_simulation = True
             if test_bed_name == "suite-based":
                 custom_test_bed_spec = fun_test.get_suite_run_time_environment_variable(name="custom_test_bed_spec")
                 self.spec = custom_test_bed_spec
@@ -66,6 +68,17 @@ class TopologyHelper:
                 fun_test.simple_assert(host_spec, "Retrieve host-spec for {}".format(host_name))
                 self.expanded_topology.hosts[host_name] = Host(name=host_name, spec=host_spec)
 
+        disabled_perf_listener_hosts = spec.get("disabled_perf_listener_hosts", [])
+        if "perf_listener_host_info" in spec:
+            perf_listener_hosts = spec["perf_listener_host_info"]
+            for host_name in perf_listener_hosts:
+                if host_name in disabled_perf_listener_hosts:
+                    fun_test.log("Disabling Perf listener Host: {}".format(host_name))
+                    continue
+                host_spec = fun_test.get_asset_manager().get_host_spec(name=host_name)
+                fun_test.simple_assert(host_spec, "Retrieve host-spec for {}".format(host_name))
+                self.expanded_topology.perf_listener_hosts[host_name] = Host(name=host_name, spec=host_spec)
+
         if "switch_info" in spec:
             switches = spec["switch_info"]
             for switch_name, switch_spec in switches.items():
@@ -88,6 +101,8 @@ class TopologyHelper:
                     fun_test.log("Skipping initialization for Dut-index: {}".format(dut_index))
                     continue
 
+                if "mode" in dut_info and dut_info["mode"] == Dut.MODE_SIMULATION:
+                    is_mode_simulation = True
                 dut_type = dut_info["type"]
 
                 start_mode = F1.START_MODE_NORMAL
@@ -95,7 +110,8 @@ class TopologyHelper:
                     start_mode = dut_info["start_mode"]
 
                 # Create DUT object
-                dut_obj = Dut(type=dut_type, index=dut_index, spec=dut_info, start_mode=start_mode)
+                dut_mode = Dut.MODE_REAL if not is_mode_simulation else Dut.MODE_SIMULATION
+                dut_obj = Dut(type=dut_type, index=dut_index, spec=dut_info, start_mode=start_mode, mode=dut_mode)
                 if "dut" in dut_info:
                     dut_obj.set_name(name=dut_info["dut"])
 
@@ -202,6 +218,12 @@ class TopologyHelper:
         return self.expanded_topology.get_hosts()
 
     @fun_test.safe
+    def get_available_perf_listener_hosts(self):
+        if not self.expanded_topology:
+            self.expanded_topology = self.get_expanded_topology()
+        return self.expanded_topology.get_perf_listener_hosts()
+
+    @fun_test.safe
     def set_dut_parameters(self, dut_index=None, **kwargs):
         if not self.expanded_topology:
             self.expanded_topology = self.get_expanded_topology()
@@ -260,10 +282,9 @@ class TopologyHelper:
                         host_is_ready = False
                         while not host_is_ready and not host_ready_timer.is_expired():
                             host_is_ready = peer.is_ready(max_wait_time=host_ready_max_wait_time)
-                            fun_test.sleep("Host: {} readiness check. Remaining time: {}".format(peer.get_instance(),
-                                                                                                 host_ready_timer.remaining_time()))
+                            fun_test.sleep("Host: {} readiness check. Remaining time: {}: Host ready: {}".format(peer.get_instance(), host_ready_timer.remaining_time(), host_is_ready))
 
-                        fun_test.test_assert(not host_ready_timer.is_expired(), "Host: {} ready".format(str(peer.get_instance())))
+                        fun_test.test_assert(host_is_ready or not host_ready_timer.is_expired(), "Host: {} ready".format(str(peer.get_instance())))
                         """
                         host_instance = peer_info.get_host_instance()
                         ipmi_details = None
@@ -295,6 +316,7 @@ class TopologyHelper:
 
             # Fetch storage container orchestrator
 
+            # Check if DUTs FS boot up complete
             for dut_index, dut_obj in duts.items():
                 if dut_index in self.disabled_dut_indexes:
                     continue
@@ -307,28 +329,72 @@ class TopologyHelper:
                 fun_test.debug("Allocating the DUT")
                 self.allocate_dut(dut_index=dut_index, dut_obj=dut_obj, orchestrator_obj=orchestrator)
 
-                fun_test.debug("Setting up peers on the interfaces")
+            peer_allocation_duts = duts.values()  # DUT indexes that need peer allocation
+            simulation_mode_found = False
+            for dut in peer_allocation_duts:
+                if dut.mode == Dut.MODE_SIMULATION:
+                    simulation_mode_found = True
+                    break
 
-                for interface_index, interface_info in dut_obj.interfaces.items():
-                    fun_test.debug("Setting up DUT interface {}".format(interface_index))
-                    peer_info = interface_info.peer_info
-                    # fun_test.simple_assert(peer_info, "Peer info")
-                    if peer_info:
+            """
+            Give up time is function of number of DUTs but for now lets keep it 10 minutes
+            """
+            f1_bringup_all_duts_time = 60 * 20
+            f1_bringup_all_duts_timer = FunTimer(max_time=f1_bringup_all_duts_time)
+            fun_test.simple_assert(peer_allocation_duts or simulation_mode_found, "At least one DUT is required")
+            while not simulation_mode_found and peer_allocation_duts and not f1_bringup_all_duts_timer.is_expired() and not fun_test.closed:
 
-                        if peer_info.type == peer_info.END_POINT_TYPE_BARE_METAL:
-                            instance = self.allocate_bare_metal(bare_metal_end_point=peer_info,
-                                                                orchestrator_obj=orchestrator)
-                            fun_test.simple_assert(instance, "Bare-metal instance")
+                fun_test.sleep("allocate_topology: Waiting for F1 bringup on all DUTs", seconds=10)
+                for dut_obj in peer_allocation_duts:
+                    if dut_obj.index in self.disabled_dut_indexes:
+                        continue
+                    fun_test.debug("Setting up peers on the interfaces")
 
-                            if interface_info.type == DutInterface.INTERFACE_TYPE_PCIE:
-                                fun_test.test_assert(peer_info.reboot(), "Host instance: {} rebooted issued".format(str(instance)))
+                    dut_instance = dut_obj.get_instance()
+                    boot_phase = dut_instance.get_boot_phase()
+                    # fun_test.log("DUT: {} current boot-phase".format(boot_phase))
+                    fun_test.simple_assert(boot_phase != BootPhases.FS_BRING_UP_ERROR, "DUT: {} Bring up error".format(dut_instance))
 
-                        elif peer_info.type == peer_info.END_POINT_TYPE_HYPERVISOR:
-                            self.allocate_hypervisor(hypervisor_end_point=peer_info,
-                                                     orchestrator_obj=orchestrator)
-                        elif peer_info.type == peer_info.END_POINT_TYPE_HYPERVISOR_QEMU_COLOCATED:
-                            self.allocate_hypervisor(hypervisor_end_point=peer_info,
-                                                     orchestrator_obj=orchestrator)
+                    """
+                    if not dut_instance.is_u_boot_complete():
+                        # fun_test.log("DUT: {} bootup not complete".format(dut_instance))
+                        continue
+                    """
+                    if not dut_instance.is_come_ready():
+                        if f1_bringup_all_duts_timer.is_expired():
+                            fun_test.critical("FS Bring up error (External Trigger)")
+                            dut_instance.set_boot_phase(BootPhases.FS_BRING_UP_ERROR)
+                        continue
+
+                    for interface_index, interface_info in dut_obj.interfaces.items():
+                        fun_test.debug("Setting up DUT interface {}".format(interface_index))
+                        peer_info = interface_info.peer_info
+                        # fun_test.simple_assert(peer_info, "Peer info")
+                        if peer_info:
+
+                            if peer_info.type == peer_info.END_POINT_TYPE_BARE_METAL:
+                                instance = self.allocate_bare_metal(bare_metal_end_point=peer_info,
+                                                                    orchestrator_obj=orchestrator)
+                                fun_test.simple_assert(instance, "Bare-metal instance")
+
+                                if interface_info.type == DutInterface.INTERFACE_TYPE_PCIE:
+                                    fun_test.test_assert(peer_info.reboot(), "Host instance: {} rebooted issued".format(str(instance)))
+
+                            elif peer_info.type == peer_info.END_POINT_TYPE_HYPERVISOR:
+                                self.allocate_hypervisor(hypervisor_end_point=peer_info,
+                                                         orchestrator_obj=orchestrator)
+                            elif peer_info.type == peer_info.END_POINT_TYPE_HYPERVISOR_QEMU_COLOCATED:
+                                self.allocate_hypervisor(hypervisor_end_point=peer_info,
+                                                         orchestrator_obj=orchestrator)
+                    peer_allocation_duts.remove(dut_obj)
+            if peer_allocation_duts and not simulation_mode_found:
+                for dut_obj in peer_allocation_duts:
+                    dut_instance = dut_obj.get_instance()
+                    fun_test.log("DUT: {} bringup incomplete".format(dut_instance))
+
+
+            fun_test.test_assert(not peer_allocation_duts or simulation_mode_found, "All DUT's bringups are complete")
+            fun_test.simple_assert(not f1_bringup_all_duts_timer.is_expired() or simulation_mode_found, "F1 bringup all DUTS not expired")
 
             for dut_index, dut_obj in duts.items():
                 for f1_index, interface_info in dut_obj.fpg_interfaces.iteritems():
@@ -398,6 +464,7 @@ class TopologyHelper:
         dut_instance = orchestrator_obj.launch_dut_instance(dut_index=dut_index, dut_obj=dut_obj)
         fun_test.test_assert(dut_instance, "allocate_dut: Launch DUT instance")
         dut_obj.set_instance(dut_instance)
+        return dut_instance
 
     @fun_test.safe
     def allocate_switch(self, switch_name, switch_obj):

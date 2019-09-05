@@ -944,10 +944,6 @@ peek_wro_hnu_stats_parser = peek_wro_stats_parsers.add_parser('hnu', help="Peek 
 peek_wro_hnu_stats_parser.add_argument('-tunnel', type=int, help="Tunnel ID", default=None)
 peek_wro_hnu_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
 
-# bam stats
-peek_bam_stats_parser = peek_stats_parsers.add_parser('bam', help="NU Peek bam Stats")
-peek_bam_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
-
 # fwd stats
 peek_fwd_stats_parser = peek_stats_parsers.add_parser('fwd', help="NU Peek FWD Stats")
 peek_fwd_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
@@ -1010,8 +1006,15 @@ peek_hnu_sfg_stats_parser.add_argument('-grep', help="Grep regex pattern", defau
 
 # Per VP stats
 peek_per_vp_stats_parser = peek_stats_parsers.add_parser('per_vp', help="Peek Per VP Stats")
-peek_per_vp_stats_parser.add_argument('-vp_num', type=int, help="VP number", default=None)
+peek_per_vp_stats_parser.add_argument('-cluster_id', type=int, help="Cluster_id 0..7", default=None)
+peek_per_vp_stats_parser.add_argument('-core_id', type=int, help="Core_id 0..5", default=None)
 peek_per_vp_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
+
+# New params
+peek_per_vp_stats_parser.add_argument('-rx', type=bool, help="Print Wus received", default=False)
+peek_per_vp_stats_parser.add_argument('-tx', type=bool, help="Print Wus sent", default=False)
+peek_per_vp_stats_parser.add_argument('-q', type=bool, help="Print Wus q depth", default=False)
+peek_per_vp_stats_parser.add_argument('-pp', type=bool, help="PrettyPrint tabular", default=False)
 
 # nwqm stats
 peek_nwqm_stats_parser = peek_stats_parsers.add_parser('nwqm', help="Peek nwqm stats")
@@ -1032,7 +1035,8 @@ peek_mpg_stats_parser.add_argument('-grep', help="Grep Regex pattern", default=N
 # Nu per vppkts
 peek_pervppkts_stats_parser = peek_stats_parsers.add_parser('pervppkts', help='Peek per vppkts stats')
 peek_pervppkts_stats_parser.add_argument('cluster_id', type=int, help="Cluster ID")
-peek_pervppkts_stats_parser.add_argument('-vp_num', type=int, help="VP number", default=None)
+peek_pervppkts_stats_parser.add_argument('-core_id', type=int, help="Core id", default=None)
+#peek_pervppkts_stats_parser.add_argument('-vp_num', type=int, help="VP number", default=None)
 peek_pervppkts_stats_parser.add_argument('-grep', help='Grep regex pattern', default=None)
 
 # nhp stats
@@ -1048,6 +1052,7 @@ peek_resource_stats_parser = peek_stats_parsers.add_parser('resource', help="Res
 peek_resource_stats_parsers = peek_resource_stats_parser.add_subparsers(title='subcommands', help="")
 peek_pc_resource_stats_parser = peek_resource_stats_parsers.add_parser('pc', help='Peek pc resource stats')
 peek_pc_resource_stats_parser.add_argument('cluster_id', type=int, help="Cluster ID", default=None)
+peek_pc_resource_stats_parser.add_argument('-core_id', type=int, help="Core ID", default=None)
 peek_pc_resource_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
 
 peek_cc_resource_stats_parser = peek_resource_stats_parsers.add_parser('cc', help='Peek cc resource stats')
@@ -1134,6 +1139,18 @@ peek_stats_blt_vol_parser.add_argument('vol_id', type=str, help="Volume ID (For 
 peek_stats_rds_vol_parser = peek_stats_parsers.add_parser('rds', help="Peek RDS volume stats")
 peek_stats_rds_vol_parser.add_argument('vol_id', type=str, help="Volume ID (For e.g if vol id is 0000000000003001)")
 
+# Peek stats cdu
+peek_stats_cdu_parser = peek_stats_parsers.add_parser('cdu', help="Peek cdu stats")
+peek_stats_cdu_parser.add_argument('-grep', help="Grep regex pattern", default=None)
+
+# Peek stats ca
+peek_stats_ca_parser = peek_stats_parsers.add_parser('ca', help="Peek ca stats")
+peek_stats_ca_parser.add_argument('-grep', help="Grep regex pattern", default=None)
+
+# Peek stats ddr
+peek_stats_ddr_parser = peek_stats_parsers.add_parser('ddr', help="Peek ddr stats")
+peek_stats_ddr_parser.add_argument('-grep', help="Grep regex pattern", default=None)
+
 # ---------------------------------------------------------------------------------------------------
 # show commands
 
@@ -1177,8 +1194,23 @@ base_flow_subparsers = base_flow_parser.add_subparsers(title="subcommands", help
 
 # Flow list
 flow_list_parser = base_flow_subparsers.add_parser('list', help='List flows')
+flow_list_parser.add_argument("-pp", help="Pretty Print output", default=False)
+flow_list_parser.add_argument("-tx", help="Only prints tx data", default=None)
+flow_list_parser.add_argument("-rx", help="Only prints rx data", default=None)
+flow_list_parser.add_argument("-hu_id", help="hu_id in x.x.x format", type=str, default=None)
 flow_list_parser.add_argument('-grep', help="Grep for specific flow", default=None)
 
 # Flow blocked
 flow_blocked_parser = base_flow_subparsers.add_parser('blocked', help='blocked flows')
 flow_blocked_parser.add_argument('-grep', help="Grep for specific flow", default=None)
+
+# ==================================================================================================
+
+base_debug_parser = ArgumentParser(prog="debug")
+base_debug_subparsers = base_debug_parser.add_subparsers(title="subcommands", help="")
+
+vp_util_parser = base_debug_subparsers.add_parser("vp_util", help="Display vp utilization")
+vp_util_parser.add_argument("-cluster_id", help="Specify cluster id", type=int)
+vp_util_parser.add_argument("-core_id", help="Specify core id", type=int)
+vp_util_parser.add_argument("-pp", help="Pretty Print in tabular")
+vp_util_parser.add_argument('-grep', help="Grep on particular field")

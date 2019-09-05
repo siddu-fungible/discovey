@@ -1,11 +1,12 @@
-<textarea [ngClass]="{'invalid-input': parseError}"
+<textarea [ngClass]="{'invalid-input': parseError, 'fun-input-disabled': disabled}"
           style="width: 100%"
-          rows="6"
+          rows="{{ numRows }}"
           [value]="jsonString"
           (change)="onChange($event)"
           (keyup)="onChange($event)">
 </textarea>
 <p *ngIf="parseError">JSON is invalid</p>
+<p *ngIf="notArrayOfNumbers">JSON should be an array of numbers</p>
 
 
 

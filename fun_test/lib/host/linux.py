@@ -7,9 +7,11 @@ import sys
 import os
 import time
 from lib.system.fun_test import fun_test, FunTimer
+from fun_global import get_current_time
 from lib.system.utils import ToDictMixin
 import json
 import copy
+import traceback
 
 class NoLogger:
     def __init__(self):
@@ -94,6 +96,7 @@ class Linux(object, ToDictMixin):
     IPTABLES_PROTOCOL_TCP = "tcp"
 
     TO_DICT_VARS = ["host_ip", "ssh_username", "ssh_password", "ssh_port"]
+    DEBUG_LOG_FILE = "/tmp/linux_debug.txt"
 
     def __init__(self,
                  host_ip,
@@ -141,6 +144,8 @@ class Linux(object, ToDictMixin):
             if "ipmi_info" in self.extra_attributes:
                 self.ipmi_info = self.extra_attributes["ipmi_info"]
         fun_test.register_hosts(host=self)
+        self.was_power_cycled = False
+        self.spawn_pid = None
         self.post_init()
 
     @staticmethod
@@ -268,6 +273,7 @@ class Linux(object, ToDictMixin):
                         self.handle = pexpect.spawn("bash",
                                                     env={"TERM": "dumb"},
                                                     maxread=4096)
+                    self.spawn_pid = self.handle.pid
                 else:
                     fun_test.debug(
                         "Attempting Telnet connect to %s username: %s password: %s" % (self.host_ip,
@@ -335,9 +341,20 @@ class Linux(object, ToDictMixin):
             if not self._set_paths():
                 raise Exception("Unable to set paths")
             result = True
+            self._add_to_debug_log()
         else:
             self.handle = None
         return result
+
+    def _add_to_debug_log(self):
+        # IN-478
+        try:
+            s = "{} {}\n".format(get_current_time(), traceback.format_stack())
+            f = open(self.DEBUG_LOG_FILE, "a+")
+            f.write(s)
+            f.close()
+        except:
+            pass
 
     def _set_term_settings(self):
         self.command("shopt -s checkwinsize")
@@ -417,6 +434,7 @@ class Linux(object, ToDictMixin):
                 except (pexpect.EOF, pexpect.TIMEOUT):
                     pass  # We are expecting an intentional timeout
             command_lines = command.split('\n')
+            prompt_terminator_processed = False
             for c in command_lines:
                 self.sendline(c)
                 if wait_until and (len(command_lines) == 1):
@@ -436,17 +454,22 @@ class Linux(object, ToDictMixin):
                         pass
                     buf += self.handle.before.lstrip() + str(self.handle.after).lstrip()
                 elif custom_prompts:
-                    all_prompts_list = custom_prompts.keys()
-                    all_prompts_list.append(self.prompt_terminator)
-                    self.handle.timeout = timeout  # Pexpect does not honor timeouts
-                    i = self.handle.expect(all_prompts_list, timeout=timeout)
-                    if i == (len(all_prompts_list) - 1):
-                        buf = buf + self.handle.before.lstrip()
-                        break
-                    else:
-                        self.sendline(custom_prompts[custom_prompts.keys()[i]])
+                    done = False
+                    max_custom_prompt_timer = FunTimer(max_time=timeout)
+                    while not max_custom_prompt_timer.is_expired():
+                        all_prompts_list = custom_prompts.keys()
+                        all_prompts_list.append(self.prompt_terminator)
+                        self.handle.timeout = timeout  # Pexpect does not honor timeouts
+                        i = self.handle.expect(all_prompts_list, timeout=timeout)
+                        if i == (len(all_prompts_list) - 1):
+                            buf = buf + self.handle.before.lstrip()
+                            prompt_terminator_processed = True
+                            break
+                        else:
+                            self.sendline(custom_prompts[custom_prompts.keys()[i]])
                 try:
-                    self.handle.expect(self.prompt_terminator + r'$', timeout=timeout)
+                    if not prompt_terminator_processed:
+                        self.handle.expect(self.prompt_terminator + r'$', timeout=timeout)
                 except pexpect.EOF:
                     self.disconnect()
                     # return self.command(command=command,
@@ -691,6 +714,30 @@ class Linux(object, ToDictMixin):
         return result
 
     @fun_test.safe
+    def process_exists(self, process_id, sudo=False):
+        """
+        Check if a process id exists
+        :param process_id:
+        :param sudo: set to True if the ps command needs to be executed with sudo
+        :return: None/False if process_id does not exist, True otherwise
+        """
+        result = None
+        if process_id is not None:
+            process_id = int(process_id)
+        command = "ps -ef | grep {}".format(process_id)
+        if sudo:
+            output = self.sudo_command(command)
+        else:
+            output = self.command(command)
+        if output:
+            m = re.search(r'(\S+)\s+(\d+)\s+(\d+).*', output)
+            if m:
+                pid = int(m.group(2))
+                if pid:
+                    result = pid == process_id
+        return result
+
+    @fun_test.safe
     def dd(self, input_file, output_file, block_size, count, timeout=60, sudo=False, **kwargs):
 
         result = 0
@@ -736,6 +783,15 @@ class Linux(object, ToDictMixin):
         self.command("rm -rf %s/" % (directory.strip("/")))
         return True
 
+    def remove_directory(self, directory):
+        result = False
+        if directory in ["/", "/root"]:
+            fun_test.critical("Removing {} is not permitted".format(directory))
+            result = True
+        else:
+            self.command("rm -rf {}".format(directory))
+        return result
+
     def remove_temp_file(self, file_name):
         return self.remove_file(file_name=self.get_temp_file_path(file_name=file_name))
 
@@ -752,7 +808,7 @@ class Linux(object, ToDictMixin):
 
     @fun_test.safe
     def list_files(self, path):
-        o = self.command("ls -ltr " + path)
+        o = self.command("ls -ltrd " + path)
         lines = o.split('\n')
         files = []
         for line in lines:
@@ -761,6 +817,9 @@ class Linux(object, ToDictMixin):
                 m = reg.search(line)
                 if m:
                     files.append({"info": m.group(1), "filename": m.group(2)})
+            if "No such" in line:
+                files = []
+                break
         return files
 
     @fun_test.safe
@@ -824,6 +883,10 @@ class Linux(object, ToDictMixin):
                      kill_seconds=5,
                      minimum_process_id=50,
                      sudo=True):
+        if process_id is not None:
+            process_id = int(process_id)
+        if job_id is not None:
+            job_id = int(job_id)
         if not process_id and not job_id:
             fun_test.critical(message="Please provide a valid process-id or job-id")
             return
@@ -842,6 +905,7 @@ class Linux(object, ToDictMixin):
                 self.command(command=command)
         except pexpect.ExceptionPexpect:
             pass
+        self.command("")  # This is to ensure that back-ground tasks Exit message is processed before leaving this function
         fun_test.sleep("Waiting for kill to complete", seconds=kill_seconds)
 
     def tshark_capture_start(self):
@@ -965,6 +1029,7 @@ class Linux(object, ToDictMixin):
         if self.handle:
             self.handle.close()
         self.handle = None
+        fun_test.log("Disconnecting: {}".format(self.spawn_pid))
         return True
 
     def _set_paths(self):
@@ -1281,6 +1346,23 @@ class Linux(object, ToDictMixin):
             fun_test.debug(output_lines)
             result = output_lines[0].strip()
         except Exception as ex:
+            critical_str = str(ex)
+            fun_test.critical(critical_str)
+            self.logger.critical(critical_str)
+        return result
+
+    @fun_test.safe
+    def untar(self, file_name, dest, timeout=60):
+        result = None
+        command = "tar -xvzf " + file_name + " -C " + dest
+        try:
+            output = self.sudo_command("tar -xvzf " + file_name + " -C " + dest)
+            fun_test.debug(output)
+            output_lines = output.split('\n')
+            fun_test.debug(output_lines)
+            result = True
+        except Exception as ex:
+            result = False
             critical_str = str(ex)
             fun_test.critical(critical_str)
             self.logger.critical(critical_str)
@@ -1780,8 +1862,9 @@ class Linux(object, ToDictMixin):
             # Populating the resultant fio_dict dictionary
             for operation in ["write", "read"]:
                 fio_dict[operation] = {}
-                for stat in ["bw", "iops", "latency", "clatency", "latency90", "latency95", "latency99",
-                             "latency9950", "latency9999"]:
+                stat_list = ["bw", "iops", "io_bytes", "latency", "clatency", "latency90", "latency95",
+                             "latency99","latency9950", "latency9999"]
+                for stat in stat_list:
                     if stat not in ("latency", "clatency", "latency90", "latency95", "latency99", "latency9950",
                                     "latency9999"):
                         fio_dict[operation][stat] = fio_result_dict["jobs"][0][operation][stat]
@@ -2081,24 +2164,29 @@ class Linux(object, ToDictMixin):
             result = False
             fun_test.critical("Host: {} is not reachable".format(self.host_ip))
 
+
         if not host_is_up and service_host:
             result = False
 
             if not ipmi_details:
                 if self.ipmi_info:
                     ipmi_details = self.ipmi_info
-                    
+
             if not result and ipmi_details and power_cycle:
                 fun_test.log("Trying IPMI power-cycle".format(self.host_ip))
                 ipmi_host_ip = ipmi_details["host_ip"]
                 ipmi_username = ipmi_details["username"]
                 ipmi_password = ipmi_details["password"]
                 try:
+                    self.was_power_cycled = False
                     service_host.ipmi_power_cycle(host=ipmi_host_ip, user=ipmi_username, passwd=ipmi_password, chassis=True)
                     fun_test.log("IPMI power-cycle complete")
+                    self.was_power_cycled = True
+
                 except Exception as ex:
                     fun_test.critical(str(ex))
                     service_host.ipmi_power_on(host=ipmi_host_ip, user=ipmi_username, passwd=ipmi_password, chassis=True)
+                    self.was_power_cycled = True
                 finally:
                     return self.ensure_host_is_up(max_wait_time=max_wait_time, power_cycle=False)
         return result
@@ -2675,6 +2763,48 @@ class Linux(object, ToDictMixin):
 
         return iostat_output
 
+    def nvme_connect(self, target_ip, nvme_subsystem, port=1099, transport="tcp", nvme_io_queues=None, hostnqn=None,
+                     retries=2, timeout=61):
+        result = False
+        nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {}".format(transport.lower(), target_ip, port,
+                                                                         nvme_subsystem)
+        if nvme_io_queues:
+            nvme_connect_cmd += " -i {}".format(nvme_io_queues)
+        if hostnqn:
+            nvme_connect_cmd += " -q {}".format(hostnqn)
+
+        for i in range(retries):
+            try:
+                nvme_connect_output = self.sudo_command(command=nvme_connect_cmd, timeout=timeout)
+                nvme_connect_exit_status = self.exit_status()
+                fun_test.log("NVMe connect output: {}".format(nvme_connect_output))
+                if not nvme_connect_exit_status:
+                    result = True
+                    break
+            except Exception as ex:
+                remaining = retries - i - 1
+                if remaining:
+                    fun_test.critical("NVMe connect attempt failed...Going to retry {} more time(s)...\n".
+                                      format(remaining))
+                    fun_test.critical(str(ex))
+                    fun_test.sleep("before retrying")
+                else:
+                    fun_test.critical("Maximum number of retires({}) failed...So bailing out...".format(retries))
+
+        return result
+
+    @fun_test.safe
+    def destroy(self):
+        try:
+            self.disconnect()
+        except:
+            pass
+        try:
+            if self.spawn_pid > 1:
+                fun_test.log("Killing spawn id: {}".format(self.spawn_pid))
+                os.kill(self.spawn_pid, 9)
+        except Exception as ex:
+            pass
 
 class LinuxBackup:
     def __init__(self, linux_obj, source_file_name, backedup_file_name):
@@ -2690,3 +2820,9 @@ class LinuxBackup:
                           ssh_port=self.linux_obj.ssh_port)
         linux_obj.prompt_terminator = self.prompt_terminator
         linux_obj.cp(source_file_name=self.backedup_file_name, destination_file_name=self.source_file_name)
+
+
+
+if __name__ == "__main__":
+    l = Linux(host_ip="qa-ubuntu-02", ssh_username="auto_admin", ssh_password="fun123")
+    print l.process_exists(process_id=22635)

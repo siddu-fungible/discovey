@@ -1,0 +1,14 @@
+.ul-error-panel {
+  margin-top: 5px;
+  margin-bottom: 5px;
+  border: red solid 1px;
+  background-color: rgba(255, 132, 132, 0.43);
+  display: inline-flex;
+  padding-right: 25px;
+  justify-content: center;
+}
+
+
+ul {
+  margin: 0;
+}

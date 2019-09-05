@@ -28,8 +28,8 @@ class ScriptSetup(FunTestScript):
         if not f1_index:
             f1_index = 0
         if fun_test.get_job_environment_variable('test_bed_type') == 'fs-7':
-            bootargs = fun_test.get_build_parameter('BOOTARGS')
-            bootargs = bootargs + ' override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]}'
+            bootargs = 'app=hw_hsu_test sku=SKU_FS1600_0 --dpc-server --dis-stats --dpc-uart --csr-replay --all_100g --disable-wu-watchdog \
+                                                override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303'
             # fs = Fs.get(disable_f1_index=f1_index)
             fs = Fs.get(disable_f1_index=f1_index, boot_args=bootargs)
             fun_test.shared_variables['fs'] = fs
@@ -220,7 +220,7 @@ class TestFirewallPerformance(FunTestCase):
         table_name = "Performance Numbers for %s flow " % self.flow_direction
         if self.spray:
             table_name += " Spray Enable"
-        result = self.template_obj.create_performance_table(result_dict=result_dict['summary_result'],
+        result = self.template_obj.create_performance_table(result=result_dict['summary_result'],
                                                             table_name=table_name)
         fun_test.simple_assert(result, checkpoint)
 

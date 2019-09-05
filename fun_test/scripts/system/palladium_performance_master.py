@@ -1,22 +1,9 @@
 from lib.system.fun_test import *
 from django.apps import apps
 from lib.host.lsf_status_server import LsfStatusServer
-from web.fun_test.metrics_models import AllocSpeedPerformance, BcopyPerformance, LAST_ANALYTICS_DB_STATUS_UPDATE
-from web.fun_test.metrics_models import BcopyFloodDmaPerformance, PkeX25519TlsSoakPerformance, PkeP256TlsSoakPerformance
-from web.fun_test.metrics_models import EcPerformance, EcVolPerformance, VoltestPerformance
-from web.fun_test.metrics_models import WuSendSpeedTestPerformance, WuDispatchTestPerformance, FunMagentPerformanceTest
-from web.fun_test.metrics_models import WuStackSpeedTestPerformance, SoakFunMallocPerformance, \
-    SoakClassicMallocPerformance, TeraMarkMultiClusterCryptoPerformance
-from web.fun_test.metrics_models import WuLatencyAllocStack, WuLatencyUngated, BootTimePerformance, NuTransitPerformance
-from web.fun_test.metrics_models import TeraMarkPkeEcdh256Performance, TeraMarkPkeEcdh25519Performance
-from web.fun_test.metrics_models import TeraMarkPkeRsa4kPerformance, TeraMarkPkeRsaPerformance, \
-    TeraMarkCryptoPerformance, SoakDmaMemcpyCoherentPerformance, SoakDmaMemcpyNonCoherentPerformance, \
-    SoakDmaMemsetPerformance, MetricChart, F1FlowTestPerformance
-from web.fun_test.metrics_models import TeraMarkLookupEnginePerformance, FlowTestPerformance, \
-    TeraMarkZipDeflatePerformance, TeraMarkZipLzmaPerformance, TeraMarkDfaPerformance, TeraMarkJpegPerformance
-from web.fun_test.analytics_models_helper import MetricHelper, invalidate_goodness_cache, MetricChartHelper
-from web.fun_test.analytics_models_helper import prepare_status_db
-from web.fun_test.models import TimeKeeper
+from web.fun_test.metrics_models import MetricChart
+from web.fun_test.analytics_models_helper import invalidate_goodness_cache
+
 import re
 from datetime import datetime
 from dateutil.parser import parse
@@ -68,8 +55,12 @@ CHANNEL_PARALL = "qa_channel_parall"
 SOAK_FLOWS_BUSY_LOOP = "qa_soak_flows_busy_loop"
 SOAK_FLOWS_MEMCPY = "qa_soak_flows_memcpy_non_coh"
 
-QA_S1_EC_TERAMARK = "qa_s1_ec_teramark"
-QA_S1_JPEG_TERAMARK = "qa_s1_jpeg_teramark"
+VOLTEST_BLT_1 = "qa_voltest_blt_performance"
+VOLTEST_BLT_8 = "qa_voltest_blt_8_performance"
+VOLTEST_BLT_12 = "qa_voltest_blt_12_performance"
+TERAMARK_EC_S1 = "qa_s1_ec_teramark"
+TERAMARK_JPEG_S1 = "qa_s1_jpeg_teramark"
+TERAMARK_ZIP_S1 = "qa_s1_zip_teramark"
 
 jpeg_operations = {"Compression throughput": "Compression throughput with Driver",
                    "Decompression throughput": "JPEG Decompress",
@@ -163,19 +154,15 @@ def set_networking_chart_status(platform=FunPlatform.F1):
 
 
 def add_version_to_jenkins_job_id_map(date_time, version):
-    date_time = timezone.localtime(date_time)
-    date_time = str(date_time).split(":")
-    completion_date = date_time[0] + ":" + date_time[1]
-    build_date = parse(completion_date)
     suite_execution_id = fun_test.get_suite_execution_id()
     add_jenkins_job_id_map(jenkins_job_id=0,
                            fun_sdk_branch="",
                            git_commit="",
                            software_date=0,
                            hardware_version="",
-                           completion_date=completion_date,
                            build_properties="", lsf_job_id="",
-                           sdk_version=version, build_date=build_date, suite_execution_id=suite_execution_id)
+                           sdk_version=version, build_date=date_time, suite_execution_id=suite_execution_id,
+                           add_associated_suites=False)
 
 
 class MyScript(FunTestScript):
@@ -187,16 +174,16 @@ class MyScript(FunTestScript):
 
     def setup(self):
         self.lsf_status_server = LsfStatusServer()
-        tags = [ALLOC_SPEED_TEST_TAG, VOLTEST_TAG, BOOT_TIMING_TEST_TAG, TERAMARK_PKE, TERAMARK_CRYPTO, TERAMARK_LOOKUP,
+        tags = [ALLOC_SPEED_TEST_TAG, BOOT_TIMING_TEST_TAG, TERAMARK_PKE, TERAMARK_CRYPTO, TERAMARK_LOOKUP,
                 FLOW_TEST_TAG, F1_FLOW_TEST_TAG, TERAMARK_ZIP, TERAMARK_DFA, TERAMARK_NFA, TERAMARK_EC, TERAMARK_JPEG,
                 SOAK_DMA_MEMCPY_COH,
                 SOAK_DMA_MEMCPY_NON_COH, SOAK_DMA_MEMSET, RCNVME_READ, RCNVME_RANDOM_READ, RCNVME_WRITE,
                 RCNVME_RANDOM_WRITE, TERAMARK_CRYPTO_SINGLE_TUNNEL, TERAMARK_CRYPTO_MULTI_TUNNEL, RCNVME_READ_ALL,
                 RCNVME_RANDOM_READ_ALL, RCNVME_WRITE_ALL,
-                RCNVME_RANDOM_WRITE_ALL, TLS_1_TUNNEL, TLS_32_TUNNEL, TLS_64_TUNNEL, SOAK_DMA_MEMCPY_THRESHOLD,
+                RCNVME_RANDOM_WRITE_ALL, SOAK_DMA_MEMCPY_THRESHOLD,
                 IPSEC_ENC_SINGLE_TUNNEL, IPSEC_ENC_MULTI_TUNNEL, IPSEC_DEC_MULTI_TUNNEL, IPSEC_DEC_SINGLE_TUNNEL,
-                VOLTEST_LSV, VOLTEST_LSV_4, CHANNEL_PARALL, SOAK_FLOWS_BUSY_LOOP, SOAK_FLOWS_MEMCPY, QA_S1_EC_TERAMARK,
-                QA_S1_JPEG_TERAMARK]
+                VOLTEST_LSV, VOLTEST_LSV_4, CHANNEL_PARALL, SOAK_FLOWS_BUSY_LOOP, SOAK_FLOWS_MEMCPY, VOLTEST_BLT_1,
+                VOLTEST_BLT_8, VOLTEST_BLT_12, TERAMARK_EC_S1, TERAMARK_JPEG_S1, TERAMARK_ZIP_S1]
         self.lsf_status_server.workaround(tags=tags)
         fun_test.shared_variables["lsf_status_server"] = self.lsf_status_server
 
@@ -309,214 +296,35 @@ class BcopyFloodPerformanceTc(PalladiumPerformanceTc):
 
 class EcPerformanceTc(PalladiumPerformanceTc):
     tag = TERAMARK_EC
+    model = 'EcPerformance'
+    platform = F1
 
     def describe(self):
         self.set_test_details(id=4,
                               summary="EC performance",
                               steps="Steps 1")
 
-    def run(self):
-        ec_encode_latency_min = ec_encode_latency_max = ec_encode_latency_avg = -1
-        ec_encode_throughput_min = ec_encode_throughput_max = ec_encode_throughput_avg = -1
-        ec_recovery_latency_min = ec_recovery_latency_max = ec_recovery_latency_avg = -1
-        ec_recovery_throughput_min = ec_recovery_throughput_max = ec_recovery_throughput_avg = -1
-
-        try:
-            fun_test.test_assert(self.validate_job(), "validating job")
-            for line in self.lines:
-
-                m = re.search(r'Aggregated.*\s+(?P<value_json>{.*})\s+\[(?P<metric_name>perf_ec_encode_latency)\]',
-                              line)
-                if m:
-                    d = json.loads(m.group("value_json"))
-                    ec_encode_latency_min = int(d["min"])
-                    ec_encode_latency_max = int(d["max"])
-                    ec_encode_latency_avg = int(d["avg"])
-                    input_metric_name = m.group("metric_name")
-                    encode_latency_unit = d["unit"]
-
-                m = re.search(r'Aggregated.*\s+(?P<value_json>{.*})\s+\[(?P<metric_name>perf_ec_encode_throughput)\]',
-                              line)
-                if m:
-                    d = json.loads(m.group("value_json"))
-                    ec_encode_throughput_min = int(d["min"])
-                    ec_encode_throughput_max = int(d["max"])
-                    ec_encode_throughput_avg = int(d["avg"])
-                    input_metric_name = m.group("metric_name")
-                    encode_throughput_unit = d["unit"]
-
-                m = re.search(r'Aggregated.*\s+(?P<value_json>{.*})\s+\[(?P<metric_name>perf_ec_recovery_latency)\]',
-                              line)
-                if m:
-                    d = json.loads(m.group("value_json"))
-                    ec_recovery_latency_min = int(d["min"])
-                    ec_recovery_latency_max = int(d["max"])
-                    ec_recovery_latency_avg = int(d["avg"])
-                    input_metric_name = m.group("metric_name")
-                    recovery_latency_unit = d["unit"]
-
-                m = re.search(r'Aggregated.*\s+(?P<value_json>{.*})\s+\[(?P<metric_name>perf_ec_recovery_throughput)\]',
-                              line)
-                if m:
-                    d = json.loads(m.group("value_json"))
-                    ec_recovery_throughput_min = int(d["min"])
-                    ec_recovery_throughput_max = int(d["max"])
-                    ec_recovery_throughput_avg = int(d["avg"])
-                    input_metric_name = m.group("metric_name")
-                    recovery_throughput_unit = d["unit"]
-            self.result = fun_test.PASSED
-
-        except Exception as ex:
-            fun_test.critical(str(ex))
-        if self.result == fun_test.PASSED:
-            MetricHelper(model=EcPerformance).add_entry(status=self.result,
-                                                        input_date_time=self.dt,
-                                                        output_encode_latency_min=ec_encode_latency_min,
-                                                        output_encode_latency_max=ec_encode_latency_max,
-                                                        output_encode_latency_avg=ec_encode_latency_avg,
-                                                        output_encode_throughput_min=ec_encode_throughput_min,
-                                                        output_encode_throughput_max=ec_encode_throughput_max,
-                                                        output_encode_throughput_avg=ec_encode_throughput_avg,
-                                                        output_recovery_latency_min=ec_recovery_latency_min,
-                                                        output_recovery_latency_max=ec_recovery_latency_max,
-                                                        output_recovery_latency_avg=ec_recovery_latency_avg,
-                                                        output_recovery_throughput_min=ec_recovery_throughput_min,
-                                                        output_recovery_throughput_max=ec_recovery_throughput_max,
-                                                        output_recovery_throughput_avg=ec_recovery_throughput_avg,
-                                                        output_encode_latency_min_unit=encode_latency_unit,
-                                                        output_encode_latency_max_unit=encode_latency_unit,
-                                                        output_encode_latency_avg_unit=encode_latency_unit,
-                                                        output_encode_throughput_min_unit=encode_throughput_unit,
-                                                        output_encode_throughput_max_unit=encode_throughput_unit,
-                                                        output_encode_throughput_avg_unit=encode_throughput_unit,
-                                                        output_recovery_latency_min_unit=recovery_latency_unit,
-                                                        output_recovery_latency_max_unit=recovery_latency_unit,
-                                                        output_recovery_latency_avg_unit=recovery_latency_unit,
-                                                        output_recovery_throughput_min_unit=recovery_throughput_unit,
-                                                        output_recovery_throughput_max_unit=recovery_throughput_unit,
-                                                        output_recovery_throughput_avg_unit=recovery_throughput_unit
-                                                        )
-        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
-                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     git_commit=self.git_commit, model_name="EcPerformance")
-        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
-
 
 class EcVolPerformanceTc(PalladiumPerformanceTc):
     tag = VOLTEST_TAG
+    model = "EcVolPerformance"
+    platform = F1
 
     def describe(self):
         self.set_test_details(id=5,
                               summary="EC Vol performance",
                               steps="Steps 1")
 
-    def run(self):
-        metrics = collections.OrderedDict()
-        try:
-            fun_test.test_assert(self.validate_job(), "validating job")
-            for line in self.lines:
-                m = re.search(
-                    r'(?P<value>{.*})\s+\[\S+:(?P<metric_name>\S+)\]',
-                    line)
-                if m:
-                    value = m.group("value")
-                    j = json.loads(value)
-                    metric_name = m.group("metric_name").lower()
-                    if not (
-                            "ECVOL_EC_STATS_latency_ns".lower() in metric_name or "ECVOL_EC_STATS_iops".lower() in metric_name):
-                        continue
-
-                    try:  # Either a raw value or json value
-                        if "latency" in j:
-                            j = j["latency"]
-                        for key, value in j.iteritems():
-                            if key != "unit" and key != "value":
-                                metrics["output_" + metric_name + "_" + key] = value
-                                metrics["output_" + metric_name + "_" + key + "_unit"] = j["unit"]
-                            if key == "value":
-                                metrics["output_" + metric_name] = value
-                                metrics["output_" + metric_name + "_unit"] = j["unit"]
-                    except:
-                        metrics["output_" + metric_name] = value
-                        metrics["output_" + metric_name + "_unit"] = j["unit"]
-                    d = self.metrics_to_dict(metrics, self.result)
-                    MetricHelper(model=EcVolPerformance).add_entry(**d)
-            self.result = fun_test.PASSED
-        except Exception as ex:
-            fun_test.critical(str(ex))
-
-        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
-                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     git_commit=self.git_commit, model_name="EcVolPerformance")
-        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
-
 
 class VoltestPerformanceTc(PalladiumPerformanceTc):
     tag = VOLTEST_TAG
+    model = "VoltestPerformance"
+    platform = F1
 
     def describe(self):
         self.set_test_details(id=6,
                               summary="Voltest performance",
                               steps="Steps 1")
-
-    def run(self):
-        metrics = collections.OrderedDict()
-        try:
-            fun_test.test_assert(self.validate_job(), "validating job")
-            for line in self.lines:
-                m = re.search(
-                    r'"(?P<metric_name>\S+)\s+(?:\S+\s+\d+:\s+)?(?P<metric_type>\S+)?(:\s+)?(?P<value>{.*})\s+\[(?P<metric_id>\S+)\]',
-                    line)
-                if m:
-                    metric_name = m.group("metric_name")
-                    metric_type = m.group("metric_type")
-                    value = m.group("value")
-                    j = json.loads(value)
-                    metric_id = m.group("metric_id").lower()
-                    allowed_metric_names = ["VOL_TYPE_BLK_LSV_write",
-                                            "VOL_TYPE_BLK_LSV_read",
-                                            "FILTER_TYPE_XTS_ENCRYPT",
-                                            "FILTER_TYPE_XTS_DECRYPT",
-                                            "FILTER_TYPE_DEFLATE",
-                                            "FILTER_TYPE_INFLATE",
-                                            "VOL_TYPE_BLK_EC_write",
-                                            "VOL_TYPE_BLK_EC_read"]
-                    if metric_name not in allowed_metric_names:
-                        continue
-
-                    if metric_type == None:
-                        metric_type = "latency"
-                        j = j["latency"]
-
-                    if "andwidth" in metric_type.lower():
-                        if "avg_op_bw_mbps" in line:
-                            metric_type += "_avg"
-                        elif "total_op_bw_mbps":
-                            metric_type += "_total"
-
-                    try:  # Either a raw value or json value
-                        for key, value in j.iteritems():
-                            if key != "unit" and key != "value":
-                                metrics["output_" + metric_name + "_" + metric_type + "_" + key] = value
-                                metrics["output_" + metric_name + "_" + metric_type + "_" + key + "_unit"] = j["unit"]
-                            if key == "value":
-                                metrics["output_" + metric_name + "_" + metric_type] = value
-                                metrics["output_" + metric_name + "_" + metric_type + "_unit"] = j["unit"]
-                    except Exception as ex:
-                        metrics["output_" + metric_name + "_" + metric_type] = value
-                        metrics["output_" + metric_name + "_" + metric_type + "_unit"] = j["unit"]
-                    d = self.metrics_to_dict(metrics, self.result)
-                    MetricHelper(model=VoltestPerformance).add_entry(**d)
-
-            self.result = fun_test.PASSED
-
-        except Exception as ex:
-            fun_test.critical(str(ex))
-
-        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
-                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     git_commit=self.git_commit, model_name="VoltestPerformance")
-        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
 class WuDispatchTestPerformanceTc(PalladiumPerformanceTc):
@@ -587,6 +395,8 @@ class SoakClassicMallocPerformanceTc(PalladiumPerformanceTc):
 
 class BootTimingPerformanceTc(PalladiumPerformanceTc):
     tag = BOOT_TIMING_TEST_TAG
+    model = "BootTimePerformance"
+    platform = F1
 
     def describe(self):
         self.set_test_details(id=13,
@@ -594,184 +404,20 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
                               steps="Steps 1")
 
     def run(self):
-        metrics = collections.OrderedDict()
-        reset_cut_done = False
         try:
             fun_test.test_assert(self.validate_job(), "validating job")
             log = self.lsf_status_server.get_human_file(job_id=self.job_id, file_name="cdn_uartout1.txt")
             fun_test.test_assert(log, "fetched boot time uart log")
-            log = log.split("\n")
-            for line in log:
-                if "Reset CUT done!" in line:
-                    reset_cut_done = True
-                if reset_cut_done:
-                    m = re.search(
-                        r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Firmware',
-                        line)
-                    if m:
-                        output_firmware_boot_time = int(m.group("time")) / 1000.0
-                        output_firmware_boot_cycles = int(m.group("cycle"))
-                        fun_test.log(
-                            "boot type: Firmware, boot time: {}, boot cycles: {}".format(output_firmware_boot_time,
-                                                                                         output_firmware_boot_cycles))
-                        metrics["output_firmware_boot_time"] = output_firmware_boot_time
-                        metrics["output_firmware_boot_time_unit"] = "msecs"
-
-                    m = re.search(
-                        r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Flash\s+type\s+detection',
-                        line)
-                    if m:
-                        output_flash_type_boot_time = int(m.group("time")) / 1000.0
-                        output_flash_type_boot_cycles = int(m.group("cycle"))
-                        fun_test.log("boot type: Flash type detection, boot time: {}, boot cycles: {}".format(
-                            output_flash_type_boot_time,
-                            output_flash_type_boot_cycles))
-                        metrics["output_flash_type_boot_time"] = output_flash_type_boot_time
-                        metrics["output_flash_type_boot_time_unit"] = "msecs"
-
-                    m = re.search(
-                        r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+EEPROM\s+Loading',
-                        line)
-                    if m:
-                        output_eeprom_boot_time = int(m.group("time")) / 1000.0
-                        output_eeprom_boot_cycles = int(m.group("cycle"))
-                        fun_test.log(
-                            "boot type: EEPROM Loading, boot time: {}, boot cycles: {}".format(output_eeprom_boot_time,
-                                                                                               output_eeprom_boot_cycles))
-                        metrics["output_eeprom_boot_time"] = output_eeprom_boot_time
-                        metrics["output_eeprom_boot_time_unit"] = "msecs"
-
-                    m = re.search(
-                        r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+SBUS\s+Loading',
-                        line)
-                    if m:
-                        output_sbus_boot_time = int(m.group("time")) / 1000.0
-                        output_sbus_boot_cycles = int(m.group("cycle"))
-                        fun_test.log(
-                            "boot type: SBUS Loading, boot time: {}, boot cycles: {}".format(output_sbus_boot_time,
-                                                                                             output_sbus_boot_cycles))
-                        metrics["output_sbus_boot_time"] = output_sbus_boot_time
-                        metrics["output_sbus_boot_time_unit"] = "msecs"
-
-                    m = re.search(
-                        r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Host\s+BOOT',
-                        line)
-                    if m:
-                        output_host_boot_time = int(m.group("time")) / 1000.0
-                        output_host_boot_cycles = int(m.group("cycle"))
-                        fun_test.log(
-                            "boot type: Host BOOT, boot time: {}, boot cycles: {}".format(output_host_boot_time,
-                                                                                          output_host_boot_cycles))
-                        metrics["output_host_boot_time"] = output_host_boot_time
-                        metrics["output_host_boot_time_unit"] = "msecs"
-
-                    m = re.search(
-                        r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Main\s+Loop',
-                        line)
-                    if m:
-                        output_main_loop_boot_time = int(m.group("time")) / 1000.0
-                        output_main_loop_boot_cycles = int(m.group("cycle"))
-                        fun_test.log(
-                            "boot type: Main Loop, boot time: {}, boot cycles: {}".format(output_main_loop_boot_time,
-                                                                                          output_main_loop_boot_cycles))
-                        metrics["output_main_loop_boot_time"] = output_main_loop_boot_time
-                        metrics["output_main_loop_boot_time_unit"] = "msecs"
-
-                    m = re.search(
-                        r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Boot\s+success',
-                        line)
-                    if m:
-                        output_boot_success_boot_time = int(m.group("time")) / 1000.0
-                        output_boot_success_boot_cycles = int(m.group("cycle"))
-                        fun_test.log(
-                            "boot type: Boot success, boot time: {}, boot cycles: {}".format(
-                                output_boot_success_boot_time,
-                                output_boot_success_boot_cycles))
-                        metrics["output_boot_success_boot_time"] = output_boot_success_boot_time
-                        metrics["output_boot_success_boot_time_unit"] = "msecs"
-
+            logs_1 = log.split("\n")
             log = self.lsf_status_server.get_human_file(job_id=self.job_id, file_name="cdn_uartout0.txt")
             fun_test.test_assert(log, "fetched mmc time uart log")
-            log = log.split("\n")
-            for line in log:
-                m = re.search(
-                    r'\[(?P<timestamp>.*)\s+\S+\]\s+\[\S+\]\s+all\s+VPs\s+online,\s+sending\s+bootstrap\s+WU',
-                    line)
-                if m:
-                    metrics["output_all_vps_online"] = float(m.group("timestamp"))
-                    metrics["output_all_vps_online_unit"] = PerfUnit.UNIT_SECS
-                    fun_test.log(
-                        "All VPs online: {}".format(metrics["output_all_vps_online"]))
-                m = re.search(
-                    r'\[(?P<timestamp>.*)\s+\S+\]\s+\[\S+\]\s+Parsing\s+config\s+took\s+(?P<parsing_time>\d+)(?P<parsing_unit>\S+)',
-                    line)
-                if m:
-                    metrics["output_parsing_config_end"] = float(m.group("timestamp"))
-                    metrics["output_parsing_config_end_unit"] = PerfUnit.UNIT_SECS
-                    metrics["output_parsing_config"] = float(m.group("parsing_time"))
-                    metrics["output_parsing_config_unit"] = m.group("parsing_unit")
-                    fun_test.log(
-                        "Parsing config: {}, {}".format(metrics["output_parsing_config"],
-                                                        metrics["output_parsing_config_end"]))
-                m = re.search(
-                    r'\[(?P<timestamp>.*)\s+\S+\]\s+\[\S+\]\s+SKU\s+has\s+SBP,\s+sending\s+a\s+HOST_BOOTED\s+message',
-                    line)
-                if m:
-                    metrics["output_sending_host_booted_message"] = float(m.group("timestamp"))
-                    metrics["output_sending_host_booted_message_unit"] = PerfUnit.UNIT_SECS
-                    fun_test.log(
-                        "Sending host booted message: {}".format(metrics["output_sending_host_booted_message"]))
+            logs_0 = log.split("\n")
+            self.lines = logs_1 + logs_0
 
-                m = re.search(
-                    r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+MMC\s+INIT',
-                    line)
-                if m:
-                    output_init_mmc_time = int(m.group("time")) / 1000.0
-                    output_init_mmc_cycles = int(m.group("cycle"))
-                    fun_test.log(
-                        "MMC INIT Time: {}, cycles: {}".format(output_init_mmc_time,
-                                                               output_init_mmc_cycles))
-                    metrics["output_init_mmc_time"] = output_init_mmc_time
-                    metrics["output_init_mmc_time_unit"] = "msecs"
+            result = MetricParser().parse_it(model_name=self.model, logs=self.lines,
+                                             auto_add_to_db=True, date_time=self.dt, platform=self.platform)
 
-                m = re.search(
-                    r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+MMC\s+load\s+dest=(?P<dest>ffffffff90000000)\s+size=(?P<size>\d+)',
-                    line)
-                if m:
-                    output_boot_read_mmc_time = int(m.group("time")) / 1000.0
-                    output_boot_read_mmc_cycles = int(m.group("cycle"))
-                    fun_test.log(
-                        "MMC Boot Read Time: {}, cycles: {}".format(output_boot_read_mmc_time,
-                                                                    output_boot_read_mmc_cycles))
-                    metrics["output_boot_read_mmc_time"] = output_boot_read_mmc_time
-                    metrics["output_boot_read_mmc_time_unit"] = "msecs"
-
-                m = re.search(
-                    r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+MMC\s+load\s+dest=(?P<dest>ffffffff91000000)\s+size=(?P<size>\d+)',
-                    line)
-                if m:
-                    output_funos_read_mmc_time = int(m.group("time")) / 1000.0
-                    output_funos_read_mmc_cycles = int(m.group("cycle"))
-                    fun_test.log(
-                        "MMC FunOS Read Time: {}, cycles: {}".format(output_funos_read_mmc_time,
-                                                                     output_funos_read_mmc_cycles))
-                    metrics["output_funos_read_mmc_time"] = output_funos_read_mmc_time
-                    metrics["output_funos_read_mmc_time_unit"] = "msecs"
-
-                m = re.search(
-                    r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Start\s+ELF',
-                    line)
-                if m:
-                    output_funos_load_elf_time = int(m.group("time")) / 1000.0
-                    output_funos_load_elf_cycles = int(m.group("cycle"))
-                    fun_test.log(
-                        "ELF FunOS Load Time: {}, cycles: {}".format(output_funos_load_elf_time,
-                                                                     output_funos_load_elf_cycles))
-                    metrics["output_funos_load_elf_time"] = output_funos_load_elf_time
-                    metrics["output_funos_load_elf_time_unit"] = "msecs"
-
-            d = self.metrics_to_dict(metrics, fun_test.PASSED)
-            MetricHelper(model=BootTimePerformance).add_entry(**d)
+            fun_test.test_assert(result["match_found"], "Found atleast one entry")
             self.result = fun_test.PASSED
 
         except Exception as ex:
@@ -831,85 +477,12 @@ class TeraMarkPkeEcdh25519PerformanceTc(PalladiumPerformanceTc):
 class TeraMarkCryptoPerformanceTc(PalladiumPerformanceTc):
     tag = TERAMARK_CRYPTO
     model = "TeraMarkCryptoPerformance"
+    platform = F1
 
     def describe(self):
         self.set_test_details(id=18,
                               summary="TeraMark Crypto Performance Test",
                               steps="Steps 1")
-
-    def run(self):
-        try:
-            fun_test.test_assert(self.validate_job(), "validating job")
-            for line in self.lines:
-                m = re.search(
-                    r'(?P<crypto_json>{"test".*})',
-                    line)
-                if m:
-                    metrics = collections.OrderedDict()
-                    crypto_json = json.loads(m.group("crypto_json"))
-                    input_test = crypto_json["test"]
-                    if self.model == "TeraMarkCryptoPerformance":
-                        if "api" in input_test:
-                            input_app = "crypto_api_perf"
-                            input_algorithm = crypto_json["alg"]
-                            input_operation = crypto_json["operation"]
-                            pkt_size_json = crypto_json["pktsize"]
-                            ops_json = crypto_json["ops"] if "ops" in crypto_json else None
-                            bandwidth_json = crypto_json["throughput"]
-
-                            input_pkt_size = int(pkt_size_json["value"])
-                            output_ops_per_sec = int(ops_json["value"]) if ops_json else -1
-                            output_throughput = float(bandwidth_json["value"])
-                            unit = bandwidth_json["units"]
-
-                            metrics["input_app"] = input_app
-                            metrics["input_algorithm"] = input_algorithm
-                            metrics["input_operation"] = input_operation
-                            metrics["input_pkt_size"] = input_pkt_size
-                            metrics["output_ops_per_sec"] = output_ops_per_sec
-                            metrics["output_throughput"] = output_throughput
-                            metrics["output_ops_per_sec_unit"] = "ops"
-                            metrics["output_throughput_unit"] = unit
-                            d = self.metrics_to_dict(metrics, fun_test.PASSED)
-                            metric_model = app_config.get_metric_models()[self.model]
-                            MetricHelper(model=metric_model).add_entry(**d)
-                    elif self.model == "TeraMarkMultiClusterCryptoPerformance":
-                        if "raw" in input_test:
-                            input_app = "crypto_raw_speed"
-                            input_algorithm = crypto_json["alg"]
-                            input_operation = crypto_json["operation"]
-                            input_key_size = int(crypto_json["key_size"]) if "key_size" in crypto_json else -1
-                            pkt_size_json = crypto_json["pktsize"]
-                            ops_json = crypto_json["ops"] if "ops" in crypto_json else None
-                            bandwidth_json = crypto_json["throughput"]
-
-                            input_pkt_size = int(pkt_size_json["value"])
-                            output_ops_per_sec = int(ops_json["value"]) if ops_json else -1
-                            output_throughput = float(bandwidth_json["value"])
-                            unit = bandwidth_json["units"]
-
-                            metrics["input_app"] = input_app
-                            metrics["input_key_size"] = input_key_size
-                            metrics["input_algorithm"] = input_algorithm
-                            metrics["input_operation"] = input_operation
-                            metrics["input_pkt_size"] = input_pkt_size
-                            metrics["output_ops_per_sec"] = output_ops_per_sec
-                            metrics["output_throughput"] = output_throughput
-                            metrics["output_ops_per_sec_unit"] = "ops"
-                            metrics["output_throughput_unit"] = unit
-                            d = self.metrics_to_dict(metrics, fun_test.PASSED)
-                            metric_model = app_config.get_metric_models()[self.model]
-                            MetricHelper(model=metric_model).add_entry(**d)
-
-            self.result = fun_test.PASSED
-
-        except Exception as ex:
-            fun_test.critical(str(ex))
-
-        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
-                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     git_commit=self.git_commit, model_name=self.model)
-        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
 class TeraMarkLookupEnginePerformanceTc(PalladiumPerformanceTc):
@@ -954,6 +527,7 @@ class FlowTestPerformanceTc(PalladiumPerformanceTc):
 
 class TeraMarkZipPerformanceTc(PalladiumPerformanceTc):
     tag = TERAMARK_ZIP
+    platform = F1
 
     def describe(self):
         self.set_test_details(id=21,
@@ -961,46 +535,10 @@ class TeraMarkZipPerformanceTc(PalladiumPerformanceTc):
                               steps="Steps 1")
 
     def run(self):
-        metrics = collections.OrderedDict()
         try:
             fun_test.test_assert(self.validate_job(), "validating job")
-            teramark_begin = False
-            for line in self.lines:
-                if "TeraMark Begin" in line:
-                    teramark_begin = True
-                if "TeraMark End" in line:
-                    teramark_begin = False
-                if teramark_begin:
-                    m = re.search(
-                        r'{"Type":\s+"(?P<type>\S+)",\s+"Operation":\s+(?P<operation>\S+),\s+"Effort":\s+(?P<effort>\S+),.*\s+"Duration"\s+:\s+(?P<latency_json>{.*}),\s+"Throughput":\s+(?P<throughput_json>{.*})}',
-                        line)
-                    if m:
-                        input_type = m.group("type")
-                        input_operation = m.group("operation")
-                        input_effort = int(m.group("effort"))
-                        bandwidth_json = json.loads(m.group("throughput_json"))
-                        output_bandwidth_avg = bandwidth_json['value']
-                        output_bandwidth_avg_unit = bandwidth_json["unit"]
-                        latency_json = json.loads(m.group("latency_json"))
-                        output_latency_avg = latency_json['value']
-                        output_latency_unit = latency_json["unit"]
-
-                        fun_test.log("type: {}, operation: {}, effort: {}, stats {}".format(input_type, input_operation,
-                                                                                            input_effort,
-                                                                                            bandwidth_json))
-                        metrics["input_type"] = input_type
-                        metrics["input_operation"] = input_operation
-                        metrics["input_effort"] = input_effort
-                        metrics["output_bandwidth_avg"] = output_bandwidth_avg
-                        metrics["output_bandwidth_avg_unit"] = output_bandwidth_avg_unit
-                        metrics["output_latency_avg"] = output_latency_avg
-                        metrics["output_latency_avg_unit"] = output_latency_unit
-                        d = self.metrics_to_dict(metrics, fun_test.PASSED)
-                        if input_type == "Deflate":
-                            MetricHelper(model=TeraMarkZipDeflatePerformance).add_entry(**d)
-                        else:
-                            MetricHelper(model=TeraMarkZipLzmaPerformance).add_entry(**d)
-
+            parsed_result = MetricParser().parse_it(model_name="TeraMarkZip" ,logs=self.lines,
+                                                    auto_add_to_db=False,date_time=self.dt, platform=self.platform)
             self.result = fun_test.PASSED
 
         except Exception as ex:
@@ -1027,6 +565,7 @@ class TeraMarkDfaPerformanceTc(PalladiumPerformanceTc):
 
 class TeraMarkJpegPerformanceTc(PalladiumPerformanceTc):
     tag = TERAMARK_JPEG
+    model = "TeraMarkJpegPerformance"
     platform = F1
 
     def describe(self):
@@ -1034,88 +573,11 @@ class TeraMarkJpegPerformanceTc(PalladiumPerformanceTc):
                               summary="TeraMark Jpeg Performance Test",
                               steps="Steps 1")
 
-    def run(self):
-        metrics = collections.OrderedDict()
-        current_file_name = None
-        final_file_name = None
-        try:
-            fun_test.test_assert(self.validate_job(), "validating job")
-            teramark_begin = False
-
-            for line in self.lines:
-                compression_ratio_found = False
-                if "Compression-ratio to 1" in line:
-                    compression_ratio_found = True
-                m = re.search(r'JPEG Compression/Decompression performance stats (?P<current_file_name>\S+?)(?=#)',
-                              line)
-                if m:
-                    current_file_name = m.group("current_file_name")
-                    final_file_name = current_file_name
-                if "TeraMark Begin" in line:
-                    teramark_begin = True
-                    continue
-                if "TeraMark End" in line:
-                    teramark_begin = False
-                    fun_test.test_assert(current_file_name, "Filename detected")
-
-                    current_file_name = None
-                if teramark_begin:
-                    pass
-                    m = re.search(r'({.*})', line)
-                    if m:
-                        j = m.group(1)
-                        try:
-                            d = json.loads(j)
-                        except Exception as ex:
-                            message = "Invalid json for : {}".format(j)
-                            fun_test.critical(message)
-                            raise Exception(message)
-
-                        try:
-                            metrics = {}
-                            metrics['input_platform'] = self.platform
-                            if not compression_ratio_found:
-                                if d["Operation"] in jpeg_operations:
-                                    metrics["input_operation"] = jpeg_operations[d["Operation"]]
-                                else:
-                                    metrics["input_operation"] = d["Operation"]
-                                metrics["input_count"] = d['Stats']['_count']
-                                metrics["input_image"] = final_file_name
-                                # metrics["output_iops"] = d['Stats']['_iops']
-                                # metrics["output_max_latency"] = d['Stats']['_max_latency']
-                                # metrics["output_min_latency"] = d['Stats']['_min_latency']
-                                # metrics["output_average_latency"] = d['Stats']['_avg_latency']
-                                metrics["output_average_bandwidth"] = d['Stats']['_avg_bw_gbps']
-                            else:
-                                if d["Operation"] in jpeg_operations:
-                                    metrics["input_operation"] = jpeg_operations[d["Operation"]]
-                                else:
-                                    metrics["input_operation"] = d["Operation"]
-                                metrics["input_image"] = final_file_name
-                                metrics["output_compression_ratio"] = d['Stats']["Compression-ratio to 1"]
-                                metrics["output_percentage_savings"] = d['Stats']["PercentageSpaceSaving"]
-                            d = self.metrics_to_dict(metrics, fun_test.PASSED)
-                            MetricHelper(model=TeraMarkJpegPerformance).add_entry(**d)
-
-                        except Exception as ex:
-                            message = "Unable to add metric : {}".format(str(ex))
-                            fun_test.critical(message)
-                            raise Exception(message)
-
-            self.result = fun_test.PASSED
-
-        except Exception as ex:
-            fun_test.critical(str(ex))
-
-        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
-                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     git_commit=self.git_commit, model_name="TeraMarkJpegPerformance")
-        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
-
 
 class TeraMarkNuTransitPerformanceTc(PalladiumPerformanceTc):
     model = "NuTransitPerformance"
     file_paths = ["nu_rfc2544_performance.json"]
+    platform = F1
 
     def describe(self):
         self.set_test_details(id=24,
@@ -1125,49 +587,8 @@ class TeraMarkNuTransitPerformanceTc(PalladiumPerformanceTc):
     def run(self):
         try:
             fun_test.test_assert(self.validate_json_file(file_paths=self.file_paths), "validate json file and output")
-            for file in self.lines:
-                for line in file:
-                    metrics = collections.OrderedDict()
-                    if "flow_type" in line:
-                        if line["flow_type"] in nu_transit_flow_types:
-                            line["flow_type"] = nu_transit_flow_types[line["flow_type"]]
-                        metrics["input_flow_type"] = line["flow_type"].replace("FPG", "NU")
-                        metrics["input_mode"] = line.get("mode", "")
-                        metrics["input_version"] = line["version"]
-                        metrics["input_frame_size"] = line["frame_size"]
-                        date_time = get_time_from_timestamp(line["timestamp"])
-                        metrics["output_throughput"] = (float(
-                            line["throughput"]) / 1000) if "throughput" in line and line[
-                            "throughput"] != -1 else -1
-                        metrics["output_pps"] = (float(
-                            line["pps"]) / 1000000) if "pps" in line and line[
-                            "pps"] != -1 else -1
-                        metrics["output_latency_max"] = line.get("latency_max", -1)
-                        metrics["output_latency_min"] = line.get("latency_min", -1)
-                        metrics["output_latency_avg"] = line.get("latency_avg", -1)
-                        if self.model == "NuTransitPerformance":
-                            metrics["output_latency_P99"] = line.get("latency_P99", -1)
-                            metrics["output_latency_P90"] = line.get("latency_P90", -1)
-                            metrics["output_latency_P50"] = line.get("latency_P50", -1)
-                        else:
-                            metrics["input_half_load_latency"] = line.get("half_load_latency", False)
-                        metrics["input_num_flows"] = line.get("num_flows", 512000)
-                        metrics["input_offloads"] = line.get("offloads", False)
-                        metrics["input_protocol"] = line.get("protocol", "UDP")
-                        metrics["output_jitter_max"] = line.get("jitter_max", -1)
-                        metrics["output_jitter_min"] = line.get("jitter_min", -1)
-                        metrics["output_jitter_avg"] = line.get("jitter_avg", -1)
-                        fun_test.log(
-                            "flow type: {}, latency: {}, bandwidth: {}, frame size: {}, jitters: {}, pps: {}".format(
-                                metrics["input_flow_type"], metrics["output_latency_avg"], metrics["output_throughput"],
-                                metrics["input_frame_size"], metrics["output_jitter_avg"], metrics["output_pps"]))
-                        d = self.metrics_to_dict(metrics, fun_test.PASSED)
-                        d["input_date_time"] = date_time
-                        if date_time.year >= 2019:
-                            metric_model = app_config.get_metric_models()[self.model]
-                            MetricHelper(model=metric_model).add_entry(**d)
-                            add_version_to_jenkins_job_id_map(date_time=date_time, version=metrics["input_version"])
-
+            result = MetricParser().parse_it(model_name=self.model, logs=self.lines,
+                                             auto_add_to_db=False, platform=self.platform)
             self.result = fun_test.PASSED
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -1532,6 +953,39 @@ class SoakFlowsMemcpy1MbNonCohPerformanceTc(PalladiumPerformanceTc):
                               steps="Steps 1")
 
 
+class VoltestBlt1PerformanceTc(PalladiumPerformanceTc):
+    tag = VOLTEST_BLT_1
+    model = 'VoltestBlt1Performance'
+    platform = F1
+
+    def describe(self):
+        self.set_test_details(id=61,
+                              summary="Voltest instance 1 BLT performance",
+                              steps="Steps 1")
+
+
+class VoltestBlt8PerformanceTc(PalladiumPerformanceTc):
+    tag = VOLTEST_BLT_8
+    model = 'VoltestBlt8Performance'
+    platform = F1
+
+    def describe(self):
+        self.set_test_details(id=62,
+                              summary="Voltest instance 8 BLT performance",
+                              steps="Steps 1")
+
+
+class VoltestBlt12PerformanceTc(PalladiumPerformanceTc):
+    tag = VOLTEST_BLT_12
+    model = 'VoltestBlt12Performance'
+    platform = F1
+
+    def describe(self):
+        self.set_test_details(id=63,
+                              summary="Voltest instance 12 BLT performance",
+                              steps="Steps 1")
+
+
 if __name__ == "__main__":
     myscript = MyScript()
 
@@ -1539,8 +993,6 @@ if __name__ == "__main__":
     myscript.add_test_case(BcopyPerformanceTc())
     myscript.add_test_case(BcopyFloodPerformanceTc())
     myscript.add_test_case(EcPerformanceTc())
-    myscript.add_test_case(EcVolPerformanceTc())
-    myscript.add_test_case(VoltestPerformanceTc())
     myscript.add_test_case(WuDispatchTestPerformanceTc())
     myscript.add_test_case(WuSendSpeedTestPerformanceTc())
     myscript.add_test_case(FunMagentPerformanceTestTc())
@@ -1577,9 +1029,6 @@ if __name__ == "__main__":
     myscript.add_test_case(RcnvmeRandomReadAllPerformanceTc())
     myscript.add_test_case(RcnvmeWriteAllPerformanceTc())
     myscript.add_test_case(RcnvmeRandomWriteAllPerformanceTc())
-    myscript.add_test_case(JuniperTlsSingleTunnelPerformanceTc())
-    myscript.add_test_case(JuniperTls32TunnelPerformanceTc())
-    myscript.add_test_case(JuniperTls64TunnelPerformanceTc())
     myscript.add_test_case(SoakDmaMemcpyThresholdPerformanceTc())
     myscript.add_test_case(WuLatencyUngatedPerformanceTc())
     myscript.add_test_case(WuLatencyAllocStackPerformanceTc())
@@ -1593,5 +1042,8 @@ if __name__ == "__main__":
     myscript.add_test_case(ChannelParallPerformanceTc())
     myscript.add_test_case(SoakFlowsBusyLoopPerformanceTc())
     myscript.add_test_case(SoakFlowsMemcpy1MbNonCohPerformanceTc())
+    myscript.add_test_case(VoltestBlt1PerformanceTc())
+    myscript.add_test_case(VoltestBlt8PerformanceTc())
+    myscript.add_test_case(VoltestBlt12PerformanceTc())
 
     myscript.run()

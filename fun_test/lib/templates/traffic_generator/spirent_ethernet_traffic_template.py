@@ -4,6 +4,8 @@ from lib.templates.traffic_generator.spirent_traffic_generator_template import *
 from prettytable import PrettyTable
 # Currently Nu Config manager is in scripts dir we will move it later to proper place
 from scripts.networking.nu_config_manager import NuConfigManager
+from fun_global import PerfUnit
+from web.fun_test.analytics_models_helper import ModelHelper
 
 
 class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
@@ -17,6 +19,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
     ETH_IPV6_UDP_VXLAN_ETH_IPV6_UDP = 8
     MPLS_ETH_IPV4_UDP_CUST_IPV4_TCP = 9
     MPLS_ETH_IPV4_UDP_CUST_IPV4_UDP = 10
+    JUNIPER_PERFORMANCE_MODEL_NAME = "TeraMarkJuniperNetworkingPerformance"
 
     def __init__(self, session_name, spirent_config, chassis_type=SpirentManager.VIRTUAL_CHASSIS_TYPE):
         SpirentTrafficGeneratorTemplate.__init__(self, spirent_config=spirent_config, chassis_type=chassis_type)
@@ -25,11 +28,14 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
         self.nu_config_obj = NuConfigManager()
 
     def setup(self, no_of_ports_needed, flow_type=NuConfigManager.TRANSIT_FLOW_TYPE,
-              flow_direction=NuConfigManager.FLOW_DIRECTION_NU_NU, ports_map={}):
+              flow_direction=NuConfigManager.FLOW_DIRECTION_NU_NU, ports_map={}, imix_distribution=False):
         result = {"result": False, 'port_list': [], 'interface_obj_list': []}
 
         project_handle = self.stc_manager.create_project(project_name=self.session_name)
         fun_test.test_assert(project_handle, "Create %s Project" % self.session_name)
+
+        if imix_distribution:
+            out = self.stc_manager.create_frame_length_distribution()
         if not self.stc_connected:
             fun_test.test_assert(expression=self.stc_manager.health(session_name=self.session_name)['result'],
                                  message="Health of Spirent Test Center")
@@ -236,7 +242,8 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
             fun_test.critical(str(ex))
         return result
 
-    def setup_existing_tcc_configuration(self, config_file_path, configure_ports=False, port_list=[]):
+    def setup_existing_tcc_configuration(self, config_file_path, configure_ports=False, port_list=[],
+                                         deactivate_streams=True):
         result = False
         try:
             fun_test.test_assert(expression=self.stc_manager.health(session_name=self.session_name)['result'],
@@ -255,15 +262,16 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
             checkpoint = "Attach ports and apply configuration"
             fun_test.test_assert(expression=self.stc_manager.attach_ports(), message=checkpoint)
 
-            checkpoint = "Deactivate all streams from all ports"
-            all_port_streams = self.get_streams_all_ports()
-            for key in all_port_streams.keys():
-                if not all_port_streams[key]:
-                    continue
-                deactivate_success = self.deactivate_stream_blocks(stream_obj_list=all_port_streams[key])
-                fun_test.test_assert(deactivate_success, message="Deactivate Streams %s " % all_port_streams[key],
-                                     ignore_on_success=True)
-            fun_test.add_checkpoint(checkpoint)
+            if deactivate_streams:
+                checkpoint = "Deactivate all streams from all ports"
+                all_port_streams = self.get_streams_all_ports()
+                for key in all_port_streams.keys():
+                    if not all_port_streams[key]:
+                        continue
+                    deactivate_success = self.deactivate_stream_blocks(stream_obj_list=all_port_streams[key])
+                    fun_test.test_assert(deactivate_success, message="Deactivate Streams %s " % all_port_streams[key],
+                                         ignore_on_success=True)
+                fun_test.add_checkpoint(checkpoint)
 
             result = True
         except Exception as ex:
@@ -389,7 +397,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
             fun_test.critical(str(ex))
         return result
 
-    def activate_stream_blocks(self, stream_obj_list=None):
+    def activate_stream_blocks(self, stream_obj_list=None, stream_handles=False):
         result = False
         try:
             stream_block_handles = []
@@ -403,10 +411,14 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                             stream_block_handles.append(stream_obj)
             else:
                 for stream_obj in stream_obj_list:
-                    stream_block_handles.append(stream_obj._spirent_handle)
+                    if stream_handles:
+                        stream_block_handles.append(stream_obj)
+                    else:
+                        stream_block_handles.append(stream_obj._spirent_handle)
 
             result = self.stc_manager.run_stream_block_active_command(stream_block_handles=stream_block_handles)
             fun_test.test_assert(result, message="Activate Stream Blocks: %s" % stream_block_handles)
+            self.stc_manager.apply_configuration()
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
@@ -1650,3 +1662,136 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
+
+    def get_latency_values_for_streamblock(self, streamblock_handle, rx_streamblock_subscribe_handle):
+        result = {}
+        result['latency_min'] = 0.0
+        result['latency_max'] = 0.0
+        result['latency_avg'] = 0.0
+        try:
+            output = self.stc_manager.get_rx_stream_block_results(stream_block_handle=streamblock_handle,
+                                                                  subscribe_handle=rx_streamblock_subscribe_handle,
+                                                                  summary=True)
+            if output:
+                result['latency_min'] = output["MinLatency"]
+                result['latency_max'] = output["MaxLatency"]
+                result['latency_avg'] = output["AvgLatency"]
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def get_jitter_values_for_streamblock(self, streamblock_handle, rx_streamblock_subscribe_handle,
+                                          change_mode_jitter=False):
+        result = {}
+        result['jitter_min'] = 0.0
+        result['jitter_max'] = 0.0
+        result['jitter_avg'] = 0.0
+        try:
+            view_attribute_list = ["AvgJitter", "MinJitter", "MaxJitter"]
+            if change_mode_jitter:
+                rx_summary_subscribe = self.subscribe_rx_results(
+                    parent=self.stc_manager.project_handle, result_type="RxStreamSummaryResults",
+                    change_mode=True, result_view_mode=SpirentManager.RESULT_VIEW_MODE_JITTER,
+                    view_attribute_list=view_attribute_list)
+                fun_test.simple_assert(rx_summary_subscribe, "Subscribe to jitter mode")
+            output = self.stc_manager.get_rx_stream_block_results(stream_block_handle=streamblock_handle,
+                                                                  subscribe_handle=rx_summary_subscribe,
+                                                                  summary=True)
+            if output:
+                result['jitter_min'] = output["MinJitter"]
+                result['jitter_max'] = output["MaxJitter"]
+                result['jitter_avg'] = output["AvgJitter"]
+            if change_mode_jitter:
+                rx_summary_subscribe = self.subscribe_rx_results(
+                    parent=self.stc_manager.project_handle, result_type="RxStreamSummaryResults",
+                    change_mode=True, result_view_mode=SpirentManager.RESULT_VIEW_MODE_BASIC)
+                fun_test.simple_assert(rx_summary_subscribe, "Subscribe back to basic mode")
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+
+    def use_model_helper(self, model_name, data_dict, unit_dict):
+        result = False
+        try:
+            generic_helper = ModelHelper(model_name=model_name)
+            status = fun_test.PASSED
+            generic_helper.set_units(**unit_dict)
+            generic_helper.add_entry(**data_dict)
+            generic_helper.set_status(status)
+            result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def _parse_file_to_json_in_order(self, file_name):
+        result = None
+        try:
+            with open(file_name, "r") as infile:
+                contents = infile.read()
+                result = json.loads(contents, object_pairs_hook=OrderedDict)
+        except Exception as ex:
+            scheduler_logger.critical(str(ex))
+        return result
+
+    def populate_non_rfc_performance_json_file(self, flow_type, frame_size, pps, filename, timestamp, num_flows=None, throughput=None,
+                                               mode="100G", model_name=JUNIPER_PERFORMANCE_MODEL_NAME, offloads=False, protocol="UDP",
+                                               latency_min=None, latency_max=None, latency_avg=None, jitter_min=None, jitter_max=None, jitter_avg=None,
+                                               half_load_latency=False, num_tunnels=None):
+        results = []
+        output = False
+        try:
+            output_dict = OrderedDict()
+            output_dict["mode"] = mode
+            output_dict["version"] = fun_test.get_version()
+            output_dict["timestamp"] = str(timestamp)
+            output_dict["half_load_latency"] = half_load_latency
+            output_dict["flow_type"] = flow_type
+            output_dict["frame_size"] = frame_size
+            output_dict["pps"] = pps
+            if throughput:
+                output_dict["throughput"] = throughput
+            if latency_min:
+                output_dict["latency_min"] = latency_min
+            if latency_max:
+                output_dict["latency_max"] = latency_max
+            if latency_avg:
+                output_dict["latency_avg"] = latency_avg
+            if jitter_min:
+                output_dict["jitter_min"] = jitter_min
+            if jitter_max:
+                output_dict["jitter_max"] = jitter_max
+            if jitter_avg:
+                output_dict["jitter_avg"] = jitter_avg
+            if num_flows or num_tunnels:
+                if num_flows:
+                    output_dict["num_flows"] = num_flows
+                if num_tunnels:
+                    output_dict["num_tunnels"] = num_tunnels
+                output_dict["offloads"] = offloads
+                output_dict["protocol"] = protocol
+
+            fun_test.log("FunOS version is %s" % output_dict['version'])
+            results.append(output_dict)
+            file_path = fun_test.get_test_case_artifact_file_name(post_fix_name=filename)
+            contents = self._parse_file_to_json_in_order(file_name=file_path)
+            if contents:
+                append_new_results = contents + results
+                file_created = self.create_counters_file(json_file_name=file_path,
+                                                    counter_dict=append_new_results)
+                fun_test.simple_assert(file_created, "Create Performance JSON file")
+            else:
+                file_created = self.create_counters_file(json_file_name=file_path,
+                                                    counter_dict=results)
+                fun_test.simple_assert(file_created, "Create Performance JSON file")
+            unit_dict = {}
+            unit_dict["pps_unit"] = PerfUnit.UNIT_PPS
+            unit_dict["throughput_unit"] = PerfUnit.UNIT_MBITS_PER_SEC
+            add_entry = self.use_model_helper(model_name=model_name, data_dict=output_dict, unit_dict=unit_dict)
+            fun_test.simple_assert(add_entry, "Entry added to model %s" % model_name)
+            fun_test.add_checkpoint("Entry added to model %s" % model_name)
+
+            output = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return output

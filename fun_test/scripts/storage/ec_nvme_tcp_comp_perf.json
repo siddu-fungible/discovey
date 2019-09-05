@@ -8,6 +8,7 @@
     "command_timeout": 5,
     "reboot_timeout": 360,
     "ethernet_adapter": "Mellanox",
+    "end_host_name":"poc-server-01",
     "csr_network": {
       "0": {
         "test_interface_ip": "20.1.1.1/24",
@@ -93,7 +94,8 @@
     },
     "fio_modes": [
       "read",
-      "randread"
+      "randread",
+      "write"
     ],
     "fio_numjobs_iodepth": [
       "(16, 8)"

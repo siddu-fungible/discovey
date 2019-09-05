@@ -463,7 +463,7 @@ class NetworkController(DpcshClient):
 
     def set_qos_egress_buffer_pool(self, sf_thr=None, sx_thr=None, dx_thr=None, df_thr=None, fcp_thr=None,
                                    nonfcp_thr=None, sample_copy_thr=0, sf_xoff_thr=0, fcp_xoff_thr=0,
-                                   nonfcp_xoff_thr=0, mode='nu'):
+                                   nonfcp_xoff_thr=0, sf_xon_thr=0, fcp_xon_thr=0, nonfcp_xon_thr=0, mode='nu'):
         result = False
         try:
             egress_buffer_pool = self.get_qos_egress_buffer_pool(mode=mode)
@@ -480,7 +480,7 @@ class NetworkController(DpcshClient):
                 egress_buffer_pool["fcp_thr"] = fcp_thr
             if nonfcp_thr:
                 egress_buffer_pool["nonfcp_thr"] = nonfcp_thr
-            if sample_copy_thr:
+            if sample_copy_thr is not None:
                 egress_buffer_pool["sample_copy_thr"] = sample_copy_thr
             if sf_xoff_thr:
                 egress_buffer_pool["sf_xoff_thr"] = sf_xoff_thr
@@ -488,6 +488,12 @@ class NetworkController(DpcshClient):
                 egress_buffer_pool["fcp_xoff_thr"] = fcp_xoff_thr
             if nonfcp_xoff_thr:
                 egress_buffer_pool["nonfcp_xoff_thr"] = nonfcp_xoff_thr
+            if nonfcp_xon_thr:
+                egress_buffer_pool["nonfcp_xon_thr"] = nonfcp_xon_thr
+            if sf_xon_thr:
+                egress_buffer_pool["sf_xon_thr"] = sf_xon_thr
+            if fcp_xon_thr:
+                egress_buffer_pool["fcp_xon_thr"] = fcp_xon_thr
             egress_buffer_pool_args = ['set', 'egress_buffer_pool', egress_buffer_pool]
             if not mode == 'nu':
                 egress_buffer_pool_args.insert(1, mode)
@@ -499,6 +505,7 @@ class NetworkController(DpcshClient):
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
+
 
     def get_qos_egress_buffer_pool(self, mode='nu'):
         egress_buffer_pool_dict = None
@@ -1260,19 +1267,6 @@ class NetworkController(DpcshClient):
             fun_test.critical(str(ex))
         return result
 
-    def peek_bam_stats(self):
-        stats = None
-        try:
-            cmd = "stats/bam"
-            fun_test.debug("Getting bam stats")
-            result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=cmd, command_duration=self.COMMAND_DURATION)
-            fun_test.simple_assert(expression=result['status'], message="Get bam stats")
-            fun_test.debug("BAM stats: %s" % result['data'])
-            stats = result['data']
-        except Exception as ex:
-            fun_test.critical(str(ex))
-        return stats
-
     def peek_resource_bam_stats(self):
         stats = None
         try:
@@ -1338,15 +1332,17 @@ class NetworkController(DpcshClient):
             fun_test.critical(str(ex))
         return stats
 
-    def flow_list(self, blocked_only=False):
+    def flow_list(self, huid=None, blocked_only=False, timeout=120):
         stats = None
         try:
             if blocked_only:
-                cmd = "blocked"
+                cmd = ["blocked"]
+            elif huid:
+                cmd = ["list", huid]
             else:
-                cmd = "list"
+                cmd = ["list"]
             fun_test.debug("Getting flow list")
-            result = self.json_execute(verb="flow", data=cmd, command_duration=self.COMMAND_DURATION)
+            result = self.json_execute(verb="flow", data=cmd, command_duration=timeout, chunk=65536)
             fun_test.simple_assert(expression=result['status'], message="Get flow %s" % cmd)
             fun_test.debug("flow %s: %s" % (cmd, result['data']))
             stats = result['data']
@@ -1376,7 +1372,7 @@ class NetworkController(DpcshClient):
             cmd = "stats/pervppkts/[%s]" % cluster_id
             fun_test.debug("Getting vp per pkt")
             result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=cmd, command_duration=self.COMMAND_DURATION,
-                                       sleep_duration=20)
+                                       chunk=16384)
             fun_test.simple_assert(expression=result['status'], message="Get vp per pkts stats")
             fun_test.debug("Per vppkts stats: %s" % result['data'])
             stats = result['data']
@@ -1387,11 +1383,12 @@ class NetworkController(DpcshClient):
     def peek_per_vp_stats(self):
         stats = None
         try:
+            self.COMMAND_DURATION = 10
             cmd = "stats/per_vp"
-            fun_test.debug("Getting vp per pkt")
+            fun_test.debug("Getting per VP WU stats")
             result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=cmd, command_duration=self.COMMAND_DURATION)
-            fun_test.simple_assert(expression=result['status'], message="Get vp per pkts stats")
-            fun_test.debug("Per vppkts stats: %s" % result['data'])
+            fun_test.simple_assert(expression=result['status'], message="Get per VP WU stats")
+            fun_test.debug("Per VP WU stats: %s" % result['data'])
             stats = result['data']
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -1671,12 +1668,14 @@ class NetworkController(DpcshClient):
 
 
     def set_nu_benchmark_1(self, fpg=None, mode=None, num_flows=None, flow_le_ddr=None, flow_state_ddr=None,
+                           flow_state_cache=None,
                            sport=None, dport=None, protocol=None, ip_sa=None, ip_da=None, flow_offset=None,
-                           flow_inport=None, flow_outport=None, show=None):
+                           flow_inport=None, flow_outport=None, show=None, num_tunnels=None, is_encryption=None,
+                           spi=None, tunnel_src=None, tunnel_dst=None, ipsec=None):
         result = None
         try:
             cmd_args = {}
-            if fpg:
+            if fpg is not None:
                 cmd_args['fpg'] = fpg
             if mode is not None:
                 cmd_args['mode'] = mode
@@ -1686,6 +1685,8 @@ class NetworkController(DpcshClient):
                 cmd_args['flow_le_ddr'] = flow_le_ddr
             if flow_state_ddr is not None:
                 cmd_args['flow_state_ddr'] = flow_state_ddr
+            if flow_state_cache is not None:
+                cmd_args['flow_state_cache'] = flow_state_cache
             if sport:
                 cmd_args['sport'] = sport
             if dport:
@@ -1698,12 +1699,25 @@ class NetworkController(DpcshClient):
                 cmd_args['ip_da'] = ip_da
             if flow_offset is not None:
                 cmd_args['flow_offset'] = flow_offset
-            if flow_inport:
+            if flow_inport is not None:
                 cmd_args['flow_inport'] = flow_inport
-            if flow_outport:
+            if flow_outport is not None:
                 cmd_args['flow_outport'] = flow_outport
             if show:
                 cmd_args['show'] = show
+            if num_tunnels:
+                cmd_args['num_tunnels'] = num_tunnels
+            if is_encryption:
+                cmd_args['is_encryption'] = is_encryption
+            if spi:
+                cmd_args['spi'] = spi
+            if tunnel_src:
+                cmd_args['tunnel_src'] = tunnel_src
+            if tunnel_dst:
+                cmd_args['tunnel_dst'] = tunnel_dst
+            if ipsec:
+                cmd_args['ipsec'] = ipsec
+
             cmd = ['benchmark', cmd_args]
             result = self.json_execute(verb='nu', data=cmd, command_duration=600)
         except Exception as ex:
@@ -1821,6 +1835,19 @@ class NetworkController(DpcshClient):
             fun_test.critical(str(ex))
         return stats
 
+    def overlay_num_flows(self, n):
+        stats = None
+        try:
+            cmd = ['num_flows', n]
+            msg = "Overlay {}".format(cmd)
+            fun_test.debug(msg)
+            result = self.json_execute(verb="overlay", data=cmd, command_duration=self.COMMAND_DURATION)
+            fun_test.simple_assert(expression=result['status'], message=msg)
+            stats = result['data']
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return stats
+
     def overlay_vif_add(self, lport_num):
         stats = None
         try:
@@ -1881,7 +1908,7 @@ class NetworkController(DpcshClient):
     def overlay_vif_table_add_mac_entry(self, vnid, mac_addr, egress_vif):
         stats = None
         try:
-            cmd = ['vif_table', 'vnid', vnid, 'mac', '"{}"'.format(mac_addr), 'egress_vif', egress_vif]
+            cmd = ['vif_table', 'vnid', vnid, 'mac', '{}'.format(mac_addr), 'egress_vif', egress_vif]
             msg = "Overlay {}".format(cmd)
             fun_test.debug(msg)
             result = self.json_execute(verb="overlay", data=cmd, command_duration=self.COMMAND_DURATION)
@@ -1890,3 +1917,26 @@ class NetworkController(DpcshClient):
         except Exception as ex:
             fun_test.critical(str(ex))
         return stats
+
+    def poke_fcp_config_scheduler(self, total_bw, fcp_ctl_bw, fcp_data_bw):
+        output = None
+        try:
+            cmd_dict = {"total_bw": total_bw, "fcp_ctl_bw": fcp_ctl_bw, "fcp_data_bw": fcp_data_bw}
+            cmd = ['config/fcp/scheduler', cmd_dict]
+            result = self.json_execute(verb=self.VERB_TYPE_POKE, data=cmd, command_duration=self.COMMAND_DURATION)
+            fun_test.simple_assert(expression=result['status'], message="poke fcp scheduler")
+            output = result['data']
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return output
+
+    def port_link_status(self):
+        result = None
+        try:
+            cmd = ['linkstatus']
+            result = self.json_execute(verb='port', data=cmd)
+            fun_test.simple_assert(result['status'], "Port LinkStatus Command")
+            result = result['data']
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result

@@ -3,6 +3,9 @@ import {ApiService} from "../services/api/api.service";
 import {LoggerService} from "../services/logger/logger.service";
 import {ActivatedRoute} from "@angular/router";
 import {CommonService} from "../services/common/common.service";
+import {Observable} from "rxjs";
+import {switchMap} from "rxjs/operators";
+import {PerformanceService} from "../performance/performance.service";
 
 enum TimeMode {
   ALL = "all",
@@ -133,7 +136,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   public pointClickCallback: Function;
 
   constructor(private apiService: ApiService, private loggerService: LoggerService, private route: ActivatedRoute,
-              private commonService: CommonService) {
+              private commonService: CommonService, private performanceService: PerformanceService) {
   }
 
   ngOnInit() {
@@ -157,8 +160,25 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.formatter = this.xAxisFormatter.bind(this);
     this.tooltip = this.tooltipFormatter.bind(this);
     this.pointClickCallback = this.pointDetail.bind(this);
+    if (!this.buildInfo) {
+      new Observable(observer => {
+        observer.next(true);
+        observer.complete();
+        return () => {
+        }
+      }).pipe(
+        switchMap(response => {
+          return this.performanceService.fetchBuildInfo();
+        })).subscribe(response => {
+          this.buildInfo = response;
+        console.log("fetched buildInfo");
+      }, error => {
+        this.loggerService.error("Unable to fetch buildInfo");
+      });
+    }
     if (!this.id) {
       this.status = null;
+      this.fetchNames();
     }
   }
 
@@ -241,16 +261,13 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   //checks if the given fieldname is relevant to display in show tables
   isFieldRelevant(fieldName): boolean {
     let relevant = false;
-    if (fieldName === "input_date_time") {
-      relevant = true;
-    }
     this.filterDataSets.forEach((oneDataSet) => {
       Object.keys(oneDataSet.inputs).forEach((key) => {
         if (key === fieldName) {
           relevant = true;
         }
       });
-      if (fieldName === oneDataSet.output.name) {
+      if (fieldName === oneDataSet.output.name || fieldName === "input_date_time" || fieldName === oneDataSet.output.name + "_unit") {
         relevant = true;
       }
     });
@@ -282,8 +299,16 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     let hardwareVersion = "Unknown";
     let sdkBranch = "Unknown";
     let gitCommit = "Unknown";
-    let key = this._getBuildKey(x);
+    //let key = this._getBuildKey(x);
+    let key = x;
     let s = {};
+    let keyDate = new Date(key);
+    let workAroundDate = new Date(2019, 6, 27);
+    // TODO: workaround due to https://github.com/fungible-inc/Integration/pull/691
+    if (keyDate < workAroundDate) {
+      key = key.replace(/..$/, "00");
+    }
+
     if (this.buildInfo && key in this.buildInfo) {
       softwareDate = this.buildInfo[key]["software_date"];
       hardwareVersion = this.buildInfo[key]["hardware_version"];
@@ -339,7 +364,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     let key = "";
     try {
       let dateString = xDate.split('.')[0];
-      key = dateString.slice(0, -2) + '00'; //added since the past values do not have accurate timestamp
+      // key = dateString.slice(0, -2) + '00'; //added since the past values do not have accurate timestamp
+      key = dateString; //removed the completion date and is dependent on build date
     }
     catch (e) {
       this.loggerService.error("Date on xAxis is empty for tooltip and point click call back");
@@ -519,7 +545,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     payload["visualization_unit"] = this.changingVizUnit;
     payload["set_expected"] = this.expectedOperation;
     this.apiService.post('/metrics/update_chart', payload).subscribe((data) => {
-      if (data) {
+      if (data.data) {
         this.editingDescription = false;
         this.editingOwner = false;
         this.editingSource = false;
@@ -660,7 +686,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
           tempDate.setHours(0);
           tempDate.setMinutes(0);
           tempDate.setSeconds(1);
-          let keyString = this.addLeadingZeroesToDate(tempDate);
+          let keyString = this.commonService.addLeadingZeroesToDate(tempDate);
           finalDates.push(keyString);
         }
         currentDate.setDate(currentDate.getDate() + 1);
@@ -779,22 +805,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     }
   }
 
-  addLeadingZeroesToDate(localDate): string {
-    let localDateString = (localDate.getDate() < 10 ? '0' : '') + localDate.getDate();
-    let localMonthString = ((localDate.getMonth() + 1) < 10 ? '0' : '') + (localDate.getMonth() + 1);
-    let localYearString = String(localDate.getFullYear());
-    // let keySplitString = localDate.toLocaleString("default", {hourCycle: "h24"}).split(" ");
-    // let timeString = keySplitString[1].split(":");
-    let localHour = (localDate.getHours());
-    let localMinutes = (localDate.getMinutes());
-    let localSeconds = (localDate.getSeconds());
-    let hour = ((Number(localHour) < 10) ? '0' : '') + localHour + ":";
-    let minutes = ((Number(localMinutes) < 10) ? '0' : '') + localMinutes + ":";
-    let seconds = ((Number(localSeconds) < 10) ? '0' : '') + localSeconds;
-    let keyString = localMonthString + "/" + localDateString + "/" + localYearString + ", " + hour + minutes + seconds;
-    return keyString;
-  }
-
   //fetching leaf data
   fetchLeafData(chartInfo, previewDataSets, tableInfo, payload): void {
     this.tableInfo = tableInfo;
@@ -826,7 +836,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
           }
           if (trimEmptyStartValues) {
             let localDate = this.commonService.convertToLocalTimezone(oneRecord.input_date_time);
-            let keyString = this.addLeadingZeroesToDate(localDate);
+            let keyString = this.commonService.addLeadingZeroesToDate(localDate);
             keyList.push(keyString); //value = "3/19/2019, 4:49:31 PM"
             keyValue[dataSetIndex][keyString] = oneRecord;
           }
@@ -1228,7 +1238,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
           trimEmptyStartValues = true;
         }
         if (trimEmptyStartValues) {
-          let keyString = this.addLeadingZeroesToDate(d);
+          let keyString = this.commonService.addLeadingZeroesToDate(d);
           series.push(keyString);
           keyValue[keyString] = response.data.scores[dateTime].score;
         }

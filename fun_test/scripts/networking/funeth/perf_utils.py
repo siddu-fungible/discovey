@@ -9,6 +9,7 @@ import re
 
 
 NETWORK_PC_LIST = (1, 2)
+HU_ID_LIST = (1, 2, 3)
 
 
 def get_diff_stats(old_stats, new_stats):
@@ -179,6 +180,7 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict,  v
     is_etp_queue_stuck = False
     is_flow_blocked = False
     is_eqm_not_dequeued = False
+    is_wropkt_timeout_skip = False
     for nc_obj in network_controller_objs:
         output_list = []
         f1 = 'F1_{}'.format(network_controller_objs.index(nc_obj))
@@ -210,16 +212,21 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict,  v
             if eop_cnt != prv_sent:
                 is_parser_stuck = True
 
-        # VP stats
+        # VP pkt stats
         fun_test.log('{} dpc: Get VP pkts stats'.format(f1))
         output = nc_obj.peek_vp_packets()
         output_list.append({'VP': output})
 
-        # Per VP stats
+        # Per VP pkt stats
         for pc_id in NETWORK_PC_LIST:
             fun_test.log('{} dpc: Get per VP pkts stats from PC {}'.format(f1, pc_id))
             output = nc_obj.peek_per_vppkts_stats(pc_id)
             output_list.append({'Per VP for PC {}'.format(pc_id): output})
+
+        # Per VP WU stats
+        fun_test.log('{} dpc: Get per_vp WU stats from'.format(f1, pc_id))
+        output = nc_obj.peek_per_vp_stats()
+        output_list.append({'per_vp': output})
 
         # NWQM
         #fun_test.log('{} dpc: Get NWQM stats'.format(f1))
@@ -236,11 +243,11 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict,  v
         output = nc_obj.peek_fcp_global_stats()
         output_list.append({'FCB': output})
 
-        # FCP tunnel 192
-        tunnel_id = 192
+        # FCP tunnel
+        tunnel_id = 195
         fun_test.log('{} dpc: Get FCP tunnel {} stats'.format(f1, tunnel_id))
         output = nc_obj.peek_fcp_tunnel_stats(tunnel_id)
-        output_list.append({'FCP tunnel {}'.format(192): output})
+        output_list.append({'FCP tunnel {}'.format(tunnel_id): output})
 
         # PSW
         fun_test.log('{} dpc: Get PSW stats'.format(f1))
@@ -252,12 +259,14 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict,  v
         output = nc_obj.peek_erp_global_stats()
         output_list.append({'ERP': output})
 
-        # WRO
+        # WRO - Check WROPKT_TIMEOUT_SKIP
         fun_test.log('{} dpc: Get WRO stats'.format(f1))
         output = nc_obj.peek_wro_global_stats()
         output_list.append({'WRO': output})
+        #if output['global'].get('WROPKT_TIMEOUT_SKIP'):
+        #    is_wropkt_timeout_skip = True
 
-        # WRO tunnel 192
+        # WRO tunnel
         fun_test.log('{} dpc: Get WRO tunnel {} stats'.format(f1, tunnel_id))
         output = nc_obj.peek_wro_tunnel_stats(tunnel_id)
         output_list.append({'WRO tunnel {}'.format(tunnel_id): output})
@@ -311,6 +320,21 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict,  v
                         else:
                             fun_test.log('{} dpc: flow blocked {} {} has no callee_dest'.format(f1, hu_fn, flow_t))
 
+        # Flow list
+        for huid in HU_ID_LIST:
+            output = nc_obj.flow_list(huid=huid)
+            output_list.append({'flow list {}'.format(huid): output})
+
+        # cdu stats
+        fun_test.log('{} dpc: Get cdu stats'.format(f1))
+        output = nc_obj.peek_cdu_stats()
+        output_list.append({'cdu': output})
+
+        # ca stats
+        #fun_test.log('{} dpc: Get ca stats'.format(f1))
+        #output = nc_obj.peek_ca_stats()
+        #output_list.append({'ca': output})
+
         # Upload stats output file
         dpc_stats_filename = '{}_{}_{}_dpc_stats_{}.txt'.format(str(version), tc_id, f1, when)
         file_path = fun_test.get_test_case_artifact_file_name(dpc_stats_filename)
@@ -331,7 +355,10 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict,  v
     #    [fpg_stats[i][0].get('port_{}-PORT_MAC_TX_aFramesTransmittedOK'.format(i), 0) for i in fpg_interfaces]
     #)
 
-    if is_vp_stuck or is_parser_stuck or is_etp_queue_stuck or is_flow_blocked:
+    for nc_obj in network_controller_objs:
+        nc_obj.disconnect()
+
+    if is_vp_stuck or is_parser_stuck or is_etp_queue_stuck or is_flow_blocked or is_wropkt_timeout_skip:
         if eqm_output.get(
                 "EFI->EQC Enqueue Interface valid", None) != eqm_output.get("EQC->EFI Dequeue Interface valid", None):
             is_eqm_not_dequeued = True
@@ -346,11 +373,11 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict,  v
             messages.append('Flow blocked')
         if is_eqm_not_dequeued:
             messages.append('EQM not dequeued')
+        if is_wropkt_timeout_skip:
+            messages.append('WROPKT_TIMEOUT_SKIP happened')
         fun_test.critical('; '.join(messages))
 
-        return True
-    else:
-        return False
+    return is_etp_queue_stuck, is_flow_blocked, is_parser_stuck, is_vp_stuck, is_wropkt_timeout_skip
     #return fpg_tx_pkts, fpg_tx_bytes, fpg_rx_pkts, fpg_rx_bytes
 
 
@@ -548,3 +575,48 @@ def mlx5_irq_affinity(linux_obj):
         cmds_chg.append('echo 7f00 > /proc/irq/{}/smp_affinity'.format(i))
     linux_obj.sudo_command(';'.join(cmds_chg))
     linux_obj.command(';'.join(cmds_cat))
+
+
+def redis_del_fcp_ftep(linux_obj, ws='/scratch/opt/fungible'):
+    """In redis, delete FCP FTEP to tear down FCP tunnel."""
+    # TODO: make it setup independent
+    ftep_dict = {
+        'F1-0': r"openconfig-fcp:fcp-tunnel[ftep=\'9.0.0.2\']",
+        'F1-1': r"openconfig-fcp:fcp-tunnel[ftep=\'9.0.0.1\']",
+    }
+    for k in ftep_dict:
+        cmd_prefix = 'docker exec {} bash -c'.format(k)
+        chk_file = 'check_{}'.format(k)
+        del_file = 'del_{}'.format(k)
+
+        # check
+        contents = "SELECT 1 \nKEYS *fcp-tunnel*"
+        linux_obj.command('{0} "rm {1}"'.format(cmd_prefix, chk_file))
+        linux_obj.create_file('{}/{}'.format(ws, chk_file), contents=contents)
+        linux_obj.command('{} "cat {}"'.format(cmd_prefix, chk_file))
+
+        # del
+        contents = "SELECT 1 \nDEL \"{}\"".format(ftep_dict[k])
+        linux_obj.command('{0} "rm {1}"'.format(cmd_prefix, del_file))
+        linux_obj.create_file('{}/{}'.format(ws, del_file), contents=contents)
+        linux_obj.command('{} "cat {}"'.format(cmd_prefix, del_file))
+
+        fun_test.log("Check and delete FCP FTEP to tear down FCP tunnel in {}".format(k))
+        linux_obj.command('{} "redis-cli < {}"'.format(cmd_prefix, chk_file))
+        linux_obj.command('{} "redis-cli < {}"'.format(cmd_prefix, del_file))
+        linux_obj.command('{} "redis-cli < {}"'.format(cmd_prefix, chk_file))
+
+
+def collect_funcp_logs(linux_obj, path='/scratch/opt/fungible/logs'):
+    """Populate the FunCP log files to job log dir"""
+    output = linux_obj.command('cd {}; ls -l *.log'.format(path))
+    log_files = re.findall(r'(\S+.log)', output)
+    for log_file in log_files:
+        artifact_file_name = fun_test.get_test_case_artifact_file_name(
+            post_fix_name='{}_{}.txt'.format(linux_obj.host_ip, log_file))
+        fun_test.scp(source_ip=linux_obj.host_ip,
+                     source_file_path='{}/{}'.format(path, log_file),
+                     source_username=linux_obj.ssh_username,
+                     source_password=linux_obj.ssh_password,
+                     target_file_path=artifact_file_name)
+        fun_test.add_auxillary_file(description="{} Log".format(log_file), filename=artifact_file_name)

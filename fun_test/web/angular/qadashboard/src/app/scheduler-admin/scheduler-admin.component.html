@@ -17,6 +17,16 @@
       <pre>{{ gitLogs }}</pre>
     </div>
 
-
   </div>
+
+  <div>
+    <div>Scheduler state: {{ info?.state }}</div>
+    <div>HB: {{ info?.main_loop_heartbeat }}</div>
+
+    <button *ngIf="info.state == stateTypes.SCHEDULER_STATE_RUNNING" (click)="pause()">Pause</button>
+    <button *ngIf="info.state == stateTypes.SCHEDULER_STATE_PAUSED" (click)="unpause()">Unpause</button>
+  </div>
+
+
+
 </div>

@@ -69,11 +69,14 @@ class FunTestCase2(FunTestCase):
         topology = topology_helper.deploy()
         fun_test.test_assert(topology, "Topology deployed")
         fs = topology.get_dut_instance(index=0)
+        come = fs.get_come()
+        come.setup_tools()
         #mfun_test.shared_variables["fs"] = fs
-        fs.cleanup()
+        topology.cleanup()
 
 if __name__ == "__main__":
     myscript = MyScript()
     myscript.add_test_case(FunTestCase1())
     myscript.add_test_case(FunTestCase2())
     myscript.run()
+

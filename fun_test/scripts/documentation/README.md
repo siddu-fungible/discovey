@@ -4,7 +4,10 @@ The scripts directory has the following layout
 2. networking
 3. storage
 4. bugs_and_analyses
-5. TBD ....
+5. scratch
+6. test_case_spec
+7. tasks_spec
+8. TBD ....
 
 ## bugs_and_analyses
 
@@ -20,4 +23,10 @@ This is the location of
 5. While filing the bug mention the boot-args, Jenkins parameters, the script and a link to script's log files.
 6. While filing the bug, also mention the procedure to submit the script: http://confluence.fungible.local/display/SW/Submitting+bug+reproduction+scripts
 
-  
+## test_case_spec
+This is location of the various test-suites.
+Suites files should end with .json
+
+## tasks_spec
+
+

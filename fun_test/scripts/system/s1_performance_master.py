@@ -3,8 +3,6 @@ from scripts.system.palladium_performance_master import *
 S1 = FunPlatform.S1
 
 ALLOC_SPEED_TEST_TAG_S1 = "qa_alloc_speed_test_s1"
-QA_S1_EC_TERAMARK = "qa_s1_ec_teramark"
-QA_S1_JPEG_TERAMARK = "qa_s1_jpeg_teramark"
 
 class MyScript(FunTestScript):
     def describe(self):
@@ -132,25 +130,9 @@ class WuLatencyAllocStackPerformanceS1Tc(PalladiumPerformanceTc):
                               summary="Wu Latency Alloc Stack Test on S1",
                               steps="Steps 1")
 
-class PrepareDbTc(FunTestCase):
-    def describe(self):
-        self.set_test_details(id=100,
-                              summary="Prepare Status Db on S1",
-                              steps="Steps 1")
 
-    def setup(self):
-        pass
-
-    def run(self):
-        chart_names = [FunPlatform.S1, "All metrics"]
-        prepare_status_db(chart_names=chart_names)
-        TimeKeeper.set_time(name=LAST_ANALYTICS_DB_STATUS_UPDATE, time=get_current_time())
-
-    def cleanup(self):
-        pass
-
-class S1EcPerformanceTc(PalladiumPerformanceTc):
-    tag = QA_S1_EC_TERAMARK
+class EcPerformanceS1Tc(PalladiumPerformanceTc):
+    tag = TERAMARK_EC_S1
     model = "EcPerformance"
     platform = FunPlatform.S1
 
@@ -160,14 +142,24 @@ class S1EcPerformanceTc(PalladiumPerformanceTc):
                               steps="Steps 1")
 
 
-class S1TeraMarkJpegPerformanceTc(TeraMarkJpegPerformanceTc):
-    tag = QA_S1_JPEG_TERAMARK
+class TeraMarkJpegPerformanceS1Tc(TeraMarkJpegPerformanceTc):
+    tag = TERAMARK_JPEG_S1
     model = "TeraMarkJpegPerformance"
     platform = FunPlatform.S1
 
     def describe(self):
         self.set_test_details(id=13,
-                              summary="TeraMark Jpeg Performance Test S1",
+                              summary="S1 Jpeg performance teramark",
+                              steps="Steps 1")
+
+
+class TeraMarkZipPerformanceS1Tc(TeraMarkZipPerformanceTc):
+    tag = TERAMARK_ZIP_S1
+    platform = FunPlatform.S1
+
+    def describe(self):
+        self.set_test_details(id=14,
+                              summary="S1 Zip performance teramark",
                               steps="Steps 1")
 
 
@@ -185,8 +177,8 @@ if __name__ == "__main__":
     myscript.add_test_case(AllocSpeedPerformanceS1Tc())
     myscript.add_test_case(WuLatencyUngatedPerformanceS1Tc())
     myscript.add_test_case(WuLatencyAllocStackPerformanceS1Tc())
-    # myscript.add_test_case(PrepareDbTc())
-    # myscript.add_test_case(S1EcPerformanceTc())
-    # myscript.add_test_case(S1TeraMarkJpegPerformanceTc())
+    myscript.add_test_case(EcPerformanceS1Tc())
+    myscript.add_test_case(TeraMarkJpegPerformanceS1Tc())
+    # myscript.add_test_case(TeraMarkZipPerformanceS1Tc())
 
     myscript.run()

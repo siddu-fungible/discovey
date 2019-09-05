@@ -177,4 +177,25 @@ export class QueueViewerComponent implements OnInit {
       })
     }
   }
+
+  onChangeSuspend(suspend, queueEntry) {
+    let url = "/regression/scheduler/queue/" + queueEntry.job_id;
+    let payload = {suspend: suspend};
+    this.apiService.put(url, payload).subscribe((response) => {
+
+    }, error => {
+      this.loggerService.error("Unable to suspend entry")
+    })
+  }
+
+  onChangePreEmption(preEmptionAllowed, queueEntry) {
+    let url = "/regression/scheduler/queue/" + queueEntry.job_id;
+    let payload = {pre_emption_allowed: preEmptionAllowed};
+    this.apiService.put(url, payload).subscribe((response) => {
+
+    }, error => {
+      this.loggerService.error("Unable to change pre-emption")
+    })
+  }
+
 }

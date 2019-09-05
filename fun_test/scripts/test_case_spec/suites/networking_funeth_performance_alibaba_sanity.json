@@ -1,0 +1,4 @@
+[
+  {"info": {"tags": ["networking-funeth-performance"]}},
+  {"path": "networking/funeth/performance.py", "test_case_ids": [10000, 12000], "inputs": {"debug": 1, "control_plane": 1, "hu_host_vm": 1, "configure_overlay": 1}}
+]

@@ -1,3 +1,21 @@
 .announcement {
   padding: 20px;
 }
+
+.announcement-info {
+  background-color: #e7f5ff;
+  border:thin solid #d0ebff;
+}
+
+
+.announcement-warning {
+  background-color: #fff3bf;
+  border: thin solid #ffec99;
+
+}
+
+.announcement-danger {
+  background-color: #ffc9c9;
+  border:thin solid #ffa8a8;
+}
+

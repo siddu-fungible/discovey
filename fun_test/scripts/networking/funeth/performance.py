@@ -43,7 +43,7 @@ FLOW_TYPES_DICT = OrderedDict([
 TOOLS = ('netperf',)
 PROTOCOLS = ('tcp', )  # TODO: add UDP
 FRAME_SIZES = (1500,)  # It's actually IP packet size in bytes
-NUM_FLOWS = (1, 8, 4, 2, 16, )  # TODO: May add more
+NUM_FLOWS = (1, 8, 4, 2, 16, 32)  # TODO: May add more
 NUM_HOSTS = (1, 2, )  # Number of PCIe hosts, TODO: may keep 2 hosts only in the future
 FPG_MTU_DEFAULT = 1518
 PERF_RESULT_KEYS = (nm.THROUGHPUT,
@@ -82,13 +82,23 @@ class FunethPerformance(sanity.FunethSanity):
         funsdk_bld = super(FunethPerformance, self).__getattribute__('funsdk_bld')
         driver_commit = super(FunethPerformance, self).__getattribute__('driver_commit')
         driver_bld =  super(FunethPerformance, self).__getattribute__('driver_bld')
+        come_linux_obj = super(FunethPerformance, self).__getattribute__('come_linux_obj')
+        funeth_obj = super(FunethPerformance, self).__getattribute__('funeth_obj')
+        if sanity.csi_perf_enabled:
+            csi_perf_obj = super(FunethPerformance, self).__getattribute__('csi_perf_obj')
+        else:
+            csi_perf_obj = None
+        threading = super(FunethPerformance, self).__getattribute__('threading')
         fun_test.shared_variables['funsdk_commit'] = funsdk_commit
         fun_test.shared_variables['funsdk_bld'] = funsdk_bld
         fun_test.shared_variables['driver_commit'] = driver_commit
         fun_test.shared_variables['driver_bld'] = driver_bld
+        fun_test.shared_variables['come_linux_obj'] = come_linux_obj
+        fun_test.shared_variables['csi_perf_obj'] = csi_perf_obj
+        fun_test.shared_variables['threading'] = threading
 
-        tb_config_obj = tb_configs.TBConfigs(TB)
-        funeth_obj = funeth.Funeth(tb_config_obj)
+        #tb_config_obj = tb_configs.TBConfigs(TB)
+        #funeth_obj = funeth.Funeth(tb_config_obj)
         fun_test.shared_variables['funeth_obj'] = funeth_obj
         linux_objs = funeth_obj.linux_obj_dict.values()
 
@@ -107,10 +117,12 @@ class FunethPerformance(sanity.FunethSanity):
 
         # HU host is VM
         if sanity.hu_host_vm:
-            tb_config_obj_ul_vm = tb_configs.TBConfigs(tb_configs.get_tb_name_vm(TB, 'ul'))
-            tb_config_obj_ol_vm = tb_configs.TBConfigs(tb_configs.get_tb_name_vm(TB, 'ol'))
-            funeth_obj_ul_vm = funeth.Funeth(tb_config_obj_ul_vm)
-            funeth_obj_ol_vm = funeth.Funeth(tb_config_obj_ol_vm)
+            #tb_config_obj_ul_vm = tb_configs.TBConfigs(tb_configs.get_tb_name_vm(TB, 'ul'))
+            #tb_config_obj_ol_vm = tb_configs.TBConfigs(tb_configs.get_tb_name_vm(TB, 'ol'))
+            #funeth_obj_ul_vm = funeth.Funeth(tb_config_obj_ul_vm)
+            #funeth_obj_ol_vm = funeth.Funeth(tb_config_obj_ol_vm)
+            funeth_obj_ul_vm = super(FunethPerformance, self).__getattribute__('funeth_obj_ul_vm')
+            funeth_obj_ol_vm = super(FunethPerformance, self).__getattribute__('funeth_obj_ol_vm')
             fun_test.shared_variables['funeth_obj_ul_vm'] = funeth_obj_ul_vm
             fun_test.shared_variables['funeth_obj_ol_vm'] = funeth_obj_ol_vm
 
@@ -174,6 +186,8 @@ class FunethPerformance(sanity.FunethSanity):
                                                fun_test.shared_variables['driver_commit'],
                                                fun_test.shared_variables['driver_bld'],
                                                '00_summary_of_results.txt')
+            for nc_obj in fun_test.shared_variables['network_controller_objs']:
+                nc_obj.disconnect()
         except:
             pass
         super(FunethPerformance, self).cleanup()
@@ -198,15 +212,30 @@ class FunethPerformanceBase(FunTestCase):
         # Underlay VMs
         if 'UL_VM' in flow_type.upper():
             funeth_obj = fun_test.shared_variables['funeth_obj_ul_vm']
-            cpu_list = funeth.CPU_LIST_VM
+            if flow_type.startswith('HU_NU'):
+                cpu_list_client = funeth.CPU_LIST_VM
+                cpu_list_server = funeth.CPU_LIST_HOST
+            elif flow_type.startswith('NU_HU'):
+                cpu_list_client = funeth.CPU_LIST_HOST
+                cpu_list_server = funeth.CPU_LIST_VM
+            elif flow_type.startswith('HU_HU'):
+                cpu_list_client = funeth.CPU_LIST_VM
+                cpu_list_server = funeth.CPU_LIST_VM
         # Overlay VMs
         elif 'OL_VM' in flow_type.upper():
             funeth_obj = fun_test.shared_variables['funeth_obj_ol_vm']
-            cpu_list = funeth.CPU_LIST_VM
+            cpu_list_client = funeth.CPU_LIST_VM
+            cpu_list_server = funeth.CPU_LIST_VM
         # Hosts
         else:
             funeth_obj = fun_test.shared_variables['funeth_obj']
-            cpu_list = funeth.CPU_LIST_HOST
+            cpu_list_client = funeth.CPU_LIST_HOST
+            cpu_list_server = funeth.CPU_LIST_HOST
+
+        # Tear down FCP tunnel
+        # TODO: Need to set up FCP tunnel
+        if flow_type.startswith('HU_HU_NFCP_2F1') or flow_type.startswith('HU_HU_NFCP_OL'):
+            perf_utils.redis_del_fcp_ftep(fun_test.shared_variables['come_linux_obj'])
 
         # host/VM use same perf_manager_obj, since CPU tuning is only doable in host
         perf_manager_obj = fun_test.shared_variables['netperf_manager_obj']
@@ -216,7 +245,8 @@ class FunethPerformanceBase(FunTestCase):
         if flow_type.startswith('HU_HU'):  # HU --> HU
             # TODO: handle exception if hu_hosts len is 1
             num_hu_hosts = len(funeth_obj.hu_hosts)
-            if flow_type.startswith('HU_HU_NFCP_2F1') or flow_type.startswith('HU_HU_FCP'):  # Under 2 F1s
+            flow_types_2f1 = ('HU_HU_NFCP_2F1', 'HU_HU_NFCP_OL', 'HU_HU_FCP')
+            if any(flow_type.startswith(f) for f in flow_types_2f1):  # Under 2 F1s
                 for i in range(0, num_hu_hosts/2):
                     host_pairs.append([funeth_obj.hu_hosts[i], funeth_obj.hu_hosts[i+2]])
                     if num_flows == 1:
@@ -277,8 +307,11 @@ class FunethPerformanceBase(FunTestCase):
                  'duration': duration,
                  'frame_size': frame_size + 18,  # Pass Ethernet frame size
                  'suffix': suffix,
-                 'cpu_list': cpu_list,
+                 'cpu_list_server': cpu_list_server,
+                 'cpu_list_client': cpu_list_client,
                  'fixed_netperf_port': True if 'OL_VM' in flow_type.upper() else False,  # TODO: Remove after SWOS-5645
+                 'csi_perf_obj': fun_test.shared_variables['csi_perf_obj'],
+                 'threading': fun_test.shared_variables['threading'],
                  }
             )
 
@@ -294,7 +327,7 @@ class FunethPerformanceBase(FunTestCase):
                                                         version,
                                                         when='before')
 
-        if pingable and not sth_stuck_before:
+        if pingable and not any(i for i in sth_stuck_before[:-1]):  # Still test if is_wropkt_timeout_skip is True
 
             # TODO: calculate dpc stats collection duration and add it to test duration*2
             perf_utils.collect_host_stats(funeth_obj, version, when='before', duration=duration*5)
@@ -309,8 +342,8 @@ class FunethPerformanceBase(FunTestCase):
                                                            when='after')
             # Collect host stats after dpc stats to give enough time for mpstat collection
             perf_utils.collect_host_stats(funeth_obj, version, when='after')
-            if sth_stuck_after:
-                result = {}
+            #if any(i for i in sth_stuck_after):
+            #    result = {}
         else:
             result = {}
 
@@ -383,9 +416,19 @@ class FunethPerformanceBase(FunTestCase):
         tc_ids.append(fun_test.current_test_case_id)
         fun_test.simple_assert(pingable, '{} ping {} with packet size {}'.format(
             linux_obj_src.host_ip, dip, frame_size))
-        fun_test.simple_assert(not sth_stuck_before, 'Something is stuck before test')
+
+        # Check if something is stuck/blocked, or unexpected
+        when = 'before'
+        for is_etp_queue_stuck, is_flow_blocked, is_parser_stuck, is_vp_stuck, is_wropkt_timeout_skip in (
+                sth_stuck_before, sth_stuck_after):
+            fun_test.simple_assert(not is_etp_queue_stuck, 'ETP queue is stuck {} test'.format(when))
+            fun_test.simple_assert(not is_flow_blocked, 'Flow is blocked {} test'.format(when))
+            fun_test.simple_assert(not is_parser_stuck, 'Parser is stuck {} test'.format(when))
+            fun_test.simple_assert(not is_vp_stuck, 'VP is stuck {} test'.format(when))
+            fun_test.simple_assert(not is_wropkt_timeout_skip, 'WROPKT_TIMEOUT_SKIP happens {} test'.format(when))
+            when = 'after'
+
         fun_test.test_assert(passed, 'Get throughput/pps/latency test result')
-        fun_test.simple_assert(not sth_stuck_after, 'Something is stuck after test')
 
 
 def create_testcases(id, summary, steps, flow_type, tool, protocol, num_flows, num_hosts, frame_size):

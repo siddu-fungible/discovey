@@ -115,7 +115,7 @@ class ECVolumeLevelScript(FunTestScript):
             fun_test.log("{} Testbed Config: {}".format(self.testbed_type, self.testbed_config))
             self.fs_hosts_map = utils.parse_file_to_json(SCRIPTS_DIR + "/storage/inspur_fs_hosts_mapping.json")
             self.available_hosts = self.fs_hosts_map[self.testbed_type]["host_info"]
-            self.full_dut_indexes = self.testbed_config["dut_info"]
+            self.full_dut_indexes = [int(i) for i in sorted(self.testbed_config["dut_info"].keys())]
             # Skipping DUTs not required for this test
             self.skip_dut_list = []
             for index in xrange(0, self.dut_start_index):
@@ -177,7 +177,7 @@ class ECVolumeLevelScript(FunTestScript):
                 if j in required_host_index:
                     self.required_hosts[host_name] = hosts[host_name]
 
-        self.host_info = {}
+        self.host_info = OrderedDict()
         self.hosts_test_interfaces = {}
         self.host_handles = {}
         self.host_ips = []

@@ -7,6 +7,7 @@ User needs to create .tcc spirent config with the test parameters and RFC-2544 w
 from lib.system.fun_test import *
 from lib.host.spirent_manager import *
 from lib.templates.traffic_generator.spirent_traffic_generator_template import *
+from lib.templates.traffic_generator.spirent_ethernet_traffic_template import *
 from scripts.networking.nu_config_manager import *
 import sqlite3
 from web.fun_test.analytics_models_helper import ModelHelper
@@ -19,14 +20,19 @@ FLOW_TYPE_HNU_NU_NFCP = "HNU_NU_NFCP"
 FLOW_TYPE_NU_HNU_NFCP = "NU_HNU_NFCP"
 FLOW_TYPE_NU_VP_NU_FWD_NFCP = "NU_VP_NU_FWD_NFCP"
 FLOW_TYPE_NU_LE_VP_NU_FW = "NU_LE_VP_NU_FW"
+FLOW_TYPE_NU_LE_VP_NU_L4_FW = "NU_LE_VP_NU_L4_FW"
 JUNIPER_PERFORMANCE_MODEL_NAME = "TeraMarkJuniperNetworkingPerformance"
 HNU_PERFORMANCE_MODEL_NAME = "NuTransitPerformance"
 MEMORY_TYPE_HBM = "HBM"
 MEMORY_TYPE_DDR = "DDR"
 FLOW_TYPE_FWD = "FWD"
+IPSEC_ENCRYPT_MULTI_TUNNEL = "IPSEC_ENCRYPT_MULTI_TUNNEL"
+IPSEC_DECRYPT_MULTI_TUNNEL = "IPSEC_DECRYPT_MULTI_TUNNEL"
+IPSEC_ENCRYPT_SINGLE_TUNNEL = "IPSEC_ENCRYPT_SINGLE_TUNNEL"
+IPSEC_DECRYPT_SINGLE_TUNNEL = "IPSEC_DECRYPT_SINGLE_TUNNEL"
 
 
-class Rfc2544Template(SpirentTrafficGeneratorTemplate):
+class Rfc2544Template(SpirentEthernetTrafficTemplate):
     USER_WORKING_DIR = "USER_WORKING_DIR"
     FRAME_SIZE_64 = "64.0"
     FRAME_SIZE_66 = "66.0"
@@ -309,17 +315,39 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
             fun_test.critical(str(ex))
         return table_data
 
-    def create_performance_table(self, result_dict, table_name):
-        result = False
+    def _non_spirent_table_data(self, result_list):
+        table_data = {'headers': [], 'rows': []}
         try:
-            table_data = self._get_table_data(result_dict=result_dict)
-            fun_test.add_table(panel_header="RFC-2544 Performance Detailed Summary",
-                               table_name=table_name,
-                               table_data=table_data)
-            result = True
+            first_entry = result_list[0]
+            table_columns = first_entry.keys()
+            table_data['headers'] = table_columns
+            rows = []
+            for entry in result_list:
+                row = []
+                for key in table_columns:
+                    row.append(entry[key])
+                rows.append(row)
+            table_data['rows'] = rows
         except Exception as ex:
             fun_test.critical(str(ex))
-        return result
+        return table_data
+
+    def create_performance_table(self, result, table_name, spirent_rfc=True):
+        output = False
+        try:
+            if not spirent_rfc:
+                panel_header = "Non spirent rfc performance details"
+                table_data = self._non_spirent_table_data(result_list=result)
+            else:
+                panel_header = "RFC-2544 Performance Detailed Summary"
+                table_data = self._get_table_data(result_dict=result)
+            fun_test.add_table(panel_header=panel_header,
+                               table_name=table_name,
+                               table_data=table_data)
+            output = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return output
 
     def _get_list_of_records(self, summary_result):
         records = []
@@ -497,6 +525,74 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
             if any_result_failed:
                 fun_test.log("Failed result found")
                 output = False
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return output
+
+    def populate_non_rfc_performance_json_file(self, flow_type, frame_size, pps, filename, timestamp, num_flows=None, throughput=None,
+                                               mode="100G", model_name=JUNIPER_PERFORMANCE_MODEL_NAME, offloads=False, protocol="UDP",
+                                               latency_min=None, latency_max=None, latency_avg=None, jitter_min=None, jitter_max=None, jitter_avg=None,
+                                               half_load_latency=False, num_tunnels=None):
+        results = []
+        output = False
+        try:
+            output_dict = OrderedDict()
+            output_dict["mode"] = mode
+            output_dict["version"] = fun_test.get_version()
+            output_dict["timestamp"] = str(timestamp)
+            output_dict["half_load_latency"] = half_load_latency
+            output_dict["flow_type"] = flow_type
+            output_dict["frame_size"] = frame_size
+            output_dict["pps"] = pps
+            if throughput:
+                output_dict["throughput"] = throughput
+            if latency_min:
+                output_dict["latency_min"] = latency_min
+            if latency_max:
+                output_dict["latency_max"] = latency_max
+            if latency_avg:
+                output_dict["latency_avg"] = latency_avg
+            if jitter_min:
+                output_dict["jitter_min"] = jitter_min
+            if jitter_max:
+                output_dict["jitter_max"] = jitter_max
+            if jitter_avg:
+                output_dict["jitter_avg"] = jitter_avg
+            if num_flows or num_tunnels:
+                if num_flows:
+                    output_dict["num_flows"] = num_flows
+                if num_tunnels:
+                    output_dict["num_tunnels"] = num_tunnels
+                output_dict["offloads"] = offloads
+                output_dict["protocol"] = protocol
+
+            fun_test.log("FunOS version is %s" % output_dict['version'])
+            results.append(output_dict)
+            file_path = fun_test.get_test_case_artifact_file_name(post_fix_name=filename)
+            contents = self._parse_file_to_json_in_order(file_name=file_path)
+            if contents:
+                append_new_results = contents + results
+                file_created = self.create_counters_file(json_file_name=file_path,
+                                                    counter_dict=append_new_results)
+                fun_test.simple_assert(file_created, "Create Performance JSON file")
+            else:
+                file_created = self.create_counters_file(json_file_name=file_path,
+                                                    counter_dict=results)
+                fun_test.simple_assert(file_created, "Create Performance JSON file")
+            unit_dict = {}
+            unit_dict["pps_unit"] = PerfUnit.UNIT_PPS
+            unit_dict["throughput_unit"] = PerfUnit.UNIT_MBITS_PER_SEC
+            unit_dict["latency_min_unit"] = PerfUnit.UNIT_USECS
+            unit_dict["latency_max_unit"] = PerfUnit.UNIT_USECS
+            unit_dict["latency_avg_unit"] = PerfUnit.UNIT_USECS
+            unit_dict["jitter_min_unit"] = PerfUnit.UNIT_USECS
+            unit_dict["jitter_max_unit"] = PerfUnit.UNIT_USECS
+            unit_dict["jitter_avg_unit"] = PerfUnit.UNIT_USECS
+            add_entry = self.use_model_helper(model_name=model_name, data_dict=output_dict, unit_dict=unit_dict)
+            fun_test.simple_assert(add_entry, "Entry added to model %s" % model_name)
+            fun_test.add_checkpoint("Entry added to model %s" % model_name)
+
+            output = True
         except Exception as ex:
             fun_test.critical(str(ex))
         return output

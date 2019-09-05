@@ -3,7 +3,9 @@ from lib.fun.fs import Fs
 from lib.system import utils
 from lib.topology.topology_helper import TopologyHelper
 from storage_helper import *
+from lib.host.linux import Linux
 import fun_global
+import copy
 
 '''
 Script to track the Storage Performance different reads for Compression enabled Erasure Coded volume using FIO.
@@ -40,8 +42,14 @@ class ECVolumeLevelScript(FunTestScript):
                 setattr(self, k, v)
 
         job_inputs = fun_test.get_job_inputs()
+        fun_test.log("Provided job inputs: {}".format(job_inputs))
         if job_inputs and "boot_args" in job_inputs:
             self.bootargs = job_inputs["boot_args"]
+        fun_test.shared_variables["post_result"] = job_inputs[
+            "post_result"] if job_inputs and "post_result" in job_inputs else True
+        host_spec = fun_test.get_asset_manager().get_host_spec(name=self.end_host_name)
+        self.end_host = Linux(**host_spec)
+        self.end_host.reboot(non_blocking=True)
 
         topology_helper = TopologyHelper()
         topology_helper.set_dut_parameters(dut_index=0,
@@ -75,9 +83,12 @@ class ECVolumeLevelScript(FunTestScript):
             self.num_ssd = 6
         if not hasattr(self, "num_volume"):
             self.num_volume = 1
+        # Configuring Linux host
+        fun_test.test_assert(self.end_host.ensure_host_is_up(max_wait_time=self.reboot_timeout),
+                             message="End Host {} is up".format(self.end_host.host_ip))
 
         test_network = self.csr_network[str(fpg_inteface_index)]
-        remote_ip = test_network["test_interface_ip"].split('/')[0]
+        remote_ip = test_network["test_interface_ip"].split("/")[0]
 
         fun_test.shared_variables["test_network"] = test_network
         fun_test.shared_variables["end_host"] = self.end_host
@@ -87,10 +98,6 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.shared_variables["num_volumes"] = self.num_volume
         fun_test.shared_variables["numa_cpus"] = fetch_numa_cpus(self.end_host, self.ethernet_adapter)
         fun_test.shared_variables["db_log_time"] = get_current_time()
-
-        # Configuring Linux host
-        fun_test.test_assert(self.end_host.reboot(timeout=self.command_timeout, max_wait_time=self.reboot_timeout),
-                             "End Host {} is up".format(self.end_host.host_ip))
 
         configure_endhost_interface(end_host=self.end_host,
                                     test_network=test_network,
@@ -207,7 +214,11 @@ class ECVolumeLevelTestcase(FunTestCase):
         test_method = testcase[4:]
         fun_test.simple_assert(self.nvme_block_device, message="Nvme block device fetched")
         warm_up_fio_cmd_args = self.warm_up_fio_cmd_args
-        fio_cmd_args = self.fio_cmd_args
+        job_inputs = fun_test.get_job_inputs()
+        collect_artifacts = job_inputs["collect_artifacts"] if job_inputs and "collect_artifacts" in job_inputs else True
+        poll_interval = job_inputs["poll_interval"] if job_inputs and "poll_interval" in job_inputs else 30
+        ec_details = get_ec_vol_uuids(ec_info=self.ec_info)
+        stats_collector = CollectStats(self.storage_controller)  # required to poll vol stats
 
         for param in self.test_parameters:
             warm_up_fio_cmd_args["buffer_compress_percentage"] = param["compress_percent"]
@@ -224,17 +235,49 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fio_output[combo] = {}
 
                 for mode in self.fio_modes:
-                    fio_job_name = "{}_{}_{}pctcomp_{}".format(self.fio_job_name,
-                                                               mode,
-                                                               param["compress_percent"],
-                                                               (fio_num_jobs * fio_iodepth))
+                    fio_cmd_args = copy.copy(self.fio_cmd_args)
+                    fio_cmd_args["rw"] = mode
+                    fio_cmd_args["numjobs"] = fio_num_jobs
+                    fio_cmd_args["iodepth"] = fio_iodepth
+                    fio_cmd_args["cpus_allowed"] = self.numa_cpus
+                    fio_cmd_args["name"] = "{}_{}_{}pctcomp_{}".format(self.fio_job_name,
+                                                                       mode,
+                                                                       param["compress_percent"],
+                                                                       (fio_num_jobs * fio_iodepth))
+                    if mode == "write":
+                        fio_cmd_args["buffer_pattern"] = warm_up_fio_cmd_args["buffer_pattern"]
+                        fio_cmd_args["buffer_compress_percentage"] = param['compress_percent']
+                    if collect_artifacts:
+                        count = (fio_cmd_args["runtime"] + poll_interval) / poll_interval
+                        vp_util_artifact_file = fun_test.get_test_case_artifact_file_name(
+                            post_fix_name="{}_vputil_artifact.txt".format(fio_cmd_args["name"]))
+                        vol_stats_artifact_file = fun_test.get_test_case_artifact_file_name(
+                            post_fix_name="{}_vol_stats_artifact.txt".format(fio_cmd_args["name"]))
+                        bam_stats_artifact_file = fun_test.get_test_case_artifact_file_name(
+                            post_fix_name="{}_bam_stats_artifact.txt".format(fio_cmd_args["name"]))
+                        thread_info = initiate_stats_collection(storage_controller=self.storage_controller,
+                                                                interval=poll_interval,
+                                                                count=count,
+                                                                vp_util_artifact_file=vp_util_artifact_file,
+                                                                vol_stats_artifact_file=vol_stats_artifact_file,
+                                                                bam_stats_articat_file=bam_stats_artifact_file,
+                                                                vol_details=ec_details)
+                        active_threads = [thread_info['vp_util_thread_id'], thread_info['vol_stats_thread_id'], thread_info["bam_stats_thread_id"]]
+
                     fio_output[combo][mode] = self.end_host.pcie_fio(filename=self.nvme_block_device,
-                                                                     rw=mode,
-                                                                     numjobs=fio_num_jobs,
-                                                                     iodepth=fio_iodepth,
-                                                                     name=fio_job_name,
-                                                                     cpus_allowed=self.numa_cpus,
                                                                      **fio_cmd_args)
+                    if collect_artifacts:
+                        terminate_stats_collection(stats_ollector_obj=stats_collector, thread_list=active_threads)
+                        fun_test.add_auxillary_file(description="F1 VP Utilization - {0} IO depth {1}".format(
+                            mode, fio_cmd_args["iodepth"] * fio_cmd_args["numjobs"]),
+                            filename=vp_util_artifact_file)
+                        fun_test.add_auxillary_file(description="F1 Volume Stats - {0} IO depth {1}".format(
+                            mode, fio_cmd_args["iodepth"] * fio_cmd_args["numjobs"]),
+                            filename=vol_stats_artifact_file)
+                        fun_test.add_auxillary_file(description="F1 Bam Resource Stats - {0} IO depth {1}".format(
+                            mode, fio_cmd_args["iodepth"] * fio_cmd_args["numjobs"]),
+                            filename=bam_stats_artifact_file)
+
                     fun_test.test_assert(fio_output[combo][mode],
                                          message="Execute fio with mode:{0}, iodepth: {1}, num_jobs: {2} "
                                                  "and cpus: {3}".format(mode, fio_iodepth, fio_num_jobs,
@@ -245,11 +288,14 @@ class ECVolumeLevelTestcase(FunTestCase):
                                      "block_size": fio_cmd_args["bs"],
                                      "iodepth": fio_iodepth * fio_num_jobs,
                                      "size": "{}G".format(self.ec_info["capacity"] >> 30),
-                                     "fio_job_name": fio_job_name}
+                                     "fio_job_name": fio_cmd_args["name"]}
 
-                    if mode == 'read' or mode == 'randread':
-                        for key in fio_output[combo][mode]['write']:
-                            fio_output[combo][mode]['write'][key] = -1
+                    if mode == "read" or mode == "randread":
+                        for key in fio_output[combo][mode]["write"]:
+                            fio_output[combo][mode]["write"][key] = -1
+                    elif mode == "write":
+                        for key in fio_output[combo][mode]["read"]:
+                            fio_output[combo][mode]["read"][key] = -1
 
                     for op, stats in fio_output[combo][mode].items():
                         for field, value in stats.items():
@@ -274,7 +320,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                             row_data_list.append(row_data_dict[i])
 
                     table_data_rows.append(row_data_list)
-                    if fun_global.is_production_mode():
+                    if fun_global.is_production_mode() and fun_test.shared_variables["post_result"]:
                         post_results(testcase,
                                      test_method,
                                      fun_test.shared_variables["db_log_time"],
@@ -284,17 +330,17 @@ class ECVolumeLevelTestcase(FunTestCase):
 
             table_data = {"headers": fio_perf_table_header, "rows": table_data_rows}
             fun_test.add_table(panel_header=self.summary,
-                               table_name=param['name'],
+                               table_name=param["name"],
                                table_data=table_data)
 
     def cleanup(self):
         try:
             # disconnect volume from controller
-            ctlr_uuid = fun_test.shared_variables['ctlr_uuid']
+            ctlr_uuid = fun_test.shared_variables["ctlr_uuid"]
             fun_test.test_assert(self.storage_controller.detach_volume_from_controller(
                 ctrlr_uuid=ctlr_uuid,
                 ns_id=self.ns_id,
-                command_duration=self.command_timeout)['status'],
+                command_duration=self.command_timeout)["status"],
                                  message="Detach nsid: {} from controller: {}".format(self.ns_id, ctlr_uuid))
             fun_test.test_assert(self.storage_controller.unconfigure_ec_volume(ec_info=self.ec_info,
                                                                                command_timeout=self.command_timeout),

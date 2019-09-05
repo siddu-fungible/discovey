@@ -6,6 +6,7 @@ from web.fun_test.django_interactive import *
 from web.fun_test.models import SuiteExecution, RegresssionScripts
 from fun_settings import LOGS_DIR
 from django.core.exceptions import ObjectDoesNotExist
+from scheduler.scheduler_global import JobStatusType
 
 import logging
 import logging.handlers
@@ -63,17 +64,24 @@ for baseline_suite_execution_id in baseline_suite_execution_ids:
 
 
 def move_directory(source):
-    shutil.move(src=source, dst=RECOVERY_DIRECTORY + "/")
+    try:
+        shutil.move(src=source, dst=RECOVERY_DIRECTORY + "/")
+    except Exception as ex:
+        print ("Move directory: {}".format(str(ex)))
 
 for file in files:
-    suite_execution_id = file.replace(LOGS_DIR, "").replace("/s_", "")
-    suite_execution_id = int(suite_execution_id)
+    try:
+        suite_execution_id = file.replace(LOGS_DIR, "").replace("/s_", "")
+        suite_execution_id = int(suite_execution_id)
+    except Exception as ex:
+        print "Unable to parse: {}".format(file)
+        continue
     if suite_execution_id in baseline_suite_execution_ids:
         logger.debug("Skipping {} as it is a baseline".format(suite_execution_id))
         continue
     try:
         s = SuiteExecution.objects.get(execution_id=suite_execution_id)
-        if (get_current_time() - s.completed_time).days > KEEP_SUITE_DAYS:
+        if ((get_current_time() - s.completed_time).days > KEEP_SUITE_DAYS) and (s.state != JobStatusType.IN_PROGRESS):
             if not DEBUG:
                 # print s.completed_time
                 tgz_file_name = ARCHIVE_DIRECTORY + "/s_{}.tgz".format(suite_execution_id)

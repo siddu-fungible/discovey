@@ -1,4 +1,6 @@
 [
   {"info": {"custom_test_bed_spec": {"base_test_bed": "fs-inspur", "asset_request": {"DUT": {"num": 1}, "Host": {"num": 8}}}}},
-  {"path": "storage/ec_inspur_fs_teramark_multivolume.py", "inputs": {"num_volumes": 8, "num_hosts": 8}}
+  {"path": "storage/pocs/inspur/ec_inspur_fs_teramark_multivolume.py", "test_case_ids": [1], "inputs": {"num_volumes": 8, "num_hosts": 8, "post_results": true}},
+  {"path": "storage/pocs/inspur/ec_inspur_fs_teramark_multivolume.py", "test_case_ids": [2], "inputs": {"num_volumes": 8, "num_hosts": 8, "post_results": true}},
+  {"path": "storage/pocs/inspur/ec_inspur_fs_teramark_multivolume.py", "test_case_ids": [3], "inputs": {"num_volumes": 8, "num_hosts": 8, "post_results": true}}
 ]

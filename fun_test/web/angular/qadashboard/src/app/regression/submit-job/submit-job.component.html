@@ -2,7 +2,14 @@
   <div class="row">
     <div class="col">
       <div class="card" style="margin: 4px;">
-        <div class="card-header">Submit Job</div>
+        <div class="card-header">
+          <ng-container [ngSwitch]="mode">
+            <ng-container *ngSwitchCase="Mode.REGULAR"> Submit job</ng-container>
+            <ng-container *ngSwitchCase="Mode.TASK"> Submit task</ng-container>
+            <ng-container *ngSwitchCase="Mode.TRIAGE"> Submit triage</ng-container>
+
+          </ng-container>
+        </div>
         <div class="card-body">
           <table class="table table-nonfluid table-borderless">
             <tr>
@@ -11,103 +18,196 @@
               </td>
               <td>
                 <select id="submitter" [(ngModel)]="selectedUser">
-                  <option *ngFor="let user of users" [ngValue]="user">{{ user.first_name }} {{ user.last_name }} ({{ user.email }})</option>
+                  <option *ngFor="let user of users" [ngValue]="user">{{ user.first_name }} {{ user.last_name }}
+                    ({{ user.email }})
+                  </option>
                 </select>
                 &nbsp;
                 <a href="/users" target="_blank">Can't find your name? Add user</a>
               </td>
             </tr>
 
-            <tr>
-              <td class="no-wrap">
-                <label for="testbed-type" class="required-label">Testbed type</label>
-              </td>
-              <td>
-                  <select id="testbed-type" [(ngModel)]="selectedTestBedType">
-                    <option *ngFor="let tb of testBedNames" [ngValue]="tb" [selected]="selectedTestBedType == tb">{{ tb }}</option>
+
+            <ng-container *ngIf="mode === Mode.REGULAR || mode === Mode.TRIAGE">
+              <ng-container *ngIf="mode === Mode.TRIAGE">
+                <tr>
+                <td>
+                  <label for="triage_type">Type: </label>
+                </td>
+                <td>
+                  <select class="form-control" id="triage_type" [(ngModel)]="currentTriageType" (ngModelChange)="test()">
+
+                    <option *ngFor="let triageType of triageTypes" [value]="triageType.value">{{ triageType.description }}
+                    </option>
                   </select>
-              </td>
-            </tr>
 
 
-            <tr *ngIf="selectedTestBedType && isTestBedFs()">
-              <td class="no-wrap">
-                <label for="tftp-path">TFTP path (F1 stripped image)</label>
-              </td>
-              <td>
-                <input [ngClass]="{disabled: withJenkinsBuild}" id="tftp-path" name="tftp-path" [(ngModel)]="tftpImagePath" type="text"/>
-                &nbsp;&nbsp;<input (change)="toggleWithJenkins()" type="checkbox" [checked]="withJenkinsBuild"> With Jenkins build
-              </td>
-            </tr>
-
-
-            <tr *ngIf="selectedTestBedType && selectedTestBedType.indexOf('simulation') > -1">
-              <td class="no-wrap">
-                <label for="build-url">Build artifacts URL</label>
-              </td>
-              <td>
-                <input class="field-width" id="build-url" name="build-url" [(ngModel)]="buildUrl" type="text" required/>
-              </td>
-
-
-            </tr>
-
-            <tr *ngIf="selectedTestBedType && selectedTestBedType.indexOf('simulation') > -1">
-              <td class="no-wrap">
-                <label for="build-url">Custom path to funos-posix</label>
-              </td>
-              <td>
-                <input class="field-width" id="private-funos-tgz-url" name="private_funos_tgz_url" [(ngModel)]="privateFunosTgzUrl" type="text" required/>
-              </td>
-
-            </tr>
-
-
-            <ng-container *ngIf="withJenkinsBuild">
-
-              <ng-container *ngIf="selectedTestBedType && isTestBedFs()">
-              <tr>
-                  <td colspan="2">
-                    <app-section-horizontal-line [text]="'Jenkins params'"></app-section-horizontal-line>
+                </td>
+              </tr>
+                <tr *ngIf="triageTypes && (currentTriageType == 7)">
+                  <td>
+                    <label for="regex_match_string">Regex match string: </label>
+                  </td>
+                  <td>
+                    <div class="form-group">
+                      <input style="width: 400px" id="regex_match_string" [(ngModel)]="regexMatchString">
+                    </div>
                   </td>
                 </tr>
                 <tr>
-                <td><label for="boot-args">BOOTARGS</label></td>
-                <td><input style='width:100%' id="boot-args" name="boot-args" [(ngModel)]="bootArgs" type="text" required/></td>
+                <td>
+                  <label for="from_fun_os_sha">From FunOS commit: </label>
+                </td>
+                <td>
+                  <input style="width: 400px" [(ngModel)]="fromFunOsSha" id="from_fun_os_sha">
+                </td>
               </tr>
-              <tr>
-                  <td><input (change)="disableAssertions = !disableAssertions" type="checkbox" name="disable-assertions" [checked]="disableAssertions"> DISABLE_ASSERTIONS </td>
-              </tr>
-              <tr>
-                <td><label for="branch-funos">BRANCH_FunOS</label></td>
-                <td><input style="width: 100%" id="branch-funos" name="branch-funos" [(ngModel)]="branchFunOs" type="text"></td>
-              </tr>
-              <tr>
-                <td><label for="branch-funsdk">BRANCH_FunSDK</label></td>
-                <td><input style="width: 100%" id="branch-funsdk" name="branch-funsdk" [(ngModel)]="branchFunSdk" type="text"></td>
-              </tr>
-              <tr>
-                <td><label for="funos-makeflags">FUNOS_MAKEFLAGS</label></td>
-                <td><input style='width:100%' id="funos-makeflags" name="funos-makeflags" [(ngModel)]="funOsMakeFlags" type="text"/></td>
-              </tr>
-              <tr>
-                <td><label for="branch-funcontrolplane">BRANCH_FunControlPlane</label></td>
-                <td><input style='width:100%' id="branch-funcontrolplane" name="branch-funcontrolplane" [(ngModel)]="branchFunControlPlane" type="text"/></td>
-              </tr>
-              <tr>
-                  <td><input (change)="skipDasmC = !skipDasmC" type="checkbox" name="skip-dasm" [checked]="skipDasmC"> SKIP_DASM_C </td>
-              </tr>
-              <tr>
-                <td><label for="branch-funtools">BRANCH_FunTools</label></td>
-                <td><input style='width:100%' id="branch-funtools" name="branch-funtools" [(ngModel)]="branchFunTools" type="text"/></td>
-              </tr>
-              <tr>
-                <td><label for="branch-funhw">BRANCH_FunHW</label></td>
-                <td><input style='width:100%' id="branch-funhw" name="branch-funhw" [(ngModel)]="branchFunHw" type="text"/></td>
-              </tr>
+                <tr>
+                <td>
+                  <label  for="to_fun_os_sha">To FunOS commit: </label>
+                </td>
+                <td>
+                  <input style="width: 400px" [(ngModel)]="toFunOsSha" id="to_fun_os_sha">
+                  <ng-container *ngIf="!gitShasValid">
+                    <div style="margin-left: 20px; display: inline-block">
+                      <button *ngIf="!validateShasStatus" class="btn btn-primary btn-sm" (click)="validateShas()">Validate commits</button>
+                      <fun-spinner [status]="validateShasStatus"></fun-spinner>
+                    </div>
+                  </ng-container>
+                  <span *ngIf="gitShasValid"><i class="fa fa-check fa-fw tick-color"></i>Git commits are valid  (Commits: {{ commitsInBetween.length }})</span>
 
+                </td>
+             </tr>
               </ng-container>
 
+
+
+
+
+
+
+              <tr>
+                <td class="no-wrap">
+                  <label for="testbed-type" class="required-label">Testbed type</label>
+                </td>
+                <td>
+                  <select id="testbed-type" [(ngModel)]="selectedTestBedType">
+                    <option *ngFor="let tb of testBedNames" [ngValue]="tb"
+                            [selected]="selectedTestBedType == tb">{{ tb }}</option>
+                  </select>
+                </td>
+              </tr>
+              <tr *ngIf="selectedTestBedType && isTestBedFs() && mode === Mode.REGULAR">
+                <td class="no-wrap">
+                  <label for="tftp-path">TFTP path (F1 stripped image)</label>
+                </td>
+                <td>
+                  <input [ngClass]="{disabled: withJenkinsBuild}" id="tftp-path" name="tftp-path"
+                         [(ngModel)]="tftpImagePath" type="text"/>
+                  &nbsp;&nbsp;<input (change)="toggleWithJenkins()" type="checkbox" [checked]="withJenkinsBuild"> With
+                  Jenkins build
+                </td>
+              </tr>
+              <tr *ngIf="selectedTestBedType && selectedTestBedType.indexOf('simulation') > -1">
+                <td class="no-wrap">
+                  <label for="build-url">Build artifacts URL</label>
+                </td>
+                <td>
+                  <input class="field-width" id="build-url" name="build-url" [(ngModel)]="buildUrl" type="text"
+                         required/>
+                </td>
+
+
+              </tr>
+              <tr *ngIf="selectedTestBedType && selectedTestBedType.indexOf('simulation') > -1">
+                <td class="no-wrap">
+                  <label for="build-url">Custom path to funos-posix</label>
+                </td>
+                <td>
+                  <input class="field-width" id="private-funos-tgz-url" name="private_funos_tgz_url"
+                         [(ngModel)]="privateFunosTgzUrl" type="text" required/>
+                </td>
+
+              </tr>
+              <ng-container *ngIf="withJenkinsBuild">
+
+                <ng-container *ngIf="selectedTestBedType && isTestBedFs()">
+                  <tr>
+                    <td colspan="2">
+                      <app-section-horizontal-line [text]="'Jenkins params'"></app-section-horizontal-line>
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td><input (change)="releaseBuild = !releaseBuild" type="checkbox"
+                               name="release-build"
+                               [checked]="releaseBuild"> RELEASE_BUILD
+                    </td>
+                  </tr>
+                  <tr *ngIf="mode === Mode.REGULAR">
+                    <td><label for="branch-funos">BRANCH_FunOS</label></td>
+                    <td><input style="width: 100%" id="branch-funos" name="branch-funos" [(ngModel)]="branchFunOs"
+                               type="text"></td>
+                  </tr>
+                  <tr>
+                    <td colspan="2">
+                      <span (click)="moreJenkinsOptions = !moreJenkinsOptions"
+                            class="pseudo-anchor"> {{ !moreJenkinsOptions? "+ More": "- Lesser"}} Jenkins options </span>
+                    </td>
+                  </tr>
+
+                  <ng-container *ngIf="moreJenkinsOptions">
+                    <tr>
+                      <td><input (change)="disableAssertions = !disableAssertions" type="checkbox"
+                                 name="disable-assertions"
+                                 [checked]="disableAssertions"> DISABLE_ASSERTIONS
+                      </td>
+                    </tr>
+                    <tr [@fadeIn]>
+                      <td><label for="boot-args">BOOTARGS</label></td>
+                      <td><input style='width:100%' id="boot-args" name="boot-args" [(ngModel)]="bootArgs" type="text"
+                                 required/></td>
+                    </tr>
+                    <tr [@fadeIn]>
+                      <td><label for="branch-funsdk">BRANCH_FunSDK</label></td>
+                      <td><input style="width: 100%" id="branch-funsdk" name="branch-funsdk" [(ngModel)]="branchFunSdk"
+                                 type="text"></td>
+                    </tr>
+                    <tr [@fadeIn]>
+                      <td><label for="funos-makeflags">FUNOS_MAKEFLAGS</label></td>
+                      <td><input style='width:100%' id="funos-makeflags" name="funos-makeflags"
+                                 [(ngModel)]="funOsMakeFlags"
+                                 type="text"/></td>
+                    </tr>
+                    <tr [@fadeIn]>
+                      <td><label for="branch-funcontrolplane">BRANCH_FunControlPlane</label></td>
+                      <td><input style='width:100%' id="branch-funcontrolplane" name="branch-funcontrolplane"
+                                 [(ngModel)]="branchFunControlPlane" type="text"/></td>
+                    </tr>
+                    <tr [@fadeIn]>
+                      <td><input (change)="skipDasmC = !skipDasmC" type="checkbox" name="skip-dasm"
+                                 [checked]="skipDasmC">
+                        SKIP_DASM_C
+                      </td>
+                    </tr>
+                    <tr [@fadeIn]>
+                      <td><label for="branch-funtools">BRANCH_FunTools</label></td>
+                      <td><input style='width:100%' id="branch-funtools" name="branch-funtools"
+                                 [(ngModel)]="branchFunTools"
+                                 type="text"/></td>
+                    </tr>
+                    <tr [@fadeIn]>
+                      <td><label for="branch-funhw">BRANCH_FunHW</label></td>
+                      <td><input style='width:100%' id="branch-funhw" name="branch-funhw" [(ngModel)]="branchFunHw"
+                                 type="text"/></td>
+                    </tr>
+                  </ng-container>
+
+
+                </ng-container>
+
+
+              </ng-container>
 
             </ng-container>
 
@@ -116,10 +216,13 @@
                 <app-section-horizontal-line [text]="'Suite/Script selection'"></app-section-horizontal-line>
               </td>
             </tr>
-
             <tr>
-              <td><input (change)="suiteSelectionMode = 'BY_SUITE'" type="radio" [checked]="suiteSelectionMode === 'BY_SUITE'"> By suite</td>
-              <td><input (change)="suiteSelectionMode = 'BY_SCRIPT'" type="radio" [checked]="suiteSelectionMode === 'BY_SCRIPT'"> By script</td>
+              <td><input (change)="suiteSelectionMode = 'BY_SUITE'" type="radio"
+                         [checked]="suiteSelectionMode === 'BY_SUITE'"> By suite
+              </td>
+              <td><input (change)="suiteSelectionMode = 'BY_SCRIPT'" type="radio"
+                         [checked]="suiteSelectionMode === 'BY_SCRIPT'"> By script
+              </td>
             </tr>
             <tr *ngIf="suiteSelectionMode === 'BY_SUITE'">
               <td class="no-wrap">
@@ -138,32 +241,34 @@
             </tr>
             <tr *ngIf="suiteSelectionMode === 'BY_SCRIPT'">
               <td colspan="2">
-                <app-script-selector [resetEvent]="resetScriptSelector" (singleSelectPk)="singleSelectPkEvent($event)"></app-script-selector>
+                <app-script-selector [resetEvent]="resetScriptSelector"
+                                     (singleSelectPk)="singleSelectPkEvent($event)"></app-script-selector>
               </td>
             </tr>
-
             <tr>
               <td colspan="2">
                 <app-section-horizontal-line [text]="'Additional options'"></app-section-horizontal-line>
               </td>
             </tr>
 
-
             <tr>
-              <td class="no-wrap">
-                <label>Select a tag: </label>
-              </td>
-              <td >
-                <div class="field-width">
-                  <ng-multiselect-dropdown [placeholder]="'Select'" [data]="selectTags" [(ngModel)]="selectedTags"
-                                           [settings]="dropdownSettings">
-                  </ng-multiselect-dropdown>
-                </div>
+              <td colspan="2"><input (change)="csiPerf = !csiPerf" type="checkbox"
+                         name="csi-perf"
+                         [checked]="csiPerf"> Enable CSI perf
               </td>
             </tr>
-
-
-
+            <tr>
+              <td colspan="2"><input (change)="dryRun = !dryRun" type="checkbox"
+                         name="dry-run"
+                         [checked]="dryRun"> Dry run (Don't update performance DB)
+              </td>
+            </tr>
+            <tr>
+              <td colspan="2"><input (change)="hbmDump = !hbmDump" type="checkbox"
+                         name="hbm-dump"
+                         [checked]="hbmDump"> Enable HBM dump at topology cleanup
+              </td>
+            </tr>
             <tr>
               <td class="no-wrap">
                 <label>Inputs (JSON): </label>
@@ -185,6 +290,20 @@
 
             <tr>
               <td class="no-wrap">
+                <label>Select a tag: </label>
+              </td>
+              <td>
+                <div class="field-width">
+                  <ng-multiselect-dropdown [placeholder]="'Select'" [data]="selectTags" [(ngModel)]="selectedTags"
+                                           [settings]="dropdownSettings">
+                  </ng-multiselect-dropdown>
+                </div>
+              </td>
+            </tr>
+
+
+            <tr>
+              <td class="no-wrap">
                 <label for="emails">Additional e-mails: </label>
               </td>
               <td>
@@ -197,102 +316,106 @@
               </td>
             </tr>
           </table>
+          <div style="padding: 5px;">
+            <ng-container *ngIf="!submitting">
+              <button [disabled]="!selectedInfo && !selectedScriptPk"
+                      [ngClass]="{'disabled': !selectedInfo && !selectedScriptPk}" (click)="submitClick()"
+                      class="btn btn-primary">Submit
+              </button>
+              <button *ngIf="selectedInfo && !(suiteSelectionMode !== 'BY_SCRIPT')" (click)="ngOnInit()"
+                      class="btn">Clear
+              </button>
+            </ng-container>
+            <fun-spinner [status]="submitting"></fun-spinner>
+
+          </div>
           <a *ngIf="!schedulingOptions" [routerLink]="" (click)="schedulingOptions = !schedulingOptions">Show Scheduling
             Options</a>
           <a *ngIf="schedulingOptions" [routerLink]="" (click)="schedulingOptions = !schedulingOptions">Hide Scheduling
             Options</a>
-        </div>
-      </div>
-      <div *ngIf="schedulingOptions" style="padding: 4px;">
-        <div class="card">
-          <div class="card-header">Scheduling options</div>
-          <div class="card-body">
 
-            <div class="radio">
-              <label for="scheduling-type-radio">
-                <input type="radio" name="scheduling-type-radio" [(ngModel)]="schedulingType" [value]="2"
-                       checked="true"> Schedule today
-              </label>
-              &nbsp;
-              <label for="scheduling-type-radio">
-                <input type="radio" name="scheduling-type-radio" [(ngModel)]="schedulingType" [value]="3"> Schedule by
-                day of the week
-              </label>
-            </div>
-            <div *ngIf="schedulingType !== 1">
-              <table>
-                <tr>
-                  <td>HH : MM</td>
-                  <td>
-                    <ngb-timepicker style="display: inline-flex" id="scheduling-time-picker"
-                                    [(ngModel)]="schedulingTime"></ngb-timepicker>
-                  </td>
-                </tr>
-              </table>
+          <div *ngIf="schedulingOptions" style="padding: 4px;">
+            <div class="card">
+              <div class="card-header">Scheduling options</div>
+              <div class="card-body">
 
-              <hr>
-
-              <ng-container [ngSwitch]="schedulingType">
-                <div *ngSwitchCase="2">
-                  <label>
-                    Repeat options
-                    <input type="checkbox" [checked]="todaySchedulingTimeRepeatInMinutesOption"
-                           [(ngModel)]="todaySchedulingTimeRepeatInMinutesOption"/>
+                <div class="radio">
+                  <label for="scheduling-type-radio">
+                    <input type="radio" name="scheduling-type-radio" [(ngModel)]="schedulingType" [value]="2"
+                           checked="true"> Schedule today
                   </label>
-                  <ng-container *ngIf="todaySchedulingTimeRepeatInMinutesOption">
-                    &nbsp;
-                    <label for="repeat-in-minutes">
-                      Repeat in minutes:
-                      <input id="repeat-in-minutes" type="number" min="1" max="720"
-                             [(ngModel)]="todaySchedulingTimeRepeatInMinutesValue"/>
-                    </label>
-
-                  </ng-container>
-
+                  &nbsp;
+                  <label for="scheduling-type-radio">
+                    <input type="radio" name="scheduling-type-radio" [(ngModel)]="schedulingType" [value]="3"> Schedule
+                    by
+                    day of the week
+                  </label>
                 </div>
-                <div *ngSwitchCase="3">
+                <div *ngIf="schedulingType !== 1">
                   <table>
                     <tr>
-                      <td class="no-wrap">
-                        <label>Select day(s): </label>
-                      </td>
-                      <td class="no-wrap" style="width: 400px">
-                        <div>
-                          <ng-multiselect-dropdown [placeholder]="'Select'" [data]="daysOptions"
-                                                   [(ngModel)]="selectedDays"
-                                                   [settings]="dropdownSettings">
-                          </ng-multiselect-dropdown>
-                        </div>
+                      <td>HH : MM</td>
+                      <td>
+                        <ngb-timepicker style="display: inline-flex" id="scheduling-time-picker"
+                                        [(ngModel)]="schedulingTime"></ngb-timepicker>
                       </td>
                     </tr>
                   </table>
-                </div>
-              </ng-container>
-              <label for="scheduling-time-timezone">Timezone:
-                <div id="scheduling-time-timezone" style="display:inline-flex;" ngbDropdown>
-                  <button class="btn btn-sm" ngbDropdownToggle>{{ schedulingTimeTimezone }}</button>
-                  <div ngbDropdownMenu aria-labelledby="scheduling-time-timezone">
-                    <button class="dropdown-item" (click)="schedulingTimeTimezone = 'IST'">IST</button>
-                    <button class="dropdown-item" (click)="schedulingTimeTimezone = 'PST'">PST</button>
-                  </div>
-                </div>
-              </label>
 
+                  <hr>
+
+                  <ng-container [ngSwitch]="schedulingType">
+                    <div *ngSwitchCase="2">
+                      <label>
+                        Repeat options
+                        <input type="checkbox" [checked]="todaySchedulingTimeRepeatInMinutesOption"
+                               [(ngModel)]="todaySchedulingTimeRepeatInMinutesOption"/>
+                      </label>
+                      <ng-container *ngIf="todaySchedulingTimeRepeatInMinutesOption">
+                        &nbsp;
+                        <label for="repeat-in-minutes">
+                          Repeat in minutes:
+                          <input id="repeat-in-minutes" type="number" min="1" max="720"
+                                 [(ngModel)]="todaySchedulingTimeRepeatInMinutesValue"/>
+                        </label>
+
+                      </ng-container>
+
+                    </div>
+                    <div *ngSwitchCase="3">
+                      <table>
+                        <tr>
+                          <td class="no-wrap">
+                            <label>Select day(s): </label>
+                          </td>
+                          <td class="no-wrap" style="width: 400px">
+                            <div>
+                              <ng-multiselect-dropdown [placeholder]="'Select'" [data]="daysOptions"
+                                                       [(ngModel)]="selectedDays"
+                                                       [settings]="dropdownSettings">
+                              </ng-multiselect-dropdown>
+                            </div>
+                          </td>
+                        </tr>
+                      </table>
+                    </div>
+                  </ng-container>
+                  <label for="scheduling-time-timezone">Timezone:
+                    <div id="scheduling-time-timezone" style="display:inline-flex;" ngbDropdown>
+                      <button class="btn btn-sm" ngbDropdownToggle>{{ schedulingTimeTimezone }}</button>
+                      <div ngbDropdownMenu aria-labelledby="scheduling-time-timezone">
+                        <button class="dropdown-item" (click)="schedulingTimeTimezone = 'IST'">IST</button>
+                        <button class="dropdown-item" (click)="schedulingTimeTimezone = 'PST'">PST</button>
+                      </div>
+                    </div>
+                  </label>
+
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
-      <div style="padding: 5px;">
-        <ng-container *ngIf="!submitting">
-          <button *ngIf="selectedInfo || selectedScriptPk" (click)="submitClick()"
-                class="btn btn-primary">Submit
-          </button>
-          <button *ngIf="selectedInfo && !(suiteSelectionMode !== 'BY_SCRIPT')" (click)="ngOnInit()"
-                  class="btn">Clear
-          </button>
-        </ng-container>
-        <fun-spinner [status]="submitting"></fun-spinner>
 
+        </div>
       </div>
     </div>
     <div *ngIf="selectedInfo" class="col">

@@ -21,15 +21,15 @@
 		"enable" : true
 	},
 		{
-		"name" : "fpg8",
-		"address" : "9.0.8.2",
-		"prefix length" : 30,
+		"name" : "fpg16",
+		"address" : "29.1.1.2",
+		"prefix length" : 24,
 		"spine_index" : 0,
 		"gph_index" : 6,
 		"enable" : true
 	},
 	{
-		"name" : "fpg16",
+		"name" : "fpg8",
 		"mtu": 9000,
 		"address" : "9.0.16.2",
 		"prefix length" : 30,

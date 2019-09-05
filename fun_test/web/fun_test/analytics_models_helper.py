@@ -37,6 +37,25 @@ def invalidate_goodness_cache():
         chart.save()
 
 
+def save_entry(entry):
+    dry_run = fun_test.get_job_environment_variable("dry_run")
+    if not dry_run:
+        entry.save()
+    else:
+        try:
+            fun_test.log("Dry run. Printing potential db entry")
+
+            result = {}
+            fields = entry._meta.get_fields()
+            for field in fields:
+                result[field.name] = getattr(entry, field.name)
+
+            for key, value in result.iteritems():
+                fun_test.log("DB entry: {}: {}".format(key, value))
+        except Exception as ex:
+            fun_test.critical(str(ex))
+    return
+
 def get_data_collection_time(tag=None):
     if tag:
         data_collection_time = get_current_time()
@@ -114,11 +133,11 @@ class MetricHelper(object):
             for k, v in outputs.iteritems():
                 if hasattr(o, k):
                     setattr(o, k, v)
-            o.save()
+            save_entry(o)
             return None
         except ObjectDoesNotExist:
             o = self.model(**kwargs)
-            o.save()
+            save_entry(o)
             return o.id
 
     def get_entry(self, **kwargs):
@@ -211,7 +230,7 @@ class VolumePerformanceHelper(MetricHelper):
             entry.output_read_bw = read_bw
             entry.output_write_latency = write_latency
             entry.output_read_latency = read_latency
-            entry.save()
+            save_entry(entry)
         except ObjectDoesNotExist:
             pass
             one_entry = VolumePerformance(key=key,
@@ -227,7 +246,7 @@ class VolumePerformanceHelper(MetricHelper):
                                           output_read_bw=read_bw,
                                           output_write_latency=write_latency,
                                           output_read_latency=read_latency)
-            one_entry.save()
+            save_entry(one_entry)
 
 
 class VolumePerformanceEmulationHelper(MetricHelper):
@@ -305,6 +324,7 @@ class BltVolumePerformanceHelper(MetricHelper):
                   read_99_latency_unit="usecs", read_99_99_latency_unit="usecs", write_99_99_latency_unit="usecs",
                   version=-1):
         try:
+
             if version == -1:
                 version = str(fun_test.get_version())
             entry = BltVolumePerformance.objects.get(input_date_time=date_time,
@@ -346,7 +366,7 @@ class BltVolumePerformanceHelper(MetricHelper):
             entry.output_read_95_latency_unit = read_95_latency_unit
             entry.output_read_99_latency_unit = read_99_latency_unit
             entry.output_read_99_99_latency_unit = read_99_99_latency_unit
-            entry.save()
+            save_entry(entry)
         except ObjectDoesNotExist:
             fun_test.log("Adding new entry into model using helper")
             one_entry = BltVolumePerformance(input_date_time=date_time,
@@ -388,23 +408,21 @@ class BltVolumePerformanceHelper(MetricHelper):
                                              output_read_95_latency_unit=read_95_latency_unit,
                                              output_read_99_latency_unit=read_99_latency_unit,
                                              output_read_99_99_latency_unit=read_99_99_latency_unit)
-            one_entry.save()
+            save_entry(one_entry)
             try:
-                fun_test.log("Entering the jenkins job id map entry for {} and  {}".format(date_time, version))
-                completion_date = timezone.localtime(one_entry.input_date_time)
-                completion_date = str(completion_date).split(":")
-                completion_date = completion_date[0] + ":" + completion_date[1]
-                build_date = parser.parse(completion_date)
-                suite_execution_id = fun_test.get_suite_execution_id()
-                add_jenkins_job_id_map(jenkins_job_id=0,
-                                       fun_sdk_branch="",
-                                       git_commit="",
-                                       software_date=0,
-                                       hardware_version="",
-                                       completion_date=completion_date,
-                                       build_properties="", lsf_job_id="",
-                                       sdk_version=version, build_date=build_date,
-                                       suite_execution_id=suite_execution_id)
+                dry_run = fun_test.get_job_environment_variable("dry_run")
+                if not dry_run:
+                    fun_test.log("Entering the jenkins job id map entry for {} and  {}".format(date_time, version))
+                    completion_date = timezone.localtime(one_entry.input_date_time)
+                    suite_execution_id = fun_test.get_suite_execution_id()
+                    add_jenkins_job_id_map(jenkins_job_id=0,
+                                           fun_sdk_branch="",
+                                           git_commit="",
+                                           software_date=0,
+                                           hardware_version="",
+                                           build_properties="", lsf_job_id="",
+                                           sdk_version=version, build_date=completion_date,
+                                           suite_execution_id=suite_execution_id)
             except Exception as ex:
                 fun_test.critical(str(ex))
 
@@ -485,9 +503,6 @@ class ModelHelper(MetricHelper):
                 self.id = super(ModelHelper, self).add_entry(**new_kwargs)
                 if "input_version" in new_kwargs and "input_date_time" in new_kwargs:
                     date_time = timezone.localtime(new_kwargs["input_date_time"])
-                    date_time = str(date_time).split(":")
-                    completion_date = date_time[0] + ":" + date_time[1]
-                    build_date = parser.parse(completion_date)
                     version = new_kwargs["input_version"]
                     suite_execution_id = fun_test.get_suite_execution_id()
                     add_jenkins_job_id_map(jenkins_job_id=0,
@@ -495,9 +510,8 @@ class ModelHelper(MetricHelper):
                                            git_commit="",
                                            software_date=0,
                                            hardware_version="",
-                                           completion_date=completion_date,
                                            build_properties="", lsf_job_id="",
-                                           sdk_version=version, build_date=build_date,
+                                           sdk_version=version, build_date=date_time,
                                            suite_execution_id=suite_execution_id)
                 result = True
             except Exception as ex:
@@ -531,7 +545,7 @@ class ModelHelper(MetricHelper):
                     setattr(m_obj, "status", status)
                 if not self.units:
                     raise Exception('No units provided. Please provide the required units')
-                m_obj.save()
+                save_entry(m_obj)
                 result = True
             else:
                 raise Exception("Set status failed")
@@ -740,202 +754,101 @@ if __name__ == "__main2__":
 
     # MetricChart(chart_name="Chart 2", data_sets=json.dumps([data_set3]), metric_model_name="Performance1").save()
 
-if __name__ == "__main__":
-    json_text = [
-        {
-            "mode": "100G",
-            "version": 7248,
-            "timestamp": "2019-07-16 03:44:44.780229-07:00",
-            "half_load_latency": False,
-            "flow_type": "NU_LE_VP_NU_L4_FW",
-            "frame_size": 64.0,
-            "pps": 163371647.1,
-            "throughput": 112399.78,
-            "latency_min": 2.62,
-            "latency_max": 6081.88,
-            "latency_avg": 12.85,
-            "jitter_min": 0.0,
-            "jitter_max": 1.77,
-            "jitter_avg": 0.02,
-            "num_flows": 4000000,
-            "offloads": False,
-            "protocol": "UDP"
-        },
-        {
-            "mode": "100G",
-            "version": 7248,
-            "timestamp": "2019-07-16 03:44:44.780229-07:00",
-            "half_load_latency": False,
-            "flow_type": "NU_LE_VP_NU_L4_FW",
-            "frame_size": 1500.0,
-            "pps": 16118257.56,
-            "throughput": 195998.04,
-            "latency_min": 2.64,
-            "latency_max": 5350.76,
-            "latency_avg": 4.65,
-            "jitter_min": 0.0,
-            "jitter_max": 13.38,
-            "jitter_avg": 0.14,
-            "num_flows": 4000000,
-            "offloads": False,
-            "protocol": "UDP"
-        },
-        {
-            "mode": "100G",
-            "version": 7248,
-            "timestamp": "2019-07-16 03:44:44.780229-07:00",
-            "half_load_latency": False,
-            "flow_type": "NU_LE_VP_NU_L4_FW",
-            "frame_size": 362.94,
-            "pps": 65515849.81,
-            "throughput": 196517.51,
-            "latency_min": 2.42,
-            "latency_max": 9532.24,
-            "latency_avg": 14.29,
-            "jitter_min": 0.0,
-            "jitter_max": 3.23,
-            "jitter_avg": 0.07,
-            "num_flows": 4000000,
-            "offloads": False,
-            "protocol": "UDP"
-        },
-        {
-            "mode": "100G",
-            "version": 7248,
-            "timestamp": "2019-07-16 03:44:44.780229-07:00",
-            "half_load_latency": True,
-            "flow_type": "NU_LE_VP_NU_L4_FW",
-            "frame_size": 64.0,
-            "pps": 81394608.23,
-            "throughput": 55999.57,
-            "latency_min": 2.42,
-            "latency_max": 8199.44,
-            "latency_avg": 10.6,
-            "jitter_min": 0.0,
-            "jitter_max": 4.23,
-            "jitter_avg": 0.06,
-            "num_flows": 4000000,
-            "offloads": False,
-            "protocol": "UDP"
-        },
-        {
-            "mode": "100G",
-            "version": 7248,
-            "timestamp": "2019-07-16 03:44:44.780229-07:00",
-            "half_load_latency": True,
-            "flow_type": "NU_LE_VP_NU_L4_FW",
-            "frame_size": 1500.0,
-            "pps": 8059127.75,
-            "throughput": 97998.99,
-            "latency_min": 2.66,
-            "latency_max": 5203.26,
-            "latency_avg": 3.39,
-            "jitter_min": 0.0,
-            "jitter_max": 9.22,
-            "jitter_avg": 0.13,
-            "num_flows": 4000000,
-            "offloads": False,
-            "protocol": "UDP"
-        },
-        {
-            "mode": "100G",
-            "version": 7248,
-            "timestamp": "2019-07-16 03:44:44.780229-07:00",
-            "half_load_latency": True,
-            "flow_type": "NU_LE_VP_NU_L4_FW",
-            "frame_size": 362.94,
-            "pps": 32799674.48,
-            "throughput": 98383.97,
-            "latency_min": 2.44,
-            "latency_max": 12366.0,
-            "latency_avg": 9.97,
-            "jitter_min": 0.0,
-            "jitter_max": 9.28,
-            "jitter_avg": 0.09,
-            "num_flows": 4000000,
-            "offloads": False,
-            "protocol": "UDP"
-        },
-        {
-            "mode": "100G",
-            "flow_type": "NU_LE_VP_NU_L4_FW",
-            "frame_size": 64.0,
-            "pps": 60385949.0,
-            "timestamp": "2019-07-16 03:44:44.780229-07:00",
-            "version": 7248,
-            "throughput": 31882.0,
-            "num_flows": 128000000,
-            "offloads": False,
-            "protocol": "UDP",
-            "latency_min": "2.623",
-            "latency_max": "2059.74",
-            "latency_avg": "45.788",
-            "jitter_min": "0",
-            "jitter_max": "0.705",
-            "jitter_avg": "0.035",
-            "half_load_latency": False
-        }
-    ]
-    unit_dict = {
-        "throughput_unit": PerfUnit.UNIT_MBITS_PER_SEC,
-        "pps_unit": PerfUnit.UNIT_PPS,
-        "latency_min_unit": PerfUnit.UNIT_USECS,
-        "latency_max_unit": PerfUnit.UNIT_USECS,
-        "latency_avg_unit": PerfUnit.UNIT_USECS,
-        "jitter_min_unit": PerfUnit.UNIT_USECS,
-        "jitter_max_unit": PerfUnit.UNIT_USECS,
-        "jitter_avg_unit": PerfUnit.UNIT_USECS
+if __name__ == "__main__inspur":
 
+    # Helper for Inspur 871 (single disk failure)
+    value_dict = {
+        "date_time": get_data_collection_time(),
+        "num_hosts": 1,
+        "num_f1s": 1,
+        "base_file_copy_time": 1.32,
+        "copy_time_during_plex_fail": 2.13,
+        "file_copy_time_during_rebuild": 3.123,
+        "plex_rebuild_time": 4.12,
     }
-    # prepare_status_db()
-    # value_dict = {
-    # "date_time": get_data_collection_time(),
-    # "volume_type": "BLT",
-    # "test": "FioSeqRead",
-    # "block_size": "4K",
-    # "io_depth": 128,
-    # "io_size": "8G",
-    # "operation": "read",
-    # "num_ssd": 1,
-    # "num_volume": 1,
-    # "num_threads": 4,
-    # "platform": FunPlatform.F1,
-    # "version": fun_test.get_version(),
-    # "write_iops": 100,
-    # "read_iops": 200,
-    # "write_throughput": 300,
-    # "read_throughput": 400,
-    # "write_avg_latency": 500,
-    # "write_90_latency": 600,
-    # "write_95_latency": 700,
-    # "write_99_99_latency": 800,
-    # "write_99_latency": 900,
-    # "read_avg_latency": 1000,
-    # "read_90_latency": 1100,
-    # "read_95_latency": 1200,
-    # "read_99_99_latency": 1300,
-    # "read_99_latency": 1400
-    # }
+    unit_dict = {
+        "base_file_copy_time_unit":PerfUnit.UNIT_SECS,
+        "copy_time_during_plex_fail_unit":PerfUnit.UNIT_SECS,
+        "file_copy_time_during_rebuild_unit":PerfUnit.UNIT_SECS,
+        "plex_rebuild_time_unit":PerfUnit.UNIT_SECS
+    }
+    model_name = "InspurSingleDiskFailurePerformance"
+    status = fun_test.PASSED
+    try:
+        generic_helper = ModelHelper(model_name=model_name)
+        generic_helper.set_units(validate=True, **unit_dict)
+        generic_helper.add_entry(**value_dict)
+        generic_helper.set_status(status)
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    print "used generic helper to add an entry"
 
-    # unit_dict = {
-    # "write_iops_unit": PerfUnit.UNIT_OPS,
-    # "read_iops_unit": PerfUnit.UNIT_OPS,
-    # "write_throughput_unit": PerfUnit.UNIT_MBYTES_PER_SEC,
-    # "read_throughput_unit": PerfUnit.UNIT_MBYTES_PER_SEC,
-    # "write_avg_latency_unit": PerfUnit.UNIT_USECS,
-    # "write_90_latency_unit": PerfUnit.UNIT_USECS,
-    # "write_95_latency_unit": PerfUnit.UNIT_USECS,
-    # "write_99_99_latency_unit": PerfUnit.UNIT_USECS,
-    # "write_99_latency_unit": PerfUnit.UNIT_USECS,
-    # "read_avg_latency_unit": PerfUnit.UNIT_USECS,
-    # "read_90_latency_unit": PerfUnit.UNIT_USECS,
-    # "read_95_latency_unit": PerfUnit.UNIT_USECS,
-    # "read_99_99_latency_unit": PerfUnit.UNIT_USECS,
-    # "read_99_latency_unit": PerfUnit.UNIT_USECS
-    # }
+    # Helper for Inspur 875 (Data reconstruction)
 
-    model_name = "TeraMarkJuniperNetworkingPerformance"
-    for value_dict in json_text:
+    value_dict = {
+        "date_time": get_data_collection_time(),
+        "num_hosts": 1,
+        "block_size": "Mixed",
+        "operation": "Combined",
+        "write_iops": 100,
+        "read_iops": 200,
+        "write_throughput": 300,
+        "read_throughput": 400,
+        "write_avg_latency": 500,
+        "write_90_latency": 600,
+        "write_95_latency": 700,
+        "write_99_99_latency": 800,
+        "write_99_latency": 900,
+        "read_avg_latency": 1000,
+        "read_90_latency": 1100,
+        "read_95_latency": 1200,
+        "read_99_99_latency": 1300,
+        "read_99_latency": 1400,
+        "plex_rebuild_time": 1500
+    }
+    unit_dict = {
+    "write_iops_unit": PerfUnit.UNIT_OPS,
+    "read_iops_unit": PerfUnit.UNIT_OPS,
+    "write_throughput_unit": PerfUnit.UNIT_MBYTES_PER_SEC,
+    "read_throughput_unit": PerfUnit.UNIT_MBYTES_PER_SEC,
+    "write_avg_latency_unit": PerfUnit.UNIT_USECS,
+    "write_90_latency_unit": PerfUnit.UNIT_USECS,
+    "write_95_latency_unit": PerfUnit.UNIT_USECS,
+    "write_99_99_latency_unit": PerfUnit.UNIT_USECS,
+    "write_99_latency_unit": PerfUnit.UNIT_USECS,
+    "read_avg_latency_unit": PerfUnit.UNIT_USECS,
+    "read_90_latency_unit": PerfUnit.UNIT_USECS,
+    "read_95_latency_unit": PerfUnit.UNIT_USECS,
+    "read_99_99_latency_unit": PerfUnit.UNIT_USECS,
+    "read_99_latency_unit": PerfUnit.UNIT_USECS,
+    "plex_rebuild_time_unit": PerfUnit.UNIT_SECS
+    }
+    model_name = "InspurDataReconstructionPerformance"
+    status = fun_test.PASSED
+    try:
+        generic_helper = ModelHelper(model_name=model_name)
+        generic_helper.set_units(validate=True, **unit_dict)
+        generic_helper.add_entry(**value_dict)
+        generic_helper.set_status(status)
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    print "used generic helper to add an entry"
+
+if __name__ == "__main__":
+
+    dt = datetime.datetime(year=2019, month=7, day=18, hour=2, minute=12, second=33)
+    data = 4
+    for app in ["crypto_dp_tunnel_throughput", "ipsec_tunnel_throughput"]:
+        value_dict = {
+            "date_time": dt,
+            "platform": FunPlatform.S1,
+            "app": app,
+            "throughput": data
+        }
+        unit_dict = {
+            "throughput_unit": PerfUnit.UNIT_GBITS_PER_SEC
+        }
+        model_name = "TeraMarkCryptoPerformance"
         status = fun_test.PASSED
         try:
             generic_helper = ModelHelper(model_name=model_name)
@@ -944,4 +857,25 @@ if __name__ == "__main__":
             generic_helper.set_status(status)
         except Exception as ex:
             fun_test.critical(str(ex))
-    print "used generic helper to add an entry"
+        print ("used generic helper to add an entry")
+
+    for app in ["crypto_dp_tunnel_throughput", "ipsec_tunnel_throughput"]:
+        value_dict = {
+            "date_time": get_data_collection_time(),
+            "platform": FunPlatform.S1,
+            "app": app,
+            "throughput": data
+        }
+        unit_dict = {
+            "throughput_unit": PerfUnit.UNIT_GBITS_PER_SEC
+        }
+        model_name = "TeraMarkCryptoPerformance"
+        status = fun_test.PASSED
+        try:
+            generic_helper = ModelHelper(model_name=model_name)
+            generic_helper.set_units(validate=True, **unit_dict)
+            generic_helper.add_entry(**value_dict)
+            generic_helper.set_status(status)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        print ("used generic helper to add an entry")

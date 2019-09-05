@@ -17,7 +17,7 @@ nu:
       routes:
         - prefix: 53.1.1.0/24
           nexthop: 20.1.1.2
-        - prefix: 21.1.1.0/24
+        - prefix: 29.1.1.0/24  # for perf
           nexthop: 20.1.1.2
 
 nu2:
@@ -36,8 +36,6 @@ nu2:
         - prefix: 53.1.1.0/24
           nexthop: 21.1.1.2
         - prefix: 53.1.9.0/24
-          nexthop: 21.1.1.2
-        - prefix: 20.1.1.0/24
           nexthop: 21.1.1.2
 
 # HU host - the keyword must start with "hu"
@@ -66,8 +64,6 @@ hu:
       arps:
         - ipv4_addr: 53.1.1.4
           mac_addr: 00:de:ad:be:ef:21
-        #- ipv4_addr: 53.1.1.254
-        #  mac_addr: 00:f1:1d:ad:00:3e
 
 hu2:
   hostname: poc-server-10
@@ -76,7 +72,7 @@ hu2:
   mgmt_interface: eno1
   pcie_width: 16
   pf_interface: hu2-f0
-  vf_interface: hu2-f8
+  vf_interface: hu2-f10
   namespaces:
     default:
       interfaces:
@@ -96,17 +92,15 @@ hu2:
       arps:
         - ipv4_addr: 53.1.1.1
           mac_addr: 00:de:ad:be:ef:11
-        #- ipv4_addr: 53.1.1.253
-        #  mac_addr: 00:f1:1d:ad:00:3e
-#    n1:
-#      interfaces:
-#        - hu2-f8:
-#            mac_addr: 00:de:ad:be:ef:51
-#            ipv4_addr: 53.1.9.4
-#            ipv4_netmask: 255.255.255.0
-#      routes:
-#        - prefix: 53.1.1.0/24
-#          nexthop: 53.1.9.254
+    n1:
+      interfaces:
+        - hu2-f10:
+            mac_addr: 00:de:ad:be:ef:31
+            ipv4_addr: 53.1.1.10
+            ipv4_netmask: 255.255.255.0
+      routes:
+        - prefix: 21.1.1.0/24
+          nexthop: 53.1.1.254
 
 hu3:
   hostname: poc-server-08
@@ -126,9 +120,6 @@ hu3:
       routes:
         - prefix: 53.1.1.0/24
           nexthop: 54.1.1.254
-      #arps:
-      #  - ipv4_addr: 54.1.1.253
-      #    mac_addr: 00:f1:1d:ad:00:3e
 
 hu4:
   hostname: poc-server-09
@@ -148,6 +139,3 @@ hu4:
       routes:
         - prefix: 53.1.1.0/24
           nexthop: 54.1.1.254
-      #arps:
-      #  - ipv4_addr: 54.1.1.253
-      #    mac_addr: 00:f1:1d:ad:00:3e

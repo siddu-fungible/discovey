@@ -1,7 +1,7 @@
 [
   {"info": {"custom_test_bed_spec": {"base_test_bed": "fs-inspur", "asset_request": {"DUT": {"num": 1}, "Host": {"num": 1}}}}},
-  {"path": "storage/ec_inspur_fs_teramark.py", "test_case_ids": [3]},
-  {"path": "storage/ec_inspur_fs_teramark.py", "test_case_ids": [4]},
-  {"path": "storage/ec_inspur_fs_teramark.py", "test_case_ids": [5]},
-  {"path": "storage/ec_inspur_fs_teramark.py", "test_case_ids": [2]}
+  {"path": "storage/pocs/inspur/ec_inspur_fs_teramark.py", "test_case_ids": [3], "post_results": true},
+  {"path": "storage/pocs/inspur/ec_inspur_fs_teramark.py", "test_case_ids": [4], "post_results": true},
+  {"path": "storage/pocs/inspur/ec_inspur_fs_teramark.py", "test_case_ids": [5], "post_results": true},
+  {"path": "storage/pocs/inspur/ec_inspur_fs_teramark.py", "test_case_ids": [2], "post_results": true}
 ]
