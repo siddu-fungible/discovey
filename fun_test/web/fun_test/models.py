@@ -226,6 +226,39 @@ class SuiteExecution(models.Model):
             result[field.name] = getattr(self, field.name)
         return result
 
+    def get_tags(self):
+        """
+
+        :return: a list of tags or None
+        """
+        result = None
+        try:
+            if self.tags:
+                result = json.loads(self.tags)
+        except:
+            pass
+        return result
+
+    def get_environment(self):
+        result = None
+        environment = self.environment
+        if environment:
+            try:
+                result = json.loads(self.environment)
+            except:
+                pass
+        return result
+
+
+    def get_inputs(self):
+        result = None
+        if self.inputs:
+            try:
+                result = json.loads(self.inputs)
+            except:
+                pass
+        return result
+
 class SuiteExecutionSerializer(serializers.Serializer):
     version = serializers.CharField(max_length=50)
     execution_id = serializers.IntegerField()

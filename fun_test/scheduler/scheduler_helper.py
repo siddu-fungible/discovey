@@ -9,7 +9,7 @@ import logging.handlers
 import sys
 import web.fun_test.models_helper as models_helper
 from web.fun_test.web_interface import get_suite_detail_url, set_annoucement, clear_announcements
-from fun_settings import JOBS_DIR, ARCHIVED_JOBS_DIR, LOGS_DIR, WEB_STATIC_DIR, SUITES_DIR, TASKS_DIR
+from fun_settings import JOBS_DIR, LOGS_DIR, WEB_STATIC_DIR, SUITES_DIR, TASKS_DIR
 from fun_settings import TEAM_REGRESSION_EMAIL
 from fun_global import RESULTS, get_current_time
 from lib.utilities.send_mail import send_mail
