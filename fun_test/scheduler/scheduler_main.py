@@ -746,13 +746,7 @@ class SuiteWorker(Thread):
                 script_level_test_case_ids = script_item.get("test_case_ids", None)
                 if script_level_test_case_ids:
                     popens.append("--test_case_ids=" + ','.join(str(v) for v in script_item["test_case_ids"]))
-                if self.job_is_re_run:
-                    re_run_info = {}
-                    if self.job_re_run_info:
-                        if relative_path in self.job_re_run_info:
-                            re_run_info = self.job_re_run_info[relative_path]
 
-                popens.append("--re_run_info={}".format(json.dumps(re_run_info)))
                 if self.job_environment:
                     popens.append("--environment={}".format(json.dumps(self.job_environment)))  # TODO: validate
 
@@ -760,16 +754,25 @@ class SuiteWorker(Thread):
                 if script_inputs:
                     popens.append("--inputs={}".format(json.dumps(script_inputs)))  # TODO: validate
 
-                self.debug("Before subprocess Script: {}".format(script_path))
+                do_run = True
+                if self.job_is_re_run:
+                    if self.job_re_run_info:
+                        if str(script_item_index) in self.job_re_run_info:
+                            re_run_info = self.job_re_run_info[str(script_item_index)]
+                            popens.append("--re_run_info={}".format(json.dumps(re_run_info)))
+                        else:
+                            self.set_next_script_item_index()
+                            do_run = False
 
-                self.current_script_process = subprocess.Popen(popens,
-                                                               stdout=console_log,
-                                                               stderr=console_log)
-                self.update_suite_run_time("current_script_process_id", self.current_script_process.pid)
-
-                time.sleep(5)
-                self.active_script_item_index = script_item_index
-                self.update_suite_run_time("active_script_item_index", self.active_script_item_index)
+                if do_run:
+                    self.debug("Before subprocess Script: {}".format(script_path))
+                    self.current_script_process = subprocess.Popen(popens,
+                                                                   stdout=console_log,
+                                                                   stderr=console_log)
+                    self.update_suite_run_time("current_script_process_id", self.current_script_process.pid)
+                    time.sleep(5)
+                    self.active_script_item_index = script_item_index
+                    self.update_suite_run_time("active_script_item_index", self.active_script_item_index)
 
         except Exception as ex:
             self.error("Script error {}, exception: {}".format(script_item, str(ex)))

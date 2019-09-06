@@ -17,6 +17,7 @@ from asset.asset_global import AssetType
 from web.fun_test.models import Module
 from web.fun_test.fun_serializer import model_instance_to_dict
 from web.fun_test.models_helper import _get_suite_executions
+from scheduler.scheduler_global import SuiteType
 from web.fun_test.models import Suite
 from fun_global import RESULTS
 from django.core import paginator
@@ -427,9 +428,11 @@ def re_run_job(request):
 
             if result_filter and (test_case_execution.result not in result_filter):
                 continue
-            if script_path not in re_run_info:
-                re_run_info[script_path] = {}
-            re_run_info[script_path][test_case_execution.test_case_id] = {"test_case_execution_id": test_case_execution.execution_id}
+
+            log_prefix = int(test_case_execution.log_prefix)
+            if log_prefix not in re_run_info:
+                re_run_info[log_prefix] = {}
+            re_run_info[log_prefix][test_case_execution.test_case_id] = {"test_case_execution_id": test_case_execution.execution_id}
         suite_id = request_json.get("suite_id", None)
         re_use_build_image = request_json.get("re_use_build_image", None)
         original_suite_execution = SuiteExecution.objects.get(execution_id=original_suite_execution_id)
@@ -462,6 +465,7 @@ def re_run_job(request):
         new_suite_execution.test_case_execution_ids = json.dumps([])
         new_suite_execution.is_re_run = True
         new_suite_execution.re_run_info = re_run_info
+        new_suite_execution.suite_type = SuiteType.DYNAMIC
         new_suite_execution.save()
 
         SuiteReRunInfo(original_suite_execution_id=original_suite_execution_id,
