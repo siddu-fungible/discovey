@@ -1,11 +1,51 @@
-.div {
-  margin: 10px;
+
+.flex-container {
+  display: flex;
+  justify-content: flex-start;
+  flex-direction: row;
   padding: 10px;
 }
 
-.hover-cell .hover-icon {
-  visibility: hidden;
+
+
+
+.sidenav {
+  height: 100%;
+  width: 25%;
+  position: fixed;
+  z-index: 1;
+  top: 0;
+  left: 0;
+  overflow-x: hidden;
+  padding: 10px;
 }
-.hover-cell:hover .hover-icon {
-  visibility: visible;
+
+.sidenav span {
+  margin: 10px;
+}
+
+
+
+.main {
+  margin-left: 25%;
+}
+
+.fun-panel {
+  margin-top: 10px;
+  border: 1px solid rgba(0,0,0,.125);
+}
+
+.fun-panel-header {
+  padding: 5px;
+  background-color: rgba(0,0,0,.03);
+}
+
+.fun-panel-body {
+  padding: 10px
+
+}
+
+
+display-checkpoint {
+  background-color: lightgrey;
 }
