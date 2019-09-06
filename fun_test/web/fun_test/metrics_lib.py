@@ -379,38 +379,43 @@ class MetricLib():
         reports = []
         metrics = InterestedMetrics.objects.filter(workspace_id=workspace_id)
         for metric in metrics:
-            metric_id = metric.metric_id
-            chart = MetricChart.objects.get(metric_id=metric_id)
-            if chart.leaf:
-                data_sets = chart.get_data_sets()
-                metric_model_name = chart.metric_model_name
-                metric_model = app_config.get_metric_models()[metric_model_name]
-                report = {}
-                report["chart_name"] = metric.chart_name
-                report["lineage"] = metric.lineage
-                report["url"] = atomic_url + "/" + str(metric.metric_id)
-                report["positive"] = chart.positive
-                report["data_sets"] = []
-                for data_set in data_sets:
-                    entries = metric_model.objects.filter(**data_set["inputs"]).order_by("-input_date_time")[:2]
-                    output_name = data_set["output"]["name"]
-                    name = data_set["name"]
-                    if len(entries) == 2:
-                        data_set_dict = {}
-                        self._set_dict(entries=entries, data_set_dict=data_set_dict, output_name=output_name, name=name)
-                        if data_set_dict["today"] and data_set_dict["yesterday"]:
-                            percentage = self._calculate_percentage(current=data_set_dict["today"],
-                                                                    previous=data_set_dict[
-                                                                        "yesterday"])
-                            if chart.positive and percentage < negative_threshold:
-                                self._set_percentage(data_set_dict=data_set_dict, report=report, percentage=percentage)
-                            elif not chart.positive and percentage > positive_threshold:
-                                self._set_percentage(data_set_dict=data_set_dict, report=report, percentage=percentage)
-
-                if len(report["data_sets"]):
-                    reports.append(report)
+            self._set_report_fields(lineage=metric.lineage, metric_id=metric.metric_id, reports=reports)
         return reports
 
+    def _set_report_fields(self, lineage, metric_id, reports):
+        chart = MetricChart.objects.get(metric_id=metric_id)
+        if chart.leaf:
+            data_sets = chart.get_data_sets()
+            metric_model_name = chart.metric_model_name
+            metric_model = app_config.get_metric_models()[metric_model_name]
+            report = {}
+            report["chart_name"] = chart.chart_name
+            report["lineage"] = lineage
+            report["url"] = atomic_url + "/" + str(metric_id)
+            report["positive"] = chart.positive
+            report["data_sets"] = []
+            for data_set in data_sets:
+                entries = metric_model.objects.filter(**data_set["inputs"]).order_by("-input_date_time")[:2]
+                output_name = data_set["output"]["name"]
+                name = data_set["name"]
+                if len(entries) == 2:
+                    data_set_dict = {}
+                    self._set_dict(entries=entries, data_set_dict=data_set_dict, output_name=output_name, name=name)
+                    if data_set_dict["today"] and data_set_dict["yesterday"]:
+                        percentage = self._calculate_percentage(current=data_set_dict["today"],
+                                                                previous=data_set_dict[
+                                                                    "yesterday"])
+                        if chart.positive and percentage < negative_threshold:
+                            self._set_percentage(data_set_dict=data_set_dict, report=report, percentage=percentage)
+                        elif not chart.positive and percentage > positive_threshold:
+                            self._set_percentage(data_set_dict=data_set_dict, report=report, percentage=percentage)
+
+            if len(report["data_sets"]):
+                reports.append(report)
+        else:
+            children = chart.get_children()
+            for child in children:
+                self._set_report_fields(lineage=lineage, metric_id=int(child), reports=reports)
 
     def _calculate_percentage(self, current, previous):
         percent_num = (float(current - previous) / float(previous)) * 100.0
