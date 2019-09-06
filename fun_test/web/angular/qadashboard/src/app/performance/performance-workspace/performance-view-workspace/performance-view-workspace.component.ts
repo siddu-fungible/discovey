@@ -280,9 +280,6 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
       }
     }).pipe(
       switchMap(response => {
-        return this.fetchLeaves(this.workspace.id);
-      }),
-      switchMap(response => {
         return this.fetchReports();
       }),
       switchMap(response => {
@@ -293,26 +290,6 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
       this.loggerService.error("Unable to generate report");
     });
 
-  }
-
-  fetchLeaves(workspaceId): any {
-    let times = this.commonService.getEpochBounds(dateTime);
-    let fromEpoch = times[0];
-    let toEpoch = times[1];
-    let self = this;
-    return this.apiService.get("/api/v1/performance/metrics_data?metric_id=" + metric["metric_id"] + "&from_epoch_ms=" + fromEpoch + "&to_epoch_ms=" + toEpoch).pipe(switchMap(response => {
-      let data = response.data;
-      for (let oneData of data) {
-        for (let dataSet of metric["data"]) {
-          if (dataSet["name"] == oneData["name"]) {
-            dataSet[key] = oneData["value"];
-            dataSet[key + "Date"] = this.commonService.getPrettyLocalizeTime(oneData["date_time"]);
-            dataSet["unit"] = oneData["unit"];
-          }
-        }
-      }
-      return of(true);
-    }));
   }
 
   setSubject(): void {
