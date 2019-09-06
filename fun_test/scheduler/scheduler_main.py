@@ -364,8 +364,8 @@ class SuiteWorker(Thread):
 
         self.shutdown_reason = None
         self.current_script_process = None  # run-time # done
+        self.current_script_path = None     # run-time
         self.suite_shutdown = False  # run-time
-        self.abort_on_failure_requested = False  # run-time
         self.summary_extra_message = ""
         self.last_script_path = None  # run-time # done
         self.current_script_item_index = 0  # run-time  # done
@@ -584,26 +584,27 @@ class SuiteWorker(Thread):
         models_helper.update_suite_execution(suite_execution_id=self.job_id,
                                              tags=all_tags)
 
+    def is_process_running(self, pid, script_path):
+        running = False
+        for p in psutil.process_iter():
+            try:
+                if p.pid == pid and (script_path in p.cmdline()):
+                    running = p.status() == "running"
+            except:
+                pass
+        return running
+
     def run_next(self):
         if not self.initialized:
             self.initialize()
-        if self.suite_shutdown or self.suite_completed or self.abort_on_failure_requested:
+        if self.suite_shutdown or self.suite_completed:
             return
 
         script_item = self.script_items[self.current_script_item_index]
 
         if self.current_script_item_index == self.active_script_item_index:
-            if self.current_script_process.poll() is not None:
-                self.debug(message="Executed", script_path=self.last_script_path)
-                script_result = False
-                if self.current_script_process.returncode == 0:
-                    script_result = True
-                if not script_result:
-                    if "abort_suite_on_failure" in script_item and script_item["abort_suite_on_failure"]:
-                        self.abort_on_failure_requested = True
-                        self.error(message="Abort Requested on failure", script_path=self.last_script_path)
-
-                print ("PID: {} does not exist".format(self.current_script_process.pid))
+            if not self.is_process_running(pid=self.current_script_process, script_path=self.current_script_path):
+                self.debug(message="Executed", script_path=self.current_script_path)
                 self.set_next_script_item_index()
 
         elif self.current_script_item_index > self.active_script_item_index:
@@ -631,13 +632,7 @@ class SuiteWorker(Thread):
     def start_script(self, script_item, script_item_index):
         # print ("Start_script: {}".format(script_item))
         script_path = SCRIPTS_DIR + "/" + script_item["script_path"].lstrip("/")
-        self.last_script_path = script_path
-        self.update_suite_run_time("last_script_path", self.last_script_path)
 
-        if self.abort_on_failure_requested:
-            self.error(message="Skipping, as abort_on_failure_requested", script_path=script_path)
-            self.shutdown_suite(reason=ShutdownReason.ABORTED)
-            return
         if self.suite_shutdown:
             self.error(message="Suite shutdown requested", script_path=script_path)
             self.summary_extra_message = "Suite was shutdown"
@@ -666,21 +661,28 @@ class SuiteWorker(Thread):
                           "--" + "relative_path={}".format(relative_path),
                           "--" + "log_prefix={}".format(script_item_index)]
 
+                """
+                command_args = [script_path,
+                                "--" + "logs_dir={}".format(self.get_job_dir()),
+                                "--" + "suite_execution_id={}".format(self.job_id),
+                                "--" + "relative_path={}".format(relative_path),
+                                "--" + "log_prefix={}".format(script_item_index)]
+                """
 
-
-                if script_item["test_case_ids"]:
-                    popens.append("--test_case_ids=" + ','.join(str(v) for v in script_item["test_case_ids"]))
                 script_level_test_case_ids = script_item.get("test_case_ids", None)
                 if script_level_test_case_ids:
                     popens.append("--test_case_ids=" + ','.join(str(v) for v in script_item["test_case_ids"]))
+                    # command_args.append("--test_case_ids=" + ','.join(str(v) for v in script_item["test_case_ids"]))
 
                 suite_execution = self.get_suite_execution()
                 if suite_execution.environment:
                     popens.append("--environment={}".format(json.dumps(suite_execution.get_environment())))  # TODO: validate
+                    # command_args.append("--environment={}".format(json.dumps(suite_execution.get_environment())))  # TODO: validate
 
                 script_inputs = self.get_script_inputs(script_item=script_item)
                 if script_inputs:
                     popens.append("--inputs={}".format(json.dumps(script_inputs)))  # TODO: validate
+                    # command_args.append("--inputs={}".format(json.dumps(script_inputs)))  # TODO: validate
 
                 do_run = True
                 if suite_execution.is_re_run:
@@ -688,6 +690,7 @@ class SuiteWorker(Thread):
                         if str(script_item_index) in suite_execution.re_run_info:
                             re_run_info = suite_execution.re_run_info[str(script_item_index)]
                             popens.append("--re_run_info={}".format(json.dumps(re_run_info)))
+                            # command_args.append("--re_run_info={}".format(json.dumps(re_run_info)))
 
                 disabled_script = script_item.get("disabled", None)
                 if disabled_script:
@@ -695,16 +698,21 @@ class SuiteWorker(Thread):
 
                 if do_run:
                     self.debug("Before subprocess Script: {}".format(script_path))
-                    self.current_script_process = subprocess.Popen(popens,
+
+                    new_process = subprocess.Popen(popens,
                                                                    stdout=console_log,
                                                                    stderr=console_log)
-                    self.update_suite_run_time("current_script_process_id", self.current_script_process.pid)
+
+
+                    current_script_info = {"process_id": new_process.pid, "item_index": script_item_index, "path": script_path}
+                    self.current_script_process = new_process.pid
+                    self.current_script_path = script_path
+                    self.update_suite_run_time("current_script_info", current_script_info)
                     time.sleep(5)
                     self.active_script_item_index = script_item_index
                     self.update_suite_run_time("active_script_item_index", self.active_script_item_index)
                 else:
                     self.set_next_script_item_index()
-
 
         except Exception as ex:
             self.error("Script error {}, exception: {}".format(script_item, str(ex)))
