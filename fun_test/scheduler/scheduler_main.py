@@ -658,12 +658,15 @@ class SuiteWorker(Thread):
 
             with open(console_log_file_name, "w") as console_log:
                 self.local_scheduler_logger.info("Executing: {}".format(script_path))
+
                 popens = ["python",
                           script_path,
                           "--" + "logs_dir={}".format(self.get_job_dir()),
                           "--" + "suite_execution_id={}".format(self.job_id),
                           "--" + "relative_path={}".format(relative_path),
                           "--" + "log_prefix={}".format(script_item_index)]
+
+
 
                 if script_item["test_case_ids"]:
                     popens.append("--test_case_ids=" + ','.join(str(v) for v in script_item["test_case_ids"]))
