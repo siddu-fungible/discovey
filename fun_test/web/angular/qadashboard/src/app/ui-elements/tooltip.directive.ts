@@ -75,7 +75,7 @@ export class TooltipDirective {
     //this.renderer.setStyle(this.tooltip, 'font-weight', '1');
     this.renderer.setStyle(this.tooltip, 'background-color', 'white');
     this.renderer.setStyle(this.tooltip, 'box-shadow', '0 4px 8px 0 rgba(0, 0, 0, 0.2)');
-    this.renderer.setStyle(this.tooltip, 'border-radius', '10px');
+    this.renderer.setStyle(this.tooltip, 'border-radius', '3px');
     this.renderer.setStyle(this.tooltip, 'border', 'solid lightgrey 1px');
 
     /*this.renderer.setStyle(this.tooltip, '-webkit-transition', `opacity ${this.delay}ms`);

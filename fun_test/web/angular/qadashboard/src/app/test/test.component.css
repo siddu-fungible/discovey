@@ -49,3 +49,40 @@
 display-checkpoint {
   background-color: lightgrey;
 }
+
+
+/* this is the box */
+.container {
+    width: 150px;
+    background: #fff;
+    border: 1px solid black;
+    position: absolute;
+    text-align: center;
+    color: black;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+}
+
+/* this CS forms the triangles */
+.container:after,
+.container:before {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-style: solid;
+}
+
+
+.container:after {
+    border-color: transparent transparent transparent white;
+    border-width: 10px;
+    left: 96%;
+
+}
+
+.container:before {
+    border-color: transparent transparent transparent black;
+    border-width: 10px;
+    left: 97%;
+}
