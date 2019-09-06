@@ -86,7 +86,11 @@ export class SuiteEditorComponent implements OnInit {
       return () => {
       }
     }).pipe(switchMap(response => {
-      return this.getQueryParam();
+      return this.getRouterQueryParam();
+    })).pipe(switchMap(response => {
+      return this.getRouterParam();
+    })).pipe(switchMap(response => {
+      return this.fetchSuite();
     })).pipe(switchMap(response => {
       return this.service.categories();
     })).pipe(switchMap(response => {
@@ -108,12 +112,13 @@ export class SuiteEditorComponent implements OnInit {
     }));
 
 
-    this.route.params.subscribe(params => {
+    /*this.route.params.subscribe(params => {
       if (params["id"]) {
         this.id = params["id"];
       }
       if (!this.id) {
         this.suite = new Suite();
+        this.suite.type = this.mode;
         this.refreshAll();
 
       } else {
@@ -124,15 +129,37 @@ export class SuiteEditorComponent implements OnInit {
 
         });
       }
+    });*/
 
-
-
-    });
+    this.refreshAll();
 
   }
 
+  getRouterParam() {
+    return this.route.params.pipe(switchMap(params => {
+      if (params["id"]) {
+        this.id = params["id"];
+      }
+      return of(this.id)
+    }));
+  }
 
-  getQueryParam() {
+  fetchSuite() {
+    if (!this.id) {
+        this.suite = new Suite();
+        this.suite.type = this.mode;
+        return of(this.suite)
+
+      } else {
+        return this.service.suite(this.id).pipe(switchMap(response => {
+          this.suite = response;
+          console.log(this.suite.constructor.name);
+          return of(this.suite)
+        }));
+    }
+  }
+
+  getRouterQueryParam() {
     return this.route.queryParams.pipe(switchMap(params => {
       if (params.hasOwnProperty('mode')) {
         this.mode = params["mode"];

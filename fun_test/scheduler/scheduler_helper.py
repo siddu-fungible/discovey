@@ -228,20 +228,6 @@ def validate_spec(spec):
     return valid, error_message
 
 
-def parse_suite(suite_name=None, dynamic_suite_file=None, suite_type=SuiteType.STATIC):
-    suite_file_name = None
-    if not dynamic_suite_file:
-        suite_file_name = SUITES_DIR + "/" + suite_name
-        if suite_type == SuiteType.TASK:
-            suite_file_name = TASKS_DIR + "/" + suite_name
-    else:
-        suite_file_name = dynamic_suite_file
-    if not suite_file_name.endswith(".json"):
-        suite_file_name += ".json"
-    suite_spec = parse_file_to_json(file_name=suite_file_name)
-    if not suite_spec:
-        raise SchedulerException("Unable to parse suite-spec: {}".format(suite_file_name))
-    return suite_spec
 
 def get_suite_level_tags(suite_spec):
     tags = []

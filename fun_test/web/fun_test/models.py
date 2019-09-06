@@ -677,7 +677,7 @@ class SuiteItems(models.Model):
 
 class Suite(models.Model):
     name = models.TextField(default="TBD")
-    tyoe = models.TextField(default="SUITE")   # Other types are TASK
+    type = models.TextField(default="SUITE")   # Other types are TASK
     categories = JSONField(default=[], null=True)
     sub_categories = JSONField(default=[], null=True)
     short_description = models.TextField(default="", null=True)

@@ -36,7 +36,8 @@ from web.fun_test.models import (
     SuiteContainerExecution,
     SuiteReRunInfo,
     TestBed,
-    TestCaseInfo
+    TestCaseInfo,
+    Suite
 )
 
 SUITE_EXECUTION_FILTERS = {"PENDING": "PENDING",
@@ -395,6 +396,14 @@ def report_re_run_result(execution_id, re_run_info=None):
 
             finalize_suite_execution(suite_execution_id=original_suite_execution.execution_id)
 
+
+def get_suite(id):
+    result = None
+    try:
+        result = Suite.objects.get(id=id)
+    except ObjectDoesNotExist:
+        pass
+    return result
 
 def get_test_case_executions_by_suite_execution(suite_execution_id):
     results = TestCaseExecution.objects.filter(suite_execution_id=suite_execution_id)

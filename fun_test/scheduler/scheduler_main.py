@@ -357,6 +357,10 @@ class SuiteWorker(Thread):
         self.job_spec = job_spec
         self.job_suite_id = job_spec.suite_id
         self.job_suite_type = job_spec.suite_type
+        if self.job_suite_id:
+            suite = models_helper.get_suite(id=self.job_suite_id)
+            if suite:
+                self.job_suite_type = suite.type
         self.job_id = job_spec.execution_id
         self.job_dir = None
         self.job_test_case_ids = None
@@ -614,8 +618,6 @@ class SuiteWorker(Thread):
             script_items = self.get_scripts(suite_id=self.job_suite_id)
 
         script_paths = [SCRIPTS_DIR + "/" + x["script_path"].lstrip("/") for x in script_items]
-        if self.job_suite_type == SuiteType.TASK:
-            script_paths = [TASKS_DIR + "/" + x["script_path"].lstrip("/") for x in script_items]
 
         scripts_exist, error_message = self.ensure_scripts_exists(script_paths)
         if not scripts_exist:
@@ -705,8 +707,6 @@ class SuiteWorker(Thread):
     def start_script(self, script_item, script_item_index):
         # print ("Start_script: {}".format(script_item))
         script_path = SCRIPTS_DIR + "/" + script_item["script_path"].lstrip("/")
-        if self.job_suite_type == SuiteType.TASK:
-            script_path = TASKS_DIR + "/" + script_item["script_path"].lstrip("/")
         self.last_script_path = script_path
         self.update_suite_run_time("last_script_path", self.last_script_path)
 
@@ -721,8 +721,7 @@ class SuiteWorker(Thread):
             return
 
         relative_path = script_path.replace(SCRIPTS_DIR, "")
-        if self.job_suite_type == SuiteType.TASK:
-            relative_path = script_path.replace(TASKS_DIR, "")
+
         self.debug("Before running script: {}".format(script_path))
 
         console_log_file_name = self.job_dir + "/" + get_flat_console_log_file_name("/{}".format(script_path),

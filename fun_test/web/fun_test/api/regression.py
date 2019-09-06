@@ -399,6 +399,8 @@ def suites(request, id):
         tags = request_json.get("tags", None)
         custom_test_bed_spec = request_json.get("custom_test_bed_spec", None)
         suite_entries = request_json.get("entries", None)
+        type = request_json.get("type", "SUITE") # TODO
+        s.type = type
         s.name = name
         s.short_description = short_description
         s.categories = categories

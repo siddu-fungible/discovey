@@ -24,6 +24,7 @@ interface SuiteInterface {
   tags: string[];
   custom_test_bed_spec: any;
   entries: SuiteEntry[];
+  type: SuiteMode;
 }
 
 
@@ -35,6 +36,7 @@ export class Suite implements SuiteInterface {
   tags: string[] = null;
   custom_test_bed_spec: any = null;
   entries: SuiteEntry[] = null;
+  type: SuiteMode = SuiteMode.SUITE;
 
   constructor(obj?: any) {
     Object.assign(this, obj);
