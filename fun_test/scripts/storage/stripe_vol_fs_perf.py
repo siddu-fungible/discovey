@@ -3,6 +3,7 @@ from lib.system import utils
 from lib.host.traffic_generator import TrafficGenerator
 from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper
 from lib.fun.fs import Fs
+import storage_helper
 from datetime import datetime
 from lib.templates.storage.fio_performance_helper import FioPerfHelper
 
@@ -218,7 +219,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
         blt_count = self.blt_count
         fun_test.shared_variables["blt_count"] = self.blt_count
 
-        self.nvme_block_device = self.nvme_device + "n" + str(self.stripe_details["ns_id"])
+        # self.nvme_block_device = self.nvme_device + "n" + str(self.stripe_details["ns_id"])
         self.storage_controller = fun_test.shared_variables["storage_controller"]
 
         fs = fun_test.shared_variables["fs"]
@@ -310,12 +311,17 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             fun_test.shared_variables["stripe_uuid"] = self.stripe_uuid
 
             # Checking that the above created BLT volume is visible to the end host
-            fun_test.sleep("Sleeping for couple of seconds for the volume to accessible to the host", 5)
-            self.volume_name = self.nvme_device.replace("/dev/", "") + "n" + str(self.stripe_details["ns_id"])
-            lsblk_output = self.end_host.lsblk()
-            fun_test.test_assert(self.volume_name in lsblk_output, "{} device available".format(self.volume_name))
-            fun_test.test_assert_expected(expected="disk", actual=lsblk_output[self.volume_name]["type"],
-                                          message="{} device type check".format(self.volume_name))
+            # fun_test.sleep("Sleeping for couple of seconds for the volume to accessible to the host", 5)
+            # self.volume_name = self.nvme_device.replace("/dev/", "") + "n" + str(self.stripe_details["ns_id"])
+            # lsblk_output = self.end_host.lsblk()
+            # fun_test.test_assert(self.volume_name in lsblk_output, "{} device available".format(self.volume_name))
+            # fun_test.test_assert_expected(expected="disk", actual=lsblk_output[self.volume_name]["type"],
+            #                               message="{} device type check".format(self.volume_name))
+            fetch_nvme_device = storage_helper.fetch_nvme_device(end_host=self.end_host,
+                                                                 nsid=self.stripe_details["ns_id"])
+            fun_test.test_assert(fetch_nvme_device['status'], message="Check: nvme device visible on end host")
+            self.nvme_block_device = fetch_nvme_device["nvme_device"]
+            fun_test.shared_variables['nvme_block_device'] = self.nvme_block_device
 
             # Writing 20GB data on volume (one time task)
             if self.warm_up_traffic and not hasattr(self, "create_file_system"):
@@ -336,14 +342,14 @@ class BLTVolumePerformanceTestcase(FunTestCase):
 
         if hasattr(self, "create_file_system") and self.create_file_system:
             self.end_host.sudo_command("mkfs.xfs -f /dev/nvme0n1")
-            self.end_host.sudo_command("mount /dev/nvme0n1 /mnt")
+            self.end_host.sudo_command("mount {} /mnt".format(self.nvme_block_device))
 
         if hasattr(self, "create_file_system") and self.create_file_system:
             fio_output = self.end_host.pcie_fio(filename="/mnt/testfile.dat",
                                                 **self.warm_up_fio_cmd_args)
             fun_test.test_assert(fio_output, "Pre-populating the testfile")
             self.end_host.sudo_command("umount /mnt")
-            self.end_host.sudo_command("mount -o ro /dev/nvme0n1 /mnt")
+            self.end_host.sudo_command("mount -o ro {} /mnt".format(self.nvme_block_device))
 
         if hasattr(self, "create_file_system") and self.create_file_system:
             test_filename = "/mnt/testfile.dat"

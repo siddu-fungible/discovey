@@ -107,6 +107,7 @@ class Bmc(Linux):
 
     def __init__(self, disable_f1_index=None, disable_uart_logger=False, setup_support_files=None, **kwargs):
         super(Bmc, self).__init__(**kwargs)
+        self.set_prompt_terminator(r'# $')
         self.disable_f1_index = disable_f1_index
         self.disable_uart_logger = disable_uart_logger
         self.uart_log_listener_process_ids = []
@@ -1330,7 +1331,6 @@ class Fs(object, ToDictMixin):
                            disable_uart_logger=self.disable_uart_logger,
                            context=self.context,
                            setup_support_files=self.setup_bmc_support_files)
-            self.bmc.set_prompt_terminator(r'# $')
         return self.bmc
 
     def get_fpga(self):
