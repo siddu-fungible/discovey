@@ -413,7 +413,7 @@ class MetricLib():
             if len(report["data_sets"]):
                 reports.append(report)
         else:
-            children = json.loads(chart.children)
+            children = chart.get_children()
             for child in children:
                 self._set_report_fields(lineage=lineage, metric_id=int(child), reports=reports)
 
