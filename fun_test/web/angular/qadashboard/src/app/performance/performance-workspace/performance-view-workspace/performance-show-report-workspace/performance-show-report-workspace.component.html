@@ -1,7 +1,7 @@
 <div class="card" style="margin: 10px; padding: 5px;">
   <b>Subject: </b><input style="max-width: 50%" type="text" [(ngModel)]="subject"/><br>
   <div *ngFor="let interestedMetric of workspace.interested_metrics">
-    <div style="vertical-align: middle; width: 50%">
+    <div *ngIf="interestedMetric.leaf" style="vertical-align: middle; width: 50%">
       <h5>{{ interestedMetric.lineage }}</h5>
       {{ interestedMetric.chart_name }}<br>
       Link to chart: <a href="{{ interestedMetric.url }}" target="_blank">Link</a><br>

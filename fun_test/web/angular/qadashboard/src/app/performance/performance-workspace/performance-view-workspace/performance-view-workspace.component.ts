@@ -36,6 +36,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
   selectMode: any = SelectMode;
   allMetricIds: number[] = [];
   interestedMetrics: number[] = [];
+  SUBJECT_BASE_STRING: string = "Performance status report - ";
 
   constructor(private apiService: ApiService, private commonService: CommonService, private loggerService: LoggerService,
               private route: ActivatedRoute, private router: Router, private location: Location, private title: Title, private performanceService: PerformanceService) {
@@ -179,7 +180,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
   fetchScores(): any {
     const resultObservables = [];
     this.workspace.interested_metrics.forEach(metric => {
-        resultObservables.push(this.fetchChartInfo(metric, metric.metric_id));
+      resultObservables.push(this.fetchChartInfo(metric));
     });
     if (resultObservables.length > 0) {
       return forkJoin(resultObservables);
@@ -188,18 +189,16 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
     }
   }
 
-  fetchChartInfo(metric, metricId): any {
-    let payload = {};
-    payload["metric_id"] = metricId;
-    return this.apiService.post("/metrics/chart_info", payload).pipe(switchMap(response => {
-      let lastGoodScore = Number(response.data["last_good_score"]);
-      let penultimateGoodScore = Number(response.data["penultimate_good_score"]);
+  fetchChartInfo(metric): any {
+    return this.performanceService.fetchChartInfo(metric.metric_id).pipe(switchMap(response => {
+      let lastGoodScore = Number(response["last_good_score"]);
+      let penultimateGoodScore = Number(response["penultimate_good_score"]);
       metric["last_good_score"] = lastGoodScore;
       metric["penultimate_good_score"] = penultimateGoodScore;
-      metric["model_name"] = response.data["metric_model_name"];
-      metric["data_sets"] = response.data["data_sets"];
-      metric["jira_ids"] = response.data["jira_ids"];
-      metric["leaf"] = response.data["leaf"];
+      metric["model_name"] = response["metric_model_name"];
+      metric["data_sets"] = response["data_sets"];
+      metric["jira_ids"] = response["jira_ids"];
+      metric["leaf"] = response["leaf"];
       let jiraList = {};
       for (let jiraId of metric["jira_ids"]) {
         jiraList[jiraId] = {};
@@ -207,7 +206,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
       metric["jira_list"] = jiraList;
       metric["selected"] = false;
       metric["report"] = null;
-      metric["positive"] = response.data["positive"];
+      metric["positive"] = response["positive"];
       metric["data"] = [];
       metric["url"] = this.atomicUrl + "/" + metric["metric_id"];
       return of(true);
@@ -286,6 +285,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
         return this.fetchHistory();
       })).subscribe(response => {
       this.setSubject();
+      this.showReport();
     }, error => {
       this.loggerService.error("Unable to generate report");
     });
@@ -295,7 +295,10 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
   setSubject(): void {
     let t = new Date();
     let dateString = this.commonService.getShortDate(t);
-    this.subject = "Performance status report - " + dateString;
+    this.subject = this.SUBJECT_BASE_STRING + dateString;
+  }
+
+  showReport(): void {
     this.reportGenerated = true;
     this.showGrids = false;
     this.showDag = false;
