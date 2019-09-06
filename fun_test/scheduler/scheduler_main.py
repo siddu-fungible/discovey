@@ -591,9 +591,6 @@ class SuiteWorker(Thread):
             return
 
         script_item = self.script_items[self.current_script_item_index]
-        if "disabled" in script_item and script_item["disabled"]:
-            self.set_next_script_item_index()
-        script_item = self.script_items[self.current_script_item_index]
 
         if self.current_script_item_index == self.active_script_item_index:
             if self.current_script_process.poll() is not None:
@@ -688,9 +685,10 @@ class SuiteWorker(Thread):
                         if str(script_item_index) in suite_execution.re_run_info:
                             re_run_info = suite_execution.re_run_info[str(script_item_index)]
                             popens.append("--re_run_info={}".format(json.dumps(re_run_info)))
-                        else:
-                            self.set_next_script_item_index()
-                            do_run = False
+
+                disabled_script = script_item.get("disabled", None)
+                if disabled_script:
+                    do_run = False
 
                 if do_run:
                     self.debug("Before subprocess Script: {}".format(script_path))
@@ -701,6 +699,9 @@ class SuiteWorker(Thread):
                     time.sleep(5)
                     self.active_script_item_index = script_item_index
                     self.update_suite_run_time("active_script_item_index", self.active_script_item_index)
+                else:
+                    self.set_next_script_item_index()
+
 
         except Exception as ex:
             self.error("Script error {}, exception: {}".format(script_item, str(ex)))
