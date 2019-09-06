@@ -52,7 +52,7 @@ class EmailPerformanceDrop(PerformanceTc):
                 try:
                     data = ml._send_email(email=email, subject=subject, reports=reports,
                                           report_name="performance_drop_report.html")
-                    if not data.status:
+                    if not data["status"]:
                         raise Exception("sending email failed to - {}".format(email))
                     else:
                         print "sent email successfully to - {}".format(email)
