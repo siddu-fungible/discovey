@@ -313,7 +313,7 @@
         </div>
 
         <div class="closed-section"></div>
-        <div *ngIf="mode == modeType.ShowingNonAtomicMetric" class=""
+        <div *ngIf="mode == modeType.ShowingNonAtomicMetric && selectMode == SelectMode.ShowMainSite" class=""
              style="background-color: whitesmoke; padding-left: 20px; padding-right: 20px">
           <div *ngIf="currentNode.grid.length">
             <div *ngFor="let row of currentNode.grid" class="row">

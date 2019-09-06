@@ -1033,7 +1033,7 @@ export class PerformanceComponent implements OnInit {
   };
 
   showNonAtomicMetric = (flatNode) => {
-    if (this.selectMode == SelectMode.ShowMainSite) {
+    if (this.selectMode == SelectMode.ShowMainSite || this.selectMode == SelectMode.ShowViewWorkspace) {
       if (flatNode.node.metricModelName && flatNode.node.chartName !== "All metrics") {
         this.chartReady = false;
         if (this.currentNode && this.currentNode.showAddJira) {
@@ -1054,16 +1054,19 @@ export class PerformanceComponent implements OnInit {
         this.currentFlatNode = flatNode;
         this.mode = Mode.ShowingNonAtomicMetric;
         this.expandNode(flatNode);
-        this.prepareGridNodes(flatNode.node);
-        this.commonService.scrollTo("chart-info");
+        if (this.selectMode == SelectMode.ShowMainSite) {
+          this.prepareGridNodes(flatNode.node);
+          this.commonService.scrollTo("chart-info");
+        }
         this.chartReady = true;
       } else {
         this.chartReady = false;
         this.expandNode(flatNode);
         this.chartReady = true;
       }
-      if (!flatNode.special)
+      if (!flatNode.special && this.selectMode == SelectMode.ShowMainSite) {
         this.navigateByQuery(flatNode);
+      }
       this.fetchChartInfo(flatNode);
     } else {
       this.expandNode(flatNode);
