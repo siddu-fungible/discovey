@@ -194,7 +194,7 @@ class FunTest:
         self.local_settings = {}
         if self.suite_execution_id:
             self.suite_execution_id = int(self.suite_execution_id)
-
+            self.set_my_process_id()
         print("Suite Execution Id: {}".format(self.get_suite_execution_id()))
 
         if args.test_case_ids:
@@ -391,6 +391,14 @@ class FunTest:
             suite_execution = models_helper.get_suite_execution(suite_execution_id=self.suite_execution_id)
             if suite_execution:
                 suite_execution.add_run_time_variable(variable, value)
+
+    def set_my_process_id(self):
+        run_time_process_id = self.get_suite_run_time_environment_variable("process_id")
+        if not run_time_process_id:
+            self.set_suite_run_time_environment_variable("process_id", {self.log_prefix: os.getpid()})
+        else:
+            run_time_process_id[self.log_prefix] = os.getpid()
+            self.set_suite_run_time_environment_variable("process_id", run_time_process_id)
 
     def get_job_environment_variable(self, variable):
         result = None
@@ -1102,12 +1110,12 @@ class FunTest:
 
     def exit_gracefully(self, sig, _):
         self.critical("Unexpected Exit")
-
-        if fun_test.suite_execution_id:
+        if self.suite_execution_id:
             models_helper.update_test_case_execution(test_case_execution_id=self.current_test_case_execution_id,
                                                      suite_execution_id=self.suite_execution_id,
                                                      result=self.FAILED)
             signal.signal(signal.SIGINT, self.original_sig_int_handler)
+
         sys.exit(-1)
 
     def _get_flat_file_name(self, path):

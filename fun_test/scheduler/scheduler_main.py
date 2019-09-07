@@ -21,6 +21,24 @@ ONE_HOUR = 60 * 60
 queue_lock = None
 
 
+class FunTimer:
+    def __init__(self, max_time=10000):
+        self.max_time = max_time
+        self.start_time = time.time()
+
+    def start(self):
+        self.start_time = time.time()
+
+    def is_expired(self):
+        return (self.elapsed_time()) > self.max_time
+
+    def elapsed_time(self):
+        current_time = time.time()
+        return current_time - self.start_time
+
+    def remaining_time(self):
+        return self.max_time - self.elapsed_time()
+
 class ShutdownReason:
     ABORTED = -2
     KILLED = -1
@@ -343,6 +361,10 @@ def report_error(job_spec, error_message, local_logger=None):
     if local_logger:
         local_logger.exception(error_message)
     # send email
+
+
+def preexec_function():
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
 
 
 class SuiteWorker(Thread):
@@ -673,14 +695,6 @@ class SuiteWorker(Thread):
                           "--" + "relative_path={}".format(relative_path),
                           "--" + "log_prefix={}".format(script_item_index)]
 
-                command_args = [script_path,
-                                "--" + "logs_dir={}".format(self.get_job_dir()),
-                                "--" + "suite_execution_id={}".format(self.job_id),
-                                "--" + "relative_path={}".format(relative_path),
-                                "--" + "log_prefix={}".format(script_item_index),
-                                "&>{}",
-                                console_log_file_name]
-
                 script_level_test_case_ids = script_item.get("test_case_ids", None)
                 if script_level_test_case_ids:
                     popens.append("--test_case_ids=" + ','.join(str(v) for v in script_item["test_case_ids"]))
@@ -705,26 +719,37 @@ class SuiteWorker(Thread):
                     do_run = False
                 if do_run:
                     self.debug("Before subprocess Script: {}".format(script_path))
-                    new_process = subprocess.Popen(popens, stdout=console_log, stderr=console_log)
-                    # new_process = subprocess.Popen(popens, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
-                    # new_process = subprocess.call(popens, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+                    popens = ['nohup'] + popens + [" &"]
+                    new_process = subprocess.Popen(' '.join(popens), stdout=console_log, stderr=console_log, shell=True)
+                    self.current_script_process_id = None
+                    script_start_timer = FunTimer(max_time=20)
+                    while not script_start_timer.is_expired():
+                        suite_execution = self.get_suite_execution(refresh=True)
+                        process_id_run_time = suite_execution.get_run_time_variable("process_id")
+                        if process_id_run_time:
+                            script_process_id_from_run_time = process_id_run_time.get(str(script_item_index), None)
+                            if script_process_id_from_run_time:
+                                self.current_script_process_id = int(script_process_id_from_run_time)
+                                break
 
-                    # full_command = ' '.join(command_args)
-                    # pid = os.execlp(os.P_NOWAIT, "/usr/bin/python", "python", *command_args)
-                    # pid = subprocess.Popen(["/usr/bin/python", ' '.join(command_args)]).pid
-                    self.current_script_process_id = new_process.pid
-                    self.current_script_path = script_path
-                    self.current_script_item_index = script_item_index
-                    self.active_script_item_index = script_item_index
+                    if not self.current_script_process_id:
+                        self.abort_suite("Unable to fetch process id from script")
+                    else:
+                        self.current_script_path = script_path
+                        self.current_script_item_index = script_item_index
+                        self.active_script_item_index = script_item_index
 
+                        current_script_info = {"current_script_process_id": self.current_script_process_id,
+                                               "current_script_item_index": self.current_script_item_index,
+                                               "current_script_path": script_path,
+                                               "active_script_item_index": self.active_script_item_index}
+                        self.update_suite_run_time("current_script_info", current_script_info)
                 else:
                     self.set_next_script_item_index()
 
-            current_script_info = {"current_script_process_id": self.current_script_process_id,
-                                   "current_script_item_index": self.current_script_item_index,
-                                   "current_script_path": script_path,
-                                   "active_script_item_index": self.active_script_item_index}
-            self.update_suite_run_time("current_script_info", current_script_info)
+
+
+
 
         except Exception as ex:
             self.error("Script error {}, exception: {}".format(script_item, str(ex)))
