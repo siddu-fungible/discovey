@@ -1,4 +1,4 @@
-import {Component, Injector, OnInit, Renderer2, ViewChild, Input, Output, EventEmitter} from '@angular/core';
+import {Component, EventEmitter, Input, OnInit, Output, Renderer2, ViewChild} from '@angular/core';
 import {ApiService} from "../services/api/api.service";
 import {LoggerService} from "../services/logger/logger.service";
 import {Title} from "@angular/platform-browser";
@@ -6,8 +6,7 @@ import {CommonService} from "../services/common/common.service";
 import {ActivatedRoute, Router} from "@angular/router";
 import {Observable, of} from "rxjs";
 import {switchMap} from "rxjs/operators";
-import {PerformanceService} from "./performance.service";
-import {SelectMode} from "./performance.service";
+import {PerformanceService, SelectMode} from "./performance.service";
 
 
 class ChildInfo {
@@ -991,11 +990,8 @@ export class PerformanceComponent implements OnInit {
       }, error => {
         console.error("Unable to fetch chartInfo");
       })
-
     }
-
   }
-
 
   showAtomicMetric = (flatNode) => {
     if (this.selectMode == SelectMode.ShowMainSite || this.selectMode == SelectMode.ShowViewWorkspace) {
@@ -1033,6 +1029,52 @@ export class PerformanceComponent implements OnInit {
       this.commonService.scrollTo("chart-info");
       this.chartReady = true;
       this.fetchChartInfo(flatNode);
+    }
+  };
+
+  showNonAtomicMetric = (flatNode) => {
+    if (this.selectMode == SelectMode.ShowMainSite || this.selectMode == SelectMode.ShowViewWorkspace) {
+      if (flatNode.node.metricModelName && flatNode.node.chartName !== "All metrics") {
+        this.chartReady = false;
+        if (this.currentNode && this.currentNode.showAddJira) {
+          this.currentNode.showAddJira = false;
+        }
+        if (this.currentFlatNode && this.currentFlatNode.showJiraInfo) {
+          this.currentFlatNode.showJiraInfo = false;
+        }
+        if (this.currentFlatNode && this.currentFlatNode.showGitInfo) {
+          this.currentFlatNode.showGitInfo = false;
+        }
+        this.showBugPanel = false;
+        this.currentNode = flatNode.node;
+        this.currentNode.showAddJira = true;
+        if (this.currentNode && this.currentNode.companionCharts) {
+          this.currentNode.companionCharts = [...this.currentNode.companionCharts];
+        }
+        this.currentFlatNode = flatNode;
+        this.mode = Mode.ShowingNonAtomicMetric;
+        this.expandNode(flatNode);
+        if (this.selectMode == SelectMode.ShowMainSite) {
+          this.prepareGridNodes(flatNode.node);
+          this.commonService.scrollTo("chart-info");
+        }
+        this.chartReady = true;
+      } else {
+        this.chartReady = false;
+        this.expandNode(flatNode);
+        this.chartReady = true;
+      }
+      if (!flatNode.special && this.selectMode == SelectMode.ShowMainSite) {
+        this.navigateByQuery(flatNode);
+      }
+      this.fetchChartInfo(flatNode);
+    } else {
+      this.expandNode(flatNode);
+      this.currentNode = flatNode.node;
+      this.currentFlatNode = flatNode;
+      if (this.selectMode == SelectMode.ShowEditWorkspace) {
+        this.currentFlatNode.showAddLeaf = true;
+      }
     }
   };
 
@@ -1108,46 +1150,6 @@ export class PerformanceComponent implements OnInit {
       }
     }
   }
-
-  showNonAtomicMetric = (flatNode) => {
-    if (this.selectMode == SelectMode.ShowMainSite) {
-      if (flatNode.node.metricModelName && flatNode.node.chartName !== "All metrics") {
-        this.chartReady = false;
-        if (this.currentNode && this.currentNode.showAddJira) {
-          this.currentNode.showAddJira = false;
-        }
-        if (this.currentFlatNode && this.currentFlatNode.showJiraInfo) {
-          this.currentFlatNode.showJiraInfo = false;
-        }
-        if (this.currentFlatNode && this.currentFlatNode.showGitInfo) {
-          this.currentFlatNode.showGitInfo = false;
-        }
-        this.showBugPanel = false;
-        this.currentNode = flatNode.node;
-        this.currentNode.showAddJira = true;
-        if (this.currentNode && this.currentNode.companionCharts) {
-          this.currentNode.companionCharts = [...this.currentNode.companionCharts];
-        }
-        this.currentFlatNode = flatNode;
-        this.mode = Mode.ShowingNonAtomicMetric;
-        this.expandNode(flatNode);
-        this.prepareGridNodes(flatNode.node);
-        this.commonService.scrollTo("chart-info");
-        this.chartReady = true;
-      } else {
-        this.chartReady = false;
-        this.expandNode(flatNode);
-        this.chartReady = true;
-      }
-      if (!flatNode.special)
-        this.navigateByQuery(flatNode);
-      this.fetchChartInfo(flatNode);
-    } else {
-      this.expandNode(flatNode);
-      this.currentNode = flatNode.node;
-      this.currentFlatNode = flatNode;
-    }
-  };
 
   navigateByQuery(flatNode) {
     let path = this.lineageToPath(flatNode.lineage[0]);
