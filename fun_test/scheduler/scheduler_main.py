@@ -462,12 +462,10 @@ class SuiteWorker(Thread):
         if self.current_script_process_id:
             for i in range(2):
                 try:
-                    while self.current_script_process.poll() is None:
-                        # os.kill(self.current_script_process.pid, signal.SIGINT)
+                    if self.is_process_running(pid=self.current_script_process_id, script_path=self.current_script_path):
+                        os.kill(self.current_script_process_id, signal.SIGINT)
                         time.sleep(5)
-                        self.current_script_process.kill()
-                        os.kill(self.current_script_process.pid, signal.SIGKILL)
-                        self.current_script_process.communicate()
+                        os.kill(self.current_script_process_id, signal.SIGKILL)
                 except Exception as ex:
                     pass
 
