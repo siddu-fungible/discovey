@@ -25,7 +25,7 @@
     "blt_count": 6,
     "blt_details": {"type": "VOL_TYPE_BLK_LOCAL_THIN", "block_size": 4096},
     "stripe_details": {"ns_id": 1, "type": "VOL_TYPE_BLK_STRIPE", "vol_size": 569083166720,
-      "block_size": 4096, "stripe_unit": 2},
+      "block_size": 4096, "stripe_unit": 1},
     "command_timeout": 30,
     "iter_interval": 5,
     "create_file_system": true,
