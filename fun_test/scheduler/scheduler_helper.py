@@ -24,6 +24,7 @@ from asset.asset_global import AssetType
 from web.fun_test.models import Asset
 from web.fun_test.models import TestBed, User, Suite
 from django.core.exceptions import ObjectDoesNotExist
+from web.fun_test.models import SchedulerConfig
 from django.db import transaction
 from pytz import timezone
 from datetime import timedelta

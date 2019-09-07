@@ -487,6 +487,26 @@ class ScriptInfo(models.Model):
     bug = models.TextField(default="")
 
 
+class SchedulerConfig(models.Model):
+    asset_unlock_warning_time = models.IntegerField(default=30)
+    debug = models.BooleanField(default=False)
+
+    @staticmethod
+    def get():
+        if not SchedulerConfig.objects.exists():
+            SchedulerConfig().save()
+        return SchedulerConfig.objects.first()
+
+    @staticmethod
+    def get_asset_unlock_warning_time():
+        config = SchedulerConfig.get()
+        return config.asset_unlock_warning_time
+
+    @staticmethod
+    def get_debug():
+        config = SchedulerConfig.get()
+        return config.debug
+
 class SchedulerInfo(models.Model):
     """
     A place to store scheduler state such as time started, time restarted, current state
