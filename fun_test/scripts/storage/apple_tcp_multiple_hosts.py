@@ -489,10 +489,11 @@ class StripeVolumeTestCase(FunTestCase):
                 fun_test.test_assert(command_result["status"], "Create BLT {} with uuid {} on DUT".format(i, cur_uuid))
             fun_test.shared_variables["thin_uuid"] = self.thin_uuid
 
+            self.stripe_vol_size = (self.blt_capacity - self.stripe_unit_size) * self.blt_count
             # Create Strip Volume
             self.stripe_uuid = utils.generate_uuid()
             command_result = self.storage_controller.create_volume(type=self.stripe_details["type"],
-                                                                   capacity=self.stripe_details["vol_size"],
+                                                                   capacity=self.stripe_vol_size,
                                                                    name="stripevol1",
                                                                    uuid=self.stripe_uuid,
                                                                    block_size=self.stripe_details["block_size"],
