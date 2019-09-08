@@ -456,7 +456,7 @@ def re_run_job(request):
                     del original_environment["tftp_image_path"]
 
         new_suite_execution = original_suite_execution
-        new_suite_execution.environment = original_environment
+        new_suite_execution.environment = json.dumps(original_environment)
         new_suite_execution.pk = None
         new_suite_execution.execution_id = LastSuiteExecution.get_next()
         new_suite_execution.submitted_time = get_current_time()

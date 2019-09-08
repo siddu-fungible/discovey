@@ -26,7 +26,7 @@
   </div>
 
 
-  <button class="fun-button-add"><a style="color: white" href="/regression/suite_editor">Add a suite</a></button>
+  <button class="fun-button-add" (click)="onAddSuiteClick()">Add a suite</button>
   <div class="fun-flex-container">
     <!-- pager -->
     <div id="page-div" *ngIf="pager.pages && pager.pages.length">
