@@ -587,8 +587,14 @@ def increase_decrease_priority(job_id, increase=True):
 def get_manual_lock_test_beds():
     return TestBed.objects.filter(manual_lock=True)
 
+def get_manual_lock_assets():
+    return Asset.objects.filter(manual_lock_user__isnull=False)
+
 def get_test_bed_by_name(test_bed_name):
     return TestBed.objects.get(name=test_bed_name)
+
+def get_asset(asset_name, asset_type):
+    return Asset.objects.get(name=asset_name, type=asset_type)
 
 def manual_un_lock_assets(test_bed_name, manual_lock_submitter):
     from asset.asset_manager import AssetManager
@@ -604,10 +610,16 @@ def send_error_mail(message, submitter_email=None, job_id=None):
     pass
 
 
-def send_test_bed_remove_lock(test_bed, warning=False, un_lock_warning_time=60 * 10):
+def send_test_bed_remove_lock(test_bed=None, asset=None, warning=False, un_lock_warning_time=60 * 10):
 
-    submitter_email = test_bed.manual_lock_submitter
-    expiry_time = test_bed.manual_lock_expiry_time
+    if test_bed:
+        submitter_email = test_bed.manual_lock_submitter
+        expiry_time = test_bed.manual_lock_expiry_time
+        item_name = "test-bed {}".format(test_bed.name)
+    else:
+        submitter_email = asset.manual_lock_user
+        expiry_time = asset.manual_lock_expiry_time
+        item_name = "asset {}".format(asset.name)
 
     default_email_list = [x.email for x in TestbedNotificationEmails.objects.all()]
     to_addresses = [submitter_email]
@@ -615,13 +627,13 @@ def send_test_bed_remove_lock(test_bed, warning=False, un_lock_warning_time=60 *
 
     user = User.objects.get(email=submitter_email)
     content = "Hi {},".format(user.first_name) + "<br>"
-    content += "Manual-testing lock duration for test-bed {} has exceeded. Expiry time: {}".format(test_bed.name, str(expiry_time)) + "<br>"
+    content += "Manual-testing lock duration for {} has exceeded. Expiry time: {}".format(item_name, str(expiry_time)) + "<br>"
     if warning:
-        content += "We will unlock the test-bed in {} minutes".format(un_lock_warning_time / 60) + "<br>"
-        subject = "Manual-testing lock duration for test-bed {} has exceeded".format(test_bed.name)
+        content += "We will unlock {} in {} minutes".format(item_name, un_lock_warning_time / 60) + "<br>"
+        subject = "Manual-testing lock duration for {} has exceeded".format(item_name)
     else:
         content += "Unlocking now" + "<br>"
-        subject = "Manual lock for test-bed {} removed".format(test_bed.name)
+        subject = "Manual lock for {} removed".format(item_name)
     content += "- Regression" + "<br>"
 
     send_mail(to_addresses=to_addresses, content=content, subject=subject)

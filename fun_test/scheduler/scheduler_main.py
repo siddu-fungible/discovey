@@ -66,7 +66,9 @@ class TestBedWorker(Thread):
         super(TestBedWorker, self).__init__()
         self.shutdown_requested = False
         self.warn_list = []
+        self.asset_warn_list = []
         self.test_bed_lock_timers = {}
+        self.asset_lock_timers = {}
 
     @debug_function
     def shutdown(self):
@@ -91,6 +93,32 @@ class TestBedWorker(Thread):
             scheduler_logger.exception(str(ex))
 
     @debug_function
+    def asset_unlock_dispatch(self, asset_name, asset_type):
+        try:
+            composite_key = asset_name + asset_type
+            asset = get_asset(asset_name=asset_name, asset_type=asset_type)
+
+            if asset and asset.manual_lock_user:
+                if get_current_time() > asset.manual_lock_expiry_time:
+                    asset.manual_lock_user = None
+                    asset.save()
+                    send_test_bed_remove_lock(asset=asset, warning=False)
+
+                    if composite_key in self.asset_lock_timers:
+                        del self.asset_lock_timers[composite_key]
+            self.warn_list.remove(composite_key)
+        except Exception as ex:
+            scheduler_logger.exception(str(ex))
+
+    def is_asset_in_warn_list(self, asset):
+        found = False
+        for asset_in_warn_list in self.asset_warn_list:
+            found = (asset.name == asset_in_warn_list["name"]) and (asset.type == asset_in_warn_list["type"])
+            if found:
+                break
+        return found
+
+    @debug_function
     def run(self):
         while not self.shutdown_requested:
             test_beds = get_manual_lock_test_beds()
@@ -100,11 +128,27 @@ class TestBedWorker(Thread):
                     if get_current_time() > expiry_time:
                         scheduler_logger.info("Test-bed {} manual lock expired".format(test_bed.name))
                         un_lock_warning_time = 60 * SchedulerConfig.get_asset_unlock_warning_time()
-                        # self.test_bed_lock_timers[test_bed.name] = threading.Timer(ONE_HOUR, self.test_bed_unlock_dispatch, (self, test_bed.name,))
                         self.test_bed_lock_timers[test_bed.name] = threading.Timer(un_lock_warning_time, self.test_bed_unlock_dispatch, (test_bed.name,))
                         self.test_bed_lock_timers[test_bed.name].start()
                         self.warn_list.append(test_bed.name)
                         send_test_bed_remove_lock(test_bed=test_bed, warning=True, un_lock_warning_time=un_lock_warning_time)
+
+            assets = get_manual_lock_assets()
+            for asset in assets:
+                expiry_time = asset.manual_lock_expiry_time
+                asset_name = asset.name
+                asset_type = asset.type
+                composite_key = asset_name + asset_type
+                if composite_key not in self.asset_warn_list:
+                    if get_current_time() > expiry_time:
+                        scheduler_logger.info("Asset {} manual lock expired".format(asset_name))
+                        un_lock_warning_time = 60 * SchedulerConfig.get_asset_unlock_warning_time()
+
+                        self.asset_lock_timers[composite_key] = threading.Timer(un_lock_warning_time, self.asset_unlock_dispatch, (asset_name, asset_type))
+                        self.asset_lock_timers[composite_key].start()
+                        self.asset_warn_list.append(composite_key)
+                        send_test_bed_remove_lock(asset=asset, warning=True, un_lock_warning_time=un_lock_warning_time)
+
 
             time.sleep(20)
 
@@ -572,7 +616,7 @@ class SuiteWorker(Thread):
             all_tags = job_tags
 
         suite = self.get_suite()
-        if suite.tags:
+        if suite and suite.tags:
             all_tags.extend(suite.tags)
         models_helper.update_suite_execution(suite_execution_id=self.job_id,
                                              tags=all_tags)
