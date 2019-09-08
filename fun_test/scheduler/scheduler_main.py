@@ -1025,8 +1025,7 @@ def recover_in_progress_jobs():
 
 @debug_function
 def clear_out_old_jobs():
-    today = get_current_time()
-    old_jobs = models_helper.get_suite_executions_by_filter(state=JobStatusType.SCHEDULED, scheduled_time__lt=today)
+    old_jobs = models_helper.get_suite_executions_by_filter(state=JobStatusType.SCHEDULED)
     for old_job in old_jobs:
         old_job.state = JobStatusType.ABORTED
         old_job.save()
