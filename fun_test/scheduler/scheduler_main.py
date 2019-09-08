@@ -1076,6 +1076,10 @@ if __name__ == "__main__":
             run = False
             os.kill(os.getpid(), 9)
             break
+        if scheduler_info.state == SchedulerStates.SCHEDULER_STATE_PAUSED:
+            scheduler_logger.info("Scheduler is paused")
+            time.sleep(1)
+            continue
 
         try:
             process_killed_jobs()
