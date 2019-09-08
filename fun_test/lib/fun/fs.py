@@ -107,6 +107,7 @@ class Bmc(Linux):
 
     def __init__(self, disable_f1_index=None, disable_uart_logger=False, setup_support_files=None, **kwargs):
         super(Bmc, self).__init__(**kwargs)
+        self.set_prompt_terminator(r'# $')
         self.disable_f1_index = disable_f1_index
         self.disable_uart_logger = disable_uart_logger
         self.uart_log_listener_process_ids = []
@@ -387,12 +388,12 @@ class Bmc(Linux):
                              context=self.context)
 
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_ELF)
-        output = self.u_boot_command(command="bootelf -p {}".format(self.ELF_ADDRESS), timeout=80, f1_index=index, expected="CRIT hw_hsu_test \"this space intentionally left blank.\"")
-        m = re.search(r'Version=(\S+), Branch=(\S+)', output)
+        output = self.u_boot_command(command="bootelf -p {}".format(self.ELF_ADDRESS), timeout=80, f1_index=index, expected="\"this space intentionally left blank.\"")
+        m = re.search(r'FunSDK Version=(\S+), ', output) # Branch=(\S+)', output)
         if m:
             version = m.group(1)
-            branch = m.group(2)
-            fun_test.add_checkpoint(checkpoint="Version: {}, branch: {}".format(version, branch), context=self.context)
+            # branch = m.group(2)
+            fun_test.add_checkpoint(checkpoint="SDK Version: {}".format(version), context=self.context)
             fun_test.set_version(version=version.replace("bld_", ""))
 
         sections = ['Welcome to FunOS', 'NETWORK_START', 'DPC_SERVER_STARTED', 'PCI_STARTED']
@@ -1330,7 +1331,6 @@ class Fs(object, ToDictMixin):
                            disable_uart_logger=self.disable_uart_logger,
                            context=self.context,
                            setup_support_files=self.setup_bmc_support_files)
-            self.bmc.set_prompt_terminator(r'# $')
         return self.bmc
 
     def get_fpga(self):

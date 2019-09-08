@@ -1,3 +1,4 @@
 [
-  {"path": "system/f1_fun_os_apps.py"}
+  {"path": "system/f1_fun_os_apps.py"},
+  {"path": "tasks/monitor_performance.py"}
 ]

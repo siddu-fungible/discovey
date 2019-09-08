@@ -1,11 +1,88 @@
-.div {
-  margin: 10px;
+
+.flex-container {
+  display: flex;
+  justify-content: flex-start;
+  flex-direction: row;
   padding: 10px;
 }
 
-.hover-cell .hover-icon {
-  visibility: hidden;
+
+
+
+.sidenav {
+  height: 100%;
+  width: 25%;
+  position: fixed;
+  z-index: 1;
+  top: 0;
+  left: 0;
+  overflow-x: hidden;
+  padding: 10px;
 }
-.hover-cell:hover .hover-icon {
-  visibility: visible;
+
+.sidenav span {
+  margin: 10px;
+}
+
+
+
+.main {
+  margin-left: 25%;
+}
+
+.fun-panel {
+  margin-top: 10px;
+  border: 1px solid rgba(0,0,0,.125);
+}
+
+.fun-panel-header {
+  padding: 5px;
+  background-color: rgba(0,0,0,.03);
+}
+
+.fun-panel-body {
+  padding: 10px
+
+}
+
+
+display-checkpoint {
+  background-color: lightgrey;
+}
+
+
+/* this is the box */
+.container {
+    width: 150px;
+    background: #fff;
+    border: 1px solid black;
+    position: absolute;
+    text-align: center;
+    color: black;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+}
+
+/* this CS forms the triangles */
+.container:after,
+.container:before {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-style: solid;
+}
+
+
+.container:after {
+    border-color: transparent transparent transparent white;
+    border-width: 10px;
+    left: 96%;
+
+}
+
+.container:before {
+    border-color: transparent transparent transparent black;
+    border-width: 10px;
+    left: 97%;
 }

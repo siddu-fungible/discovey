@@ -3,8 +3,9 @@ from web.fun_test.analytics_models_helper import get_data_collection_time
 from lib.fun.fs import Fs
 from lib.topology.topology_helper import TopologyHelper
 from lib.templates.storage.storage_fs_template import *
-from storage_helper import *
+from scripts.storage.storage_helper import *
 from collections import OrderedDict
+from math import ceil
 
 '''
 Script to track the Apple performance on a stripe volume
@@ -133,7 +134,8 @@ class StripeVolumeLevelScript(FunTestScript):
         if self.testbed_type != "suite-based":
             self.testbed_config = fun_test.get_asset_manager().get_test_bed_spec(self.testbed_type)
             fun_test.log("{} Testbed Config: {}".format(self.testbed_type, self.testbed_config))
-            self.fs_hosts_map = utils.parse_file_to_json(SCRIPTS_DIR + "/storage/inspur_fs_hosts_mapping.json")
+            self.fs_hosts_map = utils.parse_file_to_json(SCRIPTS_DIR +
+                                                         "/storage/pocs/apple/apple_fs_hosts_mapping.json")
             self.available_hosts = self.fs_hosts_map[self.testbed_type]["host_info"]
             self.full_dut_indexes = [int(i) for i in sorted(self.testbed_config["dut_info"].keys())]
             # Skipping DUTs not required for this test
@@ -186,7 +188,7 @@ class StripeVolumeLevelScript(FunTestScript):
             self.required_hosts = OrderedDict()
             for i in xrange(self.host_start_index, self.host_start_index + self.num_hosts):
                 required_host_index.append(i)
-            fun_test.debug("Host index required for scripts: {}".format(self.required_host_index))
+            fun_test.debug("Host index required for scripts: {}".format(required_host_index))
             for j, host_name in enumerate(sorted(hosts)):
                 if j in required_host_index:
                     self.required_hosts[host_name] = hosts[host_name]
@@ -257,7 +259,7 @@ class StripeVolumeLevelScript(FunTestScript):
             self.funcp_obj[index] = StorageFsTemplate(self.come_obj[index])
             self.funcp_spec[index] = self.funcp_obj[index].deploy_funcp_container(
                 update_deploy_script=self.update_deploy_script, update_workspace=self.update_workspace,
-                mode=self.funcp_mode)
+                mode=self.funcp_mode, launch_resp_parse=True)
             fun_test.test_assert(self.funcp_spec[index]["status"],
                                  "Starting FunCP docker container in DUT {}".format(index))
             self.funcp_spec[index]["container_names"].sort()
@@ -297,6 +299,7 @@ class StripeVolumeLevelScript(FunTestScript):
         fun_test.shared_variables["num_duts"] = self.num_duts
         fun_test.shared_variables["syslog_level"] = self.syslog
         fun_test.shared_variables["db_log_time"] = self.db_log_time
+        fun_test.shared_variables["host_test_interfaces"] = self.hosts_test_interfaces
 
         for key in self.host_handles:
             # Ensure all hosts are up after reboot
@@ -423,15 +426,6 @@ class StripeVolumeTestCase(FunTestCase):
             self.nvme_io_queues = job_inputs["nvme_io_queues"]
         if "nvme_io_q" in job_inputs:
             self.nvme_io_queues = job_inputs["nvme_io_q"]
-        if "capacity" in job_inputs:
-            self.stripe_details["vol_size"] = job_inputs["capacity"]
-            self.warm_up_fio_cmd_args["size"] = str((((int(int(job_inputs["capacity"]) * .96) + 4095) / 4096) * 4096) /
-                                                    (1024 ** 3)) + "G"
-            self.fio_cmd_args["size"] = str((((int(int(job_inputs["capacity"]) * .96) + 4095) / 4096) * 4096) /
-                                            (1024 ** 3)) + "G"
-        if "runtime" in job_inputs:
-            self.fio_cmd_args["runtime"] = job_inputs["runtime"]
-            self.fio_cmd_args["timeout"] = int(job_inputs["runtime"]) + 120
 
         self.fs = fun_test.shared_variables["fs_objs"]
         self.come_obj = fun_test.shared_variables["come_obj"]
@@ -465,8 +459,10 @@ class StripeVolumeTestCase(FunTestCase):
             fun_test.test_assert(command_result["status"], "ip_cfg on DUT instance")
 
             # Compute the individual BLT sizes
-            self.capacity = (int(self.stripe_details["vol_size"] /
-                                 (self.blt_count * self.blt_details["block_size"]))) * self.blt_details["block_size"]
+            self.capacity = int(
+                ceil(self.stripe_details["vol_size"] / (self.blt_count * self.blt_details["block_size"]))
+                * self.blt_details["block_size"]
+            )
 
             # Create BLTs for striped volume
             self.stripe_unit_size = self.stripe_details["block_size"] * self.stripe_details["stripe_unit"]
@@ -489,11 +485,11 @@ class StripeVolumeTestCase(FunTestCase):
                 fun_test.test_assert(command_result["status"], "Create BLT {} with uuid {} on DUT".format(i, cur_uuid))
             fun_test.shared_variables["thin_uuid"] = self.thin_uuid
 
-            self.stripe_vol_size = (self.blt_capacity - self.stripe_unit_size) * self.blt_count
+            self.strip_vol_size = (self.blt_capacity - self.stripe_unit_size) * self.blt_count
             # Create Strip Volume
             self.stripe_uuid = utils.generate_uuid()
             command_result = self.storage_controller.create_volume(type=self.stripe_details["type"],
-                                                                   capacity=self.stripe_vol_size,
+                                                                   capacity=self.strip_vol_size,
                                                                    name="stripevol1",
                                                                    uuid=self.stripe_uuid,
                                                                    block_size=self.stripe_details["block_size"],
@@ -541,15 +537,17 @@ class StripeVolumeTestCase(FunTestCase):
                 self.nqn = "nqn" + str(host_index + 1)
 
                 self.host_handles[key].sudo_command("iptables -F && ip6tables -F && dmesg -c > /dev/null")
-                self.host_handles[key].sudo_command("/etc/init.d/irqbalance stop")
-                irq_bal_stat = self.host_handles[key].command("/etc/init.d/irqbalance status")
+                self.host_handles[key].sudo_command("systemctl stop irqbalance")
+                irq_bal_stat = self.host_handles[key].command("systemctl status irqbalance")
                 if "dead" in irq_bal_stat:
                     fun_test.log("IRQ balance stopped on {}".format(host_index))
                 else:
                     fun_test.log("IRQ balance not stopped on {}".format(host_index))
                     self.host_handles[key].sudo_command("tuned-adm profile network-throughput && tuned-adm active")
 
-                self.host_handles[key].start_bg_process(command="sudo tcpdump -i enp216s0 -w nvme_connect_auto.pcap")
+                # Interface name is not always fixed; filtering on IP of F1 instead (assuming 1 IP for now)
+                self.host_handles[key].start_bg_process(command="sudo tcpdump -i any host {} -w nvme_connect_auto.pcap"
+                                                        .format(self.test_network["f1_loopback_ip"]))
                 if hasattr(self, "nvme_io_queues") and self.nvme_io_queues != 0:
                     command_result = self.host_handles[key].sudo_command(
                         "nvme connect -t {} -a {} -s {} -n {} -i {} -q {}".format(unicode.lower(self.transport_type),
@@ -594,7 +592,8 @@ class StripeVolumeTestCase(FunTestCase):
                 self.host_handles[ip_key].sudo_command("mkfs.xfs -f {}".format(self.nvme_block_device))
                 self.host_handles[ip_key].sudo_command("mount {} /mnt".format(self.nvme_block_device))
                 fun_test.log("Creating a testfile on XFS volume")
-                fio_output = self.host_handles[ip_key].pcie_fio(filename="/mnt/testfile.dat", **self.warm_up_fio_cmd_args)
+                fio_output = self.host_handles[ip_key].pcie_fio(filename="/mnt/testfile.dat",
+                                                                **self.warm_up_fio_cmd_args)
                 fun_test.test_assert(fio_output, "Pre-populating the file on XFS volume")
                 self.host_handles[ip_key].sudo_command("umount /mnt")
                 self.host_handles[ip_key].disconnect()
@@ -910,7 +909,7 @@ class StripeVolumeTestCase(FunTestCase):
                     row_data_list.append(row_data_dict[i])
 
             table_data_rows.append(row_data_list)
-            post_results("Apple_TCP_Multiple_Host_Perf", test_method, *row_data_list)
+            # post_results("Apple_TCP_Multiple_Host_Perf", test_method, *row_data_list)
 
         table_data = {"headers": table_data_headers, "rows": table_data_rows}
         fun_test.add_table(panel_header="Apple TCP RandRead Multi-Host Perf Table", table_name=self.summary,

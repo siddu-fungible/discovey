@@ -1,0 +1,49 @@
+{
+  "GlobalSetup": {
+    "bootargs": ["app=mdt_test,load_mods,hw_hsu_test workload=storage cc_huid=3 --serial --disable-wu-watchdog --dpc-server --dpc-uart --mgmt --all_10g --nofreeze --funtop",
+                 "app=mdt_test,load_mods,hw_hsu_test workload=storage cc_huid=2 --serial --disable-wu-watchdog --dpc-server --dpc-uart --mgmt --all_10g --nofreeze --funtop"],
+    "dut_start_index": 0,
+    "host_start_index": 0,
+    "update_workspace": false,
+    "update_deploy_script": false,
+    "funcp_mode": "ep",
+    "num_f1_per_fs": 1,
+    "num_f1s": 1,
+    "num_hosts": 8,
+    "fpg_int_prefix": "fpg",
+    "load_modules": ["nvme_tcp"],
+    "syslog": 2,
+    "command_timeout": 5,
+    "reboot_timeout": 600,
+    "nvme_device": "/dev/nvme0",
+    "ethernet_adapter": "Mellanox",
+    "override_numa_node": {"override": true, "override_node": "NUMA node0 CPU(s)"}
+  },
+  "RandReadXFS": {
+    "syslog": 2,
+    "num_ssd": 6,
+    "blt_count": 6,
+    "blt_details": {"type": "VOL_TYPE_BLK_LOCAL_THIN", "block_size": 4096},
+    "stripe_details": {"ns_id": 1, "type": "VOL_TYPE_BLK_STRIPE", "vol_size": 569083158528,
+      "block_size": 4096, "stripe_unit": 1},
+    "command_timeout": 30,
+    "iter_interval": 5,
+    "create_file_system": true,
+    "transport_type": "tcp",
+    "transport_port": 1099,
+    "nvme_io_queues": 16,
+    "nvme_device": "/dev/nvme0",
+    "iostat_details": { "interval": 2},
+    "fio_jobs_iodepth": ["(32, 1)"],
+    "fio_job_name": {"read": "tcp", "randread": "tcp"},
+    "warm_up_traffic": 1,
+    "warm_up_fio_cmd_args": {"bs": "4k", "iodepth": 8, "fill_device": 1, "rw": "randwrite", "direct": 1, "prio": 0,
+                             "size": "100G", "cpus_allowed": "1-19", "numjobs": 1, "timeout": 3000},
+    "fio_cmd_args": {"ioengine": "mmap", "size": "100G", "direct": 1, "time_based": 1, "runtime": 1200,
+                      "thread": 1, "cpus_allowed": "1-19,41-59", "group_reporting": 1, "prio":  0, "timeout": 11000},
+    "fio_modes": ["randread"],
+    "expected_fio_result": {
+      "(32, 1)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}}
+    }
+  }
+}

@@ -202,7 +202,7 @@ class AssetManager:
         assets_required_for_test_bed = None
         if test_bed_type not in self.PSEUDO_TEST_BEDS:
             assets_required_for_test_bed = self.get_assets_required(test_bed_name=test_bed_type)
-            if "fs-42" in test_bed_type:
+            if "fs-41" in test_bed_type:
                 print ("TB: {}".format(test_bed_type))
             in_use, error_message, used_by_suite_id, asset_in_use = self.check_assets_in_use(test_bed_type=test_bed_type, assets_required=assets_required_for_test_bed)
 
@@ -230,9 +230,17 @@ class AssetManager:
         if manual_lock_info:
             result["status"] = False
             result["message"] = "Test-bed: {} manual locked by: {}".format(test_bed_type, manual_lock_info["manual_lock_submitter"])
+            if in_use:  # Check if the required internal resources are used by another run
+                result["internal_asset_in_use"] = True
+                result["internal_asset_in_use_suite_id"] = used_by_suite_id
+                result["internal_asset"] = asset_in_use
         elif asset_level_manual_locked:
             result["status"] = False
             result["message"] = asset_level_error_message
+            if in_use:  # Check if the required internal resources are used by another run
+                result["internal_asset_in_use"] = True
+                result["internal_asset_in_use_suite_id"] = used_by_suite_id
+                result["internal_asset"] = asset_in_use
         elif in_progress_count >= credits:
             result["status"] = False
             result["message"] = "Test-bed: {0} locked by Suite: <a href='/regression/suite_detail/{1}'>{1}</a>".format(test_bed_type, in_progress_suites[0].execution_id)
