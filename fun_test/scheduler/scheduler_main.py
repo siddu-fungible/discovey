@@ -100,10 +100,12 @@ class TestBedWorker(Thread):
 
             if asset and asset.manual_lock_user:
                 if get_current_time() > asset.manual_lock_expiry_time:
+                    try:
+                        send_test_bed_remove_lock(asset=asset, warning=False)
+                    except:
+                        pass
                     asset.manual_lock_user = None
                     asset.save()
-                    send_test_bed_remove_lock(asset=asset, warning=False)
-
                     if composite_key in self.asset_lock_timers:
                         del self.asset_lock_timers[composite_key]
             self.warn_list.remove(composite_key)
