@@ -580,7 +580,7 @@ export class RegressionComponent implements OnInit {
       this.logger.error("Unable to disable suite");
     })
   }
-  
+
   toggleReRunOptions() {
     this.reRunOptionsReRunAll = !this.reRunOptionsReRunAll;
     this.reRunOptionsReRunFailed = !this.reRunOptionsReRunFailed;

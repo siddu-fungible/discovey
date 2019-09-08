@@ -534,7 +534,7 @@ class SuiteWorker(Thread):
         result = None
         suite_execution = self.get_suite_execution()
         if suite_execution.suite_id:
-            result = models_helper.get_suite(id=suite_execution.suite_id)
+            result = get_suite(suite_id=suite_execution.suite_id)
         return result
 
     @debug_function

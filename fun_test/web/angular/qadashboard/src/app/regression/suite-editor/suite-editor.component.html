@@ -180,7 +180,8 @@
   </ng-container>
 
 
-  <ng-container *ngIf="mode == SuiteMode.SUITE && customTestBedValidated else noCustomTestBedSpec">
+
+  <ng-container *ngIf="mode == SuiteMode.SUITE && customTestBedValidated; else noCustomTestBedSpec">
     <app-section-horizontal-line [text]="'Custom test-bed spec'"></app-section-horizontal-line>
     <div style="display: flex">
       <table>
@@ -203,12 +204,14 @@
          (click)="onDeleteCustomTestBedSpec(customTestBedSpecModalContent)"></i>
 
     </div>
-  </ng-container>
 
-  <ng-template *ngIf="mode == SuiteMode.SUITE" #noCustomTestBedSpec>
+
+  </ng-container>
+  <ng-template #noCustomTestBedSpec>
     <button class="fun-button-add" (click)="onAddCustomTestBedSpec(customTestBedSpecModalContent)">Add custom test-bed
     </button>
   </ng-template>
+
 
   <!--button (click)="test()">Test</button-->
   <br>

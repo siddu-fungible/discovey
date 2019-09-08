@@ -450,18 +450,6 @@ def process_dynamic_suite():
         print parse_file_to_json(job_file)
 
 
-def prepare_dynamic_suite(spec):
-
-    queued_file_name = "{}/{}.{}".format(DYNAMIC_SUITE_JOBS_DIR, suite_execution_id, DYNAMIC_SUITE_QUEUED_JOB_EXTENSION)
-    with open(queued_file_name, "w+") as qf:
-        qf.write(json.dumps(spec))
-        qf.close()
-    return queued_file_name
-
-
-
-
-
 
 def set_scheduler_state(state):
     o = SchedulerInfo.objects.first()
@@ -516,16 +504,28 @@ def move_to_queue_head(job_id):
     this_job_queue_entry = JobQueue.objects.get(job_id=job_id)
     priority_category = get_priority_category_by_priority(priority=this_job_queue_entry.priority)
     low, high = SchedulerJobPriority.RANGES[priority_category]
+    custom_test_bed_spec_this = get_suite_based_test_bed_spec(this_job_queue_entry.job_id)
 
+    lowest_priority_allowed = low
     with transaction.atomic():
         queue_entries = JobQueue.objects.all().order_by('priority')
         for queue_entry in queue_entries:
+
+            if custom_test_bed_spec_this:
+                custom_test_bed_spec_other = get_suite_based_test_bed_spec(queue_entry.job_id)
+                if not queue_entry.pre_emption_allowed:
+                    base_test_bed_other = custom_test_bed_spec_other.get("base_test_bed")
+                    base_test_bed_this = custom_test_bed_spec_this.get("base_test_bed")
+                    if base_test_bed_other == base_test_bed_this:
+                        lowest_priority_allowed = queue_entry.priority + 1
+                        break
+
+    with transaction.atomic():
+        queue_entries = JobQueue.objects.all().order_by('priority').filter(priority__gte=lowest_priority_allowed)
+        for queue_entry in queue_entries:
             queue_entry.priority += 1
-            if queue_entry.priority > high:
-                scheduler_logger.exception("Unable to change priority. Job-id: {}, high mark: {}".format(job_id, high))
-            else:
-                queue_entry.save()
-        this_job_queue_entry.priority = low
+            queue_entry.save()
+        this_job_queue_entry.priority = lowest_priority_allowed
         this_job_queue_entry.save()
 
 
@@ -557,6 +557,7 @@ def swap_priorities(job1, job2):
 
 
 def increase_decrease_priority(job_id, increase=True):
+    priorities_changed = False
     this_job_queue_entry = JobQueue.objects.get(job_id=job_id)
     this_job_priority = this_job_queue_entry.priority
     priority_category = get_priority_category_by_priority(this_job_priority)
@@ -569,9 +570,19 @@ def increase_decrease_priority(job_id, increase=True):
 
     if other_priority_jobs.count():
         other_priority_job = other_priority_jobs.last()
-        swap_priorities(this_job_queue_entry, other_priority_job)
+        if all(lambda x: x == "suite-based" for x in [other_priority_job.test_bed_type, this_job_queue_entry.test_bed_type]) and (not other_priority_job.pre_emption_allowed):
+            # get base test-bed
+            custom_test_bed_spec_other = get_suite_based_test_bed_spec(other_priority_job.job_id)
+            custom_test_bed_spec_this = get_suite_based_test_bed_spec(this_job_queue_entry.job_id)
+            if custom_test_bed_spec_other["base_test_bed"] != custom_test_bed_spec_this["base_test_bed"]:
+                swap_priorities(this_job_queue_entry, other_priority_job)
+                priorities_changed = True
+        else:
+            swap_priorities(this_job_queue_entry, other_priority_job)
+            priorities_changed = True
     else:
         pass # You are already the highest
+    return priorities_changed
 
 def get_manual_lock_test_beds():
     return TestBed.objects.filter(manual_lock=True)
@@ -624,25 +635,23 @@ def get_job_inputs(job_id):
             job_inputs = json.loads(job_spec.inputs)
     return job_inputs
 
+
+def get_suite(suite_id):
+    result = models_helper.get_suite(id=suite_id)
+    return result
+
 def get_suite_based_test_bed_spec(job_id):
     spec = None
     s = models_helper.get_suite_execution(suite_execution_id=job_id)
-    suite_path = s.suite_path
-    if suite_path:
+    suite_id = s.suite_id
+    if suite_id:
         job_inputs = get_job_inputs(job_id=job_id)
         if "custom_test_bed_spec" in job_inputs:
             spec = job_inputs.get("custom_test_bed_spec", None)
         else:
-            suite_spec = parse_suite(suite_name=suite_path)
+            suite_spec = get_suite(suite_id=suite_id)
             if suite_spec:
-                for item in suite_spec:
-                    if "info" in item:
-                        info = item["info"]
-                        if "custom_test_bed_spec" in info:
-                            spec = info["custom_test_bed_spec"]
-                        else:
-                            print("Job: {} no custom_test_bed_spec in {}".format(job_id, suite_path))
-                        break
+                spec = suite_spec.custom_test_bed_spec
     return spec
 
 def lock_assets(job_id, assets):
