@@ -663,6 +663,7 @@ class Asset(FunModel):
     job_ids = JSONField(default=[])
     manual_lock_user = models.TextField(default=None, null=True)
     test_beds = JSONField(default=[])
+    manual_lock_expiry_time = models.DateTimeField(default=timezone.now)
 
     @staticmethod
     def add_update(name, type, job_ids=None):
@@ -679,6 +680,7 @@ class Asset(FunModel):
                 a.save()
         except Exception as ex:
             pass
+
     @staticmethod
     def get(name, type):
         result = None
@@ -721,6 +723,9 @@ class Asset(FunModel):
             self.manual_lock_user = None
             self.save()
 
+    def add_time(self, minutes):
+        self.manual_lock_expiry_time += timedelta(minutes=minutes)
+        self.save()
 
 class SuiteItems(models.Model):
     script_path = models.TextField()
