@@ -109,6 +109,10 @@ export class SuitesViewComponent implements OnInit {
     this.refreshAll();
   }
 
+  onAddSuiteClick() {
+    window.location.href = "/regression/suite_editor";
+  }
+
 
 
 

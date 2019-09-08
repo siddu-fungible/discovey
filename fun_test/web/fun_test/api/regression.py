@@ -5,6 +5,7 @@ from web.fun_test.models import TestBed, Asset
 from django.db.models import Q
 from web.fun_test.models import SuiteExecution, TestCaseExecution, TestbedNotificationEmails, LastSuiteExecution
 from web.fun_test.models import ScriptInfo, RegresssionScripts, SuiteReRunInfo
+from scheduler.scheduler_global import SchedulingType
 from scheduler.scheduler_global import SchedulerStates
 from fun_settings import TEAM_REGRESSION_EMAIL, SCRIPTS_DIR
 import json
@@ -455,6 +456,7 @@ def re_run_job(request):
                     del original_environment["tftp_image_path"]
 
         new_suite_execution = original_suite_execution
+        new_suite_execution.environment = json.dumps(original_environment)
         new_suite_execution.pk = None
         new_suite_execution.execution_id = LastSuiteExecution.get_next()
         new_suite_execution.submitted_time = get_current_time()
@@ -471,6 +473,7 @@ def re_run_job(request):
         new_suite_execution.is_re_run = True
         new_suite_execution.re_run_info = re_run_info
         new_suite_execution.suite_type = SuiteType.DYNAMIC
+        new_suite_execution.scheduling_type = SchedulingType.ASAP
         new_suite_execution.save()
 
         SuiteReRunInfo(original_suite_execution_id=original_suite_execution_id,

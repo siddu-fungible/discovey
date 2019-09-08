@@ -625,13 +625,17 @@ class SuiteWorker(Thread):
 
     @debug_function
     def is_process_running(self, pid, script_path):
+        # scheduler_logger.info("is process running: {} {}".format(pid, script_path))
         running = False
         for p in psutil.process_iter():
             try:
                 if p.pid == pid and (script_path in p.cmdline()):
-                    running = p.status() == "running"
-            except:
-                pass
+                    # running = p.status() == "running"
+                    running = True
+                    # scheduler_logger.info("PID: {} is running: {}".format(pid, running))
+                    break
+            except Exception as ex:
+                scheduler_logger.exception("is process running: {} {}: {}".format(pid, script_path, str(ex)))
         return running
 
     @debug_function
