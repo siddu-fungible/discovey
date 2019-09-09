@@ -315,6 +315,9 @@ def suite_executions_count(request, state_filter_string):
             if "tags" in request_json:
                 tags = request_json["tags"]
                 # tags = json.loads(tags)
+            if "tag" in request_json:
+                tags = [request_json["tag"]]
+
             submitter_email = request_json.get('submitter_email', None)
             test_bed_type = request_json.get('test_bed_type', None)
             suite_path = request_json.get('suite_path', None)
@@ -339,6 +342,8 @@ def suite_executions(request, records_per_page=10, page=None, state_filter_strin
                 tags = request_json["tags"]
                 tags = json.loads(tags)
 
+            if "tag" in request_json:
+                tags = [request_json["tag"]]
             submitter_email = request_json.get('submitter_email', None)
             test_bed_type = request_json.get('test_bed_type', None)
             suite_path = request_json.get('suite_path', None)
