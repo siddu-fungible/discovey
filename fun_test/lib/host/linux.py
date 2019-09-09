@@ -442,7 +442,7 @@ class Linux(object, ToDictMixin):
                         self.handle.timeout = wait_until_timeout  # Pexpect does not honor timeouts
                         self.handle.expect(wait_until, timeout=wait_until_timeout)
                     except (pexpect.EOF):
-                        self.disconnect()
+                        Linux.disconnect(self)
                         return self.command(command=command,
                                             sync=sync, timeout=timeout,
                                             custom_prompts=custom_prompts,
@@ -471,7 +471,7 @@ class Linux(object, ToDictMixin):
                     if not prompt_terminator_processed:
                         self.handle.expect(self.prompt_terminator + r'$', timeout=timeout)
                 except pexpect.EOF:
-                    self.disconnect()
+                    Linux.disconnect(self)
                     # return self.command(command=command,
                     #                    sync=sync, timeout=timeout,
                     #                    custom_prompts=custom_prompts,
@@ -2797,7 +2797,7 @@ class Linux(object, ToDictMixin):
     def destroy(self):
         try:
             self.disconnect()
-        except:
+        except Exception as ex:
             pass
         try:
             if self.spawn_pid > 1:
