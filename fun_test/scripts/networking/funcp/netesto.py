@@ -2,6 +2,7 @@ from lib.system.fun_test import *
 from lib.host.linux import Linux
 import pandas as pd
 from StringIO import StringIO
+import random
 
 
 def netesto_client(host, ssh_username="localadmin", ssh_password="Precious1*"):
@@ -23,6 +24,9 @@ def netesto_client(host, ssh_username="localadmin", ssh_password="Precious1*"):
     # linux_obj.sudo_command(command="sysctl -w net.core.netdev_max_backlog=250000;sysctl -w net.ipv4.tcp_low_latency=1;")
     # linux_obj.sudo_command(command="sysctl -w net.ipv4.route.flush=1")
     fun_test.sleep(message="start tcpdump now", seconds=10)
+    if host == "cab02-qa-05":
+        linux_obj.start_bg_process("sudo tcpdump -i hu2-f0 tcp -w netesto_%s.pcap" % random.randint(1, 90000))
+        linux_obj.start_bg_process("sudo tcpdump \"tcp[tcpflags] & (tcp-syn) != 0\" -w netesto_syn_%s.pcap" % random.randint(1, 90000))
     linux_obj.command("cd ~/netesto/netesto/remote")
     linux_obj.sudo_command("./numa_script.py")
 
@@ -56,6 +60,8 @@ if __name__ == '__main__':
     # fun_test.sleep(message="Sleep before tests start", seconds=10)
     netesto_controller.sudo_command(command="./netesto.py -d < fun_scripts/script.alibaba_hu-hu", timeout=600)
 
+    # netesto_controller.sudo_command(command="./netesto.py -d < fun_scripts/script.alibaba_3servers", timeout=600)
+
     netesto_process = netesto_controller.command("cat counter; echo").strip()
     if netesto_process != "":
         netesto_controller.command("cd ~/netesto_controller/netesto/local/fun_plots")
@@ -66,7 +72,8 @@ if __name__ == '__main__':
         df = pd.read_csv(data)
         print df
         fun_test.critical(message="No of incomplete streams = %s" % df[df['Duration'] < 60].count(1).count())
-
+        x = Linux(host_ip='cab02-qa-05', ssh_username='localadmin', ssh_password='Precious1*')
+        x.sudo_command("killall tcpdump")
         netesto_controller.sudo_command("cp -r ~/netesto_controller/netesto/local/%s /var/www/html/" % netesto_process)
         netesto_controller.command("cd /var/www/html/Chart.js/fun_plots")
         netesto_controller.sudo_command("./webplot_latency.py %s" % netesto_process)
