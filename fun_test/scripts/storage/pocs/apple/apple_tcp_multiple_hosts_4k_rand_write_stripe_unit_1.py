@@ -458,9 +458,19 @@ class StripeVolumeTestCase(FunTestCase):
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "ip_cfg on DUT instance")
 
+            # Check if stripe vol size is passed as job inputs
+            if "stripe_vol_size" in job_inputs:
+                self.stripe_vol_size = int(job_inputs["stripe_vol_size"])
+            else:
+                self.stripe_vol_size = self.stripe_details["vol_size"]
+
+            # Adding 128 MB to stripe vol size to account for filesystem metadata
+            self.stripe_file_size = self.stripe_vol_size
+            self.stripe_vol_size += (128 * 1024 * 1024)
+
             # Compute the individual BLT sizes
             self.capacity = int(
-                ceil(self.stripe_details["vol_size"] / (self.blt_count * self.blt_details["block_size"]))
+                ceil(self.stripe_vol_size / (self.blt_count * self.blt_details["block_size"]))
                 * self.blt_details["block_size"]
             )
 
@@ -485,6 +495,7 @@ class StripeVolumeTestCase(FunTestCase):
                 fun_test.test_assert(command_result["status"], "Create BLT {} with uuid {} on DUT".format(i, cur_uuid))
             fun_test.shared_variables["thin_uuid"] = self.thin_uuid
 
+            # Compute new stripe vol size based on BLT size
             self.strip_vol_size = (self.blt_capacity - self.stripe_unit_size) * self.blt_count
             # Create Strip Volume
             self.stripe_uuid = utils.generate_uuid()
@@ -593,6 +604,7 @@ class StripeVolumeTestCase(FunTestCase):
                 self.host_handles[ip_key].sudo_command("mount {} /mnt".format(self.nvme_block_device))
                 fun_test.log("Creating a testfile on XFS volume")
                 fio_output = self.host_handles[ip_key].pcie_fio(filename="/mnt/testfile.dat",
+                                                                size=self.stripe_file_size,
                                                                 **self.warm_up_fio_cmd_args)
                 fun_test.test_assert(fio_output, "Pre-populating the file on XFS volume")
                 self.host_handles[ip_key].sudo_command("umount /mnt")
@@ -697,7 +709,9 @@ class StripeVolumeTestCase(FunTestCase):
                     row_data_dict["mode"] = mode
                     row_data_dict["block_size"] = fio_block_size
                     row_data_dict["iodepth"] = fio_iodepth
-                    file_size_in_gb = self.stripe_details["vol_size"] / 1073741824
+                    # file_size_in_gb = self.stripe_details["vol_size"] / 1073741824
+                    # Get file size based on strip_vol_size
+                    file_size_in_gb = self.strip_vol_size / 1073741824
                     row_data_dict["size"] = str(file_size_in_gb) + "GB"
 
                     fun_test.log("Running FIO {} only test with the block size and IO depth set to {} & {}".
