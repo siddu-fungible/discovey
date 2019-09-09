@@ -105,8 +105,8 @@ class RegexTemplate(Linux):
             results = []
             cmd = 'ffac '
             graph_path = ""
-            pat_prefix = (os.path.basename(compiler_args["p"])).split(".pat")[0]
-            pld_prefix=os.path.basename(compiler_args["r"])
+            #pat_prefix = (os.path.basename(compiler_args["p"])).split(".pat")[0]
+            #pld_prefix=os.path.basename(compiler_args["r"])
 
             print "Entered compile_re: args: ", args
             for arg in args:
@@ -191,11 +191,15 @@ class RegexTemplate(Linux):
 
 
         @fun_test.safe
-        def compile_n_validate(con1, mem_dist, pat_path, pld_path, res_path,exp_file_path,pat_pld_files ,exclude_lst=[], engine="", juniper_style="",  time_out=5*60):
+        def compile_n_validate(con1, mem_dist, pat_path, pld_path, res_path,exp_file_path,pat_pld_files ,exclude_lst=[],target="", engine="", juniper_style="",  time_out=5*60):
+            trgt="f1"
+            compilation_failed=validation_failed=0
             print ("compile and validation function")
             print ("pat_pld_files are ",pat_pld_files)
             print ("pat_pld_fileS_items are ",pat_pld_files.items())
             jstyle = "yes"
+            if target=="s1":
+                trgt="s1"
             for pat,plds in pat_pld_files.items():
                 print ("pattern is",pat)
                 print ("payload is ",plds)
@@ -257,42 +261,42 @@ class RegexTemplate(Linux):
                                 print ("DFA")
                                 if mem == "dflt":
                                     op = con1.compile_re(j=jstyle, drop_unsupported=" ", e=engine, r=pattern_path, p=payload_path,
-                                                        o=res_path + graph_name,s="1500" ,time_out=time_out)
+                                                        o=res_path + graph_name,s="1500" ,target=trgt,time_out=time_out)
                                 if mem == "rbm":
                                     op = con1.compile_re(j=jstyle, drop_unsupported=" ", no_exm=" ", e=engine, r=pattern_path, p=payload_path,
-                                                        o=res_path + graph_name,s="1500", time_out=time_out)
+                                                        o=res_path + graph_name,s="1500", target=trgt,time_out=time_out)
                                 if mem == "exm":
                                     op = con1.compile_re(j=jstyle, drop_unsupported=" ", B="0", e=engine, r=pattern_path, p=payload_path,
-                                                        o=res_path + graph_name,s="1500", time_out=time_out)
+                                                        o=res_path + graph_name,s="1500",target=trgt, time_out=time_out)
                                 if mem == "exm_plr":
                                     op = con1.compile_re(j=jstyle, drop_unsupported=" ", B="0", L=" ", e=engine, r=pattern_path,
-                                                        p=payload_path, o=res_path + graph_name, s="1500",time_out=time_out)
+                                                        p=payload_path, o=res_path + graph_name, s="1500",target=trgt,time_out=time_out)
                                 if mem == "rbm_exm":
                                     op = con1.compile_re(j=jstyle, drop_unsupported=" ", B="10", e=engine, r=pattern_path, p=payload_path,
-                                                        o=res_path + graph_name,s="1500", time_out=time_out)
+                                                        o=res_path + graph_name,s="1500", target=trgt,time_out=time_out)
                                 if mem == "rbm_exm_plr":
                                     op = con1.compile_re(j=jstyle, drop_unsupported=" ", B="10", L=" ", e=engine, r=pattern_path,
-                                                        p=payload_path,s="1500", o=res_path + graph_name, time_out=time_out)
+                                                        p=payload_path,s="1500", o=res_path + graph_name,target=trgt, time_out=time_out)
                             elif engine == "0":
                                 print ("NFA")
                                 if mem == "dflt":
                                     op = con1.compile_re(j=jstyle, drop_unsupported=" ", e=engine, r=pattern_path, p=payload_path,
-                                                        o=res_path + graph_name, s="1500",time_out=time_out)
+                                                        o=res_path + graph_name, s="1500",target=trgt,time_out=time_out)
                                 if mem == "rbm":
                                     op = con1.compile_re(j=jstyle, drop_unsupported=" ", no_exm=" ", e=engine, r=pattern_path, p=payload_path,
-                                                        o=res_path + graph_name,s="1500", time_out=time_out)
+                                                        o=res_path + graph_name,s="1500", target=trgt,time_out=time_out)
                                 if mem == "exm":
                                     op = con1.compile_re(j=jstyle, drop_unsupported=" ", H="0", e=engine, r=pattern_path, p=payload_path,
-                                                        o=res_path + graph_name,s="1500", time_out=time_out)
+                                                        o=res_path + graph_name,s="1500",target=trgt, time_out=time_out)
                                 if mem == "exm_plr":
                                     op = con1.compile_re(j=jstyle, drop_unsupported=" ", H="0", L=" ", e=engine, r=pat_path + base +"/"+pat,
-                                                        p=pld_path+base+"/payloads/"+base+".in", o=res_path + graph_name, s="1500",time_out=time_out)
+                                                        p=pld_path+base+"/payloads/"+base+".in",target=trgt, o=res_path + graph_name, s="1500",time_out=time_out)
                                 if mem == "rbm_exm":
                                     op = con1.compile_re(j=jstyle, drop_unsupported=" ", H="10", e=engine, r=pattern_path, p=payload_path,
-                                                        o=res_path + graph_name, s="1500", time_out=time_out)
+                                                        o=res_path + graph_name, s="1500",target=trgt, time_out=time_out)
                                 if mem == "rbm_exm_plr":
                                     op = con1.compile_re(j=jstyle, drop_unsupported=" ", H="10", L=" ", e=engine,r=pattern_path,
-                                                        p=payload_path, o=res_path + graph_name,s="1500", time_out=time_out)
+                                                        p=payload_path, o=res_path + graph_name,s="1500",target=trgt, time_out=time_out)
                             else:
                                 print ("FFA")
                                 if mem == "dflt":
@@ -301,29 +305,29 @@ class RegexTemplate(Linux):
                                    # op = self.compile_re(j=jstyle, drop_unsupported=" ", r=pat_path+base+"/pattern/"+pat, p=pld_path+base+"/payloads/"+base+".in",
                                                         #o=res_path + graph_name, time_out=time_out)
                                     #op = self.compile_re(j=jstyle, drop_unsupported=" ",r=pat_path+"/pattern/"+pat, o=res_path + graph_name, time_out=time_out)
-                                    op=con1.compile_re(j=jstyle, drop_unsupported=" ", r=pattern_path,  p=payload_path,o=res_path+graph_name,time_out=time_out)
+                                    op=con1.compile_re(j=jstyle, drop_unsupported=" ", r=pattern_path,  p=payload_path,o=res_path+graph_name,target=trgt,time_out=time_out)
                                 print ("first check point")
                                 if mem == "rbm":
                                     print("FFA :rbm")
-                                    op = con1.compile_re(j=jstyle, drop_unsupported=" ", r=pattern_path,  p=payload_path, o=res_path + graph_name,  no_exm=" ",
+                                    op = con1.compile_re(j=jstyle, drop_unsupported=" ", r=pattern_path,  p=payload_path, o=res_path + graph_name, target=trgt, no_exm=" ",
                                                        s="1500",time_out=time_out)
                                 print ("second  check point")
                                 if mem == "exm":
                                     print ("FFA :exm")
-                                    op = con1.compile_re(j=jstyle, drop_unsupported=" ",r=pattern_path, p=payload_path, o=res_path + graph_name,  B="0", H="0",
+                                    op = con1.compile_re(j=jstyle, drop_unsupported=" ",r=pattern_path, p=payload_path, o=res_path + graph_name, target=trgt, B="0", H="0",
                                                         s="1500",time_out=time_out)
                                 print ("third check point")
                                 if mem == "exm_plr":
                                     print ("FFA exm_plr")
-                                    op = con1.compile_re(j=jstyle, drop_unsupported=" ",  r=pattern_path, p=payload_path,o=res_path + graph_name,B="0", H="0", L=" ",
+                                    op = con1.compile_re(j=jstyle, drop_unsupported=" ",  r=pattern_path, p=payload_path,o=res_path + graph_name,target=trgt,B="0", H="0", L=" ",
                                                        s="1500", time_out=time_out)
                                 print("fourh checkpoint")
                                 if mem == "rbm_exm":
-                                    op = con1.compile_re(j=jstyle, drop_unsupported=" ",r=pattern_path,   p=payload_path, o=res_path + graph_name,B="10", H="10",
+                                    op = con1.compile_re(j=jstyle, drop_unsupported=" ",r=pattern_path,   p=payload_path, o=res_path + graph_name,target=trgt,B="10", H="10",
                                                         s="1500", time_out=time_out)
                                 if mem == "rbm_exm_plr":
                                     print ("FFA:rbbm_exm_plr")
-                                    op = con1.compile_re(j=jstyle, drop_unsupported=" ",r=pattern_path,  p=payload_path,o=res_path + graph_name, B="10", H="10", L=" ",
+                                    op = con1.compile_re(j=jstyle, drop_unsupported=" ",r=pattern_path,  p=payload_path,o=res_path + graph_name, target=trgt,B="10", H="10", L=" ",
                                                      s="1500",time_out=time_out)
 
                         except Exception as e:
@@ -393,13 +397,28 @@ class RegexTemplate(Linux):
                                 else:
                                     fail_op_lst = op[1].split("\n")
                                     result_str += "".join(fail_op_lst[-5:])
-                            fun_test.test_assert(op[0],result_str + "\n")
-                            fun_test.test_assert(validation,result_str1+"\n")
+                            try:
+                                fun_test.test_assert(op[0],result_str + "\n")
+                            except:
+                                compilation_failed+=1
+                            try:
+                                fun_test.test_assert(validation,result_str1+"\n")
+                            except:
+                                validation_failed+=1
                             print ("after assertion")
 
                             #fun_test.test_assert(op[0], result_str + "\n")
                         except:
                             pass
+
+                        try:
+                            fun_test.test_assert(compilation_failed==0, " Fail number: {}".format(compilation_failed))
+                        except:
+                            print("assertion failed")
+                        try:
+                            fun_test.test_assert(validation_failed==0,"fail number: {}".format(validation_failed))
+                        except:
+                            print ("assertion failed")
 
         '''
                         try:
