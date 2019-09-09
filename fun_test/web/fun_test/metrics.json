@@ -3344,7 +3344,7 @@
               {
                 "metric_model_name": "MetricContainer",
                 "name": "teramarks_customer_juniper_ipsec_encryption",
-                "label": "IPSEC - Encryption (Network)",
+                "label": "IPSEC - Encryption",
                 "children": [
                   {
                     "metric_model_name": "MetricContainer",
@@ -3385,7 +3385,7 @@
               {
                 "metric_model_name": "MetricContainer",
                 "name": "teramarks_customer_juniper_ipsec_decryption",
-                "label": "IPSEC - Decryption (Network)",
+                "label": "IPSEC - Decryption",
                 "children": [
                   {
                     "metric_model_name": "MetricContainer",
@@ -3426,7 +3426,7 @@
               {
                 "metric_model_name": "MetricContainer",
                 "name": "juniper_ipsec_encryption",
-                "label": "IPSEC - Encryption (App)",
+                "label": "IPSEC - Encryption (ipsec_dp_perf)",
                 "children": [
                   {
                     "metric_model_name": "MetricContainer",
@@ -3467,7 +3467,7 @@
               {
                 "metric_model_name": "MetricContainer",
                 "name": "juniper_ipsec_decryption",
-                "label": "IPSEC - Decryption (App)",
+                "label": "IPSEC - Decryption (ipsec_dp_perf)",
                 "children": [
                   {
                     "metric_model_name": "MetricContainer",
