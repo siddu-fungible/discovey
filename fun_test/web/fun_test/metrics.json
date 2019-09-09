@@ -493,6 +493,7 @@
                         "metric_model_name": "MetricContainer",
                         "name": "juniper_ipsec",
                         "label": "Crypto",
+                        "disable": true,
                         "children": [
                           {
                             "metric_model_name": "MetricContainer",
@@ -1341,6 +1342,7 @@
             "metric_model_name": "MetricContainer",
             "name": "Crypto raw throughput",
             "label": "Crypto Raw Throughput",
+            "disable": true,
             "reference": true
           },
           {
@@ -1736,6 +1738,7 @@
             "metric_model_name": "MetricContainer",
             "name": "Crypto raw throughput",
             "label": "Crypto Raw Throughput",
+            "disable": true,
             "reference": true
           }
         ]
