@@ -106,7 +106,8 @@ export class SuitesViewComponent implements OnInit {
   onSearchText(searchText) {
     this.byNameSearchText = searchText;
     //console.log(this.byNameSearchText);
-    this.refreshAll();
+    //this.refreshAll();
+    this.setPage(1);
   }
 
   onAddSuiteClick() {
