@@ -412,7 +412,7 @@ class RegexTemplate(Linux):
                             pass
 
             try:
-                fun_test.test_assert(compilation_failed == 0, ' Compilation Failed testcase number: {}'.format(compilation_failed)
+                fun_test.test_assert(compilation_failed > 0, ' Compilation Failed testcase number: {}'.format(compilation_failed)
             except:
                 print("assertion failed")
             try:
