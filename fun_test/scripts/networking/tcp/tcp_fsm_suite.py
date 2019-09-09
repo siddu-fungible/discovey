@@ -23,6 +23,7 @@ all_hosts_specs = parse_file_to_json(file_name=hosts_json_file)
 host_spec = all_hosts_specs[host_name]
 host_username = host_spec["ssh_username"]
 host_passwd = host_spec["ssh_password"]
+script_timeout = 3600
 
 
 
@@ -100,9 +101,7 @@ class TcSynRecvd(FunTestCase):
         self.set_test_details(id=1, summary="Test TCP Syn Recvd State",
                               steps="""
                                 Test scenarios covered:
-                                'syn_without_payload', 'syn_with_payload', 'synack_retransmissions', 'synack_retransmission_interval',
-                       'duplicate_syn', 'duplicate_syn_after_synack_retransmissions', 'duplicate_syn_diff_seq_num_in_window',
-                       'duplicate_syn_diff_seq_num_out_of_window'
+                                TCP FSM scenarios in syn recvd state
                               """)
 
     def setup(self):
@@ -117,10 +116,10 @@ class TcSynRecvd(FunTestCase):
     def run(self):
         try:
             if subtests == 'all':
-                self.linux_obj.sudo_command("./tcp_functional.py -b fs -p -t tc_syn_recvd",timeout=600)
+                self.linux_obj.sudo_command("./tcp_functional.py -b fs -p -t tc_syn_recvd",timeout=script_timeout )
             else:
                 self.linux_obj.sudo_command(
-                    "./tcp_functional.py -b fs -p -t tc_syn_recvd --ts " + subtests, timeout=600)
+                    "./tcp_functional.py -b fs -p -t tc_syn_recvd --ts " + subtests, timeout=script_timeout)
             return True
         except Exception as e:
             fun_test.critical("Error" + e)
@@ -141,54 +140,6 @@ class TcSynRecvd(FunTestCase):
         fun_test.test_assert(expression=res, message=key + '=' + value)
         self.linux_obj.disconnect()
 
-class Tc3whs(FunTestCase):
-
-
-    def describe(self):
-        self.set_test_details(id=2, summary="Test TCP Three way handshake",
-                              steps="""
-                                Test scenarios covered:
-                                'ack_without_payload', 'ack_with_payload', 'ack_with_push_flag_without_payload',
-                       'ack_with_push_flag_with_payload', 'ack_in_future_segment', 'ack_in_past_segment',
-                       'rcvnxt_future_segment', 'ack_after_synack_retransmissions', 'unexpected_flags', 'bad_flags',
-                       'ack_with_fin_flag_with_payload', 'ack_with_fin_flag_without_payload', 'inorder_ack_after_out_of_order_ack', 'reset_flag', 'reset_ack_flag'
-                              """)
-
-    def setup(self):
-        try:
-            self.linux_obj = Linux(host_ip=host_name, ssh_username=host_username, ssh_password=host_passwd)
-
-            self.linux_obj.command("cd " + script_location)
-            self.linux_obj.command("rm -rf " + script_results_file)
-        except Exception as e:
-            fun_test.critical("Error" + e)
-            return False
-    def run(self):
-        try:
-            if subtests == 'all':
-                self.linux_obj.sudo_command("./tcp_functional.py -b fs -p -t tc_3whs",timeout=600)
-            else:
-                self.linux_obj.sudo_command(
-                    "./tcp_functional.py -b fs -p -t tc_3whs --ts " + subtests, timeout=600)
-            return True
-        except Exception as e:
-            fun_test.critical("Error" + e)
-            return False
-
-    def cleanup(self):
-        results = self.linux_obj.read_file(script_results_file)
-        key = ''
-        value = False
-        m = re.search("(\S+)\s+\|\s+Result\s+:\s+(PASS|FAIL)",results)
-        if m:
-            key = m.group(1)
-            value = m.group(2)
-            if value == "FAIL":
-                res = False
-            else:
-                res = True
-        fun_test.test_assert(expression=res, message=key + '=' + value)
-        self.linux_obj.disconnect()
 
 class TcOutOfOrderSegments(FunTestCase):
 
@@ -213,10 +164,10 @@ class TcOutOfOrderSegments(FunTestCase):
     def run(self):
         try:
             if subtests == 'all':
-                self.linux_obj.sudo_command("./tcp_functional.py -b fs -a sink -p -t tc_out_of_order_data_segments",timeout=600)
+                self.linux_obj.sudo_command("./tcp_functional.py -b fs -a sink -p -t tc_out_of_order_data_segments",timeout=script_timeout )
             else:
                 self.linux_obj.sudo_command(
-                    "./tcp_functional.py -b fs -a sink -p -t tc_out_of_order_data_segments --ts " + subtests, timeout=600)
+                    "./tcp_functional.py -b fs -a sink -p -t tc_out_of_order_data_segments --ts " + subtests, timeout=script_timeout )
             return True
         except Exception as e:
             fun_test.critical("Error" + e)
@@ -244,10 +195,7 @@ class TcLastAck(FunTestCase):
         self.set_test_details(id=4, summary="Test TCP Last Ack",
                               steps="""
                                 Test scenarios covered:
-                               'ack_without_payload', 'ack_with_payload', 'finack_retransmissions', 'finack_retransmission_interval',
-                       'duplicate_client_fin', 'duplicate_client_fin_after_srv_finack_retransmissions', 'duplicate_fin_diff_seq_num',
-                       'close_with_reset', 'close_with_reset_ack', 'close_with_ack_future_segment',
-                       'close_with_ack_past_segment', 'unexpected_flags', 'bad_flags'
+                               TCP FSM scenarios in Last ACK state
                               """)
 
     def setup(self):
@@ -262,10 +210,10 @@ class TcLastAck(FunTestCase):
     def run(self):
         try:
             if subtests == 'all':
-                self.linux_obj.sudo_command("./tcp_functional.py -b fs -p -t tc_last_ack",timeout=600)
+                self.linux_obj.sudo_command("./tcp_functional.py -b fs -p -t tc_last_ack",timeout=script_timeout )
             else:
                 self.linux_obj.sudo_command(
-                    "./tcp_functional.py -b fs -p -t tc_last_ack --ts " + subtests, timeout=600)
+                    "./tcp_functional.py -b fs -p -t tc_last_ack --ts " + subtests, timeout=script_timeout )
             return True
         except Exception as e:
             fun_test.critical("Error" + e)
@@ -292,9 +240,7 @@ class TcKeepAliveTimeout(FunTestCase):
     def describe(self):
         self.set_test_details(id=5, summary="Test TCP Keepalive timeout",
                               steps="""
-                                Test scenarios covered:
-                                'data_transfer_after_timeout', 'data_transfer_before_timeout', 'out_of_order_ack_before_timeout',
-                       'keepalive_before_timeout'
+                                TCP Keepalive scenarios
                               """)
 
     def setup(self):
@@ -309,10 +255,10 @@ class TcKeepAliveTimeout(FunTestCase):
     def run(self):
         try:
             if subtests == 'all':
-                self.linux_obj.sudo_command("./tcp_functional.py -b fs -a sink -p -t tc_keepalive_timeout",timeout=600)
+                self.linux_obj.sudo_command("./tcp_functional.py -b fs -a sink -p -t tc_keepalive_timeout",timeout=script_timeout )
             else:
                 self.linux_obj.sudo_command(
-                    "./tcp_functional.py -b fs -a sink -p -t tc_keepalive_timeout --ts " + subtests, timeout=600)
+                    "./tcp_functional.py -b fs -a sink -p -t tc_keepalive_timeout --ts " + subtests, timeout=script_timeout )
             return True
         except Exception as e:
             fun_test.critical("Error" + e)
@@ -355,10 +301,10 @@ class TcTrafficTests(FunTestCase):
     def run(self):
         try:
             if subtests == 'all':
-                self.linux_obj.sudo_command("./tcp_functional.py -b fs -p -t tc_traffic_tests --ts send_data1k,send_data10k,send_data25k,send_data1k_drop,send_data10k_drop,send_data25k_drop",timeout=600)
+                self.linux_obj.sudo_command("./tcp_functional.py -b fs -p -t tc_traffic_tests --ts send_data1k,send_data10k,send_data25k,send_data1k_drop,send_data10k_drop,send_data25k_drop",timeout=script_timeout )
             else:
                 self.linux_obj.sudo_command(
-                    "./tcp_functional.py -b fs -p -t tc_traffic_tests --ts " + subtests, timeout=600)
+                    "./tcp_functional.py -b fs -p -t tc_traffic_tests --ts " + subtests, timeout=script_timeout )
             return True
         except Exception as e:
             fun_test.critical("Error" + e)
@@ -387,19 +333,7 @@ class TcEstablished(FunTestCase):
     def describe(self):
         self.set_test_details(id=7, summary="Test TCP Established State",
                               steps="""
-                                Test scenarios covered:
-                                'push_no_ack_without_payload', 'push_no_ack_with_payload', 'ack_with_data_rcvnxt_future_segment', 'ack_with_data_rcvnxt_past_segment',
-                       'push_ack_with_data_rcvnxt_future_segment',
-                       'push_ack_with_data_rcvnxt_past_segment', 'close_with_reset_and_data', 'close_with_reset_ack_and_data',
-                       'close_with_reset_seg', 'close_with_reset_ack_seg', 'close_with_fin_ack_seg', 'close_with_fin_ack_and_data',
-                       'close_with_fin_ack_future_segment', 'close_with_fin_ack_past_segment', 'close_with_fin_ack_rcvnxt_past_segment',
-                       'close_with_fin_ack_rcvnxt_future_segment', 'close_with_fin_seg', 'close_with_fin_and_data',
-                       'close_with_fin_future_segment', 'close_with_fin_past_segment', 'close_with_fin_rcvnxt_past_segment',
-                       'close_with_fin_rcvnxt_future_segment',  'unexpected_flags',
-                       'bad_flags', 'close_with_reset_ack_future_segment', 'close_with_reset_ack_past_segment',
-                       'close_with_reset_ack_rcvnxt_future_segment', 'close_with_reset_ack_rcvnxt_past_segment',
-                       'close_with_reset_future_segment', 'close_with_reset_past_segment', 'close_with_reset_rcvnxt_future_segment',
-                       'close_with_reset_rcvnxt_past_segment'
+                               TCP established cases
                               """)
 
     def setup(self):
@@ -414,10 +348,10 @@ class TcEstablished(FunTestCase):
     def run(self):
         try:
             if subtests == 'all':
-                self.linux_obj.sudo_command("./tcp_functional.py -b fs -p -t tc_established",timeout=600)
+                self.linux_obj.sudo_command("./tcp_functional.py -b fs -p -t tc_established",timeout=script_timeout )
             else:
                 self.linux_obj.sudo_command(
-                    "./tcp_functional.py -b fs -p -t tc_established --ts " + subtests, timeout=600)
+                    "./tcp_functional.py -b fs -p -t tc_established --ts " + subtests, timeout=script_timeout )
             return True
         except Exception as e:
             fun_test.critical("Error" + e)
@@ -460,10 +394,10 @@ class TcOtherTests(FunTestCase):
     def run(self):
         try:
             if subtests == 'all':
-                self.linux_obj.sudo_command("./tcp_functional.py -b fs -p -t " + execute_test,timeout=600)
+                self.linux_obj.sudo_command("./tcp_functional.py -b fs -p -t " + execute_test,timeout=script_timeout )
             else:
                 self.linux_obj.sudo_command(
-                    "./tcp_functional.py -b fs -p -t " + execute_test + " --ts " + subtests, timeout=600)
+                    "./tcp_functional.py -b fs -p -t " + execute_test + " --ts " + subtests, timeout=script_timeout )
             return True
         except Exception as e:
             fun_test.critical("Error" + e)
@@ -489,8 +423,6 @@ if __name__ == '__main__':
 
     if execute_test == 'sanity' or execute_test == 'tc_syn_recvd':
         ts.add_test_case(TcSynRecvd())
-    if execute_test == 'sanity' or execute_test == 'tc_3whs':
-        ts.add_test_case(Tc3whs())
     if execute_test == 'sanity' or execute_test == 'tc_out_of_order_data_segments':
         ts.add_test_case(TcOutOfOrderSegments())
     if execute_test == 'sanity' or execute_test == 'tc_last_ack':
@@ -501,7 +433,7 @@ if __name__ == '__main__':
         ts.add_test_case(TcEstablished())
     if execute_test == 'sanity' or execute_test == 'tc_traffic_tests':
         ts.add_test_case(TcTrafficTests())
-    if execute_test not in ('sanity', 'tc_syn_recvd', 'tc_3whs', 'tc_out_of_order_data_segments', 'tc_last_ack', 'tc_keepalive_timeout', 'tc_established', 'tc_traffic_tests' ):
+    if execute_test not in ('sanity', 'tc_syn_recvd',  'tc_out_of_order_data_segments', 'tc_last_ack', 'tc_keepalive_timeout', 'tc_established', 'tc_traffic_tests' ):
         ts.add_test_case(TcOtherTests())
 
     ts.run()
