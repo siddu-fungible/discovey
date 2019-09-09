@@ -5,7 +5,7 @@ from lib.topology.dut import Dut, DutInterface
 from lib.fun.f1 import F1
 from lib.host.traffic_generator import TrafficGenerator
 from lib.system.fun_test import *
-from lib.templates.regex.regex_template  import RegexTemplate
+from lib.templates.regex.regex_template import RegexTemplate
 from fun_settings import DATA_STORE_DIR
 import re
 import json
@@ -88,7 +88,7 @@ class JuniperNFACustomCompileOnly(FunTestCase):
         fun_test.log("data store directory: " + DATA_STORE_DIR)
         con1.set_compiler_env(ffac_path)
         mem_dist = ["rbm", "exm", "rbm_exm", "rbm_exm_plr"]
-        for tc in ["snort"]:
+        for tc in ["dfa_only_compile"]:
             tarball_path = "{}/{}.tgz".format(DATA_STORE_DIR + base, str(tc))
             print ("tarball path is ",tarball_path)
             fun_test.test_assert(fun_test.scp(source_file_path=tarball_path,
@@ -109,14 +109,14 @@ class JuniperNFACustomCompileOnly(FunTestCase):
             pat_path = "/regex/patterns/"
             pld_path = "/regex/payloads/"
             #for gtype, en in zip(["dfa", "nfa", "ffa"], ["1", "0", ""]):
-            for gtype, en in zip(["ffa"], [""]):
+            for gtype, en in zip(["dfa"], ["1"]):
                 res_path = "/regex/"+str(tc)+"/" + gtype + "_results/"
                 con1.create_directory(res_path)
                 print ("res_path is ",res_path)
                 #res_path = "/regex/Users/fungible/ws/data_store/regression/" + str(tc) + "/" + gtype + "_results/"
                 print ("res_path is ",res_path)
-                # exp_file_path= DATA_STORE_DIR+"/regex/"+str(tc)+"/"+gtype+"_exp_files/"
-                exp_file_path=DATA_STORE_DIR+"/regex/"+str(tc)+"/"+gtype+"_exp_files/"
+                exp_file_path = DATA_STORE_DIR + "/regex/" + str(tc) + "/" + gtype + "_exp_files/"
+                #exp_file_path="/regex/Users/fungible/ws/data_store/regression/DFA_ONLY/"+gtype+"_exp_files/"
                 print ("exp_file_path is",exp_file_path)
                 print "CALLING compiler with ", res_path, " en:", en
                 pat_pld_files = {}
@@ -137,19 +137,20 @@ class JuniperNFACustomCompileOnly(FunTestCase):
                 print("pld_files are ",pld_files)
                 pat_pld_files = {}
                 for pat in pat_files:
-                    pat_base=pat.split(".pat")[0]
-                    plds_list=pat_base+".in"
+                    id_ = pat.split(".pat")[0]
+                    print("id_ is", id_)
+                    x = id_ + "_*"
+                    plds_list = con1.list_files(pld_path+x)
 
 
 
-
-                 #   print ("plds list before extraction",plds_list)
-                  #  plds_list=[str(fn['filename'].split(pld_path)[1]) for fn in plds_list if not fn["filename"].isdigit()]
-                   # print ("plds list after extraction is",plds_list)
-                    #plds_list=sorted(plds_list)
+                    print ("plds list before extraction",plds_list)
+                    plds_list=[str(fn['filename'].split(pld_path)[1]) for fn in plds_list if not fn["filename"].isdigit()]
+                    print ("plds list after extraction is",plds_list)
+                    plds_list=sorted(plds_list)
                     print ("plds_list after sorting is",plds_list)
                     try:
-                        pat_pld_files[pat] = [plds_list]
+                        pat_pld_files[pat] = plds_list
                     #   print ("**************************")
                     #  print ("pat_pld_files is ",pat_pld_files)
                     except:
@@ -157,7 +158,7 @@ class JuniperNFACustomCompileOnly(FunTestCase):
                 print ("pat_pld_files are ",pat_pld_files)
                 #pat_pld_files={"test_3.pat":["test_3_1.in","test_3_2.in","test_3_3.in"]}
 
-                RegexTemplate.compile_n_validate(con1, mem_dist, pat_path, pld_path,res_path,exp_file_path,pat_pld_files, ['browser-webkit', 'file-office', 'malware-other', 'server-mssql', 'scada', 'protocol-tftp', 'policy-spam', 'separate_files.py', 'file-flash', 'browser-plugins', 'browser-ie', 'deleted', 'server-webapp', 'pua-adware', 'malware-cnc', 'malware-tools', 'pua-toolbars'], en, juniper_style="yes_snort")
+                RegexTemplate.compile_n_validate(con1, mem_dist, pat_path, pld_path,res_path,exp_file_path,pat_pld_files, ["test_33", "test_28"], en, juniper_style="",target="s1")
 
                 #RegexTemplate.compile_only(con1, mem_dist, pat_path, res_path, [], en, juniper_style="yes")
 
