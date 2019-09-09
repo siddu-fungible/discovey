@@ -411,14 +411,14 @@ class RegexTemplate(Linux):
                         except:
                             pass
 
-                        try:
-                            fun_test.test_assert(compilation_failed==0, " Fail number: {}".format(compilation_failed))
-                        except:
-                            print("assertion failed")
-                        try:
-                            fun_test.test_assert(validation_failed==0,"fail number: {}".format(validation_failed))
-                        except:
-                            print ("assertion failed")
+            try:
+                fun_test.test_assert(compilation_failed == 0, ' Compilation Failed testcase number: {}'.format(compilation_failed)
+            except:
+                print("assertion failed")
+            try:
+                fun_test.test_assert(validation_failed==0,"validation failed testcases number: {}".format(validation_failed))
+            except:
+                print ("assertion failed")
 
         '''
                         try:
