@@ -532,88 +532,6 @@
                       },
                       {
                         "metric_model_name": "MetricContainer",
-                        "name": "juniper_ipsec_encryption",
-                        "label": "IPSEC - Encryption",
-                        "children": [
-                          {
-                            "metric_model_name": "MetricContainer",
-                            "name": "juniper_ipsec_enc_single_tunnel",
-                            "label": "Single Tunnel",
-                            "children": [
-                              {
-                                "metric_model_name": "JuniperIpsecEncryptionSingleTunnelPerformance",
-                                "name": "juniper_ipsec_enc_single_tunnel_output_throughput",
-                                "label": "Throughput"
-                              },
-                              {
-                                "metric_model_name": "JuniperIpsecEncryptionSingleTunnelPerformance",
-                                "name": "juniper_ipsec_enc_single_tunnel_output_pps",
-                                "label": "Packets per sec"
-                              }
-                            ]
-                          },
-                          {
-                            "metric_model_name": "MetricContainer",
-                            "name": "juniper_ipsec_enc_multi_tunnel",
-                            "label": "Multi Tunnel",
-                            "children": [
-                              {
-                                "metric_model_name": "JuniperIpsecEncryptionMultiTunnelPerformance",
-                                "name": "juniper_ipsec_enc_multi_tunnel_output_throughput",
-                                "label": "Throughput"
-                              },
-                              {
-                                "metric_model_name": "JuniperIpsecEncryptionMultiTunnelPerformance",
-                                "name": "juniper_ipsec_enc_multi_tunnel_output_pps",
-                                "label": "Packets per sec"
-                              }
-                            ]
-                          }
-                        ]
-                      },
-                      {
-                        "metric_model_name": "MetricContainer",
-                        "name": "juniper_ipsec_decryption",
-                        "label": "IPSEC - Decryption",
-                        "children": [
-                          {
-                            "metric_model_name": "MetricContainer",
-                            "name": "juniper_ipsec_dec_single_tunnel",
-                            "label": "Single Tunnel",
-                            "children": [
-                              {
-                                "metric_model_name": "JuniperIpsecDecryptionSingleTunnelPerformance",
-                                "name": "juniper_ipsec_dec_single_tunnel_output_throughput",
-                                "label": "Throughput"
-                              },
-                              {
-                                "metric_model_name": "JuniperIpsecDecryptionSingleTunnelPerformance",
-                                "name": "juniper_ipsec_dec_single_tunnel_output_pps",
-                                "label": "Packets per sec"
-                              }
-                            ]
-                          },
-                          {
-                            "metric_model_name": "MetricContainer",
-                            "name": "juniper_ipsec_dec_multi_tunnel",
-                            "label": "Multi Tunnel",
-                            "children": [
-                              {
-                                "metric_model_name": "JuniperIpsecDecryptionMultiTunnelPerformance",
-                                "name": "juniper_ipsec_dec_multi_tunnel_output_throughput",
-                                "label": "Throughput"
-                              },
-                              {
-                                "metric_model_name": "JuniperIpsecDecryptionMultiTunnelPerformance",
-                                "name": "juniper_ipsec_dec_multi_tunnel_output_pps",
-                                "label": "Packets per sec"
-                              }
-                            ]
-                          }
-                        ]
-                      },
-                      {
-                        "metric_model_name": "MetricContainer",
                         "name": "juniper_tls",
                         "label": "TLS",
                         "disable": true,
@@ -1898,6 +1816,7 @@
                 "metric_model_name": "MetricContainer",
                 "name": "Crypto raw throughput",
                 "label": "Crypto Raw Throughput",
+                "disable": true,
                 "children": [
                   {
                     "metric_model_name": "TeraMarkMultiClusterCryptoPerformance",
@@ -3422,7 +3341,7 @@
               {
                 "metric_model_name": "MetricContainer",
                 "name": "teramarks_customer_juniper_ipsec_encryption",
-                "label": "IPSEC - Encryption",
+                "label": "IPSEC - Encryption (Network)",
                 "children": [
                   {
                     "metric_model_name": "MetricContainer",
@@ -3463,7 +3382,7 @@
               {
                 "metric_model_name": "MetricContainer",
                 "name": "teramarks_customer_juniper_ipsec_decryption",
-                "label": "IPSEC - Decryption",
+                "label": "IPSEC - Decryption (Network)",
                 "children": [
                   {
                     "metric_model_name": "MetricContainer",
@@ -3495,6 +3414,88 @@
                       {
                         "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
                         "name": "juniper_new_ipsec_dec_multi_tunnel_output_pps",
+                        "label": "Packets per sec"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "metric_model_name": "MetricContainer",
+                "name": "juniper_ipsec_encryption",
+                "label": "IPSEC - Encryption (App)",
+                "children": [
+                  {
+                    "metric_model_name": "MetricContainer",
+                    "name": "juniper_ipsec_enc_single_tunnel",
+                    "label": "Single Tunnel",
+                    "children": [
+                      {
+                        "metric_model_name": "JuniperIpsecEncryptionSingleTunnelPerformance",
+                        "name": "juniper_ipsec_enc_single_tunnel_output_throughput",
+                        "label": "Throughput"
+                      },
+                      {
+                        "metric_model_name": "JuniperIpsecEncryptionSingleTunnelPerformance",
+                        "name": "juniper_ipsec_enc_single_tunnel_output_pps",
+                        "label": "Packets per sec"
+                      }
+                    ]
+                  },
+                  {
+                    "metric_model_name": "MetricContainer",
+                    "name": "juniper_ipsec_enc_multi_tunnel",
+                    "label": "Multi Tunnel",
+                    "children": [
+                      {
+                        "metric_model_name": "JuniperIpsecEncryptionMultiTunnelPerformance",
+                        "name": "juniper_ipsec_enc_multi_tunnel_output_throughput",
+                        "label": "Throughput"
+                      },
+                      {
+                        "metric_model_name": "JuniperIpsecEncryptionMultiTunnelPerformance",
+                        "name": "juniper_ipsec_enc_multi_tunnel_output_pps",
+                        "label": "Packets per sec"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "metric_model_name": "MetricContainer",
+                "name": "juniper_ipsec_decryption",
+                "label": "IPSEC - Decryption (App)",
+                "children": [
+                  {
+                    "metric_model_name": "MetricContainer",
+                    "name": "juniper_ipsec_dec_single_tunnel",
+                    "label": "Single Tunnel",
+                    "children": [
+                      {
+                        "metric_model_name": "JuniperIpsecDecryptionSingleTunnelPerformance",
+                        "name": "juniper_ipsec_dec_single_tunnel_output_throughput",
+                        "label": "Throughput"
+                      },
+                      {
+                        "metric_model_name": "JuniperIpsecDecryptionSingleTunnelPerformance",
+                        "name": "juniper_ipsec_dec_single_tunnel_output_pps",
+                        "label": "Packets per sec"
+                      }
+                    ]
+                  },
+                  {
+                    "metric_model_name": "MetricContainer",
+                    "name": "juniper_ipsec_dec_multi_tunnel",
+                    "label": "Multi Tunnel",
+                    "children": [
+                      {
+                        "metric_model_name": "JuniperIpsecDecryptionMultiTunnelPerformance",
+                        "name": "juniper_ipsec_dec_multi_tunnel_output_throughput",
+                        "label": "Throughput"
+                      },
+                      {
+                        "metric_model_name": "JuniperIpsecDecryptionMultiTunnelPerformance",
+                        "name": "juniper_ipsec_dec_multi_tunnel_output_pps",
                         "label": "Packets per sec"
                       }
                     ]
