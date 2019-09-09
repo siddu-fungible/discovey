@@ -1235,7 +1235,7 @@ if __name__ == "__main_attach_dag__":
     final_dict = ml.get_dict(chart=root_chart)
     print json.dumps(final_dict)
 
-if __name__ == "__main__":
+if __name__ == "__main_inspur_fix__":
     charts = MetricChart.objects.all()
     for chart in charts:
         if "inspur" in chart.internal_chart_name and chart.leaf:
@@ -1249,5 +1249,15 @@ if __name__ == "__main__":
                 chart.positive = False
             chart.save()
             print "fixed the chart: {}, {}".format(chart.chart_name, chart.internal_chart_name)
+
+if __name__ == "__main__":
+    internal_chart_names = ["apple_rand_read_mrsw_tcp_output_bandwidth", "apple_rand_read_mrsw_tcp_output_latency", "apple_rand_read_mrsw_tcp_output_iops"]
+    for internal_chart_name in internal_chart_names:
+        chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
+        mmt = MileStoneMarkers(metric_id=chart.metric_id, milestone_date=datetime(year=2019, month=9, day=8),
+                               milestone_name="Moved to new host")
+        mmt.save()
+
+
 
 
