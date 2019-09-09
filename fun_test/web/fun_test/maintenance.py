@@ -1171,7 +1171,7 @@ if __name__ == "__main_qdepth256__":
         final_dict = ml.get_dict(chart=latency_charts)
         print json.dumps(final_dict, indent=4)
 
-if __name__ == "__main__":
+if __name__ == "__main_attach_dag__":
     dag = {}
     owner_info = "Radhika Naik (radhika.naik@fungible.com)"
     source = "Unknown"
@@ -1234,4 +1234,20 @@ if __name__ == "__main__":
     root_chart.fix_children_weights()
     final_dict = ml.get_dict(chart=root_chart)
     print json.dumps(final_dict)
+
+if __name__ == "__main__":
+    charts = MetricChart.objects.all()
+    for chart in charts:
+        if "inspur" in chart.internal_chart_name and chart.leaf:
+            if "latency" in chart.internal_chart_name:
+                chart.positive = False
+            elif "iops" in chart.internal_chart_name:
+                chart.positive = True
+            elif "ratio" in chart.internal_chart_name:
+                chart.positive = True
+            elif "time" in chart.internal_chart_name:
+                chart.positive = False
+            chart.save()
+            print "fixed the chart: {}, {}".format(chart.chart_name, chart.internal_chart_name)
+
 
