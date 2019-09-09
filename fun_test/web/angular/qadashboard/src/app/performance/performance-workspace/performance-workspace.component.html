@@ -182,6 +182,7 @@
             <th>Description</th>
             <th>Created date</th>
             <th>Modified date</th>
+            <th>Workspace id</th>
             <th></th>
           </tr>
           <tr *ngFor="let workspace of profile">
@@ -201,6 +202,9 @@
             </td>
             <td>
               {{ workspace.modifiedDate }}
+            </td>
+            <td>
+              {{ workspace.workspaceId }}
             </td>
             <td style="width: 10%">
               <span class="pseudo-anchor" (click)="openDeleteWorkspace(deleteWorkspace, workspace)">Delete</span>

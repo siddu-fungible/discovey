@@ -24,6 +24,7 @@ interface SuiteInterface {
   tags: string[];
   custom_test_bed_spec: any;
   entries: SuiteEntry[];
+  type: SuiteMode;
 }
 
 
@@ -35,6 +36,7 @@ export class Suite implements SuiteInterface {
   tags: string[] = null;
   custom_test_bed_spec: any = null;
   entries: SuiteEntry[] = null;
+  type: SuiteMode = SuiteMode.SUITE;
 
   constructor(obj?: any) {
     Object.assign(this, obj);
@@ -61,10 +63,16 @@ export class SuiteEditorService {
 
   constructor(private apiService: ApiService, private loggerService: LoggerService) { }
 
-  suites(recordsPerPage=null, page=null, selectedCategories=null): Observable<Suite[]> {
+  suites<T>(getCount=null, recordsPerPage=null, page=null, selectedCategories=null, byNameSearchText=null): Observable<T> {
     let url = "/api/v1/regression/suites";
     if (recordsPerPage) {
       url += `?records_per_page=${recordsPerPage}&page=${page}`;
+    }
+    if (getCount) {
+      url += `&get_count=${getCount}`;
+    }
+    if (byNameSearchText) {
+      url += `&search_by_name=${byNameSearchText}`;
     }
     if (selectedCategories && selectedCategories.length > 0) {
       let s = "";
@@ -76,7 +84,7 @@ export class SuiteEditorService {
     }
 
     return this.apiService.get(url).pipe(switchMap(response => {
-      return of<Suite[]>(response.data);
+      return of(response.data);
     }))
   }
 

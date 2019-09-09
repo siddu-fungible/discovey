@@ -9,7 +9,7 @@ import logging.handlers
 import sys
 import web.fun_test.models_helper as models_helper
 from web.fun_test.web_interface import get_suite_detail_url, set_annoucement, clear_announcements
-from fun_settings import JOBS_DIR, ARCHIVED_JOBS_DIR, LOGS_DIR, WEB_STATIC_DIR, SUITES_DIR, TASKS_DIR
+from fun_settings import JOBS_DIR, LOGS_DIR, WEB_STATIC_DIR, SUITES_DIR, TASKS_DIR
 from fun_settings import TEAM_REGRESSION_EMAIL
 from fun_global import RESULTS, get_current_time
 from lib.utilities.send_mail import send_mail
@@ -22,7 +22,9 @@ from web.fun_test.models import SchedulerJobPriority, JobQueue, KilledJob, TestC
 from web.fun_test.models import SchedulerDirective
 from asset.asset_global import AssetType
 from web.fun_test.models import Asset
-from web.fun_test.models import TestBed, User
+from web.fun_test.models import TestBed, User, Suite
+from django.core.exceptions import ObjectDoesNotExist
+from web.fun_test.models import SchedulerConfig
 from django.db import transaction
 from pytz import timezone
 from datetime import timedelta
@@ -227,20 +229,6 @@ def validate_spec(spec):
     return valid, error_message
 
 
-def parse_suite(suite_name=None, dynamic_suite_file=None, suite_type=SuiteType.STATIC):
-    suite_file_name = None
-    if not dynamic_suite_file:
-        suite_file_name = SUITES_DIR + "/" + suite_name
-        if suite_type == SuiteType.TASK:
-            suite_file_name = TASKS_DIR + "/" + suite_name
-    else:
-        suite_file_name = dynamic_suite_file
-    if not suite_file_name.endswith(".json"):
-        suite_file_name += ".json"
-    suite_spec = parse_file_to_json(file_name=suite_file_name)
-    if not suite_spec:
-        raise SchedulerException("Unable to parse suite-spec: {}".format(suite_file_name))
-    return suite_spec
 
 def get_suite_level_tags(suite_spec):
     tags = []
@@ -275,7 +263,7 @@ def queue_dynamic_suite(dynamic_suite_spec,
 def is_auto_scheduled(scheduling_type, repeat_in_minutes):
     return (scheduling_type == SchedulingType.TODAY and repeat_in_minutes > 0) or (scheduling_type == SchedulingType.PERIODIC)
 
-def queue_job3(suite_path=None,
+def queue_job3(suite_id=None,
                original_suite_execution_id=None,
                dynamic_suite_spec=None,
                script_path=None,
@@ -306,38 +294,49 @@ def queue_job3(suite_path=None,
         emails = []
     if not inputs:
         inputs = {}
-    if suite_type == SuiteType.DYNAMIC:
-        original_suite_execution = models_helper.get_suite_execution(suite_execution_id=original_suite_execution_id)
-        # suite_path = "Re({})".format(original_suite_execution.suite_path)
-        suite_path = original_suite_execution.suite_path
 
-    if suite_path and suite_path.replace(".json", "").endswith("_container"):
-        suite_type = SuiteType.CONTAINER
-
-    final_suite_path = suite_path if suite_path else script_path
-
-    is_auto_scheduled_job = is_auto_scheduled(scheduling_type=scheduling_type, repeat_in_minutes=repeat_in_minutes)
-    job_state = JobStatusType.AUTO_SCHEDULED if is_auto_scheduled_job else JobStatusType.SUBMITTED
-
-    # print ("Before adding suite execution: submitter {}".format(submitter_email))
-    suite_execution = models_helper.add_suite_execution(submitted_time=get_current_time(),
-                                                        scheduled_time=get_current_time(),
-                                                        completed_time=get_current_time(),
-                                                        suite_path=final_suite_path,
-                                                        tags=tags,
-                                                        suite_container_execution_id=suite_container_execution_id,
-                                                        test_bed_type=test_bed_type,
-                                                        submitter_email=submitter_email,
-                                                        state=job_state)
-    if suite_type == SuiteType.DYNAMIC:
-        if original_suite_execution_id:  # Must be a re-run
-            models_helper.set_suite_re_run_info(original_suite_execution_id=original_suite_execution_id,
-                                                re_run_suite_execution_id=suite_execution.execution_id)
-        else:
-            scheduler_logger.error("Suite is dynamic, but original_suite_execution_id is missing")
-
+    suite_execution = None
     try:
-        suite_execution.suite_path = suite_path
+        suite_path = None
+
+        if suite_type == SuiteType.DYNAMIC:
+            try:
+                original_suite = Suite.objects.get(id=original_suite_execution_id)
+                suite_path = original_suite.name
+            except ObjectDoesNotExist:
+                pass
+
+        if suite_id:
+            try:
+                suite = Suite.objects.get(id=suite_id)
+                suite_path = suite.name
+            except ObjectDoesNotExist:
+                pass
+
+        final_suite_name = suite_path if suite_id else script_path
+
+        is_auto_scheduled_job = is_auto_scheduled(scheduling_type=scheduling_type, repeat_in_minutes=repeat_in_minutes)
+        job_state = JobStatusType.AUTO_SCHEDULED if is_auto_scheduled_job else JobStatusType.SUBMITTED
+
+
+        suite_execution = models_helper.add_suite_execution(submitted_time=get_current_time(),
+                                                            scheduled_time=get_current_time(),
+                                                            completed_time=get_current_time(),
+                                                            suite_path=final_suite_name,
+                                                            suite_id=suite_id,
+                                                            tags=tags,
+                                                            suite_container_execution_id=suite_container_execution_id,
+                                                            test_bed_type=test_bed_type,
+                                                            submitter_email=submitter_email,
+                                                            state=job_state)
+        if suite_type == SuiteType.DYNAMIC:
+            if original_suite_execution_id:  # Must be a re-run
+                models_helper.set_suite_re_run_info(original_suite_execution_id=original_suite_execution_id,
+                                                    re_run_suite_execution_id=suite_execution.execution_id)
+            else:
+                scheduler_logger.error("Suite is dynamic, but original_suite_execution_id is missing")
+
+        suite_execution.suite_path = final_suite_name
         suite_execution.script_path = script_path
         suite_execution.dynamic_suite_spec = json.dumps(dynamic_suite_spec)
         suite_execution.suite_type = suite_type
@@ -368,6 +367,7 @@ def queue_job3(suite_path=None,
         suite_execution.save()
 
         result = suite_execution.execution_id
+
     except Exception as ex:
         scheduler_logger.exception(str(ex))
         if suite_execution:
@@ -376,31 +376,6 @@ def queue_job3(suite_path=None,
         # TODO: Remove suite execution entry
     # print("Job Id: {} suite: {} Submitted".format(suite_execution.execution_id, suite_path))
     return result
-
-
-
-def get_archived_file_name(suite_execution_id):
-    glob_str = ARCHIVED_JOBS_DIR + "/{}.{}".format(suite_execution_id,
-                                                   ARCHIVED_JOB_EXTENSION)
-    files = glob.glob(glob_str)
-    return files[0]
-
-
-
-def re_queue_job(suite_execution_id,
-                 test_case_execution_id=None,
-                 suite_path=None,
-                 script_path=None):
-    archived_job_file = get_archived_file_name(suite_execution_id=suite_execution_id)
-    job_spec = parse_file_to_json(file_name=archived_job_file)
-    if test_case_execution_id:
-        job_spec["test_case_ids"] = [test_case_execution_id]
-        job_spec["suite_path"] = suite_path
-        job_spec["script_path"] = script_path
-        if "email_list" in job_spec:
-            job_spec["email_list"] = job_spec["email_list"]
-    job_spec["scheduling_type"] = SchedulingType.ASAP
-    return queue_job2(job_spec=job_spec)
 
 
 def parse_file_to_json(file_name):
@@ -475,18 +450,6 @@ def process_dynamic_suite():
         print parse_file_to_json(job_file)
 
 
-def prepare_dynamic_suite(spec):
-
-    queued_file_name = "{}/{}.{}".format(DYNAMIC_SUITE_JOBS_DIR, suite_execution_id, DYNAMIC_SUITE_QUEUED_JOB_EXTENSION)
-    with open(queued_file_name, "w+") as qf:
-        qf.write(json.dumps(spec))
-        qf.close()
-    return queued_file_name
-
-
-
-
-
 
 def set_scheduler_state(state):
     o = SchedulerInfo.objects.first()
@@ -541,16 +504,28 @@ def move_to_queue_head(job_id):
     this_job_queue_entry = JobQueue.objects.get(job_id=job_id)
     priority_category = get_priority_category_by_priority(priority=this_job_queue_entry.priority)
     low, high = SchedulerJobPriority.RANGES[priority_category]
+    custom_test_bed_spec_this = get_suite_based_test_bed_spec(this_job_queue_entry.job_id)
 
+    lowest_priority_allowed = low
     with transaction.atomic():
         queue_entries = JobQueue.objects.all().order_by('priority')
         for queue_entry in queue_entries:
+
+            if custom_test_bed_spec_this:
+                custom_test_bed_spec_other = get_suite_based_test_bed_spec(queue_entry.job_id)
+                if not queue_entry.pre_emption_allowed:
+                    base_test_bed_other = custom_test_bed_spec_other.get("base_test_bed")
+                    base_test_bed_this = custom_test_bed_spec_this.get("base_test_bed")
+                    if base_test_bed_other == base_test_bed_this:
+                        lowest_priority_allowed = queue_entry.priority + 1
+                        break
+
+    with transaction.atomic():
+        queue_entries = JobQueue.objects.all().order_by('priority').filter(priority__gte=lowest_priority_allowed)
+        for queue_entry in queue_entries:
             queue_entry.priority += 1
-            if queue_entry.priority > high:
-                scheduler_logger.exception("Unable to change priority. Job-id: {}, high mark: {}".format(job_id, high))
-            else:
-                queue_entry.save()
-        this_job_queue_entry.priority = low
+            queue_entry.save()
+        this_job_queue_entry.priority = lowest_priority_allowed
         this_job_queue_entry.save()
 
 
@@ -582,6 +557,7 @@ def swap_priorities(job1, job2):
 
 
 def increase_decrease_priority(job_id, increase=True):
+    priorities_changed = False
     this_job_queue_entry = JobQueue.objects.get(job_id=job_id)
     this_job_priority = this_job_queue_entry.priority
     priority_category = get_priority_category_by_priority(this_job_priority)
@@ -594,15 +570,31 @@ def increase_decrease_priority(job_id, increase=True):
 
     if other_priority_jobs.count():
         other_priority_job = other_priority_jobs.last()
-        swap_priorities(this_job_queue_entry, other_priority_job)
+        if all(lambda x: x == "suite-based" for x in [other_priority_job.test_bed_type, this_job_queue_entry.test_bed_type]) and (not other_priority_job.pre_emption_allowed):
+            # get base test-bed
+            custom_test_bed_spec_other = get_suite_based_test_bed_spec(other_priority_job.job_id)
+            custom_test_bed_spec_this = get_suite_based_test_bed_spec(this_job_queue_entry.job_id)
+            if custom_test_bed_spec_other["base_test_bed"] != custom_test_bed_spec_this["base_test_bed"]:
+                swap_priorities(this_job_queue_entry, other_priority_job)
+                priorities_changed = True
+        else:
+            swap_priorities(this_job_queue_entry, other_priority_job)
+            priorities_changed = True
     else:
         pass # You are already the highest
+    return priorities_changed
 
 def get_manual_lock_test_beds():
     return TestBed.objects.filter(manual_lock=True)
 
+def get_manual_lock_assets():
+    return Asset.objects.filter(manual_lock_user__isnull=False)
+
 def get_test_bed_by_name(test_bed_name):
     return TestBed.objects.get(name=test_bed_name)
+
+def get_asset(asset_name, asset_type):
+    return Asset.objects.get(name=asset_name, type=asset_type)
 
 def manual_un_lock_assets(test_bed_name, manual_lock_submitter):
     from asset.asset_manager import AssetManager
@@ -618,10 +610,16 @@ def send_error_mail(message, submitter_email=None, job_id=None):
     pass
 
 
-def send_test_bed_remove_lock(test_bed, warning=False, un_lock_warning_time=60 * 10):
+def send_test_bed_remove_lock(test_bed=None, asset=None, warning=False, un_lock_warning_time=60 * 10):
 
-    submitter_email = test_bed.manual_lock_submitter
-    expiry_time = test_bed.manual_lock_expiry_time
+    if test_bed:
+        submitter_email = test_bed.manual_lock_submitter
+        expiry_time = test_bed.manual_lock_expiry_time
+        item_name = "test-bed {}".format(test_bed.name)
+    else:
+        submitter_email = asset.manual_lock_user
+        expiry_time = asset.manual_lock_expiry_time
+        item_name = "asset {}".format(asset.name)
 
     default_email_list = [x.email for x in TestbedNotificationEmails.objects.all()]
     to_addresses = [submitter_email]
@@ -629,13 +627,13 @@ def send_test_bed_remove_lock(test_bed, warning=False, un_lock_warning_time=60 *
 
     user = User.objects.get(email=submitter_email)
     content = "Hi {},".format(user.first_name) + "<br>"
-    content += "Manual-testing lock duration for test-bed {} has exceeded. Expiry time: {}".format(test_bed.name, str(expiry_time)) + "<br>"
+    content += "Manual-testing lock duration for {} has exceeded. Expiry time: {}".format(item_name, str(expiry_time)) + "<br>"
     if warning:
-        content += "We will unlock the test-bed in {} minutes".format(un_lock_warning_time / 60) + "<br>"
-        subject = "Manual-testing lock duration for test-bed {} has exceeded".format(test_bed.name)
+        content += "We will unlock {} in {} minutes".format(item_name, un_lock_warning_time / 60) + "<br>"
+        subject = "Manual-testing lock duration for {} has exceeded".format(item_name)
     else:
         content += "Unlocking now" + "<br>"
-        subject = "Manual lock for test-bed {} removed".format(test_bed.name)
+        subject = "Manual lock for {} removed".format(item_name)
     content += "- Regression" + "<br>"
 
     send_mail(to_addresses=to_addresses, content=content, subject=subject)
@@ -649,25 +647,23 @@ def get_job_inputs(job_id):
             job_inputs = json.loads(job_spec.inputs)
     return job_inputs
 
+
+def get_suite(suite_id):
+    result = models_helper.get_suite(id=suite_id)
+    return result
+
 def get_suite_based_test_bed_spec(job_id):
     spec = None
     s = models_helper.get_suite_execution(suite_execution_id=job_id)
-    suite_path = s.suite_path
-    if suite_path:
+    suite_id = s.suite_id
+    if suite_id:
         job_inputs = get_job_inputs(job_id=job_id)
         if "custom_test_bed_spec" in job_inputs:
             spec = job_inputs.get("custom_test_bed_spec", None)
         else:
-            suite_spec = parse_suite(suite_name=suite_path)
+            suite_spec = get_suite(suite_id=suite_id)
             if suite_spec:
-                for item in suite_spec:
-                    if "info" in item:
-                        info = item["info"]
-                        if "custom_test_bed_spec" in info:
-                            spec = info["custom_test_bed_spec"]
-                        else:
-                            print("Job: {} no custom_test_bed_spec in {}".format(job_id, suite_path))
-                        break
+                spec = suite_spec.custom_test_bed_spec
     return spec
 
 def lock_assets(job_id, assets):

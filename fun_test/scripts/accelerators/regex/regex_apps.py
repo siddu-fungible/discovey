@@ -42,7 +42,7 @@ class FunTestCase1(FunTestCase):
     def run(self):
         fun_test.add_checkpoint("Some checkpoint")
         jenkins_manager = JenkinsManager()
-        boot_args = "app=pm_test_bootstrap param-file=nightly_nfa_H_dflt_h_dflt_nfa.json rbm-size=1m --disable-wu-watchdog"
+        boot_args = "app=pm_test_bootstrap param-file=nightly_nfa_H_dflt_h_dflt_nfa.json rbm-size=1m syslog=2 --disable-wu-watchdog"
         funos_makeflags = "PM_TESTS=1 XDATA_LISTS=/project/users/jlulla/sanity_runtime/jenkins.list"
         max_duration = 5
         tags = "qa_rgx_nfa_runtime_sanity"
@@ -80,7 +80,7 @@ class FunTestCase2(FunTestCase):
     def run(self):
         fun_test.add_checkpoint("Some checkpoint")
         jenkins_manager = JenkinsManager()
-        boot_args = "app=pm_test_bootstrap param-file=nightly_dfa_B_dflt_b_dflt_dfa.json rbm-size=1m --disable-wu-watchdog"
+        boot_args = "app=pm_test_bootstrap param-file=nightly_dfa_B_dflt_b_dflt_dfa.json rbm-size=1m syslog=2 --disable-wu-watchdog"
         funos_makeflags = "PM_TESTS=1 XDATA_LISTS=/project/users/jlulla/sanity_runtime/jenkins.list"
         max_duration = 5
         tags = "qa_rgx_dfa_runtime_sanity"
@@ -118,7 +118,7 @@ class FunTestCase3(FunTestCase):
     def run(self):
         fun_test.add_checkpoint("Some checkpoint")
         jenkins_manager = JenkinsManager()
-        boot_args = "app=pm_test_bootstrap param-file=nightly_combined_H_dflt_h_dflt_combined.json rbm-size=1m --disable-wu-watchdog"
+        boot_args = "app=pm_test_bootstrap param-file=nightly_combined_H_dflt_h_dflt_combined.json rbm-size=1m syslog=2 --disable-wu-watchdog"
         funos_makeflags = "PM_TESTS=1 XDATA_LISTS=/project/users/jlulla/sanity_runtime/jenkins.list"
         max_duration = 5
         tags = "qa_rgx_software_runtime_sanity"

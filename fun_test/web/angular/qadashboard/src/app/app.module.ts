@@ -85,6 +85,7 @@ import { PerformanceShowChartsWorkspaceComponent } from './performance/performan
 import { PerformanceShowReportWorkspaceComponent } from './performance/performance-workspace/performance-view-workspace/performance-show-report-workspace/performance-show-report-workspace.component';
 import { TextareaInputComponent } from './ui-elements/textarea-input/textarea-input.component';
 import { SuitesViewComponent } from './regression/suite-editor/suites-view/suites-view.component';
+import { SearchBarComponent } from './ui-elements/search-bar/search-bar.component';
 
 
 @NgModule({
@@ -153,7 +154,8 @@ import { SuitesViewComponent } from './regression/suite-editor/suites-view/suite
     PerformanceShowChartsWorkspaceComponent,
     PerformanceShowReportWorkspaceComponent,
     TextareaInputComponent,
-    SuitesViewComponent
+    SuitesViewComponent,
+    SearchBarComponent
   ],
   imports: [
     BsDropdownModule,

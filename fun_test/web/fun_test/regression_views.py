@@ -125,6 +125,7 @@ def submit_job(request):
 
         # suite path
         suite_path = request_json.get("suite_path", None)
+        suite_id = request_json.get("suite_id", None)
         submitter_email = request_json.get("submitter_email", "john.abraham@fungible.com")
 
         # script path used for script only submission
@@ -163,8 +164,9 @@ def submit_job(request):
         repeat_in_minutes = request_json.get("repeat_in_minutes", -1)  # TODO:
         description = request_json.get("description", None)
 
-        if suite_path:
-            job_id = queue_job3(suite_path=suite_path,
+        # if suite_path:
+        if suite_id:
+            job_id = queue_job3(suite_id=suite_id,
                                 build_url=build_url,
                                 tags=tags,
                                 emails=emails,
@@ -1058,16 +1060,15 @@ def scheduler_queue(request, job_id):
         operation = request_json['operation']
         job_id = request_json["job_id"]
         if operation == QueueOperations.MOVE_UP:
-            increase_decrease_priority(job_id=job_id, increase=True)
+            result = increase_decrease_priority(job_id=job_id, increase=True)
         if operation == QueueOperations.MOVE_DOWN:
-            increase_decrease_priority(job_id=job_id, increase=False)
+            result = increase_decrease_priority(job_id=job_id, increase=False)
         if operation == QueueOperations.MOVE_TO_TOP:
             move_to_queue_head(job_id=job_id)
         if operation == QueueOperations.MOVE_TO_NEXT_QUEUE:
             move_to_higher_queue(job_id=job_id)
         if operation == QueueOperations.DELETE:
             delete_queued_job(job_id=job_id)
-        result = True
     elif request.method == 'DELETE':
         try:
             queue_entry = JobQueue.objects.get(job_id=int(job_id))

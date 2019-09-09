@@ -33,7 +33,7 @@ class SchedulerJobPriority:
     LOW = "low"
     NORMAL = "normal"
     HIGH = "high"
-    RANGES = {LOW: (2049, 3072),  NORMAL: (1025, 2048), HIGH: (1, 1024)}
+    RANGES = {LOW: (16385, 24576),  NORMAL: (8193, 16384), HIGH: (1, 8192)}
 
 
 class QueueOperations:

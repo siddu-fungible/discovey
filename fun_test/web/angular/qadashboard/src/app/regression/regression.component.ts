@@ -489,8 +489,8 @@ export class RegressionComponent implements OnInit {
     }*/
   }
 
-  reRunClick(suiteExecutionId, suitePath, resultFilter=null, reUseBuildImage=null) {
-    this.reRunService.submitReRun(suiteExecutionId, suitePath, resultFilter, null, reUseBuildImage).subscribe(response => {
+  reRunClick(suiteExecution, resultFilter=null, reUseBuildImage=null) {
+    this.reRunService.submitReRun(suiteExecution.fields.execution_id, suiteExecution.fields.suite_id, resultFilter, null, reUseBuildImage).subscribe(response => {
       this.logger.success("Re-run request submitted");
       window.location.href = "/regression";
     }, error => {
@@ -579,24 +579,6 @@ export class RegressionComponent implements OnInit {
     }, error => {
       this.logger.error("Unable to disable suite");
     })
-  }
-
-  reRunModalOpen(content) {
-    this.reRunOptionsReRunFailed = false;
-    this.reRunOptionsReRunAll = true;
-    this.reUseBuildImage = false;
-    this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title'}).result.then((suiteExecution) => {
-      if (this.reRunOptionsReRunAll) {
-        this.reRunClick(suiteExecution.fields.execution_id, suiteExecution.fields.suite_path, null, this.reUseBuildImage);
-      }
-      if (this.reRunOptionsReRunFailed) {
-        this.reRunClick(suiteExecution.fields.execution_id, suiteExecution.fields.suite_path, ['FAILED', 'NOT_RUN'], this.reUseBuildImage)
-      }
-
-    }, (reason) => {
-      console.log("Rejected");
-      //this.closeResult = `Dismissed ${this.getDismissReason(reason)}`;
-    });
   }
 
   toggleReRunOptions() {

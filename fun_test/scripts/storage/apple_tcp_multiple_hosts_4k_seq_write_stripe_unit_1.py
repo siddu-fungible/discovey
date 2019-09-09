@@ -340,7 +340,6 @@ class StripeVolumeLevelScript(FunTestScript):
         fun_test.sleep("Allowing buffer time before clean-up", 30)
         self.topology.cleanup()
 
-
 class StripeVolumeTestCase(FunTestCase):
     def describe(self):
         pass
