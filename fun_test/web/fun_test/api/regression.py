@@ -458,6 +458,7 @@ def re_run_job(request):
         new_suite_execution = original_suite_execution
         new_suite_execution.environment = json.dumps(original_environment)
         new_suite_execution.pk = None
+        new_suite_execution.build_done = False
         new_suite_execution.execution_id = LastSuiteExecution.get_next()
         new_suite_execution.submitted_time = get_current_time()
         new_suite_execution.scheduled_time = get_current_time()
