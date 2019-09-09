@@ -5,7 +5,7 @@ from lib.topology.dut import Dut, DutInterface
 from lib.fun.f1 import F1
 from lib.host.traffic_generator import TrafficGenerator
 from lib.system.fun_test import *
-from lib.templates.regex.regex_template_creating_json import RegexTemplate
+from lib.templates.regex.regex_template import RegexTemplate
 from fun_settings import DATA_STORE_DIR
 import re
 import json
