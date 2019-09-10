@@ -180,7 +180,7 @@ class MyScript(FunTestScript):
                 FLOW_TEST_TAG, F1_FLOW_TEST_TAG, TERAMARK_ZIP, TERAMARK_DFA, TERAMARK_NFA, TERAMARK_EC, TERAMARK_JPEG,
                 SOAK_DMA_MEMCPY_COH,
                 SOAK_DMA_MEMCPY_NON_COH, SOAK_DMA_MEMSET, RCNVME_READ, RCNVME_RANDOM_READ, RCNVME_WRITE,
-                RCNVME_RANDOM_WRITE, TERAMARK_CRYPTO_SINGLE_TUNNEL, TERAMARK_CRYPTO_MULTI_TUNNEL, RCNVME_READ_ALL,
+                RCNVME_RANDOM_WRITE, RCNVME_READ_ALL,
                 RCNVME_RANDOM_READ_ALL, RCNVME_WRITE_ALL,
                 RCNVME_RANDOM_WRITE_ALL, SOAK_DMA_MEMCPY_THRESHOLD,
                 IPSEC_ENC_SINGLE_TUNNEL, IPSEC_ENC_MULTI_TUNNEL, IPSEC_DEC_MULTI_TUNNEL, IPSEC_DEC_SINGLE_TUNNEL,
@@ -1018,15 +1018,12 @@ if __name__ == "__main__":
     myscript.add_test_case(SoakDmaMemcpyCohPerformanceTc())
     myscript.add_test_case(SoakDmaMemcpyNonCohPerformanceTc())
     myscript.add_test_case(SoakDmaMemsetPerformanceTc())
-    myscript.add_test_case(TeraMarkMultiClusterCryptoPerformanceTc())
     myscript.add_test_case(F1FlowTestPerformanceTc())
     myscript.add_test_case(TeraMarkNfaPerformanceTc())
     myscript.add_test_case(TeraMarkRcnvmeReadPerformanceTc())
     myscript.add_test_case(TeraMarkRcnvmeRandomReadPerformanceTc())
     myscript.add_test_case(TeraMarkRcnvmeWritePerformanceTc())
     myscript.add_test_case(TeraMarkRcnvmeRandomWritePerformanceTc())
-    myscript.add_test_case(JuniperCryptoSingleTunnelPerformanceTc())
-    myscript.add_test_case(JuniperCryptoMultiTunnelPerformanceTc())
     myscript.add_test_case(RcnvmeReadAllPerformanceTc())
     myscript.add_test_case(RcnvmeRandomReadAllPerformanceTc())
     myscript.add_test_case(RcnvmeWriteAllPerformanceTc())
