@@ -889,7 +889,7 @@ class PeekCommands(object):
                     diff_value = result[key] - prev_result[key]
                     diff_result[key] = diff_value
                 else:
-                    diff_result[key] = 0
+                    diff_result[key] = result[key]
 
         return diff_result
 
