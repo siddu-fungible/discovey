@@ -864,6 +864,18 @@ class ECVolumeLevelTestcase(FunTestCase):
 
         start_stats = True
 
+        # Preparing the volume details list containing the list of ditionaries where each dictionary has the details of
+        # an EC volume
+        vol_details = []
+        for num in range(self.ec_info["num_volumes"]):
+            vol_group = {}
+            vol_group[self.ec_info["volume_types"]["ndata"]] = self.ec_info["uuids"][num]["blt"]
+            vol_group[self.ec_info["volume_types"]["ec"]] = self.ec_info["uuids"][num]["ec"]
+            vol_group[self.ec_info["volume_types"]["jvol"]] = [self.ec_info["uuids"][num]["jvol"]]
+            vol_group[self.ec_info["volume_types"]["lsv"]] = self.ec_info["uuids"][num]["lsv"]
+            vol_details.append(vol_group)
+        fun_test.log("vol_details is: {}".format(vol_details))
+
         for iodepth in self.fio_iodepth:
             fio_result[iodepth] = True
             fio_output[iodepth] = {}
@@ -928,18 +940,19 @@ class ECVolumeLevelTestcase(FunTestCase):
 
             row_data_dict["block_size"] = fio_block_size
 
-            # Starting the thread to collect the vp_utils stats for the current iteration
-            if start_stats:
-                vp_util_post_fix_name = "vp_util_iodepth_{}.txt".format(iodepth)
-                vp_util_artifact_file = fun_test.get_test_case_artifact_file_name(post_fix_name=vp_util_post_fix_name)
-                stats_thread_id = fun_test.execute_thread_after(time_in_seconds=1, func=collect_vp_utils_stats,
-                                                                storage_controller=self.storage_controller,
-                                                                output_file=vp_util_artifact_file,
-                                                                interval=self.vp_util_args["interval"],
-                                                                count=int(mpstat_count), threaded=True)
-            else:
-                fun_test.critical("Not starting the vp_utils stats collection because of lack of interval and count "
-                                  "details")
+            file_suffix = "iodepth_{}.txt".format(iodepth)
+            for index, stat_detail in enumerate(self.stats_collect_details):
+                func = stat_detail.keys()[0]
+                self.stats_collect_details[index][func]["count"] = int(mpstat_count)
+                if func == "vol_stats":
+                    self.stats_collect_details[index][func]["vol_details"] = vol_details
+            fun_test.log("Different stats collection thread details for the current IO depth {} before starting "
+                         "them:\n{}".format(iodepth, self.stats_collect_details))
+            self.storage_controller.verbose = False
+            stats_obj = CollectStats(self.storage_controller)
+            stats_obj.start(file_suffix, self.stats_collect_details)
+            fun_test.log("Different stats collection thread details for the current IO depth {} after starting "
+                         "them:\n{}".format(iodepth, self.stats_collect_details))
 
             for index, host_name in enumerate(self.host_info):
                 fio_job_args = ""
@@ -1035,12 +1048,9 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.critical(str(ex))
                 fun_test.log("FIO Command Output from {}:\n {}".format(host_name,
                                                                        fun_test.shared_variables["fio"][index]))
-                # Checking whether the vp_util stats collection thread is still running...If so stopping it...
-                if fun_test.fun_test_threads[stats_thread_id]["thread"].is_alive():
-                    fun_test.critical("VP utilization stats collection thread is still running...Stopping it now")
-                    global vp_stats_thread_stop_status
-                    vp_stats_thread_stop_status[self.storage_controller] = True
-                    fun_test.fun_test_threads[stats_thread_id]["thread"]._Thread__stop()
+            finally:
+                stats_obj.stop(self.stats_collect_details)
+                self.storage_controller.verbose = True
 
             # Summing up the FIO stats from all the hosts
             for index, host_name in enumerate(self.host_info):
@@ -1101,18 +1111,58 @@ class ECVolumeLevelTestcase(FunTestCase):
                                             format(host_name, row_data_dict["iodepth"]),
                                             filename=mpstat_artifact_file[host_name])
 
-            # Checking whether the vp_util stats collection thread is still running...If so stopping it...
-            if fun_test.fun_test_threads[stats_thread_id]["thread"].is_alive():
-                fun_test.critical("VP utilization stats collection thread is still running...Stopping it now")
-                global vp_stats_thread_stop_status
-                vp_stats_thread_stop_status[self.storage_controller] = True
-                fun_test.fun_test_threads[stats_thread_id]["thread"]._Thread__stop()
-            fun_test.join_thread(fun_test_thread_id=stats_thread_id, sleep_time=1)
-            fun_test.add_auxillary_file(description="F1 VP Utilization - IO depth {}".format(row_data_dict["iodepth"]),
-                                        filename=vp_util_artifact_file)
+            for index, value in enumerate(self.stats_collect_details):
+                for func, arg in value.iteritems():
+                    filename = arg.get("output_file")
+                    if filename:
+                        if func == "vp_utils":
+                            fun_test.add_auxillary_file(description="F1 VP Utilization - IO depth {}".
+                                                        format(row_data_dict["iodepth"]), filename=filename)
+                        if func == "per_vp":
+                            fun_test.add_auxillary_file(description="F1 Per VP Stats - IO depth {}".
+                                                        format(row_data_dict["iodepth"]), filename=filename)
+                        if func == "resource_bam_args":
+                            fun_test.add_auxillary_file(description="F1 Resource bam stats - IO depth {}".
+                                                        format(row_data_dict["iodepth"]), filename=filename)
+                        if func == "vol_stats":
+                            fun_test.add_auxillary_file(description="Volume Stats - IO depth {}".
+                                                        format(row_data_dict["iodepth"]), filename=filename)
+                        if func == "vppkts_stats":
+                            fun_test.add_auxillary_file(description="VP Pkts Stats - IO depth {}".
+                                                        format(row_data_dict["iodepth"]), filename=filename)
+                        if func == "psw_stats":
+                            fun_test.add_auxillary_file(description="PSW Stats - IO depth {}".
+                                                        format(row_data_dict["iodepth"]), filename=filename)
+                        if func == "fcp_stats":
+                            fun_test.add_auxillary_file(description="FCP Stats - IO depth {}".
+                                                        format(row_data_dict["iodepth"]), filename=filename)
+                        if func == "wro_stats":
+                            fun_test.add_auxillary_file(description="WRO Stats - IO depth {}".
+                                                        format(row_data_dict["iodepth"]), filename=filename)
+                        if func == "erp_stats":
+                            fun_test.add_auxillary_file(description="ERP Stats - IO depth {}".
+                                                        format(row_data_dict["iodepth"]), filename=filename)
+                        if func == "etp_stats":
+                            fun_test.add_auxillary_file(description="ETP Stats - IO depth {}".
+                                                        format(row_data_dict["iodepth"]), filename=filename)
+                        if func == "eqm_stats":
+                            fun_test.add_auxillary_file(description="EQM Stats - IO depth {}".
+                                                        format(row_data_dict["iodepth"]), filename=filename)
+                        if func == "hu_stats":
+                            fun_test.add_auxillary_file(description="HU Stats - IO depth {}".
+                                                        format(row_data_dict["iodepth"]), filename=filename)
+                        if func == "ddr_stats":
+                            fun_test.add_auxillary_file(description="DDR Stats - IO depth {}".
+                                                        format(row_data_dict["iodepth"]), filename=filename)
+                        if func == "ca_stats":
+                            fun_test.add_auxillary_file(description="CA Stats - IO depth {}".
+                                                        format(row_data_dict["iodepth"]), filename=filename)
+                        if func == "cdu_stats":
+                            fun_test.add_auxillary_file(description="CDU Stats - IO depth {}".
+                                                        format(row_data_dict["iodepth"]), filename=filename)
 
-        table_data = {"headers": table_data_headers, "rows": table_data_rows}
-        fun_test.add_table(panel_header="Performance Table", table_name=self.summary, table_data=table_data)
+            table_data = {"headers": table_data_headers, "rows": table_data_rows}
+            fun_test.add_table(panel_header="Performance Table", table_name=self.summary, table_data=table_data)
 
         # Posting the final status of the test result
         fun_test.log(fio_result)
