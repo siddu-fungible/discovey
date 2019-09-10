@@ -601,7 +601,7 @@ class StripeVolumeTestCase(FunTestCase):
             vol_details = []
             vol_group = {}
             vol_group[self.blt_details["type"]] = fun_test.shared_variables["thin_uuid"]
-            vol_group[self.stripe_details["type"]] = fun_test.shared_variables["stripe_uuid"]
+            vol_group[self.stripe_details["type"]] = [fun_test.shared_variables["stripe_uuid"]]
             vol_details.append(vol_group)
 
             file_suffix = "{}_{}_iodepth_{}.txt".format("warmup",
