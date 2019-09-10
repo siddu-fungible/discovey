@@ -302,9 +302,9 @@
             <app-json-input (dataChanged)="jobInputsChanged($event)"></app-json-input>
           </td>
         </tr>
-        <tr *ngIf="selectedTestBedType && selectedTestBedType.indexOf('simulation') > -1">
+        <tr *ngIf="selectedTestBedType">
           <td class="no-wrap">
-            <label>Bootargs (JSON): </label>
+            <label>Boot-args (JSON): </label>
           </td>
           <td>
             <app-json-input (dataChanged)="jobBootArgsChanged($event)"></app-json-input>
