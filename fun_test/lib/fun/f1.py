@@ -61,6 +61,13 @@ class F1(Linux, ToDictMixin):
         self.TO_DICT_VARS.extend(["fun_os_process_id", "external_dpcsh_port"])
 
     def run_app(self, boot_args, foreground=False, timeout=20, run_to_completion=False):
+        rich_inputs = fun_test.get_rich_inputs()
+        if rich_inputs:
+            if "boot_args" in rich_inputs:
+                rich_input_boot_args = rich_inputs.get("boot_args", None)
+                if rich_input_boot_args:
+                    if "0" in rich_input_boot_args:
+                        boot_args = rich_input_boot_args["0"]
         return self.start(start_mode=self.START_MODE_CUSTOM_APP,
                           boot_args=boot_args,
                           foreground=foreground,
@@ -84,7 +91,8 @@ class F1(Linux, ToDictMixin):
             "run_to_completion": run_to_completion,
             "start_mode": start_mode
         }
-
+        if boot_args:
+            self.boot_args = boot_args
         # Detect if it is in Simulation mode #TODO
         simulation_mode = True  # for now
         if not start_mode:
@@ -95,7 +103,7 @@ class F1(Linux, ToDictMixin):
                 try:
                     process_id = self.get_process_id(process_name=self.FUN_OS_SIMULATION_PROCESS_NAME)
                     if process_id:
-                        self.kill_process(process_id=process_id[0], signal=9)
+                        self.kill_process(process_id=process_id, signal=9)
 
                     self.command("cd {}".format(self.SIMULATION_FUNOS_BUILD_PATH))
                     self.command("ulimit -Sc unlimited")

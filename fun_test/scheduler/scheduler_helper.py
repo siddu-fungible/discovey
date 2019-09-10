@@ -285,7 +285,8 @@ def queue_job3(suite_id=None,
                version=None,
                requested_priority_category=SchedulerJobPriority.NORMAL,
                submitter_email=None,
-               description=None):
+               description=None,
+               rich_inputs=None):
     # time.sleep(0.1)
     result = -1
     if not tags:
@@ -358,7 +359,7 @@ def queue_job3(suite_id=None,
         suite_execution.version = version
         suite_execution.requested_priority_category = requested_priority_category
         suite_execution.description = description
-
+        suite_execution.rich_inputs = rich_inputs
         job_spec_valid, error_message = validate_spec(spec=suite_execution)
         if not job_spec_valid:
             raise SchedulerException("Invalid job spec: {}, Error message: {}".format(suite_execution, error_message))

@@ -381,6 +381,13 @@ class FunTest:
                 result = stored_environment
         return result
 
+    def get_rich_inputs(self):
+        rich_inputs = None
+        if fun_test.suite_execution_id:
+            suite_execution = models_helper.get_suite_execution(suite_execution_id=fun_test.suite_execution_id)
+            rich_inputs = suite_execution.rich_inputs
+        return rich_inputs
+
     def get_suite_run_time_environment_variable(self, name):
         run_time = models_helper.get_suite_run_time(execution_id=self.suite_execution_id)
         result = run_time.get(name, None)
