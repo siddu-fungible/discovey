@@ -379,11 +379,13 @@ class MetricLib():
         reports = []
         metrics = InterestedMetrics.objects.filter(workspace_id=workspace_id)
         for metric in metrics:
-            self._set_report_fields(lineage=metric.lineage, metric_id=metric.metric_id, reports=reports)
+            self._set_report_fields(lineage=metric.lineage, metric_id=metric.metric_id, reports=reports, root=True)
         return reports
 
-    def _set_report_fields(self, lineage, metric_id, reports):
+    def _set_report_fields(self, lineage, metric_id, reports, root=False):
         chart = MetricChart.objects.get(metric_id=metric_id)
+        if not root:
+            lineage += "/" + chart.chart_name
         if chart.leaf:
             data_sets = chart.get_data_sets()
             metric_model_name = chart.metric_model_name
@@ -415,7 +417,7 @@ class MetricLib():
         else:
             children = chart.get_children()
             for child in children:
-                self._set_report_fields(lineage=lineage, metric_id=int(child), reports=reports)
+                self._set_report_fields(lineage=lineage, metric_id=int(child), reports=reports, root=False)
 
     def _calculate_percentage(self, current, previous):
         percent_num = (float(current - previous) / float(previous)) * 100.0

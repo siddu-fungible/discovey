@@ -48,7 +48,8 @@ class EmailPerformanceDrop(PerformanceTc):
             if len(reports):
                 print reports
                 status = fun_test.FAILED
-                subject = "Performance drop report - " + str(get_current_time())
+                date_time = time.strftime("%m/%d/%Y %H:%M")
+                subject = "Performance drop report - " + date_time
                 try:
                     data = ml._send_email(email=email, subject=subject, reports=reports,
                                           report_name="performance_drop_report.html")
