@@ -124,9 +124,6 @@ class RegexTemplate(Linux):
                 elif "target" in arg:
                     if arg[1] == "s1":
                         cmd = cmd + "--" + arg[0] + "=" + arg[1] + " "
-                elif "s" in arg:
-                    self.logger.log("setting result buffer size to 1500")
-                    cmd=cmd+"-"+ arg[0]+ " "+arg[1]+ " "
                 else:
                     cmd = cmd + "-" + arg[0] + " " + arg[1] + " "
             print ("graph path is ",graph_path)
