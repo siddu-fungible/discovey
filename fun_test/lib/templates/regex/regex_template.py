@@ -191,7 +191,13 @@ class RegexTemplate(Linux):
 
 
         @fun_test.safe
-        def compile_n_validate(con1, mem_dist, pat_path, pld_path, res_path,exp_file_path,pat_pld_files ,exclude_lst=[],target="", engine="", juniper_style="",  time_out=5*60):
+        def compile_n_validate(con1, mem_dist, pat_path, pld_path, res_path, exp_file_path, pat_pld_files, exclude_lst=[],
+                               engine="",juniper_style="", target="",time_out= 5 * 60):
+
+            """
+
+            :type target: object
+            """
             trgt="f1"
             compilation_failed=validation_failed=0
             print ("compile and validation function")
