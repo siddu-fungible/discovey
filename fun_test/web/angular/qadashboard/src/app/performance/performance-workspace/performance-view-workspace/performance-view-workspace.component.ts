@@ -246,12 +246,19 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
       let data = response.data;
       for (let dataSet of metric["data"]) {
         dataSet["history"] = [];
+        let dateTimeSet = new Set();
         for (let oneData of data) {
           if (dataSet["name"] == oneData["name"]) {
-            let hData = {};
-            hData["date"] = this.commonService.getPrettyLocalizeTime(oneData["date_time"]);
-            hData["value"] = oneData["value"];
-            dataSet["history"].push(hData);
+            let present = this.addToSet(oneData["date_time"], dateTimeSet);
+            if (!present) {
+              let hData = {};
+              hData["date"] = this.commonService.getPrettyLocalizeTime(oneData["date_time"]);
+              hData["value"] = oneData["value"];
+              dataSet["history"].push(hData);
+            }
+            if (dataSet["history"].length > 4) {
+              break;
+            }
           }
         }
         dataSet["rows"] = dataSet["history"].length + 1;
@@ -269,6 +276,18 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
       }
       return of(true);
     }));
+  }
+
+  addToSet(dateTime, dateTimeSet): boolean {
+    let dateTimeObj = this.commonService.convertToLocalTimezone(dateTime);
+    let dateTimeStr = String(dateTimeObj.getMonth() + 1) + "/" + String(dateTimeObj.getDate()) + "/" + String(dateTimeObj.getFullYear());
+    let present = false;
+    if (dateTimeSet.has(dateTimeStr)) {
+      present = true;
+    } else {
+      dateTimeSet.add(dateTimeStr)
+    }
+    return present
   }
 
   generateReport(): void {

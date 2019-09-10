@@ -103,18 +103,13 @@ def metrics_data(request):
                     new_q = Q(**d)
                 results = model.objects.filter(new_q).order_by(order_by)[:fetch]
                 if len(results):
-                    date_time_set = set()
                     for result in results:
                         output_name = data_set["output"]["name"]
                         date_time = getattr(result, "input_date_time")
                         value = getattr(result, output_name)
                         unit = getattr(result, output_name + "_unit")
-                        present = _add_to_set(date_time=date_time, date_time_set=date_time_set)
-                        if not present:
-                            temp = {"name": data_set["name"], "value": value, "unit": unit, "date_time": date_time}
-                            data.append(temp)
-                        if len(data) > 4:
-                            break
+                        temp = {"name": data_set["name"], "value": value, "unit": unit, "date_time": date_time}
+                        data.append(temp)
     elif request.method == "POST":
         request_json = json.loads(request.body)
         reports = request_json["reports"]
@@ -128,15 +123,6 @@ def metrics_data(request):
         data = send_mail(to_addresses=[email], subject=subject, content=content)
     return data
 
-
-def _add_to_set(date_time, date_time_set):
-    date_time_str = str(date_time.month) + "/" + str(date_time.day) + "/" + str(date_time.year)
-    if date_time_str not in date_time_set:
-        date_time_set.add(date_time_str)
-        present = False
-    else:
-        present = True
-    return present
 
 @csrf_exempt
 @api_safe_json_response
