@@ -97,7 +97,7 @@ export class SubmitJobComponent implements OnInit {
   //type: string = "regular"; // some other type like task
   queryParams: any = null;
   jobInputs: string = null; // input dictionary to be sent to the scheduler
-
+  richBootArgs: string = null;
   csiPerf: boolean = false;
   dryRun: boolean = false;
   hbmDump: boolean = false;
@@ -399,8 +399,13 @@ export class SubmitJobComponent implements OnInit {
       payload["job_inputs"] = this.jobInputs;
     }
 
+
     if (this.privateFunosTgzUrl && this.privateFunosTgzUrl !== "") {
       payload["environment"]["private_funos_tgz_url"] = this.privateFunosTgzUrl;
+    }
+
+    if (this.richBootArgs) {
+      payload["rich_inputs"] = {boot_args: this.richBootArgs};
     }
 
     if (this.csiPerf) {
@@ -486,6 +491,10 @@ export class SubmitJobComponent implements OnInit {
 
   jobInputsChanged(jobInputs) {
     this.jobInputs = jobInputs;
+  }
+
+  jobBootArgsChanged(bootArgs) {
+    this.richBootArgs = bootArgs;
   }
 
   test() {
