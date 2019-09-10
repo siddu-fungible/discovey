@@ -3625,6 +3625,9 @@ class FlowCommands(object):
                         result = output
                         if hu_id:
                             result = {}
+                            if not hu_id in result:
+                                print "hu_id %s entry not found. Entries available is %s" % (hu_id, sorted(output.keys()))
+                                return self.dpc_client.disconnect()
                             result[hu_id] = output[hu_id]
 
                         if tx:
