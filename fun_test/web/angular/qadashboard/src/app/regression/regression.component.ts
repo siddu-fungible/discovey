@@ -174,9 +174,9 @@ export class RegressionComponent implements OnInit {
       allowSearchFilter: true,
     };
     this.title.setTitle('Regression');
-    if (this.route.snapshot.data["tags"]) {
+    /*if (this.route.snapshot.data["tags"]) {
       this.tags = this.route.snapshot.data["tags"];
-    }
+    }*/
 
     this.recordsPerPage = 50;
     this.logDir = null;
@@ -383,9 +383,9 @@ export class RegressionComponent implements OnInit {
     }
     let payload = {};
 
-    if (this.tags) {
+    /*if (this.tags) {
       payload["tags"] = this.tags;
-    }
+    }*/
 
     if (this.queryParameters) {
       for (let key in this.queryParameters) {

@@ -458,9 +458,19 @@ class StripeVolumeTestCase(FunTestCase):
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "ip_cfg on DUT instance")
 
+            # Check if stripe vol size is passed as job inputs
+            if "stripe_vol_size" in job_inputs:
+                self.stripe_vol_size = int(job_inputs["stripe_vol_size"])
+            else:
+                self.stripe_vol_size = self.stripe_details["vol_size"]
+
+            # Adding 128 MB to stripe vol size to account for filesystem metadata
+            self.stripe_file_size = self.stripe_vol_size
+            self.stripe_vol_size += (128 * 1024 * 1024)
+
             # Compute the individual BLT sizes
             self.capacity = int(
-                ceil(self.stripe_details["vol_size"] / (self.blt_count * self.blt_details["block_size"]))
+                ceil(self.stripe_vol_size / (self.blt_count * self.blt_details["block_size"]))
                 * self.blt_details["block_size"]
             )
 
@@ -485,6 +495,7 @@ class StripeVolumeTestCase(FunTestCase):
                 fun_test.test_assert(command_result["status"], "Create BLT {} with uuid {} on DUT".format(i, cur_uuid))
             fun_test.shared_variables["thin_uuid"] = self.thin_uuid
 
+            # Compute new stripe vol size based on BLT size
             self.strip_vol_size = (self.blt_capacity - self.stripe_unit_size) * self.blt_count
             # Create Strip Volume
             self.stripe_uuid = utils.generate_uuid()
@@ -586,17 +597,82 @@ class StripeVolumeTestCase(FunTestCase):
             before_write_eqm = {}
             before_write_eqm = self.storage_controller.peek(props_tree="stats/eqm")
 
+            # Collecting vol stats for warmup as well
+            vol_details = []
+            vol_group = {}
+            vol_group[self.blt_details["type"]] = fun_test.shared_variables["thin_uuid"]
+            vol_group[self.stripe_details["type"]] = fun_test.shared_variables["stripe_uuid"]
+            vol_details.append(vol_group)
+
+            file_suffix = "{}_{}_iodepth_{}.txt".format("warmup",
+                                                        self.warm_up_fio_cmd_args["rw"],
+                                                        self.warm_up_fio_cmd_args["iodepth"])
+            for index, stat_detail in enumerate(self.stats_collect_details):
+                func = stat_detail.keys()[0]
+                self.stats_collect_details[index][func]["count"] = int(
+                    self.warm_up_fio_cmd_args["runtime"] / self.stats_collect_details[index][func]["interval"])
+                if func == "vol_stats":
+                    self.stats_collect_details[index][func]["vol_details"] = vol_details
+            self.storage_controller.verbose = False
+            stats_obj = CollectStats(self.storage_controller)
+            stats_obj.start(file_suffix, self.stats_collect_details)
+            fun_test.log("Different stats collection thread details for warmup after starting "
+                         "them:\n{}".format(self.stats_collect_details))
+
             # Create filesystem
             ip_key = self.final_host_ips[0]
-            if hasattr(self, "create_file_system") and self.create_file_system:
-                self.host_handles[ip_key].sudo_command("mkfs.xfs -f {}".format(self.nvme_block_device))
-                self.host_handles[ip_key].sudo_command("mount {} /mnt".format(self.nvme_block_device))
-                fun_test.log("Creating a testfile on XFS volume")
-                fio_output = self.host_handles[ip_key].pcie_fio(filename="/mnt/testfile.dat",
-                                                                **self.warm_up_fio_cmd_args)
-                fun_test.test_assert(fio_output, "Pre-populating the file on XFS volume")
-                self.host_handles[ip_key].sudo_command("umount /mnt")
-                self.host_handles[ip_key].disconnect()
+            try:
+                if hasattr(self, "create_file_system") and self.create_file_system:
+                    self.host_handles[ip_key].sudo_command("mkfs.xfs -f {}".format(self.nvme_block_device))
+                    self.host_handles[ip_key].sudo_command("mount {} /mnt".format(self.nvme_block_device))
+                    fun_test.log("Creating a testfile on XFS volume")
+                    fio_output = self.host_handles[ip_key].pcie_fio(filename="/mnt/testfile.dat",
+                                                                    size=self.stripe_file_size,
+                                                                    **self.warm_up_fio_cmd_args)
+                    fun_test.test_assert(fio_output, "Pre-populating the file on XFS volume")
+                    self.host_handles[ip_key].sudo_command("umount /mnt")
+                    self.host_handles[ip_key].disconnect()
+            except Exception as ex:
+                fun_test.critical(str(ex))
+                fun_test.log("FIO Command Output for warmup:\n {}".format(fio_output))
+            finally:
+                stats_obj.stop(self.stats_collect_details)
+                self.storage_controller.verbose = True
+
+            for index, value in enumerate(self.stats_collect_details):
+                for func, arg in value.iteritems():
+                    filename = arg.get("output_file")
+                    if filename:
+                        if func == "vp_utils":
+                            fun_test.add_auxillary_file(description="F1 VP Utilization - warmup", filename=filename)
+                        if func == "per_vp":
+                            fun_test.add_auxillary_file(description="F1 Per VP Stats - warmup", filename=filename)
+                        if func == "resource_bam_args":
+                            fun_test.add_auxillary_file(description="F1 Resource bam stats - warmup", filename=filename)
+                        if func == "vol_stats":
+                            fun_test.add_auxillary_file(description="Volume Stats - warmup", filename=filename)
+                        if func == "vppkts_stats":
+                            fun_test.add_auxillary_file(description="VP Pkts Stats - warmup", filename=filename)
+                        if func == "psw_stats":
+                            fun_test.add_auxillary_file(description="PSW Stats - warmup", filename=filename)
+                        if func == "fcp_stats":
+                            fun_test.add_auxillary_file(description="FCP Stats - warmup", filename=filename)
+                        if func == "wro_stats":
+                            fun_test.add_auxillary_file(description="WRO Stats - warmup", filename=filename)
+                        if func == "erp_stats":
+                            fun_test.add_auxillary_file(description="ERP Stats - warmup", filename=filename)
+                        if func == "etp_stats":
+                            fun_test.add_auxillary_file(description="ETP Stats - warmup", filename=filename)
+                        if func == "eqm_stats":
+                            fun_test.add_auxillary_file(description="EQM Stats - warmup", filename=filename)
+                        if func == "hu_stats":
+                            fun_test.add_auxillary_file(description="HU Stats - warmup", filename=filename)
+                        if func == "ddr_stats":
+                            fun_test.add_auxillary_file(description="DDR Stats - warmup", filename=filename)
+                        if func == "ca_stats":
+                            fun_test.add_auxillary_file(description="CA Stats - warmup", filename=filename)
+                        if func == "cdu_stats":
+                            fun_test.add_auxillary_file(description="CDU Stats - warmup", filename=filename)
 
             after_write_eqm = {}
             after_write_eqm = self.storage_controller.peek(props_tree="stats/eqm")
@@ -697,7 +773,9 @@ class StripeVolumeTestCase(FunTestCase):
                     row_data_dict["mode"] = mode
                     row_data_dict["block_size"] = fio_block_size
                     row_data_dict["iodepth"] = fio_iodepth
-                    file_size_in_gb = self.stripe_details["vol_size"] / 1073741824
+                    # file_size_in_gb = self.stripe_details["vol_size"] / 1073741824
+                    # Get file size based on strip_vol_size
+                    file_size_in_gb = self.strip_vol_size / 1073741824
                     row_data_dict["size"] = str(file_size_in_gb) + "GB"
 
                     fun_test.log("Running FIO {} only test with the block size and IO depth set to {} & {}".
@@ -909,7 +987,7 @@ class StripeVolumeTestCase(FunTestCase):
                     row_data_list.append(row_data_dict[i])
 
             table_data_rows.append(row_data_list)
-            post_results("Apple_TCP_Multiple_Host_Perf", test_method, *row_data_list)
+            #post_results("Apple_TCP_Multiple_Host_Perf", test_method, *row_data_list)
 
         table_data = {"headers": table_data_headers, "rows": table_data_rows}
         fun_test.add_table(panel_header="Apple TCP RandRead Multi-Host Perf Table", table_name=self.summary,

@@ -997,7 +997,10 @@ class CmdController(Cmd):
         if tx is None and rx is None:
             tx=1
             rx=1
-        if args.pp:
+        if pp:
+            if hu_id and (('.' not in hu_id) or len(hu_id.split(".")) != 3):
+                print "Please enter hu_id in x.x.x format. Current given %s" % hu_id
+                return self.dpc_client.disconnect()
             self._flow_cmd_obj.get_flow_list_pp(hu_id=hu_id, tx=tx, rx=rx, grep_regex=grep_regex)
         else:
             self._flow_cmd_obj.get_flow_list(grep_regex=grep_regex)

@@ -881,7 +881,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
                 this.mileStoneIndices[mileStone] = startIndex;
               }
             } else if (compareDate >= new Date(this.mileStoneMarkers[mileStone])) {
-              if (mileStone === "F1") {
+              if (mileStone !== "Tape-out") {
                 if (!this.mileStoneIndices.hasOwnProperty(mileStone)) {
                   this.mileStoneIndices[mileStone] = startIndex;
                 }

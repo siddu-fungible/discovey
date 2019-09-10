@@ -805,9 +805,14 @@ class ComE(Linux):
         fun_test.simple_assert(self.list_files(target_file_path), "HBM tool copied")
         self.command("mkdir -p {}".format(self.HBM_DUMP_DIRECTORY))
         tgzs = "{}/*tgz".format(self.HBM_DUMP_DIRECTORY)
-        num_tgzs = len(self.list_files(tgzs))
-        fun_test.simple_assert(num_tgzs < self.MAX_HBM_DUMPS, "Only {} dump tgzs are allowed. Please delete a few old ones".format(self.MAX_HBM_DUMPS))
-        # self.sudo_command("rm -rf {}/*hbm_dump*txt".format(self.HBM_DUMP_DIRECTORY))
+        tgz_paths = self.list_files(tgzs)
+        num_tgzs = len(tgz_paths)
+        try:
+            fun_test.simple_assert(num_tgzs < self.MAX_HBM_DUMPS, "Only {} dump tgzs are allowed. Please delete a few old ones".format(self.MAX_HBM_DUMPS))
+        except Exception as ex:
+            fun_test.log("Clearing old dumps")
+            for tgz_path in tgz_paths[:100]:
+                self.remove_file(tgz_path["filename"])
         return True
 
     def setup_tools(self):
