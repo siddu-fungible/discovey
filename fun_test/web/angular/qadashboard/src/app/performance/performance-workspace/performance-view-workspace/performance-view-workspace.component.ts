@@ -242,7 +242,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
   }
 
   fetchHistoricalData(metric): any {
-    return this.apiService.get("/api/v1/performance/metrics_data?metric_id=" + metric["metric_id"] + "&order_by=-input_date_time&count=5").pipe(switchMap(response => {
+    return this.apiService.get("/api/v1/performance/metrics_data?metric_id=" + metric["metric_id"] + "&order_by=-input_date_time&count=10").pipe(switchMap(response => {
       let data = response.data;
       for (let dataSet of metric["data"]) {
         dataSet["history"] = [];

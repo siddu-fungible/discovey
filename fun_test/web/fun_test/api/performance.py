@@ -89,9 +89,6 @@ def metrics_data(request):
                 date_range = [from_time, to_time]
                 q = Q(input_date_time__range=date_range)
                 order_by = "-input_date_time"
-                fetch = 1
-            else:
-                fetch = 10
             for data_set in data_sets:
                 inputs = data_set["inputs"]
                 d = {}
@@ -101,7 +98,7 @@ def metrics_data(request):
                     new_q = q & Q(**d)
                 else:
                     new_q = Q(**d)
-                results = model.objects.filter(new_q).order_by(order_by)[:fetch]
+                results = model.objects.filter(new_q).order_by(order_by)[:count]
                 if len(results):
                     for result in results:
                         output_name = data_set["output"]["name"]
