@@ -63,7 +63,7 @@ class RegExScript(FunTestScript):
 class JuniperNFACustomCompileOnly(FunTestCase):
     def describe(self):
         self.set_test_details(id=4,
-                              summary="compile and load",
+                              summary="F1: HANDCRAFTED NFA_ONLY PATTERNS compiled with NFA Strategy and (RBM_ONLY,EXM_ONLY,DISTRIBUTED) Memory Allocation",
                               steps="""
                               """)
 
@@ -155,7 +155,8 @@ class JuniperNFACustomCompileOnly(FunTestCase):
                         print ("caught an exception")
                 print ("pat_pld_files are ",pat_pld_files)
 
-                RegexTemplate.compile_n_validate(con1, mem_dist, pat_path, pld_path,res_path,exp_file_path,pat_pld_files, ["test_16", "test_17", "test_19", "test_20", "test_21", "test_24"], en, juniper_style="")
+                RegexTemplate.compile_n_validate(con1, mem_dist, pat_path, pld_path, res_path, exp_file_path, pat_pld_files, ["test_16", "test_17", "test_19", "test_20", "test_21", "test_24"],
+                                                en, juniper_style="")
 
                 #RegexTemplate.compile_only(con1, mem_dist, pat_path, res_path, [], en, juniper_style="yes")
 

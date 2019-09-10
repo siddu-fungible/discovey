@@ -9,7 +9,6 @@ from lib.templates.regex.regex_template import RegexTemplate
 from fun_settings import DATA_STORE_DIR
 import re
 import json
-import glob
 
 topology_dict = {
     "name": "Basic Storage",
@@ -63,7 +62,7 @@ class RegExScript(FunTestScript):
 class JuniperNFACustomCompileOnly(FunTestCase):
     def describe(self):
         self.set_test_details(id=4,
-                              summary="F1: SNORT PATTERNS compiled with NFA Strategy and DEFAULT Memory Allocation",
+                              summary="S1:JUNIPER PATTERNS compiled with FFA Strategy and DEFAULT Memory Allocation",
                               steps="""
                               """)
 
@@ -88,7 +87,7 @@ class JuniperNFACustomCompileOnly(FunTestCase):
         fun_test.log("data store directory: " + DATA_STORE_DIR)
         con1.set_compiler_env(ffac_path)
         mem_dist = ["dflt"]
-        for tc in ["snort"]:
+        for tc in ["juniper_compile_full"]:
             tarball_path = "{}/{}.tgz".format(DATA_STORE_DIR + base, str(tc))
             print ("tarball path is ",tarball_path)
             fun_test.test_assert(fun_test.scp(source_file_path=tarball_path,
@@ -105,18 +104,17 @@ class JuniperNFACustomCompileOnly(FunTestCase):
         #below pat and pld path are used to test compile only part with all patterns stored in a single folder and all payloads stored ina separate folder
           #  pat_path="/regex/"+str(tc)+"/patterns/"
            # pld_path="/regex/"+str(tc)+"/payloads/"
-        #bbelow pat_ptah and pld_path are used for  the junieper_style of patterns to compile and validate
-            pat_path = "/regex/patterns/"
-            pld_path = "/regex/payloads/"
+        #bbelow pat_ptah and pld_path are used for  the juniper_style of patterns to compile and validate
+            pat_path = "/regex/"
+            pld_path = "/regex/"
             #for gtype, en in zip(["dfa", "nfa", "ffa"], ["1", "0", ""]):
-            for gtype, en in zip(["nfa"], ["0"]):
-                res_path = "/regex/"+str(tc)+"/" + gtype + "_results/"
+            for gtype, en in zip(["ffa"], [""]):
+                res_path = DATA_STORE_DIR+"/regex/"+str(tc)+"/" + gtype + "_results/"
                 con1.create_directory(res_path)
                 print ("res_path is ",res_path)
                 #res_path = "/regex/Users/fungible/ws/data_store/regression/" + str(tc) + "/" + gtype + "_results/"
                 print ("res_path is ",res_path)
-                # exp_file_path= DATA_STORE_DIR+"/regex/"+str(tc)+"/"+gtype+"_exp_files/"
-                exp_file_path=DATA_STORE_DIR+"/regex/"+str(tc)+"/"+gtype+"_exp_files/"
+                exp_file_path= DATA_STORE_DIR+"/regex/"+str(tc)+"/"+gtype+"_exp_files/"
                 print ("exp_file_path is",exp_file_path)
                 print "CALLING compiler with ", res_path, " en:", en
                 pat_pld_files = {}
@@ -126,39 +124,24 @@ class JuniperNFACustomCompileOnly(FunTestCase):
                 pat_file_dict = con1.list_files(pat_path+"*")
                 print ("type of pat_file_dict is ", type(pat_file_dict))
                 print ("pat_file_dict is ", pat_file_dict)
-                pld_files = con1.list_files(pld_path+"*")
-                pat_files = con1.list_files(pat_path+"*")
+                pat_files = [fn['filename'].split(pat_path)[1] for fn in pat_file_dict if not fn['filename'].endswith(".tgz")]
+                print ("pat_files are",pat_files)
+                pat_files = [pat for pat in pat_files if pat != "juniper_compile_full"]
                 print ("pat_files are ",pat_files)
-                print ("pld_files are ",pld_files)
-                pld_files = [fn['filename'].split(pld_path)[1] for fn in pld_files if not fn["filename"].isdigit()]
-                pat_files= [fn['filename'].split(pat_path)[1] for fn in pat_files if not fn["filename"].isdigit()]
-
-                print("pat_file are ",pat_files)
-                print("pld_files are ",pld_files)
-                pat_pld_files = {}
+                pat_files = [pat for pat in pat_files if not pat.isdigit()]
+                print ("pat_file is", pat_files)
                 for pat in pat_files:
-                    pat_base=pat.split(".pat")[0]
-                    plds_list=pat_base+".in"
+                    pld_paths = pat_path + pat + "/payloads/"
+                    print ("pld_path is ", pld_paths)
+                    plds = con1.list_files(pld_paths+"*")
+                    print("plds are", plds)
+                    plds = [fn['filename'].split(pld_paths)[1] for fn in plds if not fn["filename"].isdigit()]
+                    plds=sorted(plds)
+                    pat_pld_files[pat + ".pat"] = plds
+                print ("pat_pld_files are",pat_pld_files)
 
-
-
-
-                 #   print ("plds list before extraction",plds_list)
-                  #  plds_list=[str(fn['filename'].split(pld_path)[1]) for fn in plds_list if not fn["filename"].isdigit()]
-                   # print ("plds list after extraction is",plds_list)
-                    #plds_list=sorted(plds_list)
-                    print ("plds_list after sorting is",plds_list)
-                    try:
-                        pat_pld_files[pat] = [plds_list]
-                    #   print ("**************************")
-                    #  print ("pat_pld_files is ",pat_pld_files)
-                    except:
-                        print ("caught an exception")
-                print ("pat_pld_files are ",pat_pld_files)
-                #pat_pld_files={"test_3.pat":["test_3_1.in","test_3_2.in","test_3_3.in"]}
-
-                RegexTemplate.compile_n_validate(con1, mem_dist, pat_path, pld_path, res_path, exp_file_path, pat_pld_files, ['browser-webkit', 'file-office', 'malware-other', 'server-mssql', 'scada', 'protocol-tftp', 'policy-spam', 'separate_files.py', 'file-flash', 'browser-plugins', 'browser-ie', 'deleted', 'server-webapp', 'pua-adware', 'malware-cnc', 'malware-tools', 'pua-toolbars'],
-                                                en, juniper_style="yes_snort")
+                RegexTemplate.compile_n_validate(con1, mem_dist, pat_path, pld_path, res_path, exp_file_path, pat_pld_files, ["ymsg-p2p-put-filename","ymsg-message","h225ras-location","mssql-login-user","imap-fetch","msn-sign-in-name","h225ras-admission","vnc-client-version","smb-account-name","nbname-resource-address","http-header-content-language","ymsg-user-name"],
+                                                 en, juniper_style="yes", target="s1")
 
                 #RegexTemplate.compile_only(con1, mem_dist, pat_path, res_path, [], en, juniper_style="yes")
 

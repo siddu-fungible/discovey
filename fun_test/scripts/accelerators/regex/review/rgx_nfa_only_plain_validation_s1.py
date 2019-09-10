@@ -63,7 +63,7 @@ class RegExScript(FunTestScript):
 class JuniperNFACustomCompileOnly(FunTestCase):
     def describe(self):
         self.set_test_details(id=4,
-                              summary="F1: SNORT PATTERNS compiled with NFA Strategy and DEFAULT Memory Allocation",
+                              summary="S1:HANDCRAFTED NFA_ONLY PATTERNS compiled with NFA Strategy with DEFAULT Memory Allocation",
                               steps="""
                               """)
 
@@ -88,7 +88,7 @@ class JuniperNFACustomCompileOnly(FunTestCase):
         fun_test.log("data store directory: " + DATA_STORE_DIR)
         con1.set_compiler_env(ffac_path)
         mem_dist = ["dflt"]
-        for tc in ["snort"]:
+        for tc in ["nfa_only_compile"]:
             tarball_path = "{}/{}.tgz".format(DATA_STORE_DIR + base, str(tc))
             print ("tarball path is ",tarball_path)
             fun_test.test_assert(fun_test.scp(source_file_path=tarball_path,
@@ -115,7 +115,7 @@ class JuniperNFACustomCompileOnly(FunTestCase):
                 print ("res_path is ",res_path)
                 #res_path = "/regex/Users/fungible/ws/data_store/regression/" + str(tc) + "/" + gtype + "_results/"
                 print ("res_path is ",res_path)
-                # exp_file_path= DATA_STORE_DIR+"/regex/"+str(tc)+"/"+gtype+"_exp_files/"
+                res_path = "/regex/" + str(tc) + "/" + gtype + "_results/"
                 exp_file_path=DATA_STORE_DIR+"/regex/"+str(tc)+"/"+gtype+"_exp_files/"
                 print ("exp_file_path is",exp_file_path)
                 print "CALLING compiler with ", res_path, " en:", en
@@ -132,33 +132,31 @@ class JuniperNFACustomCompileOnly(FunTestCase):
                 print ("pld_files are ",pld_files)
                 pld_files = [fn['filename'].split(pld_path)[1] for fn in pld_files if not fn["filename"].isdigit()]
                 pat_files= [fn['filename'].split(pat_path)[1] for fn in pat_files if not fn["filename"].isdigit()]
-
                 print("pat_file are ",pat_files)
                 print("pld_files are ",pld_files)
                 pat_pld_files = {}
                 for pat in pat_files:
-                    pat_base=pat.split(".pat")[0]
-                    plds_list=pat_base+".in"
+                    id_ = pat.split(".pat")[0]
+                    print("id_ is", id_)
+                    x =id_ + "_*"
+                    plds_list = con1.list_files(pld_path+x)
 
 
 
-
-                 #   print ("plds list before extraction",plds_list)
-                  #  plds_list=[str(fn['filename'].split(pld_path)[1]) for fn in plds_list if not fn["filename"].isdigit()]
-                   # print ("plds list after extraction is",plds_list)
-                    #plds_list=sorted(plds_list)
-                    print ("plds_list after sorting is",plds_list)
+                    print ("plds list before extraction",plds_list)
+                    plds_list=[str(fn['filename'].split(pld_path)[1]) for fn in plds_list if not fn["filename"].isdigit()]
+                    print ("plds list after extraction is",plds_list)
+                    plds_list=sorted(plds_list)
                     try:
-                        pat_pld_files[pat] = [plds_list]
+                        pat_pld_files[pat] = plds_list
                     #   print ("**************************")
                     #  print ("pat_pld_files is ",pat_pld_files)
                     except:
                         print ("caught an exception")
                 print ("pat_pld_files are ",pat_pld_files)
-                #pat_pld_files={"test_3.pat":["test_3_1.in","test_3_2.in","test_3_3.in"]}
 
-                RegexTemplate.compile_n_validate(con1, mem_dist, pat_path, pld_path, res_path, exp_file_path, pat_pld_files, ['browser-webkit', 'file-office', 'malware-other', 'server-mssql', 'scada', 'protocol-tftp', 'policy-spam', 'separate_files.py', 'file-flash', 'browser-plugins', 'browser-ie', 'deleted', 'server-webapp', 'pua-adware', 'malware-cnc', 'malware-tools', 'pua-toolbars'],
-                                                en, juniper_style="yes_snort")
+                RegexTemplate.compile_n_validate(con1, mem_dist, pat_path, pld_path, res_path, exp_file_path, pat_pld_files, ["test_16", "test_17", "test_19", "test_20", "test_21", "test_24"],
+                                                en, juniper_style="", target="s1")
 
                 #RegexTemplate.compile_only(con1, mem_dist, pat_path, res_path, [], en, juniper_style="yes")
 
