@@ -63,7 +63,7 @@ class RegExScript(FunTestScript):
 class JuniperNFACustomCompileOnly(FunTestCase):
     def describe(self):
         self.set_test_details(id=4,
-                              summary="F1: SNORT PATTERNS compiled with NFA Strategy and DEFAULT Memory Allocation",
+                              summary="S1: SNORT PATTERNS compiled with FFA Strategy and (RBM_ONLY,EXM_ONLY,DISTRIBUTED) Memory Allocation",
                               steps="""
                               """)
 
@@ -87,7 +87,7 @@ class JuniperNFACustomCompileOnly(FunTestCase):
         base = "/regex"
         fun_test.log("data store directory: " + DATA_STORE_DIR)
         con1.set_compiler_env(ffac_path)
-        mem_dist = ["dflt"]
+        mem_dist = ["rbm", "exm", "rbm_exm", "rbm_exm_plr"]
         for tc in ["snort"]:
             tarball_path = "{}/{}.tgz".format(DATA_STORE_DIR + base, str(tc))
             print ("tarball path is ",tarball_path)
@@ -158,7 +158,7 @@ class JuniperNFACustomCompileOnly(FunTestCase):
                 #pat_pld_files={"test_3.pat":["test_3_1.in","test_3_2.in","test_3_3.in"]}
 
                 RegexTemplate.compile_n_validate(con1, mem_dist, pat_path, pld_path, res_path, exp_file_path, pat_pld_files, ['browser-webkit', 'file-office', 'malware-other', 'server-mssql', 'scada', 'protocol-tftp', 'policy-spam', 'separate_files.py', 'file-flash', 'browser-plugins', 'browser-ie', 'deleted', 'server-webapp', 'pua-adware', 'malware-cnc', 'malware-tools', 'pua-toolbars'],
-                                                en, juniper_style="yes_snort")
+                                                en, juniper_style="yes_snort", target="s1")
 
                 #RegexTemplate.compile_only(con1, mem_dist, pat_path, res_path, [], en, juniper_style="yes")
 

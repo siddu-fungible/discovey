@@ -63,7 +63,7 @@ class RegExScript(FunTestScript):
 class JuniperNFACustomCompileOnly(FunTestCase):
     def describe(self):
         self.set_test_details(id=4,
-                              summary="compile and load",
+                              summary=" F1: HANDCRAFTED DFA_ONLY PATTERNS compiled with DFA Strategy and DEFAULT Memory Allocation",
                               steps="""
                               """)
 
@@ -103,7 +103,7 @@ class JuniperNFACustomCompileOnly(FunTestCase):
 
             con1.untar("/regex/"+str(tc)+".tgz", "/regex/")
         #below pat and pld path are used to test compile only part with all patterns stored in a single folder and all payloads stored ina separate folder
-          #  pat_path="/regex/"+str(tc)+"/patterns/"
+            #pat_path="/regex/"+str(tc)+"/patterns/"
            # pld_path="/regex/"+str(tc)+"/payloads/"
         #bbelow pat_ptah and pld_path are used for  the junieper_style of patterns to compile and validate
             pat_path = "/regex/patterns/"
@@ -158,7 +158,8 @@ class JuniperNFACustomCompileOnly(FunTestCase):
                 print ("pat_pld_files are ",pat_pld_files)
                 #pat_pld_files={"test_3.pat":["test_3_1.in","test_3_2.in","test_3_3.in"]}
 
-                RegexTemplate.compile_n_validate(con1, mem_dist, pat_path, pld_path,res_path,exp_file_path,pat_pld_files, ["test_33", "test_28"], en, juniper_style="")
+                RegexTemplate.compile_n_validate(con1, mem_dist, pat_path, pld_path, res_path, exp_file_path, pat_pld_files, ["test_33", "test_28"], en,
+                                                 juniper_style="")
 
                 #RegexTemplate.compile_only(con1, mem_dist, pat_path, res_path, [], en, juniper_style="yes")
 

@@ -15,7 +15,7 @@ def check_ssd(come_handle, expected_ssds_up=6, f1=0):
 
 def check_nu_ports(come_handle,
                    iteration,
-                   expected_ports_up,
+                   expected_ports_up=None,
                    f1=0):
     result = False
     dpcsh_output = get_dpcsh_data_for_cmds(come_handle, "port linkstatus", f1)
@@ -23,7 +23,7 @@ def check_nu_ports(come_handle,
         ports_up = validate_link_status_out(dpcsh_output,
                                             f1=f1,
                                             iteration=iteration,
-                                            epected_port_up=expected_ports_up)
+                                            expected_port_up=expected_ports_up)
         if ports_up:
             result = True
     return result
@@ -48,25 +48,29 @@ def validate_ssd_status(dpcsh_data, expected_ssd_count):
 
 
 def validate_link_status_out(link_status_out,
-                             epected_port_up,
+                             expected_port_up,
                              f1=0,
                              iteration=1):
     result = True
     link_status = parse_link_status_out(link_status_out, f1=f1, iteration=iteration)
     if link_status:
-        try:
-            name_xcvr_dict = get_name_xcvr(link_status)
-            for field in ['NU', 'HNU']:
-                if epected_port_up[field]:
-                    for port in epected_port_up[field]:
-                        nu_port_name = '{}-FPG-{}'.format(field, port)
-                        if not (nu_port_name in name_xcvr_dict):
-                            return False
-                        if name_xcvr_dict[nu_port_name] == 'ABSENT':
-                            return False
-        except:
-            fun_test.log("Unable o parse the logs")
-            result = False
+        if not expected_port_up:
+            speed = link_status['lport-0']['speed']
+            if speed == "10G":
+                expected_port_up = {'NU': range(24), 'HNU': []}
+            elif speed == "100G":
+                expected_port_up = {'NU': [0, 4, 8, 12], 'HNU': []}
+
+        name_xcvr_dict = get_name_xcvr(link_status)
+        for field in ['NU', 'HNU']:
+            if expected_port_up[field]:
+                for port in expected_port_up[field]:
+                    nu_port_name = '{}-FPG-{}'.format(field, port)
+                    if not (nu_port_name in name_xcvr_dict):
+                        return False
+                    if name_xcvr_dict[nu_port_name] == 'ABSENT':
+                        return False
+
     else:
         result = False
     return result

@@ -12,7 +12,7 @@
     "num_hosts": 8,
     "fpg_int_prefix": "fpg",
     "load_modules": ["nvme_tcp"],
-    "syslog": 2,
+    "syslog": 6,
     "command_timeout": 5,
     "reboot_timeout": 600,
     "nvme_device": "/dev/nvme0",
