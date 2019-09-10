@@ -34,8 +34,19 @@ class ApcPduTestcase(FunTestCase):
     def setup(self):
         fs_name = fun_test.get_job_environment_variable("test_bed_type")
         self.fs = AssetManager().get_fs_by_name(fs_name)
-        self.apc_info = self.fs.get("apc_info", None)
+        # self.apc_info = self.fs.get("apc_info", None)
+        self.apc_info = {
+            "host_ip": "cab07-pdu1",
+            "username": "localadmin",
+            "password": "Precious1*",
+            "outlet_number": 1
+        }
         self.outlet_no = self.apc_info.get("outlet_number", None)
+
+        job_inputs = fun_test.get_job_inputs()
+        if job_inputs:
+            if "iterations" in job_inputs:
+                self.NUMBER_OF_ITERATIONS = job_inputs["iterations"]
 
         # if you are loading the image every time you boot up
         self.f1_0_boot_args = "app=hw_hsu_test cc_huid=3 sku=SKU_FS1600_0 --all_100g --dis-stats --disable-wu-watchdog --dpc-server --dpc-uart"
@@ -60,49 +71,32 @@ class ApcPduTestcase(FunTestCase):
                                ssh_username=self.fs['fpga']['mgmt_ssh_username'],
                                ssh_password=self.fs['fpga']['mgmt_ssh_password'])
             qa_02_handle = Linux(host_ip="qa-ubuntu-02", ssh_username="auto_admin", ssh_password="fun123")
-            qa_02_handle.destroy()
-            come_handle.destroy()
 
             fun_test.add_checkpoint(checkpoint="ITERATION : {}".format(pc_no))
 
-            self.apc_pdu_reboot(come_handle, fpga_handle)
+            # self.apc_pdu_reboot(come_handle, fpga_handle)
 
-            fun_test.log("Checking if FPGA is up")
-            fpga_up = fpga_handle.ensure_host_is_up(max_wait_time=600)
-            fun_test.test_assert(fpga_up, "FPGA is UP")
+            # fun_test.log("Checking if FPGA is up")
+            # fpga_up = fpga_handle.ensure_host_is_up(max_wait_time=600)
+            # fun_test.test_assert(fpga_up, "FPGA is UP")
+            #
+            # fun_test.log("Checking if BMC is UP")
+            # bmc_up = qa_02_handle.ping(dst=self.fs['bmc']['mgmt_ip'])
+            # fun_test.test_assert(bmc_up, "BMC is UP")
+            #
+            # fun_test.log("Checking if COMe is UP")
+            # come_up = come_handle.ensure_host_is_up(max_wait_time=600)
+            # fun_test.test_assert(come_up, "COMe is UP")
 
-            fun_test.log("Checking if COMe is UP")
-            come_up = come_handle.ensure_host_is_up(max_wait_time=600)
-            fun_test.test_assert(come_up, "COMe is UP")
-
-            initial = come_handle.command("uptime")
-            output = come_handle.command("uptime")
-            up_time = re.search(r'(\d+) min', output)
-            up_time_less_than_5 = False
-            if up_time:
-                up_time_min = int(up_time.group(1))
-                if up_time_min <= 5:
-                    up_time_less_than_5 = True
-            fun_test.test_assert(up_time_less_than_5, "COMe 'up-time' less than 5 min")
-
-            fun_test.log("Checking if BMC is UP")
-            bmc_up = qa_02_handle.ping(dst=self.fs['bmc']['mgmt_ip'])
-            fun_test.test_assert(bmc_up, "BMC is UP")
-
-            come_handle.destroy()
-            qa_02_handle.destroy()
-            fpga_handle.destroy()
-
-            # Since we are going to load the image now, so kill all the handles before
-            # this otherwise some issue might come in.
-
-            topology_helper = TopologyHelper()
-            topology_helper.set_dut_parameters(f1_parameters={0: {"boot_args": self.f1_0_boot_args},
-                                                              1: {"boot_args": self.f1_1_boot_args}},
-                                               skip_funeth_come_power_cycle=True,
-                                               dut_index=0)
-            topology = topology_helper.deploy()
-            fun_test.test_assert(topology, "Topology deployed")
+            # initial = come_handle.command("uptime")
+            # output = come_handle.command("uptime")
+            # up_time = re.search(r'(\d+) min', output)
+            # up_time_less_than_5 = False
+            # if up_time:
+            #     up_time_min = int(up_time.group(1))
+            #     if up_time_min <= 5:
+            #         up_time_less_than_5 = True
+            # fun_test.test_assert(up_time_less_than_5, "COMe 'up-time' less than 5 min")
 
             fun_test.log("Checking if SSD's are Active on F1_0")
             ssd_valid = check_ssd(come_handle, expected_ssds_up=12, f1=0)
@@ -110,16 +104,14 @@ class ApcPduTestcase(FunTestCase):
 
             fun_test.log("Checking if SSD's are Active on F1_1")
             ssd_valid = check_ssd(come_handle, expected_ssds_up=12, f1=1)
-            fun_test.test_assert(ssd_valid, "F1_1: SSD's ONLINE")
+            # fun_test.test_assert(ssd_valid, "F1_1: SSD's ONLINE")
 
             fun_test.log("Checking if NU and HNU port's are active")
-            nu_port_valid = check_nu_ports(come_handle, iteration=pc_no, f1=0,
-                                           expected_ports_up={"NU": [0, 4, 8, 12], "HNU": []})
+            nu_port_valid = check_nu_ports(come_handle, iteration=pc_no, f1=0)
             fun_test.test_assert(nu_port_valid, "F1_0: NU ports are present (0,4,8,12) 100G")
 
             fun_test.log("Checking if NU and HNU port's are active on F1_1")
-            nu_port_valid = check_nu_ports(come_handle, iteration=pc_no, f1=1,
-                                           expected_ports_up={"NU": [0, 4, 8, 12], "HNU": []})
+            nu_port_valid = check_nu_ports(come_handle, iteration=pc_no, f1=1)
             fun_test.test_assert(nu_port_valid, "F1_1: NU ports are present (0,4,8,12) 100G")
 
             # Minor checks: docker and cores

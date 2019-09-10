@@ -15,7 +15,7 @@ def check_ssd(come_handle, expected_ssds_up=6, f1=0):
 
 def check_nu_ports(come_handle,
                    iteration,
-                   expected_ports_up,
+                   expected_ports_up=None,
                    f1=0):
     result = False
     dpcsh_output = get_dpcsh_data_for_cmds(come_handle, "port linkstatus", f1)
@@ -23,7 +23,7 @@ def check_nu_ports(come_handle,
         ports_up = validate_link_status_out(dpcsh_output,
                                             f1=f1,
                                             iteration=iteration,
-                                            epected_port_up=expected_ports_up)
+                                            expected_port_up=expected_ports_up)
         if ports_up:
             result = True
     return result
@@ -48,25 +48,29 @@ def validate_ssd_status(dpcsh_data, expected_ssd_count):
 
 
 def validate_link_status_out(link_status_out,
-                             epected_port_up,
+                             expected_port_up,
                              f1=0,
                              iteration=1):
     result = True
     link_status = parse_link_status_out(link_status_out, f1=f1, iteration=iteration)
     if link_status:
-        try:
-            name_xcvr_dict = get_name_xcvr(link_status)
-            for field in ['NU', 'HNU']:
-                if epected_port_up[field]:
-                    for port in epected_port_up[field]:
-                        nu_port_name = '{}-FPG-{}'.format(field, port)
-                        if not (nu_port_name in name_xcvr_dict):
-                            return False
-                        if name_xcvr_dict[nu_port_name] == 'ABSENT':
-                            return False
-        except:
-            fun_test.log("Unable o parse the logs")
-            result = False
+        if not expected_port_up:
+            speed = link_status['lport-0']['speed']
+            if speed == "10G":
+                expected_port_up = {'NU': range(24), 'HNU': []}
+            elif speed == "100G":
+                expected_port_up = {'NU': [0, 4, 8, 12], 'HNU': []}
+
+        name_xcvr_dict = get_name_xcvr(link_status)
+        for field in ['NU', 'HNU']:
+            if expected_port_up[field]:
+                for port in expected_port_up[field]:
+                    nu_port_name = '{}-FPG-{}'.format(field, port)
+                    if not (nu_port_name in name_xcvr_dict):
+                        return False
+                    if name_xcvr_dict[nu_port_name] == 'ABSENT':
+                        return False
+
     else:
         result = False
     return result
@@ -154,3 +158,50 @@ def get_dpcsh_data_for_cmds(come_handle, cmd, f1=0):
     except:
         fun_test.log("Unable to get the DPCSH data for command: {}".format(cmd))
     return result
+
+
+if __name__ == "__main__":
+    dpcsh_data = {
+    "LINK STATUS": "LINK STATUS",
+    "lport- 0": " NU-FPG- 0 xcvr:PRESENT  speed:  10G admin:NOSHUT SW: 0 HW: 0 LPBK: 0 FEC: 0",
+    "lport- 1": " NU-FPG- 1 xcvr:PRESENT  speed:  10G admin:NOSHUT SW: 0 HW: 0 LPBK: 0 FEC: 0",
+    "lport- 2": " NU-FPG- 2 xcvr:PRESENT  speed:  10G admin:NOSHUT SW: 0 HW: 0 LPBK: 0 FEC: 0",
+    "lport- 3": " NU-FPG- 3 xcvr:PRESENT  speed:  10G admin:NOSHUT SW: 0 HW: 0 LPBK: 0 FEC: 0",
+    "lport- 4": " NU-FPG- 4 xcvr:ABSENT   speed:  10G admin:NOSHUT SW: 0 HW: 0 LPBK: 0 FEC: 0",
+    "lport- 5": " NU-FPG- 5 xcvr:ABSENT   speed:  10G admin:NOSHUT SW: 0 HW: 0 LPBK: 0 FEC: 0",
+    "lport- 6": " NU-FPG- 6 xcvr:ABSENT   speed:  10G admin:NOSHUT SW: 0 HW: 0 LPBK: 0 FEC: 0",
+    "lport- 7": " NU-FPG- 7 xcvr:ABSENT   speed:  10G admin:NOSHUT SW: 0 HW: 0 LPBK: 0 FEC: 0",
+    "lport- 8": " NU-FPG- 8 xcvr:ABSENT   speed:  10G admin:NOSHUT SW: 0 HW: 0 LPBK: 0 FEC: 0",
+    "lport- 9": " NU-FPG- 9 xcvr:ABSENT   speed:  10G admin:NOSHUT SW: 0 HW: 0 LPBK: 0 FEC: 0",
+    "lport-10": " NU-FPG-10 xcvr:ABSENT   speed:  10G admin:NOSHUT SW: 0 HW: 0 LPBK: 0 FEC: 0",
+    "lport-11": " NU-FPG-11 xcvr:ABSENT   speed:  10G admin:NOSHUT SW: 0 HW: 0 LPBK: 0 FEC: 0",
+    "lport-12": " NU-FPG-12 xcvr:ABSENT   speed:  10G admin:NOSHUT SW: 0 HW: 0 LPBK: 0 FEC: 0",
+    "lport-13": " NU-FPG-13 xcvr:ABSENT   speed:  10G admin:NOSHUT SW: 0 HW: 0 LPBK: 0 FEC: 0",
+    "lport-14": " NU-FPG-14 xcvr:ABSENT   speed:  10G admin:NOSHUT SW: 0 HW: 0 LPBK: 0 FEC: 0",
+    "lport-15": " NU-FPG-15 xcvr:ABSENT   speed:  10G admin:NOSHUT SW: 0 HW: 0 LPBK: 0 FEC: 0",
+    "lport-16": " NU-FPG-16 xcvr:ABSENT   speed:  10G admin:NOSHUT SW: 0 HW: 0 LPBK: 0 FEC: 0",
+    "lport-17": " NU-FPG-17 xcvr:ABSENT   speed:  10G admin:NOSHUT SW: 0 HW: 0 LPBK: 0 FEC: 0",
+    "lport-18": " NU-FPG-18 xcvr:ABSENT   speed:  10G admin:NOSHUT SW: 0 HW: 0 LPBK: 0 FEC: 0",
+    "lport-19": " NU-FPG-19 xcvr:ABSENT   speed:  10G admin:NOSHUT SW: 0 HW: 0 LPBK: 0 FEC: 0",
+    "lport-20": " NU-FPG-20 xcvr:ABSENT   speed:  10G admin:NOSHUT SW: 0 HW: 0 LPBK: 0 FEC: 0",
+    "lport-21": " NU-FPG-21 xcvr:ABSENT   speed:  10G admin:NOSHUT SW: 0 HW: 0 LPBK: 0 FEC: 0",
+    "lport-22": " NU-FPG-22 xcvr:ABSENT   speed:  10G admin:NOSHUT SW: 0 HW: 0 LPBK: 0 FEC: 0",
+    "lport-23": " NU-FPG-23 xcvr:ABSENT   speed:  10G admin:NOSHUT SW: 0 HW: 0 LPBK: 0 FEC: 0",
+    "lport-61": " NU-MPG- 0 xcvr:ABSENT   speed:  10G admin:NOSHUT SW: 0 HW: 0 LPBK: 0 FEC: 0",
+    "lport-64": "HNU-FPG- 0 xcvr:ABSENT   speed:  10G admin:NOSHUT SW: 0 HW: 0 LPBK: 0 FEC: 0",
+    "lport-65": "HNU-FPG- 1 xcvr:ABSENT   speed:  10G admin:NOSHUT SW: 0 HW: 0 LPBK: 0 FEC: 0",
+    "lport-66": "HNU-FPG- 2 xcvr:ABSENT   speed:  10G admin:NOSHUT SW: 0 HW: 0 LPBK: 0 FEC: 0",
+    "lport-67": "HNU-FPG- 3 xcvr:ABSENT   speed:  10G admin:NOSHUT SW: 0 HW: 0 LPBK: 0 FEC: 0",
+    "lport-68": "HNU-FPG- 4 xcvr:ABSENT   speed:  10G admin:NOSHUT SW: 0 HW: 0 LPBK: 0 FEC: 0",
+    "lport-69": "HNU-FPG- 5 xcvr:ABSENT   speed:  10G admin:NOSHUT SW: 0 HW: 0 LPBK: 0 FEC: 0",
+    "lport-70": "HNU-FPG- 6 xcvr:ABSENT   speed:  10G admin:NOSHUT SW: 0 HW: 0 LPBK: 0 FEC: 0",
+    "lport-71": "HNU-FPG- 7 xcvr:ABSENT   speed:  10G admin:NOSHUT SW: 0 HW: 0 LPBK: 0 FEC: 0",
+    "lport-72": "HNU-FPG- 8 xcvr:ABSENT   speed:  10G admin:NOSHUT SW: 0 HW: 0 LPBK: 0 FEC: 0",
+    "lport-73": "HNU-FPG- 9 xcvr:ABSENT   speed:  10G admin:NOSHUT SW: 0 HW: 0 LPBK: 0 FEC: 0",
+    "lport-74": "HNU-FPG-10 xcvr:ABSENT   speed:  10G admin:NOSHUT SW: 0 HW: 0 LPBK: 0 FEC: 0",
+    "lport-75": "HNU-FPG-11 xcvr:ABSENT   speed:  10G admin:NOSHUT SW: 0 HW: 0 LPBK: 0 FEC: 0",
+    "lport-76": "HNU-FPG-12 xcvr:ABSENT   speed:  10G admin:NOSHUT SW: 0 HW: 0 LPBK: 0 FEC: 0",
+    "lport-77": "HNU-FPG-13 xcvr:ABSENT   speed:  10G admin:NOSHUT SW: 0 HW: 0 LPBK: 0 FEC: 0",
+    "lport-78": "HNU-FPG-14 xcvr:ABSENT   speed:  10G admin:NOSHUT SW: 0 HW: 0 LPBK: 0 FEC: 0",
+    "lport-79": "HNU-FPG-15 xcvr:ABSENT   speed:  10G admin:NOSHUT SW: 0 HW: 0 LPBK: 0 FEC: 0"}
+    print validate_link_status_out(dpcsh_data, {"NU": [0,1,2,3], "HNU": []})
