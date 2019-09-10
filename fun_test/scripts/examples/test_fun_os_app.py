@@ -11,13 +11,25 @@ class MyScript(FunTestScript):
         """)
 
     def setup(self):
-        os.environ[
-            "DOCKER_HOSTS_SPEC_FILE"] = fun_test.get_script_parent_directory() + "/remote_docker_host_with_storage.json"
-        # topology_obj_helper = TopologyHelper(spec=topology_dict) use locally defined dictionary variable
-        topology_obj_helper = TopologyHelper(spec_file=fun_test.get_script_parent_directory() + "/single_f1_custom_app.json")
-        topology = topology_obj_helper.deploy()
-        fun_test.test_assert(topology, "Ensure deploy is successful")
-        fun_test.shared_variables["topology"] = topology
+        test_bed_type = fun_test.get_job_environment_variable("test_bed_type")
+        if test_bed_type == "simulation":
+            os.environ[
+                "DOCKER_HOSTS_SPEC_FILE"] = fun_test.get_script_parent_directory() + "/remote_docker_host_with_storage.json"
+            topology_obj_helper = TopologyHelper(spec_file=fun_test.get_script_parent_directory() + "/single_f1_custom_app.json")
+            topology = topology_obj_helper.deploy()
+            fun_test.test_assert(topology, "Ensure deploy is successful")
+            fun_test.shared_variables["topology"] = topology
+        else:
+            boot_args = "app=hw_hsu_test --dpc-uart --dpc-server --csr-replay --all_100g --disable-wu-watchdog"
+            rich_inputs = fun_test.get_rich_inputs()
+            if rich_inputs:
+                if "boot_args" in rich_inputs:
+                    rich_input_boot_args = rich_inputs.get("boot_args", None)
+                    if rich_input_boot_args:
+                        if "0" in rich_input_boot_args:
+                            boot_args = rich_input_boot_args["0"]
+            topology_helper = TopologyHelper()
+            topology_helper.set_dut_parameters(dut_index=0, custom_boot_args=boot_args)
 
     def cleanup(self):
         if "topology" in fun_test.shared_variables:
