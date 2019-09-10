@@ -75,7 +75,7 @@ def metrics_data(request):
         from_epoch_ms = request.GET.get("from_epoch_ms", None)
         to_epoch_ms = request.GET.get("to_epoch_ms", None)
         order_by = request.GET.get("order_by", None)
-        count = request.GET.get("count", None)
+        count = int(request.GET.get("count", 1))
         if metric_id:
             chart = MetricChart.objects.get(metric_id=metric_id)
             model = app_config.get_metric_models()[chart.metric_model_name]
@@ -89,7 +89,9 @@ def metrics_data(request):
                 date_range = [from_time, to_time]
                 q = Q(input_date_time__range=date_range)
                 order_by = "-input_date_time"
-                count = 1
+                fetch = 1
+            else:
+                fetch = 10
             for data_set in data_sets:
                 inputs = data_set["inputs"]
                 d = {}
@@ -99,15 +101,20 @@ def metrics_data(request):
                     new_q = q & Q(**d)
                 else:
                     new_q = Q(**d)
-                results = model.objects.filter(new_q).order_by(order_by)[:count]
+                results = model.objects.filter(new_q).order_by(order_by)[:fetch]
                 if len(results):
+                    date_time_set = set()
                     for result in results:
                         output_name = data_set["output"]["name"]
                         date_time = getattr(result, "input_date_time")
                         value = getattr(result, output_name)
                         unit = getattr(result, output_name + "_unit")
-                        temp = {"name": data_set["name"], "value": value, "unit": unit, "date_time": date_time}
-                        data.append(temp)
+                        present = _add_to_set(date_time=date_time, date_time_set=date_time_set)
+                        if not present:
+                            temp = {"name": data_set["name"], "value": value, "unit": unit, "date_time": date_time}
+                            data.append(temp)
+                        if len(data) > 4:
+                            break
     elif request.method == "POST":
         request_json = json.loads(request.body)
         reports = request_json["reports"]
@@ -121,6 +128,15 @@ def metrics_data(request):
         data = send_mail(to_addresses=[email], subject=subject, content=content)
     return data
 
+
+def _add_to_set(date_time, date_time_set):
+    date_time_str = str(date_time.month) + "/" + str(date_time.day) + "/" + str(date_time.year)
+    if date_time_str not in date_time_set:
+        date_time_set.add(date_time_str)
+        present = False
+    else:
+        present = True
+    return present
 
 @csrf_exempt
 @api_safe_json_response
