@@ -610,7 +610,7 @@ class StripeVolumeTestCase(FunTestCase):
             for index, stat_detail in enumerate(self.stats_collect_details):
                 func = stat_detail.keys()[0]
                 self.stats_collect_details[index][func]["count"] = int(
-                    self.warm_up_fio_cmd_args["runtime"] / self.stats_collect_details[index][func]["interval"])
+                    self.warm_up_fio_cmd_args["timeout"] / self.stats_collect_details[index][func]["interval"])
                 if func == "vol_stats":
                     self.stats_collect_details[index][func]["vol_details"] = vol_details
             self.storage_controller.verbose = False
