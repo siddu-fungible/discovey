@@ -63,7 +63,7 @@ class RegExScript(FunTestScript):
 class JuniperNFACustomCompileOnly(FunTestCase):
     def describe(self):
         self.set_test_details(id=4,
-                              summary="compile and load",
+                              summary=" S1: HANDCRAFTED DFA_ONLY PATTERNS compiled with DFA Strategy and DEFAULT Memory Allocation",
                               steps="""
                               """)
 
