@@ -18,7 +18,7 @@ export class SuitesViewComponent implements OnInit {
   dropDownSettings = {};
   driver: Observable<any> = null;
   suitesCount: number = null;
-  RECORDS_PER_PAGE: number = 20;
+  RECORDS_PER_PAGE: number = 40;
   currentPage = 1;
   pager: any = {};
   byNameSearchText: string = null;
@@ -56,7 +56,7 @@ export class SuitesViewComponent implements OnInit {
   }
 
   setPage(page) {
-    if (page === 0 || (page > this.pager.endPage)) {
+    if (page === 0 || (page > this.pager.totalPages)) {
       return;
     }
     this.currentPage = page;

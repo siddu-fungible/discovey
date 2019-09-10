@@ -374,7 +374,7 @@ def suites(request, id):
             search_by_name_text = request.GET.get("search_by_name", None)
             if search_by_name_text:
                 q &= Q(name__contains=search_by_name_text)
-            all_suites = Suite.objects.filter(q).order_by('name')
+            all_suites = Suite.objects.filter(q).extra(select={'case_insensitive_name': 'lower(name)'}).order_by('case_insensitive_name')
             if get_count is None:
                 records_per_page = request.GET.get("records_per_page", None)
                 page = request.GET.get("page", None)
