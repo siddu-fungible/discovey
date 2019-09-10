@@ -92,7 +92,10 @@ class ScriptSetup(FunTestScript):
     def cleanup(self):
         fun_test.log("Cleanup")
         fun_test.shared_variables["topology"].cleanup()
-        pass
+        if 'fs' in fun_test.shared_variables:
+            fs1 = fun_test.shared_variables['fs']
+            fs1.cleanup()
+
 
 class TcSynSent(FunTestCase):
 
