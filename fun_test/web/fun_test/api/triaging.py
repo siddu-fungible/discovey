@@ -69,16 +69,18 @@ def trials(request, triage_id):
                 first_trial.submission_date_time = get_current_time()
                 first_trial.save()
             else:
-                t = Triage3.objects.get(triage_id=triage_id)
+                triage = Triage3.objects.get(triage_id=triage_id)
                 fun_os_sha = request_json["fun_os_sha"]
                 trial = Triage3Trial(fun_os_sha=fun_os_sha,
                                      triage_id=triage_id,
-                                     trial_set_id=t.current_trial_set_id,
-                                     status=TriagingStates.INIT,
+                                     trial_set_id=triage.current_trial_set_id,
+                                     status=TriageTrialStates.INIT,
                                      submission_date_time=get_current_time(), active=True, reruns=False)
                 trial_tag = get_trial_tag(base_tag="qa_triage", triage_id=triage_id, fun_os_sha=fun_os_sha)
                 trial.tag = trial_tag
                 trial.save()
+                triage.status = TriagingStates.IN_PROGRESS
+                triage.save()
     elif request.method == "GET":
         fun_os_sha = request.GET.get("fun_os_sha", None)
         original_id = request.GET.get("original_id", -1)
