@@ -1532,7 +1532,7 @@ class CollectStats(object):
             func = stat_detail.keys()[0]
             arg = stat_detail[func]
             thread_id = arg.get("thread_id")
-            if thread_id and fun_test.fun_test_threads[thread_id]["thread"].is_alive():
+            if fun_test.fun_test_threads[thread_id]["thread"] and fun_test.fun_test_threads[thread_id]["thread"].is_alive():
                 if func == "vp_utils":
                     fun_test.log("VP utilization stats collection thread having the ID {} is still running..."
                                  "Stopping it now".format(thread_id))
