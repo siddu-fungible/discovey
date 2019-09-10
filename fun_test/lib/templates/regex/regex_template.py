@@ -124,6 +124,8 @@ class RegexTemplate(Linux):
                 elif "target" in arg:
                     if arg[1] == "s1":
                         cmd = cmd + "--" + arg[0] + "=" + arg[1] + " "
+                elif "s" in arg:
+                        cmd=cmd+"-"+ arg[0]+ " "+arg[1]+ " "
                 else:
                     cmd = cmd + "-" + arg[0] + " " + arg[1] + " "
             print ("graph path is ",graph_path)
