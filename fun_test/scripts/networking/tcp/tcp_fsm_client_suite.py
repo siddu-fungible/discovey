@@ -90,6 +90,7 @@ class ScriptSetup(FunTestScript):
         fun_test.sleep("Sleeping before start of test", seconds=15)
 
     def cleanup(self):
+        time.sleep(120)
         fun_test.log("Cleanup")
         fun_test.shared_variables["topology"].cleanup()
         if 'fs' in fun_test.shared_variables:
