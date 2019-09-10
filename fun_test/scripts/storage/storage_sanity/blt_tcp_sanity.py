@@ -220,7 +220,7 @@ class BltTcpSanityTestcase(FunTestCase):
         # Preparing the volume details list containing the list of dictionaries
         vol_details = []
         vol_group = {}
-        vol_group[self.blt_details["type"]] = fun_test.shared_variables["blt_uuid"]
+        vol_group[self.blt_details["type"]] = [fun_test.shared_variables["blt_uuid"]]
         vol_details.append(vol_group)
 
         self.storage_controller = fun_test.shared_variables["storage_controller"]
