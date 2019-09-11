@@ -1250,7 +1250,7 @@ if __name__ == "__main_inspur_fix__":
             chart.save()
             print "fixed the chart: {}, {}".format(chart.chart_name, chart.internal_chart_name)
 
-if __name__ == "__main__":
+if __name__ == "__main__apple":
     internal_chart_names = ["apple_rand_read_mrsw_tcp_output_bandwidth", "apple_rand_read_mrsw_tcp_output_latency", "apple_rand_read_mrsw_tcp_output_iops"]
     for internal_chart_name in internal_chart_names:
         chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
@@ -1258,6 +1258,27 @@ if __name__ == "__main__":
                                milestone_name="Moved to new host")
         mmt.save()
 
+
+if __name__ == "__main__":
+    metric_ids = [318, 319]
+    for metric_id in metric_ids:
+        # changing the input_metric_name in the filter
+        chart = MetricChart.objects.get(metric_id=metric_id)
+        data_sets = json.loads(chart.data_sets)
+        metric_name = data_sets[0]['inputs']['input_metric_name']
+        data_sets[0]['inputs']['input_metric_name'] = metric_name.replace(' ', '_')
+        print(data_sets)
+        chart.data_sets = json.dumps(data_sets)
+        chart.save()
+
+        # changing the input_metric_name in the data base
+        metric_model_name = chart.metric_model_name
+        print (metric_model_name)
+        model_data = eval(metric_model_name).objects.all()
+        for each_data in model_data:
+            input_metric_name = each_data.input_metric_name
+            each_data.input_metric_name = input_metric_name.replace(' ', '_')
+            each_data.save()
 
 
 
