@@ -629,6 +629,26 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
             for host_name in self.host_info:
                 self.host_info[host_name]["num_volumes"] = self.final_host_ips.count(self.host_info[host_name]["ip"])
 
+            # Finding the useable capacity of the drives which will be used as the BLT volume capacity, in case
+            # the capacity is not overridden while starting the script
+            command_result = self.storage_controller.peek(
+                props_tree="storage/volumes/VOL_TYPE_BLK_LOCAL_THIN/drives", legacy=False, chunk=8192,
+                command_duration=self.command_timeout)
+            if command_result["status"] and command_result["data"]:
+                for drive_id, stats in sorted(command_result["data"].iteritems()):
+                    if "capacity_bytes" in stats:
+                        if stats["capacity_bytes"] < self.blt_details["capacity"]:
+                            self.blt_details["capacity"] = stats["capacity_bytes"]
+                fun_test.log("Minimum capacity found by traversing all the drive stats is: {}".
+                             format(self.blt_details["capacity"]))
+            else:
+                fun_test.critical("Unable to get the individual drive status...So going to use the BLT capacity given "
+                                  "in the script config file or capacity passed at the runtime...")
+
+            if "capacity" in job_inputs:
+                fun_test.critical("Original Volume size {} is overriden by the size {} given while running the "
+                                  "script".format(self.blt_details["capacity"], job_inputs["capacity"]))
+                self.blt_details["capacity"] = job_inputs["capacity"]
 
             # Create BLT's
             self.thin_uuid_list = []
