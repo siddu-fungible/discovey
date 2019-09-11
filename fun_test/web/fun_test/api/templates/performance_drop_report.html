@@ -44,6 +44,9 @@
 <h3>{{ report.lineage }}</h3>
 <b>Chart name: </b>{{ report.chart_name }}<br>
 <b>Link to chart: </b><a href="{{ report.url }}" target="_blank">Link</a><br>
+{% for jira_id in report.jira_ids %}
+<a href="{{ 'http://jira/browse/' + jira_id }}" target="_blank">{{ jira_id }} </a>
+{% endfor %}<br>
 <table>
     <tr class="header">
         <th class="header-text">Series name</th>
