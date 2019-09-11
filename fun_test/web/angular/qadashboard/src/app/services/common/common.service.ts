@@ -44,6 +44,14 @@ export class CommonService {
     return new Date(epochValue);
   }
 
+  changeToPstTimezone(date) {
+    let pstDate = new Date(date.toLocaleString('en-US', {
+      timeZone: "America/Los_Angeles"
+    }));
+    var diff = date.getTime() - pstDate.getTime();
+    return new Date(date.getTime() + diff);
+  }
+
   isSameDay(d1, d2) {
     return d1.getFullYear() === d2.getFullYear() &&
       d1.getMonth() === d2.getMonth() &&
