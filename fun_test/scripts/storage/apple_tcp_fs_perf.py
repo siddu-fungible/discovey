@@ -16,8 +16,8 @@ tb_config = {
     "name": "Basic Storage",
     "dut_info": {
         0: {
-            "bootarg": "setenv bootargs app=mdt_test,load_mods,hw_hsu_test workload=storage --serial sku=SKU_FS1600_0 --all_100g"
-                       " --dpc-server --dpc-uart --csr-replay --nofreeze",
+            "bootarg": "setenv bootargs app=mdt_test,load_mods,hw_hsu_test workload=storage --serial sku=SKU_FS1600_0"
+                       " --all_100g --dpc-server --dpc-uart --csr-replay --nofreeze",
             "perf_multiplier": 1,
             "f1_ip": "29.1.1.1",
             "tcp_port": 1099
@@ -290,8 +290,7 @@ class StripedVolumePerformanceTestcase(FunTestCase):
         try:
             if hasattr(self, "reboot_host") and self.reboot_host:
                 for end_host in self.end_host_list:
-                    end_host.reboot(non_blocking=True)
-                fun_test.sleep("Server rebooting", 340)
+                    end_host.reboot(max_wait_time=400)
         except:
             fun_test.log("Failure during reboot of host")
 
