@@ -48,8 +48,7 @@ export class CommonService {
     let pstDate = new Date(date.toLocaleString('en-US', {
       timeZone: "America/Los_Angeles"
     }));
-    var diff = date.getTime() - pstDate.getTime();
-    return new Date(date.getTime() + diff);
+    return pstDate;
   }
 
   isSameDay(d1, d2) {
