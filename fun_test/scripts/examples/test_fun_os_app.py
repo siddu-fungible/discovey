@@ -16,9 +16,8 @@ class MyScript(FunTestScript):
             os.environ[
                 "DOCKER_HOSTS_SPEC_FILE"] = fun_test.get_script_parent_directory() + "/remote_docker_host_with_storage.json"
             topology_obj_helper = TopologyHelper(spec_file=fun_test.get_script_parent_directory() + "/single_f1_custom_app.json")
-            topology = topology_obj_helper.deploy()
-            fun_test.test_assert(topology, "Ensure deploy is successful")
-            fun_test.shared_variables["topology"] = topology
+            fun_test.shared_variables["topology_obj_helper"] = topology_obj_helper
+
         else:
             boot_args = "app=hw_hsu_test --dpc-uart --dpc-server --csr-replay --all_100g --disable-wu-watchdog"
             rich_inputs = fun_test.get_rich_inputs()
@@ -56,12 +55,18 @@ class FunTestCase1(FunTestCase):
         pass
 
     def run(self):
-        topology = fun_test.shared_variables["topology"]
-        dut_instance0 = topology.get_dut_instance(index=0)
-        fun_test.test_assert(dut_instance0, "Retrieved dut instance 0")
+        topology_obj_helper = fun_test.shared_variables["topology_obj_helper"]
+        topology = topology_obj_helper.deploy()
+        fun_test.test_assert(topology, "Ensure deploy is successful")
 
-        boot_args = "app=test"
-        dut_instance0.run_app(boot_args=boot_args, foreground=True, timeout=60)
+        fun_test.shared_variables["topology"] = topology
+        topology = fun_test.shared_variables["topology"]
+        test_bed_type = fun_test.get_job_environment_variable("test_bed_type")
+        if test_bed_type == "simulation":
+            dut_instance0 = topology.get_dut_instance(index=0)
+            fun_test.test_assert(dut_instance0, "Retrieved dut instance 0")
+            boot_args = "app=test"
+            dut_instance0.run_app(boot_args=boot_args, foreground=True, timeout=60)
         # dut_instance0.start(foreground=True, run_to_completion=True)
 
 
