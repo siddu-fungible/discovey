@@ -28,6 +28,10 @@ class MyScript(FunTestScript):
                     if rich_input_boot_args:
                         if "0" in rich_input_boot_args:
                             boot_args = rich_input_boot_args["0"]
+                            if "--dpc-uart" not in boot_args:
+                                boot_args += " --dpc-uart"
+                            if "--dpc-server" not in boot_args:
+                                boot_args += " --dpc-server"
             topology_helper = TopologyHelper()
             topology_helper.set_dut_parameters(dut_index=0, custom_boot_args=boot_args)
 
