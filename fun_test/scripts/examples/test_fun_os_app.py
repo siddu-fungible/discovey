@@ -33,6 +33,8 @@ class MyScript(FunTestScript):
                                 boot_args += " --dpc-server"
             topology_helper = TopologyHelper()
             topology_helper.set_dut_parameters(dut_index=0, custom_boot_args=boot_args)
+            fun_test.shared_variables["topology_obj_helper"] = topology_obj_helper
+
 
     def cleanup(self):
         if "topology" in fun_test.shared_variables:
