@@ -1599,7 +1599,7 @@ class CollectStats(object):
             func = stat_detail.keys()[0]
             arg = stat_detail[func]
             thread_id = arg.get("thread_id")
-            if thread_id:
+            if fun_test.fun_test_threads[thread_id]["thread"]:
                 if func == "vp_utils":
                     fun_test.log("Waiting for the VP utilization stats collection thread having the ID {} to "
                                  "complete...".format(thread_id))
