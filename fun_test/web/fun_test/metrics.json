@@ -3608,6 +3608,12 @@
                     "label": "IOPS, QDepth=64"
                   },
                   {
+                    "name": "inspur_rand_read_write_qd96_8k_block_output_iops",
+                    "label": "IOPS, QDepth=96",
+                    "metric_model_name": "BltVolumePerformance",
+                    "children": []
+                  },
+                  {
                     "metric_model_name": "BltVolumePerformance",
                     "name": "inspur_rand_read_write_qd128_8k_block_output_iops",
                     "label": "IOPS, QDepth=128"

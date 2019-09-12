@@ -1259,7 +1259,7 @@ if __name__ == "__main__apple":
         mmt.save()
 
 
-if __name__ == "__main__":
+if __name__ == "__main__aaa":
     # underscore problem
     metric_ids = [318, 319]
     for metric_id in metric_ids:
@@ -1313,4 +1313,64 @@ if __name__ == "__main__":
         print ("next")
         chart.data_sets = json.dumps(data_sets)
         chart.save()
+
+
+if __name__ == "__main__":
+    internal_chart_name = "inspur_rand_read_write_qd96_8k_block_output_iops"
+    metric_model_name = "BltVolumePerformance"
+    description = "TBD"
+    owner_info = "Ravi Hulle (ravi.hulle@fungible.com)"
+    source = "https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/storage/" \
+             "ec_inspur_fs_teramark_multivolume.py"
+    positive = True
+    y1_axis_title = PerfUnit.UNIT_OPS
+    platform = FunPlatform.F1
+    base_line_date = datetime(year=2019, month=5, day=15, minute=0, hour=0, second=0)
+    chart_name = 'IOPS, QDepth=96'
+    data_sets = []
+    for vol in [4, 8]:
+        input_fio_job_name = "inspur_8k_random_read_write_iodepth_96_vol_{}".format(vol)
+        inputs = {
+            "input_platform": platform,
+            "input_fio_job_name": input_fio_job_name
+        }
+        for operation in ["read", "write"]:
+            one_data_set = {}
+            name = "{}({} vols)".format(operation, vol)
+            output_name = "output_{}_iops".format(operation)
+            output = {
+                "name": output_name,
+                "unit": y1_axis_title,
+                "min": 0,
+                "max": -1,
+                "expected": -1,
+                "reference": -1
+            }
+            one_data_set["name"] = name
+            one_data_set["inputs"] = inputs
+            one_data_set["output"] = output
+            data_sets.append(one_data_set.copy())
+
+    iops_charts = ml.create_leaf(chart_name=chart_name,
+                                 internal_chart_name=internal_chart_name,
+                                 data_sets=data_sets,
+                                 leaf=True,
+                                 description=description,
+                                 owner_info=owner_info,
+                                 source=source,
+                                 positive=positive,
+                                 y1_axis_title=y1_axis_title,
+                                 visualization_unit=y1_axis_title,
+                                 metric_model_name=metric_model_name,
+                                 base_line_date=base_line_date,
+                                 work_in_progress=False,
+                                 children=[],
+                                 jira_ids=[],
+                                 platform=platform,
+                                 peer_ids=[],
+                                 creator=TEAM_REGRESSION_EMAIL,
+                                 workspace_ids=[])
+
+    final_dict = ml.get_dict(chart=iops_charts)
+    print json.dumps(final_dict, indent=4)
 
