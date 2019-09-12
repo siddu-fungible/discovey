@@ -893,6 +893,26 @@ class PeekCommands(object):
 
         return diff_result
 
+    def _get_nested_dict_difference(self, result, prev_result):
+        diff_result = {}
+        for key in result:
+            if type(result[key]) == dict:
+                if key in prev_result:
+                    diff_result[key] = self._get_nested_dict_difference(result[key], prev_result[key])
+            elif type(result[key]) == str:
+                diff_result[key] = result[key]
+            else:
+                if key in prev_result:
+                    if type(result[key]) == list:
+                        diff_result[key] = result[key]
+                        continue
+                    diff_value = result[key] - prev_result[key]
+                    diff_result[key] = diff_value
+                else:
+                    diff_result[key] = result[key]
+
+        return diff_result
+
     def _sort_bam_keys(self, result, au_sort=True):
         sorted_dict = OrderedDict()
         if not au_sort:
@@ -1258,7 +1278,7 @@ class PeekCommands(object):
                     if 'bam' in cmd:
                         result = self._sort_bam_keys(result=result, au_sort=au_sort)
                     if not isinstance(result, dict):
-                        print "'%s' seen in output " % result
+                        print "Empty result seen"
                         break
                     if result:
                         if prev_result:
@@ -1565,11 +1585,72 @@ class PeekCommands(object):
                 self.dpc_client.disconnect()
 
     def peek_etp_stats(self, mode='nu', grep_regex=None, get_result_only=False):
-        cmd = "stats/etp/" + mode
-        if get_result_only:
-            return self._get_nested_dict_stats(cmd=cmd, grep_regex=grep_regex, get_result_only=get_result_only)
-        else:
-            self._get_nested_dict_stats(cmd=cmd, grep_regex=grep_regex)
+        # cmd = "stats/etp/" + mode
+        # if get_result_only:
+        #     return self._get_nested_dict_stats(cmd=cmd, grep_regex=grep_regex, get_result_only=get_result_only)
+        # else:
+        #     self._get_nested_dict_stats(cmd=cmd, grep_regex=grep_regex)
+        prev_result = None
+        while True:
+            try:
+                cmd = "stats/etp/%s" % mode
+                result = self.dpc_client.execute(verb="peek", arg_list=[cmd])
+                if prev_result:
+                    master_table_obj = PrettyTable(['Field Name', 'Counters', 'Counter Diff'])
+                    master_table_obj.align = 'l'
+                    diff_result = self._get_difference(result=result, prev_result=prev_result)
+                    for key in sorted(result):
+                        if grep_regex:
+                            if re.search(grep_regex, key, re.IGNORECASE):
+                                master_table_obj.add_row([key, result[key], diff_result[key]])
+                        else:
+                            table_obj = PrettyTable(['Field Name', 'Counters', 'Counter Diff'])
+                            table_obj.align = 'l'
+                            table_obj.sortby = 'Field Name'
+                            if type(result[key]) == dict:
+                                inner_table_obj = PrettyTable(['Field Name', 'Counters', 'Counter Diff'])
+                                inner_table_obj.align = 'l'
+                                inner_table_obj.sortby = 'Field Name'
+                                for inner_key in result[key]:
+                                    inner_table_obj.add_row([inner_key, result[key][inner_key],
+                                                             diff_result[key][inner_key]])
+                                master_table_obj.add_row([key, inner_table_obj, ""])
+                            else:
+                                master_table_obj.add_row([key, result[key], diff_result[key]])
+                else:
+                    master_table_obj = PrettyTable(['Field Name', 'Counters'])
+                    master_table_obj.align = 'l'
+                    for key in sorted(result):
+                        if grep_regex:
+                            if re.search(grep_regex, key, re.IGNORECASE):
+                                master_table_obj.add_row([key, result[key]])
+                        else:
+                            table_obj = PrettyTable(['Field Name', 'Counters'])
+                            table_obj.align = 'l'
+                            table_obj.sortby = 'Field Name'
+                            if type(result[key]) == dict:
+                                inner_table_obj = PrettyTable(['Field Name', 'Counters'])
+                                inner_table_obj.align = 'l'
+                                inner_table_obj.sortby = 'Field Name'
+                                for inner_key in result[key]:
+                                    inner_table_obj.add_row([inner_key, result[key][inner_key]])
+                                master_table_obj.add_row([key, inner_table_obj])
+                            else:
+                                master_table_obj.add_row([key, result[key]])
+                if get_result_only:
+                    return cmd, master_table_obj
+                prev_result = result
+                print master_table_obj
+                print "\n########################  %s ########################\n" % str(self._get_timestamp())
+                time.sleep(TIME_INTERVAL)
+            except KeyboardInterrupt:
+                self.dpc_client.disconnect()
+                break
+            except Exception as ex:
+                print "ERROR: %s" % str(ex)
+                self.dpc_client.disconnect()
+                break
+
 
     def get_singleton_table_obj(self, result, prev_result=None, grep=None):
         if prev_result:
@@ -3125,7 +3206,7 @@ class PeekCommands(object):
                     result = self.dpc_client.execute(verb='peek', arg_list=[cmd])
                     if result:
                         if prev_result:
-                            diff_result = self._get_difference(result=result, prev_result=prev_result)
+                            diff_result = self._get_nested_dict_difference(result=result, prev_result=prev_result)
                             for key in sorted(result):
                                 table_obj = PrettyTable()
                                 table_obj.align = 'l'
@@ -3136,13 +3217,22 @@ class PeekCommands(object):
                                     inner_table_obj.align = 'l'
                                     inner_table_obj.sortby = 'Field Name'
                                     for in_key in sorted(result[key][_key]):
-                                        if grep_regex:
-                                            if re.search(grep_regex, _key, re.IGNORECASE):
+                                        if type(result[key][_key][in_key]) == dict:
+                                            nested_table_obj = PrettyTable(['Field Name', 'Counter', 'Counter Diff'])
+                                            nested_table_obj.align = 'l'
+                                            nested_table_obj.sortby = 'Field Name'
+                                            for nested_in_key in sorted(result[key][_key][in_key]):
+                                                nested_table_obj.add_row([nested_in_key, result[key][_key][in_key][nested_in_key],
+                                                                         diff_result[key][_key][in_key][nested_in_key]])
+                                            inner_table_obj.add_row([in_key, nested_table_obj, ""])
+                                        else:
+                                            if grep_regex:
+                                                if re.search(grep_regex, _key, re.IGNORECASE):
+                                                    inner_table_obj.add_row([in_key, result[key][_key][in_key],
+                                                                             diff_result[key][_key][in_key]])
+                                            else:
                                                 inner_table_obj.add_row([in_key, result[key][_key][in_key],
                                                                          diff_result[key][_key][in_key]])
-                                        else:
-                                            inner_table_obj.add_row([in_key, result[key][_key][in_key],
-                                                                     diff_result[key][_key][in_key]])
                                     table_obj.add_row([_key, inner_table_obj])
                                 master_table_obj.add_row([key, table_obj])
                         else:
@@ -3156,11 +3246,19 @@ class PeekCommands(object):
                                     inner_table_obj.align = 'l'
                                     inner_table_obj.sortby = 'Field Name'
                                     for in_key in sorted(result[key][_key]):
-                                        if grep_regex:
-                                            if re.search(grep_regex, _key, re.IGNORECASE):
-                                                inner_table_obj.add_row([in_key, result[key][_key][in_key]])
+                                        if type(result[key][_key][in_key]) == dict:
+                                            nested_table_obj = PrettyTable(['Field Name', 'Counter'])
+                                            nested_table_obj.align = 'l'
+                                            nested_table_obj.sortby = 'Field Name'
+                                            for nested_in_key in sorted(result[key][_key][in_key]):
+                                                nested_table_obj.add_row([nested_in_key, result[key][_key][in_key][nested_in_key]])
+                                            inner_table_obj.add_row([in_key, nested_table_obj])
                                         else:
-                                            inner_table_obj.add_row([in_key, result[key][_key][in_key]])
+                                            if grep_regex:
+                                                if re.search(grep_regex, _key, re.IGNORECASE):
+                                                    inner_table_obj.add_row([in_key, result[key][_key][in_key]])
+                                            else:
+                                                inner_table_obj.add_row([in_key, result[key][_key][in_key]])
                                     table_obj.add_row([_key, inner_table_obj])
                                 master_table_obj.add_row([key, table_obj])
                         print master_table_obj
@@ -3757,7 +3855,7 @@ class DebugCommands(PeekCommands):
             return val
         val = "{:.0f}".format(val * 100)
         if int(val) >= 90:
-            val = "\033[92m " + val + " \033[0m"
+            val = "\033[91m " + val + " \033[0m"
         return val
 
 
