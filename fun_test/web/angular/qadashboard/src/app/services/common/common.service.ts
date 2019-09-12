@@ -78,6 +78,16 @@ export class CommonService {
     })
   }
 
+  getPrettyPstTime(t) {
+    let result = t;
+    try {
+      result = this.convertToTimezone(t, "America/Los_Angeles").toLocaleString().replace(/\..*$/, "");
+    } catch (e) {
+      console.log(e);
+    }
+    return result;
+  }
+
   getPrettyLocalizeTime(t) {
     let result = t;
     try {

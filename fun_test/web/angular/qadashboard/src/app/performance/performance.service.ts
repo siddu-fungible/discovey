@@ -18,6 +18,7 @@ export enum SelectMode {
 
 export class PerformanceService {
   buildInfo: any = null;
+  PST_TIMEZONE: string = "America/Los_Angeles";
 
   constructor(private apiService: ApiService, private commonService: CommonService) {
   }
@@ -92,7 +93,7 @@ export class PerformanceService {
       } else {
         this.buildInfo = {};
         Object.keys(response.data).forEach((key) => {
-          let pstKey = this.commonService.convertToTimezone(key, "America/Los_Angeles");
+          let pstKey = this.commonService.convertToTimezone(key, this.PST_TIMEZONE);
           this.buildInfo[this.commonService.addLeadingZeroesToDate(pstKey)] = response.data[key];
         });
         return of(this.buildInfo);

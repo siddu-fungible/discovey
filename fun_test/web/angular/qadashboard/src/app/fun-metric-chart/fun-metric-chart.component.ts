@@ -41,6 +41,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   LOGS_DIR = "/static/logs";
   suiteLogsDir = "http://integration.fungible.local/regression/static_serve_log_directory/";
 
+  PST_TIMEZONE: string = "America/Los_Angeles";
+
   status: string = null;
   showingTable: boolean;
   showingConfigure: boolean;
@@ -835,7 +837,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
             trimEmptyStartValues = true;
           }
           if (trimEmptyStartValues) {
-            let pstDate = this.commonService.convertToTimezone(oneRecord.input_date_time, "America/Los_Angeles");
+            let pstDate = this.commonService.convertToTimezone(oneRecord.input_date_time, this.PST_TIMEZONE);
             let keyString = this.commonService.addLeadingZeroesToDate(pstDate);
             keyList.push(keyString); //value = "3/19/2019, 4:49:31 PM"
             keyValue[dataSetIndex][keyString] = oneRecord;
@@ -1238,7 +1240,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
           trimEmptyStartValues = true;
         }
         if (trimEmptyStartValues) {
-          let pstDate = this.commonService.convertToTimezone(d, "America/Los_Angeles");
+          let pstDate = this.commonService.convertToTimezone(d, this.PST_TIMEZONE);
           let keyString = this.commonService.addLeadingZeroesToDate(pstDate);
           series.push(keyString);
           keyValue[keyString] = response.data.scores[dateTime].score;
