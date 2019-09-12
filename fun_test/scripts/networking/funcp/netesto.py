@@ -184,7 +184,11 @@ def netstat(linux):
     fun_test.log("======================================")
     linux.command(command="netstat -st")
 
-def run_netesto(no_of_streams, no_of_rr, local_buff, remote_buff):
+def run_netesto(no_of_streams, no_of_rr, local_buff, remote_buff, total_calls):
+    if total_calls == 0:
+        st = inspect.stack()
+        script_file_name = st[1][1]
+        fun_test._initialize(script_file_name)
 
     directory = '/Users/yajat/Documents/Fungible/WORKSPACE/Integration/fun_test/scripts/networking/funcp/'
     self_linux = Linux(host_ip='127.0.0.1', ssh_username='yajat', ssh_password='messi3006')
@@ -269,12 +273,8 @@ def run_netesto(no_of_streams, no_of_rr, local_buff, remote_buff):
 
 
 if __name__ == '__main__':
-
-    st = inspect.stack()
-    script_file_name = st[1][1]
-    fun_test._initialize(script_file_name)
-
     fun_test.shared_variables['result'] = {}
+    total_calls = 0
     for streams in (4, 8, 16, 32):
         hosts = ['cab02-qa-06', 'cab02-qa-02', 'cab02-qa-03', 'cab02-qa-05', 'cab02-qa-01', 'cab02-qa-07']
         threads_list = []
@@ -295,6 +295,7 @@ if __name__ == '__main__':
             buffs = [6000, 10000, 13600, 18000, 24000]
         for buff_value in buffs:
 
-            run_netesto(no_of_streams=streams, no_of_rr=1, local_buff=buff_value, remote_buff=buff_value)
-
-        print fun_test.shared_variables['result']
+            run_netesto(no_of_streams=streams, no_of_rr=1, local_buff=buff_value, remote_buff=buff_value,
+                        total_calls=total_calls)
+            total_calls += 1
+    print fun_test.shared_variables['result']
