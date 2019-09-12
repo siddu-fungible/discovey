@@ -1259,7 +1259,7 @@ if __name__ == "__main__apple":
         mmt.save()
 
 
-if __name__ == "__main__aaa":
+if __name__ == "__main__":
     # underscore problem
     metric_ids = [318, 319]
     for metric_id in metric_ids:
@@ -1282,7 +1282,8 @@ if __name__ == "__main__aaa":
             each_data.save()
 
 
-    # Inspur charts
+    # Inspur charts added vol 4,8
+
     metric_ids = [803, 804, 805, 806, 807, 808, 809, 810, 811, 812]
     for metric_id in metric_ids:
         chart = MetricChart.objects.get(metric_id=metric_id)
@@ -1314,8 +1315,8 @@ if __name__ == "__main__aaa":
         chart.data_sets = json.dumps(data_sets)
         chart.save()
 
+    # Inspur charts iodepth 96
 
-if __name__ == "__main__":
     internal_chart_name = "inspur_rand_read_write_qd96_8k_block_output_iops"
     metric_model_name = "BltVolumePerformance"
     description = "TBD"
