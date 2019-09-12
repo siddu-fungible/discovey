@@ -247,6 +247,7 @@ class FunTest:
         self.version = "1"
         self.determine_version()
         self.asset_manager = None
+        self.time_series_manager = None
         self.build_parameters = {}
         self._prepare_build_parameters()
 
@@ -587,6 +588,12 @@ class FunTest:
             self.asset_manager = AssetManager()
         return self.asset_manager
 
+    def get_mongo_db_manager(self):
+        from lib.utilities.mongo_db_manager import MongoDbManager
+        if not self.time_series_manager:
+            self.time_series_manager = MongoDbManager()
+        return self.time_series_manager
+
     def parse_string_to_json(self, string):
         result = None
         try:
@@ -834,6 +841,8 @@ class FunTest:
             final_message = self._get_context_prefix(context=context, message=str(message) + nl)
         else:
             final_message = str(message) + nl
+        if TIME_SERIES:
+            no_timestamp = True
         if self.log_timestamps and (not no_timestamp) and not section:
             final_message = "[{}] {}".format(current_time, final_message)
 
@@ -844,6 +853,11 @@ class FunTest:
         if stdout:
             sys.stdout.write(final_message)
             sys.stdout.flush()
+        if not TIME_SERIES:
+            models_helper.add_time_series_log(time_series_manager=self.get_mongo_db_manager(),
+                                              collection_name="s_{}_{}".format(self.get_suite_execution_id(),
+                                                                               self.get_test_case_execution_id()),
+                                              date_time=get_current_time(), log=final_message)
 
     def print_key_value(self, title, data, max_chars_per_column=50):
         if title:
