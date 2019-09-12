@@ -534,7 +534,7 @@ tr.text-center > th {
   line-height: 1.6;
   font-size: 14px;
   font-weight: 100;
-  padding: 5px;
+  padding: 10px;
 }
 
 
@@ -543,9 +543,12 @@ tr.text-center > th {
   content: "";
   position: absolute;
   border-style: solid;
-  border-width: 7px;
-
+  border-width: 5px;
 }
+
+
+
+
 
 .fun-tooltip-top:before {
   top: 100%;
@@ -555,7 +558,7 @@ tr.text-center > th {
 }
 
 .fun-tooltip-top:after {
-  top: 97%;
+  bottom: -8px;
   left: 50%;
   margin-left: -5px;
   border-color: white transparent transparent transparent;
@@ -570,7 +573,7 @@ tr.text-center > th {
 }
 
 .fun-tooltip-bottom:after {
-  bottom: 97%;
+  top: -8px;
   left: 50%;
   margin-left: -5px;
   border-color: transparent transparent white transparent;
@@ -586,7 +589,7 @@ tr.text-center > th {
 
 .fun-tooltip-left:after {
   top: 50%;
-  left: 97%;
+  right: -8px;
   margin-top: -5px;
   border-color: transparent transparent transparent white;
 }
@@ -600,7 +603,7 @@ tr.text-center > th {
 
 .fun-tooltip-right:after {
   top: 50%;
-  right: 97%;
+  left: -8px;
   margin-top: -5px;
   border-color: transparent white transparent transparent;
 }
