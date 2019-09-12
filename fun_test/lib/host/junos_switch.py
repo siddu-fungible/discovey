@@ -24,19 +24,6 @@ class JunOsSwitch(Linux):
         self.command("exit")
 
 
-if __name__ == "__main2__":
-    router_obj = Router(host_ip="10.1.20.92", telnet_password="zebra", telnet_port=51111)
-
-    router_obj.enable()
-    output = router_obj.command("show interface")
-
-    fun_test.log("\nOutput:" + output)
-
-    router_obj.config()
-    router_obj.command("""hostname john
-    hostname john2
-    """)
-
 if __name__ == "__main__":
     router_obj = JunOsSwitch(host_ip="10.1.20.92", ssh_username="root", ssh_password="Precious1*")
     router_obj.enter_cli()
