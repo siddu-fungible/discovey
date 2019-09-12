@@ -45,7 +45,7 @@
 <b>Chart name: </b>{{ report.chart_name }}<br>
 <b>Link to chart: </b><a href="{{ report.url }}" target="_blank">Link</a><br>
 {% for jira_id in report.jira_ids %}
-<a href="{{ 'http://jira/browse/' + jira_id }}" target="_blank">{{ jira_id }} </a>
+<a href="{{ 'http://jira/browse/' + jira_id }}" target="_blank">{{ jira_id }}</a>&nbsp;
 {% endfor %}<br>
 <table>
     <tr class="header">
