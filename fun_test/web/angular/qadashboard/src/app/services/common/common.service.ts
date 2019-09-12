@@ -53,7 +53,20 @@ export class CommonService {
     let pstDate = new Date(dateTime.toLocaleString('en-US', {
       timeZone: timeZone
     }));
-    return pstDate
+    return pstDate;
+  }
+
+  convertEpochToDate(epoch, timeZone): Date {
+    let dateTime = new Date(epoch);
+    let pstDate = new Date(dateTime.toLocaleString('en-US', {
+      timeZone: timeZone
+    }));
+    return pstDate;
+  }
+
+  convertDateToEpoch(dateTimeObj): Date {
+    let epochValue = dateTimeObj.getTime();
+    return epochValue;
   }
 
   isSameDay(d1, d2) {

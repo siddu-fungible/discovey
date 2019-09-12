@@ -32,14 +32,15 @@ def get_localized_time(datetime_obj):
     localized = tz.localize(datetime_obj, is_dst=None)
     return localized
 
-epoch_obj = get_localized_time(datetime.datetime(1970, 1, 1, 0, 0, 0))  # Moving it here for efficiency
+epoch_obj = datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=pytz.UTC)
 
 def get_epoch_time_from_datetime(datetime_obj):
     date_obj = datetime_obj
     if datetime_obj.tzinfo is None:
         date_obj = get_localized_time(datetime_obj)
     epoch_seconds = date_obj - epoch_obj
-    epoch = (epoch_seconds.microseconds + (epoch_seconds.seconds + epoch_seconds.days * NUM_SECONDS_IN_DAY) * MICROSECONDS) / 1000
+    epoch = (epoch_seconds.microseconds + (epoch_seconds.seconds + epoch_seconds.days * NUM_SECONDS_IN_DAY) *
+              MICROSECONDS) / 1000
     return epoch
 
 def get_datetime_from_epoch_time(epoch_in_milliseconds):
