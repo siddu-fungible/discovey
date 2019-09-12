@@ -26,14 +26,14 @@ class BuildHelper():
         while not build_number and max_tries:
             max_tries -= 1
             queue_item = self.jenkins_manager.build(params=parameters, extra_emails=[submitter_email])
-            max_wait_for_build_start = 60
+            max_wait_for_build_start = 60 * 20
             build_start_timer = FunTimer(max_time=max_wait_for_build_start)
             fun_test.sleep("Before polling Jenkins", seconds=15)
             while not build_start_timer.is_expired():
                 build_number = self.jenkins_manager.get_build_number(queue_item=queue_item)
                 if build_number:
                     break
-                fun_test.sleep("Build start trigger")
+                fun_test.sleep("Waiting for build start trigger")
             if not build_number:
                 fun_test.log("")
                 fun_test.sleep(seconds=10 * 60, message="Retry Jenkins build. Remaining tries: {}".format(max_tries))
