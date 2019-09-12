@@ -1599,7 +1599,7 @@ class CollectStats(object):
             func = stat_detail.keys()[0]
             arg = stat_detail[func]
             thread_id = arg.get("thread_id")
-            if thread_id:
+            if fun_test.fun_test_threads[thread_id]["thread"]:
                 if func == "vp_utils":
                     fun_test.log("Waiting for the VP utilization stats collection thread having the ID {} to "
                                  "complete...".format(thread_id))
@@ -1646,3 +1646,22 @@ class CollectStats(object):
                     fun_test.log("Waiting for the CDU Stats collection thread having the ID {} to "
                                  "complete...".format(thread_id))
                 fun_test.join_thread(fun_test_thread_id=thread_id, sleep_time=1)
+
+
+def find_min_drive_capacity(storage_controller, command_timeout=DPCSH_COMMAND_TIMEOUT):
+    min_capacity = 0
+
+    command_result = storage_controller.peek(props_tree="storage/volumes/VOL_TYPE_BLK_LOCAL_THIN/drives",
+                                             legacy=False, chunk=8192, command_duration=command_timeout)
+    if command_result["status"] and command_result["data"]:
+        for drive_id, stats in sorted(command_result["data"].iteritems()):
+            if "capacity_bytes" in stats:
+                if min_capacity == 0:
+                    min_capacity = stats["capacity_bytes"]
+                if stats["capacity_bytes"] < min_capacity:
+                    min_capacity = stats["capacity_bytes"]
+        fun_test.log("Minimum capacity found by traversing all the drive stats is: {}".format(min_capacity))
+    else:
+        fun_test.critical("Unable to get the individual drive status...")
+
+    return min_capacity

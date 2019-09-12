@@ -13,4 +13,5 @@ A list of all the UI elements that should be checked for all the commits involvi
 8. The show tables panel below the chart should show the relevant values
 9. The configure panel should load the data series and the other details about the chart
 10. The build info tooltip should show all the details like the suite id, associated suties, version, value, date etc.,
+11. Re-check time related features on Safari
 ~~~~

@@ -21,7 +21,7 @@ class MyScript(FunTestScript):
 
 
 class PerformanceTc(FunTestCase):
-    workspace_ids = [1480]
+    workspace_ids = [1480, 1912]
 
     def setup(self):
         pass
