@@ -853,7 +853,7 @@ class FunTest:
         if stdout:
             sys.stdout.write(final_message)
             sys.stdout.flush()
-        if not TIME_SERIES:
+        if TIME_SERIES:
             models_helper.add_time_series_log(time_series_manager=self.get_mongo_db_manager(),
                                               collection_name="s_{}_{}".format(self.get_suite_execution_id(),
                                                                                self.get_test_case_execution_id()),
