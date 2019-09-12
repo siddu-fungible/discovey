@@ -1259,7 +1259,7 @@ if __name__ == "__main__apple":
         mmt.save()
 
 
-if __name__ == "__main__":
+if __name__ == "__main__asasd":
     metric_ids = [318, 319]
     for metric_id in metric_ids:
         # changing the input_metric_name in the filter
@@ -1281,4 +1281,24 @@ if __name__ == "__main__":
             each_data.save()
 
 
+if __name__ == "__main__":
+    metric_ids = [803]
+    for metric_id in metric_ids:
+        chart = MetricChart.objects.get(metric_id=metric_id)
+        data_sets = json.loads(chart.data_sets)
+        for one_data_set in data_sets:
+            input_fio_job_name = one_data_set['inputs']['input_fio_job_name']
+            one_data_set['inputs']['input_fio_job_name'] = input_fio_job_name.replace('write_1',
+                                                                                      'write_iodepth_1_vol_4')
+            one_data_set['output']['reference'] = -1
+            for vol in [4, 8]:
+                one_data_set['name'] = one_data_set['name'].replace('1', str(vol))
+                data_sets.append(one_data_set)
 
+
+        for data in data_sets:
+            print data
+
+
+# inspur_1024k_sequential_read_write_iodepth_1_vol_4
+# inspur_1024k_sequential_read_write_1

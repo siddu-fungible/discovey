@@ -29,7 +29,7 @@ class PalladiumTc(FunTestCase):
     hw_model = "S1_Compute"
     max_duration = 900
     disable_assertions = "true"
-    hw_version = "rel_08012019"
+    hw_version = "rel_09012019"
     run_target = "protium_s"
     extra_emails = []
 
@@ -167,7 +167,7 @@ class JpegTeramarkTc(PalladiumTc):
 
 class ZipDeflateTeramarkTc(PalladiumTc):
     boot_args = "app=deflate_perf_multi nflows=30 niterations=30 npcs=1 --platforms1"
-    tags = "qa_s1_zip_teramark"
+    tags = "qa_s1_zip_deflate_teramark"
     note = "ZIP deflate teramark app on S1"
     fun_os_make_flags = "XDATA_LISTS=/project/users/ashaikh/qa_test_inputs/zip_inputs/compress_perf_input.list"
     max_duration = 2700
@@ -184,7 +184,7 @@ class ZipDeflateTeramarkTc(PalladiumTc):
 
 class ZipLzmaTeramarkTc(PalladiumTc):
     boot_args = "app=lzma_perf_multi nflows=30 niterations=10 npcs=1 --platforms1"
-    tags = "qa_s1_zip_teramark"
+    tags = "qa_s1_zip_lzma_teramark"
     note = "ZIP lzma teramark app on S1"
     fun_os_make_flags = "XDATA_LISTS=/project/users/ashaikh/qa_test_inputs/zip_inputs/compress_perf_input.list"
     max_duration = 2700
