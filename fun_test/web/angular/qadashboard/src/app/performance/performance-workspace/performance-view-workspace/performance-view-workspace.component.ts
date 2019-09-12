@@ -36,6 +36,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
   selectMode: any = SelectMode;
   allMetricIds: number[] = [];
   interestedMetrics: number[] = [];
+  SUBJECT_BASE_STRING: string = "Performance status report - ";
 
   constructor(private apiService: ApiService, private commonService: CommonService, private loggerService: LoggerService,
               private route: ActivatedRoute, private router: Router, private location: Location, private title: Title, private performanceService: PerformanceService) {
@@ -82,10 +83,6 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
     });
   }
 
-  goBack(): void {
-    this.location.back();
-  }
-
   viewDag(): void {
     this.showDag = true;
     this.reportGenerated = false;
@@ -97,7 +94,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
   }
 
   setMetricIds(charts): void {
-     this.allMetricIds = [];
+    this.allMetricIds = [];
     this.workspaceMetrics = [];
     for (let chart of charts) {
       this.workspaceMetrics.push(Number(chart.metric_id));
@@ -108,31 +105,6 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
     }
     this.allMetricIds = this.interestedMetrics.concat(this.workspaceMetrics);
     this.showWorkspace = true;
-  }
-
-
-  closeChartTable(): void {
-    this.showChartTable = false;
-    if (this.currentChart) {
-      this.currentChart.selected = false;
-    }
-  }
-
-  openChartTable(metric): void {
-    this.closeChartTable();
-    this.status = "Fetching data";
-    this.currentChart = metric;
-    this.currentChart.selected = true;
-    if (!metric["report"]) {
-      let obsObj = this.fetchTodayAndYesterdayData(metric);
-      obsObj.subscribe(response => {
-        console.log("fetched today and yesterday data");
-      }, error => {
-        this.loggerService.error("Unable to fetch today and yesterday data when opened chart");
-      });
-    }
-    this.showChartTable = true;
-    this.status = null;
   }
 
   setData(metric): void {
@@ -190,52 +162,61 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
     let fromEpoch = times[0];
     let toEpoch = times[1];
     let self = this;
-    let data = this.performanceService.metricsData(metric["metric_id"], fromEpoch, toEpoch);
-    for (let oneData of data) {
-      for (let dataSet of metric["data"]) {
-        if (dataSet["name"] == oneData["name"]) {
-          dataSet[key] = oneData["value"];
-          dataSet[key + "Date"] = this.commonService.getPrettyLocalizeTime(oneData["date_time"]);
-          dataSet["unit"] = oneData["unit"];
+    return this.apiService.get("/api/v1/performance/metrics_data?metric_id=" + metric["metric_id"] + "&from_epoch_ms=" + fromEpoch + "&to_epoch_ms=" + toEpoch).pipe(switchMap(response => {
+      let data = response.data;
+      for (let oneData of data) {
+        for (let dataSet of metric["data"]) {
+          if (dataSet["name"] == oneData["name"]) {
+            dataSet[key] = oneData["value"];
+            dataSet[key + "Date"] = this.commonService.getPrettyLocalizeTime(oneData["date_time"]);
+            dataSet["unit"] = oneData["unit"];
+          }
         }
       }
-    }
-    return of(true);
+      return of(true);
+    }));
   }
 
   fetchScores(): any {
-    for (let metric of this.workspace.interested_metrics) {
-      let payload = {};
-      payload["metric_id"] = metric.metric_id;
-      this.apiService.post("/metrics/chart_info", payload).subscribe(response => {
-        let lastGoodScore = Number(response.data["last_good_score"]);
-        let penultimateGoodScore = Number(response.data["penultimate_good_score"]);
-        metric["last_good_score"] = lastGoodScore;
-        metric["penultimate_good_score"] = penultimateGoodScore;
-        metric["model_name"] = response.data["metric_model_name"];
-        metric["data_sets"] = response.data["data_sets"];
-        metric["jira_ids"] = response.data["jira_ids"];
-        let jiraList = {};
-        for (let jiraId of metric["jira_ids"]) {
-          jiraList[jiraId] = {};
-        }
-        metric["jira_list"] = jiraList;
-        metric["selected"] = false;
-        metric["report"] = null;
-        metric["positive"] = response.data["positive"];
-        metric["data"] = [];
-        metric["url"] = this.atomicUrl + "/" + metric["metric_id"];
-      }, error => {
-        this.loggerService.error("failed fetching the chart info while viewing workspace");
-      });
+    const resultObservables = [];
+    this.workspace.interested_metrics.forEach(metric => {
+      resultObservables.push(this.fetchChartInfo(metric));
+    });
+    if (resultObservables.length > 0) {
+      return forkJoin(resultObservables);
+    } else {
+      return of(true);
     }
-    return of(true);
+  }
+
+  fetchChartInfo(metric): any {
+    return this.performanceService.fetchChartInfo(metric.metric_id).pipe(switchMap(response => {
+      let lastGoodScore = Number(response["last_good_score"]);
+      let penultimateGoodScore = Number(response["penultimate_good_score"]);
+      metric["last_good_score"] = lastGoodScore;
+      metric["penultimate_good_score"] = penultimateGoodScore;
+      metric["model_name"] = response["metric_model_name"];
+      metric["data_sets"] = response["data_sets"];
+      metric["jira_ids"] = response["jira_ids"];
+      metric["leaf"] = response["leaf"];
+      let jiraList = {};
+      for (let jiraId of metric["jira_ids"]) {
+        jiraList[jiraId] = {};
+      }
+      metric["jira_list"] = jiraList;
+      metric["selected"] = false;
+      metric["report"] = null;
+      metric["positive"] = response["positive"];
+      metric["data"] = [];
+      metric["url"] = this.atomicUrl + "/" + metric["metric_id"];
+      return of(true);
+    }));
   }
 
   fetchReports(): any {
     const resultObservables = [];
     this.workspace.interested_metrics.forEach(metric => {
-      if (!metric["report"]) {
+      if (!metric["report"] && metric["leaf"]) {
         resultObservables.push(this.fetchTodayAndYesterdayData(metric));
       }
     });
@@ -249,7 +230,9 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
   fetchHistory(): any {
     const resultObservables = [];
     this.workspace.interested_metrics.forEach(metric => {
-      resultObservables.push(this.fetchHistoricalData(metric));
+      if (metric["leaf"]) {
+        resultObservables.push(this.fetchHistoricalData(metric));
+      }
     });
     if (resultObservables.length > 0) {
       return forkJoin(resultObservables);
@@ -259,16 +242,23 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
   }
 
   fetchHistoricalData(metric): any {
-    return this.apiService.get("/api/v1/performance/metrics_data?metric_id=" + metric["metric_id"] + "&order_by=-input_date_time&count=5").pipe(switchMap(response => {
+    return this.apiService.get("/api/v1/performance/metrics_data?metric_id=" + metric["metric_id"] + "&order_by=-input_date_time&count=10").pipe(switchMap(response => {
       let data = response.data;
       for (let dataSet of metric["data"]) {
         dataSet["history"] = [];
+        let dateTimeSet = new Set();
         for (let oneData of data) {
           if (dataSet["name"] == oneData["name"]) {
-            let hData = {};
-            hData["date"] = this.commonService.getPrettyLocalizeTime(oneData["date_time"]);
-            hData["value"] = oneData["value"];
-            dataSet["history"].push(hData);
+            let present = this.addToSet(oneData["date_time"], dateTimeSet);
+            if (!present) {
+              let hData = {};
+              hData["date"] = this.commonService.getPrettyLocalizeTime(oneData["date_time"]);
+              hData["value"] = oneData["value"];
+              dataSet["history"].push(hData);
+            }
+            if (dataSet["history"].length > 4) {
+              break;
+            }
           }
         }
         dataSet["rows"] = dataSet["history"].length + 1;
@@ -288,6 +278,18 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
     }));
   }
 
+  addToSet(dateTime, dateTimeSet): boolean {
+    let dateTimeObj = this.commonService.convertToLocalTimezone(dateTime);
+    let dateTimeStr = String(dateTimeObj.getMonth() + 1) + "/" + String(dateTimeObj.getDate()) + "/" + String(dateTimeObj.getFullYear());
+    let present = false;
+    if (dateTimeSet.has(dateTimeStr)) {
+      present = true;
+    } else {
+      dateTimeSet.add(dateTimeStr)
+    }
+    return present
+  }
+
   generateReport(): void {
     new Observable(observer => {
       observer.next(true);
@@ -301,16 +303,24 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
       switchMap(response => {
         return this.fetchHistory();
       })).subscribe(response => {
-      let t = new Date();
-      let dateString = this.commonService.getShortDate(t);
-      this.subject = "Performance status report - " + dateString;
-      this.reportGenerated = true;
-      this.showGrids = false;
-      this.showDag = false;
+      this.setSubject();
+      this.showReport();
     }, error => {
       this.loggerService.error("Unable to generate report");
     });
 
+  }
+
+  setSubject(): void {
+    let t = new Date();
+    let dateString = this.commonService.getShortDate(t);
+    this.subject = this.SUBJECT_BASE_STRING + dateString;
+  }
+
+  showReport(): void {
+    this.reportGenerated = true;
+    this.showGrids = false;
+    this.showDag = false;
   }
 
   showCharts(): void {

@@ -15,6 +15,7 @@ from fun_global import FunPlatform, PerfUnit
 F1 = FunPlatform.F1
 
 ALLOC_SPEED_TEST_TAG = "alloc_speed_test"
+SOAK_BCOPY_TEST = "qa_soak_bcopy_test"
 BOOT_TIMING_TEST_TAG = "boot_timing_test"
 VOLTEST_TAG = "voltest_performance"
 TERAMARK_PKE = "pke_teramark"
@@ -174,11 +175,12 @@ class MyScript(FunTestScript):
 
     def setup(self):
         self.lsf_status_server = LsfStatusServer()
-        tags = [ALLOC_SPEED_TEST_TAG, BOOT_TIMING_TEST_TAG, TERAMARK_PKE, TERAMARK_CRYPTO, TERAMARK_LOOKUP,
+        tags = [ALLOC_SPEED_TEST_TAG, SOAK_BCOPY_TEST, BOOT_TIMING_TEST_TAG, TERAMARK_PKE, TERAMARK_CRYPTO,
+                TERAMARK_LOOKUP,
                 FLOW_TEST_TAG, F1_FLOW_TEST_TAG, TERAMARK_ZIP, TERAMARK_DFA, TERAMARK_NFA, TERAMARK_EC, TERAMARK_JPEG,
                 SOAK_DMA_MEMCPY_COH,
                 SOAK_DMA_MEMCPY_NON_COH, SOAK_DMA_MEMSET, RCNVME_READ, RCNVME_RANDOM_READ, RCNVME_WRITE,
-                RCNVME_RANDOM_WRITE, TERAMARK_CRYPTO_SINGLE_TUNNEL, TERAMARK_CRYPTO_MULTI_TUNNEL, RCNVME_READ_ALL,
+                RCNVME_RANDOM_WRITE, RCNVME_READ_ALL,
                 RCNVME_RANDOM_READ_ALL, RCNVME_WRITE_ALL,
                 RCNVME_RANDOM_WRITE_ALL, SOAK_DMA_MEMCPY_THRESHOLD,
                 IPSEC_ENC_SINGLE_TUNNEL, IPSEC_ENC_MULTI_TUNNEL, IPSEC_DEC_MULTI_TUNNEL, IPSEC_DEC_SINGLE_TUNNEL,
@@ -273,7 +275,7 @@ class AllocSpeedPerformanceTc(PalladiumPerformanceTc):
 
 
 class BcopyPerformanceTc(PalladiumPerformanceTc):
-    tag = ALLOC_SPEED_TEST_TAG
+    tag = SOAK_BCOPY_TEST
     model = "BcopyPerformance"
     platform = F1
 
@@ -284,7 +286,7 @@ class BcopyPerformanceTc(PalladiumPerformanceTc):
 
 
 class BcopyFloodPerformanceTc(PalladiumPerformanceTc):
-    tag = ALLOC_SPEED_TEST_TAG
+    tag = SOAK_BCOPY_TEST
     model = "BcopyFloodDmaPerformance"
     platform = F1
 
@@ -350,7 +352,7 @@ class WuSendSpeedTestPerformanceTc(PalladiumPerformanceTc):
 
 
 class FunMagentPerformanceTestTc(PalladiumPerformanceTc):
-    tag = ALLOC_SPEED_TEST_TAG
+    tag = SOAK_BCOPY_TEST
     model = "FunMagentPerformanceTest"
     platform = F1
 
@@ -367,12 +369,12 @@ class WuStackSpeedTestPerformanceTc(PalladiumPerformanceTc):
 
     def describe(self):
         self.set_test_details(id=10,
-                              summary="Wu Send Speed Test performance",
+                              summary="Wu Stack Speed Test performance",
                               steps="Steps 1")
 
 
 class SoakFunMallocPerformanceTc(PalladiumPerformanceTc):
-    tag = ALLOC_SPEED_TEST_TAG
+    tag = SOAK_BCOPY_TEST
     model = "SoakFunMallocPerformance"
     platform = F1
 
@@ -383,7 +385,7 @@ class SoakFunMallocPerformanceTc(PalladiumPerformanceTc):
 
 
 class SoakClassicMallocPerformanceTc(PalladiumPerformanceTc):
-    tag = ALLOC_SPEED_TEST_TAG
+    tag = SOAK_BCOPY_TEST
     model = "SoakClassicMallocPerformance"
     platform = F1
 
@@ -1016,15 +1018,12 @@ if __name__ == "__main__":
     myscript.add_test_case(SoakDmaMemcpyCohPerformanceTc())
     myscript.add_test_case(SoakDmaMemcpyNonCohPerformanceTc())
     myscript.add_test_case(SoakDmaMemsetPerformanceTc())
-    myscript.add_test_case(TeraMarkMultiClusterCryptoPerformanceTc())
     myscript.add_test_case(F1FlowTestPerformanceTc())
     myscript.add_test_case(TeraMarkNfaPerformanceTc())
     myscript.add_test_case(TeraMarkRcnvmeReadPerformanceTc())
     myscript.add_test_case(TeraMarkRcnvmeRandomReadPerformanceTc())
     myscript.add_test_case(TeraMarkRcnvmeWritePerformanceTc())
     myscript.add_test_case(TeraMarkRcnvmeRandomWritePerformanceTc())
-    myscript.add_test_case(JuniperCryptoSingleTunnelPerformanceTc())
-    myscript.add_test_case(JuniperCryptoMultiTunnelPerformanceTc())
     myscript.add_test_case(RcnvmeReadAllPerformanceTc())
     myscript.add_test_case(RcnvmeRandomReadAllPerformanceTc())
     myscript.add_test_case(RcnvmeWriteAllPerformanceTc())

@@ -3,8 +3,10 @@ from web.web_global import api_safe_json_response
 from django.views.decorators.csrf import csrf_exempt
 from web.fun_test.models import TestBed, Asset
 from django.db.models import Q
-from web.fun_test.models import SuiteExecution, TestCaseExecution, TestbedNotificationEmails
-from web.fun_test.models import ScriptInfo, RegresssionScripts
+from web.fun_test.models import SuiteExecution, TestCaseExecution, TestbedNotificationEmails, LastSuiteExecution
+from web.fun_test.models import ScriptInfo, RegresssionScripts, SuiteReRunInfo
+from scheduler.scheduler_global import SchedulingType
+from scheduler.scheduler_global import SchedulerStates
 from fun_settings import TEAM_REGRESSION_EMAIL, SCRIPTS_DIR
 import json
 from lib.utilities.send_mail import send_mail
@@ -16,6 +18,7 @@ from asset.asset_global import AssetType
 from web.fun_test.models import Module
 from web.fun_test.fun_serializer import model_instance_to_dict
 from web.fun_test.models_helper import _get_suite_executions
+from scheduler.scheduler_global import SuiteType
 from web.fun_test.models import Suite
 from fun_global import RESULTS
 from django.core import paginator
@@ -266,7 +269,8 @@ def assets(request, name, asset_type):
                               "type": one_asset.type,
                               "manual_lock_user": one_asset.manual_lock_user,
                               "job_ids": one_asset.job_ids,
-                              "test_beds": one_asset.test_beds}
+                              "test_beds": one_asset.test_beds,
+                              "manual_lock_expiry_time": one_asset.manual_lock_expiry_time}
                 result.append(one_record)
     elif request.method == "PUT":
         request_json = json.loads(request.body)
@@ -282,6 +286,8 @@ def assets(request, name, asset_type):
                     if (original_manual_lock_user != asset.manual_lock_user) and asset.manual_lock_user:
                         to_addresses.append(asset.manual_lock_user)
                 send_mail(to_addresses=to_addresses, subject="{} {}".format(asset.name, lock_or_unlock))
+            if "minutes" in request_json:
+                asset.manual_lock_expiry_time = get_current_time() + timedelta(minutes=int(request_json["minutes"]))
             asset.save()
             result = True
         except Exception as ex:
@@ -365,7 +371,10 @@ def suites(request, id):
                 categories = categories.split(",")
                 for category in categories:
                     q &= Q(categories__contains=category)
-            all_suites = Suite.objects.filter(q)
+            search_by_name_text = request.GET.get("search_by_name", None)
+            if search_by_name_text:
+                q &= Q(name__contains=search_by_name_text)
+            all_suites = Suite.objects.filter(q).extra(select={'case_insensitive_name': 'lower(name)'}).order_by('case_insensitive_name')
             if get_count is None:
                 records_per_page = request.GET.get("records_per_page", None)
                 page = request.GET.get("page", None)
@@ -394,6 +403,8 @@ def suites(request, id):
         tags = request_json.get("tags", None)
         custom_test_bed_spec = request_json.get("custom_test_bed_spec", None)
         suite_entries = request_json.get("entries", None)
+        type = request_json.get("type", "SUITE") # TODO
+        s.type = type
         s.name = name
         s.short_description = short_description
         s.categories = categories
@@ -404,6 +415,73 @@ def suites(request, id):
         s.save()
 
     return result
+
+@csrf_exempt
+@api_safe_json_response
+def re_run_job(request):
+    if request.method == "POST":
+        request_json = json.loads(request.body)
+        original_suite_execution_id = request_json.get("original_suite_execution_id", None)
+        script_filter = request_json.get("script_filter", None)
+        result_filter = request_json.get("result_filter", None)
+        test_case_executions = TestCaseExecution.objects.filter(suite_execution_id=original_suite_execution_id)
+        re_run_info = {}
+        for test_case_execution in test_case_executions:
+            script_path = test_case_execution.script_path
+            if script_filter:
+                if script_path not in script_filter:
+                    continue
+
+            if result_filter and (test_case_execution.result not in result_filter):
+                continue
+
+            log_prefix = int(test_case_execution.log_prefix)
+            if log_prefix not in re_run_info:
+                re_run_info[log_prefix] = {}
+            re_run_info[log_prefix][test_case_execution.test_case_id] = {"test_case_execution_id": test_case_execution.execution_id}
+        suite_id = request_json.get("suite_id", None)
+        re_use_build_image = request_json.get("re_use_build_image", None)
+        original_suite_execution = SuiteExecution.objects.get(execution_id=original_suite_execution_id)
+
+        original_environment = None
+        try:
+            original_environment = json.loads(original_suite_execution.environment)
+        except:
+            pass
+        if original_environment:
+            with_jenkins_build = original_environment.get("with_jenkins_build", None)
+            if with_jenkins_build:
+                tftp_image_path = original_environment.get("tftp_image_path", None)
+                if tftp_image_path and not re_use_build_image:
+                    del original_environment["tftp_image_path"]
+
+        new_suite_execution = original_suite_execution
+        new_suite_execution.environment = json.dumps(original_environment)
+        new_suite_execution.pk = None
+        new_suite_execution.build_done = False
+        new_suite_execution.execution_id = LastSuiteExecution.get_next()
+        new_suite_execution.submitted_time = get_current_time()
+        new_suite_execution.scheduled_time = get_current_time()
+        new_suite_execution.completed_time = get_current_time()
+        new_suite_execution.started_time = get_current_time()
+        new_suite_execution.result = RESULTS["UNKNOWN"]
+        new_suite_execution.finalized = False
+        new_suite_execution.preserve_logs = False
+        new_suite_execution.state = JobStatusType.SUBMITTED
+        new_suite_execution.run_time = {}
+        new_suite_execution.assets_used = None
+        new_suite_execution.test_case_execution_ids = json.dumps([])
+        new_suite_execution.is_re_run = True
+        new_suite_execution.re_run_info = re_run_info
+        new_suite_execution.suite_type = SuiteType.DYNAMIC
+        new_suite_execution.scheduling_type = SchedulingType.ASAP
+        new_suite_execution.save()
+
+        SuiteReRunInfo(original_suite_execution_id=original_suite_execution_id,
+                       re_run_suite_execution_id=new_suite_execution.execution_id).save()
+
+        if suite_id:
+            pass
 
 if __name__ == "__main__":
     from web.fun_test.django_interactive import *

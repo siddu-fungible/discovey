@@ -19,7 +19,7 @@ class ApcPduScript(FunTestScript):
 
 
 class ApcPduTestcase(FunTestCase):
-    NUMBER_OF_ITERATIONS = 10
+    NUMBER_OF_ITERATIONS = 100
 
     def describe(self):
         self.set_test_details(id=1,
@@ -33,14 +33,20 @@ class ApcPduTestcase(FunTestCase):
 
     def setup(self):
         fs_name = fun_test.get_job_environment_variable("test_bed_type")
-        # fs_name = "fs-41"
         self.fs = AssetManager().get_fs_by_name(fs_name)
-        self.apc_info = self.fs.get("apc_info", None)
+        # self.apc_info = self.fs.get("apc_info", None)
+        self.apc_info = {
+            "host_ip": "cab02-pdu1",
+            "username": "localadmin",
+            "password": "Precious1*",
+            "outlet_number": 21
+        }
         self.outlet_no = self.apc_info.get("outlet_number", None)
 
-        # if you are loading the image every time you boot up
-        self.f1_0_boot_args = "app=hw_hsu_test cc_huid=3 sku=SKU_FS1600_0 --all_100g --dis-stats --disable-wu-watchdog --dpc-server --dpc-uart"
-        self.f1_1_boot_args = "app=hw_hsu_test cc_huid=2 sku=SKU_FS1600_1 --all_100g --dis-stats --disable-wu-watchdog --dpc-server --dpc-uart"
+        job_inputs = fun_test.get_job_inputs()
+        if job_inputs:
+            if "iterations" in job_inputs:
+                self.NUMBER_OF_ITERATIONS = job_inputs["iterations"]
         print(json.dumps(self.fs, indent=4))
 
     def run(self):
@@ -57,12 +63,7 @@ class ApcPduTestcase(FunTestCase):
             come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
                                ssh_username=self.fs['come']['mgmt_ssh_username'],
                                ssh_password=self.fs['come']['mgmt_ssh_password'])
-            fpga_handle = Fpga(host_ip=self.fs['fpga']['mgmt_ip'],
-                               ssh_username=self.fs['fpga']['mgmt_ssh_username'],
-                               ssh_password=self.fs['fpga']['mgmt_ssh_password'])
             qa_02_handle = Linux(host_ip="qa-ubuntu-02", ssh_username="auto_admin", ssh_password="fun123")
-            qa_02_handle.destroy()
-            come_handle.destroy()
 
             fun_test.add_checkpoint(checkpoint="ITERATION : {}".format(pc_no))
 
@@ -80,48 +81,42 @@ class ApcPduTestcase(FunTestCase):
                 up_time_min = int(up_time.group(1))
                 if up_time_min <= 5:
                     up_time_less_than_5 = True
-            fun_test.test_assert(up_time_less_than_5, "COMe 'uptime' less than 5 min")
+            # fun_test.test_assert(up_time_less_than_5, "COMe 'up-time' less than 5 min")
 
             fun_test.log("Checking if BMC is UP")
             bmc_up = qa_02_handle.ping(dst=self.fs['bmc']['mgmt_ip'])
             fun_test.test_assert(bmc_up, "BMC is UP")
-            qa_02_handle.destroy()
 
-            fun_test.log("Checking if FPGA is up")
-            fpga_up = fpga_handle.ensure_host_is_up()
-            fun_test.test_assert(fpga_up, "FPGA is UP")
+            fun_test.log("Checking if storage controller is up")
+            timer = FunTimer(max_time=300)
+            while not timer.is_expired():
+                output = come_handle.command("curl -I -u admin:password http://10.1.105.141:50220/FunCC/v1/topology")
+                match_status = re.search(r'HTTP/[\d.]+\s+(\d+)', output)
+                if match_status:
+                    status = match_status.group(1)
+                    if status == "200":
+                        break
+                fun_test.sleep("Waiting for storage controller to be up", seconds=10)
 
-            come_handle.destroy()
-            qa_02_handle.destroy()
-            fpga_handle.destroy()
-
-            # Since we are going to load the image now, so kill all the handles.
-
-            topology_helper = TopologyHelper()
-            topology_helper.set_dut_parameters(f1_parameters={0: {"boot_args": self.f1_0_boot_args},
-                                                              1: {"boot_args": self.f1_1_boot_args}},
-                                               skip_funeth_come_power_cycle=True,
-                                               dut_index=0)
-            topology = topology_helper.deploy()
-            fun_test.test_assert(topology, "Topology deployed")
+            come_handle.command("curl -u admin:password http://10.1.105.141:50220/FunCC/v1/topology | json_pp")
 
             fun_test.log("Checking if SSD's are Active on F1_0")
             ssd_valid = check_ssd(come_handle, expected_ssds_up=12, f1=0)
             fun_test.test_assert(ssd_valid, "F1_0: SSD's ONLINE")
 
-            fun_test.log("Checking if SSD's are Active on F1_1")
-            ssd_valid = check_ssd(come_handle, expected_ssds_up=12, f1=1)
-            fun_test.test_assert(ssd_valid, "F1_1: SSD's ONLINE")
+            # fun_test.log("Checking if SSD's are Active on F1_1")
+            # ssd_valid = check_ssd(come_handle, expected_ssds_up=12, f1=1)
+            # fun_test.test_assert(ssd_valid, "F1_1: SSD's ONLINE")
 
             fun_test.log("Checking if NU and HNU port's are active")
-            nu_port_valid = check_nu_ports(come_handle, iteration=pc_no, f1=0,
-                                           expected_ports_up={"NU": [0, 4, 8, 12], "HNU": []})
-            fun_test.test_assert(nu_port_valid, "F1_0: NU ports are present (0,4,8,12) 100G")
+            nu_port_valid = check_nu_ports(come_handle, iteration=pc_no, f1=0, expected_ports_up={'NU': range(8),
+                                                                                                  'HNU': []})
+            fun_test.test_assert(nu_port_valid, "F1_0: NU ports are present")
 
             fun_test.log("Checking if NU and HNU port's are active on F1_1")
-            nu_port_valid = check_nu_ports(come_handle, iteration=pc_no, f1=1,
-                                           expected_ports_up={"NU": [0, 4, 8, 12], "HNU": []})
-            fun_test.test_assert(nu_port_valid, "F1_1: NU ports are present (0,4,8,12) 100G")
+            nu_port_valid = check_nu_ports(come_handle, iteration=pc_no, f1=1, expected_ports_up={'NU': range(8),
+                                                                                                  'HNU': []})
+            fun_test.test_assert(nu_port_valid, "F1_1: NU ports are present")
 
             # Minor checks: docker and cores
 
@@ -129,7 +124,9 @@ class ApcPduTestcase(FunTestCase):
             come_handle.command("docker ps -a")
             fun_test.log("Checking the cores")
             come_handle.command("ls /opt/fungible/cores")
+
             come_handle.destroy()
+            # fpga_handle.destroy()
             qa_02_handle.destroy()
 
             fun_test.sleep("Sleeping for 10s before next iteration", seconds=10)
@@ -143,10 +140,12 @@ class ApcPduTestcase(FunTestCase):
         '''
         fun_test.log("Iteration no: {} out of {}".format(self.pc_no + 1, self.NUMBER_OF_ITERATIONS))
 
+        fun_test.log("Checking if COMe is UP")
         come_up = come_handle.ensure_host_is_up()
-        come_handle.destroy()
-        fun_test.add_checkpoint("COMe is UP (before powercycle)",
+        fun_test.add_checkpoint("COMe is UP (before switching off fs outlet)",
                                 self.to_str(come_up), True, come_up)
+        come_handle.destroy()
+
         apc_pdu = ApcPdu(host_ip=self.apc_info['host_ip'], username=self.apc_info['username'],
                          password=self.apc_info['password'])
         fun_test.sleep(message="Wait for few seconds after connect with apc power rack", seconds=5)
@@ -157,9 +156,11 @@ class ApcPduTestcase(FunTestCase):
         fun_test.test_assert(outlet_off, "Power down FS")
 
         fun_test.sleep(message="Wait for few seconds after switching off fs outlet", seconds=5)
+
+        fun_test.log("Checking if COMe is down")
         come_down = not (come_handle.ensure_host_is_up(max_wait_time=30))
-        come_handle.destroy()
         fun_test.test_assert(come_down, "COMe is Down")
+        come_handle.destroy()
 
         apc_outlet_on_msg = apc_pdu.outlet_on(self.outlet_no)
         fun_test.log("APC PDU outlet on message {}".format(apc_outlet_on_msg))

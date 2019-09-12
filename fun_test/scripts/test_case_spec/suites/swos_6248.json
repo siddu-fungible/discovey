@@ -1,0 +1,4 @@
+[
+  {"path": "networking/tcp/tcp_fsm_client_suite.py", "inputs": {"test":"tc_fin_wait_1","subtests":"flag_R_none,flag_R_add_payload"}},
+
+]

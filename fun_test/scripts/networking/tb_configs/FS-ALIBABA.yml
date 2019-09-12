@@ -121,3 +121,53 @@ hu4:
           nexthop: 43.1.1.1
         - prefix: 20.1.1.0/24
           nexthop: 43.1.1.1
+
+hu5:
+  hostname: cab02-qa-07
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: eno1
+  pcie_width: 8
+  pf_interface: hu0-f0
+  vf_interface: hu0-f8
+  namespaces:
+    default:
+      interfaces:
+        - hu0-f0:
+            mac_addr: 00:de:ad:be:ef:11
+            ipv4_addr: 41.1.1.4
+            ipv4_netmask: 255.255.255.0
+      routes:
+      - prefix: 42.1.1.0/24
+        nexthop: 41.1.1.1
+      - prefix: 43.1.1.0/24
+        nexthop: 41.1.1.1
+      - prefix: 44.1.1.0/24
+        nexthop: 41.1.1.1
+      - prefix: 20.1.1.0/24
+        nexthop: 41.1.1.1
+
+hu6:
+  hostname: cab02-qa-01
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: eno1
+  pcie_width: 8
+  pf_interface: hu0-f0
+  vf_interface: hu0-f8
+  namespaces:
+    default:
+      interfaces:
+        - hu0-f0:
+            mac_addr: 00:de:ad:be:ef:11
+            ipv4_addr: 43.1.1.4
+            ipv4_netmask: 255.255.255.0
+      routes:
+        - prefix: 44.1.1.0/24
+          nexthop: 43.1.1.1
+        - prefix: 41.1.1.0/24
+          nexthop: 43.1.1.1
+        - prefix: 42.1.1.0/24
+          nexthop: 43.1.1.1
+        - prefix: 20.1.1.0/24
+          nexthop: 43.1.1.1

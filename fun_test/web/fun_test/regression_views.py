@@ -125,6 +125,7 @@ def submit_job(request):
 
         # suite path
         suite_path = request_json.get("suite_path", None)
+        suite_id = request_json.get("suite_id", None)
         submitter_email = request_json.get("submitter_email", "john.abraham@fungible.com")
 
         # script path used for script only submission
@@ -163,8 +164,11 @@ def submit_job(request):
         repeat_in_minutes = request_json.get("repeat_in_minutes", -1)  # TODO:
         description = request_json.get("description", None)
 
-        if suite_path:
-            job_id = queue_job3(suite_path=suite_path,
+        rich_inputs = request_json.get("rich_inputs", None)
+
+        # if suite_path:
+        if suite_id:
+            job_id = queue_job3(suite_id=suite_id,
                                 build_url=build_url,
                                 tags=tags,
                                 emails=emails,
@@ -180,7 +184,8 @@ def submit_job(request):
                                 submitter_email=submitter_email,
                                 inputs=inputs,
                                 description=description,
-                                suite_type=suite_type)
+                                suite_type=suite_type,
+                                rich_inputs=rich_inputs)
         elif script_pk:
             script_path = RegresssionScripts.objects.get(pk=script_pk).script_path
             job_id = queue_job3(script_path=script_path,
@@ -199,7 +204,8 @@ def submit_job(request):
                                 submitter_email=submitter_email,
                                 inputs=inputs,
                                 description=description,
-                                suite_type=suite_type)
+                                suite_type=suite_type,
+                                rich_inputs=rich_inputs)
         elif dynamic_suite_spec:
             job_id = queue_dynamic_suite(dynamic_suite_spec=dynamic_suite_spec,
                                          emails=emails,
@@ -313,6 +319,9 @@ def suite_executions_count(request, state_filter_string):
             if "tags" in request_json:
                 tags = request_json["tags"]
                 # tags = json.loads(tags)
+            if "tag" in request_json:
+                tags = [request_json["tag"]]
+
             submitter_email = request_json.get('submitter_email', None)
             test_bed_type = request_json.get('test_bed_type', None)
             suite_path = request_json.get('suite_path', None)
@@ -337,6 +346,8 @@ def suite_executions(request, records_per_page=10, page=None, state_filter_strin
                 tags = request_json["tags"]
                 tags = json.loads(tags)
 
+            if "tag" in request_json:
+                tags = [request_json["tag"]]
             submitter_email = request_json.get('submitter_email', None)
             test_bed_type = request_json.get('test_bed_type', None)
             suite_path = request_json.get('suite_path', None)
@@ -1058,16 +1069,15 @@ def scheduler_queue(request, job_id):
         operation = request_json['operation']
         job_id = request_json["job_id"]
         if operation == QueueOperations.MOVE_UP:
-            increase_decrease_priority(job_id=job_id, increase=True)
+            result = increase_decrease_priority(job_id=job_id, increase=True)
         if operation == QueueOperations.MOVE_DOWN:
-            increase_decrease_priority(job_id=job_id, increase=False)
+            result = increase_decrease_priority(job_id=job_id, increase=False)
         if operation == QueueOperations.MOVE_TO_TOP:
             move_to_queue_head(job_id=job_id)
         if operation == QueueOperations.MOVE_TO_NEXT_QUEUE:
             move_to_higher_queue(job_id=job_id)
         if operation == QueueOperations.DELETE:
             delete_queued_job(job_id=job_id)
-        result = True
     elif request.method == 'DELETE':
         try:
             queue_entry = JobQueue.objects.get(job_id=int(job_id))

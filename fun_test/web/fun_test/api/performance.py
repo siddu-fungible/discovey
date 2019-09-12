@@ -75,7 +75,7 @@ def metrics_data(request):
         from_epoch_ms = request.GET.get("from_epoch_ms", None)
         to_epoch_ms = request.GET.get("to_epoch_ms", None)
         order_by = request.GET.get("order_by", None)
-        count = request.GET.get("count", None)
+        count = int(request.GET.get("count", 1))
         if metric_id:
             chart = MetricChart.objects.get(metric_id=metric_id)
             model = app_config.get_metric_models()[chart.metric_model_name]
@@ -89,7 +89,6 @@ def metrics_data(request):
                 date_range = [from_time, to_time]
                 q = Q(input_date_time__range=date_range)
                 order_by = "-input_date_time"
-                count = 1
             for data_set in data_sets:
                 inputs = data_set["inputs"]
                 d = {}

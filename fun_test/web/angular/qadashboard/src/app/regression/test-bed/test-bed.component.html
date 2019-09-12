@@ -229,13 +229,80 @@
             </td>
             <td>{{ asset.type }}</td>
             <td>{{ asset.manual_lock_user }}
-              <span *ngIf="asset.manual_lock_user" class="pseudo-anchor"
+              <!--span *ngIf="asset.manual_lock_user" class="pseudo-anchor"
                     (click)="unlockAsset(asset)"> Un-lock</span>
               <span *ngIf="!asset.applyingManualLock && !asset.manual_lock_user" class="pseudo-anchor"
-                    (click)="asset.applyingManualLock = true">Apply manual-lock</span>
+                    (click)="asset.applyingManualLock = true">Apply manual-lock</span-->
               <ng-container *ngIf="asset.applyingManualLock && !asset.manual_lock_user">
                 Applying manual-lock
               </ng-container>
+
+              <span *ngIf="asset.manual_lock_user" class="pseudo-anchor"
+                    (click)="unlockAsset(asset)"> Un-lock</span>
+              <span *ngIf="!asset.applyingManualLock && !asset.manual_lock_user" class="pseudo-anchor"
+                    (click)="lockAssetModalClick(assetLockModalContent, asset)">Apply manual-lock</span>
+              &nbsp;
+              <span *ngIf="asset.manual_lock_user">{{ getPrettyTime(asset?.manual_lock_expiry_time) }}</span>
+              &nbsp;
+              <span *ngIf="isAssetLockExpired(asset)" class="badge badge-danger"> Expired</span>
+              &nbsp;
+              <span *ngIf="asset.manual_lock_user" class="pseudo-anchor fun-button-secondary"
+                    [ngClass]="{'fun-button-secondary-active' : asset.manual_lock_user}"
+                    (click)="currentTestBed=testBed; onAssetAddTimeModalClick(assetAddTimeModalContent, asset)">Add time</span>
+
+              <ng-template #assetLockModalContent let-modal>
+                  <div class="modal-header">
+                    Lock asset: {{ assetLockInfo.asset.name }}
+                  </div>
+                  <div class="modal-body">
+                    <table style="float:left">
+                      <tr>
+                        <td class="no-wrap">
+                          <label for="submitter">Submitter&nbsp;</label>
+                          <select id="submitter" [(ngModel)]="assetLockInfo.user">
+                            <option *ngFor="let user of users" [ngValue]="user">{{ user.first_name }} {{ user.last_name }}
+                              ({{ user.email }})
+                            </option>
+                          </select>
+                          &nbsp;
+                          <a href="/users" target="_blank">Add user</a>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td colspan="2">
+                          <table>
+                            <tr>
+                              <td>HH:MM (Duration from now)</td>
+                              <td>
+                                <ngb-timepicker style="display: inline-flex"
+                                                [(ngModel)]="assetLockInfo.schedulingTime"></ngb-timepicker>
+                              </td>
+                            </tr>
+                          </table>
+
+                        </td>
+                      </tr>
+                      <tr>
+                        <span class="fun-cancel-link" (click)="modal.dismiss();">Cancel</span>
+                        <button [ngClass]="{'fun-disabled': !assetLockInfo.user }" class="fun-button-submit" (click)="modal.close(true); onAssetLockSubmit();"> Submit</button>
+                      </tr>
+                    </table>
+                  </div>
+                </ng-template>
+              <ng-template #assetAddTimeModalContent let-modal>
+                  <div class="modal-header">
+                    Add time: {{ assetLockInfo.asset.name }}
+                  </div>
+                  <div class="modal-body">
+                    <label>Hours&nbsp;</label>
+                    <input type="number" [(ngModel)]="assetLockInfo.additionalHours">
+                      <div style="padding: 5px">
+                      <span class="fun-cancel-link" (click)="modal.dismiss();">Cancel</span>
+                      <button  [ngClass]="{'fun-disabled': assetLockInfo.additionalHours <= 0}" class="fun-button-submit" (click)="modal.close(true); onAssetAddTimeSubmit()">Submit</button>
+                    </div>
+                  </div>
+              </ng-template>
+
               <select *ngIf="asset.applyingManualLock" id="assetSelectedUser" [(ngModel)]="asset.selectedUser">
                 <option *ngFor="let user of users" [ngValue]="user.email">{{ user.email }}
                 </option>
@@ -246,6 +313,8 @@
                 <span><i class="fa fa-times fa-fw close-color"
                          (click)="asset.applyingManualLock = false; asset.selectedUser = null"></i>
                 </span>
+
+
 
               </ng-container>
 

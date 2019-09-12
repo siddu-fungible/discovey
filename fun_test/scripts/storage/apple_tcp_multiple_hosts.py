@@ -423,6 +423,15 @@ class StripeVolumeTestCase(FunTestCase):
             self.nvme_io_queues = job_inputs["nvme_io_queues"]
         if "nvme_io_q" in job_inputs:
             self.nvme_io_queues = job_inputs["nvme_io_q"]
+        if "capacity" in job_inputs:
+            self.stripe_details["vol_size"] = job_inputs["capacity"]
+            self.warm_up_fio_cmd_args["size"] = str((((int(int(job_inputs["capacity"]) * .96) + 4095) / 4096) * 4096) /
+                                                    (1024 ** 3)) + "G"
+            self.fio_cmd_args["size"] = str((((int(int(job_inputs["capacity"]) * .96) + 4095) / 4096) * 4096) /
+                                            (1024 ** 3)) + "G"
+        if "runtime" in job_inputs:
+            self.fio_cmd_args["runtime"] = job_inputs["runtime"]
+            self.fio_cmd_args["timeout"] = int(job_inputs["runtime"]) + 120
 
         self.fs = fun_test.shared_variables["fs_objs"]
         self.come_obj = fun_test.shared_variables["come_obj"]
@@ -480,10 +489,11 @@ class StripeVolumeTestCase(FunTestCase):
                 fun_test.test_assert(command_result["status"], "Create BLT {} with uuid {} on DUT".format(i, cur_uuid))
             fun_test.shared_variables["thin_uuid"] = self.thin_uuid
 
+            self.stripe_vol_size = (self.blt_capacity - self.stripe_unit_size) * self.blt_count
             # Create Strip Volume
             self.stripe_uuid = utils.generate_uuid()
             command_result = self.storage_controller.create_volume(type=self.stripe_details["type"],
-                                                                   capacity=self.stripe_details["vol_size"],
+                                                                   capacity=self.stripe_vol_size,
                                                                    name="stripevol1",
                                                                    uuid=self.stripe_uuid,
                                                                    block_size=self.stripe_details["block_size"],
@@ -638,7 +648,7 @@ class StripeVolumeTestCase(FunTestCase):
         vol_details = []
         vol_group = {}
         vol_group[self.blt_details["type"]] = fun_test.shared_variables["thin_uuid"]
-        vol_group[self.stripe_details["type"]] = fun_test.shared_variables["stripe_uuid"]
+        vol_group[self.stripe_details["type"]] = [fun_test.shared_variables["stripe_uuid"]]
         vol_details.append(vol_group)
 
         # If you are using mmap then make sure you use a large timeout value for the test as fio instance takes 2-3min

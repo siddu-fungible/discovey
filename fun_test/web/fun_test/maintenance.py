@@ -1171,7 +1171,7 @@ if __name__ == "__main_qdepth256__":
         final_dict = ml.get_dict(chart=latency_charts)
         print json.dumps(final_dict, indent=4)
 
-if __name__ == "__main__":
+if __name__ == "__main_attach_dag__":
     dag = {}
     owner_info = "Radhika Naik (radhika.naik@fungible.com)"
     source = "Unknown"
@@ -1234,4 +1234,30 @@ if __name__ == "__main__":
     root_chart.fix_children_weights()
     final_dict = ml.get_dict(chart=root_chart)
     print json.dumps(final_dict)
+
+if __name__ == "__main_inspur_fix__":
+    charts = MetricChart.objects.all()
+    for chart in charts:
+        if "inspur" in chart.internal_chart_name and chart.leaf:
+            if "latency" in chart.internal_chart_name:
+                chart.positive = False
+            elif "iops" in chart.internal_chart_name:
+                chart.positive = True
+            elif "ratio" in chart.internal_chart_name:
+                chart.positive = True
+            elif "time" in chart.internal_chart_name:
+                chart.positive = False
+            chart.save()
+            print "fixed the chart: {}, {}".format(chart.chart_name, chart.internal_chart_name)
+
+if __name__ == "__main__":
+    internal_chart_names = ["apple_rand_read_mrsw_tcp_output_bandwidth", "apple_rand_read_mrsw_tcp_output_latency", "apple_rand_read_mrsw_tcp_output_iops"]
+    for internal_chart_name in internal_chart_names:
+        chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
+        mmt = MileStoneMarkers(metric_id=chart.metric_id, milestone_date=datetime(year=2019, month=9, day=8),
+                               milestone_name="Moved to new host")
+        mmt.save()
+
+
+
 

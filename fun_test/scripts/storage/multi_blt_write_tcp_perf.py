@@ -14,6 +14,7 @@ from collections import OrderedDict
 Script to track the performance of various read write combination with multiple (12) local thin block volumes using FIO
 '''
 
+
 def get_iostat(host_thread, sleep_time, iostat_interval, iostat_iter):
     host_thread.sudo_command("sleep {} ; iostat {} {} -d nvme0n1 > /tmp/iostat.log".
                              format(sleep_time, iostat_interval, iostat_iter), timeout=400)
@@ -508,8 +509,8 @@ class MultiBLTVolumePerformanceScript(FunTestScript):
             fun_test.shared_variables["fs"].cleanup()
 
         self.storage_controller.disconnect()
-        fun_test.sleep("Allowing buffer time before clean-up", 30)
         self.topology.cleanup()     # Why is this needed?
+
 
 class MultiBLTVolumePerformanceTestcase(FunTestCase):
     def describe(self):
@@ -641,6 +642,20 @@ class MultiBLTVolumePerformanceTestcase(FunTestCase):
             command_result = self.storage_controller.ip_cfg(ip=self.test_network["f1_loopback_ip"])
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "ip_cfg on DUT instance")
+
+            # Finding the usable capacity of the drives which will be used as the BLT volume capacity, in case
+            # the capacity is not overridden while starting the script
+            min_drive_capacity = find_min_drive_capacity(self.storage_controller, self.command_timeout)
+            if min_drive_capacity:
+                self.blt_details["capacity"] = min_drive_capacity
+            else:
+                fun_test.critical("Unable to find the drive with minimum capacity...So going to use the BLT capacity"
+                                  "given in the script config file or capacity passed at the runtime...")
+
+            if "capacity" in job_inputs:
+                fun_test.critical("Original Volume size {} is overriden by the size {} given while running the "
+                                  "script".format(self.blt_details["capacity"], job_inputs["capacity"]))
+                self.blt_details["capacity"] = job_inputs["capacity"]
 
             # Create BLT's
             self.nvme_block_device = []
@@ -781,11 +796,11 @@ class MultiBLTVolumePerformanceTestcase(FunTestCase):
                 fun_test.sleep("Sleeping for {} seconds before actual test".format(self.iter_interval),
                                self.iter_interval)
 
-
     def run(self):
 
         testcase = self.__class__.__name__
         test_method = testcase[3:]
+        self.test_mode = testcase[:]
 
         # Going to run the FIO test for the block size and iodepth combo listed in fio_jobs_iodepth in both write only
         # & read only modes
@@ -812,6 +827,12 @@ class MultiBLTVolumePerformanceTestcase(FunTestCase):
                            "fio_job_name"]
         table_data_rows = []
 
+        # Preparing the volume details list containing the list of dictionaries
+        vol_details = []
+        vol_group = {}
+        vol_group[self.blt_details["type"]] = fun_test.shared_variables["thin_uuid"]
+        vol_details.append(vol_group)
+
         for combo in self.fio_jobs_iodepth:
             fio_result[combo] = {}
             fio_output[combo] = {}
@@ -823,11 +844,28 @@ class MultiBLTVolumePerformanceTestcase(FunTestCase):
             final_stats[combo] = {}
             diff_stats[combo] = {}
 
+            tmp = combo.split(',')
+            fio_numjobs = tmp[0].strip('() ')
+            fio_iodepth = tmp[1].strip('() ')
+
+            # Starting stats collection
+            file_suffix = "{}_iodepth_{}.txt".format(self.test_mode, (int(fio_iodepth) * int(fio_numjobs)))
+            for index, stat_detail in enumerate(self.stats_collect_details):
+                func = stat_detail.keys()[0]
+                self.stats_collect_details[index][func]["count"] = int(
+                    self.fio_cmd_args["runtime"] / self.stats_collect_details[index][func]["interval"])
+                if func == "vol_stats":
+                    self.stats_collect_details[index][func]["vol_details"] = vol_details
+            fun_test.log("Different stats collection thread details for the current IO depth {} before starting "
+                         "them:\n{}".format((int(fio_iodepth) * int(fio_numjobs)), self.stats_collect_details))
+            self.storage_controller.verbose = False
+            stats_obj = CollectStats(self.storage_controller)
+            stats_obj.start(file_suffix, self.stats_collect_details)
+            fun_test.log("Different stats collection thread details for the current IO depth {} after starting "
+                         "them:\n{}".format((int(fio_iodepth) * int(fio_numjobs)), self.stats_collect_details))
+
             for mode in self.fio_modes:
-                tmp = combo.split(',')
                 fio_block_size = self.fio_bs
-                fio_numjobs = tmp[0].strip('() ')
-                fio_iodepth = tmp[1].strip('() ')
                 fio_result[combo][mode] = True
                 internal_result[combo][mode] = True
                 row_data_dict = {}
@@ -875,14 +913,22 @@ class MultiBLTVolumePerformanceTestcase(FunTestCase):
                     fio_filename = fun_test.shared_variables["nvme_block_device_list"][0]
                 else:
                     fio_filename = fun_test.shared_variables["nvme_block_device_str"]
-                fio_output[combo][mode] = self.end_host.pcie_fio(filename=fio_filename,
-                                                                 numjobs=fio_numjobs,
-                                                                 rw=mode,
-                                                                 bs=fio_block_size,
-                                                                 iodepth=fio_iodepth,
-                                                                 name=fio_job_name,
-                                                                 cpus_allowed=cpus_allowed,
-                                                                 **self.fio_cmd_args)
+                try:
+                    fio_output[combo][mode] = self.end_host.pcie_fio(filename=fio_filename,
+                                                                     numjobs=fio_numjobs,
+                                                                     rw=mode,
+                                                                     bs=fio_block_size,
+                                                                     iodepth=fio_iodepth,
+                                                                     name=fio_job_name,
+                                                                     cpus_allowed=cpus_allowed,
+                                                                     **self.fio_cmd_args)
+                except Exception as ex:
+                    fun_test.critical(str(ex))
+                    fun_test.log("FIO Command Output:\n {}".format(fio_output[combo][mode]))
+                finally:
+                    # Stopping stats collection
+                    stats_obj.stop(self.stats_collect_details)
+                    self.storage_controller.verbose = True
 
                 fun_test.log("FIO Command Output:")
                 fun_test.log(fio_output[combo][mode])
@@ -918,9 +964,6 @@ class MultiBLTVolumePerformanceTestcase(FunTestCase):
                 """
                 fun_test.log(fio_output[combo][mode])
 
-                fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval),
-                               self.iter_interval)
-
                 # Comparing the FIO results with the expected value for the current block size and IO depth combo
                 for op, stats in self.expected_fio_result[combo][mode].items():
                     for field, value in stats.items():
@@ -941,8 +984,63 @@ class MultiBLTVolumePerformanceTestcase(FunTestCase):
                 table_data_rows.append(row_data_list)
                 post_results("Multi_vol_TCP", test_method, *row_data_list)
 
-        table_data = {"headers": table_data_headers, "rows": table_data_rows}
-        fun_test.add_table(panel_header="Single/Multiple Volume(s) over TCP Perf Table", table_name=self.summary, table_data=table_data)
+                # Creating artifacts for all collected stats
+                for index, value in enumerate(self.stats_collect_details):
+                    for func, arg in value.iteritems():
+                        filename = arg.get("output_file")
+                        if filename:
+                            if func == "vp_utils":
+                                fun_test.add_auxillary_file(description="F1 VP Utilization - {} - IO depth {}".
+                                                            format(mode, row_data_dict["iodepth"]), filename=filename)
+                            if func == "per_vp":
+                                fun_test.add_auxillary_file(description="F1 Per VP Stats - {} - IO depth {}".
+                                                            format(mode, row_data_dict["iodepth"]), filename=filename)
+                            if func == "resource_bam_args":
+                                fun_test.add_auxillary_file(description="F1 Resource bam stats - {} - IO depth {}".
+                                                            format(mode, row_data_dict["iodepth"]), filename=filename)
+                            if func == "vol_stats":
+                                fun_test.add_auxillary_file(description="Volume Stats - {} - IO depth {}".
+                                                            format(mode, row_data_dict["iodepth"]), filename=filename)
+                            if func == "vppkts_stats":
+                                fun_test.add_auxillary_file(description="VP Pkts Stats - {} - IO depth {}".
+                                                            format(mode, row_data_dict["iodepth"]), filename=filename)
+                            if func == "psw_stats":
+                                fun_test.add_auxillary_file(description="PSW Stats - {} - IO depth {}".
+                                                            format(mode, row_data_dict["iodepth"]), filename=filename)
+                            if func == "fcp_stats":
+                                fun_test.add_auxillary_file(description="FCP Stats - {} - IO depth {}".
+                                                            format(mode, row_data_dict["iodepth"]), filename=filename)
+                            if func == "wro_stats":
+                                fun_test.add_auxillary_file(description="WRO Stats - {} - IO depth {}".
+                                                            format(mode, row_data_dict["iodepth"]), filename=filename)
+                            if func == "erp_stats":
+                                fun_test.add_auxillary_file(description="ERP Stats - {} IO depth {}".
+                                                            format(mode, row_data_dict["iodepth"]), filename=filename)
+                            if func == "etp_stats":
+                                fun_test.add_auxillary_file(description="ETP Stats - {} IO depth {}".
+                                                            format(mode, row_data_dict["iodepth"]), filename=filename)
+                            if func == "eqm_stats":
+                                fun_test.add_auxillary_file(description="EQM Stats - {} - IO depth {}".
+                                                            format(mode, row_data_dict["iodepth"]), filename=filename)
+                            if func == "hu_stats":
+                                fun_test.add_auxillary_file(description="HU Stats - {} - IO depth {}".
+                                                            format(mode, row_data_dict["iodepth"]), filename=filename)
+                            if func == "ddr_stats":
+                                fun_test.add_auxillary_file(description="DDR Stats - {} - IO depth {}".
+                                                            format(mode, row_data_dict["iodepth"]), filename=filename)
+                            if func == "ca_stats":
+                                fun_test.add_auxillary_file(description="CA Stats - {} IO depth {}".
+                                                            format(mode, row_data_dict["iodepth"]), filename=filename)
+                            if func == "cdu_stats":
+                                fun_test.add_auxillary_file(description="CDU Stats - {} - IO depth {}".
+                                                            format(mode, row_data_dict["iodepth"]), filename=filename)
+
+                fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval),
+                               self.iter_interval)
+
+            table_data = {"headers": table_data_headers, "rows": table_data_rows}
+            fun_test.add_table(panel_header="Single/Multiple Volume(s) over TCP Perf Table", table_name=self.summary,
+                               table_data=table_data)
 
         # Posting the final status of the test result
         test_result = True
@@ -958,6 +1056,7 @@ class MultiBLTVolumePerformanceTestcase(FunTestCase):
     def cleanup(self):
         pass
 
+
 class SingleBLTFioWrite(MultiBLTVolumePerformanceTestcase):
 
     def describe(self):
@@ -971,6 +1070,7 @@ class SingleBLTFioWrite(MultiBLTVolumePerformanceTestcase):
         4. Run the FIO Sequential Write test(without verify) for various block size and IO depth from the 
         remote host and check the performance are inline with the expected threshold. 
         ''')
+
 
 class SingleBLTFioRandWrite(MultiBLTVolumePerformanceTestcase):
 
@@ -986,6 +1086,7 @@ class SingleBLTFioRandWrite(MultiBLTVolumePerformanceTestcase):
         remote host and check the performance are inline with the expected threshold. 
         ''')
 
+
 class MultiBLTFioWrite12(MultiBLTVolumePerformanceTestcase):
 
     def describe(self):
@@ -1000,6 +1101,7 @@ class MultiBLTFioWrite12(MultiBLTVolumePerformanceTestcase):
         remote host and check the performance are inline with the expected threshold. 
         ''')
 
+
 class MultiBLTFioRandWrite12(MultiBLTVolumePerformanceTestcase):
 
     def describe(self):
@@ -1013,6 +1115,7 @@ class MultiBLTFioRandWrite12(MultiBLTVolumePerformanceTestcase):
         4. Run the FIO Random Write test(without verify) for various block size and IO depth from the 
         remote host and check the performance are inline with the expected threshold. 
         ''')
+
 
 if __name__ == "__main__":
 

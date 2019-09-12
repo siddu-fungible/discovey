@@ -130,6 +130,7 @@ class SuiteExecution(models.Model):
     Suite selection
     """
     suite_path = models.CharField(max_length=100, null=True)
+    suite_id = models.IntegerField(null=True)  # replacement for suite_path
     script_path = models.TextField(default=None, null=True)
     suite_type = models.TextField(default=SuiteType.STATIC)
     dynamic_suite_spec = models.TextField(default="{}", null=True)
@@ -183,8 +184,11 @@ class SuiteExecution(models.Model):
     build_done = models.BooleanField(default=False)
     auto_scheduled_execution_id = models.IntegerField(default=-1)
     disable_schedule = models.BooleanField(default=False)
-    assets_used = JSONField(default={})
-    run_time = JSONField(default={})
+    assets_used = JSONField(default={}, null=True)
+    run_time = JSONField(default={}, null=True)
+    is_re_run = models.NullBooleanField(default=False)
+    re_run_info = JSONField(default={}, null=True)
+    rich_inputs = JSONField(default=None, null=True)
 
     def __str__(self):
         s = "Suite: {} {} state: {}".format(self.execution_id, self.suite_path, self.state)
@@ -223,6 +227,39 @@ class SuiteExecution(models.Model):
             result[field.name] = getattr(self, field.name)
         return result
 
+    def get_tags(self):
+        """
+
+        :return: a list of tags or None
+        """
+        result = None
+        try:
+            if self.tags:
+                result = json.loads(self.tags)
+        except:
+            pass
+        return result
+
+    def get_environment(self):
+        result = None
+        environment = self.environment
+        if environment:
+            try:
+                result = json.loads(self.environment)
+            except:
+                pass
+        return result
+
+
+    def get_inputs(self):
+        result = None
+        if self.inputs:
+            try:
+                result = json.loads(self.inputs)
+            except:
+                pass
+        return result
+
 class SuiteExecutionSerializer(serializers.Serializer):
     version = serializers.CharField(max_length=50)
     execution_id = serializers.IntegerField()
@@ -235,7 +272,17 @@ class SuiteExecutionSerializer(serializers.Serializer):
 class LastSuiteExecution(models.Model):
     last_suite_execution_id = models.IntegerField(unique=True, default=10)
 
+    @staticmethod
+    def get_next():
+        all = LastSuiteExecution.objects.all()
+        if all.count():
+            first = LastSuiteExecution.objects.first()
+            first.last_suite_execution_id += 1
+            first.save()
+        else:
+            LastSuiteExecution(last_suite_execution_id=10).save()
 
+        return LastSuiteExecution.objects.first().last_suite_execution_id
 class LastTestCaseExecution(models.Model):
     last_test_case_execution_id = models.IntegerField(unique=True, default=10)
 
@@ -441,6 +488,26 @@ class ScriptInfo(models.Model):
     bug = models.TextField(default="")
 
 
+class SchedulerConfig(models.Model):
+    asset_unlock_warning_time = models.IntegerField(default=30)
+    debug = models.BooleanField(default=False)
+
+    @staticmethod
+    def get():
+        if not SchedulerConfig.objects.exists():
+            SchedulerConfig().save()
+        return SchedulerConfig.objects.first()
+
+    @staticmethod
+    def get_asset_unlock_warning_time():
+        config = SchedulerConfig.get()
+        return config.asset_unlock_warning_time
+
+    @staticmethod
+    def get_debug():
+        config = SchedulerConfig.get()
+        return config.debug
+
 class SchedulerInfo(models.Model):
     """
     A place to store scheduler state such as time started, time restarted, current state
@@ -597,6 +664,7 @@ class Asset(FunModel):
     job_ids = JSONField(default=[])
     manual_lock_user = models.TextField(default=None, null=True)
     test_beds = JSONField(default=[])
+    manual_lock_expiry_time = models.DateTimeField(default=timezone.now)
 
     @staticmethod
     def add_update(name, type, job_ids=None):
@@ -613,6 +681,7 @@ class Asset(FunModel):
                 a.save()
         except Exception as ex:
             pass
+
     @staticmethod
     def get(name, type):
         result = None
@@ -655,6 +724,9 @@ class Asset(FunModel):
             self.manual_lock_user = None
             self.save()
 
+    def add_time(self, minutes):
+        self.manual_lock_expiry_time += timedelta(minutes=minutes)
+        self.save()
 
 class SuiteItems(models.Model):
     script_path = models.TextField()
@@ -664,7 +736,7 @@ class SuiteItems(models.Model):
 
 class Suite(models.Model):
     name = models.TextField(default="TBD")
-    tyoe = models.TextField(default="SUITE")   # Other types are TASK
+    type = models.TextField(default="SUITE")   # Other types are TASK
     categories = JSONField(default=[], null=True)
     sub_categories = JSONField(default=[], null=True)
     short_description = models.TextField(default="", null=True)

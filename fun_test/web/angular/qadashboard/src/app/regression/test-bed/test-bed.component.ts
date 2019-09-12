@@ -17,6 +17,20 @@ enum EditMode {
   MANUAL_LOCK_ADD_TIME = "Add time to manual lock"
 }
 
+class AssetLockInfo {
+  asset: any = null;
+  user: any = null;
+  schedulingTime = {hour: 1, minute: 1};
+  additionalHours = 0;
+
+  clear() {
+    this.asset = null;
+    this.user = null;
+    this.schedulingTime = {hour: 1, minute: 1};
+    this.additionalHours = 0;
+  }
+}
+
 @Component({
   selector: 'app-test-bed',
   templateUrl: './test-bed.component.html',
@@ -44,6 +58,7 @@ export class TestBedComponent implements OnInit {
   tempDescription: string;
   tempNote: string;
 
+  assetLockInfo: AssetLockInfo = new AssetLockInfo();
 
 
   constructor(private regressionService: RegressionService,
@@ -315,6 +330,17 @@ export class TestBedComponent implements OnInit {
     return expired;
   }
 
+  isAssetLockExpired(asset) {
+    let expired = false;
+    if (asset.manual_lock_user) {
+      let expiryTime = this.commonService.convertToLocalTimezone(asset.manual_lock_expiry_time);
+      if (expiryTime < new Date()) {
+        expired = true;
+      }
+    }
+    return expired;
+  }
+
   lockAsset(asset) {
     if (!asset.selectedUser) {
       return this.loggerService.error('Please select a user');
@@ -385,4 +411,40 @@ export class TestBedComponent implements OnInit {
     testBed.description = this.tempDescription;
     testBed.editingDescription = false;
   }
+
+
+  lockAssetModalClick(content, asset) {
+    this.assetLockInfo.asset = asset;
+    this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title', size: 'lg', backdrop: 'static'});
+  }
+
+  onAssetAddTimeModalClick(content, asset) {
+    this.assetLockInfo.asset = asset;
+    this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title', size: 'lg', backdrop: 'static'});
+  }
+
+
+  onAssetLockSubmit() {
+    console.log(this.assetLockInfo);
+    let totalMinutes = this.assetLockInfo.schedulingTime.hour * 60 + this.assetLockInfo.schedulingTime.minute;
+    this.service.lockAsset(this.assetLockInfo.asset.name, this.assetLockInfo.asset.type, this.assetLockInfo.user.email, totalMinutes).subscribe(response => {
+      this.loggerService.success("Lock request submitted");
+      this.assetLockInfo.clear();
+      this.refreshAll();
+    }, error => {
+      this.loggerService.error("Unable to lock " + this.assetLockInfo.asset.name);
+    })
+  }
+
+  onAssetAddTimeSubmit() {
+    let totalMinutes = this.assetLockInfo.additionalHours * 60;
+    this.service.lockAsset(this.assetLockInfo.asset.name, this.assetLockInfo.asset.type, this.assetLockInfo.asset.manual_lock_user, totalMinutes).subscribe(response => {
+      this.loggerService.success("Lock duration extension submitted");
+      this.assetLockInfo.clear();
+      this.refreshAll();
+    }, error => {
+      this.loggerService.error("Unable to extend duration");
+    })
+  }
+
 }

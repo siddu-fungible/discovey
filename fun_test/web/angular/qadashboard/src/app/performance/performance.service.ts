@@ -136,4 +136,12 @@ export class PerformanceService {
     }));
   }
 
+  fetchChartInfo(metricId): any {
+    let payload = {};
+    payload["metric_id"] = metricId;
+    return this.apiService.post("/metrics/chart_info", payload).pipe(switchMap(response => {
+      return of(response.data);
+    }));
+  }
+
 }

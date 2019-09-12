@@ -36,7 +36,8 @@ from web.fun_test.models import (
     SuiteContainerExecution,
     SuiteReRunInfo,
     TestBed,
-    TestCaseInfo
+    TestCaseInfo,
+    Suite
 )
 
 SUITE_EXECUTION_FILTERS = {"PENDING": "PENDING",
@@ -243,6 +244,7 @@ def get_new_suite_execution_id():
 def add_suite_execution(submitted_time,
                         scheduled_time,
                         completed_time,
+                        suite_id=None,
                         suite_path="unknown",
                         state=JobStatusType.UNKNOWN,
                         tags=None,
@@ -257,30 +259,22 @@ def add_suite_execution(submitted_time,
     if not test_bed_type:
         test_bed_type = ""
 
-    for i in xrange(4):
-        try:
-            last_suite_execution_id = get_new_suite_execution_id()
-            # print ("New suite: {}, submitter: {}".format(last_suite_execution_id.last_suite_execution_id, submitter_email))
-            s = SuiteExecution(execution_id=last_suite_execution_id.last_suite_execution_id, suite_path=suite_path,
-                               submitted_time=submitted_time,
-                               scheduled_time=scheduled_time,
-                               completed_time=completed_time,
-                               tags=tags,
-                               suite_container_execution_id=suite_container_execution_id,
-                               test_bed_type=test_bed_type,
-                               state=state,
-                               suite_type=suite_type,
-                               submitter_email=submitter_email)
-            s.started_time = submitted_time
-            s.save()
-            s.save()
-
-            break
-        except Exception as ex:
-            print "Error: add_suite_execution: {}".format(str(ex))
-            time.sleep(random.uniform(0.1, 1.0))
+    last_suite_execution_id = get_new_suite_execution_id()
+    s = SuiteExecution(execution_id=last_suite_execution_id.last_suite_execution_id,
+                       suite_path=suite_path,
+                       submitted_time=submitted_time,
+                       scheduled_time=scheduled_time,
+                       completed_time=completed_time,
+                       tags=tags,
+                       suite_container_execution_id=suite_container_execution_id,
+                       test_bed_type=test_bed_type,
+                       state=state,
+                       suite_type=suite_type,
+                       submitter_email=submitter_email,
+                       suite_id=suite_id)
+    s.started_time = submitted_time
+    s.save()
     return s
-
 
 def set_suite_execution_banner(suite_execution_id, banner):
     suite_execution = get_suite_execution(suite_execution_id)
@@ -402,6 +396,14 @@ def report_re_run_result(execution_id, re_run_info=None):
 
             finalize_suite_execution(suite_execution_id=original_suite_execution.execution_id)
 
+
+def get_suite(id):
+    result = None
+    try:
+        result = Suite.objects.get(id=id)
+    except ObjectDoesNotExist:
+        pass
+    return result
 
 def get_test_case_executions_by_suite_execution(suite_execution_id):
     results = TestCaseExecution.objects.filter(suite_execution_id=suite_execution_id)
