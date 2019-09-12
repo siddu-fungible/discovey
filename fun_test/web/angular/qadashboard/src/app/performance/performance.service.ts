@@ -92,8 +92,7 @@ export class PerformanceService {
       } else {
         this.buildInfo = {};
         Object.keys(response.data).forEach((key) => {
-          let localizedKey = this.commonService.convertToLocalTimezone(key);
-          let pstKey = this.commonService.changeToPstTimezone(localizedKey);
+          let pstKey = this.commonService.convertToTimezone(key, "America/Los_Angeles");
           this.buildInfo[this.commonService.addLeadingZeroesToDate(pstKey)] = response.data[key];
         });
         return of(this.buildInfo);
