@@ -1259,7 +1259,8 @@ if __name__ == "__main__apple":
         mmt.save()
 
 
-if __name__ == "__main__asasd":
+if __name__ == "__main__":
+    # underscore problem
     metric_ids = [318, 319]
     for metric_id in metric_ids:
         # changing the input_metric_name in the filter
@@ -1281,24 +1282,35 @@ if __name__ == "__main__asasd":
             each_data.save()
 
 
-if __name__ == "__main__":
-    metric_ids = [803]
+    # Inspur charts
+    metric_ids = [803, 804, 805, 806, 807, 808, 809, 810, 811, 812]
     for metric_id in metric_ids:
         chart = MetricChart.objects.get(metric_id=metric_id)
         data_sets = json.loads(chart.data_sets)
-        for one_data_set in data_sets:
-            input_fio_job_name = one_data_set['inputs']['input_fio_job_name']
-            one_data_set['inputs']['input_fio_job_name'] = input_fio_job_name.replace('write_1',
-                                                                                      'write_iodepth_1_vol_4')
-            one_data_set['output']['reference'] = -1
+        new_data_sets=[]
+        for each_data in data_sets:
             for vol in [4, 8]:
-                one_data_set['name'] = one_data_set['name'].replace('1', str(vol))
-                data_sets.append(one_data_set)
+                inputs = each_data['inputs'].copy()
+                output = each_data['output'].copy()
+                name = each_data['name']
+                new_each_data = {}
 
+                input_fio_job_name = inputs['input_fio_job_name']
+                iodepth = re.search(r'write_(\d+)', input_fio_job_name).group(1)
+                inputs['input_fio_job_name'] = input_fio_job_name.replace('write_{}'.format(iodepth),
+                                                                          "write_iodepth_{}_vol_{}".format(iodepth, vol))
+                new_name = re.sub(r'\d+ vol', "{} vol".format(vol), name)
+                output["reference"] = -1
+                new_each_data['inputs'] = inputs
+                new_each_data['name'] = new_name
+                new_each_data['output'] = output
+                # print (new_each_data)
+                new_data_sets.append(new_each_data.copy())
+        new_data_sets[2], new_data_sets[1] = new_data_sets[1], new_data_sets[2]
+        data_sets += new_data_sets
+        for i in data_sets:
+            print i
+        print ("next")
+        chart.data_sets = json.dumps(data_sets)
+        chart.save()
 
-        for data in data_sets:
-            print data
-
-
-# inspur_1024k_sequential_read_write_iodepth_1_vol_4
-# inspur_1024k_sequential_read_write_1

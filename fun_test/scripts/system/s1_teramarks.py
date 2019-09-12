@@ -43,7 +43,8 @@ class PalladiumTc(FunTestCase):
                               """)
 
     def setup(self):
-        self.extra_emails.append("ranga.gowda@fungible.com")
+        if not ("ranga.gowda@fungible.com" in self.extra_emails):
+            self.extra_emails.append("ranga.gowda@fungible.com")
         fun_test.log("Testcase setup")
 
     def cleanup(self):
@@ -170,7 +171,7 @@ class ZipDeflateTeramarkTc(PalladiumTc):
     tags = "qa_s1_zip_deflate_teramark"
     note = "ZIP deflate teramark app on S1"
     fun_os_make_flags = "XDATA_LISTS=/project/users/ashaikh/qa_test_inputs/zip_inputs/compress_perf_input.list"
-    max_duration = 2700
+    max_duration = 9000
 
     def describe(self):
         self.set_test_details(id=7,
@@ -187,7 +188,7 @@ class ZipLzmaTeramarkTc(PalladiumTc):
     tags = "qa_s1_zip_lzma_teramark"
     note = "ZIP lzma teramark app on S1"
     fun_os_make_flags = "XDATA_LISTS=/project/users/ashaikh/qa_test_inputs/zip_inputs/compress_perf_input.list"
-    max_duration = 2700
+    max_duration = 9000
 
     def describe(self):
         self.set_test_details(id=8,
