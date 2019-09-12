@@ -29,7 +29,6 @@ from lib.utilities.send_mail import *
 from web.fun_test.web_interface import get_performance_url
 from django.utils import timezone
 
-email_list = [TEAM_REGRESSION_EMAIL]
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 atomic_url = get_performance_url() + "/atomic"
 negative_threshold = -5
@@ -366,14 +365,12 @@ class MetricLib():
             root_dict["children"].append(child_dict)
         return root_dict
 
-    def _send_email(self, email, subject, reports, report_name):
-        report_name = "performance_drop_report.html"
+    def _send_email(self, email, subject, reports, report_name="performance_drop_report.html"):
         file_loader = FileSystemLoader(JINJA_TEMPLATE_DIR)
         env = Environment(loader=file_loader)
         template = env.get_template(report_name)
         content = template.render(all_reports=reports)
-        email_list.append(email)
-        return send_mail(to_addresses=email_list, subject=subject, content=content)
+        return send_mail(to_addresses=email, subject=subject, content=content)
 
     def _generate_report(self, workspace_id):
         reports = []
