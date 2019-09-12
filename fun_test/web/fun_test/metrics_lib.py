@@ -390,7 +390,7 @@ class MetricLib():
             report = {}
             report["chart_name"] = chart.chart_name
             report["lineage"] = lineage
-            report["jira_ids"] = json.loads(chart.jira_ids)
+            report["jira_ids"] = chart.get_jira_ids()
             report["url"] = atomic_url + "/" + str(metric_id)
             report["positive"] = chart.positive
             report["data_sets"] = []
