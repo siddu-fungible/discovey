@@ -44,11 +44,16 @@ export class CommonService {
     return new Date(epochValue);
   }
 
-  changeToPstTimezone(date) {
-    let pstDate = new Date(date.toLocaleString('en-US', {
-      timeZone: "America/Los_Angeles"
+  convertToTimezone(dateTime, timeZone) {
+    if (dateTime instanceof String) {
+      let d = new Date(dateTime.replace(/\s+/g, 'T'));
+      let epochValue = d.getTime();
+      dateTime = new Date(epochValue);
+    }
+    let pstDate = new Date(dateTime.toLocaleString('en-US', {
+      timeZone: timeZone
     }));
-    return pstDate;
+    return pstDate
   }
 
   isSameDay(d1, d2) {

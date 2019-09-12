@@ -835,8 +835,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
             trimEmptyStartValues = true;
           }
           if (trimEmptyStartValues) {
-            let localDate = this.commonService.convertToLocalTimezone(oneRecord.input_date_time);
-            let pstDate = this.commonService.changeToPstTimezone(localDate);
+            let pstDate = this.commonService.convertToTimezone(oneRecord.input_date_time, "America/Los_Angeles");
             let keyString = this.commonService.addLeadingZeroesToDate(pstDate);
             keyList.push(keyString); //value = "3/19/2019, 4:49:31 PM"
             keyValue[dataSetIndex][keyString] = oneRecord;
@@ -1239,7 +1238,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
           trimEmptyStartValues = true;
         }
         if (trimEmptyStartValues) {
-          let pstDate = this.commonService.changeToPstTimezone(d);
+          let pstDate = this.commonService.convertToTimezone(d, "America/Los_Angeles");
           let keyString = this.commonService.addLeadingZeroesToDate(pstDate);
           series.push(keyString);
           keyValue[keyString] = response.data.scores[dateTime].score;
