@@ -186,10 +186,6 @@ def netstat(linux):
 
 def run_netesto(no_of_streams, no_of_rr, local_buff, remote_buff):
 
-    st = inspect.stack()
-    script_file_name = st[1][1]
-    fun_test._initialize(script_file_name)
-
     directory = '/Users/yajat/Documents/Fungible/WORKSPACE/Integration/fun_test/scripts/networking/funcp/'
     self_linux = Linux(host_ip='127.0.0.1', ssh_username='yajat', ssh_password='messi3006')
     self_linux.command('cd %s' % directory)
@@ -234,7 +230,7 @@ def run_netesto(no_of_streams, no_of_rr, local_buff, remote_buff):
         netesto_controller.sudo_command("mv netesto1.html netesto_latency_%s.html" % netesto_process)
         netesto_controller.sudo_command("mv ~/netesto_controller/netesto/local/fun_plots/aggregate.csv "
                                         "/var/www/html/Chart.js/fun_plots/aggregate_%s.csv" % netesto_process)
-
+        netesto_controller.disconnect()
         fun_test.log("\n======================================")
         fun_test.log("Link for throughput and Latency graphs")
         fun_test.log("======================================\n")
@@ -273,6 +269,11 @@ def run_netesto(no_of_streams, no_of_rr, local_buff, remote_buff):
 
 
 if __name__ == '__main__':
+
+    st = inspect.stack()
+    script_file_name = st[1][1]
+    fun_test._initialize(script_file_name)
+
     fun_test.shared_variables['result'] = {}
     for streams in (4, 8, 16, 32):
         hosts = ['cab02-qa-06', 'cab02-qa-02', 'cab02-qa-03', 'cab02-qa-05', 'cab02-qa-01', 'cab02-qa-07']
