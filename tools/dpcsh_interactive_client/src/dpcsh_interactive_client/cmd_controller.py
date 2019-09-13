@@ -1012,7 +1012,14 @@ class CmdController(Cmd):
     def flow_list_rdma(self, args):
         grep_regex = args.grep
         hu_id = args.hu_id
-        self._flow_cmd_obj.get_flow_list_rdma(hu_id=hu_id, grep_regex=grep_regex)
+        qpn_number = args.qpn
+        self._flow_cmd_obj.get_flow_list_rdma(hu_id=hu_id, qpn_number=qpn_number, grep_regex=grep_regex)
+
+    def peek_stats_rdma(self, args):
+        grep_regex = args.grep
+        hu_id = args.hu_id
+        qpn_number = args.qpn
+        self._peek_cmd_obj.peek_stats_rdma(hu_id=hu_id, qpn_number=qpn_number, grep_regex=grep_regex)
 
     def get_flow_blocked(self, args):
         grep_regex = args.grep
@@ -1220,6 +1227,7 @@ class CmdController(Cmd):
     peek_stats_cdu_parser.set_defaults(func=peek_cdu_stats)
     peek_stats_ca_parser.set_defaults(func=peek_ca_stats)
     peek_stats_ddr_parser.set_defaults(func=peek_ddr_stats)
+    peek_stats_rdma_parser.set_defaults(func=peek_stats_rdma)
 
     # Storage Peek Commands
     peek_stats_ssds_parser.set_defaults(func=peek_stats_ssds)
@@ -1310,7 +1318,7 @@ class CmdController(Cmd):
 
 
 if __name__ == '__main__':
-    cmd_obj = CmdController(target_ip="fs66-come", target_port=40221, verbose=False)
+    cmd_obj = CmdController(target_ip="fs56-come", target_port=40220, verbose=False)
     cmd_obj.cmdloop(intro="hello")
 
 

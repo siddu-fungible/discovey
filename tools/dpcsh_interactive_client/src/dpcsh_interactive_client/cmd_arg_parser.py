@@ -1151,6 +1151,11 @@ peek_stats_ca_parser.add_argument('-grep', help="Grep regex pattern", default=No
 peek_stats_ddr_parser = peek_stats_parsers.add_parser('ddr', help="Peek ddr stats")
 peek_stats_ddr_parser.add_argument('-grep', help="Grep regex pattern", default=None)
 
+peek_stats_rdma_parser = peek_stats_parsers.add_parser('rdma', help='peek rdma stats')
+peek_stats_rdma_parser.add_argument("hu_id", help="Hu id to look for", type=str)
+peek_stats_rdma_parser.add_argument("-qpn", help="Print data only for particular qpn", default=None)
+peek_stats_rdma_parser.add_argument('-grep', help="Grep for specific flow", default=None)
+
 # ---------------------------------------------------------------------------------------------------
 # show commands
 
@@ -1203,6 +1208,7 @@ flow_list_parser.add_argument('-grep', help="Grep for specific flow", default=No
 
 flow_list_rdma_parser = base_flow_subparsers.add_parser('list_rdma', help='list rdma flows')
 flow_list_rdma_parser.add_argument("hu_id", help="Hu id to look for", type=str)
+flow_list_rdma_parser.add_argument("-qpn", help="Print data only for particular qpn", default=None)
 flow_list_rdma_parser.add_argument('-grep', help="Grep for specific flow", default=None)
 
 # Flow blocked

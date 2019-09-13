@@ -3318,6 +3318,86 @@ class PeekCommands(object):
             self.dpc_client.disconnect()
 
 
+    def _get_all_rdma(self, output_dict, hu_id, qpn_number=None):
+        result = {}
+        result['rdma'] = {}
+        for key, val in output_dict.iteritems():
+            if key.split(".")[0] == str(hu_id) and 'rdma' in val.keys():
+                if qpn_number:
+                    for item in val['rdma']:
+                        if str(qpn_number) == str(item['QPN']):
+                            result['rdma'][key] = []
+                            result['rdma'][key].append(item)
+                            break
+                else:
+                    result['rdma'][key] = output_dict[key]['rdma']
+        return result
+
+    def peek_stats_rdma(self, hu_id, qpn_number=None, grep_regex=None):
+        try:
+            prev_result = None
+            while True:
+                try:
+                    cmd = "list"
+                    output = self.dpc_client.execute(verb='flow', arg_list=[cmd])
+                    result = self._get_all_rdma(output, hu_id, qpn_number)
+                    if result['rdma']:
+                        if prev_result:
+                            result = result['rdma']
+                            master_table_obj = PrettyTable(['id:qpn', 'values'])
+                            master_table_obj.align = 'l'
+                            for key, val in result.iteritems():
+                                for item in val:
+                                    table_obj = PrettyTable(['Field', 'Counter', "Counter_Diff"])
+                                    table_obj.align = 'l'
+                                    qpn_id = item['QPN']
+                                    for new_item in prev_result[key]:
+                                        if qpn_id == new_item['QPN']:
+                                            diff_item = new_item
+                                            break
+                                    for _key in sorted(item):
+                                        if isinstance(item[_key], dict):
+                                            for inner_key, inner_val in item[_key].iteritems():
+                                                if isinstance(inner_val, int):
+                                                    table_obj.add_row([_key + ":" + inner_key, inner_val,
+                                                                       int(inner_val) - int(diff_item[_key][inner_key])])
+                                        else:
+                                            if isinstance(item[_key], int):
+                                                table_obj.add_row([_key, item[_key], int(item[_key]) - int(diff_item[_key])])
+                                    master_table_obj.add_row([key + ":" + str(qpn_id), table_obj])
+                        else:
+                            result = result['rdma']
+                            master_table_obj = PrettyTable(['id:qpn', 'values'])
+                            master_table_obj.align = 'l'
+                            for key, val in result.iteritems():
+                                for item in val:
+                                    table_obj = PrettyTable(['Field', 'Counter'])
+                                    table_obj.align = 'l'
+                                    qpn_id = item['QPN']
+                                    for _key in sorted(item):
+                                        if isinstance(item[_key], dict):
+                                            for inner_key, inner_val in item[_key].iteritems():
+                                                if isinstance(inner_val, int):
+                                                    table_obj.add_row([_key + ":" + inner_key, inner_val])
+                                        else:
+                                            if isinstance(item[_key], int):
+                                                table_obj.add_row([_key, item[_key]])
+                                    master_table_obj.add_row([key + ":" + str(qpn_id), table_obj])
+                        print master_table_obj
+                        prev_result = result
+                        print "\n########################  %s ########################\n" % str(self._get_timestamp())
+                        time.sleep(TIME_INTERVAL)
+                    else:
+                        print "Empty Result"
+                        break
+                except KeyboardInterrupt:
+                    self.dpc_client.disconnect()
+                    break
+        except Exception as ex:
+            print "ERROR: %s" % str(ex)
+            self.dpc_client.disconnect()
+
+
 class SampleCommands(object):
 
     def __init__(self, dpc_client):
@@ -3814,51 +3894,49 @@ class FlowCommands(object):
             print "ERROR: %s" % str(ex)
             self.dpc_client.disconnect()
 
-    def _get_all_rdma(self, output_dict, hu_id):
+    def _get_all_rdma(self, output_dict, hu_id, qpn_number=None):
         result = {}
+        result['rdma'] = {}
         for key, val in output_dict.iteritems():
             if key.split(".")[0] == str(hu_id) and 'rdma' in val.keys():
-                result[key]['rdma'] = output_dict[key]['rdma']
+                if qpn_number:
+                    for item in val['rdma']:
+                        if str(qpn_number) == str(item['QPN']):
+                            result['rdma'][key] = []
+                            result['rdma'][key].append(item)
+                            break
+                else:
+                    result['rdma'][key] = output_dict[key]['rdma']
         return result
 
-    def get_flow_list_rdma(self, hu_id, grep_regex=None):
+    def get_flow_list_rdma(self, hu_id, qpn_number=None, grep_regex=None):
         try:
-            prev_result = None
-            while True:
-                master_table_obj = PrettyTable()
-                master_table_obj.align = 'l'
-                master_table_obj.header = False
-                try:
-                    cmd = "list"
-                    output = self.dpc_client.execute(verb='flow', arg_list=[cmd])
-                    result = self._get_all_rdma(output, hu_id)
-                    if result:
-                        if prev_result:
-                            for key in sorted(result):
-                                table_obj = self._inner_table_obj(result=result[key],
-                                                                  prev_result=prev_result[key])
-                                if grep_regex:
-                                    if re.search(grep_regex, key, re.IGNORECASE):
-                                        master_table_obj.add_row([key, table_obj])
+            try:
+                cmd = "list"
+                output = self.dpc_client.execute(verb='flow', arg_list=[cmd])
+                output = json.loads(open('rdma.txt').read())
+                result = self._get_all_rdma(output, hu_id, qpn_number)
+                if result['rdma']:
+                    result = result['rdma']
+                    master_table_obj = PrettyTable(['id:qpn', 'values'])
+                    master_table_obj.align = 'l'
+                    for key, val in result.iteritems():
+                        for item in val:
+                            table_obj = PrettyTable(['Field', 'Counter'])
+                            table_obj.align = 'l'
+                            qpn_id = item['QPN']
+                            for _key in sorted(item):
+                                if isinstance(item[_key], dict):
+                                    for inner_key, inner_val in item[_key].iteritems():
+                                        table_obj.add_row([_key + ":" + inner_key, inner_val])
                                 else:
-                                    master_table_obj.add_row([key, table_obj])
-                        else:
-                            for key in sorted(result):
-                                table_obj = self._inner_table_obj(result=result[key])
-                                if grep_regex:
-                                    if re.search(grep_regex, key, re.IGNORECASE):
-                                        master_table_obj.add_row([key, table_obj])
-                                else:
-                                    master_table_obj.add_row([key, table_obj])
-                        print master_table_obj
-                        prev_result = result
-                        print "\n########################  %s ########################\n" % str(self._get_timestamp())
-                        time.sleep(TIME_INTERVAL)
-                    else:
-                        print "Empty Result"
-                except KeyboardInterrupt:
-                    self.dpc_client.disconnect()
-                    break
+                                    table_obj.add_row([_key, item[_key]])
+                            master_table_obj.add_row([key + ":" + str(qpn_id), table_obj])
+                    print master_table_obj
+                else:
+                    print "Empty Result"
+            except KeyboardInterrupt:
+                self.dpc_client.disconnect()
         except Exception as ex:
             print "ERROR: %s" % str(ex)
             self.dpc_client.disconnect()
