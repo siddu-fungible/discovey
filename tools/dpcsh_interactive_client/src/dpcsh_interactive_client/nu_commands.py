@@ -3914,7 +3914,6 @@ class FlowCommands(object):
             try:
                 cmd = "list"
                 output = self.dpc_client.execute(verb='flow', arg_list=[cmd])
-                output = json.loads(open('rdma.txt').read())
                 result = self._get_all_rdma(output, hu_id, qpn_number)
                 if result['rdma']:
                     result = result['rdma']
