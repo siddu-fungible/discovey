@@ -153,13 +153,23 @@ class TeraMarkJpegPerformanceS1Tc(TeraMarkJpegPerformanceTc):
                               steps="Steps 1")
 
 
-class TeraMarkZipPerformanceS1Tc(TeraMarkZipPerformanceTc):
-    tag = TERAMARK_ZIP_S1
+class TeraMarkZipDeflatePerformanceS1Tc(TeraMarkZipPerformanceTc):
+    tag = TERAMARK_ZIP_DEFLATE_S1
     platform = FunPlatform.S1
 
     def describe(self):
         self.set_test_details(id=14,
-                              summary="S1 Zip performance teramark",
+                              summary="S1 Zip defalte performance teramark",
+                              steps="Steps 1")
+
+
+class TeraMarkZipLzmaPerformanceS1Tc(TeraMarkZipPerformanceTc):
+    tag = TERAMARK_ZIP_LZMA_S1
+    platform = FunPlatform.S1
+
+    def describe(self):
+        self.set_test_details(id=15,
+                              summary="S1 Zip lzma performance teramark",
                               steps="Steps 1")
 
 
@@ -179,6 +189,7 @@ if __name__ == "__main__":
     myscript.add_test_case(WuLatencyAllocStackPerformanceS1Tc())
     myscript.add_test_case(EcPerformanceS1Tc())
     myscript.add_test_case(TeraMarkJpegPerformanceS1Tc())
-    # myscript.add_test_case(TeraMarkZipPerformanceS1Tc())
+    myscript.add_test_case(TeraMarkZipDeflatePerformanceS1Tc())
+    myscript.add_test_case(TeraMarkZipLzmaPerformanceS1Tc())
 
     myscript.run()

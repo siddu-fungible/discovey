@@ -3318,6 +3318,86 @@ class PeekCommands(object):
             self.dpc_client.disconnect()
 
 
+    def _get_all_rdma(self, output_dict, hu_id, qpn_number=None):
+        result = {}
+        result['rdma'] = {}
+        for key, val in output_dict.iteritems():
+            if key.split(".")[0] == str(hu_id) and 'rdma' in val.keys():
+                if qpn_number:
+                    for item in val['rdma']:
+                        if str(qpn_number) == str(item['QPN']):
+                            result['rdma'][key] = []
+                            result['rdma'][key].append(item)
+                            break
+                else:
+                    result['rdma'][key] = output_dict[key]['rdma']
+        return result
+
+    def peek_stats_rdma(self, hu_id, qpn_number=None, grep_regex=None):
+        try:
+            prev_result = None
+            while True:
+                try:
+                    cmd = "list"
+                    output = self.dpc_client.execute(verb='flow', arg_list=[cmd])
+                    result = self._get_all_rdma(output, hu_id, qpn_number)
+                    if result['rdma']:
+                        if prev_result:
+                            result = result['rdma']
+                            master_table_obj = PrettyTable(['id:qpn', 'values'])
+                            master_table_obj.align = 'l'
+                            for key, val in result.iteritems():
+                                for item in val:
+                                    table_obj = PrettyTable(['Field', 'Counter', "Counter_Diff"])
+                                    table_obj.align = 'l'
+                                    qpn_id = item['QPN']
+                                    for new_item in prev_result[key]:
+                                        if qpn_id == new_item['QPN']:
+                                            diff_item = new_item
+                                            break
+                                    for _key in sorted(item):
+                                        if isinstance(item[_key], dict):
+                                            for inner_key, inner_val in item[_key].iteritems():
+                                                if isinstance(inner_val, int):
+                                                    table_obj.add_row([_key + ":" + inner_key, inner_val,
+                                                                       int(inner_val) - int(diff_item[_key][inner_key])])
+                                        else:
+                                            if isinstance(item[_key], int):
+                                                table_obj.add_row([_key, item[_key], int(item[_key]) - int(diff_item[_key])])
+                                    master_table_obj.add_row([key + ":" + str(qpn_id), table_obj])
+                        else:
+                            result = result['rdma']
+                            master_table_obj = PrettyTable(['id:qpn', 'values'])
+                            master_table_obj.align = 'l'
+                            for key, val in result.iteritems():
+                                for item in val:
+                                    table_obj = PrettyTable(['Field', 'Counter'])
+                                    table_obj.align = 'l'
+                                    qpn_id = item['QPN']
+                                    for _key in sorted(item):
+                                        if isinstance(item[_key], dict):
+                                            for inner_key, inner_val in item[_key].iteritems():
+                                                if isinstance(inner_val, int):
+                                                    table_obj.add_row([_key + ":" + inner_key, inner_val])
+                                        else:
+                                            if isinstance(item[_key], int):
+                                                table_obj.add_row([_key, item[_key]])
+                                    master_table_obj.add_row([key + ":" + str(qpn_id), table_obj])
+                        print master_table_obj
+                        prev_result = result
+                        print "\n########################  %s ########################\n" % str(self._get_timestamp())
+                        time.sleep(TIME_INTERVAL)
+                    else:
+                        print "Empty Result"
+                        break
+                except KeyboardInterrupt:
+                    self.dpc_client.disconnect()
+                    break
+        except Exception as ex:
+            print "ERROR: %s" % str(ex)
+            self.dpc_client.disconnect()
+
+
 class SampleCommands(object):
 
     def __init__(self, dpc_client):
@@ -3630,9 +3710,13 @@ class FlowCommands(object):
                         output['eth_vp'] = queue['flow']['dest']
                         output['eth_pkts'] = queue['packets']
                         output['eth_bytes'] = queue['bytes']
+                        output['hw_blockedcnt'] = queue['flow']['hw_blockedcnt']
+                        output['sw_blockedcnt'] = queue['flow']['sw_blockedcnt']
                     elif module_name == 'epcq':
                         output['epcq_vp'] = queue['flow']['dest']
                         output['cqe_count'] = queue['cqe_count']
+                        output['hw_blockedcnt'] = queue['flow']['hw_blockedcnt']
+                        output['sw_blockedcnt'] = queue['flow']['sw_blockedcnt']
                     elif module_name == 'virtual_interface':
                         output['vi_vp'] = queue['flow']['dest']
                         output['vi_pkts'] = queue['packets']
@@ -3653,23 +3737,31 @@ class FlowCommands(object):
                     vis = val['virtual_interface']
                     for epsq in epsqs:
                         for _key, _val in epsq.iteritems():
-                            if 'callee' in str(_key) and _val['module'] == queue:
+                            if 'callee' in str(_key) and _val['module'] in queue:
                                 output[key][_val['id']] = OrderedDict()
                                 output[key][_val['id']]['epsq_vp'] = epsq['flow']['dest']
+                                output[key][_val['id']]['epsq_dest_vp'] = epsq['callee']['dest']
                                 output[key][_val['id']]['epsq_sqe_cnt'] = epsq['sqe_count']
-
+                                output[key][_val['id']]['epsq_hw_bcnt'] = epsq['flow']['hw_blockedcnt']
+                                output[key][_val['id']]['eqsq_sw_bcnt'] = epsq['flow']['sw_blockedcnt']
                                 if queue == 'ethernet':
                                     ethernet = self._get_info_for_id(ethernets, _val['id'], module_name='ethernet')
                                     eth_vp = None
                                     eth_pkts = None
                                     eth_bytes = None
+                                    eth_hw_blockedcnt = None
+                                    eth_sw_blockedcnt = None
                                     if ethernet:
                                         eth_vp = ethernet['eth_vp']
                                         eth_pkts = ethernet['eth_pkts']
                                         eth_bytes = ethernet['eth_bytes']
+                                        eth_hw_blockedcnt = ethernet['hw_blockedcnt']
+                                        eth_sw_blockedcnt = ethernet['sw_blockedcnt']
                                     output[key][_val['id']]['eth_vp'] = eth_vp
                                     output[key][_val['id']]['eth_pkts'] = eth_pkts
                                     output[key][_val['id']]['eth_bytes'] = eth_bytes
+                                    output[key][_val['id']]['eth_hw_bcnt'] = eth_hw_blockedcnt
+                                    output[key][_val['id']]['eth_sw_bcnt'] = eth_sw_blockedcnt
 
                                     # Virtual Interface
                                     # TODO: Remove virtual interface for now
@@ -3690,6 +3782,8 @@ class FlowCommands(object):
                                     epcq = self._get_info_for_id(epcqs, _val['id'], module_name='epcq')
                                     output[key][_val['id']]['epcq_vp'] = epcq['epcq_vp']
                                     output[key][_val['id']]['epcq_cqe_cnt'] = epcq['cqe_count']
+                                    output[key][_val['id']]['epcq_hw_bcnt'] = epcq['hw_blockedcnt']
+                                    output[key][_val['id']]['epcq_sw_bcnt'] = epcq['sw_blockedcnt']
                                     '''
                                     vi = self._get_info_for_id(vis, _val['id'], module_name='virtual_interface')
                                     output[key][_val['id']]['vi_vp'] = vi['vi_vp']
@@ -3713,37 +3807,48 @@ class FlowCommands(object):
                 master_table_obj.add_row(all_vals)
         print master_table_obj
 
-    def get_flow_list_pp(self, hu_id=None, tx=None, rx=None, grep_regex=None):
+    def get_flow_list_pp(self, hcf_id=None,hu_id=None, tx=None, rx=None, grep_regex=None):
         try:
-            while True:
-                try:
+            try:
+                while True:
                     cmd = "list"
                     output = self.dpc_client.execute(verb='flow', arg_list=[cmd])
                     if output:
                         result = output
                         if hu_id:
                             result = {}
-                            if not hu_id in result:
-                                print "hu_id %s entry not found. Entries available is %s" % (hu_id, sorted(output.keys()))
+                            key_list = []
+                            for key in output.keys():
+                                if hu_id == key.split(".")[0]:
+                                    key_list.append(key)
+                            if not key_list:
+                                print "hu_id %s entry not found" % hu_id
                                 return self.dpc_client.disconnect()
-                            result[hu_id] = output[hu_id]
-
+                            for id in key_list:
+                                result[str(id)] = output[str(id)]
+                        elif hcf_id:
+                            if not hcf_id in output.keys():
+                                print "hcf_id %s entry not found" % hcf_id
+                                return self.dpc_client.disconnect()
+                            result[hcf_id] = output[hcf_id]
                         if tx:
                             print "\n********** Displaying tx table below **********\n"
                             tx_parsed_dict = self.get_queue_parsed_dict(result, queue='ethernet')
                             if tx_parsed_dict:
                                 self._print_flow_list_table(tx_parsed_dict)
                             else:
-                                print "No entries found for ethernet"
+                                print "No tx entries found"
                         if rx:
                             print "\n********** Displaying rx table below **********\n"
                             rx_parsed_dict = self.get_queue_parsed_dict(result, queue='epcq')
                             if rx_parsed_dict:
                                 self._print_flow_list_table(rx_parsed_dict)
                             else:
-                                print "No entries found for epcq"
-                except KeyboardInterrupt:
-                    self.dpc_client.disconnect()
+                                print "No rx entries found"
+                    print "\n########################  %s ########################\n" % str(self._get_timestamp())
+                    time.sleep(TIME_INTERVAL)
+            except KeyboardInterrupt:
+                self.dpc_client.disconnect()
         except Exception as ex:
             print "ERROR: %s" % str(ex)
             self.dpc_client.disconnect()
@@ -3785,6 +3890,52 @@ class FlowCommands(object):
                 except KeyboardInterrupt:
                     self.dpc_client.disconnect()
                     break
+        except Exception as ex:
+            print "ERROR: %s" % str(ex)
+            self.dpc_client.disconnect()
+
+    def _get_all_rdma(self, output_dict, hu_id, qpn_number=None):
+        result = {}
+        result['rdma'] = {}
+        for key, val in output_dict.iteritems():
+            if key.split(".")[0] == str(hu_id) and 'rdma' in val.keys():
+                if qpn_number:
+                    for item in val['rdma']:
+                        if str(qpn_number) == str(item['QPN']):
+                            result['rdma'][key] = []
+                            result['rdma'][key].append(item)
+                            break
+                else:
+                    result['rdma'][key] = output_dict[key]['rdma']
+        return result
+
+    def get_flow_list_rdma(self, hu_id, qpn_number=None, grep_regex=None):
+        try:
+            try:
+                cmd = "list"
+                output = self.dpc_client.execute(verb='flow', arg_list=[cmd])
+                result = self._get_all_rdma(output, hu_id, qpn_number)
+                if result['rdma']:
+                    result = result['rdma']
+                    master_table_obj = PrettyTable(['id:qpn', 'values'])
+                    master_table_obj.align = 'l'
+                    for key, val in result.iteritems():
+                        for item in val:
+                            table_obj = PrettyTable(['Field', 'Counter'])
+                            table_obj.align = 'l'
+                            qpn_id = item['QPN']
+                            for _key in sorted(item):
+                                if isinstance(item[_key], dict):
+                                    for inner_key, inner_val in item[_key].iteritems():
+                                        table_obj.add_row([_key + ":" + inner_key, inner_val])
+                                else:
+                                    table_obj.add_row([_key, item[_key]])
+                            master_table_obj.add_row([key + ":" + str(qpn_id), table_obj])
+                    print master_table_obj
+                else:
+                    print "Empty Result"
+            except KeyboardInterrupt:
+                self.dpc_client.disconnect()
         except Exception as ex:
             print "ERROR: %s" % str(ex)
             self.dpc_client.disconnect()

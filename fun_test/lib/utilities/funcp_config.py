@@ -11,6 +11,7 @@ from scripts.networking.lib_nw import funcp
 import socket
 from lib.templates.storage.storage_fs_template import FunCpDockerContainer
 import os
+from datetime import date
 
 
 class FunControlPlaneBringup:
@@ -192,10 +193,15 @@ class FunControlPlaneBringup:
         fun_test.test_assert(expression=ssh_test_come, message="Make sure ssh can be done to COMe")
         come_lspci = linux_obj_come.lspci(grep_filter="1dad:")
         if prepare_docker:
+            today = date.today()
+            d1 = today.strftime("%d_%m_%Y")
 
             linux_obj_come.command(command="cd /mnt/keep/")
+            linux_obj_come.sudo_command(command="cp -r FunSDK FunSDK_bkp_%s" % d1)
+            linux_obj_come.sudo_command(command="cp -r /scratch /scratch_bkp_%s" % d1)
             linux_obj_come.sudo_command(command="rm -rf FunSDK")
-            git_pull = linux_obj_come.command("git clone git@github.com:fungible-inc/FunSDK-small.git FunSDK", timeout=120)
+            git_pull = linux_obj_come.command("git clone git@github.com:fungible-inc/FunSDK-small.git FunSDK",
+                                              timeout=120)
             linux_obj_come.command(command="cd /mnt/keep/FunSDK/")
             prepare_docker_output = linux_obj_come.command("./integration_test/emulation/test_system.py --prepare "
                                                            "--docker", timeout=1200)
@@ -458,7 +464,7 @@ class FunControlPlaneBringup:
         m = re.match(r"^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$", ip)
         return bool(m) and all(map(lambda n: 0 <= int(n) <= 255, m.groups()))
 
-    def cleanup_funcp(self):
+    def  cleanup_funcp(self):
         fun_test.log("=====================")
         fun_test.log("Control Plane Cleanup")
         fun_test.log("=====================")
