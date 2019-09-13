@@ -41,7 +41,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   LOGS_DIR = "/static/logs";
   suiteLogsDir = "http://integration.fungible.local/regression/static_serve_log_directory/";
 
-  PST_TIMEZONE: string = "America/Los_Angeles";
+  TIMEZONE: string = "America/Los_Angeles";
 
   status: string = null;
   showingTable: boolean;
@@ -634,10 +634,10 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     } else if (this.timeMode === "month") {
       let i = len - 1;
       let startIndex = len - 1;
-      let latestDate = this.commonService.convertEpochToDate(dateList[i], this.PST_TIMEZONE);
+      let latestDate = this.commonService.convertEpochToDate(dateList[i], this.TIMEZONE);
       let latestMonth = latestDate.getMonth();
       while (i >= 0) {
-        let currentDate = this.commonService.convertEpochToDate(dateList[i], this.PST_TIMEZONE);
+        let currentDate = this.commonService.convertEpochToDate(dateList[i], this.TIMEZONE);
         let currentMonth = currentDate.getMonth();
         if (currentMonth !== latestMonth) {
           filteredDate.push([startIndex, i + 1]);
@@ -665,7 +665,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     if (dates.length !== 0) {
       // let firstString = dates[0];
       // let firstDate = new Date(firstString);
-      let firstDate = this.commonService.convertEpochToDate(dates[0], this.PST_TIMEZONE);
+      let firstDate = this.commonService.convertEpochToDate(dates[0], this.TIMEZONE);
       let lastDate = new Date();
       lastDate.setHours(23, 59, 59);
 
@@ -673,10 +673,10 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       let datesIndex = 0;
       while (currentDate <= lastDate) {
         let latestDate = null;
-        if ((datesIndex < dates.length) && this.sameDay(this.commonService.convertEpochToDate(dates[datesIndex], this.PST_TIMEZONE), currentDate)) {
+        if ((datesIndex < dates.length) && this.sameDay(this.commonService.convertEpochToDate(dates[datesIndex], this.TIMEZONE), currentDate)) {
           latestDate = dates[datesIndex];
           datesIndex++;
-          while ((datesIndex < dates.length) && this.sameDay(this.commonService.convertEpochToDate(dates[datesIndex], this.PST_TIMEZONE), currentDate)) {
+          while ((datesIndex < dates.length) && this.sameDay(this.commonService.convertEpochToDate(dates[datesIndex], this.TIMEZONE), currentDate)) {
             latestDate = dates[datesIndex];
             datesIndex++;
           }
@@ -687,7 +687,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
           tempDate.setSeconds(1);
           latestDate = this.commonService.convertDateToEpoch(tempDate);
         }
-        let pstDate = this.commonService.convertEpochToDate(latestDate, this.PST_TIMEZONE);
+        let pstDate = this.commonService.convertEpochToDate(latestDate, this.TIMEZONE);
         finalDates.push(latestDate);
         currentDate.setDate(currentDate.getDate() + 1);
       }
@@ -868,14 +868,14 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
           let startIndex = datesByTimeMode[i][0];
           let endIndex = datesByTimeMode[i][1];
           let matchingDateFound = false;
-          let pstEpochDate = this.commonService.convertEpochToDate(keyList[startIndex], this.PST_TIMEZONE);
+          let pstEpochDate = this.commonService.convertEpochToDate(keyList[startIndex], this.TIMEZONE);
           let keyString = this.commonService.addLeadingZeroesToDate(pstEpochDate);
           seriesDates.push(keyString);
 
           Object.keys(this.mileStoneMarkers).forEach((mileStone) => {
-            let mileStoneDate = this.commonService.convertToTimezone(this.mileStoneMarkers[mileStone], this.PST_TIMEZONE);
+            let mileStoneDate = this.commonService.convertToTimezone(this.mileStoneMarkers[mileStone], this.TIMEZONE);
             //comparing two date objects to get the f1 milestone incase of date mismatch
-            let compareDate = this.commonService.convertEpochToDate(keyList[startIndex], this.PST_TIMEZONE);
+            let compareDate = this.commonService.convertEpochToDate(keyList[startIndex], this.TIMEZONE);
             if (this.sameDay(mileStoneDate, compareDate)) { // Tape-out and F1
               if (!this.mileStoneIndices.hasOwnProperty(mileStone)) {
                 this.mileStoneIndices[mileStone] = startIndex;
@@ -1238,7 +1238,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
           trimEmptyStartValues = true;
         }
         if (trimEmptyStartValues) {
-          let pstDate = this.commonService.convertToTimezone(d, this.PST_TIMEZONE);
+          let pstDate = this.commonService.convertToTimezone(d, this.TIMEZONE);
           let keyString = this.commonService.addLeadingZeroesToDate(pstDate);
           series.push(keyString);
           keyValue[keyString] = response.data.scores[dateTime].score;

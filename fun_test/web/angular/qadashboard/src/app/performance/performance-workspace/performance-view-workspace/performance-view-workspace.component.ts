@@ -37,7 +37,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
   allMetricIds: number[] = [];
   interestedMetrics: number[] = [];
   SUBJECT_BASE_STRING: string = "Performance status report - ";
-  PST_TIMEZONE: string = "America/Los_Angeles";
+  TIMEZONE: string = "America/Los_Angeles";
 
   constructor(private apiService: ApiService, private commonService: CommonService, private loggerService: LoggerService,
               private route: ActivatedRoute, private router: Router, private location: Location, private title: Title, private performanceService: PerformanceService) {
@@ -169,7 +169,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
         for (let dataSet of metric["data"]) {
           if (dataSet["name"] == oneData["name"]) {
             dataSet[key] = oneData["value"];
-            dataSet[key + "Date"] = this.commonService.convertToTimezone(oneData["date_time"], this.PST_TIMEZONE);
+            dataSet[key + "Date"] = this.commonService.convertToTimezone(oneData["date_time"], this.TIMEZONE);
             dataSet["unit"] = oneData["unit"];
           }
         }
@@ -280,7 +280,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
   }
 
   addToSet(dateTime, dateTimeSet): boolean {
-    let dateTimeObj = this.commonService.convertToTimezone(dateTime, this.PST_TIMEZONE);
+    let dateTimeObj = this.commonService.convertToTimezone(dateTime, this.TIMEZONE);
     let dateTimeStr = String(dateTimeObj.getMonth() + 1) + "/" + String(dateTimeObj.getDate()) + "/" + String(dateTimeObj.getFullYear());
     let present = false;
     if (dateTimeSet.has(dateTimeStr)) {
