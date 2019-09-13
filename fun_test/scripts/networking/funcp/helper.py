@@ -150,7 +150,18 @@ def test_host_pings(host, ips, username="localadmin", password="Precious1*", str
         ping_timeout = 60
         if ping_count > ping_timeout:
             ping_timeout = ping_count+10
-        result = linux_obj.ping(dst=hosts, interval=ping_interval, count=ping_count, timeout=ping_timeout)
+        result = True
+        output = linux_obj.command(command="sudo ping %s -i %s -c %s -q" % (hosts, ping_interval, ping_count),
+                                   timeout=ping_timeout)
+        m = re.search(r'(\d+)%\s+packet\s+loss', output)
+        if m:
+            percentage_loss = int(m.group(1))
+            if percentage_loss <= 1:
+                result &= True
+            else:
+                result &= False
+        linux_obj.disconnect()
+
         if result:
             fun_test.log("%s can reach %s" % (host, hosts))
         else:
