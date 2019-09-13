@@ -20,6 +20,13 @@ class ScriptSetup(FunTestScript):
                               """)
 
     def setup(self):
+        job_inputs = fun_test.get_job_inputs()
+        if not job_inputs:
+            job_inputs = {}
+        if "enable_bgp" in job_inputs:
+            enable_bgp = job_inputs["enable_bgp"]
+            fun_test.shared_variables["enable_bgp"] = enable_bgp
+
         self.server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() +
                                                       '/fs_connected_servers.json')
         global funcp_obj, fs_name
@@ -74,15 +81,19 @@ class BringupControlPlane(FunTestCase):
 
 
     def run(self):
+        enable_bgp = fun_test.shared_variables["enable_bgp"]
+        abstract_key = "abstract_configs"
+        if enable_bgp:
+            abstract_key = "abstract_configs_bgp"
 
         fun_test.test_assert(expression=funcp_obj.bringup_funcp(prepare_docker=True), message="Bringup FunCP")
         funcp_obj.assign_mpg_ips(static=self.server_key["fs"][fs_name]["mpg_ips"]["static"],
                                  f1_1_mpg=self.server_key["fs"][fs_name]["mpg_ips"]["mpg1"],
                                  f1_0_mpg=self.server_key["fs"][fs_name]["mpg_ips"]["mpg0"])
         abstract_json_file0 = fun_test.get_script_parent_directory() + '/abstract_config/' + \
-                              self.server_key["fs"][fs_name]["abstract_configs"]["F1-0"]
+                              self.server_key["fs"][fs_name][abstract_key]["F1-0"]
         abstract_json_file1 = fun_test.get_script_parent_directory() + '/abstract_config/' + \
-                              self.server_key["fs"][fs_name]["abstract_configs"]["F1-1"]
+                              self.server_key["fs"][fs_name][abstract_key]["F1-1"]
         funcp_obj.funcp_abstract_config(abstract_config_f1_0=abstract_json_file0,
                                         abstract_config_f1_1=abstract_json_file1, workspace="/scratch")
 
