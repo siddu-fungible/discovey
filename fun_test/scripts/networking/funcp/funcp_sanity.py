@@ -26,6 +26,9 @@ class ScriptSetup(FunTestScript):
         if "enable_bgp" in job_inputs:
             enable_bgp = job_inputs["enable_bgp"]
             fun_test.shared_variables["enable_bgp"] = enable_bgp
+        else:
+            enable_bgp = False
+            fun_test.shared_variables["enable_bgp"] = enable_bgp
 
         self.server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() +
                                                       '/fs_connected_servers.json')
