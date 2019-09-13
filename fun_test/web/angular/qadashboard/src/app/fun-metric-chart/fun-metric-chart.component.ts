@@ -662,37 +662,38 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   //check for all dates and if not present add the respective date to the list
   fixMissingDates(dates): any {
     let finalDates = [];
+    let datesSet = new Set();
     if (dates.length !== 0) {
-      // let firstString = dates[0];
-      // let firstDate = new Date(firstString);
-      let firstDate = this.commonService.convertEpochToDate(dates[0], this.TIMEZONE);
-      let lastDate = new Date();
-      lastDate.setHours(23, 59, 59);
-
-      let currentDate = firstDate;
+      let lastDate = this.commonService.convertEpochToDate(dates[0], this.TIMEZONE);
+      dates.reverse();
+      let uniqueDates = [];
+      for (let epochDate of dates) {
+        let pstDate = this.commonService.convertEpochToDate(epochDate, this.TIMEZONE);
+        let keyString = (pstDate.getMonth() + 1) + "/" + pstDate.getDate() + "/" + pstDate.getFullYear();
+        if (!datesSet.has(keyString)) {
+          datesSet.add(keyString);
+          uniqueDates.push(epochDate);
+        }
+      }
+      let currentDate = this.commonService.convertEpochToDate(new Date(), this.TIMEZONE);
       let datesIndex = 0;
-      while (currentDate <= lastDate) {
-        let latestDate = null;
-        if ((datesIndex < dates.length) && this.sameDay(this.commonService.convertEpochToDate(dates[datesIndex], this.TIMEZONE), currentDate)) {
-          latestDate = dates[datesIndex];
-          datesIndex++;
-          while ((datesIndex < dates.length) && this.sameDay(this.commonService.convertEpochToDate(dates[datesIndex], this.TIMEZONE), currentDate)) {
-            latestDate = dates[datesIndex];
-            datesIndex++;
-          }
-        } else {
+      while (currentDate >= lastDate) {
+        let keyString = (currentDate.getMonth() + 1) + "/" + currentDate.getDate() + "/" + currentDate.getFullYear();
+        if (!datesSet.has(keyString)) {
           let tempDate = currentDate;
           tempDate.setHours(0);
           tempDate.setMinutes(0);
           tempDate.setSeconds(1);
-          latestDate = this.commonService.convertDateToEpoch(tempDate);
+          let epochDate = this.commonService.convertDateToEpoch(tempDate);
+          finalDates.push(epochDate);
+        } else if (datesIndex < uniqueDates.length) {
+          finalDates.push(uniqueDates[datesIndex]);
+          datesIndex++;
         }
-        let pstDate = this.commonService.convertEpochToDate(latestDate, this.TIMEZONE);
-        finalDates.push(latestDate);
-        currentDate.setDate(currentDate.getDate() + 1);
+        currentDate.setDate(currentDate.getDate() - 1);
       }
     }
-    return finalDates;
+    return finalDates.reverse();
   }
 
   //check if both the dates are same
