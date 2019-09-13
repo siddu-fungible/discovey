@@ -99,8 +99,8 @@ class BringupControlPlane(FunTestCase):
                               self.server_key["fs"][fs_name][abstract_key]["F1-1"]
         funcp_obj.funcp_abstract_config(abstract_config_f1_0=abstract_json_file0,
                                         abstract_config_f1_1=abstract_json_file1, workspace="/scratch")
-
-        funcp_obj.add_routes_on_f1(routes_dict=self.server_key["fs"][fs_name]["static_routes"])
+        if not enable_bgp:
+            funcp_obj.add_routes_on_f1(routes_dict=self.server_key["fs"][fs_name]["static_routes"])
 
         ping_dict = self.server_key["fs"][fs_name]["cc_pings"]
         for container in ping_dict:
