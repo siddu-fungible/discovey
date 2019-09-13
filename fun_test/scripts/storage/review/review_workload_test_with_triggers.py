@@ -514,7 +514,7 @@ class CreateStripedVolTestCase(FunTestCase):
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"],
                                      "Create Storage Controller for {} with controller uuid {} on DUT".
-                                     format(self.attach_transport, self.ctrlr_uuid[-1]))
+                                     format(self.transport_type.upper(), self.ctrlr_uuid[-1]))
 
             # Attaching volume to NVMeOF controller
             for index, host_name in enumerate(self.host_info):
@@ -847,7 +847,7 @@ class ConnectMoreHosts(FunTestCase):
         for k, v in benchmark_dict[testcase].iteritems():
             setattr(self, k, v)
 
-        self.fs = fun_test.shared_variables["fs_objs"]
+        self.fs = fun_test.shared_variables["fs_obj"]
         self.come_obj = fun_test.shared_variables["come_obj"]
         self.f1 = fun_test.shared_variables["f1_objs"][0][0]
         self.storage_controller = fun_test.shared_variables["sc_obj"][0]
