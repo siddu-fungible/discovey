@@ -123,6 +123,8 @@ class ECVolumeLevelScript(FunTestScript):
             self.disable_wu_watchdog = True
         if "f1_in_use" in job_inputs:
             self.f1_in_use = job_inputs["f1_in_use"]
+        if "syslog" in job_inputs:
+            self.syslog_level = job_inputs["syslog"]
 
         # Deploying of DUTs
         self.num_duts = int(round(float(self.num_f1s) / self.num_f1_per_fs))
