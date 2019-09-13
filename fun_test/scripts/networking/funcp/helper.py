@@ -506,7 +506,7 @@ def cc_sanity_pings(docker_names, vlan_ips, fs_spec, nu_hosts, hu_hosts_0, hu_ho
                                                  ssh_password=fs_spec['come']['mgmt_ssh_password'])
                 # result &= container.ping(dst=hu_host, count=ping_count, max_percentage_loss=1, timeout=60,
                 #                          interval=ping_interval, sudo=True)
-                output = container.command(command="sudo ping -I %s %s -i %s -c %s" % (vlan_ips[docker], hu_host,
+                output = container.command(command="sudo ping -I %s %s -i %s -c %s -q" % (vlan_ips[docker], hu_host,
                                                                                        ping_interval, ping_count),
                                            timeout=300)
                 m = re.search(r'(\d+)%\s+packet\s+loss', output)
@@ -525,7 +525,7 @@ def cc_sanity_pings(docker_names, vlan_ips, fs_spec, nu_hosts, hu_hosts_0, hu_ho
                                                  ssh_password=fs_spec['come']['mgmt_ssh_password'])
                 # result &= container.ping(dst=hu_host, count=ping_count, max_percentage_loss=1, timeout=60,
                 #                          interval=ping_interval, sudo=True)
-                output = container.command(command="sudo ping -I %s %s -i %s -c %s" % (vlan_ips[docker], hu_host,
+                output = container.command(command="sudo ping -I %s %s -i %s -c %s -q" % (vlan_ips[docker], hu_host,
                                                                                        ping_interval, ping_count),
                                            timeout=300)
                 m = re.search(r'(\d+)%\s+packet\s+loss', output)
