@@ -1,5 +1,28 @@
+ <div class="fun-flex-container" style="padding: 10px;">
+    <!-- pager -->
+    <div id="page-div" *ngIf="pager.pages && pager.pages.length">
+      <span *ngIf="pager.currentPage > 1" [ngClass]="{'fun-disabled': pager.currentPage === 1}">
+      <a [routerLink]="" (click)="setPage(1)">First </a>
+      </span>
+      <span *ngIf="pager.currentPage > 1" [ngClass]="{'fun-disabled': pager.currentPage === 1}">
+      <a [routerLink]="" (click)="setPage(pager.currentPage - 1)">Previous </a>
+      </span>
+      <ng-container *ngFor="let page of pager.pages">
+        <span class="pseudo-anchor" (click)="setPage(page)"
+              [ngClass]="{'fun-pager-active':pager.currentPage === page}">{{ page }}</span>&nbsp;
+      </ng-container>
+      <span *ngIf="pager.currentPage < pager.totalPages"
+            [ngClass]="{'fun-disabled': pager.currentPage === pager.totalPages}">
+      <a [routerLink]="" (click)="setPage(pager.currentPage + 1)">Next </a>
+      </span>
+      <span *ngIf="pager.currentPage < pager.totalPages"
+            [ngClass]="{'fun-disabled': pager.currentPage === pager.totalPages}">
+      <a [routerLink]="" (click)="setPage(pager.totalPages)">Last </a>
+      </span>
+    </div>
+  </div><br>
 <div class="flex-container">
-  <ng-container *ngFor="let interestedMetric of workspace.interested_metrics">
+  <ng-container *ngFor="let interestedMetric of pagedItems">
     <div style="flex: 0 0 45%; padding-bottom: 10px;">
       <table align="center">
         <tr>
