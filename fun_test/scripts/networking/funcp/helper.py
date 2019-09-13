@@ -488,7 +488,7 @@ def cc_sanity_pings(docker_names, vlan_ips, fs_spec, nu_hosts, hu_hosts_0, hu_ho
         for nu_host in nu_hosts:
             # result &= container.ping(dst=nu_host, count=ping_count, max_percentage_loss=1, timeout=60,
             #                          interval=ping_interval, sudo=True)
-            output = container.command(command="sudo ping -I %s %s -i %s -c %s" % (vlan_ips[docker], nu_host,
+            output = container.command(command="sudo ping -I %s %s -i %s -c %s -q" % (vlan_ips[docker], nu_host,
                                                                                    ping_interval, ping_count),
                                        timeout=300)
             m = re.search(r'(\d+)%\s+packet\s+loss', output)
