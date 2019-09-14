@@ -29,10 +29,7 @@ class WorkloadTriggerTestScript(FunTestScript):
         # Parsing the global config and assign them as object members
         config_file = fun_test.get_script_name_without_ext() + ".json"
         fun_test.log("Config file being used: {}".format(config_file))
-        config_dict = parse_file_to_json(config_file)
-
-        fun_test.shared_variables["fio"] = {}
-        fun_test.shared_variables["iostat_output"] = {}
+        config_dict = utils.parse_file_to_json(config_file)
 
         if "GlobalSetup" not in config_dict or not config_dict["GlobalSetup"]:
             fun_test.critical("Global setup config is not available in the {} config file".format(config_file))
@@ -41,7 +38,7 @@ class WorkloadTriggerTestScript(FunTestScript):
             self.disable_f1_index = None
             self.f1_in_use = 0
             self.syslog_level = 2
-            self.command_timeout = 30
+            self.command_timeout = 5
             self.reboot_timeout = 600
         else:
             for k, v in config_dict["GlobalSetup"].items():
@@ -112,8 +109,6 @@ class WorkloadTriggerTestScript(FunTestScript):
 
         fun_test.test_assert(expression=self.num_duts <= self.total_available_duts,
                              message="Testbed has enough DUTs")
-
-        # Deploying of DUTs
         for dut_index in self.available_dut_indexes:
             self.topology_helper.set_dut_parameters(
                 dut_index=dut_index,
@@ -132,6 +127,7 @@ class WorkloadTriggerTestScript(FunTestScript):
             fun_test.log("Available hosts are: {}".format(hosts))
             required_host_index = []
             self.required_hosts = OrderedDict()
+
             for i in xrange(self.host_start_index, self.host_start_index + self.num_hosts):
                 required_host_index.append(i)
             fun_test.debug("Host index required for scripts: {}".format(required_host_index))
@@ -140,7 +136,6 @@ class WorkloadTriggerTestScript(FunTestScript):
                     self.required_hosts[host_name] = hosts[host_name]
 
         fun_test.log("Hosts that will be used for current test: {}".format(self.required_hosts.keys()))
-        # fun_test.shared_variables["num_hosts"] = self.num_hosts
 
         self.host_info = OrderedDict()
         self.hosts_test_interfaces = {}
@@ -166,14 +161,10 @@ class WorkloadTriggerTestScript(FunTestScript):
             host_instance = host_obj.get_instance()
             self.host_handles[host_ip] = host_instance
             self.host_info[host_name]["handle"] = host_instance
-        print("script setup: prepared host_info is: {}".format(self.host_info))
-        print("script setup: dir of host_info is: {}".format(dir(self.host_info)))
 
         # Rebooting all the hosts in non-blocking mode before the test and getting NUMA cpus
         for host_name in self.host_info:
             host_handle = self.host_info[host_name]["handle"]
-            '''
-            # Enable only if NUMA node required
             if self.override_numa_node["override"]:
                 host_numa_cpus_filter = host_handle.lscpu(self.override_numa_node["override_node"])
                 self.host_info[host_name]["host_numa_cpus"] = host_numa_cpus_filter[
@@ -186,7 +177,6 @@ class WorkloadTriggerTestScript(FunTestScript):
             for cpu_group in self.host_info[host_name]["host_numa_cpus"].split(","):
                 cpu_range = cpu_group.split("-")
                 self.host_info[host_name]["total_numa_cpus"] += len(range(int(cpu_range[0]), int(cpu_range[1]))) + 1
-            '''
             fun_test.log("Rebooting host: {}".format(host_name))
             host_handle.reboot(non_blocking=True)
         fun_test.log("Hosts info: {}".format(self.host_info))
@@ -214,11 +204,6 @@ class WorkloadTriggerTestScript(FunTestScript):
         self.funcp_spec = {}
         for index in xrange(self.num_duts):
             self.funcp_obj[index] = StorageFsTemplate(self.come_obj[index])
-            '''
-            self.funcp_spec[index] = self.funcp_obj[index].deploy_funcp_container(
-                update_deploy_script=self.update_deploy_script, update_workspace=self.update_workspace,
-                mode=self.funcp_mode, launch_resp_parse=True)
-            '''
             self.funcp_spec[index] = self.funcp_obj[index].deploy_funcp_container(
                 update_deploy_script=self.update_deploy_script, update_workspace=self.update_workspace,
                 mode=self.funcp_mode)
