@@ -896,5 +896,5 @@ class ConnectMoreHosts(FunTestCase):
 if __name__ == "__main__":
     testscript = WorkloadTriggerTestScript()
     testscript.add_test_case(CreateStripedVolTestCase())
-    testscript.add_test_case(ConnectMoreHosts())
+    # testscript.add_test_case(ConnectMoreHosts())
     testscript.run()
