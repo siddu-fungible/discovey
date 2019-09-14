@@ -384,20 +384,17 @@ class CreateStripedVolTestCase(FunTestCase):
 
             self.strip_vol_size = (self.blt_capacity - self.stripe_unit_size) * self.blt_count
             # Create Strip Volume
-            self.stripe_uuid = []
-            stripe_uuid = generate_uuid()
-            self.stripe_uuid.append(stripe_uuid)
+            self.stripe_uuid = generate_uuid()
             command_result = self.storage_controller.create_volume(type=self.stripe_details["type"],
                                                                    capacity=self.strip_vol_size,
                                                                    name="stripevol1",
-                                                                   uuid=stripe_uuid[0],
+                                                                   uuid=self.stripe_uuid,
                                                                    block_size=self.stripe_details["block_size"],
                                                                    stripe_unit=self.stripe_details["stripe_unit"],
                                                                    pvol_id=self.thin_uuid)
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Create Stripe Vol with uuid {} on DUT".
-                                 format(self.stripe_uuid[0]))
-            fun_test.shared_variables["stripe_uuid"] = self.stripe_uuid
+                                 format(self.stripe_uuid))
 
             # Create TCP controllers for all hosts
             self.ctrlr_uuid = []
@@ -420,11 +417,11 @@ class CreateStripedVolTestCase(FunTestCase):
                     command_result = self.storage_controller.attach_volume_to_controller(
                         ctrlr_uuid=self.ctrlr_uuid[index],
                         ns_id=self.stripe_details["ns_id"],
-                        vol_uuid=self.stripe_uuid[0])
+                        vol_uuid=self.stripe_uuid)
                     fun_test.log(command_result)
                     fun_test.test_assert(command_result["status"],
                                          "Attach NVMeOF controller {} to stripe vol {} over {}".
-                                         format(self.ctrlr_uuid[index], self.stripe_uuid[0],
+                                         format(self.ctrlr_uuid[index], self.stripe_uuid,
                                                 self.transport_type.upper()))
 
             # Starting packet capture in all the hosts
@@ -549,10 +546,8 @@ class CreateStripedVolTestCase(FunTestCase):
             for index, host_name in enumerate(self.host_info):
                 fio_job_args = ""
                 host_handle = self.host_info[host_name]["handle"]
-                nvme_block_device_list = self.host_info[host_name]["nvme_block_device_list"]
                 host_numa_cpus = self.host_info[host_name]["host_numa_cpus"]
                 total_numa_cpus = self.host_info[host_name]["total_numa_cpus"]
-                fio_num_jobs = len(nvme_block_device_list)
 
                 if hasattr(self, "create_file_system") and self.create_file_system:
                     test_filename = "/mnt/testfile.dat"
@@ -567,16 +562,16 @@ class CreateStripedVolTestCase(FunTestCase):
                         command_duration=self.command_timeout)
                     fun_test.log(command_result)
                     fun_test.test_assert(command_result["status"], "Create Stripe Vol with uuid {} on DUT".
-                                         format(self.stripe_uuid[0]))
+                                         format(self.stripe_uuid))
 
                     # Attach volume to NVMe-OF controller
                     command_result = self.storage_controller.attach_volume_to_controller(
                         ctrlr_uuid=self.ctrlr_uuid[index], ns_id=self.stripe_details["ns_id"],
-                        vol_uuid=self.stripe_uuid[0])
+                        vol_uuid=self.stripe_uuid)
                     fun_test.log(command_result)
                     fun_test.test_assert(command_result["status"],
                                          "Attach NVMeOF controller {} to stripe vol {} over {}".format(
-                                             self.ctrlr_uuid[index], self.stripe_uuid[0], self.transport_type.upper()))
+                                             self.ctrlr_uuid[index], self.stripe_uuid, self.transport_type.upper()))
 
                     # NVMe connect
                     fun_test.shared_variables["blt"][host_name] = {}
