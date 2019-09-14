@@ -6,7 +6,7 @@ from lib.templates.storage.storage_fs_template import *
 from scripts.storage.storage_helper import *
 from lib.system.utils import *
 from lib.host.storage_controller import *
-from collections import OrderedDict
+from collections import OrderedDict, Counter
 from math import ceil
 
 
@@ -17,80 +17,11 @@ def fio_parser(arg1, host_index, **kwargs):
     arg1.disconnect()
 
 
-def allow_host_access(sc_obj, host_ip, host_index, vol_uuid):
-    cur_uuid = generate_uuid()
-    nqn = "nqn" + str(host_index + 1)
-    nvme_transport = "tcp"
-    transport_port = 1099
-
-    # Create NVMe-OF controller
-    command_result = sc_obj.create_controller(ctrlr_uuid=cur_uuid,
-                                              transport=nvme_transport.upper(),
-                                              remote_ip=host_ip,
-                                              nqn=nqn,
-                                              port=transport_port,
-                                              command_duration=5)
-
-    fun_test.log(command_result)
-    fun_test.test_assert(command_result["status"], "Create storage controller for TCP with uuid {} on DUT".
-                         format(cur_uuid))
-
-    # Attach volume to NVMe-OF controller
-    ns_id = host_index + 1
-    command_result = sc_obj.attach_volume_to_controller(ctrlr_uuid=cur_uuid,
-                                                        ns_id=ns_id,
-                                                        vol_uuid=vol_uuid)
-
-    fun_test.log(command_result)
-    fun_test.test_assert(command_result["status"], "Attach NVMeOF controller {} to stripe vol {} over {}".
-                         format(cur_uuid, vol_uuid, nvme_transport))
-
-
-def nvme_connect(host, host_index, f1_ip):
-        nqn = "nqn" + str(host_index + 1)
-        ns_id = host_index + 1
-        nvme_io_queues = 16
-        nvme_transport = "tcp"
-        transport_port = 1099
-        nvme_device = "/dev/nvme0"
-
-        host_instance = host["host_instance"]
-        host_instance.sudo_command("iptables -F && ip6tables -F && dmesg -c > /dev/null")
-        host_instance.sudo_command("systemctl stop irqbalance")
-        irq_bal_stat = host_instance.command("systemctl status irqbalance")
-        if "dead" in irq_bal_stat:
-            fun_test.log("IRQ balance stopped on {}".format(host_index))
-        else:
-            fun_test.log("IRQ balance not stopped on {}".format(host_index))
-            host_instance.sudo_command("tuned-adm profile network-throughput && tuned-adm active")
-
-        # Interface name is not always fixed; filtering on IP of F1 instead (assuming 1 IP for now)
-        host_instance.start_bg_process(command="sudo tcpdump -i any host {} -w nvme_connect_auto.pcap"
-                                       .format(f1_ip))
-        command_result = host_instance.sudo_command(
-                "nvme connect -t {} -a {} -s {} -n {} -i {} -q {}".format(nvme_transport.lower(),
-                                                                          f1_ip,
-                                                                          transport_port,
-                                                                          nqn,
-                                                                          nvme_io_queues,
-                                                                          host["host_ip"]))
-        fun_test.log("nvme_connect command result is: {}".format(command_result))
-        print("last command status is: {}".format(host_instance.exit_status))
-
-        fun_test.sleep("Wait for couple of seconds for the volume to be accessible to the host", 5)
-        host_instance.sudo_command("for i in `pgrep tcpdump`;do kill -9 $i;done")
-        volume_name = nvme_device.replace("/dev/", "") + "n" + str(ns_id)
-        print("exprected vol name: {}".format(volume_name))
-        host_instance.sudo_command("dmesg")
-        lsblk_output = host_instance.lsblk()
-        fun_test.test_assert(volume_name in lsblk_output, "{} device available".format(volume_name))
-        fun_test.test_assert_expected(expected="disk", actual=lsblk_output[volume_name]["type"],
-                                      message="{} device type check".format(volume_name))
-
-
 class WorkloadTriggerTestScript(FunTestScript):
     def describe(self):
         self.set_test_details(steps="""
+        1. Deploy the topology. Bring up F1 with funos 
+        2. Configure Linux Host instance and make it available for test case
         """)
 
     def setup(self):
@@ -283,9 +214,14 @@ class WorkloadTriggerTestScript(FunTestScript):
         self.funcp_spec = {}
         for index in xrange(self.num_duts):
             self.funcp_obj[index] = StorageFsTemplate(self.come_obj[index])
+            '''
             self.funcp_spec[index] = self.funcp_obj[index].deploy_funcp_container(
                 update_deploy_script=self.update_deploy_script, update_workspace=self.update_workspace,
                 mode=self.funcp_mode, launch_resp_parse=True)
+            '''
+            self.funcp_spec[index] = self.funcp_obj[index].deploy_funcp_container(
+                update_deploy_script=self.update_deploy_script, update_workspace=self.update_workspace,
+                mode=self.funcp_mode)
             fun_test.test_assert(self.funcp_spec[index]["status"],
                                  "Starting FunCP docker container in DUT {}".format(index))
             self.funcp_spec[index]["container_names"].sort()
@@ -368,9 +304,11 @@ class CreateStripedVolTestCase(FunTestCase):
     def describe(self):
         self.set_test_details(
             id=1,
-            summary="",
+            summary="Create Stripe Volume and validate events",
             steps='''
-                Blank
+                1. Create Stripe volume
+                2. Attach it to one host and perform sequential write
+                3. Start Read on whole volume
                 ''')
 
     def setup(self):
@@ -386,35 +324,10 @@ class CreateStripedVolTestCase(FunTestCase):
         for k, v in benchmark_dict[testcase].iteritems():
             setattr(self, k, v)
 
-        '''
-        if not hasattr(self, "num_ssd"):
-            self.num_ssd = 6
-        if not hasattr(self, "blt_count"):
-            self.blt_count = 6
-        num_ssd = self.num_ssd
-        fun_test.shared_variables["num_ssd"] = num_ssd
-        fun_test.shared_variables["blt_count"] = self.blt_count
-        '''
-
         # New changes
         self.nvme_block_device = self.nvme_device + "n" + str(self.stripe_details["ns_id"])
         self.volume_name = self.nvme_block_device.replace("/dev/", "")
         fun_test.shared_variables["nvme_block_device"] = self.nvme_block_device
-
-        '''
-        self.fs = fun_test.shared_variables["fs_objs"]
-        self.come_obj = fun_test.shared_variables["come_obj"]
-        self.f1 = fun_test.shared_variables["f1_objs"][0][0]
-        self.storage_controller = fun_test.shared_variables["sc_obj"][0]
-        self.f1_ips = fun_test.shared_variables["f1_ips"][0]
-        self.syslog_level = fun_test.shared_variables["syslog_level"]
-        self.host_handles = fun_test.shared_variables["host_handles"]
-        self.host_ips = fun_test.shared_variables["host_ips"]
-        self.num_f1s = fun_test.shared_variables["num_f1s"]
-        self.test_network = {}
-        self.test_network["f1_loopback_ip"] = self.f1_ips
-        self.host_list = fun_test.shared_variables["host_list"]
-        '''
 
         self.f1_in_use = fun_test.shared_variables["f1_in_use"]
         self.fs = fun_test.shared_variables["fs_obj"]
@@ -492,13 +405,13 @@ class CreateStripedVolTestCase(FunTestCase):
             command_result = self.storage_controller.create_volume(type=self.stripe_details["type"],
                                                                    capacity=self.strip_vol_size,
                                                                    name="stripevol1",
-                                                                   uuid=stripe_uuid,
+                                                                   uuid=stripe_uuid[0],
                                                                    block_size=self.stripe_details["block_size"],
                                                                    stripe_unit=self.stripe_details["stripe_unit"],
                                                                    pvol_id=self.thin_uuid)
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Create Stripe Vol with uuid {} on DUT".
-                                 format(self.stripe_uuid))
+                                 format(self.stripe_uuid[0]))
             fun_test.shared_variables["stripe_uuid"] = self.stripe_uuid
 
             # Create TCP controllers for all hosts
@@ -521,7 +434,7 @@ class CreateStripedVolTestCase(FunTestCase):
                 if index == 0:
                     command_result = self.storage_controller.attach_volume_to_controller(
                         ctrlr_uuid=self.ctrlr_uuid[index],
-                        ns_id=self.ns_id,
+                        ns_id=self.stripe_details["ns_id"],
                         vol_uuid=self.stripe_uuid[0])
                     fun_test.log(command_result)
                     fun_test.test_assert(command_result["status"],
@@ -529,73 +442,24 @@ class CreateStripedVolTestCase(FunTestCase):
                                          format(self.ctrlr_uuid[index], self.stripe_uuid[0],
                                                 self.transport_type.upper()))
 
-            '''
-            # Create TCP controller for 1st host
-            self.ctrlr_uuid = []
-            fun_test.shared_variables["host_count"] = self.num_hosts
-            nvme_transport = self.transport_type
-
-            host_index = 0
-            cur_uuid = generate_uuid()
-            self.ctrlr_uuid.append(cur_uuid)
-            self.nqn = "nqn" + str(host_index + 1)
-
-            # Create NVMe-OF controller
-            command_result = self.storage_controller.create_controller(ctrlr_uuid=cur_uuid,
-                                                                       transport=nvme_transport.upper(),
-                                                                       remote_ip=self.host_list[host_index]["host_ip"],
-                                                                       nqn=self.nqn,
-                                                                       port=self.transport_port,
-                                                                       command_duration=5)
-
-            fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "Create storage controller for TCP with uuid {} on DUT".
-                                 format(cur_uuid))
-
-            # Attach volume to NVMe-OF controller
-            self.ns_id = host_index + 1
-            command_result = self.storage_controller.attach_volume_to_controller(ctrlr_uuid=cur_uuid,
-                                                                                 ns_id=self.ns_id,
-                                                                                 vol_uuid=self.stripe_uuid)
-
-            fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "Attach NVMeOF controller {} to stripe vol {} over {}".
-                                 format(cur_uuid, self.stripe_uuid, nvme_transport))
-
-            self.nqn = "nqn" + str(host_index + 1)
-
-            self.host_instance = self.host_list[host_index]["host_instance"]
-            self.host_instance.sudo_command("iptables -F && ip6tables -F && dmesg -c > /dev/null")
-            self.host_instance.sudo_command("systemctl stop irqbalance")
-            irq_bal_stat = self.host_instance.command("systemctl status irqbalance")
-            if "dead" in irq_bal_stat:
-                fun_test.log("IRQ balance stopped on {}".format(host_index))
-            else:
-                fun_test.log("IRQ balance not stopped on {}".format(host_index))
-                self.host_instance.sudo_command("tuned-adm profile network-throughput && tuned-adm active")
-            '''
-
             # Starting packet capture in all the hosts
-            pcap_started = {}
-            pcap_stopped = {}
-            pcap_pid = {}
-            self.host_info_list = list(self.host_info.items())
+            self.pcap_started = {}
+            self.pcap_stopped = {}
+            self.pcap_pid = {}
             for index, host_name in enumerate(self.host_info):
                 if index == 0:
-                    host_name = self.host_info_list[index][0]
                     fun_test.shared_variables["blt"][host_name] = {}
                     host_handle = self.host_info[host_name]["handle"]
                     test_interface = self.host_info[host_name]["test_interface"].name
-                    pcap_started[host_name] = False
-                    pcap_stopped[host_name] = True
-                    pcap_pid[host_name] = {}
-                    pcap_pid[host_name] = host_handle.tcpdump_capture_start(interface=test_interface,
-                                                                            tcpdump_filename="/tmp/nvme_connect.pcap",
-                                                                            snaplen=1500)
-                    if pcap_pid[host_name]:
+                    self.pcap_started[host_name] = False
+                    self.pcap_stopped[host_name] = True
+                    self.pcap_pid[host_name] = {}
+                    self.pcap_pid[host_name] = host_handle.tcpdump_capture_start(
+                        interface=test_interface, tcpdump_filename="/tmp/nvme_connect.pcap", snaplen=1500)
+                    if self.pcap_pid[host_name]:
                         fun_test.log("Started packet capture in {}".format(host_name))
-                        pcap_started[host_name] = True
-                        pcap_stopped[host_name] = False
+                        self.pcap_started[host_name] = True
+                        self.pcap_stopped[host_name] = False
                     else:
                         fun_test.critical("Unable to start packet capture in {}".format(host_name))
 
@@ -613,9 +477,9 @@ class CreateStripedVolTestCase(FunTestCase):
                                 port=self.transport_port, transport=self.transport_type.lower(),
                                 hostnqn=self.host_info[host_name]["ip"][0])
 
-                        if pcap_started[host_name]:
-                            host_handle.tcpdump_capture_stop(process_id=pcap_pid[host_name])
-                            pcap_stopped[host_name] = True
+                        if self.pcap_started[host_name]:
+                            host_handle.tcpdump_capture_stop(process_id=self.pcap_pid[host_name])
+                            self.pcap_stopped[host_name] = True
 
                         fun_test.test_assert(nvme_connect_status, message="{} - NVME Connect Status".format(host_name))
 
@@ -628,31 +492,6 @@ class CreateStripedVolTestCase(FunTestCase):
                         fun_test.test_assert(volume_name in lsblk_output, "{} device available".format(volume_name))
                         fun_test.test_assert_expected(expected="disk", actual=lsblk_output[volume_name]["type"],
                                                       message="{} device type check".format(volume_name))
-
-            '''
-            # Interface name is not always fixed; filtering on IP of F1 instead (assuming 1 IP for now)
-            self.host_instance.start_bg_process(command="sudo tcpdump -i any host {} -w nvme_connect_auto.pcap"
-                                                .format(self.test_network["f1_loopback_ip"]))
-            if hasattr(self, "nvme_io_queues") and self.nvme_io_queues != 0:
-                command_result = self.host_instance.sudo_command(
-                    "nvme connect -t {} -a {} -s {} -n {} -i {} -q {}".format(self.transport_type.lower(),
-                                                                              self.test_network["f1_loopback_ip"],
-                                                                              self.transport_port,
-                                                                              self.nqn,
-                                                                              self.nvme_io_queues,
-                                                                              self.host_list[host_index]["host_ip"]))
-                fun_test.log(command_result)
-            else:
-                command_result = self.host_instance.sudo_command(
-                    "nvme connect -t {} -a {} -s {} -n {} -q {}".format(self.transport_type.lower(),
-                                                                        self.test_network["f1_loopback_ip"],
-                                                                        str(self.transport_port),
-                                                                        self.nqn,
-                                                                        self.host_list[host_index]["host_ip"]))
-                fun_test.log(command_result)
-            fun_test.sleep("Wait for couple of seconds for the volume to be accessible to the host", 5)
-            self.host_instance.sudo_command("for i in `pgrep tcpdump`;do kill -9 $i;done")
-            '''
 
             # Setting the syslog level
             command_result = self.storage_controller.poke(props_tree=["params/syslog/level", self.syslog_level],
@@ -685,7 +524,8 @@ class CreateStripedVolTestCase(FunTestCase):
                     else:
                         fio_output = host_handle.pcie_fio(filename=self.nvme_block_device, **self.warm_up_fio_cmd_args)
                         fun_test.test_assert(fio_output, "Writing the entire volume")
-                    host_handle.disconnect()
+                    fun_test.shared_variables["blt"]["warmup_io_completed"] = True
+                    # host_handle.disconnect()
 
             after_write_eqm = self.storage_controller.peek(props_tree="stats/eqm")
 
@@ -694,14 +534,6 @@ class CreateStripedVolTestCase(FunTestCase):
                 if (value != current_value) and (field != "incoming BN msg valid"):
                     stats_delta = current_value - value
                     fun_test.log("Write test : there is a mismatch in {} : {}".format(field, stats_delta))
-
-            '''
-            # Mount NVMe disk on host in Read-Only mode if on a filesystem
-            if hasattr(self, "create_file_system") and self.create_file_system:
-                self.host_instance.sudo_command("umount /mnt")
-                self.host_instance.sudo_command("mount -o ro {} /mnt".format(self.nvme_block_device))
-            self.host_instance.disconnect()
-            '''
 
             fun_test.shared_variables["blt"]["setup_created"] = True
 
@@ -723,6 +555,12 @@ class CreateStripedVolTestCase(FunTestCase):
             test_thread_id = {}
             host_clone = {}
 
+            fio_size = int(100 / (self.num_hosts - 1))
+            self.fio_cmd_args1["size"] = "{}{}".format(str(fio_size), "%")
+            print("self.fio_cmd_args_fio_size is: {}".format(self.fio_cmd_args["size"]))
+
+            fio_offset_diff = fio_size
+
             for index, host_name in enumerate(self.host_info):
                 fio_job_args = ""
                 host_handle = self.host_info[host_name]["handle"]
@@ -731,17 +569,101 @@ class CreateStripedVolTestCase(FunTestCase):
                 total_numa_cpus = self.host_info[host_name]["total_numa_cpus"]
                 fio_num_jobs = len(nvme_block_device_list)
 
+                if hasattr(self, "create_file_system") and self.create_file_system:
+                    test_filename = "/mnt/testfile.dat"
+                else:
+                    test_filename = self.nvme_block_device
+
+                if index != 0:
+                    # Create NVMe-OF controller
+                    command_result = self.storage_controller.create_controller(
+                        ctrlr_uuid=self.ctrlr_uuid[index], transport=self.transport_type.upper(),
+                        remote_ip=self.host_info[host_name]["ip"][0], nqn=self.nvme_subsystem, port=self.transport_port,
+                        command_duration=self.command_timeout)
+                    fun_test.log(command_result)
+                    fun_test.test_assert(command_result["status"], "Create Stripe Vol with uuid {} on DUT".
+                                         format(self.stripe_uuid[0]))
+
+                    # Attach volume to NVMe-OF controller
+                    command_result = self.storage_controller.attach_volume_to_controller(
+                        ctrlr_uuid=self.ctrlr_uuid[index], ns_id=self.stripe_details["ns_id"],
+                        vol_uuid=self.stripe_uuid[0])
+                    fun_test.log(command_result)
+                    fun_test.test_assert(command_result["status"],
+                                         "Attach NVMeOF controller {} to stripe vol {} over {}".format(
+                                             self.ctrlr_uuid[index], self.stripe_uuid[0], self.transport_type.upper()))
+
+                    # NVMe connect
+                    fun_test.shared_variables["blt"][host_name] = {}
+                    host_handle = self.host_info[host_name]["handle"]
+                    test_interface = self.host_info[host_name]["test_interface"].name
+                    self.pcap_started[host_name] = False
+                    self.pcap_stopped[host_name] = True
+                    self.pcap_pid[host_name] = {}
+                    self.pcap_pid[host_name] = host_handle.tcpdump_capture_start(
+                        interface=test_interface, tcpdump_filename="/tmp/nvme_connect.pcap", snaplen=1500)
+                    if self.pcap_pid[host_name]:
+                        fun_test.log("Started packet capture in {}".format(host_name))
+                        self.pcap_started[host_name] = True
+                        self.pcap_stopped[host_name] = False
+                    else:
+                        fun_test.critical("Unable to start packet capture in {}".format(host_name))
+
+                    if not fun_test.shared_variables["blt"]["nvme_connect"]:
+                        # Checking nvme-connect status
+                        if not hasattr(self, "nvme_io_queues") or self.nvme_io_queues != 0:
+                            nvme_connect_status = host_handle.nvme_connect(
+                                target_ip=self.test_network["f1_loopback_ip"], nvme_subsystem=self.nvme_subsystem,
+                                port=self.transport_port, transport=self.transport_type.lower(),
+                                nvme_io_queues=self.nvme_io_queues,
+                                hostnqn=self.host_info[host_name]["ip"][0])
+                        else:
+                            nvme_connect_status = host_handle.nvme_connect(
+                                target_ip=self.test_network["f1_loopback_ip"], nvme_subsystem=self.nvme_subsystem,
+                                port=self.transport_port, transport=self.transport_type.lower(),
+                                hostnqn=self.host_info[host_name]["ip"][0])
+
+                        if self.pcap_started[host_name]:
+                            host_handle.tcpdump_capture_stop(process_id=self.pcap_pid[host_name])
+                            self.pcap_stopped[host_name] = True
+
+                        fun_test.test_assert(nvme_connect_status, message="{} - NVME Connect Status".format(host_name))
+
+                        lsblk_output = host_handle.lsblk("-b")
+                        fun_test.simple_assert(lsblk_output, "Listing available volumes")
+
+                        volume_name = self.nvme_device.replace("/dev/", "") + "n" + str(self.stripe_details["ns_id"])
+                        host_handle.sudo_command("dmesg")
+                        lsblk_output = host_handle.lsblk()
+                        fun_test.test_assert(volume_name in lsblk_output, "{} device available".format(volume_name))
+                        fun_test.test_assert_expected(expected="disk", actual=lsblk_output[volume_name]["type"],
+                                                      message="{} device type check".format(volume_name))
+
                 wait_time = self.num_hosts - index
                 host_clone[host_name] = self.host_info[host_name]["handle"].clone()
 
-                test_thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
-                                                                      func=fio_parser,
-                                                                      arg1=host_clone[host_name],
-                                                                      host_index=index,
-                                                                      numjobs=fio_num_jobs,
-                                                                      iodepth=fio_iodepth, name=fio_job_name,
-                                                                      cpus_allowed=host_numa_cpus,
-                                                                      **self.fio_cmd_args)
+                if index == 0:
+                    # Starting Read for whole volume on first host
+                    test_thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
+                                                                          func=fio_parser,
+                                                                          arg1=host_clone[host_name],
+                                                                          host_index=index,
+                                                                          filename=test_filename,
+                                                                          rw=self.fio_modes[0],
+                                                                          iodepth=iodepth,
+                                                                          name="fio_{}".format(host_name),
+                                                                          **self.fio_cmd_args)
+                else:
+                    # Starting IO on rest of hosts for particular LBA range
+                    self.fio_cmd_args1["offset"] = "{}{}".format(str((index - 1) * fio_offset_diff), "%")
+                    test_thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
+                                                                          func=fio_parser,
+                                                                          arg1=host_clone[host_name],
+                                                                          host_index=index,
+                                                                          filename=test_filename,
+                                                                          iodepth=iodepth,
+                                                                          name="fio_{}".format(host_name),
+                                                                          **self.fio_cmd_args1)
 
             # Waiting for all the FIO test threads to complete
             try:
@@ -762,9 +684,8 @@ class CreateStripedVolTestCase(FunTestCase):
             # Summing up the FIO stats from all the hosts
             for index, host_name in enumerate(self.host_info):
                 fun_test.test_assert(fun_test.shared_variables["fio"][index],
-                                     "FIO {} test with the Block Size {} IO depth {} and Numjobs {} on {}"
-                                     .format(row_data_dict["mode"], fio_block_size, fio_iodepth,
-                                             fio_num_jobs * global_num_jobs, host_name))
+                                     "FIO {} test with on {}"
+                                     .format(self.fio_modes[0], host_name))
                 for op, stats in fun_test.shared_variables["fio"][index].items():
                     if op not in aggr_fio_output[iodepth]:
                         aggr_fio_output[iodepth][op] = {}
@@ -782,7 +703,6 @@ class CreateStripedVolTestCase(FunTestCase):
                         aggr_fio_output[iodepth][op][field] = int(round(value / 1000))
                     if "latency" in field:
                         aggr_fio_output[iodepth][op][field] = int(round(value) / self.num_hosts)
-                    row_data_dict[op + field] = aggr_fio_output[iodepth][op][field]
 
             fun_test.log("Processed Aggregated FIO Command Output:\n{}".format(aggr_fio_output[iodepth]))
 
@@ -793,102 +713,6 @@ class CreateStripedVolTestCase(FunTestCase):
 
             fun_test.sleep("Waiting in between iterations", self.iter_interval)
 
-
-        thread_id = {}
-        end_host_thread = {}
-        thread_count = 1
-        wait_time = self.num_hosts + 1 - thread_count
-        end_host_thread[thread_count] = self.host_list[host_index]["host_instance"].clone()
-
-        # Start read traffic from the host
-        # TODO: Change to non-blocking mode
-        if hasattr(self, "create_file_system") and self.create_file_system:
-            test_filename = "/mnt/testfile.dat"
-        else:
-            test_filename = self.nvme_block_device
-
-        thread_id[thread_count] = fun_test.execute_thread_after(time_in_seconds=wait_time,
-                                                                func=fio_parser,
-                                                                arg1=end_host_thread[thread_count],
-                                                                host_index=thread_count,
-                                                                filename=test_filename,
-                                                                rw="randread",
-                                                                **self.fio_cmd_args)
-        fun_test.test_assert(fio_output, "Reading from filesystem")
-        self.host_instance.disconnect()
-
-        print("tc1: run: host_index is: {}".format(host_index))
-        fun_test.shared_variables["host_index"] = host_index
-
-    def cleanup(self):
-        pass
-
-
-class ConnectMoreHosts(FunTestCase):
-    def describe(self):
-        self.set_test_details(
-            id=2,
-            summary="",
-            steps='''
-                Blank
-                ''')
-
-    def setup(self):
-        pass
-
-    def run(self):
-        testcase = self.__class__.__name__
-        benchmark_file = fun_test.get_script_name_without_ext() + ".json"
-        fun_test.log("Benchmark file being used: {}".format(benchmark_file))
-
-        benchmark_dict = {}
-        benchmark_dict = parse_file_to_json(benchmark_file)
-
-        for k, v in benchmark_dict[testcase].iteritems():
-            setattr(self, k, v)
-
-        self.fs = fun_test.shared_variables["fs_obj"]
-        self.come_obj = fun_test.shared_variables["come_obj"]
-        self.f1 = fun_test.shared_variables["f1_objs"][0][0]
-        self.storage_controller = fun_test.shared_variables["sc_obj"][0]
-        self.f1_ips = fun_test.shared_variables["f1_ips"][0]
-        self.host_handles = fun_test.shared_variables["host_handles"]
-        self.host_ips = fun_test.shared_variables["host_ips"]
-        self.num_f1s = fun_test.shared_variables["num_f1s"]
-        self.test_network = {}
-        self.test_network["f1_loopback_ip"] = self.f1_ips
-        self.host_list = fun_test.shared_variables["host_list"]
-        self.num_duts = fun_test.shared_variables["num_duts"]
-        self.num_hosts = fun_test.shared_variables["num_hosts"]
-
-        self.stripe_uuid = fun_test.shared_variables["stripe_uuid"]
-
-        # Create controller for 2nd host
-        host_index = fun_test.shared_variables["host_index"] + 1
-        print("tc2: run: host_index is: {}".format(host_index))
-
-        allow_host_access(self.storage_controller, self.host_list[host_index]["host_ip"], host_index, self.stripe_uuid)
-
-        nvme_connect(self.host_list[host_index], host_index, self.test_network["f1_loopback_ip"])
-
-        self.host_instance = self.host_list[host_index]["host_instance"]
-
-        # Mount NVMe disk on host in Read-Only mode if on a filesystem
-        if hasattr(self, "create_file_system") and self.create_file_system:
-            self.host_instance.sudo_command("umount /mnt")
-            self.host_instance.sudo_command("mount -o ro {} /mnt".format(self.nvme_block_device))
-        self.host_instance.disconnect()
-
-        # Start read traffic from the host
-        # TODO: Change to non-blocking mode
-        if hasattr(self, "create_file_system") and self.create_file_system:
-            fio_output = self.host_instance.pcie_fio(filename="/mnt/testfile.dat",
-                                                     **self.fio_cmd_args)
-        else:
-            fio_output = self.host_instance.pcie_fio(filename=self.nvme_block_device, **self.fio_cmd_args)
-        fun_test.test_assert(fio_output, "Reading from filesystem")
-        self.host_instance.disconnect()
-
     def cleanup(self):
         pass
 
@@ -896,5 +720,4 @@ class ConnectMoreHosts(FunTestCase):
 if __name__ == "__main__":
     testscript = WorkloadTriggerTestScript()
     testscript.add_test_case(CreateStripedVolTestCase())
-    # testscript.add_test_case(ConnectMoreHosts())
     testscript.run()
