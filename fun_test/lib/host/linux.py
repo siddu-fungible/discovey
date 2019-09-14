@@ -2794,6 +2794,14 @@ class Linux(object, ToDictMixin):
         return result
 
     @fun_test.safe
+    def curl(self, url, output_file=None):
+        command = "curl {}".format(url)
+        if output_file:
+            command += " -o {}".format(output_file)
+        self.command(command)
+        return int(self.exit_status()) == 0
+
+    @fun_test.safe
     def destroy(self):
         try:
             self.disconnect()
