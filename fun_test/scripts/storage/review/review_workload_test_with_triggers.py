@@ -396,24 +396,24 @@ class CreateStripedVolTestCase(FunTestCase):
             fun_test.test_assert(command_result["status"], "Create Stripe Vol with uuid {} on DUT".
                                  format(self.stripe_uuid))
 
-            # Create TCP controllers for all hosts
+            # Create TCP controllers for first host
             self.ctrlr_uuid = []
-            for host_name in self.host_info:
-                self.ctrlr_uuid.append(utils.generate_uuid())
-                command_result = self.storage_controller.create_controller(ctrlr_uuid=self.ctrlr_uuid[-1],
-                                                                           transport=self.transport_type.upper(),
-                                                                           remote_ip=self.host_info[host_name]["ip"][0],
-                                                                           nqn=self.nvme_subsystem,
-                                                                           port=self.transport_port,
-                                                                           command_duration=self.command_timeout)
-                fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"],
-                                     "Create Storage Controller for {} with controller uuid {} on DUT".
-                                     format(self.transport_type.upper(), self.ctrlr_uuid[-1]))
-
-            # Attaching volume to NVMeOF controller
             for index, host_name in enumerate(self.host_info):
                 if index == 0:
+                    self.ctrlr_uuid.append(utils.generate_uuid())
+                    command_result = self.storage_controller.create_controller(ctrlr_uuid=self.ctrlr_uuid[-1],
+                                                                               transport=self.transport_type.upper(),
+                                                                               remote_ip=
+                                                                               self.host_info[host_name]["ip"][0],
+                                                                               nqn=self.nvme_subsystem,
+                                                                               port=self.transport_port,
+                                                                               command_duration=self.command_timeout)
+                    fun_test.log(command_result)
+                    fun_test.test_assert(command_result["status"],
+                                         "Create Storage Controller for {} with controller uuid {} on DUT".
+                                         format(self.transport_type.upper(), self.ctrlr_uuid[-1]))
+
+                    # Attaching volume to NVMeOF controller
                     command_result = self.storage_controller.attach_volume_to_controller(
                         ctrlr_uuid=self.ctrlr_uuid[index],
                         ns_id=self.stripe_details["ns_id"],
@@ -554,10 +554,12 @@ class CreateStripedVolTestCase(FunTestCase):
                 else:
                     test_filename = self.nvme_block_device
 
+                print("print: run: current index is: {}".format(index))
                 if index != 0:
-                    # Create NVMe-OF controller
+                    # Create NVMe-OF controller for rest of hosts
+                    self.ctrlr_uuid.append(utils.generate_uuid())
                     command_result = self.storage_controller.create_controller(
-                        ctrlr_uuid=self.ctrlr_uuid[index], transport=self.transport_type.upper(),
+                        ctrlr_uuid=self.ctrlr_uuid[-1], transport=self.transport_type.upper(),
                         remote_ip=self.host_info[host_name]["ip"][0], nqn=self.nvme_subsystem, port=self.transport_port,
                         command_duration=self.command_timeout)
                     fun_test.log(command_result)
@@ -566,12 +568,12 @@ class CreateStripedVolTestCase(FunTestCase):
 
                     # Attach volume to NVMe-OF controller
                     command_result = self.storage_controller.attach_volume_to_controller(
-                        ctrlr_uuid=self.ctrlr_uuid[index], ns_id=self.stripe_details["ns_id"],
+                        ctrlr_uuid=self.ctrlr_uuid[-1], ns_id=self.stripe_details["ns_id"],
                         vol_uuid=self.stripe_uuid)
                     fun_test.log(command_result)
                     fun_test.test_assert(command_result["status"],
                                          "Attach NVMeOF controller {} to stripe vol {} over {}".format(
-                                             self.ctrlr_uuid[index], self.stripe_uuid, self.transport_type.upper()))
+                                             self.ctrlr_uuid[-1], self.stripe_uuid, self.transport_type.upper()))
 
                     # NVMe connect
                     fun_test.shared_variables["blt"][host_name] = {}
@@ -620,10 +622,12 @@ class CreateStripedVolTestCase(FunTestCase):
                                                       message="{} device type check".format(volume_name))
 
                 wait_time = self.num_hosts - index
+                print("print: run: wait time is: {}".format(wait_time))
                 host_clone[host_name] = self.host_info[host_name]["handle"].clone()
 
                 if index == 0:
                     # Starting Read for whole volume on first host
+                    fun_test.log("print: run: if index == 0: starting IO on host: {}".format(host_name))
                     test_thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
                                                                           func=fio_parser,
                                                                           arg1=host_clone[host_name],
@@ -635,6 +639,7 @@ class CreateStripedVolTestCase(FunTestCase):
                                                                           **self.fio_cmd_args)
                 else:
                     # Starting IO on rest of hosts for particular LBA range
+                    fun_test.log("print: run: else index == 0: starting IO on host: {}".format(host_name))
                     self.fio_cmd_args1["offset"] = "{}{}".format(str((index - 1) * fio_offset_diff), "%")
                     test_thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
                                                                           func=fio_parser,
@@ -644,6 +649,7 @@ class CreateStripedVolTestCase(FunTestCase):
                                                                           iodepth=iodepth,
                                                                           name="fio_{}".format(host_name),
                                                                           **self.fio_cmd_args1)
+                print("going for next iteration")
 
             # Waiting for all the FIO test threads to complete
             try:

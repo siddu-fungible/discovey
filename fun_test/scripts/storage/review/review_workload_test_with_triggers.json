@@ -17,7 +17,7 @@
     "disable_f1_index": 0,
     "f1_in_use": 0,
     "load_modules": ["nvme_tcp"],
-    "syslog_level": 2,
+    "syslog_level": 5,
     "command_timeout": 5,
     "reboot_timeout": 600,
     "nvme_device": "/dev/nvme0",
