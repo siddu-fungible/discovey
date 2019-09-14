@@ -65,6 +65,11 @@ class SetupInfo(FunTestCase):
             reboot_count = 100
             fun_test.shared_variables["reboot_count"] = reboot_count
         fun_test.log("Running reboot test for {} iterations".format(reboot_count))
+        if "run_fio" in job_inputs:
+            run_fio = job_inputs["run_fio"]
+            fun_test.shared_variables["run_fio"] = run_fio
+        else:
+            fun_test.shared_variables["run_fio"] = True
 
         topology_helper = TopologyHelper()
 
@@ -139,9 +144,10 @@ class RebootTest(FunTestCase):
         reboot_count = fun_test.shared_variables["reboot_count"]
         fio_seq_tests = ["write", "read"]
         fio_rand_test = ["randwrite", "randread"]
+        run_fio = fun_test.shared_variables["run_fio"]
         seq_fio_cmd_args = {"size": "5G", "verify": "pattern", "verify_pattern": "\\\"DEADBEEF\\\"",
                             "verify_fatal": 1, "bs": "4k", "timeout": 240}
-        rand_fio_cmd_args = {"size": "5G", "verify": "pattern", "verify_pattern": "\\\"DEADCAFE\\\"",
+        rand_fio_cmd_args = {"size": "2G", "verify": "pattern", "verify_pattern": "\\\"DEADCAFE\\\"",
                              "verify_fatal": 1, "bs": "4k", "timeout": 360}
 
         for count in xrange(1, reboot_count + 1):
@@ -149,44 +155,45 @@ class RebootTest(FunTestCase):
             print "Iteration {}".format(count)
             print "================="
 
-            # Start seq fio traffic on F1_0 hosts
-            for test in fio_seq_tests:
-                host_index = 1
-                thread_id = {}
-                for obj in f10_hosts:
-                    thread_id[host_index] = fun_test.execute_thread_after(time_in_seconds=2,
-                                                                          func=fio_parser,
-                                                                          arg1=obj["handle"],
-                                                                          host_index=host_index,
-                                                                          rw=test,
-                                                                          filename="/tmp/seq_test.img",
-                                                                          **seq_fio_cmd_args)
-                    host_index += 1
-                    fun_test.sleep("Fio threadzz", seconds=1)
+            if run_fio:
+                # Start seq fio traffic on F1_0 hosts
+                for test in fio_seq_tests:
+                    host_index = 1
+                    thread_id = {}
+                    for obj in f10_hosts:
+                        thread_id[host_index] = fun_test.execute_thread_after(time_in_seconds=2,
+                                                                              func=fio_parser,
+                                                                              arg1=obj["handle"],
+                                                                              host_index=host_index,
+                                                                              rw=test,
+                                                                              filename="/tmp/seq_test.img",
+                                                                              **seq_fio_cmd_args)
+                        host_index += 1
+                        fun_test.sleep("Fio threadzz", seconds=1)
 
-                fun_test.sleep("Sleeping between thread join...", seconds=10)
-                for x in xrange(1, host_index):
-                    fun_test.log("Joining thread {}".format(x))
-                    fun_test.join_thread(fun_test_thread_id=thread_id[x])
+                    fun_test.sleep("Sleeping between thread join...", seconds=10)
+                    for x in xrange(1, host_index):
+                        fun_test.log("Joining thread {}".format(x))
+                        fun_test.join_thread(fun_test_thread_id=thread_id[x])
 
-            # Start rand fio traffic on F1_0 hosts
-            for test in fio_rand_test:
-                host_index = 1
-                thread_id = {}
-                for obj in f10_hosts:
-                    thread_id[host_index] = fun_test.execute_thread_after(time_in_seconds=2,
-                                                                          func=fio_parser,
-                                                                          arg1=obj["handle"],
-                                                                          host_index=host_index,
-                                                                          rw=test,
-                                                                          filename="/tmp/rand_test.img",
-                                                                          **rand_fio_cmd_args)
-                    host_index += 1
-                    fun_test.sleep("Fio threadzz", seconds=1)
-                fun_test.sleep("Sleeping between thread join...", seconds=10)
-                for x in xrange(1, host_index):
-                    fun_test.log("Joining thread {}".format(x))
-                    fun_test.join_thread(fun_test_thread_id=thread_id[x])
+                # Start rand fio traffic on F1_0 hosts
+                for test in fio_rand_test:
+                    host_index = 1
+                    thread_id = {}
+                    for obj in f10_hosts:
+                        thread_id[host_index] = fun_test.execute_thread_after(time_in_seconds=2,
+                                                                              func=fio_parser,
+                                                                              arg1=obj["handle"],
+                                                                              host_index=host_index,
+                                                                              rw=test,
+                                                                              filename="/tmp/rand_test.img",
+                                                                              **rand_fio_cmd_args)
+                        host_index += 1
+                        fun_test.sleep("Fio threadzz", seconds=1)
+                    fun_test.sleep("Sleeping between thread join...", seconds=10)
+                    for x in xrange(1, host_index):
+                        fun_test.log("Joining thread {}".format(x))
+                        fun_test.join_thread(fun_test_thread_id=thread_id[x])
 
             # Reboot hosts in threaded mode
             host_index = 1
@@ -204,8 +211,20 @@ class RebootTest(FunTestCase):
 
             for obj in f10_hosts:
                 host_os = obj["handle"].command("cat /etc/redhat-release")
-                if "ubuntu" in host_os.lower():
+                if "centos" not in host_os.lower() or "cent os" not in host_os.lower():
                     fun_test.test_assert(False, "Machine booted to Ubuntu")
+
+            # Check PCIe Link on host
+            servers_mode = self.server_key["fs"][fs_name]["hosts"]
+            for server in servers_mode:
+                result = verify_host_pcie_link(hostname=server, mode=servers_mode[server], reboot=False)
+                fun_test.test_assert(expression=(result != "0"),
+                                     message="Make sure that PCIe links on host %s went up"
+                                             % server)
+                if result == "2":
+                    fun_test.add_checkpoint(
+                        "<b><font color='red'><PCIE link did not come up in %s mode</font></b>"
+                        % servers_mode[server])
 
         fun_test.log("Test done")
 
