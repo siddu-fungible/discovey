@@ -428,6 +428,7 @@ class CreateStripedVolTestCase(FunTestCase):
             self.pcap_started = {}
             self.pcap_stopped = {}
             self.pcap_pid = {}
+            fun_test.shared_variables["fio"] = {}
             for index, host_name in enumerate(self.host_info):
                 if index == 0:
                     fun_test.shared_variables["blt"][host_name] = {}
@@ -539,7 +540,7 @@ class CreateStripedVolTestCase(FunTestCase):
 
             fio_size = int(100 / (self.num_hosts - 1))
             self.fio_cmd_args1["size"] = "{}{}".format(str(fio_size), "%")
-            print("self.fio_cmd_args_fio_size is: {}".format(self.fio_cmd_args["size"]))
+            print("self.fio_cmd_args_fio_size is: {}".format(self.fio_cmd_args1["size"]))
 
             fio_offset_diff = fio_size
 
