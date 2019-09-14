@@ -564,8 +564,9 @@ class CreateStripedVolTestCase(FunTestCase):
                         remote_ip=self.host_info[host_name]["ip"][0], nqn=self.nvme_subsystem, port=self.transport_port,
                         command_duration=self.command_timeout)
                     fun_test.log(command_result)
-                    fun_test.test_assert(command_result["status"], "Create Stripe Vol with uuid {} on DUT".
-                                         format(self.stripe_uuid))
+                    fun_test.test_assert(command_result["status"],
+                                         "Create Storage Controller for {} with controller uuid {} on DUT".
+                                         format(self.transport_type.upper(), self.ctrlr_uuid[-1]))
 
                     # Attach volume to NVMe-OF controller
                     command_result = self.storage_controller.attach_volume_to_controller(
@@ -634,7 +635,6 @@ class CreateStripedVolTestCase(FunTestCase):
                                                                           arg1=host_clone[host_name],
                                                                           host_index=index,
                                                                           filename=test_filename,
-                                                                          rw=self.fio_modes[0],
                                                                           iodepth=iodepth,
                                                                           name="fio_{}".format(host_name),
                                                                           **self.fio_cmd_args)
@@ -701,7 +701,20 @@ class CreateStripedVolTestCase(FunTestCase):
             fun_test.sleep("Waiting in between iterations", self.iter_interval)
 
     def cleanup(self):
-        pass
+        try:
+            # Saving the pcap file captured during the nvme connect to the pcap_artifact_file file
+            for host_name in self.host_info:
+                host_handle = self.host_info[host_name]["handle"]
+                pcap_post_fix_name = "{}_nvme_connect.pcap".format(host_name)
+                pcap_artifact_file = fun_test.get_test_case_artifact_file_name(post_fix_name=pcap_post_fix_name)
+
+                fun_test.scp(source_port=host_handle.ssh_port, source_username=host_handle.ssh_username,
+                             source_password=host_handle.ssh_password, source_ip=host_handle.host_ip,
+                             source_file_path="/tmp/nvme_connect.pcap", target_file_path=pcap_artifact_file)
+                fun_test.add_auxillary_file(description="Host {} NVME connect pcap".format(host_name),
+                                            filename=pcap_artifact_file)
+        except Exception as ex:
+            fun_test.critical(str(ex))
 
 
 if __name__ == "__main__":
