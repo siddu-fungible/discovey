@@ -245,6 +245,16 @@ class ECVolumeLevelScript(FunTestScript):
 
     def cleanup(self):
         try:
+            # add syslogs
+            host_syslog_path = "/var/log/syslog"
+            syslog_file = fun_test.get_test_case_artifact_file_name(post_fix_name="end_host_syslog.txt")
+            fun_test.scp(source_file_path=host_syslog_path,
+                         target_file_path=syslog_file,
+                         source_ip=self.end_host.host_ip,
+                         source_username=self.end_host.ssh_username,
+                         source_password=self.end_host.ssh_password,
+                         source_port=self.end_host.ssh_port)
+            fun_test.add_auxillary_file(description="Host Machine Syslogs", filename=syslog_file)
             if 'configured_vols' in fun_test.shared_variables and fun_test.shared_variables['configured_vols']:
                 configured_vols = fun_test.shared_variables['configured_vols']
                 for effort in configured_vols:
