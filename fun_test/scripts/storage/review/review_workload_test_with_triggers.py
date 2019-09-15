@@ -299,15 +299,15 @@ class CreateStripedVolTestCase(FunTestCase):
     def setup(self):
         testcase = self.__class__.__name__
 
-        benchmark_parsing = True
-        benchmark_file = fun_test.get_script_name_without_ext() + ".json"
-        fun_test.log("Benchmark file being used: {}".format(benchmark_file))
+        # Parsing the global config and assign them as object members
+        config_file = fun_test.get_script_name_without_ext() + ".json"
+        fun_test.log("Config file being used: {}".format(config_file))
+        config_dict = utils.parse_file_to_json(config_file)
 
-        benchmark_dict = {}
-        benchmark_dict = parse_file_to_json(benchmark_file)
-
-        for k, v in benchmark_dict[testcase].iteritems():
+        for k, v in config_dict[testcase].items():
             setattr(self, k, v)
+
+        fun_test.log("Config Config: {}".format(self.__dict__))
 
         # New changes
         self.nvme_block_device = self.nvme_device + "n" + str(self.stripe_details["ns_id"])
@@ -391,7 +391,8 @@ class CreateStripedVolTestCase(FunTestCase):
                                                                    uuid=self.stripe_uuid,
                                                                    block_size=self.stripe_details["block_size"],
                                                                    stripe_unit=self.stripe_details["stripe_unit"],
-                                                                   pvol_id=self.thin_uuid)
+                                                                   pvol_id=self.thin_uuid,
+                                                                   command_duration=self.command_timeout)
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Create Stripe Vol with uuid {} on DUT".
                                  format(self.stripe_uuid))
@@ -417,7 +418,8 @@ class CreateStripedVolTestCase(FunTestCase):
                     command_result = self.storage_controller.attach_volume_to_controller(
                         ctrlr_uuid=self.ctrlr_uuid[index],
                         ns_id=self.stripe_details["ns_id"],
-                        vol_uuid=self.stripe_uuid)
+                        vol_uuid=self.stripe_uuid,
+                        command_duration=self.command_timeout)
                     fun_test.log(command_result)
                     fun_test.test_assert(command_result["status"],
                                          "Attach NVMeOF controller {} to stripe vol {} over {}".
@@ -528,32 +530,30 @@ class CreateStripedVolTestCase(FunTestCase):
         fio_output = {}
         aggr_fio_output = {}
 
+        if hasattr(self, "create_file_system") and self.create_file_system:
+            test_filename = "/mnt/testfile.dat"
+        else:
+            test_filename = self.nvme_block_device
+
+        fio_size = int(100 / (self.num_hosts - 1))
+        self.fio_cmd_args1["size"] = "{}{}".format(str(fio_size), "%")
+        print("self.fio_cmd_args_fio_size is: {}".format(self.fio_cmd_args1["size"]))
+
+        fio_offset_diff = fio_size
+
         for iodepth in self.fio_iodepth:
             fio_result[iodepth] = True
             fio_output[iodepth] = {}
             aggr_fio_output[iodepth] = {}
-            fio_job_args = ""
-            fio_cmd_args = {}
 
             test_thread_id = {}
             host_clone = {}
 
-            fio_size = int(100 / (self.num_hosts - 1))
-            self.fio_cmd_args1["size"] = "{}{}".format(str(fio_size), "%")
-            print("self.fio_cmd_args_fio_size is: {}".format(self.fio_cmd_args1["size"]))
-
-            fio_offset_diff = fio_size
-
             for index, host_name in enumerate(self.host_info):
-                fio_job_args = ""
-                host_handle = self.host_info[host_name]["handle"]
+                '''
                 host_numa_cpus = self.host_info[host_name]["host_numa_cpus"]
                 total_numa_cpus = self.host_info[host_name]["total_numa_cpus"]
-
-                if hasattr(self, "create_file_system") and self.create_file_system:
-                    test_filename = "/mnt/testfile.dat"
-                else:
-                    test_filename = self.nvme_block_device
+                '''
 
                 print("print: run: current index is: {}".format(index))
                 if index != 0:
@@ -571,7 +571,7 @@ class CreateStripedVolTestCase(FunTestCase):
                     # Attach volume to NVMe-OF controller
                     command_result = self.storage_controller.attach_volume_to_controller(
                         ctrlr_uuid=self.ctrlr_uuid[-1], ns_id=self.stripe_details["ns_id"],
-                        vol_uuid=self.stripe_uuid)
+                        vol_uuid=self.stripe_uuid, command_duration=self.command_timeout)
                     fun_test.log(command_result)
                     fun_test.test_assert(command_result["status"],
                                          "Attach NVMeOF controller {} to stripe vol {} over {}".format(
@@ -652,6 +652,26 @@ class CreateStripedVolTestCase(FunTestCase):
                                                                           **self.fio_cmd_args1)
                 print("going for next iteration")
 
+            fun_test.sleep("to initiate detach from host", self.detach_time)
+            nvme_disconnect_cmd = "nvme disconnect -n {}".format(self.nvme_subsystem)
+
+            for index, host_name in enumerate(self.host_info):
+                if index != 0:
+                    # Executing NVMe disconnect from all the hosts
+                    host_handle = self.host_info[host_name]["handle"]
+                    host_handle.sudo_command(command=nvme_disconnect_cmd, timeout=60)
+                    nvme_disconnect_exit_status = host_handle.exit_status()
+                    fun_test.test_assert_expected(expected=0, actual=nvme_disconnect_exit_status,
+                                                  message="{} - NVME Disconnect Status".format(host_name))
+
+                    # Detach volume from NVMe-OF controller
+                    command_result = self.storage_controller.detach_volume_from_controller(
+                        ctrlr_uuid=self.ctrlr_uuid[index], ns_id=self.stripe_details["ns_id"],
+                        command_duration=self.command_timeout)
+                    fun_test.log(command_result)
+                    fun_test.test_assert(command_result["status"], "{} - Detach NVMeOF controller {}".format(
+                        host_name, self.ctrlr_uuid[index]))
+
             # Waiting for all the FIO test threads to complete
             try:
                 fun_test.log("Test Thread IDs: {}".format(test_thread_id))
@@ -699,6 +719,7 @@ class CreateStripedVolTestCase(FunTestCase):
                 continue
 
             fun_test.sleep("Waiting in between iterations", self.iter_interval)
+        print ("out of loop")
 
     def cleanup(self):
         try:
