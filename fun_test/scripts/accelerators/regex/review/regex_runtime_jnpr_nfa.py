@@ -153,7 +153,7 @@ class HigherLevelTestcase(FunTestCase):
         for json in self.jsons:
             print "json:", json
             note = self.description + " " + self.XDATA_LISTS + " JSON: " + json
-            boot_args = "app=pm_test_bootstrap rbm-size=" + rbm_size + " param-file=" + json + " syslog=2 --disable-wu-watchdog"
+            boot_args = "app=pm_test_bootstrap rbm-size=" + rbm_size + " param-file=" + json + " --bm-profile-regex syslog=2 --disable-wu-watchdog"
             tags = str(fun_test.get_wall_clock_time())
             print "TAGS:", tags
             params = {
