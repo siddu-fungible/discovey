@@ -285,16 +285,9 @@ class WorkloadTriggerTestScript(FunTestScript):
         pass
 
 
-class CreateStripedVolTestCase(FunTestCase):
+class WorkloadTriggerTestCase(FunTestCase):
     def describe(self):
-        self.set_test_details(
-            id=1,
-            summary="Create Stripe Volume and validate events",
-            steps='''
-                1. Create Stripe volume
-                2. Attach it to one host and perform sequential write
-                3. Start Read on whole volume
-                ''')
+        pass
 
     def setup(self):
         testcase = self.__class__.__name__
@@ -309,7 +302,6 @@ class CreateStripedVolTestCase(FunTestCase):
 
         fun_test.log("Config Config: {}".format(self.__dict__))
 
-        # New changes
         self.nvme_block_device = self.nvme_device + "n" + str(self.stripe_details["ns_id"])
         self.volume_name = self.nvme_block_device.replace("/dev/", "")
         fun_test.shared_variables["nvme_block_device"] = self.nvme_block_device
@@ -330,17 +322,6 @@ class CreateStripedVolTestCase(FunTestCase):
         fun_test.shared_variables["transport_type"] = self.transport_type
 
         print("test level setup: self.host_info is: {}".format(self.host_info))
-
-        # self.num_hosts = fun_test.shared_variables["num_hosts"]
-        '''
-        self.final_host_ips = self.host_ips[:]
-        print("self.final_host_ips: {}".format(self.final_host_ips))
-        if len(self.host_ips) < self.num_hosts:
-            print("len of self.host_ips is less than self.num_hosts")
-            for i in range(len(self.host_ips), self.num_hosts):
-                self.final_host_ips.append(self.host_ips[len(self.host_ips) % i])
-        fun_test.shared_variables["final_host_ips"] = self.final_host_ips
-        '''
 
         if "blt" not in fun_test.shared_variables or not fun_test.shared_variables["blt"]["setup_created"]:
             fun_test.shared_variables["blt"] = {}
@@ -534,6 +515,7 @@ class CreateStripedVolTestCase(FunTestCase):
             test_filename = "/mnt/testfile.dat"
         else:
             test_filename = self.nvme_block_device
+        volume_name = self.nvme_device.replace("/dev/", "") + "n" + str(self.stripe_details["ns_id"])
 
         fio_size = int(100 / (self.num_hosts - 1))
         self.fio_cmd_args1["size"] = "{}{}".format(str(fio_size), "%")
@@ -616,7 +598,6 @@ class CreateStripedVolTestCase(FunTestCase):
                         lsblk_output = host_handle.lsblk("-b")
                         fun_test.simple_assert(lsblk_output, "Listing available volumes")
 
-                        volume_name = self.nvme_device.replace("/dev/", "") + "n" + str(self.stripe_details["ns_id"])
                         host_handle.sudo_command("dmesg")
                         lsblk_output = host_handle.lsblk()
                         fun_test.test_assert(volume_name in lsblk_output, "{} device available".format(volume_name))
@@ -650,27 +631,6 @@ class CreateStripedVolTestCase(FunTestCase):
                                                                           iodepth=iodepth,
                                                                           name="fio_{}".format(host_name),
                                                                           **self.fio_cmd_args1)
-                print("going for next iteration")
-
-            fun_test.sleep("to initiate detach from host", self.detach_time)
-            nvme_disconnect_cmd = "nvme disconnect -n {}".format(self.nvme_subsystem)
-
-            for index, host_name in enumerate(self.host_info):
-                if index != 0:
-                    # Executing NVMe disconnect from all the hosts
-                    host_handle = self.host_info[host_name]["handle"]
-                    host_handle.sudo_command(command=nvme_disconnect_cmd, timeout=60)
-                    nvme_disconnect_exit_status = host_handle.exit_status()
-                    fun_test.test_assert_expected(expected=0, actual=nvme_disconnect_exit_status,
-                                                  message="{} - NVME Disconnect Status".format(host_name))
-
-                    # Detach volume from NVMe-OF controller
-                    command_result = self.storage_controller.detach_volume_from_controller(
-                        ctrlr_uuid=self.ctrlr_uuid[index], ns_id=self.stripe_details["ns_id"],
-                        command_duration=self.command_timeout)
-                    fun_test.log(command_result)
-                    fun_test.test_assert(command_result["status"], "{} - Detach NVMeOF controller {}".format(
-                        host_name, self.ctrlr_uuid[index]))
 
             # Waiting for all the FIO test threads to complete
             try:
@@ -690,9 +650,7 @@ class CreateStripedVolTestCase(FunTestCase):
 
             # Summing up the FIO stats from all the hosts
             for index, host_name in enumerate(self.host_info):
-                fun_test.test_assert(fun_test.shared_variables["fio"][index],
-                                     "FIO {} test with on {}"
-                                     .format(self.fio_modes[0], host_name))
+                fun_test.test_assert(fun_test.shared_variables["fio"][index], "FIO test with on {}".format(host_name))
                 for op, stats in fun_test.shared_variables["fio"][index].items():
                     if op not in aggr_fio_output[iodepth]:
                         aggr_fio_output[iodepth][op] = {}
@@ -719,12 +677,191 @@ class CreateStripedVolTestCase(FunTestCase):
                 continue
 
             fun_test.sleep("Waiting in between iterations", self.iter_interval)
-        print ("out of loop")
+
+        iodepth = self.fio_iodepth[0]
+        fun_test.log("\n********** Starting Disconnect test **********\n")
+        for index, host_name in enumerate(self.host_info):
+            print("print: disconnect run: current index is: {}".format(index))
+
+            wait_time = self.num_hosts - index
+            host_clone[host_name] = self.host_info[host_name]["handle"].clone()
+
+            if index == 0:
+                # Starting Read for whole volume on first host
+                fun_test.log("print: diconnect run: if index == 0: starting IO on host: {}".format(host_name))
+                test_thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
+                                                                      func=fio_parser,
+                                                                      arg1=host_clone[host_name],
+                                                                      host_index=index,
+                                                                      filename=test_filename,
+                                                                      iodepth=iodepth,
+                                                                      name="detach_fio_{}".format(host_name),
+                                                                      **self.fio_cmd_args)
+            else:
+                # Starting IO on rest of hosts for particular LBA range
+                fun_test.log("print: disconnect run: else index == 0: starting IO on host: {}".format(host_name))
+                self.fio_cmd_args1["offset"] = "{}{}".format(str((index - 1) * fio_offset_diff), "%")
+                test_thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
+                                                                      func=fio_parser,
+                                                                      arg1=host_clone[host_name],
+                                                                      host_index=index,
+                                                                      filename=test_filename,
+                                                                      iodepth=iodepth,
+                                                                      name="detach_fio_{}".format(host_name),
+                                                                      **self.fio_cmd_args1)
+
+            fun_test.sleep("to initiate detach from host", self.detach_time)
+            # nvme_disconnect_cmd = "nvme disconnect -n {}".format(self.nvme_subsystem)
+            nvme_disconnect_cmd = "nvme disconnect -d {}".format(volume_name)
+
+            if index != 0:
+                # Executing NVMe disconnect from all the hosts
+                host_handle = self.host_info[host_name]["handle"]
+                host_handle.sudo_command(command=nvme_disconnect_cmd, timeout=60)
+                nvme_disconnect_exit_status = host_handle.exit_status()
+                fun_test.test_assert_expected(expected=0, actual=nvme_disconnect_exit_status,
+                                              message="{} - NVME Disconnect Status".format(host_name))
+
+                # Detach volume from NVMe-OF controller
+                command_result = self.storage_controller.detach_volume_from_controller(
+                    ctrlr_uuid=self.ctrlr_uuid[index], ns_id=self.stripe_details["ns_id"],
+                    command_duration=self.command_timeout)
+                fun_test.log(command_result)
+                fun_test.test_assert(command_result["status"], "{} - Detach NVMeOF controller {}".format(
+                    host_name, self.ctrlr_uuid[index]))
+
+        # Waiting for all the FIO test threads to complete
+        try:
+            fun_test.log("Test Thread IDs: {}".format(test_thread_id))
+            for index, host_name in enumerate(self.host_info):
+                fio_output[iodepth][host_name] = {}
+                fun_test.log("Joining fio thread {}".format(index))
+                fun_test.join_thread(fun_test_thread_id=test_thread_id[index], sleep_time=1)
+                fun_test.log("FIO Command Output from {}:\n {}".format(host_name,
+                                                                       fun_test.shared_variables["fio"][index]))
+        except Exception as ex:
+            fun_test.critical(str(ex))
+            fun_test.log("FIO Command Output from {}:\n {}".format(host_name,
+                                                                   fun_test.shared_variables["fio"][index]))
+        finally:
+            self.storage_controller.verbose = True
+
+        # Summing up the FIO stats from all the hosts
+        for index, host_name in enumerate(self.host_info):
+            if index == 0:
+                fun_test.test_assert(fun_test.shared_variables["fio"][index], "FIO test with on {}".format(host_name))
+            else:
+                # TODO: Capture the failure
+                fun_test.log("FIO test with on {}: {}".format(host_name, fun_test.shared_variables["fio"][index]))
+                fun_test.test_assert_expected(expected={}, actual=fun_test.shared_variables["fio"][index],
+                                              message="Expected IO failure due to Detach")
+
+        fun_test.log("\n********** Starting Re-Attach hosts test **********\n")
+        for index, host_name in enumerate(self.host_info):
+            print("print: Reattach run: current index is: {}".format(index))
+
+            if index != 0:
+                # Re-Attach volume to NVMe-OF controller
+                command_result = self.storage_controller.attach_volume_to_controller(
+                    ctrlr_uuid=self.ctrlr_uuid[index], ns_id=self.stripe_details["ns_id"],
+                    vol_uuid=self.stripe_uuid, command_duration=self.command_timeout)
+                fun_test.log(command_result)
+                fun_test.test_assert(command_result["status"],
+                                     "Re-Attach NVMeOF controller {} to stripe vol {} over {}".format(
+                                         self.ctrlr_uuid[index], self.stripe_uuid, self.transport_type.upper()))
+
+                # NVMe connect
+                fun_test.shared_variables["blt"][host_name] = {}
+                host_handle = self.host_info[host_name]["handle"]
+                test_interface = self.host_info[host_name]["test_interface"].name
+                self.pcap_started[host_name] = False
+                self.pcap_stopped[host_name] = True
+                self.pcap_pid[host_name] = {}
+                self.pcap_pid[host_name] = host_handle.tcpdump_capture_start(
+                    interface=test_interface, tcpdump_filename="/tmp/nvme_reconnect.pcap", snaplen=1500)
+                if self.pcap_pid[host_name]:
+                    fun_test.log("Started packet capture in {}".format(host_name))
+                    self.pcap_started[host_name] = True
+                    self.pcap_stopped[host_name] = False
+                else:
+                    fun_test.critical("Unable to start packet capture in {}".format(host_name))
+
+                if not fun_test.shared_variables["blt"]["nvme_connect"]:
+                    # Checking nvme-connect status
+                    if not hasattr(self, "nvme_io_queues") or self.nvme_io_queues != 0:
+                        nvme_connect_status = host_handle.nvme_connect(
+                            target_ip=self.test_network["f1_loopback_ip"], nvme_subsystem=self.nvme_subsystem,
+                            port=self.transport_port, transport=self.transport_type.lower(),
+                            nvme_io_queues=self.nvme_io_queues,
+                            hostnqn=self.host_info[host_name]["ip"][0])
+                    else:
+                        nvme_connect_status = host_handle.nvme_connect(
+                            target_ip=self.test_network["f1_loopback_ip"], nvme_subsystem=self.nvme_subsystem,
+                            port=self.transport_port, transport=self.transport_type.lower(),
+                            hostnqn=self.host_info[host_name]["ip"][0])
+
+                    if self.pcap_started[host_name]:
+                        host_handle.tcpdump_capture_stop(process_id=self.pcap_pid[host_name])
+                        self.pcap_stopped[host_name] = True
+
+                    fun_test.test_assert(nvme_connect_status, message="{} - NVME Connect Status".format(host_name))
+
+                    lsblk_output = host_handle.lsblk("-b")
+                    fun_test.simple_assert(lsblk_output, "Listing available volumes")
+
+                    # volume_name = self.nvme_device.replace("/dev/", "") + "n" + str(self.stripe_details["ns_id"])
+                    host_handle.sudo_command("dmesg")
+                    lsblk_output = host_handle.lsblk()
+                    fun_test.test_assert(volume_name in lsblk_output, "{} device available".format(volume_name))
+                    fun_test.test_assert_expected(expected="disk", actual=lsblk_output[volume_name]["type"],
+                                                  message="{} device type check".format(volume_name))
+
+            wait_time = self.num_hosts - index
+            host_clone[host_name] = self.host_info[host_name]["handle"].clone()
+
+            if index == 0:
+                # Starting Read for whole volume on first host
+                fun_test.log("print: Reattach run: if index == 0: starting IO on host: {}".format(host_name))
+                test_thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
+                                                                      func=fio_parser,
+                                                                      arg1=host_clone[host_name],
+                                                                      host_index=index,
+                                                                      filename=test_filename,
+                                                                      iodepth=iodepth,
+                                                                      name="detach_fio_{}".format(host_name),
+                                                                      **self.fio_cmd_args)
+            else:
+                # Starting IO on rest of hosts for particular LBA range
+                fun_test.log("print: reattach run: else index == 0: starting IO on host: {}".format(host_name))
+                self.fio_cmd_args1["offset"] = "{}{}".format(str((index - 1) * fio_offset_diff), "%")
+                test_thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
+                                                                      func=fio_parser,
+                                                                      arg1=host_clone[host_name],
+                                                                      host_index=index,
+                                                                      filename=test_filename,
+                                                                      iodepth=iodepth,
+                                                                      name="detach_fio_{}".format(host_name),
+                                                                      **self.fio_cmd_args1)
+        # Waiting for all the FIO test threads to complete
+        try:
+            fun_test.log("Test Thread IDs: {}".format(test_thread_id))
+            for index, host_name in enumerate(self.host_info):
+                fio_output[iodepth][host_name] = {}
+                fun_test.log("Joining fio thread {}".format(index))
+                fun_test.join_thread(fun_test_thread_id=test_thread_id[index], sleep_time=1)
+                fun_test.log("FIO Command Output from {}:\n {}".format(host_name,
+                                                                       fun_test.shared_variables["fio"][index]))
+        except Exception as ex:
+            fun_test.critical(str(ex))
+            fun_test.log("FIO Command Output from {}:\n {}".format(host_name,
+                                                                   fun_test.shared_variables["fio"][index]))
+        finally:
+            self.storage_controller.verbose = True
 
     def cleanup(self):
         try:
             # Saving the pcap file captured during the nvme connect to the pcap_artifact_file file
-            for host_name in self.host_info:
+            for index, host_name in enumerate(self.host_info):
                 host_handle = self.host_info[host_name]["handle"]
                 pcap_post_fix_name = "{}_nvme_connect.pcap".format(host_name)
                 pcap_artifact_file = fun_test.get_test_case_artifact_file_name(post_fix_name=pcap_post_fix_name)
@@ -734,11 +871,46 @@ class CreateStripedVolTestCase(FunTestCase):
                              source_file_path="/tmp/nvme_connect.pcap", target_file_path=pcap_artifact_file)
                 fun_test.add_auxillary_file(description="Host {} NVME connect pcap".format(host_name),
                                             filename=pcap_artifact_file)
+                if index != 0:
+                    pcap_post_fix_name = "{}_nvme_reconnect.pcap".format(host_name)
+                    pcap_artifact_file = fun_test.get_test_case_artifact_file_name(post_fix_name=pcap_post_fix_name)
+
+                    fun_test.scp(source_port=host_handle.ssh_port, source_username=host_handle.ssh_username,
+                                 source_password=host_handle.ssh_password, source_ip=host_handle.host_ip,
+                                 source_file_path="/tmp/nvme_reconnect.pcap", target_file_path=pcap_artifact_file)
+                    fun_test.add_auxillary_file(description="Host {} NVME re-connect pcap".format(host_name),
+                                                filename=pcap_artifact_file)
         except Exception as ex:
             fun_test.critical(str(ex))
 
 
+class StripedVolVerifyIO(WorkloadTriggerTestCase):
+    def describe(self):
+        self.set_test_details(
+            id=1,
+            summary="Create Stripe Volume and validate events",
+            steps='''
+                1. Create Stripe volume
+                2. Attach volume to one host and perform sequential write
+                3. Start Random Read on whole volume from first host
+                4. Start Random Read-Write with data integrity from rest of the volumes
+                5. Ensure data integrity
+                6. Initiate IO again and Disconnect hosts one by one
+                7. Verify impact on IO
+                8. Re-attach hosts and initiate IO again 
+                ''')
+
+    def setup(self):
+        super(StripedVolVerifyIO, self).setup()
+
+    def run(self):
+        super(StripedVolVerifyIO, self).run()
+
+    def cleanup(self):
+        super(StripedVolVerifyIO, self).cleanup()
+
+
 if __name__ == "__main__":
     testscript = WorkloadTriggerTestScript()
-    testscript.add_test_case(CreateStripedVolTestCase())
+    testscript.add_test_case(StripedVolVerifyIO())
     testscript.run()
