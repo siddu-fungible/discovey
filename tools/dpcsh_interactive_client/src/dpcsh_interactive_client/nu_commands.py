@@ -13,6 +13,10 @@ TOTAL_CORES_PER_CLUSTER = 6
 TOTAL_VPS_PER_CORE = 4
 START_VP_NUMBER = 8
 
+def do_sleep_for_interval():
+    time.sleep(TIME_INTERVAL)
+    return True
+
 class PortCommands(object):
     def __init__(self, dpc_client):
         self.dpc_client = dpc_client
@@ -1030,7 +1034,7 @@ class PeekCommands(object):
                     return cmd, master_table_obj
                 print master_table_obj
                 print "\n########################  %s ########################\n" % str(self._get_timestamp())
-                time.sleep(TIME_INTERVAL)
+                do_sleep_for_interval()
             except KeyboardInterrupt:
                 self.dpc_client.disconnect()
                 break
@@ -1076,7 +1080,7 @@ class PeekCommands(object):
                 prev_result = result
                 print table_obj
                 print "\n########################  %s ########################\n" % str(self._get_timestamp())
-                time.sleep(TIME_INTERVAL)
+                do_sleep_for_interval()
             except KeyboardInterrupt:
                 self.dpc_client.disconnect()
                 break
@@ -1258,7 +1262,7 @@ class PeekCommands(object):
                 prev_result = result
                 print master_table_obj
                 print "\n########################  %s ########################\n" % str(self._get_timestamp())
-                time.sleep(TIME_INTERVAL)
+                do_sleep_for_interval()
             except KeyboardInterrupt:
                 self.dpc_client.disconnect()
                 break
@@ -1309,12 +1313,12 @@ class PeekCommands(object):
                         prev_result = result
                         print table_obj
                         print "\n########################  %s ########################\n" % str(self._get_timestamp())
-                        time.sleep(TIME_INTERVAL)
+                        do_sleep_for_interval()
                     else:
                         if get_result_only:
                             return cmd, "Empty Result"
                         print "Empty Result"
-                        time.sleep(TIME_INTERVAL)
+                        do_sleep_for_interval()
                 except KeyboardInterrupt:
                     self.dpc_client.disconnect()
                     break
@@ -1443,7 +1447,7 @@ class PeekCommands(object):
                     nuflex_prev_result = nuflex_result
                     print master_table_obj
                     print "\n########################  %s ########################\n" % str(self._get_timestamp())
-                    time.sleep(TIME_INTERVAL)
+                    do_sleep_for_interval()
                 except KeyboardInterrupt:
                     self.dpc_client.disconnect()
                     break
@@ -1497,7 +1501,7 @@ class PeekCommands(object):
                         prev_result = result
                         print table_obj
                         print "\n########################  %s ########################\n" % str(self._get_timestamp())
-                        time.sleep(TIME_INTERVAL)
+                        do_sleep_for_interval()
                 except KeyboardInterrupt:
                     self.dpc_client.disconnect()
                     break
@@ -1572,7 +1576,7 @@ class PeekCommands(object):
                             print table_obj
                             print "\n########################  %s ########################\n" % \
                                   str(self._get_timestamp())
-                            time.sleep(TIME_INTERVAL)
+                            do_sleep_for_interval()
                         else:
                             if get_result_only:
                                 return cmd, "Empty Result"
@@ -1642,7 +1646,7 @@ class PeekCommands(object):
                 prev_result = result
                 print master_table_obj
                 print "\n########################  %s ########################\n" % str(self._get_timestamp())
-                time.sleep(TIME_INTERVAL)
+                do_sleep_for_interval()
             except KeyboardInterrupt:
                 self.dpc_client.disconnect()
                 break
@@ -1705,7 +1709,7 @@ class PeekCommands(object):
                         print table_obj
                         print "\n########################  %s ########################\n" % \
                               str(self._get_timestamp())
-                        time.sleep(TIME_INTERVAL)
+                        do_sleep_for_interval()
                     else:
                         print "Empty Result"
                 except KeyboardInterrupt:
@@ -1739,7 +1743,7 @@ class PeekCommands(object):
                         print master_table_obj
                         print "\n########################  %s ########################\n" % \
                               str(self._get_timestamp())
-                        time.sleep(TIME_INTERVAL)
+                        do_sleep_for_interval()
                     else:
                         print "Empty Result"
                 except KeyboardInterrupt:
@@ -1794,7 +1798,7 @@ class PeekCommands(object):
                         print master_table_obj
                         print "\n########################  %s ########################\n" % \
                               str(self._get_timestamp())
-                        time.sleep(TIME_INTERVAL)
+                        do_sleep_for_interval()
                     else:
                         print "Empty Result"
                 except KeyboardInterrupt:
@@ -1852,7 +1856,7 @@ class PeekCommands(object):
                     prev_result = global_result
                     print master_table_obj
                     print "\n########################  %s ########################\n" % str(self._get_timestamp())
-                    time.sleep(TIME_INTERVAL)
+                    do_sleep_for_interval()
                 except KeyboardInterrupt:
                     self.dpc_client.disconnect()
                     break
@@ -1926,7 +1930,7 @@ class PeekCommands(object):
                             print master_table_obj
                             print "\n########################  %s ########################\n" % \
                                   str(self._get_timestamp())
-                            time.sleep(TIME_INTERVAL)
+                            do_sleep_for_interval()
                         else:
                             if get_result_only:
                                 return cmd, "Empty Result"
@@ -2108,7 +2112,7 @@ class PeekCommands(object):
                             print master_table_obj
                             print "\n########################  %s ########################\n" % \
                                   str(self._get_timestamp())
-                            time.sleep(TIME_INTERVAL)
+                            do_sleep_for_interval()
                         else:
                             if get_result_only:
                                 return cmd, "Empty Result"
@@ -2341,7 +2345,7 @@ class PeekCommands(object):
                         print master_table_obj
                         print "\n########################  %s ########################\n" % \
                               str(self._get_timestamp())
-                        time.sleep(TIME_INTERVAL)
+                        do_sleep_for_interval()
                     else:
                         if get_result_only:
                             return cmd, "Empty Result"
@@ -2423,7 +2427,7 @@ class PeekCommands(object):
                         return cmd, master_table_obj
                     print master_table_obj
                     print "\n########################  %s ########################\n" % str(self._get_timestamp())
-                    time.sleep(TIME_INTERVAL)
+                    do_sleep_for_interval()
                 except KeyboardInterrupt:
                     self.dpc_client.disconnect()
                     break
@@ -2512,7 +2516,7 @@ class PeekCommands(object):
                         print master_table_obj
                         print "\n########################  %s ########################\n" % \
                               str(self._get_timestamp())
-                        time.sleep(TIME_INTERVAL)
+                        do_sleep_for_interval()
                     else:
                         if get_result_only:
                             return cmd, "Empty Result"
@@ -2593,7 +2597,7 @@ class PeekCommands(object):
                     prev_result = result
                     print master_table_obj
                     print "\n########################  %s ########################\n" % str(self._get_timestamp())
-                    time.sleep(TIME_INTERVAL)
+                    do_sleep_for_interval()
                 except KeyboardInterrupt:
                     self.dpc_client.disconnect()
                     break
@@ -2639,7 +2643,7 @@ class PeekCommands(object):
                     prev_result = result
                     print table_obj
                     print "\n########################  %s ########################\n" % str(self._get_timestamp())
-                    time.sleep(TIME_INTERVAL)
+                    do_sleep_for_interval()
                 except KeyboardInterrupt:
                     self.dpc_client.disconnect()
                     break
@@ -2717,7 +2721,7 @@ class PeekCommands(object):
                         print master_table_obj
                         print "\n########################  %s ########################\n" % \
                               str(self._get_timestamp())
-                        time.sleep(TIME_INTERVAL)
+                        do_sleep_for_interval()
                     else:
                         if get_result_only:
                             return cmd, "Empty Result"
@@ -2753,7 +2757,7 @@ class PeekCommands(object):
                 prev_result = result
                 print table_obj
                 print "\n########################  %s ########################\n" % str(self._get_timestamp())
-                time.sleep(TIME_INTERVAL)
+                do_sleep_for_interval()
             except KeyboardInterrupt:
                 self.dpc_client.disconnect()
                 break
@@ -2880,12 +2884,12 @@ class PeekCommands(object):
                         prev_result = result
                         print table_obj
                         print "\n########################  %s ########################\n" % str(self._get_timestamp())
-                        time.sleep(TIME_INTERVAL)
+                        do_sleep_for_interval()
                     else:
                         if get_result_only:
                             return cmd, "Empty Result"
                         print "Empty Result"
-                        time.sleep(TIME_INTERVAL)
+                        do_sleep_for_interval()
                 except KeyboardInterrupt:
                     self.dpc_client.disconnect()
                     break
@@ -2925,7 +2929,7 @@ class PeekCommands(object):
                         print table_obj
                         print "\n########################  %s ########################\n" % \
                               str(self._get_timestamp())
-                        time.sleep(TIME_INTERVAL)
+                        do_sleep_for_interval()
                 except KeyboardInterrupt:
                     self.dpc_client.disconnect()
                     break
@@ -2982,7 +2986,7 @@ class PeekCommands(object):
                         prev_result = result
                         print table_obj
                         print "\n########################  %s ########################\n" % str(self._get_timestamp())
-                        time.sleep(TIME_INTERVAL)
+                        do_sleep_for_interval()
                     else:
                         print "Empty Result"
                 except KeyboardInterrupt:
@@ -3051,7 +3055,7 @@ class PeekCommands(object):
                         print master_table_obj
                         prev_result = result
                         print "\n########################  %s ########################\n" % str(self._get_timestamp())
-                        time.sleep(TIME_INTERVAL)
+                        do_sleep_for_interval()
                     else:
                         print 'Empty Result'
                 except KeyboardInterrupt:
@@ -3150,7 +3154,7 @@ class PeekCommands(object):
                         print master_table_obj
                         prev_result = result
                         print "\n########################  %s ########################\n" % str(self._get_timestamp())
-                        time.sleep(TIME_INTERVAL)
+                        do_sleep_for_interval()
                     else:
                         print 'Empty Result'
                 except KeyboardInterrupt:
@@ -3184,7 +3188,7 @@ class PeekCommands(object):
                         print table_obj
                         prev_result = result
                         print "\n########################  %s ########################\n" % str(self._get_timestamp())
-                        time.sleep(TIME_INTERVAL)
+                        do_sleep_for_interval()
                     else:
                         print "Empty Result"
                 except KeyboardInterrupt:
@@ -3264,7 +3268,7 @@ class PeekCommands(object):
                         print master_table_obj
                         prev_result = result
                         print "\n########################  %s ########################\n" % str(self._get_timestamp())
-                        time.sleep(TIME_INTERVAL)
+                        do_sleep_for_interval()
                     else:
                         print "Empty Result"
                 except KeyboardInterrupt:
@@ -3307,7 +3311,7 @@ class PeekCommands(object):
                         print master_table_obj
                         prev_result = result
                         print "\n########################  %s ########################\n" % str(self._get_timestamp())
-                        time.sleep(TIME_INTERVAL)
+                        do_sleep_for_interval()
                     else:
                         print "Empty Result"
                 except KeyboardInterrupt:
@@ -3386,7 +3390,7 @@ class PeekCommands(object):
                         print master_table_obj
                         prev_result = result
                         print "\n########################  %s ########################\n" % str(self._get_timestamp())
-                        time.sleep(TIME_INTERVAL)
+                        do_sleep_for_interval()
                     else:
                         print "Empty Result"
                         break
@@ -3846,7 +3850,7 @@ class FlowCommands(object):
                             else:
                                 print "No rx entries found"
                     print "\n########################  %s ########################\n" % str(self._get_timestamp())
-                    time.sleep(TIME_INTERVAL)
+                    do_sleep_for_interval()
             except KeyboardInterrupt:
                 self.dpc_client.disconnect()
         except Exception as ex:
@@ -3884,7 +3888,7 @@ class FlowCommands(object):
                         print master_table_obj
                         prev_result = result
                         print "\n########################  %s ########################\n" % str(self._get_timestamp())
-                        time.sleep(TIME_INTERVAL)
+                        do_sleep_for_interval()
                     else:
                         print "Empty Result"
                 except KeyboardInterrupt:
@@ -3971,7 +3975,7 @@ class FlowCommands(object):
                         print master_table_obj
                         prev_result = result
                         print "\n########################  %s ########################\n" % str(self._get_timestamp())
-                        time.sleep(TIME_INTERVAL)
+                        do_sleep_for_interval()
                     else:
                         print "Empty Result"
                 except KeyboardInterrupt:
@@ -4075,7 +4079,7 @@ class DebugCommands(PeekCommands):
                     print master_table_obj
                     print "\n########################  %s ########################\n" % \
                           str(self._get_timestamp())
-                    time.sleep(TIME_INTERVAL)
+                    do_sleep_for_interval()
                 except KeyboardInterrupt:
                     self.dpc_client.disconnect()
                     break
@@ -4109,7 +4113,7 @@ class DebugCommands(PeekCommands):
                         print table_obj
                         print "\n########################  %s ########################\n" % \
                               str(self._get_timestamp())
-                        time.sleep(TIME_INTERVAL)
+                        do_sleep_for_interval()
                     else:
                         if get_result_only:
                             return cmd, "Empty Result"

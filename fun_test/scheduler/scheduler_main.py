@@ -700,8 +700,8 @@ class SuiteWorker(Thread):
 
         console_log_file_name = self.get_job_dir() + "/" + get_flat_console_log_file_name("/{}".format(script_path), script_item_index)
         suite = self.get_suite()
-        if suite and suite.type == "TASK":
-            console_log_file_name = self.get_job_dir() + "/" + os.path.basename(script_path) + ".task.log.txt"
+        # if suite and suite.type == "TASK":
+        #    console_log_file_name = self.get_job_dir() + "/" + os.path.basename(script_path) + ".task.log.txt"
 
         try:
 

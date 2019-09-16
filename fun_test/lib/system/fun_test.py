@@ -318,8 +318,12 @@ class FunTest:
 
     def _prepare_build_parameters(self):
         tftp_image_path = self.get_job_environment_variable("tftp_image_path")
+        with_stable_master = self.get_job_environment_variable("with_stable_master")
+
         if tftp_image_path:
             self.build_parameters["tftp_image_path"] = tftp_image_path
+        elif with_stable_master:
+            self.build_parameters["with_stable_master"] = with_stable_master
         else:
             # Check if it was stored by a previous script
             tftp_image_path = self.get_stored_environment_variable(variable_name="tftp_image_path")
@@ -555,6 +559,13 @@ class FunTest:
 
         fun_test.log("Join complete for Thread-id: {}".format(fun_test_thread_id))
         return True
+
+
+    def fetch_stable_master(self):
+        from lib.system.build_helper import BuildHelper
+        result = None
+        bh = BuildHelper(parameters=self.build_parameters)
+        return result
 
     def build(self):
         from lib.system.build_helper import BuildHelper
@@ -1423,6 +1434,9 @@ class FunTestScript(object):
                                                                tags=suite_execution_tags,
                                                                inputs=fun_test.get_job_inputs())
                     test_case.execution_id = te.execution_id
+
+            if fun_test.build_parameters and "with_stable_master" in fun_test.build_parameters and fun_test.build_parameters["with_stable_master"]:
+                fun_test.test_assert(fun_test.fetch_stable_master(), "Fetch stable master image from dochub")
 
             tftp_image_path_provided = "tftp_image_path" in fun_test.build_parameters and fun_test.build_parameters["tftp_image_path"]
             if fun_test.is_with_jenkins_build() and fun_test.suite_execution_id and not tftp_image_path_provided:
