@@ -115,6 +115,15 @@ export class SuitesViewComponent implements OnInit {
   }
 
 
-
+  onDeleteSuite(suite) {
+    if (confirm(`Are you sure, you want to delete ${suite.name}`)) {
+      this.service.delete(suite).subscribe(response => {
+        this.loggerService.success(`Suite ${suite.name} deleted`);
+        this.refreshAll();
+      }, error => {
+        this.loggerService.error("Unable to delete suite");
+      })
+    }
+  }
 
 }

@@ -23,6 +23,7 @@ import {
   animate,
   transition,
 } from '@angular/animations';
+import {SuiteEditorService, Suite} from "./suite-editor/suite-editor.service";
 
 class FilterButton {
   displayString: string = null;
@@ -122,6 +123,7 @@ export class RegressionComponent implements OnInit {
   fetchedSuites: boolean = false;
   suitesInfo: any;
   suitesInfoKeys: any = [];
+  suiteMap: {[key: number]: Suite} = {};
 
   // Re-run options
   reRunOptionsReRunFailed: boolean = false;
@@ -139,7 +141,8 @@ export class RegressionComponent implements OnInit {
               private router: Router,
               private userService: UserService,
               private fb: FormBuilder,
-              private modalService: NgbModal) {
+              private modalService: NgbModal,
+              private suiteService: SuiteEditorService) {
     this.stateStringMap = this.regressionService.stateStringMap;
     this.stateMap = this.regressionService.stateMap;
   }
@@ -242,14 +245,27 @@ export class RegressionComponent implements OnInit {
       });
     }
 
+    this.suiteService.suites<Suite[]>(null, 1000, 1).subscribe(response => {
+      let allSuites = response;
+      allSuites.forEach(suite => {
+        this.suiteMap[suite.id] = suite;
+        this.suitesInfoKeys.push(suite.name);
+      });
+      this.suitesInfoKeys.sort();
+      this.fetchedSuites = true;
+    });
+
+    /*
     this.suites().subscribe((response) => {
       this.suitesInfo = response;
+
       for (let suites of Object.keys(this.suitesInfo)) {
         this.suitesInfoKeys.push(suites);
       }
       this.suitesInfoKeys.sort();
+
       this.fetchedSuites = true;
-    });
+    });*/
 
     this.userService.getUserMap().subscribe((response) => {
       this.userMap = response;
@@ -676,6 +692,10 @@ export class RegressionComponent implements OnInit {
         return {'atLeastOne': true};
       }
       return null;
+  }
+
+  onSuiteDetail(suiteId) {
+    window.location.href = '/regression/suite_editor/' + suiteId;
   }
 
 }
