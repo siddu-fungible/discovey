@@ -67,7 +67,8 @@ class WebBackup(FunTestCase):
         fun_test.log("Files found: {}".format(files_from_today))
 
         for file in files_from_today:
-            if file.startswith("fun_test") and file.endswith(".tgz"):
+            base_name = os.path.basename(file)
+            if base_name.startswith("fun_test") and base_name.endswith(".tgz"):
                 backup_file_found = file
                 break
         fun_test.test_assert(backup_file_found, "Backup file found")
