@@ -1,0 +1,9 @@
+{
+  "PcreDflt": {
+    "jsons":["all_lsu.json"],
+    "XDATA_LISTS": "/project/users/QA/regression/data_store/regex/pcre_dfa_runtime_1/jenkins.list",
+    "description":"DFA sanity F1 Automated run",
+    "rbm_size": "1m"
+  }
+}
+
