@@ -1,0 +1,9 @@
+{
+  "PcreDflt": {
+    "jsons":["all_lsu.json"],
+    "XDATA_LISTS": "/project/users/mkumar/s1_dfa_sanity/jenkins.list",
+    "description":"[new h/w version] DFA sanity S1 Automated run",
+    "rbm_size": "1m"
+  }
+}
+
