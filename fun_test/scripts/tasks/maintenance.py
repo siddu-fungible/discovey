@@ -45,7 +45,47 @@ class ManageSsh(FunTestCase):
         fun_test.test_assert(len(all_sshs) <= max_allowed_ssh, "Num ssh < {}".format(max_allowed_ssh))
 
 
+class WebBackup(FunTestCase):
+    BACKUP_SCRIPT = "backup_db_raw.sh"
+    def describe(self):
+        self.set_test_details(id=2,
+                              summary="Take web database backups",
+                              steps="""
+                              """)
+
+    def setup(self):
+        pass
+
+    def run(self):
+
+        t = TaskTemplate()
+        t.call("./{}".format(self.BACKUP_SCRIPT), working_directory=WEB_DIR)
+        current_time = get_current_time()
+        top_of_the_day = current_time - timedelta(hours=current_time.hour, minutes=current_time.minute, seconds=current_time.second)
+        files_from_today = t.list_files_by_time(directory=DATA_STORE_DIR + "/web_backup", from_time=top_of_the_day)
+        backup_file_found = None
+        fun_test.log("Files found: {}".format(files_from_today))
+
+        for file in files_from_today:
+            base_name = os.path.basename(file)
+            if base_name.startswith("fun_test") and base_name.endswith(".tgz"):
+                backup_file_found = file
+                break
+        fun_test.test_assert(backup_file_found, "Backup file found")
+        file_size = t.get_file_size(file_name=backup_file_found)
+
+        one_kb = 1024
+        one_mb = 1024 * one_kb
+        minimum_size = 20 * one_mb
+        fun_test.test_assert(file_size > minimum_size, "Backup file size > {}".format(minimum_size))
+
+        pass
+
+    def cleanup(self):
+        pass
+
 if __name__ == "__main__":
     myscript = MaintenanceScript()
     myscript.add_test_case(ManageSsh())
+    myscript.add_test_case(WebBackup())
     myscript.run()

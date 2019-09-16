@@ -6,6 +6,7 @@ from storage_commands import *
 from cmd_arg_parser import *
 import sys
 
+
 class CmdController(Cmd):
 
     def __init__(self, target_ip, target_port, verbose=False):
@@ -895,7 +896,8 @@ class CmdController(Cmd):
     # Storage Peek stats
     def peek_stats_ssds(self, args):
         grep = args.grep
-        self._storage_peek_obj.peek_connected_ssds(grep=grep)
+        ssd_ids = args.ssd_ids
+        self._storage_peek_obj.peek_connected_ssds(ssd_ids=ssd_ids, grep=grep)
 
     def peek_blt_vol_stats(self, args):
         vol_id = args.vol_id
@@ -1044,6 +1046,11 @@ class CmdController(Cmd):
             self._debug_cmd_obj.debug_vp_util_pp(cluster_id=cluster_id, core_id=core_id, grep_regex=grep_regex)
         elif cid_flag and core_id_flag:
             self._debug_cmd_obj.debug_vp_util(cluster_id=cluster_id, core_id=core_id, grep_regex=grep_regex)
+
+    # Peek storage commands
+    def peek_storage_vols(self, args):
+        grep = args.grep
+        self._storage_peek_obj.peek_storage_volumes(grep=grep)
 
     # Set handler functions for the sub commands
 
@@ -1229,10 +1236,12 @@ class CmdController(Cmd):
     peek_stats_ddr_parser.set_defaults(func=peek_ddr_stats)
     peek_stats_rdma_parser.set_defaults(func=peek_stats_rdma)
 
-    # Storage Peek Commands
     peek_stats_ssds_parser.set_defaults(func=peek_stats_ssds)
     peek_stats_blt_vol_parser.set_defaults(func=peek_blt_vol_stats)
     peek_stats_rds_vol_parser.set_defaults(func=peek_rds_vol_stats)
+
+    # Storage Peek Commands
+    peek_storage_vol_parser.set_defaults(func=peek_storage_vols)
 
 
     # -------------- Clear Command Handlers ----------------
@@ -1318,7 +1327,7 @@ class CmdController(Cmd):
 
 
 if __name__ == '__main__':
-    cmd_obj = CmdController(target_ip="fs56-come", target_port=40220, verbose=False)
+    cmd_obj = CmdController(target_ip="fs66-come", target_port=40221, verbose=False)
     cmd_obj.cmdloop(intro="hello")
 
 

@@ -11,7 +11,7 @@ tags = ""
 test_result = True
 
 def validate_job(self, validation_required=True):
-    fun_test.sleep("Waiting 240 before fetching last job info ...", 240)
+    #fun_test.sleep("Waiting 240 before fetching last job info ...", 240)
     self.lsf_status_server = fun_test.shared_variables["lsf_status_server"]
     print "self.lsf_status_server: ", self.lsf_status_server
 
@@ -30,17 +30,34 @@ def validate_job(self, validation_required=True):
 def validate_rgx_result(self):
     print "data store:", DATA_STORE_DIR
     test_result = True
-    funos_logs_file = DATA_STORE_DIR+"/funos_logs.txt"
+    #funos_logs_file = DATA_STORE_DIR+"/funos_logs.txt"
+    funos_logs_file = DATA_STORE_DIR+"/"+self.job_dir.split("/")[-1]+".txt"
     file_name = self.job_dir+"/mail.txt"
-    fun_test.test_assert(fun_test.scp(source_file_path=file_name,
+    # remove stale entry of mail.txt
+    #try:
+    #    fun_test.remove_file(funos_logs_file)
+    #except:
+    #    fun_test.log("No stale file")
+    num_polls = 60 # Max 3 Hrs
+    #scp_op = False
+    for poll in range(num_polls):
+        fun_test.scp(source_file_path=file_name,
                                       source_ip="qa-ubuntu-02",
                                       source_username="auto_admin",
                                       source_password="fun123",
                                       source_port=22,
                                       target_file_path=funos_logs_file,
                                       recursive=False,
-                                      timeout=300),
-                         message="scp funos logs", ignore_on_success=True)
+                                      timeout=300)
+        if os.path.exists(funos_logs_file):
+            fun_test.log("SCP of mail.txt successful")
+            break
+        else:
+            fun_test.sleep("Polling for mail.txt...", 3*60)
+            #fun_test.log("Polling for mail.txt ...")
+            #time.sleep(2*60)
+
+
     with open(funos_logs_file, "r") as f_in:
         log_data = f_in.read()
     try:
@@ -147,27 +164,32 @@ class HigherLevelTestcase(FunTestCase):
         jenkins_manager = JenkinsManager()
         funos_makeflags = "PM_TESTS=1 XDATA_LISTS=" + self.XDATA_LISTS
         rbm_size = self.rbm_size
-        max_duration = 10
+        max_duration = 890
         global tags
         print "All jsons: ", self.jsons
         for json in self.jsons:
             print "json:", json
             note = self.description + " " + self.XDATA_LISTS + " JSON: " + json
-            boot_args = "app=pm_test_bootstrap rbm-size=" + rbm_size + " param-file=" + json + " --bm-profile-regex syslog=2 --disable-wu-watchdog"
+            boot_args = "app=pm_test_bootstrap rbm-size=" + rbm_size + " param-file=" + json + " --bm-profile-regex syslog=6"
             tags = str(fun_test.get_wall_clock_time())
             print "TAGS:", tags
+            funos_branch = "nfa_s1_upgrade",
             params = {
+                "RUN_TARGET": "protium_s",
+                "HW_MODEL": "S1_Compute",
+                "HW_VERSION": "rel_09012019",
+                "BRANCH_FunOS": "",
                 "BOOTARGS": boot_args,
                 "FUNOS_MAKEFLAGS": funos_makeflags,
                 "MAX_DURATION": max_duration,
                 "RUN_MODE": "Batch",
                 "NOTE": note,
-                "FAST_EXIT": "False",
+                "FAST_EXIT": "True",
                 "TAGS": tags
             }
 
             build_result = jenkins_manager.build(params=params, extra_emails=[
-                "jitendra.lulla@fungible.com"],
+                "mahesh.kumar@fungible.com"],
                                                  wait_time_for_build_complete=25 * 60)
             fun_test.test_assert(build_result, "Build completed normally: for Graphs in {}".format(json))
             fun_test.test_assert_expected(actual=build_result.lower(), expected="success", message="Successfully built")
@@ -192,10 +214,10 @@ class HigherLevelTestcase(FunTestCase):
         fun_test.log("Testcase cleanup")
 
 
-class SnortNfaDflt1_20(HigherLevelTestcase):
+class PcreDflt(HigherLevelTestcase):
     def describe(self):
         self.set_test_details(id=3,
-                              summary="Runtime: SNORT NFA Graphs, default args, (Graphs 1 - 20)",
+                              summary="Runtime: PCRE DFA Graphs, default args",
                               steps="""
         1. Steps 1
         2. Steps 2
@@ -203,39 +225,19 @@ class SnortNfaDflt1_20(HigherLevelTestcase):
                               """)
 
     def setup(self):
-        super(SnortNfaDflt1_20, self).setup()
+        super(PcreDflt, self).setup()
 
     def run(self):
-        super(SnortNfaDflt1_20, self).run()
+        super(PcreDflt, self).run()
 
     def cleanup(self):
-        super(SnortNfaDflt1_20, self).cleanup()
-
-class SnortNfaDflt40_50(HigherLevelTestcase):
-    def describe(self):
-        self.set_test_details(id=4,
-                              summary="Runtime: SNORT NFA Graphs, default args, (Graphs 40 - 50)",
-                              steps="""
-        1. Steps 1
-        2. Steps 2
-        3. Steps 3
-                              """)
-
-    def setup(self):
-        super(SnortNfaDflt40_50, self).setup()
-
-    def run(self):
-        super(SnortNfaDflt40_50, self).run()
-
-    def cleanup(self):
-        super(SnortNfaDflt40_50, self).cleanup()
+        super(PcreDflt, self).cleanup()
 
 
 if __name__ == "__main__":
     myscript = MyScript()
 
-    myscript.add_test_case(SnortNfaDflt1_20())
-    myscript.add_test_case(SnortNfaDflt40_50())
+    myscript.add_test_case(PcreDflt())
 
     myscript.run()
 

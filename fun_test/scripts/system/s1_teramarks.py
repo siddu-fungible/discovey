@@ -118,7 +118,7 @@ class EcTeramarkTc(PalladiumTc):
 
 
 class DfaTeramarkTc(PalladiumTc):
-    boot_args = "app=dfa_perf_bootstrap rbm-size=1m dfa_perf.pc_mask=255 dfa_perf.nflows=3072 dfa_perf.niterations=1024 syslog=2"
+    boot_args = "app=dfa_perf_bootstrap rbm-size=1m dfa_perf.pc_mask=3 --bm-profile-regex dfa_perf.nflows=3072 dfa_perf.niterations=1024 syslog=2"
     tags = "qa_s1_dfa_teramark"
     note = "DFA teramark app on S1"
     fun_os_make_flags = "PM_TESTS=1"
@@ -134,7 +134,7 @@ class DfaTeramarkTc(PalladiumTc):
 
 
 class NfaTeramarkTc(PalladiumTc):
-    boot_args = "app=nfa_perf_bootstrap rbm-size=1m nfa_perf.pc_mask=255 nfa_perf.nflows=3584 nfa_perf.niterations=1024 syslog=2"
+    boot_args = "app=nfa_perf_bootstrap rbm-size=1m nfa_perf.pc_mask=3 --bm-profile-regex nfa_perf.nflows=48 nfa_perf.niterations=1024 syslog=2"
     tags = "qa_s1_nfa_teramark"
     note = "NFA teramark app on S1"
     fun_os_make_flags = "PM_TESTS=1"
