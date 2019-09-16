@@ -304,12 +304,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     //let key = this._getBuildKey(x);
     let key = x;
     let s = {};
-    let keyDate = new Date(key);
-    let workAroundDate = new Date(2019, 6, 27);
-    // TODO: workaround due to https://github.com/fungible-inc/Integration/pull/691
-    if (keyDate < workAroundDate) {
-      key = key.replace(/..$/, "00");
-    }
 
     if (this.buildInfo && key in this.buildInfo) {
       softwareDate = this.buildInfo[key]["software_date"];

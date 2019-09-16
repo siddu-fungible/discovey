@@ -93,7 +93,7 @@ export class PerformanceService {
       } else {
         this.buildInfo = {};
         Object.keys(response.data).forEach((key) => {
-          let pstKey = this.commonService.convertToTimezone(key, this.TIMEZONE);
+          let pstKey = this.commonService.convertEpochToDate(Number(key), this.TIMEZONE);
           this.buildInfo[this.commonService.addLeadingZeroesToDate(pstKey)] = response.data[key];
         });
         return of(this.buildInfo);

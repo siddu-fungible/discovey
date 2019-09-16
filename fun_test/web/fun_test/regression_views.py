@@ -511,12 +511,13 @@ def build_to_date_map(request):
     end_date = get_current_time()
     start_date = end_date - timedelta(days=30)
     date_range = [start_date, end_date]
-    filtered_entries = JenkinsJobIdMap.objects.filter(build_date__range=date_range)
+    filtered_entries = JenkinsJobIdMap.objects.filter(build_date__range=date_range).order_by("build_date")
     build_info = {}
     for entry in filtered_entries:
         try:
             key = timezone.localtime(entry.build_date)
-            build_info[str(key)] = {"software_date": entry.software_date,
+            key = get_epoch_time_from_datetime(entry.build_date)
+            build_info[key] = {"software_date": entry.software_date,
                                "hardware_version": entry.hardware_version,
                                "fun_sdk_branch": entry.fun_sdk_branch,
                                "git_commit": entry.git_commit,
