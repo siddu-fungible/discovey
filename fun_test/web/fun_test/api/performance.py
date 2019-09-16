@@ -175,7 +175,6 @@ def interested_metrics(request, workspace_id=None):
         interested_metrics = InterestedMetrics.objects.filter(q)
         for metric in interested_metrics:
             result.append(metric.to_dict())
-            # get_leaf_interested_metrics(metric=metric, result=result)
     elif request.method == "DELETE":
         metric_id = request.GET.get("metric_id", None)
         if metric_id:
@@ -183,16 +182,6 @@ def interested_metrics(request, workspace_id=None):
             entry = InterestedMetrics.objects.get(q)
             entry.delete()
     return result
-
-
-def get_leaf_interested_metrics(metric, result):
-    chart = MetricChart.objects.get(metric_id=metric.metric_id)
-    result.append(metric.to_dict())
-    if not chart.leaf:
-        children = chart.get_children()
-        for child in children:
-            metric["metric_id"] = int(child)
-            get_leaf_interested_metrics(metric=metric, result=result)
 
 
 @csrf_exempt
