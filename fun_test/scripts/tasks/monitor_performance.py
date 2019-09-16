@@ -22,7 +22,7 @@ class MyScript(FunTestScript):
 
 class PerformanceTc(FunTestCase):
     workspaces = [{"id": 1912, "extra_email": ["storage-test@fungible.com", "harinadh.saladi@fungible.com"]},
-                     {"id": 2088, "extra_email": ["mohit.saxena@fungible.com"]}]
+                     {"id": 2088, "extra_email": ["mohit.saxena@fungible.com", "network-test@fungible.com"]}]
     regression_email = TEAM_REGRESSION_EMAIL
 
     def setup(self):

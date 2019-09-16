@@ -45,7 +45,9 @@ export class CommonService {
   }
 
   convertToTimezone(dateTime, timeZone) {
-    if (dateTime instanceof String) {
+    if (dateTime instanceof Date) {
+      dateTime = dateTime;
+    } else {
       let d = new Date(dateTime.replace(/\s+/g, 'T'));
       let epochValue = d.getTime();
       dateTime = new Date(epochValue);
