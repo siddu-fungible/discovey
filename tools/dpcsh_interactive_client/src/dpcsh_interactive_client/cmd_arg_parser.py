@@ -1127,9 +1127,16 @@ peek_malloc_agent_non_coh_stats_parser.add_argument('-grep', help="Grep regex pa
 
 
 # Storage Peek Commands
+peek_storage_parser = base_peek_subparsers.add_parser('storage', help="Peek storage")
+peek_storage_parsers = peek_storage_parser.add_subparsers(title="subcommands", help="")
+
+peek_storage_vol_parser = peek_storage_parsers.add_parser('volumes', help="Shows volumes attached to DUT")
+peek_storage_vol_parser.add_argument('-grep', help="Grep regex pattern", default=None)
+
 # Peek Stats SSDs Connected
 peek_stats_ssds_parser = peek_stats_parsers.add_parser('ssds', help="Shows the SSDs connected")
-peek_stats_ssds_parser.add_argument('-grep', help="Grep regex pattern (Grep for SSD ID)", default=None)
+peek_stats_ssds_parser.add_argument('-ssd_ids', help="List of ssd ids. specify as follows: -ssd_ids 6 7 8", default=[], nargs='+')
+peek_stats_ssds_parser.add_argument('-grep', help="Grep regex pattern (Grep for filter key)", default=None)
 
 # Peek BLT volume stats
 peek_stats_blt_vol_parser = peek_stats_parsers.add_parser('blt', help="Peek BLT volume stats")
