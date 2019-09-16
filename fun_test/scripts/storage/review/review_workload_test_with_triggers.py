@@ -20,7 +20,7 @@ def fio_parser(arg1, host_index, **kwargs):
 class WorkloadTriggerTestScript(FunTestScript):
     def describe(self):
         self.set_test_details(steps="""
-        1. Deploy the topology. Bring up F1 with funos 
+        1. Deploy the topology. Bring up F1 with funos
         2. Configure Linux Host instance and make it available for test case
         """)
 
@@ -538,7 +538,8 @@ class WorkloadTriggerTestCase(FunTestCase):
                 '''
 
                 print("print: run: current index is: {}".format(index))
-                if index != 0:
+                if index != 0 or index != len(self.host_info):
+                    fun_test.sleep("add host at interval of {}".format(self.add_host_delay), self.add_host_delay)
                     # Create NVMe-OF controller for rest of hosts
                     self.ctrlr_uuid.append(utils.generate_uuid())
                     command_result = self.storage_controller.create_controller(
@@ -619,7 +620,7 @@ class WorkloadTriggerTestCase(FunTestCase):
                                                                           iodepth=iodepth,
                                                                           name="fio_{}".format(host_name),
                                                                           **self.fio_cmd_args)
-                else:
+                elif index != 0 and index != len(self.host_info):
                     # Starting IO on rest of hosts for particular LBA range
                     fun_test.log("print: run: else index == 0: starting IO on host: {}".format(host_name))
                     self.fio_cmd_args1["offset"] = "{}{}".format(str((index - 1) * fio_offset_diff), "%")
@@ -631,16 +632,19 @@ class WorkloadTriggerTestCase(FunTestCase):
                                                                           iodepth=iodepth,
                                                                           name="fio_{}".format(host_name),
                                                                           **self.fio_cmd_args1)
+                else:
+                    fun_test.log("Keeping host - {} idle for later use".format(host_name))
 
             # Waiting for all the FIO test threads to complete
             try:
                 fun_test.log("Test Thread IDs: {}".format(test_thread_id))
                 for index, host_name in enumerate(self.host_info):
-                    fio_output[iodepth][host_name] = {}
-                    fun_test.log("Joining fio thread {}".format(index))
-                    fun_test.join_thread(fun_test_thread_id=test_thread_id[index], sleep_time=1)
-                    fun_test.log("FIO Command Output from {}:\n {}".format(host_name,
-                                                                           fun_test.shared_variables["fio"][index]))
+                    if index != len(self.host_info):
+                        fio_output[iodepth][host_name] = {}
+                        fun_test.log("Joining fio thread {}".format(index))
+                        fun_test.join_thread(fun_test_thread_id=test_thread_id[index], sleep_time=1)
+                        fun_test.log("FIO Command Output from {}:\n {}".format(host_name,
+                                                                               fun_test.shared_variables["fio"][index]))
             except Exception as ex:
                 fun_test.critical(str(ex))
                 fun_test.log("FIO Command Output from {}:\n {}".format(host_name,
@@ -688,7 +692,7 @@ class WorkloadTriggerTestCase(FunTestCase):
 
             if index == 0:
                 # Starting Read for whole volume on first host
-                fun_test.log("print: diconnect run: if index == 0: starting IO on host: {}".format(host_name))
+                fun_test.log("print: disconnect run: if index == 0: starting IO on host: {}".format(host_name))
                 test_thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
                                                                       func=fio_parser,
                                                                       arg1=host_clone[host_name],
@@ -697,7 +701,7 @@ class WorkloadTriggerTestCase(FunTestCase):
                                                                       iodepth=iodepth,
                                                                       name="detach_fio_{}".format(host_name),
                                                                       **self.fio_cmd_args)
-            else:
+            elif index != 0 and index != len(self.host_info):
                 # Starting IO on rest of hosts for particular LBA range
                 fun_test.log("print: disconnect run: else index == 0: starting IO on host: {}".format(host_name))
                 self.fio_cmd_args1["offset"] = "{}{}".format(str((index - 1) * fio_offset_diff), "%")
@@ -711,11 +715,11 @@ class WorkloadTriggerTestCase(FunTestCase):
                                                                       **self.fio_cmd_args1)
 
             fun_test.sleep("to initiate detach from host", self.detach_time)
-            # nvme_disconnect_cmd = "nvme disconnect -n {}".format(self.nvme_subsystem)
+            # nvme_disconnect_cmd = "nvme disconnect -n {}".format(self.nvme_subsystem)  # TODO: SWOS-6165
             nvme_disconnect_cmd = "nvme disconnect -d {}".format(volume_name)
 
-            if index != 0:
-                # Executing NVMe disconnect from all the hosts
+            if index == len(self.host_info - 1):
+                # Executing NVMe disconnect for 4th host
                 host_handle = self.host_info[host_name]["handle"]
                 host_handle.sudo_command(command=nvme_disconnect_cmd, timeout=60)
                 nvme_disconnect_exit_status = host_handle.exit_status()
@@ -756,12 +760,24 @@ class WorkloadTriggerTestCase(FunTestCase):
                 fun_test.test_assert_expected(expected={}, actual=fun_test.shared_variables["fio"][index],
                                               message="Expected IO failure due to Detach")
 
-        fun_test.log("\n********** Starting Re-Attach hosts test **********\n")
+        fun_test.log("\n********** Adding 5th hosts to test **********\n")
         for index, host_name in enumerate(self.host_info):
-            print("print: Reattach run: current index is: {}".format(index))
+            print("print: Attach run: current index is: {}".format(index))
 
-            if index != 0:
-                # Re-Attach volume to NVMe-OF controller
+            if index == len(self.host_info):
+                fun_test.sleep("add host at interval of {}".format(self.add_host_delay), self.add_host_delay)
+                # Create NVMe-OF controller for last hosts
+                self.ctrlr_uuid.append(utils.generate_uuid())
+                command_result = self.storage_controller.create_controller(
+                    ctrlr_uuid=self.ctrlr_uuid[index], transport=self.transport_type.upper(),
+                    remote_ip=self.host_info[host_name]["ip"][0], nqn=self.nvme_subsystem, port=self.transport_port,
+                    command_duration=self.command_timeout)
+                fun_test.log(command_result)
+                fun_test.test_assert(command_result["status"],
+                                     "Create Storage Controller for {} with controller uuid {} on DUT".
+                                     format(self.transport_type.upper(), self.ctrlr_uuid[index]))
+
+                # Attach 5th volume to NVMe-OF controller
                 command_result = self.storage_controller.attach_volume_to_controller(
                     ctrlr_uuid=self.ctrlr_uuid[index], ns_id=self.stripe_details["ns_id"],
                     vol_uuid=self.stripe_uuid, command_duration=self.command_timeout)
@@ -778,7 +794,7 @@ class WorkloadTriggerTestCase(FunTestCase):
                 self.pcap_stopped[host_name] = True
                 self.pcap_pid[host_name] = {}
                 self.pcap_pid[host_name] = host_handle.tcpdump_capture_start(
-                    interface=test_interface, tcpdump_filename="/tmp/nvme_reconnect.pcap", snaplen=1500)
+                    interface=test_interface, tcpdump_filename="/tmp/nvme_connect.pcap", snaplen=1500)
                 if self.pcap_pid[host_name]:
                     fun_test.log("Started packet capture in {}".format(host_name))
                     self.pcap_started[host_name] = True
@@ -830,7 +846,7 @@ class WorkloadTriggerTestCase(FunTestCase):
                                                                       iodepth=iodepth,
                                                                       name="detach_fio_{}".format(host_name),
                                                                       **self.fio_cmd_args)
-            else:
+            elif index != 0 and index != len(self.host_info - 1):
                 # Starting IO on rest of hosts for particular LBA range
                 fun_test.log("print: reattach run: else index == 0: starting IO on host: {}".format(host_name))
                 self.fio_cmd_args1["offset"] = "{}{}".format(str((index - 1) * fio_offset_diff), "%")
@@ -846,11 +862,12 @@ class WorkloadTriggerTestCase(FunTestCase):
         try:
             fun_test.log("Test Thread IDs: {}".format(test_thread_id))
             for index, host_name in enumerate(self.host_info):
-                fio_output[iodepth][host_name] = {}
-                fun_test.log("Joining fio thread {}".format(index))
-                fun_test.join_thread(fun_test_thread_id=test_thread_id[index], sleep_time=1)
-                fun_test.log("FIO Command Output from {}:\n {}".format(host_name,
-                                                                       fun_test.shared_variables["fio"][index]))
+                if index != len(self.host_info - 1):
+                    fio_output[iodepth][host_name] = {}
+                    fun_test.log("Joining fio thread {}".format(index))
+                    fun_test.join_thread(fun_test_thread_id=test_thread_id[index], sleep_time=1)
+                    fun_test.log("FIO Command Output from {}:\n {}".format(host_name,
+                                                                           fun_test.shared_variables["fio"][index]))
         except Exception as ex:
             fun_test.critical(str(ex))
             fun_test.log("FIO Command Output from {}:\n {}".format(host_name,
@@ -871,15 +888,6 @@ class WorkloadTriggerTestCase(FunTestCase):
                              source_file_path="/tmp/nvme_connect.pcap", target_file_path=pcap_artifact_file)
                 fun_test.add_auxillary_file(description="Host {} NVME connect pcap".format(host_name),
                                             filename=pcap_artifact_file)
-                if index != 0:
-                    pcap_post_fix_name = "{}_nvme_reconnect.pcap".format(host_name)
-                    pcap_artifact_file = fun_test.get_test_case_artifact_file_name(post_fix_name=pcap_post_fix_name)
-
-                    fun_test.scp(source_port=host_handle.ssh_port, source_username=host_handle.ssh_username,
-                                 source_password=host_handle.ssh_password, source_ip=host_handle.host_ip,
-                                 source_file_path="/tmp/nvme_reconnect.pcap", target_file_path=pcap_artifact_file)
-                    fun_test.add_auxillary_file(description="Host {} NVME re-connect pcap".format(host_name),
-                                                filename=pcap_artifact_file)
         except Exception as ex:
             fun_test.critical(str(ex))
 
