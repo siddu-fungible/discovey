@@ -64,6 +64,7 @@ class WebBackup(FunTestCase):
         top_of_the_day = current_time - timedelta(hours=current_time.hour, minutes=current_time.minute, seconds=current_time.second)
         files_from_today = t.list_files_by_time(directory=DATA_STORE_DIR + "/web_backup", from_time=top_of_the_day)
         backup_file_found = None
+        fun_test.log("Files found: {}".format(files_from_today))
 
         for file in files_from_today:
             if file.startswith("fun_test") and file.endswith(".tgz"):
