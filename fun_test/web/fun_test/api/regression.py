@@ -414,6 +414,10 @@ def suites(request, id):
             s.entries = suite_entries
         s.save()
 
+    if request.method == "DELETE":
+        s = Suite.objects.get(id=id)
+        s.delete()
+        result = True
     return result
 
 @csrf_exempt

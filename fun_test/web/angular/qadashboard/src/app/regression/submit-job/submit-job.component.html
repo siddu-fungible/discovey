@@ -252,7 +252,7 @@
                       <select class="field-width" id="suite-select" [(ngModel)]="selectedSuite" (change)="changedValue(selectedSuite)">
                         <option></option>
                         <option [ngValue]="suite" *ngFor="let suite of suitesInfo">
-                        {{ suite.name }}
+                        {{ suite.id }}: {{ suite.name }}
                         </option>
                       </select></td>
                   </tr>
