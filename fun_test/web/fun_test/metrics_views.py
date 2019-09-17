@@ -33,6 +33,7 @@ from lib.utilities.git_manager import GitManager
 from web.fun_test.metrics_models import MetricsGlobalSettings, MetricsGlobalSettingsSerializer, MileStoneMarkers
 from web.fun_test.db_fixup import get_rounded_time
 from web.fun_test.metrics_lib import MetricLib
+from fun_global import get_epoch_time_from_datetime, get_datetime_from_epoch_time
 
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
@@ -747,7 +748,13 @@ def data(request):
             try:
                 result = model.objects.filter(input_date_time__range=date_range, **d).order_by(
                     "input_date_time")  # unpack, pack
-                data.append([model_to_dict(x) for x in result])
+                # data.append([model_to_dict(x) for x in result])
+                data_set_list = []
+                for x in result:
+                    temp_dict = model_to_dict(x)
+                    temp_dict["epoch_time"] = get_epoch_time_from_datetime(temp_dict["input_date_time"])
+                    data_set_list.append(temp_dict)
+                data.append(data_set_list)
             except ObjectDoesNotExist:
                 logger.critical("No data found Model: {} Inputs: {}".format(metric_model_name, str(inputs)))
     except ObjectDoesNotExist:

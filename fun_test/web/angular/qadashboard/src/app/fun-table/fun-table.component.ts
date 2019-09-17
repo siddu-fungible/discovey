@@ -116,8 +116,8 @@ export class FunTableComponent implements OnInit {
     });
   }
 
-  localizeTime(t) {
-    return this.commonService.getPrettyLocalizeTime(t);
+  getPstTime(t) {
+    return this.commonService.getPrettyPstTime(t);
   }
 }
 

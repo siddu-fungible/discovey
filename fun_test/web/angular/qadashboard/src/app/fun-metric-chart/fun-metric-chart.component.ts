@@ -41,6 +41,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   LOGS_DIR = "/static/logs";
   suiteLogsDir = "http://integration.fungible.local/regression/static_serve_log_directory/";
 
+  TIMEZONE: string = "America/Los_Angeles";
+
   status: string = null;
   showingTable: boolean;
   showingConfigure: boolean;
@@ -170,7 +172,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         switchMap(response => {
           return this.performanceService.fetchBuildInfo();
         })).subscribe(response => {
-          this.buildInfo = response;
+        this.buildInfo = response;
         console.log("fetched buildInfo");
       }, error => {
         this.loggerService.error("Unable to fetch buildInfo");
@@ -302,12 +304,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     //let key = this._getBuildKey(x);
     let key = x;
     let s = {};
-    let keyDate = new Date(key);
-    let workAroundDate = new Date(2019, 6, 27);
-    // TODO: workaround due to https://github.com/fungible-inc/Integration/pull/691
-    if (keyDate < workAroundDate) {
-      key = key.replace(/..$/, "00");
-    }
 
     if (this.buildInfo && key in this.buildInfo) {
       softwareDate = this.buildInfo[key]["software_date"];
@@ -632,10 +628,10 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     } else if (this.timeMode === "month") {
       let i = len - 1;
       let startIndex = len - 1;
-      let latestDate = new Date(dateList[i]);
+      let latestDate = this.commonService.convertEpochToDate(dateList[i], this.TIMEZONE);
       let latestMonth = latestDate.getMonth();
       while (i >= 0) {
-        let currentDate = new Date(dateList[i]);
+        let currentDate = this.commonService.convertEpochToDate(dateList[i], this.TIMEZONE);
         let currentMonth = currentDate.getMonth();
         if (currentMonth !== latestMonth) {
           filteredDate.push([startIndex, i + 1]);
@@ -660,39 +656,38 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   //check for all dates and if not present add the respective date to the list
   fixMissingDates(dates): any {
     let finalDates = [];
+    let datesSet = new Set();
     if (dates.length !== 0) {
-      let firstString = dates[0];
-      let firstDate = new Date(firstString);
-      let today = new Date();
-      let yesterday = new Date(today);
-      yesterday.setHours(23, 59, 59);
-      let lastDate = yesterday;
-
-      let currentDate = firstDate;
+      let lastDate = this.commonService.convertEpochToDate(dates[0], this.TIMEZONE);
+      dates.reverse();
+      let uniqueDates = [];
+      for (let epochDate of dates) {
+        let pstDate = this.commonService.convertEpochToDate(epochDate, this.TIMEZONE);
+        let keyString = (pstDate.getMonth() + 1) + "/" + pstDate.getDate() + "/" + pstDate.getFullYear();
+        if (!datesSet.has(keyString)) {
+          datesSet.add(keyString);
+          uniqueDates.push(epochDate);
+        }
+      }
+      let currentDate = this.commonService.convertEpochToDate(new Date(), this.TIMEZONE);
       let datesIndex = 0;
-      while (currentDate <= yesterday) {
-        let latestDate = null;
-        if ((datesIndex < dates.length) && this.sameDay(new Date(dates[datesIndex]), currentDate)) {
-          latestDate = dates[datesIndex];
-          datesIndex++;
-          while ((datesIndex < dates.length) && this.sameDay(new Date(dates[datesIndex]), currentDate)) {
-            latestDate = dates[datesIndex];
-            datesIndex++;
-          }
-          finalDates.push(latestDate);
-        } else {
-          //currentDate.setHours(currentDate.getHours() - currentDate.getTimezoneOffset() / 60);
+      while (currentDate >= lastDate) {
+        let keyString = (currentDate.getMonth() + 1) + "/" + currentDate.getDate() + "/" + currentDate.getFullYear();
+        if (!datesSet.has(keyString)) {
           let tempDate = currentDate;
           tempDate.setHours(0);
           tempDate.setMinutes(0);
           tempDate.setSeconds(1);
-          let keyString = this.commonService.addLeadingZeroesToDate(tempDate);
-          finalDates.push(keyString);
+          let epochDate = this.commonService.convertDateToEpoch(tempDate);
+          finalDates.push(epochDate);
+        } else if (datesIndex < uniqueDates.length) {
+          finalDates.push(uniqueDates[datesIndex]);
+          datesIndex++;
         }
-        currentDate.setDate(currentDate.getDate() + 1);
+        currentDate.setDate(currentDate.getDate() - 1);
       }
     }
-    return finalDates;
+    return finalDates.reverse();
   }
 
   //check if both the dates are same
@@ -835,10 +830,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
             trimEmptyStartValues = true;
           }
           if (trimEmptyStartValues) {
-            let localDate = this.commonService.convertToLocalTimezone(oneRecord.input_date_time);
-            let keyString = this.commonService.addLeadingZeroesToDate(localDate);
-            keyList.push(keyString); //value = "3/19/2019, 4:49:31 PM"
-            keyValue[dataSetIndex][keyString] = oneRecord;
+            keyList.push(oneRecord.epoch_time); //value = "3/19/2019, 4:49:31 PM"
+            keyValue[dataSetIndex][oneRecord.epoch_time] = oneRecord;
           }
 
         }
@@ -846,8 +839,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       }
       keyList.sort();
       keyList = this.fixMissingDates(keyList);
-      let originalKeyList = keyList;
-      keyList = this.getDatesByTimeMode(keyList);
+      let datesByTimeMode = this.getDatesByTimeMode(keyList);
       let chartDataSets = [];
       let seriesDates = [];
       this.expectedValues = [];
@@ -864,23 +856,26 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         let name = this.filterDataSets[j].name;
         let unit = this.filterDataSets[j].output.unit;
         let expected = filterDataSets[j].output.expected;
-        for (let i = 0; i < keyList.length; i++) {
+        for (let i = 0; i < datesByTimeMode.length; i++) {
           let output = null;
           let total = 0;
           let count = 0;
-          let startIndex = keyList[i][0];
-          let endIndex = keyList[i][1];
+          let startIndex = datesByTimeMode[i][0];
+          let endIndex = datesByTimeMode[i][1];
           let matchingDateFound = false;
-          seriesDates.push(originalKeyList[startIndex]);
+          let pstEpochDate = this.commonService.convertEpochToDate(keyList[startIndex], this.TIMEZONE);
+          let keyString = this.commonService.addLeadingZeroesToDate(pstEpochDate);
+          seriesDates.push(keyString);
+
           Object.keys(this.mileStoneMarkers).forEach((mileStone) => {
-            let markerDate = this.mileStoneMarkers[mileStone].split(" ")[0]; // removing the time to check if the milestone date exists
+            let mileStoneDate = this.commonService.convertToTimezone(this.mileStoneMarkers[mileStone], this.TIMEZONE);
             //comparing two date objects to get the f1 milestone incase of date mismatch
-            let compareDate = new Date(originalKeyList[startIndex]);
-            if (originalKeyList[startIndex].includes(markerDate)) { // Tape-out and F1
+            let compareDate = this.commonService.convertEpochToDate(keyList[startIndex], this.TIMEZONE);
+            if (this.sameDay(mileStoneDate, compareDate)) { // Tape-out and F1
               if (!this.mileStoneIndices.hasOwnProperty(mileStone)) {
                 this.mileStoneIndices[mileStone] = startIndex;
               }
-            } else if (compareDate >= new Date(this.mileStoneMarkers[mileStone])) {
+            } else if (compareDate >= mileStoneDate) {
               if (mileStone !== "Tape-out") {
                 if (!this.mileStoneIndices.hasOwnProperty(mileStone)) {
                   this.mileStoneIndices[mileStone] = startIndex;
@@ -890,8 +885,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
           });
 
           while (startIndex >= endIndex) {
-            if (keyValue[j][originalKeyList[startIndex]]) {
-              let oneRecord = keyValue[j][originalKeyList[startIndex]];
+            if (keyValue[j][keyList[startIndex]]) {
+              let oneRecord = keyValue[j][keyList[startIndex]];
               matchingDateFound = true;
               output = oneRecord[outputName];
               let unit = outputName + '_unit';
@@ -989,13 +984,16 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       this.apiService.post("/metrics/data_by_model", payload).subscribe((response) => {
         let dataSet = response.data;
         for (let rowData of dataSet) {
-          let row = [];
           let rowInTable = [];
           Object.keys(self.headers).forEach((key) => {
             if (self.isFieldRelevant(key)) {
-              let value = rowData[key];
+              let value = null;
+              if (key == "input_date_time") {
+                value = this.commonService.convertToTimezone(rowData[key], this.TIMEZONE);
+              } else {
+                value = rowData[key]
+              }
               rowInTable.push(value);
-              row.push(self.cleanValue(key, value));
             }
           });
           self.data["rows"][index++] = rowInTable;
@@ -1238,7 +1236,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
           trimEmptyStartValues = true;
         }
         if (trimEmptyStartValues) {
-          let keyString = this.commonService.addLeadingZeroesToDate(d);
+          let pstDate = this.commonService.convertToTimezone(d, this.TIMEZONE);
+          let keyString = this.commonService.addLeadingZeroesToDate(pstDate);
           series.push(keyString);
           keyValue[keyString] = response.data.scores[dateTime].score;
         }

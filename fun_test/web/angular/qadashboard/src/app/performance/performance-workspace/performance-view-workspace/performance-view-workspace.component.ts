@@ -37,6 +37,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
   allMetricIds: number[] = [];
   interestedMetrics: number[] = [];
   SUBJECT_BASE_STRING: string = "Performance status report - ";
+  TIMEZONE: string = "America/Los_Angeles";
 
   constructor(private apiService: ApiService, private commonService: CommonService, private loggerService: LoggerService,
               private route: ActivatedRoute, private router: Router, private location: Location, private title: Title, private performanceService: PerformanceService) {
@@ -125,7 +126,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
   fetchTodayAndYesterdayData(metric): any {
     this.setData(metric);
     let self = this;
-    let dateTime = new Date();
+    let dateTime = this.commonService.convertToTimezone(new Date(), this.TIMEZONE);
     return of(true).pipe(
       switchMap(response => {
         return this.fetchData(metric, dateTime, "today");
@@ -168,7 +169,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
         for (let dataSet of metric["data"]) {
           if (dataSet["name"] == oneData["name"]) {
             dataSet[key] = oneData["value"];
-            dataSet[key + "Date"] = this.commonService.getPrettyLocalizeTime(oneData["date_time"]);
+            dataSet[key + "Date"] = this.commonService.getPrettyPstTime(oneData["date_time"]);
             dataSet["unit"] = oneData["unit"];
           }
         }
@@ -252,7 +253,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
             let present = this.addToSet(oneData["date_time"], dateTimeSet);
             if (!present) {
               let hData = {};
-              hData["date"] = this.commonService.getPrettyLocalizeTime(oneData["date_time"]);
+              hData["date"] = this.commonService.getPrettyPstTime(oneData["date_time"]);
               hData["value"] = oneData["value"];
               dataSet["history"].push(hData);
             }
@@ -279,7 +280,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
   }
 
   addToSet(dateTime, dateTimeSet): boolean {
-    let dateTimeObj = this.commonService.convertToLocalTimezone(dateTime);
+    let dateTimeObj = this.commonService.convertToTimezone(dateTime, this.TIMEZONE);
     let dateTimeStr = String(dateTimeObj.getMonth() + 1) + "/" + String(dateTimeObj.getDate()) + "/" + String(dateTimeObj.getFullYear());
     let present = false;
     if (dateTimeSet.has(dateTimeStr)) {
@@ -312,7 +313,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
   }
 
   setSubject(): void {
-    let t = new Date();
+    let t = this.commonService.convertToTimezone(new Date(), this.TIMEZONE);
     let dateString = this.commonService.getShortDate(t);
     this.subject = this.SUBJECT_BASE_STRING + dateString;
   }
