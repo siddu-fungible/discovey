@@ -65,6 +65,9 @@ class WorkloadTriggerTestScript(FunTestScript):
             self.update_workspace = job_inputs["update_workspace"]
         if "update_deploy_script" in job_inputs:
             self.update_deploy_script = job_inputs["update_deploy_script"]
+        if "num_hosts" in job_inputs:
+            self.num_hosts = job_inputs["num_hosts"]
+        fun_test.test_assert(expression=self.num_hosts >= 3, message="Test bed has minimum hosts (3) required")
 
         # Deploying of DUTs
         self.num_duts = int(round(float(self.num_f1s) / self.num_f1_per_fs))
@@ -538,7 +541,8 @@ class WorkloadTriggerTestCase(FunTestCase):
                 '''
 
                 print("print: run: current index is: {}".format(index))
-                if index != 0 or index != len(self.host_info):
+                if index != 0 and index != len(self.host_info) - 1:
+                    print("2. index is: {} and hostname is: {}".format(index, host_name))
                     fun_test.sleep("add host at interval of {}".format(self.add_host_delay), self.add_host_delay)
                     # Create NVMe-OF controller for rest of hosts
                     self.ctrlr_uuid.append(utils.generate_uuid())
@@ -610,6 +614,7 @@ class WorkloadTriggerTestCase(FunTestCase):
                 host_clone[host_name] = self.host_info[host_name]["handle"].clone()
 
                 if index == 0:
+                    print("1. index is: {} and hostname is: {}".format(index, host_name))
                     # Starting Read for whole volume on first host
                     fun_test.log("print: run: if index == 0: starting IO on host: {}".format(host_name))
                     test_thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
@@ -620,9 +625,10 @@ class WorkloadTriggerTestCase(FunTestCase):
                                                                           iodepth=iodepth,
                                                                           name="fio_{}".format(host_name),
                                                                           **self.fio_cmd_args)
-                elif index != 0 and index != len(self.host_info):
+                elif index != len(self.host_info) - 1:
+                    print("3. index is: {} and hostname is: {}".format(index, host_name))
                     # Starting IO on rest of hosts for particular LBA range
-                    fun_test.log("print: run: else index == 0: starting IO on host: {}".format(host_name))
+                    fun_test.log("print: run: elif on host: {}".format(host_name))
                     self.fio_cmd_args1["offset"] = "{}{}".format(str((index - 1) * fio_offset_diff), "%")
                     test_thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
                                                                           func=fio_parser,
@@ -633,13 +639,14 @@ class WorkloadTriggerTestCase(FunTestCase):
                                                                           name="fio_{}".format(host_name),
                                                                           **self.fio_cmd_args1)
                 else:
+                    print("4. index is: {} and hostname is: {}".format(index, host_name))
                     fun_test.log("Keeping host - {} idle for later use".format(host_name))
 
             # Waiting for all the FIO test threads to complete
             try:
                 fun_test.log("Test Thread IDs: {}".format(test_thread_id))
                 for index, host_name in enumerate(self.host_info):
-                    if index != len(self.host_info):
+                    if index != len(self.host_info) - 1:
                         fio_output[iodepth][host_name] = {}
                         fun_test.log("Joining fio thread {}".format(index))
                         fun_test.join_thread(fun_test_thread_id=test_thread_id[index], sleep_time=1)
@@ -654,12 +661,14 @@ class WorkloadTriggerTestCase(FunTestCase):
 
             # Summing up the FIO stats from all the hosts
             for index, host_name in enumerate(self.host_info):
-                fun_test.test_assert(fun_test.shared_variables["fio"][index], "FIO test with on {}".format(host_name))
-                for op, stats in fun_test.shared_variables["fio"][index].items():
-                    if op not in aggr_fio_output[iodepth]:
-                        aggr_fio_output[iodepth][op] = {}
-                    aggr_fio_output[iodepth][op] = Counter(aggr_fio_output[iodepth][op]) + \
-                                                   Counter(fun_test.shared_variables["fio"][index][op])
+                if index != len(self.host_info) - 1:
+                    fun_test.test_assert(fun_test.shared_variables["fio"][index],
+                                         "FIO test with on {}".format(host_name))
+                    for op, stats in fun_test.shared_variables["fio"][index].items():
+                        if op not in aggr_fio_output[iodepth]:
+                            aggr_fio_output[iodepth][op] = {}
+                        aggr_fio_output[iodepth][op] = Counter(aggr_fio_output[iodepth][op]) + \
+                                                       Counter(fun_test.shared_variables["fio"][index][op])
 
             fun_test.log("Aggregated FIO Command Output:\n{}".format(aggr_fio_output[iodepth]))
 
@@ -683,7 +692,7 @@ class WorkloadTriggerTestCase(FunTestCase):
             fun_test.sleep("Waiting in between iterations", self.iter_interval)
 
         iodepth = self.fio_iodepth[0]
-        fun_test.log("\n********** Starting Disconnect test **********\n")
+        fun_test.log("\n********** Disconnect 2nd last host **********\n")
         for index, host_name in enumerate(self.host_info):
             print("print: disconnect run: current index is: {}".format(index))
 
@@ -691,6 +700,7 @@ class WorkloadTriggerTestCase(FunTestCase):
             host_clone[host_name] = self.host_info[host_name]["handle"].clone()
 
             if index == 0:
+                print("1.1. index is: {} and hostname is: {}".format(index, host_name))
                 # Starting Read for whole volume on first host
                 fun_test.log("print: disconnect run: if index == 0: starting IO on host: {}".format(host_name))
                 test_thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
@@ -701,7 +711,8 @@ class WorkloadTriggerTestCase(FunTestCase):
                                                                       iodepth=iodepth,
                                                                       name="detach_fio_{}".format(host_name),
                                                                       **self.fio_cmd_args)
-            elif index != 0 and index != len(self.host_info):
+            elif index != len(self.host_info) - 1:
+                print("1.2. index is: {} and hostname is: {}".format(index, host_name))
                 # Starting IO on rest of hosts for particular LBA range
                 fun_test.log("print: disconnect run: else index == 0: starting IO on host: {}".format(host_name))
                 self.fio_cmd_args1["offset"] = "{}{}".format(str((index - 1) * fio_offset_diff), "%")
@@ -718,7 +729,7 @@ class WorkloadTriggerTestCase(FunTestCase):
             # nvme_disconnect_cmd = "nvme disconnect -n {}".format(self.nvme_subsystem)  # TODO: SWOS-6165
             nvme_disconnect_cmd = "nvme disconnect -d {}".format(volume_name)
 
-            if index == len(self.host_info - 1):
+            if index == len(self.host_info) - 2:
                 # Executing NVMe disconnect for 4th host
                 host_handle = self.host_info[host_name]["handle"]
                 host_handle.sudo_command(command=nvme_disconnect_cmd, timeout=60)
@@ -738,33 +749,33 @@ class WorkloadTriggerTestCase(FunTestCase):
         try:
             fun_test.log("Test Thread IDs: {}".format(test_thread_id))
             for index, host_name in enumerate(self.host_info):
-                fio_output[iodepth][host_name] = {}
-                fun_test.log("Joining fio thread {}".format(index))
-                fun_test.join_thread(fun_test_thread_id=test_thread_id[index], sleep_time=1)
-                fun_test.log("FIO Command Output from {}:\n {}".format(host_name,
-                                                                       fun_test.shared_variables["fio"][index]))
+                if index != len(self.host_info) - 1:
+                    fio_output[iodepth][host_name] = {}
+                    fun_test.log("Joining fio thread {}".format(index))
+                    fun_test.join_thread(fun_test_thread_id=test_thread_id[index], sleep_time=1)
+                    fun_test.log("FIO Command Output from {}:\n {}".format(host_name,
+                                                                           fun_test.shared_variables["fio"][index]))
         except Exception as ex:
             fun_test.critical(str(ex))
             fun_test.log("FIO Command Output from {}:\n {}".format(host_name,
                                                                    fun_test.shared_variables["fio"][index]))
-        finally:
-            self.storage_controller.verbose = True
 
         # Summing up the FIO stats from all the hosts
         for index, host_name in enumerate(self.host_info):
-            if index == 0:
+            if index != len(self.host_info) - 1 and index != len(self.host_info) - 2:
                 fun_test.test_assert(fun_test.shared_variables["fio"][index], "FIO test with on {}".format(host_name))
-            else:
+            elif index != len(self.host_info) - 2:
                 # TODO: Capture the failure
                 fun_test.log("FIO test with on {}: {}".format(host_name, fun_test.shared_variables["fio"][index]))
-                fun_test.test_assert_expected(expected={}, actual=fun_test.shared_variables["fio"][index],
-                                              message="Expected IO failure due to Detach")
+                # fun_test.test_assert_expected(expected={}, actual=fun_test.shared_variables["fio"][index],
+                #                               message="Expected IO failure due to Detach")
+            else:
+                print("FIO is not started on index: {}, host: {} yet".format(index, host_name))
 
         fun_test.log("\n********** Adding 5th hosts to test **********\n")
         for index, host_name in enumerate(self.host_info):
-            print("print: Attach run: current index is: {}".format(index))
-
-            if index == len(self.host_info):
+            if index == len(self.host_info) - 1:
+                print("print: Attach run: current index is: {}".format(index))
                 fun_test.sleep("add host at interval of {}".format(self.add_host_delay), self.add_host_delay)
                 # Create NVMe-OF controller for last hosts
                 self.ctrlr_uuid.append(utils.generate_uuid())
@@ -846,9 +857,10 @@ class WorkloadTriggerTestCase(FunTestCase):
                                                                       iodepth=iodepth,
                                                                       name="detach_fio_{}".format(host_name),
                                                                       **self.fio_cmd_args)
-            elif index != 0 and index != len(self.host_info - 1):
+            # Skipping IO on host 4, which is in disconnected state
+            elif index != len(self.host_info) - 2:
                 # Starting IO on rest of hosts for particular LBA range
-                fun_test.log("print: reattach run: else index == 0: starting IO on host: {}".format(host_name))
+                fun_test.log("print: 5th host attach run: elif starting IO on index: {}, host: {}".format(index, host_name))
                 self.fio_cmd_args1["offset"] = "{}{}".format(str((index - 1) * fio_offset_diff), "%")
                 test_thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
                                                                       func=fio_parser,
@@ -862,7 +874,7 @@ class WorkloadTriggerTestCase(FunTestCase):
         try:
             fun_test.log("Test Thread IDs: {}".format(test_thread_id))
             for index, host_name in enumerate(self.host_info):
-                if index != len(self.host_info - 1):
+                if index != len(self.host_info) - 2:
                     fio_output[iodepth][host_name] = {}
                     fun_test.log("Joining fio thread {}".format(index))
                     fun_test.join_thread(fun_test_thread_id=test_thread_id[index], sleep_time=1)
@@ -872,8 +884,6 @@ class WorkloadTriggerTestCase(FunTestCase):
             fun_test.critical(str(ex))
             fun_test.log("FIO Command Output from {}:\n {}".format(host_name,
                                                                    fun_test.shared_variables["fio"][index]))
-        finally:
-            self.storage_controller.verbose = True
 
     def cleanup(self):
         try:
