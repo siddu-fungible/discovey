@@ -48,8 +48,8 @@ class ApcPduTestcase(FunTestCase):
                 self.validate["ports"] = job_inputs["check_ports"]
             if "check_storage_controller" in job_inputs:
                 self.validate["check_storage_controller"] = job_inputs["check_storage_controller"]
-        print(json.dumps(self.fs, indent=4))
-        print (self.validate)
+        fun_test.log(json.dumps(self.fs, indent=4))
+        fun_test.log(self.validate)
 
     def run(self):
         '''
