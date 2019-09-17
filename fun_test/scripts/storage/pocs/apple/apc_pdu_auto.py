@@ -78,13 +78,13 @@ class ApcPduTestcase(FunTestCase):
 
             come_handle.destroy()
 
-            fun_test.log("Checking if BMC is UP")
-            bmc_up = bmc_handle.ensure_host_is_up(max_wait_time=600)
-            fun_test.test_assert(bmc_up, "BMC is UP")
-
             fun_test.log("Checking if COMe is UP")
             come_up = come_handle.ensure_host_is_up(max_wait_time=600)
             fun_test.test_assert(come_up, "COMe is UP")
+
+            fun_test.log("Checking if BMC is UP")
+            bmc_up = bmc_handle.ensure_host_is_up(max_wait_time=600)
+            fun_test.test_assert(bmc_up, "BMC is UP")
 
             initial = come_handle.command("uptime")
             output = come_handle.command("uptime")
