@@ -1,28 +1,7 @@
 <div class="card" style="margin: 10px; padding: 5px;">
   <b>Subject: </b><input style="max-width: 50%" type="text" [(ngModel)]="subject"/><br>
-  <div class="fun-flex-container">
-    <!-- pager -->
-    <div id="page-div" *ngIf="pager.pages && pager.pages.length">
-      <span *ngIf="pager.currentPage > 1" [ngClass]="{'fun-disabled': pager.currentPage === 1}">
-      <a [routerLink]="" (click)="setPage(1)">First </a>
-      </span>
-      <span *ngIf="pager.currentPage > 1" [ngClass]="{'fun-disabled': pager.currentPage === 1}">
-      <a [routerLink]="" (click)="setPage(pager.currentPage - 1)">Previous </a>
-      </span>
-      <ng-container *ngFor="let page of pager.pages">
-        <span class="pseudo-anchor" (click)="setPage(page)"
-              [ngClass]="{'fun-pager-active':pager.currentPage === page}">{{ page }}</span>&nbsp;
-      </ng-container>
-      <span *ngIf="pager.currentPage < pager.totalPages"
-            [ngClass]="{'fun-disabled': pager.currentPage === pager.totalPages}">
-      <a [routerLink]="" (click)="setPage(pager.currentPage + 1)">Next </a>
-      </span>
-      <span *ngIf="pager.currentPage < pager.totalPages"
-            [ngClass]="{'fun-disabled': pager.currentPage === pager.totalPages}">
-      <a [routerLink]="" (click)="setPage(pager.totalPages)">Last </a>
-      </span>
-    </div>
-  </div><br>
+  <app-pager *ngIf="workspace" [data]="workspace.interested_metrics" [recordsPerPage]=5
+             (pageNumber)="setPage($event)"></app-pager>
   <div *ngFor="let interestedMetric of pagedItems">
     <div *ngIf="interestedMetric.leaf" style="vertical-align: middle; width: 50%">
       <h5>{{ interestedMetric.lineage }}</h5>
