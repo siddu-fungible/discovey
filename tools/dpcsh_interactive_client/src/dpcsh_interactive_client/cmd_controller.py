@@ -854,7 +854,8 @@ class CmdController(Cmd):
 
     def peek_bam_resource_stats(self, args):
         grep_regex = args.grep
-        self._peek_cmd_obj.peek_bam_resource_stats(grep_regex=grep_regex)
+        cid = args.cid
+        self._peek_cmd_obj.peek_bam_resource_stats(cid=cid,grep_regex=grep_regex)
 
     def peek_eqm_stats(self, args):
         grep_regex = args.grep
@@ -1327,7 +1328,7 @@ class CmdController(Cmd):
 
 
 if __name__ == '__main__':
-    cmd_obj = CmdController(target_ip="fs66-come", target_port=40221, verbose=False)
+    cmd_obj = CmdController(target_ip="10.1.20.17", target_port=40220, verbose=False)
     cmd_obj.cmdloop(intro="hello")
 
 

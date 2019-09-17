@@ -1097,6 +1097,7 @@ peek_dam_resource_stats_parser = peek_resource_stats_parsers.add_parser('dam', h
 peek_dam_resource_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
 
 peek_bam_resource_stats_parser = peek_resource_stats_parsers.add_parser('bam', help='Peek bam resource stats')
+peek_bam_resource_stats_parser.add_argument('-cid', help="Specify the cluster id", default=None)
 peek_bam_resource_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
 
 # Eqm stats
