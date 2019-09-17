@@ -330,6 +330,12 @@
       "mgmt_ip": "10.1.104.172",
       "mgmt_ssh_username": "fun",
       "mgmt_ssh_password": "123"
+    },
+    "apc_info": {
+      "host_ip": "cab02-pdu1",
+      "username": "localadmin",
+      "password": "Precious1*",
+      "outlet_number": 17
     }
   },
   {
@@ -391,6 +397,12 @@
       "mgmt_ip": "fs63-come",
       "mgmt_ssh_username": "fun",
       "mgmt_ssh_password": "123"
+    },
+    "apc_info": {
+      "host_ip": "cab02-pdu1",
+      "username": "localadmin",
+      "password": "Precious1*",
+      "outlet_number": 21
     }
   },
   {
