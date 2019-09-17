@@ -2,10 +2,12 @@ from lib.system.fun_test import fun_test, FunTimer
 from lib.utilities.jenkins_manager import JenkinsManager
 from fun_settings import TFTP_SERVER_IP, TFTP_SERVER_SSH_USERNAME, TFTP_SERVER_SSH_PASSWORD, TFTP_DIRECTORY
 from lib.host.linux import Linux
+from lib.utilities.http import fetch_binary_file
 
 
 class BuildHelper():
     FUN_OS_STRIPPED_IMAGE_NAME = "funos-f1.stripped"
+    STABLE_MASTER_DOCHUB_PATH = "http://dochub.fungible.local/doc/jenkins/funsdk/latest/Linux/funos.mips64-extra.tgz"
 
     def __init__(self,
                  parameters,
@@ -14,8 +16,10 @@ class BuildHelper():
                  disable_assertions=None):
         self.parameters = parameters
         self.max_build_time = max_build_time
-        self.disable_assertions = disable_assertions
         self.jenkins_manager = JenkinsManager(job_name=job_name)
+
+    def get_tftp_server(self):
+        return Linux(host_ip=TFTP_SERVER_IP, ssh_username=TFTP_SERVER_SSH_USERNAME, ssh_password=TFTP_SERVER_SSH_PASSWORD)
 
     def build_emulation_image(self, submitter_email=None):
         result = None
@@ -53,14 +57,13 @@ class BuildHelper():
         fun_test.simple_assert(bld_props_path, "Bld props path")
         bld_props = self.jenkins_manager.get_bld_props(build_number=build_number, bld_props_path=bld_props_path)
         fun_test.test_assert(bld_props, "Bld props retrieved")
+        fun_test.set_suite_run_time_environment_variable("bld_props", bld_props)
 
         image_path = self.jenkins_manager.get_image_path(build_number=build_number)
         fun_test.log("Image path: {}".format(image_path))
         fun_test.test_assert(image_path, "Image path retrieved")
 
-        tftp_server = Linux(host_ip=TFTP_SERVER_IP,
-                            ssh_username=TFTP_SERVER_SSH_USERNAME,
-                            ssh_password=TFTP_SERVER_SSH_PASSWORD)
+        tftp_server = self.get_tftp_server()
         filename = "s_{}_{}".format(fun_test.get_suite_execution_id(), self.FUN_OS_STRIPPED_IMAGE_NAME)
         gz_filename = filename + ".gz"
         tftp_server.command("cd {}".format(TFTP_DIRECTORY))
@@ -74,9 +77,37 @@ class BuildHelper():
 
         return gz_filename
 
-if __name__ == "__main__":
+    def fetch_stable_master(self, debug=False, stripped=True):
+        filename = "{}/s_{}_{}".format(TFTP_DIRECTORY, fun_test.get_suite_execution_id(), self.FUN_OS_STRIPPED_IMAGE_NAME)
+        base_temp_directory = "/tmp/stable_master/s_{}".format(fun_test.get_suite_execution_id())
+        tmp_tgz_file_name = "{}/extra_remove_me.tgz".format(base_temp_directory)
+        tmp_untar_directory = "{}/untar_extra_remove_me".format(base_temp_directory)
+
+        gz_filename = filename + ".gz"
+        tftp_server = self.get_tftp_server()
+        tftp_server.command("cd /tmp; mkdir -p {}".format(tmp_untar_directory))
+        tftp_server.curl(url=self.STABLE_MASTER_DOCHUB_PATH, output_file=tmp_tgz_file_name)
+        fun_test.log(tmp_tgz_file_name)
+        tftp_server.untar(file_name=tmp_tgz_file_name, dest=tmp_untar_directory)
+
+        funos_binary_name = "funos-f1"
+        if not debug:
+            funos_binary_name += "-release"
+        if stripped:
+            funos_binary_name += ".stripped"
+        fun_os_binary_full_path = "{}/bin/{}".format(tmp_untar_directory, funos_binary_name)
+        fun_test.simple_assert(tftp_server.list_files("{}".format(fun_os_binary_full_path)), "FunOS binary path found")
+        tftp_server.command("gzip {}".format(fun_os_binary_full_path))
+
+
+if __name__ == "__main2__":
     boot_args = "app=jpeg_perf_test --test-exit-fast"
     fun_os_make_flags = "XDATA_LISTS=/project/users/ashaikh/qa_test_inputs/jpeg_perf_inputs/perf_input.list"
 
     build_helper = BuildHelper(boot_args=boot_args, fun_os_make_flags=fun_os_make_flags)
     build_helper.build_emulation_image()
+
+
+if __name__ == "__main__":
+    bh = BuildHelper(parameters=None)
+    bh.fetch_stable_master()
