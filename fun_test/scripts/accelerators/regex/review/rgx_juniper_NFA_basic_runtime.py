@@ -32,9 +32,9 @@ def validate_rgx_result(self):
     test_result = True
     #funos_logs_file = DATA_STORE_DIR+"/funos_logs.txt"
     funos_logs_file = DATA_STORE_DIR+"/"+self.job_dir.split("/")[-1]+".txt"
-    file_name = self.job_dir+"/mail.txt"
+    #file_name = self.job_dir+"/mail.txt"
 
-    while not os.path.exists(file_name):
+    while not os.path.exists(funos_logs_file):
         fun_test.sleep("waiting as the file is not created",5)
     with open(funos_logs_file, "r") as f_in:
         log_data = f_in.read()
