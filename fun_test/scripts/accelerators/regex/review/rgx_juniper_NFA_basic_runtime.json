@@ -39,7 +39,7 @@
    "description":"LSU:loading all graphs on differnt clusters parallelly",
     "rbm_size": "1m"
   },
-   "JuniperNFA_Sequential2": {
+   "JuniperNFA_parallel2": {
     "jsons": [
       "JUNIPER_NFA_PARALLEL2_LSU.json"
     ],
