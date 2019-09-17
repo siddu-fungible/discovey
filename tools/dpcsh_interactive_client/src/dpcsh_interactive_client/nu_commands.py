@@ -2038,9 +2038,7 @@ class PeekCommands(object):
     def peek_stats_per_vp(self, cluster_id=None, core_id=None, grep_regex=None,
                           rx=False, tx=False, q=False, get_result_only=False):
         try:
-            prev_result_dict = {}
-            prev_result_dict['0'] = None
-            prev_result_dict['1'] = None
+            prev_result = None
             if rx == False and tx == False and q == False:
                 rx = True
                 tx = True
@@ -2049,74 +2047,72 @@ class PeekCommands(object):
                 try:
                     cmd = "stats/per_vp"
                     output_result = self.dpc_client.execute(verb='peek', arg_list=[cmd])
-                    result_dict = self.get_required_per_vp_result(output_result)
-                    for key in sorted(result_dict):
-                        result = result_dict[key]
-                        prev_result = prev_result_dict[key]
-                        master_table_obj = PrettyTable()
-                        master_table_obj.align = 'l'
-                        master_table_obj.border = False
-                        master_table_obj.header = False
-                        if result:
-                            '''
-                            if vp_number:
-                                vp_key = self._get_vp_number_key(output_dict=result, vp_number=vp_number)
-                                result = result[vp_key]
-                                if prev_result:
-                                    diff_result = self._get_difference(result=result, prev_result=prev_result)
-                                    table_obj = PrettyTable(['Field Name', 'Counter', 'Counter Diff'])
-                                    table_obj.align = 'l'
-                                    for _key in sorted(result):
-                                        if grep_regex:
-                                            if re.search(grep_regex, _key, re.IGNORECASE):
-                                                table_obj.add_row([_key, result[_key], diff_result[_key]])
-                                        else:
-                                            table_obj.add_row([_key, result[_key], diff_result[_key]])
-                                    master_table_obj.add_row([table_obj])
-                                else:
-                                    table_obj = PrettyTable(['Field Name', 'Counter'])
-                                    table_obj.align = 'l'
-                                    for _key in sorted(result):
-                                        if grep_regex:
-                                            if re.search(grep_regex, _key, re.IGNORECASE):
-                                                table_obj.add_row([_key, result[_key]])
-                                        else:
-                                            table_obj.add_row([_key, result[_key]])
-                                    master_table_obj.add_row([table_obj])
-                            '''
-                            # Print table for cluster id and core id given
-                            if (cluster_id is not None) and (core_id is not None):
-                                result = self._get_cluster_core_parsed_dict(output_dict=result, cluster_id=cluster_id,
-                                                                            core_id=core_id)
-
-                            # Print table for cluster id given
-                            elif cluster_id is not None:
-                                result = self._get_cluster_core_parsed_dict(output_dict=result, cluster_id=cluster_id)
-
-                            # Print master table
-                            result = self.get_filtered_dict(result, cluster_id=cluster_id, core_id=core_id, rx=rx, tx=tx,
-                                                            q=q)
+                    result = self.get_required_per_vp_result(output_result)
+                    #prev_result = prev_result_dict[key]
+                    master_table_obj = PrettyTable()
+                    master_table_obj.align = 'l'
+                    master_table_obj.border = False
+                    master_table_obj.header = False
+                    if result:
+                        '''
+                        if vp_number:
+                            vp_key = self._get_vp_number_key(output_dict=result, vp_number=vp_number)
+                            result = result[vp_key]
                             if prev_result:
-                                prev_result = self.get_filtered_dict(prev_result, cluster_id=cluster_id, core_id=core_id, rx=rx,
-                                                                     tx=tx, q=q)
-                                self.print_diff_result_single_dict_table_obj(master_table_obj=master_table_obj,
-                                                                             result=result, prev_result=prev_result,
-                                                                             grep_regex=grep_regex)
+                                diff_result = self._get_difference(result=result, prev_result=prev_result)
+                                table_obj = PrettyTable(['Field Name', 'Counter', 'Counter Diff'])
+                                table_obj.align = 'l'
+                                for _key in sorted(result):
+                                    if grep_regex:
+                                        if re.search(grep_regex, _key, re.IGNORECASE):
+                                            table_obj.add_row([_key, result[_key], diff_result[_key]])
+                                    else:
+                                        table_obj.add_row([_key, result[_key], diff_result[_key]])
+                                master_table_obj.add_row([table_obj])
                             else:
-                                self.print_single_dict_table_obj(master_table_obj=master_table_obj, result=result,
-                                                                 grep_regex=grep_regex)
+                                table_obj = PrettyTable(['Field Name', 'Counter'])
+                                table_obj.align = 'l'
+                                for _key in sorted(result):
+                                    if grep_regex:
+                                        if re.search(grep_regex, _key, re.IGNORECASE):
+                                            table_obj.add_row([_key, result[_key]])
+                                    else:
+                                        table_obj.add_row([_key, result[_key]])
+                                master_table_obj.add_row([table_obj])
+                        '''
+                        # Print table for cluster id and core id given
+                        if (cluster_id is not None) and (core_id is not None):
+                            result = self._get_cluster_core_parsed_dict(output_dict=result, cluster_id=cluster_id,
+                                                                        core_id=core_id)
 
-                            if get_result_only:
-                                return cmd, master_table_obj
-                            prev_result_dict[key] = result
-                            print master_table_obj
-                            print "\n########################  %s ########################\n" % \
-                                  str(self._get_timestamp())
-                            do_sleep_for_interval()
+                        # Print table for cluster id given
+                        elif cluster_id is not None:
+                            result = self._get_cluster_core_parsed_dict(output_dict=result, cluster_id=cluster_id)
+
+                        # Print master table
+                        result = self.get_filtered_dict(result, cluster_id=cluster_id, core_id=core_id, rx=rx, tx=tx,
+                                                        q=q)
+                        if prev_result:
+                            prev_result = self.get_filtered_dict(prev_result, cluster_id=cluster_id, core_id=core_id, rx=rx,
+                                                                 tx=tx, q=q)
+                            self.print_diff_result_single_dict_table_obj(master_table_obj=master_table_obj,
+                                                                         result=result, prev_result=prev_result,
+                                                                         grep_regex=grep_regex)
                         else:
-                            if get_result_only:
-                                return cmd, "Empty Result"
-                            print "Empty Result"
+                            self.print_single_dict_table_obj(master_table_obj=master_table_obj, result=result,
+                                                             grep_regex=grep_regex)
+
+                        if get_result_only:
+                            return cmd, master_table_obj
+                        prev_result = result
+                        print master_table_obj
+                        print "\n########################  %s ########################\n" % \
+                              str(self._get_timestamp())
+                        do_sleep_for_interval()
+                    else:
+                        if get_result_only:
+                            return cmd, "Empty Result"
+                        print "Empty Result"
                 except KeyboardInterrupt:
                     self.dpc_client.disconnect()
                     break
@@ -2818,84 +2814,179 @@ class PeekCommands(object):
         cmd = "stats/resource/dam"
         self._get_nested_dict_stats(cmd=cmd, grep_regex=grep_regex)
 
-    def peek_bam_resource_stats(self, grep_regex=None, get_result_only=False):
-        cmd = "stats/resource/bam"
-        verb = "peek"
-        tid = 0
-        au_sort = False
-        prev_result = None
-        try:
-            bam_pool_decode_dict ={
-		'pool0': 'BM_POOL_FUNOS',
-		'pool1': 'BM_POOL_NU_ETP_CMDLIST',
-		'pool2': 'BM_POOL_HU_REQ',
-		'pool3': 'BM_POOL_SW_PREFETCH',
-		'pool4': 'BM_POOL_NU_ERP_FCP',
-		'pool19': 'BM_POOL_NU_ERP_CC',
-		'pool20': 'BM_POOL_NU_ERP_SAMPLING',
-		'pool34': 'BM_POOL_REGEX',
-		'pool35': 'BM_POOL_REFBUF',
-		'pool49': 'BM_POOL_NU_ERP_NONFCP',
-		'pool50': 'BM_POOL_HNU_NONFCP',
-		'pool62': 'BM_POOL_HNU_PREFETCH',
-		'pool63': 'BM_POOL_NU_PREFETCH',}
+    # def peek_bam_resource_stats(self, grep_regex=None, get_result_only=False):
+    #     cmd = "stats/resource/bam"
+    #     verb = "peek"
+    #     tid = 0
+    #     au_sort = False
+    #     prev_result = None
+    #     try:
+    #         bam_pool_decode_dict ={
+	# 	'pool0': 'BM_POOL_FUNOS',
+	# 	'pool1': 'BM_POOL_NU_ETP_CMDLIST',
+	# 	'pool2': 'BM_POOL_HU_REQ',
+	# 	'pool3': 'BM_POOL_SW_PREFETCH',
+	# 	'pool4': 'BM_POOL_NU_ERP_FCP',
+	# 	'pool19': 'BM_POOL_NU_ERP_CC',
+	# 	'pool20': 'BM_POOL_NU_ERP_SAMPLING',
+	# 	'pool34': 'BM_POOL_REGEX',
+	# 	'pool35': 'BM_POOL_REFBUF',
+	# 	'pool49': 'BM_POOL_NU_ERP_NONFCP',
+	# 	'pool50': 'BM_POOL_HNU_NONFCP',
+	# 	'pool62': 'BM_POOL_HNU_PREFETCH',
+	# 	'pool63': 'BM_POOL_NU_PREFETCH',}
+    #
+    #         while True:
+    #             try:
+    #                 if type(cmd) == list:
+    #                     result = self.dpc_client.execute(verb=verb, arg_list=cmd, tid=tid)
+    #                 else:
+    #                     result = self.dpc_client.execute(verb=verb, arg_list=[cmd], tid=tid)
+    #                 result = self._sort_bam_keys(result=result, au_sort=au_sort)
+    #                 if result:
+    #                     if prev_result:
+    #                         diff_result = self._get_difference(result=result, prev_result=prev_result)
+    #                         table_obj = PrettyTable(['Field Name', 'Counters', 'Diff Counters'])
+    #                         table_obj.align = 'l'
+    #                         for key in result:
+    #                             decode_value = ''
+    #                             pool_value = key.split(' ')[0]
+    #                             if 'usage' in key:
+    #                                 pool_value = key.split(' ')[1]
+    #                             if pool_value in bam_pool_decode_dict:
+    #                                 decode_value = bam_pool_decode_dict[pool_value]
+    #                             if grep_regex:
+    #                                 if re.search(grep_regex, decode_value, re.IGNORECASE):
+    #                                     table_obj.add_row([decode_value + ' (' + key + ')'.strip(), result[key], diff_result[key]])
+    #                             else:
+    #                                 table_obj.add_row([decode_value + ' (' + key + ')'.strip(), result[key], diff_result[key]])
+    #                     else:
+    #                         table_obj = PrettyTable(['Field Name', 'Counters'])
+    #                         table_obj.align = 'l'
+    #                         for key in result:
+    #                             decode_value = ''
+    #                             pool_value = key.split(' ')[0]
+    #                             if 'usage' in key:
+    #                                 pool_value = key.split(' ')[1]
+    #                             if pool_value in bam_pool_decode_dict:
+    #                                 decode_value = bam_pool_decode_dict[pool_value]
+    #                             if grep_regex:
+    #                                 if re.search(grep_regex, decode_value, re.IGNORECASE):
+    #                                     table_obj.add_row([decode_value + ' (' + key + ')'.strip(), result[key]])
+    #                             else:
+    #                                 table_obj.add_row([decode_value + ' (' + key + ')'.strip(), result[key], ])
+    #                     if get_result_only:
+    #                         return cmd, table_obj
+    #                     prev_result = result
+    #                     print table_obj
+    #                     print "\n########################  %s ########################\n" % str(self._get_timestamp())
+    #                     do_sleep_for_interval()
+    #                 else:
+    #                     if get_result_only:
+    #                         return cmd, "Empty Result"
+    #                     print "Empty Result"
+    #                     do_sleep_for_interval()
+    #             except KeyboardInterrupt:
+    #                 self.dpc_client.disconnect()
+    #                 break
+    #     except Exception as ex:
+    #         print "ERROR: %s" % str(ex)
+    #         self.dpc_client.disconnect()
 
-            while True:
-                try:
-                    if type(cmd) == list:
-                        result = self.dpc_client.execute(verb=verb, arg_list=cmd, tid=tid)
-                    else:
-                        result = self.dpc_client.execute(verb=verb, arg_list=[cmd], tid=tid)
-                    result = self._sort_bam_keys(result=result, au_sort=au_sort)
-                    if result:
-                        if prev_result:
-                            diff_result = self._get_difference(result=result, prev_result=prev_result)
-                            table_obj = PrettyTable(['Field Name', 'Counters', 'Diff Counters'])
-                            table_obj.align = 'l'
-                            for key in result:
-                                decode_value = ''
-                                pool_value = key.split(' ')[0]
-                                if 'usage' in key:
-                                    pool_value = key.split(' ')[1]
-                                if pool_value in bam_pool_decode_dict:
-                                    decode_value = bam_pool_decode_dict[pool_value]
-                                if grep_regex:
-                                    if re.search(grep_regex, decode_value, re.IGNORECASE):
-                                        table_obj.add_row([decode_value + ' (' + key + ')'.strip(), result[key], diff_result[key]])
+    def _get_cid_bam_results(self, result, cid):
+        for key in result.keys():
+            if key == 'bm_usage_per_cluster':
+                for _key in result[key].keys():
+                    if not str(cid) == _key.split("_")[1]:
+                        del result[key][_key]
+        return result
+
+    def peek_bam_resource_stats(self, cid=None, grep_regex=None, get_result_only=False):
+        prev_result = None
+        while True:
+            try:
+                cmd = "stats/resource/bam"
+                master_table_obj = PrettyTable()
+                master_table_obj.header = False
+                master_table_obj.border = False
+                master_table_obj.align = 'l'
+                result = self.dpc_client.execute(verb="peek", arg_list=[cmd])
+                if cid:
+                    result = self._get_cid_bam_results(result, cid)
+                if prev_result:
+                    diff_result = self._get_nested_dict_difference(result=result, prev_result=prev_result)
+                    for key in sorted(result):
+                        table_obj = PrettyTable(['Field Name', 'Counters', 'Counter Diff'])
+                        table_obj.align = 'l'
+                        table_obj.sortby = 'Field Name'
+                        for _key in result[key]:
+                            if grep_regex:
+                                if re.search(grep_regex, key, re.IGNORECASE):
+                                    table_obj.add_row([_key, result[key][_key], diff_result[key][_key]])
+                            else:
+                                if type(result[key][_key]) == dict:
+                                    inner_table_obj = PrettyTable(['Field Name', 'Counters', 'Counter Diff'])
+                                    inner_table_obj.align = 'l'
+                                    inner_table_obj.sortby = 'Field Name'
+                                    for inner_key in result[key][_key]:
+                                        if type(result[key][_key]) == dict:
+                                            _inner_table_obj = PrettyTable(['Field Name', 'Counters', 'Counter Diff'])
+                                            _inner_table_obj.align = 'l'
+                                            _inner_table_obj.sortby = 'Field Name'
+                                            for _inner_key in result[key][_key][inner_key]:
+                                                _inner_table_obj.add_row([_inner_key, result[key][_key][inner_key][_inner_key],
+                                                                          diff_result[key][_key][inner_key][_inner_key]])
+                                            inner_table_obj.add_row([inner_key, _inner_table_obj, ""])
+                                        else:
+                                            inner_table_obj.add_row([inner_key, result[key][_key][inner_key],
+                                                                     diff_result[key][_key][inner_key]])
+                                    table_obj.add_row([_key, inner_table_obj, ""])
                                 else:
-                                    table_obj.add_row([decode_value + ' (' + key + ')'.strip(), result[key], diff_result[key]])
-                        else:
-                            table_obj = PrettyTable(['Field Name', 'Counters'])
-                            table_obj.align = 'l'
-                            for key in result:
-                                decode_value = ''
-                                pool_value = key.split(' ')[0]
-                                if 'usage' in key:
-                                    pool_value = key.split(' ')[1]
-                                if pool_value in bam_pool_decode_dict:
-                                    decode_value = bam_pool_decode_dict[pool_value]
-                                if grep_regex:
-                                    if re.search(grep_regex, decode_value, re.IGNORECASE):
-                                        table_obj.add_row([decode_value + ' (' + key + ')'.strip(), result[key]])
+                                    table_obj.add_row([_key, result[key][_key], diff_result[key][_key]])
+                        if table_obj.rowcount > 0:
+                            master_table_obj.add_row([key, table_obj])
+                else:
+                    for key in sorted(result):
+                        table_obj = PrettyTable(['Field Name', 'Counters'])
+                        table_obj.align = 'l'
+                        table_obj.sortby = 'Field Name'
+                        for _key in result[key]:
+                            if grep_regex:
+                                if re.search(grep_regex, key, re.IGNORECASE):
+                                    table_obj.add_row([_key, result[key][_key]])
+                            else:
+                                if type(result[key][_key]) == dict:
+                                    inner_table_obj = PrettyTable(['Field Name', 'Counters'])
+                                    inner_table_obj.align = 'l'
+                                    inner_table_obj.sortby = 'Field Name'
+                                    for inner_key in result[key][_key]:
+                                        if type(result[key][_key]) == dict:
+                                            _inner_table_obj = PrettyTable(['Field Name', 'Counters'])
+                                            _inner_table_obj.align = 'l'
+                                            _inner_table_obj.sortby = 'Field Name'
+                                            for _inner_key in result[key][_key][inner_key]:
+                                                _inner_table_obj.add_row([_inner_key, result[key][_key][inner_key][_inner_key]])
+                                            inner_table_obj.add_row([inner_key, _inner_table_obj])
+                                        else:
+                                            inner_table_obj.add_row([inner_key, result[key][_key][inner_key]])
+                                    table_obj.add_row([_key, inner_table_obj])
                                 else:
-                                    table_obj.add_row([decode_value + ' (' + key + ')'.strip(), result[key], ])
-                        if get_result_only:
-                            return cmd, table_obj
-                        prev_result = result
-                        print table_obj
-                        print "\n########################  %s ########################\n" % str(self._get_timestamp())
-                        do_sleep_for_interval()
-                    else:
-                        if get_result_only:
-                            return cmd, "Empty Result"
-                        print "Empty Result"
-                        do_sleep_for_interval()
-                except KeyboardInterrupt:
-                    self.dpc_client.disconnect()
-                    break
-        except Exception as ex:
-            print "ERROR: %s" % str(ex)
-            self.dpc_client.disconnect()
+                                    table_obj.add_row([_key, result[key][_key]])
+                        if table_obj.rowcount > 0:
+                            master_table_obj.add_row([key, table_obj])
+                if get_result_only:
+                    return cmd, master_table_obj
+                prev_result = result
+                print master_table_obj
+                print "\n########################  %s ########################\n" % str(self._get_timestamp())
+                do_sleep_for_interval()
+            except KeyboardInterrupt:
+                self.dpc_client.disconnect()
+                break
+            except Exception as ex:
+                print "ERROR: %s" % str(ex)
+                self.dpc_client.disconnect()
+                break
     '''
     def peek_nwqm_stats(self, grep_regex=None):
         try:
