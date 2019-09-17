@@ -216,17 +216,30 @@ def suite_executions(request, id):
 @api_safe_json_response
 def test_case_executions(request, id):
     if request.method == 'GET':
-        suite_id = request.GET.get("suite_id", None)
-        test_executions = TestCaseExecution.objects.filter(suite_execution_id=int(suite_id))
-        num_passed = 0
-        num_failed = 0
+        suite_execution_id = request.GET.get("suite_execution_id", None)
+        q = Q()
+        if suite_execution_id:
+            q = q & Q(suite_execution_id=int(suite_execution_id))
+        script_path = request.GET.get("script_path", None)
+        if script_path:
+            q = q & Q(script_path=script_path)
+        test_executions = TestCaseExecution.objects.filter(q)
+        results = []
+        #return results
+        for test_execution in test_executions:
+            results.append({"result": test_execution.result,
+                            "test_case_id": test_execution.test_case_id,
+                            "suite_execution_id": test_execution.suite_execution_id,
+                            "execution_id": test_execution.execution_id})
+        return results
+        """    
         for test_execution in test_executions:
             if test_execution.result == RESULTS["PASSED"]:
                 num_passed += 1
             elif test_execution.result == RESULTS["FAILED"]:
                 num_failed += 1
-        return {"num_passed": num_passed, "num_failed": num_failed}
-
+        return {"num_passed": num_passed, "num_failed": num_failed, "execution_id": test_execution.execution_id}
+        """
 
 
 @csrf_exempt

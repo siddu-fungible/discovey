@@ -692,3 +692,7 @@ def get_log_files(suite_execution_id):
                 log_files.append(associated_file)
     return log_files
 
+
+def add_time_series_log(time_series_manager, collection_name, date_time, log):
+    collection = time_series_manager.get_collection(collection_name=collection_name)
+    collection.insert_one({"date_time": date_time, "log": log})
