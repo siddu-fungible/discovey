@@ -31,6 +31,7 @@ import {PerformanceWorkspaceComponent} from './performance/performance-workspace
 import {PerformanceViewWorkspaceComponent} from "./performance/performance-workspace/performance-view-workspace/performance-view-workspace.component";
 import {SuiteEditorComponent} from "./regression/suite-editor/suite-editor.component";
 import {SuitesViewComponent} from "./regression/suite-editor/suites-view/suites-view.component";
+import {ScriptDetailComponent} from "./regression/script-detail/script-detail.component";
 
 export function regressionHome(url: UrlSegment[]) {
   return url[0].path.endsWith("regression");
@@ -55,6 +56,7 @@ const routes: Routes = [
   {path: 'regression/submit_job_page', component: SubmitJobComponent},
   {path: 'regression/test_bed', component: TestBedComponent},
   {path: 'regression/suite_detail/:suiteId', component: SuiteDetailComponent},
+  {path: 'regression/script_detail', component: ScriptDetailComponent},
   {path: 'regression/script_history_page/:scriptId', component: ScriptHistoryComponent},
   {path: 'regression/job_spec_detail/:id', component: JobSpecComponent},
   {path: 'regression/suite_editor/:id', component: SuiteEditorComponent},

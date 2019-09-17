@@ -3,6 +3,7 @@ import {ApiService} from "../services/api/api.service";
 import {LoggerService} from "../services/logger/logger.service";
 import {catchError, switchMap} from 'rxjs/operators';
 import {forkJoin, observable, Observable, of, throwError} from "rxjs";
+import {CommonService} from "../services/common/common.service";
 
 @Injectable({
   providedIn: 'root'
@@ -36,7 +37,7 @@ export class RegressionService implements OnInit{
   };
 
   logDir: string = null;
-  constructor(private apiService: ApiService, private loggerService: LoggerService) { }
+  constructor(private apiService: ApiService, private loggerService: LoggerService, private commonService: CommonService) { }
 
   ngOnInit() {
 
@@ -175,6 +176,25 @@ getPrettyLocalizeTime(t) {
       }
       return of(parsedTags);
     }), catchError(error => {
+      return throwError(error);
+    }))
+  }
+
+  testCaseExecutions(executionId=null, suiteExecutionId=null, scriptPath=null) {
+    let url = "/api/v1/regression/test_case_executions";
+    let queryParams = [];
+    if (suiteExecutionId) {
+      queryParams.push(["suite_execution_id", suiteExecutionId]);
+    }
+    if (scriptPath) {
+      queryParams.push(["script_path", scriptPath]);
+    }
+    let queryParamString = this.commonService.queryParamsToString(queryParams);
+    url = `${url}${queryParamString}`;
+    return this.apiService.get(url).pipe(switchMap(response => {
+      return of(response.data);
+
+    }), catchError (error => {
       return throwError(error);
     }))
   }
