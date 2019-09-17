@@ -34,20 +34,22 @@ class ApcPduTestcase(FunTestCase):
     def setup(self):
         fs_name = fun_test.get_job_environment_variable("test_bed_type")
         self.fs = AssetManager().get_fs_by_name(fs_name)
-        # self.apc_info = self.fs.get("apc_info", None)
-        self.apc_info = {
-            "host_ip": "cab02-pdu1",
-            "username": "localadmin",
-            "password": "Precious1*",
-            "outlet_number": 21
-        }
+        self.apc_info = self.fs.get("apc_info", None)
         self.outlet_no = self.apc_info.get("outlet_number", None)
 
+        self.validate = {"check_storage_controller": False, "check_ssd": False, "check_ports": False}
         job_inputs = fun_test.get_job_inputs()
         if job_inputs:
             if "iterations" in job_inputs:
                 self.NUMBER_OF_ITERATIONS = job_inputs["iterations"]
-        print(json.dumps(self.fs, indent=4))
+            if "check_ssd" in job_inputs:
+                self.validate["check_ssd"] = job_inputs["check_ssd"]
+            if "ports" in job_inputs:
+                self.validate["ports"] = job_inputs["check_ports"]
+            if "check_storage_controller" in job_inputs:
+                self.validate["check_storage_controller"] = job_inputs["check_storage_controller"]
+        fun_test.log(json.dumps(self.fs, indent=4))
+        fun_test.log(self.validate)
 
     def run(self):
         '''
@@ -63,11 +65,22 @@ class ApcPduTestcase(FunTestCase):
             come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
                                ssh_username=self.fs['come']['mgmt_ssh_username'],
                                ssh_password=self.fs['come']['mgmt_ssh_password'])
-            qa_02_handle = Linux(host_ip="qa-ubuntu-02", ssh_username="auto_admin", ssh_password="fun123")
+            bmc_handle = Bmc(host_ip=self.fs['bmc']['mgmt_ip'],
+                             ssh_username=self.fs['bmc']['mgmt_ssh_username'],
+                             ssh_password=self.fs['bmc']['mgmt_ssh_password'])
+            bmc_handle.set_prompt_terminator(r'# $')
 
             fun_test.add_checkpoint(checkpoint="ITERATION : {}".format(pc_no))
 
             self.apc_pdu_reboot(come_handle)
+
+            # Destroy any previously opened sessions(i.e After the power cycle)
+
+            come_handle.destroy()
+
+            fun_test.log("Checking if BMC is UP")
+            bmc_up = bmc_handle.ensure_host_is_up(max_wait_time=600)
+            fun_test.test_assert(bmc_up, "BMC is UP")
 
             fun_test.log("Checking if COMe is UP")
             come_up = come_handle.ensure_host_is_up(max_wait_time=600)
@@ -81,42 +94,41 @@ class ApcPduTestcase(FunTestCase):
                 up_time_min = int(up_time.group(1))
                 if up_time_min <= 5:
                     up_time_less_than_5 = True
-            # fun_test.test_assert(up_time_less_than_5, "COMe 'up-time' less than 5 min")
+            fun_test.test_assert(up_time_less_than_5, "COMe 'up-time' less than 5 min")
 
-            fun_test.log("Checking if BMC is UP")
-            bmc_up = qa_02_handle.ping(dst=self.fs['bmc']['mgmt_ip'])
-            fun_test.test_assert(bmc_up, "BMC is UP")
+            if self.validate["check_storage_controller"]:
+                fun_test.log("Checking if storage controller is up")
+                timer = FunTimer(max_time=300)
+                while not timer.is_expired():
+                    output = come_handle.command("curl -I -u admin:password http://10.1.105.141:50220/FunCC/v1/topology")
+                    match_status = re.search(r'HTTP/[\d.]+\s+(\d+)', output)
+                    if match_status:
+                        status = match_status.group(1)
+                        if status == "200":
+                            break
+                    fun_test.sleep("Waiting for storage controller to be up", seconds=10)
 
-            fun_test.log("Checking if storage controller is up")
-            timer = FunTimer(max_time=300)
-            while not timer.is_expired():
-                output = come_handle.command("curl -I -u admin:password http://10.1.105.141:50220/FunCC/v1/topology")
-                match_status = re.search(r'HTTP/[\d.]+\s+(\d+)', output)
-                if match_status:
-                    status = match_status.group(1)
-                    if status == "200":
-                        break
-                fun_test.sleep("Waiting for storage controller to be up", seconds=10)
+                come_handle.command("curl -u admin:password http://10.1.105.141:50220/FunCC/v1/topology | json_pp")
 
-            come_handle.command("curl -u admin:password http://10.1.105.141:50220/FunCC/v1/topology | json_pp")
+            if self.validate["check_ssd"]:
+                fun_test.log("Checking if SSD's are Active on F1_0")
+                ssd_valid = check_ssd(come_handle, expected_ssds_up=12, f1=0)
+                fun_test.test_assert(ssd_valid, "F1_0: SSD's ONLINE")
 
-            fun_test.log("Checking if SSD's are Active on F1_0")
-            ssd_valid = check_ssd(come_handle, expected_ssds_up=12, f1=0)
-            fun_test.test_assert(ssd_valid, "F1_0: SSD's ONLINE")
+                fun_test.log("Checking if SSD's are Active on F1_1")
+                ssd_valid = check_ssd(come_handle, expected_ssds_up=12, f1=1)
+                fun_test.test_assert(ssd_valid, "F1_1: SSD's ONLINE")
 
-            # fun_test.log("Checking if SSD's are Active on F1_1")
-            # ssd_valid = check_ssd(come_handle, expected_ssds_up=12, f1=1)
-            # fun_test.test_assert(ssd_valid, "F1_1: SSD's ONLINE")
+            if self.validate["check_ports"]:
+                fun_test.log("Checking if NU and HNU port's are active")
+                nu_port_valid = check_nu_ports(come_handle, iteration=pc_no, f1=0, expected_ports_up={'NU': range(8),
+                                                                                                      'HNU': []})
+                fun_test.test_assert(nu_port_valid, "F1_0: NU ports are present")
 
-            fun_test.log("Checking if NU and HNU port's are active")
-            nu_port_valid = check_nu_ports(come_handle, iteration=pc_no, f1=0, expected_ports_up={'NU': range(8),
-                                                                                                  'HNU': []})
-            fun_test.test_assert(nu_port_valid, "F1_0: NU ports are present")
-
-            fun_test.log("Checking if NU and HNU port's are active on F1_1")
-            nu_port_valid = check_nu_ports(come_handle, iteration=pc_no, f1=1, expected_ports_up={'NU': range(8),
-                                                                                                  'HNU': []})
-            fun_test.test_assert(nu_port_valid, "F1_1: NU ports are present")
+                fun_test.log("Checking if NU and HNU port's are active on F1_1")
+                nu_port_valid = check_nu_ports(come_handle, iteration=pc_no, f1=1, expected_ports_up={'NU': range(8),
+                                                                                                      'HNU': []})
+                fun_test.test_assert(nu_port_valid, "F1_1: NU ports are present")
 
             # Minor checks: docker and cores
 
@@ -126,8 +138,7 @@ class ApcPduTestcase(FunTestCase):
             come_handle.command("ls /opt/fungible/cores")
 
             come_handle.destroy()
-            # fpga_handle.destroy()
-            qa_02_handle.destroy()
+            bmc_handle.destroy()
 
             fun_test.sleep("Sleeping for 10s before next iteration", seconds=10)
 
