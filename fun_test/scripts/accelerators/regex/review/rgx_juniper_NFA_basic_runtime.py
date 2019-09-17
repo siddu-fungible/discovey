@@ -272,7 +272,7 @@ class JuniperNFA_Sequential2(HigherLevelTestcase):
 
 class JuniperNFA_parallel1(HigherLevelTestcase):
     def describe(self):
-        self.set_test_details(id=4,
+        self.set_test_details(id=5,
                               summary="JUNIPER NFA LSU parallel:loading graphs on different cluster",
                               steps="""
         1. Steps 1
@@ -292,7 +292,7 @@ class JuniperNFA_parallel1(HigherLevelTestcase):
 
 class JuniperNFA_parallel2(HigherLevelTestcase):
     def describe(self):
-        self.set_test_details(id=4,
+        self.set_test_details(id=6,
                               summary="JUNIPER NFA LSU parallel:loading graphs on single cluster",
                               steps="""
         1. Steps 1
