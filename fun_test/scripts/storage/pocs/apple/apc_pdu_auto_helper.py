@@ -36,14 +36,15 @@ def validate_ssd_status(dpcsh_data, expected_ssd_count):
     result = True
     if dpcsh_data:
         ssds_count = len(dpcsh_data)
-        if ssds_count >= expected_ssd_count:
-            for each_ssd, value in dpcsh_data.iteritems():
-                if "device state" in value:
-                    if not (value["device state"] == "DEV_ONLINE"):
-                        result = False
-        else:
-            result = False
-            fun_test.add_checkpoint("Expected ssds count : {}", FunTest.FAILED, True, result)
+        ssd_count_check = False
+        if ssds_count == expected_ssd_count:
+            ssd_count_check = True
+        fun_test.test_assert(ssd_count_check,
+                             "SSD count: Expected: {}, Present: {}".format(expected_ssd_count, ssds_count), )
+        for each_ssd, value in dpcsh_data.iteritems():
+            if "device state" in value:
+                if not (value["device state"] == "DEV_ONLINE"):
+                    result = False
     return result
 
 
