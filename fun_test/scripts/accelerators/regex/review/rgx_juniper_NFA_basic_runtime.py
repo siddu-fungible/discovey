@@ -34,8 +34,29 @@ def validate_rgx_result(self):
     funos_logs_file = DATA_STORE_DIR+"/"+self.job_dir.split("/")[-1]+".txt"
     #file_name = self.job_dir+"/mail.txt"
 
-    while not os.path.exists(funos_logs_file):
-        fun_test.sleep("waiting as the file is not created",5)
+
+
+
+   # while not os.path.exists(funos_logs_file):
+    #    fun_test.sleep("waiting as the file is not created",5)
+        num_polls = 60  # Max 3 Hrs
+        # scp_op = False
+    for poll in range(num_polls):
+        fun_test.scp(source_file_path=file_name,
+                     source_ip="qa-ubuntu-02",
+                     source_username="auto_admin",
+                     source_password="fun123",
+                     source_port=22,
+                     target_file_path=funos_logs_file,
+                     recursive=False,
+                     timeout=300)
+        if os.path.exists(funos_logs_file):
+            fun_test.log("SCP of mail.txt successful")
+            break
+        else:
+            fun_test.sleep("Polling for mail.txt...", 3 * 60)
+            # fun_test.log("Polling for mail.txt ...")
+            # time.sleep(2*60)
     with open(funos_logs_file, "r") as f_in:
         log_data = f_in.read()
     try:
