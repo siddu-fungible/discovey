@@ -34,7 +34,9 @@ export class PerformanceShowReportWorkspaceComponent implements OnInit {
 
   setPage(pager): void {
     this.pager = pager;
-    this.refreshPage()
+    setTimeout(() => {
+      this.refreshPage();
+    }, 1);
   }
 
   saveComments(): any {

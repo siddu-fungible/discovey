@@ -12,7 +12,8 @@ export class PerformanceShowChartsWorkspaceComponent implements OnInit {
   pagedItems: any[] = [];
   showPagedItems: boolean = false;
 
-  constructor() { }
+  constructor() {
+  }
 
   ngOnInit() {
   }
@@ -22,9 +23,11 @@ export class PerformanceShowChartsWorkspaceComponent implements OnInit {
     this.showPagedItems = true;
   }
 
-   setPage(pager): void {
+  setPage(pager): void {
     this.pager = pager;
-    this.refreshPage()
+    setTimeout(() => {
+      this.refreshPage();
+    }, 1);
   }
 
 }

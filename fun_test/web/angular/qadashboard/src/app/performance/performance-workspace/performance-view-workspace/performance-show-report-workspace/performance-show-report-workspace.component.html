@@ -1,7 +1,7 @@
+<app-pager *ngIf="workspace" [data]="workspace.interested_metrics" [recordsPerPage]=5
+             (pageNumber)="setPage($event)"></app-pager>
 <div class="card" style="margin: 10px; padding: 5px;">
   <b>Subject: </b><input style="max-width: 50%" type="text" [(ngModel)]="subject"/><br>
-  <app-pager *ngIf="workspace" [data]="workspace.interested_metrics" [recordsPerPage]=5
-             (pageNumber)="setPage($event)"></app-pager>
   <ng-container *ngIf="showPagedItems">
   <div *ngFor="let interestedMetric of pagedItems">
     <div *ngIf="interestedMetric.leaf" style="vertical-align: middle; width: 50%">
