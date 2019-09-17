@@ -515,7 +515,7 @@ def build_to_date_map(request):
     build_info = {}
     for entry in filtered_entries:
         try:
-            key = timezone.localtime(entry.build_date)
+            # key = timezone.localtime(entry.build_date)
             key = get_epoch_time_from_datetime(entry.build_date)
             build_info[key] = {"software_date": entry.software_date,
                                "hardware_version": entry.hardware_version,
