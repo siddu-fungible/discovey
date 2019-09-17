@@ -19,6 +19,7 @@ export class PerformanceShowReportWorkspaceComponent implements OnInit {
   jiraUrl: string = "http://jira/browse";
   pager: any = {};
   pagedItems: any[] = [];
+  showPagedItems: boolean = false;
 
   constructor(private apiService: ApiService, private loggerService: LoggerService, private performanceService: PerformanceService) {
   }
@@ -28,6 +29,7 @@ export class PerformanceShowReportWorkspaceComponent implements OnInit {
 
   refreshPage(): void {
     this.pagedItems = this.workspace.interested_metrics.slice(this.pager.startIndex, this.pager.endIndex + 1);
+    this.showPagedItems = true;
   }
 
   setPage(pager): void {
