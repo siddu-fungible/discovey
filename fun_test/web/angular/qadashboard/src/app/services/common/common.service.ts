@@ -60,10 +60,8 @@ export class CommonService {
 
   convertEpochToDate(epoch, timeZone): Date {
     let dateTime = new Date(epoch);
-    let pstDate = new Date(dateTime.toLocaleString('en-US', {
-      timeZone: timeZone
-    }));
-    return pstDate;
+    let date = this.convertToTimezone(dateTime, timeZone);
+    return date;
   }
 
   convertDateToEpoch(dateTimeObj): Date {

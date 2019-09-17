@@ -984,13 +984,16 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       this.apiService.post("/metrics/data_by_model", payload).subscribe((response) => {
         let dataSet = response.data;
         for (let rowData of dataSet) {
-          let row = [];
           let rowInTable = [];
           Object.keys(self.headers).forEach((key) => {
             if (self.isFieldRelevant(key)) {
-              let value = rowData[key];
+              let value = null;
+              if (key == "input_date_time") {
+                value = this.commonService.convertToTimezone(rowData[key], this.TIMEZONE);
+              } else {
+                value = rowData[key]
+              }
               rowInTable.push(value);
-              row.push(self.cleanValue(key, value));
             }
           });
           self.data["rows"][index++] = rowInTable;
