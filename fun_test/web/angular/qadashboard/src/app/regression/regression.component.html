@@ -455,6 +455,12 @@
           </tr>
           <tr *ngIf="suiteExecution.showingDetails">
             <td colspan="8">
+              <ng-container *ngIf="suiteExecution.fields.suite_id">
+                Suite ID: {{ suiteExecution.fields.suite_id }} <span class="pseudo-anchor" (click)="onSuiteDetail(suiteExecution.fields.suite_id)">...suite details</span>
+                <div>Name: {{ suiteMap[suiteExecution.fields.suite_id].name }}</div>
+                <div>Description:</div>
+                <div [innerHTML]="suiteMap[suiteExecution.fields.suite_id].short_description | safeHtml"></div>
+              </ng-container>
               <ng-container *ngIf="(suiteExecution.parsedInputs | keyvalue)?.length">
                 <div><b>Inputs</b></div>
 
