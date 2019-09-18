@@ -395,8 +395,8 @@ class WorkloadTriggerTestCase(FunTestCase):
                                                                                command_duration=self.command_timeout)
                     fun_test.log(command_result)
                     fun_test.test_assert(command_result["status"],
-                                         "Create Storage Controller for {} with controller uuid {} on DUT".
-                                         format(self.transport_type.upper(), self.ctrlr_uuid[-1]))
+                                         "Create Storage Controller for {} with controller uuid {} on DUT for host {}".
+                                         format(self.transport_type.upper(), self.ctrlr_uuid[-1], host_name))
 
                     # Attaching volume to NVMeOF controller
                     command_result = self.storage_controller.attach_volume_to_controller(
@@ -406,9 +406,9 @@ class WorkloadTriggerTestCase(FunTestCase):
                         command_duration=self.command_timeout)
                     fun_test.log(command_result)
                     fun_test.test_assert(command_result["status"],
-                                         "Attach NVMeOF controller {} to stripe vol {} over {}".
+                                         "Attach NVMeOF controller {} to stripe vol {} over {} for host {}".
                                          format(self.ctrlr_uuid[index], self.stripe_uuid,
-                                                self.transport_type.upper()))
+                                                self.transport_type.upper(), host_name))
 
             # Starting packet capture in all the hosts
             self.pcap_started = {}
@@ -455,12 +455,13 @@ class WorkloadTriggerTestCase(FunTestCase):
                         lsblk_output = host_handle.lsblk("-b")
                         fun_test.simple_assert(lsblk_output, "Listing available volumes")
 
-                        volume_name = self.nvme_device.replace("/dev/", "") + "n" + str(self.stripe_details["ns_id"])
+                        self.volume_name = self.nvme_device.replace("/dev/", "") + "n" + str(self.stripe_details["ns_id"])
                         host_handle.sudo_command("dmesg")
                         lsblk_output = host_handle.lsblk()
-                        fun_test.test_assert(volume_name in lsblk_output, "{} device available".format(volume_name))
-                        fun_test.test_assert_expected(expected="disk", actual=lsblk_output[volume_name]["type"],
-                                                      message="{} device type check".format(volume_name))
+                        fun_test.test_assert(self.volume_name in lsblk_output, "{} device available".
+                                             format(self.volume_name))
+                        fun_test.test_assert_expected(expected="disk", actual=lsblk_output[self.volume_name]["type"],
+                                                      message="{} device type check".format(self.volume_name))
 
             # Setting the syslog level
             command_result = self.storage_controller.poke(props_tree=["params/syslog/level", self.syslog_level],
@@ -518,7 +519,7 @@ class WorkloadTriggerTestCase(FunTestCase):
             test_filename = "/mnt/testfile.dat"
         else:
             test_filename = self.nvme_block_device
-        volume_name = self.nvme_device.replace("/dev/", "") + "n" + str(self.stripe_details["ns_id"])
+        # volume_name = self.nvme_device.replace("/dev/", "") + "n" + str(self.stripe_details["ns_id"])
 
         fio_size = int(100 / (self.num_hosts - 1))
         self.fio_cmd_args1["size"] = "{}{}".format(str(fio_size), "%")
@@ -552,8 +553,8 @@ class WorkloadTriggerTestCase(FunTestCase):
                         command_duration=self.command_timeout)
                     fun_test.log(command_result)
                     fun_test.test_assert(command_result["status"],
-                                         "Create Storage Controller for {} with controller uuid {} on DUT".
-                                         format(self.transport_type.upper(), self.ctrlr_uuid[-1]))
+                                         "Create Storage Controller for {} with controller uuid {} on DUT for host {}".
+                                         format(self.transport_type.upper(), self.ctrlr_uuid[-1], host_name))
 
                     # Attach volume to NVMe-OF controller
                     command_result = self.storage_controller.attach_volume_to_controller(
@@ -561,8 +562,9 @@ class WorkloadTriggerTestCase(FunTestCase):
                         vol_uuid=self.stripe_uuid, command_duration=self.command_timeout)
                     fun_test.log(command_result)
                     fun_test.test_assert(command_result["status"],
-                                         "Attach NVMeOF controller {} to stripe vol {} over {}".format(
-                                             self.ctrlr_uuid[-1], self.stripe_uuid, self.transport_type.upper()))
+                                         "Attach NVMeOF controller {} to stripe vol {} over {} for host {}".
+                                         format(self.ctrlr_uuid[-1], self.stripe_uuid, self.transport_type.upper(),
+                                                host_name))
 
                     # NVMe connect
                     fun_test.shared_variables["blt"][host_name] = {}
@@ -605,9 +607,10 @@ class WorkloadTriggerTestCase(FunTestCase):
 
                         host_handle.sudo_command("dmesg")
                         lsblk_output = host_handle.lsblk()
-                        fun_test.test_assert(volume_name in lsblk_output, "{} device available".format(volume_name))
-                        fun_test.test_assert_expected(expected="disk", actual=lsblk_output[volume_name]["type"],
-                                                      message="{} device type check".format(volume_name))
+                        fun_test.test_assert(self.volume_name in lsblk_output, "{} device available".
+                                             format(self.volume_name))
+                        fun_test.test_assert_expected(expected="disk", actual=lsblk_output[self.volume_name]["type"],
+                                                      message="{} device type check".format(self.volume_name))
 
                 wait_time = self.num_hosts - index
                 print("print: run: wait time is: {}".format(wait_time))
@@ -692,6 +695,7 @@ class WorkloadTriggerTestCase(FunTestCase):
             fun_test.sleep("Waiting in between iterations", self.iter_interval)
 
         iodepth = self.fio_iodepth[0]
+
         fun_test.log("\n\n********** NVMe disconnect followed by DETACH 2nd last host **********\n\n")
         for index, host_name in enumerate(self.host_info):
             print("print: disconnect run: current index is: {}".format(index))
@@ -726,7 +730,7 @@ class WorkloadTriggerTestCase(FunTestCase):
                                                                       **self.fio_cmd_args1)
 
             # nvme_disconnect_cmd = "nvme disconnect -n {}".format(self.nvme_subsystem)  # TODO: SWOS-6165
-            nvme_disconnect_cmd = "nvme disconnect -d {}".format(volume_name)
+            nvme_disconnect_cmd = "nvme disconnect -d {}".format(self.volume_name)
 
             if index == len(self.host_info) - 2:
                 fun_test.sleep("to initiate detach from host", self.detach_time)
@@ -785,8 +789,8 @@ class WorkloadTriggerTestCase(FunTestCase):
                     command_duration=self.command_timeout)
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"],
-                                     "Create Storage Controller for {} with controller uuid {} on DUT".
-                                     format(self.transport_type.upper(), self.ctrlr_uuid[index]))
+                                     "Create Storage Controller for {} with controller uuid {} on DUT for host {}".
+                                     format(self.transport_type.upper(), self.ctrlr_uuid[index], host_name))
 
                 # Attach 5th volume to NVMe-OF controller
                 command_result = self.storage_controller.attach_volume_to_controller(
@@ -794,8 +798,9 @@ class WorkloadTriggerTestCase(FunTestCase):
                     vol_uuid=self.stripe_uuid, command_duration=self.command_timeout)
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"],
-                                     "Re-Attach NVMeOF controller {} to stripe vol {} over {}".format(
-                                         self.ctrlr_uuid[index], self.stripe_uuid, self.transport_type.upper()))
+                                     "Attach NVMeOF controller {} to stripe vol {} over {} for host {}".
+                                     format(self.ctrlr_uuid[index], self.stripe_uuid, self.transport_type.upper(),
+                                            host_name))
 
                 # NVMe connect
                 fun_test.shared_variables["blt"][host_name] = {}
@@ -839,9 +844,10 @@ class WorkloadTriggerTestCase(FunTestCase):
                     # volume_name = self.nvme_device.replace("/dev/", "") + "n" + str(self.stripe_details["ns_id"])
                     host_handle.sudo_command("dmesg")
                     lsblk_output = host_handle.lsblk()
-                    fun_test.test_assert(volume_name in lsblk_output, "{} device available".format(volume_name))
-                    fun_test.test_assert_expected(expected="disk", actual=lsblk_output[volume_name]["type"],
-                                                  message="{} device type check".format(volume_name))
+                    fun_test.test_assert(self.volume_name in lsblk_output, "{} device available".
+                                         format(self.volume_name))
+                    fun_test.test_assert_expected(expected="disk", actual=lsblk_output[self.volume_name]["type"],
+                                                  message="{} device type check".format(self.volume_name))
 
             wait_time = self.num_hosts - index
             host_clone[host_name] = self.host_info[host_name]["handle"].clone()
@@ -860,7 +866,8 @@ class WorkloadTriggerTestCase(FunTestCase):
             # Skipping IO on host 4, which is in disconnected state
             elif index != len(self.host_info) - 2:
                 # Starting IO on rest of hosts for particular LBA range
-                fun_test.log("print: 5th host attach run: elif starting IO on index: {}, host: {}".format(index, host_name))
+                fun_test.log("print: 5th host attach run: elif starting IO on index: {}, host: {}".format(index,
+                                                                                                          host_name))
                 self.fio_cmd_args1["offset"] = "{}{}".format(str((index - 1) * fio_offset_diff), "%")
                 test_thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
                                                                       func=fio_parser,
@@ -970,8 +977,9 @@ class WorkloadTriggerTestCase(FunTestCase):
                     vol_uuid=self.stripe_uuid, command_duration=self.command_timeout)
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"],
-                                     "Re-Attach NVMeOF controller {} to stripe vol {} over {}".format(
-                                         self.ctrlr_uuid[index], self.stripe_uuid, self.transport_type.upper()))
+                                     "Re-Attach NVMeOF controller {} to stripe vol {} over {} for host {}".
+                                     format(self.ctrlr_uuid[index], self.stripe_uuid, self.transport_type.upper(),
+                                            host_name))
 
                 # Skip NVMe connect
                 fun_test.shared_variables["blt"][host_name] = {}
@@ -980,9 +988,9 @@ class WorkloadTriggerTestCase(FunTestCase):
                 fun_test.simple_assert(lsblk_output, "Listing available volumes")
                 host_handle.sudo_command("dmesg")
                 lsblk_output = host_handle.lsblk()
-                fun_test.test_assert(volume_name in lsblk_output, "{} device available".format(volume_name))
-                fun_test.test_assert_expected(expected="disk", actual=lsblk_output[volume_name]["type"],
-                                              message="{} device type check".format(volume_name))
+                fun_test.test_assert(self.volume_name in lsblk_output, "{} device available".format(self.volume_name))
+                fun_test.test_assert_expected(expected="disk", actual=lsblk_output[self.volume_name]["type"],
+                                              message="{} device type check".format(self.volume_name))
 
             wait_time = self.num_hosts - index
             host_clone[host_name] = self.host_info[host_name]["handle"].clone()
@@ -996,7 +1004,8 @@ class WorkloadTriggerTestCase(FunTestCase):
                                                                       host_index=index,
                                                                       filename=test_filename,
                                                                       iodepth=iodepth,
-                                                                      name="reattach_detach_wo_discon_fio_{}".format(host_name),
+                                                                      name="reattach_detach_wo_discon_fio_{}".
+                                                                      format(host_name),
                                                                       **self.fio_cmd_args)
             # Skipping IO on host 4, which is in disconnected state
             elif index != len(self.host_info) - 2:
@@ -1010,7 +1019,8 @@ class WorkloadTriggerTestCase(FunTestCase):
                                                                       host_index=index,
                                                                       filename=test_filename,
                                                                       iodepth=iodepth,
-                                                                      name="reattach_detach_wo_discon_fio_{}".format(host_name),
+                                                                      name="reattach_detach_wo_discon_fio_{}".
+                                                                      format(host_name),
                                                                       **self.fio_cmd_args1)
         # Waiting for all the FIO test threads to complete
         try:
@@ -1028,6 +1038,56 @@ class WorkloadTriggerTestCase(FunTestCase):
                                                                    fun_test.shared_variables["fio"][index]))
 
     def cleanup(self):
+        # Volume un-configuration
+        fun_test.log("\n\n********** Deleting volume **********\n\n")
+        for index, host_name in enumerate(self.host_info):
+            print("print: disconnect run: current index is: {}".format(index))
+
+            # nvme_disconnect_cmd = "nvme disconnect -n {}".format(self.nvme_subsystem)  # TODO: SWOS-6165
+            nvme_disconnect_cmd = "nvme disconnect -d {}".format(self.volume_name)
+
+            # Skipping disconnect from host4 as it's already disconnected
+            if index != len(self.host_info) - 2:
+                # Executing NVMe disconnect for 4th host
+                host_handle = self.host_info[host_name]["handle"]
+                host_handle.sudo_command(command=nvme_disconnect_cmd, timeout=60)
+                nvme_disconnect_exit_status = host_handle.exit_status()
+                fun_test.test_assert_expected(expected=0, actual=nvme_disconnect_exit_status,
+                                              message="{} - NVME Disconnect Status".format(host_name))
+
+                # Detach volume from NVMe-OF controller
+                command_result = self.storage_controller.detach_volume_from_controller(
+                    ctrlr_uuid=self.ctrlr_uuid[index], ns_id=self.stripe_details["ns_id"],
+                    command_duration=self.command_timeout)
+                fun_test.log(command_result)
+                fun_test.test_assert(command_result["status"], "{} - Detach NVMeOF controller {}".format(
+                    host_name, self.ctrlr_uuid[index]))
+
+        # Delete Strip Volume
+        command_result = self.storage_controller.delete_volume(type=self.stripe_details["type"],
+                                                               capacity=self.strip_vol_size,
+                                                               name="stripevol1",
+                                                               uuid=self.stripe_uuid,
+                                                               block_size=self.stripe_details["block_size"],
+                                                               stripe_unit=self.stripe_details["stripe_unit"],
+                                                               pvol_id=self.thin_uuid,
+                                                               command_duration=self.command_timeout)
+        fun_test.log(command_result)
+        fun_test.test_assert(command_result["status"], "Deleting Stripe Vol with uuid {} on DUT".
+                             format(self.stripe_uuid))
+
+        # Deleting BLT volumes
+        for i in range(self.blt_count):
+            command_result = self.storage_controller.delete_thin_block_volume(
+                capacity=self.blt_capacity,
+                block_size=self.blt_details["block_size"],
+                name="thin_block" + str(i+1),
+                uuid=self.thin_uuid[i],
+                command_duration=self.command_timeout)
+            fun_test.log(command_result)
+            fun_test.test_assert(command_result["status"], "Deleting BLT {} with uuid {} on DUT".
+                                 format(i, self.thin_uuid[i]))
+
         try:
             # Saving the pcap file captured during the nvme connect to the pcap_artifact_file file
             for index, host_name in enumerate(self.host_info):
@@ -1055,9 +1115,13 @@ class StripedVolVerifyIO(WorkloadTriggerTestCase):
                 3. Start Random Read on whole volume from first host
                 4. Start Random Read-Write with data integrity from rest of the volumes
                 5. Ensure data integrity
-                6. Initiate IO again and Disconnect hosts one by one
-                7. Verify impact on IO
-                8. Re-attach hosts and initiate IO again 
+                6. Re-Initiate IO and on one host do nvme-disconnect and Detach host
+                7. Verify data integrity on other hosts is not impacted
+                8. Attach a new host and initiate IO again
+                9. Re-Initiate IO and on last host Detach without nvme-disconnect
+                10. Verify data integrity on other hosts is not impacted
+                11. Re-attach same host, initiate IO, it should succeed
+                12. Un-configure volume
                 ''')
 
     def setup(self):
