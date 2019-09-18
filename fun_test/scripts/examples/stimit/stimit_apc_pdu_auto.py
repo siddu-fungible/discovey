@@ -1,4 +1,4 @@
-from apc_pdu_auto_helper import *
+from stimit_apc_pdu_auto_helper import *
 from asset.asset_manager import AssetManager
 from lib.host.apc_pdu import ApcPdu
 import re
