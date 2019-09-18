@@ -112,10 +112,13 @@ export class SuiteDetailComponent implements OnInit {
                 data.summary = moreInfo.summary;
 
                 ctrl.fetchScriptInfo(data.script_path, data.execution_id);
+
                 if (!ctrl.scriptExecutionsMap.hasOwnProperty(data.script_path)) {
                   ctrl.scriptExecutionsMap[data.script_path] = {};
                 }
                 ctrl.scriptExecutionsMap[data.script_path][data.execution_id] = data;
+                this.scriptExecutionsMap[data.script_path][data.execution_id]["logPrefix"] = parseInt(data.log_prefix);
+
                 let i = 0;
                 ctrl.fetchTestCaseInfo(testCaseExecutionId);
               });
@@ -153,12 +156,10 @@ export class SuiteDetailComponent implements OnInit {
       if (Object.keys(this.scriptExecutionsMap).indexOf(scriptPath) > -1) {
         let scriptPathValue = this.scriptExecutionsMap[scriptPath];
         if (scriptPathValue && Object.keys(scriptPathValue).indexOf(testCaseExecutionId.toString()) > -1) {
-          this.scriptExecutionsMap[scriptPath][testCaseExecutionId]["script_pk"] = response.pk;
-          //this.scriptExecutionsMap[scriptPath][testCaseExecutionId]["log_prefix"]
+          this.scriptExecutionsMap[scriptPath][testCaseExecutionId]["scriptPk"] = response.pk;
         }
       }
 
-      let i = 0;
     });
   }
 
@@ -427,12 +428,13 @@ export class SuiteDetailComponent implements OnInit {
     this.reUseBuildImage = !this.reUseBuildImage;
   }
 
-  getScriptDetailLink(scriptExecution) {
-    let i = 0;
-
-    let scriptInfo = (this.scriptInfo[scriptExecution.key]);
+  getScriptDetailLink(scriptPath, executionId, logPrefix) {
+    executionId = parseInt(executionId);
+    let scriptInfo = (this.scriptInfo[scriptPath]);
+    let scriptPk = this.scriptExecutionsMap[scriptPath][executionId].scriptPk;
+    let url = `/regression/script_detail/${scriptPk}/${logPrefix}/${this.suiteExecutionId}`;
+    return url;
   }
-
 
 
 }
