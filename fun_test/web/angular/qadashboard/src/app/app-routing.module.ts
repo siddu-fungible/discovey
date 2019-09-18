@@ -56,7 +56,7 @@ const routes: Routes = [
   {path: 'regression/submit_job_page', component: SubmitJobComponent},
   {path: 'regression/test_bed', component: TestBedComponent},
   {path: 'regression/suite_detail/:suiteExecutionId', component: SuiteDetailComponent},
-  {path: 'regression/script_detail', component: ScriptDetailComponent},
+  {path: 'regression/script_detail/:scriptPk/:logPrefix/:suiteExecutionId', component: ScriptDetailComponent},
   {path: 'regression/script_history_page/:scriptId', component: ScriptHistoryComponent},
   {path: 'regression/job_spec_detail/:id', component: JobSpecComponent},
   {path: 'regression/suite_editor/:id', component: SuiteEditorComponent},
