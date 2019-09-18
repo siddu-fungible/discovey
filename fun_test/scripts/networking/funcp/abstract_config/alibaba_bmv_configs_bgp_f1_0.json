@@ -1,0 +1,34 @@
+{
+    "Description": "FS45(fs-alibaba-demo) F1-0 abstract cfg with BGP",
+    "F1Index" : 1,
+    "Interfaces" : [
+        {
+            "name" : "fpg4",
+            "mtu": 9000,
+            "address" : "6.1.1.2",
+            "prefix length" : 24,
+            "spine_index" : 0,
+            "gph_index" : 0,
+            "enable" : true
+        },
+	{
+	    "name" : "lo:0",
+	    "address" : "6.6.6.6",
+	    "prefix length" : 32,
+	    "enable" : true
+	},
+        {
+            "name" : "vlan1",
+            "address" : "18.1.1.1",
+            "prefix length" : 24,
+            "enable" : true
+        }
+    ],
+    "BGP" : {
+	"Local AS": 62011,
+	"Neighbors" : [
+	    { "peer" : "6.1.1.1", "peer-as": 62010}
+
+	]
+    }
+}
