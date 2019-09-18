@@ -56,6 +56,7 @@ export class JenkinsFormComponent implements OnInit, OnChanges {
             this.jenkinsParameters['MAX_DURATION'] = value.MAX_DURATION;
             this.jenkinsParameters['FUNOS_MAKEFLAGS'] = value.FUNOS_MAKEFLAGS;
             this.jenkinsParameters['DISABLE_ASSERTIONS'] = value.DISABLE_ASSERTIONS;
+            this.jenkinsParameters['RELEASE_BUILD'] = value.RELEASE_BUILD;
             this.jenkinsParameters['HW_MODEL'] = value.HW_MODEL;
             this.jenkinsParameters['PCI_MODE'] = value.PCI_MODE;
             this.jenkinsParameters['REMOTE_SCRIPT'] = value.REMOTE_SCRIPT;
@@ -82,6 +83,7 @@ export class JenkinsFormComponent implements OnInit, OnChanges {
         'MAX_DURATION': [5],
         'SKIP_DASM_C': [true],
         'DISABLE_ASSERTIONS': [true],
+        'RELEASE_BUILD': [true],
         'FUNOS_MAKEFLAGS': [''],
         'HW_MODEL': [''],
         'PCI_MODE': [''],
