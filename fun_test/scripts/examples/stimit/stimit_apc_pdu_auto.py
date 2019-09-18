@@ -62,10 +62,10 @@ class ApcPduTestcase(FunTestCase):
         for pc_no in range(self.NUMBER_OF_ITERATIONS):
             self.pc_no = pc_no
 
-            come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
+            come_handle = ComE(host_ip='',
                                ssh_username=self.fs['come']['mgmt_ssh_username'],
                                ssh_password=self.fs['come']['mgmt_ssh_password'])
-            bmc_handle = Bmc(host_ip=self.fs['bmc']['mgmt_ip'],
+            bmc_handle = Bmc(host_ip="",
                              ssh_username=self.fs['bmc']['mgmt_ssh_username'],
                              ssh_password=self.fs['bmc']['mgmt_ssh_password'])
             bmc_handle.set_prompt_terminator(r'# $')
