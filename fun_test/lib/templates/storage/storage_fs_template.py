@@ -395,19 +395,26 @@ MODE_END_POINT = "ep"
 
 class StorageFsTemplate(object):
     NUM_FS_CONTAINERS = 2
-    FUNSDK_DIR = "/mnt/keep/FunSDK/"
+    FUNSDK_DIR = "/mnt/keep/FunSDK"
+    WORKSPACE = "/home/fun/workspace"
+    FUNGIBLE_ROOT = "opt/fungible"
     DEFAULT_TIMEOUT = 300
-    DEPLOY_TIMEOUT = 900
+    PREP_TIMEOUT = 900
+    DEPLOY_TIMEOUT = 180
     BOND_BRINGUP_TIMEOUT = 300
     LAUNCH_SCRIPT = "./integration_test/emulation/test_system.py "
+    DEPLOY_SCRIPT = "{}/{}/cclinux/cclinux_service.sh ".format(WORKSPACE, FUNGIBLE_ROOT)
     PREPARE_CMD = "{} --prepare --docker".format(LAUNCH_SCRIPT)
-    DEPLOY_CONTAINER_CMD = "{} --setup --docker".format(LAUNCH_SCRIPT)
+    DEPLOY_CONTAINER_CMD = "{} --start".format(DEPLOY_SCRIPT)
     # F1_0_HANDLE = None
     # F1_1_HANDLE = None
 
     def __init__(self, come_obj):
         self.come_obj = come_obj
         self.container_info = {}
+
+    def enter_funsdk(self):
+        self.come_obj.command("cd {}".format(self.FUNSDK_DIR))
 
     def deploy_funcp_container(self, update_deploy_script=True, update_workspace=True, mode=None,
                                launch_resp_parse=False):
@@ -424,12 +431,12 @@ class StorageFsTemplate(object):
 
         # prepare setup environment
         if update_workspace:
-            response = self.prepare_docker()
+            response = self.prepare_docker(mode, timeout=self.PREP_TIMEOUT)
             if not response:
                 return result
 
         # launch containers
-        launch_resp = self.launch_funcp_containers(mode)
+        launch_resp = self.launch_funcp_containers(mode, timeout=self.DEPLOY_TIMEOUT)
         if not launch_resp:
             fun_test.critical("FunCP container launch failed")
             if launch_resp_parse:
@@ -466,19 +473,18 @@ class StorageFsTemplate(object):
         if not response:
             fun_test.critical("{} dir does not exists".format(self.FUNSDK_DIR))
             return result
-        self.come_obj.command("cd {}".format(self.FUNSDK_DIR))
+        self.enter_funsdk()
+        # self.come_obj.command("cd {}".format(self.FUNSDK_DIR))
         self.come_obj.command("git pull", timeout=self.DEFAULT_TIMEOUT)
         if self.come_obj.exit_status() == 0:
             result = True
         return result
 
-    def enter_funsdk(self):
-        self.come_obj.command("cd {}".format(self.FUNSDK_DIR))
-
-    def prepare_docker(self):
+    def prepare_docker(self, mode, timeout=PREP_TIMEOUT):
         result = True
         self.enter_funsdk()
-        response = self.come_obj.command(self.PREPARE_CMD, timeout=self.DEFAULT_TIMEOUT)
+        prepare_cmd = self.PREPARE_CMD + "".join([" --{}".format(m) for m in mode])
+        response = self.come_obj.command(prepare_cmd, timeout=timeout)
         sections = ["Cloning into 'FunSDK'",
                     "Cloning into 'fungible-host-drivers'",
                     # "Cloning into 'FunControlPlane'",
@@ -489,13 +495,20 @@ class StorageFsTemplate(object):
                 result = False
         return result
 
-    def launch_funcp_containers(self, mode=None):
+    def launch_funcp_containers(self, mode=None, timeout=DEPLOY_TIMEOUT):
         result = True
+        response = ""
         self.enter_funsdk()
         cmd = self.DEPLOY_CONTAINER_CMD
         if mode:
-            cmd += " --{}".format(mode)
-        response = self.come_obj.command(cmd, timeout=self.DEPLOY_TIMEOUT)
+            cmd += "".join([" --{}".format(m) for m in mode])
+
+        try:
+            response = self.come_obj.command(cmd, timeout=timeout)
+        except Exception as ex:
+            fun_test.log(str(ex))
+        launch_status = self.come_obj.exit_status()
+        fun_test.log("FunCP docker container deployment stats: {}".format(launch_status))
         # Have to uncomment the below checklist after the FunCP changes gets solidified
         """
         sections = ['Bring up Control Plane',
@@ -505,16 +518,18 @@ class StorageFsTemplate(object):
                     'move fpg interface to f1 docker',
                     'Bring up Control Plane dockers']
         """
-        sections = ['Bring up Control Plane',
-                    'Device 1dad:',
-                    'libfunq bind  End',
-                    'Bring up Control Plane dockers']
+        sections = ['Discovered both F1 devices',
+                    'Done with installing funeth driver',
+                    'Done with installing libfunq',
+                    'Bring up Control Plane',
+                    'End of starting cclinux'
+                    ]
 
         for sect in sections:
             if sect not in response:
                 fun_test.critical("{} message not found in container deployment logs".format(sect))
-                result = False
-        return result
+
+        return True if not launch_status else False
 
     def get_container_names(self):
         result = {'status': False, 'container_name_list': []}
