@@ -47,7 +47,7 @@ class ChannelParallTc(FunTestCase):
                   "RUN_MODE": "Batch",
                   "TAGS": tags,
                   "NOTE": "channel parall app",
-                  "DISABLE_ASSERTIONS": "true"}
+                  "RELEASE_BUILD": "true"}
 
         build_result = jenkins_manager.build(params=params)
         fun_test.test_assert(build_result, "Build completed normally")
@@ -80,7 +80,7 @@ class SoakFlowsBusyLoopTc(FunTestCase):
                   "RUN_MODE": "Batch",
                   "TAGS": tags,
                   "NOTE": "soak flows busy loop",
-                  "DISABLE_ASSERTIONS": "true"}
+                  "RELEASE_BUILD": "true"}
 
         build_result = jenkins_manager.build(params=params)
         fun_test.test_assert(build_result, "Build completed normally")
@@ -113,7 +113,7 @@ class SoakFlowsMemcpy1MbNonCohTc(FunTestCase):
                   "RUN_MODE": "Batch",
                   "TAGS": tags,
                   "NOTE": "soak flows memcpy 1mb non coh",
-                  "DISABLE_ASSERTIONS": "true"}
+                  "RELEASE_BUILD": "true"}
 
         build_result = jenkins_manager.build(params=params)
         fun_test.test_assert(build_result, "Build completed normally")

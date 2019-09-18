@@ -28,7 +28,7 @@ class PalladiumTc(FunTestCase):
     fun_os_make_flags = ""
     hw_model = "S1_Compute"
     max_duration = 900
-    disable_assertions = "true"
+    release_build = "true"
     hw_version = "rel_09012019"
     run_target = "protium_s"
     extra_emails = []
@@ -58,7 +58,7 @@ class PalladiumTc(FunTestCase):
                   "RUN_MODE": "Batch",
                   "TAGS": self.tags,
                   "NOTE": self.note,
-                  "DISABLE_ASSERTIONS": self.disable_assertions,
+                  "RELEASE_BUILD": self.release_build,
                   "FUNOS_MAKEFLAGS": self.fun_os_make_flags,
                   "HW_VERSION": self.hw_version,
                   "RUN_TARGET": self.run_target,
