@@ -801,7 +801,13 @@ def get_data_by_model(request):
             # d["input_date_time__lt"] = today
             try:
                 result = model.objects.filter(**d)  # unpack, pack
-                data.append([model_to_dict(x) for x in result])
+                # data.append([model_to_dict(x) for x in result])
+                data_set_list = []
+                for x in result:
+                    temp_dict = model_to_dict(x)
+                    temp_dict["epoch_time"] = get_epoch_time_from_datetime(temp_dict["input_date_time"])
+                    data_set_list.append(temp_dict)
+                data.append(data_set_list)
             except ObjectDoesNotExist:
                 logger.critical("No data found Model: {} Inputs: {}".format(metric_model_name, str(inputs)))
         if duplicate is False:

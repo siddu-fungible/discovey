@@ -26,6 +26,7 @@ export class FunTableComponent implements OnInit {
   hideShowColumns: boolean = false;
   headerIndexMap: Map<number, boolean> = new Map<number, boolean>();
   static readonly defaultPageSize: number = 10;
+  TIMEZONE: string = "America/Los_Angeles";
 
   constructor(private apiService: ApiService, private pagerService: PagerService, private logger: LoggerService, private commonService: CommonService) {
     console.log("FunTableComponent init");
@@ -117,7 +118,9 @@ export class FunTableComponent implements OnInit {
   }
 
   getPstTime(t) {
-    return this.commonService.getPrettyPstTime(t);
+    console.log(t);
+    let pstDate = this.commonService.convertEpochToDate(Number(t), this.TIMEZONE);
+    return this.commonService.getPrettyPstTime(pstDate);
   }
 }
 

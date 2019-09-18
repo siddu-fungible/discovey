@@ -989,7 +989,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
             if (self.isFieldRelevant(key)) {
               let value = null;
               if (key == "input_date_time") {
-                value = this.commonService.convertToTimezone(rowData[key], this.TIMEZONE);
+                // value = this.commonService.convertToTimezone(rowData[key], this.TIMEZONE);
+                value = rowData["epoch_time"];
               } else {
                 value = rowData[key]
               }
