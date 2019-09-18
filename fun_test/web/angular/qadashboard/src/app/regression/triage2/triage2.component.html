@@ -1,54 +1,55 @@
 <div class="component">
 
   <form style="padding-top: 10px;" [formGroup]="submissionForm">
-    <div class="form-group">
-      <label class="control-label col-sm-2" for="submitter">Submitter: </label>
-      <select class="form-control" id="submitter" formControlName="submitter">
-        <option *ngFor="let user of users" [value]="user.email">{{ user.first_name }} {{ user.last_name }}
-          ({{ user.email }})
-        </option>
-      </select>
-    </div>
+    <table>
+      <tr class="form-group">
+        <td><label class="control-label col-sm-2" for="submitter">Submitter: </label></td>
+        <td><select class="form-control" id="submitter" formControlName="submitter">
+          <option *ngFor="let user of users" [value]="user.email">{{ user.first_name }} {{ user.last_name }}
+            ({{ user.email }})
+          </option>
+        </select></td>
+      </tr>
 
-    <div class="form-group">
-      <label class="control-label col-sm-2" for="triage_type">Type: </label>
-      <select class="form-control" id="triage_type" formControlName="triage_type">
-        <option *ngFor="let triageType of triageTypes | keyvalue" [value]="triageType.value">{{ triageType.key }}
-        </option>
-      </select>
-    </div>
+      <tr class="form-group">
+        <td><label class="control-label col-sm-2" for="triage_type">Type: </label></td>
+        <td><select class="form-control" id="triage_type" formControlName="triage_type">
+          <option *ngFor="let triageType of triageTypes | keyvalue" [value]="triageType.value">{{ triageType.key }}
+          </option>
+        </select></td>
+      </tr>
 
-    <div class="form-group" *ngIf="triageTypes && (submissionForm.value.triage_type == triageTypes.REGEX_MATCH || submissionForm.value.triage_type == triageTypes.INTEGRATION_REGEX_MATCH)">
-      <label class="control-label col-sm-2" for="regex_match_string">Regex match string: </label>
-      <input style="width: 400px" formControlName="regex_match_string" id="regex_match_string">
-    </div>
+      <tr class="form-group"
+          *ngIf="triageTypes && (submissionForm.value.triage_type == triageTypes.REGEX_MATCH || submissionForm.value.triage_type == triageTypes.INTEGRATION_REGEX_MATCH)">
+        <td><label class="control-label col-sm-2" for="regex_match_string">Regex match string: </label></td>
+        <td><input style="width: 400px" formControlName="regex_match_string" id="regex_match_string"></td>
+      </tr>
 
-    <div class="form-group" *ngIf="triageTypes && submissionForm.value.triage_type == triageTypes.SCORE">
-      <label class="control-label col-sm-2" for="metric_id">Metric ID: </label>
-      <input style="width: 300px" formControlName="metric_id" id="metric_id">
-    </div>
+      <tr class="form-group" *ngIf="triageTypes && submissionForm.value.triage_type == triageTypes.SCORE">
+        <td><label class="control-label col-sm-2" for="metric_id">Metric ID: </label></td>
+        <td><input style="width: 300px" formControlName="metric_id" id="metric_id"></td>
+      </tr>
 
 
-    <div class="form-group">
-      <label class="control-label col-sm-2" for="from_fun_os_sha">From FunOS commit: </label>
-      <input style="width: 400px" formControlName="from_fun_os_sha" id="from_fun_os_sha">
-    </div>
+      <tr class="form-group">
+        <td><label class="control-label col-sm-2" for="from_fun_os_sha">From FunOS commit: </label></td>
+        <td><input style="width: 400px" formControlName="from_fun_os_sha" id="from_fun_os_sha"></td>
+      </tr>
 
-    <div class="form-group">
-      <div class="flex-container">
-        <label class="control-label col-sm-2" for="to_fun_os_sha">To FunOS commit: </label>
-        <input style="width: 400px" formControlName="to_fun_os_sha" id="to_fun_os_sha">
-        <ng-container *ngIf="!gitShasValid">
-          <div style="margin-left: 20px">
-            <button *ngIf="!validateShasStatus" class="btn btn-primary btn-sm" (click)="validateShas()">Validate commits</button>
-            <fun-spinner [status]="validateShasStatus"></fun-spinner>
-          </div>
-        </ng-container>
-        <span *ngIf="gitShasValid"><i class="fa fa-check fa-fw tick-color"></i>Git commits are valid</span>
-      </div>
-    </div>
+      <tr class="form-group">
+        <td><label class="control-label col-sm-2" for="to_fun_os_sha">To FunOS commit: </label></td>
+        <td><input style="width: 400px" formControlName="to_fun_os_sha" id="to_fun_os_sha">
+          <span *ngIf="!gitShasValid" style="margin-left: 20px">
+              <button *ngIf="!validateShasStatus" class="btn btn-primary btn-sm" (click)="validateShas()">Validate
+                commits
+              </button>
+              <fun-spinner [status]="validateShasStatus"></fun-spinner>
+          </span>
+          <span *ngIf="gitShasValid"><i class="fa fa-check fa-fw tick-color"></i>Git commits are valid</span></td>
+      </tr>
+    </table>
   </form>
-
+  <br>
 
   <app-jenkins-form *ngIf="triageTypes && submissionForm.value" [triagingType]="submissionForm.value.triage_type"
                     (data)="jenkinsParametersChanged($event)"></app-jenkins-form>

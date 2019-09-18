@@ -1,62 +1,64 @@
 <form *ngIf="triagingType && triageTypes && triagingType != triageTypes.JENKINS_FUN_OS_ON_DEMAND"
       class="form-horizontal"
       [formGroup]="submissionForm">
-  <div class="form-group">
-    <label class="control-label col-sm-2" for="boot_args">BOOTARGS: </label>
-    <input style="width: 600px" formControlName="BOOTARGS" id="boot_args"/>
-  </div>
-  <div class="form-group">
-    <label class="control-label col-sm-2" for="release_build">RELEASE_BUILD: </label>
-    <input type="checkbox" formControlName="RELEASE_BUILD" id="release_build"/>
-  </div>
+  <table>
+    <tr class="form-group">
+      <td><label class="control-label col-sm-2" for="boot_args">BOOTARGS: </label></td>
+      <td><input style="width: 600px" formControlName="BOOTARGS" id="boot_args"/></td>
+    </tr>
+    <tr class="form-group">
+      <td><label class="control-label col-sm-2" for="release_build">RELEASE_BUILD: </label></td>
+      <td><input type="checkbox" formControlName="RELEASE_BUILD" id="release_build"/></td>
+    </tr>
 
-  <div class="form-group">
-    <label class="control-label col-sm-2" for="max_duration">MAX_DURATION: </label>
-    <input style="width: 50px" formControlName="MAX_DURATION" id="max_duration">
-  </div>
+    <tr class="form-group">
+      <td><label class="control-label col-sm-2" for="max_duration">MAX_DURATION: </label></td>
+      <td><input style="width: 50px" formControlName="MAX_DURATION" id="max_duration"></td>
+    </tr>
 
-  <div class="form-group">
-    <label class="control-label col-sm-2" for="hw_model">HW_MODEL: </label>
-    <input formControlName="HW_MODEL" id="hw_model">
-  </div>
+    <tr class="form-group">
+      <td><label class="control-label col-sm-2" for="hw_model">HW_MODEL: </label></td>
+      <td><input formControlName="HW_MODEL" id="hw_model"></td>
+    </tr>
 
-  <div class="form-group">
-    <label class="control-label col-sm-2" for="skip_dasm_c">SKIP_DASM_C: </label>
-    <input type="checkbox" formControlName="SKIP_DASM_C" id="skip_dasm_c"/>
-  </div>
+    <tr class="form-group">
+      <td><label class="control-label col-sm-2" for="skip_dasm_c">SKIP_DASM_C: </label></td>
+      <td><input type="checkbox" formControlName="SKIP_DASM_C" id="skip_dasm_c"/></td>
+    </tr>
 
-  <div class="form-group">
-    <label class="control-label col-sm-2" for="funos_makeflags">FUNOS_MAKEFLAGS: </label>
-    <input style="width: 500px" formControlName="FUNOS_MAKEFLAGS" id="funos_makeflags"/>
-  </div>
+    <tr class="form-group">
+      <td><label class="control-label col-sm-2" for="funos_makeflags">FUNOS_MAKEFLAGS: </label></td>
+      <td><input style="width: 500px" formControlName="FUNOS_MAKEFLAGS" id="funos_makeflags"/></td>
+    </tr>
 
-  <div class="form-group">
-    <label class="control-label col-sm-2" for="pci_mode">PCI_MODE: </label>
-    <input style="width: 200px" formControlName="PCI_MODE" id="pci_mode"/>
-  </div>
+    <tr class="form-group">
+      <td><label class="control-label col-sm-2" for="pci_mode">PCI_MODE: </label></td>
+      <td><input style="width: 200px" formControlName="PCI_MODE" id="pci_mode"/></td>
+    </tr>
 
-  <div class="form-group">
-    <label class="control-label col-sm-2" for="remote_script">REMOTE_SCRIPT: </label>
-    <input style="width: 200px" formControlName="REMOTE_SCRIPT" id="remote_script"/>
-  </div>
+    <tr class="form-group">
+      <td><label class="control-label col-sm-2" for="remote_script">REMOTE_SCRIPT: </label></td>
+      <td><input style="width: 200px" formControlName="REMOTE_SCRIPT" id="remote_script"/></td>
+    </tr>
 
-  <div class="form-group">
-    <label class="control-label col-sm-2" for="hw_version">HW_VERSION: </label>
-    <input style="width: 200px" formControlName="HW_VERSION" id="hw_version"/>
-  </div>
-
+    <tr class="form-group">
+      <td><label class="control-label col-sm-2" for="hw_version">HW_VERSION: </label></td>
+      <td><input style="width: 200px" formControlName="HW_VERSION" id="hw_version"/></td>
+    </tr>
+  </table>
 </form>
 
 <form *ngIf="triagingType && triageTypes && triagingType == triageTypes.JENKINS_FUN_OS_ON_DEMAND"
       class="form-horizontal"
       [formGroup]="submissionForm">
-  <div class="form-group">
-    <label class="control-label col-sm-2" for="test_script">Test script: </label>
-    <input style="width: 600px" formControlName="TEST_SCRIPT" id="test_script"/>
-  </div>
-  <div class="form-group">
-    <label class="control-label col-sm-2" for="test_script_loop">Test script loop: </label>
-    <input style="width: 600px" formControlName="TEST_SCRIPT_LOOP" id="test_script_loop"/>
-  </div>
-
+  <table>
+    <tr class="form-group">
+      <td><label class="control-label col-sm-2" for="test_script">Test script: </label></td>
+      <td><input style="width: 600px" formControlName="TEST_SCRIPT" id="test_script"/></td>
+    </tr>
+    <tr class="form-group">
+      <td><label class="control-label col-sm-2" for="test_script_loop">Test script loop: </label></td>
+      <td><input style="width: 600px" formControlName="TEST_SCRIPT_LOOP" id="test_script_loop"/></td>
+    </tr>
+  </table>
 </form>
