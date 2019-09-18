@@ -502,22 +502,15 @@ class StorageFsTemplate(object):
         cmd = self.DEPLOY_CONTAINER_CMD
         if mode:
             cmd += "".join([" --{}".format(m) for m in mode])
-
+            cmd = cmd + " &>/tmp/docker_launch_output.txt"
         try:
             response = self.come_obj.command(cmd, timeout=timeout)
         except Exception as ex:
             fun_test.log(str(ex))
-        launch_status = self.come_obj.exit_status()
-        fun_test.log("FunCP docker container deployment stats: {}".format(launch_status))
-        # Have to uncomment the below checklist after the FunCP changes gets solidified
-        """
-        sections = ['Bring up Control Plane',
-                    'Device 1dad:',
-                    'move fpg interface to f0 docker',
-                    'libfunq bind  End',
-                    'move fpg interface to f1 docker',
-                    'Bring up Control Plane dockers']
-        """
+        docker_launch_status = self.come_obj.exit_status()
+        fun_test.log("FunCP docker container deployment stats: {}".format(docker_launch_status))
+        docker_launch_output = self.come_obj.read_file("/tmp/docker_launch_output.txt")
+
         sections = ['Discovered both F1 devices',
                     'Done with installing funeth driver',
                     'Done with installing libfunq',
@@ -526,10 +519,10 @@ class StorageFsTemplate(object):
                     ]
 
         for sect in sections:
-            if sect not in response:
+            if sect not in docker_launch_output:
                 fun_test.critical("{} message not found in container deployment logs".format(sect))
 
-        return True if not launch_status else False
+        return True if not docker_launch_status else False
 
     def get_container_names(self):
         result = {'status': False, 'container_name_list': []}
