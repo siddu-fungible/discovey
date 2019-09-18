@@ -482,6 +482,23 @@ class Bmc(Linux):
         for log_listener_process in log_listener_processes:
             self.kill_process(signal=9, process_id=log_listener_process, kill_seconds=2)
 
+
+    def restart_serial_proxy(self):
+        fun_test.log("Restoring serial proxy")
+        serial_proxy_ids = self.get_process_id_by_pattern("python.*999", multiple=True)
+        for serial_proxy_id in serial_proxy_ids:
+            self.kill_process(signal=9, process_id=serial_proxy_id, kill_seconds=2)
+        serial_proxy_ids = self.get_process_id_by_pattern("python.*999")
+        fun_test.simple_assert(expression=not serial_proxy_ids,
+                               message="old serial proxies are alive",
+                               context=self.context)
+
+        self.command("bash web/fungible/RUN_TCP_PYSERIAL.sh")
+        serial_proxy_ids = self.get_process_id_by_pattern("python.*999", multiple=True)
+        fun_test.simple_assert(expression=len(serial_proxy_ids) == 2,
+                               message="2 serial proxies are alive",
+                               context=self.context)
+
     def initialize(self, reset=False):
         self.command("cd {}".format(self.SCRIPT_DIRECTORY))
         self.position_support_scripts()
@@ -564,6 +581,11 @@ class Bmc(Linux):
         if self.context:
             fun_test.add_auxillary_file(description=self._get_context_prefix("bringup"),
                                         filename=self.context.output_file_path)
+
+        try:
+            self.restart_serial_proxy()
+        except Exception as ex:
+            fun_test.critical((ex))
 
 
     def post_process_uart_log(self, f1_index, file_name):
