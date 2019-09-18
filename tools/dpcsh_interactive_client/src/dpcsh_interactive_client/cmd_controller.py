@@ -852,6 +852,9 @@ class CmdController(Cmd):
         grep_regex = args.grep
         self._peek_cmd_obj.peek_dam_resource_stats(grep_regex=grep_regex)
 
+    def get_bam_configs(self, args):
+        self._peek_cmd_obj.get_bam_configs()
+
     def peek_bam_resource_stats(self, args):
         grep_regex = args.grep
         cid = args.cid
@@ -1181,6 +1184,7 @@ class CmdController(Cmd):
     get_hnu_qos_arb_cfg_parser.set_defaults(func=get_hnu_qos_arb_cfg)
     set_hnu_qos_xoff_status_parser.set_defaults(func=set_hnu_qos_xoff_status)
     get_hnu_qos_xoff_status_parser.set_defaults(func=get_hnu_qos_xoff_status)
+    get_bam_parser.set_defaults(func=get_bam_configs)
 
     # -------------- Peek Command Handlers ----------------
     peek_fpg_stats_parser.set_defaults(func=peek_fpg_stats)
@@ -1328,7 +1332,7 @@ class CmdController(Cmd):
 
 
 if __name__ == '__main__':
-    cmd_obj = CmdController(target_ip="10.1.20.17", target_port=40220, verbose=False)
+    cmd_obj = CmdController(target_ip="fs48-come", target_port=40220, verbose=False)
     cmd_obj.cmdloop(intro="hello")
 
 

@@ -2893,6 +2893,49 @@ class PeekCommands(object):
     #         print "ERROR: %s" % str(ex)
     #         self.dpc_client.disconnect()
 
+    def _get_max_reference_keys(self, result, reference_cluster):
+        reference_keys = reference_cluster.keys()
+        num_keys = len(reference_keys)
+        for key, val in result.iteritems():
+            if len(val) > num_keys:
+                reference_keys = val.keys()
+        return reference_keys
+
+    def get_bam_configs(self):
+        cmd = "stats/resource/bam"
+        row_list = ['key names']
+        for x in range(9):
+            row_list.append('C' + str(x) + ":" + 'size_AUs')
+            row_list.append('C' + str(x) + ":" + 'size_KB')
+        master_table_obj = PrettyTable()
+        master_table_obj.header = True
+        master_table_obj.border = True
+        master_table_obj.align = 'l'
+        result = self.dpc_client.execute(verb="peek", arg_list=[cmd])
+        result = result['bm_usage_per_cluster']
+        reference_cluster = result['cluster_0']
+        reference_keys = self._get_max_reference_keys(result, reference_cluster)
+        output = OrderedDict()
+        for col_name in row_list:
+            output[col_name] = []
+            if col_name == 'key names':
+                output[col_name].extend(sorted(reference_keys))
+            else:
+                cname = col_name.replace('C', 'cluster_')
+                cluster_name = cname.split(":")[0]
+                key_name = 'pool_' + cname.split(":")[1]
+                cls_output = result[cluster_name]
+                for display_key in sorted(reference_keys):
+                    if display_key in cls_output:
+                        output[col_name].append(cls_output[display_key][key_name])
+                    else:
+                        output[col_name].append(0)
+        print_keys = output.keys()
+        print_values = output.values()
+        for col_name, col_values in zip(print_keys, print_values):
+            master_table_obj.add_column(col_name, col_values)
+        print master_table_obj
+
     def _get_cid_bam_results(self, result, cid):
         for key in result.keys():
             if key == 'bm_usage_per_cluster':
@@ -2902,82 +2945,107 @@ class PeekCommands(object):
         return result
 
     def peek_bam_resource_stats(self, cid=None, grep_regex=None, get_result_only=False):
-        prev_result = None
+        prev_global_result = None
+        prev_per_cluster_result = None
         while True:
             try:
                 cmd = "stats/resource/bam"
-                master_table_obj = PrettyTable()
-                master_table_obj.header = False
-                master_table_obj.border = False
-                master_table_obj.align = 'l'
                 result = self.dpc_client.execute(verb="peek", arg_list=[cmd])
+                if not result:
+                    break
+                reference_keys = self._get_max_reference_keys(result['bm_usage_per_cluster'],
+                                                              result['bm_usage_per_cluster']['cluster_0'])
                 if cid:
                     result = self._get_cid_bam_results(result, cid)
-                if prev_result:
-                    diff_result = self._get_nested_dict_difference(result=result, prev_result=prev_result)
-                    for key in sorted(result):
-                        table_obj = PrettyTable(['Field Name', 'Counters', 'Counter Diff'])
-                        table_obj.align = 'l'
-                        table_obj.sortby = 'Field Name'
-                        for _key in result[key]:
-                            if grep_regex:
-                                if re.search(grep_regex, key, re.IGNORECASE):
-                                    table_obj.add_row([_key, result[key][_key], diff_result[key][_key]])
-                            else:
-                                if type(result[key][_key]) == dict:
-                                    inner_table_obj = PrettyTable(['Field Name', 'Counters', 'Counter Diff'])
-                                    inner_table_obj.align = 'l'
-                                    inner_table_obj.sortby = 'Field Name'
-                                    for inner_key in result[key][_key]:
-                                        if type(result[key][_key]) == dict:
-                                            _inner_table_obj = PrettyTable(['Field Name', 'Counters', 'Counter Diff'])
-                                            _inner_table_obj.align = 'l'
-                                            _inner_table_obj.sortby = 'Field Name'
-                                            for _inner_key in result[key][_key][inner_key]:
-                                                _inner_table_obj.add_row([_inner_key, result[key][_key][inner_key][_inner_key],
-                                                                          diff_result[key][_key][inner_key][_inner_key]])
-                                            inner_table_obj.add_row([inner_key, _inner_table_obj, ""])
-                                        else:
-                                            inner_table_obj.add_row([inner_key, result[key][_key][inner_key],
-                                                                     diff_result[key][_key][inner_key]])
-                                    table_obj.add_row([_key, inner_table_obj, ""])
+                gloabl_result = result['bm_usage_global']
+                per_cluster_result = result['bm_usage_per_cluster']
+                if prev_global_result:
+                    diff_result = self._get_nested_dict_difference(result=gloabl_result, prev_result=prev_global_result)
+                    global_table_obj = PrettyTable(['Field Name', 'Counter', 'Counter Diff'])
+                    global_table_obj.align = 'l'
+                    for key, val in gloabl_result.iteritems():
+                        global_table_obj.add_row([key, val, diff_result[key]])
+                if prev_per_cluster_result:
+                    row_list = ['key names']
+                    for key in sorted(per_cluster_result.keys()):
+                        row_list.append(key[0].upper() + key[-1] + ":" + "cent")
+                        row_list.append(key[0].upper() + key[-1] + ":" + "d_cent")
+                        row_list.append(key[0].upper() + key[-1] + ":" + "col")
+                        row_list.append(key[0].upper() + key[-1] + ":" + "d_col")
+                    per_cluster_table_obj = PrettyTable()
+
+                    output = OrderedDict()
+                    for col_name in row_list:
+                        output[col_name] = []
+                        if col_name == 'key names':
+                            output[col_name].extend(sorted(reference_keys))
+                        else:
+                            cname = col_name.replace('C', 'cluster_')
+                            cluster_name = cname.split(":")[0]
+                            key_name = cname.split(":")[1]
+                            if key_name == 'cent':
+                                key_name = 'usage_percent'
+                            elif key_name == 'col':
+                                key_name = 'color'
+                            cls_output = per_cluster_result[cluster_name]
+                            if 'd_' in key_name:
+                                cls_output = prev_per_cluster_result[cluster_name]
+                            for display_key in sorted(reference_keys):
+                                if display_key in cls_output:
+                                    if key_name in cls_output[display_key]:
+                                        output[col_name].append(cls_output[display_key][key_name])
+                                    else:
+                                        output[col_name].append(0)
                                 else:
-                                    table_obj.add_row([_key, result[key][_key], diff_result[key][_key]])
-                        if table_obj.rowcount > 0:
-                            master_table_obj.add_row([key, table_obj])
+                                    output[col_name].append(0)
                 else:
-                    for key in sorted(result):
-                        table_obj = PrettyTable(['Field Name', 'Counters'])
-                        table_obj.align = 'l'
-                        table_obj.sortby = 'Field Name'
-                        for _key in result[key]:
-                            if grep_regex:
-                                if re.search(grep_regex, key, re.IGNORECASE):
-                                    table_obj.add_row([_key, result[key][_key]])
-                            else:
-                                if type(result[key][_key]) == dict:
-                                    inner_table_obj = PrettyTable(['Field Name', 'Counters'])
-                                    inner_table_obj.align = 'l'
-                                    inner_table_obj.sortby = 'Field Name'
-                                    for inner_key in result[key][_key]:
-                                        if type(result[key][_key]) == dict:
-                                            _inner_table_obj = PrettyTable(['Field Name', 'Counters'])
-                                            _inner_table_obj.align = 'l'
-                                            _inner_table_obj.sortby = 'Field Name'
-                                            for _inner_key in result[key][_key][inner_key]:
-                                                _inner_table_obj.add_row([_inner_key, result[key][_key][inner_key][_inner_key]])
-                                            inner_table_obj.add_row([inner_key, _inner_table_obj])
-                                        else:
-                                            inner_table_obj.add_row([inner_key, result[key][_key][inner_key]])
-                                    table_obj.add_row([_key, inner_table_obj])
+                    # Global table object
+                    global_table_obj = PrettyTable(['Field Name', 'Counter'])
+                    global_table_obj.align = 'l'
+                    for key, val in gloabl_result.iteritems():
+                        global_table_obj.add_row([key, val])
+
+                    # Per cluster table
+                    row_list = ['key names']
+                    for key in sorted(per_cluster_result.keys()):
+                        row_list.append(key[0].upper() + key[-1] + ":" + "cent")
+                        row_list.append(key[0].upper() + key[-1] + ":" + "col")
+                    per_cluster_table_obj = PrettyTable()
+
+                    output = OrderedDict()
+                    for col_name in row_list:
+                        output[col_name] = []
+                        if col_name == 'key names':
+                            output[col_name].extend(sorted(reference_keys))
+                        else:
+                            cname = col_name.replace('C', 'cluster_')
+                            cluster_name = cname.split(":")[0]
+                            key_name = cname.split(":")[1]
+                            if key_name == 'cent':
+                                key_name = 'usage_percent'
+                            elif key_name == 'col':
+                                key_name = 'color'
+                            cls_output = per_cluster_result[cluster_name]
+                            for display_key in sorted(reference_keys):
+                                if display_key in cls_output:
+                                    if key_name in cls_output[display_key]:
+                                        output[col_name].append(cls_output[display_key][key_name])
+                                    else:
+                                        output[col_name].append(0)
                                 else:
-                                    table_obj.add_row([_key, result[key][_key]])
-                        if table_obj.rowcount > 0:
-                            master_table_obj.add_row([key, table_obj])
+                                    output[col_name].append(0)
+                print_keys = output.keys()
+                print_values = output.values()
+                for col_name, col_values in zip(print_keys, print_values):
+                    per_cluster_table_obj.add_column(col_name, col_values)
+
+
                 if get_result_only:
-                    return cmd, master_table_obj
-                prev_result = result
-                print master_table_obj
+                    return cmd, global_table_obj, per_cluster_table_obj
+                prev_global_result = gloabl_result
+                prev_per_cluster_result = per_cluster_result
+                print global_table_obj
+                print per_cluster_table_obj
                 print "\n########################  %s ########################\n" % str(self._get_timestamp())
                 do_sleep_for_interval()
             except KeyboardInterrupt:
@@ -2987,6 +3055,92 @@ class PeekCommands(object):
                 print "ERROR: %s" % str(ex)
                 self.dpc_client.disconnect()
                 break
+    # def peek_bam_resource_stats(self, cid=None, grep_regex=None, get_result_only=False):
+    #     prev_result = None
+    #     while True:
+    #         try:
+    #             cmd = "stats/resource/bam"
+    #             master_table_obj = PrettyTable()
+    #             master_table_obj.header = False
+    #             master_table_obj.border = False
+    #             master_table_obj.align = 'l'
+    #             result = self.dpc_client.execute(verb="peek", arg_list=[cmd])
+    #             if cid:
+    #                 result = self._get_cid_bam_results(result, cid)
+    #             if prev_result:
+    #                 diff_result = self._get_nested_dict_difference(result=result, prev_result=prev_result)
+    #                 for key in sorted(result):
+    #                     table_obj = PrettyTable(['Field Name', 'Counters', 'Counter Diff'])
+    #                     table_obj.align = 'l'
+    #                     table_obj.sortby = 'Field Name'
+    #                     for _key in result[key]:
+    #                         if grep_regex:
+    #                             if re.search(grep_regex, key, re.IGNORECASE):
+    #                                 table_obj.add_row([_key, result[key][_key], diff_result[key][_key]])
+    #                         else:
+    #                             if type(result[key][_key]) == dict:
+    #                                 inner_table_obj = PrettyTable(['Field Name', 'Counters', 'Counter Diff'])
+    #                                 inner_table_obj.align = 'l'
+    #                                 inner_table_obj.sortby = 'Field Name'
+    #                                 for inner_key in result[key][_key]:
+    #                                     if type(result[key][_key]) == dict:
+    #                                         _inner_table_obj = PrettyTable(['Field Name', 'Counters', 'Counter Diff'])
+    #                                         _inner_table_obj.align = 'l'
+    #                                         _inner_table_obj.sortby = 'Field Name'
+    #                                         for _inner_key in result[key][_key][inner_key]:
+    #                                             _inner_table_obj.add_row([_inner_key, result[key][_key][inner_key][_inner_key],
+    #                                                                       diff_result[key][_key][inner_key][_inner_key]])
+    #                                         inner_table_obj.add_row([inner_key, _inner_table_obj, ""])
+    #                                     else:
+    #                                         inner_table_obj.add_row([inner_key, result[key][_key][inner_key],
+    #                                                                  diff_result[key][_key][inner_key]])
+    #                                 table_obj.add_row([_key, inner_table_obj, ""])
+    #                             else:
+    #                                 table_obj.add_row([_key, result[key][_key], diff_result[key][_key]])
+    #                     if table_obj.rowcount > 0:
+    #                         master_table_obj.add_row([key, table_obj])
+    #             else:
+    #                 for key in sorted(result):
+    #                     table_obj = PrettyTable(['Field Name', 'Counters'])
+    #                     table_obj.align = 'l'
+    #                     table_obj.sortby = 'Field Name'
+    #                     for _key in result[key]:
+    #                         if grep_regex:
+    #                             if re.search(grep_regex, key, re.IGNORECASE):
+    #                                 table_obj.add_row([_key, result[key][_key]])
+    #                         else:
+    #                             if type(result[key][_key]) == dict:
+    #                                 inner_table_obj = PrettyTable(['Field Name', 'Counters'])
+    #                                 inner_table_obj.align = 'l'
+    #                                 inner_table_obj.sortby = 'Field Name'
+    #                                 for inner_key in result[key][_key]:
+    #                                     if type(result[key][_key]) == dict:
+    #                                         _inner_table_obj = PrettyTable(['Field Name', 'Counters'])
+    #                                         _inner_table_obj.align = 'l'
+    #                                         _inner_table_obj.sortby = 'Field Name'
+    #                                         for _inner_key in result[key][_key][inner_key]:
+    #                                             _inner_table_obj.add_row([_inner_key, result[key][_key][inner_key][_inner_key]])
+    #                                         inner_table_obj.add_row([inner_key, _inner_table_obj])
+    #                                     else:
+    #                                         inner_table_obj.add_row([inner_key, result[key][_key][inner_key]])
+    #                                 table_obj.add_row([_key, inner_table_obj])
+    #                             else:
+    #                                 table_obj.add_row([_key, result[key][_key]])
+    #                     if table_obj.rowcount > 0:
+    #                         master_table_obj.add_row([key, table_obj])
+    #             if get_result_only:
+    #                 return cmd, master_table_obj
+    #             prev_result = result
+    #             print master_table_obj
+    #             print "\n########################  %s ########################\n" % str(self._get_timestamp())
+    #             do_sleep_for_interval()
+    #         except KeyboardInterrupt:
+    #             self.dpc_client.disconnect()
+    #             break
+    #         except Exception as ex:
+    #             print "ERROR: %s" % str(ex)
+    #             self.dpc_client.disconnect()
+    #             break
     '''
     def peek_nwqm_stats(self, grep_regex=None):
         try:
