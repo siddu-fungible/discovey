@@ -1,3 +1,6 @@
+#!/usr/bin/python
+import sys
+sys.path.append('/workspace/Integration/fun_test')
 from lib.system.fun_test import *
 from lib.host.linux import Linux
 import pandas as pd
@@ -5,7 +8,8 @@ from StringIO import StringIO
 import random
 
 
-def get_netesto_script(no_of_streams=1, no_of_rr=1, local_buff=9000, remote_buff=9000):
+ 
+def get_netesto_script(no_of_streams=1, no_of_nobuff_streams=0, no_of_rr=1, local_buff=9000, remote_buff=9000):
     ali_script = '''
     #
     # Sample script for netesto
@@ -118,11 +122,12 @@ def get_netesto_script(no_of_streams=1, no_of_rr=1, local_buff=9000, remote_buff
     SET reply=1
     #SET tcpDump=25000
     SET instancestream=%s
+    SET nobuffstreams=%s
     SET instancerr=%s
     SET localbuffer=%s
     SET remotebuffer=%s
     SET dur=60
-    IF 1: RUN MServerStreamFunAlibaba  servers=$servers3  servers_t=$servers_t1 servers2_t=$servers_t2 servers3_t=$servers_t3 clients=$clients3 client1=$client1 client2=$client2 client3=$client1 localbuf1=$localbuffer remotebuf1=$remotebuffer instance1=$instancestream instance2=$instancerr reqs=$reqs reply=$reply burst2=$burst2 interval2=$interval2 expName=AlibabaSTREAM2RR1 ca=$ca dur=$dur interval=$interval burst=$burst
+    IF 1: RUN MServerStreamFunAlibaba  servers=$servers3  servers_t=$servers_t1 servers2_t=$servers_t2 servers3_t=$servers_t3 clients=$clients3 client1=$client1 client2=$client2 client3=$client3 nobuffclient1=$client1 nobuffclient3=$client3 instancenobuff1=$nobuffstreams localbuf1=$localbuffer remotebuf1=$remotebuffer instance1=$instancestream instance2=$instancerr reqs=$reqs reply=$reply burst2=$burst2 interval2=$interval2 expName=AlibabaSTREAM2RR1 ca=$ca dur=$dur interval=$interval burst=$burst
 
 
     SET burst=0
@@ -140,7 +145,7 @@ def get_netesto_script(no_of_streams=1, no_of_rr=1, local_buff=9000, remote_buff
     SET interval=200
     IF 0: RUN MServerStreamFunAlibaba  servers=$servers1  servers_t=$servers_t1 clients=$clients1 client1=$client1 instance1=1 expName=EACHSTREAM10Gbps ca=$ca dur=$dur interval=$interval burst=$burst
 
-        ''' % (no_of_streams, no_of_rr, local_buff, remote_buff)
+        ''' % (no_of_streams, no_of_nobuff_streams, no_of_rr, local_buff, remote_buff)
     return ali_script
 
 
@@ -184,18 +189,20 @@ def netstat(linux):
     fun_test.log("======================================")
     linux.command(command="netstat -st")
 
-def run_netesto(no_of_streams, no_of_rr, local_buff, remote_buff, total_calls):
+def run_netesto(no_of_streams, no_of_nobuff_streams, no_of_rr, local_buff, remote_buff, total_calls):
     if total_calls == 0:
         st = inspect.stack()
         script_file_name = st[1][1]
         fun_test._initialize(script_file_name)
 
-    directory = '/Users/yajat/Documents/Fungible/WORKSPACE/Integration/fun_test/scripts/networking/funcp/'
-    self_linux = Linux(host_ip='127.0.0.1', ssh_username='yajat', ssh_password='messi3006')
+    #directory = '/Users/yajat/Documents/Fungible/WORKSPACE/Integration/fun_test/scripts/networking/funcp/'
+    directory = '/workspace/Integration/fun_test/scripts/networking/funcp/'
+    self_linux = Linux(host_ip='127.0.0.1', ssh_username='netesto', ssh_password='netesto')
+    #self_linux = Linux(host_ip='127.0.0.1', ssh_username='yajat', ssh_password='messi3006')
     self_linux.command('cd %s' % directory)
-    self_linux.command('rm netesto_execute_script')
-    file = open(directory+'/netesto_execute_script', 'a')
-    file.write(get_netesto_script(no_of_streams=no_of_streams, no_of_rr=no_of_rr, local_buff=local_buff,
+    self_linux.command('rm -rf netesto_execute_script')
+    file = open(directory+'/netesto_execute_script', 'w+')
+    file.write(get_netesto_script(no_of_streams=no_of_streams, no_of_nobuff_streams=no_of_nobuff_streams, no_of_rr=no_of_rr, local_buff=local_buff,
                                   remote_buff=remote_buff))
     netesto_controller = Linux(host_ip="cab03-qa-03", ssh_username="localadmin", ssh_password="Precious1*")
     netesto_controller.command("cd ~/netesto_controller/netesto/local/fun_scripts")
@@ -208,6 +215,8 @@ def run_netesto(no_of_streams, no_of_rr, local_buff, remote_buff, total_calls):
 
     netesto_controller.command("cd ~/netesto_controller/netesto/local")
 
+    netesto_process_before_test = netesto_controller.command("cat counter; echo").strip()
+
     # fun_test.sleep(message="Sleep before tests start", seconds=10)
 
     netesto_controller.sudo_command(command="./netesto.py -d < fun_scripts/netesto_execute_script", timeout=600)
@@ -215,7 +224,7 @@ def run_netesto(no_of_streams, no_of_rr, local_buff, remote_buff, total_calls):
     # netesto_controller.sudo_command(command="./netesto.py -d < fun_scripts/script.alibaba_3servers", timeout=600)
 
     netesto_process = netesto_controller.command("cat counter; echo").strip()
-    if netesto_process != "":
+    if netesto_process != "" and netesto_process_before_test != netesto_process:
         netesto_controller.command("cd ~/netesto_controller/netesto/local/fun_plots")
         netesto_controller.sudo_command(command="./aggregate.py %s" % netesto_process, timeout=150)
         csv_results = netesto_controller.command("cat aggregate.csv")
@@ -254,8 +263,8 @@ def run_netesto(no_of_streams, no_of_rr, local_buff, remote_buff, total_calls):
         rr_latency_p50 = df.loc[row].at['Latency_p50']
         rr_latency_p90 = df.loc[row].at['Latency_p90']
         rr_latency_p99 = df.loc[row].at['Latency_p99']
-
-        name = str(no_of_streams) + "streams_" + str(local_buff) + "buff"
+        no_of_nobuff_streams = str(no_of_nobuff_streams)
+        name = str(no_of_streams) + "streams_" + str(local_buff) + "buff_" + str(no_of_nobuff_streams) + "nobuff"
 
         result = {'no_of_streams': no_of_streams, 'no_of_rr': no_of_rr,
                                                            'local_buff': local_buff, 'remote_buff': remote_buff,
@@ -267,15 +276,31 @@ def run_netesto(no_of_streams, no_of_rr, local_buff, remote_buff, total_calls):
                                                            'netesto_folder': netesto_process,
                                                            'aggregate': "http://10.1.105.194/Chart.js/"
                                                                         "fun_plots/aggregate_%s.csv" % netesto_process}
+        result['no_of_nobuff_streams'] = str(no_of_nobuff_streams)
         print {name: result}
         fun_test.shared_variables['result'][name] = result
+        fun_test.shared_variables['result']['script_names'].append(name)
         print fun_test.shared_variables['result']
 
 
 if __name__ == '__main__':
     fun_test.shared_variables['result'] = {}
+    fun_test.shared_variables['result']['script_names'] = []
     total_calls = 0
-    for streams in (4, 8, 16, 32):
+    #streams_list = [4, 8, 16, 32]
+    arg_buffs = []
+    streams_list = []
+    print "Len of argv %s" %str(len(sys.argv))
+    if len(sys.argv) > 1:
+        streams_list.append(int(sys.argv[1]))
+        arg_buffs.append(sys.argv[2])
+        print "Streams list is %s , arg_buffs is %s" %(str(streams_list),str(arg_buffs))
+    else:
+        streams_list = [0,4,8,16,32]
+    streams_4_buffs = ['18000', '42000', '72000', '128000', '300000']
+    #streams_4_buffs = ['18000', '42000', '72000', '128000', '300000', '30000:4', '30000:8']
+    #streams_4_buffs = [18000]
+    for streams in streams_list:
         hosts = ['cab02-qa-06', 'cab02-qa-02', 'cab02-qa-03', 'cab02-qa-05', 'cab02-qa-01', 'cab02-qa-07']
         threads_list = []
         for host in hosts:
@@ -286,16 +311,69 @@ if __name__ == '__main__':
             fun_test.join_thread(fun_test_thread_id=thread_id, sleep_time=1)
         buffs = []
         if streams == 4:
-            buffs = [18000, 42000, 72000, 128000, 300000]
+            if arg_buffs:
+                buffs = arg_buffs
+            else:
+                buffs = ['18000', '42000', '72000', '128000', '300000'] 
         elif streams == 8:
-            buffs = [12000, 23000, 38000, 54000, 78000]
+            if arg_buffs:
+                buffs = arg_buffs
+            else:
+                buffs = ['12000', '23000', '38000', '54000', '78000', '128000']
+        elif streams == 0:
+            #nobuff_streams = 8
+            if arg_buffs:
+                buffs = arg_buffs
+            else:    
+                buffs = ['0:4', '0:8', '0:16', '0:32', '0:64', '0:128', '0:256', '0:512', '0:1024']
         elif streams == 16:
-            buffs = [9000, 15000, 22000, 30000, 43000, 58000]
+            if arg_buffs:
+                buffs = arg_buffs
+            else:
+                buffs = ['9000', '15000', '22000', '30000', '43000', '58000']
+            #buffs = [58000]
         elif streams == 32:
-            buffs = [6000, 10000, 13600, 18000, 24000]
+            if arg_buffs:
+                buffs = arg_buffs
+            else:
+                buffs = ['9000', '15000', '23000', '30000', '43000', '60000', '78000', '128000']
+            #buffs = [8400]
+            #nobuff_streams = 4
         for buff_value in buffs:
-
-            run_netesto(no_of_streams=streams, no_of_rr=1, local_buff=buff_value, remote_buff=buff_value,
+            if ':' in buff_value:
+                nobuff_streams = int(buff_value.split(':')[1])
+                buff_value = int(buff_value.split(':')[0])
+            else:
+                nobuff_streams = 0
+                buff_value = int(buff_value)
+            print "Running test for %s streams %s buffer size" %(str(streams),str(buff_value)) 
+            run_netesto(no_of_streams=streams, no_of_nobuff_streams=nobuff_streams, no_of_rr=1, local_buff=buff_value, remote_buff=buff_value,
                         total_calls=total_calls)
             total_calls += 1
     print fun_test.shared_variables['result']
+    directory = '/workspace/Integration/fun_test/scripts/networking/funcp/'
+    fw = open(directory+'/netesto_results.csv', 'w')
+    fw.write("Stream Name,no_of_streams,no_of_rr,no_of_nobuff_streams,rr_latency_min,rr_latency_p50,rr_latency_p90,rr_latency_p99,total_throughput,local_buff,remote_buff,netesto_folder,aggregate file link\n")
+    for res1 in fun_test.shared_variables['result']['script_names']:
+        res = fun_test.shared_variables['result'][res1]
+        print("Res is " + str(res))
+        line = []
+        line_val = ''
+        line.append(res1)
+        line.append(str(res['no_of_streams']))
+        line.append(str(res['no_of_rr']))
+        line.append(str(res['no_of_nobuff_streams']))
+        line.append(str(res['rr_latency_min']))
+        line.append(str(res['rr_latency_p50']))
+        line.append(str(res['rr_latency_p90']))
+        line.append(str(res['rr_latency_p99']))
+        line.append(str(res['total_throughput']))
+        line.append(str(res['local_buff']))
+        line.append(str(res['remote_buff']))
+        line.append(str(res['netesto_folder']))
+        line.append(str(res['aggregate']))
+        print "Line is " + str(line)
+        line_val = ','.join(line)
+        fw.writelines(','.join(line) + '\n')
+        #fw.write('\n')        
+    fw.close()    
