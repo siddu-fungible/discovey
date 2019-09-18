@@ -468,10 +468,11 @@ export class RegressionComponent implements OnInit {
     return this.regressionService.getPrettyLocalizeTime(t);
   }
 
+  /*
   getSuiteDetail(suiteId) {
     console.log(suiteId);
     window.location.href = "/regression/suite_detail/" + suiteId;
-  }
+  }*/
 
   getSchedulerLog(suiteId) {
     return this.regressionService.getSchedulerLog(suiteId);

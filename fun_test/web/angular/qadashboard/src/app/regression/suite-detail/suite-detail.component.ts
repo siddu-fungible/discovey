@@ -8,6 +8,8 @@ import {RegressionService} from "../regression.service";
 import {CommonService} from "../../services/common/common.service";
 import {NgbModal, ModalDismissReasons} from '@ng-bootstrap/ng-bootstrap';
 import {UserService} from "../../services/user/user.service";
+import {of} from "rxjs";
+import {catchError, switchMap} from "rxjs/operators";
 
 
 class Environment {
@@ -22,12 +24,9 @@ class Environment {
   styleUrls: ['./suite-detail.component.css']
 })
 export class SuiteDetailComponent implements OnInit {
-  logDir: any;
-  CONSOLE_LOG_EXTENSION: string;
-  HTML_LOG_EXTENSION: string;
-  executionId: number;
+  logDir: any = null;
+  suiteExecutionId: number;
   suiteExecution: any = null;
-  testCaseExecutions: any;
   scriptExecutionsMap: any = {};
   attributes: any;
   showReRunPanel: boolean = false;
@@ -38,7 +37,9 @@ export class SuiteDetailComponent implements OnInit {
   stateStringMap: any = null;
   stateMap: any = null;
   environment = new Environment();
-
+  driver = null;
+  CONSOLE_LOG_EXTENSION: string = ".logs.txt";  //TIED to scheduler_helper.py  TODO
+  HTML_LOG_EXTENSION: string = ".html";         //TIED to scheduler_helper.py  TODO
     // Re-run options
   reRunOptionsReRunFailed: boolean = false;
   reRunOptionsReRunAll: boolean = true;
@@ -59,88 +60,104 @@ export class SuiteDetailComponent implements OnInit {
 
   ngOnInit() {
     let self = this;
+
+
+    this.driver = of(true).pipe(switchMap(response => {
+      return this.getLogPath();
+    }));
+    this.driver.subscribe();
+
     this.route.params.subscribe(params => {
-      if (params['suiteId']) {
-        this.executionId = params['suiteId'];
+      if (params['suiteExecutionId']) {
+        this.suiteExecutionId = params['suiteExecutionId'];
         let ctrl = this;
-        this.apiService.get("/regression/suite_execution_attributes/" + this.executionId).subscribe(result => {
+        this.apiService.get("/regression/suite_execution_attributes/" + this.suiteExecutionId).subscribe(result => {
           self.attributes = result.data;
-          self.attributes.unshift({"name": "Suite execution Id", "value": ctrl.executionId});
-        });
-      }
-    });
-    this.logDir = null;
-    this.CONSOLE_LOG_EXTENSION = ".logs.txt";  //TIED to scheduler_helper.py  TODO
-    this.HTML_LOG_EXTENSION = ".html";         //TIED to scheduler_helper.py  TODO
-    if (!this.logDir) {
-      this.apiService.get("/regression/log_path").subscribe(function (result) {
-        self.logDir = result.data;
-      }, error => {
-        self.logDir = "/static/logs/s_";
-      });
-    }
-    let ctrl = this;
-    this.testCaseExecutions = [];
-    this.apiService.get("/regression/suite_execution/" + this.executionId).subscribe(function (result) {
-      self.suiteExecution = result.data; // TODO: validate
-      ctrl.applyAdditionalAttributes(self.suiteExecution);
-      ctrl.getReRunInfo(self.suiteExecution);
+          self.attributes.unshift({"name": "Suite execution Id", "value": ctrl.suiteExecutionId});
+          //let ctrl = this;
+          this.apiService.get("/regression/suite_execution/" + this.suiteExecutionId).subscribe(function (result) {
+            self.suiteExecution = result.data; // TODO: validate
+            ctrl.applyAdditionalAttributes(self.suiteExecution);
+            ctrl.getReRunInfo(self.suiteExecution);
 
-      //let suiteExecutionJson = JSON.parse(self.suiteExecution);
-      let suiteFields = self.suiteExecution.fields;
-      let testCaseExecutionIds = JSON.parse(suiteFields.test_case_execution_ids);
+            //let suiteExecutionJson = JSON.parse(self.suiteExecution);
+            let suiteFields = self.suiteExecution.fields;
+            let testCaseExecutionIds = JSON.parse(suiteFields.test_case_execution_ids);
 
-      if (self.suiteExecution.fields.hasOwnProperty("environment")) {
-        let environment = JSON.parse(self.suiteExecution.fields.environment);
-        //ctrl.environment.branchFunOs =
-        if (environment.hasOwnProperty("build_parameters")) {
-          let buildParameters = environment.build_parameters;
-          if (buildParameters.hasOwnProperty('BRANCH_FunOS')) {
-            if (!buildParameters.BRANCH_FunOS) {
-              ctrl.environment.BRANCH_FunOS = "master"
-            } else {
-              ctrl.environment.BRANCH_FunOS = buildParameters.BRANCH_FunOS;
+            if (self.suiteExecution.fields.hasOwnProperty("environment")) {
+              let environment = JSON.parse(self.suiteExecution.fields.environment);
+              //ctrl.environment.branchFunOs =
+              if (environment.hasOwnProperty("build_parameters")) {
+                let buildParameters = environment.build_parameters;
+                if (buildParameters.hasOwnProperty('BRANCH_FunOS')) {
+                  if (!buildParameters.BRANCH_FunOS) {
+                    ctrl.environment.BRANCH_FunOS = "master"
+                  } else {
+                    ctrl.environment.BRANCH_FunOS = buildParameters.BRANCH_FunOS;
+                  }
+                }
+                if (buildParameters.hasOwnProperty('DISABLE_ASSERTIONS')) {
+                  ctrl.environment.DISABLE_ASSERTIONS = buildParameters.DISABLE_ASSERTIONS;
+                }
+                if (buildParameters.hasOwnProperty('RELEASE_BUILD')) {
+                  ctrl.environment.RELEASE_BUILD = buildParameters.RELEASE_BUILD;
+                }
+
+              }
             }
-          }
-          if (buildParameters.hasOwnProperty('DISABLE_ASSERTIONS')) {
-            ctrl.environment.DISABLE_ASSERTIONS = buildParameters.DISABLE_ASSERTIONS;
-          }
-          if (buildParameters.hasOwnProperty('RELEASE_BUILD')) {
-            ctrl.environment.RELEASE_BUILD = buildParameters.RELEASE_BUILD;
-          }
+            for(let testCaseExecutionId of testCaseExecutionIds) {
+              self.apiService.get('/regression/test_case_execution/' + self.suiteExecutionId + "/" + testCaseExecutionId).subscribe(function (result) {
+                let data = result.data.execution_obj;
+                let moreInfo = result.data.more_info;
+                data.summary = moreInfo.summary;
 
-        }
-      }
-      for(let testCaseExecutionId of testCaseExecutionIds) {
-        self.apiService.get('/regression/test_case_execution/' + self.executionId + "/" + testCaseExecutionId).subscribe(function (result) {
-          //self.testCaseExecutions.push(JSON.parse(result.data)[0]);
-          let data = result.data.execution_obj;
-          let moreInfo = result.data.more_info;
-          data.summary = moreInfo.summary;
-          self.testCaseExecutions.push(data);
-
-          ctrl.fetchScriptInfo(data.script_path);
-          if (!ctrl.scriptExecutionsMap.hasOwnProperty(data.script_path)) {
-            ctrl.scriptExecutionsMap[data.script_path] = {};
-          }
-          ctrl.scriptExecutionsMap[data.script_path][data.execution_id] = data;
-          let i = 0;
-          ctrl.fetchTestCaseInfo(testCaseExecutionId);
+                ctrl.fetchScriptInfo(data.script_path, data.execution_id);
+                if (!ctrl.scriptExecutionsMap.hasOwnProperty(data.script_path)) {
+                  ctrl.scriptExecutionsMap[data.script_path] = {};
+                }
+                ctrl.scriptExecutionsMap[data.script_path][data.execution_id] = data;
+                let i = 0;
+                ctrl.fetchTestCaseInfo(testCaseExecutionId);
+              });
+            }
+            if (self.suiteExecution.fields.state >= self.stateMap.SUBMITTED) {
+              setInterval(() => {
+                window.location.reload();
+              }, 60 * 1000);
+            }
+          });
         });
       }
-      if (self.suiteExecution.fields.state >= self.stateMap.SUBMITTED) {
-        setInterval(() => {
-          window.location.reload();
-        }, 60 * 1000);
-      }
     });
+  }
 
+
+  getSuiteExecution(suiteExecutionId) {
 
   }
 
-  fetchScriptInfo(scriptPath) {
+
+  getLogPath() {
+    return this.apiService.get("/regression/log_path").pipe(switchMap(response => {
+      this.logDir = response.data;
+      return of(true)
+    }), catchError (error => {
+      this.logDir = "/static/logs/s_";
+      return of(true);
+    }));
+  }
+
+  fetchScriptInfo(scriptPath, testCaseExecutionId) {
     this.regressionService.fetchScriptInfoByScriptPath(scriptPath).subscribe(response => {
       this.scriptInfo[scriptPath] = response;
+      if (Object.keys(this.scriptExecutionsMap).indexOf(scriptPath) > -1) {
+        let scriptPathValue = this.scriptExecutionsMap[scriptPath];
+        if (scriptPathValue && Object.keys(scriptPathValue).indexOf(testCaseExecutionId.toString()) > -1) {
+          this.scriptExecutionsMap[scriptPath][testCaseExecutionId]["script_pk"] = response.pk;
+          //this.scriptExecutionsMap[scriptPath][testCaseExecutionId]["log_prefix"]
+        }
+      }
+
       let i = 0;
     });
   }
@@ -372,8 +389,8 @@ export class SuiteDetailComponent implements OnInit {
   }
 
   killClick() {
-    let suiteId = this.executionId;
-    this.regressionService.killSuite(this.executionId).subscribe((result) => {
+    let suiteId = this.suiteExecutionId;
+    this.regressionService.killSuite(this.suiteExecutionId).subscribe((result) => {
       this.logger.success(`Killed job: ${result}`);
       window.location.reload()
     }, error => {
@@ -408,6 +425,12 @@ export class SuiteDetailComponent implements OnInit {
 
   togglereUseBuildImage() {
     this.reUseBuildImage = !this.reUseBuildImage;
+  }
+
+  getScriptDetailLink(scriptExecution) {
+    let i = 0;
+
+    let scriptInfo = (this.scriptInfo[scriptExecution.key]);
   }
 
 
