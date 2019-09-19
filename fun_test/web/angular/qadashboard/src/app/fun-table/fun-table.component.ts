@@ -120,7 +120,7 @@ export class FunTableComponent implements OnInit {
   getPstTime(t) {
     console.log(t);
     let pstDate = this.commonService.convertEpochToDate(Number(t), this.TIMEZONE);
-    return this.commonService.getPrettyPstTime(pstDate);
+    return pstDate;
   }
 }
 
