@@ -485,6 +485,8 @@ class Bmc(Linux):
 
     def restart_serial_proxy(self):
         fun_test.log("Restoring serial proxy")
+        self.command("cd {}".format(self.INSTALL_DIRECTORY))
+
         serial_proxy_ids = self.get_process_id_by_pattern("python.*999", multiple=True)
         for serial_proxy_id in serial_proxy_ids:
             self.kill_process(signal=9, process_id=serial_proxy_id, kill_seconds=2)
