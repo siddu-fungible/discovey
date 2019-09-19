@@ -180,7 +180,7 @@ getPrettyLocalizeTime(t) {
     }))
   }
 
-  testCaseExecutions(executionId=null, suiteExecutionId=null, scriptPath=null) {
+  testCaseExecutions(executionId=null, suiteExecutionId=null, scriptPath=null, logPrefix=null) {
     let url = "/api/v1/regression/test_case_executions";
     let queryParams = [];
     if (suiteExecutionId) {
@@ -188,6 +188,9 @@ getPrettyLocalizeTime(t) {
     }
     if (scriptPath) {
       queryParams.push(["script_path", scriptPath]);
+    }
+    if (logPrefix !== null) {
+      queryParams.push(["log_prefix", logPrefix]);
     }
     let queryParamString = this.commonService.queryParamsToString(queryParams);
     url = `${url}${queryParamString}`;

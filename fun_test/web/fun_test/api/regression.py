@@ -223,6 +223,10 @@ def test_case_executions(request, id):
         script_path = request.GET.get("script_path", None)
         if script_path:
             q = q & Q(script_path=script_path)
+
+        log_prefix = request.GET.get("log_prefix", None)
+        if log_prefix is not None:
+            q = q & Q(log_prefix=log_prefix)
         test_executions = TestCaseExecution.objects.filter(q)
         results = []
         #return results
