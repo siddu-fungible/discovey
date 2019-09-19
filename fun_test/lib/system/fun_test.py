@@ -257,6 +257,7 @@ class FunTest:
         self.profiling_timer = None
         self.topologies = []
         self.hosts = []
+        self.current_time_series_checkpoint = 0
         self.closed = False
         self.enable_profiling()
 
@@ -854,10 +855,12 @@ class FunTest:
             sys.stdout.write(final_message)
             sys.stdout.flush()
         if TIME_SERIES:
+            data = {"checkpoint": self.current_time_series_checkpoint, "log": final_message}
             models_helper.add_time_series_log(time_series_manager=self.get_mongo_db_manager(),
                                               collection_name="s_{}_{}".format(self.get_suite_execution_id(),
                                                                                self.get_test_case_execution_id()),
-                                              date_time=get_current_time(), log=final_message)
+                                              date_time=get_current_time(),
+                                              data=data)
 
     def print_key_value(self, title, data, max_chars_per_column=50):
         if title:
@@ -1086,10 +1089,7 @@ class FunTest:
                 this_checkpoint = self._get_context_prefix(context=context, message=message)
                 if self.profiling:
                     this_checkpoint = "{:.2f}: {}".format(self.profiling_timer.elapsed_time(), this_checkpoint)
-                self.fun_xml_obj.add_checkpoint(checkpoint=this_checkpoint,
-                                                expected=expected,
-                                                actual=actual,
-                                                result=FunTest.FAILED)
+                self.add_checkpoint(checkpoint=this_checkpoint, expected=expected, actual=actual, result=FunTest.FAILED)
             self.critical(assert_message, context=context)
             if self.pause_on_failure:
                 pdb.set_trace()
@@ -1101,10 +1101,8 @@ class FunTest:
                 this_checkpoint = self._get_context_prefix(context=context, message=message)
                 if self.profiling:
                     this_checkpoint = "{:.2f}: {}".format(self.profiling_timer.elapsed_time(), this_checkpoint)  #TODO: Duplicate line
-                self.fun_xml_obj.add_checkpoint(checkpoint=this_checkpoint,
-                                                expected=expected,
-                                                actual=actual,
-                                                result=FunTest.PASSED)
+                self.add_checkpoint(checkpoint=this_checkpoint, expected=expected, actual=actual, result=FunTest.PASSED)
+
 
     def add_checkpoint(self,
                        checkpoint=None,
@@ -1112,7 +1110,7 @@ class FunTest:
                        expected="",
                        actual="",
                        context=None):
-
+        self.current_time_series_checkpoint += 1
         checkpoint = self._get_context_prefix(context=context, message=checkpoint)
         if self.profiling:
             checkpoint = "{:.2f} {}".format(self.profiling_timer.elapsed_time(), checkpoint)
@@ -1369,6 +1367,8 @@ class FunTestScript(object):
                                                                  log_prefix=fun_test.log_prefix,
                                                                  tags=suite_execution_tags,
                                                                  inputs=fun_test.get_job_inputs())
+
+                fun_test.current_test_case_execution_id = setup_te.execution_id
 
             fun_test.simple_assert(self.test_cases, "At least one test-case is required. No test-cases found")
             if self.test_case_order:

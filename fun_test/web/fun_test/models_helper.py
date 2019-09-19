@@ -693,6 +693,6 @@ def get_log_files(suite_execution_id):
     return log_files
 
 
-def add_time_series_log(time_series_manager, collection_name, date_time, log):
+def add_time_series_log(time_series_manager, collection_name, date_time, data):
     collection = time_series_manager.get_collection(collection_name=collection_name)
-    collection.insert_one({"date_time": date_time, "log": log})
+    collection.insert_one({"date_time": date_time, "data": data})
