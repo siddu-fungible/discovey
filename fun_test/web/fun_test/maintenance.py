@@ -1259,7 +1259,7 @@ if __name__ == "__main__apple":
         mmt.save()
 
 
-if __name__ == "__main__":
+if __name__ == "__main_inspur_iodepth_96__":
     # underscore problem
     metric_ids = [318, 319]
     for metric_id in metric_ids:
@@ -1374,4 +1374,22 @@ if __name__ == "__main__":
 
     final_dict = ml.get_dict(chart=iops_charts)
     print json.dumps(final_dict, indent=4)
+
+if __name__ == "__main__":
+    metric_ids = [273, 287, 279, 1126, 1127, 1128]
+    for metric_id in metric_ids:
+        chart = MetricChart.objects.get(metric_id=metric_id)
+        data_sets = chart.get_data_sets()
+        data_set = data_sets[0]
+        data_set["name"] = "trailingrst_jpg"
+        data_set["inputs"]["input_image"] = "trailingrst_jpg"
+        data_set["output"]["expected"] = -1
+        data_set["output"]["reference"] = -1
+        data_sets = chart.get_data_sets()
+        data_sets.append(data_set)
+        chart.data_sets = json.dumps(data_sets)
+        chart.save()
+    print "set trailingrst dataset for jpeg metrics"
+
+
 
