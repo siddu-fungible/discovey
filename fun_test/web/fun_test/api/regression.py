@@ -4,7 +4,7 @@ from django.views.decorators.csrf import csrf_exempt
 from web.fun_test.models import TestBed, Asset
 from django.db.models import Q
 from web.fun_test.models import SuiteExecution, TestCaseExecution, TestbedNotificationEmails, LastSuiteExecution
-from web.fun_test.models import ScriptInfo, RegresssionScripts, SuiteReRunInfo
+from web.fun_test.models import ScriptInfo, RegresssionScripts, SuiteReRunInfo, TestCaseInfo
 from scheduler.scheduler_global import SchedulingType
 from scheduler.scheduler_global import SchedulerStates
 from fun_settings import TEAM_REGRESSION_EMAIL, SCRIPTS_DIR
@@ -227,14 +227,24 @@ def test_case_executions(request, id):
         log_prefix = request.GET.get("log_prefix", None)
         if log_prefix is not None:
             q = q & Q(log_prefix=log_prefix)
-        test_executions = TestCaseExecution.objects.filter(q)
+        test_executions = TestCaseExecution.objects.filter(q).order_by("started_time")
         results = []
         #return results
         for test_execution in test_executions:
+            summary = "Unknown"
+            if test_execution.test_case_id == 0:
+                summary = "Setup"
+            else:
+                try:
+                    test_case_info = TestCaseInfo.objects.get(test_case_id=test_execution.test_case_id, script_path=test_execution.script_path)
+                    summary = test_case_info.summary
+                except ObjectDoesNotExist:
+                    pass
             results.append({"result": test_execution.result,
                             "test_case_id": test_execution.test_case_id,
                             "suite_execution_id": test_execution.suite_execution_id,
-                            "execution_id": test_execution.execution_id})
+                            "execution_id": test_execution.execution_id,
+                            "summary": summary})
         return results
         """    
         for test_execution in test_executions:
