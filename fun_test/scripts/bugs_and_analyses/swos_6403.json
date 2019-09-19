@@ -8,7 +8,7 @@
     "update_deploy_script": false,
     "f1_0": {"dataplane_ip": "15.53.1.2"},
     "f1_1": {"dataplane_ip": "15.53.2.2"},
-    "funcp_mode": ["ep", "storage"],
+    "funcp_mode": "ep",
     "num_duts": 1,
     "num_f1_per_fs": 2,
     "num_f1s": 1,
