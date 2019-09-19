@@ -233,12 +233,29 @@ class Bmc(Linux):
         self.u_boot_logs[f1_index] += output
         return output
 
+    def kill_serial_proxies(self, f1_index):
+        serial_proxy_ids = self.get_process_id_by_pattern("python.*999{}".format(f1_index), multiple=True)
+        for serial_proxy_id in serial_proxy_ids:
+            try:
+                self.kill_process(signal=9, process_id=serial_proxy_id, kill_seconds=2)
+            except:
+                pass
+        serial_proxy_ids = self.get_process_id_by_pattern("python.*999")
+
+
     def start_uart_log_listener(self, f1_index, serial_device):
+        self.kill_serial_proxies(f1_index=f1_index)
+
         output_file = self.get_f1_uart_log_filename(f1_index=f1_index)
-        process_id = self.start_bg_process("python {} --device_path={} --output_file={}".format(self.UART_LOG_LISTENER_PATH,
-                                                                                                serial_device,
-                                                                                                output_file), nohup=False, output_file="/tmp/uart_listener_{}.txt".format(f1_index))
-        self.uart_log_listener_process_ids.append(process_id)
+        #process_id = self.start_bg_process("python {} --device_path={} --output_file={}".format(self.UART_LOG_LISTENER_PATH,
+        #                                                                                        serial_device,
+        #                                                                                        output_file), nohup=False, output_file="/tmp/uart_listener_{}.txt".format(f1_index))
+        log_file = "/tmp/uart_listener_{}.txt".format(f1_index)
+        self.command("rm {}".format(log_file))
+        self.command("rm -f /var/lock/LCK..{}".format(os.path.basename(serial_device)))
+        command = "microcom -s 1000000 {} >> {} &".format(serial_device, output_file)
+        self.command(command)
+        # self.uart_log_listener_process_ids.append(None)
 
     def _get_boot_args_for_index(self, boot_args, f1_index):
         s = "sku=SKU_FS1600_{} ".format(f1_index) + boot_args
@@ -561,11 +578,13 @@ class Bmc(Linux):
             if self.disable_f1_index is not None and f1_index == self.disable_f1_index:
                 continue
 
-            log_listener_processes = self.get_process_id_by_pattern(self.UART_LOG_LISTENER_FILE + ".*_{}.*txt".format(f1_index), multiple=True)
-            for log_listener_process in log_listener_processes:
-                self.kill_process(signal=15, process_id=int(log_listener_process))
-                fun_test.sleep("Before really killing UART listener")
-                self.kill_process(signal=9, process_id=log_listener_process)
+            # log_listener_processes = self.get_process_id_by_pattern(self.UART_LOG_LISTENER_FILE + ".*_{}.*txt".format(f1_index), multiple=True)
+            # for log_listener_process in self.uart_log_listener_process_ids: # log_listener_processes:
+            for i in range(1):
+
+                #self.kill_process(signal=15, process_id=int(log_listener_process))
+                #fun_test.sleep("Before really killing UART listener")
+                #self.kill_process(signal=9, process_id=log_listener_process)
 
                 artifact_file_name = fun_test.get_test_case_artifact_file_name(self._get_context_prefix("f1_{}_uart_log.txt".format(f1_index)))
                 fun_test.scp(source_ip=self.host_ip,
@@ -1080,6 +1099,7 @@ class Fs(object, ToDictMixin):
         self.apc_info = apc_info
         self.original_context_description = None
         self.fun_cp_callback = fun_cp_callback
+
         if self.context:
             self.original_context_description = self.context.description
         self.setup_bmc_support_files = setup_bmc_support_files
