@@ -788,27 +788,6 @@
     "dut_info": {
       "0": {
         "type": "DUT_TYPE_FSU",
-        "pcie_interface_info": {
-          "15": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 14
-          },
-          "14": {
-            "host_info": {
-              "name": "mktg16"
-            },
-            "type": "INTERFACE_TYPE_PCIE",
-            "hosts": 1
-          },
-          "17": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 14
-          },
-          "16": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 14
-          }
-        },
         "dut": "fs-20"
       }
     }
