@@ -419,7 +419,7 @@ class StorageFsTemplate(object):
         self.come_obj.command("cd {}".format(self.FUNSDK_DIR))
 
     def deploy_funcp_container(self, update_deploy_script=True, update_workspace=True, mode=None,
-                               launch_resp_parse=False):
+                               include_storage=False, launch_resp_parse=False):
         # check if come is up
         result = {'status': False, 'container_info': {}, 'container_names': []}
         self.mode = mode
@@ -458,7 +458,7 @@ class StorageFsTemplate(object):
                 return result
 
         # get container names.
-        get_containers = self.get_container_names()
+        get_containers = self.get_container_names(include_storage=include_storage)
         if not get_containers['status']:
             return result
         result['container_names'] = get_containers['container_name_list']
@@ -537,8 +537,28 @@ class StorageFsTemplate(object):
 
         return True if not docker_launch_status else False
 
-    def get_container_names(self):
+    def get_container_names(self, include_storage=False):
         result = {'status': False, 'container_name_list': []}
+
+        # If SC docker container is not needed, kill the system_health_check.py and stop the run_sc container
+        if not include_storage:
+            health_check_pid = self.come_obj.get_process_id_by_pattern("system_health_check.py")
+            if health_check_pid:
+                self.come_obj.kill_process(process_id=health_check_pid)
+            else:
+                fun_test.critical("system_health_check.py script is not running")
+
+            cmd = "docker ps -a --format '{{.Names}}' | grep run_sc"
+            timer = FunTimer(max_time=self.DEPLOY_TIMEOUT / 2)
+            while not timer.is_expired():
+                container_name = self.come_obj.command(cmd, timeout=self.DEFAULT_TIMEOUT).split("\n")[0]
+                if container_name:
+                    stop_cmd = "docker rm -f {}".format(container_name)
+                    self.come_obj.command(stop_cmd, timeout=self.DEFAULT_TIMEOUT)
+                    break
+                else:
+                    fun_test.sleep("for the run_sc docker to show up", 5)
+
         cmd = "docker ps --format '{{.Names}}' | grep F1"
         result['container_name_list'] = self.come_obj.command(cmd, timeout=self.DEFAULT_TIMEOUT).split("\n")
         result['container_name_list'] = [name.strip("\r") for name in result['container_name_list']]
