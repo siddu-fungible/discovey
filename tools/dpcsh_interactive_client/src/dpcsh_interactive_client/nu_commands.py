@@ -4251,12 +4251,16 @@ class DebugCommands(PeekCommands):
                 break
         return result
 
+    def _print_val_red_color(self, val):
+        val = "\033[91m " + val + " \033[0m"
+        return val
+
     def _format_data_output(self, val):
         if val == "N/A":
             return val
         val = "{:.0f}".format(val * 100)
         if int(val) >= 90:
-            val = "\033[91m " + val + " \033[0m"
+            val = self._print_val_red_color(val)
         return val
 
 
