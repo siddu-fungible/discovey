@@ -147,7 +147,7 @@ class RebootTest(FunTestCase):
         run_fio = fun_test.shared_variables["run_fio"]
         seq_fio_cmd_args = {"size": "5G", "verify": "pattern", "verify_pattern": "\\\"DEADBEEF\\\"",
                             "verify_fatal": 1, "bs": "4k", "timeout": 240}
-        rand_fio_cmd_args = {"size": "2G", "verify": "pattern", "verify_pattern": "\\\"DEADCAFE\\\"",
+        rand_fio_cmd_args = {"size": "5G", "verify": "pattern", "verify_pattern": "\\\"DEADCAFE\\\"",
                              "verify_fatal": 1, "bs": "4k", "timeout": 360}
 
         for count in xrange(1, reboot_count + 1):
@@ -166,6 +166,10 @@ class RebootTest(FunTestCase):
                                                                               arg1=obj["handle"],
                                                                               host_index=host_index,
                                                                               rw=test,
+                                                                              numjobs=1,
+                                                                              iodepth=8,
+                                                                              direct=1,
+                                                                              cpus_allowed="8-12",
                                                                               filename="/tmp/seq_test.img",
                                                                               **seq_fio_cmd_args)
                         host_index += 1
@@ -186,6 +190,10 @@ class RebootTest(FunTestCase):
                                                                               arg1=obj["handle"],
                                                                               host_index=host_index,
                                                                               rw=test,
+                                                                              direct=1,
+                                                                              numjobs=1,
+                                                                              iodepth=8,
+                                                                              cpus_allowed="8-12",
                                                                               filename="/tmp/rand_test.img",
                                                                               **rand_fio_cmd_args)
                         host_index += 1
@@ -194,6 +202,7 @@ class RebootTest(FunTestCase):
                     for x in xrange(1, host_index):
                         fun_test.log("Joining thread {}".format(x))
                         fun_test.join_thread(fun_test_thread_id=thread_id[x])
+                    fun_test.sleep("Pause before next tests", 10)
 
             # Reboot hosts in threaded mode
             host_index = 1
@@ -211,7 +220,7 @@ class RebootTest(FunTestCase):
 
             for obj in f10_hosts:
                 host_os = obj["handle"].command("cat /etc/redhat-release")
-                if "centos" not in host_os.lower() or "cent os" not in host_os.lower():
+                if "centos" not in host_os.lower():
                     fun_test.test_assert(False, "Machine booted to Ubuntu")
 
             # Check PCIe Link on host

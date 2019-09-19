@@ -384,7 +384,7 @@ class TcFlowControl(FunTestCase):
 
 
     def describe(self):
-        self.set_test_details(id=7, summary="Test TCP Flow control tests",
+        self.set_test_details(id=8, summary="Test TCP Flow control tests",
                               steps="""
                                TCP flow control cases
                               """)
@@ -429,7 +429,7 @@ class TcWindowScale(FunTestCase):
 
 
     def describe(self):
-        self.set_test_details(id=7, summary="Test TCP Window scale tests",
+        self.set_test_details(id=9, summary="Test TCP Window scale tests",
                               steps="""
                                TCP window scale test cases
                               """)
@@ -474,7 +474,7 @@ class TcOtherTests(FunTestCase):
 
 
     def describe(self):
-        self.set_test_details(id=8, summary="Execute non-sanity tests part of tcp_functional.py",
+        self.set_test_details(id=10, summary="Execute non-sanity tests part of tcp_functional.py",
                               steps="""
                                 Test scenarios covered:
                                 Any test not part of Sanity but part of tcp_functional.py

@@ -428,6 +428,7 @@ base_get_subparsers = base_get_parser.add_subparsers(title="subcommands", help="
 get_nu_parser = base_get_subparsers.add_parser('nu', help="Get NU config")
 get_hnu_parser = base_get_subparsers.add_parser('hnu', help="Get HNU config")
 get_system_parser = base_get_subparsers.add_parser('system', help="system log commands")
+get_bam_parser = base_get_subparsers.add_parser('bam', help="get bam commands")
 
 # Get NU sub commands
 get_nu_subparsers = get_nu_parser.add_subparsers(title='subcommands', help="")
@@ -437,6 +438,8 @@ get_nu_sample_parser = get_nu_subparsers.add_parser('sample', help="Sample comma
 
 get_hnu_subparsers = get_hnu_parser.add_subparsers(title='subcommands', help="")
 get_hnu_qos_parser = get_hnu_subparsers.add_parser('qos', help="HNU QoS commands")
+
+get_bam_parser.add_argument("configs")
 # -----------------------------------------------------------------------------------------------
 
 # Get NU Port sub commands
@@ -1097,6 +1100,8 @@ peek_dam_resource_stats_parser = peek_resource_stats_parsers.add_parser('dam', h
 peek_dam_resource_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
 
 peek_bam_resource_stats_parser = peek_resource_stats_parsers.add_parser('bam', help='Peek bam resource stats')
+peek_bam_resource_stats_parser.add_argument('-cid', help="Specify the cluster id", default=None)
+peek_bam_resource_stats_parser.add_argument('-diff', help="Show diff for percent and color", default=None)
 peek_bam_resource_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
 
 # Eqm stats

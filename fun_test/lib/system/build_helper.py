@@ -88,7 +88,7 @@ class BuildHelper():
         tftp_server.command("cd /tmp; mkdir -p {}".format(tmp_untar_directory))
         tftp_server.curl(url=self.STABLE_MASTER_DOCHUB_PATH, output_file=tmp_tgz_file_name)
         fun_test.log(tmp_tgz_file_name)
-        tftp_server.untar(file_name=tmp_tgz_file_name, dest=tmp_untar_directory)
+        tftp_server.untar(file_name=tmp_tgz_file_name, dest=tmp_untar_directory, sudo=False)
 
         funos_binary_name = "funos-f1"
         if not debug:

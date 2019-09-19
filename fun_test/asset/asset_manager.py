@@ -10,7 +10,7 @@ from lib.orchestration.orchestrator import OrchestratorType
 from fun_global import *
 from scheduler.scheduler_global import JobStatusType
 from asset.asset_global import AssetType
-
+import json
 
 
 
@@ -505,6 +505,30 @@ class AssetManager:
             asset.job_ids = asset.remove_job_id(job_id=job_id)
     """
 
+    def add_or_replace_fs_spec(self, fs_name, spec):
+        json_spec = parse_file_to_json(file_name=self.FS_SPEC)
+        new_spec = []
+        replaced = False
+        for fs in json_spec:
+            if fs["name"] == fs_name:
+                new_spec.append(spec)
+                replaced = True
+            else:
+                new_spec.append(fs)
+        if not replaced:
+            new_spec.append(spec)
+        # sorted_fs = sorted(new_spec, key=lambda x: x["name"])
+        with open(self.FS_SPEC, "w") as f:
+            f.write(json.dumps(new_spec, indent=4))
+            f.close()
+
+    def add_test_bed_spec(self, test_bed_name, spec):
+        json_spec = parse_file_to_json(file_name=self.TEST_BED_SPEC)
+        if test_bed_name not in json_spec:
+            json_spec[test_bed_name] = spec
+        with open(self.TEST_BED_SPEC, "w") as f:
+            f.write(json.dumps(json_spec, indent=4))
+            f.close()
 
 asset_manager = AssetManager()
 

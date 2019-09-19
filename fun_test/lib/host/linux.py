@@ -1352,11 +1352,14 @@ class Linux(object, ToDictMixin):
         return result
 
     @fun_test.safe
-    def untar(self, file_name, dest, timeout=60):
+    def untar(self, file_name, dest, timeout=60, sudo=True):
         result = None
         command = "tar -xvzf " + file_name + " -C " + dest
         try:
-            output = self.sudo_command("tar -xvzf " + file_name + " -C " + dest)
+            if sudo:
+                output = self.sudo_command("tar -xvzf " + file_name + " -C " + dest)
+            else:
+                output = self.command("tar -xvzf " + file_name + " -C " + dest)
             fun_test.debug(output)
             output_lines = output.split('\n')
             fun_test.debug(output_lines)

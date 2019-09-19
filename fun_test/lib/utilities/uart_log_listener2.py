@@ -23,6 +23,7 @@ class Listener():
 
     def exit_gracefully(self, *args, **kwargs):
         self.stop()
+        print ("Exiting gracefully")
         signal.signal(signal.SIGINT, self.original_sig_int_handler)
         exit(0)
 
@@ -56,6 +57,7 @@ class Listener():
         self.stopped = True
         if self.handle:
             self.handle.close()
+            print ("Closing handle")
         self.write_to_file(flush=True)
 
 

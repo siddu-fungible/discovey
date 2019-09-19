@@ -541,6 +541,7 @@ def collect_stats(when='before'):
     fun_test.log_module_filter("random_module")
     try:
         perf_utils.collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict, version, when=when)
+        fun_test.log_module_filter_disable()
     except:
         fun_test.log_module_filter_disable()
 
