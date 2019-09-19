@@ -823,11 +823,8 @@
             "dual": 14
           },
           "14": {
-            "host_info": {
-              "name": "cab02-qa-08"
-            },
             "type": "INTERFACE_TYPE_PCIE",
-            "hosts": 1
+            "dual": 14
           },
           "17": {
             "type": "INTERFACE_TYPE_PCIE",
