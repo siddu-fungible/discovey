@@ -400,10 +400,10 @@ class StorageFsTemplate(object):
     FUNGIBLE_ROOT = "opt/fungible"
     DEFAULT_TIMEOUT = 300
     PREP_TIMEOUT = 900
-    DEPLOY_TIMEOUT = 180
+    DEPLOY_TIMEOUT = 300
     BOND_BRINGUP_TIMEOUT = 300
     LAUNCH_SCRIPT = "./integration_test/emulation/test_system.py "
-    DEPLOY_SCRIPT = "{}/{}/cclinux/cclinux_service.sh ".format(WORKSPACE, FUNGIBLE_ROOT)
+    DEPLOY_SCRIPT = "cclinux/cclinux_service.sh "
     PREPARE_CMD = "{} --prepare --docker".format(LAUNCH_SCRIPT)
     DEPLOY_CONTAINER_CMD = "{} --start".format(DEPLOY_SCRIPT)
     # F1_0_HANDLE = None
@@ -412,6 +412,8 @@ class StorageFsTemplate(object):
     def __init__(self, come_obj):
         self.come_obj = come_obj
         self.container_info = {}
+        self.workspace = ""
+        self.fungible_root = ""
 
     def enter_funsdk(self):
         self.come_obj.command("cd {}".format(self.FUNSDK_DIR))
@@ -423,6 +425,17 @@ class StorageFsTemplate(object):
         self.mode = mode
         if not self.come_obj.check_ssh():
             return result
+
+        # Get the WORKSPACE & FUNGIBLE_ROOT environment variable
+        workspace = self.come_obj.command("echo $WORKSPACE")
+        workspace = workspace.strip()
+        if workspace:
+            self.workspace = workspace
+
+        fungible_root = self.come_obj.command("echo $FUNGIBLE_ROOT")
+        fungible_root = fungible_root.strip()
+        if fungible_root:
+            self.fungible_root = fungible_root
 
         # get funsdk
         if update_deploy_script:
@@ -499,7 +512,7 @@ class StorageFsTemplate(object):
         result = True
         response = ""
         self.enter_funsdk()
-        cmd = self.DEPLOY_CONTAINER_CMD
+        cmd = "{}/{}".format(self.fungible_root, self.DEPLOY_CONTAINER_CMD)
         if mode:
             cmd += "".join([" --{}".format(m) for m in mode])
             cmd = cmd + " &>/tmp/docker_launch_output.txt"
@@ -526,7 +539,7 @@ class StorageFsTemplate(object):
 
     def get_container_names(self):
         result = {'status': False, 'container_name_list': []}
-        cmd = "docker ps --format '{{.Names}}'"
+        cmd = "docker ps --format '{{.Names}}' | grep F1"
         result['container_name_list'] = self.come_obj.command(cmd, timeout=self.DEFAULT_TIMEOUT).split("\n")
         result['container_name_list'] = [name.strip("\r") for name in result['container_name_list']]
         container_count = len(result['container_name_list'])
