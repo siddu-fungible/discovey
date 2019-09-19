@@ -2944,7 +2944,7 @@ class PeekCommands(object):
                         del result[key][_key]
         return result
 
-    def peek_bam_resource_stats(self, cid=None, grep_regex=None, get_result_only=False):
+    def peek_bam_resource_stats(self, cid=None, diff=None, grep_regex=None, get_result_only=False):
         prev_global_result = None
         prev_per_cluster_result = None
         while True:
@@ -2959,17 +2959,17 @@ class PeekCommands(object):
                     result = self._get_cid_bam_results(result, cid)
                 gloabl_result = result['bm_usage_global']
                 per_cluster_result = result['bm_usage_per_cluster']
-                if prev_global_result:
+                if prev_global_result and diff:
                     diff_result = self._get_nested_dict_difference(result=gloabl_result, prev_result=prev_global_result)
                     global_table_obj = PrettyTable(['Field Name', 'Counter', 'Counter Diff'])
                     global_table_obj.align = 'l'
                     for key, val in gloabl_result.iteritems():
                         global_table_obj.add_row([key, val, diff_result[key]])
-                if prev_per_cluster_result:
+                if prev_per_cluster_result and diff:
                     row_list = ['key names']
                     for key in sorted(per_cluster_result.keys()):
-                        row_list.append(key[0].upper() + key[-1] + ":" + "cent")
-                        row_list.append(key[0].upper() + key[-1] + ":" + "d_cent")
+                        row_list.append(key[0].upper() + key[-1] + ":" + "%")
+                        row_list.append(key[0].upper() + key[-1] + ":" + "d_%")
                         row_list.append(key[0].upper() + key[-1] + ":" + "col")
                         row_list.append(key[0].upper() + key[-1] + ":" + "d_col")
                     per_cluster_table_obj = PrettyTable()
@@ -2983,7 +2983,7 @@ class PeekCommands(object):
                             cname = col_name.replace('C', 'cluster_')
                             cluster_name = cname.split(":")[0]
                             key_name = cname.split(":")[1]
-                            if key_name == 'cent':
+                            if key_name == '%':
                                 key_name = 'usage_percent'
                             elif key_name == 'col':
                                 key_name = 'color'
@@ -3008,7 +3008,7 @@ class PeekCommands(object):
                     # Per cluster table
                     row_list = ['key names']
                     for key in sorted(per_cluster_result.keys()):
-                        row_list.append(key[0].upper() + key[-1] + ":" + "cent")
+                        row_list.append(key[0].upper() + key[-1] + ":" + "%")
                         row_list.append(key[0].upper() + key[-1] + ":" + "col")
                     per_cluster_table_obj = PrettyTable()
 
@@ -3021,7 +3021,7 @@ class PeekCommands(object):
                             cname = col_name.replace('C', 'cluster_')
                             cluster_name = cname.split(":")[0]
                             key_name = cname.split(":")[1]
-                            if key_name == 'cent':
+                            if key_name == '%':
                                 key_name = 'usage_percent'
                             elif key_name == 'col':
                                 key_name = 'color'

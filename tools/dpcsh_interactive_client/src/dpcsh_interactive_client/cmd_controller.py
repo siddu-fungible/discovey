@@ -858,7 +858,8 @@ class CmdController(Cmd):
     def peek_bam_resource_stats(self, args):
         grep_regex = args.grep
         cid = args.cid
-        self._peek_cmd_obj.peek_bam_resource_stats(cid=cid,grep_regex=grep_regex)
+        diff = args.diff
+        self._peek_cmd_obj.peek_bam_resource_stats(cid=cid, diff=diff, grep_regex=grep_regex)
 
     def peek_eqm_stats(self, args):
         grep_regex = args.grep
