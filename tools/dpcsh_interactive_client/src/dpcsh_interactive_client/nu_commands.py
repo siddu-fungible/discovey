@@ -4076,6 +4076,7 @@ class FlowCommands(object):
                             for id in key_list:
                                 result[str(id)] = output[str(id)]
                         elif hcf_id:
+                            result = {}
                             if not hcf_id in output.keys():
                                 print "hcf_id %s entry not found" % hcf_id
                                 return self.dpc_client.disconnect()
