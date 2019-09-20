@@ -251,6 +251,7 @@ class Bmc(Linux):
         #                                                                                        serial_device,
         #                                                                                        output_file), nohup=False, output_file="/tmp/uart_listener_{}.txt".format(f1_index))
         log_file = "/tmp/uart_listener_{}.txt".format(f1_index)
+        self.command("rm {}".format(output_file))
         self.command("rm {}".format(log_file))
         self.command("rm -f /var/lock/LCK..{}".format(os.path.basename(serial_device)))
         command = "microcom -s 1000000 {} >> {} &".format(serial_device, output_file)
