@@ -106,8 +106,8 @@ class JuniperNFACustomCompileOnly(FunTestCase):
           #  pat_path="/regex/"+str(tc)+"/patterns/"
            # pld_path="/regex/"+str(tc)+"/payloads/"
         #bbelow pat_ptah and pld_path are used for  the junieper_style of patterns to compile and validate
-            pat_path = "/regex/patterns/"
-            pld_path = "/regex/payloads/"
+            pat_path = "/regex/snort/patterns/"
+            pld_path = "/regex/snort/payloads/"
             #for gtype, en in zip(["dfa", "nfa", "ffa"], ["1", "0", ""]):
             for gtype, en in zip(["nfa"], ["0"]):
                 res_path = "/regex/"+str(tc)+"/" + gtype + "_results/"
