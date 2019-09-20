@@ -857,8 +857,8 @@ class FunTest:
         if TIME_SERIES:
             data = {"checkpoint": self.current_time_series_checkpoint, "log": final_message}
             models_helper.add_time_series_log(time_series_manager=self.get_mongo_db_manager(),
-                                              collection_name="s_{}_{}".format(self.get_suite_execution_id(),
-                                                                               self.get_test_case_execution_id()),
+                                              collection_name=models_helper.get_fun_test_time_series_collection_name(self.get_suite_execution_id(),
+                                                                                                                     self.get_test_case_execution_id()),
                                               date_time=get_current_time(),
                                               data=data)
 
@@ -1050,6 +1050,7 @@ class FunTest:
                                  "result": FunTest.FAILED}
         self.current_test_case_id = id
         self.test_metrics[self.current_test_case_id]["asserts"] = []
+        self.current_time_series_checkpoint = 0
 
     def _end_test(self, result):
         self.fun_xml_obj.end_test(result=result)

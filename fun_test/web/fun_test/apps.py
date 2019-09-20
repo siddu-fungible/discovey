@@ -57,7 +57,6 @@ class FunTestConfig(AppConfig):
         # self.start_scheduler()
         self.scheduler_pre_flight()
 
-
     def get_mongo_db_manager(self):
         if not self.mongo_db_manager:
             self.mongo_db_manager = MongoDbManager()

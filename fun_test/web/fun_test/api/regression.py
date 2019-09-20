@@ -17,15 +17,18 @@ from django.core.exceptions import ObjectDoesNotExist
 from asset.asset_global import AssetType
 from web.fun_test.models import Module
 from web.fun_test.fun_serializer import model_instance_to_dict
-from web.fun_test.models_helper import _get_suite_executions
+from web.fun_test.models_helper import _get_suite_executions, get_fun_test_time_series_collection_name
 from scheduler.scheduler_global import SuiteType
 from web.fun_test.models import Suite
 from fun_global import RESULTS
 from django.core import paginator
 import os
 import fnmatch
+from fun_settings import MAIN_WEB_APP
+from django.apps import apps
+from bson import json_util
 
-
+app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 
 @csrf_exempt
 @api_safe_json_response
@@ -509,6 +512,17 @@ def re_run_job(request):
 
         if suite_id:
             pass
+
+@api_safe_json_response
+def test_case_time_series_logs(request, suite_execution_id, test_case_execution_id):
+    result = None
+    if request.method == "GET":
+        collection_name = "s_{}_{}".format(suite_execution_id, test_case_execution_id)
+        mongo_db_manager = app_config.get_mongo_db_manager()
+        collection = mongo_db_manager.get_collection(collection_name)
+        if collection:
+            result = list(collection.find())
+    return result
 
 if __name__ == "__main__":
     from web.fun_test.django_interactive import *
