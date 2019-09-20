@@ -2063,10 +2063,6 @@
       "0": {
         "type": "DUT_TYPE_FSU",
         "pcie_interface_info": {
-          "15": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 14
-          },
           "14": {
             "host_info": {
               "name": "cab03-qa-04"
@@ -2074,17 +2070,17 @@
             "type": "INTERFACE_TYPE_PCIE",
             "hosts": 1
           },
+          "15": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 14
+          },
+         "16": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 14
+          },
           "17": {
             "type": "INTERFACE_TYPE_PCIE",
             "dual": 14
-          },
-          "16": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 14
-          },
-          "1": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 0
           },
           "0": {
             "host_info": {
@@ -2093,7 +2089,7 @@
             "type": "INTERFACE_TYPE_PCIE",
             "hosts": 1
           },
-          "3": {
+          "1": {
             "type": "INTERFACE_TYPE_PCIE",
             "dual": 0
           },
@@ -2101,24 +2097,10 @@
             "type": "INTERFACE_TYPE_PCIE",
             "dual": 0
           },
-          "5": {
+
+          "3": {
             "type": "INTERFACE_TYPE_PCIE",
-            "dual": 4
-          },
-          "4": {
-            "host_info": {
-              "name": "cab03-qa-07"
-            },
-            "type": "INTERFACE_TYPE_PCIE",
-            "hosts": 1
-          },
-          "7": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 4
-          },
-          "6": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 4
+            "dual": 0
           }
         },
         "dut": "fs-66"
