@@ -259,6 +259,7 @@ class FunTest:
         self.hosts = []
         self.current_time_series_checkpoint = 0
         self.closed = False
+        self.time_series_enabled = True
         self.enable_profiling()
 
     def report_message(self, message):  # Used only by FunXml only
@@ -787,6 +788,16 @@ class FunTest:
     def dict_to_json_string(self, d):
         return json.dumps(d, indent=4, cls=DatetimeEncoder)
 
+    def add_time_series_document(self, collection_name, date_time, type, data):
+        collection = self.get_mongo_db_manager().get_collection(collection_name=collection_name)
+        collection.insert_one({"date_time": date_time, "type": type, "data": data})
+
+    def add_time_series_log(self, collection_name, data):
+        self.add_time_series_document(collection_name=collection_name, date_time=get_current_time(), type="log", data=data)
+
+    def add_time_series_checkpoint(self, collection_name, data):
+        self.add_time_series_document(collection_name=collection_name, date_time=get_current_time(), type="checkpoint", data=data)
+
     def log(self,
             message,
             level=LOG_LEVEL_NORMAL,
@@ -842,7 +853,7 @@ class FunTest:
             final_message = self._get_context_prefix(context=context, message=str(message) + nl)
         else:
             final_message = str(message) + nl
-        if TIME_SERIES:
+        if self.time_series_enabled:
             no_timestamp = True
         if self.log_timestamps and (not no_timestamp) and not section:
             final_message = "[{}] {}".format(current_time, final_message)
@@ -854,13 +865,11 @@ class FunTest:
         if stdout:
             sys.stdout.write(final_message)
             sys.stdout.flush()
-        if TIME_SERIES:
+        if self.time_series_enabled:
             data = {"checkpoint": self.current_time_series_checkpoint, "log": final_message}
-            models_helper.add_time_series_log(time_series_manager=self.get_mongo_db_manager(),
-                                              collection_name=models_helper.get_fun_test_time_series_collection_name(self.get_suite_execution_id(),
-                                                                                                                     self.get_test_case_execution_id()),
-                                              date_time=get_current_time(),
-                                              data=data)
+            self.add_time_series_log(collection_name=models_helper.get_fun_test_time_series_collection_name(self.get_suite_execution_id(),
+                                                                                                            self.get_test_case_execution_id()),
+                                     data=data)
 
     def print_key_value(self, title, data, max_chars_per_column=50):
         if title:
@@ -1112,6 +1121,7 @@ class FunTest:
                        actual="",
                        context=None):
         self.current_time_series_checkpoint += 1
+
         checkpoint = self._get_context_prefix(context=context, message=checkpoint)
         if self.profiling:
             checkpoint = "{:.2f} {}".format(self.profiling_timer.elapsed_time(), checkpoint)
@@ -1120,6 +1130,14 @@ class FunTest:
                                             result=result,
                                             expected=expected,
                                             actual=actual)
+
+        data = {"checkpoint": checkpoint,
+                "result": result, 
+                "expected": expected,
+                "actual": actual,
+                "checkpoint_index": self.current_time_series_checkpoint}
+        self.add_time_series_checkpoint(collection_name=models_helper.get_fun_test_time_series_collection_name(self.get_suite_execution_id(), self.get_test_case_execution_id()), data=data)
+        # add_time_series_checkpoint
 
     def exit_gracefully(self, sig, _):
         self.critical("Unexpected Exit")

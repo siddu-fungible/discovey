@@ -514,14 +514,15 @@ def re_run_job(request):
             pass
 
 @api_safe_json_response
-def test_case_time_series_logs(request, suite_execution_id, test_case_execution_id):
+def test_case_time_series(request, suite_execution_id, test_case_execution_id):
     result = None
     if request.method == "GET":
+        type = request.GET.get("type", "log")
         collection_name = "s_{}_{}".format(suite_execution_id, test_case_execution_id)
         mongo_db_manager = app_config.get_mongo_db_manager()
         collection = mongo_db_manager.get_collection(collection_name)
         if collection:
-            result = list(collection.find())
+            result = list(collection.find({"type": type}))
     return result
 
 if __name__ == "__main__":

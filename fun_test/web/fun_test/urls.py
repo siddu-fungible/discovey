@@ -223,7 +223,7 @@ api_v1_urls = [
     url(r'^scheduler/info$', scheduler_api.info),
     url(r'^scheduler/state_types$', scheduler_api.state_types),
     url(r'^regression/test_case_executions/(.*)?$', regression.test_case_executions),
-    url(r'^regression/test_case_time_series_logs/(\d+)/(\d+)', regression.test_case_time_series_logs)
+    url(r'^regression/test_case_time_series/(\d+)/(\d+)', regression.test_case_time_series)
 ]
 
 site_under_construction = False

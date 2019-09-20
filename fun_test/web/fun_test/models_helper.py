@@ -698,6 +698,3 @@ def get_fun_test_time_series_collection_name(suite_execution_id, test_case_execu
     return collection_name
 
 
-def add_time_series_log(time_series_manager, collection_name, date_time, data):
-    collection = time_series_manager.get_collection(collection_name=collection_name)
-    collection.insert_one({"date_time": date_time, "data": data})

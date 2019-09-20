@@ -71,5 +71,3 @@ TFTP_DIRECTORY = "/tftpboot"
 REGRESSION_SERVICE_HOST = "regression_service_host"
 JENKINS_USERNAME = "regression"
 JENKINS_PASSWORD = "11b1bcc7ac9f43aee95ed4af0917bf5852"
-
-TIME_SERIES = True
