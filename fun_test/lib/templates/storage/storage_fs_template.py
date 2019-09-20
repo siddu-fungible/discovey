@@ -1,4 +1,5 @@
 from lib.system.fun_test import *
+from lib.host.network_controller import NetworkController
 from lib.host.linux import Linux
 from lib.system import utils
 import re
@@ -395,6 +396,7 @@ MODE_END_POINT = "ep"
 
 class StorageFsTemplate(object):
     NUM_FS_CONTAINERS = 2
+    FPG_L2_MTU = 1518
     FUNSDK_DIR = "/mnt/keep/FunSDK"
     WORKSPACE = "/home/fun/workspace"
     FUNGIBLE_ROOT = "opt/fungible"
@@ -406,6 +408,7 @@ class StorageFsTemplate(object):
     DEPLOY_SCRIPT = "cclinux/cclinux_service.sh "
     PREPARE_CMD = "{} --prepare --docker".format(LAUNCH_SCRIPT)
     DEPLOY_CONTAINER_CMD = "{} --start".format(DEPLOY_SCRIPT)
+    DOCKER_LAUNCH_OUTPUT = "/tmp/docker_launch_output.txt"
     # F1_0_HANDLE = None
     # F1_1_HANDLE = None
 
@@ -515,14 +518,14 @@ class StorageFsTemplate(object):
         cmd = "{}/{}".format(self.fungible_root, self.DEPLOY_CONTAINER_CMD)
         if mode:
             cmd += "".join([" --{}".format(m) for m in mode])
-            cmd = cmd + " &>/tmp/docker_launch_output.txt"
+            cmd = cmd + " &>{}".format(self.DOCKER_LAUNCH_OUTPUT)
         try:
             response = self.come_obj.command(cmd, timeout=timeout)
         except Exception as ex:
             fun_test.log(str(ex))
         docker_launch_status = self.come_obj.exit_status()
         fun_test.log("FunCP docker container deployment stats: {}".format(docker_launch_status))
-        docker_launch_output = self.come_obj.read_file("/tmp/docker_launch_output.txt")
+        docker_launch_output = self.come_obj.read_file(self.DOCKER_LAUNCH_OUTPUT)
 
         sections = ['Discovered both F1 devices',
                     'Done with installing funeth driver',
@@ -570,6 +573,7 @@ class StorageFsTemplate(object):
             return result
         else:
             result['status'] = True
+
         return result
 
     def stop_container(self, *container_names):
@@ -638,6 +642,18 @@ class StorageFsTemplate(object):
         * Bond interface name and IP are mandatory one needs to be passed
         * The other bond properties can be passed the name=value or as a dictionary at the end
         """
+
+        # Waiting for the DHCP discover process to begin before starting configure the bond interface
+        if self.come_obj.check_file_directory_exists(self.DOCKER_LAUNCH_OUTPUT):
+            cmd = "grep -c 'DHCPDISCOVER on bond' {}".format(self.DOCKER_LAUNCH_OUTPUT)
+            timer = FunTimer(max_time=self.DEPLOY_TIMEOUT / 2)
+            while not timer.is_expired():
+                status = self.come_obj.command(cmd)
+                if int(status.strip()) > 0:
+                    fun_test.log("Auto DHCP discovery process started...Safe to proceed to configure bond interface")
+                    break
+                else:
+                    fun_test.sleep("for the DHCP discover process to start", 5)
 
         container_obj = self.container_info[container_name]
         # Checking whether the two or more interfaces are passed to create the bond
@@ -717,4 +733,39 @@ class StorageFsTemplate(object):
         else:
             fun_test.simple_assert(match, "Bond {} interface is UP & RUNNING".format(bond_dict["name"]))
 
+        # As a workaround for the bug SWOS-6456, checking L2 MTU of the fgp interface and setting them to 1518, if it
+        # is less than that
+        f1_index = int(container_name.split("-")[1])
+        try:
+            nc = NetworkController(dpc_server_ip=self.come_obj.host_ip,
+                                   dpc_server_port=self.come_obj.get_dpc_port(f1_index))
+        except Exception as ex:
+            fun_test.critical("Unable to get Network Controller handle...So will not able to check & set the L2 MTU"
+                              "for the FPG interfaces")
+            fun_test.critical(str(ex))
+            return True
+
+        try:
+            for interface_name in slave_interface_list:
+                match = re.search(r"fpg(\d+)", interface_name)
+                port_num = int(match.group(1))
+                port_mtu = nc.get_port_mtu(port_num=port_num, shape=0)
+                if port_mtu < self.FPG_L2_MTU:
+                    fun_test.critical("F1_{} FPG{}'s MTU {} is less than {}...So setting it to {}".
+                                      format(f1_index, port_num, port_mtu, self.FPG_L2_MTU, self.FPG_L2_MTU))
+                    mtu_status = nc.set_port_mtu(port_num=port_num, mtu_value=self.FPG_L2_MTU, shape=0)
+                    if mtu_status:
+                        fun_test.log("Successfully the set F1_{} FPG{}'s MTU to {}".format(f1_index, port_num,
+                                                                                           self.FPG_L2_MTU))
+                    else:
+                        fun_test.critical("Unable to set F1_{} FPG{}'s MTU to {}".format(f1_index, port_num,
+                                                                                         self.FPG_L2_MTU))
+                        return False
+                else:
+                    fun_test.log("Current MTU of F1_{} FPG {}'s is: {}".format(f1_index, port_num, port_mtu))
+        except Exception as ex:
+            fun_test.critical(str(ex))
+            nc.disconnect()
+
+        nc.disconnect()
         return True
