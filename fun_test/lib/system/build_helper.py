@@ -78,12 +78,11 @@ class BuildHelper():
         return gz_filename
 
     def fetch_stable_master(self, debug=False, stripped=True):
-        filename = "{}/s_{}_{}".format(TFTP_DIRECTORY, fun_test.get_suite_execution_id(), self.FUN_OS_STRIPPED_IMAGE_NAME)
+        tftp_filename = "{}/s_{}_{}.gz".format(TFTP_DIRECTORY, fun_test.get_suite_execution_id(), self.FUN_OS_STRIPPED_IMAGE_NAME)
         base_temp_directory = "/tmp/stable_master/s_{}".format(fun_test.get_suite_execution_id())
         tmp_tgz_file_name = "{}/extra_remove_me.tgz".format(base_temp_directory)
         tmp_untar_directory = "{}/untar_extra_remove_me".format(base_temp_directory)
 
-        gz_filename = filename + ".gz"
         tftp_server = self.get_tftp_server()
         tftp_server.command("cd /tmp; mkdir -p {}".format(tmp_untar_directory))
         tftp_server.curl(url=self.STABLE_MASTER_DOCHUB_PATH, output_file=tmp_tgz_file_name)
@@ -97,8 +96,13 @@ class BuildHelper():
             funos_binary_name += ".stripped"
         fun_os_binary_full_path = "{}/bin/{}".format(tmp_untar_directory, funos_binary_name)
         fun_test.simple_assert(tftp_server.list_files("{}".format(fun_os_binary_full_path)), "FunOS binary path found")
+        gz_filename = fun_os_binary_full_path + ".gz"
+        tftp_server.command("rm {}".format(gz_filename))
         tftp_server.command("gzip {}".format(fun_os_binary_full_path))
-
+        fun_test.simple_assert(tftp_server.list_files(gz_filename), "GZ file created")
+        tftp_server.command("mv {} {}".format(gz_filename, tftp_filename))
+        fun_test.simple_assert(tftp_server.list_files(tftp_filename), "File moved to tftpboot directory")
+        tftp_server.command("rm -rf {}".format(base_temp_directory))
 
 if __name__ == "__main2__":
     boot_args = "app=jpeg_perf_test --test-exit-fast"
