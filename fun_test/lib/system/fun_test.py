@@ -866,7 +866,7 @@ class FunTest:
             sys.stdout.write(final_message)
             sys.stdout.flush()
         if self.time_series_enabled:
-            data = {"checkpoint": self.current_time_series_checkpoint, "log": final_message}
+            data = {"checkpoint_index": self.current_time_series_checkpoint, "log": final_message}
             self.add_time_series_log(collection_name=models_helper.get_fun_test_time_series_collection_name(self.get_suite_execution_id(),
                                                                                                             self.get_test_case_execution_id()),
                                      data=data)
@@ -1135,7 +1135,7 @@ class FunTest:
                 "result": result, 
                 "expected": expected,
                 "actual": actual,
-                "checkpoint_index": self.current_time_series_checkpoint}
+                "index": self.current_time_series_checkpoint}
         self.add_time_series_checkpoint(collection_name=models_helper.get_fun_test_time_series_collection_name(self.get_suite_execution_id(), self.get_test_case_execution_id()), data=data)
         # add_time_series_checkpoint
 
@@ -1220,6 +1220,15 @@ class FunTest:
 
     def send_mail(self, subject, content, to_addresses=["john.abraham@fungible.com"]):
         send_mail(to_addresses=to_addresses, subject=subject, content=content)
+
+    def add_start_checkpoint(self):
+        data = {"checkpoint": "Start",
+                "result": FunTest.PASSED,
+                "expected": True,
+                "actual": True,
+                "index": fun_test.current_time_series_checkpoint}
+        fun_test.add_time_series_checkpoint(collection_name=models_helper.get_fun_test_time_series_collection_name(
+            fun_test.get_suite_execution_id(), fun_test.get_test_case_execution_id()), data=data)
 
     def scp(self,
             source_file_path,
@@ -1388,6 +1397,7 @@ class FunTestScript(object):
                                                                  inputs=fun_test.get_job_inputs())
 
                 fun_test.current_test_case_execution_id = setup_te.execution_id
+                fun_test.add_start_checkpoint()
 
             fun_test.simple_assert(self.test_cases, "At least one test-case is required. No test-cases found")
             if self.test_case_order:
@@ -1558,6 +1568,7 @@ class FunTestScript(object):
                                                                      suite_execution_id=fun_test.suite_execution_id,
                                                                      result=fun_test.IN_PROGRESS)
                             fun_test.current_test_case_execution_id = test_case.execution_id
+                        fun_test.add_start_checkpoint()
                         test_case.setup()
                         test_case.run()
 

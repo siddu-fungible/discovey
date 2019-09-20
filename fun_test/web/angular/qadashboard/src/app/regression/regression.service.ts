@@ -202,9 +202,12 @@ getPrettyLocalizeTime(t) {
     }))
   }
 
-  testCaseTimeSeriesLogs(suiteExecutionId, testCaseExecutionId) {
+  testCaseTimeSeriesLogs(suiteExecutionId, testCaseExecutionId, checkpointIndex=null) {
     let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}/${testCaseExecutionId}`;
     url += `?type=log`;
+    if (checkpointIndex !== null) {
+      url += `&checkpoint_index=${checkpointIndex}`;
+    }
     return this.apiService.get(url).pipe(switchMap(response => {
       return of(response.data);
     }), catchError (error => {

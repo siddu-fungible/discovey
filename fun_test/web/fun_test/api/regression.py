@@ -518,11 +518,16 @@ def test_case_time_series(request, suite_execution_id, test_case_execution_id):
     result = None
     if request.method == "GET":
         type = request.GET.get("type", "log")
+        checkpoint_index = request.GET.get("checkpoint_index", None)
         collection_name = "s_{}_{}".format(suite_execution_id, test_case_execution_id)
         mongo_db_manager = app_config.get_mongo_db_manager()
         collection = mongo_db_manager.get_collection(collection_name)
+        query = {"type": type}
+        if checkpoint_index is not None:
+            query["data.checkpoint_index"] = int(checkpoint_index)
         if collection:
-            result = list(collection.find({"type": type}))
+
+            result = list(collection.find(query))
     return result
 
 if __name__ == "__main__":
