@@ -449,8 +449,8 @@ def flashF(index=0, flags=False, type=None, image=None, version=None):
         sys.exit("image-path and version are multually exclusive ...")
 
     if version:
-        if type not in [ 'pufr', 'frmw', 'eepr', 'host', 'emmc', 'sbpf' ]:
-            sys.exit("image-type %s not-supported only=['pufr', 'frmw', 'sbpf', 'eepr', 'host', 'emmc' ] ..." % type)
+        if type not in [ 'pufr', 'frmw', 'eepr', 'host', 'emmc', 'sbpf', 'husd', 'husm', 'hbsb' ]:
+            sys.exit("image-type %s not-supported only=['pufr', 'frmw', 'sbpf', 'eepr', 'host', 'emmc', 'husd', 'husm', 'hbsb' ] ..." % type)
         elif type == 'eepr':
             fimage='funsdk-release/{}/eeprom_fs1600_{}_packed.bin'.format(version, index)
         elif type == 'host':
@@ -463,6 +463,12 @@ def flashF(index=0, flags=False, type=None, image=None, version=None):
             fimage='funsdk-release/{}/esecure_puf_rom_packed.bin'.format(version)
         elif type == 'frmw':
             fimage='funsdk-release/{}/esecure_firmware_packed.bin'.format(version)
+        elif type == 'husd':
+            fimage='funsdk-release/{}/hu_sds.bin'.format(version)
+        elif type == 'husm':
+            fimage='funsdk-release/{}/hu_sbm.bin'.format(version)
+        elif type == 'hbsb':
+            fimage='funsdk-release/{}/hbm_sbus.bin'.format(version)
         else:
             sys.exit("image-type %s not-supported ..." % type)
     elif image:
