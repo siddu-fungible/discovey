@@ -2901,16 +2901,42 @@ class PeekCommands(object):
                 reference_keys = val.keys()
         return reference_keys
 
-    def get_bam_configs(self):
+    def _print_master_table_columns(self, print_keys, print_values):
+        master_table_obj = PrettyTable()
+        master_table_obj.header = True
+        master_table_obj.border = True
+        master_table_obj.align = 'l'
+        for col_name, col_values in zip(print_keys, print_values):
+            master_table_obj.add_column(col_name, col_values)
+        print master_table_obj
+
+    def get_bam_flow_control_configs(self, per_pool):
+        try:
+            print "bam flow_control configs"
+        except Exception as ex:
+            print "ERROR: %s" % str(ex)
+            self.dpc_client.disconnect()
+
+    def _invert_output_dict(self, output_dict):
+        new_output = OrderedDict()
+        temp_list = []
+        for key, val in output_dict.iteritems():
+            val_list = val
+            val_list = val_list.insert(0, key)
+            temp_list.append(val)
+        for key in temp_list[0]:
+            new_output[key] = []
+            index = temp_list[0].index(key)
+            for item in temp_list[1:]:
+                new_output[key].append(item[index])
+        return new_output
+
+    def get_bam_usage(self):
         cmd = "stats/resource/bam"
         row_list = ['key names']
         for x in range(9):
             row_list.append('C' + str(x) + ":" + 'size_AUs')
             row_list.append('C' + str(x) + ":" + 'size_KB')
-        master_table_obj = PrettyTable()
-        master_table_obj.header = True
-        master_table_obj.border = True
-        master_table_obj.align = 'l'
         result = self.dpc_client.execute(verb="peek", arg_list=[cmd])
         result = result['bm_usage_per_cluster']
         reference_cluster = result['cluster_0']
@@ -2932,9 +2958,82 @@ class PeekCommands(object):
                         output[col_name].append(0)
         print_keys = output.keys()
         print_values = output.values()
-        for col_name, col_values in zip(print_keys, print_values):
-            master_table_obj.add_column(col_name, col_values)
-        print master_table_obj
+        self._print_master_table_columns(print_keys, print_values)
+
+    def _get_bam_pool_config(self):
+        cmd = "config/bam/pool_config"
+        result = self.dpc_client.execute(verb="peek", arg_list=[cmd])
+
+        all_keys = sorted(result.keys())
+        reference_pool = all_keys[0]
+        reference_pool = result[reference_pool]
+        reference_keys = self._get_max_reference_keys(result, reference_pool)
+        row_list = ['key names']
+        output = OrderedDict()
+        output[row_list[0]] = all_keys
+        for x in sorted(reference_keys):
+            output[x] = []
+            row_list.append(x)
+        for key in all_keys:
+            for _key in reference_keys:
+                val = None
+                if _key in result[key]:
+                    val = result[key][_key]
+                output[_key].append(val)
+        print_keys = output.keys()
+        print_values = output.values()
+        self._print_master_table_columns(print_keys, print_values)
+
+    def _get_bam_ncv_config(self):
+        cmd = "config/bam/ncv_config"
+        result = self.dpc_client.execute(verb="peek", arg_list=[cmd])
+        pc_result = result['pc_count']
+        print "pc_count:%s" % pc_result
+        del result['pc_count']
+        all_keys = sorted(result.keys())
+        reference_pool = all_keys[0]
+        reference_pool = result[reference_pool]
+        reference_keys = self._get_max_reference_keys(result, reference_pool)
+        row_list = ['key names']
+        output = OrderedDict()
+        output[row_list[0]] = all_keys
+        for x in sorted(reference_keys):
+            output[x] = []
+            row_list.append(x)
+        for key in all_keys:
+            for _key in reference_keys:
+                val = None
+                if _key in result[key]:
+                    val = result[key][_key]
+                output[_key].append(val)
+        output = self._invert_output_dict(output)
+        print_keys = output.keys()
+        print_values = output.values()
+        self._print_master_table_columns(print_keys, print_values)
+
+    def _get_bam_global_flow_control(self):
+        cmd = "config/bam/global_flow_control"
+        result = self.dpc_client.execute(verb="peek", arg_list=[cmd])
+        print "Not implemented"
+
+    def _get_bam_per_pool_flow_control(self):
+        cmd = "config/bam/per_pool_flow_control"
+        result = self.dpc_client.execute(verb="peek", arg_list=[cmd])
+        print "Not implemented"
+
+    def get_nu_configs(self, config_type):
+        try:
+            if config_type == 'pool_config':
+                self._get_bam_pool_config()
+            elif config_type == 'ncv_config':
+                self._get_bam_ncv_config()
+            elif config_type == 'per_pool_flow_control':
+                self._get_bam_per_pool_flow_control()
+            elif config_type == 'global_flow_control':
+                self._get_bam_global_flow_control()
+        except Exception as ex:
+            print "ERROR: %s" % str(ex)
+            self.dpc_client.disconnect()
 
     def _get_cid_bam_results(self, result, cid):
         for key in result.keys():

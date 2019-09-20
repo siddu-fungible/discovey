@@ -435,11 +435,19 @@ get_nu_subparsers = get_nu_parser.add_subparsers(title='subcommands', help="")
 get_nu_port_parser = get_nu_subparsers.add_parser('port', help="NU Port commands")
 get_nu_qos_parser = get_nu_subparsers.add_parser('qos', help="NU QoS commands")
 get_nu_sample_parser = get_nu_subparsers.add_parser('sample', help="Sample commands")
+get_nu_config_parser = get_nu_subparsers.add_parser("configs",help="Config commands")
 
 get_hnu_subparsers = get_hnu_parser.add_subparsers(title='subcommands', help="")
 get_hnu_qos_parser = get_hnu_subparsers.add_parser('qos', help="HNU QoS commands")
 
 get_bam_parser.add_argument("configs")
+
+#get_bam_parser.add_parser("usage", help="print bam usage", default=None)
+#get_bam_parser.add_argument("pool_config", help="print bam pool config")
+
+get_nu_config_parser.add_argument("config_type",
+                                   help="Value for config_type can be: \n1. pool_config\n2. ncv_config\n3. per_pool_flow_control\n4. global_flow_control",
+                                   default=None)
 # -----------------------------------------------------------------------------------------------
 
 # Get NU Port sub commands

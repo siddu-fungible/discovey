@@ -852,8 +852,15 @@ class CmdController(Cmd):
         grep_regex = args.grep
         self._peek_cmd_obj.peek_dam_resource_stats(grep_regex=grep_regex)
 
+    def get_nu_configs(self, args):
+        config_type = args.config_type
+        if not config_type in ['pool_config', 'ncv_config', 'per_pool_flow_control', 'global_flow_control']:
+            print "Please give config_type in: \n1. pool_config\n2. ncv_config\n3. per_pool_flow_control\n4. global_flow_control"
+            self.dpc_client.disconnect()
+        self._peek_cmd_obj.get_nu_configs(config_type=config_type)
+
     def get_bam_configs(self, args):
-        self._peek_cmd_obj.get_bam_configs()
+        self._peek_cmd_obj.get_bam_usage()
 
     def peek_bam_resource_stats(self, args):
         grep_regex = args.grep
@@ -1185,6 +1192,7 @@ class CmdController(Cmd):
     get_hnu_qos_arb_cfg_parser.set_defaults(func=get_hnu_qos_arb_cfg)
     set_hnu_qos_xoff_status_parser.set_defaults(func=set_hnu_qos_xoff_status)
     get_hnu_qos_xoff_status_parser.set_defaults(func=get_hnu_qos_xoff_status)
+    get_nu_config_parser.set_defaults(func=get_nu_configs)
     get_bam_parser.set_defaults(func=get_bam_configs)
 
     # -------------- Peek Command Handlers ----------------
@@ -1333,7 +1341,7 @@ class CmdController(Cmd):
 
 
 if __name__ == '__main__':
-    cmd_obj = CmdController(target_ip="fs48-come", target_port=40220, verbose=False)
+    cmd_obj = CmdController(target_ip="10.1.21.8", target_port=40220, verbose=False)
     cmd_obj.cmdloop(intro="hello")
 
 
