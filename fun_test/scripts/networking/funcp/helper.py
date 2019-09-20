@@ -301,7 +301,8 @@ def configure_vms(server_name, vm_dict):
         if vm in all_vms:
             try:
                 pci_device = linux_obj.command(command="virsh nodedev-list | grep %s" % vm_dict[vm]["ethernet_pci_device"])
-                if vm_dict[vm]["ethernet_pci_device"] not in pci_device:
+                pci_device_pf2 = linux_obj.command(command="virsh nodedev-list | grep %s" % vm_dict[vm]["nvme_pci_device"])
+                if vm_dict[vm]["ethernet_pci_device"] not in pci_device and vm_dict[vm]["nvme_pci_device"] not in pci_device_pf2:
                     fun_test.critical(message="%s device not present on server" % vm_dict[vm]["ethernet_pci_device"])
                     fun_test.log("Skipping VM: %s" % vm)
                     continue
@@ -398,7 +399,9 @@ def enable_nvme_vfs(host, username="localadmin", password="Precious1*", pcie_vfs
     linux_obj = Linux(host_ip=host, ssh_username=username, ssh_password=password)
     if not linux_obj.check_ssh():
         return False
-    linux_obj.sudo_command(command="echo \"%s\" >  /sys/bus/pci/devices/0000\:af\:00.2/sriov_numvfs" % pcie_vfs_count)
+    bdf = linux_obj.sudo_command("lspci -D -d 1dad: | grep 'Non-Volatile memory controller' | awk '{print $1}'").strip()
+    linux_obj.sudo_command(command="echo \"%s\" >  /sys/bus/pci/devices/{}/sriov_numvfs".format(str(bdf))
+                                   % pcie_vfs_count)
     fun_test.sleep(message="waiting for NVME VFs to be created")
     lspci_op = linux_obj.command(command="lspci -d 1dad:")
     if lspci_op.count("Non-Volatile memory controller:") >= pcie_vfs_count+1:
