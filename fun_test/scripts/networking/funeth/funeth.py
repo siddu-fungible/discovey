@@ -7,7 +7,7 @@ import sys
 from time import asctime
 
 
-NUM_PCIE_FUNCS = 4
+NUM_PCIE_PF_FUNCS = 4
 CPU_LIST_HOST = range(8, 16)  # Host's CPU ids used for traffic, which are in same NUMA node
 CPU_LIST_VM = range(0, 8)  # VM's CPU ids used for traffic
 COALESCE_RX_USECS = 8
@@ -50,7 +50,7 @@ class Funeth:
 
             if check_pcie_width:
                 output = self.linux_obj_dict[hu].sudo_command('lspci -d 1dad: -vv | grep LnkSta')
-                result &= re.findall(r'Width x(\d+)', output)[:NUM_PCIE_FUNCS] == ['{}'.format(self.tb_config_obj.get_hu_pcie_width(hu))]*NUM_PCIE_FUNCS
+                result &= re.findall(r'Width x(\d+)', output)[:NUM_PCIE_PF_FUNCS] == ['{}'.format(self.tb_config_obj.get_hu_pcie_width(hu))]*NUM_PCIE_PF_FUNCS
 
         return result
 
