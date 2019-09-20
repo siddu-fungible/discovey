@@ -249,10 +249,10 @@
                   <tr>
                     <td class="fun-attribute-label">Select</td>
                     <td>
-                      <select class="field-width" id="suite-select" [(ngModel)]="selectedSuite" (change)="changedValue(selectedSuite)">
+                      <select class="field-width" id="suite-select" [(ngModel)]="selectedSuite" (change)="changedValue(selectedSuite)" size="10">
                         <option></option>
                         <option [ngValue]="suite" *ngFor="let suite of suitesInfo">
-                        {{ suite.id }}: {{ suite.name }}
+                        {{ suite.name }} (ID: {{ suite.id }})
                         </option>
                       </select></td>
                   </tr>
