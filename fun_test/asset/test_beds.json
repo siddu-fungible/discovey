@@ -1425,7 +1425,7 @@
               "name": "cab03-qa-01"
             },
             "type": "INTERFACE_TYPE_PCIE",
-            "hosts": 1
+            "hosts": 0
           },
           "3": {
             "type": "INTERFACE_TYPE_PCIE",
@@ -1434,6 +1434,25 @@
           "2": {
             "type": "INTERFACE_TYPE_PCIE",
             "dual": 0
+          },
+          "4": {
+            "host_info": {
+              "name": "cab03-qa-07"
+            },
+            "type": "INTERFACE_TYPE_PCIE",
+            "hosts": 1
+          },
+          "5": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 1
+          },
+          "6": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 1
+          },
+          "7": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 1
           }
         },
         "dut": "fs-45"
