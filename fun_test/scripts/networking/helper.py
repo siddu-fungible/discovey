@@ -1256,11 +1256,12 @@ def get_sorted_dict(result):
         sorted_dict[key] = result[key]
     return sorted_dict
 
-def populate_per_vp_output_file(network_controller_obj, filename, display_output=False):
+def populate_per_vp_output_file(per_vp_1, per_vp_2, filename, display_output=False):
     output = False
     try:
         lines = list()
 
+        """
         prev_result = network_controller_obj.peek_per_vp_stats()
         prev_result = get_required_per_vp_result(prev_result)
         prev_result = get_filtered_dict(output_dict=prev_result)
@@ -1270,7 +1271,16 @@ def populate_per_vp_output_file(network_controller_obj, filename, display_output
         result = get_required_per_vp_result(result)
         result = get_filtered_dict(output_dict=result)
         result = get_sorted_dict(result)
-        master_table_obj = get_per_vp_dict_table_obj(result=result, prev_result=prev_result)
+        """
+        per_vp_1 = get_required_per_vp_result(per_vp_1)
+        per_vp_1 = get_filtered_dict(output_dict=per_vp_1)
+        per_vp_1 = get_sorted_dict(per_vp_1)
+
+        per_vp_2 = get_required_per_vp_result(per_vp_2)
+        per_vp_2 = get_filtered_dict(output_dict=per_vp_2)
+        per_vp_2 = get_sorted_dict(per_vp_2)
+
+        master_table_obj = get_per_vp_dict_table_obj(result=per_vp_2, prev_result=per_vp_1)
         lines.append("\n########################  %s ########################\n" % str(get_timestamp()))
         lines.append(master_table_obj.get_string())
         lines.append('\n\n\n')
@@ -1376,7 +1386,7 @@ def populate_stats_file(network_controller_obj, test_time, generic_file_name_par
         ddr_stats_file = str(version) + "_" + generic_file_name_part + "_ddr.txt"
         cdu_stats_file = str(version) + "_" + generic_file_name_part + "_cdu.txt"
         ca_stats_file = str(version) + "_" + generic_file_name_part + "_ca.txt"
-
+        """
         artifact_resource_pc_1_file = fun_test.get_test_case_artifact_file_name(post_fix_name=resource_pc_1_file)
         artifact_resource_pc_2_file = fun_test.get_test_case_artifact_file_name(post_fix_name=resource_pc_2_file)
         artifact_bam_stats_file = fun_test.get_test_case_artifact_file_name(post_fix_name=bam_stats_file)
@@ -1385,7 +1395,15 @@ def populate_stats_file(network_controller_obj, test_time, generic_file_name_par
         artifact_ddr_file = fun_test.get_test_case_artifact_file_name(post_fix_name=ddr_stats_file)
         artifact_cdu_file = fun_test.get_test_case_artifact_file_name(post_fix_name=cdu_stats_file)
         artifact_ca_file = fun_test.get_test_case_artifact_file_name(post_fix_name=ca_stats_file)
-
+        """
+        artifact_resource_pc_1_file = resource_pc_1_file
+        artifact_resource_pc_2_file = resource_pc_2_file
+        artifact_bam_stats_file = bam_stats_file
+        artifact_vp_util_file = vp_util_file
+        artifact_per_vp_file = per_vp_file
+        artifact_ddr_file = ddr_stats_file
+        artifact_cdu_file = cdu_stats_file
+        artifact_ca_file = ca_stats_file
         start_counter = 0
         while not start_counter == sleep_time_factor:
             fun_test.log_module_filter("random_module")
@@ -1394,14 +1412,29 @@ def populate_stats_file(network_controller_obj, test_time, generic_file_name_par
             populate_pc_resource_output_file(network_controller_obj=network_controller_obj,
                                              filename=artifact_resource_pc_2_file, pc_id=2, display_output=display_output)
             populate_resource_bam_output_file(network_controller_obj=network_controller_obj, filename=artifact_bam_stats_file)
-            populate_ddr_output_file(network_controller_obj=network_controller_obj, filename=artifact_ddr_file)
+            #populate_ddr_output_file(network_controller_obj=network_controller_obj, filename=artifact_ddr_file)
             populate_vp_util_output_file(network_controller_obj=network_controller_obj, filename=artifact_vp_util_file)
             populate_cdu_output_file(network_controller_obj=network_controller_obj, filename=artifact_cdu_file)
-            populate_ca_output_file(network_controller_obj=network_controller_obj, filename=artifact_ca_file)
-            populate_per_vp_output_file(network_controller_obj=network_controller_obj, filename=artifact_per_vp_file)
+            #populate_ca_output_file(network_controller_obj=network_controller_obj, filename=artifact_ca_file)
+            #populate_per_vp_output_file(network_controller_obj=network_controller_obj, filename=artifact_per_vp_file)
+
+            ca1 = network_controller_obj.peek_ca_stats()
+            ddr1 = network_controller_obj.peek_ddr_stats()
+            per_vp_1 = network_controller_obj.peek_per_vp_stats()
+            fun_test.sleep("Sleep until next stats to be collected",seconds=sleep_time-5)
+
+            ca2 = network_controller_obj.peek_ca_stats()
+            ddr2 = network_controller_obj.peek_ddr_stats()
+            per_vp_2 = network_controller_obj.peek_per_vp_stats()
+
+
+            populate_ddr_output_file(ddr1, ddr2, filename=artifact_ddr_file)
+            populate_ca_output_file(ca1, ca2, filename=artifact_ca_file)
+            populate_per_vp_output_file(per_vp_1, per_vp_2, filename=artifact_per_vp_file)
+
             fun_test.log_module_filter_disable()
 
-            fun_test.sleep("Sleep for %s secs before next iteration of populating dpcsh stats" % sleep_time, seconds=sleep_time)
+            #fun_test.sleep("Sleep for %s secs before next iteration of populating dpcsh stats" % sleep_time, seconds=sleep_time)
 
             start_counter += 1
         fun_test.log("Population of file stats completed")
@@ -1473,15 +1506,15 @@ def populate_resource_bam_output_file(network_controller_obj, filename, display_
     return output
 
 
-def populate_ddr_output_file(network_controller_obj, filename, display_output=False):
+def populate_ddr_output_file(ddr1, ddr2, filename, display_output=False):
     output = False
     try:
         lines = list()
 
-        result_1 = network_controller_obj.peek_ddr_stats()
-        fun_test.sleep("Let time go for another second", seconds=1)
-        result_2 = network_controller_obj.peek_ddr_stats()
-        result = get_diff_results(old_result=result_1, new_result=result_2)
+        #result_1 = network_controller_obj.peek_ddr_stats()
+        #fun_test.sleep("Let time go for another second", seconds=1)
+        #result_2 = network_controller_obj.peek_ddr_stats()
+        result = get_diff_results(old_result=ddr1, new_result=ddr2)
         lines.append("\n########################  %s ########################\n" % str(get_timestamp()))
         for key, val in result.iteritems():
 
@@ -1513,7 +1546,7 @@ def populate_cdu_output_file(network_controller_obj, filename, display_output=Fa
         lines = list()
 
         result = network_controller_obj.peek_cdu_stats()
-        fun_test.sleep("Let time go for another second", seconds=1)
+        #fun_test.sleep("Let time go for another second", seconds=1)
         result = network_controller_obj.peek_cdu_stats()
         master_table_obj = get_nested_dict_stats(result=result)
         lines.append("\n########################  %s ########################\n" % str(get_timestamp()))
@@ -1538,15 +1571,15 @@ def populate_cdu_output_file(network_controller_obj, filename, display_output=Fa
     return output
 
 
-def populate_ca_output_file(network_controller_obj, filename, display_output=False):
+def populate_ca_output_file(ca1, ca2, filename, display_output=False):
     output = False
     try:
         lines = list()
 
-        result_1 = network_controller_obj.peek_ca_stats()
-        fun_test.sleep("Let time go for another second", seconds=1)
-        result_2 = network_controller_obj.peek_ca_stats()
-        result = get_diff_results(old_result=result_1, new_result=result_2)
+        #result_1 = network_controller_obj.peek_ca_stats()
+        #fun_test.sleep("Let time go for another second", seconds=1)
+        #result_2 = network_controller_obj.peek_ca_stats()
+        result = get_diff_results(old_result=ca1, new_result=ca2)
         lines.append("\n########################  %s ########################\n" % str(get_timestamp()))
         for key, val in result.iteritems():
 
@@ -1557,7 +1590,7 @@ def populate_ca_output_file(network_controller_obj, filename, display_output=Fal
                 f.writelines(lines)
 
             description = "CA stats"
-            fun_test.add_auxillary_file(description=description, filename=filename)
+            #fun_test.add_auxillary_file(description=description, filename=filename)
 
             if display_output:
                 fun_test.log_disable_timestamps()
