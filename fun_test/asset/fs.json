@@ -318,12 +318,12 @@
     "bmc": {
       "mgmt_ssh_password": "superuser",
       "mgmt_ssh_username": "sysadmin",
-      "mgmt_ip": "10.1.105.56"
+      "mgmt_ip": "10.1.105.91"
     },
     "come": {
       "mgmt_ssh_password": "123",
       "mgmt_ssh_username": "fun",
-      "mgmt_ip": "10.1.105.57"
+      "mgmt_ip": "10.1.105.92"
     },
     "name": "fs-58",
     "fpga": {
@@ -382,7 +382,7 @@
     "bmc": {
       "mgmt_ssh_password": "superuser",
       "mgmt_ssh_username": "sysadmin",
-      "mgmt_ip": "10.1.105.91"
+      "mgmt_ip": "10.1.105.139"
     },
     "name": "fs-63",
     "fpga": {
@@ -710,5 +710,29 @@
       "mgmt_ip": "fs67-fpga"
     },
     "gateway_ip": "10.1.105.1"
+  },
+  {
+    "bmc": {
+      "mgmt_ssh_password": "superuser",
+      "mgmt_ssh_username": "sysadmin",
+      "mgmt_ip": "10.1.105.183"
+    },
+    "come": {
+      "mgmt_ssh_password": "123",
+      "mgmt_ssh_username": "fun",
+      "mgmt_ip": "10.1.105.184"
+    },
+    "name": "fs-18",
+    "fpga": {
+      "mgmt_ssh_password": "root",
+      "mgmt_ssh_username": "root",
+      "mgmt_ip": "10.1.105.185"
+    },
+    "apc_info": {
+      "username": "localadmin",
+      "outlet_number": 18,
+      "password": "Precious1*",
+      "host_ip": "cab02-pdu1"
+    }
   }
 ]
