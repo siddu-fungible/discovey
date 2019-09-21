@@ -29,7 +29,7 @@
 		"enable" : true
 	},
 	{
-		"name" : "fpg16",
+		"name" : "fpg4",
 		"mtu": 9000,
 		"address" : "9.1.20.2",
 		"prefix length" : 30,
