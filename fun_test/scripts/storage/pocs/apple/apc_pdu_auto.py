@@ -110,7 +110,8 @@ class ApcPduTestcase(FunTestCase):
                 fun_test.log("Checking if storage controller is up")
                 timer = FunTimer(max_time=300)
                 while not timer.is_expired():
-                    output = come_handle.command("curl -I -u admin:password http://10.1.105.141:50220/FunCC/v1/topology")
+                    output = come_handle.command("curl -I -u admin:password http://{}:50220/FunCC/v1/topology"
+                                                 .format(str(self.fs['come']['mgmt_ip'])))
                     match_status = re.search(r'HTTP/[\d.]+\s+(\d+)', output)
                     if match_status:
                         status = match_status.group(1)
@@ -118,7 +119,8 @@ class ApcPduTestcase(FunTestCase):
                             break
                     fun_test.sleep("Waiting for storage controller to be up", seconds=10)
 
-                come_handle.command("curl -u admin:password http://10.1.105.141:50220/FunCC/v1/topology | json_pp")
+                come_handle.command("curl -u admin:password http://{}:50220/FunCC/v1/topology | json_pp"
+                                    .format(str(self.fs['come']['mgmt_ip'])))
 
             if self.validate["check_ssd"]:
                 fun_test.log("Checking if SSD's are Active on F1_0")
