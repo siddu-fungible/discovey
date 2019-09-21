@@ -665,18 +665,18 @@ export class RegressionComponent implements OnInit {
   }
 
   atLeastOneValidator(group: FormGroup): { [key: string]: boolean } | null {
-      const submitters = group.get('submitters');
-      const suiteName = group.get('suiteName');
-      const searchByExecutionId = group.get('searchByExecutionId');
-      const executionId = group.get('executionId');
-      console.log(searchByExecutionId.value);
-      if (((suiteName.value == "" || suiteName.value == null) && (submitters.value == "" || submitters.value == null)) && searchByExecutionId.value == false) {
-        return {'atLeastOne': true};
-      }
-      else if (searchByExecutionId.value == true && (executionId.value == "" || executionId.value == null)){
-        return {'atLeastOne': true};
-      }
-      return null;
+    const submitters = group.get('submitters');
+    const suiteName = group.get('suiteName');
+    const searchByExecutionId = group.get('searchByExecutionId');
+    const executionId = group.get('executionId');
+    console.log(searchByExecutionId.value);
+    if (((suiteName.value == "" || suiteName.value == null) && (submitters.value == "" || submitters.value == null)) && searchByExecutionId.value == false) {
+      return {'atLeastOne': true};
+    }
+    else if (searchByExecutionId.value == true && (executionId.value == "" || executionId.value == null)){
+      return {'atLeastOne': true};
+    }
+    return null;
   }
 
 }
