@@ -37,7 +37,12 @@ class ApcPduTestcase(FunTestCase):
         self.apc_info = self.fs.get("apc_info", None)
         self.outlet_no = self.apc_info.get("outlet_number", None)
 
-        self.validate = {"check_storage_controller": False, "check_ssd": False, "check_ports": False}
+        self.validate = {"check_storage_controller": False,
+                         "check_ssd": False,
+                         "check_ports": False,
+                         "expected_ssds_f1_0": 12,
+                         "expected_ssds_f1_1": 12
+                         }
         job_inputs = fun_test.get_job_inputs()
         if job_inputs:
             if "iterations" in job_inputs:
@@ -48,6 +53,11 @@ class ApcPduTestcase(FunTestCase):
                 self.validate["ports"] = job_inputs["check_ports"]
             if "check_storage_controller" in job_inputs:
                 self.validate["check_storage_controller"] = job_inputs["check_storage_controller"]
+            if "expected_ssds_f1_0" in job_inputs:
+                self.validate["expected_ssds_f1_0"] = job_inputs["expected_ssds_f1_0"]
+            if "expected_ssds_f1_1" in job_inputs:
+                self.validate["expected_ssds_f1_1"] = job_inputs["expected_ssds_f1_1"]
+
         fun_test.log(json.dumps(self.fs, indent=4))
         fun_test.log(self.validate)
 
@@ -112,11 +122,15 @@ class ApcPduTestcase(FunTestCase):
 
             if self.validate["check_ssd"]:
                 fun_test.log("Checking if SSD's are Active on F1_0")
-                ssd_valid = check_ssd(come_handle, expected_ssds_up=12, f1=0)
+                ssd_valid = check_ssd(come_handle,
+                                      expected_ssds_up=self.validate["expected_ssds_f1_0"],
+                                      f1=0)
                 fun_test.test_assert(ssd_valid, "F1_0: SSD's ONLINE")
 
                 fun_test.log("Checking if SSD's are Active on F1_1")
-                ssd_valid = check_ssd(come_handle, expected_ssds_up=12, f1=1)
+                ssd_valid = check_ssd(come_handle,
+                                      expected_ssds_up=self.validate["expected_ssds_f1_1"],
+                                      f1=1)
                 fun_test.test_assert(ssd_valid, "F1_1: SSD's ONLINE")
 
             if self.validate["check_ports"]:
