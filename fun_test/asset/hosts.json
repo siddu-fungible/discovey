@@ -83,7 +83,8 @@
       "host_ip": "poc-server-10-ilo",
       "username": "ADMIN",
       "password": "ADMIN"
-    }
+    },
+    "reboot_time": 600
   },
   "poc-server-11": {
     "host_ip": "poc-server-11",

@@ -125,6 +125,8 @@ class RegexTemplate(Linux):
                 elif "target" in arg:
                     if arg[1] == "s1":
                         cmd = cmd + "--" + arg[0] + "=" + arg[1] + " "
+                    if arg[1] == "f1":
+                       cmd = cmd + "--" + arg[0] + "=" + arg[1] + " "
                 else:
                     self.logger.log("else statement")
                     cmd = cmd + "-" + arg[0] + " " + arg[1] + " "
