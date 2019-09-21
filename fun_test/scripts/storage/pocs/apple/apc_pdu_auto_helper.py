@@ -5,6 +5,8 @@ import re
 
 def check_ssd(come_handle, expected_ssds_up=6, f1=0):
     result = False
+    if expected_ssds_up == 0:
+        return True
     dpcsh_data = get_dpcsh_data_for_cmds(come_handle, "peek storage/devices/nvme/ssds", f1)
     if dpcsh_data:
         validate = validate_ssd_status(dpcsh_data, expected_ssds_up)
