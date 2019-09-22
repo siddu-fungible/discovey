@@ -142,6 +142,16 @@ class ECVolumeSanityScript(FunTestScript):
         # Set syslog level
         # set_syslog_level(storage_controller, fun_test.shared_variables['syslog_level'])
 
+        pcap_pid = host_obj.tcpdump_capture_start(interface=test_interface_name,
+                                                  tcpdump_filename="/tmp/nvme_connect.pcap",
+                                                  snaplen=1500)
+        if pcap_pid:
+            fun_test.log("Started packet capture in {}".format(self.end_host_name))
+            pcap_started = True
+            pcap_stopped = False
+        else:
+            fun_test.critical("Unable to start packet capture in {}".format(self.end_host_name))
+
         # execute nvme connect
         nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {}".format(self.attach_transport.lower(),
                                                                          test_network["f1_loopback_ip"],
@@ -153,6 +163,10 @@ class ECVolumeSanityScript(FunTestScript):
         nvme_connect_status = end_host.sudo_command(command=nvme_connect_cmd, timeout=60)
         fun_test.log("nvme_connect_status output is: {}".format(nvme_connect_status))
         fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(), message="NVME Connect Status")
+
+        if pcap_started:
+            host_obj.tcpdump_capture_stop(process_id=pcap_pid)
+            pcap_stopped = True
 
         # check nvme device is visible on end host
         fetch_nvme = fetch_nvme_device(end_host, self.ns_id)
@@ -178,7 +192,16 @@ class ECVolumeSanityScript(FunTestScript):
 
     def cleanup(self):
         try:
-            if fun_test.shared_variables['setup_created']:
+            if fun_test.shared_variables["setup_created"]:
+                pcap_post_fix_name = "{}_nvme_connect.pcap".format(self.end_host_name)
+                pcap_artifact_file = fun_test.get_test_case_artifact_file_name(post_fix_name=pcap_post_fix_name)
+
+                fun_test.scp(source_port=self.end_host.ssh_port, source_username=self.end_host.ssh_username,
+                             source_password=self.end_host.ssh_password, source_ip=self.end_host.host_ip,
+                             source_file_path="/tmp/nvme_connect.pcap", target_file_path=pcap_artifact_file)
+                fun_test.add_auxillary_file(description="Host {} NVME connect pcap".format(self.end_host_name),
+                                            filename=pcap_artifact_file)
+                
                 ctrlr_uuid = fun_test.shared_variables["ctrlr_uuid"]
                 self.end_host.sudo_command("nvme disconnect -d {}".format(fun_test.shared_variables['volume_name']))
 
