@@ -160,7 +160,7 @@ class ECVolumeSanityScript(FunTestScript):
         if hasattr(self, "io_queues") and self.io_queues:
             nvme_connect_cmd += " -i {}".format(self.io_queues)
 
-        nvme_connect_status = end_host.sudo_command(command=nvme_connect_cmd, timeout=60)
+        nvme_connect_status = end_host.sudo_command(command=nvme_connect_cmd, timeout=70)
         fun_test.log("nvme_connect_status output is: {}".format(nvme_connect_status))
         fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(), message="NVME Connect Status")
 
