@@ -538,7 +538,13 @@
       "terminal_port": 7002,
       "terminal_ip": "cab01-terminal"
     },
-    "gateway_ip": "10.1.105.1"
+    "gateway_ip": "10.1.105.1",
+    "apc_info": {
+      "username": "localadmin",
+      "outlet_number": 22,
+      "password": "Precious1*",
+      "host_ip": "cab02-pdu1"
+    }
   },
   {
     "bmc": {
