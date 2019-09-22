@@ -1,0 +1,46 @@
+<div class="component">
+  <div class="fun-flex-container">
+    <div [@show]="showTestCasePanel" class="fun-flex-item">
+      <table class="fun-table">
+        <tr>
+          <td class="fun-table-header">ID</td>
+          <td class="fun-table-header">Description</td>
+          <td class="fun-table-header">Result</td>
+        </tr>
+        <tr *ngFor="let testCaseExecution of testCaseExecutions; let index=index">
+          <td><span class="pseudo-anchor" (click)="onTestCaseIdClick(index, testCaseExecution.execution_id)">{{ testCaseExecution.test_case_id }}</span></td>
+          <td>{{ testCaseExecution.summary }}</td>
+          <td>{{ testCaseExecution.result }}</td>
+        </tr>
+      </table>
+    </div>
+    <div class="fun-flex-item" *ngIf="currentTestCaseExecution">
+      <button *ngIf="!showTestCasePanel" (click)="onShowTestCasePanelClick()" class="fun-button-add">Show test-cases</button>
+      <table class="fun-table">
+        <tr>
+          <td class="fun-table-header">ID</td>
+          <td class="fun-table-header">Checkpoint</td>
+          <td class="fun-table-header">Result</td>
+          <td class="fun-table-header">Expected</td>
+          <td class="fun-table-header">Actual</td>
+        </tr>
+        <tr *ngFor="let checkpoint of currentTestCaseExecution.checkpoints">
+          <td><span class="pseudo-anchor" (click)="onCheckpointClick(checkpoint.data.index)">{{ checkpoint.data.index }}</span></td>
+          <td>{{ checkpoint.data.checkpoint }}</td>
+          <td>{{ checkpoint.data.result }}</td>
+          <td>{{ checkpoint.data.expected }}</td>
+          <td>{{ checkpoint.data.actual }}</td>
+        </tr>
+      </table>
+    </div>
+    <div [@show]="showLogsPanel" class="fun-flex-item">
+      <div *ngFor="let testLog of testLogs">
+        <pre>{{ testLog.data.log }}</pre>
+      </div>
+    </div>
+
+
+  </div>
+
+
+</div>
