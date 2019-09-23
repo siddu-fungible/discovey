@@ -338,10 +338,80 @@ export class SubmitJobComponent implements OnInit {
 
 
   submitClick() {
-    console.log(this.buildType);
-    console.log(this.withStableMaster);
+    let self = this;
 
+    this.jobId = null;
+    let payload = {};
+
+    if (this.suiteSelectionMode === 'BY_SUITE') {
+      payload["suite_id"] = this.selectedSuite.id;
+    } else {
+      payload["script_pk"] = this.selectedScriptPk;
+    }
+
+    if (!this.selectedUser) {
+      return this.logger.error("Please select a user");
+    }
+    payload["build_url"] = this.buildUrl;
+    payload["tags"] = this._getSelectedtags();
+    payload["email_on_fail_only"] = this.emailOnFailOnly;
+    payload["test_bed_type"] = this.selectedTestBedType;
+    payload["submitter_email"] = this.selectedUser.email;
+
+    if (this.emails) {
+      this.emails = this.emails.split(",");
+      payload["email_list"] = this.emails
+    }
+    payload["scheduling_type"] = "asap";
+    if (this.schedulingOptions) {
+      payload = this.getSchedulingOptions(payload);
+      if (!payload) {
+        return;
+      }
+    }
+    payload["environment"] = {};
+
+
+    if (this.selectedTestBedType) {
+      payload["environment"]["test_bed_type"] = this.selectedTestBedType; //TODO: this is not needed after scheduler_v2
+    }
+    /*if (this.type) {
+      payload["suite_type"] = this.type;
+      payload["environment"]["test_bed_type"] = "tasks"
+    }*/
+
+    if (this.isTestBedFs()) {
+      if (this.buildType === this.BuildType.TFTP_IMAGE_PATH) {
+        if (this.tftpImagePath && this.tftpImagePath !== "") {
+          payload["environment"]["tftp_image_path"] = this.tftpImagePath;
+        }
+      } else if (this.buildType === this.BuildType.WITH_JENKINS_BUILD) {
+        payload["environment"]["with_jenkins_build"] = true;
+      } else if (this.buildType === this.BuildType.WITH_STABLE_MASTER) {
+        payload["environment"]["with_stable_master"] = this.withStableMaster;
+      }
+
+      if (payload["environment"]["with_jenkins_build"]) {
+        payload["environment"]["build_parameters"] = {};
+        if (this.bootArgs && this.bootArgs !== "" && this.isTestBedFs()) {
+          payload["environment"]["build_parameters"]["BOOTARGS"] = this.bootArgs.replace(/\s+/g, this.BOOT_ARGS_REPLACEMENT_STRING);
+        }
+        payload["environment"]["build_parameters"]["RELEASE_BUILD"] = this.releaseBuild;
+        payload["environment"]["build_parameters"]["DISABLE_ASSERTIONS"] = this.disableAssertions;
+        payload["environment"]["build_parameters"]["FUNOS_MAKEFLAGS"] = this.funOsMakeFlags;
+        payload["environment"]["build_parameters"]["BRANCH_FunOS"] = this.branchFunOs;
+        payload["environment"]["build_parameters"]["BRANCH_FunSDK"] = this.branchFunSdk;
+        payload["environment"]["build_parameters"]["BRANCH_FunControlPlane"] = this.branchFunControlPlane;
+        payload["environment"]["build_parameters"]["SKIP_DASM_C"] = this.skipDasmC;
+        payload["environment"]["build_parameters"]["BRANCH_FunTools"] = this.branchFunTools;
+        payload["environment"]["build_parameters"]["BRANCH_FunHW"] = this.branchFunHw;
+      }
+    }
+
+    console.log(this.buildType);
+    console.log(payload);
   }
+
   submitClick2() {
 
     let self = this;
@@ -393,6 +463,8 @@ export class SubmitJobComponent implements OnInit {
         }
       } else if (this.buildType === this.BuildType.WITH_JENKINS_BUILD) {
         payload["environment"]["with_jenkins_build"] = true;
+      } else if (this.buildType === this.BuildType.WITH_STABLE_MASTER) {
+        payload["environment"]["with_stable_master"] = this.withStableMaster;
       }
 
       if (payload["environment"]["with_jenkins_build"]) {
@@ -480,9 +552,6 @@ export class SubmitJobComponent implements OnInit {
         ctrl.submitting = null;
       });
     }
-
-
-
 
   }
 
