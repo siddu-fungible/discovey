@@ -396,7 +396,7 @@ MODE_END_POINT = "ep"
 
 class StorageFsTemplate(object):
     NUM_FS_CONTAINERS = 2
-    FPG_L2_MTU = 1518
+    FPG_L2_MTU = 1500
     FUNSDK_DIR = "/mnt/keep/FunSDK"
     WORKSPACE = "/home/fun/workspace"
     FUNGIBLE_ROOT = "opt/fungible"
