@@ -266,7 +266,7 @@ class RegexTemplate(Linux):
                         con1.logger.log("memory is :")
                         con1.logger.log(mem)
                         graph_name = base + "_" + mem + "_graph.json"
-                        if mem="dflt":
+                        if mem =="dflt":
                             graph_name=base+"_graph.json"
                         print ("second_check_point")
                         try:
