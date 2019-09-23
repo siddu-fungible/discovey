@@ -73,7 +73,7 @@ class HigherLevelTestcase(FunTestCase):
             }
 
             build_result = jenkins_manager.build(params=params, extra_emails=[
-                "indranip@fungible.com"],
+                "indrani.p@fungible.com"],
                                                  wait_time_for_build_complete=25 * 60)
             fun_test.test_assert(build_result, "Build completed normally: for Graphs in {}".format(json))
             fun_test.test_assert_expected(actual=build_result.lower(), expected="success", message="Successfully built")
