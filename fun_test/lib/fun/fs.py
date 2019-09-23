@@ -987,6 +987,28 @@ class ComE(Linux):
         return s
 
     def cleanup(self):
+        try:
+            fungible_root = self.command("echo $FUNGIBLE_ROOT")
+            fungible_root = fungible_root.strip()
+            if fungible_root:
+                logs_path = "{}/logs/*".format(fungible_root)
+                files = self.list_files(logs_path)
+                for file in files:
+                    file_name = file["filename"]
+                    base_name = os.path.basename(file_name)
+                    artifact_file_name = fun_test.get_test_case_artifact_file_name(
+                        self._get_context_prefix(base_name))
+
+                    fun_test.scp(source_ip=self.host_ip,
+                                 source_file_path=file_name,
+                                 source_username=self.ssh_username,
+                                 source_password=self.ssh_password,
+                                 target_file_path=artifact_file_name)
+                    fun_test.add_auxillary_file(description=self._get_context_prefix(base_name), filename=artifact_file_name)
+
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
         for f1_index in range(self.NUM_F1S):
             if f1_index == self.disable_f1_index:
                 continue
