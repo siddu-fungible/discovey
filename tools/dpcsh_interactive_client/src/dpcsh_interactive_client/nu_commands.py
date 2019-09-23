@@ -2921,8 +2921,7 @@ class PeekCommands(object):
         new_output = OrderedDict()
         temp_list = []
         for key, val in output_dict.iteritems():
-            val_list = val
-            val_list = val_list.insert(0, key)
+            val.insert(0, key)
             temp_list.append(val)
         for key in temp_list[0]:
             new_output[key] = []
@@ -4087,6 +4086,7 @@ class FlowCommands(object):
                         for _key, _val in epsq.iteritems():
                             if 'callee' in str(_key) and _val['module'] in queue:
                                 output[key][_val['id']] = OrderedDict()
+                                output[key][_val['id']]['flow_id'] = epsq['flow']['id']
                                 output[key][_val['id']]['epsq_vp'] = epsq['flow']['dest']
                                 output[key][_val['id']]['epsq_dest_vp'] = epsq['callee']['dest']
                                 output[key][_val['id']]['epsq_sqe_cnt'] = epsq['sqe_count']
@@ -4140,6 +4140,23 @@ class FlowCommands(object):
                                     '''
         return output
 
+    def _get_flow_list_diff_dict(self, parsed_result, prev_parsed_result):
+        diff_dict = OrderedDict()
+        for key, val in parsed_result.iteritems():
+            if key not in diff_dict:
+                diff_dict[key] = OrderedDict()
+            for key1, val1 in val.iteritems():
+                diff_dict[key][key1] = OrderedDict()
+                current_id_key = val1['flow_id']
+                prev_result_id_key = None
+                if key1 in prev_parsed_result[key]:
+                    prev_result_id_key = prev_parsed_result[key][key1]['flow_id']
+                if current_id_key == prev_result_id_key:
+                    for _key, _val in val1.iteritems():
+                        diff_dict[key][key1][_key] = _val
+                        if 'id' not in _key and isinstance(_val, int):
+                            diff_dict[key][key1]['d_' + _key] = int(_val) - int(prev_parsed_result[key][key1][_key])
+        return diff_dict
 
     def _print_flow_list_table(self, output_dict):
         tx_entry = output_dict.values()[0]
@@ -4157,6 +4174,10 @@ class FlowCommands(object):
 
     def get_flow_list_pp(self, hcf_id=None,hu_id=None, tx=None, rx=None, grep_regex=None):
         try:
+            prev_tx_parsed_dict = None
+            prev_rx_parsed_dict = None
+            tx_parsed_dict = None
+            rx_parsed_dict = None
             try:
                 while True:
                     cmd = "list"
@@ -4183,18 +4204,29 @@ class FlowCommands(object):
                         if tx:
                             print "\n********** Displaying tx table below **********\n"
                             tx_parsed_dict = self.get_queue_parsed_dict(result, queue='ethernet')
-                            if tx_parsed_dict:
+                            if prev_tx_parsed_dict:
+                                self._print_flow_list_table(self._get_flow_list_diff_dict(tx_parsed_dict, prev_tx_parsed_dict))
+                            elif tx_parsed_dict:
                                 self._print_flow_list_table(tx_parsed_dict)
                             else:
                                 print "No tx entries found"
+                                self.dpc_client.disconnect()
+                                break
                         if rx:
                             print "\n********** Displaying rx table below **********\n"
                             rx_parsed_dict = self.get_queue_parsed_dict(result, queue='epcq')
-                            if rx_parsed_dict:
+                            if prev_rx_parsed_dict:
+                                self._print_flow_list_table(
+                                    self._get_flow_list_diff_dict(rx_parsed_dict, prev_rx_parsed_dict))
+                            elif rx_parsed_dict:
                                 self._print_flow_list_table(rx_parsed_dict)
                             else:
                                 print "No rx entries found"
+                                self.dpc_client.disconnect()
+                                break
                     print "\n########################  %s ########################\n" % str(self._get_timestamp())
+                    prev_tx_parsed_dict = tx_parsed_dict
+                    prev_rx_parsed_dict = rx_parsed_dict
                     do_sleep_for_interval()
             except KeyboardInterrupt:
                 self.dpc_client.disconnect()
@@ -4202,7 +4234,7 @@ class FlowCommands(object):
             print "ERROR: %s" % str(ex)
             self.dpc_client.disconnect()
 
-    def get_flow_list(self, grep_regex=None):
+    def get_flow_list(self, hcf_id=None,hu_id=None, grep_regex=None):
         try:
             prev_result = None
             while True:
@@ -4211,8 +4243,26 @@ class FlowCommands(object):
                 master_table_obj.header = False
                 try:
                     cmd = "list"
-                    result = self.dpc_client.execute(verb='flow', arg_list=[cmd])
-                    if result:
+                    output = self.dpc_client.execute(verb='flow', arg_list=[cmd])
+                    if output:
+                        result = output
+                        if hu_id:
+                            result = {}
+                            key_list = []
+                            for key in output.keys():
+                                if hu_id == key.split(".")[0]:
+                                    key_list.append(key)
+                            if not key_list:
+                                print "hu_id %s entry not found" % hu_id
+                                return self.dpc_client.disconnect()
+                            for id in key_list:
+                                result[str(id)] = output[str(id)]
+                        elif hcf_id:
+                            result = {}
+                            if not hcf_id in output.keys():
+                                print "hcf_id %s entry not found" % hcf_id
+                                return self.dpc_client.disconnect()
+                            result[hcf_id] = output[hcf_id]
                         if prev_result:
                             for key in sorted(result):
                                 table_obj = self._inner_table_obj(result=result[key],
