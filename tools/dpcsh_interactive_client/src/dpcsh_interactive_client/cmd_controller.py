@@ -1021,7 +1021,7 @@ class CmdController(Cmd):
                 return self.dpc_client.disconnect()
             self._flow_cmd_obj.get_flow_list_pp(hcf_id=hcf_id, hu_id=hu_id, tx=tx, rx=rx, grep_regex=grep_regex)
         else:
-            self._flow_cmd_obj.get_flow_list(grep_regex=grep_regex)
+            self._flow_cmd_obj.get_flow_list(hcf_id=hcf_id, hu_id=hu_id, grep_regex=grep_regex)
 
     def flow_list_rdma(self, args):
         grep_regex = args.grep
@@ -1341,7 +1341,7 @@ class CmdController(Cmd):
 
 
 if __name__ == '__main__':
-    cmd_obj = CmdController(target_ip="10.1.21.8", target_port=40220, verbose=False)
+    cmd_obj = CmdController(target_ip="fs48-come", target_port=40221, verbose=False)
     cmd_obj.cmdloop(intro="hello")
 
 

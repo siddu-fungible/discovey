@@ -198,7 +198,7 @@ class FunControlPlaneBringup:
 
             linux_obj_come.command(command="cd /mnt/keep/")
             linux_obj_come.sudo_command(command="cp -r FunSDK FunSDK_bkp_%s" % d1)
-            linux_obj_come.sudo_command(command="cp -r /scratch /scratch_bkp_%s" % d1)
+            linux_obj_come.sudo_command(command="cd / && tar cf scratch_bkp_%s.tar scratch" % d1, timeout=1200)
             linux_obj_come.sudo_command(command="rm -rf FunSDK")
             git_pull = linux_obj_come.command("git clone git@github.com:fungible-inc/FunSDK-small.git FunSDK",
                                               timeout=120)

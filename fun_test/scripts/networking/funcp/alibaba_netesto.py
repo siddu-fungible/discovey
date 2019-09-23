@@ -27,7 +27,7 @@ class SetupBringup(alibaba_fcp_callback.ScriptSetup):
     def setup(self):
         super(SetupBringup, self).setup()
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
-        tb_config_obj = tb_configs.TBConfigs(str(fs_name)+"-NETESTO")
+        tb_config_obj = tb_configs.TBConfigs(str(fs_name))
         funeth_obj = funeth.Funeth(tb_config_obj)
         fun_test.shared_variables['funeth_obj'] = funeth_obj
         linux_objs = funeth_obj.linux_obj_dict.values()

@@ -256,6 +256,7 @@ class RegexTemplate(Linux):
                     con1.logger.log(pattern_path)
                     con1.logger.log("payload_path for compilation is ")
                     con1.logger.log(payload_path)
+
 #                    pld_base = re.search("test_\d+_\d+", pld).group()
                     #for mem in ["dflt", "rbm", "exm", "exm_plr", "rbm_exm", "rbm_exm_plr"]:
                     cmd="ls -la " + payload_path + " | awk '{print $5}'"
@@ -265,6 +266,8 @@ class RegexTemplate(Linux):
                         con1.logger.log("memory is :")
                         con1.logger.log(mem)
                         graph_name = base + "_" + mem + "_graph.json"
+                        if mem =="dflt":
+                            graph_name=base+"_graph.json"
                         print ("second_check_point")
                         try:
                             if engine == "1":
@@ -282,10 +285,10 @@ class RegexTemplate(Linux):
                                     op = con1.compile_re(j=jstyle, drop_unsupported=" ", B="0", L=" ", e=engine, r=pattern_path,
                                                         p=payload_path, o=res_path + graph_name, s="1500",target=trgt ,time_out=time_out)
                                 if mem == "rbm_exm":
-                                    op = con1.compile_re(j=jstyle, drop_unsupported=" ", B="10", e=engine, r=pattern_path, p=payload_path,
+                                    op = con1.compile_re(j=jstyle, drop_unsupported=" ", B="20", e=engine, r=pattern_path, p=payload_path,
                                                         o=res_path + graph_name, s="1500", target=trgt, time_out=time_out)
                                 if mem == "rbm_exm_plr":
-                                    op = con1.compile_re(j=jstyle, drop_unsupported=" ", B="10", L=" ", e=engine, r=pattern_path,
+                                    op = con1.compile_re(j=jstyle, drop_unsupported=" ", B="20", L=" ", e=engine, r=pattern_path,
                                                         p=payload_path, s="1500", o=res_path + graph_name, target=trgt, time_out=time_out)
                             elif engine == "0":
                                 print ("NFA")
@@ -315,7 +318,7 @@ class RegexTemplate(Linux):
                                    # op = self.compile_re(j=jstyle, drop_unsupported=" ", r=pat_path+base+"/pattern/"+pat, p=pld_path+base+"/payloads/"+base+".in",
                                                         #o=res_path + graph_name, time_out=time_out)
                                     #op = self.compile_re(j=jstyle, drop_unsupported=" ",r=pat_path+"/pattern/"+pat, o=res_path + graph_name, time_out=time_out)
-                                    op=con1.compile_re(j=jstyle, drop_unsupported=" ", r=pattern_path,  p=payload_path, o=res_path+graph_name,target=trgt, time_out=time_out)
+                                    op=con1.compile_re(j=jstyle, drop_unsupported=" ", r=pattern_path,  p=payload_path, o=res_path+graph_name,target=trgt, s="1500",time_out=time_out)
                                 print ("first check point")
                                 if mem == "rbm":
                                     print("FFA :rbm")
@@ -332,7 +335,7 @@ class RegexTemplate(Linux):
                                 if mem == "rbm_exm":
                                     op = con1.compile_re(j=jstyle, drop_unsupported=" ", r=pattern_path,   p=payload_path, o=res_path + graph_name, target=trgt,B="10", H="10", s="1500", time_out=time_out)
                                 if mem == "rbm_exm_plr":
-                                    print ("FFA:rbbm_exm_plr")
+                                    print ("FFA:rbm_exm_plr")
                                     op = con1.compile_re(j=jstyle, drop_unsupported=" ", r=pattern_path,  p=payload_path, o=res_path + graph_name, target=trgt, B="10", H="10", L=" ", s="1500", time_out=time_out)
 
                         except Exception as e:
@@ -349,6 +352,7 @@ class RegexTemplate(Linux):
                             con1.logger.log("id op[0] is true")
                             fun_test.log("if op[0] is TRUE")
                             compiler_output=op[1]
+                            op0=compiler_output.split("HERE ARE THE FINAL ANSWERS")[0]
                             op1=compiler_output.split("HERE ARE THE FINAL ANSWERS")[-1]
                             try:
                                 compiler_output_dict=con1.create_exp_file(op1,payload_len)

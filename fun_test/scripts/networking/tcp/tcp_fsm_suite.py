@@ -70,7 +70,7 @@ class ScriptSetup(FunTestScript):
 
     def setup(self):
 
-        f1_1_boot_args = "app=hw_hsu_test,tcp_server,rdstest clients=1 msgs=8 --echo --csr-replay localip=29.1.1.2 remoteip=23.1.1.10 " \
+        f1_1_boot_args = "app=hw_hsu_test,tcp_server,rdstest clients=10 msgs=8 --echo --csr-replay localip=29.1.1.2 remoteip=23.1.1.10 " \
                          "rdstype=funtcp cc_huid=2 --dpc-server  --dpc-uart --all_100g " \
                          "--disable-wu-watchdog module_log=network_unit:CRIT"
 
