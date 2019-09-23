@@ -337,7 +337,7 @@ export class SubmitJobComponent implements OnInit {
   }
 
 
-  submitClick() {
+  submitClickTest() {
     let self = this;
 
     this.jobId = null;
@@ -412,7 +412,7 @@ export class SubmitJobComponent implements OnInit {
     console.log(payload);
   }
 
-  submitClick2() {
+  submitClick() {
 
     let self = this;
 

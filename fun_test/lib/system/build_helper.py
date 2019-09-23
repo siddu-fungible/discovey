@@ -3,7 +3,7 @@ from lib.utilities.jenkins_manager import JenkinsManager
 from fun_settings import TFTP_SERVER_IP, TFTP_SERVER_SSH_USERNAME, TFTP_SERVER_SSH_PASSWORD, TFTP_DIRECTORY
 from lib.host.linux import Linux
 from lib.utilities.http import fetch_binary_file
-
+import os
 
 class BuildHelper():
     FUN_OS_STRIPPED_IMAGE_NAME = "funos-f1.stripped"
@@ -103,7 +103,7 @@ class BuildHelper():
             fun_test.simple_assert(tftp_server.list_files(gz_filename), "GZ file created")
             tftp_server.command("mv {} {}".format(gz_filename, tftp_filename))
             fun_test.simple_assert(tftp_server.list_files(tftp_filename), "File moved to tftpboot directory")
-            result = True
+            result = os.path.basename(gz_filename)
         except Exception as ex:
             fun_test.critical(str(ex))
         finally:

@@ -566,6 +566,9 @@ class FunTest:
         bh = BuildHelper(parameters=self.build_parameters)
         result = bh.fetch_stable_master(debug=parameters["debug"], stripped=parameters["stripped"])
         fun_test.test_assert(result, "Stable master fetched")
+        self.build_parameters["tftp_image_path"] = result
+        self.update_job_environment_variable("tftp_image_path", result)
+
         return result
 
     def build(self):
