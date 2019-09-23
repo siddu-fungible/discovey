@@ -19,6 +19,13 @@ class Mode {
   static TRIAGE = "TRIAGE"
 }
 
+class BuildType {
+  static TFTP_IMAGE_PATH = "TFTP_IMAGE_PATH";
+  static WITH_JENKINS_BUILD = "WITH_JENKINS_BUILD";
+  static WITH_STABLE_MASTER = "WITH_STABLE_MASTER";
+}
+
+
 @Component({
   selector: 'app-submit-job',
   templateUrl: './submit-job.component.html',
@@ -73,7 +80,6 @@ export class SubmitJobComponent implements OnInit {
   // bootArgs: string = "app=hw_hsu_test --dpc-server --dpc-uart --csr-replay --serdesinit --all_100g";
   bootArgs: string = "";
 
-  withJenkinsBuild: boolean = true;
 
   disableAssertions: boolean = false;
   funOsMakeFlags: string = null;
@@ -104,6 +110,8 @@ export class SubmitJobComponent implements OnInit {
   moreJenkinsOptions: boolean = false;
   mode: Mode = Mode.REGULAR;
   Mode = Mode;
+  BuildType = BuildType;
+  buildType: BuildType = BuildType.WITH_JENKINS_BUILD;
 
   // For Triaging
   triageTypes = [{value: 6, description: "Pass or Fail"}, {value: 7, description: "Regex match"}];  //Taken from TriagingTypes
@@ -115,6 +123,7 @@ export class SubmitJobComponent implements OnInit {
   currentTriageType: number = null;
   regexMatchString: string = null;
 
+  withStableMaster = {debug: true, stripped: true};
   constructor(private apiService: ApiService, private logger: LoggerService,
               private title: Title, private route: ActivatedRoute,
               private triageService: TriageService,
@@ -329,9 +338,17 @@ export class SubmitJobComponent implements OnInit {
 
 
   submitClick() {
+    console.log(this.buildType);
+    console.log(this.withStableMaster);
+
+  }
+  submitClick2() {
+
     let self = this;
+
     this.jobId = null;
     let payload = {};
+
     if (this.suiteSelectionMode === 'BY_SUITE') {
       payload["suite_id"] = this.selectedSuite.id;
     } else {
@@ -370,12 +387,12 @@ export class SubmitJobComponent implements OnInit {
     }*/
 
     if (this.isTestBedFs()) {
-      if (!this.withJenkinsBuild) {
+      if (this.buildType === this.BuildType.TFTP_IMAGE_PATH) {
         if (this.tftpImagePath && this.tftpImagePath !== "") {
           payload["environment"]["tftp_image_path"] = this.tftpImagePath;
         }
-      } else {
-      payload["environment"]["with_jenkins_build"] = true;
+      } else if (this.buildType === this.BuildType.WITH_JENKINS_BUILD) {
+        payload["environment"]["with_jenkins_build"] = true;
       }
 
       if (payload["environment"]["with_jenkins_build"]) {
@@ -473,10 +490,6 @@ export class SubmitJobComponent implements OnInit {
     console.log("Pk: " + pk);
     this.selectedSuite = null;
     this.selectedScriptPk = pk;
-  }
-
-  toggleWithJenkins() {
-    this.withJenkinsBuild = !this.withJenkinsBuild;
   }
 
 
