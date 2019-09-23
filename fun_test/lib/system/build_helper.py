@@ -103,7 +103,8 @@ class BuildHelper():
             fun_test.simple_assert(tftp_server.list_files(gz_filename), "GZ file created")
             tftp_server.command("mv {} {}".format(gz_filename, tftp_filename))
             fun_test.simple_assert(tftp_server.list_files(tftp_filename), "File moved to tftpboot directory")
-            result = os.path.basename(gz_filename)
+            result = os.path.basename(tftp_filename)
+            # fun_test.log("Result is: {}".format(result))
         except Exception as ex:
             fun_test.critical(str(ex))
         finally:

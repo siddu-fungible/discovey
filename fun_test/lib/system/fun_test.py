@@ -568,7 +568,7 @@ class FunTest:
         fun_test.test_assert(result, "Stable master fetched")
         self.build_parameters["tftp_image_path"] = result
         self.update_job_environment_variable("tftp_image_path", result)
-
+        fun_test.log("Updating the tftp-image path: {}".format(self.build_parameters))
         return result
 
     def build(self):
