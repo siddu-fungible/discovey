@@ -63,7 +63,7 @@ TERAMARK_EC_S1 = "qa_s1_ec_teramark"
 TERAMARK_JPEG_S1 = "qa_s1_jpeg_teramark"
 TERAMARK_ZIP_DEFLATE_S1 = "qa_s1_zip_deflate_teramark"
 TERAMARK_ZIP_LZMA_S1 = "qa_s1_zip_lzma_teramark"
-
+TERAMARK_PKE_S1 = "qa_s1_pke_teramark"
 
 jpeg_operations = {"Compression throughput": "Compression throughput with Driver",
                    "Decompression throughput": "JPEG Decompress",
@@ -188,7 +188,7 @@ class MyScript(FunTestScript):
                 IPSEC_ENC_SINGLE_TUNNEL, IPSEC_ENC_MULTI_TUNNEL, IPSEC_DEC_MULTI_TUNNEL, IPSEC_DEC_SINGLE_TUNNEL,
                 VOLTEST_LSV, VOLTEST_LSV_4, CHANNEL_PARALL, SOAK_FLOWS_BUSY_LOOP, SOAK_FLOWS_MEMCPY, VOLTEST_BLT_1,
                 VOLTEST_BLT_8, VOLTEST_BLT_12, TERAMARK_EC_S1, TERAMARK_JPEG_S1, TERAMARK_ZIP_DEFLATE_S1,
-                TERAMARK_ZIP_LZMA_S1]
+                TERAMARK_ZIP_LZMA_S1, TERAMARK_PKE_S1]
         self.lsf_status_server.workaround(tags=tags)
         fun_test.shared_variables["lsf_status_server"] = self.lsf_status_server
 

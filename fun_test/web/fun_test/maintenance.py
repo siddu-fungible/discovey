@@ -1375,7 +1375,7 @@ if __name__ == "__main_inspur_iodepth_96__":
     final_dict = ml.get_dict(chart=iops_charts)
     print json.dumps(final_dict, indent=4)
 
-if __name__ == "__main__":
+if __name__ == "__main__trailingrst":
     metric_ids = [273, 287, 279, 1126, 1127, 1128]
     for metric_id in metric_ids:
         chart = MetricChart.objects.get(metric_id=metric_id)
@@ -1392,4 +1392,21 @@ if __name__ == "__main__":
     print "set trailingrst dataset for jpeg metrics"
 
 
+if __name__ == "__main__":
+    with open(METRICS_BASE_DATA_FILE, "r") as f:
+        metrics = json.load(f)
+        for metric in metrics:
+            if metric["label"] == "F1":
+                f1_metrics = metric["children"]
+                for f1_metric in f1_metrics:
+                    if f1_metric["label"] == "TeraMarks":
+                        funos_metrics = f1_metric
+                        break
 
+    tera_marks = funos_metrics["children"]
+    for tera_mark in tera_marks:
+        if tera_mark["name"] == "TeraMark Security":
+            for children in tera_mark["children"]:
+                if children["name"] == "TeraMark PKE":
+                    result = set_internal_name(children)
+                    print json.dumps(result, indent=4)

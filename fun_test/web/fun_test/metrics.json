@@ -6339,6 +6339,37 @@
                 ]
               }
             ]
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "children": [
+              {
+                "metric_model_name": "TeraMarkPkeRsaPerformance",
+                "children": [],
+                "name": "RSA CRT 2048 decryptions_S1",
+                "label": "RSA CRT 2048 decryptions"
+              },
+              {
+                "metric_model_name": "TeraMarkPkeRsa4kPerformance",
+                "children": [],
+                "name": "RSA CRT 4096 decryptions_S1",
+                "label": "RSA CRT 4096 decryptions"
+              },
+              {
+                "metric_model_name": "TeraMarkPkeEcdh256Performance",
+                "children": [],
+                "name": "ECDH P256_S1",
+                "label": "ECDH P256"
+              },
+              {
+                "metric_model_name": "TeraMarkPkeEcdh25519Performance",
+                "children": [],
+                "name": "ECDH 25519_S1",
+                "label": "ECDH 25519"
+              }
+            ],
+            "name": "TeraMark PKE_S1",
+            "label": "PKE"
           }
         ]
       }

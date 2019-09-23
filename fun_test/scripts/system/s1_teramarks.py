@@ -87,7 +87,7 @@ class CryptoTeramarkTc(PalladiumTc):
 class PkeTeramarkTc(PalladiumTc):
     boot_args = "app=pke_rsa_crt_dec_no_pad_soak,pke_rsa_crt_dec_no_pad_4096_soak,pke_ecdh_soak_256,pke_ecdh_soak_25519,pke_x25519_2k_tls_soak,pke_p256_2k_tls_soak --serial"
     tags = "qa_s1_pke_teramark"
-    hw_model = "S1_CUT"
+    hw_model = "S1_Compute"
     note = "PKE teramark app on S1"
 
     def describe(self):
@@ -203,7 +203,7 @@ class ZipLzmaTeramarkTc(PalladiumTc):
 if __name__ == "__main__":
     myscript = MyScript()
     # myscript.add_test_case(CryptoTeramarkTc())
-    # myscript.add_test_case(PkeTeramarkTc())
+    myscript.add_test_case(PkeTeramarkTc())
     myscript.add_test_case(EcTeramarkTc())
     # myscript.add_test_case(DfaTeramarkTc())
     # myscript.add_test_case(NfaTeramarkTc())
