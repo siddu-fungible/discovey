@@ -324,6 +324,14 @@ def rescan_pcie():
     """perform pcie rescan from COMe system"""
     sudo('echo 1 > /sys/bus/pci/rescan')
 
+### no stable yet !!!
+@roles('bmc')
+#@task
+def bmcresetF(index=0):
+    """ reset the chip from BMC system"""
+    with cd('/mnt/sdmmc0p1/scripts'), settings( hide('stderr'), warn_only=True ):
+        run("sh ./f1_reset.sh %s" % index)
+
 @roles('fpga')
 @task
 def resetF(index=0):
@@ -511,7 +519,9 @@ def flashF(index=0, flags=False, type=None, image=None, version=None):
     child.expect ('\nf1 # ')
     child.sendline('{} 0xffffffff99000000 {}:funsdk-release/latest/funos-f1.stripped;'.format(command, env.TFTPSERVER))
     child.expect ('\nf1 # ')
-    child.sendline('bootelf -p 0xffffffff99000000;')
+    child.sendline ('echo booting to chip={} ...'.format(index))
+    child.expect ('\nf1 # ')
+    child.sendline('bootelf -p 0xffffffff99000000')
     try:
         child.expect ('\nf1 # ', timeout=30)
     except:
