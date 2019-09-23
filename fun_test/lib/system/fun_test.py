@@ -561,10 +561,14 @@ class FunTest:
         return True
 
 
-    def fetch_stable_master(self):
+    def fetch_stable_master(self, parameters):
         from lib.system.build_helper import BuildHelper
-        result = None
         bh = BuildHelper(parameters=self.build_parameters)
+        result = bh.fetch_stable_master(debug=parameters["debug"], stripped=parameters["stripped"])
+        fun_test.test_assert(result, "Stable master fetched")
+        self.build_parameters["tftp_image_path"] = result
+        self.update_job_environment_variable("tftp_image_path", result)
+
         return result
 
     def build(self):
@@ -582,9 +586,6 @@ class FunTest:
 
         test_bed_type = self.get_job_environment_variable("test_bed_type")
         fun_test.test_assert(test_bed_type, "Test-bed type: {}".format(test_bed_type))
-
-        tftp_image_path = build_parameters["tftp_image_path"] if "tftp_image_path" in build_parameters else None
-        # fun_test.test_assert(not tftp_image_path, "TFTP-image path cannot be set if with_jenkins_build was enabled")
 
         submitter_email = None
         if fun_test.suite_execution_id:
@@ -1436,7 +1437,7 @@ class FunTestScript(object):
                     test_case.execution_id = te.execution_id
 
             if fun_test.build_parameters and "with_stable_master" in fun_test.build_parameters and fun_test.build_parameters["with_stable_master"]:
-                fun_test.test_assert(fun_test.fetch_stable_master(), "Fetch stable master image from dochub")
+                fun_test.test_assert(fun_test.fetch_stable_master(fun_test.build_parameters["with_stable_master"]), "Fetch stable master image from dochub")
 
             tftp_image_path_provided = "tftp_image_path" in fun_test.build_parameters and fun_test.build_parameters["tftp_image_path"]
             if fun_test.is_with_jenkins_build() and fun_test.suite_execution_id and not tftp_image_path_provided:

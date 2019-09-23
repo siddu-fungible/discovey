@@ -3,7 +3,7 @@ from lib.utilities.jenkins_manager import JenkinsManager
 from fun_settings import TFTP_SERVER_IP, TFTP_SERVER_SSH_USERNAME, TFTP_SERVER_SSH_PASSWORD, TFTP_DIRECTORY
 from lib.host.linux import Linux
 from lib.utilities.http import fetch_binary_file
-
+import os
 
 class BuildHelper():
     FUN_OS_STRIPPED_IMAGE_NAME = "funos-f1.stripped"
@@ -78,31 +78,38 @@ class BuildHelper():
         return gz_filename
 
     def fetch_stable_master(self, debug=False, stripped=True):
+        result = False
         tftp_filename = "{}/s_{}_{}.gz".format(TFTP_DIRECTORY, fun_test.get_suite_execution_id(), self.FUN_OS_STRIPPED_IMAGE_NAME)
         base_temp_directory = "/tmp/stable_master/s_{}".format(fun_test.get_suite_execution_id())
-        tmp_tgz_file_name = "{}/extra_remove_me.tgz".format(base_temp_directory)
-        tmp_untar_directory = "{}/untar_extra_remove_me".format(base_temp_directory)
-
         tftp_server = self.get_tftp_server()
-        tftp_server.command("cd /tmp; mkdir -p {}".format(tmp_untar_directory))
-        tftp_server.curl(url=self.STABLE_MASTER_DOCHUB_PATH, output_file=tmp_tgz_file_name)
-        fun_test.log(tmp_tgz_file_name)
-        tftp_server.untar(file_name=tmp_tgz_file_name, dest=tmp_untar_directory, sudo=False)
+        try:
+            tmp_tgz_file_name = "{}/extra_remove_me.tgz".format(base_temp_directory)
+            tmp_untar_directory = "{}/untar_extra_remove_me".format(base_temp_directory)
+            tftp_server.command("cd /tmp; mkdir -p {}".format(tmp_untar_directory))
+            tftp_server.curl(url=self.STABLE_MASTER_DOCHUB_PATH, output_file=tmp_tgz_file_name)
+            fun_test.log(tmp_tgz_file_name)
+            tftp_server.untar(file_name=tmp_tgz_file_name, dest=tmp_untar_directory, sudo=False)
 
-        funos_binary_name = "funos-f1"
-        if not debug:
-            funos_binary_name += "-release"
-        if stripped:
-            funos_binary_name += ".stripped"
-        fun_os_binary_full_path = "{}/bin/{}".format(tmp_untar_directory, funos_binary_name)
-        fun_test.simple_assert(tftp_server.list_files("{}".format(fun_os_binary_full_path)), "FunOS binary path found")
-        gz_filename = fun_os_binary_full_path + ".gz"
-        tftp_server.command("rm {}".format(gz_filename))
-        tftp_server.command("gzip {}".format(fun_os_binary_full_path))
-        fun_test.simple_assert(tftp_server.list_files(gz_filename), "GZ file created")
-        tftp_server.command("mv {} {}".format(gz_filename, tftp_filename))
-        fun_test.simple_assert(tftp_server.list_files(tftp_filename), "File moved to tftpboot directory")
-        tftp_server.command("rm -rf {}".format(base_temp_directory))
+            funos_binary_name = "funos-f1"
+            if not debug:
+                funos_binary_name += "-release"
+            if stripped:
+                funos_binary_name += ".stripped"
+            fun_os_binary_full_path = "{}/bin/{}".format(tmp_untar_directory, funos_binary_name)
+            fun_test.simple_assert(tftp_server.list_files("{}".format(fun_os_binary_full_path)), "FunOS binary path found")
+            gz_filename = fun_os_binary_full_path + ".gz"
+            tftp_server.command("rm {}".format(gz_filename))
+            tftp_server.command("gzip {}".format(fun_os_binary_full_path))
+            fun_test.simple_assert(tftp_server.list_files(gz_filename), "GZ file created")
+            tftp_server.command("mv {} {}".format(gz_filename, tftp_filename))
+            fun_test.simple_assert(tftp_server.list_files(tftp_filename), "File moved to tftpboot directory")
+            result = os.path.basename(gz_filename)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        finally:
+            tftp_server.command("rm -rf {}".format(base_temp_directory))
+        return result
+
 
 if __name__ == "__main2__":
     boot_args = "app=jpeg_perf_test --test-exit-fast"
