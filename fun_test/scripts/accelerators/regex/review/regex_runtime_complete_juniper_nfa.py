@@ -73,7 +73,7 @@ class HigherLevelTestcase(FunTestCase):
             }
 
             build_result = jenkins_manager.build(params=params, extra_emails=[
-                "mahesh.kumar@fungible.com"],
+                "indrani.p@fungible.com"],
                                                  wait_time_for_build_complete=25 * 60)
             fun_test.test_assert(build_result, "Build completed normally: for Graphs in {}".format(json))
             fun_test.test_assert_expected(actual=build_result.lower(), expected="success", message="Successfully built")
@@ -221,7 +221,10 @@ if __name__ == "__main__":
 
 
     myscript = MyScript()
-
+    myscript.add_test_case(JuniperNFA_Basic_Runtime())
+    myscript.add_test_case(JuniperNFA_MatchAcrossPacket())
+    myscript.add_test_case(JuniperNFA_Sequential1())
+    myscript.add_test_case(JuniperNFA_Sequential2())
+    myscript.add_test_case(JuniperNFA_parallel1())
     myscript.add_test_case(JuniperNFA_parallel2())
-
     myscript.run()
