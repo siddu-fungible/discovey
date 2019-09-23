@@ -123,7 +123,7 @@ export class SubmitJobComponent implements OnInit {
   currentTriageType: number = null;
   regexMatchString: string = null;
 
-  withStableMaster = {debug: true, stripped: true};
+  withStableMaster = {debug: false, stripped: true};
   constructor(private apiService: ApiService, private logger: LoggerService,
               private title: Title, private route: ActivatedRoute,
               private triageService: TriageService,
