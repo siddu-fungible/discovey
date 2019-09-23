@@ -1386,7 +1386,7 @@ def populate_stats_file(network_controller_obj, test_time, generic_file_name_par
         ddr_stats_file = str(version) + "_" + generic_file_name_part + "_ddr.txt"
         cdu_stats_file = str(version) + "_" + generic_file_name_part + "_cdu.txt"
         ca_stats_file = str(version) + "_" + generic_file_name_part + "_ca.txt"
-        """
+        
         artifact_resource_pc_1_file = fun_test.get_test_case_artifact_file_name(post_fix_name=resource_pc_1_file)
         artifact_resource_pc_2_file = fun_test.get_test_case_artifact_file_name(post_fix_name=resource_pc_2_file)
         artifact_bam_stats_file = fun_test.get_test_case_artifact_file_name(post_fix_name=bam_stats_file)
@@ -1395,15 +1395,7 @@ def populate_stats_file(network_controller_obj, test_time, generic_file_name_par
         artifact_ddr_file = fun_test.get_test_case_artifact_file_name(post_fix_name=ddr_stats_file)
         artifact_cdu_file = fun_test.get_test_case_artifact_file_name(post_fix_name=cdu_stats_file)
         artifact_ca_file = fun_test.get_test_case_artifact_file_name(post_fix_name=ca_stats_file)
-        """
-        artifact_resource_pc_1_file = resource_pc_1_file
-        artifact_resource_pc_2_file = resource_pc_2_file
-        artifact_bam_stats_file = bam_stats_file
-        artifact_vp_util_file = vp_util_file
-        artifact_per_vp_file = per_vp_file
-        artifact_ddr_file = ddr_stats_file
-        artifact_cdu_file = cdu_stats_file
-        artifact_ca_file = ca_stats_file
+        
         start_counter = 0
         while not start_counter == sleep_time_factor:
             fun_test.log_module_filter("random_module")
