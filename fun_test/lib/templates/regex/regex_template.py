@@ -373,8 +373,12 @@ class RegexTemplate(Linux):
                                 print ("compiler_output_dict[expected] is",compiler_output_dict["expected"])
                                 fun_test.log("compiler generated match result")
                                 con1.logger.log(compiler_output_dict["expected"])
+                                con1.logger.log("number of compiler match results are ")
+                                con1.logger.log(len(compiler_output_dict["expected"]))
                                 con1.logger.log("expected file results are")
                                 con1.logger.log(res)
+                                con1.logger.log("number of expected match results are ")
+                                con1.logger.log(len(res))
                                 if  not cmp(compiler_output_dict["expected"],res):
                                     validation=True
                                     print ("validation :passed")

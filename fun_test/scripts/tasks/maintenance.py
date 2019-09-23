@@ -84,8 +84,28 @@ class WebBackup(FunTestCase):
     def cleanup(self):
         pass
 
+
+class CleanupOldDirectories(FunTestCase):
+    SPIRENT_DIR = ""
+    def describe(self):
+        self.set_test_details(id=3,
+                              summary="Remove old directories",
+                              steps="""
+                              """)
+
+    def setup(self):
+        pass
+
+    def run(self):
+        t = TaskTemplate()
+        working_directory = "{}/fun_test/management".format(WEB_DIR)
+        t.call("python archiver.py", working_directory=working_directory)
+
+
+
 if __name__ == "__main__":
     myscript = MaintenanceScript()
     myscript.add_test_case(ManageSsh())
     myscript.add_test_case(WebBackup())
+    # myscript.add_test_case(CleanupOldDirectories())
     myscript.run()
