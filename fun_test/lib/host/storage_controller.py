@@ -429,6 +429,22 @@ class StorageController(NetworkController, DpcshClient):
         except Exception as ex:
             fun_test.critical(str(ex))
 
+    def get_fcp_scheduler(self, command_timeout=TIMEOUT):
+        try:
+            return self.json_execute(verb="peek", data=["config/fcp/scheduler"], command_duration=command_timeout)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+    def set_fcp_scheduler(self, fcp_sch_config, command_timeout=TIMEOUT):
+        try:
+            data = ["config/fcp/scheduler", fcp_sch_config]
+            command_result = self.json_execute(verb="poke", data=data, command_duration=command_timeout)
+            if command_result["status"]:
+                command_result = self.get_fcp_scheduler(command_timeout)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return command_result
+
 
 if __name__ == "__main__":
     sc = StorageController(target_ip="10.1.20.67", target_port=40220)
