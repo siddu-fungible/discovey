@@ -18,6 +18,7 @@ export enum SelectMode {
 
 export class PerformanceService {
   buildInfo: any = null;
+  TIMEZONE: string = "America/Los_Angeles";
 
   constructor(private apiService: ApiService, private commonService: CommonService) {
   }
@@ -92,8 +93,8 @@ export class PerformanceService {
       } else {
         this.buildInfo = {};
         Object.keys(response.data).forEach((key) => {
-          let localizedKey = this.commonService.convertToLocalTimezone(key);
-          this.buildInfo[this.commonService.addLeadingZeroesToDate(localizedKey)] = response.data[key];
+          let pstKey = this.commonService.convertEpochToDate(Number(key), this.TIMEZONE);
+          this.buildInfo[this.commonService.addLeadingZeroesToDate(pstKey)] = response.data[key];
         });
         return of(this.buildInfo);
       }
@@ -133,6 +134,14 @@ export class PerformanceService {
   getWorkspaces(email, workspaceName): any {
     return this.apiService.get("/api/v1/performance/workspaces?email=" + email + "&workspace_name=" + workspaceName).pipe(switchMap(response => {
       return of(response.data[0]);
+    }));
+  }
+
+  fetchChartInfo(metricId): any {
+    let payload = {};
+    payload["metric_id"] = metricId;
+    return this.apiService.post("/metrics/chart_info", payload).pipe(switchMap(response => {
+      return of(response.data);
     }));
   }
 

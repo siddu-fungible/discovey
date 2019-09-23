@@ -23,6 +23,7 @@ import {
   animate,
   transition,
 } from '@angular/animations';
+import {SuiteEditorService, Suite} from "./suite-editor/suite-editor.service";
 
 class FilterButton {
   displayString: string = null;
@@ -122,6 +123,7 @@ export class RegressionComponent implements OnInit {
   fetchedSuites: boolean = false;
   suitesInfo: any;
   suitesInfoKeys: any = [];
+  suiteMap: {[key: number]: Suite} = {};
 
   // Re-run options
   reRunOptionsReRunFailed: boolean = false;
@@ -139,7 +141,8 @@ export class RegressionComponent implements OnInit {
               private router: Router,
               private userService: UserService,
               private fb: FormBuilder,
-              private modalService: NgbModal) {
+              private modalService: NgbModal,
+              private suiteService: SuiteEditorService) {
     this.stateStringMap = this.regressionService.stateStringMap;
     this.stateMap = this.regressionService.stateMap;
   }
@@ -174,9 +177,9 @@ export class RegressionComponent implements OnInit {
       allowSearchFilter: true,
     };
     this.title.setTitle('Regression');
-    if (this.route.snapshot.data["tags"]) {
+    /*if (this.route.snapshot.data["tags"]) {
       this.tags = this.route.snapshot.data["tags"];
-    }
+    }*/
 
     this.recordsPerPage = 50;
     this.logDir = null;
@@ -242,14 +245,27 @@ export class RegressionComponent implements OnInit {
       });
     }
 
+    this.suiteService.suites<Suite[]>(null, 1000, 1).subscribe(response => {
+      let allSuites = response;
+      allSuites.forEach(suite => {
+        this.suiteMap[suite.id] = suite;
+        this.suitesInfoKeys.push(suite.name);
+      });
+      this.suitesInfoKeys.sort();
+      this.fetchedSuites = true;
+    });
+
+    /*
     this.suites().subscribe((response) => {
       this.suitesInfo = response;
+
       for (let suites of Object.keys(this.suitesInfo)) {
         this.suitesInfoKeys.push(suites);
       }
       this.suitesInfoKeys.sort();
+
       this.fetchedSuites = true;
-    });
+    });*/
 
     this.userService.getUserMap().subscribe((response) => {
       this.userMap = response;
@@ -383,9 +399,9 @@ export class RegressionComponent implements OnInit {
     }
     let payload = {};
 
-    if (this.tags) {
+    /*if (this.tags) {
       payload["tags"] = this.tags;
-    }
+    }*/
 
     if (this.queryParameters) {
       for (let key in this.queryParameters) {
@@ -489,8 +505,8 @@ export class RegressionComponent implements OnInit {
     }*/
   }
 
-  reRunClick(suiteExecutionId, suitePath, resultFilter=null, reUseBuildImage=null) {
-    this.reRunService.submitReRun(suiteExecutionId, suitePath, resultFilter, null, reUseBuildImage).subscribe(response => {
+  reRunClick(suiteExecution, resultFilter=null, reUseBuildImage=null) {
+    this.reRunService.submitReRun(suiteExecution.fields.execution_id, suiteExecution.fields.suite_id, resultFilter, null, reUseBuildImage).subscribe(response => {
       this.logger.success("Re-run request submitted");
       window.location.href = "/regression";
     }, error => {
@@ -579,24 +595,6 @@ export class RegressionComponent implements OnInit {
     }, error => {
       this.logger.error("Unable to disable suite");
     })
-  }
-
-  reRunModalOpen(content) {
-    this.reRunOptionsReRunFailed = false;
-    this.reRunOptionsReRunAll = true;
-    this.reUseBuildImage = false;
-    this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title'}).result.then((suiteExecution) => {
-      if (this.reRunOptionsReRunAll) {
-        this.reRunClick(suiteExecution.fields.execution_id, suiteExecution.fields.suite_path, null, this.reUseBuildImage);
-      }
-      if (this.reRunOptionsReRunFailed) {
-        this.reRunClick(suiteExecution.fields.execution_id, suiteExecution.fields.suite_path, ['FAILED', 'NOT_RUN'], this.reUseBuildImage)
-      }
-
-    }, (reason) => {
-      console.log("Rejected");
-      //this.closeResult = `Dismissed ${this.getDismissReason(reason)}`;
-    });
   }
 
   toggleReRunOptions() {
@@ -694,6 +692,10 @@ export class RegressionComponent implements OnInit {
         return {'atLeastOne': true};
       }
       return null;
+  }
+
+  onSuiteDetail(suiteId) {
+    window.location.href = '/regression/suite_editor/' + suiteId;
   }
 
 }

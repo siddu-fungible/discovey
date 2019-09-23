@@ -493,6 +493,7 @@
                         "metric_model_name": "MetricContainer",
                         "name": "juniper_ipsec",
                         "label": "Crypto",
+                        "disable": true,
                         "children": [
                           {
                             "metric_model_name": "MetricContainer",
@@ -524,88 +525,6 @@
                               {
                                 "metric_model_name": "JuniperCryptoTunnelPerformance",
                                 "name": "juniper_crypto_multi_tunnel_output_pps",
-                                "label": "Packets per sec"
-                              }
-                            ]
-                          }
-                        ]
-                      },
-                      {
-                        "metric_model_name": "MetricContainer",
-                        "name": "juniper_ipsec_encryption",
-                        "label": "IPSEC - Encryption",
-                        "children": [
-                          {
-                            "metric_model_name": "MetricContainer",
-                            "name": "juniper_ipsec_enc_single_tunnel",
-                            "label": "Single Tunnel",
-                            "children": [
-                              {
-                                "metric_model_name": "JuniperIpsecEncryptionSingleTunnelPerformance",
-                                "name": "juniper_ipsec_enc_single_tunnel_output_throughput",
-                                "label": "Throughput"
-                              },
-                              {
-                                "metric_model_name": "JuniperIpsecEncryptionSingleTunnelPerformance",
-                                "name": "juniper_ipsec_enc_single_tunnel_output_pps",
-                                "label": "Packets per sec"
-                              }
-                            ]
-                          },
-                          {
-                            "metric_model_name": "MetricContainer",
-                            "name": "juniper_ipsec_enc_multi_tunnel",
-                            "label": "Multi Tunnel",
-                            "children": [
-                              {
-                                "metric_model_name": "JuniperIpsecEncryptionMultiTunnelPerformance",
-                                "name": "juniper_ipsec_enc_multi_tunnel_output_throughput",
-                                "label": "Throughput"
-                              },
-                              {
-                                "metric_model_name": "JuniperIpsecEncryptionMultiTunnelPerformance",
-                                "name": "juniper_ipsec_enc_multi_tunnel_output_pps",
-                                "label": "Packets per sec"
-                              }
-                            ]
-                          }
-                        ]
-                      },
-                      {
-                        "metric_model_name": "MetricContainer",
-                        "name": "juniper_ipsec_decryption",
-                        "label": "IPSEC - Decryption",
-                        "children": [
-                          {
-                            "metric_model_name": "MetricContainer",
-                            "name": "juniper_ipsec_dec_single_tunnel",
-                            "label": "Single Tunnel",
-                            "children": [
-                              {
-                                "metric_model_name": "JuniperIpsecDecryptionSingleTunnelPerformance",
-                                "name": "juniper_ipsec_dec_single_tunnel_output_throughput",
-                                "label": "Throughput"
-                              },
-                              {
-                                "metric_model_name": "JuniperIpsecDecryptionSingleTunnelPerformance",
-                                "name": "juniper_ipsec_dec_single_tunnel_output_pps",
-                                "label": "Packets per sec"
-                              }
-                            ]
-                          },
-                          {
-                            "metric_model_name": "MetricContainer",
-                            "name": "juniper_ipsec_dec_multi_tunnel",
-                            "label": "Multi Tunnel",
-                            "children": [
-                              {
-                                "metric_model_name": "JuniperIpsecDecryptionMultiTunnelPerformance",
-                                "name": "juniper_ipsec_dec_multi_tunnel_output_throughput",
-                                "label": "Throughput"
-                              },
-                              {
-                                "metric_model_name": "JuniperIpsecDecryptionMultiTunnelPerformance",
-                                "name": "juniper_ipsec_dec_multi_tunnel_output_pps",
                                 "label": "Packets per sec"
                               }
                             ]
@@ -1423,6 +1342,7 @@
             "metric_model_name": "MetricContainer",
             "name": "Crypto raw throughput",
             "label": "Crypto Raw Throughput",
+            "disable": true,
             "reference": true
           },
           {
@@ -1818,6 +1738,7 @@
             "metric_model_name": "MetricContainer",
             "name": "Crypto raw throughput",
             "label": "Crypto Raw Throughput",
+            "disable": true,
             "reference": true
           }
         ]
@@ -1898,6 +1819,7 @@
                 "metric_model_name": "MetricContainer",
                 "name": "Crypto raw throughput",
                 "label": "Crypto Raw Throughput",
+                "disable": true,
                 "children": [
                   {
                     "metric_model_name": "TeraMarkMultiClusterCryptoPerformance",
@@ -3500,6 +3422,88 @@
                     ]
                   }
                 ]
+              },
+              {
+                "metric_model_name": "MetricContainer",
+                "name": "juniper_ipsec_encryption",
+                "label": "IPSEC - Encryption (ipsec_dp_perf)",
+                "children": [
+                  {
+                    "metric_model_name": "MetricContainer",
+                    "name": "juniper_ipsec_enc_single_tunnel",
+                    "label": "Single Tunnel",
+                    "children": [
+                      {
+                        "metric_model_name": "JuniperIpsecEncryptionSingleTunnelPerformance",
+                        "name": "juniper_ipsec_enc_single_tunnel_output_throughput",
+                        "label": "Throughput"
+                      },
+                      {
+                        "metric_model_name": "JuniperIpsecEncryptionSingleTunnelPerformance",
+                        "name": "juniper_ipsec_enc_single_tunnel_output_pps",
+                        "label": "Packets per sec"
+                      }
+                    ]
+                  },
+                  {
+                    "metric_model_name": "MetricContainer",
+                    "name": "juniper_ipsec_enc_multi_tunnel",
+                    "label": "Multi Tunnel",
+                    "children": [
+                      {
+                        "metric_model_name": "JuniperIpsecEncryptionMultiTunnelPerformance",
+                        "name": "juniper_ipsec_enc_multi_tunnel_output_throughput",
+                        "label": "Throughput"
+                      },
+                      {
+                        "metric_model_name": "JuniperIpsecEncryptionMultiTunnelPerformance",
+                        "name": "juniper_ipsec_enc_multi_tunnel_output_pps",
+                        "label": "Packets per sec"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "metric_model_name": "MetricContainer",
+                "name": "juniper_ipsec_decryption",
+                "label": "IPSEC - Decryption (ipsec_dp_perf)",
+                "children": [
+                  {
+                    "metric_model_name": "MetricContainer",
+                    "name": "juniper_ipsec_dec_single_tunnel",
+                    "label": "Single Tunnel",
+                    "children": [
+                      {
+                        "metric_model_name": "JuniperIpsecDecryptionSingleTunnelPerformance",
+                        "name": "juniper_ipsec_dec_single_tunnel_output_throughput",
+                        "label": "Throughput"
+                      },
+                      {
+                        "metric_model_name": "JuniperIpsecDecryptionSingleTunnelPerformance",
+                        "name": "juniper_ipsec_dec_single_tunnel_output_pps",
+                        "label": "Packets per sec"
+                      }
+                    ]
+                  },
+                  {
+                    "metric_model_name": "MetricContainer",
+                    "name": "juniper_ipsec_dec_multi_tunnel",
+                    "label": "Multi Tunnel",
+                    "children": [
+                      {
+                        "metric_model_name": "JuniperIpsecDecryptionMultiTunnelPerformance",
+                        "name": "juniper_ipsec_dec_multi_tunnel_output_throughput",
+                        "label": "Throughput"
+                      },
+                      {
+                        "metric_model_name": "JuniperIpsecDecryptionMultiTunnelPerformance",
+                        "name": "juniper_ipsec_dec_multi_tunnel_output_pps",
+                        "label": "Packets per sec"
+                      }
+                    ]
+                  }
+                ]
               }
             ]
           },
@@ -3602,6 +3606,12 @@
                     "metric_model_name": "BltVolumePerformance",
                     "name": "inspur_rand_read_write_qd64_8k_block_output_iops",
                     "label": "IOPS, QDepth=64"
+                  },
+                  {
+                    "name": "inspur_rand_read_write_qd96_8k_block_output_iops",
+                    "label": "IOPS, QDepth=96",
+                    "metric_model_name": "BltVolumePerformance",
+                    "children": []
                   },
                   {
                     "metric_model_name": "BltVolumePerformance",

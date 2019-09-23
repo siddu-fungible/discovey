@@ -140,7 +140,12 @@ export class QueueViewerComponent implements OnInit {
       payload["operation"] = "move_down";
     }
     this.apiService.post('/regression/scheduler/queue', payload).subscribe(response => {
-      this.loggerService.success("Priority modification submitted");
+      if (response.data) {
+        this.loggerService.success("Priority modification submitted");
+      } else {
+        this.loggerService.error("Unable to modify priority");
+      }
+
     }, error => {
       this.loggerService.error(`Unable to change the priority of ${jobId}`);
     })

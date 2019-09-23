@@ -10,7 +10,6 @@ from web.fun_test.models import SiteConfig
 from django.views.decorators.cache import never_cache
 
 
-
 import json
 import os
 from web.fun_test.settings import COMMON_WEB_LOGGER_NAME

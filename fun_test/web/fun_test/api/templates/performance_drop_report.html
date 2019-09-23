@@ -1,0 +1,103 @@
+<html>
+<head>
+    <style>
+        table {
+            border: solid 1px black;
+            border-collapse: collapse;
+            width: 80% !important;
+        }
+
+        th {
+            padding: 5px;
+        }
+
+        .header {
+            background-color: #bfbfbf;
+            color: black;
+        }
+
+        .header-text {
+            text-align: center;
+        }
+
+        .row-border td {
+            border-bottom: 1px solid black;
+            text-align: center;
+        }
+
+        .all-border td {
+            border: solid 1px black;
+            text-align: center;
+        }
+
+        .text-green {
+            color: green;
+        }
+
+        .text-red {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+{% for report in all_reports %}
+<h3>{{ report.lineage }}</h3>
+<b>Chart name: </b>{{ report.chart_name }}<br>
+<b>Link to chart: </b><a href="{{ report.url }}" target="_blank">Link</a><br>
+<b>Bugs:</b>
+{% for jira_id in report.jira_ids %}
+<a href="{{ 'http://jira/browse/' + jira_id }}" target="_blank">{{ jira_id }}</a>&nbsp;
+{% endfor %}<br>
+<table>
+    <tr class="header">
+        <th class="header-text">Series name</th>
+        <th class="header-text">Unit</th>
+        <th class="header-text">Previous value <br><span style="font-size: smaller">{{
+            report.data_sets[0].yesterday_date }}</span></th>
+        <th class="header-text">Latest value <br><span style="font-size: smaller">{{
+            report.data_sets[0].today_date }}</span></th>
+        <th class="header-text">Percentage change</th>
+    </tr>
+    {% for data_set in report.data_sets %}
+    <tr class="row-border">
+        <td>
+            {{ data_set.name }}
+        </td>
+        <td>
+            {{ data_set.today_unit }}
+        </td>
+        <td>
+            {{ data_set.yesterday }}
+        </td>
+        <td>
+            {{ data_set.today }}
+        </td>
+        {% if (report.positive == true) and ('+' in data_set.percentage) %}
+        <td class="text-green">
+            {{ data_set.percentage }}
+        </td>
+        {% elif (report.positive == true) and ('-' in data_set.percentage) %}
+        <td class="text-red">
+            {{ data_set.percentage }}
+        </td>
+        {% elif (report.positive == false) and ('+' in data_set.percentage) %}
+        <td class="text-red">
+            {{ data_set.percentage }}
+        </td>
+        {% elif (report.positive == false) and ('-' in data_set.percentage) %}
+        <td class="text-green">
+            {{ data_set.percentage }}
+        </td>
+        {% else %}
+        <td>
+            {{ data_set.percentage }}
+        </td>
+        {% endif %}
+    </tr>
+    {% endfor %}
+</table>
+<br>
+<br>
+{% endfor %}
+</body>
+</html>

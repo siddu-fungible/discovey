@@ -1,0 +1,15 @@
+{
+  "PcreDflt": {
+    "jsons":["all_lsu.json"],
+    "XDATA_LISTS": "/project/users/mkumar/f1_dfa_sanity/jenkins.list",
+    "description":"DFA sanity",
+    "rbm_size": "1m",
+    "syslog_level": "6",
+    "funos_branch": "nfa_s1_upgrade",
+    "run_target": "F1",
+    "hw_model":"F1",
+    "hw_version": "Ignored",
+    "max_duration": 10
+  }
+}
+

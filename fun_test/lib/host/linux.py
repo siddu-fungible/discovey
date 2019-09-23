@@ -442,7 +442,7 @@ class Linux(object, ToDictMixin):
                         self.handle.timeout = wait_until_timeout  # Pexpect does not honor timeouts
                         self.handle.expect(wait_until, timeout=wait_until_timeout)
                     except (pexpect.EOF):
-                        self.disconnect()
+                        Linux.disconnect(self)
                         return self.command(command=command,
                                             sync=sync, timeout=timeout,
                                             custom_prompts=custom_prompts,
@@ -471,7 +471,7 @@ class Linux(object, ToDictMixin):
                     if not prompt_terminator_processed:
                         self.handle.expect(self.prompt_terminator + r'$', timeout=timeout)
                 except pexpect.EOF:
-                    self.disconnect()
+                    Linux.disconnect(self)
                     # return self.command(command=command,
                     #                    sync=sync, timeout=timeout,
                     #                    custom_prompts=custom_prompts,
@@ -1352,11 +1352,14 @@ class Linux(object, ToDictMixin):
         return result
 
     @fun_test.safe
-    def untar(self, file_name, dest, timeout=60):
+    def untar(self, file_name, dest, timeout=60, sudo=True):
         result = None
         command = "tar -xvzf " + file_name + " -C " + dest
         try:
-            output = self.sudo_command("tar -xvzf " + file_name + " -C " + dest)
+            if sudo:
+                output = self.sudo_command("tar -xvzf " + file_name + " -C " + dest)
+            else:
+                output = self.command("tar -xvzf " + file_name + " -C " + dest)
             fun_test.debug(output)
             output_lines = output.split('\n')
             fun_test.debug(output_lines)
@@ -2794,10 +2797,18 @@ class Linux(object, ToDictMixin):
         return result
 
     @fun_test.safe
+    def curl(self, url, output_file=None):
+        command = "curl {}".format(url)
+        if output_file:
+            command += " -o {}".format(output_file)
+        self.command(command)
+        return int(self.exit_status()) == 0
+
+    @fun_test.safe
     def destroy(self):
         try:
             self.disconnect()
-        except:
+        except Exception as ex:
             pass
         try:
             if self.spawn_pid > 1:

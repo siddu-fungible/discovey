@@ -7,9 +7,11 @@ import {Sort} from "@angular/material";
 import {Validators} from "@angular/forms";
 import {animate, state, style, transition, trigger} from "@angular/animations";
 import {switchMap} from "rxjs/operators";
-import {of} from "rxjs";
+import {Observable, of} from "rxjs";
 import {ActivatedRoute} from "@angular/router";
 import {TriageService} from "../triage2/triage.service";
+import {SuiteEditorService} from "../suite-editor/suite-editor.service";
+import {CommonService} from "../../services/common/common.service";
 
 class Mode {
   static REGULAR = "REGULAR";
@@ -37,8 +39,12 @@ export class SubmitJobComponent implements OnInit {
   scheduleInMinutes: number;
   scheduleInMinutesRadio: boolean;
   buildUrl: string;
-  selectedSuite: string = null;
-  selectedInfo: any;
+  selectedSuite: any = null;
+  //selectedInfo: any;
+  availableCategories: string [] = null;
+  selectedCategories: string [] = null;
+  byNameSearchText: string = null;
+
   jobId: number;
   suitesInfo: any;
   selectedTags: any[] = [];
@@ -91,7 +97,7 @@ export class SubmitJobComponent implements OnInit {
   //type: string = "regular"; // some other type like task
   queryParams: any = null;
   jobInputs: string = null; // input dictionary to be sent to the scheduler
-
+  richBootArgs: string = null;
   csiPerf: boolean = false;
   dryRun: boolean = false;
   hbmDump: boolean = false;
@@ -111,7 +117,9 @@ export class SubmitJobComponent implements OnInit {
 
   constructor(private apiService: ApiService, private logger: LoggerService,
               private title: Title, private route: ActivatedRoute,
-              private triageService: TriageService) {
+              private triageService: TriageService,
+              private suiteEditorService: SuiteEditorService,
+              private commonService: CommonService) {
     this.currentTriageType = this.triageTypes[0].value;
   }
 
@@ -134,7 +142,7 @@ export class SubmitJobComponent implements OnInit {
     this.scheduleInMinutesRadio = true;
     this.buildUrl = "http://dochub.fungible.local/doc/jenkins/funsdk/latest/";
     this.selectedSuite = null;
-    this.selectedInfo = null;
+    //this.selectedInfo = null;
     this.schedulingOptions = false;
     this.jobId = null;
     let self = this;
@@ -145,15 +153,7 @@ export class SubmitJobComponent implements OnInit {
         queryParamString = "?suite_type=task";
       }
 
-      this.apiService.get("/regression/suites" + queryParamString).subscribe((result) => {
-        let suitesInfo = result.data;
-        self.suitesInfo = suitesInfo;
 
-        for (let suites of Object.keys(suitesInfo)) {
-          self.suitesInfoKeys.push(suites);
-        }
-        self.suitesInfoKeys.sort();
-      });
 
     });
 
@@ -162,8 +162,25 @@ export class SubmitJobComponent implements OnInit {
     this.fetchUsers();
     this.fetchTags();
     this.fetchTestBeds();
+    this.fetchSuites();
     this.emailOnFailOnly = false;
   }
+
+  fetchSuites() {
+    of(true).pipe(switchMap(response => {
+      return this.suiteEditorService.categories();
+    })).pipe(switchMap(response => {
+      this.availableCategories = response;
+      return this.suiteEditorService.suites(null, 400, 1, this.selectedCategories, this.byNameSearchText);
+    })).pipe(switchMap(response => {
+      this.suitesInfo = response;
+      return of(true)
+    })).subscribe(() => {
+    }, error => {
+      this.logger.error("Unable to fetch suites");
+    })
+  }
+
 
   getQueryParam() {
     return this.route.queryParams.pipe(switchMap(params => {
@@ -243,9 +260,20 @@ export class SubmitJobComponent implements OnInit {
   }
 
   changedValue(selectedSuite) {
-    this.selectedInfo = this.suitesInfo[selectedSuite];
+    this.selectedSuite = selectedSuite;
     this.selectedScriptPk = null;
     this.resetScriptSelector = true;
+    this.commonService.scrollTo("suite-info");
+
+  }
+
+  _listToString(l) {
+    let s = "";
+    l.forEach(listElement => {
+      s += listElement + ",";
+    });
+    s = s.replace(/,$/, "");
+    return s;
   }
 
   parseScriptInfo(scriptInfo) {
@@ -305,7 +333,7 @@ export class SubmitJobComponent implements OnInit {
     this.jobId = null;
     let payload = {};
     if (this.suiteSelectionMode === 'BY_SUITE') {
-      payload["suite_path"] = this.selectedSuite;
+      payload["suite_id"] = this.selectedSuite.id;
     } else {
       payload["script_pk"] = this.selectedScriptPk;
     }
@@ -371,8 +399,13 @@ export class SubmitJobComponent implements OnInit {
       payload["job_inputs"] = this.jobInputs;
     }
 
+
     if (this.privateFunosTgzUrl && this.privateFunosTgzUrl !== "") {
       payload["environment"]["private_funos_tgz_url"] = this.privateFunosTgzUrl;
+    }
+
+    if (this.richBootArgs) {
+      payload["rich_inputs"] = {boot_args: this.richBootArgs};
     }
 
     if (this.csiPerf) {
@@ -438,8 +471,7 @@ export class SubmitJobComponent implements OnInit {
 
   singleSelectPkEvent(pk) {
     console.log("Pk: " + pk);
-    this.selectedSuite = "";
-    this.selectedInfo = null;
+    this.selectedSuite = null;
     this.selectedScriptPk = pk;
   }
 
@@ -461,8 +493,25 @@ export class SubmitJobComponent implements OnInit {
     this.jobInputs = jobInputs;
   }
 
+  jobBootArgsChanged(bootArgs) {
+    this.richBootArgs = bootArgs;
+  }
+
   test() {
     console.log(this.currentTriageType);
+  }
+
+  _hasKey(o, key) {
+    return Object.keys(o).indexOf(key) > -1;
+  }
+
+  onChangeSelectedCategories() {
+    this.fetchSuites();
+  }
+
+  onSearchText(searchText) {
+    this.byNameSearchText = searchText;
+    this.fetchSuites();
   }
 
 }

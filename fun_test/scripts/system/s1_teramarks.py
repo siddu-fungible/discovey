@@ -28,10 +28,10 @@ class PalladiumTc(FunTestCase):
     fun_os_make_flags = ""
     hw_model = "S1_Compute"
     max_duration = 900
-    disable_assertions = "true"
-    hw_version = "rel_08012019"
+    release_build = "true"
+    hw_version = "rel_09012019"
     run_target = "protium_s"
-    extra_emails = None
+    extra_emails = []
 
     def describe(self):
         self.set_test_details(id=0,
@@ -43,6 +43,8 @@ class PalladiumTc(FunTestCase):
                               """)
 
     def setup(self):
+        if not ("ranga.gowda@fungible.com" in self.extra_emails):
+            self.extra_emails.append("ranga.gowda@fungible.com")
         fun_test.log("Testcase setup")
 
     def cleanup(self):
@@ -56,7 +58,7 @@ class PalladiumTc(FunTestCase):
                   "RUN_MODE": "Batch",
                   "TAGS": self.tags,
                   "NOTE": self.note,
-                  "DISABLE_ASSERTIONS": self.disable_assertions,
+                  "RELEASE_BUILD": self.release_build,
                   "FUNOS_MAKEFLAGS": self.fun_os_make_flags,
                   "HW_VERSION": self.hw_version,
                   "RUN_TARGET": self.run_target,
@@ -116,7 +118,7 @@ class EcTeramarkTc(PalladiumTc):
 
 
 class DfaTeramarkTc(PalladiumTc):
-    boot_args = "app=dfa_perf_bootstrap rbm-size=1m dfa_perf.pc_mask=255 dfa_perf.nflows=3072 dfa_perf.niterations=1024 syslog=2"
+    boot_args = "app=dfa_perf_bootstrap rbm-size=1m dfa_perf.pc_mask=3 --bm-profile-regex dfa_perf.nflows=3072 dfa_perf.niterations=1024 syslog=2"
     tags = "qa_s1_dfa_teramark"
     note = "DFA teramark app on S1"
     fun_os_make_flags = "PM_TESTS=1"
@@ -132,7 +134,7 @@ class DfaTeramarkTc(PalladiumTc):
 
 
 class NfaTeramarkTc(PalladiumTc):
-    boot_args = "app=nfa_perf_bootstrap rbm-size=1m nfa_perf.pc_mask=255 nfa_perf.nflows=3584 nfa_perf.niterations=1024 syslog=2"
+    boot_args = "app=nfa_perf_bootstrap rbm-size=1m nfa_perf.pc_mask=3 --bm-profile-regex nfa_perf.nflows=48 nfa_perf.niterations=1024 syslog=2"
     tags = "qa_s1_nfa_teramark"
     note = "NFA teramark app on S1"
     fun_os_make_flags = "PM_TESTS=1"
@@ -166,10 +168,10 @@ class JpegTeramarkTc(PalladiumTc):
 
 class ZipDeflateTeramarkTc(PalladiumTc):
     boot_args = "app=deflate_perf_multi nflows=30 niterations=30 npcs=1 --platforms1"
-    tags = "qa_s1_zip_teramark"
+    tags = "qa_s1_zip_deflate_teramark"
     note = "ZIP deflate teramark app on S1"
     fun_os_make_flags = "XDATA_LISTS=/project/users/ashaikh/qa_test_inputs/zip_inputs/compress_perf_input.list"
-    max_duration = 2700
+    max_duration = 9000
 
     def describe(self):
         self.set_test_details(id=7,
@@ -182,11 +184,11 @@ class ZipDeflateTeramarkTc(PalladiumTc):
 
 
 class ZipLzmaTeramarkTc(PalladiumTc):
-    boot_args = "lzma_perf_multi nflows=30 niterations=30 npcs=1 --platforms1"
-    tags = "qa_s1_zip_teramark"
+    boot_args = "app=lzma_perf_multi nflows=30 niterations=10 npcs=1 --platforms1"
+    tags = "qa_s1_zip_lzma_teramark"
     note = "ZIP lzma teramark app on S1"
     fun_os_make_flags = "XDATA_LISTS=/project/users/ashaikh/qa_test_inputs/zip_inputs/compress_perf_input.list"
-    max_duration = 2700
+    max_duration = 9000
 
     def describe(self):
         self.set_test_details(id=8,

@@ -8,10 +8,26 @@ import {Component, Input, OnInit} from '@angular/core';
 export class PerformanceShowChartsWorkspaceComponent implements OnInit {
   @Input() workspace: any = null;
   @Input() buildInfo: any = null;
+  pager: any = {};
+  pagedItems: any[] = [];
+  showPagedItems: boolean = false;
 
-  constructor() { }
+  constructor() {
+  }
 
   ngOnInit() {
+  }
+
+  refreshPage(): void {
+    this.pagedItems = this.workspace.interested_metrics.slice(this.pager.startIndex, this.pager.endIndex + 1);
+    this.showPagedItems = true;
+  }
+
+  setPage(pager): void {
+    this.pager = pager;
+    setTimeout(() => {
+      this.refreshPage();
+    }, 1);
   }
 
 }

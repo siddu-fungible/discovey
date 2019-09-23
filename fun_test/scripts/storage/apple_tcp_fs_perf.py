@@ -5,6 +5,7 @@ from lib.host.storage_controller import StorageController
 from web.fun_test.analytics_models_helper import VolumePerformanceEmulationHelper, BltVolumePerformanceHelper
 from lib.host.linux import Linux
 from lib.fun.fs import Fs
+import storage_helper
 from datetime import datetime
 
 '''
@@ -15,8 +16,8 @@ tb_config = {
     "name": "Basic Storage",
     "dut_info": {
         0: {
-            "bootarg": "setenv bootargs app=mdt_test,load_mods,hw_hsu_test workload=storage --serial sku=SKU_FS1600_0 --all_100g"
-                       " --dpc-server --dpc-uart --csr-replay --nofreeze",
+            "bootarg": "setenv bootargs app=mdt_test,load_mods,hw_hsu_test workload=storage --serial sku=SKU_FS1600_0"
+                       " --all_100g --dpc-server --dpc-uart --csr-replay --nofreeze",
             "perf_multiplier": 1,
             "f1_ip": "29.1.1.1",
             "tcp_port": 1099
@@ -268,7 +269,8 @@ class StripedVolumePerformanceTestcase(FunTestCase):
         blt_count = self.blt_count
         fun_test.shared_variables["blt_count"] = self.blt_count
 
-        self.nvme_block_device = self.nvme_device + "n" + str(self.stripe_details["ns_id"])
+        # self.nvme_block_device = self.nvme_device + "n" + str(self.stripe_details["ns_id"])
+
         self.storage_controller = fun_test.shared_variables["storage_controller"]
 
         fs = fun_test.shared_variables["fs"]
@@ -288,8 +290,7 @@ class StripedVolumePerformanceTestcase(FunTestCase):
         try:
             if hasattr(self, "reboot_host") and self.reboot_host:
                 for end_host in self.end_host_list:
-                    end_host.reboot(non_blocking=True)
-                fun_test.sleep("Server rebooting", 340)
+                    end_host.reboot(max_wait_time=400)
         except:
             fun_test.log("Failure during reboot of host")
 
@@ -441,11 +442,16 @@ class StripedVolumePerformanceTestcase(FunTestCase):
                                              self.nqn))
                 fun_test.sleep("Wait for couple of seconds for the volume to be accessible to the host", 5)
 
-                volume_name = self.nvme_device.replace("/dev/", "") + "n" + str(self.stripe_details["ns_id"])
-                lsblk_output = end_host.lsblk()
-                fun_test.test_assert(volume_name in lsblk_output, "{} device available".format(volume_name))
-                fun_test.test_assert_expected(expected="disk", actual=lsblk_output[volume_name]["type"],
-                                              message="{} device type check".format(volume_name))
+                # volume_name = self.nvme_device.replace("/dev/", "") + "n" + str(self.stripe_details["ns_id"])
+                # lsblk_output = end_host.lsblk()
+                # fun_test.test_assert(volume_name in lsblk_output, "{} device available".format(volume_name))
+                # fun_test.test_assert_expected(expected="disk", actual=lsblk_output[volume_name]["type"],
+                #                               message="{} device type check".format(volume_name))
+                fetch_nvme_block_device = storage_helper.fetch_nvme_device(end_host, self.stripe_details["ns_id"])
+                fun_test.test_assert(fetch_nvme_block_device['status'],
+                                     message="Check: nvme device visible on end host")
+                self.nvme_block_device = fetch_nvme_block_device["nvme_device"]
+                fun_test.shared_variables['nvme_block_device'] = self.nvme_block_device
 
             # Pre-condition volume from 1 host (one time task)
             if not hasattr(self, "create_file_system") or not self.create_file_system:

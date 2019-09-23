@@ -142,6 +142,8 @@ class MultiHostVolumePerformanceScript(FunTestScript):
             self.disable_wu_watchdog = job_inputs["disable_wu_watchdog"]
         else:
             self.disable_wu_watchdog = True
+        if "syslog" in job_inputs:
+            self.syslog = job_inputs["syslog"]
 
         self.num_duts = int(round(float(self.num_f1s) / self.num_f1_per_fs))
         fun_test.log("Num DUTs for current test: {}".format(self.num_duts))
@@ -592,6 +594,10 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
             self.post_results = job_inputs["post_results"]
         else:
             self.post_results = False
+        if "csi_perf_iodepth" in job_inputs:
+            self.csi_perf_iodepth = job_inputs["csi_perf_iodepth"]
+        if not isinstance(self.csi_perf_iodepth, list):
+            self.csi_perf_iodepth = [self.csi_perf_iodepth]
 
         if ("blt" not in fun_test.shared_variables or not fun_test.shared_variables["blt"]["setup_created"]) \
                 and (not fun_test.shared_variables["blt"]["warmup_done"]) :
@@ -623,6 +629,19 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
             for host_name in self.host_info:
                 self.host_info[host_name]["num_volumes"] = self.final_host_ips.count(self.host_info[host_name]["ip"])
 
+            # Finding the usable capacity of the drives which will be used as the BLT volume capacity, in case
+            # the capacity is not overridden while starting the script
+            min_drive_capacity = find_min_drive_capacity(self.storage_controller, self.command_timeout)
+            if min_drive_capacity:
+                self.blt_details["capacity"] = min_drive_capacity
+            else:
+                fun_test.critical("Unable to find the drive with minimum capacity...So going to use the BLT capacity"
+                                  "given in the script config file or capacity passed at the runtime...")
+
+            if "capacity" in job_inputs:
+                fun_test.critical("Original Volume size {} is overriden by the size {} given while running the "
+                                  "script".format(self.blt_details["capacity"], job_inputs["capacity"]))
+                self.blt_details["capacity"] = job_inputs["capacity"]
 
             # Create BLT's
             self.thin_uuid_list = []

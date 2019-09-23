@@ -4,23 +4,29 @@
     <div class="fun-panel-header">Filters</div>
     <div class="fun-panel-body">
       <table>
-      <tr>
-        <td class="fun-attribute-label">Categories:</td>
-        <td class="fun-attribute" style="width: 200px">
-          <ng-multiselect-dropdown [placeholder]="'Select'" [data]="availableCategories" [settings]="dropDownSettings" [(ngModel)]="selectedCategories"
-                                   (onSelect)="onChangeSelectedCategories()"
-                                   (onDeSelect)="onChangeSelectedCategories()"
-                                   (onSelectAll)="onChangeSelectedCategories()"
-                                   (onDeSelectAll)="onChangeSelectedCategories()">
-          </ng-multiselect-dropdown>
-        </td>
-      </tr>
-    </table>
+        <tr>
+          <td class="fun-attribute-label">By categories:</td>
+          <td class="fun-attribute" style="width: 200px">
+            <ng-multiselect-dropdown [placeholder]="'Select'" [data]="availableCategories" [settings]="dropDownSettings"
+                                     [(ngModel)]="selectedCategories"
+                                     (onSelect)="onChangeSelectedCategories()"
+                                     (onDeSelect)="onChangeSelectedCategories()"
+                                     (onSelectAll)="onChangeSelectedCategories()"
+                                     (onDeSelectAll)="onChangeSelectedCategories()">
+            </ng-multiselect-dropdown>
+          </td>
+        </tr>
+        <tr>
+          <td class="fun-attribute-label">By name:</td>
+          <td><app-search-bar [placeHolder]="'name'" (textChanged)="onSearchText($event)"></app-search-bar></td>
+
+        </tr>
+      </table>
     </div>
   </div>
 
-  <a routerLink="/regression/suite_editor"><button class="fun-button-add">Add a suite</button></a>
 
+  <button class="fun-button-add" (click)="onAddSuiteClick()">Add a suite</button>
   <div class="fun-flex-container">
     <!-- pager -->
     <div id="page-div" *ngIf="pager.pages && pager.pages.length">
@@ -45,34 +51,44 @@
     </div>
   </div>
 
+  <fun-spinner [status]="status"></fun-spinner>
   <table class="fun-table">
     <tr>
+      <td class="fun-table-header">ID</td>
       <td class="fun-table-header">Name</td>
       <td class="fun-table-header">Description</td>
       <td class="fun-table-header">Categories</td>
+      <td class="fun-table-header"></td>
     </tr>
     <tr *ngFor="let suite of suites; let suiteIndex=index">
+      <td>{{ suite.id }}</td>
       <td><a [routerLink]="'/regression/suite_editor/' + suite.id">{{ suite.name }}</a></td>
       <td>
-      <app-textarea-input [hoverHide]="false" [initialValue]="suite?.short_description" (valueChanged)="onShortDescriptionChangedEvent($event, suiteIndex)" [numRows]="4"></app-textarea-input>
+        <app-textarea-input [hoverHide]="false" [initialValue]="suite?.short_description"
+                            (valueChanged)="onShortDescriptionChangedEvent($event, suite)"
+                            [numRows]="4"></app-textarea-input>
       </td>
       <td>
         <div style="display: flex">
-          <ng-multiselect-dropdown [placeholder]="'Select'" [data]="availableCategories" [settings]="dropDownSettings" [(ngModel)]="suite.categories"
-                    (onSelect)="suite.dirty = true"
-                    (onDeSelect)="suite.dirty = true"
-                    (onSelectAll)="suite.dirty = true"
-                    (onDeSelectAll)="suite.dirty = true">
+          <ng-multiselect-dropdown [placeholder]="'Select'" [data]="availableCategories" [settings]="dropDownSettings"
+                                   [(ngModel)]="suite.categories"
+                                   (onSelect)="suite.dirty = true"
+                                   (onDeSelect)="suite.dirty = true"
+                                   (onSelectAll)="suite.dirty = true"
+                                   (onDeSelectAll)="suite.dirty = true">
           </ng-multiselect-dropdown>
           <div style="padding: 10px">
             <ng-container *ngIf="suite.dirty">
-            <span><i class="fa fa-check fa-fw tick-color" (click)="onSubmitCategories(suite)"></i></span>
-            <span><i class="fa fa-times fa-fw close-color" (click)="onDismissCategories(suite)"></i></span>
+              <span><i class="fa fa-check fa-fw tick-color" (click)="onSubmitCategories(suite)"></i></span>
+              <span><i class="fa fa-times fa-fw close-color" (click)="onDismissCategories(suite)"></i></span>
             </ng-container>
           </div>
 
         </div>
 
+      </td>
+      <td>
+        <i (click)="onDeleteSuite(suite)" class="fa fa-trash-o" style="font-size:20px; color: red"></i>
       </td>
 
     </tr>

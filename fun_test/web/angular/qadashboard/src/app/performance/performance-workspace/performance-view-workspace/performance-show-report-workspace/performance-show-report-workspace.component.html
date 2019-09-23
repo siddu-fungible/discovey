@@ -1,7 +1,10 @@
+<app-pager *ngIf="workspace" [data]="workspace.interested_metrics" [recordsPerPage]=5
+             (pageNumber)="setPage($event)"></app-pager>
 <div class="card" style="margin: 10px; padding: 5px;">
   <b>Subject: </b><input style="max-width: 50%" type="text" [(ngModel)]="subject"/><br>
-  <div *ngFor="let interestedMetric of workspace.interested_metrics">
-    <div style="vertical-align: middle; width: 50%">
+  <ng-container *ngIf="showPagedItems">
+  <div *ngFor="let interestedMetric of pagedItems">
+    <div *ngIf="interestedMetric.leaf" style="vertical-align: middle; width: 50%">
       <h5>{{ interestedMetric.lineage }}</h5>
       {{ interestedMetric.chart_name }}<br>
       Link to chart: <a href="{{ interestedMetric.url }}" target="_blank">Link</a><br>
@@ -10,7 +13,7 @@
                            [allowDelete]="false" [allowContext]="false" [allowAdd]="false"></summary-jira-info>
       Comments: <textarea [(ngModel)]="interestedMetric.comments" style="width: 100%"></textarea>
     </div>
-    <table class="table table-bordered" style="max-width: 50%; margin: 0">
+    <table *ngIf="interestedMetric.leaf" class="table table-bordered" style="max-width: 50%; margin: 0">
       <tr style="vertical-align: middle; border-bottom: solid black 1px">
         <th rowspan="2">
           Series name
@@ -71,6 +74,7 @@
     </table>
     <br>
   </div>
+  </ng-container>
   <span>
         <span class="fun-cancel-link" (click)="reportGenerated.emit(false)">Cancel</span>
         <button class="fun-button-submit" (click)="sendReports()">Send report</button>

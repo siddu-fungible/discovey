@@ -47,29 +47,13 @@
             <td id="{{ flatNode.gUid }}" class="child-transition">
                         <span [innerHTML]="getIndentHtml(flatNode) | safeHtml">
                         </span>
-              <ng-container *ngIf="flatNode.node.leaf">
-                <a [ngClass]="{highlight:flatNode.node.showAddJira}" [routerLink]=""
-                   (click)="showAtomicMetric(flatNode)">{{ flatNode.node.chartName }}</a><span
-                *ngIf="flatNode.node.workInProgress">&nbsp;<app-smart-label [value]="'work in progress'"
-                                                                            [type]="'warning'"></app-smart-label></span>
-                <span *ngIf="flatNode.showAddLeaf">
-                  &nbsp;&nbsp;
-                  <!--&nbsp;Subscribe:&nbsp;-->
-                  <!--<app-toggle-button [checked]="flatNode.subscribe"-->
-                                     <!--(changed)="onChangeSubscribeTo($event, flatNode.node.metricId)"></app-toggle-button>-->
-                  &nbsp;Track:&nbsp;
-                  <app-toggle-button [checked]="flatNode.track"
-                                     (changed)="onChangeTrack($event, flatNode.node.metricId)"></app-toggle-button>&nbsp;
-                  <!--<i class="fa fa-times fa-fw close-color"-->
-                     <!--(click)="removeFromInterestedList(flatNode.node.metricId)"></i>-->
-               </span>
-
-              </ng-container>
-              <ng-container *ngIf="!flatNode.node.leaf">
-                <a [ngClass]="{highlight:flatNode.node.showAddJira}" [routerLink]=""
-                   (click)="showNonAtomicMetric(flatNode)">{{ flatNode.node.chartName }}</a><span
-                *ngIf="flatNode.node.workInProgress">&nbsp;<app-smart-label [value]="'work in progress'"
-                                                                            [type]="'warning'"></app-smart-label></span>
+              <ng-container>
+                <a *ngIf="flatNode.node.leaf" [ngClass]="{highlight:flatNode.node.showAddJira}" [routerLink]=""
+                   (click)="showAtomicMetric(flatNode)">{{ flatNode.node.chartName }}</a>
+                <a *ngIf="!flatNode.node.leaf" [ngClass]="{highlight:flatNode.node.showAddJira}" [routerLink]=""
+                   (click)="showNonAtomicMetric(flatNode)">{{ flatNode.node.chartName }}</a>
+                <span *ngIf="flatNode.node.workInProgress">&nbsp;<app-smart-label [value]="'work in progress'"
+                                                                                  [type]="'warning'"></app-smart-label></span>
                 <span *ngIf="flatNode.node.tags">&nbsp;<span *ngFor="let tag of flatNode.node.tags"><app-smart-label
                   [value]=tag
                   [type]="'primary'"></app-smart-label></span></span>
@@ -83,8 +67,21 @@
                 <span class="arrow-right"></span>
               </a>
             </span>
+              <span *ngIf="flatNode.showAddLeaf">
+                  &nbsp;&nbsp;
+                <!--&nbsp;Subscribe:&nbsp;-->
+                <!--<app-toggle-button [checked]="flatNode.subscribe"-->
+                <!--(changed)="onChangeSubscribeTo($event, flatNode.node.metricId)"></app-toggle-button>-->
+                  &nbsp;Track:&nbsp;
+                  <app-toggle-button [checked]="flatNode.track"
+                                     (changed)="onChangeTrack($event, flatNode.node.metricId)"></app-toggle-button>&nbsp;
+                <!--<i class="fa fa-times fa-fw close-color"-->
+                <!--(click)="removeFromInterestedList(flatNode.node.metricId)"></i>-->
+               </span>
             </td>
-            <td *ngIf="!flatNode.special && selectMode !== SelectMode.ShowEditWorkspace && this.selectMode !== SelectMode.ShowAttachDag" class="text-center">
+            <td
+              *ngIf="!flatNode.special && selectMode !== SelectMode.ShowEditWorkspace && this.selectMode !== SelectMode.ShowAttachDag"
+              class="text-center">
               <div class="score-label">
                 <span style="vertical-align: top;">
                     <span *ngIf="flatNode.node.chartName!='All metrics'">
@@ -113,28 +110,34 @@
                 {{ flatNode.node.lastScore | number: '1.1-1' }}
               </div>
             </td>
-            <td *ngIf="flatNode.special && selectMode !== SelectMode.ShowEditWorkspace && this.selectMode !== SelectMode.ShowAttachDag">
+            <td
+              *ngIf="flatNode.special && selectMode !== SelectMode.ShowEditWorkspace && this.selectMode !== SelectMode.ShowAttachDag">
               &nbsp;
             </td>
-            <td class="text-center" *ngIf="selectMode !== SelectMode.ShowEditWorkspace && this.selectMode !== SelectMode.ShowAttachDag">
+            <td class="text-center"
+                *ngIf="selectMode !== SelectMode.ShowEditWorkspace && this.selectMode !== SelectMode.ShowAttachDag">
               <span *ngIf="!flatNode.node.leaf">{{ flatNode.node.numLeaves }}</span>
             </td>
 
-            <td *ngIf="!flatNode.node.leaf && !flatNode.special && selectMode !== SelectMode.ShowEditWorkspace && this.selectMode !== SelectMode.ShowAttachDag">
+            <td
+              *ngIf="!flatNode.node.leaf && !flatNode.special && selectMode !== SelectMode.ShowEditWorkspace && this.selectMode !== SelectMode.ShowAttachDag">
               <span *ngIf="flatNode.node.degrades.size !== 0"><i class='fa fa-arrow-down aspect-trend-icon fa-icon-red'>:</i>{{ flatNode.node.degrades.size }}</span>
               <a *ngIf="flatNode.node.failures.size !== 0" style="color: black; cursor: pointer">
                 <span *ngIf="flatNode.node.degrades.size !== 0">&nbsp;</span><span (click)="openBugPanel(flatNode)"><i
                 class='fa fa-times fa-icon-red'>:</i>{{ flatNode.node.failures.size }}</span></a>
             </td>
-            <td *ngIf="flatNode.node.leaf && flatNode.node.lastNumBuildFailed > 0 && !flatNode.special && selectMode !== SelectMode.ShowEditWorkspace && this.selectMode !== SelectMode.ShowAttachDag">
+            <td
+              *ngIf="flatNode.node.leaf && flatNode.node.lastNumBuildFailed > 0 && !flatNode.special && selectMode !== SelectMode.ShowEditWorkspace && this.selectMode !== SelectMode.ShowAttachDag">
               Bld:<label (mouseenter)="fetchChartInfo(flatNode)" tooltip [tooltipContentCallback]="tooltipCallback"
                          [tooltipContentCallbackArg]="flatNode" placement="right" delay="1" id="1"
                          class="badge failed-label no-margin badge-danger">FAILED</label>
             </td>
-            <td *ngIf="flatNode.special && selectMode !== SelectMode.ShowEditWorkspace && this.selectMode !== SelectMode.ShowAttachDag">
+            <td
+              *ngIf="flatNode.special && selectMode !== SelectMode.ShowEditWorkspace && this.selectMode !== SelectMode.ShowAttachDag">
               &nbsp;
             </td>
-            <td *ngIf="!flatNode.special && selectMode !== SelectMode.ShowEditWorkspace && this.selectMode !== SelectMode.ShowAttachDag">
+            <td
+              *ngIf="!flatNode.special && selectMode !== SelectMode.ShowEditWorkspace && this.selectMode !== SelectMode.ShowAttachDag">
                 <span *ngIf="flatNode.node.numBugs > 0" (click)="flatNode.showJiraInfo = !flatNode.showJiraInfo"
                       class="badge no-padding badge-light bug-badge">Bugs<sup><span class="text-color-red">{{ flatNode.node.numBugs }}</span>
                 </sup></span>
@@ -143,7 +146,8 @@
                 <span *ngIf="!flatNode.showJiraInfo" class="plus-minus">+</span>
                   <span *ngIf="flatNode.showJiraInfo" class="plus-minus">-</span></span>
             </td>
-            <td *ngIf="flatNode.special && selectMode !== SelectMode.ShowEditWorkspace && this.selectMode !== SelectMode.ShowAttachDag">
+            <td
+              *ngIf="flatNode.special && selectMode !== SelectMode.ShowEditWorkspace && this.selectMode !== SelectMode.ShowAttachDag">
               &nbsp;
             </td>
             <ng-template #TrendInfo>
@@ -169,7 +173,8 @@
               </div>
             </ng-template>
           </tr>
-          <tr *ngIf="flatNode.showJiraInfo && selectMode !== SelectMode.ShowEditWorkspace && this.selectMode !== SelectMode.ShowAttachDag">
+          <tr
+            *ngIf="flatNode.showJiraInfo && selectMode !== SelectMode.ShowEditWorkspace && this.selectMode !== SelectMode.ShowAttachDag">
             <td colspan="6">
               <!--<span [innerHTML]="getIndentHtml(flatNode) | safeHtml"></span>-->
               <jira-info [apiUrl]="'/metrics/jiras/' + flatNode.node.metricId"
@@ -179,7 +184,8 @@
           </tr>
         </ng-container>
       </table>
-      <span *ngIf="selectMode == SelectMode.ShowEditWorkspace" class="fun-cancel-link" (click)="cancelInterestedMetrics()">Cancel</span>
+      <span *ngIf="selectMode == SelectMode.ShowEditWorkspace" class="fun-cancel-link"
+            (click)="cancelInterestedMetrics()">Cancel</span>
       <button *ngIf="selectMode == SelectMode.ShowEditWorkspace" class="fun-button-submit"
               (click)="submitInterestedMetrics()">Submit
       </button>
@@ -307,7 +313,7 @@
         </div>
 
         <div class="closed-section"></div>
-        <div *ngIf="mode == modeType.ShowingNonAtomicMetric" class=""
+        <div *ngIf="mode == modeType.ShowingNonAtomicMetric && selectMode == SelectMode.ShowMainSite" class=""
              style="background-color: whitesmoke; padding-left: 20px; padding-right: 20px">
           <div *ngIf="currentNode.grid.length">
             <div *ngFor="let row of currentNode.grid" class="row">

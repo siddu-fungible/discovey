@@ -13,6 +13,10 @@ TOTAL_CORES_PER_CLUSTER = 6
 TOTAL_VPS_PER_CORE = 4
 START_VP_NUMBER = 8
 
+def do_sleep_for_interval():
+    time.sleep(TIME_INTERVAL)
+    return True
+
 class PortCommands(object):
     def __init__(self, dpc_client):
         self.dpc_client = dpc_client
@@ -889,7 +893,27 @@ class PeekCommands(object):
                     diff_value = result[key] - prev_result[key]
                     diff_result[key] = diff_value
                 else:
-                    diff_result[key] = 0
+                    diff_result[key] = result[key]
+
+        return diff_result
+
+    def _get_nested_dict_difference(self, result, prev_result):
+        diff_result = {}
+        for key in result:
+            if type(result[key]) == dict:
+                if key in prev_result:
+                    diff_result[key] = self._get_nested_dict_difference(result[key], prev_result[key])
+            elif type(result[key]) == str:
+                diff_result[key] = result[key]
+            else:
+                if key in prev_result:
+                    if type(result[key]) == list:
+                        diff_result[key] = result[key]
+                        continue
+                    diff_value = result[key] - prev_result[key]
+                    diff_result[key] = diff_value
+                else:
+                    diff_result[key] = result[key]
 
         return diff_result
 
@@ -1010,7 +1034,7 @@ class PeekCommands(object):
                     return cmd, master_table_obj
                 print master_table_obj
                 print "\n########################  %s ########################\n" % str(self._get_timestamp())
-                time.sleep(TIME_INTERVAL)
+                do_sleep_for_interval()
             except KeyboardInterrupt:
                 self.dpc_client.disconnect()
                 break
@@ -1056,7 +1080,7 @@ class PeekCommands(object):
                 prev_result = result
                 print table_obj
                 print "\n########################  %s ########################\n" % str(self._get_timestamp())
-                time.sleep(TIME_INTERVAL)
+                do_sleep_for_interval()
             except KeyboardInterrupt:
                 self.dpc_client.disconnect()
                 break
@@ -1238,7 +1262,7 @@ class PeekCommands(object):
                 prev_result = result
                 print master_table_obj
                 print "\n########################  %s ########################\n" % str(self._get_timestamp())
-                time.sleep(TIME_INTERVAL)
+                do_sleep_for_interval()
             except KeyboardInterrupt:
                 self.dpc_client.disconnect()
                 break
@@ -1258,7 +1282,7 @@ class PeekCommands(object):
                     if 'bam' in cmd:
                         result = self._sort_bam_keys(result=result, au_sort=au_sort)
                     if not isinstance(result, dict):
-                        print "'%s' seen in output " % result
+                        print "Empty result seen"
                         break
                     if result:
                         if prev_result:
@@ -1289,12 +1313,12 @@ class PeekCommands(object):
                         prev_result = result
                         print table_obj
                         print "\n########################  %s ########################\n" % str(self._get_timestamp())
-                        time.sleep(TIME_INTERVAL)
+                        do_sleep_for_interval()
                     else:
                         if get_result_only:
                             return cmd, "Empty Result"
                         print "Empty Result"
-                        time.sleep(TIME_INTERVAL)
+                        do_sleep_for_interval()
                 except KeyboardInterrupt:
                     self.dpc_client.disconnect()
                     break
@@ -1423,7 +1447,7 @@ class PeekCommands(object):
                     nuflex_prev_result = nuflex_result
                     print master_table_obj
                     print "\n########################  %s ########################\n" % str(self._get_timestamp())
-                    time.sleep(TIME_INTERVAL)
+                    do_sleep_for_interval()
                 except KeyboardInterrupt:
                     self.dpc_client.disconnect()
                     break
@@ -1477,7 +1501,7 @@ class PeekCommands(object):
                         prev_result = result
                         print table_obj
                         print "\n########################  %s ########################\n" % str(self._get_timestamp())
-                        time.sleep(TIME_INTERVAL)
+                        do_sleep_for_interval()
                 except KeyboardInterrupt:
                     self.dpc_client.disconnect()
                     break
@@ -1552,7 +1576,7 @@ class PeekCommands(object):
                             print table_obj
                             print "\n########################  %s ########################\n" % \
                                   str(self._get_timestamp())
-                            time.sleep(TIME_INTERVAL)
+                            do_sleep_for_interval()
                         else:
                             if get_result_only:
                                 return cmd, "Empty Result"
@@ -1565,11 +1589,72 @@ class PeekCommands(object):
                 self.dpc_client.disconnect()
 
     def peek_etp_stats(self, mode='nu', grep_regex=None, get_result_only=False):
-        cmd = "stats/etp/" + mode
-        if get_result_only:
-            return self._get_nested_dict_stats(cmd=cmd, grep_regex=grep_regex, get_result_only=get_result_only)
-        else:
-            self._get_nested_dict_stats(cmd=cmd, grep_regex=grep_regex)
+        # cmd = "stats/etp/" + mode
+        # if get_result_only:
+        #     return self._get_nested_dict_stats(cmd=cmd, grep_regex=grep_regex, get_result_only=get_result_only)
+        # else:
+        #     self._get_nested_dict_stats(cmd=cmd, grep_regex=grep_regex)
+        prev_result = None
+        while True:
+            try:
+                cmd = "stats/etp/%s" % mode
+                result = self.dpc_client.execute(verb="peek", arg_list=[cmd])
+                if prev_result:
+                    master_table_obj = PrettyTable(['Field Name', 'Counters', 'Counter Diff'])
+                    master_table_obj.align = 'l'
+                    diff_result = self._get_difference(result=result, prev_result=prev_result)
+                    for key in sorted(result):
+                        if grep_regex:
+                            if re.search(grep_regex, key, re.IGNORECASE):
+                                master_table_obj.add_row([key, result[key], diff_result[key]])
+                        else:
+                            table_obj = PrettyTable(['Field Name', 'Counters', 'Counter Diff'])
+                            table_obj.align = 'l'
+                            table_obj.sortby = 'Field Name'
+                            if type(result[key]) == dict:
+                                inner_table_obj = PrettyTable(['Field Name', 'Counters', 'Counter Diff'])
+                                inner_table_obj.align = 'l'
+                                inner_table_obj.sortby = 'Field Name'
+                                for inner_key in result[key]:
+                                    inner_table_obj.add_row([inner_key, result[key][inner_key],
+                                                             diff_result[key][inner_key]])
+                                master_table_obj.add_row([key, inner_table_obj, ""])
+                            else:
+                                master_table_obj.add_row([key, result[key], diff_result[key]])
+                else:
+                    master_table_obj = PrettyTable(['Field Name', 'Counters'])
+                    master_table_obj.align = 'l'
+                    for key in sorted(result):
+                        if grep_regex:
+                            if re.search(grep_regex, key, re.IGNORECASE):
+                                master_table_obj.add_row([key, result[key]])
+                        else:
+                            table_obj = PrettyTable(['Field Name', 'Counters'])
+                            table_obj.align = 'l'
+                            table_obj.sortby = 'Field Name'
+                            if type(result[key]) == dict:
+                                inner_table_obj = PrettyTable(['Field Name', 'Counters'])
+                                inner_table_obj.align = 'l'
+                                inner_table_obj.sortby = 'Field Name'
+                                for inner_key in result[key]:
+                                    inner_table_obj.add_row([inner_key, result[key][inner_key]])
+                                master_table_obj.add_row([key, inner_table_obj])
+                            else:
+                                master_table_obj.add_row([key, result[key]])
+                if get_result_only:
+                    return cmd, master_table_obj
+                prev_result = result
+                print master_table_obj
+                print "\n########################  %s ########################\n" % str(self._get_timestamp())
+                do_sleep_for_interval()
+            except KeyboardInterrupt:
+                self.dpc_client.disconnect()
+                break
+            except Exception as ex:
+                print "ERROR: %s" % str(ex)
+                self.dpc_client.disconnect()
+                break
+
 
     def get_singleton_table_obj(self, result, prev_result=None, grep=None):
         if prev_result:
@@ -1624,7 +1709,7 @@ class PeekCommands(object):
                         print table_obj
                         print "\n########################  %s ########################\n" % \
                               str(self._get_timestamp())
-                        time.sleep(TIME_INTERVAL)
+                        do_sleep_for_interval()
                     else:
                         print "Empty Result"
                 except KeyboardInterrupt:
@@ -1658,7 +1743,7 @@ class PeekCommands(object):
                         print master_table_obj
                         print "\n########################  %s ########################\n" % \
                               str(self._get_timestamp())
-                        time.sleep(TIME_INTERVAL)
+                        do_sleep_for_interval()
                     else:
                         print "Empty Result"
                 except KeyboardInterrupt:
@@ -1713,7 +1798,7 @@ class PeekCommands(object):
                         print master_table_obj
                         print "\n########################  %s ########################\n" % \
                               str(self._get_timestamp())
-                        time.sleep(TIME_INTERVAL)
+                        do_sleep_for_interval()
                     else:
                         print "Empty Result"
                 except KeyboardInterrupt:
@@ -1771,7 +1856,7 @@ class PeekCommands(object):
                     prev_result = global_result
                     print master_table_obj
                     print "\n########################  %s ########################\n" % str(self._get_timestamp())
-                    time.sleep(TIME_INTERVAL)
+                    do_sleep_for_interval()
                 except KeyboardInterrupt:
                     self.dpc_client.disconnect()
                     break
@@ -1845,7 +1930,7 @@ class PeekCommands(object):
                             print master_table_obj
                             print "\n########################  %s ########################\n" % \
                                   str(self._get_timestamp())
-                            time.sleep(TIME_INTERVAL)
+                            do_sleep_for_interval()
                         else:
                             if get_result_only:
                                 return cmd, "Empty Result"
@@ -1953,9 +2038,7 @@ class PeekCommands(object):
     def peek_stats_per_vp(self, cluster_id=None, core_id=None, grep_regex=None,
                           rx=False, tx=False, q=False, get_result_only=False):
         try:
-            prev_result_dict = {}
-            prev_result_dict['0'] = None
-            prev_result_dict['1'] = None
+            prev_result = None
             if rx == False and tx == False and q == False:
                 rx = True
                 tx = True
@@ -1964,74 +2047,72 @@ class PeekCommands(object):
                 try:
                     cmd = "stats/per_vp"
                     output_result = self.dpc_client.execute(verb='peek', arg_list=[cmd])
-                    result_dict = self.get_required_per_vp_result(output_result)
-                    for key in sorted(result_dict):
-                        result = result_dict[key]
-                        prev_result = prev_result_dict[key]
-                        master_table_obj = PrettyTable()
-                        master_table_obj.align = 'l'
-                        master_table_obj.border = False
-                        master_table_obj.header = False
-                        if result:
-                            '''
-                            if vp_number:
-                                vp_key = self._get_vp_number_key(output_dict=result, vp_number=vp_number)
-                                result = result[vp_key]
-                                if prev_result:
-                                    diff_result = self._get_difference(result=result, prev_result=prev_result)
-                                    table_obj = PrettyTable(['Field Name', 'Counter', 'Counter Diff'])
-                                    table_obj.align = 'l'
-                                    for _key in sorted(result):
-                                        if grep_regex:
-                                            if re.search(grep_regex, _key, re.IGNORECASE):
-                                                table_obj.add_row([_key, result[_key], diff_result[_key]])
-                                        else:
-                                            table_obj.add_row([_key, result[_key], diff_result[_key]])
-                                    master_table_obj.add_row([table_obj])
-                                else:
-                                    table_obj = PrettyTable(['Field Name', 'Counter'])
-                                    table_obj.align = 'l'
-                                    for _key in sorted(result):
-                                        if grep_regex:
-                                            if re.search(grep_regex, _key, re.IGNORECASE):
-                                                table_obj.add_row([_key, result[_key]])
-                                        else:
-                                            table_obj.add_row([_key, result[_key]])
-                                    master_table_obj.add_row([table_obj])
-                            '''
-                            # Print table for cluster id and core id given
-                            if (cluster_id is not None) and (core_id is not None):
-                                result = self._get_cluster_core_parsed_dict(output_dict=result, cluster_id=cluster_id,
-                                                                            core_id=core_id)
-
-                            # Print table for cluster id given
-                            elif cluster_id is not None:
-                                result = self._get_cluster_core_parsed_dict(output_dict=result, cluster_id=cluster_id)
-
-                            # Print master table
-                            result = self.get_filtered_dict(result, cluster_id=cluster_id, core_id=core_id, rx=rx, tx=tx,
-                                                            q=q)
+                    result = self.get_required_per_vp_result(output_result)
+                    #prev_result = prev_result_dict[key]
+                    master_table_obj = PrettyTable()
+                    master_table_obj.align = 'l'
+                    master_table_obj.border = False
+                    master_table_obj.header = False
+                    if result:
+                        '''
+                        if vp_number:
+                            vp_key = self._get_vp_number_key(output_dict=result, vp_number=vp_number)
+                            result = result[vp_key]
                             if prev_result:
-                                prev_result = self.get_filtered_dict(prev_result, cluster_id=cluster_id, core_id=core_id, rx=rx,
-                                                                     tx=tx, q=q)
-                                self.print_diff_result_single_dict_table_obj(master_table_obj=master_table_obj,
-                                                                             result=result, prev_result=prev_result,
-                                                                             grep_regex=grep_regex)
+                                diff_result = self._get_difference(result=result, prev_result=prev_result)
+                                table_obj = PrettyTable(['Field Name', 'Counter', 'Counter Diff'])
+                                table_obj.align = 'l'
+                                for _key in sorted(result):
+                                    if grep_regex:
+                                        if re.search(grep_regex, _key, re.IGNORECASE):
+                                            table_obj.add_row([_key, result[_key], diff_result[_key]])
+                                    else:
+                                        table_obj.add_row([_key, result[_key], diff_result[_key]])
+                                master_table_obj.add_row([table_obj])
                             else:
-                                self.print_single_dict_table_obj(master_table_obj=master_table_obj, result=result,
-                                                                 grep_regex=grep_regex)
+                                table_obj = PrettyTable(['Field Name', 'Counter'])
+                                table_obj.align = 'l'
+                                for _key in sorted(result):
+                                    if grep_regex:
+                                        if re.search(grep_regex, _key, re.IGNORECASE):
+                                            table_obj.add_row([_key, result[_key]])
+                                    else:
+                                        table_obj.add_row([_key, result[_key]])
+                                master_table_obj.add_row([table_obj])
+                        '''
+                        # Print table for cluster id and core id given
+                        if (cluster_id is not None) and (core_id is not None):
+                            result = self._get_cluster_core_parsed_dict(output_dict=result, cluster_id=cluster_id,
+                                                                        core_id=core_id)
 
-                            if get_result_only:
-                                return cmd, master_table_obj
-                            prev_result_dict[key] = result
-                            print master_table_obj
-                            print "\n########################  %s ########################\n" % \
-                                  str(self._get_timestamp())
-                            time.sleep(TIME_INTERVAL)
+                        # Print table for cluster id given
+                        elif cluster_id is not None:
+                            result = self._get_cluster_core_parsed_dict(output_dict=result, cluster_id=cluster_id)
+
+                        # Print master table
+                        result = self.get_filtered_dict(result, cluster_id=cluster_id, core_id=core_id, rx=rx, tx=tx,
+                                                        q=q)
+                        if prev_result:
+                            prev_result = self.get_filtered_dict(prev_result, cluster_id=cluster_id, core_id=core_id, rx=rx,
+                                                                 tx=tx, q=q)
+                            self.print_diff_result_single_dict_table_obj(master_table_obj=master_table_obj,
+                                                                         result=result, prev_result=prev_result,
+                                                                         grep_regex=grep_regex)
                         else:
-                            if get_result_only:
-                                return cmd, "Empty Result"
-                            print "Empty Result"
+                            self.print_single_dict_table_obj(master_table_obj=master_table_obj, result=result,
+                                                             grep_regex=grep_regex)
+
+                        if get_result_only:
+                            return cmd, master_table_obj
+                        prev_result = result
+                        print master_table_obj
+                        print "\n########################  %s ########################\n" % \
+                              str(self._get_timestamp())
+                        do_sleep_for_interval()
+                    else:
+                        if get_result_only:
+                            return cmd, "Empty Result"
+                        print "Empty Result"
                 except KeyboardInterrupt:
                     self.dpc_client.disconnect()
                     break
@@ -2260,7 +2341,7 @@ class PeekCommands(object):
                         print master_table_obj
                         print "\n########################  %s ########################\n" % \
                               str(self._get_timestamp())
-                        time.sleep(TIME_INTERVAL)
+                        do_sleep_for_interval()
                     else:
                         if get_result_only:
                             return cmd, "Empty Result"
@@ -2342,7 +2423,7 @@ class PeekCommands(object):
                         return cmd, master_table_obj
                     print master_table_obj
                     print "\n########################  %s ########################\n" % str(self._get_timestamp())
-                    time.sleep(TIME_INTERVAL)
+                    do_sleep_for_interval()
                 except KeyboardInterrupt:
                     self.dpc_client.disconnect()
                     break
@@ -2431,7 +2512,7 @@ class PeekCommands(object):
                         print master_table_obj
                         print "\n########################  %s ########################\n" % \
                               str(self._get_timestamp())
-                        time.sleep(TIME_INTERVAL)
+                        do_sleep_for_interval()
                     else:
                         if get_result_only:
                             return cmd, "Empty Result"
@@ -2512,7 +2593,7 @@ class PeekCommands(object):
                     prev_result = result
                     print master_table_obj
                     print "\n########################  %s ########################\n" % str(self._get_timestamp())
-                    time.sleep(TIME_INTERVAL)
+                    do_sleep_for_interval()
                 except KeyboardInterrupt:
                     self.dpc_client.disconnect()
                     break
@@ -2558,7 +2639,7 @@ class PeekCommands(object):
                     prev_result = result
                     print table_obj
                     print "\n########################  %s ########################\n" % str(self._get_timestamp())
-                    time.sleep(TIME_INTERVAL)
+                    do_sleep_for_interval()
                 except KeyboardInterrupt:
                     self.dpc_client.disconnect()
                     break
@@ -2636,7 +2717,7 @@ class PeekCommands(object):
                         print master_table_obj
                         print "\n########################  %s ########################\n" % \
                               str(self._get_timestamp())
-                        time.sleep(TIME_INTERVAL)
+                        do_sleep_for_interval()
                     else:
                         if get_result_only:
                             return cmd, "Empty Result"
@@ -2672,7 +2753,7 @@ class PeekCommands(object):
                 prev_result = result
                 print table_obj
                 print "\n########################  %s ########################\n" % str(self._get_timestamp())
-                time.sleep(TIME_INTERVAL)
+                do_sleep_for_interval()
             except KeyboardInterrupt:
                 self.dpc_client.disconnect()
                 break
@@ -2733,84 +2814,431 @@ class PeekCommands(object):
         cmd = "stats/resource/dam"
         self._get_nested_dict_stats(cmd=cmd, grep_regex=grep_regex)
 
-    def peek_bam_resource_stats(self, grep_regex=None, get_result_only=False):
-        cmd = "stats/resource/bam"
-        verb = "peek"
-        tid = 0
-        au_sort = False
-        prev_result = None
-        try:
-            bam_pool_decode_dict ={
-		'pool0': 'BM_POOL_FUNOS',
-		'pool1': 'BM_POOL_NU_ETP_CMDLIST',
-		'pool2': 'BM_POOL_HU_REQ',
-		'pool3': 'BM_POOL_SW_PREFETCH',
-		'pool4': 'BM_POOL_NU_ERP_FCP',
-		'pool19': 'BM_POOL_NU_ERP_CC',
-		'pool20': 'BM_POOL_NU_ERP_SAMPLING',
-		'pool34': 'BM_POOL_REGEX',
-		'pool35': 'BM_POOL_REFBUF',
-		'pool49': 'BM_POOL_NU_ERP_NONFCP',
-		'pool50': 'BM_POOL_HNU_NONFCP',
-		'pool62': 'BM_POOL_HNU_PREFETCH',
-		'pool63': 'BM_POOL_NU_PREFETCH',}
+    # def peek_bam_resource_stats(self, grep_regex=None, get_result_only=False):
+    #     cmd = "stats/resource/bam"
+    #     verb = "peek"
+    #     tid = 0
+    #     au_sort = False
+    #     prev_result = None
+    #     try:
+    #         bam_pool_decode_dict ={
+	# 	'pool0': 'BM_POOL_FUNOS',
+	# 	'pool1': 'BM_POOL_NU_ETP_CMDLIST',
+	# 	'pool2': 'BM_POOL_HU_REQ',
+	# 	'pool3': 'BM_POOL_SW_PREFETCH',
+	# 	'pool4': 'BM_POOL_NU_ERP_FCP',
+	# 	'pool19': 'BM_POOL_NU_ERP_CC',
+	# 	'pool20': 'BM_POOL_NU_ERP_SAMPLING',
+	# 	'pool34': 'BM_POOL_REGEX',
+	# 	'pool35': 'BM_POOL_REFBUF',
+	# 	'pool49': 'BM_POOL_NU_ERP_NONFCP',
+	# 	'pool50': 'BM_POOL_HNU_NONFCP',
+	# 	'pool62': 'BM_POOL_HNU_PREFETCH',
+	# 	'pool63': 'BM_POOL_NU_PREFETCH',}
+    #
+    #         while True:
+    #             try:
+    #                 if type(cmd) == list:
+    #                     result = self.dpc_client.execute(verb=verb, arg_list=cmd, tid=tid)
+    #                 else:
+    #                     result = self.dpc_client.execute(verb=verb, arg_list=[cmd], tid=tid)
+    #                 result = self._sort_bam_keys(result=result, au_sort=au_sort)
+    #                 if result:
+    #                     if prev_result:
+    #                         diff_result = self._get_difference(result=result, prev_result=prev_result)
+    #                         table_obj = PrettyTable(['Field Name', 'Counters', 'Diff Counters'])
+    #                         table_obj.align = 'l'
+    #                         for key in result:
+    #                             decode_value = ''
+    #                             pool_value = key.split(' ')[0]
+    #                             if 'usage' in key:
+    #                                 pool_value = key.split(' ')[1]
+    #                             if pool_value in bam_pool_decode_dict:
+    #                                 decode_value = bam_pool_decode_dict[pool_value]
+    #                             if grep_regex:
+    #                                 if re.search(grep_regex, decode_value, re.IGNORECASE):
+    #                                     table_obj.add_row([decode_value + ' (' + key + ')'.strip(), result[key], diff_result[key]])
+    #                             else:
+    #                                 table_obj.add_row([decode_value + ' (' + key + ')'.strip(), result[key], diff_result[key]])
+    #                     else:
+    #                         table_obj = PrettyTable(['Field Name', 'Counters'])
+    #                         table_obj.align = 'l'
+    #                         for key in result:
+    #                             decode_value = ''
+    #                             pool_value = key.split(' ')[0]
+    #                             if 'usage' in key:
+    #                                 pool_value = key.split(' ')[1]
+    #                             if pool_value in bam_pool_decode_dict:
+    #                                 decode_value = bam_pool_decode_dict[pool_value]
+    #                             if grep_regex:
+    #                                 if re.search(grep_regex, decode_value, re.IGNORECASE):
+    #                                     table_obj.add_row([decode_value + ' (' + key + ')'.strip(), result[key]])
+    #                             else:
+    #                                 table_obj.add_row([decode_value + ' (' + key + ')'.strip(), result[key], ])
+    #                     if get_result_only:
+    #                         return cmd, table_obj
+    #                     prev_result = result
+    #                     print table_obj
+    #                     print "\n########################  %s ########################\n" % str(self._get_timestamp())
+    #                     do_sleep_for_interval()
+    #                 else:
+    #                     if get_result_only:
+    #                         return cmd, "Empty Result"
+    #                     print "Empty Result"
+    #                     do_sleep_for_interval()
+    #             except KeyboardInterrupt:
+    #                 self.dpc_client.disconnect()
+    #                 break
+    #     except Exception as ex:
+    #         print "ERROR: %s" % str(ex)
+    #         self.dpc_client.disconnect()
 
-            while True:
-                try:
-                    if type(cmd) == list:
-                        result = self.dpc_client.execute(verb=verb, arg_list=cmd, tid=tid)
-                    else:
-                        result = self.dpc_client.execute(verb=verb, arg_list=[cmd], tid=tid)
-                    result = self._sort_bam_keys(result=result, au_sort=au_sort)
-                    if result:
-                        if prev_result:
-                            diff_result = self._get_difference(result=result, prev_result=prev_result)
-                            table_obj = PrettyTable(['Field Name', 'Counters', 'Diff Counters'])
-                            table_obj.align = 'l'
-                            for key in result:
-                                decode_value = ''
-                                pool_value = key.split(' ')[0]
-                                if 'usage' in key:
-                                    pool_value = key.split(' ')[1]
-                                if pool_value in bam_pool_decode_dict:
-                                    decode_value = bam_pool_decode_dict[pool_value]
-                                if grep_regex:
-                                    if re.search(grep_regex, decode_value, re.IGNORECASE):
-                                        table_obj.add_row([decode_value + ' (' + key + ')'.strip(), result[key], diff_result[key]])
-                                else:
-                                    table_obj.add_row([decode_value + ' (' + key + ')'.strip(), result[key], diff_result[key]])
-                        else:
-                            table_obj = PrettyTable(['Field Name', 'Counters'])
-                            table_obj.align = 'l'
-                            for key in result:
-                                decode_value = ''
-                                pool_value = key.split(' ')[0]
-                                if 'usage' in key:
-                                    pool_value = key.split(' ')[1]
-                                if pool_value in bam_pool_decode_dict:
-                                    decode_value = bam_pool_decode_dict[pool_value]
-                                if grep_regex:
-                                    if re.search(grep_regex, decode_value, re.IGNORECASE):
-                                        table_obj.add_row([decode_value + ' (' + key + ')'.strip(), result[key]])
-                                else:
-                                    table_obj.add_row([decode_value + ' (' + key + ')'.strip(), result[key], ])
-                        if get_result_only:
-                            return cmd, table_obj
-                        prev_result = result
-                        print table_obj
-                        print "\n########################  %s ########################\n" % str(self._get_timestamp())
-                        time.sleep(TIME_INTERVAL)
-                    else:
-                        if get_result_only:
-                            return cmd, "Empty Result"
-                        print "Empty Result"
-                        time.sleep(TIME_INTERVAL)
-                except KeyboardInterrupt:
-                    self.dpc_client.disconnect()
-                    break
+    def _get_max_reference_keys(self, result, reference_cluster):
+        reference_keys = reference_cluster.keys()
+        num_keys = len(reference_keys)
+        for key, val in result.iteritems():
+            if len(val) > num_keys:
+                reference_keys = val.keys()
+        return reference_keys
+
+    def _print_master_table_columns(self, print_keys, print_values):
+        master_table_obj = PrettyTable()
+        master_table_obj.header = True
+        master_table_obj.border = True
+        master_table_obj.align = 'l'
+        for col_name, col_values in zip(print_keys, print_values):
+            master_table_obj.add_column(col_name, col_values)
+        print master_table_obj
+
+    def get_bam_flow_control_configs(self, per_pool):
+        try:
+            print "bam flow_control configs"
         except Exception as ex:
             print "ERROR: %s" % str(ex)
             self.dpc_client.disconnect()
+
+    def _invert_output_dict(self, output_dict):
+        new_output = OrderedDict()
+        temp_list = []
+        for key, val in output_dict.iteritems():
+            val.insert(0, key)
+            temp_list.append(val)
+        for key in temp_list[0]:
+            new_output[key] = []
+            index = temp_list[0].index(key)
+            for item in temp_list[1:]:
+                new_output[key].append(item[index])
+        return new_output
+
+    def get_bam_usage(self):
+        cmd = "stats/resource/bam"
+        row_list = ['key names']
+        for x in range(9):
+            row_list.append('C' + str(x) + ":" + 'size_AUs')
+            row_list.append('C' + str(x) + ":" + 'size_KB')
+        result = self.dpc_client.execute(verb="peek", arg_list=[cmd])
+        result = result['bm_usage_per_cluster']
+        reference_cluster = result['cluster_0']
+        reference_keys = self._get_max_reference_keys(result, reference_cluster)
+        output = OrderedDict()
+        for col_name in row_list:
+            output[col_name] = []
+            if col_name == 'key names':
+                output[col_name].extend(sorted(reference_keys))
+            else:
+                cname = col_name.replace('C', 'cluster_')
+                cluster_name = cname.split(":")[0]
+                key_name = 'pool_' + cname.split(":")[1]
+                cls_output = result[cluster_name]
+                for display_key in sorted(reference_keys):
+                    if display_key in cls_output:
+                        output[col_name].append(cls_output[display_key][key_name])
+                    else:
+                        output[col_name].append(0)
+        print_keys = output.keys()
+        print_values = output.values()
+        self._print_master_table_columns(print_keys, print_values)
+
+    def _get_bam_pool_config(self):
+        cmd = "config/bam/pool_config"
+        result = self.dpc_client.execute(verb="peek", arg_list=[cmd])
+
+        all_keys = sorted(result.keys())
+        reference_pool = all_keys[0]
+        reference_pool = result[reference_pool]
+        reference_keys = self._get_max_reference_keys(result, reference_pool)
+        row_list = ['key names']
+        output = OrderedDict()
+        output[row_list[0]] = all_keys
+        for x in sorted(reference_keys):
+            output[x] = []
+            row_list.append(x)
+        for key in all_keys:
+            for _key in reference_keys:
+                val = None
+                if _key in result[key]:
+                    val = result[key][_key]
+                output[_key].append(val)
+        print_keys = output.keys()
+        print_values = output.values()
+        self._print_master_table_columns(print_keys, print_values)
+
+    def _get_bam_ncv_config(self):
+        cmd = "config/bam/ncv_config"
+        result = self.dpc_client.execute(verb="peek", arg_list=[cmd])
+        pc_result = result['pc_count']
+        print "pc_count:%s" % pc_result
+        del result['pc_count']
+        all_keys = sorted(result.keys())
+        reference_pool = all_keys[0]
+        reference_pool = result[reference_pool]
+        reference_keys = self._get_max_reference_keys(result, reference_pool)
+        row_list = ['key names']
+        output = OrderedDict()
+        output[row_list[0]] = all_keys
+        for x in sorted(reference_keys):
+            output[x] = []
+            row_list.append(x)
+        for key in all_keys:
+            for _key in reference_keys:
+                val = None
+                if _key in result[key]:
+                    val = result[key][_key]
+                output[_key].append(val)
+        output = self._invert_output_dict(output)
+        print_keys = output.keys()
+        print_values = output.values()
+        self._print_master_table_columns(print_keys, print_values)
+
+    def _get_bam_global_flow_control(self):
+        cmd = "config/bam/global_flow_control"
+        result = self.dpc_client.execute(verb="peek", arg_list=[cmd])
+        print "Not implemented"
+
+    def _get_bam_per_pool_flow_control(self):
+        cmd = "config/bam/per_pool_flow_control"
+        result = self.dpc_client.execute(verb="peek", arg_list=[cmd])
+        print "Not implemented"
+
+    def get_nu_configs(self, config_type):
+        try:
+            if config_type == 'pool_config':
+                self._get_bam_pool_config()
+            elif config_type == 'ncv_config':
+                self._get_bam_ncv_config()
+            elif config_type == 'per_pool_flow_control':
+                self._get_bam_per_pool_flow_control()
+            elif config_type == 'global_flow_control':
+                self._get_bam_global_flow_control()
+        except Exception as ex:
+            print "ERROR: %s" % str(ex)
+            self.dpc_client.disconnect()
+
+    def _get_cid_bam_results(self, result, cid):
+        for key in result.keys():
+            if key == 'bm_usage_per_cluster':
+                for _key in result[key].keys():
+                    if not str(cid) == _key.split("_")[1]:
+                        del result[key][_key]
+        return result
+
+    def peek_bam_resource_stats(self, cid=None, diff=None, grep_regex=None, get_result_only=False):
+        prev_global_result = None
+        prev_per_cluster_result = None
+        while True:
+            try:
+                cmd = "stats/resource/bam"
+                result = self.dpc_client.execute(verb="peek", arg_list=[cmd])
+                if not result:
+                    break
+                reference_keys = self._get_max_reference_keys(result['bm_usage_per_cluster'],
+                                                              result['bm_usage_per_cluster']['cluster_0'])
+                if cid:
+                    result = self._get_cid_bam_results(result, cid)
+                gloabl_result = result['bm_usage_global']
+                per_cluster_result = result['bm_usage_per_cluster']
+                if prev_global_result and diff:
+                    diff_result = self._get_nested_dict_difference(result=gloabl_result, prev_result=prev_global_result)
+                    global_table_obj = PrettyTable(['Field Name', 'Counter', 'Counter Diff'])
+                    global_table_obj.align = 'l'
+                    for key, val in gloabl_result.iteritems():
+                        global_table_obj.add_row([key, val, diff_result[key]])
+                if prev_per_cluster_result and diff:
+                    row_list = ['key names']
+                    for key in sorted(per_cluster_result.keys()):
+                        row_list.append(key[0].upper() + key[-1] + ":" + "%")
+                        row_list.append(key[0].upper() + key[-1] + ":" + "d_%")
+                        row_list.append(key[0].upper() + key[-1] + ":" + "col")
+                        row_list.append(key[0].upper() + key[-1] + ":" + "d_col")
+                    per_cluster_table_obj = PrettyTable()
+
+                    output = OrderedDict()
+                    for col_name in row_list:
+                        output[col_name] = []
+                        if col_name == 'key names':
+                            output[col_name].extend(sorted(reference_keys))
+                        else:
+                            cname = col_name.replace('C', 'cluster_')
+                            cluster_name = cname.split(":")[0]
+                            key_name = cname.split(":")[1]
+                            if key_name == '%':
+                                key_name = 'usage_percent'
+                            elif key_name == 'col':
+                                key_name = 'color'
+                            cls_output = per_cluster_result[cluster_name]
+                            if 'd_' in key_name:
+                                cls_output = prev_per_cluster_result[cluster_name]
+                            for display_key in sorted(reference_keys):
+                                if display_key in cls_output:
+                                    if key_name in cls_output[display_key]:
+                                        output[col_name].append(cls_output[display_key][key_name])
+                                    else:
+                                        output[col_name].append(0)
+                                else:
+                                    output[col_name].append(0)
+                else:
+                    # Global table object
+                    global_table_obj = PrettyTable(['Field Name', 'Counter'])
+                    global_table_obj.align = 'l'
+                    for key, val in gloabl_result.iteritems():
+                        global_table_obj.add_row([key, val])
+
+                    # Per cluster table
+                    row_list = ['key names']
+                    for key in sorted(per_cluster_result.keys()):
+                        row_list.append(key[0].upper() + key[-1] + ":" + "%")
+                        row_list.append(key[0].upper() + key[-1] + ":" + "col")
+                    per_cluster_table_obj = PrettyTable()
+
+                    output = OrderedDict()
+                    for col_name in row_list:
+                        output[col_name] = []
+                        if col_name == 'key names':
+                            output[col_name].extend(sorted(reference_keys))
+                        else:
+                            cname = col_name.replace('C', 'cluster_')
+                            cluster_name = cname.split(":")[0]
+                            key_name = cname.split(":")[1]
+                            if key_name == '%':
+                                key_name = 'usage_percent'
+                            elif key_name == 'col':
+                                key_name = 'color'
+                            cls_output = per_cluster_result[cluster_name]
+                            for display_key in sorted(reference_keys):
+                                if display_key in cls_output:
+                                    if key_name in cls_output[display_key]:
+                                        output[col_name].append(cls_output[display_key][key_name])
+                                    else:
+                                        output[col_name].append(0)
+                                else:
+                                    output[col_name].append(0)
+                print_keys = output.keys()
+                print_values = output.values()
+                for col_name, col_values in zip(print_keys, print_values):
+                    per_cluster_table_obj.add_column(col_name, col_values)
+
+
+                if get_result_only:
+                    return cmd, global_table_obj, per_cluster_table_obj
+                prev_global_result = gloabl_result
+                prev_per_cluster_result = per_cluster_result
+                print global_table_obj
+                print per_cluster_table_obj
+                print "\n########################  %s ########################\n" % str(self._get_timestamp())
+                do_sleep_for_interval()
+            except KeyboardInterrupt:
+                self.dpc_client.disconnect()
+                break
+            except Exception as ex:
+                print "ERROR: %s" % str(ex)
+                self.dpc_client.disconnect()
+                break
+    # def peek_bam_resource_stats(self, cid=None, grep_regex=None, get_result_only=False):
+    #     prev_result = None
+    #     while True:
+    #         try:
+    #             cmd = "stats/resource/bam"
+    #             master_table_obj = PrettyTable()
+    #             master_table_obj.header = False
+    #             master_table_obj.border = False
+    #             master_table_obj.align = 'l'
+    #             result = self.dpc_client.execute(verb="peek", arg_list=[cmd])
+    #             if cid:
+    #                 result = self._get_cid_bam_results(result, cid)
+    #             if prev_result:
+    #                 diff_result = self._get_nested_dict_difference(result=result, prev_result=prev_result)
+    #                 for key in sorted(result):
+    #                     table_obj = PrettyTable(['Field Name', 'Counters', 'Counter Diff'])
+    #                     table_obj.align = 'l'
+    #                     table_obj.sortby = 'Field Name'
+    #                     for _key in result[key]:
+    #                         if grep_regex:
+    #                             if re.search(grep_regex, key, re.IGNORECASE):
+    #                                 table_obj.add_row([_key, result[key][_key], diff_result[key][_key]])
+    #                         else:
+    #                             if type(result[key][_key]) == dict:
+    #                                 inner_table_obj = PrettyTable(['Field Name', 'Counters', 'Counter Diff'])
+    #                                 inner_table_obj.align = 'l'
+    #                                 inner_table_obj.sortby = 'Field Name'
+    #                                 for inner_key in result[key][_key]:
+    #                                     if type(result[key][_key]) == dict:
+    #                                         _inner_table_obj = PrettyTable(['Field Name', 'Counters', 'Counter Diff'])
+    #                                         _inner_table_obj.align = 'l'
+    #                                         _inner_table_obj.sortby = 'Field Name'
+    #                                         for _inner_key in result[key][_key][inner_key]:
+    #                                             _inner_table_obj.add_row([_inner_key, result[key][_key][inner_key][_inner_key],
+    #                                                                       diff_result[key][_key][inner_key][_inner_key]])
+    #                                         inner_table_obj.add_row([inner_key, _inner_table_obj, ""])
+    #                                     else:
+    #                                         inner_table_obj.add_row([inner_key, result[key][_key][inner_key],
+    #                                                                  diff_result[key][_key][inner_key]])
+    #                                 table_obj.add_row([_key, inner_table_obj, ""])
+    #                             else:
+    #                                 table_obj.add_row([_key, result[key][_key], diff_result[key][_key]])
+    #                     if table_obj.rowcount > 0:
+    #                         master_table_obj.add_row([key, table_obj])
+    #             else:
+    #                 for key in sorted(result):
+    #                     table_obj = PrettyTable(['Field Name', 'Counters'])
+    #                     table_obj.align = 'l'
+    #                     table_obj.sortby = 'Field Name'
+    #                     for _key in result[key]:
+    #                         if grep_regex:
+    #                             if re.search(grep_regex, key, re.IGNORECASE):
+    #                                 table_obj.add_row([_key, result[key][_key]])
+    #                         else:
+    #                             if type(result[key][_key]) == dict:
+    #                                 inner_table_obj = PrettyTable(['Field Name', 'Counters'])
+    #                                 inner_table_obj.align = 'l'
+    #                                 inner_table_obj.sortby = 'Field Name'
+    #                                 for inner_key in result[key][_key]:
+    #                                     if type(result[key][_key]) == dict:
+    #                                         _inner_table_obj = PrettyTable(['Field Name', 'Counters'])
+    #                                         _inner_table_obj.align = 'l'
+    #                                         _inner_table_obj.sortby = 'Field Name'
+    #                                         for _inner_key in result[key][_key][inner_key]:
+    #                                             _inner_table_obj.add_row([_inner_key, result[key][_key][inner_key][_inner_key]])
+    #                                         inner_table_obj.add_row([inner_key, _inner_table_obj])
+    #                                     else:
+    #                                         inner_table_obj.add_row([inner_key, result[key][_key][inner_key]])
+    #                                 table_obj.add_row([_key, inner_table_obj])
+    #                             else:
+    #                                 table_obj.add_row([_key, result[key][_key]])
+    #                     if table_obj.rowcount > 0:
+    #                         master_table_obj.add_row([key, table_obj])
+    #             if get_result_only:
+    #                 return cmd, master_table_obj
+    #             prev_result = result
+    #             print master_table_obj
+    #             print "\n########################  %s ########################\n" % str(self._get_timestamp())
+    #             do_sleep_for_interval()
+    #         except KeyboardInterrupt:
+    #             self.dpc_client.disconnect()
+    #             break
+    #         except Exception as ex:
+    #             print "ERROR: %s" % str(ex)
+    #             self.dpc_client.disconnect()
+    #             break
     '''
     def peek_nwqm_stats(self, grep_regex=None):
         try:
@@ -2844,7 +3272,7 @@ class PeekCommands(object):
                         print table_obj
                         print "\n########################  %s ########################\n" % \
                               str(self._get_timestamp())
-                        time.sleep(TIME_INTERVAL)
+                        do_sleep_for_interval()
                 except KeyboardInterrupt:
                     self.dpc_client.disconnect()
                     break
@@ -2901,7 +3329,7 @@ class PeekCommands(object):
                         prev_result = result
                         print table_obj
                         print "\n########################  %s ########################\n" % str(self._get_timestamp())
-                        time.sleep(TIME_INTERVAL)
+                        do_sleep_for_interval()
                     else:
                         print "Empty Result"
                 except KeyboardInterrupt:
@@ -2970,7 +3398,7 @@ class PeekCommands(object):
                         print master_table_obj
                         prev_result = result
                         print "\n########################  %s ########################\n" % str(self._get_timestamp())
-                        time.sleep(TIME_INTERVAL)
+                        do_sleep_for_interval()
                     else:
                         print 'Empty Result'
                 except KeyboardInterrupt:
@@ -3069,7 +3497,7 @@ class PeekCommands(object):
                         print master_table_obj
                         prev_result = result
                         print "\n########################  %s ########################\n" % str(self._get_timestamp())
-                        time.sleep(TIME_INTERVAL)
+                        do_sleep_for_interval()
                     else:
                         print 'Empty Result'
                 except KeyboardInterrupt:
@@ -3103,7 +3531,7 @@ class PeekCommands(object):
                         print table_obj
                         prev_result = result
                         print "\n########################  %s ########################\n" % str(self._get_timestamp())
-                        time.sleep(TIME_INTERVAL)
+                        do_sleep_for_interval()
                     else:
                         print "Empty Result"
                 except KeyboardInterrupt:
@@ -3125,7 +3553,7 @@ class PeekCommands(object):
                     result = self.dpc_client.execute(verb='peek', arg_list=[cmd])
                     if result:
                         if prev_result:
-                            diff_result = self._get_difference(result=result, prev_result=prev_result)
+                            diff_result = self._get_nested_dict_difference(result=result, prev_result=prev_result)
                             for key in sorted(result):
                                 table_obj = PrettyTable()
                                 table_obj.align = 'l'
@@ -3136,13 +3564,22 @@ class PeekCommands(object):
                                     inner_table_obj.align = 'l'
                                     inner_table_obj.sortby = 'Field Name'
                                     for in_key in sorted(result[key][_key]):
-                                        if grep_regex:
-                                            if re.search(grep_regex, _key, re.IGNORECASE):
+                                        if type(result[key][_key][in_key]) == dict:
+                                            nested_table_obj = PrettyTable(['Field Name', 'Counter', 'Counter Diff'])
+                                            nested_table_obj.align = 'l'
+                                            nested_table_obj.sortby = 'Field Name'
+                                            for nested_in_key in sorted(result[key][_key][in_key]):
+                                                nested_table_obj.add_row([nested_in_key, result[key][_key][in_key][nested_in_key],
+                                                                         diff_result[key][_key][in_key][nested_in_key]])
+                                            inner_table_obj.add_row([in_key, nested_table_obj, ""])
+                                        else:
+                                            if grep_regex:
+                                                if re.search(grep_regex, _key, re.IGNORECASE):
+                                                    inner_table_obj.add_row([in_key, result[key][_key][in_key],
+                                                                             diff_result[key][_key][in_key]])
+                                            else:
                                                 inner_table_obj.add_row([in_key, result[key][_key][in_key],
                                                                          diff_result[key][_key][in_key]])
-                                        else:
-                                            inner_table_obj.add_row([in_key, result[key][_key][in_key],
-                                                                     diff_result[key][_key][in_key]])
                                     table_obj.add_row([_key, inner_table_obj])
                                 master_table_obj.add_row([key, table_obj])
                         else:
@@ -3156,17 +3593,25 @@ class PeekCommands(object):
                                     inner_table_obj.align = 'l'
                                     inner_table_obj.sortby = 'Field Name'
                                     for in_key in sorted(result[key][_key]):
-                                        if grep_regex:
-                                            if re.search(grep_regex, _key, re.IGNORECASE):
-                                                inner_table_obj.add_row([in_key, result[key][_key][in_key]])
+                                        if type(result[key][_key][in_key]) == dict:
+                                            nested_table_obj = PrettyTable(['Field Name', 'Counter'])
+                                            nested_table_obj.align = 'l'
+                                            nested_table_obj.sortby = 'Field Name'
+                                            for nested_in_key in sorted(result[key][_key][in_key]):
+                                                nested_table_obj.add_row([nested_in_key, result[key][_key][in_key][nested_in_key]])
+                                            inner_table_obj.add_row([in_key, nested_table_obj])
                                         else:
-                                            inner_table_obj.add_row([in_key, result[key][_key][in_key]])
+                                            if grep_regex:
+                                                if re.search(grep_regex, _key, re.IGNORECASE):
+                                                    inner_table_obj.add_row([in_key, result[key][_key][in_key]])
+                                            else:
+                                                inner_table_obj.add_row([in_key, result[key][_key][in_key]])
                                     table_obj.add_row([_key, inner_table_obj])
                                 master_table_obj.add_row([key, table_obj])
                         print master_table_obj
                         prev_result = result
                         print "\n########################  %s ########################\n" % str(self._get_timestamp())
-                        time.sleep(TIME_INTERVAL)
+                        do_sleep_for_interval()
                     else:
                         print "Empty Result"
                 except KeyboardInterrupt:
@@ -3209,9 +3654,89 @@ class PeekCommands(object):
                         print master_table_obj
                         prev_result = result
                         print "\n########################  %s ########################\n" % str(self._get_timestamp())
-                        time.sleep(TIME_INTERVAL)
+                        do_sleep_for_interval()
                     else:
                         print "Empty Result"
+                except KeyboardInterrupt:
+                    self.dpc_client.disconnect()
+                    break
+        except Exception as ex:
+            print "ERROR: %s" % str(ex)
+            self.dpc_client.disconnect()
+
+
+    def _get_all_rdma(self, output_dict, hu_id, qpn_number=None):
+        result = {}
+        result['rdma'] = {}
+        for key, val in output_dict.iteritems():
+            if key.split(".")[0] == str(hu_id) and 'rdma' in val.keys():
+                if qpn_number:
+                    for item in val['rdma']:
+                        if str(qpn_number) == str(item['QPN']):
+                            result['rdma'][key] = []
+                            result['rdma'][key].append(item)
+                            break
+                else:
+                    result['rdma'][key] = output_dict[key]['rdma']
+        return result
+
+    def peek_stats_rdma(self, hu_id, qpn_number=None, grep_regex=None):
+        try:
+            prev_result = None
+            while True:
+                try:
+                    cmd = "list"
+                    output = self.dpc_client.execute(verb='flow', arg_list=[cmd])
+                    result = self._get_all_rdma(output, hu_id, qpn_number)
+                    if result['rdma']:
+                        if prev_result:
+                            result = result['rdma']
+                            master_table_obj = PrettyTable(['id:qpn', 'values'])
+                            master_table_obj.align = 'l'
+                            for key, val in result.iteritems():
+                                for item in val:
+                                    table_obj = PrettyTable(['Field', 'Counter', "Counter_Diff"])
+                                    table_obj.align = 'l'
+                                    qpn_id = item['QPN']
+                                    for new_item in prev_result[key]:
+                                        if qpn_id == new_item['QPN']:
+                                            diff_item = new_item
+                                            break
+                                    for _key in sorted(item):
+                                        if isinstance(item[_key], dict):
+                                            for inner_key, inner_val in item[_key].iteritems():
+                                                if isinstance(inner_val, int):
+                                                    table_obj.add_row([_key + ":" + inner_key, inner_val,
+                                                                       int(inner_val) - int(diff_item[_key][inner_key])])
+                                        else:
+                                            if isinstance(item[_key], int):
+                                                table_obj.add_row([_key, item[_key], int(item[_key]) - int(diff_item[_key])])
+                                    master_table_obj.add_row([key + ":" + str(qpn_id), table_obj])
+                        else:
+                            result = result['rdma']
+                            master_table_obj = PrettyTable(['id:qpn', 'values'])
+                            master_table_obj.align = 'l'
+                            for key, val in result.iteritems():
+                                for item in val:
+                                    table_obj = PrettyTable(['Field', 'Counter'])
+                                    table_obj.align = 'l'
+                                    qpn_id = item['QPN']
+                                    for _key in sorted(item):
+                                        if isinstance(item[_key], dict):
+                                            for inner_key, inner_val in item[_key].iteritems():
+                                                if isinstance(inner_val, int):
+                                                    table_obj.add_row([_key + ":" + inner_key, inner_val])
+                                        else:
+                                            if isinstance(item[_key], int):
+                                                table_obj.add_row([_key, item[_key]])
+                                    master_table_obj.add_row([key + ":" + str(qpn_id), table_obj])
+                        print master_table_obj
+                        prev_result = result
+                        print "\n########################  %s ########################\n" % str(self._get_timestamp())
+                        do_sleep_for_interval()
+                    else:
+                        print "Empty Result"
+                        break
                 except KeyboardInterrupt:
                     self.dpc_client.disconnect()
                     break
@@ -3532,9 +4057,13 @@ class FlowCommands(object):
                         output['eth_vp'] = queue['flow']['dest']
                         output['eth_pkts'] = queue['packets']
                         output['eth_bytes'] = queue['bytes']
+                        output['hw_blockedcnt'] = queue['flow']['hw_blockedcnt']
+                        output['sw_blockedcnt'] = queue['flow']['sw_blockedcnt']
                     elif module_name == 'epcq':
                         output['epcq_vp'] = queue['flow']['dest']
                         output['cqe_count'] = queue['cqe_count']
+                        output['hw_blockedcnt'] = queue['flow']['hw_blockedcnt']
+                        output['sw_blockedcnt'] = queue['flow']['sw_blockedcnt']
                     elif module_name == 'virtual_interface':
                         output['vi_vp'] = queue['flow']['dest']
                         output['vi_pkts'] = queue['packets']
@@ -3555,23 +4084,32 @@ class FlowCommands(object):
                     vis = val['virtual_interface']
                     for epsq in epsqs:
                         for _key, _val in epsq.iteritems():
-                            if 'callee' in str(_key) and _val['module'] == queue:
+                            if 'callee' in str(_key) and _val['module'] in queue:
                                 output[key][_val['id']] = OrderedDict()
+                                output[key][_val['id']]['flow_id'] = epsq['flow']['id']
                                 output[key][_val['id']]['epsq_vp'] = epsq['flow']['dest']
+                                output[key][_val['id']]['epsq_dest_vp'] = epsq['callee']['dest']
                                 output[key][_val['id']]['epsq_sqe_cnt'] = epsq['sqe_count']
-
+                                output[key][_val['id']]['epsq_hw_bcnt'] = epsq['flow']['hw_blockedcnt']
+                                output[key][_val['id']]['eqsq_sw_bcnt'] = epsq['flow']['sw_blockedcnt']
                                 if queue == 'ethernet':
                                     ethernet = self._get_info_for_id(ethernets, _val['id'], module_name='ethernet')
                                     eth_vp = None
                                     eth_pkts = None
                                     eth_bytes = None
+                                    eth_hw_blockedcnt = None
+                                    eth_sw_blockedcnt = None
                                     if ethernet:
                                         eth_vp = ethernet['eth_vp']
                                         eth_pkts = ethernet['eth_pkts']
                                         eth_bytes = ethernet['eth_bytes']
+                                        eth_hw_blockedcnt = ethernet['hw_blockedcnt']
+                                        eth_sw_blockedcnt = ethernet['sw_blockedcnt']
                                     output[key][_val['id']]['eth_vp'] = eth_vp
                                     output[key][_val['id']]['eth_pkts'] = eth_pkts
                                     output[key][_val['id']]['eth_bytes'] = eth_bytes
+                                    output[key][_val['id']]['eth_hw_bcnt'] = eth_hw_blockedcnt
+                                    output[key][_val['id']]['eth_sw_bcnt'] = eth_sw_blockedcnt
 
                                     # Virtual Interface
                                     # TODO: Remove virtual interface for now
@@ -3592,6 +4130,8 @@ class FlowCommands(object):
                                     epcq = self._get_info_for_id(epcqs, _val['id'], module_name='epcq')
                                     output[key][_val['id']]['epcq_vp'] = epcq['epcq_vp']
                                     output[key][_val['id']]['epcq_cqe_cnt'] = epcq['cqe_count']
+                                    output[key][_val['id']]['epcq_hw_bcnt'] = epcq['hw_blockedcnt']
+                                    output[key][_val['id']]['epcq_sw_bcnt'] = epcq['sw_blockedcnt']
                                     '''
                                     vi = self._get_info_for_id(vis, _val['id'], module_name='virtual_interface')
                                     output[key][_val['id']]['vi_vp'] = vi['vi_vp']
@@ -3600,6 +4140,23 @@ class FlowCommands(object):
                                     '''
         return output
 
+    def _get_flow_list_diff_dict(self, parsed_result, prev_parsed_result):
+        diff_dict = OrderedDict()
+        for key, val in parsed_result.iteritems():
+            if key not in diff_dict:
+                diff_dict[key] = OrderedDict()
+            for key1, val1 in val.iteritems():
+                diff_dict[key][key1] = OrderedDict()
+                current_id_key = val1['flow_id']
+                prev_result_id_key = None
+                if key1 in prev_parsed_result[key]:
+                    prev_result_id_key = prev_parsed_result[key][key1]['flow_id']
+                if current_id_key == prev_result_id_key:
+                    for _key, _val in val1.iteritems():
+                        diff_dict[key][key1][_key] = _val
+                        if 'id' not in _key and isinstance(_val, int):
+                            diff_dict[key][key1]['d_' + _key] = int(_val) - int(prev_parsed_result[key][key1][_key])
+        return diff_dict
 
     def _print_flow_list_table(self, output_dict):
         tx_entry = output_dict.values()[0]
@@ -3615,39 +4172,69 @@ class FlowCommands(object):
                 master_table_obj.add_row(all_vals)
         print master_table_obj
 
-    def get_flow_list_pp(self, hu_id=None, tx=None, rx=None, grep_regex=None):
+    def get_flow_list_pp(self, hcf_id=None,hu_id=None, tx=None, rx=None, grep_regex=None):
         try:
-            while True:
-                try:
+            prev_tx_parsed_dict = None
+            prev_rx_parsed_dict = None
+            tx_parsed_dict = None
+            rx_parsed_dict = None
+            try:
+                while True:
                     cmd = "list"
                     output = self.dpc_client.execute(verb='flow', arg_list=[cmd])
                     if output:
                         result = output
                         if hu_id:
                             result = {}
-                            result[hu_id] = output[hu_id]
-
+                            key_list = []
+                            for key in output.keys():
+                                if hu_id == key.split(".")[0]:
+                                    key_list.append(key)
+                            if not key_list:
+                                print "hu_id %s entry not found" % hu_id
+                                return self.dpc_client.disconnect()
+                            for id in key_list:
+                                result[str(id)] = output[str(id)]
+                        elif hcf_id:
+                            result = {}
+                            if not hcf_id in output.keys():
+                                print "hcf_id %s entry not found" % hcf_id
+                                return self.dpc_client.disconnect()
+                            result[hcf_id] = output[hcf_id]
                         if tx:
                             print "\n********** Displaying tx table below **********\n"
                             tx_parsed_dict = self.get_queue_parsed_dict(result, queue='ethernet')
-                            if tx_parsed_dict:
+                            if prev_tx_parsed_dict:
+                                self._print_flow_list_table(self._get_flow_list_diff_dict(tx_parsed_dict, prev_tx_parsed_dict))
+                            elif tx_parsed_dict:
                                 self._print_flow_list_table(tx_parsed_dict)
                             else:
-                                print "No entries found for ethernet"
+                                print "No tx entries found"
+                                self.dpc_client.disconnect()
+                                break
                         if rx:
                             print "\n********** Displaying rx table below **********\n"
                             rx_parsed_dict = self.get_queue_parsed_dict(result, queue='epcq')
-                            if rx_parsed_dict:
+                            if prev_rx_parsed_dict:
+                                self._print_flow_list_table(
+                                    self._get_flow_list_diff_dict(rx_parsed_dict, prev_rx_parsed_dict))
+                            elif rx_parsed_dict:
                                 self._print_flow_list_table(rx_parsed_dict)
                             else:
-                                print "No entries found for epcq"
-                except KeyboardInterrupt:
-                    self.dpc_client.disconnect()
+                                print "No rx entries found"
+                                self.dpc_client.disconnect()
+                                break
+                    print "\n########################  %s ########################\n" % str(self._get_timestamp())
+                    prev_tx_parsed_dict = tx_parsed_dict
+                    prev_rx_parsed_dict = rx_parsed_dict
+                    do_sleep_for_interval()
+            except KeyboardInterrupt:
+                self.dpc_client.disconnect()
         except Exception as ex:
             print "ERROR: %s" % str(ex)
             self.dpc_client.disconnect()
 
-    def get_flow_list(self, grep_regex=None):
+    def get_flow_list(self, hcf_id=None,hu_id=None, grep_regex=None):
         try:
             prev_result = None
             while True:
@@ -3656,8 +4243,26 @@ class FlowCommands(object):
                 master_table_obj.header = False
                 try:
                     cmd = "list"
-                    result = self.dpc_client.execute(verb='flow', arg_list=[cmd])
-                    if result:
+                    output = self.dpc_client.execute(verb='flow', arg_list=[cmd])
+                    if output:
+                        result = output
+                        if hu_id:
+                            result = {}
+                            key_list = []
+                            for key in output.keys():
+                                if hu_id == key.split(".")[0]:
+                                    key_list.append(key)
+                            if not key_list:
+                                print "hu_id %s entry not found" % hu_id
+                                return self.dpc_client.disconnect()
+                            for id in key_list:
+                                result[str(id)] = output[str(id)]
+                        elif hcf_id:
+                            result = {}
+                            if not hcf_id in output.keys():
+                                print "hcf_id %s entry not found" % hcf_id
+                                return self.dpc_client.disconnect()
+                            result[hcf_id] = output[hcf_id]
                         if prev_result:
                             for key in sorted(result):
                                 table_obj = self._inner_table_obj(result=result[key],
@@ -3678,12 +4283,58 @@ class FlowCommands(object):
                         print master_table_obj
                         prev_result = result
                         print "\n########################  %s ########################\n" % str(self._get_timestamp())
-                        time.sleep(TIME_INTERVAL)
+                        do_sleep_for_interval()
                     else:
                         print "Empty Result"
                 except KeyboardInterrupt:
                     self.dpc_client.disconnect()
                     break
+        except Exception as ex:
+            print "ERROR: %s" % str(ex)
+            self.dpc_client.disconnect()
+
+    def _get_all_rdma(self, output_dict, hu_id, qpn_number=None):
+        result = {}
+        result['rdma'] = {}
+        for key, val in output_dict.iteritems():
+            if key.split(".")[0] == str(hu_id) and 'rdma' in val.keys():
+                if qpn_number:
+                    for item in val['rdma']:
+                        if str(qpn_number) == str(item['QPN']):
+                            result['rdma'][key] = []
+                            result['rdma'][key].append(item)
+                            break
+                else:
+                    result['rdma'][key] = output_dict[key]['rdma']
+        return result
+
+    def get_flow_list_rdma(self, hu_id, qpn_number=None, grep_regex=None):
+        try:
+            try:
+                cmd = "list"
+                output = self.dpc_client.execute(verb='flow', arg_list=[cmd])
+                result = self._get_all_rdma(output, hu_id, qpn_number)
+                if result['rdma']:
+                    result = result['rdma']
+                    master_table_obj = PrettyTable(['id:qpn', 'values'])
+                    master_table_obj.align = 'l'
+                    for key, val in result.iteritems():
+                        for item in val:
+                            table_obj = PrettyTable(['Field', 'Counter'])
+                            table_obj.align = 'l'
+                            qpn_id = item['QPN']
+                            for _key in sorted(item):
+                                if isinstance(item[_key], dict):
+                                    for inner_key, inner_val in item[_key].iteritems():
+                                        table_obj.add_row([_key + ":" + inner_key, inner_val])
+                                else:
+                                    table_obj.add_row([_key, item[_key]])
+                            master_table_obj.add_row([key + ":" + str(qpn_id), table_obj])
+                    print master_table_obj
+                else:
+                    print "Empty Result"
+            except KeyboardInterrupt:
+                self.dpc_client.disconnect()
         except Exception as ex:
             print "ERROR: %s" % str(ex)
             self.dpc_client.disconnect()
@@ -3719,7 +4370,7 @@ class FlowCommands(object):
                         print master_table_obj
                         prev_result = result
                         print "\n########################  %s ########################\n" % str(self._get_timestamp())
-                        time.sleep(TIME_INTERVAL)
+                        do_sleep_for_interval()
                     else:
                         print "Empty Result"
                 except KeyboardInterrupt:
@@ -3749,12 +4400,16 @@ class DebugCommands(PeekCommands):
                 break
         return result
 
+    def _print_val_red_color(self, val):
+        val = "\033[91m " + val + " \033[0m"
+        return val
+
     def _format_data_output(self, val):
         if val == "N/A":
             return val
         val = "{:.0f}".format(val * 100)
         if int(val) >= 90:
-            val = "\033[92m " + val + " \033[0m"
+            val = self._print_val_red_color(val)
         return val
 
 
@@ -3823,7 +4478,7 @@ class DebugCommands(PeekCommands):
                     print master_table_obj
                     print "\n########################  %s ########################\n" % \
                           str(self._get_timestamp())
-                    time.sleep(TIME_INTERVAL)
+                    do_sleep_for_interval()
                 except KeyboardInterrupt:
                     self.dpc_client.disconnect()
                     break
@@ -3857,7 +4512,7 @@ class DebugCommands(PeekCommands):
                         print table_obj
                         print "\n########################  %s ########################\n" % \
                               str(self._get_timestamp())
-                        time.sleep(TIME_INTERVAL)
+                        do_sleep_for_interval()
                     else:
                         if get_result_only:
                             return cmd, "Empty Result"

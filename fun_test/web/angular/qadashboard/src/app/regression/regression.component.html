@@ -68,7 +68,7 @@
 
             </div>
 
-            <div  *ngIf="fetchedSuites" style="width: 50%; margin-bottom: 10px; margin-top: 10px">
+            <div *ngIf="fetchedSuites" style="width: 50%; margin-bottom: 10px; margin-top: 10px">
               <label>Suite paths</label>
               <ng-multiselect-dropdown
                 [placeholder]="'Select suite paths'"
@@ -258,25 +258,25 @@
                     </ng-template>
                     <ng-container>
                       <span
-                        (click)="reRunClick(suiteExecution.fields.execution_id, suiteExecution.fields.suite_path, null, false)"
+                        (click)="reRunClick(suiteExecution, null, false)"
                         class="dropdown-item anchor-button pseudo-anchor">
                         Re-run all
                         <span class="dropdown-item-sub-text"> (This will rebuild the image on Jenkins again)</span>
                       </span>
                       <span
-                          (click)="reRunClick(suiteExecution.fields.execution_id, suiteExecution.fields.suite_path, ['FAILED', 'NOT_RUN'], false)"
+                          (click)="reRunClick(suiteExecution, ['FAILED', 'NOT_RUN'], false)"
                           class="dropdown-item anchor-button pseudo-anchor">
                         Re-run failed
                         <span class="dropdown-item-sub-text"> (This will rebuild the image on Jenkins again)</span>
                       </span>
                       <span *ngIf="suiteExecution.fields.test_bed_type !== 'simulation'"
-                        (click)="reRunClick(suiteExecution.fields.execution_id, suiteExecution.fields.suite_path, null, true)"
+                        (click)="reRunClick(suiteExecution, null, true)"
                         class="dropdown-item anchor-button pseudo-anchor">
                         Quick re-run all
                         <span class="dropdown-item-sub-text"> (This will not rebuild the image on Jenkins again. Instead, it will re-use the image from original job)</span>
                       </span>
                       <span *ngIf="suiteExecution.fields.test_bed_type !== 'simulation'"
-                        (click)="reRunClick(suiteExecution.fields.execution_id, suiteExecution.fields.suite_path, ['FAILED', 'NOT_RUN'], true)"
+                        (click)="reRunClick(suiteExecution, ['FAILED', 'NOT_RUN'], true)"
                         class="dropdown-item anchor-button pseudo-anchor">
                         Quick re-run failed
                         <span class="dropdown-item-sub-text"> (This will not rebuild the image on Jenkins again. Instead, it will re-use the image from original job)</span>
@@ -379,6 +379,12 @@
             </tr>
             <tr *ngIf="suiteExecution.showingDetails">
               <td colspan="18">
+                <ng-container *ngIf="suiteExecution.fields.suite_id">
+                  Suite ID: {{ suiteExecution.fields.suite_id }} <span class="pseudo-anchor" (click)="onSuiteDetail(suiteExecution.fields.suite_id)">...suite details</span>
+                  <div>Name: {{ suiteMap[suiteExecution.fields.suite_id].name }}</div>
+                  <div>Description:</div>
+                  <div [innerHTML]="suiteMap[suiteExecution.fields.suite_id].short_description | safeHtml"></div>
+                </ng-container>
                 <ng-container *ngIf="(suiteExecution.parsedInputs | keyvalue)?.length">
                   <app-section-horizontal-line [text]="'Inputs'"></app-section-horizontal-line>
                   <ngx-json-viewer [json]="suiteExecution.parsedInputs" [expanded]="false"></ngx-json-viewer>
@@ -449,6 +455,12 @@
           </tr>
           <tr *ngIf="suiteExecution.showingDetails">
             <td colspan="8">
+              <ng-container *ngIf="suiteExecution.fields.suite_id">
+                Suite ID: {{ suiteExecution.fields.suite_id }} <span class="pseudo-anchor" (click)="onSuiteDetail(suiteExecution.fields.suite_id)">...suite details</span>
+                <div>Name: {{ suiteMap[suiteExecution.fields.suite_id].name }}</div>
+                <div>Description:</div>
+                <div [innerHTML]="suiteMap[suiteExecution.fields.suite_id].short_description | safeHtml"></div>
+              </ng-container>
               <ng-container *ngIf="(suiteExecution.parsedInputs | keyvalue)?.length">
                 <div><b>Inputs</b></div>
 

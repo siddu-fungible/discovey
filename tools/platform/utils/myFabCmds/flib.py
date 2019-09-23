@@ -316,7 +316,7 @@ pci_table = {
 @task 
 def show_dev():
     """Query fungible device on pcie from COMe system"""
-    return sudo('lspci -d1dad: -nnmm')
+    return sudo('lspci -d1dad: -Dnnmm')
 
 @roles('come')
 @task 
@@ -437,15 +437,11 @@ def _make_gateway(index=0):
 ## flash image ##
 @roles('bmc')
 @task
-def flashF(index=0, force=False, type=None, image=None, version=None):
+def flashF(index=0, flags=False, type=None, image=None, version=None):
     """ flash image of chip[index] over type tftp with provided arguments """
     global child
     CCHUID = 3 - int(index)
-    #bootargs = 'cc_huid={} sku=SKU_FS1600_{} app=fw_upgrade boot-reserved=0x2000000@0x12000000 '.format(CCHUID, index)
-    if force:
-        bootargs = 'app=fw_upgrade --active boot-reserved=0x2000000@0x12000000 '
-    else:
-        bootargs = 'app=fw_upgrade boot-reserved=0x2000000@0x12000000 '
+    bootargs = 'cc_huid={} sku=SKU_FS1600_{} app=fw_upgrade syslog=6 boot-reserved=0x2000000@0x12000000 '.format(CCHUID, index)
     #print bootargs
 
     command = 'tftpboot'
@@ -453,14 +449,26 @@ def flashF(index=0, force=False, type=None, image=None, version=None):
         sys.exit("image-path and version are multually exclusive ...")
 
     if version:
-        if type not in [ 'eepr', 'host', 'emmc' ]:
-            sys.exit("image-type %s not-supported only=['eepr', 'host', 'emmc' ] ..." % type)
+        if type not in [ 'pufr', 'frmw', 'eepr', 'host', 'emmc', 'sbpf', 'husd', 'husm', 'hbsb' ]:
+            sys.exit("image-type %s not-supported only=['pufr', 'frmw', 'sbpf', 'eepr', 'host', 'emmc', 'husd', 'husm', 'hbsb' ] ..." % type)
         elif type == 'eepr':
             fimage='funsdk-release/{}/eeprom_fs1600_{}_packed.bin'.format(version, index)
         elif type == 'host':
             fimage='funsdk-release/{}/host_firmware_packed.bin'.format(version)
         elif type == 'emmc':
             fimage='funsdk-release/{}/emmc_image.bin'.format(version)
+        elif type == 'sbpf':
+            fimage='funsdk-release/{}/esecure_firmware_all.bin'.format(version)
+        elif type == 'pufr':
+            fimage='funsdk-release/{}/esecure_puf_rom_packed.bin'.format(version)
+        elif type == 'frmw':
+            fimage='funsdk-release/{}/esecure_firmware_packed.bin'.format(version)
+        elif type == 'husd':
+            fimage='funsdk-release/{}/hu_sds.bin'.format(version)
+        elif type == 'husm':
+            fimage='funsdk-release/{}/hu_sbm.bin'.format(version)
+        elif type == 'hbsb':
+            fimage='funsdk-release/{}/hbm_sbus.bin'.format(version)
         else:
             sys.exit("image-type %s not-supported ..." % type)
     elif image:
@@ -474,7 +482,8 @@ def flashF(index=0, force=False, type=None, image=None, version=None):
 
     st = os.stat('/tmp/wgetfile')
     fsize = st.st_size
-    bootargs += 'fw-upgrade-{}={}@0xa800000080000000'.format(type, fsize)
+    FLAGS = "" if not flags else ":%s" % flags
+    bootargs += 'fw-upgrade-{}={}@0xa800000080000000{}'.format(type, fsize, FLAGS)
     print bootargs
 
     child = connectF(index, True)
@@ -509,6 +518,53 @@ def flashF(index=0, force=False, type=None, image=None, version=None):
         SESSION_ACTIVE_MSG = "\n\ntimeout: Seem DPU are actively flashed image. monitor nc {} 999{}\n\n".format(env.host, index)
         sys.exit(SESSION_ACTIVE_MSG)
         child.close()
+
+@roles('come')
+#@task
+def fwupgrade(index=0, flags=False, type=None, image=None, version=None):
+    """ flash image of chip[index] over type tftp with provided arguments """
+    global child
+    if image and version:
+        sys.exit("image-path and version are multually exclusive ...")
+    if '"Unassigned class [ff00]" "Vendor [1dad]"' not in show_dev():
+        sys.exit("Fungible control function is NOT discovered ...")
+
+
+@roles('come')
+#@task
+def deploy_dpcsh_install_dependencies():
+    with settings(hide('stdout', 'stderr'), warn_only=True):
+        o = run('mkdir -p ~/tools/dpudebug')
+        with cd('~/tools/dpudebug'):
+            run('wget http://dochub.fungible.local/doc/jenkins/funsdk/latest/Linux/dpcsh.tgz')
+            run('tar xvf dpcsh.tgz')
+
+@roles('come')
+#@task
+def check_dpcsh_install_dependencies():
+    """ check depencencies for dpcsh """
+    dpcsh_directory = '/home/fun/tools/dpudebug/bin/Linux'
+    dpcsh_binary = dpcsh_directory + '/dpcsh'
+    if not exists(dpcsh_binary, use_sudo=True):
+        deploy_dpcsh_install_dependencies()
+
+@roles('come')
+@task
+def dpcshF(index=0, cmd=None):
+    """ execute a dpcsh command over NVMe e.g dpcshF:cmd="peek storage" """
+    dpcsh_directory = '/home/fun/tools/dpudebug/bin/Linux'
+    O = show_dev()
+    if '[0108]" "Vendor [1dad]"' not in O:
+        sys.exit("Fungible NVMe control function is NOT discovered ...")
+    #if index == 0 and '0000:04:00.2' not in O:
+    #    sys.exit("Fungible DPU#0 control function is NOT discovered ...")
+    #if index == 1 and '0000:06:00.2' not in O:
+    #    sys.exit("Fungible DPU#1 control function is NOT discovered ...")
+    check_dpcsh_install_dependencies()
+    dev = '/dev/nvme0' if (index == 0 and '0000:04:00.2' in O) else '/dev/nvme1' if (index == 1 and '0000:06:00.2' in O) else '/dev/null'
+    with cd(dpcsh_directory):
+        return sudo('echo "%s" | ./dpcsh --pcie_nvme_sock=%s' % (cmd, dev))
+
 
 @roles('bmc')
 @task

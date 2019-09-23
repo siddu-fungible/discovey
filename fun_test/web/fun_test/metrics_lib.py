@@ -21,9 +21,18 @@ logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 from datetime import datetime, timedelta
 from web.fun_test.site_state import *
 from web.fun_test.metrics_models import MetricChart, MileStoneMarkers, LastMetricId
+from web.fun_test.models import InterestedMetrics, PerformanceUserWorkspaces
 from fun_settings import TEAM_REGRESSION_EMAIL
+from web.web_global import JINJA_TEMPLATE_DIR
+from jinja2 import Environment, FileSystemLoader
+from lib.utilities.send_mail import *
+from web.fun_test.web_interface import get_performance_url
+from django.utils import timezone
 
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
+atomic_url = get_performance_url() + "/atomic"
+negative_threshold = -5
+positive_threshold = 5
 
 
 class MetricLib():
@@ -355,6 +364,83 @@ class MetricLib():
             child_dict = self.get_dict(chart=child_chart)
             root_dict["children"].append(child_dict)
         return root_dict
+
+    def _send_email(self, email, subject, reports, report_name="performance_drop_report.html"):
+        file_loader = FileSystemLoader(JINJA_TEMPLATE_DIR)
+        env = Environment(loader=file_loader)
+        template = env.get_template(report_name)
+        content = template.render(all_reports=reports)
+        return send_mail(to_addresses=email, subject=subject, content=content)
+
+    def _generate_report(self, workspace_id):
+        reports = []
+        metrics = InterestedMetrics.objects.filter(workspace_id=workspace_id)
+        for metric in metrics:
+            self._set_report_fields(lineage=metric.lineage, metric_id=metric.metric_id, reports=reports, root=True)
+        return reports
+
+    def _set_report_fields(self, lineage, metric_id, reports, root=False):
+        chart = MetricChart.objects.get(metric_id=metric_id)
+        if not root:
+            lineage += "/" + chart.chart_name
+        if chart.leaf:
+            data_sets = chart.get_data_sets()
+            metric_model_name = chart.metric_model_name
+            metric_model = app_config.get_metric_models()[metric_model_name]
+            report = {}
+            report["chart_name"] = chart.chart_name
+            report["lineage"] = lineage
+            report["jira_ids"] = chart.get_jira_ids()
+            report["url"] = atomic_url + "/" + str(metric_id)
+            report["positive"] = chart.positive
+            report["data_sets"] = []
+            for data_set in data_sets:
+                entries = metric_model.objects.filter(**data_set["inputs"]).order_by("-input_date_time")[:2]
+                output_name = data_set["output"]["name"]
+                name = data_set["name"]
+                if len(entries) == 2:
+                    data_set_dict = {}
+                    self._set_dict(entries=entries, data_set_dict=data_set_dict, output_name=output_name, name=name)
+                    if data_set_dict["today"] and data_set_dict["yesterday"]:
+                        percentage = self._calculate_percentage(current=data_set_dict["today"],
+                                                                previous=data_set_dict[
+                                                                    "yesterday"])
+                        if chart.positive and percentage < negative_threshold:
+                            self._set_percentage(data_set_dict=data_set_dict, report=report, percentage=percentage)
+                        elif not chart.positive and percentage > positive_threshold:
+                            self._set_percentage(data_set_dict=data_set_dict, report=report, percentage=percentage)
+
+            if len(report["data_sets"]):
+                reports.append(report)
+        else:
+            children = chart.get_children()
+            for child in children:
+                self._set_report_fields(lineage=lineage, metric_id=int(child), reports=reports, root=False)
+
+    def _calculate_percentage(self, current, previous):
+        percent_num = (float(current - previous) / float(previous)) * 100.0
+        percentage = round(percent_num, 2)
+        return percentage
+
+    def _set_dict(self, entries, data_set_dict, output_name, name):
+        data_set_dict["name"] = name
+        data_set_dict["today"] = getattr(entries[0], output_name)
+        data_set_dict["yesterday"] = getattr(entries[1], output_name)
+        data_set_dict["today_unit"] = getattr(entries[0], output_name + "_unit")
+        data_set_dict["yesterday_unit"] = getattr(entries[1], output_name + "_unit")
+        data_set_dict["today_date"] = str(timezone.localtime(getattr(entries[0], "input_date_time")))
+        data_set_dict["yesterday_date"] = str(timezone.localtime(getattr(entries[1], "input_date_time")))
+
+    def _set_percentage(self, data_set_dict, report, percentage):
+        percentage = str(percentage) + '%'
+        if "-" not in percentage:
+            percentage = "+" + percentage
+        data_set_dict["percentage"] = percentage
+        report["data_sets"].append(data_set_dict)
+
+    def _get_email_address(self, workspace_id):
+        workspace = PerformanceUserWorkspaces.objects.get(id=workspace_id)
+        return workspace.email
 
 
 if __name__ == "__main__":

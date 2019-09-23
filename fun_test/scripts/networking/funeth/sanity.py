@@ -130,13 +130,13 @@ def setup_nu_host(funeth_obj):
 
 def setup_hu_host(funeth_obj, update_driver=True, is_vm=False, tx_offload=True):
     funsdk_commit = funsdk_bld = driver_commit = driver_bld = None
+    if is_vm:
+        lspci_result = funeth_obj.lspci(check_pcie_width=False)
+    else:
+        lspci_result = funeth_obj.lspci(check_pcie_width=True)
+    fun_test.test_assert(lspci_result, 'Fungible Ethernet controller is seen.')
     if update_driver:
         funeth_obj.setup_workspace()
-        if is_vm:
-            lspci_result = funeth_obj.lspci(check_pcie_width=False)
-        else:
-            lspci_result = funeth_obj.lspci(check_pcie_width=True)
-        fun_test.test_assert(lspci_result, 'Fungible Ethernet controller is seen.')
         update_src_result = funeth_obj.update_src(parallel=True)
         if update_src_result:
             funsdk_commit, funsdk_bld, driver_commit, driver_bld = update_src_result
@@ -541,6 +541,7 @@ def collect_stats(when='before'):
     fun_test.log_module_filter("random_module")
     try:
         perf_utils.collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict, version, when=when)
+        fun_test.log_module_filter_disable()
     except:
         fun_test.log_module_filter_disable()
 

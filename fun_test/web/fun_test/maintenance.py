@@ -1171,7 +1171,7 @@ if __name__ == "__main_qdepth256__":
         final_dict = ml.get_dict(chart=latency_charts)
         print json.dumps(final_dict, indent=4)
 
-if __name__ == "__main__":
+if __name__ == "__main_attach_dag__":
     dag = {}
     owner_info = "Radhika Naik (radhika.naik@fungible.com)"
     source = "Unknown"
@@ -1234,4 +1234,162 @@ if __name__ == "__main__":
     root_chart.fix_children_weights()
     final_dict = ml.get_dict(chart=root_chart)
     print json.dumps(final_dict)
+
+if __name__ == "__main_inspur_fix__":
+    charts = MetricChart.objects.all()
+    for chart in charts:
+        if "inspur" in chart.internal_chart_name and chart.leaf:
+            if "latency" in chart.internal_chart_name:
+                chart.positive = False
+            elif "iops" in chart.internal_chart_name:
+                chart.positive = True
+            elif "ratio" in chart.internal_chart_name:
+                chart.positive = True
+            elif "time" in chart.internal_chart_name:
+                chart.positive = False
+            chart.save()
+            print "fixed the chart: {}, {}".format(chart.chart_name, chart.internal_chart_name)
+
+if __name__ == "__main__apple":
+    internal_chart_names = ["apple_rand_read_mrsw_tcp_output_bandwidth", "apple_rand_read_mrsw_tcp_output_latency", "apple_rand_read_mrsw_tcp_output_iops"]
+    for internal_chart_name in internal_chart_names:
+        chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
+        mmt = MileStoneMarkers(metric_id=chart.metric_id, milestone_date=datetime(year=2019, month=9, day=8),
+                               milestone_name="Moved to new host")
+        mmt.save()
+
+
+if __name__ == "__main_inspur_iodepth_96__":
+    # underscore problem
+    metric_ids = [318, 319]
+    for metric_id in metric_ids:
+        # changing the input_metric_name in the filter
+        chart = MetricChart.objects.get(metric_id=metric_id)
+        data_sets = json.loads(chart.data_sets)
+        metric_name = data_sets[0]['inputs']['input_metric_name']
+        data_sets[0]['inputs']['input_metric_name'] = metric_name.replace(' ', '_')
+        print(data_sets)
+        chart.data_sets = json.dumps(data_sets)
+        chart.save()
+
+        # changing the input_metric_name in the data base
+        metric_model_name = chart.metric_model_name
+        print (metric_model_name)
+        model_data = eval(metric_model_name).objects.all()
+        for each_data in model_data:
+            input_metric_name = each_data.input_metric_name
+            each_data.input_metric_name = input_metric_name.replace(' ', '_')
+            each_data.save()
+
+
+    # Inspur charts added vol 4,8
+
+    metric_ids = [803, 804, 805, 806, 807, 808, 809, 810, 811, 812]
+    for metric_id in metric_ids:
+        chart = MetricChart.objects.get(metric_id=metric_id)
+        data_sets = json.loads(chart.data_sets)
+        new_data_sets=[]
+        for each_data in data_sets:
+            for vol in [4, 8]:
+                inputs = each_data['inputs'].copy()
+                output = each_data['output'].copy()
+                name = each_data['name']
+                new_each_data = {}
+
+                input_fio_job_name = inputs['input_fio_job_name']
+                iodepth = re.search(r'write_(\d+)', input_fio_job_name).group(1)
+                inputs['input_fio_job_name'] = input_fio_job_name.replace('write_{}'.format(iodepth),
+                                                                          "write_iodepth_{}_vol_{}".format(iodepth, vol))
+                new_name = re.sub(r'\d+ vol', "{} vol".format(vol), name)
+                output["reference"] = -1
+                new_each_data['inputs'] = inputs
+                new_each_data['name'] = new_name
+                new_each_data['output'] = output
+                # print (new_each_data)
+                new_data_sets.append(new_each_data.copy())
+        new_data_sets[2], new_data_sets[1] = new_data_sets[1], new_data_sets[2]
+        data_sets += new_data_sets
+        for i in data_sets:
+            print i
+        print ("next")
+        chart.data_sets = json.dumps(data_sets)
+        chart.save()
+
+    # Inspur charts iodepth 96
+
+    internal_chart_name = "inspur_rand_read_write_qd96_8k_block_output_iops"
+    metric_model_name = "BltVolumePerformance"
+    description = "TBD"
+    owner_info = "Ravi Hulle (ravi.hulle@fungible.com)"
+    source = "https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/storage/" \
+             "ec_inspur_fs_teramark_multivolume.py"
+    positive = True
+    y1_axis_title = PerfUnit.UNIT_OPS
+    platform = FunPlatform.F1
+    base_line_date = datetime(year=2019, month=5, day=15, minute=0, hour=0, second=0)
+    chart_name = 'IOPS, QDepth=96'
+    data_sets = []
+    for vol in [4, 8]:
+        input_fio_job_name = "inspur_8k_random_read_write_iodepth_96_vol_{}".format(vol)
+        inputs = {
+            "input_platform": platform,
+            "input_fio_job_name": input_fio_job_name
+        }
+        for operation in ["read", "write"]:
+            one_data_set = {}
+            name = "{}({} vols)".format(operation, vol)
+            output_name = "output_{}_iops".format(operation)
+            output = {
+                "name": output_name,
+                "unit": y1_axis_title,
+                "min": 0,
+                "max": -1,
+                "expected": -1,
+                "reference": -1
+            }
+            one_data_set["name"] = name
+            one_data_set["inputs"] = inputs
+            one_data_set["output"] = output
+            data_sets.append(one_data_set.copy())
+
+    iops_charts = ml.create_leaf(chart_name=chart_name,
+                                 internal_chart_name=internal_chart_name,
+                                 data_sets=data_sets,
+                                 leaf=True,
+                                 description=description,
+                                 owner_info=owner_info,
+                                 source=source,
+                                 positive=positive,
+                                 y1_axis_title=y1_axis_title,
+                                 visualization_unit=y1_axis_title,
+                                 metric_model_name=metric_model_name,
+                                 base_line_date=base_line_date,
+                                 work_in_progress=False,
+                                 children=[],
+                                 jira_ids=[],
+                                 platform=platform,
+                                 peer_ids=[],
+                                 creator=TEAM_REGRESSION_EMAIL,
+                                 workspace_ids=[])
+
+    final_dict = ml.get_dict(chart=iops_charts)
+    print json.dumps(final_dict, indent=4)
+
+if __name__ == "__main__":
+    metric_ids = [273, 287, 279, 1126, 1127, 1128]
+    for metric_id in metric_ids:
+        chart = MetricChart.objects.get(metric_id=metric_id)
+        data_sets = chart.get_data_sets()
+        data_set = data_sets[0]
+        data_set["name"] = "trailingrst_jpg"
+        data_set["inputs"]["input_image"] = "trailingrst_jpg"
+        data_set["output"]["expected"] = -1
+        data_set["output"]["reference"] = -1
+        data_sets = chart.get_data_sets()
+        data_sets.append(data_set)
+        chart.data_sets = json.dumps(data_sets)
+        chart.save()
+    print "set trailingrst dataset for jpeg metrics"
+
+
 

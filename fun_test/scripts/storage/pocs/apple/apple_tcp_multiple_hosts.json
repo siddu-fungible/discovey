@@ -6,7 +6,7 @@
     "host_start_index": 0,
     "update_workspace": false,
     "update_deploy_script": false,
-    "funcp_mode": "ep",
+    "funcp_mode": ["ep", "storage"],
     "num_f1_per_fs": 1,
     "num_f1s": 1,
     "num_hosts": 10,
@@ -40,6 +40,7 @@
     "warm_up_fio_cmd_args": {"bs": "32k", "iodepth": 1, "rw": "write", "direct": 1, "prio": 0,
                              "size": "64G", "cpus_allowed": "1-7", "numjobs": 1, "timeout": 600},
     "fio_cmd_args": {"ioengine": "mmap", "size": "64G", "direct": 1, "time_based": 1, "runtime": 1200,
+                      "norandommap": "NO_VALUE", "randrepeat": 0,
                       "thread": 1, "group_reporting": 1, "prio":  0, "timeout": 1400},
     "fio_modes": ["randread"],
     "expected_fio_result": {

@@ -194,7 +194,7 @@ class FunTest:
         self.local_settings = {}
         if self.suite_execution_id:
             self.suite_execution_id = int(self.suite_execution_id)
-
+            self.set_my_process_id()
         print("Suite Execution Id: {}".format(self.get_suite_execution_id()))
 
         if args.test_case_ids:
@@ -318,8 +318,12 @@ class FunTest:
 
     def _prepare_build_parameters(self):
         tftp_image_path = self.get_job_environment_variable("tftp_image_path")
+        with_stable_master = self.get_job_environment_variable("with_stable_master")
+
         if tftp_image_path:
             self.build_parameters["tftp_image_path"] = tftp_image_path
+        elif with_stable_master:
+            self.build_parameters["with_stable_master"] = with_stable_master
         else:
             # Check if it was stored by a previous script
             tftp_image_path = self.get_stored_environment_variable(variable_name="tftp_image_path")
@@ -381,6 +385,13 @@ class FunTest:
                 result = stored_environment
         return result
 
+    def get_rich_inputs(self):
+        rich_inputs = None
+        if fun_test.suite_execution_id:
+            suite_execution = models_helper.get_suite_execution(suite_execution_id=fun_test.suite_execution_id)
+            rich_inputs = suite_execution.rich_inputs
+        return rich_inputs
+
     def get_suite_run_time_environment_variable(self, name):
         run_time = models_helper.get_suite_run_time(execution_id=self.suite_execution_id)
         result = run_time.get(name, None)
@@ -391,6 +402,14 @@ class FunTest:
             suite_execution = models_helper.get_suite_execution(suite_execution_id=self.suite_execution_id)
             if suite_execution:
                 suite_execution.add_run_time_variable(variable, value)
+
+    def set_my_process_id(self):
+        run_time_process_id = self.get_suite_run_time_environment_variable("process_id")
+        if not run_time_process_id:
+            self.set_suite_run_time_environment_variable("process_id", {self.log_prefix: os.getpid()})
+        else:
+            run_time_process_id[self.log_prefix] = os.getpid()
+            self.set_suite_run_time_environment_variable("process_id", run_time_process_id)
 
     def get_job_environment_variable(self, variable):
         result = None
@@ -540,6 +559,13 @@ class FunTest:
 
         fun_test.log("Join complete for Thread-id: {}".format(fun_test_thread_id))
         return True
+
+
+    def fetch_stable_master(self):
+        from lib.system.build_helper import BuildHelper
+        result = None
+        bh = BuildHelper(parameters=self.build_parameters)
+        return result
 
     def build(self):
         from lib.system.build_helper import BuildHelper
@@ -1102,12 +1128,12 @@ class FunTest:
 
     def exit_gracefully(self, sig, _):
         self.critical("Unexpected Exit")
-
-        if fun_test.suite_execution_id:
+        if self.suite_execution_id:
             models_helper.update_test_case_execution(test_case_execution_id=self.current_test_case_execution_id,
                                                      suite_execution_id=self.suite_execution_id,
                                                      result=self.FAILED)
             signal.signal(signal.SIGINT, self.original_sig_int_handler)
+
         sys.exit(-1)
 
     def _get_flat_file_name(self, path):
@@ -1408,6 +1434,9 @@ class FunTestScript(object):
                                                                tags=suite_execution_tags,
                                                                inputs=fun_test.get_job_inputs())
                     test_case.execution_id = te.execution_id
+
+            if fun_test.build_parameters and "with_stable_master" in fun_test.build_parameters and fun_test.build_parameters["with_stable_master"]:
+                fun_test.test_assert(fun_test.fetch_stable_master(), "Fetch stable master image from dochub")
 
             tftp_image_path_provided = "tftp_image_path" in fun_test.build_parameters and fun_test.build_parameters["tftp_image_path"]
             if fun_test.is_with_jenkins_build() and fun_test.suite_execution_id and not tftp_image_path_provided:

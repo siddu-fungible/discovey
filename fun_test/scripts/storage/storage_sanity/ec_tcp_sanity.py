@@ -142,6 +142,16 @@ class ECVolumeSanityScript(FunTestScript):
         # Set syslog level
         # set_syslog_level(storage_controller, fun_test.shared_variables['syslog_level'])
 
+        self.pcap_pid = host_obj.tcpdump_capture_start(interface=test_interface_name,
+                                                  tcpdump_filename="/tmp/nvme_connect.pcap",
+                                                  snaplen=1500)
+        if self.pcap_pid:
+            fun_test.log("Started packet capture in {}".format(self.end_host_name))
+            self.pcap_started = True
+            self.pcap_stopped = False
+        else:
+            fun_test.critical("Unable to start packet capture in {}".format(self.end_host_name))
+
         # execute nvme connect
         nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {}".format(self.attach_transport.lower(),
                                                                          test_network["f1_loopback_ip"],
@@ -150,9 +160,13 @@ class ECVolumeSanityScript(FunTestScript):
         if hasattr(self, "io_queues") and self.io_queues:
             nvme_connect_cmd += " -i {}".format(self.io_queues)
 
-        nvme_connect_status = end_host.sudo_command(command=nvme_connect_cmd, timeout=60)
+        nvme_connect_status = end_host.sudo_command(command=nvme_connect_cmd, timeout=70)
         fun_test.log("nvme_connect_status output is: {}".format(nvme_connect_status))
         fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(), message="NVME Connect Status")
+
+        if self.pcap_started:
+            host_obj.tcpdump_capture_stop(process_id=self.pcap_pid)
+            self.pcap_stopped = True
 
         # check nvme device is visible on end host
         fetch_nvme = fetch_nvme_device(end_host, self.ns_id)
@@ -165,12 +179,33 @@ class ECVolumeSanityScript(FunTestScript):
                                                     **self.warm_up_fio_cmd_args), "Pre-populating the volume")
         fun_test.shared_variables["setup_created"] = True
 
+        vol_details = []
+        for num in range(self.ec_info["num_volumes"]):
+            vol_group = {}
+            vol_group[self.ec_info["volume_types"]["ndata"]] = self.ec_info["uuids"][num]["blt"]
+            vol_group[self.ec_info["volume_types"]["ec"]] = self.ec_info["uuids"][num]["ec"]
+            vol_group[self.ec_info["volume_types"]["jvol"]] = [self.ec_info["uuids"][num]["jvol"]]
+            vol_group[self.ec_info["volume_types"]["lsv"]] = self.ec_info["uuids"][num]["lsv"]
+            vol_details.append(vol_group)
+        fun_test.log("vol_details is: {}".format(vol_details))
+        fun_test.shared_variables["vol_details"] = vol_details
+
     def cleanup(self):
+        if self.pcap_started:
+            if not self.pcap_stopped:
+                self.end_host.tcpdump_capture_stop(process_id=self.pcap_pid)
+            pcap_post_fix_name = "{}_nvme_connect.pcap".format(self.end_host_name)
+            pcap_artifact_file = fun_test.get_test_case_artifact_file_name(post_fix_name=pcap_post_fix_name)
+
+            fun_test.scp(source_port=self.end_host.ssh_port, source_username=self.end_host.ssh_username,
+                         source_password=self.end_host.ssh_password, source_ip=self.end_host.host_ip,
+                         source_file_path="/tmp/nvme_connect.pcap", target_file_path=pcap_artifact_file)
+            fun_test.add_auxillary_file(description="Host {} NVME connect pcap".format(self.end_host_name),
+                                        filename=pcap_artifact_file)
         try:
-            if fun_test.shared_variables['setup_created']:
+            if fun_test.shared_variables["setup_created"]:
                 ctrlr_uuid = fun_test.shared_variables["ctrlr_uuid"]
                 self.end_host.sudo_command("nvme disconnect -d {}".format(fun_test.shared_variables['volume_name']))
-
                 # disconnect device from controller
                 fun_test.test_assert(self.storage_controller.detach_volume_from_controller(
                     ctrlr_uuid=ctrlr_uuid,
@@ -211,6 +246,12 @@ class ECTcpSanityTestcase(FunTestCase):
             setattr(self, k, v)
 
     def run(self):
+        testcase = self.__class__.__name__
+        self.test_mode = testcase[5:].lower()
+
+        vol_details = fun_test.shared_variables["vol_details"]
+        self.storage_controller = fun_test.shared_variables["storage_controller"]
+
         mode = self.fio_mode
         end_host = fun_test.shared_variables["end_host"]
         nvme_block_device = fun_test.shared_variables['nvme_block_device']
@@ -218,16 +259,91 @@ class ECTcpSanityTestcase(FunTestCase):
         fun_test.simple_assert(nvme_block_device, "nvme block device available for test")
         for combo in fio_numjob_iodepths:
             num_jobs, iodepth = eval(combo)
+
+            # Starting stats collection
+            file_suffix = "{}_iodepth_{}.txt".format(self.test_mode, (int(iodepth) * int(num_jobs)))
+            for index, stat_detail in enumerate(self.stats_collect_details):
+                func = stat_detail.keys()[0]
+                self.stats_collect_details[index][func]["count"] = int(
+                    self.fio_cmd_args["runtime"] / self.stats_collect_details[index][func]["interval"])
+                if func == "vol_stats":
+                    self.stats_collect_details[index][func]["vol_details"] = vol_details
+            fun_test.log("Different stats collection thread details for the current IO depth {} before starting "
+                         "them:\n{}".format((int(iodepth) * int(num_jobs)), self.stats_collect_details))
+            self.storage_controller.verbose = False
+            stats_obj = CollectStats(self.storage_controller)
+            stats_obj.start(file_suffix, self.stats_collect_details)
+            fun_test.log("Different stats collection thread details for the current IO depth {} after starting "
+                         "them:\n{}".format((int(iodepth) * int(num_jobs)), self.stats_collect_details))
+
             fio_job_name = "{}_{}_{}".format(self.fio_job_name, mode, iodepth * num_jobs)
-            fio_output = end_host.pcie_fio(filename=nvme_block_device,
-                                           rw=mode,
-                                           numjobs=num_jobs,
-                                           iodepth=iodepth,
-                                           name=fio_job_name,
-                                           **self.fio_cmd_args)
-            fun_test.log("FIO Command Output:{}".format(fio_output))
-            fun_test.test_assert(fio_output,
-                                 "Fio {} test for numjobs {} & iodepth {}".format(mode, num_jobs, iodepth))
+            try:
+                fio_output = end_host.pcie_fio(filename=nvme_block_device,
+                                               rw=mode,
+                                               numjobs=num_jobs,
+                                               iodepth=iodepth,
+                                               name=fio_job_name,
+                                               **self.fio_cmd_args)
+                fun_test.log("FIO Command Output:{}".format(fio_output))
+                fun_test.test_assert(fio_output,
+                                     "Fio {} test for numjobs {} & iodepth {}".format(mode, num_jobs, iodepth))
+            except Exception as ex:
+                fun_test.critical(str(ex))
+                fun_test.log("FIO Command Output:\n {}".format(fio_output))
+            finally:
+                # Stopping stats collection
+                stats_obj.stop(self.stats_collect_details)
+                self.storage_controller.verbose = True
+
+            for index, value in enumerate(self.stats_collect_details):
+                for func, arg in value.iteritems():
+                    filename = arg.get("output_file")
+                    if filename:
+                        if func == "vp_utils":
+                            fun_test.add_auxillary_file(description="F1 VP Utilization - {} - IO depth {}".
+                                                        format(mode, iodepth), filename=filename)
+                        if func == "per_vp":
+                            fun_test.add_auxillary_file(description="F1 Per VP Stats - {} - IO depth {}".
+                                                        format(mode, iodepth), filename=filename)
+                        if func == "resource_bam_args":
+                            fun_test.add_auxillary_file(description="F1 Resource bam stats - {} - IO depth {}".
+                                                        format(mode, iodepth), filename=filename)
+                        if func == "vol_stats":
+                            fun_test.add_auxillary_file(description="Volume Stats - {} - IO depth {}".
+                                                        format(mode, iodepth), filename=filename)
+                        if func == "vppkts_stats":
+                            fun_test.add_auxillary_file(description="VP Pkts Stats - {} - IO depth {}".
+                                                        format(mode, iodepth), filename=filename)
+                        if func == "psw_stats":
+                            fun_test.add_auxillary_file(description="PSW Stats - {} - IO depth {}".
+                                                        format(mode, iodepth), filename=filename)
+                        if func == "fcp_stats":
+                            fun_test.add_auxillary_file(description="FCP Stats - {} - IO depth {}".
+                                                        format(mode, iodepth), filename=filename)
+                        if func == "wro_stats":
+                            fun_test.add_auxillary_file(description="WRO Stats - {} - IO depth {}".
+                                                        format(mode, iodepth), filename=filename)
+                        if func == "erp_stats":
+                            fun_test.add_auxillary_file(description="ERP Stats - {} IO depth {}".
+                                                        format(mode, iodepth), filename=filename)
+                        if func == "etp_stats":
+                            fun_test.add_auxillary_file(description="ETP Stats - {} IO depth {}".
+                                                        format(mode, iodepth), filename=filename)
+                        if func == "eqm_stats":
+                            fun_test.add_auxillary_file(description="EQM Stats - {} - IO depth {}".
+                                                        format(mode, iodepth), filename=filename)
+                        if func == "hu_stats":
+                            fun_test.add_auxillary_file(description="HU Stats - {} - IO depth {}".
+                                                        format(mode, iodepth), filename=filename)
+                        if func == "ddr_stats":
+                            fun_test.add_auxillary_file(description="DDR Stats - {} - IO depth {}".
+                                                        format(mode, iodepth), filename=filename)
+                        if func == "ca_stats":
+                            fun_test.add_auxillary_file(description="CA Stats - {} IO depth {}".
+                                                        format(mode, iodepth), filename=filename)
+                        if func == "cdu_stats":
+                            fun_test.add_auxillary_file(description="CDU Stats - {} - IO depth {}".
+                                                        format(mode, iodepth), filename=filename)
 
     def cleanup(self):
         pass

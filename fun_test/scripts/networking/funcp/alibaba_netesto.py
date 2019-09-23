@@ -1,6 +1,6 @@
 from lib.system.fun_test import *
 from lib.utilities.funcp_config import *
-from scripts.networking.funcp import alibaba_fcp_setup
+from scripts.networking.funcp import alibaba_fcp_callback
 from scripts.networking.funeth import funeth, sanity, perf_utils, performance
 from lib.host import netperf_manager as nm
 from scripts.networking.tb_configs import tb_configs
@@ -13,7 +13,7 @@ from StringIO import StringIO
 result_links = {}
 
 
-class SetupBringup(alibaba_fcp_setup.ScriptSetup):
+class SetupBringup(alibaba_fcp_callback.ScriptSetup):
 
     def describe(self):
         self.set_test_details(steps="""
