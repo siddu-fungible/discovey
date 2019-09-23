@@ -110,7 +110,7 @@ class JuniperNFACustomCompileOnly(FunTestCase):
             pld_path = "/regex/payloads/"
             #for gtype, en in zip(["dfa", "nfa", "ffa"], ["1", "0", ""]):
             for gtype, en in zip(["dfa"], ["1"]):
-                res_path = "/regex/"+str(tc)+"/" + gtype + "_results/"
+                res_path = "/regex/S1/"+str(tc)+"/" + gtype + "_results/"
                 con1.create_directory(res_path)
                 print ("res_path is ",res_path)
                 #res_path = "/regex/Users/fungible/ws/data_store/regression/" + str(tc) + "/" + gtype + "_results/"
