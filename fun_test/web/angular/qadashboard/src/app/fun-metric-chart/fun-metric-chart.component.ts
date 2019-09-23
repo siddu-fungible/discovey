@@ -42,6 +42,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   suiteLogsDir = "http://integration.fungible.local/regression/static_serve_log_directory/";
 
   TIMEZONE: string = "America/Los_Angeles";
+  daysInPast: number = 60;
+  editingDaysInPast: boolean = false;
 
   status: string = null;
   showingTable: boolean;
@@ -187,6 +189,10 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   ngOnChanges() {
     this.status = "Updating";
     this.fetchNames();
+  }
+
+  submitDaysInPast(): void {
+    this.ngOnChanges();
   }
 
   showPointDetails(pointInfo): void {
@@ -785,8 +791,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   //fetch the data from backend
   fetchData(metricId, chartInfo, previewDataSets, tableInfo) {
     let payload = {};
-    // payload["metric_model_name"] = metricModelName;
-    // payload["chart_name"] = chartName;
     payload["preview_data_sets"] = previewDataSets;
     payload["metric_id"] = metricId;
     if (chartInfo) {
@@ -818,28 +822,22 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         this.values = null;
         return;
       }
-      let keyList = [];
-      let keyValue = [];
-      let dataSetIndex = 0;
-      for (let oneDataSet of allDataSets) {
-        keyValue[dataSetIndex] = [];
-        let trimEmptyStartValues = false; //used for trimming the start of the charts from a non zero value
-        for (let oneRecord of oneDataSet) {
-          let outputName = this.filterDataSets[dataSetIndex].output.name;
-          if (oneRecord[outputName] > 0) {
-            trimEmptyStartValues = true;
-          }
-          if (trimEmptyStartValues) {
-            keyList.push(oneRecord.epoch_time); //value = "3/19/2019, 4:49:31 PM"
-            keyValue[dataSetIndex][oneRecord.epoch_time] = oneRecord;
-          }
 
+      let d = new Date();
+      d.setDate(d.getDate() - this.daysInPast);
+      let startDate = this.commonService.convertToTimezone(d, this.TIMEZONE);
+
+      let seriesDatesSet = new Set();
+
+      for (let oneDataSet of allDataSets) {
+        for (let oneRecord of oneDataSet) {
+          let pstDate = this.commonService.convertEpochToDate(Number(oneRecord.epoch_time), this.TIMEZONE);
+          let keyString = this.commonService.addLeadingZeroesToDate(pstDate);
+          if (!seriesDatesSet.has(keyString)) {
+            seriesDatesSet.add(keyString);
+          }
         }
-        dataSetIndex++;
       }
-      keyList.sort();
-      keyList = this.fixMissingDates(keyList);
-      let datesByTimeMode = this.getDatesByTimeMode(keyList);
       let chartDataSets = [];
       let seriesDates = [];
       this.expectedValues = [];
@@ -848,77 +846,60 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       this.maxExpected = null;
       this.maxDataPoint = null;
       this.yMax = null;
-      for (let j = 0; j < this.filterDataSets.length; j++) {
+      let seriesIndex = 0;
+      for (let oneDataSet of allDataSets) {
+        let outputName = this.filterDataSets[seriesIndex].output.name;
+        let unit = this.filterDataSets[seriesIndex].output.unit;
+        let minimum = this.filterDataSets[seriesIndex].output.min;
+        let maximum = this.filterDataSets[seriesIndex].output.max;
+        let expected = this.filterDataSets[seriesIndex].output.expected;
+        let name = this.filterDataSets[seriesIndex].name;
         let oneChartDataArray = [];
-        let thisMinimum = this.filterDataSets[j].output.min;
-        let thisMaximum = this.filterDataSets[j].output.max;
-        let outputName = this.filterDataSets[j].output.name;
-        let name = this.filterDataSets[j].name;
-        let unit = this.filterDataSets[j].output.unit;
-        let expected = filterDataSets[j].output.expected;
-        for (let i = 0; i < datesByTimeMode.length; i++) {
-          let output = null;
-          let total = 0;
-          let count = 0;
-          let startIndex = datesByTimeMode[i][0];
-          let endIndex = datesByTimeMode[i][1];
-          let matchingDateFound = false;
-          let pstEpochDate = this.commonService.convertEpochToDate(keyList[startIndex], this.TIMEZONE);
-          let keyString = this.commonService.addLeadingZeroesToDate(pstEpochDate);
-          seriesDates.push(keyString);
-
-          Object.keys(this.mileStoneMarkers).forEach((mileStone) => {
-            let mileStoneDate = this.commonService.convertToTimezone(this.mileStoneMarkers[mileStone], this.TIMEZONE);
-            //comparing two date objects to get the f1 milestone incase of date mismatch
-            let compareDate = this.commonService.convertEpochToDate(keyList[startIndex], this.TIMEZONE);
-            if (this.sameDay(mileStoneDate, compareDate)) { // Tape-out and F1
-              if (!this.mileStoneIndices.hasOwnProperty(mileStone)) {
-                this.mileStoneIndices[mileStone] = startIndex;
-              }
-            } else if (compareDate >= mileStoneDate) {
-              if (mileStone !== "Tape-out") {
-                if (!this.mileStoneIndices.hasOwnProperty(mileStone)) {
-                  this.mileStoneIndices[mileStone] = startIndex;
+        let lastDate = this.commonService.convertToTimezone(new Date(), this.TIMEZONE);
+        let seriesDatesIndex = 0;
+        while (lastDate >= startDate) {
+          let valueSet = false;
+          let dateString = null;
+          for (let oneRecord of oneDataSet) {
+            let pstDate = this.commonService.convertEpochToDate(Number(oneRecord.epoch_time), this.TIMEZONE);
+            if (this.sameDay(lastDate, pstDate) && !valueSet) {
+              valueSet = true;
+              let outputUnit = oneRecord[outputName + "_unit"];
+              let output = oneRecord[outputName];
+              output = this.convertToBaseUnit(outputUnit, output);
+              output = this.convertToVisualizationUnit(this.visualizationUnit, output);
+              let result = this.getValidatedData(output, minimum, maximum);
+              dateString = this.commonService.addLeadingZeroesToDate(pstDate);
+              oneChartDataArray.push(result);
+              if (this.maxDataPoint === null) {
+                this.maxDataPoint = result.y;
+                this.originalMaxDataPoint = this.maxDataPoint;
+              } else {
+                if (result.y > this.maxDataPoint) {
+                  this.maxDataPoint = result.y;
+                  this.originalMaxDataPoint = this.maxDataPoint;
                 }
               }
+              break;
             }
-          });
-
-          while (startIndex >= endIndex) {
-            if (keyValue[j][keyList[startIndex]]) {
-              let oneRecord = keyValue[j][keyList[startIndex]];
-              matchingDateFound = true;
-              output = oneRecord[outputName];
-              let unit = outputName + '_unit';
-              let outputUnit = oneRecord[unit];
-              if (output > 0) {
-                if (outputUnit && outputUnit !== "" && outputUnit !== this.visualizationUnit) {
-                  output = this.convertToBaseUnit(outputUnit, output);
-                  output = this.convertToVisualizationUnit(this.visualizationUnit, output);
-                }
-                total += output;
-                count++;
-              }
-            }
-            startIndex--;
           }
-          if (count !== 0) {
-            output = total / count;
+          if (!valueSet) {
+            dateString = this.commonService.addLeadingZeroesToDate(lastDate);
+            oneChartDataArray.push(null);
           }
-          let result = this.getValidatedData(output, thisMinimum, thisMaximum);
-          if (this.maxDataPoint === null) {
-            this.maxDataPoint = result.y;
-            this.originalMaxDataPoint = this.maxDataPoint;
+          if (seriesDates[seriesDatesIndex] && seriesDatesSet.has(dateString)) {
+            seriesDates[seriesDatesIndex] = dateString;
           } else {
-            if (result.y > this.maxDataPoint) {
-              this.maxDataPoint = result.y;
-              this.originalMaxDataPoint = this.maxDataPoint;
-            }
+            seriesDates[seriesDatesIndex] = dateString;
           }
-          oneChartDataArray.push(result);
+          seriesDatesIndex++;
+          lastDate.setDate(lastDate.getDate() - 1);
         }
-        let oneChartDataSet = {name: name, data: oneChartDataArray};
+        let oneChartDataSet = {name: name, data: oneChartDataArray.reverse()};
         chartDataSets.push(oneChartDataSet);
+        seriesIndex++;
+
+        //to show the expected values line and setting the max min of the chart
         let output = {};
         output["name"] = name;
         if (expected && expected !== -1) {
@@ -934,17 +915,17 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         }
         this.expectedValues.push(output);
         if (this.maxDataSet === null) {
-          this.maxDataSet = thisMaximum;
+          this.maxDataSet = maximum;
         } else {
-          if (thisMaximum > this.maxDataSet) {
-            this.maxDataSet = thisMaximum;
+          if (maximum > this.maxDataSet) {
+            this.maxDataSet = maximum;
           }
         }
-        if (this.minDataSet === null && thisMinimum > 0) {
-          this.minDataSet = thisMinimum;
+        if (this.minDataSet === null && minimum > 0) {
+          this.minDataSet = minimum;
         } else {
-          if (thisMinimum > 0 && thisMinimum < this.minDataSet) {
-            this.minDataSet = thisMinimum;
+          if (minimum > 0 && minimum < this.minDataSet) {
+            this.minDataSet = minimum;
           }
         }
         if (this.maxExpected === null) {
@@ -958,8 +939,33 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       this.calculateMax();
       this.calculateMin();
       this.chart1YaxisTitle = this.visualizationUnit;
-      this.series = seriesDates;
+      this.series = seriesDates.reverse();
       this.values = chartDataSets.slice();
+
+      //setting the milestones
+      if (Object.keys(this.mileStoneMarkers).length > 0) {
+        let seriesIndex = 0;
+        for (let eachSeriesDate of this.series) {
+        let eachSeriesDateObj = this.commonService.convertToTimezone(eachSeriesDate, this.TIMEZONE);
+          Object.keys(this.mileStoneMarkers).forEach((mileStone) => {
+            let mileStoneDate = this.commonService.convertToTimezone(this.mileStoneMarkers[mileStone], this.TIMEZONE);
+            if (this.sameDay(mileStoneDate, eachSeriesDateObj)) { // Tape-out and F1
+              if (!this.mileStoneIndices.hasOwnProperty(mileStone)) {
+                this.mileStoneIndices[mileStone] = seriesIndex;
+              }
+            } else if (eachSeriesDateObj >= mileStoneDate) {
+              if (mileStone !== "Tape-out") {
+                if (!this.mileStoneIndices.hasOwnProperty(mileStone)) {
+                  this.mileStoneIndices[mileStone] = seriesIndex;
+                }
+              }
+            }
+          });
+          seriesIndex++;
+      }
+      }
+
+      //populating data for show tables
       this.originalValues = JSON.parse(JSON.stringify(this.values));
       this.headers = this.tableInfo;
       //this.data has values for the fun table
@@ -973,12 +979,9 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
           this.data["headers"].push(this.headers[key].verbose_name);
         }
       });
-      // let dataSet = allDataSets[0];
       let index = 0;
       let self = this;
       let payload = {};
-      // payload["metric_model_name"] = this.modelName;
-      // payload["chart_name"] = this.chartName;
       payload["metric_id"] = this.id;
       payload["preview_data_sets"] = this.filterDataSets;
       this.apiService.post("/metrics/data_by_model", payload).subscribe((response) => {
@@ -1002,11 +1005,296 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         self.data["totalLength"] = self.data["rows"].length;
       });
       this.changeAllExpectedValues();
+      this.status = null;
     }, error => {
       this.loggerService.error("fetchMetricsData");
     });
+  }
+
+  //fetching container data
+  fetchContainerData(chartInfo, previewDataSets, payload): void {
+    //console.log("Fetch Scores");
+    this.apiService.post('/metrics/scores', payload).subscribe((response: any) => {
+      if (response.data.length === 0) {
+        this.values = null;
+        return;
+      }
+      let filterDataSets = [];
+      if (previewDataSets) {
+        filterDataSets = previewDataSets;
+      } else {
+        if (chartInfo) {
+          filterDataSets = chartInfo['data_sets'];
+        }
+      }
+      let thisMinimum = filterDataSets[0].output.min;
+      let thisMaximum = filterDataSets[0].output.max;
+      let values = [];
+      let series = [];
+      let keyValue = {};
+      let keyList = Object.keys(response.data.scores);
+      keyList.sort();
+      let trimEmptyStartValues = false; //used for trimming the start of the charts from a non zero value
+      for (let dateTime of keyList) {
+        let d = new Date(1000 * Number(dateTime));
+        if (response.data.scores[dateTime].score > 0) {
+          trimEmptyStartValues = true;
+        }
+        if (trimEmptyStartValues) {
+          let pstDate = this.commonService.convertToTimezone(d, this.TIMEZONE);
+          let keyString = this.commonService.addLeadingZeroesToDate(pstDate);
+          series.push(keyString);
+          keyValue[keyString] = response.data.scores[dateTime].score;
+        }
+      }
+      if (series.length === 0) {
+        this.series = null;
+        this.values = null;
+      } else {
+        // series = this.fixMissingDates(series);
+        let dateSeries = [];
+        let seriesRange = this.getDatesByTimeMode(series);
+        for (let i = 0; i < seriesRange.length; i++) {
+          let startIndex = seriesRange[i][0];
+          let endIndex = seriesRange[i][1];
+          let count = 0;
+          let total = 0;
+          dateSeries.push(series[startIndex]);
+          Object.keys(this.mileStoneMarkers).forEach((mileStone) => {
+            let markerDate = this.mileStoneMarkers[mileStone].split(" ")[0];
+            if (series[startIndex].includes(markerDate)) { // Tape-out and F1
+              this.mileStoneIndices[mileStone] = startIndex;
+            }
+          });
+          while (startIndex >= endIndex) {
+            if (keyValue[series[startIndex]] && keyValue[series[startIndex]] !== -1) {
+              total += keyValue[series[startIndex]];
+              count++;
+            }
+            startIndex--;
+          }
+          if (count !== 0) {
+            let average = total / count;
+            let result = this.getValidatedData(average, thisMinimum, thisMaximum);
+            values.push(result);
+          } else {
+            values.push(null);
+          }
+        }
+        this.values = [{data: values, name: "Scores"}];
+        this.series = dateSeries;
+      }
+    });
     this.status = null;
   }
+
+  // //fetching leaf data
+  // fetchLeafData(chartInfo, previewDataSets, tableInfo, payload): void {
+  //   this.tableInfo = tableInfo;
+  //   let filterDataSets = [];
+  //   if (previewDataSets) {
+  //     filterDataSets = previewDataSets;
+  //   } else {
+  //     if (chartInfo) {
+  //       filterDataSets = chartInfo['data_sets'];
+  //     }
+  //   }
+  //   this.filterDataSets = filterDataSets;
+  //   this.apiService.post("/metrics/data", payload).subscribe((response: any) => {
+  //     let allDataSets = response.data;
+  //     if (allDataSets.length === 0) {
+  //       this.values = null;
+  //       return;
+  //     }
+  //     let keyList = [];
+  //     let keyValue = [];
+  //     let dataSetIndex = 0;
+  //     for (let oneDataSet of allDataSets) {
+  //       keyValue[dataSetIndex] = [];
+  //       let trimEmptyStartValues = false; //used for trimming the start of the charts from a non zero value
+  //       for (let oneRecord of oneDataSet) {
+  //         let outputName = this.filterDataSets[dataSetIndex].output.name;
+  //         if (oneRecord[outputName] > 0) {
+  //           trimEmptyStartValues = true;
+  //         }
+  //         if (trimEmptyStartValues) {
+  //           keyList.push(oneRecord.epoch_time); //value = "3/19/2019, 4:49:31 PM"
+  //           keyValue[dataSetIndex][oneRecord.epoch_time] = oneRecord;
+  //         }
+  //
+  //       }
+  //       dataSetIndex++;
+  //     }
+  //     keyList.sort();
+  //     keyList = this.fixMissingDates(keyList);
+  //     let datesByTimeMode = this.getDatesByTimeMode(keyList);
+  //     let chartDataSets = [];
+  //     let seriesDates = [];
+  //     this.expectedValues = [];
+  //     this.maxDataSet = null;
+  //     this.minDataSet = null;
+  //     this.maxExpected = null;
+  //     this.maxDataPoint = null;
+  //     this.yMax = null;
+  //     for (let j = 0; j < this.filterDataSets.length; j++) {
+  //       let oneChartDataArray = [];
+  //       let thisMinimum = this.filterDataSets[j].output.min;
+  //       let thisMaximum = this.filterDataSets[j].output.max;
+  //       let outputName = this.filterDataSets[j].output.name;
+  //       let name = this.filterDataSets[j].name;
+  //       let unit = this.filterDataSets[j].output.unit;
+  //       let expected = filterDataSets[j].output.expected;
+  //       for (let i = 0; i < datesByTimeMode.length; i++) {
+  //         let output = null;
+  //         let total = 0;
+  //         let count = 0;
+  //         let startIndex = datesByTimeMode[i][0];
+  //         let endIndex = datesByTimeMode[i][1];
+  //         let matchingDateFound = false;
+  //         let pstEpochDate = this.commonService.convertEpochToDate(keyList[startIndex], this.TIMEZONE);
+  //         let keyString = this.commonService.addLeadingZeroesToDate(pstEpochDate);
+  //         seriesDates.push(keyString);
+  //
+  //         Object.keys(this.mileStoneMarkers).forEach((mileStone) => {
+  //           let mileStoneDate = this.commonService.convertToTimezone(this.mileStoneMarkers[mileStone], this.TIMEZONE);
+  //           //comparing two date objects to get the f1 milestone incase of date mismatch
+  //           let compareDate = this.commonService.convertEpochToDate(keyList[startIndex], this.TIMEZONE);
+  //           if (this.sameDay(mileStoneDate, compareDate)) { // Tape-out and F1
+  //             if (!this.mileStoneIndices.hasOwnProperty(mileStone)) {
+  //               this.mileStoneIndices[mileStone] = startIndex;
+  //             }
+  //           } else if (compareDate >= mileStoneDate) {
+  //             if (mileStone !== "Tape-out") {
+  //               if (!this.mileStoneIndices.hasOwnProperty(mileStone)) {
+  //                 this.mileStoneIndices[mileStone] = startIndex;
+  //               }
+  //             }
+  //           }
+  //         });
+  //
+  //         while (startIndex >= endIndex) {
+  //           if (keyValue[j][keyList[startIndex]]) {
+  //             let oneRecord = keyValue[j][keyList[startIndex]];
+  //             matchingDateFound = true;
+  //             output = oneRecord[outputName];
+  //             let unit = outputName + '_unit';
+  //             let outputUnit = oneRecord[unit];
+  //             if (output > 0) {
+  //               if (outputUnit && outputUnit !== "" && outputUnit !== this.visualizationUnit) {
+  //                 output = this.convertToBaseUnit(outputUnit, output);
+  //                 output = this.convertToVisualizationUnit(this.visualizationUnit, output);
+  //               }
+  //               total += output;
+  //               count++;
+  //             }
+  //           }
+  //           startIndex--;
+  //         }
+  //         if (count !== 0) {
+  //           output = total / count;
+  //         }
+  //         let result = this.getValidatedData(output, thisMinimum, thisMaximum);
+  //         if (this.maxDataPoint === null) {
+  //           this.maxDataPoint = result.y;
+  //           this.originalMaxDataPoint = this.maxDataPoint;
+  //         } else {
+  //           if (result.y > this.maxDataPoint) {
+  //             this.maxDataPoint = result.y;
+  //             this.originalMaxDataPoint = this.maxDataPoint;
+  //           }
+  //         }
+  //         oneChartDataArray.push(result);
+  //       }
+  //       let oneChartDataSet = {name: name, data: oneChartDataArray};
+  //       chartDataSets.push(oneChartDataSet);
+  //       let output = {};
+  //       output["name"] = name;
+  //       if (expected && expected !== -1) {
+  //         output["value"] = this.convertToBaseUnit(unit, expected);
+  //         output["value"] = this.convertToVisualizationUnit(this.visualizationUnit, output["value"]);
+  //       } else {
+  //         output["value"] = expected;
+  //       }
+  //       output["unit"] = this.visualizationUnit;
+  //       output["show"] = false;
+  //       if (!this.showSelect && output["value"] !== -1) {
+  //         this.showSelect = true;
+  //       }
+  //       this.expectedValues.push(output);
+  //       if (this.maxDataSet === null) {
+  //         this.maxDataSet = thisMaximum;
+  //       } else {
+  //         if (thisMaximum > this.maxDataSet) {
+  //           this.maxDataSet = thisMaximum;
+  //         }
+  //       }
+  //       if (this.minDataSet === null && thisMinimum > 0) {
+  //         this.minDataSet = thisMinimum;
+  //       } else {
+  //         if (thisMinimum > 0 && thisMinimum < this.minDataSet) {
+  //           this.minDataSet = thisMinimum;
+  //         }
+  //       }
+  //       if (this.maxExpected === null) {
+  //         this.maxExpected = expected;
+  //       } else {
+  //         if (expected > this.maxExpected) {
+  //           this.maxExpected = expected;
+  //         }
+  //       }
+  //     }
+  //     this.calculateMax();
+  //     this.calculateMin();
+  //     this.chart1YaxisTitle = this.visualizationUnit;
+  //     this.series = seriesDates;
+  //     this.values = chartDataSets.slice();
+  //     this.originalValues = JSON.parse(JSON.stringify(this.values));
+  //     this.headers = this.tableInfo;
+  //     //this.data has values for the fun table
+  //     this.data["rows"] = [];
+  //     this.data["headers"] = [];
+  //     this.data["all"] = true;
+  //     this.data["pageSize"] = 10;
+  //     this.data["currentPageIndex"] = 1;
+  //     Object.keys(this.headers).forEach((key) => {
+  //       if (this.isFieldRelevant(key)) {
+  //         this.data["headers"].push(this.headers[key].verbose_name);
+  //       }
+  //     });
+  //     // let dataSet = allDataSets[0];
+  //     let index = 0;
+  //     let self = this;
+  //     let payload = {};
+  //     // payload["metric_model_name"] = this.modelName;
+  //     // payload["chart_name"] = this.chartName;
+  //     payload["metric_id"] = this.id;
+  //     payload["preview_data_sets"] = this.filterDataSets;
+  //     this.apiService.post("/metrics/data_by_model", payload).subscribe((response) => {
+  //       let dataSet = response.data;
+  //       for (let rowData of dataSet) {
+  //         let rowInTable = [];
+  //         Object.keys(self.headers).forEach((key) => {
+  //           if (self.isFieldRelevant(key)) {
+  //             let value = null;
+  //             if (key == "input_date_time") {
+  //               // value = this.commonService.convertToTimezone(rowData[key], this.TIMEZONE);
+  //               value = rowData["epoch_time"];
+  //             } else {
+  //               value = rowData[key]
+  //             }
+  //             rowInTable.push(value);
+  //           }
+  //         });
+  //         self.data["rows"][index++] = rowInTable;
+  //       }
+  //       self.data["totalLength"] = self.data["rows"].length;
+  //     });
+  //     this.changeAllExpectedValues();
+  //   }, error => {
+  //     this.loggerService.error("fetchMetricsData");
+  //   });
+  //   this.status = null;
+  // }
 
   convertToBaseUnit(outputUnit, output): any {
     if (this.latency_category.includes(outputUnit)) {
@@ -1204,84 +1492,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       this.maxDataPoint = maximum;
     }
     this.calculateYaxisPlotLines();
-  }
-
-
-  //fetching container data
-  fetchContainerData(chartInfo, previewDataSets, payload): void {
-    //console.log("Fetch Scores");
-    this.apiService.post('/metrics/scores', payload).subscribe((response: any) => {
-      if (response.data.length === 0) {
-        this.values = null;
-        return;
-      }
-      let filterDataSets = [];
-      if (previewDataSets) {
-        filterDataSets = previewDataSets;
-      } else {
-        if (chartInfo) {
-          filterDataSets = chartInfo['data_sets'];
-        }
-      }
-      let thisMinimum = filterDataSets[0].output.min;
-      let thisMaximum = filterDataSets[0].output.max;
-      let values = [];
-      let series = [];
-      let keyValue = {};
-      let keyList = Object.keys(response.data.scores);
-      keyList.sort();
-      let trimEmptyStartValues = false; //used for trimming the start of the charts from a non zero value
-      for (let dateTime of keyList) {
-        let d = new Date(1000 * Number(dateTime));
-        if (response.data.scores[dateTime].score > 0) {
-          trimEmptyStartValues = true;
-        }
-        if (trimEmptyStartValues) {
-          let pstDate = this.commonService.convertToTimezone(d, this.TIMEZONE);
-          let keyString = this.commonService.addLeadingZeroesToDate(pstDate);
-          series.push(keyString);
-          keyValue[keyString] = response.data.scores[dateTime].score;
-        }
-      }
-      if (series.length === 0) {
-        this.series = null;
-        this.values = null;
-      } else {
-        // series = this.fixMissingDates(series);
-        let dateSeries = [];
-        let seriesRange = this.getDatesByTimeMode(series);
-        for (let i = 0; i < seriesRange.length; i++) {
-          let startIndex = seriesRange[i][0];
-          let endIndex = seriesRange[i][1];
-          let count = 0;
-          let total = 0;
-          dateSeries.push(series[startIndex]);
-          Object.keys(this.mileStoneMarkers).forEach((mileStone) => {
-            let markerDate = this.mileStoneMarkers[mileStone].split(" ")[0];
-            if (series[startIndex].includes(markerDate)) { // Tape-out and F1
-              this.mileStoneIndices[mileStone] = startIndex;
-            }
-          });
-          while (startIndex >= endIndex) {
-            if (keyValue[series[startIndex]] && keyValue[series[startIndex]] !== -1) {
-              total += keyValue[series[startIndex]];
-              count++;
-            }
-            startIndex--;
-          }
-          if (count !== 0) {
-            let average = total / count;
-            let result = this.getValidatedData(average, thisMinimum, thisMaximum);
-            values.push(result);
-          } else {
-            values.push(null);
-          }
-        }
-        this.values = [{data: values, name: "Scores"}];
-        this.series = dateSeries;
-      }
-    });
-    this.status = null;
   }
 
   //called from fetchInfo and setTimeMode
