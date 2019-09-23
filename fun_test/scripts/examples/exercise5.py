@@ -4,7 +4,6 @@ from lib.topology.topology_helper import TopologyHelper
 
 import os
 # os.environ["DOCKER_HOSTS_SPEC_FILE"] = fun_test.get_script_parent_directory() + "/local_docker_host_with_storage.json"
-os.environ["DOCKER_HOSTS_SPEC_FILE"] = fun_test.get_script_parent_directory() + "/remote_docker_host_with_storage.json"
 
 
 class MyScript(FunTestScript):
@@ -15,6 +14,9 @@ class MyScript(FunTestScript):
         """)
 
     def setup(self):
+        os.environ[
+            "DOCKER_HOSTS_SPEC_FILE"] = fun_test.get_script_parent_directory() + "/remote_docker_host_with_storage.json"
+
         # topology_obj_helper = TopologyHelper(spec=topology_dict) use locally defined dictionary variable
         topology_obj_helper = TopologyHelper(spec_file="./single_f1_custom_app.json")
         topology = topology_obj_helper.deploy()

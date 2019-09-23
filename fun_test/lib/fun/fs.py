@@ -1302,6 +1302,7 @@ class Fs(object, ToDictMixin):
                     if f1_index in self.f1_parameters:
                         if "boot_args" in self.f1_parameters[f1_index]:
                             boot_args = self.f1_parameters[f1_index]["boot_args"]
+
                 fun_test.test_assert(self.get_bmc().setup_serial_proxy_connection(f1_index=f1_index, auto_boot=self.auto_boot),
                                      "Setup nc serial proxy connection")
 
@@ -1311,6 +1312,11 @@ class Fs(object, ToDictMixin):
                 else:
                     bmc = self.get_bmc()
                     bmc.reset_f1(f1_index=f1_index)
+                    try:
+                        # f1_{}_uart_log.txt
+                        bmc.command("rm -f /tmp/f1*uart_log.txt")
+                    except:
+                        pass
                 preamble = self.get_bmc().get_preamble(f1_index=f1_index)
                 if self.validate_u_boot_version:
                     fun_test.test_assert(self.bmc.validate_u_boot_version(output=preamble, minimum_date=self.MIN_U_BOOT_DATE), "Validate preamble")
