@@ -266,6 +266,8 @@ class RegexTemplate(Linux):
                         con1.logger.log("memory is :")
                         con1.logger.log(mem)
                         graph_name = base + "_" + mem + "_graph.json"
+                        if mem =="dflt":
+                            graph_name=base+"_graph.json"
                         print ("second_check_point")
                         try:
                             if engine == "1":
@@ -286,7 +288,7 @@ class RegexTemplate(Linux):
                                     op = con1.compile_re(j=jstyle, drop_unsupported=" ", B="20", e=engine, r=pattern_path, p=payload_path,
                                                         o=res_path + graph_name, s="1500", target=trgt, time_out=time_out)
                                 if mem == "rbm_exm_plr":
-                                    op = con1.compile_re(j=jstyle, drop_unsupported=" ", B="10", L=" ", e=engine, r=pattern_path,
+                                    op = con1.compile_re(j=jstyle, drop_unsupported=" ", B="20", L=" ", e=engine, r=pattern_path,
                                                         p=payload_path, s="1500", o=res_path + graph_name, target=trgt, time_out=time_out)
                             elif engine == "0":
                                 print ("NFA")
