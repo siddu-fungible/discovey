@@ -6342,34 +6342,65 @@
           },
           {
             "metric_model_name": "MetricContainer",
+            "name": "Teramark Security_S1",
+            "label": "Security",
             "children": [
               {
-                "metric_model_name": "TeraMarkPkeRsaPerformance",
-                "children": [],
-                "name": "RSA CRT 2048 decryptions_S1",
-                "label": "RSA CRT 2048 decryptions"
-              },
-              {
-                "metric_model_name": "TeraMarkPkeRsa4kPerformance",
-                "children": [],
-                "name": "RSA CRT 4096 decryptions_S1",
-                "label": "RSA CRT 4096 decryptions"
-              },
-              {
-                "metric_model_name": "TeraMarkPkeEcdh256Performance",
-                "children": [],
-                "name": "ECDH P256_S1",
-                "label": "ECDH P256"
-              },
-              {
-                "metric_model_name": "TeraMarkPkeEcdh25519Performance",
-                "children": [],
-                "name": "ECDH 25519_S1",
-                "label": "ECDH 25519"
+                "metric_model_name": "MetricContainer",
+                "name": "TeraMark PKE_S1",
+                "label": "PKE",
+                "children": [
+                  {
+                    "metric_model_name": "TeraMarkPkeRsaPerformance",
+                    "name": "RSA CRT 2048 decryptions_S1",
+                    "label": "RSA CRT 2048 decryptions",
+                    "children": []
+                  },
+                  {
+                    "metric_model_name": "TeraMarkPkeRsa4kPerformance",
+                    "name": "RSA CRT 4096 decryptions_S1",
+                    "label": "RSA CRT 4096 decryptions",
+                    "children": []
+                  },
+                  {
+                    "metric_model_name": "TeraMarkPkeEcdh256Performance",
+                    "name": "ECDH P256_S1",
+                    "label": "ECDH P256",
+                    "children": []
+                  },
+                  {
+                    "metric_model_name": "TeraMarkPkeEcdh25519Performance",
+                    "name": "ECDH 25519_S1",
+                    "label": "ECDH 25519",
+                    "children": []
+                  }
+                ]
               }
-            ],
-            "name": "TeraMark PKE_S1",
-            "label": "PKE"
+            ]
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "Regex_S1",
+            "label": "RegEx",
+            "children": [
+              {
+                "metric_model_name": "MetricContainer",
+                "name": "regex_100_cache_hit_S1",
+                "label": "100 Percent Cache Hit",
+                "children": [
+                  {
+                    "metric_model_name": "TeraMarkDfaPerformance",
+                    "name": "dfa_teramark_output_bandwidth_S1",
+                    "label": "DFA Throughput"
+                  },
+                  {
+                    "metric_model_name": "TeraMarkNfaPerformance",
+                    "name": "nfa_teramark_output_bandwidth_S1",
+                    "label": "NFA Throughput"
+                  }
+                ]
+              }
+            ]
           }
         ]
       },
