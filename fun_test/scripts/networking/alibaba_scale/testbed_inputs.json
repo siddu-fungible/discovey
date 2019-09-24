@@ -4,8 +4,8 @@
               "fs_list":["fs-38"],
               "fs-38": {
                   "index": 0,
-                  "abtract_config_f1_0": "/abstract_config/fcp_scale_fs38-f1-0.js",
-                  "abtract_config_f1_1": "/abstract_config/fcp_scale_fs38-f1-1.js",
+                  "abtract_config_f1_0": "/abstract_config/fcp_scale_fs38-f1-0.json",
+                  "abtract_config_f1_1": "/abstract_config/fcp_scale_fs38-f1-1.json",
                   "prepare_docker":false,
                   "gatewayip": "10.80.4.1",
                   "mpg0":"10.80.4.169",
