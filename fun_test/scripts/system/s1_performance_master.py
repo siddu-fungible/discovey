@@ -173,6 +173,66 @@ class TeraMarkZipLzmaPerformanceS1Tc(TeraMarkZipPerformanceTc):
                               steps="Steps 1")
 
 
+class TeraMarkPkeRsaPerformanceS1Tc(TeraMarkPkeRsaPerformanceTc):
+    tag = TERAMARK_PKE_S1
+    platform = FunPlatform.S1
+
+    def describe(self):
+        self.set_test_details(id=16,
+                              summary="S1 teraMark PKE RSA Performance Test",
+                              steps="Steps 1")
+
+
+class TeraMarkPkeRsa4kPerformanceS1Tc(TeraMarkPkeRsa4kPerformanceTc):
+    tag = TERAMARK_PKE_S1
+    platform = FunPlatform.S1
+
+    def describe(self):
+        self.set_test_details(id=17,
+                              summary="S1 TeraMark PKE RSA 4K Performance Test",
+                              steps="Steps 1")
+
+
+class TeraMarkPkeEcdh256PerformanceS1Tc(TeraMarkPkeEcdh256PerformanceTc):
+    tag = TERAMARK_PKE_S1
+    platform = FunPlatform.S1
+
+    def describe(self):
+        self.set_test_details(id=18,
+                              summary="S1 TeraMark PKE ECDH P256 Performance Test",
+                              steps="Steps 1")
+
+
+class TeraMarkPkeEcdh25519PerformanceS1Tc(TeraMarkPkeEcdh25519PerformanceTc):
+    tag = TERAMARK_PKE_S1
+    platform = FunPlatform.S1
+
+    def describe(self):
+        self.set_test_details(id=19,
+                              summary="S1 TeraMark PKE ECDH 25519 Performance Test",
+                              steps="Steps 1")
+
+
+class PkeX25519TlsSoakPerformanceS1Tc(PkeX25519TlsSoakPerformanceTc):
+    tag = TERAMARK_PKE_S1
+    platform = FunPlatform.S1
+
+    def describe(self):
+        self.set_test_details(id=20,
+                              summary="S1 ECDHE_RSA X25519 RSA 2K TLS Soak Performance Test",
+                              steps="Steps 1")
+
+
+class PkeP256TlsSoakPerformanceS1Tc(PkeP256TlsSoakPerformanceTc):
+    tag = TERAMARK_PKE_S1
+    platform = FunPlatform.S1
+
+    def describe(self):
+        self.set_test_details(id=21,
+                              summary="S1 ECDHE_RSA P256 RSA 2K TLS Soak Performance Test",
+                              steps="Steps 1")
+
+
 if __name__ == "__main__":
     myscript = MyScript()
 
@@ -191,5 +251,11 @@ if __name__ == "__main__":
     myscript.add_test_case(TeraMarkJpegPerformanceS1Tc())
     myscript.add_test_case(TeraMarkZipDeflatePerformanceS1Tc())
     myscript.add_test_case(TeraMarkZipLzmaPerformanceS1Tc())
+    myscript.add_test_case(TeraMarkPkeRsaPerformanceS1Tc())
+    myscript.add_test_case(TeraMarkPkeRsa4kPerformanceS1Tc())
+    myscript.add_test_case(TeraMarkPkeEcdh256PerformanceS1Tc())
+    myscript.add_test_case(TeraMarkPkeEcdh25519PerformanceS1Tc())
+    myscript.add_test_case(PkeX25519TlsSoakPerformanceS1Tc())
+    myscript.add_test_case(PkeP256TlsSoakPerformanceS1Tc())
 
     myscript.run()

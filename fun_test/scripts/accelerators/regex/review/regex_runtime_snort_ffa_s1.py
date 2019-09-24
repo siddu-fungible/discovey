@@ -26,7 +26,7 @@ class MyScript(FunTestScript):
         fun_test.log("Script-level cleanup")
 
 
-class HigherLevelTestcase(FunTestCase):
+class Snort(FunTestCase):
 
     def describe(self):
         pass
@@ -83,7 +83,7 @@ class HigherLevelTestcase(FunTestCase):
             except Exception as e:
                 print e, "\n"
 
-            test_result = regex_helper.validate_rgx_result(data_store_dir, job_dir, num_polls=80, private_run=False)
+            test_result = regex_helper.validate_rgx_result(data_store_dir, job_dir,num_polls=80, private_run=False)
             try:
                 fun_test.test_assert(test_result, "Validate matches for graphs in {}".format(json))
             except Exception as e:
@@ -99,10 +99,10 @@ class HigherLevelTestcase(FunTestCase):
         fun_test.log("Testcase cleanup")
 
 
-class JuniperNFA_Basic_Runtime(HigherLevelTestcase):
+class SnortFFA_Basic_Runtime(Snort):
     def describe(self):
         self.set_test_details(id=1,
-                              summary="S1:JUNIPER NFA basic runtime",
+                              summary="S1:SNORT NFA basic runtime",
                               steps="""
         1. Steps 1
         2. Steps 2
@@ -110,19 +110,19 @@ class JuniperNFA_Basic_Runtime(HigherLevelTestcase):
                               """)
 
     def setup(self):
-        super(JuniperNFA_Basic_Runtime, self).setup()
+        super(SnortFFA_Basic_Runtime, self).setup()
 
     def run(self):
-        super(JuniperNFA_Basic_Runtime, self).run()
+        super(SnortFFA_Basic_Runtime, self).run()
 
     def cleanup(self):
-        super(JuniperNFA_Basic_Runtime, self).cleanup()
+        super(SnortFFA_Basic_Runtime, self).cleanup()
 
 
-class JuniperNFA_MatchAcrossPacket(HigherLevelTestcase):
+class SnortFFA_MatchAcrossPacket(Snort):
     def describe(self):
         self.set_test_details(id=2,
-                              summary="JUNIPER NFA match across packet",
+                              summary="S1:SNORT NFA match across packet",
                               steps="""
         1. Steps 1
         2. Steps 2
@@ -130,19 +130,18 @@ class JuniperNFA_MatchAcrossPacket(HigherLevelTestcase):
                               """)
 
     def setup(self):
-        super(JuniperNFA_MatchAcrossPacket, self).setup()
+        super( SnortFFA_MatchAcrossPacket, self).setup()
 
     def run(self):
-        super(JuniperNFA_MatchAcrossPacket, self).run()
+        super( SnortFFA_MatchAcrossPacket, self).run()
 
     def cleanup(self):
-        super(JuniperNFA_MatchAcrossPacket, self).cleanup()
+        super( SnortFFA_MatchAcrossPacket, self).cleanup()
 
-
-class JuniperNFA_Sequential1(HigherLevelTestcase):
+class SnortFFA_Sequential1(Snort):
     def describe(self):
         self.set_test_details(id=3,
-                              summary="JUNIPER NFA LSU serial:loading graphs on different clusters",
+                              summary="S1:SNORT NFA LSU serial:loading graphs on different clusters",
                               steps="""
         1. Steps 1
         2. Steps 2
@@ -150,19 +149,18 @@ class JuniperNFA_Sequential1(HigherLevelTestcase):
                               """)
 
     def setup(self):
-        super(JuniperNFA_Sequential1, self).setup()
+        super(SnortFFA_Sequential1, self).setup()
 
     def run(self):
-        super(JuniperNFA_Sequential1, self).run()
+        super(SnortFFA_Sequential1, self).run()
 
     def cleanup(self):
-        super(JuniperNFA_Sequential1, self).cleanup()
+        super(SnortFFA_Sequential1, self).cleanup()
 
-
-class JuniperNFA_Sequential2(HigherLevelTestcase):
+class SnortFFA_Sequential2(Snort):
     def describe(self):
         self.set_test_details(id=4,
-                              summary="JUNIPER NFA LSU serial:loading graphs on single cluster",
+                              summary="S1:SNORT NFA LSU serial:loading graphs on single cluster",
                               steps="""
         1. Steps 1
         2. Steps 2
@@ -170,19 +168,18 @@ class JuniperNFA_Sequential2(HigherLevelTestcase):
                               """)
 
     def setup(self):
-        super(JuniperNFA_Sequential2, self).setup()
+        super(SnortFFA_Sequential2, self).setup()
 
     def run(self):
-        super(JuniperNFA_Sequential2, self).run()
+        super(SnortFFA_Sequential2, self).run()
 
     def cleanup(self):
-        super(JuniperNFA_Sequential2, self).cleanup()
+        super(SnortFFA_Sequential2, self).cleanup()
 
-
-class JuniperNFA_parallel1(HigherLevelTestcase):
+class SnortFFA_parallel1(Snort):
     def describe(self):
         self.set_test_details(id=5,
-                              summary="JUNIPER NFA LSU parallel:loading graphs on different cluster",
+                              summary="S1:SNORT NFA LSU parallel:loading graphs on different cluster",
                               steps="""
         1. Steps 1
         2. Steps 2
@@ -190,19 +187,19 @@ class JuniperNFA_parallel1(HigherLevelTestcase):
                               """)
 
     def setup(self):
-        super(JuniperNFA_parallel1, self).setup()
+        super(SnortFFA_parallel1, self).setup()
 
     def run(self):
-        super(JuniperNFA_parallel1, self).run()
+        super(SnortFFA_parallel1, self).run()
 
     def cleanup(self):
-        super(JuniperNFA_parallel1, self).cleanup()
+        super(SnortFFA_parallel1, self).cleanup()
 
 
-class JuniperNFA_parallel2(HigherLevelTestcase):
+class SnortFFA_parallel2(Snort):
     def describe(self):
         self.set_test_details(id=6,
-                              summary="JUNIPER NFA LSU parallel:loading graphs on single cluster",
+                              summary="S1:SNORT NFA LSU parallel:loading graphs on single cluster",
                               steps="""
         1. Steps 1
         2. Steps 2
@@ -210,16 +207,24 @@ class JuniperNFA_parallel2(HigherLevelTestcase):
                               """)
 
     def setup(self):
-        super(JuniperNFA_parallel2, self).setup()
+        super(SnortFFA_parallel2, self).setup()
 
     def run(self):
-        super(JuniperNFA_parallel2, self).run()
+        super(SnortFFA_parallel2, self).run()
 
     def cleanup(self):
-        super(JuniperNFA_parallel2, self).cleanup()
+        super(SnortFFA_parallel2, self).cleanup()
 
 
 if __name__ == "__main__":
+
+
+
     myscript = MyScript()
-    myscript.add_test_case(JuniperNFA_Basic_Runtime())
+    myscript.add_test_case(SnortFFA_Basic_Runtime())
+    #myscript.add_test_case(SnortFFA_MatchAcrossPacket())
+    #myscript.add_test_case(SnortFFA_Sequential1())
+    #myscript.add_test_case(SnortFFA_Sequential2())
+    #myscript.add_test_case(SnortFFA_parallel1())
+    #myscript.add_test_case(SnortFFA_parallel2())
     myscript.run()

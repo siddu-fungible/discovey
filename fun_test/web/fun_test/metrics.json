@@ -6339,6 +6339,63 @@
                 ]
               }
             ]
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "children": [
+              {
+                "metric_model_name": "TeraMarkPkeRsaPerformance",
+                "children": [],
+                "name": "RSA CRT 2048 decryptions_S1",
+                "label": "RSA CRT 2048 decryptions"
+              },
+              {
+                "metric_model_name": "TeraMarkPkeRsa4kPerformance",
+                "children": [],
+                "name": "RSA CRT 4096 decryptions_S1",
+                "label": "RSA CRT 4096 decryptions"
+              },
+              {
+                "metric_model_name": "TeraMarkPkeEcdh256Performance",
+                "children": [],
+                "name": "ECDH P256_S1",
+                "label": "ECDH P256"
+              },
+              {
+                "metric_model_name": "TeraMarkPkeEcdh25519Performance",
+                "children": [],
+                "name": "ECDH 25519_S1",
+                "label": "ECDH 25519"
+              }
+            ],
+            "name": "TeraMark PKE_S1",
+            "label": "PKE"
+          }
+        ]
+      },
+      {
+        "metric_model_name": "MetricContainer",
+        "name": "Security_S1",
+        "label": "Security",
+        "children": [
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "PKE TLS_S1",
+            "label": "TLS",
+            "children": [
+              {
+                "metric_model_name": "PkeX25519TlsSoakPerformance",
+                "name": "ECDHE_RSA X25519 RSA 2K_S1",
+                "label": "ECDHE RSA X25519 RSA 2K",
+                "children": []
+              },
+              {
+                "metric_model_name": "PkeP256TlsSoakPerformance",
+                "name": "ECDHE_RSA P256 RSA 2K_S1",
+                "label": "ECDHE RSA P256 RSA 2K",
+                "children": []
+              }
+            ]
           }
         ]
       }
