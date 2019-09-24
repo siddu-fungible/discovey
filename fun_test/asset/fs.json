@@ -76,7 +76,13 @@
       "mgmt_ssh_username": "root",
       "mgmt_ip": "fs15-fpga"
     },
-    "gateway_ip": "10.1.105.1"
+    "gateway_ip": "10.80.4.1",
+     "apc_info": {
+      "username": "localadmin",
+      "outlet_number": 13,
+      "password": "Precious1*",
+      "host_ip": "mpoc-r5-PDU1"
+    }
   },
   {
     "bmc": {
@@ -117,7 +123,13 @@
       "mgmt_ssh_username": "root",
       "mgmt_ip": "fs20-fpga"
     },
-    "gateway_ip": "10.1.105.1"
+    "gateway_ip": "10.80.4.1",
+     "apc_info": {
+      "username": "localadmin",
+      "outlet_number": 7,
+      "password": "Precious1*",
+      "host_ip": "mpoc-r5-PDU1"
+    }
   },
   {
     "bmc": {
@@ -136,7 +148,13 @@
       "mgmt_ssh_username": "root",
       "mgmt_ip": "fs21-fpga"
     },
-    "gateway_ip": "10.1.105.1"
+    "gateway_ip": "10.80.4.1",
+     "apc_info": {
+      "username": "localadmin",
+      "outlet_number": 20,
+      "password": "Precious1*",
+      "host_ip": "mpoc-r6-PDU1"
+    }
   },
   {
     "bmc": {
@@ -563,7 +581,13 @@
       "mgmt_ssh_username": "root",
       "mgmt_ip": "fs8-fpga"
     },
-    "gateway_ip": "10.1.105.1"
+    "gateway_ip": "10.80.4.1",
+     "apc_info": {
+      "username": "localadmin",
+      "outlet_number": 11,
+      "password": "Precious1*",
+      "host_ip": "mpoc-r6-PDU1"
+    }
   },
   {
     "bmc": {
@@ -582,7 +606,13 @@
       "mgmt_ssh_username": "root",
       "mgmt_ip": "fs52-fpga"
     },
-    "gateway_ip": "10.1.105.1"
+    "gateway_ip": "10.80.4.1",
+     "apc_info": {
+      "username": "localadmin",
+      "outlet_number": 20,
+      "password": "Precious1*",
+      "host_ip": "mpoc-r4-PDU1"
+    }
   },
   {
     "bmc": {
@@ -601,7 +631,13 @@
       "mgmt_ssh_username": "root",
       "mgmt_ip": "fs38-fpga"
     },
-    "gateway_ip": "10.1.105.1"
+    "gateway_ip": "10.80.4.1",
+     "apc_info": {
+      "username": "localadmin",
+      "outlet_number": 11,
+      "password": "Precious1*",
+      "host_ip": "mpoc-r4-PDU1"
+    }
   },
   {
     "bmc": {
@@ -639,7 +675,13 @@
       "mgmt_ssh_username": "root",
       "mgmt_ip": "fs39-fpga"
     },
-    "gateway_ip": "10.1.105.1"
+        "gateway_ip": "10.80.4.1",
+     "apc_info": {
+      "username": "localadmin",
+      "outlet_number": 5,
+      "password": "Precious1*",
+      "host_ip": "mpoc-r5-PDU1"
+    }
   },
   {
     "bmc": {
@@ -658,7 +700,13 @@
       "mgmt_ssh_username": "root",
       "mgmt_ip": "fs51-fpga"
     },
-    "gateway_ip": "10.1.105.1"
+        "gateway_ip": "10.80.4.1",
+     "apc_info": {
+      "username": "localadmin",
+      "outlet_number": 4,
+      "password": "Precious1*",
+      "host_ip": "mpoc-r5-PDU1"
+    }
   },
   {
     "bmc": {
@@ -677,7 +725,13 @@
       "mgmt_ssh_username": "root",
       "mgmt_ip": "fs37-fpga"
     },
-    "gateway_ip": "10.1.105.1"
+        "gateway_ip": "10.80.4.1",
+     "apc_info": {
+      "username": "localadmin",
+      "outlet_number": 3,
+      "password": "Precious1*",
+      "host_ip": "mpoc-r5-PDU1"
+    }
   },
   {
     "bmc": {
@@ -696,7 +750,13 @@
       "mgmt_ssh_username": "root",
       "mgmt_ip": "fs32-fpga"
     },
-    "gateway_ip": "10.1.105.1"
+    "gateway_ip": "10.80.4.1",
+     "apc_info": {
+      "username": "localadmin",
+      "outlet_number": 2,
+      "password": "Precious1*",
+      "host_ip": "mpoc-r5-PDU1"
+    }
   },
   {
     "bmc": {
@@ -715,7 +775,38 @@
       "mgmt_ssh_username": "root",
       "mgmt_ip": "fs67-fpga"
     },
-    "gateway_ip": "10.1.105.1"
+        "gateway_ip": "10.80.4.1",
+     "apc_info": {
+      "username": "localadmin",
+      "outlet_number": 1,
+      "password": "Precious1*",
+      "host_ip": "mpoc-r5-PDU1"
+    }
+  },
+   {
+    "bmc": {
+      "mgmt_ssh_password": "superuser",
+      "mgmt_ssh_username": "sysadmin",
+      "mgmt_ip": "fs40-bmc"
+    },
+    "come": {
+      "mgmt_ssh_password": "123",
+      "mgmt_ssh_username": "fun",
+      "mgmt_ip": "fs40-come"
+    },
+    "name": "fs-40",
+    "fpga": {
+      "mgmt_ssh_password": "root",
+      "mgmt_ssh_username": "root",
+      "mgmt_ip": "fs40-fpga"
+    },
+        "gateway_ip": "10.80.4.1",
+     "apc_info": {
+      "username": "localadmin",
+      "outlet_number": 6,
+      "password": "Precious1*",
+      "host_ip": "mpoc-r5-PDU1"
+    }
   },
   {
     "bmc": {
