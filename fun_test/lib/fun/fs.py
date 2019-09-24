@@ -694,7 +694,10 @@ class BootupWorker(Thread):
                     fs.get_bmc().reset_f1(f1_index=f1_index)
                 try:
                     # f1_{}_uart_log.txt
-                    fs.get_bmc().command("rm -f /tmp/f1*uart_log.txt")
+                    # fs.get_bmc().command("rm -f /tmp/f1*uart_log.txt")
+                    fs.get_bmc().command("echo '' > /tmp/f1_0_uart_log.txt")
+                    fs.get_bmc().command("echo '' > /tmp/f1_1_uart_log.txt")
+
                 except:
                     pass
 
