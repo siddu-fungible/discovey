@@ -1391,14 +1391,7 @@ if __name__ == "__main__trailingrst":
         chart.save()
     print "set trailingrst dataset for jpeg metrics"
 
-if __name__ == "__main__":
-    mmt = MileStoneMarkers.objects.all()
-    for mm in mmt:
-        if "Tape-out" in mm.milestone_name or "F1" in mm.milestone_name:
-            mm.delete()
-
-
-if __name__ == "__main__":
+if __name__ == "__main_s1_pke__":
     with open(METRICS_BASE_DATA_FILE, "r") as f:
         metrics = json.load(f)
         for metric in metrics:
@@ -1423,3 +1416,9 @@ if __name__ == "__main__":
         if security_children["name"] == "PKE TLS":
             result = set_internal_name(security_children)
             print json.dumps(result, indent=4)
+
+if __name__ == "__main__":
+    mmt = MileStoneMarkers.objects.all()
+    for mm in mmt:
+        if "Tape-out" in mm.milestone_name or "F1" in mm.milestone_name:
+            mm.delete()
