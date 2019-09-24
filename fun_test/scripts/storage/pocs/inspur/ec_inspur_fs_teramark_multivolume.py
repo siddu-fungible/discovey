@@ -833,49 +833,100 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.test_assert_expected(expected=self.syslog_level, actual=command_result["data"],
                                           message="Checking syslog level")
 
-            # Executing the FIO command to fill the volume to it's capacity
-            if not fun_test.shared_variables["ec"]["warmup_io_completed"] and self.warm_up_traffic:
-                if self.parallel_warm_up:
-                    host_clone = {}
-                    warmup_thread_id = {}
-                    actual_block_size = int(self.warm_up_fio_cmd_args["bs"].strip("k"))
-                    aligned_block_size = int((int(actual_block_size / self.num_hosts) + 3) / 4) * 4
-                    self.warm_up_fio_cmd_args["bs"] = str(aligned_block_size) + "k"
+            # Preparing the volume details list containing the list of ditionaries where each dictionary has the details of
+            # an EC volume
+            self.vol_details = []
+            for num in range(self.ec_info["num_volumes"]):
+                vol_group = {}
+                vol_group[self.ec_info["volume_types"]["ndata"]] = self.ec_info["uuids"][num]["blt"]
+                vol_group[self.ec_info["volume_types"]["ec"]] = self.ec_info["uuids"][num]["ec"]
+                vol_group[self.ec_info["volume_types"]["jvol"]] = [self.ec_info["uuids"][num]["jvol"]]
+                vol_group[self.ec_info["volume_types"]["lsv"]] = self.ec_info["uuids"][num]["lsv"]
+                self.vol_details.append(vol_group)
+            fun_test.log("vol_details is: {}".format(self.vol_details))
+
+        # Executing the FIO command to fill the volume to it's capacity
+        if self.ec_info.get("compress", False):
+            server_written_total_bytes = 0
+            total_bytes_pushed_to_disk = 0
+            try:
+                initial_vol_stats = self.storage_controller.peek(
+                    props_tree="storage/volumes", legacy=False, chunk=8192, command_duration=self.command_timeout)
+                fun_test.test_assert(initial_vol_stats["status"], "Volume stats collected before warmup")
+                fun_test.log("Volume stats before warmup: {}".format(initial_vol_stats))
+            except Exception as ex:
+                fun_test.critical(str(ex))
+
+        if not fun_test.shared_variables["ec"]["warmup_io_completed"] and self.warm_up_traffic:
+            if self.parallel_warm_up:
+                host_clone = {}
+                warmup_thread_id = {}
+                actual_block_size = int(self.warm_up_fio_cmd_args["bs"].strip("k"))
+                aligned_block_size = int((int(actual_block_size / self.num_hosts) + 3) / 4) * 4
+                self.warm_up_fio_cmd_args["bs"] = str(aligned_block_size) + "k"
+                for index, host_name in enumerate(self.host_info):
+                    wait_time = self.num_hosts - index
+                    host_clone[host_name] = self.host_info[host_name]["handle"].clone()
+                    warmup_thread_id[index] = fun_test.execute_thread_after(
+                        time_in_seconds=wait_time, func=fio_parser, arg1=host_clone[host_name], host_index=index,
+                        filename=self.host_info[host_name]["fio_filename"],
+                        cpus_allowed=self.host_info[host_name]["host_numa_cpus"], **self.warm_up_fio_cmd_args)
+
+                    fun_test.log("Started FIO command to perform sequential write on {}".format(host_name))
+                    fun_test.sleep("to start next thread", 1)
+
+                fun_test.sleep("Fio threads started", 10)
+                try:
                     for index, host_name in enumerate(self.host_info):
-                        wait_time = self.num_hosts - index
-                        host_clone[host_name] = self.host_info[host_name]["handle"].clone()
-                        warmup_thread_id[index] = fun_test.execute_thread_after(
-                            time_in_seconds=wait_time, func=fio_parser, arg1=host_clone[host_name], host_index=index,
-                            filename=self.host_info[host_name]["fio_filename"],
-                            cpus_allowed=self.host_info[host_name]["host_numa_cpus"], **self.warm_up_fio_cmd_args)
+                        fun_test.log("Joining fio thread {}".format(index))
+                        fun_test.join_thread(fun_test_thread_id=warmup_thread_id[index], sleep_time=1)
+                        fun_test.log("FIO Command Output: \n{}".format(fun_test.shared_variables["fio"][index]))
+                except Exception as ex:
+                    fun_test.critical(str(ex))
 
-                        fun_test.log("Started FIO command to perform sequential write on {}".format(host_name))
-                        fun_test.sleep("to start next thread", 1)
+                for index, host_name in enumerate(self.host_info):
+                    fun_test.test_assert(fun_test.shared_variables["fio"][index], "Volume warmup on host {}".
+                                         format(host_name))
+                    server_written_total_bytes += fun_test.shared_variables["fio"][index]["write"]["io_bytes"]
+                    fun_test.shared_variables["ec"][host_name]["warmup"] = True
+            else:
+                for index, host_name in enumerate(self.host_info):
+                    host_handle = self.host_info[host_name]["handle"]
+                    fio_output = host_handle.pcie_fio(filename=self.host_info[host_name]["fio_filename"],
+                                                      cpus_allowed=self.host_info[host_name]["host_numa_cpus"],
+                                                      **self.warm_up_fio_cmd_args)
+                    fun_test.log("FIO Command Output:\n{}".format(fio_output))
+                    fun_test.test_assert(fio_output, "Volume warmup on host {}".format(host_name))
+                    server_written_total_bytes += fio_output["write"]["io_bytes"]
 
-                    fun_test.sleep("Fio threads started", 10)
-                    try:
-                        for index, host_name in enumerate(self.host_info):
-                            fun_test.log("Joining fio thread {}".format(index))
-                            fun_test.join_thread(fun_test_thread_id=warmup_thread_id[index], sleep_time=1)
-                            fun_test.log("FIO Command Output: \n{}".format(fun_test.shared_variables["fio"][index]))
-                    except Exception as ex:
-                        fun_test.critical(str(ex))
+            fun_test.sleep("before actual test", self.iter_interval)
+            fun_test.shared_variables["ec"]["warmup_io_completed"] = True
 
-                    for index, host_name in enumerate(self.host_info):
-                        fun_test.test_assert(fun_test.shared_variables["fio"][index], "Volume warmup on host {}".
-                                             format(host_name))
-                        fun_test.shared_variables["ec"][host_name]["warmup"] = True
-                else:
-                    for index, host_name in enumerate(self.host_info):
-                        host_handle = self.host_info[host_name]["handle"]
-                        fio_output = host_handle.pcie_fio(filename=self.host_info[host_name]["fio_filename"],
-                                                          cpus_allowed=self.host_info[host_name]["host_numa_cpus"],
-                                                          **self.warm_up_fio_cmd_args)
-                        fun_test.log("FIO Command Output:\n{}".format(fio_output))
-                        fun_test.test_assert(fio_output, "Volume warmup on host {}".format(host_name))
+        if self.ec_info.get("compress", False):
+            try:
+                final_vol_stats = self.storage_controller.peek(
+                    props_tree="storage/volumes", legacy=False, chunk=8192, command_duration=self.command_timeout)
+                fun_test.test_assert(final_vol_stats["status"], "Volume stats collected after warmup")
+                fun_test.log("Volume stats after warmup: {}".format(final_vol_stats))
+            except Exception as ex:
+                fun_test.critical(str(ex))
 
-                fun_test.sleep("before actual test", self.iter_interval)
-                fun_test.shared_variables["ec"]["warmup_io_completed"] = True
+        if initial_vol_stats["status"] and final_vol_stats["status"]:
+            diff_vol_stats = vol_stats_diff(initial_vol_stats=initial_vol_stats["data"],
+                                            final_vol_stats=final_vol_stats["data"], vol_details=self.vol_details)
+            if diff_vol_stats["status"]:
+                total_bytes_pushed_to_disk = diff_vol_stats["total_diff"]["VOL_TYPE_BLK_LSV"]["write_bytes"]
+                compress_ratio = round(server_written_total_bytes / float(total_bytes_pushed_to_disk), 2)
+
+                headers = ["Total bytes written by server", "Total bytes pushed to disk after compression",
+                           "Compression Ratio"]
+                data = [server_written_total_bytes, total_bytes_pushed_to_disk, compress_ratio]
+                table_data = {"headers": headers, "rows": [data]}
+                fun_test.add_table(panel_header="Compression Details", table_name="Compression ratio during warmup",
+                                   table_data=table_data)
+            else:
+                fun_test.critical("Unable to compute difference betweeen the final & initial volumes stats during "
+                                  "warmup...So skipping compression ratio calculation")
 
     def run(self):
 
@@ -900,6 +951,11 @@ class ECVolumeLevelTestcase(FunTestCase):
                            "aggr_amp_vol_stats", "write_amp_app_stats", "read_amp_app_stats", "aggr_amp_app_stats",
                            "write_amp_rcnvme_stats", "read_amp_rcnvme_stats", "aggr_amp_rcnvme_stats"]
         table_data_rows = []
+
+        ssd_util_headers = ["IO Depth"]
+        for i in range(12):
+            ssd_util_headers.append("SSD{} IOPS".format(i))
+        ssd_util_data_rows = []
 
         self.ec_info = fun_test.shared_variables["ec_info"]
         # Checking whether the job's inputs argument is having the list of io_depths to be used in this test.
@@ -928,18 +984,6 @@ class ECVolumeLevelTestcase(FunTestCase):
 
         start_stats = True
 
-        # Preparing the volume details list containing the list of ditionaries where each dictionary has the details of
-        # an EC volume
-        vol_details = []
-        for num in range(self.ec_info["num_volumes"]):
-            vol_group = {}
-            vol_group[self.ec_info["volume_types"]["ndata"]] = self.ec_info["uuids"][num]["blt"]
-            vol_group[self.ec_info["volume_types"]["ec"]] = self.ec_info["uuids"][num]["ec"]
-            vol_group[self.ec_info["volume_types"]["jvol"]] = [self.ec_info["uuids"][num]["jvol"]]
-            vol_group[self.ec_info["volume_types"]["lsv"]] = self.ec_info["uuids"][num]["lsv"]
-            vol_details.append(vol_group)
-        fun_test.log("vol_details is: {}".format(vol_details))
-
         for iodepth in self.fio_iodepth:
             fio_result[iodepth] = True
             fio_output[iodepth] = {}
@@ -961,6 +1005,7 @@ class ECVolumeLevelTestcase(FunTestCase):
             host_clone = {}
 
             row_data_dict = {}
+            ssd_util_row_data = {}
             size = (self.ec_info["capacity"] * self.ec_info["num_volumes"]) / (1024 ** 3)
             row_data_dict["size"] = str(size) + "G"
             row_data_dict["num_hosts"] = self.num_hosts
@@ -1029,7 +1074,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                     func = stat_detail.keys()[0]
                     self.stats_collect_details[index][func]["count"] = int(mpstat_count)
                     if func == "vol_stats":
-                        self.stats_collect_details[index][func]["vol_details"] = vol_details
+                        self.stats_collect_details[index][func]["vol_details"] = self.vol_details
                 fun_test.log("Different stats collection thread details for the current IO depth {} before starting "
                              "them:\n{}".format(iodepth, self.stats_collect_details))
                 self.storage_controller.verbose = False
@@ -1045,7 +1090,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 try:
                     initial_vol_stat[iodepth] = self.storage_controller.peek(
                         props_tree="storage/volumes", legacy=False, chunk=8192, command_duration=self.command_timeout)
-                    fun_test.test_assert(initial_vol_stat[iodepth], "Volume stats collected before the test")
+                    fun_test.test_assert(initial_vol_stat[iodepth]["status"], "Volume stats collected before the test")
                     fun_test.log("Initial vol stats in script: {}".format(initial_vol_stat[iodepth]))
 
                     initial_rcnvme_stat[iodepth] = self.storage_controller.peek(
@@ -1090,6 +1135,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                                 io_factor += 1
 
                 row_data_dict["iodepth"] = int(fio_iodepth) * int(global_num_jobs) * int(fio_num_jobs)
+                ssd_util_row_data["IO Depth"] = row_data_dict["iodepth"]
 
                 # Calling the mpstat method to collect the mpstats for the current iteration in all the hosts used in
                 # the test
@@ -1190,7 +1236,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                         final_vol_stat[iodepth] = self.storage_controller.peek(
                             props_tree="storage/volumes", legacy=False, chunk=8192,
                             command_duration=self.command_timeout)
-                        fun_test.test_assert(final_vol_stat[iodepth], "Stats collected after the test")
+                        fun_test.test_assert(final_vol_stat[iodepth]["status"], "Volume stats collected after the test")
                         fun_test.log("Final vol stats in script: {}".format(final_vol_stat[iodepth]))
 
                         final_rcnvme_stat[iodepth] = self.storage_controller.peek(
@@ -1251,6 +1297,20 @@ class ECVolumeLevelTestcase(FunTestCase):
                         if func == "cdu_stats":
                             fun_test.add_auxillary_file(description="CDU Stats - IO depth {}".
                                                         format(row_data_dict["iodepth"]), filename=filename)
+            # Checking if mpstat process is still running...If so killing it...
+            for host_name in self.host_info:
+                host_handle = self.host_info[host_name]["handle"]
+                mpstat_pid_check = host_handle.get_process_id("mpstat")
+                if mpstat_pid_check and int(mpstat_pid_check) == int(mpstat_pid[host_name]):
+                    host_handle.kill_process(process_id=int(mpstat_pid_check))
+                # Saving the mpstat output to the mpstat_artifact_file file
+                fun_test.scp(source_port=host_handle.ssh_port, source_username=host_handle.ssh_username,
+                             source_password=host_handle.ssh_password, source_ip=host_handle.host_ip,
+                             source_file_path=self.mpstat_args["output_file"],
+                             target_file_path=mpstat_artifact_file[host_name])
+                fun_test.add_auxillary_file(description="Host {} CPU Usage - IO depth {}".
+                                            format(host_name, row_data_dict["iodepth"]),
+                                            filename=mpstat_artifact_file[host_name])
 
             # Summing up the FIO stats from all the hosts
             for index, host_name in enumerate(self.host_info):
@@ -1275,6 +1335,9 @@ class ECVolumeLevelTestcase(FunTestCase):
                         aggr_fio_output[iodepth][op][field] = int(round(value / 1000))
                     if "latency" in field:
                         aggr_fio_output[iodepth][op][field] = int(round(value) / self.num_hosts)
+                    # Converting the runtime from milliseconds to seconds and taking the average out of it
+                    if field == "runtime":
+                        aggr_fio_output[iodepth][op][field] = int(round(value / 1000) / self.num_hosts)
                     row_data_dict[op + field] = aggr_fio_output[iodepth][op][field]
 
             fun_test.log("Processed Aggregated FIO Command Output:\n{}".format(aggr_fio_output[iodepth]))
@@ -1284,6 +1347,10 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.critical("No output from FIO test, hence moving to the next variation")
                 continue
 
+            # Finding the total runtime of the current iteration
+            io_runtime = 0
+            io_runtime = max(aggr_fio_output[iodepth]["read"]["runtime"], aggr_fio_output[iodepth]["write"]["runtime"])
+
             row_data_dict["fio_job_name"] = fio_job_name
             if self.cal_amplification:
                 '''
@@ -1292,15 +1359,16 @@ class ECVolumeLevelTestcase(FunTestCase):
                 LBW = Bytes written from the test app.  Should be same as reported by the Top level volume (e.g. LSV).
                 '''
                 try:
-                    if initial_vol_stat[iodepth] or final_vol_stat[iodepth]:
+                    if initial_vol_stat[iodepth]["status"] or final_vol_stat[iodepth]["status"]:
                         fun_test.log("\ninitial_vol_stat[{}] is: {}\n".
                                      format(iodepth, initial_vol_stat[iodepth]["data"]))
                         fun_test.log("\nfinal_vol_stat[{}] is: {}\n".format(iodepth, final_vol_stat[iodepth]["data"]))
-                        fun_test.log("\nvol_details: {}\n".format(vol_details))
+                        fun_test.log("\nvol_details: {}\n".format(self.vol_details))
                         curr_stats_diff = vol_stats_diff(initial_vol_stats=initial_vol_stat[iodepth]["data"],
                                                          final_vol_stats=final_vol_stat[iodepth]["data"],
-                                                         vol_details=vol_details)
-                        fun_test.simple_assert(curr_stats_diff["status"], "Stats diff to measure amplification")
+                                                         vol_details=self.vol_details)
+                        fun_test.simple_assert(curr_stats_diff["status"], "Volume stats diff to measure amplification")
+                        fun_test.log("\nVolume stats diff: {}".format(curr_stats_diff))
 
                         pbw = curr_stats_diff["total_diff"]["VOL_TYPE_BLK_LOCAL_THIN"]["write_bytes"]
                         lbw = curr_stats_diff["total_diff"]["VOL_TYPE_BLK_LSV"]["write_bytes"]
@@ -1326,19 +1394,33 @@ class ECVolumeLevelTestcase(FunTestCase):
                 except Exception as ex:
                     fun_test.critical(str(ex))
 
-                # Calculating amplification based on rcnvme stats
+                # Calculating amplification and SSD utilization based on rcnvme stats
                 try:
-                    if initial_rcnvme_stat[iodepth] or final_rcnvme_stat[iodepth]:
+                    if initial_rcnvme_stat[iodepth]["status"] or final_rcnvme_stat[iodepth]["status"]:
                         pbr_rcnvme = 0
                         pbw_rcnvme = 0
                         rcnvme_diff_stats = {}
+                        ssd_io_counts = OrderedDict()
 
                         # Retrieving diff of stats of all ssds
                         rcnvme_diff_stats = get_results_diff(old_result=initial_rcnvme_stat[iodepth]["data"],
                                                              new_result=final_rcnvme_stat[iodepth]["data"])
-                        fun_test.simple_assert(rcnvme_diff_stats, "rcnvme diff stats to measure amplification")
-                        # Aggregating all ssds stats
-                        for i in range(len(rcnvme_diff_stats)):
+                        fun_test.simple_assert(rcnvme_diff_stats, "rcnvme diff stats")
+                        fun_test.log("\nRCNVMe stats diff: {}".format(rcnvme_diff_stats))
+
+                        # Sum up all rcnvme_read_count & rcnvme_write_count for all the SSD
+                        for drive_id in sorted(rcnvme_diff_stats, key=lambda key: int(key)):
+                            ssd_io_counts[drive_id] = rcnvme_diff_stats[drive_id]["rcnvme_read_count"] + \
+                                                      rcnvme_diff_stats[drive_id]["rcnvme_write_count"]
+
+                        fun_test.log("\nSSD level IO count during the test: {}".format(ssd_io_counts))
+                        if io_runtime:
+                            for drive_id in ssd_io_counts:
+                                key = "SSD{} IOPS".format(drive_id)
+                                ssd_util_row_data[key] = ssd_io_counts[drive_id] / io_runtime
+
+                        # Aggregating all ssds read and write bytes stats
+                        for i in sorted(rcnvme_diff_stats, key=lambda key: int(key)):
                             pbr_rcnvme += rcnvme_diff_stats[str(i)]["rcnvme_read_bytes"]
                             pbw_rcnvme += rcnvme_diff_stats[str(i)]["rcnvme_write_bytes"]
                         fun_test.log("Iodepth: {}\nPhysical Bytes Written from rcnvme stats: {}\n"
@@ -1358,7 +1440,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                     if key.__contains__("_amp_"):
                         fun_test.log("{} is:\t {}".format(key, val))
 
-            # Building the table raw for this variation
+            # Building the perf row for this variation
             row_data_list = []
             for i in table_data_cols:
                 if i not in row_data_dict:
@@ -1366,29 +1448,27 @@ class ECVolumeLevelTestcase(FunTestCase):
                 else:
                     row_data_list.append(row_data_dict[i])
             table_data_rows.append(row_data_list)
+
+            # Building the SSD utilization row for this variation
+            ssd_util_data_list = []
+            for header in ssd_util_headers:
+                if header not in ssd_util_row_data:
+                    ssd_util_data_list.append(-1)
+                else:
+                    ssd_util_data_list.append(ssd_util_row_data[header])
+            ssd_util_data_rows.append(ssd_util_data_list)
+
             if self.post_results:
                 fun_test.log("Posting results on dashboard")
                 post_results("Inspur Performance Test", test_method, *row_data_list)
-
-            # Checking if mpstat process is still running...If so killing it...
-            for host_name in self.host_info:
-                host_handle = self.host_info[host_name]["handle"]
-                mpstat_pid_check = host_handle.get_process_id("mpstat")
-                if mpstat_pid_check and int(mpstat_pid_check) == int(mpstat_pid[host_name]):
-                    host_handle.kill_process(process_id=int(mpstat_pid_check))
-                # Saving the mpstat output to the mpstat_artifact_file file
-                fun_test.scp(source_port=host_handle.ssh_port, source_username=host_handle.ssh_username,
-                             source_password=host_handle.ssh_password, source_ip=host_handle.host_ip,
-                             source_file_path=self.mpstat_args["output_file"],
-                             target_file_path=mpstat_artifact_file[host_name])
-                fun_test.add_auxillary_file(description="Host {} CPU Usage - IO depth {}".
-                                            format(host_name, row_data_dict["iodepth"]),
-                                            filename=mpstat_artifact_file[host_name])
 
             fun_test.sleep("Waiting in between iterations", self.iter_interval)
 
             table_data = {"headers": table_data_headers, "rows": table_data_rows}
             fun_test.add_table(panel_header="Performance Table", table_name=self.summary, table_data=table_data)
+
+            ssd_util_table_data = {"headers": ssd_util_headers, "rows": ssd_util_data_rows}
+            fun_test.add_table(panel_header="SSD Utilization", table_name=self.summary, table_data=ssd_util_table_data)
 
         # Posting the final status of the test result
         fun_test.log(fio_result)
