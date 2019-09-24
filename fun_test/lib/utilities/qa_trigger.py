@@ -19,7 +19,7 @@ DEFAULT_BUILD_URL = "http://dochub.fungible.local/doc/jenkins/funsdk/latest/"
 
 DEFAULT_POLL_INTERVAL_SECONDS = 60
 DEFAULT_BASE_URL = "http://integration.fungible.local"
-DEFAULT_BASE_URL = "0.0.0.0:5000"
+# DEFAULT_BASE_URL = "0.0.0.0:5000"
 
 DEFAULT_SUBMITTER_EMAIL = "team-regression@fungible.com"
 
@@ -223,7 +223,8 @@ def main():
                                             email_list=emails,
                                             environment=environment,
                                             submitter_email=submitter_email,
-                                            description=description)
+                                            description=description,
+                                            test_bed_type=test_bed_type)
 
         job_status = None
         if job_id > 0:
