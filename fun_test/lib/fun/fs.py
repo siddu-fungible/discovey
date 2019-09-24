@@ -266,8 +266,8 @@ class Bmc(Linux):
                 if f1_index == 1:
                     huid = 2
                 s += " cc_huid={}".format(huid)
-        if "--sync-uart" not in boot_args:
-            s += " --sync-uart"
+        #if "--sync-uart" not in boot_args:
+        #    s += " --sync-uart"
         return s
 
     def setup_serial_proxy_connection(self, f1_index, auto_boot=False):
