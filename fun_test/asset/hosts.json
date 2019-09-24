@@ -164,6 +164,16 @@
       "password": "ADMIN"
     }
   },
+  "mpoc-server34": {
+    "host_ip": "mpoc-server34",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "mpoc-server38-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
+  },
   "regression_service_host": {
     "host_ip": "qa-ubuntu-02",
     "ssh_username": "auto_admin",
