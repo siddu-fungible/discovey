@@ -370,7 +370,7 @@ def vol_stats_diff(initial_vol_stats, final_vol_stats, vol_details):
         for i, vol_group in dict_vol_details.iteritems():
             stats_diff[i] = {}
             for vol_type, vol_uuids in sorted(vol_group.iteritems()):
-                if vol_type not in stats_diff:
+                if vol_type not in stats_diff[i]:
                     stats_diff[i][vol_type] = {}
                 for vol_uuid in vol_uuids:
                     if vol_uuid not in stats_diff[i][vol_type]:
