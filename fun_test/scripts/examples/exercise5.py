@@ -52,8 +52,8 @@ class FunTestCase1(FunTestCase):
         fun_test.test_assert(dut_instance0, "Retrieved dut instance 0")
 
         dut_instance0.command("dd if=/dev/zero of=nvfile bs=4096 count=256")
-        dut_instance0.run_app(app="mdt_test", args="nvfile=nvfile", foreground=True, timeout=60)
-        dut_instance0.run_app(app="load_mods", foreground=True, timeout=60)
+        dut_instance0.run_app("app=mdt_test nvfile=nvfile", foreground=True, timeout=60)
+        dut_instance0.run_app("app=load_mods", foreground=True, timeout=60)
         dut_instance0.start(foreground=True, run_to_completion=True)
 
         fio = topology.get_tg_instance(tg_index=0)
