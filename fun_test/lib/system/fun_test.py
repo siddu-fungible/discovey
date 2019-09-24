@@ -1501,7 +1501,7 @@ class FunTestScript(object):
                              steps=self.steps)
         cleanup_te = None
         if fun_test.suite_execution_id:
-            models_helper.add_test_case_execution(test_case_id=FunTest.CLEANUP_TC_ID,
+            cleanup_te = models_helper.add_test_case_execution(test_case_id=FunTest.CLEANUP_TC_ID,
                                                   suite_execution_id=fun_test.suite_execution_id,
                                                   result=fun_test.IN_PROGRESS,
                                                   path=fun_test.relative_path,
@@ -1536,6 +1536,7 @@ class FunTestScript(object):
             models_helper.update_test_case_execution(test_case_execution_id=cleanup_te.execution_id,
                                                      suite_execution_id=fun_test.suite_execution_id,
                                                      result=result)
+
             models_helper.report_re_run_result(execution_id=cleanup_te.execution_id, re_run_info=fun_test.get_re_run_info())
 
     def _close(self):
