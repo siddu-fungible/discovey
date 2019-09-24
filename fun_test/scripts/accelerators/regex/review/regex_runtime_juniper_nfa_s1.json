@@ -1,7 +1,7 @@
 {
   "JuniperNFA_Basic_Runtime": {
-    "jsons":["SNORT_NFA_BASIC_RUNTIME.json"],
-    "XDATA_LISTS": "/local/auto_admin/data_store/regex/S1/snort/nfa_exp_files/SNORT_NFA_BASIC_RUNTIME.list",
+    "jsons":["JUNIPER_NFA_BASIC_RUNTIME.json"],
+    "XDATA_LISTS": "/project/users/QA/regression/data_store/regex/S1/juniper_compile/nfa_exp_files/JUNIPER_NFA_BASIC_RUNTIME.list",
     "description":"testing basic lsu actions for Juniper NFA",
     "rbm_size": "1m",
     "syslog_level": "3",
