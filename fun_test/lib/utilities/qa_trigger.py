@@ -19,6 +19,8 @@ DEFAULT_BUILD_URL = "http://dochub.fungible.local/doc/jenkins/funsdk/latest/"
 
 DEFAULT_POLL_INTERVAL_SECONDS = 60
 DEFAULT_BASE_URL = "http://integration.fungible.local"
+DEFAULT_BASE_URL = "0.0.0.0:5000"
+
 DEFAULT_SUBMITTER_EMAIL = "team-regression@fungible.com"
 
 TIME_OUT_EXIT_CODE = -999
