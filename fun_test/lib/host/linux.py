@@ -2807,7 +2807,7 @@ class Linux(object, ToDictMixin):
     @fun_test.safe
     def destroy(self):
         try:
-            self.disconnect()
+            Linux.disconnect(self)
         except Exception as ex:
             pass
         try:
