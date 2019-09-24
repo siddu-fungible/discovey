@@ -664,7 +664,7 @@
           "2": {
             "type": "INTERFACE_TYPE_PCIE",
             "dual": 0
-          },
+          }
 
         },
         "dut": "fs-38"
