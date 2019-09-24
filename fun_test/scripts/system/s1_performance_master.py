@@ -278,6 +278,6 @@ if __name__ == "__main__":
     myscript.add_test_case(PkeX25519TlsSoakPerformanceS1Tc())
     myscript.add_test_case(PkeP256TlsSoakPerformanceS1Tc())
     myscript.add_test_case(TeraMarkDfaPerformanceS1Tc())
-    myscript.add_test_case(TeraMarkNfaPerformanceS1Tc())
+    # myscript.add_test_case(TeraMarkNfaPerformanceS1Tc())
 
     myscript.run()
