@@ -692,6 +692,12 @@ class BootupWorker(Thread):
                     fpga.reset_f1(f1_index=f1_index)
                 else:
                     fs.get_bmc().reset_f1(f1_index=f1_index)
+                try:
+                    # f1_{}_uart_log.txt
+                    fs.get_bmc().command("rm -f /tmp/f1*uart_log.txt")
+                except:
+                    pass
+
                 if fs.f1_parameters:
                     if f1_index in fs.f1_parameters:
                         if "boot_args" in fs.f1_parameters[f1_index]:
