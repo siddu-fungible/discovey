@@ -641,7 +641,7 @@
       "enable_funcp": true
     }
   },
-  "fs-alibaba-scale": {
+  "fs-fcp-scale": {
     "dut_info": {
       "0": {
         "type": "DUT_TYPE_FSU",

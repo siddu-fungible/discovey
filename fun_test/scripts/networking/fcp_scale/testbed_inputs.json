@@ -1,6 +1,6 @@
 {
     "fs": { 
-          "fs-alibaba-scale": {
+          "fs-fcp-scale": {
               "fs_list":["fs-38"],
               "fs-38": {
                   "index": 0,
