@@ -254,7 +254,7 @@ class Bmc(Linux):
         self.command("rm {}".format(output_file))
         self.command("rm {}".format(log_file))
         self.command("rm -f /var/lock/LCK..{}".format(os.path.basename(serial_device)))
-        command = "microcom -s 1000000 {} >> {} &".format(serial_device, output_file)
+        command = "microcom -s 1000000 {} > {} &".format(serial_device, output_file)
         self.command(command)
         # self.uart_log_listener_process_ids.append(None)
 
@@ -694,7 +694,10 @@ class BootupWorker(Thread):
                     fs.get_bmc().reset_f1(f1_index=f1_index)
                 try:
                     # f1_{}_uart_log.txt
-                    fs.get_bmc().command("rm -f /tmp/f1*uart_log.txt")
+                    # fs.get_bmc().command("rm -f /tmp/f1*uart_log.txt")
+                    fs.get_bmc().command("echo '' > /tmp/f1_0_uart_log.txt")
+                    fs.get_bmc().command("echo '' > /tmp/f1_1_uart_log.txt")
+
                 except:
                     pass
 
