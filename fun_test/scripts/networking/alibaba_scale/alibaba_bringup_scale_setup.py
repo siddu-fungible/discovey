@@ -85,6 +85,7 @@ class ScriptSetup(FunTestScript):
         fun_test.shared_variables["test_bed_type"] = test_bed_type
         topology_helper = TopologyHelper()
         for fs_name in testbed_info['fs'][test_bed_type]["fs_list"]:
+            fs_name = str(fs_name)
             abstract_json_file0 = \
                 fun_test.get_script_parent_directory() + testbed_info['fs'][test_bed_type][fs_name][
                     'abtract_config_f1_0']
