@@ -1,5 +1,6 @@
 #!/usr/bin/python
 import sys
+import os
 sys.path.append('/workspace/Integration/fun_test')
 from lib.system.fun_test import *
 from lib.host.linux import Linux
@@ -9,8 +10,21 @@ import random
 
 
  
-def get_netesto_script(no_of_streams=1, no_of_nobuff_streams=0, no_of_rr=1, local_buff=9000, remote_buff=9000):
-    ali_script = '''
+def get_netesto_script(test_type='basic', no_of_streams=1, no_of_nobuff_streams=0, no_of_rr=1, local_buff=9000, remote_buff=9000):
+    ali_script = []
+    test_duration = 60
+    if test_type == 'stream_no_buff_limit':
+        servers3 = 'cab02-qa-03,cab02-qa-01,cab02-qa-02'
+        servers_t1 = 'cab02-qa-03t'
+        servers_t3 = 'cab02-qa-02t'
+        # splitting the nobuff_streams across 2 servers
+        no_of_nobuff_streams = int(no_of_nobuff_streams/2)
+    else:
+        servers3 = 'cab02-qa-03,cab02-qa-01,cab02-qa-02'
+        servers_t1 = 'cab02-qa-03t'
+        servers_t3 = 'cab02-qa-02t'
+
+    ali_script.append('''
     #
     # Sample script for netesto
     #
@@ -33,11 +47,11 @@ def get_netesto_script(no_of_streams=1, no_of_nobuff_streams=0, no_of_rr=1, loca
     # Set hosts for 1 or 2 server host experiments
     # replace with appropriate hostnames
     SET servers1=cab02-qa-01
-    SET servers_t1=cab02-qa-03t
+    SET servers_t1={SERVERS_T1}
     SET servers_t2=cab02-qa-01t
-    SET servers_t3=cab02-qa-02t
+    SET servers_t3={SERVERS_T3}
     SET servers2=cab02-qa-03,cab02-qa-01
-    SET servers3=cab02-qa-03,cab02-qa-01,cab02-qa-02
+    SET servers3={SERVERS3}
 
     # Set congestion control variants to run
     #SET ca=reno,cubic,nv,dctcp
@@ -45,8 +59,6 @@ def get_netesto_script(no_of_streams=1, no_of_nobuff_streams=0, no_of_rr=1, loca
     # Load library with macros
     SOURCE inlib
 
-    SET instances=1				# how many flow instances per host
-    SET dur=60						# duration of each run in seconds
     SET tcpDump=10000
     # specify descripiton of experiments
     #DESC ECN_Experiment
@@ -76,89 +88,72 @@ def get_netesto_script(no_of_streams=1, no_of_nobuff_streams=0, no_of_rr=1, loca
     SET_SYSCTL host=$host net.core.wmem_max=67108864
     SET_SYSCTL host=$host net.ipv4.tcp_wmem=10000,262144,33554432
     END preClient
-    #
-    # On Client(s)
-    #
-    #BEGIN preClient
-    # set large send buffers in client
-    #SET_SYSCTL host=$host net.ipv4.tcp_wmem=10000,262144,20971520
-    #END preClient
+    '''.format(SERVERS3=servers3,SERVERS_T1=servers_t1,SERVERS_T3=servers_t3))
 
-    # Experiments -----------------------------
-    #
-    # By default all will execute. You can disable individually by replacing
-    #   "IF 1:" by "IF 0:" or "IF $varnanme" where varname is defined as an integer
-
-    # burst - No: of sends or transactions
-    # Interval - in milliseconds
-    # For RR tests
-    # reqs_in_bits = reqs * 8
-    # transactions_per_sec = burst * (1/interval)
-    # Throughput (Mbps) = reqs_in_bits * transactions_per_sec
+    if test_type == 'tcp_rr_only_test':
+        local_buff = 0
+        remote_buff = 0
+        ali_script.append('''
 
 
-    # 1 server, 1 client, 1M
-    #SET reqs=1000B
-    #SET reply=1
-    #SET interval=200
-    #SET burst=10
-    #SET loops=1
-    #SET instances=1
-    #IF 1: RUN MServerRR servers=\$servers1 loops=$loops servers_t=$servers_t1 clients=$clients1 expName=1s1c1fr ca=$ca dur=$dur delay=0 instances=$instances reqs=$reqs reply=$reply interval=$interval burst=$burst
+        SET burst=0
+        SET interval=0
+        SET burst2=0
+        SET interval2=0
+        SET reqs=100M
+        SET reply=1
+        SET reqs1=1B
+        SET reply1=1
+        #SET tcpDump=25000
+        SET instancestream={BUFF_STREAMS}
+        SET nobuffstreams={NO_BUFF_STREAMS}
+        SET instancerr={RR}
+        SET localbuffer={LOCAL_BUFF}
+        SET remotebuffer={REMOTE_BUFF}
+        SET dur={DURATION}
+        IF 1: RUN MServerStreamFunAlibaba  test=TCP_RR reqs1=$reqs1 reply1=$reply1 servers=$servers3  servers_t=$servers_t1 servers2_t=$servers_t2 servers3_t=$servers_t3 clients=$clients3 client1=$client1 client2=$client2 client3=$client3 nobuffclient1=$client1 nobuffclient3=$client3 instancenobuff1=$nobuffstreams localbuf1=$localbuffer remotebuf1=$remotebuffer instance1=$instancestream instance2=$instancerr reqs=$reqs reply=$reply burst2=$burst2 interval2=$interval2 expName=AlibabaSTREAM2RR1 ca=$ca dur=$dur interval=$interval burst=$burst
+            '''.format(BUFF_STREAMS=no_of_streams, NO_BUFF_STREAMS=no_of_nobuff_streams, RR=no_of_rr,
+                       LOCAL_BUFF=local_buff, REMOTE_BUFF=remote_buff, DURATION=test_duration))
+    else:
 
-    #SET reqs=250K
-    #SET reply=1
-    #SET burst=10
-    #SET interval=200
-    #IF 1: RUN MServerStreamFunAlibaba  servers=$servers1  servers_t=$servers_t1 clients=$clients1 client1=$client1 instance1=1 expName=EACHSTREAM100Mbps ca=$ca dur=$dur  reqs=$reqs reply=$reply interval=$interval burst=$burst
+        ali_script.append('''
+    
+    
+        SET burst=0
+        SET interval=0
+        SET burst2=0
+        SET interval2=0
+        SET reqs1=1B
+        SET reply1=1
+        SET reqs=1B
+        SET reply=1
+        #SET tcpDump=25000
 
-    #SET burst=500
-    #SET interval=100
-    SET burst=0
-    SET interval=0
-    SET burst2=0
-    SET interval2=0
-    SET reqs=1B
-    SET reply=1
-    #SET tcpDump=25000
-    SET instancestream=%s
-    SET nobuffstreams=%s
-    SET instancerr=%s
-    SET localbuffer=%s
-    SET remotebuffer=%s
-    SET dur=60
-    IF 1: RUN MServerStreamFunAlibaba  servers=$servers3  servers_t=$servers_t1 servers2_t=$servers_t2 servers3_t=$servers_t3 clients=$clients3 client1=$client1 client2=$client2 client3=$client3 nobuffclient1=$client1 nobuffclient3=$client3 instancenobuff1=$nobuffstreams localbuf1=$localbuffer remotebuf1=$remotebuffer instance1=$instancestream instance2=$instancerr reqs=$reqs reply=$reply burst2=$burst2 interval2=$interval2 expName=AlibabaSTREAM2RR1 ca=$ca dur=$dur interval=$interval burst=$burst
+        SET instancestream={BUFF_STREAMS}
+        SET nobuffstreams={NO_BUFF_STREAMS}
+        SET instancerr={RR}
+        SET localbuffer={LOCAL_BUFF}
+        SET remotebuffer={REMOTE_BUFF}
+        SET dur={DURATION}
+        IF 1: RUN MServerStreamFunAlibaba  test=TCP_STREAM reqs1=$reqs1 reply1=$reply1 servers=$servers3  servers_t=$servers_t1 servers2_t=$servers_t2 servers3_t=$servers_t3 clients=$clients3 client1=$client1 client2=$client2 client3=$client3 nobuffclient1=$client1 nobuffclient3=$client3 instancenobuff1=$nobuffstreams localbuf1=$localbuffer remotebuf1=$remotebuffer instance1=$instancestream instance2=$instancerr reqs=$reqs reply=$reply burst2=$burst2 interval2=$interval2 expName=AlibabaSTREAM2RR1 ca=$ca dur=$dur interval=$interval burst=$burst
+            '''.format(BUFF_STREAMS=no_of_streams,NO_BUFF_STREAMS=no_of_nobuff_streams,RR=no_of_rr,
+                       LOCAL_BUFF=local_buff,REMOTE_BUFF=remote_buff,DURATION=test_duration))
 
-
-    SET burst=0
-    SET interval=0
-    SET burst2=0
-    SET interval2=0
-    SET reqs=1B
-    SET reply=1
-    #SET tcpDump=2500000
-    SET instancestream=1
-    SET instancerr=1
-    IF 0: RUN MServerStreamFunAlibaba  servers=$servers3  servers_t=$servers_t1 servers2_t=$servers_t2 servers3_t=$servers_t1 clients=$clients3 client1=$client1 client2=$client2 client3=$client3 instance1=$instancestream instance2=$instancerr reqs=$reqs reply=$reply burst2=$burst2 interval2=$interval2 expName=AlibabaSTREAM2RR1Congestion ca=$ca dur=$dur interval=$interval burst=$burst
-
-    SET burst=1000
-    SET interval=200
-    IF 0: RUN MServerStreamFunAlibaba  servers=$servers1  servers_t=$servers_t1 clients=$clients1 client1=$client1 instance1=1 expName=EACHSTREAM10Gbps ca=$ca dur=$dur interval=$interval burst=$burst
-
-        ''' % (no_of_streams, no_of_nobuff_streams, no_of_rr, local_buff, remote_buff)
+    ali_script = '\n'.join(ali_script)
     return ali_script
 
 
 def netesto_client(host, ssh_username="localadmin", ssh_password="Precious1*"):
     linux_obj = Linux(host_ip=host, ssh_username=ssh_username, ssh_password=ssh_password)
     linux_obj.sudo_command(command="killall netserver; killall netperf; killall netesto.py; killall tcpdump")
+    time.sleep(10)
     # linux_obj.sudo_command(command="sudo ufw disable;iptables -X;iptables -t nat -F;iptables -t nat -X;iptables -t mangle -F;iptables -t mangle -X;iptables -P INPUT ACCEPT;iptables -P OUTPUT ACCEPT;iptables -P FORWARD ACCEPT;iptables -F;iptables -L")
     # linux_obj.sudo_command(command="sysctl -w net.core.rmem_max=4194304;sysctl -w net.core.wmem_max=4194304;sysctl -w net.core.rmem_default=4194304;sysctl -w net.core.wmem_default=4194304;sysctl -w net.core.optmem_max=4194304")
     # linux_obj.sudo_command(command="sysctl -w net.ipv4.tcp_rmem=\"4096 87380 4194304\";sysctl -w net.ipv4.tcp_wmem=\"4096 65536 4194304\";sysctl -w net.ipv4.tcp_timestamps=0;sysctl -w net.ipv4.tcp_sack=1;sysctl -w net.core.netdev_max_backlog=250000;sysctl -w net.ipv4.tcp_low_latency=1;sysctl -w net.ipv4.tcp_adv_win_scale=1;sysctl -w net.ipv4.route.flush=1")
-    # linux_obj.sudo_command(command="echo 5 > /proc/sys/net/ipv4/tcp_fin_timeout")
+    linux_obj.sudo_command(command="echo 5 > /proc/sys/net/ipv4/tcp_fin_timeout")
     # 4096 65536 4194304
-    # linux_obj.sudo_command(command="echo 1 > /proc/sys/net/ipv4/tcp_tw_recycle")
-    # linux_obj.sudo_command(command="echo 1 > /proc/sys/net/ipv4/tcp_tw_reuse")
+    linux_obj.sudo_command(command="echo 1 > /proc/sys/net/ipv4/tcp_tw_recycle")
+    linux_obj.sudo_command(command="echo 1 > /proc/sys/net/ipv4/tcp_tw_reuse")
     #linux_obj.sudo_command(command="sysctl -w net.ipv4.tcp_rmem='10000 262144 33554432'")
     #linux_obj.sudo_command(command="sysctl -w net.ipv4.tcp_wmem='10000 262144 33554432'")
     #linux_obj.sudo_command(command="sysctl -w net.ipv4.tcp_rmem='10000 262144 33554432'")
@@ -176,7 +171,8 @@ def netesto_client(host, ssh_username="localadmin", ssh_password="Precious1*"):
     linux_obj.command("cd ~/netesto/netesto/remote")
     # linux_obj.sudo_command("./numa_script.py")
 
-    netesto_id = linux_obj.start_bg_process(command="taskset -c 0,1,2,3,4,5,6,7 ./netesto.py -d -s")
+    #netesto_id = linux_obj.start_bg_process(command="taskset -c 0,1,2,3,4,5,6,7 ./netesto.py -d -s")
+    netesto_id = linux_obj.start_bg_process(command="./netesto.py -d -s")
     check_netesto = linux_obj.process_exists(process_id=netesto_id)
     fun_test.test_assert(expression=check_netesto, message="Make sure netesto is running on %s" % linux_obj)
     netstat(linux_obj)
@@ -189,7 +185,7 @@ def netstat(linux):
     fun_test.log("======================================")
     linux.command(command="netstat -st")
 
-def run_netesto(no_of_streams, no_of_nobuff_streams, no_of_rr, local_buff, remote_buff, total_calls):
+def run_netesto(test_type, no_of_streams, no_of_nobuff_streams, no_of_rr, local_buff, remote_buff, total_calls):
     if total_calls == 0:
         st = inspect.stack()
         script_file_name = st[1][1]
@@ -200,9 +196,10 @@ def run_netesto(no_of_streams, no_of_nobuff_streams, no_of_rr, local_buff, remot
     self_linux = Linux(host_ip='127.0.0.1', ssh_username='netesto', ssh_password='netesto')
     #self_linux = Linux(host_ip='127.0.0.1', ssh_username='yajat', ssh_password='messi3006')
     self_linux.command('cd %s' % directory)
-    self_linux.command('rm -rf netesto_execute_script')
-    file = open(directory+'/netesto_execute_script', 'w+')
-    file.write(get_netesto_script(no_of_streams=no_of_streams, no_of_nobuff_streams=no_of_nobuff_streams, no_of_rr=no_of_rr, local_buff=local_buff,
+
+    with open(directory+'/netesto_execute_script', 'w+') as file:
+        os.chmod(directory+'/netesto_execute_script', 0o777)
+        file.write(get_netesto_script(test_type=test_type,no_of_streams=no_of_streams, no_of_nobuff_streams=no_of_nobuff_streams, no_of_rr=no_of_rr, local_buff=local_buff,
                                   remote_buff=remote_buff))
     netesto_controller = Linux(host_ip="cab03-qa-03", ssh_username="localadmin", ssh_password="Precious1*")
     netesto_controller.command("cd ~/netesto_controller/netesto/local/fun_scripts")
@@ -210,6 +207,7 @@ def run_netesto(no_of_streams, no_of_nobuff_streams, no_of_rr, local_buff, remot
     self_linux.scp(source_file_path=directory+"netesto_execute_script", target_ip="cab03-qa-03",
                    target_file_path="~/netesto_controller/netesto/local/fun_scripts", target_username="localadmin",
                    target_password="Precious1*")
+    time.sleep(2)
     self_linux.disconnect()
 
 
@@ -284,6 +282,9 @@ def run_netesto(no_of_streams, no_of_nobuff_streams, no_of_rr, local_buff, remot
 
 
 if __name__ == '__main__':
+    test_type = 'basic'
+    #test_type = 'stream_no_buff_limit'
+    #test_type = 'tcp_rr_only_test'
     fun_test.shared_variables['result'] = {}
     fun_test.shared_variables['result']['script_names'] = []
     total_calls = 0
@@ -292,16 +293,23 @@ if __name__ == '__main__':
     streams_list = []
     print "Len of argv %s" %str(len(sys.argv))
     if len(sys.argv) > 1:
-        streams_list.append(int(sys.argv[1]))
-        arg_buffs.append(sys.argv[2])
-        print "Streams list is %s , arg_buffs is %s" %(str(streams_list),str(arg_buffs))
+        if len(sys.argv) == 2:
+            streams_list.append(int(sys.argv[1]))
+        else:
+            streams_list.append(int(sys.argv[1]))
+            arg_buffs.append(sys.argv[2])
+            print "Streams list is %s , arg_buffs is %s" %(str(streams_list),str(arg_buffs))
     else:
+        #streams_list = [0, 4, 8, 16, 32]
         streams_list = [0,4,8,16,32]
     streams_4_buffs = ['18000', '42000', '72000', '128000', '300000']
     #streams_4_buffs = ['18000', '42000', '72000', '128000', '300000', '30000:4', '30000:8']
     #streams_4_buffs = [18000]
     for streams in streams_list:
-        hosts = ['cab02-qa-06', 'cab02-qa-02', 'cab02-qa-03', 'cab02-qa-05', 'cab02-qa-01', 'cab02-qa-07']
+        if test_type == 'stream_no_buff_limit':
+            hosts = ['cab02-qa-06', 'cab02-qa-02', 'cab02-qa-03', 'cab02-qa-05', 'cab02-qa-01', 'cab02-qa-07']
+        else:
+            hosts = ['cab02-qa-06', 'cab02-qa-02', 'cab02-qa-03', 'cab02-qa-05', 'cab02-qa-01', 'cab02-qa-07']
         threads_list = []
         for host in hosts:
             thread_id = fun_test.execute_thread_after(time_in_seconds=2, func=netesto_client, host=host)
@@ -347,7 +355,7 @@ if __name__ == '__main__':
                 nobuff_streams = 0
                 buff_value = int(buff_value)
             print "Running test for %s streams %s buffer size" %(str(streams),str(buff_value)) 
-            run_netesto(no_of_streams=streams, no_of_nobuff_streams=nobuff_streams, no_of_rr=1, local_buff=buff_value, remote_buff=buff_value,
+            run_netesto(test_type=test_type,no_of_streams=streams, no_of_nobuff_streams=nobuff_streams, no_of_rr=1, local_buff=buff_value, remote_buff=buff_value,
                         total_calls=total_calls)
             total_calls += 1
     print fun_test.shared_variables['result']

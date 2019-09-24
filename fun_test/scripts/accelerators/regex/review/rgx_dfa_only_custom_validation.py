@@ -60,7 +60,7 @@ class RegExScript(FunTestScript):
         pass
         #self.topology_obj_helper.cleanup()
 
-class JuniperNFACustomCompileOnly(FunTestCase):
+class JuniperDFACustomCompileOnly(FunTestCase):
     def describe(self):
         self.set_test_details(id=4,
                               summary="F1: HANDCRAFTED DFA_ONLY PATTERNS compiled with DFA Strategy and (RBM_ONLY,EXM_ONLY,DISTRIBUTED) Memory Allocation",
@@ -110,7 +110,7 @@ class JuniperNFACustomCompileOnly(FunTestCase):
             pld_path = "/regex/payloads/"
             #for gtype, en in zip(["dfa", "nfa", "ffa"], ["1", "0", ""]):
             for gtype, en in zip(["dfa"], ["1"]):
-                res_path = "/regex/"+str(tc)+"/" + gtype + "_results/"
+                res_path = "/regex/F1/"+str(tc)+"/" + gtype + "_results/"
                 con1.create_directory(res_path)
                 print ("res_path is ",res_path)
                 #res_path = "/regex/Users/fungible/ws/data_store/regression/" + str(tc) + "/" + gtype + "_results/"
@@ -184,6 +184,6 @@ class JuniperNFACustomCompileOnly(FunTestCase):
 
 if __name__ == "__main__":
     myscript = RegExScript()
-    myscript.add_test_case(JuniperNFACustomCompileOnly())
+    myscript.add_test_case(JuniperDFACustomCompileOnly())
     myscript.run()
 

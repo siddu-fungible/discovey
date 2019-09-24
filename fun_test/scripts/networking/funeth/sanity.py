@@ -99,7 +99,7 @@ perf_listener_ip = "20.1.1.1"
 NUM_VFs = 4
 NUM_QUEUES_TX = 8
 NUM_QUEUES_RX = 8
-MAX_MTU = 1500  # TODO: check SWLINUX-290 and update
+MAX_MTU = 1500  # TODO: change to 9000, note, need ifconfig down/up for it to be effective until SWOS-6025 is fixed
 
 supported_testbed_types = ('fs-11', 'fs-48', )
 

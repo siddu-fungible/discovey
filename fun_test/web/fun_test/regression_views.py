@@ -26,7 +26,7 @@ from datetime import datetime, timedelta
 from web.fun_test.models import RegresssionScripts, RegresssionScriptsSerializer, SuiteExecutionSerializer
 from web.fun_test.models import ScriptInfo
 from web.fun_test.models import TestCaseExecutionSerializer
-from web.fun_test.models import SuiteReRunInfo, JobQueue
+from web.fun_test.models import SuiteReRunInfo, JobQueue, Suite
 from web.fun_test.models import SuiteReRunInfo
 from web.fun_test.models import TestBed
 from lib.utilities.send_mail import send_mail
@@ -125,7 +125,12 @@ def submit_job(request):
 
         # suite path
         suite_path = request_json.get("suite_path", None)
+
         suite_id = request_json.get("suite_id", None)
+        if not suite_id and suite_path:
+            suite = Suite.objects.filter(name=suite_path)
+            if suite.count():
+                suite_id = suite[0].id
         submitter_email = request_json.get("submitter_email", "john.abraham@fungible.com")
 
         # script path used for script only submission

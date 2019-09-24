@@ -351,8 +351,8 @@ class RawVolumeLocalPerfTestcase(FunTestCase):
                 value_dict["num_threads"] = int(fio_numjobs)
                 file_size_in_gb = fun_test.shared_variables["vol_size"] / 1073741824
                 value_dict["io_size"] = str(file_size_in_gb) + "GB"
-                value_dict["num_ssd"] = 1
-                value_dict["num_volume"] = 1
+                value_dict["num_ssd"] = 4
+                value_dict["num_volume"] = 4
 
                 fun_test.log("Running FIO {} only test for block size: {} using num_jobs: {}, IO depth: {}".
                              format(mode, fio_block_size, fio_numjobs, fio_iodepth))
