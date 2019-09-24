@@ -202,6 +202,16 @@ getPrettyLocalizeTime(t) {
     }))
   }
 
+  testCaseTimeSeries(suiteExecutionId, testCaseExecutionId) {
+    let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}/${testCaseExecutionId}`;
+    return this.apiService.get(url).pipe(switchMap(response => {
+      return of(response.data);
+    }), catchError (error => {
+      this.loggerService.error("Unable fetch time-series");
+      return throwError(error);
+    }))
+  }
+
   testCaseTimeSeriesLogs(suiteExecutionId, testCaseExecutionId, checkpointIndex=null) {
     let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}/${testCaseExecutionId}`;
     url += `?type=log`;

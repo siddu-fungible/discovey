@@ -77,7 +77,7 @@ export class ScriptDetailComponent implements OnInit {
 
   }
 
-  onTestCaseIdClick(testCaseExecutionIndex, testCaseExecutionId) {
+  onTestCaseIdClick1(testCaseExecutionIndex, testCaseExecutionId) {
     this.testLogs = null;
     console.log(testCaseExecutionIndex);
     this.currentTestCaseExecution = this.testCaseExecutions[testCaseExecutionIndex];
@@ -91,14 +91,19 @@ export class ScriptDetailComponent implements OnInit {
           this.loggerService.error("Unable to fetch time-series logs")
         });
       });
-
-
-
       console.log(response);
     }, error => {
       this.loggerService.error("Unable to fetch time-series checkpoints");
     })
+  }
 
+  onTestCaseIdClick(testCaseExecutionIndex) {
+    this.testLogs = null;
+    this.currentTestCaseExecution = this.testCaseExecutions[testCaseExecutionIndex];
+    this.regressionService.testCaseTimeSeries(this.suiteExecutionId, this.testCaseExecutions[testCaseExecutionIndex].execution_id).subscribe(response => {
+      let timeSeries = response;
+      let i = 0;
+    })
   }
 
   onCheckpointClick(checkpointIndex) {
