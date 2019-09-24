@@ -38,6 +38,11 @@ class FunTestLibException(Exception):
     pass
 
 
+class FunTestFatalException(Exception):
+    pass
+
+
+
 class FunTimer:
     def __init__(self, max_time=10000):
         self.max_time = max_time
@@ -1494,23 +1499,44 @@ class FunTestScript(object):
         fun_test._start_test(id=FunTest.CLEANUP_TC_ID,
                              summary="Script cleanup",
                              steps=self.steps)
-        result = FunTest.FAILED
+        cleanup_te = None
+        if fun_test.suite_execution_id:
+            models_helper.add_test_case_execution(test_case_id=FunTest.CLEANUP_TC_ID,
+                                                  suite_execution_id=fun_test.suite_execution_id,
+                                                  result=fun_test.IN_PROGRESS,
+                                                  path=fun_test.relative_path,
+                                                  log_prefix=fun_test.log_prefix,
+                                                  inputs=fun_test.get_job_inputs())
+        result = FunTest.PASSED
+
         try:
-            self.cleanup()
+            try:
+                self.cleanup()
+            except Exception as ex:
+                fun_test.critical(ex)
+
+            try:
+                self._cleanup_topologies()
+            except Exception as ex:
+                result = FunTest.FAILED
+                fun_test.critical(ex)
+
+            try:
+                self._cleanup_hosts()
+            except Exception as ex:
+                fun_test.critical(ex)
 
             result = FunTest.PASSED
-        except Exception as ex:
-            fun_test.critical(ex)
-        try:
-            self._cleanup_topologies()
+
         except Exception as ex:
             fun_test.critical(ex)
 
-        try:
-            self._cleanup_hosts()
-        except Exception as ex:
-            fun_test.critical(ex)
         fun_test._end_test(result=result)
+        if cleanup_te:
+            models_helper.update_test_case_execution(test_case_execution_id=cleanup_te.execution_id,
+                                                     suite_execution_id=fun_test.suite_execution_id,
+                                                     result=result)
+            models_helper.report_re_run_result(execution_id=cleanup_te.execution_id, re_run_info=fun_test.get_re_run_info())
 
     def _close(self):
         fun_test.close()
@@ -1545,7 +1571,8 @@ class FunTestScript(object):
                         if fun_test.suite_execution_id:
                             models_helper.update_test_case_execution(test_case_execution_id=test_case.execution_id,
                                                                      suite_execution_id=fun_test.suite_execution_id,
-                                                                     result=fun_test.IN_PROGRESS)
+                                                                     result=fun_test.IN_PROGRESS,
+                                                                     started_time=get_current_time())
                             fun_test.current_test_case_execution_id = test_case.execution_id
                         test_case.setup()
                         test_case.run()

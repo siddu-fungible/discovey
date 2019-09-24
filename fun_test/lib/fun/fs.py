@@ -14,7 +14,7 @@ from datetime import datetime
 import re
 import os
 
-ERROR_REGEXES = ["MUD_MCI_NON_FATAL_INTR_STAT"]
+ERROR_REGEXES = ["MUD_MCI_NON_FATAL_INTR_STAT", "bug_check", "platform_halt: exit status 1"]
 
 """
 Possible workarounds:
@@ -611,6 +611,7 @@ class Bmc(Linux):
 
 
     def post_process_uart_log(self, f1_index, file_name):
+        regex_found = None
         try:
             fun_test.log("Post-processing UART log F1: {}".format(f1_index))
             regex = ""
@@ -622,13 +623,15 @@ class Bmc(Linux):
                 m = re.search(regex, content)
                 if m:
                     full_match = m.group(0)
-                    fun_test.critical("ERROR Regex matched: {}".format(full_match))
+                    critical_message = "ERROR Regex matched: {}".format(full_match)
+                    regex_found = critical_message
+                    fun_test.critical(critical_message)
                     error_message = "Regression: ERROR REGEX Matched: {} Job-ID: {} F1_{} Context: {}".format(full_match, fun_test.get_suite_execution_id(), f1_index, self._get_context_prefix(data="error"))
                     fun_test.send_mail(subject=error_message, content=error_message)
 
         except Exception as ex:
             fun_test.critical(ex)
-
+        fun_test.test_assert(not regex_found, "UART log contains: {}".format(regex_found))
 
     def get_f1_device_paths(self):
         self.command("cd {}".format(self.SCRIPT_DIRECTORY))
