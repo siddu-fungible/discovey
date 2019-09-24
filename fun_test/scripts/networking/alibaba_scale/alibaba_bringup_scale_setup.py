@@ -112,10 +112,10 @@ class ScriptSetup(FunTestScript):
         fun_test.shared_variables["topology"] = topology
         fun_test.test_assert(topology, "Topology deployed")
 
-        tb_config_obj = tb_configs.TBConfigs(test_bed_type)
-        funeth_obj = Funeth(tb_config_obj)
-        fun_test.shared_variables['funeth_obj'] = funeth_obj
-        setup_hu_host(funeth_obj, update_driver=True, num_queues=8)
+        # tb_config_obj = tb_configs.TBConfigs(test_bed_type)
+        # funeth_obj = Funeth(tb_config_obj)
+        # fun_test.shared_variables['funeth_obj'] = funeth_obj
+        # setup_hu_host(funeth_obj, update_driver=True, num_queues=8)
 
     def cleanup(self):
         fun_test.log("Cleanup")
