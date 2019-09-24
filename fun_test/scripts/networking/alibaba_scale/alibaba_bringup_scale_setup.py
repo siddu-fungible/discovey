@@ -71,7 +71,7 @@ class ScriptSetup(FunTestScript):
 
         for fs_name in testbed_info['fs'][test_bed_type]["fs_list"]:
 
-            thread_id = fun_test.execute_thread_after(time_in_seconds=2, func=clean_testbed, host=fs_name,
+            thread_id = fun_test.execute_thread_after(time_in_seconds=2, func=clean_testbed, fs_name=fs_name,
                                                       hu_host_list=testbed_info['fs'][test_bed_type][fs_name]
                                                       ['hu_host_list'])
             threads_list.append(thread_id)
@@ -80,8 +80,7 @@ class ScriptSetup(FunTestScript):
             fun_test.join_thread(fun_test_thread_id=thread_id, sleep_time=1)
 
         # Boot up FS1600
-        f1_0_boot_args = testbed_info['fs'][test_bed_type]['bootargs_f1_0']
-        f1_1_boot_args = testbed_info['fs'][test_bed_type]['bootargs_f1_1']
+
         topology_t_bed_type = fun_test.get_job_environment_variable('test_bed_type')
         fun_test.shared_variables["test_bed_type"] = test_bed_type
         topology_helper = TopologyHelper()
