@@ -10,6 +10,7 @@ from web.fun_test.metrics_models import *
 from collections import OrderedDict
 from web.fun_test.metrics_lib import MetricLib
 from web.fun_test.models import *
+from web.fun_test.metrics_models import PerformanceMetricsJson
 
 METRICS_BASE_DATA_FILE = WEB_ROOT_DIR + "/metrics.json"
 ml = MetricLib()
@@ -1392,7 +1393,7 @@ if __name__ == "__main__trailingrst":
     print "set trailingrst dataset for jpeg metrics"
 
 
-if __name__ == "__main__":
+if __name__ == "__main_s1_pke__":
     with open(METRICS_BASE_DATA_FILE, "r") as f:
         metrics = json.load(f)
         for metric in metrics:
@@ -1417,3 +1418,11 @@ if __name__ == "__main__":
         if security_children["name"] == "PKE TLS":
             result = set_internal_name(security_children)
             print json.dumps(result, indent=4)
+
+if __name__ == "__main__":
+    with open(METRICS_BASE_DATA_FILE, "r") as f:
+        metrics = json.load(f)
+        PerformanceMetricsJson(metrics_json=metrics).save()
+    pmj = PerformanceMetricsJson.objects.all().order_by("-date_time")[:-1]
+    print pmj.metrics_json
+
