@@ -173,10 +173,10 @@ if __name__ == "__main_s1_teramarks__":
                 f1_metrics = metric["children"]
                 for f1_metric in f1_metrics:
                     if f1_metric["label"] == "TeraMarks":
-                        funos_metrics = f1_metric
+                        teramark_metrics = f1_metric
                         break
 
-        tera_marks = funos_metrics["children"]
+        tera_marks = teramark_metrics["children"]
         for tera_mark in tera_marks:
             tera_mark_child_name = tera_mark["name"]
             print(tera_mark_child_name)
@@ -1400,13 +1400,20 @@ if __name__ == "__main__":
                 f1_metrics = metric["children"]
                 for f1_metric in f1_metrics:
                     if f1_metric["label"] == "TeraMarks":
-                        funos_metrics = f1_metric
-                        break
+                        teramark_metrics = f1_metric
+                    if f1_metric["label"] == "Security":
+                        security_metrics = f1_metric
 
-    tera_marks = funos_metrics["children"]
+    tera_marks = teramark_metrics["children"]
     for tera_mark in tera_marks:
         if tera_mark["name"] == "TeraMark Security":
             for children in tera_mark["children"]:
                 if children["name"] == "TeraMark PKE":
                     result = set_internal_name(children)
                     print json.dumps(result, indent=4)
+
+    security_childrens = security_metrics["children"]
+    for security_children in security_childrens:
+        if security_children["name"] == "PKE TLS":
+            result = set_internal_name(security_children)
+            print json.dumps(result, indent=4)

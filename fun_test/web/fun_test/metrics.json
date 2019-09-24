@@ -6372,6 +6372,32 @@
             "label": "PKE"
           }
         ]
+      },
+      {
+        "metric_model_name": "MetricContainer",
+        "name": "Security_S1",
+        "label": "Security",
+        "children": [
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "PKE TLS_S1",
+            "label": "TLS",
+            "children": [
+              {
+                "metric_model_name": "PkeX25519TlsSoakPerformance",
+                "children": [],
+                "name": "ECDHE_RSA X25519 RSA 2K_S1",
+                "label": "ECDHE RSA X25519 RSA 2K"
+              },
+              {
+                "metric_model_name": "PkeP256TlsSoakPerformance",
+                "children": [],
+                "name": "ECDHE_RSA P256 RSA 2K_S1",
+                "label": "ECDHE RSA P256 RSA 2K"
+              }
+            ]
+          }
+        ]
       }
     ]
   }
