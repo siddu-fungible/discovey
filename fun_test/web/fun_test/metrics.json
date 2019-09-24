@@ -6385,15 +6385,15 @@
             "children": [
               {
                 "metric_model_name": "PkeX25519TlsSoakPerformance",
-                "children": [],
                 "name": "ECDHE_RSA X25519 RSA 2K_S1",
-                "label": "ECDHE RSA X25519 RSA 2K"
+                "label": "ECDHE RSA X25519 RSA 2K",
+                "children": []
               },
               {
                 "metric_model_name": "PkeP256TlsSoakPerformance",
-                "children": [],
                 "name": "ECDHE_RSA P256 RSA 2K_S1",
-                "label": "ECDHE RSA P256 RSA 2K"
+                "label": "ECDHE RSA P256 RSA 2K",
+                "children": []
               }
             ]
           }
