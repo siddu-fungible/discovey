@@ -254,7 +254,7 @@ class Bmc(Linux):
         self.command("rm {}".format(output_file))
         self.command("rm {}".format(log_file))
         self.command("rm -f /var/lock/LCK..{}".format(os.path.basename(serial_device)))
-        command = "microcom -s 1000000 {} >> {} &".format(serial_device, output_file)
+        command = "microcom -s 1000000 {} > {} &".format(serial_device, output_file)
         self.command(command)
         # self.uart_log_listener_process_ids.append(None)
 
