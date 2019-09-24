@@ -51,6 +51,8 @@ def prepare_server(host, username="localadmin", password="Precious1*"):
         linux_obj.sudo_command("rm -rf /tmp/pcaps/*")
         linux_obj.command("cd /tmp")
         linux_obj.command("git clone git@github.com:fungible-inc/FunSDK-small.git FunSDK")
+        linux_obj.command("cd /tmp/FunSDK")
+        linux_obj.command("git checkout savin/to_commit_master")
         #linux_obj.command("git checkout savin/tcp_perf")
         linux_obj.disconnect()
         return True
