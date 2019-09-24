@@ -641,6 +641,65 @@
       "enable_funcp": true
     }
   },
+  "fs-alibaba-scale": {
+    "dut_info": {
+      "0": {
+        "type": "DUT_TYPE_FSU",
+        "pcie_interface_info": {
+          "1": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 0
+          },
+          "0": {
+            "host_info": {
+              "name": "cab02-qa-03"
+            },
+            "type": "INTERFACE_TYPE_PCIE",
+            "hosts": 1
+          },
+          "3": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 0
+          },
+          "2": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 0
+          },
+          "5": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 4
+          },
+          "4": {
+            "host_info": {
+              "name": "cab02-qa-02"
+            },
+            "type": "INTERFACE_TYPE_PCIE",
+            "hosts": 1
+          },
+          "7": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 4
+          },
+          "6": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 4
+          },
+          "9": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 8
+          },
+          "8": {
+            "host_info": {
+              "name": "cab02-qa-01"
+            },
+            "type": "INTERFACE_TYPE_PCIE",
+            "hosts": 1
+          }
+        },
+        "dut": "fs-38"
+      }
+    }
+  },
   "fs-alibaba": {
     "dut_info": {
       "1": {
