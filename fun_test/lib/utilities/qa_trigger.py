@@ -120,7 +120,8 @@ class FunTestClient:
                    tags=None,
                    email_list=None,
                    environment=None,
-                   test_bed_type="emulation"):
+                   test_bed_type="emulation",
+                   description=""):
         if not tags:
             tags = []
         elif isinstance(tags, str):
@@ -139,7 +140,8 @@ class FunTestClient:
             "email_list": email_list,
             "submitter_email": submitter_email,
             "environment": environment,
-            "test_bed_type": test_bed_type
+            "test_bed_type": test_bed_type,
+            "description": description
         }
         response = self._do_post(url="/regression/submit_job", data=json.dumps(job_spec))
         if response["status"]:
@@ -169,7 +171,8 @@ def main():
     parser.add_argument('--submitter_email', help="Submitter's email address", default=DEFAULT_SUBMITTER_EMAIL)
     parser.add_argument('--environment', help="Custom environment")
     parser.add_argument('--max_run_time', help="Max run-time", default=60 * 60 * 3)
-    parser.add_argument('--test_bed_type', default="emulation", help="emulation or simulation or fs")
+    parser.add_argument('--test_bed_type', default="fs-6", help="emulation or simulation or fs")
+    parser.add_argument('--description', default="Unknown description")
     args = parser.parse_args()
 
     suite_name = args.suite_name
@@ -180,6 +183,7 @@ def main():
     environment = args.environment
     max_run_time = args.max_run_time
     test_bed_type = args.test_bed_type
+    description = args.description
 
     logging.info("Input options provided:")
     logging.info("Suite        : {}".format(suite_name))
@@ -189,6 +193,7 @@ def main():
     logging.info("Base URL     : {}".format(base_url))
     logging.info("Environment  : {}".format(environment))
     logging.info("Test-bed type: {}".format(test_bed_type))
+    logging.info("Description  : {}".format(description))
     logging.info("")
 
     if not base_url:
@@ -215,7 +220,8 @@ def main():
                                             tags=tags,
                                             email_list=emails,
                                             environment=environment,
-                                            submitter_email=submitter_email)
+                                            submitter_email=submitter_email,
+                                            description=description)
 
         job_status = None
         if job_id > 0:
