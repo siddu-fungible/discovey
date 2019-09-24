@@ -10,7 +10,8 @@ from web.fun_test.metrics_models import *
 from collections import OrderedDict
 from web.fun_test.metrics_lib import MetricLib
 from web.fun_test.models import *
-from web.fun_test.metrics_models import PerformanceMetricsJson
+from web.fun_test.metrics_models import PerformanceMetricsDag
+import requests
 
 METRICS_BASE_DATA_FILE = WEB_ROOT_DIR + "/metrics.json"
 ml = MetricLib()
@@ -1419,10 +1420,7 @@ if __name__ == "__main_s1_pke__":
             result = set_internal_name(security_children)
             print json.dumps(result, indent=4)
 
+
 if __name__ == "__main__":
-    with open(METRICS_BASE_DATA_FILE, "r") as f:
-        metrics = json.load(f)
-        PerformanceMetricsJson(metrics_json=metrics).save()
-    pmj = PerformanceMetricsJson.objects.all().order_by("-date_time")[:-1]
-    print pmj.metrics_json
+    ml.backup_dags()
 

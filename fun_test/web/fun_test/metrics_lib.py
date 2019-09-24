@@ -20,7 +20,7 @@ from collections import OrderedDict
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 from datetime import datetime, timedelta
 from web.fun_test.site_state import *
-from web.fun_test.metrics_models import MetricChart, MileStoneMarkers, LastMetricId
+from web.fun_test.metrics_models import MetricChart, MileStoneMarkers, LastMetricId, PerformanceMetricsDag
 from web.fun_test.models import InterestedMetrics, PerformanceUserWorkspaces
 from fun_settings import TEAM_REGRESSION_EMAIL
 from web.web_global import JINJA_TEMPLATE_DIR
@@ -28,6 +28,7 @@ from jinja2 import Environment, FileSystemLoader
 from lib.utilities.send_mail import *
 from web.fun_test.web_interface import get_performance_url
 from django.utils import timezone
+import requests
 
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 atomic_url = get_performance_url() + "/atomic"
@@ -441,6 +442,25 @@ class MetricLib():
     def _get_email_address(self, workspace_id):
         workspace = PerformanceUserWorkspaces.objects.get(id=workspace_id)
         return workspace.email
+
+    def backup_dags(self):
+        metric_ids = [101, 591]
+        result = {}
+        for metric_id in metric_ids:
+            if metric_id == 101:
+                dag = "F1"
+            else:
+                dag = "S1"
+            resp = requests.get('http://integration.fungible.local/metrics/dag?root_metric_ids=' + str(metric_id))
+            if resp.status_code == 200:
+                full_json = json.loads(resp.content)
+                data = full_json["data"][0]
+                print json.dumps(data)
+                result[dag] = json.dumps(data)
+        f1_dag = result["F1"]
+        s1_dag = result["S1"]
+        PerformanceMetricsDag(f1_metrics_dag=f1_dag, s1_metrics_dag=s1_dag).save()
+        print "dag backup successful"
 
 
 if __name__ == "__main__":

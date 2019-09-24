@@ -12,7 +12,7 @@ from web.web_global import api_safe_json_response
 from web.fun_test.site_state import site_state
 from collections import OrderedDict
 from web.fun_test.metrics_models import MetricChart, ModelMapping, VolumePerformanceSerializer, WuLatencyAllocStack
-from web.fun_test.metrics_models import LastMetricId, LastTriageId
+from web.fun_test.metrics_models import LastMetricId, LastTriageId, PerformanceMetricsDag
 from web.fun_test.metrics_models import AllocSpeedPerformanceSerializer, MetricChartSerializer, EcPerformance, \
     BcopyPerformanceSerializer
 from web.fun_test.metrics_models import BcopyFloodDmaPerformanceSerializer
@@ -880,22 +880,31 @@ def traverse_dag(levels, metric_id, metric_chart_entries, sort_by_name=True):
 def dag(request):
     result = []
     levels = int(request.GET.get("levels", 15))
-    # metric ids are used instead of chart names for F1, S1 and all metrics
-    metric_ids = request.GET.get("root_metric_ids", '101,591,122')  # 101=F1, 122=All Metrics, 591-S1
-    if ',' in metric_ids:
-        metric_ids = metric_ids.strip().split(',')
-    else:
-        metric_ids = [int(metric_ids)]
-    metric_chart_entries = {}
-    for metric_id in metric_ids:
-        if metric_id == 122:
-            sort_by_name = True
+    global_setting = MetricsGlobalSettings.objects.first()
+    cache_valid = global_setting.cache_valid
+    if not cache_valid or (cache_valid and levels != 15):
+        # metric ids are used instead of chart names for F1, S1 and all metrics
+        metric_ids = request.GET.get("root_metric_ids", '101,591,122')  # 101=F1, 122=All Metrics, 591-S1
+        if ',' in metric_ids:
+            metric_ids = metric_ids.strip().split(',')
         else:
-            sort_by_name = False
-        chart = MetricChart.objects.get(metric_id=metric_id)
-        metric_chart_entries[chart.metric_id] = chart
-        result.append(traverse_dag(levels=levels, metric_id=chart.metric_id, sort_by_name=sort_by_name,
-                                   metric_chart_entries=metric_chart_entries))
+            metric_ids = [int(metric_ids)]
+        metric_chart_entries = {}
+        for metric_id in metric_ids:
+            if metric_id == 122:
+                sort_by_name = True
+            else:
+                sort_by_name = False
+            chart = MetricChart.objects.get(metric_id=metric_id)
+            metric_chart_entries[chart.metric_id] = chart
+            result.append(traverse_dag(levels=levels, metric_id=chart.metric_id, sort_by_name=sort_by_name,
+                                       metric_chart_entries=metric_chart_entries))
+    else:
+        pmds = PerformanceMetricsDag.objects.all().order_by("-date_time")[:1]
+        for pmd in pmds:
+            result.append(pmd.f1_metrics_dag)
+            result.append(pmd.s1_metrics_dag)
+
     return result
 
 

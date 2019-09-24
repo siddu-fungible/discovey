@@ -2730,9 +2730,10 @@ class MileStoneMarkers(models.Model):
             s += "{}:{} ".format(key, value)
         return s
 
-class PerformanceMetricsJson(models.Model):
+class PerformanceMetricsDag(models.Model):
     date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
-    metrics_json = JSONField(default=[])
+    f1_metrics_dag = JSONField(default=[])
+    s1_metrics_dag = JSONField(default=[])
 
     def __str__(self):
         s = ""
