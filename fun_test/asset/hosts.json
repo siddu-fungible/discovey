@@ -164,12 +164,182 @@
       "password": "ADMIN"
     }
   },
+   "mpoc-server30": {
+    "host_ip": "mpoc-server30",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "mpoc-server30-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
+  },
+   "mpoc-server31": {
+    "host_ip": "mpoc-server31",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "mpoc-server31-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
+  },
+   "mpoc-server32": {
+    "host_ip": "mpoc-server32",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "mpoc-server32-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
+  },
   "mpoc-server34": {
     "host_ip": "mpoc-server34",
     "ssh_username": "localadmin",
     "ssh_password": "Precious1*",
     "ipmi_info": {
       "host_ip": "mpoc-server34-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
+  },
+    "mpoc-server38": {
+    "host_ip": "mpoc-server38",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "mpoc-server38-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
+  },
+  "mpoc-server37": {
+    "host_ip": "mpoc-server37",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "mpoc-server37-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
+  },
+ "mpoc-server36": {
+    "host_ip": "mpoc-server36",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "mpoc-server36-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
+  },
+   "mpoc-server35": {
+    "host_ip": "mpoc-server35",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "mpoc-server35-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
+  },
+   "mpoc-server33": {
+    "host_ip": "mpoc-server33",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "mpoc-server33-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
+  },
+   "mpoc-server40": {
+    "host_ip": "mpoc-server40",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "mpoc-server40-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
+  },
+  "mpoc-server41": {
+    "host_ip": "mpoc-server41",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "mpoc-server41-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
+  },
+  "mpoc-server42": {
+    "host_ip": "mpoc-server42",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "mpoc-server42-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
+  },
+  "mpoc-server43": {
+    "host_ip": "mpoc-server43",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "mpoc-server43-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
+  },
+  "mpoc-server44": {
+    "host_ip": "mpoc-server44",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "mpoc-server44-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
+  },
+  "mpoc-server45": {
+    "host_ip": "mpoc-server45",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "mpoc-server45-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
+  },
+  "mpoc-server46": {
+    "host_ip": "mpoc-server46",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "mpoc-server46-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
+  },
+  "mpoc-server47": {
+    "host_ip": "mpoc-server47",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "mpoc-server47-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
+  },
+   "mpoc-server48": {
+    "host_ip": "mpoc-server48",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "mpoc-server48-ilo",
       "username": "ADMIN",
       "password": "ADMIN"
     }
