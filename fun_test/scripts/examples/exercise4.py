@@ -4,7 +4,6 @@ from lib.host.linux import Linux
 
 
 import os
-os.environ["DOCKER_HOSTS_SPEC_FILE"] = fun_test.get_script_parent_directory() + "/local_docker_host.json"
 
 
 class Setup(FunTestScript):
@@ -14,6 +13,7 @@ class Setup(FunTestScript):
         """)
 
     def setup(self):
+        os.environ["DOCKER_HOSTS_SPEC_FILE"] = fun_test.get_script_parent_directory() + "/local_docker_host.json"
         self.docker_host = AssetManager().get_any_docker_host()
 
         image_name = "ubuntu_template:latest"

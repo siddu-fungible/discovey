@@ -692,6 +692,12 @@ class BootupWorker(Thread):
                     fpga.reset_f1(f1_index=f1_index)
                 else:
                     fs.get_bmc().reset_f1(f1_index=f1_index)
+                try:
+                    # f1_{}_uart_log.txt
+                    fs.get_bmc().command("rm -f /tmp/f1*uart_log.txt")
+                except:
+                    pass
+
                 if fs.f1_parameters:
                     if f1_index in fs.f1_parameters:
                         if "boot_args" in fs.f1_parameters[f1_index]:
@@ -987,6 +993,28 @@ class ComE(Linux):
         return s
 
     def cleanup(self):
+        try:
+            fungible_root = self.command("echo $FUNGIBLE_ROOT")
+            fungible_root = fungible_root.strip()
+            if fungible_root:
+                logs_path = "{}/logs/*".format(fungible_root)
+                files = self.list_files(logs_path)
+                for file in files:
+                    file_name = file["filename"]
+                    base_name = os.path.basename(file_name)
+                    artifact_file_name = fun_test.get_test_case_artifact_file_name(
+                        self._get_context_prefix(base_name))
+
+                    fun_test.scp(source_ip=self.host_ip,
+                                 source_file_path=file_name,
+                                 source_username=self.ssh_username,
+                                 source_password=self.ssh_password,
+                                 target_file_path=artifact_file_name)
+                    fun_test.add_auxillary_file(description=self._get_context_prefix(base_name), filename=artifact_file_name)
+
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
         for f1_index in range(self.NUM_F1S):
             if f1_index == self.disable_f1_index:
                 continue
@@ -1280,6 +1308,7 @@ class Fs(object, ToDictMixin):
                     if f1_index in self.f1_parameters:
                         if "boot_args" in self.f1_parameters[f1_index]:
                             boot_args = self.f1_parameters[f1_index]["boot_args"]
+
                 fun_test.test_assert(self.get_bmc().setup_serial_proxy_connection(f1_index=f1_index, auto_boot=self.auto_boot),
                                      "Setup nc serial proxy connection")
 
@@ -1289,6 +1318,11 @@ class Fs(object, ToDictMixin):
                 else:
                     bmc = self.get_bmc()
                     bmc.reset_f1(f1_index=f1_index)
+                    try:
+                        # f1_{}_uart_log.txt
+                        bmc.command("rm -f /tmp/f1*uart_log.txt")
+                    except:
+                        pass
                 preamble = self.get_bmc().get_preamble(f1_index=f1_index)
                 if self.validate_u_boot_version:
                     fun_test.test_assert(self.bmc.validate_u_boot_version(output=preamble, minimum_date=self.MIN_U_BOOT_DATE), "Validate preamble")

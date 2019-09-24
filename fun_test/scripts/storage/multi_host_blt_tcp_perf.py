@@ -694,6 +694,19 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                                                                            self.host_ips[ctrlr_index],
                                                                            self.ctrlr_uuid[ctrlr_index]))
 
+            # Setting the fcp scheduler bandwidth
+            if hasattr(self, "config_fcp_scheduler"):
+                command_result = self.storage_controller.set_fcp_scheduler(fcp_sch_config=self.config_fcp_scheduler,
+                                                                           command_timeout=self.command_timeout)
+                if not command_result["status"]:
+                    fun_test.critical("Unable to set the fcp scheduler bandwidth...So proceeding the test with the "
+                                      "default setting")
+                elif self.config_fcp_scheduler != command_result["data"]:
+                    fun_test.critical("Unable to fetch the applied FCP scheduler config... So proceeding the test "
+                                      "with the default setting")
+                else:
+                    fun_test.log("Successfully set the fcp scheduler bandwidth to: {}".format(command_result["data"]))
+
             for index, host_name in enumerate(self.host_info):
                 host_handle = self.host_info[host_name]["handle"]
                 host_ip = self.host_info[host_name]["ip"]
