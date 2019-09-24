@@ -254,7 +254,7 @@ class Bmc(Linux):
         self.command("rm {}".format(output_file))
         self.command("rm {}".format(log_file))
         self.command("rm -f /var/lock/LCK..{}".format(os.path.basename(serial_device)))
-        command = "microcom -s 1000000 {} >> {} &".format(serial_device, output_file)
+        command = "microcom -s 1000000 {} > {} &".format(serial_device, output_file)
         self.command(command)
         # self.uart_log_listener_process_ids.append(None)
 
@@ -266,8 +266,8 @@ class Bmc(Linux):
                 if f1_index == 1:
                     huid = 2
                 s += " cc_huid={}".format(huid)
-        if "--sync-uart" not in boot_args:
-            s += " --sync-uart"
+        #if "--sync-uart" not in boot_args:
+        #    s += " --sync-uart"
         return s
 
     def setup_serial_proxy_connection(self, f1_index, auto_boot=False):
@@ -692,6 +692,15 @@ class BootupWorker(Thread):
                     fpga.reset_f1(f1_index=f1_index)
                 else:
                     fs.get_bmc().reset_f1(f1_index=f1_index)
+                try:
+                    # f1_{}_uart_log.txt
+                    # fs.get_bmc().command("rm -f /tmp/f1*uart_log.txt")
+                    fs.get_bmc().command("echo '' > /tmp/f1_0_uart_log.txt")
+                    fs.get_bmc().command("echo '' > /tmp/f1_1_uart_log.txt")
+
+                except:
+                    pass
+
                 if fs.f1_parameters:
                     if f1_index in fs.f1_parameters:
                         if "boot_args" in fs.f1_parameters[f1_index]:

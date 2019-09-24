@@ -23,7 +23,7 @@ all_hosts_specs = parse_file_to_json(file_name=hosts_json_file)
 host_spec = all_hosts_specs[host_name]
 host_username = host_spec["ssh_username"]
 host_passwd = host_spec["ssh_password"]
-script_timeout = 3600
+script_timeout = 7200
 
 
 
@@ -51,6 +51,8 @@ def prepare_server(host, username="localadmin", password="Precious1*"):
         linux_obj.sudo_command("rm -rf /tmp/pcaps/*")
         linux_obj.command("cd /tmp")
         linux_obj.command("git clone git@github.com:fungible-inc/FunSDK-small.git FunSDK")
+        linux_obj.command("cd /tmp/FunSDK")
+        linux_obj.command("git checkout savin/to_commit_master")
         linux_obj.disconnect()
         return True
     except Exception as e:

@@ -83,7 +83,7 @@ class HigherLevelTestcase(FunTestCase):
             except Exception as e:
                 print e, "\n"
 
-            test_result = regex_helper.validate_rgx_result(data_store_dir, job_dir,num_polls=20,private_run=False)
+            test_result = regex_helper.validate_rgx_result(data_store_dir, job_dir, num_polls=80, private_run=False)
             try:
                 fun_test.test_assert(test_result, "Validate matches for graphs in {}".format(json))
             except Exception as e:
@@ -102,7 +102,7 @@ class HigherLevelTestcase(FunTestCase):
 class JuniperNFA_Basic_Runtime(HigherLevelTestcase):
     def describe(self):
         self.set_test_details(id=1,
-                              summary="JUNIPER NFA basic runtime",
+                              summary="S1:JUNIPER NFA basic runtime",
                               steps="""
         1. Steps 1
         2. Steps 2
@@ -130,13 +130,14 @@ class JuniperNFA_MatchAcrossPacket(HigherLevelTestcase):
                               """)
 
     def setup(self):
-        super( JuniperNFA_MatchAcrossPacket, self).setup()
+        super(JuniperNFA_MatchAcrossPacket, self).setup()
 
     def run(self):
-        super( JuniperNFA_MatchAcrossPacket, self).run()
+        super(JuniperNFA_MatchAcrossPacket, self).run()
 
     def cleanup(self):
-        super( JuniperNFA_MatchAcrossPacket, self).cleanup()
+        super(JuniperNFA_MatchAcrossPacket, self).cleanup()
+
 
 class JuniperNFA_Sequential1(HigherLevelTestcase):
     def describe(self):
@@ -157,6 +158,7 @@ class JuniperNFA_Sequential1(HigherLevelTestcase):
     def cleanup(self):
         super(JuniperNFA_Sequential1, self).cleanup()
 
+
 class JuniperNFA_Sequential2(HigherLevelTestcase):
     def describe(self):
         self.set_test_details(id=4,
@@ -175,6 +177,7 @@ class JuniperNFA_Sequential2(HigherLevelTestcase):
 
     def cleanup(self):
         super(JuniperNFA_Sequential2, self).cleanup()
+
 
 class JuniperNFA_parallel1(HigherLevelTestcase):
     def describe(self):
@@ -217,14 +220,6 @@ class JuniperNFA_parallel2(HigherLevelTestcase):
 
 
 if __name__ == "__main__":
-
-
-
     myscript = MyScript()
     myscript.add_test_case(JuniperNFA_Basic_Runtime())
-    myscript.add_test_case(JuniperNFA_MatchAcrossPacket())
-    myscript.add_test_case(JuniperNFA_Sequential1())
-    myscript.add_test_case(JuniperNFA_Sequential2())
-    myscript.add_test_case(JuniperNFA_parallel1())
-    myscript.add_test_case(JuniperNFA_parallel2())
     myscript.run()
