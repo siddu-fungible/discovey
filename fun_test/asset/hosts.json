@@ -169,7 +169,7 @@
     "ssh_username": "localadmin",
     "ssh_password": "Precious1*",
     "ipmi_info": {
-      "host_ip": "mpoc-server38-ilo",
+      "host_ip": "mpoc-server34-ilo",
       "username": "ADMIN",
       "password": "ADMIN"
     }
