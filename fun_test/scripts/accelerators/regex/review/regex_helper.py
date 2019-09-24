@@ -21,7 +21,7 @@ def validate_rgx_result(data_store_dir, job_dir, num_polls=10, private_run=True)
                 fun_test.log("SCP of mail.txt successful")
                 break
             else:
-                fun_test.sleep("Polling for mail.txt...", 60)
+                fun_test.sleep("Polling for mail.txt...",60)
         with open(local_funos_logs_file, "r") as f_in:
             log_data = f_in.read()
     else:
@@ -30,7 +30,7 @@ def validate_rgx_result(data_store_dir, job_dir, num_polls=10, private_run=True)
                 fun_test.log(remote_fuons_logs_file+" available")
                 break
             else:
-                fun_test.sleep("Polling for "+ remote_fuons_logs_file+ "...", 60)
+                fun_test.sleep("Polling for "+ remote_fuons_logs_file+ "...", 3*60)
         with open(remote_fuons_logs_file, "r") as f_in:
             log_data = f_in.read()
 

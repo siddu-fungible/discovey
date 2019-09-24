@@ -83,7 +83,7 @@ class HigherLevelTestcase(FunTestCase):
             except Exception as e:
                 print e, "\n"
 
-            test_result = regex_helper.validate_rgx_result(data_store_dir, job_dir, num_polls=20, private_run=False)
+            test_result = regex_helper.validate_rgx_result(data_store_dir, job_dir, num_polls=80, private_run=False)
             try:
                 fun_test.test_assert(test_result, "Validate matches for graphs in {}".format(json))
             except Exception as e:

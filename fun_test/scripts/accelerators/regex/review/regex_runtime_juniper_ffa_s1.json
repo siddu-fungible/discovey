@@ -2,14 +2,14 @@
   "JuniperFFA_Basic_Runtime": {
     "jsons":["JUNIPER_S1_FFA_BASIC_RUNTIME.json"],
     "XDATA_LISTS": "/project/users/QA/regression/data_store/regex/S1/juniper_compile/ffa_exp_files/JUNIPER_S1_FFA_BASIC_RUNTIME.list",
-    "description":"testing basic lsu actions for Juniper NFA",
+    "description":"S1:testing basic lsu actions for Juniper NFA",
     "rbm_size": "1m",
     "syslog_level": "3",
-    "funos_branch": "master",
-    "run_target": "F1",
-    "hw_model":"F1",
-    "hw_version": "Ignored",
-    "max_duration": 45
+    "funos_branch": "",
+    "run_target": "protium_s",
+    "hw_model":"S1_Compute",
+    "hw_version": "rel_09012019",
+    "max_duration": 1500
   },
 
    "JuniperFFA_MatchAcrossPacket": {
@@ -19,9 +19,9 @@
     "rbm_size": "1m",
     "syslog_level": "3",
     "funos_branch": "master",
-    "run_target": "F1",
-    "hw_model":"F1",
-    "hw_version": "Ignored",
+    "run_target": "protium_s",
+    "hw_model":"S1_Compute",
+    "hw_version": "rel_0901201",
     "max_duration": 45
   },
 
@@ -32,9 +32,9 @@
     "rbm_size": "1m",
     "syslog_level": "3",
     "funos_branch": "master",
-    "run_target": "F1",
-    "hw_model":"F1",
-    "hw_version": "Ignored",
+    "run_target": "protium_s",
+    "hw_model":"S1_Compute",
+    "hw_version": "rel_09012019",
     "max_duration": 45
   },
 
@@ -45,9 +45,9 @@
     "rbm_size": "1m",
     "syslog_level": "3",
     "funos_branch": "master",
-    "run_target": "F1",
-    "hw_model":"F1",
-    "hw_version": "Ignored",
+    "run_target": "protium_s",
+    "hw_model":"S1_Compute",
+    "hw_version": "rel_09012019",
     "max_duration": 45
   },
   "JuniperFFA_parallel1": {
@@ -57,9 +57,9 @@
     "rbm_size": "1m",
     "syslog_level": "3",
     "funos_branch": "master",
-    "run_target": "F1",
-    "hw_model":"F1",
-    "hw_version": "Ignored",
+    "run_target": "protium_s",
+    "hw_model":"S1_Compute",
+    "hw_version": "rel_09012019",
     "max_duration": 45
   },
  "JuniperFFA_parallel2": {
@@ -69,9 +69,9 @@
     "rbm_size": "1m",
     "syslog_level": "3",
     "funos_branch": "master",
-    "run_target": "F1",
-    "hw_model":"F1",
-    "hw_version": "Ignored",
+    "run_target": "protium_s",
+    "hw_model":"S1_Compute",
+    "hw_version": "rel_09012019",
     "max_duration": 45
   }
 }
