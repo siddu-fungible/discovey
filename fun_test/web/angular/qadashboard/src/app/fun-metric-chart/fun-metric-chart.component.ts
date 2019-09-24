@@ -245,25 +245,21 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   }
 
   //formats the string displayed on xaxis of the chart
-  xAxisFormatter(value): string {
-    // value = "3/19/2019, 4:49:31 PM"
-    let s = "Error";
+  xAxisFormatter(epoch): string {
+    let dateString = "Error";
     const monthNames = ["null", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    if (value) { //check for null values
+    if (epoch) { //check for null values
       try {
-        let dateString = value.split(" "); // ex: dateString = (3) ["3/19/2019,", "4:49:31", "PM"]
-        let dateMonth = dateString[0].split("/"); //ex: dateMonth = (3) ["3", "19", "2019,"]
-        if (this.timeMode === "month") {
-          let month = parseInt(dateMonth[0]);
-          s = monthNames[month]; //ex: s = "Apr"
-        } else {
-          s = dateMonth[0] + "/" + dateMonth[1]; //ex: s = "3/19"
-        }
+        let pstDate = this.commonService.convertEpochToDate(epoch, this.TIMEZONE);
+        let value = this.commonService.addLeadingZeroesToDate(pstDate);
+        let dateStringArray = value.split(" "); // ex: dateString = (3) ["3/19/2019,", "4:49:31", "PM"]
+        let dateSplits = dateStringArray[0].split("/"); //ex: dateMonth = (3) ["3", "19", "2019,"]
+        dateString = dateSplits[0] + "/" + dateSplits[1]; //ex: s = "3/19"
       } catch (e) {
         this.loggerService.error("xAxis Formatter");
       }
     }
-    return s;
+    return dateString;
   }
 
   //checks if the given fieldname is relevant to display in show tables
@@ -291,7 +287,9 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     let key = this._getBuildKey(x);
     let s = "";
     if (x) {
-      s += "<b>Date:</b> " + x.substring(0, 5) + "<br>";
+      let pstDate = this.commonService.convertEpochToDate(x, this.TIMEZONE);
+      let value = this.commonService.addLeadingZeroesToDate(pstDate);
+      s += "<b>Date:</b> " + value.substring(0, 5) + "<br>";
     }
     if (metaData.originalValue) {
       s += "<b>Value:</b> " + metaData.originalValue + "<br>";
@@ -308,7 +306,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     let sdkBranch = "Unknown";
     let gitCommit = "Unknown";
     //let key = this._getBuildKey(x);
-    let key = x;
+    let pstDate = this.commonService.convertEpochToDate(x, this.TIMEZONE);
+    let key = this.commonService.addLeadingZeroesToDate(pstDate);
     let s = {};
 
     if (this.buildInfo && key in this.buildInfo) {
@@ -349,9 +348,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         s["Build Properties"] = buildProperties;
       }
     }
-    if (x) {
-      s["Date"] = x.substring(0, 5);
-    }
+    s["Date"] = key.substring(0, 5);
     if (metaData.originalValue) {
       s["Value"] = metaData.originalValue;
     } else {
@@ -860,6 +857,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         while (lastDate >= startDate) {
           let valueSet = false;
           let dateString = null;
+          let epoch = null;
           for (let oneRecord of oneDataSet) {
             let pstDate = this.commonService.convertEpochToDate(Number(oneRecord.epoch_time), this.TIMEZONE);
             if (this.sameDay(lastDate, pstDate) && !valueSet) {
@@ -870,6 +868,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
               output = this.convertToVisualizationUnit(this.visualizationUnit, output);
               let result = this.getValidatedData(output, minimum, maximum);
               dateString = this.commonService.addLeadingZeroesToDate(pstDate);
+              epoch = oneRecord.epoch_time;
               oneChartDataArray.push(result);
               if (this.maxDataPoint === null) {
                 this.maxDataPoint = result.y;
@@ -885,12 +884,13 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
           }
           if (!valueSet) {
             dateString = this.commonService.addLeadingZeroesToDate(lastDate);
+            epoch = this.commonService.convertDateToEpoch(lastDate);
             oneChartDataArray.push(null);
           }
           if (seriesDates[seriesDatesIndex] && seriesDatesSet.has(dateString)) {
-            seriesDates[seriesDatesIndex] = dateString;
+            seriesDates[seriesDatesIndex] = epoch;
           } else {
-            seriesDates[seriesDatesIndex] = dateString;
+            seriesDates[seriesDatesIndex] = epoch;
           }
           seriesDatesIndex++;
           lastDate.setDate(lastDate.getDate() - 1);
@@ -944,25 +944,18 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
 
       //setting the milestones
       if (Object.keys(this.mileStoneMarkers).length > 0) {
-        let seriesIndex = 0;
-        for (let eachSeriesDate of this.series) {
-        let eachSeriesDateObj = this.commonService.convertToTimezone(eachSeriesDate, this.TIMEZONE);
-          Object.keys(this.mileStoneMarkers).forEach((mileStone) => {
-            let mileStoneDate = this.commonService.convertToTimezone(this.mileStoneMarkers[mileStone], this.TIMEZONE);
-            if (this.sameDay(mileStoneDate, eachSeriesDateObj)) { // Tape-out and F1
-              if (!this.mileStoneIndices.hasOwnProperty(mileStone)) {
-                this.mileStoneIndices[mileStone] = seriesIndex;
-              }
-            } else if (eachSeriesDateObj >= mileStoneDate) {
-              if (mileStone !== "Tape-out") {
-                if (!this.mileStoneIndices.hasOwnProperty(mileStone)) {
-                  this.mileStoneIndices[mileStone] = seriesIndex;
-                }
-              }
+        Object.keys(this.mileStoneMarkers).forEach((mileStone) => {
+          for (let index = 0; index < this.series.length - 1; index++) {
+            if ((index == 0 && this.mileStoneMarkers[mileStone] <= this.series[index])) {
+              this.mileStoneIndices[mileStone] = index;
+              break;
             }
-          });
-          seriesIndex++;
-      }
+            if ((this.mileStoneMarkers[mileStone] > this.series[index] && this.mileStoneMarkers[mileStone] <= this.series[index + 1])) {
+              this.mileStoneIndices[mileStone] = index;
+              break;
+            }
+          }
+        });
       }
 
       //populating data for show tables

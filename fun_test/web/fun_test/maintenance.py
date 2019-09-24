@@ -1375,7 +1375,7 @@ if __name__ == "__main_inspur_iodepth_96__":
     final_dict = ml.get_dict(chart=iops_charts)
     print json.dumps(final_dict, indent=4)
 
-if __name__ == "__main__":
+if __name__ == "__main__trailingrst":
     metric_ids = [273, 287, 279, 1126, 1127, 1128]
     for metric_id in metric_ids:
         chart = MetricChart.objects.get(metric_id=metric_id)
@@ -1390,6 +1390,12 @@ if __name__ == "__main__":
         chart.data_sets = json.dumps(data_sets)
         chart.save()
     print "set trailingrst dataset for jpeg metrics"
+
+if __name__ == "__main__":
+    mmt = MileStoneMarkers.objects.all()
+    for mm in mmt:
+        if "Tape-out" in mm.milestone_name or "F1" in mm.milestone_name:
+            mm.delete()
 
 
 
