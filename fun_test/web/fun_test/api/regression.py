@@ -513,6 +513,7 @@ def re_run_job(request):
         if suite_id:
             pass
 
+
 @api_safe_json_response
 def test_case_time_series(request, suite_execution_id, test_case_execution_id):
     result = None
