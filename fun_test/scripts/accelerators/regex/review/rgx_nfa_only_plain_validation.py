@@ -115,7 +115,6 @@ class JuniperNFACustomCompileOnly(FunTestCase):
                 print ("res_path is ",res_path)
                 #res_path = "/regex/Users/fungible/ws/data_store/regression/" + str(tc) + "/" + gtype + "_results/"
                 print ("res_path is ",res_path)
-                res_path = "/regex/" + str(tc) + "/" + gtype + "_results/"
                 exp_file_path=DATA_STORE_DIR+"/regex/"+str(tc)+"/"+gtype+"_exp_files/"
                 print ("exp_file_path is",exp_file_path)
                 print "CALLING compiler with ", res_path, " en:", en
