@@ -1,6 +1,7 @@
 from lib.system.fun_test import *
 from lib.host.linux import Linux
 from lib.system.utils import MultiProcessingTasks
+import json
 import re
 import os
 import sys
@@ -123,40 +124,75 @@ class Funeth:
             linux_obj.create_directory(self.ws, sudo=False)
 
             # clone FunSDK, host-drivers, FunOS
-            linux_obj.command('cd {}; git clone git@github.com:fungible-inc/fungible-host-drivers.git'.format(self.ws),
-                              timeout=300)
-            if self.fundrv_branch:
-                linux_obj.command('cd {}; git checkout {}'.format(drvdir, self.fundrv_branch))
-            if self.fundrv_commit:
-                linux_obj.command('cd {}; git reset --hard {}'.format(drvdir, self.fundrv_commit))
-            linux_obj.command('cd {}; git clone git@github.com:fungible-inc/FunSDK-small.git FunSDK'.format(self.ws),
-                              timeout=300)
-            if self.funsdk_branch:
-                linux_obj.command('cd {}; git checkout {}'.format(sdkdir, self.funsdk_branch))
-            if self.funsdk_commit:
-                linux_obj.command('cd {}; git reset --hard {}'.format(sdkdir, self.funsdk_commit))
+            if self.fundrv_branch or self.fundrv_commit:
+                linux_obj.command('cd {}; git clone git@github.com:fungible-inc/fungible-host-drivers.git'.format(self.ws),
+                                  timeout=300)
+                if self.fundrv_branch:
+                    linux_obj.command('cd {}; git checkout {}'.format(drvdir, self.fundrv_branch))
+                if self.fundrv_commit:
+                    linux_obj.command('cd {}; git reset --hard {}'.format(drvdir, self.fundrv_commit))
+            else:  # wget from dochub
+                cmds = [
+                    'cd {}'.format(self.ws),
+                    'wget http://dochub.fungible.local/doc/jenkins/fungible-host-drivers/latest/fungible-host-drivers.src.tgz',
+                    'tar xzvf fungible-host-drivers.src.tgz',
+                ]
+                linux_obj.command(';'.join(cmds))
 
-            #output = linux_obj.command(
-            #    'cd {0}; scripts/bob --sdkup -C {1}/FunSDK-cache'.format(sdkdir, self.ws), timeout=600)
-            for pkg in ('hci', 'generator-bin'):
-                output = linux_obj.command(
-                    'cd {0}; scripts/bob --sdkup {2} -C {1}/FunSDK-cache'.format(sdkdir, self.ws, pkg))
-            if re.search(r'Updating working projectdb.*Updating current build number', output, re.DOTALL):
+            if self.funsdk_branch or self.funsdk_commit:
+                linux_obj.command('cd {}; git clone git@github.com:fungible-inc/FunSDK-small.git FunSDK'.format(self.ws),
+                                  timeout=300)
+                if self.funsdk_branch:
+                    linux_obj.command('cd {}; git checkout {}'.format(sdkdir, self.funsdk_branch))
+                if self.funsdk_commit:
+                    linux_obj.command('cd {}; git reset --hard {}'.format(sdkdir, self.funsdk_commit))
+            else:  # wget from dochub
+                cmds = [
+                    'mkdir {}'.format(sdkdir),
+                    'cd {}'.format(sdkdir),
+                    'wget http://dochub.fungible.local/doc/jenkins/funsdk/latest/Linux/hci.tgz',
+                    'wget http://dochub.fungible.local/doc/jenkins/funsdk/latest/Linux/generator-bin.tgz',
+                    'tar xzvf hci.tgz',
+                    'tar xzvf generator-bin.tgz',
+                ]
+                linux_obj.command(';'.join(cmds))
 
-                # Get FunSDK, fungible-host-driver commit/bld info
-                result_list = []
-                for repo, repo_dir in zip(('FunSDK', 'Driver'), (sdkdir, drvdir)):
-                    fun_test.log('Get {} commit/build info'.format(repo))
+            if self.fundrv_branch or self.fundrv_commit:
+                for pkg in ('hci', 'generator-bin'):
                     output = linux_obj.command(
-                        'git config --global core.pager ""; cd {}; git log --oneline -n 5'.format(repo_dir))
-                    match = re.search(r'(\w+).*? tag: (bld_\d+)', output)
-                    if match:
-                        commit = match.group(1)
-                        bld = match.group(2)
-                    else:
-                        match = re.search(r'(\w+).*?', output)
-                        commit = match.group(1)
-                        bld = None
+                        'cd {0}; scripts/bob --sdkup {2} -C {1}/FunSDK-cache'.format(sdkdir, self.ws, pkg))
+                if re.search(r'Updating working projectdb.*Updating current build number', output, re.DOTALL):
+
+                    # Get FunSDK, fungible-host-driver commit/bld info
+                    result_list = []
+                    for repo, repo_dir in zip(('FunSDK', 'Driver'), (sdkdir, drvdir)):
+                        fun_test.log('Get {} commit/build info'.format(repo))
+                        output = linux_obj.command(
+                            'git config --global core.pager ""; cd {}; git log --oneline -n 5'.format(repo_dir))
+                        match = re.search(r'(\w+).*? tag: (bld_\d+)', output)
+                        if match:
+                            commit = match.group(1)
+                            bld = match.group(2)
+                        else:
+                            match = re.search(r'(\w+).*?', output)
+                            commit = match.group(1)
+                            bld = None
+                        result_list.extend([commit, bld])
+                    return result_list
+            else:
+                cmds = [
+                    'cd {}'.format(drvdir),
+                    'wget http://dochub.fungible.local/doc/jenkins/fungible-host-drivers/latest/bld_props.json',
+                    'cd {}'.format(sdkdir),
+                    'wget http://dochub.fungible.local/doc/jenkins/funsdk/latest/bld_props.json',
+                ]
+                linux_obj.command(';'.join(cmds))
+                result_list = []
+                for d in (sdkdir, drvdir):
+                    output = linux_obj.command('cat {}/bld_props.json'.format(d))
+                    dict = json.loads(output)
+                    commit = dict.get('gitHubSha1s').get(d.split('/')[-1])
+                    bld = dict.get('bldNum')
                     result_list.extend([commit, bld])
                 return result_list
 
