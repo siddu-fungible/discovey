@@ -103,7 +103,7 @@ class TBConfigs:
         for namespace in self.get_namespaces(nu_or_hu):
             for intf_dict in self.get_interface_dicts(nu_or_hu, namespace):
                 if intf_dict.keys()[0] == intf:
-                    return intf_dict[intf].get(address_family, None)
+                    return intf_dict[intf].get('{}_addr'.format(address_family), None)
 
     def get_interface_netmask(self, nu_or_hu, intf, address_family='ipv4'):
         for namespace in self.get_namespaces(nu_or_hu):
