@@ -276,6 +276,8 @@ class Funeth:
             mac_addr = self.tb_config_obj.get_interface_mac_addr(nu_or_hu, intf)
             ipv4_addr = self.tb_config_obj.get_interface_ipv4_addr(nu_or_hu, intf)
             ipv4_netmask = self.tb_config_obj.get_interface_ipv4_netmask(nu_or_hu, intf)
+            ipv6_addr = self.tb_config_obj.get_interface_ipv6_addr(nu_or_hu, intf)
+            ipv6_prefix_length = self.tb_config_obj.get_interface_ipv6_prefix_length(nu_or_hu, intf)
             mtu = self.tb_config_obj.get_interface_mtu(nu_or_hu, intf)
 
             # macvlan interface, e.g. fpg1.1
@@ -304,6 +306,13 @@ class Funeth:
                  #'ifconfig {}'.format(intf),
                 ]
             )
+
+            if ipv6_addr and ipv6_prefix_length:
+                cmds.extend(
+                    ['ifconfig {} inet6 add {}/{}'.format(intf, ipv6_addr, ipv6_prefix_length),
+                     ]
+                )
+
             cmd_chk = 'ifconfig {}'.format(intf)
             if ns:
                 cmds = ['ip netns add {}'.format(ns), 'ip link set {} netns {}'.format(intf, ns)] + cmds
@@ -338,6 +347,9 @@ class Funeth:
                 else:
                     match = re.search(r'UP.*RUNNING.*inet {}\s+netmask {}'.format(ipv4_addr, ipv4_netmask),
                                       output, re.DOTALL)
+                if ipv6_addr and ipv6_prefix_length:
+                    match &= re.search(r'inet6 {}\s+prefixlen {}'.format(ipv6_addr, ipv6_prefix_length), output)
+
             result &= match is not None
 
         return result
@@ -532,6 +544,40 @@ class Funeth:
         result = True
         for ns in self.tb_config_obj.get_namespaces(nu_or_hu):
             result &= self.configure_namespace_arps(nu_or_hu, ns)
+
+        return result
+
+    def configure_namespace_ipv6_routes(self, nu_or_hu, ns):
+        """Configure a namespace's IPv6 routes to NU."""
+        result = True
+        for route in self.tb_config_obj.get_ipv6_routes(nu_or_hu, ns):
+            prefix = route['prefix']
+            nexthop = route['nexthop']
+
+            # Route
+            cmds = (
+                'ip -6 route delete {}'.format(prefix),
+                'ip -6 route add {} via {}'.format(prefix, nexthop),
+                'ip -6 route',
+            )
+            for cmd in cmds:
+                if ns is None:
+                    output = self.linux_obj_dict[nu_or_hu].command('sudo {}'.format(cmd))
+                else:
+                    output = self.linux_obj_dict[nu_or_hu].command('sudo ip netns exec {} {}'.format(ns, cmd))
+            if prefix.endswith('/128'):
+                p = prefix.rstrip('/128')
+            else:
+                p = prefix
+            result &= re.search(r'{} via {}'.format(p, nexthop), output) is not None
+
+        return result
+
+    def configure_ipv6_routes(self, nu_or_hu):
+        """Configure IPv6 routes to NU."""
+        result = True
+        for ns in self.tb_config_obj.get_namespaces(nu_or_hu):
+            result &= self.configure_namespace_ipv6_routes(nu_or_hu, ns)
 
         return result
 

@@ -120,6 +120,8 @@ def setup_nu_host(funeth_obj):
         fun_test.test_assert(funeth_obj.configure_ipv4_routes(nu, configure_gw_arp=(not control_plane)),
                              'Configure NU host {} IPv4 routes'.format(
             linux_obj.host_ip))
+        fun_test.test_assert(funeth_obj.configure_ipv6_routes(nu),
+                             'Configure NU host {} IPv6 routes'.format(linux_obj.host_ip))
         # TODO: temp workaround
         if linux_obj.host_ip == 'poc-server-06':
             if enable_tso:
@@ -174,6 +176,8 @@ def setup_hu_host(funeth_obj, update_driver=True, is_vm=False, tx_offload=True):
             funeth_obj.configure_interfaces(hu), 'Configure HU host {} funeth interfaces.'.format(linux_obj.host_ip))
         fun_test.test_assert(funeth_obj.configure_ipv4_routes(hu, configure_gw_arp=(not control_plane)),
                              'Configure HU host {} IPv4 routes.'.format(linux_obj.host_ip))
+        fun_test.test_assert(funeth_obj.configure_ipv6_routes(hu),
+                             'Configure HU host {} IPv6 routes.'.format(linux_obj.host_ip))
         fun_test.test_assert(
             funeth_obj.configure_arps(hu), 'Configure HU host {} ARP entries.'.format(linux_obj.host_ip))
         #fun_test.test_assert(funeth_obj.loopback_test(packet_count=80),

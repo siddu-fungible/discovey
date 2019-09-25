@@ -14,11 +14,16 @@ nu:
             mac_addr: fe:dc:ba:44:66:30
             ipv4_addr: 20.1.1.1
             ipv4_netmask: 255.255.255.0
+            ipv6_addr: 2001::20:1:1:1
+            ipv6_prefix_length: 112
       routes:
         - prefix: 53.1.1.0/24
           nexthop: 20.1.1.2
         - prefix: 29.1.1.0/24  # for perf
           nexthop: 20.1.1.2
+      ipv6_routes:
+        - prefix: 2001::53:1:1:0/112
+          nexthop: 2001::20:1:1:2
 
 nu2:
   hostname: poc-server-07
@@ -32,11 +37,16 @@ nu2:
             mac_addr: fe:dc:ba:44:66:31
             ipv4_addr: 21.1.1.1
             ipv4_netmask: 255.255.255.0
+            ipv6_addr: 2001::21:1:1:1
+            ipv6_prefix_length: 112
       routes:
         - prefix: 53.1.1.0/24
           nexthop: 21.1.1.2
         - prefix: 53.1.9.0/24
           nexthop: 21.1.1.2
+      ipv6_routes:
+        - prefix: 2001::53:1:1:0/112
+          nexthop: 2001::21:1:1:2
 
 # HU host - the keyword must start with "hu"
 hu:
@@ -54,6 +64,8 @@ hu:
             mac_addr: 00:de:ad:be:ef:11
             ipv4_addr: 53.1.1.1
             ipv4_netmask: 255.255.255.0
+            ipv6_addr: 2001::53:1:1:1
+            ipv6_prefix_length: 112
       routes:
         - prefix: 20.1.1.0/24
           nexthop: 53.1.1.254
@@ -61,6 +73,13 @@ hu:
           nexthop: 53.1.1.254
         - prefix: 54.1.1.0/24
           nexthop: 53.1.1.254
+      ipv6_routes:
+        - prefix: 2001::20:1:1:0/112
+          nexthop: 2001::53:1:1:254
+        - prefix: 2001::21:1:1:0/112
+          nexthop: 2001::53:1:1:254
+        - prefix: 2001::54:1:1:0/112
+          nexthop: 2001::53:1:1:254
       arps:
         - ipv4_addr: 53.1.1.4
           mac_addr: 00:de:ad:be:ef:21
@@ -80,6 +99,8 @@ hu2:
             mac_addr: 00:de:ad:be:ef:21
             ipv4_addr: 53.1.1.4
             ipv4_netmask: 255.255.255.0
+            ipv6_addr: 2001::53:1:1:4
+            ipv6_prefix_length: 112
       routes:
         - prefix: 20.1.1.0/24
           nexthop: 53.1.1.254
@@ -89,6 +110,13 @@ hu2:
           nexthop: 53.1.1.254
         - prefix: 54.1.1.0/24
           nexthop: 53.1.1.254
+      ipv6_routes:
+        - prefix: 2001::20:1:1:0/112
+          nexthop: 2001::53:1:1:254
+        - prefix: 2001::21:1:1:0/112
+          nexthop: 2001::53:1:1:254
+        - prefix: 2001::54:1:1:0/112
+          nexthop: 2001::53:1:1:254
       arps:
         - ipv4_addr: 53.1.1.1
           mac_addr: 00:de:ad:be:ef:11
@@ -98,9 +126,14 @@ hu2:
             mac_addr: 00:de:ad:be:ef:31
             ipv4_addr: 53.1.1.10
             ipv4_netmask: 255.255.255.0
+            ipv6_addr: 2001::53:1:1:10
+            ipv6_prefix_length: 112
       routes:
         - prefix: 21.1.1.0/24
           nexthop: 53.1.1.254
+      ipv6_routes:
+        - prefix: 2001::21:1:1:0/112
+          nexthop: 2001::53:1:1:254
 
 hu3:
   hostname: poc-server-08
@@ -117,9 +150,14 @@ hu3:
             mac_addr: 00:de:ad:be:ef:11
             ipv4_addr: 54.1.1.1
             ipv4_netmask: 255.255.255.0
+            ipv6_addr: 2001::54:1:1:1
+            ipv6_prefix_length: 112
       routes:
         - prefix: 53.1.1.0/24
           nexthop: 54.1.1.254
+      ipv6_routes:
+        - prefix: 2001::53:1:1:0/112
+          nexthop: 2001::54:1:1:254
 
 hu4:
   hostname: poc-server-09
@@ -136,6 +174,11 @@ hu4:
             mac_addr: 00:de:ad:be:ef:31
             ipv4_addr: 54.1.1.4
             ipv4_netmask: 255.255.255.0
+            ipv6_addr: 2001::54:1:1:4
+            ipv6_prefix_length: 112
       routes:
         - prefix: 53.1.1.0/24
           nexthop: 54.1.1.254
+      ipv6_routes:
+        - prefix: 2001::53:1:1:0/112
+          nexthop: 2001::54:1:1:254
