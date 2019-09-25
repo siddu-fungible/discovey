@@ -140,7 +140,7 @@ class JuniperNFACustomCompileOnly(FunTestCase):
                     pat_pld_files[pat + ".pat"] = plds
                 print ("pat_pld_files are",pat_pld_files)
 
-                RegexTemplate.compile_n_validate(con1, mem_dist, pat_path, pld_path, res_path, exp_file_path, pat_pld_files, ["ymsg-p2p-put-filename","ymsg-message","h225ras-location","mssql-login-user","imap-fetch","msn-sign-in-name","h225ras-admission","vnc-client-version","smb-account-name","nbname-resource-address","http-header-content-language","ymsg-user-name"],
+                RegexTemplate.compile_n_validate(con1, mem_dist, pat_path, pld_path, res_path, exp_file_path, pat_pld_files, ["ymsg-p2p-put-filename","ymsg-message","h225ras-location","mssql-login-user","imap-fetch","msn-sign-in-name","h225ras-admission","vnc-client-version","smb-account-name","nbname-resource-address","http-header-content-language","ymsg-user-name","stream256","first-packet"],
                                en, juniper_style="yes")
 
                 #RegexTemplate.compile_only(con1, mem_dist, pat_path, res_path, [], en, juniper_style="yes")
