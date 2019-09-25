@@ -64,7 +64,7 @@ TERAMARK_JPEG_S1 = "qa_s1_jpeg_teramark"
 TERAMARK_ZIP_DEFLATE_S1 = "qa_s1_zip_deflate_teramark"
 TERAMARK_ZIP_LZMA_S1 = "qa_s1_zip_lzma_teramark"
 TERAMARK_PKE_S1 = "qa_s1_pke_teramark"
-TERAMARK_DFA_S1 = "dfa_teramark"
+TERAMARK_DFA_S1 = "qa_s1_dfa_teramark"
 TERAMARK_NFA_S1 = "qa_s1_nfa_teramark"
 
 jpeg_operations = {"Compression throughput": "Compression throughput with Driver",
