@@ -207,7 +207,7 @@ if __name__ == "__main__":
     myscript.add_test_case(CryptoTeramarkTc())
     # myscript.add_test_case(PkeTeramarkTc())
     myscript.add_test_case(EcTeramarkTc())
-    # myscript.add_test_case(DfaTeramarkTc())
+    myscript.add_test_case(DfaTeramarkTc())
     # myscript.add_test_case(NfaTeramarkTc())
     myscript.add_test_case(JpegTeramarkTc())
     myscript.add_test_case(ZipDeflateTeramarkTc())
