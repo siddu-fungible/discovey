@@ -846,16 +846,15 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.log("vol_details is: {}".format(self.vol_details))
 
         # Executing the FIO command to fill the volume to it's capacity
-        if self.ec_info.get("compress", False):
-            server_written_total_bytes = 0
-            total_bytes_pushed_to_disk = 0
-            try:
-                initial_vol_stats = self.storage_controller.peek(
-                    props_tree="storage/volumes", legacy=False, chunk=8192, command_duration=self.command_timeout)
-                fun_test.test_assert(initial_vol_stats["status"], "Volume stats collected before warmup")
-                fun_test.log("Volume stats before warmup: {}".format(initial_vol_stats))
-            except Exception as ex:
-                fun_test.critical(str(ex))
+        server_written_total_bytes = 0
+        total_bytes_pushed_to_disk = 0
+        try:
+            initial_vol_stats = self.storage_controller.peek(
+                props_tree="storage/volumes", legacy=False, chunk=8192, command_duration=self.command_timeout)
+            fun_test.test_assert(initial_vol_stats["status"], "Volume stats collected before warmup")
+            fun_test.log("Volume stats before warmup: {}".format(initial_vol_stats))
+        except Exception as ex:
+            fun_test.critical(str(ex))
 
         if not fun_test.shared_variables["ec"]["warmup_io_completed"] and self.warm_up_traffic:
             if self.parallel_warm_up:
@@ -887,8 +886,8 @@ class ECVolumeLevelTestcase(FunTestCase):
                 for index, host_name in enumerate(self.host_info):
                     fun_test.test_assert(fun_test.shared_variables["fio"][index], "Volume warmup on host {}".
                                          format(host_name))
-                    server_written_total_bytes += fun_test.shared_variables["fio"][index]["write"]["io_bytes"]
                     fun_test.shared_variables["ec"][host_name]["warmup"] = True
+                    server_written_total_bytes += fun_test.shared_variables["fio"][index]["write"]["io_bytes"]
             else:
                 for index, host_name in enumerate(self.host_info):
                     host_handle = self.host_info[host_name]["handle"]
@@ -902,14 +901,13 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.sleep("before actual test", self.iter_interval)
             fun_test.shared_variables["ec"]["warmup_io_completed"] = True
 
-        if self.ec_info.get("compress", False):
-            try:
-                final_vol_stats = self.storage_controller.peek(
-                    props_tree="storage/volumes", legacy=False, chunk=8192, command_duration=self.command_timeout)
-                fun_test.test_assert(final_vol_stats["status"], "Volume stats collected after warmup")
-                fun_test.log("Volume stats after warmup: {}".format(final_vol_stats))
-            except Exception as ex:
-                fun_test.critical(str(ex))
+        try:
+            final_vol_stats = self.storage_controller.peek(
+                props_tree="storage/volumes", legacy=False, chunk=8192, command_duration=self.command_timeout)
+            fun_test.test_assert(final_vol_stats["status"], "Volume stats collected after warmup")
+            fun_test.log("Volume stats after warmup: {}".format(final_vol_stats))
+        except Exception as ex:
+            fun_test.critical(str(ex))
 
         if initial_vol_stats["status"] and final_vol_stats["status"]:
             diff_vol_stats = vol_stats_diff(initial_vol_stats=initial_vol_stats["data"],
@@ -925,7 +923,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.add_table(panel_header="Compression Details", table_name="Compression ratio during warmup",
                                    table_data=table_data)
             else:
-                fun_test.critical("Unable to compute difference betweeen the final & initial volumes stats during "
+                fun_test.critical("Unable to compute difference between the final & initial volumes stats during "
                                   "warmup...So skipping compression ratio calculation")
 
     def run(self):
