@@ -4,6 +4,7 @@ import {Observable, of, interval, timer} from "rxjs";
 import {switchMap, switchMapTo} from "rxjs/operators";
 import {LoggerService} from "../../services/logger/logger.service";
 import {UserService} from "../../services/user/user.service";
+import {CommonService} from "../../services/common/common.service";
 
 class JobSpec {
   suite_type: string;
@@ -19,6 +20,9 @@ class QueueEntry {
   job_spec: JobSpec;
   priority: number;
   test_bed_type: string;
+  queued_time_timestamp: number;
+  waiting_time: string;
+
 }
 
 
@@ -36,7 +40,10 @@ export class QueueViewerComponent implements OnInit {
   normalPriorityQueueOccupancy: QueueEntry[] = [];
   lowPriorityQueueOccupancy: QueueEntry[] = [];
   userMap: any = null;
-  constructor(private apiService: ApiService, private loggerService: LoggerService, private userService: UserService) { }
+  constructor(private apiService: ApiService,
+              private loggerService: LoggerService,
+              private userService: UserService,
+              private commonService: CommonService) { }
 
   ngOnInit() {
     this.priorityCategories.forEach(category => {
@@ -97,6 +104,20 @@ export class QueueViewerComponent implements OnInit {
     return category;
   }
 
+  getWaitingTime(timestamp) {
+    let queuedTime = this.commonService.convertEpochToDate(timestamp);
+    let currentTime = new Date();
+    let diffMs:number = (currentTime.getTime() - queuedTime.getTime());
+    let diffHrs = Math.floor((diffMs % 86400000) / 3600000); // hours
+    let diffMins = Math.round(((diffMs % 86400000) % 3600000) / 60000); // minutes
+    let s = `${diffMins} mins`;
+    if (diffHrs > 0) {
+      s = `${diffHrs} hours ` + s;
+    }
+    return s;
+
+  }
+
   getCurrentQueueOccupancy(): Observable<boolean> {
 
     return this.apiService.get('/regression/scheduler/queue').pipe(switchMap(response => {
@@ -108,6 +129,7 @@ export class QueueViewerComponent implements OnInit {
       let queueOccupancy = response.data;
       for (let i = 0; i < queueOccupancy.length; i++) {
         let oneQueueEntry = queueOccupancy[i] as QueueEntry;
+        oneQueueEntry.waiting_time = this.getWaitingTime(oneQueueEntry.queued_time_timestamp);
         const category = this.getPriorityCategory(oneQueueEntry.priority);
         let categoryLower = category.toLowerCase();
         if (categoryLower === 'normal') {

@@ -140,7 +140,7 @@ class JuniperNFACustomCompileOnly(FunTestCase):
                     pat_pld_files[pat + ".pat"] = plds
                 print ("pat_pld_files are",pat_pld_files)
 
-                RegexTemplate.compile_n_validate(con1, mem_dist, pat_path, pld_path, res_path, exp_file_path, pat_pld_files, ["ymsg-p2p-put-filename","ymsg-message","h225ras-location","mssql-login-user","imap-fetch","msn-sign-in-name","h225ras-admission","vnc-client-version","smb-account-name","nbname-resource-address","http-header-content-language","ymsg-user-name"],
+                RegexTemplate.compile_n_validate(con1, mem_dist, pat_path, pld_path, res_path, exp_file_path, pat_pld_files, ["ymsg-p2p-put-filename","ymsg-message","h225ras-location","mssql-login-user","imap-fetch","msn-sign-in-name","h225ras-admission","vnc-client-version","smb-account-name","nbname-resource-address","http-header-content-language","ymsg-user-name","stream256","first-packet"],
                                                 en, juniper_style="yes", target="s1")
 
                 #RegexTemplate.compile_only(con1, mem_dist, pat_path, res_path, [], en, juniper_style="yes")
@@ -152,12 +152,12 @@ class JuniperNFACustomCompileOnly(FunTestCase):
 
                 res1_path=""
                 try:
-                    fun_test.test_assert(con1.scp(target_file_path="/local/auto_admin/data_store/" + res_path,
+                    fun_test.test_assert(con1.scp(target_file_path="/project/users/QA/regression/data_store/" + res_path,
                          target_ip=con2.host_ip,
                          source_file_path=res_path+"*.json",
                          target_username=con2.ssh_username,
                          target_password=con2.ssh_password),
-                         message="scp graphs to /local/auto_admin/data_store/{}".format(res_path))
+                         message="scp graphs to /project/users/QA/regression/data_store/{}".format(res_path))
                 except:
                     pass
 

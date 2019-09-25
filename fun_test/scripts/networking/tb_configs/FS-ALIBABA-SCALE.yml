@@ -1,0 +1,27 @@
+router_mac:
+  00:de:ad:be:ef:00
+
+# HU host - the keyword must start with "hu"
+hu:
+  hostname: mpoc-server34
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: eno1
+  pcie_width: 16
+  pf_interface: hu2-f0
+  vf_interface: hu2-f8
+  namespaces:
+    default:
+      interfaces:
+        - hu2-f0:
+            ipv4_addr: 41.1.1.2
+            ipv4_netmask: 255.255.255.0
+      routes:
+        - prefix: 42.1.1.0/24
+          nexthop: 41.1.1.1
+        - prefix: 43.1.1.0/24
+          nexthop: 41.1.1.1
+        - prefix: 44.1.1.0/24
+          nexthop: 41.1.1.1
+        - prefix: 20.1.1.0/24
+          nexthop: 41.1.1.1

@@ -115,11 +115,14 @@ def setup_nu_host(funeth_obj):
         #if TB in ('FS7', 'FS11'):
             #fun_test.test_assert(linux_obj.reboot(timeout=60, retries=5), 'Reboot NU host')
         fun_test.test_assert(linux_obj.is_host_up(), 'NU host {} is up'.format(linux_obj.host_ip))
+        linux_obj.command('sudo sysctl net.ipv6.conf.all.disable_ipv6=0')
         fun_test.test_assert(funeth_obj.configure_interfaces(nu), 'Configure NU host {} interface'.format(
             linux_obj.host_ip))
         fun_test.test_assert(funeth_obj.configure_ipv4_routes(nu, configure_gw_arp=(not control_plane)),
                              'Configure NU host {} IPv4 routes'.format(
             linux_obj.host_ip))
+        fun_test.test_assert(funeth_obj.configure_ipv6_routes(nu),
+                             'Configure NU host {} IPv6 routes'.format(linux_obj.host_ip))
         # TODO: temp workaround
         if linux_obj.host_ip == 'poc-server-06':
             if enable_tso:
@@ -174,6 +177,8 @@ def setup_hu_host(funeth_obj, update_driver=True, is_vm=False, tx_offload=True):
             funeth_obj.configure_interfaces(hu), 'Configure HU host {} funeth interfaces.'.format(linux_obj.host_ip))
         fun_test.test_assert(funeth_obj.configure_ipv4_routes(hu, configure_gw_arp=(not control_plane)),
                              'Configure HU host {} IPv4 routes.'.format(linux_obj.host_ip))
+        fun_test.test_assert(funeth_obj.configure_ipv6_routes(hu),
+                             'Configure HU host {} IPv6 routes.'.format(linux_obj.host_ip))
         fun_test.test_assert(
             funeth_obj.configure_arps(hu), 'Configure HU host {} ARP entries.'.format(linux_obj.host_ip))
         #fun_test.test_assert(funeth_obj.loopback_test(packet_count=80),

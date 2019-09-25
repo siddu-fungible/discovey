@@ -108,8 +108,15 @@ export class SuiteDetailComponent implements OnInit {
           if (buildParameters.hasOwnProperty('RELEASE_BUILD')) {
             ctrl.environment.RELEASE_BUILD = buildParameters.RELEASE_BUILD;
           }
-
         }
+
+        if (environment.hasOwnProperty("with_stable_master")) {
+          let withStableMaster = environment["with_stable_master"];
+          if (withStableMaster.hasOwnProperty("debug") && withStableMaster.debug) {
+            ctrl.environment.RELEASE_BUILD = true;
+          }
+        }
+
       }
       for(let testCaseExecutionId of testCaseExecutionIds) {
         self.apiService.get('/regression/test_case_execution/' + self.executionId + "/" + testCaseExecutionId).subscribe(function (result) {

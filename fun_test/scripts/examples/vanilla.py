@@ -93,11 +93,11 @@ class FunTestCase4(FunTestCase):
                               """)
 
     def setup(self):
-        fun_test.log("Testcase setup")
+        fun_test.log("Test-case setup")
         fun_test.sleep("demo", seconds=1)
 
     def cleanup(self):
-        fun_test.log("Testcase cleanup")
+        fun_test.log("Test-case cleanup")
 
     def run(self):
         fun_test.log("Some log: vanilla 2")
