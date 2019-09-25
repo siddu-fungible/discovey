@@ -87,7 +87,7 @@ class JuniperNFACustomCompileOnly(FunTestCase):
         base = "/regex"
         fun_test.log("data store directory: " + DATA_STORE_DIR)
         con1.set_compiler_env(ffac_path)
-        mem_dist = ["rbm", "exm", "rbm_exm", "rbm_exm_plr"]
+        mem_dist = [ "exm", "rbm_exm", "rbm_exm_plr"]
         for tc in ["snort"]:
             tarball_path = "{}/{}.tgz".format(DATA_STORE_DIR + base, str(tc))
             print ("tarball path is ",tarball_path)
