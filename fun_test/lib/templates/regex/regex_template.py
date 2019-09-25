@@ -333,7 +333,7 @@ class RegexTemplate(Linux):
                                     op = con1.compile_re(j=jstyle, drop_unsupported=" ",  r=pattern_path, p=payload_path, o=res_path + graph_name, target=trgt, B="0", H="0", L=" ", s="1500", time_out=time_out)
                                 print("fourh checkpoint")
                                 if mem == "rbm_exm":
-                                    op = con1.compile_re(j=jstyle, drop_unsupported=" ", r=pattern_path,   p=payload_path, o=res_path + graph_name, target=trgt,B="10", H="10", s="1500", time_out=time_out)
+                                    op = con1.compile_re(j=jstyle, drop_unsupported=" ", r=pattern_path,   p=payload_path, o=res_path + graph_name, target=trgt,B="100", H="100", s="1500", time_out=time_out)
                                 if mem == "rbm_exm_plr":
                                     print ("FFA:rbm_exm_plr")
                                     op = con1.compile_re(j=jstyle, drop_unsupported=" ", r=pattern_path,  p=payload_path, o=res_path + graph_name, target=trgt, B="10", H="10", L=" ", s="1500", time_out=time_out)

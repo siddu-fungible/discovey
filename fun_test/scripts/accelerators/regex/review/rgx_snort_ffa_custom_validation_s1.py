@@ -87,7 +87,7 @@ class JuniperNFACustomCompileOnly(FunTestCase):
         base = "/regex"
         fun_test.log("data store directory: " + DATA_STORE_DIR)
         con1.set_compiler_env(ffac_path)
-        mem_dist = ["rbm", "exm", "rbm_exm", "rbm_exm_plr"]
+        mem_dist = [ "exm", "rbm_exm", "rbm_exm_plr"]
         for tc in ["snort"]:
             tarball_path = "{}/{}.tgz".format(DATA_STORE_DIR + base, str(tc))
             print ("tarball path is ",tarball_path)
@@ -110,7 +110,7 @@ class JuniperNFACustomCompileOnly(FunTestCase):
             pld_path = "/regex/snort/payloads/"
             #for gtype, en in zip(["dfa", "nfa", "ffa"], ["1", "0", ""]):
             for gtype, en in zip(["ffa"], [""]):
-                res_path = "/regex/"+str(tc)+"/" + gtype + "_results/"
+                res_path = "/regex/S1/"+str(tc)+"/" + gtype + "_results/"
                 con1.create_directory(res_path)
                 print ("res_path is ",res_path)
                 #res_path = "/regex/Users/fungible/ws/data_store/regression/" + str(tc) + "/" + gtype + "_results/"

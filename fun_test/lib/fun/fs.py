@@ -574,7 +574,7 @@ class Bmc(Linux):
 
     def cleanup(self):
         fun_test.sleep(message="Allowing time to generate full report", seconds=45, context=self.context)
-
+        post_processing_error_found = False
         for f1_index in range(self.NUM_F1S):
             if self.disable_f1_index is not None and f1_index == self.disable_f1_index:
                 continue
@@ -597,9 +597,14 @@ class Bmc(Linux):
                     content = f.read()
                     f.seek(0, 0)
                     f.write(self.u_boot_logs[f1_index] + '\n' + content)
-                self.post_process_uart_log(f1_index=f1_index, file_name=artifact_file_name)
                 fun_test.add_auxillary_file(description=self._get_context_prefix("F1_{} UART log").format(f1_index),
                                             filename=artifact_file_name)
+                try:
+                    self.post_process_uart_log(f1_index=f1_index, file_name=artifact_file_name)
+                except Exception as ex:
+                    post_processing_error_found = True
+                    fun_test.critical("Error in post-processing:" + str(ex))
+
         if self.context:
             fun_test.add_auxillary_file(description=self._get_context_prefix("bringup"),
                                         filename=self.context.output_file_path)
@@ -608,7 +613,7 @@ class Bmc(Linux):
             self.restart_serial_proxy()
         except Exception as ex:
             fun_test.critical((ex))
-
+        fun_test.simple_assert(not post_processing_error_found, "Post-processing failed. Please check for error regex")
 
     def post_process_uart_log(self, f1_index, file_name):
         regex_found = None
@@ -631,7 +636,7 @@ class Bmc(Linux):
 
         except Exception as ex:
             fun_test.critical(ex)
-        fun_test.test_assert(not regex_found, "UART log contains: {}".format(regex_found))
+        fun_test.simple_assert(not regex_found, "UART log contains: {}".format(regex_found))
 
     def get_f1_device_paths(self):
         self.command("cd {}".format(self.SCRIPT_DIRECTORY))

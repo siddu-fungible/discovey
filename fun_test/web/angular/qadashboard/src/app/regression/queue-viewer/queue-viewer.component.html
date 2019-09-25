@@ -37,7 +37,7 @@
         <td><a href="/regression/suite_detail/{{ queueEntry.job_id }}">{{ queueEntry.job_id }}</a></td>
         <td>{{ queueEntry.priority }}</td>
         <td>{{ queueEntry.test_bed_type }}</td>
-        <td>{{ queueEntry.job_spec.suite_path }}</td>
+        <td><div>{{ queueEntry.job_spec.suite_path }}</div><small>Waiting time: {{ queueEntry.waiting_time }}</small></td>
         <td>{{ userMap[queueEntry.job_spec.email].first_name }} {{ userMap[queueEntry.job_spec.email].last_name.charAt(0)}}</td>
         <td [innerHTML]="queueEntry.message | safeHtml"></td>
         <td style="display: flex; justify-content: flex-start">

@@ -62,10 +62,12 @@ export class CommonService {
     return dateTime.getMonth() + "/" + dateTime.getDate() + "/" + dateTime.getFullYear() + ", " + dateTime.getHours() + ":" + dateTime.getMinutes() + ":" +  dateTime.getSeconds();
   }
 
-  convertEpochToDate(epoch, timeZone): Date {
+  convertEpochToDate(epoch, timeZone=null): Date {
     let dateTime = new Date(epoch);
-    let date = this.convertToTimezone(dateTime, timeZone);
-    return date;
+    if (timeZone) {
+      dateTime = this.convertToTimezone(dateTime, timeZone);
+    }
+    return dateTime;
   }
 
   convertDateToEpoch(dateTimeObj): Date {
