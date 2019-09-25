@@ -1474,6 +1474,8 @@ class FunTestScript(object):
 
     def _cleanup_topologies(self):
         topologies = fun_test.get_topologies()
+        cleanup_error_found = False
+
         for topology in topologies:
             if not topology.is_cleaned_up():
                 fun_test.log("Topology was not cleaned up. Attempting ...")
@@ -1481,6 +1483,8 @@ class FunTestScript(object):
                     topology.cleanup()
                 except Exception as ex:
                     fun_test.critical(ex)
+                    cleanup_error_found = True
+        fun_test.simple_assert(not cleanup_error_found, "Topology cleanup error")
 
     def _cleanup_hosts(self):
         for host in fun_test.get_hosts():
