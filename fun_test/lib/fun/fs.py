@@ -256,6 +256,7 @@ class Bmc(Linux):
         self.command("rm -f /var/lock/LCK..{}".format(os.path.basename(serial_device)))
         command = "microcom -s 1000000 {} > {} &".format(serial_device, output_file)
         self.command(command)
+        process_ids = self.get_process_id_by_pattern("microcom", multiple=True)
         # self.uart_log_listener_process_ids.append(None)
 
     def _get_boot_args_for_index(self, boot_args, f1_index):
@@ -450,6 +451,8 @@ class Bmc(Linux):
         process_ids = self.get_process_id_by_pattern("microcom", multiple=True)
         for process_id in process_ids:
             self.kill_process(signal=9, process_id=process_id, kill_seconds=2)
+        process_ids = self.get_process_id_by_pattern("microcom", multiple=True)
+        self.command("rm -f /var/lock/LCK..tty*")
         process_ids = self.get_process_id_by_pattern("minicom", multiple=True)
         for process_id in process_ids:
             self.kill_process(signal=9, process_id=process_id, kill_seconds=2)
