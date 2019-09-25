@@ -1865,7 +1865,7 @@ class Linux(object, ToDictMixin):
             # Populating the resultant fio_dict dictionary
             for operation in ["write", "read"]:
                 fio_dict[operation] = {}
-                stat_list = ["bw", "iops", "io_bytes", "latency", "clatency", "latency90", "latency95",
+                stat_list = ["bw", "iops", "io_bytes", "runtime", "latency", "clatency", "latency90", "latency95",
                              "latency99","latency9950", "latency9999"]
                 for stat in stat_list:
                     if stat not in ("latency", "clatency", "latency90", "latency95", "latency99", "latency9950",
@@ -2807,7 +2807,7 @@ class Linux(object, ToDictMixin):
     @fun_test.safe
     def destroy(self):
         try:
-            self.disconnect()
+            Linux.disconnect(self)
         except Exception as ex:
             pass
         try:

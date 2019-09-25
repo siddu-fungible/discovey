@@ -14,7 +14,7 @@ from datetime import datetime
 import re
 import os
 
-ERROR_REGEXES = ["MUD_MCI_NON_FATAL_INTR_STAT"]
+ERROR_REGEXES = ["MUD_MCI_NON_FATAL_INTR_STAT", "bug_check", "platform_halt: exit status 1"]
 
 """
 Possible workarounds:
@@ -266,8 +266,8 @@ class Bmc(Linux):
                 if f1_index == 1:
                     huid = 2
                 s += " cc_huid={}".format(huid)
-        if "--sync-uart" not in boot_args:
-            s += " --sync-uart"
+        #if "--sync-uart" not in boot_args:
+        #    s += " --sync-uart"
         return s
 
     def setup_serial_proxy_connection(self, f1_index, auto_boot=False):
@@ -574,7 +574,7 @@ class Bmc(Linux):
 
     def cleanup(self):
         fun_test.sleep(message="Allowing time to generate full report", seconds=45, context=self.context)
-
+        post_processing_error_found = False
         for f1_index in range(self.NUM_F1S):
             if self.disable_f1_index is not None and f1_index == self.disable_f1_index:
                 continue
@@ -597,9 +597,14 @@ class Bmc(Linux):
                     content = f.read()
                     f.seek(0, 0)
                     f.write(self.u_boot_logs[f1_index] + '\n' + content)
-                self.post_process_uart_log(f1_index=f1_index, file_name=artifact_file_name)
                 fun_test.add_auxillary_file(description=self._get_context_prefix("F1_{} UART log").format(f1_index),
                                             filename=artifact_file_name)
+                try:
+                    self.post_process_uart_log(f1_index=f1_index, file_name=artifact_file_name)
+                except Exception as ex:
+                    post_processing_error_found = True
+                    fun_test.critical("Error in post-processing:" + str(ex))
+
         if self.context:
             fun_test.add_auxillary_file(description=self._get_context_prefix("bringup"),
                                         filename=self.context.output_file_path)
@@ -608,9 +613,10 @@ class Bmc(Linux):
             self.restart_serial_proxy()
         except Exception as ex:
             fun_test.critical((ex))
-
+        fun_test.simple_assert(not post_processing_error_found, "Post-processing failed. Please check for error regex")
 
     def post_process_uart_log(self, f1_index, file_name):
+        regex_found = None
         try:
             fun_test.log("Post-processing UART log F1: {}".format(f1_index))
             regex = ""
@@ -622,13 +628,15 @@ class Bmc(Linux):
                 m = re.search(regex, content)
                 if m:
                     full_match = m.group(0)
-                    fun_test.critical("ERROR Regex matched: {}".format(full_match))
+                    critical_message = "ERROR Regex matched: {}".format(full_match)
+                    regex_found = critical_message
+                    fun_test.critical(critical_message)
                     error_message = "Regression: ERROR REGEX Matched: {} Job-ID: {} F1_{} Context: {}".format(full_match, fun_test.get_suite_execution_id(), f1_index, self._get_context_prefix(data="error"))
                     fun_test.send_mail(subject=error_message, content=error_message)
 
         except Exception as ex:
             fun_test.critical(ex)
-
+        fun_test.simple_assert(not regex_found, "UART log contains: {}".format(regex_found))
 
     def get_f1_device_paths(self):
         self.command("cd {}".format(self.SCRIPT_DIRECTORY))
