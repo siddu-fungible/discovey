@@ -1068,6 +1068,12 @@ def scheduler_queue(request, job_id):
                            "message": queue_element.message,
                            "suspend": queue_element.suspend,
                            "pre_emption_allowed": queue_element.pre_emption_allowed}
+
+            try:
+                s = SuiteExecution.objects.get(execution_id=queue_element.job_id)
+                one_element["queued_time_timestamp"] = get_epoch_time_from_datetime(s.scheduled_time)
+            except ObjectDoesNotExist:
+                pass
             result.append(one_element)
     elif request.method == 'POST':
         result = None
