@@ -272,9 +272,9 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict,  v
         output_list.append({'WRO tunnel {}'.format(tunnel_id): output})
 
         # BM
-        fun_test.log('{} dpc: Get resource BAM stats'.format(f1))
-        output = nc_obj.peek_resource_bam_stats()
-        output_list.append({'BM': output})
+        #fun_test.log('{} dpc: Get resource BAM stats'.format(f1))
+        #output = nc_obj.peek_resource_bam_stats()
+        #output_list.append({'BM': output})
 
         # EQM
         fun_test.log('{} dpc: Get EQM stats'.format(f1))
