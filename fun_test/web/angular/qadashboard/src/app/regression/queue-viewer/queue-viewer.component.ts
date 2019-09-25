@@ -108,12 +108,18 @@ export class QueueViewerComponent implements OnInit {
     let queuedTime = this.commonService.convertEpochToDate(timestamp);
     let currentTime = new Date();
     let diffMs:number = (currentTime.getTime() - queuedTime.getTime());
+    let diffDays = Math.floor(diffMs / 86400000); // days
     let diffHrs = Math.floor((diffMs % 86400000) / 3600000); // hours
     let diffMins = Math.round(((diffMs % 86400000) % 3600000) / 60000); // minutes
-    let s = `${diffMins} mins`;
-    if (diffHrs > 0) {
-      s = `${diffHrs} hours ` + s;
+    let s = "";
+    if (diffDays) {
+      s = `${diffDays} days `;
     }
+    if (diffHrs > 0) {
+      s += `${diffHrs} hours `;
+    }
+    s += `${diffMins} mins`;
+
     return s;
 
   }
