@@ -241,6 +241,7 @@ class RawVolumeLocalPerfTestcase(FunTestCase):
                     fun_test.test_assert(command_result["status"], "Attaching volume {} to controller {}"
                                      .format(blt_volume_dpu_1[x], controller_dpu_1))
 
+                fun_test.sleep("Sleeping before accessing VMs ", seconds=10)
                 # Workaround for connecting to the VM via SSH
                 host_obj.sudo_command("sysctl -w net.bridge.bridge-nf-call-iptables=0")
 
