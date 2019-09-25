@@ -190,7 +190,8 @@ class Funeth:
                 result_list = []
                 for d in (sdkdir, drvdir):
                     output = linux_obj.command('cat {}/bld_props.json'.format(d))
-                    dict = json.loads(output)
+                    mat = re.search(r'{.*}', output, re.DOTALL)
+                    dict = json.loads(mat.group())
                     commit = dict.get('gitHubSha1s').get(d.split('/')[-1])
                     bld = dict.get('bldNum')
                     result_list.extend([commit, bld])
