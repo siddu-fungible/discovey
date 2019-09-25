@@ -348,7 +348,7 @@ class Funeth:
                     match = re.search(r'UP.*RUNNING.*inet {}\s+netmask {}'.format(ipv4_addr, ipv4_netmask),
                                       output, re.DOTALL)
                 if ipv6_addr and ipv6_prefix_length:
-                    match &= re.search(r'inet6 {}\s+prefixlen {}'.format(ipv6_addr, ipv6_prefix_length), output)
+                    match &= re.search(r'inet6 {}\s+prefixlen {}'.format(ipv6_addr, ipv6_prefix_length), output) is not None
 
             result &= match is not None
 
