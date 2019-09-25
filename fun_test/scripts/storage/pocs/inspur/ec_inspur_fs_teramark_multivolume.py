@@ -833,8 +833,8 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.test_assert_expected(expected=self.syslog_level, actual=command_result["data"],
                                           message="Checking syslog level")
 
-            # Preparing the volume details list containing the list of ditionaries where each dictionary has the details of
-            # an EC volume
+            # Preparing the volume details list containing the list of ditionaries where each dictionary has the
+            # details of an EC volume
             self.vol_details = []
             for num in range(self.ec_info["num_volumes"]):
                 vol_group = {}
@@ -844,19 +844,20 @@ class ECVolumeLevelTestcase(FunTestCase):
                 vol_group[self.ec_info["volume_types"]["lsv"]] = self.ec_info["uuids"][num]["lsv"]
                 self.vol_details.append(vol_group)
             fun_test.log("vol_details is: {}".format(self.vol_details))
+            fun_test.shared_variables["vol_details"] = self.vol_details
 
         # Executing the FIO command to fill the volume to it's capacity
-        server_written_total_bytes = 0
-        total_bytes_pushed_to_disk = 0
-        try:
-            initial_vol_stats = self.storage_controller.peek(
-                props_tree="storage/volumes", legacy=False, chunk=8192, command_duration=self.command_timeout)
-            fun_test.test_assert(initial_vol_stats["status"], "Volume stats collected before warmup")
-            fun_test.log("Volume stats before warmup: {}".format(initial_vol_stats))
-        except Exception as ex:
-            fun_test.critical(str(ex))
-
         if not fun_test.shared_variables["ec"]["warmup_io_completed"] and self.warm_up_traffic:
+            server_written_total_bytes = 0
+            total_bytes_pushed_to_disk = 0
+            try:
+                initial_vol_stats = self.storage_controller.peek(
+                    props_tree="storage/volumes", legacy=False, chunk=8192, command_duration=self.command_timeout)
+                fun_test.test_assert(initial_vol_stats["status"], "Volume stats collected before warmup")
+                fun_test.log("Volume stats before warmup: {}".format(initial_vol_stats))
+            except Exception as ex:
+                fun_test.critical(str(ex))
+
             if self.parallel_warm_up:
                 host_clone = {}
                 warmup_thread_id = {}
@@ -901,30 +902,30 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.sleep("before actual test", self.iter_interval)
             fun_test.shared_variables["ec"]["warmup_io_completed"] = True
 
-        try:
-            final_vol_stats = self.storage_controller.peek(
-                props_tree="storage/volumes", legacy=False, chunk=8192, command_duration=self.command_timeout)
-            fun_test.test_assert(final_vol_stats["status"], "Volume stats collected after warmup")
-            fun_test.log("Volume stats after warmup: {}".format(final_vol_stats))
-        except Exception as ex:
-            fun_test.critical(str(ex))
+            try:
+                final_vol_stats = self.storage_controller.peek(
+                    props_tree="storage/volumes", legacy=False, chunk=8192, command_duration=self.command_timeout)
+                fun_test.test_assert(final_vol_stats["status"], "Volume stats collected after warmup")
+                fun_test.log("Volume stats after warmup: {}".format(final_vol_stats))
+            except Exception as ex:
+                fun_test.critical(str(ex))
 
-        if initial_vol_stats["status"] and final_vol_stats["status"]:
-            diff_vol_stats = vol_stats_diff(initial_vol_stats=initial_vol_stats["data"],
-                                            final_vol_stats=final_vol_stats["data"], vol_details=self.vol_details)
-            if diff_vol_stats["status"]:
-                total_bytes_pushed_to_disk = diff_vol_stats["total_diff"]["VOL_TYPE_BLK_LSV"]["write_bytes"]
-                compress_ratio = round(server_written_total_bytes / float(total_bytes_pushed_to_disk), 2)
+            if initial_vol_stats["status"] and final_vol_stats["status"]:
+                diff_vol_stats = vol_stats_diff(initial_vol_stats=initial_vol_stats["data"],
+                                                final_vol_stats=final_vol_stats["data"], vol_details=self.vol_details)
+                if diff_vol_stats["status"]:
+                    total_bytes_pushed_to_disk = diff_vol_stats["total_diff"]["VOL_TYPE_BLK_LSV"]["write_bytes"]
+                    compress_ratio = round(server_written_total_bytes / float(total_bytes_pushed_to_disk), 2)
 
-                headers = ["Total bytes written by server", "Total bytes pushed to disk after compression",
-                           "Compression Ratio"]
-                data = [server_written_total_bytes, total_bytes_pushed_to_disk, compress_ratio]
-                table_data = {"headers": headers, "rows": [data]}
-                fun_test.add_table(panel_header="Compression Details", table_name="Compression ratio during warmup",
-                                   table_data=table_data)
-            else:
-                fun_test.critical("Unable to compute difference between the final & initial volumes stats during "
-                                  "warmup...So skipping compression ratio calculation")
+                    headers = ["Total bytes written by server", "Total bytes pushed to disk after compression",
+                               "Compression Ratio"]
+                    data = [server_written_total_bytes, total_bytes_pushed_to_disk, compress_ratio]
+                    table_data = {"headers": headers, "rows": [data]}
+                    fun_test.add_table(panel_header="Compression Details", table_name="Compression ratio during warmup",
+                                       table_data=table_data)
+                else:
+                    fun_test.critical("Unable to compute difference between the final & initial volumes stats during "
+                                      "warmup...So skipping compression ratio calculation")
 
     def run(self):
 
@@ -956,6 +957,7 @@ class ECVolumeLevelTestcase(FunTestCase):
         ssd_util_data_rows = []
 
         self.ec_info = fun_test.shared_variables["ec_info"]
+        self.vol_details = fun_test.shared_variables["vol_details"]
         # Checking whether the job's inputs argument is having the list of io_depths to be used in this test.
         # If so, override the script default with the user provided config
         job_inputs = fun_test.get_job_inputs()
