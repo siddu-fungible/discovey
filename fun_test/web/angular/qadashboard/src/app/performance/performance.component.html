@@ -1,6 +1,26 @@
 <fun-spinner [status]="status"></fun-spinner>
 <div class="component container">
-  <div [ngClass]="{'row': selectMode !== SelectMode.ShowEditWorkspace}">
+  <div class="card-header">
+    <ul class="nav nav-tabs card-header-tabs" role="tablist">
+      <li class="nav-item">
+        <span class="nav-link pseudo-anchor"
+              role="tab" *ngIf="!showF1Dag" (click)="openF1Dag()"
+              >F1</span>
+        <span class="nav-link active pseudo-anchor" role="tab"
+              *ngIf="showF1Dag"
+              >F1</span>
+      </li>
+      <li class="nav-item">
+        <span class="nav-link pseudo-anchor"
+                    role="tab" *ngIf="!showS1Dag" (click)="openS1Dag()">S1
+        </span>
+        <span class="nav-link active pseudo-anchor" role="tab"
+              *ngIf="showS1Dag">S1
+        </span>
+      </li>
+    </ul>
+  </div>
+  <div [ngClass]="{'row': selectMode !== SelectMode.ShowEditWorkspace}" class="card-body tab-pane" role="tabpanel">
     <!-- left side of the performance page containing tree structure -->
     <div [ngClass]="{'col-lg-5 col-md-5 col-xxl-4 col-xl-5 left-col': selectMode !== SelectMode.ShowEditWorkspace}">
       <table class="table table-nonfluid">
@@ -329,5 +349,4 @@
       </div>
     </div>
   </div>
-
 </div>

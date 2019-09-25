@@ -172,6 +172,8 @@ export class PerformanceComponent implements OnInit {
   allMetricsNode: FlatNode = null;
 
   buildInfo: any = null;
+  showF1Dag: boolean = true;
+  showS1Dag: boolean = false;
 
   constructor(
     private apiService: ApiService,
@@ -216,7 +218,6 @@ export class PerformanceComponent implements OnInit {
       this.loggerService.error("Unable to fetch buildInfo");
     });
     this.fetchDag();
-
   }
 
   getDefaultQueryPath(flatNode) {
@@ -263,8 +264,32 @@ export class PerformanceComponent implements OnInit {
     });
   }
 
+  openS1Dag(): void {
+    this.showS1Dag = true;
+    this.showF1Dag = false;
+  }
+
+  closeS1Dag(): void {
+
+  }
+
+  openF1Dag(): void {
+    this.showF1Dag = true;
+    this.showS1Dag = false;
+  }
+
+  closeF1Dag(): void {
+
+  }
+
   fetchDag(): void {
     let url = "/metrics/dag";
+    if (this.showF1Dag) {
+      url += "?root_metric_ids=101";
+    }
+    if (this.showS1Dag) {
+      url += "?root_metric_ids=591";
+    }
     if (this.metricIds) {
       url = "/metrics/dag" + "?root_metric_ids=" + String(this.metricIds);
     }

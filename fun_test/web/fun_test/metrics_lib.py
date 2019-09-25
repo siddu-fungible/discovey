@@ -21,7 +21,7 @@ logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 from datetime import datetime, timedelta
 from web.fun_test.site_state import *
 from web.fun_test.metrics_models import MetricChart, MileStoneMarkers, LastMetricId, PerformanceMetricsDag
-from web.fun_test.models import InterestedMetrics, PerformanceUserWorkspaces
+from web.fun_test.models import InterestedMetrics, PerformanceUserWorkspaces, MetricsGlobalSettings
 from fun_settings import TEAM_REGRESSION_EMAIL
 from web.web_global import JINJA_TEMPLATE_DIR
 from jinja2 import Environment, FileSystemLoader
@@ -461,6 +461,11 @@ class MetricLib():
         s1_dag = result["S1"]
         PerformanceMetricsDag(f1_metrics_dag=f1_dag, s1_metrics_dag=s1_dag).save()
         print "dag backup successful"
+
+    def set_global_cache(self, cache_valid):
+        global_setting = MetricsGlobalSettings.objects.first()
+        global_setting.cache_valid = cache_valid
+        global_setting.save()
 
 
 if __name__ == "__main__":

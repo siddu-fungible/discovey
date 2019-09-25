@@ -243,9 +243,7 @@ def update_child_weight(request):
     if str(child_id) in children_weights.keys():
         c.add_child_weight(child_id=child_id, weight=weight)
     invalidate_goodness_cache()
-    global_settings = MetricsGlobalSettings.objects.first()
-    global_settings.cache_valid = False
-    global_settings.save()
+    ml.set_global_cache(cache_valid=False)
 
 
 '''
@@ -590,9 +588,6 @@ def update_chart(request):
             visualization_unit = request_json["visualization_unit"]
             c.visualization_unit = visualization_unit
         c.save()
-        global_settings = MetricsGlobalSettings.objects.first()
-        global_settings.cache_valid = False
-        global_settings.save()
     except ObjectDoesNotExist:
         metric_id = LastMetricId.get_next_id()
         c = MetricChart(metric_model_name=model_name,
@@ -610,6 +605,8 @@ def update_chart(request):
             c.base_line_date = base_line_date
         c.save()
         invalidate_goodness_cache()
+    finally:
+        ml.set_global_cache(cache_valid=False)
     return c.metric_id
 
 
@@ -633,12 +630,10 @@ def update_expected(chart, expected_operation):
                         output_name = data_set["output"]["name"]
                         output_unit_name = output_name + "_unit"
                         latest_entry = entries.first()
-                        if hasattr(latest_entry, output_name):
+                        if hasattr(latest_entry, output_name) and hasattr(latest_entry, output_unit_name):
                             output_value = getattr(latest_entry, output_name)
-                        if hasattr(latest_entry, output_unit_name):
                             output_unit = getattr(latest_entry, output_unit_name)
-
-                        set_expected(current_data_sets, data_set["name"], output_value, output_unit, expected_operation)
+                            set_expected(current_data_sets, data_set["name"], output_value, output_unit, expected_operation)
                     else:
                         set_expected(current_data_sets, data_set["name"], -1, chart.visualization_unit,
                                      expected_operation)
@@ -880,15 +875,15 @@ def traverse_dag(levels, metric_id, metric_chart_entries, sort_by_name=True):
 def dag(request):
     result = []
     levels = int(request.GET.get("levels", 15))
+    # metric ids are used instead of chart names for F1, S1 and all metrics
+    metric_ids = request.GET.get("root_metric_ids", '101,591,122')  # 101=F1, 122=All Metrics, 591-S1
+    if ',' in metric_ids:
+        metric_ids = metric_ids.strip().split(',')
+    else:
+        metric_ids = [int(metric_ids)]
     global_setting = MetricsGlobalSettings.objects.first()
     cache_valid = global_setting.cache_valid
     if not cache_valid or (cache_valid and levels != 15):
-        # metric ids are used instead of chart names for F1, S1 and all metrics
-        metric_ids = request.GET.get("root_metric_ids", '101,591,122')  # 101=F1, 122=All Metrics, 591-S1
-        if ',' in metric_ids:
-            metric_ids = metric_ids.strip().split(',')
-        else:
-            metric_ids = [int(metric_ids)]
         metric_chart_entries = {}
         for metric_id in metric_ids:
             if metric_id == 122:
@@ -902,9 +897,11 @@ def dag(request):
     else:
         pmds = PerformanceMetricsDag.objects.all().order_by("-date_time")[:1]
         for pmd in pmds:
-            result.append(pmd.f1_metrics_dag)
-            result.append(pmd.s1_metrics_dag)
-
+            for metric_id in metric_ids:
+                if metric_id == 101:
+                    result.append(json.loads(pmd.f1_metrics_dag))
+                if metric_id == 591:
+                    result.append(json.loads(pmd.s1_metrics_dag))
     return result
 
 

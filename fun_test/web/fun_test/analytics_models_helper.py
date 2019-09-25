@@ -574,8 +574,7 @@ def prepare_status_db(chart_names):
         prepare_status(chart=total_chart, purge_old_status=False, cache_valid=cache_valid)
     if not cache_valid:
         ml.backup_dags()
-    global_setting.cache_valid = True
-    global_setting.save()
+        ml.set_global_cache(cache_valid=True)
 
 
 if __name__ == "__main2__":
