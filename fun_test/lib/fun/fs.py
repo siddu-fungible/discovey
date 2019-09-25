@@ -244,6 +244,8 @@ class Bmc(Linux):
 
 
     def start_uart_log_listener(self, f1_index, serial_device):
+        process_ids = self.get_process_id_by_pattern("microcom", multiple=True)
+
         self.kill_serial_proxies(f1_index=f1_index)
 
         output_file = self.get_f1_uart_log_filename(f1_index=f1_index)
@@ -251,8 +253,8 @@ class Bmc(Linux):
         #                                                                                        serial_device,
         #                                                                                        output_file), nohup=False, output_file="/tmp/uart_listener_{}.txt".format(f1_index))
         log_file = "/tmp/uart_listener_{}.txt".format(f1_index)
-        self.command("rm {}".format(output_file))
-        self.command("rm {}".format(log_file))
+        # self.command("rm {}".format(output_file))
+        # self.command("rm {}".format(log_file))
         self.command("rm -f /var/lock/LCK..{}".format(os.path.basename(serial_device)))
         command = "microcom -s 1000000 {} > {} &".format(serial_device, output_file)
         self.command(command)
