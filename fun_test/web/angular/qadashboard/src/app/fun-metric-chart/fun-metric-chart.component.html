@@ -2,37 +2,6 @@
 <div *ngIf="status === null" class="chart-div" [ngClass]="{'component': paddingNeeded}">
   <div style="max-width: 1000px; height: 100%; margin: auto;">
     <br>
-    <!--&lt;!&ndash; showing week month and all time mode for leafs &ndash;&gt;-->
-    <!--<div *ngIf="!minimal" [ngSwitch]="timeMode">-->
-    <!--<div *ngSwitchCase="'all'">-->
-    <!--<a (click)="setTimeMode('week')"> Week </a>/-->
-    <!--<a (click)="setTimeMode('month')"> Month </a>/-->
-    <!--<b><u><a (click)="setTimeMode('all')"> All </a></u></b>-->
-    <!--<select *ngIf="leaf" [(ngModel)]="selectedUnit"-->
-    <!--(ngModelChange)="onUnitChange($event)" style="float: right">-->
-    <!--<option [ngValue]="units" *ngFor="let units of category">{{ units }}</option>-->
-    <!--</select>-->
-    <!--</div>-->
-    <!--<div *ngSwitchCase="'week'">-->
-    <!--<b><u><a (click)="setTimeMode('week')"> Week </a></u></b>/-->
-    <!--<a (click)="setTimeMode('month')"> Month </a>/-->
-    <!--<a (click)="setTimeMode('all')"> All </a>-->
-    <!--<select *ngIf="leaf" [(ngModel)]="selectedUnit"-->
-    <!--(ngModelChange)="onUnitChange($event)" style="float: right">-->
-    <!--<option [ngValue]="units" *ngFor="let units of category">{{ units }}</option>-->
-    <!--</select>-->
-    <!--</div>-->
-    <!--<div *ngSwitchCase="'month'">-->
-    <!--<a (click)="setTimeMode('week')"> Week </a>/-->
-    <!--<b><u><a (click)="setTimeMode('month')"> Month </a></u></b>/-->
-    <!--<a (click)="setTimeMode('all')"> All </a>-->
-    <!--<select *ngIf="leaf" [(ngModel)]="selectedUnit"-->
-    <!--(ngModelChange)="onUnitChange($event)" style="float: right">-->
-    <!--<option [ngValue]="units" *ngFor="let units of category">{{ units }}</option>-->
-    <!--</select>-->
-    <!--</div>-->
-    <!--</div>-->
-
     <!-- showing the units dropdown on the right-->
     <div *ngIf="!minimal">
       <select *ngIf="leaf" [(ngModel)]="selectedUnit"
@@ -114,12 +83,6 @@
           <span><i class="fa fa-check fa-fw tick-color" (click)="submit()"></i></span>
           <span><i class="fa fa-times fa-fw close-color" (click)="editingSource = false"></i></span></i>
         <br>
-        <i *ngIf="!editingDaysInPast" class="grey-text">Show days in past: <span
-          (click)="editingDaysInPast = true">{{ daysInPast }}</span></i>
-        <i *ngIf="editingDaysInPast" style="font-size: 95%;">Show days in past: <input type="number" style="width: 100px"
-                                                                      [(ngModel)]="daysInPast">
-          <span><i class="fa fa-check fa-fw tick-color" (click)="submitDaysInPast()"></i></span>
-          <span><i class="fa fa-times fa-fw close-color" (click)="editingDaysInPast = false"></i></span></i>
       </div>
       <br>
       <div>
@@ -133,7 +96,6 @@
           <a style="padding: 5px;" (click)="toggleEdit()">Cancel</a>
         </div>
       </div>
-      <br>
       <br>
       <div *ngIf="leaf">
         <b>Show expected values:</b>&nbsp;
@@ -161,19 +123,28 @@
           </tr>
         </table>
       </div>
+      <div>
+        <i *ngIf="!editingDaysInPast" class="grey-text">Show days in past: <span
+          (click)="editingDaysInPast = true">{{ daysInPast }}</span></i>
+        <i *ngIf="editingDaysInPast" style="font-size: 95%;">Show days in past: <input type="number"
+                                                                                       style="width: 100px"
+                                                                                       [(ngModel)]="daysInPast">
+          <span><i class="fa fa-check fa-fw tick-color" (click)="submitDaysInPast()"></i></span>
+          <span><i class="fa fa-times fa-fw close-color" (click)="editingDaysInPast = false"></i></span></i>
+      </div>
     </div>
     <br>
     <div class="closed-section"></div>
     <!-- Show tables below the leaf chart -->
     <div *ngIf="!minimal && leaf" style="padding-top: 10px; padding-bottom: 10px;">
       <div *ngIf="!minimal">
-    <span class="a-text">
-      <a *ngIf="!showingTable" [routerLink]="" (click)="showTables()">Show Table </a>
-      <a *ngIf="showingTable" [routerLink]="" (click)="showTables()">Hide Table </a>
-      <a [routerLink]="" (click)="showTables()"><span *ngIf="!showingTable" class="arrow-right"></span>
-        <span *ngIf="showingTable" class="arrow-down"></span>
-      </a>
-    </span>
+        <span class="a-text">
+          <a *ngIf="!showingTable" [routerLink]="" (click)="showTables()">Show Table </a>
+          <a *ngIf="showingTable" [routerLink]="" (click)="showTables()">Hide Table </a>
+          <a [routerLink]="" (click)="showTables()"><span *ngIf="!showingTable" class="arrow-right"></span>
+          <span *ngIf="showingTable" class="arrow-down"></span>
+          </a>
+        </span>
         <div *ngIf="showingTable" scrollTo>
           <h3 style="float: left;">{{ chartName }}</h3>
           <fun-table [data]="data"></fun-table>

@@ -58,6 +58,10 @@ export class CommonService {
     return pstDate;
   }
 
+  convertDateToString(dateTime) {
+    return dateTime.getMonth() + "/" + dateTime.getDate() + "/" + dateTime.getFullYear() + ", " + dateTime.getHours() + ":" + dateTime.getMinutes() + ":" +  dateTime.getSeconds();
+  }
+
   convertEpochToDate(epoch, timeZone): Date {
     let dateTime = new Date(epoch);
     let date = this.convertToTimezone(dateTime, timeZone);

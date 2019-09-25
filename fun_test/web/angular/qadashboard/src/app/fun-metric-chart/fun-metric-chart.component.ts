@@ -147,6 +147,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.status = "Updating";
     this.showingTable = false;
     this.showingConfigure = false;
+    this.daysInPast = 60;
+    this.editingDaysInPast = false;
     this.headers = null;
     this.metricId = -1;
     this.editingDescription = false;
@@ -187,12 +189,18 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges() {
+    this.daysInPast = 60;
+    this.editingDaysInPast = false;
+    this.refreshCharts();
+  }
+
+  refreshCharts() {
     this.status = "Updating";
     this.fetchNames();
   }
 
   submitDaysInPast(): void {
-    this.ngOnChanges();
+    this.refreshCharts();
   }
 
   showPointDetails(pointInfo): void {
@@ -280,11 +288,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
 
   //formats the tooltip shown in the charts
   tooltipFormatter(x, y, metaData): string {
-    let softwareDate = "Unknown";
-    let hardwareVersion = "Unknown";
-    let sdkBranch = "Unknown";
-    let gitCommit = "Unknown";
-    let key = this._getBuildKey(x);
     let s = "";
     if (x) {
       let pstDate = this.commonService.convertEpochToDate(x, this.TIMEZONE);
@@ -306,8 +309,10 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     let sdkBranch = "Unknown";
     let gitCommit = "Unknown";
     //let key = this._getBuildKey(x);
-    let pstDate = this.commonService.convertEpochToDate(x, this.TIMEZONE);
-    let key = this.commonService.addLeadingZeroesToDate(pstDate);
+    let key = x;
+    if (metaData.epoch) {
+      key = Number(metaData.epoch);
+    }
     let s = {};
 
     if (this.buildInfo && key in this.buildInfo) {
@@ -348,7 +353,9 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         s["Build Properties"] = buildProperties;
       }
     }
-    s["Date"] = key.substring(0, 5);
+    let pstDate = this.commonService.convertEpochToDate(key, this.TIMEZONE);
+    let dateString = this.commonService.addLeadingZeroesToDate(pstDate);
+    s["Date"] = dateString.substring(0, 5);
     if (metaData.originalValue) {
       s["Value"] = metaData.originalValue;
     } else {
@@ -613,86 +620,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     }
   }
 
-  //returns the range of dates according to the time mode
-  getDatesByTimeMode(dateList): any {
-    let len = dateList.length;
-    let filteredDate = [];
-    let result = [[len, 0]];
-    if (this.timeMode === "week") {
-      for (let i = len - 1; i >= 0; i = i - 7) {
-        if (i >= 7) {
-          filteredDate.push([i, i - 7 + 1]);
-        }
-        else {
-          filteredDate.push([i, 0]);
-        }
-      }
-      result = filteredDate.reverse();
-    } else if (this.timeMode === "month") {
-      let i = len - 1;
-      let startIndex = len - 1;
-      let latestDate = this.commonService.convertEpochToDate(dateList[i], this.TIMEZONE);
-      let latestMonth = latestDate.getMonth();
-      while (i >= 0) {
-        let currentDate = this.commonService.convertEpochToDate(dateList[i], this.TIMEZONE);
-        let currentMonth = currentDate.getMonth();
-        if (currentMonth !== latestMonth) {
-          filteredDate.push([startIndex, i + 1]);
-          latestMonth = currentMonth;
-          startIndex = i;
-        }
-        if (i === 0) {
-          filteredDate.push([startIndex, i]);
-        }
-        i--;
-      }
-      result = filteredDate.reverse();
-    } else {
-      for (let i = len - 1; i >= 0; i--) {
-        filteredDate.push([i, i]);
-      }
-      result = filteredDate.reverse();
-    }
-    return result;
-  }
-
-  //check for all dates and if not present add the respective date to the list
-  fixMissingDates(dates): any {
-    let finalDates = [];
-    let datesSet = new Set();
-    if (dates.length !== 0) {
-      let lastDate = this.commonService.convertEpochToDate(dates[0], this.TIMEZONE);
-      dates.reverse();
-      let uniqueDates = [];
-      for (let epochDate of dates) {
-        let pstDate = this.commonService.convertEpochToDate(epochDate, this.TIMEZONE);
-        let keyString = (pstDate.getMonth() + 1) + "/" + pstDate.getDate() + "/" + pstDate.getFullYear();
-        if (!datesSet.has(keyString)) {
-          datesSet.add(keyString);
-          uniqueDates.push(epochDate);
-        }
-      }
-      let currentDate = this.commonService.convertEpochToDate(new Date(), this.TIMEZONE);
-      let datesIndex = 0;
-      while (currentDate >= lastDate) {
-        let keyString = (currentDate.getMonth() + 1) + "/" + currentDate.getDate() + "/" + currentDate.getFullYear();
-        if (!datesSet.has(keyString)) {
-          let tempDate = currentDate;
-          tempDate.setHours(0);
-          tempDate.setMinutes(0);
-          tempDate.setSeconds(1);
-          let epochDate = this.commonService.convertDateToEpoch(tempDate);
-          finalDates.push(epochDate);
-        } else if (datesIndex < uniqueDates.length) {
-          finalDates.push(uniqueDates[datesIndex]);
-          datesIndex++;
-        }
-        currentDate.setDate(currentDate.getDate() - 1);
-      }
-    }
-    return finalDates.reverse();
-  }
-
   //check if both the dates are same
   sameDay(d1, d2) {
     return d1.getFullYear() === d2.getFullYear() &&
@@ -790,6 +717,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     let payload = {};
     payload["preview_data_sets"] = previewDataSets;
     payload["metric_id"] = metricId;
+    payload["count"] = this.daysInPast;
     if (chartInfo) {
       payload["metric_id"] = chartInfo["metric_id"];
       this.metricId = chartInfo["metric_id"];
@@ -824,17 +752,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       d.setDate(d.getDate() - this.daysInPast);
       let startDate = this.commonService.convertToTimezone(d, this.TIMEZONE);
 
-      let seriesDatesSet = new Set();
-
-      for (let oneDataSet of allDataSets) {
-        for (let oneRecord of oneDataSet) {
-          let pstDate = this.commonService.convertEpochToDate(Number(oneRecord.epoch_time), this.TIMEZONE);
-          let keyString = this.commonService.addLeadingZeroesToDate(pstDate);
-          if (!seriesDatesSet.has(keyString)) {
-            seriesDatesSet.add(keyString);
-          }
-        }
-      }
       let chartDataSets = [];
       let seriesDates = [];
       this.expectedValues = [];
@@ -856,7 +773,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         let seriesDatesIndex = 0;
         while (lastDate >= startDate) {
           let valueSet = false;
-          let dateString = null;
           let epoch = null;
           for (let oneRecord of oneDataSet) {
             let pstDate = this.commonService.convertEpochToDate(Number(oneRecord.epoch_time), this.TIMEZONE);
@@ -866,9 +782,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
               let output = oneRecord[outputName];
               output = this.convertToBaseUnit(outputUnit, output);
               output = this.convertToVisualizationUnit(this.visualizationUnit, output);
-              let result = this.getValidatedData(output, minimum, maximum);
-              dateString = this.commonService.addLeadingZeroesToDate(pstDate);
               epoch = oneRecord.epoch_time;
+              let result = this.getValidatedData(output, minimum, maximum, epoch);
               oneChartDataArray.push(result);
               if (this.maxDataPoint === null) {
                 this.maxDataPoint = result.y;
@@ -883,14 +798,10 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
             }
           }
           if (!valueSet) {
-            dateString = this.commonService.addLeadingZeroesToDate(lastDate);
-            epoch = this.commonService.convertDateToEpoch(lastDate);
             oneChartDataArray.push(null);
           }
-          if (seriesDates[seriesDatesIndex] && seriesDatesSet.has(dateString)) {
-            seriesDates[seriesDatesIndex] = epoch;
-          } else {
-            seriesDates[seriesDatesIndex] = epoch;
+          if (!seriesDates[seriesDatesIndex]) {
+            seriesDates[seriesDatesIndex] = this.commonService.convertDateToEpoch(lastDate);
           }
           seriesDatesIndex++;
           lastDate.setDate(lastDate.getDate() - 1);
@@ -942,61 +853,14 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       this.series = seriesDates.reverse();
       this.values = chartDataSets.slice();
 
-      //setting the milestones
-      if (Object.keys(this.mileStoneMarkers).length > 0) {
-        Object.keys(this.mileStoneMarkers).forEach((mileStone) => {
-          for (let index = 0; index < this.series.length - 1; index++) {
-            if ((index == 0 && this.mileStoneMarkers[mileStone] <= this.series[index])) {
-              this.mileStoneIndices[mileStone] = index;
-              break;
-            }
-            if ((this.mileStoneMarkers[mileStone] > this.series[index] && this.mileStoneMarkers[mileStone] <= this.series[index + 1])) {
-              this.mileStoneIndices[mileStone] = index;
-              break;
-            }
-          }
-        });
-      }
+      //set the milestones
+      this.setMileStones();
 
       //populating data for show tables
-      this.originalValues = JSON.parse(JSON.stringify(this.values));
-      this.headers = this.tableInfo;
-      //this.data has values for the fun table
-      this.data["rows"] = [];
-      this.data["headers"] = [];
-      this.data["all"] = true;
-      this.data["pageSize"] = 10;
-      this.data["currentPageIndex"] = 1;
-      Object.keys(this.headers).forEach((key) => {
-        if (this.isFieldRelevant(key)) {
-          this.data["headers"].push(this.headers[key].verbose_name);
-        }
-      });
-      let index = 0;
-      let self = this;
-      let payload = {};
-      payload["metric_id"] = this.id;
-      payload["preview_data_sets"] = this.filterDataSets;
-      this.apiService.post("/metrics/data_by_model", payload).subscribe((response) => {
-        let dataSet = response.data;
-        for (let rowData of dataSet) {
-          let rowInTable = [];
-          Object.keys(self.headers).forEach((key) => {
-            if (self.isFieldRelevant(key)) {
-              let value = null;
-              if (key == "input_date_time") {
-                // value = this.commonService.convertToTimezone(rowData[key], this.TIMEZONE);
-                value = rowData["epoch_time"];
-              } else {
-                value = rowData[key]
-              }
-              rowInTable.push(value);
-            }
-          });
-          self.data["rows"][index++] = rowInTable;
-        }
-        self.data["totalLength"] = self.data["rows"].length;
-      });
+      if (!this.data["rows"]) {
+        this.populateShowTables();
+      }
+
       this.changeAllExpectedValues();
       this.status = null;
     }, error => {
@@ -1006,7 +870,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
 
   //fetching container data
   fetchContainerData(chartInfo, previewDataSets, payload): void {
-    //console.log("Fetch Scores");
     this.apiService.post('/metrics/scores', payload).subscribe((response: any) => {
       if (response.data.length === 0) {
         this.values = null;
@@ -1022,63 +885,84 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       }
       let thisMinimum = filterDataSets[0].output.min;
       let thisMaximum = filterDataSets[0].output.max;
+      this.series = null;
+      this.values = null;
+      let keyList = Object.keys(response.data.scores);
       let values = [];
       let series = [];
-      let keyValue = {};
-      let keyList = Object.keys(response.data.scores);
-      keyList.sort();
-      let trimEmptyStartValues = false; //used for trimming the start of the charts from a non zero value
       for (let dateTime of keyList) {
-        let d = new Date(1000 * Number(dateTime));
-        if (response.data.scores[dateTime].score > 0) {
-          trimEmptyStartValues = true;
-        }
-        if (trimEmptyStartValues) {
-          let pstDate = this.commonService.convertToTimezone(d, this.TIMEZONE);
-          let keyString = this.commonService.addLeadingZeroesToDate(pstDate);
-          series.push(keyString);
-          keyValue[keyString] = response.data.scores[dateTime].score;
-        }
+        let score = response.data.scores[dateTime].score;
+        let result = this.getValidatedData(score, thisMinimum, thisMaximum, dateTime);
+        values.push(result);
+        series.push(Number(dateTime) * 1000);
       }
-      if (series.length === 0) {
-        this.series = null;
-        this.values = null;
-      } else {
-        // series = this.fixMissingDates(series);
-        let dateSeries = [];
-        let seriesRange = this.getDatesByTimeMode(series);
-        for (let i = 0; i < seriesRange.length; i++) {
-          let startIndex = seriesRange[i][0];
-          let endIndex = seriesRange[i][1];
-          let count = 0;
-          let total = 0;
-          dateSeries.push(series[startIndex]);
-          Object.keys(this.mileStoneMarkers).forEach((mileStone) => {
-            let markerDate = this.mileStoneMarkers[mileStone].split(" ")[0];
-            if (series[startIndex].includes(markerDate)) { // Tape-out and F1
-              this.mileStoneIndices[mileStone] = startIndex;
-            }
-          });
-          while (startIndex >= endIndex) {
-            if (keyValue[series[startIndex]] && keyValue[series[startIndex]] !== -1) {
-              total += keyValue[series[startIndex]];
-              count++;
-            }
-            startIndex--;
+      this.values = [{data: values, name: "Scores"}];
+      this.series = series;
+
+      //setting milestone
+      this.setMileStones();
+
+      this.status = null;
+    });
+  }
+
+  setMileStones(): void {
+    //setting the milestones
+    if (Object.keys(this.mileStoneMarkers).length > 0) {
+      Object.keys(this.mileStoneMarkers).forEach((mileStone) => {
+        for (let index = 0; index < this.series.length - 1; index++) {
+          if ((index == 0 && this.mileStoneMarkers[mileStone] <= this.series[index])) {
+            this.mileStoneIndices[mileStone] = index;
+            break;
           }
-          if (count !== 0) {
-            let average = total / count;
-            let result = this.getValidatedData(average, thisMinimum, thisMaximum);
-            values.push(result);
-          } else {
-            values.push(null);
+          if ((this.mileStoneMarkers[mileStone] > this.series[index] && this.mileStoneMarkers[mileStone] <= this.series[index + 1])) {
+            this.mileStoneIndices[mileStone] = index;
+            break;
           }
         }
-        this.values = [{data: values, name: "Scores"}];
-        this.series = dateSeries;
+      });
+    }
+  }
+
+  populateShowTables(): void {
+    this.originalValues = JSON.parse(JSON.stringify(this.values));
+    this.headers = this.tableInfo;
+    //this.data has values for the fun table
+    this.data["rows"] = [];
+    this.data["headers"] = [];
+    this.data["all"] = true;
+    this.data["pageSize"] = 10;
+    this.data["currentPageIndex"] = 1;
+    Object.keys(this.headers).forEach((key) => {
+      if (this.isFieldRelevant(key)) {
+        this.data["headers"].push(this.headers[key].verbose_name);
       }
     });
-    this.status = null;
+    let index = 0;
+    let self = this;
+    let payload = {};
+    payload["metric_id"] = this.id;
+    payload["preview_data_sets"] = this.filterDataSets;
+    this.apiService.post("/metrics/data_by_model", payload).subscribe((response) => {
+      let dataSet = response.data;
+      for (let rowData of dataSet) {
+        let rowInTable = [];
+        Object.keys(self.headers).forEach((key) => {
+          if (self.isFieldRelevant(key)) {
+            let value = null;
+            if (key == "input_date_time") {
+              // value = this.commonService.convertToTimezone(rowData[key], this.TIMEZONE);
+              value = rowData["epoch_time"];
+            } else {
+              value = rowData[key]
+            }
+            rowInTable.push(value);
+          }
+        });
+        self.data["rows"][index++] = rowInTable;
+      }
+      self.data["totalLength"] = self.data["rows"].length;
+    });
   }
 
   convertToBaseUnit(outputUnit, output): any {
@@ -1301,7 +1185,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
 
 
   //creates the point values for the funchart
-  getValidatedData(data, minimum, maximum): any {
+  getValidatedData(data, minimum, maximum, epoch): any {
     let result = data;
     if (data < 0) {
       data = null;
@@ -1314,6 +1198,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       },
       metaData: {}
     };
+    result.metaData["epoch"] = epoch;
     if (data > maximum && maximum !== -1) {
       result.y = maximum;
       result.marker['symbol'] = "url(/static/media/red-x-png-7.png)";
