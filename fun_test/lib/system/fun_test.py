@@ -1517,6 +1517,7 @@ class FunTestScript(object):
             try:
                 self.cleanup()
             except Exception as ex:
+                result = FunTest.FAILED
                 fun_test.critical(ex)
 
             try:
@@ -1530,7 +1531,6 @@ class FunTestScript(object):
             except Exception as ex:
                 fun_test.critical(ex)
 
-            result = FunTest.PASSED
 
         except Exception as ex:
             fun_test.critical(ex)
