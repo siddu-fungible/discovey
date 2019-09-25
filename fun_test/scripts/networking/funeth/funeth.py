@@ -1,6 +1,7 @@
 from lib.system.fun_test import *
 from lib.host.linux import Linux
 from lib.system.utils import MultiProcessingTasks
+import json
 import re
 import os
 import sys
@@ -123,40 +124,75 @@ class Funeth:
             linux_obj.create_directory(self.ws, sudo=False)
 
             # clone FunSDK, host-drivers, FunOS
-            linux_obj.command('cd {}; git clone git@github.com:fungible-inc/fungible-host-drivers.git'.format(self.ws),
-                              timeout=300)
-            if self.fundrv_branch:
-                linux_obj.command('cd {}; git checkout {}'.format(drvdir, self.fundrv_branch))
-            if self.fundrv_commit:
-                linux_obj.command('cd {}; git reset --hard {}'.format(drvdir, self.fundrv_commit))
-            linux_obj.command('cd {}; git clone git@github.com:fungible-inc/FunSDK-small.git FunSDK'.format(self.ws),
-                              timeout=300)
-            if self.funsdk_branch:
-                linux_obj.command('cd {}; git checkout {}'.format(sdkdir, self.funsdk_branch))
-            if self.funsdk_commit:
-                linux_obj.command('cd {}; git reset --hard {}'.format(sdkdir, self.funsdk_commit))
+            if self.fundrv_branch or self.fundrv_commit:
+                linux_obj.command('cd {}; git clone git@github.com:fungible-inc/fungible-host-drivers.git'.format(self.ws),
+                                  timeout=300)
+                if self.fundrv_branch:
+                    linux_obj.command('cd {}; git checkout {}'.format(drvdir, self.fundrv_branch))
+                if self.fundrv_commit:
+                    linux_obj.command('cd {}; git reset --hard {}'.format(drvdir, self.fundrv_commit))
+            else:  # wget from dochub
+                cmds = [
+                    'cd {}'.format(self.ws),
+                    'wget http://dochub.fungible.local/doc/jenkins/fungible-host-drivers/latest/fungible-host-drivers.src.tgz',
+                    'tar xzvf fungible-host-drivers.src.tgz',
+                ]
+                linux_obj.command(';'.join(cmds))
 
-            #output = linux_obj.command(
-            #    'cd {0}; scripts/bob --sdkup -C {1}/FunSDK-cache'.format(sdkdir, self.ws), timeout=600)
-            for pkg in ('hci', 'generator-bin'):
-                output = linux_obj.command(
-                    'cd {0}; scripts/bob --sdkup {2} -C {1}/FunSDK-cache'.format(sdkdir, self.ws, pkg))
-            if re.search(r'Updating working projectdb.*Updating current build number', output, re.DOTALL):
+            if self.funsdk_branch or self.funsdk_commit:
+                linux_obj.command('cd {}; git clone git@github.com:fungible-inc/FunSDK-small.git FunSDK'.format(self.ws),
+                                  timeout=300)
+                if self.funsdk_branch:
+                    linux_obj.command('cd {}; git checkout {}'.format(sdkdir, self.funsdk_branch))
+                if self.funsdk_commit:
+                    linux_obj.command('cd {}; git reset --hard {}'.format(sdkdir, self.funsdk_commit))
+            else:  # wget from dochub
+                cmds = [
+                    'mkdir {}'.format(sdkdir),
+                    'cd {}'.format(sdkdir),
+                    'wget http://dochub.fungible.local/doc/jenkins/funsdk/latest/Linux/hci.tgz',
+                    'wget http://dochub.fungible.local/doc/jenkins/funsdk/latest/Linux/generator-bin.tgz',
+                    'tar xzvf hci.tgz',
+                    'tar xzvf generator-bin.tgz',
+                ]
+                linux_obj.command(';'.join(cmds))
 
-                # Get FunSDK, fungible-host-driver commit/bld info
-                result_list = []
-                for repo, repo_dir in zip(('FunSDK', 'Driver'), (sdkdir, drvdir)):
-                    fun_test.log('Get {} commit/build info'.format(repo))
+            if self.fundrv_branch or self.fundrv_commit:
+                for pkg in ('hci', 'generator-bin'):
                     output = linux_obj.command(
-                        'git config --global core.pager ""; cd {}; git log --oneline -n 5'.format(repo_dir))
-                    match = re.search(r'(\w+).*? tag: (bld_\d+)', output)
-                    if match:
-                        commit = match.group(1)
-                        bld = match.group(2)
-                    else:
-                        match = re.search(r'(\w+).*?', output)
-                        commit = match.group(1)
-                        bld = None
+                        'cd {0}; scripts/bob --sdkup {2} -C {1}/FunSDK-cache'.format(sdkdir, self.ws, pkg))
+                if re.search(r'Updating working projectdb.*Updating current build number', output, re.DOTALL):
+
+                    # Get FunSDK, fungible-host-driver commit/bld info
+                    result_list = []
+                    for repo, repo_dir in zip(('FunSDK', 'Driver'), (sdkdir, drvdir)):
+                        fun_test.log('Get {} commit/build info'.format(repo))
+                        output = linux_obj.command(
+                            'git config --global core.pager ""; cd {}; git log --oneline -n 5'.format(repo_dir))
+                        match = re.search(r'(\w+).*? tag: (bld_\d+)', output)
+                        if match:
+                            commit = match.group(1)
+                            bld = match.group(2)
+                        else:
+                            match = re.search(r'(\w+).*?', output)
+                            commit = match.group(1)
+                            bld = None
+                        result_list.extend([commit, bld])
+                    return result_list
+            else:
+                cmds = [
+                    'cd {}'.format(drvdir),
+                    'wget http://dochub.fungible.local/doc/jenkins/fungible-host-drivers/latest/bld_props.json',
+                    'cd {}'.format(sdkdir),
+                    'wget http://dochub.fungible.local/doc/jenkins/funsdk/latest/bld_props.json',
+                ]
+                linux_obj.command(';'.join(cmds))
+                result_list = []
+                for d in (sdkdir, drvdir):
+                    output = linux_obj.command('cat {}/bld_props.json'.format(d))
+                    mat = re.search(r'"{}": "(\w+)".*"bldNum": "(\d+)"'.format(d.split('/')[-1]), output, re.DOTALL)
+                    commit = mat.group(1)
+                    bld = mat.group(2)
                     result_list.extend([commit, bld])
                 return result_list
 
@@ -276,6 +312,8 @@ class Funeth:
             mac_addr = self.tb_config_obj.get_interface_mac_addr(nu_or_hu, intf)
             ipv4_addr = self.tb_config_obj.get_interface_ipv4_addr(nu_or_hu, intf)
             ipv4_netmask = self.tb_config_obj.get_interface_ipv4_netmask(nu_or_hu, intf)
+            ipv6_addr = self.tb_config_obj.get_interface_ipv6_addr(nu_or_hu, intf)
+            ipv6_prefix_length = self.tb_config_obj.get_interface_ipv6_prefix_length(nu_or_hu, intf)
             mtu = self.tb_config_obj.get_interface_mtu(nu_or_hu, intf)
 
             # macvlan interface, e.g. fpg1.1
@@ -304,6 +342,13 @@ class Funeth:
                  #'ifconfig {}'.format(intf),
                 ]
             )
+
+            if ipv6_addr and ipv6_prefix_length:
+                cmds.extend(
+                    ['ifconfig {} inet6 add {}/{}'.format(intf, ipv6_addr, ipv6_prefix_length),
+                     ]
+                )
+
             cmd_chk = 'ifconfig {}'.format(intf)
             if ns:
                 cmds = ['ip netns add {}'.format(ns), 'ip link set {} netns {}'.format(intf, ns)] + cmds
@@ -338,6 +383,9 @@ class Funeth:
                 else:
                     match = re.search(r'UP.*RUNNING.*inet {}\s+netmask {}'.format(ipv4_addr, ipv4_netmask),
                                       output, re.DOTALL)
+                if match and ipv6_addr and ipv6_prefix_length:
+                    match = re.search(r'inet6 {}\s+prefixlen {}'.format(ipv6_addr, ipv6_prefix_length), output)
+
             result &= match is not None
 
         return result
@@ -532,6 +580,40 @@ class Funeth:
         result = True
         for ns in self.tb_config_obj.get_namespaces(nu_or_hu):
             result &= self.configure_namespace_arps(nu_or_hu, ns)
+
+        return result
+
+    def configure_namespace_ipv6_routes(self, nu_or_hu, ns):
+        """Configure a namespace's IPv6 routes to NU."""
+        result = True
+        for route in self.tb_config_obj.get_ipv6_routes(nu_or_hu, ns):
+            prefix = route['prefix']
+            nexthop = route['nexthop']
+
+            # Route
+            cmds = (
+                'ip -6 route delete {}'.format(prefix),
+                'ip -6 route add {} via {}'.format(prefix, nexthop),
+                'ip -6 route',
+            )
+            for cmd in cmds:
+                if ns is None:
+                    output = self.linux_obj_dict[nu_or_hu].command('sudo {}'.format(cmd))
+                else:
+                    output = self.linux_obj_dict[nu_or_hu].command('sudo ip netns exec {} {}'.format(ns, cmd))
+            if prefix.endswith('/128'):
+                p = prefix.rstrip('/128')
+            else:
+                p = prefix
+            result &= re.search(r'{} via {}'.format(p, nexthop), output) is not None
+
+        return result
+
+    def configure_ipv6_routes(self, nu_or_hu):
+        """Configure IPv6 routes to NU."""
+        result = True
+        for ns in self.tb_config_obj.get_namespaces(nu_or_hu):
+            result &= self.configure_namespace_ipv6_routes(nu_or_hu, ns)
 
         return result
 

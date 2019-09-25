@@ -74,9 +74,9 @@ class RawVolumePerfScript(FunTestScript):
         global funcp_obj, servers_mode, servers_list, fs_name
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
         f1_0_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --dpc-server --all_100g --serial --dpc-uart " \
-                         "retimer=0,1 --mgmt --disable-wu-watchdog syslog=2 --sync-uart workload=storage"
+                         "retimer=0,1 --mgmt --disable-wu-watchdog syslog=2  workload=storage"
         f1_1_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 --dpc-server --all_100g --serial --dpc-uart " \
-                         "retimer=0 --mgmt --disable-wu-watchdog syslog=2 --sync-uart workload=storage"
+                         "retimer=0 --mgmt --disable-wu-watchdog syslog=2  workload=storage"
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
         # fs_name = "fs-45"
         funcp_obj = FunControlPlaneBringup(fs_name=self.server_key["fs"][fs_name]["fs-name"])
@@ -241,6 +241,7 @@ class RawVolumeLocalPerfTestcase(FunTestCase):
                     fun_test.test_assert(command_result["status"], "Attaching volume {} to controller {}"
                                      .format(blt_volume_dpu_1[x], controller_dpu_1))
 
+                fun_test.sleep("Sleeping before accessing VMs ", seconds=10)
                 # Workaround for connecting to the VM via SSH
                 host_obj.sudo_command("sysctl -w net.bridge.bridge-nf-call-iptables=0")
 

@@ -58,10 +58,12 @@ export class CommonService {
     return pstDate;
   }
 
-  convertEpochToDate(epoch, timeZone): Date {
+  convertEpochToDate(epoch, timeZone=null): Date {
     let dateTime = new Date(epoch);
-    let date = this.convertToTimezone(dateTime, timeZone);
-    return date;
+    if (timeZone) {
+      dateTime = this.convertToTimezone(dateTime, timeZone);
+    }
+    return dateTime;
   }
 
   convertDateToEpoch(dateTimeObj): Date {

@@ -23,7 +23,7 @@ all_hosts_specs = parse_file_to_json(file_name=hosts_json_file)
 host_spec = all_hosts_specs[host_name]
 host_username = host_spec["ssh_username"]
 host_passwd = host_spec["ssh_password"]
-script_timeout = 3600
+script_timeout = 7200
 
 
 

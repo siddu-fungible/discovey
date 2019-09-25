@@ -69,14 +69,16 @@ class PalladiumTc(FunTestCase):
 
 
 class CryptoTeramarkTc(PalladiumTc):
-    boot_args = "app=crypto_test,crypto_tunnel_perf,crypto_api_perf,crypto_raw_speed --test-exit-fast --serial"
+    #boot_args = "app=crypto_test,crypto_tunnel_perf,crypto_api_perf,crypto_raw_speed --test-exit-fast --serial"
+    boot_args = "app=crypto_test,crypto_raw_speed  nvps=24 vp_iters=5000 pcs_to_use=1 --test-exit-fast --serial"
     tags = "qa_s1_crypto_teramark"
-    note = "Crypto teramark app on S1"
+    max_duration = 2700
+    note = "Crypto SEC Regression & TeraMark apps (PC0 Throughput) on S1"
     fun_os_make_flags = "NDEBUG=1"
 
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Schedule crypto s1 teramark app on Jenkins",
+                              summary="Schedule crypto (SEC) s1 Feature Regression and TeraMark apps on Jenkins",
                               steps="""
         1. Steps 1
         2. Steps 2
@@ -202,7 +204,7 @@ class ZipLzmaTeramarkTc(PalladiumTc):
 
 if __name__ == "__main__":
     myscript = MyScript()
-    # myscript.add_test_case(CryptoTeramarkTc())
+    myscript.add_test_case(CryptoTeramarkTc())
     # myscript.add_test_case(PkeTeramarkTc())
     myscript.add_test_case(EcTeramarkTc())
     myscript.add_test_case(DfaTeramarkTc())
