@@ -58,18 +58,16 @@ class ScriptSetup(FunTestScript):
         testbed_info = fun_test.parse_file_to_json(
             fun_test.get_script_parent_directory() + '/testbed_inputs.json')
         test_bed_type = fun_test.get_job_environment_variable('test_bed_type')
-        tftp_image_path = fun_test.get_job_environment_variable('tftp_image_path')
         fun_test.shared_variables["test_bed_type"] = test_bed_type
         fun_test.shared_variables['testbed_info'] = testbed_info
 
-        testbed_info = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() + '/testbed_inputs.json')
-        test_bed_type = fun_test.get_job_environment_variable('test_bed_type')
-        tftp_image_path = fun_test.get_job_environment_variable('tftp_image_path')
-        fun_test.shared_variables["test_bed_type"] = test_bed_type
         # Removing any funeth driver from COMe and and all the connected server
         threads_list = []
-
-        for fs_name in testbed_info['fs'][test_bed_type]["fs_list"]:
+        if test_bed_type == 'fs-fcp-scale':
+            fs_list = testbed_info['fs'][test_bed_type]["fs_list"]
+        else:
+            fs_list = [test_bed_type]
+        for fs_name in fs_list:
 
             thread_id = fun_test.execute_thread_after(time_in_seconds=2, func=clean_testbed, fs_name=fs_name,
                                                       hu_host_list=testbed_info['fs'][test_bed_type][fs_name]
@@ -81,10 +79,8 @@ class ScriptSetup(FunTestScript):
 
         # Boot up FS1600
 
-        topology_t_bed_type = fun_test.get_job_environment_variable('test_bed_type')
-        fun_test.shared_variables["test_bed_type"] = test_bed_type
         topology_helper = TopologyHelper()
-        for fs_name in testbed_info['fs'][test_bed_type]["fs_list"]:
+        for fs_name in fs_list:
             fs_name = str(fs_name)
             abstract_json_file0 = \
                 fun_test.get_script_parent_directory() + testbed_info['fs'][test_bed_type][fs_name][
