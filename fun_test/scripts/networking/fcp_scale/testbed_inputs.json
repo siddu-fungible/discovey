@@ -15,7 +15,7 @@
                   "hu_host_list":["mpoc-server34"]
               },
               "fs-32": {
-                  "index": 0,
+                  "index": 1,
                   "abtract_config_f1_0": "/abstract_config/fcp_scale_fs38-f1-0.json",
                   "abtract_config_f1_1": "/abstract_config/fcp_scale_fs38-f1-1.json",
                   "prepare_docker":false,
@@ -27,7 +27,7 @@
                   "hu_host_list":[]
               },
               "fs-37": {
-                  "index": 0,
+                  "index": 2,
                   "abtract_config_f1_0": "/abstract_config/fcp_scale_fs38-f1-0.json",
                   "abtract_config_f1_1": "/abstract_config/fcp_scale_fs38-f1-1.json",
                   "prepare_docker":false,
@@ -39,7 +39,7 @@
                   "hu_host_list":[]
               },
               "fs-39": {
-                  "index": 0,
+                  "index": 3,
                   "abtract_config_f1_0": "/abstract_config/fcp_scale_fs38-f1-0.json",
                   "abtract_config_f1_1": "/abstract_config/fcp_scale_fs38-f1-1.json",
                   "prepare_docker":false,
@@ -51,7 +51,7 @@
                   "hu_host_list":[]
               },
               "fs-51": {
-                  "index": 0,
+                  "index": 4,
                   "abtract_config_f1_0": "/abstract_config/fcp_scale_fs38-f1-0.json",
                   "abtract_config_f1_1": "/abstract_config/fcp_scale_fs38-f1-1.json",
                   "prepare_docker":false,
@@ -63,7 +63,7 @@
                   "hu_host_list":[]
               },
               "fs-67": {
-                  "index": 0,
+                  "index": 5,
                   "abtract_config_f1_0": "/abstract_config/fcp_scale_fs38-f1-0.json",
                   "abtract_config_f1_1": "/abstract_config/fcp_scale_fs38-f1-1.json",
                   "prepare_docker":false,
@@ -75,7 +75,7 @@
                   "hu_host_list":[]
               },
               "fs-8": {
-                  "index": 0,
+                  "index": 6,
                   "abtract_config_f1_0": "/abstract_config/fcp_scale_fs38-f1-0.json",
                   "abtract_config_f1_1": "/abstract_config/fcp_scale_fs38-f1-1.json",
                   "prepare_docker":false,
@@ -87,7 +87,7 @@
                   "hu_host_list":[]
               },
               "fs-21": {
-                  "index": 0,
+                  "index": 7,
                   "abtract_config_f1_0": "/abstract_config/fcp_scale_fs38-f1-0.json",
                   "abtract_config_f1_1": "/abstract_config/fcp_scale_fs38-f1-1.json",
                   "prepare_docker":false,
@@ -99,7 +99,7 @@
                   "hu_host_list":[]
               },
               "fs-15": {
-                  "index": 0,
+                  "index": 8,
                   "abtract_config_f1_0": "/abstract_config/fcp_scale_fs38-f1-0.json",
                   "abtract_config_f1_1": "/abstract_config/fcp_scale_fs38-f1-1.json",
                   "prepare_docker":false,
@@ -111,7 +111,7 @@
                   "hu_host_list":[]
               },
                "fs-20": {
-                  "index": 0,
+                  "index": 9,
                   "abtract_config_f1_0": "/abstract_config/fcp_scale_fs38-f1-0.json",
                   "abtract_config_f1_1": "/abstract_config/fcp_scale_fs38-f1-1.json",
                   "prepare_docker":false,
