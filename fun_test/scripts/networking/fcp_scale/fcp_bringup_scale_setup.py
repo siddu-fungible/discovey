@@ -67,6 +67,7 @@ class ScriptSetup(FunTestScript):
             fs_list = testbed_info['fs'][test_bed_type]["fs_list"]
         else:
             fs_list = [test_bed_type]
+            test_bed_type = 'fs-fcp-scale'
         for fs_name in fs_list:
 
             thread_id = fun_test.execute_thread_after(time_in_seconds=2, func=clean_testbed, fs_name=fs_name,
