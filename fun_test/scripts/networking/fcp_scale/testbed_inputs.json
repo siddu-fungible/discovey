@@ -10,8 +10,8 @@
                   "gatewayip": "10.80.4.1",
                   "mpg0":"10.80.4.169",
                   "mpg1":"10.80.4.170",
-                  "bootargs_f1_0": "app=hw_hsu_test cc_huid=3 --all_100g --dpc-server --dpc-uart --disable-wu-watchdog retimer=0,1,2",
-                  "bootargs_f1_1": "app=hw_hsu_test cc_huid=3 --all_100g --dpc-server --dpc-uart --disable-wu-watchdog retimer=0,1",
+                  "bootargs_f1_0": "app=hw_hsu_test cc_huid=3 --all_50g --dpc-server --dpc-uart --disable-wu-watchdog retimer=0,1,2",
+                  "bootargs_f1_1": "app=hw_hsu_test cc_huid=3 --all_50g --dpc-server --dpc-uart --disable-wu-watchdog retimer=0,1",
                   "hu_host_list":["mpoc-server34"]
               },
               "fs-32": {
@@ -22,8 +22,8 @@
                   "gatewayip": "10.80.4.1",
                   "mpg0":"10.80.4.204",
                   "mpg1":"10.80.4.205",
-                  "bootargs_f1_0": "app=hw_hsu_test cc_huid=3 --all_100g --dpc-server --dpc-uart --disable-wu-watchdog",
-                  "bootargs_f1_1": "app=hw_hsu_test cc_huid=3 --all_100g --dpc-server --dpc-uart --disable-wu-watchdog",
+                  "bootargs_f1_0": "app=hw_hsu_test cc_huid=3 --all_50g --dpc-server --dpc-uart --disable-wu-watchdog",
+                  "bootargs_f1_1": "app=hw_hsu_test cc_huid=3 --all_50g --dpc-server --dpc-uart --disable-wu-watchdog",
                   "hu_host_list":[]
               },
               "fs-37": {
@@ -34,8 +34,8 @@
                   "gatewayip": "10.80.4.1",
                   "mpg0":"10.80.4.199",
                   "mpg1":"10.80.4.200",
-                  "bootargs_f1_0": "app=hw_hsu_test cc_huid=3 --all_100g --dpc-server --dpc-uart --disable-wu-watchdog",
-                  "bootargs_f1_1": "app=hw_hsu_test cc_huid=3 --all_100g --dpc-server --dpc-uart --disable-wu-watchdog",
+                  "bootargs_f1_0": "app=hw_hsu_test cc_huid=3 --all_50g --dpc-server --dpc-uart --disable-wu-watchdog",
+                  "bootargs_f1_1": "app=hw_hsu_test cc_huid=3 --all_50g --dpc-server --dpc-uart --disable-wu-watchdog",
                   "hu_host_list":[]
               },
               "fs-39": {
@@ -46,8 +46,8 @@
                   "gatewayip": "10.80.4.1",
                   "mpg0":"10.80.4.189",
                   "mpg1":"10.80.4.190",
-                  "bootargs_f1_0": "app=hw_hsu_test cc_huid=3 --all_100g --dpc-server --dpc-uart --disable-wu-watchdog",
-                  "bootargs_f1_1": "app=hw_hsu_test cc_huid=3 --all_100g --dpc-server --dpc-uart --disable-wu-watchdog",
+                  "bootargs_f1_0": "app=hw_hsu_test cc_huid=3 --all_50g --dpc-server --dpc-uart --disable-wu-watchdog",
+                  "bootargs_f1_1": "app=hw_hsu_test cc_huid=3 --all_50g --dpc-server --dpc-uart --disable-wu-watchdog",
                   "hu_host_list":[]
               },
               "fs-51": {
@@ -58,8 +58,8 @@
                   "gatewayip": "10.80.4.1",
                   "mpg0":"10.80.4.194",
                   "mpg1":"10.80.4.195",
-                  "bootargs_f1_0": "app=hw_hsu_test cc_huid=3 --all_100g --dpc-server --dpc-uart --disable-wu-watchdog",
-                  "bootargs_f1_1": "app=hw_hsu_test cc_huid=3 --all_100g --dpc-server --dpc-uart --disable-wu-watchdog",
+                  "bootargs_f1_0": "app=hw_hsu_test cc_huid=3 --all_50g --dpc-server --dpc-uart --disable-wu-watchdog",
+                  "bootargs_f1_1": "app=hw_hsu_test cc_huid=3 --all_50g --dpc-server --dpc-uart --disable-wu-watchdog",
                   "hu_host_list":[]
               },
               "fs-67": {
@@ -70,8 +70,8 @@
                   "gatewayip": "10.80.4.1",
                   "mpg0":"10.80.4.209",
                   "mpg1":"10.80.4.210",
-                  "bootargs_f1_0": "app=hw_hsu_test cc_huid=3 --all_100g --dpc-server --dpc-uart --disable-wu-watchdog",
-                  "bootargs_f1_1": "app=hw_hsu_test cc_huid=3 --all_100g --dpc-server --dpc-uart --disable-wu-watchdog",
+                  "bootargs_f1_0": "app=hw_hsu_test cc_huid=3 --all_50g --dpc-server --dpc-uart --disable-wu-watchdog",
+                  "bootargs_f1_1": "app=hw_hsu_test cc_huid=3 --all_50g --dpc-server --dpc-uart --disable-wu-watchdog",
                   "hu_host_list":[]
               }
           }
