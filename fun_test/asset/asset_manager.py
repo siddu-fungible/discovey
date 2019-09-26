@@ -7,10 +7,13 @@ from lib.orchestration.simulation_orchestrator import DockerContainerOrchestrato
 from lib.orchestration.simulation_orchestrator import DockerHostOrchestrator
 from lib.orchestration.real_orchestrator import RealOrchestrator
 from lib.orchestration.orchestrator import OrchestratorType
+from lib.topology.dut import Dut
 from fun_global import *
 from scheduler.scheduler_global import JobStatusType
 from asset.asset_global import AssetType
 import json
+
+
 
 
 
@@ -22,6 +25,7 @@ class AssetManager:
     FS_SPEC = ASSET_DIR + "/fs.json"
     HOSTS_SPEC = ASSET_DIR + "/hosts.json"
     PSEUDO_TEST_BEDS = ["emulation", "simulation", "tasks", "suite-based"]
+
 
     def __init__(self):
         self.docker_host = None  # TODO
@@ -331,8 +335,10 @@ class AssetManager:
             th = TopologyHelper(spec=test_bed_spec)
             topology = th.get_expanded_topology()
             duts = topology.get_duts()
-            dut_names = [duts[x].name for x in duts]
+            dut_names = [duts[x].name for x in duts if duts[x]]
             assets_required[AssetType.DUT] = dut_names
+
+
 
             hosts = topology.get_hosts()
             host_names = [host_obj.name for name, host_obj in hosts.iteritems()]
@@ -353,7 +359,7 @@ class AssetManager:
                                          asset_type,
                                          to_disable=None,
                                          to_enable=None):
-        if asset_type == AssetType.DUT:
+        if asset_type in [AssetType.DUT, AssetType.DUT_WITH_SSDS, AssetType.DUT_WITH_SERVERS]:
             if "dut_info" in test_bed_spec:
                 dut_info = test_bed_spec["dut_info"]
                 for dut_index, dut_spec in dut_info.iteritems():
@@ -390,7 +396,11 @@ class AssetManager:
         result = {"status": True,
                   "message": "",
                   "custom_test_bed_spec": None,
-                  "assets_required": {AssetType.DUT: [], AssetType.HOST: [], AssetType.PERFORMANCE_LISTENER_HOST: []}}
+                  "assets_required": {AssetType.DUT: [],
+                                      AssetType.HOST: [],
+                                      AssetType.PERFORMANCE_LISTENER_HOST: [],
+                                      AssetType.DUT_WITH_SERVERS: [],
+                                      AssetType.DUT_WITH_SSDS: []}}
         from web.fun_test.models import Asset
         from web.fun_test.models_helper import is_suite_in_progress
         from django.core.exceptions import ObjectDoesNotExist
@@ -403,9 +413,17 @@ class AssetManager:
         asset_request = custom_spec.get("asset_request", None)
         fun_test.simple_assert(asset_request, "asset_request in custom_spec")
 
-        assets_required_config = {AssetType.DUT: {}, AssetType.HOST: {}, AssetType.PERFORMANCE_LISTENER_HOST: {}}
+        assets_required_config = {AssetType.DUT: {},
+                                  AssetType.HOST: {},
+                                  AssetType.PERFORMANCE_LISTENER_HOST: {},
+                                  AssetType.DUT_WITH_SERVERS: {},
+                                  AssetType.DUT_WITH_SSDS: {}}
 
-        all_asset_types = [AssetType.DUT, AssetType.HOST, AssetType.PERFORMANCE_LISTENER_HOST]
+        all_asset_types = [AssetType.DUT,
+                           AssetType.HOST,
+                           AssetType.PERFORMANCE_LISTENER_HOST,
+                           AssetType.DUT_WITH_SERVERS,
+                           AssetType.DUT_WITH_SSDS]
         for asset_type in all_asset_types:
             if asset_type in asset_request:
                 info = asset_request[asset_type]
