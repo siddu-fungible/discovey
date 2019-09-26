@@ -639,7 +639,7 @@ class Bmc(Linux):
                     regex_found = critical_message
                     fun_test.critical(critical_message)
                     error_message = "Regression: ERROR REGEX Matched: {} Job-ID: {} F1_{} Context: {}".format(full_match, fun_test.get_suite_execution_id(), f1_index, self._get_context_prefix(data="error"))
-                    fun_test.send_mail(subject=error_message, content=error_message)
+                    fun_test.send_mail(subject=error_message, content=error_message, to_addresses=["team-regression@fungible.com"])
 
         except Exception as ex:
             fun_test.critical(ex)
