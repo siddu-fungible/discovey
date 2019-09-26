@@ -274,6 +274,8 @@ class Bmc(Linux):
         return s
 
     def setup_serial_proxy_connection(self, f1_index, auto_boot=False):
+        self.command("rm -f /tmp/f1_{}_uart_log.txt".format(f1_index))
+
         self.nc[f1_index] = Netcat(ip=self.host_ip, port=self.SERIAL_PROXY_PORTS[f1_index])
         nc = self.nc[f1_index]
         write_on_trigger = None
@@ -708,8 +710,9 @@ class BootupWorker(Thread):
                 try:
                     # f1_{}_uart_log.txt
                     # fs.get_bmc().command("rm -f /tmp/f1*uart_log.txt")
-                    fs.get_bmc().command("echo '' > /tmp/f1_0_uart_log.txt")
-                    fs.get_bmc().command("echo '' > /tmp/f1_1_uart_log.txt")
+                    # fs.get_bmc().command("echo '' > /tmp/f1_0_uart_log.txt")
+                    # fs.get_bmc().command("echo '' > /tmp/f1_1_uart_log.txt")
+                    pass
 
                 except:
                     pass
