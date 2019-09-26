@@ -111,7 +111,7 @@ def chart_info(request):
     metric_id = int(request_json["metric_id"])
     if not chart_name:
         chart = MetricChart.objects.get(metric_id=metric_id)
-        milestones = MileStoneMarkers.objects.filter(metric_id=metric_id)
+        milestones = MileStoneMarkers.objects.filter(metric_id=metric_id).order_by("-milestone_date")
     else:
         chart = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=chart_name)
     result = None
@@ -145,7 +145,7 @@ def chart_info(request):
                   "penultimate_good_score": chart.penultimate_good_score,
                   "jira_ids": json.loads(chart.jira_ids)}
         for markers in milestones:
-            markers_dict[markers.milestone_name] = markers.milestone_date
+            markers_dict[markers.milestone_name] = get_epoch_time_from_datetime(markers.milestone_date)
         result["milestone_markers"] = markers_dict
     return result
 
@@ -294,6 +294,9 @@ def scores(request):
     result = {}
     request_json = json.loads(request.body)
     metric_id = int(request_json["metric_id"])
+    count = 60
+    if "count" in request_json:
+        count = int(request_json["count"])
     chart = None
     try:
         chart = MetricChart.objects.get(metric_id=metric_id)
@@ -304,7 +307,7 @@ def scores(request):
         to_date = get_rounded_time(datetime.now())
         date_range = [from_date, to_date]
         entries = MetricChartStatus.objects.filter(date_time__range=date_range,
-                                                   metric_id=metric_id)
+                                                   metric_id=metric_id).order_by("-date_time")[:count]
 
     # if "date_range" in request_json:
     #     date_range = request_json["date_range"]
@@ -313,7 +316,7 @@ def scores(request):
     #                                                metric_id=metric_id)
     # chart_name = request_json["chart_name"]
     else:
-        entries = MetricChartStatus.objects.filter(metric_id=metric_id)
+        entries = MetricChartStatus.objects.filter(metric_id=metric_id).order_by("-date_time")[:count]
     serialized = MetricChartStatusSerializer(entries, many=True)
     serialized_data = serialized.data[:]
     result["scores"] = {}
@@ -716,6 +719,9 @@ def data(request):
     if request_json["metric_id"]:
         metric_id = int(request_json["metric_id"])
     preview_data_sets = request_json["preview_data_sets"]
+    count = 60 # default value to show last 60 days of data
+    if "count" in request_json:
+        count = request_json["count"]
     chart = None
     data = []
     try:
@@ -742,7 +748,7 @@ def data(request):
             # d["input_date_time__lt"] = today
             try:
                 result = model.objects.filter(input_date_time__range=date_range, **d).order_by(
-                    "input_date_time")  # unpack, pack
+                    "-input_date_time")[:count]  # unpack, pack
                 # data.append([model_to_dict(x) for x in result])
                 data_set_list = []
                 for x in result:
@@ -795,7 +801,7 @@ def get_data_by_model(request):
             # today = today.replace(hour=0, minute=0, second=1)
             # d["input_date_time__lt"] = today
             try:
-                result = model.objects.filter(**d)  # unpack, pack
+                result = model.objects.filter(**d).order_by("-input_date_time")
                 # data.append([model_to_dict(x) for x in result])
                 data_set_list = []
                 for x in result:
