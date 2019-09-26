@@ -244,6 +244,8 @@ class Bmc(Linux):
 
 
     def start_uart_log_listener(self, f1_index, serial_device):
+        process_ids = self.get_process_id_by_pattern("microcom", multiple=True)
+
         self.kill_serial_proxies(f1_index=f1_index)
 
         output_file = self.get_f1_uart_log_filename(f1_index=f1_index)
@@ -251,11 +253,12 @@ class Bmc(Linux):
         #                                                                                        serial_device,
         #                                                                                        output_file), nohup=False, output_file="/tmp/uart_listener_{}.txt".format(f1_index))
         log_file = "/tmp/uart_listener_{}.txt".format(f1_index)
-        self.command("rm {}".format(output_file))
-        self.command("rm {}".format(log_file))
+        # self.command("rm {}".format(output_file))
+        # self.command("rm {}".format(log_file))
         self.command("rm -f /var/lock/LCK..{}".format(os.path.basename(serial_device)))
-        command = "microcom -s 1000000 {} > {} &".format(serial_device, output_file)
+        command = "microcom -s 1000000 {} > {}  < /dev/null &".format(serial_device, output_file)
         self.command(command)
+        process_ids = self.get_process_id_by_pattern("microcom", multiple=True)
         # self.uart_log_listener_process_ids.append(None)
 
     def _get_boot_args_for_index(self, boot_args, f1_index):
@@ -271,6 +274,8 @@ class Bmc(Linux):
         return s
 
     def setup_serial_proxy_connection(self, f1_index, auto_boot=False):
+        self.command("rm -f /tmp/f1_{}_uart_log.txt".format(f1_index))
+
         self.nc[f1_index] = Netcat(ip=self.host_ip, port=self.SERIAL_PROXY_PORTS[f1_index])
         nc = self.nc[f1_index]
         write_on_trigger = None
@@ -450,6 +455,8 @@ class Bmc(Linux):
         process_ids = self.get_process_id_by_pattern("microcom", multiple=True)
         for process_id in process_ids:
             self.kill_process(signal=9, process_id=process_id, kill_seconds=2)
+        process_ids = self.get_process_id_by_pattern("microcom", multiple=True)
+        self.command("rm -f /var/lock/LCK..tty*")
         process_ids = self.get_process_id_by_pattern("minicom", multiple=True)
         for process_id in process_ids:
             self.kill_process(signal=9, process_id=process_id, kill_seconds=2)
@@ -609,10 +616,10 @@ class Bmc(Linux):
             fun_test.add_auxillary_file(description=self._get_context_prefix("bringup"),
                                         filename=self.context.output_file_path)
 
-        try:
-            self.restart_serial_proxy()
-        except Exception as ex:
-            fun_test.critical((ex))
+        # try:
+        #    self.restart_serial_proxy()
+        #except Exception as ex:
+        #    fun_test.critical((ex))
         fun_test.simple_assert(not post_processing_error_found, "Post-processing failed. Please check for error regex")
 
     def post_process_uart_log(self, f1_index, file_name):
@@ -632,7 +639,7 @@ class Bmc(Linux):
                     regex_found = critical_message
                     fun_test.critical(critical_message)
                     error_message = "Regression: ERROR REGEX Matched: {} Job-ID: {} F1_{} Context: {}".format(full_match, fun_test.get_suite_execution_id(), f1_index, self._get_context_prefix(data="error"))
-                    fun_test.send_mail(subject=error_message, content=error_message)
+                    fun_test.send_mail(subject=error_message, content=error_message, to_addresses=["team-regression@fungible.com"])
 
         except Exception as ex:
             fun_test.critical(ex)
@@ -703,8 +710,9 @@ class BootupWorker(Thread):
                 try:
                     # f1_{}_uart_log.txt
                     # fs.get_bmc().command("rm -f /tmp/f1*uart_log.txt")
-                    fs.get_bmc().command("echo '' > /tmp/f1_0_uart_log.txt")
-                    fs.get_bmc().command("echo '' > /tmp/f1_1_uart_log.txt")
+                    # fs.get_bmc().command("echo '' > /tmp/f1_0_uart_log.txt")
+                    # fs.get_bmc().command("echo '' > /tmp/f1_1_uart_log.txt")
+                    pass
 
                 except:
                     pass

@@ -1391,7 +1391,7 @@ if __name__ == "__main__trailingrst":
         chart.save()
     print "set trailingrst dataset for jpeg metrics"
 
-if __name__ == "__main_s1_pke__":
+if __name__ == "__main__pke_tls":
     with open(METRICS_BASE_DATA_FILE, "r") as f:
         metrics = json.load(f)
         for metric in metrics:
@@ -1415,6 +1415,22 @@ if __name__ == "__main_s1_pke__":
     for security_children in security_childrens:
         if security_children["name"] == "PKE TLS":
             result = set_internal_name(security_children)
+            print json.dumps(result, indent=4)
+
+if __name__ == "__main_dfa_regex__":
+    with open(METRICS_BASE_DATA_FILE, "r") as f:
+        metrics = json.load(f)
+        for metric in metrics:
+            if metric["label"] == "F1":
+                f1_metrics = metric["children"]
+                for f1_metric in f1_metrics:
+                    if f1_metric["label"] == "TeraMarks":
+                        teramark_metrics = f1_metric
+
+    tera_mark_childrens = teramark_metrics["children"]
+    for tera_mark_children in tera_mark_childrens:
+        if tera_mark_children["name"] == "Regex":
+            result = set_internal_name(tera_mark_children)
             print json.dumps(result, indent=4)
 
 if __name__ == "__main__":
