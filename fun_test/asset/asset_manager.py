@@ -335,10 +335,14 @@ class AssetManager:
             th = TopologyHelper(spec=test_bed_spec)
             topology = th.get_expanded_topology()
             duts = topology.get_duts()
-            dut_names = [duts[x].name for x in duts if duts[x]]
+            dut_names = [duts[x].name for x in duts if duts[x].get_pool_member_type == Dut.POOL_MEMBER_TYPE_DEFAULT]
             assets_required[AssetType.DUT] = dut_names
 
+            dut_with_ssds_names = [duts[x].name for x in duts if duts[x].get_pool_member_type() == Dut.POOL_MEMBER_TYPE_WITH_SSDS]
+            assets_required[AssetType.DUT_WITH_SSDS] = dut_with_ssds_names
 
+            dut_with_servers_names = [duts[x].name for x in duts if duts[x].get_pool_member_type() == Dut.POOL_MEMBER_TYPE_WITH_SERVERS]
+            assets_required[AssetType.DUT_WITH_SERVERS] = dut_with_servers_names
 
             hosts = topology.get_hosts()
             host_names = [host_obj.name for name, host_obj in hosts.iteritems()]
