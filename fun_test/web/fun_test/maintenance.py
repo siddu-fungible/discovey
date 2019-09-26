@@ -1419,7 +1419,7 @@ if __name__ == "__main__pke_tls":
             print json.dumps(result, indent=4)
 
 
-if __name__ == "__main__":
+if __name__ == "__main_dfa_regex__":
     with open(METRICS_BASE_DATA_FILE, "r") as f:
         metrics = json.load(f)
         for metric in metrics:
@@ -1434,3 +1434,48 @@ if __name__ == "__main__":
         if tera_mark_children["name"] == "Regex":
             result = set_internal_name(tera_mark_children)
             print json.dumps(result, indent=4)
+
+if __name__ == "__main__":
+    operations = ["Random Read", "Random Write"]
+    qdepths = [1, 16, 32, 64, 128, 256]
+    owner_info = "Divya Krishnankutty (divya.krishnankutty@fungible.com)"
+    source = "https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/storage/pocs/alibaba/alibaba_raw_multi_vol_pcie_via_vm.py"
+    base_line_date = datetime(year=2019, month=9, day=25, minute=0, hour=0, second=0)
+    for operation in operations:
+        internal_chart_name = "alibaba_bmv_storage_local_ssd_4_" + operation.replace(" ", "_").lower()
+        root_chart = ml.create_container(chart_name=operation, internal_chart_name=internal_chart_name, platform=FunPlatform.F1,
+                                         owner_info=owner_info,
+                                         source=source, base_line_date=base_line_date, workspace_ids=[])
+        for qdepth in qdepths:
+            chart_name = "Latency, Qdepth=" + str(qdepth)
+            internal_chart_name = "bmv_storage_local_ssd_4_" + operation.replace(" ", "_").lower() + "_qd" + str(
+                qdepth) + "_latency"
+            latency_chart = ml.create_leaf(chart_name=chart_name, internal_chart_name=internal_chart_name, data_sets=[], leaf=True,
+                                        description="TBD",
+                                        owner_info=owner_info, source=source,
+                                        positive=True, y1_axis_title=PerfUnit.UNIT_OPS,
+                                        visualization_unit=PerfUnit.UNIT_OPS,
+                                        metric_model_name="AlibabaPerformance",
+                                        base_line_date=base_line_date,
+                                        work_in_progress=False, children=[], jira_ids=[], platform=FunPlatform.F1,
+                                        peer_ids=[], creator=TEAM_REGRESSION_EMAIL,
+                                        workspace_ids=[])
+            latency_chart.fix_children_weights()
+            root_chart.add_child(child_id=iops_chart.metric_id)
+    metric_ids = [900, 901]
+    for metric_id in metric_ids:
+        chart = MetricChart.objects.get(metric_id=metric_id)
+        internal_chart_name = chart.internal_chart_name.replace("ssd", "ssd_4")
+        root_chart = ml.create_container(chart_name=chart.chart_name, internal_chart_name=internal_chart_name,
+                                         platform=FunPlatform.F1,
+                                         owner_info=owner_info,
+                                         source=source, base_line_date=base_line_date, workspace_ids=[])
+        children = chart.get_children()
+        for child in children:
+            child_chart = MetricChart.objects.get(metric_id=int(child))
+            internal_chart_name = child_chart.internal_chart_name.replace("ssd", "ssd_4")
+            data_sets = child_chart.get_data_sets()
+            for data_set in data_sets:
+                data_set["input"]["input_num_ssd"] = 1
+                
+
