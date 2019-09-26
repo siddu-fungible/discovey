@@ -1,7 +1,7 @@
 {
     "fs": { 
           "fs-fcp-scale": {
-              "fs_list":["fs-38", "fs-32", "fs-37", "fs-39", "fs-51", "fs-67"],
+              "fs_list":["fs-38", "fs-32", "fs-37", "fs-39", "fs-51", "fs-67", "fs-8", "fs-21", "fs-15", "fs-20"],
               "fs-38": {
                   "index": 0,
                   "abtract_config_f1_0": "/abstract_config/fcp_scale_fs38-f1-0.json",
@@ -70,6 +70,54 @@
                   "gatewayip": "10.80.4.1",
                   "mpg0":"10.80.4.209",
                   "mpg1":"10.80.4.210",
+                  "bootargs_f1_0": "app=hw_hsu_test cc_huid=3 --all_50g --dpc-server --dpc-uart --disable-wu-watchdog",
+                  "bootargs_f1_1": "app=hw_hsu_test cc_huid=3 --all_50g --dpc-server --dpc-uart --disable-wu-watchdog",
+                  "hu_host_list":[]
+              },
+              "fs-8": {
+                  "index": 0,
+                  "abtract_config_f1_0": "/abstract_config/fcp_scale_fs38-f1-0.json",
+                  "abtract_config_f1_1": "/abstract_config/fcp_scale_fs38-f1-1.json",
+                  "prepare_docker":false,
+                  "gatewayip": "10.80.4.1",
+                  "mpg0":"10.80.4.154",
+                  "mpg1":"10.80.4.155",
+                  "bootargs_f1_0": "app=hw_hsu_test cc_huid=3 --all_50g --dpc-server --dpc-uart --disable-wu-watchdog retimer=0,1,2",
+                  "bootargs_f1_1": "app=hw_hsu_test cc_huid=3 --all_50g --dpc-server --dpc-uart --disable-wu-watchdog retimer=0,1",
+                  "hu_host_list":[]
+              },
+              "fs-21": {
+                  "index": 0,
+                  "abtract_config_f1_0": "/abstract_config/fcp_scale_fs38-f1-0.json",
+                  "abtract_config_f1_1": "/abstract_config/fcp_scale_fs38-f1-1.json",
+                  "prepare_docker":false,
+                  "gatewayip": "10.80.4.1",
+                  "mpg0":"10.80.4.159",
+                  "mpg1":"10.80.4.160",
+                  "bootargs_f1_0": "app=hw_hsu_test cc_huid=3 --all_50g --dpc-server --dpc-uart --disable-wu-watchdog retimer=0,1",
+                  "bootargs_f1_1": "app=hw_hsu_test cc_huid=3 --all_50g --dpc-server --dpc-uart --disable-wu-watchdog retimer=0,1",
+                  "hu_host_list":[]
+              },
+              "fs-15": {
+                  "index": 0,
+                  "abtract_config_f1_0": "/abstract_config/fcp_scale_fs38-f1-0.json",
+                  "abtract_config_f1_1": "/abstract_config/fcp_scale_fs38-f1-1.json",
+                  "prepare_docker":false,
+                  "gatewayip": "10.80.4.1",
+                  "mpg0":"10.80.4.174",
+                  "mpg1":"10.80.4.175",
+                  "bootargs_f1_0": "app=hw_hsu_test cc_huid=3 --all_50g --dpc-server --dpc-uart --disable-wu-watchdog",
+                  "bootargs_f1_1": "app=hw_hsu_test cc_huid=3 --all_50g --dpc-server --dpc-uart --disable-wu-watchdog",
+                  "hu_host_list":[]
+              },
+               "fs-20": {
+                  "index": 0,
+                  "abtract_config_f1_0": "/abstract_config/fcp_scale_fs38-f1-0.json",
+                  "abtract_config_f1_1": "/abstract_config/fcp_scale_fs38-f1-1.json",
+                  "prepare_docker":false,
+                  "gatewayip": "10.80.4.1",
+                  "mpg0":"10.80.4.179",
+                  "mpg1":"10.80.4.180",
                   "bootargs_f1_0": "app=hw_hsu_test cc_huid=3 --all_50g --dpc-server --dpc-uart --disable-wu-watchdog",
                   "bootargs_f1_1": "app=hw_hsu_test cc_huid=3 --all_50g --dpc-server --dpc-uart --disable-wu-watchdog",
                   "hu_host_list":[]
