@@ -2,7 +2,7 @@
     <ul class="nav nav-tabs card-header-tabs" role="tablist">
       <li class="nav-item" style="width: 100px; text-align: center">
         <span class="nav-link pseudo-anchor"
-              role="tab" *ngIf="!showF1Dag" (click)="openF1Dag()"
+              role="tab" *ngIf="!showF1Dag" (click)="queryExists = false; openF1Dag()"
               >F1</span>
         <span class="nav-link active pseudo-anchor" role="tab"
               *ngIf="showF1Dag"
@@ -10,7 +10,7 @@
       </li>
       <li class="nav-item" style="width: 100px; text-align: center">
         <span class="nav-link pseudo-anchor"
-                    role="tab" *ngIf="!showS1Dag" (click)="openS1Dag()">S1
+                    role="tab" *ngIf="!showS1Dag" (click)="queryExists = false; openS1Dag()">S1
         </span>
         <span class="nav-link active pseudo-anchor" role="tab"
               *ngIf="showS1Dag">S1
@@ -20,7 +20,8 @@
 </div>
 <br>
 <fun-spinner [status]="status"></fun-spinner>
-<div class="component container">
+<span id="chart-info"></span>
+<div class="component container" *ngIf="status == null">
   <div [ngClass]="{'row': selectMode !== SelectMode.ShowEditWorkspace}" class="card-body tab-pane" role="tabpanel"
        style="padding: 0">
     <!-- left side of the performance page containing tree structure -->
@@ -219,7 +220,6 @@
                            [allowDelete]="false" [allowContext]="true" [allowAdd]="false"
                            (close)="closeSummaryPanel($event)"></summary-jira-info>
       </div>
-      <span id="chart-info"></span>
       <div *ngIf="mode != modeType.None && chartReady" class="card" style="padding: 10px">
         <table>
           <tr>
