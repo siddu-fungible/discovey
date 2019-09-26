@@ -558,6 +558,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         this.visualizationUnit = this.changingVizUnit;
         this.setTimeMode(TimeMode.ALL);
         this.selectedUnit = this.visualizationUnit;
+        this.showConfigure();
       } else {
         alert("Submission failed. Please check alerts");
       }
