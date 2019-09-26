@@ -168,8 +168,7 @@ export class PerformanceComponent implements OnInit {
 
   slashReplacement: string = "_fsl"; //forward slash
 
-  f1Node: FlatNode = null;
-  s1Node: FlatNode = null;
+  rootNode: FlatNode = null;
   allMetricsNode: FlatNode = null;
 
   buildInfo: any = null;
@@ -282,8 +281,14 @@ export class PerformanceComponent implements OnInit {
     this.fetchDag();
   }
 
-  closeS1Dag(): void {
-
+  s1Dag(): void {
+    this.queryExists = false;
+    this.queryPath = null;
+    this.showBugPanel = false;
+    this.chartReady = false;
+    this.currentNode = null;
+    this.currentFlatNode = null;
+    this.openS1Dag();
   }
 
   openF1Dag(): void {
@@ -294,8 +299,14 @@ export class PerformanceComponent implements OnInit {
     this.fetchDag();
   }
 
-  closeF1Dag(): void {
-
+  f1Dag(): void {
+    this.queryExists = false;
+    this.queryPath = null;
+    this.showBugPanel = false;
+    this.chartReady = false;
+    this.currentNode = null;
+    this.currentFlatNode = null;
+    this.openF1Dag();
   }
 
   fetchDag(): void {
@@ -319,10 +330,10 @@ export class PerformanceComponent implements OnInit {
       }
       //total container should always appear
       if (this.selectMode == SelectMode.ShowMainSite) {
-        this.f1Node = this.flatNodes[0];
-        this.f1Node.hide = false;
+        this.rootNode = this.flatNodes[0];
+        this.rootNode.hide = false;
         if (!this.queryExists) {
-          this.queryPath = this.getDefaultQueryPath(this.f1Node);
+          this.queryPath = this.getDefaultQueryPath(this.rootNode);
         }
 
         this.expandUrl(this.queryExists);
@@ -628,11 +639,6 @@ export class PerformanceComponent implements OnInit {
         this.updateUpDownSincePrevious(false);
       }
 
-    }
-    if (newNode.chartName === "S1") {
-      thisFlatNode.hide = false;
-      this.s1Node = thisFlatNode;
-      lineage = [];
     }
     if (this.metricIds && this.metricIds.includes(newNode.metricId)) {
       thisFlatNode.hide = false;
@@ -1217,13 +1223,7 @@ export class PerformanceComponent implements OnInit {
     try {
       path = path.replace(this.gotoQueryBaseUrl, "");
       let parts = path.split("/");
-      result = this._doPathToGuid(this.f1Node, parts);
-      if (!result) {
-        result = this._doPathToGuid(this.s1Node, parts);
-      }
-      if (!result) {
-        result = this._doPathToGuid(this.allMetricsNode, parts);
-      }
+      result = this._doPathToGuid(this.rootNode, parts);
       // console.log("Path: " + path + " : guid: " + result + " c: " + this.getFlatNodeByGuid(result).node.chartName);
 
     } catch (e) {
