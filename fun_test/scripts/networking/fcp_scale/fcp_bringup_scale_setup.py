@@ -84,8 +84,8 @@ class ScriptSetup(FunTestScript):
         for fs_name in fs_list:
             fs_name = str(fs_name)
             # FS-39 issue
-            if fs_name == "fs-39":
-                continue
+            # if fs_name == "fs-39":
+            #     continue
             abstract_json_file0 = \
                 fun_test.get_script_parent_directory() + testbed_info['fs'][test_bed_type][fs_name][
                     'abtract_config_f1_0']
