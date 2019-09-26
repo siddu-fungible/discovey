@@ -164,6 +164,7 @@ export class PerformanceComponent implements OnInit {
 
   gotoQueryBaseUrl: string = "/performance?goto=";
   queryPath: string = null;  // includes gotoQueryBaseUrl and a query
+  queryExists: boolean = false; //decides whether to just expand the node or to do both expand and show charts
 
   slashReplacement: string = "_fsl"; //forward slash
 
@@ -217,7 +218,11 @@ export class PerformanceComponent implements OnInit {
     }, error => {
       this.loggerService.error("Unable to fetch buildInfo");
     });
-    this.fetchDag();
+    if (this.selectMode == SelectMode.ShowMainSite) {
+      this.processUrl();
+    } else {
+      this.fetchDag();
+    }
   }
 
   getDefaultQueryPath(flatNode) {
@@ -226,14 +231,19 @@ export class PerformanceComponent implements OnInit {
 
   getQueryPath() {
     return this.activatedRoute.queryParams.pipe(switchMap(params => {
+      let queryPath = null;
       if (params.hasOwnProperty('goto')) {
-        let queryPath = params['goto'];
+        queryPath = params['goto'];
         // console.log("QueryPath: " + this.queryPath);
+        if (this.queryPath !== (this.gotoQueryBaseUrl + queryPath)) {
+          this.queryPath = this.gotoQueryBaseUrl + queryPath;
+        }
         return of(queryPath);
       }
       else {
         return of(null);
       }
+
     }))
   }
 
@@ -267,6 +277,9 @@ export class PerformanceComponent implements OnInit {
   openS1Dag(): void {
     this.showS1Dag = true;
     this.showF1Dag = false;
+    this.flatNodes = [];
+    this.guIdFlatNodeMap = {};
+    this.fetchDag();
   }
 
   closeS1Dag(): void {
@@ -276,6 +289,9 @@ export class PerformanceComponent implements OnInit {
   openF1Dag(): void {
     this.showF1Dag = true;
     this.showS1Dag = false;
+    this.flatNodes = [];
+    this.guIdFlatNodeMap = {};
+    this.fetchDag();
   }
 
   closeF1Dag(): void {
@@ -283,6 +299,7 @@ export class PerformanceComponent implements OnInit {
   }
 
   fetchDag(): void {
+    this.status = "Fetching DAG";
     let url = "/metrics/dag";
     if (this.showF1Dag) {
       url += "?root_metric_ids=101";
@@ -304,29 +321,11 @@ export class PerformanceComponent implements OnInit {
       if (this.selectMode == SelectMode.ShowMainSite) {
         this.f1Node = this.flatNodes[0];
         this.f1Node.hide = false;
-        this.getQueryPath().subscribe(queryPath => {
-          let queryExists = false;
-          if (!queryPath) {
-            queryPath = this.getDefaultQueryPath(this.f1Node);
-          } else {
-            queryExists = true;
-          }
-          if (this.queryPath !== (this.gotoQueryBaseUrl + queryPath)) {
-            this.queryPath = this.gotoQueryBaseUrl + queryPath;
-            let pathGuid = this.pathToGuid(this.queryPath);
-            let targetFlatNode = this.guIdFlatNodeMap[pathGuid];
-            this.expandNode(targetFlatNode);
+        if (!this.queryExists) {
+          this.queryPath = this.getDefaultQueryPath(this.f1Node);
+        }
 
-            if (queryExists) {
-              if (targetFlatNode.node.leaf) {
-                this.showAtomicMetric(targetFlatNode);
-              } else {
-                this.showNonAtomicMetric(targetFlatNode);
-              }
-            }
-
-          }
-        });
+        this.expandUrl(this.queryExists);
       }
       if (this.selectMode == SelectMode.ShowEditWorkspace && this.interestedMetrics) {
         this.flatNodes[0].hide = false;
@@ -346,6 +345,37 @@ export class PerformanceComponent implements OnInit {
     }, error => {
       this.loggerService.error("fetchDag");
     });
+  }
+
+  processUrl(): void {
+    this.getQueryPath().subscribe(queryPath => {
+      if (!queryPath) {
+        this.queryExists = false;
+        this.fetchDag();
+      } else {
+        this.queryExists = true;
+        if (queryPath.startsWith("F1")) {
+          this.openF1Dag();
+        }
+        if (queryPath.startsWith("S1")) {
+          this.openS1Dag();
+        }
+      }
+    });
+  }
+
+  expandUrl(queryExists): void {
+    let pathGuid = this.pathToGuid(this.queryPath);
+    let targetFlatNode = this.guIdFlatNodeMap[pathGuid];
+    this.expandNode(targetFlatNode);
+
+    if (queryExists) {
+      if (targetFlatNode.node.leaf) {
+        this.showAtomicMetric(targetFlatNode);
+      } else {
+        this.showNonAtomicMetric(targetFlatNode);
+      }
+    }
   }
 
   updateUpDownSincePrevious(upgrade: boolean): void {

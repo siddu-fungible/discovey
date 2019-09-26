@@ -1,8 +1,6 @@
-<fun-spinner [status]="status"></fun-spinner>
-<div class="component container">
-  <div class="card-header">
+<div class="card-header">
     <ul class="nav nav-tabs card-header-tabs" role="tablist">
-      <li class="nav-item">
+      <li class="nav-item" style="width: 100px; text-align: center">
         <span class="nav-link pseudo-anchor"
               role="tab" *ngIf="!showF1Dag" (click)="openF1Dag()"
               >F1</span>
@@ -10,7 +8,7 @@
               *ngIf="showF1Dag"
               >F1</span>
       </li>
-      <li class="nav-item">
+      <li class="nav-item" style="width: 100px; text-align: center">
         <span class="nav-link pseudo-anchor"
                     role="tab" *ngIf="!showS1Dag" (click)="openS1Dag()">S1
         </span>
@@ -19,8 +17,12 @@
         </span>
       </li>
     </ul>
-  </div>
-  <div [ngClass]="{'row': selectMode !== SelectMode.ShowEditWorkspace}" class="card-body tab-pane" role="tabpanel">
+</div>
+<br>
+<fun-spinner [status]="status"></fun-spinner>
+<div class="component container">
+  <div [ngClass]="{'row': selectMode !== SelectMode.ShowEditWorkspace}" class="card-body tab-pane" role="tabpanel"
+       style="padding: 0">
     <!-- left side of the performance page containing tree structure -->
     <div [ngClass]="{'col-lg-5 col-md-5 col-xxl-4 col-xl-5 left-col': selectMode !== SelectMode.ShowEditWorkspace}">
       <table class="table table-nonfluid">

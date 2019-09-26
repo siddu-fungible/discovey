@@ -233,6 +233,26 @@ class PkeP256TlsSoakPerformanceS1Tc(PkeP256TlsSoakPerformanceTc):
                               steps="Steps 1")
 
 
+class TeraMarkDfaPerformanceS1Tc(TeraMarkDfaPerformanceTc):
+    tag = TERAMARK_DFA_S1
+    platform = FunPlatform.S1
+
+    def describe(self):
+        self.set_test_details(id=22,
+                              summary="TeraMark DFA Performance Test on S1",
+                              steps="Steps 1")
+
+
+class TeraMarkNfaPerformanceS1Tc(TeraMarkNfaPerformanceTc):
+    tag = TERAMARK_NFA_S1
+    platform = FunPlatform.S1
+
+    def describe(self):
+        self.set_test_details(id=23,
+                              summary="TeraMark NFA Performance Test on S1",
+                              steps="Steps 1")
+
+
 if __name__ == "__main__":
     myscript = MyScript()
 
@@ -257,5 +277,7 @@ if __name__ == "__main__":
     myscript.add_test_case(TeraMarkPkeEcdh25519PerformanceS1Tc())
     myscript.add_test_case(PkeX25519TlsSoakPerformanceS1Tc())
     myscript.add_test_case(PkeP256TlsSoakPerformanceS1Tc())
+    myscript.add_test_case(TeraMarkDfaPerformanceS1Tc())
+    # myscript.add_test_case(TeraMarkNfaPerformanceS1Tc())
 
     myscript.run()
