@@ -799,7 +799,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
             }
           }
           if (!valueSet) {
-            oneChartDataArray.push(null);
+            oneChartDataArray.push(this.getValidatedData(-1, minimum, -1, null));
           }
           if (!seriesDates[seriesDatesIndex]) {
             seriesDates[seriesDatesIndex] = this.commonService.convertDateToEpoch(lastDate);
@@ -1191,7 +1191,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     if (data < 0) {
       data = null;
     }
-    let i = 0;
     result = {
       y: data,
       marker: {
