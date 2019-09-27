@@ -745,8 +745,9 @@ class StripeVolAttachDetachTestCase(FunTestCase):
                                                      source_password=host_handle.ssh_password,
                                                      source_ip=host_handle.host_ip,
                                                      source_file_path=filename, target_file_path=pcap_artifact_file)
-                                    fun_test.add_auxillary_file(description="Host {} NVME connect pcap".
-                                                                format(host_name), filename=pcap_artifact_file)
+                                    fun_test.add_auxillary_file(
+                                        description="{}: Host {} NVME connect pcap iteration {}".
+                                            format(self.testcase, host_name, iter), filename=pcap_artifact_file)
                                 except Exception as ex:
                                     fun_test.critical(str(ex))
                         try:
