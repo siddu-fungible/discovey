@@ -13,7 +13,7 @@ from math import ceil
 def fio_parser(arg1, host_index, **kwargs):
     fio_output = arg1.pcie_fio(**kwargs)
     fun_test.shared_variables["fio"][host_index] = fio_output
-    fun_test.test_assert(fio_output, "Fio test for thread {}".format(host_index), ignore_on_success=True)
+    fun_test.log("Fio test for thread {}: {}".format(host_index, fio_output))
     arg1.disconnect()
 
 
@@ -284,7 +284,73 @@ class StripeVolAttachDetachTestScript(FunTestScript):
                                      format(host_name, self.funcp_spec[0]["container_names"][index], ip))
 
     def cleanup(self):
-        pass
+
+        if fun_test.shared_variables["blt"]["setup_created"]:
+            self.ctrlr_uuid = fun_test.shared_variables["ctrlr_uuid"]
+            self.stripe_uuid = fun_test.shared_variables["stripe_uuid"]
+            self.strip_vol_size = fun_test.shared_variables["strip_vol_size"]
+            self.stripe_details = fun_test.shared_variables["stripe_details"]
+            self.thin_uuid = fun_test.shared_variables["thin_uuid"]
+            self.blt_capacity = fun_test.shared_variables["blt_capacity"]
+            self.blt_details = fun_test.shared_variables["blt_details"]
+            self.nvme_subsystem = fun_test.shared_variables["nvme_subsystem"]
+            self.blt_count = fun_test.shared_variables["blt_count"]
+            self.storage_controller = fun_test.shared_variables["storage_controller"]
+
+            # Volume un-configuration
+            if not fun_test.shared_variables["attach_detach_loop"]:
+                try:
+                    for index, host_name in enumerate(self.host_info):
+                        nvme_disconnect_cmd = "nvme disconnect -n {}".format(self.nvme_subsystem)  # TODO: SWOS-6165
+                        # nvme_disconnect_cmd = "nvme disconnect -d {}".format(self.volume_name)
+
+                        # Skipping disconnect from host4 as it's already disconnected
+                        host_handle = self.host_info[host_name]["handle"]
+                        host_handle.sudo_command(command=nvme_disconnect_cmd, timeout=60)
+                        nvme_disconnect_exit_status = host_handle.exit_status()
+                        fun_test.test_assert_expected(expected=0, actual=nvme_disconnect_exit_status,
+                                                      message="{} - NVME Disconnect Status".format(host_name))
+
+                        # Detach volume from NVMe-OF controller
+                        command_result = self.storage_controller.detach_volume_from_controller(
+                            ctrlr_uuid=self.ctrlr_uuid[index], ns_id=self.stripe_details["ns_id"],
+                            command_duration=self.command_timeout)
+                        fun_test.log(command_result)
+                        fun_test.test_assert(command_result["status"], "{} - Detach NVMeOF controller {}".
+                                             format(host_name, self.ctrlr_uuid[index]))
+                except Exception as ex:
+                    fun_test.critical(str(ex))
+
+            try:
+                # Delete Strip Volume
+                fun_test.log("\n\n********** Deleting volume **********\n\n")
+                command_result = self.storage_controller.delete_volume(type=self.stripe_details["type"],
+                                                                       capacity=self.strip_vol_size,
+                                                                       name="stripevol1",
+                                                                       uuid=self.stripe_uuid,
+                                                                       block_size=self.stripe_details["block_size"],
+                                                                       stripe_unit=self.stripe_details["stripe_unit"],
+                                                                       pvol_id=self.thin_uuid,
+                                                                       command_duration=self.command_timeout)
+                fun_test.log(command_result)
+                fun_test.test_assert(command_result["status"], "Deleting Stripe Vol with uuid {} on DUT".
+                                     format(self.stripe_uuid))
+            except Exception as ex:
+                fun_test.critical(str(ex))
+
+            try:
+                for i in range(self.blt_count):
+                    command_result = self.storage_controller.delete_thin_block_volume(
+                        capacity=self.blt_capacity,
+                        block_size=self.blt_details["block_size"],
+                        name="thin_block" + str(i + 1),
+                        uuid=self.thin_uuid[i],
+                        command_duration=self.command_timeout)
+                    fun_test.log(command_result)
+                    fun_test.test_assert(command_result["status"], "Deleting BLT {} with uuid {} on DUT".
+                                         format(i, self.thin_uuid[i]))
+            except Exception as ex:
+                fun_test.critical(str(ex))
 
 
 class StripeVolAttachDetachTestCase(FunTestCase):
@@ -292,14 +358,14 @@ class StripeVolAttachDetachTestCase(FunTestCase):
         pass
 
     def setup(self):
-        testcase = self.__class__.__name__
+        self.testcase = self.__class__.__name__
 
         # Parsing the global config and assign them as object members
         config_file = fun_test.get_script_name_without_ext() + ".json"
         fun_test.log("Config file being used: {}".format(config_file))
         config_dict = utils.parse_file_to_json(config_file)
 
-        for k, v in config_dict[testcase].items():
+        for k, v in config_dict[self.testcase].items():
             setattr(self, k, v)
 
         fun_test.log("Config Config: {}".format(self.__dict__))
@@ -520,6 +586,17 @@ class StripeVolAttachDetachTestCase(FunTestCase):
                     fun_test.log("Write test : there is a mismatch in {} : {}".format(field, stats_delta))
 
             fun_test.shared_variables["blt"]["setup_created"] = True
+            fun_test.shared_variables["ctrlr_uuid"] = self.ctrlr_uuid
+            fun_test.shared_variables["stripe_uuid"] = self.stripe_uuid
+            fun_test.shared_variables["attach_detach_loop"] = self.attach_detach_loop
+            fun_test.shared_variables["strip_vol_size"] = self.strip_vol_size
+            fun_test.shared_variables["stripe_details"] = self.stripe_details
+            fun_test.shared_variables["thin_uuid"] = self.thin_uuid
+            fun_test.shared_variables["blt_capacity"] = self.blt_capacity
+            fun_test.shared_variables["blt_details"] = self.blt_details
+            fun_test.shared_variables["nvme_subsystem"] = self.nvme_subsystem
+            fun_test.shared_variables["blt_count"] = self.blt_count
+            fun_test.shared_variables["storage_controller"] = self.storage_controller
 
     def run(self):
         testcase = self.__class__.__name__
@@ -528,6 +605,12 @@ class StripeVolAttachDetachTestCase(FunTestCase):
         fio_result = {}
         fio_output = {}
         aggr_fio_output = {}
+
+        self.ctrlr_uuid = fun_test.shared_variables["ctrlr_uuid"]
+        self.stripe_uuid = fun_test.shared_variables["stripe_uuid"]
+        self.strip_vol_size = fun_test.shared_variables["strip_vol_size"]
+        self.thin_uuid = fun_test.shared_variables["thin_uuid"]
+        self.blt_capacity = fun_test.shared_variables["blt_capacity"]
 
         if hasattr(self, "create_file_system") and self.create_file_system:
             test_filename = "/mnt/testfile.dat"
@@ -614,7 +697,7 @@ class StripeVolAttachDetachTestCase(FunTestCase):
                                 host_handle.sudo_command("dmesg")
                                 lsblk_output = host_handle.lsblk()
                                 fun_test.test_assert(self.volume_name in lsblk_output,
-                                                     "Iteration: {} - {} device available".format(self.volume_name))
+                                                     "Iteration: {} - {} device available".format(iter, self.volume_name))
                                 fun_test.test_assert_expected(expected="disk",
                                                               actual=lsblk_output[self.volume_name]["type"],
                                                               message="Iteration: {} - {} device type check".
@@ -663,37 +746,38 @@ class StripeVolAttachDetachTestCase(FunTestCase):
                                                      source_ip=host_handle.host_ip,
                                                      source_file_path=filename, target_file_path=pcap_artifact_file)
                                     fun_test.add_auxillary_file(
-                                        description="Host {} NVME connect pcap".format(host_name),
-                                        filename=pcap_artifact_file)
+                                        description="{}: Host {} NVME connect pcap iteration {}".
+                                            format(self.testcase, host_name, iter), filename=pcap_artifact_file)
                                 except Exception as ex:
                                     fun_test.critical(str(ex))
-
                         try:
                             # Detach volume from NVMe-OF controller
                             command_result = self.storage_controller.detach_volume_from_controller(
                                 ctrlr_uuid=self.ctrlr_uuid[index], ns_id=self.stripe_details["ns_id"],
                                 command_duration=self.command_timeout)
                             fun_test.log(command_result)
-                            fun_test.test_assert(command_result["status"],
-                                                 "{} - Detach NVMeOF controller {}".format(
-                                                     host_name, self.ctrlr_uuid[index]))
+                            fun_test.test_assert(command_result["status"], "{} - Detach NVMeOF controller {}".
+                                                 format(host_name, self.ctrlr_uuid[index]))
                             fun_test.shared_variables["blt"]["nvme_connect"] = False
                         except Exception as ex:
                             fun_test.critical(str(ex))
 
-                    # Waiting for all the FIO test threads to complete
-                    try:
-                        fun_test.log("Test Thread IDs: {}".format(test_thread_id))
-                        for index, host_name in enumerate(self.host_info):
-                            fio_output[iodepth][host_name] = {}
-                            fun_test.log("Joining fio thread {}".format(index))
-                            fun_test.join_thread(fun_test_thread_id=test_thread_id[index], sleep_time=1)
-                            fun_test.log("FIO Command Output from {}:\n {}".
+                    if self.io_during_attach_detach:
+                        # Waiting for all the FIO test threads to complete
+                        try:
+                            fun_test.log("Test Thread IDs: {}".format(test_thread_id))
+                            for index, host_name in enumerate(self.host_info):
+                                fio_output[iodepth][host_name] = {}
+                                fun_test.log("Joining fio thread {}".format(index))
+                                fun_test.join_thread(fun_test_thread_id=test_thread_id[index], sleep_time=1)
+                                fun_test.test_assert(
+                                    not fun_test.shared_variables["fio"][index],
+                                    "Iteration: {} - FIO output on Disconnect and Detach during an IO on {}"
+                                        .format(iter, host_name))
+                        except Exception as ex:
+                            fun_test.critical(str(ex))
+                            fun_test.log("Expected FIO failure {}:\n {}".
                                          format(host_name, fun_test.shared_variables["fio"][index]))
-                    except Exception as ex:
-                        fun_test.critical(str(ex))
-                        fun_test.log("Expected FIO failure {}:\n {}".
-                                     format(host_name, fun_test.shared_variables["fio"][index]))
             else:
                 for index, host_name in enumerate(self.host_info):
                     wait_time = self.num_hosts - index
@@ -724,61 +808,6 @@ class StripeVolAttachDetachTestCase(FunTestCase):
             fun_test.sleep("Waiting in between iterations", self.iter_interval)
 
     def cleanup(self):
-        # Volume un-configuration
-        if not self.attach_detach_loop:
-            try:
-                fun_test.log("\n\n********** Deleting volume **********\n\n")
-                for index, host_name in enumerate(self.host_info):
-                    nvme_disconnect_cmd = "nvme disconnect -n {}".format(self.nvme_subsystem)  # TODO: SWOS-6165
-                    # nvme_disconnect_cmd = "nvme disconnect -d {}".format(self.volume_name)
-
-                    # Skipping disconnect from host4 as it's already disconnected
-                    host_handle = self.host_info[host_name]["handle"]
-                    host_handle.sudo_command(command=nvme_disconnect_cmd, timeout=60)
-                    nvme_disconnect_exit_status = host_handle.exit_status()
-                    fun_test.test_assert_expected(expected=0, actual=nvme_disconnect_exit_status,
-                                                  message="{} - NVME Disconnect Status".format(host_name))
-
-                    # Detach volume from NVMe-OF controller
-                    command_result = self.storage_controller.detach_volume_from_controller(
-                        ctrlr_uuid=self.ctrlr_uuid[index], ns_id=self.stripe_details["ns_id"],
-                        command_duration=self.command_timeout)
-                    fun_test.log(command_result)
-                    fun_test.test_assert(command_result["status"], "{} - Detach NVMeOF controller {}".format(
-                        host_name, self.ctrlr_uuid[index]))
-            except Exception as ex:
-                fun_test.critical(str(ex))
-
-        try:
-            # Delete Strip Volume
-            command_result = self.storage_controller.delete_volume(type=self.stripe_details["type"],
-                                                                   capacity=self.strip_vol_size,
-                                                                   name="stripevol1",
-                                                                   uuid=self.stripe_uuid,
-                                                                   block_size=self.stripe_details["block_size"],
-                                                                   stripe_unit=self.stripe_details["stripe_unit"],
-                                                                   pvol_id=self.thin_uuid,
-                                                                   command_duration=self.command_timeout)
-            fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "Deleting Stripe Vol with uuid {} on DUT".
-                                 format(self.stripe_uuid))
-        except Exception as ex:
-            fun_test.critical(str(ex))
-
-        try:
-            for i in range(self.blt_count):
-                command_result = self.storage_controller.delete_thin_block_volume(
-                    capacity=self.blt_capacity,
-                    block_size=self.blt_details["block_size"],
-                    name="thin_block" + str(i+1),
-                    uuid=self.thin_uuid[i],
-                    command_duration=self.command_timeout)
-                fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "Deleting BLT {} with uuid {} on DUT".
-                                     format(i, self.thin_uuid[i]))
-        except Exception as ex:
-            fun_test.critical(str(ex))
-
         try:
             # Saving the pcap file captured during the nvme connect to the pcap_artifact_file file
             for index, host_name in enumerate(self.host_info):
@@ -790,50 +819,46 @@ class StripeVolAttachDetachTestCase(FunTestCase):
                     fun_test.scp(source_port=host_handle.ssh_port, source_username=host_handle.ssh_username,
                                  source_password=host_handle.ssh_password, source_ip=host_handle.host_ip,
                                  source_file_path=filename, target_file_path=pcap_artifact_file)
-                fun_test.add_auxillary_file(description="Host {} NVME connect pcap".format(host_name),
-                                            filename=pcap_artifact_file)
+                fun_test.add_auxillary_file(description="{}: Host {} NVME connect pcap".
+                                            format(self.testcase, host_name), filename=pcap_artifact_file)
         except Exception as ex:
             fun_test.critical(str(ex))
-
-
-class StripedVolAttachConnDisConnDetach(StripeVolAttachDetachTestCase):
-    def describe(self):
-        self.set_test_details(
-            id=1,
-            summary="Data integrity validation after funos reboot",
-            steps='''
-                1. Create Stripe volume
-                2. Attach volume to one host
-                3. Do nvme_connect and perform sequential write
-                4. Start Random Read-Write with data integrity
-                5. Do nvme_disconnect
-                6. Detach volume
-                7. Repeat Step#2 to Step#6 for mentioned iterations 
-                ''')
-
-    def setup(self):
-        super(StripedVolAttachConnDisConnDetach, self).setup()
-
-    def run(self):
-        super(StripedVolAttachConnDisConnDetach, self).run()
-
-    def cleanup(self):
-        super(StripedVolAttachConnDisConnDetach, self).cleanup()
 
 
 class StripedVolAttachConnDisConnDetachIO(StripeVolAttachDetachTestCase):
     def describe(self):
         self.set_test_details(
             id=1,
-            summary="Data integrity validation after funos reboot",
+            summary="Multiple Attach-NvmeConnect-NvmeDisconnect-Detach with IO",
             steps='''
                 1. Create Stripe volume
                 2. Attach volume to one host
-                3. Do nvme_connect and perform sequential write
-                4. Start Random Read-Write with data integrity
-                5. Do nvme_disconnect
-                6. Detach volume
-                7. Repeat Step#2 to Step#6 for mentioned iterations 
+                3. Do nvme_connect and perform sequential write and nvme_disconnect and detach
+                4. Perform Attach-NvmeConnect- IO With DI -NvmeDisconnect-Disconnect in loop
+                5. Start Random Read-Write with data integrity
+                ''')
+
+    def setup(self):
+        super(StripedVolAttachConnDisConnDetachIO, self).setup()
+
+    def run(self):
+        super(StripedVolAttachConnDisConnDetachIO, self).run()
+
+    def cleanup(self):
+        super(StripedVolAttachConnDisConnDetachIO, self).cleanup()
+
+
+class StripedVolAttachConnDisConnDetach(StripeVolAttachDetachTestCase):
+    def describe(self):
+        self.set_test_details(
+            id=2,
+            summary="Multiple Attach-NvmeConnect-NvmeDisconnect-Detach without IO",
+            steps='''
+                1. Create Stripe volume
+                2. Attach volume to one host
+                3. Do nvme_connect and perform sequential write and nvme_disconnect and detach
+                4. Perform Attach-NvmeConnect-NvmeDisconnect-Disconnect in loop
+                5. Start Random Read-Write with data integrity 
                 ''')
 
     def setup(self):
@@ -849,31 +874,29 @@ class StripedVolAttachConnDisConnDetachIO(StripeVolAttachDetachTestCase):
 class StripedVolAttachDetach(StripeVolAttachDetachTestCase):
     def describe(self):
         self.set_test_details(
-            id=1,
-            summary="Data integrity validation after funos reboot",
+            id=3,
+            summary="Multiple Attach-Detach without IO",
             steps='''
                 1. Create Stripe volume
                 2. Attach volume to one host
-                3. Do nvme_connect and perform sequential write
-                4. Start Random Read-Write with data integrity
-                5. Do nvme_disconnect
-                6. Detach volume
-                7. Repeat Step#2 to Step#6 for mentioned iterations 
+                3. Do nvme_connect and perform sequential write and nvme_disconnect and detach
+                4. Perform Attach-Disconnect without IO in loop
+                5. Start Random Read-Write with data integrity
                 ''')
 
     def setup(self):
-        super(StripedVolAttachConnDisConnDetach, self).setup()
+        super(StripedVolAttachDetach, self).setup()
 
     def run(self):
-        super(StripedVolAttachConnDisConnDetach, self).run()
+        super(StripedVolAttachDetach, self).run()
 
     def cleanup(self):
-        super(StripedVolAttachConnDisConnDetach, self).cleanup()
+        super(StripedVolAttachDetach, self).cleanup()
 
 
 if __name__ == "__main__":
     testscript = StripeVolAttachDetachTestScript()
-    testscript.add_test_case(StripedVolAttachConnDisConnDetach())
     testscript.add_test_case(StripedVolAttachConnDisConnDetachIO())
+    testscript.add_test_case(StripedVolAttachConnDisConnDetach())
     testscript.add_test_case(StripedVolAttachDetach())
     testscript.run()

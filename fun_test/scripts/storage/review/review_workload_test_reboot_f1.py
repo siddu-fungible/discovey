@@ -250,6 +250,7 @@ class StripeVolFunOSRebootTestScript(FunTestScript):
         fun_test.shared_variables["db_log_time"] = self.db_log_time
         fun_test.shared_variables["host_info"] = self.host_info
 
+        # Required if funos needs to be rebooted
         fun_test.shared_variables["bootargs"] = self.bootargs
         fun_test.shared_variables["available_dut_indexes"] = self.available_dut_indexes
         fun_test.shared_variables["topology_helper"] = self.topology_helper
@@ -332,8 +333,6 @@ class StripeVolFunOSRebootTestCase(FunTestCase):
         self.num_hosts = len(self.host_info)
         self.syslog_level = fun_test.shared_variables["syslog_level"]
         fun_test.shared_variables["transport_type"] = self.transport_type
-
-        print("test level setup: self.host_info is: {}".format(self.host_info))
 
         if "blt" not in fun_test.shared_variables or not fun_test.shared_variables["blt"]["setup_created"]:
             fun_test.shared_variables["blt"] = {}
@@ -479,183 +478,200 @@ class StripeVolFunOSRebootTestCase(FunTestCase):
             fun_test.test_assert_expected(expected=self.syslog_level, actual=command_result["data"],
                                           message="Checking syslog level")
 
-            before_write_eqm = {}
-            after_write_eqm = {}
-            before_write_eqm = self.storage_controller.peek(props_tree="stats/eqm")
-
+            host_clone = {}
+            warmup_thread_id = {}
             for index, host_name in enumerate(self.host_info):
-                fun_test.shared_variables["blt"][host_name] = {}
-                host_handle = self.host_info[host_name]["handle"]
+                wait_time = self.num_hosts - index
+                host_clone[host_name] = self.host_info[host_name]["handle"].clone()
 
-                # Create filesystem if needed else write to raw device
                 if hasattr(self, "create_file_system") and self.create_file_system:
+                    host_handle = self.host_info[host_name]["handle"]
                     host_handle.sudo_command("mkfs.xfs -f {}".format(self.nvme_block_device))
                     host_handle.sudo_command("mount {} /mnt".format(self.nvme_block_device))
                     fun_test.log("Creating a testfile on XFS volume")
-                    fio_output = host_handle.pcie_fio(filename="/mnt/testfile.dat", **self.warm_up_fio_cmd_args)
-                    fun_test.test_assert(fio_output, "Pre-populating the file on XFS volume")
+                    warmup_thread_id[index] = fun_test.execute_thread_after(
+                        time_in_seconds=wait_time, func=fio_parser, arg1=host_clone[host_name], host_index=index,
+                        filename="/mnt/testfile.dat", **self.warm_up_fio_cmd_args)
+                else:
+                    warmup_thread_id[index] = fun_test.execute_thread_after(
+                        time_in_seconds=wait_time, func=fio_parser, arg1=host_clone[host_name], host_index=index,
+                        filename=self.nvme_block_device, **self.warm_up_fio_cmd_args)
+
+                fun_test.log("Started FIO command to perform sequential write on {}".format(host_name))
+                fun_test.sleep("to start next thread", 1)
+
+            fun_test.sleep("Fio threads started", 10)
+            try:
+                for index, host_name in enumerate(self.host_info):
+                    fun_test.log("Joining fio thread {}".format(index))
+                    fun_test.join_thread(fun_test_thread_id=warmup_thread_id[index], sleep_time=1)
+                    fun_test.log("FIO Command Output: \n{}".format(fun_test.shared_variables["fio"][index]))
+            except Exception as ex:
+                fun_test.critical(str(ex))
+
+            for index, host_name in enumerate(self.host_info):
+                fun_test.test_assert(fun_test.shared_variables["fio"][index], "Volume warmup on host {}".
+                                     format(host_name))
+                if hasattr(self, "create_file_system") and self.create_file_system:
+                    host_handle = self.host_info[host_name]["handle"]
                     host_handle.sudo_command("umount /mnt")
                     # Mount NVMe disk on host in Read-Only mode if on a filesystem
                     host_handle.sudo_command("mount -o ro {} /mnt".format(self.nvme_block_device))
-                else:
-                    fio_output = host_handle.pcie_fio(filename=self.nvme_block_device, **self.warm_up_fio_cmd_args)
-                    fun_test.test_assert(fio_output, "Writing the entire volume")
-                fun_test.shared_variables["blt"]["warmup_io_completed"] = True
-                # host_handle.disconnect()
-
-            after_write_eqm = self.storage_controller.peek(props_tree="stats/eqm")
-
-            for field, value in before_write_eqm["data"].items():
-                current_value = after_write_eqm["data"][field]
-                if (value != current_value) and (field != "incoming BN msg valid"):
-                    stats_delta = current_value - value
-                    fun_test.log("Write test : there is a mismatch in {} : {}".format(field, stats_delta))
-
+            fun_test.shared_variables["blt"]["warmup"] = True
             fun_test.shared_variables["blt"]["setup_created"] = True
 
-        #  Reboot code:
-        fun_test.log("\n\n***** Going for Funos reboot without formatting drives *****\n\n")
-        self.bootargs = fun_test.shared_variables["bootargs"]
-        self.available_dut_indexes = fun_test.shared_variables["available_dut_indexes"]
-        self.topology_helper = fun_test.shared_variables["topology_helper"]
-        self.num_f1_per_fs = fun_test.shared_variables["num_f1_per_fs"]
-        self.funcp_mode = fun_test.shared_variables["funcp_mode"]
-        self.update_deploy_script = fun_test.shared_variables["update_deploy_script"]
-        self.funcp_mode = fun_test.shared_variables["funcp_mode"]
-        self.fpg_int_prefix = fun_test.shared_variables["fpg_int_prefix"]
-        self.update_workspace = fun_test.shared_variables["update_workspace"]
+        if self.reboot_funos:
+            #  Reboot code:
+            fun_test.log("\n\n***** Going for Funos reboot without formatting drives *****\n\n")
+            self.bootargs = fun_test.shared_variables["bootargs"]
+            self.available_dut_indexes = fun_test.shared_variables["available_dut_indexes"]
+            self.topology_helper = fun_test.shared_variables["topology_helper"]
+            self.num_f1_per_fs = fun_test.shared_variables["num_f1_per_fs"]
+            self.funcp_mode = fun_test.shared_variables["funcp_mode"]
+            self.update_deploy_script = fun_test.shared_variables["update_deploy_script"]
+            self.funcp_mode = fun_test.shared_variables["funcp_mode"]
+            self.fpg_int_prefix = fun_test.shared_variables["fpg_int_prefix"]
+            self.update_workspace = fun_test.shared_variables["update_workspace"]
 
-        fun_test.log("Resetting / Rebooting F1")
-        self.fs_obj[0].fpga_initialize()
-        for i in range(len(self.bootargs)):
-            if "mdt_test" in self.bootargs[i]:
-                self.bootargs[i] = re.sub(r"mdt_test,", "", self.bootargs[i])
+            fun_test.log("Resetting / Rebooting F1")
+            self.fs_obj[0].fpga_initialize()
+            for i in range(len(self.bootargs)):
+                if "mdt_test" in self.bootargs[i]:
+                    self.bootargs[i] = re.sub(r"mdt_test,", "", self.bootargs[i])
 
-        fun_test.log("Modified bootargs for to reboot F1's (without app=mdt_test): {}".format(self.bootargs))
+            fun_test.log("Modified bootargs for to reboot F1's (without app=mdt_test): {}".format(self.bootargs))
 
-        for dut_index in self.available_dut_indexes:
-            self.topology_helper.set_dut_parameters(dut_index=dut_index,
-                                                    f1_parameters={0: {"boot_args": self.bootargs[0]},
-                                                                   1: {"boot_args": self.bootargs[1]}})
-        self.topology = self.topology_helper.deploy()
-        fun_test.test_assert(self.topology, "Re-deploying Topology after reboot")
-        fun_test.log("\n\n***** Funos is rebooted without formatting drives \n\n")
+            for dut_index in self.available_dut_indexes:
+                self.topology_helper.set_dut_parameters(dut_index=dut_index,
+                                                        f1_parameters={0: {"boot_args": self.bootargs[0]},
+                                                                       1: {"boot_args": self.bootargs[1]}})
+            self.topology = self.topology_helper.deploy()
+            fun_test.test_assert(self.topology, "Re-deploying Topology after reboot")
+            fun_test.log("\n\n***** Funos is rebooted without formatting drives \n\n")
 
-        # Bring up FunCP docker containers
-        # Getting FS, F1 and COMe objects, Storage Controller objects, F1 IPs
-        # for all the DUTs going to be used in the test
-        self.fs_obj = []
-        self.fs_spec = []
-        self.come_obj = []
-        self.f1_obj = {}
-        self.sc_obj = []
-        self.f1_ips = []
-        self.gateway_ips = []
-        for curr_index, dut_index in enumerate(self.available_dut_indexes):
-            self.fs_obj.append(self.topology.get_dut_instance(index=dut_index))
-            self.fs_spec.append(self.topology.get_dut(index=dut_index))
-            self.come_obj.append(self.fs_obj[curr_index].get_come())
-            self.f1_obj[curr_index] = []
-            for j in xrange(self.num_f1_per_fs):
-                self.f1_obj[curr_index].append(self.fs_obj[curr_index].get_f1(index=j))
-                self.sc_obj.append(self.f1_obj[curr_index][j].get_dpc_storage_controller())
+            # Bring up FunCP docker containers
+            # Getting FS, F1 and COMe objects, Storage Controller objects, F1 IPs
+            # for all the DUTs going to be used in the test
+            self.fs_obj = []
+            self.fs_spec = []
+            self.come_obj = []
+            self.f1_obj = {}
+            self.sc_obj = []
+            self.f1_ips = []
+            self.gateway_ips = []
+            for curr_index, dut_index in enumerate(self.available_dut_indexes):
+                self.fs_obj.append(self.topology.get_dut_instance(index=dut_index))
+                self.fs_spec.append(self.topology.get_dut(index=dut_index))
+                self.come_obj.append(self.fs_obj[curr_index].get_come())
+                self.f1_obj[curr_index] = []
+                for j in xrange(self.num_f1_per_fs):
+                    self.f1_obj[curr_index].append(self.fs_obj[curr_index].get_f1(index=j))
+                    self.sc_obj.append(self.f1_obj[curr_index][j].get_dpc_storage_controller())
 
-        self.storage_controller = self.sc_obj[self.f1_in_use]
-        fun_test.log("Bringing up FunCP again after fun-os reboot and ensuring hosts are reachable to Bond IPs")
+            self.storage_controller = self.sc_obj[self.f1_in_use]
+            fun_test.log("Bringing up FunCP again after fun-os reboot and ensuring hosts are reachable to Bond IPs")
 
-        self.funcp_obj = {}
-        self.funcp_spec = {}
-        for index in xrange(self.num_duts):
-            self.funcp_obj[index] = StorageFsTemplate(self.come_obj[index])
-            self.funcp_spec[index] = self.funcp_obj[index].deploy_funcp_container(
-                update_deploy_script=self.update_deploy_script, update_workspace=self.update_workspace,
-                mode=self.funcp_mode)
-            fun_test.test_assert(self.funcp_spec[index]["status"],
-                                 "Starting FunCP docker container in DUT {}".format(index))
-            self.funcp_spec[index]["container_names"].sort()
-            for f1_index, container_name in enumerate(self.funcp_spec[index]["container_names"]):
-                bond_interfaces = self.fs_spec[index].get_bond_interfaces(f1_index=f1_index)
-                bond_name = "bond0"
-                bond_ip = bond_interfaces[0].ip
-                slave_interface_list = bond_interfaces[0].fpg_slaves
-                slave_interface_list = [self.fpg_int_prefix + str(i) for i in slave_interface_list]
-                self.funcp_obj[index].configure_bond_interface(container_name=container_name,
-                                                               name=bond_name,
-                                                               ip=bond_ip,
-                                                               slave_interface_list=slave_interface_list)
-                # Configuring route
-                route = self.fs_spec[index].spec["bond_interface_info"][str(f1_index)][str(0)]["route"][0]
-                cmd = "sudo ip route add {} via {} dev {}".format(route["network"], route["gateway"], bond_name)
-                route_add_status = self.funcp_obj[index].container_info[container_name].command(cmd)
-                fun_test.test_assert_expected(expected=0,
-                                              actual=self.funcp_obj[index].container_info[
-                                                  container_name].exit_status(),
-                                              message="Configure Static route")
+            self.funcp_obj = {}
+            self.funcp_spec = {}
+            for index in xrange(self.num_duts):
+                self.funcp_obj[index] = StorageFsTemplate(self.come_obj[index])
+                self.funcp_spec[index] = self.funcp_obj[index].deploy_funcp_container(
+                    update_deploy_script=self.update_deploy_script, update_workspace=self.update_workspace,
+                    mode=self.funcp_mode)
+                fun_test.test_assert(self.funcp_spec[index]["status"],
+                                     "Starting FunCP docker container in DUT {}".format(index))
+                self.funcp_spec[index]["container_names"].sort()
+                for f1_index, container_name in enumerate(self.funcp_spec[index]["container_names"]):
+                    bond_interfaces = self.fs_spec[index].get_bond_interfaces(f1_index=f1_index)
+                    bond_name = "bond0"
+                    bond_ip = bond_interfaces[0].ip
+                    slave_interface_list = bond_interfaces[0].fpg_slaves
+                    slave_interface_list = [self.fpg_int_prefix + str(i) for i in slave_interface_list]
+                    self.funcp_obj[index].configure_bond_interface(container_name=container_name,
+                                                                   name=bond_name,
+                                                                   ip=bond_ip,
+                                                                   slave_interface_list=slave_interface_list)
+                    # Configuring route
+                    route = self.fs_spec[index].spec["bond_interface_info"][str(f1_index)][str(0)]["route"][0]
+                    cmd = "sudo ip route add {} via {} dev {}".format(route["network"], route["gateway"], bond_name)
+                    route_add_status = self.funcp_obj[index].container_info[container_name].command(cmd)
+                    fun_test.test_assert_expected(expected=0,
+                                                  actual=self.funcp_obj[index].container_info[
+                                                      container_name].exit_status(),
+                                                  message="Configure Static route")
 
-        # Ensuring connectivity from Host to F1's
-        for host_name in self.host_info:
-            host_handle = self.host_info[host_name]["handle"]
-            for index, ip in enumerate(self.f1_ips):
-                ping_status = host_handle.ping(dst=ip, max_percentage_loss=80)
-                fun_test.test_assert(ping_status, "Host {} is able to ping to {}'s bond interface IP {}".
-                                     format(host_name, self.funcp_spec[0]["container_names"][index], ip))
-        fun_test.log("FunCP brinup is completed")
+            # Ensuring connectivity from Host to F1's
+            for host_name in self.host_info:
+                host_handle = self.host_info[host_name]["handle"]
+                for index, ip in enumerate(self.f1_ips):
+                    ping_status = host_handle.ping(dst=ip, max_percentage_loss=80)
+                    fun_test.test_assert(ping_status, "Host {} is able to ping to {}'s bond interface IP {}".
+                                         format(host_name, self.funcp_spec[0]["container_names"][index], ip))
+            fun_test.log("FunCP brinup is completed")
 
-        # Mounting volume again
-        # Configuring controller IP
-        command_result = self.storage_controller.ip_cfg(ip=self.test_network["f1_loopback_ip"])
-        fun_test.log(command_result)
-        fun_test.test_assert(command_result["status"], "ip_cfg on DUT instance")
+            # Mounting volume again
+            # Configuring controller IP
+            command_result = self.storage_controller.ip_cfg(ip=self.test_network["f1_loopback_ip"])
+            fun_test.log(command_result)
+            fun_test.test_assert(command_result["status"], "ip_cfg on DUT instance")
 
-        command_result = self.storage_controller.mount_volume(type=self.stripe_details["type"],
-                                                              capacity=self.strip_vol_size,
-                                                              name="stripevol1",
-                                                              uuid=self.stripe_uuid,
-                                                              block_size=self.stripe_details["block_size"],
-                                                              stripe_unit=self.stripe_details["stripe_unit"],
-                                                              pvol_id=self.thin_uuid,
+            command_result = self.storage_controller.mount_volume(type=self.stripe_details["type"],
+                                                                  capacity=self.strip_vol_size,
+                                                                  name="stripevol1",
+                                                                  uuid=self.stripe_uuid,
+                                                                  block_size=self.stripe_details["block_size"],
+                                                                  stripe_unit=self.stripe_details["stripe_unit"],
+                                                                  pvol_id=self.thin_uuid,
+                                                                  command_duration=self.command_timeout)
+            fun_test.log(command_result)
+            fun_test.test_assert(command_result["status"], "Mounting Stripe Vol with uuid {} on DUT".
+                                 format(self.stripe_uuid))
+
+            # Create TCP controllers for first host
+            for index, host_name in enumerate(self.host_info):
+                command_result = self.storage_controller.create_controller(ctrlr_uuid=self.ctrlr_uuid[-1],
+                                                                           transport=self.transport_type.upper(),
+                                                                           remote_ip=
+                                                                           self.host_info[host_name]["ip"][0],
+                                                                           nqn=self.nvme_subsystem,
+                                                                           port=self.transport_port,
+                                                                           command_duration=self.command_timeout)
+                fun_test.log(command_result)
+                fun_test.test_assert(command_result["status"],
+                                     "Recreate Storage Controller for {} with controller uuid {} on DUT for host {}".
+                                     format(self.transport_type.upper(), self.ctrlr_uuid[-1], host_name))
+
+                # Attaching volume to NVMeOF controller
+                command_result = self.storage_controller.attach_volume_to_controller(
+                    ctrlr_uuid=self.ctrlr_uuid[index],
+                    ns_id=self.stripe_details["ns_id"],
+                    vol_uuid=self.stripe_uuid,
+                    command_duration=self.command_timeout)
+                fun_test.log(command_result)
+                fun_test.test_assert(command_result["status"],
+                                     "Attach NVMeOF controller {} to stripe vol {} over {} for host {}".
+                                     format(self.ctrlr_uuid[index], self.stripe_uuid,
+                                            self.transport_type.upper(), host_name))
+                # Setting the syslog level
+                command_result = self.storage_controller.poke(props_tree=["params/syslog/level", self.syslog_level],
+                                                              legacy=False, command_duration=self.command_timeout)
+                fun_test.test_assert(command_result["status"], "Setting syslog level to {}".format(self.syslog_level))
+                command_result = self.storage_controller.peek(props_tree="params/syslog/level", legacy=False,
                                                               command_duration=self.command_timeout)
-        fun_test.log(command_result)
-        fun_test.test_assert(command_result["status"], "Mounting Stripe Vol with uuid {} on DUT".
-                             format(self.stripe_uuid))
+                fun_test.test_assert_expected(expected=self.syslog_level, actual=command_result["data"],
+                                              message="Checking syslog level")
 
-        # Create TCP controllers for first host
-        for index, host_name in enumerate(self.host_info):
-            command_result = self.storage_controller.create_controller(ctrlr_uuid=self.ctrlr_uuid[-1],
-                                                                       transport=self.transport_type.upper(),
-                                                                       remote_ip=
-                                                                       self.host_info[host_name]["ip"][0],
-                                                                       nqn=self.nvme_subsystem,
-                                                                       port=self.transport_port,
-                                                                       command_duration=self.command_timeout)
-            fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"],
-                                 "Recreate Storage Controller for {} with controller uuid {} on DUT for host {}".
-                                 format(self.transport_type.upper(), self.ctrlr_uuid[-1], host_name))
-
-            # Attaching volume to NVMeOF controller
-            command_result = self.storage_controller.attach_volume_to_controller(
-                ctrlr_uuid=self.ctrlr_uuid[index],
-                ns_id=self.stripe_details["ns_id"],
-                vol_uuid=self.stripe_uuid,
-                command_duration=self.command_timeout)
-            fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"],
-                                 "Attach NVMeOF controller {} to stripe vol {} over {} for host {}".
-                                 format(self.ctrlr_uuid[index], self.stripe_uuid,
-                                        self.transport_type.upper(), host_name))
-            # Setting the syslog level
-            command_result = self.storage_controller.poke(props_tree=["params/syslog/level", self.syslog_level],
-                                                          legacy=False, command_duration=self.command_timeout)
-            fun_test.test_assert(command_result["status"], "Setting syslog level to {}".format(self.syslog_level))
-            command_result = self.storage_controller.peek(props_tree="params/syslog/level", legacy=False,
-                                                          command_duration=self.command_timeout)
-            fun_test.test_assert_expected(expected=self.syslog_level, actual=command_result["data"],
-                                          message="Checking syslog level")
-
-        # TODO: Check if nvme-reconnect is timed out already, if so restablish nvme-connect and redo seq write
+        # TODO: Check if nvme-reconnect is timed out already, if so reestablish nvme-connect and redo seq write
         # TODO: if nvme-connect is not timed out, ensure connections are established successfully, then do read
+        # Check sylog on host server for nvme-connect failures/retries
+        for index, host_name in enumerate(self.host_info):
+            host_handle = self.host_info[host_name]["handle"]
+            host_handle.tail(file_name="/var/log/syslog", line_count=10)
         fun_test.sleep("for nvme-reconnect", 15)
+        # Check sylog on host server for nvme-connect failures/retries
+        for index, host_name in enumerate(self.host_info):
+            host_handle = self.host_info[host_name]["handle"]
+            host_handle.tail(file_name="/var/log/syslog", line_count=10)
 
     def run(self):
         testcase = self.__class__.__name__
@@ -679,17 +695,10 @@ class StripeVolFunOSRebootTestCase(FunTestCase):
             host_clone = {}
 
             for index, host_name in enumerate(self.host_info):
-                '''
-                host_numa_cpus = self.host_info[host_name]["host_numa_cpus"]
-                total_numa_cpus = self.host_info[host_name]["total_numa_cpus"]
-                '''
                 wait_time = self.num_hosts - index
-                print("print: run: wait time is: {}".format(wait_time))
                 host_clone[host_name] = self.host_info[host_name]["handle"].clone()
 
-                print("print: 1.1 index is: {} and hostname is: {}".format(index, host_name))
                 # Starting Read for whole volume on first host
-                fun_test.log("print: run: if index == 0: starting IO on host: {}".format(host_name))
                 test_thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
                                                                       func=fio_parser,
                                                                       arg1=host_clone[host_name],
@@ -718,8 +727,6 @@ class StripeVolFunOSRebootTestCase(FunTestCase):
         try:
             fun_test.log("\n\n********** Deleting volume **********\n\n")
             for index, host_name in enumerate(self.host_info):
-                print("print: disconnect run: current index is: {}".format(index))
-
                 nvme_disconnect_cmd = "nvme disconnect -n {}".format(self.nvme_subsystem)  # TODO: SWOS-6165
                 # nvme_disconnect_cmd = "nvme disconnect -d {}".format(self.volume_name)
 
