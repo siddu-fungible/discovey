@@ -74,7 +74,7 @@
 		},
         {
             "name" : "vlan1",
-            "address" : "20.2.21.0",
+            "address" : "20.2.21.1",
             "prefix length" : 24,
             "enable" : true
        }
