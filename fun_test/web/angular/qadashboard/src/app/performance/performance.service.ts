@@ -92,9 +92,6 @@ export class PerformanceService {
         return of(this.buildInfo)
       } else {
         this.buildInfo = response.data;
-        // Object.keys(response.data).forEach((key) => {
-        //   this.buildInfo[Number(key)] = response.data[key];
-        // });
         return of(this.buildInfo);
       }
     }));
