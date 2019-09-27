@@ -19,7 +19,7 @@
                [y1AxisLabel]="chart1YaxisTitle"
                [backgroundColor]="backgroundColor"
                [seriesColors]="seriesColors"
-               [xAxisFormatter]="formatter" [tooltipFormatter]="tooltip"
+               [tooltipFormatter]="tooltip"
                [pointClickCallback]="pointClickCallback" (pointInfo)="showPointDetails($event)"></fun-chart>
     <!--showing clicked point details when selected on a chart-->
     <div class="card" *ngIf="pointClicked && leaf">
