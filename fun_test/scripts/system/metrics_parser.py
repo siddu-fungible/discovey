@@ -1431,6 +1431,8 @@ class MetricParser():
                         self.metrics["output_throughput"] = output_throughput
                         self.metrics["output_ops_per_sec_unit"] = "ops"
                         self.metrics["output_throughput_unit"] = unit
+                        d = self.metrics_to_dict(metrics=self.metrics, result=self.status, date_time=date_time)
+                        self.result["data"].append(d)
                 elif model_name == "TeraMarkMultiClusterCryptoPerformance":
                     if "raw" in input_test:
                         input_app = "crypto_raw_speed"
@@ -1455,10 +1457,10 @@ class MetricParser():
                         self.metrics["output_throughput"] = output_throughput
                         self.metrics["output_ops_per_sec_unit"] = "ops"
                         self.metrics["output_throughput_unit"] = unit
+                        d = self.metrics_to_dict(metrics=self.metrics, result=self.status, date_time=date_time)
+                        self.result["data"].append(d)
 
         self.status = RESULTS["PASSED"]
-        d = self.metrics_to_dict(metrics=self.metrics, result=self.status, date_time=date_time)
-        self.result["data"].append(d)
         self.result["match_found"] = self.match_found
         self.result["status"] = self.status == RESULTS["PASSED"]
         fun_test.log("Result :{}".format(self.result))

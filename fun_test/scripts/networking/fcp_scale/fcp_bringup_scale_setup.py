@@ -63,20 +63,23 @@ class ScriptSetup(FunTestScript):
 
         # Removing any funeth driver from COMe and and all the connected server
         threads_list = []
+        single_f1 = False
         if test_bed_type == 'fs-fcp-scale':
             fs_list = testbed_info['fs'][test_bed_type]["fs_list"]
+            fs_index=0
         else:
+            single_f1 = True
             fs_list = [test_bed_type]
             test_bed_type = 'fs-fcp-scale'
-        for fs_name in fs_list:
-
-            thread_id = fun_test.execute_thread_after(time_in_seconds=2, func=clean_testbed, fs_name=fs_name,
-                                                      hu_host_list=testbed_info['fs'][test_bed_type][fs_name]
-                                                      ['hu_host_list'])
-            threads_list.append(thread_id)
-
-        for thread_id in threads_list:
-            fun_test.join_thread(fun_test_thread_id=thread_id, sleep_time=1)
+        # for fs_name in fs_list:
+        #
+        #     thread_id = fun_test.execute_thread_after(time_in_seconds=2, func=clean_testbed, fs_name=fs_name,
+        #                                               hu_host_list=testbed_info['fs'][test_bed_type][fs_name]
+        #                                               ['hu_host_list'])
+        #     threads_list.append(thread_id)
+        #
+        # for thread_id in threads_list:
+        #     fun_test.join_thread(fun_test_thread_id=thread_id, sleep_time=1)
 
         # Boot up FS1600
 
@@ -84,8 +87,8 @@ class ScriptSetup(FunTestScript):
         for fs_name in fs_list:
             fs_name = str(fs_name)
             # FS-39 issue
-            if fs_name == "fs-39":
-                continue
+            # if fs_name == "fs-39":
+            #     continue
             abstract_json_file0 = \
                 fun_test.get_script_parent_directory() + testbed_info['fs'][test_bed_type][fs_name][
                     'abtract_config_f1_0']
@@ -100,7 +103,8 @@ class ScriptSetup(FunTestScript):
                                    abstract_config_f1_1=abstract_json_file1
                                    )
             index = testbed_info['fs'][test_bed_type][fs_name]['index']
-
+            if single_f1:
+                index = 0
             topology_helper.set_dut_parameters(dut_index=index,
                                                f1_parameters={0: {"boot_args": testbed_info['fs'][test_bed_type]
                                                               [fs_name]['bootargs_f1_0']},
