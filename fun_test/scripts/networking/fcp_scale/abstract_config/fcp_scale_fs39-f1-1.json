@@ -1,10 +1,10 @@
 {
-	"Description": "FS-38-F1-0 abstract cfg",
+	"Description": "FS-39-F1-1 abstract cfg",
     "F1Index" : 1,
     "Interfaces" : [
 		{ 
 	    	"name" : "fpg0", 
-	    	"address" : "10.2.21.0",
+	    	"address" : "10.2.14.0",
 	    	"prefix length" : 31,
 	    	"spine_index" : 0,
 	    	"gph_index" : 0,	    
@@ -12,7 +12,7 @@
 		},
    	 	{	
 			"name" : "fpg2",
-        	"address" : "10.2.21.2",
+        	"address" : "10.2.14.2",
         	"prefix length" : 31,
         	"spine_index" : 1,
         	"gph_index" : 1,
@@ -20,7 +20,7 @@
     	},
         {
             "name" : "fpg4",
-            "address" : "10.2.21.4",
+            "address" : "10.2.14.4",
             "prefix length" : 31,
             "spine_index" : 2,
             "gph_index" : 2,
@@ -28,7 +28,7 @@
         },
         {
             "name" : "fpg6",
-            "address" : "10.2.21.6",
+            "address" : "10.2.14.6",
             "prefix length" : 31,
             "spine_index" : 3,
             "gph_index" : 3,
@@ -36,7 +36,7 @@
         },
         {
             "name" : "fpg8",
-            "address" : "10.2.21.8",
+            "address" : "10.2.14.8",
             "prefix length" : 31,
             "spine_index" : 4,
             "gph_index" : 4,
@@ -44,7 +44,7 @@
         },
         {
             "name" : "fpg10",
-            "address" : "10.2.21.10",
+            "address" : "10.2.14.10",
             "prefix length" : 31,
             "spine_index" : 5,
             "gph_index" : 5,
@@ -52,7 +52,7 @@
         },
         {
             "name" : "fpg12",
-            "address" : "10.2.21.12",
+            "address" : "10.2.14.12",
             "prefix length" : 31,
             "spine_index" : 6,
             "gph_index" : 6,
@@ -60,7 +60,7 @@
         },
         {
             "name" : "fpg14",
-            "address" : "10.2.21.14",
+            "address" : "10.2.14.14",
             "prefix length" : 31,
             "spine_index" : 7,
             "gph_index" : 7,
@@ -68,13 +68,13 @@
         },
 		{ 
 	    	"name" : "lo:0", 
-	    	"address" : "30.0.38.0",
+	    	"address" : "30.0.39.1",
 	    	"prefix length" : 32,	    
 	    	"enable" : true
 		},
         {
             "name" : "vlan1",
-            "address" : "20.2.21.1",
+            "address" : "20.2.14.1",
             "prefix length" : 24,
             "enable" : true
        }
@@ -82,14 +82,14 @@
     "BGP" : {
 	"Local AS": 200,
 	"Neighbors" : [
-	    { "peer" : "10.2.21.1", "peer-as": 100},
-	    { "peer" : "10.2.21.3", "peer-as": 100},
-		{ "peer" : "10.2.21.5", "peer-as": 100},
-		{ "peer" : "10.2.21.7", "peer-as": 100},
-        { "peer" : "10.2.21.9", "peer-as": 100},
-        { "peer" : "10.2.21.11", "peer-as": 100},
-        { "peer" : "10.2.21.13", "peer-as": 100},
-        { "peer" : "10.2.21.15", "peer-as": 100}
+	    { "peer" : "10.2.14.1", "peer-as": 100},
+	    { "peer" : "10.2.14.3", "peer-as": 100},
+		{ "peer" : "10.2.14.5", "peer-as": 100},
+		{ "peer" : "10.2.14.7", "peer-as": 100},
+        { "peer" : "10.2.14.9", "peer-as": 100},
+        { "peer" : "10.2.14.11", "peer-as": 100},
+        { "peer" : "10.2.14.13", "peer-as": 100},
+        { "peer" : "10.2.14.15", "peer-as": 100}
 	]
     }	
 }
