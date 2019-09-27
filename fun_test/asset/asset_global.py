@@ -5,5 +5,5 @@ class AssetType(Codes):
     DUT = "DUT"
     HOST = "Host"
     PERFORMANCE_LISTENER_HOST = "Perf Listener"
-    DUT_WITH_SERVERS = "DUT with servers"
-    DUT_WITH_SSDS = "DUT with SSDs"
+    # DUT_WITH_SERVERS = "DUT with server"
+    # DUT_WITH_SSDS = "DUT with SSD"

@@ -325,7 +325,7 @@ class AssetManager:
                     print(str(ex))
 
     @fun_test.safe
-    def get_assets_required(self, test_bed_name):
+    def get_assets_required(self, test_bed_name, pool_member_type=None):
         from lib.topology.topology_helper import TopologyHelper
         assets_required = {}
         if test_bed_name not in self.PSEUDO_TEST_BEDS:
@@ -335,14 +335,11 @@ class AssetManager:
             th = TopologyHelper(spec=test_bed_spec)
             topology = th.get_expanded_topology()
             duts = topology.get_duts()
-            dut_names = [duts[x].name for x in duts if duts[x].get_pool_member_type == Dut.POOL_MEMBER_TYPE_DEFAULT]
-            assets_required[AssetType.DUT] = dut_names
-
-            dut_with_ssds_names = [duts[x].name for x in duts if duts[x].get_pool_member_type() == Dut.POOL_MEMBER_TYPE_WITH_SSDS]
-            assets_required[AssetType.DUT_WITH_SSDS] = dut_with_ssds_names
-
-            dut_with_servers_names = [duts[x].name for x in duts if duts[x].get_pool_member_type() == Dut.POOL_MEMBER_TYPE_WITH_SERVERS]
-            assets_required[AssetType.DUT_WITH_SERVERS] = dut_with_servers_names
+            if not pool_member_type:
+                dut_objs = [duts[x].name for x in duts]
+            else:
+                dut_objs = [duts[x].name for x in duts if duts[x].get_pool_member_type() == pool_member_type]
+            assets_required[AssetType.DUT] = dut_objs
 
             hosts = topology.get_hosts()
             host_names = [host_obj.name for name, host_obj in hosts.iteritems()]
@@ -363,7 +360,7 @@ class AssetManager:
                                          asset_type,
                                          to_disable=None,
                                          to_enable=None):
-        if asset_type in [AssetType.DUT, AssetType.DUT_WITH_SSDS, AssetType.DUT_WITH_SERVERS]:
+        if asset_type in [AssetType.DUT]:
             if "dut_info" in test_bed_spec:
                 dut_info = test_bed_spec["dut_info"]
                 for dut_index, dut_spec in dut_info.iteritems():
@@ -402,9 +399,7 @@ class AssetManager:
                   "custom_test_bed_spec": None,
                   "assets_required": {AssetType.DUT: [],
                                       AssetType.HOST: [],
-                                      AssetType.PERFORMANCE_LISTENER_HOST: [],
-                                      AssetType.DUT_WITH_SERVERS: [],
-                                      AssetType.DUT_WITH_SSDS: []}}
+                                      AssetType.PERFORMANCE_LISTENER_HOST: []}}
         from web.fun_test.models import Asset
         from web.fun_test.models_helper import is_suite_in_progress
         from django.core.exceptions import ObjectDoesNotExist
@@ -419,23 +414,23 @@ class AssetManager:
 
         assets_required_config = {AssetType.DUT: {},
                                   AssetType.HOST: {},
-                                  AssetType.PERFORMANCE_LISTENER_HOST: {},
-                                  AssetType.DUT_WITH_SERVERS: {},
-                                  AssetType.DUT_WITH_SSDS: {}}
+                                  AssetType.PERFORMANCE_LISTENER_HOST: {}}
 
         all_asset_types = [AssetType.DUT,
                            AssetType.HOST,
-                           AssetType.PERFORMANCE_LISTENER_HOST,
-                           AssetType.DUT_WITH_SERVERS,
-                           AssetType.DUT_WITH_SSDS]
+                           AssetType.PERFORMANCE_LISTENER_HOST]
         for asset_type in all_asset_types:
             if asset_type in asset_request:
                 info = asset_request[asset_type]
                 num_required = info.get("num", None)
                 specifics = info.get("names", None)
+                pool_member_type = info.get("pool_member_type", None)
+
                 if specifics:
                     num_required = len(specifics)
-                assets_required_config[asset_type] = {"num_required": num_required, "specific": specifics}
+                assets_required_config[asset_type] = {"num_required": num_required,
+                                                      "specific": specifics,
+                                                      "pool_member_type": pool_member_type}
 
         asset_category_unavailable = False
         error_message = ""
@@ -448,12 +443,15 @@ class AssetManager:
 
             if num_assets_required is not None:
 
-                assets_in_test_bed = self.get_assets_required(test_bed_name=base_test_bed_name)
+                assets_in_test_bed = self.get_assets_required(test_bed_name=base_test_bed_name, pool_member_type=assets_required_config[asset_type]["pool_member_type"])
 
                 assets_in_test_bed = assets_in_test_bed.get(asset_type)
                 unavailable_assets = []
                 available_assets = []
                 for asset_in_test_bed in assets_in_test_bed:
+                    asset_name = asset_in_test_bed
+                    if isinstance(asset_in_test_bed, Dut):
+                        asset_name = asset_in_test_bed.name
 
                     specific_assets = assets_required_config[asset_type].get("specific", None)
                     if specific_assets and asset_in_test_bed not in specific_assets:
@@ -461,7 +459,8 @@ class AssetManager:
                         continue
                     asset = None
                     try:
-                        asset = Asset.objects.get(name=asset_in_test_bed, type=asset_type)
+
+                        asset = Asset.objects.get(name=asset_name, type=asset_type)
                     except ObjectDoesNotExist:
                         pass
                     in_progress = False
@@ -473,12 +472,12 @@ class AssetManager:
                             for job_id in job_ids:
                                 in_progress = is_suite_in_progress(job_id=job_id, test_bed_type="")
                                 if in_progress:
-                                    unavailable_assets.append(asset_in_test_bed)
+                                    unavailable_assets.append(asset_name)
                         elif is_manual_locked:
-                            unavailable_assets.append(asset_in_test_bed)
+                            unavailable_assets.append(asset_name)
                     if not is_manual_locked and not in_progress:
                         num_assets_available += 1
-                        available_assets.append(asset_in_test_bed)
+                        available_assets.append(asset_name)
                     if num_assets_required == num_assets_available:
                         break
 
@@ -571,7 +570,10 @@ if __name__ == "__main2__":
 if __name__ == "__main__":
     print "Hi"
     # get base test-bed
-    custom_spec = {"base_test_bed": "fs-inspur", "asset_request": {"DUT": {"num": 1}}}
+    # custom_spec = {"base_test_bed": "fs-inspur-test", "asset_request": {"DUT with servers": {"num": 1}}}
+    custom_spec = {"base_test_bed": "fs-inspur-test", "asset_request": {"DUT": {"num": 1, "pool_member_type": "POOL_MEMBER_TYPE_WITH_SSDS"}}}
+    custom_spec = {"base_test_bed": "fs-inspur-test", "asset_request": {"DUT": {"num": 1, "pool_member_type": "POOL_MEMBER_TYPE_WITH_SERVERS"}}}
+
     """
     custom_spec = {"base_test_bed": "fs-inspur",
                    "asset_request":
