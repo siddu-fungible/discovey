@@ -1449,7 +1449,7 @@ if __name__ == "__main__":
             data_sets = child_chart.get_data_sets()
             for data_set in data_sets:
                 data_set["inputs"]["input_num_ssd"] = 1
-            child_chart = json.dumps(data_sets)
+            child_chart.data_sets = json.dumps(data_sets)
             child_chart.save()
 
     read_copy_chart = MetricChart.objects.get(metric_id=890)
@@ -1457,7 +1457,7 @@ if __name__ == "__main__":
     read_iops_chart = MetricChart.objects.get(metric_id=888)
     write_iops_chart = MetricChart.objects.get(metric_id=889)
     operations = ["Random Read", "Random Write"]
-    qdepths = {1: [1, 1], 32: [1, 32], 64: [1, 64], 128: [2, 64], 256: [4, 64], 1024: [16, 64]}
+    qdepths = OrderedDict([(1, [1, 1]), (32, [1,32]), (64, [1, 64]), (128, [2, 64]), (256, [4, 64]), (1024, [16, 64])])
     owner_info = "Divya Krishnankutty (divya.krishnankutty@fungible.com)"
     source = "https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/storage/pocs/alibaba/alibaba_raw_multi_vol_pcie_via_vm.py"
     base_line_date = datetime(year=2019, month=9, day=25, minute=0, hour=0, second=0)
@@ -1468,18 +1468,30 @@ if __name__ == "__main__":
                                          source=source, base_line_date=base_line_date, workspace_ids=[])
         iops_data_sets = []
         if "Read" in operation:
-            iops_data_sets = read_iops_chart.get_data_sets()
             iops_internal_chart_name = read_iops_chart.internal_chart_name.replace("ssd", "ssd_4")
             iops_description = read_iops_chart.description
+            op = "randread"
+            output = "output_read_iops"
         else:
-            iops_data_sets = write_iops_chart.get_data_sets()
             iops_internal_chart_name = write_iops_chart.internal_chart_name.replace("ssd", "ssd_4")
             iops_description = write_iops_chart.description
+            op = "randwrite"
+            output = "output_write_iops"
 
-        for data_set in iops_data_sets:
-
+        for qdepth in qdepths:
+            one_data_set = {}
+            one_data_set["name"] = str(qdepth)
+            one_data_set["inputs"] = {}
+            one_data_set["inputs"]["input_num_ssd"] = 4
+            one_data_set["inputs"]["input_platform"] = FunPlatform.F1
+            one_data_set["inputs"]["input_test"] = op
+            one_data_set["inputs"]["input_num_threads"] = qdepths[qdepth][0]
+            one_data_set["inputs"]["input_io_depth"] = qdepths[qdepth][1]
+            one_data_set["output"] = {"name": output, "min": 0, "max": -1, "expected": -1, "reference": -1,
+                                      "unit": PerfUnit.UNIT_OPS}
+            iops_data_sets.append(one_data_set)
         iops_chart = ml.create_leaf(chart_name="IOPS", internal_chart_name=iops_internal_chart_name,
-                                    data_sets=, leaf=True,
+                                    data_sets=iops_data_sets, leaf=True,
                                     description=iops_description,
                                     owner_info=owner_info, source=source,
                                     positive=True, y1_axis_title=PerfUnit.UNIT_OPS,
@@ -1489,7 +1501,8 @@ if __name__ == "__main__":
                                     work_in_progress=False, children=[], jira_ids=[], platform=FunPlatform.F1,
                                     peer_ids=[], creator=TEAM_REGRESSION_EMAIL,
                                     workspace_ids=[])
-
+        iops_chart.fix_children_weights()
+        root_chart.add_child(child_id=iops_chart.metric_id)
         for qdepth in qdepths:
             chart_name = "Latency, Qdepth=" + str(qdepth)
             internal_chart_name = "bmv_storage_local_ssd_4_" + operation.replace(" ", "_").lower() + "_qd" + str(
@@ -1501,7 +1514,7 @@ if __name__ == "__main__":
             else:
                 data_sets = write_copy_chart.get_data_sets()
                 description = write_copy_chart.description
-                y1_axis_title = write_copy_chart.description
+                y1_axis_title = write_copy_chart.y1_axis_title
             for data_set in data_sets:
                 data_set["inputs"]["input_num_ssd"] = 4
                 data_set["inputs"]["input_num_threads"] = qdepths[qdepth][0]
@@ -1521,7 +1534,9 @@ if __name__ == "__main__":
                                         workspace_ids=[])
             latency_chart.fix_children_weights()
             root_chart.add_child(child_id=latency_chart.metric_id)
-
+        root_chart.fix_children_weights()
+        final_dict = ml.get_dict(chart=root_chart)
+        print json.dumps(final_dict)
 
                 
 
