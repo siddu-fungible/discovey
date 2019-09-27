@@ -614,7 +614,7 @@ class StripeVolAttachDetachTestCase(FunTestCase):
                                 host_handle.sudo_command("dmesg")
                                 lsblk_output = host_handle.lsblk()
                                 fun_test.test_assert(self.volume_name in lsblk_output,
-                                                     "Iteration: {} - {} device available".format(self.volume_name))
+                                                     "Iteration: {} - {} device available".format(iter, self.volume_name))
                                 fun_test.test_assert_expected(expected="disk",
                                                               actual=lsblk_output[self.volume_name]["type"],
                                                               message="Iteration: {} - {} device type check".
@@ -662,21 +662,18 @@ class StripeVolAttachDetachTestCase(FunTestCase):
                                                      source_password=host_handle.ssh_password,
                                                      source_ip=host_handle.host_ip,
                                                      source_file_path=filename, target_file_path=pcap_artifact_file)
-                                    fun_test.add_auxillary_file(
-                                        description="Host {} NVME connect pcap".format(host_name),
-                                        filename=pcap_artifact_file)
+                                    fun_test.add_auxillary_file(description="Host {} NVME connect pcap".
+                                                                format(host_name), filename=pcap_artifact_file)
                                 except Exception as ex:
                                     fun_test.critical(str(ex))
-
                         try:
                             # Detach volume from NVMe-OF controller
                             command_result = self.storage_controller.detach_volume_from_controller(
                                 ctrlr_uuid=self.ctrlr_uuid[index], ns_id=self.stripe_details["ns_id"],
                                 command_duration=self.command_timeout)
                             fun_test.log(command_result)
-                            fun_test.test_assert(command_result["status"],
-                                                 "{} - Detach NVMeOF controller {}".format(
-                                                     host_name, self.ctrlr_uuid[index]))
+                            fun_test.test_assert(command_result["status"], "{} - Detach NVMeOF controller {}".
+                                                 format(host_name, self.ctrlr_uuid[index]))
                             fun_test.shared_variables["blt"]["nvme_connect"] = False
                         except Exception as ex:
                             fun_test.critical(str(ex))
@@ -744,8 +741,8 @@ class StripeVolAttachDetachTestCase(FunTestCase):
                         ctrlr_uuid=self.ctrlr_uuid[index], ns_id=self.stripe_details["ns_id"],
                         command_duration=self.command_timeout)
                     fun_test.log(command_result)
-                    fun_test.test_assert(command_result["status"], "{} - Detach NVMeOF controller {}".format(
-                        host_name, self.ctrlr_uuid[index]))
+                    fun_test.test_assert(command_result["status"], "{} - Detach NVMeOF controller {}".
+                                         format(host_name, self.ctrlr_uuid[index]))
             except Exception as ex:
                 fun_test.critical(str(ex))
 
@@ -796,44 +793,40 @@ class StripeVolAttachDetachTestCase(FunTestCase):
             fun_test.critical(str(ex))
 
 
-class StripedVolAttachConnDisConnDetach(StripeVolAttachDetachTestCase):
-    def describe(self):
-        self.set_test_details(
-            id=1,
-            summary="Data integrity validation after funos reboot",
-            steps='''
-                1. Create Stripe volume
-                2. Attach volume to one host
-                3. Do nvme_connect and perform sequential write
-                4. Start Random Read-Write with data integrity
-                5. Do nvme_disconnect
-                6. Detach volume
-                7. Repeat Step#2 to Step#6 for mentioned iterations 
-                ''')
-
-    def setup(self):
-        super(StripedVolAttachConnDisConnDetach, self).setup()
-
-    def run(self):
-        super(StripedVolAttachConnDisConnDetach, self).run()
-
-    def cleanup(self):
-        super(StripedVolAttachConnDisConnDetach, self).cleanup()
-
-
 class StripedVolAttachConnDisConnDetachIO(StripeVolAttachDetachTestCase):
     def describe(self):
         self.set_test_details(
             id=1,
-            summary="Data integrity validation after funos reboot",
+            summary="Multiple Attach-NvmeConnect-NvmeDisconnect-Detach with IO",
             steps='''
                 1. Create Stripe volume
                 2. Attach volume to one host
-                3. Do nvme_connect and perform sequential write
-                4. Start Random Read-Write with data integrity
-                5. Do nvme_disconnect
-                6. Detach volume
-                7. Repeat Step#2 to Step#6 for mentioned iterations 
+                3. Do nvme_connect and perform sequential write and nvme_disconnect and detach
+                4. Perform Attach-NvmeConnect- IO With DI -NvmeDisconnect-Disconnect in loop
+                5. Start Random Read-Write with data integrity
+                ''')
+
+    def setup(self):
+        super(StripedVolAttachConnDisConnDetachIO, self).setup()
+
+    def run(self):
+        super(StripedVolAttachConnDisConnDetachIO, self).run()
+
+    def cleanup(self):
+        super(StripedVolAttachConnDisConnDetachIO, self).cleanup()
+
+
+class StripedVolAttachConnDisConnDetach(StripeVolAttachDetachTestCase):
+    def describe(self):
+        self.set_test_details(
+            id=2,
+            summary="Multiple Attach-NvmeConnect-NvmeDisconnect-Detach without IO",
+            steps='''
+                1. Create Stripe volume
+                2. Attach volume to one host
+                3. Do nvme_connect and perform sequential write and nvme_disconnect and detach
+                4. Perform Attach-NvmeConnect-NvmeDisconnect-Disconnect in loop
+                5. Start Random Read-Write with data integrity 
                 ''')
 
     def setup(self):
@@ -849,31 +842,29 @@ class StripedVolAttachConnDisConnDetachIO(StripeVolAttachDetachTestCase):
 class StripedVolAttachDetach(StripeVolAttachDetachTestCase):
     def describe(self):
         self.set_test_details(
-            id=1,
-            summary="Data integrity validation after funos reboot",
+            id=3,
+            summary="Multiple Attach-Detach without IO",
             steps='''
                 1. Create Stripe volume
                 2. Attach volume to one host
-                3. Do nvme_connect and perform sequential write
-                4. Start Random Read-Write with data integrity
-                5. Do nvme_disconnect
-                6. Detach volume
-                7. Repeat Step#2 to Step#6 for mentioned iterations 
+                3. Do nvme_connect and perform sequential write and nvme_disconnect and detach
+                4. Perform Attach-Disconnect without IO in loop
+                5. Start Random Read-Write with data integrity
                 ''')
 
     def setup(self):
-        super(StripedVolAttachConnDisConnDetach, self).setup()
+        super(StripedVolAttachDetach, self).setup()
 
     def run(self):
-        super(StripedVolAttachConnDisConnDetach, self).run()
+        super(StripedVolAttachDetach, self).run()
 
     def cleanup(self):
-        super(StripedVolAttachConnDisConnDetach, self).cleanup()
+        super(StripedVolAttachDetach, self).cleanup()
 
 
 if __name__ == "__main__":
     testscript = StripeVolAttachDetachTestScript()
-    testscript.add_test_case(StripedVolAttachConnDisConnDetach())
     testscript.add_test_case(StripedVolAttachConnDisConnDetachIO())
-    testscript.add_test_case(StripedVolAttachDetach())
+    # testscript.add_test_case(StripedVolAttachConnDisConnDetach())
+    # testscript.add_test_case(StripedVolAttachDetach())
     testscript.run()
