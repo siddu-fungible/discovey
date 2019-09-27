@@ -634,7 +634,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.log("\nIteration {} - Volume stats:\n {}".format(i, vol_stats["data"]))
                 per_vp_result = self.storage_controller.peek(props_tree="stats/per_vp", legacy=False, chunk=8192,
                                                              command_duration=self.command_timeout)
-                fun_test.test_assert(per_vp_result["status"], "Per VP Stats - Iteration {}".format(i))
+                fun_test.test_assert(per_vp_result["data"], "Per VP Stats - Iteration {}".format(i))
                 fun_test.log("\nIteration {} - Per VP Stats:\n {}".format(i, per_vp_result["data"]))
             except Exception as ex:
                 try:
