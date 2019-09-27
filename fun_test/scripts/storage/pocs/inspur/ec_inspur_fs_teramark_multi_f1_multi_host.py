@@ -118,6 +118,8 @@ class ECVolumeLevelScript(FunTestScript):
             self.update_deploy_script = job_inputs["update_deploy_script"]
         if "syslog_level" in job_inputs:
             self.syslog_level = job_inputs["syslog_level"]
+        if "num_f1s" in job_inputs:
+            self.num_f1s = job_inputs["num_f1s"]
         if "disable_wu_watchdog" in job_inputs:
             self.disable_wu_watchdog = job_inputs["disable_wu_watchdog"]
         else:
