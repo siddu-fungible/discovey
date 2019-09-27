@@ -94,8 +94,8 @@
                   "gatewayip": "10.80.4.1",
                   "mpg0":"10.80.4.159",
                   "mpg1":"10.80.4.160",
-                  "bootargs_f1_0": "app=hw_hsu_test cc_huid=3 --all_50g --dpc-server --dpc-uart --disable-wu-watchdog",
-                  "bootargs_f1_1": "app=hw_hsu_test cc_huid=3 --all_50g --dpc-server --dpc-uart --disable-wu-watchdog",
+                  "bootargs_f1_0": "app=hw_hsu_test cc_huid=3 --all_50g --dpc-server --dpc-uart --disable-wu-watchdog retimer=0,1",
+                  "bootargs_f1_1": "app=hw_hsu_test cc_huid=3 --all_50g --dpc-server --dpc-uart --disable-wu-watchdog retimer=0,1",
                   "hu_host_list":[]
               },
               "fs-15": {
