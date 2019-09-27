@@ -858,9 +858,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       this.setMileStones();
 
       //populating data for show tables
-      if (!this.data["rows"]) {
-        this.populateShowTables();
-      }
+      this.populateShowTables();
 
       this.changeAllExpectedValues();
       this.status = null;
