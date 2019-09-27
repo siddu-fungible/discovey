@@ -250,6 +250,7 @@ class StripeVolHostRebootTestScript(FunTestScript):
         fun_test.shared_variables["db_log_time"] = self.db_log_time
         fun_test.shared_variables["host_info"] = self.host_info
         fun_test.shared_variables["funcp_spec"] = self.funcp_spec
+        fun_test.shared_variables["load_modules"] = self.load_modules
 
         for host_name in self.host_info:
             host_handle = self.host_info[host_name]["handle"]
@@ -314,15 +315,16 @@ class StripeVolHostRebootTestCase(FunTestCase):
         self.come_obj = fun_test.shared_variables["come_obj"]
         self.f1 = fun_test.shared_variables["f1_obj"][0][0]
         self.storage_controller = fun_test.shared_variables["sc_obj"][self.f1_in_use]
-        self.f1_ips = fun_test.shared_variables["f1_ips"][self.f1_in_use]
+        self.f1_ips = fun_test.shared_variables["f1_ips"]
         self.host_info = fun_test.shared_variables["host_info"]
         self.num_f1s = fun_test.shared_variables["num_f1s"]
         self.test_network = {}
-        self.test_network["f1_loopback_ip"] = self.f1_ips
+        self.test_network["f1_loopback_ip"] = self.f1_ips[self.f1_in_use]
         self.num_duts = fun_test.shared_variables["num_duts"]
         self.num_hosts = len(self.host_info)
         self.syslog_level = fun_test.shared_variables["syslog_level"]
         self.funcp_spec = fun_test.shared_variables["funcp_spec"]
+        self.load_modules = fun_test.shared_variables["load_modules"]
         fun_test.shared_variables["transport_type"] = self.transport_type
 
         fun_test.log("test level setup: self.host_info is: {}".format(self.host_info))
@@ -471,10 +473,6 @@ class StripeVolHostRebootTestCase(FunTestCase):
             fun_test.test_assert_expected(expected=self.syslog_level, actual=command_result["data"],
                                           message="Checking syslog level")
 
-            before_write_eqm = {}
-            after_write_eqm = {}
-            before_write_eqm = self.storage_controller.peek(props_tree="stats/eqm")
-
             host_clone = {}
             warmup_thread_id = {}
             for index, host_name in enumerate(self.host_info):
@@ -586,10 +584,6 @@ class StripeVolHostRebootTestCase(FunTestCase):
                                                   actual=lsblk_output[self.volume_name]["type"],
                                                   message="{} device type check".format(self.volume_name))
 
-                before_write_eqm = {}
-                after_write_eqm = {}
-                before_write_eqm = self.storage_controller.peek(props_tree="stats/eqm")
-
                 host_clone = {}
                 warmup_thread_id = {}
                 for index, host_name in enumerate(self.host_info):
@@ -614,7 +608,6 @@ class StripeVolHostRebootTestCase(FunTestCase):
                     fun_test.log("Started FIO command to perform sequential write on {}".format(host_name))
                     fun_test.sleep("to start next thread", 1)
 
-
             fun_test.sleep("Fio threads started", 10)
             try:
                 for index, host_name in enumerate(self.host_info):
@@ -633,15 +626,6 @@ class StripeVolHostRebootTestCase(FunTestCase):
                     # Mount NVMe disk on host in Read-Only mode if on a filesystem
                     host_handle.sudo_command("mount -o ro {} /mnt".format(self.nvme_block_device))
             fun_test.shared_variables["blt"]["warmup"] = True
-
-            after_write_eqm = self.storage_controller.peek(props_tree="stats/eqm")
-
-            for field, value in before_write_eqm["data"].items():
-                current_value = after_write_eqm["data"][field]
-                if (value != current_value) and (field != "incoming BN msg valid"):
-                    stats_delta = current_value - value
-                    fun_test.log("Write test : there is a mismatch in {} : {}".format(field, stats_delta))
-
             fun_test.shared_variables["blt"]["setup_created"] = True
 
     def run(self):
