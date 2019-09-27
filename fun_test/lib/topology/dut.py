@@ -68,9 +68,10 @@ class Dut(ToDictMixin):
     DUT_TYPE_FSU = "DUT_TYPE_FSU"
     DUT_TYPE_FM8 = "DUT_TYPE_FM8"
 
-    POOL_MEMBER_TYPE_DEFAULT = "POOL_MEMBER_TYPE_DEFAULT"
-    POOL_MEMBER_TYPE_WITH_SSDS = "POOL_MEMBER_TYPE_WITH_SSDS"
-    POOL_MEMBER_TYPE_WITH_SERVERS = "POOL_MEMBER_TYPE_WITH_SERVERS"
+    class PoolMemberType:
+        POOL_MEMBER_TYPE_DEFAULT = 0
+        POOL_MEMBER_TYPE_WITH_SSDS = 1
+        POOL_MEMBER_TYPE_WITH_SERVERS = 2
 
     MODE_SIMULATION = "MODE_SIMULATION"
     MODE_EMULATION = "MODE_EMULATION"
@@ -78,7 +79,7 @@ class Dut(ToDictMixin):
 
     TO_DICT_VARS = ["type", "index", "interfaces", "start_mode", "instance", "fpg_interfaces"]
 
-    def __init__(self, type, index, mode=MODE_SIMULATION, spec=None, start_mode=None, name=None, pool_member_type=POOL_MEMBER_TYPE_DEFAULT):
+    def __init__(self, type, index, mode=MODE_SIMULATION, spec=None, start_mode=None, name=None, pool_member_type=PoolMemberType.POOL_MEMBER_TYPE_DEFAULT):
         self.type = type
         self.index = index
         self.name = name

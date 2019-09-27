@@ -68,6 +68,8 @@ export class SuiteEditorComponent implements OnInit {
 
   editorPristine: boolean = true;
 
+  poolMemberOptions = {"DUT": ["With servers", "With SSDs"]};
+
   constructor(private testBedService: TestBedService,
               private modalService: NgbModal,
               private service: SuiteEditorService,
@@ -110,26 +112,6 @@ export class SuiteEditorComponent implements OnInit {
       this.assets = response;
       return of(true);
     }));
-
-
-    /*this.route.params.subscribe(params => {
-      if (params["id"]) {
-        this.id = params["id"];
-      }
-      if (!this.id) {
-        this.suite = new Suite();
-        this.suite.type = this.mode;
-        this.refreshAll();
-
-      } else {
-        this.service.suite(this.id).subscribe(response => {
-          this.suite = response;
-          console.log(this.suite.constructor.name);
-          this.refreshAll();
-
-        });
-      }
-    });*/
 
     this.refreshAll();
 

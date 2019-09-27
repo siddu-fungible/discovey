@@ -109,7 +109,7 @@ class TopologyHelper:
                 if "start_mode" in dut_info:
                     start_mode = dut_info["start_mode"]
 
-                pool_member_type = Dut.POOL_MEMBER_TYPE_DEFAULT
+                pool_member_type = Dut.PoolMemberType.POOL_MEMBER_TYPE_DEFAULT
                 if "pool_member_type" in dut_info:
                     pool_member_type = dut_info["pool_member_type"]
 

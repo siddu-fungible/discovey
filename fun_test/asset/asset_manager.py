@@ -571,8 +571,8 @@ if __name__ == "__main__":
     print "Hi"
     # get base test-bed
     # custom_spec = {"base_test_bed": "fs-inspur-test", "asset_request": {"DUT with servers": {"num": 1}}}
-    custom_spec = {"base_test_bed": "fs-inspur-test", "asset_request": {"DUT": {"num": 1, "pool_member_type": "POOL_MEMBER_TYPE_WITH_SSDS"}}}
-    custom_spec = {"base_test_bed": "fs-inspur-test", "asset_request": {"DUT": {"num": 1, "pool_member_type": "POOL_MEMBER_TYPE_WITH_SERVERS"}}}
+    custom_spec = {"base_test_bed": "fs-inspur-test", "asset_request": {"DUT": {"num": 1, "pool_member_type": 1}}}
+    # custom_spec = {"base_test_bed": "fs-inspur-test", "asset_request": {"DUT": {"num": 1, "pool_member_type": 2}}}
 
     """
     custom_spec = {"base_test_bed": "fs-inspur",
