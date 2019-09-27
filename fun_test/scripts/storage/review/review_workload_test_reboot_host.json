@@ -30,7 +30,7 @@
     "transport_type": "tcp",
     "transport_port": 1099
   },
-  "StripedVolFunOSReboot": {
+  "StripedVolHostReboot": {
     "syslog_level": 2,
     "num_ssd": 6,
     "blt_count": 6,
@@ -49,8 +49,8 @@
     "warm_up_fio_cmd_args": {"bs": "128k", "iodepth": 2, "rw": "write", "direct": 1, "prio": 0, "numjobs": 1, "verify_fatal": 1, "ioengine": "libaio", "name": "apple_funos_reboot_test", "verify_state_save": 1, "do_verify": 0 , "verify": "md5", "timeout": 3600},
     "fio_cmd_args": {"bs": "128k", "rw": "randread", "direct": 1, "ioengine": "libaio", "norandommap": "NO_VALUE", "randrepeat": 0, "group_reporting": 1, "prio":  0, "name": "apple_funos_reboot_test", "verify_state_load": 1, "do_verify": 1 , "verify": "md5", "timeout": 3600},
     "fio_iodepth": [2],
-    "add_host_delay": 20,
-    "detach_time": 20,
-    "reboot_funos": true
+    "reboot_host": true,
+    "reboot_after": 60,
+    "max_wait_time": 300
   }
 }

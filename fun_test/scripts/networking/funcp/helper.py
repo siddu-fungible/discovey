@@ -589,6 +589,7 @@ def reload_nvme_driver(host, username="localadmin", password="Precious1*", ns_id
     host_obj.sudo_command("modprobe nvme")
 
     # Check if volume exists
+    fun_test.sleep("Waiting for 5 seconds before checking lsblk", 5)
     lsblk_output = host_obj.lsblk()
     volume_name = "nvme0n" + str(ns_id)
     fun_test.test_assert(volume_name in lsblk_output, "{} device available".format(volume_name))

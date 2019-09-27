@@ -179,6 +179,9 @@
                 <a [routerLink]="'/regression/suite_detail/' + suiteExecution.fields.execution_id">
                   {{ suiteExecution.fields.execution_id }}
                 </a>
+                <div *ngIf="suiteExecution.fields.auto_scheduled_execution_id > -1">
+                  <small>Auto: {{ suiteExecution.fields.auto_scheduled_execution_id }}</small>
+                </div>
               </td>
               <td>
                 <app-smart-label *ngIf="suiteExecution.suite_result != 'UNKNOWN'" [value]="suiteExecution.suite_result"

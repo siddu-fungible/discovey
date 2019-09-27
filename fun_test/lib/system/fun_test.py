@@ -1474,6 +1474,8 @@ class FunTestScript(object):
 
     def _cleanup_topologies(self):
         topologies = fun_test.get_topologies()
+        cleanup_error_found = False
+
         for topology in topologies:
             if not topology.is_cleaned_up():
                 fun_test.log("Topology was not cleaned up. Attempting ...")
@@ -1481,6 +1483,8 @@ class FunTestScript(object):
                     topology.cleanup()
                 except Exception as ex:
                     fun_test.critical(ex)
+                    cleanup_error_found = True
+        fun_test.simple_assert(not cleanup_error_found, "Topology cleanup error")
 
     def _cleanup_hosts(self):
         for host in fun_test.get_hosts():
@@ -1500,6 +1504,7 @@ class FunTestScript(object):
                              summary="Script cleanup",
                              steps=self.steps)
         cleanup_te = None
+        cleanup_error_found = False
         if fun_test.suite_execution_id:
             cleanup_te = models_helper.add_test_case_execution(test_case_id=FunTest.CLEANUP_TC_ID,
                                                   suite_execution_id=fun_test.suite_execution_id,
@@ -1513,12 +1518,15 @@ class FunTestScript(object):
             try:
                 self.cleanup()
             except Exception as ex:
+                result = FunTest.FAILED
+                cleanup_error_found = True
                 fun_test.critical(ex)
 
             try:
                 self._cleanup_topologies()
             except Exception as ex:
                 result = FunTest.FAILED
+                cleanup_error_found = True
                 fun_test.critical(ex)
 
             try:
@@ -1526,11 +1534,10 @@ class FunTestScript(object):
             except Exception as ex:
                 fun_test.critical(ex)
 
-            result = FunTest.PASSED
 
         except Exception as ex:
             fun_test.critical(ex)
-
+        fun_test.add_checkpoint(checkpoint="Cleanup error found", expected=False, actual=True)
         fun_test._end_test(result=result)
         if cleanup_te:
             models_helper.update_test_case_execution(test_case_execution_id=cleanup_te.execution_id,

@@ -41,7 +41,12 @@ class ApcPduTestcase(FunTestCase):
                          "check_ssd": False,
                          "check_ports": False,
                          "expected_ssds_f1_0": 12,
-                         "expected_ssds_f1_1": 12
+                         "expected_ssds_f1_1": 12,
+                         "expected_nu_ports_f1_0": range(0, 24, 4),
+                         "expected_nu_ports_f1_1": range(0, 24, 4),
+                         "expected_hnu_ports_f1_0": [],
+                         "expected_hnu_ports_f1_1": [],
+
                          }
         job_inputs = fun_test.get_job_inputs()
         if job_inputs:
@@ -49,14 +54,22 @@ class ApcPduTestcase(FunTestCase):
                 self.NUMBER_OF_ITERATIONS = job_inputs["iterations"]
             if "check_ssd" in job_inputs:
                 self.validate["check_ssd"] = job_inputs["check_ssd"]
-            if "ports" in job_inputs:
-                self.validate["ports"] = job_inputs["check_ports"]
+            if "check_ports" in job_inputs:
+                self.validate["check_ports"] = job_inputs["check_ports"]
             if "check_storage_controller" in job_inputs:
                 self.validate["check_storage_controller"] = job_inputs["check_storage_controller"]
             if "expected_ssds_f1_0" in job_inputs:
                 self.validate["expected_ssds_f1_0"] = job_inputs["expected_ssds_f1_0"]
             if "expected_ssds_f1_1" in job_inputs:
                 self.validate["expected_ssds_f1_1"] = job_inputs["expected_ssds_f1_1"]
+            if "expected_nu_ports_f1_0" in job_inputs:
+                self.validate["expected_nu_ports_f1_0"] = job_inputs["expected_nu_ports_f1_0"]
+            if "expected_nu_ports_f1_1" in job_inputs:
+                self.validate["expected_nu_ports_f1_1"] = job_inputs["expected_nu_ports_f1_1"]
+            if "expected_hnu_ports_f1_0" in job_inputs:
+                self.validate["expected_hnu_ports_f1_0"] = job_inputs["expected_hnu_ports_f1_0"]
+            if "expected_hnu_ports_f1_1" in job_inputs:
+                self.validate["expected_hnu_ports_f1_1"] = job_inputs["expected_hnu_ports_f1_1"]
 
         fun_test.log(json.dumps(self.fs, indent=4))
         fun_test.log(self.validate)
@@ -136,15 +149,18 @@ class ApcPduTestcase(FunTestCase):
                 fun_test.test_assert(ssd_valid, "F1_1: SSD's ONLINE")
 
             if self.validate["check_ports"]:
-                fun_test.log("Checking if NU and HNU port's are active")
-                nu_port_valid = check_nu_ports(come_handle, iteration=pc_no, f1=0, expected_ports_up={'NU': range(8),
-                                                                                                      'HNU': []})
-                fun_test.test_assert(nu_port_valid, "F1_0: NU ports are present")
-
+                fun_test.log("Checking if NU and HNU port's are active on F1_0")
+                expected_ports_up_f1_0 = {'NU': self.validate["expected_nu_ports_f1_0"],
+                                          'HNU': self.validate["expected_hnu_ports_f1_0"]}
+                nu_port_valid = check_nu_ports(come_handle, iteration=pc_no, f1=0,
+                                               expected_ports_up=expected_ports_up_f1_0)
+                fun_test.test_assert(nu_port_valid, "F1_0: NU ports are present, Expected: {}".format(expected_ports_up_f1_0))
+                expected_ports_up_f1_1 = {'NU': self.validate["expected_nu_ports_f1_1"],
+                                          'HNU': self.validate["expected_hnu_ports_f1_1"]}
                 fun_test.log("Checking if NU and HNU port's are active on F1_1")
-                nu_port_valid = check_nu_ports(come_handle, iteration=pc_no, f1=1, expected_ports_up={'NU': range(8),
-                                                                                                      'HNU': []})
-                fun_test.test_assert(nu_port_valid, "F1_1: NU ports are present")
+                nu_port_valid = check_nu_ports(come_handle, iteration=pc_no, f1=1,
+                                               expected_ports_up=expected_ports_up_f1_1)
+                fun_test.test_assert(nu_port_valid, "F1_1: NU ports are present, Expected: {}".format(expected_ports_up_f1_1))
 
             # Minor checks: docker and cores
 
