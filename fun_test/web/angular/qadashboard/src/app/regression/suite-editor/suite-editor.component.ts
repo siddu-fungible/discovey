@@ -68,7 +68,7 @@ export class SuiteEditorComponent implements OnInit {
 
   editorPristine: boolean = true;
 
-  poolMemberOptions = {"DUT": ["With servers", "With SSDs"]};
+  poolMemberOptions = {"DUT": ["Default", "With servers", "With SSDs"]};
 
   constructor(private testBedService: TestBedService,
               private modalService: NgbModal,
@@ -277,6 +277,15 @@ export class SuiteEditorComponent implements OnInit {
       let numAssetsKey = this._getNumAssetsKey(flatName);
       let specificAssetsKey = this._getSpecificAssetsKey(flatName);
 
+
+      if (this.poolMemberOptions.hasOwnProperty(assetTypeKey)) {
+        let options = this.poolMemberOptions[assetTypeKey];
+        if (options.length > 0) {
+          options.forEach(option => {
+            group[option] = new FormControl(0);
+          })
+        }
+      }
 
 
       group[assetSelectionKey] = new FormControl(CustomAssetSelection.NUM);
