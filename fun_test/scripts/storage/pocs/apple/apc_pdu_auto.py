@@ -56,8 +56,6 @@ class ApcPduTestcase(FunTestCase):
                 self.validate["check_ssd"] = job_inputs["check_ssd"]
             if "check_ports" in job_inputs:
                 self.validate["check_ports"] = job_inputs["check_ports"]
-            if "check_storage_controller" in job_inputs:
-                self.validate["check_storage_controller"] = job_inputs["check_storage_controller"]
             if "expected_ssds_f1_0" in job_inputs:
                 self.validate["expected_ssds_f1_0"] = job_inputs["expected_ssds_f1_0"]
             if "expected_ssds_f1_1" in job_inputs:
@@ -125,22 +123,6 @@ class ApcPduTestcase(FunTestCase):
                 if up_time_min <= 5:
                     up_time_less_than_5 = True
             fun_test.test_assert(up_time_less_than_5, "COMe 'up-time' less than 5 min")
-
-            if self.validate["check_storage_controller"]:
-                fun_test.log("Checking if storage controller is up")
-                timer = FunTimer(max_time=300)
-                while not timer.is_expired():
-                    output = come_handle.command("curl -I -u admin:password http://{}:50220/FunCC/v1/topology"
-                                                 .format(str(self.fs['come']['mgmt_ip'])))
-                    match_status = re.search(r'HTTP/[\d.]+\s+(\d+)', output)
-                    if match_status:
-                        status = match_status.group(1)
-                        if status == "200":
-                            break
-                    fun_test.sleep("Waiting for storage controller to be up", seconds=10)
-
-                come_handle.command("curl -u admin:password http://{}:50220/FunCC/v1/topology | json_pp"
-                                    .format(str(self.fs['come']['mgmt_ip'])))
 
             if self.validate["check_ssd"]:
                 fun_test.log("Checking if SSD's are Active on F1_0")
