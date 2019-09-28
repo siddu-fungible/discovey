@@ -68,7 +68,7 @@ export class SuiteEditorComponent implements OnInit {
 
   editorPristine: boolean = true;
 
-  poolMemberOptions = {"DUT": ["Default", "With servers", "With SSDs"]};
+  poolMemberOptions = {}; //{"DUT": ["Default", "With servers", "With SSDs"]};
 
   constructor(private testBedService: TestBedService,
               private modalService: NgbModal,
@@ -238,6 +238,10 @@ export class SuiteEditorComponent implements OnInit {
     return `${flatName}Selection`;
   }
 
+  _getPoolMemberSelectionKey(flatName) {
+    return `${flatName}PoolMemberSelection`;
+  }
+
   _getNumAssetsKey(flatName) {
     return `${flatName}NumAssets`;
   }
@@ -270,23 +274,24 @@ export class SuiteEditorComponent implements OnInit {
 
     Object.keys(this.assetTypes).forEach(assetTypeKey => {
       let flatName = this._flattenName(assetTypeKey);
+      if (assetTypeKey === "DUT") {
+        this.poolMemberOptions[flatName] = ["Default", "With servers", "With SSDs"];
+      }
+
       this.flattenedAssetTypeNames.push(flatName);
       let assetTypeValue = this.assetTypes[assetTypeKey];
       this.flattenedAssetTypeNameMap[flatName] = {name: this.assetTypes[assetTypeKey], data: null};
       let assetSelectionKey = this._getAssetSelectionKey(flatName);
       let numAssetsKey = this._getNumAssetsKey(flatName);
       let specificAssetsKey = this._getSpecificAssetsKey(flatName);
+      let poolMemberSelectionKey = this._getPoolMemberSelectionKey(flatName);
 
-
-      if (this.poolMemberOptions.hasOwnProperty(assetTypeKey)) {
-        let options = this.poolMemberOptions[assetTypeKey];
+      if (this.poolMemberOptions.hasOwnProperty(flatName)) {
+        let options = this.poolMemberOptions[flatName];
         if (options.length > 0) {
-          options.forEach(option => {
-            group[option] = new FormControl(0);
-          })
+          group[poolMemberSelectionKey] = new FormControl(0);
         }
       }
-
 
       group[assetSelectionKey] = new FormControl(CustomAssetSelection.NUM);
       group[numAssetsKey] = new FormControl();
