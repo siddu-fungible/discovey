@@ -214,7 +214,10 @@ export class SuiteEditorComponent implements OnInit {
         if (readOut["numAssets"] > 0) {
           ref["num"] = readOut["numAssets"];
           totalAssets += readOut["numAssets"];
-          ref["pool_member_type"] = readOut["poolMemberType"];
+          let poolMemberType = readOut["poolMemberType"];
+          if (!isNaN(poolMemberType)) {
+            ref["pool_member_type"] = readOut["poolMemberType"];
+          }
         }
 
         let specificAssets = readOut["specificAssets"];
@@ -442,7 +445,9 @@ export class SuiteEditorComponent implements OnInit {
       if (poolMemberType) {
         poolMemberTypeValue = poolMemberType.value;
       }
-      result["poolMemberType"] = parseInt(poolMemberTypeValue);
+      if (!isNaN(poolMemberTypeValue)) {
+        result["poolMemberType"] = parseInt(poolMemberTypeValue);
+      }
 
     } else {
       let specificAssets = this.customTestBedSpecForm.get(specificAssetsKey).value;
@@ -452,6 +457,7 @@ export class SuiteEditorComponent implements OnInit {
   }
 
   _hasKey(o, key) {
+    console.log(o);
     return Object.keys(o).indexOf(key) > -1;
   }
 
