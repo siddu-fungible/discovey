@@ -307,8 +307,12 @@ export class SuiteEditorComponent implements OnInit {
         if (assetRequest.hasOwnProperty(assetTypeValue)) {
           let num = null;
           let names = null;
+          let poolMemberType = null;
           if (assetRequest[assetTypeValue].hasOwnProperty("num")) {
             num = assetRequest[assetTypeValue]["num"];
+            if (assetRequest[assetTypeValue].hasOwnProperty('pool_member_type')) {
+              poolMemberType = assetRequest[assetTypeValue]["pool_member_type"];
+            }
           }
           if (assetRequest[assetTypeValue].hasOwnProperty("names")) {
             names = assetRequest[assetTypeValue]["names"]
@@ -316,6 +320,10 @@ export class SuiteEditorComponent implements OnInit {
           if (num !== null) {
             group[assetSelectionKey].setValue(CustomAssetSelection.NUM);
             group[numAssetsKey].setValue(num);
+            if (poolMemberType !== null) {
+              group[poolMemberSelectionKey].setValue(poolMemberType);
+            }
+            
           } else {
             group[assetSelectionKey].setValue(CustomAssetSelection.SPECIFIC);
             group[specificAssetsKey].setValue(names);
@@ -405,7 +413,6 @@ export class SuiteEditorComponent implements OnInit {
     //console.log(this.flattenedAssetTypeNameMap);
     //console.log(this.selectedCategories);
     console.log(this.suite);
-
   }
 
   _readOutCustomTestBedSpecForm(flatName) {
@@ -429,7 +436,7 @@ export class SuiteEditorComponent implements OnInit {
       if (poolMemberType) {
         poolMemberTypeValue = poolMemberType.value;
       }
-      result["poolMemberType"] = poolMemberTypeValue;
+      result["poolMemberType"] = parseInt(poolMemberTypeValue);
 
     } else {
       let specificAssets = this.customTestBedSpecForm.get(specificAssetsKey).value;
