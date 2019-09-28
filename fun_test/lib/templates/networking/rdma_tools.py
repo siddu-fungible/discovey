@@ -14,6 +14,7 @@ class Rocetools:
     def repo_info(self, path):
         self.host.command("cd {}".format(path))
         self.host.command("git describe")
+        self.host.disconnect()
 
     def rdma_setup(self):
         self.host.command("export LD_LIBRARY_PATH={}".format(LD_LIBRARY_PATH))
@@ -31,6 +32,7 @@ class Rocetools:
             return False
         else:
             self.host.modprobe("rdma_ucm")
+            self.host.disconnect()
         return True
 
     def get_rdma_device(self):
@@ -247,6 +249,7 @@ class Rocetools:
             pps = lines[4]
             if bw_avg == 0.0 or bw_avg == 0.0 or iterations == 0:
                 self.host.command("dmesg")
+                self.host.disconnect()
                 fun_test.test_assert(False, "BW test failed as result is zero!!")
                 return False
             if perf:
@@ -278,6 +281,7 @@ class Rocetools:
                 t_9999 = lines[8]
             if t_mix == 0.0 or t_max == 0.0 or t_avg == 0.0 or iterations == 0:
                 self.host.command("dmesg")
+                self.host.disconnect()
                 fun_test.test_assert(False, "Latency test failed as result is zero!!")
                 return False
             if perf:
@@ -287,6 +291,7 @@ class Rocetools:
 
     def kill_pid(self, pid):
         self.host.kill_process(process_id=pid)
+        self.host.disconnect()
 
     def process_check(self, pid):
         return self.host.process_exists(process_id=pid)
@@ -297,3 +302,4 @@ class Rocetools:
 
     def cleanup(self):
         self.host.sudo_command(command="killall -g ib_write_lat ib_write_bw ib_read_lat ib_read_bw srping rping")
+        self.host.disconnect()

@@ -1241,7 +1241,6 @@ export class PerformanceComponent implements OnInit {
       }
       if (flatNode.node.chartName === decodeURIComponent(remainingPart)) {
         // match found
-
         if (remainingParts.length > 1) {
           remainingParts = remainingParts.slice(1, remainingParts.length); // there are more segments to parse
           let remainingPart = remainingParts[0].replace(this.slashReplacement, "/");

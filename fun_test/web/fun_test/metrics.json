@@ -5126,7 +5126,106 @@
                             "metric_model_name": "MetricContainer",
                             "name": "alibaba_bmv_storage_local_ssd_4",
                             "label": "4 SSD(s)",
-                            "children": []
+                            "children": [
+                              {
+                                "name": "alibaba_bmv_storage_local_ssd_4_random_read",
+                                "label": "Random Read",
+                                "metric_model_name": "MetricContainer",
+                                "children": [
+                                  {
+                                    "name": "bmv_storage_local_ssd_4_random_read_iops",
+                                    "label": "IOPS",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_4_random_read_qd32_latency",
+                                    "label": "Latency, Qdepth=32",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_4_random_read_qd1_latency",
+                                    "label": "Latency, Qdepth=1",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_4_random_read_qd1024_latency",
+                                    "label": "Latency, Qdepth=1024",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_4_random_read_qd64_latency",
+                                    "label": "Latency, Qdepth=64",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_4_random_read_qd128_latency",
+                                    "label": "Latency, Qdepth=128",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_4_random_read_qd256_latency",
+                                    "label": "Latency, Qdepth=256",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  }
+                                ]
+                              },
+                              {
+                                "name": "alibaba_bmv_storage_local_ssd_4_random_write",
+                                "label": "Random Write",
+                                "metric_model_name": "MetricContainer",
+                                "children": [
+                                  {
+                                    "name": "bmv_storage_local_ssd_4_random_write_iops",
+                                    "label": "IOPS",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_4_random_write_qd32_latency",
+                                    "label": "Latency, Qdepth=32",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_4_random_write_qd1_latency",
+                                    "label": "Latency, Qdepth=1",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_4_random_write_qd1024_latency",
+                                    "label": "Latency, Qdepth=1024",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_4_random_write_qd64_latency",
+                                    "label": "Latency, Qdepth=64",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_4_random_write_qd128_latency",
+                                    "label": "Latency, Qdepth=128",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_4_random_write_qd256_latency",
+                                    "label": "Latency, Qdepth=256",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  }
+                                ]
+                              }
+                            ]
                           }
                         ]
                       },

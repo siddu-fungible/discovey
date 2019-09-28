@@ -34,6 +34,7 @@ app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 atomic_url = get_performance_url() + "/atomic"
 negative_threshold = -5
 positive_threshold = 5
+DEFAULT_BASE_URL = "http://integration.fungible.local"
 
 
 class MetricLib():
@@ -451,7 +452,7 @@ class MetricLib():
                 dag = "F1"
             else:
                 dag = "S1"
-            resp = requests.get('http://integration.fungible.local/metrics/dag?root_metric_ids=' + str(metric_id))
+            resp = requests.get(DEFAULT_BASE_URL + '/metrics/dag?root_metric_ids=' + str(metric_id))
             if resp.status_code == 200:
                 full_json = json.loads(resp.content)
                 data = full_json["data"][0]

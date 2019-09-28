@@ -255,7 +255,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   //formats the string displayed on xaxis of the chart
   xAxisFormatter(epoch): string {
     let dateString = "Error";
-    const monthNames = ["null", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     if (epoch) { //check for null values
       try {
         let pstDate = this.commonService.convertEpochToDate(epoch, this.TIMEZONE);
@@ -290,9 +289,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   tooltipFormatter(x, y, metaData): string {
     let s = "";
     if (x) {
-      let pstDate = this.commonService.convertEpochToDate(x, this.TIMEZONE);
-      let value = this.commonService.addLeadingZeroesToDate(pstDate);
-      s += "<b>Date:</b> " + value.substring(0, 5) + "<br>";
+      s += "<b>Date:</b> " + x + "<br>";
     }
     if (metaData.originalValue) {
       s += "<b>Value:</b> " + metaData.originalValue + "<br>";
@@ -753,6 +750,13 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       d.setDate(d.getDate() - this.daysInPast);
       let startDate = this.commonService.convertToTimezone(d, this.TIMEZONE);
 
+      //check if the baseline dates is later than start date then set the start date as baseline
+      let baseDate = this.chartInfo.base_line_date;
+      baseDate = this.commonService.convertToTimezone(baseDate, this.TIMEZONE);
+      if (startDate < baseDate) {
+        startDate = baseDate;
+      }
+
       let chartDataSets = [];
       let seriesDates = [];
       this.expectedValues = [];
@@ -799,10 +803,10 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
             }
           }
           if (!valueSet) {
-            oneChartDataArray.push(this.getValidatedData(-1, minimum, -1, null));
+            oneChartDataArray.push(this.getValidatedData(-1, 0, -1, null));
           }
           if (!seriesDates[seriesDatesIndex]) {
-            seriesDates[seriesDatesIndex] = this.commonService.convertDateToEpoch(lastDate);
+            seriesDates[seriesDatesIndex] = this.commonService.addLeadingZeroesToDate(lastDate).substring(0, 5);
           }
           seriesDatesIndex++;
           lastDate.setDate(lastDate.getDate() - 1);
@@ -893,7 +897,9 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         let score = response.data.scores[dateTime].score;
         let result = this.getValidatedData(score, thisMinimum, thisMaximum, dateTime);
         values.push(result);
-        series.push(Number(dateTime) * 1000);
+        let pstDate = this.commonService.convertEpochToDate(Number(dateTime) * 1000, this.TIMEZONE);
+        let xAxisString = this.commonService.addLeadingZeroesToDate(pstDate).substring(0, 5);
+        series.push(xAxisString);
       }
       this.values = [{data: values, name: "Scores"}];
       this.series = series;
