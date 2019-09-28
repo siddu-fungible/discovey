@@ -1034,6 +1034,25 @@ def clear_out_old_jobs():
         old_job.state = JobStatusType.ABORTED
         old_job.save()
 
+    if is_development_mode():
+        old_jobs = models_helper.get_suite_executions_by_filter(state=JobStatusType.AUTO_SCHEDULED)
+        for old_job in old_jobs:
+            old_job.delete()
+
+        old_jobs = models_helper.get_suite_executions_by_filter(state=JobStatusType.QUEUED)
+        for old_job in old_jobs:
+            old_job.delete()
+
+        old_jobs = models_helper.get_suite_executions_by_filter(state=JobStatusType.SCHEDULED)
+        for old_job in old_jobs:
+            old_job.delete()
+
+        old_jobs = models_helper.get_suite_executions_by_filter(state=JobStatusType.IN_PROGRESS)
+        for old_job in old_jobs:
+            old_job.delete()
+
+        JobQueue.objects.all().delete()
+
 @debug_function
 def cleanup_unused_assets():
     try:
