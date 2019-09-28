@@ -54,6 +54,7 @@ export class SuiteEditorComponent implements OnInit {
 
   customTestBedSpecForm = null;
   customTestBedValidated = null;
+  customTestBedSpecPopulationStatus = null;
 
   availableCategories: string [] = null;
   availableSubCategories: string [] = ["general"];
@@ -151,10 +152,13 @@ export class SuiteEditorComponent implements OnInit {
   }
 
   refreshAll() {
+    this.customTestBedSpecPopulationStatus = "Refreshing";
+
     this.driver.subscribe(response => {
       this.customTestBedSpecForm = this.prepareFormGroup();
       if (this.suite) {
         this.prepareCustomTestBedSpecValidated();
+        this.customTestBedSpecPopulationStatus = null;
       }
       let i = 0;
       this.customTestBedSpecForm.get('selectedTestBed').valueChanges.subscribe(selection => {
@@ -181,11 +185,12 @@ export class SuiteEditorComponent implements OnInit {
 
       })
 
+    }, error => {
+      this.customTestBedSpecPopulationStatus = null;
     });
   }
 
   prepareCustomTestBedSpecValidated() {
-    this.customTestBedValidated = null;
     let baseTestBed = null;
     let selectedTestBedValue = this.customTestBedSpecForm.get("selectedTestBed").value;
 
@@ -193,6 +198,7 @@ export class SuiteEditorComponent implements OnInit {
       baseTestBed = selectedTestBedValue.name;
     }
     if (baseTestBed) {
+      console.log("Started");
       this.customTestBedValidated = {};
       this.customTestBedValidated["base_test_bed"] = this.customTestBedSpecForm.get("selectedTestBed").value.name;
       let payload = {};

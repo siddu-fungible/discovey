@@ -224,8 +224,10 @@
 
   </ng-container>
   <ng-template #noCustomTestBedSpec>
-    <button class="fun-button-add" (click)="onAddCustomTestBedSpec(customTestBedSpecModalContent)">Add custom test-bed
-    </button>
+    <fun-spinner [status]="customTestBedSpecPopulationStatus"></fun-spinner>
+    <ng-container *ngIf="!customTestBedSpecPopulationStatus">
+      <button class="fun-button-add" (click)="onAddCustomTestBedSpec(customTestBedSpecModalContent)">Add custom test-bed</button>
+    </ng-container>
   </ng-template>
 
 
