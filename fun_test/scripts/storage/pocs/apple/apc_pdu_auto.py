@@ -109,6 +109,13 @@ class ApcPduTestcase(FunTestCase):
             bmc_up = bmc_handle.ensure_host_is_up(max_wait_time=600)
             fun_test.test_assert(bmc_up, "BMC is UP")
 
+            # Check if lspci devices are detected
+            lspci_f0 = check_pci_dev(come_handle, f1=0)
+            fun_test.test_assert(lspci_f0, "F1_0 PCIe devices not detected")
+
+            lspci_f1 = check_pci_dev(come_handle, f1=1)
+            fun_test.test_assert(lspci_f1, "F1_1 PCIe devices not detected")
+
             initial = come_handle.command("uptime")
             output = come_handle.command("uptime")
             up_time = re.search(r'(\d+) min', output)
