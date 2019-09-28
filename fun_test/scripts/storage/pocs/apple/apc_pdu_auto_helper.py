@@ -3,6 +3,20 @@ from collections import OrderedDict
 import re
 
 
+def check_pci_dev(come_handle, f1=0):
+    result = True
+    bdf = '04:00.'
+    if f1 == 1:
+        bdf = '06:00.'
+    lspci_output = come_handle.command(command="lspci -d 1dad: | grep {}".format(bdf))
+    sections = ['Ethernet controller', 'Non-Volatile', 'Unassigned class', 'encryption device']
+    for section in sections:
+        if section not in lspci_output:
+            result = False
+            fun_test.critical("Under LSPCI {} not found".format(section))
+    return result
+
+
 def check_ssd(come_handle, expected_ssds_up=6, f1=0):
     result = False
     if expected_ssds_up == 0:

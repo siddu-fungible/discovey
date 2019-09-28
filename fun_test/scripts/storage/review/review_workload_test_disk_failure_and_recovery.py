@@ -1022,7 +1022,7 @@ class StripedVolDiskFailRecovery(StripeVolDiskFailTestCase):
     def describe(self):
         self.set_test_details(
             id=1,
-            summary="Create Stripe Volume and validate events",
+            summary="Verifying drive failure and recovery with new Stripe Volume",
             steps='''
                 1. Create Stripe volume
                 2. Attach volume to one host and perform sequential write
