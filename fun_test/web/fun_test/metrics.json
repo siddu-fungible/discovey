@@ -6375,6 +6375,33 @@
                     "children": []
                   }
                 ]
+              },
+              {
+                "metric_model_name": "MetricContainer",
+                "name": "Crypto raw throughput_S1",
+                "label": "Crypto Raw Throughput",
+                "children": [
+                  {
+                    "metric_model_name": "TeraMarkMultiClusterCryptoPerformance",
+                    "name": "AES_GCM Encryption Raw Throughput_S1",
+                    "label": "AES_GCM"
+                  },
+                  {
+                    "metric_model_name": "TeraMarkMultiClusterCryptoPerformance",
+                    "name": "AES_XTS Encryption Raw Throughput_S1",
+                    "label": "AES_XTS"
+                  },
+                  {
+                    "metric_model_name": "TeraMarkMultiClusterCryptoPerformance",
+                    "name": "SHA_256 Raw Throughput_S1",
+                    "label": "SHA_256"
+                  },
+                  {
+                    "metric_model_name": "TeraMarkMultiClusterCryptoPerformance",
+                    "name": "SHA3_256 Raw Throughput_S1",
+                    "label": "SHA3_256"
+                  }
+                ]
               }
             ]
           },
