@@ -208,6 +208,7 @@ export class SuiteEditorComponent implements OnInit {
         if (readOut["numAssets"] > 0) {
           ref["num"] = readOut["numAssets"];
           totalAssets += readOut["numAssets"];
+          ref["pool_member_type"] = readOut["poolMemberType"];
         }
 
         let specificAssets = readOut["specificAssets"];
@@ -248,6 +249,11 @@ export class SuiteEditorComponent implements OnInit {
 
   _getSpecificAssetsKey(flatName) {
     return `${flatName}SpecificAssets`;
+  }
+
+  _getPoolMemberTypeString(assetType, poolMemberType) {
+    let flatName = this._flattenName(assetType);
+    return this.poolMemberOptions[flatName][parseInt(poolMemberType)];
   }
 
   _getTestBedByName(name) {
@@ -407,6 +413,7 @@ export class SuiteEditorComponent implements OnInit {
     let assetSelectionKey = this._getAssetSelectionKey(flatName);
     let numAssetsKey = this._getNumAssetsKey(flatName);
     let specificAssetsKey = this._getSpecificAssetsKey(flatName);
+    let poolMemberSelectionKey = this._getPoolMemberSelectionKey(flatName);
 
     let assetSelection = this.customTestBedSpecForm.get(assetSelectionKey).value;
     result["assetSelection"] = assetSelection;
@@ -417,6 +424,13 @@ export class SuiteEditorComponent implements OnInit {
         numAssets = 0;
       }
       result["numAssets"] = numAssets;
+      let poolMemberType = this.customTestBedSpecForm.get(poolMemberSelectionKey);
+      let poolMemberTypeValue = null;
+      if (poolMemberType) {
+        poolMemberTypeValue = poolMemberType.value;
+      }
+      result["poolMemberType"] = poolMemberTypeValue;
+
     } else {
       let specificAssets = this.customTestBedSpecForm.get(specificAssetsKey).value;
       result["specificAssets"] = specificAssets;
