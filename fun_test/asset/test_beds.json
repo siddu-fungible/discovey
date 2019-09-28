@@ -101,6 +101,14 @@
       }
     }
   },
+  "fs-47": {
+    "dut_info": {
+      "0": {
+        "dut": "fs-47",
+        "type": "DUT_TYPE_FSU"
+      }
+    }
+  },
   "fs-11-alibaba-demo": {
     "dut_info": {
       "0": {
