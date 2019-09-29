@@ -1822,9 +1822,6 @@ class Linux(object, ToDictMixin):
             if 'runtime' in kwargs:
                 fio_command += " --time_based"
 
-            if 'output-format' not in kwargs:
-                fio_command += " --output-format=json"
-
             if kwargs:
                 for key, value in kwargs.iteritems():
                     if key == "multiple_jobs":

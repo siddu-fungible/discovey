@@ -324,8 +324,6 @@ class StripeVolDiskFailTestCase(FunTestCase):
         self.syslog_level = fun_test.shared_variables["syslog_level"]
         fun_test.shared_variables["transport_type"] = self.transport_type
 
-        print("test level setup: self.host_info is: {}".format(self.host_info))
-
         if "blt" not in fun_test.shared_variables or not fun_test.shared_variables["blt"]["setup_created"]:
             fun_test.shared_variables["blt"] = {}
             fun_test.shared_variables["blt"]["setup_created"] = False
@@ -556,7 +554,6 @@ class StripeVolDiskFailTestCase(FunTestCase):
 
         fio_size = int(100 / (self.num_hosts - 1))
         self.fio_cmd_args1["size"] = "{}{}".format(str(fio_size), "%")
-        print("self.fio_cmd_args_fio_size is: {}".format(self.fio_cmd_args1["size"]))
 
         fio_offset_diff = fio_size
 
@@ -569,14 +566,7 @@ class StripeVolDiskFailTestCase(FunTestCase):
             host_clone = {}
 
             for index, host_name in enumerate(self.host_info):
-                '''
-                host_numa_cpus = self.host_info[host_name]["host_numa_cpus"]
-                total_numa_cpus = self.host_info[host_name]["total_numa_cpus"]
-                '''
-
-                print("print: run: current index is: {}".format(index))
                 if index != 0:
-                    print("print: 1.2 index is: {} and hostname is: {}".format(index, host_name))
                     fun_test.sleep("add host at interval of {}".format(self.add_host_delay), self.add_host_delay)
                     # Create NVMe-OF controller for rest of hosts
                     self.ctrlr_uuid.append(utils.generate_uuid())
@@ -646,13 +636,10 @@ class StripeVolDiskFailTestCase(FunTestCase):
                                                       message="{} device type check".format(self.volume_name))
 
                 wait_time = self.num_hosts - index
-                print("print: run: wait time is: {}".format(wait_time))
                 host_clone[host_name] = self.host_info[host_name]["handle"].clone()
 
                 if index == 0:
-                    print("print: 1.1 index is: {} and hostname is: {}".format(index, host_name))
                     # Starting Read for whole volume on first host
-                    fun_test.log("print: run: if index == 0: starting IO on host: {}".format(host_name))
                     test_thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
                                                                           func=fio_parser,
                                                                           arg1=host_clone[host_name],
@@ -662,9 +649,7 @@ class StripeVolDiskFailTestCase(FunTestCase):
                                                                           name="fio_{}".format(host_name),
                                                                           **self.fio_cmd_args)
                 else:
-                    print("1.3 index is: {} and hostname is: {}".format(index, host_name))
                     # Starting IO on rest of hosts for particular LBA range
-                    fun_test.log("print: run: elif on host: {}".format(host_name))
                     self.fio_cmd_args1["offset"] = "{}{}".format(str((index - 1) * fio_offset_diff), "%")
                     test_thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
                                                                           func=fio_parser,
@@ -686,17 +671,14 @@ class StripeVolDiskFailTestCase(FunTestCase):
                     self.failure_drive_index = []
                     for num in xrange(self.blt_count):
                         self.failure_drive_index.append(random.randint(0, self.blt_count - 1))
-                    print("failure drive index is: {}",format(self.failure_drive_index))
                 fail_uuid = self.thin_uuid[self.failure_drive_index[0]]
                 fail_device = self.stripe_info["device_id"][self.failure_drive_index[0]]
-
-                print("fail uuid is: {}".format(fail_uuid))
-                print("fail device is: {}".format(fail_device))
 
                 # Triggering the drive failure
                 if self.fail_drive:
                     ''' Marking drive as failed '''
                     # Inducing failure in drive
+                    fun_test.log("Device to be marked as fail: {}".format(fail_device))
                     fun_test.log("Initiating drive failure")
                     device_fail_status = self.storage_controller.disable_device(device_id=fail_device,
                                                                                 command_duration=self.command_timeout)
@@ -712,6 +694,7 @@ class StripeVolDiskFailTestCase(FunTestCase):
                 else:
                     ''' Marking Volume as failed '''
                     # Inducing failure in one of the Plex of the volume
+                    fun_test.log("uuid to be marked as fail: {}".format(fail_uuid))
                     fun_test.log("Initiating BLT failure")
                     volume_fail_status = self.storage_controller.fail_volume(uuid=fail_uuid)
                     fun_test.test_assert(volume_fail_status["status"], "Disabling BLT UUID {}".format(fail_uuid))
@@ -766,8 +749,6 @@ class StripeVolDiskFailTestCase(FunTestCase):
         # NVMe-disconnect so next volume can be attached to host
         try:
             for index, host_name in enumerate(self.host_info):
-                print("print: disconnect run: current index is: {}".format(index))
-
                 nvme_disconnect_cmd = "nvme disconnect -n {}".format(self.nvme_subsystem)  # TODO: SWOS-6165
                 # nvme_disconnect_cmd = "nvme disconnect -d {}".format(self.volume_name)
 
@@ -895,8 +876,6 @@ class StripeVolDiskFailTestCase(FunTestCase):
 
         fio_size = int(100 / (self.num_hosts - 1))
         self.fio_cmd_args1["size"] = "{}{}".format(str(fio_size), "%")
-        print("self.fio_cmd_args_fio_size is: {}".format(self.fio_cmd_args1["size"]))
-
         fio_offset_diff = fio_size
 
         for iodepth in self.fio_iodepth:
@@ -909,7 +888,6 @@ class StripeVolDiskFailTestCase(FunTestCase):
 
             for index, host_name in enumerate(self.host_info):
                 wait_time = self.num_hosts - index
-                print("print: run: wait time is: {}".format(wait_time))
                 host_clone[host_name] = self.host_info[host_name]["handle"].clone()
                 if index == 0:
                     # Create filesystem if needed else write to raw device
@@ -927,9 +905,7 @@ class StripeVolDiskFailTestCase(FunTestCase):
                         fun_test.test_assert(fio_output, "Writing the entire volume")
                     fun_test.shared_variables["blt"]["warmup_io_completed"] = True
 
-                    print("print: 1.1 index is: {} and hostname is: {}".format(index, host_name))
                     # Starting Read for whole volume on first host
-                    fun_test.log("print: run: if index == 0: starting IO on host: {}".format(host_name))
                     self.fio_cmd_args["rw"] = "randread"
                     test_thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
                                                                           func=fio_parser,
@@ -940,9 +916,7 @@ class StripeVolDiskFailTestCase(FunTestCase):
                                                                           name="fio_{}".format(host_name),
                                                                           **self.fio_cmd_args)
                 else:
-                    print("1.3 index is: {} and hostname is: {}".format(index, host_name))
                     # Starting IO on rest of hosts for particular LBA range
-                    fun_test.log("print: run: elif on host: {}".format(host_name))
                     self.fio_cmd_args1["offset"] = "{}{}".format(str((index - 1) * fio_offset_diff), "%")
                     test_thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
                                                                           func=fio_parser,
@@ -977,8 +951,6 @@ class StripeVolDiskFailTestCase(FunTestCase):
         try:
             fun_test.log("\n\n********** Deleting volume **********\n\n")
             for index, host_name in enumerate(self.host_info):
-                print("print: disconnect run: current index is: {}".format(index))
-
                 nvme_disconnect_cmd = "nvme disconnect -n {}".format(self.nvme_subsystem)  # TODO: SWOS-6165
                 # nvme_disconnect_cmd = "nvme disconnect -d {}".format(self.volume_name)
 
@@ -1050,7 +1022,7 @@ class StripedVolDiskFailRecovery(StripeVolDiskFailTestCase):
     def describe(self):
         self.set_test_details(
             id=1,
-            summary="Create Stripe Volume and validate events",
+            summary="Verifying drive failure and recovery with new Stripe Volume",
             steps='''
                 1. Create Stripe volume
                 2. Attach volume to one host and perform sequential write

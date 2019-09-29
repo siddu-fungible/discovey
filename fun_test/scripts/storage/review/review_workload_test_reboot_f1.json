@@ -45,13 +45,12 @@
     "nvme_io_queues": 16,
     "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
     "nvme_device": "/dev/nvme0",
-    "iostat_details": { "interval": 2},
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {"bs": "128k", "iodepth": 2, "rw": "write", "direct": 1, "prio": 0, "numjobs": 1, "verify_fatal": 1, "ioengine": "libaio", "name": "apple_funos_reboot_test", "verify_state_save": 1, "do_verify": 0 , "verify": "md5", "timeout": 3600},
     "fio_cmd_args": {"bs": "128k", "rw": "randread", "direct": 1, "ioengine": "libaio", "norandommap": "NO_VALUE", "randrepeat": 0, "group_reporting": 1, "prio":  0, "name": "apple_funos_reboot_test", "verify_state_load": 1, "do_verify": 1 , "verify": "md5", "timeout": 3600},
     "fio_iodepth": [2],
-    "stats_collect_details": [{"vp_utils": {"interval": 60}}, {"per_vp": {"interval": 60}}, {"resource_bam_args": {"interval": 60}}, {"vol_stats": {"interval": 60}}, {"vppkts_stats": {"interval": 60}}, {"psw_stats": {"interval": 60, "nu": true}}, {"fcp_stats": {"interval": 60, "nu": true}}, {"wro_stats": {"interval": 60, "nu": true}}, {"erp_stats": {"interval": 60, "nu": true}}, {"etp_stats": {"interval": 60, "nu": true}}, {"eqm_stats": {"interval": 60}}, {"hu_stats": {"interval": 60}}, {"ddr_stats": {"interval": 60}}, {"ca_stats": {"interval": 60}}, {"cdu_stats": {"interval": 60}}],
     "add_host_delay": 20,
-    "detach_time": 20
+    "detach_time": 20,
+    "reboot_funos": true
   }
 }

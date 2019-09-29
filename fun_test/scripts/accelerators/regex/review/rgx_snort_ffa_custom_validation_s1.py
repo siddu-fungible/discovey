@@ -169,12 +169,12 @@ class JuniperNFACustomCompileOnly(FunTestCase):
 
                 res1_path=""
                 try:
-                    fun_test.test_assert(con1.scp(target_file_path="/local/auto_admin/data_store/" + res_path,
+                    fun_test.test_assert(con1.scp(target_file_path="/project/users/QA/regression/data_store" + res_path,
                          target_ip=con2.host_ip,
                          source_file_path=res_path+"*.json",
                          target_username=con2.ssh_username,
                          target_password=con2.ssh_password),
-                         message="scp graphs to /local/auto_admin/data_store/{}".format(res_path))
+                         message="scp graphs to /project/users/QA/regression/data_store{}".format(res_path))
                 except:
                     pass
 

@@ -256,7 +256,7 @@ class Bmc(Linux):
         # self.command("rm {}".format(output_file))
         # self.command("rm {}".format(log_file))
         self.command("rm -f /var/lock/LCK..{}".format(os.path.basename(serial_device)))
-        command = "microcom -s 1000000 {} > {} &".format(serial_device, output_file)
+        command = "microcom -s 1000000 {} > {}  < /dev/null &".format(serial_device, output_file)
         self.command(command)
         process_ids = self.get_process_id_by_pattern("microcom", multiple=True)
         # self.uart_log_listener_process_ids.append(None)
@@ -274,6 +274,8 @@ class Bmc(Linux):
         return s
 
     def setup_serial_proxy_connection(self, f1_index, auto_boot=False):
+        self.command("rm -f /tmp/f1_{}_uart_log.txt".format(f1_index))
+
         self.nc[f1_index] = Netcat(ip=self.host_ip, port=self.SERIAL_PROXY_PORTS[f1_index])
         nc = self.nc[f1_index]
         write_on_trigger = None
@@ -637,7 +639,7 @@ class Bmc(Linux):
                     regex_found = critical_message
                     fun_test.critical(critical_message)
                     error_message = "Regression: ERROR REGEX Matched: {} Job-ID: {} F1_{} Context: {}".format(full_match, fun_test.get_suite_execution_id(), f1_index, self._get_context_prefix(data="error"))
-                    fun_test.send_mail(subject=error_message, content=error_message)
+                    fun_test.send_mail(subject=error_message, content=error_message, to_addresses=["team-regression@fungible.com"])
 
         except Exception as ex:
             fun_test.critical(ex)
@@ -708,8 +710,9 @@ class BootupWorker(Thread):
                 try:
                     # f1_{}_uart_log.txt
                     # fs.get_bmc().command("rm -f /tmp/f1*uart_log.txt")
-                    fs.get_bmc().command("echo '' > /tmp/f1_0_uart_log.txt")
-                    fs.get_bmc().command("echo '' > /tmp/f1_1_uart_log.txt")
+                    # fs.get_bmc().command("echo '' > /tmp/f1_0_uart_log.txt")
+                    # fs.get_bmc().command("echo '' > /tmp/f1_1_uart_log.txt")
+                    pass
 
                 except:
                     pass
