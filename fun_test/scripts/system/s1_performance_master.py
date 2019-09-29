@@ -253,6 +253,16 @@ class TeraMarkNfaPerformanceS1Tc(TeraMarkNfaPerformanceTc):
                               steps="Steps 1")
 
 
+class TeraMarkMultiClusterCryptoPerformanceS1Tc(TeraMarkMultiClusterCryptoPerformanceTc):
+    tag = TERAMARK_CRYPTO_RAW_S1
+    platform = FunPlatform.S1
+
+    def describe(self):
+        self.set_test_details(id=24,
+                              summary="S1 TeraMark Multi Cluster Crypto Performance Test",
+                              steps="Steps 1")
+
+
 if __name__ == "__main__":
     myscript = MyScript()
 
@@ -279,5 +289,6 @@ if __name__ == "__main__":
     myscript.add_test_case(PkeP256TlsSoakPerformanceS1Tc())
     myscript.add_test_case(TeraMarkDfaPerformanceS1Tc())
     # myscript.add_test_case(TeraMarkNfaPerformanceS1Tc())
+    myscript.add_test_case(TeraMarkMultiClusterCryptoPerformanceS1Tc())
 
     myscript.run()
