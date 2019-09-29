@@ -2,7 +2,7 @@ from lib.system.fun_test import fun_test
 from lib.host.linux import Linux
 import re
 
-LD_LIBRARY_PATH = "/mnt/ws/fungible-rdma-core/build/lib/"
+LD_LIBRARY_PATH = "$LD_LIBRARY_PATH:/mnt/ws/fungible-rdma-core/build/lib/"
 PATH = "$PATH:/mnt/ws/fungible-rdma-core/build/bin/:/mnt/ws/fungible-perftest/"
 
 
@@ -44,8 +44,8 @@ class Rocetools:
             ibdevice = "funrdma0"
 
     def srping_test(self, server_ip=None, debug=False, timeout=120, **kwargs):
-        # self.host.command("export LD_LIBRARY_PATH={}".format(LD_LIBRARY_PATH))
-        # self.host.command("export PATH={}".format(PATH))
+        self.host.command("export LD_LIBRARY_PATH={}".format(LD_LIBRARY_PATH))
+        self.host.command("export PATH={}".format(PATH))
 
         if server_ip:
             cmd_str = "srping -ca " + str(server_ip) + " -V"
@@ -74,8 +74,8 @@ class Rocetools:
         fun_test.debug(cmd_pid)
 
     def rping_test(self, server_ip=None, debug=False, timeout=120, **kwargs):
-        # self.host.command("export LD_LIBRARY_PATH={}".format(LD_LIBRARY_PATH))
-        # self.host.command("export PATH={}".format(PATH))
+        self.host.command("export LD_LIBRARY_PATH={}".format(LD_LIBRARY_PATH))
+        self.host.command("export PATH={}".format(PATH))
 
         if server_ip:
             cmd_str = "rping -ca " + str(server_ip) + " -V"
@@ -104,8 +104,8 @@ class Rocetools:
         fun_test.debug(cmd_pid)
 
     def ib_bw_test(self, test_type, server_ip=None, timeout=60, **kwargs):
-        # self.host.command("export LD_LIBRARY_PATH={}".format(LD_LIBRARY_PATH))
-        # self.host.command("export PATH={}".format(PATH))
+        self.host.command("export LD_LIBRARY_PATH={}".format(LD_LIBRARY_PATH))
+        self.host.command("export PATH={}".format(PATH))
 
         if test_type == "write":
             tool = "ib_write_bw "
@@ -152,8 +152,8 @@ class Rocetools:
         return result_dict
 
     def ib_lat_test(self, test_type, server_ip=None, timeout=60, **kwargs):
-        # self.host.command("export LD_LIBRARY_PATH={}".format(LD_LIBRARY_PATH))
-        # self.host.command("export PATH={}".format(PATH))
+        self.host.command("export LD_LIBRARY_PATH={}".format(LD_LIBRARY_PATH))
+        self.host.command("export PATH={}".format(PATH))
 
         if test_type == "write":
             tool = "ib_write_lat "
