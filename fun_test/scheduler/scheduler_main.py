@@ -171,6 +171,7 @@ class QueueWorker(Thread):
     @debug_function
     def abort_job(self, queued_job, reason):
         self.shutdown_reason = ShutdownReason.ABORTED
+        scheduler_logger.exception("Queued Job ID: {} exception, Reason: {}".format(queued_job.job_id, reason))
         suite_execution = models_helper.get_suite_execution(suite_execution_id=queued_job.job_id)
         models_helper.update_suite_execution(suite_execution_id=queued_job.job_id,
                                              result=RESULTS["ABORTED"],
@@ -268,6 +269,9 @@ class QueueWorker(Thread):
                             queued_job.save()
                     except Exception as ex:
                         reason = "Exception: {}: {}".format(str(ex), traceback.format_exc())
+                        scheduler_logger.exception(
+                            "Queued Job ID: {} exception, Reason: {}".format(queued_job.job_id, reason))
+
                         self.abort_job(queued_job=queued_job, reason=reason)
                 time.sleep(5)
 

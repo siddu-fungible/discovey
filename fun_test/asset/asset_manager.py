@@ -439,6 +439,8 @@ class AssetManager:
         asset_category_unavailable = False
         error_message = ""
 
+        matches_for_pool_member_type = []
+
         for asset_type in all_asset_types:
             if asset_category_unavailable:
                 break
@@ -481,19 +483,15 @@ class AssetManager:
 
                     pool_member_type_options = assets_required_config[asset_type].get("pool_member_type_options", None)
                     if pool_member_type_options:
-                        match_found = False
-                        for pool_member_type, pool_member_type_value in pool_member_type_options.iteritems():
-                            if asset_in_test_bed.get_pool_member_type() == int(pool_member_type):
-                                match_found = True
-                                num_assets_available += 1
-                                available_assets.append(asset_name)
-                                break
-                        if not match_found:
-                            unavailable_assets.append(asset_name)
-                    else:
-                        if not is_manual_locked and not in_progress:
-                            num_assets_available += 1
-                            available_assets.append(asset_name)
+                        this_asset_pool_member_type = asset_in_test_bed.get_pool_member_type()
+                        pool_member_required_count = pool_member_type_options[str(this_asset_pool_member_type)]["num"]
+                        current_match_count = matches_for_pool_member_type.count(this_asset_pool_member_type)
+                        if current_match_count >= pool_member_required_count:
+                            continue
+                        matches_for_pool_member_type.append(this_asset_pool_member_type)
+                    if not is_manual_locked and not in_progress:
+                        num_assets_available += 1
+                        available_assets.append(asset_name)
                     if num_assets_required == num_assets_available:
                         break
 
