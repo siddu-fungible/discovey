@@ -139,14 +139,15 @@ class TestHostPCIeLanes(FunTestCase):
     def setup(self):
         pass
     def run(self):
-        testbed_info = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() + '/testbed_inputs.json')
-        test_bed_type = fun_test.get_job_environment_variable('test_bed_type')
-        for fs_name in testbed_info['fs'][test_bed_type]["fs_list"]:
-            servers_mode = testbed_info['fs'][test_bed_type][fs_name]['hu_host_list']
-            for server in servers_mode:
-                result = verify_host_pcie_link(hostname=server, mode=servers_mode[server], reboot=False)
-                fun_test.test_assert(expression=(result == "1"), message="Make sure that PCIe links on host %s went up"
-                                                                         % server)
+        pass
+        # testbed_info = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() + '/testbed_inputs.json')
+        # test_bed_type = fun_test.get_job_environment_variable('test_bed_type')
+        # for fs_name in testbed_info['fs'][test_bed_type]["fs_list"]:
+        #     servers_mode = testbed_info['fs'][test_bed_type][fs_name]['hu_host_list']
+        #     for server in servers_mode:
+        #         result = verify_host_pcie_link(hostname=server, mode=servers_mode[server], reboot=False)
+        #         fun_test.test_assert(expression=(result == "1"), message="Make sure that PCIe links on host %s went up"
+        #                                                                  % server)
 
 
     def cleanup(self):
