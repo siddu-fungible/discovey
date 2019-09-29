@@ -297,20 +297,28 @@ class NicEmulation(FunTestCase):
                 test_host_pings(host=host, ips=ping_dict[host], strict=False)
 
         # Update RDMA Core & perftest on hosts
+        bg_proc_id = {}
+        for obj in host_objs:
+            if obj == "f1_0":
+                host_count = fun_test.shared_variables["host_len_f10"]
+                bg_proc_id[obj] = []
+            elif obj == "f1_1":
+                host_count = fun_test.shared_variables["host_len_f11"]
+                bg_proc_id[obj] = []
+            for x in xrange(0, host_count):
+                bg_proc_id[obj].append(host_objs[obj][x].
+                                       start_bg_process("/home/localadmin/mks/update_rdma.sh build build",
+                                                        timeout=1200))
+        # fun_test.sleep("Building rdma_perf & core", seconds=120)
         for obj in host_objs:
             if obj == "f1_0":
                 host_count = fun_test.shared_variables["host_len_f10"]
             elif obj == "f1_1":
                 host_count = fun_test.shared_variables["host_len_f11"]
             for x in xrange(0, host_count):
-                host_objs[obj][x].start_bg_process("/home/localadmin/mks/update_rdma.sh build build", timeout=1200)
-        fun_test.sleep("Building rdma_perf & core", seconds=120)
-        for obj in host_objs:
-            if obj == "f1_0":
-                host_count = fun_test.shared_variables["host_len_f10"]
-            elif obj == "f1_1":
-                host_count = fun_test.shared_variables["host_len_f11"]
-            for x in xrange(0, host_count):
+                for pid in bg_proc_id[obj]:
+                    while host_objs[obj][x].process_exists(process_id=pid):
+                        fun_test.sleep(message="Still building RDMA repo...", seconds=5)
                 host_objs[obj][x].disconnect()
 
         # Create a dict containing F1_0 & F1_1 details
