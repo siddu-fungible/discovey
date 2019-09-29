@@ -13,7 +13,7 @@ for suite in all_suites:
                 dut = asset_request["DUT"]
                 if "num" in dut:
                     print asset_request
-                    dut["pool_member_type_options"] = {1: {"num": dut["num"]}}
+                    dut["pool_member_type_options"] = {0: {"num": dut["num"]}}
                     del dut["num"]
                     suite.save()
                     """
