@@ -589,7 +589,7 @@ if __name__ == "__main__":
     # custom_spec = {"base_test_bed": "fs-inspur-test", "asset_request": {"DUT with servers": {"num": 1}}}
     # custom_spec = {"base_test_bed": "fs-inspur-test", "asset_request": {"DUT": {"num": 1, "pool_member_type": 1}}}
     # custom_spec = {"base_test_bed": "fs-inspur-test", "asset_request": {"DUT": {"num": 1, "pool_member_type": 2}}}
-    custom_spec = {"base_test_bed": "fs-inspur-test", "asset_request": {"DUT": {"pool_member_type_options": {0: {"num": 1}}}}}
+    custom_spec = {"base_test_bed": "fs-inspur-test", "asset_request": {"DUT": {"pool_member_type_options": {0: {"num": 1}, 2: {"num": 1}}}}}
     # custom_spec = {"base_test_bed": "fs-inspur-test", "asset_request": {"DUT": {"pool_member_type_options": {1: {"num": 1}}}}}
     # custom_spec = {"base_test_bed": "fs-inspur-test", "asset_request": {"DUT": {"pool_member_type_options": {2: {"num": 1}}}}}
 
