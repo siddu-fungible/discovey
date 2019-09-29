@@ -495,7 +495,7 @@ export class SuiteEditorComponent implements OnInit {
   }
 
   onAddCustomTestBedSpec(content) {
-    this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title'}).result.then((dontCare) => {
+    this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title', size: 'lg', backdrop: 'static'}).result.then((dontCare) => {
       console.log("Ready to submit");
       let customTestBedSpec = {};
       this.prepareCustomTestBedSpecValidated();
@@ -507,7 +507,7 @@ export class SuiteEditorComponent implements OnInit {
   }
 
   onEditCustomTestBedSpec(content) {
-    this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title'}).result.then((dontCare) => {
+    this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title', size: 'lg', backdrop: 'static'}).result.then((dontCare) => {
       console.log("Ready to submit");
       let customTestBedSpec = {};
       this.prepareCustomTestBedSpecValidated();
