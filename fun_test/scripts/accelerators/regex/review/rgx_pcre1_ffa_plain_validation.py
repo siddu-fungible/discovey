@@ -136,7 +136,7 @@ class pcre_ffa_Plain_compile_only(FunTestCase):
                          source_file_path=res_path+"*.json",
                          target_username=con2.ssh_username,
                          target_password=con2.ssh_password),
-                         message="scp graphs to /project/users/QA/regression/data_store"
+                         message="scp graphs to /project/users/QA/regression/data_store")
                 except:
                     pass
 
