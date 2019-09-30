@@ -63,14 +63,14 @@ class FunControlPlaneBringup:
         fun_test.test_assert(fs_0.bmc.u_boot_load_image(index=0, tftp_image_path=fs_0.tftp_image_path,
                                                         boot_args=fs_0.boot_args, gateway_ip=gatewayip),
                              "U-Bootup f1: {} complete".format(0))
-        fs_0.bmc.start_uart_log_listener(f1_index=0, serial_device=None)
+        fs_0.bmc.start_uart_log_listener(f1_index=0, serial_device="/dev/ttyS0")
         fun_test.test_assert(fs_0.bmc.setup_serial_proxy_connection(f1_index=1),
                              "Setup nc serial proxy connection")
         fun_test.test_assert(
             fs_0.bmc.u_boot_load_image(index=1, tftp_image_path=fs_1.tftp_image_path, boot_args=fs_1.boot_args,
                                        gateway_ip=gatewayip),
             "U-Bootup f1: {} complete".format(1))
-        fs_0.bmc.start_uart_log_listener(f1_index=1, serial_device=None)
+        fs_0.bmc.start_uart_log_listener(f1_index=1, serial_device="/dev/ttyS1")
         if reboot_come:
             fun_test.test_assert(fs_0.come_reset(power_cycle=True, non_blocking=True),
                                  "ComE rebooted successfully")
