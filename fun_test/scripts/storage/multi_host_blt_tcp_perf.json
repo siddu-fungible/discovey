@@ -59,7 +59,7 @@
     "blt_details": {
       "ns_id": 1,
       "type": "VOL_TYPE_BLK_LOCAL_THIN",
-      "capacity": 1600277970944,
+      "capacity": 137438953472,
       "block_size": 4096
     },
     "config_fcp_scheduler": {"total_bw" : 400, "fcp_ctl_bw" : 0, "fcp_data_bw": 0},
