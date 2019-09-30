@@ -67,10 +67,8 @@
                         <span [innerHTML]="getIndentHtml(flatNode) | safeHtml">
                         </span>
               <ng-container>
-                <a *ngIf="flatNode.node.leaf" [ngClass]="{highlight:flatNode.node.showAddJira}" [routerLink]=""
-                   (click)="showAtomicMetric(flatNode)">{{ flatNode.node.chartName }}</a>
-                <a *ngIf="!flatNode.node.leaf" [ngClass]="{highlight:flatNode.node.showAddJira}" [routerLink]=""
-                   (click)="showNonAtomicMetric(flatNode)">{{ flatNode.node.chartName }}</a>
+                <a [ngClass]="{highlight:flatNode.node.showAddJira}" [routerLink]=""
+                   (click)="navigateByQuery(flatNode)">{{ flatNode.node.chartName }}</a>
                 <span *ngIf="flatNode.node.workInProgress">&nbsp;<app-smart-label [value]="'work in progress'"
                                                                                   [type]="'warning'"></app-smart-label></span>
                 <span *ngIf="flatNode.node.tags">&nbsp;<span *ngFor="let tag of flatNode.node.tags"><app-smart-label

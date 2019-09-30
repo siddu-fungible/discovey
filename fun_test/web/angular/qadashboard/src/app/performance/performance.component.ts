@@ -174,6 +174,7 @@ export class PerformanceComponent implements OnInit {
   buildInfo: any = null;
   showF1Dag: boolean = true;
   showS1Dag: boolean = false;
+  initialize: boolean = true;
 
   constructor(
     private apiService: ApiService,
@@ -278,6 +279,8 @@ export class PerformanceComponent implements OnInit {
     this.showF1Dag = false;
     this.flatNodes = [];
     this.guIdFlatNodeMap = {};
+    this.upgradeFlatNode = {};
+    this.degradeFlatNode = {};
     this.fetchDag();
   }
 
@@ -296,6 +299,8 @@ export class PerformanceComponent implements OnInit {
     this.showS1Dag = false;
     this.flatNodes = [];
     this.guIdFlatNodeMap = {};
+    this.upgradeFlatNode = {};
+    this.degradeFlatNode = {};
     this.fetchDag();
   }
 
@@ -328,15 +333,15 @@ export class PerformanceComponent implements OnInit {
       for (let dag of this.dag) {
         this.walkDag(dag, lineage);
       }
+      if (!this.queryExists) {
+        this.updateUpDownSincePrevious(true);
+        this.updateUpDownSincePrevious(false);
+      }
       //total container should always appear
       if (this.selectMode == SelectMode.ShowMainSite) {
         this.rootNode = this.flatNodes[0];
         this.rootNode.hide = false;
-        if (!this.queryExists) {
-          this.queryPath = this.getDefaultQueryPath(this.rootNode);
-        }
-
-        this.expandUrl(this.queryExists);
+        this.expandUrl();
       }
       if (this.selectMode == SelectMode.ShowEditWorkspace && this.interestedMetrics) {
         this.flatNodes[0].hide = false;
@@ -362,25 +367,39 @@ export class PerformanceComponent implements OnInit {
     this.getQueryPath().subscribe(queryPath => {
       if (!queryPath) {
         this.queryExists = false;
-        this.fetchDag();
+        if (this.initialize) {
+          this.fetchDag();
+          this.initialize = false;
+        } else {
+          this.expandUrl();
+        }
       } else {
         this.queryExists = true;
-        if (queryPath.startsWith("F1")) {
-          this.openF1Dag();
+        if (this.initialize) {
+          if (queryPath.startsWith("F1")) {
+            this.openF1Dag();
+          }
+          if (queryPath.startsWith("S1")) {
+            this.openS1Dag();
+          }
+          this.initialize = false;
+        } else {
+          this.expandUrl();
         }
-        if (queryPath.startsWith("S1")) {
-          this.openS1Dag();
-        }
+
       }
     });
   }
 
-  expandUrl(queryExists): void {
+  expandUrl(): void {
+    if (!this.queryExists) {
+      this.queryPath = this.getDefaultQueryPath(this.rootNode);
+    }
     let pathGuid = this.pathToGuid(this.queryPath);
     let targetFlatNode = this.guIdFlatNodeMap[pathGuid];
     this.expandNode(targetFlatNode);
 
-    if (queryExists) {
+    if (this.queryExists) {
       if (targetFlatNode.node.leaf) {
         this.showAtomicMetric(targetFlatNode);
       } else {
@@ -634,10 +653,6 @@ export class PerformanceComponent implements OnInit {
       thisFlatNode.hide = false;
       lineage = [];
       this.allMetricsNode = thisFlatNode;
-      if (!this.queryPath) {
-        this.updateUpDownSincePrevious(true);
-        this.updateUpDownSincePrevious(false);
-      }
 
     }
     if (this.metricIds && this.metricIds.includes(newNode.metricId)) {
@@ -1074,9 +1089,9 @@ export class PerformanceComponent implements OnInit {
       this.expandNode(flatNode);
       this.commonService.scrollTo("chart-info");
       this.chartReady = true;
-      if (this.selectMode == SelectMode.ShowMainSite) {
-        this.navigateByQuery(flatNode);
-      }
+      // if (this.selectMode == SelectMode.ShowMainSite) {
+      //   this.navigateByQuery(flatNode);
+      // }
       this.fetchChartInfo(flatNode);
     } else if (this.selectMode == SelectMode.ShowEditWorkspace) {
       flatNode.showAddLeaf = true;
@@ -1125,9 +1140,9 @@ export class PerformanceComponent implements OnInit {
         this.expandNode(flatNode);
         this.chartReady = true;
       }
-      if (!flatNode.special && this.selectMode == SelectMode.ShowMainSite) {
-        this.navigateByQuery(flatNode);
-      }
+      // if (!flatNode.special && this.selectMode == SelectMode.ShowMainSite) {
+      //   this.navigateByQuery(flatNode);
+      // }
       this.fetchChartInfo(flatNode);
     } else {
       this.expandNode(flatNode);
