@@ -4,29 +4,6 @@
       "0": {
         "type": "DUT_TYPE_FSU",
         "pcie_interface_info": {
-          "15": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 14
-          },
-          "14": {
-            "host_info": {
-              "name": "cab02-qa-04"
-            },
-            "type": "INTERFACE_TYPE_PCIE",
-            "hosts": 1
-          },
-          "17": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 14
-          },
-          "16": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 14
-          },
-          "1": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 0
-          },
           "0": {
             "host_info": {
               "name": "cab02-qa-03"
@@ -34,7 +11,7 @@
             "type": "INTERFACE_TYPE_PCIE",
             "hosts": 1
           },
-          "3": {
+          "1": {
             "type": "INTERFACE_TYPE_PCIE",
             "dual": 0
           },
@@ -42,9 +19,9 @@
             "type": "INTERFACE_TYPE_PCIE",
             "dual": 0
           },
-          "5": {
+          "3": {
             "type": "INTERFACE_TYPE_PCIE",
-            "dual": 4
+            "dual": 0
           },
           "4": {
             "host_info": {
@@ -53,7 +30,7 @@
             "type": "INTERFACE_TYPE_PCIE",
             "hosts": 1
           },
-          "7": {
+          "5": {
             "type": "INTERFACE_TYPE_PCIE",
             "dual": 4
           },
@@ -61,9 +38,9 @@
             "type": "INTERFACE_TYPE_PCIE",
             "dual": 4
           },
-          "9": {
+          "7": {
             "type": "INTERFACE_TYPE_PCIE",
-            "dual": 8
+            "dual": 4
           },
           "8": {
             "host_info": {
@@ -71,6 +48,29 @@
             },
             "type": "INTERFACE_TYPE_PCIE",
             "hosts": 1
+          },
+          "9": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 8
+          },
+          "14": {
+            "host_info": {
+              "name": "cab02-qa-04"
+            },
+            "type": "INTERFACE_TYPE_PCIE",
+            "hosts": 1
+          },
+          "15": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 14
+          },
+          "16": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 14
+          },
+          "17": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 14
           }
         },
         "dut": "fs-60"
@@ -114,10 +114,6 @@
       "0": {
         "type": "DUT_TYPE_FSU",
         "pcie_interface_info": {
-          "1": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 0
-          },
           "0": {
             "host_info": {
               "name": "poc-server-10"
@@ -125,11 +121,15 @@
             "type": "INTERFACE_TYPE_PCIE",
             "hosts": 1
           },
-          "3": {
+          "1": {
             "type": "INTERFACE_TYPE_PCIE",
             "dual": 0
           },
           "2": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 0
+          },
+          "3": {
             "type": "INTERFACE_TYPE_PCIE",
             "dual": 0
           }
@@ -162,9 +162,24 @@
       "0": {
         "type": "DUT_TYPE_FSU",
         "pcie_interface_info": {
-          "15": {
+          "0": {
+            "host_info": {
+              "name": "cab03-qa-01"
+            },
             "type": "INTERFACE_TYPE_PCIE",
-            "dual": 14
+            "hosts": 1
+          },
+          "1": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 0
+          },
+          "2": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 0
+          },
+          "3": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 0
           },
           "14": {
             "host_info": {
@@ -173,7 +188,7 @@
             "type": "INTERFACE_TYPE_PCIE",
             "hosts": 1
           },
-          "17": {
+          "15": {
             "type": "INTERFACE_TYPE_PCIE",
             "dual": 14
           },
@@ -181,24 +196,9 @@
             "type": "INTERFACE_TYPE_PCIE",
             "dual": 14
           },
-          "1": {
+          "17": {
             "type": "INTERFACE_TYPE_PCIE",
-            "dual": 0
-          },
-          "0": {
-            "host_info": {
-              "name": "cab03-qa-01"
-            },
-            "type": "INTERFACE_TYPE_PCIE",
-            "hosts": 1
-          },
-          "3": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 0
-          },
-          "2": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 0
+            "dual": 14
           }
         },
         "dut": "fs-45"
@@ -211,24 +211,6 @@
         "type": "DUT_TYPE_FSU",
         "dut": "fs-44",
         "bond_interface_info": {
-          "1": {
-            "0": {
-              "ip": "15.44.2.2/24",
-              "route": [
-                {
-                  "network": "15.0.0.0/8",
-                  "gateway": "15.44.2.1"
-                }
-              ],
-              "type": "INTERFACE_TYPE_ETHERNET_BOND",
-              "fpg_slaves": [
-                0,
-                4,
-                8,
-                12
-              ]
-            }
-          },
           "0": {
             "0": {
               "ip": "15.44.1.2/24",
@@ -246,21 +228,62 @@
                 12
               ]
             }
+          },
+          "1": {
+            "0": {
+              "ip": "15.44.2.2/24",
+              "route": [
+                {
+                  "network": "15.0.0.0/8",
+                  "gateway": "15.44.2.1"
+                }
+              ],
+              "type": "INTERFACE_TYPE_ETHERNET_BOND",
+              "fpg_slaves": [
+                0,
+                4,
+                8,
+                12
+              ]
+            }
           }
         },
         "fpg_interface_info": {
-          "1": {
+          "0": {
             "0": {
               "switch_info": {
                 "name": "qfx-1",
-                "port": "et-0/0/42"
+                "port": "et-0/0/62"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            },
+            "4": {
+              "switch_info": {
+                "name": "qfx-1",
+                "port": "et-0/0/63"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            },
+            "8": {
+              "switch_info": {
+                "name": "qfx-1",
+                "port": "et-0/0/60"
               },
               "type": "INTERFACE_TYPE_ETHERNET"
             },
             "12": {
               "switch_info": {
                 "name": "qfx-1",
-                "port": "et-0/0/41"
+                "port": "et-0/0/61"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            }
+          },
+          "1": {
+            "0": {
+              "switch_info": {
+                "name": "qfx-1",
+                "port": "et-0/0/42"
               },
               "type": "INTERFACE_TYPE_ETHERNET"
             },
@@ -277,34 +300,11 @@
                 "port": "et-0/0/40"
               },
               "type": "INTERFACE_TYPE_ETHERNET"
-            }
-          },
-          "0": {
-            "0": {
-              "switch_info": {
-                "name": "qfx-1",
-                "port": "et-0/0/62"
-              },
-              "type": "INTERFACE_TYPE_ETHERNET"
             },
             "12": {
               "switch_info": {
                 "name": "qfx-1",
-                "port": "et-0/0/61"
-              },
-              "type": "INTERFACE_TYPE_ETHERNET"
-            },
-            "4": {
-              "switch_info": {
-                "name": "qfx-1",
-                "port": "et-0/0/63"
-              },
-              "type": "INTERFACE_TYPE_ETHERNET"
-            },
-            "8": {
-              "switch_info": {
-                "name": "qfx-1",
-                "port": "et-0/0/60"
+                "port": "et-0/0/41"
               },
               "type": "INTERFACE_TYPE_ETHERNET"
             }
@@ -322,24 +322,6 @@
         "type": "DUT_TYPE_FSU",
         "dut": "fs-43",
         "bond_interface_info": {
-          "1": {
-            "0": {
-              "ip": "15.43.2.2/24",
-              "route": [
-                {
-                  "network": "15.0.0.0/8",
-                  "gateway": "15.43.2.1"
-                }
-              ],
-              "type": "INTERFACE_TYPE_ETHERNET_BOND",
-              "fpg_slaves": [
-                0,
-                4,
-                8,
-                12
-              ]
-            }
-          },
           "0": {
             "0": {
               "ip": "15.43.1.2/24",
@@ -357,21 +339,62 @@
                 12
               ]
             }
+          },
+          "1": {
+            "0": {
+              "ip": "15.43.2.2/24",
+              "route": [
+                {
+                  "network": "15.0.0.0/8",
+                  "gateway": "15.43.2.1"
+                }
+              ],
+              "type": "INTERFACE_TYPE_ETHERNET_BOND",
+              "fpg_slaves": [
+                0,
+                4,
+                8,
+                12
+              ]
+            }
           }
         },
         "fpg_interface_info": {
-          "1": {
+          "0": {
             "0": {
               "switch_info": {
                 "name": "qfx-1",
-                "port": "et-0/0/36"
+                "port": "et-0/0/58"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            },
+            "4": {
+              "switch_info": {
+                "name": "qfx-1",
+                "port": "et-0/0/59"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            },
+            "8": {
+              "switch_info": {
+                "name": "qfx-1",
+                "port": "et-0/0/56"
               },
               "type": "INTERFACE_TYPE_ETHERNET"
             },
             "12": {
               "switch_info": {
                 "name": "qfx-1",
-                "port": "et-0/0/45"
+                "port": "et-0/0/57"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            }
+          },
+          "1": {
+            "0": {
+              "switch_info": {
+                "name": "qfx-1",
+                "port": "et-0/0/36"
               },
               "type": "INTERFACE_TYPE_ETHERNET"
             },
@@ -388,34 +411,11 @@
                 "port": "et-0/0/44"
               },
               "type": "INTERFACE_TYPE_ETHERNET"
-            }
-          },
-          "0": {
-            "0": {
-              "switch_info": {
-                "name": "qfx-1",
-                "port": "et-0/0/58"
-              },
-              "type": "INTERFACE_TYPE_ETHERNET"
             },
             "12": {
               "switch_info": {
                 "name": "qfx-1",
-                "port": "et-0/0/57"
-              },
-              "type": "INTERFACE_TYPE_ETHERNET"
-            },
-            "4": {
-              "switch_info": {
-                "name": "qfx-1",
-                "port": "et-0/0/59"
-              },
-              "type": "INTERFACE_TYPE_ETHERNET"
-            },
-            "8": {
-              "switch_info": {
-                "name": "qfx-1",
-                "port": "et-0/0/56"
+                "port": "et-0/0/45"
               },
               "type": "INTERFACE_TYPE_ETHERNET"
             }
@@ -433,24 +433,6 @@
         "type": "DUT_TYPE_FSU",
         "dut": "fs-42",
         "bond_interface_info": {
-          "1": {
-            "0": {
-              "ip": "15.42.2.2/24",
-              "route": [
-                {
-                  "network": "15.0.0.0/8",
-                  "gateway": "15.42.2.1"
-                }
-              ],
-              "type": "INTERFACE_TYPE_ETHERNET_BOND",
-              "fpg_slaves": [
-                0,
-                4,
-                8,
-                12
-              ]
-            }
-          },
           "0": {
             "0": {
               "ip": "15.42.1.2/24",
@@ -468,21 +450,62 @@
                 12
               ]
             }
+          },
+          "1": {
+            "0": {
+              "ip": "15.42.2.2/24",
+              "route": [
+                {
+                  "network": "15.0.0.0/8",
+                  "gateway": "15.42.2.1"
+                }
+              ],
+              "type": "INTERFACE_TYPE_ETHERNET_BOND",
+              "fpg_slaves": [
+                0,
+                4,
+                8,
+                12
+              ]
+            }
           }
         },
         "fpg_interface_info": {
-          "1": {
+          "0": {
             "0": {
               "switch_info": {
                 "name": "qfx-1",
-                "port": "et-0/0/50"
+                "port": "et-0/0/54"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            },
+            "4": {
+              "switch_info": {
+                "name": "qfx-1",
+                "port": "et-0/0/55"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            },
+            "8": {
+              "switch_info": {
+                "name": "qfx-1",
+                "port": "et-0/0/52"
               },
               "type": "INTERFACE_TYPE_ETHERNET"
             },
             "12": {
               "switch_info": {
                 "name": "qfx-1",
-                "port": "et-0/0/49"
+                "port": "et-0/0/53"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            }
+          },
+          "1": {
+            "0": {
+              "switch_info": {
+                "name": "qfx-1",
+                "port": "et-0/0/50"
               },
               "type": "INTERFACE_TYPE_ETHERNET"
             },
@@ -499,34 +522,11 @@
                 "port": "et-0/0/48"
               },
               "type": "INTERFACE_TYPE_ETHERNET"
-            }
-          },
-          "0": {
-            "0": {
-              "switch_info": {
-                "name": "qfx-1",
-                "port": "et-0/0/54"
-              },
-              "type": "INTERFACE_TYPE_ETHERNET"
             },
             "12": {
               "switch_info": {
                 "name": "qfx-1",
-                "port": "et-0/0/53"
-              },
-              "type": "INTERFACE_TYPE_ETHERNET"
-            },
-            "4": {
-              "switch_info": {
-                "name": "qfx-1",
-                "port": "et-0/0/55"
-              },
-              "type": "INTERFACE_TYPE_ETHERNET"
-            },
-            "8": {
-              "switch_info": {
-                "name": "qfx-1",
-                "port": "et-0/0/52"
+                "port": "et-0/0/49"
               },
               "type": "INTERFACE_TYPE_ETHERNET"
             }
@@ -544,24 +544,6 @@
         "type": "DUT_TYPE_FSU",
         "dut": "fs-41",
         "bond_interface_info": {
-          "1": {
-            "0": {
-              "ip": "15.41.2.2/24",
-              "route": [
-                {
-                  "network": "15.0.0.0/8",
-                  "gateway": "15.41.2.1"
-                }
-              ],
-              "type": "INTERFACE_TYPE_ETHERNET_BOND",
-              "fpg_slaves": [
-                0,
-                4,
-                8,
-                12
-              ]
-            }
-          },
           "0": {
             "0": {
               "ip": "15.41.1.2/24",
@@ -579,21 +561,62 @@
                 12
               ]
             }
+          },
+          "1": {
+            "0": {
+              "ip": "15.41.2.2/24",
+              "route": [
+                {
+                  "network": "15.0.0.0/8",
+                  "gateway": "15.41.2.1"
+                }
+              ],
+              "type": "INTERFACE_TYPE_ETHERNET_BOND",
+              "fpg_slaves": [
+                0,
+                4,
+                8,
+                12
+              ]
+            }
           }
         },
         "fpg_interface_info": {
-          "1": {
+          "0": {
             "0": {
               "switch_info": {
                 "name": "qfx-1",
-                "port": "et-0/0/18"
+                "port": "et-0/0/22"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            },
+            "4": {
+              "switch_info": {
+                "name": "qfx-1",
+                "port": "et-0/0/23"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            },
+            "8": {
+              "switch_info": {
+                "name": "qfx-1",
+                "port": "et-0/0/20"
               },
               "type": "INTERFACE_TYPE_ETHERNET"
             },
             "12": {
               "switch_info": {
                 "name": "qfx-1",
-                "port": "et-0/0/17"
+                "port": "et-0/0/21"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            }
+          },
+          "1": {
+            "0": {
+              "switch_info": {
+                "name": "qfx-1",
+                "port": "et-0/0/18"
               },
               "type": "INTERFACE_TYPE_ETHERNET"
             },
@@ -610,34 +633,11 @@
                 "port": "et-0/0/16"
               },
               "type": "INTERFACE_TYPE_ETHERNET"
-            }
-          },
-          "0": {
-            "0": {
-              "switch_info": {
-                "name": "qfx-1",
-                "port": "et-0/0/22"
-              },
-              "type": "INTERFACE_TYPE_ETHERNET"
             },
             "12": {
               "switch_info": {
                 "name": "qfx-1",
-                "port": "et-0/0/21"
-              },
-              "type": "INTERFACE_TYPE_ETHERNET"
-            },
-            "4": {
-              "switch_info": {
-                "name": "qfx-1",
-                "port": "et-0/0/23"
-              },
-              "type": "INTERFACE_TYPE_ETHERNET"
-            },
-            "8": {
-              "switch_info": {
-                "name": "qfx-1",
-                "port": "et-0/0/20"
+                "port": "et-0/0/17"
               },
               "type": "INTERFACE_TYPE_ETHERNET"
             }
@@ -684,17 +684,13 @@
             "type": "INTERFACE_TYPE_PCIE",
             "dual": 4
           },
-        "7": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 4
-          },
           "6": {
             "type": "INTERFACE_TYPE_PCIE",
             "dual": 4
           },
-          "9": {
+          "7": {
             "type": "INTERFACE_TYPE_PCIE",
-            "dual": 8
+            "dual": 4
           },
           "8": {
             "host_info": {
@@ -703,9 +699,9 @@
             "type": "INTERFACE_TYPE_PCIE",
             "hosts": 1
           },
-          "15": {
+          "9": {
             "type": "INTERFACE_TYPE_PCIE",
-            "dual": 14
+            "dual": 8
           },
           "14": {
             "host_info": {
@@ -714,7 +710,7 @@
             "type": "INTERFACE_TYPE_PCIE",
             "hosts": 1
           },
-          "17": {
+          "15": {
             "type": "INTERFACE_TYPE_PCIE",
             "dual": 14
           },
@@ -722,9 +718,9 @@
             "type": "INTERFACE_TYPE_PCIE",
             "dual": 14
           },
-           "21": {
+          "17": {
             "type": "INTERFACE_TYPE_PCIE",
-            "dual": 20
+            "dual": 14
           },
           "20": {
             "host_info": {
@@ -733,11 +729,15 @@
             "type": "INTERFACE_TYPE_PCIE",
             "hosts": 1
           },
-          "23": {
+          "21": {
             "type": "INTERFACE_TYPE_PCIE",
             "dual": 20
           },
           "22": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 20
+          },
+          "23": {
             "type": "INTERFACE_TYPE_PCIE",
             "dual": 20
           }
@@ -946,74 +946,19 @@
       "9": {
         "type": "DUT_TYPE_FSU",
         "dut": "fs-20"
+      },
+       "10": {
+        "type": "DUT_TYPE_FSU",
+        "dut": "fs-40"
       }
     }
   },
   "fs-alibaba": {
     "dut_info": {
-      "1": {
-        "type": "DUT_TYPE_FSU",
-        "pcie_interface_info": {
-          "1": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 0
-          },
-          "0": {
-            "host_info": {
-              "name": "cab02-qa-03"
-            },
-            "type": "INTERFACE_TYPE_PCIE",
-            "hosts": 1
-          },
-          "3": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 0
-          },
-          "2": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 0
-          },
-          "5": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 4
-          },
-          "4": {
-            "host_info": {
-              "name": "cab02-qa-02"
-            },
-            "type": "INTERFACE_TYPE_PCIE",
-            "hosts": 1
-          },
-          "7": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 4
-          },
-          "6": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 4
-          },
-          "9": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 8
-          },
-          "8": {
-            "host_info": {
-              "name": "cab02-qa-01"
-            },
-            "type": "INTERFACE_TYPE_PCIE",
-            "hosts": 1
-          }
-        },
-        "dut": "fs-60"
-      },
       "0": {
         "disabled": false,
         "type": "DUT_TYPE_FSU",
         "pcie_interface_info": {
-          "1": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 0
-          },
           "0": {
             "host_info": {
               "name": "cab02-qa-05"
@@ -1021,7 +966,7 @@
             "type": "INTERFACE_TYPE_PCIE",
             "hosts": 1
           },
-          "3": {
+          "1": {
             "type": "INTERFACE_TYPE_PCIE",
             "dual": 0
           },
@@ -1029,9 +974,9 @@
             "type": "INTERFACE_TYPE_PCIE",
             "dual": 0
           },
-          "5": {
+          "3": {
             "type": "INTERFACE_TYPE_PCIE",
-            "dual": 4
+            "dual": 0
           },
           "4": {
             "host_info": {
@@ -1040,7 +985,7 @@
             "type": "INTERFACE_TYPE_PCIE",
             "hosts": 1
           },
-          "7": {
+          "5": {
             "type": "INTERFACE_TYPE_PCIE",
             "dual": 4
           },
@@ -1048,9 +993,9 @@
             "type": "INTERFACE_TYPE_PCIE",
             "dual": 4
           },
-          "9": {
+          "7": {
             "type": "INTERFACE_TYPE_PCIE",
-            "dual": 8
+            "dual": 4
           },
           "8": {
             "host_info": {
@@ -1058,9 +1003,68 @@
             },
             "type": "INTERFACE_TYPE_PCIE",
             "hosts": 1
+          },
+          "9": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 8
           }
         },
         "dut": "fs-48"
+      },
+      "1": {
+        "type": "DUT_TYPE_FSU",
+        "pcie_interface_info": {
+          "0": {
+            "host_info": {
+              "name": "cab02-qa-03"
+            },
+            "type": "INTERFACE_TYPE_PCIE",
+            "hosts": 1
+          },
+          "1": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 0
+          },
+          "2": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 0
+          },
+          "3": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 0
+          },
+          "4": {
+            "host_info": {
+              "name": "cab02-qa-02"
+            },
+            "type": "INTERFACE_TYPE_PCIE",
+            "hosts": 1
+          },
+          "5": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 4
+          },
+          "6": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 4
+          },
+          "7": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 4
+          },
+          "8": {
+            "host_info": {
+              "name": "cab02-qa-01"
+            },
+            "type": "INTERFACE_TYPE_PCIE",
+            "hosts": 1
+          },
+          "9": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 8
+          }
+        },
+        "dut": "fs-60"
       }
     }
   },
@@ -1105,26 +1109,6 @@
       "0": {
         "type": "DUT_TYPE_FSU",
         "pcie_interface_info": {
-          "15": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 14
-          },
-          "14": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 14
-          },
-          "17": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 14
-          },
-          "16": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 14
-          },
-          "1": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 0
-          },
           "0": {
             "host_info": {
               "name": "cab02-qa-05"
@@ -1132,7 +1116,7 @@
             "type": "INTERFACE_TYPE_PCIE",
             "hosts": 1
           },
-          "3": {
+          "1": {
             "type": "INTERFACE_TYPE_PCIE",
             "dual": 0
           },
@@ -1140,9 +1124,9 @@
             "type": "INTERFACE_TYPE_PCIE",
             "dual": 0
           },
-          "5": {
+          "3": {
             "type": "INTERFACE_TYPE_PCIE",
-            "dual": 4
+            "dual": 0
           },
           "4": {
             "host_info": {
@@ -1151,7 +1135,7 @@
             "type": "INTERFACE_TYPE_PCIE",
             "hosts": 1
           },
-          "7": {
+          "5": {
             "type": "INTERFACE_TYPE_PCIE",
             "dual": 4
           },
@@ -1159,9 +1143,9 @@
             "type": "INTERFACE_TYPE_PCIE",
             "dual": 4
           },
-          "9": {
+          "7": {
             "type": "INTERFACE_TYPE_PCIE",
-            "dual": 8
+            "dual": 4
           },
           "8": {
             "host_info": {
@@ -1169,6 +1153,26 @@
             },
             "type": "INTERFACE_TYPE_PCIE",
             "hosts": 1
+          },
+          "9": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 8
+          },
+          "14": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 14
+          },
+          "15": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 14
+          },
+          "16": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 14
+          },
+          "17": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 14
           }
         },
         "dut": "fs-48"
@@ -1241,9 +1245,69 @@
       "0": {
         "type": "DUT_TYPE_FSU",
         "pcie_interface_info": {
+          "0": {
+            "host_info": {
+              "name": "poc-server-10"
+            },
+            "type": "INTERFACE_TYPE_PCIE",
+            "hosts": 1
+          },
+          "1": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 0
+          },
+          "2": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 0
+          },
+          "3": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 0
+          },
+          "4": {
+            "host_info": {
+              "name": "poc-server-05"
+            },
+            "type": "INTERFACE_TYPE_PCIE",
+            "hosts": 1
+          },
+          "5": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 4
+          },
+          "6": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 4
+          },
+          "7": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 4
+          },
+          "14": {
+            "host_info": {
+              "name": "poc-server-08"
+            },
+            "type": "INTERFACE_TYPE_PCIE",
+            "hosts": 1
+          },
           "15": {
             "type": "INTERFACE_TYPE_PCIE",
             "dual": 14
+          },
+          "16": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 14
+          },
+          "17": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 14
+          },
+          "20": {
+            "host_info": {
+              "name": "poc-server-09"
+            },
+            "type": "INTERFACE_TYPE_PCIE",
+            "hosts": 1
           },
           "21": {
             "type": "INTERFACE_TYPE_PCIE",
@@ -1256,66 +1320,6 @@
           "23": {
             "type": "INTERFACE_TYPE_PCIE",
             "dual": 20
-          },
-          "16": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 14
-          },
-          "1": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 0
-          },
-          "0": {
-            "host_info": {
-              "name": "poc-server-10"
-            },
-            "type": "INTERFACE_TYPE_PCIE",
-            "hosts": 1
-          },
-          "3": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 0
-          },
-          "2": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 0
-          },
-          "5": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 4
-          },
-          "4": {
-            "host_info": {
-              "name": "poc-server-05"
-            },
-            "type": "INTERFACE_TYPE_PCIE",
-            "hosts": 1
-          },
-          "7": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 4
-          },
-          "6": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 4
-          },
-          "20": {
-            "host_info": {
-              "name": "poc-server-09"
-            },
-            "type": "INTERFACE_TYPE_PCIE",
-            "hosts": 1
-          },
-          "17": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 14
-          },
-          "14": {
-            "host_info": {
-              "name": "poc-server-08"
-            },
-            "type": "INTERFACE_TYPE_PCIE",
-            "hosts": 1
           }
         },
         "dut": "fs-11",
@@ -1362,28 +1366,6 @@
         "type": "DUT_TYPE_FSU",
         "dut": "fs-53",
         "bond_interface_info": {
-          "1": {
-            "0": {
-              "ip": "15.53.2.2/24",
-              "route": [
-                {
-                  "network": "15.0.0.0/8",
-                  "gateway": "15.53.2.1"
-                }
-              ],
-              "type": "INTERFACE_TYPE_ETHERNET_BOND",
-              "fpg_slaves": [
-                0,
-                1,
-                2,
-                3,
-                4,
-                5,
-                6,
-                7
-              ]
-            }
-          },
           "0": {
             "0": {
               "ip": "15.53.1.2/24",
@@ -1405,75 +1387,32 @@
                 7
               ]
             }
+          },
+          "1": {
+            "0": {
+              "ip": "15.53.2.2/24",
+              "route": [
+                {
+                  "network": "15.0.0.0/8",
+                  "gateway": "15.53.2.1"
+                }
+              ],
+              "type": "INTERFACE_TYPE_ETHERNET_BOND",
+              "fpg_slaves": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7
+              ]
+            }
           }
         },
         "fpg_interface_info": {
-          "1": {
-            "1": {
-              "switch_info": {
-                "name": "qfx-3",
-                "port": "et-0/0/26"
-              },
-              "type": "INTERFACE_TYPE_ETHERNET"
-            },
-            "0": {
-              "switch_info": {
-                "name": "qfx-3",
-                "port": "et-0/0/25"
-              },
-              "type": "INTERFACE_TYPE_ETHERNET"
-            },
-            "3": {
-              "switch_info": {
-                "name": "qfx-3",
-                "port": "et-0/0/28"
-              },
-              "type": "INTERFACE_TYPE_ETHERNET"
-            },
-            "2": {
-              "switch_info": {
-                "name": "qfx-3",
-                "port": "et-0/0/27"
-              },
-              "type": "INTERFACE_TYPE_ETHERNET"
-            },
-            "5": {
-              "switch_info": {
-                "name": "qfx-3",
-                "port": "et-0/0/30"
-              },
-              "type": "INTERFACE_TYPE_ETHERNET"
-            },
-            "4": {
-              "switch_info": {
-                "name": "qfx-3",
-                "port": "et-0/0/29"
-              },
-              "type": "INTERFACE_TYPE_ETHERNET"
-            },
-            "7": {
-              "switch_info": {
-                "name": "qfx-3",
-                "port": "et-0/0/32"
-              },
-              "type": "INTERFACE_TYPE_ETHERNET"
-            },
-            "6": {
-              "switch_info": {
-                "name": "qfx-3",
-                "port": "et-0/0/31"
-              },
-              "type": "INTERFACE_TYPE_ETHERNET"
-            }
-          },
           "0": {
-            "1": {
-              "switch_info": {
-                "name": "qfx-3",
-                "port": "et-0/0/18"
-              },
-              "type": "INTERFACE_TYPE_ETHERNET"
-            },
             "0": {
               "switch_info": {
                 "name": "qfx-3",
@@ -1481,10 +1420,10 @@
               },
               "type": "INTERFACE_TYPE_ETHERNET"
             },
-            "3": {
+            "1": {
               "switch_info": {
                 "name": "qfx-3",
-                "port": "et-0/0/20"
+                "port": "et-0/0/18"
               },
               "type": "INTERFACE_TYPE_ETHERNET"
             },
@@ -1495,10 +1434,10 @@
               },
               "type": "INTERFACE_TYPE_ETHERNET"
             },
-            "5": {
+            "3": {
               "switch_info": {
                 "name": "qfx-3",
-                "port": "et-0/0/22"
+                "port": "et-0/0/20"
               },
               "type": "INTERFACE_TYPE_ETHERNET"
             },
@@ -1509,10 +1448,10 @@
               },
               "type": "INTERFACE_TYPE_ETHERNET"
             },
-            "7": {
+            "5": {
               "switch_info": {
                 "name": "qfx-3",
-                "port": "et-0/0/24"
+                "port": "et-0/0/22"
               },
               "type": "INTERFACE_TYPE_ETHERNET"
             },
@@ -1520,6 +1459,71 @@
               "switch_info": {
                 "name": "qfx-3",
                 "port": "et-0/0/23"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            },
+            "7": {
+              "switch_info": {
+                "name": "qfx-3",
+                "port": "et-0/0/24"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            }
+          },
+          "1": {
+            "0": {
+              "switch_info": {
+                "name": "qfx-3",
+                "port": "et-0/0/25"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            },
+            "1": {
+              "switch_info": {
+                "name": "qfx-3",
+                "port": "et-0/0/26"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            },
+            "2": {
+              "switch_info": {
+                "name": "qfx-3",
+                "port": "et-0/0/27"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            },
+            "3": {
+              "switch_info": {
+                "name": "qfx-3",
+                "port": "et-0/0/28"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            },
+            "4": {
+              "switch_info": {
+                "name": "qfx-3",
+                "port": "et-0/0/29"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            },
+            "5": {
+              "switch_info": {
+                "name": "qfx-3",
+                "port": "et-0/0/30"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            },
+            "6": {
+              "switch_info": {
+                "name": "qfx-3",
+                "port": "et-0/0/31"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            },
+            "7": {
+              "switch_info": {
+                "name": "qfx-3",
+                "port": "et-0/0/32"
               },
               "type": "INTERFACE_TYPE_ETHERNET"
             }
@@ -1534,24 +1538,6 @@
         "type": "DUT_TYPE_FSU",
         "dut": "fs-56",
         "bond_interface_info": {
-          "1": {
-            "0": {
-              "ip": "15.56.2.2/24",
-              "route": [
-                {
-                  "network": "15.0.0.0/8",
-                  "gateway": "15.56.2.1"
-                }
-              ],
-              "type": "INTERFACE_TYPE_ETHERNET_BOND",
-              "fpg_slaves": [
-                0,
-                4,
-                8,
-                12
-              ]
-            }
-          },
           "0": {
             "0": {
               "ip": "15.56.1.2/24",
@@ -1569,21 +1555,62 @@
                 12
               ]
             }
+          },
+          "1": {
+            "0": {
+              "ip": "15.56.2.2/24",
+              "route": [
+                {
+                  "network": "15.0.0.0/8",
+                  "gateway": "15.56.2.1"
+                }
+              ],
+              "type": "INTERFACE_TYPE_ETHERNET_BOND",
+              "fpg_slaves": [
+                0,
+                4,
+                8,
+                12
+              ]
+            }
           }
         },
         "fpg_interface_info": {
-          "1": {
+          "0": {
             "0": {
               "switch_info": {
                 "name": "qfx-1",
-                "port": "et-0/0/34"
+                "port": "et-0/0/26"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            },
+            "4": {
+              "switch_info": {
+                "name": "qfx-1",
+                "port": "et-0/0/27"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            },
+            "8": {
+              "switch_info": {
+                "name": "qfx-1",
+                "port": "et-0/0/24"
               },
               "type": "INTERFACE_TYPE_ETHERNET"
             },
             "12": {
               "switch_info": {
                 "name": "qfx-1",
-                "port": "et-0/0/33"
+                "port": "et-0/0/25"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            }
+          },
+          "1": {
+            "0": {
+              "switch_info": {
+                "name": "qfx-1",
+                "port": "et-0/0/34"
               },
               "type": "INTERFACE_TYPE_ETHERNET"
             },
@@ -1600,34 +1627,11 @@
                 "port": "et-0/0/32"
               },
               "type": "INTERFACE_TYPE_ETHERNET"
-            }
-          },
-          "0": {
-            "0": {
-              "switch_info": {
-                "name": "qfx-1",
-                "port": "et-0/0/26"
-              },
-              "type": "INTERFACE_TYPE_ETHERNET"
             },
             "12": {
               "switch_info": {
                 "name": "qfx-1",
-                "port": "et-0/0/25"
-              },
-              "type": "INTERFACE_TYPE_ETHERNET"
-            },
-            "4": {
-              "switch_info": {
-                "name": "qfx-1",
-                "port": "et-0/0/27"
-              },
-              "type": "INTERFACE_TYPE_ETHERNET"
-            },
-            "8": {
-              "switch_info": {
-                "name": "qfx-1",
-                "port": "et-0/0/24"
+                "port": "et-0/0/33"
               },
               "type": "INTERFACE_TYPE_ETHERNET"
             }
@@ -1684,10 +1688,6 @@
       "0": {
         "type": "DUT_TYPE_FSU",
         "pcie_interface_info": {
-          "1": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 14
-          },
           "0": {
             "host_info": {
               "name": "systems-lab-01"
@@ -1695,11 +1695,15 @@
             "type": "INTERFACE_TYPE_PCIE",
             "hosts": 1
           },
-          "3": {
+          "1": {
             "type": "INTERFACE_TYPE_PCIE",
             "dual": 14
           },
           "2": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 14
+          },
+          "3": {
             "type": "INTERFACE_TYPE_PCIE",
             "dual": 14
           }
@@ -1713,29 +1717,6 @@
       "0": {
         "type": "DUT_TYPE_FSU",
         "pcie_interface_info": {
-          "15": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 14
-          },
-          "14": {
-            "host_info": {
-              "name": "cab03-qa-02"
-            },
-            "type": "INTERFACE_TYPE_PCIE",
-            "hosts": 1
-          },
-          "17": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 14
-          },
-          "16": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 14
-          },
-          "1": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 0
-          },
           "0": {
             "host_info": {
               "name": "cab03-qa-01"
@@ -1743,11 +1724,15 @@
             "type": "INTERFACE_TYPE_PCIE",
             "hosts": 1
           },
-          "3": {
+          "1": {
             "type": "INTERFACE_TYPE_PCIE",
             "dual": 0
           },
           "2": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 0
+          },
+          "3": {
             "type": "INTERFACE_TYPE_PCIE",
             "dual": 0
           },
@@ -1769,6 +1754,25 @@
           "7": {
             "type": "INTERFACE_TYPE_PCIE",
             "dual": 4
+          },
+          "14": {
+            "host_info": {
+              "name": "cab03-qa-02"
+            },
+            "type": "INTERFACE_TYPE_PCIE",
+            "hosts": 1
+          },
+          "15": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 14
+          },
+          "16": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 14
+          },
+          "17": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 14
           }
         },
         "dut": "fs-45"
@@ -1865,132 +1869,10 @@
       "mktg-server-14"
     ],
     "dut_info": {
-      "1": {
-        "type": "DUT_TYPE_FSU",
-        "dut": "fs-42",
-        "bond_interface_info": {
-          "1": {
-            "0": {
-              "ip": "15.42.2.2/24",
-              "route": [
-                {
-                  "network": "15.0.0.0/8",
-                  "gateway": "15.42.2.1"
-                }
-              ],
-              "type": "INTERFACE_TYPE_ETHERNET_BOND",
-              "fpg_slaves": [
-                0,
-                4,
-                8,
-                12
-              ]
-            }
-          },
-          "0": {
-            "0": {
-              "ip": "15.42.1.2/24",
-              "route": [
-                {
-                  "network": "15.0.0.0/8",
-                  "gateway": "15.42.1.1"
-                }
-              ],
-              "type": "INTERFACE_TYPE_ETHERNET_BOND",
-              "fpg_slaves": [
-                0,
-                4,
-                8,
-                12
-              ]
-            }
-          }
-        },
-        "fpg_interface_info": {
-          "1": {
-            "0": {
-              "switch_info": {
-                "name": "qfx-1",
-                "port": "et-0/0/50"
-              },
-              "type": "INTERFACE_TYPE_ETHERNET"
-            },
-            "12": {
-              "switch_info": {
-                "name": "qfx-1",
-                "port": "et-0/0/49"
-              },
-              "type": "INTERFACE_TYPE_ETHERNET"
-            },
-            "4": {
-              "switch_info": {
-                "name": "qfx-1",
-                "port": "et-0/0/51"
-              },
-              "type": "INTERFACE_TYPE_ETHERNET"
-            },
-            "8": {
-              "switch_info": {
-                "name": "qfx-1",
-                "port": "et-0/0/48"
-              },
-              "type": "INTERFACE_TYPE_ETHERNET"
-            }
-          },
-          "0": {
-            "0": {
-              "switch_info": {
-                "name": "qfx-1",
-                "port": "et-0/0/54"
-              },
-              "type": "INTERFACE_TYPE_ETHERNET"
-            },
-            "12": {
-              "switch_info": {
-                "name": "qfx-1",
-                "port": "et-0/0/53"
-              },
-              "type": "INTERFACE_TYPE_ETHERNET"
-            },
-            "4": {
-              "switch_info": {
-                "name": "qfx-1",
-                "port": "et-0/0/55"
-              },
-              "type": "INTERFACE_TYPE_ETHERNET"
-            },
-            "8": {
-              "switch_info": {
-                "name": "qfx-1",
-                "port": "et-0/0/52"
-              },
-              "type": "INTERFACE_TYPE_ETHERNET"
-            }
-          }
-        }
-      },
       "0": {
         "type": "DUT_TYPE_FSU",
         "dut": "fs-41",
         "bond_interface_info": {
-          "1": {
-            "0": {
-              "ip": "15.41.2.2/24",
-              "route": [
-                {
-                  "network": "15.0.0.0/8",
-                  "gateway": "15.41.2.1"
-                }
-              ],
-              "type": "INTERFACE_TYPE_ETHERNET_BOND",
-              "fpg_slaves": [
-                0,
-                4,
-                8,
-                12
-              ]
-            }
-          },
           "0": {
             "0": {
               "ip": "15.41.1.2/24",
@@ -2008,51 +1890,32 @@
                 12
               ]
             }
+          },
+          "1": {
+            "0": {
+              "ip": "15.41.2.2/24",
+              "route": [
+                {
+                  "network": "15.0.0.0/8",
+                  "gateway": "15.41.2.1"
+                }
+              ],
+              "type": "INTERFACE_TYPE_ETHERNET_BOND",
+              "fpg_slaves": [
+                0,
+                4,
+                8,
+                12
+              ]
+            }
           }
         },
         "fpg_interface_info": {
-          "1": {
-            "0": {
-              "switch_info": {
-                "name": "qfx-1",
-                "port": "et-0/0/18"
-              },
-              "type": "INTERFACE_TYPE_ETHERNET"
-            },
-            "12": {
-              "switch_info": {
-                "name": "qfx-1",
-                "port": "et-0/0/17"
-              },
-              "type": "INTERFACE_TYPE_ETHERNET"
-            },
-            "4": {
-              "switch_info": {
-                "name": "qfx-1",
-                "port": "et-0/0/19"
-              },
-              "type": "INTERFACE_TYPE_ETHERNET"
-            },
-            "8": {
-              "switch_info": {
-                "name": "qfx-1",
-                "port": "et-0/0/16"
-              },
-              "type": "INTERFACE_TYPE_ETHERNET"
-            }
-          },
           "0": {
             "0": {
               "switch_info": {
                 "name": "qfx-1",
                 "port": "et-0/0/22"
-              },
-              "type": "INTERFACE_TYPE_ETHERNET"
-            },
-            "12": {
-              "switch_info": {
-                "name": "qfx-1",
-                "port": "et-0/0/21"
               },
               "type": "INTERFACE_TYPE_ETHERNET"
             },
@@ -2069,21 +1932,58 @@
                 "port": "et-0/0/20"
               },
               "type": "INTERFACE_TYPE_ETHERNET"
+            },
+            "12": {
+              "switch_info": {
+                "name": "qfx-1",
+                "port": "et-0/0/21"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            }
+          },
+          "1": {
+            "0": {
+              "switch_info": {
+                "name": "qfx-1",
+                "port": "et-0/0/18"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            },
+            "4": {
+              "switch_info": {
+                "name": "qfx-1",
+                "port": "et-0/0/19"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            },
+            "8": {
+              "switch_info": {
+                "name": "qfx-1",
+                "port": "et-0/0/16"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            },
+            "12": {
+              "switch_info": {
+                "name": "qfx-1",
+                "port": "et-0/0/17"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
             }
           }
         }
       },
-      "3": {
+      "1": {
         "type": "DUT_TYPE_FSU",
-        "dut": "fs-44",
+        "dut": "fs-42",
         "bond_interface_info": {
-          "1": {
+          "0": {
             "0": {
-              "ip": "15.44.2.2/24",
+              "ip": "15.42.1.2/24",
               "route": [
                 {
                   "network": "15.0.0.0/8",
-                  "gateway": "15.44.2.1"
+                  "gateway": "15.42.1.1"
                 }
               ],
               "type": "INTERFACE_TYPE_ETHERNET_BOND",
@@ -2095,13 +1995,13 @@
               ]
             }
           },
-          "0": {
+          "1": {
             "0": {
-              "ip": "15.44.1.2/24",
+              "ip": "15.42.2.2/24",
               "route": [
                 {
                   "network": "15.0.0.0/8",
-                  "gateway": "15.44.1.1"
+                  "gateway": "15.42.2.1"
                 }
               ],
               "type": "INTERFACE_TYPE_ETHERNET_BOND",
@@ -2115,62 +2015,62 @@
           }
         },
         "fpg_interface_info": {
-          "1": {
+          "0": {
             "0": {
               "switch_info": {
-                "name": "qfx1",
-                "port": "et0/0/42"
-              },
-              "type": "INTERFACE_TYPE_ETHERNET"
-            },
-            "12": {
-              "switch_info": {
-                "name": "qfx1",
-                "port": "et0/0/41"
+                "name": "qfx-1",
+                "port": "et-0/0/54"
               },
               "type": "INTERFACE_TYPE_ETHERNET"
             },
             "4": {
               "switch_info": {
-                "name": "qfx1",
-                "port": "et0/0/43"
+                "name": "qfx-1",
+                "port": "et-0/0/55"
               },
               "type": "INTERFACE_TYPE_ETHERNET"
             },
             "8": {
               "switch_info": {
-                "name": "qfx1",
-                "port": "et0/0/40"
+                "name": "qfx-1",
+                "port": "et-0/0/52"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            },
+            "12": {
+              "switch_info": {
+                "name": "qfx-1",
+                "port": "et-0/0/53"
               },
               "type": "INTERFACE_TYPE_ETHERNET"
             }
           },
-          "0": {
+          "1": {
             "0": {
               "switch_info": {
-                "name": "qfx1",
-                "port": "et0/0/62"
-              },
-              "type": "INTERFACE_TYPE_ETHERNET"
-            },
-            "12": {
-              "switch_info": {
-                "name": "qfx1",
-                "port": "et0/0/61"
+                "name": "qfx-1",
+                "port": "et-0/0/50"
               },
               "type": "INTERFACE_TYPE_ETHERNET"
             },
             "4": {
               "switch_info": {
-                "name": "qfx1",
-                "port": "et0/0/63"
+                "name": "qfx-1",
+                "port": "et-0/0/51"
               },
               "type": "INTERFACE_TYPE_ETHERNET"
             },
             "8": {
               "switch_info": {
-                "name": "qfx1",
-                "port": "et0/0/60"
+                "name": "qfx-1",
+                "port": "et-0/0/48"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            },
+            "12": {
+              "switch_info": {
+                "name": "qfx-1",
+                "port": "et-0/0/49"
               },
               "type": "INTERFACE_TYPE_ETHERNET"
             }
@@ -2181,24 +2081,6 @@
         "type": "DUT_TYPE_FSU",
         "dut": "fs-43",
         "bond_interface_info": {
-          "1": {
-            "0": {
-              "ip": "15.43.2.2/24",
-              "route": [
-                {
-                  "network": "15.0.0.0/8",
-                  "gateway": "15.43.2.1"
-                }
-              ],
-              "type": "INTERFACE_TYPE_ETHERNET_BOND",
-              "fpg_slaves": [
-                0,
-                4,
-                8,
-                12
-              ]
-            }
-          },
           "0": {
             "0": {
               "ip": "15.43.1.2/24",
@@ -2216,51 +2098,32 @@
                 12
               ]
             }
+          },
+          "1": {
+            "0": {
+              "ip": "15.43.2.2/24",
+              "route": [
+                {
+                  "network": "15.0.0.0/8",
+                  "gateway": "15.43.2.1"
+                }
+              ],
+              "type": "INTERFACE_TYPE_ETHERNET_BOND",
+              "fpg_slaves": [
+                0,
+                4,
+                8,
+                12
+              ]
+            }
           }
         },
         "fpg_interface_info": {
-          "1": {
-            "0": {
-              "switch_info": {
-                "name": "qfx1",
-                "port": "et0/0/36"
-              },
-              "type": "INTERFACE_TYPE_ETHERNET"
-            },
-            "12": {
-              "switch_info": {
-                "name": "qfx1",
-                "port": "et0/0/45"
-              },
-              "type": "INTERFACE_TYPE_ETHERNET"
-            },
-            "4": {
-              "switch_info": {
-                "name": "qfx1",
-                "port": "et0/0/37"
-              },
-              "type": "INTERFACE_TYPE_ETHERNET"
-            },
-            "8": {
-              "switch_info": {
-                "name": "qfx1",
-                "port": "et0/0/44"
-              },
-              "type": "INTERFACE_TYPE_ETHERNET"
-            }
-          },
           "0": {
             "0": {
               "switch_info": {
                 "name": "qfx1",
                 "port": "et0/0/58"
-              },
-              "type": "INTERFACE_TYPE_ETHERNET"
-            },
-            "12": {
-              "switch_info": {
-                "name": "qfx1",
-                "port": "et0/0/57"
               },
               "type": "INTERFACE_TYPE_ETHERNET"
             },
@@ -2277,21 +2140,58 @@
                 "port": "et0/0/56"
               },
               "type": "INTERFACE_TYPE_ETHERNET"
+            },
+            "12": {
+              "switch_info": {
+                "name": "qfx1",
+                "port": "et0/0/57"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            }
+          },
+          "1": {
+            "0": {
+              "switch_info": {
+                "name": "qfx1",
+                "port": "et0/0/36"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            },
+            "4": {
+              "switch_info": {
+                "name": "qfx1",
+                "port": "et0/0/37"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            },
+            "8": {
+              "switch_info": {
+                "name": "qfx1",
+                "port": "et0/0/44"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            },
+            "12": {
+              "switch_info": {
+                "name": "qfx1",
+                "port": "et0/0/45"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
             }
           }
         }
       },
-      "4": {
+      "3": {
         "type": "DUT_TYPE_FSU",
-        "dut": "fs-56",
+        "dut": "fs-44",
         "bond_interface_info": {
-          "1": {
+          "0": {
             "0": {
-              "ip": "15.56.2.2/24",
+              "ip": "15.44.1.2/24",
               "route": [
                 {
                   "network": "15.0.0.0/8",
-                  "gateway": "15.56.2.1"
+                  "gateway": "15.44.1.1"
                 }
               ],
               "type": "INTERFACE_TYPE_ETHERNET_BOND",
@@ -2303,6 +2203,92 @@
               ]
             }
           },
+          "1": {
+            "0": {
+              "ip": "15.44.2.2/24",
+              "route": [
+                {
+                  "network": "15.0.0.0/8",
+                  "gateway": "15.44.2.1"
+                }
+              ],
+              "type": "INTERFACE_TYPE_ETHERNET_BOND",
+              "fpg_slaves": [
+                0,
+                4,
+                8,
+                12
+              ]
+            }
+          }
+        },
+        "fpg_interface_info": {
+          "0": {
+            "0": {
+              "switch_info": {
+                "name": "qfx1",
+                "port": "et0/0/62"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            },
+            "4": {
+              "switch_info": {
+                "name": "qfx1",
+                "port": "et0/0/63"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            },
+            "8": {
+              "switch_info": {
+                "name": "qfx1",
+                "port": "et0/0/60"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            },
+            "12": {
+              "switch_info": {
+                "name": "qfx1",
+                "port": "et0/0/61"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            }
+          },
+          "1": {
+            "0": {
+              "switch_info": {
+                "name": "qfx1",
+                "port": "et0/0/42"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            },
+            "4": {
+              "switch_info": {
+                "name": "qfx1",
+                "port": "et0/0/43"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            },
+            "8": {
+              "switch_info": {
+                "name": "qfx1",
+                "port": "et0/0/40"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            },
+            "12": {
+              "switch_info": {
+                "name": "qfx1",
+                "port": "et0/0/41"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            }
+          }
+        }
+      },
+      "4": {
+        "type": "DUT_TYPE_FSU",
+        "dut": "fs-56",
+        "bond_interface_info": {
           "0": {
             "0": {
               "ip": "15.56.1.2/24",
@@ -2320,21 +2306,62 @@
                 12
               ]
             }
+          },
+          "1": {
+            "0": {
+              "ip": "15.56.2.2/24",
+              "route": [
+                {
+                  "network": "15.0.0.0/8",
+                  "gateway": "15.56.2.1"
+                }
+              ],
+              "type": "INTERFACE_TYPE_ETHERNET_BOND",
+              "fpg_slaves": [
+                0,
+                4,
+                8,
+                12
+              ]
+            }
           }
         },
         "fpg_interface_info": {
-          "1": {
+          "0": {
             "0": {
               "switch_info": {
                 "name": "qfx-1",
-                "port": "et-0/0/34"
+                "port": "et-0/0/26"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            },
+            "4": {
+              "switch_info": {
+                "name": "qfx-1",
+                "port": "et-0/0/27"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            },
+            "8": {
+              "switch_info": {
+                "name": "qfx-1",
+                "port": "et-0/0/24"
               },
               "type": "INTERFACE_TYPE_ETHERNET"
             },
             "12": {
               "switch_info": {
                 "name": "qfx-1",
-                "port": "et-0/0/33"
+                "port": "et-0/0/25"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            }
+          },
+          "1": {
+            "0": {
+              "switch_info": {
+                "name": "qfx-1",
+                "port": "et-0/0/34"
               },
               "type": "INTERFACE_TYPE_ETHERNET"
             },
@@ -2351,34 +2378,11 @@
                 "port": "et-0/0/32"
               },
               "type": "INTERFACE_TYPE_ETHERNET"
-            }
-          },
-          "0": {
-            "0": {
-              "switch_info": {
-                "name": "qfx-1",
-                "port": "et-0/0/26"
-              },
-              "type": "INTERFACE_TYPE_ETHERNET"
             },
             "12": {
               "switch_info": {
                 "name": "qfx-1",
-                "port": "et-0/0/25"
-              },
-              "type": "INTERFACE_TYPE_ETHERNET"
-            },
-            "4": {
-              "switch_info": {
-                "name": "qfx-1",
-                "port": "et-0/0/27"
-              },
-              "type": "INTERFACE_TYPE_ETHERNET"
-            },
-            "8": {
-              "switch_info": {
-                "name": "qfx-1",
-                "port": "et-0/0/24"
+                "port": "et-0/0/33"
               },
               "type": "INTERFACE_TYPE_ETHERNET"
             }
@@ -2398,25 +2402,6 @@
       "0": {
         "type": "DUT_TYPE_FSU",
         "pcie_interface_info": {
-          "14": {
-            "host_info": {
-              "name": "cab03-qa-04"
-            },
-            "type": "INTERFACE_TYPE_PCIE",
-            "hosts": 1
-          },
-          "15": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 14
-          },
-         "16": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 14
-          },
-          "17": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 14
-          },
           "0": {
             "host_info": {
               "name": "cab03-qa-05"
@@ -2432,10 +2417,28 @@
             "type": "INTERFACE_TYPE_PCIE",
             "dual": 0
           },
-
           "3": {
             "type": "INTERFACE_TYPE_PCIE",
             "dual": 0
+          },
+          "14": {
+            "host_info": {
+              "name": "cab03-qa-04"
+            },
+            "type": "INTERFACE_TYPE_PCIE",
+            "hosts": 1
+          },
+          "15": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 14
+          },
+          "16": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 14
+          },
+          "17": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 14
           }
         },
         "dut": "fs-66"

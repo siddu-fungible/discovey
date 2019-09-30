@@ -109,9 +109,18 @@ class TopologyHelper:
                 if "start_mode" in dut_info:
                     start_mode = dut_info["start_mode"]
 
+                pool_member_type = Dut.PoolMemberType.POOL_MEMBER_TYPE_DEFAULT
+                if "pool_member_type" in dut_info:
+                    pool_member_type = dut_info["pool_member_type"]
+
                 # Create DUT object
                 dut_mode = Dut.MODE_REAL if not is_mode_simulation else Dut.MODE_SIMULATION
-                dut_obj = Dut(type=dut_type, index=dut_index, spec=dut_info, start_mode=start_mode, mode=dut_mode)
+                dut_obj = Dut(type=dut_type,
+                              index=dut_index,
+                              spec=dut_info,
+                              start_mode=start_mode,
+                              mode=dut_mode,
+                              pool_member_type=pool_member_type)
                 if "dut" in dut_info:
                     dut_obj.set_name(name=dut_info["dut"])
 

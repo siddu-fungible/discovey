@@ -12,6 +12,7 @@ import {ActivatedRoute} from "@angular/router";
 import {TriageService} from "../triage2/triage.service";
 import {SuiteEditorService} from "../suite-editor/suite-editor.service";
 import {CommonService} from "../../services/common/common.service";
+import {TestBedService} from "../test-bed/test-bed.service";
 
 class Mode {
   static REGULAR = "REGULAR";
@@ -128,7 +129,8 @@ export class SubmitJobComponent implements OnInit {
               private title: Title, private route: ActivatedRoute,
               private triageService: TriageService,
               private suiteEditorService: SuiteEditorService,
-              private commonService: CommonService) {
+              private commonService: CommonService,
+              private testBedService: TestBedService) {
     this.currentTriageType = this.triageTypes[0].value;
   }
 
@@ -585,6 +587,16 @@ export class SubmitJobComponent implements OnInit {
 
   _hasKey(o, key) {
     return Object.keys(o).indexOf(key) > -1;
+  }
+
+  _getPoolMemberTypeOptionsString(assetType, poolMemberTypeOptions) {
+    let s = "";
+    Object.keys(poolMemberTypeOptions).forEach(poolMemberTypeOption => {
+      let optionTypeString = this.testBedService.poolMemberTypeOptionToString(assetType, poolMemberTypeOption);
+      s += `${optionTypeString}: ${poolMemberTypeOptions[poolMemberTypeOption].num}, `;
+    });
+    s = s.replace(/, $/, "");
+    return s;
   }
 
   onChangeSelectedCategories() {

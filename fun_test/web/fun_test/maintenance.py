@@ -1439,7 +1439,8 @@ if __name__ == "__main_remove_milestones__":
         if "Tape-out" in mm.milestone_name or "F1" in mm.milestone_name:
             mm.delete()
 
-if __name__ == "__main__":
+
+if __name__ == "__main__alibaba":
     metric_ids = [900, 901]
     for metric_id in metric_ids:
         chart = MetricChart.objects.get(metric_id=metric_id)
@@ -1538,6 +1539,22 @@ if __name__ == "__main__":
         final_dict = ml.get_dict(chart=root_chart)
         print json.dumps(final_dict)
 
-                
 
+if __name__ == "__main__":
+    with open(METRICS_BASE_DATA_FILE, "r") as f:
+        metrics = json.load(f)
+        for metric in metrics:
+            if metric["label"] == "F1":
+                f1_metrics = metric["children"]
+                for f1_metric in f1_metrics:
+                    if f1_metric["label"] == "TeraMarks":
+                        teramark_metrics = f1_metric
 
+    tera_mark_childrens = teramark_metrics["children"]
+    for tera_mark_children in tera_mark_childrens:
+        if tera_mark_children["label"] == "Security":
+            security_childrens = tera_mark_children["children"]
+            for security_children in security_childrens:
+                if security_children["name"] == "Crypto raw throughput":
+                    result = set_internal_name(security_children)
+                    print json.dumps(result, indent=4)

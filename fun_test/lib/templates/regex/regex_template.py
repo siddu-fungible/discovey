@@ -228,6 +228,7 @@ class RegexTemplate(Linux):
                     con1.logger.log(pld)
                     try:
                         base = pat.split(".pat")[0]
+                        pld_base = re.search("test_\d+_(\d+).(in|pcap)", pld).group(1)
                     except:
                         continue
                     if base in exclude_lst:
@@ -257,7 +258,6 @@ class RegexTemplate(Linux):
                     con1.logger.log("payload_path for compilation is ")
                     con1.logger.log(payload_path)
 
-#                    pld_base = re.search("test_\d+_\d+", pld).group()
                     #for mem in ["dflt", "rbm", "exm", "exm_plr", "rbm_exm", "rbm_exm_plr"]:
                     cmd="ls -la " + payload_path + " | awk '{print $5}'"
                     payload_len = con1.command(cmd,timeout=time_out)
@@ -360,7 +360,10 @@ class RegexTemplate(Linux):
                                  con1.logger.log("failed to create the expected output dict")
                             graph_sz = op[3]
                             compile_time = op[2]
-                            expected_ext_file_path=exp_file_path+base+"_"+str(idx+1)+"_exp.json"
+                            if juniper_style:
+                                expected_ext_file_path=exp_file_path+base+"_"+str(idx+1)+"_exp.json"
+                            else:
+                                expected_ext_file_path=exp_file_path+base+"_"+pld_base+"_exp.json" 
                             print ("expected_ext_file_path",expected_ext_file_path)
                             fun_test.log("exp file name is ")
                             fun_test.log(expected_ext_file_path)
