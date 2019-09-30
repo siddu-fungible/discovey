@@ -202,7 +202,7 @@ class SiteState():
             self._do_register_metric(metric=all_metrics_metric)
             for metric in metrics:
                 self._do_register_metric(metric=metric)
-                ml.set_global_cache(cache_valid=False)
+            ml.set_global_cache(cache_valid=False)
             ml.update_weights_for_wip()
 
     def set_metrics_settings(self):
