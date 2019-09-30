@@ -17,12 +17,23 @@ def get_netesto_script(test_type='basic', no_of_streams=1, no_of_nobuff_streams=
         servers3 = 'cab02-qa-03,cab02-qa-01,cab02-qa-02'
         servers_t1 = 'cab02-qa-03t'
         servers_t3 = 'cab02-qa-02t'
+        client1 = 'cab02-qa-05'
+        client3 = 'cab02-qa-06'
         # splitting the nobuff_streams across 2 servers
+        no_of_nobuff_streams = int(no_of_nobuff_streams/2)
+    elif test_type == 'one_host':
+        servers3 = 'cab02-qa-03,cab02-qa-01,cab02-qa-02'
+        servers_t1 = 'cab02-qa-03t'
+        servers_t3 = 'cab02-qa-03t'
+        client1 = 'cab02-qa-05'
+        client3 = 'cab02-qa-05'
         no_of_nobuff_streams = int(no_of_nobuff_streams/2)
     else:
         servers3 = 'cab02-qa-03,cab02-qa-01,cab02-qa-02'
         servers_t1 = 'cab02-qa-03t'
         servers_t3 = 'cab02-qa-02t'
+        client1 = 'cab02-qa-05'
+        client3 = 'cab02-qa-06'
 
     ali_script.append('''
     #
@@ -38,9 +49,9 @@ def get_netesto_script(test_type='basic', no_of_streams=1, no_of_nobuff_streams=
     SET clients2=cab02-qa-05,cab02-qa-07
     SET clients3=cab02-qa-05,cab02-qa-07,cab02-qa-06
 
-    SET client1=cab02-qa-05
+    SET client1={CLIENT1}
     SET client2=cab02-qa-07
-    SET client3=cab02-qa-06
+    SET client3={CLIENT3}
     SET server1=cab02-qa-03
     SET server2=cab02-qa-01
     SET server3=cab02-qa-02
@@ -88,7 +99,7 @@ def get_netesto_script(test_type='basic', no_of_streams=1, no_of_nobuff_streams=
     SET_SYSCTL host=$host net.core.wmem_max=67108864
     SET_SYSCTL host=$host net.ipv4.tcp_wmem=10000,262144,33554432
     END preClient
-    '''.format(SERVERS3=servers3,SERVERS_T1=servers_t1,SERVERS_T3=servers_t3))
+    '''.format(CLIENT1=client1,CLIENT3=client3,SERVERS3=servers3,SERVERS_T1=servers_t1,SERVERS_T3=servers_t3))
 
     if test_type == 'tcp_rr_only_test':
         local_buff = 0
@@ -100,7 +111,7 @@ def get_netesto_script(test_type='basic', no_of_streams=1, no_of_nobuff_streams=
         SET interval=0
         SET burst2=0
         SET interval2=0
-        SET reqs=100M
+        SET reqs=10M
         SET reply=1
         SET reqs1=1B
         SET reply1=1
@@ -282,9 +293,10 @@ def run_netesto(test_type, no_of_streams, no_of_nobuff_streams, no_of_rr, local_
 
 
 if __name__ == '__main__':
-    test_type = 'basic'
+    #test_type = 'basic'
+    #test_type = 'one_host'
     #test_type = 'stream_no_buff_limit'
-    #test_type = 'tcp_rr_only_test'
+    test_type = 'tcp_rr_only_test'
     fun_test.shared_variables['result'] = {}
     fun_test.shared_variables['result']['script_names'] = []
     total_calls = 0
