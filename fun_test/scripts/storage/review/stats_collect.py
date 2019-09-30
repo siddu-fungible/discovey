@@ -33,11 +33,11 @@ class StatsCollectTC(FunTestCase):
         handle = FunCpDockerContainer(host_ip="10.1.105.58", ssh_username="fun", ssh_password="123", ssh_port=22,
                                       name=name)
 
-        cmd = "date; /opt/fungible/FunSDK/bin/Linux/dpcsh/dpcsh --pcie_nvme_sock=/dev/nvme0 --nocli 'debug memory' | tee -a debug_memory_stats.txt"
+        cmd = "date; /opt/fungible/FunSDK/bin/Linux/dpcsh/dpcsh --pcie_nvme_sock=/dev/nvme0 --nocli 'debug memory' | tee -a debug_memory_stats_new.txt"
 
         for i in range(720):
             fun_test.log("Current iteration is: {}".format(i))
-            handle.command("date >> debug_memory_stats.txt")
+            handle.command("date >> debug_memory_stats_new.txt")
             output = handle.command(cmd)
             fun_test.sleep("for 60 seconds", 60)
 
