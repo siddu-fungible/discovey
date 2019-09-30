@@ -218,6 +218,7 @@ class FunControlPlaneBringup:
         if self.hostprefix:
             setup_docker_command += " --hostprefix %s" % self.hostprefix
         if ep:
+            # TODO: Do we need to add storage?
             setup_docker_output = linux_obj_come.command(command=(setup_docker_command + " --ep"), timeout=1200)
         else:
             setup_docker_output = linux_obj_come.command(command=setup_docker_command, timeout=1200)
@@ -227,6 +228,8 @@ class FunControlPlaneBringup:
         #    fun_test.test_assert(section in setup_docker_output, "{} seen".format(section))
         linux_obj_come.disconnect()
         self._get_docker_names()
+        # TODO: Do we need to remove VLAN creating with EP mode ?
+
         if ep:
             for docker in self.docker_names:
                 linux_obj_come.command("docker exec %s sudo ip link add link irb name vlan1 type vlan id 1" % docker)
@@ -479,7 +482,7 @@ class FunControlPlaneBringup:
         funeth_op = linux_obj.command(command="lsmod | grep funeth")
         try:
             if "funeth" in funeth_op:
-                funeth_rm = linux_obj.sudo_command("rmmod funeth")
+                funeth_rm = linux_obj.sudo_command("rmmod funeth fun_core")
                 if "ERROR" not in funeth_rm:
                     fun_test.log("Funeth removed succesfully")
                 else:
