@@ -1007,6 +1007,25 @@
           "9": {
             "type": "INTERFACE_TYPE_PCIE",
             "dual": 8
+          },
+          "14": {
+            "host_info": {
+              "name": "cab02-qa-08"
+            },
+            "type": "INTERFACE_TYPE_PCIE",
+            "hosts": 1
+          },
+          "15": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 14
+          },
+          "16": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 14
+          },
+          "17": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 14
           }
         },
         "dut": "fs-48"
@@ -1062,6 +1081,25 @@
           "9": {
             "type": "INTERFACE_TYPE_PCIE",
             "dual": 8
+          },
+          "14": {
+            "host_info": {
+              "name": "cab02-qa-04"
+            },
+            "type": "INTERFACE_TYPE_PCIE",
+            "hosts": 1
+          },
+          "15": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 14
+          },
+          "16": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 14
+          },
+          "17": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 14
           }
         },
         "dut": "fs-60"
