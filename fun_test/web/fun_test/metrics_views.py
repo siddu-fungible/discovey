@@ -881,6 +881,11 @@ def traverse_dag(levels, metric_id, metric_chart_entries, sort_by_name=True):
 def dag(request):
     result = []
     levels = int(request.GET.get("levels", 15))
+    workspace = request.GET.get('workspace', 'false')
+    if workspace == 'true':
+        workspace = True
+    else:
+        workspace = False
     # metric ids are used instead of chart names for F1, S1 and all metrics
     metric_ids = request.GET.get("root_metric_ids", '101,591,122')  # 101=F1, 122=All Metrics, 591-S1
     if ',' in metric_ids:
@@ -889,14 +894,11 @@ def dag(request):
         metric_ids = [int(metric_ids)]
     global_setting = MetricsGlobalSettings.objects.first()
     cache_valid = global_setting.cache_valid
-    if not cache_valid or (cache_valid and levels != 15):
+    if not cache_valid or (cache_valid and levels != 15) or workspace:
         metric_chart_entries = {}
         for metric_id in metric_ids:
-            if metric_id == 122:
-                sort_by_name = True
-            else:
-                sort_by_name = False
-            chart = MetricChart.objects.get(metric_id=metric_id)
+            sort_by_name = False
+            chart = MetricChart.objects.get(metric_id=int(metric_id))
             metric_chart_entries[chart.metric_id] = chart
             result.append(traverse_dag(levels=levels, metric_id=chart.metric_id, sort_by_name=sort_by_name,
                                        metric_chart_entries=metric_chart_entries))
@@ -904,9 +906,9 @@ def dag(request):
         pmds = PerformanceMetricsDag.objects.all().order_by("-date_time")[:1]
         for pmd in pmds:
             for metric_id in metric_ids:
-                if metric_id == 101:
+                if int(metric_id) == 101:
                     result.append(json.loads(pmd.f1_metrics_dag))
-                if metric_id == 591:
+                if int(metric_id) == 591:
                     result.append(json.loads(pmd.s1_metrics_dag))
     return result
 

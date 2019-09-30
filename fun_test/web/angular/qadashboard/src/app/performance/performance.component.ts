@@ -169,7 +169,6 @@ export class PerformanceComponent implements OnInit {
   slashReplacement: string = "_fsl"; //forward slash
 
   rootNode: FlatNode = null;
-  allMetricsNode: FlatNode = null;
 
   buildInfo: any = null;
   showF1Dag: boolean = true;
@@ -324,7 +323,10 @@ export class PerformanceComponent implements OnInit {
       url += "?root_metric_ids=591";
     }
     if (this.metricIds) {
-      url = "/metrics/dag" + "?root_metric_ids=" + String(this.metricIds);
+      url = "/metrics/dag" + "?root_metric_ids=" + String(this.metricIds) + "&workspace=true";
+    }
+    if (this.selectMode == SelectMode.ShowEditWorkspace) {
+      url = "/metrics/dag" + "?root_metric_ids=101,591";
     }
     // Fetch the DAG
     this.apiService.get(url).subscribe(response => {
@@ -333,7 +335,7 @@ export class PerformanceComponent implements OnInit {
       for (let dag of this.dag) {
         this.walkDag(dag, lineage);
       }
-      if (!this.queryExists) {
+      if (!this.queryExists && this.selectMode == SelectMode.ShowMainSite) {
         this.updateUpDownSincePrevious(true);
         this.updateUpDownSincePrevious(false);
       }
@@ -649,11 +651,9 @@ export class PerformanceComponent implements OnInit {
     let newNode = this.getNodeFromEntry(numMetricId, dagEntry);
     this.addNodeToMap(numMetricId, newNode);
     thisFlatNode = this.getNewFlatNode(newNode, indent);
-    if (newNode.chartName === "All metrics") {
+    if (newNode.chartName === "S1" || newNode.chartName === "All metrics" || newNode.chartName === "F1") {
       thisFlatNode.hide = false;
       lineage = [];
-      this.allMetricsNode = thisFlatNode;
-
     }
     if (this.metricIds && this.metricIds.includes(newNode.metricId)) {
       thisFlatNode.hide = false;
@@ -1228,9 +1228,17 @@ export class PerformanceComponent implements OnInit {
   }
 
   navigateByQuery(flatNode) {
-    let path = this.lineageToPath(flatNode.lineage[0]);
-    let queryPath = this.gotoQueryBaseUrl + path;
-    this.router.navigateByUrl(queryPath);
+    if (this.selectMode == SelectMode.ShowMainSite) {
+      let path = this.lineageToPath(flatNode.lineage[0]);
+      let queryPath = this.gotoQueryBaseUrl + path;
+      this.router.navigateByUrl(queryPath);
+    } else {
+      if (!flatNode.node.leaf) {
+        this.showNonAtomicMetric(flatNode);
+      } else {
+        this.showAtomicMetric(flatNode);
+      }
+    }
   }
 
   pathToGuid(path) {
