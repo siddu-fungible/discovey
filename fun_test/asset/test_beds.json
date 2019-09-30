@@ -946,6 +946,10 @@
       "9": {
         "type": "DUT_TYPE_FSU",
         "dut": "fs-20"
+      },
+       "10": {
+        "type": "DUT_TYPE_FSU",
+        "dut": "fs-40"
       }
     }
   },
