@@ -12,8 +12,8 @@ class Command(BaseCommand):
         site_state.register_tags()
         site_state.register_modules()
         site_state.register_test_beds()
+        site_state.register_assets()
 
         if not is_lite_mode():
             site_state.register_product_metrics()
             site_state.set_metrics_settings()
-        site_state.register_assets()

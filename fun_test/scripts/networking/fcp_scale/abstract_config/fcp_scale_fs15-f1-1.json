@@ -1,0 +1,95 @@
+{
+	"Description": "FS-15-F1-1 abstract cfg",
+    "F1Index" : 1,
+    "Interfaces" : [
+		{ 
+	    	"name" : "fpg0", 
+	    	"address" : "10.2.20.0",
+	    	"prefix length" : 31,
+	    	"spine_index" : 0,
+	    	"gph_index" : 0,	    
+	    	"enable" : true
+		},
+   	 	{	
+			"name" : "fpg2",
+        	"address" : "10.2.20.2",
+        	"prefix length" : 31,
+        	"spine_index" : 1,
+        	"gph_index" : 1,
+        	"enable" : true
+    	},
+        {
+            "name" : "fpg4",
+            "address" : "10.2.20.4",
+            "prefix length" : 31,
+            "spine_index" : 2,
+            "gph_index" : 2,
+            "enable" : true
+        },
+        {
+            "name" : "fpg6",
+            "address" : "10.2.20.6",
+            "prefix length" : 31,
+            "spine_index" : 3,
+            "gph_index" : 3,
+            "enable" : true
+        },
+        {
+            "name" : "fpg8",
+            "address" : "10.2.20.8",
+            "prefix length" : 31,
+            "spine_index" : 4,
+            "gph_index" : 4,
+            "enable" : true
+        },
+        {
+            "name" : "fpg10",
+            "address" : "10.2.20.10",
+            "prefix length" : 31,
+            "spine_index" : 5,
+            "gph_index" : 5,
+            "enable" : true
+        },
+        {
+            "name" : "fpg12",
+            "address" : "10.2.20.12",
+            "prefix length" : 31,
+            "spine_index" : 6,
+            "gph_index" : 6,
+            "enable" : true
+        },
+        {
+            "name" : "fpg14",
+            "address" : "10.2.20.14",
+            "prefix length" : 31,
+            "spine_index" : 7,
+            "gph_index" : 7,
+            "enable" : true
+        },
+		{ 
+	    	"name" : "lo:0", 
+	    	"address" : "30.0.15.1",
+	    	"prefix length" : 32,	    
+	    	"enable" : true
+		},
+        {
+            "name" : "vlan1",
+            "address" : "20.2.20.1",
+            "prefix length" : 24,
+            "enable" : true
+       }
+    ],
+    "BGP" : {
+	"Local AS": 200,
+	"Neighbors" : [
+	    { "peer" : "10.2.20.1", "peer-as": 100},
+	    { "peer" : "10.2.20.3", "peer-as": 100},
+		{ "peer" : "10.2.20.5", "peer-as": 100},
+		{ "peer" : "10.2.20.7", "peer-as": 100},
+        { "peer" : "10.2.20.9", "peer-as": 100},
+        { "peer" : "10.2.20.11", "peer-as": 100},
+        { "peer" : "10.2.20.13", "peer-as": 100},
+        { "peer" : "10.2.20.15", "peer-as": 100}
+	]
+    }	
+}

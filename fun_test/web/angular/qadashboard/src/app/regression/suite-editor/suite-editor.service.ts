@@ -100,7 +100,7 @@ export class SuiteEditorService {
   suite(id=null): Observable<Suite>{
     let url = "/api/v1/regression/suites";
     if (id) {
-      url += `${id}`;
+      url += `/${id}`;
     }
 
     return this.apiService.get(url).pipe(map(response => new Suite(response.data)));
