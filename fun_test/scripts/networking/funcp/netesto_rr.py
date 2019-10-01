@@ -36,7 +36,7 @@ def get_dpc_stats():
     result = {"fs48_debug_vp_util": fs48_debug_vp_util, "fs60_debug_vp_util": fs60_debug_vp_util,
               "fs48_bam_stats": fs48_bam_stats, "fs60_bam_stats": fs60_bam_stats,
               "fs48_psw_stats": fs48_psw_stats, "fs60_psw_stats":fs60_psw_stats}
-    return result
+    fun_test.shared_variables["dpc_stats_result"] = result
 
 def get_netesto_script(test_type='basic', no_of_streams=1, no_of_nobuff_streams=0, no_of_rr=1, rr_size='1B', local_buff=9000, remote_buff=9000):
     ali_script = []
@@ -267,7 +267,7 @@ def run_netesto(test_type, no_of_streams, no_of_nobuff_streams, no_of_rr, rr_siz
 
     for thread_id in threads_list:
         fun_test.join_thread(fun_test_thread_id=thread_id, sleep_time=1)
-
+    print fun_test.shared_variables["dpc_stats_result"]
     # netesto_controller.sudo_command(command="./netesto.py -d < fun_scripts/netesto_execute_script", timeout=600)
 
     # netesto_controller.sudo_command(command="./netesto.py -d < fun_scripts/script.alibaba_3servers", timeout=600)
