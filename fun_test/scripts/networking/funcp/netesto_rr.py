@@ -279,6 +279,10 @@ def run_netesto(test_type, no_of_streams, no_of_nobuff_streams, no_of_rr, rr_siz
                 row += 1
 
         if test_type == 'tcp_rr_only_test':
+            rr_latency_min = 0
+            rr_latency_p50 = 0
+            rr_latency_p90 = 0
+            rr_latency_p99 = 0
             for i in row_lst:
                 rr_latency_min = int(rr_latency_min) + int(df.loc[i].at['Latency_Min'])
                 rr_latency_p50 = int(rr_latency_p50) + int(df.loc[i].at['Latency_p50'])
@@ -290,13 +294,24 @@ def run_netesto(test_type, no_of_streams, no_of_nobuff_streams, no_of_rr, rr_siz
             rr_latency_p90 = int(rr_latency_p90) / len(row_lst)
             rr_latency_p99 = int(rr_latency_p99) / len(row_lst)
 
+            row = 0 
+            for flow in df['FlowId']:
+                if flow.startswith('cab02-qa-07'):
+                    print flow
+                    break
+                row += 1
+            rr_1B_latency = str(df.loc[row].at['Latency_Min']) + ':' + str(df.loc[row].at['Latency_p50']) + ':' + str(df.loc[row].at['Latency_p90']) + ':' + str(df.loc[row].at['Latency_p99'])
         else:
             rr_latency_min = df.loc[row].at['Latency_Min']
             rr_latency_p50 = df.loc[row].at['Latency_p50']
             rr_latency_p90 = df.loc[row].at['Latency_p90']
             rr_latency_p99 = df.loc[row].at['Latency_p99']
+            rr_1B_latency = 'na'
         no_of_nobuff_streams = str(no_of_nobuff_streams)
-        name = str(no_of_streams) + "streams_" + str(local_buff) + "buff_" + str(no_of_nobuff_streams) + "nobuff"
+        if test_type == 'tcp_rr_only_test':
+            name = str(no_of_streams) + "streams_" + str(local_buff) + "buff_" + str(no_of_nobuff_streams) + "nobuff_" + str(rr_size) + "_rr_size"
+        else:    
+            name = str(no_of_streams) + "streams_" + str(local_buff) + "buff_" + str(no_of_nobuff_streams) + "nobuff"
 
         result = {'no_of_streams': no_of_streams, 'no_of_rr': no_of_rr,
                                                            'local_buff': local_buff, 'remote_buff': remote_buff,
@@ -305,6 +320,7 @@ def run_netesto(test_type, no_of_streams, no_of_nobuff_streams, no_of_rr, rr_siz
                                                            'rr_latency_p50': rr_latency_p50,
                                                            'rr_latency_p90':rr_latency_p90,
                                                            'rr_latency_p99': rr_latency_p99,
+                                                           'rr_1B_latency': rr_1B_latency,
                                                            'netesto_folder': netesto_process,
                                                            'aggregate': "http://10.1.105.194/Chart.js/"
                                                                         "fun_plots/aggregate_%s.csv" % netesto_process}
@@ -385,12 +401,12 @@ if __name__ == '__main__':
             #nobuff_streams = 4
         for buff_value in buffs:
             if ':' in buff_value:
-                nobuff_streams = int(buff_value.split(':')[1])
-                buff_value = int(buff_value.split(':')[0])
                 if len(buff_value.split(':')) > 2:
-                    rr_size = int(buff_value.split(':')[2])
+                    rr_size = buff_value.split(':')[2]
                 else:
                     rr_size = '1B'
+                nobuff_streams = int(buff_value.split(':')[1])
+                buff_value = int(buff_value.split(':')[0])    
             else:
                 nobuff_streams = 0
                 rr_size = '1B'
@@ -402,7 +418,7 @@ if __name__ == '__main__':
     print fun_test.shared_variables['result']
     directory = '/workspace/Integration/fun_test/scripts/networking/funcp/'
     fw = open(directory+'/netesto_results.csv', 'w')
-    fw.write("Stream Name,no_of_streams,no_of_rr,no_of_nobuff_streams,rr_latency_min,rr_latency_p50,rr_latency_p90,rr_latency_p99,total_throughput,local_buff,remote_buff,netesto_folder,aggregate file link\n")
+    fw.write("Stream Name,no_of_streams,no_of_rr,no_of_nobuff_streams,rr_latency_min,rr_latency_p50,rr_latency_p90,rr_latency_p99,rr_1B_latency,total_throughput,local_buff,remote_buff,netesto_folder,aggregate file link\n")
     for res1 in fun_test.shared_variables['result']['script_names']:
         res = fun_test.shared_variables['result'][res1]
         print("Res is " + str(res))
@@ -416,6 +432,7 @@ if __name__ == '__main__':
         line.append(str(res['rr_latency_p50']))
         line.append(str(res['rr_latency_p90']))
         line.append(str(res['rr_latency_p99']))
+        line.append(str(res['rr_1B_latency']))
         line.append(str(res['total_throughput']))
         line.append(str(res['local_buff']))
         line.append(str(res['remote_buff']))
