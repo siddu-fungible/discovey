@@ -10,13 +10,22 @@ import pandas as pd
 from StringIO import StringIO
 import random
 
-def execute_netesto_command_on_controller(netesto_controller):
-    netesto_controller.sudo_command(command="./netesto.py -d < fun_scripts/netesto_execute_script", timeout=600)
+def execute_netesto_command_on_controller(netesto_controller, i):
+    if i == 1:
+        netesto_pid = netesto_controller.start_bg_process(command="sudo ./netesto.py -d < fun_scripts/netesto_execute_script", timeout=10)
+        while netesto_controller.process_exists(process_id=netesto_pid):
+            fun_test.log("Netesto Process running")
+            fun_test.sleep(message="Waiting for netesto process", seconds=5)
+
+    elif i == 0:
+        get_dpc_stats()
 
 def get_dpc_stats():
+
+    print "Enter DPC folder"
     nc1 = NetworkController(dpc_server_ip="fs48-come", dpc_server_port=40220, verbose=True)
-    nc2 = NetworkController(dpc_server_ip="fs60-come", dpc_server_port=40220, verbose=True)
-    t_end = time.time() + 75
+    # nc2 = NetworkController(dpc_server_ip="fs60-come", dpc_server_port=40220, verbose=True)
+
     fs48_debug_vp_util = {}
     fs60_debug_vp_util = {}
     fs48_bam_stats = {}
@@ -24,18 +33,24 @@ def get_dpc_stats():
     fs48_psw_stats = {}
     fs60_psw_stats = {}
     count = 0
-    while time.time() < t_end:
-        fs48_debug_vp_util[str(count)] = nc1.debug_vp_util()
-        fs60_debug_vp_util[str(count)] = nc2.debug_vp_util()
-        fs48_bam_stats[str(count)] = nc1.peek_resource_bam_stats()
-        fs60_bam_stats[str(count)] = nc2.peek_resource_bam_stats()
-        fs48_psw_stats[str(count)] = nc1.peek_psw_global_stats()
-        fs60_psw_stats[str(count)] = nc2.peek_psw_global_stats()
-        count += 1
-        fun_test.sleep(message="Waiting for next iteration", seconds=5)
+    t_end = time.time() + 75
+    try:
+        while time.time() < t_end:
+            fs48_debug_vp_util[str(count)] = nc1.debug_vp_util()
+            # fs60_debug_vp_util[str(count)] = nc2.debug_vp_util()
+            fs48_bam_stats[str(count)] = nc1.peek_resource_bam_stats()
+            # fs60_bam_stats[str(count)] = nc2.peek_resource_bam_stats()
+            fs48_psw_stats[str(count)] = nc1.peek_psw_global_stats()
+            # fs60_psw_stats[str(count)] = nc2.peek_psw_global_stats()
+            count += 1
+            fun_test.sleep(message="Waiting for next iteration", seconds=5)
+    except:
+        fun_test.critical("Cant fetch output form DPC")
+    nc1.disconnect()
+    # nc2.disconnect()
     result = {"fs48_debug_vp_util": fs48_debug_vp_util, "fs60_debug_vp_util": fs60_debug_vp_util,
               "fs48_bam_stats": fs48_bam_stats, "fs60_bam_stats": fs60_bam_stats,
-              "fs48_psw_stats": fs48_psw_stats, "fs60_psw_stats":fs60_psw_stats}
+              "fs48_psw_stats": fs48_psw_stats, "fs60_psw_stats": fs60_psw_stats}
     fun_test.shared_variables["dpc_stats_result"] = result
 
 def get_netesto_script(test_type='basic', no_of_streams=1, no_of_nobuff_streams=0, no_of_rr=1, rr_size='1B', local_buff=9000, remote_buff=9000):
@@ -230,10 +245,9 @@ def run_netesto(test_type, no_of_streams, no_of_nobuff_streams, no_of_rr, rr_siz
         script_file_name = st[1][1]
         fun_test._initialize(script_file_name)
 
-    #directory = '/Users/yajat/Documents/Fungible/WORKSPACE/Integration/fun_test/scripts/networking/funcp/'
+    # directory = '/Users/yajat/Documents/Fungible/WORKSPACE/Integration/fun_test/scripts/networking/funcp/'
     directory = '/workspace/Integration/fun_test/scripts/networking/funcp/'
     self_linux = Linux(host_ip='127.0.0.1', ssh_username='netesto', ssh_password='netesto')
-    #self_linux = Linux(host_ip='127.0.0.1', ssh_username='yajat', ssh_password='messi3006')
     self_linux.command('cd %s' % directory)
 
     with open(directory+'/netesto_execute_script', 'w+') as file:
@@ -254,21 +268,20 @@ def run_netesto(test_type, no_of_streams, no_of_nobuff_streams, no_of_rr, rr_siz
 
     netesto_process_before_test = netesto_controller.command("cat counter; echo").strip()
 
-    # fun_test.sleep(message="Sleep before tests start", seconds=10)
-    threads_list = []
-    for i in range(2):
-        if i == 0:
-            thread_id = fun_test.execute_thread_after(time_in_seconds=1, func=get_dpc_stats)
-            threads_list.append(thread_id)
-        if i == 1:
-            thread_id = fun_test.execute_thread_after(time_in_seconds=1, func=execute_netesto_command_on_controller,
-                                                      netesto_controller=netesto_controller)
-            threads_list.append(thread_id)
+    get_dpc = False
+    if get_dpc:
+        # fun_test.sleep(message="Sleep before tests start", seconds=10)
+        threads_list_new = []
+        for i in range(2):
+                thread_idx = fun_test.execute_thread_after(time_in_seconds=1, func=execute_netesto_command_on_controller,
+                                                          netesto_controller=netesto_controller, i=i)
+                threads_list_new.append(thread_idx)
 
-    for thread_id in threads_list:
-        fun_test.join_thread(fun_test_thread_id=thread_id, sleep_time=1)
-    print fun_test.shared_variables["dpc_stats_result"]
-    # netesto_controller.sudo_command(command="./netesto.py -d < fun_scripts/netesto_execute_script", timeout=600)
+        for thread_idx in threads_list_new:
+            fun_test.join_thread(fun_test_thread_id=thread_idx, sleep_time=1)
+        print fun_test.shared_variables["dpc_stats_result"]
+    else:
+        netesto_controller.sudo_command(command="./netesto.py -d < fun_scripts/netesto_execute_script", timeout=600)
 
     # netesto_controller.sudo_command(command="./netesto.py -d < fun_scripts/script.alibaba_3servers", timeout=600)
 
@@ -391,8 +404,8 @@ if __name__ == '__main__':
             arg_buffs.append(sys.argv[2])
             print "Streams list is %s , arg_buffs is %s" %(str(streams_list),str(arg_buffs))
     else:
-        #streams_list = [0, 4, 8, 16, 32]
-        streams_list = [0,4,8,16,32]
+        streams_list = [0, 4, 8, 16, 32]
+        # streams_list = [0]
 
     for streams in streams_list:
         if test_type == 'stream_no_buff_limit':
@@ -423,6 +436,7 @@ if __name__ == '__main__':
                 buffs = arg_buffs
             else:
                 if test_type=='tcp_rr_only_test':
+                    # buffs = ['0:4:10M']
                     buffs = ['0:4:10M', '0:8:10M', '0:16:10M', '0:32:10M', '0:64:10M', '0:4:20M', '0:8:20M', '0:16:20M', '0:32:20M', '0:64:20M']
                 else:
                     buffs = ['0:4', '0:8', '0:16', '0:32', '0:64', '0:128', '0:256', '0:512', '0:1024']
