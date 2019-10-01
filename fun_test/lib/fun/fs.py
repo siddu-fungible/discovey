@@ -557,7 +557,7 @@ class Bmc(Linux):
         fun_test.simple_assert(expression=self.list_files(self.UART_LOG_LISTENER_PATH),
                                    message="UART log listener copied",
                                    context=self.context)
-        
+
 
         log_listener_processes = self.get_process_id_by_pattern("uart_log_listener.py", multiple=True)
         for log_listener_process in log_listener_processes:
@@ -1077,6 +1077,9 @@ class ComE(Linux):
                     artifact_file_name = fun_test.get_test_case_artifact_file_name(
                         self._get_context_prefix(base_name))
 
+                    if not fun_test.is_at_least_one_failed():
+                        if "openr" in file_name.lower():
+                            continue
                     fun_test.scp(source_ip=self.host_ip,
                                  source_file_path=file_name,
                                  source_username=self.ssh_username,
