@@ -261,12 +261,16 @@ class FunTest:
         self.profiling_timer = None
         self.topologies = []
         self.hosts = []
+        self.at_least_one_failed = False
         self.closed = False
         self.enable_profiling()
 
     def report_message(self, message):  # Used only by FunXml only
         if self.fun_xml_obj:
             self.fun_xml_obj.add_message(message=message)
+
+    def is_at_least_one_failed(self):
+        return self.at_least_one_failed
 
     def initialize_output_files(self, absolute_script_file_name):
         # (frame, file_name, line_number, function_name, lines, index) = \
@@ -1060,6 +1064,8 @@ class FunTest:
 
     def _end_test(self, result):
         self.fun_xml_obj.end_test(result=result)
+        if result == FunTest.FAILED:
+            self.at_least_one_failed = True
         self.test_metrics[self.current_test_case_id]["result"] = result
 
     def _append_assert_test_metric(self, assert_message):

@@ -1,6 +1,37 @@
 from lib.system.fun_test import *
 from collections import OrderedDict
 import re
+from lib.host.linux import Linux
+import wrapper
+HOSTS_ASSET = ASSET_DIR + "/hosts.json"
+hosts = fun_test.parse_file_to_json(file_name=HOSTS_ASSET)
+
+
+def check_host_connected(hosts_list):
+    for host_name in hosts_list:
+        result = False
+        host_handle = get_host_handle(host_name)
+        output_lsblk = host_handle.lsblk()
+        for key in output_lsblk:
+            if "nvme" in key:
+                result = True
+                break
+        fun_test.test_assert(result, "{} host is connected".format(host_name))
+
+
+def check_traffic(hosts_list):
+    for host_name in hosts_list:
+        host_handle = get_host_handle(host_name)
+        device = "/dev/nvme0n1"
+        output_iostat = host_handle.iostat(device=device, interval=2, count=5, background=False)
+        device_name = "nvme0n1"
+        result = wrapper.ensure_io_running(device_name, output_iostat, host_name)
+
+
+def check_docker(come_handle, expected=3):
+    output = come_handle.command("docker ps -a")
+    num_docker = wrapper.docker_get_num_dockers(output)
+    fun_test.test_assert_expected(expected=expected, actual=num_docker, message="Docker's up")
 
 
 def check_pci_dev(come_handle, f1=0):
@@ -23,9 +54,10 @@ def check_ssd(come_handle, expected_ssds_up=6, f1=0):
         return True
     dpcsh_data = get_dpcsh_data_for_cmds(come_handle, "peek storage/devices/nvme/ssds", f1)
     if dpcsh_data:
-        validate = validate_ssd_status(dpcsh_data, expected_ssds_up)
+        validate = validate_ssd_status(dpcsh_data, expected_ssds_up, f1)
         if validate:
             result = True
+    fun_test.test_assert(result, "F1_{}: SSD's ONLINE".format(f1))
     return result
 
 
@@ -45,18 +77,28 @@ def check_nu_ports(come_handle,
     return result
 
 
+def check_come_up_time(come_handle, expected_seconds=5):
+    initial = come_handle.command("uptime")
+    output = come_handle.command("uptime")
+    up_time = re.search(r'(\d+) min', output)
+    up_time_less_than_5 = False
+    if up_time:
+        up_time_min = int(up_time.group(1))
+        if up_time_min <= expected_seconds:
+            up_time_less_than_5 = True
+    fun_test.test_assert(up_time_less_than_5, "COMe 'up-time' less than 5 min")
+
+
 # Validation
 
 
-def validate_ssd_status(dpcsh_data, expected_ssd_count):
+def validate_ssd_status(dpcsh_data, expected_ssd_count, f1):
     result = True
     if dpcsh_data:
         ssds_count = len(dpcsh_data)
-        ssd_count_check = False
-        if ssds_count == expected_ssd_count:
-            ssd_count_check = True
-        fun_test.test_assert(ssd_count_check,
-                             "SSD count: Expected: {}, Present: {}".format(expected_ssd_count, ssds_count), )
+        fun_test.test_assert_expected(expected=expected_ssd_count,
+                                      actual=ssds_count,
+                                      message="F1_{}: SSD count".format(f1))
         for each_ssd, value in dpcsh_data.iteritems():
             if "device state" in value:
                 if not (value["device state"] == "DEV_ONLINE"):
@@ -175,3 +217,13 @@ def get_dpcsh_data_for_cmds(come_handle, cmd, f1=0):
     except:
         fun_test.log("Unable to get the DPCSH data for command: {}".format(cmd))
     return result
+
+# Common functions
+
+
+def get_host_handle(host_name):
+    host_info = hosts[host_name]
+    host_handle = Linux(host_ip=host_info['host_ip'],
+                        ssh_username=host_info['ssh_username'],
+                        ssh_password=host_info['ssh_password'])
+    return host_handle
