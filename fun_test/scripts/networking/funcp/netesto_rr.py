@@ -1,6 +1,8 @@
 #!/usr/bin/python
 import sys
 import os
+from lib.host.network_controller import *
+
 sys.path.append('/workspace/Integration/fun_test')
 from lib.system.fun_test import *
 from lib.host.linux import Linux
@@ -8,8 +10,31 @@ import pandas as pd
 from StringIO import StringIO
 import random
 
+def get_dpc_stats():
+    nc1 = NetworkController(dpc_server_ip="fs48-come", dpc_server_port=40220, verbose=True)
+    nc2 = NetworkController(dpc_server_ip="fs60-come", dpc_server_port=40220, verbose=True)
+    t_end = time.time() + 75
+    fs48_debug_vp_util = {}
+    fs60_debug_vp_util = {}
+    fs48_bam_stats = {}
+    fs60_bam_stats = {}
+    fs48_psw_stats = {}
+    fs60_psw_stats = {}
+    count = 0
+    while time.time() < t_end:
+        fs48_debug_vp_util[str(count)] = nc1.debug_vp_util()
+        fs60_debug_vp_util[str(count)] = nc2.debug_vp_util()
+        fs48_bam_stats[str(count)] = nc1.peek_resource_bam_stats()
+        fs60_bam_stats[str(count)] = nc2.peek_resource_bam_stats()
+        fs48_psw_stats[str(count)] = nc1.peek_psw_global_stats()
+        fs60_psw_stats[str(count)] = nc2.peek_psw_global_stats()
+        count += 1
+        fun_test.sleep(message="Waiting for next iteration", seconds=5)
+    result = {"fs48_debug_vp_util": fs48_debug_vp_util, "fs60_debug_vp_util": fs60_debug_vp_util,
+              "fs48_bam_stats": fs48_bam_stats, "fs60_bam_stats": fs60_bam_stats,
+              "fs48_psw_stats": fs48_psw_stats, "fs60_psw_stats":fs60_psw_stats}
+    return result
 
- 
 def get_netesto_script(test_type='basic', no_of_streams=1, no_of_nobuff_streams=0, no_of_rr=1, rr_size='1B', local_buff=9000, remote_buff=9000):
     ali_script = []
     test_duration = 60
@@ -227,8 +252,21 @@ def run_netesto(test_type, no_of_streams, no_of_nobuff_streams, no_of_rr, rr_siz
     netesto_process_before_test = netesto_controller.command("cat counter; echo").strip()
 
     # fun_test.sleep(message="Sleep before tests start", seconds=10)
+    threads_list = []
+    for i in range(2):
+        if i == 0:
+            thread_id = fun_test.execute_thread_after(time_in_seconds=1, func=get_dpc_stats)
+            threads_list.append(thread_id)
+        if i == 1:
+            thread_id = fun_test.execute_thread_after(time_in_seconds=1, func=netesto_controller.sudo_command,
+                                                      command="./netesto.py -d < fun_scripts/netesto_execute_script",
+                                                      timeout=600)
+            threads_list.append(thread_id)
 
-    netesto_controller.sudo_command(command="./netesto.py -d < fun_scripts/netesto_execute_script", timeout=600)
+    for thread_id in threads_list:
+        fun_test.join_thread(fun_test_thread_id=thread_id, sleep_time=1)
+
+    # netesto_controller.sudo_command(command="./netesto.py -d < fun_scripts/netesto_execute_script", timeout=600)
 
     # netesto_controller.sudo_command(command="./netesto.py -d < fun_scripts/script.alibaba_3servers", timeout=600)
 
