@@ -441,6 +441,7 @@ export class PerformanceComponent implements OnInit {
   expandUrl(): void {
     if (!this.queryPath) {
       this.queryPath = this.getDefaultQueryPath(this.rootNode);
+      this.router.navigateByUrl(this.queryPath);
     }
     let pathGuid = this.pathToGuid(this.queryPath);
     let targetFlatNode = this.guIdFlatNodeMap[pathGuid];
@@ -981,67 +982,6 @@ export class PerformanceComponent implements OnInit {
     this.passedDateTime = null;
   }
 
-  openTooltip(node): void {
-    this.setDefaultUrls();
-    //let payload = {"metric_model_name": node.metricModelName, chart_name: node.chartName};
-    let payload = {"metric_id": node.metricId};
-    this.apiService.post('/metrics/chart_info', payload).subscribe((data) => {
-      let result = data.data;
-      if (result.last_suite_execution_id && result.last_suite_execution_id !== -1) {
-        this.currentRegressionUrl = PerformanceComponent.REGRESSION_BASE_URL + result.last_suite_execution_id;
-      }
-      if (result.last_jenkins_job_id && result.last_jenkins_job_id !== -1) {
-        this.currentJenkinsUrl = PerformanceComponent.JENKINS_BASE_URL + result.last_jenkins_job_id;
-      }
-      if (result.last_lsf_job_id && result.last_lsf_job_id !== -1) {
-        this.currentLsfUrl = PerformanceComponent.LSF_BASE_URL + result.last_lsf_job_id;
-      }
-      if (result.last_git_commit && result.last_git_commit !== "") {
-        this.currentGitCommit = result.last_git_commit;
-      }
-    }, error => {
-      this.loggerService.error("Current Failed Urls");
-    });
-
-    let payload1 = {"metric_id": node.metricId};
-    this.apiService.post('/metrics/past_status', payload1).subscribe((data) => {
-      let result = data.data;
-      if (result.failed_date_time) {
-        this.failedDateTime = result.failed_date_time;
-      }
-      if (result.failed_suite_execution_id && result.failed_suite_execution_id !== -1) {
-        this.failedRegressionUrl = PerformanceComponent.REGRESSION_BASE_URL + result.failed_suite_execution_id;
-      }
-      if (result.failed_jenkins_job_id && result.failed_jenkins_job_id !== -1) {
-        this.failedJenkinsUrl = PerformanceComponent.JENKINS_BASE_URL + result.failed_jenkins_job_id;
-      }
-      if (result.failed_lsf_job_id && result.failed_lsf_job_id !== -1) {
-        this.failedLsfUrl = PerformanceComponent.LSF_BASE_URL + result.failed_lsf_job_id;
-      }
-      if (result.failed_git_commit && result.failed_git_commit !== "") {
-        this.failedGitCommit = result.failed_git_commit;
-      }
-      if (result.passed_date_time) {
-        this.passedDateTime = result.passed_date_time;
-      }
-      if (result.passed_suite_execution_id && result.passed_suite_execution_id !== -1) {
-        this.passedRegressionUrl = PerformanceComponent.REGRESSION_BASE_URL + result.passed_suite_execution_id;
-      }
-      if (result.passed_jenkins_job_id && result.passed_jenkins_job_id !== -1) {
-        this.passedJenkinsUrl = PerformanceComponent.JENKINS_BASE_URL + result.passed_jenkins_job_id;
-      }
-      if (result.passed_lsf_job_id && result.passed_lsf_job_id !== -1) {
-        this.passedLsfUrl = PerformanceComponent.LSF_BASE_URL + result.passed_lsf_job_id;
-      }
-      if (result.passed_git_commit && result.passed_git_commit !== "") {
-        this.passedGitCommit = result.passed_git_commit;
-      }
-    }, error => {
-      this.loggerService.error("Past Status Urls");
-    });
-
-  }
-
   openUrl(url): void {
     window.open(url, '_blank');
   }
@@ -1134,9 +1074,6 @@ export class PerformanceComponent implements OnInit {
       this.expandNode(flatNode);
       this.commonService.scrollTo("chart-info");
       this.chartReady = true;
-      // if (this.selectMode == SelectMode.ShowMainSite) {
-      //   this.navigateByQuery(flatNode);
-      // }
       this.fetchChartInfo(flatNode);
     } else if (this.selectMode == SelectMode.ShowEditWorkspace) {
       flatNode.showAddLeaf = true;
@@ -1185,9 +1122,6 @@ export class PerformanceComponent implements OnInit {
         this.expandNode(flatNode);
         this.chartReady = true;
       }
-      // if (!flatNode.special && this.selectMode == SelectMode.ShowMainSite) {
-      //   this.navigateByQuery(flatNode);
-      // }
       this.fetchChartInfo(flatNode);
     } else {
       this.expandNode(flatNode);
