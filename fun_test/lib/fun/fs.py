@@ -13,6 +13,7 @@ from threading import Thread
 from datetime import datetime
 import re
 import os
+import socket
 
 ERROR_REGEXES = ["MUD_MCI_NON_FATAL_INTR_STAT", "bug_check", "platform_halt: exit status 1"]
 
@@ -172,6 +173,12 @@ class Bmc(Linux):
         self.setup_support_files = setup_support_files
         self.nc = {}  # nc connections to serial proxy indexed by f1_index
         self.hbm_dump_enabled = fun_test.get_job_environment_variable("hbm_dump")
+
+    def _get_fake_mac(self, index):
+        this_ip = socket.gethostbyname(self.host_ip)   #so we can resolve full fqdn/ip-string in dot-decimal
+        a, b, c, d = this_ip.split('.')
+        return ':'.join(['02'] + ['1d', 'ad', "%02x" % int(c), "%02x" % int(d)] + ["%02x" % int(index)])
+
 
     @fun_test.safe
     def ping(self,
@@ -412,6 +419,13 @@ class Bmc(Linux):
                             expected=self.U_BOOT_F1_PROMPT,
                             f1_index=index)
 
+        self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_SET_ETH_ADDR)
+        fake_mac = self._get_fake_mac(index=index)
+        self.u_boot_command(command="setenv ethaddr {}".format(fake_mac),
+                            timeout=15,
+                            expected=self.U_BOOT_F1_PROMPT,
+                            f1_index=index)
+
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_TRAIN)
         self.u_boot_command(command="lfw; lmpg; ltrain; lstatus",
                             timeout=15,
@@ -532,7 +546,7 @@ class Bmc(Linux):
         fun_test.simple_assert(expression=len(serial_proxy_ids) == 2,
                                message="2 serial proxies are alive",
                                context=self.context)
-
+        """
         uart_listener_script = FUN_TEST_LIB_UTILITIES_DIR + "/{}".format(self.UART_LOG_LISTENER_FILE)
 
         fun_test.scp(source_file_path=uart_listener_script,
@@ -543,6 +557,8 @@ class Bmc(Linux):
         fun_test.simple_assert(expression=self.list_files(self.UART_LOG_LISTENER_PATH),
                                    message="UART log listener copied",
                                    context=self.context)
+        """
+
         log_listener_processes = self.get_process_id_by_pattern("uart_log_listener.py", multiple=True)
         for log_listener_process in log_listener_processes:
             self.kill_process(signal=9, process_id=log_listener_process, kill_seconds=2)
