@@ -267,7 +267,6 @@ if __name__ == '__main__':
     ts.add_test_case(BringupControlPlane())
     ts.add_test_case(CheckPCIeWidth())
     ts.add_test_case(NicEmulation())
-    # TODO: Add dpc stats
     ts.add_test_case(TestPings())
     ts.add_test_case(TestScp())
     ts.run()
