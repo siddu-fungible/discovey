@@ -140,16 +140,20 @@ class TestHostPCIeLanes(FunTestCase):
         pass
 
     def check_pcie_link_speed(self, hostname, link_speed, username="localadmin", password="Precious1*"):
+        result = True
         linux_obj = Linux(host_ip=hostname, ssh_username=username, ssh_password=password)
         lspci_out = linux_obj.sudo_command(command="sudo lspci -d 1dad: -vv | grep LnkSta")
         output = linux_obj.command('lspci -d 1dad:')
         link_check = re.search(r'Ethernet controller: (?:Device 1dad:00f1|Fungible Device 00f1)', output)
         fun_test.test_assert(expression=link_check, message="Fungible Ethernet PFs on host %s" % hostname)
+        result &= link_check
         if link_speed not in lspci_out:
             if "LnkSta" not in lspci_out:
                 fun_test.test_assert(expression=False, message="PCIE link did not come up on Host %s" % hostname)
             else:
                 fun_test.critical("PCIE link did not come up in %s mode on Host %s" % (link_speed, hostname))
+            result &= False
+        fun_test.shared_variables["pcie_host_result"] &= result
 
     def run(self):
 
@@ -162,6 +166,7 @@ class TestHostPCIeLanes(FunTestCase):
             fs_list = [test_bed_type]
             test_bed_type = 'fs-fcp-scale'
         threads_list = []
+        fun_test.shared_variables["pcie_host_result"] = True
         for fs_name in fs_list:
             servers_mode = testbed_info['fs'][test_bed_type][fs_name]['hu_host_list']
             for server_key in servers_mode:
@@ -173,8 +178,11 @@ class TestHostPCIeLanes(FunTestCase):
         for thread_id in threads_list:
             fun_test.join_thread(fun_test_thread_id=thread_id, sleep_time=1)
 
+        fun_test.test_assert(expression=fun_test.shared_variables["pcie_host_result"], message="PCIe Link Speed Check")
+
     def cleanup(self):
         pass
+
 
 if __name__ == '__main__':
     ts = ScriptSetup()
