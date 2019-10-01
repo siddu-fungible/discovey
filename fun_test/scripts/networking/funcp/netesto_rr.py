@@ -10,6 +10,9 @@ import pandas as pd
 from StringIO import StringIO
 import random
 
+def execute_netesto_command_on_controller(netesto_controller):
+    netesto_controller.sudo_command(command="./netesto.py -d < fun_scripts/netesto_execute_script", timeout=600)
+
 def get_dpc_stats():
     nc1 = NetworkController(dpc_server_ip="fs48-come", dpc_server_port=40220, verbose=True)
     nc2 = NetworkController(dpc_server_ip="fs60-come", dpc_server_port=40220, verbose=True)
@@ -258,9 +261,8 @@ def run_netesto(test_type, no_of_streams, no_of_nobuff_streams, no_of_rr, rr_siz
             thread_id = fun_test.execute_thread_after(time_in_seconds=1, func=get_dpc_stats)
             threads_list.append(thread_id)
         if i == 1:
-            thread_id = fun_test.execute_thread_after(time_in_seconds=1, func=netesto_controller.sudo_command,
-                                                      command="./netesto.py -d < fun_scripts/netesto_execute_script",
-                                                      timeout=600)
+            thread_id = fun_test.execute_thread_after(time_in_seconds=1, func=execute_netesto_command_on_controller,
+                                                      netesto_controller=netesto_controller)
             threads_list.append(thread_id)
 
     for thread_id in threads_list:
