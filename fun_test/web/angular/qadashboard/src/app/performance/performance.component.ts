@@ -286,7 +286,7 @@ export class PerformanceComponent implements OnInit {
   }
 
   setDefaultsForDag(): void {
-    this.queryExists = false;
+    // this.queryExists = false;
     this.queryPath = null;
     this.showBugPanel = false;
     this.chartReady = false;
@@ -441,7 +441,9 @@ export class PerformanceComponent implements OnInit {
   expandUrl(): void {
     if (!this.queryPath) {
       this.queryPath = this.getDefaultQueryPath(this.rootNode);
-      this.router.navigateByUrl(this.queryPath);
+      if (this.queryExists) {
+        this.router.navigateByUrl(this.queryPath);
+      }
     }
     let pathGuid = this.pathToGuid(this.queryPath);
     let targetFlatNode = this.guIdFlatNodeMap[pathGuid];
