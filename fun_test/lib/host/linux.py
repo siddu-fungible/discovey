@@ -952,6 +952,16 @@ class Linux(object, ToDictMixin):
     def tshark_parse(self, file_name, read_filter, fields=None, decode_as=None):
         pass
 
+    def stat(self, file_name):
+        result = {}
+        command = "stat {}".format(file_name)
+        output = self.command(command)
+        for line in output.split("\n"):
+            m = re.search("Size:\s+(\d+)", line)
+            if m:
+                result["size"] = int(m.group(1))
+        return result
+
     @fun_test.safe
     def enter_sudo(self, preserve_environment=None):
         result = False
