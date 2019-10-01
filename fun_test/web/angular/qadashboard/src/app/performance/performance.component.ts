@@ -331,7 +331,7 @@ export class PerformanceComponent implements OnInit {
 
   }
 
-   setDag(): any {
+  setDag(): any {
     let url = "/metrics/dag";
     let fetchIt = true;
     if (this.selectMode == SelectMode.ShowEditWorkspace) {
@@ -351,14 +351,14 @@ export class PerformanceComponent implements OnInit {
       }
     }
     if (fetchIt) {
-     return this.apiService.get(url).pipe(switchMap(response => {
-       if (this.showF1Dag) {
-         this.f1Dag = response.data;
-       } else {
-         this.s1Dag = response.data;
-       }
+      return this.apiService.get(url).pipe(switchMap(response => {
+        if (this.showF1Dag) {
+          this.f1Dag = response.data;
+        } else {
+          this.s1Dag = response.data;
+        }
         return of(response.data);
-    }));
+      }));
     } else {
       if (this.showF1Dag) {
         return of(this.f1Dag);
@@ -371,25 +371,23 @@ export class PerformanceComponent implements OnInit {
   fetchDag(): void {
     this.status = "Fetching DAG";
     new Observable(observer => {
-        observer.next(true);
-        observer.complete();
-        return () => {
-        }
-      }).pipe(
-        switchMap(response => {
-          return this.setDag();
-        })).subscribe(response => {
-        this.dag = response;
-        let lineage = [];
+      observer.next(true);
+      observer.complete();
+      return () => {
+      }
+    }).pipe(
+      switchMap(response => {
+        return this.setDag();
+      })).subscribe(response => {
+      this.dag = response;
+      let lineage = [];
       for (let dag of this.dag) {
         this.walkDag(dag, lineage);
       }
+      //total container should always appear and up and down since previous nodes added
       if (this.selectMode == SelectMode.ShowMainSite) {
         this.updateUpDownSincePrevious(true);
         this.updateUpDownSincePrevious(false);
-      }
-      //total container should always appear
-      if (this.selectMode == SelectMode.ShowMainSite) {
         this.rootNode = this.flatNodes[0];
         this.rootNode.hide = false;
         this.expandUrl();
@@ -404,62 +402,12 @@ export class PerformanceComponent implements OnInit {
               flatNode.subscribe = metric.subscribe;
             }
           }
-
         }
       }
       this.status = null;
-      }, error => {
-        this.loggerService.error("Unable to fetch Dag");
-      });
-    // let url = "/metrics/dag";
-    // if (this.selectMode == SelectMode.ShowEditWorkspace) {
-    //   url = "/metrics/dag" + "?root_metric_ids=101,591";
-    // } else {
-    //   if (this.showF1Dag) {
-    //     url += "?root_metric_ids=101";
-    //   }
-    //   if (this.showS1Dag) {
-    //     url += "?root_metric_ids=591";
-    //   }
-    //   if (this.metricIds) {
-    //     url = "/metrics/dag" + "?root_metric_ids=" + String(this.metricIds) + "&workspace=true";
-    //   }
-    // }
-    // // Fetch the DAG
-    // this.apiService.get(url).subscribe(response => {
-    //   this.dag = response.data;
-    //   let lineage = [];
-    //   for (let dag of this.dag) {
-    //     this.walkDag(dag, lineage);
-    //   }
-    //   if (this.selectMode == SelectMode.ShowMainSite) {
-    //     this.updateUpDownSincePrevious(true);
-    //     this.updateUpDownSincePrevious(false);
-    //   }
-    //   //total container should always appear
-    //   if (this.selectMode == SelectMode.ShowMainSite) {
-    //     this.rootNode = this.flatNodes[0];
-    //     this.rootNode.hide = false;
-    //     this.expandUrl();
-    //   }
-    //   if (this.selectMode == SelectMode.ShowEditWorkspace && this.interestedMetrics) {
-    //     this.flatNodes[0].hide = false;
-    //     for (let flatNode of this.flatNodes) {
-    //       for (let metric of this.interestedMetrics) {
-    //         if (flatNode.node.metricId === metric.metric_id) {
-    //           flatNode.showAddLeaf = true;
-    //           flatNode.track = true;
-    //           flatNode.subscribe = metric.subscribe;
-    //         }
-    //       }
-    //
-    //     }
-    //   }
-    //   this.status = null;
-    //
-    // }, error => {
-    //   this.loggerService.error("fetchDag");
-    // });
+    }, error => {
+      this.loggerService.error("Unable to fetch Dag");
+    });
   }
 
   processUrl(): void {
