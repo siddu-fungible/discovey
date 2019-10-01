@@ -65,8 +65,8 @@
               },
               "fs-67": {
                   "index": 5,
-                  "abtract_config_f1_0": "/abstract_config/fcp_scale_fs38-f1-0.json",
-                  "abtract_config_f1_1": "/abstract_config/fcp_scale_fs38-f1-1.json",
+                  "abtract_config_f1_0": "/abstract_config/fcp_scale_fs67-f1-0.json",
+                  "abtract_config_f1_1": "/abstract_config/fcp_scale_fs67-f1-1.json",
                   "prepare_docker":false,
                   "gatewayip": "10.80.4.1",
                   "mpg0":"10.80.4.209",
@@ -77,8 +77,8 @@
               },
               "fs-8": {
                   "index": 6,
-                  "abtract_config_f1_0": "/abstract_config/fcp_scale_fs38-f1-0.json",
-                  "abtract_config_f1_1": "/abstract_config/fcp_scale_fs38-f1-1.json",
+                  "abtract_config_f1_0": "/abstract_config/fcp_scale_fs8-f1-0.json",
+                  "abtract_config_f1_1": "/abstract_config/fcp_scale_fs8-f1-1.json",
                   "prepare_docker":false,
                   "gatewayip": "10.80.4.1",
                   "mpg0":"10.80.4.154",
@@ -127,8 +127,8 @@
               },
               "fs-40": {
                   "index": 10,
-                  "abtract_config_f1_0": "/abstract_config/fcp_scale_fs20-f1-0.json",
-                  "abtract_config_f1_1": "/abstract_config/fcp_scale_fs20-f1-1.json",
+                  "abtract_config_f1_0": "/abstract_config/fcp_scale_fs40-f1-0.json",
+                  "abtract_config_f1_1": "/abstract_config/fcp_scale_fs40-f1-1.json",
                   "prepare_docker":false,
                   "gatewayip": "10.80.4.1",
                   "mpg0":"10.80.4.184",
