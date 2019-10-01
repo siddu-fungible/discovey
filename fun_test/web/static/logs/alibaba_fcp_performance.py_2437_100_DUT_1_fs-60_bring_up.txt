@@ -1,0 +1,186 @@
+[2019-08-27 02:35:22.693166-07:00] DUT:1:fs-60: ASSERT PASSED: expected=True actual=True, TFTP image path: s_24658_funos-f1.stripped.gz
+
+DUT:1:fs-60: FS boot-phase: FS_BRING_UP_INIT
+
+=============================================
+
+DUT:1:fs-60: FS boot-phase: FS_BRING_UP_BMC_INITIALIZE
+
+=======================================================
+[2019-08-27 02:35:22.705318-07:00] DUT:1:fs-60: ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null sysadmin@10.1.105.169 -p 22
+Warning: Permanently added '10.1.105.169' (RSA) to the list of known hosts.
+sysadmin@10.1.105.169's password: [2019-08-27 02:35:26.698401-07:00] DUT:1:fs-60: Sending Password: superuser
+
+~ # [2019-08-27 02:35:31.128967-07:00] DUT:1:fs-60: Connected to 10.1.105.169 Using sysadmin:superuser
+
+~ # stty cols 1024
+~ # ?
+-/bin/sh: ?: not found
+~ # export PATH=$PATH
+~ # cd /mnt/sdmmc0p1/scripts
+/mnt/sdmmc0p1/scripts # ps -ef | grep 'microcom'| grep -v grep
+/mnt/sdmmc0p1/scripts # ps -ef | grep 'minicom'| grep -v grep
+/mnt/sdmmc0p1/scripts # cd /mnt/sdmmc0p1/_install
+/mnt/sdmmc0p1/_install # ps -ef | grep 'python.*999'| grep -v grep
+sysadmin 27469     1  0 02:28 ?        00:00:01 /usr/bin/python -m serial.utils.tcp_serial_redirect -P 9990 /dev/ttyS0 1000000
+sysadmin 27470     1  0 02:28 ?        00:00:01 /usr/bin/python -m serial.utils.tcp_serial_redirect -P 9991 /dev/ttyS2 1000000
+/mnt/sdmmc0p1/_install # sudo bash
+-/bin/sh: sudo: not found
+/mnt/sdmmc0p1/_install # kill -9 27469
+/mnt/sdmmc0p1/_install # 
+/mnt/sdmmc0p1/_install # sudo bash
+-/bin/sh: sudo: not found
+/mnt/sdmmc0p1/_install # kill -9 27470
+/mnt/sdmmc0p1/_install # 
+/mnt/sdmmc0p1/_install # ps -ef | grep 'python.*999'| grep -v grep
+/mnt/sdmmc0p1/_install # bash web/fungible/RUN_TCP_PYSERIAL.sh
+F1[0] console /dev/ttyS0
+F1[0] SBP     /dev/ttyS1
+F1[1] console /dev/ttyS2
+F1[1] SBP     /dev/ttyS3
+/mnt/sdmmc0p1/_install # ps -ef | grep 'python.*999'| grep -v grep
+sysadmin   569     1  0 02:35 pts/0    00:00:00 /usr/bin/python -m serial.utils.tcp_serial_redirect -P 9990 /dev/ttyS0 1000000
+sysadmin   570     1  0 02:35 pts/0    00:00:00 /usr/bin/python -m serial.utils.tcp_serial_redirect -P 9991 /dev/ttyS2 1000000
+/mnt/sdmmc0p1/_install # ls -ltrd /tmp/uart_log_listener.py
+-rwxr-xr-x    1 sysadmin sysadmin      3065 Aug 27 02:35 /tmp/uart_log_listener.py
+/mnt/sdmmc0p1/_install # ps -ef | grep 'uart_log_listener.py'| grep -v grep
+/mnt/sdmmc0p1/_install # [2019-08-27 02:35:54.243289-07:00] DUT:1:fs-60: ASSERT PASSED: expected=True actual=True, BMC initialize
+gpiotool 57 --get-data
+Inside Read gpio.
+
+Pin is High 
+/mnt/sdmmc0p1/_install # gpiotool 57 --set-data-low
+Inside Set Gpio low 
+
+GPIO pin is set to low 
+
+/mnt/sdmmc0p1/_install # sleep 2
+/mnt/sdmmc0p1/_install # gpiotool 57 --set-data-high
+Inside Set Gpio high 
+
+GPIO pin is set to high 
+
+/mnt/sdmmc0p1/_install # sleep 2
+/mnt/sdmmc0p1/_install # cd /mnt/sdmmc0p1/scripts
+/mnt/sdmmc0p1/scripts # ./f1_uartmux.sh 1
+F1[0] console /dev/ttyS0
+F1[0] SBP     /dev/ttyS1
+F1[1] console /dev/ttyS2
+F1[1] SBP     /dev/ttyS3
+/mnt/sdmmc0p1/scripts # [2019-08-27 02:36:01.259035-07:00] DUT:1:fs-60: ASSERT PASSED: expected=True actual=True, Set F1s
+
+DUT:1:fs-60: FS boot-phase: FS_BRING_UP_FUNETH_UNLOAD_COME_POWER_CYCLE
+
+=======================================================================
+[2019-08-27 02:36:01.264290-07:00] DUT:1:fs-60: ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@10.1.105.170 -p 22
+Warning: Permanently added '10.1.105.170' (ECDSA) to the list of known hosts.
+Last login: Wed Jun 26 22:31:48 2019 from 10.1.70.104
+root@arria10:~# [2019-08-27 02:36:04.279558-07:00] DUT:1:fs-60: Connected to 10.1.105.170 Using root:root
+
+root@arria10:~# stty cols 1024
+root@arria10:~# 
+root@arria10:~# export PATH=$PATH
+root@arria10:~# 
+root@arria10:~# ./f1reset -s 0 0; sleep 2;
+root@arria10:~# ./f1reset -g
+Reg value = 0xe000003c
+
+F1_0 is in reset
+
+F1_1 is in reset
+
+root@arria10:~# ./f1reset -s 1 0; sleep 2;
+root@arria10:~# ./f1reset -g
+Reg value = 0xe000003c
+
+F1_0 is in reset
+
+F1_1 is in reset
+
+root@arria10:~# [2019-08-27 02:38:55.177131-07:00] DUT:1:fs-60: ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null fun@10.1.105.171 -p 22
+Warning: Permanently added '10.1.105.171' (ECDSA) to the list of known hosts.
+fun@10.1.105.171's password: [2019-08-27 02:38:57.520330-07:00] DUT:1:fs-60: Sending Password: 123
+
+Welcome to Ubuntu 18.04.2 LTS (GNU/Linux 4.15.0-45-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/advantage
+
+  System information as of Tue Aug 27 02:38:58 PDT 2019
+
+  System load:  1.69                Processes:               168
+  Usage of /:   14.7% of 123.21GB   Users logged in:         0
+  Memory usage: 1%                  IP address for enp3s0f0: 10.1.105.171
+  Swap usage:   0%
+
+ * Keen to learn Istio? It's included in the single-package MicroK8s.
+
+     https://snapcraft.io/microk8s
+
+ * Canonical Livepatch is available for installation.
+   - Reduce system reboots and improve kernel security. Activate at:
+     https://ubuntu.com/livepatch
+
+223 packages can be updated.
+138 updates are security updates.
+
+
+Last login: Tue Aug 27 02:34:55 2019 from 10.1.70.104
+fun@FS60-COMe:~$ [2019-08-27 02:39:02.140772-07:00] DUT:1:fs-60: Connected to 10.1.105.171 Using fun:123
+
+fun@FS60-COMe:~$ shopt -s checkwinsize
+fun@FS60-COMe:~$ setterm -linewrap off
+[?7lfun@FS60-COMe:~$ stty cols 1024
+fun@FS60-COMe:~$ 
+fun@FS60-COMe:~$ export PATH=$PATH
+fun@FS60-COMe:~$ 
+fun@FS60-COMe:~$ pwd
+/home/fun
+fun@FS60-COMe:~$ 
+DUT:1:fs-60: FS boot-phase: FS_BRING_UP_FPGA_INITIALIZE
+
+========================================================
+[2019-08-27 02:39:05.643956-07:00] DUT:1:fs-60: [91mCRITICAL: linux.py:481: [Errno 5] Input/output error Command: ./f1reset -s 0 0; sleep 2;[0m
+[2019-08-27 02:39:05.644459-07:00] DUT:1:fs-60: [91mCRITICAL: linux.py:481: ***** Last Exception At *****[0m
+[2019-08-27 02:39:05.644870-07:00] DUT:1:fs-60: [91mCRITICAL: linux.py:481:   File "/Users/yajat/Documents/Fungible/WORKSPACE/Integration/fun_test/lib/host/linux.py", line 425, in command
+    self.sendline(c)
+  File "/Users/yajat/Documents/Fungible/WORKSPACE/Integration/fun_test/lib/system/fun_test.py", line 930, in inner
+    return the_function(*args, **kwargs)
+  File "/Users/yajat/Documents/Fungible/WORKSPACE/Integration/fun_test/lib/host/linux.py", line 1053, in sendline
+    self.handle.sendline(c)
+  File "/Library/Python/2.7/site-packages/pexpect/pty_spawn.py", line 535, in sendline
+    return self.send(s + self.linesep)
+  File "/Library/Python/2.7/site-packages/pexpect/pty_spawn.py", line 526, in send
+    return os.write(self.child_fd, b)
+[0m
+[2019-08-27 02:39:05.645535-07:00] DUT:1:fs-60: [91mCRITICAL: linux.py:481: ***** Traceback Stack *****[0m
+[2019-08-27 02:39:05.645884-07:00] DUT:1:fs-60: [91mCRITICAL: linux.py:481:   File "/System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/threading.py", line 783, in __bootstrap
+    self.__bootstrap_inner()
+  File "/System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/threading.py", line 810, in __bootstrap_inner
+    self.run()
+  File "/Users/yajat/Documents/Fungible/WORKSPACE/Integration/fun_test/lib/fun/fs.py", line 548, in run
+    fun_test.test_assert(expression=fs.fpga_initialize(), message="FPGA initiaize", context=self.context)
+  File "/Users/yajat/Documents/Fungible/WORKSPACE/Integration/fun_test/lib/fun/fs.py", line 1285, in fpga_initialize
+    return self.get_fpga().initialize()
+  File "/Users/yajat/Documents/Fungible/WORKSPACE/Integration/fun_test/lib/fun/fs.py", line 70, in initialize
+    self.reset_f1(f1_index=f1_index)
+  File "/Users/yajat/Documents/Fungible/WORKSPACE/Integration/fun_test/lib/fun/fs.py", line 77, in reset_f1
+    self.command("./f1reset -s {0} 0; sleep 2;".format(f1_index))
+  File "/Users/yajat/Documents/Fungible/WORKSPACE/Integration/fun_test/lib/system/fun_test.py", line 930, in inner
+    return the_function(*args, **kwargs)
+  File "/Users/yajat/Documents/Fungible/WORKSPACE/Integration/fun_test/lib/host/linux.py", line 481, in command
+    fun_test.critical(critical_str, context=self.context)
+[0m
+[2019-08-27 02:39:05.646351-07:00] DUT:1:fs-60: CRITICAL: [Errno 5] Input/output error Command: ./f1reset -s 0 0; sleep 2;
+
+DUT:1:fs-60: FS boot-phase: FS_BRING_UP_ERROR
+
+==============================================
+
+[92m: fs.py: 464 zzz...: Sleeping for :45s : Allowing time to generate full report[0m
+ps -ef | grep 'uart_log_listener.py.*_0.*txt'| grep -v grep
+/mnt/sdmmc0p1/scripts # ps -ef | grep 'uart_log_listener.py.*_1.*txt'| grep -v grep
+/mnt/sdmmc0p1/scripts # [2019-08-27 02:41:24.349007-07:00] DUT:1:fs-60: BMC disconnect
+[2019-08-27 02:41:24.461447-07:00] DUT:1:fs-60: FPGA disconnect
+[2019-08-27 02:41:24.570995-07:00] DUT:1:fs-60: ComE disconnect

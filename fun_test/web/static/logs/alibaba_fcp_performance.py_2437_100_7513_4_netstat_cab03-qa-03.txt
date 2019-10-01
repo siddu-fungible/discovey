@@ -1,0 +1,53 @@
+<=======> Netstat output <=======>
++--------------------------------------------------------------------------------+------------------------------------------+
+|                                     TcpExt                                     |                   Tcp                    |
++--------------------------------------------------------------------------------+------------------------------------------+
+|  TCPWinProbe                                                        0          |  segments received            5207057    |
+|  TCP sockets finished time wait in fast timer                       17         |  segments retransmitted       1376       |
+|  TCPSynRetrans                                                      8          |  active connection openings   20         |
+|  TCPRcvCoalesce                                                     3          |  segments sent out            119772133  |
+|  connections reset due to unexpected data                           0          |  connections established      0          |
+|  TCPHystartDelayCwnd                                                0          |  passive connection openings  10         |
+|  congestion windows recovered without slow start after partial ack  0          |  failed connection attempts   0          |
+|  connections reset due to early user close                          0          |  connection resets received   0          |
+|  TCPOFOQueue                                                        0          |  bad segments received        0          |
+|  TCPDSACKRecv                                                       0          |  resets sent                  0          |
+|  TCPDSACKIgnoredOld                                                 0          |                                          |
+|  TCPOrigDataSent                                                    119771989  |                                          |
+|  TCPSackShifted                                                     124        |                                          |
+|  TCPSackMerged                                                      194        |                                          |
+|  TCPAutoCorking                                                     454469     |                                          |
+|  TCPDSACKOldSent                                                    0          |                                          |
+|  retransmits in slow start                                          0          |                                          |
+|  TCPDeferAcceptDrop                                                 0          |                                          |
+|  resets received for embryonic SYN_RECV sockets                     0          |                                          |
+|  packet headers predicted                                           99         |                                          |
+|  TCPSYNChallenge                                                    0          |                                          |
+|  TCPChallengeACK                                                    0          |                                          |
+|  TCPTimeouts                                                        2          |                                          |
+|  TCPSackShiftFallback                                               66         |                                          |
+|  acknowledgments not containing data payload received               1167297    |                                          |
+|  TCPLostRetransmit                                                  151        |                                          |
+|  TCPLossProbeRecovery                                               0          |                                          |
+|  TCPWantZeroWindowAdv                                               0          |                                          |
+|  TCPACKSkippedSeq                                                   0          |                                          |
+|  TCPLossProbes                                                      0          |                                          |
+|  TCPHystartDelayDetect                                              0          |                                          |
+|  TCPSackRecovery                                                    4          |                                          |
+|  predicted acknowledgments                                          4039437    |                                          |
+|  TCPKeepAlive                                                       0          |                                          |
+|  delayed acks further delayed because of locked socket              0          |                                          |
+|  fast retransmits                                                   1368       |                                          |
+|  SYN cookies sent                                                   0          |                                          |
+|  TCPDSACKUndo                                                       0          |                                          |
+|  TCPToZeroWindowAdv                                                 0          |                                          |
+|  delayed acks sent                                                  20         |                                          |
+|  TCPHystartTrainCwnd                                                852        |                                          |
+|  TCPHystartTrainDetect                                              6          |                                          |
+|  TCPBacklogDrop                                                     0          |                                          |
+|  IPReversePathFilter                                                0          |                                          |
+|  connections aborted due to timeout                                 0          |                                          |
+|  TCPReqQFullDoCookies                                               0          |                                          |
+|  TCPFromZeroWindowAdv                                               0          |                                          |
+|  TCPDSACKIgnoredNoUndo                                              0          |                                          |
++--------------------------------------------------------------------------------+------------------------------------------+

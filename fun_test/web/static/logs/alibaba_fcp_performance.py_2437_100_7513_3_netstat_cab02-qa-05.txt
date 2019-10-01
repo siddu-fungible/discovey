@@ -1,0 +1,35 @@
+<=======> Netstat output <=======>
++-------------------------------------------------------------------+------------------------------------------+
+|                               TcpExt                              |                   Tcp                    |
++-------------------------------------------------------------------+------------------------------------------+
+|  TCP sockets finished time wait in fast timer          9          |  segments received            3323359    |
+|  TCPSpuriousRtxHostQueues                              70         |  segments retransmitted       732673     |
+|  TCPSynRetrans                                         22         |  active connection openings   17         |
+|  TCPRcvCoalesce                                        7          |  segments sent out            112587446  |
+|  connections reset due to unexpected data              0          |  connections established      0          |
+|  TCPHystartDelayCwnd                                   31         |  passive connection openings  10         |
+|  TCPDSACKRecv                                          81         |  failed connection attempts   0          |
+|  TCPOFOQueue                                           0          |  connection resets received   0          |
+|  TCPOrigDataSent                                       112587324  |  bad segments received        0          |
+|  TCPSackShifted                                        76456      |  resets sent                  0          |
+|  TCPSackMerged                                         268753     |                                          |
+|  TCPAutoCorking                                        574992     |                                          |
+|  TCPDSACKOldSent                                       1          |                                          |
+|  packet headers predicted                              27         |                                          |
+|  TCPTimeouts                                           4          |                                          |
+|  acknowledgments not containing data payload received  2153083    |                                          |
+|  TCPLostRetransmit                                     8844       |                                          |
+|  TCPLossProbes                                         21         |                                          |
+|  TCPHystartDelayDetect                                 1          |                                          |
+|  TCPSackRecovery                                       21579      |                                          |
+|  predicted acknowledgments                             1169881    |                                          |
+|  retransmits in slow start                             934        |                                          |
+|  fast retransmits                                      731687     |                                          |
+|  TCPSackRecoveryFail                                   29         |                                          |
+|  delayed acks sent                                     20         |                                          |
+|  TCPHystartTrainCwnd                                   519        |                                          |
+|  TCPHystartTrainDetect                                 7          |                                          |
+|  TCPSackShiftFallback                                  837668     |                                          |
+|  IPReversePathFilter                                   27         |                                          |
+|  timeouts in loss state                                1          |                                          |
++-------------------------------------------------------------------+------------------------------------------+

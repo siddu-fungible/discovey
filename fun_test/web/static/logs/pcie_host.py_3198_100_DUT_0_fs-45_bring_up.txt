@@ -1,0 +1,81 @@
+[2019-08-19 10:39:40.918375-07:00] DUT:0:fs-45: ASSERT PASSED: expected=True actual=True, TFTP image path: mks/funos-27498.stripped.gz
+
+DUT:0:fs-45: FS boot-phase: FS_BRING_UP_INIT
+
+=============================================
+
+DUT:0:fs-45: FS boot-phase: FS_BRING_UP_BMC_INITIALIZE
+
+=======================================================
+[2019-08-19 10:39:40.928072-07:00] DUT:0:fs-45: ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null sysadmin@10.1.105.163 -p 22
+Warning: Permanently added '10.1.105.163' (RSA) to the list of known hosts.
+sysadmin@10.1.105.163's password: [2019-08-19 10:39:43.826107-07:00] DUT:0:fs-45: Sending Password: superuser
+
+~ # [2019-08-19 10:39:47.697177-07:00] DUT:0:fs-45: Connected to 10.1.105.163 Using sysadmin:superuser
+
+~ # stty cols 1024
+~ # ?
+-/bin/sh: ?: not found
+~ # export PATH=$PATH
+~ # cd /mnt/sdmmc0p1/scripts
+/mnt/sdmmc0p1/scripts # ps -ef | grep 'microcom'| grep -v grep
+/mnt/sdmmc0p1/scripts # ps -ef | grep 'minicom'| grep -v grep
+/mnt/sdmmc0p1/scripts # cd /mnt/sdmmc0p1/_install
+/mnt/sdmmc0p1/_install # ps -ef | grep 'python.*999'| grep -v grep
+sysadmin  2738     1  0 10:03 ?        00:00:01 /usr/bin/python -m serial.utils.tcp_serial_redirect -P 9990 /dev/ttyS0 1000000
+sysadmin  2739     1  0 10:03 ?        00:00:01 /usr/bin/python -m serial.utils.tcp_serial_redirect -P 9991 /dev/ttyS2 1000000
+sysadmin  3759     1  0 10:05 ?        00:00:01 python /tmp/uart_log_listener.py --proxy_port=9990 --output_file=/tmp/f1_0_uart_log.txt
+sysadmin  4114     1  0 10:05 ?        00:00:01 python /tmp/uart_log_listener.py --proxy_port=9991 --output_file=/tmp/f1_1_uart_log.txt
+/mnt/sdmmc0p1/_install # sudo bash
+-/bin/sh: sudo: not found
+/mnt/sdmmc0p1/_install # kill -9 2738
+/mnt/sdmmc0p1/_install # 
+/mnt/sdmmc0p1/_install # [2019-08-19 10:39:53.938697-07:00] DUT:0:fs-45: Boot-phase: FS_BRING_UP_BMC_INITIALIZE
+[2019-08-19 10:39:54.567627-07:00] DUT:0:fs-45: [91mCRITICAL: linux.py:481: [Errno 5] Input/output error Command: sudo bash[0m
+[2019-08-19 10:39:54.567778-07:00] DUT:0:fs-45: [91mCRITICAL: linux.py:481: ***** Last Exception At *****[0m
+[2019-08-19 10:39:54.567889-07:00] DUT:0:fs-45: [91mCRITICAL: linux.py:481:   File "/Users/yajat/Documents/Fungible/WORKSPACE/Integration/fun_test/lib/host/linux.py", line 425, in command
+    self.sendline(c)
+  File "/Users/yajat/Documents/Fungible/WORKSPACE/Integration/fun_test/lib/system/fun_test.py", line 930, in inner
+    return the_function(*args, **kwargs)
+  File "/Users/yajat/Documents/Fungible/WORKSPACE/Integration/fun_test/lib/host/linux.py", line 1052, in sendline
+    self.handle.sendline(c)
+  File "/Library/Python/2.7/site-packages/pexpect/pty_spawn.py", line 535, in sendline
+    return self.send(s + self.linesep)
+  File "/Library/Python/2.7/site-packages/pexpect/pty_spawn.py", line 526, in send
+    return os.write(self.child_fd, b)
+[0m
+[2019-08-19 10:39:54.568239-07:00] DUT:0:fs-45: [91mCRITICAL: linux.py:481: ***** Traceback Stack *****[0m
+[2019-08-19 10:39:54.568353-07:00] DUT:0:fs-45: [91mCRITICAL: linux.py:481:   File "/System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/threading.py", line 783, in __bootstrap
+    self.__bootstrap_inner()
+  File "/System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/threading.py", line 810, in __bootstrap_inner
+    self.run()
+  File "/Users/yajat/Documents/Fungible/WORKSPACE/Integration/fun_test/lib/fun/fs.py", line 522, in run
+    fun_test.test_assert(expression=fs.bmc_initialize(), message="BMC initialize", context=self.context)
+  File "/Users/yajat/Documents/Fungible/WORKSPACE/Integration/fun_test/lib/fun/fs.py", line 1216, in bmc_initialize
+    fun_test.simple_assert(expression=bmc.initialize(), message="BMC initialize", context=self.context)
+  File "/Users/yajat/Documents/Fungible/WORKSPACE/Integration/fun_test/lib/fun/fs.py", line 403, in initialize
+    self.position_support_scripts()
+  File "/Users/yajat/Documents/Fungible/WORKSPACE/Integration/fun_test/lib/fun/fs.py", line 375, in position_support_scripts
+    self.kill_process(signal=9, process_id=serial_proxy_id, kill_seconds=2)
+  File "/Users/yajat/Documents/Fungible/WORKSPACE/Integration/fun_test/lib/system/fun_test.py", line 930, in inner
+    return the_function(*args, **kwargs)
+  File "/Users/yajat/Documents/Fungible/WORKSPACE/Integration/fun_test/lib/host/linux.py", line 889, in kill_process
+    self.sudo_command(command=command)
+  File "/Users/yajat/Documents/Fungible/WORKSPACE/Integration/fun_test/lib/system/fun_test.py", line 930, in inner
+    return the_function(*args, **kwargs)
+  File "/Users/yajat/Documents/Fungible/WORKSPACE/Integration/fun_test/lib/host/linux.py", line 1134, in sudo_command
+    sudoed = self.enter_sudo(preserve_environment=preserve_environment)
+  File "/Users/yajat/Documents/Fungible/WORKSPACE/Integration/fun_test/lib/system/fun_test.py", line 930, in inner
+    return the_function(*args, **kwargs)
+  File "/Users/yajat/Documents/Fungible/WORKSPACE/Integration/fun_test/lib/host/linux.py", line 954, in enter_sudo
+    output = self.command(cmd, custom_prompts={prompt: self.ssh_password, mac_prompt: self.ssh_password})
+  File "/Users/yajat/Documents/Fungible/WORKSPACE/Integration/fun_test/lib/system/fun_test.py", line 930, in inner
+    return the_function(*args, **kwargs)
+  File "/Users/yajat/Documents/Fungible/WORKSPACE/Integration/fun_test/lib/host/linux.py", line 481, in command
+    fun_test.critical(critical_str, context=self.context)
+[0m
+[2019-08-19 10:39:54.568522-07:00] DUT:0:fs-45: CRITICAL: [Errno 5] Input/output error Command: sudo bash
+
+DUT:0:fs-45: FS boot-phase: FS_BRING_UP_ERROR
+
+==============================================

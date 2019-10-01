@@ -1,0 +1,95 @@
+[2019-09-24 07:18:03.266101-07:00] DUT:0:fs-60: ASSERT PASSED: expected=True actual=True, TFTP image path: s_28013_funos-f1.stripped.gz
+
+DUT:0:fs-60: FS boot-phase: FS_BRING_UP_INIT
+
+=============================================
+
+DUT:0:fs-60: FS boot-phase: FS_BRING_UP_BMC_INITIALIZE
+
+=======================================================
+[2019-09-24 07:18:03.269949-07:00] DUT:0:fs-60: ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null sysadmin@10.1.105.169 -p 22
+Warning: Permanently added '10.1.105.169' (RSA) to the list of known hosts.
+sysadmin@10.1.105.169's password: [2019-09-24 07:18:08.896054-07:00] DUT:0:fs-60: Sending Password: superuser
+
+~ # [2019-09-24 07:18:14.360571-07:00] DUT:0:fs-60: Connected to 10.1.105.169 Using sysadmin:superuser
+
+~ # stty cols 1024
+~ # ?
+-/bin/sh: ?: not found
+~ # export PATH=$PATH
+~ # cd /mnt/sdmmc0p1/scripts
+/mnt/sdmmc0p1/scripts # ps -ef | grep 'microcom'| grep -v grep
+sysadmin 13692     1  0 07:16 ?        00:00:00 microcom -s 1000000 /dev/ttyS0
+/mnt/sdmmc0p1/scripts # sudo bash
+-/bin/sh: sudo: not found
+/mnt/sdmmc0p1/scripts # kill -9 13692
+/mnt/sdmmc0p1/scripts # 
+/mnt/sdmmc0p1/scripts # ps -ef | grep 'minicom'| grep -v grep
+/mnt/sdmmc0p1/scripts # cd /mnt/sdmmc0p1/_install
+/mnt/sdmmc0p1/_install # ps -ef | grep 'python.*999'| grep -v grep
+sysadmin 10834     1  0 07:12 ?        00:00:01 /usr/bin/python -m serial.utils.tcp_serial_redirect -P 9991 /dev/ttyS2 1000000
+/mnt/sdmmc0p1/_install # sudo bash
+-/bin/sh: sudo: not found
+/mnt/sdmmc0p1/_install # kill -9 10834
+/mnt/sdmmc0p1/_install # 
+/mnt/sdmmc0p1/_install # ps -ef | grep 'python.*999'| grep -v grep
+/mnt/sdmmc0p1/_install # bash web/fungible/RUN_TCP_PYSERIAL.sh
+F1[0] console /dev/ttyS0
+F1[0] SBP     /dev/ttyS1
+F1[1] console /dev/ttyS2
+F1[1] SBP     /dev/ttyS3
+/mnt/sdmmc0p1/_install # ps -ef | grep 'python.*999'| grep -v grep
+sysadmin 14959     1  0 07:18 pts/1    00:00:00 /usr/bin/python -m serial.utils.tcp_serial_redirect -P 9990 /dev/ttyS0 1000000
+sysadmin 14960     1  0 07:18 pts/1    00:00:00 /usr/bin/python -m serial.utils.tcp_serial_redirect -P 9991 /dev/ttyS2 1000000
+/mnt/sdmmc0p1/_install # ls -ltrd /tmp/uart_log_listener2.py
+-rw-r--r--    1 sysadmin sysadmin      2590 Sep 24 07:18 /tmp/uart_log_listener2.py
+/mnt/sdmmc0p1/_install # ps -ef | grep 'uart_log_listener.py'| grep -v grep
+/mnt/sdmmc0p1/_install # ps -ef | grep 'uart_log_listener2.py'| grep -v grep
+/mnt/sdmmc0p1/_install # [2019-09-24 07:18:39.198509-07:00] DUT:0:fs-60: ASSERT PASSED: expected=True actual=True, BMC initialize
+gpiotool 57 --get-data
+Inside Read gpio.
+
+Pin is High 
+/mnt/sdmmc0p1/_install # gpiotool 57 --set-data-low
+Inside Set Gpio low 
+
+GPIO pin is set to low 
+
+/mnt/sdmmc0p1/_install # sleep 2
+/mnt/sdmmc0p1/_install # gpiotool 57 --set-data-high
+Inside Set Gpio high 
+
+GPIO pin is set to high 
+
+/mnt/sdmmc0p1/_install # sleep 2
+/mnt/sdmmc0p1/_install # cd /mnt/sdmmc0p1/scripts
+/mnt/sdmmc0p1/scripts # ./f1_uartmux.sh 1
+F1[0] console /dev/ttyS0
+F1[0] SBP     /dev/ttyS1
+F1[1] console /dev/ttyS2
+F1[1] SBP     /dev/ttyS3
+/mnt/sdmmc0p1/scripts # [2019-09-24 07:18:46.571917-07:00] DUT:0:fs-60: ASSERT PASSED: expected=True actual=True, Set F1s
+
+DUT:0:fs-60: FS boot-phase: FS_BRING_UP_FUNETH_UNLOAD_COME_POWER_CYCLE
+
+=======================================================================
+[2019-09-24 07:18:46.573842-07:00] DUT:0:fs-60: ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@10.1.105.170 -p 22
+Warning: Permanently added '10.1.105.170' (ECDSA) to the list of known hosts.
+Last login: Thu Jun  6 16:16:39 2019 from 10.1.70.104
+root@arria10:~# [2019-09-24 07:18:49.554605-07:00] DUT:0:fs-60: Connected to 10.1.105.170 Using root:root
+
+root@arria10:~# stty cols 1024
+root@arria10:~# 
+root@arria10:~# export PATH=$PATH
+root@arria10:~# 
+root@arria10:~# ./f1reset -s 0 0; sleep 2;
+root@arria10:~# ./f1reset -g
+Reg value = 0xe000043c
+
+F1_0 is in reset
+
+F1_1 is out of reset
+
+root@arria10:~# ./f1reset -s 1 0; sleep 2;
+root@arria10:~# ./f1reset -g
+Reg valu

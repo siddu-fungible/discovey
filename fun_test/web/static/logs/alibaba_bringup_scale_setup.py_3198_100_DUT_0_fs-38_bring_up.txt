@@ -1,0 +1,38 @@
+[2019-09-24 07:17:17.287311-07:00] DUT:0:fs-38: ASSERT PASSED: expected=True actual=True, TFTP image path: s_28013_funos-f1.stripped.gz
+
+DUT:0:fs-38: FS boot-phase: FS_BRING_UP_INIT
+
+=============================================
+
+DUT:0:fs-38: FS boot-phase: FS_BRING_UP_BMC_INITIALIZE
+
+=======================================================
+[2019-09-24 07:17:17.291491-07:00] DUT:0:fs-38: ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null sysadmin@fs38-bmc -p 22
+[2019-09-24 07:17:37.307145-07:00] DUT:0:fs-38: Sleeping 1 seconds for next attempt
+[2019-09-24 07:17:38.312751-07:00] DUT:0:fs-38: CRITICAL: Unable to connect to fs38-bmc. Exceed max time: 20
+[2019-09-24 07:17:38.314003-07:00] DUT:0:fs-38: [91mCRITICAL: fs.py:1471: ASSERT FAILED: expected=True actual=False, BMC connected[0m
+[2019-09-24 07:17:38.314208-07:00] DUT:0:fs-38: [91mCRITICAL: fs.py:1471: ASSERT Raised by:   File "/Users/yajat/Documents/Fungible/WORKSPACE/Integration/fun_test/lib/fun/fs.py", line 1471, in bmc_initialize
+    fun_test.simple_assert(expression=bmc._connect(), message="BMC connected", context=self.context)
+[0m
+[2019-09-24 07:17:38.314714-07:00] DUT:0:fs-38: [91mCRITICAL: fs.py:1471: ***** Traceback Stack *****[0m
+[2019-09-24 07:17:38.314807-07:00] DUT:0:fs-38: [91mCRITICAL: fs.py:1471:   File "/System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/threading.py", line 783, in __bootstrap
+    self.__bootstrap_inner()
+  File "/System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/threading.py", line 810, in __bootstrap_inner
+    self.run()
+  File "/Users/yajat/Documents/Fungible/WORKSPACE/Integration/fun_test/lib/fun/fs.py", line 673, in run
+    fun_test.test_assert(expression=fs.bmc_initialize(), message="BMC initialize", context=self.context)
+  File "/Users/yajat/Documents/Fungible/WORKSPACE/Integration/fun_test/lib/fun/fs.py", line 1471, in bmc_initialize
+    fun_test.simple_assert(expression=bmc._connect(), message="BMC connected", context=self.context)
+  File "/Users/yajat/Documents/Fungible/WORKSPACE/Integration/fun_test/lib/system/fun_test.py", line 1074, in simple_assert
+    self.test_assert(expression=expression, message=message, ignore_on_success=True, context=context)
+  File "/Users/yajat/Documents/Fungible/WORKSPACE/Integration/fun_test/lib/system/fun_test.py", line 1071, in test_assert
+    ignore_on_success=ignore_on_success, context=context)
+  File "/Users/yajat/Documents/Fungible/WORKSPACE/Integration/fun_test/lib/system/fun_test.py", line 1098, in test_assert_expected
+    self.critical(assert_message, context=context)
+[0m
+
+DUT:0:fs-38: FS boot-phase: FS_BRING_UP_ERROR
+
+==============================================
+
+[92m: fs.py: 576 zzz...: Sleeping for :45s : Allowing time to generate full report[0m
