@@ -6,10 +6,10 @@ class StorageControllerApi(object):
         self.username = username
         self.password = password
         self.base_url = "http://{}:{}/FunCC/v1".format(api_server_ip, api_server_port)
-        self.storage_base_url = "http://{}:{}/FunCC/v1/storage".format(api_server_ip, api_server_port)
+        self.storage_base_url = "{}/storage".format(self.base_url)
         self.http_basic_auth = HTTPBasicAuth(self.username, self.password)
-        self.pool_url = "{}/{}".format(self.base_url, "pools")
-        self.volume_url = "{}/{}".format(self.base_url, "volumes")
+        self.pool_url = "{}/{}".format(self.storage_base_url, "pools")
+        self.volume_url = "{}/{}".format(self.storage_base_url, "volumes")
 
     def get_auth_token(self):
         auth_url = "{}/user/token".format(self.base_url)
@@ -19,8 +19,13 @@ class StorageControllerApi(object):
         print response
         print "Response Object \n{}".format(dir(response))
 
-    def configure_dataplane_ip(self):
-        pass
+    def configure_dataplane_ip(self, interface_name, ip, subnet_mask, next_hop, config_mode="static"):
+        result = {"status": False, "data": {}}
+        url = "{}/storage/storage_agent/dataplane_ip".format(self.base_url)
+        data = {"ip_type": config_mode, "next_hop": next_hop, "dataplane_ip": ip, "subnet_mask": subnet_mask}
+        response = request("post", url, auth=self.http_basic_auth, data=data)
+        print response
+        print response.json()
 
     def get_pools(self):
         response = request('get', self.pool_url, auth=self.http_basic_auth)
