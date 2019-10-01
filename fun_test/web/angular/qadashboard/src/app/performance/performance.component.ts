@@ -169,6 +169,10 @@ export class PerformanceComponent implements OnInit {
   slashReplacement: string = "_fsl"; //forward slash
 
   rootNode: FlatNode = null;
+  lastF1Lineage: string = null;
+  lastS1Lineage: string = null;
+  f1Dag: any = null;
+  s1Dag: any = null;
 
   buildInfo: any = null;
   showF1Dag: boolean = true;
@@ -225,7 +229,7 @@ export class PerformanceComponent implements OnInit {
   }
 
   getDefaultQueryPath(flatNode) {
-    return flatNode.node.chartName;
+    return this.gotoQueryBaseUrl + flatNode.node.chartName;
   }
 
   getQueryPath() {
@@ -273,69 +277,114 @@ export class PerformanceComponent implements OnInit {
     });
   }
 
-  openS1Dag(): void {
-    this.showS1Dag = true;
-    this.showF1Dag = false;
+  setDefaultFlatNodes(): void {
     this.flatNodes = [];
     this.guIdFlatNodeMap = {};
+    this.flatNodesMap = {};
     this.upgradeFlatNode = {};
     this.degradeFlatNode = {};
-    this.fetchDag();
   }
 
-  s1Dag(): void {
+  setDefaultsForDag(): void {
     this.queryExists = false;
     this.queryPath = null;
     this.showBugPanel = false;
     this.chartReady = false;
     this.currentNode = null;
     this.currentFlatNode = null;
-    this.openS1Dag();
+  }
+
+  fetchS1Dag(): void {
+    this.showS1Dag = true;
+    this.showF1Dag = false;
+    this.setDefaultFlatNodes();
+    this.fetchDag();
+  }
+
+  openS1Dag(): void {
+    this.lastF1Lineage = this.queryPath;
+    this.setDefaultsForDag();
+    if (this.lastS1Lineage) {
+      this.initialize = true;
+      this.router.navigateByUrl(this.lastS1Lineage);
+    } else {
+      this.fetchS1Dag();
+    }
+  }
+
+  fetchF1Dag(): void {
+    this.showF1Dag = true;
+    this.showS1Dag = false;
+    this.setDefaultFlatNodes();
+    this.fetchDag();
   }
 
   openF1Dag(): void {
-    this.showF1Dag = true;
-    this.showS1Dag = false;
-    this.flatNodes = [];
-    this.guIdFlatNodeMap = {};
-    this.upgradeFlatNode = {};
-    this.degradeFlatNode = {};
-    this.fetchDag();
+    this.lastS1Lineage = this.queryPath;
+    this.setDefaultsForDag();
+    if (this.lastF1Lineage) {
+      this.initialize = true;
+      this.router.navigateByUrl(this.lastF1Lineage);
+    } else {
+      this.fetchF1Dag();
+    }
+
   }
 
-  f1Dag(): void {
-    this.queryExists = false;
-    this.queryPath = null;
-    this.showBugPanel = false;
-    this.chartReady = false;
-    this.currentNode = null;
-    this.currentFlatNode = null;
-    this.openF1Dag();
+   setDag(): any {
+    let url = "/metrics/dag";
+    let fetchIt = true;
+    if (this.selectMode == SelectMode.ShowEditWorkspace) {
+      url = "/metrics/dag" + "?root_metric_ids=101,591";
+    } else {
+      if (this.showF1Dag) {
+        url += "?root_metric_ids=101";
+      }
+      if (this.showS1Dag) {
+        url += "?root_metric_ids=591";
+      }
+      if (this.metricIds) {
+        url = "/metrics/dag" + "?root_metric_ids=" + String(this.metricIds) + "&workspace=true";
+      }
+      if ((this.showF1Dag && this.f1Dag) || (this.showS1Dag && this.s1Dag)) {
+        fetchIt = false;
+      }
+    }
+    if (fetchIt) {
+     return this.apiService.get(url).pipe(switchMap(response => {
+       if (this.showF1Dag) {
+         this.f1Dag = response.data;
+       } else {
+         this.s1Dag = response.data;
+       }
+        return of(response.data);
+    }));
+    } else {
+      if (this.showF1Dag) {
+        return of(this.f1Dag);
+      } else {
+        return of(this.s1Dag);
+      }
+    }
   }
 
   fetchDag(): void {
     this.status = "Fetching DAG";
-    let url = "/metrics/dag";
-    if (this.showF1Dag) {
-      url += "?root_metric_ids=101";
-    }
-    if (this.showS1Dag) {
-      url += "?root_metric_ids=591";
-    }
-    if (this.metricIds) {
-      url = "/metrics/dag" + "?root_metric_ids=" + String(this.metricIds) + "&workspace=true";
-    }
-    if (this.selectMode == SelectMode.ShowEditWorkspace) {
-      url = "/metrics/dag" + "?root_metric_ids=101,591";
-    }
-    // Fetch the DAG
-    this.apiService.get(url).subscribe(response => {
-      this.dag = response.data;
-      let lineage = [];
+    new Observable(observer => {
+        observer.next(true);
+        observer.complete();
+        return () => {
+        }
+      }).pipe(
+        switchMap(response => {
+          return this.setDag();
+        })).subscribe(response => {
+        this.dag = response;
+        let lineage = [];
       for (let dag of this.dag) {
         this.walkDag(dag, lineage);
       }
-      if (!this.queryExists && this.selectMode == SelectMode.ShowMainSite) {
+      if (this.selectMode == SelectMode.ShowMainSite) {
         this.updateUpDownSincePrevious(true);
         this.updateUpDownSincePrevious(false);
       }
@@ -359,10 +408,58 @@ export class PerformanceComponent implements OnInit {
         }
       }
       this.status = null;
-
-    }, error => {
-      this.loggerService.error("fetchDag");
-    });
+      }, error => {
+        this.loggerService.error("Unable to fetch Dag");
+      });
+    // let url = "/metrics/dag";
+    // if (this.selectMode == SelectMode.ShowEditWorkspace) {
+    //   url = "/metrics/dag" + "?root_metric_ids=101,591";
+    // } else {
+    //   if (this.showF1Dag) {
+    //     url += "?root_metric_ids=101";
+    //   }
+    //   if (this.showS1Dag) {
+    //     url += "?root_metric_ids=591";
+    //   }
+    //   if (this.metricIds) {
+    //     url = "/metrics/dag" + "?root_metric_ids=" + String(this.metricIds) + "&workspace=true";
+    //   }
+    // }
+    // // Fetch the DAG
+    // this.apiService.get(url).subscribe(response => {
+    //   this.dag = response.data;
+    //   let lineage = [];
+    //   for (let dag of this.dag) {
+    //     this.walkDag(dag, lineage);
+    //   }
+    //   if (this.selectMode == SelectMode.ShowMainSite) {
+    //     this.updateUpDownSincePrevious(true);
+    //     this.updateUpDownSincePrevious(false);
+    //   }
+    //   //total container should always appear
+    //   if (this.selectMode == SelectMode.ShowMainSite) {
+    //     this.rootNode = this.flatNodes[0];
+    //     this.rootNode.hide = false;
+    //     this.expandUrl();
+    //   }
+    //   if (this.selectMode == SelectMode.ShowEditWorkspace && this.interestedMetrics) {
+    //     this.flatNodes[0].hide = false;
+    //     for (let flatNode of this.flatNodes) {
+    //       for (let metric of this.interestedMetrics) {
+    //         if (flatNode.node.metricId === metric.metric_id) {
+    //           flatNode.showAddLeaf = true;
+    //           flatNode.track = true;
+    //           flatNode.subscribe = metric.subscribe;
+    //         }
+    //       }
+    //
+    //     }
+    //   }
+    //   this.status = null;
+    //
+    // }, error => {
+    //   this.loggerService.error("fetchDag");
+    // });
   }
 
   processUrl(): void {
@@ -379,10 +476,10 @@ export class PerformanceComponent implements OnInit {
         this.queryExists = true;
         if (this.initialize) {
           if (queryPath.startsWith("F1")) {
-            this.openF1Dag();
+            this.fetchF1Dag();
           }
           if (queryPath.startsWith("S1")) {
-            this.openS1Dag();
+            this.fetchS1Dag();
           }
           this.initialize = false;
         } else {
@@ -394,7 +491,7 @@ export class PerformanceComponent implements OnInit {
   }
 
   expandUrl(): void {
-    if (!this.queryExists) {
+    if (!this.queryPath) {
       this.queryPath = this.getDefaultQueryPath(this.rootNode);
     }
     let pathGuid = this.pathToGuid(this.queryPath);
