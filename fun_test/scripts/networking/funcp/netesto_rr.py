@@ -32,7 +32,7 @@ def get_dpc_stats():
         fs48_psw_stats[str(count)] = nc1.peek_psw_global_stats()
         fs60_psw_stats[str(count)] = nc2.peek_psw_global_stats()
         count += 1
-        fun_test.sleep(message="Waiting for next iteration", seconds=5)
+        fun_test.sleep(message="Waiting for next iteration", seconds=10)
     result = {"fs48_debug_vp_util": fs48_debug_vp_util, "fs60_debug_vp_util": fs60_debug_vp_util,
               "fs48_bam_stats": fs48_bam_stats, "fs60_bam_stats": fs60_bam_stats,
               "fs48_psw_stats": fs48_psw_stats, "fs60_psw_stats":fs60_psw_stats}
@@ -292,6 +292,7 @@ def run_netesto(test_type, no_of_streams, no_of_nobuff_streams, no_of_rr, rr_siz
         netesto_controller.sudo_command("mv netesto1.html netesto_latency_%s.html" % netesto_process)
         netesto_controller.sudo_command("mv ~/netesto_controller/netesto/local/fun_plots/aggregate.csv "
                                         "/var/www/html/Chart.js/fun_plots/aggregate_%s.csv" % netesto_process)
+        netesto_controller.sudo_command(" echo %s  > /var/www/html/Chart.js/fun_plots/f1_debug_%s.html" % (fun_test.shared_variables["dpc_stats_result"], netesto_process))
         netesto_controller.disconnect()
         fun_test.log("\n======================================")
         fun_test.log("Link for throughput and Latency graphs")
@@ -299,6 +300,7 @@ def run_netesto(test_type, no_of_streams, no_of_nobuff_streams, no_of_rr, rr_siz
         fun_test.log("Throughput :  http://10.1.105.194/Chart.js/fun_plots/netesto_tp_%s.html" % netesto_process)
         fun_test.log("Latency :  http://10.1.105.194/Chart.js/fun_plots/netesto_latency_%s.html" % netesto_process)
         fun_test.log("Aggregate :  http://10.1.105.194/Chart.js/fun_plots/aggregate_%s.csv" % netesto_process)
+        fun_test.log("F1 logs: http://10.1.105.194/Chart.js/fun_plots/f1_debug_%s.html" % netesto_process)
         fun_test.log(message="No of incomplete streams = %s" % df[df['Duration'] < 57].count(1).count())
 
         total_throughput = df.loc[df.shape[0]-1].at['Throughput(Mbps)']
