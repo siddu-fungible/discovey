@@ -140,20 +140,27 @@ class TestHostPCIeLanes(FunTestCase):
         pass
 
     def check_pcie_link_speed(self, hostname, link_speed, username="localadmin", password="Precious1*"):
-        result = True
-        linux_obj = Linux(host_ip=hostname, ssh_username=username, ssh_password=password)
-        lspci_out = linux_obj.sudo_command(command="sudo lspci -d 1dad: -vv | grep LnkSta")
-        output = linux_obj.command('lspci -d 1dad:')
-        link_check = re.search(r'Ethernet controller: (?:Device 1dad:00f1|Fungible Device 00f1)', output)
-        fun_test.test_assert(expression=link_check, message="Fungible Ethernet PFs on host %s" % hostname)
-        result &= link_check
-        if link_speed not in lspci_out:
-            if "LnkSta" not in lspci_out:
-                fun_test.test_assert(expression=False, message="PCIE link did not come up on Host %s" % hostname)
-            else:
-                fun_test.critical("PCIE link did not come up in %s mode on Host %s" % (link_speed, hostname))
-            result &= False
-        fun_test.shared_variables["pcie_host_result"] &= result
+        try:
+            result = True
+            linux_obj = Linux(host_ip=hostname, ssh_username=username, ssh_password=password)
+            lspci_out = linux_obj.sudo_command(command="sudo lspci -d 1dad: -vv | grep LnkSta")
+            output = linux_obj.command('lspci -d 1dad:')
+            link_check = re.search(r'Ethernet controller: (?:Device 1dad:00f1|Fungible Device 00f1)', output)
+            fun_test.test_assert(expression=link_check, message="Fungible Ethernet PFs on host %s" % hostname)
+            result &= link_check
+            if link_speed not in lspci_out:
+                if "LnkSta" not in lspci_out:
+                    fun_test.test_assert(expression=False, message="PCIE link did not come up on Host %s" % hostname)
+                else:
+                    fun_test.critical("PCIE link did not come up in %s mode on Host %s" % (link_speed, hostname))
+                result &= False
+            fun_test.shared_variables["pcie_host_result"] &= result
+        except Exception as e:
+            fun_test.log("==================")
+            fun_test.log("Exception occurred")
+            fun_test.log("==================")
+            fun_test.critical(e)
+            fun_test.shared_variables["pcie_host_result"] &= False
 
     def run(self):
 
