@@ -546,7 +546,7 @@ class Bmc(Linux):
         fun_test.simple_assert(expression=len(serial_proxy_ids) == 2,
                                message="2 serial proxies are alive",
                                context=self.context)
-        """
+
         uart_listener_script = FUN_TEST_LIB_UTILITIES_DIR + "/{}".format(self.UART_LOG_LISTENER_FILE)
 
         fun_test.scp(source_file_path=uart_listener_script,
@@ -557,7 +557,7 @@ class Bmc(Linux):
         fun_test.simple_assert(expression=self.list_files(self.UART_LOG_LISTENER_PATH),
                                    message="UART log listener copied",
                                    context=self.context)
-        """
+        
 
         log_listener_processes = self.get_process_id_by_pattern("uart_log_listener.py", multiple=True)
         for log_listener_process in log_listener_processes:
