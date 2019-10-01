@@ -12,7 +12,8 @@
                   "mpg1":"10.80.4.170",
                   "bootargs_f1_0": "app=hw_hsu_test cc_huid=3 --all_50g --dpc-server --dpc-uart --disable-wu-watchdog retimer=0,1,2",
                   "bootargs_f1_1": "app=hw_hsu_test cc_huid=2 --all_50g --dpc-server --dpc-uart --disable-wu-watchdog retimer=0,1",
-                  "hu_host_list":["mpoc-server34"]
+                  "hu_host_list":[{"mpoc-server34": "x16"},{"mpoc-server33": "x16"},{"mpoc-server32": "x8"},
+                      {"mpoc-server31": "x16"}, {"mpoc-server30": "x16"}]
               },
               "fs-32": {
                   "index": 1,
@@ -84,7 +85,8 @@
                   "mpg1":"10.80.4.155",
                   "bootargs_f1_0": "app=hw_hsu_test cc_huid=3 --all_50g --dpc-server --dpc-uart --disable-wu-watchdog retimer=0,1,2",
                   "bootargs_f1_1": "app=hw_hsu_test cc_huid=2 --all_50g --dpc-server --dpc-uart --disable-wu-watchdog retimer=0,1",
-                  "hu_host_list":[]
+                  "hu_host_list":[{"mpoc-server44": "x16"},{"mpoc-server43": "x16"},{"mpoc-server42": "x8"},
+                      {"mpoc-server41": "x16"}, {"mpoc-server40": "x16"}]
               },
               "fs-21": {
                   "index": 7,
@@ -96,7 +98,8 @@
                   "mpg1":"10.80.4.160",
                   "bootargs_f1_0": "app=hw_hsu_test cc_huid=3 --all_50g --dpc-server --dpc-uart --disable-wu-watchdog retimer=0,1",
                   "bootargs_f1_1": "app=hw_hsu_test cc_huid=2 --all_50g --dpc-server --dpc-uart --disable-wu-watchdog retimer=0,1",
-                  "hu_host_list":[]
+                  "hu_host_list":[{"mpoc-server48": "x16"},{"mpoc-server47": "x16"}, {"mpoc-server46": "x16"},
+                      {"mpoc-server45": "x16"}]
               },
               "fs-15": {
                   "index": 8,
