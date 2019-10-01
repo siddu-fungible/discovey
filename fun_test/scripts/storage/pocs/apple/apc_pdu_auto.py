@@ -39,8 +39,8 @@ class ApcPduTestcase(FunTestCase):
         self.validate = {"check_storage_controller": False,
                          "check_ssd": False,
                          "check_ports": False,
-                         "expected_ssds_f1_0": 6,
-                         "expected_ssds_f1_1": 4,
+                         "expected_ssds_f1_0": 12,
+                         "expected_ssds_f1_1": 12,
                          "expected_nu_ports_f1_0": range(0, 24, 4),
                          "expected_nu_ports_f1_1": range(0, 24, 4),
                          "expected_hnu_ports_f1_0": [],
@@ -121,7 +121,7 @@ class ApcPduTestcase(FunTestCase):
             lspci_f1 = check_pci_dev(come_handle, f1=1)
             fun_test.test_assert(lspci_f1, "F1_1 PCIe devices not detected")
 
-            # check_come_up_time(come_handle, expected_seconds=5)
+            check_come_up_time(come_handle, expected_seconds=5)
 
             if self.validate["check_ssd"]:
                 fun_test.log("Checking if SSD's are Active on F1_0")
@@ -160,7 +160,7 @@ class ApcPduTestcase(FunTestCase):
             come_handle.destroy()
             bmc_handle.destroy()
 
-            # fun_test.sleep("Sleeping for 300s before next iteration", seconds=300)
+            fun_test.sleep("Sleeping for 300s before next iteration", seconds=300)
 
     def apc_pdu_reboot(self, come_handle):
         '''
