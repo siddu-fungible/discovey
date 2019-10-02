@@ -155,7 +155,15 @@ class ApcPduTestcase(FunTestCase):
             if self.validate["hosts"]:
                 fun_test.sleep("Hosts to be up", seconds=200)
                 check_host_connected(self.validate["hosts"])
+                # Start traffic
+                for host in self.validate["hosts"]:
+                    # TODO: Pass nqn here
+                    run_traffic(host, target_ip="", nqn="")
                 check_traffic(self.validate["hosts"])
+                # Disconnect volume
+                for host in self.validate["hosts"]:
+                    # TODO: Pass nqn here
+                    disconnect_vol(host, nqn="")
 
             come_handle.destroy()
             bmc_handle.destroy()
