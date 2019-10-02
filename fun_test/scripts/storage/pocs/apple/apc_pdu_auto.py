@@ -45,9 +45,10 @@ class ApcPduTestcase(FunTestCase):
                          "expected_nu_ports_f1_1": range(0, 24, 4),
                          "expected_hnu_ports_f1_0": [],
                          "expected_hnu_ports_f1_1": [],
-                         "hosts": [],
+                         "hosts": {},
                          "check_docker": False,
-                         "expected_dockers": 3
+                         "expected_dockers": 3,
+                         "target_ip": "15.53.1.2"
                          }
         job_inputs = fun_test.get_job_inputs()
         if job_inputs:
@@ -75,6 +76,8 @@ class ApcPduTestcase(FunTestCase):
                 self.validate["check_docker"] = job_inputs["check_docker"]
             if "expected_dockers" in job_inputs:
                 self.validate["expected_dockers"] = job_inputs["expected_dockers"]
+            if "target_ip" in job_inputs:
+                self.validate["target_ip"] = job_inputs["target_ip"]
 
         fun_test.log(json.dumps(self.fs, indent=4))
         fun_test.log(self.validate)
@@ -154,17 +157,15 @@ class ApcPduTestcase(FunTestCase):
 
             if self.validate["hosts"]:
                 fun_test.sleep("Hosts to be up", seconds=200)
-                check_host_connected(self.validate["hosts"])
+                hosts_list = add_hosts_handle(self.validate["hosts"])
+                connect_the_host(hosts_list, self.validate["target_ip"])
                 # Start traffic
-                for host in self.validate["hosts"]:
-                    # TODO: Pass nqn here
-                    run_traffic(host, target_ip="", nqn="")
-                check_traffic(self.validate["hosts"])
+                run_traffic_bg(hosts_list)
+                # Check if traffic is running
+                check_traffic(hosts_list)
                 # Disconnect volume
-                for host in self.validate["hosts"]:
-                    # TODO: Pass nqn here
-                    disconnect_vol(host, nqn="")
-
+                disconnect_vol(hosts_list, self.validate["target_ip"])
+                destroy_hosts_handle(hosts_list)
             come_handle.destroy()
             bmc_handle.destroy()
 
