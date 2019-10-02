@@ -10,7 +10,7 @@ hosts = fun_test.parse_file_to_json(file_name=HOSTS_ASSET)
 def connect_the_host(hosts_list, target_ip):
     for host_name, host in hosts_list.iteritems():
         result = host["handle"].nvme_connect(target_ip=target_ip, nvme_subsystem=host["nqn"], nvme_io_queues=16)
-        # fun_test.test_assert(result, "{} {} connected to {}".format(host_name, host["nqn"], target_ip))
+        fun_test.test_assert(result, "{} {} connected to {}".format(host_name, host["nqn"], target_ip))
         host["handle"].sudo_command("nvme list")
         # output_lsblk = host_handle.lsblk()
         # for key in output_lsblk:
