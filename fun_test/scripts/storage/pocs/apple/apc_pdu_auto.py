@@ -156,7 +156,7 @@ class ApcPduTestcase(FunTestCase):
                 check_docker(come_handle, expected=self.validate["expected_dockers"])
 
             if self.validate["hosts"]:
-                fun_test.sleep("Hosts to be up", seconds=100)
+                fun_test.sleep("Hosts to be up", seconds=200)
                 hosts_list = add_hosts_handle(self.validate["hosts"])
                 for host_name, host in hosts_list.iteritems():
                     single_host = {host_name: host}

@@ -45,7 +45,9 @@ def run_traffic_bg(hosts_list):
         #                                ioengine="libaio", bs="4k", size="512g", name="fio_randrw", runtime=120,
         #                                do_verify=1, verify="md5", verify_fatal=1, timeout=300)
         host["handle"].enter_sudo()
-        host["handle"].start_bg_process("fio --group_reporting --output-format=json --filename=/dev/nvme0n1 --time_based --rw=randrw --name=fio --iodepth=16 --verify=md5 --numjobs=4 --direct=1 --do_verify=1 --bs=4k --ioengine=libaio --runtime=120 --verify_fatal=1 --size=512g")
+        host["handle"].start_bg_process("fio --group_reporting --output-format=json --filename=/dev/nvme0n1 "
+                                        "--time_based --rw=randrw --name=fio --iodepth=32 --verify=md5 --numjobs=1 "
+                                        "--direct=1 --do_verify=1 --bs=4k --ioengine=libaio --runtime=120 --verify_fatal=1 --size=512g")
         fun_test.test_assert(True, "{} fio started".format(host_name))
         host["handle"].exit_sudo()
         # if not fio_out:
