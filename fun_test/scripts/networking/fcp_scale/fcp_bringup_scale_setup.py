@@ -147,7 +147,7 @@ class TestHostPCIeLanes(FunTestCase):
             output = linux_obj.command('lspci -d 1dad:')
             link_check = re.search(r'Ethernet controller: (?:Device 1dad:00f1|Fungible Device 00f1)', output)
             fun_test.test_assert(expression=link_check, message="Fungible Ethernet PFs on host %s" % hostname)
-            result &= link_check
+            result &= bool(link_check)
             if link_speed not in lspci_out:
                 if "LnkSta" not in lspci_out:
                     fun_test.test_assert(expression=False, message="PCIE link did not come up on Host %s" % hostname)
