@@ -6,6 +6,11 @@ import {LoggerService} from "../../services/logger/logger.service";
 import {ActivatedRoute} from "@angular/router";
 import {animate, state, style, transition, trigger} from "@angular/animations";
 
+class TimeSeriesLog {
+  date_time: string;
+  type: string;
+  data: any;
+}
 
 @Component({
   selector: 'app-script-detail',
@@ -26,7 +31,7 @@ export class ScriptDetailComponent implements OnInit {
   constructor(private regressionService: RegressionService,
               private loggerService: LoggerService,
               private route: ActivatedRoute,
-) { }
+  ) { }
   suiteExecutionId: number = 10000;
   logPrefix: number = null;
   scriptPk: number = null;
@@ -36,6 +41,9 @@ export class ScriptDetailComponent implements OnInit {
   testLogs = [];
   showTestCasePanel: boolean = true;
   showLogsPanel: boolean = false;
+  testCaseIds: number [] = [];
+
+  timeSeriesByTestCase: {[testCaseId: number]: TimeSeriesLog} = {};
 
   ngOnInit() {
 
@@ -98,11 +106,13 @@ export class ScriptDetailComponent implements OnInit {
   }
 
   onTestCaseIdClick(testCaseExecutionIndex) {
-    this.testLogs = null;
     this.currentTestCaseExecution = this.testCaseExecutions[testCaseExecutionIndex];
+    this.testLogs = null;
+
     this.regressionService.testCaseTimeSeries(this.suiteExecutionId, this.testCaseExecutions[testCaseExecutionIndex].execution_id).subscribe(response => {
       let timeSeries = response;
-      let i = 0;
+      this.timeSeriesByTestCase[this.currentTestCaseExecution.test_case_id] = timeSeries;
+      this.showTestCasePanel = true;
     })
   }
 
