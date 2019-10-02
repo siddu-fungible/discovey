@@ -36,11 +36,48 @@ class ApcPduTestcase(FunTestCase):
         self.fs = AssetManager().get_fs_by_name(fs_name)
         self.apc_info = self.fs.get("apc_info", None)
         self.outlet_no = self.apc_info.get("outlet_number", None)
+        self.validate = {"check_storage_controller": False,
+                         "check_ssd": False,
+                         "check_ports": False,
+                         "expected_ssds_f1_0": 12,
+                         "expected_ssds_f1_1": 12,
+                         "expected_nu_ports_f1_0": range(0, 24, 4),
+                         "expected_nu_ports_f1_1": range(0, 24, 4),
+                         "expected_hnu_ports_f1_0": [],
+                         "expected_hnu_ports_f1_1": [],
+                         "hosts": [],
+                         "check_docker": False,
+                         "expected_dockers": 3
+                         }
+        job_inputs = fun_test.get_job_inputs()
+        if job_inputs:
+            if "iterations" in job_inputs:
+                self.NUMBER_OF_ITERATIONS = job_inputs["iterations"]
+            if "check_ssd" in job_inputs:
+                self.validate["check_ssd"] = job_inputs["check_ssd"]
+            if "check_ports" in job_inputs:
+                self.validate["check_ports"] = job_inputs["check_ports"]
+            if "expected_ssds_f1_0" in job_inputs:
+                self.validate["expected_ssds_f1_0"] = job_inputs["expected_ssds_f1_0"]
+            if "expected_ssds_f1_1" in job_inputs:
+                self.validate["expected_ssds_f1_1"] = job_inputs["expected_ssds_f1_1"]
+            if "expected_nu_ports_f1_0" in job_inputs:
+                self.validate["expected_nu_ports_f1_0"] = job_inputs["expected_nu_ports_f1_0"]
+            if "expected_nu_ports_f1_1" in job_inputs:
+                self.validate["expected_nu_ports_f1_1"] = job_inputs["expected_nu_ports_f1_1"]
+            if "expected_hnu_ports_f1_0" in job_inputs:
+                self.validate["expected_hnu_ports_f1_0"] = job_inputs["expected_hnu_ports_f1_0"]
+            if "expected_hnu_ports_f1_1" in job_inputs:
+                self.validate["expected_hnu_ports_f1_1"] = job_inputs["expected_hnu_ports_f1_1"]
+            if "hosts" in job_inputs:
+                self.validate["hosts"] = job_inputs["hosts"]
+            if "check_docker" in job_inputs:
+                self.validate["check_docker"] = job_inputs["check_docker"]
+            if "expected_dockers" in job_inputs:
+                self.validate["expected_dockers"] = job_inputs["expected_dockers"]
 
-        # if you are loading the image every time you boot up
-        self.f1_0_boot_args = "app=hw_hsu_test cc_huid=3 sku=SKU_FS1600_0 --all_100g --dis-stats --disable-wu-watchdog --dpc-server --dpc-uart"
-        self.f1_1_boot_args = "app=hw_hsu_test cc_huid=2 sku=SKU_FS1600_1 --all_100g --dis-stats --disable-wu-watchdog --dpc-server --dpc-uart"
-        print(json.dumps(self.fs, indent=4))
+        fun_test.log(json.dumps(self.fs, indent=4))
+        fun_test.log(self.validate)
 
     def run(self):
         '''
@@ -56,84 +93,84 @@ class ApcPduTestcase(FunTestCase):
             come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
                                ssh_username=self.fs['come']['mgmt_ssh_username'],
                                ssh_password=self.fs['come']['mgmt_ssh_password'])
-            fpga_handle = Fpga(host_ip=self.fs['fpga']['mgmt_ip'],
-                               ssh_username=self.fs['fpga']['mgmt_ssh_username'],
-                               ssh_password=self.fs['fpga']['mgmt_ssh_password'])
-            qa_02_handle = Linux(host_ip="qa-ubuntu-02", ssh_username="auto_admin", ssh_password="fun123")
-            qa_02_handle.destroy()
-            come_handle.destroy()
+            bmc_handle = Bmc(host_ip=self.fs['bmc']['mgmt_ip'],
+                             ssh_username=self.fs['bmc']['mgmt_ssh_username'],
+                             ssh_password=self.fs['bmc']['mgmt_ssh_password'])
+            bmc_handle.set_prompt_terminator(r'# $')
 
             fun_test.add_checkpoint(checkpoint="ITERATION : {}".format(pc_no))
 
-            self.apc_pdu_reboot(come_handle, fpga_handle)
+            self.apc_pdu_reboot(come_handle)
 
-            fun_test.log("Checking if FPGA is up")
-            fpga_up = fpga_handle.ensure_host_is_up(max_wait_time=600)
-            fun_test.test_assert(fpga_up, "FPGA is UP")
+            # Destroy any previously opened sessions(i.e After the power cycle)
+
+            come_handle.destroy()
 
             fun_test.log("Checking if COMe is UP")
             come_up = come_handle.ensure_host_is_up(max_wait_time=600)
             fun_test.test_assert(come_up, "COMe is UP")
 
-            initial = come_handle.command("uptime")
-            output = come_handle.command("uptime")
-            up_time = re.search(r'(\d+) min', output)
-            up_time_less_than_5 = False
-            if up_time:
-                up_time_min = int(up_time.group(1))
-                if up_time_min <= 5:
-                    up_time_less_than_5 = True
-            fun_test.test_assert(up_time_less_than_5, "COMe 'up-time' less than 5 min")
-
             fun_test.log("Checking if BMC is UP")
-            bmc_up = qa_02_handle.ping(dst=self.fs['bmc']['mgmt_ip'])
+            bmc_up = bmc_handle.ensure_host_is_up(max_wait_time=600)
             fun_test.test_assert(bmc_up, "BMC is UP")
 
+            # Check if lspci devices are detected
+            lspci_f0 = check_pci_dev(come_handle, f1=0)
+            fun_test.test_assert(lspci_f0, "F1_0 PCIe devices not detected")
+
+            lspci_f1 = check_pci_dev(come_handle, f1=1)
+            fun_test.test_assert(lspci_f1, "F1_1 PCIe devices not detected")
+
+            check_come_up_time(come_handle, expected_seconds=5)
+
+            if self.validate["check_ssd"]:
+                fun_test.log("Checking if SSD's are Active on F1_0")
+                check_ssd(come_handle,
+                          expected_ssds_up=self.validate["expected_ssds_f1_0"],
+                          f1=0)
+
+                fun_test.log("Checking if SSD's are Active on F1_1")
+                check_ssd(come_handle,
+                          expected_ssds_up=self.validate["expected_ssds_f1_1"],
+                          f1=1)
+
+            if self.validate["check_ports"]:
+                fun_test.log("Checking if NU and HNU port's are active on F1_0")
+                expected_ports_up_f1_0 = {'NU': self.validate["expected_nu_ports_f1_0"],
+                                          'HNU': self.validate["expected_hnu_ports_f1_0"]}
+                nu_port_valid = check_nu_ports(come_handle, iteration=pc_no, f1=0,
+                                               expected_ports_up=expected_ports_up_f1_0)
+                fun_test.test_assert(nu_port_valid, "F1_0: NU ports are present, Expected: {}".format(expected_ports_up_f1_0))
+                expected_ports_up_f1_1 = {'NU': self.validate["expected_nu_ports_f1_1"],
+                                          'HNU': self.validate["expected_hnu_ports_f1_1"]}
+                fun_test.log("Checking if NU and HNU port's are active on F1_1")
+                nu_port_valid = check_nu_ports(come_handle, iteration=pc_no, f1=1,
+                                               expected_ports_up=expected_ports_up_f1_1)
+                fun_test.test_assert(nu_port_valid, "F1_1: NU ports are present, Expected: {}".format(expected_ports_up_f1_1))
+
+            if self.validate["check_docker"]:
+                fun_test.sleep("docker to be up", seconds=40)
+                check_docker(come_handle, expected=self.validate["expected_dockers"])
+
+            if self.validate["hosts"]:
+                fun_test.sleep("Hosts to be up", seconds=200)
+                check_host_connected(self.validate["hosts"])
+                # Start traffic
+                for host in self.validate["hosts"]:
+                    # TODO: Pass nqn here
+                    run_traffic(host, target_ip="", nqn="")
+                check_traffic(self.validate["hosts"])
+                # Disconnect volume
+                for host in self.validate["hosts"]:
+                    # TODO: Pass nqn here
+                    disconnect_vol(host, nqn="")
+
             come_handle.destroy()
-            qa_02_handle.destroy()
-            fpga_handle.destroy()
+            bmc_handle.destroy()
 
-            # Since we are going to load the image now, so kill all the handles before
-            # this otherwise some issue might come in.
+            fun_test.sleep("Sleeping for 300s before next iteration", seconds=300)
 
-            topology_helper = TopologyHelper()
-            topology_helper.set_dut_parameters(f1_parameters={0: {"boot_args": self.f1_0_boot_args},
-                                                              1: {"boot_args": self.f1_1_boot_args}},
-                                               skip_funeth_come_power_cycle=True,
-                                               dut_index=0)
-            topology = topology_helper.deploy()
-            fun_test.test_assert(topology, "Topology deployed")
-
-            fun_test.log("Checking if SSD's are Active on F1_0")
-            ssd_valid = check_ssd(come_handle, expected_ssds_up=12, f1=0)
-            fun_test.test_assert(ssd_valid, "F1_0: SSD's ONLINE")
-
-            fun_test.log("Checking if SSD's are Active on F1_1")
-            ssd_valid = check_ssd(come_handle, expected_ssds_up=12, f1=1)
-            fun_test.test_assert(ssd_valid, "F1_1: SSD's ONLINE")
-
-            fun_test.log("Checking if NU and HNU port's are active")
-            nu_port_valid = check_nu_ports(come_handle, iteration=pc_no, f1=0,
-                                           expected_ports_up={"NU": [0, 4, 8, 12], "HNU": []})
-            fun_test.test_assert(nu_port_valid, "F1_0: NU ports are present (0,4,8,12) 100G")
-
-            fun_test.log("Checking if NU and HNU port's are active on F1_1")
-            nu_port_valid = check_nu_ports(come_handle, iteration=pc_no, f1=1,
-                                           expected_ports_up={"NU": [0, 4, 8, 12], "HNU": []})
-            fun_test.test_assert(nu_port_valid, "F1_1: NU ports are present (0,4,8,12) 100G")
-
-            # Minor checks: docker and cores
-
-            fun_test.log("Checking the Docker")
-            come_handle.command("docker ps -a")
-            fun_test.log("Checking the cores")
-            come_handle.command("ls /opt/fungible/cores")
-            come_handle.destroy()
-            qa_02_handle.destroy()
-
-            fun_test.sleep("Sleeping for 10s before next iteration", seconds=10)
-
-    def apc_pdu_reboot(self, come_handle, fpga_handle):
+    def apc_pdu_reboot(self, come_handle):
         '''
         1. check if COMe is up, than power off.
         2. check COMe now, if its down tha power on
@@ -141,12 +178,6 @@ class ApcPduTestcase(FunTestCase):
         :return:
         '''
         fun_test.log("Iteration no: {} out of {}".format(self.pc_no + 1, self.NUMBER_OF_ITERATIONS))
-
-        fun_test.log("Checking if FPGA is up")
-        fpga_up = fpga_handle.ensure_host_is_up()
-        fun_test.add_checkpoint("FPGA is UP (before switching off fs outlet)",
-                                self.to_str(fpga_up), True, fpga_up)
-        fpga_handle.destroy()
 
         fun_test.log("Checking if COMe is UP")
         come_up = come_handle.ensure_host_is_up()
@@ -163,12 +194,7 @@ class ApcPduTestcase(FunTestCase):
         outlet_off = self.match_success(apc_outlet_off_msg)
         fun_test.test_assert(outlet_off, "Power down FS")
 
-        fun_test.sleep(message="Wait for few seconds after switching off fs outlet", seconds=5)
-
-        fun_test.log("Checking if FPGA is down")
-        fpga_down = not (fpga_handle.ensure_host_is_up(max_wait_time=30))
-        fun_test.test_assert(fpga_down, "FPGA is Down")
-        fpga_handle.destroy()
+        fun_test.sleep(message="Wait for few seconds after switching off fs outlet", seconds=30)
 
         fun_test.log("Checking if COMe is down")
         come_down = not (come_handle.ensure_host_is_up(max_wait_time=30))

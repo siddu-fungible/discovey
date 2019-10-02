@@ -1,531 +1,859 @@
 [
   {
+    "bmc": {
+      "mgmt_ssh_password": "superuser",
+      "mgmt_ssh_username": "sysadmin",
+      "mgmt_ip": "10.1.21.212"
+    },
+    "come": {
+      "mgmt_ssh_password": "123",
+      "mgmt_ssh_username": "fun",
+      "mgmt_ip": "10.1.21.213"
+    },
     "name": "fs-9",
-    "bmc": {
-      "mgmt_ip": "10.1.21.212",
-      "mgmt_ssh_username": "sysadmin",
-      "mgmt_ssh_password": "superuser"
-    },
     "fpga": {
-      "mgmt_ip": "10.1.21.211",
+      "mgmt_ssh_password": "root",
       "mgmt_ssh_username": "root",
-      "mgmt_ssh_password": "root"
-    },
-    "come": {
-      "mgmt_ip": "10.1.21.213",
-      "mgmt_ssh_username": "fun",
-      "mgmt_ssh_password": "123"
+      "mgmt_ip": "10.1.21.211"
     }
   },
   {
-    "name": "fs-7",
-    "workarounds": {
-      "skip_funeth_come_power_cycle": true
-      },
     "bmc": {
-      "mgmt_ip": "10.1.20.19",
+      "mgmt_ssh_password": "superuser",
       "mgmt_ssh_username": "sysadmin",
-      "mgmt_ssh_password": "superuser"
-    },
-    "fpga": {
-      "mgmt_ip": "10.1.20.180",
-      "mgmt_ssh_username": "root",
-      "mgmt_ssh_password": "root"
+      "mgmt_ip": "10.1.20.19"
     },
     "come": {
-      "mgmt_ip": "10.1.21.8",
+      "mgmt_ssh_password": "123",
       "mgmt_ssh_username": "fun",
-      "mgmt_ssh_password": "123"
-    }
-  },
-  {
-    "name": "fs-6",
+      "mgmt_ip": "10.1.21.8"
+    },
     "workarounds": {
       "skip_funeth_come_power_cycle": true
     },
-    "bmc": {
-      "mgmt_ip": "10.1.20.153",
-      "mgmt_ssh_username": "sysadmin",
-      "mgmt_ssh_password": "superuser"
-    },
     "fpga": {
-      "mgmt_ip": "10.1.20.29",
+      "mgmt_ssh_password": "root",
       "mgmt_ssh_username": "root",
-      "mgmt_ssh_password": "root"
+      "mgmt_ip": "10.1.20.178"
     },
-    "come": {
-      "mgmt_ip": "10.1.21.10",
-      "mgmt_ssh_username": "fun",
-      "mgmt_ssh_password": "123"
-    }
+    "name": "fs-7"
   },
   {
+    "bmc": {
+      "mgmt_ssh_password": "superuser",
+      "mgmt_ssh_username": "sysadmin",
+      "mgmt_ip": "10.1.20.153"
+    },
+    "come": {
+      "mgmt_ssh_password": "123",
+      "mgmt_ssh_username": "fun",
+      "mgmt_ip": "10.1.21.10"
+    },
+    "workarounds": {
+      "skip_funeth_come_power_cycle": true
+    },
+    "fpga": {
+      "mgmt_ssh_password": "root",
+      "mgmt_ssh_username": "root",
+      "mgmt_ip": "10.1.20.29"
+    },
+    "name": "fs-6"
+  },
+  {
+    "bmc": {
+      "mgmt_ssh_password": "superuser",
+      "mgmt_ssh_username": "sysadmin",
+      "mgmt_ip": "fs15-bmc"
+    },
+    "come": {
+      "mgmt_ssh_password": "123",
+      "mgmt_ssh_username": "fun",
+      "mgmt_ip": "fs15-come"
+    },
     "name": "fs-15",
-    "bmc": {
-      "mgmt_ip": "10.1.20.26",
-      "mgmt_ssh_username": "sysadmin",
-      "mgmt_ssh_password": "superuser"
-    },
     "fpga": {
-      "mgmt_ip": "10.1.21.15",
+      "mgmt_ssh_password": "root",
       "mgmt_ssh_username": "root",
-      "mgmt_ssh_password": "root"
+      "mgmt_ip": "fs15-fpga"
     },
-    "come": {
-      "mgmt_ip": "10.1.21.19",
-      "mgmt_ssh_username": "fun",
-      "mgmt_ssh_password": "123"
+    "gateway_ip": "10.80.4.1",
+     "apc_info": {
+      "username": "localadmin",
+      "outlet_number": 13,
+      "password": "Precious1*",
+      "host_ip": "mpoc-r5-PDU1"
     }
   },
   {
-    "name": "fs-11",
-    "workarounds": {
-      "retimer_workaround": true,
-      "skip_funeth_come_power_cycle": true
-    },
     "bmc": {
-      "mgmt_ip": "fs11-bmc",
+      "mgmt_ssh_password": "superuser",
       "mgmt_ssh_username": "sysadmin",
-      "mgmt_ssh_password": "superuser"
-    },
-    "fpga": {
-      "mgmt_ip": "fs11-fpga",
-      "mgmt_ssh_username": "root",
-      "mgmt_ssh_password": "root"
+      "mgmt_ip": "fs11-bmc"
     },
     "come": {
-      "mgmt_ip": "fs11-come",
+      "mgmt_ssh_password": "123",
       "mgmt_ssh_username": "fun",
-      "mgmt_ssh_password": "123"
-    }
-  },
-  {
-    "name": "fs-20",
-    "bmc": {
-      "mgmt_ip": "10.1.20.36",
-      "mgmt_ssh_username": "sysadmin",
-      "mgmt_ssh_password": "superuser"
+      "mgmt_ip": "fs11-come"
     },
-    "fpga": {
-      "mgmt_ip": "10.1.20.32",
-      "mgmt_ssh_username": "root",
-      "mgmt_ssh_password": "root"
-    },
-    "come": {
-      "mgmt_ip": "10.1.20.30",
-      "mgmt_ssh_username": "fun",
-      "mgmt_ssh_password": "123"
-    }
-  }, {
-    "name": "fs-21",
     "workarounds": {
-      "skip_funeth_come_power_cycle": true
-    },
-    "gateway_ip": "10.1.20.1",
-    "bmc": {
-      "mgmt_ip": "fs21-bmc.fungible.local",
-      "mgmt_ssh_username": "sysadmin",
-      "mgmt_ssh_password": "superuser"
-    },
-    "fpga": {
-      "mgmt_ip": "fs21-fpga.fungible.local",
-      "mgmt_ssh_username": "root",
-      "mgmt_ssh_password": "root"
-    },
-    "come": {
-      "mgmt_ip": "fs21-come.fungible.local",
-      "mgmt_ssh_username": "fun",
-      "mgmt_ssh_password": "123"
-    }
-  },
-  {
-    "name": "fs-45",
-    "workarounds": {
-      "retimer_workaround": true,
       "skip_funeth_come_power_cycle": true,
-       "disable_u_boot_version_validation": true
-    },
-    "gateway_ip": "10.1.105.1",
-    "bmc": {
-      "mgmt_ip": "10.1.105.163",
-      "mgmt_ssh_username": "sysadmin",
-      "mgmt_ssh_password": "superuser"
+      "retimer_workaround": true
     },
     "fpga": {
-      "mgmt_ip": "10.1.105.164",
+      "mgmt_ssh_password": "root",
       "mgmt_ssh_username": "root",
-      "mgmt_ssh_password": "root"
+      "mgmt_ip": "fs11-fpga"
+    },
+    "name": "fs-11"
+  },
+  {
+    "bmc": {
+      "mgmt_ssh_password": "superuser",
+      "mgmt_ssh_username": "sysadmin",
+      "mgmt_ip": "fs20-bmc"
     },
     "come": {
-      "mgmt_ip": "10.1.105.165",
+      "mgmt_ssh_password": "123",
       "mgmt_ssh_username": "fun",
-      "mgmt_ssh_password": "123"
+      "mgmt_ip": "fs20-come"
+    },
+    "name": "fs-20",
+    "fpga": {
+      "mgmt_ssh_password": "root",
+      "mgmt_ssh_username": "root",
+      "mgmt_ip": "fs20-fpga"
+    },
+    "gateway_ip": "10.80.4.1",
+     "apc_info": {
+      "username": "localadmin",
+      "outlet_number": 7,
+      "password": "Precious1*",
+      "host_ip": "mpoc-r5-PDU1"
     }
   },
   {
+    "bmc": {
+      "mgmt_ssh_password": "superuser",
+      "mgmt_ssh_username": "sysadmin",
+      "mgmt_ip": "fs21-bmc"
+    },
+    "come": {
+      "mgmt_ssh_password": "123",
+      "mgmt_ssh_username": "fun",
+      "mgmt_ip": "fs21-come"
+    },
+    "name": "fs-21",
+    "fpga": {
+      "mgmt_ssh_password": "root",
+      "mgmt_ssh_username": "root",
+      "mgmt_ip": "fs21-fpga"
+    },
+    "gateway_ip": "10.80.4.1",
+     "apc_info": {
+      "username": "localadmin",
+      "outlet_number": 20,
+      "password": "Precious1*",
+      "host_ip": "mpoc-r6-PDU1"
+    }
+  },
+  {
+    "bmc": {
+      "mgmt_ssh_password": "superuser",
+      "mgmt_ssh_username": "sysadmin",
+      "mgmt_ip": "10.1.105.163"
+    },
+    "name": "fs-45",
+    "fpga": {
+      "mgmt_ssh_password": "root",
+      "mgmt_ssh_username": "root",
+      "mgmt_ip": "10.1.105.164"
+    },
+    "workarounds": {
+      "skip_funeth_come_power_cycle": true,
+      "retimer_workaround": true,
+      "disable_u_boot_version_validation": true
+    },
+    "gateway_ip": "10.1.105.1",
+    "come": {
+      "mgmt_ssh_password": "123",
+      "mgmt_ssh_username": "fun",
+      "mgmt_ip": "10.1.105.165"
+    }
+  },
+  {
+    "bmc": {
+      "mgmt_ssh_password": "superuser",
+      "mgmt_ssh_username": "sysadmin",
+      "mgmt_ip": "10.1.105.151"
+    },
     "name": "fs-41",
-    "gateway_ip": "10.1.105.1",
-    "bmc": {
-      "mgmt_ip": "10.1.105.151",
-      "mgmt_ssh_username": "sysadmin",
-      "mgmt_ssh_password": "superuser"
-    },
     "fpga": {
-      "mgmt_ip": "10.1.105.152",
+      "mgmt_ssh_password": "root",
       "mgmt_ssh_username": "root",
-      "mgmt_ssh_password": "root"
+      "mgmt_ip": "10.1.105.152"
+    },
+    "gateway_ip": "10.1.105.1",
+    "apc_info": {
+      "username": "localadmin",
+      "outlet_number": 7,
+      "password": "Precious1*",
+      "host_ip": "10.1.105.249"
     },
     "come": {
-      "mgmt_ip": "10.1.105.153",
+      "mgmt_ssh_password": "123",
       "mgmt_ssh_username": "fun",
-      "mgmt_ssh_password": "123"
-    },
-      "apc_info": {
-      "host_ip": "10.1.105.249",
-      "username": "localadmin",
-      "password": "Precious1*",
-      "outlet_number": 7
+      "mgmt_ip": "10.1.105.153"
     }
   },
   {
+    "bmc": {
+      "mgmt_ssh_password": "superuser",
+      "mgmt_ssh_username": "sysadmin",
+      "mgmt_ip": "10.1.105.154"
+    },
     "name": "fs-42",
-    "gateway_ip": "10.1.105.1",
-    "bmc": {
-      "mgmt_ip": "10.1.105.154",
-      "mgmt_ssh_username": "sysadmin",
-      "mgmt_ssh_password": "superuser"
-    },
     "fpga": {
-      "mgmt_ip": "10.1.105.155",
+      "mgmt_ssh_password": "root",
       "mgmt_ssh_username": "root",
-      "mgmt_ssh_password": "root"
+      "mgmt_ip": "10.1.105.155"
+    },
+    "gateway_ip": "10.1.105.1",
+    "apc_info": {
+      "username": "localadmin",
+      "outlet_number": 15,
+      "password": "Precious1*",
+      "host_ip": "10.1.105.249"
     },
     "come": {
-      "mgmt_ip": "10.1.105.156",
+      "mgmt_ssh_password": "123",
       "mgmt_ssh_username": "fun",
-      "mgmt_ssh_password": "123"
-    },
-      "apc_info": {
-      "host_ip": "10.1.105.249",
-      "username": "localadmin",
-      "password": "Precious1*",
-      "outlet_number": 15
+      "mgmt_ip": "10.1.105.156"
     }
   },
   {
+    "bmc": {
+      "mgmt_ssh_password": "superuser",
+      "mgmt_ssh_username": "sysadmin",
+      "mgmt_ip": "10.1.105.157"
+    },
     "name": "fs-43",
-    "gateway_ip": "10.1.105.1",
-    "bmc": {
-      "mgmt_ip": "10.1.105.157",
-      "mgmt_ssh_username": "sysadmin",
-      "mgmt_ssh_password": "superuser"
-    },
     "fpga": {
-      "mgmt_ip": "10.1.105.158",
+      "mgmt_ssh_password": "root",
       "mgmt_ssh_username": "root",
-      "mgmt_ssh_password": "root"
+      "mgmt_ip": "10.1.105.158"
+    },
+    "gateway_ip": "10.1.105.1",
+    "apc_info": {
+      "username": "localadmin",
+      "outlet_number": 17,
+      "password": "Precious1*",
+      "host_ip": "10.1.105.249"
     },
     "come": {
-      "mgmt_ip": "10.1.105.159",
+      "mgmt_ssh_password": "123",
       "mgmt_ssh_username": "fun",
-      "mgmt_ssh_password": "123"
-    },
-    "apc_info": {
-      "host_ip": "10.1.105.249",
-      "username": "localadmin",
-      "password": "Precious1*",
-      "outlet_number": 17
+      "mgmt_ip": "10.1.105.159"
     }
   },
   {
+    "bmc": {
+      "mgmt_ssh_password": "superuser",
+      "mgmt_ssh_username": "sysadmin",
+      "mgmt_ip": "10.1.105.160"
+    },
     "name": "fs-44",
-    "gateway_ip": "10.1.105.1",
-    "bmc": {
-      "mgmt_ip": "10.1.105.160",
-      "mgmt_ssh_username": "sysadmin",
-      "mgmt_ssh_password": "superuser"
-    },
     "fpga": {
-      "mgmt_ip": "10.1.105.161",
+      "mgmt_ssh_password": "root",
       "mgmt_ssh_username": "root",
-      "mgmt_ssh_password": "root"
+      "mgmt_ip": "10.1.105.161"
+    },
+    "gateway_ip": "10.1.105.1",
+    "apc_info": {
+      "username": "localadmin",
+      "outlet_number": 20,
+      "password": "Precious1*",
+      "host_ip": "10.1.105.249"
     },
     "come": {
-      "mgmt_ip": "10.1.105.162",
+      "mgmt_ssh_password": "123",
       "mgmt_ssh_username": "fun",
-      "mgmt_ssh_password": "123"
-    },
-      "apc_info": {
-      "host_ip": "10.1.105.249",
-      "username": "localadmin",
-      "password": "Precious1*",
-      "outlet_number": 20
+      "mgmt_ip": "10.1.105.162"
     }
   },
   {
+    "bmc": {
+      "mgmt_ssh_password": "superuser",
+      "mgmt_ssh_username": "sysadmin",
+      "mgmt_ip": "10.1.105.166"
+    },
     "name": "fs-48",
-    "workarounds": {
-      "retimer_workaround": true
-    },
-    "gateway_ip": "10.1.105.1",
-    "bmc": {
-      "mgmt_ip": "10.1.105.166",
-      "mgmt_ssh_username": "sysadmin",
-      "mgmt_ssh_password": "superuser"
-    },
     "fpga": {
-      "mgmt_ip": "10.1.105.167",
+      "mgmt_ssh_password": "root",
       "mgmt_ssh_username": "root",
-      "mgmt_ssh_password": "root"
+      "mgmt_ip": "10.1.105.167"
     },
     "come": {
-      "mgmt_ip": "10.1.105.168",
+      "mgmt_ssh_password": "123",
       "mgmt_ssh_username": "fun",
-      "mgmt_ssh_password": "123"
+      "mgmt_ip": "10.1.105.168"
     },
-    "apc_info": {
-      "host_ip": "10.1.105.247",
-      "username": "localadmin",
-      "password": "Precious1*"
-    }
-  },
-  {
-    "name": "fs-56",
     "gateway_ip": "10.1.105.1",
-    "bmc": {
-      "mgmt_ip": "10.1.105.70",
-      "mgmt_ssh_username": "sysadmin",
-      "mgmt_ssh_password": "superuser"
-    },
-    "fpga": {
-      "mgmt_ip": "10.1.105.74",
-      "mgmt_ssh_username": "root",
-      "mgmt_ssh_password": "root"
-    },
-    "come": {
-      "mgmt_ip": "10.1.105.73",
-      "mgmt_ssh_username": "fun",
-      "mgmt_ssh_password": "123"
-    },
     "apc_info": {
-      "host_ip": "10.1.105.249",
       "username": "localadmin",
       "password": "Precious1*",
-      "outlet_number": 1
+      "host_ip": "10.1.105.247"
+    },
+    "workarounds": {
+      "retimer_workaround": true
     }
   },
   {
+    "bmc": {
+      "mgmt_ssh_password": "superuser",
+      "mgmt_ssh_username": "sysadmin",
+      "mgmt_ip": "10.1.105.70"
+    },
+    "name": "fs-56",
+    "fpga": {
+      "mgmt_ssh_password": "root",
+      "mgmt_ssh_username": "root",
+      "mgmt_ip": "10.1.105.74"
+    },
+    "gateway_ip": "10.1.105.1",
+    "apc_info": {
+      "username": "localadmin",
+      "outlet_number": 1,
+      "password": "Precious1*",
+      "host_ip": "10.1.105.249"
+    },
+    "come": {
+      "mgmt_ssh_password": "123",
+      "mgmt_ssh_username": "fun",
+      "mgmt_ip": "10.1.105.73"
+    }
+  },
+  {
+    "bmc": {
+      "mgmt_ssh_password": "superuser",
+      "mgmt_ssh_username": "sysadmin",
+      "mgmt_ip": "10.1.105.91"
+    },
+    "come": {
+      "mgmt_ssh_password": "123",
+      "mgmt_ssh_username": "fun",
+      "mgmt_ip": "10.1.105.92"
+    },
     "name": "fs-58",
-    "bmc": {
-      "mgmt_ip": "10.1.104.175",
-      "mgmt_ssh_username": "sysadmin",
-      "mgmt_ssh_password": "superuser"
-    },
     "fpga": {
-      "mgmt_ip": "10.1.104.176",
+      "mgmt_ssh_password": "root",
       "mgmt_ssh_username": "root",
-      "mgmt_ssh_password": "root"
+      "mgmt_ip": ""
     },
-    "come": {
-      "mgmt_ip": "10.1.104.172",
-      "mgmt_ssh_username": "fun",
-      "mgmt_ssh_password": "123"
+    "apc_info": {
+      "username": "localadmin",
+      "outlet_number": 17,
+      "password": "Precious1*",
+      "host_ip": "cab02-pdu1"
     }
   },
   {
+    "bmc": {
+      "mgmt_ssh_password": "superuser",
+      "mgmt_ssh_username": "sysadmin",
+      "mgmt_ip": "10.1.105.71"
+    },
+    "come": {
+      "mgmt_ssh_password": "123",
+      "mgmt_ssh_username": "fun",
+      "mgmt_ip": "10.1.105.89"
+    },
     "name": "fs-59",
-    "bmc": {
-      "mgmt_ip": "10.1.105.71",
-      "mgmt_ssh_username": "sysadmin",
-      "mgmt_ssh_password": "superuser"
-    },
     "fpga": {
-      "mgmt_ip": "10.1.105.55",
+      "mgmt_ssh_password": "root",
       "mgmt_ssh_username": "root",
-      "mgmt_ssh_password": "root"
-    },
-    "come": {
-      "mgmt_ip": "10.1.105.89",
-      "mgmt_ssh_username": "fun",
-      "mgmt_ssh_password": "123"
+      "mgmt_ip": "10.1.105.55"
     }
   },
   {
+    "bmc": {
+      "mgmt_ssh_password": "superuser",
+      "mgmt_ssh_username": "sysadmin",
+      "mgmt_ip": "10.1.105.169"
+    },
     "name": "fs-60",
+    "fpga": {
+      "mgmt_ssh_password": "root",
+      "mgmt_ssh_username": "root",
+      "mgmt_ip": "10.1.105.170"
+    },
     "workarounds": {
       "retimer_workaround": true
     },
     "gateway_ip": "10.1.105.1",
-    "bmc": {
-      "mgmt_ip": "10.1.105.169",
-      "mgmt_ssh_username": "sysadmin",
-      "mgmt_ssh_password": "superuser"
-    },
-    "fpga": {
-      "mgmt_ip": "10.1.105.170",
-      "mgmt_ssh_username": "root",
-      "mgmt_ssh_password": "root"
-    },
     "come": {
-      "mgmt_ip": "10.1.105.171",
+      "mgmt_ssh_password": "123",
       "mgmt_ssh_username": "fun",
-      "mgmt_ssh_password": "123"
+      "mgmt_ip": "10.1.105.171"
     }
   },
   {
+    "bmc": {
+      "mgmt_ssh_password": "superuser",
+      "mgmt_ssh_username": "sysadmin",
+      "mgmt_ip": "10.1.105.139"
+    },
     "name": "fs-63",
+    "fpga": {
+      "mgmt_ssh_password": "root",
+      "mgmt_ssh_username": "root",
+      "mgmt_ip": "10.1.105.142"
+    },
     "workarounds": {
       "skip_funeth_come_power_cycle": true
     },
-    "bmc": {
-      "mgmt_ip": "fs63-bmc",
-      "mgmt_ssh_username": "sysadmin",
-      "mgmt_ssh_password": "superuser"
-    },
-    "fpga": {
-      "mgmt_ip": "fs63-fpga",
-      "mgmt_ssh_username": "root",
-      "mgmt_ssh_password": "root"
+    "apc_info": {
+      "username": "localadmin",
+      "outlet_number": 4,
+      "password": "Precious1*",
+      "host_ip": "cab02-pdu1"
     },
     "come": {
-      "mgmt_ip": "fs63-come",
+      "mgmt_ssh_password": "123",
       "mgmt_ssh_username": "fun",
-      "mgmt_ssh_password": "123"
+      "mgmt_ip": "10.1.105.141"
     }
   },
   {
+    "bmc": {
+      "mgmt_ssh_password": "superuser",
+      "mgmt_ssh_username": "sysadmin",
+      "mgmt_ip": "10.1.20.170"
+    },
     "name": "fs-65",
-    "gateway_ip": "10.1.20.1",
+    "fpga": {
+      "mgmt_ssh_password": "root",
+      "mgmt_ssh_username": "root",
+      "mgmt_ip": "10.1.20.179"
+    },
     "workarounds": {
       "skip_funeth_come_power_cycle": true
     },
+    "gateway_ip": "10.1.20.1",
+    "come": {
+      "mgmt_ssh_password": "123",
+      "mgmt_ssh_username": "fun",
+      "mgmt_ip": "10.1.20.17"
+    }
+  },
+  {
     "bmc": {
-      "mgmt_ip": "10.1.20.170",
+      "mgmt_ssh_password": "superuser",
       "mgmt_ssh_username": "sysadmin",
-      "mgmt_ssh_password": "superuser"
+      "mgmt_ip": "10.1.44.53"
     },
+    "name": "fs-31",
     "fpga": {
-      "mgmt_ip": "10.1.20.179",
+      "mgmt_ssh_password": "root",
       "mgmt_ssh_username": "root",
-      "mgmt_ssh_password": "root"
+      "mgmt_ip": "10.1.44.55"
+    },
+    "workarounds": {
+      "skip_funeth_come_power_cycle": true
+    },
+    "gateway_ip": "10.1.44.1",
+    "come": {
+      "mgmt_ssh_password": "123",
+      "mgmt_ssh_username": "fun",
+      "mgmt_ip": "10.1.44.54"
+    }
+  },
+  {
+    "bmc": {
+      "mgmt_ssh_password": "superuser",
+      "mgmt_ssh_username": "sysadmin",
+      "mgmt_ip": "fs66-bmc"
+    },
+    "name": "fs-66",
+    "fpga": {
+      "mgmt_ssh_password": "root",
+      "mgmt_ssh_username": "root",
+      "mgmt_ip": "fs66-fpga"
+    },
+    "workarounds": {
+      "skip_funeth_come_power_cycle": true,
+      "disable_u_boot_version_validation": true
+    },
+    "gateway_ip": "10.1.105.1",
+    "come": {
+      "mgmt_ssh_password": "123",
+      "mgmt_ssh_username": "fun",
+      "mgmt_ip": "fs66-come"
+    }
+  },
+  {
+    "bmc": {
+      "mgmt_ssh_password": "superuser",
+      "mgmt_ssh_username": "sysadmin",
+      "mgmt_ip": "10.1.105.60"
+    },
+    "name": "fs-33",
+    "fpga": {
+      "mgmt_ssh_password": "root",
+      "mgmt_ssh_username": "root",
+      "mgmt_ip": "10.1.105.62"
+    },
+    "workarounds": {
+      "skip_funeth_come_power_cycle": true
+    },
+    "gateway_ip": "10.1.105.1",
+    "come": {
+      "mgmt_ssh_password": "123",
+      "mgmt_ssh_username": "fun",
+      "mgmt_ip": "10.1.105.76"
+    }
+  },
+  {
+    "bmc": {
+      "mgmt_ssh_password": "superuser",
+      "mgmt_ssh_username": "sysadmin",
+      "mgmt_ip": "10.1.105.61"
+    },
+    "name": "fs-34",
+    "fpga": {
+      "mgmt_ssh_password": "root",
+      "mgmt_ssh_username": "root",
+      "mgmt_ip": "10.1.105.64"
+    },
+    "workarounds": {
+      "skip_funeth_come_power_cycle": true
+    },
+    "gateway_ip": "10.1.105.1",
+    "come": {
+      "mgmt_ssh_password": "123",
+      "mgmt_ssh_username": "fun",
+      "mgmt_ip": "10.1.105.72"
+    }
+  },
+  {
+    "bmc": {
+      "mgmt_ssh_password": "superuser",
+      "mgmt_ssh_username": "sysadmin",
+      "mgmt_ip": "10.1.105.145"
     },
     "come": {
-      "mgmt_ip": "10.1.20.17",
+      "mgmt_ssh_password": "123",
       "mgmt_ssh_username": "fun",
-      "mgmt_ssh_password": "123"
+      "mgmt_ip": "10.1.105.147"
+    },
+    "name": "fs-53",
+    "fpga": {
+      "mgmt_ip": "",
+      "mgmt_ssh_password": "",
+      "mgmt_ssh_username": "",
+      "use_telnet": true,
+      "terminal_username": "root",
+      "terminal_password": "",
+      "terminal_port": 7002,
+      "terminal_ip": "cab01-terminal"
+    },
+    "gateway_ip": "10.1.105.1",
+    "apc_info": {
+      "username": "localadmin",
+      "outlet_number": 22,
+      "password": "Precious1*",
+      "host_ip": "cab02-pdu1"
+    }
+  },
+  {
+    "bmc": {
+      "mgmt_ssh_password": "superuser",
+      "mgmt_ssh_username": "sysadmin",
+      "mgmt_ip": "fs8-bmc"
+    },
+    "come": {
+      "mgmt_ssh_password": "123",
+      "mgmt_ssh_username": "fun",
+      "mgmt_ip": "fs8-come"
+    },
+    "name": "fs-8",
+    "fpga": {
+      "mgmt_ssh_password": "root",
+      "mgmt_ssh_username": "root",
+      "mgmt_ip": "fs8-fpga"
+    },
+    "gateway_ip": "10.80.4.1",
+     "apc_info": {
+      "username": "localadmin",
+      "outlet_number": 11,
+      "password": "Precious1*",
+      "host_ip": "mpoc-r6-PDU1"
+    }
+  },
+  {
+    "bmc": {
+      "mgmt_ssh_password": "superuser",
+      "mgmt_ssh_username": "sysadmin",
+      "mgmt_ip": "fs52-bmc"
+    },
+    "come": {
+      "mgmt_ssh_password": "123",
+      "mgmt_ssh_username": "fun",
+      "mgmt_ip": "fs52-come"
+    },
+    "name": "fs-52",
+    "fpga": {
+      "mgmt_ssh_password": "root",
+      "mgmt_ssh_username": "root",
+      "mgmt_ip": "fs52-fpga"
+    },
+    "gateway_ip": "10.80.4.1",
+     "apc_info": {
+      "username": "localadmin",
+      "outlet_number": 20,
+      "password": "Precious1*",
+      "host_ip": "mpoc-r4-PDU1"
+    }
+  },
+  {
+    "bmc": {
+      "mgmt_ssh_password": "superuser",
+      "mgmt_ssh_username": "sysadmin",
+      "mgmt_ip": "fs38-bmc"
+    },
+    "come": {
+      "mgmt_ssh_password": "123",
+      "mgmt_ssh_username": "fun",
+      "mgmt_ip": "fs38-come"
+    },
+    "name": "fs-38",
+    "fpga": {
+      "mgmt_ssh_password": "root",
+      "mgmt_ssh_username": "root",
+      "mgmt_ip": "fs38-fpga"
+    },
+    "gateway_ip": "10.80.4.1",
+     "apc_info": {
+      "username": "localadmin",
+      "outlet_number": 11,
+      "password": "Precious1*",
+      "host_ip": "mpoc-r4-PDU1"
+    }
+  },
+  {
+    "bmc": {
+      "mgmt_ssh_password": "superuser",
+      "mgmt_ssh_username": "sysadmin",
+      "mgmt_ip": "fs69-bmc"
+    },
+    "come": {
+      "mgmt_ssh_password": "123",
+      "mgmt_ssh_username": "fun",
+      "mgmt_ip": "fs69-come"
+    },
+    "name": "fs-69",
+    "fpga": {
+      "mgmt_ssh_password": "root",
+      "mgmt_ssh_username": "root",
+      "mgmt_ip": "fs69-fpga"
+    },
+    "gateway_ip": "10.1.105.1"
+  },
+  {
+    "bmc": {
+      "mgmt_ssh_password": "superuser",
+      "mgmt_ssh_username": "sysadmin",
+      "mgmt_ip": "fs39-bmc"
+    },
+    "come": {
+      "mgmt_ssh_password": "123",
+      "mgmt_ssh_username": "fun",
+      "mgmt_ip": "fs39-come"
+    },
+    "name": "fs-39",
+    "fpga": {
+      "mgmt_ssh_password": "root",
+      "mgmt_ssh_username": "root",
+      "mgmt_ip": "fs39-fpga"
+    },
+        "gateway_ip": "10.80.4.1",
+     "apc_info": {
+      "username": "localadmin",
+      "outlet_number": 5,
+      "password": "Precious1*",
+      "host_ip": "mpoc-r5-PDU1"
+    }
+  },
+  {
+    "bmc": {
+      "mgmt_ssh_password": "superuser",
+      "mgmt_ssh_username": "sysadmin",
+      "mgmt_ip": "fs51-bmc"
+    },
+    "come": {
+      "mgmt_ssh_password": "123",
+      "mgmt_ssh_username": "fun",
+      "mgmt_ip": "fs51-come"
+    },
+    "name": "fs-51",
+    "fpga": {
+      "mgmt_ssh_password": "root",
+      "mgmt_ssh_username": "root",
+      "mgmt_ip": "fs51-fpga"
+    },
+        "gateway_ip": "10.80.4.1",
+     "apc_info": {
+      "username": "localadmin",
+      "outlet_number": 4,
+      "password": "Precious1*",
+      "host_ip": "mpoc-r5-PDU1"
+    }
+  },
+  {
+    "bmc": {
+      "mgmt_ssh_password": "superuser",
+      "mgmt_ssh_username": "sysadmin",
+      "mgmt_ip": "fs37-bmc"
+    },
+    "come": {
+      "mgmt_ssh_password": "123",
+      "mgmt_ssh_username": "fun",
+      "mgmt_ip": "fs37-come"
+    },
+    "name": "fs-37",
+    "fpga": {
+      "mgmt_ssh_password": "root",
+      "mgmt_ssh_username": "root",
+      "mgmt_ip": "fs37-fpga"
+    },
+        "gateway_ip": "10.80.4.1",
+     "apc_info": {
+      "username": "localadmin",
+      "outlet_number": 3,
+      "password": "Precious1*",
+      "host_ip": "mpoc-r5-PDU1"
+    }
+  },
+  {
+    "bmc": {
+      "mgmt_ssh_password": "superuser",
+      "mgmt_ssh_username": "sysadmin",
+      "mgmt_ip": "fs32-bmc"
+    },
+    "come": {
+      "mgmt_ssh_password": "123",
+      "mgmt_ssh_username": "fun",
+      "mgmt_ip": "fs32-come"
+    },
+    "name": "fs-32",
+    "fpga": {
+      "mgmt_ssh_password": "root",
+      "mgmt_ssh_username": "root",
+      "mgmt_ip": "fs32-fpga"
+    },
+    "gateway_ip": "10.80.4.1",
+     "apc_info": {
+      "username": "localadmin",
+      "outlet_number": 2,
+      "password": "Precious1*",
+      "host_ip": "mpoc-r5-PDU1"
+    }
+  },
+  {
+    "bmc": {
+      "mgmt_ssh_password": "superuser",
+      "mgmt_ssh_username": "sysadmin",
+      "mgmt_ip": "fs67-bmc"
+    },
+    "come": {
+      "mgmt_ssh_password": "123",
+      "mgmt_ssh_username": "fun",
+      "mgmt_ip": "fs67-come"
+    },
+    "name": "fs-67",
+    "fpga": {
+      "mgmt_ssh_password": "root",
+      "mgmt_ssh_username": "root",
+      "mgmt_ip": "fs67-fpga"
+    },
+        "gateway_ip": "10.80.4.1",
+     "apc_info": {
+      "username": "localadmin",
+      "outlet_number": 1,
+      "password": "Precious1*",
+      "host_ip": "mpoc-r5-PDU1"
     }
   },
    {
-    "name": "fs-31",
-     "gateway_ip": "10.1.44.1",
-         "workarounds": {
-      "skip_funeth_come_power_cycle": true
-    },
     "bmc": {
-      "mgmt_ip": "10.1.44.53",
+      "mgmt_ssh_password": "superuser",
       "mgmt_ssh_username": "sysadmin",
-      "mgmt_ssh_password": "superuser"
-    },
-    "fpga": {
-      "mgmt_ip": "10.1.44.55",
-      "mgmt_ssh_username": "root",
-      "mgmt_ssh_password": "root"
+      "mgmt_ip": "fs40-bmc"
     },
     "come": {
-      "mgmt_ip": "10.1.44.54",
+      "mgmt_ssh_password": "123",
       "mgmt_ssh_username": "fun",
-      "mgmt_ssh_password": "123"
+      "mgmt_ip": "fs40-come"
+    },
+    "name": "fs-40",
+    "fpga": {
+      "mgmt_ssh_password": "root",
+      "mgmt_ssh_username": "root",
+      "mgmt_ip": "fs40-fpga"
+    },
+        "gateway_ip": "10.80.4.1",
+     "apc_info": {
+      "username": "localadmin",
+      "outlet_number": 6,
+      "password": "Precious1*",
+      "host_ip": "mpoc-r5-PDU1"
     }
   },
   {
-    "name": "fs-66",
-    "workarounds": {
-      "skip_funeth_come_power_cycle": true,
-       "disable_u_boot_version_validation": true
-      },
-    "gateway_ip": "10.1.105.1",
     "bmc": {
-      "mgmt_ip": "fs66-bmc",
+      "mgmt_ssh_password": "superuser",
       "mgmt_ssh_username": "sysadmin",
-      "mgmt_ssh_password": "superuser"
-    },
-    "fpga": {
-      "mgmt_ip": "fs66-fpga",
-      "mgmt_ssh_username": "root",
-      "mgmt_ssh_password": "root"
+      "mgmt_ip": "10.1.105.183"
     },
     "come": {
-      "mgmt_ip": "fs66-come",
+      "mgmt_ssh_password": "123",
       "mgmt_ssh_username": "fun",
-      "mgmt_ssh_password": "123"
+      "mgmt_ip": "10.1.105.184"
+    },
+    "name": "fs-18",
+    "fpga": {
+      "mgmt_ssh_password": "root",
+      "mgmt_ssh_username": "root",
+      "mgmt_ip": "10.1.105.185"
+    },
+    "apc_info": {
+      "username": "localadmin",
+      "outlet_number": 18,
+      "password": "Precious1*",
+      "host_ip": "cab02-pdu1"
     }
   },
   {
-    "name": "fs-33",
-    "workarounds": {
-      "skip_funeth_come_power_cycle": true
-      },
-    "gateway_ip": "10.1.105.1",
     "bmc": {
-      "mgmt_ip": "10.1.105.60",
+      "mgmt_ssh_password": "superuser",
       "mgmt_ssh_username": "sysadmin",
-      "mgmt_ssh_password": "superuser"
+      "mgmt_ip": "10.1.105.53"
     },
+    "come": {
+      "mgmt_ssh_password": "123",
+      "mgmt_ssh_username": "fun",
+      "mgmt_ip": "10.1.105.58"
+    },
+    "name": "fs-47",
     "fpga": {
-      "mgmt_ip": "10.1.105.62",
+      "mgmt_ssh_password": "root",
       "mgmt_ssh_username": "root",
-      "mgmt_ssh_password": "root"
+      "mgmt_ip": ""
     },
-    "come": {
-      "mgmt_ip": "10.1.105.76",
-      "mgmt_ssh_username": "fun",
-      "mgmt_ssh_password": "123"
-    }
-  },
-  {
-    "name": "fs-34",
-    "workarounds": {
-      "skip_funeth_come_power_cycle": true
-    },
-    "gateway_ip": "10.1.105.1",
-    "bmc": {
-      "mgmt_ip": "10.1.105.61",
-      "mgmt_ssh_username": "sysadmin",
-      "mgmt_ssh_password": "superuser"
-    },
-    "fpga": {
-      "mgmt_ip": "10.1.105.64",
-      "mgmt_ssh_username": "root",
-      "mgmt_ssh_password": "root"
-    },
-    "come": {
-      "mgmt_ip": "10.1.105.72",
-      "mgmt_ssh_username": "fun",
-      "mgmt_ssh_password": "123"
-    }
-  },
-  {
-    "name": "fs-53",
-    "gateway_ip": "10.1.105.1",
-    "bmc": {
-      "mgmt_ip": "10.1.105.145",
-      "mgmt_ssh_username": "sysadmin",
-      "mgmt_ssh_password": "superuser"
-    },
-    "fpga": {
-      "mgmt_ip": "",
-      "mgmt_ssh_username": "",
-      "mgmt_ssh_password": "",
-      "use_telnet": true,
-      "terminal_ip": "cab01-terminal",
-      "terminal_port": 7002,
-      "terminal_username": "root",
-      "terminal_password": ""
-    },
-    "come": {
-      "mgmt_ip": "10.1.105.147",
-      "mgmt_ssh_username": "fun",
-      "mgmt_ssh_password": "123"
+    "apc_info": {
+      "username": "localadmin",
+      "outlet_number": 15,
+      "password": "Precious1*",
+      "host_ip": "cab02-pdu1"
     }
   }
 ]

@@ -87,16 +87,26 @@ class BringupSetup(FunTestCase):
 
         global funcp_obj, servers_mode, servers_list, fs_name
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
-        f1_0_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --dpc-server --all_100g --serial --dpc-uart " \
-                         "retimer=0 --mgmt --disable-wu-watchdog syslog=3"
-        f1_1_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 --dpc-server --all_100g --serial --dpc-uart " \
-                         "retimer=0 --mgmt --disable-wu-watchdog syslog=3"
-
-        topology_helper = TopologyHelper()
         job_inputs = fun_test.get_job_inputs()
         if not job_inputs:
             job_inputs = {}
         fun_test.log("Provided job inputs: {}".format(job_inputs))
+        if "f10_retimer" in job_inputs:
+            f10_retimer = str(job_inputs["f10_retimer"]).strip("[]").replace(" ", "")
+        else:
+            f10_retimer = 0
+        if "f11_retimer" in job_inputs:
+            f11_retimer = str(job_inputs["f11_retimer"]).strip("[]").replace(" ", "")
+        else:
+            f11_retimer = 0
+
+        f1_0_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --dpc-server --all_100g --serial --dpc-uart " \
+                         "retimer={} --mgmt --disable-wu-watchdog syslog=3".format(f10_retimer)
+        f1_1_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 --dpc-server --all_100g --serial --dpc-uart " \
+                         "retimer={} --mgmt --disable-wu-watchdog syslog=3".format(f11_retimer)
+
+        topology_helper = TopologyHelper()
+
         if "deploy_setup" in job_inputs:
             deploy_setup = job_inputs["deploy_setup"]
             fun_test.shared_variables["deploy_setup"] = deploy_setup
@@ -287,20 +297,28 @@ class NicEmulation(FunTestCase):
                 test_host_pings(host=host, ips=ping_dict[host], strict=False)
 
         # Update RDMA Core & perftest on hosts
+        bg_proc_id = {}
+        for obj in host_objs:
+            if obj == "f1_0":
+                host_count = fun_test.shared_variables["host_len_f10"]
+                bg_proc_id[obj] = []
+            elif obj == "f1_1":
+                host_count = fun_test.shared_variables["host_len_f11"]
+                bg_proc_id[obj] = []
+            for x in xrange(0, host_count):
+                bg_proc_id[obj].append(host_objs[obj][x].
+                                       start_bg_process("/home/localadmin/mks/update_rdma.sh build build",
+                                                        timeout=1200))
+        # fun_test.sleep("Building rdma_perf & core", seconds=120)
         for obj in host_objs:
             if obj == "f1_0":
                 host_count = fun_test.shared_variables["host_len_f10"]
             elif obj == "f1_1":
                 host_count = fun_test.shared_variables["host_len_f11"]
             for x in xrange(0, host_count):
-                host_objs[obj][x].start_bg_process("/home/localadmin/mks/update_rdma.sh build build", timeout=1200)
-        fun_test.sleep("Building rdma_perf & core", seconds=120)
-        for obj in host_objs:
-            if obj == "f1_0":
-                host_count = fun_test.shared_variables["host_len_f10"]
-            elif obj == "f1_1":
-                host_count = fun_test.shared_variables["host_len_f11"]
-            for x in xrange(0, host_count):
+                for pid in bg_proc_id[obj]:
+                    while host_objs[obj][x].process_exists(process_id=pid):
+                        fun_test.sleep(message="Still building RDMA repo...", seconds=5)
                 host_objs[obj][x].disconnect()
 
         # Create a dict containing F1_0 & F1_1 details

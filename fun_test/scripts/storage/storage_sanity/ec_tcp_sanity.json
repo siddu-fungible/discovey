@@ -63,7 +63,7 @@
     "ns_id": 1,
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {
-      "bs": "1024k",
+      "bs": "128k",
       "iodepth": 8,
       "size": "100%",
       "rw": "write",
@@ -71,7 +71,7 @@
       "verify": "xxhash",
       "do_verify": 1,
       "prio": 0,
-      "timeout": 1200
+      "timeout": 600
     }
   },
   "ECTcpRandRW": {
@@ -88,7 +88,8 @@
     },
     "fio_mode": "randrw",
     "fio_numjobs_iodepth": ["(16, 1)"],
-    "fio_job_name": "ec_tcp_sanity"
+    "fio_job_name": "ec_tcp_sanity",
+    "stats_collect_details": [{"vp_utils": {"interval": 5}}, {"per_vp": {"interval": 5}}, {"resource_bam_args": {"interval": 5}}, {"vol_stats": {"interval": 5}}, {"vppkts_stats": {"interval": 5}}, {"psw_stats": {"interval": 5, "nu": true}}, {"fcp_stats": {"interval": 5, "nu": true}}, {"wro_stats": {"interval": 5, "nu": true}}, {"erp_stats": {"interval": 5, "nu": true}}, {"etp_stats": {"interval": 5, "nu": true}}, {"eqm_stats": {"interval": 5}}, {"hu_stats": {"interval": 5}}, {"ddr_stats": {"interval": 5}}, {"ca_stats": {"interval": 5}}, {"cdu_stats": {"interval": 5}}]
   },
   "ECTcpSeqRW": {
     "fio_cmd_args": {
@@ -104,6 +105,7 @@
     },
     "fio_mode": "readwrite",
     "fio_numjobs_iodepth": ["(16, 4)"],
-    "fio_job_name": "ec_tcp_sanity"
+    "fio_job_name": "ec_tcp_sanity",
+    "stats_collect_details": [{"vp_utils": {"interval": 5}}, {"per_vp": {"interval": 5}}, {"resource_bam_args": {"interval": 5}}, {"vol_stats": {"interval": 5}}, {"vppkts_stats": {"interval": 5}}, {"psw_stats": {"interval": 5, "nu": true}}, {"fcp_stats": {"interval": 5, "nu": true}}, {"wro_stats": {"interval": 5, "nu": true}}, {"erp_stats": {"interval": 5, "nu": true}}, {"etp_stats": {"interval": 5, "nu": true}}, {"eqm_stats": {"interval": 5}}, {"hu_stats": {"interval": 5}}, {"ddr_stats": {"interval": 5}}, {"ca_stats": {"interval": 5}}, {"cdu_stats": {"interval": 5}}]
   }
 }

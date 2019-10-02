@@ -7,7 +7,7 @@ import signal
 import threading
 
 
-READ_BUF_SIZE = 2048
+READ_BUF_SIZE = 16384
 class Listener:
     def __init__(self, ip, port, output_file=None):
         self.buffer = ""
@@ -63,7 +63,7 @@ class Listener:
             except Exception as ex:
                 print ex
 
-            time.sleep(0.00001)
+            time.sleep(0.000001)
         return self.buffer
 
     def exit_gracefully(self, sig, _):

@@ -348,17 +348,18 @@ def asset_types(request):
 def _fix_missing_scripts():
     missing_scripts = []
     for root, dir_names, file_names in os.walk(SCRIPTS_DIR):
+
         for file_name in fnmatch.filter(file_names, '*.py'):
             full_path = os.path.join(root, file_name)
             try:
                 f = open(full_path, "r")
                 contents = f.read()
-                if "if __name__ == \"__main__\"" in contents:
+                if "if __name__ == \"__main__\"" or "if __name__ == '__main__'" in contents:
                     relative_path = full_path.replace(SCRIPTS_DIR, "")
                     if not RegresssionScripts.objects.filter(script_path=relative_path).exists():
                         missing_scripts.append(relative_path)
 
-            except:
+            except Exception as ex:
                 pass  # TODO
 
     for missing_script in missing_scripts:
@@ -444,6 +445,10 @@ def suites(request, id):
             s.entries = suite_entries
         s.save()
 
+    if request.method == "DELETE":
+        s = Suite.objects.get(id=id)
+        s.delete()
+        result = True
     return result
 
 @csrf_exempt

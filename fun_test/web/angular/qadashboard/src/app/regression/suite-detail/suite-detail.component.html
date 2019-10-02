@@ -96,12 +96,11 @@
 
             </tr>
             <tr *ngIf="suiteExecution">
-              <td><a target="_blank" href="{{ getSchedulerLog(suiteExecution.fields.execution_id) | async }}">Scheduler
+              <td><a href="{{ getSchedulerLog(suiteExecution.fields.execution_id) | async }}">Scheduler
                 log</a></td>
             </tr>
             <tr *ngIf="suiteExecution">
-              <td><a target="_blank" href="{{ getSchedulerLogDir(suiteExecution.fields.execution_id) | async }}">Log
-                directory</a>
+              <td><a href="{{ getSchedulerLogDir(suiteExecution.fields.execution_id) | async }}">Log directory</a>
             </tr>
             <tr *ngIf="environment">
               <td>Branch_FunOS</td>
@@ -263,7 +262,7 @@
                       <li>Latest: <span class="pseudo-anchor"
                                         (click)="getConsoleLogPath(getLatestRerunSuiteExecutionId(script.value), script.value.script_path, testCaseInfo[getLatestRerunEntry(script.value).re_run_test_case_execution_id].log_prefix)">Console</span>
                       </li>
-                      <li>Original: <span class="pseudo-anchor" target="_blank"
+                      <li>Original: <span class="pseudo-anchor"
                                           (click)="getConsoleLogPath(executionId, script.value.script_path, script.value.log_prefix)">Console</span>
                     </ul>
                   </ng-container>
@@ -330,8 +329,7 @@
                 {{ reRun.re_run_result }}
               </td>
               <td>
-                <a target="_blank"
-                   href="/regression/suite_detail/{{ reRun.re_run_suite_execution_id }}">{{ reRun.re_run_suite_execution_id }}</a>
+                <a href="/regression/suite_detail/{{ reRun.re_run_suite_execution_id }}">{{ reRun.re_run_suite_execution_id }}</a>
               </td>
               <td>
                 {{ reRun.re_run_test_case_execution_id }}

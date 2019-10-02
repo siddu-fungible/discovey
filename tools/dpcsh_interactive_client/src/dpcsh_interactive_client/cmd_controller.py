@@ -6,6 +6,7 @@ from storage_commands import *
 from cmd_arg_parser import *
 import sys
 
+
 class CmdController(Cmd):
 
     def __init__(self, target_ip, target_port, verbose=False):
@@ -851,9 +852,21 @@ class CmdController(Cmd):
         grep_regex = args.grep
         self._peek_cmd_obj.peek_dam_resource_stats(grep_regex=grep_regex)
 
+    def get_nu_configs(self, args):
+        config_type = args.config_type
+        if not config_type in ['pool_config', 'ncv_config', 'per_pool_flow_control', 'global_flow_control']:
+            print "Please give config_type in: \n1. pool_config\n2. ncv_config\n3. per_pool_flow_control\n4. global_flow_control"
+            self.dpc_client.disconnect()
+        self._peek_cmd_obj.get_nu_configs(config_type=config_type)
+
+    def get_bam_configs(self, args):
+        self._peek_cmd_obj.get_bam_usage()
+
     def peek_bam_resource_stats(self, args):
         grep_regex = args.grep
-        self._peek_cmd_obj.peek_bam_resource_stats(grep_regex=grep_regex)
+        cid = args.cid
+        diff = args.diff
+        self._peek_cmd_obj.peek_bam_resource_stats(cid=cid, diff=diff, grep_regex=grep_regex)
 
     def peek_eqm_stats(self, args):
         grep_regex = args.grep
@@ -895,7 +908,8 @@ class CmdController(Cmd):
     # Storage Peek stats
     def peek_stats_ssds(self, args):
         grep = args.grep
-        self._storage_peek_obj.peek_connected_ssds(grep=grep)
+        ssd_ids = args.ssd_ids
+        self._storage_peek_obj.peek_connected_ssds(ssd_ids=ssd_ids, grep=grep)
 
     def peek_blt_vol_stats(self, args):
         vol_id = args.vol_id
@@ -992,15 +1006,34 @@ class CmdController(Cmd):
         grep_regex = args.grep
         pp = args.pp
         hu_id = args.hu_id
+        hcf_id = args.hcf_id
         tx = args.tx
         rx = args.rx
         if tx is None and rx is None:
             tx=1
             rx=1
-        if args.pp:
-            self._flow_cmd_obj.get_flow_list_pp(hu_id=hu_id, tx=tx, rx=rx, grep_regex=grep_regex)
+        if pp:
+            if hcf_id and (('.' not in hcf_id) or len(hcf_id.split(".")) != 3):
+                print "Please enter hcf_id(hu.cntrl.fnid) in x.x.x format. Current given %s" % hcf_id
+                return self.dpc_client.disconnect()
+            elif hu_id and hcf_id:
+                print "Please enter either hu_id in x or hcf_id in x.x.x format"
+                return self.dpc_client.disconnect()
+            self._flow_cmd_obj.get_flow_list_pp(hcf_id=hcf_id, hu_id=hu_id, tx=tx, rx=rx, grep_regex=grep_regex)
         else:
-            self._flow_cmd_obj.get_flow_list(grep_regex=grep_regex)
+            self._flow_cmd_obj.get_flow_list(hcf_id=hcf_id, hu_id=hu_id, grep_regex=grep_regex)
+
+    def flow_list_rdma(self, args):
+        grep_regex = args.grep
+        hu_id = args.hu_id
+        qpn_number = args.qpn
+        self._flow_cmd_obj.get_flow_list_rdma(hu_id=hu_id, qpn_number=qpn_number, grep_regex=grep_regex)
+
+    def peek_stats_rdma(self, args):
+        grep_regex = args.grep
+        hu_id = args.hu_id
+        qpn_number = args.qpn
+        self._peek_cmd_obj.peek_stats_rdma(hu_id=hu_id, qpn_number=qpn_number, grep_regex=grep_regex)
 
     def get_flow_blocked(self, args):
         grep_regex = args.grep
@@ -1025,6 +1058,11 @@ class CmdController(Cmd):
             self._debug_cmd_obj.debug_vp_util_pp(cluster_id=cluster_id, core_id=core_id, grep_regex=grep_regex)
         elif cid_flag and core_id_flag:
             self._debug_cmd_obj.debug_vp_util(cluster_id=cluster_id, core_id=core_id, grep_regex=grep_regex)
+
+    # Peek storage commands
+    def peek_storage_vols(self, args):
+        grep = args.grep
+        self._storage_peek_obj.peek_storage_volumes(grep=grep)
 
     # Set handler functions for the sub commands
 
@@ -1154,6 +1192,8 @@ class CmdController(Cmd):
     get_hnu_qos_arb_cfg_parser.set_defaults(func=get_hnu_qos_arb_cfg)
     set_hnu_qos_xoff_status_parser.set_defaults(func=set_hnu_qos_xoff_status)
     get_hnu_qos_xoff_status_parser.set_defaults(func=get_hnu_qos_xoff_status)
+    get_nu_config_parser.set_defaults(func=get_nu_configs)
+    get_bam_parser.set_defaults(func=get_bam_configs)
 
     # -------------- Peek Command Handlers ----------------
     peek_fpg_stats_parser.set_defaults(func=peek_fpg_stats)
@@ -1208,11 +1248,14 @@ class CmdController(Cmd):
     peek_stats_cdu_parser.set_defaults(func=peek_cdu_stats)
     peek_stats_ca_parser.set_defaults(func=peek_ca_stats)
     peek_stats_ddr_parser.set_defaults(func=peek_ddr_stats)
+    peek_stats_rdma_parser.set_defaults(func=peek_stats_rdma)
 
-    # Storage Peek Commands
     peek_stats_ssds_parser.set_defaults(func=peek_stats_ssds)
     peek_stats_blt_vol_parser.set_defaults(func=peek_blt_vol_stats)
     peek_stats_rds_vol_parser.set_defaults(func=peek_rds_vol_stats)
+
+    # Storage Peek Commands
+    peek_storage_vol_parser.set_defaults(func=peek_storage_vols)
 
 
     # -------------- Clear Command Handlers ----------------
@@ -1231,6 +1274,7 @@ class CmdController(Cmd):
 
     # -------------- Flow Command Handlers ----------------
     flow_list_parser.set_defaults(func=get_flow_list)
+    flow_list_rdma_parser.set_defaults(func=flow_list_rdma)
     flow_blocked_parser.set_defaults(func=get_flow_blocked)
 
     # -------------- Debug Command Handlers -----------------
@@ -1297,7 +1341,7 @@ class CmdController(Cmd):
 
 
 if __name__ == '__main__':
-    cmd_obj = CmdController(target_ip="10.1.20.26", target_port=40220, verbose=False)
+    cmd_obj = CmdController(target_ip="fs48-come", target_port=40221, verbose=False)
     cmd_obj.cmdloop(intro="hello")
 
 

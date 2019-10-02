@@ -23,7 +23,7 @@ all_hosts_specs = parse_file_to_json(file_name=hosts_json_file)
 host_spec = all_hosts_specs[host_name]
 host_username = host_spec["ssh_username"]
 host_passwd = host_spec["ssh_password"]
-script_timeout = 3600
+script_timeout = 7200
 
 
 
@@ -51,6 +51,8 @@ def prepare_server(host, username="localadmin", password="Precious1*"):
         linux_obj.sudo_command("rm -rf /tmp/pcaps/*")
         linux_obj.command("cd /tmp")
         linux_obj.command("git clone git@github.com:fungible-inc/FunSDK-small.git FunSDK")
+        linux_obj.command("cd /tmp/FunSDK")
+        linux_obj.command("git checkout savin/to_commit_master")
         linux_obj.disconnect()
         return True
     except Exception as e:
@@ -70,7 +72,7 @@ class ScriptSetup(FunTestScript):
 
     def setup(self):
 
-        f1_1_boot_args = "app=hw_hsu_test,tcp_server,rdstest clients=1 msgs=8 --echo --csr-replay localip=29.1.1.2 remoteip=23.1.1.10 " \
+        f1_1_boot_args = "app=hw_hsu_test,tcp_server,rdstest clients=10 msgs=8 --echo --csr-replay localip=29.1.1.2 remoteip=23.1.1.10 " \
                          "rdstype=funtcp cc_huid=2 --dpc-server  --dpc-uart --all_100g " \
                          "--disable-wu-watchdog module_log=network_unit:CRIT"
 
@@ -301,7 +303,15 @@ class TcTrafficTests(FunTestCase):
     def run(self):
         try:
             if subtests == 'all':
-                self.linux_obj.sudo_command("./tcp_functional.py -b fs -p -t tc_traffic_tests --ts send_data1k,send_data10k,send_data25k,send_data1k_drop,send_data10k_drop,send_data25k_drop",timeout=script_timeout )
+                subtest_list = []
+                datalen_list = ['1k', '10k', '25k', '50k', '75k', '100k', '1000k']
+                tc_suites = ['', '_drop']
+                for size in datalen_list:
+                    for tc in tc_suites:
+                        subtest_list.append('send_data' + size + tc)
+                subt = ','.join(subtest_list)
+
+                self.linux_obj.sudo_command("./tcp_functional.py -b fs -p -t tc_traffic_tests --ts %s" %(subt),timeout=script_timeout )
             else:
                 self.linux_obj.sudo_command(
                     "./tcp_functional.py -b fs -p -t tc_traffic_tests --ts " + subtests, timeout=script_timeout )
@@ -372,11 +382,101 @@ class TcEstablished(FunTestCase):
         fun_test.test_assert(expression=res, message=key + '=' + value)
         self.linux_obj.disconnect()
 
+class TcFlowControl(FunTestCase):
+
+
+    def describe(self):
+        self.set_test_details(id=8, summary="Test TCP Flow control tests",
+                              steps="""
+                               TCP flow control cases
+                              """)
+
+    def setup(self):
+        try:
+            self.linux_obj = Linux(host_ip=host_name, ssh_username=host_username, ssh_password=host_passwd)
+
+            self.linux_obj.command("cd " + script_location)
+            self.linux_obj.command("rm -rf " + script_results_file)
+        except Exception as e:
+            fun_test.critical("Error" + e)
+            return False
+    def run(self):
+        try:
+            if subtests == 'all':
+                self.linux_obj.sudo_command("./tcp_functional.py -b fs -p -t tc_flow_control",timeout=script_timeout )
+            else:
+                self.linux_obj.sudo_command(
+                    "./tcp_functional.py -b fs -p -t tc_flow_control --ts " + subtests, timeout=script_timeout )
+            return True
+        except Exception as e:
+            fun_test.critical("Error" + e)
+            return False
+
+    def cleanup(self):
+        results = self.linux_obj.read_file(script_results_file)
+        key = ''
+        value = False
+        m = re.search("(\S+)\s+\|\s+Result\s+:\s+(PASS|FAIL)",results)
+        if m:
+            key = m.group(1)
+            value = m.group(2)
+            if value == "FAIL":
+                res = False
+            else:
+                res = True
+        fun_test.test_assert(expression=res, message=key + '=' + value)
+        self.linux_obj.disconnect()
+
+class TcWindowScale(FunTestCase):
+
+
+    def describe(self):
+        self.set_test_details(id=9, summary="Test TCP Window scale tests",
+                              steps="""
+                               TCP window scale test cases
+                              """)
+
+    def setup(self):
+        try:
+            self.linux_obj = Linux(host_ip=host_name, ssh_username=host_username, ssh_password=host_passwd)
+
+            self.linux_obj.command("cd " + script_location)
+            self.linux_obj.command("rm -rf " + script_results_file)
+        except Exception as e:
+            fun_test.critical("Error" + e)
+            return False
+    def run(self):
+        try:
+            if subtests == 'all':
+                self.linux_obj.sudo_command("./tcp_functional.py -b fs -p -t tc_window_scale",timeout=script_timeout )
+            else:
+                self.linux_obj.sudo_command(
+                    "./tcp_functional.py -b fs -p -t tc_window_scale --ts " + subtests, timeout=script_timeout )
+            return True
+        except Exception as e:
+            fun_test.critical("Error" + e)
+            return False
+
+    def cleanup(self):
+        results = self.linux_obj.read_file(script_results_file)
+        key = ''
+        value = False
+        m = re.search("(\S+)\s+\|\s+Result\s+:\s+(PASS|FAIL)",results)
+        if m:
+            key = m.group(1)
+            value = m.group(2)
+            if value == "FAIL":
+                res = False
+            else:
+                res = True
+        fun_test.test_assert(expression=res, message=key + '=' + value)
+        self.linux_obj.disconnect()
+
 class TcOtherTests(FunTestCase):
 
 
     def describe(self):
-        self.set_test_details(id=8, summary="Execute non-sanity tests part of tcp_functional.py",
+        self.set_test_details(id=10, summary="Execute non-sanity tests part of tcp_functional.py",
                               steps="""
                                 Test scenarios covered:
                                 Any test not part of Sanity but part of tcp_functional.py
@@ -433,7 +533,12 @@ if __name__ == '__main__':
         ts.add_test_case(TcEstablished())
     if execute_test == 'sanity' or execute_test == 'tc_traffic_tests':
         ts.add_test_case(TcTrafficTests())
-    if execute_test not in ('sanity', 'tc_syn_recvd',  'tc_out_of_order_data_segments', 'tc_last_ack', 'tc_keepalive_timeout', 'tc_established', 'tc_traffic_tests' ):
+    if execute_test == 'sanity' or execute_test == 'tc_window_scale':
+        ts.add_test_case(TcWindowScale())
+    if execute_test == 'sanity' or execute_test == 'tc_flow_control':
+        ts.add_test_case(TcFlowControl())
+    if execute_test not in ('sanity', 'tc_syn_recvd', 'tc_out_of_order_data_segments', 'tc_last_ack', 'tc_keepalive_timeout',
+                            'tc_established', 'tc_traffic_tests', 'tc_window_scale', 'tc_flow_control'):
         ts.add_test_case(TcOtherTests())
 
     ts.run()

@@ -87,6 +87,7 @@ import { TextareaInputComponent } from './ui-elements/textarea-input/textarea-in
 import { SuitesViewComponent } from './regression/suite-editor/suites-view/suites-view.component';
 import { SearchBarComponent } from './ui-elements/search-bar/search-bar.component';
 import { ScriptDetailComponent } from './regression/script-detail/script-detail.component';
+import { PagerComponent } from './pager/pager.component';
 
 
 @NgModule({
@@ -157,7 +158,8 @@ import { ScriptDetailComponent } from './regression/script-detail/script-detail.
     TextareaInputComponent,
     SuitesViewComponent,
     SearchBarComponent,
-    ScriptDetailComponent
+    ScriptDetailComponent,
+    PagerComponent
   ],
   imports: [
     BsDropdownModule,

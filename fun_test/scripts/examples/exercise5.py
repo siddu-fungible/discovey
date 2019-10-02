@@ -4,7 +4,6 @@ from lib.topology.topology_helper import TopologyHelper
 
 import os
 # os.environ["DOCKER_HOSTS_SPEC_FILE"] = fun_test.get_script_parent_directory() + "/local_docker_host_with_storage.json"
-os.environ["DOCKER_HOSTS_SPEC_FILE"] = fun_test.get_script_parent_directory() + "/remote_docker_host_with_storage.json"
 
 
 class MyScript(FunTestScript):
@@ -15,6 +14,9 @@ class MyScript(FunTestScript):
         """)
 
     def setup(self):
+        os.environ[
+            "DOCKER_HOSTS_SPEC_FILE"] = fun_test.get_script_parent_directory() + "/remote_docker_host_with_storage.json"
+
         # topology_obj_helper = TopologyHelper(spec=topology_dict) use locally defined dictionary variable
         topology_obj_helper = TopologyHelper(spec_file="./single_f1_custom_app.json")
         topology = topology_obj_helper.deploy()
@@ -50,8 +52,8 @@ class FunTestCase1(FunTestCase):
         fun_test.test_assert(dut_instance0, "Retrieved dut instance 0")
 
         dut_instance0.command("dd if=/dev/zero of=nvfile bs=4096 count=256")
-        dut_instance0.run_app(app="mdt_test", args="nvfile=nvfile", foreground=True, timeout=60)
-        dut_instance0.run_app(app="load_mods", foreground=True, timeout=60)
+        dut_instance0.run_app("app=mdt_test nvfile=nvfile", foreground=True, timeout=60)
+        dut_instance0.run_app("app=load_mods", foreground=True, timeout=60)
         dut_instance0.start(foreground=True, run_to_completion=True)
 
         fio = topology.get_tg_instance(tg_index=0)

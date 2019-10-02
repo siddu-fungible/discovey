@@ -153,13 +153,113 @@ class TeraMarkJpegPerformanceS1Tc(TeraMarkJpegPerformanceTc):
                               steps="Steps 1")
 
 
-class TeraMarkZipPerformanceS1Tc(TeraMarkZipPerformanceTc):
-    tag = TERAMARK_ZIP_S1
+class TeraMarkZipDeflatePerformanceS1Tc(TeraMarkZipPerformanceTc):
+    tag = TERAMARK_ZIP_DEFLATE_S1
     platform = FunPlatform.S1
 
     def describe(self):
         self.set_test_details(id=14,
-                              summary="S1 Zip performance teramark",
+                              summary="S1 Zip defalte performance teramark",
+                              steps="Steps 1")
+
+
+class TeraMarkZipLzmaPerformanceS1Tc(TeraMarkZipPerformanceTc):
+    tag = TERAMARK_ZIP_LZMA_S1
+    platform = FunPlatform.S1
+
+    def describe(self):
+        self.set_test_details(id=15,
+                              summary="S1 Zip lzma performance teramark",
+                              steps="Steps 1")
+
+
+class TeraMarkPkeRsaPerformanceS1Tc(TeraMarkPkeRsaPerformanceTc):
+    tag = TERAMARK_PKE_S1
+    platform = FunPlatform.S1
+
+    def describe(self):
+        self.set_test_details(id=16,
+                              summary="S1 teraMark PKE RSA Performance Test",
+                              steps="Steps 1")
+
+
+class TeraMarkPkeRsa4kPerformanceS1Tc(TeraMarkPkeRsa4kPerformanceTc):
+    tag = TERAMARK_PKE_S1
+    platform = FunPlatform.S1
+
+    def describe(self):
+        self.set_test_details(id=17,
+                              summary="S1 TeraMark PKE RSA 4K Performance Test",
+                              steps="Steps 1")
+
+
+class TeraMarkPkeEcdh256PerformanceS1Tc(TeraMarkPkeEcdh256PerformanceTc):
+    tag = TERAMARK_PKE_S1
+    platform = FunPlatform.S1
+
+    def describe(self):
+        self.set_test_details(id=18,
+                              summary="S1 TeraMark PKE ECDH P256 Performance Test",
+                              steps="Steps 1")
+
+
+class TeraMarkPkeEcdh25519PerformanceS1Tc(TeraMarkPkeEcdh25519PerformanceTc):
+    tag = TERAMARK_PKE_S1
+    platform = FunPlatform.S1
+
+    def describe(self):
+        self.set_test_details(id=19,
+                              summary="S1 TeraMark PKE ECDH 25519 Performance Test",
+                              steps="Steps 1")
+
+
+class PkeX25519TlsSoakPerformanceS1Tc(PkeX25519TlsSoakPerformanceTc):
+    tag = TERAMARK_PKE_S1
+    platform = FunPlatform.S1
+
+    def describe(self):
+        self.set_test_details(id=20,
+                              summary="S1 ECDHE_RSA X25519 RSA 2K TLS Soak Performance Test",
+                              steps="Steps 1")
+
+
+class PkeP256TlsSoakPerformanceS1Tc(PkeP256TlsSoakPerformanceTc):
+    tag = TERAMARK_PKE_S1
+    platform = FunPlatform.S1
+
+    def describe(self):
+        self.set_test_details(id=21,
+                              summary="S1 ECDHE_RSA P256 RSA 2K TLS Soak Performance Test",
+                              steps="Steps 1")
+
+
+class TeraMarkDfaPerformanceS1Tc(TeraMarkDfaPerformanceTc):
+    tag = TERAMARK_DFA_S1
+    platform = FunPlatform.S1
+
+    def describe(self):
+        self.set_test_details(id=22,
+                              summary="TeraMark DFA Performance Test on S1",
+                              steps="Steps 1")
+
+
+class TeraMarkNfaPerformanceS1Tc(TeraMarkNfaPerformanceTc):
+    tag = TERAMARK_NFA_S1
+    platform = FunPlatform.S1
+
+    def describe(self):
+        self.set_test_details(id=23,
+                              summary="TeraMark NFA Performance Test on S1",
+                              steps="Steps 1")
+
+
+class TeraMarkMultiClusterCryptoPerformanceS1Tc(TeraMarkMultiClusterCryptoPerformanceTc):
+    tag = TERAMARK_CRYPTO_RAW_S1
+    platform = FunPlatform.S1
+
+    def describe(self):
+        self.set_test_details(id=24,
+                              summary="S1 TeraMark Multi Cluster Crypto Performance Test",
                               steps="Steps 1")
 
 
@@ -179,6 +279,16 @@ if __name__ == "__main__":
     myscript.add_test_case(WuLatencyAllocStackPerformanceS1Tc())
     myscript.add_test_case(EcPerformanceS1Tc())
     myscript.add_test_case(TeraMarkJpegPerformanceS1Tc())
-    # myscript.add_test_case(TeraMarkZipPerformanceS1Tc())
+    myscript.add_test_case(TeraMarkZipDeflatePerformanceS1Tc())
+    myscript.add_test_case(TeraMarkZipLzmaPerformanceS1Tc())
+    myscript.add_test_case(TeraMarkPkeRsaPerformanceS1Tc())
+    myscript.add_test_case(TeraMarkPkeRsa4kPerformanceS1Tc())
+    myscript.add_test_case(TeraMarkPkeEcdh256PerformanceS1Tc())
+    myscript.add_test_case(TeraMarkPkeEcdh25519PerformanceS1Tc())
+    myscript.add_test_case(PkeX25519TlsSoakPerformanceS1Tc())
+    myscript.add_test_case(PkeP256TlsSoakPerformanceS1Tc())
+    myscript.add_test_case(TeraMarkDfaPerformanceS1Tc())
+    # myscript.add_test_case(TeraMarkNfaPerformanceS1Tc())
+    myscript.add_test_case(TeraMarkMultiClusterCryptoPerformanceS1Tc())
 
     myscript.run()

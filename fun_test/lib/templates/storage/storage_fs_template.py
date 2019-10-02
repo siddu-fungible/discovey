@@ -1,4 +1,5 @@
 from lib.system.fun_test import *
+from lib.host.network_controller import NetworkController
 from lib.host.linux import Linux
 from lib.system import utils
 import re
@@ -395,27 +396,49 @@ MODE_END_POINT = "ep"
 
 class StorageFsTemplate(object):
     NUM_FS_CONTAINERS = 2
-    FUNSDK_DIR = "/mnt/keep/FunSDK/"
+    FPG_L2_MTU = 1500
+    FUNSDK_DIR = "/mnt/keep/FunSDK"
+    WORKSPACE = "/home/fun/workspace"
+    FUNGIBLE_ROOT = "opt/fungible"
     DEFAULT_TIMEOUT = 300
-    DEPLOY_TIMEOUT = 900
+    PREP_TIMEOUT = 900
+    DEPLOY_TIMEOUT = 300
     BOND_BRINGUP_TIMEOUT = 300
     LAUNCH_SCRIPT = "./integration_test/emulation/test_system.py "
+    DEPLOY_SCRIPT = "cclinux/cclinux_service.sh "
     PREPARE_CMD = "{} --prepare --docker".format(LAUNCH_SCRIPT)
-    DEPLOY_CONTAINER_CMD = "{} --setup --docker".format(LAUNCH_SCRIPT)
+    DEPLOY_CONTAINER_CMD = "{} --start".format(DEPLOY_SCRIPT)
+    DOCKER_LAUNCH_OUTPUT = "/tmp/docker_launch_output.txt"
     # F1_0_HANDLE = None
     # F1_1_HANDLE = None
 
     def __init__(self, come_obj):
         self.come_obj = come_obj
         self.container_info = {}
+        self.workspace = ""
+        self.fungible_root = ""
+
+    def enter_funsdk(self):
+        self.come_obj.command("cd {}".format(self.FUNSDK_DIR))
 
     def deploy_funcp_container(self, update_deploy_script=True, update_workspace=True, mode=None,
-                               launch_resp_parse=False):
+                               include_storage=False, launch_resp_parse=False):
         # check if come is up
         result = {'status': False, 'container_info': {}, 'container_names': []}
         self.mode = mode
         if not self.come_obj.check_ssh():
             return result
+
+        # Get the WORKSPACE & FUNGIBLE_ROOT environment variable
+        workspace = self.come_obj.command("echo $WORKSPACE")
+        workspace = workspace.strip()
+        if workspace:
+            self.workspace = workspace
+
+        fungible_root = self.come_obj.command("echo $FUNGIBLE_ROOT")
+        fungible_root = fungible_root.strip()
+        if fungible_root:
+            self.fungible_root = fungible_root
 
         # get funsdk
         if update_deploy_script:
@@ -424,12 +447,12 @@ class StorageFsTemplate(object):
 
         # prepare setup environment
         if update_workspace:
-            response = self.prepare_docker()
+            response = self.prepare_docker(mode, timeout=self.PREP_TIMEOUT)
             if not response:
                 return result
 
         # launch containers
-        launch_resp = self.launch_funcp_containers(mode)
+        launch_resp = self.launch_funcp_containers(mode, timeout=self.DEPLOY_TIMEOUT)
         if not launch_resp:
             fun_test.critical("FunCP container launch failed")
             if launch_resp_parse:
@@ -438,7 +461,7 @@ class StorageFsTemplate(object):
                 return result
 
         # get container names.
-        get_containers = self.get_container_names()
+        get_containers = self.get_container_names(include_storage=include_storage)
         if not get_containers['status']:
             return result
         result['container_names'] = get_containers['container_name_list']
@@ -466,19 +489,18 @@ class StorageFsTemplate(object):
         if not response:
             fun_test.critical("{} dir does not exists".format(self.FUNSDK_DIR))
             return result
-        self.come_obj.command("cd {}".format(self.FUNSDK_DIR))
+        self.enter_funsdk()
+        # self.come_obj.command("cd {}".format(self.FUNSDK_DIR))
         self.come_obj.command("git pull", timeout=self.DEFAULT_TIMEOUT)
         if self.come_obj.exit_status() == 0:
             result = True
         return result
 
-    def enter_funsdk(self):
-        self.come_obj.command("cd {}".format(self.FUNSDK_DIR))
-
-    def prepare_docker(self):
+    def prepare_docker(self, mode, timeout=PREP_TIMEOUT):
         result = True
         self.enter_funsdk()
-        response = self.come_obj.command(self.PREPARE_CMD, timeout=self.DEFAULT_TIMEOUT)
+        prepare_cmd = self.PREPARE_CMD + "".join([" --{}".format(m) for m in mode])
+        response = self.come_obj.command(prepare_cmd, timeout=timeout)
         sections = ["Cloning into 'FunSDK'",
                     "Cloning into 'fungible-host-drivers'",
                     # "Cloning into 'FunControlPlane'",
@@ -489,36 +511,58 @@ class StorageFsTemplate(object):
                 result = False
         return result
 
-    def launch_funcp_containers(self, mode=None):
+    def launch_funcp_containers(self, mode=None, timeout=DEPLOY_TIMEOUT):
         result = True
+        response = ""
         self.enter_funsdk()
-        cmd = self.DEPLOY_CONTAINER_CMD
+        cmd = "{}/{}".format(self.fungible_root, self.DEPLOY_CONTAINER_CMD)
         if mode:
-            cmd += " --{}".format(mode)
-        response = self.come_obj.command(cmd, timeout=self.DEPLOY_TIMEOUT)
-        # Have to uncomment the below checklist after the FunCP changes gets solidified
-        """
-        sections = ['Bring up Control Plane',
-                    'Device 1dad:',
-                    'move fpg interface to f0 docker',
-                    'libfunq bind  End',
-                    'move fpg interface to f1 docker',
-                    'Bring up Control Plane dockers']
-        """
-        sections = ['Bring up Control Plane',
-                    'Device 1dad:',
-                    'libfunq bind  End',
-                    'Bring up Control Plane dockers']
+            cmd += "".join([" --{}".format(m) for m in mode])
+            cmd = cmd + " &>{}".format(self.DOCKER_LAUNCH_OUTPUT)
+        try:
+            response = self.come_obj.command(cmd, timeout=timeout)
+        except Exception as ex:
+            fun_test.log(str(ex))
+        docker_launch_status = self.come_obj.exit_status()
+        fun_test.log("FunCP docker container deployment stats: {}".format(docker_launch_status))
+        docker_launch_output = self.come_obj.read_file(self.DOCKER_LAUNCH_OUTPUT)
+
+        sections = ['Discovered both F1 devices',
+                    'Done with installing funeth driver',
+                    'Done with installing libfunq',
+                    'Bring up Control Plane',
+                    'End of starting cclinux'
+                    ]
 
         for sect in sections:
-            if sect not in response:
+            if sect not in docker_launch_output:
                 fun_test.critical("{} message not found in container deployment logs".format(sect))
-                result = False
-        return result
 
-    def get_container_names(self):
+        return True if not docker_launch_status else False
+
+    def get_container_names(self, include_storage=False):
         result = {'status': False, 'container_name_list': []}
-        cmd = "docker ps --format '{{.Names}}'"
+
+        # If SC docker container is not needed, kill the system_health_check.py and stop the run_sc container
+        if not include_storage:
+            health_check_pid = self.come_obj.get_process_id_by_pattern("system_health_check.py")
+            if health_check_pid:
+                self.come_obj.kill_process(process_id=health_check_pid)
+            else:
+                fun_test.critical("system_health_check.py script is not running")
+
+            cmd = "docker ps -a --format '{{.Names}}' | grep run_sc"
+            timer = FunTimer(max_time=self.DEPLOY_TIMEOUT / 2)
+            while not timer.is_expired():
+                container_name = self.come_obj.command(cmd, timeout=self.DEFAULT_TIMEOUT).split("\n")[0]
+                if container_name:
+                    stop_cmd = "docker rm -f {}".format(container_name)
+                    self.come_obj.command(stop_cmd, timeout=self.DEFAULT_TIMEOUT)
+                    break
+                else:
+                    fun_test.sleep("for the run_sc docker to show up", 5)
+
+        cmd = "docker ps --format '{{.Names}}' | grep F1"
         result['container_name_list'] = self.come_obj.command(cmd, timeout=self.DEFAULT_TIMEOUT).split("\n")
         result['container_name_list'] = [name.strip("\r") for name in result['container_name_list']]
         container_count = len(result['container_name_list'])
@@ -529,6 +573,7 @@ class StorageFsTemplate(object):
             return result
         else:
             result['status'] = True
+
         return result
 
     def stop_container(self, *container_names):
@@ -597,6 +642,18 @@ class StorageFsTemplate(object):
         * Bond interface name and IP are mandatory one needs to be passed
         * The other bond properties can be passed the name=value or as a dictionary at the end
         """
+
+        # Waiting for the DHCP discover process to begin before starting configure the bond interface
+        if self.come_obj.check_file_directory_exists(self.DOCKER_LAUNCH_OUTPUT):
+            cmd = "grep -c 'DHCPDISCOVER on bond' {}".format(self.DOCKER_LAUNCH_OUTPUT)
+            timer = FunTimer(max_time=self.DEPLOY_TIMEOUT / 2)
+            while not timer.is_expired():
+                status = self.come_obj.command(cmd)
+                if int(status.strip()) > 0:
+                    fun_test.log("Auto DHCP discovery process started...Safe to proceed to configure bond interface")
+                    break
+                else:
+                    fun_test.sleep("for the DHCP discover process to start", 5)
 
         container_obj = self.container_info[container_name]
         # Checking whether the two or more interfaces are passed to create the bond
@@ -676,4 +733,39 @@ class StorageFsTemplate(object):
         else:
             fun_test.simple_assert(match, "Bond {} interface is UP & RUNNING".format(bond_dict["name"]))
 
+        # As a workaround for the bug SWOS-6456, checking L2 MTU of the fgp interface and setting them to 1518, if it
+        # is less than that
+        f1_index = int(container_name.split("-")[1])
+        try:
+            nc = NetworkController(dpc_server_ip=self.come_obj.host_ip,
+                                   dpc_server_port=self.come_obj.get_dpc_port(f1_index))
+        except Exception as ex:
+            fun_test.critical("Unable to get Network Controller handle...So will not able to check & set the L2 MTU"
+                              "for the FPG interfaces")
+            fun_test.critical(str(ex))
+            return True
+
+        try:
+            for interface_name in slave_interface_list:
+                match = re.search(r"fpg(\d+)", interface_name)
+                port_num = int(match.group(1))
+                port_mtu = nc.get_port_mtu(port_num=port_num, shape=0)
+                if port_mtu < self.FPG_L2_MTU:
+                    fun_test.critical("F1_{} FPG{}'s MTU {} is less than {}...So setting it to {}".
+                                      format(f1_index, port_num, port_mtu, self.FPG_L2_MTU, self.FPG_L2_MTU))
+                    mtu_status = nc.set_port_mtu(port_num=port_num, mtu_value=self.FPG_L2_MTU, shape=0)
+                    if mtu_status:
+                        fun_test.log("Successfully the set F1_{} FPG{}'s MTU to {}".format(f1_index, port_num,
+                                                                                           self.FPG_L2_MTU))
+                    else:
+                        fun_test.critical("Unable to set F1_{} FPG{}'s MTU to {}".format(f1_index, port_num,
+                                                                                         self.FPG_L2_MTU))
+                        return False
+                else:
+                    fun_test.log("Current MTU of F1_{} FPG {}'s is: {}".format(f1_index, port_num, port_mtu))
+        except Exception as ex:
+            fun_test.critical(str(ex))
+            nc.disconnect()
+
+        nc.disconnect()
         return True

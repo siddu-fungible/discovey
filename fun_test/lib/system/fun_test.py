@@ -38,6 +38,11 @@ class FunTestLibException(Exception):
     pass
 
 
+class FunTestFatalException(Exception):
+    pass
+
+
+
 class FunTimer:
     def __init__(self, max_time=10000):
         self.max_time = max_time
@@ -258,6 +263,7 @@ class FunTest:
         self.topologies = []
         self.hosts = []
         self.current_time_series_checkpoint = 0
+        self.at_least_one_failed = False
         self.closed = False
         self.time_series_enabled = True
         self.enable_profiling()
@@ -265,6 +271,9 @@ class FunTest:
     def report_message(self, message):  # Used only by FunXml only
         if self.fun_xml_obj:
             self.fun_xml_obj.add_message(message=message)
+
+    def is_at_least_one_failed(self):
+        return self.at_least_one_failed
 
     def initialize_output_files(self, absolute_script_file_name):
         # (frame, file_name, line_number, function_name, lines, index) = \
@@ -321,8 +330,12 @@ class FunTest:
 
     def _prepare_build_parameters(self):
         tftp_image_path = self.get_job_environment_variable("tftp_image_path")
+        with_stable_master = self.get_job_environment_variable("with_stable_master")
+
         if tftp_image_path:
             self.build_parameters["tftp_image_path"] = tftp_image_path
+        elif with_stable_master:
+            self.build_parameters["with_stable_master"] = with_stable_master
         else:
             # Check if it was stored by a previous script
             tftp_image_path = self.get_stored_environment_variable(variable_name="tftp_image_path")
@@ -383,6 +396,13 @@ class FunTest:
             if stored_environment:
                 result = stored_environment
         return result
+
+    def get_rich_inputs(self):
+        rich_inputs = None
+        if fun_test.suite_execution_id:
+            suite_execution = models_helper.get_suite_execution(suite_execution_id=fun_test.suite_execution_id)
+            rich_inputs = suite_execution.rich_inputs
+        return rich_inputs
 
     def get_suite_run_time_environment_variable(self, name):
         run_time = models_helper.get_suite_run_time(execution_id=self.suite_execution_id)
@@ -552,6 +572,17 @@ class FunTest:
         fun_test.log("Join complete for Thread-id: {}".format(fun_test_thread_id))
         return True
 
+
+    def fetch_stable_master(self, parameters):
+        from lib.system.build_helper import BuildHelper
+        bh = BuildHelper(parameters=self.build_parameters)
+        result = bh.fetch_stable_master(debug=parameters["debug"], stripped=parameters["stripped"])
+        fun_test.test_assert(result, "Stable master fetched")
+        self.build_parameters["tftp_image_path"] = result
+        self.update_job_environment_variable("tftp_image_path", result)
+        fun_test.log("Updating the tftp-image path: {}".format(self.build_parameters))
+        return result
+
     def build(self):
         from lib.system.build_helper import BuildHelper
         result = False
@@ -567,9 +598,6 @@ class FunTest:
 
         test_bed_type = self.get_job_environment_variable("test_bed_type")
         fun_test.test_assert(test_bed_type, "Test-bed type: {}".format(test_bed_type))
-
-        tftp_image_path = build_parameters["tftp_image_path"] if "tftp_image_path" in build_parameters else None
-        # fun_test.test_assert(not tftp_image_path, "TFTP-image path cannot be set if with_jenkins_build was enabled")
 
         submitter_email = None
         if fun_test.suite_execution_id:
@@ -1063,6 +1091,8 @@ class FunTest:
 
     def _end_test(self, result):
         self.fun_xml_obj.end_test(result=result)
+        if result == FunTest.FAILED:
+            self.at_least_one_failed = True
         self.test_metrics[self.current_test_case_id]["result"] = result
 
     def _append_assert_test_metric(self, assert_message):
@@ -1460,6 +1490,9 @@ class FunTestScript(object):
                                                                inputs=fun_test.get_job_inputs())
                     test_case.execution_id = te.execution_id
 
+            if fun_test.build_parameters and "with_stable_master" in fun_test.build_parameters and fun_test.build_parameters["with_stable_master"]:
+                fun_test.test_assert(fun_test.fetch_stable_master(fun_test.build_parameters["with_stable_master"]), "Fetch stable master image from dochub")
+
             tftp_image_path_provided = "tftp_image_path" in fun_test.build_parameters and fun_test.build_parameters["tftp_image_path"]
             if fun_test.is_with_jenkins_build() and fun_test.suite_execution_id and not tftp_image_path_provided:
                 if not fun_test.is_build_done():
@@ -1490,6 +1523,8 @@ class FunTestScript(object):
 
     def _cleanup_topologies(self):
         topologies = fun_test.get_topologies()
+        cleanup_error_found = False
+
         for topology in topologies:
             if not topology.is_cleaned_up():
                 fun_test.log("Topology was not cleaned up. Attempting ...")
@@ -1497,6 +1532,8 @@ class FunTestScript(object):
                     topology.cleanup()
                 except Exception as ex:
                     fun_test.critical(ex)
+                    cleanup_error_found = True
+        fun_test.simple_assert(not cleanup_error_found, "Topology cleanup error")
 
     def _cleanup_hosts(self):
         for host in fun_test.get_hosts():
@@ -1515,23 +1552,48 @@ class FunTestScript(object):
         fun_test._start_test(id=FunTest.CLEANUP_TC_ID,
                              summary="Script cleanup",
                              steps=self.steps)
-        result = FunTest.FAILED
-        try:
-            self.cleanup()
+        cleanup_te = None
+        cleanup_error_found = False
+        if fun_test.suite_execution_id:
+            cleanup_te = models_helper.add_test_case_execution(test_case_id=FunTest.CLEANUP_TC_ID,
+                                                  suite_execution_id=fun_test.suite_execution_id,
+                                                  result=fun_test.IN_PROGRESS,
+                                                  path=fun_test.relative_path,
+                                                  log_prefix=fun_test.log_prefix,
+                                                  inputs=fun_test.get_job_inputs())
+        result = FunTest.PASSED
 
-            result = FunTest.PASSED
-        except Exception as ex:
-            fun_test.critical(ex)
         try:
-            self._cleanup_topologies()
-        except Exception as ex:
-            fun_test.critical(ex)
+            try:
+                self.cleanup()
+            except Exception as ex:
+                result = FunTest.FAILED
+                cleanup_error_found = True
+                fun_test.critical(ex)
 
-        try:
-            self._cleanup_hosts()
+            try:
+                self._cleanup_topologies()
+            except Exception as ex:
+                result = FunTest.FAILED
+                cleanup_error_found = True
+                fun_test.critical(ex)
+
+            try:
+                self._cleanup_hosts()
+            except Exception as ex:
+                fun_test.critical(ex)
+
+
         except Exception as ex:
             fun_test.critical(ex)
+        fun_test.add_checkpoint(checkpoint="Cleanup error found", expected=False, actual=True)
         fun_test._end_test(result=result)
+        if cleanup_te:
+            models_helper.update_test_case_execution(test_case_execution_id=cleanup_te.execution_id,
+                                                     suite_execution_id=fun_test.suite_execution_id,
+                                                     result=result)
+
+            models_helper.report_re_run_result(execution_id=cleanup_te.execution_id, re_run_info=fun_test.get_re_run_info())
 
     def _close(self):
         fun_test.close()
@@ -1566,7 +1628,8 @@ class FunTestScript(object):
                         if fun_test.suite_execution_id:
                             models_helper.update_test_case_execution(test_case_execution_id=test_case.execution_id,
                                                                      suite_execution_id=fun_test.suite_execution_id,
-                                                                     result=fun_test.IN_PROGRESS)
+                                                                     result=fun_test.IN_PROGRESS,
+                                                                     started_time=get_current_time())
                             fun_test.current_test_case_execution_id = test_case.execution_id
                         fun_test.add_start_checkpoint()
                         test_case.setup()

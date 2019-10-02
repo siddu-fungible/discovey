@@ -316,13 +316,21 @@ pci_table = {
 @task 
 def show_dev():
     """Query fungible device on pcie from COMe system"""
-    return sudo('lspci -d1dad: -nnmm')
+    return sudo('lspci -d1dad: -Dnnmm')
 
 @roles('come')
 @task 
 def rescan_pcie():
     """perform pcie rescan from COMe system"""
     sudo('echo 1 > /sys/bus/pci/rescan')
+
+### no stable yet !!!
+@roles('bmc')
+#@task
+def bmcresetF(index=0):
+    """ reset the chip from BMC system"""
+    with cd('/mnt/sdmmc0p1/scripts'), settings( hide('stderr'), warn_only=True ):
+        run("sh ./f1_reset.sh %s" % index)
 
 @roles('fpga')
 @task
@@ -449,8 +457,8 @@ def flashF(index=0, flags=False, type=None, image=None, version=None):
         sys.exit("image-path and version are multually exclusive ...")
 
     if version:
-        if type not in [ 'pufr', 'frmw', 'eepr', 'host', 'emmc', 'sbpf' ]:
-            sys.exit("image-type %s not-supported only=['pufr', 'frmw', 'sbpf', 'eepr', 'host', 'emmc' ] ..." % type)
+        if type not in [ 'pufr', 'frmw', 'eepr', 'host', 'emmc', 'sbpf', 'husd', 'husm', 'hbsb' ]:
+            sys.exit("image-type %s not-supported only=['pufr', 'frmw', 'sbpf', 'eepr', 'host', 'emmc', 'husd', 'husm', 'hbsb' ] ..." % type)
         elif type == 'eepr':
             fimage='funsdk-release/{}/eeprom_fs1600_{}_packed.bin'.format(version, index)
         elif type == 'host':
@@ -463,6 +471,12 @@ def flashF(index=0, flags=False, type=None, image=None, version=None):
             fimage='funsdk-release/{}/esecure_puf_rom_packed.bin'.format(version)
         elif type == 'frmw':
             fimage='funsdk-release/{}/esecure_firmware_packed.bin'.format(version)
+        elif type == 'husd':
+            fimage='funsdk-release/{}/hu_sds.bin'.format(version)
+        elif type == 'husm':
+            fimage='funsdk-release/{}/hu_sbm.bin'.format(version)
+        elif type == 'hbsb':
+            fimage='funsdk-release/{}/hbm_sbus.bin'.format(version)
         else:
             sys.exit("image-type %s not-supported ..." % type)
     elif image:
@@ -505,13 +519,62 @@ def flashF(index=0, flags=False, type=None, image=None, version=None):
     child.expect ('\nf1 # ')
     child.sendline('{} 0xffffffff99000000 {}:funsdk-release/latest/funos-f1.stripped;'.format(command, env.TFTPSERVER))
     child.expect ('\nf1 # ')
-    child.sendline('bootelf -p 0xffffffff99000000;')
+    child.sendline ('echo booting to chip={} ...'.format(index))
+    child.expect ('\nf1 # ')
+    child.sendline('bootelf -p 0xffffffff99000000')
     try:
         child.expect ('\nf1 # ', timeout=30)
     except:
         SESSION_ACTIVE_MSG = "\n\ntimeout: Seem DPU are actively flashed image. monitor nc {} 999{}\n\n".format(env.host, index)
         sys.exit(SESSION_ACTIVE_MSG)
         child.close()
+
+@roles('come')
+#@task
+def fwupgrade(index=0, flags=False, type=None, image=None, version=None):
+    """ flash image of chip[index] over type tftp with provided arguments """
+    global child
+    if image and version:
+        sys.exit("image-path and version are multually exclusive ...")
+    if '"Unassigned class [ff00]" "Vendor [1dad]"' not in show_dev():
+        sys.exit("Fungible control function is NOT discovered ...")
+
+
+@roles('come')
+#@task
+def deploy_dpcsh_install_dependencies():
+    with settings(hide('stdout', 'stderr'), warn_only=True):
+        o = run('mkdir -p ~/tools/dpudebug')
+        with cd('~/tools/dpudebug'):
+            run('wget http://dochub.fungible.local/doc/jenkins/funsdk/latest/Linux/dpcsh.tgz')
+            run('tar xvf dpcsh.tgz')
+
+@roles('come')
+#@task
+def check_dpcsh_install_dependencies():
+    """ check depencencies for dpcsh """
+    dpcsh_directory = '/home/fun/tools/dpudebug/bin/Linux'
+    dpcsh_binary = dpcsh_directory + '/dpcsh'
+    if not exists(dpcsh_binary, use_sudo=True):
+        deploy_dpcsh_install_dependencies()
+
+@roles('come')
+@task
+def dpcshF(index=0, cmd=None):
+    """ execute a dpcsh command over NVMe e.g dpcshF:cmd="peek storage" """
+    dpcsh_directory = '/home/fun/tools/dpudebug/bin/Linux'
+    O = show_dev()
+    if '[0108]" "Vendor [1dad]"' not in O:
+        sys.exit("Fungible NVMe control function is NOT discovered ...")
+    #if index == 0 and '0000:04:00.2' not in O:
+    #    sys.exit("Fungible DPU#0 control function is NOT discovered ...")
+    #if index == 1 and '0000:06:00.2' not in O:
+    #    sys.exit("Fungible DPU#1 control function is NOT discovered ...")
+    check_dpcsh_install_dependencies()
+    dev = '/dev/nvme0' if (index == 0 and '0000:04:00.2' in O) else '/dev/nvme1' if (index == 1 and '0000:06:00.2' in O) else '/dev/null'
+    with cd(dpcsh_directory):
+        return sudo('echo "%s" | ./dpcsh --pcie_nvme_sock=%s' % (cmd, dev))
+
 
 @roles('bmc')
 @task

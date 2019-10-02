@@ -60,10 +60,10 @@ class RegExScript(FunTestScript):
         pass
         #self.topology_obj_helper.cleanup()
 
-class JuniperNFACustomCompileOnly(FunTestCase):
+class JuniperDFACustomCompileOnly(FunTestCase):
     def describe(self):
         self.set_test_details(id=4,
-                              summary="compile and load",
+                              summary="F1: HANDCRAFTED DFA_ONLY PATTERNS compiled with DFA Strategy and (RBM_ONLY,EXM_ONLY,DISTRIBUTED) Memory Allocation",
                               steps="""
                               """)
 
@@ -110,7 +110,7 @@ class JuniperNFACustomCompileOnly(FunTestCase):
             pld_path = "/regex/payloads/"
             #for gtype, en in zip(["dfa", "nfa", "ffa"], ["1", "0", ""]):
             for gtype, en in zip(["dfa"], ["1"]):
-                res_path = "/regex/"+str(tc)+"/" + gtype + "_results/"
+                res_path = "/regex/F1/"+str(tc)+"/" + gtype + "_results/"
                 con1.create_directory(res_path)
                 print ("res_path is ",res_path)
                 #res_path = "/regex/Users/fungible/ws/data_store/regression/" + str(tc) + "/" + gtype + "_results/"
@@ -158,7 +158,8 @@ class JuniperNFACustomCompileOnly(FunTestCase):
                 print ("pat_pld_files are ",pat_pld_files)
                 #pat_pld_files={"test_3.pat":["test_3_1.in","test_3_2.in","test_3_3.in"]}
 
-                RegexTemplate.compile_n_validate(con1, mem_dist, pat_path, pld_path,res_path,exp_file_path,pat_pld_files, ["test_33", "test_28"], en, juniper_style="")
+                RegexTemplate.compile_n_validate(con1, mem_dist, pat_path, pld_path, res_path, exp_file_path, pat_pld_files, ["test_33", "test_28"], en,
+                                                 juniper_style="")
 
                 #RegexTemplate.compile_only(con1, mem_dist, pat_path, res_path, [], en, juniper_style="yes")
 
@@ -169,12 +170,12 @@ class JuniperNFACustomCompileOnly(FunTestCase):
 
                 res1_path=""
                 try:
-                    fun_test.test_assert(con1.scp(target_file_path="/local/auto_admin/data_store/" + res_path,
+                    fun_test.test_assert(con1.scp(target_file_path="/project/users/QA/regression/data_store" + res_path,
                          target_ip=con2.host_ip,
                          source_file_path=res_path+"*.json",
                          target_username=con2.ssh_username,
                          target_password=con2.ssh_password),
-                         message="scp graphs to /local/auto_admin/data_store/{}".format(res_path))
+                         message="scp graphs to /project/users/QA/regression/data_store{}".format(res_path))
                 except:
                     pass
 
@@ -183,6 +184,6 @@ class JuniperNFACustomCompileOnly(FunTestCase):
 
 if __name__ == "__main__":
     myscript = RegExScript()
-    myscript.add_test_case(JuniperNFACustomCompileOnly())
+    myscript.add_test_case(JuniperDFACustomCompileOnly())
     myscript.run()
 

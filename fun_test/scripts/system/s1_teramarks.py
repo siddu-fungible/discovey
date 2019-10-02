@@ -28,10 +28,10 @@ class PalladiumTc(FunTestCase):
     fun_os_make_flags = ""
     hw_model = "S1_Compute"
     max_duration = 900
-    disable_assertions = "true"
-    hw_version = "rel_08012019"
+    release_build = "true"
+    hw_version = "rel_09012019"
     run_target = "protium_s"
-    extra_emails = None
+    extra_emails = []
 
     def describe(self):
         self.set_test_details(id=0,
@@ -43,6 +43,8 @@ class PalladiumTc(FunTestCase):
                               """)
 
     def setup(self):
+        if not ("ranga.gowda@fungible.com" in self.extra_emails):
+            self.extra_emails.append("ranga.gowda@fungible.com")
         fun_test.log("Testcase setup")
 
     def cleanup(self):
@@ -56,7 +58,7 @@ class PalladiumTc(FunTestCase):
                   "RUN_MODE": "Batch",
                   "TAGS": self.tags,
                   "NOTE": self.note,
-                  "DISABLE_ASSERTIONS": self.disable_assertions,
+                  "RELEASE_BUILD": self.release_build,
                   "FUNOS_MAKEFLAGS": self.fun_os_make_flags,
                   "HW_VERSION": self.hw_version,
                   "RUN_TARGET": self.run_target,
@@ -67,14 +69,16 @@ class PalladiumTc(FunTestCase):
 
 
 class CryptoTeramarkTc(PalladiumTc):
-    boot_args = "app=crypto_test,crypto_tunnel_perf,crypto_api_perf,crypto_raw_speed --test-exit-fast --serial"
+    #boot_args = "app=crypto_test,crypto_tunnel_perf,crypto_api_perf,crypto_raw_speed --test-exit-fast --serial"
+    boot_args = "app=crypto_test,crypto_raw_speed  nvps=24 vp_iters=5000 pcs_to_use=1 --test-exit-fast --serial"
     tags = "qa_s1_crypto_teramark"
-    note = "Crypto teramark app on S1"
+    max_duration = 2700
+    note = "Crypto SEC Regression & TeraMark apps (PC0 Throughput) on S1"
     fun_os_make_flags = "NDEBUG=1"
 
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Schedule crypto s1 teramark app on Jenkins",
+                              summary="Schedule crypto (SEC) s1 Feature Regression and TeraMark apps on Jenkins",
                               steps="""
         1. Steps 1
         2. Steps 2
@@ -116,7 +120,7 @@ class EcTeramarkTc(PalladiumTc):
 
 
 class DfaTeramarkTc(PalladiumTc):
-    boot_args = "app=dfa_perf_bootstrap rbm-size=1m dfa_perf.pc_mask=255 dfa_perf.nflows=3072 dfa_perf.niterations=1024 syslog=2"
+    boot_args = "app=dfa_perf_bootstrap rbm-size=1m dfa_perf.pc_mask=1 --bm-profile-regex dfa_perf.nflows=24 dfa_perf.niterations=100 syslog=2"
     tags = "qa_s1_dfa_teramark"
     note = "DFA teramark app on S1"
     fun_os_make_flags = "PM_TESTS=1"
@@ -132,7 +136,7 @@ class DfaTeramarkTc(PalladiumTc):
 
 
 class NfaTeramarkTc(PalladiumTc):
-    boot_args = "app=nfa_perf_bootstrap rbm-size=1m nfa_perf.pc_mask=255 nfa_perf.nflows=3584 nfa_perf.niterations=1024 syslog=2"
+    boot_args = "app=nfa_perf_bootstrap rbm-size=1m nfa_perf.pc_mask=3 --bm-profile-regex nfa_perf.nflows=48 nfa_perf.niterations=1024 syslog=2"
     tags = "qa_s1_nfa_teramark"
     note = "NFA teramark app on S1"
     fun_os_make_flags = "PM_TESTS=1"
@@ -164,16 +168,33 @@ class JpegTeramarkTc(PalladiumTc):
                                   """)
 
 
-class ZipTeramarkTc(PalladiumTc):
-    boot_args = "app=deflate_perf_multi,lzma_perf_multi --serial"
-    tags = "qa_s1_zip_teramark"
-    note = "ZIP teramark app on S1"
+class ZipDeflateTeramarkTc(PalladiumTc):
+    boot_args = "app=deflate_perf_multi nflows=30 niterations=30 npcs=1 --platforms1"
+    tags = "qa_s1_zip_deflate_teramark"
+    note = "ZIP deflate teramark app on S1"
     fun_os_make_flags = "XDATA_LISTS=/project/users/ashaikh/qa_test_inputs/zip_inputs/compress_perf_input.list"
-    max_duration = 2700
+    max_duration = 9000
 
     def describe(self):
         self.set_test_details(id=7,
-                              summary="Schedule Zip teramark app on Jenkins",
+                              summary="Schedule Zip Deflate teramark app on Jenkins",
+                              steps="""
+            1. Steps 1
+            2. Steps 2
+            3. Steps 3
+                                  """)
+
+
+class ZipLzmaTeramarkTc(PalladiumTc):
+    boot_args = "app=lzma_perf_multi nflows=30 niterations=10 npcs=1 --platforms1"
+    tags = "qa_s1_zip_lzma_teramark"
+    note = "ZIP lzma teramark app on S1"
+    fun_os_make_flags = "XDATA_LISTS=/project/users/ashaikh/qa_test_inputs/zip_inputs/compress_perf_input.list"
+    max_duration = 9000
+
+    def describe(self):
+        self.set_test_details(id=8,
+                              summary="Schedule Zip Lzma teramark app on Jenkins",
                               steps="""
             1. Steps 1
             2. Steps 2
@@ -183,11 +204,13 @@ class ZipTeramarkTc(PalladiumTc):
 
 if __name__ == "__main__":
     myscript = MyScript()
-    # myscript.add_test_case(CryptoTeramarkTc())
+    myscript.add_test_case(CryptoTeramarkTc())
     # myscript.add_test_case(PkeTeramarkTc())
     myscript.add_test_case(EcTeramarkTc())
-    # myscript.add_test_case(DfaTeramarkTc())
+    myscript.add_test_case(DfaTeramarkTc())
     # myscript.add_test_case(NfaTeramarkTc())
     myscript.add_test_case(JpegTeramarkTc())
-    # myscript.add_test_case(ZipTeramarkTc())
+    myscript.add_test_case(ZipDeflateTeramarkTc())
+    myscript.add_test_case(ZipLzmaTeramarkTc())
+
     myscript.run()

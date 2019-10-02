@@ -163,7 +163,12 @@ class ExpandedTopology(ToDictMixin):
         return tg.get_instance()
 
     def cleanup(self):
+        cleanup_error_found = False
         for active_orchestrator in self.active_orchestrators:
-            active_orchestrator.cleanup()
+            try:
+                active_orchestrator.cleanup()
+            except Exception as ex:
+                fun_test.critical("Topology cleanup error found")
+                cleanup_error_found = True
         self.cleaned_up = True
-
+        fun_test.simple_assert(not cleanup_error_found, "Topology cleanup error found")

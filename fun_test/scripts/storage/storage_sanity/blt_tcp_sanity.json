@@ -70,7 +70,8 @@
     "fio_numjobs_iodepth": [
       "(16, 4)"
     ],
-    "fio_job_name": "blt_tcp_sanity"
+    "fio_job_name": "blt_tcp_sanity",
+    "stats_collect_details": [{"vp_utils": {"interval": 5}}, {"per_vp": {"interval": 5}}, {"resource_bam_args": {"interval": 5}}, {"vol_stats": {"interval": 5}}, {"vppkts_stats": {"interval": 5}}, {"psw_stats": {"interval": 5, "nu": true}}, {"fcp_stats": {"interval": 5, "nu": true}}, {"wro_stats": {"interval": 5, "nu": true}}, {"erp_stats": {"interval": 5, "nu": true}}, {"etp_stats": {"interval": 5, "nu": true}}, {"eqm_stats": {"interval": 5}}, {"hu_stats": {"interval": 5}}, {"ddr_stats": {"interval": 5}}, {"ca_stats": {"interval": 5}}, {"cdu_stats": {"interval": 5}}]
   },
   "BltTcpRandRead": {
     "fio_cmd_args": {
@@ -85,7 +86,8 @@
     "fio_numjobs_iodepth": [
       "(16, 4)"
     ],
-    "fio_job_name": "blt_tcp_sanity"
+    "fio_job_name": "blt_tcp_sanity",
+    "stats_collect_details": [{"vp_utils": {"interval": 5}}, {"per_vp": {"interval": 5}}, {"resource_bam_args": {"interval": 5}}, {"vol_stats": {"interval": 5}}, {"vppkts_stats": {"interval": 5}}, {"psw_stats": {"interval": 5, "nu": true}}, {"fcp_stats": {"interval": 5, "nu": true}}, {"wro_stats": {"interval": 5, "nu": true}}, {"erp_stats": {"interval": 5, "nu": true}}, {"etp_stats": {"interval": 5, "nu": true}}, {"eqm_stats": {"interval": 5}}, {"hu_stats": {"interval": 5}}, {"ddr_stats": {"interval": 5}}, {"ca_stats": {"interval": 5}}, {"cdu_stats": {"interval": 5}}]
   },
   "BltTcpSeqRWMix": {
     "fio_cmd_args": {
@@ -103,7 +105,8 @@
     "fio_numjobs_iodepth": [
       "(16, 4)"
     ],
-    "fio_job_name": "blt_tcp_sanity"
+    "fio_job_name": "blt_tcp_sanity",
+    "stats_collect_details": [{"vp_utils": {"interval": 5}}, {"per_vp": {"interval": 5}}, {"resource_bam_args": {"interval": 5}}, {"vol_stats": {"interval": 5}}, {"vppkts_stats": {"interval": 5}}, {"psw_stats": {"interval": 5, "nu": true}}, {"fcp_stats": {"interval": 5, "nu": true}}, {"wro_stats": {"interval": 5, "nu": true}}, {"erp_stats": {"interval": 5, "nu": true}}, {"etp_stats": {"interval": 5, "nu": true}}, {"eqm_stats": {"interval": 5}}, {"hu_stats": {"interval": 5}}, {"ddr_stats": {"interval": 5}}, {"ca_stats": {"interval": 5}}, {"cdu_stats": {"interval": 5}}]
   },
   "BltTcpSeqWRMix": {
     "fio_cmd_args": {
@@ -121,7 +124,8 @@
     "fio_numjobs_iodepth": [
       "(16, 4)"
     ],
-    "fio_job_name": "blt_tcp_sanity"
+    "fio_job_name": "blt_tcp_sanity",
+    "stats_collect_details": [{"vp_utils": {"interval": 5}}, {"per_vp": {"interval": 5}}, {"resource_bam_args": {"interval": 5}}, {"vol_stats": {"interval": 5}}, {"vppkts_stats": {"interval": 5}}, {"psw_stats": {"interval": 5, "nu": true}}, {"fcp_stats": {"interval": 5, "nu": true}}, {"wro_stats": {"interval": 5, "nu": true}}, {"erp_stats": {"interval": 5, "nu": true}}, {"etp_stats": {"interval": 5, "nu": true}}, {"eqm_stats": {"interval": 5}}, {"hu_stats": {"interval": 5}}, {"ddr_stats": {"interval": 5}}, {"ca_stats": {"interval": 5}}, {"cdu_stats": {"interval": 5}}]
   },
   "BltTcpRandRWMix": {
     "fio_cmd_args": {
@@ -139,7 +143,8 @@
     "fio_numjobs_iodepth": [
       "(16, 4)"
     ],
-    "fio_job_name": "blt_tcp_sanity"
+    "fio_job_name": "blt_tcp_sanity",
+    "stats_collect_details": [{"vp_utils": {"interval": 5}}, {"per_vp": {"interval": 5}}, {"resource_bam_args": {"interval": 5}}, {"vol_stats": {"interval": 5}}, {"vppkts_stats": {"interval": 5}}, {"psw_stats": {"interval": 5, "nu": true}}, {"fcp_stats": {"interval": 5, "nu": true}}, {"wro_stats": {"interval": 5, "nu": true}}, {"erp_stats": {"interval": 5, "nu": true}}, {"etp_stats": {"interval": 5, "nu": true}}, {"eqm_stats": {"interval": 5}}, {"hu_stats": {"interval": 5}}, {"ddr_stats": {"interval": 5}}, {"ca_stats": {"interval": 5}}, {"cdu_stats": {"interval": 5}}]
   },
   "BltTcpRandWRMix": {
     "fio_cmd_args": {
@@ -157,6 +162,7 @@
     "fio_numjobs_iodepth": [
       "(16, 4)"
     ],
-    "fio_job_name": "blt_tcp_sanity"
+    "fio_job_name": "blt_tcp_sanity",
+    "stats_collect_details": [{"vp_utils": {"interval": 5}}, {"per_vp": {"interval": 5}}, {"resource_bam_args": {"interval": 5}}, {"vol_stats": {"interval": 5}}, {"vppkts_stats": {"interval": 5}}, {"psw_stats": {"interval": 5, "nu": true}}, {"fcp_stats": {"interval": 5, "nu": true}}, {"wro_stats": {"interval": 5, "nu": true}}, {"erp_stats": {"interval": 5, "nu": true}}, {"etp_stats": {"interval": 5, "nu": true}}, {"eqm_stats": {"interval": 5}}, {"hu_stats": {"interval": 5}}, {"ddr_stats": {"interval": 5}}, {"ca_stats": {"interval": 5}}, {"cdu_stats": {"interval": 5}}]
   }
 }

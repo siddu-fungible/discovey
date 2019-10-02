@@ -1,5 +1,7 @@
-<div class="flex-container">
-  <ng-container *ngFor="let interestedMetric of workspace.interested_metrics">
+ <app-pager *ngIf="workspace" [data]="workspace.interested_metrics" [recordsPerPage]=4
+            (pageNumber)="setPage($event)"></app-pager>
+<div *ngIf="showPagedItems" class="flex-container">
+  <ng-container *ngFor="let interestedMetric of pagedItems">
     <div style="flex: 0 0 45%; padding-bottom: 10px;">
       <table align="center">
         <tr>

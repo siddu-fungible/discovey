@@ -150,7 +150,18 @@ def test_host_pings(host, ips, username="localadmin", password="Precious1*", str
         ping_timeout = 60
         if ping_count > ping_timeout:
             ping_timeout = ping_count+10
-        result = linux_obj.ping(dst=hosts, interval=ping_interval, count=ping_count, timeout=ping_timeout)
+        result = True
+        output = linux_obj.command(command="sudo ping %s -i %s -c %s -q" % (hosts, ping_interval, ping_count),
+                                   timeout=ping_timeout)
+        m = re.search(r'(\d+)%\s+packet\s+loss', output)
+        if m:
+            percentage_loss = int(m.group(1))
+            if percentage_loss <= 1:
+                result &= True
+            else:
+                result &= False
+        linux_obj.disconnect()
+
         if result:
             fun_test.log("%s can reach %s" % (host, hosts))
         else:
@@ -290,7 +301,8 @@ def configure_vms(server_name, vm_dict):
         if vm in all_vms:
             try:
                 pci_device = linux_obj.command(command="virsh nodedev-list | grep %s" % vm_dict[vm]["ethernet_pci_device"])
-                if vm_dict[vm]["ethernet_pci_device"] not in pci_device:
+                pci_device_pf2 = linux_obj.command(command="virsh nodedev-list | grep %s" % vm_dict[vm]["nvme_pci_device"])
+                if vm_dict[vm]["ethernet_pci_device"] not in pci_device and vm_dict[vm]["nvme_pci_device"] not in pci_device_pf2:
                     fun_test.critical(message="%s device not present on server" % vm_dict[vm]["ethernet_pci_device"])
                     fun_test.log("Skipping VM: %s" % vm)
                     continue
@@ -387,7 +399,9 @@ def enable_nvme_vfs(host, username="localadmin", password="Precious1*", pcie_vfs
     linux_obj = Linux(host_ip=host, ssh_username=username, ssh_password=password)
     if not linux_obj.check_ssh():
         return False
-    linux_obj.sudo_command(command="echo \"%s\" >  /sys/bus/pci/devices/0000\:af\:00.2/sriov_numvfs" % pcie_vfs_count)
+    bdf = linux_obj.sudo_command("lspci -D -d 1dad: | grep 'Non-Volatile memory controller' | awk '{print $1}'").strip()
+    linux_obj.sudo_command(command="echo \"%s\" >  /sys/bus/pci/devices/{}/sriov_numvfs".format(str(bdf))
+                                   % pcie_vfs_count)
     fun_test.sleep(message="waiting for NVME VFs to be created")
     lspci_op = linux_obj.command(command="lspci -d 1dad:")
     if lspci_op.count("Non-Volatile memory controller:") >= pcie_vfs_count+1:
@@ -477,7 +491,7 @@ def cc_sanity_pings(docker_names, vlan_ips, fs_spec, nu_hosts, hu_hosts_0, hu_ho
         for nu_host in nu_hosts:
             # result &= container.ping(dst=nu_host, count=ping_count, max_percentage_loss=1, timeout=60,
             #                          interval=ping_interval, sudo=True)
-            output = container.command(command="sudo ping -I %s %s -i %s -c %s" % (vlan_ips[docker], nu_host,
+            output = container.command(command="sudo ping -I %s %s -i %s -c %s -q" % (vlan_ips[docker], nu_host,
                                                                                    ping_interval, ping_count),
                                        timeout=300)
             m = re.search(r'(\d+)%\s+packet\s+loss', output)
@@ -495,7 +509,7 @@ def cc_sanity_pings(docker_names, vlan_ips, fs_spec, nu_hosts, hu_hosts_0, hu_ho
                                                  ssh_password=fs_spec['come']['mgmt_ssh_password'])
                 # result &= container.ping(dst=hu_host, count=ping_count, max_percentage_loss=1, timeout=60,
                 #                          interval=ping_interval, sudo=True)
-                output = container.command(command="sudo ping -I %s %s -i %s -c %s" % (vlan_ips[docker], hu_host,
+                output = container.command(command="sudo ping -I %s %s -i %s -c %s -q" % (vlan_ips[docker], hu_host,
                                                                                        ping_interval, ping_count),
                                            timeout=300)
                 m = re.search(r'(\d+)%\s+packet\s+loss', output)
@@ -514,7 +528,7 @@ def cc_sanity_pings(docker_names, vlan_ips, fs_spec, nu_hosts, hu_hosts_0, hu_ho
                                                  ssh_password=fs_spec['come']['mgmt_ssh_password'])
                 # result &= container.ping(dst=hu_host, count=ping_count, max_percentage_loss=1, timeout=60,
                 #                          interval=ping_interval, sudo=True)
-                output = container.command(command="sudo ping -I %s %s -i %s -c %s" % (vlan_ips[docker], hu_host,
+                output = container.command(command="sudo ping -I %s %s -i %s -c %s -q" % (vlan_ips[docker], hu_host,
                                                                                        ping_interval, ping_count),
                                            timeout=300)
                 m = re.search(r'(\d+)%\s+packet\s+loss', output)
@@ -575,6 +589,7 @@ def reload_nvme_driver(host, username="localadmin", password="Precious1*", ns_id
     host_obj.sudo_command("modprobe nvme")
 
     # Check if volume exists
+    fun_test.sleep("Waiting for 5 seconds before checking lsblk", 5)
     lsblk_output = host_obj.lsblk()
     volume_name = "nvme0n" + str(ns_id)
     fun_test.test_assert(volume_name in lsblk_output, "{} device available".format(volume_name))

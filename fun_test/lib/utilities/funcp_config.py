@@ -11,6 +11,7 @@ from scripts.networking.lib_nw import funcp
 import socket
 from lib.templates.storage.storage_fs_template import FunCpDockerContainer
 import os
+from datetime import date
 
 
 class FunControlPlaneBringup:
@@ -62,14 +63,14 @@ class FunControlPlaneBringup:
         fun_test.test_assert(fs_0.bmc.u_boot_load_image(index=0, tftp_image_path=fs_0.tftp_image_path,
                                                         boot_args=fs_0.boot_args, gateway_ip=gatewayip),
                              "U-Bootup f1: {} complete".format(0))
-        fs_0.bmc.start_uart_log_listener(f1_index=0, serial_device=None)
+        fs_0.bmc.start_uart_log_listener(f1_index=0, serial_device="/dev/ttyS0")
         fun_test.test_assert(fs_0.bmc.setup_serial_proxy_connection(f1_index=1),
                              "Setup nc serial proxy connection")
         fun_test.test_assert(
             fs_0.bmc.u_boot_load_image(index=1, tftp_image_path=fs_1.tftp_image_path, boot_args=fs_1.boot_args,
                                        gateway_ip=gatewayip),
             "U-Bootup f1: {} complete".format(1))
-        fs_0.bmc.start_uart_log_listener(f1_index=1, serial_device=None)
+        fs_0.bmc.start_uart_log_listener(f1_index=1, serial_device="/dev/ttyS1")
         if reboot_come:
             fun_test.test_assert(fs_0.come_reset(power_cycle=True, non_blocking=True),
                                  "ComE rebooted successfully")
@@ -192,10 +193,15 @@ class FunControlPlaneBringup:
         fun_test.test_assert(expression=ssh_test_come, message="Make sure ssh can be done to COMe")
         come_lspci = linux_obj_come.lspci(grep_filter="1dad:")
         if prepare_docker:
+            today = date.today()
+            d1 = today.strftime("%d_%m_%Y")
 
             linux_obj_come.command(command="cd /mnt/keep/")
+            linux_obj_come.sudo_command(command="cp -r FunSDK FunSDK_bkp_%s" % d1)
+            linux_obj_come.sudo_command(command="cd / && tar cf scratch_bkp_%s.tar scratch" % d1, timeout=1200)
             linux_obj_come.sudo_command(command="rm -rf FunSDK")
-            git_pull = linux_obj_come.command("git clone git@github.com:fungible-inc/FunSDK-small.git FunSDK", timeout=120)
+            git_pull = linux_obj_come.command("git clone git@github.com:fungible-inc/FunSDK-small.git FunSDK",
+                                              timeout=120)
             linux_obj_come.command(command="cd /mnt/keep/FunSDK/")
             prepare_docker_output = linux_obj_come.command("./integration_test/emulation/test_system.py --prepare "
                                                            "--docker", timeout=1200)
@@ -212,6 +218,7 @@ class FunControlPlaneBringup:
         if self.hostprefix:
             setup_docker_command += " --hostprefix %s" % self.hostprefix
         if ep:
+            # TODO: Do we need to add storage?
             setup_docker_output = linux_obj_come.command(command=(setup_docker_command + " --ep"), timeout=1200)
         else:
             setup_docker_output = linux_obj_come.command(command=setup_docker_command, timeout=1200)
@@ -221,6 +228,8 @@ class FunControlPlaneBringup:
         #    fun_test.test_assert(section in setup_docker_output, "{} seen".format(section))
         linux_obj_come.disconnect()
         self._get_docker_names()
+        # TODO: Do we need to remove VLAN creating with EP mode ?
+
         if ep:
             for docker in self.docker_names:
                 linux_obj_come.command("docker exec %s sudo ip link add link irb name vlan1 type vlan id 1" % docker)
@@ -458,7 +467,7 @@ class FunControlPlaneBringup:
         m = re.match(r"^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$", ip)
         return bool(m) and all(map(lambda n: 0 <= int(n) <= 255, m.groups()))
 
-    def cleanup_funcp(self):
+    def  cleanup_funcp(self):
         fun_test.log("=====================")
         fun_test.log("Control Plane Cleanup")
         fun_test.log("=====================")
@@ -473,7 +482,7 @@ class FunControlPlaneBringup:
         funeth_op = linux_obj.command(command="lsmod | grep funeth")
         try:
             if "funeth" in funeth_op:
-                funeth_rm = linux_obj.sudo_command("rmmod funeth")
+                funeth_rm = linux_obj.sudo_command("rmmod funeth fun_core")
                 if "ERROR" not in funeth_rm:
                     fun_test.log("Funeth removed succesfully")
                 else:

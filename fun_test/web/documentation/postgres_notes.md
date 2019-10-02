@@ -44,7 +44,7 @@ postgres-# \q
 ```
 
 
-## Postgres settings (Ubuntu only)
+## Postgres settings for the main regression server (Ubuntu only)
 ### Prepare the data-directory
 ~~~~
 

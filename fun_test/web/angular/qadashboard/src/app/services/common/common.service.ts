@@ -44,6 +44,33 @@ export class CommonService {
     return new Date(epochValue);
   }
 
+  convertToTimezone(dateTime, timeZone) {
+    if (dateTime instanceof Date) {
+      dateTime = dateTime;
+    } else {
+      let d = new Date(dateTime.replace(/\s+/g, 'T'));
+      let epochValue = d.getTime();
+      dateTime = new Date(epochValue);
+    }
+    let pstDate = new Date(dateTime.toLocaleString('en-US', {
+      timeZone: timeZone
+    }));
+    return pstDate;
+  }
+
+  convertEpochToDate(epoch, timeZone=null): Date {
+    let dateTime = new Date(epoch);
+    if (timeZone) {
+      dateTime = this.convertToTimezone(dateTime, timeZone);
+    }
+    return dateTime;
+  }
+
+  convertDateToEpoch(dateTimeObj): Date {
+    let epochValue = dateTimeObj.getTime();
+    return epochValue;
+  }
+
   isSameDay(d1, d2) {
     return d1.getFullYear() === d2.getFullYear() &&
       d1.getMonth() === d2.getMonth() &&
@@ -64,6 +91,16 @@ export class CommonService {
       return () => {
       };
     })
+  }
+
+  getPrettyPstTime(t) {
+    let result = t;
+    try {
+      result = this.convertToTimezone(t, "America/Los_Angeles").toLocaleString().replace(/\..*$/, "");
+    } catch (e) {
+      console.log(e);
+    }
+    return result;
   }
 
   getPrettyLocalizeTime(t) {

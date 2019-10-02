@@ -647,7 +647,7 @@ class StripeVolumeTestCase(FunTestCase):
         vol_details = []
         vol_group = {}
         vol_group[self.blt_details["type"]] = fun_test.shared_variables["thin_uuid"]
-        vol_group[self.stripe_details["type"]] = fun_test.shared_variables["stripe_uuid"]
+        vol_group[self.stripe_details["type"]] = [fun_test.shared_variables["stripe_uuid"]]
         vol_details.append(vol_group)
 
         # If you are using mmap then make sure you use a large timeout value for the test as fio instance takes 2-3min

@@ -74,6 +74,8 @@ class SiteState():
         valid_test_beds = am.get_valid_test_beds()
         for test_bed_name in valid_test_beds:
             # print test_bed_name
+            if "fs-inspur" in test_bed_name:
+                i  = 0
             assets_required = am.get_assets_required(test_bed_name=test_bed_name)
             for asset_type, assets in assets_required.iteritems():
                 print asset_type, assets
@@ -81,7 +83,7 @@ class SiteState():
                     try:
                         (o, created) = Asset.objects.get_or_create(type=asset_type,
                                                                    name=asset)
-                        if not created:
+                        if created:
                             o.test_beds = []
                         if test_bed_name not in o.test_beds:
                             o.test_beds.append(test_bed_name)

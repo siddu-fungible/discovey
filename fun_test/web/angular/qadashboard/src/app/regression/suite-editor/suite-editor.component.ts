@@ -54,6 +54,7 @@ export class SuiteEditorComponent implements OnInit {
 
   customTestBedSpecForm = null;
   customTestBedValidated = null;
+  customTestBedSpecPopulationStatus = null;
 
   availableCategories: string [] = null;
   availableSubCategories: string [] = ["general"];
@@ -67,6 +68,8 @@ export class SuiteEditorComponent implements OnInit {
   driver = null;
 
   editorPristine: boolean = true;
+
+  poolMemberOptions = {}; //{"DUT": ["Default", "With servers", "With SSDs"]};
 
   constructor(private testBedService: TestBedService,
               private modalService: NgbModal,
@@ -111,26 +114,6 @@ export class SuiteEditorComponent implements OnInit {
       return of(true);
     }));
 
-
-    /*this.route.params.subscribe(params => {
-      if (params["id"]) {
-        this.id = params["id"];
-      }
-      if (!this.id) {
-        this.suite = new Suite();
-        this.suite.type = this.mode;
-        this.refreshAll();
-
-      } else {
-        this.service.suite(this.id).subscribe(response => {
-          this.suite = response;
-          console.log(this.suite.constructor.name);
-          this.refreshAll();
-
-        });
-      }
-    });*/
-
     this.refreshAll();
 
   }
@@ -169,10 +152,13 @@ export class SuiteEditorComponent implements OnInit {
   }
 
   refreshAll() {
+    this.customTestBedSpecPopulationStatus = "Refreshing";
+
     this.driver.subscribe(response => {
       this.customTestBedSpecForm = this.prepareFormGroup();
       if (this.suite) {
         this.prepareCustomTestBedSpecValidated();
+        this.customTestBedSpecPopulationStatus = null;
       }
       let i = 0;
       this.customTestBedSpecForm.get('selectedTestBed').valueChanges.subscribe(selection => {
@@ -199,11 +185,12 @@ export class SuiteEditorComponent implements OnInit {
 
       })
 
+    }, error => {
+      this.customTestBedSpecPopulationStatus = null;
     });
   }
 
   prepareCustomTestBedSpecValidated() {
-    this.customTestBedValidated = null;
     let baseTestBed = null;
     let selectedTestBedValue = this.customTestBedSpecForm.get("selectedTestBed").value;
 
@@ -211,6 +198,7 @@ export class SuiteEditorComponent implements OnInit {
       baseTestBed = selectedTestBedValue.name;
     }
     if (baseTestBed) {
+      console.log("Started");
       this.customTestBedValidated = {};
       this.customTestBedValidated["base_test_bed"] = this.customTestBedSpecForm.get("selectedTestBed").value.name;
       let payload = {};
@@ -226,6 +214,17 @@ export class SuiteEditorComponent implements OnInit {
         if (readOut["numAssets"] > 0) {
           ref["num"] = readOut["numAssets"];
           totalAssets += readOut["numAssets"];
+
+        } else if (this.poolMemberOptions.hasOwnProperty(flatName)) {
+          let payloadDict = {};
+          let options = this.poolMemberOptions[flatName];
+          for (let i = 0; i < options.length; i++) {
+            let poolMemberSelectionKey = this._getPoolMemberSelectionKey(flatName, options[i]);
+            payloadDict[i] = {"num": readOut[poolMemberSelectionKey]};
+            totalAssets += readOut[poolMemberSelectionKey];
+          }
+
+          ref["pool_member_type_options"] = payloadDict;
         }
 
         let specificAssets = readOut["specificAssets"];
@@ -252,8 +251,21 @@ export class SuiteEditorComponent implements OnInit {
     }
   }
 
+  _getPoolMemberOptionsString(assetType, options) {
+    let s =``;
+    Object.keys(options).forEach(option => {
+      s += `${this.poolMemberOptions[this._flattenName(assetType)][option]}: ${options[option].num}, `;
+    });
+    s = s.replace(/, $/, "");
+    return s;
+  }
+
   _getAssetSelectionKey(flatName) {
     return `${flatName}Selection`;
+  }
+
+  _getPoolMemberSelectionKey(flatName, poolMemberType) {
+    return `${flatName}${poolMemberType}PoolMemberSelection`;
   }
 
   _getNumAssetsKey(flatName) {
@@ -262,6 +274,11 @@ export class SuiteEditorComponent implements OnInit {
 
   _getSpecificAssetsKey(flatName) {
     return `${flatName}SpecificAssets`;
+  }
+
+  _getPoolMemberTypeString(assetType, poolMemberType) {
+    let flatName = this._flattenName(assetType);
+    return this.poolMemberOptions[flatName][parseInt(poolMemberType)];
   }
 
   _getTestBedByName(name) {
@@ -288,6 +305,10 @@ export class SuiteEditorComponent implements OnInit {
 
     Object.keys(this.assetTypes).forEach(assetTypeKey => {
       let flatName = this._flattenName(assetTypeKey);
+      if (assetTypeKey === "DUT") {
+        this.poolMemberOptions[flatName] = ["Default", "With servers", "With SSDs"];
+      }
+
       this.flattenedAssetTypeNames.push(flatName);
       let assetTypeValue = this.assetTypes[assetTypeKey];
       this.flattenedAssetTypeNameMap[flatName] = {name: this.assetTypes[assetTypeKey], data: null};
@@ -296,6 +317,13 @@ export class SuiteEditorComponent implements OnInit {
       let specificAssetsKey = this._getSpecificAssetsKey(flatName);
 
 
+      if (this.poolMemberOptions.hasOwnProperty(flatName)) {
+        let options = this.poolMemberOptions[flatName];
+        options.forEach(option => {
+          let poolMemberSelectionKey = this._getPoolMemberSelectionKey(flatName, option);
+          group[poolMemberSelectionKey] = new FormControl(0);
+        });
+      }
 
       group[assetSelectionKey] = new FormControl(CustomAssetSelection.NUM);
       group[numAssetsKey] = new FormControl();
@@ -305,8 +333,12 @@ export class SuiteEditorComponent implements OnInit {
         if (assetRequest.hasOwnProperty(assetTypeValue)) {
           let num = null;
           let names = null;
+          let poolMemberType = null;
           if (assetRequest[assetTypeValue].hasOwnProperty("num")) {
             num = assetRequest[assetTypeValue]["num"];
+            /*if (assetRequest[assetTypeValue].hasOwnProperty('pool_member_type')) {
+              poolMemberType = assetRequest[assetTypeValue]["pool_member_type"];
+            }*/
           }
           if (assetRequest[assetTypeValue].hasOwnProperty("names")) {
             names = assetRequest[assetTypeValue]["names"]
@@ -314,6 +346,17 @@ export class SuiteEditorComponent implements OnInit {
           if (num !== null) {
             group[assetSelectionKey].setValue(CustomAssetSelection.NUM);
             group[numAssetsKey].setValue(num);
+
+
+          } else if (assetRequest[assetTypeValue].hasOwnProperty('pool_member_type_options')) {
+            group[assetSelectionKey].setValue(CustomAssetSelection.NUM);
+            let poolMemberTypeOptions = assetRequest[assetTypeValue]['pool_member_type_options'];
+              Object.keys(poolMemberTypeOptions).forEach(poolMemberType => {
+                let value = poolMemberTypeOptions[poolMemberType]["num"];
+                let poolMemberTypeKey = this._getPoolMemberSelectionKey(flatName, this.poolMemberOptions[flatName][parseInt(poolMemberType)]);
+                group[poolMemberTypeKey].setValue(value);
+              });
+            
           } else {
             group[assetSelectionKey].setValue(CustomAssetSelection.SPECIFIC);
             group[specificAssetsKey].setValue(names);
@@ -360,6 +403,16 @@ export class SuiteEditorComponent implements OnInit {
           if (specificAssets) {
             totalAssets += specificAssets.length;
           }
+
+          if (this.poolMemberOptions.hasOwnProperty(flatName)) {
+            let options = this.poolMemberOptions[flatName];
+            for (let i = 0; i < options.length; i++) {
+              let poolMemberSelectionKey = this._getPoolMemberSelectionKey(flatName, options[i]);
+              totalAssets += readOut[poolMemberSelectionKey];
+            }
+          }
+
+
         }
 
         if (!totalAssets) {
@@ -403,7 +456,6 @@ export class SuiteEditorComponent implements OnInit {
     //console.log(this.flattenedAssetTypeNameMap);
     //console.log(this.selectedCategories);
     console.log(this.suite);
-
   }
 
   _readOutCustomTestBedSpecForm(flatName) {
@@ -421,6 +473,15 @@ export class SuiteEditorComponent implements OnInit {
         numAssets = 0;
       }
       result["numAssets"] = numAssets;
+
+      if (this.poolMemberOptions.hasOwnProperty(flatName)) {
+        let options = this.poolMemberOptions[flatName];
+        options.forEach(option => {
+          let poolMemberSelectionKey = this._getPoolMemberSelectionKey(flatName, option);
+          result[poolMemberSelectionKey] = this.customTestBedSpecForm.get(poolMemberSelectionKey).value;
+        });
+      }
+
     } else {
       let specificAssets = this.customTestBedSpecForm.get(specificAssetsKey).value;
       result["specificAssets"] = specificAssets;
@@ -429,11 +490,12 @@ export class SuiteEditorComponent implements OnInit {
   }
 
   _hasKey(o, key) {
+    console.log(o);
     return Object.keys(o).indexOf(key) > -1;
   }
 
   onAddCustomTestBedSpec(content) {
-    this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title'}).result.then((dontCare) => {
+    this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title', size: 'lg', backdrop: 'static'}).result.then((dontCare) => {
       console.log("Ready to submit");
       let customTestBedSpec = {};
       this.prepareCustomTestBedSpecValidated();
@@ -445,7 +507,7 @@ export class SuiteEditorComponent implements OnInit {
   }
 
   onEditCustomTestBedSpec(content) {
-    this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title'}).result.then((dontCare) => {
+    this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title', size: 'lg', backdrop: 'static'}).result.then((dontCare) => {
       console.log("Ready to submit");
       let customTestBedSpec = {};
       this.prepareCustomTestBedSpecValidated();
@@ -536,4 +598,13 @@ export class SuiteEditorComponent implements OnInit {
   onDeleteSuiteEntry(index) {
     this.suite.entries.splice(index, 1);
   }
+
+  _hasPoolMemerOptions(flatName) {
+    return Object.keys(this.poolMemberOptions).indexOf(flatName) > -1;
+  }
+
+  _getPoolMemberOptions(flatName) {
+    console.log(this.poolMemberOptions[flatName]);
+  }
+
 }

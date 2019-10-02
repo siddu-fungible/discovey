@@ -4,6 +4,7 @@ import {Observable, of} from "rxjs";
 import {ApiService} from "../../../../services/api/api.service";
 import {LoggerService} from "../../../../services/logger/logger.service";
 import {PerformanceService} from "../../../performance.service";
+import {PagerService} from "../../../../services/pager/pager.service";
 
 @Component({
   selector: 'performance-show-report',
@@ -16,11 +17,26 @@ export class PerformanceShowReportWorkspaceComponent implements OnInit {
   @Input() subject: string = null;
   @Output() reportGenerated: EventEmitter<boolean> = new EventEmitter();
   jiraUrl: string = "http://jira/browse";
+  pager: any = {};
+  pagedItems: any[] = [];
+  showPagedItems: boolean = false;
 
   constructor(private apiService: ApiService, private loggerService: LoggerService, private performanceService: PerformanceService) {
   }
 
   ngOnInit() {
+  }
+
+  refreshPage(): void {
+    this.pagedItems = this.workspace.interested_metrics.slice(this.pager.startIndex, this.pager.endIndex + 1);
+    this.showPagedItems = true;
+  }
+
+  setPage(pager): void {
+    this.pager = pager;
+    setTimeout(() => {
+      this.refreshPage();
+    }, 1);
   }
 
   saveComments(): any {

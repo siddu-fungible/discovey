@@ -99,17 +99,32 @@ class TBConfigs:
                 if intf_dict.keys()[0] == intf:
                     return intf_dict[intf].get('mac_addr', None)
 
-    def get_interface_ipv4_addr(self, nu_or_hu, intf):
+    def get_interface_addr(self, nu_or_hu, intf, address_family='ipv4'):
         for namespace in self.get_namespaces(nu_or_hu):
             for intf_dict in self.get_interface_dicts(nu_or_hu, namespace):
                 if intf_dict.keys()[0] == intf:
-                    return intf_dict[intf].get('ipv4_addr', None)
+                    return intf_dict[intf].get('{}_addr'.format(address_family), None)
+
+    def get_interface_netmask(self, nu_or_hu, intf, address_family='ipv4'):
+        for namespace in self.get_namespaces(nu_or_hu):
+            for intf_dict in self.get_interface_dicts(nu_or_hu, namespace):
+                if intf_dict.keys()[0] == intf:
+                    if address_family == 'ipv4':
+                        return intf_dict[intf].get('ipv4_netmask', None)
+                    elif address_family == 'ipv6':
+                        return intf_dict[intf].get('ipv6_prefix_length', None)
+
+    def get_interface_ipv4_addr(self, nu_or_hu, intf):
+        return self.get_interface_addr(nu_or_hu, intf, address_family='ipv4')
 
     def get_interface_ipv4_netmask(self, nu_or_hu, intf):
-        for namespace in self.get_namespaces(nu_or_hu):
-            for intf_dict in self.get_interface_dicts(nu_or_hu, namespace):
-                if intf_dict.keys()[0] == intf:
-                    return intf_dict[intf].get('ipv4_netmask', None)
+        return self.get_interface_netmask(nu_or_hu, intf, address_family='ipv4')
+
+    def get_interface_ipv6_addr(self, nu_or_hu, intf):
+        return self.get_interface_addr(nu_or_hu, intf, address_family='ipv6')
+
+    def get_interface_ipv6_prefix_length(self, nu_or_hu, intf):
+        return self.get_interface_netmask(nu_or_hu, intf, address_family='ipv6')
 
     def get_interface_mtu(self, nu_or_hu, intf):
         for namespace in self.get_namespaces(nu_or_hu):
@@ -139,6 +154,12 @@ class TBConfigs:
         if ns is None:
             ns = 'default'
         return self.configs[nu_or_hu]['namespaces'][ns].get('routes', [])
+
+    def get_ipv6_routes(self, nu_or_hu, ns):
+        """Get IPv6 route configs."""
+        if ns is None:
+            ns = 'default'
+        return self.configs[nu_or_hu]['namespaces'][ns].get('ipv6_routes', [])
 
     def get_arps(self, nu_or_hu, ns):
         """Get arp entries.

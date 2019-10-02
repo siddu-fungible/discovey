@@ -37,6 +37,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
   allMetricIds: number[] = [];
   interestedMetrics: number[] = [];
   SUBJECT_BASE_STRING: string = "Performance status report - ";
+  TIMEZONE: string = "America/Los_Angeles";
 
   constructor(private apiService: ApiService, private commonService: CommonService, private loggerService: LoggerService,
               private route: ActivatedRoute, private router: Router, private location: Location, private title: Title, private performanceService: PerformanceService) {
@@ -125,7 +126,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
   fetchTodayAndYesterdayData(metric): any {
     this.setData(metric);
     let self = this;
-    let dateTime = new Date();
+    let dateTime = this.commonService.convertToTimezone(new Date(), this.TIMEZONE);
     return of(true).pipe(
       switchMap(response => {
         return this.fetchData(metric, dateTime, "today");
@@ -168,7 +169,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
         for (let dataSet of metric["data"]) {
           if (dataSet["name"] == oneData["name"]) {
             dataSet[key] = oneData["value"];
-            dataSet[key + "Date"] = this.commonService.getPrettyLocalizeTime(oneData["date_time"]);
+            dataSet[key + "Date"] = this.commonService.getPrettyPstTime(oneData["date_time"]);
             dataSet["unit"] = oneData["unit"];
           }
         }
@@ -242,16 +243,23 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
   }
 
   fetchHistoricalData(metric): any {
-    return this.apiService.get("/api/v1/performance/metrics_data?metric_id=" + metric["metric_id"] + "&order_by=-input_date_time&count=5").pipe(switchMap(response => {
+    return this.apiService.get("/api/v1/performance/metrics_data?metric_id=" + metric["metric_id"] + "&order_by=-input_date_time&count=10").pipe(switchMap(response => {
       let data = response.data;
       for (let dataSet of metric["data"]) {
         dataSet["history"] = [];
+        let dateTimeSet = new Set();
         for (let oneData of data) {
           if (dataSet["name"] == oneData["name"]) {
-            let hData = {};
-            hData["date"] = this.commonService.getPrettyLocalizeTime(oneData["date_time"]);
-            hData["value"] = oneData["value"];
-            dataSet["history"].push(hData);
+            let present = this.addToSet(oneData["date_time"], dateTimeSet);
+            if (!present) {
+              let hData = {};
+              hData["date"] = this.commonService.getPrettyPstTime(oneData["date_time"]);
+              hData["value"] = oneData["value"];
+              dataSet["history"].push(hData);
+            }
+            if (dataSet["history"].length > 4) {
+              break;
+            }
           }
         }
         dataSet["rows"] = dataSet["history"].length + 1;
@@ -269,6 +277,18 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
       }
       return of(true);
     }));
+  }
+
+  addToSet(dateTime, dateTimeSet): boolean {
+    let dateTimeObj = this.commonService.convertToTimezone(dateTime, this.TIMEZONE);
+    let dateTimeStr = String(dateTimeObj.getMonth() + 1) + "/" + String(dateTimeObj.getDate()) + "/" + String(dateTimeObj.getFullYear());
+    let present = false;
+    if (dateTimeSet.has(dateTimeStr)) {
+      present = true;
+    } else {
+      dateTimeSet.add(dateTimeStr)
+    }
+    return present
   }
 
   generateReport(): void {
@@ -293,7 +313,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
   }
 
   setSubject(): void {
-    let t = new Date();
+    let t = this.commonService.convertToTimezone(new Date(), this.TIMEZONE);
     let dateString = this.commonService.getShortDate(t);
     this.subject = this.SUBJECT_BASE_STRING + dateString;
   }

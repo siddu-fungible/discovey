@@ -109,9 +109,18 @@ class TopologyHelper:
                 if "start_mode" in dut_info:
                     start_mode = dut_info["start_mode"]
 
+                pool_member_type = Dut.PoolMemberType.POOL_MEMBER_TYPE_DEFAULT
+                if "pool_member_type" in dut_info:
+                    pool_member_type = dut_info["pool_member_type"]
+
                 # Create DUT object
                 dut_mode = Dut.MODE_REAL if not is_mode_simulation else Dut.MODE_SIMULATION
-                dut_obj = Dut(type=dut_type, index=dut_index, spec=dut_info, start_mode=start_mode, mode=dut_mode)
+                dut_obj = Dut(type=dut_type,
+                              index=dut_index,
+                              spec=dut_info,
+                              start_mode=start_mode,
+                              mode=dut_mode,
+                              pool_member_type=pool_member_type)
                 if "dut" in dut_info:
                     dut_obj.set_name(name=dut_info["dut"])
 
@@ -397,19 +406,43 @@ class TopologyHelper:
             fun_test.simple_assert(not f1_bringup_all_duts_timer.is_expired() or simulation_mode_found, "F1 bringup all DUTS not expired")
 
             for dut_index, dut_obj in duts.items():
-                for f1_index, interface_info in dut_obj.fpg_interfaces.iteritems():
-                    for interface_index, interface_obj in interface_info.items():
-                        fun_test.debug("Setting up DUT F1: {} FPG interface {}".format(f1_index, interface_index))
+                if not simulation_mode_found:
+                    for f1_index, interface_info in dut_obj.fpg_interfaces.iteritems():
+                        for interface_index, interface_obj in interface_info.items():
+                            fun_test.debug("Setting up DUT F1: {} FPG interface {}".format(f1_index, interface_index))
+                            peer_info = interface_obj.peer_info
+                            # fun_test.simple_assert(peer_info, "Peer info")
+                            if peer_info:
+
+                                if peer_info.type == peer_info.END_POINT_TYPE_BARE_METAL:
+                                    instance = self.allocate_bare_metal(bare_metal_end_point=peer_info,
+                                                                        orchestrator_obj=orchestrator)
+                                    fun_test.simple_assert(instance, "Bare-metal instance")
+
+                                elif peer_info.type == peer_info.END_POINT_TYPE_HYPERVISOR:
+                                    self.allocate_hypervisor(hypervisor_end_point=peer_info,
+                                                             orchestrator_obj=orchestrator)
+
+                                elif peer_info.type == peer_info.END_POINT_TYPE_HYPERVISOR_QEMU_COLOCATED:
+                                    self.allocate_hypervisor(hypervisor_end_point=peer_info,
+                                                             orchestrator_obj=orchestrator)
+                                elif peer_info.type == peer_info.END_POINT_TYPE_DUT:
+                                    peer_dut_end_point = peer_info
+                                    peer_dut_instance = self.expanded_topology.get_dut_instance(peer_dut_end_point.dut_index)  # Should be changed to allocate_dut
+                                    peer_info.set_instance(peer_dut_instance)
+
+                                elif peer_info.type == peer_info.END_POINT_TYPE_SWITCH:
+                                    peer_instance = self.expanded_topology.get_switch_instance(peer_info.name)
+                                    peer_info.set_instance(peer_instance)
+                elif simulation_mode_found:
+                    for f1_index, interface_obj in dut_obj.interfaces.iteritems():
+
+                        fun_test.debug("Setting up DUT F1: {} interface {}".format(f1_index, interface_obj.index))
                         peer_info = interface_obj.peer_info
                         # fun_test.simple_assert(peer_info, "Peer info")
                         if peer_info:
 
-                            if peer_info.type == peer_info.END_POINT_TYPE_BARE_METAL:
-                                instance = self.allocate_bare_metal(bare_metal_end_point=peer_info,
-                                                                    orchestrator_obj=orchestrator)
-                                fun_test.simple_assert(instance, "Bare-metal instance")
-
-                            elif peer_info.type == peer_info.END_POINT_TYPE_HYPERVISOR:
+                            if peer_info.type == peer_info.END_POINT_TYPE_HYPERVISOR:
                                 self.allocate_hypervisor(hypervisor_end_point=peer_info,
                                                          orchestrator_obj=orchestrator)
 
@@ -418,12 +451,10 @@ class TopologyHelper:
                                                          orchestrator_obj=orchestrator)
                             elif peer_info.type == peer_info.END_POINT_TYPE_DUT:
                                 peer_dut_end_point = peer_info
-                                peer_dut_instance = self.expanded_topology.get_dut_instance(peer_dut_end_point.dut_index)  # Should be changed to allocate_dut
+                                peer_dut_instance = self.expanded_topology.get_dut_instance(
+                                    peer_dut_end_point.dut_index)  # Should be changed to allocate_dut
                                 peer_info.set_instance(peer_dut_instance)
 
-                            elif peer_info.type == peer_info.END_POINT_TYPE_SWITCH:
-                                peer_instance = self.expanded_topology.get_switch_instance(peer_info.name)
-                                peer_info.set_instance(peer_instance)
 
             for dut_index, dut_obj in duts.items():
                 for f1_index, interface_info in dut_obj.bond_interfaces.iteritems():

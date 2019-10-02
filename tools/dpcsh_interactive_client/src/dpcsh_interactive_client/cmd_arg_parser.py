@@ -428,15 +428,26 @@ base_get_subparsers = base_get_parser.add_subparsers(title="subcommands", help="
 get_nu_parser = base_get_subparsers.add_parser('nu', help="Get NU config")
 get_hnu_parser = base_get_subparsers.add_parser('hnu', help="Get HNU config")
 get_system_parser = base_get_subparsers.add_parser('system', help="system log commands")
+get_bam_parser = base_get_subparsers.add_parser('bam', help="get bam commands")
 
 # Get NU sub commands
 get_nu_subparsers = get_nu_parser.add_subparsers(title='subcommands', help="")
 get_nu_port_parser = get_nu_subparsers.add_parser('port', help="NU Port commands")
 get_nu_qos_parser = get_nu_subparsers.add_parser('qos', help="NU QoS commands")
 get_nu_sample_parser = get_nu_subparsers.add_parser('sample', help="Sample commands")
+get_nu_config_parser = get_nu_subparsers.add_parser("configs",help="Config commands")
 
 get_hnu_subparsers = get_hnu_parser.add_subparsers(title='subcommands', help="")
 get_hnu_qos_parser = get_hnu_subparsers.add_parser('qos', help="HNU QoS commands")
+
+get_bam_parser.add_argument("configs")
+
+#get_bam_parser.add_parser("usage", help="print bam usage", default=None)
+#get_bam_parser.add_argument("pool_config", help="print bam pool config")
+
+get_nu_config_parser.add_argument("config_type",
+                                   help="Value for config_type can be: \n1. pool_config\n2. ncv_config\n3. per_pool_flow_control\n4. global_flow_control",
+                                   default=None)
 # -----------------------------------------------------------------------------------------------
 
 # Get NU Port sub commands
@@ -1097,6 +1108,8 @@ peek_dam_resource_stats_parser = peek_resource_stats_parsers.add_parser('dam', h
 peek_dam_resource_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
 
 peek_bam_resource_stats_parser = peek_resource_stats_parsers.add_parser('bam', help='Peek bam resource stats')
+peek_bam_resource_stats_parser.add_argument('-cid', help="Specify the cluster id", default=None)
+peek_bam_resource_stats_parser.add_argument('-diff', help="Show diff for percent and color", default=None)
 peek_bam_resource_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
 
 # Eqm stats
@@ -1127,9 +1140,16 @@ peek_malloc_agent_non_coh_stats_parser.add_argument('-grep', help="Grep regex pa
 
 
 # Storage Peek Commands
+peek_storage_parser = base_peek_subparsers.add_parser('storage', help="Peek storage")
+peek_storage_parsers = peek_storage_parser.add_subparsers(title="subcommands", help="")
+
+peek_storage_vol_parser = peek_storage_parsers.add_parser('volumes', help="Shows volumes attached to DUT")
+peek_storage_vol_parser.add_argument('-grep', help="Grep regex pattern", default=None)
+
 # Peek Stats SSDs Connected
 peek_stats_ssds_parser = peek_stats_parsers.add_parser('ssds', help="Shows the SSDs connected")
-peek_stats_ssds_parser.add_argument('-grep', help="Grep regex pattern (Grep for SSD ID)", default=None)
+peek_stats_ssds_parser.add_argument('-ssd_ids', help="List of ssd ids. specify as follows: -ssd_ids 6 7 8", default=[], nargs='+')
+peek_stats_ssds_parser.add_argument('-grep', help="Grep regex pattern (Grep for filter key)", default=None)
 
 # Peek BLT volume stats
 peek_stats_blt_vol_parser = peek_stats_parsers.add_parser('blt', help="Peek BLT volume stats")
@@ -1150,6 +1170,11 @@ peek_stats_ca_parser.add_argument('-grep', help="Grep regex pattern", default=No
 # Peek stats ddr
 peek_stats_ddr_parser = peek_stats_parsers.add_parser('ddr', help="Peek ddr stats")
 peek_stats_ddr_parser.add_argument('-grep', help="Grep regex pattern", default=None)
+
+peek_stats_rdma_parser = peek_stats_parsers.add_parser('rdma', help='peek rdma stats')
+peek_stats_rdma_parser.add_argument("hu_id", help="Hu id to look for", type=str)
+peek_stats_rdma_parser.add_argument("-qpn", help="Print data only for particular qpn", default=None)
+peek_stats_rdma_parser.add_argument('-grep', help="Grep for specific flow", default=None)
 
 # ---------------------------------------------------------------------------------------------------
 # show commands
@@ -1197,8 +1222,14 @@ flow_list_parser = base_flow_subparsers.add_parser('list', help='List flows')
 flow_list_parser.add_argument("-pp", help="Pretty Print output", default=False)
 flow_list_parser.add_argument("-tx", help="Only prints tx data", default=None)
 flow_list_parser.add_argument("-rx", help="Only prints rx data", default=None)
-flow_list_parser.add_argument("-hu_id", help="hu_id in x.x.x format", type=str, default=None)
+flow_list_parser.add_argument("-hu_id", help="hu_id in x format", type=str, default=None)
+flow_list_parser.add_argument("-hcf_id", help="hu_id.ctrlr.fn_id in x.x.x format", type=str, default=None)
 flow_list_parser.add_argument('-grep', help="Grep for specific flow", default=None)
+
+flow_list_rdma_parser = base_flow_subparsers.add_parser('list_rdma', help='list rdma flows')
+flow_list_rdma_parser.add_argument("hu_id", help="Hu id to look for", type=str)
+flow_list_rdma_parser.add_argument("-qpn", help="Print data only for particular qpn", default=None)
+flow_list_rdma_parser.add_argument('-grep', help="Grep for specific flow", default=None)
 
 # Flow blocked
 flow_blocked_parser = base_flow_subparsers.add_parser('blocked', help='blocked flows')

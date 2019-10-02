@@ -18,6 +18,7 @@ export enum SelectMode {
 
 export class PerformanceService {
   buildInfo: any = null;
+  TIMEZONE: string = "America/Los_Angeles";
 
   constructor(private apiService: ApiService, private commonService: CommonService) {
   }
@@ -90,11 +91,7 @@ export class PerformanceService {
       if (this.buildInfo) {
         return of(this.buildInfo)
       } else {
-        this.buildInfo = {};
-        Object.keys(response.data).forEach((key) => {
-          let localizedKey = this.commonService.convertToLocalTimezone(key);
-          this.buildInfo[this.commonService.addLeadingZeroesToDate(localizedKey)] = response.data[key];
-        });
+        this.buildInfo = response.data;
         return of(this.buildInfo);
       }
     }));

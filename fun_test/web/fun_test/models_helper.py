@@ -132,7 +132,9 @@ def get_test_case_details(script_path, test_case_id):
     summary = "unknown"
 
     try:
-        if test_case_id:
+        if int(test_case_id) == 999:
+            summary = "Script cleanup"
+        elif test_case_id:
             summary = TestCaseInfo.get_summary(test_case_id=test_case_id, script_path=script_path)
         else:
             summary = "Script setup"
@@ -358,10 +360,12 @@ def add_test_case_execution(test_case_id,
     return te
 
 
-def update_test_case_execution(test_case_execution_id, suite_execution_id, result):
+def update_test_case_execution(test_case_execution_id, suite_execution_id, result, started_time=None):
     te = TestCaseExecution.objects.get(execution_id=test_case_execution_id,
                                        suite_execution_id=suite_execution_id)
     te.result = result
+    if started_time:
+        te.started_time = started_time
     te.save()
     te.save()
     return te

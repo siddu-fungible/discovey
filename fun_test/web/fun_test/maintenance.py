@@ -173,10 +173,10 @@ if __name__ == "__main_s1_teramarks__":
                 f1_metrics = metric["children"]
                 for f1_metric in f1_metrics:
                     if f1_metric["label"] == "TeraMarks":
-                        funos_metrics = f1_metric
+                        teramark_metrics = f1_metric
                         break
 
-        tera_marks = funos_metrics["children"]
+        tera_marks = teramark_metrics["children"]
         for tera_mark in tera_marks:
             tera_mark_child_name = tera_mark["name"]
             print(tera_mark_child_name)
@@ -1250,7 +1250,7 @@ if __name__ == "__main_inspur_fix__":
             chart.save()
             print "fixed the chart: {}, {}".format(chart.chart_name, chart.internal_chart_name)
 
-if __name__ == "__main__":
+if __name__ == "__main__apple":
     internal_chart_names = ["apple_rand_read_mrsw_tcp_output_bandwidth", "apple_rand_read_mrsw_tcp_output_latency", "apple_rand_read_mrsw_tcp_output_iops"]
     for internal_chart_name in internal_chart_names:
         chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
@@ -1259,5 +1259,302 @@ if __name__ == "__main__":
         mmt.save()
 
 
+if __name__ == "__main_inspur_iodepth_96__":
+    # underscore problem
+    metric_ids = [318, 319]
+    for metric_id in metric_ids:
+        # changing the input_metric_name in the filter
+        chart = MetricChart.objects.get(metric_id=metric_id)
+        data_sets = json.loads(chart.data_sets)
+        metric_name = data_sets[0]['inputs']['input_metric_name']
+        data_sets[0]['inputs']['input_metric_name'] = metric_name.replace(' ', '_')
+        print(data_sets)
+        chart.data_sets = json.dumps(data_sets)
+        chart.save()
+
+        # changing the input_metric_name in the data base
+        metric_model_name = chart.metric_model_name
+        print (metric_model_name)
+        model_data = eval(metric_model_name).objects.all()
+        for each_data in model_data:
+            input_metric_name = each_data.input_metric_name
+            each_data.input_metric_name = input_metric_name.replace(' ', '_')
+            each_data.save()
 
 
+    # Inspur charts added vol 4,8
+
+    metric_ids = [803, 804, 805, 806, 807, 808, 809, 810, 811, 812]
+    for metric_id in metric_ids:
+        chart = MetricChart.objects.get(metric_id=metric_id)
+        data_sets = json.loads(chart.data_sets)
+        new_data_sets=[]
+        for each_data in data_sets:
+            for vol in [4, 8]:
+                inputs = each_data['inputs'].copy()
+                output = each_data['output'].copy()
+                name = each_data['name']
+                new_each_data = {}
+
+                input_fio_job_name = inputs['input_fio_job_name']
+                iodepth = re.search(r'write_(\d+)', input_fio_job_name).group(1)
+                inputs['input_fio_job_name'] = input_fio_job_name.replace('write_{}'.format(iodepth),
+                                                                          "write_iodepth_{}_vol_{}".format(iodepth, vol))
+                new_name = re.sub(r'\d+ vol', "{} vol".format(vol), name)
+                output["reference"] = -1
+                new_each_data['inputs'] = inputs
+                new_each_data['name'] = new_name
+                new_each_data['output'] = output
+                # print (new_each_data)
+                new_data_sets.append(new_each_data.copy())
+        new_data_sets[2], new_data_sets[1] = new_data_sets[1], new_data_sets[2]
+        data_sets += new_data_sets
+        for i in data_sets:
+            print i
+        print ("next")
+        chart.data_sets = json.dumps(data_sets)
+        chart.save()
+
+    # Inspur charts iodepth 96
+
+    internal_chart_name = "inspur_rand_read_write_qd96_8k_block_output_iops"
+    metric_model_name = "BltVolumePerformance"
+    description = "TBD"
+    owner_info = "Ravi Hulle (ravi.hulle@fungible.com)"
+    source = "https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/storage/" \
+             "ec_inspur_fs_teramark_multivolume.py"
+    positive = True
+    y1_axis_title = PerfUnit.UNIT_OPS
+    platform = FunPlatform.F1
+    base_line_date = datetime(year=2019, month=5, day=15, minute=0, hour=0, second=0)
+    chart_name = 'IOPS, QDepth=96'
+    data_sets = []
+    for vol in [4, 8]:
+        input_fio_job_name = "inspur_8k_random_read_write_iodepth_96_vol_{}".format(vol)
+        inputs = {
+            "input_platform": platform,
+            "input_fio_job_name": input_fio_job_name
+        }
+        for operation in ["read", "write"]:
+            one_data_set = {}
+            name = "{}({} vols)".format(operation, vol)
+            output_name = "output_{}_iops".format(operation)
+            output = {
+                "name": output_name,
+                "unit": y1_axis_title,
+                "min": 0,
+                "max": -1,
+                "expected": -1,
+                "reference": -1
+            }
+            one_data_set["name"] = name
+            one_data_set["inputs"] = inputs
+            one_data_set["output"] = output
+            data_sets.append(one_data_set.copy())
+
+    iops_charts = ml.create_leaf(chart_name=chart_name,
+                                 internal_chart_name=internal_chart_name,
+                                 data_sets=data_sets,
+                                 leaf=True,
+                                 description=description,
+                                 owner_info=owner_info,
+                                 source=source,
+                                 positive=positive,
+                                 y1_axis_title=y1_axis_title,
+                                 visualization_unit=y1_axis_title,
+                                 metric_model_name=metric_model_name,
+                                 base_line_date=base_line_date,
+                                 work_in_progress=False,
+                                 children=[],
+                                 jira_ids=[],
+                                 platform=platform,
+                                 peer_ids=[],
+                                 creator=TEAM_REGRESSION_EMAIL,
+                                 workspace_ids=[])
+
+    final_dict = ml.get_dict(chart=iops_charts)
+    print json.dumps(final_dict, indent=4)
+
+if __name__ == "__main__trailingrst":
+    metric_ids = [273, 287, 279, 1126, 1127, 1128]
+    for metric_id in metric_ids:
+        chart = MetricChart.objects.get(metric_id=metric_id)
+        data_sets = chart.get_data_sets()
+        data_set = data_sets[0]
+        data_set["name"] = "trailingrst_jpg"
+        data_set["inputs"]["input_image"] = "trailingrst_jpg"
+        data_set["output"]["expected"] = -1
+        data_set["output"]["reference"] = -1
+        data_sets = chart.get_data_sets()
+        data_sets.append(data_set)
+        chart.data_sets = json.dumps(data_sets)
+        chart.save()
+    print "set trailingrst dataset for jpeg metrics"
+
+if __name__ == "__main__pke_tls":
+    with open(METRICS_BASE_DATA_FILE, "r") as f:
+        metrics = json.load(f)
+        for metric in metrics:
+            if metric["label"] == "F1":
+                f1_metrics = metric["children"]
+                for f1_metric in f1_metrics:
+                    if f1_metric["label"] == "TeraMarks":
+                        teramark_metrics = f1_metric
+                    if f1_metric["label"] == "Security":
+                        security_metrics = f1_metric
+
+    tera_marks = teramark_metrics["children"]
+    for tera_mark in tera_marks:
+        if tera_mark["name"] == "TeraMark Security":
+            for children in tera_mark["children"]:
+                if children["name"] == "TeraMark PKE":
+                    result = set_internal_name(children)
+                    print json.dumps(result, indent=4)
+
+    security_childrens = security_metrics["children"]
+    for security_children in security_childrens:
+        if security_children["name"] == "PKE TLS":
+            result = set_internal_name(security_children)
+            print json.dumps(result, indent=4)
+
+if __name__ == "__main_dfa_regex__":
+    with open(METRICS_BASE_DATA_FILE, "r") as f:
+        metrics = json.load(f)
+        for metric in metrics:
+            if metric["label"] == "F1":
+                f1_metrics = metric["children"]
+                for f1_metric in f1_metrics:
+                    if f1_metric["label"] == "TeraMarks":
+                        teramark_metrics = f1_metric
+
+    tera_mark_childrens = teramark_metrics["children"]
+    for tera_mark_children in tera_mark_childrens:
+        if tera_mark_children["name"] == "Regex":
+            result = set_internal_name(tera_mark_children)
+            print json.dumps(result, indent=4)
+
+if __name__ == "__main_remove_milestones__":
+    mmt = MileStoneMarkers.objects.all()
+    for mm in mmt:
+        if "Tape-out" in mm.milestone_name or "F1" in mm.milestone_name:
+            mm.delete()
+
+
+if __name__ == "__main__alibaba":
+    metric_ids = [900, 901]
+    for metric_id in metric_ids:
+        chart = MetricChart.objects.get(metric_id=metric_id)
+        children = chart.get_children()
+        for child in children:
+            child_chart = MetricChart.objects.get(metric_id=int(child))
+            data_sets = child_chart.get_data_sets()
+            for data_set in data_sets:
+                data_set["inputs"]["input_num_ssd"] = 1
+            child_chart.data_sets = json.dumps(data_sets)
+            child_chart.save()
+
+    read_copy_chart = MetricChart.objects.get(metric_id=890)
+    write_copy_chart = MetricChart.objects.get(metric_id=895)
+    read_iops_chart = MetricChart.objects.get(metric_id=888)
+    write_iops_chart = MetricChart.objects.get(metric_id=889)
+    operations = ["Random Read", "Random Write"]
+    qdepths = OrderedDict([(1, [1, 1]), (32, [1,32]), (64, [1, 64]), (128, [2, 64]), (256, [4, 64]), (1024, [16, 64])])
+    owner_info = "Divya Krishnankutty (divya.krishnankutty@fungible.com)"
+    source = "https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/storage/pocs/alibaba/alibaba_raw_multi_vol_pcie_via_vm.py"
+    base_line_date = datetime(year=2019, month=9, day=25, minute=0, hour=0, second=0)
+    for operation in operations:
+        internal_chart_name = "alibaba_bmv_storage_local_ssd_4_" + operation.replace(" ", "_").lower()
+        root_chart = ml.create_container(chart_name=operation, internal_chart_name=internal_chart_name, platform=FunPlatform.F1,
+                                         owner_info=owner_info,
+                                         source=source, base_line_date=base_line_date, workspace_ids=[])
+        iops_data_sets = []
+        if "Read" in operation:
+            iops_internal_chart_name = read_iops_chart.internal_chart_name.replace("ssd", "ssd_4")
+            iops_description = read_iops_chart.description
+            op = "randread"
+            output = "output_read_iops"
+        else:
+            iops_internal_chart_name = write_iops_chart.internal_chart_name.replace("ssd", "ssd_4")
+            iops_description = write_iops_chart.description
+            op = "randwrite"
+            output = "output_write_iops"
+
+        for qdepth in qdepths:
+            one_data_set = {}
+            one_data_set["name"] = str(qdepth)
+            one_data_set["inputs"] = {}
+            one_data_set["inputs"]["input_num_ssd"] = 4
+            one_data_set["inputs"]["input_platform"] = FunPlatform.F1
+            one_data_set["inputs"]["input_test"] = op
+            one_data_set["inputs"]["input_num_threads"] = qdepths[qdepth][0]
+            one_data_set["inputs"]["input_io_depth"] = qdepths[qdepth][1]
+            one_data_set["output"] = {"name": output, "min": 0, "max": -1, "expected": -1, "reference": -1,
+                                      "unit": PerfUnit.UNIT_OPS}
+            iops_data_sets.append(one_data_set)
+        iops_chart = ml.create_leaf(chart_name="IOPS", internal_chart_name=iops_internal_chart_name,
+                                    data_sets=iops_data_sets, leaf=True,
+                                    description=iops_description,
+                                    owner_info=owner_info, source=source,
+                                    positive=True, y1_axis_title=PerfUnit.UNIT_OPS,
+                                    visualization_unit=PerfUnit.UNIT_OPS,
+                                    metric_model_name="AlibabaPerformance",
+                                    base_line_date=base_line_date,
+                                    work_in_progress=False, children=[], jira_ids=[], platform=FunPlatform.F1,
+                                    peer_ids=[], creator=TEAM_REGRESSION_EMAIL,
+                                    workspace_ids=[])
+        iops_chart.fix_children_weights()
+        root_chart.add_child(child_id=iops_chart.metric_id)
+        for qdepth in qdepths:
+            chart_name = "Latency, Qdepth=" + str(qdepth)
+            internal_chart_name = "bmv_storage_local_ssd_4_" + operation.replace(" ", "_").lower() + "_qd" + str(
+                qdepth) + "_latency"
+            if "read" in internal_chart_name:
+                data_sets = read_copy_chart.get_data_sets()
+                description = read_copy_chart.description
+                y1_axis_title = read_copy_chart.y1_axis_title
+            else:
+                data_sets = write_copy_chart.get_data_sets()
+                description = write_copy_chart.description
+                y1_axis_title = write_copy_chart.y1_axis_title
+            for data_set in data_sets:
+                data_set["inputs"]["input_num_ssd"] = 4
+                data_set["inputs"]["input_num_threads"] = qdepths[qdepth][0]
+                data_set["inputs"]["input_io_depth"] = qdepths[qdepth][1]
+                data_set["output"]["expected"] = -1
+                data_set["output"]["reference"] = -1
+            latency_chart = ml.create_leaf(chart_name=chart_name, internal_chart_name=internal_chart_name,
+                                           data_sets=data_sets, leaf=True,
+                                        description=description,
+                                        owner_info=owner_info, source=source,
+                                        positive=False, y1_axis_title=y1_axis_title,
+                                        visualization_unit=y1_axis_title,
+                                        metric_model_name="AlibabaPerformance",
+                                        base_line_date=base_line_date,
+                                        work_in_progress=False, children=[], jira_ids=[], platform=FunPlatform.F1,
+                                        peer_ids=[], creator=TEAM_REGRESSION_EMAIL,
+                                        workspace_ids=[])
+            latency_chart.fix_children_weights()
+            root_chart.add_child(child_id=latency_chart.metric_id)
+        root_chart.fix_children_weights()
+        final_dict = ml.get_dict(chart=root_chart)
+        print json.dumps(final_dict)
+
+
+if __name__ == "__main__":
+    with open(METRICS_BASE_DATA_FILE, "r") as f:
+        metrics = json.load(f)
+        for metric in metrics:
+            if metric["label"] == "F1":
+                f1_metrics = metric["children"]
+                for f1_metric in f1_metrics:
+                    if f1_metric["label"] == "TeraMarks":
+                        teramark_metrics = f1_metric
+
+    tera_mark_childrens = teramark_metrics["children"]
+    for tera_mark_children in tera_mark_childrens:
+        if tera_mark_children["label"] == "Security":
+            security_childrens = tera_mark_children["children"]
+            for security_children in security_childrens:
+                if security_children["name"] == "Crypto raw throughput":
+                    result = set_internal_name(security_children)
+                    print json.dumps(result, indent=4)

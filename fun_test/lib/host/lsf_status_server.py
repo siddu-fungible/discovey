@@ -135,8 +135,12 @@ class LsfStatusServer:
         url = "{}/job/{}?format=json".format(self.base_url, job_id)
         return self._get(url=url)
 
-    def get_job_text_by_path(self, job_id, log_path):
+    def get_job_text_by_human_path(self, job_id, log_path):
         url = "{}/job/{}/human_file/{}".format(self.base_url, job_id, log_path)
+        return self._get(url=url)
+
+    def get_job_text_by_raw_path(self, job_id, log_path):
+        url = "{}/job/{}/raw_file/{}".format(self.base_url, job_id, log_path)
         return self._get(url=url)
 
     def get_completion_date(self, job_info):
@@ -168,7 +172,7 @@ class LsfStatusServer:
                             if file_name in log_info['basename']:
                                 log_path = log_info['basename']
                         if log_path:
-                            result = self.get_job_text_by_path(job_id=job_id, log_path=log_path)
+                            result = self.get_job_text_by_raw_path(job_id=job_id, log_path=log_path)
                             break
         except Exception as ex:
             fun_test.log("Actual response:" + response)

@@ -171,6 +171,7 @@ class QueueWorker(Thread):
     @debug_function
     def abort_job(self, queued_job, reason):
         self.shutdown_reason = ShutdownReason.ABORTED
+        scheduler_logger.exception("Queued Job ID: {} exception, Reason: {}".format(queued_job.job_id, reason))
         suite_execution = models_helper.get_suite_execution(suite_execution_id=queued_job.job_id)
         models_helper.update_suite_execution(suite_execution_id=queued_job.job_id,
                                              result=RESULTS["ABORTED"],
@@ -268,6 +269,9 @@ class QueueWorker(Thread):
                             queued_job.save()
                     except Exception as ex:
                         reason = "Exception: {}: {}".format(str(ex), traceback.format_exc())
+                        scheduler_logger.exception(
+                            "Queued Job ID: {} exception, Reason: {}".format(queued_job.job_id, reason))
+
                         self.abort_job(queued_job=queued_job, reason=reason)
                 time.sleep(5)
 
@@ -700,8 +704,8 @@ class SuiteWorker(Thread):
 
         console_log_file_name = self.get_job_dir() + "/" + get_flat_console_log_file_name("/{}".format(script_path), script_item_index)
         suite = self.get_suite()
-        if suite and suite.type == "TASK":
-            console_log_file_name = self.get_job_dir() + "/" + os.path.basename(script_path) + ".task.log.txt"
+        # if suite and suite.type == "TASK":
+        #    console_log_file_name = self.get_job_dir() + "/" + os.path.basename(script_path) + ".task.log.txt"
 
         try:
 
@@ -1033,6 +1037,25 @@ def clear_out_old_jobs():
     for old_job in old_jobs:
         old_job.state = JobStatusType.ABORTED
         old_job.save()
+
+    if is_development_mode():
+        old_jobs = models_helper.get_suite_executions_by_filter(state=JobStatusType.AUTO_SCHEDULED)
+        for old_job in old_jobs:
+            old_job.delete()
+
+        old_jobs = models_helper.get_suite_executions_by_filter(state=JobStatusType.QUEUED)
+        for old_job in old_jobs:
+            old_job.delete()
+
+        old_jobs = models_helper.get_suite_executions_by_filter(state=JobStatusType.SCHEDULED)
+        for old_job in old_jobs:
+            old_job.delete()
+
+        old_jobs = models_helper.get_suite_executions_by_filter(state=JobStatusType.IN_PROGRESS)
+        for old_job in old_jobs:
+            old_job.delete()
+
+        JobQueue.objects.all().delete()
 
 @debug_function
 def cleanup_unused_assets():

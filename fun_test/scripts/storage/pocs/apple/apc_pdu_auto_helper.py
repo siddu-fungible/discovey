@@ -1,21 +1,89 @@
 from lib.system.fun_test import *
 from collections import OrderedDict
 import re
+from lib.host.linux import Linux
+import wrapper
+HOSTS_ASSET = ASSET_DIR + "/hosts.json"
+hosts = fun_test.parse_file_to_json(file_name=HOSTS_ASSET)
+
+
+def check_host_connected(hosts_list):
+    for host_name in hosts_list:
+        result = False
+        host_handle = get_host_handle(host_name)
+        output_lsblk = host_handle.lsblk()
+        for key in output_lsblk:
+            if "nvme" in key:
+                result = True
+                break
+        fun_test.test_assert(result, "{} host is connected".format(host_name))
+
+
+def run_traffic(host_name, target_ip, nqn, filename):
+    result = False
+    host_handle = get_host_handle(host_name)
+    result = host_handle.nvme_connect(target_ip=target_ip, nvme_subsystem=nqn)
+    fun_test.test_assert(result, "{} connected to {}".format(nqn, target_ip))
+    # Run this in background if needed
+    fio_out = host_handle.pcie_fio(filename=filename, numjobs=16, iodepth=16, rw="randrw", direct=1,
+                                   ioengine="libaio", bs="4k", size="512g", name="fio_randrw", runtime=60)
+    if not fio_out:
+        result = True
+    return result
+
+
+def check_traffic(hosts_list):
+    for host_name in hosts_list:
+        host_handle = get_host_handle(host_name)
+        device = "/dev/nvme0n1"
+        output_iostat = host_handle.iostat(device=device, interval=2, count=5, background=False)
+        device_name = "nvme0n1"
+        result = wrapper.ensure_io_running(device_name, output_iostat, host_name)
+
+
+def disconnect_vol(host_name, nqn):
+    result = False
+    host_handle = get_host_handle(host_name)
+    result = host_handle.sudo_command("nvme disconnect -n {}".format(nqn))
+    fun_test.test_assert("Host {} disconnected from {}".format(host_name, nqn))
+
+
+def check_docker(come_handle, expected=3):
+    output = come_handle.command("docker ps -a")
+    num_docker = wrapper.docker_get_num_dockers(output)
+    fun_test.test_assert_expected(expected=expected, actual=num_docker, message="Docker's up")
+
+
+def check_pci_dev(come_handle, f1=0):
+    result = True
+    bdf = '04:00.'
+    if f1 == 1:
+        bdf = '06:00.'
+    lspci_output = come_handle.command(command="lspci -d 1dad: | grep {}".format(bdf))
+    sections = ['Ethernet controller', 'Non-Volatile', 'Unassigned class', 'encryption device']
+    for section in sections:
+        if section not in lspci_output:
+            result = False
+            fun_test.critical("Under LSPCI {} not found".format(section))
+    return result
 
 
 def check_ssd(come_handle, expected_ssds_up=6, f1=0):
     result = False
+    if expected_ssds_up == 0:
+        return True
     dpcsh_data = get_dpcsh_data_for_cmds(come_handle, "peek storage/devices/nvme/ssds", f1)
     if dpcsh_data:
-        validate = validate_ssd_status(dpcsh_data, expected_ssds_up)
+        validate = validate_ssd_status(dpcsh_data, expected_ssds_up, f1)
         if validate:
             result = True
+    fun_test.test_assert(result, "F1_{}: SSD's ONLINE".format(f1))
     return result
 
 
 def check_nu_ports(come_handle,
                    iteration,
-                   expected_ports_up,
+                   expected_ports_up=None,
                    f1=0):
     result = False
     dpcsh_output = get_dpcsh_data_for_cmds(come_handle, "port linkstatus", f1)
@@ -23,50 +91,65 @@ def check_nu_ports(come_handle,
         ports_up = validate_link_status_out(dpcsh_output,
                                             f1=f1,
                                             iteration=iteration,
-                                            epected_port_up=expected_ports_up)
+                                            expected_port_up=expected_ports_up)
         if ports_up:
             result = True
     return result
 
 
+def check_come_up_time(come_handle, expected_seconds=5):
+    initial = come_handle.command("uptime")
+    output = come_handle.command("uptime")
+    up_time = re.search(r'(\d+) min', output)
+    up_time_less_than_5 = False
+    if up_time:
+        up_time_min = int(up_time.group(1))
+        if up_time_min <= expected_seconds:
+            up_time_less_than_5 = True
+    fun_test.test_assert(up_time_less_than_5, "COMe 'up-time' less than 5 min")
+
+
 # Validation
 
 
-def validate_ssd_status(dpcsh_data, expected_ssd_count):
+def validate_ssd_status(dpcsh_data, expected_ssd_count, f1):
     result = True
     if dpcsh_data:
         ssds_count = len(dpcsh_data)
-        if ssds_count >= expected_ssd_count:
-            for each_ssd, value in dpcsh_data.iteritems():
-                if "device state" in value:
-                    if not (value["device state"] == "DEV_ONLINE"):
-                        result = False
-        else:
-            result = False
-            fun_test.add_checkpoint("Expected ssds count : {}", FunTest.FAILED, True, result)
+        fun_test.test_assert_expected(expected=expected_ssd_count,
+                                      actual=ssds_count,
+                                      message="F1_{}: SSD count".format(f1))
+        for each_ssd, value in dpcsh_data.iteritems():
+            if "device state" in value:
+                if not (value["device state"] == "DEV_ONLINE"):
+                    result = False
     return result
 
 
 def validate_link_status_out(link_status_out,
-                             epected_port_up,
+                             expected_port_up,
                              f1=0,
                              iteration=1):
     result = True
     link_status = parse_link_status_out(link_status_out, f1=f1, iteration=iteration)
     if link_status:
-        try:
-            name_xcvr_dict = get_name_xcvr(link_status)
-            for field in ['NU', 'HNU']:
-                if epected_port_up[field]:
-                    for port in epected_port_up[field]:
-                        nu_port_name = '{}-FPG-{}'.format(field, port)
-                        if not (nu_port_name in name_xcvr_dict):
-                            return False
-                        if name_xcvr_dict[nu_port_name] == 'ABSENT':
-                            return False
-        except:
-            fun_test.log("Unable o parse the logs")
-            result = False
+        if not expected_port_up:
+            speed = link_status['lport-0']['speed']
+            if speed == "10G":
+                expected_port_up = {'NU': range(24), 'HNU': []}
+            elif speed == "100G":
+                expected_port_up = {'NU': [0, 4, 8, 12], 'HNU': []}
+
+        name_xcvr_dict = get_name_xcvr(link_status)
+        for field in ['NU', 'HNU']:
+            if expected_port_up[field]:
+                for port in expected_port_up[field]:
+                    nu_port_name = '{}-FPG-{}'.format(field, port)
+                    if not (nu_port_name in name_xcvr_dict):
+                        return False
+                    if name_xcvr_dict[nu_port_name] == 'ABSENT':
+                        return False
+
     else:
         result = False
     return result
@@ -146,7 +229,7 @@ def get_dpcsh_data_for_cmds(come_handle, cmd, f1=0):
     result = False
     try:
         come_handle.enter_sudo()
-        come_handle.command("cd /scratch/FunSDK/bin/Linux")
+        come_handle.command("cd /opt/fungible/FunSDK/bin/Linux/dpcsh")
         run_cmd = "./dpcsh --pcie_nvme_sock=/dev/nvme{} --nvme_cmd_timeout=60000 --nocli {}".format(f1, cmd)
         output = come_handle.command(run_cmd)
         result = parse_dpcsh_output(output)
@@ -154,3 +237,13 @@ def get_dpcsh_data_for_cmds(come_handle, cmd, f1=0):
     except:
         fun_test.log("Unable to get the DPCSH data for command: {}".format(cmd))
     return result
+
+# Common functions
+
+
+def get_host_handle(host_name):
+    host_info = hosts[host_name]
+    host_handle = Linux(host_ip=host_info['host_ip'],
+                        ssh_username=host_info['ssh_username'],
+                        ssh_password=host_info['ssh_password'])
+    return host_handle

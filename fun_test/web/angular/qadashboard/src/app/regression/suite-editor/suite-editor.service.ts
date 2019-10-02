@@ -18,6 +18,7 @@ interface SuiteEntryInterface {
 }
 
 interface SuiteInterface {
+  id: number;
   name: string;
   categories: string[];
   short_description: string;
@@ -30,6 +31,7 @@ interface SuiteInterface {
 
 
 export class Suite implements SuiteInterface {
+  id: number = null;
   name: string = null;
   categories: string[] = null;
   short_description: string = null;
@@ -98,7 +100,7 @@ export class SuiteEditorService {
   suite(id=null): Observable<Suite>{
     let url = "/api/v1/regression/suites";
     if (id) {
-      url += `${id}`;
+      url += `/${id}`;
     }
 
     return this.apiService.get(url).pipe(map(response => new Suite(response.data)));
@@ -126,5 +128,12 @@ export class SuiteEditorService {
     return of(["networking", "storage", "accelerators", "security", "system"]);
   }
 
+  delete(suite: SuiteInterface) {
+    return this.apiService.delete('/api/v1/regression/suites/' + suite.id).pipe(switchMap(response => {
+      return of(true);
+    }), catchError(error => {
+      throw error;
+    }))
+  }
 
 }

@@ -8,7 +8,7 @@
     "host_start_index": 0,
     "update_workspace": false,
     "update_deploy_script": false,
-    "funcp_mode": "ep",
+    "funcp_mode": ["ep", "storage"],
     "num_f1_per_fs": 1,
     "num_f1s": 1,
     "num_hosts": 12,
@@ -62,6 +62,7 @@
       "capacity": 1600277970944,
       "block_size": 4096
     },
+    "config_fcp_scheduler": {"total_bw" : 400, "fcp_ctl_bw" : 0, "fcp_data_bw": 0},
     "controllers": 1,
     "syslog": 2,
     "nqn": "nqn1",
@@ -113,6 +114,7 @@
       "capacity": 1600277970944,
       "block_size": 4096
     },
+    "config_fcp_scheduler": {"total_bw" : 400, "fcp_ctl_bw" : 0, "fcp_data_bw": 0},
     "controllers": 1,
     "syslog": 2,
     "nqn": "nqn1",

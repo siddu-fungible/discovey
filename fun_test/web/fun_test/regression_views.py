@@ -26,7 +26,7 @@ from datetime import datetime, timedelta
 from web.fun_test.models import RegresssionScripts, RegresssionScriptsSerializer, SuiteExecutionSerializer
 from web.fun_test.models import ScriptInfo
 from web.fun_test.models import TestCaseExecutionSerializer
-from web.fun_test.models import SuiteReRunInfo, JobQueue
+from web.fun_test.models import SuiteReRunInfo, JobQueue, Suite
 from web.fun_test.models import SuiteReRunInfo
 from web.fun_test.models import TestBed
 from lib.utilities.send_mail import send_mail
@@ -125,7 +125,12 @@ def submit_job(request):
 
         # suite path
         suite_path = request_json.get("suite_path", None)
+
         suite_id = request_json.get("suite_id", None)
+        if not suite_id and suite_path:
+            suite = Suite.objects.filter(name=suite_path)
+            if suite.count():
+                suite_id = suite[0].id
         submitter_email = request_json.get("submitter_email", "john.abraham@fungible.com")
 
         # script path used for script only submission
@@ -164,6 +169,8 @@ def submit_job(request):
         repeat_in_minutes = request_json.get("repeat_in_minutes", -1)  # TODO:
         description = request_json.get("description", None)
 
+        rich_inputs = request_json.get("rich_inputs", None)
+
         # if suite_path:
         if suite_id:
             job_id = queue_job3(suite_id=suite_id,
@@ -182,7 +189,8 @@ def submit_job(request):
                                 submitter_email=submitter_email,
                                 inputs=inputs,
                                 description=description,
-                                suite_type=suite_type)
+                                suite_type=suite_type,
+                                rich_inputs=rich_inputs)
         elif script_pk:
             script_path = RegresssionScripts.objects.get(pk=script_pk).script_path
             job_id = queue_job3(script_path=script_path,
@@ -201,7 +209,8 @@ def submit_job(request):
                                 submitter_email=submitter_email,
                                 inputs=inputs,
                                 description=description,
-                                suite_type=suite_type)
+                                suite_type=suite_type,
+                                rich_inputs=rich_inputs)
         elif dynamic_suite_spec:
             job_id = queue_dynamic_suite(dynamic_suite_spec=dynamic_suite_spec,
                                          emails=emails,
@@ -507,12 +516,13 @@ def build_to_date_map(request):
     end_date = get_current_time()
     start_date = end_date - timedelta(days=30)
     date_range = [start_date, end_date]
-    filtered_entries = JenkinsJobIdMap.objects.filter(build_date__range=date_range)
+    filtered_entries = JenkinsJobIdMap.objects.filter(build_date__range=date_range).order_by("build_date")
     build_info = {}
     for entry in filtered_entries:
         try:
-            key = timezone.localtime(entry.build_date)
-            build_info[str(key)] = {"software_date": entry.software_date,
+            # key = timezone.localtime(entry.build_date)
+            key = get_epoch_time_from_datetime(entry.build_date)
+            build_info[key] = {"software_date": entry.software_date,
                                "hardware_version": entry.hardware_version,
                                "fun_sdk_branch": entry.fun_sdk_branch,
                                "git_commit": entry.git_commit,
@@ -1058,6 +1068,12 @@ def scheduler_queue(request, job_id):
                            "message": queue_element.message,
                            "suspend": queue_element.suspend,
                            "pre_emption_allowed": queue_element.pre_emption_allowed}
+
+            try:
+                s = SuiteExecution.objects.get(execution_id=queue_element.job_id)
+                one_element["queued_time_timestamp"] = get_epoch_time_from_datetime(s.scheduled_time)
+            except ObjectDoesNotExist:
+                pass
             result.append(one_element)
     elif request.method == 'POST':
         result = None

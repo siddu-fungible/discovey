@@ -68,7 +68,7 @@
 
             </div>
 
-            <div  *ngIf="fetchedSuites" style="width: 50%; margin-bottom: 10px; margin-top: 10px">
+            <div *ngIf="fetchedSuites" style="width: 50%; margin-bottom: 10px; margin-top: 10px">
               <label>Suite paths</label>
               <ng-multiselect-dropdown
                 [placeholder]="'Select suite paths'"
@@ -179,6 +179,9 @@
                 <a [routerLink]="'/regression/suite_detail/' + suiteExecution.fields.execution_id">
                   {{ suiteExecution.fields.execution_id }}
                 </a>
+                <div *ngIf="suiteExecution.fields.auto_scheduled_execution_id > -1">
+                  <small>Auto: {{ suiteExecution.fields.auto_scheduled_execution_id }}</small>
+                </div>
               </td>
               <td>
                 <app-smart-label *ngIf="suiteExecution.suite_result != 'UNKNOWN'" [value]="suiteExecution.suite_result"
@@ -379,6 +382,12 @@
             </tr>
             <tr *ngIf="suiteExecution.showingDetails">
               <td colspan="18">
+                <ng-container *ngIf="suiteExecution.fields.suite_id">
+                  Suite ID: {{ suiteExecution.fields.suite_id }} <span class="pseudo-anchor" (click)="onSuiteDetail(suiteExecution.fields.suite_id)">...suite details</span>
+                  <div>Name: {{ suiteMap[suiteExecution.fields.suite_id].name }}</div>
+                  <div>Description:</div>
+                  <div [innerHTML]="suiteMap[suiteExecution.fields.suite_id].short_description | safeHtml"></div>
+                </ng-container>
                 <ng-container *ngIf="(suiteExecution.parsedInputs | keyvalue)?.length">
                   <app-section-horizontal-line [text]="'Inputs'"></app-section-horizontal-line>
                   <ngx-json-viewer [json]="suiteExecution.parsedInputs" [expanded]="false"></ngx-json-viewer>
@@ -449,6 +458,12 @@
           </tr>
           <tr *ngIf="suiteExecution.showingDetails">
             <td colspan="8">
+              <ng-container *ngIf="suiteExecution.fields.suite_id">
+                Suite ID: {{ suiteExecution.fields.suite_id }} <span class="pseudo-anchor" (click)="onSuiteDetail(suiteExecution.fields.suite_id)">...suite details</span>
+                <div>Name: {{ suiteMap[suiteExecution.fields.suite_id].name }}</div>
+                <div>Description:</div>
+                <div [innerHTML]="suiteMap[suiteExecution.fields.suite_id].short_description | safeHtml"></div>
+              </ng-container>
               <ng-container *ngIf="(suiteExecution.parsedInputs | keyvalue)?.length">
                 <div><b>Inputs</b></div>
 

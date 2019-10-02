@@ -99,7 +99,7 @@ perf_listener_ip = "20.1.1.1"
 NUM_VFs = 4
 NUM_QUEUES_TX = 8
 NUM_QUEUES_RX = 8
-MAX_MTU = 1500  # TODO: check SWLINUX-290 and update
+MAX_MTU = 1500  # TODO: change to 9000, note, need ifconfig down/up for it to be effective until SWOS-6025 is fixed
 
 supported_testbed_types = ('fs-11', 'fs-48', )
 
@@ -115,11 +115,14 @@ def setup_nu_host(funeth_obj):
         #if TB in ('FS7', 'FS11'):
             #fun_test.test_assert(linux_obj.reboot(timeout=60, retries=5), 'Reboot NU host')
         fun_test.test_assert(linux_obj.is_host_up(), 'NU host {} is up'.format(linux_obj.host_ip))
+        linux_obj.command('sudo sysctl net.ipv6.conf.all.disable_ipv6=0')
         fun_test.test_assert(funeth_obj.configure_interfaces(nu), 'Configure NU host {} interface'.format(
             linux_obj.host_ip))
         fun_test.test_assert(funeth_obj.configure_ipv4_routes(nu, configure_gw_arp=(not control_plane)),
                              'Configure NU host {} IPv4 routes'.format(
             linux_obj.host_ip))
+        fun_test.test_assert(funeth_obj.configure_ipv6_routes(nu),
+                             'Configure NU host {} IPv6 routes'.format(linux_obj.host_ip))
         # TODO: temp workaround
         if linux_obj.host_ip == 'poc-server-06':
             if enable_tso:
@@ -130,13 +133,13 @@ def setup_nu_host(funeth_obj):
 
 def setup_hu_host(funeth_obj, update_driver=True, is_vm=False, tx_offload=True):
     funsdk_commit = funsdk_bld = driver_commit = driver_bld = None
+    if is_vm:
+        lspci_result = funeth_obj.lspci(check_pcie_width=False)
+    else:
+        lspci_result = funeth_obj.lspci(check_pcie_width=True)
+    fun_test.test_assert(lspci_result, 'Fungible Ethernet controller is seen.')
     if update_driver:
         funeth_obj.setup_workspace()
-        if is_vm:
-            lspci_result = funeth_obj.lspci(check_pcie_width=False)
-        else:
-            lspci_result = funeth_obj.lspci(check_pcie_width=True)
-        fun_test.test_assert(lspci_result, 'Fungible Ethernet controller is seen.')
         update_src_result = funeth_obj.update_src(parallel=True)
         if update_src_result:
             funsdk_commit, funsdk_bld, driver_commit, driver_bld = update_src_result
@@ -174,6 +177,8 @@ def setup_hu_host(funeth_obj, update_driver=True, is_vm=False, tx_offload=True):
             funeth_obj.configure_interfaces(hu), 'Configure HU host {} funeth interfaces.'.format(linux_obj.host_ip))
         fun_test.test_assert(funeth_obj.configure_ipv4_routes(hu, configure_gw_arp=(not control_plane)),
                              'Configure HU host {} IPv4 routes.'.format(linux_obj.host_ip))
+        fun_test.test_assert(funeth_obj.configure_ipv6_routes(hu),
+                             'Configure HU host {} IPv6 routes.'.format(linux_obj.host_ip))
         fun_test.test_assert(
             funeth_obj.configure_arps(hu), 'Configure HU host {} ARP entries.'.format(linux_obj.host_ip))
         #fun_test.test_assert(funeth_obj.loopback_test(packet_count=80),
@@ -541,6 +546,7 @@ def collect_stats(when='before'):
     fun_test.log_module_filter("random_module")
     try:
         perf_utils.collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict, version, when=when)
+        fun_test.log_module_filter_disable()
     except:
         fun_test.log_module_filter_disable()
 

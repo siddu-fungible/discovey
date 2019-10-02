@@ -629,6 +629,19 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
             for host_name in self.host_info:
                 self.host_info[host_name]["num_volumes"] = self.final_host_ips.count(self.host_info[host_name]["ip"])
 
+            # Finding the usable capacity of the drives which will be used as the BLT volume capacity, in case
+            # the capacity is not overridden while starting the script
+            min_drive_capacity = find_min_drive_capacity(self.storage_controller, self.command_timeout)
+            if min_drive_capacity:
+                self.blt_details["capacity"] = min_drive_capacity
+            else:
+                fun_test.critical("Unable to find the drive with minimum capacity...So going to use the BLT capacity"
+                                  "given in the script config file or capacity passed at the runtime...")
+
+            if "capacity" in job_inputs:
+                fun_test.critical("Original Volume size {} is overriden by the size {} given while running the "
+                                  "script".format(self.blt_details["capacity"], job_inputs["capacity"]))
+                self.blt_details["capacity"] = job_inputs["capacity"]
 
             # Create BLT's
             self.thin_uuid_list = []
@@ -680,6 +693,19 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                                                                "{}".format(self.thin_uuid_list[i],
                                                                            self.host_ips[ctrlr_index],
                                                                            self.ctrlr_uuid[ctrlr_index]))
+
+            # Setting the fcp scheduler bandwidth
+            if hasattr(self, "config_fcp_scheduler"):
+                command_result = self.storage_controller.set_fcp_scheduler(fcp_sch_config=self.config_fcp_scheduler,
+                                                                           command_timeout=self.command_timeout)
+                if not command_result["status"]:
+                    fun_test.critical("Unable to set the fcp scheduler bandwidth...So proceeding the test with the "
+                                      "default setting")
+                elif self.config_fcp_scheduler != command_result["data"]:
+                    fun_test.critical("Unable to fetch the applied FCP scheduler config... So proceeding the test "
+                                      "with the default setting")
+                else:
+                    fun_test.log("Successfully set the fcp scheduler bandwidth to: {}".format(command_result["data"]))
 
             for index, host_name in enumerate(self.host_info):
                 host_handle = self.host_info[host_name]["handle"]

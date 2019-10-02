@@ -29,7 +29,6 @@ from lib.utilities.send_mail import *
 from web.fun_test.web_interface import get_performance_url
 from django.utils import timezone
 
-email_list = [TEAM_REGRESSION_EMAIL]
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 atomic_url = get_performance_url() + "/atomic"
 negative_threshold = -5
@@ -366,24 +365,24 @@ class MetricLib():
             root_dict["children"].append(child_dict)
         return root_dict
 
-    def _send_email(self, email, subject, reports, report_name):
-        report_name = "performance_drop_report.html"
+    def _send_email(self, email, subject, reports, report_name="performance_drop_report.html"):
         file_loader = FileSystemLoader(JINJA_TEMPLATE_DIR)
         env = Environment(loader=file_loader)
         template = env.get_template(report_name)
         content = template.render(all_reports=reports)
-        email_list.append(email)
-        return send_mail(to_addresses=email_list, subject=subject, content=content)
+        return send_mail(to_addresses=email, subject=subject, content=content)
 
     def _generate_report(self, workspace_id):
         reports = []
         metrics = InterestedMetrics.objects.filter(workspace_id=workspace_id)
         for metric in metrics:
-            self._set_report_fields(lineage=metric.lineage, metric_id=metric.metric_id, reports=reports)
+            self._set_report_fields(lineage=metric.lineage, metric_id=metric.metric_id, reports=reports, root=True)
         return reports
 
-    def _set_report_fields(self, lineage, metric_id, reports):
+    def _set_report_fields(self, lineage, metric_id, reports, root=False):
         chart = MetricChart.objects.get(metric_id=metric_id)
+        if not root:
+            lineage += "/" + chart.chart_name
         if chart.leaf:
             data_sets = chart.get_data_sets()
             metric_model_name = chart.metric_model_name
@@ -391,6 +390,7 @@ class MetricLib():
             report = {}
             report["chart_name"] = chart.chart_name
             report["lineage"] = lineage
+            report["jira_ids"] = chart.get_jira_ids()
             report["url"] = atomic_url + "/" + str(metric_id)
             report["positive"] = chart.positive
             report["data_sets"] = []
@@ -415,7 +415,7 @@ class MetricLib():
         else:
             children = chart.get_children()
             for child in children:
-                self._set_report_fields(lineage=lineage, metric_id=int(child), reports=reports)
+                self._set_report_fields(lineage=lineage, metric_id=int(child), reports=reports, root=False)
 
     def _calculate_percentage(self, current, previous):
         percent_num = (float(current - previous) / float(previous)) * 100.0

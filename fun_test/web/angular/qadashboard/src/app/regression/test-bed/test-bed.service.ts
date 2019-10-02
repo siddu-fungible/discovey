@@ -54,4 +54,12 @@ export class TestBedService {
     }))
   }
 
+  poolMemberTypeOptionToString(assetType, typeCode) {
+    let result = "";
+    if (assetType === 'DUT') {
+      result = ["Default", "With servers", "With SSDs"][parseInt(typeCode)]; //TODO this should be a service
+    }
+    return result;
+  }
+
 }

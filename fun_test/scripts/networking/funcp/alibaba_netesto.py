@@ -8,7 +8,7 @@ from scripts.networking.funcp.helper import *
 from web.fun_test.analytics_models_helper import get_data_collection_time
 import json
 import pprint
-import pandas as pd
+#import pandas as pd
 from StringIO import StringIO
 result_links = {}
 
@@ -27,7 +27,7 @@ class SetupBringup(alibaba_fcp_callback.ScriptSetup):
     def setup(self):
         super(SetupBringup, self).setup()
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
-        tb_config_obj = tb_configs.TBConfigs(str(fs_name)+"-NETESTO")
+        tb_config_obj = tb_configs.TBConfigs(str(fs_name))
         funeth_obj = funeth.Funeth(tb_config_obj)
         fun_test.shared_variables['funeth_obj'] = funeth_obj
         linux_objs = funeth_obj.linux_obj_dict.values()
@@ -84,6 +84,8 @@ class SetupBringup(alibaba_fcp_callback.ScriptSetup):
             for p in FunPerformance.FPG_INTERFACES:
                 port_mtu_set = nc_obj.set_port_mtu(p, fpg_mtu)
                 fun_test.test_assert(port_mtu_set, '{}: Configure FPG{} mtu {}'.format(f1, p, fpg_mtu))
+
+            #nc_obj.poke_fcp_config_scheduler(total_bw=200, fcp_ctl_bw=20, fcp_data_bw=170)
 
             results = []
             fun_test.shared_variables['results'] = results

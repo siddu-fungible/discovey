@@ -834,9 +834,9 @@ if __name__ == "__main__inspur":
         fun_test.critical(str(ex))
     print "used generic helper to add an entry"
 
-if __name__ == "__main__":
+if __name__ == "__main__crypto":
 
-    dt = datetime.datetime(year=2019, month=7, day=18, hour=2, minute=12, second=33)
+    dt = datetime.datetime(year=2019, month=9, day=24, hour=2, minute=12, second=33)
     data = 4
     for app in ["crypto_dp_tunnel_throughput", "ipsec_tunnel_throughput"]:
         value_dict = {
@@ -879,3 +879,26 @@ if __name__ == "__main__":
         except Exception as ex:
             fun_test.critical(str(ex))
         print ("used generic helper to add an entry")
+
+if __name__ == "__main__":
+    dt = datetime.datetime(year=2019, month=9, day=22, hour=2, minute=12, second=33)
+    value_dict = {
+        "date_time": dt,
+        "app": "pke_x25519_2k_tls_soak",
+        "platform": "S1",
+        "metric_name": "ECDHE_RSA_X25519_RSA_2K",
+        "ops_per_sec": 123
+    }
+    unit_dict = {
+        "ops_per_sec_unit": "Kops"
+    }
+    model_name = "PkeX25519TlsSoakPerformance"
+    status = fun_test.PASSED
+    try:
+        generic_helper = ModelHelper(model_name=model_name)
+        generic_helper.set_units(validate=True, **unit_dict)
+        generic_helper.add_entry(**value_dict)
+        generic_helper.set_status(status)
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    print "used generic helper to add an entry"

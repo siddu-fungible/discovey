@@ -63,7 +63,7 @@ class RegExScript(FunTestScript):
 class JuniperNFACustomCompileOnly(FunTestCase):
     def describe(self):
         self.set_test_details(id=4,
-                              summary="compile and load",
+                              summary="F1: HANDCRAFTED NFA_ONLY PATTERNS compiled with NFA Strategy with DEFAULT Memory Allocation",
                               steps="""
                               """)
 
@@ -110,12 +110,11 @@ class JuniperNFACustomCompileOnly(FunTestCase):
             pld_path = "/regex/payloads/"
             #for gtype, en in zip(["dfa", "nfa", "ffa"], ["1", "0", ""]):
             for gtype, en in zip(["nfa"], ["0"]):
-                res_path = "/regex/"+str(tc)+"/" + gtype + "_results/"
+                res_path = "/regex/F1/"+str(tc)+"/" + gtype + "_results/"
                 con1.create_directory(res_path)
                 print ("res_path is ",res_path)
                 #res_path = "/regex/Users/fungible/ws/data_store/regression/" + str(tc) + "/" + gtype + "_results/"
                 print ("res_path is ",res_path)
-                res_path = "/regex/" + str(tc) + "/" + gtype + "_results/"
                 exp_file_path=DATA_STORE_DIR+"/regex/"+str(tc)+"/"+gtype+"_exp_files/"
                 print ("exp_file_path is",exp_file_path)
                 print "CALLING compiler with ", res_path, " en:", en
@@ -155,7 +154,8 @@ class JuniperNFACustomCompileOnly(FunTestCase):
                         print ("caught an exception")
                 print ("pat_pld_files are ",pat_pld_files)
 
-                RegexTemplate.compile_n_validate(con1, mem_dist, pat_path, pld_path,res_path,exp_file_path,pat_pld_files, ["test_16", "test_17", "test_19", "test_20", "test_21", "test_24"], en, juniper_style="")
+                RegexTemplate.compile_n_validate(con1, mem_dist, pat_path, pld_path, res_path, exp_file_path, pat_pld_files, ["test_16", "test_17", "test_19", "test_20", "test_21", "test_24"],
+                                                en, juniper_style="")
 
                 #RegexTemplate.compile_only(con1, mem_dist, pat_path, res_path, [], en, juniper_style="yes")
 
@@ -166,12 +166,12 @@ class JuniperNFACustomCompileOnly(FunTestCase):
 
                 res1_path=""
                 try:
-                    fun_test.test_assert(con1.scp(target_file_path="/local/auto_admin/data_store/" + res_path,
+                    fun_test.test_assert(con1.scp(target_file_path="/project/users/QA/regression/data_store" + res_path,
                          target_ip=con2.host_ip,
                          source_file_path=res_path+"*.json",
                          target_username=con2.ssh_username,
                          target_password=con2.ssh_password),
-                         message="scp graphs to /local/auto_admin/data_store/{}".format(res_path))
+                         message="scp graphs to /project/users/QA/regression/data_store{}".format(res_path))
                 except:
                     pass
 

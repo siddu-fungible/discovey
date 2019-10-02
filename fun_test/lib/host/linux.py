@@ -952,6 +952,16 @@ class Linux(object, ToDictMixin):
     def tshark_parse(self, file_name, read_filter, fields=None, decode_as=None):
         pass
 
+    def stat(self, file_name):
+        result = {}
+        command = "stat {}".format(file_name)
+        output = self.command(command)
+        for line in output.split("\n"):
+            m = re.search("Size:\s+(\d+)", line)
+            if m:
+                result["size"] = int(m.group(1))
+        return result
+
     @fun_test.safe
     def enter_sudo(self, preserve_environment=None):
         result = False
@@ -1352,11 +1362,14 @@ class Linux(object, ToDictMixin):
         return result
 
     @fun_test.safe
-    def untar(self, file_name, dest, timeout=60):
+    def untar(self, file_name, dest, timeout=60, sudo=True):
         result = None
         command = "tar -xvzf " + file_name + " -C " + dest
         try:
-            output = self.sudo_command("tar -xvzf " + file_name + " -C " + dest)
+            if sudo:
+                output = self.sudo_command("tar -xvzf " + file_name + " -C " + dest)
+            else:
+                output = self.command("tar -xvzf " + file_name + " -C " + dest)
             fun_test.debug(output)
             output_lines = output.split('\n')
             fun_test.debug(output_lines)
@@ -1819,9 +1832,6 @@ class Linux(object, ToDictMixin):
             if 'runtime' in kwargs:
                 fio_command += " --time_based"
 
-            if 'output-format' not in kwargs:
-                fio_command += " --output-format=json"
-
             if kwargs:
                 for key, value in kwargs.iteritems():
                     if key == "multiple_jobs":
@@ -1862,7 +1872,7 @@ class Linux(object, ToDictMixin):
             # Populating the resultant fio_dict dictionary
             for operation in ["write", "read"]:
                 fio_dict[operation] = {}
-                stat_list = ["bw", "iops", "io_bytes", "latency", "clatency", "latency90", "latency95",
+                stat_list = ["bw", "iops", "io_bytes", "runtime", "latency", "clatency", "latency90", "latency95",
                              "latency99","latency9950", "latency9999"]
                 for stat in stat_list:
                     if stat not in ("latency", "clatency", "latency90", "latency95", "latency99", "latency9950",
@@ -2794,9 +2804,17 @@ class Linux(object, ToDictMixin):
         return result
 
     @fun_test.safe
+    def curl(self, url, output_file=None):
+        command = "curl {}".format(url)
+        if output_file:
+            command += " -o {}".format(output_file)
+        self.command(command)
+        return int(self.exit_status()) == 0
+
+    @fun_test.safe
     def destroy(self):
         try:
-            self.disconnect()
+            Linux.disconnect(self)
         except Exception as ex:
             pass
         try:
