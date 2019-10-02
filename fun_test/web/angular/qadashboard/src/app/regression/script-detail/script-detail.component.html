@@ -38,7 +38,7 @@
         <div *ngFor="let testCaseExecution of testCaseExecutions">
           <table>
             <tr *ngFor="let seriesElement of this.timeSeriesByTestCase[testCaseExecution.test_case_id]">
-              <td>{{ seriesElement.date_time }}</td>
+              <td nowrap><small>{{ seriesElement.date_time }}</small></td>
               <td *ngIf="seriesElement.type === 'checkpoint'" style="background-color: gold">{{ seriesElement.data?.checkpoint }}</td>
               <td *ngIf="seriesElement.type === 'log'">{{ seriesElement.data?.log }}</td>
             </tr>
