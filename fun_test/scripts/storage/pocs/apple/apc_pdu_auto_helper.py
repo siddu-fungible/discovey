@@ -67,7 +67,8 @@ def disconnect_vol(hosts_list, target_ip):
     for host_name, host in hosts_list.iteritems():
         result = False
         result = host["handle"].sudo_command("nvme disconnect -d /dev/nvme0n1")
-        fun_test.test_assert(True, "Host {} disconnected from {}".format(host_name, target_ip))
+        result = host["handle"].sudo_command("nvme disconnect -d /dev/nvme1n1")
+        # fun_test.test_assert(result, "Host {} disconnected from {}".format(host_name, target_ip))
 
 
 def check_docker(come_handle, expected=3):
