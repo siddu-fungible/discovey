@@ -19,6 +19,19 @@ def check_host_connected(hosts_list):
         fun_test.test_assert(result, "{} host is connected".format(host_name))
 
 
+def run_traffic(host_name, target_ip, nqn, filename):
+    result = False
+    host_handle = get_host_handle(host_name)
+    result = host_handle.nvme_connect(target_ip=target_ip, nvme_subsystem=nqn)
+    fun_test.test_assert(result, "{} connected to {}".format(nqn, target_ip))
+    # Run this in background if needed
+    fio_out = host_handle.pcie_fio(filename=filename, numjobs=16, iodepth=16, rw="randrw", direct=1,
+                                   ioengine="libaio", bs="4k", size="512g", name="fio_randrw", runtime=60)
+    if not fio_out:
+        result = True
+    return result
+
+
 def check_traffic(hosts_list):
     for host_name in hosts_list:
         host_handle = get_host_handle(host_name)
@@ -26,6 +39,13 @@ def check_traffic(hosts_list):
         output_iostat = host_handle.iostat(device=device, interval=2, count=5, background=False)
         device_name = "nvme0n1"
         result = wrapper.ensure_io_running(device_name, output_iostat, host_name)
+
+
+def disconnect_vol(host_name, nqn):
+    result = False
+    host_handle = get_host_handle(host_name)
+    result = host_handle.sudo_command("nvme disconnect -n {}".format(nqn))
+    fun_test.test_assert("Host {} disconnected from {}".format(host_name, nqn))
 
 
 def check_docker(come_handle, expected=3):
