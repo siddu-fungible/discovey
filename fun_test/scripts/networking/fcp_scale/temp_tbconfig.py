@@ -61,66 +61,11 @@ class ScriptSetup(FunTestScript):
         fun_test.shared_variables["test_bed_type"] = test_bed_type
         fun_test.shared_variables['testbed_info'] = testbed_info
         fun_test.shared_variables["pcie_host_result"] = True
-        # Removing any funeth driver from COMe and and all the connected server
-        threads_list = []
-        single_f1 = False
-        if test_bed_type == 'fs-fcp-scale':
-            fs_list = testbed_info['fs'][test_bed_type]["fs_list"]
-            fs_index=0
-        else:
-            single_f1 = True
-            fs_list = [test_bed_type]
-            test_bed_type = 'fs-fcp-scale'
-        # for fs_name in fs_list:
-        #
-        #     thread_id = fun_test.execute_thread_after(time_in_seconds=2, func=clean_testbed, fs_name=fs_name,
-        #                                               hu_host_list=testbed_info['fs'][test_bed_type][fs_name]
-        #                                               ['hu_host_list'])
-        #     threads_list.append(thread_id)
-        #
-        # for thread_id in threads_list:
-        #     fun_test.join_thread(fun_test_thread_id=thread_id, sleep_time=1)
 
-        # Boot up FS1600
-
-        topology_helper = TopologyHelper()
-        for fs_name in fs_list:
-            fs_name = str(fs_name)
-            # FS-39 issue
-            # if fs_name == "fs-39":
-            #     continue
-            abstract_json_file0 = \
-                fun_test.get_script_parent_directory() + testbed_info['fs'][test_bed_type][fs_name][
-                    'abtract_config_f1_0']
-            abstract_json_file1 = \
-                fun_test.get_script_parent_directory() + testbed_info['fs'][test_bed_type][fs_name][
-                    'abtract_config_f1_1']
-            funcp_obj = FunCPSetup(test_bed_type=fs_name,
-                                   update_funcp=testbed_info['fs'][test_bed_type][fs_name]['prepare_docker'],
-                                   f1_1_mpg=str(testbed_info['fs'][test_bed_type][fs_name]['mpg1']),
-                                   f1_0_mpg=str(testbed_info['fs'][test_bed_type][fs_name]['mpg0']),
-                                   abstract_config_f1_0=abstract_json_file0,
-                                   abstract_config_f1_1=abstract_json_file1
-                                   )
-            index = testbed_info['fs'][test_bed_type][fs_name]['index']
-            if single_f1:
-                index = 0
-            topology_helper.set_dut_parameters(dut_index=index,
-                                               f1_parameters={0: {"boot_args": testbed_info['fs'][test_bed_type]
-                                                              [fs_name]['bootargs_f1_0']},
-                                                              1: {"boot_args": testbed_info['fs'][test_bed_type]
-                                                              [fs_name]['bootargs_f1_1']}},
-                                               fun_cp_callback=funcp_obj.bringup)
-
-        topology = topology_helper.deploy()
-
-        fun_test.shared_variables["topology"] = topology
-        fun_test.test_assert(topology, "Topology deployed")
-
-        # tb_config_obj = tb_configs.TBConfigs(test_bed_type)
-        # funeth_obj = Funeth(tb_config_obj)
-        # fun_test.shared_variables['funeth_obj'] = funeth_obj
-        # setup_hu_host(funeth_obj, update_driver=True, num_queues=8)
+        tb_config_obj = tb_configs.TBConfigs(test_bed_type)
+        funeth_obj = Funeth(tb_config_obj)
+        fun_test.shared_variables['funeth_obj'] = funeth_obj
+        setup_hu_host(funeth_obj, update_driver=True, num_queues=4)
 
     def cleanup(self):
         fun_test.log("Cleanup")
@@ -167,28 +112,7 @@ class TestHostPCIeLanes(FunTestCase):
 
     def run(self):
 
-        test_bed_type = fun_test.get_job_environment_variable('test_bed_type')
-        testbed_info = fun_test.parse_file_to_json(
-            fun_test.get_script_parent_directory() + '/testbed_inputs.json')
-        if test_bed_type == 'fs-fcp-scale':
-            fs_list = testbed_info['fs'][test_bed_type]["fs_list"]
-        else:
-            fs_list = [test_bed_type]
-            test_bed_type = 'fs-fcp-scale'
-        threads_list = []
-
-        for fs_name in fs_list:
-            servers_mode = testbed_info['fs'][test_bed_type][fs_name]['hu_host_list']
-            for server_key in servers_mode:
-                for server in server_key:
-                    thread_id = fun_test.execute_thread_after(time_in_seconds=1, func=self.check_pcie_link_speed,
-                                                              hostname=server, link_speed=server_key[server])
-                    threads_list.append(thread_id)
-
-        for thread_id in threads_list:
-            fun_test.join_thread(fun_test_thread_id=thread_id, sleep_time=1)
-
-        fun_test.test_assert(expression=fun_test.shared_variables["pcie_host_result"], message="PCIe Link Speed Check")
+        pass
 
     def cleanup(self):
         pass

@@ -163,7 +163,7 @@
     "pwd": "Precious1*",
     "server": "cab03-qa-01",
     "server_dict" : {"10.1.105.17": "vm1", "10.1.105.138": "vm2"},
-    "warm_up_traffic": 1,
+    "warm_up_traffic": 0,
     "iter_interval": 5,
     "num_ssds": 2,
     "warm_up_fio_cmd_args": {
@@ -185,7 +185,7 @@
       "randread", "randwrite"
     ],
     "fio_bs": "4k",
-    "fio_jobs_iodepth": ["(1,1)", "(1,32)", "(1,64)","(2, 64)", "(4,64)", "(8,64)", "(16,64)"],
+    "fio_jobs_iodepth": ["(1,1)", "(32,1)", "(64,1)","(128, 1)", "(256,1)", "(256,4)"],
     "fio_job_name": {
       "randread": "ali_bmv_local_f1",
       "randwrite": "ali_bmv_local_f1"

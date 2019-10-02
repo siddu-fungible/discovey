@@ -36,7 +36,6 @@ class ApcPduTestcase(FunTestCase):
         self.fs = AssetManager().get_fs_by_name(fs_name)
         self.apc_info = self.fs.get("apc_info", None)
         self.outlet_no = self.apc_info.get("outlet_number", None)
-
         self.validate = {"check_storage_controller": False,
                          "check_ssd": False,
                          "check_ports": False,
@@ -46,7 +45,10 @@ class ApcPduTestcase(FunTestCase):
                          "expected_nu_ports_f1_1": range(0, 24, 4),
                          "expected_hnu_ports_f1_0": [],
                          "expected_hnu_ports_f1_1": [],
-
+                         "hosts": {},
+                         "check_docker": False,
+                         "expected_dockers": 3,
+                         "target_ip": "15.53.1.2"
                          }
         job_inputs = fun_test.get_job_inputs()
         if job_inputs:
@@ -68,6 +70,14 @@ class ApcPduTestcase(FunTestCase):
                 self.validate["expected_hnu_ports_f1_0"] = job_inputs["expected_hnu_ports_f1_0"]
             if "expected_hnu_ports_f1_1" in job_inputs:
                 self.validate["expected_hnu_ports_f1_1"] = job_inputs["expected_hnu_ports_f1_1"]
+            if "hosts" in job_inputs:
+                self.validate["hosts"] = job_inputs["hosts"]
+            if "check_docker" in job_inputs:
+                self.validate["check_docker"] = job_inputs["check_docker"]
+            if "expected_dockers" in job_inputs:
+                self.validate["expected_dockers"] = job_inputs["expected_dockers"]
+            if "target_ip" in job_inputs:
+                self.validate["target_ip"] = job_inputs["target_ip"]
 
         fun_test.log(json.dumps(self.fs, indent=4))
         fun_test.log(self.validate)
@@ -114,28 +124,18 @@ class ApcPduTestcase(FunTestCase):
             lspci_f1 = check_pci_dev(come_handle, f1=1)
             fun_test.test_assert(lspci_f1, "F1_1 PCIe devices not detected")
 
-            initial = come_handle.command("uptime")
-            output = come_handle.command("uptime")
-            up_time = re.search(r'(\d+) min', output)
-            up_time_less_than_5 = False
-            if up_time:
-                up_time_min = int(up_time.group(1))
-                if up_time_min <= 5:
-                    up_time_less_than_5 = True
-            fun_test.test_assert(up_time_less_than_5, "COMe 'up-time' less than 5 min")
+            check_come_up_time(come_handle, expected_seconds=5)
 
             if self.validate["check_ssd"]:
                 fun_test.log("Checking if SSD's are Active on F1_0")
-                ssd_valid = check_ssd(come_handle,
-                                      expected_ssds_up=self.validate["expected_ssds_f1_0"],
-                                      f1=0)
-                fun_test.test_assert(ssd_valid, "F1_0: SSD's ONLINE")
+                check_ssd(come_handle,
+                          expected_ssds_up=self.validate["expected_ssds_f1_0"],
+                          f1=0)
 
                 fun_test.log("Checking if SSD's are Active on F1_1")
-                ssd_valid = check_ssd(come_handle,
-                                      expected_ssds_up=self.validate["expected_ssds_f1_1"],
-                                      f1=1)
-                fun_test.test_assert(ssd_valid, "F1_1: SSD's ONLINE")
+                check_ssd(come_handle,
+                          expected_ssds_up=self.validate["expected_ssds_f1_1"],
+                          f1=1)
 
             if self.validate["check_ports"]:
                 fun_test.log("Checking if NU and HNU port's are active on F1_0")
@@ -151,17 +151,27 @@ class ApcPduTestcase(FunTestCase):
                                                expected_ports_up=expected_ports_up_f1_1)
                 fun_test.test_assert(nu_port_valid, "F1_1: NU ports are present, Expected: {}".format(expected_ports_up_f1_1))
 
-            # Minor checks: docker and cores
+            if self.validate["check_docker"]:
+                fun_test.sleep("docker to be up", seconds=40)
+                check_docker(come_handle, expected=self.validate["expected_dockers"])
 
-            fun_test.log("Checking the Docker")
-            come_handle.command("docker ps -a")
-            fun_test.log("Checking the cores")
-            come_handle.command("ls /opt/fungible/cores")
-
+            if self.validate["hosts"]:
+                fun_test.sleep("Hosts to be up", seconds=200)
+                hosts_list = add_hosts_handle(self.validate["hosts"])
+                for host_name, host in hosts_list.iteritems():
+                    single_host = {host_name: host}
+                    connect_the_host(single_host, self.validate["target_ip"])
+                    # Start traffic
+                    run_traffic_bg(single_host)
+                    # Check if traffic is running
+                    check_traffic(single_host)
+                    # Disconnect volume
+                    disconnect_vol(single_host, self.validate["target_ip"])
+                    destroy_hosts_handle(single_host)
             come_handle.destroy()
             bmc_handle.destroy()
 
-            fun_test.sleep("Sleeping for 10s before next iteration", seconds=10)
+            fun_test.sleep("Sleeping for 300s before next iteration", seconds=300)
 
     def apc_pdu_reboot(self, come_handle):
         '''
