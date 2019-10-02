@@ -60,7 +60,7 @@ class ScriptSetup(FunTestScript):
         test_bed_type = fun_test.get_job_environment_variable('test_bed_type')
         fun_test.shared_variables["test_bed_type"] = test_bed_type
         fun_test.shared_variables['testbed_info'] = testbed_info
-
+        fun_test.shared_variables["pcie_host_result"] = True
         # Removing any funeth driver from COMe and and all the connected server
         threads_list = []
         single_f1 = False
@@ -152,9 +152,12 @@ class TestHostPCIeLanes(FunTestCase):
                 if "LnkSta" not in lspci_out:
                     fun_test.test_assert(expression=False, message="PCIE link did not come up on Host %s" % hostname)
                 else:
-                    fun_test.critical("PCIE link did not come up in %s mode on Host %s" % (link_speed, hostname))
+                    fun_test.test_assert(expression=False,
+                                         message="PCIE link did not come up in %s mode on Host %s" % (link_speed,
+                                                                                                      hostname))
                 result &= False
-            fun_test.shared_variables["pcie_host_result"] &= result
+            result &= fun_test.shared_variables["pcie_host_result"]
+            fun_test.shared_variables["pcie_host_result"] = result
         except Exception as e:
             fun_test.log("==================")
             fun_test.log("Exception occurred")
@@ -173,7 +176,7 @@ class TestHostPCIeLanes(FunTestCase):
             fs_list = [test_bed_type]
             test_bed_type = 'fs-fcp-scale'
         threads_list = []
-        fun_test.shared_variables["pcie_host_result"] = True
+
         for fs_name in fs_list:
             servers_mode = testbed_info['fs'][test_bed_type][fs_name]['hu_host_list']
             for server_key in servers_mode:
