@@ -1,5 +1,7 @@
+from lib.system.fun_test import FunTestLibException, fun_test
 from requests import *
 from requests.auth import HTTPBasicAuth
+
 
 class StorageControllerApi(object):
     def __init__(self, api_server_ip, api_server_port=50220, username="admin", password="password"):
@@ -19,13 +21,39 @@ class StorageControllerApi(object):
         print response
         print "Response Object \n{}".format(dir(response))
 
-    def configure_dataplane_ip(self, interface_name, ip, subnet_mask, next_hop, config_mode="static"):
+    def get_dpu_ids(self):
+        result = []
+        url = "{}/topology".format(self.base_url)
+        response = request("get", url, auth=self.http_basic_auth)
+        if response.ok:
+            json_response = response.json()
+            # Looping around all the FSs and its properties in the current topology
+            for fs_id, fs_props in json_response["data"].iteritems():
+                # Checking whether the current FS is having DPUs details
+                if "dpus" in fs_props:
+                    # Extracting the DPU IDs alone from the list of DPUs from the current FS
+                    for dpu in fs_props["dpus"]:
+                        if "uuid" in dpu:
+                            result.append(dpu["uuid"])
+                        else:
+                            fun_test.critical("No DPU found in the current FS")
+                else:
+                    fun_test.critical("No DPUs found in the current topology")
+
+        # Sort the DPUs and DPU IDs before returning
+        if result:
+            result.sort(key=lambda key: (int(key.split('.')[0][2:]), int(key.split('.')[1])))
+        return result
+
+    def configure_dataplane_ip(self, interface_name, ip, subnet_mask, next_hop, use_dhcp=False, dpu_id="FS1.0"):
         result = {"status": False, "data": {}}
-        url = "{}/storage/storage_agent/dataplane_ip".format(self.base_url)
-        data = {"ip_type": config_mode, "next_hop": next_hop, "dataplane_ip": ip, "subnet_mask": subnet_mask}
-        response = request("post", url, auth=self.http_basic_auth, data=data)
-        print response
-        print response.json()
+        url = "{}/topology/dpus/{}".format(self.base_url, dpu_id)
+        data = {"op": "DPU_DP_IP", "node_id": dpu_id, "ip_assignment_dhcp": use_dhcp, "dataplane_ip": ip,
+                "subnet_mask": subnet_mask, "next_hop": next_hop}
+        response = request("patch", url, auth=self.http_basic_auth, json=data)
+        if response.status_code == 200:
+            result = response.json()
+        return result
 
     def get_pools(self):
         response = request('get', self.pool_url, auth=self.http_basic_auth)
@@ -68,7 +96,7 @@ class StorageControllerApi(object):
         return response
 
     def detach_volume(self, port_uuid):
-        url = "{}/ports/{}".format(self.base_url, port_uuid)
+        url = "{}/ports/{}".format(self.storage_base_url, port_uuid)
         response = request('delete', url)
         return response
 
@@ -77,6 +105,3 @@ class StorageControllerApi(object):
         url = "{}/volumes/{}".format(self.volume_url, vol_uuid)
         response = request('delete', url, auth=self.http_basic_auth)
         return response
-
-
-

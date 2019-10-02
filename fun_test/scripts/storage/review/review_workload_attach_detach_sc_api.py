@@ -3,6 +3,7 @@ from web.fun_test.analytics_models_helper import get_data_collection_time
 from lib.fun.fs import Fs
 from lib.topology.topology_helper import TopologyHelper
 from lib.templates.storage.storage_fs_template import *
+from lib.templates.storage.storage_controller_api import *
 from scripts.storage.storage_helper import *
 from lib.system.utils import *
 from lib.host.storage_controller import *
@@ -164,6 +165,7 @@ class StripeVolAttachDetachTestScript(FunTestScript):
             self.host_handles[host_ip] = host_instance
             self.host_info[host_name]["handle"] = host_instance
 
+        """
         # Rebooting all the hosts in non-blocking mode before the test and getting NUMA cpus
         for host_name in self.host_info:
             host_handle = self.host_info[host_name]["handle"]
@@ -182,6 +184,7 @@ class StripeVolAttachDetachTestScript(FunTestScript):
             fun_test.log("Rebooting host: {}".format(host_name))
             host_handle.reboot(non_blocking=True)
         fun_test.log("Hosts info: {}".format(self.host_info))
+        """
 
         # Getting FS, F1 and COMe objects, Storage Controller objects, F1 IPs
         # for all the DUTs going to be used in the test
@@ -212,7 +215,12 @@ class StripeVolAttachDetachTestScript(FunTestScript):
             fun_test.test_assert(self.funcp_spec[index]["status"],
                                  "Starting FunCP docker container in DUT {}".format(index))
             self.funcp_spec[index]["container_names"].sort()
+
+            # Ensure that that FPGO interface is up both the docker containers
             for f1_index, container_name in enumerate(self.funcp_spec[index]["container_names"]):
+                status = self.funcp_obj[index].container_info[container_name].ifconfig_up_down("fpg0", "up")
+                fun_test.test_assert(status, "FPG0 interface up in {}".format(container_name))
+                """
                 bond_interfaces = self.fs_spec[index].get_bond_interfaces(f1_index=f1_index)
                 bond_name = "bond0"
                 bond_ip = bond_interfaces[0].ip
@@ -231,6 +239,30 @@ class StripeVolAttachDetachTestScript(FunTestScript):
                                               actual=self.funcp_obj[index].container_info[
                                                   container_name].exit_status(),
                                               message="Configure Static route")
+                """
+        # Creating storage controller API object for the first DUT in the current setup
+        fun_test.sleep("", 60)
+        self.sc_api_obj = StorageControllerApi(api_server_ip=self.come_obj[0].host_ip,
+                                               api_server_port=self.api_server_port, username=self.api_server_username,
+                                               password=self.api_server_password)
+        # Getting all the DUTs of the setup
+        nodes = self.sc_api_obj.get_dpu_ids()
+        fun_test.test_assert(nodes, "Getting UUIDs of all DUTs in the setup")
+        for index, node in enumerate(nodes):
+            # Extracting the DUT's bond interface details and applying it to FPG0 for now, due to SC bug
+            ip = self.fs_spec[index / 2].spec["bond_interface_info"][str(index % 2)][str(0)]["ip"]
+            ip = ip.split('/')[0]
+            subnet_mask = self.fs_spec[index / 2].spec["bond_interface_info"][str(index % 2)][str(0)]["subnet_mask"]
+            route = self.fs_spec[index / 2].spec["bond_interface_info"][str(index % 2)][str(0)]["route"][0]
+            next_hop = "{}/{}".format(route["gateway"], route["network"].split("/")[1])
+            self.f1_ips.append(ip)
+
+            fun_test.log("Current {} node's FPG0 is going to be configured with {} IP address with {} subnet mask with"
+                         " next hop set to {}".format(node, ip, subnet_mask, next_hop))
+            result = self.sc_api_obj.configure_dataplane_ip(dpu_id=node, interface_name="fpg0", ip=ip,
+                                                            subnet_mask=subnet_mask, next_hop=next_hop, use_dhcp=False)
+            fun_test.log("Dataplane IP configuration result of {}: {}".format(node, result))
+            fun_test.test_assert(result["status"], "Configuring {} DUT with Dataplane IP {}".format(node, ip))
 
         # Forming shared variables for defined parameters
         fun_test.shared_variables["f1_in_use"] = self.f1_in_use
@@ -239,6 +271,7 @@ class StripeVolAttachDetachTestScript(FunTestScript):
         fun_test.shared_variables["come_obj"] = self.come_obj
         fun_test.shared_variables["f1_obj"] = self.f1_obj
         fun_test.shared_variables["sc_obj"] = self.sc_obj
+        fun_test.shared_variables["sc_api_obj"] = self.sc_api_obj
         fun_test.shared_variables["f1_ips"] = self.f1_ips
         fun_test.shared_variables["host_handles"] = self.host_handles
         fun_test.shared_variables["host_ips"] = self.host_ips
