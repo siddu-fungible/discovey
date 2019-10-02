@@ -7,45 +7,65 @@ HOSTS_ASSET = ASSET_DIR + "/hosts.json"
 hosts = fun_test.parse_file_to_json(file_name=HOSTS_ASSET)
 
 
-def check_host_connected(hosts_list):
-    for host_name in hosts_list:
-        result = False
+def connect_the_host(hosts_list, target_ip):
+    for host_name, host in hosts_list.iteritems():
+        result = host["handle"].nvme_connect(target_ip=target_ip, nvme_subsystem=host["nqn"], nvme_io_queues=16)
+        # fun_test.test_assert(result, "{} {} connected to {}".format(host_name, host["nqn"], target_ip))
+        host["handle"].sudo_command("nvme list")
+        # output_lsblk = host_handle.lsblk()
+        # for key in output_lsblk:
+        #     if "nvme" in key:
+        #         result = True
+        #         break
+
+
+        # fun_test.test_assert(result, "{} host is connected".format(host_name))
+
+
+def add_hosts_handle(hosts_list):
+    result = {}
+    for host_name, nqn in hosts_list.iteritems():
         host_handle = get_host_handle(host_name)
-        output_lsblk = host_handle.lsblk()
-        for key in output_lsblk:
-            if "nvme" in key:
-                result = True
-                break
-        fun_test.test_assert(result, "{} host is connected".format(host_name))
-
-
-def run_traffic(host_name, target_ip, nqn, filename):
-    result = False
-    host_handle = get_host_handle(host_name)
-    result = host_handle.nvme_connect(target_ip=target_ip, nvme_subsystem=nqn)
-    fun_test.test_assert(result, "{} connected to {}".format(nqn, target_ip))
-    # Run this in background if needed
-    fio_out = host_handle.pcie_fio(filename=filename, numjobs=16, iodepth=16, rw="randrw", direct=1,
-                                   ioengine="libaio", bs="4k", size="512g", name="fio_randrw", runtime=60)
-    if not fio_out:
-        result = True
+        result[host_name] = {"nqn": nqn,
+                             "handle": host_handle}
     return result
 
 
+def destroy_hosts_handle(hosts_list):
+    for host_name, host in hosts_list.iteritems():
+        host["handle"].destroy()
+
+
+def run_traffic_bg(hosts_list):
+    for host_name, host in hosts_list.iteritems():
+        # result = host_handle.nvme_connect(target_ip=target_ip, nvme_subsystem=nqn)
+        # fun_test.test_assert(result, "{} connected to {}".format(nqn, target_ip))
+        # Run this in background if needed
+        # fio_out = host_handle.pcie_fio(filename=filename, numjobs=4, iodepth=4, rw="randrw", direct=1,
+        #                                ioengine="libaio", bs="4k", size="512g", name="fio_randrw", runtime=120,
+        #                                do_verify=1, verify="md5", verify_fatal=1, timeout=300)
+        host["handle"].enter_sudo()
+        host["handle"].start_bg_process("fio --group_reporting --output-format=json --filename=/dev/nvme0n1 --time_based --rw=randrw --name=fio --iodepth=4 --verify=md5 --numjobs=4 --direct=1 --do_verify=1 --bs=4k --ioengine=libaio --runtime=120 --verify_fatal=1 --size=512g")
+        fun_test.test_assert(True, "{} fio started".format(host_name))
+        host["handle"].exit_sudo()
+        # if not fio_out:
+        #     result = True
+    return
+
+
 def check_traffic(hosts_list):
-    for host_name in hosts_list:
-        host_handle = get_host_handle(host_name)
+    for host_name, host in hosts_list.iteritems():
         device = "/dev/nvme0n1"
-        output_iostat = host_handle.iostat(device=device, interval=2, count=5, background=False)
+        output_iostat = host["handle"].iostat(device=device, interval=2, count=5, background=False)
         device_name = "nvme0n1"
         result = wrapper.ensure_io_running(device_name, output_iostat, host_name)
 
 
-def disconnect_vol(host_name, nqn):
-    result = False
-    host_handle = get_host_handle(host_name)
-    result = host_handle.sudo_command("nvme disconnect -n {}".format(nqn))
-    fun_test.test_assert("Host {} disconnected from {}".format(host_name, nqn))
+def disconnect_vol(hosts_list, target_ip):
+    for host_name, host in hosts_list.iteritems():
+        result = False
+        result = host["handle"].sudo_command("nvme disconnect -d /dev/nvme0n1")
+        fun_test.test_assert(True, "Host {} disconnected from {}".format(host_name, target_ip))
 
 
 def check_docker(come_handle, expected=3):
