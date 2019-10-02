@@ -45,7 +45,7 @@ def run_traffic_bg(hosts_list):
         #                                ioengine="libaio", bs="4k", size="512g", name="fio_randrw", runtime=120,
         #                                do_verify=1, verify="md5", verify_fatal=1, timeout=300)
         host["handle"].enter_sudo()
-        host["handle"].start_bg_process("fio --group_reporting --output-format=json --filename=/dev/nvme0n1 --time_based --rw=randrw --name=fio --iodepth=4 --verify=md5 --numjobs=4 --direct=1 --do_verify=1 --bs=4k --ioengine=libaio --runtime=120 --verify_fatal=1 --size=512g")
+        host["handle"].start_bg_process("fio --group_reporting --output-format=json --filename=/dev/nvme0n1 --time_based --rw=randrw --name=fio --iodepth=16 --verify=md5 --numjobs=4 --direct=1 --do_verify=1 --bs=4k --ioengine=libaio --runtime=120 --verify_fatal=1 --size=512g")
         fun_test.test_assert(True, "{} fio started".format(host_name))
         host["handle"].exit_sudo()
         # if not fio_out:
@@ -56,9 +56,9 @@ def run_traffic_bg(hosts_list):
 def check_traffic(hosts_list):
     for host_name, host in hosts_list.iteritems():
         device = "/dev/nvme0n1"
-        output_iostat = host["handle"].iostat(device=device, interval=2, count=5, background=False)
+        output_iostat = host["handle"].iostat(device=device, interval=10, count=13, background=False)
         device_name = "nvme0n1"
-        result = wrapper.ensure_io_running(device_name, output_iostat, host_name)
+        wrapper.ensure_io_running(device_name, output_iostat, host_name)
 
 
 def disconnect_vol(hosts_list, target_ip):

@@ -158,14 +158,16 @@ class ApcPduTestcase(FunTestCase):
             if self.validate["hosts"]:
                 fun_test.sleep("Hosts to be up", seconds=200)
                 hosts_list = add_hosts_handle(self.validate["hosts"])
-                connect_the_host(hosts_list, self.validate["target_ip"])
-                # Start traffic
-                run_traffic_bg(hosts_list)
-                # Check if traffic is running
-                check_traffic(hosts_list)
-                # Disconnect volume
-                disconnect_vol(hosts_list, self.validate["target_ip"])
-                destroy_hosts_handle(hosts_list)
+                for host_name, host in hosts_list.iteritems():
+                    single_host = {host_name: host}
+                    connect_the_host(single_host, self.validate["target_ip"])
+                    # Start traffic
+                    run_traffic_bg(single_host)
+                    # Check if traffic is running
+                    check_traffic(single_host)
+                    # Disconnect volume
+                    disconnect_vol(single_host, self.validate["target_ip"])
+                    destroy_hosts_handle(single_host)
             come_handle.destroy()
             bmc_handle.destroy()
 
