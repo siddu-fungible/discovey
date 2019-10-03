@@ -65,10 +65,26 @@ def check_traffic(hosts_list):
 
 def disconnect_vol(hosts_list, target_ip):
     for host_name, host in hosts_list.iteritems():
-        result = False
+        # result = False
         result = host["handle"].sudo_command("nvme disconnect -d /dev/nvme0n1")
         result = host["handle"].sudo_command("nvme disconnect -d /dev/nvme1n1")
-        # fun_test.test_assert(result, "Host {} disconnected from {}".format(host_name, target_ip))
+        # nvme_list_raw = host["handle"].sudo_command("nvme list -o json")
+        # try:
+        #     nvme_list_dict = json.loads(nvme_list_raw)
+        # except:
+        #     nvme_list_raw = nvme_list_raw + "}"
+        #     nvme_list_dict = json.loads(nvme_list_raw, strict=False)
+        #
+        # nvme_device_list = []
+        # for device in nvme_list_dict["Devices"]:
+        #     if "Non-Volatile memory controller: Vendor 0x1dad" in device["ProductName"]:
+        #         nvme_device_list.append(device["DevicePath"])
+        #     elif "Unknown Device" in device["ProductName"]:
+        #         if not device["ModelNumber"].strip() and not device["SerialNumber"].strip():
+        #             nvme_device_list.append(device["DevicePath"])
+        # for device in nvme_device_list:
+        #     result = host["handle"].sudo_command("nvme disconnect -d {}".format(device))
+        #     fun_test.test_assert(result, "Host {} disconnected from {}".format(host_name, target_ip))
 
 
 def check_docker(come_handle, expected=3):
