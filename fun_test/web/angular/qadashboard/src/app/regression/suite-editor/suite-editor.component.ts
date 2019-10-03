@@ -598,4 +598,13 @@ export class SuiteEditorComponent implements OnInit {
   onDeleteSuiteEntry(index) {
     this.suite.entries.splice(index, 1);
   }
+
+  _hasPoolMemerOptions(flatName) {
+    return Object.keys(this.poolMemberOptions).indexOf(flatName) > -1;
+  }
+
+  _getPoolMemberOptions(flatName) {
+    console.log(this.poolMemberOptions[flatName]);
+  }
+
 }

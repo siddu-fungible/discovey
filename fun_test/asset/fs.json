@@ -34,7 +34,7 @@
     "fpga": {
       "mgmt_ssh_password": "root",
       "mgmt_ssh_username": "root",
-      "mgmt_ip": "10.1.20.180"
+      "mgmt_ip": "10.1.20.178"
     },
     "name": "fs-7"
   },
@@ -413,7 +413,7 @@
     },
     "apc_info": {
       "username": "localadmin",
-      "outlet_number": 21,
+      "outlet_number": 4,
       "password": "Precious1*",
       "host_ip": "cab02-pdu1"
     },

@@ -1,6 +1,96 @@
 from lib.system.fun_test import *
 from collections import OrderedDict
 import re
+from lib.host.linux import Linux
+import wrapper
+HOSTS_ASSET = ASSET_DIR + "/hosts.json"
+hosts = fun_test.parse_file_to_json(file_name=HOSTS_ASSET)
+
+
+def connect_the_host(hosts_list, target_ip):
+    for host_name, host in hosts_list.iteritems():
+        result = host["handle"].nvme_connect(target_ip=target_ip, nvme_subsystem=host["nqn"], nvme_io_queues=16)
+        fun_test.test_assert(result, "{} {} connected to {}".format(host_name, host["nqn"], target_ip))
+        host["handle"].sudo_command("nvme list")
+        # output_lsblk = host_handle.lsblk()
+        # for key in output_lsblk:
+        #     if "nvme" in key:
+        #         result = True
+        #         break
+
+
+        # fun_test.test_assert(result, "{} host is connected".format(host_name))
+
+
+def add_hosts_handle(hosts_list):
+    result = {}
+    for host_name, nqn in hosts_list.iteritems():
+        host_handle = get_host_handle(host_name)
+        result[host_name] = {"nqn": nqn,
+                             "handle": host_handle}
+    return result
+
+
+def destroy_hosts_handle(hosts_list):
+    for host_name, host in hosts_list.iteritems():
+        host["handle"].destroy()
+
+
+def run_traffic_bg(hosts_list):
+    for host_name, host in hosts_list.iteritems():
+        # result = host_handle.nvme_connect(target_ip=target_ip, nvme_subsystem=nqn)
+        # fun_test.test_assert(result, "{} connected to {}".format(nqn, target_ip))
+        # Run this in background if needed
+        # fio_out = host_handle.pcie_fio(filename=filename, numjobs=4, iodepth=4, rw="randrw", direct=1,
+        #                                ioengine="libaio", bs="4k", size="512g", name="fio_randrw", runtime=120,
+        #                                do_verify=1, verify="md5", verify_fatal=1, timeout=300)
+        host["handle"].enter_sudo()
+        host["handle"].start_bg_process("fio --group_reporting --output-format=json --filename=/dev/nvme0n1 "
+                                        "--time_based --rw=randrw --name=fio --iodepth=32 --verify=md5 --numjobs=1 "
+                                        "--direct=1 --do_verify=1 --bs=4k --ioengine=libaio --runtime=120 --verify_fatal=1 --size=512g")
+        fun_test.test_assert(True, "{} fio started".format(host_name))
+        host["handle"].exit_sudo()
+        # if not fio_out:
+        #     result = True
+    return
+
+
+def check_traffic(hosts_list):
+    for host_name, host in hosts_list.iteritems():
+        device = "/dev/nvme0n1"
+        output_iostat = host["handle"].iostat(device=device, interval=10, count=13, background=False)
+        device_name = "nvme0n1"
+        wrapper.ensure_io_running(device_name, output_iostat, host_name)
+
+
+def disconnect_vol(hosts_list, target_ip):
+    for host_name, host in hosts_list.iteritems():
+        # result = False
+        result = host["handle"].sudo_command("nvme disconnect -d /dev/nvme0n1")
+        result = host["handle"].sudo_command("nvme disconnect -d /dev/nvme1n1")
+        # nvme_list_raw = host["handle"].sudo_command("nvme list -o json")
+        # try:
+        #     nvme_list_dict = json.loads(nvme_list_raw)
+        # except:
+        #     nvme_list_raw = nvme_list_raw + "}"
+        #     nvme_list_dict = json.loads(nvme_list_raw, strict=False)
+        #
+        # nvme_device_list = []
+        # for device in nvme_list_dict["Devices"]:
+        #     if "Non-Volatile memory controller: Vendor 0x1dad" in device["ProductName"]:
+        #         nvme_device_list.append(device["DevicePath"])
+        #     elif "Unknown Device" in device["ProductName"]:
+        #         if not device["ModelNumber"].strip() and not device["SerialNumber"].strip():
+        #             nvme_device_list.append(device["DevicePath"])
+        # for device in nvme_device_list:
+        #     result = host["handle"].sudo_command("nvme disconnect -d {}".format(device))
+        #     fun_test.test_assert(result, "Host {} disconnected from {}".format(host_name, target_ip))
+
+
+def check_docker(come_handle, expected=3):
+    output = come_handle.command("docker ps -a")
+    num_docker = wrapper.docker_get_num_dockers(output)
+    fun_test.test_assert_expected(expected=expected, actual=num_docker, message="Docker's up")
 
 
 def check_pci_dev(come_handle, f1=0):
@@ -23,9 +113,10 @@ def check_ssd(come_handle, expected_ssds_up=6, f1=0):
         return True
     dpcsh_data = get_dpcsh_data_for_cmds(come_handle, "peek storage/devices/nvme/ssds", f1)
     if dpcsh_data:
-        validate = validate_ssd_status(dpcsh_data, expected_ssds_up)
+        validate = validate_ssd_status(dpcsh_data, expected_ssds_up, f1)
         if validate:
             result = True
+    fun_test.test_assert(result, "F1_{}: SSD's ONLINE".format(f1))
     return result
 
 
@@ -45,18 +136,28 @@ def check_nu_ports(come_handle,
     return result
 
 
+def check_come_up_time(come_handle, expected_seconds=5):
+    initial = come_handle.command("uptime")
+    output = come_handle.command("uptime")
+    up_time = re.search(r'(\d+) min', output)
+    up_time_less_than_5 = False
+    if up_time:
+        up_time_min = int(up_time.group(1))
+        if up_time_min <= expected_seconds:
+            up_time_less_than_5 = True
+    fun_test.test_assert(up_time_less_than_5, "COMe 'up-time' less than 5 min")
+
+
 # Validation
 
 
-def validate_ssd_status(dpcsh_data, expected_ssd_count):
+def validate_ssd_status(dpcsh_data, expected_ssd_count, f1):
     result = True
     if dpcsh_data:
         ssds_count = len(dpcsh_data)
-        ssd_count_check = False
-        if ssds_count == expected_ssd_count:
-            ssd_count_check = True
-        fun_test.test_assert(ssd_count_check,
-                             "SSD count: Expected: {}, Present: {}".format(expected_ssd_count, ssds_count), )
+        fun_test.test_assert_expected(expected=expected_ssd_count,
+                                      actual=ssds_count,
+                                      message="F1_{}: SSD count".format(f1))
         for each_ssd, value in dpcsh_data.iteritems():
             if "device state" in value:
                 if not (value["device state"] == "DEV_ONLINE"):
@@ -175,3 +276,13 @@ def get_dpcsh_data_for_cmds(come_handle, cmd, f1=0):
     except:
         fun_test.log("Unable to get the DPCSH data for command: {}".format(cmd))
     return result
+
+# Common functions
+
+
+def get_host_handle(host_name):
+    host_info = hosts[host_name]
+    host_handle = Linux(host_ip=host_info['host_ip'],
+                        ssh_username=host_info['ssh_username'],
+                        ssh_password=host_info['ssh_password'])
+    return host_handle

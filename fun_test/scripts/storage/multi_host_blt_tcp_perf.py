@@ -141,7 +141,7 @@ class MultiHostVolumePerformanceScript(FunTestScript):
         if "disable_wu_watchdog" in job_inputs:
             self.disable_wu_watchdog = job_inputs["disable_wu_watchdog"]
         else:
-            self.disable_wu_watchdog = True
+            self.disable_wu_watchdog = False
         if "syslog" in job_inputs:
             self.syslog = job_inputs["syslog"]
 
