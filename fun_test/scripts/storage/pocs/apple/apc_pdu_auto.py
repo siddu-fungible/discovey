@@ -20,6 +20,7 @@ class ApcPduScript(FunTestScript):
 
 class ApcPduTestcase(FunTestCase):
     NUMBER_OF_ITERATIONS = 100
+    END_SLEEP = 300
 
     def describe(self):
         self.set_test_details(id=1,
@@ -78,6 +79,8 @@ class ApcPduTestcase(FunTestCase):
                 self.validate["expected_dockers"] = job_inputs["expected_dockers"]
             if "target_ip" in job_inputs:
                 self.validate["target_ip"] = job_inputs["target_ip"]
+            if "end_sleep" in job_inputs:
+                self.END_SLEEP = job_inputs["end_sleep"]
 
         fun_test.log(json.dumps(self.fs, indent=4))
         fun_test.log(self.validate)
@@ -155,12 +158,15 @@ class ApcPduTestcase(FunTestCase):
                 fun_test.sleep("docker to be up", seconds=40)
                 check_docker(come_handle, expected=self.validate["expected_dockers"])
 
+            # Todo: remove for loop in the helper script (previously had codded to work parallelly with multiple host,
+            #  now we have to do it serially, so no need of for loops in helper function)
             if self.validate["hosts"]:
                 fun_test.sleep("Hosts to be up", seconds=100)
-                hosts_list = add_hosts_handle(self.validate["hosts"])
+                hosts_list = get_hosts_handle(self.validate["hosts"])
                 for host_name, host in hosts_list.iteritems():
                     single_host = {host_name: host}
                     connect_the_host(single_host, self.validate["target_ip"])
+                    host["nvme"] = get_nvme(single_host)
                     # Start traffic
                     run_traffic_bg(single_host)
                     # Check if traffic is running
@@ -171,7 +177,7 @@ class ApcPduTestcase(FunTestCase):
             come_handle.destroy()
             bmc_handle.destroy()
 
-            fun_test.sleep("Sleeping for 300s before next iteration", seconds=300)
+            fun_test.sleep("before next iteration", seconds=self.END_SLEEP)
 
     def apc_pdu_reboot(self, come_handle):
         '''
