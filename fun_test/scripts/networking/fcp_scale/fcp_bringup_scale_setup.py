@@ -117,11 +117,6 @@ class ScriptSetup(FunTestScript):
         fun_test.shared_variables["topology"] = topology
         fun_test.test_assert(topology, "Topology deployed")
 
-        tb_config_obj = tb_configs.TBConfigs(test_bed_type)
-        funeth_obj = Funeth(tb_config_obj)
-        fun_test.shared_variables['funeth_obj'] = funeth_obj
-        setup_hu_host(funeth_obj, update_driver=True, num_queues=4)
-
     def cleanup(self):
         fun_test.log("Cleanup")
         fun_test.shared_variables["topology"].cleanup()
@@ -129,7 +124,7 @@ class ScriptSetup(FunTestScript):
 
 class TestHostPCIeLanes(FunTestCase):
     def describe(self):
-        self.set_test_details(id=6, summary="Test PCIe speeds for HU servers",
+        self.set_test_details(id=1, summary="Test PCIe speeds for HU servers",
                               steps="""
                                       1. SSH into each host
                                       2. Check PCIe link
@@ -194,7 +189,31 @@ class TestHostPCIeLanes(FunTestCase):
         pass
 
 
+class BringupPCIeHosts(FunTestCase):
+    def describe(self):
+        self.set_test_details(id=2, summary="Test PCIe speeds for HU servers",
+                              steps="""
+                                      1. SSH into each host
+                                      2. Check PCIe link
+                                      3. Make sure PCIe link speed is correct
+                                      """)
+
+    def setup(self):
+        pass
+
+    def run(self):
+        test_bed_type = fun_test.get_job_environment_variable('test_bed_type')
+        tb_config_obj = tb_configs.TBConfigs(test_bed_type)
+        funeth_obj = Funeth(tb_config_obj)
+        fun_test.shared_variables['funeth_obj'] = funeth_obj
+        setup_hu_host(funeth_obj, update_driver=True, num_queues=4)
+
+    def cleanup(self):
+        pass
+
+
 if __name__ == '__main__':
     ts = ScriptSetup()
     ts.add_test_case(TestHostPCIeLanes())
+    ts.add_test_case(BringupPCIeHosts())
     ts.run()
