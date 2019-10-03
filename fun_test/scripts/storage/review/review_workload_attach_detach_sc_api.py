@@ -412,6 +412,7 @@ class StripeVolAttachDetachTestCase(FunTestCase):
         self.come_obj = fun_test.shared_variables["come_obj"]
         self.f1 = fun_test.shared_variables["f1_obj"][0][0]
         self.storage_controller = fun_test.shared_variables["sc_obj"][self.f1_in_use]
+        self.sc_api = fun_test.shared_variables["sc_api_obj"]
         self.f1_ips = fun_test.shared_variables["f1_ips"][self.f1_in_use]
         self.host_info = fun_test.shared_variables["host_info"]
         self.num_f1s = fun_test.shared_variables["num_f1s"]
@@ -429,6 +430,12 @@ class StripeVolAttachDetachTestCase(FunTestCase):
             fun_test.shared_variables["blt"]["warmup_io_completed"] = False
             fun_test.shared_variables["blt_details"] = self.blt_details
             fun_test.shared_variables["stripe_details"] = self.stripe_details
+
+            if self.create_pool:
+                pass
+
+            pool_name = self.default_pool if not self.create_pool else self.pool_name
+            self.pool_uuid = self.sc_api.get_pool_uuid_by_name(name=pool_name)
 
             # Configuring controller IP
             command_result = self.storage_controller.ip_cfg(ip=self.test_network["f1_loopback_ip"])
