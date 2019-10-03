@@ -206,7 +206,7 @@ class BringupPCIeHosts(FunTestCase):
         tb_config_obj = tb_configs.TBConfigs(test_bed_type)
         funeth_obj = Funeth(tb_config_obj)
         fun_test.shared_variables['funeth_obj'] = funeth_obj
-        setup_hu_host(funeth_obj, update_driver=True, num_queues=4)
+        setup_hu_host(funeth_obj, update_driver=False, num_queues=4)
 
     def cleanup(self):
         pass
