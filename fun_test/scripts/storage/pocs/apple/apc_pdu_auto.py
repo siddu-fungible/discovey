@@ -21,6 +21,8 @@ class ApcPduScript(FunTestScript):
 class ApcPduTestcase(FunTestCase):
     NUMBER_OF_ITERATIONS = 100
     END_SLEEP = 300
+    DOCKER_VERIFY_INTERVAL = 60
+    AFTER_RUNSC_UP_HOST_CONNECT_INTERVAL = 60
 
     def describe(self):
         self.set_test_details(id=1,
@@ -81,6 +83,10 @@ class ApcPduTestcase(FunTestCase):
                 self.validate["target_ip"] = job_inputs["target_ip"]
             if "end_sleep" in job_inputs:
                 self.END_SLEEP = job_inputs["end_sleep"]
+            if "docker_verify_interval" in job_inputs:
+                self.DOCKER_VERIFY_INTERVAL = job_inputs["docker_verify_interval"]
+            if "after_runsc_up_host_connect_interval" in job_inputs:
+                self.AFTER_RUNSC_UP_HOST_CONNECT_INTERVAL = job_inputs["after_runsc_up_host_connect_interval"]
 
         fun_test.log(json.dumps(self.fs, indent=4))
         fun_test.log(self.validate)
@@ -155,13 +161,13 @@ class ApcPduTestcase(FunTestCase):
                 fun_test.test_assert(nu_port_valid, "F1_1: NU ports are present, Expected: {}".format(expected_ports_up_f1_1))
 
             if self.validate["check_docker"]:
-                fun_test.sleep("docker to be up", seconds=40)
+                fun_test.sleep("docker to be up", seconds=self.DOCKER_VERIFY_INTERVAL)
                 check_docker(come_handle, expected=self.validate["expected_dockers"])
 
             # Todo: remove for loop in the helper script (previously had codded to work parallelly with multiple host,
             #  now we have to do it serially, so no need of for loops in helper function)
             if self.validate["hosts"]:
-                fun_test.sleep("Hosts to be up", seconds=100)
+                fun_test.sleep("Hosts to be up", seconds=self.AFTER_RUNSC_UP_HOST_CONNECT_INTERVAL)
                 hosts_list = get_hosts_handle(self.validate["hosts"])
                 for host_name, host in hosts_list.iteritems():
                     single_host = {host_name: host}
