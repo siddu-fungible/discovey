@@ -244,7 +244,7 @@ hu12:
           nexthop: 20.2.1.1
 
 hu13:
-  hostname: mpoc-server31
+  hostname: mpoc-server41
   username: localadmin
   password: Precious1*
   mgmt_interface: eno1
@@ -264,7 +264,7 @@ hu13:
           nexthop: 20.2.2.1
 
 hu14:
-  hostname: mpoc-server30
+  hostname: mpoc-server40
   username: localadmin
   password: Precious1*
   mgmt_interface: eno1
