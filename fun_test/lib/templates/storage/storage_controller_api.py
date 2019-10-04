@@ -31,10 +31,10 @@ class StorageControllerApi(object):
         return response
 
     def get_auth_token(self):
-        auth_url = "{}/user/token".format(self.base_url)
+        auth_url = "user/token"
         data = {"username": self.username, "password": self.password}
         print "Data to be passed:\n{}".format(data)
-        response = self.execute_api("post", data=data)
+        response = self.execute_api("post", auth_url, data=data)
         print response
         print "Response Object \n{}".format(dir(response))
 
@@ -151,7 +151,7 @@ class StorageControllerApi(object):
         response = self.execute_api('post', url, data=data)
         return response
 
-    def attach_volume(self, vol_uuid, remote_ip="", transport="TCP"):
+    def volume_attach_remote(self, vol_uuid, remote_ip, transport="TCP"):
         result = {"status": False, "data": {}}
         url = "storage/volumes/{}/ports".format(vol_uuid)
         data = {"remote_ip": remote_ip, "transport": transport}
@@ -166,7 +166,8 @@ class StorageControllerApi(object):
     def detach_volume(self, port_uuid):
         result = {"status": False, "data": {}}
         url = "storage/ports/{}".format(port_uuid)
-        response = self.execute_api("POST", url)
+        data = {}
+        response = self.execute_api("DELETE", url, data=data)
         try:
             if response.ok:
                 result = response.json()

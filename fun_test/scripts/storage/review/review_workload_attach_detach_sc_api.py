@@ -206,12 +206,10 @@ class StripeVolAttachDetachTestScript(FunTestScript):
         self.funcp_obj = {}
         self.funcp_spec = {}
         for index in xrange(self.num_duts):
-            self.funcp_obj[index] = StorageFsTemplate(self.come_obj[index])
-
             # Removing existing db directories for fresh setup
             try:
-                if self.initialise_sc_db:
-                    for directory in self.directories:
+                if self.cleanup_sc_db:
+                    for directory in self.sc_db_directories:
                         if self.come_obj[index].check_file_directory_exists(path=directory):
                             fun_test.log("Removing Directory {}".format(directory))
                             self.come_obj[index].sudo_command("rm -rf {}".format(directory))
@@ -222,6 +220,7 @@ class StripeVolAttachDetachTestScript(FunTestScript):
             except Exception as ex:
                 fun_test.critical(str(ex))
 
+            self.funcp_obj[index] = StorageFsTemplate(self.come_obj[index])
             self.funcp_spec[index] = self.funcp_obj[index].deploy_funcp_container(
                 update_deploy_script=self.update_deploy_script, update_workspace=self.update_workspace,
                 mode=self.funcp_mode, include_storage=True)
@@ -474,7 +473,7 @@ class StripeVolAttachDetachTestCase(FunTestCase):
             self.pcap_pid = {}
             fun_test.shared_variables["fio"] = {}
             for index, host_name in enumerate(self.host_info):
-                attach_volume = self.sc_api.attach_volume(vol_uuid=self.stripe_uuid,
+                attach_volume = self.sc_api.volume_attach_remote(vol_uuid=self.stripe_uuid,
                                                           transport=self.transport_type.upper(),
                                                           remote_ip=self.host_info[host_name]["ip"][0])
                 fun_test.test_assert(attach_volume["status"],
@@ -482,6 +481,7 @@ class StripeVolAttachDetachTestCase(FunTestCase):
                                      format(self.stripe_uuid, self.transport_type.upper(), host_name))
 
                 self.nqn = attach_volume["data"]["nqn"]
+                self.detach_uuid = attach_volume["data"]["uuid"]
                 fun_test.shared_variables["blt"][host_name] = {}
                 host_handle = self.host_info[host_name]["handle"]
                 test_interface = self.host_info[host_name]["test_interface"].name
@@ -539,7 +539,6 @@ class StripeVolAttachDetachTestCase(FunTestCase):
                                                   message="{} - NVME Disconnect Status".format(host_name))
                 except Exception as ex:
                     fun_test.critical(str(ex))
-
 
                 # Detach call
                 ports_details = self.sc_api.get_ports()
@@ -870,7 +869,7 @@ class StripeVolAttachDetachTestCase(FunTestCase):
                                                                                   **self.fio_cmd_args)
 
                         fun_test.sleep("Iteration: {} - before disconnect".format(iter), self.nvme_conn_disconn)
-                        if self.nvme_conn_disconn:
+                        if self.disconnect_before_detach:
                             try:
                                 fun_test.log("Iteration: {} - Disconnecting and Detaching volume from host".format(iter))
                                 nvme_disconnect_cmd = "nvme disconnect -n {}".format(self.nvme_subsystem)
@@ -923,10 +922,12 @@ class StripeVolAttachDetachTestCase(FunTestCase):
                                 fio_output[iodepth][host_name] = {}
                                 fun_test.log("Joining fio thread {}".format(index))
                                 fun_test.join_thread(fun_test_thread_id=test_thread_id[index], sleep_time=1)
-                                fun_test.test_assert(
-                                    not fun_test.shared_variables["fio"][index],
-                                    "Iteration: {} - FIO output on Disconnect and Detach during an IO on {}"
-                                        .format(iter, host_name))
+                                if fun_test.shared_variables["fio"][index]:
+                                    fun_test.add_checkpoint("Iteration: {} - FIO output on Disconnect and Detach during an "
+                                                            "IO on {}".format(iter, host_name), "PASSED")
+                                else:
+                                    fun_test.add_checkpoint("Iteration: {} - FIO output on Disconnect and Detach during an "
+                                                            "IO on {}".format(iter, host_name), "FAILED")
                         except Exception as ex:
                             fun_test.critical(str(ex))
                             fun_test.log("Expected FIO failure {}:\n {}".
@@ -958,7 +959,7 @@ class StripeVolAttachDetachTestCase(FunTestCase):
                     fun_test.log("FIO Command Output from {}:\n {}".format(host_name,
                                                                            fun_test.shared_variables["fio"][index]))
 
-            fun_test.sleep("Waiting in between iterations", self.iter_interval)
+        fun_test.sleep("Waiting in between iterations", self.iter_interval)
 
     def cleanup(self):
         try:

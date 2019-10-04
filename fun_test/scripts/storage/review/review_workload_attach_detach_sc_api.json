@@ -32,8 +32,8 @@
     "api_server_port": 50220,
     "api_server_username": "admin",
     "api_server_password": "password",
-    "initialise_sc_db": true,
-    "directories": ["/var/opt/fungible/elasticsearch", "/var/opt/fungible/cassandra"]
+    "cleanup_sc_db": true,
+    "sc_db_directories": ["/var/opt/fungible/elasticsearch", "/var/opt/fungible/cassandra"]
   },
   "StripedVolAttachConnDisConnDetach": {
     "syslog_level": 2,
@@ -63,6 +63,7 @@
     "attach_detach_count": 50,
     "attach_detach_wait": 2,
     "nvme_conn_disconn": true,
+    "disconnect_before_detach": true,
     "nvme_conn_disconn_wait": 0
   },
   "StripedVolAttachConnDisConnDetachIO": {
