@@ -4,17 +4,17 @@ from lib.system.fun_test import *
 def debug_difference(initial_dict, current_dict, f1):
     f1_dict = initial_dict["f1_{}".format(f1)].copy()
     dict_1 = f1_dict["output"]
-    print ("dict_1")
-    print(json.dumps(dict_1, indent=4))
+    # print ("dict_1")
+    # print(json.dumps(dict_1, indent=4))
     time_1 = f1_dict["time"]
     dict_2 = current_dict["output"]
     time_2 = current_dict["time"]
-    print ("dict_2")
-    print(json.dumps(dict_2, indent=4))
+    # print ("dict_2")
+    # print(json.dumps(dict_2, indent=4))
     time_difference = (time_2 - time_1).seconds
     result = debug_difference_helper(dict_1, dict_2)
     result["time_difference"] = time_difference
-    print(json.dumps(result, indent=4))
+    # print(json.dumps(result, indent=4))
     return result
 
 
