@@ -53,42 +53,42 @@ class FunTestCase1(FunTestCase):
             if "interval" in job_inputs:
                 self.details["interval"] = job_inputs["interval"]
 
-            self.fs = AssetManager().get_fs_by_name(self.details["fs"])
-            fun_test.log(json.dumps(self.fs, indent=4))
-            fun_test.log("Details: {}, Input: {}".format(self.details, job_inputs))
-            # Power files
-            self.power_shell = fun_test.get_test_case_artifact_file_name(post_fix_name="power_shell_script_logs.txt")
-            self.power_output = fun_test.get_test_case_artifact_file_name(post_fix_name="power_output_logs.txt")
-            fun_test.add_auxillary_file(description="Power shell script output", filename=self.power_shell)
-            fun_test.add_auxillary_file(description="FS and F1 power output", filename=self.power_output)
+        self.fs = AssetManager().get_fs_by_name(self.details["fs"])
+        fun_test.log(json.dumps(self.fs, indent=4))
+        fun_test.log("Details: {}, Input: {}".format(self.details, job_inputs))
+        # Power files
+        self.power_shell = fun_test.get_test_case_artifact_file_name(post_fix_name="power_shell_script_logs.txt")
+        self.power_output = fun_test.get_test_case_artifact_file_name(post_fix_name="power_output_logs.txt")
+        fun_test.add_auxillary_file(description="Power shell script output", filename=self.power_shell)
+        fun_test.add_auxillary_file(description="FS and F1 power output", filename=self.power_output)
 
-            # Debug files
-            self.f1_0_debug_memory_dpc_logs = fun_test.get_test_case_artifact_file_name(
-                post_fix_name="debug_memory_F1_0_logs.txt")
-            self.f1_1_debug_memory_dpc_logs = fun_test.get_test_case_artifact_file_name(
-                post_fix_name="debug_memory_F1_1_logs.txt")
-            fun_test.add_auxillary_file(description="debug memory dpcsh output F1_0",
-                                        filename=self.f1_0_debug_memory_dpc_logs)
-            fun_test.add_auxillary_file(description="debug memory dpcsh output F1_1",
-                                        filename=self.f1_1_debug_memory_dpc_logs)
-            self.f1_0_debug_memory_difference_dpc_logs = fun_test.get_test_case_artifact_file_name(
-                post_fix_name="debug_memory_difference_F1_0_logs.txt")
-            self.f1_1_debug_memory_difference_dpc_logs = fun_test.get_test_case_artifact_file_name(
-                post_fix_name="debug_memory_difference_F1_1_logs.txt")
-            fun_test.add_auxillary_file(description="debug memory dpcsh output difference stats F1_0",
-                                        filename=self.f1_0_debug_memory_difference_dpc_logs)
-            fun_test.add_auxillary_file(description="debug memory dpcsh output difference stats F1_1",
-                                        filename=self.f1_1_debug_memory_difference_dpc_logs)
+        # Debug files
+        self.f1_0_debug_memory_dpc_logs = fun_test.get_test_case_artifact_file_name(
+            post_fix_name="debug_memory_F1_0_logs.txt")
+        self.f1_1_debug_memory_dpc_logs = fun_test.get_test_case_artifact_file_name(
+            post_fix_name="debug_memory_F1_1_logs.txt")
+        fun_test.add_auxillary_file(description="debug memory dpcsh output F1_0",
+                                    filename=self.f1_0_debug_memory_dpc_logs)
+        fun_test.add_auxillary_file(description="debug memory dpcsh output F1_1",
+                                    filename=self.f1_1_debug_memory_dpc_logs)
+        self.f1_0_debug_memory_difference_dpc_logs = fun_test.get_test_case_artifact_file_name(
+            post_fix_name="debug_memory_difference_F1_0_logs.txt")
+        self.f1_1_debug_memory_difference_dpc_logs = fun_test.get_test_case_artifact_file_name(
+            post_fix_name="debug_memory_difference_F1_1_logs.txt")
+        fun_test.add_auxillary_file(description="debug memory dpcsh output difference stats F1_0",
+                                    filename=self.f1_0_debug_memory_difference_dpc_logs)
+        fun_test.add_auxillary_file(description="debug memory dpcsh output difference stats F1_1",
+                                    filename=self.f1_1_debug_memory_difference_dpc_logs)
 
-            # Traffic
-            self.methods = {"crypto": crypto, "zip": zip, "rcnvme":rcnvme, "fio":fio}
+        # Traffic
+        self.methods = {"crypto": crypto, "zip": zip, "rcnvme":rcnvme, "fio":fio}
 
-            if self.details["duration"] == "1m":
-                self.test_duration = 60
-            elif self.details["duration"] == "1h":
-                self.test_duration = 3600
-            elif self.details["duration"] == "4h":
-                self.test_duration = 14400
+        if self.details["duration"] == "1m":
+            self.test_duration = 60
+        elif self.details["duration"] == "1h":
+            self.test_duration = 3600
+        elif self.details["duration"] == "4h":
+            self.test_duration = 14400
 
 
     def run(self):
