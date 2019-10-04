@@ -68,7 +68,7 @@ def get(time, crypto_per=100, zip_per=100, rcnvme_per=70, fio_per=100):
         result = True
     except Exception as ex:
         fun_test.critical(ex)
-    fun_test.test_assert(result, "Got the app parameters for time : {} min".format(time))
+    fun_test.test_assert(result, "Got the app parameters for time : {} seconds".format(time))
     return app_params
 
 
