@@ -165,7 +165,6 @@ class StripeVolAttachDetachTestScript(FunTestScript):
             self.host_handles[host_ip] = host_instance
             self.host_info[host_name]["handle"] = host_instance
 
-        """
         # Rebooting all the hosts in non-blocking mode before the test and getting NUMA cpus
         for host_name in self.host_info:
             host_handle = self.host_info[host_name]["handle"]
@@ -184,7 +183,6 @@ class StripeVolAttachDetachTestScript(FunTestScript):
             fun_test.log("Rebooting host: {}".format(host_name))
             host_handle.reboot(non_blocking=True)
         fun_test.log("Hosts info: {}".format(self.host_info))
-        """
 
         # Getting FS, F1 and COMe objects, Storage Controller objects, F1 IPs
         # for all the DUTs going to be used in the test
@@ -209,9 +207,25 @@ class StripeVolAttachDetachTestScript(FunTestScript):
         self.funcp_spec = {}
         for index in xrange(self.num_duts):
             self.funcp_obj[index] = StorageFsTemplate(self.come_obj[index])
+
+            # Removing existing db directories for fresh setup
+            try:
+                if self.initialise_sc_db:
+                    for directory in self.directories:
+                        if self.come_obj[index].check_file_directory_exists(path=directory):
+                            fun_test.log("Removing Directory {}".format(directory))
+                            self.come_obj[index].sudo_command("rm -rf {}".format(directory))
+                            fun_test.test_assert_expected(actual=self.come_obj[index].exit_status(), expected=0,
+                                                          message="Directory {} is removed".format(directory))
+                        else:
+                            fun_test.log("Directory {} does not exist skipping deletion".format(directory))
+            except Exception as ex:
+                fun_test.critical(str(ex))
+
             self.funcp_spec[index] = self.funcp_obj[index].deploy_funcp_container(
                 update_deploy_script=self.update_deploy_script, update_workspace=self.update_workspace,
                 mode=self.funcp_mode, include_storage=True)
+
             fun_test.test_assert(self.funcp_spec[index]["status"],
                                  "Starting FunCP docker container in DUT {}".format(index))
             self.funcp_spec[index]["container_names"].sort()
@@ -431,12 +445,110 @@ class StripeVolAttachDetachTestCase(FunTestCase):
             fun_test.shared_variables["blt_details"] = self.blt_details
             fun_test.shared_variables["stripe_details"] = self.stripe_details
 
+            # Creating pool
             if self.create_pool:
                 pass
 
+            # Fetching pool uuid as per pool name provided
             pool_name = self.default_pool if not self.create_pool else self.pool_name
             self.pool_uuid = self.sc_api.get_pool_uuid_by_name(name=pool_name)
 
+            # Creating strip volume using sc api
+            create_stripe_vol = self.sc_api.create_stripe_volume(pool_uuid=self.pool_uuid, name="stripevol1",
+                                                                 capacity=self.stripe_details["vol_size"],
+                                                                 pvol_type=self.stripe_details["pvol_type"],
+                                                                 stripe_count=self.stripe_details["stripe_count"],
+                                                                 encrypt=self.stripe_details["encrypt"],
+                                                                 allow_expansion=self.stripe_details["allow_expansion"],
+                                                                 data_protection=self.stripe_details["data_protection"],
+                                                                 compression_effort=self.stripe_details["compress"])
+            fun_test.test_assert(create_stripe_vol["status"], "Create Stripe Vol with uuid {} on DUT".
+                                 format(create_stripe_vol["data"]["uuid"]))
+            self.stripe_uuid = create_stripe_vol["data"]["uuid"]
+
+            # Attaching volume to host
+
+            # Starting packet capture in all the hosts
+            self.pcap_started = {}
+            self.pcap_stopped = {}
+            self.pcap_pid = {}
+            fun_test.shared_variables["fio"] = {}
+            for index, host_name in enumerate(self.host_info):
+                attach_volume = self.sc_api.attach_volume(vol_uuid=self.stripe_uuid,
+                                                          transport=self.transport_type.upper(),
+                                                          remote_ip=self.host_info[host_name]["ip"][0])
+                fun_test.test_assert(attach_volume["status"],
+                                     "Attach NVMeOF controller to stripe vol {} over {} for host {}".
+                                     format(self.stripe_uuid, self.transport_type.upper(), host_name))
+
+                self.nqn = attach_volume["data"]["nqn"]
+                fun_test.shared_variables["blt"][host_name] = {}
+                host_handle = self.host_info[host_name]["handle"]
+                test_interface = self.host_info[host_name]["test_interface"].name
+                self.pcap_started[host_name] = False
+                self.pcap_stopped[host_name] = True
+                self.pcap_pid[host_name] = {}
+                self.pcap_pid[host_name] = host_handle.tcpdump_capture_start(
+                    interface=test_interface, tcpdump_filename="/tmp/nvme_connect.pcap", snaplen=1500)
+                if self.pcap_pid[host_name]:
+                    fun_test.log("Started packet capture in {}".format(host_name))
+                    self.pcap_started[host_name] = True
+                    self.pcap_stopped[host_name] = False
+                else:
+                    fun_test.critical("Unable to start packet capture in {}".format(host_name))
+
+                if not fun_test.shared_variables["blt"]["nvme_connect"]:
+                    # Checking nvme-connect status
+                    if not hasattr(self, "nvme_io_queues") or self.nvme_io_queues != 0:
+                        nvme_connect_status = host_handle.nvme_connect(
+                            target_ip=attach_volume["data"]["ip"], nvme_subsystem=self.nqn,
+                            port=self.transport_port, transport=self.transport_type.lower(),
+                            nvme_io_queues=self.nvme_io_queues, hostnqn=self.host_info[host_name]["ip"][0])
+                    else:
+                        nvme_connect_status = host_handle.nvme_connect(
+                            target_ip=attach_volume["data"]["ip"], nvme_subsystem=self.nqn,
+                            port=self.transport_port, transport=self.transport_type.lower(),
+                            hostnqn=self.host_info[host_name]["ip"][0])
+
+                    if self.pcap_started[host_name]:
+                        host_handle.tcpdump_capture_stop(process_id=self.pcap_pid[host_name])
+                        self.pcap_stopped[host_name] = True
+
+                    fun_test.test_assert(nvme_connect_status, message="{} - NVME Connect Status".format(host_name))
+
+                    lsblk_output = host_handle.lsblk("-b")
+                    fun_test.simple_assert(lsblk_output, "Listing available volumes")
+
+                    self.volume_name = self.nvme_device.replace("/dev/", "") + "n" + str(attach_volume["data"]["nsid"])
+                    host_handle.sudo_command("dmesg")
+                    lsblk_output = host_handle.lsblk()
+                    fun_test.test_assert(self.volume_name in lsblk_output, "{} device available".
+                                         format(self.volume_name))
+                    fun_test.test_assert_expected(expected="disk", actual=lsblk_output[self.volume_name]["type"],
+                                                  message="{} device type check".format(self.volume_name))
+
+                # Disconnecting volume from host
+                try:
+                    fun_test.log("Disconnecting volume from the host")
+                    # nvme_disconnect_cmd = "nvme disconnect -n {}".format(self.nqn)  # TODO: SWOS-6165
+                    nvme_disconnect_cmd = "nvme disconnect -d {}".format(self.volume_name)
+
+                    host_handle.sudo_command(command=nvme_disconnect_cmd, timeout=60)
+                    nvme_disconnect_exit_status = host_handle.exit_status()
+                    fun_test.test_assert_expected(expected=0, actual=nvme_disconnect_exit_status,
+                                                  message="{} - NVME Disconnect Status".format(host_name))
+                except Exception as ex:
+                    fun_test.critical(str(ex))
+
+
+                # Detach call
+                ports_details = self.sc_api.get_ports()
+                for port, port_details in ports_details["data"].iteritems():
+                    self.port_uuid = port_details["uuid"]
+                fun_test.log("Port UUID is {}".format(self.port_uuid))
+
+
+            '''
             # Configuring controller IP
             command_result = self.storage_controller.ip_cfg(ip=self.test_network["f1_loopback_ip"])
             fun_test.log(command_result)
@@ -561,6 +673,7 @@ class StripeVolAttachDetachTestCase(FunTestCase):
                                          format(self.volume_name))
                     fun_test.test_assert_expected(expected="disk", actual=lsblk_output[self.volume_name]["type"],
                                                   message="{} device type check".format(self.volume_name))
+            '''
 
             # Setting the syslog level
             command_result = self.storage_controller.poke(props_tree=["params/syslog/level", self.syslog_level],
@@ -937,6 +1050,6 @@ class StripedVolAttachDetach(StripeVolAttachDetachTestCase):
 if __name__ == "__main__":
     testscript = StripeVolAttachDetachTestScript()
     testscript.add_test_case(StripedVolAttachConnDisConnDetachIO())
-    testscript.add_test_case(StripedVolAttachConnDisConnDetach())
-    testscript.add_test_case(StripedVolAttachDetach())
+    # testscript.add_test_case(StripedVolAttachConnDisConnDetach())
+    # testscript.add_test_case(StripedVolAttachDetach())
     testscript.run()

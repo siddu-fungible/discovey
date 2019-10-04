@@ -26,7 +26,7 @@ class StorageControllerApi(object):
             elif method == "PATCH":
                 response = requests.patch(url, auth=self.http_basic_auth, json=data)
         except Exception as ex:
-            fun_test.critical("API Exception: ", str(ex))
+            fun_test.critical("API Exception: {}".format(str(ex)))
 
         return response
 
@@ -152,18 +152,41 @@ class StorageControllerApi(object):
         return response
 
     def attach_volume(self, vol_uuid, remote_ip="", transport="TCP"):
-        url = "{}/{}/ports".format(self.volume_url, vol_uuid)
+        result = {"status": False, "data": {}}
+        url = "storage/volumes/{}/ports".format(vol_uuid)
         data = {"remote_ip": remote_ip, "transport": transport}
-        response = self.execute_api('post', url, data=data)
-        return response
+        response = self.execute_api("POST", url, data=data)
+        try:
+            if response.ok:
+                result = response.json()
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
 
     def detach_volume(self, port_uuid):
-        url = "{}/ports/{}".format(self.storage_base_url, port_uuid)
-        response = self.execute_api('delete', url)
-        return response
+        result = {"status": False, "data": {}}
+        url = "storage/ports/{}".format(port_uuid)
+        response = self.execute_api("POST", url)
+        try:
+            if response.ok:
+                result = response.json()
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
 
     def delete_volume(self, vol_uuid):
         # Delete API doesn't accept pool id; so not using it
-        url = "{}/volumes/{}".format(self.volume_url, vol_uuid)
+        url = "storage/volumes/volumes/{}".format(vol_uuid)
         response = self.execute_api('delete', url)
         return response
+
+    def get_ports(self):
+        result = {"status": False, "data": {}}
+        url = "storage/ports"
+        response = self.execute_api("GET", url)
+        try:
+            if response.ok:
+                result = response.json()
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
