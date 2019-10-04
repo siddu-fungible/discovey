@@ -177,9 +177,16 @@ class StorageControllerApi(object):
 
     def delete_volume(self, vol_uuid):
         # Delete API doesn't accept pool id; so not using it
-        url = "storage/volumes/volumes/{}".format(vol_uuid)
-        response = self.execute_api('delete', url)
-        return response
+        result = {"status": False, "data": {}}
+        url = "storage/volumes/{}".format(vol_uuid)
+        data = {}
+        response = self.execute_api('DELETE', url, data=data)
+        try:
+            if response.ok:
+                result = response.json()
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
 
     def get_ports(self):
         result = {"status": False, "data": {}}
