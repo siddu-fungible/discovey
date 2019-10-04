@@ -510,7 +510,7 @@ class StripeVolAttachDetachTestCase(FunTestCase):
                     self.volume_name = self.host_info[host_name]["nvme_block_device_list"][0]
                     '''
                     self.volume_name = self.nvme_device.replace("/dev/", "") + "n" + str(self.stripe_details["ns_id"])
-                    host_handle.sudo_command("dmesg")
+                    host_handle.sudo_command("dmesg -c")
                     lsblk_output = host_handle.lsblk()
                     fun_test.test_assert(self.volume_name in lsblk_output, "{} device available".
                                          format(self.volume_name))
@@ -670,7 +670,7 @@ class StripeVolAttachDetachTestCase(FunTestCase):
 
                             self.volume_name = self.nvme_device.replace("/dev/", "") + "n" + str(
                                 self.stripe_details["ns_id"])
-                            host_handle.sudo_command("dmesg")
+                            host_handle.sudo_command("dmesg -c")
                             lsblk_output = host_handle.lsblk()
 
                             '''
