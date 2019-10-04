@@ -319,25 +319,29 @@ class StripeVolAttachDetachTestScript(FunTestScript):
             self.testcase = fun_test.shared_variables["testcase"]
 
             if fun_test.shared_variables["attach_detach_loop"]:
-                for iteration in range(self.attach_detach_count):
-                    for index, host_name in enumerate(self.host_info):
-                        host_handle = self.host_info[host_name]["handle"]
-                        try:
-                            # Saving the pcap file captured during the nvme connect to the pcap_artifact_file
-                            pcap_post_fix_name = "{}_nvme_connect_iter_{}.pcap".format(host_name, iteration)
-                            pcap_artifact_file = fun_test.get_test_case_artifact_file_name(
-                                post_fix_name=pcap_post_fix_name)
-                            fun_test.scp(source_port=host_handle.ssh_port,
-                                         source_username=host_handle.ssh_username,
-                                         source_password=host_handle.ssh_password,
-                                         source_ip=host_handle.host_ip,
-                                         source_file_path="/tmp/nvme_connect_iter_{}.pcap".format(iteration),
-                                         target_file_path=pcap_artifact_file)
-                            fun_test.add_auxillary_file(description="{}: Host {} NVME connect pcap iteration {}".
-                                                        format(self.testcase, host_name, iteration),
-                                                        filename=pcap_artifact_file)
-                        except Exception as ex:
-                            fun_test.critical(str(ex))
+                for index, host_name in enumerate(self.host_info):
+                    host_handle = self.host_info[host_name]["handle"]
+                    try:
+                        for iteration in range(self.attach_detach_count):
+                            filename = "/tmp/nvme_connect_iter_{}.pcap".format(iteration)
+                            if host_handle.check_file_directory_exists(path=filename):
+                                # Saving the pcap file captured during the nvme connect to the pcap_artifact_file
+                                pcap_post_fix_name = "{}_nvme_connect_iter_{}.pcap".format(host_name, iteration)
+                                pcap_artifact_file = fun_test.get_test_case_artifact_file_name(
+                                    post_fix_name=pcap_post_fix_name)
+                                fun_test.scp(source_port=host_handle.ssh_port,
+                                             source_username=host_handle.ssh_username,
+                                             source_password=host_handle.ssh_password,
+                                             source_ip=host_handle.host_ip,
+                                             source_file_path=filename,
+                                             target_file_path=pcap_artifact_file)
+                                fun_test.add_auxillary_file(description="{}: Host {} NVME connect pcap iteration {}".
+                                                            format(self.testcase, host_name, iteration),
+                                                            filename=pcap_artifact_file)
+                            else:
+                                break
+                    except Exception as ex:
+                        fun_test.critical(str(ex))
 
             # Volume un-configuration
             if not fun_test.shared_variables["attach_detach_loop"]:
