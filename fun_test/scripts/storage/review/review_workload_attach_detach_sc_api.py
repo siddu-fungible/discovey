@@ -357,7 +357,7 @@ class StripeVolAttachDetachTestScript(FunTestScript):
                                                       message="{} - NVME Disconnect Status".format(host_name))
                         # Detaching volume
                         detach_volume = self.sc_api_obj.detach_volume(port_uuid=self.detach_uuid)
-                        fun_test.test_assert(detach_volume, "{} - Detach NVMeOF controller".format(host_name))
+                        fun_test.test_assert(detach_volume["status"], "{} - Detach NVMeOF controller".format(host_name))
                 except Exception as ex:
                     fun_test.critical(str(ex))
 
@@ -744,7 +744,8 @@ class StripeVolAttachDetachTestCase(FunTestCase):
                             detach_volume = self.sc_api.detach_volume(port_uuid=self.detach_uuid)
                             fun_test.log("Iteration: {} - Detach volume API response: {}".format(iteration,
                                                                                                  detach_volume))
-                            fun_test.test_assert(detach_volume, "Iteration: {} - {} - Detach NVMeOF controller".
+                            fun_test.test_assert(detach_volume["status"],
+                                                 "Iteration: {} - {} - Detach NVMeOF controller".
                                                  format(iteration, host_name))
                         except Exception as ex:
                             fun_test.critical(str(ex))
@@ -794,7 +795,7 @@ class StripeVolAttachDetachTestCase(FunTestCase):
                         detach_volume = self.sc_api.detach_volume(port_uuid=self.detach_uuid)
                         fun_test.log("Iteration: {} - Detach volume API response: {}".format(iteration,
                                                                                              detach_volume))
-                        fun_test.test_assert(detach_volume, "Iteration: {} - {} - Detach NVMeOF controller".
+                        fun_test.test_assert(detach_volume["status"], "Iteration: {} - {} - Detach NVMeOF controller".
                                              format(iteration, host_name))
                     except Exception as ex:
                         fun_test.critical(str(ex))
