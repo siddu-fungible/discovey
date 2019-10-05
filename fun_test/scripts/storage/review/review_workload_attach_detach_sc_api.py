@@ -365,7 +365,8 @@ class StripeVolAttachDetachTestScript(FunTestScript):
                 # Delete Strip Volume
                 fun_test.log("\n********** Deleting volume **********\n")
                 delete_volume = self.sc_api_obj.delete_volume(vol_uuid=self.stripe_uuid)
-                fun_test.test_assert(delete_volume, "Deleting Stripe Vol with uuid {} on DUT".format(self.stripe_uuid))
+                fun_test.test_assert(delete_volume["status"],
+                                     "Deleting Stripe Vol with uuid {} on DUT".format(self.stripe_uuid))
             except Exception as ex:
                 fun_test.critical(str(ex))
 
@@ -581,7 +582,7 @@ class StripeVolAttachDetachTestCase(FunTestCase):
                     # Detaching volume
                     detach_volume = self.sc_api.detach_volume(port_uuid=self.detach_uuid)
                     fun_test.log("Detach volume API response: {}".format(detach_volume))
-                    fun_test.test_assert(detach_volume, "{} - Detach Volume".format(host_name))
+                    fun_test.test_assert(detach_volume["status"], "{} - Detach Volume".format(host_name))
 
             fun_test.shared_variables["stripe_vol"]["setup_created"] = True
             fun_test.shared_variables["stripe_uuid"] = self.stripe_uuid
