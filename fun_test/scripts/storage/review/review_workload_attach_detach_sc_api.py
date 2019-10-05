@@ -723,8 +723,59 @@ class StripeVolAttachDetachTestCase(FunTestCase):
                                                                               filename=test_filename,
                                                                               **self.fio_cmd_args)
 
-                    fun_test.sleep("Iteration: {} - before disconnect".format(iteration), self.nvme_disconn_wait)
+                    if self.disconnect_detach_during_io:
+                        if self.disconnect_before_detach:
+                            fun_test.sleep("Iteration: {} - before disconnect".format(iteration), self.nvme_disconn_wait)
+                            try:
+                                fun_test.log("Disconnecting volume from the host")
+                                # nvme_disconnect_cmd = "nvme disconnect -n {}".format(self.nqn)  # TODO: SWOS-6165
+                                nvme_disconnect_cmd = "nvme disconnect -d {}".format(self.volume_name)
+                                host_handle.sudo_command(command=nvme_disconnect_cmd, timeout=60)
+                                nvme_disconnect_exit_status = host_handle.exit_status()
+                                fun_test.test_assert_expected(expected=0, actual=nvme_disconnect_exit_status,
+                                                              message="Iteration: {} - {} - NVME Disconnect Status".
+                                                              format(iteration, host_name))
+                                fun_test.shared_variables["stripe_vol"]["nvme_connect"] = False
+                            except Exception as ex:
+                                fun_test.critical(str(ex))
+                        try:
+                            # Detach volume from NVMe-OF controller
+                            detach_volume = self.sc_api.detach_volume(port_uuid=self.detach_uuid)
+                            fun_test.log("Iteration: {} - Detach volume API response: {}".format(iteration,
+                                                                                                 detach_volume))
+                            fun_test.test_assert(detach_volume, "Iteration: {} - {} - Detach NVMeOF controller".
+                                                 format(iteration, host_name))
+                        except Exception as ex:
+                            fun_test.critical(str(ex))
+
+                if self.io_during_attach_detach:
+                    # Waiting for all the FIO test threads to complete
+                    try:
+                        fun_test.log("Test Thread IDs: {}".format(test_thread_id))
+                        for index, host_name in enumerate(self.host_info):
+                            fio_output[host_name] = {}
+                            fun_test.log("Joining fio thread {}".format(index))
+                            fun_test.join_thread(fun_test_thread_id=test_thread_id[index], sleep_time=1)
+                            if self.disconnect_detach_during_io:
+                                if fun_test.shared_variables["fio"][index]:
+                                    fun_test.add_checkpoint(
+                                        "Iteration: {} - FIO output on Disconnect and Detach during an IO on {}".
+                                            format(iteration, host_name), "PASSED")
+                                else:
+                                    fun_test.add_checkpoint(
+                                        "Iteration: {} - FIO output on Disconnect and Detach during an IO on {}".
+                                            format(iteration, host_name), "FAILED")
+                            else:
+                                fun_test.test_assert(fun_test.shared_variables["fio"][index],
+                                                     "Iteration: {} - FIO output before Disconnect and Detach on {}".
+                                                     format(iteration, host_name))
+                    except Exception as ex:
+                        fun_test.critical(str(ex))
+                        fun_test.log("FIO failure {}:\n {}".format(host_name, fun_test.shared_variables["fio"][index]))
+
+                if not self.disconnect_detach_during_io:
                     if self.disconnect_before_detach:
+                        fun_test.sleep("Iteration: {} - before disconnect".format(iteration), self.nvme_disconn_wait)
                         try:
                             fun_test.log("Disconnecting volume from the host")
                             # nvme_disconnect_cmd = "nvme disconnect -n {}".format(self.nqn)  # TODO: SWOS-6165
@@ -746,27 +797,6 @@ class StripeVolAttachDetachTestCase(FunTestCase):
                                              format(iteration, host_name))
                     except Exception as ex:
                         fun_test.critical(str(ex))
-
-                if self.io_during_attach_detach:
-                    # Waiting for all the FIO test threads to complete
-                    try:
-                        fun_test.log("Test Thread IDs: {}".format(test_thread_id))
-                        for index, host_name in enumerate(self.host_info):
-                            fio_output[host_name] = {}
-                            fun_test.log("Joining fio thread {}".format(index))
-                            fun_test.join_thread(fun_test_thread_id=test_thread_id[index], sleep_time=1)
-                            if fun_test.shared_variables["fio"][index]:
-                                fun_test.add_checkpoint(
-                                    "Iteration: {} - FIO output on Disconnect and Detach during an IO on {}".
-                                        format(iteration, host_name), "PASSED")
-                            else:
-                                fun_test.add_checkpoint(
-                                    "Iteration: {} - FIO output on Disconnect and Detach during an IO on {}".
-                                        format(iteration, host_name), "FAILED")
-                    except Exception as ex:
-                        fun_test.critical(str(ex))
-                        fun_test.log("Expected FIO failure {}:\n {}".
-                                     format(host_name, fun_test.shared_variables["fio"][index]))
         else:
             for index, host_name in enumerate(self.host_info):
                 wait_time = self.num_hosts - index
@@ -813,27 +843,27 @@ class StripeVolAttachDetachTestCase(FunTestCase):
             fun_test.critical(str(ex))
 
 
-class StripedVolAttachConnDisConnDetachIO(StripeVolAttachDetachTestCase):
+class StripedVolAttachConnDisConnDetachDisconnDuringIO(StripeVolAttachDetachTestCase):
     def describe(self):
         self.set_test_details(
             id=1,
-            summary="Multiple Attach-NvmeConnect-NvmeDisconnect-Detach with IO",
+            summary="Multiple Attach-NvmeConnect-NvmeDisconnect-Detach with IO - Disconnect & Detach During IO",
             steps='''
                 1. Create Stripe volume
                 2. Attach volume to one host
                 3. Do nvme_connect and perform sequential write and nvme_disconnect and detach
                 4. Perform Attach-NvmeConnect- IO With DI -NvmeDisconnect-Disconnect in loop
-                5. Start Random Read-Write with data integrity
+                5. Disconnect and Detach during Read-Write, FIO should fail
                 ''')
 
     def setup(self):
-        super(StripedVolAttachConnDisConnDetachIO, self).setup()
+        super(StripedVolAttachConnDisConnDetachDisconnDuringIO, self).setup()
 
     def run(self):
-        super(StripedVolAttachConnDisConnDetachIO, self).run()
+        super(StripedVolAttachConnDisConnDetachDisconnDuringIO, self).run()
 
     def cleanup(self):
-        super(StripedVolAttachConnDisConnDetachIO, self).cleanup()
+        super(StripedVolAttachConnDisConnDetachDisconnDuringIO, self).cleanup()
 
 
 class StripedVolAttachConnDisConnDetach(StripeVolAttachDetachTestCase):
@@ -882,9 +912,35 @@ class StripedVolAttachDetach(StripeVolAttachDetachTestCase):
         super(StripedVolAttachDetach, self).cleanup()
 
 
+class StripedVolAttachConnDisConnDetachDisconnAfterIO(StripeVolAttachDetachTestCase):
+    def describe(self):
+        self.set_test_details(
+            id=4,
+            summary="Multiple Attach-NvmeConnect-NvmeDisconnect-Detach with IO - Disconnect & Detach After IO",
+            steps='''
+                1. Create Stripe volume
+                2. Attach volume to one host
+                3. Do nvme_connect and perform sequential write
+                4. Perform Attach-NvmeConnect- IO With DI -NvmeDisconnect-Disconnect in loop
+                5. Perform RandRead with Verify, FIO should succeed
+                6. Disconnect and Detach
+                7. Repeat step #3 to #6
+                ''')
+
+    def setup(self):
+        super(StripedVolAttachConnDisConnDetachDisconnAfterIO, self).setup()
+
+    def run(self):
+        super(StripedVolAttachConnDisConnDetachDisconnAfterIO, self).run()
+
+    def cleanup(self):
+        super(StripedVolAttachConnDisConnDetachDisconnAfterIO, self).cleanup()
+
+
 if __name__ == "__main__":
     testscript = StripeVolAttachDetachTestScript()
-    testscript.add_test_case(StripedVolAttachConnDisConnDetachIO())
+    testscript.add_test_case(StripedVolAttachConnDisConnDetachDisconnDuringIO())
     testscript.add_test_case(StripedVolAttachConnDisConnDetach())
     testscript.add_test_case(StripedVolAttachDetach())
+    testscript.add_test_case(StripedVolAttachConnDisConnDetachDisconnAfterIO())
     testscript.run()
