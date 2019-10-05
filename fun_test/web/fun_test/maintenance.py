@@ -1540,7 +1540,7 @@ if __name__ == "__main__alibaba":
         print json.dumps(final_dict)
 
 
-if __name__ == "__main__":
+if __name__ == "__main_crypto_s1__":
     with open(METRICS_BASE_DATA_FILE, "r") as f:
         metrics = json.load(f)
         for metric in metrics:
@@ -1558,3 +1558,36 @@ if __name__ == "__main__":
                 if security_children["name"] == "Crypto raw throughput":
                     result = set_internal_name(security_children)
                     print json.dumps(result, indent=4)
+
+if __name__ == "__main__":
+    global_setting = MetricsGlobalSettings.objects.first()
+    global_setting.cache_valid = False
+    global_setting.save()
+    entries = MetricChart.objects.all()
+    for entry in entries:
+        if entry.leaf and entry.platform == FunPlatform.F1:
+            to_edit = True
+            data_sets = entry.get_data_sets()
+            print "checking {} {}".format(entry.chart_name, entry.metric_id)
+            for data_set in data_sets:
+                if "expected" in data_set["output"] and data_set["output"]["expected"] != -1:
+                    to_edit = False
+                    break
+            if to_edit:
+                for data_set in data_sets:
+                    if "expected" in data_set["output"] and data_set["output"]["expected"] == -1:
+                        metric_model = app_config.get_metric_models()[entry.metric_model_name]
+                        model_data_all = metric_model.objects.filter(**data_set["inputs"]).order_by(
+                            "-input_date_time")[:1]
+                        if len(model_data_all):
+                            for model_data in model_data_all:
+                                output_name = data_set["output"]["name"]
+                                if hasattr(model_data, output_name) and hasattr(model_data, output_name + "_unit"):
+                                    output_unit = getattr(model_data, output_name + "_unit")
+                                    output_value = getattr(model_data, output_name)
+                                    data_set_unit = data_set["output"]["unit"]
+                                    data_set["output"]["expected"] = output_value
+                                    data_set["output"]["unit"] = output_unit
+                entry.data_sets = json.dumps(data_sets)
+                entry.save()
+                print "edited the datasets for {} with metric id {}".format(entry.chart_name, entry.metric_id)
