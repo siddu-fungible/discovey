@@ -98,11 +98,13 @@ def check_docker(come_handle, expected=3):
     fun_test.test_assert_expected(expected=expected, actual=num_docker, message="Docker's up")
 
 
-def check_pci_dev(come_handle, f1=0):
+def check_pci_dev(come_handle, f1=0, fs_name=None):
     result = True
     bdf = '04:00.'
     if f1 == 1:
         bdf = '06:00.'
+        if fs_name in ["fs-101", "fs-102"]:
+            bdf = '05:00.'
     lspci_output = come_handle.command(command="lspci -d 1dad: | grep {}".format(bdf))
     sections = ['Ethernet controller', 'Non-Volatile', 'Unassigned class', 'encryption device']
     for section in sections:
