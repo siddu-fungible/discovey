@@ -35,8 +35,8 @@ class ApcPduTestcase(FunTestCase):
                               """)
 
     def setup(self):
-        fs_name = fun_test.get_job_environment_variable("test_bed_type")
-        self.fs = AssetManager().get_fs_by_name(fs_name)
+        self.fs_name = fun_test.get_job_environment_variable("test_bed_type")
+        self.fs = AssetManager().get_fs_by_name(self.fs_name)
         self.apc_info = self.fs.get("apc_info", None)
         self.outlet_no = self.apc_info.get("outlet_number", None)
         self.validate = {"check_storage_controller": False,
@@ -130,12 +130,8 @@ class ApcPduTestcase(FunTestCase):
             lspci_f0 = check_pci_dev(come_handle, f1=0)
             fun_test.test_assert(lspci_f0, "F1_0 PCIe devices not detected")
 
-            lspci_f1 = check_pci_dev(come_handle, f1=1)
-            # fun_test.test_assert(lspci_f1, "F1_1 PCIe devices not detected")
-            if lspci_f1:
-                fun_test.add_checkpoint("F1_0 PCIe devices not detected", "PASSED")
-            else:
-                fun_test.add_checkpoint("F1_0 PCIe devices not detected", "FAILED")
+            lspci_f1 = check_pci_dev(come_handle, f1=1, fs_name=self.fs_name)
+            fun_test.test_assert(lspci_f1, "F1_1 PCIe devices not detected")
 
             check_come_up_time(come_handle, expected_seconds=5)
 
@@ -162,7 +158,13 @@ class ApcPduTestcase(FunTestCase):
                 fun_test.log("Checking if NU and HNU port's are active on F1_1")
                 nu_port_valid = check_nu_ports(come_handle, iteration=pc_no, f1=1,
                                                expected_ports_up=expected_ports_up_f1_1)
-                fun_test.test_assert(nu_port_valid, "F1_1: NU ports are present, Expected: {}".format(expected_ports_up_f1_1))
+                # fun_test.test_assert(nu_port_valid, "F1_1: NU ports are present, Expected: {}".format(expected_ports_up_f1_1))
+                if nu_port_valid:
+                    fun_test.add_checkpoint("F1_1: NU ports are present, Expected: {}".
+                                            format(expected_ports_up_f1_1), "PASSED")
+                else:
+                    fun_test.add_checkpoint("F1_1: NU ports are present, Expected: {}".
+                                            format(expected_ports_up_f1_1), "FAILED")
 
             if self.validate["check_docker"]:
                 fun_test.sleep("docker to be up", seconds=self.DOCKER_VERIFY_INTERVAL)
