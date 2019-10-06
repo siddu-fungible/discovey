@@ -35,8 +35,8 @@ class ApcPduTestcase(FunTestCase):
                               """)
 
     def setup(self):
-        fs_name = fun_test.get_job_environment_variable("test_bed_type")
-        self.fs = AssetManager().get_fs_by_name(fs_name)
+        self.fs_name = fun_test.get_job_environment_variable("test_bed_type")
+        self.fs = AssetManager().get_fs_by_name(self.fs_name)
         self.apc_info = self.fs.get("apc_info", None)
         self.outlet_no = self.apc_info.get("outlet_number", None)
         self.validate = {"check_storage_controller": False,
@@ -130,7 +130,7 @@ class ApcPduTestcase(FunTestCase):
             lspci_f0 = check_pci_dev(come_handle, f1=0)
             fun_test.test_assert(lspci_f0, "F1_0 PCIe devices not detected")
 
-            lspci_f1 = check_pci_dev(come_handle, f1=1)
+            lspci_f1 = check_pci_dev(come_handle, f1=1, fs_name=self.fs_name)
             fun_test.test_assert(lspci_f1, "F1_1 PCIe devices not detected")
 
             check_come_up_time(come_handle, expected_seconds=5)
