@@ -268,7 +268,7 @@ class VlanPingTests(FunTestCase):
 
 class HuHostPingTest(FunTestCase):
     def describe(self):
-        self.set_test_details(id=2, summary="Ping hosts",
+        self.set_test_details(id=4, summary="Ping hosts",
                               steps="""
                                       1.Ping other hosts
                                       2.Ping VLANs
