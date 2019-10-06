@@ -265,6 +265,40 @@ class VlanPingTests(FunTestCase):
     def cleanup(self):
         pass
 
+class HuHostPingTest(FunTestCase):
+    def describe(self):
+        self.set_test_details(id=2, summary="Ping hosts",
+                              steps="""
+                                      1.Ping other hosts
+                                      2.Ping VLANs
+                                      """)
+
+    def setup(self):
+        pass
+
+    def host_ping(self, hostname, ping_list, password="Precious1*", user="localadmin"):
+        linux_obj = Linux(host_ip=hostname, ssh_password=password, ssh_username=user)
+        result = True
+        for dest_ip in ping_list:
+            result &= linux_obj.ping(dst=dest_ip, count=10, max_percentage_loss=30, timeout=30, interval=0.1)
+
+
+    def run(self):
+        test_bed_type = fun_test.get_job_environment_variable('test_bed_type')
+        testbed_info = fun_test.parse_file_to_json(
+            fun_test.get_script_parent_directory() + '/testbed_inputs.json')
+        ping_dict = testbed_info['fs'][test_bed_type]["host_pings"]
+        host_ping_threads_list = []
+        for host in ping_dict:
+            ping_thread_id = fun_test.execute_thread_after(time_in_seconds=1, func=self.host_ping, hostname=host,
+                                                           ping_list=ping_dict[host])
+            host_ping_threads_list.append(ping_thread_id)
+        for ping_thread_id in host_ping_threads_list:
+            fun_test.join_thread(fun_test_thread_id=ping_thread_id, sleep_time=1)
+
+    def cleanup(self):
+        pass
+
 
 if __name__ == '__main__':
     ts = ScriptSetup()
@@ -272,5 +306,7 @@ if __name__ == '__main__':
     test_bed_type = fun_test.get_job_environment_variable('test_bed_type')
     if test_bed_type == 'fs-fcp-scale':
         ts.add_test_case(BringupPCIeHosts())
-        ts.add_test_case(VlanPingTests())
+        # ts.add_test_case(VlanPingTests())
+        ts.add_test_case(HuHostPingTest())
+
     ts.run()
