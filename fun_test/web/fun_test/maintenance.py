@@ -1575,7 +1575,7 @@ if __name__ == "__main__":
                     break
             if to_edit:
                 for data_set in data_sets:
-                    if "expected" in data_set["output"] and data_set["output"]["expected"] == -1:
+                    if "reference" in data_set["output"]:
                         metric_model = app_config.get_metric_models()[entry.metric_model_name]
                         model_data_all = metric_model.objects.filter(**data_set["inputs"]).order_by(
                             "-input_date_time")[:1]
@@ -1586,7 +1586,7 @@ if __name__ == "__main__":
                                     output_unit = getattr(model_data, output_name + "_unit")
                                     output_value = getattr(model_data, output_name)
                                     data_set_unit = data_set["output"]["unit"]
-                                    data_set["output"]["expected"] = output_value
+                                    data_set["output"]["reference"] = output_value
                                     data_set["output"]["unit"] = output_unit
                 entry.data_sets = json.dumps(data_sets)
                 entry.save()
