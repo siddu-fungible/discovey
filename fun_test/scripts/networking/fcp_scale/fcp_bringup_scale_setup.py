@@ -62,6 +62,7 @@ class ScriptSetup(FunTestScript):
         fun_test.shared_variables["test_bed_type"] = test_bed_type
         fun_test.shared_variables['testbed_info'] = testbed_info
         fun_test.shared_variables["pcie_host_result"] = True
+        fun_test.shared_variables["host_ping_result"] = True
         # Removing any funeth driver from COMe and and all the connected server
         threads_list = []
         single_f1 = False
@@ -280,8 +281,11 @@ class HuHostPingTest(FunTestCase):
         linux_obj = Linux(host_ip=hostname, ssh_password=password, ssh_username=user)
         result = True
         for dest_ip in ping_list:
-            result &= linux_obj.ping(dst=dest_ip, count=10, max_percentage_loss=30, timeout=30, interval=0.1)
+            if not linux_obj.ping(dst=dest_ip, count=10, max_percentage_loss=30, timeout=30, interval=0.1):
+                result &= False
+                fun_test.test_assert(expression=False, message="%s can't ping %s" % (linux_obj, dest_ip))
 
+        fun_test.shared_variables["host_ping_result"] &= result
 
     def run(self):
         test_bed_type = fun_test.get_job_environment_variable('test_bed_type')
@@ -296,6 +300,7 @@ class HuHostPingTest(FunTestCase):
         for ping_thread_id in host_ping_threads_list:
             fun_test.join_thread(fun_test_thread_id=ping_thread_id, sleep_time=1)
 
+        fun_test.test_assert(expression=fun_test.shared_variables["host_ping_result"], message="Ping test")
     def cleanup(self):
         pass
 
