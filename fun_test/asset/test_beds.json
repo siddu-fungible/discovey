@@ -2804,5 +2804,21 @@
         "dut": "fs-18"
       }
     }
+  },
+  "fs-101": {
+    "dut_info": {
+      "0": {
+        "type": "DUT_TYPE_FSU",
+        "dut": "fs-101"
+      }
+    }
+  },
+  "fs-102": {
+    "dut_info": {
+      "0": {
+        "type": "DUT_TYPE_FSU",
+        "dut": "fs-102"
+      }
+    }
   }
 }
