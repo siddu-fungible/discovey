@@ -51,7 +51,7 @@ class ApcPduTestcase(FunTestCase):
                          "hosts": {},
                          "check_docker": False,
                          "expected_dockers": 3,
-                         "target_ip": "15.53.1.2"
+                         "target_ip": "15.101.1.2"  # TODO: Remove this hardcoding!!
                          }
         job_inputs = fun_test.get_job_inputs()
         if job_inputs:
