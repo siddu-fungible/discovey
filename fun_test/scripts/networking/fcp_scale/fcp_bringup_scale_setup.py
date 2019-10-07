@@ -13,7 +13,18 @@ import time
 import datetime
 
 CHECK_HPING3_ON_HOSTS = True
+# FPG_INTERFACES = (0, 2, 4, 6, 8, 10, 12, 14)
 
+def lock_cpu_freq(funeth_obj, hu):
+    linux_obj = funeth_obj.linux_obj_dict[hu]
+    linux_obj.sudo_command(command="for i in {0..31}; do echo performance > "
+                                   "/sys/devices/system/cpu/cpu$i/cpufreq/scaling_governor; done")
+    linux_obj.command(command="cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor")
+    linux_obj.sudo_command(command="cpupower idle-set -e 0")
+    for i in range(1, 5):
+        linux_obj.sudo_command(command="cpupower idle-set -d %s" % i)
+    linux_obj.sudo_command("cpupower monitor")
+    linux_obj.disconnect()
 
 def clean_testbed(fs_name, hu_host_list):
     funcp_obj = FunControlPlaneBringup(fs_name=fs_name)
@@ -210,6 +221,12 @@ class BringupPCIeHosts(FunTestCase):
         fun_test.shared_variables['funeth_obj'] = funeth_obj
         setup_hu_host(funeth_obj, update_driver=False, num_queues=4)
 
+        fun_test.log("Configure irq affinity")
+        for hu in funeth_obj.hu_hosts:
+            funeth_obj.configure_irq_affinity(hu, tx_or_rx='tx', cpu_list=range(0, 20))
+            funeth_obj.configure_irq_affinity(hu, tx_or_rx='rx', cpu_list=range(0, 20))
+            lock_cpu_freq(funeth_obj=funeth_obj, hu=hu)
+
     def cleanup(self):
         pass
 
@@ -286,6 +303,7 @@ class HuHostPingTest(FunTestCase):
                 fun_test.test_assert(expression=False, message="%s can't ping %s" % (linux_obj, dest_ip))
 
         fun_test.shared_variables["host_ping_result"] &= result
+        linux_obj.disconnect()
 
     def run(self):
         test_bed_type = fun_test.get_job_environment_variable('test_bed_type')
