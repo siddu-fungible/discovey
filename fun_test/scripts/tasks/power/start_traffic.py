@@ -53,7 +53,7 @@ class FunTestCase1(FunTestCase):
         self.details = {
             "fs": "fs-65",
             "duration": "1m",
-            "le_firewall": False,
+            "le_firewall": True,
             "interval": 5,
             "boot_new_image": True
         }
@@ -72,6 +72,7 @@ class FunTestCase1(FunTestCase):
         if self.details["boot_new_image"]:
             topology = topology_helper.deploy()
             fun_test.test_assert(topology, "Topology deployed")
+            self.verify_dpcsh_started()
             self.create_ec_volume(topology)
 
         fun_test.log(json.dumps(self.fs, indent=4))
@@ -140,7 +141,7 @@ class FunTestCase1(FunTestCase):
         fun_test.log("App parameters: {}".format(app_params))
 
         if self.details["le_firewall"]:
-            le_firewall(self.test_duration)
+            le_firewall(self.test_duration, self.details["boot_new_image"])
 
         for app, parameters in app_params.iteritems():
             parameters["f1"] = 0
@@ -273,10 +274,11 @@ class FunTestCase1(FunTestCase):
         fun_test.join_thread(thread_id_debug_memory_f1_1)
         fun_test.test_assert(True, "Power logs captured successfully")
         fun_test.test_assert(True, "Debug memory on F1_0 logs captured successfully")
-        fun_test.test_assert(True, "Debug memory on F1_0 logs captured successfully")
+        fun_test.test_assert(True, "Debug memory on F1_1 logs captured successfully")
 
     ##### EC vol creation
     def create_ec_volume(self, topology):
+        fun_test.sleep("Getting started with creation of 4:2 EC volume", seconds=30)
         transport = "PCI"
         huid = [3, 2]
         ctlid = [2, 2]
@@ -402,8 +404,20 @@ class FunTestCase1(FunTestCase):
 
         except Exception as ex:
             fun_test.critical(ex)
-
+        fun_test.sleep("for fio to settle", seconds=30)
         fun_test.test_assert(result, "Created 4:2 EC volume")
+
+    def verify_dpcsh_started(self):
+        come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
+                           ssh_username=self.fs['come']['mgmt_ssh_username'],
+                           ssh_password=self.fs['come']['mgmt_ssh_password'])
+        out = come_handle.command("cd $WORKSPACE/FunSDK/bin/Linux")
+        if "No such file" in out or "not found" in out:
+            come_handle.enter_sudo()
+            come_handle.command("cd /scratch/FunSDK/bin/Linux")
+            come_handle.command("./dpcsh --pcie_nvme_sock=/dev/nvme0 --nvme_cmd_timeout=600000 --tcp_proxy=40220 &> /tmp/f1_0_dpc.txt &")
+            come_handle.command("./dpcsh --pcie_nvme_sock=/dev/nvme1 --nvme_cmd_timeout=600000 --tcp_proxy=40221 &> /tmp/f1_1_dpc.txt &")
+            come_handle.exit_sudo()
 
 
 if __name__ == "__main__":
