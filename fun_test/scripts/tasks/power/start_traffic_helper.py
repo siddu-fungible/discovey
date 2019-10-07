@@ -15,7 +15,7 @@ def crypto(come_handle, vp_iters=500000, src='ddr', dst='ddr', f1=0, nvps=48):
     return result
 
 
-def zip(come_handle, compress=True, nflows=7680, niterations=100, max_effort=0, f1=0, npcs=None):
+def zip_deflate(come_handle, compress=True, nflows=7680, niterations=100, max_effort=0, f1=0, npcs=None):
     result = False
     try:
         json_data = {"niterations": niterations,
