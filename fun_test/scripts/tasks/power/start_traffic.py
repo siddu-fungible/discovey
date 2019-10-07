@@ -411,13 +411,13 @@ class FunTestCase1(FunTestCase):
         come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
                            ssh_username=self.fs['come']['mgmt_ssh_username'],
                            ssh_password=self.fs['come']['mgmt_ssh_password'])
-        out = come_handle.command("cd $WORKSPACE/FunSDK/bin/Linux")
-        if "No such file" in out or "not found" in out:
-            come_handle.enter_sudo()
-            come_handle.command("cd /scratch/FunSDK/bin/Linux")
-            come_handle.command("./dpcsh --pcie_nvme_sock=/dev/nvme0 --nvme_cmd_timeout=600000 --tcp_proxy=40220 &> /tmp/f1_0_dpc.txt &")
-            come_handle.command("./dpcsh --pcie_nvme_sock=/dev/nvme1 --nvme_cmd_timeout=600000 --tcp_proxy=40221 &> /tmp/f1_1_dpc.txt &")
-            come_handle.exit_sudo()
+        # out = come_handle.command("cd $WORKSPACE/FunSDK/bin/Linux")
+        # if "No such file" in out or "not found" in out:
+        come_handle.enter_sudo()
+        come_handle.command("cd /scratch/FunSDK/bin/Linux")
+        come_handle.command("./dpcsh --pcie_nvme_sock=/dev/nvme0 --nvme_cmd_timeout=600000 --tcp_proxy=40220 &> /tmp/f1_0_dpc.txt &")
+        come_handle.command("./dpcsh --pcie_nvme_sock=/dev/nvme1 --nvme_cmd_timeout=600000 --tcp_proxy=40221 &> /tmp/f1_1_dpc.txt &")
+        come_handle.exit_sudo()
 
 
 if __name__ == "__main__":
