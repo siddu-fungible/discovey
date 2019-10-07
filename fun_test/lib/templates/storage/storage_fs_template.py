@@ -650,7 +650,7 @@ class StorageFsTemplate(object):
         # Waiting for the DHCP discover process to begin before starting configure the bond interface
         if self.come_obj.check_file_directory_exists(self.DOCKER_LAUNCH_OUTPUT):
             cmd = "grep -c 'DHCPDISCOVER on bond' {}".format(self.DOCKER_LAUNCH_OUTPUT)
-            timer = FunTimer(max_time=self.DEPLOY_TIMEOUT / 2)
+            timer = FunTimer(max_time=self.DEPLOY_TIMEOUT / 10)
             while not timer.is_expired():
                 status = self.come_obj.command(cmd)
                 if int(status.strip()) > 0:
