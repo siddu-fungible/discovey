@@ -17,9 +17,14 @@ CHECK_HPING3_ON_HOSTS = True
 
 def lock_cpu_freq(funeth_obj, hu):
     linux_obj = funeth_obj.linux_obj_dict[hu]
-    linux_obj.sudo_command(command="for i in {0..31}; do echo performance > "
-                                   "/sys/devices/system/cpu/cpu$i/cpufreq/scaling_governor; done")
+    num_cores = int(linux_obj.command(command="nproc"))
+    for x in range(0, num_cores):
+        cpu_name = "cpu" + str(x)
+        linux_obj.sudo_command(command="echo performance > /sys/devices/system/cpu/{}/cpufreq/scaling_governor".
+                               format(cpu_name))
+    linux_obj.sudo_command("systemctl disable ondemand")
     linux_obj.command(command="cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor")
+    linux_obj.sudo_command("iptables -F && ip6tables -F")
     linux_obj.sudo_command(command="cpupower idle-set -e 0")
     for i in range(1, 5):
         linux_obj.sudo_command(command="cpupower idle-set -d %s" % i)
