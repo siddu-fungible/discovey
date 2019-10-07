@@ -673,7 +673,10 @@ class Bmc(Linux):
         except Exception as ex:
             fun_test.critical(str(ex))
 
-        fun_test.simple_assert(not post_processing_error_found, "Post-processing failed. Please check for error regex")
+        for f1_index in range(self.NUM_F1S):
+            if self.disable_f1_index is not None and f1_index == self.disable_f1_index:
+                continue
+            fun_test.simple_assert(not post_processing_error_found, "Post-processing failed. Please check for error regex")
 
     def post_process_uart_log(self, f1_index, file_name):
         regex_found = None
