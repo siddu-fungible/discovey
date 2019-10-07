@@ -28,3 +28,18 @@ def parse_dpcsh_output(data):
         except:
             fun_test.log("Unable to parse the output obtained from dpcsh")
     return result
+
+
+def start_dpcsh_bg(come_handle, cmd, f1=0):
+    result = False
+    try:
+        print("Command : {}".format(cmd))
+        come_handle.enter_sudo()
+        come_handle.command("cd /scratch/FunSDK/bin/Linux")
+        run_cmd = "./dpcsh --pcie_nvme_sock=/dev/nvme{} --nvme_cmd_timeout=60000 --nocli {}".format(f1, cmd)
+        pid = come_handle.start_bg_process(run_cmd)
+        come_handle.exit_sudo()
+        result = True
+    except Exception as ex:
+        fun_test.critical(ex)
+    return result

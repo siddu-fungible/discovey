@@ -562,7 +562,11 @@ class StorageFsTemplate(object):
                 else:
                     fun_test.sleep("for the run_sc docker to show up", 5)
 
-        cmd = "docker ps --format '{{.Names}}' | grep F1"
+        if not include_storage:
+            cmd = "docker ps --format '{{.Names}}' | grep F1"
+        else:
+            cmd = "docker ps --format '{{.Names}}'"
+
         result['container_name_list'] = self.come_obj.command(cmd, timeout=self.DEFAULT_TIMEOUT).split("\n")
         result['container_name_list'] = [name.strip("\r") for name in result['container_name_list']]
         container_count = len(result['container_name_list'])

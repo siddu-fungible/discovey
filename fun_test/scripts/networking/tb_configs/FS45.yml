@@ -9,7 +9,6 @@ hu:
   mgmt_interface: eno1
   pcie_width: 16
   pf_interface: hu2-f0
-  vf_interface: hu2-f8
   namespaces:
     default:
       interfaces:
@@ -19,8 +18,6 @@ hu:
       routes:
         - prefix: 19.1.1.0/24
           nexthop: 18.1.1.1
-        - prefix: 20.1.1.0/24
-          nexthop: 18.1.1.1
 hu2:
   hostname: cab03-qa-02
   username: localadmin
@@ -28,7 +25,6 @@ hu2:
   mgmt_interface: eno1
   pcie_width: 16
   pf_interface: hu1-f0
-  vf_interface: hu1-f8
   namespaces:
     default:
       interfaces:
@@ -38,8 +34,6 @@ hu2:
       routes:
       - prefix: 18.1.1.0/24
         nexthop: 19.1.1.1
-      - prefix: 20.1.1.0/24
-        nexthop: 19.1.1.1
 
 hu3:
   hostname: cab03-qa-06
@@ -47,28 +41,7 @@ hu3:
   password: Precious1*
   mgmt_interface: eno1
   pcie_width: 16
-  pf_interface: hu1-f0
-  vf_interface: hu1-f8
-  namespaces:
-    default:
-      interfaces:
-        - hu1-f0:
-            ipv4_addr: 18.1.1.3
-            ipv4_netmask: 255.255.255.0
-      routes:
-        - prefix: 19.1.1.0/24
-          nexthop: 18.1.1.1
-        - prefix: 20.1.1.0/24
-          nexthop: 18.1.1.1
-
-hu4:
-  hostname: cab02-qa-08
-  username: localadmin
-  password: Precious1*
-  mgmt_interface: eno1
-  pcie_width: 16
   pf_interface: hu3-f0
-  vf_interface: hu3-f8
   namespaces:
     default:
       interfaces:
@@ -78,5 +51,22 @@ hu4:
       routes:
         - prefix: 18.1.1.0/24
           nexthop: 19.1.1.1
+
+hu4:
+  hostname: cab03-qa-07
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: eno1
+  pcie_width: 16
+  pf_interface: hu1-f0
+  namespaces:
+    default:
+      interfaces:
+        - hu1-f0:
+            ipv4_addr: 18.1.1.3
+            ipv4_netmask: 255.255.255.0
+      routes:
+        - prefix: 19.1.1.0/24
+          nexthop: 18.1.1.1
 
 

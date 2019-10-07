@@ -61,7 +61,12 @@ def run_traffic_bg(hosts_list):
         #                                ioengine="libaio", bs="4k", size="512g", name="fio_randrw", runtime=120,
         #                                do_verify=1, verify="md5", verify_fatal=1, timeout=300)
         host["handle"].enter_sudo()
-        host["handle"].start_bg_process("fio --group_reporting --output-format=json --filename={filename} --time_based --rw=randrw --name=fio --iodepth=32 --verify=md5 --numjobs=1 --direct=1 --do_verify=1 --bs=4k --ioengine=libaio --runtime=120 --verify_fatal=1 --size=512g".format(filename=host["nvme"]))
+        host["handle"].start_bg_process("fio --group_reporting --output-format=json --filename={filename} "
+                                        "--time_based --rw=randrw --name=fio --iodepth=32 --verify=md5 --numjobs=1 "
+                                        "--direct=1 --do_verify=1 --bs=4k --ioengine=libaio --runtime=120 "
+                                        "--verify_fatal=1 --size=512g --output=/tmp/fio_power_cycler.txt".format(
+            filename=host[
+            "nvme"]))
         # fun_test.test_assert(True, "{} fio started".format(host_name))
         host["handle"].exit_sudo()
         # if not fio_out:
@@ -75,6 +80,7 @@ def check_traffic(hosts_list):
         output_iostat = host["handle"].iostat(device=device, interval=10, count=13, background=False)
         device_name = device.replace("/dev/", '')
         wrapper.ensure_io_running(device_name, output_iostat, host_name)
+        fun_test.log(host["handle"].command("cat /tmp/fio_power_cycler.txt"))
 
 
 def disconnect_vol(hosts_list, target_ip):
@@ -92,11 +98,13 @@ def check_docker(come_handle, expected=3):
     fun_test.test_assert_expected(expected=expected, actual=num_docker, message="Docker's up")
 
 
-def check_pci_dev(come_handle, f1=0):
+def check_pci_dev(come_handle, f1=0, fs_name=None):
     result = True
     bdf = '04:00.'
     if f1 == 1:
         bdf = '06:00.'
+        if fs_name in ["fs-101", "fs-102"]:
+            bdf = '05:00.'
     lspci_output = come_handle.command(command="lspci -d 1dad: | grep {}".format(bdf))
     sections = ['Ethernet controller', 'Non-Volatile', 'Unassigned class', 'encryption device']
     for section in sections:

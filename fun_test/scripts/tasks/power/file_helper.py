@@ -14,11 +14,13 @@ def add_data(f, data, extra_line=False, heading="Result"):
     f.write('\n')
     f.write("Time = {}".format(data["time"]))
     f.write("\n")
+    if "time_difference" in data:
+        f.write("Time difference with the initial stats: {}".format(data["time_difference"]))
     f.write("\n")
-    if type(data["dpcsh_output"]) is dict:
-        add_json_data(f, data["dpcsh_output"])
+    if type(data["output"]) is dict:
+        add_json_data(f, data["output"])
     else:
-        f.write(data["dpcsh_output"])
+        f.write(data["output"])
     f.write("\n")
     if extra_line:
         f.write("\n")

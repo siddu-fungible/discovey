@@ -181,6 +181,25 @@
             "type": "INTERFACE_TYPE_PCIE",
             "dual": 0
           },
+          "4": {
+            "host_info": {
+              "name": "cab03-qa-07"
+            },
+            "type": "INTERFACE_TYPE_PCIE",
+            "hosts": 1
+          },
+          "5": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 4
+          },
+          "6": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 4
+          },
+          "7": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 4
+          },
           "14": {
             "host_info": {
               "name": "cab03-qa-02"
@@ -199,6 +218,25 @@
           "17": {
             "type": "INTERFACE_TYPE_PCIE",
             "dual": 14
+          },
+          "20": {
+            "host_info": {
+              "name": "cab03-qa-06"
+            },
+            "type": "INTERFACE_TYPE_PCIE",
+            "hosts": 1
+          },
+          "21": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 20
+          },
+          "22": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 20
+          },
+          "23": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 20
           }
         },
         "dut": "fs-45"
@@ -214,6 +252,7 @@
           "0": {
             "0": {
               "ip": "15.44.1.2/24",
+              "subnet_mask": "255.255.255.0",
               "route": [
                 {
                   "network": "15.0.0.0/8",
@@ -232,6 +271,7 @@
           "1": {
             "0": {
               "ip": "15.44.2.2/24",
+              "subnet_mask": "255.255.255.0",
               "route": [
                 {
                   "network": "15.0.0.0/8",
@@ -1891,7 +1931,25 @@
             "type": "INTERFACE_TYPE_PCIE",
             "dual": 8
           },
-
+           "14": {
+            "host_info": {
+              "name": "mpoc-server31"
+            },
+            "type": "INTERFACE_TYPE_PCIE",
+            "hosts": 1
+          },
+          "15": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 14
+          },
+          "16": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 14
+          },
+          "17": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 14
+          },
           "20": {
             "host_info": {
               "name": "mpoc-server30"
@@ -2472,6 +2530,7 @@
           "0": {
             "0": {
               "ip": "15.44.1.2/24",
+              "subnet_mask": "255.255.255.0",
               "route": [
                 {
                   "network": "15.0.0.0/8",
@@ -2490,6 +2549,7 @@
           "1": {
             "0": {
               "ip": "15.44.2.2/24",
+              "subnet_mask": "255.255.255.0",
               "route": [
                 {
                   "network": "15.0.0.0/8",
@@ -2742,6 +2802,22 @@
       "0": {
         "type": "DUT_TYPE_FSU",
         "dut": "fs-18"
+      }
+    }
+  },
+  "fs-101": {
+    "dut_info": {
+      "0": {
+        "type": "DUT_TYPE_FSU",
+        "dut": "fs-101"
+      }
+    }
+  },
+  "fs-102": {
+    "dut_info": {
+      "0": {
+        "type": "DUT_TYPE_FSU",
+        "dut": "fs-102"
       }
     }
   }

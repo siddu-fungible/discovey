@@ -1,4 +1,4 @@
-from apc_pdu_auto_helper import *
+from scripts.storage.pocs.apple.apc_pdu_auto_helper import *
 from asset.asset_manager import AssetManager
 from lib.host.apc_pdu import ApcPdu
 import re
@@ -51,7 +51,7 @@ class ApcPduTestcase(FunTestCase):
                          "hosts": {},
                          "check_docker": False,
                          "expected_dockers": 3,
-                         "target_ip": "15.53.1.2"
+                         "target_ip": "15.101.1.2"  # TODO: Remove this hardcoding!!
                          }
         job_inputs = fun_test.get_job_inputs()
         if job_inputs:
@@ -158,7 +158,13 @@ class ApcPduTestcase(FunTestCase):
                 fun_test.log("Checking if NU and HNU port's are active on F1_1")
                 nu_port_valid = check_nu_ports(come_handle, iteration=pc_no, f1=1,
                                                expected_ports_up=expected_ports_up_f1_1)
-                fun_test.test_assert(nu_port_valid, "F1_1: NU ports are present, Expected: {}".format(expected_ports_up_f1_1))
+                # fun_test.test_assert(nu_port_valid, "F1_1: NU ports are present, Expected: {}".format(expected_ports_up_f1_1))
+                if nu_port_valid:
+                    fun_test.add_checkpoint("F1_1: NU ports are present, Expected: {}".
+                                            format(expected_ports_up_f1_1), "PASSED")
+                else:
+                    fun_test.add_checkpoint("F1_1: NU ports are present, Expected: {}".
+                                            format(expected_ports_up_f1_1), "FAILED")
 
             if self.validate["check_docker"]:
                 fun_test.sleep("docker to be up", seconds=self.DOCKER_VERIFY_INTERVAL)
