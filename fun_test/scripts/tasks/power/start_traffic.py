@@ -53,7 +53,7 @@ class FunTestCase1(FunTestCase):
         self.details = {
             "fs": "fs-65",
             "duration": "1m",
-            "le_firewall": True,
+            "le_firewall": False,
             "interval": 5,
             "boot_new_image": True
         }
