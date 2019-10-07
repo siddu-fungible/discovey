@@ -53,7 +53,7 @@ class FunTestCase1(FunTestCase):
         self.details = {
             "fs": "fs-65",
             "duration": "1m",
-            "le_firewall": False,
+            "le_firewall": True,
             "interval": 5,
             "boot_new_image": True
         }
@@ -108,8 +108,8 @@ class FunTestCase1(FunTestCase):
             self.test_duration = 60
         elif self.details["duration"] == "1h":
             self.test_duration = 3600
-        elif self.details["duration"] == "4h":
-            self.test_duration = 14400
+        elif self.details["duration"] == "3h":
+            self.test_duration = 10800
 
     def run(self):
         # Initialise the
