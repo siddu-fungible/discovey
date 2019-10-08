@@ -212,6 +212,7 @@ class BringupPCIeHosts(FunTestCase):
         self.set_test_details(id=2, summary="Bringup PCIe hosts",
                               steps="""
                                       1. use Funeth library and tc_config to bringup Hosts
+                                      2. Tune hosts for perf
                                       """)
 
     def setup(self):
@@ -224,7 +225,7 @@ class BringupPCIeHosts(FunTestCase):
         tb_config_obj = tb_configs.TBConfigs(test_bed_type)
         funeth_obj = Funeth(tb_config_obj)
         fun_test.shared_variables['funeth_obj'] = funeth_obj
-        setup_hu_host(funeth_obj, update_driver=False, num_queues=4)
+        setup_hu_host(funeth_obj, update_driver=False, num_queues=8)
 
         fun_test.log("Configure irq affinity")
         for hu in funeth_obj.hu_hosts:
