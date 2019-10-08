@@ -1535,6 +1535,9 @@ class Fs(object, ToDictMixin):
         return True
 
     def get_bmc(self, disable_f1_index=None):
+        if disable_f1_index is None:
+            disable_f1_index = self.disable_f1_index
+
         if not self.bmc:
             self.bmc = Bmc(disable_f1_index=disable_f1_index, host_ip=self.bmc_mgmt_ip,
                            ssh_username=self.bmc_mgmt_ssh_username,
