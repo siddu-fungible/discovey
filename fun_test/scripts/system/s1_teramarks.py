@@ -138,7 +138,7 @@ class DfaTeramarkTc(PalladiumTc):
 
 
 class NfaTeramarkTc(PalladiumTc):
-    boot_args = "app=nfa_perf_bootstrap rbm-size=1m nfa_perf.pc_mask=3 --bm-profile-regex nfa_perf.nflows=48 nfa_perf.niterations=1024 syslog=2"
+    boot_args = "app=nfa_perf_bootstrap rbm-size=1m --bm-profile-regex nfa_perf.pc_mask=1 nfa_perf.nflows=24 nfa_perf.niterations=1024 syslog=2"
     tags = "qa_s1_nfa_teramark"
     note = "NFA teramark app on S1"
     fun_os_make_flags = "PM_TESTS=1"
@@ -213,7 +213,7 @@ if __name__ == "__main__":
     # myscript.add_test_case(PkeTeramarkTc())
     myscript.add_test_case(EcTeramarkTc())
     myscript.add_test_case(DfaTeramarkTc())
-    # myscript.add_test_case(NfaTeramarkTc())
+    myscript.add_test_case(NfaTeramarkTc())
     myscript.add_test_case(JpegTeramarkTc())
     myscript.add_test_case(ZipDeflateTeramarkTc())
     myscript.add_test_case(ZipLzmaTeramarkTc())
