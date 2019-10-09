@@ -14,7 +14,9 @@ export class CommonService {
 
   scrollTo(elementId) {
     let element = document.getElementById(elementId);
-    window.scrollTo({left: 0, top: element.offsetTop, behavior: "smooth"});
+    //window.scrollTo({left: 0, top: 80, behavior: "smooth"});
+    element.scrollIntoView({behavior: "smooth", block: "center", inline: "nearest"});
+
   }
 
   timestampToDate(timestampInMs) {

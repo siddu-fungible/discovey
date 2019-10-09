@@ -5,6 +5,7 @@ import {switchMap} from "rxjs/operators";
 import {LoggerService} from "../../services/logger/logger.service";
 import {ActivatedRoute} from "@angular/router";
 import {animate, state, style, transition, trigger} from "@angular/animations";
+import {CommonService} from "../../services/common/common.service";
 
 class TimeSeriesLog {
   date_time: string;
@@ -39,6 +40,7 @@ export class ScriptDetailComponent implements OnInit {
   constructor(private regressionService: RegressionService,
               private loggerService: LoggerService,
               private route: ActivatedRoute,
+              private commonService: CommonService
   ) { }
   suiteExecutionId: number = 10000;
   logPrefix: number = null;
@@ -132,10 +134,12 @@ export class ScriptDetailComponent implements OnInit {
     })
   }
 
-  onCheckpointClick(checkpointIndex) {
+  onCheckpointClick(testCaseId, checkpointIndex) {
     this.regressionService.testCaseTimeSeriesLogs(this.suiteExecutionId, this.currentTestCaseExecution.execution_id, checkpointIndex).subscribe(response => {
       this.showTestCasePanel = false;
       this.showLogsPanel = true;
+      let checkpointId = `${testCaseId}_${checkpointIndex}`;
+      this.commonService.scrollTo(checkpointId);
     }, error => {
       this.loggerService.error("Unable to fetch time-series logs")
     })

@@ -170,7 +170,7 @@ export class RegressionSummaryComponent implements OnInit {
   }
 
   scrollTo(elementId, index) {
-    index = parseInt(index) + 1;
+    //index = parseInt(index) + 1;
     this.commonService.scrollTo(elementId + index);
   }
 
