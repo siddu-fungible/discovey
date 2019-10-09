@@ -100,9 +100,9 @@ class BringupSetup(FunTestCase):
         else:
             f11_retimer = 0
 
-        f1_0_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --dpc-server --all_100g --serial --dpc-uart " \
+        f1_0_boot_args = "app=hw_hsu_test cc_huid=3 --dpc-server --all_100g --dpc-uart " \
                          "retimer={} --mgmt --disable-wu-watchdog syslog=3".format(f10_retimer)
-        f1_1_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 --dpc-server --all_100g --serial --dpc-uart " \
+        f1_1_boot_args = "app=hw_hsu_test cc_huid=2 --dpc-server --all_100g --dpc-uart " \
                          "retimer={} --mgmt --disable-wu-watchdog syslog=3".format(f11_retimer)
 
         topology_helper = TopologyHelper()
