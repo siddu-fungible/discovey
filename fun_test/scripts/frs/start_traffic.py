@@ -1,4 +1,3 @@
-from lib.system.fun_test import *
 from start_traffic_helper import *
 from asset.asset_manager import AssetManager
 from lib.fun.fs import ComE, Bmc
