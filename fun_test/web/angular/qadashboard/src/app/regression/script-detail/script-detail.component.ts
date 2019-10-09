@@ -43,7 +43,7 @@ export class ScriptDetailComponent implements OnInit {
   showLogsPanel: boolean = false;
   testCaseIds: number [] = [];
 
-  timeSeriesByTestCase: {[testCaseId: number]: TimeSeriesLog} = {};
+  timeSeriesByTestCase: {[testCaseId: number]: {[timeSeries: string]: TimeSeriesLog}} = {};
 
   ngOnInit() {
 
@@ -111,7 +111,7 @@ export class ScriptDetailComponent implements OnInit {
 
     this.regressionService.testCaseTimeSeries(this.suiteExecutionId, this.testCaseExecutions[testCaseExecutionIndex].execution_id).subscribe(response => {
       let timeSeries = response;
-      this.timeSeriesByTestCase[this.currentTestCaseExecution.test_case_id] = timeSeries;
+      this.timeSeriesByTestCase[this.currentTestCaseExecution.test_case_id] = {timeSeries: timeSeries};
       this.showTestCasePanel = true;
     })
   }
