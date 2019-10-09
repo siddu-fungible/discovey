@@ -24,29 +24,24 @@
           <td class="fun-table-header">Expected</td>
           <td class="fun-table-header">Actual</td>
         </tr>
-        <tr *ngFor="let checkpoint of currentTestCaseExecution.checkpoints">
-          <td><span class="pseudo-anchor" (click)="onCheckpointClick(checkpoint.data.index)">{{ checkpoint.data.index }}</span></td>
-          <td>{{ checkpoint.data.checkpoint }}</td>
-          <td>{{ checkpoint.data.result }}</td>
-          <td>{{ checkpoint.data.expected }}</td>
-          <td>{{ checkpoint.data.actual }}</td>
+        <tr *ngFor="let checkpoint of this.timeSeriesByTestCase[currentTestCaseExecution.test_case_id]?.checkpoints">
+          <td><span class="pseudo-anchor" (click)="onCheckpointClick(checkpoint.index)">{{ checkpoint.index }}</span></td>
+          <td>{{ checkpoint.checkpoint }}</td>
+          <td>{{ checkpoint.result }}</td>
+          <td>{{ checkpoint.expected }}</td>
+          <td>{{ checkpoint.actual }}</td>
         </tr>
       </table>
     </div>
     <div class="fun-flex-item">
-      <ng-container *ngIf="testCaseExecutions?.length > 0">
-        <div *ngFor="let testCaseExecution of testCaseExecutions">
-          <table>
-            <tr *ngFor="let seriesElement of this.timeSeriesByTestCase[testCaseExecution.test_case_id].timeSeries">
-              <td nowrap><small>{{ seriesElement.date_time }}</small></td>
-              <td *ngIf="seriesElement.type === 'checkpoint'" style="background-color: gold">{{ seriesElement.data?.checkpoint }}</td>
-              <td *ngIf="seriesElement.type === 'log'">{{ seriesElement.data?.log }}</td>
-            </tr>
-          </table>
-
-
-
-        </div>
+      <ng-container *ngIf="currentTestCaseExecution">
+        <table>
+          <tr *ngFor="let seriesElement of this.timeSeriesByTestCase[currentTestCaseExecution.test_case_id]?.timeSeries">
+            <td nowrap><small>{{ seriesElement.date_time }}</small></td>
+            <td *ngIf="seriesElement.type === 'checkpoint'" style="background-color: gold">{{ seriesElement.data?.checkpoint }}</td>
+            <td *ngIf="seriesElement.type === 'log'">{{ seriesElement.data?.log }}</td>
+          </tr>
+        </table>
       </ng-container>
     </div>
 

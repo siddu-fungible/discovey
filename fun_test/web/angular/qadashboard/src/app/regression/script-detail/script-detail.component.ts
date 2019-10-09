@@ -12,6 +12,14 @@ class TimeSeriesLog {
   data: any;
 }
 
+class Checkpoint {
+  checkpoint: string;
+  actual: boolean;
+  expected: boolean;
+  index: number;
+  result: string;
+}
+
 @Component({
   selector: 'app-script-detail',
   templateUrl: './script-detail.component.html',
@@ -43,7 +51,7 @@ export class ScriptDetailComponent implements OnInit {
   showLogsPanel: boolean = false;
   testCaseIds: number [] = [];
 
-  timeSeriesByTestCase: {[testCaseId: number]: {[timeSeries: string]: TimeSeriesLog}} = {};
+  timeSeriesByTestCase: {[testCaseId: number]: {[key: string]: any }} = {};
 
   ngOnInit() {
 
@@ -88,13 +96,13 @@ export class ScriptDetailComponent implements OnInit {
   onTestCaseIdClick1(testCaseExecutionIndex, testCaseExecutionId) {
     this.testLogs = null;
     console.log(testCaseExecutionIndex);
-    this.currentTestCaseExecution = this.testCaseExecutions[testCaseExecutionIndex];
     this.regressionService.testCaseTimeSeriesCheckpoints(this.suiteExecutionId, this.testCaseExecutions[testCaseExecutionIndex].execution_id).subscribe(response => {
       this.testCaseExecutions[testCaseExecutionIndex]["checkpoints"] = response;
       let checkpoints = this.testCaseExecutions[testCaseExecutionIndex]["checkpoints"];
       checkpoints.forEach(checkpoint => {
         this.regressionService.testCaseTimeSeriesLogs(this.suiteExecutionId, this.currentTestCaseExecution.execution_id, checkpoint.index).subscribe(response => {
           this.testLogs = response;
+          this.currentTestCaseExecution = this.testCaseExecutions[testCaseExecutionIndex];
         }, error => {
           this.loggerService.error("Unable to fetch time-series logs")
         });
@@ -106,12 +114,20 @@ export class ScriptDetailComponent implements OnInit {
   }
 
   onTestCaseIdClick(testCaseExecutionIndex) {
-    this.currentTestCaseExecution = this.testCaseExecutions[testCaseExecutionIndex];
     this.testLogs = null;
 
     this.regressionService.testCaseTimeSeries(this.suiteExecutionId, this.testCaseExecutions[testCaseExecutionIndex].execution_id).subscribe(response => {
+      this.currentTestCaseExecution = this.testCaseExecutions[testCaseExecutionIndex];
+
       let timeSeries = response;
-      this.timeSeriesByTestCase[this.currentTestCaseExecution.test_case_id] = {timeSeries: timeSeries};
+      this.timeSeriesByTestCase[this.currentTestCaseExecution.test_case_id] = {timeSeries: timeSeries, checkpoints: []};
+      timeSeries.forEach(timeSeriesElement => {
+        if (timeSeriesElement.type == "checkpoint") { //TODO
+          let newCheckpoint = timeSeriesElement.data;
+          this.timeSeriesByTestCase[this.currentTestCaseExecution.test_case_id].checkpoints.push(newCheckpoint);
+        }
+      });
+
       this.showTestCasePanel = true;
     })
   }
