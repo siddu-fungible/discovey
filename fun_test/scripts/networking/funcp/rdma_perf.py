@@ -306,8 +306,11 @@ class NicEmulation(FunTestCase):
                 host_count = fun_test.shared_variables["host_len_f11"]
                 bg_proc_id[obj] = []
             for x in xrange(0, host_count):
+                update_path = host_objs[obj][x].command("echo $HOME")
+                update_script = update_path.strip() + "/mks/update_rdma.sh"
+                print update_script
                 bg_proc_id[obj].append(host_objs[obj][x].
-                                       start_bg_process("/home/localadmin/mks/update_rdma.sh build build",
+                                       start_bg_process("{} build build".format(update_script),
                                                         timeout=1200))
         # fun_test.sleep("Building rdma_perf & core", seconds=120)
         for obj in host_objs:
