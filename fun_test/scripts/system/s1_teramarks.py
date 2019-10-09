@@ -75,6 +75,7 @@ class CryptoTeramarkTc(PalladiumTc):
     max_duration = 2700
     note = "Crypto SEC Regression & TeraMark apps (PC0 Throughput) on S1"
     fun_os_make_flags = "NDEBUG=1"
+    extra_emails = ["jitendra.lulla@fungible.com"]
 
     def describe(self):
         self.set_test_details(id=1,
@@ -124,6 +125,7 @@ class DfaTeramarkTc(PalladiumTc):
     tags = "qa_s1_dfa_teramark"
     note = "DFA teramark app on S1"
     fun_os_make_flags = "PM_TESTS=1"
+    extra_emails = ["jitendra.lulla@fungible.com", "mahesh.kumar@fungible.com", " indrani.p@fungible.com"]
 
     def describe(self):
         self.set_test_details(id=4,
@@ -140,6 +142,7 @@ class NfaTeramarkTc(PalladiumTc):
     tags = "qa_s1_nfa_teramark"
     note = "NFA teramark app on S1"
     fun_os_make_flags = "PM_TESTS=1"
+    extra_emails = ["jitendra.lulla@fungible.com", "mahesh.kumar@fungible.com", " indrani.p@fungible.com"]
 
     def describe(self):
         self.set_test_details(id=5,
@@ -156,7 +159,7 @@ class JpegTeramarkTc(PalladiumTc):
     tags = "qa_s1_jpeg_teramark"
     note = "JPEG teramark app on S1"
     fun_os_make_flags = "XDATA_LISTS=/project/users/ashaikh/qa_test_inputs/jpeg_perf_inputs/perf_input.list"
-    extra_emails = ["aamir.shaikh@fungible.com", "abhishek.dikshit@fungible.com", "hara.bandhakavi@fungible.com"]
+    extra_emails = ["jitendra.lulla@fungible.com", "abhishek.dikshit@fungible.com", "hara.bandhakavi@fungible.com"]
 
     def describe(self):
         self.set_test_details(id=6,
@@ -174,6 +177,7 @@ class ZipDeflateTeramarkTc(PalladiumTc):
     note = "ZIP deflate teramark app on S1"
     fun_os_make_flags = "XDATA_LISTS=/project/users/ashaikh/qa_test_inputs/zip_inputs/compress_perf_input.list"
     max_duration = 9000
+    extra_emails = ["jitendra.lulla@fungible.com"]
 
     def describe(self):
         self.set_test_details(id=7,
@@ -191,6 +195,7 @@ class ZipLzmaTeramarkTc(PalladiumTc):
     note = "ZIP lzma teramark app on S1"
     fun_os_make_flags = "XDATA_LISTS=/project/users/ashaikh/qa_test_inputs/zip_inputs/compress_perf_input.list"
     max_duration = 9000
+    extra_emails = ["jitendra.lulla@fungible.com"]
 
     def describe(self):
         self.set_test_details(id=8,
