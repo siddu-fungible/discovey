@@ -970,7 +970,7 @@ class FunethTestReboot(FunTestCase):
         linux_obj = funeth_obj.linux_obj_dict[hu]
         hostname = tb_config_obj.get_hostname(hu)
         fun_test.test_assert(linux_obj.reboot(non_blocking=True), 'Reboot HU host {}'.format(hostname))
-        fun_test.sleep("Sleeping for the host to come up from reboot", seconds=180)
+        fun_test.sleep("Sleeping for the host to come up from reboot", seconds=300)
         fun_test.test_assert(linux_obj.is_host_up(), 'HU host {} is up'.format(hostname))
         setup_hu_host(funeth_obj, update_driver=False)
         verify_nu_hu_datapath(funeth_obj, nu=nu, hu=hu)

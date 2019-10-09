@@ -163,7 +163,7 @@
     "pwd": "Precious1*",
     "server": "cab03-qa-01",
     "server_dict" : {"10.1.105.17": "vm1", "10.1.105.138": "vm2"},
-    "warm_up_traffic": 1,
+    "warm_up_traffic": 0,
     "iter_interval": 5,
     "num_ssds": 2,
     "warm_up_fio_cmd_args": {

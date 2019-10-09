@@ -1586,7 +1586,7 @@ class FunTestScript(object):
 
         except Exception as ex:
             fun_test.critical(ex)
-        fun_test.add_checkpoint(checkpoint="Cleanup error found", expected=False, actual=True)
+        fun_test.add_checkpoint(checkpoint="Cleanup error found", expected=False, actual=cleanup_error_found)
         fun_test._end_test(result=result)
         if cleanup_te:
             models_helper.update_test_case_execution(test_case_execution_id=cleanup_te.execution_id,

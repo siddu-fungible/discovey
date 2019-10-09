@@ -33,9 +33,9 @@ POSIXLIB="$DIR/build/posix-f1/lib"
 POSIXBIN="$DIR/build/posix-f1/bin"
 
 echo "bind library and utilities to pci function $PCI for DPU(index=$DPU) ..."
-[[ $DRYRUN == "yes" ]] || sudo LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:$POSIXLIB $POSIXBIN/funq-setup bind 'vfio' $PCI
+sudo LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:$POSIXLIB $POSIXBIN/funq-setup bind 'vfio' $PCI
 echo "show current firmware images ..."
-[[ $DRYRUN == "yes" ]] ||  sudo LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:$POSIXLIB $POSIXBIN/fwupgrade -a -d $PCI
+sudo LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:$POSIXLIB $POSIXBIN/fwupgrade -a -d $PCI
 
 EEPR="$VDIR/eeprom_fs1600_${DPU}_packed.bin"
 HOST="$VDIR/host_firmware_packed.bin"
@@ -51,4 +51,4 @@ echo "upgrade EMMC image for ..."
 [[ $DRYRUN == "yes" ]] || sudo LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:$POSIXLIB $POSIXBIN/fwupgrade --image $EMMC -f emmc -d $PCI
 
 echo "UN bind library and utilities to pci function $PCI for DPU(index=$DPU) ..."
-[[ $DRYRUN == "yes" ]] || sudo LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:$POSIXLIB $POSIXBIN/funq-setup unbind 'vfio' $PCI
+sudo LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:$POSIXLIB $POSIXBIN/funq-setup unbind 'vfio' $PCI

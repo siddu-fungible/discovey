@@ -1,0 +1,4 @@
+[
+  {"info": {"custom_test_bed_spec": {"base_test_bed": "fs-inspur", "asset_request": {"DUT": {"names": ["fs-44"]}, "Host": {"num": 1}}}}},
+  {"path": "storage/review/review_workload_attach_detach_sc_api.py", "test_case_ids": [2]}
+]
