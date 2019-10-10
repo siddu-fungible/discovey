@@ -50,6 +50,7 @@ export class ScriptDetailComponent implements OnInit {
   currentTestCaseExecution: any = null;
   testLogs = [];
   showTestCasePanel: boolean = true;
+  showCheckpointPanel: boolean = false;
   showLogsPanel: boolean = false;
   testCaseIds: number [] = [];
 
@@ -130,7 +131,7 @@ export class ScriptDetailComponent implements OnInit {
         }
       });
 
-      this.showTestCasePanel = true;
+      this.showCheckpointPanel = true;
     })
   }
 
@@ -138,6 +139,7 @@ export class ScriptDetailComponent implements OnInit {
     this.regressionService.testCaseTimeSeriesLogs(this.suiteExecutionId, this.currentTestCaseExecution.execution_id, checkpointIndex).subscribe(response => {
       this.showTestCasePanel = false;
       this.showLogsPanel = true;
+      this.showCheckpointPanel = true;
       let checkpointId = `${testCaseId}_${checkpointIndex}`;
       this.commonService.scrollTo(checkpointId);
     }, error => {
@@ -147,6 +149,7 @@ export class ScriptDetailComponent implements OnInit {
 
   onShowTestCasePanelClick() {
     this.showTestCasePanel = true;
+    this.showCheckpointPanel = true;
     this.showLogsPanel = false;
   }
 

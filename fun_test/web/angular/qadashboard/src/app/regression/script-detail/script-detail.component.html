@@ -1,7 +1,7 @@
 <div class="component">
   <div style="position: fixed; top: 70px">
     <div class="fun-flex-container">
-      <div class="fun-flex-item">
+      <div class="fun-flex-item" [@show]="showTestCasePanel">
         <table class="fun-table">
           <tr>
             <td class="fun-table-header">ID</td>
@@ -15,7 +15,7 @@
           </tr>
         </table>
       </div>
-      <div class="fun-flex-item" *ngIf="currentTestCaseExecution">
+      <div class="fun-flex-item" [@show]="showCheckpointPanel" *ngIf="currentTestCaseExecution">
         <button *ngIf="!showTestCasePanel" (click)="onShowTestCasePanelClick()" class="fun-button-add">Show test-cases</button>
         <table class="fun-table">
           <tr>
@@ -34,8 +34,8 @@
           </tr>
         </table>
       </div>
-      <div class="fun-flex-item">
-        <div style="overflow-y: scroll; height: 1500px">
+      <div class="fun-flex-item" [@show]="showLogsPanel">
+        <div style="overflow-y: scroll; height: 1200px">
           <ng-container *ngIf="currentTestCaseExecution">
           <table>
             <tr *ngFor="let seriesElement of this.timeSeriesByTestCase[currentTestCaseExecution.test_case_id]?.timeSeries">
