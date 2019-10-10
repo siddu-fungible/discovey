@@ -306,7 +306,7 @@ def calculate_leaf_scores(cache_valid, chart, result, from_log=False):
                                 output_unit = getattr(this_days_record, output_unit)
                             else:
                                 output_unit = None
-                            if output_value and output_value != -1:
+                            if output_value and output_value != -1 and not math.isinf(output_value):
                                 output_value = convert_to_base_unit(output_value=output_value, output_unit=output_unit)
 
                             # data_set_statuses.append(leaf_status)
@@ -316,16 +316,15 @@ def calculate_leaf_scores(cache_valid, chart, result, from_log=False):
                                 if output_unit:
                                     reference_value = convert_to_base_unit(output_value=reference_value,
                                                                            output_unit=data_set["output"]["unit"])
-                                if chart.positive:
-                                    data_set_combined_goodness += (float(
-                                        output_value) / reference_value) * 100 if output_value >= 0 and reference_value > 0 else 0
-                                else:
-                                    if output_value:
+                                if output_value and output_value != -1 and not math.isinf(output_value):
+                                    if chart.positive:
+                                        data_set_combined_goodness += (float(
+                                            output_value) / reference_value) * 100 if output_value >= 0 and reference_value > 0 else 0
+                                    else:
                                         data_set_combined_goodness += (float(
                                             reference_value) / output_value) * 100 if output_value >= 0 else 0
-                                    else:
-                                        print "ERROR: {}, {}".format(chart.chart_name,
-                                                                     chart.metric_model_name)
+                                else:
+                                    print "ERROR: {}, {}".format(chart.chart_name, chart.metric_model_name)
                 current_score = round(data_set_combined_goodness / num_data_sets_with_expected,
                                       1) if num_data_sets_with_expected != 0 else 0
 
