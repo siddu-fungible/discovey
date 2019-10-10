@@ -16,6 +16,7 @@ import os
 import socket
 
 ERROR_REGEXES = ["MUD_MCI_NON_FATAL_INTR_STAT", "bug_check", "platform_halt: exit status 1"]
+DOCHUB_BASE_URL = "http://dochub.fungible.local/doc/jenkins"
 
 """
 Possible workarounds:
@@ -870,6 +871,7 @@ class ComE(Linux):
     HBM_TOOL = "hbm_dump_pcie"
 
     MAX_HBM_DUMPS = 200
+    BUILD_SCRIPT_DOWNLOAD_DIRECTORY = "/tmp/remove_me_build_script"
 
     def __init__(self, **kwargs):
         super(ComE, self).__init__(**kwargs)
@@ -895,6 +897,46 @@ class ComE(Linux):
             fun_test.test_assert(self.setup_hbm_tools(), "HBM tools and dump directory ready")
 
         return True
+
+    def _get_build_script_url(self, build_number, release_train, script_file_name):
+        """
+        convert build number and release train to a url on dochub that refers to the bundle script
+        :param build_number: example 68
+        :param release_train: example apple_fs1600
+        :param script_file_name: example setup_fs1600-68.sh
+        :return: returns the dochub url with the given build number and release train
+                example: http://dochub.fungible.local/doc/jenkins/apple_fs1600/68/setup_fs1600-68.sh
+        """
+        url = "{}/{}/{}/{}".format(DOCHUB_BASE_URL, release_train, build_number, script_file_name)
+        return url
+
+    def _setup_build_script_directory(self):
+        """
+        Sets up the directory location where the build script such as setup_fs1600-68.sh will be saved for the installation
+        process. Create the directory
+        :return:
+        """
+        path = self.BUILD_SCRIPT_DOWNLOAD_DIRECTORY
+        self.command("mkdir -p {}".format(path))
+        return path
+
+    def install_build_setup_script(self, build_number, release_train="apple_fs1600"):
+        """
+        install the build setup script downloaded from dochub
+        :param build_number: build number
+        :param release_train: example apple_fs1600
+        :return: True if the installation succeeded with exit status == 0, else raise an assert
+        """
+        script_file_name = "setup_fs1600-{}.sh".format(build_number)
+        script_url = self._get_build_script_url(build_number=build_number,
+                                                release_train=release_train,
+                                                script_file_name=script_file_name)
+        target_directory = self._setup_build_script_directory()
+        target_file_name = "{}/{}".format(target_directory, script_file_name)
+        self.curl(output_file=target_file_name, url=script_url, timeout=180)
+        fun_test.simple_assert(self.list_files(target_file_name), "Install script downloaded")
+        return True
+
 
     def _get_bus_number(self, pcie_device_id):
         bus_number = None
