@@ -228,6 +228,9 @@ def adjust_timezone_for_day_light_savings(current_date):
                                       hour=current_date.hour, second=current_date.second, minute=current_date.minute)
     return get_localized_time(date_time_obj)
 
+def _is_valid_output(output_value):
+    return (output_value != -1 and not math.isinf(output_value))
+
 
 def calculate_leaf_scores(cache_valid, chart, result, from_log=False):
     # print "Reached leaf: {}".format(chart.chart_name)
@@ -306,7 +309,7 @@ def calculate_leaf_scores(cache_valid, chart, result, from_log=False):
                                 output_unit = getattr(this_days_record, output_unit)
                             else:
                                 output_unit = None
-                            if output_value and output_value != -1 and not math.isinf(output_value):
+                            if output_value and _is_valid_output(output_value):
                                 output_value = convert_to_base_unit(output_value=output_value, output_unit=output_unit)
 
                             # data_set_statuses.append(leaf_status)
@@ -316,7 +319,7 @@ def calculate_leaf_scores(cache_valid, chart, result, from_log=False):
                                 if output_unit:
                                     reference_value = convert_to_base_unit(output_value=reference_value,
                                                                            output_unit=data_set["output"]["unit"])
-                                if output_value and output_value != -1 and not math.isinf(output_value):
+                                if output_value and _is_valid_output(output_value):
                                     if chart.positive:
                                         data_set_combined_goodness += (float(
                                             output_value) / reference_value) * 100 if output_value >= 0 and \
