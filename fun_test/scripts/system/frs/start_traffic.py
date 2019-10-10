@@ -55,7 +55,7 @@ class FunTestCase1(FunTestCase):
             "le_firewall": True,
             "interval": 5,
             "boot_new_image": True,
-            "specific_app": {}
+            "specific_app": []
         }
         if job_inputs:
             if "fs" in job_inputs:
@@ -152,11 +152,11 @@ class FunTestCase1(FunTestCase):
     def run(self):
 
         ############## Before traffic #####################
-        # self.initial_debug_memory_stats = self.get_debug_memory_stats_initially(self.f_debug_memory_f1_0,
-        #                                                                         self.f_debug_memory_f1_1)
-        # self.capture_data(count=3, heading="Before starting traffic")
-        #
-        # fun_test.test_assert(True, "Initial debug stats is saved")
+        self.initial_debug_memory_stats = self.get_debug_memory_stats_initially(self.f_debug_memory_f1_0,
+                                                                                self.f_debug_memory_f1_1)
+        self.capture_data(count=3, heading="Before starting traffic")
+
+        fun_test.test_assert(True, "Initial debug stats is saved")
 
         #############  Starting Traffic ################
         come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
