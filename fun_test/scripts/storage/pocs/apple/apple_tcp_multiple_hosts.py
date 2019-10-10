@@ -429,7 +429,12 @@ class StripeVolumeTestCase(FunTestCase):
         fun_test.log("tc setup: before job inputs fio_runtime is: {}".format(self.fio_cmd_args["runtime"]))
         if "fio_runtime" in job_inputs:
             self.fio_cmd_args["runtime"] = job_inputs["fio_runtime"]
+            try:
+                self.fio_cmd_args["timeout"] = int(job_inputs["fio_runtime"]) + 60
+            except Exception as ex:
+                fun_test.critical(str(ex))
         fun_test.log("tc setup: after job inputs fio_runtime is: {}".format(self.fio_cmd_args["runtime"]))
+        fun_test.log("tc setup: after job inputs fio timeout is: {}".format(self.fio_cmd_args["timeout"]))
 
         self.fs = fun_test.shared_variables["fs_objs"]
         self.come_obj = fun_test.shared_variables["come_obj"]
@@ -736,6 +741,7 @@ class StripeVolumeTestCase(FunTestCase):
                     wait_time = self.num_hosts + 1 - thread_count
                     # fun_test.log("Wait time for thread {} is {}".format(thread_count, wait_time))
                     fun_test.log("tc run: before fio starts fio_runtime is: {}".format(self.fio_cmd_args["runtime"]))
+                    fun_test.log("tc setup: after job inputs fio timeout is: {}".format(self.fio_cmd_args["timeout"]))
                     thread_id[thread_count] = fun_test.execute_thread_after(time_in_seconds=wait_time,
                                                                             func=fio_parser,
                                                                             arg1=end_host_thread[thread_count],
