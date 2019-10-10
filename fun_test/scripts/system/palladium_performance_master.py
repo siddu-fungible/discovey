@@ -52,9 +52,13 @@ IPSEC_DEC_SINGLE_TUNNEL = "ipsec_dec_single_tunnel_teramark"
 IPSEC_DEC_MULTI_TUNNEL = "ipsec_dec_multi_tunnel_teramark"
 VOLTEST_LSV = "qa_voltest_lsv_performance"
 VOLTEST_LSV_4 = "qa_voltest_lsv_4_performance"
+
 CHANNEL_PARALL = "qa_channel_parall"
+CHANNEL_PARALL_S1 = "qa_s1_channel_parall"
 SOAK_FLOWS_BUSY_LOOP = "qa_soak_flows_busy_loop"
+SOAK_FLOWS_BUSY_LOOP_S1 = "qa_s1_soak_flows_busy_loop"
 SOAK_FLOWS_MEMCPY = "qa_soak_flows_memcpy_non_coh"
+SOAK_FLOWS_MEMCPY_S1 = "qa_s1_soak_flows_memcpy_non_coh"
 
 VOLTEST_BLT_1 = "qa_voltest_blt_performance"
 VOLTEST_BLT_8 = "qa_voltest_blt_8_performance"
@@ -189,7 +193,9 @@ class MyScript(FunTestScript):
                 RCNVME_RANDOM_READ_ALL, RCNVME_WRITE_ALL,
                 RCNVME_RANDOM_WRITE_ALL, SOAK_DMA_MEMCPY_THRESHOLD,
                 IPSEC_ENC_SINGLE_TUNNEL, IPSEC_ENC_MULTI_TUNNEL, IPSEC_DEC_MULTI_TUNNEL, IPSEC_DEC_SINGLE_TUNNEL,
-                VOLTEST_LSV, VOLTEST_LSV_4, CHANNEL_PARALL, SOAK_FLOWS_BUSY_LOOP, SOAK_FLOWS_MEMCPY, VOLTEST_BLT_1,
+                VOLTEST_LSV, VOLTEST_LSV_4, CHANNEL_PARALL, CHANNEL_PARALL_S1, SOAK_FLOWS_BUSY_LOOP,
+                SOAK_FLOWS_BUSY_LOOP_S1, SOAK_FLOWS_MEMCPY,
+                SOAK_FLOWS_MEMCPY_S1, VOLTEST_BLT_1,
                 VOLTEST_BLT_8, VOLTEST_BLT_12, TERAMARK_EC_S1, TERAMARK_JPEG_S1, TERAMARK_ZIP_DEFLATE_S1,
                 TERAMARK_ZIP_LZMA_S1, TERAMARK_PKE_S1, TERAMARK_DFA_S1, TERAMARK_NFA_S1, TERAMARK_CRYPTO_RAW_S1]
         self.lsf_status_server.workaround(tags=tags)

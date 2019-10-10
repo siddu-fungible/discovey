@@ -262,6 +262,33 @@ class TeraMarkMultiClusterCryptoPerformanceS1Tc(TeraMarkMultiClusterCryptoPerfor
                               summary="S1 TeraMark Multi Cluster Crypto Performance Test",
                               steps="Steps 1")
 
+class SoakFlowsMemcpy1MbNonCohPerformanceS1Tc(SoakFlowsMemcpy1MbNonCohPerformanceTc):
+    tag = SOAK_FLOWS_MEMCPY_S1
+    platform = S1
+
+    def describe(self):
+        self.set_test_details(id=25,
+                              summary="S1 soak flows memcpy 1MB non coh performance",
+                              steps="Steps 1")
+
+class ChannelParallPerformanceS1Tc(ChannelParallPerformanceTc):
+    tag = CHANNEL_PARALL_S1
+    platform = S1
+
+    def describe(self):
+        self.set_test_details(id=26,
+                              summary="Channel parall Performance on S1",
+                              steps="Steps 1")
+
+class SoakFlowsBusyLoopPerformanceS1Tc(SoakFlowsBusyLoopPerformanceTc):
+    tag = SOAK_FLOWS_BUSY_LOOP_S1
+    platform = S1
+
+    def describe(self):
+        self.set_test_details(id=27,
+                              summary="soak flows busy loop 10 usecs performance on S1",
+                              steps="Steps 1")
+
 
 if __name__ == "__main__":
     myscript = MyScript()
@@ -290,5 +317,8 @@ if __name__ == "__main__":
     myscript.add_test_case(TeraMarkDfaPerformanceS1Tc())
     myscript.add_test_case(TeraMarkNfaPerformanceS1Tc())
     myscript.add_test_case(TeraMarkMultiClusterCryptoPerformanceS1Tc())
+    myscript.add_test_case(SoakFlowsMemcpy1MbNonCohPerformanceS1Tc())
+    myscript.add_test_case(ChannelParallPerformanceS1Tc())
+    myscript.add_test_case(SoakFlowsBusyLoopPerformanceS1Tc())
 
     myscript.run()

@@ -29,7 +29,7 @@ class PalladiumTc(FunTestCase):
     hw_model = "S1_Compute"
     max_duration = 900
     release_build = "true"
-    hw_version = "rel_09012019"
+    hw_version = "rel_09152019"
     run_target = "protium_s"
     extra_emails = []
 
@@ -45,6 +45,8 @@ class PalladiumTc(FunTestCase):
     def setup(self):
         if not ("ranga.gowda@fungible.com" in self.extra_emails):
             self.extra_emails.append("ranga.gowda@fungible.com")
+        if not ("team-regression@fungible.com" in self.extra_emails):
+            self.extra_emails.append("team-regression@fungible.com")
         fun_test.log("Testcase setup")
 
     def cleanup(self):
@@ -206,6 +208,54 @@ class ZipLzmaTeramarkTc(PalladiumTc):
             3. Steps 3
                                   """)
 
+class SoakFlowsMemcpy1MbNonCohTc(PalladiumTc):
+    boot_args = "app=soak_flows_memcpy_1MB_non_coh"
+    tags = "qa_s1_soak_flows_memcpy_non_coh"
+    note = "soak flows memcpy 1mb non coh on S1"
+    max_duration = 5000
+    extra_emails = []
+
+    def describe(self):
+        self.set_test_details(id=9,
+                              summary="Schedule Max DMA 1 mb app on Jenkins for S1",
+                              steps="""
+        1. Steps 1
+        2. Steps 2
+        3. Steps 3
+                              """)
+
+class ChannelParallTc(PalladiumTc):
+    boot_args = "app=channel_parall_speed"
+    tags = "qa_s1_channel_parall"
+    note = "channel parall app on S1"
+    max_duration = 5000
+    extra_emails = []
+
+    def describe(self):
+        self.set_test_details(id=10,
+                              summary="Schedule Channel parall app on Jenkins for S1",
+                              steps="""
+        1. Steps 1
+        2. Steps 2
+        3. Steps 3
+                              """)
+
+class SoakFlowsBusyLoopTc(PalladiumTc):
+    boot_args = "app=soak_flows_busy_loop_10usecs"
+    tags = "qa_s1_soak_flows_busy_loop"
+    note = "soak flows busy loop on S1"
+    max_duration = 5000
+    extra_emails = []
+
+    def describe(self):
+        self.set_test_details(id=11,
+                              summary="Schedule Soak flows busy loop app on Jenkins for S1",
+                              steps="""
+        1. Steps 1
+        2. Steps 2
+        3. Steps 3
+                              """)
+
 
 if __name__ == "__main__":
     myscript = MyScript()
@@ -217,5 +267,8 @@ if __name__ == "__main__":
     myscript.add_test_case(JpegTeramarkTc())
     myscript.add_test_case(ZipDeflateTeramarkTc())
     myscript.add_test_case(ZipLzmaTeramarkTc())
+    myscript.add_test_case(SoakFlowsMemcpy1MbNonCohTc())
+    myscript.add_test_case(ChannelParallTc())
+    myscript.add_test_case(SoakFlowsBusyLoopTc())
 
     myscript.run()

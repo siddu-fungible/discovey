@@ -1559,7 +1559,7 @@ if __name__ == "__main_crypto_s1__":
                     result = set_internal_name(security_children)
                     print json.dumps(result, indent=4)
 
-if __name__ == "__main__":
+if __name__ == "__main_rebasing__":
     global_setting = MetricsGlobalSettings.objects.first()
     global_setting.cache_valid = False
     global_setting.save()
@@ -1591,3 +1591,22 @@ if __name__ == "__main__":
                 entry.data_sets = json.dumps(data_sets)
                 entry.save()
                 print "edited the datasets for {} with metric id {}".format(entry.chart_name, entry.metric_id)
+
+if __name__ == "__main__":
+    with open(METRICS_BASE_DATA_FILE, "r") as f:
+        metrics = json.load(f)
+        for metric in metrics:
+            if metric["label"] == "F1":
+                f1_metrics = metric["children"]
+                for f1_metric in f1_metrics:
+                    if f1_metric["label"] == "TeraMarks":
+                        teramark_metrics = f1_metric
+
+    tera_mark_childrens = teramark_metrics["children"]
+    for tera_mark_children in tera_mark_childrens:
+        if tera_mark_children["label"] == "Security":
+            security_childrens = tera_mark_children["children"]
+            for security_children in security_childrens:
+                if security_children["name"] == "Crypto raw throughput":
+                    result = set_internal_name(security_children)
+                    print json.dumps(result, indent=4)
