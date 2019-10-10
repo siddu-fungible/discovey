@@ -863,6 +863,8 @@ def traverse_dag(levels, metric_id, metric_chart_entries, sort_by_name=True):
     result["copied_score_disposition"] = chart.copied_score_disposition
     if math.isinf(chart.last_good_score):
         chart.last_good_score = 0
+    if math.isinf(chart.penultimate_good_score):
+        chart.penultimate_good_score = 0
     if chart.last_good_score >= 0:
         result["last_two_scores"] = [chart.last_good_score, chart.penultimate_good_score]
     else:
