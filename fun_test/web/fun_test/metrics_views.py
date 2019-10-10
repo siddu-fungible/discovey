@@ -940,7 +940,7 @@ def validate_jira(jira_id):
         if jira_valid:
             jira_valid = jira_valid[0]
             return jira_valid
-    except Exception:
+    except Exception as ex:
         return None
     return None
 
