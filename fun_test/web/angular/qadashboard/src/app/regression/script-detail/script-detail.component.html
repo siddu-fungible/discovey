@@ -1,54 +1,58 @@
 <div class="component">
-  <div class="fun-flex-container">
-    <div [@show]="showTestCasePanel" class="fun-flex-item1">
-      <table class="fun-table">
-        <tr>
-          <td class="fun-table-header">ID</td>
-          <td class="fun-table-header">Description</td>
-          <td class="fun-table-header">Result</td>
-        </tr>
-        <tr *ngFor="let testCaseExecution of testCaseExecutions; let index=index">
-          <td><span class="pseudo-anchor" (click)="onTestCaseIdClick(index, testCaseExecution.execution_id)">{{ testCaseExecution.test_case_id }}</span></td>
-          <td>{{ testCaseExecution.summary }}</td>
-          <td>{{ testCaseExecution.result }}</td>
-        </tr>
-      </table>
-    </div>
-    <div class="fun-flex-item1" *ngIf="currentTestCaseExecution" style="top: 0; position: absolute">
-      <button *ngIf="!showTestCasePanel" (click)="onShowTestCasePanelClick()" class="fun-button-add">Show test-cases</button>
-      <table class="fun-table">
-        <tr>
-          <td class="fun-table-header">ID</td>
-          <td class="fun-table-header">Checkpoint</td>
-          <td class="fun-table-header">Result</td>
-          <td class="fun-table-header">Expected</td>
-          <td class="fun-table-header">Actual</td>
-        </tr>
-        <tr *ngFor="let checkpoint of this.timeSeriesByTestCase[currentTestCaseExecution.test_case_id]?.checkpoints">
-          <td><span class="pseudo-anchor" (click)="onCheckpointClick(currentTestCaseExecution.test_case_id, checkpoint.index)">{{ checkpoint.index }}</span></td>
-          <td>{{ checkpoint.checkpoint }}</td>
-          <td>{{ checkpoint.result }}</td>
-          <td>{{ checkpoint.expected }}</td>
-          <td>{{ checkpoint.actual }}</td>
-        </tr>
-      </table>
-    </div>
-    <div class="fun-flex-item1" style="overflow: visible">
-      <ng-container *ngIf="currentTestCaseExecution">
-        <table>
-          <tr *ngFor="let seriesElement of this.timeSeriesByTestCase[currentTestCaseExecution.test_case_id]?.timeSeries">
-            <td nowrap><small>{{ seriesElement.date_time }}</small></td>
-            <td *ngIf="seriesElement.type === 'checkpoint'" style="background-color: gold">
-              <div id="{{ currentTestCaseExecution.test_case_id }}_{{ seriesElement.data?.index }}">{{ seriesElement.data?.checkpoint }}</div>
-            </td>
-            <td *ngIf="seriesElement.type === 'log'">{{ seriesElement.data?.log }}</td>
+  <div style="position: fixed; top: 70px">
+    <div class="fun-flex-container">
+      <div class="fun-flex-item">
+        <table class="fun-table">
+          <tr>
+            <td class="fun-table-header">ID</td>
+            <td class="fun-table-header">Description</td>
+            <td class="fun-table-header">Result</td>
+          </tr>
+          <tr *ngFor="let testCaseExecution of testCaseExecutions; let index=index">
+            <td><span class="pseudo-anchor" (click)="onTestCaseIdClick(index, testCaseExecution.execution_id)">{{ testCaseExecution.test_case_id }}</span></td>
+            <td>{{ testCaseExecution.summary }}</td>
+            <td>{{ testCaseExecution.result }}</td>
           </tr>
         </table>
-      </ng-container>
+      </div>
+      <div class="fun-flex-item" *ngIf="currentTestCaseExecution">
+        <button *ngIf="!showTestCasePanel" (click)="onShowTestCasePanelClick()" class="fun-button-add">Show test-cases</button>
+        <table class="fun-table">
+          <tr>
+            <td class="fun-table-header">ID</td>
+            <td class="fun-table-header">Checkpoint</td>
+            <td class="fun-table-header">Result</td>
+            <td class="fun-table-header">Expected</td>
+            <td class="fun-table-header">Actual</td>
+          </tr>
+          <tr *ngFor="let checkpoint of this.timeSeriesByTestCase[currentTestCaseExecution.test_case_id]?.checkpoints">
+            <td><span class="pseudo-anchor" (click)="onCheckpointClick(currentTestCaseExecution.test_case_id, checkpoint.index)">{{ checkpoint.index }}</span></td>
+            <td>{{ checkpoint.checkpoint }}</td>
+            <td>{{ checkpoint.result }}</td>
+            <td>{{ checkpoint.expected }}</td>
+            <td>{{ checkpoint.actual }}</td>
+          </tr>
+        </table>
+      </div>
+      <div class="fun-flex-item">
+        <div style="overflow-y: scroll; height: 1500px">
+          <ng-container *ngIf="currentTestCaseExecution">
+          <table>
+            <tr *ngFor="let seriesElement of this.timeSeriesByTestCase[currentTestCaseExecution.test_case_id]?.timeSeries">
+              <td nowrap><small>{{ seriesElement.date_time }}</small></td>
+              <td *ngIf="seriesElement.type === 'checkpoint'" style="background-color: gold">
+                <div id="{{ currentTestCaseExecution.test_case_id }}_{{ seriesElement.data?.index }}">{{ seriesElement.data?.checkpoint }}</div>
+              </td>
+              <td *ngIf="seriesElement.type === 'log'">{{ seriesElement.data?.log }}</td>
+            </tr>
+          </table>
+        </ng-container>
+        </div>
+      </div>
     </div>
-
-
   </div>
-
-
 </div>
+
+
+
+
