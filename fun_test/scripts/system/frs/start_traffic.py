@@ -54,7 +54,8 @@ class FunTestCase1(FunTestCase):
             "duration": "1m",
             "le_firewall": True,
             "interval": 5,
-            "boot_new_image": True
+            "boot_new_image": True,
+            "specific_app": {}
         }
         if job_inputs:
             if "fs" in job_inputs:
@@ -67,6 +68,8 @@ class FunTestCase1(FunTestCase):
                 self.details["interval"] = job_inputs["interval"]
             if "boot_new_image" in job_inputs:
                 self.details["boot_new_image"] = job_inputs["boot_new_image"]
+            if "specific_app" in job_inputs:
+                self.details["specific_app"] = job_inputs["specific_app"]
 
         if self.details["boot_new_image"]:
             topology = topology_helper.deploy()
@@ -149,11 +152,11 @@ class FunTestCase1(FunTestCase):
     def run(self):
 
         ############## Before traffic #####################
-        self.initial_debug_memory_stats = self.get_debug_memory_stats_initially(self.f_debug_memory_f1_0,
-                                                                                self.f_debug_memory_f1_1)
-        self.capture_data(count=3, heading="Before starting traffic")
-
-        fun_test.test_assert(True, "Initial debug stats is saved")
+        # self.initial_debug_memory_stats = self.get_debug_memory_stats_initially(self.f_debug_memory_f1_0,
+        #                                                                         self.f_debug_memory_f1_1)
+        # self.capture_data(count=3, heading="Before starting traffic")
+        #
+        # fun_test.test_assert(True, "Initial debug stats is saved")
 
         #############  Starting Traffic ################
         come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
@@ -162,6 +165,8 @@ class FunTestCase1(FunTestCase):
         come_handle.command("pwd")
 
         app_params = get_params_for_time.get(self.test_duration)
+        if self.details["specific_app"]:
+            app_params = get_params_for_time.get(self.test_duration, specific_field=self.details["specific_app"])
         fun_test.log("App parameters: {}".format(app_params))
 
         if self.details["le_firewall"]:
@@ -397,7 +402,6 @@ class FunTestCase1(FunTestCase):
                                                            file_bm=self.f_bam_f1_1,
                                                            heading=heading)
         fun_test.test_assert(True, "Started capturing the peek stats/bam logs {} on F1_1".format(heading))
-
 
         fun_test.join_thread(thread_id_power)
         fun_test.join_thread(thread_id_debug_memory_f1_0)
