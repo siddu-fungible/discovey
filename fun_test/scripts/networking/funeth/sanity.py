@@ -73,7 +73,7 @@ try:
         ol_offload = False  # default False
         nu_all_clusters = False  # default False
         bootup_funos = True  # default True
-        threading = False   # default False
+        threading = True   # default False
         cleanup = True  # default True
         fundrv_branch = None
         fundrv_commit = None
