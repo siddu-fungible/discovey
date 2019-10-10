@@ -240,12 +240,15 @@ def script_infos(request, pk):
         script_infos = ScriptInfo.objects.filter(q)
         result = []
         for script_info in script_infos:
-            regression_script = RegresssionScripts.objects.get(pk=script_info.pk)
+            try:
+                regression_script = RegresssionScripts.objects.get(pk=script_info.pk)
 
-            result.append({"id": script_info.script_id,
-                           "bug": script_info.bug,
-                           "pk": script_info.pk,
-                           "script_path": regression_script.script_path})
+                result.append({"id": script_info.script_id,
+                               "bug": script_info.bug,
+                               "pk": script_info.pk,
+                               "script_path": regression_script.script_path})
+            except Exception as ex:
+                pass
     return result
 
 
