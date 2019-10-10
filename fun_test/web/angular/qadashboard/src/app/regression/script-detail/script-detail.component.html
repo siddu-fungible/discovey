@@ -48,9 +48,12 @@
           <ng-container *ngIf="currentTestCaseExecution">
             <table>
               <tr *ngFor="let seriesElement of this.timeSeriesByTestCase[currentTestCaseExecution.test_case_id]?.timeSeries">
-                <td nowrap><small>{{ seriesElement.date_time }}</small></td>
-                <td *ngIf="seriesElement.type === 'checkpoint'" style="background-color: gold">
-                  <div id="{{ currentTestCaseExecution.test_case_id }}_{{ seriesElement.data?.index }}">{{ seriesElement.data?.checkpoint }}</div>
+                <td class="timestamp" nowrap><small>{{ seriesElement.date_time }}</small></td>
+                <td *ngIf="seriesElement.type === 'checkpoint'">
+                  <div id="{{ currentTestCaseExecution.test_case_id }}_{{ seriesElement.data?.index }}">
+                    <span class="checkpoint-span">Checkpoint: {{ seriesElement.data?.checkpoint }}
+                    </span>
+                  </div>
                 </td>
                 <td *ngIf="seriesElement.type === 'log'">{{ seriesElement.data?.log }}</td>
               </tr>
