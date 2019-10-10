@@ -144,6 +144,7 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                     self.required_hosts[host_name] = hosts[host_name]
         fun_test.log("Hosts that will be used for current test: {}".format(self.required_hosts.keys()))
 
+        self.host_info = OrderedDict()
         self.hosts_test_interfaces = {}
         self.host_handles = {}
         self.host_ips = []
@@ -156,30 +157,34 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                 self.hosts_test_interfaces[host_name] = []
             test_interface = host_obj.get_test_interface(index=0)
             self.hosts_test_interfaces[host_name].append(test_interface)
+            self.host_info[host_name]["test_interface"] = test_interface
             host_ip = self.hosts_test_interfaces[host_name][-1].ip.split('/')[0]
             self.host_ips.append(host_ip)
+            self.host_info[host_name]["ip"].append(host_ip)
             fun_test.log("Host-IP: {}".format(host_ip))
             # Retrieving host handles
             host_instance = host_obj.get_instance()
             self.host_handles[host_ip] = host_instance
+            self.host_info[host_name]["handle"] = host_instance
 
         # Rebooting all the hosts in non-blocking mode before the test and getting NUMA cpus
-        for key in self.host_handles:
+        for host_name in self.host_info:
+            host_handle = self.host_info[host_name]["handle"]
             if self.override_numa_node["override"]:
-                self.host_numa_cpus_filter = self.host_handles[key].lscpu(self.override_numa_node["override_node"])
-                self.host_numa_cpus[key] = self.host_numa_cpus_filter[self.override_numa_node["override_node"]]
+                host_numa_cpus_filter = host_handle.lscpu(self.override_numa_node["override_node"])
+                self.host_info[host_name]["host_numa_cpus"] = host_numa_cpus_filter[
+                    self.override_numa_node["override_node"]]
             else:
-                self.host_numa_cpus[key] = fetch_numa_cpus(self.host_handles[key], self.ethernet_adapter)
+                self.host_info[host_name]["host_numa_cpus"] = fetch_numa_cpus(host_handle, self.ethernet_adapter)
 
             # Calculating the number of CPUs available in the given numa
-            self.total_numa_cpus[key] = 0
-            for cpu_group in self.host_numa_cpus[key].split(","):
+            self.host_info[host_name]["total_numa_cpus"] = 0
+            for cpu_group in self.host_info[host_name]["host_numa_cpus"].split(","):
                 cpu_range = cpu_group.split("-")
-                self.total_numa_cpus[key] += len(range(int(cpu_range[0]), int(cpu_range[1]))) + 1
-            fun_test.log("Rebooting host: {}".format(key))
-            self.host_handles[key].reboot(non_blocking=True)
-        fun_test.log("NUMA CPU for Host: {}".format(self.host_numa_cpus))
-        fun_test.log("Total CPUs: {}".format(self.total_numa_cpus))
+                self.host_info[host_name]["total_numa_cpus"] += len(range(int(cpu_range[0]), int(cpu_range[1]))) + 1
+            fun_test.log("Rebooting host: {}".format(host_name))
+            host_handle.reboot(non_blocking=True)
+        fun_test.log("Hosts info: {}".format(self.host_info))
 
         # Getting FS, F1 and COMe objects, Storage Controller objects, F1 IPs
         # for all the DUTs going to be used in the test
@@ -246,37 +251,35 @@ class MultiHostVolumePerformanceScript(FunTestScript):
         fun_test.shared_variables["num_duts"] = self.num_duts
         fun_test.shared_variables["syslog_level"] = self.syslog
         fun_test.shared_variables["db_log_time"] = self.db_log_time
+        fun_test.shared_variables["host_info"] = self.host_info
 
-        for key in self.host_handles:
+        for host_name in self.host_info:
+            host_handle = self.host_info[host_name]["handle"]
             # Ensure all hosts are up after reboot
-            fun_test.test_assert(self.host_handles[key].ensure_host_is_up(max_wait_time=self.reboot_timeout),
-                                 message="Ensure Host {} is reachable after reboot".format(key))
+            fun_test.test_assert(host_handle.ensure_host_is_up(max_wait_time=self.reboot_timeout),
+                                 message="Ensure Host {} is reachable after reboot".format(host_name))
 
-            # TODO: enable after mpstat check is added
-            """
-            # Check and install systat package
-            install_sysstat_pkg = host_handle.install_package(pkg="sysstat")
-            fun_test.test_assert(expression=install_sysstat_pkg, message="sysstat package available")
-            """
             # Ensure required modules are loaded on host server, if not load it
             for module in self.load_modules:
-                module_check = self.host_handles[key].lsmod(module)
+                module_check = host_handle.lsmod(module)
                 if not module_check:
-                    self.host_handles[key].modprobe(module)
-                    module_check = self.host_handles[key].lsmod(module)
+                    host_handle.modprobe(module)
+                    module_check = host_handle.lsmod(module)
                     fun_test.sleep("Loading {} module".format(module))
                 fun_test.simple_assert(module_check, "{} module is loaded".format(module))
 
         # Ensuring connectivity from Host to F1's
-        for key in self.host_handles:
+        for host_name in self.host_info:
+            host_handle = self.host_info[host_name]["handle"]
             for index, ip in enumerate(self.f1_ips):
-                ping_status = self.host_handles[key].ping(dst=ip)
+                ping_status = host_handle.ping(dst=ip, max_percentage_loss=80)
                 fun_test.test_assert(ping_status, "Host {} is able to ping to {}'s bond interface IP {}".
-                                     format(key, self.funcp_spec[0]["container_names"][index], ip))
+                                     format(host_name, self.funcp_spec[0]["container_names"][index], ip))
 
         fun_test.shared_variables["testbed_config"] = self.testbed_config
         fun_test.shared_variables["blt"] = {}
         fun_test.shared_variables["blt"]["setup_created"] = False
+        fun_test.shared_variables["blt"]["ip_cfg"] = False
         fun_test.shared_variables["blt"]["warmup_done"] = False
 
     def cleanup(self):
@@ -287,7 +290,6 @@ class MultiHostVolumePerformanceScript(FunTestScript):
             try:
                 self.blt_details = fun_test.shared_variables["blt_details"]
                 self.ctrlr_uuid = fun_test.shared_variables["ctrlr_uuid"]
-
                 # Deleting the volumes
                 for i in range(0, fun_test.shared_variables["blt_count"], 1):
 
@@ -295,7 +297,6 @@ class MultiHostVolumePerformanceScript(FunTestScript):
 
                     command_result = self.storage_controller.detach_volume_from_controller(
                         ctrlr_uuid=self.ctrlr_uuid[i], ns_id=1, command_duration=self.command_timeout)
-
                     fun_test.test_assert(command_result["status"], "Detaching BLT volume on DUT")
 
                     command_result = self.storage_controller.delete_volume(uuid=lun_uuid,
@@ -309,7 +310,6 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                                                                                command_duration=self.command_timeout)
                     fun_test.log(command_result)
                     fun_test.test_assert(command_result["status"], "Storage Controller Delete")
-
             except:
                 fun_test.log("Clean-up of volumes failed.")
 
@@ -393,6 +393,7 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
         self.f1 = fun_test.shared_variables["f1_objs"][0][0]
         self.storage_controller = fun_test.shared_variables["sc_obj"][0]
         self.f1_ips = fun_test.shared_variables["f1_ips"][0]
+        self.host_info = fun_test.shared_variables["host_info"]
         self.host_handles = fun_test.shared_variables["host_handles"]
         self.host_ips = fun_test.shared_variables["host_ips"]
         self.num_hosts = len(self.host_ips)
@@ -428,9 +429,11 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
             """
 
             # Configuring controller IP
-            command_result = self.storage_controller.ip_cfg(ip=self.test_network["f1_loopback_ip"])
-            fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "ip_cfg on DUT instance")
+            if not fun_test.shared_variables["blt"]["ip_cfg"]:
+                command_result = self.storage_controller.ip_cfg(ip=self.test_network["f1_loopback_ip"])
+                fun_test.log(command_result)
+                fun_test.test_assert(command_result["status"], "ip_cfg on DUT instance")
+                fun_test.shared_variables["blt"]["ip_cfg"] = True
 
             # Create BLT's
             self.vol_list = []
@@ -503,53 +506,48 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                                           message="Checking syslog level")
 
             for conn_no in range(1, self.no_of_nvme_connect + 1):
-
-                for i in range(0, self.blt_count):
-                    key = self.host_ips[i]
+                for i, host_name in enumerate(self.host_info):
+                    host_handle = self.host_info[host_name]["handle"]
                     nqn = self.vol_list[i]["nqn"]
-
-                    hostname = str(self.host_handles[key]).split()[1]
-
                     if conn_no == 1:
-
-                        self.host_handles[key].sudo_command("iptables -F && ip6tables -F && dmesg -c > /dev/null")
-                        self.host_handles[key].sudo_command("/etc/init.d/irqbalance stop")
-                        irq_bal_stat = self.host_handles[key].command("/etc/init.d/irqbalance status")
+                        host_handle.sudo_command("iptables -F && ip6tables -F && dmesg -c > /dev/null")
+                        host_handle.sudo_command("/etc/init.d/irqbalance stop")
+                        irq_bal_stat = host_handle.command("/etc/init.d/irqbalance status")
 
                         if "dead" in irq_bal_stat:
                             fun_test.log("IRQ balance stopped on {}".format(i))
                         else:
                             fun_test.log("IRQ balance not stopped on {}".format(i))
-                            install_status = self.host_handles[key].install_package("tuned")
+                            install_status = host_handle.install_package("tuned")
                             fun_test.test_assert(install_status, "tuned installed successfully")
 
-                            self.host_handles[key].sudo_command(
+                            host_handle.sudo_command(
                                 "tuned-adm profile network-throughput && tuned-adm active")
 
-                        command_result = self.host_handles[key].command("lsmod | grep -w nvme")
+                        command_result = host_handle.command("lsmod | grep -w nvme")
                         if "nvme" in command_result:
                             fun_test.log("nvme driver is loaded")
                         else:
                             fun_test.log("Loading nvme")
-                            self.host_handles[key].modprobe("nvme")
-                            self.host_handles[key].modprobe("nvme_core")
-                        command_result = self.host_handles[key].lsmod("nvme_tcp")
+                            host_handle.modprobe("nvme")
+                            host_handle.modprobe("nvme_core")
+                        command_result = host_handle.lsmod("nvme_tcp")
                         if "nvme_tcp" in command_result:
                             fun_test.log("nvme_tcp driver is loaded")
                         else:
                             fun_test.log("Loading nvme_tcp")
-                            self.host_handles[key].modprobe("nvme_tcp")
-                            self.host_handles[key].modprobe("nvme_fabrics")
+                            host_handle.modprobe("nvme_tcp")
+                            host_handle.modprobe("nvme_fabrics")
 
-                    pcap_file = "/tmp/SWOS-5844-{}_nvme_connect_auto_{}.pcap".format(hostname, conn_no)
+                    pcap_file = "/tmp/SWOS-5844-{}_nvme_connect_auto_{}.pcap".format(host_name, conn_no)
 
-                    pcap_pid = self.host_handles[key].tcpdump_capture_start(interface="enp216s0",
+                    pcap_pid = host_handle.tcpdump_capture_start(interface="enp216s0",
                                                                             tcpdump_filename=pcap_file, snaplen=1500)
                     nvme_connect_failed = False
 
                     try:
                         if hasattr(self, "nvme_io_q"):
-                            command_result = self.host_handles[key].sudo_command(
+                            command_result = host_handle.sudo_command(
                                 "nvme connect -t {} -a {} -s {} -n {} -i {} -q {}".format(
                                     unicode.lower(self.transport_type),
                                     self.test_network["f1_loopback_ip"],
@@ -559,7 +557,7 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                                     self.host_ips[i]), timeout=60)
                             fun_test.log(command_result)
                         else:
-                            command_result = self.host_handles[key].sudo_command(
+                            command_result = host_handle.sudo_command(
                                 "nvme connect -t {} -a {} -s {} -n {} -q {}".format(unicode.lower(self.transport_type),
                                                                                     self.test_network["f1_loopback_ip"],
                                                                                     self.transport_port,
@@ -576,43 +574,43 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                     pcap_artifact_file = fun_test.get_test_case_artifact_file_name(
                         post_fix_name="{}".format(pcap_file.split('/')[-1]))
 
-                    self.host_handles[key].tcpdump_capture_stop(process_id=pcap_pid)
+                    host_handle.tcpdump_capture_stop(process_id=pcap_pid)
 
                     if not nvme_connect_failed:
                         fun_test.log(
-                            "nvme connect on host {} for iteration {} is successful".format(hostname, conn_no))
+                            "nvme connect on host {} for iteration {} is successful".format(host_name, conn_no))
                         if conn_no == 1:
-                            fun_test.scp(source_port=self.host_handles[key].ssh_port,
-                                         source_username=self.host_handles[key].ssh_username,
-                                         source_password=self.host_handles[key].ssh_password,
-                                         source_ip=self.host_handles[key].host_ip,
+                            fun_test.scp(source_port=host_handle.ssh_port,
+                                         source_username=host_handle.ssh_username,
+                                         source_password=host_handle.ssh_password,
+                                         source_ip=host_handle.host_ip,
                                          source_file_path=pcap_file,
                                          target_file_path=pcap_artifact_file)
                             fun_test.add_auxillary_file(
-                                description="Host {} NVME connect passed pcap".format(hostname),
+                                description="Host {} NVME connect passed pcap".format(host_name),
                                 filename=pcap_artifact_file)
 
                     else:
                         fun_test.log(
                             "nvme connect on host {} failed on iteration: {}. Check pcap file {} for errors".format(
-                                hostname, conn_no, pcap_file))
-                        fun_test.scp(source_port=self.host_handles[key].ssh_port,
-                                     source_username=self.host_handles[key].ssh_username,
-                                     source_password=self.host_handles[key].ssh_password,
-                                     source_ip=self.host_handles[key].host_ip,
+                                host_name, conn_no, pcap_file))
+                        fun_test.scp(source_port=host_handle.ssh_port,
+                                     source_username=host_handle.ssh_username,
+                                     source_password=host_handle.ssh_password,
+                                     source_ip=host_handle.host_ip,
                                      source_file_path=pcap_file,
                                      target_file_path=pcap_artifact_file)
                         fun_test.add_auxillary_file(
-                            description="Host {} NVME connect failed pcap".format(hostname),
+                            description="Host {} NVME connect failed pcap".format(host_name),
                             filename=pcap_artifact_file)
 
                     fun_test.test_assert(expression=not nvme_connect_failed,
-                                         message="SWOS-5844: nvme connect passed on host {}".format(hostname))
+                                         message="SWOS-5844: nvme connect passed on host {}".format(host_name))
 
-                for i in range(0, self.blt_count):
-                    key = self.host_ips[i]
+                for i, host_name in enumerate(self.host_info):
+                    host_handle = self.host_info[host_name]["handle"]
                     nqn = self.vol_list[i]["nqn"]
-                    command_result = self.host_handles[key].sudo_command("nvme disconnect -n {}".format(nqn))
+                    command_result = host_handle.sudo_command("nvme disconnect -n {}".format(nqn))
                     fun_test.log(command_result)
 
             fun_test.shared_variables["blt"]["setup_created"] = True
