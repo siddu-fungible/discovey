@@ -782,25 +782,37 @@
             "dual": 20
           }
         },
+        "disabled": false,
+        "pool_member_type": 2,
         "dut": "fs-38"
       },
       "1": {
+        "disabled": false,
+        "pool_member_type": 1,
         "type": "DUT_TYPE_FSU",
         "dut": "fs-32"
       },
       "2": {
+        "disabled": false,
+        "pool_member_type": 1,
         "type": "DUT_TYPE_FSU",
         "dut": "fs-37"
       },
       "3": {
+        "disabled": false,
+        "pool_member_type": 1,
         "type": "DUT_TYPE_FSU",
         "dut": "fs-39"
       },
       "4": {
+        "disabled": false,
+        "pool_member_type": 1,
         "type": "DUT_TYPE_FSU",
         "dut": "fs-51"
       },
       "5": {
+        "disabled": false,
+        "pool_member_type": 1,
         "type": "DUT_TYPE_FSU",
         "dut": "fs-67"
       },
@@ -895,6 +907,8 @@
             "dual": 20
           }
         },
+        "pool_member_type": 2,
+        "disabled": false,
         "dut": "fs-8"
       },
       "7": {
@@ -977,17 +991,25 @@
             "dual": 20
           }
         },
+        "disabled": false,
+        "pool_member_type": 2,
         "dut": "fs-21"
       },
       "8": {
+        "disabled": false,
+        "pool_member_type": 1,
         "type": "DUT_TYPE_FSU",
         "dut": "fs-15"
       },
       "9": {
+        "disabled": false,
+        "pool_member_type": 1,
         "type": "DUT_TYPE_FSU",
         "dut": "fs-20"
       },
        "10": {
+         "disabled": false,
+         "pool_member_type": 1,
         "type": "DUT_TYPE_FSU",
         "dut": "fs-40"
       }
