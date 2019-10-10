@@ -7,6 +7,7 @@ from web.fun_test.analytics_models_helper import ModelHelper, get_data_collectio
 from fun_global import PerfUnit, FunPlatform
 from lib.templates.networking.rdma_tools import Rocetools
 import re
+import math
 
 
 def add_to_data_base(value_dict):
@@ -470,6 +471,10 @@ class BwTest(FunTestCase):
                 bw_peak_gbps = 0
                 qp_count = qp
                 row_data_list = []
+                total_values = len(parsed_result)
+                for x in range(0, total_values):
+                    if isinstance(parsed_result[x], str) or math.isinf(parsed_result[x]):
+                        parsed_result[x] = -1
                 for results in parsed_result:
                     size_bandwidth = int(results[0])
                     iterations = int(results[1])
@@ -623,6 +628,10 @@ class LatencyTest(FunTestCase):
             latency_99_99 = 0
             iterations = 0
             row_data_list = []
+            total_values = len(parsed_result)
+            for x in range(0, total_values):
+                if isinstance(parsed_result[x], str) or math.isinf(parsed_result[x]):
+                    parsed_result[x] = -1
             for results in parsed_result:
                 size_latency = int(results[0])
                 iterations = int(results[4])
