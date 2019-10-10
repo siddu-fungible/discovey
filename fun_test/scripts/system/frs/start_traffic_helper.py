@@ -172,9 +172,5 @@ def start_le_firewall():
     fun_test.test_assert(True, "Le-firewall initiated on {} VM".format("10.1.23.150"))
 
 
-
-
-
-
 if __name__ == "__main__":
     le_firewall(60)
