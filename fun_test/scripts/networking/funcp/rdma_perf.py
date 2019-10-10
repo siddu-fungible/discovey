@@ -375,6 +375,7 @@ class BwTest(FunTestCase):
         qp_list = fun_test.shared_variables["qp_list"]
         come_obj = fun_test.shared_variables["come_obj"]
         kill_time = 30
+        test_case_failure_time = 5
 
         # Using hosts based on minimum host length
         total_link_bw = min(fun_test.shared_variables["host_len_f10"], fun_test.shared_variables["host_len_f11"])
@@ -447,6 +448,10 @@ class BwTest(FunTestCase):
                             fun_test.sleep(message="Client process still there", seconds=2)
                         while key.qp_check() > 1:
                             fun_test.sleep("Client : QP count {}".format(key.qp_check()), seconds=5)
+                            wait_time = test_case_failure_time - 1
+                            if wait_time == 0:
+                                print "******** QP didn't clear on client *****************"
+                                fun_test.test_assert(False, "QP is not clearing on client, aborting test case")
                         parsed_result.append(key.parse_test_log(filepath=value["output_file"], tool="ib_bw",
                                                                 perf=True))
                 for handle in f10_pid_list:
@@ -456,6 +461,10 @@ class BwTest(FunTestCase):
                             fun_test.sleep(message="Server process still there", seconds=2)
                         while key.qp_check() > 1:
                             fun_test.sleep("Server : QP count {}".format(key.qp_check()), seconds=5)
+                            wait_time = test_case_failure_time - 1
+                            if wait_time == 0:
+                                print "******** QP didn't clear on server *****************"
+                                fun_test.test_assert(False, "QP is not clearing on server, aborting test case")
                 avg_bandwidth = 0
                 msg_rate = 0
                 bw_peak_gbps = 0
@@ -516,6 +525,7 @@ class LatencyTest(FunTestCase):
         f11_hosts = fun_test.shared_variables["f11_hosts"]
         qp_list = fun_test.shared_variables["qp_list"]
         kill_time = 20
+        test_case_failure_time = 5
 
         # Using hosts based on minimum host length
         total_link_bw = min(fun_test.shared_variables["host_len_f10"], fun_test.shared_variables["host_len_f11"])
@@ -589,6 +599,10 @@ class LatencyTest(FunTestCase):
                         fun_test.sleep(message="Client process still there", seconds=2)
                     while key.qp_check() > 1:
                         fun_test.sleep("Client : QP count {}".format(key.qp_check()), seconds=5)
+                        wait_time = test_case_failure_time - 1
+                        if wait_time == 0:
+                            print "******** QP didn't clear on client *****************"
+                            fun_test.test_assert(False, "QP is not clearing on client, aborting test case")
                     parsed_result.append(key.parse_test_log(filepath=value["output_file"], tool="ib_lat",
                                                             perf=True))
             for handle in f10_pid_list:
@@ -598,6 +612,10 @@ class LatencyTest(FunTestCase):
                         fun_test.sleep(message="Server process still there", seconds=2)
                     while key.qp_check() > 1:
                         fun_test.sleep("Server : QP count {}".format(key.qp_check()), seconds=5)
+                        wait_time = test_case_failure_time - 1
+                        if wait_time == 0:
+                            print "******** QP didn't clear on server *****************"
+                            fun_test.test_assert(False, "QP is not clearing on server, aborting test case")
             min_latency = 0
             max_latency = 0
             avg_latency = 0
