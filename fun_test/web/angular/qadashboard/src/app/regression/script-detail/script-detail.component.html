@@ -13,8 +13,11 @@
             <td class="fun-table-header">Description</td>
             <td class="fun-table-header">Result</td>
           </tr>
-          <tr *ngFor="let testCaseExecution of testCaseExecutions; let index=index">
-            <td><span class="pseudo-anchor" (click)="onTestCaseIdClick(index, testCaseExecution.execution_id)">{{ testCaseExecution.test_case_id }}</span></td>
+          <tr *ngFor="let testCaseExecution of testCaseExecutions; let index=index" [ngClass]="{'selected-row': currentTestCaseExecution?.test_case_id === testCaseExecution.test_case_id }">
+            <td>
+              <span class="pseudo-anchor" (click)="onTestCaseIdClick(index, testCaseExecution.execution_id)" >{{ testCaseExecution.test_case_id }}
+              </span>
+            </td>
             <td>{{ testCaseExecution.summary }}</td>
             <td>{{ testCaseExecution.result }}</td>
           </tr>
@@ -22,7 +25,6 @@
       </div>
       <div class="fun-flex-item panel" [@show]="showCheckpointPanel" *ngIf="currentTestCaseExecution">
         <h4>Checkpoints</h4>
-
         <table class="fun-table">
           <tr>
             <td class="fun-table-header">ID</td>
@@ -31,7 +33,7 @@
             <td class="fun-table-header">Expected</td>
             <td class="fun-table-header">Actual</td>
           </tr>
-          <tr *ngFor="let checkpoint of this.timeSeriesByTestCase[currentTestCaseExecution.test_case_id]?.checkpoints">
+          <tr *ngFor="let checkpoint of this.timeSeriesByTestCase[currentTestCaseExecution.test_case_id]?.checkpoints" [ngClass]="{'selected-row': currentCheckpointIndex === checkpoint.index }">
             <td><span class="pseudo-anchor" (click)="onCheckpointClick(currentTestCaseExecution.test_case_id, checkpoint.index)">{{ checkpoint.index }}</span></td>
             <td>{{ checkpoint.checkpoint }}</td>
             <td>{{ checkpoint.result }}</td>

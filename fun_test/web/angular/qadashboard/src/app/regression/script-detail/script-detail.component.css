@@ -6,3 +6,7 @@
 .panel {
  margin: 10px;
 }
+
+.selected-row {
+  background-color: #c4e3f3;
+}

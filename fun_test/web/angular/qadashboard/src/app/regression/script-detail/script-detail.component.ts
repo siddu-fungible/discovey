@@ -53,6 +53,7 @@ export class ScriptDetailComponent implements OnInit {
   showCheckpointPanel: boolean = false;
   showLogsPanel: boolean = false;
   testCaseIds: number [] = [];
+  currentCheckpointIndex: number = null;
 
   timeSeriesByTestCase: {[testCaseId: number]: {[key: string]: any }} = {};
 
@@ -118,7 +119,7 @@ export class ScriptDetailComponent implements OnInit {
 
   onTestCaseIdClick(testCaseExecutionIndex) {
     this.testLogs = null;
-
+    this.currentCheckpointIndex = null;
     this.regressionService.testCaseTimeSeries(this.suiteExecutionId, this.testCaseExecutions[testCaseExecutionIndex].execution_id).subscribe(response => {
       this.currentTestCaseExecution = this.testCaseExecutions[testCaseExecutionIndex];
 
@@ -141,6 +142,7 @@ export class ScriptDetailComponent implements OnInit {
       this.showLogsPanel = true;
       this.showCheckpointPanel = true;
       let checkpointId = `${testCaseId}_${checkpointIndex}`;
+      this.currentCheckpointIndex = checkpointIndex;
       this.commonService.scrollTo(checkpointId);
     }, error => {
       this.loggerService.error("Unable to fetch time-series logs")
@@ -151,6 +153,7 @@ export class ScriptDetailComponent implements OnInit {
     this.showTestCasePanel = true;
     this.showCheckpointPanel = true;
     this.showLogsPanel = false;
+    this.currentCheckpointIndex = null;
   }
 
 }
