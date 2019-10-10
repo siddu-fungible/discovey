@@ -319,10 +319,12 @@ def calculate_leaf_scores(cache_valid, chart, result, from_log=False):
                                 if output_value and output_value != -1 and not math.isinf(output_value):
                                     if chart.positive:
                                         data_set_combined_goodness += (float(
-                                            output_value) / reference_value) * 100 if output_value >= 0 and reference_value > 0 else 0
+                                            output_value) / reference_value) * 100 if output_value >= 0 and \
+                                                                                      reference_value >= 0 else 0
                                     else:
                                         data_set_combined_goodness += (float(
-                                            reference_value) / output_value) * 100 if output_value >= 0 else 0
+                                            reference_value) / output_value) * 100 if output_value >= 0 and \
+                                                                                      reference_value >= 0 else 0
                                 else:
                                     print "ERROR: {}, {}".format(chart.chart_name, chart.metric_model_name)
                 current_score = round(data_set_combined_goodness / num_data_sets_with_expected,
