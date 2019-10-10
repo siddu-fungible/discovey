@@ -1,3 +1,8 @@
 .fun-flex-item {
   flex-grow: 1;
 }
+
+
+.panel {
+ margin: 10px;
+}
