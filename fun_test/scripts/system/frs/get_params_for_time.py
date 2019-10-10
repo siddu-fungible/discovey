@@ -1,7 +1,7 @@
 from lib.system.fun_test import *
 
 
-def get(time, crypto_per=100, zip_per=100, rcnvme_per=70, fio_per=100):
+def get(time, crypto_per=100, zip_per=100, rcnvme_per=70, fio_per=100, specific_field=None):
     result = False
     app_params = {}
     try:
@@ -68,8 +68,15 @@ def get(time, crypto_per=100, zip_per=100, rcnvme_per=70, fio_per=100):
         result = True
     except Exception as ex:
         fun_test.critical(ex)
+    new_app_params = {}
+    if specific_field:
+        for field in specific_field:
+            new_app_params[field] = app_params[field]
+    else:
+        new_app_params = app_params
+
     fun_test.test_assert(result, "Got the app parameters for time : {} seconds".format(time))
-    return app_params
+    return new_app_params
 
 
 # unit : minutes
