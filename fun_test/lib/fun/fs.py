@@ -913,10 +913,11 @@ class ComE(Linux):
     def _setup_build_script_directory(self):
         """
         Sets up the directory location where the build script such as setup_fs1600-68.sh will be saved for the installation
-        process. Create the directory
+        process. Remove the directory and Create the directory
         :return:
         """
         path = self.BUILD_SCRIPT_DOWNLOAD_DIRECTORY
+        self.command("rm -rf {}".format(path))
         self.command("mkdir -p {}".format(path))
         return path
 
@@ -935,6 +936,10 @@ class ComE(Linux):
         target_file_name = "{}/{}".format(target_directory, script_file_name)
         self.curl(output_file=target_file_name, url=script_url, timeout=180)
         fun_test.simple_assert(self.list_files(target_file_name), "Install script downloaded")
+        self.sudo_command("chmod 777 {}".format(target_file_name))
+        self.sudo_command("{} install".format(target_file_name), timeout=360)
+        exit_status = self.exit_status()
+        fun_test.test_assert(exit_status == 0, "Bundle install complete")
         return True
 
 
