@@ -39,7 +39,7 @@
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {"bs": "32k", "iodepth": 1, "rw": "write", "direct": 1, "prio": 0,
                              "size": "64G", "cpus_allowed": "1-7", "numjobs": 1, "timeout": 600},
-    "fio_cmd_args": {"ioengine": "mmap", "size": "64G", "direct": 1, "time_based": 1, "runtime": 1200,
+    "fio_cmd_args": {"ioengine": "mmap", "size": "64G", "direct": 1, "time_based": 1, "runtime": 86400,
                       "norandommap": "NO_VALUE", "randrepeat": 0,
                       "thread": 1, "group_reporting": 1, "prio":  0, "timeout": 1400},
     "fio_modes": ["randread"],

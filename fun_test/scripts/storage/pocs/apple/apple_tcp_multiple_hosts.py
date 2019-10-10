@@ -426,8 +426,10 @@ class StripeVolumeTestCase(FunTestCase):
             self.nvme_io_queues = job_inputs["nvme_io_queues"]
         if "nvme_io_q" in job_inputs:
             self.nvme_io_queues = job_inputs["nvme_io_q"]
+        fun_test.log("tc setup: before job inputs fio_runtime is: {}".format(self.fio_cmd_args["runtime"]))
         if "fio_runtime" in job_inputs:
             self.fio_cmd_args["runtime"] = job_inputs["fio_runtime"]
+        fun_test.log("tc setup: after job inputs fio_runtime is: {}".format(self.fio_cmd_args["runtime"]))
 
         self.fs = fun_test.shared_variables["fs_objs"]
         self.come_obj = fun_test.shared_variables["come_obj"]
@@ -733,6 +735,7 @@ class StripeVolumeTestCase(FunTestCase):
                         test_filename = self.nvme_block_device
                     wait_time = self.num_hosts + 1 - thread_count
                     # fun_test.log("Wait time for thread {} is {}".format(thread_count, wait_time))
+                    fun_test.log("tc run: before fio starts fio_runtime is: {}".format(self.fio_cmd_args["runtime"]))
                     thread_id[thread_count] = fun_test.execute_thread_after(time_in_seconds=wait_time,
                                                                             func=fio_parser,
                                                                             arg1=end_host_thread[thread_count],
