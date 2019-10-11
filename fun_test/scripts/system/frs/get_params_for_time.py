@@ -71,6 +71,8 @@ def get(time, crypto_per=100, zip_per=100, rcnvme_per=70, fio_per=100, specific_
     new_app_params = {}
     if specific_field:
         for field in specific_field:
+            if field == "None":
+                break
             new_app_params[field] = app_params[field]
     else:
         new_app_params = app_params
