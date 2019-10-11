@@ -7,6 +7,7 @@ from web.fun_test.analytics_models_helper import ModelHelper, get_data_collectio
 from fun_global import PerfUnit, FunPlatform
 from lib.templates.networking.rdma_tools import Rocetools
 import re
+import math
 
 
 def add_to_data_base(value_dict):
@@ -441,6 +442,7 @@ class BwTest(FunTestCase):
                 fun_test.sleep("Waiting for {} seconds before killing tests".format(kill_time), seconds=kill_time)
                 # First kill client & then kill server
                 parsed_result = []
+                wait_time = test_case_failure_time
                 for handle in f11_pid_list:
                     for key, value in handle.items():
                         key.kill_pid(pid=value["cmd_pid"])
@@ -448,12 +450,13 @@ class BwTest(FunTestCase):
                             fun_test.sleep(message="Client process still there", seconds=2)
                         while key.qp_check() > 1:
                             fun_test.sleep("Client : QP count {}".format(key.qp_check()), seconds=5)
-                            wait_time = test_case_failure_time - 1
+                            wait_time -= 1
                             if wait_time == 0:
                                 print "******** QP didn't clear on client *****************"
                                 fun_test.test_assert(False, "QP is not clearing on client, aborting test case")
                         parsed_result.append(key.parse_test_log(filepath=value["output_file"], tool="ib_bw",
                                                                 perf=True))
+                wait_time = test_case_failure_time
                 for handle in f10_pid_list:
                     for key, value in handle.items():
                         key.kill_pid(pid=value["cmd_pid"])
@@ -461,7 +464,7 @@ class BwTest(FunTestCase):
                             fun_test.sleep(message="Server process still there", seconds=2)
                         while key.qp_check() > 1:
                             fun_test.sleep("Server : QP count {}".format(key.qp_check()), seconds=5)
-                            wait_time = test_case_failure_time - 1
+                            wait_time -= 1
                             if wait_time == 0:
                                 print "******** QP didn't clear on server *****************"
                                 fun_test.test_assert(False, "QP is not clearing on server, aborting test case")
@@ -470,6 +473,10 @@ class BwTest(FunTestCase):
                 bw_peak_gbps = 0
                 qp_count = qp
                 row_data_list = []
+                total_values = len(parsed_result)
+                for x in range(0, total_values):
+                    if isinstance(parsed_result[x], str) or math.isinf(parsed_result[x]):
+                        parsed_result[x] = -1
                 for results in parsed_result:
                     size_bandwidth = int(results[0])
                     iterations = int(results[1])
@@ -592,6 +599,7 @@ class LatencyTest(FunTestCase):
             fun_test.sleep("Waiting for {} seconds before killing tests".format(kill_time), seconds=kill_time)
             # First kill client & then kill server
             parsed_result = []
+            wait_time = test_case_failure_time
             for handle in f11_pid_list:
                 for key, value in handle.items():
                     key.kill_pid(pid=value["cmd_pid"])
@@ -599,12 +607,13 @@ class LatencyTest(FunTestCase):
                         fun_test.sleep(message="Client process still there", seconds=2)
                     while key.qp_check() > 1:
                         fun_test.sleep("Client : QP count {}".format(key.qp_check()), seconds=5)
-                        wait_time = test_case_failure_time - 1
+                        wait_time -= 1
                         if wait_time == 0:
                             print "******** QP didn't clear on client *****************"
                             fun_test.test_assert(False, "QP is not clearing on client, aborting test case")
                     parsed_result.append(key.parse_test_log(filepath=value["output_file"], tool="ib_lat",
                                                             perf=True))
+            wait_time = test_case_failure_time
             for handle in f10_pid_list:
                 for key, value in handle.items():
                     key.kill_pid(pid=value["cmd_pid"])
@@ -612,7 +621,7 @@ class LatencyTest(FunTestCase):
                         fun_test.sleep(message="Server process still there", seconds=2)
                     while key.qp_check() > 1:
                         fun_test.sleep("Server : QP count {}".format(key.qp_check()), seconds=5)
-                        wait_time = test_case_failure_time - 1
+                        wait_time -= 1
                         if wait_time == 0:
                             print "******** QP didn't clear on server *****************"
                             fun_test.test_assert(False, "QP is not clearing on server, aborting test case")
@@ -623,6 +632,10 @@ class LatencyTest(FunTestCase):
             latency_99_99 = 0
             iterations = 0
             row_data_list = []
+            total_values = len(parsed_result)
+            for x in range(0, total_values):
+                if isinstance(parsed_result[x], str) or math.isinf(parsed_result[x]):
+                    parsed_result[x] = -1
             for results in parsed_result:
                 size_latency = int(results[0])
                 iterations = int(results[4])

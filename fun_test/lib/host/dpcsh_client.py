@@ -60,10 +60,10 @@ class DpcshClient(object):
                     break
             else:
                 output += buffer
-        dry_run = fun_test.get_job_environment_variable("dry_run")
-        if dry_run:
-            if "\n" in output:
-                fun_test.log("slash n in output. Output: S: {} xxx E".format(output))
+        # dry_run = fun_test.get_job_environment_variable("dry_run")
+        # if dry_run:
+        #    if "\n" in output:
+        #        fun_test.log("slash n in output. Output: S: {} xxx E".format(output))
         return output
 
     def _connect(self):

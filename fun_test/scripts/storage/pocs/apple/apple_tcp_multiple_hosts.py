@@ -426,8 +426,6 @@ class StripeVolumeTestCase(FunTestCase):
             self.nvme_io_queues = job_inputs["nvme_io_queues"]
         if "nvme_io_q" in job_inputs:
             self.nvme_io_queues = job_inputs["nvme_io_q"]
-        if "fio_runtime" in job_inputs:
-            self.fio_cmd_args["runtime"] = job_inputs["fio_runtime"]
 
         self.fs = fun_test.shared_variables["fs_objs"]
         self.come_obj = fun_test.shared_variables["come_obj"]

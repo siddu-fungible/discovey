@@ -34,7 +34,6 @@ class FunTestCase1(FunTestCase):
         # 1. 1min
         # 2. 1hour - 60 min
         # 3. 3.5 hour - 210min
-
         fs_name = fun_test.get_job_environment_variable("test_bed_type")
         self.fs = AssetManager().get_fs_by_name(fs_name)
 
@@ -54,7 +53,8 @@ class FunTestCase1(FunTestCase):
             "duration": "1m",
             "le_firewall": True,
             "interval": 5,
-            "boot_new_image": True
+            "boot_new_image": True,
+            "specific_app": []
         }
         if job_inputs:
             if "fs" in job_inputs:
@@ -67,6 +67,8 @@ class FunTestCase1(FunTestCase):
                 self.details["interval"] = job_inputs["interval"]
             if "boot_new_image" in job_inputs:
                 self.details["boot_new_image"] = job_inputs["boot_new_image"]
+            if "specific_app" in job_inputs:
+                self.details["specific_app"] = job_inputs["specific_app"]
 
         if self.details["boot_new_image"]:
             topology = topology_helper.deploy()
@@ -136,6 +138,8 @@ class FunTestCase1(FunTestCase):
         self.f_bam_f1_0 = open(self.f1_0_bam_dpc_logs, "w+")
         self.f_bam_f1_1 = open(self.f1_1_bam_dpc_logs, "w+")
 
+        #TODO: Clear the Uart log files if the
+
         # Traffic
         self.methods = {"crypto": crypto, "zip": zip_deflate, "rcnvme": rcnvme, "fio": fio}
 
@@ -147,7 +151,6 @@ class FunTestCase1(FunTestCase):
             self.test_duration = 10800
 
     def run(self):
-
         ############## Before traffic #####################
         self.initial_debug_memory_stats = self.get_debug_memory_stats_initially(self.f_debug_memory_f1_0,
                                                                                 self.f_debug_memory_f1_1)
@@ -162,6 +165,8 @@ class FunTestCase1(FunTestCase):
         come_handle.command("pwd")
 
         app_params = get_params_for_time.get(self.test_duration)
+        if self.details["specific_app"]:
+            app_params = get_params_for_time.get(self.test_duration, specific_field=self.details["specific_app"])
         fun_test.log("App parameters: {}".format(app_params))
 
         if self.details["le_firewall"]:
@@ -198,10 +203,18 @@ class FunTestCase1(FunTestCase):
         self.f_cdu_f1_1.close()
 
     def cleanup(self):
-        pass
-
-
-
+        if not self.details["boot_new_image"]:
+            bmc_handle = Bmc(host_ip=self.fs['bmc']['mgmt_ip'],
+                             ssh_username=self.fs['bmc']['mgmt_ssh_username'],
+                             ssh_password=self.fs['bmc']['mgmt_ssh_password'],
+                             set_term_settings=True,
+                             disable_uart_logger=False)
+            bmc_handle.set_prompt_terminator(r'# $')
+            # bmc_handle.cleanup()
+            artifact_file_name_f1_0 = bmc_handle.get_uart_log_file(0)
+            artifact_file_name_f1_1 = bmc_handle.get_uart_log_file(1)
+            fun_test.add_auxillary_file(description="DUT_0_fs-65_F1_0 UART Log", filename=artifact_file_name_f1_0)
+            fun_test.add_auxillary_file(description="DUT_0_fs-65_F1_1 UART Log", filename=artifact_file_name_f1_1)
 
     ############## power #############
     def power_output_to_file(self, count, f_power_shell, f_power_output, heading):
@@ -266,7 +279,7 @@ class FunTestCase1(FunTestCase):
             file_helper.add_data(file_cdu, one_dataset, heading=heading)
         come_handle.destroy()
 
-    ############# EQM ########
+    ############# EQM ################
     def eqm_stats(self, f1, count, file_eqm, heading):
         come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
                            ssh_username=self.fs['come']['mgmt_ssh_username'],
@@ -280,7 +293,7 @@ class FunTestCase1(FunTestCase):
             file_helper.add_data(file_eqm, one_dataset, heading=heading)
         come_handle.destroy()
 
-    ############# BAM ########
+    ############# BAM ################
     def bam_stats(self, f1, count, file_bm, heading):
         come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
                            ssh_username=self.fs['come']['mgmt_ssh_username'],
@@ -310,6 +323,7 @@ class FunTestCase1(FunTestCase):
             else:
                 file_helper.add_data(f_debug_memory_f1_1, one_dataset, heading=heading)
             result["f1_{}".format(f1)] = one_dataset.copy()
+        come_handle.destroy()
         return result
 
     ####### Data Capturing function ############
@@ -397,7 +411,6 @@ class FunTestCase1(FunTestCase):
                                                            file_bm=self.f_bam_f1_1,
                                                            heading=heading)
         fun_test.test_assert(True, "Started capturing the peek stats/bam logs {} on F1_1".format(heading))
-
 
         fun_test.join_thread(thread_id_power)
         fun_test.join_thread(thread_id_debug_memory_f1_0)
