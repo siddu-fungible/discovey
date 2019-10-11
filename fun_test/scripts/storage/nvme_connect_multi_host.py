@@ -151,8 +151,10 @@ class MultiHostVolumePerformanceScript(FunTestScript):
         self.host_numa_cpus = {}
         self.total_numa_cpus = {}
         for host_name, host_obj in self.required_hosts.items():
-            # Retrieving host ips
-            # test_interfaces = host.get_test_interfaces()
+            if host_name not in self.host_info:
+                self.host_info[host_name] = {}
+                self.host_info[host_name]["ip"] = []
+            # Retrieving host ip
             if host_name not in self.hosts_test_interfaces:
                 self.hosts_test_interfaces[host_name] = []
             test_interface = host_obj.get_test_interface(index=0)
@@ -284,35 +286,6 @@ class MultiHostVolumePerformanceScript(FunTestScript):
 
     def cleanup(self):
         come_reboot = False
-        if "blt" in fun_test.shared_variables and fun_test.shared_variables["blt"]["setup_created"]:
-            self.fs = self.fs_objs[0]
-            self.storage_controller = fun_test.shared_variables["sc_obj"][0]
-            try:
-                self.blt_details = fun_test.shared_variables["blt_details"]
-                self.ctrlr_uuid = fun_test.shared_variables["ctrlr_uuid"]
-                # Deleting the volumes
-                for i in range(0, fun_test.shared_variables["blt_count"], 1):
-
-                    lun_uuid = fun_test.shared_variables["thin_uuid"][i]
-
-                    command_result = self.storage_controller.detach_volume_from_controller(
-                        ctrlr_uuid=self.ctrlr_uuid[i], ns_id=1, command_duration=self.command_timeout)
-                    fun_test.test_assert(command_result["status"], "Detaching BLT volume on DUT")
-
-                    command_result = self.storage_controller.delete_volume(uuid=lun_uuid,
-                                                                           type=str(self.blt_details['type']),
-                                                                           command_duration=self.command_timeout)
-                    fun_test.test_assert(command_result["status"], "Deleting BLT {} with uuid {} on DUT".
-                                         format(i + 1, lun_uuid))
-
-                    # Deleting the controller
-                    command_result = self.storage_controller.delete_controller(ctrlr_uuid=self.ctrlr_uuid[i],
-                                                                               command_duration=self.command_timeout)
-                    fun_test.log(command_result)
-                    fun_test.test_assert(command_result["status"], "Storage Controller Delete")
-            except:
-                fun_test.log("Clean-up of volumes failed.")
-
         try:
             for index in xrange(self.num_duts):
                 stop_containers = self.funcp_obj[index].stop_container()
@@ -324,7 +297,6 @@ class MultiHostVolumePerformanceScript(FunTestScript):
         except Exception as ex:
             fun_test.critical(str(ex))
             come_reboot = True
-
         '''
         # disabling COMe reboot in cleanup section as, setup bring-up handles it through COMe power-cycle
         try:
@@ -335,7 +307,6 @@ class MultiHostVolumePerformanceScript(FunTestScript):
         except Exception as ex:
             fun_test.critical(str(ex))
         '''
-
         fun_test.log("FS cleanup")
         for fs in fun_test.shared_variables["fs_objs"]:
             fs.cleanup()
@@ -344,9 +315,17 @@ class MultiHostVolumePerformanceScript(FunTestScript):
         self.topology.cleanup()  # Why is this needed?
 
 
-class MultiHostVolumePerformanceTestcase(FunTestCase):
+class MultiNvmeConnect(FunTestCase):
     def describe(self):
-        pass
+        self.set_test_details(id=1,
+                              summary="Connect no of hosts with one blt each and issue nvme connect disconnect "
+                                      "continuously until hit the issue",
+                              steps='''
+        1. Create 1 BLT volumes fro each host
+        2. Create a storage controller for TCP and attach above volumes to this controller. Strt TCPDUMP
+        3. Do NVME connect from each host see if you are hitting swos-5844.
+        4. If pass disconnect and do for next iteration. if fails stop TCPDUMP and collect the logs
+        ''')
 
     def setup(self):
 
@@ -369,8 +348,6 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
         for k, v in benchmark_dict[testcase].iteritems():
             setattr(self, k, v)
 
-        if not hasattr(self, "num_ssd"):
-            self.num_ssd = 12
         if not hasattr(self, "blt_count"):
             self.blt_count = 12
         if not hasattr(self, "no_of_nvme_connect"):
@@ -378,15 +355,10 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
 
         self.testbed_config = fun_test.shared_variables["testbed_config"]
         self.syslog = fun_test.shared_variables["syslog_level"]
-        num_ssd = self.num_ssd
-        fun_test.shared_variables["num_ssd"] = num_ssd
         fun_test.shared_variables["blt_count"] = self.blt_count
 
         # New changes
         fun_test.shared_variables["transport_type"] = self.transport_type
-
-        self.nvme_block_device = self.nvme_device + "0n" + str(self.blt_details["ns_id"])
-        self.volume_name = self.nvme_block_device.replace("/dev/", "")
 
         self.fs = fun_test.shared_variables["fs_objs"]
         self.come_obj = fun_test.shared_variables["come_obj"]
@@ -397,9 +369,6 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
         self.host_handles = fun_test.shared_variables["host_handles"]
         self.host_ips = fun_test.shared_variables["host_ips"]
         self.num_hosts = len(self.host_ips)
-        self.end_host = self.host_handles[self.host_ips[0]]
-        self.numa_cpus = fun_test.shared_variables["numa_cpus"][self.host_ips[0]]
-        self.total_numa_cpus = fun_test.shared_variables["total_numa_cpus"][self.host_ips[0]]
         self.num_f1s = fun_test.shared_variables["num_f1s"]
         self.test_network = {}
         self.test_network["f1_loopback_ip"] = self.f1_ips
@@ -413,187 +382,170 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
         fun_test.log("Provided job inputs: {}".format(job_inputs))
         if "blt_count" in job_inputs:
             self.blt_count = job_inputs["blt_count"]
+        if "no_of_nvme_connect" in job_inputs:
+            self.no_of_nvme_connect = job_inputs["no_of_nvme_connect"]
 
-        if ("blt" not in fun_test.shared_variables or not fun_test.shared_variables["blt"]["setup_created"]) \
-                and (not fun_test.shared_variables["blt"]["warmup_done"]):
-            fun_test.shared_variables["blt"] = {}
-            fun_test.shared_variables["blt"]["setup_created"] = False
-            fun_test.shared_variables["blt_details"] = self.blt_details
+        fun_test.shared_variables["blt_details"] = self.blt_details
 
-            # Enabling counters
-            """
-            command_result = self.storage_controller.json_execute(verb="enable_counters",
-                                                                  command_duration=self.command_timeout)
+        # Enabling counters
+        """
+        command_result = self.storage_controller.json_execute(verb="enable_counters",
+                                                              command_duration=self.command_timeout)
+        fun_test.log(command_result)
+        fun_test.test_assert(command_result["status"], "Enabling Internal Stats/Counters")
+        """
+
+        # Configuring controller IP
+        if not fun_test.shared_variables["blt"]["ip_cfg"]:
+            command_result = self.storage_controller.ip_cfg(ip=self.test_network["f1_loopback_ip"])
             fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "Enabling Internal Stats/Counters")
-            """
+            fun_test.test_assert(command_result["status"], "ip_cfg on DUT instance")
+            fun_test.shared_variables["blt"]["ip_cfg"] = True
 
-            # Configuring controller IP
-            if not fun_test.shared_variables["blt"]["ip_cfg"]:
-                command_result = self.storage_controller.ip_cfg(ip=self.test_network["f1_loopback_ip"])
-                fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "ip_cfg on DUT instance")
-                fun_test.shared_variables["blt"]["ip_cfg"] = True
+        # Create BLT's
+        self.vol_list = []
+        self.thin_uuid_list = []
 
-            # Create BLT's
-            self.vol_list = []
-            self.thin_uuid_list = []
+        for i in range(self.blt_count):
+            vol_details = {}
+            cur_uuid = utils.generate_uuid()
+            self.thin_uuid_list.append(cur_uuid)
+            vol_details["vol_uuid"] = cur_uuid
+            command_result = self.storage_controller.create_thin_block_volume(
+                capacity=self.blt_details["capacity"],
+                block_size=self.blt_details["block_size"],
+                name="thin_block" + str(i + 1),
+                uuid=cur_uuid,
+                command_duration=self.command_timeout)
+            fun_test.log(command_result)
+            fun_test.test_assert(command_result["status"],
+                                 "Create BLT {} with uuid {} on DUT".format(i + 1, cur_uuid))
+            self.vol_list.append(vol_details)
 
-            for i in range(0, self.blt_count):
-                vol_details = {}
-                cur_uuid = utils.generate_uuid()
-                self.thin_uuid_list.append(cur_uuid)
-                vol_details["vol_uuid"] = cur_uuid
-                command_result = self.storage_controller.create_thin_block_volume(
-                    capacity=self.blt_details["capacity"],
-                    block_size=self.blt_details["block_size"],
-                    name="thin_block" + str(i + 1),
-                    uuid=cur_uuid,
-                    command_duration=self.command_timeout)
-                fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"],
-                                     "Create BLT {} with uuid {} on DUT".format(i + 1, cur_uuid))
-                # self.nvme_block_device.append(vol_details["name"])
+        fun_test.shared_variables["thin_uuid"] = self.thin_uuid_list
 
-                self.vol_list.append(vol_details)
+        # Create TCP controllers (1 for each SSD and Host)
+        self.ctrlr_uuid = []
+        for i in range(self.blt_count):
+            cur_uuid = utils.generate_uuid()
+            nqn = "nqn" + str(i + 1)
+            self.ctrlr_uuid.append(cur_uuid)
+            self.vol_list[i]["ctrl_uuid"] = cur_uuid
+            self.vol_list[i]["nqn"] = nqn
+            command_result = self.storage_controller.create_controller(
+                ctrlr_uuid=cur_uuid,
+                transport=unicode.upper(self.transport_type),
+                remote_ip=self.host_ips[i],
+                nqn=nqn,
+                port=self.transport_port,
+                command_duration=self.command_timeout)
+            fun_test.log(command_result)
+            fun_test.test_assert(command_result["status"], "Creating controller for {} with uuid {} on DUT".
+                                 format(self.transport_type, cur_uuid))
 
-            fun_test.shared_variables["thin_uuid"] = self.thin_uuid_list
+            # Attach controller to BLTs
+            ns_id = 1  # ns_id is 1 since there is 1 vol per controller
+            command_result = self.storage_controller.attach_volume_to_controller(ctrlr_uuid=cur_uuid,
+                                                                                 vol_uuid=self.vol_list[i][
+                                                                                     "vol_uuid"],
+                                                                                 ns_id=ns_id,
+                                                                                 command_duration=self.command_timeout)
+            fun_test.log(command_result)
+            fun_test.test_assert(command_result["status"], "Attaching BLT volume {} to controller {}".
+                                 format(self.thin_uuid_list[i], cur_uuid))
+            self.vol_list[i]["ns_id"] = ns_id
 
-            # Create TCP controllers (1 for each SSD and Host)
-            self.nvme_block_device = []
-            self.ctrlr_uuid = []
-            for i in range(0, self.blt_count):
-                ctrl_details = {}
-                cur_uuid = utils.generate_uuid()
-                nqn = "nqn" + str(i + 1)
-                self.ctrlr_uuid.append(cur_uuid)
-                self.vol_list[i]["ctrl_uuid"] = cur_uuid
-                self.vol_list[i]["nqn"] = nqn
-                command_result = self.storage_controller.create_controller(
-                    ctrlr_uuid=cur_uuid,
-                    transport=unicode.upper(self.transport_type),
-                    remote_ip=self.host_ips[i],
-                    nqn=nqn,
-                    port=self.transport_port,
-                    command_duration=self.command_timeout)
-                fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "Creating controller for {} with uuid {} on DUT".
-                                     format(self.transport_type, cur_uuid))
+        fun_test.shared_variables["ctrlr_uuid"] = self.ctrlr_uuid
 
-                # Attach controller to BLTs
-                ns_id = 1  # ns_id is 1 since there is 1 vol per controller
-                command_result = self.storage_controller.attach_volume_to_controller(ctrlr_uuid=cur_uuid,
-                                                                                     vol_uuid=self.vol_list[i][
-                                                                                         "vol_uuid"],
-                                                                                     ns_id=ns_id,
-                                                                                     command_duration=self.command_timeout)
-                fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "Attaching BLT volume {} to controller {}".
-                                     format(self.thin_uuid_list[i], cur_uuid))
-                self.vol_list[i]["vol_name"] = self.nvme_device + "n" + str(ns_id)
-                self.nvme_block_device.append(self.vol_list[i]["vol_name"])
-                self.vol_list[i]["ns_id"] = ns_id
+        # Setting the syslog level to 6
+        command_result = self.storage_controller.poke("params/syslog/level {}".format(self.syslog))
+        fun_test.test_assert(command_result["status"], "Setting syslog level to {}".format(self.syslog))
 
-            fun_test.shared_variables["ctrlr_uuid"] = self.ctrlr_uuid
-            fun_test.shared_variables["nvme_block_device_list"] = self.nvme_block_device
+        command_result = self.storage_controller.peek("params/syslog/level")
+        fun_test.test_assert_expected(expected=self.syslog, actual=command_result["data"],
+                                      message="Checking syslog level")
 
-            # Setting the syslog level to 6
-            command_result = self.storage_controller.poke("params/syslog/level {}".format(self.syslog))
-            fun_test.test_assert(command_result["status"], "Setting syslog level to {}".format(self.syslog))
+        for conn_no in range(1, self.no_of_nvme_connect + 1):
+            for i, host_name in enumerate(self.host_info):
+                host_handle = self.host_info[host_name]["handle"]
+                test_interface = self.host_info[host_name]["test_interface"].name
+                nqn = self.vol_list[i]["nqn"]
+                if conn_no == 1:
+                    host_handle.sudo_command("iptables -F && ip6tables -F && dmesg -c > /dev/null")
+                    host_handle.sudo_command("/etc/init.d/irqbalance stop")
+                    irq_bal_stat = host_handle.command("/etc/init.d/irqbalance status")
 
-            command_result = self.storage_controller.peek("params/syslog/level")
-            fun_test.test_assert_expected(expected=self.syslog, actual=command_result["data"],
-                                          message="Checking syslog level")
-
-            for conn_no in range(1, self.no_of_nvme_connect + 1):
-                for i, host_name in enumerate(self.host_info):
-                    host_handle = self.host_info[host_name]["handle"]
-                    nqn = self.vol_list[i]["nqn"]
-                    if conn_no == 1:
-                        host_handle.sudo_command("iptables -F && ip6tables -F && dmesg -c > /dev/null")
-                        host_handle.sudo_command("/etc/init.d/irqbalance stop")
-                        irq_bal_stat = host_handle.command("/etc/init.d/irqbalance status")
-
-                        if "dead" in irq_bal_stat:
-                            fun_test.log("IRQ balance stopped on {}".format(i))
-                        else:
-                            fun_test.log("IRQ balance not stopped on {}".format(i))
-                            install_status = host_handle.install_package("tuned")
-                            fun_test.test_assert(install_status, "tuned installed successfully")
-
-                            host_handle.sudo_command(
-                                "tuned-adm profile network-throughput && tuned-adm active")
-
-                        command_result = host_handle.command("lsmod | grep -w nvme")
-                        if "nvme" in command_result:
-                            fun_test.log("nvme driver is loaded")
-                        else:
-                            fun_test.log("Loading nvme")
-                            host_handle.modprobe("nvme")
-                            host_handle.modprobe("nvme_core")
-                        command_result = host_handle.lsmod("nvme_tcp")
-                        if "nvme_tcp" in command_result:
-                            fun_test.log("nvme_tcp driver is loaded")
-                        else:
-                            fun_test.log("Loading nvme_tcp")
-                            host_handle.modprobe("nvme_tcp")
-                            host_handle.modprobe("nvme_fabrics")
-
-                    pcap_file = "/tmp/SWOS-5844-{}_nvme_connect_auto_{}.pcap".format(host_name, conn_no)
-
-                    pcap_pid = host_handle.tcpdump_capture_start(interface="enp216s0",
-                                                                            tcpdump_filename=pcap_file, snaplen=1500)
-                    nvme_connect_failed = False
-
-                    try:
-                        if hasattr(self, "nvme_io_q"):
-                            command_result = host_handle.sudo_command(
-                                "nvme connect -t {} -a {} -s {} -n {} -i {} -q {}".format(
-                                    unicode.lower(self.transport_type),
-                                    self.test_network["f1_loopback_ip"],
-                                    self.transport_port,
-                                    nqn,
-                                    self.nvme_io_q,
-                                    self.host_ips[i]), timeout=60)
-                            fun_test.log(command_result)
-                        else:
-                            command_result = host_handle.sudo_command(
-                                "nvme connect -t {} -a {} -s {} -n {} -q {}".format(unicode.lower(self.transport_type),
-                                                                                    self.test_network["f1_loopback_ip"],
-                                                                                    self.transport_port,
-                                                                                    nqn,
-                                                                                    self.host_ips[i]), timeout=60)
-                    except:
-                        nvme_connect_failed = True
-                        fun_test.log("NVME connect failed - the status {} and pcap file  {}".format(nvme_connect_failed,
-                                                                                                    pcap_file))
-                    fun_test.log(command_result)
-
-                    fun_test.sleep("Wait for couple of seconds before taking tcpdump", 2)
-
-                    pcap_artifact_file = fun_test.get_test_case_artifact_file_name(
-                        post_fix_name="{}".format(pcap_file.split('/')[-1]))
-
-                    host_handle.tcpdump_capture_stop(process_id=pcap_pid)
-
-                    if not nvme_connect_failed:
-                        fun_test.log(
-                            "nvme connect on host {} for iteration {} is successful".format(host_name, conn_no))
-                        if conn_no == 1:
-                            fun_test.scp(source_port=host_handle.ssh_port,
-                                         source_username=host_handle.ssh_username,
-                                         source_password=host_handle.ssh_password,
-                                         source_ip=host_handle.host_ip,
-                                         source_file_path=pcap_file,
-                                         target_file_path=pcap_artifact_file)
-                            fun_test.add_auxillary_file(
-                                description="Host {} NVME connect passed pcap".format(host_name),
-                                filename=pcap_artifact_file)
-
+                    if "dead" in irq_bal_stat:
+                        fun_test.log("IRQ balance stopped on {}".format(i))
                     else:
-                        fun_test.log(
-                            "nvme connect on host {} failed on iteration: {}. Check pcap file {} for errors".format(
-                                host_name, conn_no, pcap_file))
+                        fun_test.log("IRQ balance not stopped on {}".format(i))
+                        install_status = host_handle.install_package("tuned")
+                        fun_test.test_assert(install_status, "tuned installed successfully")
+
+                        host_handle.sudo_command(
+                            "tuned-adm profile network-throughput && tuned-adm active")
+
+                    command_result = host_handle.command("lsmod | grep -w nvme")
+                    if "nvme" in command_result:
+                        fun_test.log("nvme driver is loaded")
+                    else:
+                        fun_test.log("Loading nvme")
+                        host_handle.modprobe("nvme")
+                        host_handle.modprobe("nvme_core")
+                    command_result = host_handle.lsmod("nvme_tcp")
+                    if "nvme_tcp" in command_result:
+                        fun_test.log("nvme_tcp driver is loaded")
+                    else:
+                        fun_test.log("Loading nvme_tcp")
+                        host_handle.modprobe("nvme_tcp")
+                        host_handle.modprobe("nvme_fabrics")
+
+                pcap_file = "/tmp/SWOS-5844-{}_nvme_connect_auto_{}.pcap".format(host_name, conn_no)
+                pcap_pid = host_handle.tcpdump_capture_start(interface=test_interface,
+                                                             tcpdump_filename=pcap_file, snaplen=1500)
+                nvme_connect_failed = False
+
+                try:
+                    if hasattr(self, "nvme_io_q"):
+                        command_result = host_handle.sudo_command(
+                            "nvme connect -t {} -a {} -s {} -n {} -i {} -q {}".format(
+                                unicode.lower(self.transport_type),
+                                self.test_network["f1_loopback_ip"],
+                                self.transport_port,
+                                nqn,
+                                self.nvme_io_q,
+                                self.host_ips[i]), timeout=60)
+                    else:
+                        command_result = host_handle.sudo_command(
+                            "nvme connect -t {} -a {} -s {} -n {} -q {}".format(unicode.lower(self.transport_type),
+                                                                                self.test_network["f1_loopback_ip"],
+                                                                                self.transport_port,
+                                                                                nqn,
+                                                                                self.host_ips[i]), timeout=60)
+                except Exception as ex:
+                    nvme_connect_failed = True
+                    fun_test.log("NVME connect failed - the status {} and pcap file  {}".format(nvme_connect_failed,
+                                                                                                pcap_file))
+                    fun_test.critical(str(ex))
+                fun_test.log(command_result)
+
+                # Checking whether the NVMe connect is succeeded or not
+                nvme_connect_exit_status = host_handle.exit_status()
+                if nvme_connect_exit_status:
+                    nvme_connect_failed = True
+                    fun_test.log("NVME connect failed - the status {} and pcap file  {}".format(nvme_connect_failed,
+                                                                                                pcap_file))
+
+                fun_test.sleep("Wait for couple of seconds before taking tcpdump", 2)
+
+                pcap_artifact_file = fun_test.get_test_case_artifact_file_name(
+                    post_fix_name="{}".format(pcap_file.split('/')[-1]))
+                host_handle.tcpdump_capture_stop(process_id=pcap_pid)
+
+                if not nvme_connect_failed:
+                    fun_test.log(
+                        "nvme connect on host {} for iteration {} is successful".format(host_name, conn_no))
+                    if conn_no == 1:
                         fun_test.scp(source_port=host_handle.ssh_port,
                                      source_username=host_handle.ssh_username,
                                      source_password=host_handle.ssh_password,
@@ -601,45 +553,356 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                                      source_file_path=pcap_file,
                                      target_file_path=pcap_artifact_file)
                         fun_test.add_auxillary_file(
-                            description="Host {} NVME connect failed pcap".format(host_name),
+                            description="Host {} NVME connect passed pcap".format(host_name),
                             filename=pcap_artifact_file)
 
-                    fun_test.test_assert(expression=not nvme_connect_failed,
-                                         message="SWOS-5844: nvme connect passed on host {}".format(host_name))
+                else:
+                    fun_test.log(
+                        "nvme connect on host {} failed on iteration: {}. Check pcap file {} for errors".format(
+                            host_name, conn_no, pcap_file))
+                    fun_test.scp(source_port=host_handle.ssh_port,
+                                 source_username=host_handle.ssh_username,
+                                 source_password=host_handle.ssh_password,
+                                 source_ip=host_handle.host_ip,
+                                 source_file_path=pcap_file,
+                                 target_file_path=pcap_artifact_file)
+                    fun_test.add_auxillary_file(
+                        description="Host {} NVME connect failed pcap".format(host_name),
+                        filename=pcap_artifact_file)
 
-                for i, host_name in enumerate(self.host_info):
-                    host_handle = self.host_info[host_name]["handle"]
-                    nqn = self.vol_list[i]["nqn"]
-                    command_result = host_handle.sudo_command("nvme disconnect -n {}".format(nqn))
-                    fun_test.log(command_result)
+                fun_test.test_assert(expression=not nvme_connect_failed,
+                                     message="SWOS-5844: nvme connect passed on host {}".format(host_name))
 
-            fun_test.shared_variables["blt"]["setup_created"] = True
+            for i, host_name in enumerate(self.host_info):
+                host_handle = self.host_info[host_name]["handle"]
+                nqn = self.vol_list[i]["nqn"]
+                command_result = host_handle.sudo_command("nvme disconnect -n {}".format(nqn))
+                fun_test.log(command_result)
 
     def run(self):
         pass
 
     def cleanup(self):
-        pass
+        self.fs = fun_test.shared_variables["fs_objs"][0]
+        self.storage_controller = fun_test.shared_variables["sc_obj"][0]
+        try:
+            # Deleting the volumes
+            for i in range(self.blt_count):
+                lun_uuid = self.thin_uuid_list[i]
+                command_result = self.storage_controller.detach_volume_from_controller(
+                    ctrlr_uuid=self.ctrlr_uuid[i], ns_id=1, command_duration=self.command_timeout)
+                fun_test.test_assert(command_result["status"], "Detaching BLT volume on DUT")
+
+                command_result = self.storage_controller.delete_volume(uuid=lun_uuid,
+                                                                       type=str(self.blt_details['type']),
+                                                                       command_duration=self.command_timeout)
+                fun_test.test_assert(command_result["status"], "Deleting BLT {} with uuid {} on DUT".
+                                     format(i + 1, lun_uuid))
+
+                # Deleting the controller
+                command_result = self.storage_controller.delete_controller(ctrlr_uuid=self.ctrlr_uuid[i],
+                                                                           command_duration=self.command_timeout)
+                fun_test.log(command_result)
+                fun_test.test_assert(command_result["status"], "Storage Controller Delete")
+        except Exception as ex:
+            fun_test.log("Clean-up of volumes failed.")
+            fun_test.critical(str(ex))
 
 
-class MultiNvmeConnect(MultiHostVolumePerformanceTestcase):
-
+class NVMeConnectWithSpurious(FunTestCase):
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Connect no of hosts with one blt each"
-                                      "and issue nvme connect disconnect continously until hit the issue",
-                              steps='''
-        1. Create 1 BLT volumes fro each host
-        2. Create a storage controller for TCP and attach above volumes to this controller. Strt TCPDUMP
-        3. Do NVME connect from each host see if you are hitting swos-5844.
-        4. If pass disconnect and do for next iteration. if fails stop TCPDUMP and collect the logs
-        ''')
+                              summary="Attempting NVMe session from the attached host at the end of every 1024K spurious "
+                                      "connection in the middle 16K spurious connection",
+                              steps="""
+        1. Create a BLT volume and attach it to network host H1.
+        2. From the network attached host establish a NVMe session with the F1, check the above volume is visible to the host and disconnect the NVMe session. 
+        3. Attempt 1024 NVMe sessions from the non attached host H2.
+        4. Repeat the above steps for N times
+        """)
+
+    def setup(self):
+
+        testcase = self.__class__.__name__
+
+        benchmark_parsing = True
+        benchmark_file = ""
+        benchmark_file = fun_test.get_script_name_without_ext() + ".json"
+        fun_test.log("Benchmark file being used: {}".format(benchmark_file))
+
+        benchmark_dict = {}
+        benchmark_dict = utils.parse_file_to_json(benchmark_file)
+
+        if testcase not in benchmark_dict or not benchmark_dict[testcase]:
+            benchmark_parsing = False
+            fun_test.critical("Benchmarking is not available for the current testcase {} in {} file".
+                              format(testcase, benchmark_file))
+            fun_test.test_assert(benchmark_parsing, "Parsing Benchmark json file for this {} testcase".format(testcase))
+
+        for k, v in benchmark_dict[testcase].iteritems():
+            setattr(self, k, v)
+
+        if not hasattr(self, "blt_count"):
+            self.blt_count = 1
+        if not hasattr(self, "repetition"):
+            self.repetition = 16
+
+        self.testbed_config = fun_test.shared_variables["testbed_config"]
+        self.syslog = fun_test.shared_variables["syslog_level"]
+        fun_test.shared_variables["blt_count"] = self.blt_count
+
+        # New changes
+        fun_test.shared_variables["transport_type"] = self.transport_type
+
+        self.fs = fun_test.shared_variables["fs_objs"]
+        self.come_obj = fun_test.shared_variables["come_obj"]
+        self.f1 = fun_test.shared_variables["f1_objs"][0][0]
+        self.storage_controller = fun_test.shared_variables["sc_obj"][0]
+        self.f1_ips = fun_test.shared_variables["f1_ips"][0]
+        self.host_info = fun_test.shared_variables["host_info"]
+        self.host_handles = fun_test.shared_variables["host_handles"]
+        self.host_ips = fun_test.shared_variables["host_ips"]
+        self.num_hosts = len(self.host_ips)
+        self.num_f1s = fun_test.shared_variables["num_f1s"]
+        self.test_network = {}
+        self.test_network["f1_loopback_ip"] = self.f1_ips
+        self.remote_ip = self.host_ips[0]
+        fun_test.shared_variables["remote_ip"] = self.remote_ip
+        self.num_duts = fun_test.shared_variables["num_duts"]
+
+        job_inputs = fun_test.get_job_inputs()
+        if not job_inputs:
+            job_inputs = {}
+        fun_test.log("Provided job inputs: {}".format(job_inputs))
+        if "blt_count" in job_inputs:
+            self.blt_count = job_inputs["blt_count"]
+        if "no_of_nvme_connect" in job_inputs:
+            self.no_of_nvme_connect = job_inputs["no_of_nvme_connect"]
+
+        fun_test.shared_variables["blt_details"] = self.blt_details
+
+        # Checking whether we have sufficient hosts to run the test
+        fun_test.test_assert_expected(expected=self.attach_host + self.non_attach_host,
+                                      actual=len(self.host_info),
+                                      message="Sufficient host available to run the test")
+
+        self.genuine_host = self.host_info.keys()[0]
+        self.rogue_host = self.host_info.keys()[1]
+
+        # Enabling counters
+        """
+        command_result = self.storage_controller.json_execute(verb="enable_counters",
+                                                              command_duration=self.command_timeout)
+        fun_test.log(command_result)
+        fun_test.test_assert(command_result["status"], "Enabling Internal Stats/Counters")
+        """
+
+        # Configuring controller IP
+        if not fun_test.shared_variables["blt"]["ip_cfg"]:
+            command_result = self.storage_controller.ip_cfg(ip=self.test_network["f1_loopback_ip"])
+            fun_test.log(command_result)
+            fun_test.test_assert(command_result["status"], "ip_cfg on DUT instance")
+            fun_test.shared_variables["blt"]["ip_cfg"] = True
+
+        # Configure a BLT volume and attach the same to the first host
+        self.vol_list = []
+        self.thin_uuid_list = []
+
+        for i in range(self.blt_count):
+            vol_details = {}
+            cur_uuid = utils.generate_uuid()
+            self.thin_uuid_list.append(cur_uuid)
+            vol_details["vol_uuid"] = cur_uuid
+            command_result = self.storage_controller.create_thin_block_volume(
+                capacity=self.blt_details["capacity"],
+                block_size=self.blt_details["block_size"],
+                name="thin_block" + str(i + 1),
+                uuid=cur_uuid,
+                command_duration=self.command_timeout)
+            fun_test.log(command_result)
+            fun_test.test_assert(command_result["status"],
+                                 "Create BLT {} with uuid {} on DUT".format(i + 1, cur_uuid))
+            self.vol_list.append(vol_details)
+
+        fun_test.shared_variables["thin_uuid"] = self.thin_uuid_list
+
+        self.ctrlr_uuid = []
+        for i in range(self.blt_count):
+            cur_uuid = utils.generate_uuid()
+            nqn = "nqn" + str(i + 1)
+            self.ctrlr_uuid.append(cur_uuid)
+            self.vol_list[i]["ctrl_uuid"] = cur_uuid
+            self.vol_list[i]["nqn"] = nqn
+            command_result = self.storage_controller.create_controller(
+                ctrlr_uuid=cur_uuid,
+                transport=unicode.upper(self.transport_type),
+                remote_ip=self.host_ips[i],
+                nqn=nqn,
+                port=self.transport_port,
+                command_duration=self.command_timeout)
+            fun_test.log(command_result)
+            fun_test.test_assert(command_result["status"], "Creating controller for {} with uuid {} on DUT".
+                                 format(self.transport_type, cur_uuid))
+
+            # Attach controller to BLTs
+            ns_id = 1  # ns_id is 1 since there is 1 vol per controller
+            command_result = self.storage_controller.attach_volume_to_controller(ctrlr_uuid=cur_uuid,
+                                                                                 vol_uuid=self.vol_list[i][
+                                                                                     "vol_uuid"],
+                                                                                 ns_id=ns_id,
+                                                                                 command_duration=self.command_timeout)
+            fun_test.log(command_result)
+            fun_test.test_assert(command_result["status"], "Attaching BLT volume {} to controller {}".
+                                 format(self.thin_uuid_list[i], cur_uuid))
+            self.vol_list[i]["ns_id"] = ns_id
+
+        fun_test.shared_variables["ctrlr_uuid"] = self.ctrlr_uuid
+
+        # Setting the syslog level
+        command_result = self.storage_controller.poke("params/syslog/level {}".format(self.syslog))
+        fun_test.test_assert(command_result["status"], "Setting syslog level to {}".format(self.syslog))
+
+        command_result = self.storage_controller.peek("params/syslog/level")
+        fun_test.test_assert_expected(expected=self.syslog, actual=command_result["data"],
+                                      message="Checking syslog level")
+
+        # Attempting NVMe session from the genuine host
+        host_handle = self.host_info[self.genuine_host]["handle"]
+        test_interface = self.host_info[self.genuine_host]["test_interface"].name
+        nqn = self.vol_list[0]["nqn"]
+        host_handle.sudo_command("iptables -F && ip6tables -F && dmesg -c > /dev/null")
+        host_handle.sudo_command("/etc/init.d/irqbalance stop")
+        irq_bal_stat = host_handle.command("/etc/init.d/irqbalance status")
+
+        if "dead" in irq_bal_stat:
+            fun_test.log("IRQ balance stopped on {}".format(self.genuine_host))
+        else:
+            fun_test.log("IRQ balance not stopped on {}".format(self.genuine_host))
+            install_status = host_handle.install_package("tuned")
+            fun_test.test_assert(install_status, "tuned installed successfully")
+
+            host_handle.sudo_command(
+                "tuned-adm profile network-throughput && tuned-adm active")
+
+        command_result = host_handle.command("lsmod | grep -w nvme")
+        if "nvme" in command_result:
+            fun_test.log("nvme driver is loaded")
+        else:
+            fun_test.log("Loading nvme")
+            host_handle.modprobe("nvme")
+            host_handle.modprobe("nvme_core")
+        command_result = host_handle.lsmod("nvme_tcp")
+        if "nvme_tcp" in command_result:
+            fun_test.log("nvme_tcp driver is loaded")
+        else:
+            fun_test.log("Loading nvme_tcp")
+            host_handle.modprobe("nvme_tcp")
+            host_handle.modprobe("nvme_fabrics")
+
+        pcap_file = "/tmp/{}_nvme_connect_auto_0.pcap".format(self.genuine_host)
+
+        pcap_pid = host_handle.tcpdump_capture_start(interface=test_interface,
+                                                     tcpdump_filename=pcap_file, snaplen=1500)
+        nvme_connect_failed = False
+
+        try:
+            if hasattr(self, "nvme_io_q"):
+                command_result = host_handle.sudo_command(
+                    "nvme connect -t {} -a {} -s {} -n {} -i {} -q {}".format(
+                        unicode.lower(self.transport_type),
+                        self.test_network["f1_loopback_ip"],
+                        self.transport_port,
+                        nqn,
+                        self.nvme_io_q,
+                        self.host_info[self.genuine_host]["ip"][0]), timeout=60)
+                fun_test.log(command_result)
+            else:
+                command_result = host_handle.sudo_command(
+                    "nvme connect -t {} -a {} -s {} -n {} -q {}".format(unicode.lower(self.transport_type),
+                                                                        self.test_network["f1_loopback_ip"],
+                                                                        self.transport_port,
+                                                                        nqn,
+                                                                        self.host_info[self.genuine_host]["ip"][0]),
+                    timeout=60)
+        except:
+            nvme_connect_failed = True
+            fun_test.log("NVME connect failed - the status {} and pcap file  {}".format(nvme_connect_failed,
+                                                                                        pcap_file))
+        fun_test.log(command_result)
+
+        fun_test.sleep("before stopping tcpdump", 2)
+        pcap_artifact_file = fun_test.get_test_case_artifact_file_name(
+            post_fix_name="{}".format(pcap_file.split('/')[-1]))
+        host_handle.tcpdump_capture_stop(process_id=pcap_pid)
+
+        if not nvme_connect_failed:
+            fun_test.log(
+                "nvme connect on host {} for iteration {} is successful".format(host_name, conn_no))
+            if conn_no == 1:
+                fun_test.scp(source_port=host_handle.ssh_port,
+                             source_username=host_handle.ssh_username,
+                             source_password=host_handle.ssh_password,
+                             source_ip=host_handle.host_ip,
+                             source_file_path=pcap_file,
+                             target_file_path=pcap_artifact_file)
+                fun_test.add_auxillary_file(
+                    description="Host {} NVME connect passed pcap".format(host_name),
+                    filename=pcap_artifact_file)
+
+        else:
+            fun_test.log(
+                "nvme connect on host {} failed on iteration: {}. Check pcap file {} for errors".format(
+                    host_name, conn_no, pcap_file))
+            fun_test.scp(source_port=host_handle.ssh_port,
+                         source_username=host_handle.ssh_username,
+                         source_password=host_handle.ssh_password,
+                         source_ip=host_handle.host_ip,
+                         source_file_path=pcap_file,
+                         target_file_path=pcap_artifact_file)
+            fun_test.add_auxillary_file(
+                description="Host {} NVME connect failed pcap".format(host_name),
+                filename=pcap_artifact_file)
+
+        fun_test.test_assert(expression=not nvme_connect_failed,
+                             message="SWOS-5844: nvme connect passed on host {}".format(host_name))
+
+        host_handle = self.host_info[host_name]["handle"]
+        nqn = self.vol_list[i]["nqn"]
+        command_result = host_handle.sudo_command("nvme disconnect -n {}".format(nqn))
+        fun_test.log(command_result)
 
     def run(self):
         pass
+
+    def cleanup(self):
+        self.fs = fun_test.shared_variables["fs_objs"][0]
+        self.storage_controller = fun_test.shared_variables["sc_obj"][0]
+        try:
+            # Deleting the volumes
+            for i in range(self.blt_count):
+                lun_uuid = self.blt_details[i]
+                command_result = self.storage_controller.detach_volume_from_controller(
+                    ctrlr_uuid=self.ctrlr_uuid[i], ns_id=1, command_duration=self.command_timeout)
+                fun_test.test_assert(command_result["status"], "Detaching BLT volume on DUT")
+
+                command_result = self.storage_controller.delete_volume(uuid=lun_uuid,
+                                                                       type=str(self.blt_details['type']),
+                                                                       command_duration=self.command_timeout)
+                fun_test.test_assert(command_result["status"], "Deleting BLT {} with uuid {} on DUT".
+                                     format(i + 1, lun_uuid))
+
+                # Deleting the controller
+                command_result = self.storage_controller.delete_controller(ctrlr_uuid=self.ctrlr_uuid[i],
+                                                                           command_duration=self.command_timeout)
+                fun_test.log(command_result)
+                fun_test.test_assert(command_result["status"], "Storage Controller Delete")
+        except Exception as ex:
+            fun_test.log("Clean-up of volumes failed.")
+            fun_test.critical(str(ex))
 
 
 if __name__ == "__main__":
     bltscript = MultiHostVolumePerformanceScript()
     bltscript.add_test_case(MultiNvmeConnect())
+    # bltscript.add_test_case(NVMeConnectWithSpurious())
     bltscript.run()
