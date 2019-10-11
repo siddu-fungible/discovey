@@ -372,8 +372,6 @@ class MultiNvmeConnect(FunTestCase):
         self.num_f1s = fun_test.shared_variables["num_f1s"]
         self.test_network = {}
         self.test_network["f1_loopback_ip"] = self.f1_ips
-        self.remote_ip = self.host_ips[0]
-        fun_test.shared_variables["remote_ip"] = self.remote_ip
         self.num_duts = fun_test.shared_variables["num_duts"]
 
         job_inputs = fun_test.get_job_inputs()
@@ -611,7 +609,7 @@ class MultiNvmeConnect(FunTestCase):
 
 class NVMeConnectWithSpurious(FunTestCase):
     def describe(self):
-        self.set_test_details(id=1,
+        self.set_test_details(id=2,
                               summary="Attempting NVMe session from the attached host at the end of every 1024K spurious "
                                       "connection in the middle 16K spurious connection",
                               steps="""
@@ -620,6 +618,91 @@ class NVMeConnectWithSpurious(FunTestCase):
         3. Attempt 1024 NVMe sessions from the non attached host H2.
         4. Repeat the above steps for N times
         """)
+
+    def nvme_connect_disconect(self, host_handle, test_interface, nqn, count):
+        pcap_file = "/tmp/{}_nvme_connect_auto_{}.pcap".format(self.genuine_host, count)
+        pcap_pid = host_handle.tcpdump_capture_start(interface=test_interface,
+                                                     tcpdump_filename=pcap_file, snaplen=1500)
+        nvme_connect_failed = False
+
+        try:
+            if hasattr(self, "nvme_io_q"):
+                command_result = host_handle.sudo_command(
+                    "nvme connect -t {} -a {} -s {} -n {} -i {} -q {}".format(
+                        unicode.lower(self.transport_type),
+                        self.test_network["f1_loopback_ip"],
+                        self.transport_port,
+                        nqn,
+                        self.nvme_io_q,
+                        self.host_info[self.genuine_host]["ip"][0]), timeout=60)
+                fun_test.log(command_result)
+            else:
+                command_result = host_handle.sudo_command(
+                    "nvme connect -t {} -a {} -s {} -n {} -q {}".format(unicode.lower(self.transport_type),
+                                                                        self.test_network["f1_loopback_ip"],
+                                                                        self.transport_port,
+                                                                        nqn,
+                                                                        self.host_info[self.genuine_host]["ip"][0]),
+                    timeout=60)
+        except Exception as ex:
+            nvme_connect_failed = True
+            fun_test.log("NVME connect failed - the status {} and pcap file  {}".format(nvme_connect_failed, pcap_file))
+            fun_test.critical(str(ex))
+
+        fun_test.log(command_result)
+
+        # Checking whether the NVMe connect is succeeded or not
+        nvme_connect_exit_status = host_handle.exit_status()
+        if nvme_connect_exit_status:
+            nvme_connect_failed = True
+            fun_test.log("NVME connect failed - the status {} and pcap file  {}".format(nvme_connect_failed, pcap_file))
+
+        fun_test.sleep("before stopping tcpdump", 2)
+        pcap_artifact_file = fun_test.get_test_case_artifact_file_name(
+            post_fix_name="{}".format(pcap_file.split('/')[-1]))
+        host_handle.tcpdump_capture_stop(process_id=pcap_pid)
+
+        if nvme_connect_failed:
+            fun_test.log("nvme connect on host {} failed. Check pcap file {} for errors".format(self.genuine_host,
+                                                                                                pcap_file))
+            fun_test.scp(source_port=host_handle.ssh_port,
+                         source_username=host_handle.ssh_username,
+                         source_password=host_handle.ssh_password,
+                         source_ip=host_handle.host_ip,
+                         source_file_path=pcap_file,
+                         target_file_path=pcap_artifact_file)
+            fun_test.add_auxillary_file(description="Host {} NVME connect failed pcap".format(self.genuine_host),
+                                        filename=pcap_artifact_file)
+
+        fun_test.test_assert(expression=not nvme_connect_failed,
+                             message="{} - NVME Connect Status - Iteration {}".format(self.genuine_host, count))
+
+        lsblk_output = host_handle.lsblk("-b")
+        fun_test.simple_assert(lsblk_output, "Listing available volumes")
+
+        # Checking that the above created BLT volume is visible to the end host
+        self.host_info[self.genuine_host]["nvme_block_device_list"] = []
+        volume_pattern = self.nvme_device.replace("/dev/", "") + r"(\d+)n(\d+)"
+        for volume_name in lsblk_output:
+            match = re.search(volume_pattern, volume_name)
+            if match:
+                self.nvme_block_device = self.nvme_device + str(match.group(1)) + "n" + \
+                                         str(match.group(2))
+                self.host_info[self.genuine_host]["nvme_block_device_list"].append(self.nvme_block_device)
+                fun_test.log("NVMe Block Device/s: {}".
+                             format(self.host_info[self.genuine_host]["nvme_block_device_list"]))
+
+        fun_test.test_assert_expected(expected=self.host_info[self.genuine_host]["num_volumes"],
+                                      actual=len(self.host_info[self.genuine_host]["nvme_block_device_list"]),
+                                      message="Expected NVMe devices are available")
+
+        # Disconnecting the NVMe session
+        command_result = host_handle.sudo_command("nvme disconnect -n {}".format(nqn))
+        nvme_disconnect_exit_status = host_handle.exit_status()
+        fun_test.test_assert_expected(expected=0, actual=nvme_disconnect_exit_status,
+                                      message="{} - NVME Disconnect Status - Iteration {}".format(self.genuine_host,
+                                                                                                  count))
+        fun_test.log(command_result)
 
     def setup(self):
 
@@ -666,18 +749,7 @@ class NVMeConnectWithSpurious(FunTestCase):
         self.num_f1s = fun_test.shared_variables["num_f1s"]
         self.test_network = {}
         self.test_network["f1_loopback_ip"] = self.f1_ips
-        self.remote_ip = self.host_ips[0]
-        fun_test.shared_variables["remote_ip"] = self.remote_ip
         self.num_duts = fun_test.shared_variables["num_duts"]
-
-        job_inputs = fun_test.get_job_inputs()
-        if not job_inputs:
-            job_inputs = {}
-        fun_test.log("Provided job inputs: {}".format(job_inputs))
-        if "blt_count" in job_inputs:
-            self.blt_count = job_inputs["blt_count"]
-        if "no_of_nvme_connect" in job_inputs:
-            self.no_of_nvme_connect = job_inputs["no_of_nvme_connect"]
 
         fun_test.shared_variables["blt_details"] = self.blt_details
 
@@ -751,6 +823,7 @@ class NVMeConnectWithSpurious(FunTestCase):
                                                                                      "vol_uuid"],
                                                                                  ns_id=ns_id,
                                                                                  command_duration=self.command_timeout)
+            self.host_info[self.genuine_host]["num_volumes"] = 1
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Attaching BLT volume {} to controller {}".
                                  format(self.thin_uuid_list[i], cur_uuid))
@@ -799,8 +872,10 @@ class NVMeConnectWithSpurious(FunTestCase):
             host_handle.modprobe("nvme_tcp")
             host_handle.modprobe("nvme_fabrics")
 
-        pcap_file = "/tmp/{}_nvme_connect_auto_0.pcap".format(self.genuine_host)
+        self.nvme_connect_disconect(host_handle, test_interface, nqn, 0)
 
+        """
+        pcap_file = "/tmp/{}_nvme_connect_auto_0.pcap".format(self.genuine_host)
         pcap_pid = host_handle.tcpdump_capture_start(interface=test_interface,
                                                      tcpdump_filename=pcap_file, snaplen=1500)
         nvme_connect_failed = False
@@ -824,55 +899,86 @@ class NVMeConnectWithSpurious(FunTestCase):
                                                                         nqn,
                                                                         self.host_info[self.genuine_host]["ip"][0]),
                     timeout=60)
-        except:
+        except Exception as ex:
             nvme_connect_failed = True
-            fun_test.log("NVME connect failed - the status {} and pcap file  {}".format(nvme_connect_failed,
-                                                                                        pcap_file))
+            fun_test.log("NVME connect failed - the status {} and pcap file  {}".format(nvme_connect_failed, pcap_file))
+            fun_test.critical(str(ex))
+
         fun_test.log(command_result)
+
+        # Checking whether the NVMe connect is succeeded or not
+        nvme_connect_exit_status = host_handle.exit_status()
+        if nvme_connect_exit_status:
+            nvme_connect_failed = True
+            fun_test.log("NVME connect failed - the status {} and pcap file  {}".format(nvme_connect_failed, pcap_file))
 
         fun_test.sleep("before stopping tcpdump", 2)
         pcap_artifact_file = fun_test.get_test_case_artifact_file_name(
             post_fix_name="{}".format(pcap_file.split('/')[-1]))
         host_handle.tcpdump_capture_stop(process_id=pcap_pid)
 
-        if not nvme_connect_failed:
-            fun_test.log(
-                "nvme connect on host {} for iteration {} is successful".format(host_name, conn_no))
-            if conn_no == 1:
-                fun_test.scp(source_port=host_handle.ssh_port,
-                             source_username=host_handle.ssh_username,
-                             source_password=host_handle.ssh_password,
-                             source_ip=host_handle.host_ip,
-                             source_file_path=pcap_file,
-                             target_file_path=pcap_artifact_file)
-                fun_test.add_auxillary_file(
-                    description="Host {} NVME connect passed pcap".format(host_name),
-                    filename=pcap_artifact_file)
-
-        else:
-            fun_test.log(
-                "nvme connect on host {} failed on iteration: {}. Check pcap file {} for errors".format(
-                    host_name, conn_no, pcap_file))
+        if nvme_connect_failed:
+            fun_test.log("nvme connect on host {} failed. Check pcap file {} for errors".format(self.genuine_host,
+                                                                                                pcap_file))
             fun_test.scp(source_port=host_handle.ssh_port,
                          source_username=host_handle.ssh_username,
                          source_password=host_handle.ssh_password,
                          source_ip=host_handle.host_ip,
                          source_file_path=pcap_file,
                          target_file_path=pcap_artifact_file)
-            fun_test.add_auxillary_file(
-                description="Host {} NVME connect failed pcap".format(host_name),
-                filename=pcap_artifact_file)
+            fun_test.add_auxillary_file(description="Host {} NVME connect failed pcap".format(self.genuine_host),
+                                        filename=pcap_artifact_file)
 
         fun_test.test_assert(expression=not nvme_connect_failed,
-                             message="SWOS-5844: nvme connect passed on host {}".format(host_name))
+                             message="{} - NVME Connect Status".format(self.genuine_host))
 
-        host_handle = self.host_info[host_name]["handle"]
-        nqn = self.vol_list[i]["nqn"]
+        lsblk_output = host_handle.lsblk("-b")
+        fun_test.simple_assert(lsblk_output, "Listing available volumes")
+
+        # Checking that the above created BLT volume is visible to the end host
+        self.host_info[self.genuine_host]["nvme_block_device_list"] = []
+        volume_pattern = self.nvme_device.replace("/dev/", "") + r"(\d+)n(\d+)"
+        for volume_name in lsblk_output:
+            match = re.search(volume_pattern, volume_name)
+            if match:
+                self.nvme_block_device = self.nvme_device + str(match.group(1)) + "n" + \
+                                         str(match.group(2))
+                self.host_info[self.genuine_host]["nvme_block_device_list"].append(self.nvme_block_device)
+                fun_test.log("NVMe Block Device/s: {}".
+                             format(self.host_info[self.genuine_host]["nvme_block_device_list"]))
+
+        fun_test.test_assert_expected(expected=self.host_info[self.genuine_host]["num_volumes"],
+                                      actual=len(self.host_info[self.genuine_host]["nvme_block_device_list"]),
+                                      message="Expected NVMe devices are available")
+
+        # Disconnecting the NVMe session
         command_result = host_handle.sudo_command("nvme disconnect -n {}".format(nqn))
         fun_test.log(command_result)
+        """
 
     def run(self):
-        pass
+
+        testcase = self.__class__.__name__
+        self.genuine_host_handle = self.host_info[self.genuine_host]["handle"]
+        self.rogue_host_handle = self.host_info[self.rogue_host]["handle"]
+        test_interface = self.host_info[self.genuine_host]["test_interface"].name
+        nqn = self.vol_list[0]["nqn"]
+
+        spurious_connect_cmd = 'for i in `seq 1 {}`; do echo -n "Attempt - $i "; sudo nvme connect -t {} -a {} ' \
+                               '-s {} -n {} -i 16 -q {}; done'.format(self.spurious_conn,
+                                                                      unicode.lower(self.transport_type),
+                                                                      self.test_network["f1_loopback_ip"],
+                                                                      self.transport_port,
+                                                                      nqn,
+                                                                      self.host_info[self.rogue_host]["ip"][0])
+
+        for i in range(1, self.repetition+1):
+            spurious_connect_status = self.rogue_host_handle.sudo_command(command=spurious_connect_cmd, timeout=600)
+            fun_test.test_assert_expected(expected=self.spurious_conn,
+                                          actual=spurious_connect_status.count("Connection refused"),
+                                          message="{} spurious connection from {} rejected".format(self.spurious_conn,
+                                                                                                   self.rogue_host))
+            self.nvme_connect_disconect(self.genuine_host_handle, test_interface, nqn, i)
 
     def cleanup(self):
         self.fs = fun_test.shared_variables["fs_objs"][0]
@@ -880,7 +986,7 @@ class NVMeConnectWithSpurious(FunTestCase):
         try:
             # Deleting the volumes
             for i in range(self.blt_count):
-                lun_uuid = self.blt_details[i]
+                lun_uuid = self.thin_uuid_list[i]
                 command_result = self.storage_controller.detach_volume_from_controller(
                     ctrlr_uuid=self.ctrlr_uuid[i], ns_id=1, command_duration=self.command_timeout)
                 fun_test.test_assert(command_result["status"], "Detaching BLT volume on DUT")
@@ -904,5 +1010,5 @@ class NVMeConnectWithSpurious(FunTestCase):
 if __name__ == "__main__":
     bltscript = MultiHostVolumePerformanceScript()
     bltscript.add_test_case(MultiNvmeConnect())
-    # bltscript.add_test_case(NVMeConnectWithSpurious())
+    bltscript.add_test_case(NVMeConnectWithSpurious())
     bltscript.run()

@@ -92,6 +92,7 @@
     "attach_host": 1,
     "non_attach_host": 1,
     "repetition": 16,
+    "spurious_conn": 1024,
     "blt_details": {
       "ns_id": 1,
       "type": "VOL_TYPE_BLK_LOCAL_THIN",
@@ -111,6 +112,7 @@
       "iodepth": 1, "numjobs": 1,
       "ioengine": "libaio", "direct": 1, "prio": 0, "cpus_allowed": "1-19",
       "size": "100%", "timeout": 7200
-    }
+    },
+    "nvme_device": "/dev/nvme"
   }
 }
