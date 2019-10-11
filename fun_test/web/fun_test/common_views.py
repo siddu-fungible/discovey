@@ -53,15 +53,16 @@ def bug_info(request):
             bug_ids = request_json["bug_ids"]
             for jira_id in bug_ids:
                 jira_response = validate_jira(jira_id)
-                jira_data = {}
-                jira_data["id"] = jira_id
-                jira_data["summary"] = jira_response.fields.summary
-                jira_data["priority"] = jira_response.fields.priority
-                jira_data["status"] = jira_response.fields.status
-                jira_data["creator"] = jira_response.fields.creator
-                jira_data["created"] = jira_response.fields.created
-                jira_data["severity"] = jira_response.fields.customfield_10204.value
-                jira_info[jira_id] = jira_data
+                if jira_response:
+                    jira_data = {}
+                    jira_data["id"] = jira_id
+                    jira_data["summary"] = jira_response.fields.summary
+                    jira_data["priority"] = jira_response.fields.priority
+                    jira_data["status"] = jira_response.fields.status
+                    jira_data["creator"] = jira_response.fields.creator
+                    jira_data["created"] = jira_response.fields.created
+                    jira_data["severity"] = jira_response.fields.customfield_10204.value
+                    jira_info[jira_id] = jira_data
             result = jira_info
         except ObjectDoesNotExist as obj:
             logger.critical("No data found")
