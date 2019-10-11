@@ -138,6 +138,8 @@ class FunTestCase1(FunTestCase):
         self.f_bam_f1_0 = open(self.f1_0_bam_dpc_logs, "w+")
         self.f_bam_f1_1 = open(self.f1_1_bam_dpc_logs, "w+")
 
+        #TODO: Clear the Uart log files if the
+
         # Traffic
         self.methods = {"crypto": crypto, "zip": zip_deflate, "rcnvme": rcnvme, "fio": fio}
 
