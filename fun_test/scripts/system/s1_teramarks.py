@@ -256,6 +256,71 @@ class SoakFlowsBusyLoopTc(PalladiumTc):
         3. Steps 3
                               """)
 
+class SoakDmaMemcpyThresholdTc(PalladiumTc):
+    boot_args = "app=dma_memcpy_threshold_find_app"
+    tags = "qa_s1_soak_funos_memcpy_threshold"
+    note = "Soak FunOS DMA memcpy threshold tests on S1"
+    max_duration = 5000
+    extra_emails = []
+
+    def describe(self):
+        self.set_test_details(id=12,
+                              summary="Schedule Soak FunOS DMA memcpy threshold tests for S1",
+                              steps="""
+        1. Steps 1
+        2. Steps 2
+        3. Steps 3
+                              """)
+
+
+class SoakDmaMemcpyCohTc(PalladiumTc):
+    boot_args = "app=soak_dma_memcpy"
+    tags = "qa_s1_soak_funos_memcpy_coh"
+    note = "Soak FunOS DMA memcpy coherent tests on S1"
+    max_duration = 5000
+    extra_emails = []
+
+    def describe(self):
+        self.set_test_details(id=13,
+                              summary="Schedule Soak FunOS DMA memcpy coherent tests for S1",
+                              steps="""
+        1. Steps 1
+        2. Steps 2
+        3. Steps 3
+                              """)
+
+
+class SoakDmaMemcpyNonCohTc(PalladiumTc):
+    boot_args = "app=soak_dma_memcpy_non_coh"
+    tags = "qa_s1_soak_funos_memcpy_non_coh"
+    note = "Soak FunOS DMA memcpy non coherent tests on S1"
+    max_duration = 5000
+    extra_emails = []
+
+    def describe(self):
+        self.set_test_details(id=14,
+                              summary="Schedule Soak FunOS DMA memcpy non coherent tests for S1",
+                              steps="""
+        1. Steps 1
+        2. Steps 2
+        3. Steps 3
+                              """)
+
+class SoakDmaMemsetTc(PalladiumTc):
+    boot_args = "app=soak_dma_memset"
+    tags = "qa_s1_soak_funos_memset"
+    note = "Soak FunOS DMA memset tests on S1"
+    max_duration = 5000
+    extra_emails = []
+
+    def describe(self):
+        self.set_test_details(id=15,
+                              summary="Schedule Soak FunOS DMA memset tests for S1",
+                              steps="""
+        1. Steps 1
+        2. Steps 2
+        3. Steps 3
+                              """)
 
 if __name__ == "__main__":
     myscript = MyScript()
@@ -270,5 +335,9 @@ if __name__ == "__main__":
     myscript.add_test_case(SoakFlowsMemcpy1MbNonCohTc())
     myscript.add_test_case(ChannelParallTc())
     myscript.add_test_case(SoakFlowsBusyLoopTc())
+    myscript.add_test_case(SoakDmaMemcpyThresholdTc())
+    myscript.add_test_case(SoakDmaMemcpyCohTc())
+    myscript.add_test_case(SoakDmaMemcpyNonCohTc())
+    myscript.add_test_case(SoakDmaMemsetTc())
 
     myscript.run()

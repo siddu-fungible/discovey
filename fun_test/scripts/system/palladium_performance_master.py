@@ -28,9 +28,14 @@ TERAMARK_DFA = "dfa_teramark"
 TERAMARK_NFA = "nfa_teramark"
 TERAMARK_EC = "ec_teramark"
 TERAMARK_JPEG = "jpeg_teramark"
+
 SOAK_DMA_MEMCPY_COH = "soak_funos_memcpy_coh"
 SOAK_DMA_MEMCPY_NON_COH = "soak_funos_memcpy_non_coh"
 SOAK_DMA_MEMSET = "soak_funos_memset"
+SOAK_DMA_MEMCPY_COH_S1 = "qa_s1_soak_funos_memcpy_coh"
+SOAK_DMA_MEMCPY_NON_COH_S1 = "qa_s1_soak_funos_memcpy_non_coh"
+SOAK_DMA_MEMSET_S1 = "qa_s1_soak_funos_memset"
+
 RCNVME_READ = "qa_rcnvme_read"
 RCNVME_RANDOM_READ = "qa_rcnvme_random_read"
 RCNVME_WRITE = "qa_rcnvme_write"
@@ -44,7 +49,9 @@ TERAMARK_CRYPTO_MULTI_TUNNEL = "crypto_multi_tunnel_teramark"
 TLS_1_TUNNEL = "tls_1_tunnel_teramark"
 TLS_32_TUNNEL = "tls_32_tunnel_teramark"
 TLS_64_TUNNEL = "tls_64_tunnel_teramark"
+
 SOAK_DMA_MEMCPY_THRESHOLD = "soak_funos_memcpy_threshold"
+SOAK_DMA_MEMCPY_THRESHOLD_S1 = "qa_s1_soak_funos_memcpy_threshold"
 
 IPSEC_ENC_SINGLE_TUNNEL = "ipsec_enc_single_tunnel_teramark"
 IPSEC_ENC_MULTI_TUNNEL = "ipsec_enc_multi_tunnel_teramark"
@@ -187,11 +194,12 @@ class MyScript(FunTestScript):
         tags = [ALLOC_SPEED_TEST_TAG, SOAK_BCOPY_TEST, BOOT_TIMING_TEST_TAG, TERAMARK_PKE, TERAMARK_CRYPTO,
                 TERAMARK_LOOKUP,
                 FLOW_TEST_TAG, F1_FLOW_TEST_TAG, TERAMARK_ZIP, TERAMARK_DFA, TERAMARK_NFA, TERAMARK_EC, TERAMARK_JPEG,
-                SOAK_DMA_MEMCPY_COH,
-                SOAK_DMA_MEMCPY_NON_COH, SOAK_DMA_MEMSET, RCNVME_READ, RCNVME_RANDOM_READ, RCNVME_WRITE,
+                SOAK_DMA_MEMCPY_COH, SOAK_DMA_MEMCPY_COH_S1,
+                SOAK_DMA_MEMCPY_NON_COH, SOAK_DMA_MEMCPY_NON_COH_S1, SOAK_DMA_MEMSET, SOAK_DMA_MEMSET_S1, RCNVME_READ,
+                RCNVME_RANDOM_READ, RCNVME_WRITE,
                 RCNVME_RANDOM_WRITE, RCNVME_READ_ALL,
                 RCNVME_RANDOM_READ_ALL, RCNVME_WRITE_ALL,
-                RCNVME_RANDOM_WRITE_ALL, SOAK_DMA_MEMCPY_THRESHOLD,
+                RCNVME_RANDOM_WRITE_ALL, SOAK_DMA_MEMCPY_THRESHOLD, SOAK_DMA_MEMCPY_THRESHOLD_S1,
                 IPSEC_ENC_SINGLE_TUNNEL, IPSEC_ENC_MULTI_TUNNEL, IPSEC_DEC_MULTI_TUNNEL, IPSEC_DEC_SINGLE_TUNNEL,
                 VOLTEST_LSV, VOLTEST_LSV_4, CHANNEL_PARALL, CHANNEL_PARALL_S1, SOAK_FLOWS_BUSY_LOOP,
                 SOAK_FLOWS_BUSY_LOOP_S1, SOAK_FLOWS_MEMCPY,
@@ -829,6 +837,7 @@ class JuniperTls64TunnelPerformanceTc(JuniperTlsSingleTunnelPerformanceTc):
 class SoakDmaMemcpyThresholdPerformanceTc(PalladiumPerformanceTc):
     tag = SOAK_DMA_MEMCPY_THRESHOLD
     model = "SoakDmaMemcpyThresholdPerformance"
+    platform = F1
 
     def describe(self):
         self.set_test_details(id=48,
