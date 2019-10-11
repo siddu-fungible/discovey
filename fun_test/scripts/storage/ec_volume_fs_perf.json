@@ -44,7 +44,7 @@
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {
       "bs": "8k",
-      "iodepth": 1,
+      "iodepth": 8,
       "size": "100%",
       "rw": "write",
       "direct": 1,
