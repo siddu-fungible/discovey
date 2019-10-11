@@ -44,7 +44,7 @@
       </div>
       <div class="fun-flex-item panel" [@show]="showLogsPanel" *ngIf="currentTestCaseExecution">
         <h4>{{ currentTestCaseExecution.test_case_id }}: {{ currentTestCaseExecution.summary }}</h4>
-        <div style="overflow-y: scroll; height: 1200px">
+        <div style="overflow-y: scroll; height: 500px">
           <ng-container *ngIf="currentTestCaseExecution">
             <table>
               <tr *ngFor="let seriesElement of this.timeSeriesByTestCase[currentTestCaseExecution.test_case_id]?.timeSeries">
