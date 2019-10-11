@@ -1,13 +1,14 @@
 <div class="component">
-  <div>
+  <div class="fun-flex-container">
     <button *ngIf="!showTestCasePanel" (click)="onShowTestCasePanelClick()" class="fun-button-add">Show test-cases</button>
+    <h4>{{ scriptPath }}</h4>
   </div>
   <div style="position: fixed; top: 110px">
     <div class="fun-flex-container">
       <div class="fun-flex-item panel" [@show]="showTestCasePanel">
         <h4>Test-cases</h4>
 
-        <table class="fun-table panel">
+        <table class="fun-table">
           <tr>
             <td class="fun-table-header">ID</td>
             <td class="fun-table-header">Description</td>
@@ -19,7 +20,7 @@
               </span>
             </td>
             <td>{{ testCaseExecution.summary }}</td>
-            <td>{{ testCaseExecution.result }}</td>
+            <td><span [ngClass]="{'passed': testCaseExecution.result === 'PASSED', 'failed': testCaseExecution.result === 'FAILED' }">{{ testCaseExecution.result }}</span></td>
           </tr>
         </table>
       </div>
@@ -36,7 +37,7 @@
           <tr *ngFor="let checkpoint of this.timeSeriesByTestCase[currentTestCaseExecution.test_case_id]?.checkpoints" [ngClass]="{'selected-row': currentCheckpointIndex === checkpoint.index }">
             <td><span class="pseudo-anchor" (click)="onCheckpointClick(currentTestCaseExecution.test_case_id, checkpoint.index)">{{ checkpoint.index }}</span></td>
             <td>{{ checkpoint.checkpoint }}</td>
-            <td>{{ checkpoint.result }}</td>
+            <td><span [ngClass]="{'passed': checkpoint.result === 'PASSED', 'failed': checkpoint.result === 'FAILED' }">{{ checkpoint.result }}</span></td>
             <td>{{ checkpoint.expected }}</td>
             <td>{{ checkpoint.actual }}</td>
           </tr>

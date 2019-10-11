@@ -381,7 +381,7 @@ def _fix_missing_scripts():
 
 @csrf_exempt
 @api_safe_json_response
-def scripts(request):
+def scripts(request, id):
     result = None
     if request.method == "POST":
         request_json = json.loads(request.body)
@@ -389,6 +389,14 @@ def scripts(request):
         if operation == "fix_missing_scripts":
             _fix_missing_scripts()
             result = True
+    if request.method == "GET":
+        q = Q()
+        if id is not None:
+            q &= Q(id=int(id))
+        regression_scripts = RegresssionScripts.objects.filter(q)
+        result = []
+        for script in regression_scripts:
+            result.append({"script_path": script.script_path, "id": script.id})
     return result
 
 

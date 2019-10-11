@@ -437,10 +437,8 @@ export class SuiteDetailComponent implements OnInit {
 
   getScriptDetailLink(scriptPath, executionId, logPrefix) {
     executionId = parseInt(executionId);
-    let scriptInfo = (this.scriptInfo[scriptPath]);
-    let scriptPk = this.scriptExecutionsMap[scriptPath][executionId].scriptPk;
-    let url = `/regression/script_detail/${scriptPk}/${logPrefix}/${this.suiteExecutionId}`;
-    return url;
+    let scriptId = this.scriptExecutionsMap[scriptPath][executionId].scriptId;
+    return `/regression/script_detail/${scriptId}/${logPrefix}/${this.suiteExecutionId}`;
   }
 
 

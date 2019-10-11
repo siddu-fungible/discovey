@@ -237,4 +237,8 @@ getPrettyLocalizeTime(t) {
     }))
   }
 
+  getRegressionScripts(scriptId=null, scriptPath=null) {
+    let url = `/api/v1/regression/scripts`
+  }
+
 }

@@ -28,3 +28,12 @@
     white-space: nowrap;
     border: .5px;
 }
+
+
+.passed {
+  color: green;
+}
+
+.failed {
+  color: red;
+}
