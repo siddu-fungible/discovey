@@ -309,7 +309,7 @@ class Bmc(Linux):
         output_file = self.get_f1_uart_log_filename(f1_index=f1_index)
         log_file = "/tmp/uart_listener_{}.txt".format(f1_index)
         self.command("rm -f /var/lock/LCK..{}".format(os.path.basename(serial_device)))
-        command = "microcom -s 1000000 {} > {}  < /dev/null &".format(serial_device, output_file)
+        command = "microcom -s 1000000 {} >> {}  < /dev/null &".format(serial_device, output_file)
         self.command(command)
         process_ids = self.get_process_id_by_pattern("microcom", multiple=True)
 
@@ -921,13 +921,14 @@ class ComE(Linux):
         self.command("mkdir -p {}".format(path))
         return path
 
-    def install_build_setup_script(self, build_number, release_train="apple_fs1600"):
+    def install_build_setup_script(self, build_number, release_train="apple_fs1600", reset=True):
         """
         install the build setup script downloaded from dochub
         :param build_number: build number
         :param release_train: example apple_fs1600
         :return: True if the installation succeeded with exit status == 0, else raise an assert
         """
+        self.sudo_command("/opt/fungible/cclinux/cclinux_service.sh --stop")
         script_file_name = "setup_fs1600-{}.sh".format(build_number)
         script_url = self._get_build_script_url(build_number=build_number,
                                                 release_train=release_train,
