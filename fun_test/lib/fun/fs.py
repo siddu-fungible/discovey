@@ -311,7 +311,7 @@ class Bmc(Linux):
         output_file = self.get_f1_uart_log_filename(f1_index=f1_index)
         log_file = "/tmp/uart_listener_{}.txt".format(f1_index)
         self.command("rm -f /var/lock/LCK..{}".format(os.path.basename(serial_device)))
-        command = "microcom -s 1000000 {} > {}  < /dev/null &".format(serial_device, output_file)
+        command = "microcom -s 1000000 {} >> {}  < /dev/null &".format(serial_device, output_file)
         self.command(command)
         process_ids = self.get_process_id_by_pattern("microcom", multiple=True)
 
