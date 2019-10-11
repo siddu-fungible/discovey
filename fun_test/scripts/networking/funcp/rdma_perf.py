@@ -478,8 +478,8 @@ class BwTest(FunTestCase):
                     if isinstance(parsed_result[x], str) or math.isinf(parsed_result[x]):
                         parsed_result[x] = -1
                 for results in parsed_result:
-                    size_bandwidth = int(results[0])
-                    iterations = int(results[1])
+                    size_bandwidth = float(results[0])
+                    iterations = float(results[1])
                     bw_peak_gbps += float(results[0])
                     avg_bandwidth += float(results[3])
                     msg_rate += float(results[4])
@@ -637,8 +637,8 @@ class LatencyTest(FunTestCase):
                 if isinstance(parsed_result[x], str) or math.isinf(parsed_result[x]):
                     parsed_result[x] = -1
             for results in parsed_result:
-                size_latency = int(results[0])
-                iterations = int(results[4])
+                size_latency = float(results[0])
+                iterations = float(results[4])
                 min_latency = float(results[5])
                 max_latency = float(results[6])
                 avg_latency = float(results[8])
