@@ -29,7 +29,7 @@ class PalladiumTc(FunTestCase):
     hw_model = "S1_Compute"
     max_duration = 900
     release_build = "true"
-    hw_version = "rel_09152019"
+    hw_version = "rel_10012019"
     run_target = "protium_s"
     extra_emails = []
 
