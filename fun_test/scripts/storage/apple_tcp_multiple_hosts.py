@@ -124,6 +124,10 @@ class StripeVolumeLevelScript(FunTestScript):
             self.update_workspace = job_inputs["update_workspace"]
         if "update_deploy_script" in job_inputs:
             self.update_deploy_script = job_inputs["update_deploy_script"]
+        if "skip_cleanup" in job_inputs:
+            self.skip_cleanup = job_inputs["skip_cleanup"]
+        else:
+            self.skip_cleanup = False
 
         self.num_duts = int(round(float(self.num_f1s) / self.num_f1_per_fs))
         fun_test.log("Num DUTs for current test: {}".format(self.num_duts))
@@ -320,6 +324,8 @@ class StripeVolumeLevelScript(FunTestScript):
                                      format(key, self.funcp_spec[0]["container_names"][index], ip))
 
     def cleanup(self):
+        if self.skip_cleanup:
+            return 0
         # Umount and disconnect from host
         try:
             self.final_host_ips = fun_test.shared_variables["final_host_ips"]
@@ -432,6 +438,8 @@ class StripeVolumeTestCase(FunTestCase):
         if "runtime" in job_inputs:
             self.fio_cmd_args["runtime"] = job_inputs["runtime"]
             self.fio_cmd_args["timeout"] = int(job_inputs["runtime"]) + 120
+        if "syslog_level" in job_inputs:
+            self.syslog = job_inputs["syslog_level"]
 
         self.fs = fun_test.shared_variables["fs_objs"]
         self.come_obj = fun_test.shared_variables["come_obj"]
@@ -753,12 +761,12 @@ class StripeVolumeTestCase(FunTestCase):
                     fun_test.join_thread(fun_test_thread_id=thread_id[x])
                     fun_test.log("FIO Command Output:")
                     fun_test.log(fun_test.shared_variables["fio"][x])
-                    fun_test.test_assert(fun_test.shared_variables["fio"][x], "Fio threaded test")
                     fio_output[combo][mode][x] = {}
+                    fun_test.test_assert(fun_test.shared_variables["fio"][x], "Fio threaded test")
                     fio_output[combo][mode][x] = fun_test.shared_variables["fio"][x]
             except Exception as ex:
                 fun_test.critical(str(ex))
-                fun_test.log("FIO Command Output for volume {}:\n {}".format(x, fio_output[combo][mode][x]))
+                # fun_test.log("FIO Command Output for volume {}:\n {}".format(x, fio_output[combo][mode][x]))
             finally:
                 stats_obj.stop(self.stats_collect_details)
                 self.storage_controller.verbose = True
