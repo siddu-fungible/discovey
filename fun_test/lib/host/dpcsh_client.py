@@ -98,10 +98,11 @@ class DpcshClient(object):
                 result["raw_output"] = output
                 try:
                     json_output = json.loads(actual_output.strip())
+                    result["status"] = True
                 except:
                     fun_test.critical("Unable to parse JSON data")
+                    result["status"] = False
                     json_output = output
-                result["status"] = True
 
                 if "result" in json_output:
                     result["data"] = json_output["result"]
