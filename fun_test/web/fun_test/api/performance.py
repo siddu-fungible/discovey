@@ -174,7 +174,7 @@ def interested_metrics(request, workspace_id=None):
         q = Q(workspace_id=workspace_id)
         interested_metrics = InterestedMetrics.objects.filter(q)
         for metric in interested_metrics:
-            result.append(metric.to_dict())
+            set_interested_metrics(metric=metric, result=result)
     elif request.method == "DELETE":
         metric_id = request.GET.get("metric_id", None)
         if metric_id:
@@ -182,6 +182,51 @@ def interested_metrics(request, workspace_id=None):
             entry = InterestedMetrics.objects.get(q)
             entry.delete()
     return result
+
+def set_interested_metrics(metric, result):
+    if type(metric) is dict:
+        result.append(metric)
+        metric_id = metric["metric_id"]
+        workspace_id = metric["workspace_id"]
+        email = metric["email"]
+        subscribe = metric["subscribe"]
+        track = metric["track"]
+        category = metric["category"]
+        lineage = metric["lineage"]
+        date_created = metric["date_created"]
+        date_modified = metric["date_modified"]
+        comments = metric["comments"]
+    else:
+        result.append(metric.to_dict())
+        metric_id = metric.metric_id
+        workspace_id = metric.workspace_id
+        email = metric.email
+        subscribe = metric.subscribe
+        track = metric.track
+        category = metric.category
+        lineage = metric.lineage
+        date_created = metric.date_created
+        date_modified = metric.date_modified
+        comments = metric.comments
+    mc = MetricChart.objects.get(metric_id=metric_id)
+    if not mc.leaf:
+        children = mc.get_children()
+        for child in children:
+            child_chart = MetricChart.objects.get(metric_id=int(child))
+            new_metric = {}
+            new_metric["workspace_id"] = workspace_id
+            new_metric["email"] = email
+            new_metric["metric_id"] = int(child)
+            new_metric["subscribe"] = subscribe
+            new_metric["track"] = track
+            new_metric["chart_name"] = child_chart.chart_name
+            new_metric["category"] = category
+            new_metric["lineage"] = lineage + "/" + child_chart.chart_name
+            new_metric["date_created"] = date_created
+            new_metric["date_modified"] = date_modified
+            new_metric["comments"] = comments
+            new_metric["duplicate"] = True
+            set_interested_metrics(metric=new_metric, result=result)
 
 
 @csrf_exempt

@@ -25,6 +25,7 @@ export class PerformanceShowReportWorkspaceComponent implements OnInit {
   }
 
   ngOnInit() {
+    console.log("showing reports");
   }
 
   refreshPage(): void {
@@ -44,7 +45,8 @@ export class PerformanceShowReportWorkspaceComponent implements OnInit {
     payload["email"] = this.email;
     payload["workspace_id"] = this.workspace.id;
     payload["interested_metrics"] = this.workspace.interested_metrics;
-    return this.performanceService.saveInterestedMetrics(this.workspace.id, payload)
+    return of(true);
+    // return this.performanceService.saveInterestedMetrics(this.workspace.id, payload)
   }
 
   sendReports(): void {
@@ -75,15 +77,17 @@ export class PerformanceShowReportWorkspaceComponent implements OnInit {
     let payload = {};
     let reports = [];
     this.workspace.interested_metrics.forEach(metric => {
-      let report = {};
-      report["chart_name"] = metric["chart_name"];
-      report["lineage"] = metric["lineage"];
-      report["url"] = metric["url"];
-      report["comments"] = metric["comments"];
-      report["jira_ids"] = metric["jira_ids"];
-      report["report"] = metric["report"];
-      report["positive"] = metric["positive"];
-      reports.push(report);
+      if (!metric["report"] && metric["leaf"]) {
+        let report = {};
+        report["chart_name"] = metric["chart_name"];
+        report["lineage"] = metric["lineage"];
+        report["url"] = metric["url"];
+        report["comments"] = metric["comments"];
+        report["jira_ids"] = metric["jira_ids"];
+        report["report"] = metric["report"];
+        report["positive"] = metric["positive"];
+        reports.push(report);
+      }
     });
     payload["reports"] = reports;
     payload["email"] = this.email;

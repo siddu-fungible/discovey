@@ -20,6 +20,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
   workspaceName: string = null;
   email: string = null;
   workspace: any = null;
+  workspaceReport: any = null;
   showWorkspace: boolean = false;
   showGrids: boolean = false;
   showChartTable: boolean = false;
@@ -102,7 +103,9 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
     }
     this.interestedMetrics = [];
     for (let metric of this.workspace.interested_metrics) {
-      this.interestedMetrics.push(metric["metric_id"])
+      if (!metric.hasOwnProperty("duplicate")) {
+        this.interestedMetrics.push(metric["metric_id"]);
+      }
     }
     this.allMetricIds = this.interestedMetrics.concat(this.workspaceMetrics);
     this.showWorkspace = true;
@@ -292,6 +295,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
   }
 
   generateReport(): void {
+    this.status = "Loading reports";
     new Observable(observer => {
       observer.next(true);
       //observer.complete();
@@ -306,6 +310,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
       })).subscribe(response => {
       this.setSubject();
       this.showReport();
+      this.status = null;
     }, error => {
       this.loggerService.error("Unable to generate report");
     });
@@ -320,8 +325,8 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
 
   showReport(): void {
     this.reportGenerated = true;
-    this.showGrids = false;
-    this.showDag = false;
+      this.showGrids = false;
+      this.showDag = false;
   }
 
   showCharts(): void {
