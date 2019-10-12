@@ -97,6 +97,7 @@ class Fpga(Linux):
 
 class BmcMaintenanceWorker(Thread):
     MAX_ARCHIVES = 5
+    FREQUENCY = 2 * 60
 
     def __init__(self, bmc, f1_index, context, max_file_size=1024 * 1024 * 10):
         super(BmcMaintenanceWorker, self).__init__()
@@ -139,7 +140,7 @@ class BmcMaintenanceWorker(Thread):
                         if self.archive_index > self.MAX_ARCHIVES:
                             fun_test.critical("Max archives: {} exceeded. Resetting micrcocom".format(self.MAX_ARCHIVES))
                             bmc._reset_microcom()
-                fun_test.sleep(message="BMC Maintenance", seconds=5 * 60)
+                fun_test.sleep(message="BMC Maintenance", seconds=self.FREQUENCY)
 
         except Exception as ex:
             fun_test.critical(str(ex))
