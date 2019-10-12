@@ -117,6 +117,7 @@ def test_beds(request, id):
                 else:
                     pass  # TODO
         else:
+            test_bed.note = ""
             am.manual_un_lock_assets_by_test_bed(test_bed_name=test_bed.name, user=test_bed.manual_lock_submitter)
 
         test_bed.save()
