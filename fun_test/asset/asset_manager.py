@@ -292,7 +292,7 @@ class AssetManager:
         return host_spec
 
     @fun_test.safe
-    def manual_lock_assets(self, user, assets):
+    def manual_lock_assets(self, user, assets, expiration_time=None):
         from web.fun_test.models import Asset
         for asset_type, assets_for_type in assets.items():
             for asset in assets_for_type:
@@ -300,6 +300,8 @@ class AssetManager:
                     Asset.add_update(name=asset, type=asset_type)
                     a = Asset.objects.get(name=asset, type=asset_type)
                     a.manual_lock_user = user
+                    if expiration_time is not None:
+                        a.manual_lock_expiry_time = expiration_time
                     a.save()
                 except Exception as ex:   #TODO
                     print(str(ex))
@@ -460,7 +462,7 @@ class AssetManager:
                         asset_name = asset_in_test_bed.name
 
                     specific_assets = assets_required_config[asset_type].get("specific", None)
-                    if specific_assets and asset_in_test_bed not in specific_assets:
+                    if specific_assets and asset_name not in specific_assets:
                         fun_test.log("Specific Assets set: {}, so skipping {}".format(specific_assets, asset_in_test_bed))
                         continue
                     asset = None

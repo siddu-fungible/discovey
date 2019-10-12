@@ -98,8 +98,9 @@ class Fpga(Linux):
 
 class BmcMaintenanceWorker(Thread):
     MAX_ARCHIVES = 5
+    FREQUENCY = 2 * 60
 
-    def __init__(self, bmc, f1_index, context, max_file_size=1024 * 1024 * 20):
+    def __init__(self, bmc, f1_index, context, max_file_size=1024 * 1024 * 10):
         super(BmcMaintenanceWorker, self).__init__()
         self.bmc = bmc
         self.context = context
@@ -117,12 +118,14 @@ class BmcMaintenanceWorker(Thread):
                 for log_file in log_files:
                     file_name = log_file["filename"]
                     stat = self.bmc.stat(file_name)
-                    if stat["size"] >= self.max_file_size:
+                    fun_test.log("Current size: {} max_size: {}".format(stat["size"], self.max_file_size))
+                    if int(stat["size"]) >= self.max_file_size:
                         fun_test.log("{} UART log exceeded max file size".format(self.context))
                         bmc.command("cd /tmp")
                         archive_file_name = "{}.tgz".format(file_name)
                         bmc.command("tar -cvzf {} {}".format(archive_file_name, file_name))
                         bmc.command("echo 'Archived' > {}".format(file_name))
+                        bmc.list_files(file_name)
 
                         artifact_file_name = fun_test.get_test_case_artifact_file_name("{}_{}_{}_archived.tgz".format(self.context, self.f1_index, self.archive_index))
                         fun_test.scp(source_ip=bmc.host_ip,
@@ -132,12 +135,13 @@ class BmcMaintenanceWorker(Thread):
                                      target_file_path=artifact_file_name)
                         fun_test.add_auxillary_file(description="{}_f1_{}_{}".format(self.context, self.f1_index, self.archive_index), filename=artifact_file_name)
                         bmc.command("rm {}".format(archive_file_name))
+                        bmc.command("echo 'Archived' > {}".format(file_name))
 
                         self.archive_index += 1
                         if self.archive_index > self.MAX_ARCHIVES:
-                            fun_test.critical("Max archives: {} exceeded".format(self.MAX_ARCHIVES))
+                            fun_test.critical("Max archives: {} exceeded. Resetting micrcocom".format(self.MAX_ARCHIVES))
                             bmc._reset_microcom()
-                fun_test.sleep(message="BMC Maintenance", seconds=5 * 60)
+                fun_test.sleep(message="BMC Maintenance", seconds=self.FREQUENCY)
 
         except Exception as ex:
             fun_test.critical(str(ex))

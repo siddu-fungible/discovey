@@ -25,7 +25,6 @@ from django.core import serializers, paginator
 from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ObjectDoesNotExist
 from django.forms.models import model_to_dict
-# from analytics_models_helper import invalidate_goodness_cache
 from datetime import datetime, timedelta
 from dateutil import parser
 from lib.utilities.jira_manager import JiraManager
@@ -34,7 +33,6 @@ from web.fun_test.metrics_models import MetricsGlobalSettings, MetricsGlobalSett
 from web.fun_test.db_fixup import get_rounded_time
 from web.fun_test.metrics_lib import MetricLib
 from fun_global import get_epoch_time_from_datetime, get_datetime_from_epoch_time
-import math
 
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
@@ -861,10 +859,6 @@ def traverse_dag(levels, metric_id, metric_chart_entries, sort_by_name=True):
 
     result["copied_score"] = chart.copied_score
     result["copied_score_disposition"] = chart.copied_score_disposition
-    if math.isinf(chart.last_good_score):
-        chart.last_good_score = 0
-    if math.isinf(chart.penultimate_good_score):
-        chart.penultimate_good_score = 0
     if chart.last_good_score >= 0:
         result["last_two_scores"] = [chart.last_good_score, chart.penultimate_good_score]
     else:
