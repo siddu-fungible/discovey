@@ -361,6 +361,14 @@ class Bmc(Linux):
                 fun_test.critical("Unable to parse u-boot build date")
         return result
 
+    def _use_i2c_reset(self):
+        result = False
+        reset_file = "/mnt/sdmmc0p1/scripts/f1_reset.sh"
+        if self.list_files(reset_file):
+            contents = self.read_file(reset_file)
+            result = "i2c-test -w -b 4 -s 0x41" in contents
+        return result
+
     def reset_f1(self, f1_index=0, keep_low=False):
         # Workaround for cases where autoboot is enabled, but we want to do tftpboot
         """
@@ -380,24 +388,36 @@ class Bmc(Linux):
             gpiotool $F1_RESET_1 --set-data-high &>/dev/null
         fi
 
+        BMC_F1_RESET="i2c-test -w -b 4 -s 0x41 -d "
+        F1_RESET_0="0x00 0xEC 0x5D 0x5C 0x01 0x00"
+        F1_RESET_1="0x00 0xEC 0x5C 0x5D 0x01 0x00"
+
         :param f1_index:
         :return:
         """
-        gpio_pin = 149
-        if f1_index == 1:
-            gpio_pin = 150
+        if not self._use_i2c_reset():
+            gpio_pin = 149
+            if f1_index == 1:
+                gpio_pin = 150
 
-        gpio_command = "gpiotool {} --set-dir-output &>/dev/null".format(gpio_pin)
-        self.command(gpio_command)
-        gpio_command = "gpiotool {} --set-data-low &>/dev/null".format(gpio_pin)
-        self.command(gpio_command)
-        fun_test.sleep("After F1 reset")
-        if not keep_low:
             gpio_command = "gpiotool {} --set-dir-output &>/dev/null".format(gpio_pin)
             self.command(gpio_command)
-            gpio_command = "gpiotool {} --set-data-high &>/dev/null".format(gpio_pin)
+            gpio_command = "gpiotool {} --set-data-low &>/dev/null".format(gpio_pin)
             self.command(gpio_command)
-            fun_test.sleep("After removing F1 reset")
+            fun_test.sleep("After F1 reset")
+            if not keep_low:
+                gpio_command = "gpiotool {} --set-dir-output &>/dev/null".format(gpio_pin)
+                self.command(gpio_command)
+                gpio_command = "gpiotool {} --set-data-high &>/dev/null".format(gpio_pin)
+                self.command(gpio_command)
+                fun_test.sleep("After removing F1 reset")
+        else:
+            bmc_f1_reset = "i2c-test -w -b 4 -s 0x41 -d "
+            if f1_index == 0:
+                self.command("{} {}".format(bmc_f1_reset, "0x00 0xEC 0x5D 0x5C 0x01 0x00"))
+            else:
+                self.command("{} {}".format(bmc_f1_reset, "0x00 0xEC 0x5C 0x5D 0x01 0x00"))
+
 
     def u_boot_load_image(self,
                           index,
@@ -758,21 +778,14 @@ class BootupWorker(Thread):
                 if f1_index == fs.disable_f1_index:
                     continue
                 boot_args = fs.boot_args
-                fun_test.test_assert(bmc.setup_serial_proxy_connection(f1_index=f1_index, auto_boot=self.fs.auto_boot),
+                fun_test.log("Auto-boot: {}".format(fs.is_auto_boot()))
+
+                fun_test.test_assert(bmc.setup_serial_proxy_connection(f1_index=f1_index, auto_boot=fs.is_auto_boot()),
                                      "Setup nc serial proxy connection")
                 if fpga:
                     fpga.reset_f1(f1_index=f1_index)
                 else:
                     fs.get_bmc().reset_f1(f1_index=f1_index)
-                try:
-                    # f1_{}_uart_log.txt
-                    # fs.get_bmc().command("rm -f /tmp/f1*uart_log.txt")
-                    # fs.get_bmc().command("echo '' > /tmp/f1_0_uart_log.txt")
-                    # fs.get_bmc().command("echo '' > /tmp/f1_1_uart_log.txt")
-                    pass
-
-                except:
-                    pass
 
                 if fs.f1_parameters:
                     if f1_index in fs.f1_parameters:
@@ -786,8 +799,9 @@ class BootupWorker(Thread):
                         "Validate preamble")
 
                 fun_test.test_assert(
-                    expression=bmc.u_boot_load_image(index=f1_index, tftp_image_path=fs.tftp_image_path,
-                                                          boot_args=boot_args, gateway_ip=fs.gateway_ip),
+                    expression=bmc.u_boot_load_image(index=f1_index,
+                                                     tftp_image_path=fs.tftp_image_path,
+                                                     boot_args=boot_args, gateway_ip=fs.gateway_ip),
                     message="U-Bootup f1: {} complete".format(f1_index),
                     context=self.context)
                 fun_test.update_job_environment_variable("tftp_image_path", fs.tftp_image_path)
@@ -1222,8 +1236,7 @@ class Fs(object, ToDictMixin):
                  apc_info=None,
                  fun_cp_callback=None,
                  skip_funeth_come_power_cycle=None,
-                 spec=None,
-                 auto_boot=False):
+                 spec=None):
         self.spec = spec
         self.bmc_mgmt_ip = bmc_mgmt_ip
         self.bmc_mgmt_ssh_username = bmc_mgmt_ssh_username
@@ -1268,8 +1281,12 @@ class Fs(object, ToDictMixin):
 
         self.csi_perf_templates = {}
         self.bundle_upgraded = False   # is the bundle upgrade complete?
-        self.auto_boot = auto_boot
+        self.bundle_compatibile = False   # Set this, if we are trying to boot a device with bundle installed already
+        # self.auto_boot = auto_boot
         self.bmc_maintenance_threads = []
+
+    def is_auto_boot(self):
+        return False if self.tftp_image_path else True
 
     def get_tftp_image_path(self):
         return self.tftp_image_path
@@ -1442,7 +1459,7 @@ class Fs(object, ToDictMixin):
                         if "boot_args" in self.f1_parameters[f1_index]:
                             boot_args = self.f1_parameters[f1_index]["boot_args"]
 
-                fun_test.test_assert(self.get_bmc().setup_serial_proxy_connection(f1_index=f1_index, auto_boot=self.auto_boot),
+                fun_test.test_assert(self.get_bmc().setup_serial_proxy_connection(f1_index=f1_index, auto_boot=self.is_auto_boot()),
                                      "Setup nc serial proxy connection")
 
                 self.set_boot_phase(BootPhases.FS_BRING_UP_RESET_F1)
@@ -1453,7 +1470,7 @@ class Fs(object, ToDictMixin):
                     bmc.reset_f1(f1_index=f1_index)
                     try:
                         # f1_{}_uart_log.txt
-                        bmc.command("rm -f /tmp/f1*uart_log.txt")
+                        bmc.command("rm -f /tmp/f1_{}_uart_log.txt".format(f1_index))
                     except:
                         pass
                 preamble = self.get_bmc().get_preamble(f1_index=f1_index)
