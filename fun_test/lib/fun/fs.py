@@ -907,7 +907,7 @@ class ComE(Linux):
         :return: returns the dochub url with the given build number and release train
                 example: http://dochub.fungible.local/doc/jenkins/apple_fs1600/68/setup_fs1600-68.sh
         """
-        url = "{}/{}/{}/{}".format(DOCHUB_BASE_URL, release_train, build_number, script_file_name)
+        url = "{}/{}/fs1600/{}/{}".format(DOCHUB_BASE_URL, release_train, build_number, script_file_name)
         return url
 
     def _setup_build_script_directory(self):
@@ -921,7 +921,7 @@ class ComE(Linux):
         self.command("mkdir -p {}".format(path))
         return path
 
-    def install_build_setup_script(self, build_number, release_train="apple_fs1600", reset=True):
+    def install_build_setup_script(self, build_number, release_train="rel_1_0a_aa", reset=True):
         """
         install the build setup script downloaded from dochub
         :param build_number: build number
@@ -1267,6 +1267,7 @@ class Fs(object, ToDictMixin):
         self.come_initialized = False
 
         self.csi_perf_templates = {}
+        self.bundle_upgraded = False   # is the bundle upgrade complete?
         self.auto_boot = auto_boot
         self.bmc_maintenance_threads = []
 
@@ -1372,7 +1373,7 @@ class Fs(object, ToDictMixin):
         if not already_deployed:
             if not tftp_image_path:
                 tftp_image_path = fun_test.get_build_parameter("tftp_image_path")
-            fun_test.test_assert(tftp_image_path, "TFTP image path: {}".format(tftp_image_path), context=context)
+            # fun_test.test_assert(tftp_image_path, "TFTP image path: {}".format(tftp_image_path), context=context)
 
         if not boot_args:
             boot_args = fun_test.get_build_parameter("BOOTARGS")
@@ -1459,18 +1460,20 @@ class Fs(object, ToDictMixin):
                 if self.validate_u_boot_version:
                     fun_test.test_assert(self.bmc.validate_u_boot_version(output=preamble, minimum_date=self.MIN_U_BOOT_DATE), "Validate preamble")
 
-                fun_test.test_assert(expression=self.bmc.u_boot_load_image(index=f1_index, tftp_image_path=self.tftp_image_path, boot_args=boot_args, gateway_ip=self.gateway_ip),
-                                     message="U-Bootup f1: {} complete".format(f1_index),
-                                     context=self.context)
-                fun_test.update_job_environment_variable("tftp_image_path", self.tftp_image_path)
+                if self.tftp_image_path:
+                    fun_test.test_assert(expression=self.bmc.u_boot_load_image(index=f1_index, tftp_image_path=self.tftp_image_path, boot_args=boot_args, gateway_ip=self.gateway_ip),
+                                         message="U-Bootup f1: {} complete".format(f1_index),
+                                         context=self.context)
+                    fun_test.update_job_environment_variable("tftp_image_path", self.tftp_image_path)
                 self.bmc.start_uart_log_listener(f1_index=f1_index, serial_device=self.f1s.get(f1_index).serial_device_path)
-    
+
             self.get_come()
-            self.set_boot_phase(BootPhases.FS_BRING_UP_COME_REBOOT_INITIATE)
-            fun_test.test_assert(expression=self.come_reset(power_cycle=self.power_cycle_come or power_cycle_come,
-                                                            non_blocking=non_blocking),
-                                 message="ComE rebooted successfully. Non-blocking: {}".format(non_blocking),
-                                 context=self.context)
+            if not self.bundle_upgraded:
+                self.set_boot_phase(BootPhases.FS_BRING_UP_COME_REBOOT_INITIATE)
+                fun_test.test_assert(expression=self.come_reset(power_cycle=self.power_cycle_come or power_cycle_come,
+                                                                non_blocking=non_blocking),
+                                     message="ComE rebooted successfully. Non-blocking: {}".format(non_blocking),
+                                     context=self.context)
     
             if not non_blocking:
                 self.set_boot_phase(BootPhases.FS_BRING_UP_COME_INITIALIZE)
@@ -1479,7 +1482,7 @@ class Fs(object, ToDictMixin):
                                      context=self.context)
 
                 if self.fun_cp_callback:
-                    fun_test.log("Calling fun CP callback from Fs")
+                    fun_test.log("Calling FunCP callback from FS")
                 #    self.fs.fun_cp_callback(self.fs.get_come())
                 self.come_initialized = True
                 self.set_boot_phase(BootPhases.FS_BRING_UP_COMPLETE)
