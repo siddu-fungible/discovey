@@ -460,7 +460,7 @@ class AssetManager:
                         asset_name = asset_in_test_bed.name
 
                     specific_assets = assets_required_config[asset_type].get("specific", None)
-                    if specific_assets and asset_in_test_bed not in specific_assets:
+                    if specific_assets and asset_name not in specific_assets:
                         fun_test.log("Specific Assets set: {}, so skipping {}".format(specific_assets, asset_in_test_bed))
                         continue
                     asset = None

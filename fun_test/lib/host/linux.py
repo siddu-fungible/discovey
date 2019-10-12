@@ -946,8 +946,8 @@ class Linux(object, ToDictMixin):
             fun_test.critical(str(ex))
         return result
 
-    def tcpdump_capture_stop(self, process_id):
-        return self.kill_process(process_id=process_id)
+    def tcpdump_capture_stop(self, process_id, wait_after_stop=0):
+        return self.kill_process(process_id=process_id, kill_seconds=wait_after_stop)
 
     def tshark_parse(self, file_name, read_filter, fields=None, decode_as=None):
         pass
