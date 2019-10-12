@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ApiService}  from "../../services/api/api.service";
 import { ActivatedRoute } from "@angular/router";
-import {hasOwnProperty} from "tslint/lib/utils";
 import {ReRunService} from "../re-run.service";
 import {LoggerService} from '../../services/logger/logger.service';
 import {RegressionService} from "../regression.service";
