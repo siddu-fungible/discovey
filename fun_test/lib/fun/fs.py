@@ -120,7 +120,7 @@ class BmcMaintenanceWorker(Thread):
                 for f1_index in range(2):
                     if f1_index == self.fs.disable_f1_index:
                         continue
-                    log_files = bmc.list_files("/tmp/f1_{}*uart*txt".format(f1_index))
+                    log_files = bmc.list_files(bmc.get_f1_uart_log_file_name(f1_index=f1_index))
                     for log_file in log_files:
                         file_name = log_file["filename"]
                         stat = self.bmc.stat(file_name)
@@ -167,12 +167,14 @@ class Bmc(Linux):
     UART_LOG_LISTENER_PATH = "/tmp/{}".format(UART_LOG_LISTENER_FILE)
     SCRIPT_DIRECTORY = "/mnt/sdmmc0p1/scripts"
     INSTALL_DIRECTORY = "/mnt/sdmmc0p1/_install"
+    LOG_DIRECTORY = "/mnt/sdmmc0p1/log"
     SERIAL_PROXY_PORTS = [9990, 9991]
     ELF_ADDRESS = "0xffffffff99000000"
     SERIAL_SPEED_DEFAULT = 1000000
     U_BOOT_F1_PROMPT = "f1 #"
     NUM_F1S = 2
     FUNOS_LOGS_SCRIPT = "/mnt/sdmmc0p1/scripts/funos_logs.sh"
+
 
     def __init__(self, disable_f1_index=None,
                  disable_uart_logger=False,
@@ -323,12 +325,12 @@ class Bmc(Linux):
         serial_proxy_ids = self.get_process_id_by_pattern("python.*999")
 
     def start_bundle_f1_logs(self):
-        self.command(self.FUNOS_LOGS_SCRIPT)
+        self.command("{} start".format(self.FUNOS_LOGS_SCRIPT))
 
     def start_uart_log_listener(self, f1_index, serial_device):
         process_ids = self.get_process_id_by_pattern("microcom", multiple=True)
         self.kill_serial_proxies(f1_index=f1_index)
-        output_file = self.get_f1_uart_log_filename(f1_index=f1_index)
+        output_file = self.get_f1_uart_log_file_name(f1_index=f1_index)
         log_file = "/tmp/uart_listener_{}.txt".format(f1_index)
         self.command("rm -f /var/lock/LCK..{}".format(os.path.basename(serial_device)))
         command = "microcom -s 1000000 {} >> {}  < /dev/null &".format(serial_device, output_file)
@@ -343,22 +345,25 @@ class Bmc(Linux):
                 if f1_index == 1:
                     huid = 2
                 s += " cc_huid={}".format(huid)
-        #if "--sync-uart" not in boot_args:
-        #    s += " --sync-uart"
         return s
 
     def setup_serial_proxy_connection(self, f1_index, auto_boot=False):
         self._reset_microcom()
-        self.command("rm -f /tmp/f1_{}_uart_log.txt".format(f1_index))
+        uart_log_file_name = self.get_f1_uart_log_file_name(f1_index)
+
+        self.command("rm -f {}".format(uart_log_file_name))
 
         self.nc[f1_index] = Netcat(ip=self.host_ip, port=self.SERIAL_PROXY_PORTS[f1_index])
         nc = self.nc[f1_index]
         write_on_trigger = None
         if not auto_boot:
             write_on_trigger = {"Autoboot in": "noboot"}
-        fun_test.execute_thread_after(0, nc.read_until, expected_data=self.U_BOOT_F1_PROMPT, timeout=20, write_on_trigger=write_on_trigger)
-        # output = nc.read_until(expected_data=self.U_BOOT_F1_PROMPT, timeout=2)
-        # fun_test.log(message=output, context=self.context)
+        fun_test.execute_thread_after(0,
+                                      nc.read_until,
+                                      expected_data=self.U_BOOT_F1_PROMPT,
+                                      timeout=20,
+                                      write_on_trigger=write_on_trigger)
+
 
         return True
 
@@ -391,6 +396,9 @@ class Bmc(Linux):
             contents = self.read_file(reset_file)
             result = "i2c-test -w -b 4 -s 0x41" in contents
         return result
+
+    def remove_uart_logs(self, f1_index=0):
+        self.command("rm {}".format(self.get_f1_uart_log_file_name(f1_index=f1_index)))
 
     def reset_f1(self, f1_index=0, keep_low=False):
         # Workaround for cases where autoboot is enabled, but we want to do tftpboot
@@ -633,8 +641,9 @@ class Bmc(Linux):
                                context=self.context)
 
     def initialize(self, reset=False):
-        self.command("cd {}".format(self.SCRIPT_DIRECTORY))
-        self.position_support_scripts()
+        # self.command("cd {}".format(self.SCRIPT_DIRECTORY))
+        # self.position_support_scripts()
+        self.command("mkdir -p {}".format("{}".format(self.LOG_DIRECTORY)))
         return True
 
     def reset_come(self):
@@ -675,7 +684,7 @@ class Bmc(Linux):
         artifact_file_name = fun_test.get_test_case_artifact_file_name(
             self._get_context_prefix("f1_{}{}_uart_log.txt".format(f1_index, post_fix)))
         fun_test.scp(source_ip=self.host_ip,
-                     source_file_path=self.get_f1_uart_log_filename(f1_index=f1_index),
+                     source_file_path=self.get_f1_uart_log_file_name(f1_index=f1_index),
                      source_username=self.ssh_username,
                      source_password=self.ssh_password,
                      target_file_path=artifact_file_name)
@@ -694,10 +703,11 @@ class Bmc(Linux):
 
             artifact_file_name = fun_test.get_test_case_artifact_file_name(self._get_context_prefix("f1_{}_uart_log.txt".format(f1_index)))
             fun_test.scp(source_ip=self.host_ip,
-                         source_file_path=self.get_f1_uart_log_filename(f1_index=f1_index),
+                         source_file_path=self.get_f1_uart_log_file_name(f1_index=f1_index),
                          source_username=self.ssh_username,
                          source_password=self.ssh_password,
-                         target_file_path=artifact_file_name)
+                         target_file_path=artifact_file_name,
+                         timeout=120)
             with open(artifact_file_name, "r+") as f:
                 content = f.read()
                 f.seek(0, 0)
@@ -772,10 +782,11 @@ class Bmc(Linux):
                     f1_info[f1_index]["sbp_device_path"] = device_path
         return f1_info
 
-    def get_f1_uart_log_filename(self, f1_index):
-        file_name = "/tmp/f1_{}_uart_log.txt".format(f1_index)
+    def get_f1_uart_log_file_name(self, f1_index):
+        # file_name = "/tmp/f1_{}_uart_log.txt".format(f1_index)
+        file_name = "{}/f1_{}_uart_log.txt".format(self.LOG_DIRECTORY, f1_index)
         if self.bundle_compatible:
-            file_name = "/mnt/sdmmc0p1/log/funos_f1_{}.log".format(f1_index)
+            file_name = "{}/funos_f1_{}.log".format(self.LOG_DIRECTORY, f1_index)
         return file_name
 
 
@@ -838,6 +849,7 @@ class BootupWorker(Thread):
                     boot_args = fs.boot_args
                     fun_test.log("Auto-boot: {}".format(fs.is_auto_boot()))
                     if fs.tftp_image_path:
+                        bmc.position_support_scripts()
                         fun_test.test_assert(bmc.setup_serial_proxy_connection(f1_index=f1_index, auto_boot=fs.is_auto_boot()),
                                              "Setup nc serial proxy connection")
                     if fpga:
@@ -1052,7 +1064,7 @@ class ComE(Linux):
         self.curl(output_file=target_file_name, url=script_url, timeout=180)
         fun_test.simple_assert(self.list_files(target_file_name), "Install script downloaded")
         self.sudo_command("chmod 777 {}".format(target_file_name))
-        self.sudo_command("{} install".format(target_file_name), timeout=360)
+        self.sudo_command("{} install".format(target_file_name), timeout=500)
         exit_status = self.exit_status()
         fun_test.test_assert(exit_status == 0, "Bundle install complete")
         return True
@@ -1572,11 +1584,8 @@ class Fs(object, ToDictMixin):
                 else:
                     bmc = self.get_bmc()
                     bmc.reset_f1(f1_index=f1_index)
-                    try:
-                        # f1_{}_uart_log.txt
-                        bmc.command("rm -f /tmp/f1_{}_uart_log.txt".format(f1_index))
-                    except:
-                        pass
+                    bmc.remove_uart_logs(f1_index=f1_index)
+
                 preamble = self.get_bmc().get_preamble(f1_index=f1_index)
                 if self.validate_u_boot_version:
                     fun_test.test_assert(self.bmc.validate_u_boot_version(output=preamble, minimum_date=self.MIN_U_BOOT_DATE), "Validate preamble")
@@ -1611,8 +1620,8 @@ class Fs(object, ToDictMixin):
                     if not self.bundle_compatible:
                         bmc_maintenance_thread = BmcMaintenanceWorker(fs=self, bmc=self.get_bmc().clone(),
                                                                       context=self._get_context_prefix(""))
-                        bmc_maintenance_thread.start()
-                        self.bmc_maintenance_threads.append(bmc_maintenance_thread)
+                        # bmc_maintenance_thread.start()
+                        # self.bmc_maintenance_threads.append(bmc_maintenance_thread)
             else:
                 # Start thread
                 self.worker = ComEInitializationWorker(fs=self)
@@ -1659,8 +1668,8 @@ class Fs(object, ToDictMixin):
                     bmc_maintenance_thread = BmcMaintenanceWorker(fs=self,
                                                                   bmc=self.get_bmc().clone(),
                                                                   context=self._get_context_prefix(""))
-                    bmc_maintenance_thread.start()
-                    self.bmc_maintenance_threads.append(bmc_maintenance_thread)
+                    # bmc_maintenance_thread.start()
+                    # self.bmc_maintenance_threads.append(bmc_maintenance_thread)
         except Exception as ex:
             fun_test.critical(str(ex))
         return ready
