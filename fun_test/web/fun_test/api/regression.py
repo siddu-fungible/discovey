@@ -494,7 +494,7 @@ def re_run_job(request):
 
 @api_safe_json_response
 def release_trains(request):
-    releases = ["rel_1_0a_aa"]
+    releases = ["rel_1_0a_aa", "rel_1_0a_ab"]
     result = None
     if request.method == "GET":
         result = releases
