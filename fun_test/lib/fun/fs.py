@@ -112,7 +112,7 @@ class BmcMaintenanceWorker(Thread):
         self.stopped = False
 
     def run(self):
-        bmc = self.bmc
+        bmc = self.bmc.clone()
         try:
             while not self.stopped and not fun_test.closed:
                 fun_test.log("BmcMaintenanceWorker")
@@ -805,7 +805,12 @@ class BootupWorker(Thread):
                 except Exception as ex:
                     pass
 
+                fs.bmc = None
+                fs.come = None
+                come = None
+
                 # Wait for BMC to come up
+                bmc = self.fs.get_bmc()
                 fun_test.test_assert(bmc.ensure_host_is_up(), "BMC is up")
 
             if not fs.bundle_upgraded:
@@ -856,6 +861,7 @@ class BootupWorker(Thread):
 
             self.worker = ComEInitializationWorker(fs=self.fs)
             self.worker.run()
+            come = fs.get_come()
             for f1_index, f1 in fs.f1s.iteritems():
                 f1.set_dpc_port(come.get_dpc_port(f1_index))
             self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COME_INITIALIZED)
@@ -1167,14 +1173,6 @@ class ComE(Linux):
 
                 num_pfs_detected += 1
 
-        '''
-        for f1_index in range(self.NUM_F1S):
-            if f1_index == self.disable_f1_index:
-                continue
-            fun_test.test_assert_expected(actual=self.funq_bind_device[f1_index],
-                                          expected=self.EXPECTED_FUNQ_DEVICE_ID[f1_index],
-                                          message="F1_{} funq bind device found".format(f1_index))
-        '''
         fun_test.test_assert(expression=num_pfs_detected, message="At least one PF detected", context=self.context)
         if self.disable_f1_index is None:
             fun_test.test_assert_expected(actual=num_pfs_detected,
@@ -1702,6 +1700,8 @@ class Fs(object, ToDictMixin):
                            disable_uart_logger=self.disable_uart_logger,
                            context=self.context,
                            setup_support_files=self.setup_bmc_support_files)
+        if self.bundle_upgraded:
+            self.bmc.bundle_upgraded = self.bundle_upgraded
         return self.bmc
 
     def get_fpga(self):
@@ -1762,9 +1762,6 @@ class Fs(object, ToDictMixin):
                                         serial_device_path=f1_info[f1_index]["f1_device_path"],
                                         serial_sbp_device_path=f1_info[f1_index]["sbp_device_path"])
 
-            # if f1_index > 0:
-            #    fun_test.critical("Disabling F1_1 for now")
-            #    continue
 
         fun_test.simple_assert(expression=len(self.f1s.keys()), message="Both F1 device paths found", context=self.context)
         result = True

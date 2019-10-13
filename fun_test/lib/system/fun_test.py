@@ -329,9 +329,12 @@ class FunTest:
     def _prepare_build_parameters(self):
         tftp_image_path = self.get_job_environment_variable("tftp_image_path")
         with_stable_master = self.get_job_environment_variable("with_stable_master")
+        bundle_image_parameters = self.get_job_environment_variable("bundle_image_parameters")
 
         if tftp_image_path:
             self.build_parameters["tftp_image_path"] = tftp_image_path
+        elif bundle_image_parameters:
+            self.build_parameters["bundle_image_parameters"] = bundle_image_parameters
         elif with_stable_master:
             self.build_parameters["with_stable_master"] = with_stable_master
         else:

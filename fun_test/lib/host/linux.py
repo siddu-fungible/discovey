@@ -131,7 +131,6 @@ class Linux(object, ToDictMixin):
         self.prompt_terminator = None
         self.root_prompt_terminator = Linux.ROOT_PROMPT_TERMINATOR_DEFAULT
         self.buffer = None
-        self.saved_prompt_terminator = None
         self._set_defaults()
         self.use_telnet = False
         self.telnet_port = telnet_port
@@ -199,6 +198,8 @@ class Linux(object, ToDictMixin):
                 self.prompt_terminator = ".*" + self.NON_ROOT_PROMPT_TERMINATOR_DEFAULT
             else:
                 self.prompt_terminator = self.NON_ROOT_PROMPT_TERMINATOR_DEFAULT
+        self.saved_prompt_terminator = self.prompt_terminator
+
 
     def trace(self, enable, id):
         self.logger.trace(enable=enable, id=id)
