@@ -102,55 +102,60 @@ class BmcMaintenanceWorker(Thread):
     MAX_ARCHIVES = 5
     FREQUENCY = 2 * 60
 
-    def __init__(self, fs, bmc, f1_index, context, max_file_size=1024 * 1024 * 10):
+    def __init__(self, fs, bmc, context, max_file_size=1024 * 1024 * 10):
         super(BmcMaintenanceWorker, self).__init__()
         self.fs = fs
         self.bmc = bmc
         self.context = context
-        self.f1_index = f1_index
         self.archive_index = 0
         self.max_file_size = max_file_size
         self.stopped = False
 
     def run(self):
-        bmc = self.fs.get_bmc()
+        bmc = None
         try:
             while not self.stopped and not fun_test.closed:
+                bmc = self.fs.get_bmc()
                 fun_test.log("BmcMaintenanceWorker")
-                log_files = bmc.list_files("/tmp/f1_{}*uart*txt".format(self.f1_index))
-                for log_file in log_files:
-                    file_name = log_file["filename"]
-                    stat = self.bmc.stat(file_name)
-                    fun_test.log("Current size: {} max_size: {}".format(stat["size"], self.max_file_size))
-                    if int(stat["size"]) >= self.max_file_size:
-                        fun_test.log("{} UART log exceeded max file size".format(self.context))
-                        bmc.command("cd /tmp")
-                        archive_file_name = "{}.tgz".format(file_name)
-                        bmc.command("tar -cvzf {} {}".format(archive_file_name, file_name))
-                        bmc.command("echo 'Archived' > {}".format(file_name))
-                        bmc.list_files(file_name)
+                for f1_index in range(2):
+                    if f1_index == self.fs.disable_f1_index:
+                        continue
+                    log_files = bmc.list_files("/tmp/f1_{}*uart*txt".format(f1_index))
+                    for log_file in log_files:
+                        file_name = log_file["filename"]
+                        stat = self.bmc.stat(file_name)
+                        fun_test.log("Current size: {} max_size: {}".format(stat["size"], self.max_file_size))
+                        if int(stat["size"]) >= self.max_file_size:
+                            fun_test.log("{} UART log exceeded max file size".format(self.context))
+                            bmc.command("cd /tmp")
+                            archive_file_name = "{}.tgz".format(file_name)
+                            bmc.command("tar -cvzf {} {}".format(archive_file_name, file_name))
+                            bmc.command("echo 'Archived' > {}".format(file_name))
+                            bmc.list_files(file_name)
 
-                        artifact_file_name = fun_test.get_test_case_artifact_file_name("{}_{}_{}_archived.tgz".format(self.context, self.f1_index, self.archive_index))
-                        fun_test.scp(source_ip=bmc.host_ip,
-                                     source_file_path=archive_file_name,
-                                     source_username=bmc.ssh_username,
-                                     source_password=bmc.ssh_password,
-                                     target_file_path=artifact_file_name)
-                        fun_test.add_auxillary_file(description="{}_f1_{}_{}".format(self.context, self.f1_index, self.archive_index), filename=artifact_file_name)
-                        bmc.command("rm {}".format(archive_file_name))
-                        bmc.command("echo 'Archived' > {}".format(file_name))
+                            artifact_file_name = fun_test.get_test_case_artifact_file_name("{}_{}_{}_archived.tgz".format(self.context, f1_index, self.archive_index))
+                            fun_test.scp(source_ip=bmc.host_ip,
+                                         source_file_path=archive_file_name,
+                                         source_username=bmc.ssh_username,
+                                         source_password=bmc.ssh_password,
+                                         target_file_path=artifact_file_name)
+                            fun_test.add_auxillary_file(description="{}_f1_{}_{}".format(self.context, f1_index, self.archive_index), filename=artifact_file_name)
+                            bmc.command("rm {}".format(archive_file_name))
+                            bmc.command("echo 'Archived' > {}".format(file_name))
 
-                        self.archive_index += 1
-                        if self.archive_index > self.MAX_ARCHIVES:
-                            fun_test.critical("Max archives: {} exceeded. Resetting micrcocom".format(self.MAX_ARCHIVES))
-                            bmc._reset_microcom()
+                            self.archive_index += 1
+                            if self.archive_index > self.MAX_ARCHIVES:
+                                fun_test.critical("Max archives: {} exceeded. Resetting micrcocom".format(self.MAX_ARCHIVES))
+                                bmc._reset_microcom()
                 fun_test.sleep(message="BMC Maintenance", seconds=self.FREQUENCY)
-
+                bmc.disconnect()
         except Exception as ex:
             fun_test.critical(str(ex))
         finally:
+            if bmc:
+                bmc.disconnect()
+        if bmc:
             bmc.disconnect()
-        bmc.disconnect()
 
     def stop(self):
         self.stopped = True
@@ -1593,15 +1598,11 @@ class Fs(object, ToDictMixin):
                 self.come_initialized = True
                 self.set_boot_phase(BootPhases.FS_BRING_UP_COMPLETE)
                 if not self.bmc_maintenance_threads:
-                    for f1_index, f1 in self.f1s.iteritems():
-                        if f1_index == self.disable_f1_index:
-                            continue
-                        if not self.bundle_compatible:
-                            bmc_maintenance_thread = BmcMaintenanceWorker(fs=self, bmc=self.get_bmc().clone(),
-                                                                          f1_index=f1_index,
-                                                                          context=self._get_context_prefix(""))
-                            bmc_maintenance_thread.start()
-                            self.bmc_maintenance_threads.append(bmc_maintenance_thread)
+                    if not self.bundle_compatible:
+                        bmc_maintenance_thread = BmcMaintenanceWorker(fs=self, bmc=self.get_bmc().clone(),
+                                                                      context=self._get_context_prefix(""))
+                        bmc_maintenance_thread.start()
+                        self.bmc_maintenance_threads.append(bmc_maintenance_thread)
             else:
                 # Start thread
                 self.worker = ComEInitializationWorker(fs=self)
@@ -1644,13 +1645,12 @@ class Fs(object, ToDictMixin):
         ready = self.boot_phase == BootPhases.FS_BRING_UP_COMPLETE
         try:
             if ready:
-                for f1_index, f1 in self.f1s.iteritems():
-                    if f1_index == self.disable_f1_index:
-                        continue
-                    if not self.bundle_compatible:
-                        bmc_maintenance_thread = BmcMaintenanceWorker(fs=self, bmc=self.get_bmc().clone(), f1_index=f1_index, context=self._get_context_prefix(""))
-                        bmc_maintenance_thread.start()
-                        self.bmc_maintenance_threads.append(bmc_maintenance_thread)
+                if not self.bundle_compatible:
+                    bmc_maintenance_thread = BmcMaintenanceWorker(fs=self,
+                                                                  bmc=self.get_bmc().clone(),
+                                                                  context=self._get_context_prefix(""))
+                    bmc_maintenance_thread.start()
+                    self.bmc_maintenance_threads.append(bmc_maintenance_thread)
         except Exception as ex:
             fun_test.critical(str(ex))
         return ready
