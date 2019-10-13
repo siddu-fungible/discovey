@@ -453,18 +453,20 @@ class Bmc(Linux):
                             expected=self.U_BOOT_F1_PROMPT,
                             f1_index=index)
 
-        self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_SET_NO_AUTOLOAD)
-        self.u_boot_command(command="setenv autoload no",
-                            timeout=15,
-                            expected=self.U_BOOT_F1_PROMPT,
-                            f1_index=index)
+        if not self.bundle_compatible:
+            self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_SET_NO_AUTOLOAD)
+            self.u_boot_command(command="setenv autoload no",
+                                timeout=15,
+                                expected=self.U_BOOT_F1_PROMPT,
+                                f1_index=index)
 
-        self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_SET_ETH_ADDR)
-        fake_mac = self._get_fake_mac(index=index)
-        self.u_boot_command(command="setenv ethaddr {}".format(fake_mac),
-                            timeout=15,
-                            expected=self.U_BOOT_F1_PROMPT,
-                            f1_index=index)
+        if not self.bundle_compatible:
+            self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_SET_ETH_ADDR)
+            fake_mac = self._get_fake_mac(index=index)
+            self.u_boot_command(command="setenv ethaddr {}".format(fake_mac),
+                                timeout=15,
+                                expected=self.U_BOOT_F1_PROMPT,
+                                f1_index=index)
 
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_TRAIN)
         self.u_boot_command(command="lfw; lmpg; ltrain; lstatus",
@@ -821,16 +823,16 @@ class BootupWorker(Thread):
                 bmc = self.fs.get_bmc()
                 fun_test.test_assert(bmc.ensure_host_is_up(), "BMC is up")
 
-            if not fs.bundle_upgraded:
+            if not fs.bundle_image_parameters:
                 fs.set_boot_phase(BootPhases.FS_BRING_UP_U_BOOT)
                 for f1_index, f1 in fs.f1s.iteritems():
                     if f1_index == fs.disable_f1_index:
                         continue
                     boot_args = fs.boot_args
                     fun_test.log("Auto-boot: {}".format(fs.is_auto_boot()))
-
-                    fun_test.test_assert(bmc.setup_serial_proxy_connection(f1_index=f1_index, auto_boot=fs.is_auto_boot()),
-                                         "Setup nc serial proxy connection")
+                    if fs.tftp_image_path:
+                        fun_test.test_assert(bmc.setup_serial_proxy_connection(f1_index=f1_index, auto_boot=fs.is_auto_boot()),
+                                             "Setup nc serial proxy connection")
                     if fpga:
                         fpga.reset_f1(f1_index=f1_index)
                     else:
@@ -841,14 +843,12 @@ class BootupWorker(Thread):
                             if "boot_args" in fs.f1_parameters[f1_index]:
                                 boot_args = fs.f1_parameters[f1_index]["boot_args"]
 
-                    preamble = bmc.get_preamble(f1_index=f1_index)
-                    if fs.validate_u_boot_version:
-                        fun_test.test_assert(
-                            bmc.validate_u_boot_version(output=preamble, minimum_date=fs.MIN_U_BOOT_DATE),
-                            "Validate preamble")
-
                     if fs.tftp_image_path:
-
+                        preamble = bmc.get_preamble(f1_index=f1_index)
+                        if fs.validate_u_boot_version:
+                            fun_test.test_assert(
+                                bmc.validate_u_boot_version(output=preamble, minimum_date=fs.MIN_U_BOOT_DATE),
+                                "Validate preamble")
                         fun_test.test_assert(
                             expression=bmc.u_boot_load_image(index=f1_index,
                                                              tftp_image_path=fs.tftp_image_path,
@@ -856,7 +856,8 @@ class BootupWorker(Thread):
                             message="U-Bootup f1: {} complete".format(f1_index),
                             context=self.context)
                         fun_test.update_job_environment_variable("tftp_image_path", fs.tftp_image_path)
-                    bmc.start_uart_log_listener(f1_index=f1_index, serial_device=fs.f1s.get(f1_index).serial_device_path)
+                    if not fs.bundle_compatible:
+                        bmc.start_uart_log_listener(f1_index=f1_index, serial_device=fs.f1s.get(f1_index).serial_device_path)
 
                 fs.set_boot_phase(BootPhases.FS_BRING_UP_U_BOOT_COMPLETE)
                 fs.u_boot_complete = True
