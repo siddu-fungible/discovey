@@ -777,6 +777,13 @@ class BootupWorker(Thread):
                 fs.set_boot_phase(BootPhases.FS_BRING_UP_FUNETH_UNLOAD_COME_POWER_CYCLE)
                 fun_test.test_assert(expression=fs.funeth_reset(), message="Funeth ComE power-cycle ref: IN-373")
 
+            if fs.bundle_image_parameters:
+                build_number = fs.bundle_image_parameters.get("build_number", 70) # TODO: Is there a latest?
+                release_train = fs.bundle_image_parameters.get("release_train", 70)
+                come = fs.get_come()
+                fun_test.test_assert(come.install_build_setup_script(build_number=build_number, release_train=release_train),
+                                     "Bundle image installed")
+
             fs.set_boot_phase(BootPhases.FS_BRING_UP_U_BOOT)
             for f1_index, f1 in fs.f1s.iteritems():
                 if f1_index == fs.disable_f1_index:
@@ -978,7 +985,7 @@ class ComE(Linux):
         self.command("mkdir -p {}".format(path))
         return path
 
-    def install_build_setup_script(self, build_number, release_train="rel_1_0a_aa", reset=True):
+    def install_build_setup_script(self, build_number, release_train="rel_1_0a_aa"):
         """
         install the build setup script downloaded from dochub
         :param build_number: build number
@@ -1279,6 +1286,7 @@ class Fs(object, ToDictMixin):
                  apc_info=None,
                  fun_cp_callback=None,
                  skip_funeth_come_power_cycle=None,
+                 bundle_image_parameters=None,
                  spec=None):
         self.spec = spec
         self.bmc_mgmt_ip = bmc_mgmt_ip
@@ -1294,6 +1302,7 @@ class Fs(object, ToDictMixin):
         self.fpga = None
         self.come = None
         self.tftp_image_path = tftp_image_path
+        self.bundle_image_parameters = bundle_image_parameters
         self.disable_f1_index = disable_f1_index
         self.f1s = {}
         self.boot_args = boot_args
@@ -1421,7 +1430,8 @@ class Fs(object, ToDictMixin):
             fun_cp_callback=None,
             power_cycle_come=False,
             already_deployed=False,
-            skip_funeth_come_power_cycle=None):  #TODO
+            skip_funeth_come_power_cycle=None,
+            bundle_image_parameters=None):  #TODO
         if not fs_spec:
             am = fun_test.get_asset_manager()
             test_bed_type = fun_test.get_job_environment_variable("test_bed_type")
@@ -1435,6 +1445,8 @@ class Fs(object, ToDictMixin):
         if not already_deployed:
             if not tftp_image_path:
                 tftp_image_path = fun_test.get_build_parameter("tftp_image_path")
+            if not tftp_image_path:
+                bundle_image_parameters = fun_test.get_build_parameter("bundle_image_parameters")
             # fun_test.test_assert(tftp_image_path, "TFTP image path: {}".format(tftp_image_path), context=context)
 
         if not boot_args:
@@ -1474,7 +1486,8 @@ class Fs(object, ToDictMixin):
                   fun_cp_callback=fun_cp_callback,
                   power_cycle_come=power_cycle_come,
                   skip_funeth_come_power_cycle=skip_funeth_come_power_cycle,
-                  spec=fs_spec)
+                  spec=fs_spec,
+                  bundle_image_parameters=bundle_image_parameters)
 
     def bootup(self, reboot_bmc=False, power_cycle_come=True, non_blocking=False, threaded=False):
         fpga = self.get_fpga()
