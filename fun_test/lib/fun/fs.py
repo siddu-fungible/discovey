@@ -197,6 +197,7 @@ class Bmc(Linux):
         self.bundle_upgraded = bundle_upgraded
         self.bundle_compatible = bundle_compatible
 
+
     def _get_fake_mac(self, index):
         this_ip = socket.gethostbyname(self.host_ip)   #so we can resolve full fqdn/ip-string in dot-decimal
         a, b, c, d = this_ip.split('.')
@@ -1390,6 +1391,7 @@ class Fs(object, ToDictMixin):
         self.bundle_compatible = False   # Set this, if we are trying to boot a device with bundle installed already
         if "bundle_compatible" in spec and spec["bundle_compatible"]:
             self.bundle_compatible = True
+            self.skip_funeth_come_power_cycle = True
         # self.auto_boot = auto_boot
         self.bmc_maintenance_threads = []
         self.cleanup_complete = False
