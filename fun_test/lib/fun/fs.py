@@ -1577,6 +1577,7 @@ class Fs(object, ToDictMixin):
                         if "boot_args" in self.f1_parameters[f1_index]:
                             boot_args = self.f1_parameters[f1_index]["boot_args"]
 
+                self.get_bmc().position_support_scripts()
                 fun_test.test_assert(self.get_bmc().setup_serial_proxy_connection(f1_index=f1_index, auto_boot=self.is_auto_boot()),
                                      "Setup nc serial proxy connection")
 
