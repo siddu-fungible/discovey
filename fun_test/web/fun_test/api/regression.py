@@ -492,6 +492,14 @@ def re_run_job(request):
         if suite_id:
             pass
 
+@api_safe_json_response
+def release_trains(request):
+    releases = ["rel_1_0a_aa"]
+    result = None
+    if request.method == "GET":
+        result = releases
+    return result
+
 if __name__ == "__main__":
     from web.fun_test.django_interactive import *
     print categories(None)
