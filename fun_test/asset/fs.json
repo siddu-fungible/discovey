@@ -896,7 +896,7 @@
     "fpga": {
       "mgmt_ssh_password": "root",
       "mgmt_ssh_username": "root",
-      "mgmt_ip": ""
+      "mgmt_ip": "10.1.105.85"
     },
     "apc_info": {
       "username": "localadmin",
