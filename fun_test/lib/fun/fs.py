@@ -1256,6 +1256,20 @@ class ComE(Linux):
                                  target_file_path=artifact_file_name)
                     fun_test.add_auxillary_file(description=self._get_context_prefix(base_name), filename=artifact_file_name)
 
+
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+        try:
+            come_boot_up_log_file = "/var/log/COMe-boot-up.log"
+            base_name = os.path.basename(come_boot_up_log_file)
+            artifact_file_name = fun_test.get_test_case_artifact_file_name(self._get_context_prefix(base_name))
+            fun_test.scp(source_ip=self.host_ip,
+                         source_file_path=come_boot_up_log_file,
+                         source_username=self.ssh_username,
+                         source_password=self.ssh_password,
+                         target_file_path=artifact_file_name)
+            fun_test.add_auxillary_file(description=self._get_context_prefix(base_name), filename=artifact_file_name)
         except Exception as ex:
             fun_test.critical(str(ex))
 
