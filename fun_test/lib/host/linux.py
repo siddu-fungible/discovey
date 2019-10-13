@@ -2824,6 +2824,22 @@ class Linux(object, ToDictMixin):
         except Exception as ex:
             pass
 
+    @fun_test.safe
+    def docker(self, ps=True):
+        result = None
+        command = None
+        if ps:
+            command = "docker ps --format '{{json .}}'"
+        output = self.command(command)
+        lines = output.split("\n")
+        try:
+            result = [json.loads(str(line)) for line in lines]
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+        return result
+
+
 class LinuxBackup:
     def __init__(self, linux_obj, source_file_name, backedup_file_name):
         self.linux_obj = linux_obj

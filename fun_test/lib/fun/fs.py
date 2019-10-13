@@ -802,13 +802,15 @@ class BootupWorker(Thread):
                         bmc.validate_u_boot_version(output=preamble, minimum_date=fs.MIN_U_BOOT_DATE),
                         "Validate preamble")
 
-                fun_test.test_assert(
-                    expression=bmc.u_boot_load_image(index=f1_index,
-                                                     tftp_image_path=fs.tftp_image_path,
-                                                     boot_args=boot_args, gateway_ip=fs.gateway_ip),
-                    message="U-Bootup f1: {} complete".format(f1_index),
-                    context=self.context)
-                fun_test.update_job_environment_variable("tftp_image_path", fs.tftp_image_path)
+                if fs.tftp_image_path:
+
+                    fun_test.test_assert(
+                        expression=bmc.u_boot_load_image(index=f1_index,
+                                                         tftp_image_path=fs.tftp_image_path,
+                                                         boot_args=boot_args, gateway_ip=fs.gateway_ip),
+                        message="U-Bootup f1: {} complete".format(f1_index),
+                        context=self.context)
+                    fun_test.update_job_environment_variable("tftp_image_path", fs.tftp_image_path)
                 bmc.start_uart_log_listener(f1_index=f1_index, serial_device=fs.f1s.get(f1_index).serial_device_path)
 
             fs.set_boot_phase(BootPhases.FS_BRING_UP_U_BOOT_COMPLETE)
@@ -850,9 +852,17 @@ class BootupWorker(Thread):
 
 
 class ComEInitializationWorker(Thread):
+    EXPECTED_CONTAINERS = ["run_sc"]# , "F1-1", "F1-0"]
+    CONTAINERS_BRING_UP_TIME_MAX = 120
+
+
     def __init__(self, fs):
         super(ComEInitializationWorker, self).__init__()
         self.fs = fs
+        for f1_index in range(self.fs.NUM_F1S):
+            if f1_index == self.fs.disable_f1_index:
+                continue
+            self.EXPECTED_CONTAINERS.append("F1-{}".format(f1_index))
 
     def run(self):
         try:
@@ -870,12 +880,41 @@ class ComEInitializationWorker(Thread):
                 fun_test.test_assert(expression=self.fs.come.initialize(disable_f1_index=self.fs.disable_f1_index),
                                      message="ComE initialized",
                                      context=self.fs.context)
+                if self.fs.bundle_compatible:
+                    expected_containers_running = self.is_expected_containers_running(come)
+                    expected_containers_running_timer = FunTimer(max_time=self.CONTAINERS_BRING_UP_TIME_MAX)
+
+                    while not expected_containers_running and not expected_containers_running_timer.is_expired():
+                        fun_test.sleep(seconds=30, message="Waiting for expected containers")
+                        expected_containers_running = self.is_expected_containers_running(come)
+
+                    fun_test.test_assert(expected_containers_running, "Expected containers running")
 
                 self.fs.come_initialized = True
         except Exception as ex:
             self.fs.set_boot_phase(BootPhases.FS_BRING_UP_ERROR)
             raise ex
 
+    def is_expected_containers_running(self, come):
+
+        result = True
+        containers = come.docker()
+        for expected_container in self.EXPECTED_CONTAINERS:
+            found = False
+            for container in containers:
+                container_name = container["Names"]
+                if container_name == expected_container:
+                    found = True
+                    container_is_up = "Up" in container["Status"]
+                    if not container_is_up:
+                        result = False
+                        fun_test.critical("Container {} is not up".format(container_name))
+                        break
+            if not found:
+                fun_test.critical("Container {} was not found".format(expected_container))
+                result = False
+                break
+        return result
 
 class ComE(Linux):
     EXPECTED_FUNQ_DEVICE_ID = ["04:00.1", "06:00.1"]
@@ -1285,7 +1324,9 @@ class Fs(object, ToDictMixin):
 
         self.csi_perf_templates = {}
         self.bundle_upgraded = False   # is the bundle upgrade complete?
-        self.bundle_compatibile = False   # Set this, if we are trying to boot a device with bundle installed already
+        self.bundle_compatible = False   # Set this, if we are trying to boot a device with bundle installed already
+        if "bundle_compatible" in spec and spec["bundle_compatible"]:
+            self.bundle_compatible = True
         # self.auto_boot = auto_boot
         self.bmc_maintenance_threads = []
 
