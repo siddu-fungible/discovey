@@ -892,10 +892,11 @@
       "mgmt_ip": "10.1.105.87"
     },
     "name": "fs-102",
+    "bundle_compatible": true,
     "fpga": {
       "mgmt_ssh_password": "root",
       "mgmt_ssh_username": "root",
-      "mgmt_ip": "10.1.105.85"
+      "mgmt_ip": ""
     },
     "apc_info": {
       "username": "localadmin",
