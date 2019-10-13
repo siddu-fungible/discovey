@@ -351,8 +351,8 @@ class Bmc(Linux):
     def setup_serial_proxy_connection(self, f1_index, auto_boot=False):
         self._reset_microcom()
         uart_log_file_name = self.get_f1_uart_log_file_name(f1_index)
-
-        self.command("rm -f {}".format(uart_log_file_name))
+        if not self.bundle_compatible:
+            self.command("rm -f {}".format(uart_log_file_name))
 
         self.nc[f1_index] = Netcat(ip=self.host_ip, port=self.SERIAL_PROXY_PORTS[f1_index])
         nc = self.nc[f1_index]
@@ -784,7 +784,6 @@ class Bmc(Linux):
         return f1_info
 
     def get_f1_uart_log_file_name(self, f1_index):
-        # file_name = "/tmp/f1_{}_uart_log.txt".format(f1_index)
         file_name = "{}/f1_{}_uart_log.txt".format(self.LOG_DIRECTORY, f1_index)
         if self.bundle_compatible:
             file_name = "{}/funos_f1_{}.log".format(self.LOG_DIRECTORY, f1_index)
