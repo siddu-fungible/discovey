@@ -708,7 +708,7 @@ class Bmc(Linux):
                          source_username=self.ssh_username,
                          source_password=self.ssh_password,
                          target_file_path=artifact_file_name,
-                         timeout=120)
+                         timeout=240)
             with open(artifact_file_name, "r+") as f:
                 content = f.read()
                 f.seek(0, 0)
@@ -1582,7 +1582,7 @@ class Fs(object, ToDictMixin):
                                      "Setup nc serial proxy connection")
 
                 self.set_boot_phase(BootPhases.FS_BRING_UP_RESET_F1)
-                if fpga:
+                if fpga and not self.bundle_compatible:
                     fpga.reset_f1(f1_index=f1_index)
                 else:
                     bmc = self.get_bmc()
@@ -1704,7 +1704,7 @@ class Fs(object, ToDictMixin):
         fpga = self.get_fpga()
         bmc = self.get_bmc()
         for f1_index, f1 in self.f1s.iteritems():
-            if fpga:
+            if fpga and not self.bundle_compatible:
                 fpga.reset_f1(f1_index=f1_index, keep_low=True)
             else:
                 bmc.reset_f1(f1_index=f1_index, keep_low=True)
