@@ -190,7 +190,7 @@ class StripeVolumeLevelScript(FunTestScript):
             self.required_hosts = OrderedDict()
             for i in xrange(self.host_start_index, self.host_start_index + self.num_hosts):
                 required_host_index.append(i)
-            fun_test.debug("Host index required for scripts: {}".format(self.required_host_index))
+            fun_test.debug("Host index required for scripts: {}".format(required_host_index))
             for j, host_name in enumerate(sorted(hosts)):
                 if j in required_host_index:
                     self.required_hosts[host_name] = hosts[host_name]
