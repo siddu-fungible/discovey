@@ -99,7 +99,7 @@ class Fpga(Linux):
 
 
 class BmcMaintenanceWorker(Thread):
-    MAX_ARCHIVES = 5
+    MAX_ARCHIVES = 10
     FREQUENCY = 2 * 60
 
     def __init__(self, fs, bmc, context, max_file_size=1024 * 1024 * 10):
@@ -172,6 +172,7 @@ class Bmc(Linux):
     SERIAL_SPEED_DEFAULT = 1000000
     U_BOOT_F1_PROMPT = "f1 #"
     NUM_F1S = 2
+    FUNOS_LOGS_SCRIPT = "/mnt/sdmmc0p1/scripts/funos_logs.sh"
 
     def __init__(self, disable_f1_index=None,
                  disable_uart_logger=False,
@@ -321,6 +322,8 @@ class Bmc(Linux):
                 pass
         serial_proxy_ids = self.get_process_id_by_pattern("python.*999")
 
+    def start_bundle_f1_logs(self):
+        self.command(self.FUNOS_LOGS_SCRIPT)
 
     def start_uart_log_listener(self, f1_index, serial_device):
         process_ids = self.get_process_id_by_pattern("microcom", multiple=True)
@@ -345,6 +348,7 @@ class Bmc(Linux):
         return s
 
     def setup_serial_proxy_connection(self, f1_index, auto_boot=False):
+        self._reset_microcom()
         self.command("rm -f /tmp/f1_{}_uart_log.txt".format(f1_index))
 
         self.nc[f1_index] = Netcat(ip=self.host_ip, port=self.SERIAL_PROXY_PORTS[f1_index])
@@ -460,13 +464,12 @@ class Bmc(Linux):
                                 expected=self.U_BOOT_F1_PROMPT,
                                 f1_index=index)
 
-        if not self.bundle_compatible:
-            self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_SET_ETH_ADDR)
-            fake_mac = self._get_fake_mac(index=index)
-            self.u_boot_command(command="setenv ethaddr {}".format(fake_mac),
-                                timeout=15,
-                                expected=self.U_BOOT_F1_PROMPT,
-                                f1_index=index)
+        self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_SET_ETH_ADDR)
+        fake_mac = self._get_fake_mac(index=index)
+        self.u_boot_command(command="setenv ethaddr {}".format(fake_mac),
+                            timeout=15,
+                            expected=self.U_BOOT_F1_PROMPT,
+                            f1_index=index)
 
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_TRAIN)
         self.u_boot_command(command="lfw; lmpg; ltrain; lstatus",
@@ -562,7 +565,8 @@ class Bmc(Linux):
             self.kill_process(signal=9, process_id=process_id, kill_seconds=2)
 
     def position_support_scripts(self):
-        self._reset_microcom()
+        if not self.bundle_compatible:
+            self._reset_microcom()
         pyserial_filename = "pyserial-install.tar"
         pyserial_dir = INTEGRATION_DIR + "/tools/platform/bmc/{}".format(pyserial_filename)
         if self.setup_support_files:
@@ -711,7 +715,10 @@ class Bmc(Linux):
                                         filename=self.context.output_file_path)
 
         try:
-            self._reset_microcom()
+            if not self.bundle_compatible:
+                self._reset_microcom()
+            else:
+                self.start_bundle_f1_logs()
         except Exception as ex:
             fun_test.critical(str(ex))
 
@@ -858,6 +865,8 @@ class BootupWorker(Thread):
                         fun_test.update_job_environment_variable("tftp_image_path", fs.tftp_image_path)
                     if not fs.bundle_compatible:
                         bmc.start_uart_log_listener(f1_index=f1_index, serial_device=fs.f1s.get(f1_index).serial_device_path)
+                    else:
+                        bmc.start_bundle_f1_logs()
 
                 fs.set_boot_phase(BootPhases.FS_BRING_UP_U_BOOT_COMPLETE)
                 fs.u_boot_complete = True
@@ -1089,7 +1098,7 @@ class ComE(Linux):
         fun_test.test_assert(self.list_files(artifact_file_name), "HBM dump file created")
         tar_artifact_file_name = artifact_file_name + ".tgz"
         command = "tar -cvzf {} {} --remove-files".format(tar_artifact_file_name, artifact_file_name)
-        self.sudo_command(command, timeout=60)
+        self.sudo_command(command, timeout=120)
         fun_test.test_assert(self.list_files(tar_artifact_file_name), "HBM dump file tgz created")
         fun_test.log("HBM dump tgz file: {}".format(tar_artifact_file_name))
         self.list_files(path="{}".format(self.HBM_DUMP_DIRECTORY))
