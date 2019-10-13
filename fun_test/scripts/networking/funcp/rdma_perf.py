@@ -121,12 +121,12 @@ class BringupSetup(FunTestCase):
         else:
             roce_speed = "all"
             fun_test.shared_variables["test_speed"] = roce_speed
-        if "enable_bgp" in job_inputs:
-            enable_bgp = job_inputs["enable_bgp"]
-            fun_test.shared_variables["enable_bgp"] = enable_bgp
+        if "enable_fcp" in job_inputs:
+            enable_fcp = job_inputs["enable_fcp"]
+            fun_test.shared_variables["enable_fcp"] = enable_fcp
         else:
-            enable_bgp = True
-            fun_test.shared_variables["enable_bgp"] = enable_bgp
+            enable_fcp = True
+            fun_test.shared_variables["enable_fcp"] = enable_fcp
         qp_list = []
         if "qp_list" in job_inputs:
             qp_list = job_inputs["qp_list"]
@@ -255,9 +255,9 @@ class NicEmulation(FunTestCase):
 
     def run(self):
         host_objs = fun_test.shared_variables["hosts_obj"]
-        enable_bgp = fun_test.shared_variables["enable_bgp"]
+        enable_fcp = fun_test.shared_variables["enable_fcp"]
         abstract_key = ""
-        if enable_bgp:
+        if enable_fcp:
             abstract_key = "abstract_configs_bgp"
         else:
             abstract_key = "abstract_configs"
@@ -273,7 +273,7 @@ class NicEmulation(FunTestCase):
             funcp_obj.funcp_abstract_config(abstract_config_f1_0=abstract_json_file0,
                                             abstract_config_f1_1=abstract_json_file1, workspace="/scratch")
 
-            if not enable_bgp:
+            if not enable_fcp:
                 # Add static routes on Containers
                 funcp_obj.add_routes_on_f1(routes_dict=self.server_key["fs"][fs_name]["static_routes"])
 
@@ -281,7 +281,7 @@ class NicEmulation(FunTestCase):
 
             # Ping QFX from both F1s
             ping_dict = self.server_key["fs"][fs_name]["cc_pings"]
-            if enable_bgp:
+            if enable_fcp:
                 ping_dict = self.server_key["fs"][fs_name]["cc_pings_bgp"]
 
             for container in ping_dict:
