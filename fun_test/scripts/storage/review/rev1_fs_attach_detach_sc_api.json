@@ -53,7 +53,7 @@
     "nvme_device": "/dev/nvme0",
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {"bs": "128k", "iodepth": 4, "rw": "write", "direct": 1, "prio": 0, "numjobs": 1, "verify_fatal": 1, "ioengine": "libaio", "name": "apple_di_test", "verify_state_save": 1, "do_verify": 0 , "verify": "md5", "timeout": 3600},
-    "fio_cmd_args": {"bs": "128k", "iodepth": 4, "rw": "randread", "direct": 1, "ioengine": "libaio", "norandommap": "NO_VALUE", "randrepeat": 0, "group_reporting": 1, "prio":  0, "name": "apple_di_test", "verify_state_load": 1, "do_verify": 1 , "verify": "md5", "timeout": 3600},
+    "fio_cmd_args": {"bs": "128k", "numjobs": 8, "iodepth": 8, "rw": "randread", "direct": 1, "ioengine": "libaio", "norandommap": "NO_VALUE", "randrepeat": 0, "group_reporting": 1, "prio":  0, "name": "apple_di_test", "runtime": 60, "timeout": 120},
     "io_during_attach_detach": true,
     "disconnect_detach_during_io": true,
     "attach_detach_loop": true,
