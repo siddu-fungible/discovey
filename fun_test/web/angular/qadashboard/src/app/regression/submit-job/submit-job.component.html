@@ -121,32 +121,38 @@
             </tr>
             <tr>
               <td>
+                <input type="radio" name="build-type-radio" [(ngModel)]="buildType" [value]="BuildType.USE_BUNDLE_IMAGE"> Use bundle image
+              </td>
+              <td>
+                <ng-container *ngIf="buildType === BuildType.USE_BUNDLE_IMAGE">
+                  <div class="fun-flex-container">
+                    <div class="bundle-image-input">
+                      <label for="release-select">Select a release: </label>
+                      <select id="release-select" [(ngModel)]="bundleImageParameters.release_train">
+                        <option></option>
+                        <option [ngValue]="releaseTrain" *ngFor="let releaseTrain of releaseTrains">
+                        {{ releaseTrain }}
+                        </option>
+                      </select>
+                    </div>
+                    <div class="bundle-image-input">
+                      <label for="bundle-image-build">Specify build number: </label>
+                      <input [ngClass]="{disabled: buildType !== BuildType.USE_BUNDLE_IMAGE}" id="bundle-image-build" name="bundle-image-build"
+                             [(ngModel)]="bundleImageParameters.build_number" type="number" style="width: 100px"/>
+                    </div>
+                  </div>
+                </ng-container>
+              </td>
+            </tr>
+
+            <tr>
+              <td>
                 <input type="radio" name="build-type-radio" [(ngModel)]="buildType" [value]="BuildType.WITH_JENKINS_BUILD"> Build on Jenkins now
               </td>
             </tr>
           </ng-container>
 
 
-          <!--tr *ngIf="selectedTestBedType && isTestBedFs() && mode === Mode.REGULAR">
-            <td class="no-wrap">
-              <label for="tftp-path">TFTP path (F1 stripped image)</label>
-            </td>
-            <td>
-              <input [ngClass]="{disabled: withJenkinsBuild}" id="tftp-path" name="tftp-path"
-                     [(ngModel)]="tftpImagePath" type="text"/>
-              &nbsp;&nbsp;<input (change)="toggleWithJenkins()" type="checkbox" [checked]="withJenkinsBuild"> With
-              Jenkins build
-            </td>
-          </tr>
-          <tr *ngIf="selectedTestBedType && selectedTestBedType.indexOf('simulation') > -1">
-            <td class="no-wrap">
-              <label for="build-url">Build artifacts URL</label>
-            </td>
-            <td>
-              <input class="field-width" id="build-url" name="build-url" [(ngModel)]="buildUrl" type="text"
-                     required/>
-            </td>
-          </tr-->
 
           <tr *ngIf="selectedTestBedType && selectedTestBedType.indexOf('simulation') > -1">
             <td class="no-wrap">
@@ -284,7 +290,8 @@
                         <option [ngValue]="suite" *ngFor="let suite of suitesInfo">
                         {{ suite.name }} (ID: {{ suite.id }})
                         </option>
-                      </select></td>
+                      </select>
+                    </td>
                   </tr>
                 </table>
               </div>

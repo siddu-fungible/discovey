@@ -178,6 +178,7 @@ export class SubmitJobComponent implements OnInit {
     this.tags = [];
     this.fetchUsers();
     this.fetchTags();
+    this.fetchReleaseTrains();
     this.fetchTestBeds();
     this.fetchSuites();
     this.emailOnFailOnly = false;

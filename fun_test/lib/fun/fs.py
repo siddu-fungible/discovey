@@ -102,8 +102,9 @@ class BmcMaintenanceWorker(Thread):
     MAX_ARCHIVES = 5
     FREQUENCY = 2 * 60
 
-    def __init__(self, bmc, f1_index, context, max_file_size=1024 * 1024 * 10):
+    def __init__(self, fs, bmc, f1_index, context, max_file_size=1024 * 1024 * 10):
         super(BmcMaintenanceWorker, self).__init__()
+        self.fs = fs
         self.bmc = bmc
         self.context = context
         self.f1_index = f1_index
@@ -112,7 +113,7 @@ class BmcMaintenanceWorker(Thread):
         self.stopped = False
 
     def run(self):
-        bmc = self.bmc.clone()
+        bmc = self.fs.get_bmc()
         try:
             while not self.stopped and not fun_test.closed:
                 fun_test.log("BmcMaintenanceWorker")
@@ -171,6 +172,7 @@ class Bmc(Linux):
                  disable_uart_logger=False,
                  setup_support_files=None,
                  bundle_upgraded=None,
+                 bundle_compatible=None,
                  **kwargs):
         super(Bmc, self).__init__(**kwargs)
         self.set_prompt_terminator(r'# $')
@@ -185,6 +187,7 @@ class Bmc(Linux):
         self.nc = {}  # nc connections to serial proxy indexed by f1_index
         self.hbm_dump_enabled = fun_test.get_job_environment_variable("hbm_dump")
         self.bundle_upgraded = bundle_upgraded
+        self.bundle_compatible = bundle_compatible
 
     def _get_fake_mac(self, index):
         this_ip = socket.gethostbyname(self.host_ip)   #so we can resolve full fqdn/ip-string in dot-decimal
@@ -757,7 +760,7 @@ class Bmc(Linux):
 
     def get_f1_uart_log_filename(self, f1_index):
         file_name = "/tmp/f1_{}_uart_log.txt".format(f1_index)
-        if self.bundle_upgraded:
+        if self.bundle_compatible:
             file_name = "/mnt/sdmmc0p1/log/funos_f1_{}.log".format(f1_index)
         return file_name
 
@@ -1593,11 +1596,12 @@ class Fs(object, ToDictMixin):
                     for f1_index, f1 in self.f1s.iteritems():
                         if f1_index == self.disable_f1_index:
                             continue
-                        bmc_maintenance_thread = BmcMaintenanceWorker(bmc=self.get_bmc().clone(),
-                                                                      f1_index=f1_index,
-                                                                      context=self._get_context_prefix(""))
-                        bmc_maintenance_thread.start()
-                        self.bmc_maintenance_threads.append(bmc_maintenance_thread)
+                        if not self.bundle_compatible:
+                            bmc_maintenance_thread = BmcMaintenanceWorker(fs=self, bmc=self.get_bmc().clone(),
+                                                                          f1_index=f1_index,
+                                                                          context=self._get_context_prefix(""))
+                            bmc_maintenance_thread.start()
+                            self.bmc_maintenance_threads.append(bmc_maintenance_thread)
             else:
                 # Start thread
                 self.worker = ComEInitializationWorker(fs=self)
@@ -1643,9 +1647,10 @@ class Fs(object, ToDictMixin):
                 for f1_index, f1 in self.f1s.iteritems():
                     if f1_index == self.disable_f1_index:
                         continue
-                    bmc_maintenance_thread = BmcMaintenanceWorker(bmc=self.get_bmc().clone(), f1_index=f1_index, context=self._get_context_prefix(""))
-                    bmc_maintenance_thread.start()
-                    self.bmc_maintenance_threads.append(bmc_maintenance_thread)
+                    if not self.bundle_compatible:
+                        bmc_maintenance_thread = BmcMaintenanceWorker(fs=self, bmc=self.get_bmc().clone(), f1_index=f1_index, context=self._get_context_prefix(""))
+                        bmc_maintenance_thread.start()
+                        self.bmc_maintenance_threads.append(bmc_maintenance_thread)
         except Exception as ex:
             fun_test.critical(str(ex))
         return ready
@@ -1702,6 +1707,7 @@ class Fs(object, ToDictMixin):
                            setup_support_files=self.setup_bmc_support_files)
         if self.bundle_upgraded:
             self.bmc.bundle_upgraded = self.bundle_upgraded
+        self.bmc.bundle_compatible = self.bundle_compatible
         return self.bmc
 
     def get_fpga(self):
