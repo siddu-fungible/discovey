@@ -64,22 +64,23 @@ class StripeVolAttachDetachTestCase(FunTestCase):
         self.pcap_pid = {}
         fun_test.shared_variables["fio"] = {}
 
-        fun_test.shared_variables["stripe_uuid"] = "1fb63b213be74fb1"
+        fun_test.shared_variables["stripe_uuid"] = "1fb63b213be74fb1"  # TODO: get this uuid form create_volume API output
         self.stripe_uuid = fun_test.shared_variables["stripe_uuid"]
         fun_test.shared_variables["attach_detach_count"] = self.attach_detach_count
 
         self.sc_api = StorageControllerApi(api_server_ip="10.1.105.162",
                                            api_server_port=50220, username="admin",
                                            password="password")
+        # TODO: Change the api_server_ip
 
         self.num_hosts = 1
         self.host_info = OrderedDict()
-        host_name = "mktg11"
-        host_handle = Linux(host_ip=host_name, ssh_username="localadmin", ssh_password="Precious1*")
+        host_name = "mktg11"  # TODO: Change hostname
+        host_handle = Linux(host_ip=host_name, ssh_username="localadmin", ssh_password="Precious1*")  # TODO: Change hostname creds
 
         self.host_info[host_name] = {}
         self.host_info[host_name]["handle"] = host_handle
-        self.host_info[host_name]["ip"] = ['15.1.11.2']
+        self.host_info[host_name]["ip"] = ['15.1.11.2']  # TODO: Change host ip
 
         if hasattr(self, "create_file_system") and self.create_file_system:
             test_filename = "/mnt/testfile.dat"
@@ -106,7 +107,7 @@ class StripeVolAttachDetachTestCase(FunTestCase):
                                          format(iteration, self.stripe_uuid, self.transport_type.upper(), host_name))
                     self.nqn = "nqn-1"
                     self.detach_uuid = attach_volume["data"]["uuid"]
-                    hostnqn = "15.1.11.2"
+                    hostnqn = "15.1.11.2"  # TODO: Change according to your setup
 
                     if self.nvme_connect:
                         # test_interface = self.host_info[host_name]["test_interface"].name
@@ -128,6 +129,7 @@ class StripeVolAttachDetachTestCase(FunTestCase):
 
                         if not fun_test.shared_variables["stripe_vol"]["nvme_connect"]:
                             # Checking nvme-connect status
+                            # TODO: Change target IP according to your setup
                             if not hasattr(self, "nvme_io_queues") or self.nvme_io_queues != 0:
                                 nvme_connect_status = host_handle.nvme_connect(
                                     target_ip="15.44.1.2", nvme_subsystem=self.nqn,
@@ -179,7 +181,6 @@ class StripeVolAttachDetachTestCase(FunTestCase):
                             fun_test.sleep("Iteration: {} - before disconnect".format(iteration), self.nvme_disconn_wait)
                             try:
                                 fun_test.log("Disconnecting volume from the host")
-                                # nvme_disconnect_cmd = "nvme disconnect -n {}".format(self.nqn)  # TODO: SWOS-6165
                                 nvme_disconnect_cmd = "nvme disconnect -d {}".format(self.volume_name)
                                 host_handle.sudo_command(command=nvme_disconnect_cmd, timeout=60)
                                 nvme_disconnect_exit_status = host_handle.exit_status()
@@ -230,7 +231,6 @@ class StripeVolAttachDetachTestCase(FunTestCase):
                         fun_test.sleep("Iteration: {} - before disconnect".format(iteration), self.nvme_disconn_wait)
                         try:
                             fun_test.log("Disconnecting volume from the host")
-                            # nvme_disconnect_cmd = "nvme disconnect -n {}".format(self.nqn)  # TODO: SWOS-6165
                             nvme_disconnect_cmd = "nvme disconnect -d {}".format(self.volume_name)
                             host_handle.sudo_command(command=nvme_disconnect_cmd, timeout=60)
                             nvme_disconnect_exit_status = host_handle.exit_status()
@@ -279,6 +279,8 @@ class StripeVolAttachDetachTestCase(FunTestCase):
 
     def cleanup(self):
         try:
+            # TODO: This is to ensure we are fetching the funos uart file and creating artifact for a run,
+            #  change hostip and creds accordingly
             bmc_handle = Linux(host_ip='10.1.105.160', ssh_username="sysadmin", ssh_password="superuser")
             uart_post_fix_name = "fs44_f1_0_uart_log.txt"
             uart_artifact_file = fun_test.get_test_case_artifact_file_name(post_fix_name=uart_post_fix_name)
