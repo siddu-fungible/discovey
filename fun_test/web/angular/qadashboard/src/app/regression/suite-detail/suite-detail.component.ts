@@ -116,14 +116,14 @@ export class SuiteDetailComponent implements OnInit {
                 let data = result.data.execution_obj;
                 let moreInfo = result.data.more_info;
                 data.summary = moreInfo.summary;
+                let scriptId = result.data.script_id;
+                ctrl.fetchScriptInfo(scriptId, data.execution_id);
 
-                ctrl.fetchScriptInfo(data.script_path, data.execution_id);
-
-                if (!ctrl.scriptExecutionsMap.hasOwnProperty(data.script_path)) {
-                  ctrl.scriptExecutionsMap[data.script_path] = {};
+                if (!ctrl.scriptExecutionsMap.hasOwnProperty(scriptId)) {
+                  ctrl.scriptExecutionsMap[data.script_id] = {};
                 }
-                ctrl.scriptExecutionsMap[data.script_path][data.execution_id] = data;
-                ctrl.scriptExecutionsMap[data.script_path][data.execution_id]["logPrefix"] = parseInt(data.log_prefix);
+                ctrl.scriptExecutionsMap[data.script_id][data.execution_id] = data;
+                ctrl.scriptExecutionsMap[data.script_id][data.execution_id]["logPrefix"] = parseInt(data.log_prefix);
 
                 let i = 0;
                 ctrl.fetchTestCaseInfo(testCaseExecutionId);
@@ -156,15 +156,17 @@ export class SuiteDetailComponent implements OnInit {
     }));
   }
 
-  fetchScriptInfo(scriptPath, testCaseExecutionId) {
-    this.regressionService.fetchScriptInfoByScriptPath(scriptPath).subscribe(response => {
-      this.scriptInfo[scriptPath] = response;
-      if (Object.keys(this.scriptExecutionsMap).indexOf(scriptPath) > -1) {
-        let scriptPathValue = this.scriptExecutionsMap[scriptPath];
+  fetchScriptInfo(scriptId, testCaseExecutionId) {
+    this.regressionService.getScriptInfoById(scriptId).subscribe(response => {
+      this.scriptInfo[scriptId] = response;
+      /*
+      if (Object.keys(this.scriptExecutionsMap).indexOf(scriptId) > -1) {
+        let scriptPathValue = this.scriptExecutionsMap[scriptId];
+
         if (scriptPathValue && Object.keys(scriptPathValue).indexOf(testCaseExecutionId.toString()) > -1) {
-          this.scriptExecutionsMap[scriptPath][testCaseExecutionId]["scriptPk"] = response.pk;
+          this.scriptExecutionsMap[scriptId][testCaseExecutionId]["scriptPk"] = response.pk;
         }
-      }
+      }*/
 
     });
   }
@@ -386,13 +388,13 @@ export class SuiteDetailComponent implements OnInit {
     return parseInt(s);
   }
 
-  clickHistory(scriptPath) {
-    let url = "/regression/script_history_page/" + this.scriptInfo[scriptPath].pk;
+  clickHistory(scriptId) {
+    let url = "/regression/script_history_page/" + this.scriptInfo[scriptId].pk;
     window.open(url, '_blank');
   }
 
-  scriptPathToPk(scriptPath) {
-    return this.scriptInfo[scriptPath].pk;
+  scriptIdToPk(scriptId) {
+    return this.scriptInfo[scriptId].pk;
   }
 
   killClick() {
@@ -406,17 +408,17 @@ export class SuiteDetailComponent implements OnInit {
   }
 
 
-  reRunModalOpen(content, scriptPath=null) {
+  reRunModalOpen(content, scriptId=null) {
     this.reRunOptionsReRunFailed = false;
     this.reRunOptionsReRunAll = true;
     this.reUseBuildImage = false;
-    this.reRunScript = scriptPath;
+    this.reRunScript = scriptId;
     this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title'}).result.then((suiteExecution) => {
       if (this.reRunOptionsReRunAll) {
-        this.reRunClick(suiteExecution.fields.execution_id, suiteExecution.fields.suite_path, null, scriptPath, this.reUseBuildImage);
+        this.reRunClick(suiteExecution.fields.execution_id, suiteExecution.fields.suite_path, null, scriptId, this.reUseBuildImage);
       }
       if (this.reRunOptionsReRunFailed) {
-        this.reRunClick(suiteExecution.fields.execution_id, suiteExecution.fields.suite_path,['FAILED'], scriptPath, this.reUseBuildImage)
+        this.reRunClick(suiteExecution.fields.execution_id, suiteExecution.fields.suite_path,['FAILED'], scriptId, this.reUseBuildImage)
       }
 
     }, (reason) => {
@@ -434,9 +436,8 @@ export class SuiteDetailComponent implements OnInit {
     this.reUseBuildImage = !this.reUseBuildImage;
   }
 
-  getScriptDetailLink(scriptPath, executionId, logPrefix) {
+  getScriptDetailLink(scriptId, executionId, logPrefix) {
     executionId = parseInt(executionId);
-    let scriptId = this.scriptExecutionsMap[scriptPath][executionId].scriptId;
     return `/regression/script_detail/${scriptId}/${logPrefix}/${this.suiteExecutionId}`;
   }
 

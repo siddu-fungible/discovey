@@ -151,6 +151,13 @@ getPrettyLocalizeTime(t) {
     }))
   }
 
+  getScriptInfoById(scriptId) {
+    let url = "/api/v1/regression/scripts/" + scriptId;
+    return this.apiService.get(url).pipe(switchMap(response => {
+      return of(response.data);
+    }))
+  }
+
   killSuite(suiteId) {
     return this.apiService.get("/regression/kill_job/" + suiteId).pipe(switchMap( (response) => {
       let jobId = parseInt(response.data);
@@ -180,7 +187,6 @@ getPrettyLocalizeTime(t) {
     }))
   }
 
-<<<<<<< HEAD
   testCaseExecutions(executionId=null, suiteExecutionId=null, scriptPath=null, logPrefix=null) {
     let url = "/api/v1/regression/test_case_executions";
     let queryParams = [];
