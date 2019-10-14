@@ -935,6 +935,6 @@ class StripedVolAttachDetach(StripeVolAttachDetachTestCase):
 if __name__ == "__main__":
     testscript = StripeVolAttachDetachTestScript()
     testscript.add_test_case(StripedVolAttachConnDisConnDetachDisconnDuringIO())
-    # testscript.add_test_case(StripedVolAttachConnDisConnDetach())
-    # testscript.add_test_case(StripedVolAttachDetach())
+    testscript.add_test_case(StripedVolAttachConnDisConnDetach())
+    testscript.add_test_case(StripedVolAttachDetach())
     testscript.run()
