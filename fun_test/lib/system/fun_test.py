@@ -313,6 +313,9 @@ class FunTest:
         output_file_path = output_file_path
         fc = FunContext(description=description, context_id=self.last_context_id, output_file_path=output_file_path)
         self.contexts[self.last_context_id] = fc
+        models_helper.get_fun_test_time_series_collection_name(self.get_suite_execution_id(),
+                                                               self.get_test_case_execution_id())
+        self.add_time_series_context(collection_name=models_helper.get_fun_test_time_series_test_case_context_info(), data={"id": self.last_context_id})
         fc.open()
         return fc
 
@@ -841,6 +844,9 @@ class FunTest:
     def add_time_series_checkpoint(self, collection_name, data):
         self.add_time_series_document(collection_name=collection_name, date_time=get_current_time(), type="checkpoint", data=data)
 
+    def add_time_series_context(self, collection_name, data):
+        self.add_time_series_document(collection_name=collection_name, date_time=get_current_time(), type="context", data=data)
+
     def log(self,
             message,
             level=LOG_LEVEL_NORMAL,
@@ -1163,7 +1169,6 @@ class FunTest:
                     this_checkpoint = "{:.2f}: {}".format(self.profiling_timer.elapsed_time(), this_checkpoint)  #TODO: Duplicate line
                 self.add_checkpoint(checkpoint=this_checkpoint, expected=expected, actual=actual, result=FunTest.PASSED)
 
-
     def add_checkpoint(self,
                        checkpoint=None,
                        result=PASSED,
@@ -1181,12 +1186,20 @@ class FunTest:
                                             expected=expected,
                                             actual=actual)
 
+        context_id = 0
+        if context:
+            context_id = context.get_id()
+
         data = {"checkpoint": checkpoint,
                 "result": result, 
                 "expected": expected,
                 "actual": actual,
-                "index": self.current_time_series_checkpoint}
-        self.add_time_series_checkpoint(collection_name=models_helper.get_fun_test_time_series_collection_name(self.get_suite_execution_id(), self.get_test_case_execution_id()), data=data)
+                "index": self.current_time_series_checkpoint,
+                "context": context_id}
+
+        self.add_time_series_checkpoint(collection_name=models_helper.get_fun_test_time_series_collection_name(self.get_suite_execution_id(),
+                                                                                                               self.get_test_case_execution_id()),
+                                        data=data)
         # add_time_series_checkpoint
 
     def exit_gracefully(self, sig, _):
