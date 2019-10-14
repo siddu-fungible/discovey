@@ -58,7 +58,7 @@ try:
         ol_offload = (inputs.get('ol_offload', 0) == 1)  # Enable overlay TSO/checksum offload or not
         nu_all_clusters = (inputs.get('nu_all_clusters', 0) == 1)  # Enable NU to use all the clusters or not
         bootup_funos = (inputs.get('bootup_funos', 1) == 1)  # Boot up FunOS or not
-        threading = (inputs.get('threading', 0) == 1)  # Use threading in multi task or not
+        threading = (inputs.get('threading', 1) == 1)  # Use threading in multi task or not
         fundrv_branch = inputs.get('fundrv_branch', None)
         fundrv_commit = inputs.get('fundrv_commit', None)
         funsdk_branch = inputs.get('funsdk_branch', None)
@@ -73,7 +73,7 @@ try:
         ol_offload = False  # default False
         nu_all_clusters = False  # default False
         bootup_funos = True  # default True
-        threading = False   # default False
+        threading = True   # default True
         cleanup = True  # default True
         fundrv_branch = None
         fundrv_commit = None
@@ -89,7 +89,7 @@ except:
     ol_offload = False
     nu_all_clusters = False
     bootup_funos = True
-    threading = False
+    threading = True
     cleanup = True
 
 csi_perf_enabled = fun_test.get_job_environment_variable("csi_perf")

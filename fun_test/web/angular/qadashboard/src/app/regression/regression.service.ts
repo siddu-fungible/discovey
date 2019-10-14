@@ -179,4 +179,12 @@ getPrettyLocalizeTime(t) {
     }))
   }
 
+  releaseTrains(): Observable<string[]> {
+    return this.apiService.get("/api/v1/regression/release_trains").pipe(switchMap(response => {
+      return of(response.data);
+    }), catchError(error => {
+      return throwError(error);
+    }))
+  }
+
 }

@@ -131,7 +131,6 @@ class Linux(object, ToDictMixin):
         self.prompt_terminator = None
         self.root_prompt_terminator = Linux.ROOT_PROMPT_TERMINATOR_DEFAULT
         self.buffer = None
-        self.saved_prompt_terminator = None
         self._set_defaults()
         self.use_telnet = False
         self.telnet_port = telnet_port
@@ -199,6 +198,8 @@ class Linux(object, ToDictMixin):
                 self.prompt_terminator = ".*" + self.NON_ROOT_PROMPT_TERMINATOR_DEFAULT
             else:
                 self.prompt_terminator = self.NON_ROOT_PROMPT_TERMINATOR_DEFAULT
+        self.saved_prompt_terminator = self.prompt_terminator
+
 
     def trace(self, enable, id):
         self.logger.trace(enable=enable, id=id)
@@ -946,8 +947,8 @@ class Linux(object, ToDictMixin):
             fun_test.critical(str(ex))
         return result
 
-    def tcpdump_capture_stop(self, process_id):
-        return self.kill_process(process_id=process_id)
+    def tcpdump_capture_stop(self, process_id, wait_after_stop=0):
+        return self.kill_process(process_id=process_id, kill_seconds=wait_after_stop)
 
     def tshark_parse(self, file_name, read_filter, fields=None, decode_as=None):
         pass
@@ -2804,11 +2805,11 @@ class Linux(object, ToDictMixin):
         return result
 
     @fun_test.safe
-    def curl(self, url, output_file=None):
+    def curl(self, url, output_file=None, timeout=60):
         command = "curl {}".format(url)
         if output_file:
             command += " -o {}".format(output_file)
-        self.command(command)
+        self.command(command, timeout=timeout)
         return int(self.exit_status()) == 0
 
     @fun_test.safe
@@ -2823,6 +2824,22 @@ class Linux(object, ToDictMixin):
                 os.kill(self.spawn_pid, 9)
         except Exception as ex:
             pass
+
+    @fun_test.safe
+    def docker(self, ps=True):
+        result = None
+        command = None
+        if ps:
+            command = "docker ps --format '{{json .}}'"
+        output = self.command(command)
+        lines = output.split("\n")
+        try:
+            result = [json.loads(str(line)) for line in lines]
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+        return result
+
 
 class LinuxBackup:
     def __init__(self, linux_obj, source_file_name, backedup_file_name):
