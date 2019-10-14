@@ -1,0 +1,59 @@
+{
+  "NfaRuntime": {
+    "jsons": [
+      "NFA_ONLY_BASIC_RUNTIME.json"
+    ],
+    "XDATA_LISTS": "/project/users/QA/regression/data_store/regex/F1/nfa_only_compile/nfa_results/NFA_ONLY_BASIC_RUNTIME.list",
+    "description": "F1:testing basic lsu actions for NFA patterns",
+    "rbm_size": "1m",
+    "syslog_level": "3",
+    "funos_branch": "master",
+    "run_target": "F1",
+    "hw_model":"F1",
+    "hw_version": "Ignored",
+    "max_duration": 45
+  },
+  "NfaRuntimeSerial1": {
+    "jsons": [
+      "NFA_ONLY_COMLX_SERIAL1.json"
+    ],
+    "XDATA_LISTS": "/project/users/QA/regression/data_store/regex/F1/nfa_only_compile/nfa_results/NFA_ONLY_COMLX_SERIAL1.list",
+    "description": "F1:Seraial 1 ,NFA patterns",
+    "rbm_size": "1m",
+    "syslog_level": "3",
+    "funos_branch": "master",
+    "run_target": "F1",
+    "hw_model":"F1",
+    "hw_version": "Ignored",
+    "max_duration": 45
+  },
+  "NfaRuntimeSerial2": {
+    "jsons": [
+      "NFA_ONLY_COMLX_SERIAL2.json"
+    ],
+    "XDATA_LISTS": "/project/users/QA/regression/data_store/regex/F1/nfa_only_compile/nfa_results/NFA_ONLY_COMLX_SERIAL2.list",
+    "description": "F1:Seraial 2 ,NFA patterns",
+    "rbm_size": "1m",
+    "syslog_level": "3",
+    "funos_branch": "master",
+    "run_target": "F1",
+    "hw_model":"F1",
+    "hw_version": "Ignored",
+    "max_duration": 45
+  },
+
+   "NfaRuntimeCrossPacket": {
+    "jsons": [
+      "NFA_ONLY_CROSS_PACKET.json"
+    ],
+    "XDATA_LISTS": "/project/users/QA/regression/data_store/regex/F1/nfa_only_compile/nfa_results/NFA_ONLY_CROSS_PACKET.list",
+    "description": "F1:match across packet ,NFA patterns",
+    "rbm_size": "1m",
+    "syslog_level": "3",
+    "funos_branch": "master",
+    "run_target": "F1",
+    "hw_model":"F1",
+    "hw_version": "Ignored",
+    "max_duration": 45
+  }
+}

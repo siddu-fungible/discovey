@@ -13,7 +13,7 @@
     "hw_version": "Ignored",
     "max_duration": 45
   },
-  " Pcre1NfaRuntimeSerial1": {
+  "Pcre1NfaRuntimeSerial1": {
     "jsons": [
       "PCRE_NFA1_SERIAL1.json"
     ],
@@ -27,7 +27,7 @@
     "hw_version": "Ignored",
     "max_duration": 45
   },
-  " Pcre1NfaRuntimeSerial2": {
+  "Pcre1NfaRuntimeSerial2": {
     "jsons": [
       "PCRE_NFA1_SERIAL2.json"
     ],
