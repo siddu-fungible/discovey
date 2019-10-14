@@ -552,7 +552,7 @@ def test_case_time_series(request, suite_execution_id, test_case_execution_id):
             result = list(collection.find(query))
 @api_safe_json_response
 def release_trains(request):
-    releases = ["rel_1_0a_aa", "rel_1_0a_ab"]
+    releases = ["1.0a_aa", "1.0a_ab"]
     result = None
     if request.method == "GET":
         result = releases

@@ -75,7 +75,7 @@ class TestCase1(FunTestCase):
         bmc_handle.set_prompt_terminator(r'# $')
 
         for i in range(count):
-            raw_output, cal_output = bmc_commands.power_manager(bmc_handle=bmc_handle)
+            raw_output, cal_output, result = bmc_commands.power_manager(bmc_handle=bmc_handle)
             time_now = datetime.datetime.now()
             print_data = {"output": raw_output, "time": time_now}
             file_helper.add_data(f_power_shell, print_data, heading=heading)
