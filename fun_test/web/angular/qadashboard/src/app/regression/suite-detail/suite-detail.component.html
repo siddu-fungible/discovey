@@ -273,7 +273,7 @@
                   </ng-template>
                 </td>
                 <td>
-                  <a [routerLink]="[getScriptDetailLink(script.value.script_path, script.value.execution_id, script.value.log_prefix)]">New report</a>
+                  <a [routerLink]="[getScriptDetailLink(scriptExecutionInfo.key, script.value.execution_id, script.value.log_prefix)]">New report</a>
                 </td>
                 <!--td>
 									<button data-placement="top" data-toggle="tooltip" title="Re-run"

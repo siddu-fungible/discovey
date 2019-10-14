@@ -44,7 +44,7 @@ export class ScriptDetailComponent implements OnInit {
   ) { }
   suiteExecutionId: number = 10000;
   logPrefix: number = null;
-  scriptPk: number = null;
+  scriptId: number = null;
   scriptPath: string = null;
   testCaseExecutions: any = null;
   currentTestCaseExecution: any = null;
@@ -60,7 +60,7 @@ export class ScriptDetailComponent implements OnInit {
   ngOnInit() {
 
     this.driver = of(true).pipe(switchMap(response => {
-      return this.regressionService.getScriptInfo(this.scriptPk);
+      return this.regressionService.getScriptInfoById(this.scriptId);
     })).pipe(switchMap(response => {
       this.scriptPath = response.script_path;
       return this.regressionService.testCaseExecutions(null, this.suiteExecutionId, this.scriptPath, this.logPrefix);
@@ -77,8 +77,8 @@ export class ScriptDetailComponent implements OnInit {
       if (params['logPrefix']) {
         this.logPrefix = params['logPrefix'];
       }
-      if (params["scriptPk"]) {
-        this.scriptPk = parseInt(params["scriptPk"]);
+      if (params["scriptId"]) {
+        this.scriptId = parseInt(params["scriptId"]);
       }
       this.refreshAll();
 
