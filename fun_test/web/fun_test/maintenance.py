@@ -1559,7 +1559,7 @@ if __name__ == "__main_crypto_s1__":
                     result = set_internal_name(security_children)
                     print json.dumps(result, indent=4)
 
-if __name__ == "__main__":
+if __name__ == "__main_rebasing__":
     global_setting = MetricsGlobalSettings.objects.first()
     global_setting.cache_valid = False
     global_setting.save()
@@ -1591,3 +1591,4 @@ if __name__ == "__main__":
                 entry.data_sets = json.dumps(data_sets)
                 entry.save()
                 print "edited the datasets for {} with metric id {}".format(entry.chart_name, entry.metric_id)
+
