@@ -6537,9 +6537,7 @@
                   {
                     "metric_model_name": "TeraMarkNfaPerformance",
                     "name": "nfa_teramark_output_bandwidth_S1",
-                    "label": "NFA Throughput",
-                    "disable": true
-
+                    "label": "NFA Throughput"
                   }
                 ]
               }
