@@ -120,10 +120,10 @@ export class SuiteDetailComponent implements OnInit {
                 ctrl.fetchScriptInfo(scriptId, data.execution_id);
 
                 if (!ctrl.scriptExecutionsMap.hasOwnProperty(scriptId)) {
-                  ctrl.scriptExecutionsMap[data.script_id] = {};
+                  ctrl.scriptExecutionsMap[scriptId] = {};
                 }
-                ctrl.scriptExecutionsMap[data.script_id][data.execution_id] = data;
-                ctrl.scriptExecutionsMap[data.script_id][data.execution_id]["logPrefix"] = parseInt(data.log_prefix);
+                ctrl.scriptExecutionsMap[scriptId][data.execution_id] = data;
+                ctrl.scriptExecutionsMap[scriptId][data.execution_id]["logPrefix"] = parseInt(data.log_prefix);
 
                 let i = 0;
                 ctrl.fetchTestCaseInfo(testCaseExecutionId);

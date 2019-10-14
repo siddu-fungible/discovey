@@ -398,6 +398,8 @@ def scripts(request, id):
         result = []
         for script in regression_scripts:
             result.append({"script_path": script.script_path, "id": script.id})
+        if result and id is not None:
+            result = result[0]
     return result
 
 

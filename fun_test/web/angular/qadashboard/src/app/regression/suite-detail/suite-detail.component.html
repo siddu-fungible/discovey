@@ -175,7 +175,7 @@
 
       <div class="card" *ngFor="let scriptExecutionInfo of scriptExecutionsMap | keyvalue">
         <div class="card card-primary">
-          <div class="card-header"><b>Script: {{ scriptExecutionInfo.key }} </b>
+          <div class="card-header"><b>Script: {{ scriptInfo[scriptExecutionInfo.key]?.script_path }} </b>
             <span
               *ngIf="(suiteExecution?.fields.state !== stateMap.IN_PROGRESS) && (suiteExecution?.fields.state !== stateMap.ABORTED)"
               (click)="reRunModalOpen(suiteContent, scriptExecutionInfo.key)"
