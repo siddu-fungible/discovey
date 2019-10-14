@@ -391,7 +391,7 @@ class BwTest(FunTestCase):
         qp_list = fun_test.shared_variables["qp_list"]
         come_obj = fun_test.shared_variables["come_obj"]
         kill_time = 30
-        test_case_failure_time = 5
+        test_case_failure_time = 20
 
         # Using hosts based on minimum host length
         total_link_bw = min(fun_test.shared_variables["host_len_f10"], fun_test.shared_variables["host_len_f11"])
@@ -544,7 +544,7 @@ class LatencyTest(FunTestCase):
         f11_hosts = fun_test.shared_variables["f11_hosts"]
         qp_list = fun_test.shared_variables["qp_list"]
         kill_time = 20
-        test_case_failure_time = 5
+        test_case_failure_time = 20
 
         # Using hosts based on minimum host length
         total_link_bw = min(fun_test.shared_variables["host_len_f10"], fun_test.shared_variables["host_len_f11"])
