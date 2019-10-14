@@ -846,7 +846,7 @@ class BootupWorker(Thread):
             if fs.bundle_image_parameters:
                 fs.set_boot_phase(BootPhases.FS_BRING_UP_INSTALL_BUNDLE)
                 build_number = fs.bundle_image_parameters.get("build_number", 70)  # TODO: Is there a latest?
-                release_train = fs.bundle_image_parameters.get("release_train", "rel_1_0a_aa")
+                release_train = fs.bundle_image_parameters.get("release_train", "1.0a_aa")
                 come = fs.get_come()
                 fun_test.test_assert(come.install_build_setup_script(build_number=build_number, release_train=release_train),
                                      "Bundle image installed")
@@ -1061,7 +1061,11 @@ class ComE(Linux):
         :return: returns the dochub url with the given build number and release train
                 example: http://dochub.fungible.local/doc/jenkins/apple_fs1600/68/setup_fs1600-68.sh
         """
-        url = "{}/{}/fs1600/{}/{}".format(DOCHUB_BASE_URL, release_train, build_number, script_file_name)
+        url = "{}/{}/fs1600/{}/{}".format(DOCHUB_BASE_URL,
+                                          "rel_" + release_train.replace(".", "_"),
+                                          build_number,
+                                          script_file_name)
+
         return url
 
     def _setup_build_script_directory(self):
@@ -1075,7 +1079,7 @@ class ComE(Linux):
         self.command("mkdir -p {}".format(path))
         return path
 
-    def install_build_setup_script(self, build_number, release_train="rel_1_0a_aa"):
+    def install_build_setup_script(self, build_number, release_train="1.0a_aa"):
         """
         install the build setup script downloaded from dochub
         :param build_number: build number
@@ -1083,7 +1087,10 @@ class ComE(Linux):
         :return: True if the installation succeeded with exit status == 0, else raise an assert
         """
         self.sudo_command("/opt/fungible/cclinux/cclinux_service.sh --stop")
-        script_file_name = "setup_fs1600-{}.sh".format(build_number)
+        parts = release_train.split("_")
+        temp = "{}-{}_{}".format(parts[0], build_number, parts[1])
+        script_file_name = "setup_fs1600-{}.sh".format(temp)
+
         script_url = self._get_build_script_url(build_number=build_number,
                                                 release_train=release_train,
                                                 script_file_name=script_file_name)
