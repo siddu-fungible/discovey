@@ -1499,7 +1499,7 @@ class FunTestScript(object):
                 except Exception as ex:
                     fun_test.critical(ex)
                     cleanup_error_found = True
-        fun_test.simple_assert(not cleanup_error_found, "FS {} cleanup error".format(fs.context))
+            fun_test.simple_assert(not cleanup_error_found, "FS {} cleanup error".format(fs.context))
 
 
     def _cleanup_topologies(self):

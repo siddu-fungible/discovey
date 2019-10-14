@@ -33,10 +33,11 @@ class BootPhases:
     U_BOOT_MICROCOM_STARTED = "u-boot: microcom started"
     U_BOOT_SET_NO_AUTOLOAD = "u-boot: setenv autoload no"
     U_BOOT_TRAIN = "u-boot: train"
-    U_BOOT_SET_ETH_ADDR = "u-boot: set ethaddr"
-    U_BOOT_SET_GATEWAY_IP = "u-boot: set gatewayip"
-    U_BOOT_SET_SERVER_IP = "u-boot: set serverip"
-    U_BOOT_SET_BOOT_ARGS = "u-boot: set boot args"
+    U_BOOT_SET_ETH_ADDR = "u-boot: setenv ethaddr"
+    U_BOOT_SET_IPADDR = "u-boot: setenv ipaddr"
+    U_BOOT_SET_GATEWAY_IP = "u-boot: setenv gatewayip"
+    U_BOOT_SET_SERVER_IP = "u-boot: setenv serverip"
+    U_BOOT_SET_BOOT_ARGS = "u-boot: setenv boot args"
     U_BOOT_DHCP = "u-boot: dhcp"
     U_BOOT_TFTP_DOWNLOAD = "u-boot: tftp download"
     U_BOOT_UNCOMPRESS_IMAGE = "u-boot: uncompress image"
@@ -457,7 +458,8 @@ class Bmc(Linux):
                           tftp_load_address="0xa800000080000000",
                           tftp_server=TFTP_SERVER_IP,
                           tftp_image_path="funos-f1.stripped.gz",
-                          gateway_ip=None):
+                          gateway_ip=None,
+                          mpg_ips=None):
         result = None
 
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_INIT)
@@ -501,12 +503,24 @@ class Bmc(Linux):
                 self._get_boot_args_for_index(boot_args=boot_args, f1_index=index)), timeout=5, f1_index=index, expected=self.U_BOOT_F1_PROMPT)
 
         fun_test.add_checkpoint("BOOTARGS: {}".format(boot_args), context=self.context)
-        self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_DHCP)
-        self.u_boot_command(command="dhcp", timeout=15, expected=self.U_BOOT_F1_PROMPT, f1_index=index)
+
+        if mpg_ips:
+            self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_SET_IPADDR)
+            self.u_boot_command(command="setenv ipaddr {}".format(mpg_ips[index]),
+                                timeout=15,
+                                expected=self.U_BOOT_F1_PROMPT,
+                                f1_index=index)
+            self.u_boot_command(command="setenv netmask 255.255.255.0",
+                                timeout=15,
+                                expected=self.U_BOOT_F1_PROMPT,
+                                f1_index=index)
+        else:
+            self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_DHCP)
+            self.u_boot_command(command="dhcp", timeout=15, expected=self.U_BOOT_F1_PROMPT, f1_index=index)
 
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_TFTP_DOWNLOAD)
         output = self.u_boot_command(
-            command="tftpboot {} {}:{}".format(tftp_load_address, tftp_server, tftp_image_path), timeout=15,
+            command="tftpboot {} {}:{}".format(tftp_load_address, tftp_server, tftp_image_path), timeout=40,
             f1_index=index, expected=self.U_BOOT_F1_PROMPT)
         m = re.search(r'Bytes transferred = (\d+)', output)
         bytes_transferred = 0
@@ -852,7 +866,7 @@ class BootupWorker(Thread):
                         bmc.position_support_scripts()
                         fun_test.test_assert(bmc.setup_serial_proxy_connection(f1_index=f1_index, auto_boot=fs.is_auto_boot()),
                                              "Setup nc serial proxy connection")
-                    if fpga:
+                    if fpga and not fs.bundle_compatible:
                         fpga.reset_f1(f1_index=f1_index)
                     else:
                         fs.get_bmc().reset_f1(f1_index=f1_index)
@@ -871,7 +885,8 @@ class BootupWorker(Thread):
                         fun_test.test_assert(
                             expression=bmc.u_boot_load_image(index=f1_index,
                                                              tftp_image_path=fs.tftp_image_path,
-                                                             boot_args=boot_args, gateway_ip=fs.gateway_ip),
+                                                             boot_args=boot_args, gateway_ip=fs.gateway_ip,
+                                                             mpg_ips=fs.mpg_ips),
                             message="U-Bootup f1: {} complete".format(f1_index),
                             context=self.context)
                         fun_test.update_job_environment_variable("tftp_image_path", fs.tftp_image_path)
@@ -1405,6 +1420,7 @@ class Fs(object, ToDictMixin):
         if "bundle_compatible" in spec and spec["bundle_compatible"]:
             self.bundle_compatible = True
             self.skip_funeth_come_power_cycle = True
+        self.mpg_ips = spec.get("mpg_ips", [])
         # self.auto_boot = auto_boot
         self.bmc_maintenance_threads = []
         self.cleanup_complete = False
@@ -1607,7 +1623,11 @@ class Fs(object, ToDictMixin):
                     fun_test.test_assert(self.bmc.validate_u_boot_version(output=preamble, minimum_date=self.MIN_U_BOOT_DATE), "Validate preamble")
 
                 if self.tftp_image_path:
-                    fun_test.test_assert(expression=self.bmc.u_boot_load_image(index=f1_index, tftp_image_path=self.tftp_image_path, boot_args=boot_args, gateway_ip=self.gateway_ip),
+                    fun_test.test_assert(expression=self.bmc.u_boot_load_image(index=f1_index,
+                                                                               tftp_image_path=self.tftp_image_path,
+                                                                               boot_args=boot_args,
+                                                                               gateway_ip=self.gateway_ip,
+                                                                               mpg_ips=self.mpg_ips),
                                          message="U-Bootup f1: {} complete".format(f1_index),
                                          context=self.context)
                     fun_test.update_job_environment_variable("tftp_image_path", self.tftp_image_path)
