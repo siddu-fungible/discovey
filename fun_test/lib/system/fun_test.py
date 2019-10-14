@@ -82,16 +82,21 @@ class DatetimeEncoder(json.JSONEncoder):
         except TypeError:
             return str(obj)
 
+
 class FunContext:
-    def __init__(self, description, context_id, output_file_path):
+    def __init__(self, description, context_id, output_file_path=None):
         self.description = description
         self.context_id = context_id
         self.fp = None
         self.output_file_path = output_file_path
         self.buf = ""
 
+    def get_id(self):
+        return self.context_id
+
     def open(self):
-        self.fp = open(self.output_file_path, "w")
+        if self.output_file_path:
+            self.fp = open(self.output_file_path, "w")
         return True
 
     def close(self):
@@ -303,7 +308,7 @@ class FunTest:
         self.profiling = True
         self.profiling_timer = FunTimer(max_time=10000)
 
-    def add_context(self, description, output_file_path):
+    def add_context(self, description, output_file_path=None):
         self.last_context_id += 1
         output_file_path = output_file_path
         fc = FunContext(description=description, context_id=self.last_context_id, output_file_path=output_file_path)
@@ -903,8 +908,13 @@ class FunTest:
         if stdout:
             sys.stdout.write(final_message)
             sys.stdout.flush()
+
+        context_id = 0
+        if context:
+            context_id = context.get_id()
+            
         if self.time_series_enabled:
-            data = {"checkpoint_index": self.current_time_series_checkpoint, "log": final_message}
+            data = {"checkpoint_index": self.current_time_series_checkpoint, "log": final_message, "context": context_id}
             self.add_time_series_log(collection_name=models_helper.get_fun_test_time_series_collection_name(self.get_suite_execution_id(),
                                                                                                             self.get_test_case_execution_id()),
                                      data=data)
