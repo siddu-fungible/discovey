@@ -72,9 +72,9 @@ class BringupSetup(FunTestCase):
             f11_retimer = 0
 
         f1_0_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --dpc-server --all_100g --serial --dpc-uart " \
-                         "retimer={} --mgmt --disable-wu-watchdog syslog=2".format(f10_retimer)
+                         "retimer={} --mgmt syslog=2".format(f10_retimer)
         f1_1_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 --dpc-server --all_100g --serial --dpc-uart " \
-                         "retimer={} --mgmt --disable-wu-watchdog syslog=2".format(f11_retimer)
+                         "retimer={} --mgmt syslog=2".format(f11_retimer)
 
         topology_helper = TopologyHelper()
         if "deploy_setup" in job_inputs:

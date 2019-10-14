@@ -113,10 +113,11 @@ def test_beds(request, id):
                 pass
             else:
                 if submitter_email:
-                    am.manual_lock_assets(user=submitter_email, assets=assets_required)
+                    am.manual_lock_assets(user=submitter_email, assets=assets_required, expiration_time=test_bed.manual_lock_expiry_time)
                 else:
                     pass  # TODO
         else:
+            test_bed.note = ""
             am.manual_un_lock_assets_by_test_bed(test_bed_name=test_bed.name, user=test_bed.manual_lock_submitter)
 
         test_bed.save()
@@ -490,6 +491,14 @@ def re_run_job(request):
 
         if suite_id:
             pass
+
+@api_safe_json_response
+def release_trains(request):
+    releases = ["1.0a_aa", "1.0a_ab"]
+    result = None
+    if request.method == "GET":
+        result = releases
+    return result
 
 if __name__ == "__main__":
     from web.fun_test.django_interactive import *

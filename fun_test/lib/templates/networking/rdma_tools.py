@@ -245,7 +245,7 @@ class Rocetools:
             lines = content.split()
             total_values = len(lines)
             for x in range(0, total_values):
-                if isinstance(lines[x], str) or math.isinf(lines[x]):
+                if lines[x] == "inf" or math.isinf(float(lines[x])):
                     lines[x] = -1
             size = lines[0]
             iterations = lines[1]
@@ -265,7 +265,7 @@ class Rocetools:
                 lines = content.split()
                 total_values = len(lines)
                 for x in range(0, total_values):
-                    if isinstance(lines[x], str) or math.isinf(lines[x]):
+                    if lines[x] == "inf" or math.isinf(float(lines[x])):
                         lines[x] = -1
 
                 size = lines[0]
@@ -282,7 +282,7 @@ class Rocetools:
                 lines = content.split()
                 total_values = len(lines)
                 for x in range(0, total_values):
-                    if isinstance(lines[x], str) or math.isinf(lines[x]):
+                    if lines[x] == "inf" or math.isinf(float(lines[x])):
                         lines[x] = -1
                 size = lines[0]
                 iterations = lines[1]

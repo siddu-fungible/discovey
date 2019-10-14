@@ -7,6 +7,7 @@ from web.fun_test.analytics_models_helper import ModelHelper, get_data_collectio
 from fun_global import PerfUnit, FunPlatform
 from lib.templates.networking.rdma_tools import Rocetools
 import re
+from asset.asset_manager import *
 import math
 
 
@@ -101,10 +102,10 @@ class BringupSetup(FunTestCase):
         else:
             f11_retimer = 0
 
-        f1_0_boot_args = "app=hw_hsu_test cc_huid=3 --dpc-server --all_100g --dpc-uart " \
-                         "retimer={} --mgmt --disable-wu-watchdog syslog=3".format(f10_retimer)
-        f1_1_boot_args = "app=hw_hsu_test cc_huid=2 --dpc-server --all_100g --dpc-uart " \
-                         "retimer={} --mgmt --disable-wu-watchdog syslog=3".format(f11_retimer)
+        f1_0_boot_args = "app=load_mods,hw_hsu_test cc_huid=3 --dpc-server --serial --all_100g --dpc-uart " \
+                         "retimer={} --mgmt syslog=3".format(f10_retimer)
+        f1_1_boot_args = "app=load_mods,hw_hsu_test cc_huid=2 --dpc-server --serial --all_100g --dpc-uart " \
+                         "retimer={} --mgmt syslog=3".format(f11_retimer)
 
         topology_helper = TopologyHelper()
 
@@ -120,12 +121,12 @@ class BringupSetup(FunTestCase):
         else:
             roce_speed = "all"
             fun_test.shared_variables["test_speed"] = roce_speed
-        if "enable_bgp" in job_inputs:
-            enable_bgp = job_inputs["enable_bgp"]
-            fun_test.shared_variables["enable_bgp"] = enable_bgp
+        if "enable_fcp" in job_inputs:
+            enable_fcp = job_inputs["enable_fcp"]
+            fun_test.shared_variables["enable_fcp"] = enable_fcp
         else:
-            enable_bgp = True
-            fun_test.shared_variables["enable_bgp"] = enable_bgp
+            enable_fcp = True
+            fun_test.shared_variables["enable_fcp"] = enable_fcp
         qp_list = []
         if "qp_list" in job_inputs:
             qp_list = job_inputs["qp_list"]
@@ -192,6 +193,17 @@ class BringupSetup(FunTestCase):
                     fun_test.add_checkpoint("<b><font color='red'><PCIE link did not come up in %s mode</font></b>"
                                             % servers_mode[server])
         else:
+            # Get COMe object
+            am = AssetManager()
+            th = TopologyHelper(spec=am.get_test_bed_spec(name=fs_name))
+            topology = th.get_expanded_topology()
+            dut = topology.get_dut(index=0)
+            dut_name = dut.get_name()
+            fs_spec = fun_test.get_asset_manager().get_fs_by_name(name=dut_name)
+            fs_obj = Fs.get(fs_spec=fs_spec, already_deployed=True)
+            come_obj = fs_obj.get_come()
+            fun_test.shared_variables["come_obj"] = come_obj
+
             fun_test.log("Getting host info")
             host_dict = {"f1_0": [], "f1_1": []}
             temp_host_list = []
@@ -243,9 +255,9 @@ class NicEmulation(FunTestCase):
 
     def run(self):
         host_objs = fun_test.shared_variables["hosts_obj"]
-        enable_bgp = fun_test.shared_variables["enable_bgp"]
+        enable_fcp = fun_test.shared_variables["enable_fcp"]
         abstract_key = ""
-        if enable_bgp:
+        if enable_fcp:
             abstract_key = "abstract_configs_bgp"
         else:
             abstract_key = "abstract_configs"
@@ -261,7 +273,7 @@ class NicEmulation(FunTestCase):
             funcp_obj.funcp_abstract_config(abstract_config_f1_0=abstract_json_file0,
                                             abstract_config_f1_1=abstract_json_file1, workspace="/scratch")
 
-            if not enable_bgp:
+            if not enable_fcp:
                 # Add static routes on Containers
                 funcp_obj.add_routes_on_f1(routes_dict=self.server_key["fs"][fs_name]["static_routes"])
 
@@ -269,7 +281,7 @@ class NicEmulation(FunTestCase):
 
             # Ping QFX from both F1s
             ping_dict = self.server_key["fs"][fs_name]["cc_pings"]
-            if enable_bgp:
+            if enable_fcp:
                 ping_dict = self.server_key["fs"][fs_name]["cc_pings_bgp"]
 
             for container in ping_dict:
@@ -333,12 +345,15 @@ class NicEmulation(FunTestCase):
                 handle.sudo_command("rm -rf /tmp/*bw* && rm -rf /tmp/*rping* /tmp/*lat*")
                 handle.sudo_command("dmesg -c > /dev/null")
                 hostname = handle.command("hostname").strip()
-                iface_name = handle.command(
-                    "ip link ls up | awk '{print $2}' | grep -e '00:f1:1d' -e '00:de:ad' -B 1 | head -1 | tr -d :"). \
-                    strip()
-                iface_addr = handle.command(
-                    "ip addr list {} | grep \"inet \" | cut -d\' \' -f6 | cut -d/ -f1".format(
-                        iface_name)).strip()
+                if handle.lsmod("funeth"):
+                    iface_name = handle.command(
+                        "ip link ls up | awk '{print $2}' | grep -e '00:f1:1d' -e '00:de:ad' -B 1 | head -1 | tr -d :"). \
+                        strip()
+                    iface_addr = handle.command(
+                        "ip addr list {} | grep \"inet \" | cut -d\' \' -f6 | cut -d/ -f1".format(
+                            iface_name)).strip()
+                else:
+                    fun_test.test_assert(False, "Funeth is not loaded on {}".format(hostname))
                 if objs == "f1_0":
                     f10_host_dict = {"name": hostname, "iface_name": iface_name, "ipaddr": iface_addr,
                                      "handle": handle, "roce_handle": Rocetools(handle)}
@@ -376,7 +391,7 @@ class BwTest(FunTestCase):
         qp_list = fun_test.shared_variables["qp_list"]
         come_obj = fun_test.shared_variables["come_obj"]
         kill_time = 30
-        test_case_failure_time = 5
+        test_case_failure_time = 20
 
         # Using hosts based on minimum host length
         total_link_bw = min(fun_test.shared_variables["host_len_f10"], fun_test.shared_variables["host_len_f11"])
@@ -442,12 +457,12 @@ class BwTest(FunTestCase):
                 fun_test.sleep("Waiting for {} seconds before killing tests".format(kill_time), seconds=kill_time)
                 # First kill client & then kill server
                 parsed_result = []
-                wait_time = test_case_failure_time
                 for handle in f11_pid_list:
                     for key, value in handle.items():
                         key.kill_pid(pid=value["cmd_pid"])
                         while key.process_check(pid=value["cmd_pid"]):
                             fun_test.sleep(message="Client process still there", seconds=2)
+                        wait_time = test_case_failure_time
                         while key.qp_check() > 1:
                             fun_test.sleep("Client : QP count {}".format(key.qp_check()), seconds=5)
                             wait_time -= 1
@@ -456,12 +471,12 @@ class BwTest(FunTestCase):
                                 fun_test.test_assert(False, "QP is not clearing on client, aborting test case")
                         parsed_result.append(key.parse_test_log(filepath=value["output_file"], tool="ib_bw",
                                                                 perf=True))
-                wait_time = test_case_failure_time
                 for handle in f10_pid_list:
                     for key, value in handle.items():
                         key.kill_pid(pid=value["cmd_pid"])
                         while key.process_check(pid=value["cmd_pid"]):
                             fun_test.sleep(message="Server process still there", seconds=2)
+                        wait_time = test_case_failure_time
                         while key.qp_check() > 1:
                             fun_test.sleep("Server : QP count {}".format(key.qp_check()), seconds=5)
                             wait_time -= 1
@@ -474,13 +489,10 @@ class BwTest(FunTestCase):
                 qp_count = qp
                 row_data_list = []
                 total_values = len(parsed_result)
-                for x in range(0, total_values):
-                    if isinstance(parsed_result[x], str) or math.isinf(parsed_result[x]):
-                        parsed_result[x] = -1
                 for results in parsed_result:
-                    size_bandwidth = int(results[0])
-                    iterations = int(results[1])
-                    bw_peak_gbps += float(results[0])
+                    size_bandwidth = float(results[0])
+                    iterations = float(results[1])
+                    bw_peak_gbps += float(results[2])
                     avg_bandwidth += float(results[3])
                     msg_rate += float(results[4])
                 for item in table_data_cols:
@@ -532,7 +544,7 @@ class LatencyTest(FunTestCase):
         f11_hosts = fun_test.shared_variables["f11_hosts"]
         qp_list = fun_test.shared_variables["qp_list"]
         kill_time = 20
-        test_case_failure_time = 5
+        test_case_failure_time = 20
 
         # Using hosts based on minimum host length
         total_link_bw = min(fun_test.shared_variables["host_len_f10"], fun_test.shared_variables["host_len_f11"])
@@ -599,12 +611,12 @@ class LatencyTest(FunTestCase):
             fun_test.sleep("Waiting for {} seconds before killing tests".format(kill_time), seconds=kill_time)
             # First kill client & then kill server
             parsed_result = []
-            wait_time = test_case_failure_time
             for handle in f11_pid_list:
                 for key, value in handle.items():
                     key.kill_pid(pid=value["cmd_pid"])
                     while key.process_check(pid=value["cmd_pid"]):
                         fun_test.sleep(message="Client process still there", seconds=2)
+                    wait_time = test_case_failure_time
                     while key.qp_check() > 1:
                         fun_test.sleep("Client : QP count {}".format(key.qp_check()), seconds=5)
                         wait_time -= 1
@@ -613,12 +625,12 @@ class LatencyTest(FunTestCase):
                             fun_test.test_assert(False, "QP is not clearing on client, aborting test case")
                     parsed_result.append(key.parse_test_log(filepath=value["output_file"], tool="ib_lat",
                                                             perf=True))
-            wait_time = test_case_failure_time
             for handle in f10_pid_list:
                 for key, value in handle.items():
                     key.kill_pid(pid=value["cmd_pid"])
                     while key.process_check(pid=value["cmd_pid"]):
                         fun_test.sleep(message="Server process still there", seconds=2)
+                    wait_time = test_case_failure_time
                     while key.qp_check() > 1:
                         fun_test.sleep("Server : QP count {}".format(key.qp_check()), seconds=5)
                         wait_time -= 1
@@ -633,12 +645,9 @@ class LatencyTest(FunTestCase):
             iterations = 0
             row_data_list = []
             total_values = len(parsed_result)
-            for x in range(0, total_values):
-                if isinstance(parsed_result[x], str) or math.isinf(parsed_result[x]):
-                    parsed_result[x] = -1
             for results in parsed_result:
-                size_latency = int(results[0])
-                iterations = int(results[4])
+                size_latency = float(results[0])
+                iterations = float(results[4])
                 min_latency = float(results[5])
                 max_latency = float(results[6])
                 avg_latency = float(results[8])

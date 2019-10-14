@@ -44,6 +44,13 @@ def bam(come_handle, f1=0):
     return dpcsh_output
 
 
+def debug_vp_utils(come_handle, f1=0):
+    cmd = "debug vp_util"
+    dpcsh_output = dpcsh_nocli.get_dpcsh_output(come_handle, cmd, f1)
+    # print dpcsh_output
+    return dpcsh_output
+
+
 if __name__ == "__main__":
     come_handle = get_handles.get_come_handle("fs-65")
     output = ddr(come_handle, f1=0)

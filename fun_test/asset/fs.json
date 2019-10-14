@@ -34,7 +34,7 @@
     "fpga": {
       "mgmt_ssh_password": "root",
       "mgmt_ssh_username": "root",
-      "mgmt_ip": "10.1.20.178"
+      "mgmt_ip": "10.1.20.171"
     },
     "name": "fs-7"
   },
@@ -892,6 +892,9 @@
       "mgmt_ip": "10.1.105.87"
     },
     "name": "fs-102",
+    "mpg_ips": ["10.1.105.88", "10.1.105.89"],
+    "gateway_ip": "10.1.105.1",
+    "bundle_compatible": true,
     "fpga": {
       "mgmt_ssh_password": "root",
       "mgmt_ssh_username": "root",
