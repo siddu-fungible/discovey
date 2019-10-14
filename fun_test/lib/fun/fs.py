@@ -303,17 +303,27 @@ class Bmc(Linux):
         fun_test.add_checkpoint(checkpoint="F1_{}: Started boot phase: {}".format(index, phase), context=self.context)
         fun_test.log_section(message="F1_{}:{}".format(index, phase), context=self.context)
 
+    def detect_version(self, output):
+        try:
+            m = re.search(r'FunSDK Version=(\S+), ', output) # Branch=(\S+)', output)
+            if m:
+                version = m.group(1)
+                fun_test.add_checkpoint(checkpoint="SDK Version: {}".format(version), context=self.context)
+                fun_test.set_version(version=version.replace("bld_", ""))
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
     def u_boot_command(self, f1_index, command, timeout=15, expected=None):
-        # nc = Netcat(ip=self.host_ip, port=self.SERIAL_PROXY_PORTS[f1_index])
         nc = self.nc[f1_index]
         nc.write(command + "\n")
         output = nc.read_until(expected_data=expected, timeout=timeout)
+        self.detect_version(output)
+
         fun_test.log(message=output, context=self.context)
         if expected:
             fun_test.simple_assert(expression=expected in output,
                                    message="{} in output".format(expected),
                                    context=self.context)
-        # output = nc.close()
         self.u_boot_logs[f1_index] += output
         return output
 
@@ -527,7 +537,7 @@ class Bmc(Linux):
         if m:
             bytes_transferred = int(m.group(1))
 
-        fun_test.test_assert(bytes_transferred > 1000, "FunOs download size: {}".format(bytes_transferred))
+        fun_test.test_assert(bytes_transferred > 1000, "FunOS download size: {}".format(bytes_transferred))
 
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_UNCOMPRESS_IMAGE)
         output = self.u_boot_command(command="unzip {} {};".format(tftp_load_address, self.ELF_ADDRESS), timeout=10,
@@ -551,13 +561,15 @@ class Bmc(Linux):
             output = self.u_boot_command(command="bootelf -p {}".format(self.ELF_ADDRESS), timeout=80, f1_index=index, expected="\"this space intentionally left blank.\"")
         else:
             output = self.u_boot_command(command="bootelf -p {}".format(self.ELF_ADDRESS), timeout=80, f1_index=index, expected="sending a HOST_BOOTED message")
+        """
         m = re.search(r'FunSDK Version=(\S+), ', output) # Branch=(\S+)', output)
         if m:
             version = m.group(1)
             # branch = m.group(2)
             fun_test.add_checkpoint(checkpoint="SDK Version: {}".format(version), context=self.context)
             fun_test.set_version(version=version.replace("bld_", ""))
-
+        """
+        
         if not rich_input_boot_args:
             sections = ['Welcome to FunOS', 'NETWORK_START', 'DPC_SERVER_STARTED', 'PCI_STARTED']
             for section in sections:
@@ -1386,6 +1398,10 @@ class Fs(object, ToDictMixin):
         self.come = None
         self.tftp_image_path = tftp_image_path
         self.bundle_image_parameters = bundle_image_parameters
+        if self.bundle_image_parameters:
+            if int(self.bundle_image_parameters["build_number"]) < 0:
+                fun_test.log("Build number set to -1 so resetting bundle image parameters")
+                self.bundle_image_parameters = None
         self.disable_f1_index = disable_f1_index
         self.f1s = {}
         self.boot_args = boot_args
@@ -1536,6 +1552,10 @@ class Fs(object, ToDictMixin):
                 tftp_image_path = fun_test.get_build_parameter("tftp_image_path")
             if not tftp_image_path:
                 bundle_image_parameters = fun_test.get_build_parameter("bundle_image_parameters")
+                if bundle_image_parameters:
+                    if int(bundle_image_parameters["build_number"]) < 0:
+                        fun_test.log("Build number set to -1 so resetting bundle image parameters")
+                        bundle_image_parameters = None
             # fun_test.test_assert(tftp_image_path, "TFTP image path: {}".format(tftp_image_path), context=context)
 
         if not boot_args:
