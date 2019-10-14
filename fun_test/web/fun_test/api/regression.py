@@ -116,10 +116,11 @@ def test_beds(request, id):
                 pass
             else:
                 if submitter_email:
-                    am.manual_lock_assets(user=submitter_email, assets=assets_required)
+                    am.manual_lock_assets(user=submitter_email, assets=assets_required, expiration_time=test_bed.manual_lock_expiry_time)
                 else:
                     pass  # TODO
         else:
+            test_bed.note = ""
             am.manual_un_lock_assets_by_test_bed(test_bed_name=test_bed.name, user=test_bed.manual_lock_submitter)
 
         test_bed.save()
@@ -547,6 +548,12 @@ def test_case_time_series(request, suite_execution_id, test_case_execution_id):
         if collection:
 
             result = list(collection.find(query))
+@api_safe_json_response
+def release_trains(request):
+    releases = ["rel_1_0a_aa", "rel_1_0a_ab"]
+    result = None
+    if request.method == "GET":
+        result = releases
     return result
 
 if __name__ == "__main__":

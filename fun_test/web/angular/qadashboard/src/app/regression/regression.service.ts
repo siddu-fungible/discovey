@@ -180,6 +180,7 @@ getPrettyLocalizeTime(t) {
     }))
   }
 
+<<<<<<< HEAD
   testCaseExecutions(executionId=null, suiteExecutionId=null, scriptPath=null, logPrefix=null) {
     let url = "/api/v1/regression/test_case_executions";
     let queryParams = [];
@@ -222,6 +223,13 @@ getPrettyLocalizeTime(t) {
       return of(response.data);
     }), catchError (error => {
       this.loggerService.error("Unable fetch time-series logs");
+      return throwError(error);
+    }))
+  }
+  releaseTrains(): Observable<string[]> {
+    return this.apiService.get("/api/v1/regression/release_trains").pipe(switchMap(response => {
+      return of(response.data);
+    }), catchError(error => {
       return throwError(error);
     }))
   }

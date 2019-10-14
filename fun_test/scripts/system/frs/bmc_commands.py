@@ -94,6 +94,12 @@ def power_manager(bmc_handle):
     return raw_output, cal_output
 
 
+def die_temperature(bmc_handle):
+    output = bmc_handle.command("ipmitool -I lanplus -H 10.1.21.0 -U admin -P admin sensor")
+    return output
+
+
+
 if __name__ == "__main__":
     fs = AssetManager().get_fs_by_name("fs-65")
     bmc_handle = Bmc(host_ip=fs['bmc']['mgmt_ip'],

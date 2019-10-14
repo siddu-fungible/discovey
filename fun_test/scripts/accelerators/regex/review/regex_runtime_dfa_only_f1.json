@@ -1,0 +1,58 @@
+{
+   "DfaRuntime": {
+    "jsons": [
+      "DFA_ONLY.json,"
+    ],
+    "XDATA_LISTS": "/project/users/QA/regression/data_store/regex/F1/dfa_only_compile/dfa_results/DFA_ONLY.list",
+    "description": "F1:testing basic lsu actions for DFA patterns",
+    "rbm_size": "1m",
+    "syslog_level": "3",
+    "funos_branch": "master",
+    "run_target": "F1",
+    "hw_model":"F1",
+    "hw_version": "Ignored",
+    "max_duration": 45
+  },
+  "DfaRuntimeMatchAcrossPackets": {
+    "jsons": [
+      "DFA_ONLY_MATCH_ACROSS_PACKET.json"
+    ],
+    "XDATA_LISTS": "/project/users/QA/regression/data_store/regex/F1/dfa_only_compile/dfa_results/DFA_ONLY_MATCH_ACROSS_PACKET.list",
+    "description": "F1:match across packets for DFA patterns",
+    "rbm_size": "1m",
+    "syslog_level": "3",
+    "funos_branch": "master",
+    "run_target": "F1",
+    "hw_model":"F1",
+    "hw_version": "Ignored",
+    "max_duration": 45
+  },
+  "DfaRuntimeSerial1": {
+    "jsons": [
+      "DFA_ONLY_COMLX_SERIAL1.json"
+    ],
+    "XDATA_LISTS": "/project/users/QA/regression/data_store/regex/F1/dfa_only_compile/dfa_results/DFA_ONLY_COMLX_SERIAL1.list",
+    "description": "F1:serial1 DFA patterns",
+    "rbm_size": "1m",
+    "syslog_level": "3",
+    "funos_branch": "master",
+    "run_target": "F1",
+    "hw_model":"F1",
+    "hw_version": "Ignored",
+    "max_duration": 45
+  },
+    "DfaRuntimeSerial2": {
+    "jsons": [
+      "DFA_ONLY_COMLX_SERIAL2.json"
+    ],
+    "XDATA_LISTS": "/project/users/QA/regression/data_store/regex/F1/dfa_only_compile/dfa_results/DFA_ONLY_COMLX_SERIAL2.list",
+    "description": "F1:serial2  DFA patterns",
+    "rbm_size": "1m",
+    "syslog_level": "3",
+    "funos_branch": "master",
+    "run_target": "F1",
+    "hw_model":"F1",
+    "hw_version": "Ignored",
+    "max_duration": 45
+  }
+}

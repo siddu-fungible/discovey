@@ -292,7 +292,7 @@ class AssetManager:
         return host_spec
 
     @fun_test.safe
-    def manual_lock_assets(self, user, assets):
+    def manual_lock_assets(self, user, assets, expiration_time=None):
         from web.fun_test.models import Asset
         for asset_type, assets_for_type in assets.items():
             for asset in assets_for_type:
@@ -300,6 +300,8 @@ class AssetManager:
                     Asset.add_update(name=asset, type=asset_type)
                     a = Asset.objects.get(name=asset, type=asset_type)
                     a.manual_lock_user = user
+                    if expiration_time is not None:
+                        a.manual_lock_expiry_time = expiration_time
                     a.save()
                 except Exception as ex:   #TODO
                     print(str(ex))
