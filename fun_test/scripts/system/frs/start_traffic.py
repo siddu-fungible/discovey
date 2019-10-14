@@ -168,8 +168,8 @@ class FunTestCase1(FunTestCase):
 
     def run(self):
         ############## Before traffic #####################
-        # self.initial_debug_memory_stats = self.get_debug_memory_stats_initially(self.f_debug_memory_f1_0,
-        #                                                                         self.f_debug_memory_f1_1)
+        self.initial_debug_memory_stats = self.get_debug_memory_stats_initially(self.f_debug_memory_f1_0,
+                                                                                self.f_debug_memory_f1_1)
         self.capture_data(count=3, heading="Before starting traffic")
 
         fun_test.test_assert(True, "Initial debug stats is saved")
