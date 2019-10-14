@@ -1,4 +1,3 @@
-from lib.system.fun_test import *
 from start_traffic_helper import *
 from asset.asset_manager import AssetManager
 from lib.fun.fs import ComE, Bmc
@@ -35,7 +34,6 @@ class FunTestCase1(FunTestCase):
         # 1. 1min
         # 2. 1hour - 60 min
         # 3. 3.5 hour - 210min
-
         fs_name = fun_test.get_job_environment_variable("test_bed_type")
         self.fs = AssetManager().get_fs_by_name(fs_name)
 
@@ -53,9 +51,10 @@ class FunTestCase1(FunTestCase):
         self.details = {
             "fs": "fs-65",
             "duration": "1m",
-            "le_firewall": False,
+            "le_firewall": True,
             "interval": 5,
-            "boot_new_image": True
+            "boot_new_image": True,
+            "specific_app": []
         }
         if job_inputs:
             if "fs" in job_inputs:
@@ -68,10 +67,13 @@ class FunTestCase1(FunTestCase):
                 self.details["interval"] = job_inputs["interval"]
             if "boot_new_image" in job_inputs:
                 self.details["boot_new_image"] = job_inputs["boot_new_image"]
+            if "specific_app" in job_inputs:
+                self.details["specific_app"] = job_inputs["specific_app"]
 
         if self.details["boot_new_image"]:
             topology = topology_helper.deploy()
             fun_test.test_assert(topology, "Topology deployed")
+            self.verify_dpcsh_started()
             self.create_ec_volume(topology)
 
         fun_test.log(json.dumps(self.fs, indent=4))
@@ -81,6 +83,8 @@ class FunTestCase1(FunTestCase):
         self.power_output = fun_test.get_test_case_artifact_file_name(post_fix_name="power_output_logs.txt")
         fun_test.add_auxillary_file(description="Power shell script output", filename=self.power_shell)
         fun_test.add_auxillary_file(description="FS and F1 power output", filename=self.power_output)
+        self.f_power_shell = open(self.power_shell, 'w+')
+        self.f_power_output = open(self.power_output, 'w+')
 
         # Debug files
         self.f1_0_debug_memory_dpc_logs = fun_test.get_test_case_artifact_file_name(
@@ -99,6 +103,42 @@ class FunTestCase1(FunTestCase):
                                     filename=self.f1_0_debug_memory_difference_dpc_logs)
         fun_test.add_auxillary_file(description="debug memory dpcsh output difference stats F1_1",
                                     filename=self.f1_1_debug_memory_difference_dpc_logs)
+        self.f_debug_memory_f1_0 = open(self.f1_0_debug_memory_dpc_logs, "w+")
+        self.f_debug_memory_f1_1 = open(self.f1_1_debug_memory_dpc_logs, "w+")
+        self.f_debug_memory_difference_f1_0 = open(self.f1_0_debug_memory_difference_dpc_logs, "w+")
+        self.f_debug_memory_difference_f1_1 = open(self.f1_1_debug_memory_difference_dpc_logs, "w+")
+
+        # cdu files
+        self.f1_0_cdu_dpc_logs = fun_test.get_test_case_artifact_file_name(
+            post_fix_name="cdu_F1_0_logs.txt")
+        self.f1_1_cdu_dpc_logs = fun_test.get_test_case_artifact_file_name(
+            post_fix_name="cdu_F1_1_logs.txt")
+        fun_test.add_auxillary_file(description="cdu stats F1_0", filename=self.f1_0_cdu_dpc_logs)
+        fun_test.add_auxillary_file(description="cdu stats F1_1", filename=self.f1_1_cdu_dpc_logs)
+        self.f_cdu_f1_0 = open(self.f1_0_cdu_dpc_logs, "w+")
+        self.f_cdu_f1_1 = open(self.f1_1_cdu_dpc_logs, "w+")
+
+        # EQM files
+        self.f1_0_eqm_dpc_logs = fun_test.get_test_case_artifact_file_name(
+            post_fix_name="eqm_F1_0_logs.txt")
+        self.f1_1_eqm_dpc_logs = fun_test.get_test_case_artifact_file_name(
+            post_fix_name="eqm_F1_1_logs.txt")
+        fun_test.add_auxillary_file(description="eqm stats F1_0", filename=self.f1_0_eqm_dpc_logs)
+        fun_test.add_auxillary_file(description="eqm stats F1_1", filename=self.f1_1_eqm_dpc_logs)
+        self.f_eqm_f1_0 = open(self.f1_0_eqm_dpc_logs, "w+")
+        self.f_eqm_f1_1 = open(self.f1_1_eqm_dpc_logs, "w+")
+
+        # BM files
+        self.f1_0_bam_dpc_logs = fun_test.get_test_case_artifact_file_name(
+            post_fix_name="bam_F1_0_logs.txt")
+        self.f1_1_bam_dpc_logs = fun_test.get_test_case_artifact_file_name(
+            post_fix_name="bam_F1_1_logs.txt")
+        fun_test.add_auxillary_file(description="bam stats F1_0", filename=self.f1_0_bam_dpc_logs)
+        fun_test.add_auxillary_file(description="bam stats F1_1", filename=self.f1_1_bam_dpc_logs)
+        self.f_bam_f1_0 = open(self.f1_0_bam_dpc_logs, "w+")
+        self.f_bam_f1_1 = open(self.f1_1_bam_dpc_logs, "w+")
+
+        #TODO: Clear the Uart log files if the
 
         # Traffic
         self.methods = {"crypto": crypto, "zip": zip_deflate, "rcnvme": rcnvme, "fio": fio}
@@ -107,22 +147,10 @@ class FunTestCase1(FunTestCase):
             self.test_duration = 60
         elif self.details["duration"] == "1h":
             self.test_duration = 3600
-        elif self.details["duration"] == "4h":
-            self.test_duration = 14400
+        elif self.details["duration"] == "3h":
+            self.test_duration = 10800
 
     def run(self):
-        # Initialise the
-        # Power files
-        self.f_power_shell = open(self.power_shell, 'w+')
-        self.f_power_output = open(self.power_output, 'w+')
-
-        # Debug memory files
-
-        self.f_debug_memory_f1_0 = open(self.f1_0_debug_memory_dpc_logs, "w+")
-        self.f_debug_memory_f1_1 = open(self.f1_1_debug_memory_dpc_logs, "w+")
-        self.f_debug_memory_difference_f1_0 = open(self.f1_0_debug_memory_difference_dpc_logs, "w+")
-        self.f_debug_memory_difference_f1_1 = open(self.f1_1_debug_memory_difference_dpc_logs, "w+")
-
         ############## Before traffic #####################
         self.initial_debug_memory_stats = self.get_debug_memory_stats_initially(self.f_debug_memory_f1_0,
                                                                                 self.f_debug_memory_f1_1)
@@ -137,10 +165,12 @@ class FunTestCase1(FunTestCase):
         come_handle.command("pwd")
 
         app_params = get_params_for_time.get(self.test_duration)
+        if self.details["specific_app"]:
+            app_params = get_params_for_time.get(self.test_duration, specific_field=self.details["specific_app"])
         fun_test.log("App parameters: {}".format(app_params))
 
         if self.details["le_firewall"]:
-            le_firewall(self.test_duration)
+            le_firewall(self.test_duration, self.details["boot_new_image"])
 
         for app, parameters in app_params.iteritems():
             parameters["f1"] = 0
@@ -169,9 +199,22 @@ class FunTestCase1(FunTestCase):
         self.f_power_output.close()
         self.f_debug_memory_f1_0.close()
         self.f_debug_memory_f1_1.close()
+        self.f_cdu_f1_0.close()
+        self.f_cdu_f1_1.close()
 
     def cleanup(self):
-        pass
+        if not self.details["boot_new_image"]:
+            bmc_handle = Bmc(host_ip=self.fs['bmc']['mgmt_ip'],
+                             ssh_username=self.fs['bmc']['mgmt_ssh_username'],
+                             ssh_password=self.fs['bmc']['mgmt_ssh_password'],
+                             set_term_settings=True,
+                             disable_uart_logger=False)
+            bmc_handle.set_prompt_terminator(r'# $')
+            # bmc_handle.cleanup()
+            artifact_file_name_f1_0 = bmc_handle.get_uart_log_file(0)
+            artifact_file_name_f1_1 = bmc_handle.get_uart_log_file(1)
+            fun_test.add_auxillary_file(description="DUT_0_fs-65_F1_0 UART Log", filename=artifact_file_name_f1_0)
+            fun_test.add_auxillary_file(description="DUT_0_fs-65_F1_1 UART Log", filename=artifact_file_name_f1_1)
 
     ############## power #############
     def power_output_to_file(self, count, f_power_shell, f_power_output, heading):
@@ -220,6 +263,49 @@ class FunTestCase1(FunTestCase):
                 interval = self.details["interval"]
             fun_test.sleep("before next iteration", seconds=interval)
             file_helper.add_data(file_handler, one_dataset, heading=heading)
+        come_handle.destroy()
+
+    ############# CDU ########
+    def cdu_stats(self, f1, count, file_cdu, heading):
+        come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
+                           ssh_username=self.fs['come']['mgmt_ssh_username'],
+                           ssh_password=self.fs['come']['mgmt_ssh_password'])
+        for i in range(count):
+            one_dataset = {}
+            dpcsh_output = dpcsh_commands.cdu(come_handle=come_handle, f1=f1)
+            one_dataset["time"] = datetime.datetime.now()
+            one_dataset["output"] = dpcsh_output
+            fun_test.sleep("before next iteration", seconds=self.details["interval"])
+            file_helper.add_data(file_cdu, one_dataset, heading=heading)
+        come_handle.destroy()
+
+    ############# EQM ################
+    def eqm_stats(self, f1, count, file_eqm, heading):
+        come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
+                           ssh_username=self.fs['come']['mgmt_ssh_username'],
+                           ssh_password=self.fs['come']['mgmt_ssh_password'])
+        for i in range(count):
+            one_dataset = {}
+            dpcsh_output = dpcsh_commands.eqm(come_handle=come_handle, f1=f1)
+            one_dataset["time"] = datetime.datetime.now()
+            one_dataset["output"] = dpcsh_output
+            fun_test.sleep("before next iteration", seconds=self.details["interval"])
+            file_helper.add_data(file_eqm, one_dataset, heading=heading)
+        come_handle.destroy()
+
+    ############# BAM ################
+    def bam_stats(self, f1, count, file_bm, heading):
+        come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
+                           ssh_username=self.fs['come']['mgmt_ssh_username'],
+                           ssh_password=self.fs['come']['mgmt_ssh_password'])
+        for i in range(count):
+            one_dataset = {}
+            dpcsh_output = dpcsh_commands.bam(come_handle=come_handle, f1=f1)
+            one_dataset["time"] = datetime.datetime.now()
+            one_dataset["output"] = dpcsh_output
+            fun_test.sleep("before next iteration", seconds=self.details["interval"])
+            file_helper.add_data(file_bm, one_dataset, heading=heading)
+        come_handle.destroy()
 
     def get_debug_memory_stats_initially(self, f_debug_memory_f1_0, f_debug_memory_f1_1):
         result = {}
@@ -237,17 +323,21 @@ class FunTestCase1(FunTestCase):
             else:
                 file_helper.add_data(f_debug_memory_f1_1, one_dataset, heading=heading)
             result["f1_{}".format(f1)] = one_dataset.copy()
+        come_handle.destroy()
         return result
 
-    ####### Data Capturing function
+    ####### Data Capturing function ############
 
     def capture_data(self, count, heading):
+        # power stats
         thread_id_power = fun_test.execute_thread_after(func=self.power_output_to_file,
                                                         time_in_seconds=1,
                                                         count=count,
                                                         f_power_shell=self.f_power_shell,
                                                         f_power_output=self.f_power_output,
                                                         heading=heading)
+
+        # Debug memory F1_0
 
         fun_test.test_assert(True, "Started capturing the power logs {}".format(heading))
         thread_id_debug_memory_f1_0 = fun_test.execute_thread_after(func=self.dpcsh_debug_memory,
@@ -259,6 +349,7 @@ class FunTestCase1(FunTestCase):
                                                                     heading=heading)
 
         fun_test.test_assert(True, "Started capturing the debug memory logs {} on F1_0".format(heading))
+        # Debug memory F1_1
         thread_id_debug_memory_f1_1 = fun_test.execute_thread_after(func=self.dpcsh_debug_memory,
                                                                     time_in_seconds=3,
                                                                     f1=1,
@@ -268,15 +359,81 @@ class FunTestCase1(FunTestCase):
                                                                     heading=heading)
         fun_test.test_assert(True, "Started capturing the debug memory logs {} on F1_1".format(heading))
 
+        # CDU stats
+        thread_id_cdu_f1_0 = fun_test.execute_thread_after(func=self.cdu_stats,
+                                                           time_in_seconds=4,
+                                                           count=count,
+                                                           f1=0,
+                                                           file_cdu=self.f_cdu_f1_0,
+                                                           heading=heading)
+        fun_test.test_assert(True, "Started capturing the peek stats/cdu logs {} on F1_0".format(heading))
+
+        thread_id_cdu_f1_1 = fun_test.execute_thread_after(func=self.cdu_stats,
+                                                           time_in_seconds=5,
+                                                           count=count,
+                                                           f1=1,
+                                                           file_cdu=self.f_cdu_f1_1,
+                                                           heading=heading)
+        fun_test.test_assert(True, "Started capturing the peek stats/cdu logs {} on F1_1".format(heading))
+
+        # EQM stats
+
+        thread_id_eqm_f1_0 = fun_test.execute_thread_after(func=self.eqm_stats,
+                                                           time_in_seconds=6,
+                                                           count=count,
+                                                           f1=0,
+                                                           file_eqm=self.f_eqm_f1_0,
+                                                           heading=heading)
+        fun_test.test_assert(True, "Started capturing the peek stats/eqm logs {} on F1_0".format(heading))
+
+        thread_id_eqm_f1_1 = fun_test.execute_thread_after(func=self.eqm_stats,
+                                                           time_in_seconds=7,
+                                                           count=count,
+                                                           f1=1,
+                                                           file_eqm=self.f_eqm_f1_1,
+                                                           heading=heading)
+        fun_test.test_assert(True, "Started capturing the peek stats/eqm logs {} on F1_1".format(heading))
+
+        # BM stats
+
+        thread_id_bam_f1_0 = fun_test.execute_thread_after(func=self.bam_stats,
+                                                           time_in_seconds=8,
+                                                           count=count,
+                                                           f1=0,
+                                                           file_bm=self.f_bam_f1_0,
+                                                           heading=heading)
+        fun_test.test_assert(True, "Started capturing the peek stats/bam logs {} on F1_0".format(heading))
+
+        thread_id_bam_f1_1 = fun_test.execute_thread_after(func=self.bam_stats,
+                                                           time_in_seconds=9,
+                                                           count=count,
+                                                           f1=1,
+                                                           file_bm=self.f_bam_f1_1,
+                                                           heading=heading)
+        fun_test.test_assert(True, "Started capturing the peek stats/bam logs {} on F1_1".format(heading))
+
         fun_test.join_thread(thread_id_power)
         fun_test.join_thread(thread_id_debug_memory_f1_0)
         fun_test.join_thread(thread_id_debug_memory_f1_1)
+        fun_test.join_thread(thread_id_cdu_f1_0)
+        fun_test.join_thread(thread_id_cdu_f1_1)
+        fun_test.join_thread(thread_id_eqm_f1_0)
+        fun_test.join_thread(thread_id_eqm_f1_1)
+        fun_test.join_thread(thread_id_bam_f1_0)
+        fun_test.join_thread(thread_id_bam_f1_1)
         fun_test.test_assert(True, "Power logs captured successfully")
         fun_test.test_assert(True, "Debug memory on F1_0 logs captured successfully")
-        fun_test.test_assert(True, "Debug memory on F1_0 logs captured successfully")
+        fun_test.test_assert(True, "Debug memory on F1_1 logs captured successfully")
+        fun_test.test_assert(True, "CDU logs on F1_0 captured successfully")
+        fun_test.test_assert(True, "CDU logs on F1_1 captured successfully")
+        fun_test.test_assert(True, "EQM logs on F1_0 captured successfully")
+        fun_test.test_assert(True, "EQM logs on F1_1 captured successfully")
+        fun_test.test_assert(True, "BAM logs on F1_0 captured successfully")
+        fun_test.test_assert(True, "BAM logs on F1_1 captured successfully")
 
     ##### EC vol creation
     def create_ec_volume(self, topology):
+        fun_test.sleep("Getting started with creation of 4:2 EC volume", seconds=30)
         transport = "PCI"
         huid = [3, 2]
         ctlid = [2, 2]
@@ -402,8 +559,20 @@ class FunTestCase1(FunTestCase):
 
         except Exception as ex:
             fun_test.critical(ex)
-
+        fun_test.sleep("for fio to settle", seconds=30)
         fun_test.test_assert(result, "Created 4:2 EC volume")
+
+    def verify_dpcsh_started(self):
+        come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
+                           ssh_username=self.fs['come']['mgmt_ssh_username'],
+                           ssh_password=self.fs['come']['mgmt_ssh_password'])
+        # out = come_handle.command("cd $WORKSPACE/FunSDK/bin/Linux")
+        # if "No such file" in out or "not found" in out:
+        come_handle.enter_sudo()
+        come_handle.command("cd /scratch/FunSDK/bin/Linux")
+        come_handle.command("./dpcsh --pcie_nvme_sock=/dev/nvme0 --nvme_cmd_timeout=600000 --tcp_proxy=40220 &> /tmp/f1_0_dpc.txt &")
+        come_handle.command("./dpcsh --pcie_nvme_sock=/dev/nvme1 --nvme_cmd_timeout=600000 --tcp_proxy=40221 &> /tmp/f1_1_dpc.txt &")
+        come_handle.exit_sudo()
 
 
 if __name__ == "__main__":

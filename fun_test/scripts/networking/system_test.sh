@@ -26,6 +26,24 @@ else
 fi
 echo "Using workspace $MY_SCRIPT_VARIABLE"
 
+function setup_dpc {
+    cmd=`ps -aef | grep dpc | grep -v grep -c`
+    if [ $cmd -eq 0 ]
+    then
+        echo "Dpcsh over proxy not started. Starting it"
+        cd $MY_SCRIPT_VARIABLE/opt/fungible/FunSDK/bin/Linux/dpcsh/; ./dpcsh --pcie_nvme_sock=/dev/nvme0 --nvme_cmd_timeout=600000 --tcp_proxy=40220 &> /tmp/f1_0_dpc.txt &
+        cd $MY_SCRIPT_VARIABLE/opt/fungible/FunSDK/bin/Linux/dpcsh/; ./dpcsh --pcie_nvme_sock=/dev/nvme1 --nvme_cmd_timeout=600000 --tcp_proxy=40221 &> /tmp/f1_1_dpc.txt &
+        process1=`ps -aef | grep dpc | grep -v grep -c`
+        if [ $process1 -ne 2 ]
+        then
+            echo "Dpcsh processes not started"
+        fi
+    elif [ $cmd -eq 2 ]
+    then
+        echo "Dpcsh process already running"
+    fi
+}
+
 function stats() {
     s=$1
     echo "Capturing stats $s test"
@@ -69,10 +87,10 @@ function check_nvme_cli {
 		dpkg -s $pkg | grep -x 'Status: install ok installed'
         if [ $? -ne 0 ]
         then
-            echo "Package $pkg not installed. Please check"
+            echo "Package nvme-cli not installed. Please check"
             exit 1
         fi
-        echo "Installed package $pkg"
+        echo "Installed package nvme-cli"
 	fi
 }
 
@@ -178,9 +196,9 @@ function storage_setup() {
 
     for j in `eval echo {1..$num_ssds_per_f1}`
     do
-        cmd="sudo nvme create-ns --nsze=${nsze} --ncap=${ncap} --block-size=${block_size} ${device}"
+        cmd="sudo nvme create-ns --nsze=${nsze} --ncap=${ncap} ${device}"
         echo "$cmd"
-        create_op=`sudo nvme create-ns --nsze=${nsze} --ncap=${ncap} --block-size=${block_size} ${device}`
+        create_op=`sudo nvme create-ns --nsze=${nsze} --ncap=${ncap} ${device}`
         create_status=$?
         if [ ${create_status} -ne 0 ]
         then
@@ -348,11 +366,33 @@ function usage {
 	exit 1
 }
 
+function cleanup {
+    echo "kill all docker conttainers"
+    cmd=`docker kill $(docker ps -q)`
+    echo "Remove all test files"
+    rm -rf test* f1*
+    echo "#####Detaching and deleting nvme namespaces#####"
+    f1_id=$(($num_f1s - 1))
+    for i in `eval echo {0..$f1_id}`
+    do
+        device="/dev/nvme"${i}
+        for j in `eval echo {1..$num_ssds_per_f1}`
+        do
+            sudo nvme detach-ns -n ${j} -c ${controller_id} ${device}
+            sudo nvme delete-ns -n ${j} ${device}
+        done
+    done
+}
+
 #### MAIN ####
 if [ -z "$1" ]; then runtime=30; else runtime=$1; fi
 
+echo "######### Start Dpcsh ##########"
+setup_dpc
+
 echo "########Installing libaio and fio########"
 generic_setup
+
 echo "#####Check nvme-cli installed########"
 check_nvme_cli
 
@@ -375,7 +415,7 @@ do
         echo "Storage setup successful for F1-$f1"
     fi
 done
-
+sleep 60
 echo "Capture stats before test"
 stats before
 
@@ -387,3 +427,6 @@ stats after
 
 echo "Verifying output results"
 verify_results1
+
+echo "Call cleanup"
+cleanup

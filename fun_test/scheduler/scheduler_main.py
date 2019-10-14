@@ -91,9 +91,13 @@ class TestBedWorker(Thread):
             self.warn_list.remove(test_bed_name)
         except Exception as ex:
             scheduler_logger.exception(str(ex))
+        finally:
+            if test_bed_name in self.warn_list:
+                self.warn_list.remove(test_bed_name)
 
     @debug_function
     def asset_unlock_dispatch(self, asset_name, asset_type):
+        composite_key = None
         try:
             composite_key = asset_name + asset_type
             asset = get_asset(asset_name=asset_name, asset_type=asset_type)
@@ -108,9 +112,12 @@ class TestBedWorker(Thread):
                     asset.save()
                     if composite_key in self.asset_lock_timers:
                         del self.asset_lock_timers[composite_key]
-            self.warn_list.remove(composite_key)
+            self.asset_warn_list.remove(composite_key)
         except Exception as ex:
             scheduler_logger.exception(str(ex))
+        finally:
+            if composite_key and composite_key in self.asset_warn_list:
+                self.asset_warn_list.remove(composite_key)
 
     def is_asset_in_warn_list(self, asset):
         found = False

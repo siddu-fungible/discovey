@@ -414,11 +414,9 @@ class RawVolumeLocalPerfTestcase(FunTestCase):
                 for index, host in enumerate(self.server_dict):
                     fun_test.test_assert(fun_test.shared_variables["fio"][index],
                                          "FIO {} test with the Block Size {} IO depth {} and Numjobs {} on {}"
-                                         .format(mode, fio_block_size, fio_iodepth,
-                                                 fio_numjobs , host))
+                                         .format(mode, fio_block_size, fio_iodepth, fio_numjobs , host))
                     for op, stats in fun_test.shared_variables["fio"][index].items():
                         if op not in aggr_fio_output[fio_iodepth]:
-
                             aggr_fio_output[fio_iodepth][op] = {}
                         aggr_fio_output[fio_iodepth][op] = Counter(aggr_fio_output[fio_iodepth][op]) + \
                                                        Counter(fun_test.shared_variables["fio"][index][op])
@@ -426,6 +424,12 @@ class RawVolumeLocalPerfTestcase(FunTestCase):
                 fun_test.log("Aggregated FIO Command Output:\n{}".format(aggr_fio_output[fio_iodepth]))
                 fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval),
                                self.iter_interval)
+                for op, stats in aggr_fio_output[fio_iodepth].items():
+                    for field, value in stats.items():
+                        if "latency" in field:
+                            #change divide by 2 by number of VMs involved
+                            aggr_fio_output[fio_iodepth][op][field] = int(round(value) / 2)
+                fun_test.log("Processed Aggregated FIO Command Output:\n{}".format(aggr_fio_output[fio_iodepth]))
 
                 #for op, stats in fio_output[mode][combo].items():
                 for op, stats in aggr_fio_output[fio_iodepth].items():

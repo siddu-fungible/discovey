@@ -13,6 +13,24 @@ import time
 import datetime
 
 CHECK_HPING3_ON_HOSTS = True
+# FPG_INTERFACES = (0, 2, 4, 6, 8, 10, 12, 14)
+
+
+def lock_cpu_freq(funeth_obj, hu):
+    linux_obj = funeth_obj.linux_obj_dict[hu]
+    num_cores = int(linux_obj.command(command="nproc"))
+    for x in range(0, num_cores):
+        cpu_name = "cpu" + str(x)
+        linux_obj.sudo_command(command="echo performance > /sys/devices/system/cpu/{}/cpufreq/scaling_governor".
+                               format(cpu_name))
+    linux_obj.sudo_command("systemctl disable ondemand")
+    linux_obj.command(command="cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor")
+    linux_obj.sudo_command("iptables -F && ip6tables -F")
+    linux_obj.sudo_command(command="cpupower idle-set -e 0")
+    for i in range(1, 5):
+        linux_obj.sudo_command(command="cpupower idle-set -d %s" % i)
+    linux_obj.sudo_command("cpupower monitor")
+    linux_obj.disconnect()
 
 
 def clean_testbed(fs_name, hu_host_list):
@@ -68,7 +86,7 @@ class ScriptSetup(FunTestScript):
         single_f1 = False
         if test_bed_type == 'fs-fcp-scale':
             fs_list = testbed_info['fs'][test_bed_type]["fs_list"]
-            fs_index=0
+            fs_index = 0
         else:
             single_f1 = True
             fs_list = [test_bed_type]
@@ -120,8 +138,10 @@ class ScriptSetup(FunTestScript):
         fun_test.test_assert(topology, "Topology deployed")
 
     def cleanup(self):
-        fun_test.log("Cleanup")
-        fun_test.shared_variables["topology"].cleanup()
+        # fun_test.log("Cleanup")
+        # fun_test.shared_variables["topology"].cleanup()
+        fun_test.log("Not doing cleanup..")
+        fun_test.shared_variables["topology"].cleaned_up = True
 
 
 class TestHostPCIeLanes(FunTestCase):
@@ -196,6 +216,7 @@ class BringupPCIeHosts(FunTestCase):
         self.set_test_details(id=2, summary="Bringup PCIe hosts",
                               steps="""
                                       1. use Funeth library and tc_config to bringup Hosts
+                                      2. Tune hosts for perf
                                       """)
 
     def setup(self):
@@ -208,7 +229,13 @@ class BringupPCIeHosts(FunTestCase):
         tb_config_obj = tb_configs.TBConfigs(test_bed_type)
         funeth_obj = Funeth(tb_config_obj)
         fun_test.shared_variables['funeth_obj'] = funeth_obj
-        setup_hu_host(funeth_obj, update_driver=False, num_queues=4)
+        setup_hu_host(funeth_obj, update_driver=False, num_queues=8)
+
+        fun_test.log("Configure irq affinity")
+        for hu in funeth_obj.hu_hosts:
+            funeth_obj.configure_irq_affinity(hu, tx_or_rx='tx', cpu_list=range(0, 20))
+            funeth_obj.configure_irq_affinity(hu, tx_or_rx='rx', cpu_list=range(0, 20))
+            lock_cpu_freq(funeth_obj=funeth_obj, hu=hu)
 
     def cleanup(self):
         pass
@@ -266,6 +293,7 @@ class VlanPingTests(FunTestCase):
     def cleanup(self):
         pass
 
+
 class HuHostPingTest(FunTestCase):
     def describe(self):
         self.set_test_details(id=4, summary="Ping hosts",
@@ -286,6 +314,7 @@ class HuHostPingTest(FunTestCase):
                 fun_test.test_assert(expression=False, message="%s can't ping %s" % (linux_obj, dest_ip))
 
         fun_test.shared_variables["host_ping_result"] &= result
+        linux_obj.disconnect()
 
     def run(self):
         test_bed_type = fun_test.get_job_environment_variable('test_bed_type')
@@ -301,6 +330,7 @@ class HuHostPingTest(FunTestCase):
             fun_test.join_thread(fun_test_thread_id=ping_thread_id, sleep_time=1)
 
         fun_test.test_assert(expression=fun_test.shared_variables["host_ping_result"], message="Ping test")
+
     def cleanup(self):
         pass
 

@@ -2,6 +2,8 @@ import dpcsh_nocli
 from lib.system.fun_test import *
 from lib.host.linux import Linux
 
+vm_1 = "10.1.20.52"
+vm_2 = "10.1.23.228"
 
 def crypto(come_handle, vp_iters=500000, src='ddr', dst='ddr', f1=0, nvps=48):
     result = False
@@ -84,12 +86,18 @@ def fio(come_handle, f1=0, num_jobs=8, run_time=80, iodepth=16):
     return result
 
 
-def le_firewall(run_time):
-    run_time += 200
+def le_firewall(run_time, new_image):
+    if new_image:
+        run_time += 400
+    else:
+        run_time += 200
     kill_le_firewall()
-    cmd = '''python run_nu_transit_only.py --inputs '{"speed":"SPEED_100G", "run_time":%s}' ''' % run_time
+    if new_image:
+        cmd = '''python run_nu_transit_only.py --inputs '{"speed":"SPEED_100G", "run_time":%s, "initiate":true}' ''' % run_time
+    else:
+        cmd = '''python run_nu_transit_only.py --inputs '{"speed":"SPEED_100G", "run_time":%s, "initiate":false}' ''' % run_time
     print cmd
-    host_1 = Linux(host_ip="10.1.20.52", ssh_username="localadmin", ssh_password="Precious1*")
+    host_1 = Linux(host_ip=vm_1, ssh_username="localadmin", ssh_password="Precious1*")
     host_1.enter_sudo()
     host_1.command('export WORKSPACE="/home/localadmin/Integration"')
     host_1.command('export PYTHONPATH="/home/localadmin/Integration/fun_test"')
@@ -97,9 +105,9 @@ def le_firewall(run_time):
     host_1.start_bg_process(cmd)
     host_1.command("pwd")
     host_1.exit_sudo()
-    fun_test.test_assert(True, "Le-firewall started on {} VM for {} seconds".format("10.1.20.52", run_time))
+    fun_test.test_assert(True, "Le-firewall started on {} VM for {} seconds".format(vm_1, run_time))
 
-    host_2 = Linux(host_ip="10.1.23.150", ssh_username="localadmin", ssh_password="r00t.!@#")
+    host_2 = Linux(host_ip=vm_2, ssh_username="localadmin", ssh_password="r00t.!@#")
     host_2.enter_sudo()
     host_2.command("cd /home/localadmin/fungible_automation/Integration/fun_test/scripts/power_monitor")
     host_2.command("git checkout ranga/power")
@@ -108,16 +116,18 @@ def le_firewall(run_time):
     host_2.start_bg_process(cmd)
     host_2.command("pwd")
     host_2.exit_sudo()
-    fun_test.sleep("for Le-firewall to start traffic", seconds=100)
     host_1.destroy()
     host_2.destroy()
-
-    fun_test.test_assert(True, "Le-firewall started on {} VM for {} secoonds".format("10.1.23.150", run_time))
+    if new_image:
+        fun_test.sleep("for Le-firewall to start traffic", seconds=360)
+    else:
+        fun_test.sleep("for Le-firewall to start traffic", seconds=100)
+    fun_test.test_assert(True, "Le-firewall started on {} VM for {} seconds".format(vm_2, run_time))
 
 
 def kill_le_firewall():
-    host_1 = Linux(host_ip="10.1.20.52", ssh_username="localadmin", ssh_password="Precious1*")
-    host_2 = Linux(host_ip="10.1.23.150", ssh_username="localadmin", ssh_password="r00t.!@#")
+    host_1 = Linux(host_ip=vm_1, ssh_username="localadmin", ssh_password="Precious1*")
+    host_2 = Linux(host_ip=vm_2, ssh_username="localadmin", ssh_password="r00t.!@#")
     try:
 
         for host in host_1, host_2:
@@ -134,9 +144,34 @@ def kill_le_firewall():
         fun_test.log(ex)
 
 
+def start_le_firewall():
+    run_time = 30
+    kill_le_firewall()
+    cmd = '''python run_nu_transit_only.py --inputs '{"speed":"SPEED_100G", "run_time":%s, "initiate":true}' '''%run_time
+    host_1 = Linux(host_ip=vm_1, ssh_username="localadmin", ssh_password="Precious1*")
+    host_1.enter_sudo()
+    host_1.command('export WORKSPACE="/home/localadmin/Integration"')
+    host_1.command('export PYTHONPATH="/home/localadmin/Integration/fun_test"')
+    host_1.command("cd /home/localadmin/Integration/fun_test/scripts/power_monitor")
+    host_1.start_bg_process(cmd)
+    host_1.command("pwd")
+    host_1.exit_sudo()
+    fun_test.test_assert(True, "Le-firewall initiate on {} VM".format(vm_1))
 
+    host_2 = Linux(host_ip=vm_2, ssh_username="localadmin", ssh_password="r00t.!@#")
+    host_2.enter_sudo()
+    host_2.command("cd /home/localadmin/fungible_automation/Integration/fun_test/scripts/power_monitor")
+    host_2.command("git checkout ranga/power")
+    host_2.command('export WORKSPACE="/home/localadmin/fungible_automation/Integration"')
+    host_2.command('export PYTHONPATH="/home/localadmin/fungible_automation/Integration/fun_test"')
+    host_2.start_bg_process(cmd)
+    host_2.command("pwd")
+    host_2.exit_sudo()
+    fun_test.sleep("to initiate Le-firewall", seconds=600)
 
-
+    host_1.destroy()
+    host_2.destroy()
+    fun_test.test_assert(True, "Le-firewall initiated on {} VM".format(vm_2))
 
 
 if __name__ == "__main__":
