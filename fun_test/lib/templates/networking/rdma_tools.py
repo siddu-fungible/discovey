@@ -1,6 +1,7 @@
 from lib.system.fun_test import fun_test
 from lib.host.linux import Linux
 import re
+import math
 
 LD_LIBRARY_PATH = "$LD_LIBRARY_PATH:/mnt/ws/fungible-rdma-core/build/lib/"
 PATH = "$PATH:/mnt/ws/fungible-rdma-core/build/bin/:/mnt/ws/fungible-perftest/"
@@ -242,6 +243,10 @@ class Rocetools:
                 grep_line = 1
             content = self.host.command("grep -i 'bytes' -A {} {} | tail -1".format(grep_line, filepath))
             lines = content.split()
+            total_values = len(lines)
+            for x in range(0, total_values):
+                if lines[x] == "inf" or math.isinf(float(lines[x])):
+                    lines[x] = -1
             size = lines[0]
             iterations = lines[1]
             bw_peak = lines[2]
@@ -258,6 +263,11 @@ class Rocetools:
             if perf:
                 content = self.host.command("grep -i 'bytes' -A 3 {} | tail -1".format(filepath))
                 lines = content.split()
+                total_values = len(lines)
+                for x in range(0, total_values):
+                    if lines[x] == "inf" or math.isinf(float(lines[x])):
+                        lines[x] = -1
+
                 size = lines[0]
                 iterations = lines[4]
                 t_mix = lines[5]
@@ -270,6 +280,10 @@ class Rocetools:
             else:
                 content = self.host.command("grep -i 'bytes' -A 1 {} | tail -1".format(filepath))
                 lines = content.split()
+                total_values = len(lines)
+                for x in range(0, total_values):
+                    if lines[x] == "inf" or math.isinf(float(lines[x])):
+                        lines[x] = -1
                 size = lines[0]
                 iterations = lines[1]
                 t_mix = lines[2]

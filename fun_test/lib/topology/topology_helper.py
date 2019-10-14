@@ -215,10 +215,13 @@ class TopologyHelper:
 
 
     @fun_test.safe
-    def get_available_duts(self):
+    def get_available_duts(self, pool_member_type=None):
         if not self.expanded_topology:
             self.expanded_topology = self.get_expanded_topology()
-        return self.expanded_topology.get_duts()
+        duts = self.expanded_topology.get_duts()
+        if pool_member_type is not None:
+            duts = filter(lambda x: x.get_pool_member_type() == pool_member_type, duts)
+        return duts
 
     @fun_test.safe
     def get_available_hosts(self):

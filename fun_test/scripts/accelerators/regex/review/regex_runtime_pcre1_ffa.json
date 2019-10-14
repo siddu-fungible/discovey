@@ -1,0 +1,59 @@
+{
+  "Pcre1FfaRuntime": {
+    "jsons": [
+      "PCRE_FFA1_BASIC_RUNTIME.json"
+    ],
+    "XDATA_LISTS": "/project/users/QA/regression/data_store/regex/F1/pcre1_ffa/ffa_results/PCRE_FFA1_BASIC_RUNTIME.list",
+    "description": "F1:testing basic lsu actions for PCRE patterns",
+    "rbm_size": "1m",
+    "syslog_level": "3",
+    "funos_branch": "master",
+    "run_target": "F1",
+    "hw_model":"F1",
+    "hw_version": "Ignored",
+    "max_duration": 45
+  },
+  "Pcre1FfaRuntimeSerial1": {
+    "jsons": [
+      "PCRE_FFA1_SERIAL1.json"
+    ],
+    "XDATA_LISTS": "/project/users/QA/regression/data_store/regex/F1/pcre1_ffa/ffa_results/PCRE_FFA1_SERIAL1.list",
+    "description": "F1:Seraial 1 ,PCRE patterns",
+    "rbm_size": "1m",
+    "syslog_level": "3",
+    "funos_branch": "master",
+    "run_target": "F1",
+    "hw_model":"F1",
+    "hw_version": "Ignored",
+    "max_duration": 45
+  },
+  "Pcre1FfaRuntimeSerial2": {
+    "jsons": [
+      "PCRE_FFA1_SERIAL2.json"
+    ],
+    "XDATA_LISTS": "/project/users/QA/regression/data_store/regex/F1/pcre1_ffa/ffa_results/PCRE_FFA1_SERIAL2.list",
+    "description": "F1:Seraial 2 ,PCRE patterns",
+    "rbm_size": "1m",
+    "syslog_level": "3",
+    "funos_branch": "master",
+    "run_target": "F1",
+    "hw_model":"F1",
+    "hw_version": "Ignored",
+    "max_duration": 45
+  },
+
+   "Pcre1FfaMatchAcrossPackets": {
+    "jsons": [
+      "PCRE_FFA1_MATCH_ACROSS_PACKET.json"
+    ],
+    "XDATA_LISTS": "/project/users/QA/regression/data_store/regex/F1/pcre1_ffa/ffa_results/PCRE_FFA1_MATCH_ACROSS_PACKET.list",
+    "description": "F1:match across packet ,PCRE patterns",
+    "rbm_size": "1m",
+    "syslog_level": "3",
+    "funos_branch": "master",
+    "run_target": "F1",
+    "hw_model":"F1",
+    "hw_version": "Ignored",
+    "max_duration": 45
+  }
+}
