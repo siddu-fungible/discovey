@@ -6,6 +6,8 @@ import dpcsh_commands
 import file_helper
 import debug_memory_calculation
 from lib.topology.topology_helper import TopologyHelper
+from fun_global import PerfUnit, FunPlatform
+from web.fun_test.analytics_models_helper import get_data_collection_time, ModelHelper
 
 from scripts.storage.storage_helper import *
 
@@ -54,7 +56,8 @@ class FunTestCase1(FunTestCase):
             "le_firewall": True,
             "interval": 5,
             "boot_new_image": True,
-            "specific_app": []
+            "specific_app": [],
+            "add_to_database": False
         }
         if job_inputs:
             if "fs" in job_inputs:
@@ -69,6 +72,8 @@ class FunTestCase1(FunTestCase):
                 self.details["boot_new_image"] = job_inputs["boot_new_image"]
             if "specific_app" in job_inputs:
                 self.details["specific_app"] = job_inputs["specific_app"]
+            if "add_to_database" in job_inputs:
+                self.details["add_to_database"] = job_inputs["add_to_database"]
 
         if self.details["boot_new_image"]:
             topology = topology_helper.deploy()
@@ -85,6 +90,7 @@ class FunTestCase1(FunTestCase):
         fun_test.add_auxillary_file(description="FS and F1 power output", filename=self.power_output)
         self.f_power_shell = open(self.power_shell, 'w+')
         self.f_power_output = open(self.power_output, 'w+')
+        self.upload_first_data = True
 
         # Debug memory files
         self.f1_0_debug_memory_dpc_logs = fun_test.get_test_case_artifact_file_name(
@@ -242,13 +248,17 @@ class FunTestCase1(FunTestCase):
         bmc_handle.set_prompt_terminator(r'# $')
 
         for i in range(count):
-            raw_output, cal_output = bmc_commands.power_manager(bmc_handle=bmc_handle)
+            raw_output, cal_output, pro_data = bmc_commands.power_manager(bmc_handle=bmc_handle)
             time_now = datetime.datetime.now()
             print_data = {"output": raw_output, "time": time_now}
             file_helper.add_data(f_power_shell, print_data, heading=heading)
             print_data = {"output": cal_output, "time": time_now}
             file_helper.add_data(f_power_output, print_data, heading=heading)
             fun_test.sleep("before next iteration", seconds=self.details["interval"])
+            if heading == "During traffic" and self.upload_first_data and self.details["add_to_database"]:
+                self.upload_first_data = False
+                print ("Result pro_data: {}".format(pro_data))
+                self.add_to_data_base(pro_data)
         bmc_handle.destroy()
 
     ###########  debug memory ########
@@ -652,6 +662,26 @@ class FunTestCase1(FunTestCase):
         come_handle.command("./dpcsh --pcie_nvme_sock=/dev/nvme0 --nvme_cmd_timeout=600000 --tcp_proxy=40220 &> /tmp/f1_0_dpc.txt &")
         come_handle.command("./dpcsh --pcie_nvme_sock=/dev/nvme1 --nvme_cmd_timeout=600000 --tcp_proxy=40221 &> /tmp/f1_1_dpc.txt &")
         come_handle.exit_sudo()
+
+    def add_to_data_base(self, value_dict):
+        unit_dict = {
+            "fs_power_unit": PerfUnit.UNIT_WATT,
+            "f1_0_power_unit": PerfUnit.UNIT_WATT,
+            "f1_1_power_unit": PerfUnit.UNIT_WATT,
+        }
+        value_dict["date_time"] = get_data_collection_time()
+        value_dict["version"] = fun_test.get_version()
+        model_name = "PowerPerformance"
+        status = fun_test.PASSED
+        try:
+            generic_helper = ModelHelper(model_name=model_name)
+            generic_helper.set_units(validate=True, **unit_dict)
+            generic_helper.add_entry(**value_dict)
+            generic_helper.set_status(status)
+            print "used generic helper to add an entry"
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
 
 
 if __name__ == "__main__":
