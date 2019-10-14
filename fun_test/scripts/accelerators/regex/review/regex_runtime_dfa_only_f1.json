@@ -1,9 +1,9 @@
 {
    "DfaRuntime": {
     "jsons": [
-      "DFA_ONLY_BASIC_LSU.json"
+      "DFA_ONLY.json,"
     ],
-    "XDATA_LISTS": "/project/users/QA/regression/data_store/regex/F1/dfa_only_compile/dfa_results/DFA_ONLY_BASIC_LSU.list",
+    "XDATA_LISTS": "/project/users/QA/regression/data_store/regex/F1/dfa_only_compile/dfa_results/DFA_ONLY.list",
     "description": "F1:testing basic lsu actions for DFA patterns",
     "rbm_size": "1m",
     "syslog_level": "3",
@@ -15,9 +15,9 @@
   },
   "DfaRuntimeMatchAcrossPackets": {
     "jsons": [
-      "DFA_ONLY_MATCH_ACROSS_PACKETS.json"
+      "DFA_ONLY_MATCH_ACROSS_PACKET.json"
     ],
-    "XDATA_LISTS": "/project/users/QA/regression/data_store/regex/F1/dfa_only_compile/dfa_results/DFA_ONLY_MATCH_ACROSS_PACKETS.list",
+    "XDATA_LISTS": "/project/users/QA/regression/data_store/regex/F1/dfa_only_compile/dfa_results/DFA_ONLY_MATCH_ACROSS_PACKET.list",
     "description": "F1:match across packets for DFA patterns",
     "rbm_size": "1m",
     "syslog_level": "3",

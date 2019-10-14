@@ -1,9 +1,9 @@
 {
   "NfaRuntime": {
     "jsons": [
-      "NFA_ONLY_BASIC_RUNTIME.json"
+      "NFA_ONLY.json"
     ],
-    "XDATA_LISTS": "/project/users/QA/regression/data_store/regex/F1/nfa_only_compile/nfa_results/NFA_ONLY_BASIC_RUNTIME.list",
+    "XDATA_LISTS": "/project/users/QA/regression/data_store/regex/F1/nfa_only_compile/nfa_results/NFA_ONLY.list",
     "description": "F1:testing basic lsu actions for NFA patterns",
     "rbm_size": "1m",
     "syslog_level": "3",
@@ -44,9 +44,9 @@
 
    "NfaRuntimeCrossPacket": {
     "jsons": [
-      "NFA_ONLY_CROSS_PACKET.json"
+      "NFA_ONLY_MATCH_ACROSS_PACKETS.json"
     ],
-    "XDATA_LISTS": "/project/users/QA/regression/data_store/regex/F1/nfa_only_compile/nfa_results/NFA_ONLY_CROSS_PACKET.list",
+    "XDATA_LISTS": "/project/users/QA/regression/data_store/regex/F1/nfa_only_compile/nfa_results/NFA_ONLY_MATCH_ACROSS_PACKETS.list",
     "description": "F1:match across packet ,NFA patterns",
     "rbm_size": "1m",
     "syslog_level": "3",
