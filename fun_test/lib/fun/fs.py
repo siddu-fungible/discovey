@@ -360,7 +360,7 @@ class Bmc(Linux):
         return s
 
     def setup_serial_proxy_connection(self, f1_index, auto_boot=False):
-        self._reset_microcom()
+
         uart_log_file_name = self.get_f1_uart_log_file_name(f1_index)
         if not self.bundle_compatible:
             self.command("rm -f {}".format(uart_log_file_name))
@@ -569,7 +569,7 @@ class Bmc(Linux):
             fun_test.add_checkpoint(checkpoint="SDK Version: {}".format(version), context=self.context)
             fun_test.set_version(version=version.replace("bld_", ""))
         """
-        
+
         if not rich_input_boot_args:
             sections = ['Welcome to FunOS', 'NETWORK_START', 'DPC_SERVER_STARTED', 'PCI_STARTED']
             for section in sections:
@@ -869,13 +869,14 @@ class BootupWorker(Thread):
 
             if not fs.bundle_image_parameters:
                 fs.set_boot_phase(BootPhases.FS_BRING_UP_U_BOOT)
+                if fs.tftp_image_path:
+                    bmc.position_support_scripts()
                 for f1_index, f1 in fs.f1s.iteritems():
                     if f1_index == fs.disable_f1_index:
                         continue
                     boot_args = fs.boot_args
                     fun_test.log("Auto-boot: {}".format(fs.is_auto_boot()))
                     if fs.tftp_image_path:
-                        bmc.position_support_scripts()
                         fun_test.test_assert(bmc.setup_serial_proxy_connection(f1_index=f1_index, auto_boot=fs.is_auto_boot()),
                                              "Setup nc serial proxy connection")
                     if fpga and not fs.bundle_compatible:
@@ -1617,6 +1618,8 @@ class Fs(object, ToDictMixin):
                 fun_test.test_assert(expression=self.funeth_reset(), message="Funeth ComE power-cycle ref: IN-373")
 
             self.set_boot_phase(BootPhases.FS_BRING_UP_U_BOOT)
+            self.get_bmc()
+            self.get_bmc().position_support_scripts()
             for f1_index, f1 in self.f1s.iteritems():
                 if f1_index == self.disable_f1_index:
                     continue
@@ -1626,7 +1629,6 @@ class Fs(object, ToDictMixin):
                         if "boot_args" in self.f1_parameters[f1_index]:
                             boot_args = self.f1_parameters[f1_index]["boot_args"]
 
-                self.get_bmc().position_support_scripts()
                 fun_test.test_assert(self.get_bmc().setup_serial_proxy_connection(f1_index=f1_index, auto_boot=self.is_auto_boot()),
                                      "Setup nc serial proxy connection")
 
