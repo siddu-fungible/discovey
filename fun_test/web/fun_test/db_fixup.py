@@ -39,6 +39,7 @@ bits_bytes_category = ["b", "B", "KB", "MB", "GB", "TB"]
 bandwidth_category = ["bps", "Kbps", "Mbps", "Gbps", "Tbps", "Bps", "KBps", "MBps", "GBps", "TBps"]
 packets_per_sec_category = ["pps", "Mpps", "Kpps", "Gpps"]
 connections_per_sec_category = ["cps", "Mcps", "Kcps", "Gcps"]
+power_category = ["W", "kW", "MW", "mW"]
 
 
 def get_rounded_time(dt):
@@ -565,6 +566,13 @@ def convert_to_base_unit(output_value, output_unit):
                 output_value = float(output_value * math.pow(10, 3))
             if output_unit == "Gcps":
                 output_value = float(output_value * math.pow(10, 9))
+        elif output_value in power_category:
+            if output_unit == "kW":
+                output_value = float(output_value * math.pow(10, 3))
+            if output_unit == "MW":
+                output_value = float(output_value * math.pow(10, 6))
+            if output_unit == "mW":
+                output_value = float(output_value / math.pow(10, 3))
     return output_value
 
 
