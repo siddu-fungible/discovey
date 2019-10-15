@@ -739,7 +739,10 @@ class Bmc(Linux):
                          source_password=self.ssh_password,
                          target_file_path=artifact_file_name,
                          timeout=240)
-            with open(artifact_file_name, "r+") as f:
+            mode = "r+"
+            if not os.path.exists(artifact_file_name):
+                mode = "a+"
+            with open(artifact_file_name, mode) as f:
                 content = f.read()
                 f.seek(0, 0)
                 f.write(self.u_boot_logs[f1_index] + '\n' + content)
