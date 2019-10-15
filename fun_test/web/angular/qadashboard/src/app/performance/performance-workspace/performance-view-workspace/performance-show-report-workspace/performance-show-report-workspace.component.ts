@@ -13,6 +13,7 @@ import {PagerService} from "../../../../services/pager/pager.service";
 })
 export class PerformanceShowReportWorkspaceComponent implements OnInit {
   @Input() workspace: any = null;
+  @Input() flattenedInterestedMetrics: any = null;
   @Input() email: string = null;
   @Input() subject: string = null;
   @Output() reportGenerated: EventEmitter<boolean> = new EventEmitter();
@@ -25,10 +26,11 @@ export class PerformanceShowReportWorkspaceComponent implements OnInit {
   }
 
   ngOnInit() {
+    console.log("showing reports");
   }
 
   refreshPage(): void {
-    this.pagedItems = this.workspace.interested_metrics.slice(this.pager.startIndex, this.pager.endIndex + 1);
+    this.pagedItems = this.flattenedInterestedMetrics.slice(this.pager.startIndex, this.pager.endIndex + 1);
     this.showPagedItems = true;
   }
 
@@ -44,7 +46,8 @@ export class PerformanceShowReportWorkspaceComponent implements OnInit {
     payload["email"] = this.email;
     payload["workspace_id"] = this.workspace.id;
     payload["interested_metrics"] = this.workspace.interested_metrics;
-    return this.performanceService.saveInterestedMetrics(this.workspace.id, payload)
+    return of(true);
+    // return this.performanceService.saveInterestedMetrics(this.workspace.id, payload)
   }
 
   sendReports(): void {
@@ -74,16 +77,18 @@ export class PerformanceShowReportWorkspaceComponent implements OnInit {
   sendEmail(): any {
     let payload = {};
     let reports = [];
-    this.workspace.interested_metrics.forEach(metric => {
-      let report = {};
-      report["chart_name"] = metric["chart_name"];
-      report["lineage"] = metric["lineage"];
-      report["url"] = metric["url"];
-      report["comments"] = metric["comments"];
-      report["jira_ids"] = metric["jira_ids"];
-      report["report"] = metric["report"];
-      report["positive"] = metric["positive"];
-      reports.push(report);
+    this.flattenedInterestedMetrics.forEach(metric => {
+      if (!metric["report"] && metric["leaf"]) {
+        let report = {};
+        report["chart_name"] = metric["chart_name"];
+        report["lineage"] = metric["lineage"];
+        report["url"] = metric["url"];
+        report["comments"] = metric["comments"];
+        report["jira_ids"] = metric["jira_ids"];
+        report["report"] = metric["report"];
+        report["positive"] = metric["positive"];
+        reports.push(report);
+      }
     });
     payload["reports"] = reports;
     payload["email"] = this.email;
