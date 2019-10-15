@@ -13,6 +13,7 @@ import {PagerService} from "../../../../services/pager/pager.service";
 })
 export class PerformanceShowReportWorkspaceComponent implements OnInit {
   @Input() workspace: any = null;
+  @Input() flattenedInterestedMetrics: any = null;
   @Input() email: string = null;
   @Input() subject: string = null;
   @Output() reportGenerated: EventEmitter<boolean> = new EventEmitter();
@@ -29,7 +30,7 @@ export class PerformanceShowReportWorkspaceComponent implements OnInit {
   }
 
   refreshPage(): void {
-    this.pagedItems = this.workspace.interested_metrics.slice(this.pager.startIndex, this.pager.endIndex + 1);
+    this.pagedItems = this.flattenedInterestedMetrics.slice(this.pager.startIndex, this.pager.endIndex + 1);
     this.showPagedItems = true;
   }
 
@@ -76,7 +77,7 @@ export class PerformanceShowReportWorkspaceComponent implements OnInit {
   sendEmail(): any {
     let payload = {};
     let reports = [];
-    this.workspace.interested_metrics.forEach(metric => {
+    this.flattenedInterestedMetrics.forEach(metric => {
       if (!metric["report"] && metric["leaf"]) {
         let report = {};
         report["chart_name"] = metric["chart_name"];

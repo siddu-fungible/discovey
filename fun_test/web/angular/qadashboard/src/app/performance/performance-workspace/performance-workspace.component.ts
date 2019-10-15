@@ -112,9 +112,7 @@ export class PerformanceWorkspaceComponent implements OnInit {
     return this.apiService.get("/api/v1/performance/workspaces/" + workspaceId + "/interested_metrics").pipe(switchMap(response => {
       this.currentWorkspace["interestedMetrics"] = [];
       for (let metric of response.data) {
-      if (!metric.hasOwnProperty("duplicate")) {
         this.currentWorkspace["interestedMetrics"].push(metric);
-      }
     }
       return of(true);
     }));

@@ -175,7 +175,8 @@ def interested_metrics(request, workspace_id=None):
         interested_metrics = InterestedMetrics.objects.filter(q)
         for metric in interested_metrics:
             metric = metric.to_dict()
-            _set_interested_metrics(metric=metric, result=result)
+            _set_interested_metrics(metric=metric)
+            result.append(metric)
     elif request.method == "DELETE":
         metric_id = request.GET.get("metric_id", None)
         if metric_id:
@@ -184,9 +185,9 @@ def interested_metrics(request, workspace_id=None):
             entry.delete()
     return result
 
-def _set_interested_metrics(metric, result):
-    result.append(metric)
+def _set_interested_metrics(metric):
     metric_id = metric["metric_id"]
+    metric["children"] = []
     mc = MetricChart.objects.get(metric_id=metric_id)
     if not mc.leaf:
         children = mc.get_children()
@@ -204,8 +205,8 @@ def _set_interested_metrics(metric, result):
             new_metric["date_created"] = metric["date_created"]
             new_metric["date_modified"] = metric["date_modified"]
             new_metric["comments"] = metric["comments"]
-            new_metric["duplicate"] = True
-            _set_interested_metrics(metric=new_metric, result=result)
+            _set_interested_metrics(metric=new_metric)
+            metric["children"].append(new_metric)
 
 
 @csrf_exempt

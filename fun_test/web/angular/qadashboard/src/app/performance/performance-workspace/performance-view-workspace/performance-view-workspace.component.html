@@ -42,7 +42,8 @@
 
   <!--showing reports in the workspace-->
   <ng-container class="card-body tab-pane" role="tabpanel" *ngIf="reportGenerated">
-    <performance-show-report [workspace]="workspace" [email]="email" [subject]="subject"
+    <performance-show-report [workspace]="workspace" [flattenedInterestedMetrics]="flattenedInterestedMetrics" [email]="email"
+                             [subject]="subject"
                              (reportGenerated)="reportGenerated = false"></performance-show-report>
   </ng-container>
 
