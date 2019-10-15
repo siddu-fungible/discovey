@@ -1454,7 +1454,7 @@ class Fs(object, ToDictMixin):
         self.mpg_ips = spec.get("mpg_ips", [])
         # self.auto_boot = auto_boot
         self.bmc_maintenance_threads = []
-        self.cleanup_complete = False
+        self.cleanup_attempted = False
         fun_test.register_fs(self)
 
     def is_auto_boot(self):
@@ -1504,6 +1504,7 @@ class Fs(object, ToDictMixin):
         pass
 
     def cleanup(self):
+        self.cleanup_attempted = True
 
         self.get_bmc().cleanup()
         self.get_come().cleanup()
@@ -1525,7 +1526,6 @@ class Fs(object, ToDictMixin):
             fun_test.log(message="ComE disconnect", context=self.context)
         except:
             pass
-        self.cleanup_complete = True
         return True
 
     def get_f1_0(self):
