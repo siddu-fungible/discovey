@@ -320,9 +320,16 @@ class FunTest:
         output_file_path = output_file_path
         fc = FunContext(description=description, context_id=self.last_context_id, output_file_path=output_file_path)
         self.contexts[self.last_context_id] = fc
-        self.add_time_series_context(collection_name=models_helper.get_ts_test_case_context_info_collection_name(self.get_suite_execution_id(),
-                                                                                                             self.get_test_case_execution_id()),
-                                     data={"id": self.last_context_id})
+        suite_execution_id = self.get_suite_execution_id()
+        test_case_execution_id = self.get_test_case_execution_id()
+        script_id = self.get_script_id()
+
+        self.add_time_series_context(collection_name=models_helper.get_ts_test_case_context_info_collection_name(suite_execution_id=suite_execution_id,
+                                                                                                                 test_case_execution_id=test_case_execution_id),
+                                     data={"id": self.last_context_id,
+                                           "suite_execution_id": suite_execution_id,
+                                           "test_case_execution_id": test_case_execution_id,
+                                           "script_id": script_id})
         fc.open()
         return fc
 
