@@ -357,6 +357,10 @@ class Bmc(Linux):
                 if f1_index == 1:
                     huid = 2
                 s += " cc_huid={}".format(huid)
+        csi_cache_miss_enabled = fun_test.get_job_environment_variable("csi_cache_miss")
+        if csi_cache_miss_enabled:
+            if "csi_cache_miss" not in s:
+                s += " --csi-cache-miss"
         return s
 
     def setup_serial_proxy_connection(self, f1_index, auto_boot=False):
