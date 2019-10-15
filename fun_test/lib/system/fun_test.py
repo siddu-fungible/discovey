@@ -308,14 +308,15 @@ class FunTest:
         self.profiling = True
         self.profiling_timer = FunTimer(max_time=10000)
 
+
     def add_context(self, description, output_file_path=None):
         self.last_context_id += 1
         output_file_path = output_file_path
         fc = FunContext(description=description, context_id=self.last_context_id, output_file_path=output_file_path)
         self.contexts[self.last_context_id] = fc
-        models_helper.get_fun_test_time_series_collection_name(self.get_suite_execution_id(),
-                                                               self.get_test_case_execution_id())
-        self.add_time_series_context(collection_name=models_helper.get_fun_test_time_series_test_case_context_info(), data={"id": self.last_context_id})
+        self.add_time_series_context(collection_name=models_helper.get_ts_test_case_context_info_collection_name(self.get_suite_execution_id(),
+                                                                                                             self.get_test_case_execution_id()),
+                                     data={"id": self.last_context_id})
         fc.open()
         return fc
 

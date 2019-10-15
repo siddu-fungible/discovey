@@ -18,6 +18,7 @@ from asset.asset_global import AssetType
 from web.fun_test.models import Module
 from web.fun_test.fun_serializer import model_instance_to_dict
 from web.fun_test.models_helper import _get_suite_executions, get_fun_test_time_series_collection_name
+from web.fun_test.models_helper import get_ts_test_case_context_info_collection_name
 from scheduler.scheduler_global import SuiteType
 from web.fun_test.models import Suite
 from fun_global import RESULTS
@@ -539,7 +540,7 @@ def test_case_time_series(request, suite_execution_id, test_case_execution_id):
     if request.method == "GET":
         type = request.GET.get("type", None)
         checkpoint_index = request.GET.get("checkpoint_index", None)
-        collection_name = "s_{}_{}".format(suite_execution_id, test_case_execution_id)
+        collection_name = get_fun_test_time_series_collection_name(suite_execution_id, test_case_execution_id) # "s_{}_{}".format(suite_execution_id, test_case_execution_id)
         mongo_db_manager = app_config.get_mongo_db_manager()
         collection = mongo_db_manager.get_collection(collection_name)
         query = {}
@@ -548,8 +549,21 @@ def test_case_time_series(request, suite_execution_id, test_case_execution_id):
         if checkpoint_index is not None:
             query["data.checkpoint_index"] = int(checkpoint_index)
         if collection:
-
             result = list(collection.find(query))
+    return result
+
+@api_safe_json_response
+def contexts(request, suite_execution_id, test_case_execution_id):
+    result = None
+    if request.method == "GET":
+        collection_name = get_ts_test_case_context_info_collection_name(suite_execution_id, test_case_execution_id)
+        mongo_db_manager = app_config.get_mongo_db_manager()
+        collection = mongo_db_manager.get_collection(collection_name)
+        query = {}
+        if collection:
+            result = list(collection.find(query))
+    return result
+
 @api_safe_json_response
 def release_trains(request):
     releases = ["1.0a_aa", "1.0a_ab"]

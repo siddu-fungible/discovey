@@ -6,6 +6,8 @@ import {LoggerService} from "../../services/logger/logger.service";
 import {ActivatedRoute} from "@angular/router";
 import {animate, state, style, transition, trigger} from "@angular/animations";
 import {CommonService} from "../../services/common/common.service";
+import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
+import {ScriptDetailService} from "./script-detail.service";
 
 class TimeSeriesLog {
   date_time: string;
@@ -27,8 +29,8 @@ class Checkpoint {
   styleUrls: ['./script-detail.component.css'],
   animations: [
     trigger('show', [
-      state('true', style({ opacity: 1, flexGrow: 1})),
-      state('false', style({ opacity: 0, flexGrow: 0 })),
+      state('true', style({ opacity: 1, flexGrow: 1, width: "100%"})),
+      state('false', style({ opacity: 0, flexGrow: 0, width: 0 })),
       transition('false => true', animate('300ms')),
       transition('true => false', animate('300ms')),
 
@@ -40,7 +42,9 @@ export class ScriptDetailComponent implements OnInit {
   constructor(private regressionService: RegressionService,
               private loggerService: LoggerService,
               private route: ActivatedRoute,
-              private commonService: CommonService
+              private commonService: CommonService,
+              private modalService: NgbModal,
+              private service: ScriptDetailService
   ) { }
   suiteExecutionId: number = 10000;
   logPrefix: number = null;
@@ -61,6 +65,8 @@ export class ScriptDetailComponent implements OnInit {
 
     this.driver = of(true).pipe(switchMap(response => {
       return this.regressionService.getScriptInfoById(this.scriptId);
+    })).pipe(switchMap(response => {
+      return this.service.getContexts(this.suiteExecutionId);
     })).pipe(switchMap(response => {
       this.scriptPath = response.script_path;
       return this.regressionService.testCaseExecutions(null, this.suiteExecutionId, this.scriptPath, this.logPrefix);
@@ -154,6 +160,15 @@ export class ScriptDetailComponent implements OnInit {
     this.showCheckpointPanel = true;
     this.showLogsPanel = false;
     this.currentCheckpointIndex = null;
+  }
+
+  onContextOptionsClick(content) {
+    this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title'}).result.then((suiteExecution) => {
+
+    }, (reason) => {
+      console.log("Rejected");
+      //this.closeResult = `Dismissed ${this.getDismissReason(reason)}`;
+    });
   }
 
 }

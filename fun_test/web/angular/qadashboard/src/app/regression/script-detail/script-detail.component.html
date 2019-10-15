@@ -1,7 +1,12 @@
 <div class="component">
   <div class="fun-flex-container">
-    <button *ngIf="!showTestCasePanel" (click)="onShowTestCasePanelClick()" class="fun-button-add">Show test-cases</button>
     <h4>{{ scriptPath }}</h4>
+    <button *ngIf="!showTestCasePanel" (click)="onShowTestCasePanelClick()" class="fun-button-add">Show test-cases</button>
+    <button (click)="onContextOptionsClick(contextOptions)" class="fun-button-add">Context options</button>
+    <ng-template #contextOptions let-modal>
+      Abc
+    </ng-template>
+
   </div>
   <div style="position: fixed; top: 110px">
     <div class="fun-flex-container">
