@@ -867,14 +867,14 @@ class StripedVolAttachConnDisConnDetachDisconnDuringIO(StripeVolAttachDetachTest
     def describe(self):
         self.set_test_details(
             id=1,
-            summary="Multiple Attach-NvmeConnect-NvmeDisconnect-Detach with IO",
+            summary="Multiple Attach-NvmeConnect-NvmeDisconnect-Detach with IO - Disconnect & Detach During IO",
             steps='''
-                1. Create Stripe volume
-                2. Attach volume to one host
-                3. Do nvme_connect and perform sequential write and nvme_disconnect and detach
-                4. Perform Attach-NvmeConnect- IO With DI -NvmeDisconnect-Disconnect in loop
-                5. Start Random Read-Write with data integrity
-                ''')
+                        1. Create Stripe volume
+                        2. Attach volume to one host
+                        3. Do nvme_connect and perform sequential write and nvme_disconnect and detach
+                        4. Perform Attach-NvmeConnect- IO With DI -NvmeDisconnect-Disconnect in loop
+                        5. Disconnect and Detach during Read-Write, FIO should fail
+                        ''')
 
     def setup(self):
         super(StripedVolAttachConnDisConnDetachDisconnDuringIO, self).setup()
@@ -892,12 +892,12 @@ class StripedVolAttachConnDisConnDetach(StripeVolAttachDetachTestCase):
             id=2,
             summary="Multiple Attach-NvmeConnect-NvmeDisconnect-Detach without IO",
             steps='''
-                1. Create Stripe volume
-                2. Attach volume to one host
-                3. Do nvme_connect and perform sequential write and nvme_disconnect and detach
-                4. Perform Attach-NvmeConnect-NvmeDisconnect-Disconnect in loop
-                5. Start Random Read-Write with data integrity 
-                ''')
+                        1. Create Stripe volume
+                        2. Attach volume to one host
+                        3. Do nvme_connect and perform sequential write and nvme_disconnect and detach
+                        4. Perform Attach-NvmeConnect-NvmeDisconnect-Disconnect in loop
+                        5. Start Random Read-Write with data integrity 
+                        ''')
 
     def setup(self):
         super(StripedVolAttachConnDisConnDetach, self).setup()
@@ -915,12 +915,12 @@ class StripedVolAttachDetach(StripeVolAttachDetachTestCase):
             id=3,
             summary="Multiple Attach-Detach without IO",
             steps='''
-                1. Create Stripe volume
-                2. Attach volume to one host
-                3. Do nvme_connect and perform sequential write and nvme_disconnect and detach
-                4. Perform Attach-Disconnect without IO in loop
-                5. Start Random Read-Write with data integrity
-                ''')
+                        1. Create Stripe volume
+                        2. Attach volume to one host
+                        3. Do nvme_connect and perform sequential write and nvme_disconnect and detach
+                        4. Perform Attach-Disconnect without IO in loop
+                        5. Start Random Read-Write with data integrity
+                        ''')
 
     def setup(self):
         super(StripedVolAttachDetach, self).setup()
@@ -932,9 +932,35 @@ class StripedVolAttachDetach(StripeVolAttachDetachTestCase):
         super(StripedVolAttachDetach, self).cleanup()
 
 
+class StripedVolAttachConnDisConnDetachDisconnAfterIO(StripeVolAttachDetachTestCase):
+    def describe(self):
+        self.set_test_details(
+            id=4,
+            summary="Multiple Attach-NvmeConnect-NvmeDisconnect-Detach with IO - Disconnect & Detach After IO",
+            steps='''
+                        1. Create Stripe volume
+                        2. Attach volume to one host
+                        3. Do nvme_connect and perform sequential write
+                        4. Perform Attach-NvmeConnect- IO With DI -NvmeDisconnect-Disconnect in loop
+                        5. Perform RandRead with Verify, FIO should succeed
+                        6. Disconnect and Detach
+                        7. Repeat step #3 to #6
+                        ''')
+
+    def setup(self):
+        super(StripedVolAttachConnDisConnDetachDisconnAfterIO, self).setup()
+
+    def run(self):
+        super(StripedVolAttachConnDisConnDetachDisconnAfterIO, self).run()
+
+    def cleanup(self):
+        super(StripedVolAttachConnDisConnDetachDisconnAfterIO, self).cleanup()
+
+
 if __name__ == "__main__":
     testscript = StripeVolAttachDetachTestScript()
     testscript.add_test_case(StripedVolAttachConnDisConnDetachDisconnDuringIO())
     testscript.add_test_case(StripedVolAttachConnDisConnDetach())
     testscript.add_test_case(StripedVolAttachDetach())
+    testscript.add_test_case(StripedVolAttachConnDisConnDetachDisconnAfterIO())
     testscript.run()
