@@ -85,7 +85,6 @@ export class SubmitJobComponent implements OnInit {
   bootArgs: string = "";
 
 
-  disableAssertions: boolean = false;
   funOsMakeFlags: string = null;
   branchFunOs: string = null;
   branchFunSdk: string = null;
@@ -415,7 +414,6 @@ export class SubmitJobComponent implements OnInit {
           payload["environment"]["build_parameters"]["BOOTARGS"] = this.bootArgs.replace(/\s+/g, this.BOOT_ARGS_REPLACEMENT_STRING);
         }
         payload["environment"]["build_parameters"]["RELEASE_BUILD"] = this.releaseBuild;
-        payload["environment"]["build_parameters"]["DISABLE_ASSERTIONS"] = this.disableAssertions;
         payload["environment"]["build_parameters"]["FUNOS_MAKEFLAGS"] = this.funOsMakeFlags;
         payload["environment"]["build_parameters"]["BRANCH_FunOS"] = this.branchFunOs;
         payload["environment"]["build_parameters"]["BRANCH_FunSDK"] = this.branchFunSdk;
@@ -495,7 +493,6 @@ export class SubmitJobComponent implements OnInit {
           payload["environment"]["build_parameters"]["BOOTARGS"] = this.bootArgs.replace(/\s+/g, this.BOOT_ARGS_REPLACEMENT_STRING);
         }
         payload["environment"]["build_parameters"]["RELEASE_BUILD"] = this.releaseBuild;
-        payload["environment"]["build_parameters"]["DISABLE_ASSERTIONS"] = this.disableAssertions;
         payload["environment"]["build_parameters"]["FUNOS_MAKEFLAGS"] = this.funOsMakeFlags;
         payload["environment"]["build_parameters"]["BRANCH_FunOS"] = this.branchFunOs;
         payload["environment"]["build_parameters"]["BRANCH_FunSDK"] = this.branchFunSdk;
