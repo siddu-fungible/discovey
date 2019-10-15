@@ -314,9 +314,13 @@
         </tr>
 
         <tr>
-          <td colspan="2"><input (change)="csiPerf = !csiPerf" type="checkbox"
+          <td><input (change)="csiPerf = !csiPerf" type="checkbox"
                      name="csi-perf"
                      [checked]="csiPerf"> Enable CSI perf
+          </td>
+          <td><input (change)="toggleCsiCacheMiss()" type="checkbox"
+                     name="csi-cache-miss"
+                     [checked]="csiCacheMiss"> Enable CSI cache miss
           </td>
         </tr>
         <tr>

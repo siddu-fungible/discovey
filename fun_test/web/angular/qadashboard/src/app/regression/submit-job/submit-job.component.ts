@@ -109,6 +109,7 @@ export class SubmitJobComponent implements OnInit {
   jobInputs: string = null; // input dictionary to be sent to the scheduler
   richBootArgs: string = null;
   csiPerf: boolean = false;
+  csiCacheMiss: boolean = false;
   dryRun: boolean = false;
   hbmDump: boolean = false;
   moreJenkinsOptions: boolean = false;
@@ -522,6 +523,11 @@ export class SubmitJobComponent implements OnInit {
       payload["environment"]["csi_perf"] = this.csiPerf;
     }
 
+    if (this.csiCacheMiss) {
+      payload["environment"]["csi_cache_miss"] = this.csiCacheMiss;
+    }
+
+
     if (this.dryRun) {
       payload["environment"]["dry_run"] = this.dryRun;
     }
@@ -625,6 +631,13 @@ export class SubmitJobComponent implements OnInit {
   onSearchText(searchText) {
     this.byNameSearchText = searchText;
     this.fetchSuites();
+  }
+
+  toggleCsiCacheMiss() {
+    this.csiCacheMiss = !this.csiCacheMiss;
+    if (this.csiCacheMiss) {
+      this.csiPerf = true;
+    }
   }
 
 }
