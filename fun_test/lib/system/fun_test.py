@@ -272,7 +272,13 @@ class FunTest:
         self.at_least_one_failed = False
         self.closed = False
         self.time_series_enabled = True
+        self.script_id = None
         self.enable_profiling()
+
+    def get_script_id(self):
+        if not self.script_id and self.suite_execution_id and self.current_test_case_execution_id:
+            self.script_id = models_helper.get_script_id(self.current_test_case_execution_id)
+        return self.script_id
 
     def report_message(self, message):  # Used only by FunXml only
         if self.fun_xml_obj:
