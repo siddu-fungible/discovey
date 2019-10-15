@@ -290,6 +290,7 @@ class ECVolumeLevelScript(FunTestScript):
             fun_test.shared_variables["f1_obj"] = self.f1_obj
             fun_test.shared_variables["sc_obj"] = self.sc_obj
             fun_test.shared_variables["f1_ips"] = self.f1_ips
+            self.storage_controller = fun_test.shared_variables["sc_obj"][self.f1_in_use]
             fun_test.shared_variables["host_handles"] = self.host_handles
             fun_test.shared_variables["host_ips"] = self.host_ips
             fun_test.shared_variables["numa_cpus"] = self.host_numa_cpus
@@ -491,7 +492,8 @@ class ECVolumeLevelTestcase(FunTestCase):
 
         orignal_cmd = command
 
-        import pdb; pdb.set_trace()
+        self.f1_in_use = fun_test.shared_variables["f1_in_use"]
+        self.storage_controller = fun_test.shared_variables["sc_obj"][self.f1_in_use]
 
         for each_m in self.messagerate:
             for each_c in self.totalconnection:
@@ -541,35 +543,35 @@ class ECVolumeLevelTestcase(FunTestCase):
                         filename = arg.get("output_file")
                         if filename:
                             if func == "vp_utils":
-                                fun_test.add_auxillary_file(description="F1 VP Utilization - message_{}_conn_{}.txt".format(ecah_m, each_c), filename=filename)
+                                fun_test.add_auxillary_file(description="F1 VP Utilization - message_{}_conn_{}.txt".format(each_m, each_c), filename=filename)
                             if func == "per_vp":
-                                fun_test.add_auxillary_file(description="F1 Per VP Stats - message_{}_conn_{}.txt".format(ecah_m, each_c), filename=filename)
+                                fun_test.add_auxillary_file(description="F1 Per VP Stats - message_{}_conn_{}.txt".format(each_m, each_c), filename=filename)
                             if func == "resource_bam_args":
-                                fun_test.add_auxillary_file(description="F1 Resource bam stats - message_{}_conn_{}.txt".format(ecah_m, each_c), filename=filename)
+                                fun_test.add_auxillary_file(description="F1 Resource bam stats - message_{}_conn_{}.txt".format(each_m, each_c), filename=filename)
                             if func == "vol_stats":
-                                fun_test.add_auxillary_file(description="Volume Stats - message_{}_conn_{}.txt".format(ecah_m, each_c), filename=filename)
+                                fun_test.add_auxillary_file(description="Volume Stats - message_{}_conn_{}.txt".format(each_m, each_c), filename=filename)
                             if func == "vppkts_stats":
-                                fun_test.add_auxillary_file(description="VP Pkts Stats - message_{}_conn_{}.txt".format(ecah_m, each_c), filename=filename)
+                                fun_test.add_auxillary_file(description="VP Pkts Stats - message_{}_conn_{}.txt".format(each_m, each_c), filename=filename)
                             if func == "psw_stats":
-                                fun_test.add_auxillary_file(description="PSW Stats - message_{}_conn_{}.txt".format(ecah_m, each_c), filename=filename)
+                                fun_test.add_auxillary_file(description="PSW Stats - message_{}_conn_{}.txt".format(each_m, each_c), filename=filename)
                             if func == "fcp_stats":
-                                fun_test.add_auxillary_file(description="FCP Stats - message_{}_conn_{}.txt".format(ecah_m, each_c), filename=filename)
+                                fun_test.add_auxillary_file(description="FCP Stats - message_{}_conn_{}.txt".format(each_m, each_c), filename=filename)
                             if func == "wro_stats":
-                                fun_test.add_auxillary_file(description="WRO Stats - message_{}_conn_{}.txt".format(ecah_m, each_c), filename=filename)
+                                fun_test.add_auxillary_file(description="WRO Stats - message_{}_conn_{}.txt".format(each_m, each_c), filename=filename)
                             if func == "erp_stats":
-                                fun_test.add_auxillary_file(description="ERP Stats - message_{}_conn_{}.txt".format(ecah_m, each_c), filename=filename)
+                                fun_test.add_auxillary_file(description="ERP Stats - message_{}_conn_{}.txt".format(each_m, each_c), filename=filename)
                             if func == "etp_stats":
-                                fun_test.add_auxillary_file(description="ETP Stats - message_{}_conn_{}.txt".format(ecah_m, each_c), filename=filename)
+                                fun_test.add_auxillary_file(description="ETP Stats - message_{}_conn_{}.txt".format(each_m, each_c), filename=filename)
                             if func == "eqm_stats":
-                                fun_test.add_auxillary_file(description="EQM Stats - message_{}_conn_{}.txt".format(ecah_m, each_c), filename=filename)
+                                fun_test.add_auxillary_file(description="EQM Stats - message_{}_conn_{}.txt".format(each_m, each_c), filename=filename)
                             if func == "hu_stats":
-                                fun_test.add_auxillary_file(description="HU Stats - message_{}_conn_{}.txt".format(ecah_m, each_c), filename=filename)
+                                fun_test.add_auxillary_file(description="HU Stats - message_{}_conn_{}.txt".format(each_m, each_c), filename=filename)
                             if func == "ddr_stats":
-                                fun_test.add_auxillary_file(description="DDR Stats - message_{}_conn_{}.txt".format(ecah_m, each_c), filename=filename)
+                                fun_test.add_auxillary_file(description="DDR Stats - message_{}_conn_{}.txt".format(each_m, each_c), filename=filename)
                             if func == "ca_stats":
-                                fun_test.add_auxillary_file(description="CA Stats - message_{}_conn_{}.txt".format(ecah_m, each_c), filename=filename)
+                                fun_test.add_auxillary_file(description="CA Stats - message_{}_conn_{}.txt".format(each_m, each_c), filename=filename)
                             if func == "cdu_stats":
-                                fun_test.add_auxillary_file(description="CDU Stats - message_{}_conn_{}.txt".format(ecah_m, each_c), filename=filename)
+                                fun_test.add_auxillary_file(description="CDU Stats - message_{}_conn_{}.txt".format(each_m, each_c), filename=filename)
 
                 for index in fun_test.shared_variables["tcpkali"].keys():
                     m = re.search('Aggregate bandwidth:\s+(\d+)\.\d+', fun_test.shared_variables["tcpkali"][index])
