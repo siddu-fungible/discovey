@@ -603,8 +603,8 @@ class Bmc(Linux):
         for process_id in process_ids:
             self.kill_process(signal=9, process_id=process_id, kill_seconds=2)
 
-    def position_support_scripts(self):
-        if not self.bundle_compatible:
+    def position_support_scripts(self, auto_boot=False):
+        if not self.bundle_compatible or not auto_boot:
             self._reset_microcom()
         pyserial_filename = "pyserial-install.tar"
         pyserial_dir = INTEGRATION_DIR + "/tools/platform/bmc/{}".format(pyserial_filename)
@@ -879,7 +879,7 @@ class BootupWorker(Thread):
             if not fs.bundle_image_parameters:
                 fs.set_boot_phase(BootPhases.FS_BRING_UP_U_BOOT)
                 if fs.tftp_image_path:
-                    bmc.position_support_scripts()
+                    bmc.position_support_scripts(auto_boot=fs.is_auto_boot())
                 for f1_index, f1 in fs.f1s.iteritems():
                     if f1_index == fs.disable_f1_index:
                         continue
