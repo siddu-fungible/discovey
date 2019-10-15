@@ -855,6 +855,8 @@ class BootupWorker(Thread):
                 build_number = fs.bundle_image_parameters.get("build_number", 70)  # TODO: Is there a latest?
                 release_train = fs.bundle_image_parameters.get("release_train", "1.0a_aa")
                 come = fs.get_come()
+                fun_test.test_assert(come.detect_pfs(), "Detect PFs")
+
                 fun_test.test_assert(come.install_build_setup_script(build_number=build_number, release_train=release_train),
                                      "Bundle image installed")
                 fs.bundle_upgraded = True
