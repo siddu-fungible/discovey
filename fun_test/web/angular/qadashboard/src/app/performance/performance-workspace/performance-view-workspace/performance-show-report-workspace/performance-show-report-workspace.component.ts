@@ -78,7 +78,7 @@ export class PerformanceShowReportWorkspaceComponent implements OnInit {
     let payload = {};
     let reports = [];
     this.flattenedInterestedMetrics.forEach(metric => {
-      if (!metric["report"] && metric["leaf"]) {
+      if (metric["report"] && metric["leaf"]) {
         let report = {};
         report["chart_name"] = metric["chart_name"];
         report["lineage"] = metric["lineage"];
