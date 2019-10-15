@@ -192,12 +192,6 @@
               </tr>
 
               <ng-container *ngIf="moreJenkinsOptions">
-                <tr>
-                  <td><input (change)="disableAssertions = !disableAssertions" type="checkbox"
-                             name="disable-assertions"
-                             [checked]="disableAssertions"> DISABLE_ASSERTIONS
-                  </td>
-                </tr>
                 <tr [@fadeIn]>
                   <td><label for="boot-args">BOOTARGS</label></td>
                   <td><input style='width:100%' id="boot-args" name="boot-args" [(ngModel)]="bootArgs" type="text"
@@ -314,9 +308,13 @@
         </tr>
 
         <tr>
-          <td colspan="2"><input (change)="csiPerf = !csiPerf" type="checkbox"
+          <td><input (change)="csiPerf = !csiPerf" type="checkbox"
                      name="csi-perf"
                      [checked]="csiPerf"> Enable CSI perf
+          </td>
+          <td><input (change)="toggleCsiCacheMiss()" type="checkbox"
+                     name="csi-cache-miss"
+                     [checked]="csiCacheMiss"> Enable CSI cache miss
           </td>
         </tr>
         <tr>

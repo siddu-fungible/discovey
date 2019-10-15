@@ -357,6 +357,10 @@ class Bmc(Linux):
                 if f1_index == 1:
                     huid = 2
                 s += " cc_huid={}".format(huid)
+        csi_cache_miss_enabled = fun_test.get_job_environment_variable("csi_cache_miss")
+        if csi_cache_miss_enabled:
+            if "csi_cache_miss" not in s:
+                s += " --csi-cache-miss"
         return s
 
     def setup_serial_proxy_connection(self, f1_index, auto_boot=False):
@@ -735,7 +739,10 @@ class Bmc(Linux):
                          source_password=self.ssh_password,
                          target_file_path=artifact_file_name,
                          timeout=240)
-            with open(artifact_file_name, "r+") as f:
+            mode = "r+"
+            if not os.path.exists(artifact_file_name):
+                mode = "a+"
+            with open(artifact_file_name, mode) as f:
                 content = f.read()
                 f.seek(0, 0)
                 f.write(self.u_boot_logs[f1_index] + '\n' + content)
@@ -848,6 +855,8 @@ class BootupWorker(Thread):
                 build_number = fs.bundle_image_parameters.get("build_number", 70)  # TODO: Is there a latest?
                 release_train = fs.bundle_image_parameters.get("release_train", "1.0a_aa")
                 come = fs.get_come()
+                fun_test.test_assert(come.detect_pfs(), "Detect PFs")
+
                 fun_test.test_assert(come.install_build_setup_script(build_number=build_number, release_train=release_train),
                                      "Bundle image installed")
                 fs.bundle_upgraded = True
@@ -1447,7 +1456,7 @@ class Fs(object, ToDictMixin):
         self.mpg_ips = spec.get("mpg_ips", [])
         # self.auto_boot = auto_boot
         self.bmc_maintenance_threads = []
-        self.cleanup_complete = False
+        self.cleanup_attempted = False
         fun_test.register_fs(self)
 
     def is_auto_boot(self):
@@ -1497,6 +1506,7 @@ class Fs(object, ToDictMixin):
         pass
 
     def cleanup(self):
+        self.cleanup_attempted = True
 
         self.get_bmc().cleanup()
         self.get_come().cleanup()
@@ -1518,7 +1528,6 @@ class Fs(object, ToDictMixin):
             fun_test.log(message="ComE disconnect", context=self.context)
         except:
             pass
-        self.cleanup_complete = True
         return True
 
     def get_f1_0(self):

@@ -85,7 +85,6 @@ export class SubmitJobComponent implements OnInit {
   bootArgs: string = "";
 
 
-  disableAssertions: boolean = false;
   funOsMakeFlags: string = null;
   branchFunOs: string = null;
   branchFunSdk: string = null;
@@ -109,6 +108,7 @@ export class SubmitJobComponent implements OnInit {
   jobInputs: string = null; // input dictionary to be sent to the scheduler
   richBootArgs: string = null;
   csiPerf: boolean = false;
+  csiCacheMiss: boolean = false;
   dryRun: boolean = false;
   hbmDump: boolean = false;
   moreJenkinsOptions: boolean = false;
@@ -414,7 +414,6 @@ export class SubmitJobComponent implements OnInit {
           payload["environment"]["build_parameters"]["BOOTARGS"] = this.bootArgs.replace(/\s+/g, this.BOOT_ARGS_REPLACEMENT_STRING);
         }
         payload["environment"]["build_parameters"]["RELEASE_BUILD"] = this.releaseBuild;
-        payload["environment"]["build_parameters"]["DISABLE_ASSERTIONS"] = this.disableAssertions;
         payload["environment"]["build_parameters"]["FUNOS_MAKEFLAGS"] = this.funOsMakeFlags;
         payload["environment"]["build_parameters"]["BRANCH_FunOS"] = this.branchFunOs;
         payload["environment"]["build_parameters"]["BRANCH_FunSDK"] = this.branchFunSdk;
@@ -494,7 +493,6 @@ export class SubmitJobComponent implements OnInit {
           payload["environment"]["build_parameters"]["BOOTARGS"] = this.bootArgs.replace(/\s+/g, this.BOOT_ARGS_REPLACEMENT_STRING);
         }
         payload["environment"]["build_parameters"]["RELEASE_BUILD"] = this.releaseBuild;
-        payload["environment"]["build_parameters"]["DISABLE_ASSERTIONS"] = this.disableAssertions;
         payload["environment"]["build_parameters"]["FUNOS_MAKEFLAGS"] = this.funOsMakeFlags;
         payload["environment"]["build_parameters"]["BRANCH_FunOS"] = this.branchFunOs;
         payload["environment"]["build_parameters"]["BRANCH_FunSDK"] = this.branchFunSdk;
@@ -521,6 +519,11 @@ export class SubmitJobComponent implements OnInit {
     if (this.csiPerf) {
       payload["environment"]["csi_perf"] = this.csiPerf;
     }
+
+    if (this.csiCacheMiss) {
+      payload["environment"]["csi_cache_miss"] = this.csiCacheMiss;
+    }
+
 
     if (this.dryRun) {
       payload["environment"]["dry_run"] = this.dryRun;
@@ -625,6 +628,13 @@ export class SubmitJobComponent implements OnInit {
   onSearchText(searchText) {
     this.byNameSearchText = searchText;
     this.fetchSuites();
+  }
+
+  toggleCsiCacheMiss() {
+    this.csiCacheMiss = !this.csiCacheMiss;
+    if (this.csiCacheMiss) {
+      this.csiPerf = true;
+    }
   }
 
 }
