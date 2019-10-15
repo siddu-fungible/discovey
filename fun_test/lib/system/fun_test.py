@@ -1565,7 +1565,7 @@ class FunTestScript(object):
         cleanup_error_found = False
 
         for fs in fun_test.get_fss():
-            if fs and not fs.cleanup_complete:
+            if fs and not fs.cleanup_attempted:
                 fun_test.log("FS {} was not cleaned up. Attempting ...".format(fs.context))
                 try:
                     fs.cleanup()

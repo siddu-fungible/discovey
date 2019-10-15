@@ -192,12 +192,6 @@
               </tr>
 
               <ng-container *ngIf="moreJenkinsOptions">
-                <tr>
-                  <td><input (change)="disableAssertions = !disableAssertions" type="checkbox"
-                             name="disable-assertions"
-                             [checked]="disableAssertions"> DISABLE_ASSERTIONS
-                  </td>
-                </tr>
                 <tr [@fadeIn]>
                   <td><label for="boot-args">BOOTARGS</label></td>
                   <td><input style='width:100%' id="boot-args" name="boot-args" [(ngModel)]="bootArgs" type="text"
