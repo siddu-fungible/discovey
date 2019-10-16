@@ -822,6 +822,13 @@ class Bmc(Linux):
             file_name = "{}/funos_f1_{}.log".format(self.LOG_DIRECTORY, f1_index)
         return file_name
 
+    def clear_bundle_f1_logs(self):
+        for f1_index in range(2):
+            if f1_index == self.disable_f1_index:
+                continue
+            if self.bundle_compatible:
+                file_name = "{}/funos_f1_{}.log".format(self.LOG_DIRECTORY, f1_index)
+                self.command("echo 'Cleared' > {}".format(file_name))
 
 class BootupWorker(Thread):
     def __init__(self, fs, power_cycle_come=True, non_blocking=False, context=None):
@@ -920,6 +927,7 @@ class BootupWorker(Thread):
 
                 fs.set_boot_phase(BootPhases.FS_BRING_UP_U_BOOT_COMPLETE)
                 fs.u_boot_complete = True
+                fs.get_bmc().clear_bundle_f1_logs()
                 fs.get_bmc().start_bundle_f1_logs()
 
                 come = fs.get_come()
