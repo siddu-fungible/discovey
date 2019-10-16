@@ -950,7 +950,7 @@ class FunTest:
             context_id = context.get_id()
             
         if self.time_series_enabled:
-            data = {"checkpoint_index": self.current_time_series_checkpoint, "log": final_message, "context": context_id}
+            data = {"checkpoint_index": self.current_time_series_checkpoint, "log": final_message, "context_id": context_id}
             self.add_time_series_log(collection_name=models_helper.get_fun_test_time_series_collection_name(self.get_suite_execution_id(),
                                                                                                             self.get_test_case_execution_id()),
                                      data=data)
@@ -1225,7 +1225,7 @@ class FunTest:
                 "expected": expected,
                 "actual": actual,
                 "index": self.current_time_series_checkpoint,
-                "context": context_id}
+                "context_id": context_id}
 
         self.add_time_series_checkpoint(collection_name=models_helper.get_fun_test_time_series_collection_name(self.get_suite_execution_id(),
                                                                                                                self.get_test_case_execution_id()),
@@ -1315,11 +1315,13 @@ class FunTest:
         send_mail(to_addresses=to_addresses, subject=subject, content=content)
 
     def add_start_checkpoint(self):
+
         data = {"checkpoint": "Start",
                 "result": FunTest.PASSED,
                 "expected": True,
                 "actual": True,
-                "index": fun_test.current_time_series_checkpoint}
+                "index": fun_test.current_time_series_checkpoint,
+                "context_id": 0}
         fun_test.add_time_series_checkpoint(collection_name=models_helper.get_fun_test_time_series_collection_name(
             fun_test.get_suite_execution_id(), fun_test.get_test_case_execution_id()), data=data)
 

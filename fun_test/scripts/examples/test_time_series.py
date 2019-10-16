@@ -122,7 +122,7 @@ class FunTestCase4(FunTestCase):
         for context in range(3):
             new_context = fun_test.add_context(description="Context_{}".format(context))
             for i in range(0, 500):
-                fun_test.log(message="Some log {}".format(i), context=new_context)
+                fun_test.log(message="Some log {} for context: {}".format(i, new_context.get_id()), context=new_context)
 
 if __name__ == "__main__":
     myscript = MyScript()

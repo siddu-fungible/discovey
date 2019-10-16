@@ -88,6 +88,7 @@ import { SuitesViewComponent } from './regression/suite-editor/suites-view/suite
 import { SearchBarComponent } from './ui-elements/search-bar/search-bar.component';
 import { ScriptDetailComponent } from './regression/script-detail/script-detail.component';
 import { PagerComponent } from './pager/pager.component';
+import { SelectedPipe } from './pipes/selected.pipe';
 
 
 @NgModule({
@@ -159,7 +160,8 @@ import { PagerComponent } from './pager/pager.component';
     SuitesViewComponent,
     SearchBarComponent,
     ScriptDetailComponent,
-    PagerComponent
+    PagerComponent,
+    SelectedPipe
   ],
   imports: [
     BsDropdownModule,

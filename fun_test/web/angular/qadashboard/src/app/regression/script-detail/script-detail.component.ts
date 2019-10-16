@@ -8,6 +8,7 @@ import {animate, state, style, transition, trigger} from "@angular/animations";
 import {CommonService} from "../../services/common/common.service";
 import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
 import {ScriptDetailService, ContextInfo} from "./script-detail.service";
+import { Pipe, PipeTransform } from '@angular/core';
 
 class TimeSeriesLog {
   date_time: string;
@@ -23,21 +24,28 @@ class Checkpoint {
   result: string;
 }
 
+@Pipe({name: 'selected'})
+export class selected implements PipeTransform {
+  transform(value: ContextInfo []): ContextInfo [] {
+    return value.filter(element => element.selected);
+  }
+}
 
 
 @Component({
   selector: 'app-script-detail',
   templateUrl: './script-detail.component.html',
   styleUrls: ['./script-detail.component.css'],
-  animations: [
-    trigger('show', [
-      state('true', style({ opacity: 1, flexGrow: 1, width: "100%"})),
-      state('false', style({ opacity: 0, flexGrow: 0, width: 0 })),
-      transition('false => true', animate('300ms')),
-      transition('true => false', animate('300ms')),
-
-    ])
-  ]
+  animations: [trigger('show', [
+      transition(':enter', [
+        style({ opacity: 0 }),
+        animate(300)
+      ]),
+      transition(':leave', [
+        animate(1, style({ opacity: 1.0 }))
+      ]),
+      state('*', style({ opacity: 1.0 })),
+    ])]
 })
 export class ScriptDetailComponent implements OnInit {
   driver: Observable<any> = null;
@@ -73,6 +81,15 @@ export class ScriptDetailComponent implements OnInit {
       return this.service.getContexts(this.suiteExecutionId, this.scriptId);
     })).pipe(switchMap(response => {
       this.availableContexts = response;
+      this.availableContexts.map(availableContext => {
+        availableContext["selected"] = false;
+      });
+      let defaultContext = new ContextInfo();
+      defaultContext.context_id = 0;
+      defaultContext.description = "Default";
+      defaultContext.selected = true;
+
+      this.availableContexts.unshift(defaultContext);
       return this.regressionService.testCaseExecutions(null, this.suiteExecutionId, this.scriptPath, this.logPrefix);
     })).pipe(switchMap(response => {
       this.testCaseExecutions = response;
@@ -154,6 +171,7 @@ export class ScriptDetailComponent implements OnInit {
       let checkpointId = `${testCaseId}_${checkpointIndex}`;
       this.currentCheckpointIndex = checkpointIndex;
       this.commonService.scrollTo(checkpointId);
+
     }, error => {
       this.loggerService.error("Unable to fetch time-series logs")
     })
