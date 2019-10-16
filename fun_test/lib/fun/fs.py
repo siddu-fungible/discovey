@@ -1042,10 +1042,11 @@ class ComE(Linux):
         if self.context:
             self.original_context_description = self.context.description
         self.hbm_dump_enabled = False
+        self.funq_bind_device = {}
+
 
     def initialize(self, reset=False, disable_f1_index=None):
         self.disable_f1_index = disable_f1_index
-        self.funq_bind_device = {}
         self.dpc_ready = None
         fun_test.simple_assert(expression=self.setup_workspace(), message="ComE workspace setup", context=self.context)
         fun_test.simple_assert(expression=self.cleanup_dpc(), message="Cleanup dpc", context=self.context)
