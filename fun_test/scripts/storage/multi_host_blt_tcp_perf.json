@@ -62,6 +62,7 @@
       "capacity": 1600277970944,
       "block_size": 4096
     },
+    "drive_margin": 157286400,
     "config_fcp_scheduler": {"total_bw" : 400, "fcp_ctl_bw" : 0, "fcp_data_bw": 0},
     "controllers": 1,
     "syslog": "default",
@@ -114,6 +115,7 @@
       "capacity": 1600277970944,
       "block_size": 4096
     },
+    "drive_margin": 157286400,
     "config_fcp_scheduler": {"total_bw" : 400, "fcp_ctl_bw" : 0, "fcp_data_bw": 0},
     "controllers": 1,
     "syslog": "default",

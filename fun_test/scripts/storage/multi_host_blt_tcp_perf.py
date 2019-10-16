@@ -636,6 +636,8 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
             min_drive_capacity = find_min_drive_capacity(self.storage_controller, self.command_timeout)
             if min_drive_capacity:
                 self.blt_details["capacity"] = min_drive_capacity
+                # Reducing the volume capacity by drive margin as a workaround for the bug SWOS-6862
+                self.blt_details["capacity"] -= self.drive_margin
             else:
                 fun_test.critical("Unable to find the drive with minimum capacity...So going to use the BLT capacity"
                                   "given in the script config file or capacity passed at the runtime...")
