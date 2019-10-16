@@ -36,7 +36,7 @@ class MetricParser():
         if "FlowTest" in model_name:
             return self.flow_test(logs=logs, date_time=date_time)
         elif "Dfa" in model_name or "Nfa" in model_name:
-            return self.dfa_nfa(logs=logs, date_time=date_time)
+            return self.dfa_nfa(logs=logs, date_time=date_time, platform=platform)
         elif "Rcnvme" in model_name:
             return self.rcnvme(logs=logs, date_time=date_time, model_name=model_name)
         elif "HuLatency" in model_name or "HuThroughput" in model_name:
@@ -243,7 +243,7 @@ class MetricParser():
         result["status"] = self.status == RESULTS["PASSED"]
         return result
 
-    def dfa_nfa(self, logs, date_time):
+    def dfa_nfa(self, logs, date_time, platform):
         metrics = collections.OrderedDict()
         teramark_begin = False
         match_found = False
@@ -273,6 +273,7 @@ class MetricParser():
                     metrics["output_bandwidth"] = output_bandwidth
                     metrics["output_latency_unit"] = output_latency_unit
                     metrics["output_bandwidth_unit"] = output_bandwidth_unit
+                    metrics["input_platform"] = platform
                     self.status = RESULTS["PASSED"]
                     d = self.metrics_to_dict(metrics=metrics, result=self.status, date_time=date_time)
                     result["data"].append(d)

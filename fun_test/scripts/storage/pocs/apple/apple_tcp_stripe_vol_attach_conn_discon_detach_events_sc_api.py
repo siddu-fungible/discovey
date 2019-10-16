@@ -3,6 +3,7 @@ from web.fun_test.analytics_models_helper import get_data_collection_time
 from lib.fun.fs import Fs
 from lib.topology.topology_helper import TopologyHelper
 from lib.templates.storage.storage_fs_template import *
+from lib.templates.storage.storage_controller_api import *
 from scripts.storage.storage_helper import *
 from lib.system.utils import *
 from lib.host.storage_controller import *
@@ -129,7 +130,6 @@ class StripeVolAttachDetachTestScript(FunTestScript):
             fun_test.log("Available hosts are: {}".format(hosts))
             required_host_index = []
             self.required_hosts = OrderedDict()
-
             for i in xrange(self.host_start_index, self.host_start_index + self.num_hosts):
                 required_host_index.append(i)
             fun_test.debug("Host index required for scripts: {}".format(required_host_index))
@@ -205,32 +205,56 @@ class StripeVolAttachDetachTestScript(FunTestScript):
         self.funcp_obj = {}
         self.funcp_spec = {}
         for index in xrange(self.num_duts):
+            # Removing existing db directories for fresh setup
+            try:
+                if self.cleanup_sc_db:
+                    for directory in self.sc_db_directories:
+                        if self.come_obj[index].check_file_directory_exists(path=directory):
+                            fun_test.log("Removing Directory {}".format(directory))
+                            self.come_obj[index].sudo_command("rm -rf {}".format(directory))
+                            fun_test.test_assert_expected(actual=self.come_obj[index].exit_status(), expected=0,
+                                                          message="Directory {} is removed".format(directory))
+                        else:
+                            fun_test.log("Directory {} does not exist skipping deletion".format(directory))
+            except Exception as ex:
+                fun_test.critical(str(ex))
+
             self.funcp_obj[index] = StorageFsTemplate(self.come_obj[index])
             self.funcp_spec[index] = self.funcp_obj[index].deploy_funcp_container(
                 update_deploy_script=self.update_deploy_script, update_workspace=self.update_workspace,
-                mode=self.funcp_mode)
+                mode=self.funcp_mode, include_storage=True)
+
             fun_test.test_assert(self.funcp_spec[index]["status"],
                                  "Starting FunCP docker container in DUT {}".format(index))
             self.funcp_spec[index]["container_names"].sort()
+
+            # Ensure that that FPGO interface is up both the docker containers
             for f1_index, container_name in enumerate(self.funcp_spec[index]["container_names"]):
-                bond_interfaces = self.fs_spec[index].get_bond_interfaces(f1_index=f1_index)
-                bond_name = "bond0"
-                bond_ip = bond_interfaces[0].ip
-                self.f1_ips.append(bond_ip.split('/')[0])
-                slave_interface_list = bond_interfaces[0].fpg_slaves
-                slave_interface_list = [self.fpg_int_prefix + str(i) for i in slave_interface_list]
-                self.funcp_obj[index].configure_bond_interface(container_name=container_name,
-                                                               name=bond_name,
-                                                               ip=bond_ip,
-                                                               slave_interface_list=slave_interface_list)
-                # Configuring route
-                route = self.fs_spec[index].spec["bond_interface_info"][str(f1_index)][str(0)]["route"][0]
-                cmd = "sudo ip route add {} via {} dev {}".format(route["network"], route["gateway"], bond_name)
-                route_add_status = self.funcp_obj[index].container_info[container_name].command(cmd)
-                fun_test.test_assert_expected(expected=0,
-                                              actual=self.funcp_obj[index].container_info[
-                                                  container_name].exit_status(),
-                                              message="Configure Static route")
+                status = self.funcp_obj[index].container_info[container_name].ifconfig_up_down("fpg0", "up")
+                fun_test.test_assert(status, "FPG0 interface up in {}".format(container_name))
+        # Creating storage controller API object for the first DUT in the current setup
+        fun_test.sleep("", 60)
+        self.sc_api_obj = StorageControllerApi(api_server_ip=self.come_obj[0].host_ip,
+                                               api_server_port=self.api_server_port, username=self.api_server_username,
+                                               password=self.api_server_password)
+        # Getting all the DUTs of the setup
+        nodes = self.sc_api_obj.get_dpu_ids()
+        fun_test.test_assert(nodes, "Getting UUIDs of all DUTs in the setup")
+        for index, node in enumerate(nodes):
+            # Extracting the DUT's bond interface details and applying it to FPG0 for now, due to SC bug
+            ip = self.fs_spec[index / 2].spec["bond_interface_info"][str(index % 2)][str(0)]["ip"]
+            ip = ip.split('/')[0]
+            subnet_mask = self.fs_spec[index / 2].spec["bond_interface_info"][str(index % 2)][str(0)]["subnet_mask"]
+            route = self.fs_spec[index / 2].spec["bond_interface_info"][str(index % 2)][str(0)]["route"][0]
+            next_hop = "{}/{}".format(route["gateway"], route["network"].split("/")[1])
+            self.f1_ips.append(ip)
+
+            fun_test.log("Current {} node's FPG0 is going to be configured with {} IP address with {} subnet mask with"
+                         " next hop set to {}".format(node, ip, subnet_mask, next_hop))
+            result = self.sc_api_obj.configure_dataplane_ip(dpu_id=node, interface_name="fpg0", ip=ip,
+                                                            subnet_mask=subnet_mask, next_hop=next_hop, use_dhcp=False)
+            fun_test.log("Dataplane IP configuration result of {}: {}".format(node, result))
+            fun_test.test_assert(result["status"], "Configuring {} DUT with Dataplane IP {}".format(node, ip))
 
         # Forming shared variables for defined parameters
         fun_test.shared_variables["f1_in_use"] = self.f1_in_use
@@ -239,6 +263,7 @@ class StripeVolAttachDetachTestScript(FunTestScript):
         fun_test.shared_variables["come_obj"] = self.come_obj
         fun_test.shared_variables["f1_obj"] = self.f1_obj
         fun_test.shared_variables["sc_obj"] = self.sc_obj
+        fun_test.shared_variables["sc_api_obj"] = self.sc_api_obj
         fun_test.shared_variables["f1_ips"] = self.f1_ips
         fun_test.shared_variables["host_handles"] = self.host_handles
         fun_test.shared_variables["host_ips"] = self.host_ips
@@ -286,17 +311,12 @@ class StripeVolAttachDetachTestScript(FunTestScript):
     def cleanup(self):
 
         if fun_test.shared_variables["stripe_vol"]["setup_created"]:
-            self.ctrlr_uuid = fun_test.shared_variables["ctrlr_uuid"]
             self.stripe_uuid = fun_test.shared_variables["stripe_uuid"]
-            self.strip_vol_size = fun_test.shared_variables["strip_vol_size"]
-            self.stripe_details = fun_test.shared_variables["stripe_details"]
-            self.thin_uuid = fun_test.shared_variables["thin_uuid"]
-            self.blt_capacity = fun_test.shared_variables["blt_capacity"]
-            self.blt_details = fun_test.shared_variables["blt_details"]
-            self.nvme_subsystem = fun_test.shared_variables["nvme_subsystem"]
-            self.blt_count = fun_test.shared_variables["blt_count"]
-            self.storage_controller = fun_test.shared_variables["storage_controller"]
+            self.detach_uuid = fun_test.shared_variables["detach_uuid"]
+            self.volume_name = fun_test.shared_variables["volume_name"]
+            self.nqn = fun_test.shared_variables["nqn"]
             self.attach_detach_count = fun_test.shared_variables["attach_detach_count"]
+            self.testcase = fun_test.shared_variables["testcase"]
 
             if fun_test.shared_variables["attach_detach_loop"]:
                 for index, host_name in enumerate(self.host_info):
@@ -327,54 +347,26 @@ class StripeVolAttachDetachTestScript(FunTestScript):
             if not fun_test.shared_variables["attach_detach_loop"]:
                 try:
                     for index, host_name in enumerate(self.host_info):
-                        nvme_disconnect_cmd = "nvme disconnect -n {}".format(self.nvme_subsystem)  # TODO: SWOS-6165
-                        # nvme_disconnect_cmd = "nvme disconnect -d {}".format(self.volume_name)
-
-                        # Skipping disconnect from host4 as it's already disconnected
+                        # NVMe disconnect on host
+                        # nvme_disconnect_cmd = "nvme disconnect -n {}".format(self.nqn)  # TODO: SWOS-6165
+                        nvme_disconnect_cmd = "nvme disconnect -d {}".format(self.volume_name)
                         host_handle = self.host_info[host_name]["handle"]
                         host_handle.sudo_command(command=nvme_disconnect_cmd, timeout=60)
                         nvme_disconnect_exit_status = host_handle.exit_status()
                         fun_test.test_assert_expected(expected=0, actual=nvme_disconnect_exit_status,
                                                       message="{} - NVME Disconnect Status".format(host_name))
-
-                        # Detach volume from NVMe-OF controller
-                        command_result = self.storage_controller.detach_volume_from_controller(
-                            ctrlr_uuid=self.ctrlr_uuid[index], ns_id=self.stripe_details["ns_id"],
-                            command_duration=self.command_timeout)
-                        fun_test.log(command_result)
-                        fun_test.test_assert(command_result["status"], "{} - Detach NVMeOF controller {}".
-                                             format(host_name, self.ctrlr_uuid[index]))
+                        # Detaching volume
+                        detach_volume = self.sc_api_obj.detach_volume(port_uuid=self.detach_uuid)
+                        fun_test.test_assert(detach_volume["status"], "{} - Detach NVMeOF controller".format(host_name))
                 except Exception as ex:
                     fun_test.critical(str(ex))
 
             try:
                 # Delete Strip Volume
-                fun_test.log("\n\n********** Deleting volume **********\n\n")
-                command_result = self.storage_controller.delete_volume(type=self.stripe_details["type"],
-                                                                       capacity=self.strip_vol_size,
-                                                                       name="stripevol1",
-                                                                       uuid=self.stripe_uuid,
-                                                                       block_size=self.stripe_details["block_size"],
-                                                                       stripe_unit=self.stripe_details["stripe_unit"],
-                                                                       pvol_id=self.thin_uuid,
-                                                                       command_duration=self.command_timeout)
-                fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "Deleting Stripe Vol with uuid {} on DUT".
-                                     format(self.stripe_uuid))
-            except Exception as ex:
-                fun_test.critical(str(ex))
-
-            try:
-                for i in range(self.blt_count):
-                    command_result = self.storage_controller.delete_thin_block_volume(
-                        capacity=self.blt_capacity,
-                        block_size=self.blt_details["block_size"],
-                        name="thin_block" + str(i + 1),
-                        uuid=self.thin_uuid[i],
-                        command_duration=self.command_timeout)
-                    fun_test.log(command_result)
-                    fun_test.test_assert(command_result["status"], "Deleting BLT {} with uuid {} on DUT".
-                                         format(i, self.thin_uuid[i]))
+                fun_test.log("\n********** Deleting volume **********\n")
+                delete_volume = self.sc_api_obj.delete_volume(vol_uuid=self.stripe_uuid)
+                fun_test.test_assert(delete_volume["status"],
+                                     "Deleting Stripe Vol with uuid {} on DUT".format(self.stripe_uuid))
             except Exception as ex:
                 fun_test.critical(str(ex))
 
@@ -405,6 +397,7 @@ class StripeVolAttachDetachTestCase(FunTestCase):
         self.come_obj = fun_test.shared_variables["come_obj"]
         self.f1 = fun_test.shared_variables["f1_obj"][0][0]
         self.storage_controller = fun_test.shared_variables["sc_obj"][self.f1_in_use]
+        self.sc_api = fun_test.shared_variables["sc_api_obj"]
         self.f1_ips = fun_test.shared_variables["f1_ips"][self.f1_in_use]
         self.host_info = fun_test.shared_variables["host_info"]
         self.num_f1s = fun_test.shared_variables["num_f1s"]
@@ -421,88 +414,45 @@ class StripeVolAttachDetachTestCase(FunTestCase):
             fun_test.shared_variables["stripe_vol"]["setup_created"] = False
             fun_test.shared_variables["stripe_vol"]["nvme_connect"] = False
             fun_test.shared_variables["stripe_vol"]["warmup_io_completed"] = False
-            fun_test.shared_variables["blt_details"] = self.blt_details
-            fun_test.shared_variables["stripe_details"] = self.stripe_details
 
-            # Configuring controller IP
-            command_result = self.storage_controller.ip_cfg(ip=self.test_network["f1_loopback_ip"])
-            fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "ip_cfg on DUT instance")
+            # Creating pool
+            if self.create_pool:
+                pass
 
-            # Compute the individual BLT sizes
-            self.capacity = int(
-                ceil(self.stripe_details["vol_size"] / (self.blt_count * self.blt_details["block_size"]))
-                * self.blt_details["block_size"]
-            )
+            # Fetching pool uuid as per pool name provided
+            pool_name = self.default_pool if not self.create_pool else self.pool_name
+            self.pool_uuid = self.sc_api.get_pool_uuid_by_name(name=pool_name)
 
-            # Create BLTs for striped volume
-            self.stripe_unit_size = self.stripe_details["block_size"] * self.stripe_details["stripe_unit"]
-            self.blt_capacity = self.stripe_unit_size + self.capacity
-            if (self.blt_capacity / self.stripe_unit_size) % 2:
-                fun_test.log("Num of block in BLT is not even")
-                self.blt_capacity += self.stripe_unit_size
+            # Creating strip volume using sc api
+            create_stripe_vol = self.sc_api.create_stripe_volume(pool_uuid=self.pool_uuid, name="stripevol1",
+                                                                 capacity=self.stripe_details["vol_size"],
+                                                                 pvol_type=self.stripe_details["pvol_type"],
+                                                                 stripe_count=self.stripe_details["stripe_count"],
+                                                                 encrypt=self.stripe_details["encrypt"],
+                                                                 allow_expansion=self.stripe_details["allow_expansion"],
+                                                                 data_protection=self.stripe_details["data_protection"],
+                                                                 compression_effort=self.stripe_details["compress"])
+            fun_test.log("Create stripe volume API response: {}".format(create_stripe_vol))
+            fun_test.test_assert(create_stripe_vol["status"], "Create Stripe Vol with uuid {} on DUT".
+                                 format(create_stripe_vol["data"]["uuid"]))
+            self.stripe_uuid = create_stripe_vol["data"]["uuid"]
 
-            self.thin_uuid = []
-            for i in range(1, self.blt_count + 1, 1):
-                cur_uuid = generate_uuid()
-                self.thin_uuid.append(cur_uuid)
-                command_result = self.storage_controller.create_thin_block_volume(
-                    capacity=self.blt_capacity,
-                    block_size=self.blt_details["block_size"],
-                    name="thin_block" + str(i),
-                    uuid=cur_uuid,
-                    command_duration=self.command_timeout)
-                fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "Create BLT {} with uuid {} on DUT".format(i, cur_uuid))
-            fun_test.shared_variables["thin_uuid"] = self.thin_uuid
-
-            self.strip_vol_size = (self.blt_capacity - self.stripe_unit_size) * self.blt_count
-            # Create Strip Volume
-            self.stripe_uuid = generate_uuid()
-            command_result = self.storage_controller.create_volume(type=self.stripe_details["type"],
-                                                                   capacity=self.strip_vol_size,
-                                                                   name="stripevol1",
-                                                                   uuid=self.stripe_uuid,
-                                                                   block_size=self.stripe_details["block_size"],
-                                                                   stripe_unit=self.stripe_details["stripe_unit"],
-                                                                   pvol_id=self.thin_uuid,
-                                                                   command_duration=self.command_timeout)
-            fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "Create Stripe Vol with uuid {} on DUT".
-                                 format(self.stripe_uuid))
-
-            # Create TCP controllers for first host
-            self.ctrlr_uuid = []
-            for index, host_name in enumerate(self.host_info):
-                self.ctrlr_uuid.append(utils.generate_uuid())
-                command_result = self.storage_controller.create_controller(ctrlr_uuid=self.ctrlr_uuid[-1],
-                                                                           transport=self.transport_type.upper(),
-                                                                           remote_ip=
-                                                                           self.host_info[host_name]["ip"][0],
-                                                                           nqn=self.nvme_subsystem,
-                                                                           port=self.transport_port,
-                                                                           command_duration=self.command_timeout)
-                fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"],
-                                     "Create Storage Controller for {} with controller uuid {} on DUT for host {}".
-                                     format(self.transport_type.upper(), self.ctrlr_uuid[-1], host_name))
-
-                # Attaching volume to NVMeOF controller
-                command_result = self.storage_controller.attach_volume_to_controller(
-                    ctrlr_uuid=self.ctrlr_uuid[index], ns_id=self.stripe_details["ns_id"], vol_uuid=self.stripe_uuid,
-                    command_duration=self.command_timeout)
-                fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"],
-                                     "Attach NVMeOF controller {} to stripe vol {} over {} for host {}".
-                                     format(self.ctrlr_uuid[index], self.stripe_uuid,
-                                            self.transport_type.upper(), host_name))
-
+            # Attaching volume to host
             # Starting packet capture in all the hosts
             self.pcap_started = {}
             self.pcap_stopped = {}
             self.pcap_pid = {}
             fun_test.shared_variables["fio"] = {}
             for index, host_name in enumerate(self.host_info):
+                attach_volume = self.sc_api.volume_attach_remote(vol_uuid=self.stripe_uuid,
+                                                                 transport=self.transport_type.upper(),
+                                                                 remote_ip=self.host_info[host_name]["ip"][0])
+                fun_test.log("Attach volume API response: {}".format(attach_volume))
+                fun_test.test_assert(attach_volume["status"], "Attach Stripe volume {} over {} for host {}".
+                                     format(self.stripe_uuid, self.transport_type.upper(), host_name))
+
+                self.nqn = attach_volume["data"]["nqn"]
+                self.detach_uuid = attach_volume["data"]["uuid"]
                 fun_test.shared_variables["stripe_vol"][host_name] = {}
                 host_handle = self.host_info[host_name]["handle"]
                 test_interface = self.host_info[host_name]["test_interface"].name
@@ -522,13 +472,12 @@ class StripeVolAttachDetachTestCase(FunTestCase):
                     # Checking nvme-connect status
                     if not hasattr(self, "nvme_io_queues") or self.nvme_io_queues != 0:
                         nvme_connect_status = host_handle.nvme_connect(
-                            target_ip=self.test_network["f1_loopback_ip"], nvme_subsystem=self.nvme_subsystem,
+                            target_ip=attach_volume["data"]["ip"], nvme_subsystem=self.nqn,
                             port=self.transport_port, transport=self.transport_type.lower(),
-                            nvme_io_queues=self.nvme_io_queues,
-                            hostnqn=self.host_info[host_name]["ip"][0])
+                            nvme_io_queues=self.nvme_io_queues, hostnqn=self.host_info[host_name]["ip"][0])
                     else:
                         nvme_connect_status = host_handle.nvme_connect(
-                            target_ip=self.test_network["f1_loopback_ip"], nvme_subsystem=self.nvme_subsystem,
+                            target_ip=attach_volume["data"]["ip"], nvme_subsystem=self.nqn,
                             port=self.transport_port, transport=self.transport_type.lower(),
                             hostnqn=self.host_info[host_name]["ip"][0])
 
@@ -541,6 +490,30 @@ class StripeVolAttachDetachTestCase(FunTestCase):
                     lsblk_output = host_handle.lsblk("-b")
                     fun_test.simple_assert(lsblk_output, "Listing available volumes")
 
+                    '''
+                    self.host_info[host_name]["nvme_block_device_list"] = []
+                    volume_pattern = self.nvme_device.replace("/dev/", "") + r"(\d+)n(\d+)"
+                    for volume_name in lsblk_output:
+                        match = re.search(volume_pattern, volume_name)
+                        if match:
+                            self.nvme_block_device = self.nvme_device + str(match.group(1)) + "n" + \
+                                                     str(match.group(2))
+                            if volume_name not in self.host_info[host_name]["nvme_block_device_list"]:
+                                self.host_info[host_name]["nvme_block_device_list"].append(
+                                    self.nvme_block_device)
+                            fun_test.log("NVMe Block Device/s: {}".
+                                         format(self.host_info[host_name]["nvme_block_device_list"]))
+
+                    try:
+                        fun_test.test_assert_expected(expected=len(self.host_info),
+                                                      actual=len(self.host_info[host_name]["nvme_block_device_list"]),
+                                                      message="Expected NVMe devices are available")
+                    except Exception as ex:
+                        fun_test.critical(str(ex))
+                    fun_test.log("nvme_block_device_list: {}".
+                                 format(self.host_info[host_name]["nvme_block_device_list"]))
+                    self.volume_name = self.host_info[host_name]["nvme_block_device_list"][0]
+                    '''
                     self.volume_name = self.nvme_device.replace("/dev/", "") + "n" + str(self.stripe_details["ns_id"])
                     host_handle.sudo_command("dmesg -c")
                     lsblk_output = host_handle.lsblk()
@@ -548,7 +521,10 @@ class StripeVolAttachDetachTestCase(FunTestCase):
                                          format(self.volume_name))
                     fun_test.test_assert_expected(expected="disk", actual=lsblk_output[self.volume_name]["type"],
                                                   message="{} device type check".format(self.volume_name))
+                    fun_test.shared_variables["stripe_vol"]["nvme_connect"] = True
 
+            # Leaving syslog level to default
+            '''
             # Setting the syslog level
             command_result = self.storage_controller.poke(props_tree=["params/syslog/level", self.syslog_level],
                                                           legacy=False, command_duration=self.command_timeout)
@@ -557,6 +533,7 @@ class StripeVolAttachDetachTestCase(FunTestCase):
                                                           command_duration=self.command_timeout)
             fun_test.test_assert_expected(expected=self.syslog_level, actual=command_result["data"],
                                           message="Checking syslog level")
+            '''
 
             for index, host_name in enumerate(self.host_info):
                 fun_test.shared_variables["stripe_vol"][host_name] = {}
@@ -580,69 +557,54 @@ class StripeVolAttachDetachTestCase(FunTestCase):
                         fio_output = host_handle.pcie_fio(filename=self.nvme_block_device, **self.warm_up_fio_cmd_args)
                         fun_test.test_assert(fio_output, "Writing the entire volume")
                     fun_test.shared_variables["stripe_vol"]["warmup_io_completed"] = True
-                    # host_handle.disconnect()
-                    after_write_eqm = self.storage_controller.peek(props_tree="stats/eqm")
 
+                    after_write_eqm = self.storage_controller.peek(props_tree="stats/eqm")
                     for field, value in before_write_eqm["data"].items():
                         current_value = after_write_eqm["data"][field]
                         if (value != current_value) and (field != "incoming BN msg valid"):
                             stats_delta = current_value - value
                             fun_test.log("Write test : there is a mismatch in {} : {}".format(field, stats_delta))
 
-                    if self.attach_detach_loop:
-                        try:
-                            fun_test.log("Disconnecting and Detaching volume from host")
-                            nvme_disconnect_cmd = "nvme disconnect -n {}".format(self.nvme_subsystem)  # TODO: SWOS-6165
-                            # nvme_disconnect_cmd = "nvme disconnect -d {}".format(self.volume_name)
+                if self.attach_detach_loop:
+                    # Disconnecting volume from host
+                    try:
+                        fun_test.log("Disconnecting volume from the host")
+                        # nvme_disconnect_cmd = "nvme disconnect -n {}".format(self.nqn)  # TODO: SWOS-6165
+                        nvme_disconnect_cmd = "nvme disconnect -d {}".format(self.volume_name)
+                        host_handle.sudo_command(command=nvme_disconnect_cmd, timeout=60)
+                        nvme_disconnect_exit_status = host_handle.exit_status()
+                        fun_test.test_assert_expected(expected=0, actual=nvme_disconnect_exit_status,
+                                                      message="{} - NVME Disconnect Status".format(host_name))
+                        fun_test.shared_variables["stripe_vol"]["nvme_connect"] = False
+                    except Exception as ex:
+                        fun_test.critical(str(ex))
 
-                            host_handle.sudo_command(command=nvme_disconnect_cmd, timeout=60)
-                            nvme_disconnect_exit_status = host_handle.exit_status()
-                            fun_test.test_assert_expected(expected=0, actual=nvme_disconnect_exit_status,
-                                                          message="{} - NVME Disconnect Status".format(host_name))
-
-                            # Detach volume from NVMe-OF controller
-                            command_result = self.storage_controller.detach_volume_from_controller(
-                                ctrlr_uuid=self.ctrlr_uuid[index], ns_id=self.stripe_details["ns_id"],
-                                command_duration=self.command_timeout)
-                            fun_test.log(command_result)
-                            fun_test.test_assert(command_result["status"], "{} - Detach NVMeOF controller {}".format(
-                                host_name, self.ctrlr_uuid[index]))
-                            fun_test.shared_variables["stripe_vol"]["nvme_connect"] = False
-                        except Exception as ex:
-                            fun_test.critical(str(ex))
+                    # Detaching volume
+                    detach_volume = self.sc_api.detach_volume(port_uuid=self.detach_uuid)
+                    fun_test.log("Detach volume API response: {}".format(detach_volume))
+                    fun_test.test_assert(detach_volume["status"], "{} - Detach Volume".format(host_name))
 
             fun_test.shared_variables["stripe_vol"]["setup_created"] = True
-            fun_test.shared_variables["ctrlr_uuid"] = self.ctrlr_uuid
             fun_test.shared_variables["stripe_uuid"] = self.stripe_uuid
+            fun_test.shared_variables["detach_uuid"] = self.detach_uuid
             fun_test.shared_variables["attach_detach_loop"] = self.attach_detach_loop
-            fun_test.shared_variables["strip_vol_size"] = self.strip_vol_size
-            fun_test.shared_variables["stripe_details"] = self.stripe_details
-            fun_test.shared_variables["thin_uuid"] = self.thin_uuid
-            fun_test.shared_variables["blt_capacity"] = self.blt_capacity
-            fun_test.shared_variables["blt_details"] = self.blt_details
-            fun_test.shared_variables["nvme_subsystem"] = self.nvme_subsystem
-            fun_test.shared_variables["blt_count"] = self.blt_count
             fun_test.shared_variables["storage_controller"] = self.storage_controller
-            fun_test.shared_variables["attach_detach_count"] = self.attach_detach_count
+            fun_test.shared_variables["volume_name"] = self.volume_name
+            fun_test.shared_variables["nqn"] = self.nqn
 
     def run(self):
         testcase = self.__class__.__name__
 
         # Going to run the FIO test for the block size and iodepth combo listed in fio_iodepth
-        fio_result = {}
         fio_output = {}
-        aggr_fio_output = {}
         test_thread_id = {}
         host_clone = {}
         self.pcap_started = {}
         self.pcap_stopped = {}
         self.pcap_pid = {}
 
-        self.ctrlr_uuid = fun_test.shared_variables["ctrlr_uuid"]
         self.stripe_uuid = fun_test.shared_variables["stripe_uuid"]
-        self.strip_vol_size = fun_test.shared_variables["strip_vol_size"]
-        self.thin_uuid = fun_test.shared_variables["thin_uuid"]
-        self.blt_capacity = fun_test.shared_variables["blt_capacity"]
+        fun_test.shared_variables["attach_detach_count"] = self.attach_detach_count
 
         if hasattr(self, "create_file_system") and self.create_file_system:
             test_filename = "/mnt/testfile.dat"
@@ -652,7 +614,7 @@ class StripeVolAttachDetachTestCase(FunTestCase):
         if self.attach_detach_loop:
             for iteration in range(self.attach_detach_count):
                 fun_test.log("Iteration: {} - Executing Attach Detach in loop".format(iteration))
-                fun_test.sleep("before attaching to controller", self.attach_detach_wait)
+                fun_test.sleep("before attaching volume", self.attach_detach_wait)
                 self.pcap_started[iteration] = {}
                 self.pcap_stopped[iteration] = {}
                 self.pcap_pid[iteration] = {}
@@ -660,15 +622,15 @@ class StripeVolAttachDetachTestCase(FunTestCase):
                 for index, host_name in enumerate(self.host_info):
                     # Attaching volume to NVMeOF controller
                     host_handle = self.host_info[host_name]["handle"]
-                    command_result = self.storage_controller.attach_volume_to_controller(
-                        ctrlr_uuid=self.ctrlr_uuid[index], ns_id=self.stripe_details["ns_id"],
-                        vol_uuid=self.stripe_uuid,
-                        command_duration=self.command_timeout)
-                    fun_test.log(command_result)
-                    fun_test.test_assert(command_result["status"],
-                                         "Attach NVMeOF controller {} to stripe vol {} over {} for host {}".
-                                         format(self.ctrlr_uuid[index], self.stripe_uuid,
-                                                self.transport_type.upper(), host_name))
+                    attach_volume = self.sc_api.volume_attach_remote(vol_uuid=self.stripe_uuid,
+                                                                     transport=self.transport_type.upper(),
+                                                                     remote_ip=self.host_info[host_name]["ip"][0])
+                    fun_test.log("Iteration {} - Attach volume API response: {}".format(iteration, attach_volume))
+                    fun_test.test_assert(attach_volume["status"],
+                                         "Iteration: {} - Attach stripe vol {} over {} for host {}".
+                                         format(iteration, self.stripe_uuid, self.transport_type.upper(), host_name))
+                    self.nqn = attach_volume["data"]["nqn"]
+                    self.detach_uuid = attach_volume["data"]["uuid"]
 
                     if self.nvme_connect:
                         test_interface = self.host_info[host_name]["test_interface"].name
@@ -679,7 +641,8 @@ class StripeVolAttachDetachTestCase(FunTestCase):
                         self.pcap_pid[iteration][host_name] = host_handle.tcpdump_capture_start(
                             interface=test_interface, tcpdump_filename=tcpdump_filename, snaplen=1500)
                         if self.pcap_pid[iteration][host_name]:
-                            fun_test.log("Iteration: {} - Started packet capture in {}".format(iteration, host_name))
+                            fun_test.log("Iteration: {} - Started packet capture in {}".format(iteration,
+                                                                                               host_name))
                             self.pcap_started[iteration][host_name] = True
                             self.pcap_stopped[iteration][host_name] = False
                         else:
@@ -690,15 +653,12 @@ class StripeVolAttachDetachTestCase(FunTestCase):
                             # Checking nvme-connect status
                             if not hasattr(self, "nvme_io_queues") or self.nvme_io_queues != 0:
                                 nvme_connect_status = host_handle.nvme_connect(
-                                    target_ip=self.test_network["f1_loopback_ip"],
-                                    nvme_subsystem=self.nvme_subsystem,
+                                    target_ip=attach_volume["data"]["ip"], nvme_subsystem=self.nqn,
                                     port=self.transport_port, transport=self.transport_type.lower(),
-                                    nvme_io_queues=self.nvme_io_queues,
-                                    hostnqn=self.host_info[host_name]["ip"][0])
+                                    nvme_io_queues=self.nvme_io_queues, hostnqn=self.host_info[host_name]["ip"][0])
                             else:
                                 nvme_connect_status = host_handle.nvme_connect(
-                                    target_ip=self.test_network["f1_loopback_ip"],
-                                    nvme_subsystem=self.nvme_subsystem,
+                                    target_ip=attach_volume["data"]["ip"], nvme_subsystem=self.nqn,
                                     port=self.transport_port, transport=self.transport_type.lower(),
                                     hostnqn=self.host_info[host_name]["ip"][0])
 
@@ -717,17 +677,45 @@ class StripeVolAttachDetachTestCase(FunTestCase):
                                 self.stripe_details["ns_id"])
                             host_handle.sudo_command("dmesg -c")
                             lsblk_output = host_handle.lsblk()
+
+                            '''
+                            self.host_info[host_name]["nvme_block_device_list"] = []
+                            volume_pattern = self.nvme_device.replace("/dev/", "") + r"(\d+)n(\d+)"
+                            for volume_name in lsblk_output:
+                                match = re.search(volume_pattern, volume_name)
+                                if match:
+                                    self.nvme_block_device = self.nvme_device + str(match.group(1)) + "n" + \
+                                                             str(match.group(2))
+                                    if volume_name not in self.nvme_block_device:
+                                        self.host_info[host_name]["nvme_block_device_list"].append(
+                                            self.nvme_block_device)
+                                    fun_test.log("NVMe Block Device/s: {}".
+                                                 format(self.host_info[host_name]["nvme_block_device_list"]))
+
+                            try:
+                                fun_test.test_assert_expected(
+                                    expected=len(self.host_info),
+                                    actual=len(self.host_info[host_name]["nvme_block_device_list"]),
+                                    message="Expected NVMe devices are available")
+                            except Exception as ex:
+                                fun_test.critical(str(ex))
+                            fun_test.log("Iteration: {} - nvme_block_device_list: {}".
+                                         format(iteration, self.host_info[host_name]["nvme_block_device_list"]))
+                            self.volume_name = self.host_info[host_name]["nvme_block_device_list"][0]
+
+                            '''
                             fun_test.test_assert(self.volume_name in lsblk_output,
-                                                 "Iteration: {} - {} device available".format(iteration, self.volume_name))
+                                                 "Iteration: {} - {} device available".format(iteration,
+                                                                                              self.volume_name))
                             fun_test.test_assert_expected(expected="disk",
                                                           actual=lsblk_output[self.volume_name]["type"],
                                                           message="Iteration: {} - {} device type check".
                                                           format(iteration, self.volume_name))
+                            fun_test.shared_variables["stripe_vol"]["nvme_connect"] = True
 
                     if self.io_during_attach_detach:
                         wait_time = self.num_hosts - index
                         host_clone[host_name] = self.host_info[host_name]["handle"].clone()
-
                         # Starting Read for whole volume on first host
                         test_thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
                                                                               func=fio_parser,
@@ -740,11 +728,9 @@ class StripeVolAttachDetachTestCase(FunTestCase):
                         if self.disconnect_before_detach:
                             fun_test.sleep("Iteration: {} - before disconnect".format(iteration), self.nvme_disconn_wait)
                             try:
-                                fun_test.log("Iteration: {} - Disconnecting from host".format(iteration))
-                                nvme_disconnect_cmd = "nvme disconnect -n {}".format(self.nvme_subsystem)
-                                # TODO: SWOS-6165
-                                # nvme_disconnect_cmd = "nvme disconnect -d {}".format(self.volume_name)
-
+                                fun_test.log("Disconnecting volume from the host")
+                                # nvme_disconnect_cmd = "nvme disconnect -n {}".format(self.nqn)  # TODO: SWOS-6165
+                                nvme_disconnect_cmd = "nvme disconnect -d {}".format(self.volume_name)
                                 host_handle.sudo_command(command=nvme_disconnect_cmd, timeout=60)
                                 nvme_disconnect_exit_status = host_handle.exit_status()
                                 fun_test.test_assert_expected(expected=0, actual=nvme_disconnect_exit_status,
@@ -753,16 +739,14 @@ class StripeVolAttachDetachTestCase(FunTestCase):
                                 fun_test.shared_variables["stripe_vol"]["nvme_connect"] = False
                             except Exception as ex:
                                 fun_test.critical(str(ex))
-
                         try:
                             # Detach volume from NVMe-OF controller
-                            command_result = self.storage_controller.detach_volume_from_controller(
-                                ctrlr_uuid=self.ctrlr_uuid[index], ns_id=self.stripe_details["ns_id"],
-                                command_duration=self.command_timeout)
-                            fun_test.log(command_result)
-                            fun_test.test_assert(command_result["status"], "{} - Detach NVMeOF controller {}".
-                                                 format(host_name, self.ctrlr_uuid[index]))
-                            fun_test.shared_variables["stripe_vol"]["nvme_connect"] = False
+                            detach_volume = self.sc_api.detach_volume(port_uuid=self.detach_uuid)
+                            fun_test.log("Iteration: {} - Detach volume API response: {}".format(iteration,
+                                                                                                 detach_volume))
+                            fun_test.test_assert(detach_volume["status"],
+                                                 "Iteration: {} - {} - Detach NVMeOF controller".
+                                                 format(iteration, host_name))
                         except Exception as ex:
                             fun_test.critical(str(ex))
 
@@ -808,13 +792,11 @@ class StripeVolAttachDetachTestCase(FunTestCase):
                             fun_test.critical(str(ex))
                     try:
                         # Detach volume from NVMe-OF controller
-                        command_result = self.storage_controller.detach_volume_from_controller(
-                            ctrlr_uuid=self.ctrlr_uuid[index], ns_id=self.stripe_details["ns_id"],
-                            command_duration=self.command_timeout)
-                        fun_test.log(command_result)
-                        fun_test.test_assert(command_result["status"], "{} - Detach NVMeOF controller {}".
-                                             format(host_name, self.ctrlr_uuid[index]))
-                        fun_test.shared_variables["stripe_vol"]["nvme_connect"] = False
+                        detach_volume = self.sc_api.detach_volume(port_uuid=self.detach_uuid)
+                        fun_test.log("Iteration: {} - Detach volume API response: {}".format(iteration,
+                                                                                             detach_volume))
+                        fun_test.test_assert(detach_volume["status"], "Iteration: {} - {} - Detach NVMeOF controller".
+                                             format(iteration, host_name))
                     except Exception as ex:
                         fun_test.critical(str(ex))
         else:
@@ -867,13 +849,13 @@ class StripedVolAttachConnDisConnDetachDisconnDuringIO(StripeVolAttachDetachTest
     def describe(self):
         self.set_test_details(
             id=1,
-            summary="Multiple Attach-NvmeConnect-NvmeDisconnect-Detach with IO",
+            summary="Multiple Attach-NvmeConnect-NvmeDisconnect-Detach with IO - Disconnect & Detach During IO",
             steps='''
                 1. Create Stripe volume
                 2. Attach volume to one host
                 3. Do nvme_connect and perform sequential write and nvme_disconnect and detach
                 4. Perform Attach-NvmeConnect- IO With DI -NvmeDisconnect-Disconnect in loop
-                5. Start Random Read-Write with data integrity
+                5. Disconnect and Detach during Read-Write, FIO should fail
                 ''')
 
     def setup(self):
@@ -932,9 +914,35 @@ class StripedVolAttachDetach(StripeVolAttachDetachTestCase):
         super(StripedVolAttachDetach, self).cleanup()
 
 
+class StripedVolAttachConnDisConnDetachDisconnAfterIO(StripeVolAttachDetachTestCase):
+    def describe(self):
+        self.set_test_details(
+            id=4,
+            summary="Multiple Attach-NvmeConnect-NvmeDisconnect-Detach with IO - Disconnect & Detach After IO",
+            steps='''
+                1. Create Stripe volume
+                2. Attach volume to one host
+                3. Do nvme_connect and perform sequential write
+                4. Perform Attach-NvmeConnect- IO With DI -NvmeDisconnect-Disconnect in loop
+                5. Perform RandRead with Verify, FIO should succeed
+                6. Disconnect and Detach
+                7. Repeat step #3 to #6
+                ''')
+
+    def setup(self):
+        super(StripedVolAttachConnDisConnDetachDisconnAfterIO, self).setup()
+
+    def run(self):
+        super(StripedVolAttachConnDisConnDetachDisconnAfterIO, self).run()
+
+    def cleanup(self):
+        super(StripedVolAttachConnDisConnDetachDisconnAfterIO, self).cleanup()
+
+
 if __name__ == "__main__":
     testscript = StripeVolAttachDetachTestScript()
     testscript.add_test_case(StripedVolAttachConnDisConnDetachDisconnDuringIO())
     testscript.add_test_case(StripedVolAttachConnDisConnDetach())
     testscript.add_test_case(StripedVolAttachDetach())
+    testscript.add_test_case(StripedVolAttachConnDisConnDetachDisconnAfterIO())
     testscript.run()

@@ -6,6 +6,8 @@ import dpcsh_commands
 import file_helper
 import debug_memory_calculation
 from lib.topology.topology_helper import TopologyHelper
+from fun_global import PerfUnit, FunPlatform
+from web.fun_test.analytics_models_helper import get_data_collection_time, ModelHelper
 
 from scripts.storage.storage_helper import *
 
@@ -33,7 +35,7 @@ class FunTestCase1(FunTestCase):
         # we have the combination for
         # 1. 1min
         # 2. 1hour - 60 min
-        # 3. 3.5 hour - 210min
+        # 3. 3.5 hour - 210 min
         fs_name = fun_test.get_job_environment_variable("test_bed_type")
         self.fs = AssetManager().get_fs_by_name(fs_name)
 
@@ -54,7 +56,8 @@ class FunTestCase1(FunTestCase):
             "le_firewall": True,
             "interval": 5,
             "boot_new_image": True,
-            "specific_app": []
+            "specific_app": [],
+            "add_to_database": False
         }
         if job_inputs:
             if "fs" in job_inputs:
@@ -69,6 +72,8 @@ class FunTestCase1(FunTestCase):
                 self.details["boot_new_image"] = job_inputs["boot_new_image"]
             if "specific_app" in job_inputs:
                 self.details["specific_app"] = job_inputs["specific_app"]
+            if "add_to_database" in job_inputs:
+                self.details["add_to_database"] = job_inputs["add_to_database"]
 
         if self.details["boot_new_image"]:
             topology = topology_helper.deploy()
@@ -85,8 +90,9 @@ class FunTestCase1(FunTestCase):
         fun_test.add_auxillary_file(description="FS and F1 power output", filename=self.power_output)
         self.f_power_shell = open(self.power_shell, 'w+')
         self.f_power_output = open(self.power_output, 'w+')
+        self.upload_first_data = True
 
-        # Debug files
+        # Debug memory files
         self.f1_0_debug_memory_dpc_logs = fun_test.get_test_case_artifact_file_name(
             post_fix_name="debug_memory_F1_0_logs.txt")
         self.f1_1_debug_memory_dpc_logs = fun_test.get_test_case_artifact_file_name(
@@ -138,7 +144,23 @@ class FunTestCase1(FunTestCase):
         self.f_bam_f1_0 = open(self.f1_0_bam_dpc_logs, "w+")
         self.f_bam_f1_1 = open(self.f1_1_bam_dpc_logs, "w+")
 
-        #TODO: Clear the Uart log files if the
+        # Debug vp util
+        self.f1_0_debug_vp_utils_dpc_logs = fun_test.get_test_case_artifact_file_name(
+            post_fix_name="debug_vp_utils_F1_0_logs.txt")
+        self.f1_1_debug_vp_utils_dpc_logs = fun_test.get_test_case_artifact_file_name(
+            post_fix_name="debug_vp_utils_F1_1_logs.txt")
+        fun_test.add_auxillary_file(description="Debug vp_util stats F1_0", filename=self.f1_0_debug_vp_utils_dpc_logs)
+        fun_test.add_auxillary_file(description="Debug vp_util stats F1_1", filename=self.f1_1_debug_vp_utils_dpc_logs)
+        self.f_debug_vp_utils_f1_0 = open(self.f1_0_debug_vp_utils_dpc_logs, "w+")
+        self.f_debug_vp_utils_f1_1 = open(self.f1_1_debug_vp_utils_dpc_logs, "w+")
+
+        # F1 die temperature
+        self.die_temperature = fun_test.get_test_case_artifact_file_name(post_fix_name="fs_die_temperature_logs.txt")
+        fun_test.add_auxillary_file(description="FS die temperature", filename=self.die_temperature)
+        self.f_die_temperature = open(self.die_temperature, 'w+')
+
+
+        # TODO: Clear the Uart log files if the new image is not built
 
         # Traffic
         self.methods = {"crypto": crypto, "zip": zip_deflate, "rcnvme": rcnvme, "fio": fio}
@@ -158,7 +180,7 @@ class FunTestCase1(FunTestCase):
 
         fun_test.test_assert(True, "Initial debug stats is saved")
 
-        #############  Starting Traffic ################
+        ############# Starting Traffic ################
         come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
                            ssh_username=self.fs['come']['mgmt_ssh_username'],
                            ssh_password=self.fs['come']['mgmt_ssh_password'])
@@ -186,10 +208,9 @@ class FunTestCase1(FunTestCase):
         fun_test.log("Capturing the data {}".format(heading))
         self.capture_data(count=count, heading=heading)
 
-        #################### After the traffic ################
+        #################### After the traffic ############
         if self.details["le_firewall"]:
             kill_le_firewall()
-        fun_test.sleep("To make sure traffic is completed", seconds=5)
         count = 3
         heading = "After the traffic"
         fun_test.log("Capturing the data {}".format(heading))
@@ -211,6 +232,7 @@ class FunTestCase1(FunTestCase):
                              disable_uart_logger=False)
             bmc_handle.set_prompt_terminator(r'# $')
             # bmc_handle.cleanup()
+            # Capture the UART logs also
             artifact_file_name_f1_0 = bmc_handle.get_uart_log_file(0)
             artifact_file_name_f1_1 = bmc_handle.get_uart_log_file(1)
             fun_test.add_auxillary_file(description="DUT_0_fs-65_F1_0 UART Log", filename=artifact_file_name_f1_0)
@@ -226,13 +248,17 @@ class FunTestCase1(FunTestCase):
         bmc_handle.set_prompt_terminator(r'# $')
 
         for i in range(count):
-            raw_output, cal_output = bmc_commands.power_manager(bmc_handle=bmc_handle)
+            raw_output, cal_output, pro_data = bmc_commands.power_manager(bmc_handle=bmc_handle)
             time_now = datetime.datetime.now()
             print_data = {"output": raw_output, "time": time_now}
             file_helper.add_data(f_power_shell, print_data, heading=heading)
             print_data = {"output": cal_output, "time": time_now}
             file_helper.add_data(f_power_output, print_data, heading=heading)
             fun_test.sleep("before next iteration", seconds=self.details["interval"])
+            if heading == "During traffic" and self.upload_first_data and self.details["add_to_database"]:
+                self.upload_first_data = False
+                print ("Result pro_data: {}".format(pro_data))
+                self.add_to_data_base(pro_data)
         bmc_handle.destroy()
 
     ###########  debug memory ########
@@ -306,6 +332,38 @@ class FunTestCase1(FunTestCase):
             fun_test.sleep("before next iteration", seconds=self.details["interval"])
             file_helper.add_data(file_bm, one_dataset, heading=heading)
         come_handle.destroy()
+
+    ############### debug vp_utils #######
+    def debug_vp_utils(self, f1, count, file_debug, heading):
+        come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
+                           ssh_username=self.fs['come']['mgmt_ssh_username'],
+                           ssh_password=self.fs['come']['mgmt_ssh_password'])
+        for i in range(count):
+            one_dataset = {}
+            dpcsh_output = dpcsh_commands.debug_vp_utils(come_handle=come_handle, f1=f1)
+            one_dataset["time"] = datetime.datetime.now()
+            one_dataset["output"] = dpcsh_output
+            fun_test.sleep("before next iteration", seconds=self.details["interval"])
+            file_helper.add_data(file_debug, one_dataset, heading=heading)
+        come_handle.destroy()
+
+    ############ Die temperature #########
+    def die_temperature_func(self, count, f_die_temperature, heading):
+        bmc_handle = Bmc(host_ip=self.fs['bmc']['mgmt_ip'],
+                         ssh_username=self.fs['bmc']['mgmt_ssh_username'],
+                         ssh_password=self.fs['bmc']['mgmt_ssh_password'],
+                         set_term_settings=True,
+                         disable_uart_logger=False)
+        bmc_handle.set_prompt_terminator(r'# $')
+        for i in range(count):
+            output = bmc_commands.die_temperature(bmc_handle)
+            time_now = datetime.datetime.now()
+            print_data = {"output": output, "time": time_now}
+            file_helper.add_data(f_die_temperature, print_data, heading=heading)
+            fun_test.sleep("before next iteration", seconds=self.details["interval"])
+        bmc_handle.destroy()
+
+    ###########
 
     def get_debug_memory_stats_initially(self, f_debug_memory_f1_0, f_debug_memory_f1_1):
         result = {}
@@ -412,6 +470,31 @@ class FunTestCase1(FunTestCase):
                                                            heading=heading)
         fun_test.test_assert(True, "Started capturing the peek stats/bam logs {} on F1_1".format(heading))
 
+        # Debug vp_utils stats
+        thread_id_debug_vp_utils_f1_0 = fun_test.execute_thread_after(func=self.debug_vp_utils,
+                                                                      time_in_seconds=10,
+                                                                      count=count,
+                                                                      f1=0,
+                                                                      file_debug=self.f_debug_vp_utils_f1_0,
+                                                                      heading=heading)
+        fun_test.test_assert(True, "Started capturing the debug vp_utils logs {} on F1_0".format(heading))
+
+        thread_id_debug_vp_utils_f1_1 = fun_test.execute_thread_after(func=self.debug_vp_utils,
+                                                                      time_in_seconds=11,
+                                                                      count=count,
+                                                                      f1=1,
+                                                                      file_debug=self.f_debug_vp_utils_f1_1,
+                                                                      heading=heading)
+        fun_test.test_assert(True, "Started capturing the debug vp_utils logs {} on F1_1".format(heading))
+
+        # Die temperature
+
+        thread_id_die_temp = fun_test.execute_thread_after(func=self.die_temperature_func,
+                                                           time_in_seconds=12,
+                                                           count=count,
+                                                           f_die_temperature=self.f_die_temperature,
+                                                           heading=heading)
+
         fun_test.join_thread(thread_id_power)
         fun_test.join_thread(thread_id_debug_memory_f1_0)
         fun_test.join_thread(thread_id_debug_memory_f1_1)
@@ -421,6 +504,9 @@ class FunTestCase1(FunTestCase):
         fun_test.join_thread(thread_id_eqm_f1_1)
         fun_test.join_thread(thread_id_bam_f1_0)
         fun_test.join_thread(thread_id_bam_f1_1)
+        fun_test.join_thread(thread_id_debug_vp_utils_f1_0)
+        fun_test.join_thread(thread_id_debug_vp_utils_f1_1)
+        fun_test.join_thread(thread_id_die_temp)
         fun_test.test_assert(True, "Power logs captured successfully")
         fun_test.test_assert(True, "Debug memory on F1_0 logs captured successfully")
         fun_test.test_assert(True, "Debug memory on F1_1 logs captured successfully")
@@ -430,6 +516,9 @@ class FunTestCase1(FunTestCase):
         fun_test.test_assert(True, "EQM logs on F1_1 captured successfully")
         fun_test.test_assert(True, "BAM logs on F1_0 captured successfully")
         fun_test.test_assert(True, "BAM logs on F1_1 captured successfully")
+        fun_test.test_assert(True, "Debug vp_util logs on F1_0 captured successfully")
+        fun_test.test_assert(True, "Debug vp_util logs on F1_1 captured successfully")
+        fun_test.test_assert(True, "Die temperature captured successfully captured successfully")
 
     ##### EC vol creation
     def create_ec_volume(self, topology):
@@ -573,6 +662,26 @@ class FunTestCase1(FunTestCase):
         come_handle.command("./dpcsh --pcie_nvme_sock=/dev/nvme0 --nvme_cmd_timeout=600000 --tcp_proxy=40220 &> /tmp/f1_0_dpc.txt &")
         come_handle.command("./dpcsh --pcie_nvme_sock=/dev/nvme1 --nvme_cmd_timeout=600000 --tcp_proxy=40221 &> /tmp/f1_1_dpc.txt &")
         come_handle.exit_sudo()
+
+    def add_to_data_base(self, value_dict):
+        unit_dict = {
+            "fs_power_unit": PerfUnit.UNIT_WATT,
+            "f1_0_power_unit": PerfUnit.UNIT_WATT,
+            "f1_1_power_unit": PerfUnit.UNIT_WATT,
+        }
+        value_dict["date_time"] = get_data_collection_time()
+        value_dict["version"] = fun_test.get_version()
+        model_name = "PowerPerformance"
+        status = fun_test.PASSED
+        try:
+            generic_helper = ModelHelper(model_name=model_name)
+            generic_helper.set_units(validate=True, **unit_dict)
+            generic_helper.add_entry(**value_dict)
+            generic_helper.set_status(status)
+            print "used generic helper to add an entry"
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
 
 
 if __name__ == "__main__":
