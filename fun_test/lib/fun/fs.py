@@ -337,7 +337,8 @@ class Bmc(Linux):
         serial_proxy_ids = self.get_process_id_by_pattern("python.*999")
 
     def start_bundle_f1_logs(self):
-        self.command("{} start".format(self.FUNOS_LOGS_SCRIPT))
+        if self.bundle_compatible:
+            self.command("{} start".format(self.FUNOS_LOGS_SCRIPT))
 
     def start_uart_log_listener(self, f1_index, serial_device):
         process_ids = self.get_process_id_by_pattern("microcom", multiple=True)
