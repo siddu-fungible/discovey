@@ -703,8 +703,8 @@ def get_fun_test_time_series_collection_name(suite_execution_id, test_case_execu
     return collection_name
 
 
-def get_ts_test_case_context_info_collection_name(suite_execution_id, test_case_execution_id):
-    return "s_{}_{}_context_info".format(suite_execution_id, test_case_execution_id)
+def get_ts_test_case_context_info_collection_name(suite_execution_id, script_id):
+    return "s_{}_{}_context_info".format(suite_execution_id, script_id)
 
 
 def get_script_id(test_case_execution_id):

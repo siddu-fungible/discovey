@@ -540,7 +540,7 @@ def test_case_time_series(request, suite_execution_id, test_case_execution_id):
     if request.method == "GET":
         type = request.GET.get("type", None)
         checkpoint_index = request.GET.get("checkpoint_index", None)
-        collection_name = get_fun_test_time_series_collection_name(suite_execution_id, test_case_execution_id) # "s_{}_{}".format(suite_execution_id, test_case_execution_id)
+        collection_name = get_fun_test_time_series_collection_name(suite_execution_id, test_case_execution_id)  # "s_{}_{}".format(suite_execution_id, test_case_execution_id)
         mongo_db_manager = app_config.get_mongo_db_manager()
         collection = mongo_db_manager.get_collection(collection_name)
         query = {}
@@ -552,17 +552,23 @@ def test_case_time_series(request, suite_execution_id, test_case_execution_id):
             result = list(collection.find(query))
     return result
 
+
 @api_safe_json_response
-def contexts(request, suite_execution_id, test_case_execution_id):
+def contexts(request, suite_execution_id, script_id):
     result = None
     if request.method == "GET":
-        collection_name = get_ts_test_case_context_info_collection_name(suite_execution_id, test_case_execution_id)
+        collection_name = get_ts_test_case_context_info_collection_name(suite_execution_id, script_id)
         mongo_db_manager = app_config.get_mongo_db_manager()
         collection = mongo_db_manager.get_collection(collection_name)
         query = {}
         if collection:
+            if script_id:
+                query["script_id"] = int(script_id)
+            if suite_execution_id:
+                query["suite_execution_id"] = int(suite_execution_id)
             result = list(collection.find(query))
     return result
+
 
 @api_safe_json_response
 def release_trains(request):
@@ -571,6 +577,7 @@ def release_trains(request):
     if request.method == "GET":
         result = releases
     return result
+
 
 if __name__ == "__main__":
     from web.fun_test.django_interactive import *

@@ -7,7 +7,7 @@ import {ActivatedRoute} from "@angular/router";
 import {animate, state, style, transition, trigger} from "@angular/animations";
 import {CommonService} from "../../services/common/common.service";
 import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
-import {ScriptDetailService} from "./script-detail.service";
+import {ScriptDetailService, ContextInfo} from "./script-detail.service";
 
 class TimeSeriesLog {
   date_time: string;
@@ -22,6 +22,8 @@ class Checkpoint {
   index: number;
   result: string;
 }
+
+
 
 @Component({
   selector: 'app-script-detail',
@@ -58,6 +60,7 @@ export class ScriptDetailComponent implements OnInit {
   showLogsPanel: boolean = false;
   testCaseIds: number [] = [];
   currentCheckpointIndex: number = null;
+  availableContexts: ContextInfo [] = [];
 
   timeSeriesByTestCase: {[testCaseId: number]: {[key: string]: any }} = {};
 
@@ -66,9 +69,10 @@ export class ScriptDetailComponent implements OnInit {
     this.driver = of(true).pipe(switchMap(response => {
       return this.regressionService.getScriptInfoById(this.scriptId);
     })).pipe(switchMap(response => {
-      return this.service.getContexts(this.suiteExecutionId);
-    })).pipe(switchMap(response => {
       this.scriptPath = response.script_path;
+      return this.service.getContexts(this.suiteExecutionId, this.scriptId);
+    })).pipe(switchMap(response => {
+      this.availableContexts = response;
       return this.regressionService.testCaseExecutions(null, this.suiteExecutionId, this.scriptPath, this.logPrefix);
     })).pipe(switchMap(response => {
       this.testCaseExecutions = response;

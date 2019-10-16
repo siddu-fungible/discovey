@@ -84,12 +84,21 @@ class DatetimeEncoder(json.JSONEncoder):
 
 
 class FunContext:
-    def __init__(self, description, context_id, output_file_path=None):
+    def __init__(self,
+                 description,
+                 context_id,
+                 output_file_path=None,
+                 suite_execution_id=None,
+                 test_case_execution_id=None,
+                 script_id=None):
         self.description = description
         self.context_id = context_id
         self.fp = None
         self.output_file_path = output_file_path
         self.buf = ""
+        self.suite_execution_id = suite_execution_id
+        self.test_case_execution_id = test_case_execution_id
+        self.script_id = script_id
 
     def get_id(self):
         return self.context_id
@@ -314,22 +323,21 @@ class FunTest:
         self.profiling = True
         self.profiling_timer = FunTimer(max_time=10000)
 
-
     def add_context(self, description, output_file_path=None):
         self.last_context_id += 1
         output_file_path = output_file_path
-        fc = FunContext(description=description, context_id=self.last_context_id, output_file_path=output_file_path)
-        self.contexts[self.last_context_id] = fc
         suite_execution_id = self.get_suite_execution_id()
-        test_case_execution_id = self.get_test_case_execution_id()
         script_id = self.get_script_id()
+        fc = FunContext(description=description,
+                        context_id=self.last_context_id,
+                        output_file_path=output_file_path,
+                        suite_execution_id=suite_execution_id,
+                        test_case_execution_id=self.get_test_case_execution_id(),
+                        script_id=script_id)
+        self.contexts[self.last_context_id] = fc
 
-        self.add_time_series_context(collection_name=models_helper.get_ts_test_case_context_info_collection_name(suite_execution_id=suite_execution_id,
-                                                                                                                 test_case_execution_id=test_case_execution_id),
-                                     data={"id": self.last_context_id,
-                                           "suite_execution_id": suite_execution_id,
-                                           "test_case_execution_id": test_case_execution_id,
-                                           "script_id": script_id})
+        self.add_time_series_context(collection_name=models_helper.get_ts_test_case_context_info_collection_name(suite_execution_id=suite_execution_id, script_id=script_id),
+                                     context=fc)
         fc.open()
         return fc
 
@@ -858,8 +866,16 @@ class FunTest:
     def add_time_series_checkpoint(self, collection_name, data):
         self.add_time_series_document(collection_name=collection_name, date_time=get_current_time(), type="checkpoint", data=data)
 
-    def add_time_series_context(self, collection_name, data):
-        self.add_time_series_document(collection_name=collection_name, date_time=get_current_time(), type="context", data=data)
+    def add_time_series_context(self, collection_name, context):
+        collection = self.get_mongo_db_manager().get_collection(collection_name=collection_name)
+        collection.insert_one({"date_time": get_current_time(),
+                               "type": "context",
+                               "context_id": context.context_id,
+                               "description": context.description,
+                               "suite_execution_id": context.suite_execution_id,
+                               "test_case_execution_id": context.test_case_execution_id,
+                               "script_id": context.script_id})
+
 
     def log(self,
             message,
