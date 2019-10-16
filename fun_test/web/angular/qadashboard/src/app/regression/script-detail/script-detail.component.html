@@ -9,6 +9,10 @@
           <span class="fun-attribute-label">Select contexts to display</span>
         </div>
         <div class="fun-panel-body">
+          <input type="checkbox" [(ngModel)]="availableContext.selected" [checked]="availableContext?.selected" *ngFor="let availableContext of availableContexts">
+            ID : {{ availableContext.context_id }} ({{ availableContext.description }})
+          </input>
+
           <select multiple class="field-width" id="context-select" [(ngModel)]="selectedContexts" (change)="changedValue(selectedSuite)" size="10">
           <option></option>
           <option [ngValue]="availableContext" *ngFor="let availableContext of availableContexts">
