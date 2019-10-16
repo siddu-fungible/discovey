@@ -572,6 +572,10 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.log("aggregate bw on all the hosts: {} mbps for  -r {} -c {}".format(aggregate_bw, each_m, each_c))
                 fun_test.sleep("sleep 5 seconds for next iteration", seconds=5)
 
+                headers = ["messagerate", "no of connections", "Aggregate bandwidth"]
+                data = [each_m, each_c, aggregate_bw]
+                table_data = {"headers": headers, "rows": [data]}
+                fun_test.add_table(panel_header="Compression Details", table_name="Compression ratio during warmup", table_data=table_data)
 
     def cleanup(self):
         self.stats_obj.stop(self.stats_collect_details)
