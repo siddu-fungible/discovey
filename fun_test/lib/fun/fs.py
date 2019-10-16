@@ -354,7 +354,7 @@ class Bmc(Linux):
         process_ids = self.get_process_id_by_pattern("microcom", multiple=True)
 
     def _get_boot_args_for_index(self, boot_args, f1_index):
-        s = ""
+        s = boot_args
         if not self.bundle_compatible:
             s = "sku=SKU_FS1600_{} ".format(f1_index) + boot_args
         if self.hbm_dump_enabled:
