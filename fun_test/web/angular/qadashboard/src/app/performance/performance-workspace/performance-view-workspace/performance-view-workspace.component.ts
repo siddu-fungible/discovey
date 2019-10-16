@@ -20,6 +20,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
   workspaceName: string = null;
   email: string = null;
   workspace: any = null;
+  workspaceReport: any = null;
   showWorkspace: boolean = false;
   showGrids: boolean = false;
   showChartTable: boolean = false;
@@ -38,6 +39,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
   interestedMetrics: number[] = [];
   SUBJECT_BASE_STRING: string = "Performance status report - ";
   TIMEZONE: string = "America/Los_Angeles";
+  flattenedInterestedMetrics: any = [];
 
   constructor(private apiService: ApiService, private commonService: CommonService, private loggerService: LoggerService,
               private route: ActivatedRoute, private router: Router, private location: Location, private title: Title, private performanceService: PerformanceService) {
@@ -64,6 +66,12 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
           }),
           switchMap(response => {
             this.workspace.interested_metrics = response;
+            this.workspace.interested_metrics.forEach(metric => {
+                this.flattenInterestedMetrics(metric);
+            });
+            return of(true);
+          }),
+          switchMap(response => {
             return this.fetchScores();
           }),
           switchMap(response => {
@@ -84,6 +92,17 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
     });
   }
 
+  flattenInterestedMetrics(metric): void {
+    if (metric["children"].length > 0) {
+      this.flattenedInterestedMetrics.push(metric);
+      for (let child of metric["children"]) {
+        this.flattenInterestedMetrics(child);
+      }
+    } else {
+      this.flattenedInterestedMetrics.push(metric);
+    }
+  }
+
   viewDag(): void {
     this.showDag = true;
     this.reportGenerated = false;
@@ -102,7 +121,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
     }
     this.interestedMetrics = [];
     for (let metric of this.workspace.interested_metrics) {
-      this.interestedMetrics.push(metric["metric_id"])
+      this.interestedMetrics.push(metric["metric_id"]);
     }
     this.allMetricIds = this.interestedMetrics.concat(this.workspaceMetrics);
     this.showWorkspace = true;
@@ -180,7 +199,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
 
   fetchScores(): any {
     const resultObservables = [];
-    this.workspace.interested_metrics.forEach(metric => {
+    this.flattenedInterestedMetrics.forEach(metric => {
       resultObservables.push(this.fetchChartInfo(metric));
     });
     if (resultObservables.length > 0) {
@@ -216,7 +235,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
 
   fetchReports(): any {
     const resultObservables = [];
-    this.workspace.interested_metrics.forEach(metric => {
+    this.flattenedInterestedMetrics.forEach(metric => {
       if (!metric["report"] && metric["leaf"]) {
         resultObservables.push(this.fetchTodayAndYesterdayData(metric));
       }
@@ -230,7 +249,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
 
   fetchHistory(): any {
     const resultObservables = [];
-    this.workspace.interested_metrics.forEach(metric => {
+    this.flattenedInterestedMetrics.forEach(metric => {
       if (metric["leaf"]) {
         resultObservables.push(this.fetchHistoricalData(metric));
       }
@@ -292,6 +311,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
   }
 
   generateReport(): void {
+    this.status = "Loading reports";
     new Observable(observer => {
       observer.next(true);
       //observer.complete();
@@ -306,6 +326,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
       })).subscribe(response => {
       this.setSubject();
       this.showReport();
+      this.status = null;
     }, error => {
       this.loggerService.error("Unable to generate report");
     });

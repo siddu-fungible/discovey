@@ -515,7 +515,7 @@ class StorageFsTemplate(object):
         result = True
         response = ""
         self.enter_funsdk()
-        cmd = "{}/{}".format(self.fungible_root, self.DEPLOY_CONTAINER_CMD)
+        cmd = "sudo -E {}/{}".format(self.fungible_root, self.DEPLOY_CONTAINER_CMD)
         if mode:
             cmd += "".join([" --{}".format(m) for m in mode])
             cmd = cmd + " &>{}".format(self.DOCKER_LAUNCH_OUTPUT)

@@ -83,7 +83,7 @@ class ECVolumeLevelScript(FunTestScript):
             self.bootargs = Fs.DEFAULT_BOOT_ARGS
             self.disable_f1_index = None
             self.f1_in_use = 0
-            self.syslog_level = 2
+            self.syslog = "default"
             self.command_timeout = 5
             self.reboot_timeout = 600
         else:
@@ -124,7 +124,7 @@ class ECVolumeLevelScript(FunTestScript):
         if "f1_in_use" in job_inputs:
             self.f1_in_use = job_inputs["f1_in_use"]
         if "syslog" in job_inputs:
-            self.syslog_level = job_inputs["syslog"]
+            self.syslog = job_inputs["syslog"]
 
         # Deploying of DUTs
         self.num_duts = int(round(float(self.num_f1s) / self.num_f1_per_fs))
@@ -333,7 +333,7 @@ class ECVolumeLevelScript(FunTestScript):
             fun_test.shared_variables["total_numa_cpus"] = self.total_numa_cpus
             fun_test.shared_variables["num_f1s"] = self.num_f1s
             fun_test.shared_variables["num_duts"] = self.num_duts
-            fun_test.shared_variables["syslog_level"] = self.syslog_level
+            fun_test.shared_variables["syslog"] = self.syslog
             fun_test.shared_variables["db_log_time"] = self.db_log_time
             fun_test.shared_variables["host_info"] = self.host_info
             fun_test.shared_variables["csi_perf_enabled"] = self.csi_perf_enabled
@@ -421,7 +421,7 @@ class ECVolumeLevelScript(FunTestScript):
             fun_test.shared_variables["fs"] = self.fs
             fun_test.shared_variables["f1_in_use"] = self.f1_in_use
             fun_test.shared_variables["test_network"] = self.test_network
-            fun_test.shared_variables["syslog_level"] = self.syslog_level
+            fun_test.shared_variables["syslog"] = self.syslog
             fun_test.shared_variables["db_log_time"] = self.db_log_time
             fun_test.shared_variables["storage_controller"] = self.storage_controller
 
@@ -590,6 +590,9 @@ class ECVolumeLevelTestcase(FunTestCase):
 
         testcase = self.__class__.__name__
 
+        self.testbed_config = fun_test.shared_variables["testbed_config"]
+        self.syslog = fun_test.shared_variables["syslog"]
+
         # Start of benchmarking json file parsing and initializing various variables to run this testcase
         benchmark_parsing = True
         benchmark_file = ""
@@ -614,8 +617,6 @@ class ECVolumeLevelTestcase(FunTestCase):
             self.num_ssd = 1
         # End of benchmarking json file parsing
 
-        self.testbed_config = fun_test.shared_variables["testbed_config"]
-        self.syslog_level = fun_test.shared_variables["syslog_level"]
         num_ssd = self.num_ssd
         fun_test.shared_variables["num_ssd"] = num_ssd
         fun_test.shared_variables["attach_transport"] = self.attach_transport
@@ -822,16 +823,19 @@ class ECVolumeLevelTestcase(FunTestCase):
                     fun_test.shared_variables["host_info"] = self.host_info
                     fun_test.log("Hosts info: {}".format(self.host_info))
 
-            # Setting the syslog level
-            command_result = self.storage_controller.poke(props_tree=["params/syslog/level", self.syslog_level],
-                                                          legacy=False, command_duration=self.command_timeout)
-            fun_test.test_assert(command_result["status"],
-                                 "Setting syslog level to {}".format(self.syslog_level))
+            # Setting the required syslog level
+            if self.syslog != "default":
+                command_result = self.storage_controller.poke(props_tree=["params/syslog/level", self.syslog],
+                                                              legacy=False, command_duration=self.command_timeout)
+                fun_test.test_assert(command_result["status"],
+                                     "Setting syslog level to {}".format(self.syslog))
 
-            command_result = self.storage_controller.peek(props_tree="params/syslog/level", legacy=False,
-                                                          command_duration=self.command_timeout)
-            fun_test.test_assert_expected(expected=self.syslog_level, actual=command_result["data"],
-                                          message="Checking syslog level")
+                command_result = self.storage_controller.peek(props_tree="params/syslog/level", legacy=False,
+                                                              command_duration=self.command_timeout)
+                fun_test.test_assert_expected(expected=self.syslog, actual=command_result["data"],
+                                              message="Checking syslog level")
+            else:
+                fun_test.log("Default syslog level is requested...So not going to modify the syslog settings")
 
             # Preparing the volume details list containing the list of ditionaries where each dictionary has the
             # details of an EC volume
