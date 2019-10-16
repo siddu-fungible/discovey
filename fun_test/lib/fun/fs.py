@@ -915,11 +915,12 @@ class BootupWorker(Thread):
                         fun_test.update_job_environment_variable("tftp_image_path", fs.tftp_image_path)
                     if not fs.bundle_compatible:
                         bmc.start_uart_log_listener(f1_index=f1_index, serial_device=fs.f1s.get(f1_index).serial_device_path)
-                    else:
-                        bmc.start_bundle_f1_logs()
+                    # else:
+                    #    bmc.start_bundle_f1_logs()
 
                 fs.set_boot_phase(BootPhases.FS_BRING_UP_U_BOOT_COMPLETE)
                 fs.u_boot_complete = True
+                fs.get_bmc().start_bundle_f1_logs()
 
                 come = fs.get_come()
                 fs.set_boot_phase(BootPhases.FS_BRING_UP_COME_REBOOT_INITIATE)
