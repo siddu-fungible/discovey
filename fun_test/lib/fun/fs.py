@@ -338,13 +338,16 @@ class Bmc(Linux):
 
     def start_bundle_f1_logs(self):
         if self.bundle_compatible:
+            for f1_index in range(2):
+                if f1_index == self.disable_f1_index:
+                    continue
+                self.kill_serial_proxies(f1_index=f1_index)
             self.command("{} start".format(self.FUNOS_LOGS_SCRIPT))
 
     def start_uart_log_listener(self, f1_index, serial_device):
         process_ids = self.get_process_id_by_pattern("microcom", multiple=True)
         self.kill_serial_proxies(f1_index=f1_index)
         output_file = self.get_f1_uart_log_file_name(f1_index=f1_index)
-        log_file = "/tmp/uart_listener_{}.txt".format(f1_index)
         self.command("rm -f /var/lock/LCK..{}".format(os.path.basename(serial_device)))
         command = "microcom -s 1000000 {} >> {}  < /dev/null &".format(serial_device, output_file)
         self.command(command)
@@ -673,8 +676,6 @@ class Bmc(Linux):
                                context=self.context)
 
     def initialize(self, reset=False):
-        # self.command("cd {}".format(self.SCRIPT_DIRECTORY))
-        # self.position_support_scripts()
         self.command("mkdir -p {}".format("{}".format(self.LOG_DIRECTORY)))
         return True
 
