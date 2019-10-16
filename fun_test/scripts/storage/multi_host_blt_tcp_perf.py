@@ -339,7 +339,7 @@ class MultiHostVolumePerformanceScript(FunTestScript):
         fun_test.shared_variables["total_numa_cpus"] = self.total_numa_cpus
         fun_test.shared_variables["num_f1s"] = self.num_f1s
         fun_test.shared_variables["num_duts"] = self.num_duts
-        fun_test.shared_variables["syslog_level"] = self.syslog
+        fun_test.shared_variables["syslog"] = self.syslog
         fun_test.shared_variables["db_log_time"] = self.db_log_time
         fun_test.shared_variables["csi_perf_enabled"] = self.csi_perf_enabled
         if self.csi_perf_enabled:
@@ -400,12 +400,13 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                 self.nqn_list = fun_test.shared_variables["nqn_list"]
 
                 # Setting the syslog level back to 6
-                command_result = self.storage_controller.poke("params/syslog/level 6")
-                fun_test.test_assert(command_result["status"], "Setting syslog level to 6")
+                if self.syslog != "default":
+                    command_result = self.storage_controller.poke("params/syslog/level 6")
+                    fun_test.test_assert(command_result["status"], "Setting syslog level to 6")
 
-                command_result = self.storage_controller.peek("params/syslog/level")
-                fun_test.test_assert_expected(expected=6, actual=command_result["data"],
-                                              message="Checking syslog level set to 6")
+                    command_result = self.storage_controller.peek("params/syslog/level")
+                    fun_test.test_assert_expected(expected=6, actual=command_result["data"],
+                                                  message="Checking syslog level set to 6")
 
                 # Executing NVMe disconnect from all the hosts
                 for index, host_name in enumerate(self.host_info):
@@ -484,6 +485,9 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
 
         testcase = self.__class__.__name__
 
+        self.testbed_config = fun_test.shared_variables["testbed_config"]
+        self.syslog = fun_test.shared_variables["syslog"]
+
         benchmark_parsing = True
         benchmark_file = ""
         benchmark_file = fun_test.get_script_name_without_ext() + ".json"
@@ -540,8 +544,6 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                      format(testcase, self.expected_fio_result))
         # End of benchmarking json file parsing
 
-        self.testbed_config = fun_test.shared_variables["testbed_config"]
-        self.syslog = fun_test.shared_variables["syslog_level"]
         num_ssd = self.num_ssd
         fun_test.shared_variables["num_ssd"] = num_ssd
         fun_test.shared_variables["blt_count"] = self.blt_count
@@ -782,13 +784,16 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                 fun_test.shared_variables["host_info"] = self.host_info
                 fun_test.log("Hosts info: {}".format(self.host_info))
 
-            # Setting the syslog level to 2
-            command_result = self.storage_controller.poke("params/syslog/level {}".format(self.syslog))
-            fun_test.test_assert(command_result["status"], "Setting syslog level to {}".format(self.syslog))
+            # Setting the required syslog level
+            if self.syslog != "default":
+                command_result = self.storage_controller.poke("params/syslog/level {}".format(self.syslog))
+                fun_test.test_assert(command_result["status"], "Setting syslog level to {}".format(self.syslog))
 
-            command_result = self.storage_controller.peek("params/syslog/level")
-            fun_test.test_assert_expected(expected=self.syslog, actual=command_result["data"],
-                                          message="Checking syslog level")
+                command_result = self.storage_controller.peek("params/syslog/level")
+                fun_test.test_assert_expected(expected=self.syslog, actual=command_result["data"],
+                                              message="Checking syslog level")
+            else:
+                fun_test.log("Default syslog level is requested...So not going to modify the syslog settings")
 
             fun_test.shared_variables["blt"]["setup_created"] = True
 
