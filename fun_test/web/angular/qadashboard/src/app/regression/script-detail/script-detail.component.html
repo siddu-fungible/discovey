@@ -4,13 +4,21 @@
     <button *ngIf="!showTestCasePanel" (click)="onShowTestCasePanelClick()" class="fun-button-add">Show test-cases</button>
     <button (click)="onContextOptionsClick(contextOptions)" class="fun-button-add">Context options</button>
     <ng-template #contextOptions let-modal>
-      <span class="fun-attribute-label">Select</span>
-      <select class="field-width" id="context-select" [(ngModel)]="selectedContexts" (change)="changedValue(selectedSuite)" size="10">
-        <option></option>
-        <option [ngValue]="suite" *ngFor="let availableContext of availableContexts">
-        ID : {{ availableContext.context_id }} ({{ availableContext.description }})
-        </option>
-      </select>
+      <div class="fun-panel">
+        <div class="fun-panel-header">
+          <span class="fun-attribute-label">Select contexts to display</span>
+        </div>
+        <div class="fun-panel-body">
+          <select multiple class="field-width" id="context-select" [(ngModel)]="selectedContexts" (change)="changedValue(selectedSuite)" size="10">
+          <option></option>
+          <option [ngValue]="availableContext" *ngFor="let availableContext of availableContexts">
+          ID : {{ availableContext.context_id }} ({{ availableContext.description }})
+          </option>
+        </select>
+        </div>
+
+      </div>
+
     </ng-template>
 
   </div>
