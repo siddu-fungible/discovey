@@ -10,6 +10,7 @@ from scripts.networking.helper import *
 from collections import OrderedDict, Counter
 from lib.templates.csi_perf.csi_perf_template import CsiPerfTemplate
 from lib.host.linux import Linux
+from threading import Lock
 
 '''
 Script to track the Inspur Performance Cases of various read write combination of Erasure Coded volume using FIO
@@ -589,6 +590,7 @@ class ECVolumeLevelTestcase(FunTestCase):
     def setup(self):
 
         testcase = self.__class__.__name__
+        self.sc_lock = Lock()
 
         self.testbed_config = fun_test.shared_variables["testbed_config"]
         self.syslog = fun_test.shared_variables["syslog"]
@@ -855,8 +857,10 @@ class ECVolumeLevelTestcase(FunTestCase):
             server_written_total_bytes = 0
             total_bytes_pushed_to_disk = 0
             try:
+                self.sc_lock.acquire()
                 initial_vol_stats = self.storage_controller.peek(
                     props_tree="storage/volumes", legacy=False, chunk=8192, command_duration=self.command_timeout)
+                self.sc_lock.release()
                 fun_test.test_assert(initial_vol_stats["status"], "Volume stats collected before warmup")
                 fun_test.log("Volume stats before warmup: {}".format(initial_vol_stats))
             except Exception as ex:
@@ -907,8 +911,10 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.shared_variables["ec"]["warmup_io_completed"] = True
 
             try:
+                self.sc_lock.acquire()
                 final_vol_stats = self.storage_controller.peek(
                     props_tree="storage/volumes", legacy=False, chunk=8192, command_duration=self.command_timeout)
+                self.sc_lock.release()
                 fun_test.test_assert(final_vol_stats["status"], "Volume stats collected after warmup")
                 fun_test.log("Volume stats after warmup: {}".format(final_vol_stats))
             except Exception as ex:
@@ -1082,7 +1088,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.log("Different stats collection thread details for the current IO depth {} before starting "
                              "them:\n{}".format(iodepth, self.stats_collect_details))
                 self.storage_controller.verbose = False
-                self.stats_obj = CollectStats(self.storage_controller)
+                self.stats_obj = CollectStats(storage_controller=self.storage_controller, sc_lock=self.sc_lock)
                 self.stats_obj.start(file_suffix, self.stats_collect_details)
                 fun_test.log("Different stats collection thread details for the current IO depth {} after starting "
                              "them:\n{}".format(iodepth,self.stats_collect_details))
@@ -1092,14 +1098,18 @@ class ECVolumeLevelTestcase(FunTestCase):
 
             if self.cal_amplification:
                 try:
+                    self.sc_lock.acquire()
                     initial_vol_stat[iodepth] = self.storage_controller.peek(
                         props_tree="storage/volumes", legacy=False, chunk=8192, command_duration=self.command_timeout)
+                    self.sc_lock.release()
                     fun_test.test_assert(initial_vol_stat[iodepth]["status"], "Volume stats collected before the test")
                     fun_test.log("Initial vol stats in script: {}".format(initial_vol_stat[iodepth]))
 
+                    self.sc_lock.acquire()
                     initial_rcnvme_stat[iodepth] = self.storage_controller.peek(
                         props_tree="storage/devices/nvme/ssds", legacy=False, chunk=8192,
                         command_duration=self.command_timeout)
+                    self.sc_lock.release()
                     fun_test.test_assert(initial_rcnvme_stat[iodepth]["status"],
                                          "rcnvme stats collected before the test")
                     fun_test.log("Initial rcnvme stats in script: {}".format(initial_rcnvme_stat[iodepth]))
@@ -1237,15 +1247,19 @@ class ECVolumeLevelTestcase(FunTestCase):
 
                 if self.cal_amplification:
                     try:
+                        self.sc_lock.acquire()
                         final_vol_stat[iodepth] = self.storage_controller.peek(
                             props_tree="storage/volumes", legacy=False, chunk=8192,
                             command_duration=self.command_timeout)
+                        self.sc_lock.release()
                         fun_test.test_assert(final_vol_stat[iodepth]["status"], "Volume stats collected after the test")
                         fun_test.log("Final vol stats in script: {}".format(final_vol_stat[iodepth]))
 
+                        self.sc_lock.acquire()
                         final_rcnvme_stat[iodepth] = self.storage_controller.peek(
                             props_tree="storage/devices/nvme/ssds", legacy=False, chunk=8192,
                             command_duration=self.command_timeout)
+                        self.sc_lock.release()
                         fun_test.test_assert(final_rcnvme_stat[iodepth]["status"],
                                              "rcnvme stats collected after the test")
                         fun_test.log("Final rcnvme stats in script: {}".format(final_rcnvme_stat[iodepth]))
