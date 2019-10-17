@@ -1559,7 +1559,7 @@ if __name__ == "__main_crypto_s1__":
                     result = set_internal_name(security_children)
                     print json.dumps(result, indent=4)
 
-if __name__ == "__main__":
+if __name__ == "__main_rebasing__":
     global_setting = MetricsGlobalSettings.objects.first()
     global_setting.cache_valid = False
     global_setting.save()
@@ -1591,3 +1591,70 @@ if __name__ == "__main__":
                 entry.data_sets = json.dumps(data_sets)
                 entry.save()
                 print "edited the datasets for {} with metric id {}".format(entry.chart_name, entry.metric_id)
+
+if __name__ == "__main__":
+    metric_ids = {1207: "read", 754: "read_write", 1208: "write", 1209: "read", 755: "read_write", 1210: "write"}
+    fio_job_names = ["inspur_8k_random_", "_iodepth_", "_f1_6_vol_12"]
+    for key in metric_ids:
+        value = metric_ids[key]
+        chart = MetricChart.objects.get(metric_id=int(key))
+        children = chart.get_children()
+        for child in children:
+            child_chart = MetricChart.objects.get(metric_id=int(child))
+            if "32" in child_chart.internal_chart_name:
+                fio_job_name = fio_job_names[0] + value + fio_job_names[1] + "32" + fio_job_names[2]
+            elif "64" in child_chart.internal_chart_name:
+                fio_job_name = fio_job_names[0] + value + fio_job_names[1] + "64" + fio_job_names[2]
+            elif "96" in child_chart.internal_chart_name:
+                fio_job_name = fio_job_names[0] + value + fio_job_names[1] + "96" + fio_job_names[2]
+            elif "128" in child_chart.internal_chart_name:
+                fio_job_name = fio_job_names[0] + value + fio_job_names[1] + "128" + fio_job_names[2]
+            else:
+                fio_job_name = None
+                continue
+
+            if fio_job_name:
+                if child_chart.positive:
+                    name = value
+                    output_names = ["output_read_iops", "output_write_iops"]
+                else:
+                    name = value + "-avg"
+                    output_names = ["output_read_avg_latency", "output_write_avg_latency"]
+                data_sets = child_chart.get_data_sets()
+                if value == "read_write":
+                    for output_name in output_names:
+                        if "read" in output_name:
+                            rw_name = "read"
+                        else:
+                            rw_name = "write"
+                        one_data_set = {}
+                        if "-avg" in name:
+                            one_data_set["name"] = rw_name + "-avg(12 vols)"
+                            unit = PerfUnit.UNIT_USECS
+                        else:
+                            one_data_set["name"] = rw_name + "(12 vols)"
+                            unit = PerfUnit.UNIT_OPS
+                        one_data_set["inputs"] = {}
+                        one_data_set["inputs"]["input_platform"] = FunPlatform.F1
+                        one_data_set["inputs"]["input_fio_job_name"] = fio_job_name
+                        one_data_set["output"] = {"name": output_name, "min": 0, "max": -1, "expected": -1,
+                                                  "reference": -1, "unit": unit}
+                        data_sets.append(one_data_set)
+                else:
+                    one_data_set = data_sets[0]
+                    one_data_set["name"] = name + "(12 vols)"
+                    one_data_set["inputs"]["input_fio_job_name"] = fio_job_name
+                    one_data_set["output"]["expected"] = -1
+                    one_data_set["output"]["reference"] = -1
+                    data_sets = child_chart.get_data_sets()
+                    data_sets.append(one_data_set)
+                child_chart.data_sets = json.dumps(data_sets)
+                child_chart.save()
+    print "added 12 volume datasets for 32, 64, 96 and 128 qdepths for Inspur"
+
+
+
+
+
+
+
