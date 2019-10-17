@@ -862,7 +862,7 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                     fun_test.critical(str(ex))
 
                 fun_test.sleep("Sleeping for {} seconds before actual test".format(self.iter_interval),
-                                self.iter_interval)
+                               self.iter_interval)
 
     def run(self):
 
@@ -893,16 +893,17 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
         vol_details = []
         vol_group = {}
         vol_group[self.blt_details["type"]] = fun_test.shared_variables["thin_uuid"]
+        vol_details.append(vol_group)
 
         job_inputs = fun_test.get_job_inputs()
         if not job_inputs:
             job_inputs = {}
         if "io_depth" in job_inputs:
             self.fio_jobs_iodepth = job_inputs["io_depth"]
+            fun_test.log("Overrided fio_jobs_iodepth: {}".format(self.fio_jobs_iodepth))
 
-        if not isinstance(self.fio_iodepth, list):
-            self.fio_iodepth = [self.fio_iodepth]
-        vol_details.append(vol_group)
+        if not isinstance(self.fio_jobs_iodepth, list):
+            self.fio_jobs_iodepth = [self.fio_jobs_iodepth]
 
         for combo in self.fio_jobs_iodepth:
             thread_id = {}
