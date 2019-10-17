@@ -224,7 +224,8 @@
       }
     },
     "host_info": [
-        "mktg-server-07"
+        "mktg-server-02",
+        "mktg-server-03"
     ]
   },
   "fs-43": {
