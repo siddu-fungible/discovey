@@ -135,7 +135,7 @@ class Pcre1DfaMatchAcrossPackets(HigherLevelTestcase):
         super(Pcre1DfaMatchAcrossPackets, self).setup()
 
     def run(self):
-        super(Pcre1FfaMatchAcrossPackets, self).run()
+        super(Pcre1DfaMatchAcrossPackets, self).run()
 
     def cleanup(self):
         super(Pcre1DfaMatchAcrossPackets, self).cleanup()

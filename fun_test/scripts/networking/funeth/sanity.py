@@ -152,6 +152,7 @@ def setup_hu_host(funeth_obj, update_driver=True, is_vm=False, tx_offload=True):
     fun_test.test_assert(load_result, 'Load funeth driver.')
     for hu in funeth_obj.hu_hosts:
         linux_obj = funeth_obj.linux_obj_dict[hu]
+        linux_obj.command('sudo sysctl net.ipv6.conf.all.disable_ipv6=0')
         if enable_tso:
             fun_test.test_assert(funeth_obj.enable_tso(hu, disable=False),
                                  'Enable HU host {} funeth interfaces TSO.'.format(linux_obj.host_ip))

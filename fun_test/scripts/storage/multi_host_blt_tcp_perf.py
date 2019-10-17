@@ -602,7 +602,7 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
             self.csi_perf_iodepth = [self.csi_perf_iodepth]
 
         if ("blt" not in fun_test.shared_variables or not fun_test.shared_variables["blt"]["setup_created"]) \
-                and (not fun_test.shared_variables["blt"]["warmup_done"]) :
+                and (not fun_test.shared_variables["blt"]["warmup_done"]):
             fun_test.shared_variables["blt"] = {}
             fun_test.shared_variables["blt"]["setup_created"] = False
             fun_test.shared_variables["blt"]["warmup_done"] = False
@@ -820,28 +820,28 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                         self.warm_up_fio_cmd_args["multiple_jobs"] += "  --cpus_allowed={}".\
                             format(self.host_info[host_name]["host_numa_cpus"])
                         for id, device in enumerate(self.host_info[host_name]["nvme_block_device_list"]):
-                             jobs += " --name=pre-cond-job-{} --filename={}".format(id + 1, device)
+                            jobs += " --name=pre-cond-job-{} --filename={}".format(id + 1, device)
                         warm_up_fio_cmd_args["multiple_jobs"] = self.warm_up_fio_cmd_args["multiple_jobs"] + str(jobs)
                         warm_up_fio_cmd_args["timeout"] = self.warm_up_fio_cmd_args["timeout"]
                         # fio_output = self.host_handles[key].pcie_fio(filename="nofile", timeout=self.warm_up_fio_cmd_args["timeout"],
                         #                                    **warm_up_fio_cmd_args)
                         thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
-                                                                             func=fio_parser,
-                                                                             arg1=end_host_thread[index],
-                                                                             host_index=index,
-                                                                             filename="nofile",
-                                                                             **warm_up_fio_cmd_args)
+                                                                         func=fio_parser,
+                                                                         arg1=end_host_thread[index],
+                                                                         host_index=index,
+                                                                         filename="nofile",
+                                                                         **warm_up_fio_cmd_args)
                     else:
                         # Adding the allowed CPUs into the fio warmup command
                         self.warm_up_fio_cmd_args["cpus_allowed"] = self.host_info[host_name]["host_numa_cpus"]
                         # fio_output = self.host_handles[key].pcie_fio(filename=self.nvme_block_device_str, **self.warm_up_fio_cmd_args)
                         filename = self.host_info[host_name]["fio_filename"]
                         thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
-                                                                             func=fio_parser,
-                                                                             arg1=end_host_thread[index],
-                                                                             host_index=index,
-                                                                             filename=filename,
-                                                                             **self.warm_up_fio_cmd_args)
+                                                                         func=fio_parser,
+                                                                         arg1=end_host_thread[index],
+                                                                         host_index=index,
+                                                                         filename=filename,
+                                                                         **self.warm_up_fio_cmd_args)
 
                     fun_test.sleep("Fio threadzz", seconds=1)
 
@@ -893,6 +893,15 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
         vol_details = []
         vol_group = {}
         vol_group[self.blt_details["type"]] = fun_test.shared_variables["thin_uuid"]
+
+        job_inputs = fun_test.get_job_inputs()
+        if not job_inputs:
+            job_inputs = {}
+        if "io_depth" in job_inputs:
+            self.fio_jobs_iodepth = job_inputs["io_depth"]
+
+        if not isinstance(self.fio_iodepth, list):
+            self.fio_iodepth = [self.fio_iodepth]
         vol_details.append(vol_group)
 
         for combo in self.fio_jobs_iodepth:

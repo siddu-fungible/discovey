@@ -298,6 +298,7 @@ class StripeVolAttachDetachTestScript(FunTestScript):
             self.storage_controller = fun_test.shared_variables["storage_controller"]
             self.attach_detach_count = fun_test.shared_variables["attach_detach_count"]
 
+            '''
             if fun_test.shared_variables["attach_detach_loop"]:
                 for index, host_name in enumerate(self.host_info):
                     host_handle = self.host_info[host_name]["handle"]
@@ -322,6 +323,7 @@ class StripeVolAttachDetachTestScript(FunTestScript):
                                 break
                     except Exception as ex:
                         fun_test.critical(str(ex))
+            '''
 
             # Volume un-configuration
             if not fun_test.shared_variables["attach_detach_loop"]:
@@ -671,6 +673,7 @@ class StripeVolAttachDetachTestCase(FunTestCase):
                                                 self.transport_type.upper(), host_name))
 
                     if self.nvme_connect:
+                        '''
                         test_interface = self.host_info[host_name]["test_interface"].name
                         self.pcap_started[iteration][host_name] = False
                         self.pcap_stopped[iteration][host_name] = True
@@ -685,6 +688,7 @@ class StripeVolAttachDetachTestCase(FunTestCase):
                         else:
                             fun_test.critical("Iteration: {} - Unable to start packet capture in {}".
                                               format(iteration, host_name))
+                        '''
 
                         if not fun_test.shared_variables["stripe_vol"]["nvme_connect"]:
                             # Checking nvme-connect status
@@ -702,9 +706,11 @@ class StripeVolAttachDetachTestCase(FunTestCase):
                                     port=self.transport_port, transport=self.transport_type.lower(),
                                     hostnqn=self.host_info[host_name]["ip"][0])
 
+                            '''
                             if self.pcap_started[iteration][host_name]:
                                 host_handle.tcpdump_capture_stop(process_id=self.pcap_pid[iteration][host_name])
                                 self.pcap_stopped[iteration][host_name] = True
+                            '''
 
                             fun_test.test_assert(nvme_connect_status,
                                                  message="Iteration: {} - {} - NVME Connect Status".
