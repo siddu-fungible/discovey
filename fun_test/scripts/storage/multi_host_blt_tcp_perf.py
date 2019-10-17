@@ -524,7 +524,7 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                 fun_test.critical("Mismatch in FIO sizes and its benchmarking results")
         elif "fio_jobs_iodepth" in benchmark_dict[testcase]:
             if len(self.fio_jobs_iodepth) != len(self.expected_fio_result.keys()):
-                # benchmark_parsing = False
+                benchmark_parsing = False
                 fun_test.critical("Mismatch in numjobs and IO depth combo and its benchmarking results")
 
         if 'fio_pass_threshold' not in benchmark_dict[testcase]:
