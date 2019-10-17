@@ -81,7 +81,7 @@
                   <table>
                     <tr *ngFor="let seriesElement of this.timeSeriesByTestCase[currentTestCaseExecution.test_case_id]?.timeSeries">
                       <ng-container *ngIf="seriesElement.data.context_id === availableContext.context_id">
-                        <td class="timestamp" nowrap><small>{{ seriesElement.date_time }}</small></td>
+                        <td class="timestamp" nowrap><small>{{ seriesElement.epoch_time }}</small></td>
                         <td *ngIf="seriesElement.type === 'checkpoint'">
                           <div id="{{ currentTestCaseExecution.test_case_id }}_{{ seriesElement.data?.index }}">
                             <span class="checkpoint-span">Checkpoint: {{ seriesElement.data?.checkpoint }}

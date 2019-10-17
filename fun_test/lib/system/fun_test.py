@@ -9,7 +9,7 @@ from fun_settings import *
 import fun_xml
 import argparse
 import threading
-from fun_global import RESULTS, get_current_time, determine_version, get_localized_time
+from fun_global import RESULTS, get_current_time, determine_version, get_localized_time, get_current_epoch_time
 from scheduler.scheduler_helper import *
 import signal
 from web.fun_test.web_interface import get_homepage_url
@@ -856,19 +856,24 @@ class FunTest:
     def dict_to_json_string(self, d):
         return json.dumps(d, indent=4, cls=DatetimeEncoder)
 
-    def add_time_series_document(self, collection_name, date_time, type, data):
+    def add_time_series_document(self, collection_name, epoch_time, type, data):
         collection = self.get_mongo_db_manager().get_collection(collection_name=collection_name)
-        collection.insert_one({"date_time": date_time, "type": type, "data": data})
+        collection.insert_one({"epoch_time": epoch_time, "type": type, "data": data})
 
-    def add_time_series_log(self, collection_name, data):
-        self.add_time_series_document(collection_name=collection_name, date_time=get_current_time(), type="log", data=data)
+    def add_time_series_log(self, collection_name, data, epoch_time=None):
+        if not epoch_time:
+            epoch_time = get_current_epoch_time()
+        self.add_time_series_document(collection_name=collection_name,
+                                      epoch_time=epoch_time,
+                                      type="log",
+                                      data=data)
 
     def add_time_series_checkpoint(self, collection_name, data):
-        self.add_time_series_document(collection_name=collection_name, date_time=get_current_time(), type="checkpoint", data=data)
+        self.add_time_series_document(collection_name=collection_name, epoch_time=get_current_epoch_time(), type="checkpoint", data=data)
 
     def add_time_series_context(self, collection_name, context):
         collection = self.get_mongo_db_manager().get_collection(collection_name=collection_name)
-        collection.insert_one({"date_time": get_current_time(),
+        collection.insert_one({"epoch_time": get_current_epoch_time(),
                                "type": "context",
                                "context_id": context.context_id,
                                "description": context.description,
@@ -889,6 +894,8 @@ class FunTest:
             ignore_context_description=None,
             section=False):
         current_time = get_current_time()
+        current_epoch_time = get_current_epoch_time()
+
         if calling_module:
             module_name = calling_module[0]
             line_number = calling_module[1]
@@ -953,7 +960,8 @@ class FunTest:
             data = {"checkpoint_index": self.current_time_series_checkpoint, "log": final_message, "context_id": context_id}
             self.add_time_series_log(collection_name=models_helper.get_fun_test_time_series_collection_name(self.get_suite_execution_id(),
                                                                                                             self.get_test_case_execution_id()),
-                                     data=data)
+                                     data=data,
+                                     time=current_epoch_time)
 
     def print_key_value(self, title, data, max_chars_per_column=50):
         if title:

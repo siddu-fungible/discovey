@@ -11,7 +11,7 @@ import {ScriptDetailService, ContextInfo} from "./script-detail.service";
 import { Pipe, PipeTransform } from '@angular/core';
 
 class TimeSeriesLog {
-  date_time: string;
+  epoch_time: number;
   type: string;
   data: any;
 }
@@ -151,8 +151,16 @@ export class ScriptDetailComponent implements OnInit {
       this.currentTestCaseExecution = this.testCaseExecutions[testCaseExecutionIndex];
 
       let timeSeries = response;
-      this.timeSeriesByTestCase[this.currentTestCaseExecution.test_case_id] = {timeSeries: timeSeries, checkpoints: []};
+      this.timeSeriesByTestCase[this.currentTestCaseExecution.test_case_id] = {timeSeries: timeSeries,
+        checkpoints: [], minimum_epoch: 0, maximum_epoch: 0};
+      let thisEntry = this.timeSeriesByTestCase[this.currentTestCaseExecution.test_case_id];
       timeSeries.forEach(timeSeriesElement => {
+        if (timeSeriesElement.epoch_time < thisEntry.minimum_epoch) {
+          thisEntry.minimum_epoch = timeSeriesElement.epoch_time;
+        }
+        if (timeSeriesElement.epoch_time > thisEntry.maximum_epoch) {
+          thisEntry.maximum_epoch = timeSeriesElement.epoch_time;
+        }
         if (timeSeriesElement.type == "checkpoint") { //TODO
           let newCheckpoint = timeSeriesElement.data;
           this.timeSeriesByTestCase[this.currentTestCaseExecution.test_case_id].checkpoints.push(newCheckpoint);
