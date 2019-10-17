@@ -1,6 +1,7 @@
 <div class="component">
   <div class="fun-flex-container">
-    <h4>{{ scriptPath }}</h4>
+    <span class="script-name">{{ scriptPath }}</span>
+    <div class="fun-spacer"></div>
     <button *ngIf="!showTestCasePanel" (click)="onShowTestCasePanelClick()" class="fun-button-add">Show test-cases</button>
     <button (click)="onContextOptionsClick(contextOptions)" class="fun-button-add">Context options</button>
     <ng-template #contextOptions let-modal>
@@ -24,51 +25,56 @@
     </ng-template>
 
   </div>
-  <div style="position: fixed; top: 110px">
+  <div style="position: fixed; top: 130px">
     <div class="fun-flex-container">
-      <div *ngIf="showTestCasePanel" class="fun-flex-item panel" [@show]="showTestCasePanel">
-        <h4>Test-cases</h4>
-
-        <table class="fun-table">
-          <tr>
-            <td class="fun-table-header">ID</td>
-            <td class="fun-table-header">Description</td>
-            <td class="fun-table-header">Result</td>
-          </tr>
-          <tr *ngFor="let testCaseExecution of testCaseExecutions; let index=index" [ngClass]="{'selected-row': currentTestCaseExecution?.test_case_id === testCaseExecution.test_case_id }">
-            <td>
-              <span class="pseudo-anchor" (click)="onTestCaseIdClick(index, testCaseExecution.execution_id)" >{{ testCaseExecution.test_case_id }}
-              </span>
-            </td>
-            <td>{{ testCaseExecution.summary }}</td>
-            <td><span [ngClass]="{'passed': testCaseExecution.result === 'PASSED', 'failed': testCaseExecution.result === 'FAILED' }">{{ testCaseExecution.result }}</span></td>
-          </tr>
-        </table>
+      <div *ngIf="showTestCasePanel" class="fun-flex-item panel fun-panel" [@show]="showTestCasePanel">
+        <div class="fun-panel-header">Test-cases</div>
+        <div>
+          <table class="fun-table">
+            <tr>
+              <td class="fun-table-header">ID</td>
+              <td class="fun-table-header">Description</td>
+              <td class="fun-table-header">Result</td>
+            </tr>
+            <tr *ngFor="let testCaseExecution of testCaseExecutions; let index=index" [ngClass]="{'selected-row': currentTestCaseExecution?.test_case_id === testCaseExecution.test_case_id }">
+              <td>
+                <span class="pseudo-anchor" (click)="onTestCaseIdClick(index, testCaseExecution.execution_id)" >{{ testCaseExecution.test_case_id }}
+                </span>
+              </td>
+              <td>{{ testCaseExecution.summary }}</td>
+              <td><span [ngClass]="{'passed': testCaseExecution.result === 'PASSED', 'failed': testCaseExecution.result === 'FAILED' }">{{ testCaseExecution.result }}</span></td>
+            </tr>
+          </table>
+        </div>
       </div>
-      <div class="fun-flex-item panel" [@show]="showCheckpointPanel" *ngIf="currentTestCaseExecution">
-        <h4>Checkpoints</h4>
+
+      <div class="fun-flex-item panel fun-panel" [@show]="showCheckpointPanel" *ngIf="currentTestCaseExecution">
+        <div class="fun-panel-header">Checkpoints</div>
         <table class="fun-table">
-          <tr>
-            <td class="fun-table-header">ID</td>
-            <td class="fun-table-header">Checkpoint</td>
-            <td class="fun-table-header">Result</td>
-            <td class="fun-table-header">Expected</td>
-            <td class="fun-table-header">Actual</td>
-          </tr>
-          <tr *ngFor="let checkpoint of this.timeSeriesByTestCase[currentTestCaseExecution.test_case_id]?.checkpoints" [ngClass]="{'selected-row': currentCheckpointIndex === checkpoint.index }">
-            <td><span class="pseudo-anchor" (click)="onCheckpointClick(currentTestCaseExecution.test_case_id, checkpoint.index)">{{ checkpoint.index }}</span></td>
-            <td>{{ checkpoint.checkpoint }}</td>
-            <td><span [ngClass]="{'passed': checkpoint.result === 'PASSED', 'failed': checkpoint.result === 'FAILED' }">{{ checkpoint.result }}</span></td>
-            <td>{{ checkpoint.expected }}</td>
-            <td>{{ checkpoint.actual }}</td>
-          </tr>
-        </table>
+            <tr>
+              <td class="fun-table-header">ID</td>
+              <td class="fun-table-header">Checkpoint</td>
+              <td class="fun-table-header">Result</td>
+              <td class="fun-table-header">Expected</td>
+              <td class="fun-table-header">Actual</td>
+            </tr>
+            <tr *ngFor="let checkpoint of this.timeSeriesByTestCase[currentTestCaseExecution.test_case_id]?.checkpoints" [ngClass]="{'selected-row': currentCheckpointIndex === checkpoint.index }">
+              <td><span class="pseudo-anchor" (click)="onCheckpointClick(currentTestCaseExecution.test_case_id, checkpoint.index)">{{ checkpoint.index }}</span></td>
+              <td>{{ checkpoint.checkpoint }}</td>
+              <td><span [ngClass]="{'passed': checkpoint.result === 'PASSED', 'failed': checkpoint.result === 'FAILED' }">{{ checkpoint.result }}</span></td>
+              <td>{{ checkpoint.expected }}</td>
+              <td>{{ checkpoint.actual }}</td>
+            </tr>
+          </table>
       </div>
       <div class="fun-flex-container">
         <ng-container *ngFor="let availableContext of (availableContexts | selected)">
-          <div class="fun-flex-item panel">
-            Context: {{ availableContext.context_id }} {{ availableContext.description }}
-            <div [@show]="showLogsPanel" *ngIf="currentTestCaseExecution">
+          <div class="fun-flex-item panel fun-panel">
+            <div class="fun-panel-header">
+              Context: {{ availableContext.context_id }} {{ availableContext.description }}
+            </div>
+            <div class="fun-panel-body">
+              <div [@show]="showLogsPanel" *ngIf="currentTestCaseExecution">
               <h4>{{ currentTestCaseExecution.test_case_id }}: {{ currentTestCaseExecution.summary }}</h4>
               <div style="overflow-y: scroll; height: 500px">
                 <ng-container *ngIf="currentTestCaseExecution">
@@ -88,6 +94,7 @@
                   </table>
                 </ng-container>
               </div>
+            </div>
             </div>
           </div>
       </ng-container>

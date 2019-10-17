@@ -636,6 +636,7 @@ tr.text-center > th {
   min-width: 100px;
   border-radius: .25rem;
   margin: 5px;
+  max-height: 30px;
 }
 
 .fun-button-add:hover {
@@ -709,6 +710,7 @@ label {
   border-bottom: solid lightgrey 1px;
   border-left: solid lightgrey 1px;
   border-right: solid lightgrey 1px;
+  width: 100%;
 
 }
 
