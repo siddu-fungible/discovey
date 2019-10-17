@@ -220,8 +220,12 @@ export class SuiteEditorComponent implements OnInit {
           let options = this.poolMemberOptions[flatName];
           for (let i = 0; i < options.length; i++) {
             let poolMemberSelectionKey = this._getPoolMemberSelectionKey(flatName, options[i]);
-            payloadDict[i] = {"num": readOut[poolMemberSelectionKey]};
-            totalAssets += readOut[poolMemberSelectionKey];
+            let poolMemberSelectionValue = readOut[poolMemberSelectionKey];
+            if (!isNaN(poolMemberSelectionValue)) {
+              payloadDict[i] = {"num": poolMemberSelectionValue};
+              totalAssets += readOut[poolMemberSelectionKey];
+            }
+
           }
 
           ref["pool_member_type_options"] = payloadDict;
@@ -408,7 +412,10 @@ export class SuiteEditorComponent implements OnInit {
             let options = this.poolMemberOptions[flatName];
             for (let i = 0; i < options.length; i++) {
               let poolMemberSelectionKey = this._getPoolMemberSelectionKey(flatName, options[i]);
-              totalAssets += readOut[poolMemberSelectionKey];
+              let poolMemberSelectionValue = readOut[poolMemberSelectionKey];
+              if (!isNaN(poolMemberSelectionValue)) {
+                totalAssets += poolMemberSelectionValue;
+              }
             }
           }
 
@@ -598,4 +605,13 @@ export class SuiteEditorComponent implements OnInit {
   onDeleteSuiteEntry(index) {
     this.suite.entries.splice(index, 1);
   }
+
+  _hasPoolMemerOptions(flatName) {
+    return Object.keys(this.poolMemberOptions).indexOf(flatName) > -1;
+  }
+
+  _getPoolMemberOptions(flatName) {
+    console.log(this.poolMemberOptions[flatName]);
+  }
+
 }

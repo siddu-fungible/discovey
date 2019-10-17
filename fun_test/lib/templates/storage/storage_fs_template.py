@@ -515,7 +515,7 @@ class StorageFsTemplate(object):
         result = True
         response = ""
         self.enter_funsdk()
-        cmd = "{}/{}".format(self.fungible_root, self.DEPLOY_CONTAINER_CMD)
+        cmd = "sudo -E {}/{}".format(self.fungible_root, self.DEPLOY_CONTAINER_CMD)
         if mode:
             cmd += "".join([" --{}".format(m) for m in mode])
             cmd = cmd + " &>{}".format(self.DOCKER_LAUNCH_OUTPUT)
@@ -562,7 +562,11 @@ class StorageFsTemplate(object):
                 else:
                     fun_test.sleep("for the run_sc docker to show up", 5)
 
-        cmd = "docker ps --format '{{.Names}}' | grep F1"
+        if not include_storage:
+            cmd = "docker ps --format '{{.Names}}' | grep F1"
+        else:
+            cmd = "docker ps --format '{{.Names}}'"
+
         result['container_name_list'] = self.come_obj.command(cmd, timeout=self.DEFAULT_TIMEOUT).split("\n")
         result['container_name_list'] = [name.strip("\r") for name in result['container_name_list']]
         container_count = len(result['container_name_list'])
@@ -646,7 +650,7 @@ class StorageFsTemplate(object):
         # Waiting for the DHCP discover process to begin before starting configure the bond interface
         if self.come_obj.check_file_directory_exists(self.DOCKER_LAUNCH_OUTPUT):
             cmd = "grep -c 'DHCPDISCOVER on bond' {}".format(self.DOCKER_LAUNCH_OUTPUT)
-            timer = FunTimer(max_time=self.DEPLOY_TIMEOUT / 2)
+            timer = FunTimer(max_time=self.DEPLOY_TIMEOUT / 10)
             while not timer.is_expired():
                 status = self.come_obj.command(cmd)
                 if int(status.strip()) > 0:

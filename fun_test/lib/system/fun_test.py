@@ -261,12 +261,17 @@ class FunTest:
         self.profiling_timer = None
         self.topologies = []
         self.hosts = []
+        self.fss = []
+        self.at_least_one_failed = False
         self.closed = False
         self.enable_profiling()
 
     def report_message(self, message):  # Used only by FunXml only
         if self.fun_xml_obj:
             self.fun_xml_obj.add_message(message=message)
+
+    def is_at_least_one_failed(self):
+        return self.at_least_one_failed
 
     def initialize_output_files(self, absolute_script_file_name):
         # (frame, file_name, line_number, function_name, lines, index) = \
@@ -324,9 +329,12 @@ class FunTest:
     def _prepare_build_parameters(self):
         tftp_image_path = self.get_job_environment_variable("tftp_image_path")
         with_stable_master = self.get_job_environment_variable("with_stable_master")
+        bundle_image_parameters = self.get_job_environment_variable("bundle_image_parameters")
 
         if tftp_image_path:
             self.build_parameters["tftp_image_path"] = tftp_image_path
+        elif bundle_image_parameters:
+            self.build_parameters["bundle_image_parameters"] = bundle_image_parameters
         elif with_stable_master:
             self.build_parameters["with_stable_master"] = with_stable_master
         else:
@@ -689,11 +697,17 @@ class FunTest:
     def register_hosts(self, host):
         self.hosts.append(host)
 
+    def register_fs(self, fs):
+        self.fss.append(fs)
+
     def get_topologies(self):
         return self.topologies
 
     def get_hosts(self):
         return self.hosts
+
+    def get_fss(self):
+        return self.fss
 
     def get_environment_variable(self, variable):
         result = None
@@ -1060,6 +1074,8 @@ class FunTest:
 
     def _end_test(self, result):
         self.fun_xml_obj.end_test(result=result)
+        if result == FunTest.FAILED:
+            self.at_least_one_failed = True
         self.test_metrics[self.current_test_case_id]["result"] = result
 
     def _append_assert_test_metric(self, assert_message):
@@ -1472,6 +1488,20 @@ class FunTestScript(object):
 
         return script_result == FunTest.PASSED
 
+    def _cleanup_fss(self):
+        cleanup_error_found = False
+
+        for fs in fun_test.get_fss():
+            if fs and not fs.cleanup_attempted:
+                fun_test.log("FS {} was not cleaned up. Attempting ...".format(fs.context))
+                try:
+                    fs.cleanup()
+                except Exception as ex:
+                    fun_test.critical(ex)
+                    cleanup_error_found = True
+            fun_test.simple_assert(not cleanup_error_found, "FS {} cleanup error".format(fs.context))
+
+
     def _cleanup_topologies(self):
         topologies = fun_test.get_topologies()
         cleanup_error_found = False
@@ -1530,6 +1560,13 @@ class FunTestScript(object):
                 fun_test.critical(ex)
 
             try:
+                self._cleanup_fss()
+            except Exception as ex:
+                result = FunTest.FAILED
+                cleanup_error_found = True
+                fun_test.critical(ex)
+
+            try:
                 self._cleanup_hosts()
             except Exception as ex:
                 fun_test.critical(ex)
@@ -1537,7 +1574,7 @@ class FunTestScript(object):
 
         except Exception as ex:
             fun_test.critical(ex)
-        fun_test.add_checkpoint(checkpoint="Cleanup error found", expected=False, actual=True)
+        fun_test.add_checkpoint(checkpoint="Cleanup error found", expected=False, actual=cleanup_error_found)
         fun_test._end_test(result=result)
         if cleanup_te:
             models_helper.update_test_case_execution(test_case_execution_id=cleanup_te.execution_id,

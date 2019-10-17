@@ -45,9 +45,9 @@ class ScriptSetup(FunTestScript):
             critical_log(expression=rmmod_funeth_host(hostname=server), message="rmmod funeth on host %s " % server)
 
         f1_0_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --dpc-server --all_100g --serial --dpc-uart " \
-                         "--dis-stats retimer=0 --mgmt --disable-wu-watchdog"
+                         "--dis-stats retimer=0,1 --mgmt --disable-wu-watchdog"
         f1_1_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 --dpc-server --all_100g --serial --dpc-uart " \
-                         "--dis-stats retimer=0 --mgmt --disable-wu-watchdog"
+                         "--dis-stats retimer=0,1 --mgmt --disable-wu-watchdog"
         topology_helper = TopologyHelper()
         topology_helper.set_dut_parameters(f1_parameters={0: {"boot_args": f1_0_boot_args},
                                                           1: {"boot_args": f1_1_boot_args}}

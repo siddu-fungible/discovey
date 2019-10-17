@@ -49,7 +49,7 @@ class ECVolumeLevelScript(FunTestScript):
             self.bootargs = Fs.DEFAULT_BOOT_ARGS
             self.disable_f1_index = None
             self.f1_in_use = 0
-            self.syslog_level = "default"
+            self.syslog = "default"
             self.command_timeout = 5
             self.retries = 24
         else:
@@ -249,7 +249,7 @@ class ECVolumeLevelScript(FunTestScript):
             fun_test.shared_variables["f1_ips"] = self.f1_ips
             fun_test.shared_variables["num_f1s"] = self.num_f1s
             fun_test.shared_variables["num_duts"] = self.num_duts
-            fun_test.shared_variables["syslog_level"] = self.syslog_level
+            fun_test.shared_variables["syslog"] = self.syslog
             fun_test.shared_variables["db_log_time"] = self.db_log_time
             fun_test.shared_variables["host_info"] = self.host_info
 
@@ -369,6 +369,9 @@ class ECVolumeLevelTestcase(FunTestCase):
 
         testcase = self.__class__.__name__
 
+        self.testbed_config = fun_test.shared_variables["testbed_config"]
+        self.syslog = fun_test.shared_variables["syslog"]
+
         # Start of benchmarking json file parsing and initializing various variables to run this testcase
         benchmark_parsing = True
         benchmark_file = ""
@@ -390,8 +393,6 @@ class ECVolumeLevelTestcase(FunTestCase):
         fun_test.test_assert(benchmark_parsing, "Parsing Benchmark json file for this {} testcase".format(testcase))
         # End of benchmarking json file parsing
 
-        self.testbed_config = fun_test.shared_variables["testbed_config"]
-        self.syslog_level = fun_test.shared_variables["syslog_level"]
         fun_test.shared_variables["attach_transport"] = self.attach_transport
         fun_test.shared_variables["nvme_subsystem"] = self.nvme_subsystem
 
@@ -623,16 +624,16 @@ class ECVolumeLevelTestcase(FunTestCase):
                     fun_test.test_assert(service_status, "Stopping {} service in host: {}".format(service, host_name))
 
             # Setting the syslog level
-            if self.syslog_level != "default":
+            if self.syslog != "default":
                 command_result = self.storage_controller.poke(
-                    props_tree=["params/syslog/level", self.syslog_level],
+                    props_tree=["params/syslog/level", self.syslog],
                     legacy=False, command_duration=self.command_timeout)
                 fun_test.test_assert(command_result["status"],
-                                     "Setting syslog level to {}".format(self.syslog_level))
+                                     "Setting syslog level to {}".format(self.syslog))
 
                 command_result = self.storage_controller.peek(props_tree="params/syslog/level", legacy=False,
                                                               command_duration=self.command_timeout)
-                fun_test.test_assert_expected(expected=self.syslog_level, actual=command_result["data"],
+                fun_test.test_assert_expected(expected=self.syslog, actual=command_result["data"],
                                               message="Checking syslog level")
             else:
                 fun_test.log("Default syslog level is requested...So not going to modify the syslog settings")

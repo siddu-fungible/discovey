@@ -85,10 +85,12 @@ class BringupSetup(FunTestCase):
                                      f1_1_mpg=self.server_key["fs"][fs_name]["mpg_ips"]["mpg1"],
                                      f1_0_mpg=self.server_key["fs"][fs_name]["mpg_ips"]["mpg0"])
 
-            abstract_json_file0 = fun_test.get_script_parent_directory() + '/abstract_config/' + \
+            abstract_json_file0 = fun_test.get_script_parent_directory() + '/' + \
                                   self.server_key["fs"][fs_name]["abstract_configs"]["F1-0"]
-            abstract_json_file1 = fun_test.get_script_parent_directory() + '/abstract_config/' + \
+            abstract_json_file1 = fun_test.get_script_parent_directory() + '/' + \
                                   self.server_key["fs"][fs_name]["abstract_configs"]["F1-1"]
+
+
 
             funcp_obj.funcp_abstract_config(abstract_config_f1_0=abstract_json_file0,
                                             abstract_config_f1_1=abstract_json_file1, workspace="/scratch")

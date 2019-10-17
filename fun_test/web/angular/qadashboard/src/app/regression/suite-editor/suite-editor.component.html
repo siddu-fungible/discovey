@@ -121,7 +121,10 @@
                 <ng-container
                   *ngIf="customTestBedSpecForm.controls[_getAssetSelectionKey(flattenedAssetTypeName)].value == CustomAssetSelection.NUM">
 
-                  <div class="fun-form-field">
+                  <input *ngIf="!_hasPoolMemerOptions(flattenedAssetTypeName); else showPoolMemberOptions" formControlName="{{ _getNumAssetsKey(flattenedAssetTypeName) }}" type="number"
+                         class="fun-form-field fun-form-input">
+                  <ng-template #showPoolMemberOptions>
+                    <div class="fun-form-field">
                     <ng-container *ngFor="let poolMemberOption of poolMemberOptions[flattenedAssetTypeName]; let index=index">
                       <label class="fun-form-input-field-label" for="{{ _getPoolMemberSelectionKey(flattenedAssetTypeName)}}">
                         Type: {{ poolMemberOption }}
@@ -130,9 +133,9 @@
                          class="fun-form-field fun-form-input">
 
                     </ng-container>
-                  </div>
-                  <!--input formControlName="{{ _getNumAssetsKey(flattenedAssetTypeName) }}" type="number"
-                         class="fun-form-field fun-form-input"-->
+                    </div>
+                  </ng-template>
+
 
                 </ng-container>
 

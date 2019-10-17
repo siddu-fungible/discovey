@@ -58,7 +58,7 @@ try:
         ol_offload = (inputs.get('ol_offload', 0) == 1)  # Enable overlay TSO/checksum offload or not
         nu_all_clusters = (inputs.get('nu_all_clusters', 0) == 1)  # Enable NU to use all the clusters or not
         bootup_funos = (inputs.get('bootup_funos', 1) == 1)  # Boot up FunOS or not
-        threading = (inputs.get('threading', 0) == 1)  # Use threading in multi task or not
+        threading = (inputs.get('threading', 1) == 1)  # Use threading in multi task or not
         fundrv_branch = inputs.get('fundrv_branch', None)
         fundrv_commit = inputs.get('fundrv_commit', None)
         funsdk_branch = inputs.get('funsdk_branch', None)
@@ -73,7 +73,7 @@ try:
         ol_offload = False  # default False
         nu_all_clusters = False  # default False
         bootup_funos = True  # default True
-        threading = False   # default False
+        threading = True   # default True
         cleanup = True  # default True
         fundrv_branch = None
         fundrv_commit = None
@@ -89,7 +89,7 @@ except:
     ol_offload = False
     nu_all_clusters = False
     bootup_funos = True
-    threading = False
+    threading = True
     cleanup = True
 
 csi_perf_enabled = fun_test.get_job_environment_variable("csi_perf")
@@ -152,6 +152,7 @@ def setup_hu_host(funeth_obj, update_driver=True, is_vm=False, tx_offload=True):
     fun_test.test_assert(load_result, 'Load funeth driver.')
     for hu in funeth_obj.hu_hosts:
         linux_obj = funeth_obj.linux_obj_dict[hu]
+        linux_obj.command('sudo sysctl net.ipv6.conf.all.disable_ipv6=0')
         if enable_tso:
             fun_test.test_assert(funeth_obj.enable_tso(hu, disable=False),
                                  'Enable HU host {} funeth interfaces TSO.'.format(linux_obj.host_ip))
@@ -371,11 +372,11 @@ class FunethSanity(FunTestScript):
             TB = ''.join(test_bed_type.split('-')).upper()
             if control_plane:
                 if test_bed_type == 'fs-11':
-                    f1_0_boot_args = "app=hw_hsu_test cc_huid=3 sku=SKU_FS1600_0 retimer=0,1 --all_100g --dpc-uart --dpc-server --disable-wu-watchdog"
-                    f1_1_boot_args = "app=hw_hsu_test cc_huid=2 sku=SKU_FS1600_1 retimer=0,1 --all_100g --dpc-uart --dpc-server --disable-wu-watchdog"
+                    f1_0_boot_args = "app=hw_hsu_test cc_huid=3 sku=SKU_FS1600_0 retimer=0,1 --all_100g --dpc-uart --dpc-server"
+                    f1_1_boot_args = "app=hw_hsu_test cc_huid=2 sku=SKU_FS1600_1 retimer=0,1 --all_100g --dpc-uart --dpc-server"
                 if test_bed_type == 'fs-48':
-                    f1_0_boot_args = "app=hw_hsu_test cc_huid=3 sku=SKU_FS1600_0 retimer=0,1,2 --all_100g --dpc-uart --dpc-server --disable-wu-watchdog"
-                    f1_1_boot_args = "app=hw_hsu_test cc_huid=2 sku=SKU_FS1600_1 retimer=0 --all_100g --dpc-uart --dpc-server --disable-wu-watchdog"
+                    f1_0_boot_args = "app=hw_hsu_test cc_huid=3 sku=SKU_FS1600_0 retimer=0,1,2 --all_100g --dpc-uart --dpc-server"
+                    f1_1_boot_args = "app=hw_hsu_test cc_huid=2 sku=SKU_FS1600_1 retimer=0 --all_100g --dpc-uart --dpc-server"
                 if csi_perf_enabled:
                     f1_0_boot_args += " --perf csi-local-ip=29.1.1.2 csi-remote-ip={} pdtrace-hbm-size-kb=204800".format(perf_listener_ip)
                 if nu_all_clusters:
@@ -388,7 +389,7 @@ class FunethSanity(FunTestScript):
                                                                   1: {"boot_args": f1_1_boot_args}},
                                                    fun_cp_callback=funcp_setup_obj.bringup)
             else:
-                boot_args = "app=hw_hsu_test retimer=0,1 --dpc-uart --dpc-server --csr-replay --all_100g --disable-wu-watchdog"
+                boot_args = "app=hw_hsu_test retimer=0,1 --dpc-uart --dpc-server --csr-replay --all_100g"
                 if csi_perf_enabled:
                     boot_args += " --perf csi-local-ip=29.1.1.2 csi-remote-ip={} pdtrace-hbm-size-kb=204800".format(perf_listener_ip)
                 if nu_all_clusters:
@@ -970,7 +971,7 @@ class FunethTestReboot(FunTestCase):
         linux_obj = funeth_obj.linux_obj_dict[hu]
         hostname = tb_config_obj.get_hostname(hu)
         fun_test.test_assert(linux_obj.reboot(non_blocking=True), 'Reboot HU host {}'.format(hostname))
-        fun_test.sleep("Sleeping for the host to come up from reboot", seconds=180)
+        fun_test.sleep("Sleeping for the host to come up from reboot", seconds=300)
         fun_test.test_assert(linux_obj.is_host_up(), 'HU host {} is up'.format(hostname))
         setup_hu_host(funeth_obj, update_driver=False)
         verify_nu_hu_datapath(funeth_obj, nu=nu, hu=hu)

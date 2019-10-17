@@ -18,9 +18,12 @@ PERF_LISTENER_PATH = TOOLS_DIRECTORY + "/" + PERF_LISTENER
 FUNOS_F1_NAME = "funos-f1"
 MAX_TRACE_JOB_DIRECTORIES = 50
 EXPECTED_TOOLS = ["process_perf.sh", "view_perf.sh", "listener_lib.py", "perf_listener.py"]
-EXPECTED_DOCKER_IMAGES = ["docker.fungible.com/perf_processing", "docker.fungible.com/perf_server"]
+EXPECTED_DOCKER_IMAGES = ["docker.fungible.com/perf_processing",
+                          "docker.fungible.com/perf_server",
+                          "docker.fungible.com/cm_processing"]
 EXPECTED_TOOL_LOCATIONS = {"PalladiumOnDemand": [
     {"source_file_path": "docker/process_perf.sh", "target_file_path": "process_perf.sh"},
+    {"source_file_path": "docker/process_cm.sh", "target_file_path": "process_cm.sh"},
     {"source_file_path": "docker/view_perf.sh", "target_file_path": "view_perf.sh"}],
     "FunTools": [{"source_file_path": "csi_listeners/perf_listener.py", "target_file_path": "perf_listener.py"},
                  {"source_file_path": "csi_listeners/listener_lib.py", "target_file_path": "listener_lib.py"}]}
@@ -135,16 +138,16 @@ class CsiPerfTemplate():
 
         if not dpc_client:
             dpc_client = self.fs.get_dpc_client(f1_index=f1_index, auto_disconnect=True)
-        dpc_client.json_execute(verb="perf", data="reinit", command_duration=4)
-        dpc_client.json_execute(verb="perf", data="start", command_duration=4)
+        dpc_client.json_execute(verb="csi", data="reinit", command_duration=4)
+        dpc_client.json_execute(verb="csi", data="start", command_duration=4)
         fun_test.add_checkpoint("CSI perf started")
 
     def stop(self, f1_index=0, dpc_client=None):
         fun_test.add_checkpoint("CSI perf before stop")
         if not dpc_client:
             dpc_client = self.fs.get_dpc_client(f1_index=f1_index, auto_disconnect=True)
-        dpc_client.json_execute(verb="perf", data="stop", command_duration=4)
-        dpc_client.json_execute(verb="perf", data="offload", command_duration=4)
+        dpc_client.json_execute(verb="csi", data="stop", command_duration=4)
+        # dpc_client.json_execute(verb="csi", data="offload", command_duration=4)
         fun_test.sleep("Wait for offload to complete", seconds=120)
         self.move_trace_files(source_directory=self.tools_directory, job_directory=self.job_directory)
         uart_log_path = self.fs.get_uart_log_file(f1_index=f1_index, post_fix=self.instance)
@@ -240,11 +243,13 @@ class CsiPerfTemplate():
         self.perf_host.exit_sudo()
         self.perf_host.command("service docker stop", custom_prompts={"Password:": self.perf_host.ssh_password})
         self.perf_host.command("service docker start", custom_prompts={"Password:": self.perf_host.ssh_password})
-        docker_commands = ["docker pull docker.fungible.com/perf_processing", "docker pull docker.fungible.com/perf_server"]
+        docker_commands = ["docker pull docker.fungible.com/perf_processing",
+                           "docker pull docker.fungible.com/perf_server",
+                           "docker pull docker.fungible.com/cm_processing"]
         for docker_command in docker_commands:
             self.perf_host.command(docker_command)
         return True
 
 if __name__ == "__main__":
-    p = CsiPerfTemplate(perf_collector_host_name="poc-server-11", listener_ip="123", fs=None, setup_docker=True)
+    p = CsiPerfTemplate(perf_collector_host_name="mktg-server-14", listener_ip="123", fs=None, setup_docker=True)
     p.prepare(f1_index=0)

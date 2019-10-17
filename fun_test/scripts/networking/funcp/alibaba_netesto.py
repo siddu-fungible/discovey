@@ -85,7 +85,7 @@ class SetupBringup(alibaba_fcp_callback.ScriptSetup):
                 port_mtu_set = nc_obj.set_port_mtu(p, fpg_mtu)
                 fun_test.test_assert(port_mtu_set, '{}: Configure FPG{} mtu {}'.format(f1, p, fpg_mtu))
 
-            nc_obj.poke_fcp_config_scheduler(total_bw=200, fcp_ctl_bw=20, fcp_data_bw=170)
+            #nc_obj.poke_fcp_config_scheduler(total_bw=200, fcp_ctl_bw=20, fcp_data_bw=170)
 
             results = []
             fun_test.shared_variables['results'] = results

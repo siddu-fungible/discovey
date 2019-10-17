@@ -140,7 +140,8 @@ class NetperfManager:
             perf_tuning_obj.iptables()
 
         for linux_obj in self.linux_objs:
-            linux_obj.sudo_command('sysctl net.ipv6.conf.all.disable_ipv6=1')
+            pass
+            #linux_obj.sudo_command('sysctl net.ipv6.conf.all.disable_ipv6=1')
 
             # All the required packages are manually installed, so no need to do it in script
             ## Install linuxptp package
@@ -270,7 +271,7 @@ class NetperfManager:
                     netserver_cpu_list.append(netserver_cpu)
                     mp_task_obj.add_task(
                         func=do_test,
-                        func_args=(linux_obj, dip, protocol, duration, frame_size, cpu, measure_latency, sip, ns, fixed_netperf_port),
+                        func_args=(linux_obj.clone(), dip, protocol, duration, frame_size, cpu, measure_latency, sip, ns, fixed_netperf_port),
                         task_key='{}_{}_{}'.format(direction, dip, i))
                 if test == TEST_LATENCY_UNDER_THROUGHPUT_LOAD:
                     #if num_flows == 1:
@@ -279,7 +280,7 @@ class NetperfManager:
                     measure_latency = True
                     mp_task_obj.add_task(
                         func=do_test,
-                        func_args=(linux_obj, dip, protocol, duration, frame_size, cpu, measure_latency, sip, ns, fixed_netperf_port),
+                        func_args=(linux_obj.clone(), dip, protocol, duration, frame_size, cpu, measure_latency, sip, ns, fixed_netperf_port),
                         task_key='{}_{}_{}_latency'.format(direction, dip, i))
 
                 # Start netserver
