@@ -133,7 +133,6 @@ class PerfUnit:
 
     UNIT_WATT = "W"
     UNIT_KILOWATT = "kW"
-    UNIT_MEGAWATT = "MW"
     UNIT_MILLIWATT = "mW"
 
 class FunPlatform:
