@@ -132,7 +132,7 @@
     "io_during_attach_detach": true,
     "disconnect_detach_during_io": false,
     "attach_detach_loop": true,
-    "attach_detach_count": 10,
+    "attach_detach_count": 2,
     "attach_detach_wait": 2,
     "nvme_connect": true,
     "disconnect_before_detach": true,
