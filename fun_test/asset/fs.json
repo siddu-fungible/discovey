@@ -923,7 +923,6 @@
       "10.1.105.99",
       "10.1.105.100"
     ],
-    "bundle_compatible": true,
     "fpga": {
       "mgmt_ssh_password": "root",
       "mgmt_ssh_username": "root",
