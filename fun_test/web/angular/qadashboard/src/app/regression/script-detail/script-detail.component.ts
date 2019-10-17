@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import {Component, OnInit } from '@angular/core';
 import {RegressionService} from "../regression.service";
 import {Observable, of} from "rxjs";
 import {switchMap} from "rxjs/operators";
@@ -8,7 +8,8 @@ import {animate, state, style, transition, trigger} from "@angular/animations";
 import {CommonService} from "../../services/common/common.service";
 import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
 import {ScriptDetailService, ContextInfo} from "./script-detail.service";
-import { Pipe, PipeTransform } from '@angular/core';
+import {Pipe, PipeTransform } from '@angular/core';
+import {ElementRef, ViewChild} from '@angular/core';
 
 class TimeSeriesLog {
   epoch_time: number;
@@ -49,6 +50,9 @@ export class selected implements PipeTransform {
 })
 export class ScriptDetailComponent implements OnInit {
   driver: Observable<any> = null;
+  @ViewChild('chart')
+  private chartContainer: ElementRef;
+
   constructor(private regressionService: RegressionService,
               private loggerService: LoggerService,
               private route: ActivatedRoute,
