@@ -44,7 +44,7 @@
   font-size: 18px;
   line-height: 20px;
   font-weight: 700;
-  margin: auto 0;
+  margin: auto 10px;
 
 }
 
@@ -52,5 +52,21 @@
   width: 0;
   border-right: 1px solid #E2E2E2;
   height: 50px;
-  margin: 0 1.4em;
+  margin: 0 0.5em;
+}
+
+.fun-action-nav {
+  box-shadow: 0 4px 8px -2px gray;
+  display: flex;
+  align-items: center;
+
+}
+
+.checkbox-text {
+  font-family: Times;
+  margin-left: 5px;
+}
+
+table {
+  border-spacing: 0;
 }

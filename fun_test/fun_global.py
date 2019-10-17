@@ -1,5 +1,6 @@
 import pytz
 import datetime
+import time
 from fun_settings import TIME_ZONE
 import os
 import dateutil
@@ -21,6 +22,9 @@ RESULTS = {"NOT_RUN": "NOT_RUN",
            "QUEUED": "QUEUED",
            "SCHEDULED": "SCHEDULED",
            "ABORTED": "ABORTED"}
+
+def get_epoch_time():
+    return int(time.time())
 
 def get_current_time():
     utc = pytz.utc.localize(datetime.datetime.utcnow())

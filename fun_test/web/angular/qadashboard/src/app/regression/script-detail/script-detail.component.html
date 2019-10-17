@@ -1,5 +1,5 @@
 <div class="component">
-  <div class="fun-flex-container">
+  <div class="fun-flex-container fun-action-nav">
     <span class="script-name">{{ scriptPath }}</span>
     <div class="fun-spacer"></div>
     <button *ngIf="!showTestCasePanel" (click)="onShowTestCasePanelClick()" class="fun-button-add">Show test-cases</button>
@@ -7,13 +7,13 @@
     <ng-template #contextOptions let-modal>
       <div class="fun-panel">
         <div class="fun-panel-header">
-          <span class="fun-attribute-label">Select contexts to display</span>
+          <span>Select contexts to display</span>
         </div>
         <div class="fun-panel-body">
           <ng-container *ngFor="let availableContext of availableContexts">
             <div>
               <input type="checkbox" [(ngModel)]="availableContext.selected" [checked]="availableContext?.selected">
-                ID : {{ availableContext.context_id }} ({{ availableContext.description }})
+              <span class="checkbox-text">ID : {{ availableContext.context_id }} ({{ availableContext.description }})</span>
             </div>
 
           </ng-container>
@@ -26,7 +26,7 @@
 
   </div>
   <div style="position: fixed; top: 130px">
-    <div class="fun-flex-container">
+    <div class="fun-flex-container" style="align-items: flex-start;">
       <div *ngIf="showTestCasePanel" class="fun-flex-item panel fun-panel" [@show]="showTestCasePanel">
         <div class="fun-panel-header">Test-cases</div>
         <div>
@@ -67,7 +67,7 @@
             </tr>
           </table>
       </div>
-      <div class="fun-flex-container">
+      <div class="fun-flex-container" *ngIf="showLogsPanel">
         <ng-container *ngFor="let availableContext of (availableContexts | selected)">
           <div class="fun-flex-item panel fun-panel">
             <div class="fun-panel-header">
