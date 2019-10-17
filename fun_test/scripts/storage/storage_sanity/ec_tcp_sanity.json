@@ -63,7 +63,7 @@
     "ns_id": 1,
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {
-      "bs": "128k",
+      "bs": "1024k",
       "iodepth": 8,
       "size": "100%",
       "rw": "write",
