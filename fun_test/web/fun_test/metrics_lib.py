@@ -1,6 +1,6 @@
 import os
 import django
-from web.web_global import PRIMARY_SETTINGS_FILE
+from web.web_global import PRIMARY_SETTINGS_FILE, F1_ROOT_ID, S1_ROOT_ID
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", PRIMARY_SETTINGS_FILE)
 django.setup()
@@ -447,10 +447,10 @@ class MetricLib():
 
     def backup_dags(self):
         self.set_global_cache(cache_valid=False)
-        metric_ids = [101, 591] # F1, S1 metric id
+        metric_ids = [F1_ROOT_ID, S1_ROOT_ID] # F1, S1 metric id
         result = {}
         for metric_id in metric_ids:
-            if metric_id == 101: # F1 metric id
+            if metric_id == F1_ROOT_ID: # F1 metric id
                 dag = "F1"
             else:
                 dag = "S1"
@@ -508,10 +508,10 @@ class MetricLib():
                                          sorted(children_info.iteritems(), key=lambda d: d[1]['chart_name']))
         return result
 
-    def fetch_dag(self, metric_ids, levels=15, workspace=0):
+    def fetch_dag(self, metric_ids, levels=15, is_workspace=0):
         result = []
         cache_valid = MetricsGlobalSettings.get_cache_validity()
-        if not cache_valid or (cache_valid and levels != 15) or int(workspace):
+        if not cache_valid or (cache_valid and levels != 15) or int(is_workspace):
             metric_chart_entries = {}
             for metric_id in metric_ids:
                 sort_by_name = False
@@ -523,9 +523,9 @@ class MetricLib():
             pmds = PerformanceMetricsDag.objects.all().order_by("-date_time")[:1]
             for pmd in pmds:
                 for metric_id in metric_ids:
-                    if int(metric_id) == 101:  # 101=F1
+                    if int(metric_id) == F1_ROOT_ID:  # 101=F1
                         result.append(json.loads(pmd.f1_metrics_dag))
-                    if int(metric_id) == 591:  # 591-S1
+                    if int(metric_id) == S1_ROOT_ID:  # 591-S1
                         result.append(json.loads(pmd.s1_metrics_dag))
         return result
 
