@@ -29,6 +29,11 @@ class MetricsGlobalSettings(models.Model):
     tolerance_percentage = models.FloatField(default=3.0)
     cache_valid = models.BooleanField(default=True)
 
+    @staticmethod
+    def get_cache_validity():
+        first_record = MetricsGlobalSettings.objects.first()
+        return first_record.cache_valid
+
 class MetricsGlobalSettingsSerializer(ModelSerializer):
 
     class Meta:

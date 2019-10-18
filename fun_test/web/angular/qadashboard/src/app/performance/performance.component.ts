@@ -344,7 +344,7 @@ export class PerformanceComponent implements OnInit {
         url += "?root_metric_ids=591";
       }
       if (this.metricIds) {
-        url = "/metrics/dag" + "?root_metric_ids=" + String(this.metricIds) + "&workspace=true";
+        url = "/metrics/dag" + "?root_metric_ids=" + String(this.metricIds) + "&workspace=1";
       }
       if ((this.showF1Dag && this.f1Dag) || (this.showS1Dag && this.s1Dag)) {
         fetchIt = false;

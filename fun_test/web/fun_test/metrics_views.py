@@ -827,88 +827,18 @@ def test(request):
     return render(request, 'qa_dashboard/test.html', locals())
 
 
-def traverse_dag(levels, metric_id, metric_chart_entries, sort_by_name=True):
-    result = {}
-    if metric_id not in metric_chart_entries:
-        chart = MetricChart.objects.get(metric_id=metric_id)
-    else:
-        chart = metric_chart_entries[metric_id]
-
-    result["metric_model_name"] = chart.metric_model_name
-    result["chart_name"] = chart.chart_name
-    if levels < 1:
-        result['children'] = []
-    else:
-        result["children"] = json.loads(chart.children)
-    result["children_info"] = {}
-    result["children_weights"] = json.loads(chart.children_weights)
-    result["leaf"] = chart.leaf
-    result["num_leaves"] = chart.num_leaves
-    result["last_num_degrades"] = chart.last_num_degrades
-    result["last_num_build_failed"] = chart.last_num_build_failed
-    result["positive"] = chart.positive
-    result["work_in_progress"] = chart.work_in_progress
-    result["companion_charts"] = chart.companion_charts
-    result["jira_ids"] = json.loads(chart.jira_ids)
-    result["metric_id"] = chart.metric_id
-
-    result["copied_score"] = chart.copied_score
-    result["copied_score_disposition"] = chart.copied_score_disposition
-    if chart.last_good_score >= 0:
-        result["last_two_scores"] = [chart.last_good_score, chart.penultimate_good_score]
-    else:
-        result["last_two_scores"] = [0, 0]
-    if levels >= 1 and not chart.leaf:
-        levels = levels - 1
-        children_info = result["children_info"]
-        for child_id in result["children"]:
-            if child_id in metric_chart_entries:
-                child_chart = metric_chart_entries[child_id]
-            else:
-                child_chart = MetricChart.objects.get(metric_id=child_id)
-                metric_chart_entries[child_id] = child_chart
-            children_info[child_chart.metric_id] = traverse_dag(levels, metric_id=child_chart.metric_id,
-                                                                metric_chart_entries=metric_chart_entries)
-        if sort_by_name:
-            result["children"] = map(lambda item: item[0],
-                                     sorted(children_info.iteritems(), key=lambda d: d[1]['chart_name']))
-    return result
-
-
 @csrf_exempt
 @api_safe_json_response
 def dag(request):
-    result = []
     levels = int(request.GET.get("levels", 15))
-    workspace = request.GET.get('workspace', 'false')
-    if workspace == 'true':
-        workspace = True
-    else:
-        workspace = False
+    workspace = request.GET.get('workspace', 0)
     # metric ids are used instead of chart names for F1, S1 and all metrics
     metric_ids = request.GET.get("root_metric_ids", '101,591,122')  # 101=F1, 122=All Metrics, 591-S1
     if ',' in metric_ids:
         metric_ids = metric_ids.strip().split(',')
     else:
         metric_ids = [int(metric_ids)]
-    global_setting = MetricsGlobalSettings.objects.first()
-    cache_valid = global_setting.cache_valid
-    if not cache_valid or (cache_valid and levels != 15) or workspace:
-        metric_chart_entries = {}
-        for metric_id in metric_ids:
-            sort_by_name = False
-            chart = MetricChart.objects.get(metric_id=int(metric_id))
-            metric_chart_entries[chart.metric_id] = chart
-            result.append(traverse_dag(levels=levels, metric_id=chart.metric_id, sort_by_name=sort_by_name,
-                                       metric_chart_entries=metric_chart_entries))
-    else:
-        pmds = PerformanceMetricsDag.objects.all().order_by("-date_time")[:1]
-        for pmd in pmds:
-            for metric_id in metric_ids:
-                if int(metric_id) == 101:
-                    result.append(json.loads(pmd.f1_metrics_dag))
-                if int(metric_id) == 591:
-                    result.append(json.loads(pmd.s1_metrics_dag))
+    result = ml.fetch_dag(levels=levels, workspace=workspace, metric_ids=metric_ids)
     return result
 
 

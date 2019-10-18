@@ -1,17 +1,8 @@
 from web.fun_test.maintenance_old import *
-from lib.system.fun_test import *
-from datetime import datetime
-from web.fun_test.models_helper import add_jenkins_job_id_map
 from dateutil import parser
-from django.utils import timezone
-from fun_global import PerfUnit
-from fun_global import ChartType, FunChartType
-from web.fun_test.metrics_models import *
 from collections import OrderedDict
 from web.fun_test.metrics_lib import MetricLib
 from web.fun_test.models import *
-from web.fun_test.metrics_models import PerformanceMetricsDag
-import requests
 
 METRICS_BASE_DATA_FILE = WEB_ROOT_DIR + "/metrics.json"
 ml = MetricLib()

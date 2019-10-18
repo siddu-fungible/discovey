@@ -67,7 +67,7 @@
                         <span [innerHTML]="getIndentHtml(flatNode) | safeHtml">
                         </span>
               <ng-container>
-                <a [ngClass]="{highlight:flatNode.node.showAddJira}" [routerLink]=""
+                <a [ngClass]="{highlight:flatNode.node.showAddJira}" class="pseudo-anchor"
                    (click)="navigateByQuery(flatNode)">{{ flatNode.node.chartName }}</a>
                 <span *ngIf="flatNode.node.workInProgress">&nbsp;<app-smart-label [value]="'work in progress'"
                                                                                   [type]="'warning'"></app-smart-label></span>
@@ -77,10 +77,10 @@
               </ng-container>
               <span *ngIf="!flatNode.node.leaf">
               <span [innerHTML]="'&nbsp'"></span>
-              <a [routerLink]="" *ngIf="!flatNode.collapsed" (click)="collapseNode(flatNode)">
+              <a class="pseudo-anchor" *ngIf="!flatNode.collapsed" (click)="collapseNode(flatNode)">
                 <span class="arrow-down"></span>
               </a>
-              <a [routerLink]="" *ngIf="flatNode.collapsed" (click)="expandNode(flatNode)">
+              <a class="pseudo-anchor" *ngIf="flatNode.collapsed" (click)="expandNode(flatNode)">
                 <span class="arrow-right"></span>
               </a>
             </span>
@@ -314,7 +314,7 @@
                 {{ parent.chartName }}
               </span>
               <span *ngIf="parent.chartName !== currentNode.chartName">
-                <a [routerLink]="" (click)="expandFromLineage(parent)"> {{ parent.chartName }}</a> >
+                <a class="pseudo-anchor" (click)="expandFromLineage(parent)"> {{ parent.chartName }}</a> >
               </span>
               </span>
             <br></span>
