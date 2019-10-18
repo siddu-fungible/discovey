@@ -1,4 +1,6 @@
 <div class="component">
+
+
   <div class="fun-flex-container fun-action-nav">
     <span class="script-name">{{ scriptPath }}</span>
     <div class="fun-spacer"></div>
@@ -25,7 +27,9 @@
     </ng-template>
 
   </div>
-  <div style="position: fixed; top: 130px">
+  <div #chart id="chart"></div>
+
+  <div style="position: fixed">
     <div class="fun-flex-container" style="align-items: flex-start;">
       <div *ngIf="showTestCasePanel" class="fun-flex-item panel fun-panel" [@show]="showTestCasePanel">
         <div class="fun-panel-header">Test-cases</div>

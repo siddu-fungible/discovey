@@ -10,6 +10,14 @@ import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
 import {ScriptDetailService, ContextInfo} from "./script-detail.service";
 import {Pipe, PipeTransform } from '@angular/core';
 import {ElementRef, ViewChild} from '@angular/core';
+import * as d3 from 'd3';
+
+class DataModel {
+  letter: string;
+  frequency: number;
+}
+
+
 
 class TimeSeriesLog {
   epoch_time: number;
@@ -52,6 +60,8 @@ export class ScriptDetailComponent implements OnInit {
   driver: Observable<any> = null;
   @ViewChild('chart')
   private chartContainer: ElementRef;
+  margin = {top: 20, right: 20, bottom: 30, left: 40};
+  data: DataModel[] = [];
 
   constructor(private regressionService: RegressionService,
               private loggerService: LoggerService,
@@ -114,10 +124,69 @@ export class ScriptDetailComponent implements OnInit {
       this.refreshAll();
 
     });
+    let d1 = new DataModel();
+    d1.frequency = 5;
+    d1.letter = "A";
+    let d2 = new DataModel();
+    d2.frequency = 10;
+    d2.letter = "B";
+    this.data.push(d1);
+    this.data.push(d2);
+    this.createChart();
+  }
 
 
+
+  private createChart(): void {
+
+
+    // create svg element
+    var svg = d3.select("#chart")
+      .append("svg")
+        .attr("width", 1000)
+        .attr("height", 300);
+
+    // Create the scale
+    var x = d3.scaleBand()
+        .domain(["Long name", "Another One", "Here", "And this is", "The end", "ouuuu", "not yet"])         // This is what is written on the Axis: from 0 to 100
+        .range([0, 800]);         // Note it is reversed
+
+    console.log(x.domain());
+    // Draw the axis
+    svg
+      .append("g")
+      .attr("transform", "translate(100, 100)")      // This controls the rotate position of the Axis
+      .call(d3.axisBottom(x))
+      .selectAll("text")
+        .attr("transform", "translate(-10,10)rotate(-45)")
+        .style("text-anchor", "end")
+        .style("font-size", 12)
+        .style("fill", "#69a3b2");
+    let circle = svg
+      .append("circle")
+      .attr("cx", 100)
+      .attr("cy", 100)
+      .attr("r", 8)
+      .call(d3.drag()
+          .on("start", dragstarted)
+          .on("drag", dragged)
+          .on("end", dragended));
+
+    function dragstarted() {
+      d3.select(this).raise();
+      circle.attr("cursor", "grabbing");
+    }
+
+    function dragged(d, i, n) {
+      d3.select(n[i]).attr("cx", n[i].x = Math.min(Math.max(100, d3.event.x), x.bandwidth())).attr("cy", n[i].y = 100);
+    }
+
+    function dragended() {
+      circle.attr("cursor", "grab");
+    }
 
   }
+
 
   refreshAll() {
     this.driver.subscribe(response => {
