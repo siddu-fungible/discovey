@@ -1644,5 +1644,64 @@ if __name__ == "__main_inspur_12_volumes__":
                 child_chart.save()
     print "added 12 volume datasets for 32, 64, 96 and 128 qdepths for Inspur"
 
+if __name__ == "__main_power_perf__":
+    metric_model_name = "PowerPerformance"
+    description = "TBD"
+    owner_info = "Ranganatha Gowda (ranga.gowda@fungible.com)"
+    source = "https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/system/frs/start_traffic.py"
+    positive = False
+    visualization_unit = PerfUnit.UNIT_WATT
+    y1_axis_title = PerfUnit.UNIT_WATT
+    platform = FunPlatform.F1
+    internal_chart_name = "system_power_f1"
+    chart_name = "Power"
+
+    data_sets = []
+    one_data_set = {}
+
+    inputs = {
+        "input_platform": platform,
+    }
+    output_names = OrderedDict([("output_fs_power", "FS"), ("output_f1_0_power", "F1_0"),
+                                ("output_f1_1_power", "F1_1")])
+    for output_name in output_names:
+        output = {
+            "name": output_name,
+            "unit": visualization_unit,
+            "min": 0,
+            "max": -1,
+            "expected": -1,
+            "reference": -1
+        }
+        one_data_set["name"] = output_names[output_name]
+        one_data_set["inputs"] = inputs
+        one_data_set["output"] = output
+        data_sets.append(one_data_set.copy())
+
+    metric_id = LastMetricId.get_next_id()
+    base_line_date = datetime(year=2019, month=10, day=13, minute=0, hour=0, second=0)
+    power_chart = ml.create_leaf(chart_name=chart_name,
+                                 internal_chart_name=internal_chart_name,
+                                 data_sets=data_sets,
+                                 leaf=True,
+                                 description=description,
+                                 owner_info=owner_info,
+                                 source=source,
+                                 positive=positive,
+                                 y1_axis_title=y1_axis_title,
+                                 visualization_unit=visualization_unit,
+                                 metric_model_name=metric_model_name,
+                                 base_line_date=base_line_date,
+                                 work_in_progress=False,
+                                 children=[],
+                                 jira_ids=[],
+                                 platform=platform,
+                                 peer_ids=[],
+                                 creator=TEAM_REGRESSION_EMAIL,
+                                 workspace_ids=[])
+
+    final_dict = ml.get_dict(chart=power_chart)
+    print json.dumps(final_dict, indent=4)
+
 if __name__ == "__main__":
     ml.backup_dags()

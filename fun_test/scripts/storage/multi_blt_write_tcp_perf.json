@@ -62,7 +62,7 @@
       "capacity": 1600277970944,
       "block_size": 4096
     },
-    "drive_margin": 157286400,
+    "drive_margin": 0,
     "controllers": 1,
     "syslog": "default",
     "nqn": "nqn1",
@@ -111,7 +111,7 @@
       "capacity": 1600277970944,
       "block_size": 4096
     },
-    "drive_margin": 157286400,
+    "drive_margin": 0,
     "controllers": 1,
     "syslog": "default",
     "nqn": "nqn1",
@@ -159,7 +159,7 @@
       "capacity": 1600277970944,
       "block_size": 4096
     },
-    "drive_margin": 157286400,
+    "drive_margin": 0,
     "controllers": 1,
     "syslog": "default",
     "nqn": "nqn1",
@@ -207,7 +207,7 @@
       "capacity": 1600277970944,
       "block_size": 4096
     },
-    "drive_margin": 157286400,
+    "drive_margin": 0,
     "controllers": 1,
     "syslog": "default",
     "nqn": "nqn1",

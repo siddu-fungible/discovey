@@ -1700,6 +1700,18 @@
             "name": "f1_timings",
             "label": "FunOS Timings",
             "children": []
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "FRS_F1",
+            "label": "FRS",
+            "children": [
+              {
+                "metric_model_name": "PowerPerformance",
+                "name": "system_power_f1",
+                "label": "Power"
+              }
+            ]
           }
         ]
       },
