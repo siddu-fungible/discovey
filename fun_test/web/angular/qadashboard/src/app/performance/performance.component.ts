@@ -164,14 +164,21 @@ export class PerformanceComponent implements OnInit {
 
   gotoQueryBaseUrl: string = "/performance?goto=";
   queryPath: string = null;  // includes gotoQueryBaseUrl and a query
+  queryExists: boolean = false; //decides whether to just expand the node or to do both expand and show charts
 
   slashReplacement: string = "_fsl"; //forward slash
 
-  f1Node: FlatNode = null;
-  s1Node: FlatNode = null;
-  allMetricsNode: FlatNode = null;
+  rootNode: FlatNode = null;
+  lastF1Lineage: string = null;
+  lastS1Lineage: string = null;
+  f1Dag: any = null;
+  s1Dag: any = null;
 
   buildInfo: any = null;
+  showF1Dag: boolean = true;
+  showS1Dag: boolean = false;
+  initialize: boolean = true;
+  rootTabs: any[] = [{"name": "F1", "active": true}, {"name": "S1", "active": false}];
 
   constructor(
     private apiService: ApiService,
@@ -215,24 +222,32 @@ export class PerformanceComponent implements OnInit {
     }, error => {
       this.loggerService.error("Unable to fetch buildInfo");
     });
-    this.fetchDag();
-
+    if (this.selectMode == SelectMode.ShowMainSite) {
+      this.processUrl();
+    } else {
+      this.fetchDag();
+    }
   }
 
   getDefaultQueryPath(flatNode) {
-    return flatNode.node.chartName;
+    return this.gotoQueryBaseUrl + flatNode.node.chartName;
   }
 
   getQueryPath() {
     return this.activatedRoute.queryParams.pipe(switchMap(params => {
+      let queryPath = null;
       if (params.hasOwnProperty('goto')) {
-        let queryPath = params['goto'];
+        queryPath = params['goto'];
         // console.log("QueryPath: " + this.queryPath);
+        if (this.queryPath !== (this.gotoQueryBaseUrl + queryPath)) {
+          this.queryPath = this.gotoQueryBaseUrl + queryPath;
+        }
         return of(queryPath);
       }
       else {
         return of(null);
       }
+
     }))
   }
 
@@ -263,45 +278,137 @@ export class PerformanceComponent implements OnInit {
     });
   }
 
-  fetchDag(): void {
-    let url = "/metrics/dag";
-    if (this.metricIds) {
-      url = "/metrics/dag" + "?root_metric_ids=" + String(this.metricIds);
+  setDefaultFlatNodes(): void {
+    this.flatNodes = [];
+    this.guIdFlatNodeMap = {};
+    this.flatNodesMap = {};
+    this.upgradeFlatNode = {};
+    this.degradeFlatNode = {};
+  }
+
+  setDefaultsForDag(): void {
+    // this.queryExists = false;
+    this.queryPath = null;
+    this.showBugPanel = false;
+    this.chartReady = false;
+    this.currentNode = null;
+    this.currentFlatNode = null;
+  }
+
+  fetchS1Dag(): void {
+    this.showS1Dag = true;
+    this.showF1Dag = false;
+    this.setDefaultFlatNodes();
+    this.fetchDag();
+  }
+
+  openS1Dag(): void {
+    this.lastF1Lineage = this.queryPath;
+    this.setDefaultsForDag();
+    if (this.lastS1Lineage) {
+      this.initialize = true;
+      this.router.navigateByUrl(this.lastS1Lineage);
+    } else {
+      this.fetchS1Dag();
     }
-    // Fetch the DAG
-    this.apiService.get(url).subscribe(response => {
-      this.dag = response.data;
+  }
+
+  fetchF1Dag(): void {
+    this.showF1Dag = true;
+    this.showS1Dag = false;
+    this.setDefaultFlatNodes();
+    this.fetchDag();
+  }
+
+  openDag(rootTab): void {
+    for (let tab of this.rootTabs) {
+      if (tab["name"] == rootTab["name"]) {
+        tab["active"] = true;
+      } else {
+        tab["active"] = false;
+      }
+    }
+    if (rootTab["name"] === "F1") {
+      this.openF1Dag();
+    }
+    else if (rootTab["name"] === "S1") {
+      this.openS1Dag();
+    }
+
+  }
+
+  openF1Dag(): void {
+    this.lastS1Lineage = this.queryPath;
+    this.setDefaultsForDag();
+    if (this.lastF1Lineage) {
+      this.initialize = true;
+      this.router.navigateByUrl(this.lastF1Lineage);
+    } else {
+      this.fetchF1Dag();
+    }
+
+  }
+
+  setDag(): any {
+    let url = "/metrics/dag";
+    let fetchIt = true;
+    if (this.selectMode == SelectMode.ShowEditWorkspace) {
+      url = "/metrics/dag" + "?root_metric_ids=101,591";
+    } else {
+      if (this.showF1Dag) {
+        url += "?root_metric_ids=101";
+      }
+      if (this.showS1Dag) {
+        url += "?root_metric_ids=591";
+      }
+      if (this.metricIds) {
+        url = "/metrics/dag" + "?root_metric_ids=" + String(this.metricIds) + "&is_workspace=1";
+      }
+      if ((this.showF1Dag && this.f1Dag) || (this.showS1Dag && this.s1Dag)) {
+        fetchIt = false;
+      }
+    }
+    if (fetchIt) {
+      return this.apiService.get(url).pipe(switchMap(response => {
+        if (this.showF1Dag) {
+          this.f1Dag = response.data;
+        } else {
+          this.s1Dag = response.data;
+        }
+        return of(response.data);
+      }));
+    } else {
+      if (this.showF1Dag) {
+        return of(this.f1Dag);
+      } else {
+        return of(this.s1Dag);
+      }
+    }
+  }
+
+  fetchDag(): void {
+    this.status = "Fetching DAG";
+    new Observable(observer => {
+      observer.next(true);
+      observer.complete();
+      return () => {
+      }
+    }).pipe(
+      switchMap(response => {
+        return this.setDag();
+      })).subscribe(response => {
+      this.dag = response;
       let lineage = [];
       for (let dag of this.dag) {
         this.walkDag(dag, lineage);
       }
-      //total container should always appear
+      //total container should always appear and up and down since previous nodes added
       if (this.selectMode == SelectMode.ShowMainSite) {
-        this.f1Node = this.flatNodes[0];
-        this.f1Node.hide = false;
-        this.getQueryPath().subscribe(queryPath => {
-          let queryExists = false;
-          if (!queryPath) {
-            queryPath = this.getDefaultQueryPath(this.f1Node);
-          } else {
-            queryExists = true;
-          }
-          if (this.queryPath !== (this.gotoQueryBaseUrl + queryPath)) {
-            this.queryPath = this.gotoQueryBaseUrl + queryPath;
-            let pathGuid = this.pathToGuid(this.queryPath);
-            let targetFlatNode = this.guIdFlatNodeMap[pathGuid];
-            this.expandNode(targetFlatNode);
-
-            if (queryExists) {
-              if (targetFlatNode.node.leaf) {
-                this.showAtomicMetric(targetFlatNode);
-              } else {
-                this.showNonAtomicMetric(targetFlatNode);
-              }
-            }
-
-          }
-        });
+        this.updateUpDownSincePrevious(true);
+        this.updateUpDownSincePrevious(false);
+        this.rootNode = this.flatNodes[0];
+        this.rootNode.hide = false;
+        this.expandUrl();
       }
       if (this.selectMode == SelectMode.ShowEditWorkspace && this.interestedMetrics) {
         this.flatNodes[0].hide = false;
@@ -313,14 +420,60 @@ export class PerformanceComponent implements OnInit {
               flatNode.subscribe = metric.subscribe;
             }
           }
-
         }
       }
       this.status = null;
-
     }, error => {
-      this.loggerService.error("fetchDag");
+      this.loggerService.error("Unable to fetch Dag");
     });
+  }
+
+  processUrl(): void {
+    this.getQueryPath().subscribe(queryPath => {
+      if (!queryPath) {
+        this.queryExists = false;
+        if (this.initialize) {
+          this.fetchDag();
+          this.initialize = false;
+        } else {
+          this.expandUrl();
+        }
+      } else {
+        this.queryExists = true;
+        if (this.initialize) {
+          if (queryPath.startsWith("F1")) {
+            this.fetchF1Dag();
+          }
+          if (queryPath.startsWith("S1")) {
+            this.fetchS1Dag();
+          }
+          this.initialize = false;
+        } else {
+          this.expandUrl();
+        }
+
+      }
+    });
+  }
+
+  expandUrl(): void {
+    if (!this.queryPath) {
+      this.queryPath = this.getDefaultQueryPath(this.rootNode);
+      if (this.queryExists) {
+        this.router.navigateByUrl(this.queryPath);
+      }
+    }
+    let pathGuid = this.pathToGuid(this.queryPath);
+    let targetFlatNode = this.guIdFlatNodeMap[pathGuid];
+    this.expandNode(targetFlatNode);
+
+    if (this.queryExists) {
+      if (targetFlatNode.node.leaf) {
+        this.showAtomicMetric(targetFlatNode);
+      } else {
+        this.showNonAtomicMetric(targetFlatNode);
+      }
+    }
   }
 
   updateUpDownSincePrevious(upgrade: boolean): void {
@@ -564,19 +717,8 @@ export class PerformanceComponent implements OnInit {
     let newNode = this.getNodeFromEntry(numMetricId, dagEntry);
     this.addNodeToMap(numMetricId, newNode);
     thisFlatNode = this.getNewFlatNode(newNode, indent);
-    if (newNode.chartName === "All metrics") {
+    if (newNode.chartName === "S1" || newNode.chartName === "All metrics" || newNode.chartName === "F1") {
       thisFlatNode.hide = false;
-      lineage = [];
-      this.allMetricsNode = thisFlatNode;
-      if (!this.queryPath) {
-        this.updateUpDownSincePrevious(true);
-        this.updateUpDownSincePrevious(false);
-      }
-
-    }
-    if (newNode.chartName === "S1") {
-      thisFlatNode.hide = false;
-      this.s1Node = thisFlatNode;
       lineage = [];
     }
     if (this.metricIds && this.metricIds.includes(newNode.metricId)) {
@@ -860,67 +1002,6 @@ export class PerformanceComponent implements OnInit {
     this.passedDateTime = null;
   }
 
-  openTooltip(node): void {
-    this.setDefaultUrls();
-    //let payload = {"metric_model_name": node.metricModelName, chart_name: node.chartName};
-    let payload = {"metric_id": node.metricId};
-    this.apiService.post('/metrics/chart_info', payload).subscribe((data) => {
-      let result = data.data;
-      if (result.last_suite_execution_id && result.last_suite_execution_id !== -1) {
-        this.currentRegressionUrl = PerformanceComponent.REGRESSION_BASE_URL + result.last_suite_execution_id;
-      }
-      if (result.last_jenkins_job_id && result.last_jenkins_job_id !== -1) {
-        this.currentJenkinsUrl = PerformanceComponent.JENKINS_BASE_URL + result.last_jenkins_job_id;
-      }
-      if (result.last_lsf_job_id && result.last_lsf_job_id !== -1) {
-        this.currentLsfUrl = PerformanceComponent.LSF_BASE_URL + result.last_lsf_job_id;
-      }
-      if (result.last_git_commit && result.last_git_commit !== "") {
-        this.currentGitCommit = result.last_git_commit;
-      }
-    }, error => {
-      this.loggerService.error("Current Failed Urls");
-    });
-
-    let payload1 = {"metric_id": node.metricId};
-    this.apiService.post('/metrics/past_status', payload1).subscribe((data) => {
-      let result = data.data;
-      if (result.failed_date_time) {
-        this.failedDateTime = result.failed_date_time;
-      }
-      if (result.failed_suite_execution_id && result.failed_suite_execution_id !== -1) {
-        this.failedRegressionUrl = PerformanceComponent.REGRESSION_BASE_URL + result.failed_suite_execution_id;
-      }
-      if (result.failed_jenkins_job_id && result.failed_jenkins_job_id !== -1) {
-        this.failedJenkinsUrl = PerformanceComponent.JENKINS_BASE_URL + result.failed_jenkins_job_id;
-      }
-      if (result.failed_lsf_job_id && result.failed_lsf_job_id !== -1) {
-        this.failedLsfUrl = PerformanceComponent.LSF_BASE_URL + result.failed_lsf_job_id;
-      }
-      if (result.failed_git_commit && result.failed_git_commit !== "") {
-        this.failedGitCommit = result.failed_git_commit;
-      }
-      if (result.passed_date_time) {
-        this.passedDateTime = result.passed_date_time;
-      }
-      if (result.passed_suite_execution_id && result.passed_suite_execution_id !== -1) {
-        this.passedRegressionUrl = PerformanceComponent.REGRESSION_BASE_URL + result.passed_suite_execution_id;
-      }
-      if (result.passed_jenkins_job_id && result.passed_jenkins_job_id !== -1) {
-        this.passedJenkinsUrl = PerformanceComponent.JENKINS_BASE_URL + result.passed_jenkins_job_id;
-      }
-      if (result.passed_lsf_job_id && result.passed_lsf_job_id !== -1) {
-        this.passedLsfUrl = PerformanceComponent.LSF_BASE_URL + result.passed_lsf_job_id;
-      }
-      if (result.passed_git_commit && result.passed_git_commit !== "") {
-        this.passedGitCommit = result.passed_git_commit;
-      }
-    }, error => {
-      this.loggerService.error("Past Status Urls");
-    });
-
-  }
-
   openUrl(url): void {
     window.open(url, '_blank');
   }
@@ -1013,9 +1094,6 @@ export class PerformanceComponent implements OnInit {
       this.expandNode(flatNode);
       this.commonService.scrollTo("chart-info");
       this.chartReady = true;
-      if (this.selectMode == SelectMode.ShowMainSite) {
-        this.navigateByQuery(flatNode);
-      }
       this.fetchChartInfo(flatNode);
     } else if (this.selectMode == SelectMode.ShowEditWorkspace) {
       flatNode.showAddLeaf = true;
@@ -1063,9 +1141,6 @@ export class PerformanceComponent implements OnInit {
         this.chartReady = false;
         this.expandNode(flatNode);
         this.chartReady = true;
-      }
-      if (!flatNode.special && this.selectMode == SelectMode.ShowMainSite) {
-        this.navigateByQuery(flatNode);
       }
       this.fetchChartInfo(flatNode);
     } else {
@@ -1152,9 +1227,17 @@ export class PerformanceComponent implements OnInit {
   }
 
   navigateByQuery(flatNode) {
-    let path = this.lineageToPath(flatNode.lineage[0]);
-    let queryPath = this.gotoQueryBaseUrl + path;
-    this.router.navigateByUrl(queryPath);
+    if (this.selectMode == SelectMode.ShowMainSite) {
+      let path = this.lineageToPath(flatNode.lineage[0]);
+      let queryPath = this.gotoQueryBaseUrl + path;
+      this.router.navigateByUrl(queryPath);
+    } else {
+      if (!flatNode.node.leaf) {
+        this.showNonAtomicMetric(flatNode);
+      } else {
+        this.showAtomicMetric(flatNode);
+      }
+    }
   }
 
   pathToGuid(path) {
@@ -1162,13 +1245,7 @@ export class PerformanceComponent implements OnInit {
     try {
       path = path.replace(this.gotoQueryBaseUrl, "");
       let parts = path.split("/");
-      result = this._doPathToGuid(this.f1Node, parts);
-      if (!result) {
-        result = this._doPathToGuid(this.s1Node, parts);
-      }
-      if (!result) {
-        result = this._doPathToGuid(this.allMetricsNode, parts);
-      }
+      result = this._doPathToGuid(this.rootNode, parts);
       // console.log("Path: " + path + " : guid: " + result + " c: " + this.getFlatNodeByGuid(result).node.chartName);
 
     } catch (e) {
@@ -1186,7 +1263,6 @@ export class PerformanceComponent implements OnInit {
       }
       if (flatNode.node.chartName === decodeURIComponent(remainingPart)) {
         // match found
-
         if (remainingParts.length > 1) {
           remainingParts = remainingParts.slice(1, remainingParts.length); // there are more segments to parse
           let remainingPart = remainingParts[0].replace(this.slashReplacement, "/");

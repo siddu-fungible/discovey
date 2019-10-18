@@ -1,8 +1,20 @@
 <fun-spinner [status]="status"></fun-spinner>
-<div class="component container">
-  <div [ngClass]="{'row': selectMode !== SelectMode.ShowEditWorkspace}">
+<span id="chart-info"></span>
+<div class="component container" *ngIf="status == null">
+  <div [ngClass]="{'row': selectMode !== SelectMode.ShowEditWorkspace}" class="card-body tab-pane" role="tabpanel"
+       style="padding: 0">
     <!-- left side of the performance page containing tree structure -->
     <div [ngClass]="{'col-lg-5 col-md-5 col-xxl-4 col-xl-5 left-col': selectMode !== SelectMode.ShowEditWorkspace}">
+      <div *ngIf="selectMode == SelectMode.ShowMainSite">
+        <ul class="nav nav-tabs card-header-tabs" role="tablist">
+          <li *ngFor="let rootTab of rootTabs" class="nav-item" style="width: 100px; text-align: center">
+            <span class="nav-link pseudo-anchor"
+              role="tab" [ngClass]="{'active tab-highlight':rootTab['active']}" (click)="openDag(rootTab)">{{
+              rootTab["name"] }}</span>
+          </li>
+        </ul>
+      </div>
+      <br>
       <table class="table table-nonfluid">
         <tr *ngIf="selectMode !== SelectMode.ShowEditWorkspace && this.selectMode !== SelectMode.ShowAttachDag">
           <th class="text-center">Aspect</th>
@@ -48,10 +60,8 @@
                         <span [innerHTML]="getIndentHtml(flatNode) | safeHtml">
                         </span>
               <ng-container>
-                <a *ngIf="flatNode.node.leaf" [ngClass]="{highlight:flatNode.node.showAddJira}" [routerLink]=""
-                   (click)="showAtomicMetric(flatNode)">{{ flatNode.node.chartName }}</a>
-                <a *ngIf="!flatNode.node.leaf" [ngClass]="{highlight:flatNode.node.showAddJira}" [routerLink]=""
-                   (click)="showNonAtomicMetric(flatNode)">{{ flatNode.node.chartName }}</a>
+                <a [ngClass]="{highlight:flatNode.node.showAddJira}" class="pseudo-anchor"
+                   (click)="navigateByQuery(flatNode)">{{ flatNode.node.chartName }}</a>
                 <span *ngIf="flatNode.node.workInProgress">&nbsp;<app-smart-label [value]="'work in progress'"
                                                                                   [type]="'warning'"></app-smart-label></span>
                 <span *ngIf="flatNode.node.tags">&nbsp;<span *ngFor="let tag of flatNode.node.tags"><app-smart-label
@@ -60,10 +70,10 @@
               </ng-container>
               <span *ngIf="!flatNode.node.leaf">
               <span [innerHTML]="'&nbsp'"></span>
-              <a [routerLink]="" *ngIf="!flatNode.collapsed" (click)="collapseNode(flatNode)">
+              <a class="pseudo-anchor" *ngIf="!flatNode.collapsed" (click)="collapseNode(flatNode)">
                 <span class="arrow-down"></span>
               </a>
-              <a [routerLink]="" *ngIf="flatNode.collapsed" (click)="expandNode(flatNode)">
+              <a class="pseudo-anchor" *ngIf="flatNode.collapsed" (click)="expandNode(flatNode)">
                 <span class="arrow-right"></span>
               </a>
             </span>
@@ -197,7 +207,6 @@
                            [allowDelete]="false" [allowContext]="true" [allowAdd]="false"
                            (close)="closeSummaryPanel($event)"></summary-jira-info>
       </div>
-      <span id="chart-info"></span>
       <div *ngIf="mode != modeType.None && chartReady" class="card" style="padding: 10px">
         <table>
           <tr>
@@ -298,7 +307,7 @@
                 {{ parent.chartName }}
               </span>
               <span *ngIf="parent.chartName !== currentNode.chartName">
-                <a [routerLink]="" (click)="expandFromLineage(parent)"> {{ parent.chartName }}</a> >
+                <a class="pseudo-anchor" (click)="expandFromLineage(parent)"> {{ parent.chartName }}</a> >
               </span>
               </span>
             <br></span>
@@ -329,5 +338,4 @@
       </div>
     </div>
   </div>
-
 </div>
