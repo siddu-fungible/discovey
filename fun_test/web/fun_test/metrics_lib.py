@@ -20,8 +20,9 @@ from collections import OrderedDict
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 from datetime import datetime, timedelta
 from web.fun_test.site_state import *
-from web.fun_test.metrics_models import MetricChart, MileStoneMarkers, LastMetricId, PerformanceMetricsDag
-from web.fun_test.models import InterestedMetrics, PerformanceUserWorkspaces, MetricsGlobalSettings
+from web.fun_test.metrics_models import MetricChart, MileStoneMarkers, LastMetricId, PerformanceMetricsDag, \
+    MetricsGlobalSettings
+from web.fun_test.models import InterestedMetrics, PerformanceUserWorkspaces
 from fun_settings import TEAM_REGRESSION_EMAIL
 from web.web_global import JINJA_TEMPLATE_DIR
 from jinja2 import Environment, FileSystemLoader
