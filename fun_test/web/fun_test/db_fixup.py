@@ -39,6 +39,7 @@ bits_bytes_category = ["b", "B", "KB", "MB", "GB", "TB"]
 bandwidth_category = ["bps", "Kbps", "Mbps", "Gbps", "Tbps", "Bps", "KBps", "MBps", "GBps", "TBps"]
 packets_per_sec_category = ["pps", "Mpps", "Kpps", "Gpps"]
 connections_per_sec_category = ["cps", "Mcps", "Kcps", "Gcps"]
+power_category = ["W", "kW", "MW", "mW"]
 
 
 def get_rounded_time(dt):
@@ -228,6 +229,9 @@ def adjust_timezone_for_day_light_savings(current_date):
                                       hour=current_date.hour, second=current_date.second, minute=current_date.minute)
     return get_localized_time(date_time_obj)
 
+def _is_valid_output(output_value):
+    return (output_value != -1 and not math.isinf(output_value))
+
 
 def calculate_leaf_scores(cache_valid, chart, result, from_log=False):
     # print "Reached leaf: {}".format(chart.chart_name)
@@ -306,7 +310,7 @@ def calculate_leaf_scores(cache_valid, chart, result, from_log=False):
                                 output_unit = getattr(this_days_record, output_unit)
                             else:
                                 output_unit = None
-                            if output_value and output_value != -1:
+                            if output_value and _is_valid_output(output_value):
                                 output_value = convert_to_base_unit(output_value=output_value, output_unit=output_unit)
 
                             # data_set_statuses.append(leaf_status)
@@ -316,16 +320,17 @@ def calculate_leaf_scores(cache_valid, chart, result, from_log=False):
                                 if output_unit:
                                     reference_value = convert_to_base_unit(output_value=reference_value,
                                                                            output_unit=data_set["output"]["unit"])
-                                if chart.positive:
-                                    data_set_combined_goodness += (float(
-                                        output_value) / reference_value) * 100 if output_value >= 0 and reference_value > 0 else 0
-                                else:
-                                    if output_value:
+                                if output_value and _is_valid_output(output_value):
+                                    if chart.positive:
                                         data_set_combined_goodness += (float(
-                                            reference_value) / output_value) * 100 if output_value >= 0 else 0
+                                            output_value) / reference_value) * 100 if output_value >= 0 and \
+                                                                                      reference_value >= 0 else 0
                                     else:
-                                        print "ERROR: {}, {}".format(chart.chart_name,
-                                                                     chart.metric_model_name)
+                                        data_set_combined_goodness += (float(
+                                            reference_value) / output_value) * 100 if output_value >= 0 and \
+                                                                                      reference_value >= 0 else 0
+                                else:
+                                    print "ERROR: {}, {}".format(chart.chart_name, chart.metric_model_name)
                 current_score = round(data_set_combined_goodness / num_data_sets_with_expected,
                                       1) if num_data_sets_with_expected != 0 else 0
 
@@ -561,6 +566,13 @@ def convert_to_base_unit(output_value, output_unit):
                 output_value = float(output_value * math.pow(10, 3))
             if output_unit == "Gcps":
                 output_value = float(output_value * math.pow(10, 9))
+        elif output_value in power_category:
+            if output_unit == "kW":
+                output_value = float(output_value * math.pow(10, 3))
+            if output_unit == "MW":
+                output_value = float(output_value * math.pow(10, 6))
+            if output_unit == "mW":
+                output_value = float(output_value / math.pow(10, 3))
     return output_value
 
 

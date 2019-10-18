@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Global configuration #
 ########################
@@ -15,315 +15,418 @@ vol_size=$((400 * 1024 * 1024 * 1024))
 # Log interval for fio; Default is 5 mins
 # Note: Fio will dump full stats at these intervals;
 # So if runtime is large then it will bloat the output file
-log_interval=300
+#log_interval=300
 ########################
+
+if [[ -z "${WORKSPACE}" ]]
+then
+    MY_SCRIPT_VARIABLE="/"
+else
+    MY_SCRIPT_VARIABLE="${WORKSPACE}"
+fi
+echo "Using workspace $MY_SCRIPT_VARIABLE"
+
+function setup_dpc {
+    cmd=`ps -aef | grep dpc | grep -v grep -c`
+    if [ $cmd -eq 0 ]
+    then
+        echo "Dpcsh over proxy not started. Starting it"
+        cd $MY_SCRIPT_VARIABLE/opt/fungible/FunSDK/bin/Linux/dpcsh/; ./dpcsh --pcie_nvme_sock=/dev/nvme0 --nvme_cmd_timeout=600000 --tcp_proxy=40220 &> /tmp/f1_0_dpc.txt &
+        cd $MY_SCRIPT_VARIABLE/opt/fungible/FunSDK/bin/Linux/dpcsh/; ./dpcsh --pcie_nvme_sock=/dev/nvme1 --nvme_cmd_timeout=600000 --tcp_proxy=40221 &> /tmp/f1_1_dpc.txt &
+        process1=`ps -aef | grep dpc | grep -v grep -c`
+        if [ $process1 -ne 2 ]
+        then
+            echo "Dpcsh processes not started"
+        fi
+    elif [ $cmd -eq 2 ]
+    then
+        echo "Dpcsh process already running"
+    fi
+}
 
 function stats() {
     s=$1
-    f1_0_file="/home/fun/f1_0_dpc_stats.txt"
-    f1_1_file="/home/fun/f1_1_dpc_stats.txt"
     echo "Capturing stats $s test"
-    /opt/fungible/FunSDK/bin/Linux/dpcsh/dpcsh --pcie_nvme_sock=/dev/nvme0 --nocli peek stats/psw/nu/global >> $f1_0_file
-    /opt/fungible/FunSDK/bin/Linux/dpcsh/dpcsh --pcie_nvme_sock=/dev/nvme1 --nocli peek stats/psw/nu/global >> $f1_1_file
+    for f1 in 0 1
+    do
+        f1_file="/home/fun/f1_$f1-dpc_stats.txt"
+
+        if [ $s == "before" ]
+        then
+            rm -f $f1_file
+        fi
+
+        $MY_SCRIPT_VARIABLE/opt/fungible/FunSDK/bin/Linux/dpcsh/dpcsh --pcie_nvme_sock=/dev/nvme$f1 --nocli peek stats/psw/nu/global >> $f1_file
+        for fpg in 0 4 8 12 16 20
+        do
+            $MY_SCRIPT_VARIABLE/opt/fungible/FunSDK/bin/Linux/dpcsh/dpcsh --pcie_nvme_sock=/dev/nvme$f1 --nocli peek stats/fpg/nu/port[$fpg] >> $f1_file
+        done
+    done
 }
 
-function usage {
-	echo "Usage: $0 <setup/run/cleanup> [network|storage] [runtime in secs]"
-	exit 1
+function generic_setup {
+    for pkg in libaio-dev fio
+        do
+            apt-get -yq install $pkg
+            dpkg -s $pkg | grep -x 'Status: install ok installed'
+            if [ $? -ne 0 ]
+            then
+                echo "Package $pkg not installed. Please check"
+                exit 1
+            fi
+            echo "Installed package $pkg"
+        done
 }
 
 function check_nvme_cli {
 	sudo nvme create-ns --help 2>&1 | grep "block-size"
 	if [ $? -ne 0 ]
 	then
-		tar -zxvf nvme-cli.tgz
-		pushd nvme-cli
-		make && sudo make install
-		popd
+		echo "Nvme-cli not found. Installing it"
+		apt-get -yq install nvme-cli
+		dpkg -s $pkg | grep -x 'Status: install ok installed'
+        if [ $? -ne 0 ]
+        then
+            echo "Package nvme-cli not installed. Please check"
+            exit 1
+        fi
+        echo "Installed package nvme-cli"
 	fi
 }
 
-function stop_tests {
-	sudo pkill -9 fio
-	sudo pkill -9 ping
-	end_time=`date +%s`
-	run_duration=$(($end_time - $start_time))
-	echo "#####All tests stopped; Run duration: ${run_duration}#####"
-}
-
-function scrub_outfiles {
-	echo "#####Checking outfiles for any errors...#####"
-
-    if [ ${test} == "network" ] || [ ${test} == "all" ]
+function network_setup {
+    network_setup_successful=1
+    echo "########## Setup docker containers for snake ############"
+    snake_file_path="/opt/fungible/cclinux/snake_test.sh"
+    snake_file="$MY_WORKSPACE$snake_file_path"
+    if [ -f "$snake_file" ]
     then
-        for outfile in `ls compliance_snake*.out`
-        do
-            grep -iE '[0-9]+ packets transmitted' ${outfile}
-            if [ $? -ne 0 ]
-            then
-                echo "FAIL: No packets transmitted in ${outfile}. Make sure you run with sudo."
-            fi
-
-            grep -iE ' 0 received|100% packet loss' ${outfile}
-            if [ $? -eq 0 ]
-            then
-                echo "FAIL: No packets received in ${outfile}. Check your snake connections."
-            fi
-        done
-    fi
-
-    if [ ${test} == "storage" ] || [ ${test} == "all" ]
-    then
-    	for outfile in `ls compliance_fio_*.out`
-    	do
-    		grep -iE 'error|fail' ${outfile}
-    		if [ $? -eq 0 ]
-    		then
-    			echo "Error in ${outfile}"
-    		fi
-    	done
-    fi
-}
-
-function setup {
-    if [ ${test} == "storage" ] || [ ${test} == "all" ]
-    then
-        echo "#####Loading nvme driver#####"
-        sudo modprobe nvme
-
-            echo "#####Checking if fio is present#####"
-            sudo apt list --installed | grep fio
-            if [ $? -ne 0 ]
-            then
-            # Install libaio-dev since its needed for fio
-            sudo apt install libaio-dev_0.3.110-5ubuntu0.1_amd64.deb
-            # Install fio
-            tar -zxvf fio.tgz
-            pushd fio
-            ./configure
-            sudo make
-            sudo make install
-            popd
-            fi
-
-        echo "#####Checking if nvme create-ns cmd has --block-size option#####"
-        check_nvme_cli
-
-        memvol=`ls /dev/nvme*n*`
-        if [ $? -ne 0 ]
-        then
-            echo "No existing volumes found which means memory volumes were not found/created"
-        fi
-
-        echo "#####Creating nvme namespaces; these will be created on all online SSDs in round-robin fashion#####"
-        block_size=4096
-        nsze=$((${vol_size} / ${block_size}))
-        ncap=${nsze}
-
-        f1_id=$(($num_f1s - 1))
-        for i in `eval echo {0..$f1_id}`
-        do
-            device="/dev/nvme"${i}
-
-            for j in `eval echo {1..$num_ssds_per_f1}`
-            do
-                create_op=`sudo nvme create-ns --nsze=${nsze} --ncap=${ncap} --block-size=${block_size} ${device} 2>&1`
-                create_status=$?
-                if [ ${create_status} -ne 0 ]
-                then
-                    echo "Error: Create nvme namespace failed; Check funos logs"
-                    exit ${create_status}
-                fi
-                ns_id=`echo ${create_op} | awk -F ':' '{print $3}'`
-
-                #sudo nvme attach-ns -n ${ns_id} -c ${controller_id} ${device}
-                sudo nvme attach-ns -n ${ns_id} ${device}
-                attach_status=$?
-                if [ ${attach_status} -ne 0 ]
-                then
-                    echo "Error: Attach nvme namespace ${ns_id} failed; Check funos logs"
-                    exit ${attach_status}
-                fi
-            done
-        done
-    fi
-
-    if [ ${test} == "network" ] || [ ${test} == "all" ]
-    then
-        echo "########## Setup docker containers for snake ############"
-        snake_file="/opt/fungible/cclinux/snake_test.sh"
-        if [ -f "$snake_file" ]
-        then
-            echo "$snake_file found"
-        else
-            echo  "$snake_file does not exists"
-            exit 1
-        fi
-
+        echo "$snake_file found"
         sh $snake_file
-
-        echo "Check  docker containers are created"
-        if [ `docker ps | wc -l` -ne 5 ]
-        then
-            docker ps
-            echo "Docker containers are not up. Please check"
-            exit 1
-        fi
-
-        echo "#### Setup interfaces  ####"
-        for f1 in 0 1
-        do
-            device_name="04:00.1"
-            if [ $f1 == 1 ]
-            then
-                device_name="06:00.1"
-            fi
-            docker exec -i "F1-$f1-fpg0" bash -c "cd /opt/fungible/FunControlPlane/bin/; FUNQ_MODE=yes"
-            docker exec -i "F1-$f1-fpg0" bash -c "cd /opt/fungible/FunControlPlane/bin/; FUNQ_DEVICE_NAME=$device_name"
-            docker exec -i "F1-$f1-fpg0" bash -c "cd /opt/fungible/FunControlPlane/bin/; ./nu_test ../scripts/snake_nutest.json"
-            #  Need validations
-            for fpg_int in 4 8 12 16
-            do
-                f="f$f1"
-                fpg="fpg$fpg_int"
-                interface="$f$fpg"
-                sudo ifconfig $interface up
-                create_status=$?
-                if [ ${create_status} -ne 0 ]
-                then
-                    echo "$interface not created. Please check"
-                    exit ${create_status}
-                fi
-            done
-        done
-
-        echo "Add arp and routes to interfaces inside docker"
-        for f1 in 0 1
-        do
-            for fpg_int in 0 20
-            do
-                docker_name="F1-$f1-fpg$fpg_int"
-                intf_ip_mask="9.2.2.1/24"
-                arp="00:de:ad:be:ef:00"
-                route_ip_mask="9.1.2.0/24"
-                gw="9.2.2.10"
-                if [ $fpg_int -ne 0 ]
-                then
-                    intf_ip_mask="9.1.2.1/24"
-                    arp="00:de:ad:be:ef:00"
-                    route_ip_mask="9.2.2.0/24"
-                    gw="9.1.2.10"
-                fi
-                f="f$f1"
-                fpg="fpg$fpg_int"
-                interface="$f$fpg"
-                docker exec $docker_name ifconfig $interface $intf_ip_mask up
-                docker exec $docker_name ifconfig $interface hw ether $arp
-                docker exec $docker_name ip route add $route_ip_mask via $gw
-                docker exec $docker_name arp -s $gw $arp
-                docker exec $docker_name ifconfig $interface
-                create_status=$?
-                if [ ${create_status} -ne 0 ]
-                    then
-                echo "Error: Route addition failed for $interface"
-                exit ${create_status}
-                        fi
-            done
-        done
+    else
+        echo  "$snake_file does not exists"
+        network_setup_successful=0
+        return "$network_setup_successful"
     fi
+
+    echo "Check  docker containers are created"
+    if [ `docker ps | wc -l` -ne 5 ]
+    then
+        docker ps
+        echo "Docker containers are not up. Please check"
+        network_setup_successful=0
+        return "$network_setup_successful"
+    fi
+
+    echo "#### Setup interfaces  ####"
+    for f1 in 0 1
+    do
+        device_name="04:00.1"
+        if [ $f1 == 1 ]
+        then
+            device_name="05:00.1"
+        fi
+        nu_test_file="/home/fun/f1-$f1-nutest.txt"
+        docker exec -i "F1-$f1-fpg0" bash -c "cd $MY_WORKSPACE/opt/fungible/FunControlPlane/bin/; FUNQ_MODE=yes FUNQ_DEVICE_NAME=$device_name ./nu_test ../scripts/snake_nutest.json" > $nu_test_file 2>&1
+        #  Need validations
+        for fpg_int in 4 8 12 16
+        do
+            f="f$f1"
+            fpg="fpg$fpg_int"
+            interface="$f$fpg"
+            sudo ifconfig $interface up
+            create_status=$?
+            if [ ${create_status} -ne 0 ]
+            then
+                echo "$interface not created. Please check"
+                network_setup_successful=0
+                return "$network_setup_successful"
+            fi
+        done
+    done
+
+    echo "Add arp and routes to interfaces inside docker"
+    for f1 in 0 1
+    do
+        for fpg_int in 0 20
+        do
+            docker_name="F1-$f1-fpg$fpg_int"
+            intf_ip_mask="9.2.2.1/24"
+            arp="00:de:ad:be:ef:00"
+            route_ip_mask="9.1.2.0/24"
+            gw="9.2.2.10"
+            if [ $fpg_int -ne 0 ]
+            then
+                intf_ip_mask="9.1.2.1/24"
+                arp="00:de:ad:be:ef:00"
+                route_ip_mask="9.2.2.0/24"
+                gw="9.1.2.10"
+            fi
+            f="f$f1"
+            fpg="fpg$fpg_int"
+            interface="$f$fpg"
+            docker exec $docker_name ifconfig $interface $intf_ip_mask up
+            docker exec $docker_name ifconfig $interface hw ether $arp
+            docker exec $docker_name ip route add $route_ip_mask via $gw
+            docker exec $docker_name arp -s $gw $arp
+            docker exec $docker_name ifconfig $interface
+            create_status=$?
+            if [ ${create_status} -ne 0 ]
+            then
+                echo "Error: Route addition failed for $interface"
+                network_setup_successful=0
+                return "$network_setup_successful"
+            fi
+        done
+    done
+    return "$network_setup_successful"
+}
+
+function storage_setup() {
+    f1_id=$1
+    storage_setup_successful=1
+
+    echo "#####Loading nvme driver#####"
+    sudo modprobe nvme
+
+    block_size=4096
+    nsze=$((${vol_size} / ${block_size}))
+    ncap=${nsze}
+    device="/dev/nvme"${f1_id}
+
+    for j in `eval echo {1..$num_ssds_per_f1}`
+    do
+        cmd="sudo nvme create-ns --nsze=${nsze} --ncap=${ncap} ${device}"
+        echo "$cmd"
+        create_op=`sudo nvme create-ns --nsze=${nsze} --ncap=${ncap} ${device}`
+        create_status=$?
+        if [ ${create_status} -ne 0 ]
+        then
+            echo "Error: Create nvme namespace failed for $device and volume $j; Check funos logs"
+            storage_setup_successful=0
+        else
+            ns_id=`echo ${create_op} | awk -F ':' '{print $3}'`
+
+            #sudo nvme attach-ns -n ${ns_id} -c ${controller_id} ${device}
+            sudo nvme attach-ns -n ${ns_id} ${device}
+            attach_status=$?
+            if [ ${attach_status} -ne 0 ]
+            then
+                echo "Error: Attach nvme namespace ${ns_id} failed; Check funos logs"
+                storage_setup_successful=0
+            fi
+        fi
+    done
+    return "$storage_setup_successful"
+
 }
 
 function run {
-    echo "Dump stats before run"
-    stats before
-    outfile1="compliance_snake1.out"
-    outfile2="compliance_snake2.out"
+	echo "#####Running fio#####"
+	numjobs=2
+	iodepth=4
+	size="100%"
+	bs="4k"
+	rw="readwrite"
+	outfile1="test_snake0.out"
+	outfile2="test_snake1.out"
 
-    if [ ${test} == "storage" ] || [ ${test} == "all" ]
+	log_interval=$((runtime / 10))
+    if [ $log_interval == 0 ]
     then
-        echo "#####Running fio#####"
-        numjobs=2
-        iodepth=4
-        size="100%"
-        bs="4k"
-        rw="readwrite"
-
-
-        start_time=`date +%s`
-        for dev in `ls /dev/nvme*n*`
-        do
-            outfile="compliance_fio_$(basename $dev).out"
-            cmd="sudo fio --name=compliance-test --ioengine=libaio --direct=1 --filename=${dev} --numjobs=${numjobs} --iodepth=${iodepth} --rw=${rw} --bs=${bs} --size=${size} --group_reporting --time_based --runtime=${runtime} --status-interval=${log_interval}"
-            echo ${cmd}
-            fio_pid=`${cmd} 1>${outfile} 2>&1 & echo $!`
-        done
+        log_interval=1
     fi
 
-    if [ ${test} == "network" ] || [ ${test} == "all" ]
+	start_time=`date +%s`
+	for dev in `ls /dev/nvme*n*`
+	do
+		outfile="test_fio_$(basename $dev).out"
+		cmd="sudo fio --name=test-test --ioengine=libaio --direct=1 --filename=${dev} --numjobs=${numjobs} --iodepth=${iodepth} --rw=${rw} --bs=${bs} --size=${size} --group_reporting --time_based --runtime=${runtime} --status-interval=${log_interval}"
+   		echo ${cmd}
+   		fio_pid=`${cmd} 1>${outfile} 2>&1 & echo $!`
+	done
+
+	echo "#####Running snake on F1_0#####"
+	cmd="docker exec F1-0-fpg0 ping 9.1.2.1 -w${runtime} -i 0.05"
+	echo ${cmd}
+	snake1_pid=`${cmd} 1>${outfile1} 2>&1 & echo $!`
+
+	echo "#####Running snake on F1_1#####"
+	cmd="docker exec F1-1-fpg0 ping 9.1.2.1 -w${runtime} -i 0.05"
+	echo ${cmd}
+	snake2_pid=`${cmd} 1>${outfile2} 2>&1 & echo $!`
+
+   	trap stop_tests INT TERM HUP
+
+	echo "#####Running test test for ${runtime} seconds...#####"
+	sleep $(( ${runtime} + 2))
+}
+
+function verify_storage_result() {
+    f1_id=$1
+    storage_test=1
+    no_files_found=1
+    for outfile in `ls test_fio_nvme$f1_id*.out`
+    do
+        if [ -f $outfile ]
+        then
+            no_files_found=0
+        fi
+        grep -iE 'error|fail' ${outfile}
+        if [ $? -eq 0 ]
+        then
+            echo "Error in ${outfile}"
+            storage_test=0
+        fi
+    done
+    if [ $no_files_found == 1 ]
     then
-        echo "#####Running snake on F1_0#####"
-        cmd="docker exec F1-0-fpg0 ping 9.1.2.1 -w${runtime} -i 0.01"
-        echo ${cmd}
-        snake1_pid=`${cmd} 1>${outfile1} 2>&1 & echo $!`
-
-        echo "#####Running snake on F1_1#####"
-        cmd="docker exec F1-1-fpg0 ping 9.1.2.1 -w${runtime} -i 0.01"
-        echo ${cmd}
-        snake2_pid=`${cmd} 1>${outfile2} 2>&1 & echo $!`
-
-        trap stop_tests INT TERM HUP
-        #trap "kill -9 ${snake2_pid}" INT TERM HUP
-        #trap "kill -9 ${fio_pid}" INT TERM HUP
-
-        echo "#####Running compliance test for ${runtime} seconds...#####"
-        sleep $(( ${runtime} ))
-        #wait ${fio_pid}
-        #wait ${snake1_pid}
-        #wait ${snake2_pid}
-
-        echo "#### Collecting stats after test run #####"
-        stats after
-
-        echo "#####All tests finished; Run duration: ${run_duration}#####"
-        scrub_outfiles
+        echo "fio output files not found for F1-$f1_id"
+        storage_test=0
     fi
+    return "$storage_test"
+}
+
+function verify_network_result() {
+    f1_id=$1
+    network_test=0
+    outfile="test_snake$f1_id.out"
+    if [ -f $outfile ]
+    then
+        tx_count=`grep -iE 'packet loss' ${outfile} | cut -d' ' -f1`
+        rx_count=`grep -iE 'packet loss' ${outfile} | cut -d' ' -f4`
+        echo "Packets transmitted for F1-$f1_id: $tx_count"
+        echo "Packets received for F1-$f1_id: $rx_count"
+        if [ $tx_count -eq $rx_count ] && [ $tx_count -ge 0 ]
+        then
+            network_test=1
+        fi
+    else
+        echo "File $outfile not found"
+    fi
+    return "$network_test"
+}
+
+function verify_results {
+    for f1 in 0 1
+    do
+        verify_storage_result $f1
+        if [ "$storage_test" == 0 ]
+        then
+            echo "F1-$f1: Storage Test Failed"
+        else
+            echo "F1-$f1: Storage Test Passed"
+        fi
+        verify_network_result $f1
+        if [ "$network_test" == 0 ]
+        then
+            echo "F1-$f1: Network Test Failed"
+        else
+            echo "F1-$f1: Network Test Passed"
+        fi
+    done
+}
+
+function verify_results1 {
+    my_array=()
+    for f1 in 0 1
+    do
+        verify_storage_result $f1
+        my_array+=( "$storage_test" )
+        verify_network_result $f1
+        my_array+=( "$network_test" )
+    done
+
+    for i in "${!my_array[@]}"
+    do
+        if [ ${my_array[$i]} -ne 1 ]
+        then
+            result="FAIL"
+        else
+            result="PASS"
+        fi
+        if [ "$i" == 0 ]
+        then
+            echo "F1-0: Storage test $result"
+        elif [ "$i" == 1 ]
+        then
+            echo "F1-0: Network test $result"
+        elif [ "$i" == 2 ]
+        then
+            echo "F1-1: Storage test $result"
+        elif [ "$i" == 3 ]
+        then
+            echo "F1-1: Network test $result"
+        fi
+    done
+}
+
+function usage {
+	echo "Usage: $0 [runtime in secs]"
+	exit 1
 }
 
 function cleanup {
-	echo "#####Detaching and deleting nvme namespaces#####"
-	f1_id=$(($num_f1s - 1))
-	for i in `eval echo {0..$f1_id}`
-	do
-		device="/dev/nvme"${i}
-		for j in `eval echo {1..$num_ssds_per_f1}`
-		do
-			sudo nvme detach-ns -n ${j} -c ${controller_id} ${device}
-			sudo nvme delete-ns -n ${j} ${device}
-		done
-	done
-
-	echo "#####Unloading funeth driver#####"
-	cmd="sudo rmmod funeth"
-	echo ${cmd}
-	${cmd}
+    echo "kill all docker conttainers"
+    cmd=`docker kill $(docker ps -q)`
+    echo "Remove all test files"
+    rm -rf test* f1*
+    echo "#####Detaching and deleting nvme namespaces#####"
+    f1_id=$(($num_f1s - 1))
+    for i in `eval echo {0..$f1_id}`
+    do
+        device="/dev/nvme"${i}
+        for j in `eval echo {1..$num_ssds_per_f1}`
+        do
+            sudo nvme detach-ns -n ${j} -c ${controller_id} ${device}
+            sudo nvme delete-ns -n ${j} ${device}
+        done
+    done
 }
 
-#####Main#####
-[ $# -lt 1 ] && usage
+#### MAIN ####
+if [ -z "$1" ]; then runtime=30; else runtime=$1; fi
 
-if [ $1 == "setup" ]
+echo "######### Start Dpcsh ##########"
+setup_dpc
+
+echo "########Installing libaio and fio########"
+generic_setup
+
+echo "#####Check nvme-cli installed########"
+check_nvme_cli
+
+echo "Setup docker containers for network test"
+network_setup
+if [ "$network_setup_successful" == 0 ]
 then
-    if [ -z "$2" ]; then test="all"; else test=$2; fi
-	setup
-elif [ $1 == "run" ]
-then
-	if [ -z "$3" ]; then runtime=600; else runtime=$3; fi
-	if [ -z "$2" ]; then test="all"; else test=$2; fi
-	run
-elif [ $1 == "cleanup" ]
-then
-    if [ -z "$2" ]; then test="all"; else test=$2; fi
-	cleanup
+    echo "Network setup successful"
 else
-	echo "Invalid argument"
+    echo "Network setup failed"
 fi
+
+for f1 in 1 0
+do
+    storage_setup $f1
+    if [ "$storage_setup_successful" == 0 ]
+    then
+        echo "Storage setup failed for F1-$f1"
+    else
+        echo "Storage setup successful for F1-$f1"
+    fi
+done
+sleep 60
+echo "Capture stats before test"
+stats before
+
+echo "Running storage and network test"
+run
+
+echo "Capture stats after test"
+stats after
+
+echo "Verifying output results"
+verify_results1
+
+echo "Call cleanup"
+cleanup

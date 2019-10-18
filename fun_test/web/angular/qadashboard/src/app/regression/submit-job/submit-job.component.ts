@@ -13,6 +13,7 @@ import {TriageService} from "../triage2/triage.service";
 import {SuiteEditorService} from "../suite-editor/suite-editor.service";
 import {CommonService} from "../../services/common/common.service";
 import {TestBedService} from "../test-bed/test-bed.service";
+import {RegressionService} from "../regression.service";
 
 class Mode {
   static REGULAR = "REGULAR";
@@ -24,6 +25,7 @@ class BuildType {
   static TFTP_IMAGE_PATH = "TFTP_IMAGE_PATH";
   static WITH_JENKINS_BUILD = "WITH_JENKINS_BUILD";
   static WITH_STABLE_MASTER = "WITH_STABLE_MASTER";
+  static USE_BUNDLE_IMAGE = "USE_BUNDLE_IMAGE";
 }
 
 
@@ -56,6 +58,7 @@ export class SubmitJobComponent implements OnInit {
   jobId: number;
   suitesInfo: any;
   selectedTags: any[] = [];
+  releaseTrains: string [] = [];
   tags: any;
   emailOnFailOnly: boolean;
   schedulingOptions: boolean;
@@ -82,7 +85,6 @@ export class SubmitJobComponent implements OnInit {
   bootArgs: string = "";
 
 
-  disableAssertions: boolean = false;
   funOsMakeFlags: string = null;
   branchFunOs: string = null;
   branchFunSdk: string = null;
@@ -106,6 +108,7 @@ export class SubmitJobComponent implements OnInit {
   jobInputs: string = null; // input dictionary to be sent to the scheduler
   richBootArgs: string = null;
   csiPerf: boolean = false;
+  csiCacheMiss: boolean = false;
   dryRun: boolean = false;
   hbmDump: boolean = false;
   moreJenkinsOptions: boolean = false;
@@ -124,13 +127,16 @@ export class SubmitJobComponent implements OnInit {
   currentTriageType: number = null;
   regexMatchString: string = null;
 
+
   withStableMaster = {debug: false, stripped: true};
+  bundleImageParameters = {release_train: null, build_number: null};
   constructor(private apiService: ApiService, private logger: LoggerService,
               private title: Title, private route: ActivatedRoute,
               private triageService: TriageService,
               private suiteEditorService: SuiteEditorService,
               private commonService: CommonService,
-              private testBedService: TestBedService) {
+              private testBedService: TestBedService,
+              private regressionService: RegressionService) {
     this.currentTriageType = this.triageTypes[0].value;
   }
 
@@ -172,6 +178,7 @@ export class SubmitJobComponent implements OnInit {
     this.tags = [];
     this.fetchUsers();
     this.fetchTags();
+    this.fetchReleaseTrains();
     this.fetchTestBeds();
     this.fetchSuites();
     this.emailOnFailOnly = false;
@@ -251,6 +258,14 @@ export class SubmitJobComponent implements OnInit {
         this.selectedTestBedType = this.DEFAULT_TEST_BED;
       })
 
+    })
+  }
+
+  fetchReleaseTrains(): void {
+    this.regressionService.releaseTrains().subscribe(result => {
+      this.releaseTrains = result;
+    }, error => {
+      this.logger.error("Unable to fetch release trains");
     })
   }
 
@@ -399,7 +414,6 @@ export class SubmitJobComponent implements OnInit {
           payload["environment"]["build_parameters"]["BOOTARGS"] = this.bootArgs.replace(/\s+/g, this.BOOT_ARGS_REPLACEMENT_STRING);
         }
         payload["environment"]["build_parameters"]["RELEASE_BUILD"] = this.releaseBuild;
-        payload["environment"]["build_parameters"]["DISABLE_ASSERTIONS"] = this.disableAssertions;
         payload["environment"]["build_parameters"]["FUNOS_MAKEFLAGS"] = this.funOsMakeFlags;
         payload["environment"]["build_parameters"]["BRANCH_FunOS"] = this.branchFunOs;
         payload["environment"]["build_parameters"]["BRANCH_FunSDK"] = this.branchFunSdk;
@@ -453,16 +467,20 @@ export class SubmitJobComponent implements OnInit {
     if (this.selectedTestBedType) {
       payload["environment"]["test_bed_type"] = this.selectedTestBedType; //TODO: this is not needed after scheduler_v2
     }
-    /*if (this.type) {
-      payload["suite_type"] = this.type;
-      payload["environment"]["test_bed_type"] = "tasks"
-    }*/
 
     if (this.isTestBedFs()) {
       if (this.buildType === this.BuildType.TFTP_IMAGE_PATH) {
         if (this.tftpImagePath && this.tftpImagePath !== "") {
           payload["environment"]["tftp_image_path"] = this.tftpImagePath;
         }
+      } else if (this.buildType === this.BuildType.USE_BUNDLE_IMAGE) {
+        if (this.bundleImageParameters.release_train === null) {
+          return this.logger.error("Please select bundle release");
+        }
+        if (this.bundleImageParameters.build_number === null) {
+          return this.logger.error("Please select bundle number");
+        }
+        payload["environment"]["bundle_image_parameters"] = this.bundleImageParameters;
       } else if (this.buildType === this.BuildType.WITH_JENKINS_BUILD) {
         payload["environment"]["with_jenkins_build"] = true;
       } else if (this.buildType === this.BuildType.WITH_STABLE_MASTER) {
@@ -475,7 +493,6 @@ export class SubmitJobComponent implements OnInit {
           payload["environment"]["build_parameters"]["BOOTARGS"] = this.bootArgs.replace(/\s+/g, this.BOOT_ARGS_REPLACEMENT_STRING);
         }
         payload["environment"]["build_parameters"]["RELEASE_BUILD"] = this.releaseBuild;
-        payload["environment"]["build_parameters"]["DISABLE_ASSERTIONS"] = this.disableAssertions;
         payload["environment"]["build_parameters"]["FUNOS_MAKEFLAGS"] = this.funOsMakeFlags;
         payload["environment"]["build_parameters"]["BRANCH_FunOS"] = this.branchFunOs;
         payload["environment"]["build_parameters"]["BRANCH_FunSDK"] = this.branchFunSdk;
@@ -502,6 +519,11 @@ export class SubmitJobComponent implements OnInit {
     if (this.csiPerf) {
       payload["environment"]["csi_perf"] = this.csiPerf;
     }
+
+    if (this.csiCacheMiss) {
+      payload["environment"]["csi_cache_miss"] = this.csiCacheMiss;
+    }
+
 
     if (this.dryRun) {
       payload["environment"]["dry_run"] = this.dryRun;
@@ -606,6 +628,13 @@ export class SubmitJobComponent implements OnInit {
   onSearchText(searchText) {
     this.byNameSearchText = searchText;
     this.fetchSuites();
+  }
+
+  toggleCsiCacheMiss() {
+    this.csiCacheMiss = !this.csiCacheMiss;
+    if (this.csiCacheMiss) {
+      this.csiPerf = true;
+    }
   }
 
 }

@@ -48,8 +48,11 @@ def ensure_io_running(device, output_iostat, host_name):
 
     if fio_read or fio_write:
         result = True
-    fun_test.test_assert(result, "{} IO is resumed".format(host_name))
+    fun_test.test_assert(result, "{} IO is running".format(host_name))
 
+
+def hello():
+    print ""
 
 if __name__ == "__main__":
     pass

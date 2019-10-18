@@ -34,3 +34,8 @@ input.disabled {
   color: red;
   font-weight: bold;
 }
+
+.bundle-image-input {
+  margin-left: 10px;
+  margin-right: 10px;
+}

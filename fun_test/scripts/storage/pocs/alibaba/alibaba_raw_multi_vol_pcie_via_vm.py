@@ -289,9 +289,31 @@ class RawVolumeLocalPerfTestcase(FunTestCase):
                         break
                 fun_test.sleep("Sleeping for {} seconds before actual test".format(self.iter_interval),
                                self.iter_interval)
+        else:
+            print("Warm up begins:")
+            thread_id = {}
+            fun_test.shared_variables["fio"] = {}
+            fio_filename = fun_test.shared_variables["nvme_block_device"]
+            for i in range(0, 2):
+                for index, host in enumerate(self.server_dict):
+                    self.host = Linux(host_ip=host, ssh_username=self.uname, ssh_password=self.pwd)
+                    thread_id[index] = fun_test.execute_thread_after(time_in_seconds=10,
+                                        func=fio_parser,
+                                        arg1=self.host,
+                                        host_index=index,
+                                        filename=fio_filename,
+                                        **self.warm_up_fio_cmd_args)
+                fun_test.sleep("Fio threadzz", seconds=1)
+                #fio_output[fio_iodepth] = {}
+                for index, host in enumerate(self.server_dict):
+                    #fio_output[fio_iodepth][host] = {}
+                    fun_test.log("Joining fio thread {}".format(index))
+                    fun_test.join_thread(fun_test_thread_id=thread_id[index], sleep_time=1)
+                    fun_test.log("FIO Command Output from {}:\n {}".format(host,
+                                                                       fun_test.shared_variables["fio"][index]))
 
-        i += 1
-
+        #i += 1
+        print("warm up done:")
 
     def run(self):
         testcase = self.__class__.__name__
@@ -392,11 +414,9 @@ class RawVolumeLocalPerfTestcase(FunTestCase):
                 for index, host in enumerate(self.server_dict):
                     fun_test.test_assert(fun_test.shared_variables["fio"][index],
                                          "FIO {} test with the Block Size {} IO depth {} and Numjobs {} on {}"
-                                         .format(mode, fio_block_size, fio_iodepth,
-                                                 fio_numjobs , host))
+                                         .format(mode, fio_block_size, fio_iodepth, fio_numjobs , host))
                     for op, stats in fun_test.shared_variables["fio"][index].items():
                         if op not in aggr_fio_output[fio_iodepth]:
-
                             aggr_fio_output[fio_iodepth][op] = {}
                         aggr_fio_output[fio_iodepth][op] = Counter(aggr_fio_output[fio_iodepth][op]) + \
                                                        Counter(fun_test.shared_variables["fio"][index][op])
@@ -404,6 +424,12 @@ class RawVolumeLocalPerfTestcase(FunTestCase):
                 fun_test.log("Aggregated FIO Command Output:\n{}".format(aggr_fio_output[fio_iodepth]))
                 fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval),
                                self.iter_interval)
+                for op, stats in aggr_fio_output[fio_iodepth].items():
+                    for field, value in stats.items():
+                        if "latency" in field:
+                            #change divide by 2 by number of VMs involved
+                            aggr_fio_output[fio_iodepth][op][field] = int(round(value) / 2)
+                fun_test.log("Processed Aggregated FIO Command Output:\n{}".format(aggr_fio_output[fio_iodepth]))
 
                 #for op, stats in fio_output[mode][combo].items():
                 for op, stats in aggr_fio_output[fio_iodepth].items():

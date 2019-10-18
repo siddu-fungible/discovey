@@ -25,7 +25,6 @@ from django.core import serializers, paginator
 from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ObjectDoesNotExist
 from django.forms.models import model_to_dict
-# from analytics_models_helper import invalidate_goodness_cache
 from datetime import datetime, timedelta
 from dateutil import parser
 from lib.utilities.jira_manager import JiraManager
@@ -943,7 +942,7 @@ def validate_jira(jira_id):
         if jira_valid:
             jira_valid = jira_valid[0]
             return jira_valid
-    except Exception:
+    except Exception as ex:
         return None
     return None
 

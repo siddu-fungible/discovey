@@ -72,9 +72,9 @@ class BringupSetup(FunTestCase):
             f11_retimer = 0
 
         f1_0_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --dpc-server --all_100g --serial --dpc-uart " \
-                         "retimer={} --mgmt --disable-wu-watchdog syslog=2".format(f10_retimer)
+                         "retimer={} --mgmt syslog=2".format(f10_retimer)
         f1_1_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 --dpc-server --all_100g --serial --dpc-uart " \
-                         "retimer={} --mgmt --disable-wu-watchdog syslog=2".format(f11_retimer)
+                         "retimer={} --mgmt syslog=2".format(f11_retimer)
 
         topology_helper = TopologyHelper()
         if "deploy_setup" in job_inputs:
@@ -93,12 +93,12 @@ class BringupSetup(FunTestCase):
         else:
             ib_bw_tests = ["write", "read"]
             fun_test.shared_variables["test_type"] = ib_bw_tests
-        if "enable_bgp" in job_inputs:
-            enable_bgp = job_inputs["enable_bgp"]
-            fun_test.shared_variables["enable_bgp"] = enable_bgp
+        if "enable_fcp" in job_inputs:
+            enable_fcp = job_inputs["enable_fcp"]
+            fun_test.shared_variables["enable_fcp"] = enable_fcp
         else:
-            enable_bgp = False
-            fun_test.shared_variables["enable_bgp"] = enable_bgp
+            enable_fcp = False
+            fun_test.shared_variables["enable_fcp"] = enable_fcp
 
         if deploy_setup:
             funcp_obj = FunControlPlaneBringup(fs_name=self.server_key["fs"][fs_name]["fs-name"])
@@ -208,9 +208,9 @@ class NicEmulation(FunTestCase):
 
     def run(self):
         host_objs = fun_test.shared_variables["hosts_obj"]
-        enable_bgp = fun_test.shared_variables["enable_bgp"]
+        enable_fcp = fun_test.shared_variables["enable_fcp"]
         abstract_key = ""
-        if enable_bgp:
+        if enable_fcp:
             abstract_key = "abstract_configs_bgp"
         else:
             abstract_key = "abstract_configs"
@@ -232,7 +232,7 @@ class NicEmulation(FunTestCase):
 
             # Ping QFX from both F1s
             ping_dict = self.server_key["fs"][fs_name]["cc_pings"]
-            if enable_bgp:
+            if enable_fcp:
                 ping_dict = self.server_key["fs"][fs_name]["cc_pings_bgp"]
 
             for container in ping_dict:
