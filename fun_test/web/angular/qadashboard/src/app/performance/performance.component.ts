@@ -178,6 +178,7 @@ export class PerformanceComponent implements OnInit {
   showF1Dag: boolean = true;
   showS1Dag: boolean = false;
   initialize: boolean = true;
+  rootTabs: any[] = [{"name": "F1", "active": true}, {"name": "S1", "active": false}];
 
   constructor(
     private apiService: ApiService,
@@ -317,6 +318,23 @@ export class PerformanceComponent implements OnInit {
     this.showS1Dag = false;
     this.setDefaultFlatNodes();
     this.fetchDag();
+  }
+
+  openDag(rootTab): void {
+    for (let tab of this.rootTabs) {
+      if (tab["name"] == rootTab["name"]) {
+        tab["active"] = true;
+      } else {
+        tab["active"] = false;
+      }
+    }
+    if (rootTab["name"] === "F1") {
+      this.openF1Dag();
+    }
+    else if (rootTab["name"] === "S1") {
+      this.openS1Dag();
+    }
+
   }
 
   openF1Dag(): void {

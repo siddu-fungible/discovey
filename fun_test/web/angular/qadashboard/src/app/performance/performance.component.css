@@ -247,3 +247,8 @@ sup {
 * {
   -ms-overflow-style: none !important;
 }
+
+.tab-highlight {
+  font-weight: bold;
+  background-color: whitesmoke !important;
+}
