@@ -375,8 +375,9 @@ class MetricLib():
     def _generate_report(self, workspace_id):
         reports = []
         metrics = InterestedMetrics.objects.filter(workspace_id=workspace_id)
-        for metric in metrics:
-            self._set_report_fields(lineage=metric.lineage, metric_id=metric.metric_id, reports=reports, root=True)
+        if len(metrics):
+            for metric in metrics:
+                self._set_report_fields(lineage=metric.lineage, metric_id=metric.metric_id, reports=reports, root=True)
         return reports
 
     def _set_report_fields(self, lineage, metric_id, reports, root=False):
