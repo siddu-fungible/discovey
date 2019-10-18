@@ -18,6 +18,7 @@ from django.contrib.postgres.fields import JSONField, ArrayField
 from web.web_global import *
 from web.fun_test.triaging_global import TriagingStates, TriageTrialStates, TriagingResult, TriagingTypes
 from fun_global import PerfUnit, ChartType, FunChartType
+from web.fun_test.models import FunModel
 
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
@@ -3029,7 +3030,7 @@ class InspurDataReconstructionPerformance(models.Model):
         return (str(self.__dict__))
 
 
-class PowerPerformance(models.Model):
+class PowerPerformance(FunModel):
     interpolation_allowed = models.BooleanField(default=False)
     interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])

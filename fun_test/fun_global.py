@@ -131,9 +131,6 @@ class PerfUnit:
     UNIT_KCPS = "Kcps"
     UNIT_GCPS = "Gcps"
 
-    UNIT_WATT = "W"
-    UNIT_KILOWATT = "kW"
-    UNIT_MILLIWATT = "mW"
 
 class FunPlatform:
     F1 = "F1"
