@@ -26,7 +26,7 @@ test_var['netesto_fun_plots'] = '~/netesto_git/local/fun_plots'
 def get_netesto_script(test_type='basic', no_of_streams=1, no_of_nobuff_streams=0, no_of_rr=1, rr_size='1B,1', local_buff=9000, remote_buff=9000):
     global test_var
     ali_script = []
-    test_duration = 5000
+    test_duration = 60
     rr_req_size = rr_size.split(',')[0]
     rr_reply_size = rr_size.split(',')[1]
     if test_type == 'tp_tcp_stream_bi_dir':
@@ -60,6 +60,16 @@ def get_netesto_script(test_type='basic', no_of_streams=1, no_of_nobuff_streams=
     servers_t3 = 'dummy'
     client3 = 'dummy'
 
+    if test_var['cs_pair']:
+        c1,s1 = test_var['cs_pair'].split(',')
+
+        clients3 = clients3 + ',' + c1
+        servers3 = servers3 + ',' + s1
+        s1t = s1 + 't'
+    else:
+        c1 = 'dummy'
+        s1t = 'dummy'
+
     ali_script.append('''
     #
     # Sample script for netesto
@@ -88,6 +98,8 @@ def get_netesto_script(test_type='basic', no_of_streams=1, no_of_nobuff_streams=
     SET servers_t3={SERVERS_T3}
     SET servers2=cab02-qa-03,cab02-qa-01
     SET servers3={SERVERS3}
+    SET c1={C1}
+    SET s1={S1}
 
     # Set congestion control variants to run
     #SET ca=reno,cubic,nv,dctcp
@@ -124,7 +136,7 @@ def get_netesto_script(test_type='basic', no_of_streams=1, no_of_nobuff_streams=
     SET_SYSCTL host=$host net.core.wmem_max=67108864
     SET_SYSCTL host=$host net.ipv4.tcp_wmem=10000,262144,33554432
     END preClient
-    '''.format(CLIENT1=client1,CLIENT2=client2,CLIENT3=client3,CLIENTS3=clients3,SERVERS3=servers3,SERVERS_T2=servers_t2,SERVERS_T1=servers_t1,SERVERS_T3=servers_t3))
+    '''.format(CLIENT1=client1,CLIENT2=client2,CLIENT3=client3,CLIENTS3=clients3,SERVERS3=servers3,SERVERS_T2=servers_t2,SERVERS_T1=servers_t1,SERVERS_T3=servers_t3,C1=c1,S1=s1t))
 
     if test_type == 'tcp_rr_only_test':
         local_buff = 0
@@ -147,7 +159,7 @@ def get_netesto_script(test_type='basic', no_of_streams=1, no_of_nobuff_streams=
         SET localbuffer={LOCAL_BUFF}
         SET remotebuffer={REMOTE_BUFF}
         SET dur={DURATION}
-        IF 1: RUN MServerStreamFunAlibaba  test=TCP_RR reqs1=$reqs1 reply1=$reply1 servers=$servers3  servers_t=$servers_t1 servers2_t=$servers_t2 servers3_t=$servers_t3 clients=$clients3 client1=$client1 client2=$client2 client3=$client3 nobuffclient1=$client1 nobuffclient3=$client3 instancenobuff1=$nobuffstreams localbuf1=$localbuffer remotebuf1=$remotebuffer instance1=$instancestream instance2=$instancerr reqs=$reqs reply=$reply burst2=$burst2 interval2=$interval2 expName=AlibabaSTREAM2RR1 ca=$ca dur=$dur interval=$interval burst=$burst
+        IF 1: RUN MServerStreamFunAlibaba  test=TCP_RR reqs1=$reqs1 reply1=$reply1 servers=$servers3  servers_t=$servers_t1 servers2_t=$servers_t2 servers3_t=$servers_t3 clients=$clients3 client1=$client1 client2=$client2 client3=$client3 nobuffclient1=$client1 nobuffclient3=$client3 instancenobuff1=$nobuffstreams localbuf1=$localbuffer remotebuf1=$remotebuffer instance1=$instancestream instance2=$instancerr reqs=$reqs reply=$reply burst2=$burst2 interval2=$interval2 expName=AlibabaSTREAM2RR1 c1=$c1 s1=$s1 ca=$ca dur=$dur interval=$interval burst=$burst
             '''.format(BUFF_STREAMS=no_of_streams, NO_BUFF_STREAMS=no_of_nobuff_streams, RR=no_of_rr, RR_SIZE=rr_req_size, REPLY_SIZE=rr_reply_size,
                        LOCAL_BUFF=local_buff, REMOTE_BUFF=remote_buff, DURATION=test_duration))
     else:
@@ -171,7 +183,7 @@ def get_netesto_script(test_type='basic', no_of_streams=1, no_of_nobuff_streams=
         SET remotebuffer={REMOTE_BUFF}
         SET dur={DURATION}
         SET test={TEST}
-        IF 1: RUN MServerStreamFunAlibaba  test=$test reqs1=$reqs1 reply1=$reply1 servers=$servers3  servers_t=$servers_t1 servers2_t=$servers_t2 servers3_t=$servers_t3 clients=$clients3 client1=$client1 client2=$client2 client3=$client3 nobuffclient1=$client1 nobuffclient3=$client3 instancenobuff1=$nobuffstreams localbuf1=$localbuffer remotebuf1=$remotebuffer instance1=$instancestream instance2=$instancerr reqs=$reqs reply=$reply burst2=$burst2 interval2=$interval2 expName=AlibabaSTREAM2RR1 ca=$ca dur=$dur interval=$interval burst=$burst
+        IF 1: RUN MServerStreamFunAlibaba  test=$test reqs1=$reqs1 reply1=$reply1 servers=$servers3  servers_t=$servers_t1 servers2_t=$servers_t2 servers3_t=$servers_t3 clients=$clients3 client1=$client1 client2=$client2 client3=$client3 nobuffclient1=$client1 nobuffclient3=$client3 instancenobuff1=$nobuffstreams localbuf1=$localbuffer remotebuf1=$remotebuffer instance1=$instancestream instance2=$instancerr reqs=$reqs reply=$reply burst2=$burst2 interval2=$interval2 expName=AlibabaSTREAM2RR1 c1=$c1 s1=$s1 ca=$ca dur=$dur interval=$interval burst=$burst
             '''.format(BUFF_STREAMS=no_of_streams, NO_BUFF_STREAMS=no_of_nobuff_streams, RR=no_of_rr, RR_SIZE=rr_req_size, REPLY_SIZE=rr_reply_size,
                        LOCAL_BUFF=local_buff, REMOTE_BUFF=remote_buff, DURATION=test_duration, TEST=test))
 
@@ -181,7 +193,7 @@ def get_netesto_script(test_type='basic', no_of_streams=1, no_of_nobuff_streams=
 
 def netesto_client(host, ssh_username="localadmin", ssh_password="Precious1*"):
     linux_obj = Linux(host_ip=host, ssh_username=ssh_username, ssh_password=ssh_password)
-    linux_obj.sudo_command(command="killall netserver; killall netperf; killall netesto.py; killall tcpdump")
+    linux_obj.sudo_command(command="killall doClient.sh; killall doServer.sh; killall netserver; killall netperf; killall netesto.py; killall tcpdump")
     time.sleep(10)
     # linux_obj.sudo_command(command="sudo ufw disable;iptables -X;iptables -t nat -F;iptables -t nat -X;iptables -t mangle -F;iptables -t mangle -X;iptables -P INPUT ACCEPT;iptables -P OUTPUT ACCEPT;iptables -P FORWARD ACCEPT;iptables -F;iptables -L")
     # linux_obj.sudo_command(command="sysctl -w net.core.rmem_max=4194304;sysctl -w net.core.wmem_max=4194304;sysctl -w net.core.rmem_default=4194304;sysctl -w net.core.wmem_default=4194304;sysctl -w net.core.optmem_max=4194304")
@@ -199,6 +211,32 @@ def netesto_client(host, ssh_username="localadmin", ssh_password="Precious1*"):
     # linux_obj.sudo_command(command="sysctl -w net.core.netdev_max_backlog=250000;sysctl -w net.ipv4.tcp_low_latency=1;")
     # linux_obj.sudo_command(command="sysctl -w net.ipv4.route.flush=1")
     # fun_test.sleep(message="start tcpdump now", seconds=10)
+
+    interface = {
+        'mpoc-server30': 'hu3-f0',
+        'mpoc-server31': 'hu1-f0',
+        'mpoc-server32': 'hu0-f0',
+        'mpoc-server33': 'hu1-f0',
+        'mpoc-server34': 'hu2-f0',
+        'mpoc-server40': 'hu3-f0',
+        'mpoc-server41': 'hu1-f0',
+        'mpoc-server42': 'hu0-f0',
+        'mpoc-server43': 'hu1-f0',
+        'mpoc-server44': 'hu2-f0',
+        'mpoc-server45': 'hu3-f0',
+        'mpoc-server46': 'hu1-f0',
+        'mpoc-server47': 'hu1-f0',
+        'mpoc-server48': 'hu2-f0',
+    }
+
+    if host == "mpoc-server42" or host == "mpoc-server46" or host == "mpoc-server-33":
+        linux_obj.sudo_command(command="ethtool --coalesce {INTF} rx-usecs 0 tx-usecs 0 rx-frames 1 tx-frames 1 adaptive-rx off".format(INTF=interface[host]))
+    else:
+        linux_obj.sudo_command(
+            command="sudo ethtool --coalesce {INTF} rx-usecs 8 tx-usecs 16 rx-frames 64 tx-frames 32 adaptive-rx on".format(
+                INTF=interface[host]))
+
+
     take_tcpdump = False
     if take_tcpdump:
         if host == "cab02-qa-05":
@@ -401,6 +439,8 @@ if __name__ == '__main__':
                       help='netesto_rr_clients')
     parser.add_option('--buff', action="store", dest="buffer_size", default='0,0',
                       help='netesto_rr_clients')
+    parser.add_option('--cs_pair', action="store", dest="cs_pair", default=None,
+                      help='client server pair')
     parser.add_option('-u', '--usage',
                       action="store_true", dest="usage",
                       help="README text", default=False)
@@ -418,6 +458,7 @@ if __name__ == '__main__':
     		'--ns_rr', default='mpoc-server42','mpoc-server46','mpoc-server-33'
     		'--nc_rr', default='mpoc-server42','mpoc-server46','mpoc-server-33'
     		'--buff', default=0,0 , help=local_buff,remote_buff'
+    		'--cs_pair', default=None , help=client server pair'
     		-u : This help
     		'''
         exit()
@@ -429,15 +470,20 @@ if __name__ == '__main__':
     netesto_controller = options.netesto_controller
     test_var['nh'] = netesto_controller
     netesto_clients = options.netesto_clients
-    test_var['nc'] = netesto_clients
     netesto_servers = options.netesto_servers
+    test_var['cs_pair'] = options.cs_pair
+    test_var['nc'] = netesto_clients
+
     test_var['ns'] = netesto_servers
     test_var['nc_rr'] = options.netesto_rr_clients
     test_var['ns_rr'] = options.netesto_rr_servers
+
     default_streams_list = [0,4,8,16,32]
 
     #hosts = netesto_controller + ',' + netesto_clients + ',' + netesto_servers
     hosts = test_var['nc'] + ',' + test_var['ns'] + ',' + test_var['nc_rr'] + ',' + test_var['ns_rr']
+    if test_var['cs_pair'] is not None:
+        hosts = hosts + ',' + test_var['cs_pair']
     hosts = hosts.split(',')
     fun_test.shared_variables['result'] = {}
     fun_test.shared_variables['result']['script_names'] = []
@@ -464,7 +510,33 @@ if __name__ == '__main__':
 
         run_netesto(test_type=test_type, no_of_streams=nobuff_streams, local_buff=local_buff, remote_buff=remote_buff, total_calls=total_calls)
 
-        total_calls += 1
+    elif test_type ==  "tp_tcp_stream_buff_limit_template":
+
+        stream_template = { '4' : ['18000', '42000', '72000', '128000', '300000'],
+                            '8' : ['12000', '23000', '38000', '54000', '78000', '128000'],
+                            '16' : ['9000', '15000', '22000', '30000', '43000', '58000'],
+                            '32' : ['9000', '15000', '23000', '30000', '43000', '60000', '78000', '128000']
+                            }
+        #stream_template = {'4': ['18000', '42000']}
+        for stream_count in stream_template.keys():
+            server_count = len(test_var['ns'].split(','))
+            print "Server count is " + str(server_count)
+
+            for buffer_size in stream_template[stream_count]:
+                if ',' in buffer_size:
+                    local_buff = buffer_size.split(',')[0]
+                    remote_buff = buffer_size.split(',')[1]
+                else:
+                    local_buff = buffer_size
+                    remote_buff = buffer_size
+
+                local_buff = int(local_buff)/server_count
+                remote_buff = int(remote_buff)/server_count
+
+                run_netesto(test_type=test_type, no_of_streams=int(stream_count), local_buff=local_buff, remote_buff=remote_buff,
+                            total_calls=total_calls)
+
+                total_calls += 1
 
 
     print fun_test.shared_variables['result']
