@@ -639,6 +639,8 @@ class ECVolumeLevelTestcase(FunTestCase):
             self.warm_up_fio_cmd_args["bs"] = job_inputs["warmup_bs"]
         if "warmup_io_depth" in job_inputs:
             self.warm_up_fio_cmd_args["iodepth"] = job_inputs["warmup_io_depth"]
+        if "warmup_size" in job_inputs:
+            self.warm_up_fio_cmd_args["io_size"] = job_inputs["warmup_size"]
         if "post_results" in job_inputs:
             self.post_results = job_inputs["post_results"]
         else:

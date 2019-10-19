@@ -247,3 +247,15 @@ sup {
 * {
   -ms-overflow-style: none !important;
 }
+
+.tab-highlight {
+  text-decoration: underline;
+  text-decoration-color: red;
+  text-decoration-style: solid;
+  font-weight: bolder;
+}
+
+
+.card-header-tabs {
+  margin-left: unset;
+}
