@@ -387,7 +387,7 @@ export class PerformanceComponent implements OnInit {
   }
 
   fetchDag(): void {
-    this.status = "Fetching DAG";
+    this.status = "Fetching metrics";
     new Observable(observer => {
       observer.next(true);
       observer.complete();
