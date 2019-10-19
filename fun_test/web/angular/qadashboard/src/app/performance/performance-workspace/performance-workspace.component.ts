@@ -409,6 +409,7 @@ export class PerformanceWorkspaceComponent implements OnInit {
       })).subscribe(response => {
       this.fetchWorkspacesAfterEditing();
       this.loggerService.success("saved the workspace");
+      this.modalService.dismissAll();
     }, error => {
       this.loggerService.error("Unable to save interested metrics");
     });

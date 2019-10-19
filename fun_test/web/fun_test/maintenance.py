@@ -1,12 +1,5 @@
 from web.fun_test.maintenance_old import *
-from lib.system.fun_test import *
-from datetime import datetime
-from web.fun_test.models_helper import add_jenkins_job_id_map
 from dateutil import parser
-from django.utils import timezone
-from fun_global import PerfUnit
-from fun_global import ChartType, FunChartType
-from web.fun_test.metrics_models import *
 from collections import OrderedDict
 from web.fun_test.metrics_lib import MetricLib
 from web.fun_test.models import *
@@ -1439,7 +1432,6 @@ if __name__ == "__main_remove_milestones__":
         if "Tape-out" in mm.milestone_name or "F1" in mm.milestone_name:
             mm.delete()
 
-
 if __name__ == "__main__alibaba":
     metric_ids = [900, 901]
     for metric_id in metric_ids:
@@ -1539,7 +1531,6 @@ if __name__ == "__main__alibaba":
         final_dict = ml.get_dict(chart=root_chart)
         print json.dumps(final_dict)
 
-
 if __name__ == "__main_crypto_s1__":
     with open(METRICS_BASE_DATA_FILE, "r") as f:
         metrics = json.load(f)
@@ -1558,6 +1549,7 @@ if __name__ == "__main_crypto_s1__":
                 if security_children["name"] == "Crypto raw throughput":
                     result = set_internal_name(security_children)
                     print json.dumps(result, indent=4)
+
 
 if __name__ == "__main_rebasing__":
     global_setting = MetricsGlobalSettings.objects.first()
@@ -1592,7 +1584,7 @@ if __name__ == "__main_rebasing__":
                 entry.save()
                 print "edited the datasets for {} with metric id {}".format(entry.chart_name, entry.metric_id)
 
-if __name__ == "__main__inspur_charts":
+if __name__ == "__main_inspur_12_volumes__":
     metric_ids = {1207: "read", 754: "read_write", 1208: "write", 1209: "read", 755: "read_write", 1210: "write"}
     fio_job_names = ["inspur_8k_random_", "_iodepth_", "_f1_6_vol_12"]
     for key in metric_ids:
@@ -1652,8 +1644,7 @@ if __name__ == "__main__inspur_charts":
                 child_chart.save()
     print "added 12 volume datasets for 32, 64, 96 and 128 qdepths for Inspur"
 
-
-if __name__ == "__main__":
+if __name__ == "__main_power_perf__":
     metric_model_name = "PowerPerformance"
     description = "TBD"
     owner_info = "Ranganatha Gowda (ranga.gowda@fungible.com)"
@@ -1711,3 +1702,6 @@ if __name__ == "__main__":
 
     final_dict = ml.get_dict(chart=power_chart)
     print json.dumps(final_dict, indent=4)
+
+if __name__ == "__main__":
+    ml.backup_dags()
