@@ -85,6 +85,7 @@ export class ScriptDetailComponent implements OnInit {
   availableContexts: ContextInfo [] = [];
   svg: any = null;
   xScale: any = null;
+  titleElement: any = null;
 
   timeSeriesByTestCase: {[testCaseId: number]: {[key: string]: any }} = {};
 
@@ -140,37 +141,45 @@ export class ScriptDetailComponent implements OnInit {
 
 
   private createChart(): void {
-
-
-    // create svg element
+    let domainMin = 0;
+    let domainMax = 300;
     var svg = d3.select("#chart")
       .append("svg")
-        .attr("width", 1000)
+        .attr("width", "100%")
         .attr("height", 300);
-    this.svg = svg;
 
+    this.svg = svg;
+    let padding = 20;
+    let rangeMin = 0;
+    let rangeMax = this.chartContainer.nativeElement.offsetWidth - padding;
     // Create the scale
     var x = d3.scaleLinear()
-        .domain([0, 100])         // This is what is written on the Axis: from 0 to 100
-        .range([0, 50]);         // Note it is reversed
+        .domain([domainMin, domainMax])
+        .range([rangeMin, rangeMax]);
     this.xScale = x;
-    console.log(x.domain());
+    let xOffset = 10;
+    let yOffset = 100;
+    let title = "Timeline:";
+
     // Draw the axis
     svg
       .append("g")
-      .attr("transform", "translate(100, 100)")      // This controls the rotate position of the Axis
+      .attr("transform", "translate(" + xOffset + ", " + yOffset + ")")      // This controls the rotate position of the Axis
       .call(d3.axisBottom(x))
       .selectAll("text")
-        .attr("transform", "translate(-10,10)rotate(-45)")
+        .attr("transform", "translate(-10, 10)rotate(-45)")
         .style("text-anchor", "end")
         .style("font-size", 12)
         .style("fill", "#69a3b2");
 
+    this.titleElement = svg.append("text")
+      .attr("transform", "translate(" + rangeMax/2 + ", " + yOffset/2 + ")")
+      .text(title);
 
     let circle = svg
       .append("circle")
-      .attr("cx", 100)
-      .attr("cy", 100)
+      .attr("cx", xOffset)
+      .attr("cy", yOffset)
       .attr("r", 8)
       .call(d3.drag()
           .on("start", dragstarted)
@@ -184,10 +193,13 @@ export class ScriptDetailComponent implements OnInit {
 
     function dragged(d, i, n) {
       let thisX = d3.event.x;
-      //console.log(thisX);
-      let invertedX = x.invert(d3.event.x);
+      let newX = Math.min(Math.max(rangeMin + xOffset, thisX), rangeMax + xOffset);
+      d3.select(n[i])
+        .attr("cx", n[i].x = newX)
+        .attr("cy", n[i].y = yOffset);
+      let invertedX = x.invert(newX - xOffset);
       console.log(invertedX);
-      d3.select(n[i]).attr("cx", n[i].x = Math.min(Math.max(100, thisX), 800)).attr("cy", n[i].y = 100);
+
     }
 
     function dragended() {
@@ -195,29 +207,10 @@ export class ScriptDetailComponent implements OnInit {
     }
 
 
-    /*
-
-    let circle = svg
-      .append("circle")
-      .attr("cx", 100)
-      .attr("cy", 100)
-      .attr("r", 8)
-      .on("mouseover", this.handleMouseOver.bind(this));*/
-
-
 
 
   }
 
-  handleMouseOver(d, i) {  // Add interactivity
-    // Specify where to put label of text
-    let a = this.svg.append("text")
-      .attr("x", this.xScale(d3.event.x))
-      .attr("y", 100 );
-    a.text(function() {
-      return [d3.event.x, 100];  // Value of the text
-    });
-  }
 
 
   refreshAll() {
