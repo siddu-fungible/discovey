@@ -249,6 +249,13 @@ sup {
 }
 
 .tab-highlight {
-  font-weight: bold;
-  background-color: whitesmoke !important;
+  text-decoration: underline;
+  text-decoration-color: red;
+  text-decoration-style: solid;
+  font-weight: bolder;
+}
+
+
+.card-header-tabs {
+  margin-left: unset;
 }

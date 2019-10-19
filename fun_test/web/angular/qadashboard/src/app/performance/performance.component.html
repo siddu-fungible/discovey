@@ -9,7 +9,7 @@
         <ul class="nav nav-tabs card-header-tabs" role="tablist">
           <li *ngFor="let rootTab of rootTabs" class="nav-item" style="width: 100px; text-align: center">
             <span class="nav-link pseudo-anchor"
-              role="tab" [ngClass]="{'active tab-highlight':rootTab['active']}" (click)="openDag(rootTab)">{{
+              role="tab" [ngClass]="{'tab-highlight':rootTab['active']}" (click)="openDag(rootTab)">{{
               rootTab["name"] }}</span>
           </li>
         </ul>
@@ -60,7 +60,7 @@
                         <span [innerHTML]="getIndentHtml(flatNode) | safeHtml">
                         </span>
               <ng-container>
-                <a [ngClass]="{highlight:flatNode.node.showAddJira}" class="pseudo-anchor"
+                <a [ngClass]="{highlight: flatNode.node.showAddJira}" class="pseudo-anchor"
                    (click)="navigateByQuery(flatNode)">{{ flatNode.node.chartName }}</a>
                 <span *ngIf="flatNode.node.workInProgress">&nbsp;<app-smart-label [value]="'work in progress'"
                                                                                   [type]="'warning'"></app-smart-label></span>
