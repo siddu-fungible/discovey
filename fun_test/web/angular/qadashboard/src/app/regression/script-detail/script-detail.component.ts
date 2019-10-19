@@ -83,6 +83,8 @@ export class ScriptDetailComponent implements OnInit {
   testCaseIds: number [] = [];
   currentCheckpointIndex: number = null;
   availableContexts: ContextInfo [] = [];
+  svg: any = null;
+  xScale: any = null;
 
   timeSeriesByTestCase: {[testCaseId: number]: {[key: string]: any }} = {};
 
@@ -145,12 +147,13 @@ export class ScriptDetailComponent implements OnInit {
       .append("svg")
         .attr("width", 1000)
         .attr("height", 300);
+    this.svg = svg;
 
     // Create the scale
-    var x = d3.scaleBand()
-        .domain(["Long name", "Another One", "Here", "And this is", "The end", "ouuuu", "not yet"])         // This is what is written on the Axis: from 0 to 100
-        .range([0, 800]);         // Note it is reversed
-
+    var x = d3.scaleLinear()
+        .domain([0, 100])         // This is what is written on the Axis: from 0 to 100
+        .range([0, 50]);         // Note it is reversed
+    this.xScale = x;
     console.log(x.domain());
     // Draw the axis
     svg
@@ -162,6 +165,8 @@ export class ScriptDetailComponent implements OnInit {
         .style("text-anchor", "end")
         .style("font-size", 12)
         .style("fill", "#69a3b2");
+
+
     let circle = svg
       .append("circle")
       .attr("cx", 100)
@@ -169,7 +174,7 @@ export class ScriptDetailComponent implements OnInit {
       .attr("r", 8)
       .call(d3.drag()
           .on("start", dragstarted)
-          .on("drag", dragged)
+          .on("drag", dragged.bind(this))
           .on("end", dragended));
 
     function dragstarted() {
@@ -178,13 +183,40 @@ export class ScriptDetailComponent implements OnInit {
     }
 
     function dragged(d, i, n) {
-      d3.select(n[i]).attr("cx", n[i].x = Math.min(Math.max(100, d3.event.x), x.bandwidth())).attr("cy", n[i].y = 100);
+      let thisX = d3.event.x;
+      //console.log(thisX);
+      let invertedX = x.invert(d3.event.x);
+      console.log(invertedX);
+      d3.select(n[i]).attr("cx", n[i].x = Math.min(Math.max(100, thisX), 800)).attr("cy", n[i].y = 100);
     }
 
     function dragended() {
       circle.attr("cursor", "grab");
     }
 
+
+    /*
+
+    let circle = svg
+      .append("circle")
+      .attr("cx", 100)
+      .attr("cy", 100)
+      .attr("r", 8)
+      .on("mouseover", this.handleMouseOver.bind(this));*/
+
+
+
+
+  }
+
+  handleMouseOver(d, i) {  // Add interactivity
+    // Specify where to put label of text
+    let a = this.svg.append("text")
+      .attr("x", this.xScale(d3.event.x))
+      .attr("y", 100 );
+    a.text(function() {
+      return [d3.event.x, 100];  // Value of the text
+    });
   }
 
 
