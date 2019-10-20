@@ -13,14 +13,14 @@ export class TimelineControlComponent implements OnInit, OnChanges {
   @Input() unit: string;
   @Output() valueChanged = new EventEmitter<number>();
   canvasWidth: any = "100%";
-  canvasHeight: any = "100%";
+  canvasHeight: any = "60px";
   @ViewChild('canvas')
   private canvasContainer: ElementRef;
   svg: any = null;
   rangePadding: number = 20;
   xScale: any = null;
   xOffset: number = 20;
-  yOffset: number = 50;
+  yOffset: number = 20;
   titleElement: any = null;
   fromTimeKnob: any = null;
   knobRadius: number = 8;
