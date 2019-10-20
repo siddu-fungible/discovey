@@ -19,6 +19,7 @@ from web.fun_test.models import Module
 from web.fun_test.fun_serializer import model_instance_to_dict
 from web.fun_test.models_helper import _get_suite_executions, get_fun_test_time_series_collection_name
 from web.fun_test.models_helper import get_ts_test_case_context_info_collection_name
+from web.fun_test.models_helper import get_ts_script_run_time_collection_name
 from scheduler.scheduler_global import SuiteType
 from web.fun_test.models import Suite
 from fun_global import RESULTS
@@ -251,15 +252,6 @@ def test_case_executions(request, id):
                             "execution_id": test_execution.execution_id,
                             "summary": summary})
         return results
-        """    
-        for test_execution in test_executions:
-            if test_execution.result == RESULTS["PASSED"]:
-                num_passed += 1
-            elif test_execution.result == RESULTS["FAILED"]:
-                num_failed += 1
-        return {"num_passed": num_passed, "num_failed": num_failed, "execution_id": test_execution.execution_id}
-        """
-
 
 @csrf_exempt
 @api_safe_json_response
@@ -569,6 +561,22 @@ def contexts(request, suite_execution_id, script_id):
             result = list(collection.find(query))
     return result
 
+
+@api_safe_json_response
+def script_run_time(request, suite_execution_id, script_id):
+    result = None
+    if request.method == "GET":
+        collection_name = get_ts_script_run_time_collection_name(suite_execution_id, script_id)
+        mongo_db_manager = app_config.get_mongo_db_manager()
+        collection = mongo_db_manager.get_collection(collection_name)
+        query = {}
+        if collection:
+            if script_id:
+                query["script_id"] = int(script_id)
+            if suite_execution_id:
+                query["suite_execution_id"] = int(suite_execution_id)
+            result = json.loads(json_util.dumps(collection.find_one(query)))
+    return result
 
 @api_safe_json_response
 def release_trains(request):

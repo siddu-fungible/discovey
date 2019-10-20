@@ -707,6 +707,9 @@ def get_ts_test_case_context_info_collection_name(suite_execution_id, script_id)
     return "s_{}_{}_context_info".format(suite_execution_id, script_id)
 
 
+def get_ts_script_run_time_collection_name(suite_execution_id, script_id):
+    return "s_{}_{}_script_run_time".format(suite_execution_id, script_id)
+
 def get_script_id(test_case_execution_id):
     result = None
     test_case_execution = get_test_case_execution(execution_id=test_case_execution_id)

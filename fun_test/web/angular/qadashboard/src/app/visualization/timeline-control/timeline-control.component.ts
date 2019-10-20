@@ -1,4 +1,4 @@
-import {Component, ElementRef, EventEmitter, Input, OnInit, Output, ViewChild} from '@angular/core';
+import {Component, ElementRef, EventEmitter, Input, OnChanges, OnInit, Output, ViewChild} from '@angular/core';
 import * as d3 from 'd3';
 
 @Component({
@@ -6,21 +6,21 @@ import * as d3 from 'd3';
   templateUrl: './timeline-control.component.html',
   styleUrls: ['./timeline-control.component.css']
 })
-export class TimelineControlComponent implements OnInit {
+export class TimelineControlComponent implements OnInit, OnChanges {
   @Input() domainMin: number;
   @Input() domainMax: number;
   @Input() title: string;
   @Input() unit: string;
   @Output() valueChanged = new EventEmitter<number>();
   canvasWidth: any = "100%";
-  canvasHeight: any = 300;
+  canvasHeight: any = "100%";
   @ViewChild('canvas')
   private canvasContainer: ElementRef;
   svg: any = null;
   rangePadding: number = 20;
   xScale: any = null;
-  xOffset: number = 10;
-  yOffset: number = 100;
+  xOffset: number = 20;
+  yOffset: number = 50;
   titleElement: any = null;
   fromTimeKnob: any = null;
   knobRadius: number = 8;
@@ -28,8 +28,6 @@ export class TimelineControlComponent implements OnInit {
   constructor() { }
 
   ngOnInit() {
-    this.createChart();
-    this.setTitleText(0);
   }
 
 
@@ -42,7 +40,7 @@ export class TimelineControlComponent implements OnInit {
       .attr("height", this.canvasHeight);
 
     let rangeMin = 0;
-    let rangeMax = this.canvasContainer.nativeElement.offsetWidth - this.rangePadding;
+    let rangeMax = this.canvasContainer.nativeElement.offsetWidth -  2 * this.rangePadding;
 
     // xScale
     this.xScale = d3.scaleLinear()
@@ -100,10 +98,17 @@ export class TimelineControlComponent implements OnInit {
   setTitleText(xValue) {
     let chartWidth = this.canvasContainer.nativeElement.offsetWidth;
     this.titleElement.text(`${this.title}: ${xValue} ${this.unit}`);
-    let n2 = this.titleElement.node();
-    let titleWidth = n2.getBoundingClientRect().width;
+    let node = this.titleElement.node();
+    let titleWidth = node.getBoundingClientRect().width;
     let newXValue = (this.canvasContainer.nativeElement.offsetWidth - titleWidth)/2;
-    this.titleElement.attr("transform", "translate(" + newXValue + ", " +  "50)");
+    this.titleElement.attr("transform", "translate(" + newXValue + ", " + this.yOffset/2 + ")");
+
+  }
+
+  ngOnChanges() {
+    d3.select("svg").remove();
+    this.createChart();
+    this.setTitleText(0);
 
   }
 

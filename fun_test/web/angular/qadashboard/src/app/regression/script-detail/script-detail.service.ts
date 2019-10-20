@@ -15,6 +15,11 @@ export class ContextInfo {
   selected: boolean;
 }
 
+
+export class ScriptRunTime {
+  started_epoch_time: number;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -28,6 +33,14 @@ export class ScriptDetailService {
     }), catchError(error => {
       this.loggerService.error(`Unable to fetch contexts ${error}`);
       console.error(error);
+      return throwError(error);
+    }))
+  }
+
+  getScriptRunTime(suiteExecutionId, scriptId): Observable<ScriptRunTime> {
+    return this.apiService.get(`/api/v1/regression/script_run_time/${suiteExecutionId}/${scriptId}`).pipe(switchMap(response => {
+      return of(response.data);
+    }), catchError(error => {
       return throwError(error);
     }))
   }
