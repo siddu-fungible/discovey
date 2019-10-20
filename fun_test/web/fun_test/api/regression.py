@@ -235,12 +235,11 @@ def test_case_executions(request, id):
             q = q & Q(log_prefix=log_prefix)
         test_executions = TestCaseExecution.objects.filter(q).order_by("started_time")
         results = []
-        #return results
         for test_execution in test_executions:
             summary = "Unknown"
             if test_execution.test_case_id == 0:
                 summary = "Script setup"
-            if test_execution.test_case_id == 999:
+            elif test_execution.test_case_id == 999:
                 summary = "Script cleanup"
             else:
                 try:
