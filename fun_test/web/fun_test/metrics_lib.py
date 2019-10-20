@@ -510,7 +510,8 @@ class MetricLib():
 
     def fetch_dag(self, metric_ids, levels=15, is_workspace=0):
         result = []
-        cache_valid = MetricsGlobalSettings.get_cache_validity()
+        # cache_valid = MetricsGlobalSettings.get_cache_validity()
+        cache_valid = False
         if not cache_valid or (cache_valid and levels != 15) or int(is_workspace):
             metric_chart_entries = {}
             for metric_id in metric_ids:
