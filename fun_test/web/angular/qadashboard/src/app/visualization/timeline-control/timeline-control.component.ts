@@ -85,12 +85,14 @@ export class TimelineControlComponent implements OnInit, OnChanges {
         .attr("cy", n[i].y = this.yOffset);
       let invertedX = this.xScale.invert(newX - this.xOffset);
       this.setTitleText(invertedX);
-      this.valueChanged.emit(invertedX);
 
     }
 
     function dragended() {
       this.fromTimeKnob.attr("cursor", "grab");
+      let invertedX = this.xScale.invert(d3.event.x);
+      this.valueChanged.emit(invertedX);
+
     }
 
   }

@@ -73,6 +73,7 @@ export class ScriptDetailComponent implements OnInit {
   scriptPath: string = null;
   testCaseExecutions: any = null;
   currentTestCaseExecution: any = null;
+  currentTestCaseExecutionIndex: number = null;
   testLogs = [];
   showTestCasePanel: boolean = true;
   showCheckpointPanel: boolean = false;
@@ -111,6 +112,10 @@ export class ScriptDetailComponent implements OnInit {
       return this.regressionService.testCaseExecutions(null, this.suiteExecutionId, this.scriptPath, this.logPrefix);
     })).pipe(switchMap(response => {
       this.testCaseExecutions = response;
+      this.testCaseExecutions.forEach(testCaseExecution => {
+        testCaseExecution["relative_started_epoch_time"] = testCaseExecution["started_epoch_time"] - this.scriptRunTime.started_epoch_time;
+
+      });
       return of(true);
     }));
 
@@ -140,31 +145,13 @@ export class ScriptDetailComponent implements OnInit {
 
   }
 
-  onTestCaseIdClick1(testCaseExecutionIndex, testCaseExecutionId) {
-    this.testLogs = null;
-    console.log(testCaseExecutionIndex);
-    this.regressionService.testCaseTimeSeriesCheckpoints(this.suiteExecutionId, this.testCaseExecutions[testCaseExecutionIndex].execution_id).subscribe(response => {
-      this.testCaseExecutions[testCaseExecutionIndex]["checkpoints"] = response;
-      let checkpoints = this.testCaseExecutions[testCaseExecutionIndex]["checkpoints"];
-      checkpoints.forEach(checkpoint => {
-        this.regressionService.testCaseTimeSeriesLogs(this.suiteExecutionId, this.currentTestCaseExecution.execution_id, checkpoint.index).subscribe(response => {
-          this.testLogs = response;
-          this.currentTestCaseExecution = this.testCaseExecutions[testCaseExecutionIndex];
-        }, error => {
-          this.loggerService.error("Unable to fetch time-series logs")
-        });
-      });
-      console.log(response);
-    }, error => {
-      this.loggerService.error("Unable to fetch time-series checkpoints");
-    })
-  }
 
   onTestCaseIdClick(testCaseExecutionIndex) {
     this.testLogs = null;
     this.currentCheckpointIndex = null;
     this.regressionService.testCaseTimeSeries(this.suiteExecutionId, this.testCaseExecutions[testCaseExecutionIndex].execution_id).subscribe(response => {
       this.currentTestCaseExecution = this.testCaseExecutions[testCaseExecutionIndex];
+      this.currentTestCaseExecutionIndex = testCaseExecutionIndex;
 
       let timeSeries = response;
       this.timeSeriesByTestCase[this.currentTestCaseExecution.test_case_id] = {timeSeries: timeSeries,
@@ -227,8 +214,27 @@ export class ScriptDetailComponent implements OnInit {
     });
   }
 
+  findMatchingTestCase(time): number {
+    let testCaseIndex = 0;
+    let found = false;
+    for (let index = 0; index < this.testCaseExecutions.length; index++) {
+      if (this.testCaseExecutions[index].relative_started_epoch_time <= time) {
+      } else {
+        break;
+      }
+      testCaseIndex = index;
+
+    }
+    console.log(`TC: ${testCaseIndex}`);
+    return testCaseIndex;
+  }
+
   onTimeLineChanged(valueChanged) {
     console.log(valueChanged);
     this.timeFilterMin = valueChanged;
+    let testCaseIndex = this.findMatchingTestCase(this.timeFilterMin);
+    if (this.currentTestCaseExecutionIndex !== testCaseIndex) {
+      this.onTestCaseIdClick(testCaseIndex)
+    }
   }
 }

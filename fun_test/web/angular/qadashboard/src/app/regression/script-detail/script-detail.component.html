@@ -4,7 +4,6 @@
   <div class="fun-flex-container fun-action-nav">
     <span class="script-name">{{ scriptPath }}</span>
     <div class="fun-spacer"></div>
-    <button *ngIf="!showTestCasePanel" (click)="onShowTestCasePanelClick()" class="fun-button-add">Show test-cases</button>
     <button (click)="onContextOptionsClick(contextOptions)" class="fun-button-add">Context options</button>
     <ng-template #contextOptions let-modal>
       <div class="fun-panel">
@@ -53,7 +52,10 @@
       </div>
 
       <div class="fun-flex-item panel fun-panel" [@show]="showCheckpointPanel" *ngIf="currentTestCaseExecution">
-        <div class="fun-panel-header">Checkpoints</div>
+        <div class="fun-panel-header fun-flex-container" style="justify-content: space-between">
+          <span>Checkpoints</span>
+          <span *ngIf="!showTestCasePanel" (click)="onShowTestCasePanelClick()" class="pseudo-anchor">< Show test-cases</span>
+        </div>
         <table class="fun-table">
             <tr>
               <td class="fun-table-header">ID</td>

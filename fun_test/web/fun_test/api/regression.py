@@ -1,4 +1,4 @@
-from fun_global import get_current_time
+from fun_global import get_current_time, get_epoch_time_from_datetime
 from web.web_global import api_safe_json_response
 from django.views.decorators.csrf import csrf_exempt
 from web.fun_test.models import TestBed, Asset
@@ -250,7 +250,8 @@ def test_case_executions(request, id):
                             "test_case_id": test_execution.test_case_id,
                             "suite_execution_id": test_execution.suite_execution_id,
                             "execution_id": test_execution.execution_id,
-                            "summary": summary})
+                            "summary": summary,
+                            "started_epoch_time": get_epoch_time_from_datetime(test_execution.started_time)/1000})
         return results
 
 @csrf_exempt
