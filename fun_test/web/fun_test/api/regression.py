@@ -239,7 +239,9 @@ def test_case_executions(request, id):
         for test_execution in test_executions:
             summary = "Unknown"
             if test_execution.test_case_id == 0:
-                summary = "Setup"
+                summary = "Script setup"
+            if test_execution.test_case_id == 999:
+                summary = "Script cleanup"
             else:
                 try:
                     test_case_info = TestCaseInfo.objects.get(test_case_id=test_execution.test_case_id, script_path=test_execution.script_path)

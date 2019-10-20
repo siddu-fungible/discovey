@@ -962,8 +962,8 @@ class FunTest:
             final_message = self._get_context_prefix(context=context, message=str(message) + nl)
         else:
             final_message = str(message) + nl
-        if self.time_series_enabled:
-            no_timestamp = True
+        final_message_for_time_series = final_message
+
         if self.log_timestamps and (not no_timestamp) and not section:
             final_message = "[{}] {}".format(current_time, final_message)
 
@@ -980,7 +980,9 @@ class FunTest:
             context_id = context.get_id()
             
         if self.time_series_enabled:
-            data = {"checkpoint_index": self.current_time_series_checkpoint, "log": final_message, "context_id": context_id}
+            data = {"checkpoint_index": self.current_time_series_checkpoint,
+                    "log": final_message_for_time_series,
+                    "context_id": context_id}
             self.add_time_series_log(collection_name=models_helper.get_fun_test_time_series_collection_name(self.get_suite_execution_id(),
                                                                                                             self.get_test_case_execution_id()),
                                      data=data, epoch_time=current_epoch_time)
@@ -1213,8 +1215,8 @@ class FunTest:
             if self.initialized:
                 self._append_assert_test_metric(assert_message)
                 this_checkpoint = self._get_context_prefix(context=context, message=message)
-                if self.profiling:
-                    this_checkpoint = "{:.2f}: {}".format(self.profiling_timer.elapsed_time(), this_checkpoint)
+                # if self.profiling:
+                #    this_checkpoint = "{:.2f}: {}".format(self.profiling_timer.elapsed_time(), this_checkpoint)
                 self.add_checkpoint(checkpoint=this_checkpoint, expected=expected, actual=actual, result=FunTest.FAILED)
             self.critical(assert_message, context=context)
             if self.pause_on_failure:
@@ -1225,8 +1227,8 @@ class FunTest:
             if self.initialized:
                 self._append_assert_test_metric(assert_message)
                 this_checkpoint = self._get_context_prefix(context=context, message=message)
-                if self.profiling:
-                    this_checkpoint = "{:.2f}: {}".format(self.profiling_timer.elapsed_time(), this_checkpoint)  #TODO: Duplicate line
+                # if self.profiling:
+                #    this_checkpoint = "{:.2f}: {}".format(self.profiling_timer.elapsed_time(), this_checkpoint)  #TODO: Duplicate line
                 self.add_checkpoint(checkpoint=this_checkpoint, expected=expected, actual=actual, result=FunTest.PASSED)
 
     def add_checkpoint(self,
@@ -1238,6 +1240,7 @@ class FunTest:
         self.current_time_series_checkpoint += 1
 
         checkpoint = self._get_context_prefix(context=context, message=checkpoint)
+        checkpoint_for_time_series = checkpoint
         if self.profiling:
             checkpoint = "{:.2f} {}".format(self.profiling_timer.elapsed_time(), checkpoint)
         if self.fun_xml_obj:
@@ -1250,7 +1253,7 @@ class FunTest:
         if context:
             context_id = context.get_id()
 
-        data = {"checkpoint": checkpoint,
+        data = {"checkpoint": checkpoint_for_time_series,
                 "result": result, 
                 "expected": expected,
                 "actual": actual,
@@ -1260,7 +1263,6 @@ class FunTest:
         self.add_time_series_checkpoint(collection_name=models_helper.get_fun_test_time_series_collection_name(self.get_suite_execution_id(),
                                                                                                                self.get_test_case_execution_id()),
                                         data=data)
-        # add_time_series_checkpoint
 
     def exit_gracefully(self, sig, _):
         self.critical("Unexpected Exit")
@@ -1671,6 +1673,7 @@ class FunTestScript(object):
                                                   path=fun_test.relative_path,
                                                   log_prefix=fun_test.log_prefix,
                                                   inputs=fun_test.get_job_inputs())
+            fun_test.current_test_case_execution_id = cleanup_te.execution_id
         result = FunTest.PASSED
 
         try:
