@@ -89,6 +89,7 @@ import { SearchBarComponent } from './ui-elements/search-bar/search-bar.componen
 import { ScriptDetailComponent } from './regression/script-detail/script-detail.component';
 import { PagerComponent } from './pager/pager.component';
 import { SelectedPipe } from './pipes/selected.pipe';
+import { TimelineControlComponent } from './visualization/timeline-control/timeline-control.component';
 
 
 @NgModule({
@@ -161,7 +162,8 @@ import { SelectedPipe } from './pipes/selected.pipe';
     SearchBarComponent,
     ScriptDetailComponent,
     PagerComponent,
-    SelectedPipe
+    SelectedPipe,
+    TimelineControlComponent
   ],
   imports: [
     BsDropdownModule,

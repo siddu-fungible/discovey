@@ -960,8 +960,7 @@ class FunTest:
             data = {"checkpoint_index": self.current_time_series_checkpoint, "log": final_message, "context_id": context_id}
             self.add_time_series_log(collection_name=models_helper.get_fun_test_time_series_collection_name(self.get_suite_execution_id(),
                                                                                                             self.get_test_case_execution_id()),
-                                     data=data,
-                                     time=current_epoch_time)
+                                     data=data, epoch_time=current_epoch_time)
 
     def print_key_value(self, title, data, max_chars_per_column=50):
         if title:

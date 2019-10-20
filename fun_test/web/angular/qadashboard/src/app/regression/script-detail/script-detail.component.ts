@@ -58,10 +58,6 @@ export class selected implements PipeTransform {
 })
 export class ScriptDetailComponent implements OnInit {
   driver: Observable<any> = null;
-  @ViewChild('chart')
-  private chartContainer: ElementRef;
-  margin = {top: 20, right: 20, bottom: 30, left: 40};
-  data: DataModel[] = [];
 
   constructor(private regressionService: RegressionService,
               private loggerService: LoggerService,
@@ -83,9 +79,7 @@ export class ScriptDetailComponent implements OnInit {
   testCaseIds: number [] = [];
   currentCheckpointIndex: number = null;
   availableContexts: ContextInfo [] = [];
-  svg: any = null;
-  xScale: any = null;
-  titleElement: any = null;
+
 
   timeSeriesByTestCase: {[testCaseId: number]: {[key: string]: any }} = {};
 
@@ -127,90 +121,8 @@ export class ScriptDetailComponent implements OnInit {
       this.refreshAll();
 
     });
-    let d1 = new DataModel();
-    d1.frequency = 5;
-    d1.letter = "A";
-    let d2 = new DataModel();
-    d2.frequency = 10;
-    d2.letter = "B";
-    this.data.push(d1);
-    this.data.push(d2);
-    this.createChart();
-  }
-
-
-
-  private createChart(): void {
-    let domainMin = 0;
-    let domainMax = 300;
-    var svg = d3.select("#chart")
-      .append("svg")
-        .attr("width", "100%")
-        .attr("height", 300);
-
-    this.svg = svg;
-    let padding = 20;
-    let rangeMin = 0;
-    let rangeMax = this.chartContainer.nativeElement.offsetWidth - padding;
-    // Create the scale
-    var x = d3.scaleLinear()
-        .domain([domainMin, domainMax])
-        .range([rangeMin, rangeMax]);
-    this.xScale = x;
-    let xOffset = 10;
-    let yOffset = 100;
-    let title = "Timeline:";
-
-    // Draw the axis
-    svg
-      .append("g")
-      .attr("transform", "translate(" + xOffset + ", " + yOffset + ")")      // This controls the rotate position of the Axis
-      .call(d3.axisBottom(x))
-      .selectAll("text")
-        .attr("transform", "translate(-10, 10)rotate(-45)")
-        .style("text-anchor", "end")
-        .style("font-size", 12)
-        .style("fill", "#69a3b2");
-
-    this.titleElement = svg.append("text")
-      .attr("transform", "translate(" + rangeMax/2 + ", " + yOffset/2 + ")")
-      .text(title);
-
-    let circle = svg
-      .append("circle")
-      .attr("cx", xOffset)
-      .attr("cy", yOffset)
-      .attr("r", 8)
-      .call(d3.drag()
-          .on("start", dragstarted)
-          .on("drag", dragged.bind(this))
-          .on("end", dragended));
-
-    function dragstarted() {
-      d3.select(this).raise();
-      circle.attr("cursor", "grabbing");
-    }
-
-    function dragged(d, i, n) {
-      let thisX = d3.event.x;
-      let newX = Math.min(Math.max(rangeMin + xOffset, thisX), rangeMax + xOffset);
-      d3.select(n[i])
-        .attr("cx", n[i].x = newX)
-        .attr("cy", n[i].y = yOffset);
-      let invertedX = x.invert(newX - xOffset);
-      console.log(invertedX);
-
-    }
-
-    function dragended() {
-      circle.attr("cursor", "grab");
-    }
-
-
-
 
   }
-
 
 
   refreshAll() {
@@ -299,4 +211,7 @@ export class ScriptDetailComponent implements OnInit {
     });
   }
 
+  onTimeLineChanged(valueChanged) {
+    console.log(valueChanged);
+  }
 }

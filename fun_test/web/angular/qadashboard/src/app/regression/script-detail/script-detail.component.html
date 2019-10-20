@@ -27,9 +27,7 @@
     </ng-template>
 
   </div>
-  <div #chart id="chart" style="margin: 20px">
-
-  </div>
+  <app-timeline-control [domainMin]="0" [domainMax]="300" [title]="'Timeline'" [unit]="'s'" (valueChanged)="onTimeLineChanged($event)"></app-timeline-control>
 
   <div style="position: fixed">
     <div class="fun-flex-container" style="align-items: flex-start;">
