@@ -258,7 +258,7 @@ class FunTest:
         self.shared_variables = {}
         if self.local_settings_file:
             self.local_settings = self.parse_file_to_json(file_name=self.local_settings_file)
-        self.start_time = get_current_time()
+
         self.wall_clock_timer = FunTimer()
         self.wall_clock_timer.start()
         self.fun_test_threads = {}
@@ -283,6 +283,9 @@ class FunTest:
         self.time_series_enabled = True
         self.script_id = None
         self.enable_profiling()
+        self.start_time = get_current_time()
+        self.started_epoch_time = get_current_epoch_time()
+
 
     def get_script_id(self):
         if not self.script_id and self.suite_execution_id and self.current_test_case_execution_id:
@@ -873,14 +876,34 @@ class FunTest:
 
     def add_time_series_context(self, collection_name, context):
         collection = self.get_mongo_db_manager().get_collection(collection_name=collection_name)
-        collection.insert_one({"epoch_time": get_current_epoch_time(),
-                               "type": "context",
-                               "context_id": context.context_id,
-                               "description": context.description,
-                               "suite_execution_id": context.suite_execution_id,
-                               "test_case_execution_id": context.test_case_execution_id,
-                               "script_id": context.script_id})
+        if collection:
+            collection.insert_one({"epoch_time": get_current_epoch_time(),
+                                   "type": "context",
+                                   "context_id": context.context_id,
+                                   "description": context.description,
+                                   "suite_execution_id": context.suite_execution_id,
+                                   "test_case_execution_id": context.test_case_execution_id,
+                                   "script_id": context.script_id})
+        else:
+            print ("Unable to find collection: {}".format(collection_name))  #TODO
 
+    def update_time_series_script_run_time(self, started_epoch_time=None):
+        script_id = self.get_script_id()
+        collection_name = models_helper.get_ts_script_run_time_collection_name(self.suite_execution_id,
+                                                                               script_id=script_id)
+        collection = self.get_mongo_db_manager().get_collection(collection_name=collection_name)
+        self.log("Ex: {} script: {}".format(self.suite_execution_id, script_id))
+        if collection:
+            update_dict = {"suite_execution_id": self.suite_execution_id,
+                           "script_id": script_id}
+            if started_epoch_time:
+                update_dict["started_epoch_time"] = started_epoch_time
+            collection.find_one_and_update(update_dict,
+                                           {"$set": update_dict},
+                                           upsert=True)
+        else:
+            print ("Unable to find collection: {}".format(collection_name))  #TODO
+        pass
 
     def log(self,
             message,
@@ -1499,6 +1522,7 @@ class FunTestScript(object):
                                                                  inputs=fun_test.get_job_inputs())
 
                 fun_test.current_test_case_execution_id = setup_te.execution_id
+                fun_test.update_time_series_script_run_time(started_epoch_time=fun_test.started_epoch_time)
                 fun_test.add_start_checkpoint()
 
             fun_test.simple_assert(self.test_cases, "At least one test-case is required. No test-cases found")

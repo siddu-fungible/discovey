@@ -24,7 +24,7 @@ RESULTS = {"NOT_RUN": "NOT_RUN",
            "ABORTED": "ABORTED"}
 
 def get_current_epoch_time():
-    return int(time.time())
+    return time.time()
 
 def get_current_time():
     utc = pytz.utc.localize(datetime.datetime.utcnow())

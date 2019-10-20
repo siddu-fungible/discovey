@@ -7,7 +7,7 @@ import {ActivatedRoute} from "@angular/router";
 import {animate, state, style, transition, trigger} from "@angular/animations";
 import {CommonService} from "../../services/common/common.service";
 import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
-import {ScriptDetailService, ContextInfo} from "./script-detail.service";
+import {ScriptDetailService, ContextInfo, ScriptRunTime} from "./script-detail.service";
 import {Pipe, PipeTransform } from '@angular/core';
 import {ElementRef, ViewChild} from '@angular/core';
 import * as d3 from 'd3';
@@ -21,6 +21,7 @@ class DataModel {
 
 class TimeSeriesLog {
   epoch_time: number;
+  relative_epoch_time: number;
   type: string;
   data: any;
 }
@@ -79,13 +80,19 @@ export class ScriptDetailComponent implements OnInit {
   testCaseIds: number [] = [];
   currentCheckpointIndex: number = null;
   availableContexts: ContextInfo [] = [];
-
+  minRelativeTime: number = 0;
+  maxRelativeTime: number = 1;
+  scriptRunTime: ScriptRunTime = null;
+  timeFilterMin: number = 0;
 
   timeSeriesByTestCase: {[testCaseId: number]: {[key: string]: any }} = {};
 
   ngOnInit() {
 
     this.driver = of(true).pipe(switchMap(response => {
+      return this.service.getScriptRunTime(this.suiteExecutionId, this.scriptId);
+    })).pipe(switchMap(response => {
+      this.scriptRunTime = response;
       return this.regressionService.getScriptInfoById(this.scriptId);
     })).pipe(switchMap(response => {
       this.scriptPath = response.script_path;
@@ -110,7 +117,6 @@ export class ScriptDetailComponent implements OnInit {
     this.route.params.subscribe(params => {
       if (params['suiteExecutionId']) {
         this.suiteExecutionId = parseInt(params['suiteExecutionId']);
-
       }
       if (params['logPrefix']) {
         this.logPrefix = params['logPrefix'];
@@ -165,12 +171,19 @@ export class ScriptDetailComponent implements OnInit {
         checkpoints: [], minimum_epoch: 0, maximum_epoch: 0};
       let thisEntry = this.timeSeriesByTestCase[this.currentTestCaseExecution.test_case_id];
       timeSeries.forEach(timeSeriesElement => {
-        if (timeSeriesElement.epoch_time < thisEntry.minimum_epoch) {
-          thisEntry.minimum_epoch = timeSeriesElement.epoch_time;
+
+        timeSeriesElement.relative_epoch_time = timeSeriesElement.epoch_time - this.scriptRunTime.started_epoch_time;
+        if (timeSeriesElement.relative_epoch_time < thisEntry.minimum_epoch) {
+          thisEntry.minimum_epoch = timeSeriesElement.relative_epoch_time;
         }
-        if (timeSeriesElement.epoch_time > thisEntry.maximum_epoch) {
-          thisEntry.maximum_epoch = timeSeriesElement.epoch_time;
+        if (timeSeriesElement.relative_epoch_time > thisEntry.maximum_epoch) {
+          thisEntry.maximum_epoch = timeSeriesElement.relative_epoch_time;
         }
+
+        if (timeSeriesElement.relative_epoch_time > this.maxRelativeTime) {
+          this.maxRelativeTime = timeSeriesElement.relative_epoch_time;
+        }
+
         if (timeSeriesElement.type == "checkpoint") { //TODO
           let newCheckpoint = timeSeriesElement.data;
           this.timeSeriesByTestCase[this.currentTestCaseExecution.test_case_id].checkpoints.push(newCheckpoint);
@@ -188,7 +201,10 @@ export class ScriptDetailComponent implements OnInit {
       this.showCheckpointPanel = true;
       let checkpointId = `${testCaseId}_${checkpointIndex}`;
       this.currentCheckpointIndex = checkpointIndex;
-      this.commonService.scrollTo(checkpointId);
+      setTimeout(() => {
+        this.commonService.scrollTo(checkpointId);
+      }, 500);
+
 
     }, error => {
       this.loggerService.error("Unable to fetch time-series logs")
@@ -213,5 +229,6 @@ export class ScriptDetailComponent implements OnInit {
 
   onTimeLineChanged(valueChanged) {
     console.log(valueChanged);
+    this.timeFilterMin = valueChanged;
   }
 }

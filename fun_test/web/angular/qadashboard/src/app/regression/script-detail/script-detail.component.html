@@ -27,7 +27,7 @@
     </ng-template>
 
   </div>
-  <app-timeline-control [domainMin]="0" [domainMax]="300" [title]="'Timeline'" [unit]="'s'" (valueChanged)="onTimeLineChanged($event)"></app-timeline-control>
+  <app-timeline-control [domainMin]="minRelativeTime" [domainMax]="maxRelativeTime" [title]="'Timeline'" [unit]="'s'" (valueChanged)="onTimeLineChanged($event)"></app-timeline-control>
 
   <div style="position: fixed">
     <div class="fun-flex-container" style="align-items: flex-start;">
@@ -84,8 +84,8 @@
                 <ng-container *ngIf="currentTestCaseExecution">
                   <table>
                     <tr *ngFor="let seriesElement of this.timeSeriesByTestCase[currentTestCaseExecution.test_case_id]?.timeSeries">
-                      <ng-container *ngIf="seriesElement.data.context_id === availableContext.context_id">
-                        <td class="timestamp" nowrap><small>{{ seriesElement.epoch_time }}</small></td>
+                      <ng-container *ngIf="seriesElement.data.context_id === availableContext.context_id && (seriesElement.relative_epoch_time >= timeFilterMin)">
+                        <td class="timestamp" nowrap><small>{{ seriesElement.relative_epoch_time }}</small></td>
                         <td *ngIf="seriesElement.type === 'checkpoint'">
                           <div id="{{ currentTestCaseExecution.test_case_id }}_{{ seriesElement.data?.index }}">
                             <span class="checkpoint-span">Checkpoint: {{ seriesElement.data?.checkpoint }}
