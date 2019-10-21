@@ -878,5 +878,25 @@
         }
       }
     }
+  },
+  "cab07-qa-02": {
+    "host_ip": "cab07-qa-02",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "cab07-qa-02-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
+  },
+  "gpu-server-03": {
+    "host_ip": "gpu-server-03",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "gpu-server-03-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
   }
 }
