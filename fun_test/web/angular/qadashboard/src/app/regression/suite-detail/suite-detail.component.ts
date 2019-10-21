@@ -415,10 +415,10 @@ export class SuiteDetailComponent implements OnInit {
     this.reRunScript = scriptId;
     this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title'}).result.then((suiteExecution) => {
       if (this.reRunOptionsReRunAll) {
-        this.reRunClick(suiteExecution.fields.execution_id, suiteExecution.fields.suite_path, null, scriptId, this.reUseBuildImage);
+        this.reRunClick(suiteExecution.fields.execution_id, suiteExecution.fields.suite_path, null, parseInt(scriptId), this.reUseBuildImage);
       }
       if (this.reRunOptionsReRunFailed) {
-        this.reRunClick(suiteExecution.fields.execution_id, suiteExecution.fields.suite_path,['FAILED'], scriptId, this.reUseBuildImage)
+        this.reRunClick(suiteExecution.fields.execution_id, suiteExecution.fields.suite_path,['FAILED'], parseInt(scriptId), this.reUseBuildImage)
       }
 
     }, (reason) => {

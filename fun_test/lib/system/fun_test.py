@@ -280,7 +280,10 @@ class FunTest:
         self.fss = []
         self.at_least_one_failed = False
         self.closed = False
-        self.time_series_enabled = True
+        self.time_series_enabled = False
+        print "Testing mongodb"
+        if not self.get_mongo_db_manager().test_connection():
+            self.enable_time_series(enable=False)
         self.script_id = None
         self.enable_profiling()
         self.start_time = get_current_time()
@@ -342,9 +345,9 @@ class FunTest:
                         test_case_execution_id=self.get_test_case_execution_id(),
                         script_id=script_id)
         self.contexts[self.last_context_id] = fc
-
-        self.add_time_series_context(collection_name=models_helper.get_ts_test_case_context_info_collection_name(suite_execution_id=suite_execution_id, script_id=script_id),
-                                     context=fc)
+        if self.time_series_enabled:
+            self.add_time_series_context(collection_name=models_helper.get_ts_test_case_context_info_collection_name(suite_execution_id=suite_execution_id, script_id=script_id),
+                                         context=fc)
         fc.open()
         return fc
 
@@ -1279,9 +1282,10 @@ class FunTest:
                 "index": self.current_time_series_checkpoint,
                 "context_id": context_id}
 
-        self.add_time_series_checkpoint(collection_name=models_helper.get_fun_test_time_series_collection_name(self.get_suite_execution_id(),
-                                                                                                               self.get_test_case_execution_id()),
-                                        data=data)
+        if self.time_series_enabled:
+            self.add_time_series_checkpoint(collection_name=models_helper.get_fun_test_time_series_collection_name(self.get_suite_execution_id(),
+                                                                                                                   self.get_test_case_execution_id()),
+                                            data=data)
 
     def exit_gracefully(self, sig, _):
         self.critical("Unexpected Exit")
@@ -1373,8 +1377,9 @@ class FunTest:
                 "actual": True,
                 "index": fun_test.current_time_series_checkpoint,
                 "context_id": 0}
-        fun_test.add_time_series_checkpoint(collection_name=models_helper.get_fun_test_time_series_collection_name(
-            fun_test.get_suite_execution_id(), fun_test.get_test_case_execution_id()), data=data)
+        if self.time_series_enabled:
+            fun_test.add_time_series_checkpoint(collection_name=models_helper.get_fun_test_time_series_collection_name(
+                fun_test.get_suite_execution_id(), fun_test.get_test_case_execution_id()), data=data)
 
     def scp(self,
             source_file_path,
@@ -1543,7 +1548,8 @@ class FunTestScript(object):
                                                                  inputs=fun_test.get_job_inputs())
 
                 fun_test.current_test_case_execution_id = setup_te.execution_id
-                fun_test.update_time_series_script_run_time(started_epoch_time=fun_test.started_epoch_time)
+                if fun_test.time_series_enabled:
+                    fun_test.update_time_series_script_run_time(started_epoch_time=fun_test.started_epoch_time)
                 fun_test.add_start_checkpoint()
 
             fun_test.simple_assert(self.test_cases, "At least one test-case is required. No test-cases found")

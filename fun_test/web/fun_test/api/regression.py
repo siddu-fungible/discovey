@@ -29,6 +29,7 @@ import fnmatch
 from fun_settings import MAIN_WEB_APP
 from django.apps import apps
 from bson import json_util
+from web.fun_test.models_helper import get_script_id
 
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 
@@ -471,9 +472,9 @@ def re_run_job(request):
         test_case_executions = TestCaseExecution.objects.filter(suite_execution_id=original_suite_execution_id)
         re_run_info = {}
         for test_case_execution in test_case_executions:
-            script_path = test_case_execution.script_path
+            script_id = get_script_id(test_case_execution_id=test_case_execution.execution_id)
             if script_filter:
-                if script_path not in script_filter:
+                if script_id and script_id != script_filter:
                     continue
 
             if result_filter and (test_case_execution.result not in result_filter):

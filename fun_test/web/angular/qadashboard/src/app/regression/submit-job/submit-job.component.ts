@@ -289,16 +289,21 @@ export class SubmitJobComponent implements OnInit {
     this.selectedSuite = selectedSuite;
     this.selectedScriptPk = null;
     this.resetScriptSelector = true;
-    this.commonService.scrollTo("suite-info");
+    setTimeout(() => {
+      this.commonService.scrollTo("suite-info");
+    }, 500);
 
   }
 
   _listToString(l) {
     let s = "";
-    l.forEach(listElement => {
-      s += listElement + ",";
-    });
-    s = s.replace(/,$/, "");
+    if (l) {
+      l.forEach(listElement => {
+        s += listElement + ",";
+      });
+      s = s.replace(/,$/, "");
+    }
+
     return s;
   }
 
