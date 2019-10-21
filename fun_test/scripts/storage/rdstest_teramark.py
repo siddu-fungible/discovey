@@ -24,10 +24,10 @@ def run_tcpkali(arg1, host_index, **kwargs):
 
 def add_to_data_base(value_dict):
     unit_dict = {"num_hosts": PerfUnit.UNIT_NUMBER, "message_rate": PerfUnit.UNIT_NUMBER,
-                 "no_of_connection": PerfUnit.UNIT_NUMBER, "iops_in_mbps": PerfUnit.UNIT_MBYTES_PER_SEC}
-    # unit_dict_helper = ["num_hosts", "message_rate", "no_of_connection", "iops_in_mbps", "rds_job_name"]
+                 "no_of_connection": PerfUnit.UNIT_NUMBER, "aggbw_in_mbps": PerfUnit.UNIT_MBYTES_PER_SEC}
+    # unit_dict_helper = ["num_hosts", "message_rate", "no_of_connection", "aggbw_in_mbps", "rds_job_name"]
 
-    model_name = "RDSClientIOPS"
+    model_name = "RDSClientAB"
     status = fun_test.PASSED
     try:
         generic_helper = ModelHelper(model_name=model_name)
@@ -443,7 +443,7 @@ class ECVolumeLevelTestcase(FunTestCase):
         test_method = testcase[4:]
         command = 'tcpkali '
 
-        table_data_cols = ["num_hosts", "message_rate", "no_of_connection", "iops_in_mbps", "rds_job_name"]
+        table_data_cols = ["num_hosts", "message_rate", "no_of_connection", "aggbw_in_mbps", "rds_job_name"]
         table_data_rows = []
 
         job_inputs = fun_test.get_job_inputs()
@@ -510,7 +510,7 @@ class ECVolumeLevelTestcase(FunTestCase):
 
         row_data_dict = {}
 
-        headers = ["num_hosts", "message_rate", "no_of_connection", "iops_in_mbps", "rds_job_name"]
+        headers = ["num_hosts", "message_rate", "no_of_connection", "aggbw_in_mbps", "rds_job_name"]
 
         for each_m in self.messagerate:
             for each_c in self.totalconnection:
@@ -522,7 +522,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 row_data_dict['message_rate'] = each_m
                 row_data_dict['no_of_connection'] = each_c
                 row_data_dict['num_hosts'] = len(self.host_info)
-                row_data_dict['rds_job_name'] = "RDS_client_test_{}_hosts_{}_messagerate_{}_noofconn_IOPS".format(len(self.host_info), each_m, each_c)
+                row_data_dict['rds_job_name'] = "RDS_client_test_{}_hosts_{}_messagerate_{}_noofconn_aggbw".format(len(self.host_info), each_m, each_c)
 
                 # Starting the thread to collect the vp_utils stats and resource_bam stats for the current iteration
                 if start_stats:
@@ -607,7 +607,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.log("aggregate bw on all the hosts: {} mbps for  -r {} -c {}".format(aggregate_bw, each_m, each_c))
                 fun_test.sleep("sleep 5 seconds for next iteration", seconds=5)
 
-                row_data_dict['iops_in_mbps'] = aggregate_bw
+                row_data_dict['aggbw_in_mbps'] = aggregate_bw
 
                 data = [each_m, each_c, len(self.host_info), aggregate_bw]
 
@@ -634,8 +634,8 @@ class ECVolumeLevelTestcase(FunTestCase):
                         "num_hosts": len(self.host_info),
                         "message_rate": each_m,
                         "no_of_connection": each_c,
-                        "iops_in_mbps": aggregate_bw,
-                        "rds_job_name": "RDS_client_test_for_{}_hosts_{}_messagerate_{}_noofconn_IOPS".format(len(self.host_info), each_m, each_c)
+                        "aggbw_in_mbps": aggregate_bw,
+                        "rds_job_name": "RDS_client_test_for_{}_hosts_{}_messagerate_{}_noofconn_aggbw".format(len(self.host_info), each_m, each_c)
                         }
                     if self.post_results:
                         fun_test.log("Posting results on dashboard")
