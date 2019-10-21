@@ -999,15 +999,9 @@
         "disabled": false,
         "pool_member_type": 1,
         "type": "DUT_TYPE_FSU",
-        "dut": "fs-15"
-      },
-      "9": {
-        "disabled": false,
-        "pool_member_type": 1,
-        "type": "DUT_TYPE_FSU",
         "dut": "fs-20"
       },
-       "10": {
+       "9": {
          "disabled": false,
          "pool_member_type": 1,
         "type": "DUT_TYPE_FSU",
