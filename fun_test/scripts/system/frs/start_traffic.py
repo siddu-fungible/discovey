@@ -83,7 +83,8 @@ class FunTestCase1(FunTestCase):
 
         fun_test.log(json.dumps(self.fs, indent=4))
         fun_test.log("Details: {}, Input: {}".format(self.details, job_inputs))
-        # Power files
+
+        # Power files - finding the right number, so its done
         self.power_shell = fun_test.get_test_case_artifact_file_name(post_fix_name="power_shell_script_logs.txt")
         self.power_output = fun_test.get_test_case_artifact_file_name(post_fix_name="power_output_logs.txt")
         fun_test.add_auxillary_file(description="Power shell script output", filename=self.power_shell)
@@ -681,7 +682,6 @@ class FunTestCase1(FunTestCase):
             print "used generic helper to add an entry"
         except Exception as ex:
             fun_test.critical(str(ex))
-
 
 
 if __name__ == "__main__":
