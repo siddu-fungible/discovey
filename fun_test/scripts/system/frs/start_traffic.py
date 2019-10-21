@@ -226,6 +226,7 @@ class FunTestCase1(FunTestCase):
             le_firewall(self.test_duration, self.details["boot_new_image"])
 
         for app, parameters in app_params.iteritems():
+            parameters["f1"] = 0
             result = self.methods[app](come_handle, **parameters)
             fun_test.test_assert(result, "{} traffic started on F1_0".format(app))
             parameters["f1"] = 1
