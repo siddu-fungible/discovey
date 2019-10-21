@@ -575,7 +575,7 @@ class ECVolumeLevelTestcase(FunTestCase):
 
                 data = [each_m, each_c, len(self.host_info), aggregate_bw]
                 table_data = {"headers": headers, "rows": [data]}
-                fun_test.add_table(panel_header="Compression Details", table_name="Compression ratio during warmup", table_data=table_data)
+                fun_test.add_table(panel_header="RDS TEST perf table", table_name="RDS TEST for {} message {} connections and {} no of hosts".format(each_m, each_c, len(self.host_info)), table_data=table_data)
 
     def cleanup(self):
         self.stats_obj.stop(self.stats_collect_details)
