@@ -16,7 +16,7 @@
     "load_modules": ["nvme", "nvme_tcp"],
     "huid": 7,
     "ctlid": 0,
-    "syslog_level": 2,
+    "syslog": "default",
     "command_timeout": 5,
     "reboot_timeout": 600,
     "ethernet_adapter": "Mellanox",

@@ -3,6 +3,7 @@ import {ApiService} from "../services/api/api.service";
 import {LoggerService} from "../services/logger/logger.service";
 import {catchError, switchMap} from 'rxjs/operators';
 import {forkJoin, observable, Observable, of, throwError} from "rxjs";
+import {CommonService} from "../services/common/common.service";
 
 @Injectable({
   providedIn: 'root'
@@ -36,7 +37,7 @@ export class RegressionService implements OnInit{
   };
 
   logDir: string = null;
-  constructor(private apiService: ApiService, private loggerService: LoggerService) { }
+  constructor(private apiService: ApiService, private loggerService: LoggerService, private commonService: CommonService) { }
 
   ngOnInit() {
 
@@ -150,6 +151,13 @@ getPrettyLocalizeTime(t) {
     }))
   }
 
+  getScriptInfoById(scriptId) {
+    let url = "/api/v1/regression/scripts/" + scriptId;
+    return this.apiService.get(url).pipe(switchMap(response => {
+      return of(response.data);
+    }))
+  }
+
   killSuite(suiteId) {
     return this.apiService.get("/regression/kill_job/" + suiteId).pipe(switchMap( (response) => {
       let jobId = parseInt(response.data);
@@ -179,12 +187,72 @@ getPrettyLocalizeTime(t) {
     }))
   }
 
+  testCaseExecutions(executionId=null, suiteExecutionId=null, scriptPath=null, logPrefix=null) {
+    let url = "/api/v1/regression/test_case_executions";
+    let queryParams = [];
+    if (suiteExecutionId) {
+      queryParams.push(["suite_execution_id", suiteExecutionId]);
+    }
+    if (scriptPath) {
+      queryParams.push(["script_path", scriptPath]);
+    }
+    if (logPrefix !== null) {
+      queryParams.push(["log_prefix", logPrefix]);
+    }
+    let queryParamString = this.commonService.queryParamsToString(queryParams);
+    url = `${url}${queryParamString}`;
+    return this.apiService.get(url).pipe(switchMap(response => {
+      return of(response.data);
+
+    }), catchError (error => {
+      return throwError(error);
+    }))
+  }
+
+  testCaseTimeSeries(suiteExecutionId, testCaseExecutionId) {
+    let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}/${testCaseExecutionId}`;
+    return this.apiService.get(url).pipe(switchMap(response => {
+      return of(response.data);
+    }), catchError (error => {
+      this.loggerService.error("Unable fetch time-series");
+      return throwError(error);
+    }))
+  }
+
+  testCaseTimeSeriesLogs(suiteExecutionId, testCaseExecutionId, checkpointIndex=null) {
+    let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}/${testCaseExecutionId}`;
+    url += `?type=log`;
+    if (checkpointIndex !== null) {
+      url += `&checkpoint_index=${checkpointIndex}`;
+    }
+    return this.apiService.get(url).pipe(switchMap(response => {
+      return of(response.data);
+    }), catchError (error => {
+      this.loggerService.error("Unable fetch time-series logs");
+      return throwError(error);
+    }))
+  }
   releaseTrains(): Observable<string[]> {
     return this.apiService.get("/api/v1/regression/release_trains").pipe(switchMap(response => {
       return of(response.data);
     }), catchError(error => {
       return throwError(error);
     }))
+  }
+
+  testCaseTimeSeriesCheckpoints(suiteExecutionId, testCaseExecutionId) {
+    let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}/${testCaseExecutionId}`;
+    url += `?type=checkpoint`;
+    return this.apiService.get(url).pipe(switchMap(response => {
+      return of(response.data);
+    }), catchError (error => {
+      this.loggerService.error("Unable fetch time-series logs");
+      return throwError(error);
+    }))
+  }
+
+  getRegressionScripts(scriptId=null, scriptPath=null) {
+    let url = `/api/v1/regression/scripts`
   }
 
 }

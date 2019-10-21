@@ -15,6 +15,7 @@ import os
 import traceback
 
 site_state = None
+ml = MetricLib()
 
 SITE_BASE_DATA_FILE = WEB_ROOT_DIR + "/site_base_data.json"
 METRICS_BASE_DATA_FILE = WEB_ROOT_DIR + "/metrics.json"
@@ -201,10 +202,7 @@ class SiteState():
             self._do_register_metric(metric=all_metrics_metric)
             for metric in metrics:
                 self._do_register_metric(metric=metric)
-                global_setting = MetricsGlobalSettings.objects.first()
-                global_setting.cache_valid = False
-                global_setting.save()
-            ml = MetricLib()
+            ml.set_global_cache(cache_valid=False)
             ml.update_weights_for_wip()
 
     def set_metrics_settings(self):

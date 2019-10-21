@@ -14,7 +14,9 @@ export class CommonService {
 
   scrollTo(elementId) {
     let element = document.getElementById(elementId);
-    window.scrollTo({left: 0, top: element.offsetTop, behavior: "smooth"});
+    //window.scrollTo({left: 0, top: 80, behavior: "smooth"});
+    element.scrollIntoView({behavior: "smooth", block: "center", inline: "nearest"});
+
   }
 
   timestampToDate(timestampInMs) {
@@ -151,6 +153,22 @@ export class CommonService {
     dateTime.setMilliseconds(0);
     let fromEpoch = dateTime.getTime();
     return [fromEpoch, toEpoch];
+  }
+
+  queryParamsToString(queryParams: [string, any][]) {
+    let queryParamString = "";
+    if (queryParams.length > 0) {
+      queryParamString = "?";
+      queryParams.forEach(queryParamKeyValue => {
+        queryParamString += `${queryParamKeyValue[0]}=${queryParamKeyValue[1]}`;
+        queryParamString += `&`;
+      });
+      if (queryParamString.endsWith("&")) {
+        queryParamString = queryParamString.replace(/&$/, "");
+      }
+
+    }
+    return queryParamString;
   }
 
 }

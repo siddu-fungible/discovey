@@ -1,6 +1,7 @@
 from django.apps import AppConfig
 from django.contrib import admin
 from lib.utilities.jira_manager import JiraManager
+from lib.utilities.mongo_db_manager import MongoDbManager
 from lib.utilities.git_manager import GitManager
 from apscheduler.schedulers.background import BackgroundScheduler
 from threading import Lock
@@ -22,6 +23,8 @@ class FunTestConfig(AppConfig):
     def __init__(self, *args, **kwargs):
         super(FunTestConfig, self).__init__(*args, **kwargs)
         self.metric_models = {}
+
+        self.mongo_db_manager = None
 
 
     def start_scheduler(self):
@@ -54,6 +57,10 @@ class FunTestConfig(AppConfig):
         # self.start_scheduler()
         self.scheduler_pre_flight()
 
+    def get_mongo_db_manager(self):
+        if not self.mongo_db_manager:
+            self.mongo_db_manager = MongoDbManager()
+        return self.mongo_db_manager
 
     def get_jira_manager(self):
         if not hasattr(self, "jira_manager"):
