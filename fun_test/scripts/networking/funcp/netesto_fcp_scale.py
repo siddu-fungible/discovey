@@ -31,8 +31,9 @@ def get_netesto_script(test_type='basic', no_of_streams=1, no_of_nobuff_streams=
     rr_reply_size = rr_size.split(',')[1]
     if test_type == 'tp_tcp_stream_bi_dir':
         test = 'TCP_STREAM,TCP_MAERTS'
-    elif test_type == 'tp_tcp_rr':
+    elif test_type == 'tp_tcp_rr' or test_type == 'tp_tcp_rr_buff_limit' or test_type == 'tp_tcp_rr_buff_limit_template':
         test = 'TCP_RR'
+
     else:
         test = 'TCP_STREAM'
 
@@ -291,7 +292,7 @@ def run_netesto(test_type, no_of_streams=0, no_of_nobuff_streams=0, no_of_rr=1, 
 
     # fun_test.sleep(message="Sleep before tests start", seconds=10)
 
-    netesto_controller.sudo_command(command="./netesto.py -d < fun_scripts/netesto_execute_script", timeout=600)
+    netesto_controller.sudo_command(command="./netesto.py -d < fun_scripts/netesto_execute_script", timeout=1200)
 
     netesto_process = netesto_controller.command("cat counter; echo").strip()
     if netesto_process != "" and netesto_process_before_test != netesto_process:
@@ -326,13 +327,13 @@ def run_netesto(test_type, no_of_streams=0, no_of_nobuff_streams=0, no_of_rr=1, 
         row = 0
         row_lst = []
         for flow in df['FlowId']:
-            if test_type == 'tcp_rr_only_test':
+            if test_type == 'tp_tcp_rr':
                 if flow.startswith(tuple(test_var['nc'].split(','))):
                     print flow
                     row_lst.append(row)
                 row += 1
 
-        if test_type == 'tcp_rr_only_test':
+        if test_type == 'tp_tcp_rr':
             rr_latency_min = 0
             rr_latency_p50 = 0
             rr_latency_p90 = 0
@@ -349,6 +350,7 @@ def run_netesto(test_type, no_of_streams=0, no_of_nobuff_streams=0, no_of_rr=1, 
             rr_latency_p99 = int(rr_latency_p99) / len(row_lst)
 
             row = 0 
+            row_lst = []
             for flow in df['FlowId']:
                 if flow.startswith(tuple(test_var['nc_rr'].split(','))):
                     print flow
@@ -364,13 +366,15 @@ def run_netesto(test_type, no_of_streams=0, no_of_nobuff_streams=0, no_of_rr=1, 
                 rr_1B_latency_p50 = int(rr_1B_latency_p50) + int(df.loc[i].at['Latency_p50'])
                 rr_1B_latency_p90 = int(rr_1B_latency_p90) + int(df.loc[i].at['Latency_p90'])
                 rr_1B_latency_p99 = int(rr_1B_latency_p99) + int(df.loc[i].at['Latency_p99'])
+            if row_lst: 
+                rr_1B_latency_min = int(rr_1B_latency_min) / len(row_lst)
+                rr_1B_latency_p50 = int(rr_1B_latency_p50) / len(row_lst)
+                rr_1B_latency_p90 = int(rr_1B_latency_p90) / len(row_lst)
+                rr_1B_latency_p99 = int(rr_1B_latency_p99) / len(row_lst)
 
-            rr_1B_latency_min = int(rr_1B_latency_min) / len(row_lst)
-            rr_1B_latency_p50 = int(rr_1B_latency_p50) / len(row_lst)
-            rr_1B_latency_p90 = int(rr_1B_latency_p90) / len(row_lst)
-            rr_1B_latency_p99 = int(rr_1B_latency_p99) / len(row_lst)
-
-            rr_1B_latency = str(rr_1B_latency_min) + ':' + str(rr_1B_latency_p50) + ':' + str(rr_1B_latency_p90) + ':' + str(rr_1B_latency_p99)
+                rr_1B_latency = str(rr_1B_latency_min) + ':' + str(rr_1B_latency_p50) + ':' + str(rr_1B_latency_p90) + ':' + str(rr_1B_latency_p99)
+            else:
+                rr_1B_latency = 'na'
         else:
             for flow in df['FlowId']:
                 if flow.startswith(tuple(test_var['nc_rr'].split(','))):
@@ -386,12 +390,18 @@ def run_netesto(test_type, no_of_streams=0, no_of_nobuff_streams=0, no_of_rr=1, 
                 rr_latency_p50 = int(rr_latency_p50) + int(df.loc[i].at['Latency_p50'])
                 rr_latency_p90 = int(rr_latency_p90) + int(df.loc[i].at['Latency_p90'])
                 rr_latency_p99 = int(rr_latency_p99) + int(df.loc[i].at['Latency_p99'])
-
-            rr_latency_min = int(rr_latency_min) / len(row_lst)
-            rr_latency_p50 = int(rr_latency_p50) / len(row_lst)
-            rr_latency_p90 = int(rr_latency_p90) / len(row_lst)
-            rr_latency_p99 = int(rr_latency_p99) / len(row_lst)
-            rr_1B_latency = 'na'
+            if row_lst:
+                rr_latency_min = int(rr_latency_min) / len(row_lst)
+                rr_latency_p50 = int(rr_latency_p50) / len(row_lst)
+                rr_latency_p90 = int(rr_latency_p90) / len(row_lst)
+                rr_latency_p99 = int(rr_latency_p99) / len(row_lst)
+                rr_1B_latency = 'na'
+            else:
+                rr_latency_min = 'na' 
+                rr_latency_p50 = 'na'
+                rr_latency_p90 = 'na'
+                rr_latency_p99 = 'na'
+                rr_1B_latency = 'na'
         no_of_nobuff_streams = str(no_of_nobuff_streams)
         if test_type == 'tcp_rr_only_test':
             name = str(no_of_streams) + "streams_" + str(local_buff) + "buff_" + str(no_of_nobuff_streams) + "nobuff_" + str(rr_size) + "_rr_size"
@@ -433,9 +443,9 @@ if __name__ == '__main__':
                       help='netesto_clients')
     parser.add_option('--ns', action="store", dest="netesto_servers", default='mpoc-server40,mpoc-server41,mpoc-server42,mpoc-server43,mpoc-server47,mpoc-server48,mpoc-server44',
                       help='netesto_servers')
-    parser.add_option('--ns_rr', action="store", dest="netesto_rr_servers", default='mpoc-server42,mpoc-server46,mpoc-server-33',
+    parser.add_option('--ns_rr', action="store", dest="netesto_rr_servers", default='dummy',
                       help='netesto_rr_servers')
-    parser.add_option('--nc_rr', action="store", dest="netesto_rr_clients", default='mpoc-server42,mpoc-server46,mpoc-server-33',
+    parser.add_option('--nc_rr', action="store", dest="netesto_rr_clients", default='dummy',
                       help='netesto_rr_clients')
     parser.add_option('--buff', action="store", dest="buffer_size", default='0,0',
                       help='netesto_rr_clients')
@@ -455,8 +465,8 @@ if __name__ == '__main__':
     		'--nh', default='mpoc-server01', help='netesto_controller'
     		'--nc', default='mpoc-server30,mpoc-server31,mpoc-server32,mpoc-server45,mpoc-server34' , help='netesto_clients'
     		'--ns', default='mpoc-server40,mpoc-server41,mpoc-server43,mpoc-server47,mpoc-server48,mpoc-server44' , help='netesto_servers'
-    		'--ns_rr', default='mpoc-server42','mpoc-server46','mpoc-server-33'
-    		'--nc_rr', default='mpoc-server42','mpoc-server46','mpoc-server-33'
+    		'--ns_rr', default='dummy'
+    		'--nc_rr', default='dummy'
     		'--buff', default=0,0 , help=local_buff,remote_buff'
     		'--cs_pair', default=None , help=client server pair'
     		-u : This help
@@ -479,9 +489,11 @@ if __name__ == '__main__':
     test_var['ns_rr'] = options.netesto_rr_servers
 
     default_streams_list = [0,4,8,16,32]
-
-    #hosts = netesto_controller + ',' + netesto_clients + ',' + netesto_servers
-    hosts = test_var['nc'] + ',' + test_var['ns'] + ',' + test_var['nc_rr'] + ',' + test_var['ns_rr']
+    if test_var['nc_rr'] == 'dummy' or test_var['ns_rr'] == 'dummy':
+	hosts = test_var['nc'] + ',' + test_var['ns']
+    else:
+    	#hosts = netesto_controller + ',' + netesto_clients + ',' + netesto_servers
+    	hosts = test_var['nc'] + ',' + test_var['ns'] + ',' + test_var['nc_rr'] + ',' + test_var['ns_rr']
     if test_var['cs_pair'] is not None:
         hosts = hosts + ',' + test_var['cs_pair']
     hosts = hosts.split(',')
@@ -510,14 +522,24 @@ if __name__ == '__main__':
 
         run_netesto(test_type=test_type, no_of_streams=nobuff_streams, local_buff=local_buff, remote_buff=remote_buff, total_calls=total_calls)
 
-    elif test_type ==  "tp_tcp_stream_buff_limit_template":
+    elif test_type == "tp_tcp_rr_buff_limit":
+        if ',' in buffer_size:
+            local_buff = buffer_size.split(',')[0]
+            remote_buff = buffer_size.split(',')[1]
+        else:
+            local_buff = buffer_size
+            remote_buff = buffer_size
 
-        stream_template = { '4' : ['18000', '42000', '72000', '128000', '300000'],
+        run_netesto(test_type=test_type, no_of_streams=nobuff_streams, rr_size=rr_size, local_buff=local_buff, remote_buff=remote_buff, total_calls=total_calls)
+    elif test_type ==  "tp_tcp_stream_buff_limit_template" or test_type ==  "tp_tcp_rr_buff_limit_template":
+
+        stream_template = { '1' : ['18000', '42000', '72000', '128000', '300000'],
+                            '4' : ['18000', '42000', '72000', '128000', '300000'],
                             '8' : ['12000', '23000', '38000', '54000', '78000', '128000'],
                             '16' : ['9000', '15000', '22000', '30000', '43000', '58000'],
                             '32' : ['9000', '15000', '23000', '30000', '43000', '60000', '78000', '128000']
                             }
-        #stream_template = {'4': ['18000', '42000']}
+        stream_template = {'1' : ['18000', '42000', '72000', '128000', '300000']}
         for stream_count in stream_template.keys():
             server_count = len(test_var['ns'].split(','))
             print "Server count is " + str(server_count)
@@ -533,7 +555,13 @@ if __name__ == '__main__':
                 local_buff = int(local_buff)/server_count
                 remote_buff = int(remote_buff)/server_count
 
-                run_netesto(test_type=test_type, no_of_streams=int(stream_count), local_buff=local_buff, remote_buff=remote_buff,
+                if test_type ==  "tp_tcp_stream_buff_limit_template":
+
+                    run_netesto(test_type=test_type, no_of_streams=int(stream_count), local_buff=local_buff, remote_buff=remote_buff,
+                            total_calls=total_calls)
+
+                else:
+                    run_netesto(test_type=test_type, no_of_streams=int(stream_count), rr_size=rr_size, local_buff=local_buff, remote_buff=remote_buff,
                             total_calls=total_calls)
 
                 total_calls += 1
