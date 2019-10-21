@@ -227,8 +227,9 @@ class NicEmulation(FunTestCase):
                                             abstract_config_f1_1=abstract_json_file1, workspace="/scratch")
 
             # Add static routes on Containers
-            funcp_obj.add_routes_on_f1(routes_dict=self.server_key["fs"][fs_name]["static_routes"])
-            fun_test.sleep(message="Waiting before ping tests", seconds=10)
+            if not enable_fcp:
+                funcp_obj.add_routes_on_f1(routes_dict=self.server_key["fs"][fs_name]["static_routes"])
+                fun_test.sleep(message="Waiting before ping tests", seconds=10)
 
             # Ping QFX from both F1s
             ping_dict = self.server_key["fs"][fs_name]["cc_pings"]
