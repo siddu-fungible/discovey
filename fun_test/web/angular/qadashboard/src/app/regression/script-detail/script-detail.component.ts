@@ -208,6 +208,9 @@ export class ScriptDetailComponent implements OnInit {
     let testCaseIndex = 0;
     let found = false;
     for (let index = 0; index < this.testCaseExecutions.length; index++) {
+      if (this.testCaseExecutions[index].result === "NOT_RUN") {
+        continue;
+      }
       if (this.testCaseExecutions[index].relative_started_epoch_time <= time) {
       } else {
         break;
