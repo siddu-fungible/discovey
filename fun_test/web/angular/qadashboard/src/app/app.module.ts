@@ -90,6 +90,7 @@ import { ScriptDetailComponent } from './regression/script-detail/script-detail.
 import { PagerComponent } from './pager/pager.component';
 import { SelectedPipe } from './pipes/selected.pipe';
 import { TimelineControlComponent } from './visualization/timeline-control/timeline-control.component';
+import * as d3 from 'd3';
 
 
 @NgModule({

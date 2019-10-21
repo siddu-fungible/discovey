@@ -9,8 +9,6 @@ import {CommonService} from "../../services/common/common.service";
 import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
 import {ScriptDetailService, ContextInfo, ScriptRunTime} from "./script-detail.service";
 import {Pipe, PipeTransform } from '@angular/core';
-import {ElementRef, ViewChild} from '@angular/core';
-import * as d3 from 'd3';
 
 class DataModel {
   letter: string;
@@ -33,14 +31,6 @@ class Checkpoint {
   index: number;
   result: string;
 }
-
-@Pipe({name: 'selected'})
-export class selected implements PipeTransform {
-  transform(value: ContextInfo []): ContextInfo [] {
-    return value.filter(element => element.selected);
-  }
-}
-
 
 @Component({
   selector: 'app-script-detail',
