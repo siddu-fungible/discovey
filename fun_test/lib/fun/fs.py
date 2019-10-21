@@ -568,7 +568,7 @@ class Bmc(Linux):
                 rich_input_boot_args = True
 
         if not rich_input_boot_args:
-            if "load_mods" in boot_args:
+            if "load_mods" in boot_args and "hw_hsu_test" not in boot_args:
                 output = self.u_boot_command(command="bootelf -p {}".format(self.ELF_ADDRESS), timeout=80, f1_index=index, expected="FUNOS_INITIALIZED")
             else:
                 output = self.u_boot_command(command="bootelf -p {}".format(self.ELF_ADDRESS), timeout=80, f1_index=index, expected="\"this space intentionally left blank.\"")

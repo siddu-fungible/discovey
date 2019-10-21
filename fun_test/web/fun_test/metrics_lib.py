@@ -454,7 +454,7 @@ class MetricLib():
                 dag = "F1"
             else:
                 dag = "S1"
-            result[dag] = self.fetch_dag(metric_ids=[metric_id])
+            result[dag] = self.fetch_dag(metric_ids=[metric_id], backup=True)
             print json.dumps(result[dag])
         f1_dag = result["F1"]
         s1_dag = result["S1"]
@@ -508,10 +508,10 @@ class MetricLib():
                                          sorted(children_info.iteritems(), key=lambda d: d[1]['chart_name']))
         return result
 
-    def fetch_dag(self, metric_ids, levels=15, is_workspace=0):
+    def fetch_dag(self, metric_ids, levels=15, is_workspace=0, backup=False):
         result = []
         cache_valid = MetricsGlobalSettings.get_cache_validity()
-        if not cache_valid or (cache_valid and levels != 15) or int(is_workspace):
+        if not cache_valid or (cache_valid and levels != 15) or int(is_workspace) or backup:
             metric_chart_entries = {}
             for metric_id in metric_ids:
                 sort_by_name = False
@@ -524,9 +524,9 @@ class MetricLib():
             for pmd in pmds:
                 for metric_id in metric_ids:
                     if int(metric_id) == F1_ROOT_ID:  # 101=F1
-                        result.append(json.loads(pmd.f1_metrics_dag))
+                        result.append(json.loads(pmd.f1_metrics_dag)[0])
                     if int(metric_id) == S1_ROOT_ID:  # 591-S1
-                        result.append(json.loads(pmd.s1_metrics_dag))
+                        result.append(json.loads(pmd.s1_metrics_dag)[0])
         return result
 
     def set_global_cache(self, cache_valid):
