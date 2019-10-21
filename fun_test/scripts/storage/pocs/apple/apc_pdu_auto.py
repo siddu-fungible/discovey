@@ -114,6 +114,21 @@ class ApcPduTestcase(FunTestCase):
             come_up = self.come_handle.ensure_host_is_up(max_wait_time=600)
             fun_test.test_assert(come_up, "COMe is UP")
 
+            self.check_come_up_time(expected_minutes=5)
+
+            if self.check_docker:
+                fun_test.log("Check if all the Dockers are up")
+                docker_count = 0
+                max_time = 100
+                timer = FunTimer(max_time)
+                while not timer.is_expired():
+                    docker_count = self.get_docker_count()
+                    if docker_count == self.expected_dockers:
+                        break
+                    else:
+                        fun_test.sleep("{} docker to be up".format(self.expected_dockers), seconds=5)
+                fun_test.test_assert_expected(expected=self.expected_dockers, actual=docker_count, message="Docker's up")
+
             portal_up = False
             max_time = 300
             timer = FunTimer(max_time)
@@ -129,27 +144,12 @@ class ApcPduTestcase(FunTestCase):
 
             fun_test.test_assert(portal_up, "Portal is up")
 
-            if self.check_docker:
-                fun_test.log("Check if all the Dockers are up")
-                docker_count = 0
-                max_time = 100
-                timer = FunTimer(max_time)
-                while not timer.is_expired():
-                    docker_count = self.get_docker_count()
-                    if docker_count == self.expected_dockers:
-                        break
-                    else:
-                        fun_test.sleep("{} docker to be up".format(self.expected_dockers), seconds=5)
-                fun_test.test_assert_expected(expected=self.expected_dockers, actual=docker_count, message="Docker's up")
-
             # Check if lspci devices are detected
             fun_test.log("Check if F1_0 is detected")
             self.check_pci_dev(f1=0)
 
             fun_test.log("Check if F1_1 is detected")
             self.check_pci_dev(f1=1, fs_name=self.fs_name)
-
-            # self.check_come_up_time(expected_minutes=5)
 
             if self.check_ssd:
                 fun_test.log("Checking if SSD's are Active on F1_0")
