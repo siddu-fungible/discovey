@@ -290,6 +290,7 @@ class FunTest:
         self.enable_profiling()
         self.start_time = get_current_time()
         self.started_epoch_time = get_current_epoch_time()
+        self.time_series_buffer = {0: ""}
 
     def enable_time_series(self, enable=True):
         self.time_series_enabled = enable
@@ -337,6 +338,7 @@ class FunTest:
 
     def add_context(self, description, output_file_path=None):
         self.last_context_id += 1
+        self.time_series_buffer[self.last_context_id] = ""
         output_file_path = output_file_path
         suite_execution_id = self.get_suite_execution_id()
         script_id = self.get_script_id()
@@ -1002,14 +1004,25 @@ class FunTest:
         context_id = 0
         if context:
             context_id = context.get_id()
-            
+
         if self.time_series_enabled:
-            data = {"checkpoint_index": self.current_time_series_checkpoint,
-                    "log": final_message_for_time_series,
-                    "context_id": context_id}
-            self.add_time_series_log(collection_name=models_helper.get_fun_test_time_series_collection_name(self.get_suite_execution_id(),
-                                                                                                            self.get_test_case_execution_id()),
-                                     data=data, epoch_time=current_epoch_time)
+            try:
+                if not final_message_for_time_series.endswith("\n"):
+                    self.time_series_buffer[context_id] += final_message_for_time_series
+                else:
+                    final_message_for_time_series = self.time_series_buffer[context_id] + final_message_for_time_series
+                    for part in final_message_for_time_series.split("\n"):
+                        if not part:
+                            continue
+                        data = {"checkpoint_index": self.current_time_series_checkpoint,
+                                "log": part,
+                                "context_id": context_id}
+                        self.add_time_series_log(collection_name=models_helper.get_fun_test_time_series_collection_name(self.get_suite_execution_id(),
+                                                                                                                        self.get_test_case_execution_id()),
+                                                 data=data, epoch_time=current_epoch_time)
+                    self.time_series_buffer[context_id] = ""
+            except Exception as ex:
+                print "Timeseries exception: {}".format(str(ex))
 
     def print_key_value(self, title, data, max_chars_per_column=50):
         if title:

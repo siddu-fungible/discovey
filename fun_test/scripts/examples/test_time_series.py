@@ -1,4 +1,5 @@
 from lib.system.fun_test import *
+from lib.host.linux import Linux
 
 class MyScript(FunTestScript):
     def describe(self):
@@ -40,7 +41,8 @@ class FunTestCase1(FunTestCase):
 
         fun_test.log("Variable shared across test-cases and the script level: {}".format(fun_test.shared_variables["some_variable"]))
 
-
+        l = Linux(host_ip="qa-ubuntu-02", ssh_username="auto_admin", ssh_password="fun123")
+        l.command("date")
         fun_test.test_assert_expected(expected=2, actual=2, message="Some message2")
 
 
@@ -127,8 +129,8 @@ class FunTestCase4(FunTestCase):
 if __name__ == "__main__":
     myscript = MyScript()
     myscript.add_test_case(FunTestCase1())
-    myscript.add_test_case(FunTestCase2())
-    myscript.add_test_case(FunTestCase3())
-    myscript.add_test_case(FunTestCase4())
+    # myscript.add_test_case(FunTestCase2())
+    # myscript.add_test_case(FunTestCase3())
+    # myscript.add_test_case(FunTestCase4())
 
     myscript.run()
