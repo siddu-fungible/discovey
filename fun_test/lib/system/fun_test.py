@@ -286,6 +286,10 @@ class FunTest:
         self.start_time = get_current_time()
         self.started_epoch_time = get_current_epoch_time()
 
+    def enable_time_series(self, enable=True):
+        self.time_series_enabled = enable
+        if not enable:
+            self.log("Disabling time series")
 
     def get_script_id(self):
         if not self.script_id and self.suite_execution_id and self.current_test_case_execution_id:
@@ -859,9 +863,17 @@ class FunTest:
     def dict_to_json_string(self, d):
         return json.dumps(d, indent=4, cls=DatetimeEncoder)
 
-    def add_time_series_document(self, collection_name, epoch_time, type, data):
-        collection = self.get_mongo_db_manager().get_collection(collection_name=collection_name)
-        collection.insert_one({"epoch_time": epoch_time, "type": type, "data": data})
+    def add_time_series_document(self, collection_name, epoch_time, type, **kwargs):
+        try:
+            result = self.get_mongo_db_manager().insert_one(collection_name=collection_name,
+                                                            epoch_time=epoch_time,
+                                                            type=type,
+                                                            **kwargs)
+            if not result:
+                self.critical("Unable to add_time_series_document: {}".format(kwargs))
+        except Exception as ex:
+            self.critical(str(ex))
+            self.enable_time_series(enable=False)
 
     def add_time_series_log(self, collection_name, data, epoch_time=None):
         if not epoch_time:
@@ -872,38 +884,45 @@ class FunTest:
                                       data=data)
 
     def add_time_series_checkpoint(self, collection_name, data):
-        self.add_time_series_document(collection_name=collection_name, epoch_time=get_current_epoch_time(), type="checkpoint", data=data)
+        self.add_time_series_document(collection_name=collection_name,
+                                      epoch_time=get_current_epoch_time(),
+                                      type="checkpoint",
+                                      data=data)
 
     def add_time_series_context(self, collection_name, context):
-        collection = self.get_mongo_db_manager().get_collection(collection_name=collection_name)
-        if collection:
-            collection.insert_one({"epoch_time": get_current_epoch_time(),
-                                   "type": "context",
-                                   "context_id": context.context_id,
-                                   "description": context.description,
-                                   "suite_execution_id": context.suite_execution_id,
-                                   "test_case_execution_id": context.test_case_execution_id,
-                                   "script_id": context.script_id})
-        else:
-            print ("Unable to find collection: {}".format(collection_name))  #TODO
+        try:
+            result = self.get_mongo_db_manager().insert_one(collection_name=collection_name,
+                                                            epoch_time=get_current_epoch_time(),
+                                                            type="context",
+                                                            context_id=context.context_id,
+                                                            description=context.description,
+                                                            suite_execution_id=context.suite_execution_id,
+                                                            test_case_execution_id=context.test_case_execution_id,
+                                                            script_id=context.script_id)
+            if not result:
+                self.critical("Unable to add_time_series_context: {}".format(context))
+        except Exception as ex:
+            self.critical(str(ex))
+            self.enable_time_series(enable=False)
 
     def update_time_series_script_run_time(self, started_epoch_time=None):
         script_id = self.get_script_id()
         collection_name = models_helper.get_ts_script_run_time_collection_name(self.suite_execution_id,
                                                                                script_id=script_id)
-        collection = self.get_mongo_db_manager().get_collection(collection_name=collection_name)
-        self.log("Ex: {} script: {}".format(self.suite_execution_id, script_id))
-        if collection:
-            update_dict = {"suite_execution_id": self.suite_execution_id,
-                           "script_id": script_id}
-            if started_epoch_time:
-                update_dict["started_epoch_time"] = started_epoch_time
-            collection.find_one_and_update(update_dict,
-                                           {"$set": update_dict},
-                                           upsert=True)
-        else:
-            print ("Unable to find collection: {}".format(collection_name))  #TODO
-        pass
+        update_dict = {"suite_execution_id": self.suite_execution_id,
+                       "script_id": script_id,
+                       "started_epoch_time": started_epoch_time}
+        try:
+
+            result = self.get_mongo_db_manager().find_one_and_update(collection_name=collection_name,
+                                                            key={"suite_execution_id": self.suite_execution_id,
+                                                                 "script_id": script_id},
+                                                            **update_dict)
+
+        except Exception as ex:
+            self.critical(str(ex))
+            self.enable_time_series(enable=False)
+
 
     def log(self,
             message,
