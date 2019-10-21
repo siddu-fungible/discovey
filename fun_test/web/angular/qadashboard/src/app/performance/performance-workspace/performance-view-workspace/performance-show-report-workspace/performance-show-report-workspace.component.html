@@ -1,79 +1,106 @@
 <app-pager *ngIf="workspace" [data]="flattenedInterestedMetrics" [recordsPerPage]=5
-             (pageNumber)="setPage($event)"></app-pager>
+           (pageNumber)="setPage($event)"></app-pager>
 <div class="card" style="margin: 10px; padding: 5px;">
   <b>Subject: </b><input style="max-width: 50%" type="text" [(ngModel)]="subject"/><br>
   <ng-container *ngIf="showPagedItems">
-  <div *ngFor="let interestedMetric of pagedItems">
-    <div *ngIf="interestedMetric.leaf" style="vertical-align: middle; width: 50%">
-      <h5>{{ interestedMetric.lineage }}</h5>
-      {{ interestedMetric.chart_name }}<br>
-      Link to chart: <a href="{{ interestedMetric.url }}" target="_blank">Link</a><br>
-      Bugs:
-      <summary-jira-info [bugInfoUrl]="'/common/bug_info'" [data]="interestedMetric.jira_list"
-                           [allowDelete]="false" [allowContext]="false" [allowAdd]="false"></summary-jira-info>
-      Comments: <textarea [(ngModel)]="interestedMetric.comments" style="width: 100%"></textarea>
+    <div *ngFor="let interestedMetric of pagedItems">
+      <div *ngIf="interestedMetric.leaf" style="vertical-align: middle; width: 50%">
+        <h5>{{ interestedMetric.lineage }}</h5>
+        {{ interestedMetric.chart_name }}<br>
+        Link to chart: <a href="{{ interestedMetric.url }}" target="_blank">Link</a><br>
+        Bugs:
+        <span *ngFor="let jira of interestedMetric.jira_ids">
+          <a href="'http://jira/browse/' + {{ jira }}" target="_blank">{{ jira }}</a>&nbsp;
+        </span><br>
+
+        <!--<summary-jira-info [bugInfoUrl]="'/common/bug_info'" [data]="interestedMetric.jira_list"-->
+                           <!--[allowDelete]="false" [allowContext]="false" [allowAdd]="false"></summary-jira-info>-->
+        Comments: <textarea [(ngModel)]="interestedMetric.comments" style="width: 100%"></textarea>
+      </div>
+      <table *ngIf="interestedMetric.leaf" class="table table-bordered" style="max-width: 50%; margin: 0">
+        <tr style="vertical-align: middle; border-bottom: solid black 1px">
+          <th>
+            Series name
+          </th>
+          <th>
+            Unit
+          </th>
+          <th>
+            Yesterday <br><span class="text-size-smaller">{{ interestedMetric.report[0].yesterdayDate }}</span>
+          </th>
+          <th>
+            Today <br><span class="text-size-smaller">{{ interestedMetric.report[0].todayDate }}</span>
+          </th>
+          <th>
+            Percentage change
+          </th>
+          <th>
+            Best Percentage change
+          </th>
+          <th>
+            History
+          </th>
+        </tr>
+        <ng-container *ngFor="let dataSet of interestedMetric.report">
+          <tr>
+            <td>
+              {{ dataSet.name }}
+            </td>
+            <td>
+              {{ dataSet.unit }}
+            </td>
+            <td>
+              {{ dataSet.yesterday }}
+            </td>
+            <td>
+              {{ dataSet.today }}
+            </td>
+            <td *ngIf="dataSet.percentage && interestedMetric.positive"
+                [ngClass]="{'text-color-red': dataSet.percentage.includes('-'), 'text-color-green': dataSet.percentage.includes('+')}">
+              {{ dataSet.percentage }}
+            </td>
+            <td *ngIf="dataSet.percentage && !interestedMetric.positive"
+                [ngClass]="{'text-color-green': dataSet.percentage.includes('-'), 'text-color-red': dataSet.percentage.includes('+')}">
+              {{ dataSet.percentage }}
+            </td>
+            <td *ngIf="dataSet.percentage && interestedMetric.positive"
+                [ngClass]="{'text-color-red': dataSet.percentage.includes('-'), 'text-color-green': dataSet.percentage.includes('+')}">
+              {{ dataSet.percentage }}
+            </td>
+            <td *ngIf="dataSet.percentage && !interestedMetric.positive"
+                [ngClass]="{'text-color-green': dataSet.percentage.includes('-'), 'text-color-red': dataSet.percentage.includes('+')}">
+              {{ dataSet.percentage }}
+            </td>
+            <td>
+              <span *ngIf="!dataSet.show_history" class="pseudo-anchor"
+                    (click)="dataSet.show_history = true">Show</span>
+              <span *ngIf="dataSet.show_history" class="pseudo-anchor"
+                    (click)="dataSet.show_history = false">Hide</span>
+            </td>
+          </tr>
+          <ng-container *ngIf="dataSet.show_history">
+            <tr>
+              <th style="padding: 0; text-align: center">
+                Date
+              </th>
+              <th style="padding: 0; text-align: center">
+                Value
+              </th>
+            </tr>
+            <tr *ngFor="let data of dataSet['history']; let i = index">
+              <td style="padding: 0; text-align: center">{{ data.date }}</td>
+              <td style="padding: 0; text-align: center">{{ data.value }}
+                <span *ngIf="dataSet.percentage_history && interestedMetric.positive && i == 0"
+                      [ngClass]="{'text-color-red': dataSet.percentage_history.includes('-'), 'text-color-green': dataSet.percentage_history.includes('+')}"><br>{{ dataSet.percentage_history }}</span>
+                <span *ngIf="dataSet.percentage_history && !interestedMetric.positive && i == 0"
+                      [ngClass]="{'text-color-green': dataSet.percentage_history.includes('-'), 'text-color-red': dataSet.percentage_history.includes('+')}"><br>{{ dataSet.percentage_history }}</span>
+              </td>
+            </tr>
+          </ng-container>
+        </ng-container>
+      </table>
+      <br>
     </div>
-    <table *ngIf="interestedMetric.leaf" class="table table-bordered" style="max-width: 50%; margin: 0">
-      <tr style="vertical-align: middle; border-bottom: solid black 1px">
-        <th rowspan="2">
-          Series name
-        </th>
-        <th rowspan="2">
-          Unit
-        </th>
-        <th rowspan="2">
-          Yesterday <br><span class="text-size-smaller">{{ interestedMetric.report[0].yesterdayDate }}</span>
-        </th>
-        <th rowspan="2">
-          Today <br><span class="text-size-smaller">{{ interestedMetric.report[0].todayDate }}</span>
-        </th>
-        <th rowspan="2">
-          Percentage change
-        </th>
-        <th colspan="2">
-          History
-        </th>
-      </tr>
-      <tr style="vertical-align: middle">
-        <th>Date</th>
-        <th>Value</th>
-      </tr>
-      <ng-container *ngFor="let dataSet of interestedMetric.report">
-        <tr>
-          <td [attr.rowspan]="dataSet['rows']">
-            {{ dataSet.name }}
-          </td>
-          <td [attr.rowspan]="dataSet['rows']">
-            {{ dataSet.unit }}
-          </td>
-          <td [attr.rowspan]="dataSet['rows']">
-            {{ dataSet.yesterday }}
-          </td>
-          <td [attr.rowspan]="dataSet['rows']">
-            {{ dataSet.today }}
-          </td>
-          <td *ngIf="dataSet.percentage && interestedMetric.positive" [attr.rowspan]="dataSet['rows']"
-              [ngClass]="{'text-color-red': dataSet.percentage.includes('-'), 'text-color-green': dataSet.percentage.includes('+')}">
-            {{ dataSet.percentage }}
-          </td>
-          <td *ngIf="dataSet.percentage && !interestedMetric.positive" [attr.rowspan]="dataSet['rows']"
-              [ngClass]="{'text-color-green': dataSet.percentage.includes('-'), 'text-color-red': dataSet.percentage.includes('+')}">
-            {{ dataSet.percentage }}
-          </td>
-        </tr>
-        <tr *ngFor="let data of dataSet['history']; let i = index">
-          <td>{{ data.date }}</td>
-          <td>{{ data.value }}
-            <span *ngIf="dataSet.percentage_history && interestedMetric.positive && i == 0"
-                  [ngClass]="{'text-color-red': dataSet.percentage_history.includes('-'), 'text-color-green': dataSet.percentage_history.includes('+')}"><br>{{ dataSet.percentage_history }}</span>
-            <span *ngIf="dataSet.percentage_history && !interestedMetric.positive && i == 0"
-                  [ngClass]="{'text-color-green': dataSet.percentage_history.includes('-'), 'text-color-red': dataSet.percentage_history.includes('+')}"><br>{{ dataSet.percentage_history }}</span>
-          </td>
-        </tr>
-      </ng-container>
-    </table>
-    <br>
-  </div>
   </ng-container>
   <span>
         <span class="fun-cancel-link" (click)="reportGenerated.emit(false)">Cancel</span>

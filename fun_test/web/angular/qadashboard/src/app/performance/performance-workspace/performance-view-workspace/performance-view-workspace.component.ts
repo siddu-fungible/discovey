@@ -137,7 +137,10 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
       temp["yesterday"] = null;
       temp["unit"] = null;
       temp["percentage"] = null;
+      temp["percentage_history"] = null;
+      temp["best_percentage"] = null;
       temp["history"] = [];
+      temp["show_history"] = false;
       metric["data"].push(temp);
     }
   }
@@ -173,6 +176,15 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
           percentage = "+" + percentNum.toFixed(2) + "%";
         }
       }
+      //  if (dataSet["today"] && dataSet["yesterday"]) {
+      //   let today = Number(dataSet["today"]);
+      //   let yesterday = Number(dataSet["yesterday"]);
+      //   let percentNum = (((today - yesterday) / yesterday) * 100);
+      //   percentage = percentNum.toFixed(2) + "%";
+      //   if (percentNum >= 0) {
+      //     percentage = "+" + percentNum.toFixed(2) + "%";
+      //   }
+      // }
       dataSet["percentage"] = percentage;
     }
   }

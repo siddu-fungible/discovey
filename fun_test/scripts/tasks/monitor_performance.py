@@ -44,27 +44,30 @@ class EmailPerformanceDrop(PerformanceTc):
 
     def run(self):
         status = fun_test.PASSED
-        for workspace in self.workspaces:
-            # email = ml._get_email_address(workspace_id=workspace["id"])
-            email_list = []
-            email_list.append(self.regression_email)
-            email_list.extend(workspace["extra_email"])
-            reports = ml._generate_report(workspace_id=workspace["id"])
-            if len(reports):
-                print reports
-                status = fun_test.FAILED
-                date_time = time.strftime("%m/%d/%Y %H:%M")
-                subject = "Performance drop report - " + date_time
-                try:
-                    data = ml._send_email(email=email_list, subject=subject, reports=reports,
-                                          report_name="performance_drop_report.html")
-                    if not data["status"]:
-                        raise Exception("sending email failed to - {}".format(email_list))
-                    else:
-                        print "sent email successfully to - {}".format(email_list)
-                except Exception as ex:
+        workspaces = PerformanceUserWorkspaces.objects.all()
+        for workspace in workspaces:
+            if workspace.subscribe_to_alerts:
+                # email = ml._get_email_address(workspace_id=workspace["id"])
+                email_list = []
+                email_list.append(self.regression_email)
+                extra_email = workspace.alert_emails.trim().split(",")
+                email_list.extend(extra_email)
+                reports = ml._generate_report(workspace_id=workspace.id)
+                if len(reports):
+                    print reports
                     status = fun_test.FAILED
-                    fun_test.critical(str(ex))
+                    date_time = time.strftime("%m/%d/%Y %H:%M")
+                    subject = "Performance drop report - " + date_time
+                    try:
+                        data = ml._send_email(email=email_list, subject=subject, reports=reports,
+                                              report_name="performance_drop_report.html")
+                        if not data["status"]:
+                            raise Exception("sending email failed to - {}".format(email_list))
+                        else:
+                            print "sent email successfully to - {}".format(email_list)
+                    except Exception as ex:
+                        status = fun_test.FAILED
+                        fun_test.critical(str(ex))
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=status, message="No degraded metrics")
 
 
