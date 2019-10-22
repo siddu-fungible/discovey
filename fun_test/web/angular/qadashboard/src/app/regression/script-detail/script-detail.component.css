@@ -12,6 +12,10 @@
   background-color: #c4e3f3;
 }
 
+.selected-checkpont-row {
+  rgba(255, 248, 186, 0.58);
+}
+
 .timestamp {
   background-color: rgba(220, 220, 220, 0.64);
 }
