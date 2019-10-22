@@ -133,12 +133,14 @@ export class PerformanceShowReportWorkspaceComponent implements OnInit {
       switchMap(response => {
         return this.fetchData(metric, dateTime, 1);
       }), catchError(error => {
+        this.loggerService.error("fetching todays data failed " + error);
         throw error;
       }),
       switchMap(response => {
         dateTime.setDate(dateTime.getDate() - 1);
         return this.fetchData(metric, dateTime, 0);
       }), catchError(error => {
+        this.loggerService.error("fetching yesterdays data failed " + error);
         throw error;
       }),
       switchMap(response => {
@@ -146,6 +148,7 @@ export class PerformanceShowReportWorkspaceComponent implements OnInit {
         metric["report"] = metric["data"];
         return of(true);
       }), catchError(error => {
+        this.loggerService.error("calculating percentage failed " + error);
         throw error;
       }));
   }
