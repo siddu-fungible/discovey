@@ -317,10 +317,10 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             # fun_test.test_assert(self.volume_name in lsblk_output, "{} device available".format(self.volume_name))
             # fun_test.test_assert_expected(expected="disk", actual=lsblk_output[self.volume_name]["type"],
             #                               message="{} device type check".format(self.volume_name))
-            fetch_nvme_device = storage_helper.fetch_nvme_device(end_host=self.end_host,
+            fetch_nvme_block_device = storage_helper.fetch_nvme_device(end_host=self.end_host,
                                                                  nsid=self.stripe_details["ns_id"])
-            fun_test.test_assert(fetch_nvme_device['status'], message="Check: nvme device visible on end host")
-            self.nvme_block_device = fetch_nvme_device["nvme_device"]
+            fun_test.test_assert(fetch_nvme_block_device['status'], message="Check: nvme device visible on end host")
+            self.nvme_block_device = fetch_nvme_block_device["nvme_device"]
             fun_test.shared_variables['nvme_block_device'] = self.nvme_block_device
 
             # Writing 20GB data on volume (one time task)
@@ -341,7 +341,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
         test_method = testcase[3:]
 
         if hasattr(self, "create_file_system") and self.create_file_system:
-            self.end_host.sudo_command("mkfs.xfs -f /dev/nvme0n1")
+            self.end_host.sudo_command("mkfs.xfs -f {}".format(self.nvme_block_device))
             self.end_host.sudo_command("mount {} /mnt".format(self.nvme_block_device))
 
         if hasattr(self, "create_file_system") and self.create_file_system:
