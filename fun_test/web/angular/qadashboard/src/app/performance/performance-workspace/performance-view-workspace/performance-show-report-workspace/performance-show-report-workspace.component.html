@@ -18,72 +18,46 @@
         </div>
         <table *ngIf="interestedMetric.leaf" class="table table-bordered" style="max-width: 50%; margin: 0">
           <tr style="vertical-align: middle; border-bottom: solid black 1px">
-            <th rowspan="2">
-              Series name
-            </th>
-            <th rowspan="2">
-              Unit
-            </th>
+            <th rowspan="2">Series name</th>
+            <th rowspan="2">Unit</th>
             <th rowspan="2">
               Yesterday <br><span class="text-size-smaller">{{ interestedMetric.report[0].yesterdayDate }}</span>
             </th>
             <th rowspan="2">
               Today <br><span class="text-size-smaller">{{ interestedMetric.report[0].todayDate }}</span>
             </th>
-            <th colspan="2">
-              % change
-            </th>
+            <th colspan="2">% change</th>
           </tr>
           <tr>
-            <th>
-              from last value
-            </th>
-            <th>
-              from best value
-            </th>
+            <th>from last value</th>
+            <th>from best value</th>
           </tr>
           <ng-container *ngFor="let dataSet of interestedMetric.report">
             <tr>
-              <td>
-                {{ dataSet.name }}
-              </td>
-              <td>
-                {{ dataSet.unit }}
-              </td>
+              <td>{{ dataSet.name }}</td>
+              <td>{{ dataSet.unit }}</td>
               <td>
                 {{ dataSet.yesterday }} <span *ngIf="!dataSet.show_history" class="pseudo-anchor small-text"
-                    (click)="dataSet.show_history = true">..show history</span>
+                                              (click)="dataSet.show_history = true">..show history</span>
                 <span *ngIf="dataSet.show_history" class="pseudo-anchor small-text"
                       (click)="dataSet.show_history = false">..hide history</span>
               </td>
-              <td>
-                {{ dataSet.today }}
-              </td>
-              <td *ngIf="dataSet.percentage && interestedMetric.positive"
-                  [ngClass]="{'text-color-red': dataSet.percentage.includes('-'), 'text-color-green': dataSet.percentage.includes('+')}">
+              <td>{{ dataSet.today }}</td>
+              <td *ngIf="dataSet.percentage"
+                  [ngClass]="{'text-color-red': (dataSet.percentage.includes('-') && interestedMetric.positive) || (dataSet.percentage.includes('+') && !interestedMetric.positive),
+                  'text-color-green': (dataSet.percentage.includes('+') && interestedMetric.positive) || (dataSet.percentage.includes('-') && !interestedMetric.positive)}">
                 {{ dataSet.percentage }}
               </td>
-              <td *ngIf="dataSet.percentage && !interestedMetric.positive"
-                  [ngClass]="{'text-color-green': dataSet.percentage.includes('-'), 'text-color-red': dataSet.percentage.includes('+')}">
-                {{ dataSet.percentage }}
-              </td>
-              <td *ngIf="dataSet.percentage && interestedMetric.positive"
-                  [ngClass]="{'text-color-red': dataSet.percentage.includes('-'), 'text-color-green': dataSet.percentage.includes('+')}">
-                {{ dataSet.percentage }}
-              </td>
-              <td *ngIf="dataSet.percentage && !interestedMetric.positive"
-                  [ngClass]="{'text-color-green': dataSet.percentage.includes('-'), 'text-color-red': dataSet.percentage.includes('+')}">
+              <td *ngIf="dataSet.percentage"
+                  [ngClass]="{'text-color-red': (dataSet.percentage.includes('-') && interestedMetric.positive) || (dataSet.percentage.includes('+') && !interestedMetric.positive),
+                  'text-color-green': (dataSet.percentage.includes('+') && interestedMetric.positive) || (dataSet.percentage.includes('-') && !interestedMetric.positive)}">
                 {{ dataSet.percentage }}
               </td>
             </tr>
             <ng-container *ngIf="dataSet.show_history">
               <tr>
-                <th style="padding: 0; text-align: center">
-                  Date
-                </th>
-                <th style="padding: 0; text-align: center">
-                  Value
-                </th>
+                <th style="padding: 0; text-align: center">Date</th>
+                <th style="padding: 0; text-align: center">Value</th>
               </tr>
               <tr *ngFor="let data of dataSet['history']; let i = index">
                 <td style="padding: 0; text-align: center">{{ data.date }}</td>

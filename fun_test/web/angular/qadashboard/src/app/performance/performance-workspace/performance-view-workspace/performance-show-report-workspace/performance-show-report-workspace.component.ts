@@ -1,5 +1,5 @@
 import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
-import {switchMap} from "rxjs/operators";
+import {catchError, switchMap} from "rxjs/operators";
 import {forkJoin, Observable, of} from "rxjs";
 import {ApiService} from "../../../../services/api/api.service";
 import {LoggerService} from "../../../../services/logger/logger.service";
@@ -25,6 +25,8 @@ export class PerformanceShowReportWorkspaceComponent implements OnInit {
   status: string = null;
   atomicUrl: string = "http://integration.fungible.local/performance/atomic";
   TIMEZONE: string = "America/Los_Angeles";
+  historicalDataLength: number = 4;
+  HISTORY: number = 10;
 
   constructor(private apiService: ApiService, private loggerService: LoggerService, private commonService: CommonService,
               private performanceService: PerformanceService) {
@@ -91,7 +93,7 @@ export class PerformanceShowReportWorkspaceComponent implements OnInit {
     }));
   }
 
-    fetchReports(): any {
+  fetchReports(): any {
     const resultObservables = [];
     this.flattenedInterestedMetrics.forEach(metric => {
       if (!metric["report"] && metric["leaf"]) {
@@ -105,7 +107,7 @@ export class PerformanceShowReportWorkspaceComponent implements OnInit {
     }
   }
 
-    setData(metric): void {
+  setData(metric): void {
     metric["data"] = [];
     let dataSets = metric["data_sets"];
     for (let dataSet of dataSets) {
@@ -123,22 +125,28 @@ export class PerformanceShowReportWorkspaceComponent implements OnInit {
     }
   }
 
-   fetchTodayAndYesterdayData(metric): any {
+  fetchTodayAndYesterdayData(metric): any {
     this.setData(metric);
     let self = this;
     let dateTime = this.commonService.convertToTimezone(new Date(), this.TIMEZONE);
     return of(true).pipe(
       switchMap(response => {
-        return this.fetchData(metric, dateTime, "today");
+        return this.fetchData(metric, dateTime, 1);
+      }), catchError(error => {
+        throw error;
       }),
       switchMap(response => {
         dateTime.setDate(dateTime.getDate() - 1);
-        return this.fetchData(metric, dateTime, "yesterday");
+        return this.fetchData(metric, dateTime, 0);
+      }), catchError(error => {
+        throw error;
       }),
       switchMap(response => {
         this.calculatePercentage(metric["data"]);
         metric["report"] = metric["data"];
         return of(true);
+      }), catchError(error => {
+        throw error;
       }));
   }
 
@@ -158,11 +166,17 @@ export class PerformanceShowReportWorkspaceComponent implements OnInit {
     }
   }
 
-  fetchData(metric, dateTime, key): any {
+  fetchData(metric, dateTime, today): any {
     let times = this.commonService.getEpochBounds(dateTime);
     let fromEpoch = times[0];
     let toEpoch = times[1];
     let self = this;
+    let key = "";
+    if (today) {
+      key = "today";
+    } else {
+      key = "yesterday";
+    }
     return this.apiService.get("/api/v1/performance/metrics_data?metric_id=" + metric["metric_id"] + "&from_epoch_ms=" + fromEpoch + "&to_epoch_ms=" + toEpoch).pipe(switchMap(response => {
       let data = response.data;
       for (let oneData of data) {
@@ -193,7 +207,7 @@ export class PerformanceShowReportWorkspaceComponent implements OnInit {
   }
 
   fetchHistoricalData(metric): any {
-    return this.apiService.get("/api/v1/performance/metrics_data?metric_id=" + metric["metric_id"] + "&order_by=-input_date_time&count=10").pipe(switchMap(response => {
+    return this.apiService.get("/api/v1/performance/metrics_data?metric_id=" + metric["metric_id"] + "&order_by=-input_date_time&count=" + this.HISTORY).pipe(switchMap(response => {
       let data = response.data;
       for (let dataSet of metric["data"]) {
         dataSet["history"] = [];
@@ -207,7 +221,7 @@ export class PerformanceShowReportWorkspaceComponent implements OnInit {
               hData["value"] = oneData["value"];
               dataSet["history"].push(hData);
             }
-            if (dataSet["history"].length > 4) {
+            if (dataSet["history"].length > this.historicalDataLength) {
               break;
             }
           }

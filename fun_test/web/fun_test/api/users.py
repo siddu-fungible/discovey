@@ -43,18 +43,10 @@ def workspaces(request):
         request_json = json.loads(request.body)
         email = request_json["email"]
         workspace_name = request_json["name"]
-        if "description" in request_json:
-            description = request_json["description"]
-        else:
-            description = ""
-        if "subscribe_to_alerts" in request_json:
-            subscribe = request_json["subscribe_to_alerts"]
-        else:
-            subscribe = False
-        if "alert_emails" in request_json:
-            alert_emails = request_json["alert_emails"]
-        else:
-            alert_emails = False
+
+        description = request_json.get("description", "")
+        subscribe = request_json.get("subscribe_to_alerts", False)
+        alert_emails = request_json.get("alert_emails", False)
         try:
             q = Q(email=email, workspace_name=workspace_name)
             entry = PerformanceUserWorkspaces.objects.get(q)

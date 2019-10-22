@@ -55,7 +55,7 @@ class EmailPerformanceDrop(PerformanceTc):
                 email_list.extend(extra_email)
                 reports = ml._generate_report(workspace_id=workspace.id)
                 if len(reports):
-                    print reports
+                    # print reports
                     status = fun_test.FAILED
                     date_time = time.strftime("%m/%d/%Y %H:%M")
                     subject = "Performance drop report - " + date_time

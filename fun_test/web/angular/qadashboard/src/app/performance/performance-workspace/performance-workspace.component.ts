@@ -25,7 +25,7 @@ export class PerformanceWorkspaceComponent implements OnInit {
   gridLength: number = 0;
   createError: string = null;
   currentWorkspace: any = null;
-  deletingWorkspace: any = null;
+  workspaceToBeDeleted: any = null;
   selectMode: any = SelectMode.ShowEditWorkspace;
 
   workspaceName: string = null;
@@ -101,7 +101,7 @@ export class PerformanceWorkspaceComponent implements OnInit {
   }
 
   openDeleteWorkspace(content, workspace) {
-    this.deletingWorkspace = workspace;
+    this.workspaceToBeDeleted = workspace;
     this.modalService.open(content, {ariaLabelledBy: 'modal-delete-workspace'}).result.then((result) => {
       // this.closeResult = `Closed with: ${result}`;
     }, (reason) => {
