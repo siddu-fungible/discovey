@@ -23,11 +23,11 @@ def run_tcpkali(arg1, host_index, **kwargs):
     arg1.disconnect()
 
 def add_to_data_base(value_dict):
-    unit_dict = {"num_hosts": PerfUnit.UNIT_NUMBER, "message_rate": PerfUnit.UNIT_NUMBER,
-                 "no_of_connection": PerfUnit.UNIT_NUMBER, "aggbw_in_mbps": PerfUnit.UNIT_MBYTES_PER_SEC}
+    unit_dict = {"input_num_hosts": PerfUnit.UNIT_NUMBER, "input_msg_rate": PerfUnit.UNIT_NUMBER,
+                 "input_num_connection": PerfUnit.UNIT_NUMBER, "output_aggregate_bandwidth": PerfUnit.UNIT_MBYTES_PER_SEC}
     # unit_dict_helper = ["num_hosts", "message_rate", "no_of_connection", "aggbw_in_mbps", "rds_job_name"]
 
-    model_name = "RDSClientAB"
+    model_name = "RdsClientPerformance"
     status = fun_test.PASSED
     try:
         generic_helper = ModelHelper(model_name=model_name)
@@ -631,11 +631,10 @@ class ECVolumeLevelTestcase(FunTestCase):
                         "platform": FunPlatform.F1,
                         "version": fun_test.get_version(),
                         "num_f1s": self.num_f1s,
-                        "num_hosts": len(self.host_info),
-                        "message_rate": each_m,
-                        "no_of_connection": each_c,
-                        "aggbw_in_mbps": aggregate_bw,
-                        "rds_job_name": "RDS_client_test_for_{}_hosts_{}_messagerate_{}_noofconn_aggbw".format(len(self.host_info), each_m, each_c)
+                        "input_num_hosts": len(self.host_info),
+                        "input_msg_rate": each_m,
+                        "input_num_connection": each_c,
+                        "output_aggregate_bandwidth": aggregate_bw
                         }
                     if self.post_results:
                         fun_test.log("Posting results on dashboard")
