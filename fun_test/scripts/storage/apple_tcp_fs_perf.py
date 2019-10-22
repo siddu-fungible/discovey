@@ -290,7 +290,7 @@ class StripedVolumePerformanceTestcase(FunTestCase):
         try:
             if hasattr(self, "reboot_host") and self.reboot_host:
                 for end_host in self.end_host_list:
-                    end_host.reboot(max_wait_time=500)
+                    end_host.reboot(max_wait_time=400)
         except:
             fun_test.log("Failure during reboot of host")
 
