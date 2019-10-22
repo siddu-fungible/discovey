@@ -11,6 +11,7 @@
         <div class="fun-panel-header">
           <span>Select contexts to display</span>
         </div>
+        <fun-spinner [status]="status"></fun-spinner>
         <div class="fun-panel-body">
           <ng-container *ngFor="let availableContext of availableContexts">
             <div>
@@ -66,7 +67,7 @@
               <td class="fun-table-header">Expected</td>
               <td class="fun-table-header">Actual</td>
             </tr>
-            <tr *ngFor="let checkpoint of this.timeSeriesByTestCase[currentTestCaseExecution.test_case_id]?.checkpoints" [ngClass]="{'selected-row': currentCheckpointIndex === checkpoint.index }">
+            <tr *ngFor="let checkpoint of this.timeSeriesByTestCase[currentTestCaseExecution.test_case_id]?.checkpoints" [ngClass]="{'selected-checkpoint-row': currentCheckpointIndex === checkpoint.index }">
               <td><span class="pseudo-anchor" (click)="onCheckpointClick(currentTestCaseExecution.test_case_id, checkpoint.index, checkpoint.context_id)">{{ checkpoint.index }}</span></td>
               <td>{{ checkpoint.context_id }}</td>
               <td>{{ checkpoint.checkpoint }}</td>
