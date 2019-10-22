@@ -51,18 +51,12 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
 
     num_f1 = len(ec_info["storage_controller_list"])
 
-    # If hosting_f1_list is not provided then the first volume will be host in first F1, second volume in second F1 and so on
+    # If hosting_f1_list is not provided then the first volume will be host in first F1, second volume in second F1 and
+    # so on
     if "hosting_f1_list" not in ec_info:
         ec_info["hosting_f1_list"] = [0] * ec_info["num_volumes"]
-        i = 0
-        while i < ec_info["num_volumes"]:
-            j = 0
-            while j < num_f1:
-                if j >= ec_info["num_volumes"]:
-                    break
-                ec_info["hosting_f1_list"][i] = j
-                i += 1
-                j += 1
+        for i in range(ec_info["num_volumes"]):
+            ec_info["hosting_f1_list"][i] = i % num_f1
 
     # Check whether the spread list is given for all the volumes, else copy the one and only available spread to
     # all the volumes
@@ -126,8 +120,8 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
     ec_info["attach_ctlr"] = {}
     ec_info["rds_nsid"] = {}
 
-    # Running counter which can be used whenever an nsid and nqn is needed in the config
-    ns_id = 0
+    # Maintaining separate ns_id for each F1
+    f1_ns_id = [0] * num_f1
     nqn = 0
     for num in xrange(ec_info["num_volumes"]):
         ec_info["uuids"][num] = {}
@@ -253,7 +247,8 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
                                      format(num, i, vtype, ec_info["volume_types"][vtype],
                                             ec_info["volume_capacity"][num][vtype], sc_index))
                 if sc_index != cur_vol_host_f1:
-                    ns_id += 1
+                    f1_ns_id[sc_index] += 1
+                    ns_id = f1_ns_id[sc_index]
                     ec_info["rds_nsid"][num][ns_id] = ec_info["f1_ips"][sc_index]
                     remote_ip = ec_info["f1_ips"][cur_vol_host_f1]
                     transport = "RDS"
@@ -357,7 +352,8 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
             ec_info["attach_size"][num] = ec_info["volume_capacity"][num]["lsv"]
 
         # Attaching the EC/LSV
-        ns_id += 1
+        f1_ns_id[cur_vol_host_f1] += 1
+        ns_id = f1_ns_id[cur_vol_host_f1]
         ec_info["attach_nsid"][num] = ns_id
         command_result = hosting_sc.attach_volume_to_controller(ctrlr_uuid=ec_info["attach_ctlr"][num],
                                                                 ns_id=ns_id, vol_uuid=ec_info["attach_uuid"][num],
@@ -369,6 +365,7 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
                              format(num, ec_info["attach_size"][num], cur_vol_host_f1))
 
     return (result, ec_info)
+
 
 class FunCpDockerContainer(Linux):
     CUSTOM_PROMPT_TERMINATOR = r'# '
