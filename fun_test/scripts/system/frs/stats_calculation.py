@@ -18,7 +18,10 @@ def dict_difference(one_data_set, cmd):
         diff_dict = dict_difference_level_2(dict_1, dict_2, time_difference)
         result = dict_level_1_div(diff_dict, peek_value)
     elif cmd == "hbm":
-        diff_dict = dict_difference_level_2(dict_1, dict_2, time_difference)
+        # diff_dict = dict_difference_level_2(dict_1, dict_2, time_difference)
+        pass
+    elif cmd == "cdu":
+        result = dict_difference_level_2(dict_1, dict_2, time_difference)
 
     return result
 
