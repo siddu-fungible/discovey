@@ -205,8 +205,8 @@ class FunTestCase1(FunTestCase):
 
     def run(self):
         ############## Before traffic #####################
-        self.initial_debug_memory_stats = self.get_debug_memory_stats_initially(self.f_debug_memory_f1_0,
-                                                                                self.f_debug_memory_f1_1)
+        # self.initial_debug_memory_stats = self.get_debug_memory_stats_initially(self.f_debug_memory_f1_0,
+        #                                                                         self.f_debug_memory_f1_1)
         self.capture_data(count=3, heading="Before starting traffic")
 
         fun_test.test_assert(True, "Initial debug stats is saved")
@@ -358,7 +358,7 @@ class FunTestCase1(FunTestCase):
             one_dataset["time2"] = datetime.datetime.now()
             one_dataset["output2"] = dpcsh_output
             file_helper.add_data(file_eqm, one_dataset, heading=heading)
-            difference_dict = stats_calculation.dict_difference(one_dataset)
+            difference_dict = stats_calculation.dict_difference(one_dataset, "eqm")
             one_dataset["time"] = datetime.datetime.now()
             one_dataset["output"] = difference_dict
             file_helper.add_data(file_eqm_dif, one_dataset, heading=heading)
@@ -377,8 +377,20 @@ class FunTestCase1(FunTestCase):
             dpcsh_output = dpcsh_commands.le(come_handle=come_handle, f1=f1)
             one_dataset["time"] = datetime.datetime.now()
             one_dataset["output"] = dpcsh_output
+            one_dataset["time1"] = datetime.datetime.now()
+            one_dataset["output1"] = dpcsh_output
             file_helper.add_data(file_le, one_dataset, heading=heading)
-            div_by_peek_value = stats_calculation.cal_le_stat(dpcsh_output)
+
+            fun_test.sleep("Before capturing next set of data", seconds=5)
+
+            dpcsh_output = dpcsh_commands.le(come_handle=come_handle, f1=f1)
+            one_dataset["time"] = datetime.datetime.now()
+            one_dataset["output"] = dpcsh_output
+            one_dataset["time2"] = datetime.datetime.now()
+            one_dataset["output2"] = dpcsh_output
+            file_helper.add_data(file_le, one_dataset, heading=heading)
+
+            div_by_peek_value = stats_calculation.dict_difference(one_dataset, "le")
             one_dataset["time"] = datetime.datetime.now()
             one_dataset["output"] = div_by_peek_value
             file_helper.add_data(file_le_dif, one_dataset, heading=heading)
@@ -455,73 +467,73 @@ class FunTestCase1(FunTestCase):
     ####### Data Capturing function ############
 
     def capture_data(self, count, heading):
-        # power stats
-        thread_id_power = fun_test.execute_thread_after(func=self.power_output_to_file,
-                                                        time_in_seconds=1,
-                                                        count=count,
-                                                        f_power_shell=self.f_power_shell,
-                                                        f_power_output=self.f_power_output,
-                                                        heading=heading)
-
-        # Debug memory F1_0
-
-        fun_test.test_assert(True, "Started capturing the power logs {}".format(heading))
-        thread_id_debug_memory_f1_0 = fun_test.execute_thread_after(func=self.dpcsh_debug_memory,
-                                                                    time_in_seconds=2,
-                                                                    f1=0,
-                                                                    file_handler=self.f_debug_memory_f1_0,
-                                                                    file_difference=self.f_debug_memory_difference_f1_0,
-                                                                    count=count,
-                                                                    heading=heading)
-
-        fun_test.test_assert(True, "Started capturing the debug memory logs {} on F1_0".format(heading))
-        # Debug memory F1_1
-        thread_id_debug_memory_f1_1 = fun_test.execute_thread_after(func=self.dpcsh_debug_memory,
-                                                                    time_in_seconds=3,
-                                                                    f1=1,
-                                                                    file_handler=self.f_debug_memory_f1_1,
-                                                                    file_difference=self.f_debug_memory_difference_f1_1,
-                                                                    count=count,
-                                                                    heading=heading)
-        fun_test.test_assert(True, "Started capturing the debug memory logs {} on F1_1".format(heading))
-
-        # CDU stats
-        thread_id_cdu_f1_0 = fun_test.execute_thread_after(func=self.cdu_stats,
-                                                           time_in_seconds=4,
-                                                           count=count,
-                                                           f1=0,
-                                                           file_cdu=self.f_cdu_f1_0,
-                                                           heading=heading)
-        fun_test.test_assert(True, "Started capturing the peek stats/cdu logs {} on F1_0".format(heading))
-
-        thread_id_cdu_f1_1 = fun_test.execute_thread_after(func=self.cdu_stats,
-                                                           time_in_seconds=5,
-                                                           count=count,
-                                                           f1=1,
-                                                           file_cdu=self.f_cdu_f1_1,
-                                                           heading=heading)
-        fun_test.test_assert(True, "Started capturing the peek stats/cdu logs {} on F1_1".format(heading))
-
-        # EQM stats
-
-        thread_id_eqm_f1_0 = fun_test.execute_thread_after(func=self.eqm_stats,
-                                                           time_in_seconds=6,
-                                                           count=count,
-                                                           f1=0,
-                                                           file_eqm=self.f_eqm_f1_0,
-                                                           file_eqm_dif=self.f_eqm_dif_f1_0,
-                                                           heading=heading)
-        fun_test.test_assert(True, "Started capturing the peek stats/eqm logs {} on F1_0".format(heading))
-
-        thread_id_eqm_f1_1 = fun_test.execute_thread_after(func=self.eqm_stats,
-                                                           time_in_seconds=7,
-                                                           count=count,
-                                                           f1=1,
-                                                           file_eqm=self.f_eqm_f1_1,
-                                                           file_eqm_dif=self.f_eqm_dif_f1_1,
-                                                           heading=heading)
-        fun_test.test_assert(True, "Started capturing the peek stats/eqm logs {} on F1_1".format(heading))
-
+        # # power stats
+        # thread_id_power = fun_test.execute_thread_after(func=self.power_output_to_file,
+        #                                                 time_in_seconds=1,
+        #                                                 count=count,
+        #                                                 f_power_shell=self.f_power_shell,
+        #                                                 f_power_output=self.f_power_output,
+        #                                                 heading=heading)
+        #
+        # # Debug memory F1_0
+        #
+        # fun_test.test_assert(True, "Started capturing the power logs {}".format(heading))
+        # thread_id_debug_memory_f1_0 = fun_test.execute_thread_after(func=self.dpcsh_debug_memory,
+        #                                                             time_in_seconds=2,
+        #                                                             f1=0,
+        #                                                             file_handler=self.f_debug_memory_f1_0,
+        #                                                             file_difference=self.f_debug_memory_difference_f1_0,
+        #                                                             count=count,
+        #                                                             heading=heading)
+        #
+        # fun_test.test_assert(True, "Started capturing the debug memory logs {} on F1_0".format(heading))
+        # # Debug memory F1_1
+        # thread_id_debug_memory_f1_1 = fun_test.execute_thread_after(func=self.dpcsh_debug_memory,
+        #                                                             time_in_seconds=3,
+        #                                                             f1=1,
+        #                                                             file_handler=self.f_debug_memory_f1_1,
+        #                                                             file_difference=self.f_debug_memory_difference_f1_1,
+        #                                                             count=count,
+        #                                                             heading=heading)
+        # fun_test.test_assert(True, "Started capturing the debug memory logs {} on F1_1".format(heading))
+        #
+        # # CDU stats
+        # thread_id_cdu_f1_0 = fun_test.execute_thread_after(func=self.cdu_stats,
+        #                                                    time_in_seconds=4,
+        #                                                    count=count,
+        #                                                    f1=0,
+        #                                                    file_cdu=self.f_cdu_f1_0,
+        #                                                    heading=heading)
+        # fun_test.test_assert(True, "Started capturing the peek stats/cdu logs {} on F1_0".format(heading))
+        #
+        # thread_id_cdu_f1_1 = fun_test.execute_thread_after(func=self.cdu_stats,
+        #                                                    time_in_seconds=5,
+        #                                                    count=count,
+        #                                                    f1=1,
+        #                                                    file_cdu=self.f_cdu_f1_1,
+        #                                                    heading=heading)
+        # fun_test.test_assert(True, "Started capturing the peek stats/cdu logs {} on F1_1".format(heading))
+        #
+        # # EQM stats
+        #
+        # thread_id_eqm_f1_0 = fun_test.execute_thread_after(func=self.eqm_stats,
+        #                                                    time_in_seconds=6,
+        #                                                    count=count,
+        #                                                    f1=0,
+        #                                                    file_eqm=self.f_eqm_f1_0,
+        #                                                    file_eqm_dif=self.f_eqm_dif_f1_0,
+        #                                                    heading=heading)
+        # fun_test.test_assert(True, "Started capturing the peek stats/eqm logs {} on F1_0".format(heading))
+        #
+        # thread_id_eqm_f1_1 = fun_test.execute_thread_after(func=self.eqm_stats,
+        #                                                    time_in_seconds=7,
+        #                                                    count=count,
+        #                                                    f1=1,
+        #                                                    file_eqm=self.f_eqm_f1_1,
+        #                                                    file_eqm_dif=self.f_eqm_dif_f1_1,
+        #                                                    heading=heading)
+        # fun_test.test_assert(True, "Started capturing the peek stats/eqm logs {} on F1_1".format(heading))
+        #
         # LE firewall stats
 
         thread_id_le_f1_0 = fun_test.execute_thread_after(func=self.le_stats,
@@ -541,78 +553,78 @@ class FunTestCase1(FunTestCase):
                                                           file_le_dif=self.f_le_dif_f1_1,
                                                           heading=heading)
         fun_test.test_assert(True, "Started capturing the peek stats/le/counters logs {} on F1_1".format(heading))
-
-        # BM stats
-
-        thread_id_bam_f1_0 = fun_test.execute_thread_after(func=self.bam_stats,
-                                                           time_in_seconds=8,
-                                                           count=count,
-                                                           f1=0,
-                                                           file_bm=self.f_bam_f1_0,
-                                                           heading=heading)
-        fun_test.test_assert(True, "Started capturing the peek stats/bam logs {} on F1_0".format(heading))
-
-        thread_id_bam_f1_1 = fun_test.execute_thread_after(func=self.bam_stats,
-                                                           time_in_seconds=9,
-                                                           count=count,
-                                                           f1=1,
-                                                           file_bm=self.f_bam_f1_1,
-                                                           heading=heading)
-        fun_test.test_assert(True, "Started capturing the peek stats/bam logs {} on F1_1".format(heading))
-
-        # Debug vp_utils stats
-        thread_id_debug_vp_utils_f1_0 = fun_test.execute_thread_after(func=self.debug_vp_utils,
-                                                                      time_in_seconds=10,
-                                                                      count=count,
-                                                                      f1=0,
-                                                                      file_debug=self.f_debug_vp_utils_f1_0,
-                                                                      heading=heading)
-        fun_test.test_assert(True, "Started capturing the debug vp_utils logs {} on F1_0".format(heading))
-
-        thread_id_debug_vp_utils_f1_1 = fun_test.execute_thread_after(func=self.debug_vp_utils,
-                                                                      time_in_seconds=11,
-                                                                      count=count,
-                                                                      f1=1,
-                                                                      file_debug=self.f_debug_vp_utils_f1_1,
-                                                                      heading=heading)
-        fun_test.test_assert(True, "Started capturing the debug vp_utils logs {} on F1_1".format(heading))
-
-        # Die temperature
-
-        thread_id_die_temp = fun_test.execute_thread_after(func=self.die_temperature_func,
-                                                           time_in_seconds=12,
-                                                           count=count,
-                                                           f_die_temperature=self.f_die_temperature,
-                                                           heading=heading)
-
-        fun_test.join_thread(thread_id_power)
-        fun_test.join_thread(thread_id_debug_memory_f1_0)
-        fun_test.join_thread(thread_id_debug_memory_f1_1)
-        fun_test.join_thread(thread_id_cdu_f1_0)
-        fun_test.join_thread(thread_id_cdu_f1_1)
-        fun_test.join_thread(thread_id_eqm_f1_0)
-        fun_test.join_thread(thread_id_eqm_f1_1)
-        fun_test.join_thread(thread_id_bam_f1_0)
-        fun_test.join_thread(thread_id_bam_f1_1)
-        fun_test.join_thread(thread_id_debug_vp_utils_f1_0)
-        fun_test.join_thread(thread_id_debug_vp_utils_f1_1)
-        fun_test.join_thread(thread_id_die_temp)
+        #
+        # # BM stats
+        #
+        # thread_id_bam_f1_0 = fun_test.execute_thread_after(func=self.bam_stats,
+        #                                                    time_in_seconds=8,
+        #                                                    count=count,
+        #                                                    f1=0,
+        #                                                    file_bm=self.f_bam_f1_0,
+        #                                                    heading=heading)
+        # fun_test.test_assert(True, "Started capturing the peek stats/bam logs {} on F1_0".format(heading))
+        #
+        # thread_id_bam_f1_1 = fun_test.execute_thread_after(func=self.bam_stats,
+        #                                                    time_in_seconds=9,
+        #                                                    count=count,
+        #                                                    f1=1,
+        #                                                    file_bm=self.f_bam_f1_1,
+        #                                                    heading=heading)
+        # fun_test.test_assert(True, "Started capturing the peek stats/bam logs {} on F1_1".format(heading))
+        #
+        # # Debug vp_utils stats
+        # thread_id_debug_vp_utils_f1_0 = fun_test.execute_thread_after(func=self.debug_vp_utils,
+        #                                                               time_in_seconds=10,
+        #                                                               count=count,
+        #                                                               f1=0,
+        #                                                               file_debug=self.f_debug_vp_utils_f1_0,
+        #                                                               heading=heading)
+        # fun_test.test_assert(True, "Started capturing the debug vp_utils logs {} on F1_0".format(heading))
+        #
+        # thread_id_debug_vp_utils_f1_1 = fun_test.execute_thread_after(func=self.debug_vp_utils,
+        #                                                               time_in_seconds=11,
+        #                                                               count=count,
+        #                                                               f1=1,
+        #                                                               file_debug=self.f_debug_vp_utils_f1_1,
+        #                                                               heading=heading)
+        # fun_test.test_assert(True, "Started capturing the debug vp_utils logs {} on F1_1".format(heading))
+        #
+        # # Die temperature
+        #
+        # thread_id_die_temp = fun_test.execute_thread_after(func=self.die_temperature_func,
+        #                                                    time_in_seconds=12,
+        #                                                    count=count,
+        #                                                    f_die_temperature=self.f_die_temperature,
+        #                                                    heading=heading)
+        #
+        # fun_test.join_thread(thread_id_power)
+        # fun_test.join_thread(thread_id_debug_memory_f1_0)
+        # fun_test.join_thread(thread_id_debug_memory_f1_1)
+        # fun_test.join_thread(thread_id_cdu_f1_0)
+        # fun_test.join_thread(thread_id_cdu_f1_1)
+        # fun_test.join_thread(thread_id_eqm_f1_0)
+        # fun_test.join_thread(thread_id_eqm_f1_1)
+        # fun_test.join_thread(thread_id_bam_f1_0)
+        # fun_test.join_thread(thread_id_bam_f1_1)
+        # fun_test.join_thread(thread_id_debug_vp_utils_f1_0)
+        # fun_test.join_thread(thread_id_debug_vp_utils_f1_1)
+        # fun_test.join_thread(thread_id_die_temp)
         fun_test.join_thread(thread_id_le_f1_0)
         fun_test.join_thread(thread_id_le_f1_1)
-        fun_test.test_assert(True, "Power logs captured successfully")
-        fun_test.test_assert(True, "Debug memory on F1_0 logs captured successfully")
-        fun_test.test_assert(True, "Debug memory on F1_1 logs captured successfully")
-        fun_test.test_assert(True, "CDU logs on F1_0 captured successfully")
-        fun_test.test_assert(True, "CDU logs on F1_1 captured successfully")
-        fun_test.test_assert(True, "EQM logs on F1_0 captured successfully")
-        fun_test.test_assert(True, "EQM logs on F1_1 captured successfully")
-        fun_test.test_assert(True, "BAM logs on F1_0 captured successfully")
-        fun_test.test_assert(True, "BAM logs on F1_1 captured successfully")
-        fun_test.test_assert(True, "Debug vp_util logs on F1_0 captured successfully")
-        fun_test.test_assert(True, "Debug vp_util logs on F1_1 captured successfully")
-        fun_test.test_assert(True, "Die temperature captured successfully captured successfully")
-        fun_test.test_assert(True, "LE logs on F1_0 captured successfully")
-        fun_test.test_assert(True, "LE logs on F1_1 captured successfully")
+        # fun_test.test_assert(True, "Power logs captured successfully")
+        # fun_test.test_assert(True, "Debug memory on F1_0 logs captured successfully")
+        # fun_test.test_assert(True, "Debug memory on F1_1 logs captured successfully")
+        # fun_test.test_assert(True, "CDU logs on F1_0 captured successfully")
+        # fun_test.test_assert(True, "CDU logs on F1_1 captured successfully")
+        # fun_test.test_assert(True, "EQM logs on F1_0 captured successfully")
+        # fun_test.test_assert(True, "EQM logs on F1_1 captured successfully")
+        # fun_test.test_assert(True, "BAM logs on F1_0 captured successfully")
+        # fun_test.test_assert(True, "BAM logs on F1_1 captured successfully")
+        # fun_test.test_assert(True, "Debug vp_util logs on F1_0 captured successfully")
+        # fun_test.test_assert(True, "Debug vp_util logs on F1_1 captured successfully")
+        # fun_test.test_assert(True, "Die temperature captured successfully captured successfully")
+        # fun_test.test_assert(True, "LE logs on F1_0 captured successfully")
+        # fun_test.test_assert(True, "LE logs on F1_1 captured successfully")
 
     ##### EC vol creation
     def create_ec_volume(self, topology):
