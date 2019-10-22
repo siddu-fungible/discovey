@@ -19,7 +19,6 @@ from collections import OrderedDict
 
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 from datetime import datetime, timedelta
-from web.fun_test.site_state import *
 from web.fun_test.metrics_models import MetricChart, MileStoneMarkers, LastMetricId, PerformanceMetricsDag, \
     MetricsGlobalSettings
 from web.fun_test.models import InterestedMetrics, PerformanceUserWorkspaces

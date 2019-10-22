@@ -1,6 +1,7 @@
 from web.fun_test.django_interactive import *
 from lib.system.fun_test import *
-from web.fun_test.metrics_lib import *
+from web.fun_test.metrics_lib import MetricLib
+from web.fun_test.models import PerformanceUserWorkspaces
 
 ml = MetricLib()
 
@@ -50,7 +51,7 @@ class EmailPerformanceDrop(PerformanceTc):
                 # email = ml._get_email_address(workspace_id=workspace["id"])
                 email_list = []
                 email_list.append(self.regression_email)
-                extra_email = workspace.alert_emails.trim().split(",")
+                extra_email = str(workspace.alert_emails).strip().split(",")
                 email_list.extend(extra_email)
                 reports = ml._generate_report(workspace_id=workspace.id)
                 if len(reports):
