@@ -88,16 +88,6 @@ class BringupSetup(FunTestCase):
             fun_test.shared_variables["total_ssd"] = total_ssd
         else:
             fun_test.shared_variables["total_ssd"] = 1
-        if "wp_policy_debug" in job_inputs:
-            wp_policy_debug = job_inputs["wp_policy_debug"]
-            if wp_policy_debug:
-                f1_0_boot_args = f1_0_boot_args + " --wp-policy-debug"
-                f1_1_boot_args = f1_1_boot_args + " --wp-policy-debug"
-        if "collect_artifacts" in job_inputs:
-            collect_artifacts = job_inputs["collect_artifacts"]
-            fun_test.shared_variables["collect_artifacts"] = collect_artifacts
-        else:
-            fun_test.shared_variables["collect_artifacts"] = True
         if "skip_ctrlr_creation" in job_inputs:
             skip_ctrlr_creation = job_inputs["skip_ctrlr_creation"]
             fun_test.shared_variables["skip_ctrlr_creation"] = skip_ctrlr_creation
@@ -512,7 +502,6 @@ class RunFioRds(FunTestCase):
         f11_hosts = fun_test.shared_variables["f11_hosts"]
         come_obj = fun_test.shared_variables["come_obj"]
         total_ssd = fun_test.shared_variables["total_ssd"]
-        collect_artifacts = fun_test.shared_variables["collect_artifacts"]
         f10_storage_ctrl_obj = fun_test.shared_variables["f10_storage_ctrl_obj"]
         f11_storage_ctrl_obj = fun_test.shared_variables["f11_storage_ctrl_obj"]
         f10_stats_collector = CollectStats(f10_storage_ctrl_obj)
@@ -547,7 +536,7 @@ class RunFioRds(FunTestCase):
                     nvme_device_list.append(device["DevicePath"])
 
         print "***************************"
-        print "NVMe Devices found"
+        print " NVMe Devices found "
         print "***************************"
         print nvme_device_list
         
@@ -557,21 +546,26 @@ class RunFioRds(FunTestCase):
 
         fio_filename = str(':'.join(nvme_device_list))
 
+        if total_ssd != host_nvme_device_count:
+            if total_ssd == 1:
+                fio_filename = nvme_device_list[0]
+            else:
+                fio_filename = str(':'.join(nvme_device_list[:total_ssd]))
+
+        print "Running traffic on"
+        print fio_filename
+
         try:
-            if self.fio_cmd_args["numjobs"]:
-                fio_num_jobs = self.fio_cmd_args["numjobs"]
+            if self.precondition_args["numjobs"]:
+                precondition_fio_num_jobs = self.precondition_args["numjobs"]
         except:
-            fio_num_jobs = 4 * host_nvme_device_count
-        # Run write test on disk
+            precondition_fio_num_jobs = 1 * host_nvme_device_count
+        # # Run write test on disk
         # fio_result = f11_hosts[0]["handle"].pcie_fio(filename=fio_filename,
         #                                              rw="write",
-        #                                              bs=4096,
-        #                                              numjobs=fio_num_jobs,
-        #                                              iodepth=32,
-        #                                              direct=1,
-        #                                              size="100%",
-        #                                              cpus_allowed="8-15,24-31",
-        #                                              timeout=600)
+        #                                              numjobs=precondition_fio_num_jobs,
+        #                                              timeout=600,
+        #                                              **self.precondition_args)
         # fun_test.simple_assert(fio_result, message="Initial write test on all disks")
 
         test_type = "read"
@@ -579,101 +573,6 @@ class RunFioRds(FunTestCase):
         fio_job_name = "{}_ssd_{}_{}".format(host_nvme_device_count, test_type,
                                              self.fio_cmd_args["iodepth"] * host_nvme_device_count)
         total_iod = self.fio_cmd_args["iodepth"]
-
-        # if collect_artifacts:
-        #     f10_file_suffix = "f10_{}_ssd_{}.txt".format(host_nvme_device_count, total_iod)
-        #     f11_file_suffix = "f11_{}_ssd_{}.txt".format(host_nvme_device_count, total_iod)
-        #     # f10_stats_collect_details = self.stats_collect_details
-        #     # f11_stats_collect_details = self.stats_collect_details
-        #     f10_storage_ctrl_obj.verbose = False
-        #     f11_storage_ctrl_obj.verbose = False
-        #     f10_stats_obj = CollectStats(f10_storage_ctrl_obj)
-        #     f11_stats_obj = CollectStats(f11_storage_ctrl_obj)
-        #     f10_stats_obj.start(f10_file_suffix, self.stats_collect_details)
-        #     f11_stats_obj.start(f11_file_suffix, self.stats_collect_details)
-
-        # if collect_artifacts:
-        #     f10_stats_obj.stop(f10_stats_collect_details)
-        #     f11_stats_obj.stop(f11_stats_collect_details)
-        #     f10_storage_ctrl_obj.verbose = True
-        #     f11_storage_ctrl_obj.verbose = True
-        #
-        # for index, value in enumerate(f10_stats_collect_details):
-        #     for func, arg in value.iteritems():
-        #         filename = arg.get("output_file")
-        #         if filename:
-        #             fun_test.log("here")
-        #             if func == "vp_utils":
-        #                 fun_test.add_auxillary_file(description="F10 VP Utilization - IO depth {}".
-        #                                             format(total_iod), filename=filename)
-        #             if func == "per_vp":
-        #                 fun_test.add_auxillary_file(description="F10 Per VP Stats - IO depth {}".
-        #                                             format(total_iod), filename=filename)
-        #             if func == "resource_bam_args":
-        #                 fun_test.add_auxillary_file(description="F10 Resource bam stats - IO depth {}".
-        #                                             format(total_iod), filename=filename)
-        #             if func == "vppkts_stats":
-        #                 fun_test.add_auxillary_file(description="F10 VP Pkts Stats - IO depth {}".
-        #                                             format(total_iod), filename=filename)
-        #
-        # for index, value in enumerate(f11_stats_collect_details):
-        #     for func, arg in value.iteritems():
-        #         filename = arg.get("output_file")
-        #         if filename:
-        #             fun_test.log("here")
-        #             if func == "vp_utils":
-        #                 fun_test.add_auxillary_file(description="F11 VP Utilization - IO depth {}".
-        #                                             format(total_iod), filename=filename)
-        #             if func == "per_vp":
-        #                 fun_test.add_auxillary_file(description="F11 Per VP Stats - IO depth {}".
-        #                                             format(total_iod), filename=filename)
-        #             if func == "resource_bam_args":
-        #                 fun_test.add_auxillary_file(description="F11 Resource bam stats - IO depth {}".
-        #                                             format(total_iod), filename=filename)
-        #             if func == "vppkts_stats":
-        #                 fun_test.add_auxillary_file(description="F11 VP Pkts Stats - IO depth {}".
-        #                                             format(total_iod), filename=filename)
-
-        # Collect artifacts
-        if collect_artifacts:
-            count = (self.fio_cmd_args['runtime'] + self.artifact_params["poll_interval"]) / self.artifact_params["poll_interval"]
-            f10_vp_util_artifact_file = fun_test.get_test_case_artifact_file_name(
-                post_fix_name="{}_vputil_artifact_f10.txt".format(fio_job_name))
-            f10_bam_stats_artifact_file = fun_test.get_test_case_artifact_file_name(
-                post_fix_name="{}_bam_stats_artifact_f10.txt".format(fio_job_name))
-            f10_per_vp_stats_artifact_file = fun_test.get_test_case_artifact_file_name(
-                post_fix_name="{}_per_vp_stats_artifact_f10.txt".format(fio_job_name))
-            f10_thread_info = initiate_stats_collection(storage_controller=f10_storage_ctrl_obj,
-                                                        interval=self.artifact_params["poll_interval"],
-                                                        count=count,
-                                                        vp_util_artifact_file=f10_vp_util_artifact_file,
-                                                        bam_stats_artifact_file=f10_bam_stats_artifact_file,
-                                                        per_vp_artifact_file=f10_per_vp_stats_artifact_file)
-            f10_active_threads = [f10_thread_info['vp_util_thread_id'], f10_thread_info['bam_stats_thread_id'],
-                                  f10_thread_info['per_vp_stats_thread_id']]
-            f11_vp_util_artifact_file = fun_test.get_test_case_artifact_file_name(
-                post_fix_name="{}_vputil_artifact_f11.txt".format(fio_job_name))
-            f11_bam_stats_artifact_file = fun_test.get_test_case_artifact_file_name(
-                post_fix_name="{}_bam_stats_artifact_f11.txt".format(fio_job_name))
-            f11_per_vp_stats_artifact_file = fun_test.get_test_case_artifact_file_name(
-                post_fix_name="{}_per_vp_stats_artifact_f11.txt".format(fio_job_name))
-            f11_thread_info = initiate_stats_collection(storage_controller=f11_storage_ctrl_obj,
-                                                        interval=self.artifact_params["poll_interval"],
-                                                        count=count,
-                                                        vp_util_artifact_file=f11_vp_util_artifact_file,
-                                                        bam_stats_artifact_file=f11_bam_stats_artifact_file,
-                                                        per_vp_artifact_file=f11_per_vp_stats_artifact_file)
-            f11_active_threads = [f11_thread_info['vp_util_thread_id'], f11_thread_info['bam_stats_thread_id'],
-                                  f11_thread_info['per_vp_stats_thread_id']]
-        #
-        #     num_jobs_fio = test_iter * 3
-        #     # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
-        #     fio_result = f11_hosts[0]["handle"].pcie_fio(filename=fio_test_file,
-        #                                                  numjobs=num_jobs_fio,
-        #                                                  rw="read",
-        #                                                  name=fio_job_name,
-        #                                                  **self.fio_cmd_args)
-        #     fun_test.simple_assert(fio_result, message="FIO job {}".format(fio_job_name))
 
         if "numjobs" in self.fio_cmd_args:
             fio_result = f11_hosts[0]["handle"].pcie_fio(filename=fio_filename,
@@ -683,33 +582,11 @@ class RunFioRds(FunTestCase):
             fun_test.simple_assert(fio_result, message="FIO job {}".format(fio_job_name))
         else:
             fio_result = f11_hosts[0]["handle"].pcie_fio(filename=fio_filename,
-                                                         numjobs=fio_num_jobs,
+                                                         numjobs=precondition_fio_num_jobs,
                                                          rw="read",
                                                          name=fio_job_name,
                                                          **self.fio_cmd_args)
             fun_test.simple_assert(fio_result, message="FIO job {}".format(fio_job_name))
-
-        if collect_artifacts:
-            terminate_stats_collection(stats_collector_obj=f10_stats_collector, thread_list=f10_active_threads)
-            fun_test.add_auxillary_file(description="F10 VP Utilization - read IO depth {0}".format(
-                self.fio_cmd_args["iodepth"] * fio_num_jobs),
-                filename=f10_vp_util_artifact_file)
-            fun_test.add_auxillary_file(description="F10 Bam Stats - read IO depth {0}".format(
-                self.fio_cmd_args["iodepth"] * fio_num_jobs),
-                filename=f10_bam_stats_artifact_file)
-            fun_test.add_auxillary_file(description="F10 Per VP Stats - read IO depth {0}".format(
-                self.fio_cmd_args["iodepth"] * fio_num_jobs),
-                filename=f10_per_vp_stats_artifact_file)
-            terminate_stats_collection(stats_collector_obj=f11_stats_collector, thread_list=f11_active_threads)
-            fun_test.add_auxillary_file(description="F11 VP Utilization - read IO depth {0}".format(
-                self.fio_cmd_args["iodepth"] * fio_num_jobs),
-                filename=f11_vp_util_artifact_file)
-            fun_test.add_auxillary_file(description="F11 Bam Stats - read IO depth {0}".format(
-                self.fio_cmd_args["iodepth"] * fio_num_jobs),
-                filename=f11_bam_stats_artifact_file)
-            fun_test.add_auxillary_file(description="F11 Per VP Stats - read IO depth {0}".format(
-                self.fio_cmd_args["iodepth"] * fio_num_jobs),
-                filename=f11_per_vp_stats_artifact_file)
 
         fun_test.log("Test done")
 
