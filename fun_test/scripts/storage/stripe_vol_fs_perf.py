@@ -287,7 +287,6 @@ class BLTVolumePerformanceTestcase(FunTestCase):
 
             # Create controller
             self.ctrlr_uuid = utils.generate_uuid()
-            fun_test.shared_variables["ctrlr_uuid"] = self.ctrlr_uuid
             command_result = self.storage_controller.create_controller(
                 ctrlr_uuid=self.ctrlr_uuid,
                 transport="PCI",
