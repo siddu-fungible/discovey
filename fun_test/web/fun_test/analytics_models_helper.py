@@ -571,9 +571,8 @@ def prepare_status_db(chart_names):
     for chart_name in chart_names:
         total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name=chart_name)
         prepare_status(chart=total_chart, purge_old_status=False, cache_valid=cache_valid)
-    if not cache_valid:
-        ml.backup_dags()
-        ml.set_global_cache(cache_valid=True)
+    ml.backup_dags()
+    ml.set_global_cache(cache_valid=True)
 
 
 if __name__ == "__main2__":
