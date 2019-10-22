@@ -71,6 +71,7 @@ export class ScriptDetailComponent implements OnInit {
   testCaseIds: number [] = [];
   currentCheckpointIndex: number = null;
   availableContexts: ContextInfo [] = [];
+  selectedContexts: ContextInfo [] = [];
   minRelativeTime: number = 0;
   maxRelativeTime: number = 1;
   scriptRunTime: ScriptRunTime = null;
@@ -171,12 +172,12 @@ export class ScriptDetailComponent implements OnInit {
     })
   }
 
-  onCheckpointClick(testCaseId, checkpointIndex) {
+  onCheckpointClick(testCaseId, checkpointIndex, contextId=0) {
     this.regressionService.testCaseTimeSeriesLogs(this.suiteExecutionId, this.currentTestCaseExecution.execution_id, checkpointIndex).subscribe(response => {
       this.showTestCasePanel = false;
       this.showLogsPanel = true;
       this.showCheckpointPanel = true;
-      let checkpointId = `${testCaseId}_${checkpointIndex}`;
+      let checkpointId = `${testCaseId}_${checkpointIndex}_${contextId}`;
       this.currentCheckpointIndex = checkpointIndex;
       setTimeout(() => {
         this.commonService.scrollTo(checkpointId);
@@ -197,17 +198,21 @@ export class ScriptDetailComponent implements OnInit {
 
   onContextOptionsClick(content) {
     this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title'}).result.then((suiteExecution) => {
-
     }, (reason) => {
       console.log("Rejected");
       //this.closeResult = `Dismissed ${this.getDismissReason(reason)}`;
     });
+    this.selectedContexts = this.availableContexts.filter(availableContext => availableContext.selected);
+
   }
 
   findMatchingTestCase(time): number {
     let testCaseIndex = 0;
     let found = false;
     for (let index = 0; index < this.testCaseExecutions.length; index++) {
+      if (this.testCaseExecutions[index].result === "NOT_RUN") {
+        continue;
+      }
       if (this.testCaseExecutions[index].relative_started_epoch_time <= time) {
       } else {
         break;
@@ -226,5 +231,9 @@ export class ScriptDetailComponent implements OnInit {
     if (this.currentTestCaseExecutionIndex !== testCaseIndex) {
       this.onTestCaseIdClick(testCaseIndex)
     }
+  }
+
+  testClick() {
+    console.log(this.selectedContexts);
   }
 }

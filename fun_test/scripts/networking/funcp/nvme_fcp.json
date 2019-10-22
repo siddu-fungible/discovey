@@ -1,0 +1,28 @@
+{
+  "GenericParams":
+  {
+    "precondition_args":{
+      "bs": "128k",
+      "size": "100%",
+      "iodepth": 32,
+      "direct": 1,
+      "prio": 0
+    },
+    "fio_cmd_args": {
+      "bs": 4096,
+      "ioengine": "libaio",
+      "runtime": 60,
+      "direct": 1,
+      "timeout": 600,
+      "iodepth": 16,
+      "numjobs": 16,
+      "cpus_allowed": "8-15,24-31",
+      "prio": 0
+    },
+    "artifact_params":
+    {
+      "poll_interval": 5,
+      "poll_count": 12
+    }
+  }
+}

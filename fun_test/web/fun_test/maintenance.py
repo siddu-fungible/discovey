@@ -1703,5 +1703,70 @@ if __name__ == "__main_power_perf__":
     final_dict = ml.get_dict(chart=power_chart)
     print json.dumps(final_dict, indent=4)
 
-if __name__ == "__main__":
+if __name__ == "__main__backup":
     ml.backup_dags()
+
+if __name__ == "__main__":
+    metric_model_name = "RdsClientPerformance"
+    description = "TBD"
+    owner_info = "Nazir Ahamed (nazir.ahamed@fungible.com)"
+    source = ""
+    positive = False
+    visualization_unit = PerfUnit.UNIT_MBITS_PER_SEC
+    y1_axis_title = PerfUnit.UNIT_MBITS_PER_SEC
+    platform = FunPlatform.F1
+    internal_chart_name = "rds_client_test_2_hosts_aggbw"
+    chart_name = "Aggregate Bandwidth"
+    num_hosts = 2
+    output_name = "output_aggregate_bandwidth"
+
+    data_sets = []
+    one_data_set = {}
+
+    output = {
+        "name": output_name,
+        "unit": y1_axis_title,
+        "min": 0,
+        "max": -1,
+        "expected": -1,
+        "reference": -1
+    }
+    for msg_rate in [1, 8, 16]:
+        for no_of_con in [1, 8, 16]:
+            inputs = {
+                "input_platform": platform,
+                "input_num_hosts": num_hosts,
+                "input_msg_rate": msg_rate,
+                "input_num_connection": no_of_con
+            }
+            display_name = "MR {}, TC {}".format(msg_rate, no_of_con)
+            one_data_set["name"] = display_name
+            one_data_set["inputs"] = inputs
+            one_data_set["output"] = output
+            data_sets.append(one_data_set.copy())
+
+    metric_id = LastMetricId.get_next_id()
+    base_line_date = datetime(year=2019, month=10, day=20, minute=0, hour=0, second=0)
+    iops_chart = ml.create_leaf(chart_name=chart_name,
+                                internal_chart_name=internal_chart_name,
+                                data_sets=data_sets,
+                                leaf=True,
+                                description=description,
+                                owner_info=owner_info,
+                                source=source,
+                                positive=positive,
+                                y1_axis_title=y1_axis_title,
+                                visualization_unit=visualization_unit,
+                                metric_model_name=metric_model_name,
+                                base_line_date=base_line_date,
+                                work_in_progress=False,
+                                children=[],
+                                jira_ids=[],
+                                platform=platform,
+                                peer_ids=[],
+                                creator=TEAM_REGRESSION_EMAIL,
+                                workspace_ids=[])
+
+    final_dict = ml.get_dict(chart=iops_chart)
+    print json.dumps(final_dict, indent=4)
+
