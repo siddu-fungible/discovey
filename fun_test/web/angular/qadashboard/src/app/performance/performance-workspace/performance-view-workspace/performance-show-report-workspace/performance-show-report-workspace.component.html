@@ -1,5 +1,5 @@
 <fun-spinner [status]="status"></fun-spinner>
-<ng-container *ngIf="status == null">
+<ng-container *ngIf="status === null">
   <app-pager *ngIf="workspace" [data]="flattenedInterestedMetrics" [recordsPerPage]=5
              (pageNumber)="setPage($event)"></app-pager>
   <div class="card" style="margin: 10px; padding: 5px;">
@@ -62,9 +62,9 @@
               <tr *ngFor="let data of dataSet['history']; let i = index">
                 <td style="padding: 0; text-align: center">{{ data.date }}</td>
                 <td style="padding: 0; text-align: center">{{ data.value }}
-                  <span *ngIf="dataSet.percentage_history && interestedMetric.positive && i == 0"
+                  <span *ngIf="dataSet.percentage_history && interestedMetric.positive && i === 0"
                         [ngClass]="{'text-color-red': dataSet.percentage_history.includes('-'), 'text-color-green': dataSet.percentage_history.includes('+')}"><br>{{ dataSet.percentage_history }}</span>
-                  <span *ngIf="dataSet.percentage_history && !interestedMetric.positive && i == 0"
+                  <span *ngIf="dataSet.percentage_history && !interestedMetric.positive && i === 0"
                         [ngClass]="{'text-color-green': dataSet.percentage_history.includes('-'), 'text-color-red': dataSet.percentage_history.includes('+')}"><br>{{ dataSet.percentage_history }}</span>
                 </td>
               </tr>
