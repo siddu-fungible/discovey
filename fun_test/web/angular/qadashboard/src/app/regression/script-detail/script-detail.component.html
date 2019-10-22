@@ -5,13 +5,14 @@
     <span class="script-name">{{ scriptPath }}</span>
     <div class="fun-spacer"></div>
     <button (click)="onContextOptionsClick(contextOptions)" class="fun-button-add">Context options</button>
-    <button (click)="testClick()">Test</button>
+    <!--button (click)="testClick()">Test</button-->
+    <fun-spinner [status]="status"></fun-spinner>
+
     <ng-template #contextOptions let-modal>
       <div class="fun-panel">
         <div class="fun-panel-header">
           <span>Select contexts to display</span>
         </div>
-        <fun-spinner [status]="status"></fun-spinner>
         <div class="fun-panel-body">
           <ng-container *ngFor="let availableContext of availableContexts">
             <div>
