@@ -3282,6 +3282,25 @@
                     ]
                   }
                 ]
+              },
+              {
+                "metric_model_name": "MetricContainer",
+                "name": "teramark_storage_eds_client",
+                "label": "RDS Client",
+                "children": [
+                  {
+                    "metric_model_name": "MetricContainer",
+                    "name": "teramark_storage_eds_client_2_hosts",
+                    "label": "2 Host",
+                    "children": [
+                      {
+                        "metric_model_name": "RdsClientPerformance",
+                        "name": "rds_client_test_2_hosts_aggbw",
+                        "label": "AGGBW"
+                      }
+                    ]
+                  }
+                ]
               }
             ]
           }
