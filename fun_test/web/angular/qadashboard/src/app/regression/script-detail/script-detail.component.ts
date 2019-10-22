@@ -71,10 +71,12 @@ export class ScriptDetailComponent implements OnInit {
   testCaseIds: number [] = [];
   currentCheckpointIndex: number = null;
   availableContexts: ContextInfo [] = [];
+  selectedContexts: ContextInfo [] = [];
   minRelativeTime: number = 0;
   maxRelativeTime: number = 1;
   scriptRunTime: ScriptRunTime = null;
   timeFilterMin: number = 0;
+  status: string = null;
 
   timeSeriesByTestCase: {[testCaseId: number]: {[key: string]: any }} = {};
 
@@ -139,6 +141,7 @@ export class ScriptDetailComponent implements OnInit {
   onTestCaseIdClick(testCaseExecutionIndex) {
     this.testLogs = null;
     this.currentCheckpointIndex = null;
+    this.status = "Fetching test-case executions";
     this.regressionService.testCaseTimeSeries(this.suiteExecutionId, this.testCaseExecutions[testCaseExecutionIndex].execution_id).subscribe(response => {
       this.currentTestCaseExecution = this.testCaseExecutions[testCaseExecutionIndex];
       this.currentTestCaseExecutionIndex = testCaseExecutionIndex;
@@ -168,23 +171,26 @@ export class ScriptDetailComponent implements OnInit {
       });
 
       this.showCheckpointPanel = true;
+      this.status = null;
     })
   }
 
-  onCheckpointClick(testCaseId, checkpointIndex) {
+  onCheckpointClick(testCaseId, checkpointIndex, contextId=0) {
+    this.status = "Fetching checkpoint data";
     this.regressionService.testCaseTimeSeriesLogs(this.suiteExecutionId, this.currentTestCaseExecution.execution_id, checkpointIndex).subscribe(response => {
       this.showTestCasePanel = false;
       this.showLogsPanel = true;
       this.showCheckpointPanel = true;
-      let checkpointId = `${testCaseId}_${checkpointIndex}`;
+      let checkpointId = `${testCaseId}_${checkpointIndex}_${contextId}`;
       this.currentCheckpointIndex = checkpointIndex;
       setTimeout(() => {
         this.commonService.scrollTo(checkpointId);
       }, 500);
 
-
+      this.status = null;
     }, error => {
-      this.loggerService.error("Unable to fetch time-series logs")
+      this.loggerService.error("Unable to fetch time-series logs");
+      this.status = null;
     })
   }
 
@@ -197,17 +203,21 @@ export class ScriptDetailComponent implements OnInit {
 
   onContextOptionsClick(content) {
     this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title'}).result.then((suiteExecution) => {
-
     }, (reason) => {
       console.log("Rejected");
       //this.closeResult = `Dismissed ${this.getDismissReason(reason)}`;
     });
+    this.selectedContexts = this.availableContexts.filter(availableContext => availableContext.selected);
+
   }
 
   findMatchingTestCase(time): number {
     let testCaseIndex = 0;
     let found = false;
     for (let index = 0; index < this.testCaseExecutions.length; index++) {
+      if (this.testCaseExecutions[index].result === "NOT_RUN") {
+        continue;
+      }
       if (this.testCaseExecutions[index].relative_started_epoch_time <= time) {
       } else {
         break;
@@ -226,5 +236,9 @@ export class ScriptDetailComponent implements OnInit {
     if (this.currentTestCaseExecutionIndex !== testCaseIndex) {
       this.onTestCaseIdClick(testCaseIndex)
     }
+  }
+
+  testClick() {
+    console.log(this.selectedContexts);
   }
 }

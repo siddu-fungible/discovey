@@ -1386,7 +1386,7 @@ def populate_stats_file(network_controller_obj, test_time, generic_file_name_par
         ddr_stats_file = str(version) + "_" + generic_file_name_part + "_ddr.txt"
         cdu_stats_file = str(version) + "_" + generic_file_name_part + "_cdu.txt"
         ca_stats_file = str(version) + "_" + generic_file_name_part + "_ca.txt"
-        
+
         artifact_resource_pc_1_file = fun_test.get_test_case_artifact_file_name(post_fix_name=resource_pc_1_file)
         artifact_resource_pc_2_file = fun_test.get_test_case_artifact_file_name(post_fix_name=resource_pc_2_file)
         artifact_bam_stats_file = fun_test.get_test_case_artifact_file_name(post_fix_name=bam_stats_file)
@@ -1395,7 +1395,7 @@ def populate_stats_file(network_controller_obj, test_time, generic_file_name_par
         artifact_ddr_file = fun_test.get_test_case_artifact_file_name(post_fix_name=ddr_stats_file)
         artifact_cdu_file = fun_test.get_test_case_artifact_file_name(post_fix_name=cdu_stats_file)
         artifact_ca_file = fun_test.get_test_case_artifact_file_name(post_fix_name=ca_stats_file)
-        
+
         start_counter = 0
         while not start_counter == sleep_time_factor:
             fun_test.log_module_filter("random_module")
@@ -1435,7 +1435,7 @@ def populate_stats_file(network_controller_obj, test_time, generic_file_name_par
         fun_test.critical(str(ex))
     return True
 
-
+'''
 def get_resource_bam_table(result):
     table_obj = None
     bam_pool_decode_dict = {
@@ -1467,32 +1467,109 @@ def get_resource_bam_table(result):
     except Exception as ex:
         fun_test.critical(str(ex))
     return table_obj
+'''
 
 
+def _get_max_reference_keys(result, reference_cluster):
+    reference_keys = reference_cluster.keys()
+    num_keys = len(reference_keys)
+    for key, val in result.iteritems():
+        if len(val) > num_keys:
+            reference_keys = val.keys()
+    return reference_keys
+
+def get_resource_bam_table(result):
+
+    while True:
+        try:
+            cmd = "stats/resource/bam"
+            if not result:
+                break
+            reference_keys = _get_max_reference_keys(result['bm_usage_per_cluster'],
+                                                          result['bm_usage_per_cluster']['cluster_0'])
+            gloabl_result = result['bm_usage_global']
+            per_cluster_result = result['bm_usage_per_cluster']
+
+            # Global table object
+            global_table_obj = PrettyTable(['Field Name', 'Counter'])
+            global_table_obj.align = 'l'
+            for key, val in gloabl_result.iteritems():
+                global_table_obj.add_row([key, val])
+
+            # Per cluster table
+            row_list = ['key names']
+            for key in sorted(per_cluster_result.keys()):
+                row_list.append(key[0].upper() + key[-1] + ":" + "%")
+                row_list.append(key[0].upper() + key[-1] + ":" + "col")
+            per_cluster_table_obj = PrettyTable()
+
+            output = OrderedDict()
+            for col_name in row_list:
+                output[col_name] = []
+                if col_name == 'key names':
+                    output[col_name].extend(sorted(reference_keys))
+                else:
+                    cname = col_name.replace('C', 'cluster_')
+                    cluster_name = cname.split(":")[0]
+                    key_name = cname.split(":")[1]
+                    if key_name == '%':
+                        key_name = 'usage_percent'
+                    elif key_name == 'col':
+                        key_name = 'color'
+                    cls_output = per_cluster_result[cluster_name]
+                    for display_key in sorted(reference_keys):
+                        if display_key in cls_output:
+                            if key_name in cls_output[display_key]:
+                                output[col_name].append(cls_output[display_key][key_name])
+                            else:
+                                output[col_name].append(0)
+                        else:
+                            output[col_name].append(0)
+            print_keys = output.keys()
+            print_values = output.values()
+            for col_name, col_values in zip(print_keys, print_values):
+                per_cluster_table_obj.add_column(col_name, col_values)
+
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return global_table_obj, per_cluster_table_obj
+'''
+            prev_global_result = gloabl_result
+            prev_per_cluster_result = per_cluster_result
+            print
+            global_table_obj
+            print
+            per_cluster_table_obj
+            print
+            "\n########################  %s ########################\n" % str(self._get_timestamp())
+            #do_sleep_for_interval()
+'''
 def populate_resource_bam_output_file(network_controller_obj, filename, display_output=False):
     output = False
     try:
-        lines = list()
-
+        #lines = list()
         result = network_controller_obj.peek_resource_bam_stats()
-        master_table_obj = get_resource_bam_table(result=result)
-        lines.append("\n########################  %s ########################\n" % str(get_timestamp()))
-        lines.append(master_table_obj.get_string())
-        lines.append('\n\n\n')
+        master_table_obj1,master_table_obj2 = get_resource_bam_table(result=result)
+        tab_obj = [master_table_obj1, master_table_obj2]
+        for i in tab_obj:
+            lines = list()
+            lines.append("\n########################  %s ########################\n" % str(get_timestamp()))
+            lines.append(i.get_string())
+            lines.append('\n\n\n')
 
-        with open(filename, 'a') as f:
-            f.writelines(lines)
+            with open(filename, 'a') as f:
+                f.writelines(lines)
 
-        description = "Bam stats"
-        fun_test.add_auxillary_file(description=description, filename=filename)
+            description = "Bam stats"
+            fun_test.add_auxillary_file(description=description, filename=filename)
 
-        if display_output:
-            fun_test.log_disable_timestamps()
-            fun_test.log_section("BAM Resource result")
-            for line in lines:
-                fun_test.log(line)
-            fun_test.log_enable_timestamps()
-        output = True
+            if display_output:
+                fun_test.log_disable_timestamps()
+                fun_test.log_section("BAM Resource result")
+                for line in lines:
+                    fun_test.log(line)
+                fun_test.log_enable_timestamps()
+            output = True
     except Exception as ex:
         fun_test.critical(str(ex))
     return output

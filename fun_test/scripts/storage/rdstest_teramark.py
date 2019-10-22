@@ -1,6 +1,6 @@
 from lib.system.fun_test import *
 from lib.system import utils
-from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper, get_data_collection_time
+from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper, ModelHelper, get_data_collection_time
 from lib.fun.fs import Fs
 import re
 from lib.topology.topology_helper import TopologyHelper
@@ -10,6 +10,8 @@ from scripts.networking.helper import *
 from collections import OrderedDict, Counter
 from lib.templates.csi_perf.csi_perf_template import CsiPerfTemplate
 from lib.host.linux import Linux
+from fun_global import PerfUnit, FunPlatform
+
 
 '''
 Script to run rdstest on F1 from multiple hosts.
@@ -23,11 +25,9 @@ def run_tcpkali(arg1, host_index, **kwargs):
     arg1.disconnect()
 
 def add_to_data_base(value_dict):
-    unit_dict = {"num_hosts": PerfUnit.UNIT_NUMBER, "message_rate": PerfUnit.UNIT_NUMBER,
-                 "no_of_connection": PerfUnit.UNIT_NUMBER, "aggbw_in_mbps": PerfUnit.UNIT_MBYTES_PER_SEC}
-    # unit_dict_helper = ["num_hosts", "message_rate", "no_of_connection", "aggbw_in_mbps", "rds_job_name"]
+    unit_dict = {"aggregate_bandwidth_unit": PerfUnit.UNIT_MBITS_PER_SEC}
 
-    model_name = "RDSClientAB"
+    model_name = "RdsClientPerformance"
     status = fun_test.PASSED
     try:
         generic_helper = ModelHelper(model_name=model_name)
@@ -451,6 +451,7 @@ class ECVolumeLevelTestcase(FunTestCase):
             job_inputs = {}
         if "post_results" in job_inputs:
             self.post_results = job_inputs["post_results"]
+        fun_test.log("Post results value: {}".format(self.post_results))
 
         if (self.tcpkali_payload):
             command += '-f {} '.format(self.tcpkali_payload)
@@ -502,6 +503,7 @@ class ECVolumeLevelTestcase(FunTestCase):
         host_clone = {}
         fun_test.shared_variables["tcpkali"] = {}
         self.host_info = fun_test.shared_variables["host_info"]
+        self.db_log_time = fun_test.shared_variables["db_log_time"]
 
         orignal_cmd = command
 
@@ -630,12 +632,10 @@ class ECVolumeLevelTestcase(FunTestCase):
                         "date_time": self.db_log_time,
                         "platform": FunPlatform.F1,
                         "version": fun_test.get_version(),
-                        "num_f1s": self.num_f1s,
                         "num_hosts": len(self.host_info),
-                        "message_rate": each_m,
-                        "no_of_connection": each_c,
-                        "aggbw_in_mbps": aggregate_bw,
-                        "rds_job_name": "RDS_client_test_for_{}_hosts_{}_messagerate_{}_noofconn_aggbw".format(len(self.host_info), each_m, each_c)
+                        "msg_rate": each_m,
+                        "num_connection": each_c,
+                        "aggregate_bandwidth": aggregate_bw
                         }
                     if self.post_results:
                         fun_test.log("Posting results on dashboard")

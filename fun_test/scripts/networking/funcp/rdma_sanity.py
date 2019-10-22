@@ -227,8 +227,9 @@ class NicEmulation(FunTestCase):
                                             abstract_config_f1_1=abstract_json_file1, workspace="/scratch")
 
             # Add static routes on Containers
-            funcp_obj.add_routes_on_f1(routes_dict=self.server_key["fs"][fs_name]["static_routes"])
-            fun_test.sleep(message="Waiting before ping tests", seconds=10)
+            if not enable_fcp:
+                funcp_obj.add_routes_on_f1(routes_dict=self.server_key["fs"][fs_name]["static_routes"])
+                fun_test.sleep(message="Waiting before ping tests", seconds=10)
 
             # Ping QFX from both F1s
             ping_dict = self.server_key["fs"][fs_name]["cc_pings"]
@@ -261,15 +262,32 @@ class NicEmulation(FunTestCase):
                 test_host_pings(host=host, ips=ping_dict[host], strict=False)
 
         # Update RDMA Core & perftest on hosts
+        bg_proc_id = {}
+        for obj in host_objs:
+            if obj == "f1_0":
+                host_count = fun_test.shared_variables["host_len_f10"]
+                bg_proc_id[obj] = []
+            elif obj == "f1_1":
+                host_count = fun_test.shared_variables["host_len_f11"]
+                bg_proc_id[obj] = []
+            for x in xrange(0, host_count):
+                update_path = host_objs[obj][x].command("echo $HOME")
+                update_script = update_path.strip() + "/mks/update_rdma.sh"
+                print update_script
+                bg_proc_id[obj].append(host_objs[obj][x].
+                                       start_bg_process("{} build build".format(update_script),
+                                                        timeout=1200))
+        # fun_test.sleep("Building rdma_perf & core", seconds=120)
         for obj in host_objs:
             if obj == "f1_0":
                 host_count = fun_test.shared_variables["host_len_f10"]
             elif obj == "f1_1":
                 host_count = fun_test.shared_variables["host_len_f11"]
             for x in xrange(0, host_count):
-                host_objs[obj][x].start_bg_process("/home/localadmin/mks/update_rdma.sh update update", timeout=1200)
-                # host_objs[obj][x].command("hostname")
-        fun_test.sleep("Building rdma_perf & core", seconds=120)
+                for pid in bg_proc_id[obj]:
+                    while host_objs[obj][x].process_exists(process_id=pid):
+                        fun_test.sleep(message="Still building RDMA repo...", seconds=5)
+                host_objs[obj][x].disconnect()
 
         # Create a dict containing F1_0 & F1_1 details
         f10_hosts = []

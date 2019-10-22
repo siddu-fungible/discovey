@@ -3066,3 +3066,25 @@ class PowerPerformance(FunModel):
         for key, value in self.__dict__.iteritems():
             s += "{}:{} ".format(key, value)
         return s
+
+
+class RdsClientPerformance(FunModel):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_platform = models.TextField(default=FunPlatform.F1)
+    input_version = models.CharField(verbose_name="Version", max_length=50, default="")
+
+    input_num_hosts = models.IntegerField(verbose_name="Number of hosts", default=-1)
+    input_msg_rate = models.IntegerField(verbose_name="Message rate", default=-1)
+    input_num_connection = models.IntegerField(verbose_name="Number of connections", default=-1)
+    output_aggregate_bandwidth = models.FloatField(verbose_name="Aggregate Bandwidth", default=-1)
+
+    output_aggregate_bandwidth_unit = models.TextField(default=PerfUnit.UNIT_MBITS_PER_SEC)
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
