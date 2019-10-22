@@ -3296,7 +3296,7 @@
                       {
                         "metric_model_name": "RdsClientPerformance",
                         "name": "rds_client_test_2_hosts_aggbw",
-                        "label": "AGGBW"
+                        "label": "Aggregate Bandwidth"
                       }
                     ]
                   }

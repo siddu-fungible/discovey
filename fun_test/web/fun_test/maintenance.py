@@ -1716,7 +1716,7 @@ if __name__ == "__main__":
     y1_axis_title = PerfUnit.UNIT_MBITS_PER_SEC
     platform = FunPlatform.F1
     internal_chart_name = "rds_client_test_2_hosts_aggbw"
-    chart_name = "AGGBW"
+    chart_name = "Aggregate Bandwidth"
     num_hosts = 2
     output_name = "output_aggregate_bandwidth"
 
