@@ -10,6 +10,7 @@ from scripts.networking.helper import *
 from collections import OrderedDict, Counter
 from lib.templates.csi_perf.csi_perf_template import CsiPerfTemplate
 from lib.host.linux import Linux
+from fun_global import PerfUnit, FunPlatform
 
 '''
 Script to run rdstest on F1 from multiple hosts.
@@ -449,6 +450,7 @@ class ECVolumeLevelTestcase(FunTestCase):
             job_inputs = {}
         if "post_results" in job_inputs:
             self.post_results = job_inputs["post_results"]
+        fun_test.log("Post results value: {}".format(self.post_results))
 
         if (self.tcpkali_payload):
             command += '-f {} '.format(self.tcpkali_payload)
@@ -500,6 +502,7 @@ class ECVolumeLevelTestcase(FunTestCase):
         host_clone = {}
         fun_test.shared_variables["tcpkali"] = {}
         self.host_info = fun_test.shared_variables["host_info"]
+        self.db_log_time = fun_test.shared_variables["db_log_time"]
 
         orignal_cmd = command
 
