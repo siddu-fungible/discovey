@@ -10,13 +10,15 @@ def dict_difference(one_data_set, cmd):
     time_2 = one_data_set["time2"]
     time_difference = (time_2 - time_1).seconds
     if cmd == "eqm":
-        dif_dict = dict_difference_div(dict_1, dict_2, time_difference)
+        diff_dict = dict_difference_div(dict_1, dict_2, time_difference)
         for field in ["EFI->EQC Enqueue Interface valid", "EQC->EFI Dequeue Interface valid"]:
-            result[field] = dif_dict[field]
+            result[field] = diff_dict[field]
     elif cmd == "le":
         peek_value = 320
-        diff_dict = dict_difference_level_1(dict_1, dict_2, time_difference)
+        diff_dict = dict_difference_level_2(dict_1, dict_2, time_difference)
         result = dict_level_1_div(diff_dict, peek_value)
+    elif cmd == "hbm":
+        diff_dict = dict_difference_level_2(dict_1, dict_2, time_difference)
 
     return result
 
@@ -26,11 +28,12 @@ def dict_difference_div(dict_1, dict_2, time_difference):
             for x in dict_1 if ((x in dict_2) and (type(dict_2[x]) == int or type(dict_2[x]) == float))}
 
 
-def dict_difference_level_1(dict_1, dict_2, time_difference):
+def dict_difference_level_2(dict_1, dict_2, time_difference):
     result = {}
     for each_field in dict_1:
         result[each_field] = dict_difference_div(dict_1[each_field], dict_2[each_field], time_difference)
     return result
+
 
 def dict_level_1_div(dict_lev1, peek_value):
     for k, v in dict_lev1.iteritems():

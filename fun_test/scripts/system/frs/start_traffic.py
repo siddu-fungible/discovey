@@ -191,7 +191,23 @@ class FunTestCase1(FunTestCase):
         fun_test.add_auxillary_file(description="FS die temperature", filename=self.die_temperature)
         self.f_die_temperature = open(self.die_temperature, 'w+')
 
-        # TODO: Clear the Uart log files if the new image is not built
+        # MUH files
+        self.f1_0_hbm_dpc_logs = fun_test.get_test_case_artifact_file_name(
+            post_fix_name="muh_F1_0_logs.txt")
+        self.f1_1_hbm_dpc_logs = fun_test.get_test_case_artifact_file_name(
+            post_fix_name="muh_F1_1_logs.txt")
+        self.f1_0_hbm_dif_logs = fun_test.get_test_case_artifact_file_name(
+            post_fix_name="muh_F1_0_dif_logs.txt")
+        self.f1_1_hbm_dif_logs = fun_test.get_test_case_artifact_file_name(
+            post_fix_name="muh_F1_1_dif_logs.txt")
+        fun_test.add_auxillary_file(description="MUH stats F1_0", filename=self.f1_0_hbm_dpc_logs)
+        fun_test.add_auxillary_file(description="MUH stats F1_1", filename=self.f1_1_hbm_dpc_logs)
+        fun_test.add_auxillary_file(description="Calculated MUH stats F1_0", filename=self.f1_0_hbm_dif_logs)
+        fun_test.add_auxillary_file(description="Calculated MUH stats F1_1", filename=self.f1_1_hbm_dif_logs)
+        self.f_hbm_f1_0 = open(self.f1_0_hbm_dpc_logs, "w+")
+        self.f_hbm_f1_1 = open(self.f1_1_hbm_dpc_logs, "w+")
+        self.f_hbm_dif_f1_0 = open(self.f1_0_hbm_dif_logs, "w+")
+        self.f_hbm_dif_f1_1 = open(self.f1_1_hbm_dif_logs, "w+")
 
         # Traffic
         self.methods = {"crypto": crypto, "zip": zip_deflate, "rcnvme": rcnvme, "fio": fio}
@@ -443,7 +459,39 @@ class FunTestCase1(FunTestCase):
             fun_test.sleep("before next iteration", seconds=self.details["interval"])
         bmc_handle.destroy()
 
-    ###########
+    ########### HBM ##################
+    def hbm_stats(self, f1, count, file_hbm, file_hbm_dif, heading):
+        come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
+                           ssh_username=self.fs['come']['mgmt_ssh_username'],
+                           ssh_password=self.fs['come']['mgmt_ssh_password'])
+        for i in range(count):
+            one_dataset = {}
+            dpcsh_output = dpcsh_commands.hbm(come_handle=come_handle, f1=f1)
+            one_dataset["time"] = datetime.datetime.now()
+            one_dataset["output"] = dpcsh_output
+            one_dataset["time1"] = datetime.datetime.now()
+            one_dataset["output1"] = dpcsh_output
+            file_helper.add_data(file_hbm, one_dataset, heading=heading)
+
+            fun_test.sleep("Before capturing next set of data", seconds=5)
+
+            dpcsh_output = dpcsh_commands.hbm(come_handle=come_handle, f1=f1)
+            one_dataset["time"] = datetime.datetime.now()
+            one_dataset["output"] = dpcsh_output
+            one_dataset["time2"] = datetime.datetime.now()
+            one_dataset["output2"] = dpcsh_output
+            file_helper.add_data(file_hbm, one_dataset, heading=heading)
+
+            div_by_peek_value = stats_calculation.dict_difference(one_dataset, "hbm")
+            one_dataset["time"] = datetime.datetime.now()
+            one_dataset["output"] = div_by_peek_value
+            file_helper.add_data(file_hbm_dif, one_dataset, heading=heading)
+
+            # fun_test.sleep("before next iteration", seconds=self.details["interval"])
+
+        come_handle.destroy()
+
+    ########## MUD ###################
 
     def get_debug_memory_stats_initially(self, f_debug_memory_f1_0, f_debug_memory_f1_1):
         result = {}
@@ -534,26 +582,6 @@ class FunTestCase1(FunTestCase):
         #                                                    heading=heading)
         # fun_test.test_assert(True, "Started capturing the peek stats/eqm logs {} on F1_1".format(heading))
         #
-        # LE firewall stats
-
-        thread_id_le_f1_0 = fun_test.execute_thread_after(func=self.le_stats,
-                                                          time_in_seconds=13,
-                                                          count=count,
-                                                          f1=0,
-                                                          file_le=self.f_le_f1_0,
-                                                          file_le_dif=self.f_le_dif_f1_0,
-                                                          heading=heading)
-        fun_test.test_assert(True, "Started capturing the peek stats/le/counters logs {} on F1_0".format(heading))
-
-        thread_id_le_f1_1 = fun_test.execute_thread_after(func=self.le_stats,
-                                                          time_in_seconds=14,
-                                                          count=count,
-                                                          f1=1,
-                                                          file_le=self.f_le_f1_1,
-                                                          file_le_dif=self.f_le_dif_f1_1,
-                                                          heading=heading)
-        fun_test.test_assert(True, "Started capturing the peek stats/le/counters logs {} on F1_1".format(heading))
-        #
         # # BM stats
         #
         # thread_id_bam_f1_0 = fun_test.execute_thread_after(func=self.bam_stats,
@@ -592,10 +620,50 @@ class FunTestCase1(FunTestCase):
         # # Die temperature
         #
         # thread_id_die_temp = fun_test.execute_thread_after(func=self.die_temperature_func,
-        #                                                    time_in_seconds=12,
+        #                                                    time_in_seconds=1,
         #                                                    count=count,
         #                                                    f_die_temperature=self.f_die_temperature,
         #                                                    heading=heading)
+        # LE firewall stats
+        #
+        # thread_id_le_f1_0 = fun_test.execute_thread_after(func=self.le_stats,
+        #                                                   time_in_seconds=2,
+        #                                                   count=count,
+        #                                                   f1=0,
+        #                                                   file_le=self.f_le_f1_0,
+        #                                                   file_le_dif=self.f_le_dif_f1_0,
+        #                                                   heading=heading)
+        # fun_test.test_assert(True, "Started capturing the peek stats/le/counters logs {} on F1_0".format(heading))
+        #
+        # thread_id_le_f1_1 = fun_test.execute_thread_after(func=self.le_stats,
+        #                                                   time_in_seconds=3,
+        #                                                   count=count,
+        #                                                   f1=1,
+        #                                                   file_le=self.f_le_f1_1,
+        #                                                   file_le_dif=self.f_le_dif_f1_1,
+        #                                                   heading=heading)
+        # fun_test.test_assert(True, "Started capturing the peek stats/le/counters logs {} on F1_1".format(heading))
+
+        # MUH stats
+
+        thread_id_hbm_f1_0 = fun_test.execute_thread_after(func=self.hbm_stats,
+                                                           time_in_seconds=4,
+                                                           count=count,
+                                                           f1=0,
+                                                           file_hbm=self.f_hbm_f1_0,
+                                                           file_hbm_dif=self.f_hbm_dif_f1_0,
+                                                           heading=heading)
+        fun_test.test_assert(True, "Started capturing the peek stats/muh logs {} on F1_0".format(heading))
+
+        thread_id_hbm_f1_1 = fun_test.execute_thread_after(func=self.hbm_stats,
+                                                          time_in_seconds=5,
+                                                          count=count,
+                                                          f1=1,
+                                                          file_hbm=self.f_hbm_f1_1,
+                                                          file_hbm_dif=self.f_hbm_dif_f1_1,
+                                                          heading=heading)
+        fun_test.test_assert(True, "Started capturing the peek stats/le/counters logs {} on F1_1".format(heading))
+
         #
         # fun_test.join_thread(thread_id_power)
         # fun_test.join_thread(thread_id_debug_memory_f1_0)
@@ -609,8 +677,10 @@ class FunTestCase1(FunTestCase):
         # fun_test.join_thread(thread_id_debug_vp_utils_f1_0)
         # fun_test.join_thread(thread_id_debug_vp_utils_f1_1)
         # fun_test.join_thread(thread_id_die_temp)
-        fun_test.join_thread(thread_id_le_f1_0)
-        fun_test.join_thread(thread_id_le_f1_1)
+        # fun_test.join_thread(thread_id_le_f1_0)
+        # fun_test.join_thread(thread_id_le_f1_1)
+        fun_test.join_thread(thread_id_hbm_f1_0)
+        fun_test.join_thread(thread_id_hbm_f1_1)
         # fun_test.test_assert(True, "Power logs captured successfully")
         # fun_test.test_assert(True, "Debug memory on F1_0 logs captured successfully")
         # fun_test.test_assert(True, "Debug memory on F1_1 logs captured successfully")
