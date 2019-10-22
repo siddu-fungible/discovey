@@ -3291,7 +3291,7 @@
                   {
                     "metric_model_name": "MetricContainer",
                     "name": "teramark_storage_eds_client_2_hosts",
-                    "label": "2 Host",
+                    "label": "2 Host(s)",
                     "children": [
                       {
                         "metric_model_name": "RdsClientPerformance",
