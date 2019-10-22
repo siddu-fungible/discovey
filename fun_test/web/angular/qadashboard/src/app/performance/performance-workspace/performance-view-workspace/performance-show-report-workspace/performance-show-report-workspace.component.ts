@@ -212,6 +212,18 @@ export class PerformanceShowReportWorkspaceComponent implements OnInit {
             }
           }
         }
+        let maximum = 0;
+        let hData = {};
+        dataSet["best_value"] = {};
+        for (let oneHistoricalData of data) {
+          if (dataSet["name"] == oneHistoricalData["name"]) {
+            if (oneHistoricalData["value"] > maximum) {
+              hData["date"] = this.commonService.getPrettyPstTime(oneHistoricalData["date_time"]);
+              hData["value"] = oneHistoricalData["value"];
+            }
+          }
+        }
+        dataSet["best_value"] = hData;
         dataSet["rows"] = dataSet["history"].length + 1;
         let percentage = "NA";
         if (dataSet["history"].length >= 2) {
