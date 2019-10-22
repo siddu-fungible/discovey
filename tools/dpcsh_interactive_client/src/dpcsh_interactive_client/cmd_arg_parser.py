@@ -1176,6 +1176,13 @@ peek_stats_rdma_parser.add_argument("hu_id", help="Hu id to look for", type=str)
 peek_stats_rdma_parser.add_argument("-qpn", help="Print data only for particular qpn", default=None)
 peek_stats_rdma_parser.add_argument('-grep', help="Grep for specific flow", default=None)
 
+
+# peek status
+peek_status_parser = base_peek_subparsers.add_parser('status', help="Peek stats")
+peek_status_subparsers = peek_status_parser.add_subparsers(title='subcommands', help="")
+
+peek_status_nhp_parser = peek_status_subparsers.add_parser('nhp', help="NHP Status")
+peek_status_nhp_parser.add_argument('-grep', help="Grep regex pattern", default=None)
 # ---------------------------------------------------------------------------------------------------
 # show commands
 
