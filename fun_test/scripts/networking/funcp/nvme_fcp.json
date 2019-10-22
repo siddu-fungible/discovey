@@ -1,6 +1,12 @@
 {
   "GenericParams":
   {
+    "blt_details":{
+      "capacity": 107374182400,
+      "block_size": 4096
+    },
+    "controller_port":1099,
+    "command_timeout": 5,
     "precondition_args":{
       "bs": "128k",
       "size": "100%",
@@ -11,13 +17,12 @@
     "fio_cmd_args": {
       "bs": 4096,
       "ioengine": "libaio",
-      "runtime": 60,
+      "runtime": 20,
       "direct": 1,
       "timeout": 600,
-      "iodepth": 16,
-      "numjobs": 16,
-      "cpus_allowed": "8-15,24-31",
-      "prio": 0
+      "iodepth": 24,
+      "prio": 0,
+      "cpus_allowed_policy": "split"
     },
     "artifact_params":
     {

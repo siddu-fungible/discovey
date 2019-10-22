@@ -132,7 +132,7 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
         ec_info["uuids"][num]["rds"] = []
         ec_info["uuids"][num]["nonrds"] = []
         ec_info["uuids"][num]["ctlr"] = []
-        ec_info["rds_nsid"][num] = {}
+        ec_info["rds_nsid"][num] = []
 
         # Calculating the sizes of all the volumes together creates the EC or LSV on top EC volume
         ec_info["volume_capacity"][num] = {}
@@ -249,7 +249,7 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
                 if sc_index != cur_vol_host_f1:
                     f1_ns_id[sc_index] += 1
                     ns_id = f1_ns_id[sc_index]
-                    ec_info["rds_nsid"][num][ns_id] = ec_info["f1_ips"][sc_index]
+                    ec_info["rds_nsid"][num].append((ns_id, ec_info["f1_ips"][sc_index]))
                     remote_ip = ec_info["f1_ips"][cur_vol_host_f1]
                     transport = "RDS"
                     command_result = sc.attach_volume_to_controller(
@@ -263,14 +263,13 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
                 plex_num += 1
 
         # Configuring RDS volume in the hosting F1 for all the remote BLTs
-        for cur_ns_id in sorted(ec_info["rds_nsid"][num]):
+        for cur_ns_id, cur_f1_ip in ec_info["rds_nsid"][num]:
             this_uuid = utils.generate_uuid()
             ec_info["uuids"][num]["rds"].append(this_uuid)
             command_result = hosting_sc.create_volume(
                 type="VOL_TYPE_BLK_RDS", capacity=ec_info["volume_capacity"][num]["ndata"],
                 block_size=ec_info["volume_block"]["ndata"], name="RDS" + "_" + this_uuid[-4:], uuid=this_uuid,
-                remote_nsid=cur_ns_id, remote_ip=ec_info["rds_nsid"][num][cur_ns_id], group_id=num+1,
-                command_duration=command_timeout)
+                remote_nsid=cur_ns_id, remote_ip=cur_f1_ip, group_id=num+1, command_duration=command_timeout)
             fun_test.test_assert(command_result["status"], "Creating RDS volume for the remote BLT {} in remote F1 {} "
                                                            "on DUT {}".format(cur_ns_id,
                                                                               ec_info["rds_nsid"][num][cur_ns_id],
