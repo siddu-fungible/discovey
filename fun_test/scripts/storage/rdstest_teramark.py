@@ -23,9 +23,7 @@ def run_tcpkali(arg1, host_index, **kwargs):
     arg1.disconnect()
 
 def add_to_data_base(value_dict):
-    unit_dict = {"input_num_hosts": PerfUnit.UNIT_NUMBER, "input_msg_rate": PerfUnit.UNIT_NUMBER,
-                 "input_num_connection": PerfUnit.UNIT_NUMBER, "output_aggregate_bandwidth": PerfUnit.UNIT_MBYTES_PER_SEC}
-    # unit_dict_helper = ["num_hosts", "message_rate", "no_of_connection", "aggbw_in_mbps", "rds_job_name"]
+    unit_dict = {"aggregate_bandwidth_unit": PerfUnit.UNIT_MBITS_PER_SEC}
 
     model_name = "RdsClientPerformance"
     status = fun_test.PASSED
@@ -630,11 +628,10 @@ class ECVolumeLevelTestcase(FunTestCase):
                         "date_time": self.db_log_time,
                         "platform": FunPlatform.F1,
                         "version": fun_test.get_version(),
-                        "num_f1s": self.num_f1s,
-                        "input_num_hosts": len(self.host_info),
-                        "input_msg_rate": each_m,
-                        "input_num_connection": each_c,
-                        "output_aggregate_bandwidth": aggregate_bw
+                        "num_hosts": len(self.host_info),
+                        "msg_rate": each_m,
+                        "num_connection": each_c,
+                        "aggregate_bandwidth": aggregate_bw
                         }
                     if self.post_results:
                         fun_test.log("Posting results on dashboard")
