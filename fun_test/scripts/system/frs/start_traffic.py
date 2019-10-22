@@ -40,6 +40,7 @@ class FunTestCase1(FunTestCase):
         # 3. 3.5 hour - 210 min
         fs_name = fun_test.get_job_environment_variable("test_bed_type")
         self.fs = AssetManager().get_fs_by_name(fs_name)
+        fun_test.log(json.dumps(self.fs, indent=4))
 
         self.f1_0_boot_args = 'cc_huid=3 sku=SKU_FS1600_0 app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303'
         self.f1_1_boot_args = 'cc_huid=2 sku=SKU_FS1600_1 app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303'
@@ -84,7 +85,6 @@ class FunTestCase1(FunTestCase):
             self.create_ec_volume(topology)
         self.clear_uart_logs()
 
-        fun_test.log(json.dumps(self.fs, indent=4))
         fun_test.log("Details: {}, Input: {}".format(self.details, job_inputs))
 
         # Power files - finding the right number, so its done
