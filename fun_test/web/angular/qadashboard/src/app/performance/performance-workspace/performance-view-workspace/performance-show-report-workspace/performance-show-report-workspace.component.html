@@ -14,33 +14,32 @@
           <span *ngFor="let jira of interestedMetric.jira_ids">
           <a href="'http://jira/browse/' + {{ jira }}" target="_blank">{{ jira }}</a>&nbsp;
         </span><br>
-
-          <!--<summary-jira-info [bugInfoUrl]="'/common/bug_info'" [data]="interestedMetric.jira_list"-->
-          <!--[allowDelete]="false" [allowContext]="false" [allowAdd]="false"></summary-jira-info>-->
           Comments: <textarea [(ngModel)]="interestedMetric.comments" style="width: 100%"></textarea>
         </div>
         <table *ngIf="interestedMetric.leaf" class="table table-bordered" style="max-width: 50%; margin: 0">
           <tr style="vertical-align: middle; border-bottom: solid black 1px">
-            <th>
+            <th rowspan="2">
               Series name
             </th>
-            <th>
+            <th rowspan="2">
               Unit
             </th>
-            <th>
+            <th rowspan="2">
               Yesterday <br><span class="text-size-smaller">{{ interestedMetric.report[0].yesterdayDate }}</span>
             </th>
-            <th>
+            <th rowspan="2">
               Today <br><span class="text-size-smaller">{{ interestedMetric.report[0].todayDate }}</span>
             </th>
+            <th colspan="2">
+              % change
+            </th>
+          </tr>
+          <tr>
             <th>
-              Percentage change
+              from last value
             </th>
             <th>
-              Best Percentage change
-            </th>
-            <th>
-              History
+              from best value
             </th>
           </tr>
           <ng-container *ngFor="let dataSet of interestedMetric.report">
@@ -52,7 +51,10 @@
                 {{ dataSet.unit }}
               </td>
               <td>
-                {{ dataSet.yesterday }}
+                {{ dataSet.yesterday }} <span *ngIf="!dataSet.show_history" class="pseudo-anchor small-text"
+                    (click)="dataSet.show_history = true">..show history</span>
+                <span *ngIf="dataSet.show_history" class="pseudo-anchor small-text"
+                      (click)="dataSet.show_history = false">..hide history</span>
               </td>
               <td>
                 {{ dataSet.today }}
@@ -72,12 +74,6 @@
               <td *ngIf="dataSet.percentage && !interestedMetric.positive"
                   [ngClass]="{'text-color-green': dataSet.percentage.includes('-'), 'text-color-red': dataSet.percentage.includes('+')}">
                 {{ dataSet.percentage }}
-              </td>
-              <td>
-              <span *ngIf="!dataSet.show_history" class="pseudo-anchor"
-                    (click)="dataSet.show_history = true">Show</span>
-                <span *ngIf="dataSet.show_history" class="pseudo-anchor"
-                      (click)="dataSet.show_history = false">Hide</span>
               </td>
             </tr>
             <ng-container *ngIf="dataSet.show_history">
