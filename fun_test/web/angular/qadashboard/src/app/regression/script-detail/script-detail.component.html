@@ -1,4 +1,4 @@
-<div class="component" style="overflow: visible">
+<div class="component">
 
 
   <div class="fun-flex-container fun-action-nav">
@@ -29,7 +29,7 @@
   </div>
   <app-timeline-control [domainMin]="minRelativeTime" [domainMax]="maxRelativeTime" [title]="'Timeline'" [unit]="'s'" (valueChanged)="onTimeLineChanged($event)"></app-timeline-control>
 
-  <div style="position: fixed">
+  <div>
     <div class="fun-flex-container" style="align-items: flex-start;">
       <div *ngIf="showTestCasePanel" class="fun-flex-item panel fun-panel" [@show]="showTestCasePanel">
         <div class="fun-panel-header">Test-cases</div>
@@ -83,7 +83,7 @@
               Context: {{ availableContext.context_id }} {{ availableContext.description }}
             </div>
             <div class="fun-panel-body">
-              <div [@show]="showLogsPanel" *ngIf="currentTestCaseExecution" style="overflow-y: scroll; height: 500px; overflow-x: scroll; width: 300px">
+              <div [@show]="showLogsPanel" *ngIf="currentTestCaseExecution">
                 <h4>{{ currentTestCaseExecution.test_case_id }}: {{ currentTestCaseExecution.summary }}</h4>
                 <div>
                   <ng-container *ngIf="currentTestCaseExecution">
