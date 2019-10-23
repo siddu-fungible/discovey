@@ -81,6 +81,19 @@ class ScriptSetup(FunTestScript):
         fun_test.shared_variables['testbed_info'] = testbed_info
         fun_test.shared_variables["pcie_host_result"] = True
         fun_test.shared_variables["host_ping_result"] = True
+
+        job_inputs = fun_test.get_job_inputs()
+        if not job_inputs:
+            job_inputs = {}
+        fun_test.log("Provided job inputs: {}".format(job_inputs))
+
+        if "enable_fcp_rds" in job_inputs:
+            enable_fcp_rds = job_inputs["enable_fcp_rds"]
+            fun_test.shared_variables["enable_fcp_rds"] = enable_fcp_rds
+        else:
+            enable_fcp_rds = True
+            fun_test.shared_variables["enable_fcp_rds"] = enable_fcp_rds
+
         # Removing any funeth driver from COMe and and all the connected server
         threads_list = []
         single_f1 = False
@@ -125,11 +138,14 @@ class ScriptSetup(FunTestScript):
             index = testbed_info['fs'][test_bed_type][fs_name]['index']
             if single_f1:
                 index = 0
+            f10_bootarg = testbed_info['fs'][test_bed_type][fs_name]['bootargs_f1_0']
+            f11_bootarg = testbed_info['fs'][test_bed_type][fs_name]['bootargs_f1_1']
+            if "enable_fcp_rds":
+                f10_bootarg += " rdstype=fcp"
+                f11_bootarg += " rdstype=fcp"
             topology_helper.set_dut_parameters(dut_index=index,
-                                               f1_parameters={0: {"boot_args": testbed_info['fs'][test_bed_type]
-                                                              [fs_name]['bootargs_f1_0']},
-                                                              1: {"boot_args": testbed_info['fs'][test_bed_type]
-                                                              [fs_name]['bootargs_f1_1']}},
+                                               f1_parameters={0: {"boot_args": f10_bootarg},
+                                                              1: {"boot_args": f11_bootarg}},
                                                fun_cp_callback=funcp_obj.bringup)
 
         topology = topology_helper.deploy()
