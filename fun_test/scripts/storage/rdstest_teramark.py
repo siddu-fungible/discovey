@@ -11,6 +11,8 @@ from collections import OrderedDict, Counter
 from lib.templates.csi_perf.csi_perf_template import CsiPerfTemplate
 from lib.host.linux import Linux
 from fun_global import PerfUnit, FunPlatform
+from datetime import datetime
+
 
 
 '''
@@ -186,9 +188,8 @@ class ECVolumeLevelScript(FunTestScript):
             self.topology = self.topology_helper.deploy()
             fun_test.test_assert(self.topology, "Topology deployed")
 
-            # Datetime required for daily Dashboard data filter
-            self.db_log_time = get_data_collection_time(tag="ec_inspur_fs_teramark_single_f1")
-            fun_test.log("Data collection time: {}".format(self.db_log_time))
+            self.db_log_time = datetime.now()
+            fun_test.shared_variables["db_log_time"] = self.db_log_time
 
             # Retrieving all Hosts list and filtering required hosts and forming required object lists out of it
             if self.testbed_type != "suite-based":

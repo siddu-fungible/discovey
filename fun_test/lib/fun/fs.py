@@ -300,7 +300,10 @@ class Bmc(Linux):
 
     def set_boot_phase(self, index, phase):
         self.boot_phase = phase
-        fun_test.add_checkpoint(checkpoint="F1_{}: Started boot phase: {}".format(index, phase), context=self.context)
+        result = fun_test.PASSED
+        if phase == BootPhases.FS_BRING_UP_ERROR:
+            result = fun_test.FAILED
+        fun_test.add_checkpoint(checkpoint="F1_{}: Started boot phase: {}".format(index, phase), context=self.context, result=result)
         fun_test.log_section(message="F1_{}:{}".format(index, phase), context=self.context)
 
     def detect_version(self, output):

@@ -271,9 +271,7 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
                 block_size=ec_info["volume_block"]["ndata"], name="RDS" + "_" + this_uuid[-4:], uuid=this_uuid,
                 remote_nsid=cur_ns_id, remote_ip=cur_f1_ip, group_id=num+1, command_duration=command_timeout)
             fun_test.test_assert(command_result["status"], "Creating RDS volume for the remote BLT {} in remote F1 {} "
-                                                           "on DUT {}".format(cur_ns_id,
-                                                                              ec_info["rds_nsid"][num][cur_ns_id],
-                                                                              cur_vol_host_f1))
+                                                           "on DUT {}".format(cur_ns_id, cur_f1_ip, cur_vol_host_f1))
         """
         plex_num = 0
         for sc_index in cur_plex_to_f1_map:

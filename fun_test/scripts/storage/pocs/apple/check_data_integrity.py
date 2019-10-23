@@ -1,13 +1,20 @@
 from lib.system.fun_test import *
+from lib.fun.fs import Fs
+from lib.templates.storage.storage_fs_template import *
+from lib.topology.topology_helper import TopologyHelper
+from scripts.storage.storage_helper import *
 from asset.asset_manager import AssetManager
 from lib.host.apc_pdu import ApcPdu
-import re
-import urllib
+
 from lib.fun.fs import ComE, Bmc, Fpga
 from lib.system import utils
 from lib.host.linux import Linux
 from collections import OrderedDict
 
+import re
+import urllib
+import urllib3
+import requests
 
 class ApcPduScript(FunTestScript):
     def describe(self):
@@ -48,6 +55,13 @@ class ApcPduTestcase(FunTestCase):
 
         HOSTS_ASSET = ASSET_DIR + "/hosts.json"
         self.hosts_asset = fun_test.parse_file_to_json(file_name=HOSTS_ASSET)
+
+        fun_test.shared_variables["apiprotocol"] = self.apiprotocol
+        fun_test.shared_variables["apiport"] = self.apiport
+        fun_test.shared_variables["volcapacity"] = self.volcapacity
+        fun_test.shared_variables["volencrypt"] = self.volencrypt
+        fun_test.shared_variables["volname"] = self.volname
+        fun_test.shared_variables["volstripecount"] = self.volstripecount
 
         job_inputs = fun_test.get_job_inputs()
         if job_inputs:
@@ -92,6 +106,52 @@ class ApcPduTestcase(FunTestCase):
         4. now check for SSD's and NU & HNU ports validation.
         :return:
         '''
+
+        self.apiprotocol = fun_test.shared_variables["apiprotocol"]
+        self.apiport = fun_test.shared_variables["apiport"]
+        self.volcapacity = fun_test.shared_variables["volcapacity"]
+        self.volencrypt = fun_test.shared_variables["volencrypt"]
+        self.volname = fun_test.shared_variables["volname"]
+        self.volstripecount = fun_test.shared_variables["volstripecount"]
+
+        import pdb; pdb.set_trace()
+
+        urllib3.disable_warnings()
+        self.username = 'admin'
+        self.password = 'password'
+        self.pool_url = '{}://{}:{}/FunCC/v1/storage/pools'.format(self.apiprotocol, self.fs['come']['mgmt_ip'],
+                                                                   self.apiport)
+        data = []
+        self.http_basic_auth = requests.auth.HTTPBasicAuth(self.username, self.password)
+        response = requests.get(self.pool_url, auth=self.http_basic_auth, json=data, verify=False)
+
+        pool_id = str(response.json()['data'].keys()[0])
+        fun_test.log("pools log: {}".format(response.json()))
+        fun_test.log("pool_id: {}".format(pool_id))
+
+        self.topo_url = '{}://{}:{}/FunCC/v1/topology'.format(self.apiprotocol, self.fs['come']['mgmt_ip'],
+                                                              self.apiport)
+        response = requests.get(self.pool_url, auth=self.http_basic_auth, json=data, verify=False)
+
+        fun_test.log("topology log: {}".format(response.json()))
+
+        # STEP1: VOL CREATION
+        fun_test.log("STEP1: VOL CREATION")
+        self.volcreate_url = "{}://{}:{}/FunCC/v1/storage/pools/{}/volumes".format(self.apiprotocol,
+                                                                                   self.fs['come']['mgmt_ip'],
+                                                                                   self.apiport, pool_id)
+        data = {"name": self.volname, "capacity": self.volcapacity, "vol_type": "VOL_TYPE_BLK_LOCAL_THIN",
+                "encrypt": self.volencrypt, "allow_expansion": False, "stripe_count": self.volstripecount, "data_protection": {},
+                "compression_effort": 0}
+        response = requests.post(self.volcreate_url, auth=self.http_basic_auth, json=data, verify=False)
+
+        fun_test.log("vol creation log: {}".format(response.json()))
+        fun_test.test_assert(response.json()['message'] == 'volume create successful',
+                             "Volume creation successful")
+        fun_test.log("vol creation status: {}".format(response.json()['message']))
+        fun_test.log("vol UUID: {}".format(response.json()['data']['uuid']))
+        vol_uuid = str(response.json()['data']['uuid'])
+
         for pc_no in range(self.iterations):
             self.pc_no = pc_no
             self.come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
@@ -105,14 +165,6 @@ class ApcPduTestcase(FunTestCase):
             fun_test.add_checkpoint(checkpoint="ITERATION : {} out of {}".format(pc_no + 1, self.iterations))
 
             self.apc_pdu_reboot()
-            self.come_handle.destroy()
-
-            self.come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
-                                    ssh_username=self.fs['come']['mgmt_ssh_username'],
-                                    ssh_password=self.fs['come']['mgmt_ssh_password'])
-            self.bmc_handle = Bmc(host_ip=self.fs['bmc']['mgmt_ip'],
-                                  ssh_username=self.fs['bmc']['mgmt_ssh_username'],
-                                  ssh_password=self.fs['bmc']['mgmt_ssh_password'])
 
             fun_test.log("Checking if BMC is UP")
             bmc_up = self.bmc_handle.ensure_host_is_up(max_wait_time=600)
@@ -206,39 +258,36 @@ class ApcPduTestcase(FunTestCase):
         :param come_handle:
         :return:
         '''
-        try:
-            fun_test.log("Iteration no: {} out of {}".format(self.pc_no + 1, self.iterations))
+        fun_test.log("Iteration no: {} out of {}".format(self.pc_no + 1, self.iterations))
 
-            fun_test.log("Checking if COMe is UP")
-            come_up = self.come_handle.ensure_host_is_up()
-            fun_test.add_checkpoint("COMe is UP (before switching off fs outlet)",
-                                    self.to_str(come_up), True, come_up)
-            self.come_handle.destroy()
+        fun_test.log("Checking if COMe is UP")
+        come_up = self.come_handle.ensure_host_is_up()
+        fun_test.add_checkpoint("COMe is UP (before switching off fs outlet)",
+                                self.to_str(come_up), True, come_up)
+        self.come_handle.destroy()
 
-            apc_pdu = ApcPdu(host_ip=self.apc_info['host_ip'], username=self.apc_info['username'],
-                             password=self.apc_info['password'])
-            fun_test.sleep(message="Wait for few seconds after connect with apc power rack", seconds=5)
+        apc_pdu = ApcPdu(host_ip=self.apc_info['host_ip'], username=self.apc_info['username'],
+                         password=self.apc_info['password'])
+        fun_test.sleep(message="Wait for few seconds after connect with apc power rack", seconds=5)
 
-            apc_outlet_off_msg = apc_pdu.outlet_off(self.outlet_no)
-            fun_test.log("APC PDU outlet off mesg {}".format(apc_outlet_off_msg))
-            outlet_off = self.match_success(apc_outlet_off_msg)
-            fun_test.test_assert(outlet_off, "Power down FS")
+        apc_outlet_off_msg = apc_pdu.outlet_off(self.outlet_no)
+        fun_test.log("APC PDU outlet off mesg {}".format(apc_outlet_off_msg))
+        outlet_off = self.match_success(apc_outlet_off_msg)
+        fun_test.test_assert(outlet_off, "Power down FS")
 
-            fun_test.sleep(message="Wait for few seconds after switching off fs outlet", seconds=20)
+        fun_test.sleep(message="Wait for few seconds after switching off fs outlet", seconds=20)
 
-            fun_test.log("Checking if COMe is down")
-            come_down = not (self.come_handle.ensure_host_is_up(max_wait_time=10))
-            fun_test.test_assert(come_down, "COMe is Down")
-            self.come_handle.destroy()
+        fun_test.log("Checking if COMe is down")
+        come_down = not (self.come_handle.ensure_host_is_up(max_wait_time=10))
+        fun_test.test_assert(come_down, "COMe is Down")
+        self.come_handle.destroy()
 
-            apc_outlet_on_msg = apc_pdu.outlet_on(self.outlet_no)
-            fun_test.log("APC PDU outlet on message {}".format(apc_outlet_on_msg))
-            outlet_on = self.match_success(apc_outlet_on_msg)
-            fun_test.test_assert(outlet_on, "Power on FS")
+        apc_outlet_on_msg = apc_pdu.outlet_on(self.outlet_no)
+        fun_test.log("APC PDU outlet on message {}".format(apc_outlet_on_msg))
+        outlet_on = self.match_success(apc_outlet_on_msg)
+        fun_test.test_assert(outlet_on, "Power on FS")
 
-            apc_pdu.disconnect()
-        except Exception as ex:
-            fun_test.critical(ex)
+        apc_pdu.disconnect()
 
         return
 
