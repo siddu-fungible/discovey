@@ -68,13 +68,13 @@
               <td class="fun-table-header">Expected</td>
               <td class="fun-table-header">Actual</td>
             </tr>
-            <tr *ngFor="let checkpoint of this.timeSeriesByTestCase[currentTestCaseExecution.test_case_id]?.checkpoints" [ngClass]="{'selected-checkpoint-row': currentCheckpointIndex === checkpoint.index }">
-              <td><span class="pseudo-anchor" (click)="onCheckpointClick(currentTestCaseExecution.test_case_id, checkpoint.index, checkpoint.context_id)">{{ checkpoint.index }}</span></td>
-              <td>{{ checkpoint.context_id }}</td>
-              <td>{{ checkpoint.checkpoint }}</td>
-              <td><span [ngClass]="{'passed': checkpoint.result === 'PASSED', 'failed': checkpoint.result === 'FAILED' }">{{ checkpoint.result }}</span></td>
-              <td>{{ checkpoint.expected }}</td>
-              <td>{{ checkpoint.actual }}</td>
+            <tr *ngFor="let checkpoint of this.timeSeriesByTestCase[currentTestCaseExecution.test_case_id]?.checkpoints" [ngClass]="{'selected-checkpoint-row': currentCheckpointIndex === checkpoint.data.index }">
+              <td><span class="pseudo-anchor" (click)="onCheckpointClick(currentTestCaseExecution.test_case_id, checkpoint.data.index, checkpoint.data.context_id)">{{ checkpoint.data.index }}</span></td>
+              <td>{{ checkpoint.data.context_id }}</td>
+              <td>{{ checkpoint.data.checkpoint }}</td>
+              <td><span [ngClass]="{'passed': checkpoint.data.result === 'PASSED', 'failed': checkpoint.data.result === 'FAILED' }">{{ checkpoint.data.result }}</span></td>
+              <td>{{ checkpoint.data.expected }}</td>
+              <td>{{ checkpoint.data.actual }}</td>
             </tr>
           </table>
       </div>

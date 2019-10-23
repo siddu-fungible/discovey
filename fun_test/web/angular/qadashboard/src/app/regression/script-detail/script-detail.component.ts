@@ -152,8 +152,8 @@ export class ScriptDetailComponent implements OnInit {
   }
 
 
-  fetchCheckpoints(testCaseExecutionIndex, suiteExecutionId) {
-    let testCaseExecution = this.testCaseExecutions[testCaseExecutionIndex];
+  fetchCheckpoints(testCaseExecution, suiteExecutionId) {
+
     let testCaseId = testCaseExecution.test_case_id;
     let timeSeriesEntry = this.timeSeriesByTestCase[testCaseId];
     if (!timeSeriesEntry) {
@@ -177,12 +177,19 @@ export class ScriptDetailComponent implements OnInit {
   }
 
   onTestCaseIdClick(testCaseExecutionIndex) {
-    this.fetchCheckpoints(testCaseExecutionIndex, this.suiteExecutionId).subscribe(response => {
+    this.testLogs = null;
+    this.currentCheckpointIndex = null;
+    this.currentTestCaseExecution = this.testCaseExecutions[testCaseExecutionIndex];
+    this.status = "Fetching checkpoints";
+    this.fetchCheckpoints(this.currentTestCaseExecution, this.suiteExecutionId).subscribe(response => {
+      this.status = null;
+      this.showCheckpointPanel = true;
 
     }, error => {
       this.loggerService.error("Unable to fetch checkpoints");
-    })
+      this.status = null;
 
+    });
 
     /*this.regressionService.testCaseTimeSeriesCheckpoints(this.suiteExecutionId, )*/
 
