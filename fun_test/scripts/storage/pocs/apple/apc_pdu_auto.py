@@ -110,6 +110,9 @@ class ApcPduTestcase(FunTestCase):
             bmc_up = self.bmc_handle.ensure_host_is_up(max_wait_time=600)
             fun_test.test_assert(bmc_up, "BMC is UP")
 
+            # make sure seesins are closed
+            self.come_handle.destroy()
+
             fun_test.log("Checking if COMe is UP")
             come_up = self.come_handle.ensure_host_is_up(max_wait_time=600)
             fun_test.test_assert(come_up, "COMe is UP")
