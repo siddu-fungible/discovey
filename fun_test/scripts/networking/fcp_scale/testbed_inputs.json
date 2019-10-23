@@ -110,20 +110,8 @@
                   "hu_host_list":[{"mpoc-server48": "x16"},{"mpoc-server47": "x16"}, {"mpoc-server46": "x4"},
                       {"mpoc-server45": "x16"}]
               },
-              "fs-15": {
-                  "index": 8,
-                  "abtract_config_f1_0": "/abstract_config/fcp_scale_fs15-f1-0.json",
-                  "abtract_config_f1_1": "/abstract_config/fcp_scale_fs15-f1-1.json",
-                  "prepare_docker":false,
-                  "gatewayip": "10.80.4.1",
-                  "mpg0":"10.80.4.174",
-                  "mpg1":"10.80.4.175",
-                  "bootargs_f1_0": "app=mdt_test,load_mods,hw_hsu_test --serial cc_huid=3 --all_50g --dpc-server --dpc-uart",
-                  "bootargs_f1_1": "app=mdt_test,load_mods,hw_hsu_test --serial cc_huid=2 --all_50g --dpc-server --dpc-uart",
-                  "hu_host_list":[]
-              },
                "fs-20": {
-                  "index": 9,
+                  "index": 8,
                   "abtract_config_f1_0": "/abstract_config/fcp_scale_fs20-f1-0.json",
                   "abtract_config_f1_1": "/abstract_config/fcp_scale_fs20-f1-1.json",
                   "prepare_docker":false,
@@ -135,7 +123,7 @@
                   "hu_host_list":[]
               },
               "fs-40": {
-                  "index": 10,
+                  "index": 9,
                   "abtract_config_f1_0": "/abstract_config/fcp_scale_fs40-f1-0.json",
                   "abtract_config_f1_1": "/abstract_config/fcp_scale_fs40-f1-1.json",
                   "prepare_docker":false,
