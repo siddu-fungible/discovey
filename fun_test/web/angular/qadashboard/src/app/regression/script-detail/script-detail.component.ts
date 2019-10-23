@@ -141,11 +141,14 @@ export class ScriptDetailComponent implements OnInit {
     let lastCheckpoint = null;
     let currentCheckpoint = null;
     checkpoints.forEach(checkpoint => {
+      checkpoint["previous_checkpoint"] = null;
       currentCheckpoint = checkpoint;
       checkpoint["relative_epoch_time"] = checkpoint.epoch_time - this.scriptRunTime.started_epoch_time;
       if (lastCheckpoint) {
         lastCheckpoint["relative_end_epoch_time"] = checkpoint.relative_epoch_time;
+        checkpoint["previous_checkpoint"] = lastCheckpoint;
       }
+
       lastCheckpoint = checkpoint;
     });
     lastCheckpoint["relative_end_epoch_time"] = currentCheckpoint["relative_epoch_time"] + 100; //TODO: Derive this from script run time
@@ -238,12 +241,23 @@ export class ScriptDetailComponent implements OnInit {
     this.showTestCasePanel = false;
     this.showLogsPanel = true;
     this.showCheckpointPanel = true;
+    /*
     let checkpointId = `${testCaseId}_${checkpointIndex}_${contextId}`;
     this.currentCheckpointIndex = checkpointIndex;
     setTimeout(() => {
       this.commonService.scrollTo(checkpointId);
-    }, 500);
+    }, 500);*/
+
+    let selectedCheckpoint = this.timeSeriesByTestCase[testCaseId].checkpoints[checkpointIndex];
+    let checkpointsInConsideration = [selectedCheckpoint];
+    if (selectedCheckpoint.previous_checkpoint) {
+      checkpointsInConsideration.unshift(selectedCheckpoint.previous_checkpoint);
+    }
+    console.log(checkpointsInConsideration);
+    checkpointsInConsideration.
   }
+
+
   
   onShowTestCasePanelClick() {
     this.showTestCasePanel = true;
