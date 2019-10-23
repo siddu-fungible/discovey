@@ -691,20 +691,20 @@ def populate_resource_bam_output_file(network_controller_obj, filename, max_time
                 lines.append(i.get_string())
                 lines.append('\n\n\n')
 
-                file_path = fun_test.get_test_case_artifact_file_name(filename)
+            file_path = fun_test.get_test_case_artifact_file_name(filename)
 
-                with open(file_path, 'a') as f:
-                    f.writelines(lines)
+            with open(file_path, 'a') as f:
+                f.writelines(lines)
 
-                fun_test.add_auxillary_file(description='DPC Resource BAM stats', filename=file_path)
+            fun_test.add_auxillary_file(description='DPC Resource BAM stats', filename=file_path)
 
-                if display_output:
-                    fun_test.log_disable_timestamps()
-                    fun_test.log_section("BAM Resource result")
-                    for line in lines:
-                        fun_test.log(line)
-                    fun_test.log_enable_timestamps()
-                output = True
+            if display_output:
+                fun_test.log_disable_timestamps()
+                fun_test.log_section("BAM Resource result")
+                for line in lines:
+                    fun_test.log(line)
+                fun_test.log_enable_timestamps()
+            output = True
     except Exception as ex:
         fun_test.critical(str(ex))
     return output
