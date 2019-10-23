@@ -103,7 +103,7 @@ def le_firewall(run_time, new_image):
     host_1.command('export PYTHONPATH="/home/localadmin/Integration/fun_test"')
     host_1.command("cd /home/localadmin/Integration/fun_test/scripts/power_monitor")
     host_1.start_bg_process(cmd)
-    host_1.command("ps -a | grep python")
+    host_1.command("ps -ef | grep python")
     host_1.exit_sudo()
     fun_test.test_assert(True, "Le-firewall started on {} VM for {} seconds".format(vm_1, run_time))
 
@@ -114,7 +114,7 @@ def le_firewall(run_time, new_image):
     host_2.command('export WORKSPACE="/home/localadmin/fungible_automation/Integration"')
     host_2.command('export PYTHONPATH="/home/localadmin/fungible_automation/Integration/fun_test"')
     host_2.start_bg_process(cmd)
-    host_1.command("ps -a | grep python")
+    host_1.command("ps -ef | grep python")
     host_2.exit_sudo()
     host_1.destroy()
     host_2.destroy()

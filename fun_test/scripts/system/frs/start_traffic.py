@@ -10,9 +10,7 @@ from fun_global import PerfUnit, FunPlatform
 from web.fun_test.analytics_models_helper import get_data_collection_time, ModelHelper
 import stats_calculation
 from lib.fun import fs
-
 from scripts.storage.storage_helper import *
-
 import get_params_for_time
 
 
@@ -42,8 +40,8 @@ class FunTestCase1(FunTestCase):
         self.fs = AssetManager().get_fs_by_name(fs_name)
         fun_test.log(json.dumps(self.fs, indent=4))
 
-        self.f1_0_boot_args = 'cc_huid=3 sku=SKU_FS1600_0 app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303'
-        self.f1_1_boot_args = 'cc_huid=2 sku=SKU_FS1600_1 app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303'
+        self.f1_0_boot_args = 'cc_huid=3 sku=SKU_FS1600_0 app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303 --funtop'
+        self.f1_1_boot_args = 'cc_huid=2 sku=SKU_FS1600_1 app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303 --funtop'
         fs_name = fun_test.get_job_environment_variable("test_bed_type")
         self.fs = AssetManager().get_fs_by_name(fs_name)
         topology_helper = TopologyHelper()
@@ -689,7 +687,6 @@ class FunTestCase1(FunTestCase):
                                                           file_hbm_dif=self.f_hbm_dif_f1_1,
                                                           heading=heading)
         fun_test.test_assert(True, "Started capturing the peek stats/le/counters logs {} on F1_1".format(heading))
-
 
         fun_test.join_thread(thread_id_power)
         fun_test.join_thread(thread_id_debug_memory_f1_0)
