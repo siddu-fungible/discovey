@@ -80,7 +80,7 @@ class FunTestCase1(FunTestCase):
             topology = topology_helper.deploy()
             fun_test.test_assert(topology, "Topology deployed")
             self.verify_dpcsh_started()
-            self.create_ec_volume(topology)
+            # self.create_ec_volume(topology)
         self.clear_uart_logs()
 
         fun_test.log("Details: {}, Input: {}".format(self.details, job_inputs))
