@@ -113,7 +113,7 @@ export class PerformanceShowReportWorkspaceComponent implements OnInit {
     for (let dataSet of dataSets) {
       let temp = {};
       temp["name"] = dataSet["name"];
-      temp["best"] = dataSet["best"];
+      temp["best"] = dataSet["output"]["best"];
       temp["today"] = null;
       temp["yesterday"] = null;
       temp["unit"] = null;
