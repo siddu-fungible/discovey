@@ -410,7 +410,7 @@ class Linux(object, ToDictMixin):
             if not custom_prompts:
                 custom_prompts = {}
             if not self.handle:
-                if not Linux._connect(self):
+                if not self._connect():
                     raise Exception("Unable to connect to %s, username: %s, password: %s" % (self.host_ip,
                                                                                              self.ssh_username,
                                                                                              self.ssh_password))
@@ -425,7 +425,7 @@ class Linux(object, ToDictMixin):
                 try:
                     self.handle.expect(self.prompt_terminator, timeout=sync_timeout)
                 except (pexpect.EOF):
-                    Linux.disconnect(self)
+                    self.disconnect(self)
                     return self.command(command=command,
                                         sync=sync, timeout=timeout,
                                         custom_prompts=custom_prompts,
