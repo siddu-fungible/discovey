@@ -105,13 +105,18 @@ class ApcPduTestcase(FunTestCase):
             fun_test.add_checkpoint(checkpoint="ITERATION : {} out of {}".format(pc_no + 1, self.iterations))
 
             self.apc_pdu_reboot()
+            self.come_handle.destroy()
+
+            self.come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
+                                    ssh_username=self.fs['come']['mgmt_ssh_username'],
+                                    ssh_password=self.fs['come']['mgmt_ssh_password'])
+            self.bmc_handle = Bmc(host_ip=self.fs['bmc']['mgmt_ip'],
+                                  ssh_username=self.fs['bmc']['mgmt_ssh_username'],
+                                  ssh_password=self.fs['bmc']['mgmt_ssh_password'])
 
             fun_test.log("Checking if BMC is UP")
             bmc_up = self.bmc_handle.ensure_host_is_up(max_wait_time=600)
             fun_test.test_assert(bmc_up, "BMC is UP")
-
-            # make sure seesins are closed
-            self.come_handle.destroy()
 
             fun_test.log("Checking if COMe is UP")
             come_up = self.come_handle.ensure_host_is_up(max_wait_time=600)
@@ -201,36 +206,39 @@ class ApcPduTestcase(FunTestCase):
         :param come_handle:
         :return:
         '''
-        fun_test.log("Iteration no: {} out of {}".format(self.pc_no + 1, self.iterations))
+        try:
+            fun_test.log("Iteration no: {} out of {}".format(self.pc_no + 1, self.iterations))
 
-        fun_test.log("Checking if COMe is UP")
-        come_up = self.come_handle.ensure_host_is_up()
-        fun_test.add_checkpoint("COMe is UP (before switching off fs outlet)",
-                                self.to_str(come_up), True, come_up)
-        self.come_handle.destroy()
+            fun_test.log("Checking if COMe is UP")
+            come_up = self.come_handle.ensure_host_is_up()
+            fun_test.add_checkpoint("COMe is UP (before switching off fs outlet)",
+                                    self.to_str(come_up), True, come_up)
+            self.come_handle.destroy()
 
-        apc_pdu = ApcPdu(host_ip=self.apc_info['host_ip'], username=self.apc_info['username'],
-                         password=self.apc_info['password'])
-        fun_test.sleep(message="Wait for few seconds after connect with apc power rack", seconds=5)
+            apc_pdu = ApcPdu(host_ip=self.apc_info['host_ip'], username=self.apc_info['username'],
+                             password=self.apc_info['password'])
+            fun_test.sleep(message="Wait for few seconds after connect with apc power rack", seconds=5)
 
-        apc_outlet_off_msg = apc_pdu.outlet_off(self.outlet_no)
-        fun_test.log("APC PDU outlet off mesg {}".format(apc_outlet_off_msg))
-        outlet_off = self.match_success(apc_outlet_off_msg)
-        fun_test.test_assert(outlet_off, "Power down FS")
+            apc_outlet_off_msg = apc_pdu.outlet_off(self.outlet_no)
+            fun_test.log("APC PDU outlet off mesg {}".format(apc_outlet_off_msg))
+            outlet_off = self.match_success(apc_outlet_off_msg)
+            fun_test.test_assert(outlet_off, "Power down FS")
 
-        fun_test.sleep(message="Wait for few seconds after switching off fs outlet", seconds=20)
+            fun_test.sleep(message="Wait for few seconds after switching off fs outlet", seconds=20)
 
-        fun_test.log("Checking if COMe is down")
-        come_down = not (self.come_handle.ensure_host_is_up(max_wait_time=10))
-        fun_test.test_assert(come_down, "COMe is Down")
-        self.come_handle.destroy()
+            fun_test.log("Checking if COMe is down")
+            come_down = not (self.come_handle.ensure_host_is_up(max_wait_time=10))
+            fun_test.test_assert(come_down, "COMe is Down")
+            self.come_handle.destroy()
 
-        apc_outlet_on_msg = apc_pdu.outlet_on(self.outlet_no)
-        fun_test.log("APC PDU outlet on message {}".format(apc_outlet_on_msg))
-        outlet_on = self.match_success(apc_outlet_on_msg)
-        fun_test.test_assert(outlet_on, "Power on FS")
+            apc_outlet_on_msg = apc_pdu.outlet_on(self.outlet_no)
+            fun_test.log("APC PDU outlet on message {}".format(apc_outlet_on_msg))
+            outlet_on = self.match_success(apc_outlet_on_msg)
+            fun_test.test_assert(outlet_on, "Power on FS")
 
-        apc_pdu.disconnect()
+            apc_pdu.disconnect()
+        except Exception as ex:
+            fun_test.critical(ex)
 
         return
 
