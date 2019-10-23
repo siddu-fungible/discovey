@@ -11,6 +11,8 @@ from collections import OrderedDict, Counter
 from lib.templates.csi_perf.csi_perf_template import CsiPerfTemplate
 from lib.host.linux import Linux
 from fun_global import PerfUnit, FunPlatform
+from datetime import datetime
+
 
 
 '''
