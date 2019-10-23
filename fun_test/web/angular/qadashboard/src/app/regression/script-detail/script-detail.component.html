@@ -71,7 +71,7 @@
             <tr *ngFor="let checkpoint of this.timeSeriesByTestCase[currentTestCaseExecution.test_case_id]?.checkpoints" [ngClass]="{'selected-checkpoint-row': currentCheckpointIndex === checkpoint.data.index }">
               <td><span class="pseudo-anchor" (click)="onCheckpointClick(currentTestCaseExecution.test_case_id, checkpoint.data.index, checkpoint.data.context_id)">{{ checkpoint.data.index }}</span></td>
               <td>{{ checkpoint.data.context_id }}</td>
-              <td>{{ checkpoint.data.checkpoint }}</td>
+              <td>{{ checkpoint.data.checkpoint }} ({{ checkpoint.relative_epoch_time }}, {{ checkpoint.relative_end_epoch_time }})</td>
               <td><span [ngClass]="{'passed': checkpoint.data.result === 'PASSED', 'failed': checkpoint.data.result === 'FAILED' }">{{ checkpoint.data.result }}</span></td>
               <td>{{ checkpoint.data.expected }}</td>
               <td>{{ checkpoint.data.actual }}</td>

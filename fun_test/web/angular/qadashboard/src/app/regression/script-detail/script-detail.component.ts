@@ -139,14 +139,16 @@ export class ScriptDetailComponent implements OnInit {
 
   parseCheckpoints(checkpoints) {
     let lastCheckpoint = null;
+    let currentCheckpoint = null;
     checkpoints.forEach(checkpoint => {
+      currentCheckpoint = checkpoint;
       checkpoint["relative_epoch_time"] = checkpoint.epoch_time - this.scriptRunTime.started_epoch_time;
       if (lastCheckpoint) {
-        checkpoint["relative_end_epoch_time"] = checkpoint.relative_epoch_time;
+        lastCheckpoint["relative_end_epoch_time"] = checkpoint.relative_epoch_time;
       }
       lastCheckpoint = checkpoint;
     });
-    lastCheckpoint["relative_end_epoch_time"] = lastCheckpoint["relative_epoch_time"] + 100; //TODO: Derive this from script run time
+    lastCheckpoint["relative_end_epoch_time"] = currentCheckpoint["relative_epoch_time"] + 100; //TODO: Derive this from script run time
 
 
   }
