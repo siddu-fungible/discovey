@@ -1706,7 +1706,7 @@ if __name__ == "__main_power_perf__":
 if __name__ == "__main__backup":
     ml.backup_dags()
 
-if __name__ == "__main__":
+if __name__ == "__main_rds_client__":
     metric_model_name = "RdsClientPerformance"
     description = "TBD"
     owner_info = "Nazir Ahamed (nazir.ahamed@fungible.com)"
@@ -1769,4 +1769,27 @@ if __name__ == "__main__":
 
     final_dict = ml.get_dict(chart=iops_chart)
     print json.dumps(final_dict, indent=4)
+
+if __name__ == "__main__":
+    entries = MetricChart.objects.all()
+    for entry in entries:
+        if entry.leaf:
+            model = app_config.get_metric_models()[entry.metric_model_name]
+            data_sets = entry.get_data_sets()
+            for data_set in data_sets:
+                inputs = data_set["inputs"]
+                d = {}
+                for input_name, input_value in inputs.iteritems():
+                    if input_name == "input_date_time":
+                        continue
+                    d[input_name] = input_value
+                order_by = "-input_date_time"
+                result = model.objects.filter(**d).order_by(order_by)[:1]
+                result = result.first() if len(result) else None
+                output_name = data_set["output"]["name"]
+                best_value = getattr(result, output_name) if result else -1
+                data_set["output"]["best"] = best_value
+            entry.data_sets = json.dumps(data_sets)
+            entry.save()
+    print "added best value for all datasets"
 

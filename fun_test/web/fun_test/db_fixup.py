@@ -70,34 +70,6 @@ def get_entries_for_day(model, day, data_set):
     return result
 
 
-def get_first_record(model, data_set):
-    inputs = data_set["inputs"]
-    d = {}
-    for input_name, input_value in inputs.iteritems():
-        d[input_name] = input_value
-    order_by = "-input_date_time"
-    entries = model.objects.filter(**d).order_by(order_by)
-    i = 0
-
-
-def fixup_reference_values(chart, model, data_set):
-    modified = 0
-    first_record = get_first_record(model=model, data_set=data_set)
-    if not first_record:
-        i = 0
-    else:
-        first_record = first_record[-1]
-        output_name = data_set["output"]["name"]
-        if output_name in first_record:
-            data_set["output"]["reference"] = first_record[output_name]
-            modified = 1
-        j = 0
-        # data_set["reference"] = first_rec
-    # self.data_sets = json.dumps(data_set)
-    # self.save()
-    return modified
-
-
 def interpolate(chart, model, from_date, to_date):
     data_sets = json.loads(chart.data_sets)
 
@@ -232,6 +204,22 @@ def adjust_timezone_for_day_light_savings(current_date):
 def _is_valid_output(output_value):
     return (output_value != -1 and not math.isinf(output_value))
 
+def _update_best_value(chart, model, current_date):
+    data_sets = chart.get_data_sets()
+    for data_set in data_sets:
+        entries = get_entries_for_day(model=model, day=current_date, data_set=data_set)
+        if len(entries):
+            this_days_record = entries.first()
+            output_name = data_set["output"]["name"]
+            output_value = getattr(this_days_record, output_name)
+            best_value = data_set["output"]["best"] if "best" in data_set["output"] else -1
+            if chart.postitive and output_value > best_value:
+                data_set["output"]["best"] = output_value
+            elif not chart.positive and output_value < best_value:
+                data_set["output"]["best"] = output_value
+    chart.data_sets = json.dumps(data_sets)
+    chart.save()
+
 
 def calculate_leaf_scores(cache_valid, chart, result, from_log=False):
     # print "Reached leaf: {}".format(chart.chart_name)
@@ -293,6 +281,7 @@ def calculate_leaf_scores(cache_valid, chart, result, from_log=False):
         while current_date <= to_date:
             result["num_degrades"] = 0
             valid_dates.append(current_date)
+            _update_best_value(chart=chart, model=model, current_date=current_date)
             if len(data_sets):
                 data_set_combined_goodness = 0
                 for data_set in data_sets:
@@ -304,7 +293,6 @@ def calculate_leaf_scores(cache_valid, chart, result, from_log=False):
                             output_name = data_set["output"]["name"]  # TODO
                             output_unit = output_name + "_unit"
                             reference_value = data_set["output"]["reference"]
-                            get_first_record(model=model, data_set=data_set)
                             output_value = getattr(this_days_record, output_name)
                             if hasattr(this_days_record, output_unit):
                                 output_unit = getattr(this_days_record, output_unit)

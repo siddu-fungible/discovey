@@ -96,7 +96,7 @@ export class PerformanceComponent implements OnInit {
   @Input() interestedMetrics: any = null; //metrics already part of the workspace
   @Input() description: string = null; //workspace description
   @Output() editedWorkspace: EventEmitter<boolean> = new EventEmitter(); //successful submission of metrics to DB
-  @Input() metricIds: number[] = null;
+  @Input() metricIds: any[] = null;
   updatedInterestedMetrics: any = [];
   SelectMode = SelectMode;
 
@@ -178,6 +178,7 @@ export class PerformanceComponent implements OnInit {
   showF1Dag: boolean = true;
   showS1Dag: boolean = false;
   initialize: boolean = true;
+  viewWorkspaceIds: number[] = [];
   rootTabs: any[] = [{"name": "F1", "active": true}, {"name": "S1", "active": false}];
 
   constructor(
@@ -196,6 +197,11 @@ export class PerformanceComponent implements OnInit {
     console.log("Component Init");
     if (this.selectMode == SelectMode.ShowMainSite) {
       this.title.setTitle('Performance');
+    }
+    if (this.selectMode == SelectMode.ShowViewWorkspace && this.metricIds) {
+      for (let metric of this.metricIds) {
+        this.viewWorkspaceIds.push(metric["metric_id"]);
+      }
     }
     this.status = "Loading";
     this.numGridColumns = 2;
@@ -227,6 +233,17 @@ export class PerformanceComponent implements OnInit {
     } else {
       this.fetchDag();
     }
+  }
+
+  getLineage(flatNode): string {
+    let result = flatNode.node.chartName;
+    let metricId = flatNode.node.metricId;
+    for (let metric of this.metricIds) {
+        if (metricId === metric["metric_id"]) {
+          result = metric["lineage"];
+        }
+      }
+    return result;
   }
 
   getDefaultQueryPath(flatNode) {
@@ -361,8 +378,8 @@ export class PerformanceComponent implements OnInit {
       if (this.showS1Dag) {
         url += "?root_metric_ids=591";
       }
-      if (this.metricIds) {
-        url = "/metrics/dag" + "?root_metric_ids=" + String(this.metricIds) + "&is_workspace=1";
+      if (this.metricIds && this.viewWorkspaceIds.length > 0) {
+        url = "/metrics/dag" + "?root_metric_ids=" + String(this.viewWorkspaceIds) + "&is_workspace=1";
       }
       if ((this.showF1Dag && this.f1Dag) || (this.showS1Dag && this.s1Dag)) {
         fetchIt = false;
@@ -721,7 +738,7 @@ export class PerformanceComponent implements OnInit {
       thisFlatNode.hide = false;
       lineage = [];
     }
-    if (this.metricIds && this.metricIds.includes(newNode.metricId)) {
+    if (this.metricIds && this.viewWorkspaceIds.includes(newNode.metricId)) {
       thisFlatNode.hide = false;
       lineage = [];
     }
