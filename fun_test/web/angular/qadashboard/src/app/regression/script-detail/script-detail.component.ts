@@ -254,7 +254,7 @@ export class ScriptDetailComponent implements OnInit {
       checkpointsInConsideration.unshift(selectedCheckpoint.previous_checkpoint);
     }
     console.log(checkpointsInConsideration);
-    checkpointsInConsideration.
+    checkpointsInConsideration.reduce((min, p) => p.relative_epoch_time)
   }
 
 
