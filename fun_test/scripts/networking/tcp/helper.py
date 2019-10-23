@@ -1,4 +1,5 @@
 from lib.system.fun_test import *
+from scripts.networking.helper import *
 from lib.system.utils import MultiProcessingTasks
 from collections import OrderedDict
 from prettytable import PrettyTable
@@ -674,6 +675,7 @@ def get_resource_bam_table(result):
             fun_test.critical(str(ex))
         return global_table_obj, per_cluster_table_obj
 
+
 def populate_resource_bam_output_file(network_controller_obj, filename, max_time=10, display_output=False):
     output = False
     try:
@@ -725,19 +727,28 @@ def get_single_dict_stats(result):
 def populate_vp_util_output_file(network_controller_obj, filename, display_output=True, max_time=10, iteration=True):
     output = False
     try:
-        filtered_dict = {}
         lines = list()
         timer = FunTimer(max_time=max_time)
         while not timer.is_expired():
-            result = network_controller_obj.debug_vp_util()
-            for key, val in sorted(result.iteritems()):
-                if "CCV1" in key or "CCV2" in key:
-                    filtered_dict[key] = val
-            master_table_obj = get_single_dict_stats(result=filtered_dict)
+            output = network_controller_obj.debug_vp_util()
+            result = get_vp_util_filtered_dict(output=output)
+            complete_dict = get_vp_util_parsed_data_dict(result=result)
+
+            master_table_obj = get_vp_util_table_obj(complete_dict=complete_dict)
+
+            # print normalized data
+            normalized_value = get_normalized_data_vp_data(complete_dict=complete_dict)
+
+            # print histogram
+            histogram_table_obj = get_vp_util_histogram_table_obj(complete_dict=complete_dict)
+
             lines.append("\n########################  %s ########################\n" % str(get_timestamp()))
+            lines.append("Normalized VP Util: {}".format(normalized_value))
+            lines.append("\n\nHistogram table: Num of VPs in util range\n")
+            lines.append(histogram_table_obj.get_string())
+            lines.append('\n\nVP util table obj\n')
             lines.append(master_table_obj.get_string())
             lines.append('\n\n\n')
-
             if not iteration:
                 break
 
@@ -1104,5 +1115,7 @@ def validate_summary_stats(summary_dict):
     return result
 
 
-
-
+if __name__ == '__main__':
+    from lib.host.network_controller import NetworkController
+    nw = NetworkController(dpc_server_ip="fs48-come", dpc_server_port=40220)
+    populate_vp_util_output_file(network_controller_obj=nw, filename='output_vp_util.txt')
