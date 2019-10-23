@@ -1293,7 +1293,7 @@ class Linux(object, ToDictMixin):
         sudo_string = ""
         if sudo:
             sudo_string = "sudo "
-        scp_command = "%sscp -P %d %s %s@%s:%s" % (sudo_string, target_port, source_file_path, target_username, target_ip, target_file_path)
+        scp_command = "%sscp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P %d %s %s@%s:%s" % (sudo_string, target_port, source_file_path, target_username, target_ip, target_file_path)
         if not self.handle:
             self._connect()
 
