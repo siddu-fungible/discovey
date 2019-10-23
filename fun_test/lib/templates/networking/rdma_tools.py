@@ -135,7 +135,7 @@ class Rocetools:
             cmd_str += " -R"
             del kwargs["rdma_cm"]
         if "perf" in kwargs:
-            cmd_str += " --run_infinitely"
+            # cmd_str += " --run_infinitely"
             del kwargs["perf"]
         if server_ip:
             cmd_str += " " + str(server_ip) + " "
@@ -183,7 +183,7 @@ class Rocetools:
             cmd_str += " -R"
             del kwargs["rdma_cm"]
         if "perf" in kwargs:
-            cmd_str += " --run_infinitely"
+            # cmd_str += " --run_infinitely"
             del kwargs["perf"]
         if server_ip:
             cmd_str += " " + str(server_ip) + " "
@@ -237,10 +237,13 @@ class Rocetools:
                         return False
                 return True
         elif tool == "ib_bw":
+            # TODO to overcome the cleanup issue and get past scaling we are not using run_infinitely. So changing grep
+            # line to 1
             if perf:
-                grep_line = 3
+                grep_line = 1
             else:
                 grep_line = 1
+            # content = self.host.command("grep -i 'bytes' -A {} {} | tail -1".format(grep_line, filepath))
             content = self.host.command("grep -i 'bytes' -A {} {} | tail -1".format(grep_line, filepath))
             lines = content.split()
             total_values = len(lines)
@@ -261,7 +264,8 @@ class Rocetools:
                 return lines
         elif tool == "ib_lat":
             if perf:
-                content = self.host.command("grep -i 'bytes' -A 3 {} | tail -1".format(filepath))
+                # content = self.host.command("grep -i 'bytes' -A 3 {} | tail -1".format(filepath))
+                content = self.host.command("grep -i 'bytes' -A 1 {} | tail -1".format(filepath))
                 lines = content.split()
                 total_values = len(lines)
                 for x in range(0, total_values):

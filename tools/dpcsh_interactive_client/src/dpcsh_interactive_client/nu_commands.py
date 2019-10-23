@@ -3744,6 +3744,13 @@ class PeekCommands(object):
             print "ERROR: %s" % str(ex)
             self.dpc_client.disconnect()
 
+    def peek_nhp_status(self, grep_regex=None, get_result_only=False):
+        cmd = "status/nhp"
+        if get_result_only:
+            return self._display_stats(cmd=cmd, grep_regex=grep_regex, get_result_only=True)
+        else:
+            self._display_stats(cmd=cmd, grep_regex=grep_regex, get_result_only=get_result_only)
+
 
 class SampleCommands(object):
 
@@ -4423,9 +4430,7 @@ class DebugCommands(PeekCommands):
                 del list[index]
         return list_of_lists
 
-
-    def get_vp_util_table_obj(self, result):
-        master_table_obj = PrettyTable()
+    def get_vp_util_parsed_data_dict(self, result):
         complete_dict = OrderedDict()
         rows_list = ["Cls/Core", "0", "1", "2", "3"]
         for col_name in rows_list:
@@ -4442,13 +4447,73 @@ class DebugCommands(PeekCommands):
                     if _key == vp_num:
                         complete_dict[_key].append(val)
                         break
+        return complete_dict
 
+    def get_vp_util_table_obj(self, complete_dict):
+        master_table_obj = PrettyTable()
         print_keys = complete_dict.keys()
         print_values = complete_dict.values()
         print_values = self._format_non_zero_values(print_values)
         for col_name, col_values in zip(print_keys, print_values):
             master_table_obj.add_column(col_name, col_values)
         return master_table_obj
+
+    def get_normalized_data_vp_data(self, complete_dict):
+        print_values = complete_dict.values()
+        sum = 0
+        counter = 0
+        for item in print_values:
+            if isinstance(item, list):
+                for val in item:
+                    if val.isdigit():
+                        sum += int(val)
+                        counter += 1
+            else:
+                if item.isdigit():
+                    sum += int(item)
+                    counter += 1
+        if counter == 0:
+            counter = 1
+        return sum/counter
+
+    def get_vp_util_histogram_table_obj(self, complete_dict):
+        histo_table_obj = PrettyTable()
+        histo_dict = {'1-10': 0, '11-20': 0, '21-30': 0, '31-40': 0, '41-50': 0, '51-60': 0, '61-70': 0,
+                      '71-80': 0, '81-90': 0, '91-100': 0}
+        final_list = []
+        print_values = complete_dict.values()
+        for inner_list in print_values:
+            final_list.extend(inner_list)
+
+        for val in final_list:
+            if val.isdigit():
+                val = int(val)
+                if val in range(0,11):
+                    if not val == 0:
+                        histo_dict['1-10'] += 1
+                elif val in range(11,21):
+                    histo_dict['11-20'] += 1
+                elif val in range(21,31):
+                    histo_dict['21-30'] += 1
+                elif val in range(31,41):
+                    histo_dict['31-40'] += 1
+                elif val in range(41,51):
+                    histo_dict['41-50'] += 1
+                elif val in range(51,61):
+                    histo_dict['51-60'] += 1
+                elif val in range(61,71):
+                    histo_dict['61-70'] += 1
+                elif val in range(71,81):
+                    histo_dict['71-80'] += 1
+                elif val in range(81,91):
+                    histo_dict['81-90'] += 1
+                else:
+                    histo_dict['91-100'] += 1
+        for key in sorted(histo_dict):
+            val = []
+            val.append(histo_dict[key])
+            histo_table_obj.add_column(key, val)
+        return histo_table_obj
 
     def debug_vp_util_pp(self, cluster_id=None, core_id=None, grep_regex=None):
         try:
@@ -4473,8 +4538,20 @@ class DebugCommands(PeekCommands):
                                 key = 'CCV8.%s.%s' % (x, y)
                                 output_dict[key] = 'N/A'
                     result = self.get_filtered_dict(output_dict=output_dict, cluster_id=cluster_id, core_id=core_id)
+                    complete_dict = self.get_vp_util_parsed_data_dict(result=result)
 
-                    master_table_obj = self.get_vp_util_table_obj(result=result)
+                    master_table_obj = self.get_vp_util_table_obj(complete_dict=complete_dict)
+
+                    # print normalized data
+                    normalized_value = self.get_normalized_data_vp_data(complete_dict=complete_dict)
+                    print "Normalized VP Util: {}".format(normalized_value)
+
+                    # print histogram
+                    histogram_table_obj = self.get_vp_util_histogram_table_obj(complete_dict=complete_dict)
+                    print "\nHistogram table: Num of VPs in util range"
+                    print histogram_table_obj
+
+                    print "\nVP util table"
                     print master_table_obj
                     print "\n########################  %s ########################\n" % \
                           str(self._get_timestamp())

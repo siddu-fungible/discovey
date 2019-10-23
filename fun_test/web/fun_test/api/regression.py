@@ -1,10 +1,10 @@
-from fun_global import get_current_time
+from fun_global import get_current_time, get_epoch_time_from_datetime
 from web.web_global import api_safe_json_response
 from django.views.decorators.csrf import csrf_exempt
 from web.fun_test.models import TestBed, Asset
 from django.db.models import Q
 from web.fun_test.models import SuiteExecution, TestCaseExecution, TestbedNotificationEmails, LastSuiteExecution
-from web.fun_test.models import ScriptInfo, RegresssionScripts, SuiteReRunInfo
+from web.fun_test.models import ScriptInfo, RegresssionScripts, SuiteReRunInfo, TestCaseInfo
 from scheduler.scheduler_global import SchedulingType
 from scheduler.scheduler_global import SchedulerStates
 from fun_settings import TEAM_REGRESSION_EMAIL, SCRIPTS_DIR
@@ -17,15 +17,21 @@ from django.core.exceptions import ObjectDoesNotExist
 from asset.asset_global import AssetType
 from web.fun_test.models import Module
 from web.fun_test.fun_serializer import model_instance_to_dict
-from web.fun_test.models_helper import _get_suite_executions
+from web.fun_test.models_helper import _get_suite_executions, get_fun_test_time_series_collection_name
+from web.fun_test.models_helper import get_ts_test_case_context_info_collection_name
+from web.fun_test.models_helper import get_ts_script_run_time_collection_name
 from scheduler.scheduler_global import SuiteType
 from web.fun_test.models import Suite
 from fun_global import RESULTS
 from django.core import paginator
 import os
 import fnmatch
+from fun_settings import MAIN_WEB_APP
+from django.apps import apps
+from bson import json_util
+from web.fun_test.models_helper import get_script_id
 
-
+app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 
 @csrf_exempt
 @api_safe_json_response
@@ -217,18 +223,38 @@ def suite_executions(request, id):
 @api_safe_json_response
 def test_case_executions(request, id):
     if request.method == 'GET':
-        suite_id = request.GET.get("suite_id", None)
-        test_executions = TestCaseExecution.objects.filter(suite_execution_id=int(suite_id))
-        num_passed = 0
-        num_failed = 0
+        suite_execution_id = request.GET.get("suite_execution_id", None)
+        q = Q()
+        if suite_execution_id:
+            q = q & Q(suite_execution_id=int(suite_execution_id))
+        script_path = request.GET.get("script_path", None)
+        if script_path:
+            q = q & Q(script_path=script_path)
+
+        log_prefix = request.GET.get("log_prefix", None)
+        if log_prefix is not None:
+            q = q & Q(log_prefix=log_prefix)
+        test_executions = TestCaseExecution.objects.filter(q).order_by("started_time")
+        results = []
         for test_execution in test_executions:
-            if test_execution.result == RESULTS["PASSED"]:
-                num_passed += 1
-            elif test_execution.result == RESULTS["FAILED"]:
-                num_failed += 1
-        return {"num_passed": num_passed, "num_failed": num_failed}
-
-
+            summary = "Unknown"
+            if test_execution.test_case_id == 0:
+                summary = "Script setup"
+            elif test_execution.test_case_id == 999:
+                summary = "Script cleanup"
+            else:
+                try:
+                    test_case_info = TestCaseInfo.objects.get(test_case_id=test_execution.test_case_id, script_path=test_execution.script_path)
+                    summary = test_case_info.summary
+                except ObjectDoesNotExist:
+                    pass
+            results.append({"result": test_execution.result,
+                            "test_case_id": test_execution.test_case_id,
+                            "suite_execution_id": test_execution.suite_execution_id,
+                            "execution_id": test_execution.execution_id,
+                            "summary": summary,
+                            "started_epoch_time": get_epoch_time_from_datetime(test_execution.started_time)/1000})
+        return results
 
 @csrf_exempt
 @api_safe_json_response
@@ -352,7 +378,7 @@ def _fix_missing_scripts():
 
 @csrf_exempt
 @api_safe_json_response
-def scripts(request):
+def scripts(request, id):
     result = None
     if request.method == "POST":
         request_json = json.loads(request.body)
@@ -360,6 +386,16 @@ def scripts(request):
         if operation == "fix_missing_scripts":
             _fix_missing_scripts()
             result = True
+    if request.method == "GET":
+        q = Q()
+        if id is not None:
+            q &= Q(id=int(id))
+        regression_scripts = RegresssionScripts.objects.filter(q)
+        result = []
+        for script in regression_scripts:
+            result.append({"script_path": script.script_path, "id": script.id})
+        if result and id is not None:
+            result = result[0]
     return result
 
 
@@ -436,9 +472,9 @@ def re_run_job(request):
         test_case_executions = TestCaseExecution.objects.filter(suite_execution_id=original_suite_execution_id)
         re_run_info = {}
         for test_case_execution in test_case_executions:
-            script_path = test_case_execution.script_path
+            script_id = get_script_id(test_case_execution_id=test_case_execution.execution_id)
             if script_filter:
-                if script_path not in script_filter:
+                if script_id and script_id != script_filter:
                     continue
 
             if result_filter and (test_case_execution.result not in result_filter):
@@ -492,13 +528,67 @@ def re_run_job(request):
         if suite_id:
             pass
 
+
+@api_safe_json_response
+def test_case_time_series(request, suite_execution_id, test_case_execution_id):
+    result = None
+    if request.method == "GET":
+        type = request.GET.get("type", None)
+        checkpoint_index = request.GET.get("checkpoint_index", None)
+        collection_name = get_fun_test_time_series_collection_name(suite_execution_id, test_case_execution_id)  # "s_{}_{}".format(suite_execution_id, test_case_execution_id)
+        mongo_db_manager = app_config.get_mongo_db_manager()
+        collection = mongo_db_manager.get_collection(collection_name)
+        query = {}
+        if type:
+            query["type"] = type
+        if checkpoint_index is not None:
+            query["data.checkpoint_index"] = int(checkpoint_index)
+        if collection:
+            result = list(collection.find(query))
+    return result
+
+
+@api_safe_json_response
+def contexts(request, suite_execution_id, script_id):
+    result = None
+    if request.method == "GET":
+        collection_name = get_ts_test_case_context_info_collection_name(suite_execution_id, script_id)
+        mongo_db_manager = app_config.get_mongo_db_manager()
+        collection = mongo_db_manager.get_collection(collection_name)
+        query = {}
+        if collection:
+            if script_id:
+                query["script_id"] = int(script_id)
+            if suite_execution_id:
+                query["suite_execution_id"] = int(suite_execution_id)
+            result = list(collection.find(query))
+    return result
+
+
+@api_safe_json_response
+def script_run_time(request, suite_execution_id, script_id):
+    result = None
+    if request.method == "GET":
+        collection_name = get_ts_script_run_time_collection_name(suite_execution_id, script_id)
+        mongo_db_manager = app_config.get_mongo_db_manager()
+        collection = mongo_db_manager.get_collection(collection_name)
+        query = {}
+        if collection:
+            if script_id:
+                query["script_id"] = int(script_id)
+            if suite_execution_id:
+                query["suite_execution_id"] = int(suite_execution_id)
+            result = json.loads(json_util.dumps(collection.find_one(query)))
+    return result
+
 @api_safe_json_response
 def release_trains(request):
-    releases = ["rel_1_0a_aa", "rel_1_0a_ab"]
+    releases = ["1.0a_aa", "1.0a_ab"]
     result = None
     if request.method == "GET":
         result = releases
     return result
+
 
 if __name__ == "__main__":
     from web.fun_test.django_interactive import *

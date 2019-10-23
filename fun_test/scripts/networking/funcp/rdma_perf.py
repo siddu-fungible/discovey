@@ -103,9 +103,9 @@ class BringupSetup(FunTestCase):
             f11_retimer = 0
 
         f1_0_boot_args = "app=load_mods,hw_hsu_test cc_huid=3 --dpc-server --serial --all_100g --dpc-uart " \
-                         "retimer={} --mgmt --disable-wu-watchdog syslog=3".format(f10_retimer)
+                         "retimer={} --mgmt syslog=3".format(f10_retimer)
         f1_1_boot_args = "app=load_mods,hw_hsu_test cc_huid=2 --dpc-server --serial --all_100g --dpc-uart " \
-                         "retimer={} --mgmt --disable-wu-watchdog syslog=3".format(f11_retimer)
+                         "retimer={} --mgmt syslog=3".format(f11_retimer)
 
         topology_helper = TopologyHelper()
 
@@ -390,7 +390,7 @@ class BwTest(FunTestCase):
         f11_hosts = fun_test.shared_variables["f11_hosts"]
         qp_list = fun_test.shared_variables["qp_list"]
         come_obj = fun_test.shared_variables["come_obj"]
-        kill_time = 30
+        kill_time = 140
         test_case_failure_time = 20
 
         # Using hosts based on minimum host length
@@ -437,16 +437,16 @@ class BwTest(FunTestCase):
                 # Start servers on F1_0
                 for index in range(total_link_bw):
                     f10_server = f10_hosts[index]["roce_handle"].ib_bw_test(test_type=self.rt, perf=True, size=size,
-                                                                            qpair=qp,
+                                                                            qpair=qp, duration=120,
                                                                             timeout=300)
                     pid_dict = {f10_hosts[index]["roce_handle"]: f10_server}
                     f10_pid_list.append(pid_dict)
                 fun_test.sleep("Servers started for {} BW test with size={} & qp={}".format(self.rt, size, qp),
                                seconds=5)
-                # Start servers on F1_1
+                # Start clients on F1_1
                 for index in range(total_link_bw):
                     f11_client = f11_hosts[index]["roce_handle"].ib_bw_test(test_type=self.rt, perf=True, size=size,
-                                                                            qpair=qp,
+                                                                            qpair=qp, duration=120,
                                                                             server_ip=f10_hosts[index]["ipaddr"],
                                                                             timeout=300)
                     pid_dict = {f11_hosts[index]["roce_handle"]: f11_client}
@@ -543,7 +543,7 @@ class LatencyTest(FunTestCase):
         f10_hosts = fun_test.shared_variables["f10_hosts"]
         f11_hosts = fun_test.shared_variables["f11_hosts"]
         qp_list = fun_test.shared_variables["qp_list"]
-        kill_time = 20
+        kill_time = 140
         test_case_failure_time = 20
 
         # Using hosts based on minimum host length

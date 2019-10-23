@@ -1171,50 +1171,7 @@
                 "metric_model_name": "MetricContainer",
                 "name": "EC",
                 "label": "EC",
-                "children": [
-                  {
-                    "metric_model_name": "VoltestPerformance",
-                    "name": "BLK_EC: Latency",
-                    "label": "BLK_EC: Latency",
-                    "children": []
-                  },
-                  {
-                    "metric_model_name": "VoltestPerformance",
-                    "name": "BLK_EC: Bandwidth",
-                    "label": "BLK_EC: Bandwidth",
-                    "children": []
-                  },
-                  {
-                    "metric_model_name": "VoltestPerformance",
-                    "name": "BLK_EC: IOPS",
-                    "label": "BLK_EC: IOPS",
-                    "children": []
-                  },
-                  {
-                    "metric_model_name": "EcPerformance",
-                    "name": "EC 8:4 Latency",
-                    "label": "EC 8:4 Latency",
-                    "children": []
-                  },
-                  {
-                    "metric_model_name": "EcPerformance",
-                    "name": "EC 8:4 Throughput",
-                    "label": "EC 8:4 Throughput",
-                    "children": []
-                  },
-                  {
-                    "metric_model_name": "EcVolPerformance",
-                    "name": "ECVOL: Latency",
-                    "label": "ECVOL: Latency",
-                    "children": []
-                  },
-                  {
-                    "metric_model_name": "EcVolPerformance",
-                    "name": "ECVOL: IOPS",
-                    "label": "ECVOL: IOPS",
-                    "children": []
-                  }
-                ]
+                "reference": true
               }
             ]
           },
@@ -1324,7 +1281,55 @@
             "metric_model_name": "MetricContainer",
             "name": "EC",
             "label": "EC",
-            "reference": true
+            "children": [
+              {
+                "metric_model_name": "VoltestPerformance",
+                "name": "BLK_EC: Latency",
+                "label": "BLK_EC: Latency",
+                "children": [],
+                "disable": true
+              },
+              {
+                "metric_model_name": "VoltestPerformance",
+                "name": "BLK_EC: Bandwidth",
+                "label": "BLK_EC: Bandwidth",
+                "children": [],
+                "disable": true
+              },
+              {
+                "metric_model_name": "VoltestPerformance",
+                "name": "BLK_EC: IOPS",
+                "label": "BLK_EC: IOPS",
+                "children": [],
+                "disable": true
+              },
+              {
+                "metric_model_name": "EcPerformance",
+                "name": "EC 8:4 Latency",
+                "label": "EC 8:4 Latency",
+                "children": []
+              },
+              {
+                "metric_model_name": "EcPerformance",
+                "name": "EC 8:4 Throughput",
+                "label": "EC 8:4 Throughput",
+                "children": []
+              },
+              {
+                "metric_model_name": "EcVolPerformance",
+                "name": "ECVOL: Latency",
+                "label": "ECVOL: Latency",
+                "children": [],
+                "disable": true
+              },
+              {
+                "metric_model_name": "EcVolPerformance",
+                "name": "ECVOL: IOPS",
+                "label": "ECVOL: IOPS",
+                "children": [],
+                "disable": true
+              }
+            ]
           },
           {
             "metric_model_name": "MetricContainer",
@@ -1695,6 +1700,18 @@
             "name": "f1_timings",
             "label": "FunOS Timings",
             "children": []
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "FRS_F1",
+            "label": "FRS",
+            "children": [
+              {
+                "metric_model_name": "PowerPerformance",
+                "name": "system_power_f1",
+                "label": "Power"
+              }
+            ]
           }
         ]
       },
@@ -3261,6 +3278,25 @@
                             "label": "IOPS"
                           }
                         ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "metric_model_name": "MetricContainer",
+                "name": "teramark_storage_eds_client",
+                "label": "RDS Client",
+                "children": [
+                  {
+                    "metric_model_name": "MetricContainer",
+                    "name": "teramark_storage_eds_client_2_hosts",
+                    "label": "2 Host(s)",
+                    "children": [
+                      {
+                        "metric_model_name": "RdsClientPerformance",
+                        "name": "rds_client_test_2_hosts_aggbw",
+                        "label": "Aggregate Bandwidth"
                       }
                     ]
                   }
@@ -6537,9 +6573,7 @@
                   {
                     "metric_model_name": "TeraMarkNfaPerformance",
                     "name": "nfa_teramark_output_bandwidth_S1",
-                    "label": "NFA Throughput",
-                    "disable": true
-
+                    "label": "NFA Throughput"
                   }
                 ]
               }

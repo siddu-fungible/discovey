@@ -919,6 +919,10 @@ class CmdController(Cmd):
         vol_id = args.vol_id
         self._storage_peek_obj.peek_rds_vol_stats(vol_id=vol_id)
 
+    def peek_nhp_status(self, args):
+        grep_regex = args.grep
+        self._peek_cmd_obj.peek_nhp_status(grep_regex=grep_regex)
+
     def clear_nu_port_stats(self, args):
         self._clear_cmd_obj.clear_nu_port_stats(port_num=args.port_num, shape=args.shape)
 
@@ -1257,6 +1261,9 @@ class CmdController(Cmd):
     # Storage Peek Commands
     peek_storage_vol_parser.set_defaults(func=peek_storage_vols)
 
+    # Status peek commands
+    peek_status_nhp_parser.set_defaults(func=peek_nhp_status)
+
 
     # -------------- Clear Command Handlers ----------------
     clear_nu_port_stats_parser.set_defaults(func=clear_nu_port_stats)
@@ -1341,7 +1348,7 @@ class CmdController(Cmd):
 
 
 if __name__ == '__main__':
-    cmd_obj = CmdController(target_ip="fs48-come", target_port=40221, verbose=False)
+    cmd_obj = CmdController(target_ip="10.1.20.17", target_port=40220, verbose=False)
     cmd_obj.cmdloop(intro="hello")
 
 

@@ -119,6 +119,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   bandwidth_category: string[] = ["bps", "Kbps", "Mbps", "Gbps", "Tbps", "Bps", "KBps", "MBps", "GBps", "TBps"];
   packets_per_second_category: string[] = ["Mpps", "pps", "Kpps", "Gpps"];
   connections_per_second_category: string[] = ["Mcps", "cps", "Kcps", "Gcps"];
+  power_category: string[] = ["W", "kW", "MW", "mW"];
 
   expectedOperationCategory: string[] = [ExpectedOperation.SAME_AS_F1, ExpectedOperation.F1_BY_4];
 
@@ -422,6 +423,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
           this.category = [...this.packets_per_second_category];
         } else if (this.connections_per_second_category.includes(this.visualizationUnit)) {
           this.category = [...this.connections_per_second_category];
+        } else if (this.power_category.includes(this.visualizationUnit)) {
+          this.category = [...this.power_category];
         }
         this.selectedUnit = this.visualizationUnit;
       }
@@ -1045,6 +1048,14 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       } else if (outputUnit === "Gcps") {
         output = output * Math.pow(10, 9);
       }
+    } else if (this.power_category.includes(outputUnit)) {
+      if (outputUnit === "kW") {
+        output = output * Math.pow(10, 3);
+      } else if (outputUnit === "MW") {
+        output = output * Math.pow(10, 6);
+      } else if (outputUnit === "mW") {
+        output = output / Math.pow(10, 3);
+      }
     }
 
     return output;
@@ -1125,6 +1136,14 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         output = output / Math.pow(10, 3);
       } else if (outputUnit === "Gcps") {
         output = output / Math.pow(10, 9);
+      }
+    } else if (this.power_category.includes(outputUnit)) {
+      if (outputUnit === "kW") {
+        output = output / Math.pow(10, 3);
+      } else if (outputUnit === "MW") {
+        output = output / Math.pow(10, 6);
+      } else if (outputUnit === "mW") {
+        output = output * Math.pow(10, 3);
       }
     }
     return parseFloat(output.toFixed(this.DECIMAL_PRECISION));

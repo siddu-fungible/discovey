@@ -1,12 +1,5 @@
 from web.fun_test.maintenance_old import *
-from lib.system.fun_test import *
-from datetime import datetime
-from web.fun_test.models_helper import add_jenkins_job_id_map
 from dateutil import parser
-from django.utils import timezone
-from fun_global import PerfUnit
-from fun_global import ChartType, FunChartType
-from web.fun_test.metrics_models import *
 from collections import OrderedDict
 from web.fun_test.metrics_lib import MetricLib
 from web.fun_test.models import *
@@ -1439,7 +1432,6 @@ if __name__ == "__main_remove_milestones__":
         if "Tape-out" in mm.milestone_name or "F1" in mm.milestone_name:
             mm.delete()
 
-
 if __name__ == "__main__alibaba":
     metric_ids = [900, 901]
     for metric_id in metric_ids:
@@ -1539,7 +1531,6 @@ if __name__ == "__main__alibaba":
         final_dict = ml.get_dict(chart=root_chart)
         print json.dumps(final_dict)
 
-
 if __name__ == "__main_crypto_s1__":
     with open(METRICS_BASE_DATA_FILE, "r") as f:
         metrics = json.load(f)
@@ -1559,7 +1550,8 @@ if __name__ == "__main_crypto_s1__":
                     result = set_internal_name(security_children)
                     print json.dumps(result, indent=4)
 
-if __name__ == "__main__":
+
+if __name__ == "__main_rebasing__":
     global_setting = MetricsGlobalSettings.objects.first()
     global_setting.cache_valid = False
     global_setting.save()
@@ -1591,3 +1583,190 @@ if __name__ == "__main__":
                 entry.data_sets = json.dumps(data_sets)
                 entry.save()
                 print "edited the datasets for {} with metric id {}".format(entry.chart_name, entry.metric_id)
+
+if __name__ == "__main_inspur_12_volumes__":
+    metric_ids = {1207: "read", 754: "read_write", 1208: "write", 1209: "read", 755: "read_write", 1210: "write"}
+    fio_job_names = ["inspur_8k_random_", "_iodepth_", "_f1_6_vol_12"]
+    for key in metric_ids:
+        value = metric_ids[key]
+        chart = MetricChart.objects.get(metric_id=int(key))
+        children = chart.get_children()
+        for child in children:
+            child_chart = MetricChart.objects.get(metric_id=int(child))
+            if "32" in child_chart.internal_chart_name:
+                fio_job_name = fio_job_names[0] + value + fio_job_names[1] + "32" + fio_job_names[2]
+            elif "64" in child_chart.internal_chart_name:
+                fio_job_name = fio_job_names[0] + value + fio_job_names[1] + "64" + fio_job_names[2]
+            elif "96" in child_chart.internal_chart_name:
+                fio_job_name = fio_job_names[0] + value + fio_job_names[1] + "96" + fio_job_names[2]
+            elif "128" in child_chart.internal_chart_name:
+                fio_job_name = fio_job_names[0] + value + fio_job_names[1] + "128" + fio_job_names[2]
+            else:
+                fio_job_name = None
+                continue
+
+            if fio_job_name:
+                if child_chart.positive:
+                    name = value
+                    output_names = ["output_read_iops", "output_write_iops"]
+                else:
+                    name = value + "-avg"
+                    output_names = ["output_read_avg_latency", "output_write_avg_latency"]
+                data_sets = child_chart.get_data_sets()
+                if value == "read_write":
+                    for output_name in output_names:
+                        if "read" in output_name:
+                            rw_name = "read"
+                        else:
+                            rw_name = "write"
+                        one_data_set = {}
+                        if "-avg" in name:
+                            one_data_set["name"] = rw_name + "-avg(12 vols)"
+                            unit = PerfUnit.UNIT_USECS
+                        else:
+                            one_data_set["name"] = rw_name + "(12 vols)"
+                            unit = PerfUnit.UNIT_OPS
+                        one_data_set["inputs"] = {}
+                        one_data_set["inputs"]["input_platform"] = FunPlatform.F1
+                        one_data_set["inputs"]["input_fio_job_name"] = fio_job_name
+                        one_data_set["output"] = {"name": output_name, "min": 0, "max": -1, "expected": -1,
+                                                  "reference": -1, "unit": unit}
+                        data_sets.append(one_data_set)
+                else:
+                    one_data_set = data_sets[0]
+                    one_data_set["name"] = name + "(12 vols)"
+                    one_data_set["inputs"]["input_fio_job_name"] = fio_job_name
+                    one_data_set["output"]["expected"] = -1
+                    one_data_set["output"]["reference"] = -1
+                    data_sets = child_chart.get_data_sets()
+                    data_sets.append(one_data_set)
+                child_chart.data_sets = json.dumps(data_sets)
+                child_chart.save()
+    print "added 12 volume datasets for 32, 64, 96 and 128 qdepths for Inspur"
+
+if __name__ == "__main_power_perf__":
+    metric_model_name = "PowerPerformance"
+    description = "TBD"
+    owner_info = "Ranganatha Gowda (ranga.gowda@fungible.com)"
+    source = "https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/system/frs/start_traffic.py"
+    positive = False
+    visualization_unit = PerfUnit.UNIT_WATT
+    y1_axis_title = PerfUnit.UNIT_WATT
+    platform = FunPlatform.F1
+    internal_chart_name = "system_power_f1"
+    chart_name = "Power"
+
+    data_sets = []
+    one_data_set = {}
+
+    inputs = {
+        "input_platform": platform,
+    }
+    output_names = OrderedDict([("output_fs_power", "FS"), ("output_f1_0_power", "F1_0"),
+                                ("output_f1_1_power", "F1_1")])
+    for output_name in output_names:
+        output = {
+            "name": output_name,
+            "unit": visualization_unit,
+            "min": 0,
+            "max": -1,
+            "expected": -1,
+            "reference": -1
+        }
+        one_data_set["name"] = output_names[output_name]
+        one_data_set["inputs"] = inputs
+        one_data_set["output"] = output
+        data_sets.append(one_data_set.copy())
+
+    metric_id = LastMetricId.get_next_id()
+    base_line_date = datetime(year=2019, month=10, day=13, minute=0, hour=0, second=0)
+    power_chart = ml.create_leaf(chart_name=chart_name,
+                                 internal_chart_name=internal_chart_name,
+                                 data_sets=data_sets,
+                                 leaf=True,
+                                 description=description,
+                                 owner_info=owner_info,
+                                 source=source,
+                                 positive=positive,
+                                 y1_axis_title=y1_axis_title,
+                                 visualization_unit=visualization_unit,
+                                 metric_model_name=metric_model_name,
+                                 base_line_date=base_line_date,
+                                 work_in_progress=False,
+                                 children=[],
+                                 jira_ids=[],
+                                 platform=platform,
+                                 peer_ids=[],
+                                 creator=TEAM_REGRESSION_EMAIL,
+                                 workspace_ids=[])
+
+    final_dict = ml.get_dict(chart=power_chart)
+    print json.dumps(final_dict, indent=4)
+
+if __name__ == "__main__backup":
+    ml.backup_dags()
+
+if __name__ == "__main__":
+    metric_model_name = "RdsClientPerformance"
+    description = "TBD"
+    owner_info = "Nazir Ahamed (nazir.ahamed@fungible.com)"
+    source = ""
+    positive = False
+    visualization_unit = PerfUnit.UNIT_MBITS_PER_SEC
+    y1_axis_title = PerfUnit.UNIT_MBITS_PER_SEC
+    platform = FunPlatform.F1
+    internal_chart_name = "rds_client_test_2_hosts_aggbw"
+    chart_name = "Aggregate Bandwidth"
+    num_hosts = 2
+    output_name = "output_aggregate_bandwidth"
+
+    data_sets = []
+    one_data_set = {}
+
+    output = {
+        "name": output_name,
+        "unit": y1_axis_title,
+        "min": 0,
+        "max": -1,
+        "expected": -1,
+        "reference": -1
+    }
+    for msg_rate in [1, 8, 16]:
+        for no_of_con in [1, 8, 16]:
+            inputs = {
+                "input_platform": platform,
+                "input_num_hosts": num_hosts,
+                "input_msg_rate": msg_rate,
+                "input_num_connection": no_of_con
+            }
+            display_name = "MR {}, TC {}".format(msg_rate, no_of_con)
+            one_data_set["name"] = display_name
+            one_data_set["inputs"] = inputs
+            one_data_set["output"] = output
+            data_sets.append(one_data_set.copy())
+
+    metric_id = LastMetricId.get_next_id()
+    base_line_date = datetime(year=2019, month=10, day=20, minute=0, hour=0, second=0)
+    iops_chart = ml.create_leaf(chart_name=chart_name,
+                                internal_chart_name=internal_chart_name,
+                                data_sets=data_sets,
+                                leaf=True,
+                                description=description,
+                                owner_info=owner_info,
+                                source=source,
+                                positive=positive,
+                                y1_axis_title=y1_axis_title,
+                                visualization_unit=visualization_unit,
+                                metric_model_name=metric_model_name,
+                                base_line_date=base_line_date,
+                                work_in_progress=False,
+                                children=[],
+                                jira_ids=[],
+                                platform=platform,
+                                peer_ids=[],
+                                creator=TEAM_REGRESSION_EMAIL,
+                                workspace_ids=[])
+
+    final_dict = ml.get_dict(chart=iops_chart)
+    print json.dumps(final_dict, indent=4)
+

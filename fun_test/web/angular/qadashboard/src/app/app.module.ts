@@ -86,7 +86,11 @@ import { PerformanceShowReportWorkspaceComponent } from './performance/performan
 import { TextareaInputComponent } from './ui-elements/textarea-input/textarea-input.component';
 import { SuitesViewComponent } from './regression/suite-editor/suites-view/suites-view.component';
 import { SearchBarComponent } from './ui-elements/search-bar/search-bar.component';
+import { ScriptDetailComponent } from './regression/script-detail/script-detail.component';
 import { PagerComponent } from './pager/pager.component';
+import { SelectedPipe } from './pipes/selected.pipe';
+import { TimelineControlComponent } from './visualization/timeline-control/timeline-control.component';
+import * as d3 from 'd3';
 
 
 @NgModule({
@@ -157,7 +161,10 @@ import { PagerComponent } from './pager/pager.component';
     TextareaInputComponent,
     SuitesViewComponent,
     SearchBarComponent,
-    PagerComponent
+    ScriptDetailComponent,
+    PagerComponent,
+    SelectedPipe,
+    TimelineControlComponent
   ],
   imports: [
     BsDropdownModule,
