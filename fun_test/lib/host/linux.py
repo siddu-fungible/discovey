@@ -410,7 +410,7 @@ class Linux(object, ToDictMixin):
             if not custom_prompts:
                 custom_prompts = {}
             if not self.handle:
-                if not self._connect():
+                if not Linux._connect(self):
                     raise Exception("Unable to connect to %s, username: %s, password: %s" % (self.host_ip,
                                                                                              self.ssh_username,
                                                                                              self.ssh_password))
@@ -425,7 +425,7 @@ class Linux(object, ToDictMixin):
                 try:
                     self.handle.expect(self.prompt_terminator, timeout=sync_timeout)
                 except (pexpect.EOF):
-                    self.disconnect()
+                    Linux.disconnect(self)
                     return self.command(command=command,
                                         sync=sync, timeout=timeout,
                                         custom_prompts=custom_prompts,
@@ -1293,7 +1293,7 @@ class Linux(object, ToDictMixin):
         sudo_string = ""
         if sudo:
             sudo_string = "sudo "
-        scp_command = "%sscp -P %d %s %s@%s:%s" % (sudo_string, target_port, source_file_path, target_username, target_ip, target_file_path)
+        scp_command = "%sscp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P %d %s %s@%s:%s" % (sudo_string, target_port, source_file_path, target_username, target_ip, target_file_path)
         if not self.handle:
             self._connect()
 
