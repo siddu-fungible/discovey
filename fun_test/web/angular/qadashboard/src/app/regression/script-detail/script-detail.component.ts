@@ -1,7 +1,7 @@
 import {Component, OnInit } from '@angular/core';
 import {RegressionService} from "../regression.service";
 import {Observable, of} from "rxjs";
-import {switchMap} from "rxjs/operators";
+import {last, switchMap} from "rxjs/operators";
 import {LoggerService} from "../../services/logger/logger.service";
 import {ActivatedRoute} from "@angular/router";
 import {animate, state, style, transition, trigger} from "@angular/animations";
@@ -137,6 +137,21 @@ export class ScriptDetailComponent implements OnInit {
 
   }
 
+  parseCheckpoints(checkpoints) {
+    let lastCheckpoint = null;
+    checkpoints.forEach(checkpoint => {
+      checkpoint["relative_epoch_time"] = checkpoint.epoch_time - this.scriptRunTime.started_epoch_time;
+      if (lastCheckpoint) {
+        checkpoint["relative_end_epoch_time"] = checkpoint.relative_epoch_time;
+      }
+      lastCheckpoint = checkpoint;
+    });
+    lastCheckpoint["relative_end_epoch_time"] = lastCheckpoint["relative_epoch_time"] + 100; //TODO: Derive this from script run time
+
+
+  }
+
+
   fetchCheckpoints(testCaseExecutionIndex, suiteExecutionId) {
     let testCaseExecution = this.testCaseExecutions[testCaseExecutionIndex];
     let testCaseId = testCaseExecution.test_case_id;
@@ -146,7 +161,7 @@ export class ScriptDetailComponent implements OnInit {
       timeSeriesEntry = this.timeSeriesByTestCase[testCaseId];
     }
 
-    if (timeSeriesEntry.hasOwnProperty("checkpoints") && (timeSeriesEntry.checkpoints.length > 0)) {
+    if (timeSeriesEntry.hasOwnProperty("checkpoints") && (timeSeriesEntry.checkpoints) && (timeSeriesEntry.checkpoints.length > 0)) {
       return of(true)
     } else {
       return this.regressionService.testCaseTimeSeriesCheckpoints(suiteExecutionId, testCaseExecution.execution_id).pipe(switchMap(response => {
@@ -155,6 +170,7 @@ export class ScriptDetailComponent implements OnInit {
         } else {
           timeSeriesEntry["checkpoints"] = response;
         }
+        this.parseCheckpoints(timeSeriesEntry.checkpoints);
         return of(true);
       }))
     }
