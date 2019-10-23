@@ -677,7 +677,7 @@ def get_resource_bam_table(result):
 def populate_resource_bam_output_file(network_controller_obj, filename, max_time=10, display_output=False):
     output = False
     try:
-        #lines = list()
+        lines = list()
         timer = FunTimer(max_time=max_time)
         while not timer.is_expired():
             fun_test.sleep(message="Peek stats resource BAM", seconds=1)
@@ -686,7 +686,6 @@ def populate_resource_bam_output_file(network_controller_obj, filename, max_time
             master_table_obj1, master_table_obj2 = get_resource_bam_table(result=result)
             tab_obj = [master_table_obj1, master_table_obj2]
             for i in tab_obj:
-                lines = list()
                 lines.append("\n########################  %s ########################\n" % str(get_timestamp()))
                 lines.append(i.get_string())
                 lines.append('\n\n\n')
