@@ -106,12 +106,16 @@ class ApcPduTestcase(FunTestCase):
 
             self.apc_pdu_reboot()
 
+            self.come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
+                                    ssh_username=self.fs['come']['mgmt_ssh_username'],
+                                    ssh_password=self.fs['come']['mgmt_ssh_password'])
+            self.bmc_handle = Bmc(host_ip=self.fs['bmc']['mgmt_ip'],
+                                  ssh_username=self.fs['bmc']['mgmt_ssh_username'],
+                                  ssh_password=self.fs['bmc']['mgmt_ssh_password'])
+
             fun_test.log("Checking if BMC is UP")
             bmc_up = self.bmc_handle.ensure_host_is_up(max_wait_time=600)
             fun_test.test_assert(bmc_up, "BMC is UP")
-
-            # make sure seesins are closed
-            self.come_handle.destroy()
 
             fun_test.log("Checking if COMe is UP")
             come_up = self.come_handle.ensure_host_is_up(max_wait_time=600)
