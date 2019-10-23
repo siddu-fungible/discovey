@@ -254,7 +254,14 @@ export class ScriptDetailComponent implements OnInit {
       checkpointsInConsideration.unshift(selectedCheckpoint.previous_checkpoint);
     }
     console.log(checkpointsInConsideration);
-    checkpointsInConsideration.reduce((min, p) => p.relative_epoch_time)
+    let minEpoch = checkpointsInConsideration.reduce((min, p) => p.relative_epoch_time < min ? p.relative_epoch_time: min , checkpointsInConsideration[0].relative_epoch_time);
+    let maxEpoch = checkpointsInConsideration.reduce((max, p) => p.relative_end_epoch_time > max ? p.relative_end_epoch_time: max, checkpointsInConsideration[0].relative_end_epoch_time);
+
+    console.log(minEpoch, maxEpoch);
+    let trueRange = [this.scriptRunTime.started_epoch_time + minEpoch, this.scriptRunTime.started_epoch_time + maxEpoch];
+    console.log(trueRange);
+    console.log(checkpointsInConsideration);
+
   }
 
 
