@@ -873,10 +873,11 @@ class BootupWorker(Thread):
                 build_number = fs.bundle_image_parameters.get("build_number", 70)  # TODO: Is there a latest?
                 release_train = fs.bundle_image_parameters.get("release_train", "1.0a_aa")
                 come = fs.get_come()
-                fun_test.test_assert(come.detect_pfs(), "Detect PFs")
+                fun_test.test_assert(come.detect_pfs(), "Detect PFs", context=self.context)
 
-                fun_test.test_assert(come.install_build_setup_script(build_number=build_number, release_train=release_train),
-                                     "Bundle image installed")
+                fun_test.test_assert(expression=come.install_build_setup_script(build_number=build_number, release_train=release_train),
+                                     message="Bundle image installed",
+                                     context=self.context)
                 fs.bundle_upgraded = True
                 bmc.bundle_upgraded = True
 
@@ -892,7 +893,7 @@ class BootupWorker(Thread):
 
                 # Wait for BMC to come up
                 bmc = self.fs.get_bmc()
-                fun_test.test_assert(bmc.ensure_host_is_up(), "BMC is up")
+                fun_test.test_assert(expression=bmc.ensure_host_is_up(), message="BMC is up", context=self.context)
 
             if not fs.bundle_image_parameters:
                 fs.set_boot_phase(BootPhases.FS_BRING_UP_U_BOOT)
@@ -902,10 +903,11 @@ class BootupWorker(Thread):
                     if f1_index == fs.disable_f1_index:
                         continue
                     boot_args = fs.boot_args
-                    fun_test.log("Auto-boot: {}".format(fs.is_auto_boot()))
+                    fun_test.log("Auto-boot: {}".format(fs.is_auto_boot()), context=self.context)
                     if fs.tftp_image_path:
-                        fun_test.test_assert(bmc.setup_serial_proxy_connection(f1_index=f1_index, auto_boot=fs.is_auto_boot()),
-                                             "Setup nc serial proxy connection")
+                        fun_test.test_assert(expression=bmc.setup_serial_proxy_connection(f1_index=f1_index, auto_boot=fs.is_auto_boot()),
+                                             message="Setup nc serial proxy connection",
+                                             context=self.context)
                     if fs.tftp_image_path:
                         if fpga and not fs.bundle_compatible:
                             fpga.reset_f1(f1_index=f1_index)
@@ -972,7 +974,7 @@ class BootupWorker(Thread):
             self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COMPLETE)
 
         except Exception as ex:
-            fun_test.critical(str(ex))
+            fun_test.critical(str(ex) + " FS: {}".format(fs), context=fs.context)
             fs.set_boot_phase(BootPhases.FS_BRING_UP_ERROR)
             raise ex
 
@@ -1007,18 +1009,19 @@ class ComEInitializationWorker(Thread):
                                      message="ComE initialized",
                                      context=self.fs.context)
                 if self.fs.bundle_compatible:
-                    fun_test.sleep(seconds=10, message="Waiting for expected containers")
+                    fun_test.sleep(seconds=10, message="Waiting for expected containers", context=self.fs.context)
                     expected_containers_running = self.is_expected_containers_running(come)
                     expected_containers_running_timer = FunTimer(max_time=self.CONTAINERS_BRING_UP_TIME_MAX)
 
                     while not expected_containers_running and not expected_containers_running_timer.is_expired():
-                        fun_test.sleep(seconds=10, message="Waiting for expected containers")
+                        fun_test.sleep(seconds=10, message="Waiting for expected containers", context=self.fs.context)
                         expected_containers_running = self.is_expected_containers_running(come)
 
-                    fun_test.test_assert(expected_containers_running, "Expected containers running")
+                    fun_test.test_assert(expected_containers_running, "Expected containers running", context=self.fs.context)
 
                 self.fs.come_initialized = True
         except Exception as ex:
+            fun_test.critical(str(ex) + " FS: {}".format(self.fs), context=self.fs.context)
             self.fs.set_boot_phase(BootPhases.FS_BRING_UP_ERROR)
             raise ex
 
@@ -1035,10 +1038,10 @@ class ComEInitializationWorker(Thread):
                     container_is_up = "Up" in container["Status"]
                     if not container_is_up:
                         result = False
-                        fun_test.critical("Container {} is not up".format(container_name))
+                        fun_test.critical("Container {} is not up".format(container_name), context=self.fs.context)
                         break
             if not found:
-                fun_test.critical("Container {} was not found".format(expected_container))
+                fun_test.critical("Container {} was not found".format(expected_container), context=self.fs.context)
                 result = False
                 break
         return result
@@ -1480,6 +1483,9 @@ class Fs(object, ToDictMixin):
         self.bmc_maintenance_threads = []
         self.cleanup_attempted = False
         fun_test.register_fs(self)
+
+    def get_context(self):
+        return self.context
 
     def is_auto_boot(self):
         return False if self.tftp_image_path else True
