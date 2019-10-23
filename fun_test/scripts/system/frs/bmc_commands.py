@@ -23,7 +23,7 @@ def run_fs_power_script(bmc_handle):
 
 
 def run_f1_power_script(bmc_handle):
-    output = bmc_handle.command("/mnt/sdmmc0p1/scripts/f1_power.sh", timeout=3000)
+    output = bmc_handle.command("sh /mnt/sdmmc0p1/scripts/f1_power.sh", timeout=3000)
     power_dict = parse_power_output(output)
     fun_test.log("F1 power: {}".format(power_dict))
     return output, power_dict
