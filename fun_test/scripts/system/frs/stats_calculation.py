@@ -23,6 +23,7 @@ def dict_difference(one_data_set, cmd):
     elif cmd == "cdu":
         result = dict_difference_level_2(dict_1, dict_2, time_difference)
 
+
     return result
 
 
@@ -43,3 +44,10 @@ def dict_level_1_div(dict_lev1, peek_value):
         for field, value in v.iteritems():
             dict_lev1[k][field] = value/peek_value
     return dict_lev1
+
+
+# def dict_sum_level_2(dict_lev1):
+#     for k, v in dict_lev1.iteritems():
+#         for field, value in v.iteritems():
+#             dict_lev1[k][field] = value/peek_value
+#     return dict_lev1
