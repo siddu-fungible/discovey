@@ -647,12 +647,12 @@ class LatencyTest(FunTestCase):
             total_values = len(parsed_result)
             for results in parsed_result:
                 size_latency = float(results[0])
-                iterations = float(results[4])
-                min_latency = float(results[5])
-                max_latency = float(results[6])
-                avg_latency = float(results[8])
-                latency_99 = float(results[10])
-                latency_99_99 = float(results[11])
+                iterations = float(results[1])
+                min_latency = float(results[2])
+                max_latency = float(results[3])
+                avg_latency = float(results[5])
+                latency_99 = float(results[7])
+                latency_99_99 = float(results[8])
             for item in table_data_cols:
                 row_data_list.append(eval(item))
             table_data_rows.append(row_data_list)

@@ -91,7 +91,7 @@ class ScriptSetup(FunTestScript):
             enable_fcp_rds = job_inputs["enable_fcp_rds"]
             fun_test.shared_variables["enable_fcp_rds"] = enable_fcp_rds
         else:
-            enable_fcp_rds = True
+            enable_fcp_rds = False
             fun_test.shared_variables["enable_fcp_rds"] = enable_fcp_rds
 
         # Removing any funeth driver from COMe and and all the connected server
