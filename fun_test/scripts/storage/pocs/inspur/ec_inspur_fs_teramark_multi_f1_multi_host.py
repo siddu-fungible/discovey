@@ -346,7 +346,7 @@ class ECVolumeLevelScript(FunTestScript):
             for index, ip in enumerate(self.f1_ips):
                 ping_status = host_handle.ping(dst=ip, max_percentage_loss=80)
                 fun_test.simple_assert(ping_status, "Host {} is able to ping to {}'s bond interface IP {}".
-                                     format(host_name, self.funcp_spec[index / 2]["container_names"][index % 2], ip))
+                                       format(host_name, self.funcp_spec[index / 2]["container_names"][index % 2], ip))
 
         fun_test.shared_variables["testbed_config"] = self.testbed_config
 
@@ -539,6 +539,13 @@ class ECVolumeLevelTestcase(FunTestCase):
             self.ec_info["storage_controller_list"] = self.sc_obj
             self.ec_info["f1_ips"] = self.f1_ips
             self.ec_info["host_ips"] = self.final_host_ips
+            # Populate the self.ec_info["hosting_f1_list"] attribute if the script config file has hosting_f1_indexes
+            # and its not equal to all. If it is equal to all, then no need to populate the
+            # self.ec_info["hosting_f1_list"] attribute because the configure_ec_volume_across_f1s will take care of it
+            if hasattr(self, "hosting_f1_indexes") and self.hosting_f1_indexes != "all":
+                self.ec_info["hosting_f1_list"] = []
+                for i in range(self.ec_info["num_volumes"]):
+                    self.ec_info["hosting_f1_list"].append(self.hosting_f1_indexes[i % len(self.hosting_f1_indexes)])
             ec_config_status = True
             try:
                 (ec_config_status, self.ec_info) = configure_ec_volume_across_f1s(self.ec_info, self.command_timeout)
@@ -741,7 +748,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                         fun_test.log("FIO Command Output:\n{}".format(fio_output))
                         fun_test.test_assert(fio_output, "Volume warmup on host {}".format(host_name))
 
-                fun_test.sleep("before actual test",self.iter_interval)
+                fun_test.sleep("before actual test", self.iter_interval)
                 fun_test.shared_variables["ec"]["warmup_io_completed"] = True
 
     def run(self):
@@ -903,9 +910,9 @@ class ECVolumeLevelTestcase(FunTestCase):
                     mpstat_artifact_file[host_name] = fun_test.get_test_case_artifact_file_name(
                         post_fix_name=mpstat_post_fix_name)
                     mpstat_pid[host_name] = host_handle.mpstat(cpu_list=mpstat_cpu_list,
-                                                                 output_file=self.mpstat_args["output_file"],
-                                                                 interval=self.mpstat_args["interval"],
-                                                                 count=int(mpstat_count))
+                                                               output_file=self.mpstat_args["output_file"],
+                                                               interval=self.mpstat_args["interval"],
+                                                               count=int(mpstat_count))
                 else:
                     fun_test.critical("Not starting the mpstats collection because of lack of interval and count "
                                       "details")
@@ -913,8 +920,15 @@ class ECVolumeLevelTestcase(FunTestCase):
                 # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
                 fun_test.log("Running FIO {} test with the block size: {} and IO depth: {} Num jobs: {} for the EC".
                              format(row_data_dict["mode"], fio_block_size, fio_iodepth, fio_num_jobs * global_num_jobs))
-                fio_job_name = "{}_iodepth_{}_f1_{}_vol_{}".format(self.fio_job_name, row_data_dict["iodepth"],
-                                                                  self.num_f1s, self.ec_info["num_volumes"])
+                if hasattr(self, "hosting_f1_indexes") and self.hosting_f1_indexes != "all":
+                    fio_job_name = "{}_iodepth_{}_f1_{}_vol_{}_hostf1_{}".format(self.fio_job_name,
+                                                                                 row_data_dict["iodepth"],
+                                                                                 self.num_f1s,
+                                                                                 self.ec_info["num_volumes"],
+                                                                                 len(self.hosting_f1_indexes))
+                else:
+                    fio_job_name = "{}_iodepth_{}_f1_{}_vol_{}".format(self.fio_job_name, row_data_dict["iodepth"],
+                                                                       self.num_f1s, self.ec_info["num_volumes"])
                 fun_test.log("fio_job_name used for current iteration: {}".format(fio_job_name))
                 if "multiple_jobs" in self.fio_cmd_args:
                     fio_cmd_args["multiple_jobs"] = self.fio_cmd_args["multiple_jobs"].format(
