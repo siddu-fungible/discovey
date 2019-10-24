@@ -1916,7 +1916,7 @@ class Linux(object, ToDictMixin):
                             if key == "clat_ns":
                                 for key in fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"].keys():
                                     if key.startswith("50.00"):
-                                        stat = "latency90"
+                                        stat = "latency50"
                                         value = int(round(
                                             fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"]["50.000000"]))
                                         value /= 1000
