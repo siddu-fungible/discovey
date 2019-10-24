@@ -61,16 +61,27 @@ class RawVolumePerfScript(FunTestScript):
 
     def setup(self):
 
+
         self.server_key = fun_test.parse_file_to_json(fun_test.get_script_name_without_ext() + ".json")
         fun_test.shared_variables["server_key"] = self.server_key
 
         global funcp_obj, servers_mode, servers_list, fs_name
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
+        job_inputs = fun_test.get_job_inputs()
         f1_0_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --dpc-server --all_100g --serial --dpc-uart " \
-                         "retimer=0 --mgmt --disable-wu-watchdog syslog=2 workload=storage"
+                         "retimer=0 --mgmt syslog=5 workload=storage"
         f1_1_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 --dpc-server --all_100g --serial --dpc-uart " \
-                         "retimer=0 --mgmt --disable-wu-watchdog syslog=2 workload=storage"
+                         "retimer=0 --mgmt syslog=5 workload=storage"
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
+        if not job_inputs:
+            job_inputs = {}
+        if "skip_warmup" in job_inputs:
+            skip_warmup = job_inputs["skip_warmup"]
+            fun_test.shared_variables["skip_warmup"] = skip_warmup
+        else:
+            fun_test.shared_variables["skip_warmup"] = False
+
+
         # fs_name = "fs-45"
         funcp_obj = FunControlPlaneBringup(fs_name=self.server_key["fs"][fs_name]["fs-name"])
         funcp_obj.cleanup_funcp()
@@ -275,19 +286,21 @@ class RawVolumeLocalPerfTestcase(FunTestCase):
                 fun_test.shared_variables["end_host_obj"] = self.end_host
 
                 # Run warmup
-                if self.warm_up_traffic:
-                    fun_test.log(
-                        "Initial Write IO to volume, this might take long time depending on fio --size provided")
-                    for i in range(0, 2):
-                        fio_output = self.end_host.pcie_fio(filename=self.nvme_block_device,
-                                                            **self.warm_up_fio_cmd_args)
-                        fun_test.test_assert(fio_output, "Pre-populating the volume")
-                        fun_test.log("FIO Command Output:\n{}".format(fio_output))
+                skip_warmup = fun_test.shared_variables["skip_warmup"]
+                if not skip_warmup:
+                    if self.warm_up_traffic:
+                        fun_test.log(
+                            "Initial Write IO to volume, this might take long time depending on fio --size provided")
+                        for i in range(0, 2):
+                            fio_output = self.end_host.pcie_fio(filename=self.nvme_block_device,
+                                                                **self.warm_up_fio_cmd_args)
+                            fun_test.test_assert(fio_output, "Pre-populating the volume")
+                            fun_test.log("FIO Command Output:\n{}".format(fio_output))
 
-                    fun_test.sleep("Sleeping for {} seconds before actual test".format(self.iter_interval),
-                                   self.iter_interval)
+                        fun_test.sleep("Sleeping for {} seconds before actual test".format(self.iter_interval),
+                                       self.iter_interval)
 
-                i += 1
+                    i += 1
 
     def run(self):
         testcase = self.__class__.__name__

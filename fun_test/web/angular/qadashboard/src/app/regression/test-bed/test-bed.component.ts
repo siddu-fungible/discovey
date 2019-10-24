@@ -255,7 +255,7 @@ export class TestBedComponent implements OnInit {
 
   onAddTimeSubmit(testBed) {
     let url = "/api/v1/regression/test_beds/" + this.currentTestBed.id;
-    let payload = {manual_lock_extension_hour: this.addedTime, manual_lock_extension_minute: 0};
+    let payload = {manual_lock_extension_hour: this.addedTime, manual_lock_extension_minute: 0, manual_lock_submitter_email: this.currentTestBed.manual_lock_submitter};
     this.apiService.put(url, payload).subscribe(response => {
       this.loggerService.success("Time successfully added");
       this.refreshTestBeds();

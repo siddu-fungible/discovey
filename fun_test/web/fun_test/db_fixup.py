@@ -1,23 +1,14 @@
-import os
 import django
-import json
-import random
-import re
-import pytz
 import math
-from datetime import datetime, timedelta
 from web.web_global import PRIMARY_SETTINGS_FILE
 from fun_global import *
 from fun_settings import MAIN_WEB_APP
+from datetime import timedelta
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", PRIMARY_SETTINGS_FILE)
 django.setup()
-from web.fun_test.metrics_models import Performance1, PerformanceIkv, PerformanceBlt, VolumePerformance
-from web.fun_test.metrics_models import AllocSpeedPerformance
 from web.fun_test.site_state import *
-from web.fun_test.metrics_models import MetricChart, ShaxPerformance
-from web.fun_test.metrics_models import WuLatencyUngated, WuLatencyAllocStack, AllocSpeedPerformance
-from web.fun_test.models import JenkinsJobIdMap
+from web.fun_test.metrics_models import MetricChart
 from web.fun_test.metrics_models import MetricChartStatus, MetricChartStatusSerializer
 from web.fun_test.metrics_models import MetricsGlobalSettings
 from django.utils import timezone
@@ -39,6 +30,7 @@ bits_bytes_category = ["b", "B", "KB", "MB", "GB", "TB"]
 bandwidth_category = ["bps", "Kbps", "Mbps", "Gbps", "Tbps", "Bps", "KBps", "MBps", "GBps", "TBps"]
 packets_per_sec_category = ["pps", "Mpps", "Kpps", "Gpps"]
 connections_per_sec_category = ["cps", "Mcps", "Kcps", "Gcps"]
+power_category = ["W", "kW", "MW", "mW"]
 
 
 def get_rounded_time(dt):
@@ -181,7 +173,7 @@ def set_result_dict(result):
 def set_from_to_dates(chart):
     dates = {}
     # calculate the from date and to date for fetching the data
-    today = datetime.now(pytz.timezone('US/Pacific'))
+    today = datetime.datetime.now(pytz.timezone('US/Pacific'))
     from_date = chart.base_line_date
     from_date = adjust_timezone_for_day_light_savings(from_date)
     from_date = get_rounded_time(from_date)
@@ -224,7 +216,7 @@ def set_chart_status_details(chart, result):
 
 
 def adjust_timezone_for_day_light_savings(current_date):
-    date_time_obj = datetime(year=current_date.year, month=current_date.month, day=current_date.day,
+    date_time_obj = datetime.datetime(year=current_date.year, month=current_date.month, day=current_date.day,
                                       hour=current_date.hour, second=current_date.second, minute=current_date.minute)
     return get_localized_time(date_time_obj)
 
@@ -565,6 +557,13 @@ def convert_to_base_unit(output_value, output_unit):
                 output_value = float(output_value * math.pow(10, 3))
             if output_unit == "Gcps":
                 output_value = float(output_value * math.pow(10, 9))
+        elif output_value in power_category:
+            if output_unit == "kW":
+                output_value = float(output_value * math.pow(10, 3))
+            if output_unit == "MW":
+                output_value = float(output_value * math.pow(10, 6))
+            if output_unit == "mW":
+                output_value = float(output_value / math.pow(10, 3))
     return output_value
 
 

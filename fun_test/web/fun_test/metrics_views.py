@@ -12,7 +12,7 @@ from web.web_global import api_safe_json_response
 from web.fun_test.site_state import site_state
 from collections import OrderedDict
 from web.fun_test.metrics_models import MetricChart, ModelMapping, VolumePerformanceSerializer, WuLatencyAllocStack
-from web.fun_test.metrics_models import LastMetricId, LastTriageId
+from web.fun_test.metrics_models import LastMetricId, LastTriageId, PerformanceMetricsDag
 from web.fun_test.metrics_models import AllocSpeedPerformanceSerializer, MetricChartSerializer, EcPerformance, \
     BcopyPerformanceSerializer
 from web.fun_test.metrics_models import BcopyFloodDmaPerformanceSerializer
@@ -242,9 +242,7 @@ def update_child_weight(request):
     if str(child_id) in children_weights.keys():
         c.add_child_weight(child_id=child_id, weight=weight)
     invalidate_goodness_cache()
-    global_settings = MetricsGlobalSettings.objects.first()
-    global_settings.cache_valid = False
-    global_settings.save()
+    ml.set_global_cache(cache_valid=False)
 
 
 '''
@@ -592,9 +590,6 @@ def update_chart(request):
             visualization_unit = request_json["visualization_unit"]
             c.visualization_unit = visualization_unit
         c.save()
-        global_settings = MetricsGlobalSettings.objects.first()
-        global_settings.cache_valid = False
-        global_settings.save()
     except ObjectDoesNotExist:
         metric_id = LastMetricId.get_next_id()
         c = MetricChart(metric_model_name=model_name,
@@ -612,6 +607,8 @@ def update_chart(request):
             c.base_line_date = base_line_date
         c.save()
         invalidate_goodness_cache()
+    finally:
+        ml.set_global_cache(cache_valid=False)
     return c.metric_id
 
 
@@ -635,12 +632,10 @@ def update_expected(chart, expected_operation):
                         output_name = data_set["output"]["name"]
                         output_unit_name = output_name + "_unit"
                         latest_entry = entries.first()
-                        if hasattr(latest_entry, output_name):
+                        if hasattr(latest_entry, output_name) and hasattr(latest_entry, output_unit_name):
                             output_value = getattr(latest_entry, output_name)
-                        if hasattr(latest_entry, output_unit_name):
                             output_unit = getattr(latest_entry, output_unit_name)
-
-                        set_expected(current_data_sets, data_set["name"], output_value, output_unit, expected_operation)
+                            set_expected(current_data_sets, data_set["name"], output_value, output_unit, expected_operation)
                     else:
                         set_expected(current_data_sets, data_set["name"], -1, chart.visualization_unit,
                                      expected_operation)
@@ -832,75 +827,18 @@ def test(request):
     return render(request, 'qa_dashboard/test.html', locals())
 
 
-def traverse_dag(levels, metric_id, metric_chart_entries, sort_by_name=True):
-    result = {}
-    if metric_id not in metric_chart_entries:
-        chart = MetricChart.objects.get(metric_id=metric_id)
-    else:
-        chart = metric_chart_entries[metric_id]
-
-    result["metric_model_name"] = chart.metric_model_name
-    result["chart_name"] = chart.chart_name
-    if levels < 1:
-        result['children'] = []
-    else:
-        result["children"] = json.loads(chart.children)
-    result["children_info"] = {}
-    result["children_weights"] = json.loads(chart.children_weights)
-    result["leaf"] = chart.leaf
-    result["num_leaves"] = chart.num_leaves
-    result["last_num_degrades"] = chart.last_num_degrades
-    result["last_num_build_failed"] = chart.last_num_build_failed
-    result["positive"] = chart.positive
-    result["work_in_progress"] = chart.work_in_progress
-    result["companion_charts"] = chart.companion_charts
-    result["jira_ids"] = json.loads(chart.jira_ids)
-    result["metric_id"] = chart.metric_id
-
-    result["copied_score"] = chart.copied_score
-    result["copied_score_disposition"] = chart.copied_score_disposition
-    if chart.last_good_score >= 0:
-        result["last_two_scores"] = [chart.last_good_score, chart.penultimate_good_score]
-    else:
-        result["last_two_scores"] = [0, 0]
-    if levels >= 1 and not chart.leaf:
-        levels = levels - 1
-        children_info = result["children_info"]
-        for child_id in result["children"]:
-            if child_id in metric_chart_entries:
-                child_chart = metric_chart_entries[child_id]
-            else:
-                child_chart = MetricChart.objects.get(metric_id=child_id)
-                metric_chart_entries[child_id] = child_chart
-            children_info[child_chart.metric_id] = traverse_dag(levels, metric_id=child_chart.metric_id,
-                                                                metric_chart_entries=metric_chart_entries)
-        if sort_by_name:
-            result["children"] = map(lambda item: item[0],
-                                     sorted(children_info.iteritems(), key=lambda d: d[1]['chart_name']))
-    return result
-
-
 @csrf_exempt
 @api_safe_json_response
 def dag(request):
-    result = []
     levels = int(request.GET.get("levels", 15))
+    is_workspace = request.GET.get('is_workspace', 0)
     # metric ids are used instead of chart names for F1, S1 and all metrics
     metric_ids = request.GET.get("root_metric_ids", '101,591,122')  # 101=F1, 122=All Metrics, 591-S1
     if ',' in metric_ids:
         metric_ids = metric_ids.strip().split(',')
     else:
         metric_ids = [int(metric_ids)]
-    metric_chart_entries = {}
-    for metric_id in metric_ids:
-        if metric_id == 122:
-            sort_by_name = True
-        else:
-            sort_by_name = False
-        chart = MetricChart.objects.get(metric_id=metric_id)
-        metric_chart_entries[chart.metric_id] = chart
-        result.append(traverse_dag(levels=levels, metric_id=chart.metric_id, sort_by_name=sort_by_name,
-                                   metric_chart_entries=metric_chart_entries))
+    result = ml.fetch_dag(levels=levels, is_workspace=is_workspace, metric_ids=metric_ids)
     return result
 
 

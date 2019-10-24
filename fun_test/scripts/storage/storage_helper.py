@@ -445,9 +445,11 @@ def divide(n, d):
 
 
 class CollectStats(object):
-    def __init__(self, storage_controller):
+    def __init__(self, storage_controller, sc_lock=None):
         self.storage_controller = storage_controller
         self.socket_lock = Lock()
+        if sc_lock:
+            self.socket_lock = sc_lock
         self.stop_all = False
         self.stop_vp_utils = False
         self.stop_per_vp_stats = False

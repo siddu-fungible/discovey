@@ -22,14 +22,16 @@ export class PerformanceWorkspaceComponent implements OnInit {
   showWorkspace: boolean = false;
   profile: any = null;
   editingWorkspace: boolean = false;
-  workspaceName: string = null;
   gridLength: number = 0;
   createError: string = null;
   currentWorkspace: any = null;
+  workspaceToBeDeleted: any = null;
   selectMode: any = SelectMode.ShowEditWorkspace;
 
+  workspaceName: string = null;
   description: string = null;
-  deletingWorkspace: any = null;
+  subscribeToAlerts: boolean = false;
+  alertEmails: string = null;
 
   constructor(private loggerService: LoggerService, private  apiService: ApiService, private router: Router,
               private route: ActivatedRoute, private commonService: CommonService, private modalService: NgbModal,
@@ -99,7 +101,7 @@ export class PerformanceWorkspaceComponent implements OnInit {
   }
 
   openDeleteWorkspace(content, workspace) {
-    this.deletingWorkspace = workspace;
+    this.workspaceToBeDeleted = workspace;
     this.modalService.open(content, {ariaLabelledBy: 'modal-delete-workspace'}).result.then((result) => {
       // this.closeResult = `Closed with: ${result}`;
     }, (reason) => {
@@ -110,7 +112,10 @@ export class PerformanceWorkspaceComponent implements OnInit {
 
   fetchInterestedMetrics(workspaceId): any {
     return this.apiService.get("/api/v1/performance/workspaces/" + workspaceId + "/interested_metrics").pipe(switchMap(response => {
-      this.currentWorkspace["interestedMetrics"] = response.data;
+      this.currentWorkspace["interestedMetrics"] = [];
+      for (let metric of response.data) {
+        this.currentWorkspace["interestedMetrics"].push(metric);
+    }
       return of(true);
     }));
   }
@@ -194,8 +199,11 @@ export class PerformanceWorkspaceComponent implements OnInit {
           newWorkspace["editingWorkspace"] = false;
           newWorkspace["editingDescription"] = false;
           newWorkspace["workspaceId"] = workspace.id;
+          newWorkspace["subscribeToAlerts"] = workspace.subscribe_to_alerts;
+          newWorkspace["alertEmails"] = workspace.alert_emails;
           newWorkspace["createdDate"] = workspace.date_created;
           newWorkspace["modifiedDate"] = workspace.date_modified;
+          newWorkspace["editingAlerts"] = false;
           if (this.currentWorkspace && this.currentWorkspace.name === newWorkspace["name"]) {
             new Observable(observer => {
               observer.next(true);
@@ -286,10 +294,38 @@ export class PerformanceWorkspaceComponent implements OnInit {
     payload["email"] = this.selectedUser.email;
     payload["name"] = this.workspaceName;
     payload["description"] = this.description;
+    payload["subscribe_to_alerts"] = this.subscribeToAlerts;
+    payload["alert_emails"] = this.alertEmails;
     return this.apiService.post("/api/v1/performance/workspaces", payload).pipe(switchMap(response => {
       console.log("created/edited workspace successfully");
       return of(true);
     }));
+  }
+
+  onChangeSubscribeToAlerts(subscribed, workspace): void {
+    workspace.subscribeToAlerts = subscribed;
+    workspace.editingAlerts = true;
+  }
+
+  saveSubscribeAndEmailsForAlerts(workspace): void {
+    this.workspaceName = workspace.name;
+    this.description = workspace.description;
+    this.subscribeToAlerts = workspace.subscribeToAlerts;
+    this.alertEmails = workspace.alertEmails;
+    new Observable(observer => {
+      observer.next(true);
+      observer.complete();
+      return () => {
+      }
+    }).pipe(
+      switchMap(response => {
+        return this.submitWorkspace();
+      })).subscribe(response => {
+      this.fetchWorkspacesAfterEditing();
+      this.loggerService.success("saved the alerts for workspace");
+    }, error => {
+      this.loggerService.error("Unable to save alerts for workspace");
+    });
   }
 
   deleteMetricInWorkspace(metricId): void {
@@ -406,6 +442,7 @@ export class PerformanceWorkspaceComponent implements OnInit {
       })).subscribe(response => {
       this.fetchWorkspacesAfterEditing();
       this.loggerService.success("saved the workspace");
+      this.modalService.dismissAll();
     }, error => {
       this.loggerService.error("Unable to save interested metrics");
     });

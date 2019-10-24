@@ -111,9 +111,19 @@ export class SuiteExecutionWidgetComponent implements OnInit {
 
 
   fetchTestCaseExecutions(index) {
-    return this.apiService.get(`/api/v1/regression/test_case_executions/?suite_id=${this.lastTwoSuites[index].id}`).pipe(switchMap(response => {
-      this.lastTwoSuites[index].numFailed = response.data.num_failed;
-      this.lastTwoSuites[index].numPassed = response.data.num_passed;
+    return this.apiService.get(`/api/v1/regression/test_case_executions/?suite_execution_id=${this.lastTwoSuites[index].id}`).pipe(switchMap(response => {
+      let testCaseExecutions = response.data;
+      this.lastTwoSuites[index].numFailed = 0;
+      this.lastTwoSuites[index].numPassed = 0;
+      testCaseExecutions.forEach(testCaseExecution => {
+        if (testCaseExecution.result == "PASSED") {
+          this.lastTwoSuites[index].numPassed += 1;
+        }
+        if (testCaseExecution.result == "FAILED") {
+          this.lastTwoSuites[index].numFailed += 1;
+        }
+      });
+
 
       return of(true);
     }));

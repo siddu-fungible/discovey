@@ -72,9 +72,9 @@ class BringupSetup(FunTestCase):
             f11_retimer = 0
 
         f1_0_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --dpc-server --all_100g --serial --dpc-uart " \
-                         "retimer={} --mgmt --disable-wu-watchdog syslog=2".format(f10_retimer)
+                         "retimer={} --mgmt syslog=2".format(f10_retimer)
         f1_1_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 --dpc-server --all_100g --serial --dpc-uart " \
-                         "retimer={} --mgmt --disable-wu-watchdog syslog=2".format(f11_retimer)
+                         "retimer={} --mgmt syslog=2".format(f11_retimer)
 
         topology_helper = TopologyHelper()
         if "deploy_setup" in job_inputs:
@@ -93,12 +93,20 @@ class BringupSetup(FunTestCase):
         else:
             ib_bw_tests = ["write", "read"]
             fun_test.shared_variables["test_type"] = ib_bw_tests
-        if "enable_bgp" in job_inputs:
-            enable_bgp = job_inputs["enable_bgp"]
-            fun_test.shared_variables["enable_bgp"] = enable_bgp
+        if "enable_fcp" in job_inputs:
+            enable_fcp = job_inputs["enable_fcp"]
+            fun_test.shared_variables["enable_fcp"] = enable_fcp
         else:
-            enable_bgp = False
-            fun_test.shared_variables["enable_bgp"] = enable_bgp
+            enable_fcp = False
+            fun_test.shared_variables["enable_fcp"] = enable_fcp
+        if "check_scale" in job_inputs:
+            fun_test.shared_variables["check_scale"] = job_inputs["check_scale"]
+        else:
+            fun_test.shared_variables["check_scale"] = False
+        if "qp_list" in job_inputs:
+            fun_test.shared_variables["qp_list"] = job_inputs["qp_list"]
+        else:
+            fun_test.shared_variables["qp_list"] = [64]
 
         if deploy_setup:
             funcp_obj = FunControlPlaneBringup(fs_name=self.server_key["fs"][fs_name]["fs-name"])
@@ -208,9 +216,9 @@ class NicEmulation(FunTestCase):
 
     def run(self):
         host_objs = fun_test.shared_variables["hosts_obj"]
-        enable_bgp = fun_test.shared_variables["enable_bgp"]
+        enable_fcp = fun_test.shared_variables["enable_fcp"]
         abstract_key = ""
-        if enable_bgp:
+        if enable_fcp:
             abstract_key = "abstract_configs_bgp"
         else:
             abstract_key = "abstract_configs"
@@ -227,12 +235,13 @@ class NicEmulation(FunTestCase):
                                             abstract_config_f1_1=abstract_json_file1, workspace="/scratch")
 
             # Add static routes on Containers
-            funcp_obj.add_routes_on_f1(routes_dict=self.server_key["fs"][fs_name]["static_routes"])
-            fun_test.sleep(message="Waiting before ping tests", seconds=10)
+            if not enable_fcp:
+                funcp_obj.add_routes_on_f1(routes_dict=self.server_key["fs"][fs_name]["static_routes"])
+                fun_test.sleep(message="Waiting before ping tests", seconds=10)
 
             # Ping QFX from both F1s
             ping_dict = self.server_key["fs"][fs_name]["cc_pings"]
-            if enable_bgp:
+            if enable_fcp:
                 ping_dict = self.server_key["fs"][fs_name]["cc_pings_bgp"]
 
             for container in ping_dict:
@@ -261,15 +270,32 @@ class NicEmulation(FunTestCase):
                 test_host_pings(host=host, ips=ping_dict[host], strict=False)
 
         # Update RDMA Core & perftest on hosts
+        bg_proc_id = {}
+        for obj in host_objs:
+            if obj == "f1_0":
+                host_count = fun_test.shared_variables["host_len_f10"]
+                bg_proc_id[obj] = []
+            elif obj == "f1_1":
+                host_count = fun_test.shared_variables["host_len_f11"]
+                bg_proc_id[obj] = []
+            for x in xrange(0, host_count):
+                update_path = host_objs[obj][x].command("echo $HOME")
+                update_script = update_path.strip() + "/mks/update_rdma.sh"
+                print update_script
+                bg_proc_id[obj].append(host_objs[obj][x].
+                                       start_bg_process("{} build build".format(update_script),
+                                                        timeout=1200))
+        # fun_test.sleep("Building rdma_perf & core", seconds=120)
         for obj in host_objs:
             if obj == "f1_0":
                 host_count = fun_test.shared_variables["host_len_f10"]
             elif obj == "f1_1":
                 host_count = fun_test.shared_variables["host_len_f11"]
             for x in xrange(0, host_count):
-                host_objs[obj][x].start_bg_process("/home/localadmin/mks/update_rdma.sh update update", timeout=1200)
-                # host_objs[obj][x].command("hostname")
-        fun_test.sleep("Building rdma_perf & core", seconds=120)
+                for pid in bg_proc_id[obj]:
+                    while host_objs[obj][x].process_exists(process_id=pid):
+                        fun_test.sleep(message="Still building RDMA repo...", seconds=5)
+                host_objs[obj][x].disconnect()
 
         # Create a dict containing F1_0 & F1_1 details
         f10_hosts = []
@@ -919,22 +945,110 @@ class IbLatRandIoRdmaCm(IbLatSeqIoTest):
                                   """)
 
 
+class IbWriteScale(FunTestCase):
+    server_key = {}
+    random_io = False
+    use_rdmacm = True
+
+    def describe(self):
+        self.set_test_details(id=17,
+                              summary="IB_BW* QP scale test",
+                              steps="""
+                                  1. Load funrdma & rdma_ucm driver
+                                  2. Start IB_BW write/read test for different QP's with size=1
+                                  """)
+
+    def setup(self):
+
+        self.server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() +
+                                                      '/fs_connected_servers.json')
+
+    def run(self):
+        global funcp_obj, servers_mode, servers_list, fs_name
+        fs_name = fun_test.get_job_environment_variable('test_bed_type')
+        f10_hosts = fun_test.shared_variables["f10_hosts"]
+        f11_hosts = fun_test.shared_variables["f11_hosts"]
+
+        f10_host_roce = fun_test.shared_variables["f10_host_roce"]
+        f11_host_roce = fun_test.shared_variables["f11_host_roce"]
+        test_type_list = fun_test.shared_variables["test_type"]
+
+        # Load RDMA modules
+        f10_host_roce.rdma_setup()
+        f11_host_roce.rdma_setup()
+
+        # Kill all RDMA tools
+        f10_host_roce.cleanup()
+        f11_host_roce.cleanup()
+
+        if self.use_rdmacm:
+            rdmacm = True
+        else:
+            rdmacm = False
+
+        if self.random_io:
+            io_type = "Random"
+            io_list = []
+            while True:
+                rand_num = random.randint(1, 524288)
+                if rand_num not in io_list:
+                    io_list.append(rand_num)
+                if len(io_list) == 16:
+                    break
+        else:
+            io_type = "Sequential"
+            qp_list = fun_test.shared_variables["qp_list"]
+        f10_pid_there = 0
+        f11_pid_there = 0
+        size = 1
+        for test in test_type_list:
+            for qp in qp_list:
+                f10_host_test = f10_host_roce.ib_bw_test(test_type=test, size=size, rdma_cm=rdmacm, qpair=qp,
+                                                         duration=30)
+                f11_host_test = f11_host_roce.ib_bw_test(test_type=test, size=size, rdma_cm=rdmacm, qpair=qp,
+                                                         server_ip=f10_hosts[0]["ipaddr"], duration=30)
+                while f10_hosts[0]["handle"].process_exists(process_id=f10_host_test["cmd_pid"]):
+                    fun_test.sleep("ib_bw test on f10_host", 2)
+                    f10_pid_there += 1
+                    if f10_pid_there == 60:
+                        f10_hosts[0]["handle"].kill_process(process_id=f10_host_test["cmd_pid"])
+                while f11_hosts[0]["handle"].process_exists(process_id=f10_host_test["cmd_pid"]):
+                    fun_test.sleep("ib_bw test on f11_host", 2)
+                    f11_pid_there += 1
+                    if f11_pid_there == 60:
+                        f11_hosts[0]["handle"].kill_process(process_id=f11_host_test["cmd_pid"])
+                f10_host_result = f10_host_roce.parse_test_log(f10_host_test["output_file"], tool="ib_bw")
+                f11_host_result = f11_host_roce.parse_test_log(f11_host_test["output_file"], tool="ib_bw",
+                                                               client_cmd=True)
+                fun_test.simple_assert(f10_host_result, "F10_host {} result of size {}".format(test, size))
+                fun_test.simple_assert(f11_host_result, "F11_host {} result of size {}".format(test, size))
+
+            fun_test.test_assert(True, "IB_BW {} test with {} IO".format(test, io_type))
+
+    def cleanup(self):
+        fun_test.shared_variables["f10_host_roce"].cleanup()
+        fun_test.shared_variables["f10_host_roce"].cleanup()
+
+
 if __name__ == '__main__':
     ts = ScriptSetup()
     ts.add_test_case(BringupSetup())
     ts.add_test_case(NicEmulation())
-    ts.add_test_case(SrpingLoopBack())
-    ts.add_test_case(RpingLoopBack())
-    ts.add_test_case(SrpingSeqIoTest())
-    ts.add_test_case(SrpingRandIoTest())
-    ts.add_test_case(RpingSeqIoTest())
-    ts.add_test_case(RpingRandIoTest())
-    ts.add_test_case(IbBwSeqIoTest())
-    ts.add_test_case(IbBwRandIoTest())
-    ts.add_test_case(IbBwSeqIoRdmaCm())
-    ts.add_test_case(IbBwRandIoRdmaCm())
-    ts.add_test_case(IbLatSeqIoTest())
-    ts.add_test_case(IbLatRandIoTest())
-    ts.add_test_case(IbLatSeqIoRdmaCm())
-    ts.add_test_case(IbLatRandIoRdmaCm())
+    if not fun_test.shared_variables["check_scale"]:
+        ts.add_test_case(SrpingLoopBack())
+        ts.add_test_case(RpingLoopBack())
+        ts.add_test_case(SrpingSeqIoTest())
+        ts.add_test_case(SrpingRandIoTest())
+        ts.add_test_case(RpingSeqIoTest())
+        ts.add_test_case(RpingRandIoTest())
+        ts.add_test_case(IbBwSeqIoTest())
+        ts.add_test_case(IbBwRandIoTest())
+        ts.add_test_case(IbBwSeqIoRdmaCm())
+        ts.add_test_case(IbBwRandIoRdmaCm())
+        ts.add_test_case(IbLatSeqIoTest())
+        ts.add_test_case(IbLatRandIoTest())
+        ts.add_test_case(IbLatSeqIoRdmaCm())
+        ts.add_test_case(IbLatRandIoRdmaCm())
+    else:
+        ts.add_test_case(IbWriteScale())
     ts.run()
