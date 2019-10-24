@@ -2206,6 +2206,36 @@
               "name": "mktg-server-10"
             },
             "ip": "15.1.10.1/24"
+          },
+          "et-0/0/56": {
+            "host_info": {
+              "name": "cab02-qa-09"
+            },
+            "ip": "15.1.15.1/24"
+          },
+          "et-0/0/57": {
+            "host_info": {
+              "name": "cab02-qa-10"
+            },
+            "ip": "15.1.16.1/24"
+          },
+          "et-0/0/58": {
+            "host_info": {
+              "name": "cab02-qa-11"
+            },
+            "ip": "15.1.17.1/24"
+          },
+          "et-0/0/59": {
+            "host_info": {
+              "name": "cab02-qa-12"
+            },
+            "ip": "15.1.18.1/24"
+          },
+          "et-0/0/14": {
+            "host_info": {
+              "name": "cab02-qa-13"
+            },
+            "ip": "15.1.19.1/24"
           }
         }
       }
@@ -2224,7 +2254,11 @@
       "mktg-server-11",
       "mktg-server-12",
       "mktg-server-13",
-      "mktg-server-14"
+      "mktg-server-14",
+      "cab02-qa-09",
+      "cab02-qa-10",
+      "cab02-qa-12",
+      "cab02-qa-13"
     ],
     "dut_info": {
       "0": {
