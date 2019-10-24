@@ -1,11 +1,13 @@
-<div class="component" style="overflow: visible">
+<div class="component">
 
 
   <div class="fun-flex-container fun-action-nav">
     <span class="script-name">{{ scriptPath }}</span>
     <div class="fun-spacer"></div>
     <button (click)="onContextOptionsClick(contextOptions)" class="fun-button-add">Context options</button>
-    <button (click)="testClick()">Test</button>
+    <!--button (click)="testClick()">Test</button-->
+    <fun-spinner [status]="status"></fun-spinner>
+
     <ng-template #contextOptions let-modal>
       <div class="fun-panel">
         <div class="fun-panel-header">
@@ -29,7 +31,7 @@
   </div>
   <app-timeline-control [domainMin]="minRelativeTime" [domainMax]="maxRelativeTime" [title]="'Timeline'" [unit]="'s'" (valueChanged)="onTimeLineChanged($event)"></app-timeline-control>
 
-  <div style="position: fixed">
+  <div>
     <div class="fun-flex-container" style="align-items: flex-start;">
       <div *ngIf="showTestCasePanel" class="fun-flex-item panel fun-panel" [@show]="showTestCasePanel">
         <div class="fun-panel-header">Test-cases</div>
@@ -66,7 +68,7 @@
               <td class="fun-table-header">Expected</td>
               <td class="fun-table-header">Actual</td>
             </tr>
-            <tr *ngFor="let checkpoint of this.timeSeriesByTestCase[currentTestCaseExecution.test_case_id]?.checkpoints" [ngClass]="{'selected-row': currentCheckpointIndex === checkpoint.index }">
+            <tr *ngFor="let checkpoint of this.timeSeriesByTestCase[currentTestCaseExecution.test_case_id]?.checkpoints" [ngClass]="{'selected-checkpoint-row': currentCheckpointIndex === checkpoint.index }">
               <td><span class="pseudo-anchor" (click)="onCheckpointClick(currentTestCaseExecution.test_case_id, checkpoint.index, checkpoint.context_id)">{{ checkpoint.index }}</span></td>
               <td>{{ checkpoint.context_id }}</td>
               <td>{{ checkpoint.checkpoint }}</td>
@@ -83,7 +85,7 @@
               Context: {{ availableContext.context_id }} {{ availableContext.description }}
             </div>
             <div class="fun-panel-body">
-              <div [@show]="showLogsPanel" *ngIf="currentTestCaseExecution" style="overflow-y: scroll; height: 500px; overflow-x: scroll; width: 300px">
+              <div [@show]="showLogsPanel" *ngIf="currentTestCaseExecution">
                 <h4>{{ currentTestCaseExecution.test_case_id }}: {{ currentTestCaseExecution.summary }}</h4>
                 <div>
                   <ng-container *ngIf="currentTestCaseExecution">
@@ -94,7 +96,7 @@
                             <td class="timestamp" nowrap><small>{{ seriesElement.relative_epoch_time }}</small></td>
                             <td >
                               <div id="{{ currentTestCaseExecution.test_case_id }}_{{ seriesElement.data?.index }}_{{ seriesElement.data?.context_id }}">
-                                <span class="checkpoint-span">Checkpoint: {{ seriesElement.data?.checkpoint }} {{ seriesElement.data | json }}
+                                <span class="checkpoint-span">Checkpoint: {{ seriesElement.data?.checkpoint }}
                                 </span>
                               </div>
                             </td>

@@ -190,9 +190,8 @@
             </ng-container>
           </div>
           <div class="card-body">
-
-            <jira-info *ngIf="scriptInfo[scriptExecutionInfo.key]?.pk"
-                       [apiUrl]="'/regression/jiras/' + scriptInfo[scriptExecutionInfo.key].pk">
+            <jira-info *ngIf="scriptInfo[scriptExecutionInfo.key]?.id"
+                       [apiUrl]="'/regression/jiras/' + scriptInfo[scriptExecutionInfo.key].id">
             </jira-info>
 
 

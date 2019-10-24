@@ -1,6 +1,6 @@
 from lib.system.fun_test import *
 from lib.system import utils
-from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper, get_data_collection_time
+from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper, ModelHelper, get_data_collection_time
 from lib.fun.fs import Fs
 import re
 from lib.topology.topology_helper import TopologyHelper
@@ -10,6 +10,10 @@ from scripts.networking.helper import *
 from collections import OrderedDict, Counter
 from lib.templates.csi_perf.csi_perf_template import CsiPerfTemplate
 from lib.host.linux import Linux
+from fun_global import PerfUnit, FunPlatform
+from datetime import datetime
+
+
 
 '''
 Script to run rdstest on F1 from multiple hosts.
@@ -184,9 +188,8 @@ class ECVolumeLevelScript(FunTestScript):
             self.topology = self.topology_helper.deploy()
             fun_test.test_assert(self.topology, "Topology deployed")
 
-            # Datetime required for daily Dashboard data filter
-            self.db_log_time = get_data_collection_time(tag="ec_inspur_fs_teramark_single_f1")
-            fun_test.log("Data collection time: {}".format(self.db_log_time))
+            self.db_log_time = datetime.now()
+            fun_test.shared_variables["db_log_time"] = self.db_log_time
 
             # Retrieving all Hosts list and filtering required hosts and forming required object lists out of it
             if self.testbed_type != "suite-based":
@@ -449,6 +452,7 @@ class ECVolumeLevelTestcase(FunTestCase):
             job_inputs = {}
         if "post_results" in job_inputs:
             self.post_results = job_inputs["post_results"]
+        fun_test.log("Post results value: {}".format(self.post_results))
 
         if (self.tcpkali_payload):
             command += '-f {} '.format(self.tcpkali_payload)
@@ -500,6 +504,7 @@ class ECVolumeLevelTestcase(FunTestCase):
         host_clone = {}
         fun_test.shared_variables["tcpkali"] = {}
         self.host_info = fun_test.shared_variables["host_info"]
+        self.db_log_time = fun_test.shared_variables["db_log_time"]
 
         orignal_cmd = command
 

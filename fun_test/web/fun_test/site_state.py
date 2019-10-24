@@ -9,7 +9,7 @@ from web.fun_test.metrics_models import MetricsGlobalSettings
 from web.fun_test.models import Asset
 from django.apps import apps
 from web.fun_test.metrics_models import MetricChart, LastMetricId
-from web.fun_test.metrics_lib import *
+from web.fun_test.metrics_lib import MetricLib
 import json
 import os
 import traceback

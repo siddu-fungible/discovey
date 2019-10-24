@@ -390,7 +390,7 @@ class BwTest(FunTestCase):
         f11_hosts = fun_test.shared_variables["f11_hosts"]
         qp_list = fun_test.shared_variables["qp_list"]
         come_obj = fun_test.shared_variables["come_obj"]
-        kill_time = 30
+        kill_time = 140
         test_case_failure_time = 20
 
         # Using hosts based on minimum host length
@@ -437,16 +437,16 @@ class BwTest(FunTestCase):
                 # Start servers on F1_0
                 for index in range(total_link_bw):
                     f10_server = f10_hosts[index]["roce_handle"].ib_bw_test(test_type=self.rt, perf=True, size=size,
-                                                                            qpair=qp,
+                                                                            qpair=qp, duration=60,
                                                                             timeout=300)
                     pid_dict = {f10_hosts[index]["roce_handle"]: f10_server}
                     f10_pid_list.append(pid_dict)
                 fun_test.sleep("Servers started for {} BW test with size={} & qp={}".format(self.rt, size, qp),
                                seconds=5)
-                # Start servers on F1_1
+                # Start clients on F1_1
                 for index in range(total_link_bw):
                     f11_client = f11_hosts[index]["roce_handle"].ib_bw_test(test_type=self.rt, perf=True, size=size,
-                                                                            qpair=qp,
+                                                                            qpair=qp, duration=60,
                                                                             server_ip=f10_hosts[index]["ipaddr"],
                                                                             timeout=300)
                     pid_dict = {f11_hosts[index]["roce_handle"]: f11_client}
@@ -454,12 +454,12 @@ class BwTest(FunTestCase):
                 fun_test.sleep("Clients started for {} BW test with size={} & qp={}".format(self.rt, size, qp),
                                seconds=5)
                 # fun_test.sleep("Clients started for {} BW test, size {}".format(rt, size), seconds=20)
-                fun_test.sleep("Waiting for {} seconds before killing tests".format(kill_time), seconds=kill_time)
+                # fun_test.sleep("Waiting for {} seconds before killing tests".format(kill_time), seconds=kill_time)
                 # First kill client & then kill server
                 parsed_result = []
                 for handle in f11_pid_list:
                     for key, value in handle.items():
-                        key.kill_pid(pid=value["cmd_pid"])
+                        # key.kill_pid(pid=value["cmd_pid"])
                         while key.process_check(pid=value["cmd_pid"]):
                             fun_test.sleep(message="Client process still there", seconds=2)
                         wait_time = test_case_failure_time
@@ -473,7 +473,7 @@ class BwTest(FunTestCase):
                                                                 perf=True))
                 for handle in f10_pid_list:
                     for key, value in handle.items():
-                        key.kill_pid(pid=value["cmd_pid"])
+                        # key.kill_pid(pid=value["cmd_pid"])
                         while key.process_check(pid=value["cmd_pid"]):
                             fun_test.sleep(message="Server process still there", seconds=2)
                         wait_time = test_case_failure_time
@@ -543,7 +543,7 @@ class LatencyTest(FunTestCase):
         f10_hosts = fun_test.shared_variables["f10_hosts"]
         f11_hosts = fun_test.shared_variables["f11_hosts"]
         qp_list = fun_test.shared_variables["qp_list"]
-        kill_time = 20
+        kill_time = 140
         test_case_failure_time = 20
 
         # Using hosts based on minimum host length
@@ -608,12 +608,12 @@ class LatencyTest(FunTestCase):
                 f11_pid_list.append(pid_dict)
             fun_test.sleep("Clients started for {} Latency test with size={}".format(self.rt, size),
                            seconds=5)
-            fun_test.sleep("Waiting for {} seconds before killing tests".format(kill_time), seconds=kill_time)
+            # fun_test.sleep("Waiting for {} seconds before killing tests".format(kill_time), seconds=kill_time)
             # First kill client & then kill server
             parsed_result = []
             for handle in f11_pid_list:
                 for key, value in handle.items():
-                    key.kill_pid(pid=value["cmd_pid"])
+                    # key.kill_pid(pid=value["cmd_pid"])
                     while key.process_check(pid=value["cmd_pid"]):
                         fun_test.sleep(message="Client process still there", seconds=2)
                     wait_time = test_case_failure_time
@@ -627,7 +627,7 @@ class LatencyTest(FunTestCase):
                                                             perf=True))
             for handle in f10_pid_list:
                 for key, value in handle.items():
-                    key.kill_pid(pid=value["cmd_pid"])
+                    # key.kill_pid(pid=value["cmd_pid"])
                     while key.process_check(pid=value["cmd_pid"]):
                         fun_test.sleep(message="Server process still there", seconds=2)
                     wait_time = test_case_failure_time
@@ -647,12 +647,12 @@ class LatencyTest(FunTestCase):
             total_values = len(parsed_result)
             for results in parsed_result:
                 size_latency = float(results[0])
-                iterations = float(results[4])
-                min_latency = float(results[5])
-                max_latency = float(results[6])
-                avg_latency = float(results[8])
-                latency_99 = float(results[10])
-                latency_99_99 = float(results[11])
+                iterations = float(results[1])
+                min_latency = float(results[2])
+                max_latency = float(results[3])
+                avg_latency = float(results[5])
+                latency_99 = float(results[7])
+                latency_99_99 = float(results[8])
             for item in table_data_cols:
                 row_data_list.append(eval(item))
             table_data_rows.append(row_data_list)
@@ -802,13 +802,13 @@ if __name__ == '__main__':
     ts = ScriptSetup()
     ts.add_test_case(BringupSetup())
     ts.add_test_case(NicEmulation())
-    # ts.add_test_case(BwWriteFcp1500())
-    # ts.add_test_case(LatWriteFcp1500())
-    # ts.add_test_case(BwWriteFcp9000())
-    # ts.add_test_case(LatWriteFcp9000())
-    # ts.add_test_case(BwWriteNfcp1500())
-    # ts.add_test_case(LatWriteNfcp1500())
-    # ts.add_test_case(BwWriteNfcp9000())
-    # ts.add_test_case(LatWriteNfcp9000())
+    ts.add_test_case(BwWriteFcp1500())
+    ts.add_test_case(LatWriteFcp1500())
+    ts.add_test_case(BwWriteFcp9000())
+    ts.add_test_case(LatWriteFcp9000())
+    ts.add_test_case(BwWriteNfcp1500())
+    ts.add_test_case(LatWriteNfcp1500())
+    ts.add_test_case(BwWriteNfcp9000())
+    ts.add_test_case(LatWriteNfcp9000())
 
     ts.run()
