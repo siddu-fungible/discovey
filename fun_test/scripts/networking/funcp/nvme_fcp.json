@@ -17,10 +17,10 @@
     "fio_cmd_args": {
       "bs": 4096,
       "ioengine": "libaio",
-      "runtime": 20,
+      "runtime": 120,
       "direct": 1,
       "timeout": 600,
-      "iodepth": 24,
+      "iodepth": 32,
       "prio": 0,
       "cpus_allowed_policy": "split"
     },

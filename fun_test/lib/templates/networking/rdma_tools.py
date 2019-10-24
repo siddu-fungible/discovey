@@ -273,14 +273,14 @@ class Rocetools:
                         lines[x] = -1
 
                 size = lines[0]
-                iterations = lines[4]
-                t_min = lines[5]
-                t_max = lines[6]
-                t_typical = lines[7]
-                t_avg = lines[8]
-                t_stdev = lines[9]
-                t_99 = lines[10]
-                t_9999 = lines[11]
+                iterations = lines[1]
+                t_min = lines[2]
+                t_max = lines[3]
+                t_typical = lines[4]
+                t_avg = lines[5]
+                t_stdev = lines[6]
+                t_99 = lines[7]
+                t_9999 = lines[8]
             else:
                 content = self.host.command("grep -i 'bytes' -A 1 {} | tail -1".format(filepath))
                 lines = content.split()

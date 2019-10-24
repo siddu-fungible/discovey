@@ -48,10 +48,10 @@
                   'text-color-green': (dataSet.percentage.includes('+') && interestedMetric.positive) || (dataSet.percentage.includes('-') && !interestedMetric.positive)}">
                 {{ dataSet.percentage }}
               </td>
-              <td *ngIf="dataSet.percentage"
-                  [ngClass]="{'text-color-red': (dataSet.percentage.includes('-') && interestedMetric.positive) || (dataSet.percentage.includes('+') && !interestedMetric.positive),
-                  'text-color-green': (dataSet.percentage.includes('+') && interestedMetric.positive) || (dataSet.percentage.includes('-') && !interestedMetric.positive)}">
-                {{ dataSet.percentage }}
+              <td *ngIf="dataSet.best_percentage"
+                  [ngClass]="{'text-color-red': (dataSet.best_percentage.includes('-') && interestedMetric.positive) || (dataSet.best_percentage.includes('+') && !interestedMetric.positive),
+                  'text-color-green': (dataSet.best_percentage.includes('+') && interestedMetric.positive) || (dataSet.best_percentage.includes('-') && !interestedMetric.positive)}">
+                {{ dataSet.best_percentage }}
               </td>
             </tr>
             <ng-container *ngIf="dataSet.show_history">

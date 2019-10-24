@@ -3,16 +3,6 @@
   <div [ngClass]="{'row': selectMode !== SelectMode.ShowEditWorkspace}">
     <!-- left side of the performance page containing tree structure -->
     <div [ngClass]="{'col-lg-5 col-md-5 col-xxl-4 col-xl-5 left-col': selectMode !== SelectMode.ShowEditWorkspace}">
-      <!--<div *ngIf="selectMode == SelectMode.ShowMainSite">-->
-        <!--<ul class="nav nav-tabs card-header-tabs" role="tablist">-->
-          <!--<li *ngFor="let rootTab of rootTabs" class="nav-item" style="width: 100px; text-align: center">-->
-            <!--<span class="nav-link pseudo-anchor"-->
-              <!--role="tab" [ngClass]="{'tab-highlight':rootTab['active']}" (click)="openDag(rootTab)">{{-->
-              <!--rootTab["name"] }}</span>-->
-          <!--</li>-->
-        <!--</ul>-->
-      <!--</div>-->
-      <!--<br>-->
       <table class="table table-nonfluid">
         <tr *ngIf="selectMode !== SelectMode.ShowEditWorkspace && this.selectMode !== SelectMode.ShowAttachDag">
           <th class="text-center">Aspect</th>
@@ -58,8 +48,13 @@
                         <span [innerHTML]="getIndentHtml(flatNode) | safeHtml">
                         </span>
               <ng-container>
-                <a [ngClass]="{highlight: flatNode.node.showAddJira}" class="pseudo-anchor"
-                   (click)="navigateByQuery(flatNode)">{{ flatNode.node.chartName }}</a>
+                <a *ngIf="!flatNode.viewLineage" [ngClass]="{highlight: flatNode.node.showAddJira}"
+                   class="pseudo-anchor"
+                   (click)="showMetricCharts(flatNode)">{{ flatNode.node.chartName }}</a>
+                 <a *ngIf="flatNode.viewLineage"
+                    [ngClass]="{highlight: flatNode.node.showAddJira}"
+                   class="pseudo-anchor"
+                   (click)="showMetricCharts(flatNode)">{{ flatNode.viewLineage }}</a>
                 <span *ngIf="flatNode.node.workInProgress">&nbsp;<app-smart-label [value]="'work in progress'"
                                                                                   [type]="'warning'"></app-smart-label></span>
                 <span *ngIf="flatNode.node.tags">&nbsp;<span *ngFor="let tag of flatNode.node.tags"><app-smart-label
