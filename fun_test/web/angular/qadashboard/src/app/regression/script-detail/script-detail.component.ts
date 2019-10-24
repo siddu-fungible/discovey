@@ -262,6 +262,14 @@ export class ScriptDetailComponent implements OnInit {
     console.log(trueRange);
     console.log(checkpointsInConsideration);
 
+    this.regressionService.testCaseTimeSeries(this.suiteExecutionId,
+      this.currentTestCaseExecution.execution_id,
+      trueRange[0], trueRange[1]).subscribe(response => {
+
+    }, error => {
+        this.loggerService
+    })
+
   }
 
 
