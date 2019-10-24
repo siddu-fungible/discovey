@@ -454,7 +454,7 @@ class BwTest(FunTestCase):
                 fun_test.sleep("Clients started for {} BW test with size={} & qp={}".format(self.rt, size, qp),
                                seconds=5)
                 # fun_test.sleep("Clients started for {} BW test, size {}".format(rt, size), seconds=20)
-                fun_test.sleep("Waiting for {} seconds before killing tests".format(kill_time), seconds=kill_time)
+                # fun_test.sleep("Waiting for {} seconds before killing tests".format(kill_time), seconds=kill_time)
                 # First kill client & then kill server
                 parsed_result = []
                 for handle in f11_pid_list:
@@ -608,7 +608,7 @@ class LatencyTest(FunTestCase):
                 f11_pid_list.append(pid_dict)
             fun_test.sleep("Clients started for {} Latency test with size={}".format(self.rt, size),
                            seconds=5)
-            fun_test.sleep("Waiting for {} seconds before killing tests".format(kill_time), seconds=kill_time)
+            # fun_test.sleep("Waiting for {} seconds before killing tests".format(kill_time), seconds=kill_time)
             # First kill client & then kill server
             parsed_result = []
             for handle in f11_pid_list:
