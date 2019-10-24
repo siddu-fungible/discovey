@@ -224,10 +224,10 @@ class ApcPduTestcase(FunTestCase):
             outlet_off = self.match_success(apc_outlet_off_msg)
             fun_test.test_assert(outlet_off, "Power down FS")
 
-            fun_test.sleep(message="Wait for few seconds after switching off fs outlet", seconds=20)
+            fun_test.sleep(message="Wait for few seconds after switching off fs outlet", seconds=15)
 
             fun_test.log("Checking if COMe is down")
-            come_down = not (self.come_handle.ensure_host_is_up(max_wait_time=10))
+            come_down = not (self.come_handle.ensure_host_is_up(max_wait_time=15))
             fun_test.test_assert(come_down, "COMe is Down")
             self.come_handle.destroy()
 
