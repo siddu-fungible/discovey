@@ -76,6 +76,7 @@ export class ScriptDetailComponent implements OnInit {
   maxRelativeTime: number = 1;
   scriptRunTime: ScriptRunTime = null;
   timeFilterMin: number = 0;
+  status: string = null;
 
   timeSeriesByTestCase: {[testCaseId: number]: {[key: string]: any }} = {};
 
@@ -140,6 +141,7 @@ export class ScriptDetailComponent implements OnInit {
   onTestCaseIdClick(testCaseExecutionIndex) {
     this.testLogs = null;
     this.currentCheckpointIndex = null;
+    this.status = "Fetching test-case executions";
     this.regressionService.testCaseTimeSeries(this.suiteExecutionId, this.testCaseExecutions[testCaseExecutionIndex].execution_id).subscribe(response => {
       this.currentTestCaseExecution = this.testCaseExecutions[testCaseExecutionIndex];
       this.currentTestCaseExecutionIndex = testCaseExecutionIndex;
@@ -169,26 +171,22 @@ export class ScriptDetailComponent implements OnInit {
       });
 
       this.showCheckpointPanel = true;
+      this.status = null;
     })
   }
 
   onCheckpointClick(testCaseId, checkpointIndex, contextId=0) {
-    this.regressionService.testCaseTimeSeriesLogs(this.suiteExecutionId, this.currentTestCaseExecution.execution_id, checkpointIndex).subscribe(response => {
-      this.showTestCasePanel = false;
-      this.showLogsPanel = true;
-      this.showCheckpointPanel = true;
-      let checkpointId = `${testCaseId}_${checkpointIndex}_${contextId}`;
-      this.currentCheckpointIndex = checkpointIndex;
-      setTimeout(() => {
-        this.commonService.scrollTo(checkpointId);
-      }, 500);
-
-
-    }, error => {
-      this.loggerService.error("Unable to fetch time-series logs")
-    })
+    //this.status = "Fetching checkpoint data";
+    this.showTestCasePanel = false;
+    this.showLogsPanel = true;
+    this.showCheckpointPanel = true;
+    let checkpointId = `${testCaseId}_${checkpointIndex}_${contextId}`;
+    this.currentCheckpointIndex = checkpointIndex;
+    setTimeout(() => {
+      this.commonService.scrollTo(checkpointId);
+    }, 500);
   }
-
+  
   onShowTestCasePanelClick() {
     this.showTestCasePanel = true;
     this.showCheckpointPanel = true;

@@ -9,6 +9,19 @@ import re
 import ipaddress
 
 
+def get_numa(host_obj):
+    device_id = host_obj.lspci(grep_filter="1dad")
+    if not device_id:
+        device_id = host_obj.lspci(grep_filter="Fungible")
+    lspci_verbose_mode = host_obj.lspci(slot=device_id[0]["id"], verbose=True)
+    numa_number = lspci_verbose_mode[0]["numa_node"]
+    # TODO
+    # FIX this...if numa 0 then skip core 0 & its HT
+    # if numa_number == 0:
+    numa_cores = host_obj.lscpu(grep_filter="node{}".format(numa_number))
+    cpu_list = numa_cores.values()[0]
+    return cpu_list
+
 class ScriptSetup(FunTestScript):
     server_key = {}
 
@@ -93,6 +106,10 @@ class BringupSetup(FunTestCase):
             fun_test.shared_variables["skip_ctrlr_creation"] = skip_ctrlr_creation
         else:
             fun_test.shared_variables["skip_ctrlr_creation"] = False
+        if "skip_precondition" in job_inputs:
+            fun_test.shared_variables["skip_precondition"] = job_inputs["skip_precondition"]
+        else:
+            fun_test.shared_variables["skip_precondition"] = False
 
         if deploy_setup:
             funcp_obj = FunControlPlaneBringup(fs_name=self.server_key["fs"][fs_name]["fs-name"])
@@ -263,17 +280,17 @@ class NicEmulation(FunTestCase):
                 f10_ftep_status = come_obj.command("docker exec F1-0 bash -c \"redis-cli < f10_tunnel\"")
                 fun_test.log_section("F1_1 Tunnel Info")
                 f11_ftep_status = come_obj.command("docker exec F1-1 bash -c \"redis-cli < f11_tunnel\"")
-                fun_test.sleep("FCP Configured", 120)
+                fun_test.sleep("FCP Configured", 60)
 
-                if "openconfig-fcp:fcp-tunnel[ftep='4.4.4.4'][tunnel-type='0']" in f10_ftep_status:
-                    print "********** BGP is up **********"
-                    print f10_ftep_status
-                else:
-                    fun_test.critical(message="FTEP not seen on F10")
-                if "openconfig-fcp:fcp-tunnel[ftep='3.3.3.3'][tunnel-type='0']" in f11_ftep_status:
-                    print f11_ftep_status
-                else:
-                    fun_test.critical(message="FTEP not seen on F11")
+                # if "openconfig-fcp:fcp-tunnel[ftep='4.4.4.4'][tunnel-type='0']" in f10_ftep_status:
+                #     print "********** BGP is up **********"
+                #     print f10_ftep_status
+                # else:
+                #     fun_test.critical(message="FTEP not seen on F10")
+                # if "openconfig-fcp:fcp-tunnel[ftep='3.3.3.3'][tunnel-type='0']" in f11_ftep_status:
+                #     print f11_ftep_status
+                # else:
+                #     fun_test.critical(message="FTEP not seen on F11")
 
         # Create a dict containing F1_0 & F1_1 details
         f10_hosts = []
@@ -335,8 +352,17 @@ class ConfigureRdsVol(FunTestCase):
         deploy_vol = fun_test.shared_variables["deploy_vol"]
         skip_ctrlr_creation = fun_test.shared_variables["skip_ctrlr_creation"]
         total_ssd = fun_test.shared_variables["total_ssd"]
-        drive_size = 21474836480
-        command_timeout = 5
+
+        config_file = fun_test.get_script_name_without_ext() + ".json"
+        config_dict = utils.parse_file_to_json(config_file)
+
+        for k, v in config_dict["GenericParams"].items():
+            setattr(self, k, v)
+
+        drive_size = self.blt_details["capacity"]
+        command_timeout = self.command_timeout
+        controller_port = self.controller_port
+        block_size = self.blt_details["block_size"]
 
         # Fetch the VLAN IP on F10 & F11 containers
         f10_vlan_ip = \
@@ -376,11 +402,11 @@ class ConfigureRdsVol(FunTestCase):
 
         if not skip_ctrlr_creation:
             # Create IPCFG on F1_0
-            command_result = f10_storage_ctrl_obj.ip_cfg(ip=f10_vlan_ip, port=4420)
+            command_result = f10_storage_ctrl_obj.ip_cfg(ip=f10_vlan_ip, port=controller_port)
             fun_test.test_assert(command_result["status"], "ip_cfg on F1_0 COMe")
 
             # Create IPCFG on F1_1
-            command_result = f11_storage_ctrl_obj.ip_cfg(ip=f11_vlan_ip, port=4420)
+            command_result = f11_storage_ctrl_obj.ip_cfg(ip=f11_vlan_ip, port=controller_port)
             fun_test.test_assert(command_result["status"], "ip_cfg on F1_1 COMe")
 
             # Get list of drives on F1_1
@@ -388,6 +414,10 @@ class ConfigureRdsVol(FunTestCase):
                                                    command_duration=command_timeout)
             drive_uuid_list = sorted(drive_dict["data"].keys())
             f10_drive_count = len(drive_uuid_list)
+
+            fun_test.test_assert(expression=(total_ssd > len(drive_uuid_list)),
+                                 message="SSD count on F10 of FS is {}, test requirement : {}".
+                                 format(total_ssd, f10_drive_count))
 
             if total_ssd > len(drive_uuid_list):
                 fun_test.test_assert_expected(False, "SSD count on FS: {} lesser than requirement : {}".
@@ -398,7 +428,7 @@ class ConfigureRdsVol(FunTestCase):
             command_result = f10_storage_ctrl_obj.create_controller(ctrlr_uuid=f10_rds_ctrl,
                                                                     transport="RDS",
                                                                     nqn="nqn1",
-                                                                    port=4420,
+                                                                    port=controller_port,
                                                                     remote_ip=f11_vlan_ip,
                                                                     command_duration=command_timeout)
             fun_test.simple_assert(command_result["status"],
@@ -414,7 +444,7 @@ class ConfigureRdsVol(FunTestCase):
                 blt_uuid[x] = utils.generate_uuid()
                 command_result = f10_storage_ctrl_obj.create_volume(type="VOL_TYPE_BLK_LOCAL_THIN",
                                                                     capacity=drive_size,
-                                                                    block_size=4096,
+                                                                    block_size=block_size,
                                                                     name=blt_name,
                                                                     uuid=blt_uuid[x],
                                                                     drive_uuid=drive_uuid_list[drive_index].strip(),
@@ -459,12 +489,12 @@ class ConfigureRdsVol(FunTestCase):
                 rds_vol_name = "rds_vol_" + str(x)
                 command_result = f11_storage_ctrl_obj.create_volume(type="VOL_TYPE_BLK_RDS",
                                                                     capacity=drive_size,
-                                                                    block_size=4096,
+                                                                    block_size=block_size,
                                                                     name=rds_vol_name,
                                                                     uuid=f11_rds_vol[x],
                                                                     remote_nsid=x,
                                                                     remote_ip=f10_vlan_ip,
-                                                                    port=4420,
+                                                                    port=controller_port,
                                                                     command_duration=command_timeout)
                 fun_test.simple_assert(command_result["status"], "F1_1 : Created RDS vol with remote nsid {}".format(x))
 
@@ -506,13 +536,18 @@ class RunFioRds(FunTestCase):
         f11_storage_ctrl_obj = fun_test.shared_variables["f11_storage_ctrl_obj"]
         f10_stats_collector = CollectStats(f10_storage_ctrl_obj)
         f11_stats_collector = CollectStats(f11_storage_ctrl_obj)
-        command_timeout = 5
+        skip_precondition = fun_test.shared_variables["skip_precondition"]
+
+        table_data_headers = ["Block_Size", "IOPs", "BW in Gbps"]
+        table_data_cols = ["read_block_size", "total_read_iops", "total_read_bw"]
 
         config_file = fun_test.get_script_name_without_ext() + ".json"
         config_dict = utils.parse_file_to_json(config_file)
 
         for k, v in config_dict["GenericParams"].items():
             setattr(self, k, v)
+
+        command_timeout = self.command_timeout
 
         nvme_list_raw = f11_hosts[0]["handle"].sudo_command("nvme list -o json")
         if "failed to open" in nvme_list_raw.lower():
@@ -541,9 +576,6 @@ class RunFioRds(FunTestCase):
         print nvme_device_list
         
         host_nvme_device_count = len(nvme_device_list)
-        # if host_nvme_device_count != total_ssd:
-        #     fun_test.simple_assert(False, "Host NVMe device count & BLT count")
-
         fio_filename = str(':'.join(nvme_device_list))
 
         if total_ssd != host_nvme_device_count:
@@ -560,33 +592,57 @@ class RunFioRds(FunTestCase):
                 precondition_fio_num_jobs = self.precondition_args["numjobs"]
         except:
             precondition_fio_num_jobs = 1 * host_nvme_device_count
-        # # Run write test on disk
-        # fio_result = f11_hosts[0]["handle"].pcie_fio(filename=fio_filename,
-        #                                              rw="write",
-        #                                              numjobs=precondition_fio_num_jobs,
-        #                                              timeout=600,
-        #                                              **self.precondition_args)
-        # fun_test.simple_assert(fio_result, message="Initial write test on all disks")
+
+        if not skip_precondition:
+            # Run write test on disk
+            fio_result = f11_hosts[0]["handle"].pcie_fio(filename=fio_filename,
+                                                         rw="write",
+                                                         numjobs=precondition_fio_num_jobs,
+                                                         timeout=600,
+                                                         **self.precondition_args)
+            fun_test.simple_assert(fio_result, message="Initial write test on all disks")
 
         test_type = "read"
-
+        fio_read_jobs = 8 * total_ssd
         fio_job_name = "{}_ssd_{}_{}".format(host_nvme_device_count, test_type,
-                                             self.fio_cmd_args["iodepth"] * host_nvme_device_count)
-        total_iod = self.fio_cmd_args["iodepth"]
+                                             fio_read_jobs)
 
-        if "numjobs" in self.fio_cmd_args:
-            fio_result = f11_hosts[0]["handle"].pcie_fio(filename=fio_filename,
-                                                         rw="read",
-                                                         name=fio_job_name,
-                                                         **self.fio_cmd_args)
-            fun_test.simple_assert(fio_result, message="FIO job {}".format(fio_job_name))
+        cpu_list = get_numa(f11_hosts[0]["handle"])
+
+        fio_result = f11_hosts[0]["handle"].pcie_fio(filename=fio_filename,
+                                                     numjobs=fio_read_jobs,
+                                                     rw="read",
+                                                     name=fio_job_name,
+                                                     cpus_allowed=cpu_list,
+                                                     **self.fio_cmd_args)
+        fun_test.simple_assert(fio_result, message="FIO job {}".format(fio_job_name))
+
+        read_block_size = self.fio_cmd_args["bs"]
+        total_read_iops = fio_result["read"]["iops"]
+        total_read_bw = fio_result["read"]["bw"]/125000
+        row_data_list = []
+        table_data_rows = []
+
+        for item in table_data_cols:
+            row_data_list.append(eval(item))
+        table_data_rows.append(row_data_list)
+
+        table_data = {"headers": table_data_headers, "rows": table_data_rows}
+
+        fun_test.add_table(panel_header="NVMe FCP Sanity",
+                           table_name=self.summary,
+                           table_data=table_data)
+
+        # Compute expected IOPs
+        if host_nvme_device_count > 1:
+            exp_iops = 650
         else:
-            fio_result = f11_hosts[0]["handle"].pcie_fio(filename=fio_filename,
-                                                         numjobs=precondition_fio_num_jobs,
-                                                         rw="read",
-                                                         name=fio_job_name,
-                                                         **self.fio_cmd_args)
-            fun_test.simple_assert(fio_result, message="FIO job {}".format(fio_job_name))
+            exp_iops = 650 * host_nvme_device_count
+        current_read_iops = total_read_iops/1000
+        print "The current read IOPs: {}".format(current_read_iops)
+        print "The expected read IOPs: {}".format(exp_iops)
+        fun_test.simple_assert(expression=(current_read_iops > exp_iops),
+                               message="Expected Read IOPs")
 
         fun_test.log("Test done")
 

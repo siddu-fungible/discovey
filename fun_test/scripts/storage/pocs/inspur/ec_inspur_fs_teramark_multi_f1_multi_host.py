@@ -16,7 +16,7 @@ Script to track the Inspur Performance Cases of various read write combination o
 
 def deploy_funcp_container(obj, fs_index, update_deploy_script, update_workspace, mode):
     deploy_output = obj.deploy_funcp_container(update_deploy_script=update_deploy_script,
-                                                update_workspace=update_workspace, mode=mode)
+                                               update_workspace=update_workspace, mode=mode)
     fun_test.shared_variables["funcp_deploy"][fs_index] = deploy_output
 
 
