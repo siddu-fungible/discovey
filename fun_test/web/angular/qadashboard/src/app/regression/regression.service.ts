@@ -209,7 +209,7 @@ getPrettyLocalizeTime(t) {
     }))
   }
 
-  testCaseTimeSeries(suiteExecutionId, testCaseExecutionId, minCheckpointIndex=null, maxCheckpointIndex=null, startEpoch=null, endEpoch=null) {
+  testCaseTimeSeries(suiteExecutionId, testCaseExecutionId, minCheckpointIndex?: null, maxCheckpointIndex?: null, startEpoch?: null, endEpoch?: null) {
     let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}/${testCaseExecutionId}`;
     let queryParamString = this.commonService.queryParamsToString([["min_checkpoint_index", minCheckpointIndex],
       ["max_checkpoint_index", maxCheckpointIndex]]);
@@ -224,7 +224,7 @@ getPrettyLocalizeTime(t) {
     }))
   }
 
-  testCaseTimeSeriesLogs(suiteExecutionId, testCaseExecutionId, checkpointIndex=null) {
+  testCaseTimeSeriesLogs(suiteExecutionId, testCaseExecutionId, checkpointIndex?: null) {
     let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}/${testCaseExecutionId}`;
     url += `?type=log`;
     if (checkpointIndex !== null) {

@@ -1,6 +1,6 @@
 import {Component, OnInit } from '@angular/core';
 import {RegressionService} from "../regression.service";
-import {Observable, of} from "rxjs";
+import {forkJoin, Observable, of} from "rxjs";
 import {last, switchMap} from "rxjs/operators";
 import {LoggerService} from "../../services/logger/logger.service";
 import {ActivatedRoute} from "@angular/router";
@@ -263,20 +263,40 @@ export class ScriptDetailComponent implements OnInit {
     console.log(checkpointsInConsideration);
 
 
-    let checkpointIndexesToFetch = checkpointsInConsideration.map(e => e.data.index);
+    let checkpointIndexesToFetch: number [] = checkpointsInConsideration.map(e => e.data.index);
     let minCheckpointIndex = Math.min(...checkpointIndexesToFetch);
-    let maxCheckpointIndex = Math.max(...checkpointIndexesToFetch);
-    this.regressionService.testCaseTimeSeries(this.suiteExecutionId,
-      this.currentTestCaseExecution.execution_id,
-      null, maxCheckpointIndex
-      ).subscribe(response => {
+    let maxCheckpointIndex: number = Math.max(...checkpointIndexesToFetch);
+    checkpointIndexesToFetch = Array.from(Array(maxCheckpointIndex + 1).keys());
+    this.fetchLogsForCheckpoints(this.currentTestCaseExecution, checkpointIndexesToFetch).subscribe(response => {
 
     }, error => {
-        this.loggerService.error("Unable to fetch logs");
+      this.loggerService.error("Unable to fetch logs for checkpoints");
     })
 
   }
 
+
+  fetchLogsForCheckpoints(testCaseExecution, checkpointIndexesToFetch): Observable<any> {
+    const resultObservables = [];
+    checkpointIndexesToFetch.forEach(checkpointIndex => {
+      resultObservables.push(this.fetchLogsForCheckpoint(testCaseExecution, checkpointIndex));
+    });
+    if (resultObservables.length > 0) {
+      return forkJoin(resultObservables);
+    } else {
+      return of(true);
+    }
+
+  }
+
+  fetchLogsForCheckpoint(testCaseExecution, checkpointIndex) {
+    return this.regressionService.testCaseTimeSeriesLogs(this.suiteExecutionId, testCaseExecution.execution_id, checkpointIndex).pipe(switchMap(response => {
+      let i = 0;
+      return of(true);
+    }, error => {
+
+    }))
+  }
 
   
   onShowTestCasePanelClick() {
