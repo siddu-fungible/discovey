@@ -279,7 +279,11 @@ export class ScriptDetailComponent implements OnInit {
   fetchLogsForCheckpoints(testCaseExecution, checkpointIndexesToFetch): Observable<any> {
     const resultObservables = [];
     checkpointIndexesToFetch.forEach(checkpointIndex => {
-      resultObservables.push(this.fetchLogsForCheckpoint(testCaseExecution, checkpointIndex));
+      let testCaseId = testCaseExecution.test_case_id;
+      if (!this.timeSeriesByTestCase[testCaseId].checkpoints[checkpointIndex].hasOwnProperty("time_series")) {
+        resultObservables.push(this.fetchLogsForCheckpoint(testCaseExecution, checkpointIndex));
+      }
+
     });
     if (resultObservables.length > 0) {
       return forkJoin(resultObservables);
@@ -291,7 +295,9 @@ export class ScriptDetailComponent implements OnInit {
 
   fetchLogsForCheckpoint(testCaseExecution, checkpointIndex) {
     return this.regressionService.testCaseTimeSeriesLogs(this.suiteExecutionId, testCaseExecution.execution_id, checkpointIndex).pipe(switchMap(response => {
-      let i = 0;
+      let testCaseId = testCaseExecution.test_case_id;
+      this.timeSeriesByTestCase[testCaseId].checkpoints[checkpointIndex]["time_series"] = response;
+
       return of(true);
     }, error => {
 
