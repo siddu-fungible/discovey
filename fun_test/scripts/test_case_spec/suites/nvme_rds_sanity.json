@@ -1,0 +1,4 @@
+[
+  {"info": {"tags": ["storage-sanity"]}},
+  {"path": "networking/funcp/nvme_fcp.py"}
+]
