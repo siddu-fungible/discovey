@@ -67,6 +67,7 @@ class FlatNode {
   showAddLeaf: boolean = false;
   track: boolean = false;
   subscribe: boolean = false;
+  viewLineage: string = null;
 
   addChild(flatNode: FlatNode) {
     this.children.push(flatNode);
@@ -179,6 +180,7 @@ export class PerformanceComponent implements OnInit {
   showS1Dag: boolean = false;
   initialize: boolean = true;
   viewWorkspaceIds: number[] = [];
+  lineagesMap: any = {};
   rootTabs: any[] = [{"name": "F1", "active": true}, {"name": "S1", "active": false}];
 
   constructor(
@@ -201,6 +203,7 @@ export class PerformanceComponent implements OnInit {
     if (this.selectMode == SelectMode.ShowViewWorkspace && this.metricIds) {
       for (let metric of this.metricIds) {
         this.viewWorkspaceIds.push(metric["metric_id"]);
+        this.lineagesMap[metric["metric_id"]] = metric["lineage"];
       }
     }
     this.status = "Loading";
@@ -233,17 +236,6 @@ export class PerformanceComponent implements OnInit {
     } else {
       this.fetchDag();
     }
-  }
-
-  getLineage(flatNode): string {
-    let result = flatNode.node.chartName;
-    let metricId = flatNode.node.metricId;
-    for (let metric of this.metricIds) {
-        if (metricId === metric["metric_id"]) {
-          result = metric["lineage"];
-        }
-      }
-    return result;
   }
 
   getDefaultQueryPath(flatNode) {
@@ -740,6 +732,7 @@ export class PerformanceComponent implements OnInit {
     }
     if (this.metricIds && this.viewWorkspaceIds.includes(newNode.metricId)) {
       thisFlatNode.hide = false;
+      thisFlatNode.viewLineage = this.lineagesMap[newNode.metricId];
       lineage = [];
     }
     this.guIdFlatNodeMap[thisFlatNode.gUid] = thisFlatNode;
