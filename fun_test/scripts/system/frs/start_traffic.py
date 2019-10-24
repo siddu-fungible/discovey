@@ -10,9 +10,7 @@ from fun_global import PerfUnit, FunPlatform
 from web.fun_test.analytics_models_helper import get_data_collection_time, ModelHelper
 import stats_calculation
 from lib.fun import fs
-
 from scripts.storage.storage_helper import *
-
 import get_params_for_time
 
 
@@ -21,7 +19,6 @@ class MyScript(FunTestScript):
         self.set_test_details(steps="""""")
 
     def setup(self):
-
         fun_test.log("Script-level setup")
 
     def cleanup(self):
@@ -39,7 +36,19 @@ class FunTestCase1(FunTestCase):
         # 1. 1min
         # 2. 1hour - 60 min
         # 3. 3.5 hour - 210 min
+        fs_name = fun_test.get_job_environment_variable("test_bed_type")
+        self.fs = AssetManager().get_fs_by_name(fs_name)
+        fun_test.log(json.dumps(self.fs, indent=4))
 
+        self.f1_0_boot_args = 'cc_huid=3 sku=SKU_FS1600_0 app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303 --funtop'
+        self.f1_1_boot_args = 'cc_huid=2 sku=SKU_FS1600_1 app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303 --funtop'
+        fs_name = fun_test.get_job_environment_variable("test_bed_type")
+        self.fs = AssetManager().get_fs_by_name(fs_name)
+        topology_helper = TopologyHelper()
+        topology_helper.set_dut_parameters(f1_parameters={0: {"boot_args": self.f1_0_boot_args},
+                                                          1: {"boot_args": self.f1_1_boot_args}},
+                                           skip_funeth_come_power_cycle=True,
+                                           dut_index=0)
 
         job_inputs = fun_test.get_job_inputs()
         self.details = {
@@ -67,23 +76,11 @@ class FunTestCase1(FunTestCase):
             if "add_to_database" in job_inputs:
                 self.details["add_to_database"] = job_inputs["add_to_database"]
 
-        self.f1_0_boot_args = 'cc_huid=3 sku=SKU_FS1600_0 app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303'
-        self.f1_1_boot_args = 'cc_huid=2 sku=SKU_FS1600_1 app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303'
-        fs_name = fun_test.get_job_environment_variable("test_bed_type")
-        self.fs = AssetManager().get_fs_by_name(fs_name)
-        topology_helper = TopologyHelper()
-        topology_helper.set_dut_parameters(f1_parameters={0: {"boot_args": self.f1_0_boot_args},
-                                                          1: {"boot_args": self.f1_1_boot_args}},
-                                           skip_funeth_come_power_cycle=True,
-                                           dut_index=0)
-
-
-
         if self.details["boot_new_image"]:
             topology = topology_helper.deploy()
             fun_test.test_assert(topology, "Topology deployed")
             self.verify_dpcsh_started()
-            self.create_ec_volume(topology)
+            # self.create_ec_volume(topology)
         self.clear_uart_logs()
 
         fun_test.log("Details: {}, Input: {}".format(self.details, job_inputs))
@@ -690,7 +687,6 @@ class FunTestCase1(FunTestCase):
                                                           file_hbm_dif=self.f_hbm_dif_f1_1,
                                                           heading=heading)
         fun_test.test_assert(True, "Started capturing the peek stats/le/counters logs {} on F1_1".format(heading))
-
 
         fun_test.join_thread(thread_id_power)
         fun_test.join_thread(thread_id_debug_memory_f1_0)
