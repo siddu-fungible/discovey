@@ -99,10 +99,6 @@ class BringupSetup(FunTestCase):
         else:
             enable_fcp = False
             fun_test.shared_variables["enable_fcp"] = enable_fcp
-        if "check_scale" in job_inputs:
-            fun_test.shared_variables["check_scale"] = job_inputs["check_scale"]
-        else:
-            fun_test.shared_variables["check_scale"] = False
         if "qp_list" in job_inputs:
             fun_test.shared_variables["qp_list"] = job_inputs["qp_list"]
         else:
@@ -1034,21 +1030,19 @@ if __name__ == '__main__':
     ts = ScriptSetup()
     ts.add_test_case(BringupSetup())
     ts.add_test_case(NicEmulation())
-    if not fun_test.shared_variables["check_scale"]:
-        ts.add_test_case(SrpingLoopBack())
-        ts.add_test_case(RpingLoopBack())
-        ts.add_test_case(SrpingSeqIoTest())
-        ts.add_test_case(SrpingRandIoTest())
-        ts.add_test_case(RpingSeqIoTest())
-        ts.add_test_case(RpingRandIoTest())
-        ts.add_test_case(IbBwSeqIoTest())
-        ts.add_test_case(IbBwRandIoTest())
-        ts.add_test_case(IbBwSeqIoRdmaCm())
-        ts.add_test_case(IbBwRandIoRdmaCm())
-        ts.add_test_case(IbLatSeqIoTest())
-        ts.add_test_case(IbLatRandIoTest())
-        ts.add_test_case(IbLatSeqIoRdmaCm())
-        ts.add_test_case(IbLatRandIoRdmaCm())
-    else:
-        ts.add_test_case(IbWriteScale())
+    ts.add_test_case(SrpingLoopBack())
+    ts.add_test_case(RpingLoopBack())
+    ts.add_test_case(SrpingSeqIoTest())
+    ts.add_test_case(SrpingRandIoTest())
+    ts.add_test_case(RpingSeqIoTest())
+    ts.add_test_case(RpingRandIoTest())
+    ts.add_test_case(IbBwSeqIoTest())
+    ts.add_test_case(IbBwRandIoTest())
+    ts.add_test_case(IbBwSeqIoRdmaCm())
+    ts.add_test_case(IbBwRandIoRdmaCm())
+    ts.add_test_case(IbLatSeqIoTest())
+    ts.add_test_case(IbLatRandIoTest())
+    ts.add_test_case(IbLatSeqIoRdmaCm())
+    ts.add_test_case(IbLatRandIoRdmaCm())
+    ts.add_test_case(IbWriteScale())
     ts.run()

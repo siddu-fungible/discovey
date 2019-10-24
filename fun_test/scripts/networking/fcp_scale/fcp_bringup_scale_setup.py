@@ -154,10 +154,8 @@ class ScriptSetup(FunTestScript):
         fun_test.test_assert(topology, "Topology deployed")
 
     def cleanup(self):
-        # fun_test.log("Cleanup")
-        # fun_test.shared_variables["topology"].cleanup()
-        fun_test.log("Not doing cleanup..")
-        fun_test.shared_variables["topology"].cleaned_up = True
+        fun_test.log("Cleanup")
+        fun_test.shared_variables["topology"].cleanup()
 
 
 class TestHostPCIeLanes(FunTestCase):
