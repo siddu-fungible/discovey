@@ -459,7 +459,7 @@ class BwTest(FunTestCase):
                 parsed_result = []
                 for handle in f11_pid_list:
                     for key, value in handle.items():
-                        key.kill_pid(pid=value["cmd_pid"])
+                        # key.kill_pid(pid=value["cmd_pid"])
                         while key.process_check(pid=value["cmd_pid"]):
                             fun_test.sleep(message="Client process still there", seconds=2)
                         wait_time = test_case_failure_time
@@ -473,7 +473,7 @@ class BwTest(FunTestCase):
                                                                 perf=True))
                 for handle in f10_pid_list:
                     for key, value in handle.items():
-                        key.kill_pid(pid=value["cmd_pid"])
+                        # key.kill_pid(pid=value["cmd_pid"])
                         while key.process_check(pid=value["cmd_pid"]):
                             fun_test.sleep(message="Server process still there", seconds=2)
                         wait_time = test_case_failure_time
@@ -613,7 +613,7 @@ class LatencyTest(FunTestCase):
             parsed_result = []
             for handle in f11_pid_list:
                 for key, value in handle.items():
-                    key.kill_pid(pid=value["cmd_pid"])
+                    # key.kill_pid(pid=value["cmd_pid"])
                     while key.process_check(pid=value["cmd_pid"]):
                         fun_test.sleep(message="Client process still there", seconds=2)
                     wait_time = test_case_failure_time
@@ -627,7 +627,7 @@ class LatencyTest(FunTestCase):
                                                             perf=True))
             for handle in f10_pid_list:
                 for key, value in handle.items():
-                    key.kill_pid(pid=value["cmd_pid"])
+                    # key.kill_pid(pid=value["cmd_pid"])
                     while key.process_check(pid=value["cmd_pid"]):
                         fun_test.sleep(message="Server process still there", seconds=2)
                     wait_time = test_case_failure_time
