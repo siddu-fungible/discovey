@@ -1,20 +1,18 @@
 <fun-spinner [status]="status"></fun-spinner>
-<span id="chart-info"></span>
-<div class="component container" *ngIf="status == null">
-  <div [ngClass]="{'row': selectMode !== SelectMode.ShowEditWorkspace}" class="card-body tab-pane" role="tabpanel"
-       style="padding: 0">
+<div class="component container">
+  <div [ngClass]="{'row': selectMode !== SelectMode.ShowEditWorkspace}">
     <!-- left side of the performance page containing tree structure -->
     <div [ngClass]="{'col-lg-5 col-md-5 col-xxl-4 col-xl-5 left-col': selectMode !== SelectMode.ShowEditWorkspace}">
-      <div *ngIf="selectMode == SelectMode.ShowMainSite">
-        <ul class="nav nav-tabs card-header-tabs" role="tablist">
-          <li *ngFor="let rootTab of rootTabs" class="nav-item" style="width: 100px; text-align: center">
-            <span class="nav-link pseudo-anchor"
-              role="tab" [ngClass]="{'tab-highlight':rootTab['active']}" (click)="openDag(rootTab)">{{
-              rootTab["name"] }}</span>
-          </li>
-        </ul>
-      </div>
-      <br>
+      <!--<div *ngIf="selectMode == SelectMode.ShowMainSite">-->
+        <!--<ul class="nav nav-tabs card-header-tabs" role="tablist">-->
+          <!--<li *ngFor="let rootTab of rootTabs" class="nav-item" style="width: 100px; text-align: center">-->
+            <!--<span class="nav-link pseudo-anchor"-->
+              <!--role="tab" [ngClass]="{'tab-highlight':rootTab['active']}" (click)="openDag(rootTab)">{{-->
+              <!--rootTab["name"] }}</span>-->
+          <!--</li>-->
+        <!--</ul>-->
+      <!--</div>-->
+      <!--<br>-->
       <table class="table table-nonfluid">
         <tr *ngIf="selectMode !== SelectMode.ShowEditWorkspace && this.selectMode !== SelectMode.ShowAttachDag">
           <th class="text-center">Aspect</th>
@@ -207,6 +205,7 @@
                            [allowDelete]="false" [allowContext]="true" [allowAdd]="false"
                            (close)="closeSummaryPanel($event)"></summary-jira-info>
       </div>
+      <span id="chart-info"></span>
       <div *ngIf="mode != modeType.None && chartReady" class="card" style="padding: 10px">
         <table>
           <tr>

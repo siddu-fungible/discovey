@@ -164,21 +164,14 @@ export class PerformanceComponent implements OnInit {
 
   gotoQueryBaseUrl: string = "/performance?goto=";
   queryPath: string = null;  // includes gotoQueryBaseUrl and a query
-  queryExists: boolean = false; //decides whether to just expand the node or to do both expand and show charts
 
   slashReplacement: string = "_fsl"; //forward slash
 
-  rootNode: FlatNode = null;
-  lastF1Lineage: string = null;
-  lastS1Lineage: string = null;
-  f1Dag: any = null;
-  s1Dag: any = null;
+  f1Node: FlatNode = null;
+  s1Node: FlatNode = null;
+  allMetricsNode: FlatNode = null;
 
   buildInfo: any = null;
-  showF1Dag: boolean = true;
-  showS1Dag: boolean = false;
-  initialize: boolean = true;
-  rootTabs: any[] = [{"name": "F1", "active": true}, {"name": "S1", "active": false}];
 
   constructor(
     private apiService: ApiService,
@@ -222,32 +215,23 @@ export class PerformanceComponent implements OnInit {
     }, error => {
       this.loggerService.error("Unable to fetch buildInfo");
     });
-    if (this.selectMode == SelectMode.ShowMainSite) {
-      this.processUrl();
-    } else {
-      this.fetchDag();
-    }
+    this.fetchDag();
   }
 
   getDefaultQueryPath(flatNode) {
-    return this.gotoQueryBaseUrl + flatNode.node.chartName;
+    return flatNode.node.chartName;
   }
 
   getQueryPath() {
     return this.activatedRoute.queryParams.pipe(switchMap(params => {
-      let queryPath = null;
       if (params.hasOwnProperty('goto')) {
-        queryPath = params['goto'];
+        let queryPath = params['goto'];
         // console.log("QueryPath: " + this.queryPath);
-        if (this.queryPath !== (this.gotoQueryBaseUrl + queryPath)) {
-          this.queryPath = this.gotoQueryBaseUrl + queryPath;
-        }
         return of(queryPath);
       }
       else {
         return of(null);
       }
-
     }))
   }
 
@@ -278,112 +262,14 @@ export class PerformanceComponent implements OnInit {
     });
   }
 
-  setDefaultFlatNodes(): void {
-    this.flatNodes = [];
-    this.guIdFlatNodeMap = {};
-    this.flatNodesMap = {};
-    this.upgradeFlatNode = {};
-    this.degradeFlatNode = {};
-  }
-
-  setDefaultsForDag(): void {
-    // this.queryExists = false;
-    this.queryPath = null;
-    this.showBugPanel = false;
-    this.chartReady = false;
-    this.currentNode = null;
-    this.currentFlatNode = null;
-  }
-
-  fetchS1Dag(): void {
-    this.showS1Dag = true;
-    this.showF1Dag = false;
-    this.setDefaultFlatNodes();
-    this.fetchDag();
-  }
-
-  openS1Dag(): void {
-    this.lastF1Lineage = this.queryPath;
-    this.setDefaultsForDag();
-    if (this.lastS1Lineage) {
-      this.initialize = true;
-      this.router.navigateByUrl(this.lastS1Lineage);
-    } else {
-      this.fetchS1Dag();
-    }
-  }
-
-  fetchF1Dag(): void {
-    this.showF1Dag = true;
-    this.showS1Dag = false;
-    this.setDefaultFlatNodes();
-    this.fetchDag();
-  }
-
-  openDag(rootTab): void {
-    for (let tab of this.rootTabs) {
-      if (tab["name"] == rootTab["name"]) {
-        tab["active"] = true;
-      } else {
-        tab["active"] = false;
-      }
-    }
-    if (rootTab["name"] === "F1") {
-      this.openF1Dag();
-    }
-    else if (rootTab["name"] === "S1") {
-      this.openS1Dag();
-    }
-
-  }
-
-  openF1Dag(): void {
-    this.lastS1Lineage = this.queryPath;
-    this.setDefaultsForDag();
-    if (this.lastF1Lineage) {
-      this.initialize = true;
-      this.router.navigateByUrl(this.lastF1Lineage);
-    } else {
-      this.fetchF1Dag();
-    }
-
-  }
-
   setDag(): any {
     let url = "/metrics/dag";
-    let fetchIt = true;
-    if (this.selectMode == SelectMode.ShowEditWorkspace) {
-      url = "/metrics/dag" + "?root_metric_ids=101,591";
-    } else {
-      if (this.showF1Dag) {
-        url += "?root_metric_ids=101";
-      }
-      if (this.showS1Dag) {
-        url += "?root_metric_ids=591";
-      }
-      if (this.metricIds) {
-        url = "/metrics/dag" + "?root_metric_ids=" + String(this.metricIds) + "&is_workspace=1";
-      }
-      if ((this.showF1Dag && this.f1Dag) || (this.showS1Dag && this.s1Dag)) {
-        fetchIt = false;
-      }
+    if (this.metricIds) {
+      url = "/metrics/dag" + "?root_metric_ids=" + String(this.metricIds) + "&is_workspace=1";
     }
-    if (fetchIt) {
-      return this.apiService.get(url).pipe(switchMap(response => {
-        if (this.showF1Dag) {
-          this.f1Dag = response.data;
-        } else {
-          this.s1Dag = response.data;
-        }
-        return of(response.data);
-      }));
-    } else {
-      if (this.showF1Dag) {
-        return of(this.f1Dag);
-      } else {
-        return of(this.s1Dag);
-      }
-    }
+    return this.apiService.get(url).pipe(switchMap(response => {
+      return of(response.data);
+    }));
   }
 
   fetchDag(): void {
@@ -402,13 +288,13 @@ export class PerformanceComponent implements OnInit {
       for (let dag of this.dag) {
         this.walkDag(dag, lineage);
       }
-      //total container should always appear and up and down since previous nodes added
+      //total container should always appear
       if (this.selectMode == SelectMode.ShowMainSite) {
-        this.updateUpDownSincePrevious(true);
-        this.updateUpDownSincePrevious(false);
-        this.rootNode = this.flatNodes[0];
-        this.rootNode.hide = false;
-        this.expandUrl();
+        // this.updateUpDownSincePrevious(true);
+        // this.updateUpDownSincePrevious(false);
+        this.f1Node = this.flatNodes[0];
+        this.f1Node.hide = false;
+        this.processUrl();
       }
       if (this.selectMode == SelectMode.ShowEditWorkspace && this.interestedMetrics) {
         this.flatNodes[0].hide = false;
@@ -430,50 +316,26 @@ export class PerformanceComponent implements OnInit {
 
   processUrl(): void {
     this.getQueryPath().subscribe(queryPath => {
+      let queryExists = false;
       if (!queryPath) {
-        this.queryExists = false;
-        if (this.initialize) {
-          this.fetchDag();
-          this.initialize = false;
-        } else {
-          this.expandUrl();
-        }
+        queryPath = this.getDefaultQueryPath(this.f1Node);
       } else {
-        this.queryExists = true;
-        if (this.initialize) {
-          if (queryPath.startsWith("F1")) {
-            this.fetchF1Dag();
+        queryExists = true;
+      }
+      if (this.queryPath !== (this.gotoQueryBaseUrl + queryPath)) {
+        this.queryPath = this.gotoQueryBaseUrl + queryPath;
+        let pathGuid = this.pathToGuid(this.queryPath);
+        let targetFlatNode = this.guIdFlatNodeMap[pathGuid];
+        this.expandNode(targetFlatNode);
+        if (queryExists) {
+          if (targetFlatNode.node.leaf) {
+            this.showAtomicMetric(targetFlatNode);
+          } else {
+            this.showNonAtomicMetric(targetFlatNode);
           }
-          if (queryPath.startsWith("S1")) {
-            this.fetchS1Dag();
-          }
-          this.initialize = false;
-        } else {
-          this.expandUrl();
         }
-
       }
     });
-  }
-
-  expandUrl(): void {
-    if (!this.queryPath) {
-      this.queryPath = this.getDefaultQueryPath(this.rootNode);
-      if (this.queryExists) {
-        this.router.navigateByUrl(this.queryPath);
-      }
-    }
-    let pathGuid = this.pathToGuid(this.queryPath);
-    let targetFlatNode = this.guIdFlatNodeMap[pathGuid];
-    this.expandNode(targetFlatNode);
-
-    if (this.queryExists) {
-      if (targetFlatNode.node.leaf) {
-        this.showAtomicMetric(targetFlatNode);
-      } else {
-        this.showNonAtomicMetric(targetFlatNode);
-      }
-    }
   }
 
   updateUpDownSincePrevious(upgrade: boolean): void {
@@ -720,6 +582,9 @@ export class PerformanceComponent implements OnInit {
     if (newNode.chartName === "S1" || newNode.chartName === "All metrics" || newNode.chartName === "F1") {
       thisFlatNode.hide = false;
       lineage = [];
+    }
+    if (newNode.chartName === "S1") {
+      this.s1Node = thisFlatNode;
     }
     if (this.metricIds && this.metricIds.includes(newNode.metricId)) {
       thisFlatNode.hide = false;
@@ -1094,6 +959,9 @@ export class PerformanceComponent implements OnInit {
       this.expandNode(flatNode);
       this.commonService.scrollTo("chart-info");
       this.chartReady = true;
+      if (this.selectMode == SelectMode.ShowMainSite) {
+         this.navigateByQuery(flatNode);
+       }
       this.fetchChartInfo(flatNode);
     } else if (this.selectMode == SelectMode.ShowEditWorkspace) {
       flatNode.showAddLeaf = true;
