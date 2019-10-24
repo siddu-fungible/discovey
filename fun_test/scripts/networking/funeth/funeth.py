@@ -337,7 +337,9 @@ class Funeth:
                 )
 
             cmds.extend(
-                ['ifconfig {} {} netmask {}'.format(intf, ipv4_addr, ipv4_netmask),
+                ['sudo ip link set {} down'.format(intf),
+                 'sudo ip link set {} up'.format(intf),
+                 'ifconfig {} {} netmask {}'.format(intf, ipv4_addr, ipv4_netmask),
                  'ifconfig {} up'.format(intf),
                  #'ifconfig {}'.format(intf),
                 ]
