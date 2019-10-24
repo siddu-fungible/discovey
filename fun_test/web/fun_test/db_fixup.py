@@ -262,7 +262,7 @@ def calculate_leaf_scores(cache_valid, chart, result, from_log=False):
         data_sets = json.loads(chart.data_sets)
         best_value_dict = {}
         for data_set in data_sets:
-            best_value_dict[data_set["name"]] = -1
+            best_value_dict[data_set["name"]] = data_set["output"]["best"]
         while current_date <= to_date:
             result["num_degrades"] = 0
             valid_dates.append(current_date)
