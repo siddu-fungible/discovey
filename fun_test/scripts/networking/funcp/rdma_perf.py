@@ -437,7 +437,7 @@ class BwTest(FunTestCase):
                 # Start servers on F1_0
                 for index in range(total_link_bw):
                     f10_server = f10_hosts[index]["roce_handle"].ib_bw_test(test_type=self.rt, perf=True, size=size,
-                                                                            qpair=qp, duration=120,
+                                                                            qpair=qp, duration=60,
                                                                             timeout=300)
                     pid_dict = {f10_hosts[index]["roce_handle"]: f10_server}
                     f10_pid_list.append(pid_dict)
@@ -446,7 +446,7 @@ class BwTest(FunTestCase):
                 # Start clients on F1_1
                 for index in range(total_link_bw):
                     f11_client = f11_hosts[index]["roce_handle"].ib_bw_test(test_type=self.rt, perf=True, size=size,
-                                                                            qpair=qp, duration=120,
+                                                                            qpair=qp, duration=60,
                                                                             server_ip=f10_hosts[index]["ipaddr"],
                                                                             timeout=300)
                     pid_dict = {f11_hosts[index]["roce_handle"]: f11_client}
