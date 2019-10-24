@@ -102,9 +102,9 @@ class BringupSetup(FunTestCase):
         else:
             f11_retimer = 0
 
-        f1_0_boot_args = "app=load_mods,hw_hsu_test cc_huid=3 --dpc-server --serial --all_100g --dpc-uart " \
+        f1_0_boot_args = "app=load_mods cc_huid=3 --dpc-server --serial --all_100g --dpc-uart " \
                          "retimer={} --mgmt syslog=3".format(f10_retimer)
-        f1_1_boot_args = "app=load_mods,hw_hsu_test cc_huid=2 --dpc-server --serial --all_100g --dpc-uart " \
+        f1_1_boot_args = "app=load_mods cc_huid=2 --dpc-server --serial --all_100g --dpc-uart " \
                          "retimer={} --mgmt syslog=3".format(f11_retimer)
 
         topology_helper = TopologyHelper()
@@ -437,7 +437,7 @@ class BwTest(FunTestCase):
                 # Start servers on F1_0
                 for index in range(total_link_bw):
                     f10_server = f10_hosts[index]["roce_handle"].ib_bw_test(test_type=self.rt, perf=True, size=size,
-                                                                            qpair=qp, duration=120,
+                                                                            qpair=qp, duration=60,
                                                                             timeout=300)
                     pid_dict = {f10_hosts[index]["roce_handle"]: f10_server}
                     f10_pid_list.append(pid_dict)
@@ -446,7 +446,7 @@ class BwTest(FunTestCase):
                 # Start clients on F1_1
                 for index in range(total_link_bw):
                     f11_client = f11_hosts[index]["roce_handle"].ib_bw_test(test_type=self.rt, perf=True, size=size,
-                                                                            qpair=qp, duration=120,
+                                                                            qpair=qp, duration=60,
                                                                             server_ip=f10_hosts[index]["ipaddr"],
                                                                             timeout=300)
                     pid_dict = {f11_hosts[index]["roce_handle"]: f11_client}
@@ -454,12 +454,12 @@ class BwTest(FunTestCase):
                 fun_test.sleep("Clients started for {} BW test with size={} & qp={}".format(self.rt, size, qp),
                                seconds=5)
                 # fun_test.sleep("Clients started for {} BW test, size {}".format(rt, size), seconds=20)
-                fun_test.sleep("Waiting for {} seconds before killing tests".format(kill_time), seconds=kill_time)
+                # fun_test.sleep("Waiting for {} seconds before killing tests".format(kill_time), seconds=kill_time)
                 # First kill client & then kill server
                 parsed_result = []
                 for handle in f11_pid_list:
                     for key, value in handle.items():
-                        key.kill_pid(pid=value["cmd_pid"])
+                        # key.kill_pid(pid=value["cmd_pid"])
                         while key.process_check(pid=value["cmd_pid"]):
                             fun_test.sleep(message="Client process still there", seconds=2)
                         wait_time = test_case_failure_time
@@ -473,7 +473,7 @@ class BwTest(FunTestCase):
                                                                 perf=True))
                 for handle in f10_pid_list:
                     for key, value in handle.items():
-                        key.kill_pid(pid=value["cmd_pid"])
+                        # key.kill_pid(pid=value["cmd_pid"])
                         while key.process_check(pid=value["cmd_pid"]):
                             fun_test.sleep(message="Server process still there", seconds=2)
                         wait_time = test_case_failure_time
@@ -608,12 +608,12 @@ class LatencyTest(FunTestCase):
                 f11_pid_list.append(pid_dict)
             fun_test.sleep("Clients started for {} Latency test with size={}".format(self.rt, size),
                            seconds=5)
-            fun_test.sleep("Waiting for {} seconds before killing tests".format(kill_time), seconds=kill_time)
+            # fun_test.sleep("Waiting for {} seconds before killing tests".format(kill_time), seconds=kill_time)
             # First kill client & then kill server
             parsed_result = []
             for handle in f11_pid_list:
                 for key, value in handle.items():
-                    key.kill_pid(pid=value["cmd_pid"])
+                    # key.kill_pid(pid=value["cmd_pid"])
                     while key.process_check(pid=value["cmd_pid"]):
                         fun_test.sleep(message="Client process still there", seconds=2)
                     wait_time = test_case_failure_time
@@ -627,7 +627,7 @@ class LatencyTest(FunTestCase):
                                                             perf=True))
             for handle in f10_pid_list:
                 for key, value in handle.items():
-                    key.kill_pid(pid=value["cmd_pid"])
+                    # key.kill_pid(pid=value["cmd_pid"])
                     while key.process_check(pid=value["cmd_pid"]):
                         fun_test.sleep(message="Server process still there", seconds=2)
                     wait_time = test_case_failure_time
@@ -647,12 +647,12 @@ class LatencyTest(FunTestCase):
             total_values = len(parsed_result)
             for results in parsed_result:
                 size_latency = float(results[0])
-                iterations = float(results[4])
-                min_latency = float(results[5])
-                max_latency = float(results[6])
-                avg_latency = float(results[8])
-                latency_99 = float(results[10])
-                latency_99_99 = float(results[11])
+                iterations = float(results[1])
+                min_latency = float(results[2])
+                max_latency = float(results[3])
+                avg_latency = float(results[5])
+                latency_99 = float(results[7])
+                latency_99_99 = float(results[8])
             for item in table_data_cols:
                 row_data_list.append(eval(item))
             table_data_rows.append(row_data_list)

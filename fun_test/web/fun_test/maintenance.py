@@ -1770,6 +1770,25 @@ if __name__ == "__main_rds_client__":
     final_dict = ml.get_dict(chart=iops_chart)
     print json.dumps(final_dict, indent=4)
 
+if __name__ == "__main_inspur_datasets__":
+    metric_ids = [1207, 754, 1208, 1209, 755, 1210]
+    for metric_id in metric_ids:
+        chart = MetricChart.objects.get(metric_id=metric_id)
+        children = chart.get_children()
+        for child in children:
+            child_chart = MetricChart.objects.get(metric_id=int(child))
+            data_sets = child_chart.get_data_sets()
+            for data_set in data_sets:
+                name = data_set["name"]
+                if "6 F1" not in name:
+                    if "(" in name:
+                        index = name.find('(') + 1
+                        name = name[:index] + "6 F1s, " + name[index:]
+                        data_set["name"] = name
+            child_chart.data_sets = json.dumps(data_sets)
+            child_chart.save()
+    print "changed the name of datasets for 6F1s inspur charts"
+
 if __name__ == "__main__":
     entries = MetricChart.objects.all()
     for entry in entries:
@@ -1792,4 +1811,3 @@ if __name__ == "__main__":
             entry.data_sets = json.dumps(data_sets)
             entry.save()
     print "added best value for all datasets"
-

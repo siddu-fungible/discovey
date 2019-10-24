@@ -22,6 +22,7 @@ def get_numa(host_obj):
     cpu_list = numa_cores.values()[0]
     return cpu_list
 
+
 class ScriptSetup(FunTestScript):
     server_key = {}
 

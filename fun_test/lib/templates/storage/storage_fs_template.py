@@ -372,17 +372,19 @@ class FunCpDockerContainer(Linux):
         self.name = name
 
     def _connect(self):
-        super(FunCpDockerContainer, self)._connect()
-
-        # the below set_prompt_terminator is the temporary workaround of the recent FunCP docker container change
-        # Recently while logging into the docker container it gets logged in as root user
-        self.set_prompt_terminator(self.CUSTOM_PROMPT_TERMINATOR)
-        self.command("docker exec -it {} bash".format(self.name))
-        self.clean()
-        self.set_prompt_terminator(self.CUSTOM_PROMPT_TERMINATOR)
-        self.command("export PS1='{}'".format(self.CUSTOM_PROMPT_TERMINATOR), wait_until_timeout=3,
-                     wait_until=self.CUSTOM_PROMPT_TERMINATOR)
-        return True
+        result = False
+        if (super(FunCpDockerContainer, self)._connect()):
+            # the below set_prompt_terminator is the temporary workaround of the recent FunCP docker container change
+            # Recently while logging into the docker container it gets logged in as root user
+            self.set_prompt_terminator(self.CUSTOM_PROMPT_TERMINATOR)
+            self.command("docker exec -it {} bash".format(self.name))
+            self.clean()
+            self.set_prompt_terminator(self.CUSTOM_PROMPT_TERMINATOR)
+            self.command("export PS1='{}'".format(self.CUSTOM_PROMPT_TERMINATOR), wait_until_timeout=3,
+                         wait_until=self.CUSTOM_PROMPT_TERMINATOR)
+            result = True
+        fun_test.simple_assert(result, "SSH connection to docker host: {}".format(self))
+        return result
 
 
 MODE_END_POINT = "ep"
