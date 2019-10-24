@@ -114,13 +114,13 @@ class ApcPduTestcase(FunTestCase):
                                   ssh_username=self.fs['bmc']['mgmt_ssh_username'],
                                   ssh_password=self.fs['bmc']['mgmt_ssh_password'])
 
-            fun_test.log("Checking if BMC is UP")
-            bmc_up = self.bmc_handle.ensure_host_is_up(max_wait_time=600)
-            fun_test.test_assert(bmc_up, "BMC is UP")
-
             fun_test.log("Checking if COMe is UP")
             come_up = self.come_handle.ensure_host_is_up(max_wait_time=600)
             fun_test.test_assert(come_up, "COMe is UP")
+
+            fun_test.log("Checking if BMC is UP")
+            bmc_up = self.bmc_handle.ensure_host_is_up(max_wait_time=600)
+            fun_test.test_assert(bmc_up, "BMC is UP")
 
             self.check_come_up_time(expected_minutes=5)
 
