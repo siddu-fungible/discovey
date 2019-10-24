@@ -140,7 +140,7 @@ class ScriptSetup(FunTestScript):
                 index = 0
             f10_bootarg = testbed_info['fs'][test_bed_type][fs_name]['bootargs_f1_0']
             f11_bootarg = testbed_info['fs'][test_bed_type][fs_name]['bootargs_f1_1']
-            if "enable_fcp_rds":
+            if enable_fcp_rds:
                 f10_bootarg += " rdstype=fcp"
                 f11_bootarg += " rdstype=fcp"
             topology_helper.set_dut_parameters(dut_index=index,
