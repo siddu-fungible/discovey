@@ -262,12 +262,13 @@ export class ScriptDetailComponent implements OnInit {
     console.log(trueRange);
     console.log(checkpointsInConsideration);
 
+    let checkpointIndexesToFetch = checkpointsInConsideration.map(e => e.data.index);
     this.regressionService.testCaseTimeSeries(this.suiteExecutionId,
       this.currentTestCaseExecution.execution_id,
       trueRange[0], trueRange[1]).subscribe(response => {
 
     }, error => {
-        this.loggerService
+        this.loggerService.error("Unable to fetch logs");
     })
 
   }

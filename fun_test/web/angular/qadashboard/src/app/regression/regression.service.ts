@@ -209,8 +209,12 @@ getPrettyLocalizeTime(t) {
     }))
   }
 
-  testCaseTimeSeries(suiteExecutionId, testCaseExecutionId) {
+  testCaseTimeSeries(suiteExecutionId, testCaseExecutionId, startEpoch=null, endEpoch=null) {
     let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}/${testCaseExecutionId}`;
+    let queryParamString = this.commonService.queryParamsToString([["start_epoch", startEpoch], ["end_epoch", endEpoch]]);
+    if (queryParamString) {
+      url += queryParamString;
+    }
     return this.apiService.get(url).pipe(switchMap(response => {
       return of(response.data);
     }), catchError (error => {

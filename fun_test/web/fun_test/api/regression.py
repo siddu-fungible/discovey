@@ -538,11 +538,24 @@ def test_case_time_series(request, suite_execution_id, test_case_execution_id):
         collection_name = get_fun_test_time_series_collection_name(suite_execution_id, test_case_execution_id)  # "s_{}_{}".format(suite_execution_id, test_case_execution_id)
         mongo_db_manager = app_config.get_mongo_db_manager()
         collection = mongo_db_manager.get_collection(collection_name)
+
+        start_epoch = request.GET.get("start_epoch", None)
+        end_epoch = request.GET.get("end_epoch", None)
+
         query = {}
         if type:
             query["type"] = type
         if checkpoint_index is not None:
             query["data.checkpoint_index"] = int(checkpoint_index)
+
+        epoch_filter = {}
+        if start_epoch is not None:
+            epoch_filter["$gte"] = start_epoch
+        if end_epoch is not None:
+            epoch_filter["$lte"] = end_epoch
+        if epoch_filter:
+            query["epoch_time"] = epoch_filter
+
         if collection:
             result = list(collection.find(query))
     return result
