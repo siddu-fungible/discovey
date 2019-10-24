@@ -403,14 +403,23 @@ class MetricLib():
                 if len(entries) == 2:
                     data_set_dict = {}
                     self._set_dict(entries=entries, data_set_dict=data_set_dict, output_name=output_name, name=name)
-                    if data_set_dict["today"] and data_set_dict["yesterday"]:
+                    if data_set_dict["today"] and data_set_dict["yesterday"] and data_set_dict["today"] != -1 and \
+                            data_set_dict["yesterday"] != -1:
                         percentage = self._calculate_percentage(current=data_set_dict["today"],
                                                                 previous=data_set_dict[
                                                                     "yesterday"])
+                        best_percentage = self._calculate_percentage(current=data_set_dict["today"],
+                                                                     previous=data_set["output"]["best"]) if \
+                            data_set["output"]["best"] != -1 else None
+
                         if chart.positive and percentage < negative_threshold:
                             self._set_percentage(data_set_dict=data_set_dict, report=report, percentage=percentage)
                         elif not chart.positive and percentage > positive_threshold:
                             self._set_percentage(data_set_dict=data_set_dict, report=report, percentage=percentage)
+                        elif chart.positive and best_percentage and best_percentage < negative_threshold:
+                            self._set_percentage(data_set_dict=data_set_dict, report=report, percentage=best_percentage)
+                        elif not chart.positive and best_percentage and best_percentage > positive_threshold:
+                            self._set_percentage(data_set_dict=data_set_dict, report=report, percentage=best_percentage)
 
             if len(report["data_sets"]):
                 reports.append(report)
@@ -446,10 +455,10 @@ class MetricLib():
 
     def backup_dags(self):
         self.set_global_cache(cache_valid=False)
-        metric_ids = [F1_ROOT_ID, S1_ROOT_ID] # F1, S1 metric id
+        metric_ids = [F1_ROOT_ID, S1_ROOT_ID]  # F1, S1 metric id
         result = {}
         for metric_id in metric_ids:
-            if metric_id == F1_ROOT_ID: # F1 metric id
+            if metric_id == F1_ROOT_ID:  # F1 metric id
                 dag = "F1"
             else:
                 dag = "S1"
@@ -501,7 +510,7 @@ class MetricLib():
                     child_chart = MetricChart.objects.get(metric_id=child_id)
                     metric_chart_entries[child_id] = child_chart
                 children_info[child_chart.metric_id] = self.traverse_dag(levels=levels, metric_id=child_chart.metric_id,
-                                                                    metric_chart_entries=metric_chart_entries)
+                                                                         metric_chart_entries=metric_chart_entries)
             if sort_by_name:
                 result["children"] = map(lambda item: item[0],
                                          sorted(children_info.iteritems(), key=lambda d: d[1]['chart_name']))
@@ -517,7 +526,7 @@ class MetricLib():
                 chart = MetricChart.objects.get(metric_id=int(metric_id))
                 metric_chart_entries[chart.metric_id] = chart
                 result.append(self.traverse_dag(levels=levels, metric_id=chart.metric_id, sort_by_name=sort_by_name,
-                                           metric_chart_entries=metric_chart_entries))
+                                                metric_chart_entries=metric_chart_entries))
         else:
             pmds = PerformanceMetricsDag.objects.all().order_by("-date_time")[:1]
             for pmd in pmds:
