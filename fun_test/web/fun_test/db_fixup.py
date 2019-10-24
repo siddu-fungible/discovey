@@ -198,7 +198,7 @@ def _is_valid_output(output_value):
     return (output_value != -1 and not math.isinf(output_value))
 
 def _update_best_value(current_value, best_value_dict, chart, data_set):
-    if (chart.postitive and current_value > best_value_dict[data_set["name"]]):
+    if (chart.positive and current_value > best_value_dict[data_set["name"]]):
         best_value_dict[data_set["name"]] = current_value
     elif (not chart.positive and current_value < best_value_dict[data_set["name"]]):
         best_value_dict[data_set["name"]] = current_value
@@ -266,7 +266,6 @@ def calculate_leaf_scores(cache_valid, chart, result, from_log=False):
         while current_date <= to_date:
             result["num_degrades"] = 0
             valid_dates.append(current_date)
-            # _update_best_value(chart=chart, model=model, current_date=current_date)
             if len(data_sets):
                 data_set_combined_goodness = 0
                 for data_set in data_sets:
