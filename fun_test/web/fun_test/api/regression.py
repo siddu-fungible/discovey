@@ -542,6 +542,8 @@ def test_case_time_series(request, suite_execution_id, test_case_execution_id):
         start_epoch = request.GET.get("start_epoch", None)
         end_epoch = request.GET.get("end_epoch", None)
 
+        min_checkpoint_index = request.GET.get("min_checkpoint_index", None)
+        max_checkpoint_index = request.GET.get("max_checkpoint_index", None)
         query = {}
         if type:
             query["type"] = type
@@ -555,6 +557,12 @@ def test_case_time_series(request, suite_execution_id, test_case_execution_id):
             epoch_filter["$lte"] = end_epoch
         if epoch_filter:
             query["epoch_time"] = epoch_filter
+
+        checkpoint_filter = {}
+        if max_checkpoint_index is not None:
+            checkpoint_filter["$lte"] = int(max_checkpoint_index)
+        if checkpoint_filter:
+            query["data.checkpoint_index"] = checkpoint_filter
 
         if collection:
             result = list(collection.find(query))

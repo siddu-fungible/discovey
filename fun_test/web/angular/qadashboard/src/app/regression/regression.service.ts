@@ -209,9 +209,10 @@ getPrettyLocalizeTime(t) {
     }))
   }
 
-  testCaseTimeSeries(suiteExecutionId, testCaseExecutionId, startEpoch=null, endEpoch=null) {
+  testCaseTimeSeries(suiteExecutionId, testCaseExecutionId, minCheckpointIndex=null, maxCheckpointIndex=null, startEpoch=null, endEpoch=null) {
     let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}/${testCaseExecutionId}`;
-    let queryParamString = this.commonService.queryParamsToString([["start_epoch", startEpoch], ["end_epoch", endEpoch]]);
+    let queryParamString = this.commonService.queryParamsToString([["min_checkpoint_index", minCheckpointIndex],
+      ["max_checkpoint_index", maxCheckpointIndex]]);
     if (queryParamString) {
       url += queryParamString;
     }
