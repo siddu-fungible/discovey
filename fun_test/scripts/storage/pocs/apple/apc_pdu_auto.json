@@ -14,5 +14,6 @@
   "expected_dockers": 3,
   "end_sleep": 300,
   "docker_verify_interval": 20,
-  "after_runsc_up_host_connect_interval": 60
+  "after_runsc_up_host_connect_interval": 60,
+  "check_portal": false
 }
