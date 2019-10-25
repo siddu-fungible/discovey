@@ -784,3 +784,8 @@ label {
   text-decoration: underline;
   font-weight: bold;
 }
+
+.badge-history {
+  color: #212529;
+  background-color: rgba(255, 185, 7, 0.37);
+}

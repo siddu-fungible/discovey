@@ -37,10 +37,13 @@
               <td>{{ dataSet.name }}</td>
               <td>{{ dataSet.unit }}</td>
               <td>
-                {{ dataSet.yesterday }} <span *ngIf="!dataSet.show_history" class="pseudo-anchor small-text"
-                                              (click)="dataSet.show_history = true">..show history</span>
-                <span *ngIf="dataSet.show_history" class="pseudo-anchor small-text"
-                      (click)="dataSet.show_history = false">..hide history</span>
+                {{ dataSet.yesterday }}
+                <!--<span *ngIf="!dataSet.show_history" class="pseudo-anchor small-text"-->
+                                              <!--(click)="dataSet.show_history = true">..show history</span>-->
+                <!--<span *ngIf="dataSet.show_history" class="pseudo-anchor small-text"-->
+                      <!--(click)="dataSet.show_history = false">..hide history</span>-->
+                <label class="badge badge-history pseudo-anchor" data-placement="top" data-toggle="tooltip"
+                     title="history" (click)="clickHistory(dataSet)">history</label>
               </td>
               <td>{{ dataSet.today }}</td>
               <td *ngIf="dataSet.percentage"

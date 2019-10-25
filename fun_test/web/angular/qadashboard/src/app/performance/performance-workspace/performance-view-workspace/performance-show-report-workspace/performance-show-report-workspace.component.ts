@@ -154,6 +154,14 @@ export class PerformanceShowReportWorkspaceComponent implements OnInit {
       }));
   }
 
+  clickHistory(dataSet): void {
+    if (dataSet.show_history) {
+      dataSet.show_history = false;
+    } else {
+      dataSet.show_history = true;
+    }
+  }
+
   calculatePercentage(dataSets): void {
     for (let dataSet of dataSets) {
       let percentage = "NA";
