@@ -9,6 +9,7 @@ import {NgbModal, ModalDismissReasons} from '@ng-bootstrap/ng-bootstrap';
 import {UserService} from "../../services/user/user.service";
 import {of} from "rxjs";
 import {catchError, switchMap} from "rxjs/operators";
+import {Title} from "@angular/platform-browser";
 
 
 class Environment {
@@ -52,7 +53,8 @@ export class SuiteDetailComponent implements OnInit {
               private logger: LoggerService,
               private regressionService: RegressionService,
               private commonService: CommonService,
-              private modalService: NgbModal) {
+              private modalService: NgbModal,
+              private title: Title) {
     this.stateStringMap = this.regressionService.stateStringMap;
     this.stateMap = this.regressionService.stateMap;
   }
@@ -76,6 +78,9 @@ export class SuiteDetailComponent implements OnInit {
           //let ctrl = this;
           this.apiService.get("/regression/suite_execution/" + this.suiteExecutionId).subscribe(function (result) {
             self.suiteExecution = result.data; // TODO: validate
+            if (self.suiteExecution.fields.suite_path) {
+              self.title.setTitle("Suite " + self.suiteExecutionId + ": " + self.suiteExecution.fields.suite_path);
+            }
             ctrl.applyAdditionalAttributes(self.suiteExecution);
             ctrl.getReRunInfo(self.suiteExecution);
 
