@@ -6,6 +6,10 @@ import dpcsh_commands
 import file_helper
 import debug_memory_calculation
 from lib.topology.topology_helper import TopologyHelper
+from fun_global import PerfUnit, FunPlatform
+from web.fun_test.analytics_models_helper import get_data_collection_time, ModelHelper
+import stats_calculation
+from lib.fun import fs
 
 from scripts.storage.storage_helper import *
 
@@ -54,7 +58,8 @@ class FunTestCase1(FunTestCase):
             "le_firewall": True,
             "interval": 5,
             "boot_new_image": True,
-            "specific_app": []
+            "specific_app": [],
+            "add_to_database": False
         }
         if job_inputs:
             if "fs" in job_inputs:
@@ -69,22 +74,27 @@ class FunTestCase1(FunTestCase):
                 self.details["boot_new_image"] = job_inputs["boot_new_image"]
             if "specific_app" in job_inputs:
                 self.details["specific_app"] = job_inputs["specific_app"]
+            if "add_to_database" in job_inputs:
+                self.details["add_to_database"] = job_inputs["add_to_database"]
 
         if self.details["boot_new_image"]:
             topology = topology_helper.deploy()
             fun_test.test_assert(topology, "Topology deployed")
             self.verify_dpcsh_started()
             self.create_ec_volume(topology)
+        self.clear_uart_logs()
 
         fun_test.log(json.dumps(self.fs, indent=4))
         fun_test.log("Details: {}, Input: {}".format(self.details, job_inputs))
-        # Power files
+
+        # Power files - finding the right number, so its done
         self.power_shell = fun_test.get_test_case_artifact_file_name(post_fix_name="power_shell_script_logs.txt")
         self.power_output = fun_test.get_test_case_artifact_file_name(post_fix_name="power_output_logs.txt")
         fun_test.add_auxillary_file(description="Power shell script output", filename=self.power_shell)
         fun_test.add_auxillary_file(description="FS and F1 power output", filename=self.power_output)
         self.f_power_shell = open(self.power_shell, 'w+')
         self.f_power_output = open(self.power_output, 'w+')
+        self.upload_first_data = True
 
         # Debug memory files
         self.f1_0_debug_memory_dpc_logs = fun_test.get_test_case_artifact_file_name(
@@ -108,7 +118,8 @@ class FunTestCase1(FunTestCase):
         self.f_debug_memory_difference_f1_0 = open(self.f1_0_debug_memory_difference_dpc_logs, "w+")
         self.f_debug_memory_difference_f1_1 = open(self.f1_1_debug_memory_difference_dpc_logs, "w+")
 
-        # cdu files
+        # cdu files -
+        # Todo:Onkar has mailed - wait for there response
         self.f1_0_cdu_dpc_logs = fun_test.get_test_case_artifact_file_name(
             post_fix_name="cdu_F1_0_logs.txt")
         self.f1_1_cdu_dpc_logs = fun_test.get_test_case_artifact_file_name(
@@ -123,12 +134,21 @@ class FunTestCase1(FunTestCase):
             post_fix_name="eqm_F1_0_logs.txt")
         self.f1_1_eqm_dpc_logs = fun_test.get_test_case_artifact_file_name(
             post_fix_name="eqm_F1_1_logs.txt")
-        fun_test.add_auxillary_file(description="eqm stats F1_0", filename=self.f1_0_eqm_dpc_logs)
-        fun_test.add_auxillary_file(description="eqm stats F1_1", filename=self.f1_1_eqm_dpc_logs)
+        self.f1_0_eqm_dif_logs = fun_test.get_test_case_artifact_file_name(
+            post_fix_name="eqm_F1_0_dif_logs.txt")
+        self.f1_1_eqm_dif_logs = fun_test.get_test_case_artifact_file_name(
+            post_fix_name="eqm_F1_1_dif_logs.txt")
+        fun_test.add_auxillary_file(description="EQM stats F1_0", filename=self.f1_0_eqm_dpc_logs)
+        fun_test.add_auxillary_file(description="EQM stats F1_1", filename=self.f1_1_eqm_dpc_logs)
+        fun_test.add_auxillary_file(description="Difference EQM stats F1_0", filename=self.f1_0_eqm_dif_logs)
+        fun_test.add_auxillary_file(description="Difference EQM stats F1_1", filename=self.f1_1_eqm_dif_logs)
         self.f_eqm_f1_0 = open(self.f1_0_eqm_dpc_logs, "w+")
         self.f_eqm_f1_1 = open(self.f1_1_eqm_dpc_logs, "w+")
+        self.f_eqm_dif_f1_0 = open(self.f1_0_eqm_dif_logs, "w+")
+        self.f_eqm_dif_f1_1 = open(self.f1_1_eqm_dif_logs, "w+")
 
         # BM files
+        # Todo: we wanted with respect to the speed, they have provided it for the storage
         self.f1_0_bam_dpc_logs = fun_test.get_test_case_artifact_file_name(
             post_fix_name="bam_F1_0_logs.txt")
         self.f1_1_bam_dpc_logs = fun_test.get_test_case_artifact_file_name(
@@ -148,11 +168,28 @@ class FunTestCase1(FunTestCase):
         self.f_debug_vp_utils_f1_0 = open(self.f1_0_debug_vp_utils_dpc_logs, "w+")
         self.f_debug_vp_utils_f1_1 = open(self.f1_1_debug_vp_utils_dpc_logs, "w+")
 
+        # Le firewall
+        self.f1_0_le_dpc_logs = fun_test.get_test_case_artifact_file_name(
+            post_fix_name="le_F1_0_logs.txt")
+        self.f1_1_le_dpc_logs = fun_test.get_test_case_artifact_file_name(
+            post_fix_name="le_F1_1_logs.txt")
+        self.f1_0_le_dif_logs = fun_test.get_test_case_artifact_file_name(
+            post_fix_name="le_F1_0_dif_logs.txt")
+        self.f1_1_le_dif_logs = fun_test.get_test_case_artifact_file_name(
+            post_fix_name="le_F1_1_dif_logs.txt")
+        fun_test.add_auxillary_file(description="LE stats F1_0", filename=self.f1_0_le_dpc_logs)
+        fun_test.add_auxillary_file(description="LE stats F1_1", filename=self.f1_1_le_dpc_logs)
+        fun_test.add_auxillary_file(description="Calculated LE stats F1_0", filename=self.f1_0_le_dif_logs)
+        fun_test.add_auxillary_file(description="Calculated LE stats F1_1", filename=self.f1_1_le_dif_logs)
+        self.f_le_f1_0 = open(self.f1_0_le_dpc_logs, "w+")
+        self.f_le_f1_1 = open(self.f1_1_le_dpc_logs, "w+")
+        self.f_le_dif_f1_0 = open(self.f1_0_le_dif_logs, "w+")
+        self.f_le_dif_f1_1 = open(self.f1_1_le_dif_logs, "w+")
+
         # F1 die temperature
         self.die_temperature = fun_test.get_test_case_artifact_file_name(post_fix_name="fs_die_temperature_logs.txt")
         fun_test.add_auxillary_file(description="FS die temperature", filename=self.die_temperature)
         self.f_die_temperature = open(self.die_temperature, 'w+')
-
 
         # TODO: Clear the Uart log files if the new image is not built
 
@@ -242,13 +279,17 @@ class FunTestCase1(FunTestCase):
         bmc_handle.set_prompt_terminator(r'# $')
 
         for i in range(count):
-            raw_output, cal_output = bmc_commands.power_manager(bmc_handle=bmc_handle)
+            raw_output, cal_output, pro_data = bmc_commands.power_manager(bmc_handle=bmc_handle)
             time_now = datetime.datetime.now()
             print_data = {"output": raw_output, "time": time_now}
             file_helper.add_data(f_power_shell, print_data, heading=heading)
             print_data = {"output": cal_output, "time": time_now}
             file_helper.add_data(f_power_output, print_data, heading=heading)
             fun_test.sleep("before next iteration", seconds=self.details["interval"])
+            if heading == "During traffic" and self.upload_first_data and self.details["add_to_database"]:
+                self.upload_first_data = False
+                print ("Result pro_data: {}".format(pro_data))
+                self.add_to_data_base(pro_data)
         bmc_handle.destroy()
 
     ###########  debug memory ########
@@ -296,7 +337,7 @@ class FunTestCase1(FunTestCase):
         come_handle.destroy()
 
     ############# EQM ################
-    def eqm_stats(self, f1, count, file_eqm, heading):
+    def eqm_stats(self, f1, count, file_eqm, file_eqm_dif, heading):
         come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
                            ssh_username=self.fs['come']['mgmt_ssh_username'],
                            ssh_password=self.fs['come']['mgmt_ssh_password'])
@@ -305,8 +346,45 @@ class FunTestCase1(FunTestCase):
             dpcsh_output = dpcsh_commands.eqm(come_handle=come_handle, f1=f1)
             one_dataset["time"] = datetime.datetime.now()
             one_dataset["output"] = dpcsh_output
-            fun_test.sleep("before next iteration", seconds=self.details["interval"])
+            one_dataset["time1"] = datetime.datetime.now()
+            one_dataset["output1"] = dpcsh_output
             file_helper.add_data(file_eqm, one_dataset, heading=heading)
+
+            fun_test.sleep("Before capturing next set of data", seconds=5)
+
+            dpcsh_output = dpcsh_commands.eqm(come_handle=come_handle, f1=f1)
+            one_dataset["time"] = datetime.datetime.now()
+            one_dataset["output"] = dpcsh_output
+            one_dataset["time2"] = datetime.datetime.now()
+            one_dataset["output2"] = dpcsh_output
+            file_helper.add_data(file_eqm, one_dataset, heading=heading)
+            difference_dict = stats_calculation.dict_difference(one_dataset)
+            one_dataset["time"] = datetime.datetime.now()
+            one_dataset["output"] = difference_dict
+            file_helper.add_data(file_eqm_dif, one_dataset, heading=heading)
+
+            # fun_test.sleep("before next iteration", seconds=self.details["interval"])
+
+        come_handle.destroy()
+
+    ############# LE Firewall #############
+    def le_stats(self, f1, count, file_le, file_le_dif, heading):
+        come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
+                           ssh_username=self.fs['come']['mgmt_ssh_username'],
+                           ssh_password=self.fs['come']['mgmt_ssh_password'])
+        for i in range(count):
+            one_dataset = {}
+            dpcsh_output = dpcsh_commands.le(come_handle=come_handle, f1=f1)
+            one_dataset["time"] = datetime.datetime.now()
+            one_dataset["output"] = dpcsh_output
+            file_helper.add_data(file_le, one_dataset, heading=heading)
+            div_by_peek_value = stats_calculation.cal_le_stat(dpcsh_output)
+            one_dataset["time"] = datetime.datetime.now()
+            one_dataset["output"] = div_by_peek_value
+            file_helper.add_data(file_le_dif, one_dataset, heading=heading)
+
+            # fun_test.sleep("before next iteration", seconds=self.details["interval"])
+
         come_handle.destroy()
 
     ############# BAM ################
@@ -431,6 +509,7 @@ class FunTestCase1(FunTestCase):
                                                            count=count,
                                                            f1=0,
                                                            file_eqm=self.f_eqm_f1_0,
+                                                           file_eqm_dif=self.f_eqm_dif_f1_0,
                                                            heading=heading)
         fun_test.test_assert(True, "Started capturing the peek stats/eqm logs {} on F1_0".format(heading))
 
@@ -439,8 +518,29 @@ class FunTestCase1(FunTestCase):
                                                            count=count,
                                                            f1=1,
                                                            file_eqm=self.f_eqm_f1_1,
+                                                           file_eqm_dif=self.f_eqm_dif_f1_1,
                                                            heading=heading)
         fun_test.test_assert(True, "Started capturing the peek stats/eqm logs {} on F1_1".format(heading))
+
+        # LE firewall stats
+
+        thread_id_le_f1_0 = fun_test.execute_thread_after(func=self.le_stats,
+                                                          time_in_seconds=13,
+                                                          count=count,
+                                                          f1=0,
+                                                          file_le=self.f_le_f1_0,
+                                                          file_le_dif=self.f_le_dif_f1_0,
+                                                          heading=heading)
+        fun_test.test_assert(True, "Started capturing the peek stats/le/counters logs {} on F1_0".format(heading))
+
+        thread_id_le_f1_1 = fun_test.execute_thread_after(func=self.le_stats,
+                                                          time_in_seconds=14,
+                                                          count=count,
+                                                          f1=1,
+                                                          file_le=self.f_le_f1_1,
+                                                          file_le_dif=self.f_le_dif_f1_1,
+                                                          heading=heading)
+        fun_test.test_assert(True, "Started capturing the peek stats/le/counters logs {} on F1_1".format(heading))
 
         # BM stats
 
@@ -497,6 +597,8 @@ class FunTestCase1(FunTestCase):
         fun_test.join_thread(thread_id_debug_vp_utils_f1_0)
         fun_test.join_thread(thread_id_debug_vp_utils_f1_1)
         fun_test.join_thread(thread_id_die_temp)
+        fun_test.join_thread(thread_id_le_f1_0)
+        fun_test.join_thread(thread_id_le_f1_1)
         fun_test.test_assert(True, "Power logs captured successfully")
         fun_test.test_assert(True, "Debug memory on F1_0 logs captured successfully")
         fun_test.test_assert(True, "Debug memory on F1_1 logs captured successfully")
@@ -509,6 +611,8 @@ class FunTestCase1(FunTestCase):
         fun_test.test_assert(True, "Debug vp_util logs on F1_0 captured successfully")
         fun_test.test_assert(True, "Debug vp_util logs on F1_1 captured successfully")
         fun_test.test_assert(True, "Die temperature captured successfully captured successfully")
+        fun_test.test_assert(True, "LE logs on F1_0 captured successfully")
+        fun_test.test_assert(True, "LE logs on F1_1 captured successfully")
 
     ##### EC vol creation
     def create_ec_volume(self, topology):
@@ -649,9 +753,44 @@ class FunTestCase1(FunTestCase):
         # if "No such file" in out or "not found" in out:
         come_handle.enter_sudo()
         come_handle.command("cd /scratch/FunSDK/bin/Linux")
-        come_handle.command("./dpcsh --pcie_nvme_sock=/dev/nvme0 --nvme_cmd_timeout=600000 --tcp_proxy=40220 &> /tmp/f1_0_dpc.txt &")
-        come_handle.command("./dpcsh --pcie_nvme_sock=/dev/nvme1 --nvme_cmd_timeout=600000 --tcp_proxy=40221 &> /tmp/f1_1_dpc.txt &")
+        come_handle.command(
+            "./dpcsh --pcie_nvme_sock=/dev/nvme0 --nvme_cmd_timeout=600000 --tcp_proxy=40220 &> /tmp/f1_0_dpc.txt &")
+        come_handle.command(
+            "./dpcsh --pcie_nvme_sock=/dev/nvme1 --nvme_cmd_timeout=600000 --tcp_proxy=40221 &> /tmp/f1_1_dpc.txt &")
         come_handle.exit_sudo()
+
+    def add_to_data_base(self, value_dict):
+        unit_dict = {
+            "fs_power_unit": PerfUnit.UNIT_WATT,
+            "f1_0_power_unit": PerfUnit.UNIT_WATT,
+            "f1_1_power_unit": PerfUnit.UNIT_WATT,
+        }
+        value_dict["date_time"] = get_data_collection_time()
+        value_dict["version"] = fun_test.get_version()
+        model_name = "PowerPerformance"
+        status = fun_test.PASSED
+        try:
+            generic_helper = ModelHelper(model_name=model_name)
+            generic_helper.set_units(validate=True, **unit_dict)
+            generic_helper.add_entry(**value_dict)
+            generic_helper.set_status(status)
+            print "used generic helper to add an entry"
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+    def clear_uart_logs(self):
+        bmc_handle = Bmc(host_ip=self.fs['bmc']['mgmt_ip'],
+                         ssh_username=self.fs['bmc']['mgmt_ssh_username'],
+                         ssh_password=self.fs['bmc']['mgmt_ssh_password'],
+                         set_term_settings=True,
+                         disable_uart_logger=False)
+        bmc_handle.set_prompt_terminator(r'# $')
+        f1_index = 0
+        f1_0_uart_file = bmc_handle.get_f1_uart_log_file_name(f1_index=f1_index)
+        bmc_handle.command("echo '' > {}".format(f1_0_uart_file))
+        f1_index = 1
+        f1_1_uart_file = bmc_handle.get_f1_uart_log_file_name(f1_index=f1_index)
+        bmc_handle.command("echo '' > {}".format(f1_1_uart_file))
 
 
 if __name__ == "__main__":

@@ -19,8 +19,8 @@
                   "gatewayip": "10.80.4.1",
                   "mpg0":"10.80.4.169",
                   "mpg1":"10.80.4.170",
-                  "bootargs_f1_0": "app=hw_hsu_test cc_huid=3 --all_50g --dpc-server --dpc-uart --disable-wu-watchdog retimer=0,1,2",
-                  "bootargs_f1_1": "app=hw_hsu_test cc_huid=2 --all_50g --dpc-server --dpc-uart --disable-wu-watchdog retimer=0,1",
+                  "bootargs_f1_0": "app=hw_hsu_test cc_huid=3 --all_50g --dpc-server --dpc-uart retimer=0,1,2",
+                  "bootargs_f1_1": "app=hw_hsu_test cc_huid=2 --all_50g --dpc-server --dpc-uart retimer=0,1",
                   "hu_host_list":[{"mpoc-server34": "x16"},{"mpoc-server33": "x16"},{"mpoc-server32": "x8"},{"mpoc-server31": "x16"},
                       {"mpoc-server30": "x16"}]
               },
@@ -32,8 +32,8 @@
                   "gatewayip": "10.80.4.1",
                   "mpg0":"10.80.4.204",
                   "mpg1":"10.80.4.205",
-                  "bootargs_f1_0": "app=mdt_test,load_mods,hw_hsu_test --serial cc_huid=3 --all_50g --dpc-server --dpc-uart --disable-wu-watchdog",
-                  "bootargs_f1_1": "app=mdt_test,load_mods,hw_hsu_test --serial cc_huid=2 --all_50g --dpc-server --dpc-uart --disable-wu-watchdog",
+                  "bootargs_f1_0": "app=mdt_test,load_mods,hw_hsu_test --serial cc_huid=3 --all_50g --dpc-server --dpc-uart",
+                  "bootargs_f1_1": "app=mdt_test,load_mods,hw_hsu_test --serial cc_huid=2 --all_50g --dpc-server --dpc-uart",
                   "hu_host_list":[]
               },
               "fs-37": {
@@ -44,8 +44,8 @@
                   "gatewayip": "10.80.4.1",
                   "mpg0":"10.80.4.199",
                   "mpg1":"10.80.4.200",
-                  "bootargs_f1_0": "app=mdt_test,load_mods,hw_hsu_test --serial cc_huid=3 --all_50g --dpc-server --dpc-uart --disable-wu-watchdog",
-                  "bootargs_f1_1": "app=mdt_test,load_mods,hw_hsu_test --serial cc_huid=2 --all_50g --dpc-server --dpc-uart --disable-wu-watchdog",
+                  "bootargs_f1_0": "app=mdt_test,load_mods,hw_hsu_test --serial cc_huid=3 --all_50g --dpc-server --dpc-uart",
+                  "bootargs_f1_1": "app=mdt_test,load_mods,hw_hsu_test --serial cc_huid=2 --all_50g --dpc-server --dpc-uart",
                   "hu_host_list":[]
               },
               "fs-39": {
@@ -56,8 +56,8 @@
                   "gatewayip": "10.80.4.1",
                   "mpg0":"10.80.4.189",
                   "mpg1":"10.80.4.190",
-                  "bootargs_f1_0": "app=mdt_test,load_mods,hw_hsu_test --serial cc_huid=3 --all_50g --dpc-server --dpc-uart --disable-wu-watchdog",
-                  "bootargs_f1_1": "app=mdt_test,load_mods,hw_hsu_test --serial cc_huid=2 --all_50g --dpc-server --dpc-uart --disable-wu-watchdog",
+                  "bootargs_f1_0": "app=mdt_test,load_mods,hw_hsu_test --serial cc_huid=3 --all_50g --dpc-server --dpc-uart",
+                  "bootargs_f1_1": "app=mdt_test,load_mods,hw_hsu_test --serial cc_huid=2 --all_50g --dpc-server --dpc-uart",
                   "hu_host_list":[]
               },
               "fs-51": {
@@ -68,8 +68,8 @@
                   "gatewayip": "10.80.4.1",
                   "mpg0":"10.80.4.194",
                   "mpg1":"10.80.4.195",
-                  "bootargs_f1_0": "app=mdt_test,load_mods,hw_hsu_test --serial cc_huid=3 --all_50g --dpc-server --dpc-uart --disable-wu-watchdog",
-                  "bootargs_f1_1": "app=mdt_test,load_mods,hw_hsu_test --serial cc_huid=2 --all_50g --dpc-server --dpc-uart --disable-wu-watchdog",
+                  "bootargs_f1_0": "app=mdt_test,load_mods,hw_hsu_test --serial cc_huid=3 --all_50g --dpc-server --dpc-uart",
+                  "bootargs_f1_1": "app=mdt_test,load_mods,hw_hsu_test --serial cc_huid=2 --all_50g --dpc-server --dpc-uart",
                   "hu_host_list":[]
               },
               "fs-67": {
@@ -80,8 +80,8 @@
                   "gatewayip": "10.80.4.1",
                   "mpg0":"10.80.4.209",
                   "mpg1":"10.80.4.210",
-                  "bootargs_f1_0": "app=mdt_test,load_mods,hw_hsu_test --serial cc_huid=3 --all_50g --dpc-server --dpc-uart --disable-wu-watchdog",
-                  "bootargs_f1_1": "app=mdt_test,load_mods,hw_hsu_test --serial cc_huid=2 --all_50g --dpc-server --dpc-uart --disable-wu-watchdog",
+                  "bootargs_f1_0": "app=mdt_test,load_mods,hw_hsu_test --serial cc_huid=3 --all_50g --dpc-server --dpc-uart workload=storage",
+                  "bootargs_f1_1": "app=mdt_test,load_mods,hw_hsu_test --serial cc_huid=2 --all_50g --dpc-server --dpc-uart workload=storage",
                   "hu_host_list":[]
               },
               "fs-8": {
@@ -92,8 +92,8 @@
                   "gatewayip": "10.80.4.1",
                   "mpg0":"10.80.4.154",
                   "mpg1":"10.80.4.155",
-                  "bootargs_f1_0": "app=hw_hsu_test cc_huid=3 --all_50g --dpc-server --dpc-uart --disable-wu-watchdog retimer=0,1,2",
-                  "bootargs_f1_1": "app=hw_hsu_test cc_huid=2 --all_50g --dpc-server --dpc-uart --disable-wu-watchdog retimer=0,1",
+                  "bootargs_f1_0": "app=hw_hsu_test cc_huid=3 --all_50g --dpc-server --dpc-uart retimer=0,1,2",
+                  "bootargs_f1_1": "app=hw_hsu_test cc_huid=2 --all_50g --dpc-server --dpc-uart retimer=0,1",
                   "hu_host_list":[{"mpoc-server44": "x16"},{"mpoc-server43": "x16"},{"mpoc-server42": "x8"},
                       {"mpoc-server41": "x16"}, {"mpoc-server40": "x16"}]
               },
@@ -105,9 +105,9 @@
                   "gatewayip": "10.80.4.1",
                   "mpg0":"10.80.4.159",
                   "mpg1":"10.80.4.160",
-                  "bootargs_f1_0": "app=hw_hsu_test cc_huid=3 --all_50g --dpc-server --dpc-uart --disable-wu-watchdog retimer=0,1",
-                  "bootargs_f1_1": "app=hw_hsu_test cc_huid=2 --all_50g --dpc-server --dpc-uart --disable-wu-watchdog retimer=0,1",
-                  "hu_host_list":[{"mpoc-server48": "x16"},{"mpoc-server47": "x16"}, {"mpoc-server46": "x16"},
+                  "bootargs_f1_0": "app=hw_hsu_test cc_huid=3 --all_50g --dpc-server --dpc-uart retimer=0,1",
+                  "bootargs_f1_1": "app=hw_hsu_test cc_huid=2 --all_50g --dpc-server --dpc-uart retimer=0,1",
+                  "hu_host_list":[{"mpoc-server48": "x16"},{"mpoc-server47": "x16"}, {"mpoc-server46": "x4"},
                       {"mpoc-server45": "x16"}]
               },
               "fs-15": {
@@ -118,8 +118,8 @@
                   "gatewayip": "10.80.4.1",
                   "mpg0":"10.80.4.174",
                   "mpg1":"10.80.4.175",
-                  "bootargs_f1_0": "app=mdt_test,load_mods,hw_hsu_test --serial cc_huid=3 --all_50g --dpc-server --dpc-uart --disable-wu-watchdog",
-                  "bootargs_f1_1": "app=mdt_test,load_mods,hw_hsu_test --serial cc_huid=2 --all_50g --dpc-server --dpc-uart --disable-wu-watchdog",
+                  "bootargs_f1_0": "app=mdt_test,load_mods,hw_hsu_test --serial cc_huid=3 --all_50g --dpc-server --dpc-uart",
+                  "bootargs_f1_1": "app=mdt_test,load_mods,hw_hsu_test --serial cc_huid=2 --all_50g --dpc-server --dpc-uart",
                   "hu_host_list":[]
               },
                "fs-20": {
@@ -130,8 +130,8 @@
                   "gatewayip": "10.80.4.1",
                   "mpg0":"10.80.4.179",
                   "mpg1":"10.80.4.180",
-                  "bootargs_f1_0": "app=mdt_test,load_mods,hw_hsu_test --serial cc_huid=3 --all_50g --dpc-server --dpc-uart --disable-wu-watchdog",
-                  "bootargs_f1_1": "app=mdt_test,load_mods,hw_hsu_test --serial cc_huid=2 --all_50g --dpc-server --dpc-uart --disable-wu-watchdog",
+                  "bootargs_f1_0": "app=mdt_test,load_mods,hw_hsu_test --serial cc_huid=3 --all_50g --dpc-server --dpc-uart",
+                  "bootargs_f1_1": "app=mdt_test,load_mods,hw_hsu_test --serial cc_huid=2 --all_50g --dpc-server --dpc-uart",
                   "hu_host_list":[]
               },
               "fs-40": {
@@ -142,8 +142,8 @@
                   "gatewayip": "10.80.4.1",
                   "mpg0":"10.80.4.184",
                   "mpg1":"10.80.4.185",
-                  "bootargs_f1_0": "app=mdt_test,load_mods,hw_hsu_test --serial cc_huid=3 --all_50g --dpc-server --dpc-uart --disable-wu-watchdog",
-                  "bootargs_f1_1": "app=mdt_test,load_mods,hw_hsu_test --serial cc_huid=2 --all_50g --dpc-server --dpc-uart --disable-wu-watchdog",
+                  "bootargs_f1_0": "app=mdt_test,load_mods,hw_hsu_test --serial cc_huid=3 --all_50g --dpc-server --dpc-uart",
+                  "bootargs_f1_1": "app=mdt_test,load_mods,hw_hsu_test --serial cc_huid=2 --all_50g --dpc-server --dpc-uart",
                   "hu_host_list":[]
               }
           }

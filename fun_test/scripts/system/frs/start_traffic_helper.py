@@ -175,4 +175,4 @@ def start_le_firewall():
 
 
 if __name__ == "__main__":
-    le_firewall(60)
+    le_firewall(60, "")

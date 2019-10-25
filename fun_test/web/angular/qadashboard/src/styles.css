@@ -636,6 +636,8 @@ tr.text-center > th {
   min-width: 100px;
   border-radius: .25rem;
   margin: 5px;
+  max-height: 30px;
+  vertical-align: middle;
 }
 
 .fun-button-add:hover {
@@ -690,6 +692,7 @@ label {
 .component {
   padding-top: 5px;
   margin-left: 10px;
+  margin-right: 10px;
 }
 
 /*input*/
@@ -701,14 +704,15 @@ label {
 
 /*table*/
 .fun-table {
-  margin-top: 10px;
-  margin-bottom: 10px;
+  /*margin-top: 10px;
+  margin-bottom: 10px;*/
   border: solid lightgrey 1px;
   border-collapse: collapse;
   border-top: solid lightgrey 1px;
   border-bottom: solid lightgrey 1px;
   border-left: solid lightgrey 1px;
   border-right: solid lightgrey 1px;
+  width: 100%;
 
 }
 
@@ -738,8 +742,8 @@ label {
 }
 
 .fun-panel-body {
-  padding: 10px
-
+  padding: 10px;
+  height: auto;
 }
 
 .fun-attribute-section-header {

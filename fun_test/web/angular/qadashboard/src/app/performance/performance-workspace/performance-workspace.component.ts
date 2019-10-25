@@ -110,7 +110,10 @@ export class PerformanceWorkspaceComponent implements OnInit {
 
   fetchInterestedMetrics(workspaceId): any {
     return this.apiService.get("/api/v1/performance/workspaces/" + workspaceId + "/interested_metrics").pipe(switchMap(response => {
-      this.currentWorkspace["interestedMetrics"] = response.data;
+      this.currentWorkspace["interestedMetrics"] = [];
+      for (let metric of response.data) {
+        this.currentWorkspace["interestedMetrics"].push(metric);
+    }
       return of(true);
     }));
   }
@@ -406,6 +409,7 @@ export class PerformanceWorkspaceComponent implements OnInit {
       })).subscribe(response => {
       this.fetchWorkspacesAfterEditing();
       this.loggerService.success("saved the workspace");
+      this.modalService.dismissAll();
     }, error => {
       this.loggerService.error("Unable to save interested metrics");
     });

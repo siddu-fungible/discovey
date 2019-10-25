@@ -140,7 +140,8 @@ class NetperfManager:
             perf_tuning_obj.iptables()
 
         for linux_obj in self.linux_objs:
-            linux_obj.sudo_command('sysctl net.ipv6.conf.all.disable_ipv6=1')
+            pass
+            #linux_obj.sudo_command('sysctl net.ipv6.conf.all.disable_ipv6=1')
 
             # All the required packages are manually installed, so no need to do it in script
             ## Install linuxptp package

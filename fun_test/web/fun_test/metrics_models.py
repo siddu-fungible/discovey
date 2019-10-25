@@ -18,6 +18,7 @@ from django.contrib.postgres.fields import JSONField, ArrayField
 from web.web_global import *
 from web.fun_test.triaging_global import TriagingStates, TriageTrialStates, TriagingResult, TriagingTypes
 from fun_global import PerfUnit, ChartType, FunChartType
+from web.fun_test.models import FunModel
 
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
@@ -28,6 +29,11 @@ BASE_LINE_DATE = datetime(year=2018, month=4, day=1)
 class MetricsGlobalSettings(models.Model):
     tolerance_percentage = models.FloatField(default=3.0)
     cache_valid = models.BooleanField(default=True)
+
+    @staticmethod
+    def get_cache_validity():
+        first_record = MetricsGlobalSettings.objects.first()
+        return first_record.cache_valid
 
 class MetricsGlobalSettingsSerializer(ModelSerializer):
 
@@ -2730,6 +2736,16 @@ class MileStoneMarkers(models.Model):
             s += "{}:{} ".format(key, value)
         return s
 
+class PerformanceMetricsDag(FunModel):
+    date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    f1_metrics_dag = JSONField(default=[])
+    s1_metrics_dag = JSONField(default=[])
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
 
 class ShaxPerformanceSerializer(ModelSerializer):
     input_date_time = serializers.DateTimeField()
@@ -3028,3 +3044,25 @@ class InspurDataReconstructionPerformance(models.Model):
     def __str__(self):
         return (str(self.__dict__))
 
+
+class PowerPerformance(FunModel):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_platform = models.TextField(default=FunPlatform.F1)
+    input_version = models.CharField(verbose_name="Version", max_length=50, default="")
+
+    output_fs_power = models.FloatField(verbose_name="FS power", default=-1)
+    output_f1_0_power = models.FloatField(verbose_name="F1_0 power", default=-1)
+    output_f1_1_power = models.FloatField(verbose_name="F1_1 power", default=-1)
+
+    output_fs_power_unit = models.TextField(default=PerfUnit.UNIT_WATT)
+    output_f1_0_power_unit = models.TextField(default=PerfUnit.UNIT_WATT)
+    output_f1_1_power_unit = models.TextField(default=PerfUnit.UNIT_WATT)
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s

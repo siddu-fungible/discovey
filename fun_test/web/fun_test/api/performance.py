@@ -174,7 +174,9 @@ def interested_metrics(request, workspace_id=None):
         q = Q(workspace_id=workspace_id)
         interested_metrics = InterestedMetrics.objects.filter(q)
         for metric in interested_metrics:
-            result.append(metric.to_dict())
+            metric = metric.to_dict()
+            _set_interested_metrics(metric=metric)
+            result.append(metric)
     elif request.method == "DELETE":
         metric_id = request.GET.get("metric_id", None)
         if metric_id:
@@ -182,6 +184,29 @@ def interested_metrics(request, workspace_id=None):
             entry = InterestedMetrics.objects.get(q)
             entry.delete()
     return result
+
+def _set_interested_metrics(metric):
+    metric_id = metric["metric_id"]
+    metric["children"] = []
+    mc = MetricChart.objects.get(metric_id=metric_id)
+    if not mc.leaf:
+        children = mc.get_children()
+        for child in children:
+            child_chart = MetricChart.objects.get(metric_id=int(child))
+            new_metric = {}
+            new_metric["workspace_id"] = metric["workspace_id"]
+            new_metric["email"] = metric["email"]
+            new_metric["metric_id"] = int(child)
+            new_metric["subscribe"] = metric["subscribe"]
+            new_metric["track"] = metric["track"]
+            new_metric["chart_name"] = child_chart.chart_name
+            new_metric["category"] = metric["category"]
+            new_metric["lineage"] = metric["lineage"] + "/" + child_chart.chart_name
+            new_metric["date_created"] = metric["date_created"]
+            new_metric["date_modified"] = metric["date_modified"]
+            new_metric["comments"] = metric["comments"]
+            _set_interested_metrics(metric=new_metric)
+            metric["children"].append(new_metric)
 
 
 @csrf_exempt
