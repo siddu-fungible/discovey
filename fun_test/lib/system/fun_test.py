@@ -1277,7 +1277,6 @@ class FunTest:
                        expected="",
                        actual="",
                        context=None):
-        self.current_time_series_checkpoint += 1
 
         checkpoint = self._get_context_prefix(context=context, message=checkpoint)
         checkpoint_for_time_series = checkpoint
@@ -1288,6 +1287,7 @@ class FunTest:
                                             result=result,
                                             expected=expected,
                                             actual=actual)
+
 
         context_id = 0
         if context:
@@ -1304,6 +1304,8 @@ class FunTest:
             self.add_time_series_checkpoint(collection_name=models_helper.get_fun_test_time_series_collection_name(self.get_suite_execution_id(),
                                                                                                                    self.get_test_case_execution_id()),
                                             data=data)
+        self.current_time_series_checkpoint += 1
+
 
     def exit_gracefully(self, sig, _):
         self.critical("Unexpected Exit")

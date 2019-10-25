@@ -78,7 +78,7 @@ export class ScriptDetailComponent implements OnInit {
   timeFilterMin: number = 0;
   status: string = null;
 
-  timeSeriesByTestCase: {[testCaseId: number]: {[key: string]: any }} = {};
+  //timeSeriesByTestCase: {[testCaseId: number]: {[key: string]: any }} = {};
 
   ngOnInit() {
 
@@ -160,22 +160,25 @@ export class ScriptDetailComponent implements OnInit {
   fetchCheckpoints(testCaseExecution, suiteExecutionId) {
 
     let testCaseId = testCaseExecution.test_case_id;
+    /*
     let timeSeriesEntry = this.timeSeriesByTestCase[testCaseId];
     if (!timeSeriesEntry) {
       this.timeSeriesByTestCase[testCaseId] = {checkpoints: null, minimum_epoch: 0, maximum_epoch: 0};
       timeSeriesEntry = this.timeSeriesByTestCase[testCaseId];
-    }
+    }*/
 
-    if (timeSeriesEntry.hasOwnProperty("checkpoints") && (timeSeriesEntry.checkpoints) && (timeSeriesEntry.checkpoints.length > 0)) {
+    if (testCaseExecution.hasOwnProperty("checkpoints") && (testCaseExecution.checkpoints) && (testCaseExecution.checkpoints.length > 0)) {
       return of(true)
     } else {
       return this.regressionService.testCaseTimeSeriesCheckpoints(suiteExecutionId, testCaseExecution.execution_id).pipe(switchMap(response => {
-        if (!timeSeriesEntry.hasOwnProperty("checkpoints")) {
-          timeSeriesEntry = {checkpoints: response, minimum_epoch: 0, maximum_epoch: 0};
+        if (!testCaseExecution.hasOwnProperty("checkpoints")) {
+          testCaseExecution["checkpoints"] = response;
+          testCaseExecution["minimum_epoch"] = 0;
+          testCaseExecution["maximum_epoch"] = 0;
         } else {
-          timeSeriesEntry["checkpoints"] = response;
+          testCaseExecution["checkpoints"] = response;
         }
-        this.parseCheckpoints(timeSeriesEntry.checkpoints);
+        this.parseCheckpoints(testCaseExecution.checkpoints);
         return of(true);
       }))
     }
@@ -236,19 +239,20 @@ export class ScriptDetailComponent implements OnInit {
     })*/
   }
 
-  onCheckpointClick(testCaseId, checkpointIndex, contextId=0) {
+  onCheckpointClick(testCaseExecution, checkpointIndex, contextId?: 0) {
     //this.status = "Fetching checkpoint data";
+    this.currentCheckpointIndex = checkpointIndex;
     this.showTestCasePanel = false;
     this.showLogsPanel = true;
     this.showCheckpointPanel = true;
     /*
     let checkpointId = `${testCaseId}_${checkpointIndex}_${contextId}`;
-    this.currentCheckpointIndex = checkpointIndex;
+
     setTimeout(() => {
       this.commonService.scrollTo(checkpointId);
     }, 500);*/
 
-    let selectedCheckpoint = this.timeSeriesByTestCase[testCaseId].checkpoints[checkpointIndex];
+    let selectedCheckpoint = testCaseExecution.checkpoints[checkpointIndex];
     let checkpointsInConsideration = [selectedCheckpoint];
     if (selectedCheckpoint.previous_checkpoint) {
       checkpointsInConsideration.unshift(selectedCheckpoint.previous_checkpoint);
@@ -267,10 +271,13 @@ export class ScriptDetailComponent implements OnInit {
     let minCheckpointIndex = Math.min(...checkpointIndexesToFetch);
     let maxCheckpointIndex: number = Math.max(...checkpointIndexesToFetch);
     checkpointIndexesToFetch = Array.from(Array(maxCheckpointIndex + 1).keys());
+    this.status = "Fetching logs";
     this.fetchLogsForCheckpoints(this.currentTestCaseExecution, checkpointIndexesToFetch).subscribe(response => {
-
+      this.showLogsPanel = true;
+      this.status = null;
     }, error => {
       this.loggerService.error("Unable to fetch logs for checkpoints");
+      this.status = null;
     })
 
   }
@@ -280,7 +287,7 @@ export class ScriptDetailComponent implements OnInit {
     const resultObservables = [];
     checkpointIndexesToFetch.forEach(checkpointIndex => {
       let testCaseId = testCaseExecution.test_case_id;
-      if (!this.timeSeriesByTestCase[testCaseId].checkpoints[checkpointIndex].hasOwnProperty("time_series")) {
+      if (!testCaseExecution.checkpoints[checkpointIndex].hasOwnProperty("timeSeries")) {
         resultObservables.push(this.fetchLogsForCheckpoint(testCaseExecution, checkpointIndex));
       }
 
@@ -294,10 +301,13 @@ export class ScriptDetailComponent implements OnInit {
   }
 
   fetchLogsForCheckpoint(testCaseExecution, checkpointIndex) {
-    return this.regressionService.testCaseTimeSeriesLogs(this.suiteExecutionId, testCaseExecution.execution_id, checkpointIndex).pipe(switchMap(response => {
+    return this.regressionService.testCaseTimeSeries(this.suiteExecutionId, testCaseExecution.execution_id, checkpointIndex).pipe(switchMap(response => {
       let testCaseId = testCaseExecution.test_case_id;
-      this.timeSeriesByTestCase[testCaseId].checkpoints[checkpointIndex]["time_series"] = response;
+      testCaseExecution.checkpoints[checkpointIndex]["timeSeries"] = response;
 
+      testCaseExecution.checkpoints[checkpointIndex]["timeSeries"].forEach(seriesElement => {
+        seriesElement["relative_epoch_time"] = seriesElement.epoch_time - this.scriptRunTime.started_epoch_time;
+      });
       return of(true);
     }, error => {
 

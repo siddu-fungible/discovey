@@ -209,17 +209,15 @@ getPrettyLocalizeTime(t) {
     }))
   }
 
-  testCaseTimeSeries(suiteExecutionId, testCaseExecutionId, minCheckpointIndex?: null, maxCheckpointIndex?: null, startEpoch?: null, endEpoch?: null) {
+  testCaseTimeSeries(suiteExecutionId, testCaseExecutionId, checkpointIndex?: null) {
     let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}/${testCaseExecutionId}`;
-    let queryParamString = this.commonService.queryParamsToString([["min_checkpoint_index", minCheckpointIndex],
-      ["max_checkpoint_index", maxCheckpointIndex]]);
-    if (queryParamString) {
-      url += queryParamString;
+    if (checkpointIndex !== null) {
+      url += `&checkpoint_index=${checkpointIndex}`;
     }
     return this.apiService.get(url).pipe(switchMap(response => {
       return of(response.data);
     }), catchError (error => {
-      this.loggerService.error("Unable fetch time-series");
+      this.loggerService.error("Unable fetch time-series logs");
       return throwError(error);
     }))
   }
