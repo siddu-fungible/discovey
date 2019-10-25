@@ -23,10 +23,10 @@ test_var['netesto_fun_plots'] = '~/netesto_git/local/fun_plots'
 
 # Pre requisites - Create a user netesto/netesto in local host
  
-def get_netesto_script(test_type='basic', no_of_streams=1, no_of_nobuff_streams=0, no_of_rr=1, rr_size='1B,1', local_buff=9000, remote_buff=9000):
+def get_netesto_script(test_type='basic', no_of_streams=1, no_of_nobuff_streams=0, no_of_rr=1, rr_size='1M,1', local_buff=9000, remote_buff=9000):
     global test_var
     ali_script = []
-    test_duration = 60
+    test_duration = 180
     rr_req_size = rr_size.split(',')[0]
     rr_reply_size = rr_size.split(',')[1]
     if test_type == 'tp_tcp_stream_bi_dir':
@@ -174,7 +174,7 @@ def get_netesto_script(test_type='basic', no_of_streams=1, no_of_nobuff_streams=
         SET interval2=0
         SET reqs={RR_SIZE}
         SET reply={REPLY_SIZE}
-        SET reqs1=1B
+        SET reqs1=1M
         SET reply1=1
         #SET tcpDump=25000
         SET instancestream={BUFF_STREAMS}
@@ -194,7 +194,7 @@ def get_netesto_script(test_type='basic', no_of_streams=1, no_of_nobuff_streams=
 
 def netesto_client(host, ssh_username="localadmin", ssh_password="Precious1*"):
     linux_obj = Linux(host_ip=host, ssh_username=ssh_username, ssh_password=ssh_password)
-    linux_obj.sudo_command(command="killall doClient.sh; killall doServer.sh; killall netserver; killall netperf; killall netesto.py; killall tcpdump")
+    linux_obj.sudo_command(command="killall doClient.sh; killall ping; killall sleep; killall iostat; killall doServer.sh; killall netserver; killall netperf; killall netesto.py; killall tcpdump")
     time.sleep(10)
     # linux_obj.sudo_command(command="sudo ufw disable;iptables -X;iptables -t nat -F;iptables -t nat -X;iptables -t mangle -F;iptables -t mangle -X;iptables -P INPUT ACCEPT;iptables -P OUTPUT ACCEPT;iptables -P FORWARD ACCEPT;iptables -F;iptables -L")
     # linux_obj.sudo_command(command="sysctl -w net.core.rmem_max=4194304;sysctl -w net.core.wmem_max=4194304;sysctl -w net.core.rmem_default=4194304;sysctl -w net.core.wmem_default=4194304;sysctl -w net.core.optmem_max=4194304")
@@ -228,6 +228,12 @@ def netesto_client(host, ssh_username="localadmin", ssh_password="Precious1*"):
         'mpoc-server46': 'hu1-f0',
         'mpoc-server47': 'hu1-f0',
         'mpoc-server48': 'hu2-f0',
+        'mpoc-server01' : 'enp216s0',
+        'mpoc-server02' : 'enp216s0',
+        'mpoc-server03' : 'enp216s0',
+        'mpoc-server04' : 'enp216s0',
+        'mpoc-server05' : 'enp216s0',
+        'mpoc-server06' : 'enp216s0',
     }
 
     if host == "mpoc-server42" or host == "mpoc-server46" or host == "mpoc-server-33":

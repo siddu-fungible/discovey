@@ -1022,6 +1022,8 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                                 break
                             else:
                                 io_factor += 1
+                    if global_num_jobs == 0:
+                        global_num_jobs = 1
 
                     runtime_global_args = " --runtime={} --cpus_allowed={} --bs={} --rw={} --numjobs={} --iodepth={}".\
                         format(fio_runtime, cpus_allowed, fio_block_size, mode, global_num_jobs, final_fio_iodepth)
