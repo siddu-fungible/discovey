@@ -19,182 +19,7 @@ class MyScript(FunTestScript):
         self.set_test_details(steps="""""")
 
     def setup(self):
-        fs_name = fun_test.get_job_environment_variable("test_bed_type")
-        job_inputs = fun_test.get_job_inputs()
-        config_file = fun_test.get_script_name_without_ext() + ".json"
-        self.fs = AssetManager().get_fs_by_name(fs_name)
-        fun_test.log(json.dumps(self.fs, indent=4))
-        fun_test.log("Input: {}".format(job_inputs))
-
-        fun_test.log("Config file being used: {}".format(config_file))
-        config_dict = utils.parse_file_to_json(config_file)
-        for k, v in config_dict.iteritems():
-            setattr(self, k, v)
-
-        f1_0_boot_args = 'cc_huid=3 sku=SKU_FS1600_0 app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303 --funtop'
-        f1_1_boot_args = 'cc_huid=2 sku=SKU_FS1600_1 app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303 --funtop'
-
-        if job_inputs:
-            if "disable_f1_index" in job_inputs:
-                self.disable_f1_index = job_inputs["disable_f1_index"]
-            if "boot_new_image" in job_inputs:
-                self.boot_new_image = job_inputs["boot_new_image"]
-            if "ec_vol" in job_inputs:
-                self.ec_vol = job_inputs["ec_vol"]
-
-        topology_helper = TopologyHelper()
-        topology_helper.set_dut_parameters(f1_parameters={0: {"boot_args": f1_0_boot_args},
-                                                          1: {"boot_args": f1_1_boot_args}},
-                                           skip_funeth_come_power_cycle=True,
-                                           dut_index=0)
-
-        if self.disable_f1_index == 0 or self.disable_f1_index == 1:
-            topology_helper.set_dut_parameters(f1_parameters={0: {"boot_args": f1_0_boot_args},
-                                                              1: {"boot_args": f1_1_boot_args}},
-                                               skip_funeth_come_power_cycle=True,
-                                               dut_index=0,
-                                               disable_f1_index=self.disable_f1_index)
-        if self.disable_f1_index == 0:
-            self.run_on_f1 = [1]
-        elif self.disable_f1_index == 1:
-            self.run_on_f1 = [0]
-        else:
-            self.run_on_f1 = [0, 1]
-
-        self.come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
-                                ssh_username=self.fs['come']['mgmt_ssh_username'],
-                                ssh_password=self.fs['come']['mgmt_ssh_password'])
-        if self.boot_new_image:
-            topology = topology_helper.deploy()
-            fun_test.test_assert(topology, "Topology deployed")
-        # self.verify_dpcsh_started()
-        if self.ec_vol:
-            self.create_ec_volume()
-
-        fun_test.shared_variables["run_on_f1"] = self.run_on_f1
-        fun_test.shared_variables["fs"] = self.fs
-
-
-    def verify_dpcsh_started(self):
-        for f1 in self.run_on_f1:
-            fun_test.log("Verifying if the DPCSH has started on F1 {}".format(f1))
-            dpcsh_pid = self.come_handle.get_process_id_by_pattern("/nvme{}".format(f1))
-            if not dpcsh_pid:
-                self.come_handle.enter_sudo()
-                self.come_handle.command("cd /scratch/FunSDK/bin/Linux")
-                self.come_handle.command(
-                    "./dpcsh --pcie_nvme_sock=/dev/nvme{f1} --nvme_cmd_timeout=600000"
-                    " --tcp_proxy=4022{f1} &> /tmp/f1_{f1}_dpc.txt &".format(f1=f1))
-                self.come_handle.exit_sudo()
-                fun_test.log("Started DPCSH on F1 {}".format(f1))
-            else:
-                fun_test.log("Dpcsh is already running for F1 {}".format(f1))
-        fun_test.test_assert(True, "DPCSH running")
-
-    def create_ec_volume(self):
-        for f1 in self.run_on_f1:
-            # fun_test.sleep("Getting started with creation of 4:2 EC volume on F1_0".format(f1), seconds=30)
-            transport = "PCI"
-            huid = [3, 2]
-            ctlid = [2, 2]
-            ns_id = [1, 1]
-            fnid = 2
-            command_timeout = 120
-            f1_in_use = [0, 1]
-            warm_up_fio_cmd_args = {
-                "bs": "8k",
-                "iodepth": 1,
-                "size": "100%",
-                "rw": "write",
-                "direct": 1,
-                "prio": 0,
-                "timeout": 720
-            }
-
-            ec_info_0 = {
-                "volume_types": {
-                    "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
-                    "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
-                    "ec": "VOL_TYPE_BLK_EC",
-                    "lsv": "VOL_TYPE_BLK_LSV",
-                    "jvol": "VOL_TYPE_BLK_NV_MEMORY"
-                },
-                "volume_block": {
-                    "ndata": 4096,
-                    "nparity": 4096,
-                    "ec": 4096,
-                    "lsv": 4096,
-                    "jvol": 512
-                },
-                "ndata": 4,
-                "nparity": 2,
-                "capacity": 26843545600,
-                "use_lsv": 1,
-                "lsv_pct": 1,
-                "lsv_chunk_size": 128,
-                "jvol_size_multiplier": 8,
-                "num_volumes": 1
-            }
-
-            ec_info_1 = {
-                "volume_types": {
-                    "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
-                    "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
-                    "ec": "VOL_TYPE_BLK_EC",
-                    "lsv": "VOL_TYPE_BLK_LSV",
-                    "jvol": "VOL_TYPE_BLK_NV_MEMORY"
-                },
-                "volume_block": {
-                    "ndata": 4096,
-                    "nparity": 4096,
-                    "ec": 4096,
-                    "lsv": 4096,
-                    "jvol": 512
-                },
-                "ndata": 4,
-                "nparity": 2,
-                "capacity": 32212254720,
-                "use_lsv": 1,
-                "lsv_pct": 1,
-                "lsv_chunk_size": 128,
-                "jvol_size_multiplier": 8,
-                "num_volumes": 1
-            }
-            result = False
-            try:
-                index = f1
-                storage_controller_0 = StorageController(target_ip=self.come_handle.host_ip,
-                                                         target_port=self.come_handle.get_dpc_port(f1_in_use[index]))
-                ctrlr_uuid = utils.generate_uuid()
-                fun_test.test_assert(storage_controller_0.create_controller(ctrlr_uuid=ctrlr_uuid,
-                                                                            transport=transport,
-                                                                            huid=huid[index],
-                                                                            ctlid=ctlid[index],
-                                                                            fnid=fnid,
-                                                                            command_duration=120)['status'],
-                                     message="Create Controller with UUID: {}".format(ctrlr_uuid))
-                # create ec_vol
-                if index==0:
-                    ec_info = ec_info_0
-                else:
-                    ec_info = ec_info_1
-                (ec_config_status, ec_info) = storage_controller_0.configure_ec_volume(ec_info, command_timeout)
-
-                ec_uuid = ec_info["attach_uuid"][0]
-
-                fun_test.test_assert(storage_controller_0.attach_volume_to_controller(ctrlr_uuid=ctrlr_uuid,
-                                                                                      ns_id=ns_id[index],
-                                                                                      vol_uuid=ec_uuid),
-                                     message="Attaching EC Vol nsid: {} with uuid {} to controller".format(ns_id[index],
-                                                                                                           ec_uuid))
-                fetch_nvme = fetch_nvme_device(self.come_handle, 1, size=ec_info["capacity"])
-                fun_test.test_assert(fetch_nvme['status'], message="Check: nvme device visible on end host")
-                fio_output = self.come_handle.pcie_fio(filename=fetch_nvme["nvme_device"], **warm_up_fio_cmd_args)
-                result = True
-                fun_test.test_assert(result, "Created 4:2 EC volume on F1 {}".format(f1))
-            except Exception as ex:
-                fun_test.log(ex)
-        return result
+        fun_test.log("Script-level setup")
 
     def cleanup(self):
         fun_test.log("Script-level cleanup")
@@ -207,39 +32,187 @@ class FunTestCase1(FunTestCase):
                               steps="""""")
 
     def setup(self):
-        self.run_on_f1 = fun_test.shared_variables["run_on_f1"]
-        self.fs = fun_test.shared_variables["fs"]
+        # we have the combination for
+        # 1. 1min
+        # 2. 1hour - 60 min
+        # 3. 3.5 hour - 210 min
+        fs_name = fun_test.get_job_environment_variable("test_bed_type")
+        self.fs = AssetManager().get_fs_by_name(fs_name)
+        fun_test.log(json.dumps(self.fs, indent=4))
+
+        self.f1_0_boot_args = 'cc_huid=3 sku=SKU_FS1600_0 app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303 --funtop'
+        self.f1_1_boot_args = 'cc_huid=2 sku=SKU_FS1600_1 app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303 --funtop'
+
+        topology_helper = TopologyHelper()
+        topology_helper.set_dut_parameters(f1_parameters={0: {"boot_args": self.f1_0_boot_args},
+                                                          1: {"boot_args": self.f1_1_boot_args}},
+                                           skip_funeth_come_power_cycle=True,
+                                           dut_index=0)
+
         job_inputs = fun_test.get_job_inputs()
+        self.details = {
+            "fs": "fs-65",
+            "duration": "1m",
+            "le_firewall": True,
+            "interval": 5,
+            "boot_new_image": True,
+            "specific_app": [],
+            "add_to_database": False
+        }
         if job_inputs:
-            if "specific_apps" in job_inputs:
-                self.specific_apps = job_inputs["specific_app"]
-            if "add_to_database" in job_inputs:
-                self.add_to_database = job_inputs["add_to_database"]
+            if "fs" in job_inputs:
+                self.details["fs"] = job_inputs["fs"]
             if "duration" in job_inputs:
-                self.duration = job_inputs["duration"]
+                self.details["duration"] = job_inputs["duration"]
+            if "le_firewall" in job_inputs:
+                self.details["le_firewall"] = job_inputs["le_firewall"]
+            if "interval" in job_inputs:
+                self.details["interval"] = job_inputs["interval"]
+            if "boot_new_image" in job_inputs:
+                self.details["boot_new_image"] = job_inputs["boot_new_image"]
+            if "specific_app" in job_inputs:
+                self.details["specific_app"] = job_inputs["specific_app"]
+            if "add_to_database" in job_inputs:
+                self.details["add_to_database"] = job_inputs["add_to_database"]
 
-        # Create the files
+        if self.details["boot_new_image"]:
+            topology = topology_helper.deploy()
+            fun_test.test_assert(topology, "Topology deployed")
+            self.verify_dpcsh_started()
+            self.create_ec_volume(topology)
+        self.clear_uart_logs()
 
-        # post_fix_name: "{calculated_}{stat}_OUTPUT"
-        stats = {"POWER": {"calculated": True}, "DIE_TEMPERATURE": {"calculated": False}}
-        for stat in stats:
-            cal = [""]
-            if stats[stat]["calculated"]:
-                cal = ["", "calculated_"]
-            for calculated in cal:
-                globals()["{}{}_OUTPUT".format(calculated, stat)] = fun_test.get_test_case_artifact_file_name(post_fix_name="{}{}_OUTPUT_logs.txt".format(calculated, stat))
-                fun_test.add_auxillary_file(description="{}{}_OUTPUT".format(calculated, stat), filename=globals()["{}{}_OUTPUT".format(calculated, stat)])
-                setattr(self, "f_{}{}".format(calculated,stat), open(globals()["{}{}_OUTPUT".format(calculated, stat)], "w+"))
+        fun_test.log("Details: {}, Input: {}".format(self.details, job_inputs))
 
-        # post_fix_name: "{calculated_}{app_name}_DPCSH_OUTPUT_F1_{f1}_logs.txt"
-        # description : "{calculated_}_{app_name}_DPCSH_OUTPUT_F1_{f1}"
-        stats = ["DEBUG_MEMORY", "CDU", "EQM", "BAM", "DEBUG_VP_UTIL", "LE", "HBM"]
-        for stat in stats:
-            for f1 in self.run_on_f1:
-                for calculated in ["", "calculated_"]:
-                    globals()["{}{}_DPCSH_OUTPUT_F1_{}".format(calculated, stat, f1)] = fun_test.get_test_case_artifact_file_name(post_fix_name="{}{}_DPCSH_OUTPUT_F1_{}_logs.txt".format(calculated, stat, f1))
-                    fun_test.add_auxillary_file(description="{}{}_DPCSH_OUTPUT_F1_{}".format(calculated, stat, f1), filename=globals()["{}{}_DPCSH_OUTPUT_F1_{}".format(calculated, stat, f1)])
-                    setattr(self, "f_{}{}f1_{}".format(calculated, stat, f1), open(globals()["{}{}_DPCSH_OUTPUT_F1_{}".format(calculated, stat, f1)], "w+"))
+        # Power files - finding the right number, so its done
+        self.power_shell = fun_test.get_test_case_artifact_file_name(post_fix_name="power_shell_script_logs.txt")
+        self.power_output = fun_test.get_test_case_artifact_file_name(post_fix_name="power_output_logs.txt")
+        fun_test.add_auxillary_file(description="Power shell script output", filename=self.power_shell)
+        fun_test.add_auxillary_file(description="FS and F1 power output", filename=self.power_output)
+        self.f_power_shell = open(self.power_shell, 'w+')
+        self.f_power_output = open(self.power_output, 'w+')
+        self.upload_first_data = True
+
+        # Debug memory files
+        self.f1_0_debug_memory_dpc_logs = fun_test.get_test_case_artifact_file_name(
+            post_fix_name="debug_memory_F1_0_logs.txt")
+        self.f1_1_debug_memory_dpc_logs = fun_test.get_test_case_artifact_file_name(
+            post_fix_name="debug_memory_F1_1_logs.txt")
+        fun_test.add_auxillary_file(description="debug memory dpcsh output F1_0",
+                                    filename=self.f1_0_debug_memory_dpc_logs)
+        fun_test.add_auxillary_file(description="debug memory dpcsh output F1_1",
+                                    filename=self.f1_1_debug_memory_dpc_logs)
+        self.f1_0_debug_memory_difference_dpc_logs = fun_test.get_test_case_artifact_file_name(
+            post_fix_name="debug_memory_difference_F1_0_logs.txt")
+        self.f1_1_debug_memory_difference_dpc_logs = fun_test.get_test_case_artifact_file_name(
+            post_fix_name="debug_memory_difference_F1_1_logs.txt")
+        fun_test.add_auxillary_file(description="debug memory dpcsh output difference stats F1_0",
+                                    filename=self.f1_0_debug_memory_difference_dpc_logs)
+        fun_test.add_auxillary_file(description="debug memory dpcsh output difference stats F1_1",
+                                    filename=self.f1_1_debug_memory_difference_dpc_logs)
+        self.f_debug_memory_f1_0 = open(self.f1_0_debug_memory_dpc_logs, "w+")
+        self.f_debug_memory_f1_1 = open(self.f1_1_debug_memory_dpc_logs, "w+")
+        self.f_debug_memory_difference_f1_0 = open(self.f1_0_debug_memory_difference_dpc_logs, "w+")
+        self.f_debug_memory_difference_f1_1 = open(self.f1_1_debug_memory_difference_dpc_logs, "w+")
+
+        # cdu files -
+        # Todo:Onkar has mailed - wait for there response
+        self.f1_0_cdu_dpc_logs = fun_test.get_test_case_artifact_file_name(
+            post_fix_name="cdu_F1_0_logs.txt")
+        self.f1_1_cdu_dpc_logs = fun_test.get_test_case_artifact_file_name(
+            post_fix_name="cdu_F1_1_logs.txt")
+        self.f1_0_cdu_dif_logs = fun_test.get_test_case_artifact_file_name(
+            post_fix_name="cdu_F1_0_dif_logs.txt")
+        self.f1_1_cdu_dif_logs = fun_test.get_test_case_artifact_file_name(
+            post_fix_name="cdu_F1_1_dif_logs.txt")
+        fun_test.add_auxillary_file(description="cdu stats F1_0", filename=self.f1_0_cdu_dpc_logs)
+        fun_test.add_auxillary_file(description="cdu stats F1_1", filename=self.f1_1_cdu_dpc_logs)
+        fun_test.add_auxillary_file(description="Difference CDU stats F1_0", filename=self.f1_0_cdu_dif_logs)
+        fun_test.add_auxillary_file(description="Difference CDU stats F1_1", filename=self.f1_1_cdu_dif_logs)
+        self.f_cdu_f1_0 = open(self.f1_0_cdu_dpc_logs, "w+")
+        self.f_cdu_f1_1 = open(self.f1_1_cdu_dpc_logs, "w+")
+        self.f_cdu_dif_f1_0 = open(self.f1_0_cdu_dif_logs, "w+")
+        self.f_cdu_dif_f1_1 = open(self.f1_1_cdu_dif_logs, "w+")
+
+        # EQM files
+        self.f1_0_eqm_dpc_logs = fun_test.get_test_case_artifact_file_name(
+            post_fix_name="eqm_F1_0_logs.txt")
+        self.f1_1_eqm_dpc_logs = fun_test.get_test_case_artifact_file_name(
+            post_fix_name="eqm_F1_1_logs.txt")
+        self.f1_0_eqm_dif_logs = fun_test.get_test_case_artifact_file_name(
+            post_fix_name="eqm_F1_0_dif_logs.txt")
+        self.f1_1_eqm_dif_logs = fun_test.get_test_case_artifact_file_name(
+            post_fix_name="eqm_F1_1_dif_logs.txt")
+        fun_test.add_auxillary_file(description="EQM stats F1_0", filename=self.f1_0_eqm_dpc_logs)
+        fun_test.add_auxillary_file(description="EQM stats F1_1", filename=self.f1_1_eqm_dpc_logs)
+        fun_test.add_auxillary_file(description="Difference EQM stats F1_0", filename=self.f1_0_eqm_dif_logs)
+        fun_test.add_auxillary_file(description="Difference EQM stats F1_1", filename=self.f1_1_eqm_dif_logs)
+        self.f_eqm_f1_0 = open(self.f1_0_eqm_dpc_logs, "w+")
+        self.f_eqm_f1_1 = open(self.f1_1_eqm_dpc_logs, "w+")
+        self.f_eqm_dif_f1_0 = open(self.f1_0_eqm_dif_logs, "w+")
+        self.f_eqm_dif_f1_1 = open(self.f1_1_eqm_dif_logs, "w+")
+
+        # BM files
+        # Todo: we wanted with respect to the speed, they have provided it for the storage
+        self.f1_0_bam_dpc_logs = fun_test.get_test_case_artifact_file_name(
+            post_fix_name="bam_F1_0_logs.txt")
+        self.f1_1_bam_dpc_logs = fun_test.get_test_case_artifact_file_name(
+            post_fix_name="bam_F1_1_logs.txt")
+        fun_test.add_auxillary_file(description="bam stats F1_0", filename=self.f1_0_bam_dpc_logs)
+        fun_test.add_auxillary_file(description="bam stats F1_1", filename=self.f1_1_bam_dpc_logs)
+        self.f_bam_f1_0 = open(self.f1_0_bam_dpc_logs, "w+")
+        self.f_bam_f1_1 = open(self.f1_1_bam_dpc_logs, "w+")
+
+        # Debug vp util
+        self.f1_0_debug_vp_utils_dpc_logs = fun_test.get_test_case_artifact_file_name(
+            post_fix_name="debug_vp_utils_F1_0_logs.txt")
+        self.f1_1_debug_vp_utils_dpc_logs = fun_test.get_test_case_artifact_file_name(
+            post_fix_name="debug_vp_utils_F1_1_logs.txt")
+        fun_test.add_auxillary_file(description="Debug vp_util stats F1_0", filename=self.f1_0_debug_vp_utils_dpc_logs)
+        fun_test.add_auxillary_file(description="Debug vp_util stats F1_1", filename=self.f1_1_debug_vp_utils_dpc_logs)
+        self.f_debug_vp_utils_f1_0 = open(self.f1_0_debug_vp_utils_dpc_logs, "w+")
+        self.f_debug_vp_utils_f1_1 = open(self.f1_1_debug_vp_utils_dpc_logs, "w+")
+
+        # Le firewall
+        self.f1_0_le_dpc_logs = fun_test.get_test_case_artifact_file_name(
+            post_fix_name="le_F1_0_logs.txt")
+        self.f1_1_le_dpc_logs = fun_test.get_test_case_artifact_file_name(
+            post_fix_name="le_F1_1_logs.txt")
+        self.f1_0_le_dif_logs = fun_test.get_test_case_artifact_file_name(
+            post_fix_name="le_F1_0_dif_logs.txt")
+        self.f1_1_le_dif_logs = fun_test.get_test_case_artifact_file_name(
+            post_fix_name="le_F1_1_dif_logs.txt")
+        fun_test.add_auxillary_file(description="LE stats F1_0", filename=self.f1_0_le_dpc_logs)
+        fun_test.add_auxillary_file(description="LE stats F1_1", filename=self.f1_1_le_dpc_logs)
+        fun_test.add_auxillary_file(description="Calculated LE stats F1_0", filename=self.f1_0_le_dif_logs)
+        fun_test.add_auxillary_file(description="Calculated LE stats F1_1", filename=self.f1_1_le_dif_logs)
+        self.f_le_f1_0 = open(self.f1_0_le_dpc_logs, "w+")
+        self.f_le_f1_1 = open(self.f1_1_le_dpc_logs, "w+")
+        self.f_le_dif_f1_0 = open(self.f1_0_le_dif_logs, "w+")
+        self.f_le_dif_f1_1 = open(self.f1_1_le_dif_logs, "w+")
+
+        # F1 die temperature
+        self.die_temperature = fun_test.get_test_case_artifact_file_name(post_fix_name="fs_die_temperature_logs.txt")
+        fun_test.add_auxillary_file(description="FS die temperature", filename=self.die_temperature)
+        self.f_die_temperature = open(self.die_temperature, 'w+')
+
+        # HBM files
+        self.f1_0_hbm_dpc_logs = fun_test.get_test_case_artifact_file_name(
+            post_fix_name="muh_F1_0_logs.txt")
+        self.f1_1_hbm_dpc_logs = fun_test.get_test_case_artifact_file_name(
+            post_fix_name="muh_F1_1_logs.txt")
+        self.f1_0_hbm_dif_logs = fun_test.get_test_case_artifact_file_name(
+            post_fix_name="muh_F1_0_dif_logs.txt")
+        self.f1_1_hbm_dif_logs = fun_test.get_test_case_artifact_file_name(
+            post_fix_name="muh_F1_1_dif_logs.txt")
+        fun_test.add_auxillary_file(description="MUH stats F1_0", filename=self.f1_0_hbm_dpc_logs)
+        fun_test.add_auxillary_file(description="MUH stats F1_1", filename=self.f1_1_hbm_dpc_logs)
+        fun_test.add_auxillary_file(description="Calculated MUH stats F1_0", filename=self.f1_0_hbm_dif_logs)
+        fun_test.add_auxillary_file(description="Calculated MUH stats F1_1", filename=self.f1_1_hbm_dif_logs)
+        self.f_hbm_f1_0 = open(self.f1_0_hbm_dpc_logs, "w+")
+        self.f_hbm_f1_1 = open(self.f1_1_hbm_dpc_logs, "w+")
+        self.f_hbm_dif_f1_0 = open(self.f1_0_hbm_dif_logs, "w+")
+        self.f_hbm_dif_f1_1 = open(self.f1_1_hbm_dif_logs, "w+")
 
         # Traffic
         self.methods = {"crypto": crypto, "zip": zip_deflate, "rcnvme": rcnvme, "fio": fio}
@@ -706,12 +679,12 @@ class FunTestCase1(FunTestCase):
         fun_test.test_assert(True, "Started capturing the peek stats/muh logs {} on F1_0".format(heading))
 
         thread_id_hbm_f1_1 = fun_test.execute_thread_after(func=self.hbm_stats,
-                                                           time_in_seconds=5,
-                                                           count=count,
-                                                           f1=1,
-                                                           file_hbm=self.f_hbm_f1_1,
-                                                           file_hbm_dif=self.f_hbm_dif_f1_1,
-                                                           heading=heading)
+                                                          time_in_seconds=5,
+                                                          count=count,
+                                                          f1=1,
+                                                          file_hbm=self.f_hbm_f1_1,
+                                                          file_hbm_dif=self.f_hbm_dif_f1_1,
+                                                          heading=heading)
         fun_test.test_assert(True, "Started capturing the peek stats/le/counters logs {} on F1_1".format(heading))
 
         fun_test.join_thread(thread_id_power)
