@@ -167,6 +167,7 @@ export class PerformanceComponent implements OnInit {
   queryPath: string = null;  // includes gotoQueryBaseUrl and a query
 
   slashReplacement: string = "_fsl"; //forward slash
+  spaceReplacement: string = "_"; //replacement for white space
 
   f1Node: FlatNode = null;
   s1Node: FlatNode = null;
@@ -419,15 +420,12 @@ export class PerformanceComponent implements OnInit {
   lineageToPath(lineage) {
     let s = "";
     lineage.forEach(part => {
-      let name = part.chartName.replace("/", this.slashReplacement);
-      s += "/" + encodeURIComponent(name);
+      let name = part.chartName.replace(/\//g, this.slashReplacement);
+      // name = name.replace(/ /g, this.spaceReplacement);
+      s += "__" + encodeURIComponent(name);
     });
-    s = s.slice(1, s.length); // Remove leading slash
+    s = s.slice(2, s.length); // Remove leading two underscores
     return s;
-  }
-
-  getQueuryPathByMetricId(metricId) {
-
   }
 
   expandFromLineage(parent): void {
@@ -1128,7 +1126,7 @@ export class PerformanceComponent implements OnInit {
     let result = null;
     try {
       path = path.replace(this.gotoQueryBaseUrl, "");
-      let parts = path.split("/");
+      let parts = path.split("__");
       result = this._doPathToGuid(this.f1Node, parts);
        if (!result) {
          result = this._doPathToGuid(this.s1Node, parts);
@@ -1144,7 +1142,8 @@ export class PerformanceComponent implements OnInit {
   _doPathToGuid(flatNode, remainingParts) {
     let result = null;
     if (remainingParts.length > 0) {
-      let remainingPart = remainingParts[0].replace(this.slashReplacement, "/");
+      let remainingPart = remainingParts[0].replace(/_fsl/g, "/");
+      // remainingPart = remainingPart.replace(/_/g, " ");
       if (remainingPart === "Total") {
         remainingPart = "F1";
       }
@@ -1152,7 +1151,8 @@ export class PerformanceComponent implements OnInit {
         // match found
         if (remainingParts.length > 1) {
           remainingParts = remainingParts.slice(1, remainingParts.length); // there are more segments to parse
-          let remainingPart = remainingParts[0].replace(this.slashReplacement, "/");
+          let remainingPart = remainingParts[0].replace(/_fsl/g, "/");
+          // remainingPart = remainingPart.replace(/_/g, " ");
           for (let index = 0; index < flatNode.children.length; index++) {
             let childFlatNode = flatNode.children[index];
             if (decodeURIComponent(remainingPart) === childFlatNode.node.chartName) {
