@@ -176,6 +176,8 @@ export class PerformanceComponent implements OnInit {
   buildInfo: any = null;
   viewWorkspaceIds: number[] = [];
   lineagesMap: any = {};
+  S1: string = "S1";
+  F1: string = "F1";
 
   constructor(
     private apiService: ApiService,
@@ -586,14 +588,14 @@ export class PerformanceComponent implements OnInit {
     let newNode = this.getNodeFromEntry(numMetricId, dagEntry);
     this.addNodeToMap(numMetricId, newNode);
     thisFlatNode = this.getNewFlatNode(newNode, indent);
-    if (newNode.chartName === "S1" || newNode.chartName === "F1") {
+    if (newNode.chartName === this.S1 || newNode.chartName === this.F1) {
       thisFlatNode.hide = false;
       lineage = [];
     }
-    if (newNode.chartName === "S1") {
+    if (newNode.chartName === this.S1) {
       this.s1Node = thisFlatNode;
     }
-    if (newNode.chartName === "F1") {
+    if (newNode.chartName === this.F1) {
       this.f1Node = thisFlatNode;
     }
     if (this.metricIds && this.viewWorkspaceIds.includes(newNode.metricId)) {
@@ -1145,7 +1147,7 @@ export class PerformanceComponent implements OnInit {
       let remainingPart = remainingParts[0].replace(/_fsl/g, "/");
       // remainingPart = remainingPart.replace(/_/g, " ");
       if (remainingPart === "Total") {
-        remainingPart = "F1";
+        remainingPart = this.F1;
       }
       if (flatNode.node.chartName === decodeURIComponent(remainingPart)) {
         // match found
