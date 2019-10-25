@@ -1315,9 +1315,9 @@ class ComE(Linux):
                     artifact_file_name = fun_test.get_test_case_artifact_file_name(
                         self._get_context_prefix(base_name))
 
-                    if not fun_test.is_at_least_one_failed():
-                        if "openr" in file_name.lower():
-                            continue
+                    #if not fun_test.is_at_least_one_failed():
+                    if "openr" in file_name.lower():
+                        continue
                     fun_test.scp(source_ip=self.host_ip,
                                  source_file_path=file_name,
                                  source_username=self.ssh_username,
