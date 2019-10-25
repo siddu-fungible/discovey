@@ -176,24 +176,17 @@ export class ScriptDetailComponent implements OnInit {
   }
 
   onCheckpointClick(testCaseId, checkpointIndex, contextId=0) {
-    this.status = "Fetching checkpoint data";
-    this.regressionService.testCaseTimeSeriesLogs(this.suiteExecutionId, this.currentTestCaseExecution.execution_id, checkpointIndex).subscribe(response => {
-      this.showTestCasePanel = false;
-      this.showLogsPanel = true;
-      this.showCheckpointPanel = true;
-      let checkpointId = `${testCaseId}_${checkpointIndex}_${contextId}`;
-      this.currentCheckpointIndex = checkpointIndex;
-      setTimeout(() => {
-        this.commonService.scrollTo(checkpointId);
-      }, 500);
-
-      this.status = null;
-    }, error => {
-      this.loggerService.error("Unable to fetch time-series logs");
-      this.status = null;
-    })
+    //this.status = "Fetching checkpoint data";
+    this.showTestCasePanel = false;
+    this.showLogsPanel = true;
+    this.showCheckpointPanel = true;
+    let checkpointId = `${testCaseId}_${checkpointIndex}_${contextId}`;
+    this.currentCheckpointIndex = checkpointIndex;
+    setTimeout(() => {
+      this.commonService.scrollTo(checkpointId);
+    }, 500);
   }
-
+  
   onShowTestCasePanelClick() {
     this.showTestCasePanel = true;
     this.showCheckpointPanel = true;

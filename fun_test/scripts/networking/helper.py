@@ -904,8 +904,40 @@ def _format_non_zero_values(list_of_lists):
             del list[index]
     return list_of_lists
 
-def get_vp_util_table_obj(result):
-    master_table_obj = PrettyTable()
+def get_vp_util_filtered_dict(output, cluster_id=None, core_id=None):
+    result = OrderedDict()
+    output_dict = OrderedDict()
+    for key in sorted(output):
+        output_dict[key] = output[key]
+
+    for x in range(0, 6):
+        for y in range(2, 4):
+            if x > 3:
+                z = 0
+                key = 'CCV8.%s.%s' % (x, z)
+                output_dict[key] = 'N/A'
+                z = 1
+                key = 'CCV8.%s.%s' % (x, z)
+                output_dict[key] = 'N/A'
+            key = 'CCV8.%s.%s' % (x, y)
+            output_dict[key] = 'N/A'
+
+    start_key_name = 'CCV'
+    for key, val in output_dict.iteritems():
+        if cluster_id is not None and core_id is not None:
+            key_name = start_key_name + "%s.%s" % (cluster_id, core_id)
+            if key_name in key:
+                result[key] = val
+        elif cluster_id is not None:
+            key_name = start_key_name + "%s" % (cluster_id)
+            if key_name in key:
+                result[key] = val
+        else:
+            result = output_dict
+            break
+    return result
+
+def get_vp_util_parsed_data_dict(result):
     complete_dict = OrderedDict()
     rows_list = ["Cls/Core", "0", "1", "2", "3"]
     for col_name in rows_list:
@@ -922,7 +954,11 @@ def get_vp_util_table_obj(result):
                 if _key == vp_num:
                     complete_dict[_key].append(val)
                     break
+    return complete_dict
 
+
+def get_vp_util_table_obj(complete_dict):
+    master_table_obj = PrettyTable()
     print_keys = complete_dict.keys()
     print_values = complete_dict.values()
     print_values = _format_non_zero_values(print_values)
@@ -931,30 +967,86 @@ def get_vp_util_table_obj(result):
     return master_table_obj
 
 
+def get_normalized_data_vp_data(complete_dict):
+    print_values = complete_dict.values()
+    sum = 0
+    counter = 0
+    for item in print_values:
+        if isinstance(item, list):
+            for val in item:
+                if val.isdigit():
+                    sum += int(val)
+                    counter += 1
+        else:
+            if item.isdigit():
+                sum += int(item)
+                counter += 1
+    if counter == 0:
+        counter = 1
+    return sum / counter
+
+
+def get_vp_util_histogram_table_obj(complete_dict):
+    histo_table_obj = PrettyTable()
+    histo_dict = {'1-10': 0, '11-20': 0, '21-30': 0, '31-40': 0, '41-50': 0, '51-60': 0, '61-70': 0,
+                  '71-80': 0, '81-90': 0, '91-100': 0}
+    final_list = []
+    print_values = complete_dict.values()
+    for inner_list in print_values:
+        final_list.extend(inner_list)
+
+    for val in final_list:
+        if val.isdigit():
+            val = int(val)
+            if val in range(0, 11):
+                if not val == 0:
+                    histo_dict['1-10'] += 1
+            elif val in range(11, 21):
+                histo_dict['11-20'] += 1
+            elif val in range(21, 31):
+                histo_dict['21-30'] += 1
+            elif val in range(31, 41):
+                histo_dict['31-40'] += 1
+            elif val in range(41, 51):
+                histo_dict['41-50'] += 1
+            elif val in range(51, 61):
+                histo_dict['51-60'] += 1
+            elif val in range(61, 71):
+                histo_dict['61-70'] += 1
+            elif val in range(71, 81):
+                histo_dict['71-80'] += 1
+            elif val in range(81, 91):
+                histo_dict['81-90'] += 1
+            else:
+                histo_dict['91-100'] += 1
+    for key in sorted(histo_dict):
+        val = []
+        val.append(histo_dict[key])
+        histo_table_obj.add_column(key, val)
+    return histo_table_obj
+
+
 def populate_vp_util_output_file(network_controller_obj, filename, display_output=False):
     output = False
     try:
         lines = list()
-
-        output_dict = OrderedDict()
         output = network_controller_obj.debug_vp_util()
-        for key in sorted(output):
-            output_dict[key] = output[key]
+        result = get_vp_util_filtered_dict(output=output)
+        complete_dict = get_vp_util_parsed_data_dict(result=result)
 
-        for x in range(0, 6):
-            for y in range(2, 4):
-                if x > 3:
-                    z = 0
-                    key = 'CCV8.%s.%s' % (x, z)
-                    output_dict[key] = 'N/A'
-                    z = 1
-                    key = 'CCV8.%s.%s' % (x, z)
-                    output_dict[key] = 'N/A'
-                key = 'CCV8.%s.%s' % (x, y)
-                output_dict[key] = 'N/A'
+        master_table_obj = get_vp_util_table_obj(complete_dict=complete_dict)
 
-        master_table_obj = get_vp_util_table_obj(result=output_dict)
+        # print normalized data
+        normalized_value = get_normalized_data_vp_data(complete_dict=complete_dict)
+
+        # print histogram
+        histogram_table_obj = get_vp_util_histogram_table_obj(complete_dict=complete_dict)
+
         lines.append("\n########################  %s ########################\n" % str(get_timestamp()))
+        lines.append("Normalized VP Util: {}".format(normalized_value))
+        lines.append("\n\nHistogram table: Num of VPs in util range\n")
+        lines.append(histogram_table_obj.get_string())
+        lines.append('\n\nVP util table obj\n')
         lines.append(master_table_obj.get_string())
         lines.append('\n\n\n')
 
@@ -1140,6 +1232,7 @@ def _get_vp_numbers_from_core_id(core_id):
         print "ERROR: %s" % str(ex)
     return result
 
+
 def get_filtered_dict(output_dict, cluster_id=None, core_id=None, rx=True, tx=True, q=True):
     rx_key_name = 'wus_received'
     tx_key_name = 'wus_sent'
@@ -1217,6 +1310,7 @@ def get_per_vp_dict_table_obj(result, prev_result):
         master_table_obj.add_column(col_name, col_values)
     return master_table_obj
 
+
 def get_required_per_vp_result(output_result):
     result = {}
     for key, val in output_result.iteritems():
@@ -1229,6 +1323,7 @@ def get_required_per_vp_result(output_result):
                 result[key][_key] = _val
             del result[key]['vp_wu_qdepth']
     return result
+
 
 def get_sorted_dict(result):
     sorted_dict = OrderedDict()
@@ -1255,6 +1350,7 @@ def get_sorted_dict(result):
     for key in result_keys:
         sorted_dict[key] = result[key]
     return sorted_dict
+
 
 def populate_per_vp_output_file(per_vp_1, per_vp_2, filename, display_output=False):
     output = False
@@ -1547,29 +1643,28 @@ def get_resource_bam_table(result):
 def populate_resource_bam_output_file(network_controller_obj, filename, display_output=False):
     output = False
     try:
-        #lines = list()
+        lines = list()
         result = network_controller_obj.peek_resource_bam_stats()
         master_table_obj1,master_table_obj2 = get_resource_bam_table(result=result)
         tab_obj = [master_table_obj1, master_table_obj2]
         for i in tab_obj:
-            lines = list()
             lines.append("\n########################  %s ########################\n" % str(get_timestamp()))
             lines.append(i.get_string())
             lines.append('\n\n\n')
 
-            with open(filename, 'a') as f:
-                f.writelines(lines)
+        with open(filename, 'a') as f:
+            f.writelines(lines)
 
-            description = "Bam stats"
-            fun_test.add_auxillary_file(description=description, filename=filename)
+        description = "Bam stats"
+        fun_test.add_auxillary_file(description=description, filename=filename)
 
-            if display_output:
-                fun_test.log_disable_timestamps()
-                fun_test.log_section("BAM Resource result")
-                for line in lines:
-                    fun_test.log(line)
-                fun_test.log_enable_timestamps()
-            output = True
+        if display_output:
+            fun_test.log_disable_timestamps()
+            fun_test.log_section("BAM Resource result")
+            for line in lines:
+                fun_test.log(line)
+            fun_test.log_enable_timestamps()
+        output = True
     except Exception as ex:
         fun_test.critical(str(ex))
     return output
@@ -1687,3 +1782,9 @@ def get_diff_results(old_result, new_result):
     except Exception as ex:
         fun_test.critical(str(ex))
     return result
+
+
+if __name__ == '__main__':
+    from lib.host.network_controller import NetworkController
+    nw = NetworkController(dpc_server_ip="fs48-come", dpc_server_port=40220)
+    populate_vp_util_output_file(network_controller_obj=nw, filename='output_vp_util.txt')

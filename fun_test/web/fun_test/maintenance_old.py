@@ -1090,7 +1090,7 @@ if __name__ == "__main_flowtest__":
     data_sets = []
     one_data_set = {}
     one_data_set["inputs"] = {}
-    one_data_set["inputs"]["input_app"] = "hw_hsu_test"
+    one_data_set["inputs"]["input_app"] = "load_mods"
     one_data_set["inputs"]["input_iterations"] = 100000000
     one_data_set["name"] = "100M iterations"
     one_data_set["output"] = {"name": "output_time", 'min': 0, "max": -1, "expected": -1, "reference": None}

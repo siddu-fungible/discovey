@@ -74,9 +74,9 @@ class RawVolumePerfScript(FunTestScript):
         global funcp_obj, servers_mode, servers_list, fs_name
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
         f1_0_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --dpc-server --all_100g --serial --dpc-uart " \
-                         "retimer=0,1 --mgmt --disable-wu-watchdog syslog=2  workload=storage"
+                         "retimer=0,1 --mgmt  syslog=5  workload=storage"
         f1_1_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 --dpc-server --all_100g --serial --dpc-uart " \
-                         "retimer=0 --mgmt --disable-wu-watchdog syslog=2  workload=storage"
+                         "retimer=0,1 --mgmt  syslog=5  workload=storage"
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
         # fs_name = "fs-45"
         funcp_obj = FunControlPlaneBringup(fs_name=self.server_key["fs"][fs_name]["fs-name"])
@@ -187,7 +187,7 @@ class RawVolumeLocalPerfTestcase(FunTestCase):
             i = 1
             # Configure storage controller for DPU 1 (since we are testing SSD on DPU 1)
             storage_controller = StorageController(target_ip=fs_spec['come']['mgmt_ip'],
-                                                   target_port=servers_with_vms[server]["dpc_port_local"])
+                                                   target_port=servers_with_vms[server]["dpc_port_remote"])
 
             result_dict = {}
 
@@ -290,7 +290,6 @@ class RawVolumeLocalPerfTestcase(FunTestCase):
                 fun_test.sleep("Sleeping for {} seconds before actual test".format(self.iter_interval),
                                self.iter_interval)
         else:
-            print("Warm up begins:")
             thread_id = {}
             fun_test.shared_variables["fio"] = {}
             fio_filename = fun_test.shared_variables["nvme_block_device"]
@@ -312,8 +311,7 @@ class RawVolumeLocalPerfTestcase(FunTestCase):
                     fun_test.log("FIO Command Output from {}:\n {}".format(host,
                                                                        fun_test.shared_variables["fio"][index]))
 
-        #i += 1
-        print("warm up done:")
+        i += 1
 
     def run(self):
         testcase = self.__class__.__name__

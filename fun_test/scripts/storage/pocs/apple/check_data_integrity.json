@@ -15,5 +15,10 @@
   "end_sleep": 300,
   "docker_verify_interval": 20,
   "after_runsc_up_host_connect_interval": 60,
-  "check_portal": false
+  "apiprotocol" : "https",
+  "apiport": 9000,
+  "volcapacity": 6442450944,
+  "volencrypt": true,
+  "volstripecount" : 6,
+  "volname": "Stripe1"
 }

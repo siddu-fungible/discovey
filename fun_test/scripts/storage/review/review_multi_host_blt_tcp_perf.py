@@ -817,13 +817,11 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                     wait_time = self.num_hosts - index
                     if "multiple_jobs" in self.warm_up_fio_cmd_args:
                         # Adding the allowed CPUs into the fio warmup command
-                        # self.warm_up_fio_cmd_args["multiple_jobs"] += "  --cpus_allowed={}".\
-                        #    format(self.host_info[host_name]["host_numa_cpus"])
-                        fio_cpus_allowed_args = " --cpus_allowed={}".format(self.host_info[host_name]["host_numa_cpus"])
+                        self.warm_up_fio_cmd_args["multiple_jobs"] += "  --cpus_allowed={}".\
+                            format(self.host_info[host_name]["host_numa_cpus"])
                         for id, device in enumerate(self.host_info[host_name]["nvme_block_device_list"]):
                             jobs += " --name=pre-cond-job-{} --filename={}".format(id + 1, device)
-                        warm_up_fio_cmd_args["multiple_jobs"] = self.warm_up_fio_cmd_args["multiple_jobs"] + str(
-                            fio_cpus_allowed_args) + str(jobs)
+                        warm_up_fio_cmd_args["multiple_jobs"] = self.warm_up_fio_cmd_args["multiple_jobs"] + str(jobs)
                         warm_up_fio_cmd_args["timeout"] = self.warm_up_fio_cmd_args["timeout"]
                         # fio_output = self.host_handles[key].pcie_fio(filename="nofile", timeout=self.warm_up_fio_cmd_args["timeout"],
                         #                                    **warm_up_fio_cmd_args)
@@ -915,6 +913,7 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
             tmp = combo.split(',')
             fio_numjobs = tmp[0].strip('() ')
             fio_iodepth = tmp[1].strip('() ')
+            res_iodepth = int(fio_numjobs) * int(fio_iodepth)
 
             file_suffix = "{}_iodepth_{}.txt".format(self.test_mode, (int(fio_iodepth) * int(fio_numjobs)))
             for index, stat_detail in enumerate(self.stats_collect_details):
@@ -961,6 +960,7 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                         cpus_allowed = "{}-4".format(starting_core)
                     elif int(fio_numjobs) > 4:
                         cpus_allowed = "{}-{}".format(starting_core, self.host_info[host_name]["host_numa_cpus"][2:])
+                    fun_test.log("cpus_allowed: {}".format(cpus_allowed))
 
                     """
                     # Flush cache before read test
@@ -1002,14 +1002,40 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                     # Building the FIO command
                     fio_cmd_args = {}
 
-                    runtime_global_args = " --runtime={} --cpus_allowed={} --bs={} --rw={} --numjobs={} --iodepth={}".\
-                        format(fio_runtime, cpus_allowed, fio_block_size, mode, fio_numjobs, fio_iodepth)
+                    nvme_block_device_list = self.host_info[host_name]["nvme_block_device_list"]
+                    total_numa_cpus = self.host_info[host_name]["total_numa_cpus"]
+                    fio_num_jobs = len(nvme_block_device_list)
+
                     jobs = ""
                     for id, device in enumerate(self.host_info[host_name]["nvme_block_device_list"]):
                         jobs += " --name=vol{} --filename={}".format(id + 1, device)
 
+                    if int(res_iodepth) <= total_numa_cpus:
+                        global_num_jobs = int(res_iodepth) / len(nvme_block_device_list)
+                        final_fio_iodepth = 1
+                    else:
+                        io_factor = 2
+                        while True:
+                            if (int(res_iodepth) / io_factor) <= total_numa_cpus:
+                                global_num_jobs = (int(res_iodepth) / len(nvme_block_device_list)) / io_factor
+                                final_fio_iodepth = io_factor
+                                break
+                            else:
+                                io_factor += 1
+                    if global_num_jobs == 0:
+                        global_num_jobs = 1
+
+                    runtime_global_args = " --runtime={} --cpus_allowed={} --bs={} --rw={} --numjobs={} --iodepth={}".\
+                        format(fio_runtime, cpus_allowed, fio_block_size, mode, global_num_jobs, final_fio_iodepth)
                     fio_cmd_args["multiple_jobs"] = self.fio_cmd_args["multiple_jobs"] + runtime_global_args + jobs
                     fio_cmd_args["timeout"] = fio_timeout
+
+                    print("Modified FIO params: numjobs: {}, global_numjobs: {} res_iodepth: {}".format(fio_num_jobs, global_num_jobs, final_fio_iodepth))
+                    fun_test.log("Modified FIO params for {} only test for block size: {} using num_jobs: {},"
+                                 "IO depth: {}".format(mode, fio_block_size, global_num_jobs * fio_num_jobs,
+                                                       final_fio_iodepth))
+                    fun_test.log("fio_job_name used for current iteration: {}".format(fio_job_name))
+                    fun_test.log("final fio_cmd_args for current run: \n{}\n".format(fio_cmd_args))
 
                     thread_id[i] = fun_test.execute_thread_after(time_in_seconds=wait_time,
                                                                  func=fio_parser, arg1=end_host_thread[i],

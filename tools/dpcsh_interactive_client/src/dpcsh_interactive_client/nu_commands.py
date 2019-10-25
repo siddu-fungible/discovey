@@ -4475,13 +4475,10 @@ class DebugCommands(PeekCommands):
         if counter == 0:
             counter = 1
         return sum/counter
-        #total = lambda print_values: sum(x for x in print_values) # Adding all elements of print_values
-        #return total(print_values)/192
 
     def get_vp_util_histogram_table_obj(self, complete_dict):
         histo_table_obj = PrettyTable()
-        histo_dict = OrderedDict()
-        histo_dict = {'0-10': 0, '11-20': 0, '21-30': 0, '31-40': 0, '41-50': 0, '51-60': 0, '61-70': 0,
+        histo_dict = {'1-10': 0, '11-20': 0, '21-30': 0, '31-40': 0, '41-50': 0, '51-60': 0, '61-70': 0,
                       '71-80': 0, '81-90': 0, '91-100': 0}
         final_list = []
         print_values = complete_dict.values()
@@ -4492,7 +4489,8 @@ class DebugCommands(PeekCommands):
             if val.isdigit():
                 val = int(val)
                 if val in range(0,11):
-                    histo_dict['0-10'] += 1
+                    if not val == 0:
+                        histo_dict['1-10'] += 1
                 elif val in range(11,21):
                     histo_dict['11-20'] += 1
                 elif val in range(21,31):

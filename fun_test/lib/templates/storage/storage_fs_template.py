@@ -271,9 +271,7 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
                 block_size=ec_info["volume_block"]["ndata"], name="RDS" + "_" + this_uuid[-4:], uuid=this_uuid,
                 remote_nsid=cur_ns_id, remote_ip=cur_f1_ip, group_id=num+1, command_duration=command_timeout)
             fun_test.test_assert(command_result["status"], "Creating RDS volume for the remote BLT {} in remote F1 {} "
-                                                           "on DUT {}".format(cur_ns_id,
-                                                                              ec_info["rds_nsid"][num][cur_ns_id],
-                                                                              cur_vol_host_f1))
+                                                           "on DUT {}".format(cur_ns_id, cur_f1_ip, cur_vol_host_f1))
         """
         plex_num = 0
         for sc_index in cur_plex_to_f1_map:
@@ -374,17 +372,19 @@ class FunCpDockerContainer(Linux):
         self.name = name
 
     def _connect(self):
-        super(FunCpDockerContainer, self)._connect()
-
-        # the below set_prompt_terminator is the temporary workaround of the recent FunCP docker container change
-        # Recently while logging into the docker container it gets logged in as root user
-        self.set_prompt_terminator(self.CUSTOM_PROMPT_TERMINATOR)
-        self.command("docker exec -it {} bash".format(self.name))
-        self.clean()
-        self.set_prompt_terminator(self.CUSTOM_PROMPT_TERMINATOR)
-        self.command("export PS1='{}'".format(self.CUSTOM_PROMPT_TERMINATOR), wait_until_timeout=3,
-                     wait_until=self.CUSTOM_PROMPT_TERMINATOR)
-        return True
+        result = False
+        if (super(FunCpDockerContainer, self)._connect()):
+            # the below set_prompt_terminator is the temporary workaround of the recent FunCP docker container change
+            # Recently while logging into the docker container it gets logged in as root user
+            self.set_prompt_terminator(self.CUSTOM_PROMPT_TERMINATOR)
+            self.command("docker exec -it {} bash".format(self.name))
+            self.clean()
+            self.set_prompt_terminator(self.CUSTOM_PROMPT_TERMINATOR)
+            self.command("export PS1='{}'".format(self.CUSTOM_PROMPT_TERMINATOR), wait_until_timeout=3,
+                         wait_until=self.CUSTOM_PROMPT_TERMINATOR)
+            result = True
+        fun_test.simple_assert(result, "SSH connection to docker host: {}".format(self))
+        return result
 
 
 MODE_END_POINT = "ep"
