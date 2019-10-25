@@ -1297,7 +1297,7 @@ class FunTest:
                 "result": result, 
                 "expected": expected,
                 "actual": actual,
-                "index": self.current_time_series_checkpoint,
+                "checkpoint_index": self.current_time_series_checkpoint,
                 "context_id": context_id}
 
         if self.time_series_enabled:

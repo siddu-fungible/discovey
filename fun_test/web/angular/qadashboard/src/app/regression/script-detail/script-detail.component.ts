@@ -286,6 +286,8 @@ export class ScriptDetailComponent implements OnInit {
       this.fetchLogsForCheckpoints(this.currentTestCaseExecution, minCheckpointIndex, maxCheckpointIndex).subscribe(response => {
         this.showLogsPanel = true;
         this.status = null;
+        let checkpointId = `${testCaseExecution.test_case_id}_${checkpointIndex}_${contextId}`;
+        this.commonService.scrollTo(checkpointId);
       }, error => {
         this.loggerService.error("Unable to fetch logs for checkpoints");
         this.status = null;

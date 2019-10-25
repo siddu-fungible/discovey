@@ -69,9 +69,9 @@
               <td class="fun-table-header">Expected</td>
               <td class="fun-table-header">Actual</td>
             </tr>
-            <tr *ngFor="let checkpoint of currentTestCaseExecution?.checkpoints" [ngClass]="{'selected-checkpoint-row': currentCheckpointIndex === checkpoint?.data?.index }">
+            <tr *ngFor="let checkpoint of currentTestCaseExecution?.checkpoints" [ngClass]="{'selected-checkpoint-row': currentCheckpointIndex === checkpoint?.data?.checkpoint_index }">
               <td>
-                <span class="pseudo-anchor" (click)="onCheckpointClick(currentTestCaseExecution, checkpoint.data.index, checkpoint.data.context_id)">{{ checkpoint.data.index }}
+                <span class="pseudo-anchor" (click)="onCheckpointClick(currentTestCaseExecution, checkpoint.data.checkpoint_index, checkpoint.data.context_id)">{{ checkpoint.data.checkpoint_index }}
                 </span>
               </td>
               <td>{{ checkpoint.data.context_id }}</td>
@@ -96,11 +96,13 @@
                     <table>
                       <ng-container *ngFor="let checkpoint of currentTestCaseExecution?.checkpoints">
                         <tr *ngFor="let seriesElement of checkpoint?.timeSeries">
+                          {{ seriesElement.data | json }}
                           <ng-container *ngIf="(seriesElement.data.context_id === availableContext.context_id) && (seriesElement.relative_epoch_time >= timeFilterMin)">
-                            <ng-container *ngIf="seriesElement.type === 'checkpoint' && (seriesElement.data.index <= currentCheckpointIndex)">
+                            <ng-container *ngIf="seriesElement.type === 'checkpoint' && (seriesElement.data.checkpoint_index <= currentCheckpointIndex)">
+
                               <td class="timestamp" nowrap><small>{{ seriesElement.relative_epoch_time }}</small></td>
                               <td>
-                                <div id="{{ currentTestCaseExecution.test_case_id }}_{{ seriesElement.data?.index }}_{{ seriesElement.data?.context_id }}">
+                                <div id="{{ currentTestCaseExecution.test_case_id }}_{{ seriesElement.data?.checkpoint_index }}_{{ seriesElement.data?.context_id }}">
                                   <span class="checkpoint-span">Checkpoint: {{ seriesElement.data?.checkpoint }}
                                   </span>
                                 </div>
