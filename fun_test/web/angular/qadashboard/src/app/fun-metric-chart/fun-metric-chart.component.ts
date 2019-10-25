@@ -224,17 +224,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   }
 
   fetchMetricsById(): void {
-    let payload = {};
-    payload["metric_id"] = this.id;
-    this.apiService.post('/metrics/metric_by_id', payload).subscribe((data) => {
-      this.chartName = data.data["chart_name"];
-      this.platform = data.data["platform"];
-      this.modelName = data.data["metric_model_name"];
-      this.setDefault();
-      this.fetchInfo();
-    }, error => {
-      this.loggerService.error("fetching by metric id failed");
-    });
+     this.setDefault();
+     this.fetchInfo();
   }
 
   //set the chart and model name based in metric id
@@ -391,6 +382,9 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
           this.loggerService.error("No Preview Datasets");
           return;
         }
+        this.chartName = this.chartInfo.chart_name;
+        this.modelName = this.chartInfo.metric_model_name;
+        this.platform = this.chartInfo.platform;
         this.currentDescription = this.chartInfo.description;
         this.inner.currentDescription = this.currentDescription;
         this.currentOwner = this.chartInfo.owner_info;
@@ -865,7 +859,9 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       this.setMileStones();
 
       //populating data for show tables
-      this.populateShowTables();
+      if (!this.minimal) {
+        this.populateShowTables();
+      }
 
       this.changeAllExpectedValues();
       this.status = null;
@@ -1195,7 +1191,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       return;
     }
     var self = this;
-    if (this.modelName !== 'MetricContainer') {
+    if (this.modelName !== 'MetricContainer' && !this.minimal) {
       return this.apiService.get("/metrics/describe_table/" + this.modelName).subscribe(function (response) {
         self.tableInfo = response.data;
         self.fetchData(self.id, chartInfo, previewDataSets, self.tableInfo);

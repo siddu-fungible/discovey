@@ -142,7 +142,8 @@ def chart_info(request):
                   "pk": chart.pk,
                   "last_good_score": chart.last_good_score,
                   "penultimate_good_score": chart.penultimate_good_score,
-                  "jira_ids": json.loads(chart.jira_ids)}
+                  "jira_ids": json.loads(chart.jira_ids),
+                  "platform": chart.platform}
         for markers in milestones:
             markers_dict[markers.milestone_name] = get_epoch_time_from_datetime(markers.milestone_date)
         result["milestone_markers"] = markers_dict
