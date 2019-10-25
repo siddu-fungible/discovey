@@ -1022,7 +1022,7 @@ if __name__ == "__main__":
             #FunethTestScpHU2NU,
             #FunethTestInterfaceFlapPF,
             #FunethTestInterfaceFlapVF,
-            #FunethTestUnloadDriver,
+            FunethTestUnloadDriver,
             #FunethTestReboot,
             #FunethTestComeReboot,  # TODO: uncomment after SWLINUX-786 is fixed
     ):
