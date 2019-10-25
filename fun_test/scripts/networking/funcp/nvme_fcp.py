@@ -416,13 +416,9 @@ class ConfigureRdsVol(FunTestCase):
             drive_uuid_list = sorted(drive_dict["data"].keys())
             f10_drive_count = len(drive_uuid_list)
 
-            fun_test.test_assert(expression=(total_ssd > len(drive_uuid_list)),
+            fun_test.test_assert(expression=(f10_drive_count >= total_ssd),
                                  message="SSD count on F10 of FS is {}, test requirement : {}".
-                                 format(total_ssd, f10_drive_count))
-
-            if total_ssd > len(drive_uuid_list):
-                fun_test.test_assert_expected(False, "SSD count on FS: {} lesser than requirement : {}".
-                                              format(total_ssd, f10_drive_count))
+                                 format(f10_drive_count, total_ssd))
 
             # Create RDS controller on F1_0
             f10_rds_ctrl = utils.generate_uuid()
@@ -466,7 +462,7 @@ class ConfigureRdsVol(FunTestCase):
                 fun_test.test_assert(False, "F1_0 : BLT not found")
 
         if not skip_ctrlr_creation:
-            fun_test.sleep("Here", 10)
+            # fun_test.sleep("Here", 10)
             # Create PCIe controller on F1_1
             f11_pcie_ctrl = utils.generate_uuid()
             command_result = f11_storage_ctrl_obj.create_controller(transport="PCI",
@@ -539,8 +535,8 @@ class RunFioRds(FunTestCase):
         f11_stats_collector = CollectStats(f11_storage_ctrl_obj)
         skip_precondition = fun_test.shared_variables["skip_precondition"]
 
-        table_data_headers = ["Block_Size", "IOPs", "BW in Gbps"]
-        table_data_cols = ["read_block_size", "total_read_iops", "total_read_bw"]
+        table_data_headers = ["Devices", "Block_Size", "IOPs", "BW in Gbps"]
+        table_data_cols = ["devices", "read_block_size", "total_read_iops", "total_read_bw"]
 
         config_file = fun_test.get_script_name_without_ext() + ".json"
         config_dict = utils.parse_file_to_json(config_file)
@@ -571,11 +567,12 @@ class RunFioRds(FunTestCase):
                 if not device["ModelNumber"].strip() and not device["SerialNumber"].strip():
                     nvme_device_list.append(device["DevicePath"])
 
+        fun_test.test_assert(nvme_device_list, "NVMe devices on host")
         print "***************************"
         print " NVMe Devices found "
         print "***************************"
         print nvme_device_list
-        
+
         host_nvme_device_count = len(nvme_device_list)
         fio_filename = str(':'.join(nvme_device_list))
 
@@ -599,46 +596,56 @@ class RunFioRds(FunTestCase):
             fio_result = f11_hosts[0]["handle"].pcie_fio(filename=fio_filename,
                                                          rw="write",
                                                          numjobs=precondition_fio_num_jobs,
-                                                         timeout=600,
+                                                         timeout=1200,
                                                          **self.precondition_args)
             fun_test.simple_assert(fio_result, message="Initial write test on all disks")
 
+        '''
+        FIO PARSED OUTPUT FORMAT
+        {'latency': 4850, 'latency9999': 111673, 'io_bytes': 51883728896, 'latency9950': 63700,
+         'latency99': 55836, 'iops': 105531.333833, 'bw': 422125, 'latency90': 16318,
+          'runtime': 120030, 'latency95': 30539, 'clatency': 4847}'''
         test_type = "read"
-        fio_read_jobs = 8 * total_ssd
-        fio_job_name = "{}_ssd_{}_{}".format(host_nvme_device_count, test_type,
-                                             fio_read_jobs)
 
-        cpu_list = get_numa(f11_hosts[0]["handle"])
-
-        fio_result = f11_hosts[0]["handle"].pcie_fio(filename=fio_filename,
-                                                     numjobs=fio_read_jobs,
-                                                     rw="read",
-                                                     name=fio_job_name,
-                                                     cpus_allowed=cpu_list,
-                                                     **self.fio_cmd_args)
-        fun_test.simple_assert(fio_result, message="FIO job {}".format(fio_job_name))
-
-        read_block_size = self.fio_cmd_args["bs"]
-        total_read_iops = fio_result["read"]["iops"]
-        total_read_bw = fio_result["read"]["bw"]/125000
-        row_data_list = []
         table_data_rows = []
+        cpu_list = get_numa(f11_hosts[0]["handle"])
+        for x in range(1, total_ssd + 1):
+            if x == 1:
+                fio_filename = nvme_device_list[0]
+            else:
+                fio_filename = str(':'.join(nvme_device_list[:x]))
+            fio_read_jobs = 8 * x
+            fio_job_name = "{}_ssd_{}_{}".format(x, test_type,
+                                                 fio_read_jobs)
+            fio_result = f11_hosts[0]["handle"].pcie_fio(filename=fio_filename,
+                                                         numjobs=fio_read_jobs,
+                                                         rw="read",
+                                                         name=fio_job_name,
+                                                         cpus_allowed=cpu_list,
+                                                         **self.fio_cmd_args)
+            fun_test.log("FIO result {}".format(fio_result))
+            fun_test.test_assert(fio_result, message="FIO job {}".format(fio_job_name))
 
-        for item in table_data_cols:
-            row_data_list.append(eval(item))
-        table_data_rows.append(row_data_list)
+            read_block_size = self.fio_cmd_args["bs"]
+            total_read_iops = fio_result["read"]["iops"]
+            total_read_bw = fio_result["read"]["bw"]/125000
+            devices = fio_filename
+            row_data_list = []
+            for item in table_data_cols:
+                row_data_list.append(eval(item))
+            table_data_rows.append(row_data_list)
 
-        table_data = {"headers": table_data_headers, "rows": table_data_rows}
+            table_data = {"headers": table_data_headers, "rows": table_data_rows}
 
         fun_test.add_table(panel_header="NVMe FCP Sanity",
                            table_name=self.summary,
                            table_data=table_data)
 
         # Compute expected IOPs
-        if host_nvme_device_count > 1:
+        if total_ssd == 1:
             exp_iops = 650
         else:
-            exp_iops = 650 * host_nvme_device_count
+            exp_iops = 650 * total_ssd
         current_read_iops = total_read_iops/1000
         print "The current read IOPs: {}".format(current_read_iops)
         print "The expected read IOPs: {}".format(exp_iops)

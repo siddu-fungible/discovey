@@ -532,21 +532,24 @@ class GetSetupDetails(FunTestCase):
 
             print fun_test.shared_variables["fio"]
 
-            # Check which host is giving highest latency and use that to plot latency
+            # Check which host is giving highest latency50 and use that to plot latency
             fio_latency = fun_test.shared_variables["fio"]
             max_lat = 0
             for thread, value in fio_latency.iteritems():
-                if value["read"]["latency90"] > max_lat:
-                    max_lat = value["read"]["latency90"]
+                if value["read"]["latency50"] > max_lat:
+                    max_lat = value["read"]["latency50"]
                     host_thread = thread
                     print "The max is {}".format(max_lat)
                     print "The host is {}".format(host_thread_map[host_thread])
 
             print "The final max is {}".format(max_lat)
             print "The final host is {}".format(host_thread_map[host_thread])
+            read_result_dict = fun_test.shared_variables["fio"][host_thread]["read"]
 
-            table_data_headers = ["Block_Size", "IOPs", "BW in Gbps"]
-            table_data_cols = ["read_block_size", "total_read_iops", "total_read_bw"]
+            table_data_headers = ["Block_Size", "IOPs", "BW in Gbps", "Read Latency",
+                                  "Read Latency 50", "Read Latency 90", "Read Latency 99", "Read Latency 99.99"]
+            table_data_cols = ["read_block_size", "total_read_iops", "total_read_bw", "read_latency", "read_latency_50",
+                               "read_latency_90", "read_latency_99", "read_latency_9999"]
 
             read_block_size = self.fio_cmd_args["bs"]
             total_read_iops = iops_sum
@@ -560,9 +563,15 @@ class GetSetupDetails(FunTestCase):
 
             value_dict = {
                 "block_size": read_block_size,
-                "iops": total_read_iops,
-                "bw": total_read_bw}
-
+                "read_iops": total_read_iops,
+                "read_bw": total_read_bw,
+                "read_latency_avg": read_result_dict["clatency"],
+                "read_latency_50": read_result_dict["latency50"],
+                "read_latency_90": read_result_dict["latency90"],
+                "read_latency_95": read_result_dict["latency95"],
+                "read_latency_99": read_result_dict["latency99"],
+                "read_latency_9950": read_result_dict["latency9950"],
+                "read_latency_9999": read_result_dict["latency9999"]}
 
             # add_to_data_base(value_dict)
 
