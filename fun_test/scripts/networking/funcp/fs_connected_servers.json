@@ -742,7 +742,7 @@
           "vm_pings": ["30.1.1.2","19.1.1.1"]
         },
           "cab03-qa-01-vm25":{
-          "hostname":"10.1.105.41",
+          "hostname":"10.1.105.217",
           "user":"localadmin",
           "password":"Precious1*",
           "data_ip": "18.1.1.27",
@@ -762,7 +762,7 @@
           "vm_pings": ["30.1.1.2","19.1.1.1"]
         },
             "cab03-qa-01-vm26":{
-          "hostname":"10.1.105.42",
+          "hostname":"10.1.105.218",
           "user":"localadmin",
           "password":"Precious1*",
           "data_ip": "18.1.1.28",
@@ -782,7 +782,7 @@
           "vm_pings": ["30.1.1.2","19.1.1.1"]
         },
             "cab03-qa-01-vm27":{
-          "hostname":"10.1.105.43",
+          "hostname":"10.1.105.219",
           "user":"localadmin",
           "password":"Precious1*",
           "data_ip": "18.1.1.29",
@@ -802,7 +802,7 @@
           "vm_pings": ["30.1.1.2","19.1.1.1"]
         },
            "cab03-qa-01-vm28":{
-          "hostname":"10.1.105.44",
+          "hostname":"10.1.105.239",
           "user":"localadmin",
           "password":"Precious1*",
           "data_ip": "18.1.1.30",
@@ -822,7 +822,7 @@
           "vm_pings": ["30.1.1.2","19.1.1.1"]
         },
            "cab03-qa-01-vm29":{
-          "hostname":"10.1.105.45",
+          "hostname":"10.1.105.252",
           "user":"localadmin",
           "password":"Precious1*",
           "data_ip": "18.1.1.31",

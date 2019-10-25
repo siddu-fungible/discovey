@@ -91,7 +91,7 @@ class ScriptSetup(FunTestScript):
             enable_fcp_rds = job_inputs["enable_fcp_rds"]
             fun_test.shared_variables["enable_fcp_rds"] = enable_fcp_rds
         else:
-            enable_fcp_rds = True
+            enable_fcp_rds = False
             fun_test.shared_variables["enable_fcp_rds"] = enable_fcp_rds
 
         # Removing any funeth driver from COMe and and all the connected server
@@ -140,7 +140,7 @@ class ScriptSetup(FunTestScript):
                 index = 0
             f10_bootarg = testbed_info['fs'][test_bed_type][fs_name]['bootargs_f1_0']
             f11_bootarg = testbed_info['fs'][test_bed_type][fs_name]['bootargs_f1_1']
-            if "enable_fcp_rds":
+            if enable_fcp_rds:
                 f10_bootarg += " rdstype=fcp"
                 f11_bootarg += " rdstype=fcp"
             topology_helper.set_dut_parameters(dut_index=index,
@@ -154,10 +154,8 @@ class ScriptSetup(FunTestScript):
         fun_test.test_assert(topology, "Topology deployed")
 
     def cleanup(self):
-        # fun_test.log("Cleanup")
-        # fun_test.shared_variables["topology"].cleanup()
-        fun_test.log("Not doing cleanup..")
-        fun_test.shared_variables["topology"].cleaned_up = True
+        fun_test.log("Cleanup")
+        fun_test.shared_variables["topology"].cleanup()
 
 
 class TestHostPCIeLanes(FunTestCase):

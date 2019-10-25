@@ -95,8 +95,7 @@ if __name__ == "__main__":
     print nc.read_until("f1 #")
     nc.write("setenv serverip 10.1.21.48\n")
     print nc.read_until("f1 #")
-    nc.write("setenv bootargs sku=SKU_FS1600_0 app=hw_hsu_test --dpc-server --dpc-uart --csr-replay --serdesinit --all_100g\n")
-    # nc.write("setenv bootargs sku=SKU_FS1600_0 app=hw_hsu_test --dpc-server --dpc-uart --csr-replay --serdesinit --all_100g\n")
+    nc.write("setenv bootargs sku=SKU_FS1600_0 app=load_mods --dpc-server --dpc-uart --csr-replay --serdesinit --all_100g\n")
 
     print nc.read_until("f1 #")
     nc.write("dhcp\n")
@@ -122,8 +121,8 @@ if __name__ == "__main__":
     print nc.read_until("f1 #")
     nc.write("setenv serverip 10.1.21.48\n")
     print nc.read_until("f1 #")
-    nc.write("setenv bootargs sku=SKU_FS1600_1 app=hw_hsu_test --dpc-server --dpc-uart --csr-replay --serdesinit --all_100g\n")
-    # nc.write("setenv bootargs sku=SKU_FS1600_0 app=hw_hsu_test --dpc-server --dpc-uart --csr-replay --serdesinit --all_100g\n")
+    nc.write("setenv bootargs sku=SKU_FS1600_1 app=load_mods --dpc-server --dpc-uart --csr-replay --serdesinit --all_100g\n")
+    # nc.write("setenv bootargs sku=SKU_FS1600_0 app=load_mods --dpc-server --dpc-uart --csr-replay --serdesinit --all_100g\n")
 
     print nc.read_until("f1 #")
     nc.write("dhcp\n")

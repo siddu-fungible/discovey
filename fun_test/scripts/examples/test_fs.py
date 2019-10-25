@@ -37,7 +37,7 @@ class FunTestCase1(FunTestCase):
         # fun_test.shared_variables["fs"].cleanup()
 
     def run(self):
-        fs = Fs.get(setup_bmc_support_files=True, boot_args="app=hw_hsu_test --dpc-uart --dpc-server --csr-replay --all_100g --disable-wu-watchdog") # (disable_f1_index=0)
+        fs = Fs.get(setup_bmc_support_files=True, boot_args="app=load_mods --dpc-uart --dpc-server --csr-replay --all_100g --disable-wu-watchdog") # (disable_f1_index=0)
         fun_test.shared_variables["fs"] = fs
         fun_test.test_assert(fs.bootup(), "FS bootup")
         f1 = fs.get_f1(index=0)

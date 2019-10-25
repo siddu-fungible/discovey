@@ -410,7 +410,7 @@ class Linux(object, ToDictMixin):
             if not custom_prompts:
                 custom_prompts = {}
             if not self.handle:
-                if not Linux._connect(self):
+                if not self._connect():
                     raise Exception("Unable to connect to %s, username: %s, password: %s" % (self.host_ip,
                                                                                              self.ssh_username,
                                                                                              self.ssh_password))
@@ -425,7 +425,7 @@ class Linux(object, ToDictMixin):
                 try:
                     self.handle.expect(self.prompt_terminator, timeout=sync_timeout)
                 except (pexpect.EOF):
-                    Linux.disconnect(self)
+                    self.disconnect(self)
                     return self.command(command=command,
                                         sync=sync, timeout=timeout,
                                         custom_prompts=custom_prompts,
@@ -1873,11 +1873,11 @@ class Linux(object, ToDictMixin):
             # Populating the resultant fio_dict dictionary
             for operation in ["write", "read"]:
                 fio_dict[operation] = {}
-                stat_list = ["bw", "iops", "io_bytes", "runtime", "latency", "clatency", "latency90", "latency95",
-                             "latency99","latency9950", "latency9999"]
+                stat_list = ["bw", "iops", "io_bytes", "runtime", "latency", "clatency", "latency50",
+                             "latency90", "latency95", "latency99", "latency9950", "latency9999"]
                 for stat in stat_list:
-                    if stat not in ("latency", "clatency", "latency90", "latency95", "latency99", "latency9950",
-                                    "latency9999"):
+                    if stat not in ("latency", "clatency", "latency50", "latency90", "latency95",
+                                    "latency99", "latency9950", "latency9999"):
                         fio_dict[operation][stat] = fio_result_dict["jobs"][0][operation][stat]
                     elif stat in ("latency", "clatency"):
                         for key in fio_result_dict["jobs"][0][operation].keys():
@@ -1911,10 +1911,16 @@ class Linux(object, ToDictMixin):
                                     value = int(round(fio_result_dict["jobs"][0][operation][key]["mean"]))
                                     value *= 1000
                                     fio_dict[operation][stat] = value
-                    elif stat in ("latency90", "latency95", "latency99", "latency9950", "latency9999"):
+                    elif stat in ("latency50", "latency90", "latency95", "latency99", "latency9950", "latency9999"):
                         for key in fio_result_dict["jobs"][0][operation].keys():
                             if key == "clat_ns":
                                 for key in fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"].keys():
+                                    if key.startswith("50.00"):
+                                        stat = "latency50"
+                                        value = int(round(
+                                            fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"]["50.000000"]))
+                                        value /= 1000
+                                        fio_dict[operation][stat] = value
                                     if key.startswith("90.00"):
                                         stat = "latency90"
                                         value = int(round(
