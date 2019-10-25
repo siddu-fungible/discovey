@@ -59,6 +59,7 @@
           <span>Checkpoints</span>
           <span *ngIf="!showTestCasePanel" (click)="onShowTestCasePanelClick()" class="pseudo-anchor">< Show test-cases</span>
         </div>
+
         <table class="fun-table">
             <tr>
               <td class="fun-table-header">ID</td>
@@ -68,8 +69,11 @@
               <td class="fun-table-header">Expected</td>
               <td class="fun-table-header">Actual</td>
             </tr>
-            <tr *ngFor="let checkpoint of currentTestCaseExecution?.checkpoints" [ngClass]="{'selected-checkpoint-row': currentCheckpointIndex === checkpoint.data.index }">
-              <td><span class="pseudo-anchor" (click)="onCheckpointClick(currentTestCaseExecution, checkpoint.data.index, checkpoint.data.context_id)">{{ checkpoint.data.index }}</span></td>
+            <tr *ngFor="let checkpoint of currentTestCaseExecution?.checkpoints" [ngClass]="{'selected-checkpoint-row': currentCheckpointIndex === checkpoint?.data?.index }">
+              <td>
+                <span class="pseudo-anchor" (click)="onCheckpointClick(currentTestCaseExecution, checkpoint.data.index, checkpoint.data.context_id)">{{ checkpoint.data.index }}
+                </span>
+              </td>
               <td>{{ checkpoint.data.context_id }}</td>
               <td>{{ checkpoint.data.checkpoint }} ({{ checkpoint.relative_epoch_time }}, {{ checkpoint.relative_end_epoch_time }})</td>
               <td><span [ngClass]="{'passed': checkpoint.data.result === 'PASSED', 'failed': checkpoint.data.result === 'FAILED' }">{{ checkpoint.data.result }}</span></td>
@@ -78,7 +82,7 @@
             </tr>
           </table>
       </div>
-      <div class="fun-flex-container" *ngIf="showLogsPanel">
+      <!--div class="fun-flex-container" *ngIf="showLogsPanel">
         <ng-container *ngFor="let availableContext of (availableContexts | selected )">
           <div class="fun-flex-item panel fun-panel">
             <div class="fun-panel-header">
@@ -116,7 +120,7 @@
             </div>
           </div>
         </ng-container>
-      </div>
+      </div-->
     </div>
   </div>
 </div>

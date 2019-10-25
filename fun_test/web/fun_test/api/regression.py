@@ -561,6 +561,8 @@ def test_case_time_series(request, suite_execution_id, test_case_execution_id):
         checkpoint_filter = {}
         if max_checkpoint_index is not None:
             checkpoint_filter["$lte"] = int(max_checkpoint_index)
+        if min_checkpoint_index is not None:
+            checkpoint_filter["$gte"] = int(min_checkpoint_index)
         if checkpoint_filter:
             query["data.checkpoint_index"] = checkpoint_filter
 

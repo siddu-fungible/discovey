@@ -1,7 +1,7 @@
 import {Component, OnInit } from '@angular/core';
 import {RegressionService} from "../regression.service";
-import {forkJoin, Observable, of} from "rxjs";
-import {last, switchMap} from "rxjs/operators";
+import {forkJoin, Observable, of, throwError} from "rxjs";
+import {catchError, last, switchMap} from "rxjs/operators";
 import {LoggerService} from "../../services/logger/logger.service";
 import {ActivatedRoute} from "@angular/router";
 import {animate, state, style, transition, trigger} from "@angular/animations";
@@ -238,6 +238,9 @@ export class ScriptDetailComponent implements OnInit {
       this.status = null;
     })*/
   }
+  onCheckpointClick2(testCaseExecution, checkpointIndex, contextId?: 0) {
+
+  }
 
   onCheckpointClick(testCaseExecution, checkpointIndex, contextId?: 0) {
     //this.status = "Fetching checkpoint data";
@@ -258,21 +261,27 @@ export class ScriptDetailComponent implements OnInit {
       checkpointsInConsideration.unshift(selectedCheckpoint.previous_checkpoint);
     }
     console.log(checkpointsInConsideration);
-    let minEpoch = checkpointsInConsideration.reduce((min, p) => p.relative_epoch_time < min ? p.relative_epoch_time: min , checkpointsInConsideration[0].relative_epoch_time);
+    /*let minEpoch = checkpointsInConsideration.reduce((min, p) => p.relative_epoch_time < min ? p.relative_epoch_time: min , checkpointsInConsideration[0].relative_epoch_time);
     let maxEpoch = checkpointsInConsideration.reduce((max, p) => p.relative_end_epoch_time > max ? p.relative_end_epoch_time: max, checkpointsInConsideration[0].relative_end_epoch_time);
 
     console.log(minEpoch, maxEpoch);
     let trueRange = [this.scriptRunTime.started_epoch_time + minEpoch, this.scriptRunTime.started_epoch_time + maxEpoch];
     console.log(trueRange);
-    console.log(checkpointsInConsideration);
+    console.log(checkpointsInConsideration);*/
 
 
-    let checkpointIndexesToFetch: number [] = checkpointsInConsideration.map(e => e.data.index);
+    /*let checkpointIndexesToFetch: number [] = checkpointsInConsideration.map(e => e.data.index);
     let minCheckpointIndex = Math.min(...checkpointIndexesToFetch);
-    let maxCheckpointIndex: number = Math.max(...checkpointIndexesToFetch);
-    checkpointIndexesToFetch = Array.from(Array(maxCheckpointIndex + 1).keys());
+    let maxCheckpointIndex: number = Math.max(...checkpointIndexesToFetch);*/
+
+    let checkpointIndexesToFetch = Array.from(Array(checkpointIndex + 1).keys());
+    checkpointIndexesToFetch.filter(checkpointIndex => !testCaseExecution.checkpoints.hasOwnProperty("timeSeries"));
+    let minCheckpointIndex = checkpointIndexesToFetch[0];
+    let maxCheckpointIndex = checkpointIndexesToFetch[checkpointIndexesToFetch.length - 1];
+
+
     this.status = "Fetching logs";
-    this.fetchLogsForCheckpoints(this.currentTestCaseExecution, checkpointIndexesToFetch).subscribe(response => {
+    this.fetchLogsForCheckpoints(this.currentTestCaseExecution, minCheckpointIndex, maxCheckpointIndex).subscribe(response => {
       this.showLogsPanel = true;
       this.status = null;
     }, error => {
@@ -283,21 +292,24 @@ export class ScriptDetailComponent implements OnInit {
   }
 
 
-  fetchLogsForCheckpoints(testCaseExecution, checkpointIndexesToFetch): Observable<any> {
-    const resultObservables = [];
-    checkpointIndexesToFetch.forEach(checkpointIndex => {
+  fetchLogsForCheckpoints(testCaseExecution, minCheckpointIndex, maxCheckpointIndex): Observable<any> {
+    return this.regressionService.testCaseTimeSeries(this.suiteExecutionId, testCaseExecution.execution_id, null, minCheckpointIndex, maxCheckpointIndex).pipe(switchMap(response => {
       let testCaseId = testCaseExecution.test_case_id;
-      if (!testCaseExecution.checkpoints[checkpointIndex].hasOwnProperty("timeSeries")) {
-        resultObservables.push(this.fetchLogsForCheckpoint(testCaseExecution, checkpointIndex));
-      }
 
-    });
-    if (resultObservables.length > 0) {
-      return forkJoin(resultObservables);
-    } else {
+      response.forEach(timeSeriesElement => {
+        let checkpointIndex = timeSeriesElement.data.checkpoint_index;
+        if (!testCaseExecution.checkpoints[checkpointIndex].hasOwnProperty("timeSeries")) {
+          testCaseExecution.checkpoints[checkpointIndex]["timeSeries"] = [];
+        }
+        timeSeriesElement["relative_epoch_time"] = timeSeriesElement.epoch_time - this.scriptRunTime.started_epoch_time;
+        //testCaseExecution.checkpoints[checkpointIndex].timeSeries.push(timeSeriesElement);
+      });
+
       return of(true);
-    }
-
+    }), catchError (error => {
+      this.loggerService.error("Unable fetch checkpoint logs");
+      return throwError(error);
+    }))
   }
 
   fetchLogsForCheckpoint(testCaseExecution, checkpointIndex) {
