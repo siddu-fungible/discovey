@@ -199,7 +199,7 @@ class ZipLzmaTeramarkTc(PalladiumTc):
 
     def describe(self):
         self.set_test_details(id=8,
-                              summary="Schedule Crypto ccp sanity test app on S1",
+                              summary="Schedule Zip Lzma teramark app on Jenkins",
                               steps="""
             1. Steps 1
             2. Steps 2
