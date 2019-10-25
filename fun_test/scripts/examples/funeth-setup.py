@@ -1015,7 +1015,7 @@ class FunethTestComeReboot(FunTestCase):
 if __name__ == "__main__":
     ts = FunethSanity()
     for tc in (
-            FunethTestNUPingHU,
+            #FunethTestNUPingHU,
             #FunethTestPacketSweep,
             #FunethTestScpNU2HUPF,
             #FunethTestScpNU2HUVF,
