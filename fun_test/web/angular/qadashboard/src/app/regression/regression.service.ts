@@ -209,11 +209,24 @@ getPrettyLocalizeTime(t) {
     }))
   }
 
-  testCaseTimeSeries(suiteExecutionId, testCaseExecutionId, checkpointIndex?: null) {
+  testCaseTimeSeries(suiteExecutionId, testCaseExecutionId, checkpointIndex?: null, minCheckpointIndex?: null, maxCheckpointIndex?: null) {
     let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}/${testCaseExecutionId}`;
+    let params = [];
     if (checkpointIndex !== null) {
-      url += `&checkpoint_index=${checkpointIndex}`;
+      params.push(["checkpoint_index", checkpointIndex]);
+    } else {
+      if (minCheckpointIndex !== null) {
+        params.push(["min_checkpoint_index", minCheckpointIndex]);
+      }
+      if (maxCheckpointIndex !== null) {
+        params.push(["max_checkpoint_index", maxCheckpointIndex])
+      }
     }
+    let queryParamString = this.commonService.queryParamsToString(params);
+    if (queryParamString) {
+      url += queryParamString;
+    }
+
     return this.apiService.get(url).pipe(switchMap(response => {
       return of(response.data);
     }), catchError (error => {
