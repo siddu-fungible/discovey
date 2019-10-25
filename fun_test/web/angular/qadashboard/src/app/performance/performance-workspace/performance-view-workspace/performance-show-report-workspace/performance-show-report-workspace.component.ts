@@ -154,12 +154,8 @@ export class PerformanceShowReportWorkspaceComponent implements OnInit {
       }));
   }
 
-  clickHistory(dataSet): void {
-    if (dataSet.show_history) {
-      dataSet.show_history = false;
-    } else {
-      dataSet.show_history = true;
-    }
+  toggleHistory(dataSet): void {
+    dataSet.show_history = !dataSet.show_history;
   }
 
   calculatePercentage(dataSets): void {

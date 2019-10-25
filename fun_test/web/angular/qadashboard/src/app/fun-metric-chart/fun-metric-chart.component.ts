@@ -224,7 +224,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   }
 
   fetchMetricsById(): void {
-     this.setDefault();
+     this.setDefaults();
      this.fetchInfo();
   }
 
@@ -431,7 +431,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   }
 
   //sets the state of the component to default values
-  setDefault(): void {
+  setDefaults(): void {
     this.timeMode = "all";
     this.mileStoneIndices = {};
     this.showingTable = false;
