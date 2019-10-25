@@ -138,7 +138,7 @@ class DfaTeramarkTc(PalladiumTc):
 
 
 class NfaTeramarkTc(PalladiumTc):
-    boot_args = "app=nfa_perf_bootstrap rbm-size=1m --bm-profile-regex nfa_perf.pc_mask=1 nfa_perf.nflows=24 nfa_perf.niterations=1024 syslog=2"
+    boot_args = "app=nfa_perf_bootstrap rbm-size=1m --bm-profile-regex nfa_perf.pc_mask=1 nfa_perf.nflows=140 nfa_perf.niterations=1024 syslog=2"
     tags = "qa_s1_nfa_teramark"
     note = "NFA teramark app on S1"
     fun_os_make_flags = "PM_TESTS=1"
@@ -199,7 +199,24 @@ class ZipLzmaTeramarkTc(PalladiumTc):
 
     def describe(self):
         self.set_test_details(id=8,
-                              summary="Schedule Zip Lzma teramark app on Jenkins",
+                              summary="Schedule Crypto ccp sanity test app on S1",
+                              steps="""
+            1. Steps 1
+            2. Steps 2
+            3. Steps 3
+                                  """)
+
+
+class CryptoCCPSanityTc(PalladiumTc):
+    boot_args = "app=crypto_ccp_test"
+    tags = "qa_s1_ccp_sanity"
+    note = "Crypto ccp accelerator sanity test app"
+    max_duration = 9000
+    extra_emails = ["jitendra.lulla@fungible.com"]
+
+    def describe(self):
+        self.set_test_details(id=9,
+                              summary="Schedule Crypto ccp sanity test app on S1",
                               steps="""
             1. Steps 1
             2. Steps 2
@@ -217,5 +234,5 @@ if __name__ == "__main__":
     myscript.add_test_case(JpegTeramarkTc())
     myscript.add_test_case(ZipDeflateTeramarkTc())
     myscript.add_test_case(ZipLzmaTeramarkTc())
-
+    myscript.add_test_case(CryptoCCPSanityTc())
     myscript.run()
