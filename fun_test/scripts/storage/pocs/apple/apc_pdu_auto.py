@@ -83,6 +83,8 @@ class ApcPduTestcase(FunTestCase):
                 self.docker_verify_interval = job_inputs["docker_verify_interval"]
             if "after_runsc_up_host_connect_interval" in job_inputs:
                 self.after_runsc_up_host_connect_interval = job_inputs["after_runsc_up_host_connect_interval"]
+            if "check_portal" in job_inputs:
+                self.check_portal = job_inputs["check_portal"]
 
     def run(self):
         '''
@@ -139,20 +141,21 @@ class ApcPduTestcase(FunTestCase):
                         fun_test.sleep("{} docker to be up".format(self.expected_dockers), seconds=5)
                 fun_test.test_assert_expected(expected=self.expected_dockers, actual=docker_count, message="Docker's up")
 
-            portal_up = False
-            max_time = 300
-            timer = FunTimer(max_time)
-            while not timer.is_expired():
-                try:
-                    status = urllib.urlopen("http://{}".format(self.fs['come']['mgmt_ip'])).getcode()
-                    fun_test.log("Return status: {}".format(status))
-                    if status == 200:
-                        portal_up = True
-                        break
-                except Exception as ex:
-                    fun_test.log(ex)
-
-            fun_test.test_assert(portal_up, "Portal is up")
+            if self.check_portal:
+                portal_up = False
+                max_time = 300
+                timer = FunTimer(max_time)
+                while not timer.is_expired():
+                    try:
+                        status = urllib.urlopen("http://{}".format(self.fs['come']['mgmt_ip'])).getcode()
+                        fun_test.log("Return status: {}".format(status))
+                        if status == 200:
+                            portal_up = True
+                            break
+                        fun_test.sleep("Sleeping before next iteration")
+                    except Exception as ex:
+                        fun_test.log(ex)
+                fun_test.test_assert(portal_up, "Portal is up")
 
             # Check if lspci devices are detected
             fun_test.log("Check if F1_0 is detected")

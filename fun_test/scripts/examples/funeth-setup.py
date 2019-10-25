@@ -1015,14 +1015,14 @@ class FunethTestComeReboot(FunTestCase):
 if __name__ == "__main__":
     ts = FunethSanity()
     for tc in (
-            FunethTestNUPingHU,
+            #FunethTestNUPingHU,
             #FunethTestPacketSweep,
             #FunethTestScpNU2HUPF,
             #FunethTestScpNU2HUVF,
             #FunethTestScpHU2NU,
             #FunethTestInterfaceFlapPF,
             #FunethTestInterfaceFlapVF,
-            #FunethTestUnloadDriver,
+            FunethTestUnloadDriver,
             #FunethTestReboot,
             #FunethTestComeReboot,  # TODO: uncomment after SWLINUX-786 is fixed
     ):
