@@ -275,19 +275,23 @@ export class ScriptDetailComponent implements OnInit {
     let maxCheckpointIndex: number = Math.max(...checkpointIndexesToFetch);*/
 
     let checkpointIndexesToFetch = Array.from(Array(checkpointIndex + 1).keys());
-    checkpointIndexesToFetch.filter(checkpointIndex => !testCaseExecution.checkpoints.hasOwnProperty("timeSeries"));
-    let minCheckpointIndex = checkpointIndexesToFetch[0];
-    let maxCheckpointIndex = checkpointIndexesToFetch[checkpointIndexesToFetch.length - 1];
+    checkpointIndexesToFetch = checkpointIndexesToFetch.filter(checkpointIndex => !testCaseExecution.checkpoints[checkpointIndex].hasOwnProperty("timeSeries"));
+
+    if (checkpointIndexesToFetch.length) {
+      let minCheckpointIndex = checkpointIndexesToFetch[0];
+      let maxCheckpointIndex = checkpointIndexesToFetch[checkpointIndexesToFetch.length - 1];
 
 
-    this.status = "Fetching logs";
-    this.fetchLogsForCheckpoints(this.currentTestCaseExecution, minCheckpointIndex, maxCheckpointIndex).subscribe(response => {
-      this.showLogsPanel = true;
-      this.status = null;
-    }, error => {
-      this.loggerService.error("Unable to fetch logs for checkpoints");
-      this.status = null;
-    })
+      this.status = "Fetching logs";
+      this.fetchLogsForCheckpoints(this.currentTestCaseExecution, minCheckpointIndex, maxCheckpointIndex).subscribe(response => {
+        this.showLogsPanel = true;
+        this.status = null;
+      }, error => {
+        this.loggerService.error("Unable to fetch logs for checkpoints");
+        this.status = null;
+      })
+    }
+
 
   }
 
@@ -302,7 +306,7 @@ export class ScriptDetailComponent implements OnInit {
           testCaseExecution.checkpoints[checkpointIndex]["timeSeries"] = [];
         }
         timeSeriesElement["relative_epoch_time"] = timeSeriesElement.epoch_time - this.scriptRunTime.started_epoch_time;
-        //testCaseExecution.checkpoints[checkpointIndex].timeSeries.push(timeSeriesElement);
+        testCaseExecution.checkpoints[checkpointIndex].timeSeries.push(timeSeriesElement);
       });
 
       return of(true);
