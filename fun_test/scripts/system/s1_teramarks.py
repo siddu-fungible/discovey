@@ -141,7 +141,7 @@ class NfaTeramarkTc(PalladiumTc):
     boot_args = "app=nfa_perf_bootstrap rbm-size=1m --bm-profile-regex nfa_perf.pc_mask=1 nfa_perf.nflows=140 nfa_perf.niterations=1024 syslog=2 nfa_perf.name=perf0"
     tags = "qa_s1_nfa_teramark"
     note = "NFA teramark app on S1"
-    fun_os_make_flags = "PM_TESTS=1"
+    fun_os_make_flags = "PM_TESTS=1 XDATA_LISTS=/project/users/QA/regression/data_store/regex/performance/NFA/perf0.list"
     extra_emails = ["jitendra.lulla@fungible.com", "mahesh.kumar@fungible.com", " indrani.p@fungible.com"]
 
     def describe(self):
