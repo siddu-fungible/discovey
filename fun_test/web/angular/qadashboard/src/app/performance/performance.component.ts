@@ -179,6 +179,8 @@ export class PerformanceComponent implements OnInit {
   S1: string = "S1";
   F1: string = "F1";
 
+  allowedGridRows: number = 2;
+
   constructor(
     private apiService: ApiService,
     private loggerService: LoggerService,
@@ -206,6 +208,7 @@ export class PerformanceComponent implements OnInit {
     this.numGridColumns = 2;
     this.miniGridMaxWidth = '50%';
     this.miniGridMaxHeight = '50%';
+    this.allowedGridRows = 2;
     this.fetchGlobalSettings();
     if (window.screen.width >= 1690) {
       this.numGridColumns = 4;

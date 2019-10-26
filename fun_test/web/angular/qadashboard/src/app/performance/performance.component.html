@@ -319,14 +319,19 @@
         <div *ngIf="mode == modeType.ShowingNonAtomicMetric && selectMode == SelectMode.ShowMainSite" class=""
              style="background-color: whitesmoke; padding-left: 20px; padding-right: 20px">
           <div *ngIf="currentNode.grid.length">
-            <div *ngFor="let row of currentNode.grid" class="row">
-              <div *ngFor="let node of row" id="grid"
+            <div *ngFor="let row of currentNode.grid; let i = index" class="row">
+              <ng-container *ngIf="i < allowedGridRows">
+                <div *ngFor="let node of row" id="grid"
                    [ngStyle]="{'width': miniGridMaxWidth, 'height': miniGridMaxHeight, 'padding': '20px'}">
                 <!-- Fun Metric Chart component -->
                 <fun-metric-chart [id]="node.metricId" [minimal]="'true'" [buildInfo]="buildInfo"></fun-metric-chart>
               </div>
+              </ng-container>
             </div>
             <div class="closed-section"></div>
+            <span *ngIf="currentNode.grid.length > allowedGridRows" style="text-align: center; display: block"
+                  class="pseudo-anchor"
+                  (click)="allowedGridRows = allowedGridRows + 2">Show More</span>
           </div>
         </div>
       </div>
