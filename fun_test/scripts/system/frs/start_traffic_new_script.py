@@ -69,11 +69,10 @@ class MyScript(FunTestScript):
             fun_test.test_assert(topology, "Topology deployed")
         # self.verify_dpcsh_started()
         if self.ec_vol:
-            self.create_ec_volume()
+            self.create_4_et_2_ec_volume()
 
         fun_test.shared_variables["run_on_f1"] = self.run_on_f1
         fun_test.shared_variables["fs"] = self.fs
-
 
     def verify_dpcsh_started(self):
         for f1 in self.run_on_f1:
@@ -91,7 +90,7 @@ class MyScript(FunTestScript):
                 fun_test.log("Dpcsh is already running for F1 {}".format(f1))
         fun_test.test_assert(True, "DPCSH running")
 
-    def create_ec_volume(self):
+    def create_4_et_2_ec_volume(self):
         for f1 in self.run_on_f1:
             # fun_test.sleep("Getting started with creation of 4:2 EC volume on F1_0".format(f1), seconds=30)
             transport = "PCI"
