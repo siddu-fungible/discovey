@@ -179,7 +179,7 @@ export class PerformanceComponent implements OnInit {
   S1: string = "S1";
   F1: string = "F1";
 
-  allowedGridRows: number = 2;
+  allowedGridRows: number = 1;
 
   constructor(
     private apiService: ApiService,
@@ -524,6 +524,7 @@ export class PerformanceComponent implements OnInit {
 
   prepareGridNodes = (node) => {
     node.grid = [];
+    /* Disabling for now
     let maxRowsInMiniChartGrid = 10;
     let maxColumns = this.numGridColumns;
     // console.log("Prepare Grid nodes");
@@ -544,7 +545,7 @@ export class PerformanceComponent implements OnInit {
     });
     if (oneRow.length) {
       node.grid.push(oneRow);
-    }
+    }*/
   };
 
   getCurrentNodeScoreInfo = (node) => {
