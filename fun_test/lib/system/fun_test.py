@@ -1395,7 +1395,7 @@ class FunTest:
                 "result": FunTest.PASSED,
                 "expected": True,
                 "actual": True,
-                "index": fun_test.current_time_series_checkpoint,
+                "checkpoint_index": fun_test.current_time_series_checkpoint,
                 "context_id": 0}
         if self.time_series_enabled:
             fun_test.add_time_series_checkpoint(collection_name=models_helper.get_fun_test_time_series_collection_name(
