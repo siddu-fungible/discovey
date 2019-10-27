@@ -251,9 +251,7 @@ export class ScriptDetailComponent implements OnInit {
     /*
     let checkpointId = `${testCaseId}_${checkpointIndex}_${contextId}`;
 
-    setTimeout(() => {
-      this.commonService.scrollTo(checkpointId);
-    }, 500);*/
+    */
 
     let selectedCheckpoint = testCaseExecution.checkpoints[checkpointIndex];
     let checkpointsInConsideration = [selectedCheckpoint];
@@ -287,7 +285,10 @@ export class ScriptDetailComponent implements OnInit {
         this.showLogsPanel = true;
         this.status = null;
         let checkpointId = `${testCaseExecution.test_case_id}_${checkpointIndex}_${contextId}`;
-        this.commonService.scrollTo(checkpointId);
+        setTimeout(() => {
+          this.commonService.scrollTo(checkpointId);
+        }, 500);
+
       }, error => {
         this.loggerService.error("Unable to fetch logs for checkpoints");
         this.status = null;

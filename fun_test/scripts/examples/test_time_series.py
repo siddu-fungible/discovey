@@ -1,5 +1,6 @@
 from lib.system.fun_test import *
 from lib.host.linux import Linux
+fun_test.enable_time_series()
 
 class MyScript(FunTestScript):
     def describe(self):
