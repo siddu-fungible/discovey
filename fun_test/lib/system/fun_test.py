@@ -294,6 +294,7 @@ class FunTest:
         self.start_time = get_current_time()
         self.started_epoch_time = get_current_epoch_time()
         self.time_series_buffer = {0: ""}
+        self.checkpoints = {}
 
     def enable_time_series(self, enable=True):
         self.time_series_enabled = enable
@@ -1222,6 +1223,9 @@ class FunTest:
         if result == FunTest.FAILED:
             self.at_least_one_failed = True
         self.test_metrics[self.current_test_case_id]["result"] = result
+        if self.current_test_case_id not in self.checkpoints:
+            self.checkpoints[self.current_test_case_id] = []
+            self.add_checkpoint("End test-case")
 
     def _append_assert_test_metric(self, assert_message):
         if self.current_test_case_id in self.test_metrics:
@@ -1271,6 +1275,7 @@ class FunTest:
                 #    this_checkpoint = "{:.2f}: {}".format(self.profiling_timer.elapsed_time(), this_checkpoint)  #TODO: Duplicate line
                 self.add_checkpoint(checkpoint=this_checkpoint, expected=expected, actual=actual, result=FunTest.PASSED)
 
+
     def add_checkpoint(self,
                        checkpoint=None,
                        result=PASSED,
@@ -1304,6 +1309,9 @@ class FunTest:
             self.add_time_series_checkpoint(collection_name=models_helper.get_fun_test_time_series_collection_name(self.get_suite_execution_id(),
                                                                                                                    self.get_test_case_execution_id()),
                                             data=data)
+        if self.current_test_case_id not in self.checkpoints:
+            self.checkpoints[self.current_test_case_id] = []
+        self.checkpoints[self.current_test_case_id].append(checkpoint)
         self.current_time_series_checkpoint += 1
 
 
@@ -1570,7 +1578,7 @@ class FunTestScript(object):
                 fun_test.current_test_case_execution_id = setup_te.execution_id
                 if fun_test.time_series_enabled:
                     fun_test.update_time_series_script_run_time(started_epoch_time=fun_test.started_epoch_time)
-                fun_test.add_start_checkpoint()
+                # fun_test.add_start_checkpoint()
 
             fun_test.simple_assert(self.test_cases, "At least one test-case is required. No test-cases found")
             if self.test_case_order:
@@ -1796,7 +1804,7 @@ class FunTestScript(object):
                                                                      result=fun_test.IN_PROGRESS,
                                                                      started_time=get_current_time())
                             fun_test.current_test_case_execution_id = test_case.execution_id
-                        fun_test.add_start_checkpoint()
+                        # fun_test.add_start_checkpoint()
                         test_case.setup()
                         test_case.run()
 
