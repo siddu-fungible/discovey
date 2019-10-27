@@ -33,7 +33,7 @@
 
   <div>
     <div class="fun-flex-container" style="align-items: flex-start;">
-      <div *ngIf="showTestCasePanel" class="fun-flex-item panel fun-panel" [@show]="showTestCasePanel">
+      <div *ngIf="showTestCasePanel" class="fun-flex-item panel fun-panel auto-scroll" [@show]="showTestCasePanel">
         <div class="fun-panel-header">Test-cases</div>
         <div>
           <table class="fun-table">
@@ -89,14 +89,13 @@
               Context: {{ availableContext.context_id }} {{ availableContext.description }}
             </div>
             <div class="fun-panel-body">
-              <div [@show]="showLogsPanel" *ngIf="currentTestCaseExecution">
+              <div [@show]="showLogsPanel" *ngIf="currentTestCaseExecution" class="auto-scroll">
                 <h4>{{ currentTestCaseExecution.test_case_id }}: {{ currentTestCaseExecution.summary }}</h4>
                 <div>
                   <ng-container>
                     <table>
                       <ng-container *ngFor="let checkpoint of currentTestCaseExecution?.checkpoints">
                         <tr *ngFor="let seriesElement of checkpoint?.timeSeries">
-                          {{ seriesElement.data | json }}
                           <ng-container *ngIf="(seriesElement.data.context_id === availableContext.context_id) && (seriesElement.relative_epoch_time >= timeFilterMin)">
                             <ng-container *ngIf="seriesElement.type === 'checkpoint' && (seriesElement.data.checkpoint_index <= currentCheckpointIndex)">
 

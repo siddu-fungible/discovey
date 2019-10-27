@@ -45,6 +45,9 @@ class FunTestCase1(FunTestCase):
         l = Linux(host_ip="qa-ubuntu-02", ssh_username="auto_admin", ssh_password="fun123")
         l.command("date")
         fun_test.test_assert_expected(expected=2, actual=2, message="Some message2")
+        fun_test.log(
+            message="Some log AAA for context: {} start.jkhjkhjkhjkhjkhjkhjjhkkjhkkjhjkhjkhjkhjkhjkhjkhjkhjkhjkhjkhjkhjkhkjjkhjkhkjhjkhkjkhjkhjkhjkhkjhjkhkjhkjhkj end")
+
 
 
 class FunTestCase3(FunTestCase):
@@ -125,13 +128,13 @@ class FunTestCase4(FunTestCase):
         for context in range(3):
             new_context = fun_test.add_context(description="Context_{}".format(context))
             for i in range(0, 500):
-                fun_test.log(message="Some log {} for context: {}".format(i, new_context.get_id()), context=new_context)
+                fun_test.log(message="Some log {} for context: {} start.jkhjkhjkhjkhjkhjkhjkhjkhjkhjkhkjhjkhkjhkjhkj end".format(i, new_context.get_id()), context=new_context)
 
 if __name__ == "__main__":
     myscript = MyScript()
     myscript.add_test_case(FunTestCase1())
     # myscript.add_test_case(FunTestCase2())
     # myscript.add_test_case(FunTestCase3())
-    # myscript.add_test_case(FunTestCase4())
+    myscript.add_test_case(FunTestCase4())
 
     myscript.run()
