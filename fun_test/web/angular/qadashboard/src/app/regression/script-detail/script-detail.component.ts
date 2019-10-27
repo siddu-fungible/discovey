@@ -273,50 +273,54 @@ export class ScriptDetailComponent implements OnInit {
     let maxCheckpointIndex: number = Math.max(...checkpointIndexesToFetch);*/
 
     let checkpointIndexesToFetch = Array.from(Array(checkpointIndex + 1).keys());
-    checkpointIndexesToFetch = checkpointIndexesToFetch.filter(checkpointIndex => !testCaseExecution.checkpoints[checkpointIndex].hasOwnProperty("timeSeries"));
+    //checkpointIndexesToFetch = checkpointIndexesToFetch.filter(checkpointIndex => !testCaseExecution.checkpoints[checkpointIndex].hasOwnProperty("timeSeries"));
+    let checkpointId = `${testCaseExecution.test_case_id}_${checkpointIndex}_${contextId}`;
+    this.status = "Fetching logs";
+    this.fetchLogsForCheckpoints(this.currentTestCaseExecution, checkpointIndexesToFetch).subscribe(response => {
+      this.showLogsPanel = true;
+      this.status = null;
+      setTimeout(() => {
+        this.commonService.scrollTo(checkpointId);
+      }, 500);
 
-    if (checkpointIndexesToFetch.length) {
-      let minCheckpointIndex = checkpointIndexesToFetch[0];
-      let maxCheckpointIndex = checkpointIndexesToFetch[checkpointIndexesToFetch.length - 1];
 
-
-      this.status = "Fetching logs";
-      this.fetchLogsForCheckpoints(this.currentTestCaseExecution, minCheckpointIndex, maxCheckpointIndex).subscribe(response => {
-        this.showLogsPanel = true;
-        this.status = null;
-        let checkpointId = `${testCaseExecution.test_case_id}_${checkpointIndex}_${contextId}`;
-        setTimeout(() => {
-          this.commonService.scrollTo(checkpointId);
-        }, 500);
-
-      }, error => {
-        this.loggerService.error("Unable to fetch logs for checkpoints");
-        this.status = null;
-      })
-    }
+    }, error => {
+      this.loggerService.error("Unable to fetch logs for checkpoints");
+      this.status = null;
+    })
 
 
   }
 
 
-  fetchLogsForCheckpoints(testCaseExecution, minCheckpointIndex, maxCheckpointIndex): Observable<any> {
-    return this.regressionService.testCaseTimeSeries(this.suiteExecutionId, testCaseExecution.execution_id, null, minCheckpointIndex, maxCheckpointIndex).pipe(switchMap(response => {
-      let testCaseId = testCaseExecution.test_case_id;
+  fetchLogsForCheckpoints(testCaseExecution, checkpointIndexesToFetch): Observable<any> {
+    checkpointIndexesToFetch = checkpointIndexesToFetch.filter(checkpointIndex => !testCaseExecution.checkpoints[checkpointIndex].hasOwnProperty("timeSeries"));
 
-      response.forEach(timeSeriesElement => {
-        let checkpointIndex = timeSeriesElement.data.checkpoint_index;
-        if (!testCaseExecution.checkpoints[checkpointIndex].hasOwnProperty("timeSeries")) {
-          testCaseExecution.checkpoints[checkpointIndex]["timeSeries"] = [];
-        }
-        timeSeriesElement["relative_epoch_time"] = timeSeriesElement.epoch_time - this.scriptRunTime.started_epoch_time;
-        testCaseExecution.checkpoints[checkpointIndex].timeSeries.push(timeSeriesElement);
-      });
+    if (checkpointIndexesToFetch.length > 0) {
+      let minCheckpointIndex = checkpointIndexesToFetch[0];
+      let maxCheckpointIndex = checkpointIndexesToFetch[checkpointIndexesToFetch.length - 1];
 
+      return this.regressionService.testCaseTimeSeries(this.suiteExecutionId, testCaseExecution.execution_id, null, minCheckpointIndex, maxCheckpointIndex).pipe(switchMap(response => {
+        let testCaseId = testCaseExecution.test_case_id;
+
+        response.forEach(timeSeriesElement => {
+          let checkpointIndex = timeSeriesElement.data.checkpoint_index;
+          if (!testCaseExecution.checkpoints[checkpointIndex].hasOwnProperty("timeSeries")) {
+            testCaseExecution.checkpoints[checkpointIndex]["timeSeries"] = [];
+          }
+          timeSeriesElement["relative_epoch_time"] = timeSeriesElement.epoch_time - this.scriptRunTime.started_epoch_time;
+          testCaseExecution.checkpoints[checkpointIndex].timeSeries.push(timeSeriesElement);
+        });
+
+        return of(true);
+      }), catchError (error => {
+        this.loggerService.error("Unable fetch checkpoint logs");
+        return throwError(error);
+      }))
+    } else {
       return of(true);
-    }), catchError (error => {
-      this.loggerService.error("Unable fetch checkpoint logs");
-      return throwError(error);
-    }))
+    }
+
   }
 
   fetchLogsForCheckpoint(testCaseExecution, checkpointIndex) {

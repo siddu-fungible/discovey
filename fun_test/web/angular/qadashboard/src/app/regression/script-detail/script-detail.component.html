@@ -70,7 +70,7 @@
               <td class="fun-table-header">Actual</td>
             </tr>
             <tr *ngFor="let checkpoint of currentTestCaseExecution?.checkpoints" [ngClass]="{'selected-checkpoint-row': currentCheckpointIndex === checkpoint?.data?.checkpoint_index }">
-              <td>
+              <td *ngIf="checkpoint.data.checkpoint != 'Start'">
                 <span class="pseudo-anchor" (click)="onCheckpointClick(currentTestCaseExecution, checkpoint.data.checkpoint_index, checkpoint.data.context_id)">{{ checkpoint.data.checkpoint_index }}
                 </span>
               </td>
