@@ -1,3 +1,6 @@
+from operator import itemgetter
+
+
 from lib.system.fun_test import *
 from scripts.networking.nu_config_manager import *
 from lib.host.network_controller import *
@@ -198,7 +201,17 @@ class FunControlPlaneBringup:
 
             linux_obj_come.command(command="cd /mnt/keep/")
             linux_obj_come.sudo_command(command="cp -r FunSDK FunSDK_bkp_%s" % d1)
+            bkp_dirs = self._get_backup_directory_list(linux_obj_come, '/mnt/keep/FunSDK*')
+            fun_test.log(bkp_dirs)
+            if len(bkp_dirs) > 2:
+                for bkp_dir in bkp_dirs[:-2]:
+                    linux_obj_come.remove_directory(bkp_dir, sudo=True)
             linux_obj_come.sudo_command(command="cd / && tar cf scratch_bkp_%s.tar scratch" % d1, timeout=1200)
+            scr_lists = self._get_backup_directory_list(linux_obj_come, '/scratch*')
+            if len(scr_lists) > 2:
+                for scr_file in scr_lists[:-2]:
+                    linux_obj_come.remove_directory(scr_file, sudo=True)
+
             linux_obj_come.sudo_command(command="rm -rf FunSDK")
             git_pull = linux_obj_come.command("git clone git@github.com:fungible-inc/FunSDK-small.git FunSDK",
                                               timeout=120)
@@ -1222,8 +1235,12 @@ class FunControlPlaneBringup:
         except Exception as ex:
             fun_test.critical(str(ex))
         return fs_per_rack
-
-
+    def _get_backup_directory_list(self, linux_obj, path):
+        dir_file_list = linux_obj.list_files(path)
+        dir_list = []
+        for x in dir_file_list:
+            dir_list.append(x.get('filename'))
+        return dir_list
 
 
 
