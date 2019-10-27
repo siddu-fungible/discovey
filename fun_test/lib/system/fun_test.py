@@ -1223,9 +1223,7 @@ class FunTest:
         if result == FunTest.FAILED:
             self.at_least_one_failed = True
         self.test_metrics[self.current_test_case_id]["result"] = result
-        if self.current_test_case_id not in self.checkpoints:
-            self.checkpoints[self.current_test_case_id] = []
-            self.add_checkpoint("End test-case")
+        self.add_checkpoint("End test-case")
 
     def _append_assert_test_metric(self, assert_message):
         if self.current_test_case_id in self.test_metrics:

@@ -62,6 +62,7 @@
 
         <table class="fun-table">
             <tr>
+              <td class="fun-table-header">Time</td>
               <td class="fun-table-header">ID</td>
               <td class="fun-table-header">Ctx</td>
               <td class="fun-table-header">Checkpoint</td>
@@ -70,6 +71,9 @@
               <td class="fun-table-header">Actual</td>
             </tr>
             <tr *ngFor="let checkpoint of currentTestCaseExecution?.checkpoints" [ngClass]="{'selected-checkpoint-row': currentCheckpointIndex === checkpoint?.data?.checkpoint_index }">
+              <td>
+                {{ checkpoint.relative_epoch_time | number: '1.3-3'}}
+              </td>
               <td *ngIf="checkpoint.data.checkpoint != 'Start'">
                 <span class="pseudo-anchor" (click)="onCheckpointClick(currentTestCaseExecution, checkpoint.data.checkpoint_index, checkpoint.data.context_id)">{{ checkpoint.data.checkpoint_index }}
                 </span>
@@ -99,7 +103,7 @@
                           <ng-container *ngIf="(seriesElement.data.context_id === availableContext.context_id) && (seriesElement.relative_epoch_time >= timeFilterMin)">
                             <ng-container *ngIf="seriesElement.type === 'checkpoint' && (seriesElement.data.checkpoint_index <= currentCheckpointIndex)">
 
-                              <td class="timestamp" nowrap><small>{{ seriesElement.relative_epoch_time }}</small></td>
+                              <td class="timestamp" nowrap><small>{{ seriesElement.relative_epoch_time | number: '1.3-3' }}</small></td>
                               <td>
                                 <div id="{{ currentTestCaseExecution.test_case_id }}_{{ seriesElement.data?.checkpoint_index }}_{{ seriesElement.data?.context_id }}">
                                   <span class="checkpoint-span">Checkpoint: {{ seriesElement.data?.checkpoint }}
@@ -108,7 +112,7 @@
                               </td>
                             </ng-container>
                           <ng-container *ngIf="seriesElement.type === 'log' && (seriesElement.data.checkpoint_index <= currentCheckpointIndex)">
-                            <td class="timestamp" nowrap><small>{{ seriesElement.relative_epoch_time }}</small></td>
+                            <td class="timestamp" nowrap><small>{{ seriesElement.relative_epoch_time | number: '1.3-3' }}</small></td>
                             <td>{{ seriesElement.data?.log }}</td>
                           </ng-container>
                         </ng-container>
