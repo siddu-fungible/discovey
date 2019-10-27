@@ -29,7 +29,7 @@
     </ng-template>
 
   </div>
-  <app-timeline-control [domainMin]="minRelativeTime" [domainMax]="maxRelativeTime" [title]="'Timeline'" [unit]="'s'" (valueChanged)="onTimeLineChanged($event)"></app-timeline-control>
+  <app-timeline-control *ngIf="showLogsPanel" [domainMin]="minRelativeTime" [domainMax]="maxRelativeTime" [title]="'Show logs starting from'" [unit]="'s'" (valueChanged)="onTimeLineChanged($event)"></app-timeline-control>
 
   <div>
     <div class="fun-flex-container" style="align-items: flex-start;">
