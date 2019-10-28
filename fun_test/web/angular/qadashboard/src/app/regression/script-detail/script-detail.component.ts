@@ -1,7 +1,7 @@
 import {Component, OnInit } from '@angular/core';
 import {RegressionService} from "../regression.service";
 import {forkJoin, Observable, of, throwError} from "rxjs";
-import {catchError, last, switchMap} from "rxjs/operators";
+import {catchError, last, switchMap, windowWhen} from "rxjs/operators";
 import {LoggerService} from "../../services/logger/logger.service";
 import {ActivatedRoute} from "@angular/router";
 import {animate, state, style, transition, trigger} from "@angular/animations";
@@ -77,6 +77,7 @@ export class ScriptDetailComponent implements OnInit {
   scriptRunTime: ScriptRunTime = null;
   timeFilterMin: number = 0;
   status: string = null;
+  logPanelHeight: any = "500px";
 
   //timeSeriesByTestCase: {[testCaseId: number]: {[key: string]: any }} = {};
 
@@ -383,6 +384,12 @@ export class ScriptDetailComponent implements OnInit {
   }
 
   testClick() {
-    console.log(this.selectedContexts);
+    //console.log(this.selectedContexts);
+    let element = document.getElementById("logs-panel");
+    console.log(element.getBoundingClientRect().top);
+    console.log(window.top);
+    console.log(window.innerHeight);
+    this.logPanelHeight = window.innerHeight - element.getBoundingClientRect().top - 70;
+    console.log(this.logPanelHeight);
   }
 }

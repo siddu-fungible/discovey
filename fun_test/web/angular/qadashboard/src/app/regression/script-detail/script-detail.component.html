@@ -2,7 +2,7 @@
     <span class="script-name">{{ scriptPath }}</span>
     <div class="fun-spacer"></div>
     <button (click)="onContextOptionsClick(contextOptions)" class="fun-button-add">Context options</button>
-    <!--button (click)="testClick()">Test</button-->
+    <button (click)="testClick()">Test</button>
     <fun-spinner [status]="status"></fun-spinner>
 
     <ng-template #contextOptions let-modal>
@@ -27,8 +27,7 @@
   </div>
 <app-timeline-control *ngIf="showLogsPanel" [domainMin]="minRelativeTime" [domainMax]="maxRelativeTime" [title]="'Show logs starting from'" [unit]="'s'" (valueChanged)="onTimeLineChanged($event)"></app-timeline-control>
 <div class="component" style="overflow: hidden; position: fixed">
-  <div>
-    <div class="fun-flex-container" style="align-items: flex-start;">
+  <div class="fun-flex-container" style="align-items: flex-start;">
       <div *ngIf="showTestCasePanel" class="fun-flex-item panel fun-panel auto-scroll" [@show]="showTestCasePanel">
         <div class="fun-panel-header">Test-cases</div>
         <div>
@@ -75,21 +74,21 @@
                 </span>
               </td>
               <td>{{ checkpoint.data.context_id }}</td>
-              <td>{{ checkpoint.data.checkpoint }} ({{ checkpoint.relative_epoch_time }}, {{ checkpoint.relative_end_epoch_time }})</td>
+              <td>{{ checkpoint.data.checkpoint }}</td>
               <td><span [ngClass]="{'passed': checkpoint.data.result === 'PASSED', 'failed': checkpoint.data.result === 'FAILED' }">{{ checkpoint.data.result }}</span></td>
               <td>{{ checkpoint.data.expected }}</td>
               <td>{{ checkpoint.data.actual }}</td>
             </tr>
           </table>
       </div>
-      <div class="fun-flex-container" *ngIf="showLogsPanel">
+      <div class="fun-flex-container" *ngIf="showLogsPanel" id="logs-panel">
         <ng-container *ngFor="let availableContext of (availableContexts | selected )">
           <div class="fun-flex-item panel fun-panel">
             <div class="fun-panel-header">
               Context: {{ availableContext.context_id }} {{ availableContext.description }}
             </div>
             <div class="fun-panel-body">
-              <div [@show]="showLogsPanel" *ngIf="currentTestCaseExecution" class="auto-scroll">
+              <div [@show]="showLogsPanel" *ngIf="currentTestCaseExecution" class="auto-scroll" >
                 <h4>{{ currentTestCaseExecution.test_case_id }}: {{ currentTestCaseExecution.summary }}</h4>
                 <div>
                   <ng-container>
@@ -97,7 +96,7 @@
                       <ng-container *ngFor="let checkpoint of currentTestCaseExecution?.checkpoints">
                         <tr *ngFor="let seriesElement of checkpoint?.timeSeries">
                           <ng-container *ngIf="(seriesElement.data.context_id === availableContext.context_id) && (seriesElement.relative_epoch_time >= timeFilterMin)">
-                            <ng-container *ngIf="seriesElement.type === 'checkpoint' && (seriesElement.data.checkpoint_index <= currentCheckpointIndex)">
+                            <ng-container *ngIf="seriesElement.type === 80 && (seriesElement.data.checkpoint_index <= currentCheckpointIndex)">
 
                               <td class="timestamp" nowrap><small>{{ seriesElement.relative_epoch_time | number: '1.3-3' }}</small></td>
                               <td>
@@ -107,7 +106,7 @@
                                 </div>
                               </td>
                             </ng-container>
-                          <ng-container *ngIf="seriesElement.type === 'log' && (seriesElement.data.checkpoint_index <= currentCheckpointIndex)">
+                          <ng-container *ngIf="seriesElement.type === 60 && (seriesElement.data.checkpoint_index <= currentCheckpointIndex)">
                             <td class="timestamp" nowrap><small>{{ seriesElement.relative_epoch_time | number: '1.3-3' }}</small></td>
                             <td>{{ seriesElement.data?.log }}</td>
                           </ng-container>
@@ -123,7 +122,6 @@
         </ng-container>
       </div>
     </div>
-  </div>
 </div>
 
 

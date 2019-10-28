@@ -76,7 +76,7 @@ table {
 }
 
 .auto-scroll {
-  height: calc(100vh - 70px - 40px);
+  height: calc(60vh);
   overflow: auto;
   max-width: calc(50vw);
 }

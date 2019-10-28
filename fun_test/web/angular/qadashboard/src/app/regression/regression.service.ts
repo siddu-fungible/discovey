@@ -237,7 +237,7 @@ getPrettyLocalizeTime(t) {
 
   testCaseTimeSeriesLogs(suiteExecutionId, testCaseExecutionId, checkpointIndex?: null) {
     let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}/${testCaseExecutionId}`;
-    url += `?type=log`;
+    url += `?type=60`;
     if (checkpointIndex !== null) {
       url += `&checkpoint_index=${checkpointIndex}`;
     }
@@ -258,7 +258,7 @@ getPrettyLocalizeTime(t) {
 
   testCaseTimeSeriesCheckpoints(suiteExecutionId, testCaseExecutionId) {
     let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}/${testCaseExecutionId}`;
-    url += `?type=checkpoint`;
+    url += `?type=80`;
     return this.apiService.get(url).pipe(switchMap(response => {
       return of(response.data);
     }), catchError (error => {
