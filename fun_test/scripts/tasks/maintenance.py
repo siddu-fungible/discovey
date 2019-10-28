@@ -116,6 +116,8 @@ class DetectLargeFiles(FunTestCase):
         lines = output.split("\n")
         fun_test.test_assert(len(lines) < 3, "No of files > {}M: {}".format(self.MAX_FILE_SIZE, len(lines)))
 
+    def cleanup(self):
+        pass
 
 
 if __name__ == "__main__":
