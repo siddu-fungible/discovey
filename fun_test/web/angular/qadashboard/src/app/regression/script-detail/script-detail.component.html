@@ -2,7 +2,7 @@
     <span class="script-name">{{ scriptPath }}</span>
     <div class="fun-spacer"></div>
     <button (click)="onContextOptionsClick(contextOptions)" class="fun-button-add">Context options</button>
-    <button (click)="testClick()">Test</button>
+    <!--button (click)="testClick()">Test</button-->
     <fun-spinner [status]="status"></fun-spinner>
 
     <ng-template #contextOptions let-modal>
@@ -51,11 +51,12 @@
 
       <div class="fun-flex-item panel fun-panel" [@show]="showCheckpointPanel" *ngIf="currentTestCaseExecution">
         <div class="fun-panel-header fun-flex-container" style="justify-content: space-between">
-          <span>Checkpoints</span>
+          <span>Checkpoints <small>(TC: {{ currentTestCaseExecution.test_case_id }}: {{ currentTestCaseExecution.summary }})</small></span>
           <span *ngIf="!showTestCasePanel" (click)="onShowTestCasePanelClick()" class="pseudo-anchor">< Show test-cases</span>
         </div>
 
-        <table class="fun-table">
+        <div class="auto-scroll">
+          <table class="fun-table">
             <tr>
               <td class="fun-table-header">Time</td>
               <td class="fun-table-header">ID</td>
@@ -80,6 +81,7 @@
               <td>{{ checkpoint.data.actual }}</td>
             </tr>
           </table>
+        </div>
       </div>
       <div class="fun-flex-container" *ngIf="showLogsPanel" id="logs-panel">
         <ng-container *ngFor="let availableContext of (availableContexts | selected )">
@@ -88,8 +90,8 @@
               Context: {{ availableContext.context_id }} {{ availableContext.description }}
             </div>
             <div class="fun-panel-body">
+              <h4>{{ currentTestCaseExecution.test_case_id }}: {{ currentTestCaseExecution.summary }}</h4>
               <div [@show]="showLogsPanel" *ngIf="currentTestCaseExecution" class="auto-scroll" >
-                <h4>{{ currentTestCaseExecution.test_case_id }}: {{ currentTestCaseExecution.summary }}</h4>
                 <div>
                   <ng-container>
                     <table>

@@ -31,14 +31,15 @@ class FunTestCase1(FunTestCase):
         fun_test.log("Testcase setup")
         fun_test.sleep("demo", seconds=1)
 
+
     def cleanup(self):
         fun_test.log("Testcase cleanup")
 
     def run(self):
 
-        fun_test.add_checkpoint("Some checkpoint")
         for i in range(0, 500):
             fun_test.log("Some log")
+            fun_test.add_checkpoint("Some checkpoint {}".format(i))
 
         fun_test.log("Variable shared across test-cases and the script level: {}".format(fun_test.shared_variables["some_variable"]))
 
