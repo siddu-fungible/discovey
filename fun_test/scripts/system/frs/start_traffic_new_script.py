@@ -67,7 +67,7 @@ class MyScript(FunTestScript):
         if self.boot_new_image:
             topology = topology_helper.deploy()
             fun_test.test_assert(topology, "Topology deployed")
-        # self.verify_dpcsh_started()
+        self.verify_dpcsh_started()
         if self.ec_vol:
             self.create_4_et_2_ec_volume()
 
@@ -238,22 +238,22 @@ class FunTestCase1(FunTestCase):
                 for calculated in ["", "calculated_"]:
                     globals()["{}{}_DPCSH_OUTPUT_F1_{}".format(calculated, stat, f1)] = fun_test.get_test_case_artifact_file_name(post_fix_name="{}{}_DPCSH_OUTPUT_F1_{}_logs.txt".format(calculated, stat, f1))
                     fun_test.add_auxillary_file(description="{}{}_DPCSH_OUTPUT_F1_{}".format(calculated, stat, f1), filename=globals()["{}{}_DPCSH_OUTPUT_F1_{}".format(calculated, stat, f1)])
-                    setattr(self, "f_{}{}f1_{}".format(calculated, stat, f1), open(globals()["{}{}_DPCSH_OUTPUT_F1_{}".format(calculated, stat, f1)], "w+"))
+                    setattr(self, "f_{}{}_f1_{}".format(calculated, stat, f1), open(globals()["{}{}_DPCSH_OUTPUT_F1_{}".format(calculated, stat, f1)], "w+"))
 
         # Traffic
         self.methods = {"crypto": crypto, "zip": zip_deflate, "rcnvme": rcnvme, "fio": fio}
 
-        if self.details["duration"] == "1m":
+        if self.duration == "1m":
             self.test_duration = 60
-        elif self.details["duration"] == "1h":
+        elif self.duration == "1h":
             self.test_duration = 3600
-        elif self.details["duration"] == "3h":
+        elif self.duration == "3h":
             self.test_duration = 10800
 
     def run(self):
         ############## Before traffic #####################
-        self.initial_debug_memory_stats = self.get_debug_memory_stats_initially(self.f_debug_memory_f1_0,
-                                                                                self.f_debug_memory_f1_1)
+        self.initial_debug_memory_stats = self.get_debug_memory_stats_initially(self.f_DEBUG_MEMORY_f1_0,
+                                                                                self.f_DEBUG_MEMORY_f1_0)
         self.capture_data(count=3, heading="Before starting traffic")
 
         fun_test.test_assert(True, "Initial debug stats is saved")
@@ -265,12 +265,12 @@ class FunTestCase1(FunTestCase):
         come_handle.command("pwd")
 
         app_params = get_params_for_time.get(self.test_duration)
-        if self.details["specific_app"]:
+        if self.specific_apps:
             app_params = get_params_for_time.get(self.test_duration, specific_field=self.details["specific_app"])
         fun_test.log("App parameters: {}".format(app_params))
 
-        if self.details["le_firewall"]:
-            le_firewall(self.test_duration, self.details["boot_new_image"])
+        if self.run_le_firewall:
+            le_firewall(self.test_duration, self.boot_new_image)
 
         for app, parameters in app_params.iteritems():
             parameters["f1"] = 0
