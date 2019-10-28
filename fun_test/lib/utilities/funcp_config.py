@@ -25,11 +25,11 @@ class FunControlPlaneBringup:
         self.boot_args_f1_0 = boot_args_f1_0
         self.boot_args_f1_1 = boot_args_f1_1
         if not boot_args_f1_0:
-            self.boot_args_f1_0 = "app=hw_hsu_test cc_huid=3 --all_100g --dpc-server --dpc-uart " \
+            self.boot_args_f1_0 = "app=load_mods cc_huid=3 --all_100g --dpc-server --dpc-uart " \
                                   "--dis-stats --mgmt"
 
         if not boot_args_f1_1:
-            self.boot_args_f1_1 = "app=hw_hsu_test cc_huid=2 --all_100g --dis-stats --dpc-server " \
+            self.boot_args_f1_1 = "app=load_mods cc_huid=2 --all_100g --dis-stats --dpc-server " \
                                   "--dpc-uart --mgmt"
 
         self.fs_spec = fun_test.get_asset_manager().get_fs_by_name(fs_name)

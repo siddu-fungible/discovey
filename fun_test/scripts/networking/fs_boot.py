@@ -36,7 +36,7 @@ class BootFS(FunTestCase):
     def run(self):
         
         if fun_test.get_job_environment_variable('test_bed_type') == 'fs-7':
-            fs = Fs.get(boot_args="app=hw_hsu_test cc_huid=3 --fec sku=SKU_FS1600_0 --dis-stats --disable-wu-watchdog --dpc-server --dpc-uart --serdesinit")
+            fs = Fs.get(boot_args="app=load_mods cc_huid=3 --fec sku=SKU_FS1600_0 --dis-stats --disable-wu-watchdog --dpc-server --dpc-uart --serdesinit")
         fun_test.simple_assert(fs, "Succesfully fetched image, credentials and bootargs")
         fun_test.test_assert(fs.bootup(reboot_bmc=False), 'FS bootup')
 

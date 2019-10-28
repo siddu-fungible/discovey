@@ -1,6 +1,7 @@
 
 from lib.system.fun_test import *
 
+
 class MyScript(FunTestScript):
     def describe(self):
         self.set_test_details(steps=
