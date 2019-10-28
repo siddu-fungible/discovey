@@ -295,7 +295,7 @@ class SoakDmaMemcpyThresholdPerformanceS1Tc(SoakDmaMemcpyThresholdPerformanceTc)
 
     def describe(self):
         self.set_test_details(id=28,
-                              summary="Soak DMA memcpy vs VP memcpy threshold test",
+                              summary="Soak DMA memcpy vs VP memcpy threshold test on S1",
                               steps="Steps 1")
 
 class SoakDmaMemcpyCohPerformanceS1Tc(SoakDmaMemcpyCohPerformanceTc):
@@ -304,7 +304,7 @@ class SoakDmaMemcpyCohPerformanceS1Tc(SoakDmaMemcpyCohPerformanceTc):
 
     def describe(self):
         self.set_test_details(id=29,
-                              summary="Soak DMA memcpy coherent Performance Test",
+                              summary="Soak DMA memcpy coherent Performance Test on S1",
                               steps="Steps 1")
 
 
@@ -314,7 +314,7 @@ class SoakDmaMemcpyNonCohPerformanceS1Tc(SoakDmaMemcpyNonCohPerformanceTc):
 
     def describe(self):
         self.set_test_details(id=30,
-                              summary="Soak DMA memcpy Non coherent Performance Test",
+                              summary="Soak DMA memcpy Non coherent Performance Test on S1",
                               steps="Steps 1")
 
 
@@ -324,7 +324,16 @@ class SoakDmaMemsetPerformanceS1Tc(SoakDmaMemsetPerformanceTc):
 
     def describe(self):
         self.set_test_details(id=31,
-                              summary="Soak DMA memset Performance Test",
+                              summary="Soak DMA memset Performance Test on S1",
+                              steps="Steps 1")
+
+class BootTimingPerformanceS1Tc(BootTimingPerformanceTc):
+    tag = BOOT_TIMING_TEST_TAG_S1
+    platform = S1
+
+    def describe(self):
+        self.set_test_details(id=32,
+                              summary="Boot timing Performance Test on S1",
                               steps="Steps 1")
 
 
@@ -362,5 +371,6 @@ if __name__ == "__main__":
     myscript.add_test_case(SoakDmaMemcpyNonCohPerformanceS1Tc())
     myscript.add_test_case(SoakDmaMemsetPerformanceS1Tc())
     myscript.add_test_case(SoakDmaMemcpyThresholdPerformanceS1Tc())
+    myscript.add_test_case(BootTimingPerformanceS1Tc())
 
     myscript.run()

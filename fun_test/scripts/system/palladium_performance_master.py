@@ -17,6 +17,7 @@ F1 = FunPlatform.F1
 ALLOC_SPEED_TEST_TAG = "alloc_speed_test"
 SOAK_BCOPY_TEST = "qa_soak_bcopy_test"
 BOOT_TIMING_TEST_TAG = "boot_timing_test"
+BOOT_TIMING_TEST_TAG_S1 = "qa_s1_boot_timing_test"
 VOLTEST_TAG = "voltest_performance"
 TERAMARK_PKE = "pke_teramark"
 TERAMARK_CRYPTO = "crypto_teramark"
@@ -191,7 +192,8 @@ class MyScript(FunTestScript):
 
     def setup(self):
         self.lsf_status_server = LsfStatusServer()
-        tags = [ALLOC_SPEED_TEST_TAG, SOAK_BCOPY_TEST, BOOT_TIMING_TEST_TAG, TERAMARK_PKE, TERAMARK_CRYPTO,
+        tags = [ALLOC_SPEED_TEST_TAG, SOAK_BCOPY_TEST, BOOT_TIMING_TEST_TAG, BOOT_TIMING_TEST_TAG_S1, TERAMARK_PKE,
+                TERAMARK_CRYPTO,
                 TERAMARK_LOOKUP,
                 FLOW_TEST_TAG, F1_FLOW_TEST_TAG, TERAMARK_ZIP, TERAMARK_DFA, TERAMARK_NFA, TERAMARK_EC, TERAMARK_JPEG,
                 SOAK_DMA_MEMCPY_COH, SOAK_DMA_MEMCPY_COH_S1,
