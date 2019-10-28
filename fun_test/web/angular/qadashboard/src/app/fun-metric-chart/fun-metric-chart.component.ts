@@ -119,6 +119,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   bandwidth_category: string[] = ["bps", "Kbps", "Mbps", "Gbps", "Tbps", "Bps", "KBps", "MBps", "GBps", "TBps"];
   packets_per_second_category: string[] = ["Mpps", "pps", "Kpps", "Gpps"];
   connections_per_second_category: string[] = ["Mcps", "cps", "Kcps", "Gcps"];
+  power_category: string[] = ["W", "kW", "MW", "mW"];
 
   expectedOperationCategory: string[] = [ExpectedOperation.SAME_AS_F1, ExpectedOperation.F1_BY_4];
 
@@ -223,17 +224,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   }
 
   fetchMetricsById(): void {
-    let payload = {};
-    payload["metric_id"] = this.id;
-    this.apiService.post('/metrics/metric_by_id', payload).subscribe((data) => {
-      this.chartName = data.data["chart_name"];
-      this.platform = data.data["platform"];
-      this.modelName = data.data["metric_model_name"];
-      this.setDefault();
-      this.fetchInfo();
-    }, error => {
-      this.loggerService.error("fetching by metric id failed");
-    });
+     this.setDefaults();
+     this.fetchInfo();
   }
 
   //set the chart and model name based in metric id
@@ -390,6 +382,9 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
           this.loggerService.error("No Preview Datasets");
           return;
         }
+        this.chartName = this.chartInfo.chart_name;
+        this.modelName = this.chartInfo.metric_model_name;
+        this.platform = this.chartInfo.platform;
         this.currentDescription = this.chartInfo.description;
         this.inner.currentDescription = this.currentDescription;
         this.currentOwner = this.chartInfo.owner_info;
@@ -422,6 +417,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
           this.category = [...this.packets_per_second_category];
         } else if (this.connections_per_second_category.includes(this.visualizationUnit)) {
           this.category = [...this.connections_per_second_category];
+        } else if (this.power_category.includes(this.visualizationUnit)) {
+          this.category = [...this.power_category];
         }
         this.selectedUnit = this.visualizationUnit;
       }
@@ -434,7 +431,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   }
 
   //sets the state of the component to default values
-  setDefault(): void {
+  setDefaults(): void {
     this.timeMode = "all";
     this.mileStoneIndices = {};
     this.showingTable = false;
@@ -862,7 +859,9 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       this.setMileStones();
 
       //populating data for show tables
-      this.populateShowTables();
+      if (!this.minimal) {
+        this.populateShowTables();
+      }
 
       this.changeAllExpectedValues();
       this.status = null;
@@ -1045,6 +1044,14 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       } else if (outputUnit === "Gcps") {
         output = output * Math.pow(10, 9);
       }
+    } else if (this.power_category.includes(outputUnit)) {
+      if (outputUnit === "kW") {
+        output = output * Math.pow(10, 3);
+      } else if (outputUnit === "MW") {
+        output = output * Math.pow(10, 6);
+      } else if (outputUnit === "mW") {
+        output = output / Math.pow(10, 3);
+      }
     }
 
     return output;
@@ -1126,6 +1133,14 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       } else if (outputUnit === "Gcps") {
         output = output / Math.pow(10, 9);
       }
+    } else if (this.power_category.includes(outputUnit)) {
+      if (outputUnit === "kW") {
+        output = output / Math.pow(10, 3);
+      } else if (outputUnit === "MW") {
+        output = output / Math.pow(10, 6);
+      } else if (outputUnit === "mW") {
+        output = output * Math.pow(10, 3);
+      }
     }
     return parseFloat(output.toFixed(this.DECIMAL_PRECISION));
   }
@@ -1176,7 +1191,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       return;
     }
     var self = this;
-    if (this.modelName !== 'MetricContainer') {
+    if (this.modelName !== 'MetricContainer' && !this.minimal) {
       return this.apiService.get("/metrics/describe_table/" + this.modelName).subscribe(function (response) {
         self.tableInfo = response.data;
         self.fetchData(self.id, chartInfo, previewDataSets, self.tableInfo);

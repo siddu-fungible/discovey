@@ -1,23 +1,14 @@
-import os
 import django
-import json
-import random
-import re
-import pytz
 import math
-from datetime import datetime, timedelta
 from web.web_global import PRIMARY_SETTINGS_FILE
 from fun_global import *
 from fun_settings import MAIN_WEB_APP
+from datetime import timedelta
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", PRIMARY_SETTINGS_FILE)
 django.setup()
-from web.fun_test.metrics_models import Performance1, PerformanceIkv, PerformanceBlt, VolumePerformance
-from web.fun_test.metrics_models import AllocSpeedPerformance
 from web.fun_test.site_state import *
-from web.fun_test.metrics_models import MetricChart, ShaxPerformance
-from web.fun_test.metrics_models import WuLatencyUngated, WuLatencyAllocStack, AllocSpeedPerformance
-from web.fun_test.models import JenkinsJobIdMap
+from web.fun_test.metrics_models import MetricChart
 from web.fun_test.metrics_models import MetricChartStatus, MetricChartStatusSerializer
 from web.fun_test.metrics_models import MetricsGlobalSettings
 from django.utils import timezone
@@ -39,6 +30,7 @@ bits_bytes_category = ["b", "B", "KB", "MB", "GB", "TB"]
 bandwidth_category = ["bps", "Kbps", "Mbps", "Gbps", "Tbps", "Bps", "KBps", "MBps", "GBps", "TBps"]
 packets_per_sec_category = ["pps", "Mpps", "Kpps", "Gpps"]
 connections_per_sec_category = ["cps", "Mcps", "Kcps", "Gcps"]
+power_category = ["W", "kW", "MW", "mW"]
 
 
 def get_rounded_time(dt):
@@ -67,34 +59,6 @@ def get_entries_for_day(model, day, data_set):
     order_by = "-input_date_time"
     result = model.objects.filter(**d).order_by(order_by)
     return result
-
-
-def get_first_record(model, data_set):
-    inputs = data_set["inputs"]
-    d = {}
-    for input_name, input_value in inputs.iteritems():
-        d[input_name] = input_value
-    order_by = "-input_date_time"
-    entries = model.objects.filter(**d).order_by(order_by)
-    i = 0
-
-
-def fixup_reference_values(chart, model, data_set):
-    modified = 0
-    first_record = get_first_record(model=model, data_set=data_set)
-    if not first_record:
-        i = 0
-    else:
-        first_record = first_record[-1]
-        output_name = data_set["output"]["name"]
-        if output_name in first_record:
-            data_set["output"]["reference"] = first_record[output_name]
-            modified = 1
-        j = 0
-        # data_set["reference"] = first_rec
-    # self.data_sets = json.dumps(data_set)
-    # self.save()
-    return modified
 
 
 def interpolate(chart, model, from_date, to_date):
@@ -158,6 +122,7 @@ def prepare_status(chart, cache_valid, purge_old_status=False):
         serialized = MetricChartStatusSerializer(entries, many=True)
         serialized_data = serialized.data[:]
         result["scores"] = {}
+        result["data_sets"] = chart.get_data_sets()
         for element in serialized_data:
             j = dict(element)
             result["scores"][j["date_time"]] = j
@@ -181,7 +146,7 @@ def set_result_dict(result):
 def set_from_to_dates(chart):
     dates = {}
     # calculate the from date and to date for fetching the data
-    today = datetime.now(pytz.timezone('US/Pacific'))
+    today = datetime.datetime.now(pytz.timezone('US/Pacific'))
     from_date = chart.base_line_date
     from_date = adjust_timezone_for_day_light_savings(from_date)
     from_date = get_rounded_time(from_date)
@@ -220,14 +185,23 @@ def set_chart_status_details(chart, result):
     chart.penultimate_good_score = result["penultimate_good_score"]
     chart.copied_score = result["copied_score"]
     chart.copied_score_disposition = result["copied_score_disposition"]
+    chart.data_sets = json.dumps(result["data_sets"])
     chart.save()
 
 
 def adjust_timezone_for_day_light_savings(current_date):
-    date_time_obj = datetime(year=current_date.year, month=current_date.month, day=current_date.day,
+    date_time_obj = datetime.datetime(year=current_date.year, month=current_date.month, day=current_date.day,
                                       hour=current_date.hour, second=current_date.second, minute=current_date.minute)
     return get_localized_time(date_time_obj)
 
+def _is_valid_output(output_value):
+    return (output_value != -1 and not math.isinf(output_value))
+
+def _update_best_value(current_value, best_value_dict, chart, data_set):
+    if (chart.positive and current_value > best_value_dict[data_set["name"]]):
+        best_value_dict[data_set["name"]] = current_value
+    elif (not chart.positive and current_value < best_value_dict[data_set["name"]]):
+        best_value_dict[data_set["name"]] = current_value
 
 def calculate_leaf_scores(cache_valid, chart, result, from_log=False):
     # print "Reached leaf: {}".format(chart.chart_name)
@@ -286,6 +260,9 @@ def calculate_leaf_scores(cache_valid, chart, result, from_log=False):
         num_data_sets_with_expected = len(
             data_sets) if num_data_sets_with_expected == 0 else num_data_sets_with_expected
         data_sets = json.loads(chart.data_sets)
+        best_value_dict = {}
+        for data_set in data_sets:
+            best_value_dict[data_set["name"]] = data_set["output"]["best"]
         while current_date <= to_date:
             result["num_degrades"] = 0
             valid_dates.append(current_date)
@@ -300,13 +277,14 @@ def calculate_leaf_scores(cache_valid, chart, result, from_log=False):
                             output_name = data_set["output"]["name"]  # TODO
                             output_unit = output_name + "_unit"
                             reference_value = data_set["output"]["reference"]
-                            get_first_record(model=model, data_set=data_set)
                             output_value = getattr(this_days_record, output_name)
+                            _update_best_value(current_value=output_value, best_value_dict=best_value_dict,
+                                                chart=chart, data_set=data_set)
                             if hasattr(this_days_record, output_unit):
                                 output_unit = getattr(this_days_record, output_unit)
                             else:
                                 output_unit = None
-                            if output_value and output_value != -1:
+                            if output_value and _is_valid_output(output_value):
                                 output_value = convert_to_base_unit(output_value=output_value, output_unit=output_unit)
 
                             # data_set_statuses.append(leaf_status)
@@ -316,16 +294,17 @@ def calculate_leaf_scores(cache_valid, chart, result, from_log=False):
                                 if output_unit:
                                     reference_value = convert_to_base_unit(output_value=reference_value,
                                                                            output_unit=data_set["output"]["unit"])
-                                if chart.positive:
-                                    data_set_combined_goodness += (float(
-                                        output_value) / reference_value) * 100 if output_value >= 0 and reference_value > 0 else 0
-                                else:
-                                    if output_value:
+                                if output_value and _is_valid_output(output_value):
+                                    if chart.positive:
                                         data_set_combined_goodness += (float(
-                                            reference_value) / output_value) * 100 if output_value >= 0 else 0
+                                            output_value) / reference_value) * 100 if output_value >= 0 and \
+                                                                                      reference_value >= 0 else 0
                                     else:
-                                        print "ERROR: {}, {}".format(chart.chart_name,
-                                                                     chart.metric_model_name)
+                                        data_set_combined_goodness += (float(
+                                            reference_value) / output_value) * 100 if output_value >= 0 and \
+                                                                                      reference_value >= 0 else 0
+                                else:
+                                    print "ERROR: {}, {}".format(chart.chart_name, chart.metric_model_name)
                 current_score = round(data_set_combined_goodness / num_data_sets_with_expected,
                                       1) if num_data_sets_with_expected != 0 else 0
 
@@ -388,9 +367,12 @@ def calculate_leaf_scores(cache_valid, chart, result, from_log=False):
                 result["num_degrades"] = 1
             current_date = current_date + timedelta(days=1)
             current_date = adjust_timezone_for_day_light_savings(current_date)
+        for data_set in data_sets:
+            data_set["output"]["best"] = best_value_dict[data_set["name"]]
         result["scores"] = scores
         result["last_build_status"] = chart.last_build_status == "PASSED"
         result["valid_dates"] = valid_dates
+        result["data_sets"] = data_sets
         if not result["last_build_status"]:
             result["num_build_failed"] = 1
         valid_dates = result["valid_dates"]
@@ -483,6 +465,7 @@ def calculate_container_scores(chart, purge_old_status, cache_valid, result):
     result["scores"] = scores
     result["last_build_status"] = chart.last_build_status == "PASSED"
     result["valid_dates"] = valid_dates
+    result["data_sets"] = chart.get_data_sets()
     if not result["last_build_status"]:
         result["num_build_failed"] = 1
     valid_dates = result["valid_dates"]
@@ -561,6 +544,13 @@ def convert_to_base_unit(output_value, output_unit):
                 output_value = float(output_value * math.pow(10, 3))
             if output_unit == "Gcps":
                 output_value = float(output_value * math.pow(10, 9))
+        elif output_value in power_category:
+            if output_unit == "kW":
+                output_value = float(output_value * math.pow(10, 3))
+            if output_unit == "MW":
+                output_value = float(output_value * math.pow(10, 6))
+            if output_unit == "mW":
+                output_value = float(output_value / math.pow(10, 3))
     return output_value
 
 

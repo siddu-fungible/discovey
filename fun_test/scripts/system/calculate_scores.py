@@ -17,7 +17,7 @@ class PrepareDbTc(FunTestCase):
         pass
 
     def run(self):
-        chart_names = [F1, S1, "All metrics"]
+        chart_names = [F1, S1]
         prepare_status_db(chart_names=chart_names)
         TimeKeeper.set_time(name=LAST_ANALYTICS_DB_STATUS_UPDATE, time=get_current_time())
 

@@ -34,13 +34,16 @@
       </li>
     </ul>
   </div>
-  <div *ngIf="!reportGenerated && !showGrids && !showDag && workspace.interested_metrics.length > 0" class="card-body">
+  <fun-spinner [status]="status"></fun-spinner>
+  <div *ngIf="status === null">
+    <div *ngIf="!reportGenerated && !showGrids && !showDag && workspace.interested_metrics.length > 0" class="card-body">
     <app-performance [selectMode]="selectMode.ShowViewWorkspace" [metricIds]="interestedMetrics"></app-performance>
   </div>
 
   <!--showing reports in the workspace-->
   <ng-container class="card-body tab-pane" role="tabpanel" *ngIf="reportGenerated">
-    <performance-show-report [workspace]="workspace" [email]="email" [subject]="subject"
+    <performance-show-report [workspace]="workspace" [flattenedInterestedMetrics]="flattenedInterestedMetrics" [email]="email"
+                             [subject]="subject"
                              (reportGenerated)="reportGenerated = false"></performance-show-report>
   </ng-container>
 
@@ -53,4 +56,5 @@
   <ng-container class="card-body tab-pane" role="tabpanel" *ngIf="showDag && workspaceMetrics.length > 0">
    <app-performance [selectMode]="selectMode.ShowAttachDag" [metricIds]="workspaceMetrics"></app-performance>
   </ng-container>
+  </div>
 </div>

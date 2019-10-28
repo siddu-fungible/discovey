@@ -26,7 +26,7 @@
       </button>
     </div>
     <div class="modal-body">
-      <p><strong>Are you sure you want to delete <span class="text-primary">"{{ deletingWorkspace.name }}"</span>
+      <p><strong>Are you sure you want to delete <span class="text-primary">"{{ workspaceToBeDeleted.name }}"</span>
         workspace
         ?</strong></p>
       <p>All information associated to this user workspace will be permanently deleted.
@@ -34,7 +34,7 @@
       </p>
     </div>
     <div class="modal-footer">
-      <button type="button" class="btn btn-outline-success" (click)="onDeleteWorkspace(deletingWorkspace)">Yes</button>
+      <button type="button" class="btn btn-outline-success" (click)="onDeleteWorkspace(workspaceToBeDeleted)">Yes</button>
       <button type="button" class="btn btn-outline-danger" (click)="modal.dismiss('No click')">No</button>
     </div>
   </ng-template>
@@ -183,6 +183,7 @@
             <th>Created date</th>
             <th>Modified date</th>
             <th>Workspace id</th>
+            <th>Subscribe to alerts</th>
             <th></th>
           </tr>
           <tr *ngFor="let workspace of profile">
@@ -205,6 +206,19 @@
             </td>
             <td>
               {{ workspace.workspaceId }}
+            </td>
+            <td>
+              <app-toggle-button [checked]="workspace.subscribeToAlerts"
+              (changed)="onChangeSubscribeToAlerts($event, workspace)"></app-toggle-button> &nbsp;
+              <span *ngIf="workspace.editingAlerts" (click)="saveSubscribeAndEmailsForAlerts(workspace)" class="pseudo-anchor">
+                Save</span>
+              <ng-container *ngIf="workspace.subscribeToAlerts">
+                <br>Emails:
+                 <textarea *ngIf="workspace.editingAlerts" rows="5" [(ngModel)]="workspace.alertEmails"
+                style="min-width: 100%;"></textarea>
+                <span *ngIf="!workspace.editingAlerts" class="grey-text" (click)="workspace.editingAlerts = true">{{
+                  workspace.alertEmails }}</span>
+              </ng-container>
             </td>
             <td style="width: 10%">
               <span class="pseudo-anchor" (click)="openDeleteWorkspace(deleteWorkspace, workspace)">Delete</span>

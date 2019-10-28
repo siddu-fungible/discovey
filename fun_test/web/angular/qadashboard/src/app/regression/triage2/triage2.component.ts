@@ -146,7 +146,7 @@ export class Triage2Component implements OnInit {
     let url = "/api/v1/triages";
     this.apiService.post(url, payload).subscribe((response) => {
       this.loggerService.success("Triage submitted");
-      window.open("/regression/triaging/" + response.data, '_blank');
+      window.location.href = "/regression/triaging/" + response.data;
     },error => {
       this.loggerService.error("Submitting triage failed");
     });

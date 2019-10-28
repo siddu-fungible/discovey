@@ -72,7 +72,7 @@ class ScriptSetup(FunTestScript):
 
     def setup(self):
 
-        f1_1_boot_args = "app=hw_hsu_test,tcp_server,rdstest clients=10 msgs=8 --echo --csr-replay localip=29.1.1.2 remoteip=23.1.1.10 " \
+        f1_1_boot_args = "app=load_mods,tcp_server,rdstest clients=10 msgs=8 --echo --csr-replay localip=29.1.1.2 remoteip=23.1.1.10 " \
                          "rdstype=funtcp cc_huid=2 --dpc-server  --dpc-uart --all_100g " \
                          "--disable-wu-watchdog module_log=network_unit:CRIT"
 
@@ -523,19 +523,19 @@ if __name__ == '__main__':
 
     if execute_test == 'sanity' or execute_test == 'tc_syn_recvd':
         ts.add_test_case(TcSynRecvd())
-    if execute_test == 'sanity' or execute_test == 'tc_out_of_order_data_segments':
+    if execute_test == 'sanity' or execute_test == 'short_suites' or execute_test == 'tc_out_of_order_data_segments':
         ts.add_test_case(TcOutOfOrderSegments())
     if execute_test == 'sanity' or execute_test == 'tc_last_ack':
         ts.add_test_case(TcLastAck())
-    if execute_test == 'sanity' or execute_test == 'tc_keepalive_timeout':
+    if execute_test == 'sanity' or execute_test == 'short_suites' or execute_test == 'tc_keepalive_timeout':
         ts.add_test_case(TcKeepAliveTimeout())
     if execute_test == 'sanity' or execute_test == 'tc_established':
         ts.add_test_case(TcEstablished())
-    if execute_test == 'sanity' or execute_test == 'tc_traffic_tests':
+    if execute_test == 'sanity' or execute_test == 'short_suites' or execute_test == 'tc_traffic_tests':
         ts.add_test_case(TcTrafficTests())
-    if execute_test == 'sanity' or execute_test == 'tc_window_scale':
+    if execute_test == 'sanity' or execute_test == 'short_suites' or execute_test == 'tc_window_scale':
         ts.add_test_case(TcWindowScale())
-    if execute_test == 'sanity' or execute_test == 'tc_flow_control':
+    if execute_test == 'sanity' or execute_test == 'short_suites' or execute_test == 'tc_flow_control':
         ts.add_test_case(TcFlowControl())
     if execute_test not in ('sanity', 'tc_syn_recvd', 'tc_out_of_order_data_segments', 'tc_last_ack', 'tc_keepalive_timeout',
                             'tc_established', 'tc_traffic_tests', 'tc_window_scale', 'tc_flow_control'):

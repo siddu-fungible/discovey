@@ -612,6 +612,8 @@ class PerformanceUserWorkspaces(FunModel):
     description = models.TextField(default="")
     date_created = models.DateTimeField(default=datetime.now)
     date_modified = models.DateTimeField(default=datetime.now)
+    subscribe_to_alerts = models.BooleanField(default=False)
+    alert_emails = models.TextField(default="")
 
     def __str__(self):
         return (str(self.__dict__))

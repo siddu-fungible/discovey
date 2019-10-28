@@ -1,6 +1,6 @@
 {
   "GlobalSetup": {
-    "bootargs": "app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze  --useddr",
+    "bootargs": "app=mdt_test,load_mods workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze  --useddr",
     "disable_f1_index": 1,
     "f1_in_use": 0,
     "huid": 3,
@@ -44,7 +44,7 @@
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {
       "bs": "8k",
-      "iodepth": 1,
+      "iodepth": 8,
       "size": "100%",
       "rw": "write",
       "direct": 1,

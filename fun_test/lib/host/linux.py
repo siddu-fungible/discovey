@@ -131,7 +131,6 @@ class Linux(object, ToDictMixin):
         self.prompt_terminator = None
         self.root_prompt_terminator = Linux.ROOT_PROMPT_TERMINATOR_DEFAULT
         self.buffer = None
-        self.saved_prompt_terminator = None
         self._set_defaults()
         self.use_telnet = False
         self.telnet_port = telnet_port
@@ -199,6 +198,8 @@ class Linux(object, ToDictMixin):
                 self.prompt_terminator = ".*" + self.NON_ROOT_PROMPT_TERMINATOR_DEFAULT
             else:
                 self.prompt_terminator = self.NON_ROOT_PROMPT_TERMINATOR_DEFAULT
+        self.saved_prompt_terminator = self.prompt_terminator
+
 
     def trace(self, enable, id):
         self.logger.trace(enable=enable, id=id)
@@ -424,7 +425,7 @@ class Linux(object, ToDictMixin):
                 try:
                     self.handle.expect(self.prompt_terminator, timeout=sync_timeout)
                 except (pexpect.EOF):
-                    self.disconnect()
+                    self.disconnect(self)
                     return self.command(command=command,
                                         sync=sync, timeout=timeout,
                                         custom_prompts=custom_prompts,
@@ -946,8 +947,8 @@ class Linux(object, ToDictMixin):
             fun_test.critical(str(ex))
         return result
 
-    def tcpdump_capture_stop(self, process_id):
-        return self.kill_process(process_id=process_id)
+    def tcpdump_capture_stop(self, process_id, wait_after_stop=0):
+        return self.kill_process(process_id=process_id, kill_seconds=wait_after_stop)
 
     def tshark_parse(self, file_name, read_filter, fields=None, decode_as=None):
         pass
@@ -1292,7 +1293,7 @@ class Linux(object, ToDictMixin):
         sudo_string = ""
         if sudo:
             sudo_string = "sudo "
-        scp_command = "%sscp -P %d %s %s@%s:%s" % (sudo_string, target_port, source_file_path, target_username, target_ip, target_file_path)
+        scp_command = "%sscp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P %d %s %s@%s:%s" % (sudo_string, target_port, source_file_path, target_username, target_ip, target_file_path)
         if not self.handle:
             self._connect()
 
@@ -1872,11 +1873,11 @@ class Linux(object, ToDictMixin):
             # Populating the resultant fio_dict dictionary
             for operation in ["write", "read"]:
                 fio_dict[operation] = {}
-                stat_list = ["bw", "iops", "io_bytes", "runtime", "latency", "clatency", "latency90", "latency95",
-                             "latency99","latency9950", "latency9999"]
+                stat_list = ["bw", "iops", "io_bytes", "runtime", "latency", "clatency", "latency50",
+                             "latency90", "latency95", "latency99", "latency9950", "latency9999"]
                 for stat in stat_list:
-                    if stat not in ("latency", "clatency", "latency90", "latency95", "latency99", "latency9950",
-                                    "latency9999"):
+                    if stat not in ("latency", "clatency", "latency50", "latency90", "latency95",
+                                    "latency99", "latency9950", "latency9999"):
                         fio_dict[operation][stat] = fio_result_dict["jobs"][0][operation][stat]
                     elif stat in ("latency", "clatency"):
                         for key in fio_result_dict["jobs"][0][operation].keys():
@@ -1910,10 +1911,16 @@ class Linux(object, ToDictMixin):
                                     value = int(round(fio_result_dict["jobs"][0][operation][key]["mean"]))
                                     value *= 1000
                                     fio_dict[operation][stat] = value
-                    elif stat in ("latency90", "latency95", "latency99", "latency9950", "latency9999"):
+                    elif stat in ("latency50", "latency90", "latency95", "latency99", "latency9950", "latency9999"):
                         for key in fio_result_dict["jobs"][0][operation].keys():
                             if key == "clat_ns":
                                 for key in fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"].keys():
+                                    if key.startswith("50.00"):
+                                        stat = "latency50"
+                                        value = int(round(
+                                            fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"]["50.000000"]))
+                                        value /= 1000
+                                        fio_dict[operation][stat] = value
                                     if key.startswith("90.00"):
                                         stat = "latency90"
                                         value = int(round(
@@ -2804,11 +2811,11 @@ class Linux(object, ToDictMixin):
         return result
 
     @fun_test.safe
-    def curl(self, url, output_file=None):
+    def curl(self, url, output_file=None, timeout=60):
         command = "curl {}".format(url)
         if output_file:
             command += " -o {}".format(output_file)
-        self.command(command)
+        self.command(command, timeout=timeout)
         return int(self.exit_status()) == 0
 
     @fun_test.safe
@@ -2823,6 +2830,22 @@ class Linux(object, ToDictMixin):
                 os.kill(self.spawn_pid, 9)
         except Exception as ex:
             pass
+
+    @fun_test.safe
+    def docker(self, ps=True):
+        result = None
+        command = None
+        if ps:
+            command = "docker ps --format '{{json .}}'"
+        output = self.command(command)
+        lines = output.split("\n")
+        try:
+            result = [json.loads(str(line)) for line in lines]
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+        return result
+
 
 class LinuxBackup:
     def __init__(self, linux_obj, source_file_name, backedup_file_name):

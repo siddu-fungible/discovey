@@ -29,7 +29,7 @@ class PalladiumTc(FunTestCase):
     hw_model = "S1_Compute"
     max_duration = 900
     release_build = "true"
-    hw_version = "rel_10012019"
+    hw_version = "rel_10152019"
     run_target = "protium_s"
     extra_emails = []
 
@@ -140,10 +140,10 @@ class DfaTeramarkTc(PalladiumTc):
 
 
 class NfaTeramarkTc(PalladiumTc):
-    boot_args = "app=nfa_perf_bootstrap rbm-size=1m --bm-profile-regex nfa_perf.pc_mask=1 nfa_perf.nflows=24 nfa_perf.niterations=1024 syslog=2"
+    boot_args = "app=nfa_perf_bootstrap rbm-size=1m --bm-profile-regex nfa_perf.pc_mask=1 nfa_perf.nflows=140 nfa_perf.niterations=1024 syslog=2 nfa_perf.name=perf0"
     tags = "qa_s1_nfa_teramark"
     note = "NFA teramark app on S1"
-    fun_os_make_flags = "PM_TESTS=1"
+    fun_os_make_flags = "PM_TESTS=1 XDATA_LISTS=/project/users/QA/regression/data_store/regex/performance/NFA/perf0.list"
     extra_emails = ["jitendra.lulla@fungible.com", "mahesh.kumar@fungible.com", " indrani.p@fungible.com"]
 
     def describe(self):
@@ -208,6 +208,24 @@ class ZipLzmaTeramarkTc(PalladiumTc):
             3. Steps 3
                                   """)
 
+
+class CryptoCCPSanityTc(PalladiumTc):
+    boot_args = "app=crypto_ccp_test"
+    tags = "qa_s1_ccp_sanity"
+    note = "Crypto ccp accelerator sanity test app"
+    max_duration = 9000
+    extra_emails = ["jitendra.lulla@fungible.com"]
+
+    def describe(self):
+        self.set_test_details(id=9,
+                              summary="Schedule Crypto ccp sanity test app on S1",
+                              steps="""
+            1. Steps 1
+            2. Steps 2
+            3. Steps 3
+                                  """)
+
+
 class SoakFlowsMemcpy1MbNonCohTc(PalladiumTc):
     boot_args = "app=soak_flows_memcpy_1MB_non_coh"
     tags = "qa_s1_soak_flows_memcpy_non_coh"
@@ -216,7 +234,7 @@ class SoakFlowsMemcpy1MbNonCohTc(PalladiumTc):
     extra_emails = []
 
     def describe(self):
-        self.set_test_details(id=9,
+        self.set_test_details(id=10,
                               summary="Schedule Max DMA 1 mb app on Jenkins for S1",
                               steps="""
         1. Steps 1
@@ -232,7 +250,7 @@ class ChannelParallTc(PalladiumTc):
     extra_emails = []
 
     def describe(self):
-        self.set_test_details(id=10,
+        self.set_test_details(id=11,
                               summary="Schedule Channel parall app on Jenkins for S1",
                               steps="""
         1. Steps 1
@@ -248,7 +266,7 @@ class SoakFlowsBusyLoopTc(PalladiumTc):
     extra_emails = []
 
     def describe(self):
-        self.set_test_details(id=11,
+        self.set_test_details(id=12,
                               summary="Schedule Soak flows busy loop app on Jenkins for S1",
                               steps="""
         1. Steps 1
@@ -264,7 +282,7 @@ class SoakDmaMemcpyThresholdTc(PalladiumTc):
     extra_emails = []
 
     def describe(self):
-        self.set_test_details(id=12,
+        self.set_test_details(id=13,
                               summary="Schedule Soak FunOS DMA memcpy threshold tests for S1",
                               steps="""
         1. Steps 1
@@ -281,7 +299,7 @@ class SoakDmaMemcpyCohTc(PalladiumTc):
     extra_emails = []
 
     def describe(self):
-        self.set_test_details(id=13,
+        self.set_test_details(id=14,
                               summary="Schedule Soak FunOS DMA memcpy coherent tests for S1",
                               steps="""
         1. Steps 1
@@ -298,7 +316,7 @@ class SoakDmaMemcpyNonCohTc(PalladiumTc):
     extra_emails = []
 
     def describe(self):
-        self.set_test_details(id=14,
+        self.set_test_details(id=15,
                               summary="Schedule Soak FunOS DMA memcpy non coherent tests for S1",
                               steps="""
         1. Steps 1
@@ -314,7 +332,7 @@ class SoakDmaMemsetTc(PalladiumTc):
     extra_emails = []
 
     def describe(self):
-        self.set_test_details(id=15,
+        self.set_test_details(id=16,
                               summary="Schedule Soak FunOS DMA memset tests for S1",
                               steps="""
         1. Steps 1
@@ -322,8 +340,28 @@ class SoakDmaMemsetTc(PalladiumTc):
         3. Steps 3
                               """)
 
+
+class BootTimingsTc(PalladiumTc):
+    boot_args = "test=unittest_test_empty"
+    run_target = "palladium"
+    hw_model = "S1_Full"
+    tags = "qa_s1_boot_timing_test"
+    note = "Boot timing test on palladium/S1_Full"
+    max_duration = 1200
+
+    def describe(self):
+        self.set_test_details(id=17,
+                              summary="Schedule Boot timing test on S1",
+                              steps="""
+            1. Steps 1
+            2. Steps 2
+            3. Steps 3
+                                  """)
+
+
 if __name__ == "__main__":
     myscript = MyScript()
+
     myscript.add_test_case(CryptoTeramarkTc())
     # myscript.add_test_case(PkeTeramarkTc())
     myscript.add_test_case(EcTeramarkTc())
@@ -332,6 +370,7 @@ if __name__ == "__main__":
     myscript.add_test_case(JpegTeramarkTc())
     myscript.add_test_case(ZipDeflateTeramarkTc())
     myscript.add_test_case(ZipLzmaTeramarkTc())
+    myscript.add_test_case(CryptoCCPSanityTc())
     myscript.add_test_case(SoakFlowsMemcpy1MbNonCohTc())
     myscript.add_test_case(ChannelParallTc())
     myscript.add_test_case(SoakFlowsBusyLoopTc())
@@ -339,5 +378,6 @@ if __name__ == "__main__":
     myscript.add_test_case(SoakDmaMemcpyCohTc())
     myscript.add_test_case(SoakDmaMemcpyNonCohTc())
     myscript.add_test_case(SoakDmaMemsetTc())
+    myscript.add_test_case(BootTimingsTc())
 
     myscript.run()

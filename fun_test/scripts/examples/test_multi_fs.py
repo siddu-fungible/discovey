@@ -39,9 +39,7 @@ class FunTestCase1(FunTestCase):
     def run(self):
         # fs = Fs.get(disable_f1_index=1)
         topology_helper = TopologyHelper()
-        # topology_helper.set_dut_parameters(dut_index=0, custom_boot_args="app=hw_hsu_test --dpc-uart --dpc-server --csr-replay --retimer --all_100g")
-        # topology_helper.set_dut_parameters(dut_index=0, custom_boot_args="app=hw_hsu_test --dpc-uart --dpc-server --csr-replay retimer=0,1 --all_100g")
-        topology_helper.set_dut_parameters(dut_index=0, custom_boot_args="app=hw_hsu_test --dpc-uart --dpc-server --csr-replay --all_100g")
+        topology_helper.set_dut_parameters(dut_index=0, custom_boot_args="app=load_mods --dpc-uart --dpc-server --csr-replay --all_100g")
         fun_test.shared_variables["topology"] = topology_helper.get_topology()
         topology = topology_helper.deploy()
         fun_test.test_assert(topology, "Topology deployed")

@@ -24,42 +24,42 @@ class PcieHost(FunTestScript):
         # Boot up FS1600
         topology_helper = TopologyHelper()
         if fs == 'fs-11':
-            boot_args = "app=hw_hsu_test retimer=0,1 --dpc-uart --dpc-server --csr-replay --all_100g --disable-wu-watchdog"
+            boot_args = "app=load_mods retimer=0,1 --dpc-uart --dpc-server --csr-replay --all_100g"
             topology_helper.set_dut_parameters(dut_index=0, custom_boot_args=boot_args)
         elif fs == 'fs-45':
-            f1_0_boot_args = "app=hw_hsu_test retimer=0,1 --dpc-uart --dpc-server --csr-replay --all_100g --disable-wu-watchdog syslog=5"
-            f1_1_boot_args = "app=hw_hsu_test retimer=0,1 --dpc-uart --dpc-server --csr-replay --all_100g --disable-wu-watchdog syslog=5"
+            f1_0_boot_args = "app=load_mods retimer=0,1 --dpc-uart --dpc-server --csr-replay --all_100g syslog=5"
+            f1_1_boot_args = "app=load_mods retimer=0,1 --dpc-uart --dpc-server --csr-replay --all_100g syslog=5"
             topology_helper.set_dut_parameters(dut_index=0,
                                                f1_parameters={0: {"boot_args": f1_0_boot_args},
                                                               1: {"boot_args": f1_1_boot_args}})
         elif fs == 'fs-66':
-            f1_0_boot_args = "app=hw_hsu_test retimer=0 --dpc-uart --dpc-server --csr-replay --all_100g --disable-wu-watchdog"
-            f1_1_boot_args = "app=hw_hsu_test retimer=0 --dpc-uart --dpc-server --csr-replay --all_100g --disable-wu-watchdog"
+            f1_0_boot_args = "app=load_mods retimer=0 --dpc-uart --dpc-server --csr-replay --all_100g"
+            f1_1_boot_args = "app=load_mods retimer=0 --dpc-uart --dpc-server --csr-replay --all_100g"
             topology_helper.set_dut_parameters(dut_index=0,
                                                f1_parameters={0: {"boot_args": f1_0_boot_args},
                                                               1: {"boot_args": f1_1_boot_args}})
         elif fs == 'fs-60':
-            f1_0_boot_args = "app=hw_hsu_test cc_huid=3 --all_100g --dpc-server --dpc-uart retimer=0,1,2 --disable-wu-watchdog"
-            f1_1_boot_args = "app=hw_hsu_test cc_huid=2 --all_100g --dpc-server --dpc-uart retimer=0 --disable-wu-watchdog"
+            f1_0_boot_args = "app=load_mods cc_huid=3 --all_100g --dpc-server --dpc-uart retimer=0,1,2"
+            f1_1_boot_args = "app=load_mods cc_huid=2 --all_100g --dpc-server --dpc-uart retimer=0"
             topology_helper.set_dut_parameters(dut_index=0,
                                                f1_parameters={0: {"boot_args": f1_0_boot_args},
                                                               1: {"boot_args": f1_1_boot_args}})
         elif fs == 'fs-48':
-            f1_0_boot_args = "app=hw_hsu_test cc_huid=3 --all_100g --dpc-server --dpc-uart retimer=0,1,2 --disable-wu-watchdog"
-            f1_1_boot_args = "app=hw_hsu_test cc_huid=2 --all_100g --dpc-server --dpc-uart retimer=0 --disable-wu-watchdog"
+            f1_0_boot_args = "app=load_mods cc_huid=3 --all_100g --dpc-server --dpc-uart retimer=0,1,2"
+            f1_1_boot_args = "app=load_mods cc_huid=2 --all_100g --dpc-server --dpc-uart retimer=0"
             topology_helper.set_dut_parameters(dut_index=0,
                                                f1_parameters={0: {"boot_args": f1_0_boot_args},
                                                               1: {"boot_args": f1_1_boot_args}})
 
         elif fs == 'fs-20':
-            f1_0_boot_args = "app=hw_hsu_test cc_huid=3 --all_100g --dpc-server --dpc-uart --disable-wu-watchdog"
-            f1_1_boot_args = "app=hw_hsu_test cc_huid=2 --all_100g --dpc-server --dpc-uart retimer=0 --disable-wu-watchdog"
+            f1_0_boot_args = "app=load_mods cc_huid=3 --all_100g --dpc-server --dpc-uart"
+            f1_1_boot_args = "app=load_mods cc_huid=2 --all_100g --dpc-server --dpc-uart retimer=0"
             topology_helper.set_dut_parameters(dut_index=0,
                                                f1_parameters={0: {"boot_args": f1_0_boot_args},
                                                               1: {"boot_args": f1_1_boot_args}})
         elif fs == 'fs-31':
-            f1_0_boot_args = "app=hw_hsu_test cc_huid=3 --all_100g --dpc-server --dpc-uart --disable-wu-watchdog retimer=0"
-            f1_1_boot_args = "app=hw_hsu_test cc_huid=2 --all_100g --dpc-server --dpc-uart --disable-wu-watchdog"
+            f1_0_boot_args = "app=load_mods cc_huid=3 --all_100g --dpc-server --dpc-uart retimer=0"
+            f1_1_boot_args = "app=load_mods cc_huid=2 --all_100g --dpc-server --dpc-uart"
             topology_helper.set_dut_parameters(dut_index=0,
                                                f1_parameters={0: {"boot_args": f1_0_boot_args},
                                                               1: {"boot_args": f1_1_boot_args}})

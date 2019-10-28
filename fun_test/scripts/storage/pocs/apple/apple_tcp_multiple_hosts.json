@@ -1,7 +1,7 @@
 {
   "GlobalSetup": {
-    "bootargs": ["app=mdt_test,load_mods,hw_hsu_test workload=storage cc_huid=3 --serial --disable-wu-watchdog --dpc-server --dpc-uart --mgmt --all_10g --nofreeze --funtop",
-                 "app=mdt_test,load_mods,hw_hsu_test workload=storage cc_huid=2 --serial --disable-wu-watchdog --dpc-server --dpc-uart --mgmt --all_10g --nofreeze --funtop"],
+    "bootargs": ["app=mdt_test,load_mods workload=storage cc_huid=3 --serial --disable-wu-watchdog --dpc-server --dpc-uart --mgmt --all_10g --nofreeze --funtop",
+                 "app=mdt_test,load_mods workload=storage cc_huid=2 --serial --disable-wu-watchdog --dpc-server --dpc-uart --mgmt --all_10g --nofreeze --funtop"],
     "dut_start_index": 0,
     "host_start_index": 0,
     "update_workspace": false,
@@ -39,9 +39,9 @@
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {"bs": "32k", "iodepth": 1, "rw": "write", "direct": 1, "prio": 0,
                              "size": "64G", "cpus_allowed": "1-7", "numjobs": 1, "timeout": 600},
-    "fio_cmd_args": {"ioengine": "mmap", "size": "64G", "direct": 1, "time_based": 1, "runtime": 86400,
+    "fio_cmd_args": {"ioengine": "mmap", "size": "64G", "direct": 1, "time_based": 1, "runtime": 1200,
                       "norandommap": "NO_VALUE", "randrepeat": 0,
-                      "thread": 1, "group_reporting": 1, "prio":  0, "timeout": 86500},
+                      "thread": 1, "group_reporting": 1, "prio":  0, "timeout": 1400},
     "fio_modes": ["randread"],
     "expected_fio_result": {
       "(32, 1)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}}

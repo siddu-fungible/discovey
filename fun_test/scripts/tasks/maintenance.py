@@ -101,6 +101,23 @@ class CleanupOldDirectories(FunTestCase):
         working_directory = "{}/fun_test/management".format(WEB_DIR)
         t.call("python archiver.py", working_directory=working_directory)
 
+class DetectLargeFiles(FunTestCase):
+    MAX_FILE_SIZE = "400M"
+    def describe(self):
+        self.set_test_details(id=4, summary="Detect files larger than")
+
+    def setup(self):
+        pass
+
+    def run(self):
+        t = TaskTemplate()
+        working_directory = "{}".format(LOGS_DIR)
+        output = t.call("find . -type f -size +{}".format(self.MAX_FILE_SIZE), working_directory=working_directory)
+        lines = output.split("\n")
+        fun_test.test_assert(len(lines) < 3, "No of files > {}M: {}".format(self.MAX_FILE_SIZE, len(lines)))
+
+    def cleanup(self):
+        pass
 
 
 if __name__ == "__main__":
@@ -108,4 +125,5 @@ if __name__ == "__main__":
     myscript.add_test_case(ManageSsh())
     myscript.add_test_case(WebBackup())
     # myscript.add_test_case(CleanupOldDirectories())
+    myscript.add_test_case(DetectLargeFiles())
     myscript.run()
