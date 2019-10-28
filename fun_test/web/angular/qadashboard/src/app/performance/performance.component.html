@@ -308,7 +308,8 @@
         </div>
         <div class="closed-section"></div>
         <!-- Fun Metric Chart component -->
-        <fun-metric-chart [id]="currentNode.metricId" [buildInfo]="buildInfo"></fun-metric-chart>
+        <fun-metric-chart [id]="currentNode.metricId" [buildInfo]="buildInfo"
+                          [chartInfo]="currentNode.chartInfo"></fun-metric-chart>
         <div class="closed-section"></div>
         <!-- Companion Chart Component -->
         <div *ngFor="let id of currentNode.companionCharts">
