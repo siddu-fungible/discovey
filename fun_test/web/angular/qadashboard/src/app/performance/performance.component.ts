@@ -983,7 +983,7 @@ export class PerformanceComponent implements OnInit {
     // } else {
     //   this.showNonAtomicMetric(flatNode);
     // }
-    if (flatNode.node.metricId !== this.currentNode.metricId) {
+    if (!this.currentNode || flatNode.node.metricId !== this.currentNode.metricId) {
       this.showFunMetric = false;
       this.navigateByQuery(flatNode);
     }
