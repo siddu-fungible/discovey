@@ -104,6 +104,7 @@ export class SuiteEditorComponent implements OnInit {
       return this.testBedService.testBeds();
     })).pipe(switchMap(response => {
       this.testBeds = response;
+      this.testBeds = this.testBeds.filter(testBed => testBed.name.startsWith('fs'));
       return this.testBedService.assetTypes();
     })).pipe(switchMap(response => {
       this.assetTypes = response;
@@ -361,7 +362,8 @@ export class SuiteEditorComponent implements OnInit {
                 group[poolMemberTypeKey].setValue(value);
               });
             
-          } else {
+          }
+          if (names) {
             group[assetSelectionKey].setValue(CustomAssetSelection.SPECIFIC);
             group[specificAssetsKey].setValue(names);
           }
