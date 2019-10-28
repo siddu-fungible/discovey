@@ -283,14 +283,14 @@ class FunTest:
         self.at_least_one_failed = False
         self.closed = False
         self.time_series_enabled = False
-        """
+
         if self.suite_execution_id:
-            # if not self.get_mongo_db_manager().test_connection():
-                print "Testing mongodb"
+            print "Testing mongodb"
+            if not self.get_mongo_db_manager().test_connection():
                 self.enable_time_series(enable=False)
             else:
                 self.time_series_enabled = True
-        """
+
         self.script_id = None
         self.enable_profiling()
         self.start_time = get_current_time()
