@@ -181,6 +181,7 @@ export class PerformanceComponent implements OnInit {
   F1: string = "F1";
 
   allowedGridRows: number = 1;
+  showFunMetric: boolean = false;
 
   constructor(
     private apiService: ApiService,
@@ -942,10 +943,11 @@ export class PerformanceComponent implements OnInit {
   };
 
   fetchChartInfo(flatNode) {
-    if (flatNode.node.leaf && (!flatNode.node.failedInfo || !flatNode.node.pastStatus)) {
+    if (!flatNode.node.failedInfo || !flatNode.node.pastStatus) {
       this.service.fetchChartInfo(flatNode.node.metricId).subscribe((response) => {
         flatNode.node.chartInfo = response;
         this.chartReady = true;
+        this.showFunMetric = true;
         let result = {};
         if (response.last_suite_execution_id && response.last_suite_execution_id !== -1) {
           result["lastSuiteExecutionId"] = response.last_suite_execution_id;
@@ -969,15 +971,20 @@ export class PerformanceComponent implements OnInit {
       }, error => {
         console.error("Unable to fetch chartInfo");
       })
+    } else {
+      this.chartReady = true;
+      this.showFunMetric = true;
     }
   }
 
   showMetricCharts(flatNode): void {
-    if (flatNode.node.leaf) {
-      this.showAtomicMetric(flatNode);
-    } else {
-      this.showNonAtomicMetric(flatNode);
-    }
+    // if (flatNode.node.leaf) {
+    //   this.showAtomicMetric(flatNode);
+    // } else {
+    //   this.showNonAtomicMetric(flatNode);
+    // }
+    this.showFunMetric = false;
+    this.navigateByQuery(flatNode);
   }
 
   showAtomicMetric = (flatNode) => {

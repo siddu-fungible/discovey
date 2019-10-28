@@ -151,6 +151,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.daysInPast = 60;
     this.editingDaysInPast = false;
     this.headers = null;
+    this.values = null;
     this.editingDescription = false;
     this.editingOwner = false;
     this.editingSource = false;
