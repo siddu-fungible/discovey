@@ -48,6 +48,7 @@ class Node {
   tags: string = null;
   companionCharts: number[] = null;
   chartInfo: any = null;
+  failedInfo: any = null;
   pastStatus: any = null;
 }
 
@@ -180,6 +181,7 @@ export class PerformanceComponent implements OnInit {
   F1: string = "F1";
 
   allowedGridRows: number = 1;
+  showFunMetric: boolean = false;
 
   constructor(
     private apiService: ApiService,
@@ -941,26 +943,49 @@ export class PerformanceComponent implements OnInit {
   };
 
   fetchChartInfo(flatNode) {
-    if (flatNode.node.leaf && (!flatNode.node.chartInfo || !flatNode.node.pastStatus)) {
-      this.service.chartInfo(flatNode.node.metricId).subscribe((response) => {
+    if (!flatNode.node.failedInfo || !flatNode.node.pastStatus) {
+      this.service.fetchChartInfo(flatNode.node.metricId).subscribe((response) => {
         flatNode.node.chartInfo = response;
+        this.chartReady = true;
+        this.showFunMetric = true;
+        let result = {};
+        if (response.last_suite_execution_id && response.last_suite_execution_id !== -1) {
+          result["lastSuiteExecutionId"] = response.last_suite_execution_id;
+        }
+        if (response.last_jenkins_job_id && response.last_jenkins_job_id !== -1) {
+          result["lastJenkinsJobId"] = response.last_jenkins_job_id;
+        }
+        if (response.last_lsf_job_id && response.last_lsf_job_id !== -1) {
+          result["lastLsfJobId"] = response.last_lsf_job_id;
+        }
+        if (response.last_git_commit && response.last_git_commit !== "") {
+          result["currentGitCommit"] = response.last_git_commit;
+        }
+        flatNode.node.failedInfo = result;
         this.service.pastStatus(flatNode.node.metricId).subscribe((response) => {
           flatNode.node.pastStatus = response;
         }, error => {
           console.error("Unable to fetch past status"); //TODO
-        })
-
+        });
+        console.log("fetched chartInfo from performance component")
       }, error => {
         console.error("Unable to fetch chartInfo");
       })
+    } else {
+      this.chartReady = true;
+      this.showFunMetric = true;
     }
   }
 
   showMetricCharts(flatNode): void {
-    if (flatNode.node.leaf) {
-      this.showAtomicMetric(flatNode);
-    } else {
-      this.showNonAtomicMetric(flatNode);
+    // if (flatNode.node.leaf) {
+    //   this.showAtomicMetric(flatNode);
+    // } else {
+    //   this.showNonAtomicMetric(flatNode);
+    // }
+    if (flatNode.node.metricId !== this.currentNode.metricId) {
+      this.showFunMetric = false;
+      this.navigateByQuery(flatNode);
     }
   }
 
@@ -983,7 +1008,6 @@ export class PerformanceComponent implements OnInit {
       this.mode = Mode.ShowingAtomicMetric;
       this.expandNode(flatNode);
       this.commonService.scrollTo("chart-info");
-      this.chartReady = true;
       if (this.selectMode == SelectMode.ShowMainSite) {
         this.navigateByQuery(flatNode);
       }
@@ -998,15 +1022,14 @@ export class PerformanceComponent implements OnInit {
       this.mode = Mode.ShowingAtomicMetric;
       this.expandNode(flatNode);
       this.commonService.scrollTo("chart-info");
-      this.chartReady = true;
       this.fetchChartInfo(flatNode);
     }
   };
 
   showNonAtomicMetric = (flatNode) => {
     if (this.selectMode == SelectMode.ShowMainSite || this.selectMode == SelectMode.ShowViewWorkspace) {
+      this.chartReady = false;
       if (flatNode.node.metricModelName && flatNode.node.chartName !== "All metrics") {
-        this.chartReady = false;
         if (this.currentNode && this.currentNode.showAddJira) {
           this.currentNode.showAddJira = false;
         }
@@ -1029,16 +1052,14 @@ export class PerformanceComponent implements OnInit {
           this.prepareGridNodes(flatNode.node);
           this.commonService.scrollTo("chart-info");
         }
-        this.chartReady = true;
       } else {
-        this.chartReady = false;
         this.expandNode(flatNode);
-        this.chartReady = true;
       }
       if (!flatNode.special && this.selectMode == SelectMode.ShowMainSite) {
-         this.navigateByQuery(flatNode);
-       }
+        this.navigateByQuery(flatNode);
+      }
       this.fetchChartInfo(flatNode);
+      this.chartReady = true;
     } else {
       this.expandNode(flatNode);
       this.currentNode = flatNode.node;
@@ -1124,8 +1145,8 @@ export class PerformanceComponent implements OnInit {
 
   navigateByQuery(flatNode) {
     let path = this.lineageToPath(flatNode.lineage[0]);
-     let queryPath = this.gotoQueryBaseUrl + path;
-     this.router.navigateByUrl(queryPath);
+    let queryPath = this.gotoQueryBaseUrl + path;
+    this.router.navigateByUrl(queryPath);
   }
 
   pathToGuid(path) {
@@ -1134,9 +1155,9 @@ export class PerformanceComponent implements OnInit {
       path = path.replace(this.gotoQueryBaseUrl, "");
       let parts = path.split("__");
       result = this._doPathToGuid(this.f1Node, parts);
-       if (!result) {
-         result = this._doPathToGuid(this.s1Node, parts);
-       }
+      if (!result) {
+        result = this._doPathToGuid(this.s1Node, parts);
+      }
       // console.log("Path: " + path + " : guid: " + result + " c: " + this.getFlatNodeByGuid(result).node.chartName);
 
     } catch (e) {
@@ -1239,7 +1260,7 @@ export class PerformanceComponent implements OnInit {
 
   tooltipCallback(self, flatNode) {
     let content = this.renderer.createElement("span");
-    if (!flatNode.node.chartInfo || !flatNode.node.pastStatus) {
+    if (!flatNode.node.failedInfo || !flatNode.node.pastStatus) {
       const text = this.renderer.createText("Data not yet available. Try again in 10 seconds");
       this.renderer.appendChild(content, text);
     } else {
@@ -1253,16 +1274,16 @@ export class PerformanceComponent implements OnInit {
 
       let currentFailedElement = PerformanceComponent._tooltipInfoHelper(this, "Current failure:",
         "",
-        flatNode.node.chartInfo.lastLsfJobId,
-        flatNode.node.chartInfo.lastJenkinsJobId,
-        flatNode.node.chartInfo.lastSuiteExecutionId);
+        flatNode.node.failedInfo.lastLsfJobId,
+        flatNode.node.failedInfo.lastJenkinsJobId,
+        flatNode.node.failedInfo.lastSuiteExecutionId);
       this.renderer.appendChild(content, currentFailedElement);
 
       let firstFailedElement = PerformanceComponent._tooltipInfoHelper(this, "First failure:",
         this.commonService.getPrettyLocalizeTime(flatNode.node.pastStatus.failedDateTime),
-        flatNode.node.chartInfo.failedLsfJobId,
-        flatNode.node.chartInfo.failedJenkinsJobId,
-        flatNode.node.chartInfo.failedSuiteExecutionId);
+        flatNode.node.failedInfo.failedLsfJobId,
+        flatNode.node.failedInfo.failedJenkinsJobId,
+        flatNode.node.failedInfo.failedSuiteExecutionId);
       this.renderer.appendChild(content, firstFailedElement);
 
 
