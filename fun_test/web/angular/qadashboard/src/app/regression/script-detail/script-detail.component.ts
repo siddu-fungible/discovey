@@ -323,6 +323,7 @@ export class ScriptDetailComponent implements OnInit {
           });
           this.status = null;
           this.setMinimumTime();
+          console.log("Done parsing logs");
         }, 1);
 
         return of(true);
