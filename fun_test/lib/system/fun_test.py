@@ -1015,7 +1015,7 @@ class FunTest:
         if self.time_series_enabled:
             try:
                 if from_flush:
-                    if final_message_for_time_series.endswith("\n"):
+                    if not final_message_for_time_series.endswith("\n"):
                         self.time_series_buffer[context_id] += final_message_for_time_series
                     else:
                         final_message_for_time_series = self.time_series_buffer[context_id] + final_message_for_time_series
