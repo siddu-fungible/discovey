@@ -349,16 +349,14 @@ class NicEmulation(FunTestCase):
         fun_test.shared_variables["f10_host_roce"] = f10_host_roce
         fun_test.shared_variables["f11_host_roce"] = f11_host_roce
 
-        for x in range(0, fun_test.shared_variables["host_len_f10"]):
-            f10_hosts[x]["roce_handle"].build_rdma_repo(rdmacore_branch=fun_test.shared_variables["rdmacore_branch"],
-                                                        rdmacore_commit=fun_test.shared_variables["rdmacore_commit"],
-                                                        perftest_branch=fun_test.shared_variables["perftest_branch"],
-                                                        perftest_commit=fun_test.shared_variables["perftest_commit"])
-        for x in range(0, fun_test.shared_variables["host_len_f11"]):
-            f11_hosts[x]["roce_handle"].build_rdma_repo(rdmacore_branch=fun_test.shared_variables["rdmacore_branch"],
-                                                        rdmacore_commit=fun_test.shared_variables["rdmacore_commit"],
-                                                        perftest_branch=fun_test.shared_variables["perftest_branch"],
-                                                        perftest_commit=fun_test.shared_variables["perftest_commit"])
+        f10_host_roce.build_rdma_repo(rdmacore_branch=fun_test.shared_variables["rdmacore_branch"],
+                                      rdmacore_commit=fun_test.shared_variables["rdmacore_commit"],
+                                      perftest_branch=fun_test.shared_variables["perftest_branch"],
+                                      perftest_commit=fun_test.shared_variables["perftest_commit"])
+        f11_host_roce.build_rdma_repo(rdmacore_branch=fun_test.shared_variables["rdmacore_branch"],
+                                      rdmacore_commit=fun_test.shared_variables["rdmacore_commit"],
+                                      perftest_branch=fun_test.shared_variables["perftest_branch"],
+                                      perftest_commit=fun_test.shared_variables["perftest_commit"])
 
     def cleanup(self):
         pass
