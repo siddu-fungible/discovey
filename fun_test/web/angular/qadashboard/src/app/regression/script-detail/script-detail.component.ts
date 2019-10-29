@@ -323,6 +323,7 @@ export class ScriptDetailComponent implements OnInit {
           });
           this.status = null;
           this.setMinimumTime();
+          console.log("Done parsing logs");
         }, 1);
 
         return of(true);
@@ -350,7 +351,7 @@ export class ScriptDetailComponent implements OnInit {
       if (maxReached) {
         break;
       }
-      let timeSeries = this.currentTestCaseExecution.checkpoints[checkpointIteratorIndex].timeSeries;
+      let timeSeries = this.currentTestCaseExecution.checkpoints[checkpointIndexesToCheck[checkpointIteratorIndex]].timeSeries;
       let i = timeSeries.length - 1;
       if (count < maxEntries) {
         for (; i >= 0; i--, count++) {
