@@ -293,6 +293,7 @@ export class ScriptDetailComponent implements OnInit {
 
     this.fetchLogsForCheckpoints(this.currentTestCaseExecution, checkpointIndexesToFetch, checkpointIndex).subscribe(response => {
       this.showLogsPanel = true;
+      this.setMinimumTime();
       this.status = null;
       setTimeout(() => {
         this.commonService.scrollTo(checkpointId);
@@ -333,7 +334,7 @@ export class ScriptDetailComponent implements OnInit {
             testCaseExecution.checkpoints[checkpointIndex].timeSeries.push(timeSeriesElement);
           });
           this.status = null;
-          this.setMinimumTime();
+
           console.log("Done parsing logs");
         }, 1);
 
