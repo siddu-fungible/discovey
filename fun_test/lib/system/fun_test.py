@@ -1023,13 +1023,13 @@ class FunTest:
                             if not part:
                                 continue
                             data = {"checkpoint_index": self.current_time_series_checkpoint,
-                                    "log": part,
+                                    "log": part.rstrip(),
                                     "context_id": context_id}
                             self.add_time_series_log(data=data, epoch_time=current_epoch_time)
                         self.time_series_buffer[context_id] = ""
                 else:
                     data = {"checkpoint_index": self.current_time_series_checkpoint,
-                            "log": final_message_for_time_series,
+                            "log": final_message_for_time_series.rstrip(),
                             "context_id": context_id}
                     self.add_time_series_log(data=data, epoch_time=current_epoch_time)
             except Exception as ex:

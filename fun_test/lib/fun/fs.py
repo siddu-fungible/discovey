@@ -406,12 +406,12 @@ class Bmc(Linux):
         if m:
             try:
                 this_date = datetime.strptime(m.group(1), "%b %d %Y")
-                fun_test.add_checkpoint("u-boot date: {}".format(this_date))
-                fun_test.log("Minimum u-boot build date: {}".format(minimum_date))
-                fun_test.test_assert(this_date >= minimum_date, "Valid u-boot build date")
+                fun_test.add_checkpoint("u-boot date: {}".format(this_date), context=self.context)
+                fun_test.log("Minimum u-boot build date: {}".format(minimum_date), context=self.context)
+                fun_test.test_assert(this_date >= minimum_date, "Valid u-boot build date", context=self.context)
                 result = True
             except Exception as ex:
-                fun_test.critical("Unable to parse u-boot build date")
+                fun_test.critical("Unable to parse u-boot build date", context=self.context)
         return result
 
     def _use_i2c_reset(self):
@@ -550,7 +550,7 @@ class Bmc(Linux):
         if m:
             bytes_transferred = int(m.group(1))
 
-        fun_test.test_assert(bytes_transferred > 1000, "FunOS download size: {}".format(bytes_transferred))
+        fun_test.test_assert(bytes_transferred > 1000, "FunOS download size: {}".format(bytes_transferred), context=self.context)
 
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_UNCOMPRESS_IMAGE)
         output = self.u_boot_command(command="unzip {} {};".format(tftp_load_address, self.ELF_ADDRESS), timeout=10,
@@ -924,7 +924,7 @@ class BootupWorker(Thread):
                         if fs.validate_u_boot_version:
                             fun_test.test_assert(
                                 bmc.validate_u_boot_version(output=preamble, minimum_date=fs.MIN_U_BOOT_DATE),
-                                "Validate preamble")
+                                "Validate preamble", context=self.context)
                         fun_test.test_assert(
                             expression=bmc.u_boot_load_image(index=f1_index,
                                                              tftp_image_path=fs.tftp_image_path,
