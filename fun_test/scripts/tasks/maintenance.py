@@ -104,7 +104,7 @@ class CleanupOldDirectories(FunTestCase):
 class DetectLargeFiles(FunTestCase):
     MAX_FILE_SIZE = "400M"
     def describe(self):
-        self.set_test_details(id=4, summary="Detect files larger than")
+        self.set_test_details(id=4, summary="Detect files larger than", steps=""" """)
 
     def setup(self):
         pass
