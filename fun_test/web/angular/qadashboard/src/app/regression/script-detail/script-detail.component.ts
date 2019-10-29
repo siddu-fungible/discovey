@@ -277,7 +277,7 @@ export class ScriptDetailComponent implements OnInit {
     //checkpointIndexesToFetch = checkpointIndexesToFetch.filter(checkpointIndex => !testCaseExecution.checkpoints[checkpointIndex].hasOwnProperty("timeSeries"));
     let checkpointId = `${testCaseExecution.test_case_id}_${checkpointIndex}_${contextId}`;
     this.status = "Fetching logs";
-    this.fetchLogsForCheckpoints(this.currentTestCaseExecution, checkpointIndexesToFetch).subscribe(response => {
+    this.fetchLogsForCheckpoints(this.currentTestCaseExecution, checkpointIndexesToFetch, checkpointIndex).subscribe(response => {
       this.showLogsPanel = true;
       this.status = null;
       setTimeout(() => {
@@ -294,8 +294,10 @@ export class ScriptDetailComponent implements OnInit {
   }
 
 
-  fetchLogsForCheckpoints(testCaseExecution, checkpointIndexesToFetch): Observable<any> {
-    checkpointIndexesToFetch = checkpointIndexesToFetch.filter(checkpointIndex => !testCaseExecution.checkpoints[checkpointIndex].hasOwnProperty("timeSeries"));
+  fetchLogsForCheckpoints(testCaseExecution, checkpointIndexesToFetch, checkpointIndexClicked): Observable<any> {
+    checkpointIndexesToFetch = checkpointIndexesToFetch.filter(checkpointIndex => {
+      return !testCaseExecution.checkpoints[checkpointIndex].hasOwnProperty("timeSeries") && ((checkpointIndexClicked === checkpointIndex || ((checkpointIndexClicked - checkpointIndex) === 1)));
+    });
 
     if (checkpointIndexesToFetch.length > 0) {
       let minCheckpointIndex = checkpointIndexesToFetch[0];
