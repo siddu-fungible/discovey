@@ -258,6 +258,7 @@ export class ScriptDetailComponent implements OnInit {
     this.showContext(contextId);
     //this.status = "Fetching checkpoint data";
     this.numLookbackLogs = this.DEFAULT_LOOKBACK_LOGS;
+    this.timeFilterMin = 0;
     this.currentCheckpointIndex = checkpointIndex;
     this.showTestCasePanel = false;
     this.showLogsPanel = true;
