@@ -307,9 +307,9 @@ export class ScriptDetailComponent implements OnInit {
       let maxCheckpointIndex = checkpointIndexesToFetch[checkpointIndexesToFetch.length - 1];
       this.status = "Fetching logs";
       return this.regressionService.testCaseTimeSeries(this.suiteExecutionId, testCaseExecution.execution_id, null, minCheckpointIndex, maxCheckpointIndex).pipe(switchMap(response => {
-
+        this.status = "Parsing logs";
         setTimeout(() => {
-          this.status = "Parsing logs";
+
           response.forEach(timeSeriesElement => {
             let checkpointIndex = timeSeriesElement.data.checkpoint_index;
             if (!testCaseExecution.checkpoints[checkpointIndex].hasOwnProperty("timeSeries")) {
