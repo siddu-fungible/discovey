@@ -78,6 +78,8 @@ export class ScriptDetailComponent implements OnInit {
   timeFilterMin: number = 0;
   status: string = null;
   logPanelHeight: any = "500px";
+  DEFAULT_LOOKBACK_LOGS: number = 100;
+  numLookbackLogs: number = 100;
 
   //timeSeriesByTestCase: {[testCaseId: number]: {[key: string]: any }} = {};
 
@@ -245,6 +247,7 @@ export class ScriptDetailComponent implements OnInit {
 
   onCheckpointClick(testCaseExecution, checkpointIndex, contextId?: 0) {
     //this.status = "Fetching checkpoint data";
+    this.numLookbackLogs = this.DEFAULT_LOOKBACK_LOGS;
     this.currentCheckpointIndex = checkpointIndex;
     this.showTestCasePanel = false;
     this.showLogsPanel = true;
@@ -319,6 +322,7 @@ export class ScriptDetailComponent implements OnInit {
             testCaseExecution.checkpoints[checkpointIndex].timeSeries.push(timeSeriesElement);
           });
           this.status = null;
+          this.setMinimumTime();
         }, 1);
 
         return of(true);
@@ -330,6 +334,30 @@ export class ScriptDetailComponent implements OnInit {
       return of(true);
     }
 
+  }
+
+  setMinimumTime() {
+    let maxEntries = this.numLookbackLogs;
+    let count = 0;
+    let checkpointIndexesToCheck = [this.currentCheckpointIndex];
+    if ((this.currentTestCaseExecution.checkpoints.length - 2) >= this.currentCheckpointIndex) {
+      checkpointIndexesToCheck.unshift(this.currentCheckpointIndex - 1);
+    }
+    checkpointIndexesToCheck = checkpointIndexesToCheck.reverse();
+
+    checkpointIndexesToCheck.forEach(checkpointIndexToCheck => {
+      let timeSeries = this.currentTestCaseExecution.checkpoints[checkpointIndexToCheck].timeSeries;
+      let i = timeSeries.length - 1;
+      if (count < maxEntries) {
+        for (; i >= 0; i--, count++) {
+
+          if (count > maxEntries) {
+            break;
+          }
+          this.timeFilterMin = timeSeries[i].relative_epoch_time;
+        }
+      }
+    })
   }
 
   fetchLogsForCheckpoint(testCaseExecution, checkpointIndex) {
