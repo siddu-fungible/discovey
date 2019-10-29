@@ -341,7 +341,7 @@ export class ScriptDetailComponent implements OnInit {
     let maxEntries = this.numLookbackLogs;
     let count = 0;
     let checkpointIndexesToCheck = [this.currentCheckpointIndex];
-    if ((this.currentTestCaseExecution.checkpoints.length - 2) >= this.currentCheckpointIndex) {
+    if (this.currentTestCaseExecution > 0 && ((this.currentTestCaseExecution.checkpoints.length - 2) >= this.currentCheckpointIndex)) {
       checkpointIndexesToCheck.unshift(this.currentCheckpointIndex - 1);
     }
     checkpointIndexesToCheck = checkpointIndexesToCheck.reverse();

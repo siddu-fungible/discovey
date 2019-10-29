@@ -947,7 +947,8 @@ class FunTest:
             no_timestamp=False,
             context=None,
             ignore_context_description=None,
-            section=False):
+            section=False,
+            from_flush=False):
         current_time = get_current_time()
         current_epoch_time = get_current_epoch_time()
 
@@ -1013,18 +1014,24 @@ class FunTest:
 
         if self.time_series_enabled:
             try:
-                if not final_message_for_time_series.endswith("\n"):
-                    self.time_series_buffer[context_id] += final_message_for_time_series
+                if from_flush:
+                    if final_message_for_time_series.endswith("\n"):
+                        self.time_series_buffer[context_id] += final_message_for_time_series
+                    else:
+                        final_message_for_time_series = self.time_series_buffer[context_id] + final_message_for_time_series
+                        for part in final_message_for_time_series.split("\n"):
+                            if not part:
+                                continue
+                            data = {"checkpoint_index": self.current_time_series_checkpoint,
+                                    "log": part,
+                                    "context_id": context_id}
+                            self.add_time_series_log(data=data, epoch_time=current_epoch_time)
+                        self.time_series_buffer[context_id] = ""
                 else:
-                    final_message_for_time_series = self.time_series_buffer[context_id] + final_message_for_time_series
-                    for part in final_message_for_time_series.split("\n"):
-                        if not part:
-                            continue
-                        data = {"checkpoint_index": self.current_time_series_checkpoint,
-                                "log": part,
-                                "context_id": context_id}
-                        self.add_time_series_log(data=data, epoch_time=current_epoch_time)
-                    self.time_series_buffer[context_id] = ""
+                    data = {"checkpoint_index": self.current_time_series_checkpoint,
+                            "log": final_message_for_time_series,
+                            "context_id": context_id}
+                    self.add_time_series_log(data=data, epoch_time=current_epoch_time)
             except Exception as ex:
                 print "Timeseries exception: {}".format(str(ex))
 
@@ -1083,7 +1090,8 @@ class FunTest:
                  calling_module=calling_module,
                  no_timestamp=True,
                  context=context,
-                 ignore_context_description=True)
+                 ignore_context_description=True,
+                 from_flush=True)
         if context:
             context.buf = ""
         else:
