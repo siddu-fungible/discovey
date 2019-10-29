@@ -100,7 +100,7 @@
                           <ng-container *ngIf="(seriesElement.data.context_id === availableContext.context_id) && (seriesElement.relative_epoch_time >= timeFilterMin)">
                             <ng-container *ngIf="seriesElement.type === 80 && (seriesElement.data.checkpoint_index <= currentCheckpointIndex)">
 
-                              <td class="timestamp" nowrap><small>{{ seriesElement.relative_epoch_time | number: '1.3-3' }}</small></td>
+                              <td class="timestamp" nowrap><small>{{ seriesElement.relative_epoch_time }}</small></td>
                               <td>
                                 <div id="{{ currentTestCaseExecution.test_case_id }}_{{ seriesElement.data?.checkpoint_index }}_{{ seriesElement.data?.context_id }}">
                                   <span class="checkpoint-span">Checkpoint: {{ seriesElement.data?.checkpoint }}
@@ -109,7 +109,7 @@
                               </td>
                             </ng-container>
                           <ng-container *ngIf="seriesElement.type === 60 && (seriesElement.data.checkpoint_index <= currentCheckpointIndex)">
-                            <td class="timestamp" nowrap><small>{{ seriesElement.relative_epoch_time | number: '1.3-3' }}</small></td>
+                            <td class="timestamp" nowrap><small>{{ seriesElement.relative_epoch_time }}</small></td>
                             <td>{{ seriesElement.data?.log }}</td>
                           </ng-container>
                         </ng-container>
