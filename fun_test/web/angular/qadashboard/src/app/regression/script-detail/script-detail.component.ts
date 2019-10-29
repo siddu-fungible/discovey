@@ -276,7 +276,7 @@ export class ScriptDetailComponent implements OnInit {
     let checkpointIndexesToFetch = Array.from(Array(checkpointIndex + 1).keys());
     //checkpointIndexesToFetch = checkpointIndexesToFetch.filter(checkpointIndex => !testCaseExecution.checkpoints[checkpointIndex].hasOwnProperty("timeSeries"));
     let checkpointId = `${testCaseExecution.test_case_id}_${checkpointIndex}_${contextId}`;
-    this.status = "Fetching logs";
+
     this.fetchLogsForCheckpoints(this.currentTestCaseExecution, checkpointIndexesToFetch, checkpointIndex).subscribe(response => {
       this.showLogsPanel = true;
       this.status = null;
@@ -305,19 +305,20 @@ export class ScriptDetailComponent implements OnInit {
         minCheckpointIndex = checkpointIndexesToFetch[checkpointIndexesToFetch.length - 2];
       }
       let maxCheckpointIndex = checkpointIndexesToFetch[checkpointIndexesToFetch.length - 1];
-
+      this.status = "Fetching logs";
       return this.regressionService.testCaseTimeSeries(this.suiteExecutionId, testCaseExecution.execution_id, null, minCheckpointIndex, maxCheckpointIndex).pipe(switchMap(response => {
-        let testCaseId = testCaseExecution.test_case_id;
-
-        response.forEach(timeSeriesElement => {
-          let checkpointIndex = timeSeriesElement.data.checkpoint_index;
-          if (!testCaseExecution.checkpoints[checkpointIndex].hasOwnProperty("timeSeries")) {
-            testCaseExecution.checkpoints[checkpointIndex]["timeSeries"] = [];
-          }
-          timeSeriesElement["relative_epoch_time"] = timeSeriesElement.epoch_time - this.scriptRunTime.started_epoch_time;
-          testCaseExecution.checkpoints[checkpointIndex].timeSeries.push(timeSeriesElement);
-        });
-
+        this.status = "Parsing logs";
+        setTimeout(() => {
+          response.forEach(timeSeriesElement => {
+            let checkpointIndex = timeSeriesElement.data.checkpoint_index;
+            if (!testCaseExecution.checkpoints[checkpointIndex].hasOwnProperty("timeSeries")) {
+              testCaseExecution.checkpoints[checkpointIndex]["timeSeries"] = [];
+            }
+            timeSeriesElement["relative_epoch_time"] = timeSeriesElement.epoch_time - this.scriptRunTime.started_epoch_time;
+            testCaseExecution.checkpoints[checkpointIndex].timeSeries.push(timeSeriesElement);
+          });
+        }, 1);
+        
         return of(true);
       }), catchError (error => {
         this.loggerService.error("Unable fetch checkpoint logs");
