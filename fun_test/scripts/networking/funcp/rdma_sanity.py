@@ -980,7 +980,7 @@ class IbLatRandIoRdmaCm(IbLatSeqIoTest):
 class IbWriteScale(FunTestCase):
     server_key = {}
     random_io = False
-    use_rdmacm = True
+    use_rdmacm = False
 
     def describe(self):
         self.set_test_details(id=17,
