@@ -103,9 +103,9 @@ class BringupSetup(FunTestCase):
             f11_retimer = 0
 
         f1_0_boot_args = "app=load_mods cc_huid=3 --dpc-server --serial --all_100g --dpc-uart " \
-                         "retimer={} --mgmt syslog=3".format(f10_retimer)
+                         "retimer={} --mgmt".format(f10_retimer)
         f1_1_boot_args = "app=load_mods cc_huid=2 --dpc-server --serial --all_100g --dpc-uart " \
-                         "retimer={} --mgmt syslog=3".format(f11_retimer)
+                         "retimer={} --mgmt".format(f11_retimer)
 
         topology_helper = TopologyHelper()
 

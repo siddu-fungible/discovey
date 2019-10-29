@@ -72,9 +72,9 @@ class BringupSetup(FunTestCase):
             f11_retimer = 0
 
         f1_0_boot_args = "app=mdt_test,load_mods cc_huid=3 --dpc-server --all_100g --serial --dpc-uart " \
-                         "retimer={} --mgmt syslog=2".format(f10_retimer)
+                         "retimer={} --mgmt".format(f10_retimer)
         f1_1_boot_args = "app=mdt_test,load_mods cc_huid=2 --dpc-server --all_100g --serial --dpc-uart " \
-                         "retimer={} --mgmt syslog=2".format(f11_retimer)
+                         "retimer={} --mgmt".format(f11_retimer)
 
         topology_helper = TopologyHelper()
         if "deploy_setup" in job_inputs:
@@ -103,6 +103,30 @@ class BringupSetup(FunTestCase):
             fun_test.shared_variables["qp_list"] = job_inputs["qp_list"]
         else:
             fun_test.shared_variables["qp_list"] = [64]
+        if "fundrv_branch" in job_inputs:
+            fun_test.shared_variables["fundrv_branch"] = job_inputs["fundrv_branch"]
+        else:
+            fun_test.shared_variables["fundrv_branch"] = None
+        if "fundrv_commit" in job_inputs:
+            fun_test.shared_variables["fundrv_commit"] = job_inputs["fundrv_commit"]
+        else:
+            fun_test.shared_variables["fundrv_commit"] = None
+        if "rdmacore_branch" in job_inputs:
+            fun_test.shared_variables["rdmacore_branch"] = job_inputs["rdmacore_branch"]
+        else:
+            fun_test.shared_variables["rdmacore_branch"] = None
+        if "rdmacore_commit" in job_inputs:
+            fun_test.shared_variables["rdmacore_commit"] = job_inputs["rdmacore_commit"]
+        else:
+            fun_test.shared_variables["rdmacore_commit"] = None
+        if "perftest_branch" in job_inputs:
+            fun_test.shared_variables["perftest_branch"] = job_inputs["perftest_branch"]
+        else:
+            fun_test.shared_variables["perftest_branch"] = None
+        if "perftest_commit" in job_inputs:
+            fun_test.shared_variables["perftest_commit"] = job_inputs["perftest_commit"]
+        else:
+            fun_test.shared_variables["perftest_commit"] = None
 
         if deploy_setup:
             funcp_obj = FunControlPlaneBringup(fs_name=self.server_key["fs"][fs_name]["fs-name"])
@@ -248,7 +272,8 @@ class NicEmulation(FunTestCase):
 
             # install drivers on PCIE connected servers
             tb_config_obj = tb_configs.TBConfigs(str(fs_name))
-            funeth_obj = Funeth(tb_config_obj)
+            funeth_obj = Funeth(tb_config_obj, fundrv_branch=fun_test.shared_variables["fundrv_branch"],
+                                fundrv_commit=fun_test.shared_variables["fundrv_commit"])
             fun_test.shared_variables['funeth_obj'] = funeth_obj
             setup_hu_host(funeth_obj, update_driver=True, sriov=4, num_queues=1)
 
@@ -265,33 +290,33 @@ class NicEmulation(FunTestCase):
             for host in ping_dict:
                 test_host_pings(host=host, ips=ping_dict[host], strict=False)
 
-        # Update RDMA Core & perftest on hosts
-        bg_proc_id = {}
-        for obj in host_objs:
-            if obj == "f1_0":
-                host_count = fun_test.shared_variables["host_len_f10"]
-                bg_proc_id[obj] = []
-            elif obj == "f1_1":
-                host_count = fun_test.shared_variables["host_len_f11"]
-                bg_proc_id[obj] = []
-            for x in xrange(0, host_count):
-                update_path = host_objs[obj][x].command("echo $HOME")
-                update_script = update_path.strip() + "/mks/update_rdma.sh"
-                print update_script
-                bg_proc_id[obj].append(host_objs[obj][x].
-                                       start_bg_process("{} build build".format(update_script),
-                                                        timeout=1200))
-        # fun_test.sleep("Building rdma_perf & core", seconds=120)
-        for obj in host_objs:
-            if obj == "f1_0":
-                host_count = fun_test.shared_variables["host_len_f10"]
-            elif obj == "f1_1":
-                host_count = fun_test.shared_variables["host_len_f11"]
-            for x in xrange(0, host_count):
-                for pid in bg_proc_id[obj]:
-                    while host_objs[obj][x].process_exists(process_id=pid):
-                        fun_test.sleep(message="Still building RDMA repo...", seconds=5)
-                host_objs[obj][x].disconnect()
+        # # Update RDMA Core & perftest on hosts
+        # bg_proc_id = {}
+        # for obj in host_objs:
+        #     if obj == "f1_0":
+        #         host_count = fun_test.shared_variables["host_len_f10"]
+        #         bg_proc_id[obj] = []
+        #     elif obj == "f1_1":
+        #         host_count = fun_test.shared_variables["host_len_f11"]
+        #         bg_proc_id[obj] = []
+        #     for x in xrange(0, host_count):
+        #         update_path = host_objs[obj][x].command("echo $HOME")
+        #         update_script = update_path.strip() + "/mks/update_rdma.sh"
+        #         print update_script
+        #         bg_proc_id[obj].append(host_objs[obj][x].
+        #                                start_bg_process("{} build build".format(update_script),
+        #                                                 timeout=1200))
+        # # fun_test.sleep("Building rdma_perf & core", seconds=120)
+        # for obj in host_objs:
+        #     if obj == "f1_0":
+        #         host_count = fun_test.shared_variables["host_len_f10"]
+        #     elif obj == "f1_1":
+        #         host_count = fun_test.shared_variables["host_len_f11"]
+        #     for x in xrange(0, host_count):
+        #         for pid in bg_proc_id[obj]:
+        #             while host_objs[obj][x].process_exists(process_id=pid):
+        #                 fun_test.sleep(message="Still building RDMA repo...", seconds=5)
+        #         host_objs[obj][x].disconnect()
 
         # Create a dict containing F1_0 & F1_1 details
         f10_hosts = []
@@ -323,6 +348,17 @@ class NicEmulation(FunTestCase):
         fun_test.shared_variables["f11_hosts"] = f11_hosts
         fun_test.shared_variables["f10_host_roce"] = f10_host_roce
         fun_test.shared_variables["f11_host_roce"] = f11_host_roce
+
+        for x in range(0, fun_test.shared_variables["host_len_f10"]):
+            f10_hosts[x]["roce_handle"].build_rdma_repo(rdmacore_branch=fun_test.shared_variables["rdmacore_branch"],
+                                                        rdmacore_commit=fun_test.shared_variables["rdmacore_commit"],
+                                                        perftest_branch=fun_test.shared_variables["perftest_branch"],
+                                                        perftest_commit=fun_test.shared_variables["perftest_commit"])
+        for x in range(0, fun_test.shared_variables["host_len_f11"]):
+            f11_hosts[x]["roce_handle"].build_rdma_repo(rdmacore_branch=fun_test.shared_variables["rdmacore_branch"],
+                                                        rdmacore_commit=fun_test.shared_variables["rdmacore_commit"],
+                                                        perftest_branch=fun_test.shared_variables["perftest_branch"],
+                                                        perftest_commit=fun_test.shared_variables["perftest_commit"])
 
     def cleanup(self):
         pass
@@ -380,9 +416,9 @@ class SrpingLoopBack(FunTestCase):
                 size = size * 2
 
         for size in io_list:
-            f10_host_server = f10_host_roce.srping_test(size=size, count=10, debug=True, timeout=15)
+            f10_host_server = f10_host_roce.srping_test(size=size, count=100000, debug=True, timeout=15)
             fun_test.sleep("Started srping server for size {}".format(size), seconds=1)
-            f10_host_client = f10_host_roce.srping_test(size=size, count=10, debug=True,
+            f10_host_client = f10_host_roce.srping_test(size=size, count=100000, debug=True,
                                                         server_ip=f10_hosts[0]["ipaddr"], timeout=15)
             while f10_hosts[0]["handle"].process_exists(process_id=f10_host_server["cmd_pid"]):
                 fun_test.sleep("Srping server on f10_host", 2)
@@ -396,9 +432,9 @@ class SrpingLoopBack(FunTestCase):
             fun_test.simple_assert(f10_client_result, "F10_host client result for size {}".format(size))
 
         for size in io_list:
-            f11_host_server = f11_host_roce.srping_test(size=size, count=10, debug=True, timeout=15)
+            f11_host_server = f11_host_roce.srping_test(size=size, count=1000, debug=True, timeout=15)
             fun_test.sleep("Started srping server for size {}".format(size), seconds=1)
-            f11_host_client = f11_host_roce.srping_test(size=size, count=10, debug=True,
+            f11_host_client = f11_host_roce.srping_test(size=size, count=1000, debug=True,
                                                         server_ip=f11_hosts[0]["ipaddr"], timeout=15)
             while f11_hosts[0]["handle"].process_exists(process_id=f11_host_server["cmd_pid"]):
                 fun_test.sleep("Srping server on f11_host", 2)
@@ -469,9 +505,9 @@ class RpingLoopBack(FunTestCase):
                 size = size * 2
 
         for size in io_list:
-            f10_host_server = f10_host_roce.rping_test(size=size, count=10, debug=True, timeout=15)
+            f10_host_server = f10_host_roce.rping_test(size=size, count=1000, debug=True, timeout=15)
             fun_test.sleep("Started Rping server for size {}".format(size), seconds=1)
-            f10_host_client = f10_host_roce.rping_test(size=size, count=10, debug=True,
+            f10_host_client = f10_host_roce.rping_test(size=size, count=1000, debug=True,
                                                        server_ip=f10_hosts[0]["ipaddr"], timeout=15)
             while f10_hosts[0]["handle"].process_exists(process_id=f10_host_server["cmd_pid"]):
                 fun_test.sleep("Rping server on f10_host", 2)
@@ -484,9 +520,9 @@ class RpingLoopBack(FunTestCase):
             fun_test.simple_assert(f10_client_result, "F10_host client result for size {}".format(size))
 
         for size in io_list:
-            f11_host_server = f11_host_roce.rping_test(size=size, count=10, debug=True, timeout=15)
+            f11_host_server = f11_host_roce.rping_test(size=size, count=1000, debug=True, timeout=15)
             fun_test.sleep("Started rping server for size {}".format(size), seconds=1)
-            f11_host_client = f11_host_roce.rping_test(size=size, count=10, debug=True,
+            f11_host_client = f11_host_roce.rping_test(size=size, count=1000, debug=True,
                                                        server_ip=f11_hosts[0]["ipaddr"], timeout=15)
             while f11_hosts[0]["handle"].process_exists(process_id=f11_host_server["cmd_pid"]):
                 fun_test.sleep("Rping server on f11_host", 2)
@@ -560,9 +596,9 @@ class SrpingSeqIoTest(FunTestCase):
         f10_pid_there = 0
         f11_pid_there = 0
         for size in io_list:
-            f10_host_test = f10_host_roce.srping_test(size=size, count=10, debug=True)
+            f10_host_test = f10_host_roce.srping_test(size=size, count=1000, debug=True)
             fun_test.sleep("Started srping server for size {}".format(size), seconds=1)
-            f11_host_test = f11_host_roce.srping_test(size=size, count=10, debug=True, server_ip=f10_hosts[0]["ipaddr"])
+            f11_host_test = f11_host_roce.srping_test(size=size, count=1000, debug=True, server_ip=f10_hosts[0]["ipaddr"])
             while f10_hosts[0]["handle"].process_exists(process_id=f10_host_test["cmd_pid"]):
                 fun_test.sleep("Srping test on f10_host", 2)
                 f10_pid_there += 1  # Counter to check before initiating kill
@@ -654,9 +690,9 @@ class RpingSeqIoTest(FunTestCase):
         f10_pid_there = 0
         f11_pid_there = 0
         for size in io_list:
-            f10_host_test = f10_host_roce.rping_test(size=size, count=10, debug=True)
+            f10_host_test = f10_host_roce.rping_test(size=size, count=1000, debug=True)
             fun_test.sleep("Started rping server for size {}".format(size), seconds=1)
-            f11_host_test = f11_host_roce.rping_test(size=size, count=10, debug=True, server_ip=f10_hosts[0]["ipaddr"])
+            f11_host_test = f11_host_roce.rping_test(size=size, count=1000, debug=True, server_ip=f10_hosts[0]["ipaddr"])
             while f10_hosts[0]["handle"].process_exists(process_id=f10_host_test["cmd_pid"]):
                 fun_test.sleep("Rping test on f10_host", 2)
                 f10_pid_there += 1
