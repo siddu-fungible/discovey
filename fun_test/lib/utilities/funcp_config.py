@@ -203,15 +203,10 @@ class FunControlPlaneBringup:
             linux_obj_come.sudo_command(command="cp -r FunSDK FunSDK_bkp_%s" % d1)
             bkp_dirs = self._get_backup_directory_list(linux_obj_come, '/mnt/keep/FunSDK*')
             fun_test.log(bkp_dirs)
-            if len(bkp_dirs) > 2:
-                for bkp_dir in bkp_dirs[:-2]:
-                    linux_obj_come.remove_directory(bkp_dir, sudo=True)
+            self.delete_backup_directory(bkp_dirs)
             linux_obj_come.sudo_command(command="cd / && tar cf scratch_bkp_%s.tar scratch" % d1, timeout=1200)
             scr_lists = self._get_backup_directory_list(linux_obj_come, '/scratch*')
-            if len(scr_lists) > 2:
-                for scr_file in scr_lists[:-2]:
-                    linux_obj_come.remove_directory(scr_file, sudo=True)
-
+            self.delete_backup_directory(scr_lists)
             linux_obj_come.sudo_command(command="rm -rf FunSDK")
             git_pull = linux_obj_come.command("git clone git@github.com:fungible-inc/FunSDK-small.git FunSDK",
                                               timeout=120)
@@ -1241,7 +1236,10 @@ class FunControlPlaneBringup:
         for x in dir_file_list:
             dir_list.append(x.get('filename'))
         return dir_list
-
+    def delete_backup_directory(self, linux_obj, dir_list):
+        if len(dir_list) > 2:
+            for bkp_dir in dir_list[:-2]:
+                linux_obj.remove_directory(bkp_dir, sudo=True)
 
 
 

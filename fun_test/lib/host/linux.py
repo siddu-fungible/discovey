@@ -789,10 +789,11 @@ class Linux(object, ToDictMixin):
             fun_test.critical("Removing {} is not permitted".format(directory))
             result = True
         else:
+            cmd = "rm -rf {}".format(directory)
             if not sudo:
-                self.command("rm -rf {}".format(directory))
+                self.command(cmd)
             else:
-                self.sudo_command("rm -rf {}".format(directory))
+                self.sudo_command(cmd)
         return result
 
     def remove_temp_file(self, file_name):
