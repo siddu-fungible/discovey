@@ -282,7 +282,7 @@ export class ScriptDetailComponent implements OnInit {
       this.status = null;
       setTimeout(() => {
         this.commonService.scrollTo(checkpointId);
-      }, 500);
+      }, 10);
 
 
     }, error => {
@@ -299,6 +299,9 @@ export class ScriptDetailComponent implements OnInit {
 
     if (checkpointIndexesToFetch.length > 0) {
       let minCheckpointIndex = checkpointIndexesToFetch[0];
+      if (checkpointIndexesToFetch.length > 1) {
+        minCheckpointIndex = checkpointIndexesToFetch[checkpointIndexesToFetch.length - 2];
+      }
       let maxCheckpointIndex = checkpointIndexesToFetch[checkpointIndexesToFetch.length - 1];
 
       return this.regressionService.testCaseTimeSeries(this.suiteExecutionId, testCaseExecution.execution_id, null, minCheckpointIndex, maxCheckpointIndex).pipe(switchMap(response => {
