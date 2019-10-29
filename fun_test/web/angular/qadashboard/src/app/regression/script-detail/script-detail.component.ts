@@ -345,19 +345,26 @@ export class ScriptDetailComponent implements OnInit {
     }
     checkpointIndexesToCheck = checkpointIndexesToCheck.reverse();
 
-    checkpointIndexesToCheck.forEach(checkpointIndexToCheck => {
-      let timeSeries = this.currentTestCaseExecution.checkpoints[checkpointIndexToCheck].timeSeries;
+    let maxReached = false;
+    for (let checkpointIteratorIndex = 0; checkpointIteratorIndex < checkpointIndexesToCheck.length; checkpointIteratorIndex++) {
+      if (maxReached) {
+        break;
+      }
+      let timeSeries = this.currentTestCaseExecution.checkpoints[checkpointIteratorIndex].timeSeries;
       let i = timeSeries.length - 1;
       if (count < maxEntries) {
         for (; i >= 0; i--, count++) {
 
           if (count > maxEntries) {
+            maxReached = true;
+            console.log(`Max reached: ${maxReached} time: ${this.timeFilterMin}`);
             break;
           }
           this.timeFilterMin = timeSeries[i].relative_epoch_time;
         }
       }
-    })
+
+    }
   }
 
   fetchLogsForCheckpoint(testCaseExecution, checkpointIndex) {
