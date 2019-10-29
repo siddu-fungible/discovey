@@ -245,7 +245,17 @@ export class ScriptDetailComponent implements OnInit {
 
   }
 
+  showContext(contextId) {
+    for (let index = 0; index < this.availableContexts.length; index++) {
+      if (contextId === this.availableContexts[index].context_id) {
+        this.availableContexts[index].selected = true;
+        break;
+      }
+    }
+  }
+
   onCheckpointClick(testCaseExecution, checkpointIndex, contextId?: 0) {
+    this.showContext(contextId);
     //this.status = "Fetching checkpoint data";
     this.numLookbackLogs = this.DEFAULT_LOOKBACK_LOGS;
     this.currentCheckpointIndex = checkpointIndex;
