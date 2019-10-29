@@ -142,6 +142,22 @@ class BringupSetup(FunTestCase):
             fun_test.shared_variables["fundrv_commit"] = job_inputs["fundrv_commit"]
         else:
             fun_test.shared_variables["fundrv_commit"] = None
+        if "rdmacore_branch" in job_inputs:
+            fun_test.shared_variables["rdmacore_branch"] = job_inputs["rdmacore_branch"]
+        else:
+            fun_test.shared_variables["rdmacore_branch"] = None
+        if "rdmacore_commit" in job_inputs:
+            fun_test.shared_variables["rdmacore_commit"] = job_inputs["rdmacore_commit"]
+        else:
+            fun_test.shared_variables["rdmacore_commit"] = None
+        if "perftest_branch" in job_inputs:
+            fun_test.shared_variables["perftest_branch"] = job_inputs["perftest_branch"]
+        else:
+            fun_test.shared_variables["perftest_branch"] = None
+        if "perftest_commit" in job_inputs:
+            fun_test.shared_variables["perftest_commit"] = job_inputs["perftest_commit"]
+        else:
+            fun_test.shared_variables["perftest_commit"] = None
 
         if deploy_setup:
             funcp_obj = FunControlPlaneBringup(fs_name=self.server_key["fs"][fs_name]["fs-name"])
@@ -300,7 +316,8 @@ class NicEmulation(FunTestCase):
 
             # install drivers on PCIE connected servers
             tb_config_obj = tb_configs.TBConfigs(str(fs_name))
-            funeth_obj = Funeth(tb_config_obj)
+            funeth_obj = Funeth(tb_config_obj, fundrv_branch=fun_test.shared_variables["fundrv_branch"],
+                                fundrv_commit=fun_test.shared_variables["fundrv_commit"])
             fun_test.shared_variables['funeth_obj'] = funeth_obj
             setup_hu_host(funeth_obj, update_driver=True, sriov=0, num_queues=1)
 
@@ -317,33 +334,33 @@ class NicEmulation(FunTestCase):
             for host in ping_dict:
                 test_host_pings(host=host, ips=ping_dict[host], strict=False)
 
-        # Update RDMA Core & perftest on hosts
-        bg_proc_id = {}
-        for obj in host_objs:
-            if obj == "f1_0":
-                host_count = fun_test.shared_variables["host_len_f10"]
-                bg_proc_id[obj] = []
-            elif obj == "f1_1":
-                host_count = fun_test.shared_variables["host_len_f11"]
-                bg_proc_id[obj] = []
-            for x in xrange(0, host_count):
-                update_path = host_objs[obj][x].command("echo $HOME")
-                update_script = update_path.strip() + "/mks/update_rdma.sh"
-                print update_script
-                bg_proc_id[obj].append(host_objs[obj][x].
-                                       start_bg_process("{} build build".format(update_script),
-                                                        timeout=1200))
-        # fun_test.sleep("Building rdma_perf & core", seconds=120)
-        for obj in host_objs:
-            if obj == "f1_0":
-                host_count = fun_test.shared_variables["host_len_f10"]
-            elif obj == "f1_1":
-                host_count = fun_test.shared_variables["host_len_f11"]
-            for x in xrange(0, host_count):
-                for pid in bg_proc_id[obj]:
-                    while host_objs[obj][x].process_exists(process_id=pid):
-                        fun_test.sleep(message="Still building RDMA repo...", seconds=5)
-                host_objs[obj][x].disconnect()
+        # # Update RDMA Core & perftest on hosts
+        # bg_proc_id = {}
+        # for obj in host_objs:
+        #     if obj == "f1_0":
+        #         host_count = fun_test.shared_variables["host_len_f10"]
+        #         bg_proc_id[obj] = []
+        #     elif obj == "f1_1":
+        #         host_count = fun_test.shared_variables["host_len_f11"]
+        #         bg_proc_id[obj] = []
+        #     for x in xrange(0, host_count):
+        #         update_path = host_objs[obj][x].command("echo $HOME")
+        #         update_script = update_path.strip() + "/mks/update_rdma.sh"
+        #         print update_script
+        #         bg_proc_id[obj].append(host_objs[obj][x].
+        #                                start_bg_process("{} build build".format(update_script),
+        #                                                 timeout=1200))
+        # # fun_test.sleep("Building rdma_perf & core", seconds=120)
+        # for obj in host_objs:
+        #     if obj == "f1_0":
+        #         host_count = fun_test.shared_variables["host_len_f10"]
+        #     elif obj == "f1_1":
+        #         host_count = fun_test.shared_variables["host_len_f11"]
+        #     for x in xrange(0, host_count):
+        #         for pid in bg_proc_id[obj]:
+        #             while host_objs[obj][x].process_exists(process_id=pid):
+        #                 fun_test.sleep(message="Still building RDMA repo...", seconds=5)
+        #         host_objs[obj][x].disconnect()
 
         # Create a dict containing F1_0 & F1_1 details
         f10_hosts = []
@@ -372,6 +389,17 @@ class NicEmulation(FunTestCase):
                     f11_hosts.append(f11_host_dict)
         fun_test.shared_variables["f10_hosts"] = f10_hosts
         fun_test.shared_variables["f11_hosts"] = f11_hosts
+
+        for x in range(0, fun_test.shared_variables["host_len_f10"]):
+            f10_hosts[x]["roce_handle"].build_rdma_repo(rdmacore_branch=fun_test.shared_variables["rdmacore_branch"],
+                                                        rdmacore_commit=fun_test.shared_variables["rdmacore_commit"],
+                                                        perftest_branch=fun_test.shared_variables["perftest_branch"],
+                                                        perftest_commit=fun_test.shared_variables["perftest_commit"])
+        for x in range(0, fun_test.shared_variables["host_len_f11"]):
+            f11_hosts[x]["roce_handle"].build_rdma_repo(rdmacore_branch=fun_test.shared_variables["rdmacore_branch"],
+                                                        rdmacore_commit=fun_test.shared_variables["rdmacore_commit"],
+                                                        perftest_branch=fun_test.shared_variables["perftest_branch"],
+                                                        perftest_commit=fun_test.shared_variables["perftest_commit"])
 
     def cleanup(self):
         pass

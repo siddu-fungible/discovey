@@ -25,7 +25,8 @@
       "prio": 0,
       "iodepth": 16,
       "runtime": 120,
-      "numjobs": 16
+      "numjobs": 16,
+      "cpus_allowed_policy": "split"
     }
   }
 }
