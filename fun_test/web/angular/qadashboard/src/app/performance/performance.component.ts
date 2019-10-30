@@ -169,6 +169,17 @@ export class PerformanceComponent implements OnInit {
 
   slashReplacement: string = "_fsl"; //forward slash
   spaceReplacement: string = "_"; //replacement for white space
+    //   {"value": "(", "replacement": "..2.."},
+    // {"value": ")", "replacement": "..3.."},
+
+  urlReplacementMap: any = [
+    {"value": "/", "replacement": "..a.."},
+    {"value": "_", "replacement": "..b.."},
+    {"value": "\\", "replacement": "..c.."},
+    {"value": "-", "replacement": "..d.."},
+    {"value": ":", "replacement": "..e.."},
+    {"value": ";", "replacement": "..f.."}
+  ];
 
   f1Node: FlatNode = null;
   s1Node: FlatNode = null;
@@ -427,7 +438,13 @@ export class PerformanceComponent implements OnInit {
   lineageToPath(lineage) {
     let s = "";
     lineage.forEach(part => {
-      let name = part.chartName.replace(/\//g, this.slashReplacement);
+      let name = part.chartName;
+      for (let specialChar of this.urlReplacementMap) {
+        if (name.includes(specialChar["value"])) {
+          name = name.replace(new RegExp(specialChar["value"], "g"), specialChar["replacement"])
+        }
+      }
+      name = name.replace(/ /g, "_");
       // name = name.replace(/ /g, this.spaceReplacement);
       s += "__" + encodeURIComponent(name);
     });
@@ -1169,8 +1186,14 @@ export class PerformanceComponent implements OnInit {
   _doPathToGuid(flatNode, remainingParts) {
     let result = null;
     if (remainingParts.length > 0) {
-      let remainingPart = remainingParts[0].replace(/_fsl/g, "/");
+      let remainingPart = remainingParts[0];
       // remainingPart = remainingPart.replace(/_/g, " ");
+      remainingPart = remainingPart.replace(/_/g, " ");
+      for (let specialChar of this.urlReplacementMap) {
+        if (remainingPart.includes(specialChar["replacement"])) {
+          remainingPart = remainingPart.replace(new RegExp(specialChar["replacement"], "g"), specialChar["value"])
+        }
+      }
       if (remainingPart === "Total") {
         remainingPart = this.F1;
       }
@@ -1178,8 +1201,14 @@ export class PerformanceComponent implements OnInit {
         // match found
         if (remainingParts.length > 1) {
           remainingParts = remainingParts.slice(1, remainingParts.length); // there are more segments to parse
-          let remainingPart = remainingParts[0].replace(/_fsl/g, "/");
+          let remainingPart = remainingParts[0];
           // remainingPart = remainingPart.replace(/_/g, " ");
+          remainingPart = remainingPart.replace(/_/g, " ");
+          for (let specialChar of this.urlReplacementMap) {
+            if (remainingPart.includes(specialChar["replacement"])) {
+              remainingPart = remainingPart.replace(new RegExp(specialChar["replacement"], "g"), specialChar["value"])
+            }
+          }
           for (let index = 0; index < flatNode.children.length; index++) {
             let childFlatNode = flatNode.children[index];
             if (decodeURIComponent(remainingPart) === childFlatNode.node.chartName) {
