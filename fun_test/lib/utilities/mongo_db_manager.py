@@ -5,8 +5,11 @@ import pymongo.errors
 
 
 class MongoDbManager():
-    def __init__(self):
-        self.client = MongoClient()
+    DEFAULT_HOST = "127.0.0.1"
+    DEFAULT_PORT = 27017
+
+    def __init__(self, host=DEFAULT_HOST, port=DEFAULT_PORT):
+        self.client = MongoClient(host=host, port=port)
         self.db = self.client.fun_test
 
     def test_connection(self):

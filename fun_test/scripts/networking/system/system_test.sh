@@ -18,13 +18,19 @@ vol_size=$((400 * 1024 * 1024 * 1024))
 #log_interval=300
 ########################
 
-if [[ -z "${WORKSPACE}" ]]
+if [[ -d "/home/fun/workspace/opt/fungible" ]]
+then
+    MY_SCRIPT_VARIABLE="/home/fun/workspace"
+    echo "/opt/fungible dir found at $MY_SCRIPT_VARIABLE"
+    cp -r $MY_SCRIPT_VARIABLE/opt/fungible/ /opt/
+elif [[ -d "/opt/fungible" ]]
 then
     MY_SCRIPT_VARIABLE="/"
+    echo "/opt/fungible dir found at $MY_SCRIPT_VARIABLE"
 else
-    MY_SCRIPT_VARIABLE="${WORKSPACE}"
+    echo "/opt/fungible directory not found. Please check"
+    exit 1
 fi
-echo "Using workspace $MY_SCRIPT_VARIABLE"
 
 function setup_dpc {
     cmd=`ps -aef | grep dpc | grep -v grep -c`
@@ -97,14 +103,13 @@ function check_nvme_cli {
 function network_setup {
     network_setup_successful=1
     echo "########## Setup docker containers for snake ############"
-    snake_file_path="/opt/fungible/cclinux/snake_test.sh"
-    snake_file="$MY_WORKSPACE$snake_file_path"
-    if [ -f "$snake_file" ]
+    snake_file_path="$MY_SCRIPT_VARIABLE/opt/fungible/cclinux/snake_test.sh"
+    if [ -f "$snake_file_path" ]
     then
-        echo "$snake_file found"
-        sh $snake_file
+        echo "$snake_file_path found"
+        sh $snake_file_path
     else
-        echo  "$snake_file does not exists"
+        echo  "$snake_file_path does not exists"
         network_setup_successful=0
         return "$network_setup_successful"
     fi
@@ -127,7 +132,7 @@ function network_setup {
             device_name="05:00.1"
         fi
         nu_test_file="/home/fun/f1-$f1-nutest.txt"
-        docker exec -i "F1-$f1-fpg0" bash -c "cd $MY_WORKSPACE/opt/fungible/FunControlPlane/bin/; FUNQ_MODE=yes FUNQ_DEVICE_NAME=$device_name ./nu_test ../scripts/snake_nutest.json" > $nu_test_file 2>&1
+        docker exec -i "F1-$f1-fpg0" bash -c "cd $MY_SCRIPT_VARIABLE/opt/fungible/FunControlPlane/bin/; FUNQ_MODE=yes FUNQ_DEVICE_NAME=$device_name ./nu_test ../scripts/snake_nutest.json" > $nu_test_file 2>&1
         #  Need validations
         for fpg_int in 4 8 12 16
         do

@@ -14,7 +14,7 @@ tb_config = {
     "name": "Basic Storage",
     "dut_info": {
         0: {
-            "bootarg": "setenv bootargs app=mdt_test,load_mods,hw_hsu_test workload=storage cc_huid=3 --serial sku=SKU_FS1600_0"
+            "bootarg": "setenv bootargs app=mdt_test,load_mods workload=storage cc_huid=3 --serial sku=SKU_FS1600_0"
                        "  --all_100g --mgmt --dpc-server --dpc-uart --nofreeze",
             "perf_multiplier": 1,
             "f1_ip": "15.43.1.2",

@@ -30,6 +30,7 @@ from fun_settings import MAIN_WEB_APP
 from django.apps import apps
 from bson import json_util
 from web.fun_test.models_helper import get_script_id
+from fun_global import TimeSeriesTypes
 
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 
@@ -535,14 +536,43 @@ def test_case_time_series(request, suite_execution_id, test_case_execution_id):
     if request.method == "GET":
         type = request.GET.get("type", None)
         checkpoint_index = request.GET.get("checkpoint_index", None)
-        collection_name = get_fun_test_time_series_collection_name(suite_execution_id, test_case_execution_id)  # "s_{}_{}".format(suite_execution_id, test_case_execution_id)
+        collection_name = get_fun_test_time_series_collection_name(suite_execution_id)  # "s_{}_{}".format(suite_execution_id, test_case_execution_id)
         mongo_db_manager = app_config.get_mongo_db_manager()
         collection = mongo_db_manager.get_collection(collection_name)
+
+        start_epoch = request.GET.get("start_epoch", None)
+        end_epoch = request.GET.get("end_epoch", None)
+
+        min_checkpoint_index = request.GET.get("min_checkpoint_index", None)
+        max_checkpoint_index = request.GET.get("max_checkpoint_index", None)
         query = {}
         if type:
+            type = int(type)
             query["type"] = type
+
+        if type is not None:
+            if type == TimeSeriesTypes.LOG:
+                query["type"] = {"$or": [TimeSeriesTypes.LOG, TimeSeriesTypes.CHECKPOINT]}
+        query["data.te"] = int(test_case_execution_id)
         if checkpoint_index is not None:
             query["data.checkpoint_index"] = int(checkpoint_index)
+
+        epoch_filter = {}
+        if start_epoch is not None:
+            epoch_filter["$gte"] = start_epoch
+        if end_epoch is not None:
+            epoch_filter["$lte"] = end_epoch
+        if epoch_filter:
+            query["epoch_time"] = epoch_filter
+
+        checkpoint_filter = {}
+        if max_checkpoint_index is not None:
+            checkpoint_filter["$lte"] = int(max_checkpoint_index)
+        if min_checkpoint_index is not None:
+            checkpoint_filter["$gte"] = int(min_checkpoint_index)
+        if checkpoint_filter:
+            query["data.checkpoint_index"] = checkpoint_filter
+
         if collection:
             result = list(collection.find(query))
     return result
@@ -552,10 +582,10 @@ def test_case_time_series(request, suite_execution_id, test_case_execution_id):
 def contexts(request, suite_execution_id, script_id):
     result = None
     if request.method == "GET":
-        collection_name = get_ts_test_case_context_info_collection_name(suite_execution_id, script_id)
+        collection_name = get_fun_test_time_series_collection_name(suite_execution_id)
         mongo_db_manager = app_config.get_mongo_db_manager()
         collection = mongo_db_manager.get_collection(collection_name)
-        query = {}
+        query = {"type": TimeSeriesTypes.CONTEXT_INFO}
         if collection:
             if script_id:
                 query["script_id"] = int(script_id)
@@ -569,11 +599,12 @@ def contexts(request, suite_execution_id, script_id):
 def script_run_time(request, suite_execution_id, script_id):
     result = None
     if request.method == "GET":
-        collection_name = get_ts_script_run_time_collection_name(suite_execution_id, script_id)
+        collection_name = get_fun_test_time_series_collection_name(suite_execution_id)
         mongo_db_manager = app_config.get_mongo_db_manager()
         collection = mongo_db_manager.get_collection(collection_name)
         query = {}
         if collection:
+            query["type"] = TimeSeriesTypes.SCRIPT_RUN_TIME
             if script_id:
                 query["script_id"] = int(script_id)
             if suite_execution_id:

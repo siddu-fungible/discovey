@@ -55,7 +55,7 @@ class BootFS(FunTestCase):
             print "Run %s" % run_count
             run_count += 1
             print "===================================================================================================="
-            bootargs = "app=hw_hsu_test cc_huid=3 --fec sku=SKU_FS1600_0 --dis-stats --disable-wu-watchdog --dpc-server --dpc-uart --serdesinit --retimer"
+            bootargs = "app=load_mods cc_huid=3 --fec sku=SKU_FS1600_0 --dis-stats --disable-wu-watchdog --dpc-server --dpc-uart --serdesinit --retimer"
             img_path = "funos-f1.stripped_28apr_pcie_extn_test.gz"
             fs = Fs.get(fs_spec=test_bed_spec, tftp_image_path=img_path, boot_args=bootargs)
             fun_test.test_assert(expression=fs, message="Succesfully fetched image, credentials and bootargs")

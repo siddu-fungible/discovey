@@ -18,8 +18,8 @@ class ScriptSetup(FunTestScript):
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
 
         img = fun_test.get_job_environment_variable('tftp_image_path')
-        f1_0_boot_args = "app=hw_hsu_test cc_huid=3 --all_100g --dpc-server --dpc-uart --disable-wu-watchdog retimer=0"
-        f1_1_boot_args = "app=hw_hsu_test cc_huid=2 --all_100g --dpc-server --dpc-uart --disable-wu-watchdog"
+        f1_0_boot_args = "app=load_mods cc_huid=3 --all_100g --dpc-server --dpc-uart --disable-wu-watchdog retimer=0"
+        f1_1_boot_args = "app=load_mods cc_huid=2 --all_100g --dpc-server --dpc-uart --disable-wu-watchdog"
         funcp_obj = FunControlPlaneBringup(fs_name=fs_name, boot_args_f1_0=f1_0_boot_args, boot_image_f1_1=img,
                                            boot_args_f1_1=f1_1_boot_args, boot_image_f1_0=img)
         funcp_obj.boot_both_f1(reboot_come=False, gatewayip="10.1.44.1")

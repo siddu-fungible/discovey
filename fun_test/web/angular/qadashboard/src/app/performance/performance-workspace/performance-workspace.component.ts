@@ -31,7 +31,7 @@ export class PerformanceWorkspaceComponent implements OnInit {
   workspaceName: string = null;
   description: string = null;
   subscribeToAlerts: boolean = false;
-  alertEmails: string = null;
+  alertEmails: string = "";
 
   constructor(private loggerService: LoggerService, private  apiService: ApiService, private router: Router,
               private route: ActivatedRoute, private commonService: CommonService, private modalService: NgbModal,

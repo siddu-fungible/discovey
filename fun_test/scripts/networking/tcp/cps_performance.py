@@ -57,7 +57,7 @@ class TcpPerformance(FunTestScript):
         #    fs = Fs.get(disable_f1_index=f1_index)
         #    fun_test.shared_variables['fs'] = fs
         #    fun_test.test_assert(fs.bootup(reboot_bmc=False), 'FS bootup')
-        f1_1_boot_args = "app=hw_hsu_test cc_huid=2 --dpc-server --dpc-uart --csr-replay --all_100g"
+        f1_1_boot_args = "app=load_mods cc_huid=2 --dpc-server --dpc-uart --csr-replay --all_100g"
 
         topology_t_bed_type = fun_test.get_job_environment_variable('test_bed_type')
 

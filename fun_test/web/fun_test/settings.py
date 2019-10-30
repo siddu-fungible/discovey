@@ -96,7 +96,6 @@ DATABASES = {
         'timeout': 20,
     }
 }
-
 # Sample for postgresql
 if not is_lite_mode():
     DATABASES["default"] = {

@@ -1,4 +1,4 @@
-.fun-flex-item {
+.fun-flex-item1 {
   flex-grow: 1;
   flex-shrink: 1;
   flex-basis: 0;
@@ -45,7 +45,7 @@
 
 .script-name {
   /*font-family: Times;*/
-  font-size: 18px;
+  font-size: 14px;
   line-height: 20px;
   font-weight: 700;
   margin: auto 10px;
@@ -74,3 +74,21 @@
 table {
   border-spacing: 0;
 }
+
+.auto-scroll {
+  overflow: auto;
+  max-width: calc(50vw);
+}
+
+.test-case-panel {
+  height: 400px;
+}
+
+.checkpoint-panel {
+  height: 400px;
+}
+
+.logs-panel {
+  height: calc(60vh);
+}
+
