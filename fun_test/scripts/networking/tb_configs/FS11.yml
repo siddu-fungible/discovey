@@ -135,29 +135,29 @@ hu2:
         - prefix: 2001::21:1:1:0/112
           nexthop: 2001::53:1:1:254
 
-hu3:
-  hostname: poc-server-08
-  username: localadmin
-  password: Precious1*
-  mgmt_interface: eno1
-  pcie_width: 16
-  pf_interface: hu1-f0
-  vf_interface: hu1-f8
-  namespaces:
-    default:
-      interfaces:
-        - hu1-f0:
-            mac_addr: 00:de:ad:be:ef:11
-            ipv4_addr: 54.1.1.1
-            ipv4_netmask: 255.255.255.0
-            ipv6_addr: 2001::54:1:1:1
-            ipv6_prefix_length: 112
-      routes:
-        - prefix: 53.1.1.0/24
-          nexthop: 54.1.1.254
-      ipv6_routes:
-        - prefix: 2001::53:1:1:0/112
-          nexthop: 2001::54:1:1:254
+#hu3:
+#  hostname: poc-server-08
+#  username: localadmin
+#  password: Precious1*
+#  mgmt_interface: eno1
+#  pcie_width: 16
+#  pf_interface: hu1-f0
+#  vf_interface: hu1-f8
+#  namespaces:
+#    default:
+#      interfaces:
+#        - hu1-f0:
+#            mac_addr: 00:de:ad:be:ef:11
+#            ipv4_addr: 54.1.1.1
+#            ipv4_netmask: 255.255.255.0
+#            ipv6_addr: 2001::54:1:1:1
+#            ipv6_prefix_length: 112
+#      routes:
+#        - prefix: 53.1.1.0/24
+#          nexthop: 54.1.1.254
+#      ipv6_routes:
+#        - prefix: 2001::53:1:1:0/112
+#          nexthop: 2001::54:1:1:254
 
 hu4:
   hostname: poc-server-09
