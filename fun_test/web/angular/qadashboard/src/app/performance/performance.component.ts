@@ -169,13 +169,14 @@ export class PerformanceComponent implements OnInit {
 
   spaceReplacement: string = "_";
 
-  urlReplacementMap: any = [
-    {"value": "/", "replacement": "..a.."},
-    {"value": "_", "replacement": "..b.."},
-    {"value": "\\", "replacement": "..c.."},
-    {"value": ";", "replacement": "..d.."},
-    {"value": "=", "replacement": "..e.."}
-  ];
+  urlEncodingReplacementMap: any = {
+    "/": "..a..",
+    "_": "..b..",
+    "\\": "..c..",
+    ";": "..d..",
+    "=": "..e.."
+  };
+  urlDecodingReplacementMap: any = null;
 
   f1Node: FlatNode = null;
   s1Node: FlatNode = null;
@@ -200,6 +201,11 @@ export class PerformanceComponent implements OnInit {
     private renderer: Renderer2,
     private service: PerformanceService
   ) {
+    this.urlDecodingReplacementMap = {};
+    Object.keys(this.urlEncodingReplacementMap).forEach(key => {
+      // let replacement = this.urlEncodingReplacementMap[key].replace(/\./g, "\\.");
+      this.urlDecodingReplacementMap[this.urlEncodingReplacementMap[key]] = key;
+    })
   }
 
   ngOnInit() {
@@ -431,15 +437,30 @@ export class PerformanceComponent implements OnInit {
 
   }
 
+  replaceForwardUrl(chartName): string {
+    Object.keys(this.urlEncodingReplacementMap).forEach(key => {
+      if (chartName.includes(key)) {
+          chartName = chartName.replace(new RegExp(key, "g"), this.urlEncodingReplacementMap[key]);
+        }
+    });
+    return chartName;
+  }
+
+  replaceReverseUrl(chartName): string {
+    Object.keys(this.urlDecodingReplacementMap).forEach(key => {
+      if (chartName.includes(key)) {
+          let regexKey = key.replace(/\./g, "\\.");
+          chartName = chartName.replace(new RegExp(regexKey, "g"), this.urlDecodingReplacementMap[key]);
+        }
+    });
+    return chartName;
+  }
+
   lineageToPath(lineage) {
     let s = "";
     lineage.forEach(part => {
       let name = part.chartName;
-      for (let specialChar of this.urlReplacementMap) {
-        if (name.includes(specialChar["value"])) {
-          name = name.replace(new RegExp(specialChar["value"], "g"), specialChar["replacement"])
-        }
-      }
+      name = this.replaceForwardUrl(name);
       name = name.replace(/ /g, this.spaceReplacement);
       s += "__" + encodeURIComponent(name);
     });
@@ -1184,12 +1205,7 @@ export class PerformanceComponent implements OnInit {
       let remainingPart = remainingParts[0];
       // remainingPart = remainingPart.replace(/_/g, " ");
       remainingPart = remainingPart.replace(/_/g, " ");
-      for (let specialChar of this.urlReplacementMap) {
-        if (remainingPart.includes(specialChar["replacement"])) {
-          let replacement = specialChar["replacement"].replace(/\./g, "\\.");
-          remainingPart = remainingPart.replace(new RegExp(replacement, "g"), specialChar["value"])
-        }
-      }
+      remainingPart = this.replaceReverseUrl(remainingPart);
       if (remainingPart === "Total") {
         remainingPart = this.F1;
       }
@@ -1200,12 +1216,7 @@ export class PerformanceComponent implements OnInit {
           let remainingPart = remainingParts[0];
           // remainingPart = remainingPart.replace(/_/g, " ");
           remainingPart = remainingPart.replace(/_/g, " ");
-          for (let specialChar of this.urlReplacementMap) {
-            if (remainingPart.includes(specialChar["replacement"])) {
-              let replacement = specialChar["replacement"].replace(/\./g, "\\.");
-              remainingPart = remainingPart.replace(new RegExp(replacement, "g"), specialChar["value"])
-            }
-          }
+          remainingPart = this.replaceReverseUrl(remainingPart);
           for (let index = 0; index < flatNode.children.length; index++) {
             let childFlatNode = flatNode.children[index];
             if (decodeURIComponent(remainingPart) === childFlatNode.node.chartName) {
