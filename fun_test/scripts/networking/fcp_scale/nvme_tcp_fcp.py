@@ -21,11 +21,12 @@ def add_to_data_base(value_dict):
         "read_latency_95_unit": PerfUnit.UNIT_USECS,
         "read_latency_99_unit": PerfUnit.UNIT_USECS,
         "read_latency_9950_unit": PerfUnit.UNIT_USECS,
-        "read_latency_9999_unit": PerfUnit.UNIT_USECS
+        "read_latency_9999_unit": PerfUnit.UNIT_USECS,
     }
 
     value_dict["date_time"] = get_data_collection_time()
     value_dict["version"] = fun_test.get_version()
+    print "HI there, the version is {}".format(value_dict["version"])
     value_dict["platform"] = FunPlatform.F1
     model_name = "NvmeFcpPerformance"
     status = fun_test.PASSED
@@ -584,6 +585,8 @@ class GetSetupDetails(FunTestCase):
                 "read_latency_9999": read_latency_9999}
 
             add_to_data_base(value_dict)
+
+            print value_dict
 
             table_data = {"headers": table_data_headers, "rows": table_data_rows}
 
