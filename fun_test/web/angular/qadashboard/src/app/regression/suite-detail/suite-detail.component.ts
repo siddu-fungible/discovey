@@ -47,7 +47,6 @@ export class SuiteDetailComponent implements OnInit, OnDestroy {
   reRunScript: string = null;
   refreshTimer: any = null;
 
-
   constructor(private apiService: ApiService,
               private route: ActivatedRoute,
               private reRunService: ReRunService,
