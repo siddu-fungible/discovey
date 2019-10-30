@@ -190,6 +190,7 @@ export class ScriptDetailComponent implements OnInit {
   onTestCaseIdClick(testCaseExecutionIndex) {
     this.testLogs = null;
     this.currentCheckpointIndex = null;
+    this.showLogsPanel = false;
     this.currentTestCaseExecution = this.testCaseExecutions[testCaseExecutionIndex];
     this.status = "Fetching checkpoints";
     this.fetchCheckpoints(this.currentTestCaseExecution, this.suiteExecutionId).subscribe(response => {
@@ -263,7 +264,7 @@ export class ScriptDetailComponent implements OnInit {
     this.showContext(contextId);
     this._restoreCheckpointDefaults();
     this.currentCheckpointIndex = checkpointIndex;
-    this.showTestCasePanel = false;
+    //this.showTestCasePanel = false;
     this.showLogsPanel = true;
     this.showCheckpointPanel = true;
     /*

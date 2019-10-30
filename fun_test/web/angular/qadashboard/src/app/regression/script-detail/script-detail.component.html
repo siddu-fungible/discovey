@@ -26,9 +26,9 @@
 <!--app-timeline-control *ngIf="showLogsPanel" [domainMin]="minRelativeTime" [domainMax]="maxRelativeTime" [title]="'Show logs starting from'" [unit]="'s'" (valueChanged)="onTimeLineChanged($event)"></app-timeline-control-->
 <div class="component" style="overflow: hidden; position: fixed">
   <div class="fun-flex-container" style="align-items: flex-start;">
-      <div *ngIf="showTestCasePanel" class="fun-flex-item panel fun-panel auto-scroll" [@show]="showTestCasePanel">
+      <div *ngIf="showTestCasePanel" class="fun-flex-item panel fun-panel" [@show]="showTestCasePanel">
         <div class="fun-panel-header">Test-cases</div>
-        <div>
+        <div class="fun-panel-body auto-scroll test-case-panel">
           <table class="fun-table">
             <tr>
               <td class="fun-table-header">ID</td>
@@ -46,14 +46,12 @@
           </table>
         </div>
       </div>
-
-      <div class="fun-flex-item panel fun-panel" [@show]="showCheckpointPanel" *ngIf="currentTestCaseExecution">
+      <div *ngIf="currentTestCaseExecution" class="fun-flex-item panel fun-panel" [@show]="showCheckpointPanel">
         <div class="fun-panel-header fun-flex-container" style="justify-content: space-between">
-          <span>Checkpoints <small>(TC: {{ currentTestCaseExecution.test_case_id }}: {{ currentTestCaseExecution.summary }})</small></span>
+          <span>Checkpoints</span>
           <span *ngIf="!showTestCasePanel" (click)="onShowTestCasePanelClick()" class="pseudo-anchor">< Show test-cases</span>
         </div>
-
-        <div class="auto-scroll">
+        <div class="fun-panel-body checkpoint-panel auto-scroll">
           <table class="fun-table">
             <tr>
               <td class="fun-table-header">Time</td>
@@ -81,7 +79,7 @@
           </table>
         </div>
       </div>
-      <div class="fun-flex-container" *ngIf="showLogsPanel" id="logs-panel">
+      <div *ngIf="showLogsPanel" class="fun-flex-container" id="logs-panel">
         <ng-container *ngFor="let availableContext of (availableContexts | selected )">
           <div class="fun-flex-item panel fun-panel">
             <div class="fun-panel-header">
@@ -90,7 +88,7 @@
             <div class="fun-panel-body">
               <h4>{{ currentTestCaseExecution.test_case_id }}: {{ currentTestCaseExecution.summary }}</h4>
               <fun-spinner [status]="status"></fun-spinner>
-              <div [@show]="showLogsPanel" *ngIf="currentTestCaseExecution" class="auto-scroll" >
+              <div [@show]="showLogsPanel" *ngIf="currentTestCaseExecution" class=" logs-panel auto-scroll" >
                 <div>
                   <ng-container>
                     <ng-container *ngIf="logsAreTruncated">
