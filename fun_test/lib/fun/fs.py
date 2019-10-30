@@ -8,6 +8,7 @@ from lib.utilities.netcat import Netcat
 from lib.system.utils import ToDictMixin
 from lib.host.apc_pdu import ApcPdu
 from fun_settings import STASH_DIR
+from fun_global import Codes
 
 from threading import Thread
 from datetime import datetime
@@ -26,6 +27,8 @@ Possible workarounds:
       "skip_funeth_come_power_cycle": true
     }
 """
+
+
 
 
 class BootPhases:
@@ -1399,6 +1402,12 @@ class Fs(object, ToDictMixin):
                     "come_mgmt_ssh_password"]
     NUM_F1S = 2
 
+    class StatisticsType(Codes):
+        BAM = 1000
+
+    STATISTICS_COLLECTOR_MAP = {}
+
+
     def __init__(self,
                  bmc_mgmt_ip,
                  bmc_mgmt_ssh_username,
@@ -1482,6 +1491,7 @@ class Fs(object, ToDictMixin):
         # self.auto_boot = auto_boot
         self.bmc_maintenance_threads = []
         self.cleanup_attempted = False
+        self.STATISTICS_COLLECTOR_MAP = {self.StatisticsType.BAM: self.bam}
         fun_test.register_fs(self)
 
     def get_context(self):
@@ -1617,7 +1627,7 @@ class Fs(object, ToDictMixin):
         skip_funeth_come_power_cycle = skip_funeth_come_power_cycle or workarounds.get("skip_funeth_come_power_cycle", None)
 
         apc_info = fs_spec.get("apc_info", None)  # Used for power-cycling the entire FS
-        return Fs(bmc_mgmt_ip=bmc_spec["mgmt_ip"],
+        fs_obj = Fs(bmc_mgmt_ip=bmc_spec["mgmt_ip"],
                   bmc_mgmt_ssh_username=bmc_spec["mgmt_ssh_username"],
                   bmc_mgmt_ssh_password=bmc_spec["mgmt_ssh_password"],
                   fpga_mgmt_ip=fpga_spec["mgmt_ip"],
@@ -1642,6 +1652,9 @@ class Fs(object, ToDictMixin):
                   skip_funeth_come_power_cycle=skip_funeth_come_power_cycle,
                   spec=fs_spec,
                   bundle_image_parameters=bundle_image_parameters)
+        if already_deployed:
+            fs_obj.re_initialize()
+        return fs_obj
 
     def bootup(self, reboot_bmc=False, power_cycle_come=True, non_blocking=False, threaded=False):
         fpga = self.get_fpga()
@@ -1795,8 +1808,8 @@ class Fs(object, ToDictMixin):
         fun_test.test_assert(expression=self.come.ensure_dpc_running(),
                              message="Ensure dpc is running",
                              context=self.context)
-        for f1_index, f1 in self.f1s.iteritems():
-            self.bmc.start_uart_log_listener(f1_index=f1_index)
+        # for f1_index, f1 in self.f1s.iteritems():
+        #    self.bmc.start_uart_log_listener(f1_index=f1_index)
         return True
 
     def funeth_reset(self):
@@ -1860,6 +1873,17 @@ class Fs(object, ToDictMixin):
         self.get_come()
         self.come.initialize(disable_f1_index=self.disable_f1_index)
         return True
+
+    def bam(self, command_duration=2):
+        result = {}
+        for f1_index in range(self.NUM_F1S):
+            if f1_index == self.disable_f1_index:
+                continue
+            dpc_client = self.get_dpc_client(f1_index=f1_index)
+            cmd = "stats/resource/bam"
+            stats = dpc_client.json_execute(verb="peek", data=cmd, command_duration=command_duration)
+            result[f1_index] = stats
+        return result
 
     def bmc_initialize(self):
         bmc = self.get_bmc(disable_f1_index=self.disable_f1_index)
@@ -1966,6 +1990,8 @@ class Fs(object, ToDictMixin):
     def get_uart_log_file(self, f1_index, post_fix=None):
         return self.get_bmc().get_uart_log_file(f1_index=f1_index, post_fix=post_fix)
 
+    def statistics_dispatcher(self, statistics_type, **kwargs):
+        pass
 
 if __name__ == "__main2__":
     fs = Fs.get(AssetManager().get_fs_by_name(name="fs-9"), "funos-f1.stripped.gz")
