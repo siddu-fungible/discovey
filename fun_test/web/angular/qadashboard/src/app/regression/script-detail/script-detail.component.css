@@ -1,4 +1,4 @@
-.fun-flex-item {
+.fun-flex-item1 {
   flex-grow: 1;
   flex-shrink: 1;
   flex-basis: 0;
@@ -76,7 +76,19 @@ table {
 }
 
 .auto-scroll {
-  height: calc(60vh);
   overflow: auto;
   max-width: calc(50vw);
 }
+
+.test-case-panel {
+  height: 400px;
+}
+
+.checkpoint-panel {
+  height: 400px;
+}
+
+.logs-panel {
+  height: calc(60vh);
+}
+

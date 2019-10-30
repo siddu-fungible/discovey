@@ -3,8 +3,6 @@
     <div class="fun-spacer"></div>
     <button (click)="onContextOptionsClick(contextOptions)" class="fun-button-add">Context options</button>
     <!--button (click)="testClick()">Test</button-->
-    <fun-spinner [status]="status"></fun-spinner>
-
     <ng-template #contextOptions let-modal>
       <div class="fun-panel">
         <div class="fun-panel-header">
@@ -25,12 +23,23 @@
 
     </ng-template>
   </div>
+
+  <!--div class="fun-flex-container">
+    <fun-chart style="width: 300px; height: 300px" [mileStones]="mileStoneIndices" [y1AxisPlotLines]="y1AxisPlotLines" [yMax]="yMax" [yMin]="yMin"
+               [y1Values]="values"
+               [xValues]="series"
+               [title]="'BAM stats'"
+               [xAxisLabel]="'X axis'"
+               [y1AxisLabel]="'Y axis'"></fun-chart>
+  </div-->
+
+
 <!--app-timeline-control *ngIf="showLogsPanel" [domainMin]="minRelativeTime" [domainMax]="maxRelativeTime" [title]="'Show logs starting from'" [unit]="'s'" (valueChanged)="onTimeLineChanged($event)"></app-timeline-control-->
 <div class="component" style="overflow: hidden; position: fixed">
   <div class="fun-flex-container" style="align-items: flex-start;">
-      <div *ngIf="showTestCasePanel" class="fun-flex-item panel fun-panel auto-scroll" [@show]="showTestCasePanel">
+      <div *ngIf="showTestCasePanel" class="fun-flex-item panel fun-panel" [@show]="showTestCasePanel">
         <div class="fun-panel-header">Test-cases</div>
-        <div>
+        <div class="fun-panel-body auto-scroll test-case-panel">
           <table class="fun-table">
             <tr>
               <td class="fun-table-header">ID</td>
@@ -48,14 +57,12 @@
           </table>
         </div>
       </div>
-
-      <div class="fun-flex-item panel fun-panel" [@show]="showCheckpointPanel" *ngIf="currentTestCaseExecution">
-        <div class="fun-panel-header fun-flex-container" style="justify-content: space-between">
-          <span>Checkpoints <small>(TC: {{ currentTestCaseExecution.test_case_id }}: {{ currentTestCaseExecution.summary }})</small></span>
+      <div *ngIf="currentTestCaseExecution" class="fun-flex-item panel fun-panel" [@show]="showCheckpointPanel">
+        <div class="fun-panel-header fun-flfunex-container" style="justify-content: space-between">
+          <span>Checkpoints</span>
           <span *ngIf="!showTestCasePanel" (click)="onShowTestCasePanelClick()" class="pseudo-anchor">< Show test-cases</span>
         </div>
-
-        <div class="auto-scroll">
+        <div class="fun-panel-body checkpoint-panel auto-scroll">
           <table class="fun-table">
             <tr>
               <td class="fun-table-header">Time</td>
@@ -83,7 +90,7 @@
           </table>
         </div>
       </div>
-      <div class="fun-flex-container" *ngIf="showLogsPanel" id="logs-panel">
+      <div *ngIf="showLogsPanel" class="fun-flex-container" id="logs-panel">
         <ng-container *ngFor="let availableContext of (availableContexts | selected )">
           <div class="fun-flex-item panel fun-panel">
             <div class="fun-panel-header">
@@ -91,9 +98,14 @@
             </div>
             <div class="fun-panel-body">
               <h4>{{ currentTestCaseExecution.test_case_id }}: {{ currentTestCaseExecution.summary }}</h4>
-              <div [@show]="showLogsPanel" *ngIf="currentTestCaseExecution" class="auto-scroll" >
+              <fun-spinner [status]="status"></fun-spinner>
+              <div [@show]="showLogsPanel" *ngIf="currentTestCaseExecution" class=" logs-panel auto-scroll" >
                 <div>
                   <ng-container>
+                    <ng-container *ngIf="logsAreTruncated">
+                      <div class="pseudo-anchor" (click)="showPreviousLogsClick()">Show previous logs</div>
+                      <br>
+                    </ng-container>
                     <table>
                       <ng-container *ngFor="let checkpoint of currentTestCaseExecution?.checkpoints">
                         <tr *ngFor="let seriesElement of checkpoint?.timeSeries">
@@ -125,6 +137,7 @@
       </div>
     </div>
 </div>
+
 
 
 

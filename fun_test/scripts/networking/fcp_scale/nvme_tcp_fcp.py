@@ -13,26 +13,21 @@ from fun_global import PerfUnit, FunPlatform
 
 def add_to_data_base(value_dict):
     unit_dict = {
-        "read_avg_latency_unit": PerfUnit.UNIT_USECS,
-        "write_avg_latency_unit": PerfUnit.UNIT_USECS,
-        "read_min_latency_unit": PerfUnit.UNIT_USECS,
-        "write_min_latency_unit": PerfUnit.UNIT_USECS,
-        "read_max_latency_unit": PerfUnit.UNIT_USECS,
-        "write_max_latency_unit": PerfUnit.UNIT_USECS,
-        "read_99_latency_unit": PerfUnit.UNIT_USECS,
-        "write_99_latency_unit": PerfUnit.UNIT_USECS,
-        "read_99_99_latency_unit": PerfUnit.UNIT_USECS,
-        "write_99_99_latency_unit": PerfUnit.UNIT_USECS,
-        "read_bandwidth_unit": PerfUnit.UNIT_GBITS_PER_SEC,
-        "write_bandwidth_unit": PerfUnit.UNIT_GBITS_PER_SEC,
-        "read_msg_rate_unit": PerfUnit.UNIT_MPPS,
-        "write_msg_rate_unit": PerfUnit.UNIT_MPPS,
+        "read_iops_unit": PerfUnit.UNIT_USECS,
+        "read_bw_unit": PerfUnit.UNIT_USECS,
+        "read_latency_avg_unit": PerfUnit.UNIT_USECS,
+        "read_latency_50_unit": PerfUnit.UNIT_USECS,
+        "read_latency_90_unit": PerfUnit.UNIT_USECS,
+        "read_latency_95_unit": PerfUnit.UNIT_USECS,
+        "read_latency_99_unit": PerfUnit.UNIT_USECS,
+        "read_latency_9950_unit": PerfUnit.UNIT_USECS,
+        "read_latency_9999_unit": PerfUnit.UNIT_USECS
     }
 
     value_dict["date_time"] = get_data_collection_time()
     value_dict["version"] = fun_test.get_version()
     value_dict["platform"] = FunPlatform.F1
-    model_name = "NvmeTcpFcpPerformance"
+    model_name = "FCPPerformance"
     status = fun_test.PASSED
     try:
         generic_helper = ModelHelper(model_name=model_name)
@@ -203,6 +198,7 @@ class GetSetupDetails(FunTestCase):
             hosts_dict[hosts]["handle"].sudo_command("/etc/init.d/irqbalance stop")
             if skip_ctrlr_creation:
                 hosts_dict[hosts]["nvme_device"] = get_nvme_device(hosts_dict[hosts]["handle"])
+                fun_test.simple_assert(hosts_dict[hosts]["nvme_device"], "NVMe device on {}".format(hosts))
             hosts_dict[hosts]["cpu_list"] = get_numa(hosts_dict[hosts]["handle"])
             hosts_dict[hosts]["hu_int_name"] = hosts_dict[hosts]["handle"].command(
                     "ip link ls up | awk '{print $2}' | grep -e '00:f1:1d' -e '00:de:ad' -B 1 | head -1 | tr -d :").strip()
@@ -462,7 +458,7 @@ class GetSetupDetails(FunTestCase):
                                                                         rw="write",
                                                                         name="precondition_" + str(hosts),
                                                                         cpus_allowed=hosts_dict[hosts]["cpu_list"],
-                                                                        timeout=600, **self.precondition_args)
+                                                                        **self.precondition_args)
                 fun_test.sleep("Fio threadzz", seconds=1)
                 wait_time -= 1
                 thread_count += 1
@@ -548,9 +544,11 @@ class GetSetupDetails(FunTestCase):
             print read_result_dict
 
             table_data_headers = ["Block_Size", "IOPs", "BW in Gbps", "Read Latency Avg",
-                                  "Read Latency 50", "Read Latency 90", "Read Latency 99", "Read Latency 99.99"]
+                                  "Read Latency 50", "Read Latency 90", "Read Latency 95",
+                                  "Read Latency 99", "Read Latency 99.50", "Read Latency 99.99"]
             table_data_cols = ["read_block_size", "total_read_iops", "total_read_bw", "read_latency_avg",
-                               "read_latency_50", "read_latency_90", "read_latency_99", "read_latency_9999"]
+                               "read_latency_50", "read_latency_90", "read_latency_95", "read_latency_99",
+                               "read_latency_9950", "read_latency_9999"]
 
             read_block_size = self.fio_cmd_args["bs"]
             total_read_iops = iops_sum

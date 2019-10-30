@@ -414,10 +414,10 @@ class SrpingLoopBack(FunTestCase):
                 size = size * 2
 
         for size in io_list:
-            f10_host_server = f10_host_roce.srping_test(size=size, count=100000, debug=True, timeout=15)
+            f10_host_server = f10_host_roce.srping_test(size=size, count=10000, debug=True, timeout=120)
             fun_test.sleep("Started srping server for size {}".format(size), seconds=1)
-            f10_host_client = f10_host_roce.srping_test(size=size, count=100000, debug=True,
-                                                        server_ip=f10_hosts[0]["ipaddr"], timeout=15)
+            f10_host_client = f10_host_roce.srping_test(size=size, count=10000, debug=True,
+                                                        server_ip=f10_hosts[0]["ipaddr"], timeout=120)
             while f10_hosts[0]["handle"].process_exists(process_id=f10_host_server["cmd_pid"]):
                 fun_test.sleep("Srping server on f10_host", 2)
             while f11_hosts[0]["handle"].process_exists(process_id=f10_host_client["cmd_pid"]):
@@ -430,10 +430,10 @@ class SrpingLoopBack(FunTestCase):
             fun_test.simple_assert(f10_client_result, "F10_host client result for size {}".format(size))
 
         for size in io_list:
-            f11_host_server = f11_host_roce.srping_test(size=size, count=1000, debug=True, timeout=15)
+            f11_host_server = f11_host_roce.srping_test(size=size, count=10000, debug=True, timeout=120)
             fun_test.sleep("Started srping server for size {}".format(size), seconds=1)
-            f11_host_client = f11_host_roce.srping_test(size=size, count=1000, debug=True,
-                                                        server_ip=f11_hosts[0]["ipaddr"], timeout=15)
+            f11_host_client = f11_host_roce.srping_test(size=size, count=10000, debug=True,
+                                                        server_ip=f11_hosts[0]["ipaddr"], timeout=120)
             while f11_hosts[0]["handle"].process_exists(process_id=f11_host_server["cmd_pid"]):
                 fun_test.sleep("Srping server on f11_host", 2)
             while f11_hosts[0]["handle"].process_exists(process_id=f11_host_client["cmd_pid"]):
@@ -503,10 +503,10 @@ class RpingLoopBack(FunTestCase):
                 size = size * 2
 
         for size in io_list:
-            f10_host_server = f10_host_roce.rping_test(size=size, count=1000, debug=True, timeout=15)
+            f10_host_server = f10_host_roce.rping_test(size=size, count=10000, debug=True, timeout=120)
             fun_test.sleep("Started Rping server for size {}".format(size), seconds=1)
-            f10_host_client = f10_host_roce.rping_test(size=size, count=1000, debug=True,
-                                                       server_ip=f10_hosts[0]["ipaddr"], timeout=15)
+            f10_host_client = f10_host_roce.rping_test(size=size, count=10000, debug=True,
+                                                       server_ip=f10_hosts[0]["ipaddr"], timeout=120)
             while f10_hosts[0]["handle"].process_exists(process_id=f10_host_server["cmd_pid"]):
                 fun_test.sleep("Rping server on f10_host", 2)
             while f11_hosts[0]["handle"].process_exists(process_id=f10_host_client["cmd_pid"]):
@@ -518,10 +518,10 @@ class RpingLoopBack(FunTestCase):
             fun_test.simple_assert(f10_client_result, "F10_host client result for size {}".format(size))
 
         for size in io_list:
-            f11_host_server = f11_host_roce.rping_test(size=size, count=1000, debug=True, timeout=15)
+            f11_host_server = f11_host_roce.rping_test(size=size, count=10000, debug=True, timeout=120)
             fun_test.sleep("Started rping server for size {}".format(size), seconds=1)
-            f11_host_client = f11_host_roce.rping_test(size=size, count=1000, debug=True,
-                                                       server_ip=f11_hosts[0]["ipaddr"], timeout=15)
+            f11_host_client = f11_host_roce.rping_test(size=size, count=10000, debug=True,
+                                                       server_ip=f11_hosts[0]["ipaddr"], timeout=120)
             while f11_hosts[0]["handle"].process_exists(process_id=f11_host_server["cmd_pid"]):
                 fun_test.sleep("Rping server on f11_host", 2)
             while f11_hosts[0]["handle"].process_exists(process_id=f11_host_client["cmd_pid"]):
@@ -594,9 +594,9 @@ class SrpingSeqIoTest(FunTestCase):
         f10_pid_there = 0
         f11_pid_there = 0
         for size in io_list:
-            f10_host_test = f10_host_roce.srping_test(size=size, count=1000, debug=True)
+            f10_host_test = f10_host_roce.srping_test(size=size, count=10000, debug=True)
             fun_test.sleep("Started srping server for size {}".format(size), seconds=1)
-            f11_host_test = f11_host_roce.srping_test(size=size, count=1000, debug=True, server_ip=f10_hosts[0]["ipaddr"])
+            f11_host_test = f11_host_roce.srping_test(size=size, count=10000, debug=True, server_ip=f10_hosts[0]["ipaddr"])
             while f10_hosts[0]["handle"].process_exists(process_id=f10_host_test["cmd_pid"]):
                 fun_test.sleep("Srping test on f10_host", 2)
                 f10_pid_there += 1  # Counter to check before initiating kill
@@ -688,9 +688,9 @@ class RpingSeqIoTest(FunTestCase):
         f10_pid_there = 0
         f11_pid_there = 0
         for size in io_list:
-            f10_host_test = f10_host_roce.rping_test(size=size, count=1000, debug=True)
+            f10_host_test = f10_host_roce.rping_test(size=size, count=10000, debug=True)
             fun_test.sleep("Started rping server for size {}".format(size), seconds=1)
-            f11_host_test = f11_host_roce.rping_test(size=size, count=1000, debug=True, server_ip=f10_hosts[0]["ipaddr"])
+            f11_host_test = f11_host_roce.rping_test(size=size, count=10000, debug=True, server_ip=f10_hosts[0]["ipaddr"])
             while f10_hosts[0]["handle"].process_exists(process_id=f10_host_test["cmd_pid"]):
                 fun_test.sleep("Rping test on f10_host", 2)
                 f10_pid_there += 1

@@ -360,4 +360,5 @@ class Rocetools:
         self.host.command("export WORKSPACE={}".format(self.ws))
         output = self.host.command(command="cd {} ; ./fungible-build.sh".format(rdma_perf_test_path),
                                    timeout=600)
+        self.host.disconnect()
 
