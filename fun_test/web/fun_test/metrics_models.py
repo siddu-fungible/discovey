@@ -3090,7 +3090,7 @@ class RdsClientPerformance(FunModel):
         return s
 
 
-class FCPPerformance(FunModel):
+class NvmeFcpPerformance(FunModel):
     interpolation_allowed = models.BooleanField(default=False)
     interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
@@ -3106,7 +3106,9 @@ class FCPPerformance(FunModel):
     output_read_latency_avg = models.FloatField(verbose_name="Read latency avg", default=-1)
     output_read_latency_50 = models.FloatField(verbose_name="Read latency 50", default=-1)
     output_read_latency_90 = models.FloatField(verbose_name="Read latency 90", default=-1)
+    output_read_latency_95 = models.FloatField(verbose_name="Read latency 95", default=-1)
     output_read_latency_99 = models.FloatField(verbose_name="Read latency 99", default=-1)
+    output_read_latency_9950 = models.FloatField(verbose_name="Read latency 99.50", default=-1)
     output_read_latency_9999 = models.FloatField(verbose_name="Read latency 99.99", default=-1)
 
     output_read_iops_unit = models.TextField(default=PerfUnit.UNIT_OPS)
@@ -3114,7 +3116,9 @@ class FCPPerformance(FunModel):
     output_read_latency_avg_unit = models.TextField(default=PerfUnit.UNIT_USECS)
     output_read_latency_50_unit = models.TextField(default=PerfUnit.UNIT_USECS)
     output_read_latency_90_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_read_latency_95_unit = models.TextField(default=PerfUnit.UNIT_USECS)
     output_read_latency_99_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_read_latency_9950_unit = models.TextField(default=PerfUnit.UNIT_USECS)
     output_read_latency_9999_unit = models.TextField(default=PerfUnit.UNIT_USECS)
 
     def __str__(self):
