@@ -112,7 +112,7 @@ class DetectLargeFiles(FunTestCase):
     def run(self):
         t = TaskTemplate()
         working_directory = "{}".format(LOGS_DIR)
-        output = t.call("find . -type f -size +{}".format(self.MAX_FILE_SIZE), working_directory=working_directory)
+        return_code, output, err = t.piped_commands(commands=["find {} -type f -size +{}".format(LOGS_DIR, self.MAX_FILE_SIZE)])
         lines = output.split("\n")
         fun_test.test_assert(len(lines) < 3, "No of files > {}M: {}".format(self.MAX_FILE_SIZE, len(lines)))
 

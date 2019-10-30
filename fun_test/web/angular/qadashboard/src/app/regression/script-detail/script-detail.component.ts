@@ -80,7 +80,7 @@ export class ScriptDetailComponent implements OnInit {
   logPanelHeight: any = "500px";
   DEFAULT_LOOKBACK_LOGS: number = 100;
   numLookbackLogs: number = 100;
-
+  logsAreTruncated: boolean = false;
   //timeSeriesByTestCase: {[testCaseId: number]: {[key: string]: any }} = {};
 
   ngOnInit() {
@@ -254,11 +254,14 @@ export class ScriptDetailComponent implements OnInit {
     }
   }
 
-  onCheckpointClick(testCaseExecution, checkpointIndex, contextId?: 0) {
-    this.showContext(contextId);
-    //this.status = "Fetching checkpoint data";
+  _restoreCheckpointDefaults() {
     this.numLookbackLogs = this.DEFAULT_LOOKBACK_LOGS;
     this.timeFilterMin = 0;
+  }
+
+  onCheckpointClick(testCaseExecution, checkpointIndex, contextId?: 0) {
+    this.showContext(contextId);
+    this._restoreCheckpointDefaults();
     this.currentCheckpointIndex = checkpointIndex;
     this.showTestCasePanel = false;
     this.showLogsPanel = true;
@@ -293,7 +296,7 @@ export class ScriptDetailComponent implements OnInit {
 
     this.fetchLogsForCheckpoints(this.currentTestCaseExecution, checkpointIndexesToFetch, checkpointIndex).subscribe(response => {
       this.showLogsPanel = true;
-      this.setMinimumTime();
+      this.logsAreTruncated = this.setMinimumTime();
       this.status = null;
       setTimeout(() => {
         this.commonService.scrollTo(checkpointId);
@@ -323,20 +326,19 @@ export class ScriptDetailComponent implements OnInit {
       this.status = "Fetching logs";
       return this.regressionService.testCaseTimeSeries(this.suiteExecutionId, testCaseExecution.execution_id, null, minCheckpointIndex, maxCheckpointIndex).pipe(switchMap(response => {
         this.status = "Parsing logs";
-        setTimeout(() => {
 
-          response.forEach(timeSeriesElement => {
-            let checkpointIndex = timeSeriesElement.data.checkpoint_index;
-            if (!testCaseExecution.checkpoints[checkpointIndex].hasOwnProperty("timeSeries")) {
-              testCaseExecution.checkpoints[checkpointIndex]["timeSeries"] = [];
-            }
-            timeSeriesElement["relative_epoch_time"] = timeSeriesElement.epoch_time - this.scriptRunTime.started_epoch_time;
-            testCaseExecution.checkpoints[checkpointIndex].timeSeries.push(timeSeriesElement);
-          });
-          this.status = null;
+        response.forEach(timeSeriesElement => {
+          let checkpointIndex = timeSeriesElement.data.checkpoint_index;
+          if (!testCaseExecution.checkpoints[checkpointIndex].hasOwnProperty("timeSeries")) {
+            testCaseExecution.checkpoints[checkpointIndex]["timeSeries"] = [];
+          }
+          timeSeriesElement["relative_epoch_time"] = timeSeriesElement.epoch_time - this.scriptRunTime.started_epoch_time;
+          testCaseExecution.checkpoints[checkpointIndex].timeSeries.push(timeSeriesElement);
+        });
+        this.status = null;
 
-          console.log("Done parsing logs");
-        }, 1);
+        console.log("Done parsing logs");
+
 
         return of(true);
       }), catchError (error => {
@@ -349,7 +351,7 @@ export class ScriptDetailComponent implements OnInit {
 
   }
 
-  setMinimumTime() {
+  setMinimumTime(): boolean {
     let maxEntries = this.numLookbackLogs;
     let count = 0;
     let checkpointIndexesToCheck = [this.currentCheckpointIndex];
@@ -378,6 +380,7 @@ export class ScriptDetailComponent implements OnInit {
       }
 
     }
+    return maxReached;
   }
 
   fetchLogsForCheckpoint(testCaseExecution, checkpointIndex) {
@@ -447,5 +450,10 @@ export class ScriptDetailComponent implements OnInit {
     console.log(window.innerHeight);
     this.logPanelHeight = window.innerHeight - element.getBoundingClientRect().top - 70;
     console.log(this.logPanelHeight);
+  }
+
+  showPreviousLogsClick() {
+    this.numLookbackLogs += 100;
+    this.logsAreTruncated = this.setMinimumTime();
   }
 }

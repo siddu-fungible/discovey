@@ -3,8 +3,6 @@
     <div class="fun-spacer"></div>
     <button (click)="onContextOptionsClick(contextOptions)" class="fun-button-add">Context options</button>
     <!--button (click)="testClick()">Test</button-->
-    <fun-spinner [status]="status"></fun-spinner>
-
     <ng-template #contextOptions let-modal>
       <div class="fun-panel">
         <div class="fun-panel-header">
@@ -91,9 +89,14 @@
             </div>
             <div class="fun-panel-body">
               <h4>{{ currentTestCaseExecution.test_case_id }}: {{ currentTestCaseExecution.summary }}</h4>
+              <fun-spinner [status]="status"></fun-spinner>
               <div [@show]="showLogsPanel" *ngIf="currentTestCaseExecution" class="auto-scroll" >
                 <div>
                   <ng-container>
+                    <ng-container *ngIf="logsAreTruncated">
+                      <div style="float: right" class="pseudo-anchor" (click)="showPreviousLogsClick()">Show previous logs</div>
+                      <br>
+                    </ng-container>
                     <table>
                       <ng-container *ngFor="let checkpoint of currentTestCaseExecution?.checkpoints">
                         <tr *ngFor="let seriesElement of checkpoint?.timeSeries">
