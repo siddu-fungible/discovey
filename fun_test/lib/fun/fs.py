@@ -1433,7 +1433,8 @@ class Fs(object, ToDictMixin):
                  fun_cp_callback=None,
                  skip_funeth_come_power_cycle=None,
                  bundle_image_parameters=None,
-                 spec=None):
+                 spec=None,
+                 already_deployed=None):
         self.spec = spec
         self.bmc_mgmt_ip = bmc_mgmt_ip
         self.bmc_mgmt_ssh_username = bmc_mgmt_ssh_username
@@ -1492,6 +1493,7 @@ class Fs(object, ToDictMixin):
         self.bmc_maintenance_threads = []
         self.cleanup_attempted = False
         self.STATISTICS_COLLECTOR_MAP = {self.StatisticsType.BAM: self.bam}
+        self.already_deployed = already_deployed
         fun_test.register_fs(self)
 
     def get_context(self):
@@ -1651,7 +1653,8 @@ class Fs(object, ToDictMixin):
                   power_cycle_come=power_cycle_come,
                   skip_funeth_come_power_cycle=skip_funeth_come_power_cycle,
                   spec=fs_spec,
-                  bundle_image_parameters=bundle_image_parameters)
+                  bundle_image_parameters=bundle_image_parameters,
+                  already_deployed=already_deployed)
         if already_deployed:
             fs_obj.re_initialize()
         return fs_obj
@@ -1800,7 +1803,8 @@ class Fs(object, ToDictMixin):
 
     def re_initialize(self):
         self.get_bmc(disable_f1_index=self.disable_f1_index)
-        self.bmc.position_support_scripts()
+        if not self.already_deployed:
+            self.bmc.position_support_scripts()
         self.get_fpga()
         self.get_come()
         self.set_f1s()
@@ -1879,7 +1883,7 @@ class Fs(object, ToDictMixin):
         for f1_index in range(self.NUM_F1S):
             if f1_index == self.disable_f1_index:
                 continue
-            dpc_client = self.get_dpc_client(f1_index=f1_index)
+            dpc_client = self.get_dpc_client(f1_index=f1_index, auto_disconnect=True)
             cmd = "stats/resource/bam"
             stats = dpc_client.json_execute(verb="peek", data=cmd, command_duration=command_duration)
             result[f1_index] = stats
@@ -1991,7 +1995,10 @@ class Fs(object, ToDictMixin):
         return self.get_bmc().get_uart_log_file(f1_index=f1_index, post_fix=post_fix)
 
     def statistics_dispatcher(self, statistics_type, **kwargs):
-        pass
+        result = None
+        if statistics_type == self.StatisticsType.BAM:
+            result = self.bam(**kwargs)
+        return result
 
 if __name__ == "__main2__":
     fs = Fs.get(AssetManager().get_fs_by_name(name="fs-9"), "funos-f1.stripped.gz")

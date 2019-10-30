@@ -22,9 +22,16 @@ class CollectorWorker(Thread):
         super(CollectorWorker, self).__init__()
         self.collector = collector
         self.collector_id = collector_id
+        self.terminated = False
 
     def run(self):
         fun_test.log("Starting collector: {}".format(self.collector_id))
+        while not fun_test.closed and not self.terminated:
+            collector_instance = self.collector.collector
+            collector_instance.statistics_dispatcher(self.collector.type, **self.collector.kwargs)
+
+    def terminate(self):
+        self.terminate = True
 
 
 class StatisticsManager(object):
@@ -53,7 +60,20 @@ class StatisticsManager(object):
 
 
 if __name__ == "__main__":
+    from lib.fun.fs import Fs
+    from asset.asset_manager import AssetManager
+
+    asset_manager = AssetManager()
+    fs_spec = asset_manager.get_fs_by_name("fs-102")
+
+    fs_obj = Fs.get(fs_spec=fs_spec, already_deployed=True, disable_f1_index=1)
+    come_obj = fs_obj.get_come()
+    come_obj.command("date")
+    come_obj.command("ps -ef | grep nvme")
+    fs_obj.bam()
+
+
     sm = StatisticsManager()
-    sc = StatisticsCollector(collector=None, category=StatisticsCategory.FS_SYSTEM, type=1)
+    sc = StatisticsCollector(collector=fs_obj, category=StatisticsCategory.FS_SYSTEM, type=Fs.StatisticsType.BAM)
     sm.register_collector(collector=sc)
     sm.start()
