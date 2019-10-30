@@ -13,8 +13,8 @@ from fun_global import PerfUnit, FunPlatform
 
 def add_to_data_base(value_dict):
     unit_dict = {
-        "read_iops_unit": PerfUnit.UNIT_USECS,
-        "read_bw_unit": PerfUnit.UNIT_USECS,
+        "read_iops_unit": PerfUnit.UNIT_OPS,
+        "read_bw_unit": PerfUnit.UNIT_GBITS_PER_SEC,
         "read_latency_avg_unit": PerfUnit.UNIT_USECS,
         "read_latency_50_unit": PerfUnit.UNIT_USECS,
         "read_latency_90_unit": PerfUnit.UNIT_USECS,
@@ -27,7 +27,7 @@ def add_to_data_base(value_dict):
     value_dict["date_time"] = get_data_collection_time()
     value_dict["version"] = fun_test.get_version()
     value_dict["platform"] = FunPlatform.F1
-    model_name = "FCPPerformance"
+    model_name = "NvmeFcpPerformance"
     status = fun_test.PASSED
     try:
         generic_helper = ModelHelper(model_name=model_name)
@@ -442,40 +442,42 @@ class GetSetupDetails(FunTestCase):
         #     Run fio from all hosts     #
         ##################################
         if not skip_precondition:
-            print host_list
-            wait_time = len(host_list)
-            thread_count = 1
-            thread_id = {}
-            fio_output = {}
-            for hosts in hosts_dict:
-                print "Running Pre-condition on {}".format(hosts)
-                host_clone = hosts_dict[hosts]["handle"].clone()
-                thread_id[thread_count] = fun_test.execute_thread_after(time_in_seconds=wait_time,
-                                                                        func=fio_parser,
-                                                                        host_index=thread_count,
-                                                                        arg1=host_clone,
-                                                                        filename=hosts_dict[hosts]["nvme_device"],
-                                                                        rw="write",
-                                                                        name="precondition_" + str(hosts),
-                                                                        cpus_allowed=hosts_dict[hosts]["cpu_list"],
-                                                                        **self.precondition_args)
-                fun_test.sleep("Fio threadzz", seconds=1)
-                wait_time -= 1
-                thread_count += 1
-            fun_test.sleep("Fio threads started", 15)
-            for x in range(1, len(host_list) + 1):
-                try:
-                        fun_test.log("Joining fio thread {}".format(x))
-                        fun_test.join_thread(fun_test_thread_id=thread_id[x])
-                        fun_test.log("FIO Command Output:")
-                        fun_test.log(fun_test.shared_variables["fio"][x])
-                        fun_test.test_assert(fun_test.shared_variables["fio"][x], "Fio threaded test")
-                        fio_output[x] = {}
-                        fio_output[x] = fun_test.shared_variables["fio"][x]
-                except Exception as ex:
-                    fun_test.critical(str(ex))
-                    fun_test.log("FIO Command Output for volume {}:\n {}".format(x, fio_output[x]))
+            for precond in range(0, 2):
+                print host_list
+                wait_time = len(host_list)
+                thread_count = 1
+                thread_id = {}
+                fio_output = {}
+                for hosts in hosts_dict:
+                    print "Running Pre-condition{} on {}".format(precond, hosts)
+                    host_clone = hosts_dict[hosts]["handle"].clone()
+                    thread_id[thread_count] = fun_test.execute_thread_after(time_in_seconds=wait_time,
+                                                                            func=fio_parser,
+                                                                            host_index=thread_count,
+                                                                            arg1=host_clone,
+                                                                            filename=hosts_dict[hosts]["nvme_device"],
+                                                                            rw="write",
+                                                                            name="precondition_" + str(hosts),
+                                                                            cpus_allowed=hosts_dict[hosts]["cpu_list"],
+                                                                            **self.precondition_args)
+                    fun_test.sleep("Fio threadzz", seconds=1)
+                    wait_time -= 1
+                    thread_count += 1
+                fun_test.sleep("Fio threads started", 15)
+                for x in range(1, len(host_list) + 1):
+                    try:
+                            fun_test.log("Joining fio thread {}".format(x))
+                            fun_test.join_thread(fun_test_thread_id=thread_id[x])
+                            fun_test.log("FIO Command Output:")
+                            fun_test.log(fun_test.shared_variables["fio"][x])
+                            fun_test.test_assert(fun_test.shared_variables["fio"][x], "Fio threaded test")
+                            fio_output[x] = {}
+                            fio_output[x] = fun_test.shared_variables["fio"][x]
+                    except Exception as ex:
+                        fun_test.critical(str(ex))
+                        fun_test.log("FIO Command Output for volume {}:\n {}".format(x, fio_output[x]))
 
+        fun_test.sleep("Pre-condition done", 10)
         # Run read fio test from all hosts
         wait_time = len(host_list)
         thread_count = 1
@@ -543,15 +545,15 @@ class GetSetupDetails(FunTestCase):
             read_result_dict = fun_test.shared_variables["fio"][host_thread]["read"]
             print read_result_dict
 
-            table_data_headers = ["Block_Size", "IOPs", "BW in Gbps", "Read Latency Avg",
-                                  "Read Latency 50", "Read Latency 90", "Read Latency 95",
-                                  "Read Latency 99", "Read Latency 99.50", "Read Latency 99.99"]
+            table_data_headers = ["Block_Size", "Read IOPS", "Read bandwidth", "Read latency Avg",
+                                  "Read latency 50", "Read latency 90", "Read latency 95",
+                                  "Read latency 99", "Read latency 99.50", "Read latency 99.99"]
             table_data_cols = ["read_block_size", "total_read_iops", "total_read_bw", "read_latency_avg",
                                "read_latency_50", "read_latency_90", "read_latency_95", "read_latency_99",
                                "read_latency_9950", "read_latency_9999"]
 
             read_block_size = self.fio_cmd_args["bs"]
-            total_read_iops = iops_sum
+            total_read_iops = int(round(iops_sum))
             total_read_bw = bw_sum/125000
             read_latency_avg = read_result_dict["clatency"]
             read_latency_50 = read_result_dict["latency50"]
@@ -568,18 +570,20 @@ class GetSetupDetails(FunTestCase):
             table_data_rows.append(row_data_list)
 
             value_dict = {
+                "test_case": "nvme_funtcp_fcp",
+                "operation": "read",
                 "block_size": read_block_size,
                 "read_iops": total_read_iops,
                 "read_bw": total_read_bw,
-                "read_latency_avg": read_result_dict["clatency"],
-                "read_latency_50": read_result_dict["latency50"],
-                "read_latency_90": read_result_dict["latency90"],
-                "read_latency_95": read_result_dict["latency95"],
-                "read_latency_99": read_result_dict["latency99"],
-                "read_latency_9950": read_result_dict["latency9950"],
-                "read_latency_9999": read_result_dict["latency9999"]}
+                "read_latency_avg": read_latency_avg,
+                "read_latency_50": read_latency_50,
+                "read_latency_90": read_latency_90,
+                "read_latency_95": read_latency_95,
+                "read_latency_99": read_latency_99,
+                "read_latency_9950": read_latency_9950,
+                "read_latency_9999": read_latency_9999}
 
-            # add_to_data_base(value_dict)
+            add_to_data_base(value_dict)
 
             table_data = {"headers": table_data_headers, "rows": table_data_rows}
 
