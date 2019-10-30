@@ -170,11 +170,11 @@ export class PerformanceComponent implements OnInit {
   spaceReplacement: string = "_";
 
   urlEncodingReplacementMap: any = {
-    "/": "..a..",
-    "_": "..b..",
-    "\\": "..c..",
-    ";": "..d..",
-    "=": "..e.."
+    "/": "..fs..",
+    "_": "..us..",
+    "\\": "..bs..",
+    ";": "..sc..",
+    "=": "..eq.."
   };
   urlDecodingReplacementMap: any = null;
 
