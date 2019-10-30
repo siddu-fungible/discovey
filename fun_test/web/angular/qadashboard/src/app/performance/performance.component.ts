@@ -167,18 +167,14 @@ export class PerformanceComponent implements OnInit {
   gotoQueryBaseUrl: string = "/performance?goto=";
   queryPath: string = null;  // includes gotoQueryBaseUrl and a query
 
-  slashReplacement: string = "_fsl"; //forward slash
-  spaceReplacement: string = "_"; //replacement for white space
-    //   {"value": "(", "replacement": "..2.."},
-    // {"value": ")", "replacement": "..3.."},
+  spaceReplacement: string = "_";
 
   urlReplacementMap: any = [
     {"value": "/", "replacement": "..a.."},
     {"value": "_", "replacement": "..b.."},
     {"value": "\\", "replacement": "..c.."},
-    {"value": "-", "replacement": "..d.."},
-    {"value": ":", "replacement": "..e.."},
-    {"value": ";", "replacement": "..f.."}
+    {"value": ";", "replacement": "..d.."},
+    {"value": "=", "replacement": "..e.."}
   ];
 
   f1Node: FlatNode = null;
@@ -444,8 +440,7 @@ export class PerformanceComponent implements OnInit {
           name = name.replace(new RegExp(specialChar["value"], "g"), specialChar["replacement"])
         }
       }
-      name = name.replace(/ /g, "_");
-      // name = name.replace(/ /g, this.spaceReplacement);
+      name = name.replace(/ /g, this.spaceReplacement);
       s += "__" + encodeURIComponent(name);
     });
     s = s.slice(2, s.length); // Remove leading two underscores
@@ -1191,7 +1186,8 @@ export class PerformanceComponent implements OnInit {
       remainingPart = remainingPart.replace(/_/g, " ");
       for (let specialChar of this.urlReplacementMap) {
         if (remainingPart.includes(specialChar["replacement"])) {
-          remainingPart = remainingPart.replace(new RegExp(specialChar["replacement"], "g"), specialChar["value"])
+          let replacement = specialChar["replacement"].replace(/\./g, "\\.");
+          remainingPart = remainingPart.replace(new RegExp(replacement, "g"), specialChar["value"])
         }
       }
       if (remainingPart === "Total") {
@@ -1206,7 +1202,8 @@ export class PerformanceComponent implements OnInit {
           remainingPart = remainingPart.replace(/_/g, " ");
           for (let specialChar of this.urlReplacementMap) {
             if (remainingPart.includes(specialChar["replacement"])) {
-              remainingPart = remainingPart.replace(new RegExp(specialChar["replacement"], "g"), specialChar["value"])
+              let replacement = specialChar["replacement"].replace(/\./g, "\\.");
+              remainingPart = remainingPart.replace(new RegExp(replacement, "g"), specialChar["value"])
             }
           }
           for (let index = 0; index < flatNode.children.length; index++) {
