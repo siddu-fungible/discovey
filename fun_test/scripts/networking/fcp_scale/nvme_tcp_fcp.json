@@ -15,6 +15,7 @@
       "numjobs": 1,
       "direct": 1,
       "prio": 0,
+      "invalidate":1,
       "timeout": 900
     },
     "fio_cmd_args": {

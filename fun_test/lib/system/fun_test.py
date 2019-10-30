@@ -534,6 +534,7 @@ class FunTest:
         else:
             print("Unable to determine the version. Defaulting...")
         print ("Version: {}".format(self.version))
+        return determined_version
 
     def set_version(self, version):
         self.version = version
@@ -548,6 +549,11 @@ class FunTest:
                 self.log("Suite execution: {} could not be retrieved from the DB".format(self.suite_execution_id))
             else:
                 version = suite_execution.version
+                if not version:
+                    try:
+                        version = self.determine_version()
+                    except Exception as ex:
+                        print("Error unable to determine the version: {}".format(str(ex)))
         else:
             version = self.version
         return version
