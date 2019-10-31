@@ -641,6 +641,11 @@ class ECVolumeLevelTestcase(FunTestCase):
             self.warm_up_fio_cmd_args["iodepth"] = job_inputs["warmup_io_depth"]
         if "warmup_size" in job_inputs:
             self.warm_up_fio_cmd_args["io_size"] = job_inputs["warmup_size"]
+        if "csi_perf_iodepth" in job_inputs:
+            self.csi_perf_iodepth = job_inputs["csi_perf_iodepth"]
+            if not isinstance(self.csi_perf_iodepth, list):
+                self.csi_perf_iodepth = [self.csi_perf_iodepth]
+            self.full_run_iodepth = self.csi_perf_iodepth
         if "post_results" in job_inputs:
             self.post_results = job_inputs["post_results"]
         else:
@@ -1093,7 +1098,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 self.stats_obj = CollectStats(storage_controller=self.storage_controller, sc_lock=self.sc_lock)
                 self.stats_obj.start(file_suffix, self.stats_collect_details)
                 fun_test.log("Different stats collection thread details for the current IO depth {} after starting "
-                             "them:\n{}".format(iodepth,self.stats_collect_details))
+                             "them:\n{}".format(iodepth, self.stats_collect_details))
             else:
                 fun_test.critical("Not starting the vp_utils and resource_bam stats collection because of lack of "
                                   "interval and count details")
@@ -1212,7 +1217,7 @@ class ECVolumeLevelTestcase(FunTestCase):
             if self.csi_perf_enabled:
                 if row_data_dict["iodepth"] in self.csi_perf_iodepth:
                     try:
-                        fun_test.sleep("for IO to be fully active", 20)
+                        fun_test.sleep("for IO to be fully active", 60)
                         csi_perf_obj = CsiPerfTemplate(perf_collector_host_name=str(self.perf_listener_host_name),
                                                        listener_ip=self.perf_listener_ip, fs=self.fs[0],
                                                        listener_port=4420)  # Temp change for testing
