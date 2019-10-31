@@ -539,8 +539,9 @@ class FunTestCase1(FunTestCase):
             fun_test.sleep("before next iteration", seconds=5)
             if heading == "During traffic" and self.add_to_database:
                 self.add_to_database = False
-                print ("Result pro_data: {}".format(pro_data))
+                print ("Result : {}".format(pro_data))
                 self.add_to_data_base(pro_data)
+                fun_test.log("Data added to the database, Data: {}".format(pro_data))
         bmc_handle.destroy()
 
     ############ Die temperature #########
