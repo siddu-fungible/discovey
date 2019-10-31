@@ -222,6 +222,8 @@ class FunTestCase1(FunTestCase):
                 self.duration = job_inputs["duration"]
             if "run_le_firewall" in job_inputs:
                 self.run_le_firewall = job_inputs["run_le_firewall"]
+            if "collect_stats" in job_inputs:
+                self.collect_stats = job_inputs["collect_stats"]
 
         # Create the files
         self.stats_info = {}
@@ -231,6 +233,13 @@ class FunTestCase1(FunTestCase):
         self.stats_info["bmc"] = {"POWER": {"calculated": True}, "DIE_TEMPERATURE": {"calculated": False, "disable":True}}
         self.stats_info["come"] = {"DEBUG_MEMORY": {}, "CDU": {"disable":True}, "EQM": {"disable":True}, "BAM": {"calculated": False, "disable":True}, "DEBUG_VP_UTIL": {"calculated": False,"disable":True}, "LE": {"disable":True}, "HBM": {"disable":True},
                                    "EXECUTE_LEAKS":{"calculated": False}}
+        for system in self.stats_info:
+            for stat_name, value in self.stats_info[system].iteritems():
+                if stat_name in self.collect_stats:
+                    value["disable"] = False
+                else:
+                    value["disable"] = True
+
         for system in self.stats_info:
             for stat_name, value in self.stats_info[system].iteritems():
                 if value.get("disable", False):
