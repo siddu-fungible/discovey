@@ -5281,14 +5281,26 @@
                                     "children": []
                                   },
                                   {
-                                    "name": "bmv_storage_local_ssd_4_random_read_qd32_latency",
-                                    "label": "Latency, Qdepth=32",
+                                    "name": "bmv_storage_local_ssd_4_random_read_qd1_latency",
+                                    "label": "Latency, Qdepth=1",
                                     "metric_model_name": "AlibabaPerformance",
                                     "children": []
                                   },
                                   {
-                                    "name": "bmv_storage_local_ssd_4_random_read_qd1_latency",
-                                    "label": "Latency, Qdepth=1",
+                                    "name": "bmv_storage_local_ssd_4_random_read_qd8_latency",
+                                    "label": "Latency, Qdepth=8",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_4_random_read_qd16_latency",
+                                    "label": "Latency, Qdepth=16",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_4_random_read_qd32_latency",
+                                    "label": "Latency, Qdepth=32",
                                     "metric_model_name": "AlibabaPerformance",
                                     "children": []
                                   },
@@ -5296,7 +5308,8 @@
                                     "name": "bmv_storage_local_ssd_4_random_read_qd1024_latency",
                                     "label": "Latency, Qdepth=1024",
                                     "metric_model_name": "AlibabaPerformance",
-                                    "children": []
+                                    "children": [],
+                                    "disable": true
                                   },
                                   {
                                     "name": "bmv_storage_local_ssd_4_random_read_qd64_latency",
@@ -5330,14 +5343,26 @@
                                     "children": []
                                   },
                                   {
-                                    "name": "bmv_storage_local_ssd_4_random_write_qd32_latency",
-                                    "label": "Latency, Qdepth=32",
+                                    "name": "bmv_storage_local_ssd_4_random_write_qd1_latency",
+                                    "label": "Latency, Qdepth=1",
                                     "metric_model_name": "AlibabaPerformance",
                                     "children": []
                                   },
                                   {
-                                    "name": "bmv_storage_local_ssd_4_random_write_qd1_latency",
-                                    "label": "Latency, Qdepth=1",
+                                    "name": "bmv_storage_local_ssd_4_random_write_qd8_latency",
+                                    "label": "Latency, Qdepth=8",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_4_random_write_qd16_latency",
+                                    "label": "Latency, Qdepth=16",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_4_random_write_qd32_latency",
+                                    "label": "Latency, Qdepth=32",
                                     "metric_model_name": "AlibabaPerformance",
                                     "children": []
                                   },
@@ -5345,7 +5370,8 @@
                                     "name": "bmv_storage_local_ssd_4_random_write_qd1024_latency",
                                     "label": "Latency, Qdepth=1024",
                                     "metric_model_name": "AlibabaPerformance",
-                                    "children": []
+                                    "children": [],
+                                    "disable": true
                                   },
                                   {
                                     "name": "bmv_storage_local_ssd_4_random_write_qd64_latency",
