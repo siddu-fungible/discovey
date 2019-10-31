@@ -1038,11 +1038,12 @@ class IbWriteScale(FunTestCase):
         else:
             io_type = "Sequential"
             qp_list = fun_test.shared_variables["qp_list"]
-        f10_pid_there = 0
-        f11_pid_there = 0
+
         size = 1
         for test in test_type_list:
             for qp in qp_list:
+                f10_pid_there = 0
+                f11_pid_there = 0
                 f10_host_test = f10_host_roce.ib_bw_test(test_type=test, size=size, rdma_cm=rdmacm, qpair=qp,
                                                          duration=30)
                 f11_host_test = f11_host_roce.ib_bw_test(test_type=test, size=size, rdma_cm=rdmacm, qpair=qp,
