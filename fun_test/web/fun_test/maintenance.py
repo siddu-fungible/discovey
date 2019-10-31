@@ -1991,7 +1991,7 @@ if __name__ == "__main__":
             for volume in volumes:
                 one_data_set = {}
                 one_data_set["name"] = name + str(volume) + " Vol(s)"
-                inputs["input_volume"] = volume
+                inputs["input_volumes"] = volume
                 one_data_set["inputs"] = inputs
                 one_data_set["output"] = {"name": output_name,
                                           "min": 0,
