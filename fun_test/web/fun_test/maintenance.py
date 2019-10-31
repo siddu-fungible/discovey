@@ -1812,7 +1812,7 @@ if __name__ == "__main_best_value__":
             entry.save()
     print "added best value for all datasets"
 
-if __name__ == "__main__":
+if __name__ == "__main_FCP__":
     root = "FCP"
     categories = ["NVMe", "NVMe/TCP", "NVMe/FunTCP"]
     leaves = ["IOPS", "Throughput", "Latency"]
@@ -1910,3 +1910,125 @@ if __name__ == "__main__":
     root_chart.fix_children_weights()
     final_dict = ml.get_dict(chart=root_chart)
     print json.dumps(final_dict)
+
+if __name__ == "__main__":
+    internal_chart_name = "teramarks_storage_fcp_nvme"
+    leaves = ["IOPS", "Throughput", "Latency - 1 Vol(s)", "Latency - 2 Vol(s)", "Latency - 4 Vol(s)", "Latency - 8 "
+                                                                                                      "Vol(s)",
+              "Latency - 12 Vol(s)"]
+    volumes = [1, 2, 4, 8, 12]
+    latency_ds = ["avg", "50%", "90%", "95%", "99%", "99.5%", "99.99%"]
+    owner_info = "Manu K S (manu.ks@fungible.com)"
+    source = "Unknown"
+    base_line_date = datetime(year=2019, month=10, day=29, minute=0, hour=0, second=0)
+    description = "TBD"
+    model_name = "NvmeFcpPerformance"
+    inputs = {"input_platform": FunPlatform.F1,
+              "input_block_size": 4096,
+              "input_operation": "read",
+              "input_test_case": "NVMe",
+              "input_volumes": 1}
+    chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
+    for leaf in leaves:
+        internal_chart_name = "teramarks_storage_fcp_nvme"
+        data_sets = []
+        if "Latency" in leaf:
+            if "1 Vol" in leaf:
+                volume = 1
+                internal_name = "latency_" + "1vol"
+            elif "- 2 Vol" in leaf:
+                volume = 2
+                internal_name = "latency_" + "2vol"
+            elif "4 Vol" in leaf:
+                volume = 4
+                internal_name = "latency_" + "4vol"
+            elif "8 Vol" in leaf:
+                volume = 8
+                internal_name = "latency_" + "8vol"
+            elif "12 Vol" in leaf:
+                volume = 12
+                internal_name = "latency_" + "12vol"
+            positive = False
+            y1_axis_title = PerfUnit.UNIT_USECS
+            output = "output_read_latency_"
+            for ds in latency_ds:
+                if "avg" in ds:
+                    output_name = output + "avg"
+                elif "99.99%" in ds:
+                    output_name = output + "9999"
+                elif "99.5%" in ds:
+                    output_name = output + "9950"
+                elif "99%" in ds:
+                    output_name = output + "99"
+                elif "95%" in ds:
+                    output_name = output + "95"
+                elif "90%" in ds:
+                    output_name = output + "90"
+                elif "50%" in ds:
+                    output_name = output + "50"
+                one_data_set = {}
+                one_data_set["name"] = ds
+                inputs["input_volumes"] = volume
+                one_data_set["inputs"] = inputs
+                one_data_set["output"] = {"name": output_name,
+                                          "min": 0,
+                                          "max": -1,
+                                          "expected": -1,
+                                          "reference": -1,
+                                          "best": -1,
+                                          "unit": y1_axis_title}
+                data_sets.append(one_data_set)
+        else:
+            internal_name = leaf.lower()
+            positive = True
+            name = "read-"
+            if "IOPS" in leaf:
+                y1_axis_title = PerfUnit.UNIT_OPS
+                output_name = "output_read_iops"
+            else:
+                y1_axis_title = PerfUnit.UNIT_GBITS_PER_SEC
+                output_name = "output_read_bw"
+            for volume in volumes:
+                one_data_set = {}
+                one_data_set["name"] = name + str(volume) + " Vol(s)"
+                inputs["input_volumes"] = volume
+                one_data_set["inputs"] = inputs
+                one_data_set["output"] = {"name": output_name,
+                                          "min": 0,
+                                          "max": -1,
+                                          "expected": -1,
+                                          "reference": -1,
+                                          "best": -1,
+                                          "unit": y1_axis_title}
+                data_sets.append(one_data_set)
+
+        internal_chart_name = internal_chart_name + "_" + internal_name
+        child_chart = ml.create_leaf(chart_name=leaf, internal_chart_name=internal_chart_name,
+                               data_sets=data_sets, leaf=True,
+                               description=description,
+                               owner_info=owner_info, source=source,
+                               positive=positive, y1_axis_title=y1_axis_title,
+                               visualization_unit=y1_axis_title,
+                               metric_model_name=model_name,
+                               base_line_date=base_line_date,
+                               work_in_progress=False, children=[], jira_ids=[], platform=FunPlatform.F1,
+                               peer_ids=[], creator=TEAM_REGRESSION_EMAIL,
+                               workspace_ids=[])
+        child_chart.fix_children_weights()
+        chart.add_child(child_chart.metric_id)
+    chart.fix_children_weights()
+    final_dict = ml.get_dict(chart=chart)
+    print json.dumps(final_dict)
+    internal_chart_names = ["teramarks_storage_fcp_nvme_tcp_iops_throughput",
+                            "teramarks_storage_fcp_nvme_tcp_iops_throughput_latency",
+                            "teramarks_storage_fcp_nvme_funtcp_iops_throughput",
+                            "teramarks_storage_fcp_nvme_funtcp_iops_throughput_latency"]
+    for ic in internal_chart_names:
+        change_chart = MetricChart.objects.get(internal_chart_name=ic)
+        index = ic.find('_iops')
+        if "iops_throughput_latency" in ic:
+            internal_name = ic[:index] + "_latency"
+        else:
+            internal_name = ic[:index] + "_throughput"
+        change_chart.internal_chart_name = internal_name
+        change_chart.save()

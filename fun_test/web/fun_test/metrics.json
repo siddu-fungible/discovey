@@ -1242,7 +1242,50 @@
                 "name": "teramarks_storage_fcp_nvme",
                 "label": "NVMe",
                 "metric_model_name": "MetricContainer",
-                "children": []
+                "children": [
+                  {
+                    "name": "teramarks_storage_fcp_nvme_iops",
+                    "label": "IOPS",
+                    "metric_model_name": "NvmeFcpPerformance",
+                    "children": []
+                  },
+                  {
+                    "name": "teramarks_storage_fcp_nvme_throughput",
+                    "label": "Throughput",
+                    "metric_model_name": "NvmeFcpPerformance",
+                    "children": []
+                  },
+                  {
+                    "name": "teramarks_storage_fcp_nvme_latency_1vol",
+                    "label": "Latency - 1 Vol(s)",
+                    "metric_model_name": "NvmeFcpPerformance",
+                    "children": []
+                  },
+                  {
+                    "name": "teramarks_storage_fcp_nvme_latency_2vol",
+                    "label": "Latency - 2 Vol(s)",
+                    "metric_model_name": "NvmeFcpPerformance",
+                    "children": []
+                  },
+                  {
+                    "name": "teramarks_storage_fcp_nvme_latency_4vol",
+                    "label": "Latency - 4 Vol(s)",
+                    "metric_model_name": "NvmeFcpPerformance",
+                    "children": []
+                  },
+                  {
+                    "name": "teramarks_storage_fcp_nvme_latency_8vol",
+                    "label": "Latency - 8 Vol(s)",
+                    "metric_model_name": "NvmeFcpPerformance",
+                    "children": []
+                  },
+                  {
+                    "name": "teramarks_storage_fcp_nvme_latency_12vol",
+                    "label": "Latency - 12 Vol(s)",
+                    "metric_model_name": "NvmeFcpPerformance",
+                    "children": []
+                  }
+                ]
               },
               {
                 "name": "teramarks_storage_fcp_nvme_tcp",
@@ -1256,13 +1299,13 @@
                     "children": []
                   },
                   {
-                    "name": "teramarks_storage_fcp_nvme_tcp_iops_throughput",
+                    "name": "teramarks_storage_fcp_nvme_tcp_throughput",
                     "label": "Throughput",
                     "metric_model_name": "NvmeFcpPerformance",
                     "children": []
                   },
                   {
-                    "name": "teramarks_storage_fcp_nvme_tcp_iops_throughput_latency",
+                    "name": "teramarks_storage_fcp_nvme_tcp_latency",
                     "label": "Latency",
                     "metric_model_name": "NvmeFcpPerformance",
                     "children": []
@@ -1281,13 +1324,13 @@
                     "children": []
                   },
                   {
-                    "name": "teramarks_storage_fcp_nvme_funtcp_iops_throughput",
+                    "name": "teramarks_storage_fcp_nvme_funtcp_throughput",
                     "label": "Throughput",
                     "metric_model_name": "NvmeFcpPerformance",
                     "children": []
                   },
                   {
-                    "name": "teramarks_storage_fcp_nvme_funtcp_iops_throughput_latency",
+                    "name": "teramarks_storage_fcp_nvme_funtcp_latency",
                     "label": "Latency",
                     "metric_model_name": "NvmeFcpPerformance",
                     "children": []
