@@ -1177,13 +1177,13 @@ class ECVolumeLevelTestcase(FunTestCase):
                 # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
                 fun_test.log("Running FIO {} test with the block size: {} and IO depth: {} Num jobs: {} for the EC".
                              format(row_data_dict["mode"], fio_block_size, fio_iodepth, fio_num_jobs * global_num_jobs))
-                if self.ec_info.get("compress", False):
-                    fio_job_name = "{}_{}pctcomp_iodepth_{}_vol_{}".\
-                        format(self.fio_job_name, self.warm_up_fio_cmd_args["buffer_compress_percentage"],
-                               row_data_dict["iodepth"], self.ec_info["num_volumes"])
                 if self.ec_info["num_volumes"] != 1:
                     fio_job_name = "{}_iodepth_{}_vol_{}".format(self.fio_job_name, row_data_dict["iodepth"],
                                                                  self.ec_info["num_volumes"])
+                    if self.ec_info.get("compress", False):
+                        fio_job_name = "{}_{}pctcomp_iodepth_{}_vol_{}". \
+                            format(self.fio_job_name, self.warm_up_fio_cmd_args["buffer_compress_percentage"],
+                                   row_data_dict["iodepth"], self.ec_info["num_volumes"])
                 else:
                     fio_job_name = "{}_{}".format(self.fio_job_name, row_data_dict["iodepth"])
 
