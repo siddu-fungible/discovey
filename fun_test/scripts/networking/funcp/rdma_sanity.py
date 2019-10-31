@@ -1050,10 +1050,8 @@ class IbWriteScale(FunTestCase):
                 cq_depth_max_supported = 32767
                 cq_depth_required = 128 * qp
 
-                if qp > cq_depth_max_supported:
-                    fun_test.simple_assert(False, "QP's requested is more than CQ")
                 # Reduce the tx_depth for scaling and avoid CQ allocation failure
-                elif cq_depth_required > cq_depth_max_supported:
+                if cq_depth_required > cq_depth_max_supported:
                     tx_depth_in_test = cq_depth_max_supported / qp
                 else:
                     tx_depth_in_test = tx_depth_default
