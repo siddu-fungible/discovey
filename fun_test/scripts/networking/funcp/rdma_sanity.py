@@ -1044,10 +1044,26 @@ class IbWriteScale(FunTestCase):
             for qp in qp_list:
                 f10_pid_there = 0
                 f11_pid_there = 0
+                # Compute the tx_depth required for scaling. CQ depth max is 32767 & 16383 sq/rq depth from funrdma.
+                # Default tx_depth = 128 from ib_write_bw
+                tx_depth_default = 128
+                cq_depth_max_supported = 32767
+                cq_depth_required = 128 * qp
+
+                if qp > cq_depth_max_supported:
+                    fun_test.simple_assert(False, "QP's requested is more than CQ")
+                # Reduce the tx_depth for scaling and avoid CQ allocation failure
+                elif cq_depth_required > cq_depth_max_supported:
+                    tx_depth_in_test = cq_depth_max_supported / qp
+                else:
+                    tx_depth_in_test = tx_depth_default
+                fun_test.log("Running test with tx_depth {}".format(tx_depth_in_test))
+
                 f10_host_test = f10_host_roce.ib_bw_test(test_type=test, size=size, rdma_cm=rdmacm, qpair=qp,
-                                                         duration=30)
+                                                         tx_depth=tx_depth_in_test, duration=30)
                 f11_host_test = f11_host_roce.ib_bw_test(test_type=test, size=size, rdma_cm=rdmacm, qpair=qp,
-                                                         server_ip=f10_hosts[0]["ipaddr"], duration=30)
+                                                         tx_depth=tx_depth_in_test, server_ip=f10_hosts[0]["ipaddr"],
+                                                         duration=30)
                 while f10_hosts[0]["handle"].process_exists(process_id=f10_host_test["cmd_pid"]):
                     fun_test.sleep("ib_bw test on f10_host", 2)
                     f10_pid_there += 1

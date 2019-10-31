@@ -139,6 +139,9 @@ class Rocetools:
         if "perf" in kwargs:
             # cmd_str += " --run_infinitely"
             del kwargs["perf"]
+        if "tx_depth" in kwargs:
+            cmd_str += " -t " + str(kwargs["tx_depth"])
+            del kwargs["tx_depth"]
         if server_ip:
             cmd_str += " " + str(server_ip) + " "
             output_file = "/tmp/{}".format(tool.strip()) + "_client"
