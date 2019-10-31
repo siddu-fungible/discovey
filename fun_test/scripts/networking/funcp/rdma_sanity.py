@@ -425,7 +425,7 @@ class SrpingLoopBack(FunTestCase):
                                                         server_ip=f10_hosts[0]["ipaddr"], timeout=120)
             while f10_hosts[0]["handle"].process_exists(process_id=f10_host_server["cmd_pid"]):
                 fun_test.sleep("Srping server on f10_host", 2)
-            while f11_hosts[0]["handle"].process_exists(process_id=f10_host_client["cmd_pid"]):
+            while f10_hosts[0]["handle"].process_exists(process_id=f10_host_client["cmd_pid"]):
                 fun_test.sleep("Srping client on f10_host", 2)
             f10_server_result = f10_host_roce.parse_test_log(f10_host_server["output_file"], tool="srping")
             f10_client_result = f10_host_roce.parse_test_log(f10_host_client["output_file"], tool="srping",
@@ -515,7 +515,7 @@ class RpingLoopBack(FunTestCase):
                                                        server_ip=f10_hosts[0]["ipaddr"], timeout=120)
             while f10_hosts[0]["handle"].process_exists(process_id=f10_host_server["cmd_pid"]):
                 fun_test.sleep("Rping server on f10_host", 2)
-            while f11_hosts[0]["handle"].process_exists(process_id=f10_host_client["cmd_pid"]):
+            while f10_hosts[0]["handle"].process_exists(process_id=f10_host_client["cmd_pid"]):
                 fun_test.sleep("Rping client on f10_host", 2)
             f10_server_result = f10_host_roce.parse_test_log(f10_host_server["output_file"], tool="rping")
             f10_client_result = f10_host_roce.parse_test_log(f10_host_client["output_file"], tool="rping",
@@ -610,7 +610,7 @@ class SrpingSeqIoTest(FunTestCase):
                 f10_pid_there += 1  # Counter to check before initiating kill
                 if f10_pid_there == 60:
                     f10_hosts[0]["handle"].kill_process(process_id=f10_host_test["cmd_pid"])
-            while f11_hosts[0]["handle"].process_exists(process_id=f10_host_test["cmd_pid"]):
+            while f11_hosts[0]["handle"].process_exists(process_id=f11_host_test["cmd_pid"]):
                 fun_test.sleep("Srping test on f11_host", 2)
                 f11_pid_there += 1
                 if f11_pid_there == 60:
@@ -706,7 +706,7 @@ class RpingSeqIoTest(FunTestCase):
                 f10_pid_there += 1
                 if f10_pid_there == 60:
                     f10_hosts[0]["handle"].kill_process(process_id=f10_host_test["cmd_pid"])
-            while f11_hosts[0]["handle"].process_exists(process_id=f10_host_test["cmd_pid"]):
+            while f11_hosts[0]["handle"].process_exists(process_id=f11_host_test["cmd_pid"]):
                 fun_test.sleep("Rping test on f11_host", 2)
                 f11_pid_there += 1
                 if f11_pid_there == 60:
@@ -801,7 +801,7 @@ class IbBwSeqIoTest(FunTestCase):
                     f10_pid_there += 1
                     if f10_pid_there == 60:
                         f10_hosts[0]["handle"].kill_process(process_id=f10_host_test["cmd_pid"])
-                while f11_hosts[0]["handle"].process_exists(process_id=f10_host_test["cmd_pid"]):
+                while f11_hosts[0]["handle"].process_exists(process_id=f11_host_test["cmd_pid"]):
                     fun_test.sleep("ib_bw test on f11_host", 2)
                     f11_pid_there += 1
                     if f11_pid_there == 60:
@@ -1053,7 +1053,7 @@ class IbWriteScale(FunTestCase):
                     f10_pid_there += 1
                     if f10_pid_there == 60:
                         f10_hosts[0]["handle"].kill_process(process_id=f10_host_test["cmd_pid"])
-                while f11_hosts[0]["handle"].process_exists(process_id=f10_host_test["cmd_pid"]):
+                while f11_hosts[0]["handle"].process_exists(process_id=f11_host_test["cmd_pid"]):
                     fun_test.sleep("ib_bw test on f11_host", 2)
                     f11_pid_there += 1
                     if f11_pid_there == 60:
