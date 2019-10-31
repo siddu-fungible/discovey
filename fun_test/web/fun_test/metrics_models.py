@@ -3101,6 +3101,7 @@ class NvmeFcpPerformance(FunModel):
     input_block_size = models.IntegerField(verbose_name="Block size", default=-1)
     input_test_case = models.TextField(verbose_name="Test case", default="")
     input_operation = models.TextField(verbose_name="Operation", default="")
+    input_volumes = models.IntegerField(verbose_name="Volumes", default=-1)
     output_read_iops = models.FloatField(verbose_name="Read IOPS", default=-1)
     output_read_bw = models.FloatField(verbose_name="Read bandwidth", default=-1)
     output_read_latency_avg = models.FloatField(verbose_name="Read latency avg", default=-1)
