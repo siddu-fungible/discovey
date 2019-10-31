@@ -84,8 +84,12 @@ class BringupSetup(FunTestCase):
             deploy_setup = True
             fun_test.shared_variables["deploy_setup"] = deploy_setup
         if "quick_sanity" in job_inputs:
-            quick_sanity = job_inputs["quick_sanity"]
-            fun_test.shared_variables["quick_sanity"] = quick_sanity
+            if job_inputs["quick_sanity"]:
+                fun_test.shared_variables["test_count"] = 30
+            else:
+                fun_test.shared_variables["test_count"] = 200
+        else:
+            fun_test.shared_variables["test_count"] = 200
         ib_bw_tests = []
         if "test_type" in job_inputs:
             ib_bw_tests.append(job_inputs["test_type"])
@@ -386,6 +390,7 @@ class SrpingLoopBack(FunTestCase):
 
         f10_host_roce = fun_test.shared_variables["f10_host_roce"]
         f11_host_roce = fun_test.shared_variables["f11_host_roce"]
+        test_count = fun_test.shared_variables["test_count"]
 
         # Load RDMA modules
         f10_host_roce.rdma_setup()
@@ -414,9 +419,9 @@ class SrpingLoopBack(FunTestCase):
                 size = size * 2
 
         for size in io_list:
-            f10_host_server = f10_host_roce.srping_test(size=size, count=10000, debug=True, timeout=120)
+            f10_host_server = f10_host_roce.srping_test(size=size, count=test_count, debug=True, timeout=120)
             fun_test.sleep("Started srping server for size {}".format(size), seconds=1)
-            f10_host_client = f10_host_roce.srping_test(size=size, count=10000, debug=True,
+            f10_host_client = f10_host_roce.srping_test(size=size, count=test_count, debug=True,
                                                         server_ip=f10_hosts[0]["ipaddr"], timeout=120)
             while f10_hosts[0]["handle"].process_exists(process_id=f10_host_server["cmd_pid"]):
                 fun_test.sleep("Srping server on f10_host", 2)
@@ -430,9 +435,9 @@ class SrpingLoopBack(FunTestCase):
             fun_test.simple_assert(f10_client_result, "F10_host client result for size {}".format(size))
 
         for size in io_list:
-            f11_host_server = f11_host_roce.srping_test(size=size, count=10000, debug=True, timeout=120)
+            f11_host_server = f11_host_roce.srping_test(size=size, count=test_count, debug=True, timeout=120)
             fun_test.sleep("Started srping server for size {}".format(size), seconds=1)
-            f11_host_client = f11_host_roce.srping_test(size=size, count=10000, debug=True,
+            f11_host_client = f11_host_roce.srping_test(size=size, count=test_count, debug=True,
                                                         server_ip=f11_hosts[0]["ipaddr"], timeout=120)
             while f11_hosts[0]["handle"].process_exists(process_id=f11_host_server["cmd_pid"]):
                 fun_test.sleep("Srping server on f11_host", 2)
@@ -475,6 +480,7 @@ class RpingLoopBack(FunTestCase):
 
         f10_host_roce = fun_test.shared_variables["f10_host_roce"]
         f11_host_roce = fun_test.shared_variables["f11_host_roce"]
+        test_count = fun_test.shared_variables["test_count"]
 
         # Load RDMA modules
         f10_host_roce.rdma_setup()
@@ -503,9 +509,9 @@ class RpingLoopBack(FunTestCase):
                 size = size * 2
 
         for size in io_list:
-            f10_host_server = f10_host_roce.rping_test(size=size, count=10000, debug=True, timeout=120)
+            f10_host_server = f10_host_roce.rping_test(size=size, count=test_count, debug=True, timeout=120)
             fun_test.sleep("Started Rping server for size {}".format(size), seconds=1)
-            f10_host_client = f10_host_roce.rping_test(size=size, count=10000, debug=True,
+            f10_host_client = f10_host_roce.rping_test(size=size, count=test_count, debug=True,
                                                        server_ip=f10_hosts[0]["ipaddr"], timeout=120)
             while f10_hosts[0]["handle"].process_exists(process_id=f10_host_server["cmd_pid"]):
                 fun_test.sleep("Rping server on f10_host", 2)
@@ -518,9 +524,9 @@ class RpingLoopBack(FunTestCase):
             fun_test.simple_assert(f10_client_result, "F10_host client result for size {}".format(size))
 
         for size in io_list:
-            f11_host_server = f11_host_roce.rping_test(size=size, count=10000, debug=True, timeout=120)
+            f11_host_server = f11_host_roce.rping_test(size=size, count=test_count, debug=True, timeout=120)
             fun_test.sleep("Started rping server for size {}".format(size), seconds=1)
-            f11_host_client = f11_host_roce.rping_test(size=size, count=10000, debug=True,
+            f11_host_client = f11_host_roce.rping_test(size=size, count=test_count, debug=True,
                                                        server_ip=f11_hosts[0]["ipaddr"], timeout=120)
             while f11_hosts[0]["handle"].process_exists(process_id=f11_host_server["cmd_pid"]):
                 fun_test.sleep("Rping server on f11_host", 2)
@@ -563,6 +569,7 @@ class SrpingSeqIoTest(FunTestCase):
 
         f10_host_roce = fun_test.shared_variables["f10_host_roce"]
         f11_host_roce = fun_test.shared_variables["f11_host_roce"]
+        test_count = fun_test.shared_variables["test_count"]
 
         # Load RDMA modules
         f10_host_roce.rdma_setup()
@@ -594,9 +601,10 @@ class SrpingSeqIoTest(FunTestCase):
         f10_pid_there = 0
         f11_pid_there = 0
         for size in io_list:
-            f10_host_test = f10_host_roce.srping_test(size=size, count=10000, debug=True)
+            f10_host_test = f10_host_roce.srping_test(size=size, count=test_count, debug=True)
             fun_test.sleep("Started srping server for size {}".format(size), seconds=1)
-            f11_host_test = f11_host_roce.srping_test(size=size, count=10000, debug=True, server_ip=f10_hosts[0]["ipaddr"])
+            f11_host_test = f11_host_roce.srping_test(size=size, count=test_count, debug=True,
+                                                      server_ip=f10_hosts[0]["ipaddr"])
             while f10_hosts[0]["handle"].process_exists(process_id=f10_host_test["cmd_pid"]):
                 fun_test.sleep("Srping test on f10_host", 2)
                 f10_pid_there += 1  # Counter to check before initiating kill
@@ -657,6 +665,7 @@ class RpingSeqIoTest(FunTestCase):
 
         f10_host_roce = fun_test.shared_variables["f10_host_roce"]
         f11_host_roce = fun_test.shared_variables["f11_host_roce"]
+        test_count = fun_test.shared_variables["test_count"]
 
         # Load RDMA modules
         f10_host_roce.rdma_setup()
@@ -688,9 +697,10 @@ class RpingSeqIoTest(FunTestCase):
         f10_pid_there = 0
         f11_pid_there = 0
         for size in io_list:
-            f10_host_test = f10_host_roce.rping_test(size=size, count=10000, debug=True)
+            f10_host_test = f10_host_roce.rping_test(size=size, count=test_count, debug=True)
             fun_test.sleep("Started rping server for size {}".format(size), seconds=1)
-            f11_host_test = f11_host_roce.rping_test(size=size, count=10000, debug=True, server_ip=f10_hosts[0]["ipaddr"])
+            f11_host_test = f11_host_roce.rping_test(size=size, count=test_count, debug=True,
+                                                     server_ip=f10_hosts[0]["ipaddr"])
             while f10_hosts[0]["handle"].process_exists(process_id=f10_host_test["cmd_pid"]):
                 fun_test.sleep("Rping test on f10_host", 2)
                 f10_pid_there += 1
