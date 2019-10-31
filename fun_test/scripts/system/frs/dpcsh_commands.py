@@ -63,6 +63,12 @@ def execute_leaks(come_handle, f1=0):
     # print dpcsh_output
     return dpcsh_output
 
+def pc_dma(come_handle, f1=0):
+    cmd = "pc_dma"
+    dpcsh_output = dpcsh_nocli.get_dpcsh_output(come_handle, cmd, f1)
+    # print dpcsh_output
+    return dpcsh_output
+
 
 
 if __name__ == "__main__":

@@ -231,8 +231,8 @@ class FunTestCase1(FunTestCase):
         # post_fix_name: "{calculated_}{app_name}_DPCSH_OUTPUT_F1_{f1}_logs.txt"
         # description : "{calculated_}_{app_name}_DPCSH_OUTPUT_F1_{f1}"
         self.stats_info["bmc"] = {"POWER": {"calculated": True}, "DIE_TEMPERATURE": {"calculated": False, "disable":True}}
-        self.stats_info["come"] = {"DEBUG_MEMORY": {}, "CDU": {"disable":True}, "EQM": {"disable":True}, "BAM": {"calculated": False, "disable":True}, "DEBUG_VP_UTIL": {"calculated": False,"disable":True}, "LE": {"disable":True}, "HBM": {"disable":True},
-                                   "EXECUTE_LEAKS":{"calculated": False}}
+        self.stats_info["come"] = {"DEBUG_MEMORY": {}, "CDU": {}, "EQM": {}, "BAM": {"calculated": False, "disable":True}, "DEBUG_VP_UTIL": {"calculated": False}, "LE": {"disable":True}, "HBM": {"disable":True},
+                                   "EXECUTE_LEAKS": {"calculated": False, "disable": True}, "PC_DMA": {"calculated": True}}
         for system in self.stats_info:
             for stat_name, value in self.stats_info[system].iteritems():
                 if stat_name in self.collect_stats:
@@ -443,6 +443,37 @@ class FunTestCase1(FunTestCase):
             # fun_test.sleep("before next iteration", seconds=self.details["interval"])
         come_handle.destroy()
 
+    ####### PC DMA #########
+    def func_pc_dma(self, count, heading, f1):
+        stat_name = "PC_DMA"
+        come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
+                           ssh_username=self.fs['come']['mgmt_ssh_username'],
+                           ssh_password=self.fs['come']['mgmt_ssh_password'])
+        for i in range(count):
+            one_dataset = {}
+            dpcsh_output = dpcsh_commands.pc_dma(come_handle=come_handle, f1=f1)
+            one_dataset["time"] = datetime.datetime.now()
+            one_dataset["output"] = dpcsh_output
+            one_dataset["time1"] = datetime.datetime.now()
+            one_dataset["output1"] = dpcsh_output
+            file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+
+            fun_test.sleep("Before capturing next set of data", seconds=5)
+
+            dpcsh_output = dpcsh_commands.pc_dma(come_handle=come_handle, f1=f1)
+            one_dataset["time"] = datetime.datetime.now()
+            one_dataset["output"] = dpcsh_output
+            one_dataset["time2"] = datetime.datetime.now()
+            one_dataset["output2"] = dpcsh_output
+            file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+
+            difference_dict = stats_calculation.dict_difference(one_dataset, "cdu")
+            one_dataset["time"] = datetime.datetime.now()
+            one_dataset["output"] = difference_dict
+            file_helper.add_data(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+            # fun_test.sleep("before next iteration", seconds=self.details["interval"])
+        come_handle.destroy()
+
     ############# BAM ################
     def func_bam(self, f1, count, heading):
         stat_name = "BAM"
@@ -589,7 +620,6 @@ class FunTestCase1(FunTestCase):
 
 
     ########## MUD ###################
-
     def get_debug_memory_stats_initially(self, f_debug_memory_f1_0, f_debug_memory_f1_1):
         result = {}
         come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
