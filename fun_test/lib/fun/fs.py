@@ -1995,9 +1995,10 @@ class Fs(object, ToDictMixin):
         return self.get_bmc().get_uart_log_file(f1_index=f1_index, post_fix=post_fix)
 
     def statistics_dispatcher(self, statistics_type, **kwargs):
-        result = None
+        result = {"status": False, "data": None}
         if statistics_type == self.StatisticsType.BAM:
-            result = self.bam(**kwargs)
+            result["data"] = self.bam(**kwargs)
+            result["status"] = True
         return result
 
 if __name__ == "__main2__":
