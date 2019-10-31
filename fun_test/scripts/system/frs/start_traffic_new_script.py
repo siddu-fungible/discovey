@@ -31,7 +31,7 @@ class MyScript(FunTestScript):
         for k, v in config_dict.iteritems():
             setattr(self, k, v)
 
-        f1_0_boot_args = 'cc_huid=3 sku=SKU_FS1600_0 app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303 --mtracker'
+        f1_0_boot_args = 'cc_huid=3 sku=SKU_FS1600_0 app=mdt_test,load_mods,hw_hsu_test, workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303 --mtracker'
         f1_1_boot_args = 'cc_huid=2 sku=SKU_FS1600_1 app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303 --mtracker'
 
         if job_inputs:
@@ -220,6 +220,8 @@ class FunTestCase1(FunTestCase):
                 self.add_to_database = job_inputs["add_to_database"]
             if "duration" in job_inputs:
                 self.duration = job_inputs["duration"]
+            if "run_le_firewall" in job_inputs:
+                self.run_le_firewall = job_inputs["run_le_firewall"]
 
         # Create the files
         self.stats_info = {}
@@ -258,11 +260,11 @@ class FunTestCase1(FunTestCase):
 
     def run(self):
         ############## Before traffic #####################
-        self.initial_debug_memory_stats = self.get_debug_memory_stats_initially(self.f_DEBUG_MEMORY_f1_0,
-                                                                                self.f_DEBUG_MEMORY_f1_0)
-        self.capture_data(count=3, heading="Before starting traffic")
-
-        fun_test.test_assert(True, "Initial debug stats is saved")
+        # self.initial_debug_memory_stats = self.get_debug_memory_stats_initially(self.f_DEBUG_MEMORY_f1_0,
+        #                                                                         self.f_DEBUG_MEMORY_f1_0)
+        # self.capture_data(count=3, heading="Before starting traffic")
+        #
+        # fun_test.test_assert(True, "Initial debug stats is saved")
 
         ############# Starting Traffic ################
         come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
@@ -335,21 +337,168 @@ class FunTestCase1(FunTestCase):
         for i in range(thread_count):
             fun_test.join_thread(thread_map[i])
 
+    ############# EQM ################
+    def func_eqm(self, f1, count, heading):
+        stat_name = "EQM"
+        come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
+                           ssh_username=self.fs['come']['mgmt_ssh_username'],
+                           ssh_password=self.fs['come']['mgmt_ssh_password'])
+        for i in range(count):
+            one_dataset = {}
+            dpcsh_output = dpcsh_commands.eqm(come_handle=come_handle, f1=f1)
+            one_dataset["time"] = datetime.datetime.now()
+            one_dataset["output"] = dpcsh_output
+            one_dataset["time1"] = datetime.datetime.now()
+            one_dataset["output1"] = dpcsh_output
+            file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
 
-    def cleanup(self):
-        if not self.boot_new_image:
-            bmc_handle = Bmc(host_ip=self.fs['bmc']['mgmt_ip'],
-                             ssh_username=self.fs['bmc']['mgmt_ssh_username'],
-                             ssh_password=self.fs['bmc']['mgmt_ssh_password'],
-                             set_term_settings=True,
-                             disable_uart_logger=False)
-            bmc_handle.set_prompt_terminator(r'# $')
-            # bmc_handle.cleanup()
-            # Capture the UART logs also
-            artifact_file_name_f1_0 = bmc_handle.get_uart_log_file(0)
-            artifact_file_name_f1_1 = bmc_handle.get_uart_log_file(1)
-            fun_test.add_auxillary_file(description="DUT_0_fs-65_F1_0 UART Log", filename=artifact_file_name_f1_0)
-            fun_test.add_auxillary_file(description="DUT_0_fs-65_F1_1 UART Log", filename=artifact_file_name_f1_1)
+            fun_test.sleep("Before capturing next set of data", seconds=5)
+
+            dpcsh_output = dpcsh_commands.eqm(come_handle=come_handle, f1=f1)
+            one_dataset["time"] = datetime.datetime.now()
+            one_dataset["output"] = dpcsh_output
+            one_dataset["time2"] = datetime.datetime.now()
+            one_dataset["output2"] = dpcsh_output
+            file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+            difference_dict = stats_calculation.dict_difference(one_dataset, "eqm")
+            one_dataset["time"] = datetime.datetime.now()
+            one_dataset["output"] = difference_dict
+            file_helper.add_data(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+
+            # fun_test.sleep("before next iteration", seconds=self.details["interval"])
+
+        come_handle.destroy()
+
+    ############# LE Firewall #############
+    def func_le(self, f1, count, heading):
+        stat_name = "LE"
+        come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
+                           ssh_username=self.fs['come']['mgmt_ssh_username'],
+                           ssh_password=self.fs['come']['mgmt_ssh_password'])
+        for i in range(count):
+            one_dataset = {}
+            dpcsh_output = dpcsh_commands.le(come_handle=come_handle, f1=f1)
+            one_dataset["time"] = datetime.datetime.now()
+            one_dataset["output"] = dpcsh_output
+            one_dataset["time1"] = datetime.datetime.now()
+            one_dataset["output1"] = dpcsh_output
+            file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+
+            fun_test.sleep("Before capturing next set of data", seconds=5)
+
+            dpcsh_output = dpcsh_commands.le(come_handle=come_handle, f1=f1)
+            one_dataset["time"] = datetime.datetime.now()
+            one_dataset["output"] = dpcsh_output
+            one_dataset["time2"] = datetime.datetime.now()
+            one_dataset["output2"] = dpcsh_output
+            file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+
+            difference_dict = stats_calculation.dict_difference(one_dataset, "le")
+            one_dataset["time"] = datetime.datetime.now()
+            one_dataset["output"] = difference_dict
+            file_helper.add_data(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+
+            # fun_test.sleep("before next iteration", seconds=self.details["interval"])
+
+        come_handle.destroy()
+
+
+    ############# CDU ########
+    def func_cdu(self, f1, count, heading):
+        stat_name = "CDU"
+        come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
+                           ssh_username=self.fs['come']['mgmt_ssh_username'],
+                           ssh_password=self.fs['come']['mgmt_ssh_password'])
+        for i in range(count):
+            one_dataset = {}
+            dpcsh_output = dpcsh_commands.cdu(come_handle=come_handle, f1=f1)
+            one_dataset["time"] = datetime.datetime.now()
+            one_dataset["output"] = dpcsh_output
+            one_dataset["time1"] = datetime.datetime.now()
+            one_dataset["output1"] = dpcsh_output
+            file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+
+            fun_test.sleep("Before capturing next set of data", seconds=5)
+
+            dpcsh_output = dpcsh_commands.cdu(come_handle=come_handle, f1=f1)
+            one_dataset["time"] = datetime.datetime.now()
+            one_dataset["output"] = dpcsh_output
+            one_dataset["time2"] = datetime.datetime.now()
+            one_dataset["output2"] = dpcsh_output
+            file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+
+            difference_dict = stats_calculation.dict_difference(one_dataset, "cdu")
+            one_dataset["time"] = datetime.datetime.now()
+            one_dataset["output"] = difference_dict
+            file_helper.add_data(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+            # fun_test.sleep("before next iteration", seconds=self.details["interval"])
+        come_handle.destroy()
+
+    ############# BAM ################
+    def func_bam(self, f1, count, heading):
+        stat_name = "BAM"
+        come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
+                           ssh_username=self.fs['come']['mgmt_ssh_username'],
+                           ssh_password=self.fs['come']['mgmt_ssh_password'])
+        for i in range(count):
+            one_dataset = {}
+            dpcsh_output = dpcsh_commands.bam(come_handle=come_handle, f1=f1)
+            one_dataset["time"] = datetime.datetime.now()
+            one_dataset["output"] = dpcsh_output
+            fun_test.sleep("before next iteration")
+            file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+        come_handle.destroy()
+
+    ############### debug vp_utils #######
+    def func_debug_vp_util(self, f1, count, heading):
+        stat_name = "DEBUG_VP_UTIL"
+        come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
+                           ssh_username=self.fs['come']['mgmt_ssh_username'],
+                           ssh_password=self.fs['come']['mgmt_ssh_password'])
+        for i in range(count):
+            one_dataset = {}
+            dpcsh_output = dpcsh_commands.debug_vp_utils(come_handle=come_handle, f1=f1)
+            one_dataset["time"] = datetime.datetime.now()
+            one_dataset["output"] = dpcsh_output
+            fun_test.sleep("before next iteration")
+            file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+        come_handle.destroy()
+
+
+
+
+    ########### HBM ##################
+    def func_hbm(self, f1, count, heading):
+        stat_name = "HBM"
+        come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
+                           ssh_username=self.fs['come']['mgmt_ssh_username'],
+                           ssh_password=self.fs['come']['mgmt_ssh_password'])
+        for i in range(count):
+            one_dataset = {}
+            dpcsh_output = dpcsh_commands.hbm(come_handle=come_handle, f1=f1)
+            one_dataset["time"] = datetime.datetime.now()
+            one_dataset["output"] = dpcsh_output
+            one_dataset["time1"] = datetime.datetime.now()
+            one_dataset["output1"] = dpcsh_output
+            file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+
+            fun_test.sleep("Before capturing next set of data", seconds=5)
+
+            dpcsh_output = dpcsh_commands.hbm(come_handle=come_handle, f1=f1)
+            one_dataset["time"] = datetime.datetime.now()
+            one_dataset["output"] = dpcsh_output
+            one_dataset["time2"] = datetime.datetime.now()
+            one_dataset["output2"] = dpcsh_output
+            file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+
+            # div_by_peek_value = stats_calculation.dict_difference(one_dataset, "hbm")
+            # one_dataset["time"] = datetime.datetime.now()
+            # one_dataset["output"] = div_by_peek_value
+            # file_helper.add_data(file_hbm_dif, one_dataset, heading=heading)
+
+            # fun_test.sleep("before next iteration", seconds=self.details["interval"])
+
+        come_handle.destroy()
 
     ######## EXECUTE LEAKS ###########
     def func_execute_leaks(self,f1,count, heading):
@@ -431,166 +580,15 @@ class FunTestCase1(FunTestCase):
 
         come_handle.destroy()
 
-    ############# CDU ########
-    def func_cdu(self, f1, count, heading):
-        stat_name = "CDU"
-        come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
-                           ssh_username=self.fs['come']['mgmt_ssh_username'],
-                           ssh_password=self.fs['come']['mgmt_ssh_password'])
-        for i in range(count):
-            one_dataset = {}
-            dpcsh_output = dpcsh_commands.cdu(come_handle=come_handle, f1=f1)
-            one_dataset["time"] = datetime.datetime.now()
-            one_dataset["output"] = dpcsh_output
-            one_dataset["time1"] = datetime.datetime.now()
-            one_dataset["output1"] = dpcsh_output
-            file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
-
-            fun_test.sleep("Before capturing next set of data", seconds=5)
-
-            dpcsh_output = dpcsh_commands.cdu(come_handle=come_handle, f1=f1)
-            one_dataset["time"] = datetime.datetime.now()
-            one_dataset["output"] = dpcsh_output
-            one_dataset["time2"] = datetime.datetime.now()
-            one_dataset["output2"] = dpcsh_output
-            file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
-
-            difference_dict = stats_calculation.dict_difference(one_dataset, "cdu")
-            one_dataset["time"] = datetime.datetime.now()
-            one_dataset["output"] = difference_dict
-            file_helper.add_data(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
-            # fun_test.sleep("before next iteration", seconds=self.details["interval"])
-        come_handle.destroy()
-
-    ############# EQM ################
-    def func_eqm(self, f1, count, heading):
-        stat_name = "EQM"
-        come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
-                           ssh_username=self.fs['come']['mgmt_ssh_username'],
-                           ssh_password=self.fs['come']['mgmt_ssh_password'])
-        for i in range(count):
-            one_dataset = {}
-            dpcsh_output = dpcsh_commands.eqm(come_handle=come_handle, f1=f1)
-            one_dataset["time"] = datetime.datetime.now()
-            one_dataset["output"] = dpcsh_output
-            one_dataset["time1"] = datetime.datetime.now()
-            one_dataset["output1"] = dpcsh_output
-            file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
-
-            fun_test.sleep("Before capturing next set of data", seconds=5)
-
-            dpcsh_output = dpcsh_commands.eqm(come_handle=come_handle, f1=f1)
-            one_dataset["time"] = datetime.datetime.now()
-            one_dataset["output"] = dpcsh_output
-            one_dataset["time2"] = datetime.datetime.now()
-            one_dataset["output2"] = dpcsh_output
-            file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
-            difference_dict = stats_calculation.dict_difference(one_dataset, "eqm")
-            one_dataset["time"] = datetime.datetime.now()
-            one_dataset["output"] = difference_dict
-            file_helper.add_data(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
-
-            # fun_test.sleep("before next iteration", seconds=self.details["interval"])
-
-        come_handle.destroy()
-
-    ############# LE Firewall #############
-    def func_le(self, f1, count, heading):
-        stat_name = "LE"
-        come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
-                           ssh_username=self.fs['come']['mgmt_ssh_username'],
-                           ssh_password=self.fs['come']['mgmt_ssh_password'])
-        for i in range(count):
-            one_dataset = {}
-            dpcsh_output = dpcsh_commands.le(come_handle=come_handle, f1=f1)
-            one_dataset["time"] = datetime.datetime.now()
-            one_dataset["output"] = dpcsh_output
-            one_dataset["time1"] = datetime.datetime.now()
-            one_dataset["output1"] = dpcsh_output
-            file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
-
-            fun_test.sleep("Before capturing next set of data", seconds=5)
-
-            dpcsh_output = dpcsh_commands.le(come_handle=come_handle, f1=f1)
-            one_dataset["time"] = datetime.datetime.now()
-            one_dataset["output"] = dpcsh_output
-            one_dataset["time2"] = datetime.datetime.now()
-            one_dataset["output2"] = dpcsh_output
-            file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
-
-            div_by_peek_value = stats_calculation.dict_difference(one_dataset, "le")
-            one_dataset["time"] = datetime.datetime.now()
-            one_dataset["output"] = div_by_peek_value
-            file_helper.add_data(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
-
-            # fun_test.sleep("before next iteration", seconds=self.details["interval"])
-
-        come_handle.destroy()
-
-    ############# BAM ################
-    def func_bam(self, f1, count, heading):
-        stat_name = "BAM"
-        come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
-                           ssh_username=self.fs['come']['mgmt_ssh_username'],
-                           ssh_password=self.fs['come']['mgmt_ssh_password'])
-        for i in range(count):
-            one_dataset = {}
-            dpcsh_output = dpcsh_commands.bam(come_handle=come_handle, f1=f1)
-            one_dataset["time"] = datetime.datetime.now()
-            one_dataset["output"] = dpcsh_output
-            fun_test.sleep("before next iteration")
-            file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
-        come_handle.destroy()
-
-    ############### debug vp_utils #######
-    def func_debug_vp_util(self, f1, count, heading):
-        stat_name = "DEBUG_VP_UTIL"
-        come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
-                           ssh_username=self.fs['come']['mgmt_ssh_username'],
-                           ssh_password=self.fs['come']['mgmt_ssh_password'])
-        for i in range(count):
-            one_dataset = {}
-            dpcsh_output = dpcsh_commands.debug_vp_utils(come_handle=come_handle, f1=f1)
-            one_dataset["time"] = datetime.datetime.now()
-            one_dataset["output"] = dpcsh_output
-            fun_test.sleep("before next iteration")
-            file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
-        come_handle.destroy()
 
 
 
-    ########### HBM ##################
-    def func_hbm(self, f1, count, heading):
-        stat_name = "HBM"
-        come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
-                           ssh_username=self.fs['come']['mgmt_ssh_username'],
-                           ssh_password=self.fs['come']['mgmt_ssh_password'])
-        for i in range(count):
-            one_dataset = {}
-            dpcsh_output = dpcsh_commands.hbm(come_handle=come_handle, f1=f1)
-            one_dataset["time"] = datetime.datetime.now()
-            one_dataset["output"] = dpcsh_output
-            one_dataset["time1"] = datetime.datetime.now()
-            one_dataset["output1"] = dpcsh_output
-            file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
 
-            fun_test.sleep("Before capturing next set of data", seconds=5)
 
-            dpcsh_output = dpcsh_commands.hbm(come_handle=come_handle, f1=f1)
-            one_dataset["time"] = datetime.datetime.now()
-            one_dataset["output"] = dpcsh_output
-            one_dataset["time2"] = datetime.datetime.now()
-            one_dataset["output2"] = dpcsh_output
-            file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
 
-            # div_by_peek_value = stats_calculation.dict_difference(one_dataset, "hbm")
-            # one_dataset["time"] = datetime.datetime.now()
-            # one_dataset["output"] = div_by_peek_value
-            # file_helper.add_data(file_hbm_dif, one_dataset, heading=heading)
 
-            # fun_test.sleep("before next iteration", seconds=self.details["interval"])
 
-        come_handle.destroy()
+
 
     ########## MUD ###################
 
@@ -670,6 +668,21 @@ class FunTestCase1(FunTestCase):
             else:
                 fun_test.log("Dpcsh is already running for F1 {}".format(f1))
         fun_test.test_assert(True, "DPCSH running")
+
+    def cleanup(self):
+        if not self.boot_new_image:
+            bmc_handle = Bmc(host_ip=self.fs['bmc']['mgmt_ip'],
+                             ssh_username=self.fs['bmc']['mgmt_ssh_username'],
+                             ssh_password=self.fs['bmc']['mgmt_ssh_password'],
+                             set_term_settings=True,
+                             disable_uart_logger=False)
+            bmc_handle.set_prompt_terminator(r'# $')
+            # bmc_handle.cleanup()
+            # Capture the UART logs also
+            artifact_file_name_f1_0 = bmc_handle.get_uart_log_file(0)
+            artifact_file_name_f1_1 = bmc_handle.get_uart_log_file(1)
+            fun_test.add_auxillary_file(description="DUT_0_fs-65_F1_0 UART Log", filename=artifact_file_name_f1_0)
+            fun_test.add_auxillary_file(description="DUT_0_fs-65_F1_1 UART Log", filename=artifact_file_name_f1_1)
 
 
 if __name__ == "__main__":

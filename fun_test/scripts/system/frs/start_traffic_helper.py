@@ -2,8 +2,23 @@ import dpcsh_nocli
 from lib.system.fun_test import *
 from lib.host.linux import Linux
 
-vm_1 = "10.1.20.52"
-vm_2 = "10.1.23.228"
+vm_1 = {
+    "host_ip":"10.1.20.52",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "WORKSPACE": "/home/localadmin/Integration",
+    "PYTHONPATH": "/home/localadmin/Integration/fun_test",
+    "SCRIPT_PATH": "/home/localadmin/Integration/fun_test/scripts/power_monitor"
+}
+vm_2 = {
+    "host_ip": "10.1.23.228",
+    "ssh_username": "localadmin",
+    "ssh_password": "r00t.!@#",
+    "WORKSPACE": "/home/localadmin/fungible_automation/Integration",
+    "PYTHONPATH": "/home/localadmin/fungible_automation/Integration/fun_test",
+    "SCRIPT_PATH": "/home/localadmin/fungible_automation/Integration/fun_test/scripts/power_monitor"
+}
+
 
 def crypto(come_handle, vp_iters=500000, src='ddr', dst='ddr', f1=0, nvps=48):
     result = False
@@ -91,12 +106,16 @@ def le_firewall(run_time, new_image):
         run_time += 400
     else:
         run_time += 200
-    kill_le_firewall()
+    # kill_le_firewall()
     if new_image:
         cmd = '''python run_nu_transit_only.py --inputs '{"speed":"SPEED_100G", "run_time":%s, "initiate":true}' ''' % run_time
     else:
         cmd = '''python run_nu_transit_only.py --inputs '{"speed":"SPEED_100G", "run_time":%s, "initiate":false}' ''' % run_time
     print cmd
+    initiate_or_run_le_firewall(cmd, vm=1)
+    poll_for_le_firewall(vm=1)
+
+
     host_1 = Linux(host_ip=vm_1, ssh_username="localadmin", ssh_password="Precious1*")
     host_1.enter_sudo()
     host_1.command('export WORKSPACE="/home/localadmin/Integration"')
@@ -137,6 +156,7 @@ def kill_le_firewall():
                 if process_id:
                     result = True
                     host.kill_process(process_id, signal=9)
+
             fun_test.test_assert(True, "Le-firewall stopped on the VM")
         host_1.destroy()
         host_2.destroy()
@@ -150,7 +170,7 @@ def start_le_firewall():
     cmd = '''python run_nu_transit_only.py --inputs '{"speed":"SPEED_100G", "run_time":%s, "initiate":true}' '''%run_time
     host_1 = Linux(host_ip=vm_1, ssh_username="localadmin", ssh_password="Precious1*")
     host_1.enter_sudo()
-    host_1.command('export WORKSPACE="/home/localadmin/Integration"')
+    host_1.command('export WORKSPACE=')
     host_1.command('export PYTHONPATH="/home/localadmin/Integration/fun_test"')
     host_1.command("cd /home/localadmin/Integration/fun_test/scripts/power_monitor")
     host_1.start_bg_process(cmd)
@@ -172,6 +192,38 @@ def start_le_firewall():
     host_1.destroy()
     host_2.destroy()
     fun_test.test_assert(True, "Le-firewall initiated on {} VM".format(vm_2))
+
+
+def initiate_or_run_le_firewall(cmd, vm=1):
+    vm = globals()["vm_{}".format(vm)]
+    handle = Linux(host_ip=vm["host_ip"], ssh_username=vm["ssh_username"], ssh_password="ssh_password")
+    handle.enter_sudo()
+    handle.command('export WORKSPACE="{}"'.format(vm["WORKSPACE"]))
+    handle.command('export PYTHONPATH="{}"'.format(vm["PYTHONPATH"]))
+    handle.command("cd {}".format(vm["SCRIPT_PATH"]))
+    handle.start_bg_process(cmd)
+    handle.command("ps -ef | grep python")
+    handle.exit_sudo()
+    handle.destroy()
+
+
+def poll_for_le_firewall(vm=1):
+    result = False
+    vm = globals()["vm_{}".format(vm)]
+    handle = Linux(host_ip=vm["host_ip"], ssh_username=vm["ssh_username"], ssh_password="ssh_password")
+    timer = FunTimer(max_time=600)
+    while not timer.is_expired():
+        process_id = handle.get_process_id_by_pattern("run_nu_transit_only.py")
+        if not process_id:
+            fun_test.log("The process has stopped")
+            result = True
+            break
+        fun_test.sleep("Before checking next iteration", seconds=30)
+    return result
+
+
+
+
 
 
 if __name__ == "__main__":

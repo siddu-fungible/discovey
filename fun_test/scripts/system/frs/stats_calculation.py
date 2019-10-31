@@ -14,15 +14,14 @@ def dict_difference(one_data_set, cmd):
         for field in ["EFI->EQC Enqueue Interface valid", "EQC->EFI Dequeue Interface valid"]:
             result[field] = diff_dict[field]
     elif cmd == "le":
-        peek_value = 320
-        diff_dict = dict_difference_level_2(dict_1, dict_2, time_difference)
-        result = dict_level_1_div(diff_dict, peek_value)
+        # peek_value = 320
+        result = dict_difference_level_2(dict_1, dict_2, time_difference)
+        # result = dict_level_1_div(diff_dict, peek_value)
     elif cmd == "hbm":
         # diff_dict = dict_difference_level_2(dict_1, dict_2, time_difference)
         pass
     elif cmd == "cdu":
         result = dict_difference_level_2(dict_1, dict_2, time_difference)
-
 
     return result
 
