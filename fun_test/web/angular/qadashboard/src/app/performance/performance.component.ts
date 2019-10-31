@@ -203,7 +203,6 @@ export class PerformanceComponent implements OnInit {
   ) {
     this.urlDecodingReplacementMap = {};
     Object.keys(this.urlEncodingReplacementMap).forEach(key => {
-      // let replacement = this.urlEncodingReplacementMap[key].replace(/\./g, "\\.");
       this.urlDecodingReplacementMap[this.urlEncodingReplacementMap[key]] = key;
     })
   }
@@ -447,11 +446,11 @@ export class PerformanceComponent implements OnInit {
   }
 
   replaceReverseUrl(chartName): string {
-    Object.keys(this.urlDecodingReplacementMap).forEach(key => {
-      if (chartName.includes(key)) {
-          let regexKey = key.replace(/\./g, "\\.");
-          chartName = chartName.replace(new RegExp(regexKey, "g"), this.urlDecodingReplacementMap[key]);
-        }
+    let self = this;
+    chartName = chartName.replace(/(\.\.[A-z]{2}\.\.)/g, (match, $1) => {
+      if (match) {
+        return self.urlDecodingReplacementMap[$1];
+      }
     });
     return chartName;
   }
