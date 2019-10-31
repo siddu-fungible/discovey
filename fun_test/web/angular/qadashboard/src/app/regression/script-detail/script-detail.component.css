@@ -19,8 +19,6 @@
   background-color: rgba(220, 220, 220, 0.64);
 }
 
-
-
 .checkpoint-span {
     background-color: rgba(255, 248, 186, 0.58);
     border-radius: 3px;
@@ -80,11 +78,11 @@ table {
 }
 
 .test-case-panel {
-  height: 400px;
+  height: auto;
 }
 
 .checkpoint-panel {
-  height: 400px;
+  height: auto;
 }
 
 .logs-panel {

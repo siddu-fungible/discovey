@@ -53,11 +53,11 @@
           <tr>
             <td class="fun-table-header">Category</td>
             <td class="fun-table-header">Sub-category</td>
-            <td></td>
+            <td class="fun-table-header"></td>
           </tr>
           <tr *ngFor="let selectedStatistic of selectedStatistics; let index=index">
-            <td>{{ selectedStatistic[0].display_name }}</td>
-            <td>{{ selectedStatistic[1].display_name }}</td>
+            <td>{{ selectedStatistic.statisticsCategory.display_name }}</td>
+            <td>{{ selectedStatistic.statisticsSubCategory.display_name }}</td>
             <td><i (click)="deleteSelectedStatisticClick(index)" class="fa fa-trash-o"
                      style="font-size:20px; color: red"></i>
             </td>
@@ -198,6 +198,8 @@
       </ng-container>
     </div>
   </div>
+  <app-statistics-container [statistics]="selectedStatistics" *ngIf="selectedStatistics?.length > 0"></app-statistics-container>
+
 </div>
 
 

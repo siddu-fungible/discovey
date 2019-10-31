@@ -8,13 +8,12 @@ import {animate, state, style, transition, trigger} from "@angular/animations";
 import {CommonService} from "../../services/common/common.service";
 import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
 import {ScriptDetailService, ContextInfo, ScriptRunTime} from "./script-detail.service";
-
+import {StatisticsService, StatisticsCategory, StatisticsSubCategory} from "../../statistics/statistics.service";
 
 class DataModel {
   letter: string;
   frequency: number;
 }
-
 
 
 class TimeSeriesLog {
@@ -491,12 +490,15 @@ export class ScriptDetailComponent implements OnInit {
     if (!this.selectedStatistics) {
       this.selectedStatistics = [];
     }
-    this.selectedStatistics.push([this.selectedStatisticsCategory, this.selectedStatisticsSubCategory]);
+    this.selectedStatistics.push({statisticsCategory: this.selectedStatisticsCategory,
+      statisticsSubCategory: this.selectedStatisticsSubCategory});
     this.selectedStatisticsCategory = null;
     this.selectedStatisticsSubCategory = null;
+    this.selectedStatistics = [...this.selectedStatistics];
   }
 
   deleteSelectedStatisticClick(index) {
-    this.selectedStatistics.splice(index);
+    this.selectedStatistics.splice(index, 1);
+    this.selectedStatistics = [...this.selectedStatistics];
   }
 }
