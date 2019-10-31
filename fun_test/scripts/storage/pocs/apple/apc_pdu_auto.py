@@ -17,6 +17,15 @@ class ApcPduScript(FunTestScript):
     def setup(self):
         pass
 
+    def wipe_out_cassandra_es_database(self):
+        self.come_handle.command("cd /var/opt/fungible")
+        self.come_handle.sudo_command("rm -r elasticsearch")
+        self.come_handle.sudo_command("rm -r cassandra")
+
+    def restart_fs1600(self):
+        self.come_handle.command("cd /opt/fungible/etc")
+        self.come_handle.command("bash ResetFs1600.sh")
+
     def cleanup(self):
         pass
 
@@ -163,11 +172,14 @@ class ApcPduTestcase(FunTestCase):
 
             # Todo: remove for loop in the helper script (previously had codded to work parallelly with multiple host,
             #  now we have to do it serially, so no need of for loops in helper function)
+            # self.wipe_out_cassandra_es_database()
+            # self.restart_fs1600()
             if self.num_hosts:
                 required_hosts_list = self.verify_and_get_required_hosts_list()
                 self.volume_uuid_details = self.create_vol_using_api()
                 self.attach_volumes_to_host(self.volume_uuid_details, required_hosts_list)
                 self.get_host_handles()
+                self.intialize_the_hosts()
                 self.connect_the_host_to_volumes()
                 self.verify_nvme_connect()
                 self.start_traffic_and_verify()
@@ -623,19 +635,24 @@ class ApcPduTestcase(FunTestCase):
                     "stripe_count": volume_creation_detail["stripe_count"],
                     "data_protection": {}, "compression_effort": volume_creation_detail["compression_effort"]}
             response = requests.post(volcreate_url, auth=self.http_basic_auth, json=data, verify=False)
-            response_json = response.json()
+            try:
+                response_json = response.json()
+            except Exception as ex:
+                fun_test.log(ex)
+                fun_test.test_assert(False,
+                                     "Create {} volume".format(volume_creation_detail["name"]))
+            message = response_json['message']
+            volume_create_successful = True if message == 'volume create successful' else False
+            fun_test.test_assert(volume_create_successful,
+                                 "Create {} volume".format(volume_creation_detail["name"]))
             # Todo: get he api call for getting the existing volume details
             if "already exists" in response_json["error_message"]:
                 pass
-            message = response_json['message']
             vol_uuid = str(response_json['data']['uuid'])
             fun_test.log("volume creation log: {}".format(response.json()))
             fun_test.log("volume creation status: {}".format(message))
             fun_test.log("vol UUID: {}".format(vol_uuid))
             volume_uuid_details[volume_creation_detail["name"]] = vol_uuid
-            volume_create_successful = True if message == 'volume create successful' else False
-            fun_test.test_assert(volume_create_successful,
-                                 "Create {} volume".format(volume_creation_detail["name"]))
         return volume_uuid_details
 
     def attach_volumes_to_host(self, volume_uuid_details, required_hosts_list):
@@ -649,7 +666,10 @@ class ApcPduTestcase(FunTestCase):
             host_interface_ip = self.hosts_asset[host_name]["test_interface_info"]["0"]["ip"].split("/")[0]
             data = {"remote_ip": host_interface_ip, "transport": self.transport_type.upper()}
             response = requests.post(volattach_url, auth=self.http_basic_auth, json=data, verify=False)
-            response_json = response.json()
+            try:
+                response_json = response.json()
+            except Exception as ex:
+                fun_test.critical(ex)
             fun_test.log("Volume attach response: {}".format(response_json))
             message = response_json["message"]
             attach_status = True if message == "Attach Success" else False
@@ -731,6 +751,22 @@ class ApcPduTestcase(FunTestCase):
             message = response_json["message"]
             deleted = True if message == "volume deletion successful" else False
             fun_test.test_assert(deleted, "Delete volume :{} ".format(vol_name))
+
+    def intialize_the_hosts(self):
+        for host_name, host_info in self.host_details.iteritems():
+            module = "nvme"
+            host_info["handle"].modprobe(module)
+            module = "nvme_tcp"
+            host_info["handle"].modprobe(module)
+
+    def wipe_out_cassandra_es_database(self):
+        self.come_handle.command("cd /var/opt/fungible")
+        self.come_handle.sudo_command("rm -r elasticsearch")
+        self.come_handle.sudo_command("rm -r cassandra")
+
+    def restart_fs1600(self):
+        self.come_handle.command("cd /opt/fungible/etc")
+        self.come_handle.command("bash ResetFs1600.sh")
 
     def cleanup(self):
         self.delete_volumes()
