@@ -17,11 +17,24 @@ class StatisticsCollector:
         self.kwargs = kwargs
 
 
+class StatisticsStorageHandler:
+    FILE_TYPE_HANDLER = 10
+    DB_TYPE_HANDLER = 20
+
+    def __init__(self, handler_type, formatter_function=None):
+        self.handler_type = handler_type
+        self.formatter_function = formatter_function
+
+    def add_entry(self):
+        pass
+
+
 class CollectorWorker(Thread):
-    def __init__(self,  collector_id, collector):
+    def __init__(self,  collector_id, collector, interval_in_seconds=60):
         super(CollectorWorker, self).__init__()
         self.collector = collector
         self.collector_id = collector_id
+        self.interval_in_seconds = interval_in_seconds
         self.terminated = False
 
     def run(self):
@@ -29,9 +42,10 @@ class CollectorWorker(Thread):
         while not fun_test.closed and not self.terminated:
             collector_instance = self.collector.collector
             collector_instance.statistics_dispatcher(self.collector.type, **self.collector.kwargs)
+            fun_test.sleep(seconds=self.interval_in_seconds, no_log=True)
 
     def terminate(self):
-        self.terminate = True
+        self.terminated = True
 
 
 class StatisticsManager(object):
@@ -46,7 +60,9 @@ class StatisticsManager(object):
         return result
 
     def register_collector(self, collector):
-        self.collectors[self._get_next_collector_id()] = collector
+        collector_id = self._get_next_collector_id()
+        self.collectors[collector_id] = collector
+        return collector_id
 
     def start(self):
         for collector_id, collector in self.collectors.iteritems():
@@ -72,8 +88,7 @@ if __name__ == "__main__":
     come_obj.command("ps -ef | grep nvme")
     fs_obj.bam()
 
-
     sm = StatisticsManager()
     sc = StatisticsCollector(collector=fs_obj, category=StatisticsCategory.FS_SYSTEM, type=Fs.StatisticsType.BAM)
-    sm.register_collector(collector=sc)
+    collector_id = sm.register_collector(collector=sc)
     sm.start()
