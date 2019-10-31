@@ -546,14 +546,15 @@ class GetSetupDetails(FunTestCase):
             read_result_dict = fun_test.shared_variables["fio"][host_thread]["read"]
             print read_result_dict
 
-            table_data_headers = ["Block_Size", "Read IOPS", "Read bandwidth", "Read latency Avg",
+            table_data_headers = ["Block_Size", "Volumes" "Read IOPS", "Read bandwidth", "Read latency Avg",
                                   "Read latency 50", "Read latency 90", "Read latency 95",
                                   "Read latency 99", "Read latency 99.50", "Read latency 99.99"]
-            table_data_cols = ["read_block_size", "total_read_iops", "total_read_bw", "read_latency_avg",
+            table_data_cols = ["read_block_size", "num_vols", "total_read_iops", "total_read_bw", "read_latency_avg",
                                "read_latency_50", "read_latency_90", "read_latency_95", "read_latency_99",
                                "read_latency_9950", "read_latency_9999"]
 
             read_block_size = self.fio_cmd_args["bs"]
+            num_vols = fun_test.shared_variables["num_vols"]
             total_read_iops = int(round(iops_sum))
             total_read_bw = bw_sum/125000
             read_latency_avg = read_result_dict["clatency"]
@@ -571,7 +572,8 @@ class GetSetupDetails(FunTestCase):
             table_data_rows.append(row_data_list)
 
             value_dict = {
-                "test_case": "nvme_funtcp_fcp",
+                "test_case": "NVMe/TCP",
+                "volumes": num_vols,
                 "operation": "read",
                 "block_size": read_block_size,
                 "read_iops": total_read_iops,
