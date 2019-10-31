@@ -303,7 +303,7 @@ class MultiBLTVolumePerformanceScript(FunTestScript):
             fun_test.shared_variables["total_numa_cpus"] = self.total_numa_cpus
             fun_test.shared_variables["num_f1s"] = self.num_f1s
             fun_test.shared_variables["num_duts"] = self.num_duts
-            fun_test.shared_variables["syslog_level"] = self.syslog
+            fun_test.shared_variables["syslog"] = self.syslog
             fun_test.shared_variables["db_log_time"] = self.db_log_time
 
             for key in self.host_handles:
@@ -374,7 +374,7 @@ class MultiBLTVolumePerformanceScript(FunTestScript):
             fun_test.shared_variables["fs"] = self.fs
             fun_test.shared_variables["f1_in_use"] = self.f1_in_use
             fun_test.shared_variables["test_network"] = self.test_network
-            fun_test.shared_variables["syslog_level"] = self.syslog
+            fun_test.shared_variables["syslog"] = self.syslog
             fun_test.shared_variables["db_log_time"] = self.db_log_time
             fun_test.shared_variables["storage_controller"] = self.storage_controller
 
@@ -528,6 +528,9 @@ class MultiBLTVolumePerformanceTestcase(FunTestCase):
 
         testcase = self.__class__.__name__
 
+        self.testbed_config = fun_test.shared_variables["testbed_config"]
+        self.syslog = fun_test.shared_variables["syslog"]
+
         benchmark_parsing = True
         benchmark_file = ""
         benchmark_file = fun_test.get_script_name_without_ext() + ".json"
@@ -584,8 +587,6 @@ class MultiBLTVolumePerformanceTestcase(FunTestCase):
                      format(testcase, self.expected_fio_result))
         # End of benchmarking json file parsing
 
-        self.testbed_config = fun_test.shared_variables["testbed_config"]
-        self.syslog = fun_test.shared_variables["syslog_level"]
         num_ssd = self.num_ssd
         fun_test.shared_variables["num_ssd"] = num_ssd
         fun_test.shared_variables["blt_count"] = self.blt_count
@@ -657,6 +658,8 @@ class MultiBLTVolumePerformanceTestcase(FunTestCase):
             min_drive_capacity = find_min_drive_capacity(self.storage_controller, self.command_timeout)
             if min_drive_capacity:
                 self.blt_details["capacity"] = min_drive_capacity
+                # Reducing the volume capacity by drive margin as a workaround for the bug SWOS-6862
+                self.blt_details["capacity"] -= self.drive_margin
             else:
                 fun_test.critical("Unable to find the drive with minimum capacity...So going to use the BLT capacity"
                                   "given in the script config file or capacity passed at the runtime...")
@@ -744,13 +747,16 @@ class MultiBLTVolumePerformanceTestcase(FunTestCase):
                 self.end_host.modprobe("nvme_tcp")
                 self.end_host.modprobe("nvme_fabrics")
 
-            # Setting the syslog level to 2
-            command_result = self.storage_controller.poke("params/syslog/level {}".format(self.syslog))
-            fun_test.test_assert(command_result["status"], "Setting syslog level to {}".format(self.syslog))
+            # Setting the required syslog level
+            if self.syslog != "default":
+                command_result = self.storage_controller.poke("params/syslog/level {}".format(self.syslog))
+                fun_test.test_assert(command_result["status"], "Setting syslog level to {}".format(self.syslog))
 
-            command_result = self.storage_controller.peek("params/syslog/level")
-            fun_test.test_assert_expected(expected=self.syslog, actual=command_result["data"],
-                                          message="Checking syslog level")
+                command_result = self.storage_controller.peek("params/syslog/level")
+                fun_test.test_assert_expected(expected=self.syslog, actual=command_result["data"],
+                                              message="Checking syslog level")
+            else:
+                fun_test.log("Default syslog level is requested...So not going to modify the syslog settings")
 
             fun_test.sleep("x86 Config done", seconds=10)
             if hasattr(self, "nvme_io_queues") and self.nvme_io_queues != 0:

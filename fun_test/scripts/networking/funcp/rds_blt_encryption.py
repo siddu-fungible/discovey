@@ -49,19 +49,25 @@ class BringupSetup(FunTestCase):
                                                       '/fs_connected_servers.json')
 
     def run(self):
-        # Last working parameter:
-        # --environment={\"test_bed_type\":\"fs-alibaba_demo\",\"tftp_image_path\":\"divya_funos-f1.stripped_june5.gz\"}
-
         global funcp_obj, servers_mode, servers_list, fs_name
-        fs_name = fun_test.get_job_environment_variable('test_bed_type')
-        f1_0_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --dpc-server --all_100g --serial --dpc-uart " \
-                         "retimer=0 --mgmt syslog=3 workload=storage"
-        f1_1_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 --dpc-server --all_100g --serial --dpc-uart " \
-                         "retimer=0 --mgmt syslog=3 workload=storage"
-
-        # module_log=tcp:DEBUG,fabrics_host:INFO,rdsvol:INFO
         topology_helper = TopologyHelper()
         job_inputs = fun_test.get_job_inputs()
+        if "f10_retimer" in job_inputs:
+            f10_retimer = str(job_inputs["f10_retimer"]).strip("[]").replace(" ", "")
+        else:
+            f10_retimer = 0
+        if "f11_retimer" in job_inputs:
+            f11_retimer = str(job_inputs["f11_retimer"]).strip("[]").replace(" ", "")
+        else:
+            f11_retimer = 0
+        fs_name = fun_test.get_job_environment_variable('test_bed_type')
+        f1_0_boot_args = "app=mdt_test,load_mods cc_huid=3 --dpc-server --all_100g --serial --dpc-uart " \
+                         "retimer={} --mgmt workload=storage".format(f10_retimer)
+        f1_1_boot_args = "app=mdt_test,load_mods cc_huid=2 --dpc-server --all_100g --serial --dpc-uart " \
+                         "retimer={} --mgmt workload=storage".format(f11_retimer)
+
+        # module_log=tcp:DEBUG,fabrics_host:INFO,rdsvol:INFO
+
         if not job_inputs:
             job_inputs = {}
         fun_test.log("Provided job inputs: {}".format(job_inputs))
@@ -80,10 +86,10 @@ class BringupSetup(FunTestCase):
             enable_fcp = job_inputs["enable_fcp"]
             fun_test.shared_variables["enable_fcp"] = enable_fcp
             if enable_fcp:
-                f1_0_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --dpc-server --all_100g --serial " \
-                                 "--dpc-uart retimer=0 rdstype=fcp --mgmt --disable-wu-watchdog syslog=3 workload=storage"
-                f1_1_boot_args = "app=load_mods,hw_hsu_test cc_huid=2 --dpc-server --all_100g --serial " \
-                                 "--dpc-uart retimer=0 rdstype=fcp --mgmt --disable-wu-watchdog syslog=3 " \
+                f1_0_boot_args = "app=mdt_test,load_mods cc_huid=3 --dpc-server --all_100g --serial " \
+                                 "--dpc-uart retimer={} rdstype=fcp --mgmt workload=storage"
+                f1_1_boot_args = "app=load_mods cc_huid=2 --dpc-server --all_100g --serial " \
+                                 "--dpc-uart retimer={} rdstype=fcp --mgmt " \
                                  "workload=storage"
         else:
             fun_test.shared_variables["enable_fcp"] = False
@@ -304,7 +310,7 @@ class NicEmulation(FunTestCase):
                         "head -1 | tr -d :").strip()
                     iface_addr = handle.command(
                         "ip addr list {} | grep \"inet \" | cut -d\' \' -f6 | cut -d/ -f1".
-                            format(iface_name)).strip()
+                        format(iface_name)).strip()
                     if objs == "f1_0":
                         f10_host_dict = {"name": hostname, "iface_name": iface_name, "ipaddr": iface_addr,
                                          "handle": handle}

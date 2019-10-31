@@ -1,0 +1,4 @@
+[
+  {"info": {"custom_test_bed_spec": {"base_test_bed": "fs-inspur", "asset_request": {"DUT": {"num": 1}, "Host": {"num": 2}}}}},
+  {"path": "storage/rdstest_teramark.py", "test_case_ids": [1]}
+]

@@ -43,16 +43,18 @@ def workspaces(request):
         request_json = json.loads(request.body)
         email = request_json["email"]
         workspace_name = request_json["name"]
-        if "description" in request_json:
-            description = request_json["description"]
-        else:
-            description = ""
+
+        description = request_json.get("description", "")
+        subscribe = request_json.get("subscribe_to_alerts", False)
+        alert_emails = request_json.get("alert_emails", "")
         try:
             q = Q(email=email, workspace_name=workspace_name)
             entry = PerformanceUserWorkspaces.objects.get(q)
             if entry:
                 entry.description = description
                 entry.date_modified = get_current_time()
+                entry.subscribe_to_alerts = subscribe
+                entry.alert_emails = alert_emails
                 entry.save()
         except ObjectDoesNotExist:
             entry = PerformanceUserWorkspaces(email=email, workspace_name=workspace_name,

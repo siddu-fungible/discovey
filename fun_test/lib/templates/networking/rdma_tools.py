@@ -2,6 +2,7 @@ from lib.system.fun_test import fun_test
 from lib.host.linux import Linux
 import re
 import math
+import os
 
 LD_LIBRARY_PATH = "$LD_LIBRARY_PATH:/mnt/ws/fungible-rdma-core/build/lib/"
 PATH = "$PATH:/mnt/ws/fungible-rdma-core/build/bin/:/mnt/ws/fungible-perftest/"
@@ -132,10 +133,11 @@ class Rocetools:
             cmd_str += " -Q " + str(kwargs["cq_mod"])
             del kwargs["cq_mod"]
         if "rdma_cm" in kwargs:
-            cmd_str += " -R"
+            if kwargs["rdma_cm"]:
+                cmd_str += " -R"
             del kwargs["rdma_cm"]
         if "perf" in kwargs:
-            cmd_str += " --run_infinitely"
+            # cmd_str += " --run_infinitely"
             del kwargs["perf"]
         if server_ip:
             cmd_str += " " + str(server_ip) + " "
@@ -180,10 +182,11 @@ class Rocetools:
             cmd_str += " -Q " + str(kwargs["cq_mod"])
             del kwargs["cq_mod"]
         if "rdma_cm" in kwargs:
-            cmd_str += " -R"
+            if kwargs["rdma_cm"]:
+                cmd_str += " -R"
             del kwargs["rdma_cm"]
         if "perf" in kwargs:
-            cmd_str += " --run_infinitely"
+            # cmd_str += " --run_infinitely"
             del kwargs["perf"]
         if server_ip:
             cmd_str += " " + str(server_ip) + " "
@@ -237,10 +240,13 @@ class Rocetools:
                         return False
                 return True
         elif tool == "ib_bw":
+            # TODO to overcome the cleanup issue and get past scaling we are not using run_infinitely. So changing grep
+            # line to 1
             if perf:
-                grep_line = 3
+                grep_line = 1
             else:
                 grep_line = 1
+            # content = self.host.command("grep -i 'bytes' -A {} {} | tail -1".format(grep_line, filepath))
             content = self.host.command("grep -i 'bytes' -A {} {} | tail -1".format(grep_line, filepath))
             lines = content.split()
             total_values = len(lines)
@@ -261,7 +267,8 @@ class Rocetools:
                 return lines
         elif tool == "ib_lat":
             if perf:
-                content = self.host.command("grep -i 'bytes' -A 3 {} | tail -1".format(filepath))
+                # content = self.host.command("grep -i 'bytes' -A 3 {} | tail -1".format(filepath))
+                content = self.host.command("grep -i 'bytes' -A 1 {} | tail -1".format(filepath))
                 lines = content.split()
                 total_values = len(lines)
                 for x in range(0, total_values):
@@ -269,14 +276,14 @@ class Rocetools:
                         lines[x] = -1
 
                 size = lines[0]
-                iterations = lines[4]
-                t_mix = lines[5]
-                t_max = lines[6]
-                t_typical = lines[7]
-                t_avg = lines[8]
-                t_stdev = lines[9]
-                t_99 = lines[10]
-                t_9999 = lines[11]
+                iterations = lines[1]
+                t_min = lines[2]
+                t_max = lines[3]
+                t_typical = lines[4]
+                t_avg = lines[5]
+                t_stdev = lines[6]
+                t_99 = lines[7]
+                t_9999 = lines[8]
             else:
                 content = self.host.command("grep -i 'bytes' -A 1 {} | tail -1".format(filepath))
                 lines = content.split()
@@ -286,14 +293,14 @@ class Rocetools:
                         lines[x] = -1
                 size = lines[0]
                 iterations = lines[1]
-                t_mix = lines[2]
+                t_min = lines[2]
                 t_max = lines[3]
                 t_typical = lines[4]
                 t_avg = lines[5]
                 t_stdev = lines[6]
                 t_99 = lines[7]
                 t_9999 = lines[8]
-            if t_mix == 0.0 or t_max == 0.0 or t_avg == 0.0 or iterations == 0:
+            if t_min == 0.0 or t_max == 0.0 or t_avg == 0.0 or iterations == 0:
                 self.host.command("dmesg")
                 self.host.disconnect()
                 fun_test.test_assert(False, "Latency test failed as result is zero!!")
@@ -317,3 +324,43 @@ class Rocetools:
     def cleanup(self):
         self.host.sudo_command(command="killall -g ib_write_lat ib_write_bw ib_read_lat ib_read_bw srping rping")
         self.host.disconnect()
+
+    def build_rdma_repo(self, rdmacore_branch=None, rdmacore_commit=None, perftest_branch=None, perftest_commit=None,
+                        perf_build=True, ws="/mnt/ws"):
+        self.rdmacore_branch = rdmacore_branch
+        self.rdmacore_commit = rdmacore_commit
+        self.perftest_branch = perftest_branch
+        self.perftest_commit = perftest_commit
+        self.ws = ws
+
+        sdkdir = os.path.join(self.ws, 'FunSDK')
+
+        # Clone fungible-perftest & rdma-core
+        self.host.command("cd {} ; git clone git@github.com:fungible-inc/fungible-perftest.git".format(self.ws))
+        self.host.command("cd {} ; git clone git@github.com:fungible-inc/fungible-rdma-core.git".format(self.ws))
+        rdma_perf_test_path = self.ws + "/fungible-perftest"
+        rdma_core_path = self.ws + "/fungible-rdma-core"
+
+        if perftest_branch:
+            self.host.command("cd {} ; git checkout {}".format(rdma_perf_test_path, perftest_branch))
+        if perftest_commit:
+            self.host.command("cd {} ; git checkout {}".format(rdma_perf_test_path, perftest_commit))
+        if rdmacore_branch:
+            self.host.command("cd {} ; git checkout {}".format(rdma_core_path, rdmacore_branch))
+        if perftest_commit:
+            self.host.command("cd {} ; git checkout {}".format(rdma_core_path, rdmacore_commit))
+        if perf_build:
+            self.host.command("export WORKSPACE={}".format(self.ws))
+            cmd_pid = self.host.command(
+                command="cd {} ; EXTRA_CMAKE_FLAGS=-DCMAKE_BUILD_TYPE=Release PALLADIUM=yes ./build.sh".
+                format(rdma_core_path), timeout=600)
+        else:
+            self.host.command("export WORKSPACE={}".format(self.ws))
+            output = self.host.command(
+                command="cd {} ; EXTRA_CMAKE_FLAGS=-DCMAKE_BUILD_TYPE=RelWithDebInfo PALLADIUM=yes ./build.sh".
+                format(rdma_core_path), timeout=600)
+        self.host.command("export WORKSPACE={}".format(self.ws))
+        output = self.host.command(command="cd {} ; ./fungible-build.sh".format(rdma_perf_test_path),
+                                   timeout=600)
+        self.host.disconnect()
+

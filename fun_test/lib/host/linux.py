@@ -425,7 +425,7 @@ class Linux(object, ToDictMixin):
                 try:
                     self.handle.expect(self.prompt_terminator, timeout=sync_timeout)
                 except (pexpect.EOF):
-                    self.disconnect()
+                    self.disconnect(self)
                     return self.command(command=command,
                                         sync=sync, timeout=timeout,
                                         custom_prompts=custom_prompts,
@@ -784,13 +784,17 @@ class Linux(object, ToDictMixin):
         self.command("rm -rf %s/" % (directory.strip("/")))
         return True
 
-    def remove_directory(self, directory):
+    def remove_directory(self, directory, sudo=False):
         result = False
         if directory in ["/", "/root"]:
             fun_test.critical("Removing {} is not permitted".format(directory))
             result = True
         else:
-            self.command("rm -rf {}".format(directory))
+            cmd = "rm -rf {}".format(directory)
+            if not sudo:
+                self.command(cmd)
+            else:
+                self.sudo_command(cmd)
         return result
 
     def remove_temp_file(self, file_name):
@@ -1293,7 +1297,7 @@ class Linux(object, ToDictMixin):
         sudo_string = ""
         if sudo:
             sudo_string = "sudo "
-        scp_command = "%sscp -P %d %s %s@%s:%s" % (sudo_string, target_port, source_file_path, target_username, target_ip, target_file_path)
+        scp_command = "%sscp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P %d %s %s@%s:%s" % (sudo_string, target_port, source_file_path, target_username, target_ip, target_file_path)
         if not self.handle:
             self._connect()
 
@@ -1873,11 +1877,11 @@ class Linux(object, ToDictMixin):
             # Populating the resultant fio_dict dictionary
             for operation in ["write", "read"]:
                 fio_dict[operation] = {}
-                stat_list = ["bw", "iops", "io_bytes", "runtime", "latency", "clatency", "latency90", "latency95",
-                             "latency99","latency9950", "latency9999"]
+                stat_list = ["bw", "iops", "io_bytes", "runtime", "latency", "clatency", "latency50",
+                             "latency90", "latency95", "latency99", "latency9950", "latency9999"]
                 for stat in stat_list:
-                    if stat not in ("latency", "clatency", "latency90", "latency95", "latency99", "latency9950",
-                                    "latency9999"):
+                    if stat not in ("latency", "clatency", "latency50", "latency90", "latency95",
+                                    "latency99", "latency9950", "latency9999"):
                         fio_dict[operation][stat] = fio_result_dict["jobs"][0][operation][stat]
                     elif stat in ("latency", "clatency"):
                         for key in fio_result_dict["jobs"][0][operation].keys():
@@ -1911,10 +1915,16 @@ class Linux(object, ToDictMixin):
                                     value = int(round(fio_result_dict["jobs"][0][operation][key]["mean"]))
                                     value *= 1000
                                     fio_dict[operation][stat] = value
-                    elif stat in ("latency90", "latency95", "latency99", "latency9950", "latency9999"):
+                    elif stat in ("latency50", "latency90", "latency95", "latency99", "latency9950", "latency9999"):
                         for key in fio_result_dict["jobs"][0][operation].keys():
                             if key == "clat_ns":
                                 for key in fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"].keys():
+                                    if key.startswith("50.00"):
+                                        stat = "latency50"
+                                        value = int(round(
+                                            fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"]["50.000000"]))
+                                        value /= 1000
+                                        fio_dict[operation][stat] = value
                                     if key.startswith("90.00"):
                                         stat = "latency90"
                                         value = int(round(

@@ -3,7 +3,7 @@ import {ApiService} from "../services/api/api.service";
 import {LoggerService} from "../services/logger/logger.service";
 import {ActivatedRoute} from "@angular/router";
 import {CommonService} from "../services/common/common.service";
-import {Observable} from "rxjs";
+import {Observable, of} from "rxjs";
 import {switchMap} from "rxjs/operators";
 import {PerformanceService} from "../performance/performance.service";
 
@@ -34,6 +34,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   @Input() id: number = null;
   @Input() previewDataSets: any = null;
   @Input() buildInfo: any = null;
+  @Input() chartInfo: any = null;
 
   lsfUrl = "http://palladium-jobs.fungible.local:8080/job/";
   versionUrl = "https://github.com/fungible-inc/FunOS/releases/tag/";
@@ -44,21 +45,20 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   TIMEZONE: string = "America/Los_Angeles";
   daysInPast: number = 60;
   editingDaysInPast: boolean = false;
+  allDataSets: any = null;
 
   status: string = null;
   showingTable: boolean;
   showingConfigure: boolean;
-  chartInfo: any;
   headers: any;
   data: any = {}; //used for fun table
   metricId: number;
   editingDescription: boolean = false;
   editingOwner: boolean = false;
   editingSource: boolean = false;
-  inner: any = {};
-  currentDescription: string;
-  currentOwner: string;
-  currentSource: string;
+  currentDescription: string = "TBD";
+  currentOwner: string = "Unknown";
+  currentSource: string = "Unknown";
   waitTime: number = 0;
   values: any;
   originalValues: any;
@@ -119,6 +119,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   bandwidth_category: string[] = ["bps", "Kbps", "Mbps", "Gbps", "Tbps", "Bps", "KBps", "MBps", "GBps", "TBps"];
   packets_per_second_category: string[] = ["Mpps", "pps", "Kpps", "Gpps"];
   connections_per_second_category: string[] = ["Mcps", "cps", "Kcps", "Gcps"];
+  power_category: string[] = ["W", "kW", "MW", "mW"];
 
   expectedOperationCategory: string[] = [ExpectedOperation.SAME_AS_F1, ExpectedOperation.F1_BY_4];
 
@@ -150,18 +151,10 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.daysInPast = 60;
     this.editingDaysInPast = false;
     this.headers = null;
-    this.metricId = -1;
+    this.values = null;
     this.editingDescription = false;
     this.editingOwner = false;
     this.editingSource = false;
-    this.inner = {};
-    this.inner.currentDescription = "TBD";
-    this.inner.currentOwner = "Unknown";
-    this.currentOwner = "Unknown";
-    this.inner.currentSource = "Unknown";
-    this.currentSource = "Unknown";
-    this.currentDescription = "---";
-    this.values = null;
     this.charting = true;
     this.formatter = this.xAxisFormatter.bind(this);
     this.tooltip = this.tooltipFormatter.bind(this);
@@ -223,17 +216,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   }
 
   fetchMetricsById(): void {
-    let payload = {};
-    payload["metric_id"] = this.id;
-    this.apiService.post('/metrics/metric_by_id', payload).subscribe((data) => {
-      this.chartName = data.data["chart_name"];
-      this.platform = data.data["platform"];
-      this.modelName = data.data["metric_model_name"];
-      this.setDefault();
-      this.fetchInfo();
-    }, error => {
-      this.loggerService.error("fetching by metric id failed");
-    });
+     this.setDefaults();
+     this.fetchInfo();
   }
 
   //set the chart and model name based in metric id
@@ -376,30 +360,21 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     return key;
   }
 
-  // populates chartInfo and fetches metrics data
-  fetchInfo(): void {
-    let payload = {};
-    // payload["metric_model_name"] = this.modelName;
-    // payload["chart_name"] = this.chartName;
-    payload["metric_id"] = this.id;
-    this.apiService.post("/metrics/chart_info", payload).subscribe((response) => {
-      this.chartInfo = response.data;
-      if (this.chartInfo !== null) {
+  setChartDetails(): void {
+    if (this.chartInfo !== null) {
         this.previewDataSets = this.getPreviewDataSets();
         if (!this.previewDataSets) {
           this.loggerService.error("No Preview Datasets");
           return;
         }
+        this.chartName = this.chartInfo.chart_name;
+        this.modelName = this.chartInfo.metric_model_name;
+        this.platform = this.chartInfo.platform;
         this.currentDescription = this.chartInfo.description;
-        this.inner.currentDescription = this.currentDescription;
         this.currentOwner = this.chartInfo.owner_info;
         this.currentSource = this.chartInfo.source;
-        this.inner.currentOwner = this.currentOwner;
-        this.inner.currentSource = this.currentSource;
         this.negativeGradient = !this.chartInfo.positive;
-        this.inner.negativeGradient = this.negativeGradient;
         this.leaf = this.chartInfo.leaf;
-        this.inner.leaf = this.leaf;
         this.mileStoneMarkers = this.chartInfo.milestone_markers;
         this.baseLineDate = String(this.chartInfo.base_line_date);
         this.visualizationUnit = this.chartInfo.visualization_unit;
@@ -422,19 +397,44 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
           this.category = [...this.packets_per_second_category];
         } else if (this.connections_per_second_category.includes(this.visualizationUnit)) {
           this.category = [...this.connections_per_second_category];
+        } else if (this.power_category.includes(this.visualizationUnit)) {
+          this.category = [...this.power_category];
         }
         this.selectedUnit = this.visualizationUnit;
       }
-      setTimeout(() => {
+  }
+
+  // populates chartInfo and fetches metrics data
+  fetchInfo(): void {
+    if (!this.chartInfo) {
+      new Observable(observer => {
+        observer.next(true);
+        observer.complete();
+        return () => {
+        }
+      }).pipe(
+        switchMap(response => {
+          return this.performanceService.fetchChartInfo(this.id);
+        }),
+        switchMap(response => {
+          this.chartInfo = response;
+          this.setChartDetails();
+          return of(true);
+        })
+        ).subscribe(response => {
         this.fetchMetricsData(this.modelName, this.chartName, this.chartInfo, this.previewDataSets);
-      }, this.waitTime);
-    }, error => {
-      this.loggerService.error("fun_metric_chart: chart_info");
-    });
+        console.log("fetched chartInfo and fetched data");
+      }, error => {
+        this.loggerService.error("Unable to fetch chartInfo in fun metric");
+      });
+    } else {
+        this.setChartDetails();
+        this.fetchMetricsData(this.modelName, this.chartName, this.chartInfo, this.previewDataSets);
+    }
   }
 
   //sets the state of the component to default values
-  setDefault(): void {
+  setDefaults(): void {
     this.timeMode = "all";
     this.mileStoneIndices = {};
     this.showingTable = false;
@@ -539,11 +539,11 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     payload["chart_name"] = this.chartName;
     payload["metric_id"] = this.id;
     payload["data_sets"] = this.previewDataSets;
-    payload["description"] = this.inner.currentDescription;
-    payload["owner_info"] = this.inner.currentOwner;
-    payload["source"] = this.inner.currentSource;
-    payload["negative_gradient"] = this.inner.negativeGradient;
-    payload["leaf"] = this.inner.leaf;
+    payload["description"] = this.currentDescription;
+    payload["owner_info"] = this.currentOwner;
+    payload["source"] = this.currentSource;
+    payload["negative_gradient"] = this.negativeGradient;
+    payload["leaf"] = this.leaf;
     payload["base_line_date"] = this.baseLineDate;
     payload["visualization_unit"] = this.changingVizUnit;
     payload["set_expected"] = this.expectedOperation;
@@ -563,11 +563,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       this.loggerService.error("EditChart: Submit");
     });
 
-  }
-
-  openTriaging(): void {
-    let url = "/performance/atomic/" + this.metricId + "/triage";
-    window.open(url, '_blank');
   }
 
   openSource(url): void {
@@ -739,9 +734,10 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       }
     }
     this.filterDataSets = filterDataSets;
+    let self = this;
     this.apiService.post("/metrics/data", payload).subscribe((response: any) => {
-      let allDataSets = response.data;
-      if (allDataSets.length === 0) {
+      self.allDataSets = response.data;
+      if (self.allDataSets.length === 0) {
         this.values = null;
         return;
       }
@@ -766,7 +762,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       this.maxDataPoint = null;
       this.yMax = null;
       let seriesIndex = 0;
-      for (let oneDataSet of allDataSets) {
+      for (let oneDataSet of self.allDataSets) {
         let outputName = this.filterDataSets[seriesIndex].output.name;
         let unit = this.filterDataSets[seriesIndex].output.unit;
         let minimum = this.filterDataSets[seriesIndex].output.min;
@@ -862,7 +858,9 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       this.setMileStones();
 
       //populating data for show tables
-      this.populateShowTables();
+      if (!this.minimal) {
+        this.populateShowTables();
+      }
 
       this.changeAllExpectedValues();
       this.status = null;
@@ -948,8 +946,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     let payload = {};
     payload["metric_id"] = this.id;
     payload["preview_data_sets"] = this.filterDataSets;
-    this.apiService.post("/metrics/data_by_model", payload).subscribe((response) => {
-      let dataSet = response.data;
+    for (let dataSet of this.allDataSets) {
       for (let rowData of dataSet) {
         let rowInTable = [];
         Object.keys(self.headers).forEach((key) => {
@@ -966,8 +963,28 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         });
         self.data["rows"][index++] = rowInTable;
       }
+    }
       self.data["totalLength"] = self.data["rows"].length;
-    });
+    // this.apiService.post("/metrics/data_by_model", payload).subscribe((response) => {
+    //   let dataSet = response.data;
+    //   for (let rowData of dataSet) {
+    //     let rowInTable = [];
+    //     Object.keys(self.headers).forEach((key) => {
+    //       if (self.isFieldRelevant(key)) {
+    //         let value = null;
+    //         if (key == "input_date_time") {
+    //           // value = this.commonService.convertToTimezone(rowData[key], this.TIMEZONE);
+    //           value = rowData["epoch_time"];
+    //         } else {
+    //           value = rowData[key]
+    //         }
+    //         rowInTable.push(value);
+    //       }
+    //     });
+    //     self.data["rows"][index++] = rowInTable;
+    //   }
+    //   self.data["totalLength"] = self.data["rows"].length;
+    // });
   }
 
   convertToBaseUnit(outputUnit, output): any {
@@ -1044,6 +1061,14 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         output = output * Math.pow(10, 3);
       } else if (outputUnit === "Gcps") {
         output = output * Math.pow(10, 9);
+      }
+    } else if (this.power_category.includes(outputUnit)) {
+      if (outputUnit === "kW") {
+        output = output * Math.pow(10, 3);
+      } else if (outputUnit === "MW") {
+        output = output * Math.pow(10, 6);
+      } else if (outputUnit === "mW") {
+        output = output / Math.pow(10, 3);
       }
     }
 
@@ -1126,6 +1151,14 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       } else if (outputUnit === "Gcps") {
         output = output / Math.pow(10, 9);
       }
+    } else if (this.power_category.includes(outputUnit)) {
+      if (outputUnit === "kW") {
+        output = output / Math.pow(10, 3);
+      } else if (outputUnit === "MW") {
+        output = output / Math.pow(10, 6);
+      } else if (outputUnit === "mW") {
+        output = output * Math.pow(10, 3);
+      }
     }
     return parseFloat(output.toFixed(this.DECIMAL_PRECISION));
   }
@@ -1176,7 +1209,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       return;
     }
     var self = this;
-    if (this.modelName !== 'MetricContainer') {
+    if (this.modelName !== 'MetricContainer' && !this.minimal) {
       return this.apiService.get("/metrics/describe_table/" + this.modelName).subscribe(function (response) {
         self.tableInfo = response.data;
         self.fetchData(self.id, chartInfo, previewDataSets, self.tableInfo);

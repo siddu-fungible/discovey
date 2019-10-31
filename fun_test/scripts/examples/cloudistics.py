@@ -38,7 +38,7 @@ class FunTestCase2(FunTestCase):
     def run(self):
 
         topology_helper = TopologyHelper()
-        topology_helper.set_dut_parameters(dut_index=0, custom_boot_args="app=hw_hsu_test --dpc-uart --dpc-server --csr-replay --all_100g --disable-wu-watchdog")
+        topology_helper.set_dut_parameters(dut_index=0, custom_boot_args="app=load_mods --dpc-uart --dpc-server --csr-replay --all_100g --disable-wu-watchdog")
         topology = topology_helper.deploy()
         fun_test.test_assert(topology, "Topology deployed")
         fs = topology.get_dut_instance(index=0)

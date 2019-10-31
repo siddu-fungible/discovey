@@ -1,0 +1,93 @@
+.fun-flex-item {
+  flex: 1;
+  min-width: auto;
+}
+
+.panel1 {
+ margin: 10px;
+}
+
+.selected-row {
+  background-color: #c4e3f3;
+}
+
+.selected-checkpoint-row {
+  background-color: rgba(255, 248, 186, 0.58);
+}
+
+.timestamp {
+  background-color: rgba(220, 220, 220, 0.64);
+}
+
+
+
+.checkpoint-span {
+    background-color: rgba(255, 248, 186, 0.58);
+    border-radius: 3px;
+    color: #274466;
+    display: inline-block;
+    font: .75em/2 SFMono-Regular,Consolas,Liberation Mono,Menlo,Courier,monospace;
+    padding: 0 5px;
+    position: relative;
+    white-space: nowrap;
+    border: .5px;
+}
+
+
+.passed {
+  color: green;
+}
+
+.failed {
+  color: red;
+}
+
+.script-name {
+  /*font-family: Times;*/
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 700;
+  margin: auto 10px;
+
+}
+
+.fun-spacer {
+  width: 0;
+  border-right: 1px solid #E2E2E2;
+  height: 50px;
+  margin: 0 0.5em;
+}
+
+.fun-action-nav {
+  box-shadow: 0px 4px 8px 0px grey;
+  display: flex;
+  align-items: center;
+
+}
+
+.checkbox-text {
+  font-family: Times;
+  margin-left: 5px;
+}
+
+table {
+  border-spacing: 0;
+}
+
+.auto-scroll {
+  overflow: auto;
+  max-width: calc(50vw);
+}
+
+.test-case-panel {
+  height: 400px;
+}
+
+.checkpoint-panel {
+  height: 400px;
+}
+
+.logs-panel {
+  height: calc(60vh);
+}
+

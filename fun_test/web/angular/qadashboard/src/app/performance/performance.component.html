@@ -1,6 +1,6 @@
 <fun-spinner [status]="status"></fun-spinner>
 <div class="component container">
-  <div [ngClass]="{'row': selectMode !== SelectMode.ShowEditWorkspace}">
+  <div class="both-cols" [ngClass]="{'row': selectMode !== SelectMode.ShowEditWorkspace}">
     <!-- left side of the performance page containing tree structure -->
     <div [ngClass]="{'col-lg-5 col-md-5 col-xxl-4 col-xl-5 left-col': selectMode !== SelectMode.ShowEditWorkspace}">
       <table class="table table-nonfluid">
@@ -48,10 +48,13 @@
                         <span [innerHTML]="getIndentHtml(flatNode) | safeHtml">
                         </span>
               <ng-container>
-                <a *ngIf="flatNode.node.leaf" [ngClass]="{highlight:flatNode.node.showAddJira}" [routerLink]=""
-                   (click)="showAtomicMetric(flatNode)">{{ flatNode.node.chartName }}</a>
-                <a *ngIf="!flatNode.node.leaf" [ngClass]="{highlight:flatNode.node.showAddJira}" [routerLink]=""
-                   (click)="showNonAtomicMetric(flatNode)">{{ flatNode.node.chartName }}</a>
+                <a *ngIf="!flatNode.viewLineage" [ngClass]="{highlight: flatNode.node.showAddJira}"
+                   class="pseudo-anchor"
+                   (click)="showMetricCharts(flatNode)">{{ flatNode.node.chartName }}</a>
+                 <a *ngIf="flatNode.viewLineage"
+                    [ngClass]="{highlight: flatNode.node.showAddJira}"
+                   class="pseudo-anchor"
+                   (click)="showMetricCharts(flatNode)">{{ flatNode.viewLineage }}</a>
                 <span *ngIf="flatNode.node.workInProgress">&nbsp;<app-smart-label [value]="'work in progress'"
                                                                                   [type]="'warning'"></app-smart-label></span>
                 <span *ngIf="flatNode.node.tags">&nbsp;<span *ngFor="let tag of flatNode.node.tags"><app-smart-label
@@ -60,10 +63,10 @@
               </ng-container>
               <span *ngIf="!flatNode.node.leaf">
               <span [innerHTML]="'&nbsp'"></span>
-              <a [routerLink]="" *ngIf="!flatNode.collapsed" (click)="collapseNode(flatNode)">
+              <a class="pseudo-anchor" *ngIf="!flatNode.collapsed" (click)="collapseNode(flatNode)">
                 <span class="arrow-down"></span>
               </a>
-              <a [routerLink]="" *ngIf="flatNode.collapsed" (click)="expandNode(flatNode)">
+              <a class="pseudo-anchor" *ngIf="flatNode.collapsed" (click)="expandNode(flatNode)">
                 <span class="arrow-right"></span>
               </a>
             </span>
@@ -298,14 +301,17 @@
                 {{ parent.chartName }}
               </span>
               <span *ngIf="parent.chartName !== currentNode.chartName">
-                <a [routerLink]="" (click)="expandFromLineage(parent)"> {{ parent.chartName }}</a> >
+                <a class="pseudo-anchor" (click)="expandFromLineage(parent)"> {{ parent.chartName }}</a> >
               </span>
               </span>
             <br></span>
         </div>
         <div class="closed-section"></div>
+        <ng-container *ngIf="showFunMetric">
         <!-- Fun Metric Chart component -->
-        <fun-metric-chart [id]="currentNode.metricId" [buildInfo]="buildInfo"></fun-metric-chart>
+        <fun-metric-chart [id]="currentNode.metricId" [buildInfo]="buildInfo"
+                          [chartInfo]="currentNode.chartInfo"></fun-metric-chart>
+        </ng-container>
         <div class="closed-section"></div>
         <!-- Companion Chart Component -->
         <div *ngFor="let id of currentNode.companionCharts">
@@ -316,18 +322,22 @@
         <div *ngIf="mode == modeType.ShowingNonAtomicMetric && selectMode == SelectMode.ShowMainSite" class=""
              style="background-color: whitesmoke; padding-left: 20px; padding-right: 20px">
           <div *ngIf="currentNode.grid.length">
-            <div *ngFor="let row of currentNode.grid" class="row">
-              <div *ngFor="let node of row" id="grid"
+            <div *ngFor="let row of currentNode.grid; let i = index" class="row">
+              <ng-container *ngIf="i < allowedGridRows">
+                <div *ngFor="let node of row" id="grid"
                    [ngStyle]="{'width': miniGridMaxWidth, 'height': miniGridMaxHeight, 'padding': '20px'}">
                 <!-- Fun Metric Chart component -->
                 <fun-metric-chart [id]="node.metricId" [minimal]="'true'" [buildInfo]="buildInfo"></fun-metric-chart>
               </div>
+              </ng-container>
             </div>
             <div class="closed-section"></div>
+            <span *ngIf="currentNode.grid.length > allowedGridRows" style="text-align: center; display: block"
+                  class="pseudo-anchor"
+                  (click)="allowedGridRows = allowedGridRows + 2">Show More</span>
           </div>
         </div>
       </div>
     </div>
   </div>
-
 </div>

@@ -754,9 +754,8 @@ class NVMeConnectWithSpurious(FunTestCase):
         fun_test.shared_variables["blt_details"] = self.blt_details
 
         # Checking whether we have sufficient hosts to run the test
-        fun_test.test_assert_expected(expected=self.attach_host + self.non_attach_host,
-                                      actual=len(self.host_info),
-                                      message="Sufficient host available to run the test")
+        fun_test.test_assert(self.attach_host + self.non_attach_host <= len(self.host_info),
+                             "Sufficient host available to run the test")
 
         self.genuine_host = self.host_info.keys()[0]
         self.rogue_host = self.host_info.keys()[1]

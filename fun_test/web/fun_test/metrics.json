@@ -1171,50 +1171,7 @@
                 "metric_model_name": "MetricContainer",
                 "name": "EC",
                 "label": "EC",
-                "children": [
-                  {
-                    "metric_model_name": "VoltestPerformance",
-                    "name": "BLK_EC: Latency",
-                    "label": "BLK_EC: Latency",
-                    "children": []
-                  },
-                  {
-                    "metric_model_name": "VoltestPerformance",
-                    "name": "BLK_EC: Bandwidth",
-                    "label": "BLK_EC: Bandwidth",
-                    "children": []
-                  },
-                  {
-                    "metric_model_name": "VoltestPerformance",
-                    "name": "BLK_EC: IOPS",
-                    "label": "BLK_EC: IOPS",
-                    "children": []
-                  },
-                  {
-                    "metric_model_name": "EcPerformance",
-                    "name": "EC 8:4 Latency",
-                    "label": "EC 8:4 Latency",
-                    "children": []
-                  },
-                  {
-                    "metric_model_name": "EcPerformance",
-                    "name": "EC 8:4 Throughput",
-                    "label": "EC 8:4 Throughput",
-                    "children": []
-                  },
-                  {
-                    "metric_model_name": "EcVolPerformance",
-                    "name": "ECVOL: Latency",
-                    "label": "ECVOL: Latency",
-                    "children": []
-                  },
-                  {
-                    "metric_model_name": "EcVolPerformance",
-                    "name": "ECVOL: IOPS",
-                    "label": "ECVOL: IOPS",
-                    "children": []
-                  }
-                ]
+                "reference": true
               }
             ]
           },
@@ -1275,6 +1232,112 @@
                 ]
               }
             ]
+          },
+          {
+            "name": "teramarks_storage_fcp",
+            "label": "FCP",
+            "metric_model_name": "MetricContainer",
+            "children": [
+              {
+                "name": "teramarks_storage_fcp_nvme",
+                "label": "NVMe",
+                "metric_model_name": "MetricContainer",
+                "children": [
+                  {
+                    "name": "teramarks_storage_fcp_nvme_iops",
+                    "label": "IOPS",
+                    "metric_model_name": "NvmeFcpPerformance",
+                    "children": []
+                  },
+                  {
+                    "name": "teramarks_storage_fcp_nvme_throughput",
+                    "label": "Throughput",
+                    "metric_model_name": "NvmeFcpPerformance",
+                    "children": []
+                  },
+                  {
+                    "name": "teramarks_storage_fcp_nvme_latency_1vol",
+                    "label": "Latency - 1 Vol(s)",
+                    "metric_model_name": "NvmeFcpPerformance",
+                    "children": []
+                  },
+                  {
+                    "name": "teramarks_storage_fcp_nvme_latency_2vol",
+                    "label": "Latency - 2 Vol(s)",
+                    "metric_model_name": "NvmeFcpPerformance",
+                    "children": []
+                  },
+                  {
+                    "name": "teramarks_storage_fcp_nvme_latency_4vol",
+                    "label": "Latency - 4 Vol(s)",
+                    "metric_model_name": "NvmeFcpPerformance",
+                    "children": []
+                  },
+                  {
+                    "name": "teramarks_storage_fcp_nvme_latency_8vol",
+                    "label": "Latency - 8 Vol(s)",
+                    "metric_model_name": "NvmeFcpPerformance",
+                    "children": []
+                  },
+                  {
+                    "name": "teramarks_storage_fcp_nvme_latency_12vol",
+                    "label": "Latency - 12 Vol(s)",
+                    "metric_model_name": "NvmeFcpPerformance",
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "teramarks_storage_fcp_nvme_tcp",
+                "label": "NVMe/TCP",
+                "metric_model_name": "MetricContainer",
+                "children": [
+                  {
+                    "name": "teramarks_storage_fcp_nvme_tcp_iops",
+                    "label": "IOPS",
+                    "metric_model_name": "NvmeFcpPerformance",
+                    "children": []
+                  },
+                  {
+                    "name": "teramarks_storage_fcp_nvme_tcp_throughput",
+                    "label": "Throughput",
+                    "metric_model_name": "NvmeFcpPerformance",
+                    "children": []
+                  },
+                  {
+                    "name": "teramarks_storage_fcp_nvme_tcp_latency",
+                    "label": "Latency",
+                    "metric_model_name": "NvmeFcpPerformance",
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "teramarks_storage_fcp_nvme_funtcp",
+                "label": "NVMe/FunTCP",
+                "metric_model_name": "MetricContainer",
+                "children": [
+                  {
+                    "name": "teramarks_storage_fcp_nvme_funtcp_iops",
+                    "label": "IOPS",
+                    "metric_model_name": "NvmeFcpPerformance",
+                    "children": []
+                  },
+                  {
+                    "name": "teramarks_storage_fcp_nvme_funtcp_throughput",
+                    "label": "Throughput",
+                    "metric_model_name": "NvmeFcpPerformance",
+                    "children": []
+                  },
+                  {
+                    "name": "teramarks_storage_fcp_nvme_funtcp_latency",
+                    "label": "Latency",
+                    "metric_model_name": "NvmeFcpPerformance",
+                    "children": []
+                  }
+                ]
+              }
+            ]
           }
         ]
       },
@@ -1324,7 +1387,55 @@
             "metric_model_name": "MetricContainer",
             "name": "EC",
             "label": "EC",
-            "reference": true
+            "children": [
+              {
+                "metric_model_name": "VoltestPerformance",
+                "name": "BLK_EC: Latency",
+                "label": "BLK_EC: Latency",
+                "children": [],
+                "disable": true
+              },
+              {
+                "metric_model_name": "VoltestPerformance",
+                "name": "BLK_EC: Bandwidth",
+                "label": "BLK_EC: Bandwidth",
+                "children": [],
+                "disable": true
+              },
+              {
+                "metric_model_name": "VoltestPerformance",
+                "name": "BLK_EC: IOPS",
+                "label": "BLK_EC: IOPS",
+                "children": [],
+                "disable": true
+              },
+              {
+                "metric_model_name": "EcPerformance",
+                "name": "EC 8:4 Latency",
+                "label": "EC 8:4 Latency",
+                "children": []
+              },
+              {
+                "metric_model_name": "EcPerformance",
+                "name": "EC 8:4 Throughput",
+                "label": "EC 8:4 Throughput",
+                "children": []
+              },
+              {
+                "metric_model_name": "EcVolPerformance",
+                "name": "ECVOL: Latency",
+                "label": "ECVOL: Latency",
+                "children": [],
+                "disable": true
+              },
+              {
+                "metric_model_name": "EcVolPerformance",
+                "name": "ECVOL: IOPS",
+                "label": "ECVOL: IOPS",
+                "children": [],
+                "disable": true
+              }
+            ]
           },
           {
             "metric_model_name": "MetricContainer",
@@ -1695,6 +1806,18 @@
             "name": "f1_timings",
             "label": "FunOS Timings",
             "children": []
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "FRS_F1",
+            "label": "FRS",
+            "children": [
+              {
+                "metric_model_name": "PowerPerformance",
+                "name": "system_power_f1",
+                "label": "Power"
+              }
+            ]
           }
         ]
       },
@@ -3261,6 +3384,25 @@
                             "label": "IOPS"
                           }
                         ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "metric_model_name": "MetricContainer",
+                "name": "teramark_storage_eds_client",
+                "label": "RDS Client",
+                "children": [
+                  {
+                    "metric_model_name": "MetricContainer",
+                    "name": "teramark_storage_eds_client_2_hosts",
+                    "label": "2 Host(s)",
+                    "children": [
+                      {
+                        "metric_model_name": "RdsClientPerformance",
+                        "name": "rds_client_test_2_hosts_aggbw",
+                        "label": "Aggregate Bandwidth"
                       }
                     ]
                   }

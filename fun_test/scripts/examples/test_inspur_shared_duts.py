@@ -40,7 +40,7 @@ class FunTestCase1(FunTestCase):
         available_dut_indexes = topology_helper.get_available_duts().keys()
 
         for available_dut_index in available_dut_indexes:
-            topology_helper.set_dut_parameters(dut_index=available_dut_index, custom_boot_args="app=hw_hsu_test --dpc-uart --dpc-server --csr-replay --all_100g")
+            topology_helper.set_dut_parameters(dut_index=available_dut_index, custom_boot_args="app=load_mods --dpc-uart --dpc-server --csr-replay --all_100g")
 
         topology = topology_helper.deploy()
         fun_test.test_assert(topology, "Topology deployed")

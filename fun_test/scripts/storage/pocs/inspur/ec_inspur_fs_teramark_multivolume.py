@@ -10,6 +10,7 @@ from scripts.networking.helper import *
 from collections import OrderedDict, Counter
 from lib.templates.csi_perf.csi_perf_template import CsiPerfTemplate
 from lib.host.linux import Linux
+from threading import Lock
 
 '''
 Script to track the Inspur Performance Cases of various read write combination of Erasure Coded volume using FIO
@@ -83,7 +84,7 @@ class ECVolumeLevelScript(FunTestScript):
             self.bootargs = Fs.DEFAULT_BOOT_ARGS
             self.disable_f1_index = None
             self.f1_in_use = 0
-            self.syslog_level = 2
+            self.syslog = "default"
             self.command_timeout = 5
             self.reboot_timeout = 600
         else:
@@ -124,7 +125,7 @@ class ECVolumeLevelScript(FunTestScript):
         if "f1_in_use" in job_inputs:
             self.f1_in_use = job_inputs["f1_in_use"]
         if "syslog" in job_inputs:
-            self.syslog_level = job_inputs["syslog"]
+            self.syslog = job_inputs["syslog"]
 
         # Deploying of DUTs
         self.num_duts = int(round(float(self.num_f1s) / self.num_f1_per_fs))
@@ -333,7 +334,7 @@ class ECVolumeLevelScript(FunTestScript):
             fun_test.shared_variables["total_numa_cpus"] = self.total_numa_cpus
             fun_test.shared_variables["num_f1s"] = self.num_f1s
             fun_test.shared_variables["num_duts"] = self.num_duts
-            fun_test.shared_variables["syslog_level"] = self.syslog_level
+            fun_test.shared_variables["syslog"] = self.syslog
             fun_test.shared_variables["db_log_time"] = self.db_log_time
             fun_test.shared_variables["host_info"] = self.host_info
             fun_test.shared_variables["csi_perf_enabled"] = self.csi_perf_enabled
@@ -421,7 +422,7 @@ class ECVolumeLevelScript(FunTestScript):
             fun_test.shared_variables["fs"] = self.fs
             fun_test.shared_variables["f1_in_use"] = self.f1_in_use
             fun_test.shared_variables["test_network"] = self.test_network
-            fun_test.shared_variables["syslog_level"] = self.syslog_level
+            fun_test.shared_variables["syslog"] = self.syslog
             fun_test.shared_variables["db_log_time"] = self.db_log_time
             fun_test.shared_variables["storage_controller"] = self.storage_controller
 
@@ -589,6 +590,10 @@ class ECVolumeLevelTestcase(FunTestCase):
     def setup(self):
 
         testcase = self.__class__.__name__
+        self.sc_lock = Lock()
+
+        self.testbed_config = fun_test.shared_variables["testbed_config"]
+        self.syslog = fun_test.shared_variables["syslog"]
 
         # Start of benchmarking json file parsing and initializing various variables to run this testcase
         benchmark_parsing = True
@@ -614,8 +619,6 @@ class ECVolumeLevelTestcase(FunTestCase):
             self.num_ssd = 1
         # End of benchmarking json file parsing
 
-        self.testbed_config = fun_test.shared_variables["testbed_config"]
-        self.syslog_level = fun_test.shared_variables["syslog_level"]
         num_ssd = self.num_ssd
         fun_test.shared_variables["num_ssd"] = num_ssd
         fun_test.shared_variables["attach_transport"] = self.attach_transport
@@ -636,6 +639,13 @@ class ECVolumeLevelTestcase(FunTestCase):
             self.warm_up_fio_cmd_args["bs"] = job_inputs["warmup_bs"]
         if "warmup_io_depth" in job_inputs:
             self.warm_up_fio_cmd_args["iodepth"] = job_inputs["warmup_io_depth"]
+        if "warmup_size" in job_inputs:
+            self.warm_up_fio_cmd_args["io_size"] = job_inputs["warmup_size"]
+        if "csi_perf_iodepth" in job_inputs:
+            self.csi_perf_iodepth = job_inputs["csi_perf_iodepth"]
+            if not isinstance(self.csi_perf_iodepth, list):
+                self.csi_perf_iodepth = [self.csi_perf_iodepth]
+            self.full_run_iodepth = self.csi_perf_iodepth
         if "post_results" in job_inputs:
             self.post_results = job_inputs["post_results"]
         else:
@@ -822,16 +832,19 @@ class ECVolumeLevelTestcase(FunTestCase):
                     fun_test.shared_variables["host_info"] = self.host_info
                     fun_test.log("Hosts info: {}".format(self.host_info))
 
-            # Setting the syslog level
-            command_result = self.storage_controller.poke(props_tree=["params/syslog/level", self.syslog_level],
-                                                          legacy=False, command_duration=self.command_timeout)
-            fun_test.test_assert(command_result["status"],
-                                 "Setting syslog level to {}".format(self.syslog_level))
+            # Setting the required syslog level
+            if self.syslog != "default":
+                command_result = self.storage_controller.poke(props_tree=["params/syslog/level", self.syslog],
+                                                              legacy=False, command_duration=self.command_timeout)
+                fun_test.test_assert(command_result["status"],
+                                     "Setting syslog level to {}".format(self.syslog))
 
-            command_result = self.storage_controller.peek(props_tree="params/syslog/level", legacy=False,
-                                                          command_duration=self.command_timeout)
-            fun_test.test_assert_expected(expected=self.syslog_level, actual=command_result["data"],
-                                          message="Checking syslog level")
+                command_result = self.storage_controller.peek(props_tree="params/syslog/level", legacy=False,
+                                                              command_duration=self.command_timeout)
+                fun_test.test_assert_expected(expected=self.syslog, actual=command_result["data"],
+                                              message="Checking syslog level")
+            else:
+                fun_test.log("Default syslog level is requested...So not going to modify the syslog settings")
 
             # Preparing the volume details list containing the list of ditionaries where each dictionary has the
             # details of an EC volume
@@ -851,8 +864,10 @@ class ECVolumeLevelTestcase(FunTestCase):
             server_written_total_bytes = 0
             total_bytes_pushed_to_disk = 0
             try:
+                self.sc_lock.acquire()
                 initial_vol_stats = self.storage_controller.peek(
                     props_tree="storage/volumes", legacy=False, chunk=8192, command_duration=self.command_timeout)
+                self.sc_lock.release()
                 fun_test.test_assert(initial_vol_stats["status"], "Volume stats collected before warmup")
                 fun_test.log("Volume stats before warmup: {}".format(initial_vol_stats))
             except Exception as ex:
@@ -903,8 +918,10 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.shared_variables["ec"]["warmup_io_completed"] = True
 
             try:
+                self.sc_lock.acquire()
                 final_vol_stats = self.storage_controller.peek(
                     props_tree="storage/volumes", legacy=False, chunk=8192, command_duration=self.command_timeout)
+                self.sc_lock.release()
                 fun_test.test_assert(final_vol_stats["status"], "Volume stats collected after warmup")
                 fun_test.log("Volume stats after warmup: {}".format(final_vol_stats))
             except Exception as ex:
@@ -1078,24 +1095,28 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.log("Different stats collection thread details for the current IO depth {} before starting "
                              "them:\n{}".format(iodepth, self.stats_collect_details))
                 self.storage_controller.verbose = False
-                self.stats_obj = CollectStats(self.storage_controller)
+                self.stats_obj = CollectStats(storage_controller=self.storage_controller, sc_lock=self.sc_lock)
                 self.stats_obj.start(file_suffix, self.stats_collect_details)
                 fun_test.log("Different stats collection thread details for the current IO depth {} after starting "
-                             "them:\n{}".format(iodepth,self.stats_collect_details))
+                             "them:\n{}".format(iodepth, self.stats_collect_details))
             else:
                 fun_test.critical("Not starting the vp_utils and resource_bam stats collection because of lack of "
                                   "interval and count details")
 
             if self.cal_amplification:
                 try:
+                    self.sc_lock.acquire()
                     initial_vol_stat[iodepth] = self.storage_controller.peek(
                         props_tree="storage/volumes", legacy=False, chunk=8192, command_duration=self.command_timeout)
+                    self.sc_lock.release()
                     fun_test.test_assert(initial_vol_stat[iodepth]["status"], "Volume stats collected before the test")
                     fun_test.log("Initial vol stats in script: {}".format(initial_vol_stat[iodepth]))
 
+                    self.sc_lock.acquire()
                     initial_rcnvme_stat[iodepth] = self.storage_controller.peek(
                         props_tree="storage/devices/nvme/ssds", legacy=False, chunk=8192,
                         command_duration=self.command_timeout)
+                    self.sc_lock.release()
                     fun_test.test_assert(initial_rcnvme_stat[iodepth]["status"],
                                          "rcnvme stats collected before the test")
                     fun_test.log("Initial rcnvme stats in script: {}".format(initial_rcnvme_stat[iodepth]))
@@ -1156,13 +1177,13 @@ class ECVolumeLevelTestcase(FunTestCase):
                 # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
                 fun_test.log("Running FIO {} test with the block size: {} and IO depth: {} Num jobs: {} for the EC".
                              format(row_data_dict["mode"], fio_block_size, fio_iodepth, fio_num_jobs * global_num_jobs))
-                if self.ec_info.get("compress", False):
-                    fio_job_name = "{}_{}pctcomp_iodepth_{}_vol_{}".\
-                        format(self.fio_job_name, self.warm_up_fio_cmd_args["buffer_compress_percentage"],
-                               row_data_dict["iodepth"], self.ec_info["num_volumes"])
                 if self.ec_info["num_volumes"] != 1:
                     fio_job_name = "{}_iodepth_{}_vol_{}".format(self.fio_job_name, row_data_dict["iodepth"],
                                                                  self.ec_info["num_volumes"])
+                    if self.ec_info.get("compress", False):
+                        fio_job_name = "{}_{}pctcomp_iodepth_{}_vol_{}". \
+                            format(self.fio_job_name, self.warm_up_fio_cmd_args["buffer_compress_percentage"],
+                                   row_data_dict["iodepth"], self.ec_info["num_volumes"])
                 else:
                     fio_job_name = "{}_{}".format(self.fio_job_name, row_data_dict["iodepth"])
 
@@ -1196,7 +1217,7 @@ class ECVolumeLevelTestcase(FunTestCase):
             if self.csi_perf_enabled:
                 if row_data_dict["iodepth"] in self.csi_perf_iodepth:
                     try:
-                        fun_test.sleep("for IO to be fully active", 20)
+                        fun_test.sleep("for IO to be fully active", 60)
                         csi_perf_obj = CsiPerfTemplate(perf_collector_host_name=str(self.perf_listener_host_name),
                                                        listener_ip=self.perf_listener_ip, fs=self.fs[0],
                                                        listener_port=4420)  # Temp change for testing
@@ -1233,15 +1254,19 @@ class ECVolumeLevelTestcase(FunTestCase):
 
                 if self.cal_amplification:
                     try:
+                        self.sc_lock.acquire()
                         final_vol_stat[iodepth] = self.storage_controller.peek(
                             props_tree="storage/volumes", legacy=False, chunk=8192,
                             command_duration=self.command_timeout)
+                        self.sc_lock.release()
                         fun_test.test_assert(final_vol_stat[iodepth]["status"], "Volume stats collected after the test")
                         fun_test.log("Final vol stats in script: {}".format(final_vol_stat[iodepth]))
 
+                        self.sc_lock.acquire()
                         final_rcnvme_stat[iodepth] = self.storage_controller.peek(
                             props_tree="storage/devices/nvme/ssds", legacy=False, chunk=8192,
                             command_duration=self.command_timeout)
+                        self.sc_lock.release()
                         fun_test.test_assert(final_rcnvme_stat[iodepth]["status"],
                                              "rcnvme stats collected after the test")
                         fun_test.log("Final rcnvme stats in script: {}".format(final_rcnvme_stat[iodepth]))

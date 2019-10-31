@@ -45,9 +45,9 @@ class BootFS(FunTestCase):
         global fs
         test_bed_spec = fun_test.get_asset_manager().get_fs_by_name(test_bed_name)
         img_path = "divya_funos-f1.stripped_june4.gz"
-        f1_0_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --dpc-server --all_100g --serial --dpc-uart " \
+        f1_0_boot_args = "app=mdt_test,load_mods cc_huid=3 --dpc-server --all_100g --serial --dpc-uart " \
                          "--dis-stats retimer=0,1,2 --mgmt syslog=6 --disable-wu-watchdog"
-        f1_1_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 --dpc-server --all_100g --serial --dpc-uart " \
+        f1_1_boot_args = "app=mdt_test,load_mods cc_huid=2 --dpc-server --all_100g --serial --dpc-uart " \
                          "--dis-stats retimer=0 --mgmt syslog=6 --disable-wu-watchdog"
         fs = Fs.get(fs_spec=test_bed_spec, tftp_image_path=img_path,
                     boot_args=f1_0_boot_args)

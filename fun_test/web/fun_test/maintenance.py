@@ -1,12 +1,5 @@
 from web.fun_test.maintenance_old import *
-from lib.system.fun_test import *
-from datetime import datetime
-from web.fun_test.models_helper import add_jenkins_job_id_map
 from dateutil import parser
-from django.utils import timezone
-from fun_global import PerfUnit
-from fun_global import ChartType, FunChartType
-from web.fun_test.metrics_models import *
 from collections import OrderedDict
 from web.fun_test.metrics_lib import MetricLib
 from web.fun_test.models import *
@@ -1439,7 +1432,6 @@ if __name__ == "__main_remove_milestones__":
         if "Tape-out" in mm.milestone_name or "F1" in mm.milestone_name:
             mm.delete()
 
-
 if __name__ == "__main__alibaba":
     metric_ids = [900, 901]
     for metric_id in metric_ids:
@@ -1539,7 +1531,6 @@ if __name__ == "__main__alibaba":
         final_dict = ml.get_dict(chart=root_chart)
         print json.dumps(final_dict)
 
-
 if __name__ == "__main_crypto_s1__":
     with open(METRICS_BASE_DATA_FILE, "r") as f:
         metrics = json.load(f)
@@ -1591,4 +1582,455 @@ if __name__ == "__main_rebasing__":
                 entry.data_sets = json.dumps(data_sets)
                 entry.save()
                 print "edited the datasets for {} with metric id {}".format(entry.chart_name, entry.metric_id)
+
+if __name__ == "__main_inspur_12_volumes__":
+    metric_ids = {1207: "read", 754: "read_write", 1208: "write", 1209: "read", 755: "read_write", 1210: "write"}
+    fio_job_names = ["inspur_8k_random_", "_iodepth_", "_f1_6_vol_12"]
+    for key in metric_ids:
+        value = metric_ids[key]
+        chart = MetricChart.objects.get(metric_id=int(key))
+        children = chart.get_children()
+        for child in children:
+            child_chart = MetricChart.objects.get(metric_id=int(child))
+            if "32" in child_chart.internal_chart_name:
+                fio_job_name = fio_job_names[0] + value + fio_job_names[1] + "32" + fio_job_names[2]
+            elif "64" in child_chart.internal_chart_name:
+                fio_job_name = fio_job_names[0] + value + fio_job_names[1] + "64" + fio_job_names[2]
+            elif "96" in child_chart.internal_chart_name:
+                fio_job_name = fio_job_names[0] + value + fio_job_names[1] + "96" + fio_job_names[2]
+            elif "128" in child_chart.internal_chart_name:
+                fio_job_name = fio_job_names[0] + value + fio_job_names[1] + "128" + fio_job_names[2]
+            else:
+                fio_job_name = None
+                continue
+
+            if fio_job_name:
+                if child_chart.positive:
+                    name = value
+                    output_names = ["output_read_iops", "output_write_iops"]
+                else:
+                    name = value + "-avg"
+                    output_names = ["output_read_avg_latency", "output_write_avg_latency"]
+                data_sets = child_chart.get_data_sets()
+                if value == "read_write":
+                    for output_name in output_names:
+                        if "read" in output_name:
+                            rw_name = "read"
+                        else:
+                            rw_name = "write"
+                        one_data_set = {}
+                        if "-avg" in name:
+                            one_data_set["name"] = rw_name + "-avg(12 vols)"
+                            unit = PerfUnit.UNIT_USECS
+                        else:
+                            one_data_set["name"] = rw_name + "(12 vols)"
+                            unit = PerfUnit.UNIT_OPS
+                        one_data_set["inputs"] = {}
+                        one_data_set["inputs"]["input_platform"] = FunPlatform.F1
+                        one_data_set["inputs"]["input_fio_job_name"] = fio_job_name
+                        one_data_set["output"] = {"name": output_name, "min": 0, "max": -1, "expected": -1,
+                                                  "reference": -1, "unit": unit}
+                        data_sets.append(one_data_set)
+                else:
+                    one_data_set = data_sets[0]
+                    one_data_set["name"] = name + "(12 vols)"
+                    one_data_set["inputs"]["input_fio_job_name"] = fio_job_name
+                    one_data_set["output"]["expected"] = -1
+                    one_data_set["output"]["reference"] = -1
+                    data_sets = child_chart.get_data_sets()
+                    data_sets.append(one_data_set)
+                child_chart.data_sets = json.dumps(data_sets)
+                child_chart.save()
+    print "added 12 volume datasets for 32, 64, 96 and 128 qdepths for Inspur"
+
+if __name__ == "__main_power_perf__":
+    metric_model_name = "PowerPerformance"
+    description = "TBD"
+    owner_info = "Ranganatha Gowda (ranga.gowda@fungible.com)"
+    source = "https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/system/frs/start_traffic.py"
+    positive = False
+    visualization_unit = PerfUnit.UNIT_WATT
+    y1_axis_title = PerfUnit.UNIT_WATT
+    platform = FunPlatform.F1
+    internal_chart_name = "system_power_f1"
+    chart_name = "Power"
+
+    data_sets = []
+    one_data_set = {}
+
+    inputs = {
+        "input_platform": platform,
+    }
+    output_names = OrderedDict([("output_fs_power", "FS"), ("output_f1_0_power", "F1_0"),
+                                ("output_f1_1_power", "F1_1")])
+    for output_name in output_names:
+        output = {
+            "name": output_name,
+            "unit": visualization_unit,
+            "min": 0,
+            "max": -1,
+            "expected": -1,
+            "reference": -1
+        }
+        one_data_set["name"] = output_names[output_name]
+        one_data_set["inputs"] = inputs
+        one_data_set["output"] = output
+        data_sets.append(one_data_set.copy())
+
+    metric_id = LastMetricId.get_next_id()
+    base_line_date = datetime(year=2019, month=10, day=13, minute=0, hour=0, second=0)
+    power_chart = ml.create_leaf(chart_name=chart_name,
+                                 internal_chart_name=internal_chart_name,
+                                 data_sets=data_sets,
+                                 leaf=True,
+                                 description=description,
+                                 owner_info=owner_info,
+                                 source=source,
+                                 positive=positive,
+                                 y1_axis_title=y1_axis_title,
+                                 visualization_unit=visualization_unit,
+                                 metric_model_name=metric_model_name,
+                                 base_line_date=base_line_date,
+                                 work_in_progress=False,
+                                 children=[],
+                                 jira_ids=[],
+                                 platform=platform,
+                                 peer_ids=[],
+                                 creator=TEAM_REGRESSION_EMAIL,
+                                 workspace_ids=[])
+
+    final_dict = ml.get_dict(chart=power_chart)
+    print json.dumps(final_dict, indent=4)
+
+if __name__ == "__main__backup":
+    ml.backup_dags()
+
+if __name__ == "__main_rds_client__":
+    metric_model_name = "RdsClientPerformance"
+    description = "TBD"
+    owner_info = "Nazir Ahamed (nazir.ahamed@fungible.com)"
+    source = ""
+    positive = False
+    visualization_unit = PerfUnit.UNIT_MBITS_PER_SEC
+    y1_axis_title = PerfUnit.UNIT_MBITS_PER_SEC
+    platform = FunPlatform.F1
+    internal_chart_name = "rds_client_test_2_hosts_aggbw"
+    chart_name = "Aggregate Bandwidth"
+    num_hosts = 2
+    output_name = "output_aggregate_bandwidth"
+
+    data_sets = []
+    one_data_set = {}
+
+    output = {
+        "name": output_name,
+        "unit": y1_axis_title,
+        "min": 0,
+        "max": -1,
+        "expected": -1,
+        "reference": -1
+    }
+    for msg_rate in [1, 8, 16]:
+        for no_of_con in [1, 8, 16]:
+            inputs = {
+                "input_platform": platform,
+                "input_num_hosts": num_hosts,
+                "input_msg_rate": msg_rate,
+                "input_num_connection": no_of_con
+            }
+            display_name = "MR {}, TC {}".format(msg_rate, no_of_con)
+            one_data_set["name"] = display_name
+            one_data_set["inputs"] = inputs
+            one_data_set["output"] = output
+            data_sets.append(one_data_set.copy())
+
+    metric_id = LastMetricId.get_next_id()
+    base_line_date = datetime(year=2019, month=10, day=20, minute=0, hour=0, second=0)
+    iops_chart = ml.create_leaf(chart_name=chart_name,
+                                internal_chart_name=internal_chart_name,
+                                data_sets=data_sets,
+                                leaf=True,
+                                description=description,
+                                owner_info=owner_info,
+                                source=source,
+                                positive=positive,
+                                y1_axis_title=y1_axis_title,
+                                visualization_unit=visualization_unit,
+                                metric_model_name=metric_model_name,
+                                base_line_date=base_line_date,
+                                work_in_progress=False,
+                                children=[],
+                                jira_ids=[],
+                                platform=platform,
+                                peer_ids=[],
+                                creator=TEAM_REGRESSION_EMAIL,
+                                workspace_ids=[])
+
+    final_dict = ml.get_dict(chart=iops_chart)
+    print json.dumps(final_dict, indent=4)
+
+if __name__ == "__main_inspur_datasets__":
+    metric_ids = [1207, 754, 1208, 1209, 755, 1210]
+    for metric_id in metric_ids:
+        chart = MetricChart.objects.get(metric_id=metric_id)
+        children = chart.get_children()
+        for child in children:
+            child_chart = MetricChart.objects.get(metric_id=int(child))
+            data_sets = child_chart.get_data_sets()
+            for data_set in data_sets:
+                name = data_set["name"]
+                if "6 F1" not in name:
+                    if "(" in name:
+                        index = name.find('(') + 1
+                        name = name[:index] + "6 F1s, " + name[index:]
+                        data_set["name"] = name
+            child_chart.data_sets = json.dumps(data_sets)
+            child_chart.save()
+    print "changed the name of datasets for 6F1s inspur charts"
+
+if __name__ == "__main_best_value__":
+    entries = MetricChart.objects.all()
+    for entry in entries:
+        if entry.leaf:
+            model = app_config.get_metric_models()[entry.metric_model_name]
+            data_sets = entry.get_data_sets()
+            for data_set in data_sets:
+                inputs = data_set["inputs"]
+                d = {}
+                for input_name, input_value in inputs.iteritems():
+                    if input_name == "input_date_time":
+                        continue
+                    d[input_name] = input_value
+                order_by = "-input_date_time"
+                result = model.objects.filter(**d).order_by(order_by)[:1]
+                result = result.first() if len(result) else None
+                output_name = data_set["output"]["name"]
+                best_value = getattr(result, output_name) if result else -1
+                data_set["output"]["best"] = best_value
+            entry.data_sets = json.dumps(data_sets)
+            entry.save()
+    print "added best value for all datasets"
+
+if __name__ == "__main_FCP__":
+    root = "FCP"
+    categories = ["NVMe", "NVMe/TCP", "NVMe/FunTCP"]
+    leaves = ["IOPS", "Throughput", "Latency"]
+    latency_ds = ["avg", "50%", "90%", "95%", "99%", "99.5%", "99.99%"]
+    owner_info = "Manu K S (manu.ks@fungible.com)"
+    source = "Unknown"
+    base_line_date = datetime(year=2019, month=10, day=29, minute=0, hour=0, second=0)
+    description = "TBD"
+    model_name = "NvmeFcpPerformance"
+    internal_name = "teramarks_storage_fcp"
+    root_chart = ml.create_container(chart_name=root, internal_chart_name=internal_name,
+                                     platform=FunPlatform.F1,
+                                     owner_info=owner_info,
+                                     source=source, base_line_date=base_line_date, workspace_ids=[])
+    for category in categories:
+        internal_chart_name = internal_name + "_" + category.replace("/", "_").lower()
+        category_chart = ml.create_container(chart_name=category, internal_chart_name=internal_chart_name,
+                                  platform=FunPlatform.F1,
+                                         owner_info=owner_info,
+                                         source=source, base_line_date=base_line_date, workspace_ids=[])
+        inputs = {"input_platform": FunPlatform.F1,
+                 "input_block_size": 4096,
+                 "input_operation": "read",
+                 "input_test_case": category}
+        if category != "NVMe":
+            for leaf in leaves:
+                data_sets = []
+                if "Latency" in leaf:
+                    positive = False
+                    y1_axis_title = PerfUnit.UNIT_USECS
+                    output = "output_read_latency_"
+                    for ds in latency_ds:
+                        if "avg" in ds:
+                            output_name = output + "avg"
+                        elif "99.99%" in ds:
+                            output_name = output + "9999"
+                        elif "99.5%" in ds:
+                            output_name = output + "9950"
+                        elif "99%" in ds:
+                            output_name = output + "99"
+                        elif "95%" in ds:
+                            output_name = output + "95"
+                        elif "90%" in ds:
+                            output_name = output + "90"
+                        elif "50%" in ds:
+                            output_name = output + "50"
+                        one_data_set = {}
+                        one_data_set["name"] = ds
+                        one_data_set["inputs"] = inputs
+                        one_data_set["output"] = {"name": output_name,
+                                                  "min": 0,
+                                                  "max": -1,
+                                                  "expected": -1,
+                                                  "reference": -1,
+                                                  "best": -1,
+                                                  "unit": y1_axis_title}
+                        data_sets.append(one_data_set)
+                else:
+                    positive = True
+                    name = "read"
+                    if "IOPS" in leaf:
+                        y1_axis_title = PerfUnit.UNIT_OPS
+                        output_name = "output_read_iops"
+                    else:
+                        y1_axis_title = PerfUnit.UNIT_GBITS_PER_SEC
+                        output_name = "output_read_bw"
+                    one_data_set = {}
+                    one_data_set["name"] = name
+                    one_data_set["inputs"] = inputs
+                    one_data_set["output"] = { "name": output_name,
+                                               "min" : 0,
+                                               "max": -1,
+                                               "expected": -1,
+                                               "reference": -1,
+                                               "best": -1,
+                                               "unit": y1_axis_title}
+                    data_sets.append(one_data_set)
+
+                internal_chart_name = internal_chart_name + "_" + leaf.lower()
+                chart = ml.create_leaf(chart_name=leaf, internal_chart_name=internal_chart_name,
+                               data_sets=data_sets, leaf=True,
+                               description=description,
+                               owner_info=owner_info, source=source,
+                               positive=positive, y1_axis_title=y1_axis_title,
+                               visualization_unit=y1_axis_title,
+                               metric_model_name=model_name,
+                               base_line_date=base_line_date,
+                               work_in_progress=False, children=[], jira_ids=[], platform=FunPlatform.F1,
+                               peer_ids=[], creator=TEAM_REGRESSION_EMAIL,
+                               workspace_ids=[])
+                chart.fix_children_weights()
+                category_chart.add_child(chart.metric_id)
+        category_chart.fix_children_weights()
+        root_chart.add_child(child_id=category_chart.metric_id)
+    root_chart.fix_children_weights()
+    final_dict = ml.get_dict(chart=root_chart)
+    print json.dumps(final_dict)
+
+if __name__ == "__main_FCP_NVMe__":
+    internal_chart_name = "teramarks_storage_fcp_nvme"
+    leaves = ["IOPS", "Throughput", "Latency - 1 Vol(s)", "Latency - 2 Vol(s)", "Latency - 4 Vol(s)", "Latency - 8 "
+                                                                                                      "Vol(s)",
+              "Latency - 12 Vol(s)"]
+    volumes = [1, 2, 4, 8, 12]
+    latency_ds = ["avg", "50%", "90%", "95%", "99%", "99.5%", "99.99%"]
+    owner_info = "Manu K S (manu.ks@fungible.com)"
+    source = "Unknown"
+    base_line_date = datetime(year=2019, month=10, day=29, minute=0, hour=0, second=0)
+    description = "TBD"
+    model_name = "NvmeFcpPerformance"
+    inputs = {"input_platform": FunPlatform.F1,
+              "input_block_size": 4096,
+              "input_operation": "read",
+              "input_test_case": "NVMe",
+              "input_volumes": 1}
+    chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
+    for leaf in leaves:
+        internal_chart_name = "teramarks_storage_fcp_nvme"
+        data_sets = []
+        if "Latency" in leaf:
+            if "1 Vol" in leaf:
+                volume = 1
+                internal_name = "latency_" + "1vol"
+            elif "- 2 Vol" in leaf:
+                volume = 2
+                internal_name = "latency_" + "2vol"
+            elif "4 Vol" in leaf:
+                volume = 4
+                internal_name = "latency_" + "4vol"
+            elif "8 Vol" in leaf:
+                volume = 8
+                internal_name = "latency_" + "8vol"
+            elif "12 Vol" in leaf:
+                volume = 12
+                internal_name = "latency_" + "12vol"
+            positive = False
+            y1_axis_title = PerfUnit.UNIT_USECS
+            output = "output_read_latency_"
+            for ds in latency_ds:
+                if "avg" in ds:
+                    output_name = output + "avg"
+                elif "99.99%" in ds:
+                    output_name = output + "9999"
+                elif "99.5%" in ds:
+                    output_name = output + "9950"
+                elif "99%" in ds:
+                    output_name = output + "99"
+                elif "95%" in ds:
+                    output_name = output + "95"
+                elif "90%" in ds:
+                    output_name = output + "90"
+                elif "50%" in ds:
+                    output_name = output + "50"
+                one_data_set = {}
+                one_data_set["name"] = ds
+                inputs["input_volumes"] = volume
+                one_data_set["inputs"] = inputs
+                one_data_set["output"] = {"name": output_name,
+                                          "min": 0,
+                                          "max": -1,
+                                          "expected": -1,
+                                          "reference": -1,
+                                          "best": -1,
+                                          "unit": y1_axis_title}
+                data_sets.append(one_data_set)
+        else:
+            internal_name = leaf.lower()
+            positive = True
+            name = "read-"
+            if "IOPS" in leaf:
+                y1_axis_title = PerfUnit.UNIT_OPS
+                output_name = "output_read_iops"
+            else:
+                y1_axis_title = PerfUnit.UNIT_GBITS_PER_SEC
+                output_name = "output_read_bw"
+            for volume in volumes:
+                one_data_set = {}
+                one_data_set["name"] = name + str(volume) + " Vol(s)"
+                inputs["input_volumes"] = volume
+                one_data_set["inputs"] = inputs
+                one_data_set["output"] = {"name": output_name,
+                                          "min": 0,
+                                          "max": -1,
+                                          "expected": -1,
+                                          "reference": -1,
+                                          "best": -1,
+                                          "unit": y1_axis_title}
+                data_sets.append(one_data_set)
+
+        internal_chart_name = internal_chart_name + "_" + internal_name
+        child_chart = ml.create_leaf(chart_name=leaf, internal_chart_name=internal_chart_name,
+                               data_sets=data_sets, leaf=True,
+                               description=description,
+                               owner_info=owner_info, source=source,
+                               positive=positive, y1_axis_title=y1_axis_title,
+                               visualization_unit=y1_axis_title,
+                               metric_model_name=model_name,
+                               base_line_date=base_line_date,
+                               work_in_progress=False, children=[], jira_ids=[], platform=FunPlatform.F1,
+                               peer_ids=[], creator=TEAM_REGRESSION_EMAIL,
+                               workspace_ids=[])
+        child_chart.fix_children_weights()
+        chart.add_child(child_chart.metric_id)
+    chart.fix_children_weights()
+    final_dict = ml.get_dict(chart=chart)
+    print json.dumps(final_dict)
+    internal_chart_names = ["teramarks_storage_fcp_nvme_tcp_iops_throughput",
+                            "teramarks_storage_fcp_nvme_tcp_iops_throughput_latency",
+                            "teramarks_storage_fcp_nvme_funtcp_iops_throughput",
+                            "teramarks_storage_fcp_nvme_funtcp_iops_throughput_latency"]
+    for ic in internal_chart_names:
+        change_chart = MetricChart.objects.get(internal_chart_name=ic)
+        index = ic.find('_iops')
+        if "iops_throughput_latency" in ic:
+            internal_name = ic[:index] + "_latency"
+        else:
+            internal_name = ic[:index] + "_throughput"
+        change_chart.internal_chart_name = internal_name
+        change_chart.save()
+
+if __name__ == "__main__":
 

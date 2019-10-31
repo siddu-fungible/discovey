@@ -18,7 +18,7 @@ tb_config = {
     "name": "Basic Storage",
     "dut_info": {
         0: {
-            "bootarg": "app=mdt_test,load_mods,hw_hsu_test --serial --dpc-server --dpc-uart --csr-replay",
+            "bootarg": "app=mdt_test,load_mods --serial --dpc-server --dpc-uart --csr-replay",
             "huid": 3,
             "ctlid": 2,
             "fnid": 2,
@@ -234,6 +234,15 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                 install_sysstat = self.end_host.install_package("sysstat")
                 fun_test.test_assert(install_sysstat, "Sysstat installation")
                 fun_test.shared_variables["sysstat_install"] = True
+
+            min_drive_capacity = find_min_drive_capacity(self.storage_controller, self.command_timeout)
+            if min_drive_capacity:
+                self.volume_details["capacity"] = min_drive_capacity
+                # Reducing the volume capacity by drive margin as a workaround for the bug SWOS-6862
+                self.volume_details["capacity"] -= self.drive_margin
+            else:
+                fun_test.critical("Unable to find the drive with minimum capacity...So going to use the BLT capacity"
+                                  "given in the script config file or capacity passed at the runtime...")
 
             self.thin_uuid = utils.generate_uuid()
             fun_test.shared_variables["thin_uuid"] = self.thin_uuid
