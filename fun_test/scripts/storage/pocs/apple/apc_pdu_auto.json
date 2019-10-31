@@ -1,5 +1,5 @@
 {
-  "iterations": 100,
+  "iterations": 1,
   "check_storage_controller": false,
   "check_ssd": false,
   "check_ports": false,
@@ -9,11 +9,19 @@
   "expected_nu_ports_f1_1": [],
   "expected_hnu_ports_f1_0": [],
   "expected_hnu_ports_f1_1": [],
-  "hosts": 0,
+  "num_hosts": 2,
   "check_docker": true,
   "expected_dockers": 3,
   "end_sleep": 300,
   "docker_verify_interval": 20,
   "after_runsc_up_host_connect_interval": 60,
-  "check_portal": false
+  "check_portal": false,
+  "transport_type": "tcp",
+  "volume_creation_details": [
+    {"capacity": 6442450944,"encrypt": true, "stripe_count" : 6, "vol_type": "VOL_TYPE_BLK_LOCAL_THIN",
+      "compression_effort": 0}
+  ],
+  "fio": {"numjobs": 1, "size": "512g", "iodepth": 32,"runtime": 60, "group_reporting": 1, "time_based": 1,
+    "rw": "randrw", "name": "fio_randrw", "verify": "md5","direct": 1, "do_verify": 1, "bs": "4k", "ioengine": "libaio",
+    "verify_fatal": 1}
 }
