@@ -35,7 +35,7 @@
 
 
 <!--app-timeline-control *ngIf="showLogsPanel" [domainMin]="minRelativeTime" [domainMax]="maxRelativeTime" [title]="'Show logs starting from'" [unit]="'s'" (valueChanged)="onTimeLineChanged($event)"></app-timeline-control-->
-<div class="component" style="overflow: hidden; position: fixed">
+<div class="component" style="overflow: auto;position: fixed;width: 100%;white-space: nowrap;">
   <div class="fun-flex-container" style="align-items: flex-start;">
       <div *ngIf="showTestCasePanel" class="fun-flex-item panel fun-panel" [@show]="showTestCasePanel">
         <div class="fun-panel-header">Test-cases</div>
@@ -58,7 +58,7 @@
         </div>
       </div>
       <div *ngIf="currentTestCaseExecution" class="fun-flex-item panel fun-panel" [@show]="showCheckpointPanel">
-        <div class="fun-panel-header fun-flfunex-container" style="justify-content: space-between">
+        <div class="fun-panel-header fun-flex-item fun-flex-container" style="justify-content: space-between">
           <span>Checkpoints</span>
           <span *ngIf="!showTestCasePanel" (click)="onShowTestCasePanelClick()" class="pseudo-anchor">< Show test-cases</span>
         </div>
@@ -90,7 +90,7 @@
           </table>
         </div>
       </div>
-      <div *ngIf="showLogsPanel" class="fun-flex-container" id="logs-panel">
+      <div *ngIf="showLogsPanel" class="fun-flex-container fun-flex-item" id="logs-panel">
         <ng-container *ngFor="let availableContext of (availableContexts | selected )">
           <div class="fun-flex-item panel fun-panel">
             <div class="fun-panel-header">

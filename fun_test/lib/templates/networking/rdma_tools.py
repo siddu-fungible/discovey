@@ -133,7 +133,8 @@ class Rocetools:
             cmd_str += " -Q " + str(kwargs["cq_mod"])
             del kwargs["cq_mod"]
         if "rdma_cm" in kwargs:
-            cmd_str += " -R"
+            if kwargs["rdma_cm"]:
+                cmd_str += " -R"
             del kwargs["rdma_cm"]
         if "perf" in kwargs:
             # cmd_str += " --run_infinitely"
@@ -181,7 +182,8 @@ class Rocetools:
             cmd_str += " -Q " + str(kwargs["cq_mod"])
             del kwargs["cq_mod"]
         if "rdma_cm" in kwargs:
-            cmd_str += " -R"
+            if kwargs["rdma_cm"]:
+                cmd_str += " -R"
             del kwargs["rdma_cm"]
         if "perf" in kwargs:
             # cmd_str += " --run_infinitely"

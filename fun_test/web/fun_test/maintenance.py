@@ -1789,7 +1789,7 @@ if __name__ == "__main_inspur_datasets__":
             child_chart.save()
     print "changed the name of datasets for 6F1s inspur charts"
 
-if __name__ == "__main__":
+if __name__ == "__main_best_value__":
     entries = MetricChart.objects.all()
     for entry in entries:
         if entry.leaf:
@@ -1811,3 +1811,102 @@ if __name__ == "__main__":
             entry.data_sets = json.dumps(data_sets)
             entry.save()
     print "added best value for all datasets"
+
+if __name__ == "__main__":
+    root = "FCP"
+    categories = ["NVMe", "NVMe/TCP", "NVMe/FunTCP"]
+    leaves = ["IOPS", "Throughput", "Latency"]
+    latency_ds = ["avg", "50%", "90%", "95%", "99%", "99.5%", "99.99%"]
+    owner_info = "Manu K S (manu.ks@fungible.com)"
+    source = "Unknown"
+    base_line_date = datetime(year=2019, month=10, day=29, minute=0, hour=0, second=0)
+    description = "TBD"
+    model_name = "NvmeFcpPerformance"
+    internal_name = "teramarks_storage_fcp"
+    root_chart = ml.create_container(chart_name=root, internal_chart_name=internal_name,
+                                     platform=FunPlatform.F1,
+                                     owner_info=owner_info,
+                                     source=source, base_line_date=base_line_date, workspace_ids=[])
+    for category in categories:
+        internal_chart_name = internal_name + "_" + category.replace("/", "_").lower()
+        category_chart = ml.create_container(chart_name=category, internal_chart_name=internal_chart_name,
+                                  platform=FunPlatform.F1,
+                                         owner_info=owner_info,
+                                         source=source, base_line_date=base_line_date, workspace_ids=[])
+        inputs = {"input_platform": FunPlatform.F1,
+                 "input_block_size": 4096,
+                 "input_operation": "read",
+                 "input_test_case": category}
+        if category != "NVMe":
+            for leaf in leaves:
+                data_sets = []
+                if "Latency" in leaf:
+                    positive = False
+                    y1_axis_title = PerfUnit.UNIT_USECS
+                    output = "output_read_latency_"
+                    for ds in latency_ds:
+                        if "avg" in ds:
+                            output_name = output + "avg"
+                        elif "99.99%" in ds:
+                            output_name = output + "9999"
+                        elif "99.5%" in ds:
+                            output_name = output + "9950"
+                        elif "99%" in ds:
+                            output_name = output + "99"
+                        elif "95%" in ds:
+                            output_name = output + "95"
+                        elif "90%" in ds:
+                            output_name = output + "90"
+                        elif "50%" in ds:
+                            output_name = output + "50"
+                        one_data_set = {}
+                        one_data_set["name"] = ds
+                        one_data_set["inputs"] = inputs
+                        one_data_set["output"] = {"name": output_name,
+                                                  "min": 0,
+                                                  "max": -1,
+                                                  "expected": -1,
+                                                  "reference": -1,
+                                                  "best": -1,
+                                                  "unit": y1_axis_title}
+                        data_sets.append(one_data_set)
+                else:
+                    positive = True
+                    name = "read"
+                    if "IOPS" in leaf:
+                        y1_axis_title = PerfUnit.UNIT_OPS
+                        output_name = "output_read_iops"
+                    else:
+                        y1_axis_title = PerfUnit.UNIT_GBITS_PER_SEC
+                        output_name = "output_read_bw"
+                    one_data_set = {}
+                    one_data_set["name"] = name
+                    one_data_set["inputs"] = inputs
+                    one_data_set["output"] = { "name": output_name,
+                                               "min" : 0,
+                                               "max": -1,
+                                               "expected": -1,
+                                               "reference": -1,
+                                               "best": -1,
+                                               "unit": y1_axis_title}
+                    data_sets.append(one_data_set)
+
+                internal_chart_name = internal_chart_name + "_" + leaf.lower()
+                chart = ml.create_leaf(chart_name=leaf, internal_chart_name=internal_chart_name,
+                               data_sets=data_sets, leaf=True,
+                               description=description,
+                               owner_info=owner_info, source=source,
+                               positive=positive, y1_axis_title=y1_axis_title,
+                               visualization_unit=y1_axis_title,
+                               metric_model_name=model_name,
+                               base_line_date=base_line_date,
+                               work_in_progress=False, children=[], jira_ids=[], platform=FunPlatform.F1,
+                               peer_ids=[], creator=TEAM_REGRESSION_EMAIL,
+                               workspace_ids=[])
+                chart.fix_children_weights()
+                category_chart.add_child(chart.metric_id)
+        category_chart.fix_children_weights()
+        root_chart.add_child(child_id=category_chart.metric_id)
+    root_chart.fix_children_weights()
+    final_dict = ml.get_dict(chart=root_chart)
+    print json.dumps(final_dict)
