@@ -15,13 +15,13 @@ def dict_difference(one_data_set, cmd):
             result[field] = diff_dict[field]
     elif cmd == "le":
         # peek_value = 320
-        result = dict_difference_level_2(dict_1, dict_2, time_difference)
+        result = dict_difference_level_2_div(dict_1, dict_2, time_difference)
         # result = dict_level_1_div(diff_dict, peek_value)
     elif cmd == "hbm":
         # diff_dict = dict_difference_level_2(dict_1, dict_2, time_difference)
         pass
     elif cmd == "cdu":
-        result = dict_difference_level_2(dict_1, dict_2, time_difference)
+        result = dict_difference_level_2_div(dict_1, dict_2, time_difference)
 
     return result
 
@@ -31,7 +31,7 @@ def dict_difference_div(dict_1, dict_2, time_difference):
             for x in dict_1 if ((x in dict_2) and (type(dict_2[x]) == int or type(dict_2[x]) == float))}
 
 
-def dict_difference_level_2(dict_1, dict_2, time_difference):
+def dict_difference_level_2_div(dict_1, dict_2, time_difference):
     result = {}
     for each_field in dict_1:
         result[each_field] = dict_difference_div(dict_1[each_field], dict_2[each_field], time_difference)

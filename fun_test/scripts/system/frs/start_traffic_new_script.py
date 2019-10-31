@@ -67,7 +67,7 @@ class MyScript(FunTestScript):
         if self.boot_new_image:
             topology = topology_helper.deploy()
             fun_test.test_assert(topology, "Topology deployed")
-        self.verify_dpcsh_started()
+        # self.verify_dpcsh_started()
         if self.ec_vol:
             self.create_4_et_2_ec_volume()
 
@@ -295,7 +295,7 @@ class FunTestCase1(FunTestCase):
 
         #################### After the traffic ############
         if self.run_le_firewall:
-            kill_le_firewall()
+            kill_le_firewall(self.test_duration, self.boot_new_image, True)
         count = 3
         heading = "After the traffic"
         fun_test.log("Capturing the data {}".format(heading))
@@ -464,9 +464,6 @@ class FunTestCase1(FunTestCase):
             file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
         come_handle.destroy()
 
-
-
-
     ########### HBM ##################
     def func_hbm(self, f1, count, heading):
         stat_name = "HBM"
@@ -579,15 +576,6 @@ class FunTestCase1(FunTestCase):
             fun_test.sleep("before next iteration", seconds=3)
 
         come_handle.destroy()
-
-
-
-
-
-
-
-
-
 
 
     ########## MUD ###################
