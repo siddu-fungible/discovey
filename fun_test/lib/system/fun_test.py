@@ -1114,13 +1114,14 @@ class FunTest:
         if context:
             context.write(str(message) + "\n")
 
-    def sleep(self, message, seconds=5, context=None):
+    def sleep(self, message, seconds=5, context=None, no_log=False):
         outer_frames = inspect.getouterframes(inspect.currentframe())
         calling_module = self._get_calling_module(outer_frames)
-        message = "zzz...: Sleeping for :" + str(seconds) + "s : " + message
-        self._print_log_green(message=message, calling_module=calling_module, context=context)
-        if self.fun_xml_obj:
-            self.fun_xml_obj.log(log=message, newline=True)
+        if not no_log:
+            message = "zzz...: Sleeping for :" + str(seconds) + "s : " + message
+            self._print_log_green(message=message, calling_module=calling_module, context=context)
+            if self.fun_xml_obj:
+                self.fun_xml_obj.log(log=message, newline=True)
         time.sleep(seconds)
 
     def safe(self, the_function):
