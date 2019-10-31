@@ -46,7 +46,7 @@ def workspaces(request):
 
         description = request_json.get("description", "")
         subscribe = request_json.get("subscribe_to_alerts", False)
-        alert_emails = request_json.get("alert_emails", False)
+        alert_emails = request_json.get("alert_emails", "")
         try:
             q = Q(email=email, workspace_name=workspace_name)
             entry = PerformanceUserWorkspaces.objects.get(q)

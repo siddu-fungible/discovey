@@ -186,3 +186,10 @@ class Codes:
             value = getattr(self, non_callable_attribute)
             result.append(value)
         return result
+
+
+class TimeSeriesTypes(Codes):
+    SCRIPT_RUN_TIME = 10
+    CONTEXT_INFO = 40
+    LOG = 60
+    CHECKPOINT = 80

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import {Component, OnDestroy, OnInit} from '@angular/core';
 import { ApiService}  from "../../services/api/api.service";
 import { ActivatedRoute } from "@angular/router";
 import {ReRunService} from "../re-run.service";
@@ -9,6 +9,7 @@ import {NgbModal, ModalDismissReasons} from '@ng-bootstrap/ng-bootstrap';
 import {UserService} from "../../services/user/user.service";
 import {of} from "rxjs";
 import {catchError, switchMap} from "rxjs/operators";
+import {Title} from "@angular/platform-browser";
 
 
 class Environment {
@@ -22,7 +23,7 @@ class Environment {
   templateUrl: './suite-detail.component.html',
   styleUrls: ['./suite-detail.component.css']
 })
-export class SuiteDetailComponent implements OnInit {
+export class SuiteDetailComponent implements OnInit, OnDestroy {
   logDir: any = null;
   suiteExecutionId: number;
   suiteExecution: any = null;
@@ -44,7 +45,7 @@ export class SuiteDetailComponent implements OnInit {
   reRunOptionsReRunAll: boolean = true;
   reUseBuildImage: boolean = false;
   reRunScript: string = null;
-
+  refreshTimer: any = null;
 
   constructor(private apiService: ApiService,
               private route: ActivatedRoute,
@@ -52,7 +53,8 @@ export class SuiteDetailComponent implements OnInit {
               private logger: LoggerService,
               private regressionService: RegressionService,
               private commonService: CommonService,
-              private modalService: NgbModal) {
+              private modalService: NgbModal,
+              private title: Title) {
     this.stateStringMap = this.regressionService.stateStringMap;
     this.stateMap = this.regressionService.stateMap;
   }
@@ -76,6 +78,9 @@ export class SuiteDetailComponent implements OnInit {
           //let ctrl = this;
           this.apiService.get("/regression/suite_execution/" + this.suiteExecutionId).subscribe(function (result) {
             self.suiteExecution = result.data; // TODO: validate
+            if (self.suiteExecution.fields.suite_path) {
+              self.title.setTitle("Suite " + self.suiteExecutionId + ": " + self.suiteExecution.fields.suite_path);
+            }
             ctrl.applyAdditionalAttributes(self.suiteExecution);
             ctrl.getReRunInfo(self.suiteExecution);
 
@@ -130,7 +135,7 @@ export class SuiteDetailComponent implements OnInit {
               });
             }
             if (self.suiteExecution.fields.state >= self.stateMap.SUBMITTED) {
-              setInterval(() => {
+              self.refreshTimer = setInterval(() => {
                 window.location.reload();
               }, 60 * 1000);
             }
@@ -441,5 +446,10 @@ export class SuiteDetailComponent implements OnInit {
     return `/regression/script_detail/${scriptId}/${logPrefix}/${this.suiteExecutionId}`;
   }
 
+  ngOnDestroy() {
+    if (this.refreshTimer) {
+      clearInterval(this.refreshTimer);
+    }
+  }
 
 }

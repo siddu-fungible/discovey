@@ -37,9 +37,9 @@ class BringupSetup(FunTestCase):
     def run(self):
        
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
-        f1_0_boot_args = "app=hw_hsu_test cc_huid=3 --dpc-uart --dpc-server " \
+        f1_0_boot_args = "app=load_mods cc_huid=3 --dpc-uart --dpc-server " \
                          "--all_100g --disable-wu-watchdog"
-        f1_1_boot_args = "app=hw_hsu_test cc_huid=2 --dpc-uart --dpc-server " \
+        f1_1_boot_args = "app=load_mods cc_huid=2 --dpc-uart --dpc-server " \
                          "--all_100g --disable-wu-watchdog"
 
         topology_helper = TopologyHelper()

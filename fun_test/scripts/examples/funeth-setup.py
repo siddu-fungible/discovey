@@ -371,11 +371,11 @@ class FunethSanity(FunTestScript):
             TB = ''.join(test_bed_type.split('-')).upper()
             if control_plane:
                 if test_bed_type == 'fs-11':
-                    f1_0_boot_args = "app=hw_hsu_test cc_huid=3 sku=SKU_FS1600_0 retimer=0,1 --all_100g --dpc-uart --dpc-server"
-                    f1_1_boot_args = "app=hw_hsu_test cc_huid=2 sku=SKU_FS1600_1 retimer=0,1 --all_100g --dpc-uart --dpc-server"
+                    f1_0_boot_args = "app=load_mods cc_huid=3 sku=SKU_FS1600_0 retimer=0,1 --all_100g --dpc-uart --dpc-server"
+                    f1_1_boot_args = "app=load_mods cc_huid=2 sku=SKU_FS1600_1 retimer=0,1 --all_100g --dpc-uart --dpc-server"
                 if test_bed_type == 'fs-48':
-                    f1_0_boot_args = "app=hw_hsu_test cc_huid=3 sku=SKU_FS1600_0 retimer=0,1,2 --all_100g --dpc-uart --dpc-server"
-                    f1_1_boot_args = "app=hw_hsu_test cc_huid=2 sku=SKU_FS1600_1 retimer=0 --all_100g --dpc-uart --dpc-server"
+                    f1_0_boot_args = "app=load_mods cc_huid=3 sku=SKU_FS1600_0 retimer=0,1,2 --all_100g --dpc-uart --dpc-server"
+                    f1_1_boot_args = "app=load_mods cc_huid=2 sku=SKU_FS1600_1 retimer=0 --all_100g --dpc-uart --dpc-server"
                 if csi_perf_enabled:
                     f1_0_boot_args += " --perf csi-local-ip=29.1.1.2 csi-remote-ip={} pdtrace-hbm-size-kb=204800".format(perf_listener_ip)
                 if nu_all_clusters:
@@ -388,7 +388,7 @@ class FunethSanity(FunTestScript):
                                                                   1: {"boot_args": f1_1_boot_args}},
                                                    fun_cp_callback=funcp_setup_obj.bringup)
             else:
-                boot_args = "app=hw_hsu_test retimer=0,1 --dpc-uart --dpc-server --csr-replay --all_100g"
+                boot_args = "app=load_mods retimer=0,1 --dpc-uart --dpc-server --csr-replay --all_100g"
                 if csi_perf_enabled:
                     boot_args += " --perf csi-local-ip=29.1.1.2 csi-remote-ip={} pdtrace-hbm-size-kb=204800".format(perf_listener_ip)
                 if nu_all_clusters:

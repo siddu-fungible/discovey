@@ -14,7 +14,9 @@
       "iodepth": 16,
       "numjobs": 1,
       "direct": 1,
-      "prio": 0
+      "prio": 0,
+      "invalidate":1,
+      "timeout": 900
     },
     "fio_cmd_args": {
       "bs": 4096,
@@ -25,7 +27,8 @@
       "prio": 0,
       "iodepth": 16,
       "runtime": 120,
-      "numjobs": 16
+      "numjobs": 16,
+      "cpus_allowed_policy": "split"
     }
   }
 }

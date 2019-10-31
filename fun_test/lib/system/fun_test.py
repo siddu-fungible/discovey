@@ -20,6 +20,8 @@ import getpass
 from threading import Thread
 from inspect import getargspec
 from lib.utilities.send_mail import send_mail
+from fun_global import Codes, TimeSeriesTypes
+
 
 
 class TestException(Exception):
@@ -281,17 +283,20 @@ class FunTest:
         self.at_least_one_failed = False
         self.closed = False
         self.time_series_enabled = False
+
         if self.suite_execution_id:
+            print "Testing mongodb"
             if not self.get_mongo_db_manager().test_connection():
-                print "Testing mongodb"
                 self.enable_time_series(enable=False)
             else:
                 self.time_series_enabled = True
+
         self.script_id = None
         self.enable_profiling()
         self.start_time = get_current_time()
         self.started_epoch_time = get_current_epoch_time()
         self.time_series_buffer = {0: ""}
+        self.checkpoints = {}
 
     def enable_time_series(self, enable=True):
         self.time_series_enabled = enable
@@ -351,8 +356,7 @@ class FunTest:
                         script_id=script_id)
         self.contexts[self.last_context_id] = fc
         if self.time_series_enabled:
-            self.add_time_series_context(collection_name=models_helper.get_ts_test_case_context_info_collection_name(suite_execution_id=suite_execution_id, script_id=script_id),
-                                         context=fc)
+            self.add_time_series_context(context=fc)
         fc.open()
         return fc
 
@@ -530,6 +534,7 @@ class FunTest:
         else:
             print("Unable to determine the version. Defaulting...")
         print ("Version: {}".format(self.version))
+        return determined_version
 
     def set_version(self, version):
         self.version = version
@@ -544,6 +549,11 @@ class FunTest:
                 self.log("Suite execution: {} could not be retrieved from the DB".format(self.suite_execution_id))
             else:
                 version = suite_execution.version
+                if not version:
+                    try:
+                        version = self.determine_version()
+                    except Exception as ex:
+                        print("Error unable to determine the version: {}".format(str(ex)))
         else:
             version = self.version
         return version
@@ -883,25 +893,27 @@ class FunTest:
             self.critical(str(ex))
             self.enable_time_series(enable=False)
 
-    def add_time_series_log(self, collection_name, data, epoch_time=None):
+    def add_time_series_log(self, data, epoch_time=None):
         if not epoch_time:
             epoch_time = get_current_epoch_time()
-        self.add_time_series_document(collection_name=collection_name,
+        data["te"] = self.current_test_case_execution_id
+        self.add_time_series_document(collection_name=self.get_time_series_collection_name(),
                                       epoch_time=epoch_time,
-                                      type="log",
+                                      type=TimeSeriesTypes.LOG,
                                       data=data)
 
-    def add_time_series_checkpoint(self, collection_name, data):
-        self.add_time_series_document(collection_name=collection_name,
+    def add_time_series_checkpoint(self, data):
+        data["te"] = self.current_test_case_execution_id
+        self.add_time_series_document(collection_name=self.get_time_series_collection_name(),
                                       epoch_time=get_current_epoch_time(),
-                                      type="checkpoint",
+                                      type=TimeSeriesTypes.CHECKPOINT,
                                       data=data)
 
-    def add_time_series_context(self, collection_name, context):
+    def add_time_series_context(self, context):
         try:
-            result = self.get_mongo_db_manager().insert_one(collection_name=collection_name,
+            result = self.get_mongo_db_manager().insert_one(collection_name=self.get_time_series_collection_name(),
                                                             epoch_time=get_current_epoch_time(),
-                                                            type="context",
+                                                            type=TimeSeriesTypes.CONTEXT_INFO,
                                                             context_id=context.context_id,
                                                             description=context.description,
                                                             suite_execution_id=context.suite_execution_id,
@@ -915,14 +927,13 @@ class FunTest:
 
     def update_time_series_script_run_time(self, started_epoch_time=None):
         script_id = self.get_script_id()
-        collection_name = models_helper.get_ts_script_run_time_collection_name(self.suite_execution_id,
-                                                                               script_id=script_id)
         update_dict = {"suite_execution_id": self.suite_execution_id,
                        "script_id": script_id,
-                       "started_epoch_time": started_epoch_time}
+                       "started_epoch_time": started_epoch_time,
+                       "type": TimeSeriesTypes.SCRIPT_RUN_TIME}
         try:
 
-            result = self.get_mongo_db_manager().find_one_and_update(collection_name=collection_name,
+            result = self.get_mongo_db_manager().find_one_and_update(collection_name=self.get_time_series_collection_name(),
                                                             key={"suite_execution_id": self.suite_execution_id,
                                                                  "script_id": script_id},
                                                             **update_dict)
@@ -942,7 +953,8 @@ class FunTest:
             no_timestamp=False,
             context=None,
             ignore_context_description=None,
-            section=False):
+            section=False,
+            from_flush=False):
         current_time = get_current_time()
         current_epoch_time = get_current_epoch_time()
 
@@ -1008,22 +1020,30 @@ class FunTest:
 
         if self.time_series_enabled:
             try:
-                if not final_message_for_time_series.endswith("\n"):
-                    self.time_series_buffer[context_id] += final_message_for_time_series
+                if from_flush:
+                    if not final_message_for_time_series.endswith("\n"):
+                        self.time_series_buffer[context_id] += final_message_for_time_series
+                    else:
+                        final_message_for_time_series = self.time_series_buffer[context_id] + final_message_for_time_series
+                        for part in final_message_for_time_series.split("\n"):
+                            if not part:
+                                continue
+                            data = {"checkpoint_index": self.current_time_series_checkpoint,
+                                    "log": part.rstrip().lstrip(),
+                                    "context_id": context_id}
+                            self.add_time_series_log(data=data, epoch_time=current_epoch_time)
+                        self.time_series_buffer[context_id] = ""
                 else:
-                    final_message_for_time_series = self.time_series_buffer[context_id] + final_message_for_time_series
-                    for part in final_message_for_time_series.split("\n"):
-                        if not part:
-                            continue
-                        data = {"checkpoint_index": self.current_time_series_checkpoint,
-                                "log": part,
-                                "context_id": context_id}
-                        self.add_time_series_log(collection_name=models_helper.get_fun_test_time_series_collection_name(self.get_suite_execution_id(),
-                                                                                                                        self.get_test_case_execution_id()),
-                                                 data=data, epoch_time=current_epoch_time)
-                    self.time_series_buffer[context_id] = ""
+                    data = {"checkpoint_index": self.current_time_series_checkpoint,
+                            "log": final_message_for_time_series.rstrip().lstrip(),
+                            "context_id": context_id}
+                    self.add_time_series_log(data=data, epoch_time=current_epoch_time)
             except Exception as ex:
                 print "Timeseries exception: {}".format(str(ex))
+
+
+    def get_time_series_collection_name(self):
+        return models_helper.get_fun_test_time_series_collection_name(self.get_suite_execution_id())
 
     def print_key_value(self, title, data, max_chars_per_column=50):
         if title:
@@ -1076,7 +1096,8 @@ class FunTest:
                  calling_module=calling_module,
                  no_timestamp=True,
                  context=context,
-                 ignore_context_description=True)
+                 ignore_context_description=True,
+                 from_flush=True)
         if context:
             context.buf = ""
         else:
@@ -1220,6 +1241,7 @@ class FunTest:
         if result == FunTest.FAILED:
             self.at_least_one_failed = True
         self.test_metrics[self.current_test_case_id]["result"] = result
+        self.add_checkpoint("End test-case")
 
     def _append_assert_test_metric(self, assert_message):
         if self.current_test_case_id in self.test_metrics:
@@ -1267,7 +1289,8 @@ class FunTest:
                 this_checkpoint = self._get_context_prefix(context=context, message=message)
                 # if self.profiling:
                 #    this_checkpoint = "{:.2f}: {}".format(self.profiling_timer.elapsed_time(), this_checkpoint)  #TODO: Duplicate line
-                self.add_checkpoint(checkpoint=this_checkpoint, expected=expected, actual=actual, result=FunTest.PASSED)
+                self.add_checkpoint(checkpoint=this_checkpoint, expected=expected, actual=actual, result=FunTest.PASSED, context=context)
+
 
     def add_checkpoint(self,
                        checkpoint=None,
@@ -1275,7 +1298,6 @@ class FunTest:
                        expected="",
                        actual="",
                        context=None):
-        self.current_time_series_checkpoint += 1
 
         checkpoint = self._get_context_prefix(context=context, message=checkpoint)
         checkpoint_for_time_series = checkpoint
@@ -1287,6 +1309,7 @@ class FunTest:
                                             expected=expected,
                                             actual=actual)
 
+
         context_id = 0
         if context:
             context_id = context.get_id()
@@ -1295,13 +1318,16 @@ class FunTest:
                 "result": result, 
                 "expected": expected,
                 "actual": actual,
-                "index": self.current_time_series_checkpoint,
+                "checkpoint_index": self.current_time_series_checkpoint,
                 "context_id": context_id}
 
         if self.time_series_enabled:
-            self.add_time_series_checkpoint(collection_name=models_helper.get_fun_test_time_series_collection_name(self.get_suite_execution_id(),
-                                                                                                                   self.get_test_case_execution_id()),
-                                            data=data)
+            self.add_time_series_checkpoint(data=data)
+        if self.current_test_case_id not in self.checkpoints:
+            self.checkpoints[self.current_test_case_id] = []
+        self.checkpoints[self.current_test_case_id].append(checkpoint)
+        self.current_time_series_checkpoint += 1
+
 
     def exit_gracefully(self, sig, _):
         self.critical("Unexpected Exit")
@@ -1391,11 +1417,10 @@ class FunTest:
                 "result": FunTest.PASSED,
                 "expected": True,
                 "actual": True,
-                "index": fun_test.current_time_series_checkpoint,
+                "checkpoint_index": fun_test.current_time_series_checkpoint,
                 "context_id": 0}
         if self.time_series_enabled:
-            fun_test.add_time_series_checkpoint(collection_name=models_helper.get_fun_test_time_series_collection_name(
-                fun_test.get_suite_execution_id(), fun_test.get_test_case_execution_id()), data=data)
+            fun_test.add_time_series_checkpoint(data=data)
 
     def scp(self,
             source_file_path,
@@ -1546,9 +1571,6 @@ class FunTestScript(object):
 
     @abc.abstractmethod
     def setup(self):
-        fun_test._start_test(id=self.id,
-                             summary="Script setup",
-                             steps=self.steps)
         script_result = FunTest.FAILED
 
         setup_te = None
@@ -1566,7 +1588,10 @@ class FunTestScript(object):
                 fun_test.current_test_case_execution_id = setup_te.execution_id
                 if fun_test.time_series_enabled:
                     fun_test.update_time_series_script_run_time(started_epoch_time=fun_test.started_epoch_time)
-                fun_test.add_start_checkpoint()
+                # fun_test.add_start_checkpoint()
+            fun_test._start_test(id=self.id,
+                                 summary="Script setup",
+                                 steps=self.steps)
 
             fun_test.simple_assert(self.test_cases, "At least one test-case is required. No test-cases found")
             if self.test_case_order:
@@ -1702,9 +1727,7 @@ class FunTestScript(object):
 
     @abc.abstractmethod
     def cleanup(self):
-        fun_test._start_test(id=FunTest.CLEANUP_TC_ID,
-                             summary="Script cleanup",
-                             steps=self.steps)
+
         cleanup_te = None
         cleanup_error_found = False
         if fun_test.suite_execution_id:
@@ -1715,6 +1738,9 @@ class FunTestScript(object):
                                                   log_prefix=fun_test.log_prefix,
                                                   inputs=fun_test.get_job_inputs())
             fun_test.current_test_case_execution_id = cleanup_te.execution_id
+        fun_test._start_test(id=FunTest.CLEANUP_TC_ID,
+                             summary="Script cleanup",
+                             steps=self.steps)
         result = FunTest.PASSED
 
         try:
@@ -1781,9 +1807,7 @@ class FunTestScript(object):
                     if fun_test.selected_test_case_ids:
                         if test_case.id not in fun_test.selected_test_case_ids:
                             continue
-                    fun_test._start_test(id=test_case.id,
-                                         summary=test_case.summary,
-                                         steps=test_case.steps)
+
                     test_result = FunTest.FAILED
                     try:
                         if fun_test.suite_execution_id:
@@ -1792,7 +1816,10 @@ class FunTestScript(object):
                                                                      result=fun_test.IN_PROGRESS,
                                                                      started_time=get_current_time())
                             fun_test.current_test_case_execution_id = test_case.execution_id
-                        fun_test.add_start_checkpoint()
+                        # fun_test.add_start_checkpoint()
+                        fun_test._start_test(id=test_case.id,
+                                             summary=test_case.summary,
+                                             steps=test_case.steps)
                         test_case.setup()
                         test_case.run()
 

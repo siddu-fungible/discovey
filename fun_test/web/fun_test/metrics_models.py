@@ -3088,3 +3088,42 @@ class RdsClientPerformance(FunModel):
         for key, value in self.__dict__.iteritems():
             s += "{}:{} ".format(key, value)
         return s
+
+
+class NvmeFcpPerformance(FunModel):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_platform = models.TextField(default=FunPlatform.F1)
+    input_version = models.CharField(verbose_name="Version", max_length=50, default="")
+
+    input_block_size = models.IntegerField(verbose_name="Block size", default=-1)
+    input_test_case = models.TextField(verbose_name="Test case", default="")
+    input_operation = models.TextField(verbose_name="Operation", default="")
+    input_volumes = models.IntegerField(verbose_name="Volumes", default=-1)
+    output_read_iops = models.FloatField(verbose_name="Read IOPS", default=-1)
+    output_read_bw = models.FloatField(verbose_name="Read bandwidth", default=-1)
+    output_read_latency_avg = models.FloatField(verbose_name="Read latency avg", default=-1)
+    output_read_latency_50 = models.FloatField(verbose_name="Read latency 50", default=-1)
+    output_read_latency_90 = models.FloatField(verbose_name="Read latency 90", default=-1)
+    output_read_latency_95 = models.FloatField(verbose_name="Read latency 95", default=-1)
+    output_read_latency_99 = models.FloatField(verbose_name="Read latency 99", default=-1)
+    output_read_latency_9950 = models.FloatField(verbose_name="Read latency 99.50", default=-1)
+    output_read_latency_9999 = models.FloatField(verbose_name="Read latency 99.99", default=-1)
+
+    output_read_iops_unit = models.TextField(default=PerfUnit.UNIT_OPS)
+    output_read_bw_unit = models.TextField(default=PerfUnit.UNIT_GBITS_PER_SEC)
+    output_read_latency_avg_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_read_latency_50_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_read_latency_90_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_read_latency_95_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_read_latency_99_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_read_latency_9950_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_read_latency_9999_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s

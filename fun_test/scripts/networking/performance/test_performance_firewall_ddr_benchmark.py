@@ -31,7 +31,7 @@ class ScriptSetup(FunTestScript):
             #bootargs = fun_test.get_build_parameter('BOOTARGS')
             #bootargs = bootargs + ' override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]}'
             #fs = Fs.get(disable_f1_index=f1_index)
-            bootargs = 'app=hw_hsu_test sku=SKU_FS1600_0 --dpc-server --dis-stats --dpc-uart --csr-replay --all_100g --disable-wu-watchdog \
+            bootargs = 'app=load_mods sku=SKU_FS1600_0 --dpc-server --dis-stats --dpc-uart --csr-replay --all_100g --disable-wu-watchdog \
                                                 override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303'
             fs = Fs.get(disable_f1_index=f1_index, boot_args=bootargs)
             fun_test.shared_variables['fs'] = fs

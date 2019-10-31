@@ -24,10 +24,29 @@
       "prio": 0,
       "cpus_allowed_policy": "split"
     },
-    "artifact_params":
-    {
-      "poll_interval": 5,
-      "poll_count": 12
-    }
+    "stats_interval": 10,
+    "stats_collect_details": [
+      {
+        "vp_utils": {
+          "interval": 5
+        }
+      },
+      {
+        "per_vp": {
+          "interval": 5
+        }
+      },
+      {
+        "eqm_stats": {
+          "interval": 5
+        }
+      },
+      {
+        "fcp_stats": {
+          "interval": 5
+        }
+      },
+      {"vppkts_stats":{"interval": 5}}
+    ]
   }
 }

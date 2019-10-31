@@ -2,6 +2,7 @@ from lib.system.fun_test import fun_test
 from lib.host.linux import Linux
 import re
 import math
+import os
 
 LD_LIBRARY_PATH = "$LD_LIBRARY_PATH:/mnt/ws/fungible-rdma-core/build/lib/"
 PATH = "$PATH:/mnt/ws/fungible-rdma-core/build/bin/:/mnt/ws/fungible-perftest/"
@@ -132,7 +133,8 @@ class Rocetools:
             cmd_str += " -Q " + str(kwargs["cq_mod"])
             del kwargs["cq_mod"]
         if "rdma_cm" in kwargs:
-            cmd_str += " -R"
+            if kwargs["rdma_cm"]:
+                cmd_str += " -R"
             del kwargs["rdma_cm"]
         if "perf" in kwargs:
             # cmd_str += " --run_infinitely"
@@ -180,7 +182,8 @@ class Rocetools:
             cmd_str += " -Q " + str(kwargs["cq_mod"])
             del kwargs["cq_mod"]
         if "rdma_cm" in kwargs:
-            cmd_str += " -R"
+            if kwargs["rdma_cm"]:
+                cmd_str += " -R"
             del kwargs["rdma_cm"]
         if "perf" in kwargs:
             # cmd_str += " --run_infinitely"
@@ -321,3 +324,43 @@ class Rocetools:
     def cleanup(self):
         self.host.sudo_command(command="killall -g ib_write_lat ib_write_bw ib_read_lat ib_read_bw srping rping")
         self.host.disconnect()
+
+    def build_rdma_repo(self, rdmacore_branch=None, rdmacore_commit=None, perftest_branch=None, perftest_commit=None,
+                        perf_build=True, ws="/mnt/ws"):
+        self.rdmacore_branch = rdmacore_branch
+        self.rdmacore_commit = rdmacore_commit
+        self.perftest_branch = perftest_branch
+        self.perftest_commit = perftest_commit
+        self.ws = ws
+
+        sdkdir = os.path.join(self.ws, 'FunSDK')
+
+        # Clone fungible-perftest & rdma-core
+        self.host.command("cd {} ; git clone git@github.com:fungible-inc/fungible-perftest.git".format(self.ws))
+        self.host.command("cd {} ; git clone git@github.com:fungible-inc/fungible-rdma-core.git".format(self.ws))
+        rdma_perf_test_path = self.ws + "/fungible-perftest"
+        rdma_core_path = self.ws + "/fungible-rdma-core"
+
+        if perftest_branch:
+            self.host.command("cd {} ; git checkout {}".format(rdma_perf_test_path, perftest_branch))
+        if perftest_commit:
+            self.host.command("cd {} ; git checkout {}".format(rdma_perf_test_path, perftest_commit))
+        if rdmacore_branch:
+            self.host.command("cd {} ; git checkout {}".format(rdma_core_path, rdmacore_branch))
+        if perftest_commit:
+            self.host.command("cd {} ; git checkout {}".format(rdma_core_path, rdmacore_commit))
+        if perf_build:
+            self.host.command("export WORKSPACE={}".format(self.ws))
+            cmd_pid = self.host.command(
+                command="cd {} ; EXTRA_CMAKE_FLAGS=-DCMAKE_BUILD_TYPE=Release PALLADIUM=yes ./build.sh".
+                format(rdma_core_path), timeout=600)
+        else:
+            self.host.command("export WORKSPACE={}".format(self.ws))
+            output = self.host.command(
+                command="cd {} ; EXTRA_CMAKE_FLAGS=-DCMAKE_BUILD_TYPE=RelWithDebInfo PALLADIUM=yes ./build.sh".
+                format(rdma_core_path), timeout=600)
+        self.host.command("export WORKSPACE={}".format(self.ws))
+        output = self.host.command(command="cd {} ; ./fungible-build.sh".format(rdma_perf_test_path),
+                                   timeout=600)
+        self.host.disconnect()
+

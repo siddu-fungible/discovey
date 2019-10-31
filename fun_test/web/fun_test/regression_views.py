@@ -1036,7 +1036,7 @@ def git(request):
             command = request_json["command"]
             result = {"pull": None}
             if command == "pull":
-                result["pull"] = subprocess.check_output("git pull", shell=True)
+                result["pull"] = subprocess.check_output("git pull &> /tmp/git.log", shell=True)
             if command == "logs":
                 output = subprocess.check_output("git log -n 10", shell=True)
                 result["logs"] = output
