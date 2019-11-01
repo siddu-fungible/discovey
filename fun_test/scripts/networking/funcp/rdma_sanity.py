@@ -106,7 +106,7 @@ class BringupSetup(FunTestCase):
         if "qp_list" in job_inputs:
             fun_test.shared_variables["qp_list"] = job_inputs["qp_list"]
         else:
-            fun_test.shared_variables["qp_list"] = [64]
+            fun_test.shared_variables["qp_list"] = [512]
         if "fundrv_branch" in job_inputs:
             fun_test.shared_variables["fundrv_branch"] = job_inputs["fundrv_branch"]
         else:
@@ -1045,17 +1045,17 @@ class IbWriteScale(FunTestCase):
         f11_device_info = f11_host_roce.ibv_devinfo()
         for devinfo in f10_device_info:
             if "max_cqe" in devinfo:
-                f10_max_cqe = devinfo.split(":")[1]
+                f10_max_cqe = int(devinfo.split(":")[1])
         for devinfo in f11_device_info:
             if "max_cqe" in devinfo:
-                f11_max_cqe = devinfo.split(":")[1]
+                f11_max_cqe = int(devinfo.split(":")[1])
         if f10_max_cqe != f11_max_cqe:
             max_cqe_in_test = min(f10_max_cqe, f11_max_cqe)
             fun_test.critical("Max CQE on F10 : {} & F11 : {}".format(f10_max_cqe, f11_max_cqe))
             fun_test.add_checkpoint("Max CQE mismatch", "FAILED", f10_max_cqe, f11_max_cqe)
         else:
             max_cqe_in_test = f10_max_cqe
-
+        print "The max_cqe is {}".format(max_cqe_in_test)
         size = 1
         for test in test_type_list:
             for qp in qp_list:
