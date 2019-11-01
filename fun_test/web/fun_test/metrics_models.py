@@ -3112,6 +3112,15 @@ class NvmeFcpPerformance(FunModel):
     output_read_latency_9950 = models.FloatField(verbose_name="Read latency 99.50", default=-1)
     output_read_latency_9999 = models.FloatField(verbose_name="Read latency 99.99", default=-1)
 
+    output_write_bw = models.FloatField(verbose_name="Write bandwidth", default=-1)
+    output_write_latency_avg = models.FloatField(verbose_name="Write latency avg", default=-1)
+    output_write_latency_50 = models.FloatField(verbose_name="Write latency 50", default=-1)
+    output_write_latency_90 = models.FloatField(verbose_name="Write latency 90", default=-1)
+    output_write_latency_95 = models.FloatField(verbose_name="Write latency 95", default=-1)
+    output_write_latency_99 = models.FloatField(verbose_name="Write latency 99", default=-1)
+    output_write_latency_9950 = models.FloatField(verbose_name="Write latency 99.50", default=-1)
+    output_write_latency_9999 = models.FloatField(verbose_name="Write latency 99.99", default=-1)
+
     output_read_iops_unit = models.TextField(default=PerfUnit.UNIT_OPS)
     output_read_bw_unit = models.TextField(default=PerfUnit.UNIT_GBITS_PER_SEC)
     output_read_latency_avg_unit = models.TextField(default=PerfUnit.UNIT_USECS)
@@ -3121,6 +3130,16 @@ class NvmeFcpPerformance(FunModel):
     output_read_latency_99_unit = models.TextField(default=PerfUnit.UNIT_USECS)
     output_read_latency_9950_unit = models.TextField(default=PerfUnit.UNIT_USECS)
     output_read_latency_9999_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+
+    output_write_iops_unit = models.TextField(default=PerfUnit.UNIT_OPS)
+    output_write_bw_unit = models.TextField(default=PerfUnit.UNIT_GBITS_PER_SEC)
+    output_write_latency_avg_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_write_latency_50_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_write_latency_90_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_write_latency_95_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_write_latency_99_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_write_latency_9950_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_write_latency_9999_unit = models.TextField(default=PerfUnit.UNIT_USECS)
 
     def __str__(self):
         s = ""
