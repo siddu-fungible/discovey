@@ -141,7 +141,8 @@ class ApcPduTestcase(FunTestCase):
             bmc_up = self.bmc_handle.ensure_host_is_up(max_wait_time=600)
             fun_test.test_assert(bmc_up, "BMC is UP")
 
-            self.check_come_up_time(expected_minutes=5)
+            if self.apc_pdu_reboot_machine:
+                self.check_come_up_time(expected_minutes=5)
 
             if self.check_docker:
                 self.check_expected_dockers_up()
