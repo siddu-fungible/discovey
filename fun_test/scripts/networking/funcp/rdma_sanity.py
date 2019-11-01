@@ -106,7 +106,7 @@ class BringupSetup(FunTestCase):
         if "qp_list" in job_inputs:
             fun_test.shared_variables["qp_list"] = job_inputs["qp_list"]
         else:
-            fun_test.shared_variables["qp_list"] = [64]
+            fun_test.shared_variables["qp_list"] = [512]
         if "fundrv_branch" in job_inputs:
             fun_test.shared_variables["fundrv_branch"] = job_inputs["fundrv_branch"]
         else:
@@ -1037,17 +1037,47 @@ class IbWriteScale(FunTestCase):
                     break
         else:
             io_type = "Sequential"
-            qp_list = fun_test.shared_variables["qp_list"]
 
+        qp_list = fun_test.shared_variables["qp_list"]
+
+        # Get max_cqe to compute tx_depth required for scaling
+        f10_device_info = f10_host_roce.ibv_devinfo()
+        f11_device_info = f11_host_roce.ibv_devinfo()
+        for devinfo in f10_device_info:
+            if "max_cqe" in devinfo:
+                f10_max_cqe = int(devinfo.split(":")[1])
+        for devinfo in f11_device_info:
+            if "max_cqe" in devinfo:
+                f11_max_cqe = int(devinfo.split(":")[1])
+        if f10_max_cqe != f11_max_cqe:
+            max_cqe_in_test = min(f10_max_cqe, f11_max_cqe)
+            fun_test.critical("Max CQE on F10 : {} & F11 : {}".format(f10_max_cqe, f11_max_cqe))
+            fun_test.add_checkpoint("Max CQE mismatch", "FAILED", f10_max_cqe, f11_max_cqe)
+        else:
+            max_cqe_in_test = f10_max_cqe
+        print "The max_cqe is {}".format(max_cqe_in_test)
         size = 1
         for test in test_type_list:
             for qp in qp_list:
                 f10_pid_there = 0
                 f11_pid_there = 0
+                # Compute the tx_depth required for scaling.
+                # Default tx_depth = 128 from ib_write_bw
+                tx_depth_default = 128
+                cq_depth_required = 128 * qp
+
+                # Reduce the tx_depth for scaling and avoid CQ allocation failure
+                if cq_depth_required > max_cqe_in_test:
+                    tx_depth_in_test = max_cqe_in_test / qp
+                else:
+                    tx_depth_in_test = tx_depth_default
+                fun_test.log("Running test with tx_depth {}".format(tx_depth_in_test))
+
                 f10_host_test = f10_host_roce.ib_bw_test(test_type=test, size=size, rdma_cm=rdmacm, qpair=qp,
-                                                         duration=30)
+                                                         tx_depth=tx_depth_in_test, duration=30)
                 f11_host_test = f11_host_roce.ib_bw_test(test_type=test, size=size, rdma_cm=rdmacm, qpair=qp,
-                                                         server_ip=f10_hosts[0]["ipaddr"], duration=30)
+                                                         tx_depth=tx_depth_in_test, server_ip=f10_hosts[0]["ipaddr"],
+                                                         duration=30)
                 while f10_hosts[0]["handle"].process_exists(process_id=f10_host_test["cmd_pid"]):
                     fun_test.sleep("ib_bw test on f10_host", 2)
                     f10_pid_there += 1
