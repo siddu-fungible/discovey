@@ -63,12 +63,24 @@ def execute_leaks(come_handle, f1=0):
     # print dpcsh_output
     return dpcsh_output
 
+
 def pc_dma(come_handle, f1=0):
-    cmd = "pc_dma"
+    cmd = "peek stats/pc_dma"
     dpcsh_output = dpcsh_nocli.get_dpcsh_output(come_handle, cmd, f1)
     # print dpcsh_output
     return dpcsh_output
 
+def busy_loop(come_handle, f1=0):
+    cmd = "async soak_flows_busy_loop_10usecs"
+    dpcsh_output = dpcsh_nocli.get_dpcsh_output(come_handle, cmd, f1)
+    # print dpcsh_output
+    return dpcsh_output
+
+def memcpy_1MB(come_handle, f1=0):
+    cmd = "async soak_flows_memcpy_1MB_non_coh"
+    dpcsh_output = dpcsh_nocli.get_dpcsh_output(come_handle, cmd, f1)
+    # print dpcsh_output
+    return dpcsh_output
 
 
 if __name__ == "__main__":

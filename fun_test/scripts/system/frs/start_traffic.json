@@ -5,5 +5,7 @@
   "specific_apps": [],
   "add_to_database": false,
   "disable_f1_index": null,
-  "ec_vol": false
+  "ec_vol": false,
+  "collect_stats": [],
+  "disable_stats": []
 }

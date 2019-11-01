@@ -102,7 +102,6 @@ def fio(come_handle, f1=0, num_jobs=8, run_time=80, iodepth=16):
         fun_test.critical(ex)
     return result
 
-
 def le_firewall(run_time, new_image, just_kill=False):
     global vm_info
     if new_image:
