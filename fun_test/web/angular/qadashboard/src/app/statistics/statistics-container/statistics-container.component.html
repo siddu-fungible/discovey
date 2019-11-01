@@ -3,7 +3,7 @@
     <div class="fun-panel-header">
       {{ statistic.statisticsCategory.display_name }} -- {{ statistic.statisticsSubCategory.display_name }}
     </div>
-    <app-bam *ngIf="statistic.statisticsCategory.name ==='system' && statistic.statisticsSubCategory.name ==='bam'">
+    <app-bam [scriptExecutionInfo]="scriptExecutionInfo" *ngIf="statistic.statisticsCategory.name ==='system' && statistic.statisticsSubCategory.name ==='bam'">
     </app-bam>
   </div>
 

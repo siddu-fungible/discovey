@@ -18,6 +18,7 @@ export class StatisticsContainerComponent implements OnInit, OnChanges {
     // fetch data using suite_execution_id
     if (this.scriptExecutionInfo) {
       let suiteExecutionId = this.scriptExecutionInfo.suite_execution_id;
+      console.log(suiteExecutionId);
 
     }
   }

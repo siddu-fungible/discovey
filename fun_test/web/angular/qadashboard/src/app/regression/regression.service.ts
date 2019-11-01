@@ -209,12 +209,12 @@ getPrettyLocalizeTime(t) {
     }))
   }
 
-  testCaseTimeSeries(suiteExecutionId, testCaseExecutionId?: null,
-                     checkpointIndex?: null,
-                     minCheckpointIndex?: null,
-                     maxCheckpointIndex?: null,
-                     type?: null,
-                     statisticsType?: null) {
+  testCaseTimeSeries(suiteExecutionId, testCaseExecutionId?: number,
+                     checkpointIndex?: number,
+                     minCheckpointIndex?: number,
+                     maxCheckpointIndex?: number,
+                     type?: number,
+                     statisticsType?: number) {
     let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}`;
     let params = [];
     if (checkpointIndex !== null) {
