@@ -187,10 +187,10 @@ def check_if_le_firewall_is_running(vm_detail):
     return result
 
 
-def poll_untill_le_stops(vm_detail):
+def poll_untill_le_stops(vm_details):
     timer = FunTimer(max_time=1200)
     while not timer.is_expired():
-        running = check_if_le_firewall_is_running(vm_detail)
+        running = check_if_le_firewall_is_running(vm_details)
         if running:
             fun_test.log("Remaining time: {}".format(timer.remaining_time()))
             fun_test.sleep("Before next check", seconds=30)
@@ -200,7 +200,7 @@ def poll_untill_le_stops(vm_detail):
 
 
 def reset_the_status(vm_detail):
-    vm_detail["handle"].command("cd ")
+    vm_detail["handle"].command("cd")
 
 if __name__ == "__main__":
     le_firewall(60, "")
