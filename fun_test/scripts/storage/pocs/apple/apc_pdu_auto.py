@@ -118,58 +118,58 @@ class ApcPduTestcase(FunTestCase):
 
             fun_test.add_checkpoint(checkpoint="ITERATION : {} out of {}".format(pc_no + 1, self.iterations))
 
-            self.apc_pdu_reboot()
-            self.come_handle.destroy()
-            self.bmc_handle.destroy()
-
-            self.come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
-                                    ssh_username=self.fs['come']['mgmt_ssh_username'],
-                                    ssh_password=self.fs['come']['mgmt_ssh_password'])
-            self.bmc_handle = Bmc(host_ip=self.fs['bmc']['mgmt_ip'],
-                                  ssh_username=self.fs['bmc']['mgmt_ssh_username'],
-                                  ssh_password=self.fs['bmc']['mgmt_ssh_password'])
-            self.bmc_handle.set_prompt_terminator(r'# $')
-
-            fun_test.log("Checking if COMe is UP")
-            come_up = self.come_handle.ensure_host_is_up(max_wait_time=600)
-            fun_test.test_assert(come_up, "COMe is UP")
-
-            fun_test.log("Checking if BMC is UP")
-            bmc_up = self.bmc_handle.ensure_host_is_up(max_wait_time=600)
-            fun_test.test_assert(bmc_up, "BMC is UP")
-
-            self.check_come_up_time(expected_minutes=5)
-
-            if self.check_docker:
-                self.check_expected_dockers_up()
-
-            if self.check_portal:
-                self.check_portal_up()
-
-            # Check if lspci devices are detected
-            fun_test.log("Check if F1_0 is detected")
-            self.check_pci_dev(f1=0)
-
-            fun_test.log("Check if F1_1 is detected")
-            self.check_pci_dev(f1=1)
-
-            if self.check_ssd:
-                fun_test.log("Checking if SSD's are Active on F1_0")
-                self.check_ssd_status(expected_ssds_up=self.expected_ssds_f1_0, f1=0)
-
-                fun_test.log("Checking if SSD's are Active on F1_1")
-                self.check_ssd_status(expected_ssds_up=self.expected_ssds_f1_1, f1=1)
-
-            if self.check_ports:
-                fun_test.log("Checking if NU and HNU port's are active on F1_0")
-                expected_ports_up_f1_0 = {'NU': self.expected_nu_ports_f1_0,
-                                          'HNU': self.expected_hnu_ports_f1_0}
-                self.check_nu_ports(f1=0, expected_ports_up=expected_ports_up_f1_0)
-
-                expected_ports_up_f1_1 = {'NU': self.expected_nu_ports_f1_1,
-                                          'HNU': self.expected_hnu_ports_f1_1}
-                fun_test.log("Checking if NU and HNU port's are active on F1_1")
-                self.check_nu_ports(f1=1, expected_ports_up=expected_ports_up_f1_1)
+            # self.apc_pdu_reboot()
+            # self.come_handle.destroy()
+            # self.bmc_handle.destroy()
+            #
+            # self.come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
+            #                         ssh_username=self.fs['come']['mgmt_ssh_username'],
+            #                         ssh_password=self.fs['come']['mgmt_ssh_password'])
+            # self.bmc_handle = Bmc(host_ip=self.fs['bmc']['mgmt_ip'],
+            #                       ssh_username=self.fs['bmc']['mgmt_ssh_username'],
+            #                       ssh_password=self.fs['bmc']['mgmt_ssh_password'])
+            # self.bmc_handle.set_prompt_terminator(r'# $')
+            #
+            # fun_test.log("Checking if COMe is UP")
+            # come_up = self.come_handle.ensure_host_is_up(max_wait_time=600)
+            # fun_test.test_assert(come_up, "COMe is UP")
+            #
+            # fun_test.log("Checking if BMC is UP")
+            # bmc_up = self.bmc_handle.ensure_host_is_up(max_wait_time=600)
+            # fun_test.test_assert(bmc_up, "BMC is UP")
+            #
+            # self.check_come_up_time(expected_minutes=5)
+            #
+            # if self.check_docker:
+            #     self.check_expected_dockers_up()
+            #
+            # if self.check_portal:
+            #     self.check_portal_up()
+            #
+            # # Check if lspci devices are detected
+            # fun_test.log("Check if F1_0 is detected")
+            # self.check_pci_dev(f1=0)
+            #
+            # fun_test.log("Check if F1_1 is detected")
+            # self.check_pci_dev(f1=1)
+            #
+            # if self.check_ssd:
+            #     fun_test.log("Checking if SSD's are Active on F1_0")
+            #     self.check_ssd_status(expected_ssds_up=self.expected_ssds_f1_0, f1=0)
+            #
+            #     fun_test.log("Checking if SSD's are Active on F1_1")
+            #     self.check_ssd_status(expected_ssds_up=self.expected_ssds_f1_1, f1=1)
+            #
+            # if self.check_ports:
+            #     fun_test.log("Checking if NU and HNU port's are active on F1_0")
+            #     expected_ports_up_f1_0 = {'NU': self.expected_nu_ports_f1_0,
+            #                               'HNU': self.expected_hnu_ports_f1_0}
+            #     self.check_nu_ports(f1=0, expected_ports_up=expected_ports_up_f1_0)
+            #
+            #     expected_ports_up_f1_1 = {'NU': self.expected_nu_ports_f1_1,
+            #                               'HNU': self.expected_hnu_ports_f1_1}
+            #     fun_test.log("Checking if NU and HNU port's are active on F1_1")
+            #     self.check_nu_ports(f1=1, expected_ports_up=expected_ports_up_f1_1)
 
             if self.num_hosts:
                 if pc_no == 0:
@@ -571,7 +571,7 @@ class ApcPduTestcase(FunTestCase):
         self.portal_username = 'admin'
         self.portal_password = 'password'
         self.apiprotocol = "https"
-        self.apiport = 9000
+        self.api_server_port = 50220
 
         self.http_basic_auth = requests.auth.HTTPBasicAuth(self.portal_username, self.portal_password)
         self.pool_id = self.get_pool_id()
@@ -580,7 +580,7 @@ class ApcPduTestcase(FunTestCase):
 
     def get_pool_id(self):
         data = []
-        pool_url = '{}://{}:{}/FunCC/v1/storage/pools'.format(self.apiprotocol, self.fs['come']['mgmt_ip'], self.apiport)
+        pool_url = '{}://{}:{}/FunCC/v1/storage/pools'.format(self.apiprotocol, self.fs['come']['mgmt_ip'], self.api_server_port)
         response = requests.get(pool_url, auth=self.http_basic_auth, json=data, verify=False)
         fun_test.log("pools log: {}".format(response.json()))
         pool_id = str(response.json()['data'].keys()[0])
@@ -589,7 +589,7 @@ class ApcPduTestcase(FunTestCase):
 
     def topology_request(self):
         data = []
-        topo_url = '{}://{}:{}/FunCC/v1/topology'.format(self.apiprotocol, self.fs['come']['mgmt_ip'], self.apiport)
+        topo_url = '{}://{}:{}/FunCC/v1/topology'.format(self.apiprotocol, self.fs['come']['mgmt_ip'], self.api_server_port)
         response = requests.get(self.topo_url, auth=self.http_basic_auth, json=data, verify=False)
         fun_test.log("topology log: {}".format(response.json()))
 
@@ -601,7 +601,7 @@ class ApcPduTestcase(FunTestCase):
             volume_creation_detail["name"] = "Stripe{}".format(index+1)
             volcreate_url = "{}://{}:{}/FunCC/v1/storage/pools/{}/volumes".format(self.apiprotocol,
                                                                                   self.fs['come']['mgmt_ip'],
-                                                                                  self.apiport,
+                                                                                  self.api_server_port,
                                                                                   self.pool_id)
             data = {"name": volume_creation_detail["name"], "capacity": volume_creation_detail["capacity"],
                     "vol_type": volume_creation_detail["vol_type"],
@@ -635,7 +635,7 @@ class ApcPduTestcase(FunTestCase):
         for vol_name, host_name in zip(volume_uuid_details, required_hosts_list):
             volattach_url = "{}://{}:{}/FunCC/v1/storage/volumes/{}/ports".format(self.apiprotocol,
                                                                                   self.fs['come']['mgmt_ip'],
-                                                                                  self.apiport,
+                                                                                  self.api_server_port,
                                                                                   volume_uuid_details[vol_name])
             host_interface_ip = self.hosts_asset[host_name]["test_interface_info"]["0"]["ip"].split("/")[0]
             data = {"remote_ip": host_interface_ip, "transport": self.transport_type.upper()}
@@ -718,7 +718,7 @@ class ApcPduTestcase(FunTestCase):
             for vol_name, vol_uuid in self.volume_uuid_details.iteritems():
                 delete_vol_url = "{}://{}:{}/FunCC/v1/storage/volumes/{}".format(self.apiprotocol,
                                                                                  self.fs['come']['mgmt_ip'],
-                                                                                 self.apiport,
+                                                                                 self.api_server_port,
                                                                                  vol_uuid)
                 response = requests.delete(delete_vol_url, auth=self.http_basic_auth, json=data, verify=False)
                 response_json = response.json()
