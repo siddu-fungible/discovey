@@ -570,7 +570,7 @@ class ApcPduTestcase(FunTestCase):
     def create_vol_using_api(self):
         self.portal_username = 'admin'
         self.portal_password = 'password'
-        self.apiprotocol = "https"
+        self.apiprotocol = "http"
         self.api_server_port = 50220
 
         self.http_basic_auth = requests.auth.HTTPBasicAuth(self.portal_username, self.portal_password)
