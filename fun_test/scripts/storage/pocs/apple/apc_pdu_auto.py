@@ -116,60 +116,60 @@ class ApcPduTestcase(FunTestCase):
                                   ssh_password=self.fs['bmc']['mgmt_ssh_password'])
             self.bmc_handle.set_prompt_terminator(r'# $')
 
-            # fun_test.add_checkpoint(checkpoint="ITERATION : {} out of {}".format(pc_no + 1, self.iterations))
-            #
-            # # self.apc_pdu_reboot()
-            # self.come_handle.destroy()
-            # self.bmc_handle.destroy()
-            #
-            # self.come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
-            #                         ssh_username=self.fs['come']['mgmt_ssh_username'],
-            #                         ssh_password=self.fs['come']['mgmt_ssh_password'])
-            # self.bmc_handle = Bmc(host_ip=self.fs['bmc']['mgmt_ip'],
-            #                       ssh_username=self.fs['bmc']['mgmt_ssh_username'],
-            #                       ssh_password=self.fs['bmc']['mgmt_ssh_password'])
-            # self.bmc_handle.set_prompt_terminator(r'# $')
-            #
-            # fun_test.log("Checking if COMe is UP")
-            # come_up = self.come_handle.ensure_host_is_up(max_wait_time=600)
-            # fun_test.test_assert(come_up, "COMe is UP")
-            #
-            # fun_test.log("Checking if BMC is UP")
-            # bmc_up = self.bmc_handle.ensure_host_is_up(max_wait_time=600)
-            # fun_test.test_assert(bmc_up, "BMC is UP")
-            #
-            # # self.check_come_up_time(expected_minutes=5)
-            #
-            # if self.check_docker:
-            #     self.check_expected_dockers_up()
-            #
-            # if self.check_portal:
-            #     self.check_portal_up()
-            #
-            # # Check if lspci devices are detected
-            # fun_test.log("Check if F1_0 is detected")
-            # self.check_pci_dev(f1=0)
-            #
-            # fun_test.log("Check if F1_1 is detected")
-            # self.check_pci_dev(f1=1)
-            #
-            # if self.check_ssd:
-            #     fun_test.log("Checking if SSD's are Active on F1_0")
-            #     self.check_ssd_status(expected_ssds_up=self.expected_ssds_f1_0, f1=0)
-            #
-            #     fun_test.log("Checking if SSD's are Active on F1_1")
-            #     self.check_ssd_status(expected_ssds_up=self.expected_ssds_f1_1, f1=1)
-            #
-            # if self.check_ports:
-            #     fun_test.log("Checking if NU and HNU port's are active on F1_0")
-            #     expected_ports_up_f1_0 = {'NU': self.expected_nu_ports_f1_0,
-            #                               'HNU': self.expected_hnu_ports_f1_0}
-            #     self.check_nu_ports(f1=0, expected_ports_up=expected_ports_up_f1_0)
-            #
-            #     expected_ports_up_f1_1 = {'NU': self.expected_nu_ports_f1_1,
-            #                               'HNU': self.expected_hnu_ports_f1_1}
-            #     fun_test.log("Checking if NU and HNU port's are active on F1_1")
-            #     self.check_nu_ports(f1=1, expected_ports_up=expected_ports_up_f1_1)
+            fun_test.add_checkpoint(checkpoint="ITERATION : {} out of {}".format(pc_no + 1, self.iterations))
+
+            self.apc_pdu_reboot()
+            self.come_handle.destroy()
+            self.bmc_handle.destroy()
+
+            self.come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
+                                    ssh_username=self.fs['come']['mgmt_ssh_username'],
+                                    ssh_password=self.fs['come']['mgmt_ssh_password'])
+            self.bmc_handle = Bmc(host_ip=self.fs['bmc']['mgmt_ip'],
+                                  ssh_username=self.fs['bmc']['mgmt_ssh_username'],
+                                  ssh_password=self.fs['bmc']['mgmt_ssh_password'])
+            self.bmc_handle.set_prompt_terminator(r'# $')
+
+            fun_test.log("Checking if COMe is UP")
+            come_up = self.come_handle.ensure_host_is_up(max_wait_time=600)
+            fun_test.test_assert(come_up, "COMe is UP")
+
+            fun_test.log("Checking if BMC is UP")
+            bmc_up = self.bmc_handle.ensure_host_is_up(max_wait_time=600)
+            fun_test.test_assert(bmc_up, "BMC is UP")
+
+            self.check_come_up_time(expected_minutes=5)
+
+            if self.check_docker:
+                self.check_expected_dockers_up()
+
+            if self.check_portal:
+                self.check_portal_up()
+
+            # Check if lspci devices are detected
+            fun_test.log("Check if F1_0 is detected")
+            self.check_pci_dev(f1=0)
+
+            fun_test.log("Check if F1_1 is detected")
+            self.check_pci_dev(f1=1)
+
+            if self.check_ssd:
+                fun_test.log("Checking if SSD's are Active on F1_0")
+                self.check_ssd_status(expected_ssds_up=self.expected_ssds_f1_0, f1=0)
+
+                fun_test.log("Checking if SSD's are Active on F1_1")
+                self.check_ssd_status(expected_ssds_up=self.expected_ssds_f1_1, f1=1)
+
+            if self.check_ports:
+                fun_test.log("Checking if NU and HNU port's are active on F1_0")
+                expected_ports_up_f1_0 = {'NU': self.expected_nu_ports_f1_0,
+                                          'HNU': self.expected_hnu_ports_f1_0}
+                self.check_nu_ports(f1=0, expected_ports_up=expected_ports_up_f1_0)
+
+                expected_ports_up_f1_1 = {'NU': self.expected_nu_ports_f1_1,
+                                          'HNU': self.expected_hnu_ports_f1_1}
+                fun_test.log("Checking if NU and HNU port's are active on F1_1")
+                self.check_nu_ports(f1=1, expected_ports_up=expected_ports_up_f1_1)
 
             if self.num_hosts:
                 if pc_no == 0:
@@ -467,27 +467,6 @@ class ApcPduTestcase(FunTestCase):
 
         fun_test.test_assert(result, "{} host is connected".format(name))
         return nvme
-
-    @staticmethod
-    def run_traffic_bg(hosts_list):
-        for host_name, host in hosts_list.iteritems():
-            # result = host_handle.nvme_connect(target_ip=target_ip, nvme_subsystem=nqn)
-            # fun_test.test_assert(result, "{} connected to {}".format(nqn, target_ip))
-            # Run this in background if needed
-            # fio_out = host_handle.pcie_fio(filename=filename, numjobs=4, iodepth=4, rw="randrw", direct=1,
-            #                                ioengine="libaio", bs="4k", size="512g", name="fio_randrw", runtime=120,
-            #                                do_verify=1, verify="md5", verify_fatal=1, timeout=300)
-            host["handle"].enter_sudo()
-            host["handle"].start_bg_process("fio --group_reporting --output-format=json --filename={filename} "
-                                            "--time_based --rw=randrw --name=fio --iodepth=32 --verify=md5 --numjobs=1 "
-                                            "--direct=1 --do_verify=1 --bs=4k --ioengine=libaio --runtime=120 "
-                                            "--verify_fatal=1 --size=512g --output=/tmp/fio_power_cycler.txt".format(
-                filename=host["nvme"]))
-            # fun_test.test_assert(True, "{} fio started".format(host_name))
-            host["handle"].exit_sudo()
-            # if not fio_out:
-            #     result = True
-        return
 
     def check_traffic(self, host_name):
         host_info = self.hosts_asset[host_name]

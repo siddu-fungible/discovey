@@ -1,5 +1,5 @@
 {
-  "iterations": 1,
+  "iterations": 100,
   "check_storage_controller": false,
   "check_ssd": false,
   "check_ports": false,
@@ -9,7 +9,7 @@
   "expected_nu_ports_f1_1": [],
   "expected_hnu_ports_f1_0": [],
   "expected_hnu_ports_f1_1": [],
-  "num_hosts": 2,
+  "num_hosts": 0,
   "check_docker": true,
   "expected_dockers": 3,
   "end_sleep": 300,
