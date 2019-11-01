@@ -514,11 +514,6 @@ class ApcPduTestcase(FunTestCase):
             result = True
         fun_test.test_assert(result, "Host: {}  IO running".format(host_name))
 
-    @staticmethod
-    def destroy_hosts_handle(hosts_list):
-        for host_name, host in hosts_list.iteritems():
-            host["handle"].destroy()
-
     def check_come_up_time(self, expected_minutes):
         initial = self.come_handle.command("uptime")
         output = self.come_handle.command("uptime")
