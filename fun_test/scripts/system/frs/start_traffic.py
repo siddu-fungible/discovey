@@ -281,11 +281,11 @@ class FunTestCase1(FunTestCase):
 
     def run(self):
         ############## Before traffic #####################
-        # self.initial_debug_memory_stats = self.get_debug_memory_stats_initially(self.f_DEBUG_MEMORY_f1_0,
-        #                                                                         self.f_DEBUG_MEMORY_f1_0)
-        # self.capture_data(count=3, heading="Before starting traffic")
-        #
-        # fun_test.test_assert(True, "Initial debug stats is saved")
+        self.initial_debug_memory_stats = self.get_debug_memory_stats_initially(self.f_DEBUG_MEMORY_f1_0,
+                                                                                self.f_DEBUG_MEMORY_f1_0)
+        self.capture_data(count=3, heading="Before starting traffic")
+
+        fun_test.test_assert(True, "Initial debug stats is saved")
 
         ############# Starting Traffic ################
         come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
@@ -318,7 +318,7 @@ class FunTestCase1(FunTestCase):
 
         #################### After the traffic ############
         if self.run_le_firewall:
-            kill_le_firewall(self.test_duration, self.boot_new_image, True)
+            le_firewall(self.test_duration, self.boot_new_image, True)
         self.stop_threaded_apps(thread_map_for_soak_apps)
 
         count = 3
