@@ -31,8 +31,8 @@ class MyScript(FunTestScript):
         for k, v in config_dict.iteritems():
             setattr(self, k, v)
 
-        f1_0_boot_args = 'cc_huid=3 sku=SKU_FS1600_0 app=mdt_test,load_mods,hw_hsu_test, workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303 --mtracker'
-        f1_1_boot_args = 'cc_huid=2 sku=SKU_FS1600_1 app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303 --mtracker'
+        f1_0_boot_args = 'cc_huid=3 sku=SKU_FS1600_0 app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303'
+        f1_1_boot_args = 'cc_huid=2 sku=SKU_FS1600_1 app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303'
 
         if job_inputs:
             if "disable_f1_index" in job_inputs:
@@ -67,7 +67,7 @@ class MyScript(FunTestScript):
         if self.boot_new_image:
             topology = topology_helper.deploy()
             fun_test.test_assert(topology, "Topology deployed")
-        # self.verify_dpcsh_started()
+        self.verify_dpcsh_started()
         if self.ec_vol:
             self.create_4_et_2_ec_volume()
 
@@ -224,6 +224,10 @@ class FunTestCase1(FunTestCase):
                 self.run_le_firewall = job_inputs["run_le_firewall"]
             if "collect_stats" in job_inputs:
                 self.collect_stats = job_inputs["collect_stats"]
+            if "disable_stats" in job_inputs:
+                self.disable_stats = job_inputs["disable_stats"]
+            if "boot_new_image" in job_inputs:
+                self.boot_new_image = job_inputs["boot_new_image"]
 
         # Create the files
         self.stats_info = {}
@@ -231,14 +235,14 @@ class FunTestCase1(FunTestCase):
         # post_fix_name: "{calculated_}{app_name}_DPCSH_OUTPUT_F1_{f1}_logs.txt"
         # description : "{calculated_}_{app_name}_DPCSH_OUTPUT_F1_{f1}"
         self.stats_info["bmc"] = {"POWER": {"calculated": True}, "DIE_TEMPERATURE": {"calculated": False, "disable":True}}
-        self.stats_info["come"] = {"DEBUG_MEMORY": {}, "CDU": {"disable":True}, "EQM": {"disable":True}, "BAM": {"calculated": False, "disable":True}, "DEBUG_VP_UTIL": {"calculated": False,"disable":True}, "LE": {"disable":True}, "HBM": {"disable":True},
-                                   "EXECUTE_LEAKS":{"calculated": False}}
-        for system in self.stats_info:
-            for stat_name, value in self.stats_info[system].iteritems():
-                if stat_name in self.collect_stats:
-                    value["disable"] = False
-                else:
-                    value["disable"] = True
+        self.stats_info["come"] = {"DEBUG_MEMORY": {}, "CDU": {}, "EQM": {}, "BAM": {"calculated": False, "disable":True}, "DEBUG_VP_UTIL": {"calculated": False}, "LE": {}, "HBM": {"disable":True},
+                                   "EXECUTE_LEAKS": {"calculated": False, "disable": True}, "PC_DMA": {"calculated": True}}
+
+        if self.disable_stats:
+            for system in self.stats_info:
+                for stat_name, value in self.stats_info[system].iteritems():
+                    if stat_name in self.disable_stats:
+                        value["disable"] = True
 
         for system in self.stats_info:
             for stat_name, value in self.stats_info[system].iteritems():
@@ -249,7 +253,7 @@ class FunTestCase1(FunTestCase):
                 for calculated in cal:
                     if system == "bmc":
                         globals()["{}{}_OUTPUT".format(calculated, stat_name)] = fun_test.get_test_case_artifact_file_name(post_fix_name="{}{}_OUTPUT_logs.txt".format(calculated, stat_name))
-                        fun_test.add_auxillary_file(description="{}{}_OUTPUT".format(calculated, stat_name), filename=globals()["{}{}_OUTPUT".format(calculated, stat_name)])
+                        fun_test.add_auxillary_file(description="{}{}_OUTPUT".format(calculated.upper(), stat_name), filename=globals()["{}{}_OUTPUT".format(calculated, stat_name)])
                         setattr(self, "f_{}{}".format(calculated,stat_name), open(globals()["{}{}_OUTPUT".format(calculated, stat_name)], "w+"))
                     elif system == "come":
                         for f1 in self.run_on_f1:
@@ -259,6 +263,8 @@ class FunTestCase1(FunTestCase):
 
         # Traffic
         self.methods = {"crypto": crypto, "zip": zip_deflate, "rcnvme": rcnvme, "fio": fio}
+        self.threaded_apps = {"busy_loop": "soak_flows_busy_loop_10usecs"}
+        # self.threaded_apps = {"busy_loop": "soak_flows_busy_loop_10usecs", "memcpy_1MB":"soak_flows_memcpy_1MB_non_coh"}
 
         if self.duration == "1m":
             self.test_duration = 60
@@ -269,11 +275,12 @@ class FunTestCase1(FunTestCase):
 
     def run(self):
         ############## Before traffic #####################
-        # self.initial_debug_memory_stats = self.get_debug_memory_stats_initially(self.f_DEBUG_MEMORY_f1_0,
-        #                                                                         self.f_DEBUG_MEMORY_f1_0)
-        # self.capture_data(count=3, heading="Before starting traffic")
-        #
-        # fun_test.test_assert(True, "Initial debug stats is saved")
+        if not self.stats_info["come"]["DEBUG_MEMORY"]["disable"]:
+            self.initial_debug_memory_stats = self.get_debug_memory_stats_initially(self.f_DEBUG_MEMORY_f1_0,
+                                                                                    self.f_DEBUG_MEMORY_f1_0)
+        self.capture_data(count=3, heading="Before starting traffic")
+
+        fun_test.test_assert(True, "Initial debug stats is saved")
 
         ############# Starting Traffic ################
         come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
@@ -287,6 +294,8 @@ class FunTestCase1(FunTestCase):
 
         if self.run_le_firewall:
             le_firewall(self.test_duration, self.boot_new_image)
+
+        thread_map_for_soak_apps = self.start_threaded_apps()
 
         for app, parameters in app_params.iteritems():
             parameters["f1"] = 0
@@ -304,7 +313,9 @@ class FunTestCase1(FunTestCase):
 
         #################### After the traffic ############
         if self.run_le_firewall:
-            kill_le_firewall(self.test_duration, self.boot_new_image, True)
+            le_firewall(self.test_duration, self.boot_new_image, True)
+        self.stop_threaded_apps(thread_map_for_soak_apps)
+
         count = 3
         heading = "After the traffic"
         fun_test.log("Capturing the data {}".format(heading))
@@ -341,7 +352,7 @@ class FunTestCase1(FunTestCase):
                 time_in_seconds += 1
                 if time_in_seconds > 10:
                     time_in_seconds = 1
-                fun_test.test_assert(True, "Started capturing the {} stats during {}".format(stat_name, heading))
+                fun_test.test_assert(True, "Started capturing the {} stats {}".format(stat_name, heading))
 
         for i in range(thread_count):
             fun_test.join_thread(thread_map[i])
@@ -412,7 +423,7 @@ class FunTestCase1(FunTestCase):
         come_handle.destroy()
 
 
-    ############# CDU ########
+    ############# CDU ################
     def func_cdu(self, f1, count, heading):
         stat_name = "CDU"
         come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
@@ -437,6 +448,37 @@ class FunTestCase1(FunTestCase):
             file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
 
             difference_dict = stats_calculation.dict_difference(one_dataset, "cdu")
+            one_dataset["time"] = datetime.datetime.now()
+            one_dataset["output"] = difference_dict
+            file_helper.add_data(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+            # fun_test.sleep("before next iteration", seconds=self.details["interval"])
+        come_handle.destroy()
+
+    ####### PC DMA #########
+    def func_pc_dma(self, count, heading, f1):
+        stat_name = "PC_DMA"
+        come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
+                           ssh_username=self.fs['come']['mgmt_ssh_username'],
+                           ssh_password=self.fs['come']['mgmt_ssh_password'])
+        for i in range(count):
+            one_dataset = {}
+            dpcsh_output = dpcsh_commands.pc_dma(come_handle=come_handle, f1=f1)
+            one_dataset["time"] = datetime.datetime.now()
+            one_dataset["output"] = dpcsh_output
+            one_dataset["time1"] = datetime.datetime.now()
+            one_dataset["output1"] = dpcsh_output
+            file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+
+            fun_test.sleep("Before capturing next set of data", seconds=5)
+
+            dpcsh_output = dpcsh_commands.pc_dma(come_handle=come_handle, f1=f1)
+            one_dataset["time"] = datetime.datetime.now()
+            one_dataset["output"] = dpcsh_output
+            one_dataset["time2"] = datetime.datetime.now()
+            one_dataset["output2"] = dpcsh_output
+            file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+
+            difference_dict = stats_calculation.dict_difference(one_dataset, "pc_dma")
             one_dataset["time"] = datetime.datetime.now()
             one_dataset["output"] = difference_dict
             file_helper.add_data(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
@@ -589,7 +631,6 @@ class FunTestCase1(FunTestCase):
 
 
     ########## MUD ###################
-
     def get_debug_memory_stats_initially(self, f_debug_memory_f1_0, f_debug_memory_f1_1):
         result = {}
         come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
@@ -681,6 +722,65 @@ class FunTestCase1(FunTestCase):
             artifact_file_name_f1_1 = bmc_handle.get_uart_log_file(1)
             fun_test.add_auxillary_file(description="DUT_0_fs-65_F1_0 UART Log", filename=artifact_file_name_f1_0)
             fun_test.add_auxillary_file(description="DUT_0_fs-65_F1_1 UART Log", filename=artifact_file_name_f1_1)
+
+    def start_threaded_apps(self):
+        def func_not_found():
+            print "Function not found"
+        self.required_apps = {}
+        if self.specific_apps:
+            for app in self.specific_apps:
+                if app in self.threaded_apps:
+                    self.required_apps[app] = self.threaded_apps[app]
+        else:
+            self.required_apps.update(self.threaded_apps)
+
+        thread_map = {}
+        for app in self.required_apps:
+            for f1 in self.run_on_f1:
+                fun_test.shared_variables["var_{}_f1_{}".format(app, f1)] = True
+                thread_map["{}_{}".format(app, f1)] = fun_test.execute_thread_after(
+                    func=getattr(self, app, func_not_found),
+                    time_in_seconds=1,
+                    f1=f1)
+                fun_test.log("Started the app : {} on f1: {}".format(app, f1))
+        return thread_map
+
+    def stop_threaded_apps(self, thread_map):
+        for app in self.required_apps:
+            for f1 in self.run_on_f1:
+                fun_test.shared_variables["var_{}_f1_{}".format(app, f1)] = False
+                fun_test.log("Stopped the app : {} on f1: {}".format(app, f1))
+
+        for name, thread in thread_map.iteritems():
+            fun_test.join_thread(thread)
+
+
+
+    def busy_loop(self, f1):
+        app = "busy_loop"
+        come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
+                           ssh_username=self.fs['come']['mgmt_ssh_username'],
+                           ssh_password=self.fs['come']['mgmt_ssh_password'])
+        track_app = fun_test.shared_variables["var_{}_f1_{}".format(app, f1)]
+        while track_app:
+            dpcsh_out = dpcsh_commands.busy_loop(come_handle, f1)
+            track_app = fun_test.shared_variables["var_{}_f1_{}".format(app, f1)]
+            fun_test.sleep("Before next iteration app: {}".format(app))
+
+    def memcpy_1MB(self, f1):
+        app = "memcpy_1MB"
+        come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
+                           ssh_username=self.fs['come']['mgmt_ssh_username'],
+                           ssh_password=self.fs['come']['mgmt_ssh_password'])
+        track_app = fun_test.shared_variables["var_{}_f1_{}".format(app, f1)]
+        while track_app:
+            dpcsh_out = dpcsh_commands.memcpy_1MB(come_handle, f1)
+            track_app = fun_test.shared_variables["var_{}_f1_{}".format(app, f1)]
+            fun_test.sleep("Before next iteration app: {}".format(app))
+
+
+
+
 
 
 if __name__ == "__main__":
