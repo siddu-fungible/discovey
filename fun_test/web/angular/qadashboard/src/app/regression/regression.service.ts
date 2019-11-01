@@ -209,7 +209,12 @@ getPrettyLocalizeTime(t) {
     }))
   }
 
-  testCaseTimeSeries(suiteExecutionId, testCaseExecutionId?: null, checkpointIndex?: null, minCheckpointIndex?: null, maxCheckpointIndex?: null) {
+  testCaseTimeSeries(suiteExecutionId, testCaseExecutionId?: null,
+                     checkpointIndex?: null,
+                     minCheckpointIndex?: null,
+                     maxCheckpointIndex?: null,
+                     type?: null,
+                     statisticsType?: null) {
     let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}`;
     let params = [];
     if (checkpointIndex !== null) {
@@ -221,8 +226,14 @@ getPrettyLocalizeTime(t) {
       if (maxCheckpointIndex !== null) {
         params.push(["max_checkpoint_index", maxCheckpointIndex]);
       }
-      if (testCaseExecutionId !== null) {
+      if (testCaseExecutionId) {
         params.push(["test_case_execution_id", testCaseExecutionId]);
+      }
+      if (type) {
+        params.push(["type", type]);
+      }
+      if (statisticsType) {
+        params.push(["t", statisticsType]);
       }
     }
     let queryParamString = this.commonService.queryParamsToString(params);
@@ -244,7 +255,7 @@ getPrettyLocalizeTime(t) {
     if (checkpointIndex !== null) {
       url += `&checkpoint_index=${checkpointIndex}`;
     }
-    if (testCaseExecutionId !== null) {
+    if (testCaseExecutionId) {
       url += `&test_case_execution_id=${testCaseExecutionId}`;
     }
     return this.apiService.get(url).pipe(switchMap(response => {

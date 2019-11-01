@@ -554,9 +554,13 @@ def test_case_time_series(request, suite_execution_id):
             if type == TimeSeriesTypes.LOG:
                 query["type"] = {"$or": [TimeSeriesTypes.LOG, TimeSeriesTypes.CHECKPOINT]}
         test_case_execution_id = request.GET.get("test_case_execution_id", None)
-        query["te"] = int(test_case_execution_id)
+        if test_case_execution_id is not None:
+            query["te"] = int(test_case_execution_id)
         if checkpoint_index is not None:
             query["data.checkpoint_index"] = int(checkpoint_index)
+        t = request.GET.get("t", None)   # sub-type like statistics type
+        if t is not None:
+            query["t"] = int(t)
 
         epoch_filter = {}
         if start_epoch is not None:
