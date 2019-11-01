@@ -668,6 +668,8 @@ class RunFioRds(FunTestCase):
                 fun_test.log("Different stats collection thread details for the current IO depth {} after starting "
                              "them:\n{}".format(fio_read_jobs, self.stats_collect_details))
             else:
+                f10_storage_ctrl_obj.disconnect()
+                f11_storage_ctrl_obj.disconnect()
                 fun_test.critical("Stats collection disabled")
             try:
                 fio_result = f11_hosts[0]["handle"].pcie_fio(filename=fio_filename,

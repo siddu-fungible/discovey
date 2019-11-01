@@ -198,7 +198,9 @@ def _is_valid_output(output_value):
     return (output_value != -1 and not math.isinf(output_value))
 
 def _update_best_value(current_value, best_value_dict, chart, data_set):
-    if (chart.positive and current_value > best_value_dict[data_set["name"]]):
+    if best_value_dict[data_set["name"]] == -1:
+        best_value_dict[data_set["name"]] = current_value
+    elif (chart.positive and current_value > best_value_dict[data_set["name"]]):
         best_value_dict[data_set["name"]] = current_value
     elif (not chart.positive and current_value < best_value_dict[data_set["name"]]):
         best_value_dict[data_set["name"]] = current_value
