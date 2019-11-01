@@ -2324,6 +2324,35 @@ class TeraMarkMultiClusterCryptoPerformance(models.Model):
             s += "{}:{} ".format(key, value)
         return s
 
+class CryptoFastPathPerformance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_app = models.CharField(max_length=30, default="crypto_fast_path")
+    input_algorithm = models.CharField(max_length=30, default="")
+    input_operation = models.CharField(max_length=30, default="")
+    input_pkt_size = models.IntegerField(verbose_name="bytes", default=-1)
+    input_key_size = models.IntegerField(verbose_name="Key Size", default=-1)
+    output_ops_per_sec = models.IntegerField(verbose_name="ops per sec", default=-1)
+    output_throughput = models.FloatField(verbose_name="Throughput", default=-1)
+    output_latency_min = models.IntegerField(verbose_name="Latency min", default=-1)
+    output_latency_avg = models.IntegerField(verbose_name="Latency avg", default=-1)
+    output_latency_max = models.IntegerField(verbose_name="Latency max", default=-1)
+    output_ops_per_sec_unit = models.TextField(default=PerfUnit.UNIT_OPS)
+    output_throughput_unit = models.TextField(default=PerfUnit.UNIT_GBITS_PER_SEC)
+    output_latency_min_unit = models.TextField(default=PerfUnit.UNIT_NSECS)
+    output_latency_avg_unit = models.TextField(default=PerfUnit.UNIT_NSECS)
+    output_latency_max_unit = models.TextField(default=PerfUnit.UNIT_NSECS)
+    input_platform = models.TextField(default=FunPlatform.F1)
+    tag = "analytics"
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
+
 class TeraMarkLookupEnginePerformance(models.Model):
     interpolation_allowed = models.BooleanField(default=False)
     interpolated = models.BooleanField(default=False)

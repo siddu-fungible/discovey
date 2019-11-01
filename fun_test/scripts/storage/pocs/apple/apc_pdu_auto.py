@@ -176,6 +176,7 @@ class ApcPduTestcase(FunTestCase):
                 self.check_nu_ports(f1=1, expected_ports_up=expected_ports_up_f1_1)
 
             if self.num_hosts:
+                fun_test.sleep("Wait for GUI to come up", seconds=80)
                 if pc_no == 0:
                     required_hosts_list = self.verify_and_get_required_hosts_list()
                     self.volume_uuid_details = self.create_vol_using_api()
