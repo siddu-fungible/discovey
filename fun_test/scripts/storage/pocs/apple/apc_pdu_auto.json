@@ -22,7 +22,7 @@
     {"capacity": 6442450944,"encrypt": true, "stripe_count" : 6, "vol_type": "VOL_TYPE_BLK_LOCAL_THIN",
       "compression_effort": 0}
   ],
-  "fio": {"numjobs": 1, "size": "512g", "iodepth": 32,"runtime": 60, "group_reporting": 1, "time_based": 1,
+  "fio": {"numjobs": 1, "size": "512g", "iodepth": 32,"runtime": 180, "group_reporting": 1, "time_based": 1,
     "rw": "randrw", "name": "fio_randrw", "verify": "md5","direct": 1, "do_verify": 1, "bs": "4k", "ioengine": "libaio",
     "verify_fatal": 1}
 }
