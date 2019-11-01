@@ -1,6 +1,7 @@
 from lib.system.fun_test import fun_test
-from fun_global import Codes
+from fun_global import Codes, TimeSeriesTypes
 from threading import Thread
+
 
 
 class StatisticsCategory(Codes):
@@ -10,12 +11,16 @@ class StatisticsCategory(Codes):
 
 
 class StatisticsCollector:
-    def __init__(self, collector, category, type, **kwargs):
+    def __init__(self, collector, category, type, storage_file_handler=None, storage_db_handler=None, **kwargs):
         self.collector = collector
         self.category = category
         self.type = type
+        self.storage_file_handler = storage_file_handler
+        self.storage_db_handler = storage_db_handler
         self.kwargs = kwargs
 
+    def get_type(self):
+        return self.type
 
 class StatisticsStorageHandler:
     FILE_TYPE_HANDLER = 10
@@ -35,17 +40,27 @@ class CollectorWorker(Thread):
         self.collector = collector
         self.collector_id = collector_id
         self.interval_in_seconds = interval_in_seconds
-        self.terminated = False
+        self.stopped = False
 
     def run(self):
         fun_test.log("Starting collector: {}".format(self.collector_id))
-        while not fun_test.closed and not self.terminated:
+        while not fun_test.closed and not self.stopped:
             collector_instance = self.collector.collector
-            collector_instance.statistics_dispatcher(self.collector.type, **self.collector.kwargs)
+            result, epoch_time = collector_instance.statistics_dispatcher(self.collector.type, **self.collector.kwargs)
             fun_test.sleep(seconds=self.interval_in_seconds, no_log=True)
+            if self.collector.storage_db_handler:
+                collection_name = fun_test.get_time_series_collection_name()
+                data = result
+                mongo_db_manager = fun_test.get_mongo_db_manager()
+                mongo_db_manager.insert_one(collection_name=collection_name,
+                                            epoch_time=epoch_time,
+                                            type=TimeSeriesTypes.STATISTICS,
+                                            te=fun_test.get_current_test_case_execution_id(),
+                                            t=self.collector.get_type(),
+                                            data=data)
 
-    def terminate(self):
-        self.terminated = True
+    def stop(self):
+        self.stopped = True
 
 
 class StatisticsManager(object):
@@ -64,16 +79,19 @@ class StatisticsManager(object):
         self.collectors[collector_id] = collector
         return collector_id
 
-    def start(self):
+    def start_all(self):
         for collector_id, collector in self.collectors.iteritems():
             t = CollectorWorker(collector_id=collector_id, collector=collector)
             t.start()
             self.collector_threads[collector_id] = t
 
-    def run(self):
-        pass
+    def start(self, collector_id):
+        t = CollectorWorker(collector_id=collector_id, collector=self.collectors[collector_id])
+        t.start()
+        self.collector_threads[collector_id] = t
 
-
+    def stop(self, collector_id):
+        self.collector_threads[collector_id].stop()
 
 if __name__ == "__main__":
     from lib.fun.fs import Fs
@@ -91,4 +109,4 @@ if __name__ == "__main__":
     sm = StatisticsManager()
     sc = StatisticsCollector(collector=fs_obj, category=StatisticsCategory.FS_SYSTEM, type=Fs.StatisticsType.BAM)
     collector_id = sm.register_collector(collector=sc)
-    sm.start()
+    sm.start_all()

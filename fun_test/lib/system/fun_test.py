@@ -268,6 +268,7 @@ class FunTest:
         self.version = "1"
         self.determine_version()
         self.asset_manager = None
+        self.statistics_manager = None
         self.time_series_manager = None
         self.build_parameters = {}
         self._prepare_build_parameters()
@@ -297,6 +298,9 @@ class FunTest:
         self.started_epoch_time = get_current_epoch_time()
         self.time_series_buffer = {0: ""}
         self.checkpoints = {}
+
+    def get_current_test_case_execution_id(self):
+        return self.current_test_case_execution_id
 
     def enable_time_series(self, enable=True):
         self.time_series_enabled = enable
@@ -676,6 +680,13 @@ class FunTest:
         if not self.asset_manager:
             self.asset_manager = AssetManager()
         return self.asset_manager
+
+
+    def get_statistics_manager(self):
+        from lib.utilities.statistics_manager import StatisticsManager
+        if not self.statistics_manager:
+            self.statistics_manager = StatisticsManager()
+        return self.statistics_manager
 
     def get_mongo_db_manager(self):
         from lib.utilities.mongo_db_manager import MongoDbManager

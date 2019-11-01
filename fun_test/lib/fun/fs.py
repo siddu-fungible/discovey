@@ -8,7 +8,8 @@ from lib.utilities.netcat import Netcat
 from lib.system.utils import ToDictMixin
 from lib.host.apc_pdu import ApcPdu
 from fun_settings import STASH_DIR
-from fun_global import Codes
+from fun_global import Codes, get_current_epoch_time
+from lib.utilities.statistics_manager import StatisticsCollector, StatisticsCategory
 
 from threading import Thread
 from datetime import datetime
@@ -1494,7 +1495,27 @@ class Fs(object, ToDictMixin):
         self.cleanup_attempted = False
         self.STATISTICS_COLLECTOR_MAP = {self.StatisticsType.BAM: self.bam}
         self.already_deployed = already_deployed
+        self.statistics_collectors = {}
         fun_test.register_fs(self)
+
+    def start_statistics_collection(self, statistics_type=None):
+        statistics_manager = fun_test.get_statistics_manager()
+        for st, collector_id in self.statistics_collectors.iteritems():
+            if st is not None and st is not statistics_type:
+                continue
+            statistics_manager.start(collector_id=collector_id)
+
+    def stop_statistics_collection(self, statistics_type=None):
+        statistics_manager = fun_test.get_statistics_manager()
+        for st, collector_id in self.statistics_collectors.iteritems():
+            if st is not None and st is not statistics_type:
+                continue
+            statistics_manager.stop(collector_id=collector_id)
+
+    def register_statistics(self, statistics_type):
+        statistics_manager = fun_test.get_statistics_manager()
+        collector = StatisticsCollector(collector=self, category=StatisticsCategory.FS_SYSTEM, type=self.StatisticsType.BAM)
+        self.statistics_collectors[statistics_type] = statistics_manager.register_collector(collector=collector)
 
     def get_context(self):
         return self.context
@@ -1887,7 +1908,7 @@ class Fs(object, ToDictMixin):
             cmd = "stats/resource/bam"
             stats = dpc_client.json_execute(verb="peek", data=cmd, command_duration=command_duration)
             result[f1_index] = stats
-        return result
+        return result, get_current_epoch_time()
 
     def bmc_initialize(self):
         bmc = self.get_bmc(disable_f1_index=self.disable_f1_index)
