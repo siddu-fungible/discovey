@@ -78,11 +78,11 @@ table {
 }
 
 .test-case-panel {
-  height: auto;
+  height: 400px;
 }
 
 .checkpoint-panel {
-  height: auto;
+  height: 400px;
 }
 
 .logs-panel {

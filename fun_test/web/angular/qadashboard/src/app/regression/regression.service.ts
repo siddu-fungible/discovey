@@ -209,8 +209,8 @@ getPrettyLocalizeTime(t) {
     }))
   }
 
-  testCaseTimeSeries(suiteExecutionId, testCaseExecutionId, checkpointIndex?: null, minCheckpointIndex?: null, maxCheckpointIndex?: null) {
-    let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}/${testCaseExecutionId}`;
+  testCaseTimeSeries(suiteExecutionId, testCaseExecutionId?: null, checkpointIndex?: null, minCheckpointIndex?: null, maxCheckpointIndex?: null) {
+    let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}`;
     let params = [];
     if (checkpointIndex !== null) {
       params.push(["checkpoint_index", checkpointIndex]);
@@ -219,7 +219,10 @@ getPrettyLocalizeTime(t) {
         params.push(["min_checkpoint_index", minCheckpointIndex]);
       }
       if (maxCheckpointIndex !== null) {
-        params.push(["max_checkpoint_index", maxCheckpointIndex])
+        params.push(["max_checkpoint_index", maxCheckpointIndex]);
+      }
+      if (testCaseExecutionId !== null) {
+        params.push(["test_case_execution_id", testCaseExecutionId]);
       }
     }
     let queryParamString = this.commonService.queryParamsToString(params);
@@ -235,11 +238,14 @@ getPrettyLocalizeTime(t) {
     }))
   }
 
-  testCaseTimeSeriesLogs(suiteExecutionId, testCaseExecutionId, checkpointIndex?: null) {
-    let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}/${testCaseExecutionId}`;
+  testCaseTimeSeriesLogs(suiteExecutionId, testCaseExecutionId?: null, checkpointIndex?: null) {
+    let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}`;
     url += `?type=60`;
     if (checkpointIndex !== null) {
       url += `&checkpoint_index=${checkpointIndex}`;
+    }
+    if (testCaseExecutionId !== null) {
+      url += `&test_case_execution_id=${testCaseExecutionId}`;
     }
     return this.apiService.get(url).pipe(switchMap(response => {
       return of(response.data);
@@ -256,9 +262,13 @@ getPrettyLocalizeTime(t) {
     }))
   }
 
-  testCaseTimeSeriesCheckpoints(suiteExecutionId, testCaseExecutionId) {
-    let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}/${testCaseExecutionId}`;
+  testCaseTimeSeriesCheckpoints(suiteExecutionId, testCaseExecutionId?: null) {
+    let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}`;
     url += `?type=80`;
+    if (testCaseExecutionId) {
+      url += `&test_case_execution_id=${testCaseExecutionId}`;
+    }
+
     return this.apiService.get(url).pipe(switchMap(response => {
       return of(response.data);
     }), catchError (error => {

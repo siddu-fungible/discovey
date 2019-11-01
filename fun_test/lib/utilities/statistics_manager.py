@@ -49,7 +49,6 @@ class CollectorWorker(Thread):
         while not fun_test.closed and not self.stopped:
             collector_instance = self.collector.collector
             result = collector_instance.statistics_dispatcher(self.collector.type, **self.collector.kwargs)
-            fun_test.sleep(seconds=self.interval_in_seconds, message="", no_log=True)
             if self.collector.storage_db:
                 # result = self.collector.storage_db_handler(result)
                 collection_name = fun_test.get_time_series_collection_name()
@@ -62,6 +61,8 @@ class CollectorWorker(Thread):
                                             te=fun_test.get_current_test_case_execution_id(),
                                             t=self.collector.get_type(),
                                             data=data)
+            fun_test.sleep(seconds=self.interval_in_seconds, message="", no_log=True)
+
 
     def stop(self):
         self.stopped = True

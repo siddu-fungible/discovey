@@ -531,7 +531,7 @@ def re_run_job(request):
 
 
 @api_safe_json_response
-def test_case_time_series(request, suite_execution_id, test_case_execution_id):
+def test_case_time_series(request, suite_execution_id):
     result = None
     if request.method == "GET":
         type = request.GET.get("type", None)
@@ -553,7 +553,8 @@ def test_case_time_series(request, suite_execution_id, test_case_execution_id):
         if type is not None:
             if type == TimeSeriesTypes.LOG:
                 query["type"] = {"$or": [TimeSeriesTypes.LOG, TimeSeriesTypes.CHECKPOINT]}
-        query["data.te"] = int(test_case_execution_id)
+        test_case_execution_id = request.GET.get("test_case_execution_id", None)
+        query["te"] = int(test_case_execution_id)
         if checkpoint_index is not None:
             query["data.checkpoint_index"] = int(checkpoint_index)
 
@@ -576,6 +577,8 @@ def test_case_time_series(request, suite_execution_id, test_case_execution_id):
         if collection:
             result = list(collection.find(query))
     return result
+
+
 
 
 @api_safe_json_response

@@ -907,17 +907,17 @@ class FunTest:
     def add_time_series_log(self, data, epoch_time=None):
         if not epoch_time:
             epoch_time = get_current_epoch_time()
-        data["te"] = self.current_test_case_execution_id
         self.add_time_series_document(collection_name=self.get_time_series_collection_name(),
                                       epoch_time=epoch_time,
                                       type=TimeSeriesTypes.LOG,
+                                      te=self.current_test_case_execution_id,
                                       data=data)
 
     def add_time_series_checkpoint(self, data):
-        data["te"] = self.current_test_case_execution_id
         self.add_time_series_document(collection_name=self.get_time_series_collection_name(),
                                       epoch_time=get_current_epoch_time(),
                                       type=TimeSeriesTypes.CHECKPOINT,
+                                      te=self.current_test_case_execution_id,
                                       data=data)
 
     def add_time_series_context(self, context):
