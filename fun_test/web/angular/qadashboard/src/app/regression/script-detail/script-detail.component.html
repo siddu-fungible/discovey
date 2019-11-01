@@ -93,7 +93,7 @@
           <tr *ngFor="let testCaseExecution of testCaseExecutions; let index=index"
               [ngClass]="{'selected-row': currentTestCaseExecution?.test_case_id === testCaseExecution.test_case_id }">
             <td>
-                <span class="pseudo-anchor"
+                <span *ngIf="testCaseExecution.result !== 'NOT_RUN'" class="pseudo-anchor"
                       (click)="onTestCaseIdClick(index, testCaseExecution.execution_id)">{{ testCaseExecution.test_case_id }}
                 </span>
             </td>

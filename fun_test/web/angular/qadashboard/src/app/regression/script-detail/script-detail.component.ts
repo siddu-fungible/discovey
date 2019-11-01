@@ -128,6 +128,7 @@ export class ScriptDetailComponent implements OnInit {
         testCaseExecution["relative_started_epoch_time"] = testCaseExecution["started_epoch_time"] - this.scriptRunTime.started_epoch_time;
 
       });
+      this.updateScriptExecutionInfo();
       return of(true);
     }));
 
