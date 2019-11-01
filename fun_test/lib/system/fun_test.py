@@ -268,6 +268,7 @@ class FunTest:
         self.version = "1"
         self.determine_version()
         self.asset_manager = None
+        self.statistics_manager = None
         self.time_series_manager = None
         self.build_parameters = {}
         self._prepare_build_parameters()
@@ -297,6 +298,9 @@ class FunTest:
         self.started_epoch_time = get_current_epoch_time()
         self.time_series_buffer = {0: ""}
         self.checkpoints = {}
+
+    def get_current_test_case_execution_id(self):
+        return self.current_test_case_execution_id
 
     def enable_time_series(self, enable=True):
         self.time_series_enabled = enable
@@ -677,6 +681,13 @@ class FunTest:
             self.asset_manager = AssetManager()
         return self.asset_manager
 
+
+    def get_statistics_manager(self):
+        from lib.utilities.statistics_manager import StatisticsManager
+        if not self.statistics_manager:
+            self.statistics_manager = StatisticsManager()
+        return self.statistics_manager
+
     def get_mongo_db_manager(self):
         from lib.utilities.mongo_db_manager import MongoDbManager
         if not self.time_series_manager:
@@ -896,17 +907,17 @@ class FunTest:
     def add_time_series_log(self, data, epoch_time=None):
         if not epoch_time:
             epoch_time = get_current_epoch_time()
-        data["te"] = self.current_test_case_execution_id
         self.add_time_series_document(collection_name=self.get_time_series_collection_name(),
                                       epoch_time=epoch_time,
                                       type=TimeSeriesTypes.LOG,
+                                      te=self.current_test_case_execution_id,
                                       data=data)
 
     def add_time_series_checkpoint(self, data):
-        data["te"] = self.current_test_case_execution_id
         self.add_time_series_document(collection_name=self.get_time_series_collection_name(),
                                       epoch_time=get_current_epoch_time(),
                                       type=TimeSeriesTypes.CHECKPOINT,
+                                      te=self.current_test_case_execution_id,
                                       data=data)
 
     def add_time_series_context(self, context):
@@ -1114,13 +1125,14 @@ class FunTest:
         if context:
             context.write(str(message) + "\n")
 
-    def sleep(self, message, seconds=5, context=None):
+    def sleep(self, message, seconds=5, context=None, no_log=False):
         outer_frames = inspect.getouterframes(inspect.currentframe())
         calling_module = self._get_calling_module(outer_frames)
-        message = "zzz...: Sleeping for :" + str(seconds) + "s : " + message
-        self._print_log_green(message=message, calling_module=calling_module, context=context)
-        if self.fun_xml_obj:
-            self.fun_xml_obj.log(log=message, newline=True)
+        if not no_log:
+            message = "zzz...: Sleeping for :" + str(seconds) + "s : " + message
+            self._print_log_green(message=message, calling_module=calling_module, context=context)
+            if self.fun_xml_obj:
+                self.fun_xml_obj.log(log=message, newline=True)
         time.sleep(seconds)
 
     def safe(self, the_function):
