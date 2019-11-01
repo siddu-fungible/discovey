@@ -369,7 +369,9 @@ class Rocetools:
         self.host.disconnect()
 
     def ibv_devinfo(self):
-        device_name = Rocetools.get_rdma_device
+        temp = self.get_rdma_device()
+        device_name = temp.strip()
         device_info_raw = self.host.command("ibv_devinfo -d {} -v".format(device_name))
-        device_info_list = device_info_raw.replace("\t", "").split("\n")
+        device_info_list = device_info_raw.replace("\t", "").replace("\r", "").split("\n")
+        self.host.disconnect()
         return device_info_list

@@ -1052,6 +1052,8 @@ class IbWriteScale(FunTestCase):
             max_cqe_in_test = min(f10_max_cqe, f11_max_cqe)
             fun_test.critical("Max CQE on F10 : {} & F11 : {}".format(f10_max_cqe, f11_max_cqe))
             fun_test.add_checkpoint("Max CQE mismatch", "FAILED", f10_max_cqe, f11_max_cqe)
+        else:
+            max_cqe_in_test = f10_max_cqe
 
         size = 1
         for test in test_type_list:
