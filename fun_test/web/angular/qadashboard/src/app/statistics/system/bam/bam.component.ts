@@ -14,8 +14,12 @@ export class BamComponent implements OnInit, OnChanges {
   data: any = null;
   parsedData: any = {};
   suitExecutionId: number = null;
-  constructor(private regressionService: RegressionService, private loggerService: LoggerService) {
+  bmUsagePerClusterPoolNames: string [] = ["default_alloc_pool", "nu_erp_fcp_pool"];
+  bmUsagePerClusterPoolKeys: string [] = ["usage_percent"];
+  clusterIndexes = Array.from(Array(8).keys());
+  detectedF1Indexes = new Set();
 
+  constructor(private regressionService: RegressionService, private loggerService: LoggerService) {
     this.driver = of(true).pipe(switchMap(response => {
      return this.regressionService.testCaseTimeSeries(this.suitExecutionId, null, null, null, null, 100, 1000);
 
@@ -33,33 +37,39 @@ export class BamComponent implements OnInit, OnChanges {
   parseData(data) {
     this.data.forEach(oneRecord => {
       let oneRecordData = oneRecord.data;
+
       Object.keys(oneRecordData).forEach(f1Index => {
+        this.detectedF1Indexes.add(f1Index);
         let dataForF1Index = oneRecordData[f1Index];
         if (!this.parsedData.hasOwnProperty(f1Index)) {
           this.parsedData[f1Index] = {};
         }
-        let poolNames = ["default_alloc_pool"];
-        let poolKeys = ["usage_percent"];
-        let clusterIndexes = Array.from(Array(8).keys());
-        clusterIndexes.forEach(clusterIndex => {
-          let clusterIndexString = `cluster_${clusterIndex}`;
+        let poolNames = this.bmUsagePerClusterPoolNames;
+        let poolKeys = this.bmUsagePerClusterPoolKeys;
+
+
           poolNames.forEach(poolName => {
             if (!this.parsedData[f1Index].hasOwnProperty(poolName)) {
               this.parsedData[f1Index][poolName] = {};
             }
             poolKeys.forEach(poolKey => {
               if (!this.parsedData[f1Index][poolName].hasOwnProperty(poolKey)) {
-                this.parsedData[f1Index][poolName][poolKey] = [];
+                this.parsedData[f1Index][poolName][poolKey] = [];  // store array of cluster data here
+                this.clusterIndexes.forEach(clusterIndex => {
+                  this.parsedData[f1Index][poolName][poolKey].push({name: `PC-${clusterIndex}`, data: []});
+                })
               }
-              this.parsedData[f1Index][poolName][poolKey].push(oneRecordData[f1Index].bm_usage_per_cluster[clusterIndexString][poolName][poolKey]);
+              this.clusterIndexes.forEach(clusterIndex => {
+                let clusterIndexString = `cluster_${clusterIndex}`;
+                let element =
+                this.parsedData[f1Index][poolName][poolKey][clusterIndex].data.push(oneRecordData[f1Index].bm_usage_per_cluster[clusterIndexString][poolName][poolKey]);
+              });
             })
           })
-        })
-
-
 
 
       });
+
       let j = 0;
     });
   }
