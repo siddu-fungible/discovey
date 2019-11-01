@@ -31,8 +31,8 @@ class MyScript(FunTestScript):
         for k, v in config_dict.iteritems():
             setattr(self, k, v)
 
-        f1_0_boot_args = 'cc_huid=3 sku=SKU_FS1600_0 app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303 --mtracker'
-        f1_1_boot_args = 'cc_huid=2 sku=SKU_FS1600_1 app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303 --mtracker'
+        f1_0_boot_args = 'cc_huid=3 sku=SKU_FS1600_0 app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303'
+        f1_1_boot_args = 'cc_huid=2 sku=SKU_FS1600_1 app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303'
 
         if job_inputs:
             if "disable_f1_index" in job_inputs:
@@ -269,7 +269,8 @@ class FunTestCase1(FunTestCase):
 
         # Traffic
         self.methods = {"crypto": crypto, "zip": zip_deflate, "rcnvme": rcnvme, "fio": fio}
-        self.threaded_apps = {"busy_loop": "soak_flows_busy_loop_10usecs", "memcpy_1MB":"soak_flows_memcpy_1MB_non_coh"}
+        self.threaded_apps = {"busy_loop": "soak_flows_busy_loop_10usecs"}
+        # self.threaded_apps = {"busy_loop": "soak_flows_busy_loop_10usecs", "memcpy_1MB":"soak_flows_memcpy_1MB_non_coh"}
 
         if self.duration == "1m":
             self.test_duration = 60
