@@ -1402,25 +1402,21 @@ class MetricParser():
         return self.result
 
     def set_crypto_metrics_dict(self, crypto_json, input_app, date_time):
-        input_algorithm = crypto_json["alg"]
-        input_operation = crypto_json["operation"]
         pkt_size_json = crypto_json["pktsize"]
         ops_json = crypto_json["ops"] if "ops" in crypto_json else None
         bandwidth_json = crypto_json["throughput"]
 
-        input_pkt_size = int(pkt_size_json["value"])
         output_ops_per_sec = int(ops_json["value"]) if ops_json else -1
         output_throughput = float(bandwidth_json["value"])
-        unit = bandwidth_json["units"]
 
         self.metrics["input_app"] = input_app
-        self.metrics["input_algorithm"] = input_algorithm
-        self.metrics["input_operation"] = input_operation
-        self.metrics["input_pkt_size"] = input_pkt_size
+        self.metrics["input_algorithm"] = crypto_json["alg"]
+        self.metrics["input_operation"] = crypto_json["operation"]
+        self.metrics["input_pkt_size"] = int(pkt_size_json["value"])
         self.metrics["output_ops_per_sec"] = output_ops_per_sec
         self.metrics["output_throughput"] = output_throughput
-        self.metrics["output_ops_per_sec_unit"] = "ops"
-        self.metrics["output_throughput_unit"] = unit
+        self.metrics["output_ops_per_sec_unit"] = PerfUnit.UNIT_OPS
+        self.metrics["output_throughput_unit"] = bandwidth_json["units"]
         d = self.metrics_to_dict(metrics=self.metrics, result=self.status, date_time=date_time)
         self.result["data"].append(d)
 
