@@ -1037,7 +1037,8 @@ class IbWriteScale(FunTestCase):
                     break
         else:
             io_type = "Sequential"
-            qp_list = fun_test.shared_variables["qp_list"]
+
+        qp_list = fun_test.shared_variables["qp_list"]
 
         # Get max_cqe to compute tx_depth required for scaling
         f10_device_info = f10_host_roce.ibv_devinfo()
