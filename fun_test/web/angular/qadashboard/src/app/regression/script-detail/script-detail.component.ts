@@ -58,6 +58,10 @@ export class ScriptDetailComponent implements OnInit {
               private modalService: NgbModal,
               private service: ScriptDetailService
   ) {
+    let sc = new StatisticsCategory();
+    sc.display_name = "System";
+    sc.name = "system";
+    let ssc = new StatisticsSubCategory();
 
   }
   suiteExecutionId: number = 10000;
