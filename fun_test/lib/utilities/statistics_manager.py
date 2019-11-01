@@ -1,6 +1,7 @@
 from lib.system.fun_test import fun_test
 from fun_global import Codes, TimeSeriesTypes
 from threading import Thread
+from bson import json_util
 
 
 
@@ -47,15 +48,16 @@ class CollectorWorker(Thread):
         fun_test.log("Starting collector: {}".format(self.collector_id))
         while not fun_test.closed and not self.stopped:
             collector_instance = self.collector.collector
-            result, epoch_time = collector_instance.statistics_dispatcher(self.collector.type, **self.collector.kwargs)
+            result = collector_instance.statistics_dispatcher(self.collector.type, **self.collector.kwargs)
             fun_test.sleep(seconds=self.interval_in_seconds, message="", no_log=True)
             if self.collector.storage_db:
                 # result = self.collector.storage_db_handler(result)
                 collection_name = fun_test.get_time_series_collection_name()
-                data = result
+                data = json_util.loads(json_util.dumps(result["data"]))  #TODO
+
                 mongo_db_manager = fun_test.get_mongo_db_manager()
                 mongo_db_manager.insert_one(collection_name=collection_name,
-                                            epoch_time=epoch_time,
+                                            epoch_time=result["epoch_time"],
                                             type=TimeSeriesTypes.STATISTICS,
                                             te=fun_test.get_current_test_case_execution_id(),
                                             t=self.collector.get_type(),

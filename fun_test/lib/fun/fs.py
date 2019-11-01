@@ -1917,15 +1917,21 @@ class Fs(object, ToDictMixin):
         return True
 
     def bam(self, command_duration=2):
-        result = {}
+        result = {"status": False}
+        f1_level_result = {}
         for f1_index in range(self.NUM_F1S):
             if f1_index == self.disable_f1_index:
                 continue
             dpc_client = self.get_dpc_client(f1_index=f1_index, auto_disconnect=True, statistics=True)
             cmd = "stats/resource/bam"
-            stats = dpc_client.json_execute(verb="peek", data=cmd, command_duration=command_duration)
-            result[f1_index] = stats
-        return result, get_current_epoch_time()
+            dpc_result = dpc_client.json_execute(verb="peek", data=cmd, command_duration=command_duration)
+            if dpc_result["status"]:
+                f1_level_result[f1_index] = dpc_result["data"]
+        result["data"] = f1_level_result
+        if f1_level_result:
+            result["status"] = True
+        # fun_test.log("BAM result: {} {}".format(result, f1_level_result))
+        return result
 
     def bmc_initialize(self):
         bmc = self.get_bmc(disable_f1_index=self.disable_f1_index)
@@ -2033,10 +2039,12 @@ class Fs(object, ToDictMixin):
         return self.get_bmc().get_uart_log_file(f1_index=f1_index, post_fix=post_fix)
 
     def statistics_dispatcher(self, statistics_type, **kwargs):
-        result = {"status": False, "data": None}
+        result = {"status": False, "data": None, "epoch_time": get_current_epoch_time()}
         if statistics_type == self.StatisticsType.BAM:
-            result["data"] = self.bam(**kwargs)
-            result["status"] = True
+            bam_result = self.bam(**kwargs)
+            if bam_result["status"]:
+                result["data"] = bam_result["data"]
+                result["status"] = True
         return result
 
 if __name__ == "__main2__":
