@@ -1039,15 +1039,29 @@ class IbWriteScale(FunTestCase):
             io_type = "Sequential"
             qp_list = fun_test.shared_variables["qp_list"]
 
+        # Get max_cqe to compute tx_depth required for scaling
+        f10_device_info = f10_host_roce.ibv_devinfo()
+        f11_device_info = f11_host_roce.ibv_devinfo()
+        for devinfo in f10_device_info:
+            if "max_cqe" in devinfo:
+                f10_max_cqe = devinfo.split(":")[1]
+        for devinfo in f11_device_info:
+            if "max_cqe" in devinfo:
+                f11_max_cqe = devinfo.split(":")[1]
+        if f10_max_cqe != f11_max_cqe:
+            max_cqe_in_test = min(f10_max_cqe, f11_max_cqe)
+            fun_test.critical("Max CQE on F10 : {} & F11 : {}".format(f10_max_cqe, f11_max_cqe))
+            fun_test.add_checkpoint("Max CQE mismatch", "FAILED", f10_max_cqe, f11_max_cqe)
+
         size = 1
         for test in test_type_list:
             for qp in qp_list:
                 f10_pid_there = 0
                 f11_pid_there = 0
-                # Compute the tx_depth required for scaling. CQ depth max is 32767 & 16383 sq/rq depth from funrdma.
+                # Compute the tx_depth required for scaling.
                 # Default tx_depth = 128 from ib_write_bw
                 tx_depth_default = 128
-                cq_depth_max_supported = 32767
+                cq_depth_max_supported = max_cqe_in_test
                 cq_depth_required = 128 * qp
 
                 # Reduce the tx_depth for scaling and avoid CQ allocation failure

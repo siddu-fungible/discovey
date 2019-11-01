@@ -44,6 +44,7 @@ class Rocetools:
         if "funrdma0" in ibv_dev:
             fun_test.log("Funrdma device present")
             ibdevice = "funrdma0"
+        return ibdevice
 
     def srping_test(self, server_ip=None, debug=False, timeout=120, **kwargs):
         self.host.command("export LD_LIBRARY_PATH={}".format(LD_LIBRARY_PATH))
@@ -367,3 +368,8 @@ class Rocetools:
                                    timeout=600)
         self.host.disconnect()
 
+    def ibv_devinfo(self):
+        device_name = Rocetools.get_rdma_device
+        device_info_raw = self.host.command("ibv_devinfo -d {} -v".format(device_name))
+        device_info_list = device_info_raw.replace("\t", "").split("\n")
+        return device_info_list
