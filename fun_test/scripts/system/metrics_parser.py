@@ -99,7 +99,8 @@ class MetricParser():
             return self.ec_vol_performance(logs=logs, date_time=date_time, platform=platform)
         elif "VoltestPerformance" in model_name:
             return self.voltest_performance(logs=logs, date_time=date_time, platform=platform)
-        elif "TeraMarkCrypto" in model_name or "TeraMarkMultiClusterCrypto" in model_name:
+        elif "TeraMarkCrypto" in model_name or "TeraMarkMultiClusterCrypto" in model_name or "CryptoFastPath" in \
+                model_name:
             return self.teramark_crypto(logs=logs, date_time=date_time, platform=platform, model_name=model_name)
         elif "TeraMarkJpeg" in model_name:
             return self.teramark_jpeg(logs=logs, date_time=date_time, platform=platform)
@@ -1400,6 +1401,25 @@ class MetricParser():
         fun_test.log("Result :{}".format(self.result))
         return self.result
 
+    def set_crypto_metrics_dict(self, crypto_json, input_app, date_time):
+        pkt_size_json = crypto_json["pktsize"]
+        ops_json = crypto_json["ops"] if "ops" in crypto_json else None
+        bandwidth_json = crypto_json["throughput"]
+
+        output_ops_per_sec = int(ops_json["value"]) if ops_json else -1
+        output_throughput = float(bandwidth_json["value"])
+
+        self.metrics["input_app"] = input_app
+        self.metrics["input_algorithm"] = crypto_json["alg"]
+        self.metrics["input_operation"] = crypto_json["operation"]
+        self.metrics["input_pkt_size"] = int(pkt_size_json["value"])
+        self.metrics["output_ops_per_sec"] = output_ops_per_sec
+        self.metrics["output_throughput"] = output_throughput
+        self.metrics["output_ops_per_sec_unit"] = PerfUnit.UNIT_OPS
+        self.metrics["output_throughput_unit"] = bandwidth_json["units"]
+        d = self.metrics_to_dict(metrics=self.metrics, result=self.status, date_time=date_time)
+        self.result["data"].append(d)
+
     def teramark_crypto(self, logs, date_time, platform, model_name):
         self.initialize()
         self.metrics["input_platform"] = platform
@@ -1408,60 +1428,25 @@ class MetricParser():
             if m:
                 fun_test.log(line)
                 self.match_found = True
+                self.status = RESULTS["PASSED"]
                 crypto_json = json.loads(m.group("crypto_json"))
                 input_test = crypto_json["test"]
                 if model_name == "TeraMarkCryptoPerformance":
                     if "api" in input_test:
                         input_app = "crypto_api_perf"
-                        input_algorithm = crypto_json["alg"]
-                        input_operation = crypto_json["operation"]
-                        pkt_size_json = crypto_json["pktsize"]
-                        ops_json = crypto_json["ops"] if "ops" in crypto_json else None
-                        bandwidth_json = crypto_json["throughput"]
-
-                        input_pkt_size = int(pkt_size_json["value"])
-                        output_ops_per_sec = int(ops_json["value"]) if ops_json else -1
-                        output_throughput = float(bandwidth_json["value"])
-                        unit = bandwidth_json["units"]
-
-                        self.metrics["input_app"] = input_app
-                        self.metrics["input_algorithm"] = input_algorithm
-                        self.metrics["input_operation"] = input_operation
-                        self.metrics["input_pkt_size"] = input_pkt_size
-                        self.metrics["output_ops_per_sec"] = output_ops_per_sec
-                        self.metrics["output_throughput"] = output_throughput
-                        self.metrics["output_ops_per_sec_unit"] = "ops"
-                        self.metrics["output_throughput_unit"] = unit
-                        d = self.metrics_to_dict(metrics=self.metrics, result=self.status, date_time=date_time)
-                        self.result["data"].append(d)
+                        self.set_crypto_metrics_dict(crypto_json=crypto_json, input_app=input_app, date_time=date_time)
                 elif model_name == "TeraMarkMultiClusterCryptoPerformance":
                     if "raw" in input_test:
                         input_app = "crypto_raw_speed"
-                        input_algorithm = crypto_json["alg"]
-                        input_operation = crypto_json["operation"]
                         input_key_size = int(crypto_json["key_size"]) if "key_size" in crypto_json else -1
-                        pkt_size_json = crypto_json["pktsize"]
-                        ops_json = crypto_json["ops"] if "ops" in crypto_json else None
-                        bandwidth_json = crypto_json["throughput"]
-
-                        input_pkt_size = int(pkt_size_json["value"])
-                        output_ops_per_sec = int(ops_json["value"]) if ops_json else -1
-                        output_throughput = float(bandwidth_json["value"])
-                        unit = bandwidth_json["units"]
-
-                        self.metrics["input_app"] = input_app
                         self.metrics["input_key_size"] = input_key_size
-                        self.metrics["input_algorithm"] = input_algorithm
-                        self.metrics["input_operation"] = input_operation
-                        self.metrics["input_pkt_size"] = input_pkt_size
-                        self.metrics["output_ops_per_sec"] = output_ops_per_sec
-                        self.metrics["output_throughput"] = output_throughput
-                        self.metrics["output_ops_per_sec_unit"] = "ops"
-                        self.metrics["output_throughput_unit"] = unit
-                        d = self.metrics_to_dict(metrics=self.metrics, result=self.status, date_time=date_time)
-                        self.result["data"].append(d)
-
-        self.status = RESULTS["PASSED"]
+                        self.set_crypto_metrics_dict(crypto_json=crypto_json, input_app=input_app, date_time=date_time)
+                elif model_name == "CryptoFastPathPerformance":
+                    if "fastpath" in input_test:
+                        input_app = "crypto_fast_path"
+                        input_key_size = int(crypto_json["key_size"]) if "key_size" in crypto_json else -1
+                        self.metrics["input_key_size"] = input_key_size
+                        self.set_crypto_metrics_dict(crypto_json=crypto_json, input_app=input_app, date_time=date_time)
         self.result["match_found"] = self.match_found
         self.result["status"] = self.status == RESULTS["PASSED"]
         fun_test.log("Result :{}".format(self.result))
