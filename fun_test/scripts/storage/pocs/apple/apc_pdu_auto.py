@@ -96,6 +96,8 @@ class ApcPduTestcase(FunTestCase):
                 self.after_runsc_up_host_connect_interval = job_inputs["after_runsc_up_host_connect_interval"]
             if "check_portal" in job_inputs:
                 self.check_portal = job_inputs["check_portal"]
+            if "apc_pdu_reboot_machine" in job_inputs:
+                self.apc_pdu_reboot_machine = job_inputs["apc_pdu_reboot_machine"]
 
     def run(self):
         '''
@@ -118,7 +120,8 @@ class ApcPduTestcase(FunTestCase):
 
             fun_test.add_checkpoint(checkpoint="ITERATION : {} out of {}".format(pc_no + 1, self.iterations))
 
-            self.apc_pdu_reboot()
+            if self.apc_pdu_reboot_machine:
+                self.apc_pdu_reboot()
             self.come_handle.destroy()
             self.bmc_handle.destroy()
 
@@ -570,7 +573,7 @@ class ApcPduTestcase(FunTestCase):
     def create_vol_using_api(self):
         self.portal_username = 'admin'
         self.portal_password = 'password'
-        self.apiprotocol = "https"
+        self.apiprotocol = "http"
         self.api_server_port = 50220
 
         self.http_basic_auth = requests.auth.HTTPBasicAuth(self.portal_username, self.portal_password)
