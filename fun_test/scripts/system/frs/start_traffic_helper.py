@@ -131,6 +131,7 @@ def le_firewall(run_time, new_image, just_kill=False):
             tmp_run_time = 30
             cmd = '''python run_nu_transit_only.py --inputs '{"speed":"SPEED_100G", "run_time":%s, "initiate":true}' ''' % tmp_run_time
             initiate_or_run_le_firewall(cmd, vm_details)
+            fun_test.sleep("to check if le -firewall has started ono vm: {}".format(vm), seconds=10)
             running = check_if_le_firewall_is_running(vm_details)
             if running:
                 fun_test.test_assert(running, "Le initiate started on the VM: {}".format(vm))
