@@ -91,6 +91,7 @@ export class ScriptDetailComponent implements OnInit {
   selectedStatisticsCategory = null;
   selectedStatisticsSubCategory = null;
   selectedStatistics: any [] = null;
+  scriptExecutionInfo = {};
 
   ngOnInit() {
 
@@ -202,6 +203,8 @@ export class ScriptDetailComponent implements OnInit {
     this.currentCheckpointIndex = null;
     this.showLogsPanel = false;
     this.currentTestCaseExecution = this.testCaseExecutions[testCaseExecutionIndex];
+    this.updateScriptExecutionInfo();
+
     this.status = "Fetching checkpoints";
     this.fetchCheckpoints(this.currentTestCaseExecution, this.suiteExecutionId).subscribe(response => {
       this.status = null;
@@ -274,6 +277,8 @@ export class ScriptDetailComponent implements OnInit {
     this.showContext(contextId);
     this._restoreCheckpointDefaults();
     this.currentCheckpointIndex = checkpointIndex;
+    this.updateScriptExecutionInfo();
+
     //this.showTestCasePanel = false;
     this.showLogsPanel = true;
     this.showCheckpointPanel = true;
@@ -490,6 +495,7 @@ export class ScriptDetailComponent implements OnInit {
     if (!this.selectedStatistics) {
       this.selectedStatistics = [];
     }
+
     this.selectedStatistics.push({statisticsCategory: this.selectedStatisticsCategory,
       statisticsSubCategory: this.selectedStatisticsSubCategory});
     this.selectedStatisticsCategory = null;
@@ -500,5 +506,12 @@ export class ScriptDetailComponent implements OnInit {
   deleteSelectedStatisticClick(index) {
     this.selectedStatistics.splice(index, 1);
     this.selectedStatistics = [...this.selectedStatistics];
+  }
+
+  updateScriptExecutionInfo() {
+    this.scriptExecutionInfo["suite_execution_id"] = this.suiteExecutionId;
+    this.scriptExecutionInfo["current_test_case_execution"] = this.currentTestCaseExecution;
+    this.scriptExecutionInfo["current_checkpoint_index"] = this.currentCheckpointIndex;
+    this.scriptExecutionInfo = {...this.scriptExecutionInfo};
   }
 }

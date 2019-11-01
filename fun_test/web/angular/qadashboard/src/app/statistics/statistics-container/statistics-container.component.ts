@@ -7,6 +7,7 @@ import {Component, Input, OnChanges, OnInit} from '@angular/core';
 })
 export class StatisticsContainerComponent implements OnInit, OnChanges {
   @Input() statistics: any [];  // {statisticsCategory: , statisticsSubCategory:}
+  @Input() scriptExecutionInfo: any = null;
   constructor() { }
 
   ngOnInit() {
@@ -14,6 +15,7 @@ export class StatisticsContainerComponent implements OnInit, OnChanges {
 
   ngOnChanges() {
     console.log(this.statistics);
+    // fetch data using suite_execution_id
   }
 
 }
