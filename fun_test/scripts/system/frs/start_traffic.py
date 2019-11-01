@@ -226,6 +226,8 @@ class FunTestCase1(FunTestCase):
                 self.collect_stats = job_inputs["collect_stats"]
             if "disable_stats" in job_inputs:
                 self.disable_stats = job_inputs["disable_stats"]
+            if "boot_new_image" in job_inputs:
+                self.boot_new_image = job_inputs["boot_new_image"]
 
         # Create the files
         self.stats_info = {}
