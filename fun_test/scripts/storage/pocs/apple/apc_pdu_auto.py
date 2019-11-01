@@ -105,6 +105,7 @@ class ApcPduTestcase(FunTestCase):
         4. now check for SSD's and NU & HNU ports validation.
         :return:
         '''
+
         for pc_no in range(self.iterations):
             self.pc_no = pc_no
             self.come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
@@ -115,75 +116,74 @@ class ApcPduTestcase(FunTestCase):
                                   ssh_password=self.fs['bmc']['mgmt_ssh_password'])
             self.bmc_handle.set_prompt_terminator(r'# $')
 
-            fun_test.add_checkpoint(checkpoint="ITERATION : {} out of {}".format(pc_no + 1, self.iterations))
+            # fun_test.add_checkpoint(checkpoint="ITERATION : {} out of {}".format(pc_no + 1, self.iterations))
+            #
+            # # self.apc_pdu_reboot()
+            # self.come_handle.destroy()
+            # self.bmc_handle.destroy()
+            #
+            # self.come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
+            #                         ssh_username=self.fs['come']['mgmt_ssh_username'],
+            #                         ssh_password=self.fs['come']['mgmt_ssh_password'])
+            # self.bmc_handle = Bmc(host_ip=self.fs['bmc']['mgmt_ip'],
+            #                       ssh_username=self.fs['bmc']['mgmt_ssh_username'],
+            #                       ssh_password=self.fs['bmc']['mgmt_ssh_password'])
+            # self.bmc_handle.set_prompt_terminator(r'# $')
+            #
+            # fun_test.log("Checking if COMe is UP")
+            # come_up = self.come_handle.ensure_host_is_up(max_wait_time=600)
+            # fun_test.test_assert(come_up, "COMe is UP")
+            #
+            # fun_test.log("Checking if BMC is UP")
+            # bmc_up = self.bmc_handle.ensure_host_is_up(max_wait_time=600)
+            # fun_test.test_assert(bmc_up, "BMC is UP")
+            #
+            # # self.check_come_up_time(expected_minutes=5)
+            #
+            # if self.check_docker:
+            #     self.check_expected_dockers_up()
+            #
+            # if self.check_portal:
+            #     self.check_portal_up()
+            #
+            # # Check if lspci devices are detected
+            # fun_test.log("Check if F1_0 is detected")
+            # self.check_pci_dev(f1=0)
+            #
+            # fun_test.log("Check if F1_1 is detected")
+            # self.check_pci_dev(f1=1)
+            #
+            # if self.check_ssd:
+            #     fun_test.log("Checking if SSD's are Active on F1_0")
+            #     self.check_ssd_status(expected_ssds_up=self.expected_ssds_f1_0, f1=0)
+            #
+            #     fun_test.log("Checking if SSD's are Active on F1_1")
+            #     self.check_ssd_status(expected_ssds_up=self.expected_ssds_f1_1, f1=1)
+            #
+            # if self.check_ports:
+            #     fun_test.log("Checking if NU and HNU port's are active on F1_0")
+            #     expected_ports_up_f1_0 = {'NU': self.expected_nu_ports_f1_0,
+            #                               'HNU': self.expected_hnu_ports_f1_0}
+            #     self.check_nu_ports(f1=0, expected_ports_up=expected_ports_up_f1_0)
+            #
+            #     expected_ports_up_f1_1 = {'NU': self.expected_nu_ports_f1_1,
+            #                               'HNU': self.expected_hnu_ports_f1_1}
+            #     fun_test.log("Checking if NU and HNU port's are active on F1_1")
+            #     self.check_nu_ports(f1=1, expected_ports_up=expected_ports_up_f1_1)
 
-            self.apc_pdu_reboot()
-            self.come_handle.destroy()
-            self.bmc_handle.destroy()
-
-            self.come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
-                                    ssh_username=self.fs['come']['mgmt_ssh_username'],
-                                    ssh_password=self.fs['come']['mgmt_ssh_password'])
-            self.bmc_handle = Bmc(host_ip=self.fs['bmc']['mgmt_ip'],
-                                  ssh_username=self.fs['bmc']['mgmt_ssh_username'],
-                                  ssh_password=self.fs['bmc']['mgmt_ssh_password'])
-            self.bmc_handle.set_prompt_terminator(r'# $')
-
-            fun_test.log("Checking if COMe is UP")
-            come_up = self.come_handle.ensure_host_is_up(max_wait_time=600)
-            fun_test.test_assert(come_up, "COMe is UP")
-
-            fun_test.log("Checking if BMC is UP")
-            bmc_up = self.bmc_handle.ensure_host_is_up(max_wait_time=600)
-            fun_test.test_assert(bmc_up, "BMC is UP")
-
-            # self.check_come_up_time(expected_minutes=5)
-
-            if self.check_docker:
-                self.check_expected_dockers_up()
-
-            if self.check_portal:
-                self.check_portal_up()
-
-            # Check if lspci devices are detected
-            fun_test.log("Check if F1_0 is detected")
-            self.check_pci_dev(f1=0)
-
-            fun_test.log("Check if F1_1 is detected")
-            self.check_pci_dev(f1=1)
-
-            if self.check_ssd:
-                fun_test.log("Checking if SSD's are Active on F1_0")
-                self.check_ssd_status(expected_ssds_up=self.expected_ssds_f1_0, f1=0)
-
-                fun_test.log("Checking if SSD's are Active on F1_1")
-                self.check_ssd_status(expected_ssds_up=self.expected_ssds_f1_1, f1=1)
-
-            if self.check_ports:
-                fun_test.log("Checking if NU and HNU port's are active on F1_0")
-                expected_ports_up_f1_0 = {'NU': self.expected_nu_ports_f1_0,
-                                          'HNU': self.expected_hnu_ports_f1_0}
-                self.check_nu_ports(f1=0, expected_ports_up=expected_ports_up_f1_0)
-
-                expected_ports_up_f1_1 = {'NU': self.expected_nu_ports_f1_1,
-                                          'HNU': self.expected_hnu_ports_f1_1}
-                fun_test.log("Checking if NU and HNU port's are active on F1_1")
-                self.check_nu_ports(f1=1, expected_ports_up=expected_ports_up_f1_1)
-
-            # Todo: remove for loop in the helper script (previously had codded to work parallelly with multiple host,
-            #  now we have to do it serially, so no need of for loops in helper function)
-            # self.wipe_out_cassandra_es_database()
-            # self.restart_fs1600()
             if self.num_hosts:
-                required_hosts_list = self.verify_and_get_required_hosts_list()
-                self.volume_uuid_details = self.create_vol_using_api()
-                self.attach_volumes_to_host(self.volume_uuid_details, required_hosts_list)
+                if pc_no == 0:
+                    required_hosts_list = self.verify_and_get_required_hosts_list()
+                    self.volume_uuid_details = self.create_vol_using_api()
+                    self.attach_volumes_to_host(self.volume_uuid_details, required_hosts_list)
+                    self.get_host_handles()
+                    self.intialize_the_hosts()
                 self.get_host_handles()
-                self.intialize_the_hosts()
                 self.connect_the_host_to_volumes()
                 self.verify_nvme_connect()
                 self.start_traffic_and_verify()
                 self.disconnect_the_hosts()
+                self.destoy_host_handles()
 
             self.come_handle.destroy()
             self.bmc_handle.destroy()
@@ -767,6 +767,10 @@ class ApcPduTestcase(FunTestCase):
     def restart_fs1600(self):
         self.come_handle.command("cd /opt/fungible/etc")
         self.come_handle.command("bash ResetFs1600.sh")
+
+    def destoy_host_handles(self):
+        for host_name in self.host_details:
+            self.host_details[host_name]["handle"].destroy()
 
     def cleanup(self):
         self.delete_volumes()
