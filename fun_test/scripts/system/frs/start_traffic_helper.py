@@ -124,8 +124,9 @@ def le_firewall(run_time, new_image, just_kill=False):
         return
     for vm, vm_details in vm_info.iteritems():
         running = check_if_le_firewall_is_running(vm_details)
-        if running and not new_image:
+        if running:
             kill_le_firewall(vm_details)
+            running = False
         if not running and new_image:
             tmp_run_time = 30
             cmd = '''python run_nu_transit_only.py --inputs '{"speed":"SPEED_100G", "run_time":%s, "initiate":true}' ''' % tmp_run_time
