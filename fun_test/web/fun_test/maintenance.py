@@ -1,6 +1,5 @@
 from web.fun_test.maintenance_old import *
 from dateutil import parser
-from collections import OrderedDict
 from web.fun_test.metrics_lib import MetricLib
 from web.fun_test.models import *
 
@@ -2033,7 +2032,7 @@ if __name__ == "__main_FCP_NVMe__":
         change_chart.internal_chart_name = internal_name
         change_chart.save()
 
-if __name__ == "__main__":
+if __name__ == "__main_FCP_nvme__":
     io_depths = OrderedDict([(1, [1, 1]), (8, [1, 8]), (16, [1, 16]), (32, [2, 16]), (64, [4, 16]), (128, [8, 16]),
                              (256, [16, 16])])
     base_line_date = datetime(year=2019, month=10, day=28, minute=0, hour=0, second=0)
@@ -2115,3 +2114,21 @@ if __name__ == "__main__":
                                peer_ids=[], creator=TEAM_REGRESSION_EMAIL,
                                workspace_ids=[])
     print "edited all the charts for 4 ssd loacl alibaba bmv storage"
+
+if __name__ == "__main__":
+    with open(METRICS_BASE_DATA_FILE, "r") as f:
+        metrics = json.load(f)
+        for metric in metrics:
+            if metric["label"] == "F1":
+                f1_metrics = metric["children"]
+                for f1_metric in f1_metrics:
+                    if f1_metric["label"] == "FunOS":
+                        fun_os_metrics = f1_metric
+                        break
+
+        children_fun_os = fun_os_metrics["children"]
+        for child in children_fun_os:
+            child_name = child["name"]
+            if child_name == "Nucleus" or child_name == "MovingBits":
+                result = set_internal_name(child)
+                print json.dumps(result)
