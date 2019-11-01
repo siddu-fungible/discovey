@@ -18,6 +18,7 @@ class StatisticsCollector:
         self.storage_file_handler = storage_file_handler
         self.storage_db_handler = storage_db_handler
         self.kwargs = kwargs
+        self.storage_db = True
 
     def get_type(self):
         return self.type
@@ -47,8 +48,9 @@ class CollectorWorker(Thread):
         while not fun_test.closed and not self.stopped:
             collector_instance = self.collector.collector
             result, epoch_time = collector_instance.statistics_dispatcher(self.collector.type, **self.collector.kwargs)
-            fun_test.sleep(seconds=self.interval_in_seconds, no_log=True)
-            if self.collector.storage_db_handler:
+            fun_test.sleep(seconds=self.interval_in_seconds, message="", no_log=True)
+            if self.collector.storage_db:
+                # result = self.collector.storage_db_handler(result)
                 collection_name = fun_test.get_time_series_collection_name()
                 data = result
                 mongo_db_manager = fun_test.get_mongo_db_manager()

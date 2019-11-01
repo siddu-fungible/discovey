@@ -1012,7 +1012,7 @@ class ComEInitializationWorker(Thread):
                 fun_test.test_assert(expression=come.initialize(disable_f1_index=self.fs.disable_f1_index),
                                      message="ComE initialized",
                                      context=self.fs.context)
-                if self.fs.bundle_compatible:
+                if self.fs.bundle_compatible and not self.fs.tftp_image_path:
                     fun_test.sleep(seconds=10, message="Waiting for expected containers", context=self.fs.context)
                     expected_containers_running = self.is_expected_containers_running(come)
                     expected_containers_running_timer = FunTimer(max_time=self.CONTAINERS_BRING_UP_TIME_MAX)
@@ -1053,7 +1053,9 @@ class ComEInitializationWorker(Thread):
 class ComE(Linux):
     EXPECTED_FUNQ_DEVICE_ID = ["04:00.1", "06:00.1"]
     DEFAULT_DPC_PORT = [40220, 40221]
+    DEFAULT_STATISTICS_DPC_PORT = [45220, 45221]
     DPC_LOG_PATH = "/tmp/f1_{}_dpc.txt"
+    DPC_STATISTICS_LOG_PATH = "/tmp/f1_{}_dpc.txt"
     NUM_F1S = 2
     NVME_CMD_TIMEOUT = 600000
 
@@ -1071,6 +1073,7 @@ class ComE(Linux):
             self.original_context_description = self.context.description
         self.hbm_dump_enabled = False
         self.funq_bind_device = {}
+        self.dpc_for_statistics_ready = False
 
 
     def initialize(self, reset=False, disable_f1_index=None):
@@ -1150,8 +1153,11 @@ class ComE(Linux):
             bus_number = int(parts[0])
         return bus_number
 
-    def get_dpc_port(self, f1_index):
-        return self.DEFAULT_DPC_PORT[f1_index]
+    def get_dpc_port(self, f1_index, statistics=None):
+        port = self.DEFAULT_DPC_PORT[f1_index]
+        if statistics:
+            port = self.DEFAULT_STATISTICS_DPC_PORT[f1_index]
+        return port
 
     def setup_workspace(self):
         working_directory = "/tmp"
@@ -1220,7 +1226,7 @@ class ComE(Linux):
         # self.sudo_command("build/posix/bin/funq-setup unbind")
         return True
 
-    def setup_dpc(self):
+    def setup_dpc(self, statistics=None):
 
         # self.command("cd $WORKSPACE/FunControlPlane")
         """
@@ -1244,12 +1250,18 @@ class ComE(Linux):
             nvme_device_index = f1_index
             if len(nvme_devices) == 1:  # if only one nvme device was detected
                 nvme_device_index = 0
-            command = "./dpcsh --pcie_nvme_sock=/dev/nvme{} --nvme_cmd_timeout={} --tcp_proxy={} &> {} &".format(nvme_device_index, self.NVME_CMD_TIMEOUT, self.get_dpc_port(f1_index=f1_index), self.get_dpc_log_path(f1_index=f1_index))
+            command = "./dpcsh --pcie_nvme_sock=/dev/nvme{} --nvme_cmd_timeout={} --tcp_proxy={} &> {} &".format(nvme_device_index,
+                                                                                                                 self.NVME_CMD_TIMEOUT,
+                                                                                                                 self.get_dpc_port(f1_index=f1_index, statistics=statistics),
+                                                                                                                 self.get_dpc_log_path(f1_index=f1_index, statistics=statistics))
             self.sudo_command(command)
 
         fun_test.sleep(message="DPC socket creation", context=self.context)
         self.dpc_ready = True
+        if statistics:
+            self.dpc_for_statistics_ready = True
         return True
+
 
     def is_dpc_running(self):
         pass
@@ -1297,8 +1309,11 @@ class ComE(Linux):
     def is_dpc_ready(self):
         return self.dpc_ready
 
-    def get_dpc_log_path(self, f1_index):
-        return self.DPC_LOG_PATH.format(f1_index)
+    def get_dpc_log_path(self, f1_index, statistics=None):
+        path = self.DPC_LOG_PATH.format(f1_index)
+        if statistics:
+            path = self.DPC_STATISTICS_LOG_PATH(f1_index=f1_index)
+        return path
 
     def _get_context_prefix(self, data):
         s = "{}".format(data)
@@ -1369,10 +1384,12 @@ class F1InFs:
         self.serial_sbp_device_path = serial_sbp_device_path
         self.dpc_port = None
 
-    def get_dpc_client(self, auto_disconnect=False):
+    def get_dpc_client(self, auto_disconnect=False, statistics=None):
         come = self.fs.get_come()
         host_ip = come.host_ip
-        dpc_port = come.get_dpc_port(self.index)
+        if statistics and not come.dpc_for_statistics_ready:
+            come.setup_dpc(statistics=True)
+        dpc_port = come.get_dpc_port(self.index, statistics=statistics)
         dpcsh_client = DpcshClient(target_ip=host_ip, target_port=dpc_port, auto_disconnect=auto_disconnect)
         return dpcsh_client
 
@@ -1904,7 +1921,7 @@ class Fs(object, ToDictMixin):
         for f1_index in range(self.NUM_F1S):
             if f1_index == self.disable_f1_index:
                 continue
-            dpc_client = self.get_dpc_client(f1_index=f1_index, auto_disconnect=True)
+            dpc_client = self.get_dpc_client(f1_index=f1_index, auto_disconnect=True, statistics=True)
             cmd = "stats/resource/bam"
             stats = dpc_client.json_execute(verb="peek", data=cmd, command_duration=command_duration)
             result[f1_index] = stats
@@ -2001,9 +2018,9 @@ class Fs(object, ToDictMixin):
                                                                           message="ComE reachable after APC power-cycle")
         return True
 
-    def get_dpc_client(self, f1_index, auto_disconnect=False):
+    def get_dpc_client(self, f1_index, auto_disconnect=False, statistics=None):
         f1 = self.get_f1(index=f1_index)
-        dpc_client = f1.get_dpc_client(auto_disconnect=auto_disconnect)
+        dpc_client = f1.get_dpc_client(auto_disconnect=auto_disconnect, statistics=None)
         return dpc_client
 
     def _get_context_prefix(self, data):
