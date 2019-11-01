@@ -6678,6 +6678,68 @@
             ]
           }
         ]
+      },
+      {
+        "metric_model_name": "MetricContainer",
+        "name": "System_S1",
+        "label": "System",
+        "children": [
+          {
+            "metric_model_name": "BootTimePerformance",
+            "children": [],
+            "name": "FunOS Boot Timing_S1",
+            "label": "FunOS Boot Timing (SBP view)"
+          },
+          {
+            "metric_model_name": "BootTimePerformance",
+            "children": [],
+            "name": "SBP Boot Timing (Main-loop)_S1",
+            "label": "SBP Boot Timing (Main-loop)"
+          },
+          {
+            "metric_model_name": "BootTimePerformance",
+            "children": [],
+            "name": "SBP Boot Timing (Host-boot)_S1",
+            "label": "SBP Boot Timing (Host-boot)"
+          },
+          {
+            "metric_model_name": "BootTimePerformance",
+            "children": [],
+            "name": "SBP Boot Timing (Pre-host-boot)_S1",
+            "label": "SBP Boot Timing (Pre-host-boot)"
+          },
+          {
+            "metric_model_name": "BootTimePerformance",
+            "children": [],
+            "name": "MMC timings_S1",
+            "label": "MMC Timings"
+          },
+          {
+            "metric_model_name": "BootTimePerformance",
+            "children": [],
+            "name": "ELF load timings_S1",
+            "label": "ELF Load Timings"
+          },
+          {
+            "metric_model_name": "BootTimePerformance",
+            "children": [],
+            "name": "f1_timings_S1",
+            "label": "FunOS Timings"
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "FRS_F1_S1",
+            "label": "FRS",
+            "disable": true,
+            "children": [
+              {
+                "metric_model_name": "PowerPerformance",
+                "name": "system_power_f1_S1",
+                "label": "Power"
+              }
+            ]
+          }
+        ]
       }
     ]
   }

@@ -2124,7 +2124,8 @@ if __name__ == "__main__":
                 for f1_metric in f1_metrics:
                     if f1_metric["label"] == "FunOS":
                         fun_os_metrics = f1_metric
-                        break
+                    if f1_metric["label"] == "System":
+                        system_metrics = f1_metric
 
         children_fun_os = fun_os_metrics["children"]
         for child in children_fun_os:
@@ -2132,3 +2133,5 @@ if __name__ == "__main__":
             if child_name == "Nucleus" or child_name == "MovingBits":
                 result = set_internal_name(child)
                 print json.dumps(result)
+        result = set_internal_name(system_metrics)
+        print json.dumps(result)
