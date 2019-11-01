@@ -10,6 +10,7 @@
   "expected_hnu_ports_f1_0": [],
   "expected_hnu_ports_f1_1": [],
   "num_hosts": 0,
+  "apc_pdu_reboot_machine": true,
   "check_docker": true,
   "expected_dockers": 3,
   "end_sleep": 300,
