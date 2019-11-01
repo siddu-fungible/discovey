@@ -534,6 +534,7 @@ class FunTest:
         else:
             print("Unable to determine the version. Defaulting...")
         print ("Version: {}".format(self.version))
+        return determined_version
 
     def set_version(self, version):
         self.version = version
@@ -548,6 +549,11 @@ class FunTest:
                 self.log("Suite execution: {} could not be retrieved from the DB".format(self.suite_execution_id))
             else:
                 version = suite_execution.version
+                if not version:
+                    try:
+                        version = self.determine_version()
+                    except Exception as ex:
+                        print("Error unable to determine the version: {}".format(str(ex)))
         else:
             version = self.version
         return version
@@ -947,7 +953,8 @@ class FunTest:
             no_timestamp=False,
             context=None,
             ignore_context_description=None,
-            section=False):
+            section=False,
+            from_flush=False):
         current_time = get_current_time()
         current_epoch_time = get_current_epoch_time()
 
@@ -1013,18 +1020,24 @@ class FunTest:
 
         if self.time_series_enabled:
             try:
-                if not final_message_for_time_series.endswith("\n"):
-                    self.time_series_buffer[context_id] += final_message_for_time_series
+                if from_flush:
+                    if not final_message_for_time_series.endswith("\n"):
+                        self.time_series_buffer[context_id] += final_message_for_time_series
+                    else:
+                        final_message_for_time_series = self.time_series_buffer[context_id] + final_message_for_time_series
+                        for part in final_message_for_time_series.split("\n"):
+                            if not part:
+                                continue
+                            data = {"checkpoint_index": self.current_time_series_checkpoint,
+                                    "log": part.rstrip().lstrip(),
+                                    "context_id": context_id}
+                            self.add_time_series_log(data=data, epoch_time=current_epoch_time)
+                        self.time_series_buffer[context_id] = ""
                 else:
-                    final_message_for_time_series = self.time_series_buffer[context_id] + final_message_for_time_series
-                    for part in final_message_for_time_series.split("\n"):
-                        if not part:
-                            continue
-                        data = {"checkpoint_index": self.current_time_series_checkpoint,
-                                "log": part,
-                                "context_id": context_id}
-                        self.add_time_series_log(data=data, epoch_time=current_epoch_time)
-                    self.time_series_buffer[context_id] = ""
+                    data = {"checkpoint_index": self.current_time_series_checkpoint,
+                            "log": final_message_for_time_series.rstrip().lstrip(),
+                            "context_id": context_id}
+                    self.add_time_series_log(data=data, epoch_time=current_epoch_time)
             except Exception as ex:
                 print "Timeseries exception: {}".format(str(ex))
 
@@ -1083,7 +1096,8 @@ class FunTest:
                  calling_module=calling_module,
                  no_timestamp=True,
                  context=context,
-                 ignore_context_description=True)
+                 ignore_context_description=True,
+                 from_flush=True)
         if context:
             context.buf = ""
         else:
@@ -1275,7 +1289,7 @@ class FunTest:
                 this_checkpoint = self._get_context_prefix(context=context, message=message)
                 # if self.profiling:
                 #    this_checkpoint = "{:.2f}: {}".format(self.profiling_timer.elapsed_time(), this_checkpoint)  #TODO: Duplicate line
-                self.add_checkpoint(checkpoint=this_checkpoint, expected=expected, actual=actual, result=FunTest.PASSED)
+                self.add_checkpoint(checkpoint=this_checkpoint, expected=expected, actual=actual, result=FunTest.PASSED, context=context)
 
 
     def add_checkpoint(self,

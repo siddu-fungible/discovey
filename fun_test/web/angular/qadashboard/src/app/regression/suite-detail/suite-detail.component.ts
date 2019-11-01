@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import {Component, OnDestroy, OnInit} from '@angular/core';
 import { ApiService}  from "../../services/api/api.service";
 import { ActivatedRoute } from "@angular/router";
 import {ReRunService} from "../re-run.service";
@@ -23,7 +23,7 @@ class Environment {
   templateUrl: './suite-detail.component.html',
   styleUrls: ['./suite-detail.component.css']
 })
-export class SuiteDetailComponent implements OnInit {
+export class SuiteDetailComponent implements OnInit, OnDestroy {
   logDir: any = null;
   suiteExecutionId: number;
   suiteExecution: any = null;
@@ -45,7 +45,7 @@ export class SuiteDetailComponent implements OnInit {
   reRunOptionsReRunAll: boolean = true;
   reUseBuildImage: boolean = false;
   reRunScript: string = null;
-
+  refreshTimer: any = null;
 
   constructor(private apiService: ApiService,
               private route: ActivatedRoute,
@@ -135,7 +135,7 @@ export class SuiteDetailComponent implements OnInit {
               });
             }
             if (self.suiteExecution.fields.state >= self.stateMap.SUBMITTED) {
-              setInterval(() => {
+              self.refreshTimer = setInterval(() => {
                 window.location.reload();
               }, 60 * 1000);
             }
@@ -446,5 +446,10 @@ export class SuiteDetailComponent implements OnInit {
     return `/regression/script_detail/${scriptId}/${logPrefix}/${this.suiteExecutionId}`;
   }
 
+  ngOnDestroy() {
+    if (this.refreshTimer) {
+      clearInterval(this.refreshTimer);
+    }
+  }
 
 }

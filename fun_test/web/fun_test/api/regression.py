@@ -585,7 +585,7 @@ def contexts(request, suite_execution_id, script_id):
         collection_name = get_fun_test_time_series_collection_name(suite_execution_id)
         mongo_db_manager = app_config.get_mongo_db_manager()
         collection = mongo_db_manager.get_collection(collection_name)
-        query = {}
+        query = {"type": TimeSeriesTypes.CONTEXT_INFO}
         if collection:
             if script_id:
                 query["script_id"] = int(script_id)

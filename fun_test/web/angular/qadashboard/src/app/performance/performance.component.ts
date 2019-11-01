@@ -167,8 +167,16 @@ export class PerformanceComponent implements OnInit {
   gotoQueryBaseUrl: string = "/performance?goto=";
   queryPath: string = null;  // includes gotoQueryBaseUrl and a query
 
-  slashReplacement: string = "_fsl"; //forward slash
-  spaceReplacement: string = "_"; //replacement for white space
+  spaceReplacement: string = "_";
+
+  urlEncodingReplacementMap: any = {
+    "/": "..fs..",
+    "_": "..us..",
+    "\\": "..bs..",
+    ";": "..sc..",
+    "=": "..eq.."
+  };
+  urlDecodingReplacementMap: any = null;
 
   f1Node: FlatNode = null;
   s1Node: FlatNode = null;
@@ -193,6 +201,10 @@ export class PerformanceComponent implements OnInit {
     private renderer: Renderer2,
     private service: PerformanceService
   ) {
+    this.urlDecodingReplacementMap = {};
+    Object.keys(this.urlEncodingReplacementMap).forEach(key => {
+      this.urlDecodingReplacementMap[this.urlEncodingReplacementMap[key]] = key;
+    })
   }
 
   ngOnInit() {
@@ -424,11 +436,31 @@ export class PerformanceComponent implements OnInit {
 
   }
 
+  replaceForwardUrl(chartName): string {
+    Object.keys(this.urlEncodingReplacementMap).forEach(key => {
+      if (chartName.includes(key)) {
+          chartName = chartName.replace(new RegExp(key, "g"), this.urlEncodingReplacementMap[key]);
+        }
+    });
+    return chartName;
+  }
+
+  replaceReverseUrl(chartName): string {
+    let self = this;
+    chartName = chartName.replace(/(\.\.[A-z]{2}\.\.)/g, (match, $1) => {
+      if (match) {
+        return self.urlDecodingReplacementMap[$1];
+      }
+    });
+    return chartName;
+  }
+
   lineageToPath(lineage) {
     let s = "";
     lineage.forEach(part => {
-      let name = part.chartName.replace(/\//g, this.slashReplacement);
-      // name = name.replace(/ /g, this.spaceReplacement);
+      let name = part.chartName;
+      name = this.replaceForwardUrl(name);
+      name = name.replace(/ /g, this.spaceReplacement);
       s += "__" + encodeURIComponent(name);
     });
     s = s.slice(2, s.length); // Remove leading two underscores
@@ -1169,8 +1201,10 @@ export class PerformanceComponent implements OnInit {
   _doPathToGuid(flatNode, remainingParts) {
     let result = null;
     if (remainingParts.length > 0) {
-      let remainingPart = remainingParts[0].replace(/_fsl/g, "/");
+      let remainingPart = remainingParts[0];
       // remainingPart = remainingPart.replace(/_/g, " ");
+      remainingPart = remainingPart.replace(/_/g, " ");
+      remainingPart = this.replaceReverseUrl(remainingPart);
       if (remainingPart === "Total") {
         remainingPart = this.F1;
       }
@@ -1178,8 +1212,10 @@ export class PerformanceComponent implements OnInit {
         // match found
         if (remainingParts.length > 1) {
           remainingParts = remainingParts.slice(1, remainingParts.length); // there are more segments to parse
-          let remainingPart = remainingParts[0].replace(/_fsl/g, "/");
+          let remainingPart = remainingParts[0];
           // remainingPart = remainingPart.replace(/_/g, " ");
+          remainingPart = remainingPart.replace(/_/g, " ");
+          remainingPart = this.replaceReverseUrl(remainingPart);
           for (let index = 0; index < flatNode.children.length; index++) {
             let childFlatNode = flatNode.children[index];
             if (decodeURIComponent(remainingPart) === childFlatNode.node.chartName) {

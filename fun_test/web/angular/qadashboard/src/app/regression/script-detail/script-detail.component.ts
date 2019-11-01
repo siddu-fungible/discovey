@@ -8,7 +8,7 @@ import {animate, state, style, transition, trigger} from "@angular/animations";
 import {CommonService} from "../../services/common/common.service";
 import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
 import {ScriptDetailService, ContextInfo, ScriptRunTime} from "./script-detail.service";
-import {Pipe, PipeTransform } from '@angular/core';
+
 
 class DataModel {
   letter: string;
@@ -49,6 +49,27 @@ class Checkpoint {
 })
 export class ScriptDetailComponent implements OnInit {
   driver: Observable<any> = null;
+  /*
+  values = [{
+        name: 'Installation',
+        data: [43934, 52503, 57177, 69658, 97031, 119931, 137133, 154175]
+    }, {
+        name: 'Manufacturing',
+        data: [24916, 24064, 29742, 29851, 32490, 30282, 38121, 40434]
+    }, {
+        name: 'Sales & Distribution',
+        data: [11744, 17722, 16005, 19771, 20185, 24377, 32147, 39387]
+    }, {
+        name: 'Project Development',
+        data: [null, null, 7988, 12169, 15112, 22452, 34400, 34227]
+    }, {
+        name: 'Other',
+        data: [12908, 5948, 8105, 11248, 8989, 11816, 18274, 18111]
+    }];
+  */
+
+  values = [{data: [{y: 45}, {y: 51}, {y: 73}]}];
+  series = [1, 2, 3];
 
   constructor(private regressionService: RegressionService,
               private loggerService: LoggerService,
@@ -56,7 +77,9 @@ export class ScriptDetailComponent implements OnInit {
               private commonService: CommonService,
               private modalService: NgbModal,
               private service: ScriptDetailService
-  ) { }
+  ) {
+
+  }
   suiteExecutionId: number = 10000;
   logPrefix: number = null;
   scriptId: number = null;
@@ -80,8 +103,8 @@ export class ScriptDetailComponent implements OnInit {
   logPanelHeight: any = "500px";
   DEFAULT_LOOKBACK_LOGS: number = 100;
   numLookbackLogs: number = 100;
+  logsAreTruncated: boolean = false;
 
-  //timeSeriesByTestCase: {[testCaseId: number]: {[key: string]: any }} = {};
 
   ngOnInit() {
 
@@ -127,6 +150,7 @@ export class ScriptDetailComponent implements OnInit {
       this.refreshAll();
 
     });
+
 
   }
 
@@ -190,6 +214,7 @@ export class ScriptDetailComponent implements OnInit {
   onTestCaseIdClick(testCaseExecutionIndex) {
     this.testLogs = null;
     this.currentCheckpointIndex = null;
+    this.showLogsPanel = false;
     this.currentTestCaseExecution = this.testCaseExecutions[testCaseExecutionIndex];
     this.status = "Fetching checkpoints";
     this.fetchCheckpoints(this.currentTestCaseExecution, this.suiteExecutionId).subscribe(response => {
@@ -245,11 +270,25 @@ export class ScriptDetailComponent implements OnInit {
 
   }
 
-  onCheckpointClick(testCaseExecution, checkpointIndex, contextId?: 0) {
-    //this.status = "Fetching checkpoint data";
+  showContext(contextId) {
+    for (let index = 0; index < this.availableContexts.length; index++) {
+      if (contextId === this.availableContexts[index].context_id) {
+        this.availableContexts[index].selected = true;
+        break;
+      }
+    }
+  }
+
+  _restoreCheckpointDefaults() {
     this.numLookbackLogs = this.DEFAULT_LOOKBACK_LOGS;
+    this.timeFilterMin = 0;
+  }
+
+  onCheckpointClick(testCaseExecution, checkpointIndex, contextId?: 0) {
+    this.showContext(contextId);
+    this._restoreCheckpointDefaults();
     this.currentCheckpointIndex = checkpointIndex;
-    this.showTestCasePanel = false;
+    //this.showTestCasePanel = false;
     this.showLogsPanel = true;
     this.showCheckpointPanel = true;
     /*
@@ -282,6 +321,7 @@ export class ScriptDetailComponent implements OnInit {
 
     this.fetchLogsForCheckpoints(this.currentTestCaseExecution, checkpointIndexesToFetch, checkpointIndex).subscribe(response => {
       this.showLogsPanel = true;
+      this.logsAreTruncated = this.setMinimumTime();
       this.status = null;
       setTimeout(() => {
         this.commonService.scrollTo(checkpointId);
@@ -311,19 +351,19 @@ export class ScriptDetailComponent implements OnInit {
       this.status = "Fetching logs";
       return this.regressionService.testCaseTimeSeries(this.suiteExecutionId, testCaseExecution.execution_id, null, minCheckpointIndex, maxCheckpointIndex).pipe(switchMap(response => {
         this.status = "Parsing logs";
-        setTimeout(() => {
 
-          response.forEach(timeSeriesElement => {
-            let checkpointIndex = timeSeriesElement.data.checkpoint_index;
-            if (!testCaseExecution.checkpoints[checkpointIndex].hasOwnProperty("timeSeries")) {
-              testCaseExecution.checkpoints[checkpointIndex]["timeSeries"] = [];
-            }
-            timeSeriesElement["relative_epoch_time"] = timeSeriesElement.epoch_time - this.scriptRunTime.started_epoch_time;
-            testCaseExecution.checkpoints[checkpointIndex].timeSeries.push(timeSeriesElement);
-          });
-          this.status = null;
-          this.setMinimumTime();
-        }, 1);
+        response.forEach(timeSeriesElement => {
+          let checkpointIndex = timeSeriesElement.data.checkpoint_index;
+          if (!testCaseExecution.checkpoints[checkpointIndex].hasOwnProperty("timeSeries")) {
+            testCaseExecution.checkpoints[checkpointIndex]["timeSeries"] = [];
+          }
+          timeSeriesElement["relative_epoch_time"] = timeSeriesElement.epoch_time - this.scriptRunTime.started_epoch_time;
+          testCaseExecution.checkpoints[checkpointIndex].timeSeries.push(timeSeriesElement);
+        });
+        this.status = null;
+
+        console.log("Done parsing logs");
+
 
         return of(true);
       }), catchError (error => {
@@ -336,11 +376,11 @@ export class ScriptDetailComponent implements OnInit {
 
   }
 
-  setMinimumTime() {
+  setMinimumTime(): boolean {
     let maxEntries = this.numLookbackLogs;
     let count = 0;
     let checkpointIndexesToCheck = [this.currentCheckpointIndex];
-    if ((this.currentTestCaseExecution.checkpoints.length - 2) >= this.currentCheckpointIndex) {
+    if (this.currentTestCaseExecution > 0 && ((this.currentTestCaseExecution.checkpoints.length - 2) >= this.currentCheckpointIndex)) {
       checkpointIndexesToCheck.unshift(this.currentCheckpointIndex - 1);
     }
     checkpointIndexesToCheck = checkpointIndexesToCheck.reverse();
@@ -365,6 +405,7 @@ export class ScriptDetailComponent implements OnInit {
       }
 
     }
+    return maxReached;
   }
 
   fetchLogsForCheckpoint(testCaseExecution, checkpointIndex) {
@@ -434,5 +475,10 @@ export class ScriptDetailComponent implements OnInit {
     console.log(window.innerHeight);
     this.logPanelHeight = window.innerHeight - element.getBoundingClientRect().top - 70;
     console.log(this.logPanelHeight);
+  }
+
+  showPreviousLogsClick() {
+    this.numLookbackLogs += 100;
+    this.logsAreTruncated = this.setMinimumTime();
   }
 }

@@ -1232,6 +1232,112 @@
                 ]
               }
             ]
+          },
+          {
+            "name": "teramarks_storage_fcp",
+            "label": "FCP",
+            "metric_model_name": "MetricContainer",
+            "children": [
+              {
+                "name": "teramarks_storage_fcp_nvme",
+                "label": "NVMe",
+                "metric_model_name": "MetricContainer",
+                "children": [
+                  {
+                    "name": "teramarks_storage_fcp_nvme_iops",
+                    "label": "IOPS",
+                    "metric_model_name": "NvmeFcpPerformance",
+                    "children": []
+                  },
+                  {
+                    "name": "teramarks_storage_fcp_nvme_throughput",
+                    "label": "Throughput",
+                    "metric_model_name": "NvmeFcpPerformance",
+                    "children": []
+                  },
+                  {
+                    "name": "teramarks_storage_fcp_nvme_latency_1vol",
+                    "label": "Latency - 1 Vol(s)",
+                    "metric_model_name": "NvmeFcpPerformance",
+                    "children": []
+                  },
+                  {
+                    "name": "teramarks_storage_fcp_nvme_latency_2vol",
+                    "label": "Latency - 2 Vol(s)",
+                    "metric_model_name": "NvmeFcpPerformance",
+                    "children": []
+                  },
+                  {
+                    "name": "teramarks_storage_fcp_nvme_latency_4vol",
+                    "label": "Latency - 4 Vol(s)",
+                    "metric_model_name": "NvmeFcpPerformance",
+                    "children": []
+                  },
+                  {
+                    "name": "teramarks_storage_fcp_nvme_latency_8vol",
+                    "label": "Latency - 8 Vol(s)",
+                    "metric_model_name": "NvmeFcpPerformance",
+                    "children": []
+                  },
+                  {
+                    "name": "teramarks_storage_fcp_nvme_latency_12vol",
+                    "label": "Latency - 12 Vol(s)",
+                    "metric_model_name": "NvmeFcpPerformance",
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "teramarks_storage_fcp_nvme_tcp",
+                "label": "NVMe/TCP",
+                "metric_model_name": "MetricContainer",
+                "children": [
+                  {
+                    "name": "teramarks_storage_fcp_nvme_tcp_iops",
+                    "label": "IOPS",
+                    "metric_model_name": "NvmeFcpPerformance",
+                    "children": []
+                  },
+                  {
+                    "name": "teramarks_storage_fcp_nvme_tcp_throughput",
+                    "label": "Throughput",
+                    "metric_model_name": "NvmeFcpPerformance",
+                    "children": []
+                  },
+                  {
+                    "name": "teramarks_storage_fcp_nvme_tcp_latency",
+                    "label": "Latency",
+                    "metric_model_name": "NvmeFcpPerformance",
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "teramarks_storage_fcp_nvme_funtcp",
+                "label": "NVMe/FunTCP",
+                "metric_model_name": "MetricContainer",
+                "children": [
+                  {
+                    "name": "teramarks_storage_fcp_nvme_funtcp_iops",
+                    "label": "IOPS",
+                    "metric_model_name": "NvmeFcpPerformance",
+                    "children": []
+                  },
+                  {
+                    "name": "teramarks_storage_fcp_nvme_funtcp_throughput",
+                    "label": "Throughput",
+                    "metric_model_name": "NvmeFcpPerformance",
+                    "children": []
+                  },
+                  {
+                    "name": "teramarks_storage_fcp_nvme_funtcp_latency",
+                    "label": "Latency",
+                    "metric_model_name": "NvmeFcpPerformance",
+                    "children": []
+                  }
+                ]
+              }
+            ]
           }
         ]
       },
@@ -5175,14 +5281,26 @@
                                     "children": []
                                   },
                                   {
-                                    "name": "bmv_storage_local_ssd_4_random_read_qd32_latency",
-                                    "label": "Latency, Qdepth=32",
+                                    "name": "bmv_storage_local_ssd_4_random_read_qd1_latency",
+                                    "label": "Latency, Qdepth=1",
                                     "metric_model_name": "AlibabaPerformance",
                                     "children": []
                                   },
                                   {
-                                    "name": "bmv_storage_local_ssd_4_random_read_qd1_latency",
-                                    "label": "Latency, Qdepth=1",
+                                    "name": "bmv_storage_local_ssd_4_random_read_qd8_latency",
+                                    "label": "Latency, Qdepth=8",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_4_random_read_qd16_latency",
+                                    "label": "Latency, Qdepth=16",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_4_random_read_qd32_latency",
+                                    "label": "Latency, Qdepth=32",
                                     "metric_model_name": "AlibabaPerformance",
                                     "children": []
                                   },
@@ -5190,7 +5308,8 @@
                                     "name": "bmv_storage_local_ssd_4_random_read_qd1024_latency",
                                     "label": "Latency, Qdepth=1024",
                                     "metric_model_name": "AlibabaPerformance",
-                                    "children": []
+                                    "children": [],
+                                    "disable": true
                                   },
                                   {
                                     "name": "bmv_storage_local_ssd_4_random_read_qd64_latency",
@@ -5224,14 +5343,26 @@
                                     "children": []
                                   },
                                   {
-                                    "name": "bmv_storage_local_ssd_4_random_write_qd32_latency",
-                                    "label": "Latency, Qdepth=32",
+                                    "name": "bmv_storage_local_ssd_4_random_write_qd1_latency",
+                                    "label": "Latency, Qdepth=1",
                                     "metric_model_name": "AlibabaPerformance",
                                     "children": []
                                   },
                                   {
-                                    "name": "bmv_storage_local_ssd_4_random_write_qd1_latency",
-                                    "label": "Latency, Qdepth=1",
+                                    "name": "bmv_storage_local_ssd_4_random_write_qd8_latency",
+                                    "label": "Latency, Qdepth=8",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_4_random_write_qd16_latency",
+                                    "label": "Latency, Qdepth=16",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_4_random_write_qd32_latency",
+                                    "label": "Latency, Qdepth=32",
                                     "metric_model_name": "AlibabaPerformance",
                                     "children": []
                                   },
@@ -5239,7 +5370,8 @@
                                     "name": "bmv_storage_local_ssd_4_random_write_qd1024_latency",
                                     "label": "Latency, Qdepth=1024",
                                     "metric_model_name": "AlibabaPerformance",
-                                    "children": []
+                                    "children": [],
+                                    "disable": true
                                   },
                                   {
                                     "name": "bmv_storage_local_ssd_4_random_write_qd64_latency",
