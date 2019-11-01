@@ -235,13 +235,7 @@ class FunTestCase1(FunTestCase):
         self.stats_info["bmc"] = {"POWER": {"calculated": True}, "DIE_TEMPERATURE": {"calculated": False, "disable":True}}
         self.stats_info["come"] = {"DEBUG_MEMORY": {}, "CDU": {}, "EQM": {}, "BAM": {"calculated": False, "disable":True}, "DEBUG_VP_UTIL": {"calculated": False}, "LE": {}, "HBM": {"disable":True},
                                    "EXECUTE_LEAKS": {"calculated": False, "disable": True}, "PC_DMA": {"calculated": True}}
-        if self.collect_stats:
-            for system in self.stats_info:
-                for stat_name, value in self.stats_info[system].iteritems():
-                    if stat_name in self.collect_stats:
-                        value["disable"] = False
-                    else:
-                        value["disable"] = True
+
         if self.disable_stats:
             for system in self.stats_info:
                 for stat_name, value in self.stats_info[system].iteritems():
@@ -281,8 +275,9 @@ class FunTestCase1(FunTestCase):
 
     def run(self):
         ############## Before traffic #####################
-        self.initial_debug_memory_stats = self.get_debug_memory_stats_initially(self.f_DEBUG_MEMORY_f1_0,
-                                                                                self.f_DEBUG_MEMORY_f1_0)
+        if not self.stats_info["come"]["DEBUG_MEMORY"]["disable"]:
+            self.initial_debug_memory_stats = self.get_debug_memory_stats_initially(self.f_DEBUG_MEMORY_f1_0,
+                                                                                    self.f_DEBUG_MEMORY_f1_0)
         self.capture_data(count=3, heading="Before starting traffic")
 
         fun_test.test_assert(True, "Initial debug stats is saved")
@@ -747,13 +742,14 @@ class FunTestCase1(FunTestCase):
                     func=getattr(self, app, func_not_found),
                     time_in_seconds=1,
                     f1=f1)
-
+                fun_test.log("Started the app : {} on f1: {}".format(app, f1))
         return thread_map
 
     def stop_threaded_apps(self, thread_map):
         for app in self.required_apps:
             for f1 in self.run_on_f1:
                 fun_test.shared_variables["var_{}_f1_{}".format(app, f1)] = False
+                fun_test.log("Stopped the app : {} on f1: {}".format(app, f1))
 
         for name, thread in thread_map.iteritems():
             fun_test.join_thread(thread)
