@@ -1063,12 +1063,11 @@ class IbWriteScale(FunTestCase):
                 # Compute the tx_depth required for scaling.
                 # Default tx_depth = 128 from ib_write_bw
                 tx_depth_default = 128
-                cq_depth_max_supported = max_cqe_in_test
                 cq_depth_required = 128 * qp
 
                 # Reduce the tx_depth for scaling and avoid CQ allocation failure
-                if cq_depth_required > cq_depth_max_supported:
-                    tx_depth_in_test = cq_depth_max_supported / qp
+                if cq_depth_required > max_cqe_in_test:
+                    tx_depth_in_test = max_cqe_in_test / qp
                 else:
                     tx_depth_in_test = tx_depth_default
                 fun_test.log("Running test with tx_depth {}".format(tx_depth_in_test))
