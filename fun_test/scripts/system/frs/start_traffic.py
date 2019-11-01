@@ -241,8 +241,6 @@ class FunTestCase1(FunTestCase):
                 for stat_name, value in self.stats_info[system].iteritems():
                     if stat_name in self.disable_stats:
                         value["disable"] = True
-                    else:
-                        value["disable"] = False
 
         for system in self.stats_info:
             for stat_name, value in self.stats_info[system].iteritems():
