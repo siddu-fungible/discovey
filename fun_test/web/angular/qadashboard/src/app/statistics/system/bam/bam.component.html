@@ -1,10 +1,11 @@
 <h4>BM usage per cluster</h4>
 <div *ngFor="let f1Index of detectedF1Indexes">
   <h5>F1-{{ f1Index }}</h5>
-  <ng-container *ngFor="let poolName of bmUsagePerClusterPoolNames">
+  <div class="fun-flex-container">
+    <ng-container *ngFor="let poolName of bmUsagePerClusterPoolNames">
     <ng-container *ngFor="let poolKey of bmUsagePerClusterPoolKeys">
       <fun-chart [title]="poolName + '-' + poolKey" [xAxisLabel]="'Cluster index'" [y1Values]="parsedData[f1Index][poolName][poolKey]"></fun-chart>
     </ng-container>
-
   </ng-container>
+  </div>
 </div>
