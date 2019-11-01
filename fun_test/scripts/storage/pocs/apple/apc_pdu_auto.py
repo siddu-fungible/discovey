@@ -514,11 +514,6 @@ class ApcPduTestcase(FunTestCase):
             result = True
         fun_test.test_assert(result, "Host: {}  IO running".format(host_name))
 
-    @staticmethod
-    def destroy_hosts_handle(hosts_list):
-        for host_name, host in hosts_list.iteritems():
-            host["handle"].destroy()
-
     def check_come_up_time(self, expected_minutes):
         initial = self.come_handle.command("uptime")
         output = self.come_handle.command("uptime")
@@ -718,18 +713,21 @@ class ApcPduTestcase(FunTestCase):
                                  "Host: {} disconnected from {}".format(host_name, host_info["data"]["ip"]))
 
     def delete_volumes(self):
-        data = {}
-        for vol_name, vol_uuid in self.volume_uuid_details.iteritems():
-            delete_vol_url = "{}://{}:{}/FunCC/v1/storage/volumes/{}".format(self.apiprotocol,
-                                                                             self.fs['come']['mgmt_ip'],
-                                                                             self.apiport,
-                                                                             vol_uuid)
-            response = requests.delete(delete_vol_url, auth=self.http_basic_auth, json=data, verify=False)
-            response_json = response.json()
-            fun_test.log("Volume delte response: {}".format(response_json))
-            message = response_json["message"]
-            deleted = True if message == "volume deletion successful" else False
-            fun_test.test_assert(deleted, "Delete volume :{} ".format(vol_name))
+        try:
+            data = {}
+            for vol_name, vol_uuid in self.volume_uuid_details.iteritems():
+                delete_vol_url = "{}://{}:{}/FunCC/v1/storage/volumes/{}".format(self.apiprotocol,
+                                                                                 self.fs['come']['mgmt_ip'],
+                                                                                 self.apiport,
+                                                                                 vol_uuid)
+                response = requests.delete(delete_vol_url, auth=self.http_basic_auth, json=data, verify=False)
+                response_json = response.json()
+                fun_test.log("Volume delte response: {}".format(response_json))
+                message = response_json["message"]
+                deleted = True if message == "volume deletion successful" else False
+                fun_test.test_assert(deleted, "Delete volume :{} ".format(vol_name))
+        except Exception as ex:
+            fun_test.log(ex)
 
     def intialize_the_hosts(self):
         for host_name, host_info in self.host_details.iteritems():
@@ -752,7 +750,8 @@ class ApcPduTestcase(FunTestCase):
             self.host_details[host_name]["handle"].destroy()
 
     def cleanup(self):
-        self.delete_volumes()
+        if self.num_hosts:
+            self.delete_volumes()
         # self.disconnect_the_hosts()
 
 if __name__ == "__main__":
