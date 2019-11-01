@@ -571,7 +571,7 @@ class ApcPduTestcase(FunTestCase):
         self.portal_username = 'admin'
         self.portal_password = 'password'
         self.apiprotocol = "https"
-        self.apiport = 9000
+        self.api_server_port = 50220
 
         self.http_basic_auth = requests.auth.HTTPBasicAuth(self.portal_username, self.portal_password)
         self.pool_id = self.get_pool_id()
@@ -580,7 +580,7 @@ class ApcPduTestcase(FunTestCase):
 
     def get_pool_id(self):
         data = []
-        pool_url = '{}://{}:{}/FunCC/v1/storage/pools'.format(self.apiprotocol, self.fs['come']['mgmt_ip'], self.apiport)
+        pool_url = '{}://{}:{}/FunCC/v1/storage/pools'.format(self.apiprotocol, self.fs['come']['mgmt_ip'], self.api_server_port)
         response = requests.get(pool_url, auth=self.http_basic_auth, json=data, verify=False)
         fun_test.log("pools log: {}".format(response.json()))
         pool_id = str(response.json()['data'].keys()[0])
@@ -589,7 +589,7 @@ class ApcPduTestcase(FunTestCase):
 
     def topology_request(self):
         data = []
-        topo_url = '{}://{}:{}/FunCC/v1/topology'.format(self.apiprotocol, self.fs['come']['mgmt_ip'], self.apiport)
+        topo_url = '{}://{}:{}/FunCC/v1/topology'.format(self.apiprotocol, self.fs['come']['mgmt_ip'], self.api_server_port)
         response = requests.get(self.topo_url, auth=self.http_basic_auth, json=data, verify=False)
         fun_test.log("topology log: {}".format(response.json()))
 
@@ -601,7 +601,7 @@ class ApcPduTestcase(FunTestCase):
             volume_creation_detail["name"] = "Stripe{}".format(index+1)
             volcreate_url = "{}://{}:{}/FunCC/v1/storage/pools/{}/volumes".format(self.apiprotocol,
                                                                                   self.fs['come']['mgmt_ip'],
-                                                                                  self.apiport,
+                                                                                  self.api_server_port,
                                                                                   self.pool_id)
             data = {"name": volume_creation_detail["name"], "capacity": volume_creation_detail["capacity"],
                     "vol_type": volume_creation_detail["vol_type"],
@@ -635,7 +635,7 @@ class ApcPduTestcase(FunTestCase):
         for vol_name, host_name in zip(volume_uuid_details, required_hosts_list):
             volattach_url = "{}://{}:{}/FunCC/v1/storage/volumes/{}/ports".format(self.apiprotocol,
                                                                                   self.fs['come']['mgmt_ip'],
-                                                                                  self.apiport,
+                                                                                  self.api_server_port,
                                                                                   volume_uuid_details[vol_name])
             host_interface_ip = self.hosts_asset[host_name]["test_interface_info"]["0"]["ip"].split("/")[0]
             data = {"remote_ip": host_interface_ip, "transport": self.transport_type.upper()}
@@ -718,7 +718,7 @@ class ApcPduTestcase(FunTestCase):
             for vol_name, vol_uuid in self.volume_uuid_details.iteritems():
                 delete_vol_url = "{}://{}:{}/FunCC/v1/storage/volumes/{}".format(self.apiprotocol,
                                                                                  self.fs['come']['mgmt_ip'],
-                                                                                 self.apiport,
+                                                                                 self.api_server_port,
                                                                                  vol_uuid)
                 response = requests.delete(delete_vol_url, auth=self.http_basic_auth, json=data, verify=False)
                 response_json = response.json()
