@@ -299,7 +299,7 @@ class FunTestCase1(FunTestCase):
         if self.run_le_firewall:
             le_firewall(self.test_duration, self.boot_new_image)
 
-        self.start_threaded_apps()
+        thread_map_for_soak_apps = self.start_threaded_apps()
 
         for app, parameters in app_params.iteritems():
             parameters["f1"] = 0
@@ -318,6 +318,8 @@ class FunTestCase1(FunTestCase):
         #################### After the traffic ############
         if self.run_le_firewall:
             kill_le_firewall(self.test_duration, self.boot_new_image, True)
+        self.stop_threaded_apps(thread_map_for_soak_apps)
+
         count = 3
         heading = "After the traffic"
         fun_test.log("Capturing the data {}".format(heading))
@@ -728,16 +730,16 @@ class FunTestCase1(FunTestCase):
     def start_threaded_apps(self):
         def func_not_found():
             print "Function not found"
-        required_apps = {}
+        self.required_apps = {}
         if self.specific_apps:
             for app in self.specific_apps:
                 if app in self.threaded_apps:
-                    required_apps[app] = self.threaded_apps[app]
+                    self.required_apps[app] = self.threaded_apps[app]
         else:
-            required_apps.update(self.threaded_apps)
+            self.required_apps.update(self.threaded_apps)
 
         thread_map = {}
-        for app in required_apps:
+        for app in self.required_apps:
             for f1 in self.run_on_f1:
                 fun_test.shared_variables["var_{}_f1_{}".format(app, f1)] = True
                 thread_map["{}_{}".format(app, f1)] = fun_test.execute_thread_after(
@@ -746,6 +748,16 @@ class FunTestCase1(FunTestCase):
                     f1=f1)
 
         return thread_map
+
+    def stop_threaded_apps(self, thread_map):
+        for app in self.required_apps:
+            for f1 in self.run_on_f1:
+                fun_test.shared_variables["var_{}_f1_{}".format(app, f1)] = False
+
+        for name, thread in thread_map.iteritems():
+            fun_test.join_thread(thread)
+
+
 
     def busy_loop(self, f1):
         app = "busy_loop"
