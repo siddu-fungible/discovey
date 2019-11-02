@@ -296,7 +296,7 @@ getPrettyLocalizeTime(t) {
 
 
   _getFlatPath(suiteExecutionId, path, logPrefix) {
-    let httpPath = this.logDir + suiteExecutionId;
+    let httpPath = "/static/logs/s_" + suiteExecutionId;
     let parts = path.split("/");
     let flat = path;
     let numParts = parts.length;
