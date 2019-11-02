@@ -238,6 +238,14 @@ class FunTestCase1(FunTestCase):
         self.stats_info["come"] = {"DEBUG_MEMORY": {}, "CDU": {}, "EQM": {}, "BAM": {"calculated": False, "disable":True}, "DEBUG_VP_UTIL": {"calculated": False}, "LE": {}, "HBM": {"disable":True},
                                    "EXECUTE_LEAKS": {"calculated": False, "disable": True}, "PC_DMA": {"calculated": True}}
 
+        if self.collect_stats:
+            for system in self.stats_info:
+                for stat_name, value in self.stats_info[system].iteritems():
+                    if stat_name in self.collect_stats:
+                        value["disable"] = False
+                    else:
+                        value["disable"] = True
+
         if self.disable_stats:
             for system in self.stats_info:
                 for stat_name, value in self.stats_info[system].iteritems():
@@ -263,7 +271,7 @@ class FunTestCase1(FunTestCase):
 
         # Traffic
         self.methods = {"crypto": crypto, "zip": zip_deflate, "rcnvme": rcnvme, "fio": fio}
-        self.threaded_apps = {"busy_loop": "soak_flows_busy_loop_10usecs"}
+        self.threaded_apps = {}
         # self.threaded_apps = {"busy_loop": "soak_flows_busy_loop_10usecs", "memcpy_1MB":"soak_flows_memcpy_1MB_non_coh"}
 
         if self.duration == "1m":
@@ -295,7 +303,7 @@ class FunTestCase1(FunTestCase):
         if self.run_le_firewall:
             le_firewall(self.test_duration, self.boot_new_image)
 
-        thread_map_for_soak_apps = self.start_threaded_apps()
+        # thread_map_for_soak_apps = self.start_threaded_apps()
 
         for app, parameters in app_params.iteritems():
             parameters["f1"] = 0
@@ -314,7 +322,7 @@ class FunTestCase1(FunTestCase):
         #################### After the traffic ############
         if self.run_le_firewall:
             le_firewall(self.test_duration, self.boot_new_image, True)
-        self.stop_threaded_apps(thread_map_for_soak_apps)
+        # self.stop_threaded_apps(thread_map_for_soak_apps)
 
         count = 3
         heading = "After the traffic"

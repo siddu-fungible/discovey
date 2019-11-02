@@ -1,4 +1,5 @@
 import debug_memory_calculation
+from lib.system.fun_test import *
 # one_data_set is assumed to have time1 and output1 and time2 and output2
 
 
@@ -15,7 +16,9 @@ def dict_difference(one_data_set, cmd):
             result[field] = diff_dict[field]
     elif cmd == "le":
         # peek_value = 320
-        result = dict_difference_level_2_div(dict_1, dict_2, time_difference)
+        field = "cmh_egress_cnt"
+        result_dict = dict_difference_level_2_div(dict_1, dict_2, time_difference)
+        result = find_field_sum_le(result_dict, field)
         # result = dict_level_1_div(diff_dict, peek_value)
     elif cmd == "hbm":
         # diff_dict = dict_difference_level_2(dict_1, dict_2, time_difference)
@@ -52,8 +55,19 @@ def dict_level_1_div(dict_lev1, peek_value):
     return dict_lev1
 
 
-# def dict_sum_level_2(dict_lev1):
-#     for k, v in dict_lev1.iteritems():
-#         for field, value in v.iteritems():
-#             dict_lev1[k][field] = value/peek_value
-#     return dict_lev1
+def dict_sum_level_2(dict_lev1):
+    for k, v in dict_lev1.iteritems():
+        for field, value in v.iteritems():
+            dict_lev1[k][field] = value
+    return dict_lev1
+
+
+def find_field_sum_le(result_dict,field):
+    result = {}
+    le_sum = 0
+    for cluster, value in result_dict.iteritems():
+        result[cluster] = value[field]
+        le_sum += value[field]
+        fun_test.log("Cluster: {} field: {} value: {}".format(cluster, field, value[field]))
+    result["overall"] = le_sum
+    return result
