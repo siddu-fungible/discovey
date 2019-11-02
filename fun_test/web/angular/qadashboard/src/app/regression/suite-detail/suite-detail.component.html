@@ -100,7 +100,7 @@
                 log</a></td>
             </tr>
             <tr *ngIf="suiteExecution">
-              <td><a href="{{ getSchedulerLogDir(suiteExecution.fields.execution_id) | async }}">Log directory (Absolute path: {{ ABSOLUTE_LOG_DIRECTORY + suiteExecution.fields.execution_id }})</a>
+              <td><a href="{{ getSchedulerLogDir(suiteExecution.fields.execution_id) | async }}">Log directory </a>(Absolute path: {{ ABSOLUTE_LOG_DIRECTORY + suiteExecution.fields.execution_id }})
             </tr>
             <tr *ngIf="environment">
               <td>Branch_FunOS</td>
