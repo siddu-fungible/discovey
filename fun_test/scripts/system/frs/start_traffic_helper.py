@@ -152,7 +152,7 @@ def le_firewall(run_time, new_image, just_kill=False):
         if running:
             fun_test.test_assert(running, "Le started on VM: {}".format(vm))
 
-    fun_test.sleep("For Le-firewall traffic to start", seconds=300)
+    fun_test.sleep("For Le-firewall traffic to start", seconds=120)
 
 
 def kill_le_firewall(vm_details):
