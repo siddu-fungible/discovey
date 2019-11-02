@@ -46,6 +46,7 @@ export class SuiteDetailComponent implements OnInit, OnDestroy {
   reUseBuildImage: boolean = false;
   reRunScript: string = null;
   refreshTimer: any = null;
+  ABSOLUTE_LOG_DIRECTORY = "/project/users/QA/regression/Integration/fun_test/web/static/logs/s_";
 
   constructor(private apiService: ApiService,
               private route: ActivatedRoute,
