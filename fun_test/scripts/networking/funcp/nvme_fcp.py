@@ -582,8 +582,8 @@ class RunFioRds(FunTestCase):
             setattr(self, k, v)
 
         job_inputs = fun_test.get_job_inputs()
-        if "qdepth" in job_inputs:
-            self.fio_cmd_args["qdepth"] = job_inputs["qdepth"]
+        if "iodepth" in job_inputs:
+            self.fio_cmd_args["iodepth"] = job_inputs["iodepth"]
         if "numjobs" in job_inputs:
             self.fio_cmd_args["numjobs"] = job_inputs["numjobs"]
             numjobs_set = True
