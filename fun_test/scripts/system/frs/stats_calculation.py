@@ -64,10 +64,10 @@ def dict_sum_level_2(dict_lev1):
 
 def find_field_sum_le(result_dict,field):
     result = {}
-    sum = 0
+    le_sum = 0
     for cluster, value in result_dict.iteritems():
         result[cluster] = value[field]
-        sum += value[field]
+        le_sum += value[field]
         fun_test.log("Cluster: {} field: {} value: {}".format(cluster, field, value[field]))
-    result["overall"] = sum
+    result["overall"] = le_sum
     return result

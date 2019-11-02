@@ -286,7 +286,7 @@ class FunTestCase1(FunTestCase):
         if not self.stats_info["come"]["DEBUG_MEMORY"]["disable"]:
             self.initial_debug_memory_stats = self.get_debug_memory_stats_initially(self.f_DEBUG_MEMORY_f1_0,
                                                                                     self.f_DEBUG_MEMORY_f1_0)
-        # self.capture_data(count=3, heading="Before starting traffic")
+        self.capture_data(count=3, heading="Before starting traffic")
 
         fun_test.test_assert(True, "Initial debug stats is saved")
 
