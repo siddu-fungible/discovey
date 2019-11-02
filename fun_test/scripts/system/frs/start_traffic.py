@@ -68,6 +68,8 @@ class MyScript(FunTestScript):
             topology = topology_helper.deploy()
             fun_test.test_assert(topology, "Topology deployed")
         self.verify_dpcsh_started()
+        if not self.boot_new_image:
+            self.clear_uart_logs()
         if self.ec_vol:
             self.create_4_et_2_ec_volume()
 
@@ -194,6 +196,27 @@ class MyScript(FunTestScript):
             except Exception as ex:
                 fun_test.log(ex)
         return result
+
+
+    def clear_uart_logs(self):
+        result = False
+        try:
+            bmc_handle = Bmc(host_ip=self.fs['bmc']['mgmt_ip'],
+                             ssh_username=self.fs['bmc']['mgmt_ssh_username'],
+                             ssh_password=self.fs['bmc']['mgmt_ssh_password'],
+                             set_term_settings=True,
+                             disable_uart_logger=False)
+            bmc_handle.set_prompt_terminator(r'# $')
+            f1_index = 0
+            f1_0_uart_file = bmc_handle.get_f1_uart_log_file_name(f1_index=f1_index)
+            bmc_handle.command("echo '' > {}".format(f1_0_uart_file))
+            f1_index = 1
+            f1_1_uart_file = bmc_handle.get_f1_uart_log_file_name(f1_index=f1_index)
+            bmc_handle.command("echo '' > {}".format(f1_1_uart_file))
+            result = True
+        except Exception as ex:
+            fun_test.log(ex)
+        fun_test.test_assert(result, "Cleared the uart logs")
 
     def cleanup(self):
         fun_test.log("Script-level cleanup")
