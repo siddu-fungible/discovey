@@ -67,9 +67,9 @@ class MyScript(FunTestScript):
         if self.boot_new_image:
             topology = topology_helper.deploy()
             fun_test.test_assert(topology, "Topology deployed")
-        self.verify_dpcsh_started()
-        if not self.boot_new_image:
-            self.clear_uart_logs()
+        # self.verify_dpcsh_started()
+        # if not self.boot_new_image:
+        #     self.clear_uart_logs()
         if self.ec_vol:
             self.create_4_et_2_ec_volume()
 
@@ -260,6 +260,7 @@ class FunTestCase1(FunTestCase):
         self.stats_info["bmc"] = {"POWER": {"calculated": True}, "DIE_TEMPERATURE": {"calculated": False, "disable":True}}
         self.stats_info["come"] = {"DEBUG_MEMORY": {}, "CDU": {}, "EQM": {}, "BAM": {"calculated": False, "disable":True}, "DEBUG_VP_UTIL": {"calculated": False}, "LE": {}, "HBM": {"disable":True},
                                    "EXECUTE_LEAKS": {"calculated": False, "disable": True}, "PC_DMA": {"calculated": True}}
+        self.stats_info["files"] = {"fio":{}}
 
         if self.collect_stats:
             for system in self.stats_info:
@@ -280,7 +281,7 @@ class FunTestCase1(FunTestCase):
                 if value.get("disable", False):
                     fun_test.log("stat: {} has been disabled".format(stat_name))
                     continue
-                cal = ["", "calculated_"] if value.get("calculated", True) else [""]
+                cal = ["", "calculated_"] if value.get("calculated", False) else [""]
                 for calculated in cal:
                     if system == "bmc":
                         globals()["{}{}_OUTPUT".format(calculated, stat_name)] = fun_test.get_test_case_artifact_file_name(post_fix_name="{}{}_OUTPUT_logs.txt".format(calculated, stat_name))
@@ -289,11 +290,16 @@ class FunTestCase1(FunTestCase):
                     elif system == "come":
                         for f1 in self.run_on_f1:
                             globals()["{}{}_DPCSH_OUTPUT_F1_{}".format(calculated, stat_name,f1)] = fun_test.get_test_case_artifact_file_name(post_fix_name="{}{}_DPCSH_OUTPUT_F1_{}_logs.txt".format(calculated, stat_name, f1))
-                            fun_test.add_auxillary_file(description="{}{}_DPCSH_OUTPUT_F1_{}".format(calculated, stat_name, f1),filename=globals()["{}{}_DPCSH_OUTPUT_F1_{}".format(calculated, stat_name, f1)])
+                            fun_test.add_auxillary_file(description="{}{}_DPCSH_OUTPUT_F1_{}".format(calculated.upper(), stat_name, f1),filename=globals()["{}{}_DPCSH_OUTPUT_F1_{}".format(calculated, stat_name, f1)])
                             setattr(self, "f_{}{}_f1_{}".format(calculated, stat_name, f1),open(globals()["{}{}_DPCSH_OUTPUT_F1_{}".format(calculated, stat_name, f1)],"w+"))
+                    elif system == "files":
+                        for f1 in self.run_on_f1:
+                            globals()["{}_OUTPUT_F1_{}".format(stat_name,f1)] = fun_test.get_test_case_artifact_file_name(post_fix_name="{}_OUTPUT_F1_{}_logs.txt".format(stat_name, f1))
+                            fun_test.add_auxillary_file(description="{}_OUTPUT_F1_{}".format(stat_name, f1),filename=globals()["{}_OUTPUT_F1_{}".format(stat_name, f1)])
+                            setattr(self, "f_{}_f1_{}".format(stat_name, f1),open(globals()["{}_OUTPUT_F1_{}".format(stat_name, f1)], "w+"))
 
         # Traffic
-        self.methods = {"crypto": crypto, "zip": zip_deflate, "rcnvme": rcnvme, "fio": fio}
+        self.methods = {"crypto": crypto, "zip": zip_deflate, "rcnvme": rcnvme}
         self.threaded_apps = {}
         # self.threaded_apps = {"busy_loop": "soak_flows_busy_loop_10usecs", "memcpy_1MB":"soak_flows_memcpy_1MB_non_coh"}
 
@@ -309,7 +315,7 @@ class FunTestCase1(FunTestCase):
         if not self.stats_info["come"]["DEBUG_MEMORY"]["disable"]:
             self.initial_debug_memory_stats = self.get_debug_memory_stats_initially(self.f_DEBUG_MEMORY_f1_0,
                                                                                     self.f_DEBUG_MEMORY_f1_0)
-        self.capture_data(count=3, heading="Before starting traffic")
+        # self.capture_data(count=3, heading="Before starting traffic")
 
         fun_test.test_assert(True, "Initial debug stats is saved")
 
@@ -323,12 +329,19 @@ class FunTestCase1(FunTestCase):
             app_params = get_params_for_time.get(self.test_duration, specific_field=self.specific_apps)
         fun_test.log("App parameters: {}".format(app_params))
 
+        if "fio" in self.specific_apps:
+            fio_data = app_params["fio"]
+            fio_data["runtime"] = 140
+            fio_thread_map = self.start_fio_as_thread(fio_data)
+
         if self.run_le_firewall:
             le_firewall(self.test_duration, self.boot_new_image)
 
         # thread_map_for_soak_apps = self.start_threaded_apps()
 
         for app, parameters in app_params.iteritems():
+            if app == "fio":
+                continue
             parameters["f1"] = 0
             result = self.methods[app](come_handle, **parameters)
             fun_test.test_assert(result, "{} traffic started on F1_0".format(app))
@@ -342,6 +355,9 @@ class FunTestCase1(FunTestCase):
         fun_test.log("Capturing the data {}".format(heading))
         self.capture_data(count=count, heading=heading)
 
+        if "fio" in self.specific_apps:
+            self.join_fio_thread(fio_thread_map)
+
         #################### After the traffic ############
         if self.run_le_firewall:
             le_firewall(self.test_duration, self.boot_new_image, True)
@@ -352,6 +368,7 @@ class FunTestCase1(FunTestCase):
         fun_test.log("Capturing the data {}".format(heading))
         self.capture_data(count=count, heading=heading)
 
+
     def capture_data(self, count, heading):
         def func_not_found():
             print "Function not found"
@@ -361,6 +378,8 @@ class FunTestCase1(FunTestCase):
         thread_count = 0
         time_in_seconds = 1
         for system in self.stats_info:
+            if system == "files":
+                continue
             for stat_name,value  in self.stats_info[system].iteritems():
                 if value.get("disable", False):
                     fun_test.log("stat: {} has been disabled".format(stat_name))
@@ -809,9 +828,56 @@ class FunTestCase1(FunTestCase):
             track_app = fun_test.shared_variables["var_{}_f1_{}".format(app, f1)]
             fun_test.sleep("Before next iteration app: {}".format(app))
 
+    def start_fio_as_thread(self,fio_data):
+        fio_thread_map = {}
+        fio_capacity_map = {"f1_0": 26843545600, "f1_1": 32212254720}
+        self.fio_params.update(fio_data)
+        for f1 in self.run_on_f1:
+            try:
+                come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
+                                   ssh_username=self.fs['come']['mgmt_ssh_username'],
+                                   ssh_password=self.fs['come']['mgmt_ssh_password'])
+
+                fetch_nvme = fetch_nvme_device(come_handle, 1, size=fio_capacity_map["f1_{}".format(f1)])
+                if fetch_nvme["status"]:
+                    fio_thread_map["{}".format(f1)] = fun_test.execute_thread_after(func=self.func_fio,
+                                                                                           time_in_seconds=5,
+                                                                                           filename=fetch_nvme["nvme_device"],
+                                                                                           come_handle=come_handle,
+                                                                                           f1=f1,
+                                                                                           **self.fio_params)
+                else:
+                    fun_test.critical("Volumes not create on F1: {}".format(f1))
+                come_handle.destroy()
+            except Exception as ex:
+                fun_test.log(ex)
+        return fio_thread_map
+
+    def join_fio_thread(self, thread_map):
+        stat_name = "fio"
+        for f1, thread in thread_map.iteritems():
+            one_dataset = {}
+            fun_test.log("Trying to join fio thread f1: {}".format(f1))
+            fun_test.join_thread(thread)
+            fun_test.test_assert(True,"FIO successfully completed on f1 : {}".format(f1))
+            try:
+                fun_test.sleep("Generating fio output")
+                output = fun_test.shared_variables["fio_output_f1_{}".format(f1)]
+                one_dataset["time"] = datetime.datetime.now()
+                one_dataset["output"] = output
+                file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset)
+            except Exception as ex:
+                fun_test.log(ex)
 
 
-
+    def func_fio(self, come_handle, filename, f1,**params):
+        try:
+            fio_output = come_handle.pcie_fio(timeout=params["runtime"] + 100,
+                                              filename=filename,
+                                              **params)
+        except Exception as ex:
+            fun_test.critical(ex)
+        fun_test.shared_variables["fio_output_f1_{}".format(f1)] = fio_output
 
 
 if __name__ == "__main__":
