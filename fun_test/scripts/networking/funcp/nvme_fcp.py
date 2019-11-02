@@ -570,7 +570,6 @@ class RunFioRds(FunTestCase):
         f11_stats_collector = CollectStats(f11_storage_ctrl_obj)
         skip_precondition = fun_test.shared_variables["skip_precondition"]
         collect_stats = fun_test.shared_variables["collect_stats"]
-        command_timeout = self.command_timeout
 
         table_data_headers = ["Devices", "Block_Size", "IOPs", "BW in Gbps"]
         table_data_cols = ["devices", "read_block_size", "total_read_iops", "total_read_bw"]
@@ -580,6 +579,7 @@ class RunFioRds(FunTestCase):
 
         for k, v in config_dict["GenericParams"].items():
             setattr(self, k, v)
+        command_timeout = self.command_timeout
 
         job_inputs = fun_test.get_job_inputs()
         if "iodepth" in job_inputs:
@@ -660,6 +660,8 @@ class RunFioRds(FunTestCase):
                 fio_filename = str(':'.join(nvme_device_list[:x]))
             if not numjobs_set:
                 self.fio_cmd_args["numjobs"] = 8 * x
+                fio_read_jobs = self.fio_cmd_args["numjobs"]
+            else:
                 fio_read_jobs = self.fio_cmd_args["numjobs"]
             fio_job_name = "{}_ssd_{}_{}".format(x, test_type,
                                                  fio_read_jobs)
