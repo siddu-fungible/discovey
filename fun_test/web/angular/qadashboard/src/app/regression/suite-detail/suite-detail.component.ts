@@ -38,8 +38,6 @@ export class SuiteDetailComponent implements OnInit, OnDestroy {
   stateMap: any = null;
   environment = new Environment();
   driver = null;
-  CONSOLE_LOG_EXTENSION: string = ".logs.txt";  //TIED to scheduler_helper.py  TODO
-  HTML_LOG_EXTENSION: string = ".html";         //TIED to scheduler_helper.py  TODO
     // Re-run options
   reRunOptionsReRunFailed: boolean = false;
   reRunOptionsReRunAll: boolean = true;
@@ -58,6 +56,14 @@ export class SuiteDetailComponent implements OnInit, OnDestroy {
               private title: Title) {
     this.stateStringMap = this.regressionService.stateStringMap;
     this.stateMap = this.regressionService.stateMap;
+  }
+
+  getHtmlLogPath(suiteExecutionId, path, logPrefix) {
+    this.regressionService.getHtmlLogPath(suiteExecutionId, path, logPrefix);
+  }
+
+  getConsoleLogPath(suiteExecutionId, path, logPrefix) {
+    this.regressionService.getConsoleLogPath(suiteExecutionId, path, logPrefix);
   }
 
   ngOnInit() {
@@ -238,28 +244,7 @@ export class SuiteDetailComponent implements OnInit, OnDestroy {
     return klass;
   }
 
-  _getFlatPath(suiteExecutionId, path, logPrefix) {
-    let httpPath = this.logDir + suiteExecutionId;
-    let parts = path.split("/");
-    let flat = path;
-    let numParts = parts.length;
-    if (numParts > 2) {
-      flat = parts[numParts - 2] + "_" + parts[numParts - 1];
-    }
-    let s = "";
-    if (logPrefix !== "") {
-      s = logPrefix + "_"
-    }
-    return httpPath + "/" + s + flat.replace(/^\//g, '');
-  }
 
-  getHtmlLogPath(suiteExecutionId, path, logPrefix) {
-    window.open(this._getFlatPath(suiteExecutionId, path, logPrefix) + this.HTML_LOG_EXTENSION);
-  }
-
-  getConsoleLogPath(suiteExecutionId, path, logPrefix) {
-    window.open(this._getFlatPath(suiteExecutionId, path, logPrefix) + this.CONSOLE_LOG_EXTENSION);
-  }
 
   applyAdditionalAttributes(item) {
     item["showingDetails"] = false;

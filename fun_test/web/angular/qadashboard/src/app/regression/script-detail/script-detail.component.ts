@@ -179,6 +179,9 @@ export class ScriptDetailComponent implements OnInit {
 
   }
 
+  openConsoleLogClick() {
+    this.regressionService.getConsoleLogPath(this.suiteExecutionId, this.scriptPath, this.logPrefix);
+  }
 
   fetchCheckpoints(testCaseExecution, suiteExecutionId) {
 
