@@ -1,4 +1,6 @@
 <div class="fun-flex-container fun-action-nav">
+  <a class="pseudo-anchor" href="/regression/suite_detail/{{ suiteExecutionId }}">&nbsp;< Back to suite</a>
+  <div class="fun-spacer"></div>
   <span class="script-name">{{ scriptPath }}</span>
   <div class="fun-spacer"></div>
   <button (click)="onContextOptionsClick(contextOptions)" class="fun-button-add">Context options</button>
@@ -17,13 +19,9 @@
             <span
               class="checkbox-text">ID : {{ availableContext.context_id }} ({{ availableContext.description }})</span>
           </div>
-
         </ng-container>
-
       </div>
-
     </div>
-
   </ng-template>
   <ng-template #chartSelectionOptions let-modal>
     <div class="fun-panel">
