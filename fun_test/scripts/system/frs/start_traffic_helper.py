@@ -84,24 +84,6 @@ def rcnvme(come_handle,
         fun_test.critical(ex)
     return result
 
-
-def fio(come_handle, f1=0, num_jobs=8, run_time=80, iodepth=16):
-    result = False
-    try:
-        cmd = "fio --group_reporting --output-format=json --ioengine=libaio --filename=/dev/nvme{f1}n1" \
-              " --time_based --output-format=json --rw=randread --name=fio_ec_default --prio=0" \
-              " --numjobs={num_jobs} --direct=1 --cpus_allowed=0-7 --bs=4k --runtime={run_time} --iodepth={iodepth}" \
-              " --size=100%".format(f1=f1, num_jobs=num_jobs, run_time=run_time, iodepth=iodepth)
-        come_handle.enter_sudo()
-        come_handle.start_bg_process(cmd, output_file="/tmp/f1_{}_fio_nj{}_io{}_run{}_logs.txt"
-                                     .format(f1, num_jobs, iodepth, run_time))
-        come_handle.exit_sudo()
-        result = True
-
-    except Exception as ex:
-        fun_test.critical(ex)
-    return result
-
 def le_firewall(run_time, new_image, just_kill=False):
     global vm_info
     if new_image:
