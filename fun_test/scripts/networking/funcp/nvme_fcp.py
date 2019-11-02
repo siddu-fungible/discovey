@@ -570,6 +570,7 @@ class RunFioRds(FunTestCase):
         f11_stats_collector = CollectStats(f11_storage_ctrl_obj)
         skip_precondition = fun_test.shared_variables["skip_precondition"]
         collect_stats = fun_test.shared_variables["collect_stats"]
+        command_timeout = self.command_timeout
 
         table_data_headers = ["Devices", "Block_Size", "IOPs", "BW in Gbps"]
         table_data_cols = ["devices", "read_block_size", "total_read_iops", "total_read_bw"]
@@ -580,7 +581,14 @@ class RunFioRds(FunTestCase):
         for k, v in config_dict["GenericParams"].items():
             setattr(self, k, v)
 
-        command_timeout = self.command_timeout
+        job_inputs = fun_test.get_job_inputs()
+        if "qdepth" in job_inputs:
+            self.fio_cmd_args["qdepth"] = job_inputs["qdepth"]
+        if "numjobs" in job_inputs:
+            self.fio_cmd_args["numjobs"] = job_inputs["numjobs"]
+            numjobs_set = True
+        else:
+            numjobs_set = False
 
         nvme_list_raw = f11_hosts[0]["handle"].sudo_command("nvme list -o json")
         if "failed to open" in nvme_list_raw.lower():
@@ -650,7 +658,9 @@ class RunFioRds(FunTestCase):
                 fio_filename = nvme_device_list[0]
             else:
                 fio_filename = str(':'.join(nvme_device_list[:x]))
-            fio_read_jobs = 8 * x
+            if not numjobs_set:
+                self.fio_cmd_args["numjobs"] = 8 * x
+                fio_read_jobs = self.fio_cmd_args["numjobs"]
             fio_job_name = "{}_ssd_{}_{}".format(x, test_type,
                                                  fio_read_jobs)
 
@@ -673,7 +683,6 @@ class RunFioRds(FunTestCase):
                 fun_test.critical("Stats collection disabled")
             try:
                 fio_result = f11_hosts[0]["handle"].pcie_fio(filename=fio_filename,
-                                                             numjobs=fio_read_jobs,
                                                              rw="read",
                                                              name=fio_job_name,
                                                              cpus_allowed=cpu_list,
