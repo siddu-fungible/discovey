@@ -22,6 +22,9 @@ test_var['netesto_fun_plots'] = '~/netesto_git/local/fun_plots'
 
 
 
+
+
+
 # Pre requisites - Create a user netesto/netesto in local host
  
 def get_netesto_script(test_type='basic'):
@@ -79,12 +82,12 @@ def get_netesto_script(test_type='basic'):
         else:
             delay = '0'
 
-        if 'repeat_flow' in flow:
+        if 'repeat_interval' in flow:
             if 'repeat_max' in flow:
                 repeat_max = flow['repeat_max']
             else:
                 repeat_max = '1'
-            repeat_flow_lst = [flow['repeat_flow']] * int(repeat_max)
+            repeat_flow_lst = [flow['repeat_interval']] * int(repeat_max)
             flow_repeat = ','.join(repeat_flow_lst)
             # insert first iteration
             flow_repeat = '0,' + str(flow_repeat)
@@ -317,6 +320,7 @@ def run_netesto(test_type, total_calls=0):
         fun_test.log("======================================\n")
         fun_test.log("Throughput :  http://10.80.2.101/Chart.js/fun_plots/netesto_tp_%s.html" % netesto_process)
         fun_test.log("Latency :  http://10.80.2.101/Chart.js/fun_plots/netesto_latency_%s.html" % netesto_process)
+        fun_test.log("Retransmissions :  http://10.80.2.101/Chart.js/fun_plots/netesto_retrans_%s.html" % netesto_process)
         fun_test.log("Aggregate :  http://10.80.2.101/Chart.js/fun_plots/aggregate_%s.csv" % netesto_process)
         fun_test.log(message="No of incomplete streams = %s" % df[df['Duration'] < 57].count(1).count())
 
@@ -468,6 +472,13 @@ if __name__ == '__main__':
     options, args = parser.parse_args()
     if options.usage:
         print '''README:
+            Examples : 
+                ./netesto_fcp_scale.py -t <test profile>
+                    where:
+                    <test profile> : Profile defined in netesto_traffic_profiles.py
+                ./netesto_fcp_scale.py -c -d <duration> -t <test name> --nc <netperf clients> --ns <netesto servers>
+                    <test name> : One of tp_tcp_rr, tp_tcp_stream, tp_tcp_stream_buff_limit, tp_tcp_rr_buff_limit
+            
     		'-t', '--test' default="tp_tcp_rr"
                 '-d', '--duration' default=60
     		'-n', '--instances' default='1', help="No of instances "
