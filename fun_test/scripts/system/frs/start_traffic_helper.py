@@ -197,6 +197,8 @@ def poll_untill_le_stops(vm_details):
             fun_test.log("Remaining time: {}".format(timer.remaining_time()))
             fun_test.sleep("Before next check", seconds=30)
         else:
+            if timer.elapsed_time() < 100:
+                fun_test.test_assert(False, "Le firewall initiate on vm: {}".format(vm_details["name"]))
             fun_test.log("Le initiated successfully, time taken: {}".format(timer.elapsed_time()))
             break
 
