@@ -260,7 +260,7 @@ class FunTestCase1(FunTestCase):
         self.stats_info["bmc"] = {"POWER": {"calculated": True}, "DIE_TEMPERATURE": {"calculated": False, "disable":True}}
         self.stats_info["come"] = {"DEBUG_MEMORY": {}, "CDU": {}, "EQM": {}, "BAM": {"calculated": False, "disable":True}, "DEBUG_VP_UTIL": {"calculated": False}, "LE": {}, "HBM": {"disable":True},
                                    "EXECUTE_LEAKS": {"calculated": False, "disable": True}, "PC_DMA": {"calculated": True}}
-        self.stats_info["files"] = {"fio":{}}
+        self.stats_info["files"] = {"fio":{"calculated": False}}
 
         if self.collect_stats:
             for system in self.stats_info:
@@ -281,7 +281,7 @@ class FunTestCase1(FunTestCase):
                 if value.get("disable", False):
                     fun_test.log("stat: {} has been disabled".format(stat_name))
                     continue
-                cal = ["", "calculated_"] if value.get("calculated", False) else [""]
+                cal = ["", "calculated_"] if value.get("calculated", True) else [""]
                 for calculated in cal:
                     if system == "bmc":
                         globals()["{}{}_OUTPUT".format(calculated, stat_name)] = fun_test.get_test_case_artifact_file_name(post_fix_name="{}{}_OUTPUT_logs.txt".format(calculated, stat_name))
