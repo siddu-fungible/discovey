@@ -1,0 +1,10 @@
+<ng-container *ngFor="let statistic of statistics">
+  <div class="fun-panel">
+    <div class="fun-panel-header">
+      {{ statistic.statisticsCategory.display_name }} -- {{ statistic.statisticsSubCategory.display_name }}
+    </div>
+    <app-bam [scriptExecutionInfo]="scriptExecutionInfo" *ngIf="statistic.statisticsCategory.name ==='system' && statistic.statisticsSubCategory.name ==='bam'">
+    </app-bam>
+  </div>
+
+</ng-container>

@@ -8,13 +8,12 @@ import {animate, state, style, transition, trigger} from "@angular/animations";
 import {CommonService} from "../../services/common/common.service";
 import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
 import {ScriptDetailService, ContextInfo, ScriptRunTime} from "./script-detail.service";
-
+import {StatisticsService, StatisticsCategory, StatisticsSubCategory} from "../../statistics/statistics.service";
 
 class DataModel {
   letter: string;
   frequency: number;
 }
-
 
 
 class TimeSeriesLog {
@@ -49,25 +48,6 @@ class Checkpoint {
 })
 export class ScriptDetailComponent implements OnInit {
   driver: Observable<any> = null;
-  /*
-  values = [{
-        name: 'Installation',
-        data: [43934, 52503, 57177, 69658, 97031, 119931, 137133, 154175]
-    }, {
-        name: 'Manufacturing',
-        data: [24916, 24064, 29742, 29851, 32490, 30282, 38121, 40434]
-    }, {
-        name: 'Sales & Distribution',
-        data: [11744, 17722, 16005, 19771, 20185, 24377, 32147, 39387]
-    }, {
-        name: 'Project Development',
-        data: [null, null, 7988, 12169, 15112, 22452, 34400, 34227]
-    }, {
-        name: 'Other',
-        data: [12908, 5948, 8105, 11248, 8989, 11816, 18274, 18111]
-    }];
-  */
-
   values = [{data: [{y: 45}, {y: 51}, {y: 73}]}];
   series = [1, 2, 3];
 
@@ -78,7 +58,14 @@ export class ScriptDetailComponent implements OnInit {
               private modalService: NgbModal,
               private service: ScriptDetailService
   ) {
-
+    this.selectedStatistics = [];
+    let sc = new StatisticsCategory();
+    sc.display_name = "System";
+    sc.name = "system";
+    let ssc = new StatisticsSubCategory();
+    ssc.display_name = "BAM";
+    ssc.name = "bam";
+    this.selectedStatistics.push({statisticsCategory: sc, statisticsSubCategory: ssc});
   }
   suiteExecutionId: number = 10000;
   logPrefix: number = null;
@@ -104,7 +91,14 @@ export class ScriptDetailComponent implements OnInit {
   DEFAULT_LOOKBACK_LOGS: number = 100;
   numLookbackLogs: number = 100;
   logsAreTruncated: boolean = false;
-
+  viewingCharts: boolean = false;
+  statisticsCategories: any [] = [
+    {name: "system", display_name: "System", "sub_categories": [{name: "bam", display_name: "BAM"}]}
+  ];
+  selectedStatisticsCategory = null;
+  selectedStatisticsSubCategory = null;
+  selectedStatistics: any [] = null;
+  scriptExecutionInfo = {};
 
   ngOnInit() {
 
@@ -134,6 +128,7 @@ export class ScriptDetailComponent implements OnInit {
         testCaseExecution["relative_started_epoch_time"] = testCaseExecution["started_epoch_time"] - this.scriptRunTime.started_epoch_time;
 
       });
+      this.updateScriptExecutionInfo();
       return of(true);
     }));
 
@@ -216,6 +211,8 @@ export class ScriptDetailComponent implements OnInit {
     this.currentCheckpointIndex = null;
     this.showLogsPanel = false;
     this.currentTestCaseExecution = this.testCaseExecutions[testCaseExecutionIndex];
+    this.updateScriptExecutionInfo();
+
     this.status = "Fetching checkpoints";
     this.fetchCheckpoints(this.currentTestCaseExecution, this.suiteExecutionId).subscribe(response => {
       this.status = null;
@@ -288,6 +285,8 @@ export class ScriptDetailComponent implements OnInit {
     this.showContext(contextId);
     this._restoreCheckpointDefaults();
     this.currentCheckpointIndex = checkpointIndex;
+    this.updateScriptExecutionInfo();
+
     //this.showTestCasePanel = false;
     this.showLogsPanel = true;
     this.showCheckpointPanel = true;
@@ -480,5 +479,47 @@ export class ScriptDetailComponent implements OnInit {
   showPreviousLogsClick() {
     this.numLookbackLogs += 100;
     this.logsAreTruncated = this.setMinimumTime();
+  }
+
+  viewChartsClick(content) {
+    this.selectedStatisticsCategory = null;
+    this.selectedStatisticsSubCategory = null;
+    this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title'}).result.then((suiteExecution) => {
+    }, (reason) => {
+      console.log("Rejected");
+      //this.closeResult = `Dismissed ${this.getDismissReason(reason)}`;
+    });
+  }
+
+  addStatisticsCategory() {
+    if (!this.selectedStatisticsCategory) {
+      return this.loggerService.error("Statistics category not selected");
+    }
+
+    if (!this.selectedStatisticsSubCategory) {
+      return this.loggerService.error("Statistics sub-category not selected");
+    }
+
+    if (!this.selectedStatistics) {
+      this.selectedStatistics = [];
+    }
+
+    this.selectedStatistics.push({statisticsCategory: this.selectedStatisticsCategory,
+      statisticsSubCategory: this.selectedStatisticsSubCategory});
+    this.selectedStatisticsCategory = null;
+    this.selectedStatisticsSubCategory = null;
+    this.selectedStatistics = [...this.selectedStatistics];
+  }
+
+  deleteSelectedStatisticClick(index) {
+    this.selectedStatistics.splice(index, 1);
+    this.selectedStatistics = [...this.selectedStatistics];
+  }
+
+  updateScriptExecutionInfo() {
+    this.scriptExecutionInfo["suite_execution_id"] = this.suiteExecutionId;
+    this.scriptExecutionInfo["current_test_case_execution"] = this.currentTestCaseExecution;
+    this.scriptExecutionInfo["current_checkpoint_index"] = this.currentCheckpointIndex;
+    this.scriptExecutionInfo = {...this.scriptExecutionInfo};
   }
 }

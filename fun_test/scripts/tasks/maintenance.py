@@ -114,7 +114,7 @@ class DetectLargeFiles(FunTestCase):
         working_directory = "{}".format(LOGS_DIR)
         return_code, output, err = t.piped_commands(commands=["find {} -type f -size +{}".format(LOGS_DIR, self.MAX_FILE_SIZE)])
         lines = output.split("\n")
-        fun_test.test_assert(len(lines) < 3, "No of files > {}M: {}".format(self.MAX_FILE_SIZE, len(lines)))
+        fun_test.test_assert(len(lines) < 3, "No of files > {}: {}".format(self.MAX_FILE_SIZE, len(lines)))
 
     def cleanup(self):
         pass

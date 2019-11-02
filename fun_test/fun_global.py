@@ -193,3 +193,4 @@ class TimeSeriesTypes(Codes):
     CONTEXT_INFO = 40
     LOG = 60
     CHECKPOINT = 80
+    STATISTICS = 100
