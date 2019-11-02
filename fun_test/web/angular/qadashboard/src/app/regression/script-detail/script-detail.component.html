@@ -106,6 +106,7 @@
       </div>
     </div>
     <div *ngIf="currentTestCaseExecution" class="fun-flex-item panel fun-panel" [@show]="showCheckpointPanel">
+      <fun-spinner [status]="checkpointPanelStatus"></fun-spinner>
       <div class="fun-panel-header fun-flex-item fun-flex-container" style="justify-content: space-between">
         <span>Checkpoints</span>
         <span *ngIf="!showTestCasePanel" (click)="onShowTestCasePanelClick()"

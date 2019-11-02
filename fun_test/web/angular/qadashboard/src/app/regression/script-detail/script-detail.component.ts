@@ -99,6 +99,7 @@ export class ScriptDetailComponent implements OnInit {
   selectedStatisticsSubCategory = null;
   selectedStatistics: any [] = null;
   scriptExecutionInfo = {};
+  checkpointPanelStatus: string = null;
 
   ngOnInit() {
 
@@ -182,12 +183,6 @@ export class ScriptDetailComponent implements OnInit {
   fetchCheckpoints(testCaseExecution, suiteExecutionId) {
 
     let testCaseId = testCaseExecution.test_case_id;
-    /*
-    let timeSeriesEntry = this.timeSeriesByTestCase[testCaseId];
-    if (!timeSeriesEntry) {
-      this.timeSeriesByTestCase[testCaseId] = {checkpoints: null, minimum_epoch: 0, maximum_epoch: 0};
-      timeSeriesEntry = this.timeSeriesByTestCase[testCaseId];
-    }*/
 
     if (testCaseExecution.hasOwnProperty("checkpoints") && (testCaseExecution.checkpoints) && (testCaseExecution.checkpoints.length > 0)) {
       return of(true)
@@ -213,9 +208,9 @@ export class ScriptDetailComponent implements OnInit {
     this.currentTestCaseExecution = this.testCaseExecutions[testCaseExecutionIndex];
     this.updateScriptExecutionInfo();
 
-    this.status = "Fetching checkpoints";
+    this.checkpointPanelStatus = "Fetching checkpoints";
     this.fetchCheckpoints(this.currentTestCaseExecution, this.suiteExecutionId).subscribe(response => {
-      this.status = null;
+      this.checkpointPanelStatus = null;
       this.showCheckpointPanel = true;
 
     }, error => {
@@ -224,44 +219,6 @@ export class ScriptDetailComponent implements OnInit {
 
     });
 
-    /*this.regressionService.testCaseTimeSeriesCheckpoints(this.suiteExecutionId, )*/
-
-
-    /*
-    this.testLogs = null;
-    this.currentCheckpointIndex = null;
-    this.status = "Fetching test-case executions";
-    this.regressionService.testCaseTimeSeries(this.suiteExecutionId, this.testCaseExecutions[testCaseExecutionIndex].execution_id).subscribe(response => {
-      this.currentTestCaseExecution = this.testCaseExecutions[testCaseExecutionIndex];
-      this.currentTestCaseExecutionIndex = testCaseExecutionIndex;
-
-      let timeSeries = response;
-      this.timeSeriesByTestCase[this.currentTestCaseExecution.test_case_id] = {timeSeries: timeSeries,
-        checkpoints: [], minimum_epoch: 0, maximum_epoch: 0};
-      let thisEntry = this.timeSeriesByTestCase[this.currentTestCaseExecution.test_case_id];
-      timeSeries.forEach(timeSeriesElement => {
-
-        timeSeriesElement.relative_epoch_time = timeSeriesElement.epoch_time - this.scriptRunTime.started_epoch_time;
-        if (timeSeriesElement.relative_epoch_time < thisEntry.minimum_epoch) {
-          thisEntry.minimum_epoch = timeSeriesElement.relative_epoch_time;
-        }
-        if (timeSeriesElement.relative_epoch_time > thisEntry.maximum_epoch) {
-          thisEntry.maximum_epoch = timeSeriesElement.relative_epoch_time;
-        }
-
-        if (timeSeriesElement.relative_epoch_time > this.maxRelativeTime) {
-          this.maxRelativeTime = timeSeriesElement.relative_epoch_time;
-        }
-
-        if (timeSeriesElement.type == "checkpoint") { //TODO
-          let newCheckpoint = timeSeriesElement.data;
-          this.timeSeriesByTestCase[this.currentTestCaseExecution.test_case_id].checkpoints.push(newCheckpoint);
-        }
-      });
-
-      this.showCheckpointPanel = true;
-      this.status = null;
-    })*/
   }
   onCheckpointClick2(testCaseExecution, checkpointIndex, contextId?: 0) {
 
@@ -301,18 +258,7 @@ export class ScriptDetailComponent implements OnInit {
       checkpointsInConsideration.unshift(selectedCheckpoint.previous_checkpoint);
     }
     console.log(checkpointsInConsideration);
-    /*let minEpoch = checkpointsInConsideration.reduce((min, p) => p.relative_epoch_time < min ? p.relative_epoch_time: min , checkpointsInConsideration[0].relative_epoch_time);
-    let maxEpoch = checkpointsInConsideration.reduce((max, p) => p.relative_end_epoch_time > max ? p.relative_end_epoch_time: max, checkpointsInConsideration[0].relative_end_epoch_time);
 
-    console.log(minEpoch, maxEpoch);
-    let trueRange = [this.scriptRunTime.started_epoch_time + minEpoch, this.scriptRunTime.started_epoch_time + maxEpoch];
-    console.log(trueRange);
-    console.log(checkpointsInConsideration);*/
-
-
-    /*let checkpointIndexesToFetch: number [] = checkpointsInConsideration.map(e => e.data.index);
-    let minCheckpointIndex = Math.min(...checkpointIndexesToFetch);
-    let maxCheckpointIndex: number = Math.max(...checkpointIndexesToFetch);*/
 
     let checkpointIndexesToFetch = Array.from(Array(checkpointIndex + 1).keys());
     //checkpointIndexesToFetch = checkpointIndexesToFetch.filter(checkpointIndex => !testCaseExecution.checkpoints[checkpointIndex].hasOwnProperty("timeSeries"));
