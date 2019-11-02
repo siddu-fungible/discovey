@@ -67,9 +67,9 @@ class MyScript(FunTestScript):
         if self.boot_new_image:
             topology = topology_helper.deploy()
             fun_test.test_assert(topology, "Topology deployed")
-        # self.verify_dpcsh_started()
-        # if not self.boot_new_image:
-        #     self.clear_uart_logs()
+        self.verify_dpcsh_started()
+        if not self.boot_new_image:
+            self.clear_uart_logs()
         if self.ec_vol:
             self.create_4_et_2_ec_volume()
 
@@ -315,7 +315,7 @@ class FunTestCase1(FunTestCase):
         if not self.stats_info["come"]["DEBUG_MEMORY"]["disable"]:
             self.initial_debug_memory_stats = self.get_debug_memory_stats_initially(self.f_DEBUG_MEMORY_f1_0,
                                                                                     self.f_DEBUG_MEMORY_f1_0)
-        # self.capture_data(count=3, heading="Before starting traffic")
+        self.capture_data(count=3, heading="Before starting traffic")
 
         fun_test.test_assert(True, "Initial debug stats is saved")
 
@@ -331,7 +331,7 @@ class FunTestCase1(FunTestCase):
 
         if "fio" in self.specific_apps:
             fio_data = app_params["fio"]
-            fio_data["runtime"] = 140
+            fio_data["runtime"] += 20
             fio_thread_map = self.start_fio_as_thread(fio_data)
 
         if self.run_le_firewall:
