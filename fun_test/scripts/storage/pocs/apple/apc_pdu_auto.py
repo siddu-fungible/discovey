@@ -8,6 +8,7 @@ from lib.system import utils
 from lib.host.linux import Linux
 from collections import OrderedDict
 import requests
+from lib.templates.storage.storage_controller_api import StorageControllerApi
 
 
 class ApcPduScript(FunTestScript):
@@ -90,8 +91,6 @@ class ApcPduTestcase(FunTestCase):
                 self.target_ip = job_inputs["target_ip"]
             if "end_sleep" in job_inputs:
                 self.end_sleep = job_inputs["end_sleep"]
-            if "docker_verify_interval" in job_inputs:
-                self.docker_verify_interval = job_inputs["docker_verify_interval"]
             if "after_runsc_up_host_connect_interval" in job_inputs:
                 self.after_runsc_up_host_connect_interval = job_inputs["after_runsc_up_host_connect_interval"]
             if "check_portal" in job_inputs:
@@ -118,72 +117,78 @@ class ApcPduTestcase(FunTestCase):
                                   ssh_password=self.fs['bmc']['mgmt_ssh_password'])
             self.bmc_handle.set_prompt_terminator(r'# $')
 
-            fun_test.add_checkpoint(checkpoint="ITERATION : {} out of {}".format(pc_no + 1, self.iterations))
-
-            if self.apc_pdu_reboot_machine:
-                self.apc_pdu_reboot()
-            self.come_handle.destroy()
-            self.bmc_handle.destroy()
-
-            self.come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
-                                    ssh_username=self.fs['come']['mgmt_ssh_username'],
-                                    ssh_password=self.fs['come']['mgmt_ssh_password'])
-            self.bmc_handle = Bmc(host_ip=self.fs['bmc']['mgmt_ip'],
-                                  ssh_username=self.fs['bmc']['mgmt_ssh_username'],
-                                  ssh_password=self.fs['bmc']['mgmt_ssh_password'])
-            self.bmc_handle.set_prompt_terminator(r'# $')
-
-            fun_test.log("Checking if COMe is UP")
-            come_up = self.come_handle.ensure_host_is_up(max_wait_time=600)
-            fun_test.test_assert(come_up, "COMe is UP")
-
-            fun_test.log("Checking if BMC is UP")
-            bmc_up = self.bmc_handle.ensure_host_is_up(max_wait_time=600)
-            fun_test.test_assert(bmc_up, "BMC is UP")
-
-            if self.apc_pdu_reboot_machine:
-                self.check_come_up_time(expected_minutes=5)
-
-            if self.check_docker:
-                self.check_expected_dockers_up()
-
-            if self.check_portal:
-                self.check_portal_up()
-
-            # Check if lspci devices are detected
-            fun_test.log("Check if F1_0 is detected")
-            self.check_pci_dev(f1=0)
-
-            fun_test.log("Check if F1_1 is detected")
-            self.check_pci_dev(f1=1)
-
-            if self.check_ssd:
-                fun_test.log("Checking if SSD's are Active on F1_0")
-                self.check_ssd_status(expected_ssds_up=self.expected_ssds_f1_0, f1=0)
-
-                fun_test.log("Checking if SSD's are Active on F1_1")
-                self.check_ssd_status(expected_ssds_up=self.expected_ssds_f1_1, f1=1)
-
-            if self.check_ports:
-                fun_test.log("Checking if NU and HNU port's are active on F1_0")
-                expected_ports_up_f1_0 = {'NU': self.expected_nu_ports_f1_0,
-                                          'HNU': self.expected_hnu_ports_f1_0}
-                self.check_nu_ports(f1=0, expected_ports_up=expected_ports_up_f1_0)
-
-                expected_ports_up_f1_1 = {'NU': self.expected_nu_ports_f1_1,
-                                          'HNU': self.expected_hnu_ports_f1_1}
-                fun_test.log("Checking if NU and HNU port's are active on F1_1")
-                self.check_nu_ports(f1=1, expected_ports_up=expected_ports_up_f1_1)
+            # fun_test.add_checkpoint(checkpoint="ITERATION : {} out of {}".format(pc_no + 1, self.iterations))
+            #
+            # if self.apc_pdu_reboot_machine:
+            #     self.apc_pdu_reboot()
+            # self.come_handle.destroy()
+            # self.bmc_handle.destroy()
+            #
+            # self.come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
+            #                         ssh_username=self.fs['come']['mgmt_ssh_username'],
+            #                         ssh_password=self.fs['come']['mgmt_ssh_password'])
+            # self.bmc_handle = Bmc(host_ip=self.fs['bmc']['mgmt_ip'],
+            #                       ssh_username=self.fs['bmc']['mgmt_ssh_username'],
+            #                       ssh_password=self.fs['bmc']['mgmt_ssh_password'])
+            # self.bmc_handle.set_prompt_terminator(r'# $')
+            #
+            # fun_test.log("Checking if COMe is UP")
+            # come_up = self.come_handle.ensure_host_is_up(max_wait_time=600)
+            # fun_test.test_assert(come_up, "COMe is UP")
+            #
+            # fun_test.log("Checking if BMC is UP")
+            # bmc_up = self.bmc_handle.ensure_host_is_up(max_wait_time=600)
+            # fun_test.test_assert(bmc_up, "BMC is UP")
+            #
+            # if self.apc_pdu_reboot_machine:
+            #     self.check_come_up_time(expected_minutes=5)
+            #
+            # if self.check_docker:
+            #     self.check_expected_dockers_up()
+            #
+            # if self.check_portal:
+            #     self.check_portal_up()
+            #
+            # # Check if lspci devices are detected
+            # fun_test.log("Check if F1_0 is detected")
+            # self.check_pci_dev(f1=0)
+            #
+            # fun_test.log("Check if F1_1 is detected")
+            # self.check_pci_dev(f1=1)
+            #
+            # if self.check_ssd:
+            #     fun_test.log("Checking if SSD's are Active on F1_0")
+            #     self.check_ssd_status(expected_ssds_up=self.expected_ssds_f1_0, f1=0)
+            #
+            #     fun_test.log("Checking if SSD's are Active on F1_1")
+            #     self.check_ssd_status(expected_ssds_up=self.expected_ssds_f1_1, f1=1)
+            #
+            # if self.check_ports:
+            #     fun_test.log("Checking if NU and HNU port's are active on F1_0")
+            #     expected_ports_up_f1_0 = {'NU': self.expected_nu_ports_f1_0,
+            #                               'HNU': self.expected_hnu_ports_f1_0}
+            #     self.check_nu_ports(f1=0, expected_ports_up=expected_ports_up_f1_0)
+            #
+            #     expected_ports_up_f1_1 = {'NU': self.expected_nu_ports_f1_1,
+            #                               'HNU': self.expected_hnu_ports_f1_1}
+            #     fun_test.log("Checking if NU and HNU port's are active on F1_1")
+            #     self.check_nu_ports(f1=1, expected_ports_up=expected_ports_up_f1_1)
 
             if self.num_hosts:
-                fun_test.sleep("Wait for GUI to come up", seconds=80)
+                # fun_test.sleep("Wait for GUI to come up", seconds=80)
+                self.sc_api = StorageControllerApi(api_server_ip=self.fs['come']['mgmt_ip'],
+                                                   api_server_port=self.api_server_port,
+                                                   username=self.username,
+                                                   password=self.password)
                 if pc_no == 0:
                     required_hosts_list = self.verify_and_get_required_hosts_list()
-                    self.volume_uuid_details = self.create_vol_using_api()
-                    self.attach_volumes_to_host(self.volume_uuid_details, required_hosts_list)
+                    self.pool_uuid = self.get_pool_id()
+                    self.volume_uuid_details = self.create_vol()
+                    self.attach_volumes_to_host(required_hosts_list)
                     self.get_host_handles()
-                    self.intialize_the_hosts()
-                self.get_host_handles()
+                    # self.intialize_the_hosts()
+                else:
+                    self.get_host_handles()
                 self.connect_the_host_to_volumes()
                 self.verify_nvme_connect()
                 self.start_traffic_and_verify()
@@ -572,90 +577,64 @@ class ApcPduTestcase(FunTestCase):
         required_hosts_list = available_hosts_list[:self.num_hosts]
         return required_hosts_list
 
-    def create_vol_using_api(self):
-        self.portal_username = 'admin'
-        self.portal_password = 'password'
-        self.apiprotocol = "http"
-        self.api_server_port = 50220
-
-        self.http_basic_auth = requests.auth.HTTPBasicAuth(self.portal_username, self.portal_password)
-        self.pool_id = self.get_pool_id()
-        volume_uuid_details = self.create_vol()
-        return volume_uuid_details
-
     def get_pool_id(self):
-        data = []
-        pool_url = '{}://{}:{}/FunCC/v1/storage/pools'.format(self.apiprotocol, self.fs['come']['mgmt_ip'], self.api_server_port)
-        response = requests.get(pool_url, auth=self.http_basic_auth, json=data, verify=False)
-        fun_test.log("pools log: {}".format(response.json()))
-        pool_id = str(response.json()['data'].keys()[0])
+        response = self.sc_api.get_pools()
+        fun_test.log("pools log: {}".format(response))
+        pool_id = str(response['data'].keys()[0])
         fun_test.log("pool_id: {}".format(pool_id))
         return pool_id
-
-    def topology_request(self):
-        data = []
-        topo_url = '{}://{}:{}/FunCC/v1/topology'.format(self.apiprotocol, self.fs['come']['mgmt_ip'], self.api_server_port)
-        response = requests.get(self.topo_url, auth=self.http_basic_auth, json=data, verify=False)
-        fun_test.log("topology log: {}".format(response.json()))
 
     def create_vol(self):
         volume_uuid_details = {}
         # If there is a need to create the volumes with different params can modify the code easily
         volume_creation_detail = self.volume_creation_details[0]
         for index in range(self.num_hosts):
-            volume_creation_detail["name"] = "Stripe{}".format(index+1)
-            volcreate_url = "{}://{}:{}/FunCC/v1/storage/pools/{}/volumes".format(self.apiprotocol,
-                                                                                  self.fs['come']['mgmt_ip'],
-                                                                                  self.api_server_port,
-                                                                                  self.pool_id)
-            data = {"name": volume_creation_detail["name"], "capacity": volume_creation_detail["capacity"],
-                    "vol_type": volume_creation_detail["vol_type"],
-                    "encrypt": volume_creation_detail["encrypt"], "allow_expansion": False,
-                    "stripe_count": volume_creation_detail["stripe_count"],
-                    "data_protection": {}, "compression_effort": volume_creation_detail["compression_effort"]}
-            response = requests.post(volcreate_url, auth=self.http_basic_auth, json=data, verify=False)
-            try:
-                response_json = response.json()
-            except Exception as ex:
-                fun_test.log(ex)
-                fun_test.test_assert(False,
+            volume_creation_detail["name"] = "Stripe{}".format(index + 1)
+            response = self.sc_api.create_stripe_volume(pool_uuid=self.pool_uuid,
+                                                        name=volume_creation_detail["name"],
+                                                        capacity=volume_creation_detail["capacity"],
+                                                        pvol_type=volume_creation_detail["vol_type"],
+                                                        stripe_count=volume_creation_detail["stripe_count"],
+                                                        encrypt=volume_creation_detail["encrypt"],
+                                                        allow_expansion=False,
+                                                        data_protection={},
+                                                        compression_effort=volume_creation_detail["compression_effort"])
+
+            if response["status"]:
+                message = response['message']
+                volume_create_successful = True if message == 'volume create successful' else False
+                fun_test.test_assert(volume_create_successful,
                                      "Create {} volume".format(volume_creation_detail["name"]))
-            message = response_json['message']
-            volume_create_successful = True if message == 'volume create successful' else False
-            fun_test.test_assert(volume_create_successful,
-                                 "Create {} volume".format(volume_creation_detail["name"]))
+            else:
+                fun_test.test_assert(response["status"],
+                                     "Create {} volume".format(volume_creation_detail["name"]))
             # Todo: get he api call for getting the existing volume details
-            if "already exists" in response_json["error_message"]:
+            if "already exists" in response["error_message"]:
                 pass
-            vol_uuid = str(response_json['data']['uuid'])
-            fun_test.log("volume creation log: {}".format(response.json()))
+            vol_uuid = str(response['data']['uuid'])
+            fun_test.log("volume creation log: {}".format(response))
             fun_test.log("volume creation status: {}".format(message))
             fun_test.log("vol UUID: {}".format(vol_uuid))
             volume_uuid_details[volume_creation_detail["name"]] = vol_uuid
         return volume_uuid_details
 
-    def attach_volumes_to_host(self, volume_uuid_details, required_hosts_list):
+    def attach_volumes_to_host(self, required_hosts_list):
         self.host_details = {}
         # uuid = volume_uuid_details[vol_name]
-        for vol_name, host_name in zip(volume_uuid_details, required_hosts_list):
-            volattach_url = "{}://{}:{}/FunCC/v1/storage/volumes/{}/ports".format(self.apiprotocol,
-                                                                                  self.fs['come']['mgmt_ip'],
-                                                                                  self.api_server_port,
-                                                                                  volume_uuid_details[vol_name])
+        for vol_name, host_name in zip(self.volume_uuid_details, required_hosts_list):
             host_interface_ip = self.hosts_asset[host_name]["test_interface_info"]["0"]["ip"].split("/")[0]
-            data = {"remote_ip": host_interface_ip, "transport": self.transport_type.upper()}
-            response = requests.post(volattach_url, auth=self.http_basic_auth, json=data, verify=False)
-            try:
-                response_json = response.json()
-            except Exception as ex:
-                fun_test.critical(ex)
-            fun_test.log("Volume attach response: {}".format(response_json))
-            message = response_json["message"]
+            response =  self.sc_api.volume_attach_remote(vol_uuid=self.volume_uuid_details[vol_name],
+                                                         remote_ip=host_interface_ip,
+                                                         transport=self.transport_type.upper())
+
+            fun_test.log("Volume attach response: {}".format(response))
+            message = response["message"]
             attach_status = True if message == "Attach Success" else False
             fun_test.test_assert(attach_status, "Attach host: {} to volume: {}".format(host_name, vol_name))
             self.host_details[host_name] = {}
-            self.host_details[host_name]["data"] = response_json["data"]
+            self.host_details[host_name]["data"] = response["data"]
             self.host_details[host_name]["volume_name"] = vol_name
+            self.host_details[host_name]["volume_uuid"] = self.volume_uuid_details[vol_name]
 
     def get_host_handles(self):
         for host_name in self.host_details:
@@ -719,16 +698,10 @@ class ApcPduTestcase(FunTestCase):
 
     def delete_volumes(self):
         try:
-            data = {}
             for vol_name, vol_uuid in self.volume_uuid_details.iteritems():
-                delete_vol_url = "{}://{}:{}/FunCC/v1/storage/volumes/{}".format(self.apiprotocol,
-                                                                                 self.fs['come']['mgmt_ip'],
-                                                                                 self.api_server_port,
-                                                                                 vol_uuid)
-                response = requests.delete(delete_vol_url, auth=self.http_basic_auth, json=data, verify=False)
-                response_json = response.json()
-                fun_test.log("Volume delte response: {}".format(response_json))
-                message = response_json["message"]
+                response = self.sc_api.delete_volume(vol_uuid)
+                fun_test.log("Volume delte response: {}".format(response))
+                message = response["message"]
                 deleted = True if message == "volume deletion successful" else False
                 fun_test.test_assert(deleted, "Delete volume :{} ".format(vol_name))
         except Exception as ex:
@@ -747,6 +720,7 @@ class ApcPduTestcase(FunTestCase):
         self.come_handle.sudo_command("rm -r cassandra")
 
     def restart_fs1600(self):
+        self.come_handle.enter_sudo()
         self.come_handle.command("cd /opt/fungible/etc")
         self.come_handle.command("bash ResetFs1600.sh")
 
@@ -757,7 +731,6 @@ class ApcPduTestcase(FunTestCase):
     def cleanup(self):
         if self.num_hosts:
             self.delete_volumes()
-        # self.disconnect_the_hosts()
 
 if __name__ == "__main__":
     obj = ApcPduScript()
