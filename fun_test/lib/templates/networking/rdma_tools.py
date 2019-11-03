@@ -72,6 +72,15 @@ class Rocetools:
         fun_test.debug(cmd_str)
         cmd_pid = self.host.start_bg_process(command=cmd_str, nohup=False, output_file=output_file, timeout=timeout)
         result_dict = {"cmd_pid": cmd_pid, "output_file": output_file}
+        command_check = self.host.command(command="pgrep srping")
+        if command_check:
+            self.host.command(command="ps -ef | grep -i srping")
+        else:
+            fun_test.log_section("Failure seen in starting srping")
+            self.host.command(command="dmesg")
+            self.host.sudo_command(command="cat /sys/kernel/debug/funrdma/*/qps")
+            self.host.disconnect()
+            fun_test.simple_assert(False, "srping process not seen")
         return result_dict
 
         fun_test.debug(cmd_pid)
@@ -102,6 +111,15 @@ class Rocetools:
         fun_test.debug(cmd_str)
         cmd_pid = self.host.start_bg_process(command=cmd_str, nohup=False, output_file=output_file, timeout=timeout)
         result_dict = {"cmd_pid": cmd_pid, "output_file": output_file}
+        command_check = self.host.command(command="pgrep rping")
+        if command_check:
+            self.host.command(command="ps -ef | grep -i rping")
+        else:
+            fun_test.log_section("Failure seen in starting rping")
+            self.host.command(command="dmesg")
+            self.host.sudo_command(command="cat /sys/kernel/debug/funrdma/*/qps")
+            self.host.disconnect()
+            fun_test.simple_assert(False, "rping process not seen")
         return result_dict
 
         fun_test.debug(cmd_pid)
@@ -156,6 +174,15 @@ class Rocetools:
         fun_test.debug(cmd_str)
         cmd_pid = self.host.start_bg_process(command=cmd_str, nohup=False, output_file=output_file, timeout=timeout)
         result_dict = {"cmd_pid": cmd_pid, "output_file": output_file}
+        command_check = self.host.command(command="pgrep {}".format(tool))
+        if command_check:
+            self.host.command(command="ps -ef | grep -i {}".format(tool))
+        else:
+            fun_test.log_section("Failure seen in starting {}".format(tool))
+            self.host.command(command="dmesg")
+            self.host.sudo_command(command="cat /sys/kernel/debug/funrdma/*/qps")
+            self.host.disconnect()
+            fun_test.simple_assert(False, "{} process not seen".format(tool))
         return result_dict
 
     def ib_lat_test(self, test_type, server_ip=None, timeout=60, **kwargs):
@@ -205,6 +232,15 @@ class Rocetools:
         fun_test.debug(cmd_str)
         cmd_pid = self.host.start_bg_process(command=cmd_str, nohup=False, output_file=output_file, timeout=timeout)
         result_dict = {"cmd_pid": cmd_pid, "output_file": output_file}
+        command_check = self.host.command(command="pgrep {}".format(tool))
+        if command_check:
+            self.host.command(command="ps -ef | grep -i {}".format(tool))
+        else:
+            fun_test.log_section("Failure seen in starting {}".format(tool))
+            self.host.command(command="dmesg")
+            self.host.sudo_command(command="cat /sys/kernel/debug/funrdma/*/qps")
+            self.host.disconnect()
+            fun_test.simple_assert(False, "{} process not seen".format(tool))
         return result_dict
 
     def parse_test_log(self, filepath, tool=None, client_cmd=None, perf=None):

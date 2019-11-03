@@ -334,6 +334,11 @@ class NicEmulation(FunTestCase):
             for host in ping_dict:
                 test_host_pings(host=host, ips=ping_dict[host], strict=False)
 
+            # Clear dmesg on hosts before starting test
+            for objs in host_objs:
+                for handle in host_objs[objs]:
+                    handle.sudo_command("dmesg -c > /dev/null")
+
         # # Update RDMA Core & perftest on hosts
         # bg_proc_id = {}
         # for obj in host_objs:
