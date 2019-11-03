@@ -168,11 +168,7 @@
       "mgmt_ssh_username": "root",
       "mgmt_ip": "10.1.105.164"
     },
-    "workarounds": {
-      "skip_funeth_come_power_cycle": true,
-      "retimer_workaround": true,
-      "disable_u_boot_version_validation": true
-    },
+    "bundle_compatible": true,
     "gateway_ip": "10.1.105.1",
     "come": {
       "mgmt_ssh_password": "123",
@@ -479,10 +475,7 @@
       "mgmt_ssh_username": "root",
       "mgmt_ip": "fs66-fpga"
     },
-    "workarounds": {
-      "skip_funeth_come_power_cycle": true,
-      "disable_u_boot_version_validation": true
-    },
+    "bundle_compatible": true,
     "gateway_ip": "10.1.105.1",
     "come": {
       "mgmt_ssh_password": "123",
