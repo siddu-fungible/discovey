@@ -77,7 +77,7 @@
 
 
 <!--app-timeline-control *ngIf="showLogsPanel" [domainMin]="minRelativeTime" [domainMax]="maxRelativeTime" [title]="'Show logs starting from'" [unit]="'s'" (valueChanged)="onTimeLineChanged($event)"></app-timeline-control-->
-<div class="" style="overflow: auto; height: 100%; width: 100%; white-space: nowrap;">
+<div class="" style="overflow: auto; height: 100%; width: 100%;">
   <div class="fun-flex-container" style="align-items: flex-start;">
     <div *ngIf="showTestCasePanel" class="fun-flex-item panel fun-panel" [@show]="showTestCasePanel">
       <div class="fun-panel-header">
