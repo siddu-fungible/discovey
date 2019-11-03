@@ -171,15 +171,6 @@ export class SuiteDetailComponent implements OnInit, OnDestroy {
   fetchScriptInfo(scriptId, testCaseExecutionId) {
     this.regressionService.getScriptInfoById(scriptId).subscribe(response => {
       this.scriptInfo[scriptId] = response;
-      /*
-      if (Object.keys(this.scriptExecutionsMap).indexOf(scriptId) > -1) {
-        let scriptPathValue = this.scriptExecutionsMap[scriptId];
-
-        if (scriptPathValue && Object.keys(scriptPathValue).indexOf(testCaseExecutionId.toString()) > -1) {
-          this.scriptExecutionsMap[scriptId][testCaseExecutionId]["scriptPk"] = response.pk;
-        }
-      }*/
-
     });
   }
 

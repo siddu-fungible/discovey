@@ -892,6 +892,16 @@ class FunTest:
     def dict_to_json_string(self, d):
         return json.dumps(d, indent=4, cls=DatetimeEncoder)
 
+    def delete_time_series_document(self, collection_name, query):
+        try:
+            result = self.get_mongo_db_manager().delete_one(collection_name=collection_name, query=query)
+            if not result:
+                self.critical("Unable to remove_time_series_document: {}".format(query))
+            fun_test.log("Removed document")
+        except Exception as ex:
+            self.critical(str(ex))
+
+
     def add_time_series_document(self, collection_name, epoch_time, type, **kwargs):
         try:
             result = self.get_mongo_db_manager().insert_one(collection_name=collection_name,
@@ -912,6 +922,13 @@ class FunTest:
                                       type=TimeSeriesTypes.LOG,
                                       te=self.current_test_case_execution_id,
                                       data=data)
+
+    def delete_time_series_checkpoint(self, checkpoint_index):
+        query = {"type": TimeSeriesTypes.CHECKPOINT,
+                 "data.checkpoint_index": checkpoint_index,
+                 "te": self.current_test_case_execution_id}
+        self.delete_time_series_document(collection_name=self.get_time_series_collection_name(),
+                                         query=query)
 
     def add_time_series_checkpoint(self, data):
         self.add_time_series_document(collection_name=self.get_time_series_collection_name(),
@@ -1334,12 +1351,25 @@ class FunTest:
                 "context_id": context_id}
 
         if self.time_series_enabled:
+            if self.current_time_series_checkpoint == 0:
+                self.delete_time_series_checkpoint(checkpoint_index=0)
+            self.log("Added checkpoint: {}".format(self.current_time_series_checkpoint))
             self.add_time_series_checkpoint(data=data)
         if self.current_test_case_id not in self.checkpoints:
             self.checkpoints[self.current_test_case_id] = []
         self.checkpoints[self.current_test_case_id].append(checkpoint)
         self.current_time_series_checkpoint += 1
 
+    def add_in_progress_checkpoint(self):
+        # only for dummy checkpoint
+        if self.time_series_enabled:
+            data = {"checkpoint": "In-progress",
+                    "result": FunTest.PASSED,
+                    "expected": True,
+                    "actual": True,
+                    "checkpoint_index": 0,
+                    "context_id": 0}
+            self.add_time_series_checkpoint(data=data)
 
     def exit_gracefully(self, sig, _):
         self.critical("Unexpected Exit")
@@ -1600,6 +1630,7 @@ class FunTestScript(object):
                 fun_test.current_test_case_execution_id = setup_te.execution_id
                 if fun_test.time_series_enabled:
                     fun_test.update_time_series_script_run_time(started_epoch_time=fun_test.started_epoch_time)
+                    fun_test.add_in_progress_checkpoint()
                 # fun_test.add_start_checkpoint()
             fun_test._start_test(id=self.id,
                                  summary="Script setup",
@@ -1750,6 +1781,9 @@ class FunTestScript(object):
                                                   log_prefix=fun_test.log_prefix,
                                                   inputs=fun_test.get_job_inputs())
             fun_test.current_test_case_execution_id = cleanup_te.execution_id
+            if fun_test.time_series_enabled:
+                fun_test.add_in_progress_checkpoint()
+
         fun_test._start_test(id=FunTest.CLEANUP_TC_ID,
                              summary="Script cleanup",
                              steps=self.steps)
@@ -1828,6 +1862,8 @@ class FunTestScript(object):
                                                                      result=fun_test.IN_PROGRESS,
                                                                      started_time=get_current_time())
                             fun_test.current_test_case_execution_id = test_case.execution_id
+                            if fun_test.time_series_enabled:
+                                fun_test.add_in_progress_checkpoint()
                         # fun_test.add_start_checkpoint()
                         fun_test._start_test(id=test_case.id,
                                              summary=test_case.summary,

@@ -36,6 +36,10 @@ class FunTestCase1(FunTestCase):
         fun_test.log("Testcase cleanup")
 
     def run(self):
+        for i in range(0, 5):
+            fun_test.log("Sleepy log")
+            fun_test.sleep(message="Eh", seconds=1)
+
 
         for i in range(0, 500):
             fun_test.log("Some log")
