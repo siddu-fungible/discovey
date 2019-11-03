@@ -67,9 +67,9 @@ class MyScript(FunTestScript):
         if self.boot_new_image:
             topology = topology_helper.deploy()
             fun_test.test_assert(topology, "Topology deployed")
-        self.verify_dpcsh_started()
-        if not self.boot_new_image:
-            self.clear_uart_logs()
+        # self.verify_dpcsh_started()
+        # if not self.boot_new_image:
+        #     self.clear_uart_logs()
         if self.ec_vol:
             self.create_4_et_2_ec_volume()
 
@@ -258,8 +258,8 @@ class FunTestCase1(FunTestCase):
         # post_fix_name: "{calculated_}{app_name}_DPCSH_OUTPUT_F1_{f1}_logs.txt"
         # description : "{calculated_}_{app_name}_DPCSH_OUTPUT_F1_{f1}"
         self.stats_info["bmc"] = {"POWER": {"calculated": True}, "DIE_TEMPERATURE": {"calculated": False, "disable":True}}
-        self.stats_info["come"] = {"DEBUG_MEMORY": {"disable": True}, "CDU": {}, "EQM": {}, "BAM": {"calculated": False, "disable":True}, "DEBUG_VP_UTIL": {"calculated": False, "disable": True}, "LE": {}, "HBM": {"disable":True},
-                                   "EXECUTE_LEAKS": {"calculated": False, "disable": True}, "PC_DMA": {"calculated": True}}
+        self.stats_info["come"] = {"DEBUG_MEMORY": {"disable": True}, "CDU": {}, "EQM": {}, "BAM": {"calculated": False, "disable":True}, "DEBUG_VP_UTIL": {"calculated": False, "disable": True}, "LE": {}, "HBM": {"calculated": True},
+                                   "EXECUTE_LEAKS": {"calculated": False, "disable": True}, "PC_DMA": {"calculated": True}, "DDR":{"calculated": True}}
         self.stats_info["files"] = {"fio":{"calculated": False}}
 
         if self.collect_stats:
@@ -342,14 +342,13 @@ class FunTestCase1(FunTestCase):
         for app, parameters in app_params.iteritems():
             if app == "fio":
                 continue
-            parameters["f1"] = 0
-            result = self.methods[app](come_handle, **parameters)
-            fun_test.test_assert(result, "{} traffic started on F1_0".format(app))
-            parameters["f1"] = 1
-            result = self.methods[app](come_handle, **parameters)
-            fun_test.test_assert(result, "{} traffic started on F1_1".format(app))
+            for f1 in self.run_on_f1:
+                parameters["f1"] = f1
+                result = self.methods[app](come_handle, **parameters)
+                fun_test.test_assert(result, "{} traffic started on F1_{}".format(app, f1))
 
         ################ During traffic ##################
+        # fun_test.sleep("Wait for traffic to start")
         count = int(self.test_duration / 5)
         heading = "During traffic"
         fun_test.log("Capturing the data {}".format(heading))
@@ -430,7 +429,7 @@ class FunTestCase1(FunTestCase):
             one_dataset["time2"] = datetime.datetime.now()
             one_dataset["output2"] = dpcsh_output
             file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
-            difference_dict = stats_calculation.dict_difference(one_dataset, "eqm")
+            difference_dict = stats_calculation.dict_difference(one_dataset, stat_name)
             one_dataset["time"] = datetime.datetime.now()
             one_dataset["output"] = difference_dict
             file_helper.add_data(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
@@ -463,7 +462,7 @@ class FunTestCase1(FunTestCase):
             one_dataset["output2"] = dpcsh_output
             file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
 
-            difference_dict = stats_calculation.dict_difference(one_dataset, "le")
+            difference_dict = stats_calculation.dict_difference(one_dataset, stat_name)
             one_dataset["time"] = datetime.datetime.now()
             one_dataset["output"] = difference_dict
             file_helper.add_data(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
@@ -497,7 +496,7 @@ class FunTestCase1(FunTestCase):
             one_dataset["output2"] = dpcsh_output
             file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
 
-            difference_dict = stats_calculation.dict_difference(one_dataset, "cdu")
+            difference_dict = stats_calculation.dict_difference(one_dataset, stat_name)
             one_dataset["time"] = datetime.datetime.now()
             one_dataset["output"] = difference_dict
             file_helper.add_data(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
@@ -528,7 +527,7 @@ class FunTestCase1(FunTestCase):
             one_dataset["output2"] = dpcsh_output
             file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
 
-            difference_dict = stats_calculation.dict_difference(one_dataset, "pc_dma")
+            difference_dict = stats_calculation.dict_difference(one_dataset, stat_name)
             one_dataset["time"] = datetime.datetime.now()
             one_dataset["output"] = difference_dict
             file_helper.add_data(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
@@ -589,14 +588,50 @@ class FunTestCase1(FunTestCase):
             one_dataset["output2"] = dpcsh_output
             file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
 
-            # div_by_peek_value = stats_calculation.dict_difference(one_dataset, "hbm")
-            # one_dataset["time"] = datetime.datetime.now()
-            # one_dataset["output"] = div_by_peek_value
-            # file_helper.add_data(file_hbm_dif, one_dataset, heading=heading)
+            difference_dict = stats_calculation.dict_difference(one_dataset, stat_name)
+            one_dataset["time"] = datetime.datetime.now()
+            one_dataset["output"] = difference_dict
+            file_helper.add_data(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset,
+                                 heading=heading)
 
             # fun_test.sleep("before next iteration", seconds=self.details["interval"])
 
         come_handle.destroy()
+
+    ############   DDR #############
+    def func_ddr(self, f1, count, heading):
+        stat_name = "DDR"
+        come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
+                           ssh_username=self.fs['come']['mgmt_ssh_username'],
+                           ssh_password=self.fs['come']['mgmt_ssh_password'])
+        for i in range(count):
+            one_dataset = {}
+            dpcsh_output = dpcsh_commands.ddr(come_handle=come_handle, f1=f1)
+            one_dataset["time"] = datetime.datetime.now()
+            one_dataset["output"] = dpcsh_output
+            one_dataset["time1"] = datetime.datetime.now()
+            one_dataset["output1"] = dpcsh_output
+            file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+
+            fun_test.sleep("Before capturing next set of data", seconds=5)
+
+            dpcsh_output = dpcsh_commands.ddr(come_handle=come_handle, f1=f1)
+            one_dataset["time"] = datetime.datetime.now()
+            one_dataset["output"] = dpcsh_output
+            one_dataset["time2"] = datetime.datetime.now()
+            one_dataset["output2"] = dpcsh_output
+            file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+
+            difference_dict = stats_calculation.dict_difference(one_dataset, stat_name)
+            one_dataset["time"] = datetime.datetime.now()
+            one_dataset["output"] = difference_dict
+            file_helper.add_data(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset,
+                                 heading=heading)
+
+            # fun_test.sleep("before next iteration", seconds=self.details["interval"])
+
+        come_handle.destroy()
+
 
     ######## EXECUTE LEAKS ###########
     def func_execute_leaks(self,f1,count, heading):
@@ -840,6 +875,7 @@ class FunTestCase1(FunTestCase):
 
                 fetch_nvme = fetch_nvme_device(come_handle, 1, size=fio_capacity_map["f1_{}".format(f1)])
                 if fetch_nvme["status"]:
+                    fun_test.test_assert(True, "{} traffic started on F1_{}".format("fio", f1))
                     fio_thread_map["{}".format(f1)] = fun_test.execute_thread_after(func=self.func_fio,
                                                                                            time_in_seconds=5,
                                                                                            filename=fetch_nvme["nvme_device"],
