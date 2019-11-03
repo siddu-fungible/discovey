@@ -243,7 +243,7 @@ class Rocetools:
             fun_test.simple_assert(False, "{} process not seen".format(tool))
         return result_dict
 
-    def parse_test_log(self, filepath, tool=None, client_cmd=None, perf=None):
+    def parse_test_log(self, filepath, tool=None, client_cmd=None, perf=None, debug=None):
         # Make sure there is a space during pattern match, as it will match address like 0x55ea98bad090
         error_pattern = "error|fatal|mismatch|fail|assert|\bbad\b"
 
@@ -255,29 +255,32 @@ class Rocetools:
 
         # Parse rping & srping results
         if tool == "srping" or tool == "rping":
-            if client_cmd:
-                client_events = ["RDMA_CM_EVENT_ADDR_RESOLVED", "RDMA_CM_EVENT_ROUTE_RESOLVED",
-                                 "RDMA_CM_EVENT_ESTABLISHED", "destroy"]
-                list_client_events = "RDMA_CM_EVENT_ADDR_RESOLVED|RDMA_CM_EVENT_ROUTE_RESOLVED|" \
-                                     "RDMA_CM_EVENT_ESTABLISHED|destroy"
-                match_event_list = re.findall(r'{}'.format(list_client_events), content, re.IGNORECASE)
+            if debug:
+                if client_cmd:
+                    client_events = ["RDMA_CM_EVENT_ADDR_RESOLVED", "RDMA_CM_EVENT_ROUTE_RESOLVED",
+                                     "RDMA_CM_EVENT_ESTABLISHED", "destroy"]
+                    list_client_events = "RDMA_CM_EVENT_ADDR_RESOLVED|RDMA_CM_EVENT_ROUTE_RESOLVED|" \
+                                         "RDMA_CM_EVENT_ESTABLISHED|destroy"
+                    match_event_list = re.findall(r'{}'.format(list_client_events), content, re.IGNORECASE)
 
-                for event in client_events:
-                    if event not in match_event_list:
-                        fun_test.critical("Event {} not found on client".format(event))
-                        return False
-                return True
+                    for event in client_events:
+                        if event not in match_event_list:
+                            fun_test.critical("Event {} not found on client".format(event))
+                            return False
+                    return True
+                else:
+                    server_events = ["RDMA_CM_EVENT_CONNECT_REQUEST", "RDMA_CM_EVENT_ESTABLISHED",
+                                     "RDMA_CM_EVENT_DISCONNECTED", "destroy"]
+                    list_server_events = "RDMA_CM_EVENT_CONNECT_REQUEST|RDMA_CM_EVENT_ESTABLISHED|" \
+                                         "RDMA_CM_EVENT_DISCONNECTED|destroy"
+                    match_event_list = re.findall(r'{}'.format(list_server_events), content, re.IGNORECASE)
+
+                    for event in server_events:
+                        if event not in match_event_list:
+                            fun_test.critical("Event {} not found on server".format(event))
+                            return False
+                    return True
             else:
-                server_events = ["RDMA_CM_EVENT_CONNECT_REQUEST", "RDMA_CM_EVENT_ESTABLISHED",
-                                 "RDMA_CM_EVENT_DISCONNECTED", "destroy"]
-                list_server_events = "RDMA_CM_EVENT_CONNECT_REQUEST|RDMA_CM_EVENT_ESTABLISHED|" \
-                                     "RDMA_CM_EVENT_DISCONNECTED|destroy"
-                match_event_list = re.findall(r'{}'.format(list_server_events), content, re.IGNORECASE)
-
-                for event in server_events:
-                    if event not in match_event_list:
-                        fun_test.critical("Event {} not found on server".format(event))
-                        return False
                 return True
         elif tool == "ib_bw":
             # TODO to overcome the cleanup issue and get past scaling we are not using run_infinitely. So changing grep
