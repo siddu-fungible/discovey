@@ -115,11 +115,12 @@ class BringupSetup(FunTestCase):
         else:
             deploy_setup = True
             fun_test.shared_variables["deploy_setup"] = deploy_setup
+        # Set test_speed to 1 for using single pair of hosts which tests 100G perf
         if "test_speed" in job_inputs:
             roce_speed = job_inputs["test_speed"]
             fun_test.shared_variables["test_speed"] = roce_speed
         else:
-            roce_speed = "all"
+            roce_speed = 0  # Test based on host count
             fun_test.shared_variables["test_speed"] = roce_speed
         if "enable_fcp" in job_inputs:
             enable_fcp = job_inputs["enable_fcp"]
@@ -431,13 +432,17 @@ class BwTest(FunTestCase):
         f11_hosts = fun_test.shared_variables["f11_hosts"]
         qp_list = fun_test.shared_variables["qp_list"]
         come_obj = fun_test.shared_variables["come_obj"]
+        roce_speed = fun_test.shared_variables["test_speed"]
         kill_time = 140
         test_case_failure_time = 20
         wait_duration = 5
         test_duration = 60
 
         # Using hosts based on minimum host length
-        total_link_bw = min(fun_test.shared_variables["host_len_f10"], fun_test.shared_variables["host_len_f11"])
+        if not roce_speed:
+            total_link_bw = min(fun_test.shared_variables["host_len_f10"], fun_test.shared_variables["host_len_f11"])
+        else:
+            total_link_bw = 1
         if total_link_bw > 1:
             link_capacity = "200G"
         else:
@@ -586,11 +591,16 @@ class LatencyTest(FunTestCase):
         f10_hosts = fun_test.shared_variables["f10_hosts"]
         f11_hosts = fun_test.shared_variables["f11_hosts"]
         qp_list = fun_test.shared_variables["qp_list"]
+        roce_speed = fun_test.shared_variables["test_speed"]
         kill_time = 140
         test_case_failure_time = 20
         wait_duration = 5
+
         # Using hosts based on minimum host length
-        total_link_bw = min(fun_test.shared_variables["host_len_f10"], fun_test.shared_variables["host_len_f11"])
+        if not roce_speed:
+            total_link_bw = min(fun_test.shared_variables["host_len_f10"], fun_test.shared_variables["host_len_f11"])
+        else:
+            total_link_bw = 1
         if total_link_bw > 1:
             link_capacity = "200G"
         else:
