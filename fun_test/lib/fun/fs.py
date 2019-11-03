@@ -915,6 +915,8 @@ class BootupWorker(Thread):
                     if fs.tftp_image_path:
                         if fpga and not fs.bundle_compatible:
                             fpga.reset_f1(f1_index=f1_index)
+                        elif fpga and not fs.get_bmc()._use_i2c_reset():
+                            fpga.reset_f1(f1_index=f1_index)
                         else:
                             fs.get_bmc().reset_f1(f1_index=f1_index)
 
