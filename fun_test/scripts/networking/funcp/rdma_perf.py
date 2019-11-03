@@ -539,7 +539,7 @@ class BwTest(FunTestCase):
                 total_values = len(parsed_result)
                 for results in parsed_result:
                     size_bandwidth = float(results[0])
-                    iterations = float(results[1])
+                    iterations = results[1]
                     bw_peak_gbps += float(results[2])
                     avg_bandwidth += float(results[3])
                     msg_rate += float(results[4])
@@ -699,7 +699,7 @@ class LatencyTest(FunTestCase):
             row_data_list = []
             total_values = len(parsed_result)
             for results in parsed_result:
-                size_latency = float(results[0])
+                size_latency = results[0]
                 iterations = float(results[1])
                 min_latency = float(results[2])
                 max_latency = float(results[3])
