@@ -897,7 +897,7 @@ class FunTest:
             result = self.get_mongo_db_manager().delete_one(collection_name=collection_name, query=query)
             if not result:
                 self.critical("Unable to remove_time_series_document: {}".format(query))
-            fun_test.log("Removed document")
+            # fun_test.log("Removed document")
         except Exception as ex:
             self.critical(str(ex))
 
@@ -1353,7 +1353,7 @@ class FunTest:
         if self.time_series_enabled:
             if self.current_time_series_checkpoint == 0:
                 self.delete_time_series_checkpoint(checkpoint_index=0)
-            self.log("Added checkpoint: {}".format(self.current_time_series_checkpoint))
+            # self.log("Added checkpoint: {}".format(self.current_time_series_checkpoint))
             self.add_time_series_checkpoint(data=data)
         if self.current_test_case_id not in self.checkpoints:
             self.checkpoints[self.current_test_case_id] = []
