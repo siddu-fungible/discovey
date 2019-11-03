@@ -258,7 +258,7 @@ class FunTestCase1(FunTestCase):
         # post_fix_name: "{calculated_}{app_name}_DPCSH_OUTPUT_F1_{f1}_logs.txt"
         # description : "{calculated_}_{app_name}_DPCSH_OUTPUT_F1_{f1}"
         self.stats_info["bmc"] = {"POWER": {"calculated": True}, "DIE_TEMPERATURE": {"calculated": False, "disable":True}}
-        self.stats_info["come"] = {"DEBUG_MEMORY": {}, "CDU": {}, "EQM": {}, "BAM": {"calculated": False, "disable":True}, "DEBUG_VP_UTIL": {"calculated": False}, "LE": {}, "HBM": {"disable":True},
+        self.stats_info["come"] = {"DEBUG_MEMORY": {"disable": True}, "CDU": {}, "EQM": {}, "BAM": {"calculated": False, "disable":True}, "DEBUG_VP_UTIL": {"calculated": False, "disable": True}, "LE": {}, "HBM": {"disable":True},
                                    "EXECUTE_LEAKS": {"calculated": False, "disable": True}, "PC_DMA": {"calculated": True}}
         self.stats_info["files"] = {"fio":{"calculated": False}}
 
@@ -329,7 +329,7 @@ class FunTestCase1(FunTestCase):
             app_params = get_params_for_time.get(self.test_duration, specific_field=self.specific_apps)
         fun_test.log("App parameters: {}".format(app_params))
 
-        if "fio" in self.specific_apps:
+        if "fio" in app_params:
             fio_data = app_params["fio"]
             fio_data["runtime"] += 20
             fio_thread_map = self.start_fio_as_thread(fio_data)
@@ -355,7 +355,7 @@ class FunTestCase1(FunTestCase):
         fun_test.log("Capturing the data {}".format(heading))
         self.capture_data(count=count, heading=heading)
 
-        if "fio" in self.specific_apps:
+        if "fio" in app_params:
             self.join_fio_thread(fio_thread_map)
 
         #################### After the traffic ############
