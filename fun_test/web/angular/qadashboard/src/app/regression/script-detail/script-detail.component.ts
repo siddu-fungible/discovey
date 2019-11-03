@@ -100,6 +100,8 @@ export class ScriptDetailComponent implements OnInit {
   selectedStatistics: any [] = null;
   scriptExecutionInfo = {};
   checkpointPanelStatus: string = null;
+  showFailedCheckpoints: boolean = false;
+  showFailedTestCases: boolean = false;
 
   ngOnInit() {
 
