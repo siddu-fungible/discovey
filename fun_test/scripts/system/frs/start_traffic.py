@@ -329,13 +329,15 @@ class FunTestCase1(FunTestCase):
             app_params = get_params_for_time.get(self.test_duration, specific_field=self.specific_apps)
         fun_test.log("App parameters: {}".format(app_params))
 
+        if self.run_le_firewall:
+            self.restart_dpcsh()
+            le_firewall(self.test_duration, self.boot_new_image)
+            self.restart_dpcsh()
+
         if "fio" in app_params:
             fio_data = app_params["fio"]
             fio_data["runtime"] += 20
             fio_thread_map = self.start_fio_as_thread(fio_data)
-
-        if self.run_le_firewall:
-            le_firewall(self.test_duration, self.boot_new_image)
 
         # thread_map_for_soak_apps = self.start_threaded_apps()
 
@@ -914,6 +916,8 @@ class FunTestCase1(FunTestCase):
         except Exception as ex:
             fun_test.critical(ex)
         fun_test.shared_variables["fio_output_f1_{}".format(f1)] = fio_output
+
+
 
 
 if __name__ == "__main__":
