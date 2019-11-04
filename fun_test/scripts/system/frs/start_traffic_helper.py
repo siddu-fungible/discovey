@@ -116,8 +116,7 @@ def le_firewall(run_time, new_image, just_kill=False):
             initiate_or_run_le_firewall(cmd, vm_details)
             fun_test.sleep("to check if le -firewall has started on vm: {}".format(vm), seconds=10)
             running = check_if_le_firewall_is_running(vm_details)
-            if running:
-                fun_test.test_assert(running, "Le initiate started on the VM: {}".format(vm))
+            fun_test.test_assert(running, "Le initiate started on the VM: {}".format(vm))
     if new_image:
         pid_info = {}
         for vm, vm_details in vm_info.iteritems():
@@ -154,13 +153,13 @@ def kill_le_firewall(vm_details):
 
 
 def initiate_or_run_le_firewall(cmd, vm_details):
-    vm_details["handle"].enter_sudo()
+    # vm_details["handle"].enter_sudo()
     vm_details["handle"].command('export WORKSPACE="{}"'.format(vm_details["WORKSPACE"]))
     vm_details["handle"].command('export PYTHONPATH="{}"'.format(vm_details["PYTHONPATH"]))
     vm_details["handle"].command("cd {}".format(vm_details["SCRIPT_PATH"]))
     vm_details["handle"].start_bg_process(cmd)
     vm_details["handle"].command("ps -ef | grep python")
-    vm_details["handle"].exit_sudo()
+    # vm_details["handle"].exit_sudo()
 
 
     # vm_details["handle"].destroy()
