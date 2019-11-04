@@ -1451,6 +1451,12 @@
           },
           {
             "metric_model_name": "MetricContainer",
+            "name": "crypto_fastpath_throughput",
+            "label": "Crypto Fastpath Throughput",
+            "reference": true
+          },
+          {
+            "metric_model_name": "MetricContainer",
             "name": "Crypto raw throughput",
             "label": "Crypto Raw Throughput",
             "disable": true,
