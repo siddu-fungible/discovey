@@ -119,6 +119,8 @@ class FunContext:
         if self.fp:
             self.fp.write(data)
 
+    def __str__(self):
+        return "Context: {}".format(self.context_id)
 
 
 class FunTest:
@@ -268,6 +270,7 @@ class FunTest:
         self.version = "1"
         self.determine_version()
         self.asset_manager = None
+        self.statistics_manager = None
         self.time_series_manager = None
         self.build_parameters = {}
         self._prepare_build_parameters()
@@ -297,6 +300,9 @@ class FunTest:
         self.started_epoch_time = get_current_epoch_time()
         self.time_series_buffer = {0: ""}
         self.checkpoints = {}
+
+    def get_current_test_case_execution_id(self):
+        return self.current_test_case_execution_id
 
     def enable_time_series(self, enable=True):
         self.time_series_enabled = enable
@@ -534,6 +540,7 @@ class FunTest:
         else:
             print("Unable to determine the version. Defaulting...")
         print ("Version: {}".format(self.version))
+        return determined_version
 
     def set_version(self, version):
         self.version = version
@@ -548,6 +555,11 @@ class FunTest:
                 self.log("Suite execution: {} could not be retrieved from the DB".format(self.suite_execution_id))
             else:
                 version = suite_execution.version
+                if not version:
+                    try:
+                        version = self.determine_version()
+                    except Exception as ex:
+                        print("Error unable to determine the version: {}".format(str(ex)))
         else:
             version = self.version
         return version
@@ -670,6 +682,13 @@ class FunTest:
         if not self.asset_manager:
             self.asset_manager = AssetManager()
         return self.asset_manager
+
+
+    def get_statistics_manager(self):
+        from lib.utilities.statistics_manager import StatisticsManager
+        if not self.statistics_manager:
+            self.statistics_manager = StatisticsManager()
+        return self.statistics_manager
 
     def get_mongo_db_manager(self):
         from lib.utilities.mongo_db_manager import MongoDbManager
@@ -875,6 +894,16 @@ class FunTest:
     def dict_to_json_string(self, d):
         return json.dumps(d, indent=4, cls=DatetimeEncoder)
 
+    def delete_time_series_document(self, collection_name, query):
+        try:
+            result = self.get_mongo_db_manager().delete_one(collection_name=collection_name, query=query)
+            if not result:
+                self.critical("Unable to remove_time_series_document: {}".format(query))
+            # fun_test.log("Removed document")
+        except Exception as ex:
+            self.critical(str(ex))
+
+
     def add_time_series_document(self, collection_name, epoch_time, type, **kwargs):
         try:
             result = self.get_mongo_db_manager().insert_one(collection_name=collection_name,
@@ -887,20 +916,48 @@ class FunTest:
             self.critical(str(ex))
             self.enable_time_series(enable=False)
 
+    def add_time_series_artifact(self,
+                                 description,
+                                 filename,
+                                 asset_type,
+                                 asset_id,
+                                 category,
+                                 sub_category):
+        epoch_time = get_current_epoch_time()
+        data = {"description": description,
+                "filename": filename,
+                "asset_type": asset_type,
+                "asset_id": asset_id,
+                "category": category,
+                "sub_category": sub_category
+                }
+        self.add_time_series_document(collection_name=self.get_time_series_collection_name(),
+                                      epoch_time=epoch_time,
+                                      type=TimeSeriesTypes.ARTIFACT,
+                                      te=self.current_test_case_execution_id,
+                                      data=data)
+
     def add_time_series_log(self, data, epoch_time=None):
         if not epoch_time:
             epoch_time = get_current_epoch_time()
-        data["te"] = self.current_test_case_execution_id
         self.add_time_series_document(collection_name=self.get_time_series_collection_name(),
                                       epoch_time=epoch_time,
                                       type=TimeSeriesTypes.LOG,
+                                      te=self.current_test_case_execution_id,
                                       data=data)
 
+    def delete_time_series_checkpoint(self, checkpoint_index):
+        query = {"type": TimeSeriesTypes.CHECKPOINT,
+                 "data.checkpoint_index": checkpoint_index,
+                 "te": self.current_test_case_execution_id}
+        self.delete_time_series_document(collection_name=self.get_time_series_collection_name(),
+                                         query=query)
+
     def add_time_series_checkpoint(self, data):
-        data["te"] = self.current_test_case_execution_id
         self.add_time_series_document(collection_name=self.get_time_series_collection_name(),
                                       epoch_time=get_current_epoch_time(),
                                       type=TimeSeriesTypes.CHECKPOINT,
+                                      te=self.current_test_case_execution_id,
                                       data=data)
 
     def add_time_series_context(self, context):
@@ -1023,13 +1080,13 @@ class FunTest:
                             if not part:
                                 continue
                             data = {"checkpoint_index": self.current_time_series_checkpoint,
-                                    "log": part.rstrip(),
+                                    "log": part.rstrip().lstrip(),
                                     "context_id": context_id}
                             self.add_time_series_log(data=data, epoch_time=current_epoch_time)
                         self.time_series_buffer[context_id] = ""
                 else:
                     data = {"checkpoint_index": self.current_time_series_checkpoint,
-                            "log": final_message_for_time_series.rstrip(),
+                            "log": final_message_for_time_series.rstrip().lstrip(),
                             "context_id": context_id}
                     self.add_time_series_log(data=data, epoch_time=current_epoch_time)
             except Exception as ex:
@@ -1108,13 +1165,22 @@ class FunTest:
         if context:
             context.write(str(message) + "\n")
 
-    def sleep(self, message, seconds=5, context=None):
+    def sleep(self, message, seconds=5, context=None, no_log=False):
         outer_frames = inspect.getouterframes(inspect.currentframe())
         calling_module = self._get_calling_module(outer_frames)
-        message = "zzz...: Sleeping for :" + str(seconds) + "s : " + message
-        self._print_log_green(message=message, calling_module=calling_module, context=context)
-        if self.fun_xml_obj:
-            self.fun_xml_obj.log(log=message, newline=True)
+        if not no_log:
+            message = "zzz...: Sleeping for :" + str(seconds) + "s : " + message
+            self._print_log_green(message=message, calling_module=calling_module, context=context)
+            if self.fun_xml_obj:
+                self.fun_xml_obj.log(log=message, newline=True)
+            context_id = 0
+            if context:
+                context_id = context.get_id()
+            if self.time_series_enabled:
+                data = {"checkpoint_index": self.current_time_series_checkpoint,
+                        "log": message.rstrip().lstrip(),
+                        "context_id": context_id}
+                self.add_time_series_log(data=data, epoch_time=get_current_epoch_time())
         time.sleep(seconds)
 
     def safe(self, the_function):
@@ -1271,7 +1337,7 @@ class FunTest:
                 this_checkpoint = self._get_context_prefix(context=context, message=message)
                 # if self.profiling:
                 #    this_checkpoint = "{:.2f}: {}".format(self.profiling_timer.elapsed_time(), this_checkpoint)
-                self.add_checkpoint(checkpoint=this_checkpoint, expected=expected, actual=actual, result=FunTest.FAILED)
+                self.add_checkpoint(checkpoint=this_checkpoint, expected=expected, actual=actual, result=FunTest.FAILED, context=context)
             self.critical(assert_message, context=context)
             if self.pause_on_failure:
                 pdb.set_trace()
@@ -1316,12 +1382,25 @@ class FunTest:
                 "context_id": context_id}
 
         if self.time_series_enabled:
+            if self.current_time_series_checkpoint == 0:
+                self.delete_time_series_checkpoint(checkpoint_index=0)
+            # self.log("Added checkpoint: {}".format(self.current_time_series_checkpoint))
             self.add_time_series_checkpoint(data=data)
         if self.current_test_case_id not in self.checkpoints:
             self.checkpoints[self.current_test_case_id] = []
         self.checkpoints[self.current_test_case_id].append(checkpoint)
         self.current_time_series_checkpoint += 1
 
+    def add_in_progress_checkpoint(self):
+        # only for dummy checkpoint
+        if self.time_series_enabled:
+            data = {"checkpoint": "In-progress",
+                    "result": FunTest.PASSED,
+                    "expected": True,
+                    "actual": True,
+                    "checkpoint_index": 0,
+                    "context_id": 0}
+            self.add_time_series_checkpoint(data=data)
 
     def exit_gracefully(self, sig, _):
         self.critical("Unexpected Exit")
@@ -1398,9 +1477,21 @@ class FunTest:
         '''
         return result
 
-    def add_auxillary_file(self, description, filename):
+    def add_auxillary_file(self, description, filename,
+                           asset_type="general",
+                           asset_id="Unknown",
+                           artifact_category="general",
+                           artifact_sub_category="general"):
         base_name = os.path.basename(filename)
         self.fun_xml_obj.add_auxillary_file(description=description, auxillary_file=base_name)
+
+        if self.time_series_enabled:
+            self.add_time_series_artifact(description=description,
+                                          filename=filename,
+                                          asset_type=asset_type,
+                                          asset_id=asset_id,
+                                          category=artifact_category,
+                                          sub_category=artifact_sub_category)
 
     def send_mail(self, subject, content, to_addresses=["john.abraham@fungible.com"]):
         send_mail(to_addresses=to_addresses, subject=subject, content=content)
@@ -1582,6 +1673,7 @@ class FunTestScript(object):
                 fun_test.current_test_case_execution_id = setup_te.execution_id
                 if fun_test.time_series_enabled:
                     fun_test.update_time_series_script_run_time(started_epoch_time=fun_test.started_epoch_time)
+                    fun_test.add_in_progress_checkpoint()
                 # fun_test.add_start_checkpoint()
             fun_test._start_test(id=self.id,
                                  summary="Script setup",
@@ -1732,6 +1824,9 @@ class FunTestScript(object):
                                                   log_prefix=fun_test.log_prefix,
                                                   inputs=fun_test.get_job_inputs())
             fun_test.current_test_case_execution_id = cleanup_te.execution_id
+            if fun_test.time_series_enabled:
+                fun_test.add_in_progress_checkpoint()
+
         fun_test._start_test(id=FunTest.CLEANUP_TC_ID,
                              summary="Script cleanup",
                              steps=self.steps)
@@ -1810,6 +1905,8 @@ class FunTestScript(object):
                                                                      result=fun_test.IN_PROGRESS,
                                                                      started_time=get_current_time())
                             fun_test.current_test_case_execution_id = test_case.execution_id
+                            if fun_test.time_series_enabled:
+                                fun_test.add_in_progress_checkpoint()
                         # fun_test.add_start_checkpoint()
                         fun_test._start_test(id=test_case.id,
                                              summary=test_case.summary,

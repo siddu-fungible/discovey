@@ -741,6 +741,10 @@ label {
   background-color: rgba(0,0,0,.03);
 }
 
+.fun-panel-header-main-text {
+  font-weight: 700;
+}
+
 .fun-panel-body {
   padding: 10px;
   height: auto;

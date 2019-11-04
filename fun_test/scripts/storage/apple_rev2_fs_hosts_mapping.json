@@ -1,0 +1,58 @@
+{
+  "fs-102": {
+    "host_info": [
+      "cab04-qa-04",
+      "cab04-qa-05"
+    ]
+  },
+  "dut_info": {
+    "0": {
+      "type": "DUT_TYPE_FSU",
+      "dut": "fs-102",
+      "bond_interface_info": {
+        "0": {
+          "0": {
+            "type": "INTERFACE_TYPE_ETHERNET_BOND",
+            "fpg_slaves": [
+              0,
+              4,
+              8,
+              12
+            ],
+            "ip": "15.41.1.2/24",
+            "route": [
+              {
+                "network": "15.0.0.0/8",
+                "gateway": "15.41.1.1"
+              }
+            ]
+          }
+        },
+        "1": {
+          "0": {
+            "type": "INTERFACE_TYPE_ETHERNET_BOND",
+            "fpg_slaves": [
+              0,
+              4,
+              8,
+              12
+            ],
+            "ip": "15.41.2.2/24",
+            "route": [
+              {
+                "network": "15.0.0.0/8",
+                "gateway": "15.41.2.1"
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "fs-53": {
+    "host_info": [
+      "cab04-qa-01",
+      "cab04-qa-02"
+    ]
+  }
+}

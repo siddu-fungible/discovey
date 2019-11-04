@@ -80,6 +80,8 @@ TERAMARK_DFA_S1 = "qa_s1_dfa_teramark"
 TERAMARK_NFA_S1 = "qa_s1_nfa_teramark"
 TERAMARK_CRYPTO_RAW_S1 = "qa_s1_crypto_teramark"
 
+CRYPTO_FAST_PATH = "qa_crypto_fastpath_teramark"
+
 jpeg_operations = {"Compression throughput": "Compression throughput with Driver",
                    "Decompression throughput": "JPEG Decompress",
                    "Accelerator Compression throughput": "Compression Accelerator throughput",
@@ -207,7 +209,7 @@ class MyScript(FunTestScript):
                 SOAK_FLOWS_BUSY_LOOP_S1, SOAK_FLOWS_MEMCPY,
                 SOAK_FLOWS_MEMCPY_S1, VOLTEST_BLT_1,
                 VOLTEST_BLT_8, VOLTEST_BLT_12, TERAMARK_EC_S1, TERAMARK_JPEG_S1, TERAMARK_ZIP_DEFLATE_S1,
-                TERAMARK_ZIP_LZMA_S1, TERAMARK_PKE_S1, TERAMARK_DFA_S1, TERAMARK_NFA_S1, TERAMARK_CRYPTO_RAW_S1]
+                TERAMARK_ZIP_LZMA_S1, TERAMARK_PKE_S1, TERAMARK_DFA_S1, TERAMARK_NFA_S1, TERAMARK_CRYPTO_RAW_S1, CRYPTO_FAST_PATH]
         self.lsf_status_server.workaround(tags=tags)
         fun_test.shared_variables["lsf_status_server"] = self.lsf_status_server
 
@@ -1011,6 +1013,17 @@ class VoltestBlt12PerformanceTc(PalladiumPerformanceTc):
                               steps="Steps 1")
 
 
+class CryptoFastPathPerformanceTc(PalladiumPerformanceTc):
+    tag = CRYPTO_FAST_PATH
+    model = "CryptoFastPathPerformance"
+    platform = F1
+
+    def describe(self):
+        self.set_test_details(id=64,
+                              summary="Crypto Fast Path Performance Test",
+                              steps="Steps 1")
+
+
 if __name__ == "__main__":
     myscript = MyScript()
 
@@ -1067,5 +1080,6 @@ if __name__ == "__main__":
     myscript.add_test_case(VoltestBlt1PerformanceTc())
     myscript.add_test_case(VoltestBlt8PerformanceTc())
     myscript.add_test_case(VoltestBlt12PerformanceTc())
+    myscript.add_test_case(CryptoFastPathPerformanceTc())
 
     myscript.run()

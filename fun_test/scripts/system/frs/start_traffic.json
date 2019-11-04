@@ -1,9 +1,26 @@
 {
   "duration": "1m",
-  "run_le_firewall": true,
-  "boot_new_image": true,
+  "run_le_firewall": false,
+  "boot_new_image": false,
   "specific_apps": [],
   "add_to_database": false,
   "disable_f1_index": null,
-  "ec_vol": true
+  "ec_vol": false,
+  "collect_stats": [],
+  "disable_stats": [],
+  "fio_params": {
+    "numjobs": 1,
+    "size": "100%",
+    "iodepth": 32,
+    "runtime": 180,
+    "group_reporting": 1,
+    "time_based": 1,
+    "rw": "randread",
+    "name": "fio_randread",
+    "direct": 1,
+    "bs": "4k",
+    "ioengine": "libaio",
+    "output-format": "json",
+    "cpus_allowed": "0-7"
+  }
 }

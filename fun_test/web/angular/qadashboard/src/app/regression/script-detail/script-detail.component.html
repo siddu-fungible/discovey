@@ -1,131 +1,226 @@
 <div class="fun-flex-container fun-action-nav">
-    <span class="script-name">{{ scriptPath }}</span>
-    <div class="fun-spacer"></div>
-    <button (click)="onContextOptionsClick(contextOptions)" class="fun-button-add">Context options</button>
-    <!--button (click)="testClick()">Test</button-->
-    <ng-template #contextOptions let-modal>
-      <div class="fun-panel">
-        <div class="fun-panel-header">
-          <span>Select contexts to display</span>
-        </div>
-        <div class="fun-panel-body">
-          <ng-container *ngFor="let availableContext of availableContexts">
-            <div>
-              <input type="checkbox" [(ngModel)]="availableContext.selected" [checked]="availableContext?.selected">
-              <span class="checkbox-text">ID : {{ availableContext.context_id }} ({{ availableContext.description }})</span>
-            </div>
-
-          </ng-container>
-
-        </div>
-
+  <a class="pseudo-anchor" href="/regression/suite_detail/{{ suiteExecutionId }}">&nbsp;< Back to suite</a>
+  <div class="fun-spacer"></div>
+  <span class="script-name">{{ scriptPath }}</span>
+  <div class="fun-spacer"></div>
+  <button (click)="onContextOptionsClick(contextOptions)" class="fun-button-add">Context options</button>
+  <button (click)="viewChartsClick(chartSelectionOptions)" class="fun-button-add">Select charts</button>
+  <span class="pseudo-anchor" (click)="openConsoleLogClick()">Console log</span>
+  <!--button (click)="testClick()">Test</button-->
+  <ng-template #contextOptions let-modal>
+    <div class="fun-panel">
+      <div class="fun-panel-header">
+        <span>Select contexts to display</span>
       </div>
-
-    </ng-template>
-  </div>
-<!--app-timeline-control *ngIf="showLogsPanel" [domainMin]="minRelativeTime" [domainMax]="maxRelativeTime" [title]="'Show logs starting from'" [unit]="'s'" (valueChanged)="onTimeLineChanged($event)"></app-timeline-control-->
-<div class="component" style="overflow: hidden; position: fixed">
-  <div class="fun-flex-container" style="align-items: flex-start;">
-      <div *ngIf="showTestCasePanel" class="fun-flex-item panel fun-panel" [@show]="showTestCasePanel">
-        <div class="fun-panel-header">Test-cases</div>
-        <div class="fun-panel-body auto-scroll test-case-panel">
-          <table class="fun-table">
-            <tr>
-              <td class="fun-table-header">ID</td>
-              <td class="fun-table-header">Description</td>
-              <td class="fun-table-header">Result</td>
-            </tr>
-            <tr *ngFor="let testCaseExecution of testCaseExecutions; let index=index" [ngClass]="{'selected-row': currentTestCaseExecution?.test_case_id === testCaseExecution.test_case_id }">
-              <td>
-                <span class="pseudo-anchor" (click)="onTestCaseIdClick(index, testCaseExecution.execution_id)" >{{ testCaseExecution.test_case_id }}
-                </span>
-              </td>
-              <td>{{ testCaseExecution.summary }}</td>
-              <td><span [ngClass]="{'passed': testCaseExecution.result === 'PASSED', 'failed': testCaseExecution.result === 'FAILED' }">{{ testCaseExecution.result }}</span></td>
-            </tr>
-          </table>
-        </div>
-      </div>
-      <div *ngIf="currentTestCaseExecution" class="fun-flex-item panel fun-panel" [@show]="showCheckpointPanel">
-        <div class="fun-panel-header fun-flex-container" style="justify-content: space-between">
-          <span>Checkpoints</span>
-          <span *ngIf="!showTestCasePanel" (click)="onShowTestCasePanelClick()" class="pseudo-anchor">< Show test-cases</span>
-        </div>
-        <div class="fun-panel-body checkpoint-panel auto-scroll">
-          <table class="fun-table">
-            <tr>
-              <td class="fun-table-header">Time</td>
-              <td class="fun-table-header">ID</td>
-              <td class="fun-table-header">Ctx</td>
-              <td class="fun-table-header">Checkpoint</td>
-              <td class="fun-table-header">Result</td>
-              <td class="fun-table-header">Expected</td>
-              <td class="fun-table-header">Actual</td>
-            </tr>
-            <tr *ngFor="let checkpoint of currentTestCaseExecution?.checkpoints" [ngClass]="{'selected-checkpoint-row': currentCheckpointIndex === checkpoint?.data?.checkpoint_index }">
-              <td>
-                {{ checkpoint.relative_epoch_time | number: '1.3-3'}}
-              </td>
-              <td *ngIf="checkpoint.data.checkpoint != 'Start'">
-                <span class="pseudo-anchor" (click)="onCheckpointClick(currentTestCaseExecution, checkpoint.data.checkpoint_index, checkpoint.data.context_id)">{{ checkpoint.data.checkpoint_index }}
-                </span>
-              </td>
-              <td>{{ checkpoint.data.context_id }}</td>
-              <td>{{ checkpoint.data.checkpoint }}</td>
-              <td><span [ngClass]="{'passed': checkpoint.data.result === 'PASSED', 'failed': checkpoint.data.result === 'FAILED' }">{{ checkpoint.data.result }}</span></td>
-              <td>{{ checkpoint.data.expected }}</td>
-              <td>{{ checkpoint.data.actual }}</td>
-            </tr>
-          </table>
-        </div>
-      </div>
-      <div *ngIf="showLogsPanel" class="fun-flex-container" id="logs-panel">
-        <ng-container *ngFor="let availableContext of (availableContexts | selected )">
-          <div class="fun-flex-item panel fun-panel">
-            <div class="fun-panel-header">
-              Context: {{ availableContext.context_id }} {{ availableContext.description }}
-            </div>
-            <div class="fun-panel-body">
-              <h4>{{ currentTestCaseExecution.test_case_id }}: {{ currentTestCaseExecution.summary }}</h4>
-              <fun-spinner [status]="status"></fun-spinner>
-              <div [@show]="showLogsPanel" *ngIf="currentTestCaseExecution" class=" logs-panel auto-scroll" >
-                <div>
-                  <ng-container>
-                    <ng-container *ngIf="logsAreTruncated">
-                      <div style="float: right" class="pseudo-anchor" (click)="showPreviousLogsClick()">Show previous logs</div>
-                      <br>
-                    </ng-container>
-                    <table>
-                      <ng-container *ngFor="let checkpoint of currentTestCaseExecution?.checkpoints">
-                        <tr *ngFor="let seriesElement of checkpoint?.timeSeries">
-                          <ng-container *ngIf="(seriesElement.data.context_id === availableContext.context_id) && (seriesElement.relative_epoch_time >= timeFilterMin)">
-                            <ng-container *ngIf="seriesElement.type === 80 && (seriesElement.data.checkpoint_index <= currentCheckpointIndex)">
-
-                              <td class="timestamp" nowrap><small>{{ seriesElement.relative_epoch_time | number: '1.3-3' }}</small></td>
-                              <td>
-                                <div id="{{ currentTestCaseExecution.test_case_id }}_{{ seriesElement.data?.checkpoint_index }}_{{ seriesElement.data?.context_id }}">
-                                  <span class="checkpoint-span">Checkpoint: {{ seriesElement.data?.checkpoint }}
-                                  </span>
-                                </div>
-                              </td>
-                            </ng-container>
-                          <ng-container *ngIf="seriesElement.type === 60 && (seriesElement.data.checkpoint_index <= currentCheckpointIndex)">
-                            <td class="timestamp" nowrap><small>{{ seriesElement.relative_epoch_time | number: '1.3-3' }}</small></td>
-                            <td><pre>{{ seriesElement.data?.log }}</pre></td>
-                          </ng-container>
-                        </ng-container>
-                      </tr>
-                      </ng-container>
-                    </table>
-                  </ng-container>
-                </div>
-              </div>
-            </div>
+      <div class="fun-panel-body">
+        <ng-container *ngFor="let availableContext of availableContexts">
+          <div>
+            <input type="checkbox" [(ngModel)]="availableContext.selected" [checked]="availableContext?.selected">
+            <span
+              class="checkbox-text">ID : {{ availableContext.context_id }} ({{ availableContext.description }})</span>
           </div>
         </ng-container>
       </div>
     </div>
+  </ng-template>
+  <ng-template #chartSelectionOptions let-modal>
+    <div class="fun-panel">
+      <div class="fun-panel-header">
+        Select charts
+      </div>
+      <div class="fun-panel-body">
+        <div class="fun-flex-container">
+          <div class="fun-flex-item">
+            Select category<select [(ngModel)]="selectedStatisticsCategory">
+            <option [ngValue]="statisticsCategory" *ngFor="let statisticsCategory of statisticsCategories">
+              {{ statisticsCategory.display_name }}
+            </option></select>
+          </div>
+          <ng-container *ngIf="selectedStatisticsCategory">
+            <div class="fun-flex-item">
+              Select sub-category<select [(ngModel)]="selectedStatisticsSubCategory">
+              <option [ngValue]="statisticsSubCategory" *ngFor="let statisticsSubCategory of selectedStatisticsCategory?.sub_categories;">
+                {{ statisticsSubCategory.display_name }}
+              </option></select>
+            </div>
+          </ng-container>
+          <span (click)="addStatisticsCategory()" *ngIf="selectedStatisticsSubCategory" class="pseudo-anchor">Add</span>
+        </div>
+
+        <table class="fun-table" *ngIf="selectedStatistics?.length > 0">
+          <tr>
+            <td class="fun-table-header">Category</td>
+            <td class="fun-table-header">Sub-category</td>
+            <td class="fun-table-header"></td>
+          </tr>
+          <tr *ngFor="let selectedStatistic of selectedStatistics; let index=index">
+            <td>{{ selectedStatistic.statisticsCategory.display_name }}</td>
+            <td>{{ selectedStatistic.statisticsSubCategory.display_name }}</td>
+            <td><i (click)="deleteSelectedStatisticClick(index)" class="fa fa-trash-o"
+                     style="font-size:20px; color: red"></i>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </ng-template>
 </div>
+
+<!--div class="fun-flex-container">
+	<fun-chart style="width: 300px; height: 300px" [mileStones]="mileStoneIndices" [y1AxisPlotLines]="y1AxisPlotLines" [yMax]="yMax" [yMin]="yMin"
+						 [y1Values]="values"
+						 [xValues]="series"
+						 [title]="'BAM stats'"
+						 [xAxisLabel]="'X axis'"
+						 [y1AxisLabel]="'Y axis'"></fun-chart>
+</div-->
+
+
+<!--app-timeline-control *ngIf="showLogsPanel" [domainMin]="minRelativeTime" [domainMax]="maxRelativeTime" [title]="'Show logs starting from'" [unit]="'s'" (valueChanged)="onTimeLineChanged($event)"></app-timeline-control-->
+<div class="" style="overflow: auto; height: 100%; width: 100%;">
+  <div class="fun-flex-container" style="align-items: flex-start;">
+    <div *ngIf="showTestCasePanel" class="fun-flex-item panel fun-panel" [@show]="showTestCasePanel">
+      <div class="fun-panel-header">
+        <span class="fun-panel-header-main-text">Test-cases</span>
+        <label style="margin: auto 20px auto">
+          <input type="checkbox" [(ngModel)]="showFailedTestCases" [checked]="showFailedTestCases"/> Show failed
+        </label>
+
+      </div>
+      <div class="fun-panel-body auto-scroll test-case-panel">
+        <table class="fun-table">
+          <tr>
+            <td class="fun-table-header">ID</td>
+            <td class="fun-table-header">Description</td>
+            <td class="fun-table-header">Result</td>
+          </tr>
+          <tr *ngFor="let testCaseExecution of testCaseExecutions; let index=index"
+              [ngClass]="{'selected-row': currentTestCaseExecution?.test_case_id === testCaseExecution.test_case_id }">
+
+            <ng-container *ngIf="!showFailedTestCases || (showFailedTestCases && (testCaseExecution.result === 'FAILED'))">
+              <td>
+                  <span [ngClass]="{'pseudo-anchor': testCaseExecution.result !== 'NOT_RUN'}"
+                        (click)="onTestCaseIdClick(index, testCaseExecution.execution_id)">{{ testCaseExecution.test_case_id }}
+                  </span>
+              </td>
+              <td>{{ testCaseExecution.summary }}</td>
+              <td><span
+                [ngClass]="{'passed': testCaseExecution.result === 'PASSED', 'failed': testCaseExecution.result === 'FAILED' }">{{ testCaseExecution.result }}</span>
+              </td>
+
+            </ng-container>
+
+          </tr>
+        </table>
+      </div>
+    </div>
+    <div *ngIf="currentTestCaseExecution" class="fun-flex-item panel fun-panel" [@show]="showCheckpointPanel">
+      <fun-spinner [status]="checkpointPanelStatus"></fun-spinner>
+      <div class="fun-panel-header fun-flex-item fun-flex-container">
+        <span class="fun-panel-header-main-text">Checkpoints</span>
+        <label style="margin: auto 20px auto">
+          <input type="checkbox" [(ngModel)]="showFailedCheckpoints" [checked]="showFailedCheckpoints"/> Show failed
+        </label>
+        <span *ngIf="!showTestCasePanel" (click)="onShowTestCasePanelClick()"
+              class="pseudo-anchor">< Show test-cases</span>
+      </div>
+      <div *ngIf="!checkpointPanelStatus" class="fun-panel-body checkpoint-panel auto-scroll">
+        <table class="fun-table">
+          <tr>
+            <td class="fun-table-header">Time</td>
+            <td class="fun-table-header">ID</td>
+            <td class="fun-table-header">Ctx</td>
+            <td class="fun-table-header">Checkpoint</td>
+            <td class="fun-table-header">Result</td>
+            <td class="fun-table-header">Expected</td>
+            <td class="fun-table-header">Actual</td>
+          </tr>
+          <tr *ngFor="let checkpoint of currentTestCaseExecution?.checkpoints"
+              [ngClass]="{'selected-checkpoint-row': currentCheckpointIndex === checkpoint?.data?.checkpoint_index }">
+
+            <ng-container *ngIf="!showFailedCheckpoints || (showFailedCheckpoints && checkpoint.data.result === 'FAILED')">
+
+              <td>
+                {{ checkpoint.relative_epoch_time | number: '1.3-3' }}
+              </td>
+              <td *ngIf="checkpoint.data.checkpoint != 'Start'">
+                  <span class="pseudo-anchor"
+                        (click)="onCheckpointClick(currentTestCaseExecution, checkpoint.data.checkpoint_index, checkpoint.data.context_id)">{{ checkpoint.data.checkpoint_index }}
+                  </span>
+              </td>
+              <td>{{ checkpoint.data.context_id }}</td>
+              <td>{{ checkpoint.data.checkpoint }}</td>
+              <td><span
+                [ngClass]="{'passed': checkpoint.data.result === 'PASSED', 'failed': checkpoint.data.result === 'FAILED' }">{{ checkpoint.data.result }}</span>
+              </td>
+              <td>{{ checkpoint.data.expected }}</td>
+              <td>{{ checkpoint.data.actual }}</td>
+
+            </ng-container>
+
+          </tr>
+        </table>
+      </div>
+    </div>
+    <div *ngIf="showLogsPanel" class="fun-flex-container fun-flex-item" id="logs-panel">
+      <ng-container *ngFor="let availableContext of (availableContexts | selected )">
+        <div class="fun-flex-item panel fun-panel">
+          <div class="fun-panel-header">
+            Context: {{ availableContext.context_id }} {{ availableContext.description }}
+          </div>
+          <div class="fun-panel-body">
+            <h4>{{ currentTestCaseExecution.test_case_id }}: {{ currentTestCaseExecution.summary }}</h4>
+            <fun-spinner [status]="status"></fun-spinner>
+            <div [@show]="showLogsPanel" *ngIf="currentTestCaseExecution" class=" logs-panel auto-scroll">
+              <div>
+                <ng-container>
+                  <ng-container *ngIf="logsAreTruncated">
+                    <div class="pseudo-anchor" (click)="showPreviousLogsClick()">Show previous logs</div>
+                    <br>
+                  </ng-container>
+                  <table>
+                    <ng-container *ngFor="let checkpoint of currentTestCaseExecution?.checkpoints">
+                      <tr *ngFor="let seriesElement of checkpoint?.timeSeries">
+                        <ng-container
+                          *ngIf="(seriesElement.data.context_id === availableContext.context_id) && (seriesElement.relative_epoch_time >= timeFilterMin)">
+                          <ng-container
+                            *ngIf="seriesElement.type === 80 && (seriesElement.data.checkpoint_index <= currentCheckpointIndex)">
+
+                            <td class="timestamp" nowrap>
+                              <small>{{ seriesElement.relative_epoch_time | number: '1.3-3' }}</small>
+                            </td>
+                            <td>
+                              <div id="{{ currentTestCaseExecution.test_case_id }}_{{ seriesElement.data?.checkpoint_index }}_{{ seriesElement.data?.context_id }}">
+                                  <span class="checkpoint-span">Checkpoint: {{ seriesElement.data?.checkpoint }}
+                                  </span>
+                              </div>
+                            </td>
+                          </ng-container>
+                          <ng-container
+                            *ngIf="seriesElement.type === 60 && (seriesElement.data.checkpoint_index <= currentCheckpointIndex)">
+                            <td class="timestamp" nowrap>
+                              <small>{{ seriesElement.relative_epoch_time | number: '1.3-3' }}</small>
+                            </td>
+                            <td>
+                              <pre style="margin: 0">{{ seriesElement.data?.log }}</pre>
+                            </td>
+                          </ng-container>
+                        </ng-container>
+                      </tr>
+                    </ng-container>
+                  </table>
+                </ng-container>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+  <app-statistics-container [statistics]="selectedStatistics" [scriptExecutionInfo]="scriptExecutionInfo" *ngIf="selectedStatistics?.length > 0"></app-statistics-container>
+
+</div>
+
 
 
 

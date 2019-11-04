@@ -7,6 +7,37 @@ from scripts.storage.storage_helper import *
 from asset.asset_manager import *
 import re
 import ipaddress
+from web.fun_test.analytics_models_helper import ModelHelper, get_data_collection_time
+from fun_global import PerfUnit, FunPlatform
+
+
+def add_to_data_base(value_dict):
+    unit_dict = {
+        "read_iops_unit": PerfUnit.UNIT_OPS,
+        "read_bw_unit": PerfUnit.UNIT_GBITS_PER_SEC,
+        "read_latency_avg_unit": PerfUnit.UNIT_USECS,
+        "read_latency_50_unit": PerfUnit.UNIT_USECS,
+        "read_latency_90_unit": PerfUnit.UNIT_USECS,
+        "read_latency_95_unit": PerfUnit.UNIT_USECS,
+        "read_latency_99_unit": PerfUnit.UNIT_USECS,
+        "read_latency_9950_unit": PerfUnit.UNIT_USECS,
+        "read_latency_9999_unit": PerfUnit.UNIT_USECS,
+    }
+
+    value_dict["date_time"] = get_data_collection_time()
+    value_dict["version"] = fun_test.get_version()
+    print "HI there, the version is {}".format(value_dict["version"])
+    value_dict["platform"] = FunPlatform.F1
+    model_name = "NvmeFcpPerformance"
+    status = fun_test.PASSED
+    try:
+        generic_helper = ModelHelper(model_name=model_name)
+        generic_helper.set_units(validate=True, **unit_dict)
+        generic_helper.add_entry(**value_dict)
+        generic_helper.set_status(status)
+        print "used generic helper to add an entry"
+    except Exception as ex:
+        fun_test.critical(str(ex))
 
 
 def get_numa(host_obj):
@@ -111,6 +142,10 @@ class BringupSetup(FunTestCase):
             fun_test.shared_variables["skip_precondition"] = job_inputs["skip_precondition"]
         else:
             fun_test.shared_variables["skip_precondition"] = False
+        if "collect_stats" in job_inputs:
+            fun_test.shared_variables["collect_stats"] = job_inputs["collect_stats"]
+        else:
+            fun_test.shared_variables["collect_stats"] = False
 
         if deploy_setup:
             funcp_obj = FunControlPlaneBringup(fs_name=self.server_key["fs"][fs_name]["fs-name"])
@@ -534,6 +569,7 @@ class RunFioRds(FunTestCase):
         f10_stats_collector = CollectStats(f10_storage_ctrl_obj)
         f11_stats_collector = CollectStats(f11_storage_ctrl_obj)
         skip_precondition = fun_test.shared_variables["skip_precondition"]
+        collect_stats = fun_test.shared_variables["collect_stats"]
 
         table_data_headers = ["Devices", "Block_Size", "IOPs", "BW in Gbps"]
         table_data_cols = ["devices", "read_block_size", "total_read_iops", "total_read_bw"]
@@ -543,8 +579,16 @@ class RunFioRds(FunTestCase):
 
         for k, v in config_dict["GenericParams"].items():
             setattr(self, k, v)
-
         command_timeout = self.command_timeout
+
+        job_inputs = fun_test.get_job_inputs()
+        if "iodepth" in job_inputs:
+            self.fio_cmd_args["iodepth"] = job_inputs["iodepth"]
+        if "numjobs" in job_inputs:
+            self.fio_cmd_args["numjobs"] = job_inputs["numjobs"]
+            numjobs_set = True
+        else:
+            numjobs_set = False
 
         nvme_list_raw = f11_hosts[0]["handle"].sudo_command("nvme list -o json")
         if "failed to open" in nvme_list_raw.lower():
@@ -606,7 +650,7 @@ class RunFioRds(FunTestCase):
          'latency99': 55836, 'iops': 105531.333833, 'bw': 422125, 'latency90': 16318,
           'runtime': 120030, 'latency95': 30539, 'clatency': 4847}'''
         test_type = "read"
-
+        stats_collect_count = self.fio_cmd_args["runtime"] / self.stats_interval
         table_data_rows = []
         cpu_list = get_numa(f11_hosts[0]["handle"])
         for x in range(1, total_ssd + 1):
@@ -614,17 +658,48 @@ class RunFioRds(FunTestCase):
                 fio_filename = nvme_device_list[0]
             else:
                 fio_filename = str(':'.join(nvme_device_list[:x]))
-            fio_read_jobs = 8 * x
+            if not numjobs_set:
+                self.fio_cmd_args["numjobs"] = 8 * x
+                fio_read_jobs = self.fio_cmd_args["numjobs"]
+            else:
+                fio_read_jobs = self.fio_cmd_args["numjobs"]
             fio_job_name = "{}_ssd_{}_{}".format(x, test_type,
                                                  fio_read_jobs)
-            fio_result = f11_hosts[0]["handle"].pcie_fio(filename=fio_filename,
-                                                         numjobs=fio_read_jobs,
-                                                         rw="read",
-                                                         name=fio_job_name,
-                                                         cpus_allowed=cpu_list,
-                                                         **self.fio_cmd_args)
-            fun_test.log("FIO result {}".format(fio_result))
-            fun_test.test_assert(fio_result, message="FIO job {}".format(fio_job_name))
+
+            # Starting the thread to collect the vp_utils stats and resource_bam stats for the current iteration
+            if collect_stats:
+                file_suffix = "{}_ssd_iodepth_{}_f10.txt".format(x, fio_read_jobs)
+                for index, stat_detail in enumerate(self.stats_collect_details):
+                    func = stat_detail.keys()[0]
+                    self.stats_collect_details[index][func]["count"] = stats_collect_count
+                fun_test.log("Different stats collection thread details for the current IO depth {} before starting "
+                             "them:\n{}".format(fio_read_jobs, self.stats_collect_details))
+                f10_storage_ctrl_obj.verbose = False
+                self.f10_stats_obj = CollectStats(storage_controller=f10_storage_ctrl_obj)
+                self.f10_stats_obj.start(file_suffix, self.stats_collect_details)
+                fun_test.log("Different stats collection thread details for the current IO depth {} after starting "
+                             "them:\n{}".format(fio_read_jobs, self.stats_collect_details))
+            else:
+                f10_storage_ctrl_obj.disconnect()
+                f11_storage_ctrl_obj.disconnect()
+                fun_test.critical("Stats collection disabled")
+            try:
+                fio_result = f11_hosts[0]["handle"].pcie_fio(filename=fio_filename,
+                                                             rw="read",
+                                                             name=fio_job_name,
+                                                             cpus_allowed=cpu_list,
+                                                             **self.fio_cmd_args)
+                fun_test.log("FIO result {}".format(fio_result))
+                fun_test.test_assert(fio_result, message="FIO job {}".format(fio_job_name))
+            except:
+                fun_test.critical("FIO test failed")
+
+            if collect_stats:
+                self.f10_stats_obj.stop(self.stats_collect_details)
+                f10_storage_ctrl_obj.verbose = True
+                f11_storage_ctrl_obj.verbose = True
+                f10_storage_ctrl_obj.disconnect()
+                f11_storage_ctrl_obj.disconnect()
 
             read_block_size = self.fio_cmd_args["bs"]
             total_read_iops = fio_result["read"]["iops"]
@@ -636,6 +711,24 @@ class RunFioRds(FunTestCase):
             table_data_rows.append(row_data_list)
 
             table_data = {"headers": table_data_headers, "rows": table_data_rows}
+
+            for index, value in enumerate(self.stats_collect_details):
+                for func, arg in value.iteritems():
+                    filename = arg.get("output_file")
+                    if filename:
+                        if func == "vp_utils":
+                            fun_test.add_auxillary_file(description="F1 VP Utilization - IO depth {}".
+                                                        format(fio_read_jobs),
+                                                        filename=filename)
+                        if func == "per_vp":
+                            fun_test.add_auxillary_file(description="F1 Per VP Stats - IO depth {}".
+                                                        format(fio_read_jobs), filename=filename)
+                        if func == "eqm_stats":
+                            fun_test.add_auxillary_file(description="F1 EQM Stats - IO depth {}".
+                                                        format(fio_read_jobs), filename=filename)
+                        if func == "fcp_stats":
+                            fun_test.add_auxillary_file(description="F1 FCP Stats - IO depth {}".
+                                                        format(fio_read_jobs), filename=filename)
 
         fun_test.add_table(panel_header="NVMe FCP Sanity",
                            table_name=self.summary,

@@ -7,6 +7,8 @@ from lib.fun.fs import ComE, Bmc, Fpga
 from lib.system import utils
 from lib.host.linux import Linux
 from collections import OrderedDict
+import requests
+from lib.templates.storage.storage_controller_api import StorageControllerApi
 
 
 class ApcPduScript(FunTestScript):
@@ -15,6 +17,15 @@ class ApcPduScript(FunTestScript):
 
     def setup(self):
         pass
+
+    def wipe_out_cassandra_es_database(self):
+        self.come_handle.command("cd /var/opt/fungible")
+        self.come_handle.sudo_command("rm -r elasticsearch")
+        self.come_handle.sudo_command("rm -r cassandra")
+
+    def restart_fs1600(self):
+        self.come_handle.command("cd /opt/fungible/etc")
+        self.come_handle.command("bash ResetFs1600.sh")
 
     def cleanup(self):
         pass
@@ -37,6 +48,8 @@ class ApcPduTestcase(FunTestCase):
         self.fs = AssetManager().get_fs_by_name(self.fs_name)
         self.apc_info = self.fs.get("apc_info", None)
         self.outlet_no = self.apc_info.get("outlet_number", None)
+        HOSTS_ASSET = ASSET_DIR + "/hosts.json"
+        self.hosts_asset = fun_test.parse_file_to_json(file_name=HOSTS_ASSET)
         fun_test.log(json.dumps(self.fs, indent=4))
 
         config_file = fun_test.get_script_name_without_ext() + ".json"
@@ -46,8 +59,7 @@ class ApcPduTestcase(FunTestCase):
         for k, v in config_dict.iteritems():
             setattr(self, k, v)
 
-        HOSTS_ASSET = ASSET_DIR + "/hosts.json"
-        self.hosts_asset = fun_test.parse_file_to_json(file_name=HOSTS_ASSET)
+
 
         job_inputs = fun_test.get_job_inputs()
         if job_inputs:
@@ -69,8 +81,8 @@ class ApcPduTestcase(FunTestCase):
                 self.expected_hnu_ports_f1_0 = job_inputs["expected_hnu_ports_f1_0"]
             if "expected_hnu_ports_f1_1" in job_inputs:
                 self.expected_hnu_ports_f1_1 = job_inputs["expected_hnu_ports_f1_1"]
-            if "hosts" in job_inputs:
-                self.hosts = job_inputs["hosts"]
+            if "num_hosts" in job_inputs:
+                self.num_hosts = job_inputs["num_hosts"]
             if "check_docker" in job_inputs:
                 self.check_docker = job_inputs["check_docker"]
             if "expected_dockers" in job_inputs:
@@ -79,12 +91,12 @@ class ApcPduTestcase(FunTestCase):
                 self.target_ip = job_inputs["target_ip"]
             if "end_sleep" in job_inputs:
                 self.end_sleep = job_inputs["end_sleep"]
-            if "docker_verify_interval" in job_inputs:
-                self.docker_verify_interval = job_inputs["docker_verify_interval"]
             if "after_runsc_up_host_connect_interval" in job_inputs:
                 self.after_runsc_up_host_connect_interval = job_inputs["after_runsc_up_host_connect_interval"]
             if "check_portal" in job_inputs:
                 self.check_portal = job_inputs["check_portal"]
+            if "apc_pdu_reboot_machine" in job_inputs:
+                self.apc_pdu_reboot_machine = job_inputs["apc_pdu_reboot_machine"]
 
     def run(self):
         '''
@@ -94,6 +106,7 @@ class ApcPduTestcase(FunTestCase):
         4. now check for SSD's and NU & HNU ports validation.
         :return:
         '''
+
         for pc_no in range(self.iterations):
             self.pc_no = pc_no
             self.come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
@@ -106,7 +119,8 @@ class ApcPduTestcase(FunTestCase):
 
             fun_test.add_checkpoint(checkpoint="ITERATION : {} out of {}".format(pc_no + 1, self.iterations))
 
-            self.apc_pdu_reboot()
+            if self.apc_pdu_reboot_machine:
+                self.apc_pdu_reboot()
             self.come_handle.destroy()
             self.bmc_handle.destroy()
 
@@ -126,36 +140,14 @@ class ApcPduTestcase(FunTestCase):
             bmc_up = self.bmc_handle.ensure_host_is_up(max_wait_time=600)
             fun_test.test_assert(bmc_up, "BMC is UP")
 
-            self.check_come_up_time(expected_minutes=5)
+            if self.apc_pdu_reboot_machine:
+                self.check_come_up_time(expected_minutes=5)
 
             if self.check_docker:
-                fun_test.log("Check if all the Dockers are up")
-                docker_count = 0
-                max_time = 100
-                timer = FunTimer(max_time)
-                while not timer.is_expired():
-                    docker_count = self.get_docker_count()
-                    if docker_count == self.expected_dockers:
-                        break
-                    else:
-                        fun_test.sleep("{} docker to be up".format(self.expected_dockers), seconds=5)
-                fun_test.test_assert_expected(expected=self.expected_dockers, actual=docker_count, message="Docker's up")
+                self.check_expected_dockers_up()
 
             if self.check_portal:
-                portal_up = False
-                max_time = 300
-                timer = FunTimer(max_time)
-                while not timer.is_expired():
-                    try:
-                        status = urllib.urlopen("http://{}".format(self.fs['come']['mgmt_ip'])).getcode()
-                        fun_test.log("Return status: {}".format(status))
-                        if status == 200:
-                            portal_up = True
-                            break
-                        fun_test.sleep("Sleeping before next iteration")
-                    except Exception as ex:
-                        fun_test.log(ex)
-                fun_test.test_assert(portal_up, "Portal is up")
+                self.check_portal_up()
 
             # Check if lspci devices are detected
             fun_test.log("Check if F1_0 is detected")
@@ -182,22 +174,26 @@ class ApcPduTestcase(FunTestCase):
                 fun_test.log("Checking if NU and HNU port's are active on F1_1")
                 self.check_nu_ports(f1=1, expected_ports_up=expected_ports_up_f1_1)
 
-            # Todo: remove for loop in the helper script (previously had codded to work parallelly with multiple host,
-            #  now we have to do it serially, so no need of for loops in helper function)
-            if self.hosts:
-                fun_test.sleep("Hosts to be up", seconds=self.after_runsc_up_host_connect_interval)
-                hosts_list_with_handle = self.get_hosts_handle()
-                for host_name, host in hosts_list_with_handle.iteritems():
-                    single_host = {host_name: host}
-                    self.connect_the_host(single_host)
-                    host["nvme"] = self.get_nvme(single_host)
-                    # Start traffic
-                    self.run_traffic_bg(single_host)
-                    # Check if traffic is running
-                    self.check_traffic(single_host)
-                    # Disconnect volume
-                    self.disconnect_vol(single_host)
-                    self.destroy_hosts_handle(single_host)
+            if self.num_hosts:
+                fun_test.sleep("Wait for GUI to come up", seconds=80)
+                self.sc_api = StorageControllerApi(api_server_ip=self.fs['come']['mgmt_ip'],
+                                                   api_server_port=self.api_server_port,
+                                                   username=self.username,
+                                                   password=self.password)
+                if pc_no == 0:
+                    required_hosts_list = self.verify_and_get_required_hosts_list()
+                    self.pool_uuid = self.get_pool_id()
+                    self.volume_uuid_details = self.create_vol()
+                    self.attach_volumes_to_host(required_hosts_list)
+                    self.get_host_handles()
+                    self.intialize_the_hosts()
+                else:
+                    self.get_host_handles()
+                self.connect_the_host_to_volumes()
+                self.verify_nvme_connect()
+                self.start_traffic_and_verify()
+                self.disconnect_the_hosts()
+                self.destoy_host_handles()
 
             self.come_handle.destroy()
             self.bmc_handle.destroy()
@@ -448,22 +444,23 @@ class ApcPduTestcase(FunTestCase):
                                  "handle": host_handle}
         return result
 
-    def connect_the_host(self, hosts_list, retry=3):
-        result = False
-        for host_name, host in hosts_list.iteritems():
+    def connect_the_host_to_volumes(self, retry=3):
+        for host_name, host_info in self.host_details.iteritems():
             # Try connecting nvme 3 times with an interval of 10 seconds each try, try 5 times
             for iter in range(retry):
                 fun_test.log("Trying to connect to nvme, Iteration no: {} out of {}".format(iter + 1, retry))
-                result = host["handle"].nvme_connect(target_ip=self.target_ip,
-                                                     nvme_subsystem=host["nqn"],
-                                                     nvme_io_queues=16,
-                                                     retries=5,
-                                                     timeout=100)
+                nqn = host_info["data"]["nqn"]
+                target_ip = host_info["data"]["ip"]
+                result = host_info["handle"].nvme_connect(target_ip=target_ip,
+                                                          nvme_subsystem=nqn,
+                                                          nvme_io_queues=16,
+                                                          retries=5,
+                                                          timeout=100)
                 if result:
                     break
-                fun_test.sleep("before next iteration", seconds=10)
+                fun_test.sleep("Before next iteration", seconds=10)
 
-            fun_test.test_assert(result, "{} {} connected to {}".format(host_name, host["nqn"], self.target_ip))
+            fun_test.test_assert(result, "Host: {} nqn: {} connected to DataplaneIP: {}".format(host_name, nqn, target_ip))
 
     @staticmethod
     def get_nvme(hosts_list):
@@ -481,34 +478,17 @@ class ApcPduTestcase(FunTestCase):
         fun_test.test_assert(result, "{} host is connected".format(name))
         return nvme
 
-    @staticmethod
-    def run_traffic_bg(hosts_list):
-        for host_name, host in hosts_list.iteritems():
-            # result = host_handle.nvme_connect(target_ip=target_ip, nvme_subsystem=nqn)
-            # fun_test.test_assert(result, "{} connected to {}".format(nqn, target_ip))
-            # Run this in background if needed
-            # fio_out = host_handle.pcie_fio(filename=filename, numjobs=4, iodepth=4, rw="randrw", direct=1,
-            #                                ioengine="libaio", bs="4k", size="512g", name="fio_randrw", runtime=120,
-            #                                do_verify=1, verify="md5", verify_fatal=1, timeout=300)
-            host["handle"].enter_sudo()
-            host["handle"].start_bg_process("fio --group_reporting --output-format=json --filename={filename} "
-                                            "--time_based --rw=randrw --name=fio --iodepth=32 --verify=md5 --numjobs=1 "
-                                            "--direct=1 --do_verify=1 --bs=4k --ioengine=libaio --runtime=120 "
-                                            "--verify_fatal=1 --size=512g --output=/tmp/fio_power_cycler.txt".format(
-                filename=host["nvme"]))
-            # fun_test.test_assert(True, "{} fio started".format(host_name))
-            host["handle"].exit_sudo()
-            # if not fio_out:
-            #     result = True
-        return
-
-    def check_traffic(self, hosts_list):
-        for host_name, host in hosts_list.iteritems():
-            device = host["nvme"]
-            output_iostat = host["handle"].iostat(device=device, interval=10, count=13, background=False)
-            device_name = device.replace("/dev/", '')
-            self.ensure_io_running(device_name, output_iostat, host_name)
-            fun_test.log(host["handle"].command("cat /tmp/fio_power_cycler.txt"))
+    def check_traffic(self, host_name):
+        host_info = self.hosts_asset[host_name]
+        host_handle = Linux(host_ip=host_info['host_ip'],
+                            ssh_username=host_info['ssh_username'],
+                            ssh_password=host_info['ssh_password'])
+        device = self.host_details[host_name]["nvme"]
+        device_name = device.replace("/dev/", '')
+        count = self.fio["runtime"] / 10
+        output_iostat = host_handle.iostat(device=device, interval=10, count=count, background=False)
+        self.ensure_io_running(device_name, output_iostat, host_name)
+        fun_test.log(host_handle.command("cat /tmp/{}_fio.txt".format(host_name)))
 
     @staticmethod
     def ensure_io_running(device, output_iostat, host_name):
@@ -542,20 +522,7 @@ class ApcPduTestcase(FunTestCase):
 
         if fio_read or fio_write:
             result = True
-        fun_test.test_assert(result, "{} IO is running".format(host_name))
-
-    def disconnect_vol(self, hosts_list):
-        for host_name, host in hosts_list.iteritems():
-            result = False
-            output = host["handle"].sudo_command("nvme disconnect -n {nqn}".format(nqn=host["nqn"]))
-            if "disconnected" in output:
-                result = True
-            fun_test.test_assert(result, "Host {} disconnected from {}".format(host_name, self.target_ip))
-
-    @staticmethod
-    def destroy_hosts_handle(hosts_list):
-        for host_name, host in hosts_list.iteritems():
-            host["handle"].destroy()
+        fun_test.test_assert(result, "Host: {}  IO running".format(host_name))
 
     def check_come_up_time(self, expected_minutes):
         initial = self.come_handle.command("uptime")
@@ -568,9 +535,202 @@ class ApcPduTestcase(FunTestCase):
                 up_time_less_than_5 = True
         fun_test.test_assert(up_time_less_than_5, "COMe 'up-time' less than 5 min")
 
-    def cleanup(self):
-        pass
+    def check_expected_dockers_up(self):
+        fun_test.log("Check if all the Dockers are up")
+        docker_count = 0
+        max_time = 100
+        timer = FunTimer(max_time)
+        while not timer.is_expired():
+            docker_count = self.get_docker_count()
+            if docker_count == self.expected_dockers:
+                break
+            else:
+                fun_test.sleep("{} docker to be up".format(self.expected_dockers), seconds=5)
+        fun_test.test_assert_expected(expected=self.expected_dockers, actual=docker_count, message="Docker's up")
 
+    def check_portal_up(self):
+        portal_up = False
+        max_time = 300
+        timer = FunTimer(max_time)
+        while not timer.is_expired():
+            try:
+                status = urllib.urlopen("http://{}".format(self.fs['come']['mgmt_ip'])).getcode()
+                fun_test.log("Return status: {}".format(status))
+                if status == 200:
+                    portal_up = True
+                    break
+                fun_test.sleep("Sleeping before next iteration")
+            except Exception as ex:
+                fun_test.log(ex)
+        fun_test.test_assert(portal_up, "Portal is up")
+
+    def verify_and_get_required_hosts_list(self):
+        available_hosts_list = []
+        try:
+            self.fs_hosts_map = utils.parse_file_to_json(SCRIPTS_DIR + "/storage/apple_rev2_fs_hosts_mapping.json")
+            available_hosts_list = self.fs_hosts_map[self.fs_name]["host_info"]
+        except Exception as ex:
+            fun_test.critical(ex)
+        required_hosts_available = True if (len(available_hosts_list) >= self.num_hosts) else False
+        fun_test.log("Expected hosts: {}, Available hosts: {}".format(self.num_hosts, len(available_hosts_list)))
+        fun_test.test_assert(required_hosts_available, "Required hosts available")
+        required_hosts_list = available_hosts_list[:self.num_hosts]
+        return required_hosts_list
+
+    def get_pool_id(self):
+        response = self.sc_api.get_pools()
+        fun_test.log("pools log: {}".format(response))
+        pool_id = str(response['data'].keys()[0])
+        fun_test.log("pool_id: {}".format(pool_id))
+        return pool_id
+
+    def create_vol(self):
+        volume_uuid_details = {}
+        # If there is a need to create the volumes with different params can modify the code easily
+        volume_creation_detail = self.volume_creation_details[0]
+        for index in range(self.num_hosts):
+            volume_creation_detail["name"] = "Stripe{}".format(index + 1)
+            response = self.sc_api.create_stripe_volume(pool_uuid=self.pool_uuid,
+                                                        name=volume_creation_detail["name"],
+                                                        capacity=volume_creation_detail["capacity"],
+                                                        pvol_type=volume_creation_detail["vol_type"],
+                                                        stripe_count=volume_creation_detail["stripe_count"],
+                                                        encrypt=volume_creation_detail["encrypt"],
+                                                        allow_expansion=False,
+                                                        data_protection={},
+                                                        compression_effort=volume_creation_detail["compression_effort"])
+
+            if response["status"]:
+                message = response['message']
+                volume_create_successful = True if message == 'volume create successful' else False
+                fun_test.test_assert(volume_create_successful,
+                                     "Create {} volume".format(volume_creation_detail["name"]))
+            else:
+                fun_test.test_assert(response["status"],
+                                     "Create {} volume".format(volume_creation_detail["name"]))
+            # Todo: get he api call for getting the existing volume details
+            if "already exists" in response["error_message"]:
+                pass
+            vol_uuid = str(response['data']['uuid'])
+            fun_test.log("volume creation log: {}".format(response))
+            fun_test.log("volume creation status: {}".format(message))
+            fun_test.log("vol UUID: {}".format(vol_uuid))
+            volume_uuid_details[volume_creation_detail["name"]] = vol_uuid
+        return volume_uuid_details
+
+    def attach_volumes_to_host(self, required_hosts_list):
+        self.host_details = {}
+        # uuid = volume_uuid_details[vol_name]
+        for vol_name, host_name in zip(self.volume_uuid_details, required_hosts_list):
+            host_interface_ip = self.hosts_asset[host_name]["test_interface_info"]["0"]["ip"].split("/")[0]
+            response =  self.sc_api.volume_attach_remote(vol_uuid=self.volume_uuid_details[vol_name],
+                                                         remote_ip=host_interface_ip,
+                                                         transport=self.transport_type.upper())
+
+            fun_test.log("Volume attach response: {}".format(response))
+            message = response["message"]
+            attach_status = True if message == "Attach Success" else False
+            fun_test.test_assert(attach_status, "Attach host: {} to volume: {}".format(host_name, vol_name))
+            self.host_details[host_name] = {}
+            self.host_details[host_name]["data"] = response["data"]
+            self.host_details[host_name]["volume_name"] = vol_name
+            self.host_details[host_name]["volume_uuid"] = self.volume_uuid_details[vol_name]
+
+    def get_host_handles(self):
+        for host_name in self.host_details:
+            host_info = self.hosts_asset[host_name]
+            host_handle = Linux(host_ip=host_info['host_ip'],
+                                ssh_username=host_info['ssh_username'],
+                                ssh_password=host_info['ssh_password'])
+            self.host_details[host_name]["handle"] = host_handle
+
+
+    def start_traffic_and_verify(self):
+        thread_details = {}
+        for host_name, host_info in self.host_details.iteritems():
+            thread_details[host_name] = {}
+            thread_details[host_name]["fio"] = fun_test.execute_thread_after(func=self.start_fio,
+                                                                             time_in_seconds=5,
+                                                                             host_name=host_name)
+            thread_details[host_name]["check"] = fun_test.execute_thread_after(func=self.check_traffic,
+                                                                               time_in_seconds=20,
+                                                                               host_name=host_name)
+
+        for host_name in self.host_details:
+            fun_test.join_thread(thread_details[host_name]["fio"])
+            fun_test.join_thread(thread_details[host_name]["check"])
+
+    def start_fio(self, host_name):
+        host_info = self.hosts_asset[host_name]
+        host_handle = Linux(host_ip=host_info['host_ip'],
+                            ssh_username=host_info['ssh_username'],
+                            ssh_password=host_info['ssh_password'])
+
+        host_handle.pcie_fio(timeout=600,
+                             filename=self.host_details[host_name]["nvme"],
+                             **self.fio)
+
+
+    def verify_nvme_connect(self):
+        for host_name, host_info in self.host_details.iteritems():
+            output_lsblk = host_info["handle"].sudo_command("nvme list")
+            nsid = host_info["data"]["nsid"]
+            lines = output_lsblk.split("\n")
+            for line in lines:
+                match_nvme_list = re.search(r'(?P<nvme_device>/dev/nvme\w+)\s+(?P<namespace>\d+)\s+(\d+)', line)
+                if match_nvme_list:
+                    namespace = int(match_nvme_list.group("namespace"))
+                    if namespace == nsid:
+                        host_info["nvme"] = match_nvme_list.group("nvme_device")
+                        fun_test.log("Host: {} is connected by nvme device: {}".format(host_name, host_info["nvme"]))
+                        break
+            verify_nvme_connect = True if "nvme" in host_info else False
+            fun_test.test_assert(verify_nvme_connect, "Host: {} nvme: {} verified NVME connect".format(host_name,
+                                                                                                       host_info["nvme"]
+                                                                                                       ))
+
+    def disconnect_the_hosts(self):
+        for host_name, host_info in self.host_details.iteritems():
+            output = host_info["handle"].sudo_command("nvme disconnect -n {nqn}".format(nqn=host_info["data"]["nqn"]))
+            disconnected = True if "disconnected" in output else False
+            fun_test.test_assert(disconnected,
+                                 "Host: {} disconnected from {}".format(host_name, host_info["data"]["ip"]))
+
+    def delete_volumes(self):
+        try:
+            for vol_name, vol_uuid in self.volume_uuid_details.iteritems():
+                response = self.sc_api.delete_volume(vol_uuid)
+                fun_test.log("Volume delte response: {}".format(response))
+                message = response["message"]
+                deleted = True if message == "volume deletion successful" else False
+                fun_test.test_assert(deleted, "Delete volume :{} ".format(vol_name))
+        except Exception as ex:
+            fun_test.log(ex)
+
+    def intialize_the_hosts(self):
+        for host_name, host_info in self.host_details.iteritems():
+            module = "nvme"
+            host_info["handle"].modprobe(module)
+            module = "nvme_tcp"
+            host_info["handle"].modprobe(module)
+
+    def wipe_out_cassandra_es_database(self):
+        self.come_handle.command("cd /var/opt/fungible")
+        self.come_handle.sudo_command("rm -r elasticsearch")
+        self.come_handle.sudo_command("rm -r cassandra")
+
+    def restart_fs1600(self):
+        self.come_handle.enter_sudo()
+        self.come_handle.command("cd /opt/fungible/etc")
+        self.come_handle.command("bash ResetFs1600.sh")
+
+    def destoy_host_handles(self):
+        for host_name in self.host_details:
+            self.host_details[host_name]["handle"].destroy()
+
+    def cleanup(self):
+        if self.num_hosts:
+            self.delete_volumes()
 
 if __name__ == "__main__":
     obj = ApcPduScript()

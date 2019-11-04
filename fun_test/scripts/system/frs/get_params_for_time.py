@@ -55,16 +55,20 @@ def get(time, crypto_per=100, zip_per=100, rcnvme_per=70, fio_per=100, specific_
                 "70": {"qdepth": 12, "nthreads": 12, "duration": rcnvme_run_time},
             },
             "fio": {
-                "10": {"num_jobs": 8, "iodepth": 1, "run_time": fio_run_time},
-                "35": {"num_jobs": 8, "iodepth": 4, "run_time": fio_run_time},
-                "65": {"num_jobs": 8, "iodepth": 8, "run_time": fio_run_time},
-                "100": {"num_jobs": 8, "iodepth": 16, "run_time": fio_run_time}
+                "10": {"numjobs": 8, "iodepth": 1, "runtime": fio_run_time},
+                "35": {"numjobs": 8, "iodepth": 4, "runtime": fio_run_time},
+                "65": {"numjobs": 8, "iodepth": 8, "runtime": fio_run_time},
+                "100": {"numjobs": 8, "iodepth": 16, "runtime": fio_run_time}
             }
         }
         result = {}
 
         for key in standard:
-            app_params[key] = standard[key][str(eval(key+"_per"))]
+            try:
+                app_params[key] = standard[key][str(eval(key+"_per"))]
+            except Exception as ex:
+                fun_test.log("Parameters not found for key: {}".format(key))
+                fun_test.log(ex)
         result = True
     except Exception as ex:
         fun_test.critical(ex)
@@ -73,11 +77,12 @@ def get(time, crypto_per=100, zip_per=100, rcnvme_per=70, fio_per=100, specific_
         for field in specific_field:
             if field == "None":
                 break
-            new_app_params[field] = app_params[field]
+            if field in app_params:
+                new_app_params[field] = app_params[field]
     else:
         new_app_params = app_params
 
-    fun_test.test_assert(result, "Got the app parameters for time : {} seconds".format(time))
+    # fun_test.test_assert(result, "Got the app parameters for time : {} seconds".format(time))
     return new_app_params
 
 

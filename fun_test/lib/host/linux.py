@@ -893,11 +893,12 @@ class Linux(object, ToDictMixin):
         if job_id is not None:
             job_id = int(job_id)
         if not process_id and not job_id:
-            fun_test.critical(message="Please provide a valid process-id or job-id")
+            fun_test.critical(message="Please provide a valid process-id or job-id", context=self.context)
             return
         if ((process_id < minimum_process_id) and not override) and (not job_id):
             fun_test.critical(
-                message="This API won't kill processes with PID < %d. Use the override switch" % minimum_process_id)
+                message="This API won't kill processes with PID < %d. Use the override switch" % minimum_process_id,
+            context=self.context)
             return
         job_str = ""
         if job_id:
@@ -911,7 +912,7 @@ class Linux(object, ToDictMixin):
         except pexpect.ExceptionPexpect:
             pass
         self.command("")  # This is to ensure that back-ground tasks Exit message is processed before leaving this function
-        fun_test.sleep("Waiting for kill to complete", seconds=kill_seconds)
+        fun_test.sleep("Waiting for kill to complete", seconds=kill_seconds, context=self.context)
 
     def tshark_capture_start(self):
         pass
@@ -1044,7 +1045,7 @@ class Linux(object, ToDictMixin):
         if self.handle:
             self.handle.close()
         self.handle = None
-        fun_test.log("Disconnecting: {}".format(self.spawn_pid))
+        fun_test.log(message="Disconnecting: {}".format(self.spawn_pid), context=self.context)
         return True
 
     def _set_paths(self):
@@ -2153,13 +2154,13 @@ class Linux(object, ToDictMixin):
         :param max_wait_time: total time to wait before giving
         :return: True, if the host is pingable and ssh'able, else False
         """
-        fun_test.log("Ensuring the host is up: ipmi_details={}, power_cycle={}".format(ipmi_details, power_cycle))
+        fun_test.log("Ensuring the host is up: ipmi_details={}, power_cycle={}".format(ipmi_details, power_cycle), context=self.context)
         service_host_spec = fun_test.get_asset_manager().get_regression_service_host_spec()
         service_host = None
         if service_host_spec:
-            service_host = Linux(**service_host_spec)
+            service_host = Linux(context=self.context, **service_host_spec)
         else:
-            fun_test.log("Regression service host could not be instantiated")
+            fun_test.log("Regression service host could not be instantiated", context=self.context)
         host_is_up = False
         max_reboot_timer = FunTimer(max_time=max_wait_time)
         result = False
@@ -2469,6 +2470,8 @@ class Linux(object, ToDictMixin):
         try:
             c.handle = None
             c.buffer = None
+            c.context = self.context
+            c.logger = self.logger
             c.prompt_terminator = c.saved_prompt_terminator
         except:
             pass

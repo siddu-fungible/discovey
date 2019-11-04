@@ -30,6 +30,7 @@ export class ScriptSelectorComponent implements OnInit, OnChanges {
   selectionMode = false;
   savedSingleSelectNode = null;
   refreshingStatus = null;
+  viewingCharts: boolean = false;
   @Input() resetEvent: any = null;
   @Input() selectionText: string = "file";
   @Output() singleSelectPk: EventEmitter<number> = new EventEmitter();
@@ -192,5 +193,6 @@ export class ScriptSelectorComponent implements OnInit, OnChanges {
       this.fetchScripts();
     }, error => {this.logger.error("Unable to refresh files");})
   }
+
 
 }
