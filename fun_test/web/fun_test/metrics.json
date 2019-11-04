@@ -1989,7 +1989,7 @@
                   },
                   {
                     "metric_model_name": "CryptoFastPathPerformance",
-                    "name": "aes_cbc_crypto_fastpath_throughputt",
+                    "name": "aes_cbc_crypto_fastpath_throughput",
                     "label": "AES_CBC",
                     "children": []
                   },
