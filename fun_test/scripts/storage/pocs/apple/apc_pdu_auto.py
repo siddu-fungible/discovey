@@ -59,8 +59,6 @@ class ApcPduTestcase(FunTestCase):
         for k, v in config_dict.iteritems():
             setattr(self, k, v)
 
-
-
         job_inputs = fun_test.get_job_inputs()
         if job_inputs:
             if "iterations" in job_inputs:
@@ -124,76 +122,8 @@ class ApcPduTestcase(FunTestCase):
             self.come_handle.destroy()
             self.bmc_handle.destroy()
 
-            self.come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
-                                    ssh_username=self.fs['come']['mgmt_ssh_username'],
-                                    ssh_password=self.fs['come']['mgmt_ssh_password'])
-            self.bmc_handle = Bmc(host_ip=self.fs['bmc']['mgmt_ip'],
-                                  ssh_username=self.fs['bmc']['mgmt_ssh_username'],
-                                  ssh_password=self.fs['bmc']['mgmt_ssh_password'])
-            self.bmc_handle.set_prompt_terminator(r'# $')
-
-            fun_test.log("Checking if COMe is UP")
-            come_up = self.come_handle.ensure_host_is_up(max_wait_time=600)
-            fun_test.test_assert(come_up, "COMe is UP")
-
-            fun_test.log("Checking if BMC is UP")
-            bmc_up = self.bmc_handle.ensure_host_is_up(max_wait_time=600)
-            fun_test.test_assert(bmc_up, "BMC is UP")
-
-            if self.apc_pdu_reboot_machine:
-                self.check_come_up_time(expected_minutes=5)
-
-            if self.check_docker:
-                self.check_expected_dockers_up()
-
-            if self.check_portal:
-                self.check_portal_up()
-
-            # Check if lspci devices are detected
-            fun_test.log("Check if F1_0 is detected")
-            self.check_pci_dev(f1=0)
-
-            fun_test.log("Check if F1_1 is detected")
-            self.check_pci_dev(f1=1)
-
-            if self.check_ssd:
-                fun_test.log("Checking if SSD's are Active on F1_0")
-                self.check_ssd_status(expected_ssds_up=self.expected_ssds_f1_0, f1=0)
-
-                fun_test.log("Checking if SSD's are Active on F1_1")
-                self.check_ssd_status(expected_ssds_up=self.expected_ssds_f1_1, f1=1)
-
-            if self.check_ports:
-                fun_test.log("Checking if NU and HNU port's are active on F1_0")
-                expected_ports_up_f1_0 = {'NU': self.expected_nu_ports_f1_0,
-                                          'HNU': self.expected_hnu_ports_f1_0}
-                self.check_nu_ports(f1=0, expected_ports_up=expected_ports_up_f1_0)
-
-                expected_ports_up_f1_1 = {'NU': self.expected_nu_ports_f1_1,
-                                          'HNU': self.expected_hnu_ports_f1_1}
-                fun_test.log("Checking if NU and HNU port's are active on F1_1")
-                self.check_nu_ports(f1=1, expected_ports_up=expected_ports_up_f1_1)
-
-            if self.num_hosts:
-                fun_test.sleep("Wait for GUI to come up", seconds=80)
-                self.sc_api = StorageControllerApi(api_server_ip=self.fs['come']['mgmt_ip'],
-                                                   api_server_port=self.api_server_port,
-                                                   username=self.username,
-                                                   password=self.password)
-                if pc_no == 0:
-                    required_hosts_list = self.verify_and_get_required_hosts_list()
-                    self.pool_uuid = self.get_pool_id()
-                    self.volume_uuid_details = self.create_vol()
-                    self.attach_volumes_to_host(required_hosts_list)
-                    self.get_host_handles()
-                    self.intialize_the_hosts()
-                else:
-                    self.get_host_handles()
-                self.connect_the_host_to_volumes()
-                self.verify_nvme_connect()
-                self.start_traffic_and_verify()
-                self.disconnect_the_hosts()
-                self.destoy_host_handles()
+            self.basic_checks()
+            self.data_integrity_check()
 
             self.come_handle.destroy()
             self.bmc_handle.destroy()
@@ -201,6 +131,79 @@ class ApcPduTestcase(FunTestCase):
             self.bmc_handle.destroy()
 
             fun_test.sleep("before next iteration", seconds=self.end_sleep)
+
+    def basic_checks(self):
+        self.come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
+                                ssh_username=self.fs['come']['mgmt_ssh_username'],
+                                ssh_password=self.fs['come']['mgmt_ssh_password'])
+        self.bmc_handle = Bmc(host_ip=self.fs['bmc']['mgmt_ip'],
+                              ssh_username=self.fs['bmc']['mgmt_ssh_username'],
+                              ssh_password=self.fs['bmc']['mgmt_ssh_password'])
+        self.bmc_handle.set_prompt_terminator(r'# $')
+
+        fun_test.log("Checking if COMe is UP")
+        come_up = self.come_handle.ensure_host_is_up(max_wait_time=600)
+        fun_test.test_assert(come_up, "COMe is UP")
+
+        fun_test.log("Checking if BMC is UP")
+        bmc_up = self.bmc_handle.ensure_host_is_up(max_wait_time=600)
+        fun_test.test_assert(bmc_up, "BMC is UP")
+
+        if self.apc_pdu_reboot_machine:
+            self.check_come_up_time(expected_minutes=5)
+
+        if self.check_docker:
+            self.check_expected_dockers_up()
+
+        if self.check_portal:
+            self.check_portal_up()
+
+        # Check if lspci devices are detected
+        fun_test.log("Check if F1_0 is detected")
+        self.check_pci_dev(f1=0)
+
+        fun_test.log("Check if F1_1 is detected")
+        self.check_pci_dev(f1=1)
+
+        if self.check_ssd:
+            fun_test.log("Checking if SSD's are Active on F1_0")
+            self.check_ssd_status(expected_ssds_up=self.expected_ssds_f1_0, f1=0)
+
+            fun_test.log("Checking if SSD's are Active on F1_1")
+            self.check_ssd_status(expected_ssds_up=self.expected_ssds_f1_1, f1=1)
+
+        if self.check_ports:
+            fun_test.log("Checking if NU and HNU port's are active on F1_0")
+            expected_ports_up_f1_0 = {'NU': self.expected_nu_ports_f1_0,
+                                      'HNU': self.expected_hnu_ports_f1_0}
+            self.check_nu_ports(f1=0, expected_ports_up=expected_ports_up_f1_0)
+
+            expected_ports_up_f1_1 = {'NU': self.expected_nu_ports_f1_1,
+                                      'HNU': self.expected_hnu_ports_f1_1}
+            fun_test.log("Checking if NU and HNU port's are active on F1_1")
+            self.check_nu_ports(f1=1, expected_ports_up=expected_ports_up_f1_1)
+
+    def data_integrity_check(self):
+        if self.num_hosts:
+            fun_test.sleep("Wait for GUI to come up", seconds=80)
+            self.sc_api = StorageControllerApi(api_server_ip=self.fs['come']['mgmt_ip'],
+                                               api_server_port=self.api_server_port,
+                                               username=self.username,
+                                               password=self.password)
+            if self.pc_no == 0:
+                required_hosts_list = self.verify_and_get_required_hosts_list(self.num_hosts)
+                self.pool_uuid = self.get_pool_id()
+                self.volume_uuid_details = self.create_vol(self.num_hosts)
+                self.attach_volumes_to_host(required_hosts_list)
+                self.get_host_handles()
+                self.intialize_the_hosts()
+            else:
+                self.get_host_handles()
+            self.connect_the_host_to_volumes()
+            self.verify_nvme_connect()
+            self.start_traffic_and_verify()
+            self.disconnect_the_hosts()
+            self.destoy_host_handles()
 
     def apc_pdu_reboot(self):
         '''
@@ -564,17 +567,17 @@ class ApcPduTestcase(FunTestCase):
                 fun_test.log(ex)
         fun_test.test_assert(portal_up, "Portal is up")
 
-    def verify_and_get_required_hosts_list(self):
+    def verify_and_get_required_hosts_list(self, num_hosts):
         available_hosts_list = []
         try:
             self.fs_hosts_map = utils.parse_file_to_json(SCRIPTS_DIR + "/storage/apple_rev2_fs_hosts_mapping.json")
             available_hosts_list = self.fs_hosts_map[self.fs_name]["host_info"]
         except Exception as ex:
             fun_test.critical(ex)
-        required_hosts_available = True if (len(available_hosts_list) >= self.num_hosts) else False
-        fun_test.log("Expected hosts: {}, Available hosts: {}".format(self.num_hosts, len(available_hosts_list)))
+        required_hosts_available = True if (len(available_hosts_list) >= num_hosts) else False
+        fun_test.log("Expected hosts: {}, Available hosts: {}".format(num_hosts, len(available_hosts_list)))
         fun_test.test_assert(required_hosts_available, "Required hosts available")
-        required_hosts_list = available_hosts_list[:self.num_hosts]
+        required_hosts_list = available_hosts_list[:num_hosts]
         return required_hosts_list
 
     def get_pool_id(self):
@@ -584,11 +587,11 @@ class ApcPduTestcase(FunTestCase):
         fun_test.log("pool_id: {}".format(pool_id))
         return pool_id
 
-    def create_vol(self):
+    def create_vol(self, number_of_vol):
         volume_uuid_details = {}
         # If there is a need to create the volumes with different params can modify the code easily
         volume_creation_detail = self.volume_creation_details[0]
-        for index in range(self.num_hosts):
+        for index in range(number_of_vol):
             volume_creation_detail["name"] = "Stripe{}".format(index + 1)
             response = self.sc_api.create_stripe_volume(pool_uuid=self.pool_uuid,
                                                         name=volume_creation_detail["name"],
@@ -651,6 +654,7 @@ class ApcPduTestcase(FunTestCase):
             thread_details[host_name] = {}
             thread_details[host_name]["fio"] = fun_test.execute_thread_after(func=self.start_fio,
                                                                              time_in_seconds=5,
+                                                                             fio_params=self.fio,
                                                                              host_name=host_name)
             thread_details[host_name]["check"] = fun_test.execute_thread_after(func=self.check_traffic,
                                                                                time_in_seconds=20,
@@ -660,15 +664,15 @@ class ApcPduTestcase(FunTestCase):
             fun_test.join_thread(thread_details[host_name]["fio"])
             fun_test.join_thread(thread_details[host_name]["check"])
 
-    def start_fio(self, host_name):
+    def start_fio(self, host_name, fio_params, timeout=600):
         host_info = self.hosts_asset[host_name]
         host_handle = Linux(host_ip=host_info['host_ip'],
                             ssh_username=host_info['ssh_username'],
                             ssh_password=host_info['ssh_password'])
 
-        host_handle.pcie_fio(timeout=600,
+        host_handle.pcie_fio(timeout=timeout,
                              filename=self.host_details[host_name]["nvme"],
-                             **self.fio)
+                             **fio_params)
 
 
     def verify_nvme_connect(self):
