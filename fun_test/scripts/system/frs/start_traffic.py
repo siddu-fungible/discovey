@@ -336,7 +336,7 @@ class FunTestCase1(FunTestCase):
 
         if "fio" in app_params:
             fio_data = app_params["fio"]
-            fio_data["runtime"] += 20
+            fio_data["runtime"] += 40
             fio_thread_map = self.start_fio_as_thread(fio_data)
 
         # thread_map_for_soak_apps = self.start_threaded_apps()
@@ -370,6 +370,8 @@ class FunTestCase1(FunTestCase):
         self.capture_data(count=count, heading=heading)
 
         self.come_handle.destroy()
+
+        fun_test.sleep("Waiting for all the things to settle", seconds=180)
 
 
     def capture_data(self, count, heading):
