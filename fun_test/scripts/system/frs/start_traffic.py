@@ -332,7 +332,7 @@ class FunTestCase1(FunTestCase):
         if self.run_le_firewall:
             self.restart_dpcsh()
             le_firewall(self.test_duration, self.boot_new_image)
-            self.restart_dpcsh()
+            # self.restart_dpcsh()
 
         if "fio" in app_params:
             fio_data = app_params["fio"]
@@ -346,7 +346,7 @@ class FunTestCase1(FunTestCase):
                 continue
             for f1 in self.run_on_f1:
                 parameters["f1"] = f1
-                result = self.methods[app](come_handle, **parameters)
+                result = self.methods[app](self.come_handle, **parameters)
                 fun_test.test_assert(result, "{} traffic started on F1_{}".format(app, f1))
 
         ################ During traffic ##################
