@@ -330,9 +330,9 @@ class FunTestCase1(FunTestCase):
         fun_test.log("App parameters: {}".format(app_params))
 
         if self.run_le_firewall:
-            self.restart_dpcsh()
+            self.restart_dpcsh(come_handle)
             le_firewall(self.test_duration, self.boot_new_image)
-            self.restart_dpcsh()
+            self.restart_dpcsh(come_handle)
 
         if "fio" in app_params:
             fio_data = app_params["fio"]
@@ -773,11 +773,11 @@ class FunTestCase1(FunTestCase):
         f1_1_uart_file = bmc_handle.get_f1_uart_log_file_name(f1_index=f1_index)
         bmc_handle.command("echo '' > {}".format(f1_1_uart_file))
 
-    def restart_dpcsh(self):
+    def restart_dpcsh(self, come_handle):
         for f1 in self.run_on_f1:
-            dpcsh_pid = self.come_handle.get_process_id_by_pattern("/nvme{}".format(f1))
+            dpcsh_pid = come_handle.get_process_id_by_pattern("/nvme{}".format(f1))
             if dpcsh_pid:
-                self.come_handle.kill_process(process_id=dpcsh_pid, signal=9)
+                come_handle.kill_process(process_id=dpcsh_pid, signal=9)
         self.verify_dpcsh_started()
 
     def verify_dpcsh_started(self):
