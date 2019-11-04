@@ -1280,7 +1280,7 @@ class ComE(Linux):
 
     def detect_pfs(self):
         devices = self.lspci(grep_filter="1dad")
-        fun_test.log("CONTEXT: {}".format(self.context))
+        # fun_test.log("CONTEXT: {}".format(self.context))
         fun_test.test_assert(expression=devices, message="PCI devices detected", context=self.context)
 
         f1_index = 0

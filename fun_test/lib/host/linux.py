@@ -2173,11 +2173,11 @@ class Linux(object, ToDictMixin):
                 #    fun_test.log("Lowered max_reboot_timer as ping is working")
             if ping_result or not service_host:
                 try:
-                    fun_test.log("Attempting SSH")
+                    fun_test.log("Attempting SSH", context=self.context)
                     self.command("pwd")
                     host_is_up = True
                     result = host_is_up
-                    fun_test.log("Host: {} is up".format(str(self)))
+                    fun_test.log("Host: {} is up".format(str(self)), context=self.context)
                     break
                 except Exception as ex:
                     pass
