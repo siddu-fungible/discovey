@@ -87,10 +87,7 @@ def rcnvme(come_handle,
 
 def le_firewall(run_time, new_image, just_kill=False):
     global vm_info
-    if new_image:
-        run_time += 400
-    else:
-        run_time += 200
+    run_time += 400
     vm_info = {}
 
     for vm_number in range(2):
@@ -134,7 +131,7 @@ def le_firewall(run_time, new_image, just_kill=False):
         if running:
             fun_test.test_assert(running, "Le started on VM: {}".format(vm))
 
-    fun_test.sleep("For Le-firewall traffic to start", seconds=120)
+    fun_test.sleep("For Le-firewall traffic to start", seconds=200)
 
 
 def kill_le_firewall(vm_details):
