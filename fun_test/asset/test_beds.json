@@ -2710,5 +2710,27 @@
         "dut": "fs-57"
       }
     }
+  },
+  "fs-116": {
+    "dut_info": {
+      "0": {
+        "type": "DUT_TYPE_FSU",
+        "dut": "fs-116"
+      }
+    },
+    "workarounds": {
+      "enable_funcp": true
+    }
+  },
+  "fs-117": {
+    "dut_info": {
+      "0": {
+        "type": "DUT_TYPE_FSU",
+        "dut": "fs-117"
+      }
+    },
+    "workarounds": {
+      "enable_funcp": true
+    }
   }
 }
