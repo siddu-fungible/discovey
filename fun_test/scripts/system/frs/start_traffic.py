@@ -369,6 +369,8 @@ class FunTestCase1(FunTestCase):
         fun_test.log("Capturing the data {}".format(heading))
         self.capture_data(count=count, heading=heading)
 
+        self.come_handle.destroy()
+
 
     def capture_data(self, count, heading):
         def func_not_found():
