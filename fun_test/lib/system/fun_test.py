@@ -119,6 +119,8 @@ class FunContext:
         if self.fp:
             self.fp.write(data)
 
+    def __str__(self):
+        return "Context: {}".format(self.context_id)
 
 
 class FunTest:
@@ -1171,6 +1173,14 @@ class FunTest:
             self._print_log_green(message=message, calling_module=calling_module, context=context)
             if self.fun_xml_obj:
                 self.fun_xml_obj.log(log=message, newline=True)
+            context_id = 0
+            if context:
+                context_id = context.get_id()
+            if self.time_series_enabled:
+                data = {"checkpoint_index": self.current_time_series_checkpoint,
+                        "log": message.rstrip().lstrip(),
+                        "context_id": context_id}
+                self.add_time_series_log(data=data, epoch_time=get_current_epoch_time())
         time.sleep(seconds)
 
     def safe(self, the_function):
@@ -1327,7 +1337,7 @@ class FunTest:
                 this_checkpoint = self._get_context_prefix(context=context, message=message)
                 # if self.profiling:
                 #    this_checkpoint = "{:.2f}: {}".format(self.profiling_timer.elapsed_time(), this_checkpoint)
-                self.add_checkpoint(checkpoint=this_checkpoint, expected=expected, actual=actual, result=FunTest.FAILED)
+                self.add_checkpoint(checkpoint=this_checkpoint, expected=expected, actual=actual, result=FunTest.FAILED, context=context)
             self.critical(assert_message, context=context)
             if self.pause_on_failure:
                 pdb.set_trace()

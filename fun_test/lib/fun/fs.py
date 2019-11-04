@@ -289,7 +289,7 @@ class Bmc(Linux):
                              message="Ensure ComE is reachable before reboot",
                              context=self.context)
 
-        fun_test.log("Rebooting ComE (Graceful)")
+        fun_test.log("Rebooting ComE (Graceful)", context=self.context)
         if not come.was_power_cycled:
             reboot_result = come.reboot(max_wait_time=max_wait_time, non_blocking=non_blocking, ipmi_details=ipmi_details)
             reboot_info_string = "initiated" if non_blocking else "complete"
@@ -400,7 +400,7 @@ class Bmc(Linux):
 
     def get_preamble(self, f1_index):
         nc = self.nc[f1_index]
-        fun_test.sleep("Reading preamble")
+        fun_test.sleep("Reading preamble", context=self.context)
         nc.stop_reading()
         output = nc.get_buffer()
         fun_test.log(message=output, context=self.context)
@@ -549,7 +549,7 @@ class Bmc(Linux):
 
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_PING)
         self.u_boot_command(command="ping {}".format(tftp_server), timeout=15, expected=self.U_BOOT_F1_PROMPT, f1_index=index)
-        
+
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_TFTP_DOWNLOAD)
         output = self.u_boot_command(
             command="tftpboot {} {}:{}".format(tftp_load_address, tftp_server, tftp_image_path), timeout=40,
@@ -615,7 +615,7 @@ class Bmc(Linux):
         return result
 
     def _reset_microcom(self):
-        fun_test.log("Resetting microcom and minicom")
+        fun_test.log("Resetting microcom and minicom", context=self.context)
         process_ids = self.get_process_id_by_pattern("microcom", multiple=True)
         for process_id in process_ids:
             self.kill_process(signal=9, process_id=process_id, kill_seconds=2)
@@ -1169,6 +1169,7 @@ class ComE(Linux):
 
     def setup_workspace(self):
         working_directory = "/tmp"
+        fun_test.log("Context: {}".format(self.context))
         self.command("cd {}".format(working_directory))
         self.command("mkdir -p workspace; cd workspace")
         self.command("export WORKSPACE=$PWD")
@@ -1279,6 +1280,7 @@ class ComE(Linux):
 
     def detect_pfs(self):
         devices = self.lspci(grep_filter="1dad")
+        fun_test.log("CONTEXT: {}".format(self.context))
         fun_test.test_assert(expression=devices, message="PCI devices detected", context=self.context)
 
         f1_index = 0

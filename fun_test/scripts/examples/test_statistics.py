@@ -5,7 +5,7 @@ from lib.host.storage_controller import StorageController
 
 from lib.fun.fs import Fs
 from scripts.storage.storage_helper import *
-
+fun_test.enable_time_series()
 '''
 Sanity Script for BLT Volume via PCI
 '''
