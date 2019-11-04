@@ -320,9 +320,9 @@ class FunTestCase1(FunTestCase):
         fun_test.test_assert(True, "Initial debug stats is saved")
 
         ############# Starting Traffic ################
-        self.come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
-                                ssh_username=self.fs['come']['mgmt_ssh_username'],
-                                ssh_password=self.fs['come']['mgmt_ssh_password'])
+        come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
+                           ssh_username=self.fs['come']['mgmt_ssh_username'],
+                           ssh_password=self.fs['come']['mgmt_ssh_password'])
 
         app_params = get_params_for_time.get(self.test_duration)
         if self.specific_apps:
@@ -330,9 +330,9 @@ class FunTestCase1(FunTestCase):
         fun_test.log("App parameters: {}".format(app_params))
 
         if self.run_le_firewall:
-            self.restart_dpcsh(self.come_handle)
+            self.restart_dpcsh(come_handle)
             le_firewall(self.test_duration, self.boot_new_image)
-            self.restart_dpcsh(self.come_handle)
+            self.restart_dpcsh(come_handle)
 
         if "fio" in app_params:
             fio_data = app_params["fio"]
@@ -346,7 +346,7 @@ class FunTestCase1(FunTestCase):
                 continue
             for f1 in self.run_on_f1:
                 parameters["f1"] = f1
-                result = self.methods[app](self.come_handle, **parameters)
+                result = self.methods[app](come_handle, **parameters)
                 fun_test.test_assert(result, "{} traffic started on F1_{}".format(app, f1))
 
         ################ During traffic ##################
