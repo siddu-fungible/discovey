@@ -183,6 +183,8 @@ class BringupSetup(FunTestCase):
             come_obj.sudo_command("iptables -F")
             come_obj.sudo_command("ip6tables -F")
             come_obj.sudo_command("dmesg -c > /dev/null")
+            if "fs-45" in fs_name:
+                come_obj.command("/home/fun/mks/restart_docker_service.sh")
 
             fun_test.log("Getting host details")
             host_dict = {"f1_0": [], "f1_1": []}
