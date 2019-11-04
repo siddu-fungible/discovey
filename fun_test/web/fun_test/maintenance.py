@@ -2115,7 +2115,7 @@ if __name__ == "__main_FCP_nvme__":
                                workspace_ids=[])
     print "edited all the charts for 4 ssd loacl alibaba bmv storage"
 
-if __name__ == "__main__":
+if __name__ == "__main_funos_s1__":
     with open(METRICS_BASE_DATA_FILE, "r") as f:
         metrics = json.load(f)
         for metric in metrics:
@@ -2135,3 +2135,36 @@ if __name__ == "__main__":
                 print json.dumps(result)
         result = set_internal_name(system_metrics)
         print json.dumps(result)
+
+if __name__ == "__main__":
+    model_name = "CryptoFastPathPerformance"
+    algorithms = ["AES_GCM", "AES_XTS", "AES_CBC", "SHA_256"]
+    packet_sizes = [64, 354, 1500, 4096]
+    y1_axis_title = PerfUnit.UNIT_GBITS_PER_SEC
+    base_line_date = datetime(year=2019, month=11, day=1, minute=0, hour=0, second=0)
+    for algorithm in algorithms:
+        internal_chart_name = algorithm.lower() + "_crypto_fastpath_throughput"
+        data_sets = []
+        for packet_size in packet_sizes:
+            one_data_set = {}
+            one_data_set["name"] = str(packet_size) + "B"
+            one_data_set["inputs"] = {"input_platform": FunPlatform.F1, "input_algorithm": algorithm,
+                                      "input_operation": "Encrypt", "input_pkt_size": packet_size, "input_key_size":
+                                          16}
+            one_data_set["output"] = {"name": "output_throughput", "min": 0, "max": -1, "expected": -1, "reference":
+                -1, "best": -1, "unit": y1_axis_title}
+            data_sets.append(one_data_set)
+        ml.create_leaf(chart_name=algorithm, internal_chart_name=internal_chart_name,
+                       data_sets=data_sets, leaf=True,
+                       description="TBD",
+                       owner_info="Suren Madineni (suren.madineni@fungible.com)",
+                       source="https://github.com/fungible-inc/FunOS/blob/e0f67f6ac777f948117ca1dabb16c511ebd88d7f/apps/cryptotest/crypto_dp_perf.c",
+                       positive=True, y1_axis_title=y1_axis_title,
+                       visualization_unit=y1_axis_title,
+                       metric_model_name=model_name,
+                       base_line_date=base_line_date,
+                       work_in_progress=False, children=[], jira_ids=[], platform=FunPlatform.F1,
+                       peer_ids=[], creator=TEAM_REGRESSION_EMAIL,
+                       workspace_ids=[])
+    print "created charts for crypto fastpath"
+

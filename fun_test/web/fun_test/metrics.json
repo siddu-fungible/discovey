@@ -1969,6 +1969,38 @@
                     "children": []
                   }
                 ]
+              },
+              {
+                "metric_model_name": "MetricContainer",
+                "name": "crypto_fastpath_throughput",
+                "label": "Crypto Fastpath Throughput",
+                "children": [
+                  {
+                    "metric_model_name": "CryptoFastPathPerformance",
+                    "name": "aes_gcm_crypto_fastpath_throughput",
+                    "label": "AES_GCM",
+                    "children": []
+                  },
+                  {
+                    "metric_model_name": "CryptoFastPathPerformance",
+                    "name": "aes_xts_crypto_fastpath_throughput",
+                    "label": "AES_XTS",
+                    "children": []
+                  },
+                  {
+                    "metric_model_name": "CryptoFastPathPerformance",
+                    "name": "aes_cbc_crypto_fastpath_throughputt",
+                    "label": "AES_CBC",
+                    "children": []
+                  },
+                  {
+                    "metric_model_name": "CryptoFastPathPerformance",
+                    "name": "sha_256_crypto_fastpath_throughput",
+                    "label": "SHA_256",
+                    "disable": true,
+                    "children": []
+                  }
+                ]
               }
             ]
           },
