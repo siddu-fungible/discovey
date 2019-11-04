@@ -9,6 +9,7 @@ from lib.system.utils import ToDictMixin
 from lib.host.apc_pdu import ApcPdu
 from fun_settings import STASH_DIR
 from fun_global import Codes, get_current_epoch_time
+from asset.asset_global import AssetType
 from lib.utilities.statistics_manager import StatisticsCollector, StatisticsCategory
 
 from threading import Thread
@@ -43,6 +44,7 @@ class BootPhases:
     U_BOOT_SET_SERVER_IP = "u-boot: setenv serverip"
     U_BOOT_SET_BOOT_ARGS = "u-boot: setenv boot args"
     U_BOOT_DHCP = "u-boot: dhcp"
+    U_BOOT_PING = "u-boot: ping tftp server"
     U_BOOT_TFTP_DOWNLOAD = "u-boot: tftp download"
     U_BOOT_UNCOMPRESS_IMAGE = "u-boot: uncompress image"
     U_BOOT_ELF = "u-boot: bootelf"
@@ -545,6 +547,9 @@ class Bmc(Linux):
             self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_DHCP)
             self.u_boot_command(command="dhcp", timeout=15, expected=self.U_BOOT_F1_PROMPT, f1_index=index)
 
+        self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_PING)
+        self.u_boot_command(command="ping {}".format(tftp_server), timeout=15, expected=self.U_BOOT_F1_PROMPT, f1_index=index)
+        
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_TFTP_DOWNLOAD)
         output = self.u_boot_command(
             command="tftpboot {} {}:{}".format(tftp_load_address, tftp_server, tftp_image_path), timeout=40,
@@ -1073,6 +1078,7 @@ class ComE(Linux):
         self.original_context_description = None
         if self.context:
             self.original_context_description = self.context.description
+        self.fs = kwargs.get("fs", None)
         self.hbm_dump_enabled = False
         self.funq_bind_device = {}
         self.dpc_for_statistics_ready = False
@@ -1491,6 +1497,11 @@ class Fs(object, ToDictMixin):
         self.original_context_description = None
         self.fun_cp_callback = fun_cp_callback
 
+        self.asset_name = "FS"
+        if self.spec:
+            self.asset_name = self.spec.get("name", "FS")
+        self.asset_type = AssetType.DUT
+
         if self.context:
             self.original_context_description = self.context.description
         self.setup_bmc_support_files = setup_bmc_support_files
@@ -1516,6 +1527,12 @@ class Fs(object, ToDictMixin):
         self.already_deployed = already_deployed
         self.statistics_collectors = {}
         fun_test.register_fs(self)
+
+    def get_asset_type(self):
+        return self.asset_type
+
+    def get_asset_name(self):
+        return self.asset_name
 
     def start_statistics_collection(self, statistics_type=None):
         statistics_manager = fun_test.get_statistics_manager()
@@ -1906,7 +1923,8 @@ class Fs(object, ToDictMixin):
                              ssh_password=self.come_mgmt_ssh_password,
                              set_term_settings=True,
                              context=self.context,
-                             ipmi_info=self.get_bmc()._get_ipmi_details())
+                             ipmi_info=self.get_bmc()._get_ipmi_details(),
+                             fs=self)
             self.come.disable_f1_index = self.disable_f1_index
         come = self.come
         if clone:

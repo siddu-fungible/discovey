@@ -914,6 +914,27 @@ class FunTest:
             self.critical(str(ex))
             self.enable_time_series(enable=False)
 
+    def add_time_series_artifact(self,
+                                 description,
+                                 filename,
+                                 asset_type,
+                                 asset_id,
+                                 category,
+                                 sub_category):
+        epoch_time = get_current_epoch_time()
+        data = {"description": description,
+                "filename": filename,
+                "asset_type": asset_type,
+                "asset_id": asset_id,
+                "category": category,
+                "sub_category": sub_category
+                }
+        self.add_time_series_document(collection_name=self.get_time_series_collection_name(),
+                                      epoch_time=epoch_time,
+                                      type=TimeSeriesTypes.ARTIFACT,
+                                      te=self.current_test_case_execution_id,
+                                      data=data)
+
     def add_time_series_log(self, data, epoch_time=None):
         if not epoch_time:
             epoch_time = get_current_epoch_time()
@@ -1446,9 +1467,21 @@ class FunTest:
         '''
         return result
 
-    def add_auxillary_file(self, description, filename):
+    def add_auxillary_file(self, description, filename,
+                           asset_type="general",
+                           asset_id="Unknown",
+                           artifact_category="general",
+                           artifact_sub_category="general"):
         base_name = os.path.basename(filename)
         self.fun_xml_obj.add_auxillary_file(description=description, auxillary_file=base_name)
+
+        if self.time_series_enabled:
+            self.add_time_series_artifact(description=description,
+                                          filename=filename,
+                                          asset_type=asset_type,
+                                          asset_id=asset_id,
+                                          category=artifact_category,
+                                          sub_category=artifact_sub_category)
 
     def send_mail(self, subject, content, to_addresses=["john.abraham@fungible.com"]):
         send_mail(to_addresses=to_addresses, subject=subject, content=content)
