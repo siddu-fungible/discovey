@@ -1398,227 +1398,227 @@ class MetricParser():
         return self.result
 
 
-def set_crypto_metrics_dict(self, crypto_json, input_app, date_time):
-    pkt_size_json = crypto_json["pktsize"]
-    ops_json = crypto_json["ops"] if "ops" in crypto_json else None
-    bandwidth_json = crypto_json["throughput"]
+    def set_crypto_metrics_dict(self, crypto_json, input_app, date_time):
+        pkt_size_json = crypto_json["pktsize"]
+        ops_json = crypto_json["ops"] if "ops" in crypto_json else None
+        bandwidth_json = crypto_json["throughput"]
 
-    output_ops_per_sec = int(ops_json["value"]) if ops_json else -1
-    output_throughput = float(bandwidth_json["value"])
+        output_ops_per_sec = int(ops_json["value"]) if ops_json else -1
+        output_throughput = float(bandwidth_json["value"])
 
-    self.metrics["input_app"] = input_app
-    self.metrics["input_algorithm"] = crypto_json["alg"]
-    self.metrics["input_operation"] = crypto_json["operation"]
-    self.metrics["input_pkt_size"] = int(pkt_size_json["value"])
-    self.metrics["output_ops_per_sec"] = output_ops_per_sec
-    self.metrics["output_throughput"] = output_throughput
-    self.metrics["output_ops_per_sec_unit"] = PerfUnit.UNIT_OPS
-    self.metrics["output_throughput_unit"] = bandwidth_json["units"]
-    d = self.metrics_to_dict(metrics=self.metrics, result=self.status, date_time=date_time)
-    self.result["data"].append(d)
-
-
-def teramark_crypto(self, logs, date_time, platform, model_name):
-    self.initialize()
-    self.metrics["input_platform"] = platform
-    for line in logs:
-        m = re.search(r'(?P<crypto_json>{"test".*})', line)
-        if m:
-            fun_test.log(line)
-            self.match_found = True
-            self.status = RESULTS["PASSED"]
-            crypto_json = json.loads(m.group("crypto_json"))
-            input_test = crypto_json["test"]
-            if model_name == "TeraMarkCryptoPerformance":
-                if "api" in input_test:
-                    input_app = "crypto_api_perf"
-                    self.set_crypto_metrics_dict(crypto_json=crypto_json, input_app=input_app, date_time=date_time)
-            elif model_name == "TeraMarkMultiClusterCryptoPerformance":
-                if "raw" in input_test:
-                    input_app = "crypto_raw_speed"
-                    input_key_size = int(crypto_json["key_size"]) if "key_size" in crypto_json else -1
-                    self.metrics["input_key_size"] = input_key_size
-                    self.set_crypto_metrics_dict(crypto_json=crypto_json, input_app=input_app, date_time=date_time)
-            elif model_name == "CryptoFastPathPerformance":
-                if "fastpath" in input_test:
-                    input_app = "crypto_fast_path"
-                    input_key_size = int(crypto_json["key_size"]) if "key_size" in crypto_json else -1
-                    self.metrics["input_key_size"] = input_key_size
-                    self.set_crypto_metrics_dict(crypto_json=crypto_json, input_app=input_app, date_time=date_time)
-    self.result["match_found"] = self.match_found
-    self.result["status"] = self.status == RESULTS["PASSED"]
-    fun_test.log("Result :{}".format(self.result))
-    return self.result
+        self.metrics["input_app"] = input_app
+        self.metrics["input_algorithm"] = crypto_json["alg"]
+        self.metrics["input_operation"] = crypto_json["operation"]
+        self.metrics["input_pkt_size"] = int(pkt_size_json["value"])
+        self.metrics["output_ops_per_sec"] = output_ops_per_sec
+        self.metrics["output_throughput"] = output_throughput
+        self.metrics["output_ops_per_sec_unit"] = PerfUnit.UNIT_OPS
+        self.metrics["output_throughput_unit"] = bandwidth_json["units"]
+        d = self.metrics_to_dict(metrics=self.metrics, result=self.status, date_time=date_time)
+        self.result["data"].append(d)
 
 
-def teramark_jpeg(self, logs, date_time, platform):
-    self.initialize()
-    jpeg_operations = {"Compression throughput": "Compression throughput with Driver",
-                       "Decompression throughput": "JPEG Decompress",
-                       "Accelerator Compression throughput": "Compression Accelerator throughput",
-                       "Accelerator Decompression throughput": "Decompression Accelerator throughput",
-                       "JPEG Compression": "JPEG Compression"}
-
-    self.metrics["input_platform"] = platform
-    current_file_name = None
-    final_file_name = None
-    teramark_begin = False
-    for line in logs:
-        compression_ratio_found = False
-        if "Compression-ratio to 1" in line:
-            compression_ratio_found = True
-        m = re.search(r'JPEG Compression/Decompression performance stats (?P<current_file_name>\S+?)(?=#)', line)
-        if m:
-            current_file_name = m.group("current_file_name")
-            final_file_name = current_file_name
-        if "TeraMark Begin" in line:
-            teramark_begin = True
-            continue
-        if "TeraMark End" in line:
-            teramark_begin = False
-            fun_test.test_assert(current_file_name, "Filename detected")
-
-            current_file_name = None
-        if teramark_begin:
-            m = re.search(r'({.*})', line)
+    def teramark_crypto(self, logs, date_time, platform, model_name):
+        self.initialize()
+        self.metrics["input_platform"] = platform
+        for line in logs:
+            m = re.search(r'(?P<crypto_json>{"test".*})', line)
             if m:
                 fun_test.log(line)
                 self.match_found = True
-                j = m.group(1)
-                try:
-                    d = json.loads(j)
-                except Exception as ex:
-                    message = "Invalid json for : {}".format(j)
-                    fun_test.critical(message)
-                    raise Exception(message)
-                self.metrics = {}
-                self.metrics["input_platform"] = platform
-                if not compression_ratio_found:
-                    if d["Operation"] in jpeg_operations:
-                        self.metrics["input_operation"] = jpeg_operations[d["Operation"]]
-                    else:
-                        self.metrics["input_operation"] = d["Operation"]
-                    self.metrics["input_count"] = d['Stats']['_count']
-                    self.metrics["input_image"] = final_file_name
-                    # metrics["output_iops"] = d['Stats']['_iops']
-                    # metrics["output_max_latency"] = d['Stats']['_max_latency']
-                    # metrics["output_min_latency"] = d['Stats']['_min_latency']
-                    # metrics["output_average_latency"] = d['Stats']['_avg_latency']
-                    self.metrics["output_average_bandwidth"] = d['Stats']['_avg_bw_gbps']
-                else:
-                    if d["Operation"] in jpeg_operations:
-                        self.metrics["input_operation"] = jpeg_operations[d["Operation"]]
-                    else:
-                        self.metrics["input_operation"] = d["Operation"]
-                    self.metrics["input_image"] = final_file_name
-                    self.metrics["output_compression_ratio"] = d['Stats']["Compression-ratio to 1"]
-                    self.metrics["output_percentage_savings"] = d['Stats']["PercentageSpaceSaving"]
-
                 self.status = RESULTS["PASSED"]
-                d = self.metrics_to_dict(metrics=self.metrics, result=self.status, date_time=date_time)
-                print("data", d)
-                self.result["data"].append(d)
-
-    self.result["match_found"] = self.match_found
-    self.result["status"] = self.status == RESULTS["PASSED"]
-    fun_test.log("Result :{}".format(self.result, indent=4))
-    return self.result
-
-
-def teramark_nu_transit(self, logs, date_time, platform, model_name):
-    self.initialize()
-    self.metrics["input_platform"] = platform
-    nu_transit_flow_types = {"FCP_HNU_HNU": "HNU_HNU_FCP"}
-
-    for file in logs:
-        for line in file:
-            if "flow_type" in line:
-                if line["flow_type"] in nu_transit_flow_types:
-                    line["flow_type"] = nu_transit_flow_types[line["flow_type"]]
-                    self.match_found = True
-                self.metrics["input_flow_type"] = line["flow_type"].replace("FPG", "NU")
-                self.metrics["input_mode"] = line.get("mode", "")
-                self.metrics["input_version"] = line["version"]
-                self.metrics["input_frame_size"] = line["frame_size"]
-                date_time = self.get_time_from_timestamp(line["timestamp"])
-                self.metrics["output_throughput"] = (float(
-                    line["throughput"]) / 1000) if "throughput" in line and line[
-                    "throughput"] != -1 else -1
-                self.metrics["output_pps"] = (float(
-                    line["pps"]) / 1000000) if "pps" in line and line[
-                    "pps"] != -1 else -1
-                self.metrics["output_latency_max"] = line.get("latency_max", -1)
-                self.metrics["output_latency_min"] = line.get("latency_min", -1)
-                self.metrics["output_latency_avg"] = line.get("latency_avg", -1)
-                if model_name == "NuTransitPerformance":
-                    self.metrics["output_latency_P99"] = line.get("latency_P99", -1)
-                    self.metrics["output_latency_P90"] = line.get("latency_P90", -1)
-                    self.metrics["output_latency_P50"] = line.get("latency_P50", -1)
-                else:
-                    self.metrics["input_half_load_latency"] = line.get("half_load_latency", False)
-                self.metrics["input_num_flows"] = line.get("num_flows", 512000)
-                self.metrics["input_offloads"] = line.get("offloads", False)
-                self.metrics["input_protocol"] = line.get("protocol", "UDP")
-                self.metrics["output_jitter_max"] = line.get("jitter_max", -1)
-                self.metrics["output_jitter_min"] = line.get("jitter_min", -1)
-                self.metrics["output_jitter_avg"] = line.get("jitter_avg", -1)
-                fun_test.log(
-                    "flow type: {}, latency: {}, bandwidth: {}, frame size: {}, jitters: {}, pps: {}".format(
-                        self.metrics["input_flow_type"], self.metrics["output_latency_avg"],
-                        self.metrics["output_throughput"],
-                        self.metrics["input_frame_size"], self.metrics["output_jitter_avg"],
-                        self.metrics["output_pps"]))
-                self.status = RESULTS["PASSED"]
-                d = self.metrics_to_dict(metrics=self.metrics, result=self.status, date_time=date_time)
-                self.result["data"].append(d)
-                if date_time.year >= 2019:
-                    metric_model = app_config.get_metric_models()[model_name]
-                    MetricHelper(model=metric_model).add_entry(**d)
-                    self.add_version_to_jenkins_job_id_map(date_time=date_time,
-                                                           version=self.metrics["input_version"])
-
+                crypto_json = json.loads(m.group("crypto_json"))
+                input_test = crypto_json["test"]
+                if model_name == "TeraMarkCryptoPerformance":
+                    if "api" in input_test:
+                        input_app = "crypto_api_perf"
+                        self.set_crypto_metrics_dict(crypto_json=crypto_json, input_app=input_app, date_time=date_time)
+                elif model_name == "TeraMarkMultiClusterCryptoPerformance":
+                    if "raw" in input_test:
+                        input_app = "crypto_raw_speed"
+                        input_key_size = int(crypto_json["key_size"]) if "key_size" in crypto_json else -1
+                        self.metrics["input_key_size"] = input_key_size
+                        self.set_crypto_metrics_dict(crypto_json=crypto_json, input_app=input_app, date_time=date_time)
+                elif model_name == "CryptoFastPathPerformance":
+                    if "fastpath" in input_test:
+                        input_app = "crypto_fast_path"
+                        input_key_size = int(crypto_json["key_size"]) if "key_size" in crypto_json else -1
+                        self.metrics["input_key_size"] = input_key_size
+                        self.set_crypto_metrics_dict(crypto_json=crypto_json, input_app=input_app, date_time=date_time)
         self.result["match_found"] = self.match_found
         self.result["status"] = self.status == RESULTS["PASSED"]
         fun_test.log("Result :{}".format(self.result))
         return self.result
 
 
-def teramark_zip(self, logs, date_time, platform):
-    metrics = collections.OrderedDict()
-    metrics['input_platform'] = platform
-    teramark_begin = False
-    for line in logs:
-        if "TeraMark Begin" in line:
-            teramark_begin = True
-        if "TeraMark End" in line:
-            teramark_begin = False
-        if teramark_begin:
-            m = re.search(
-                r'{"Type":\s+"(?P<type>\S+)",\s+"Operation":\s+(?P<operation>\S+),\s+"Effort":\s+(?P<effort>\S+),'
-                r'.*\s+"Duration"\s+:\s+(?P<latency_json>{.*}),\s+"Throughput":\s+(?P<throughput_json>{.*})}', line)
-            if m:
-                input_type = m.group("type")
-                input_operation = m.group("operation")
-                input_effort = int(m.group("effort"))
-                bandwidth_json = json.loads(m.group("throughput_json"))
-                output_bandwidth_avg = bandwidth_json['value']
-                output_bandwidth_avg_unit = bandwidth_json["unit"]
-                latency_json = json.loads(m.group("latency_json"))
-                output_latency_avg = latency_json['value']
-                output_latency_unit = latency_json["unit"]
+    def teramark_jpeg(self, logs, date_time, platform):
+        self.initialize()
+        jpeg_operations = {"Compression throughput": "Compression throughput with Driver",
+                           "Decompression throughput": "JPEG Decompress",
+                           "Accelerator Compression throughput": "Compression Accelerator throughput",
+                           "Accelerator Decompression throughput": "Decompression Accelerator throughput",
+                           "JPEG Compression": "JPEG Compression"}
 
-                fun_test.log("type: {}, operation: {}, effort: {}, stats {}".format(input_type, input_operation,
-                                                                                    input_effort,
-                                                                                    bandwidth_json))
-                metrics["input_type"] = input_type
-                metrics["input_operation"] = input_operation
-                metrics["input_effort"] = input_effort
-                metrics["output_bandwidth_avg"] = output_bandwidth_avg
-                metrics["output_bandwidth_avg_unit"] = output_bandwidth_avg_unit
-                metrics["output_latency_avg"] = output_latency_avg
-                metrics["output_latency_avg_unit"] = output_latency_unit
-                d = self.metrics_to_dict(metrics=metrics, result=fun_test.PASSED, date_time=date_time)
-                if input_type == "Deflate":
-                    MetricHelper(model=eval("TeraMarkZipDeflatePerformance")).add_entry(**d)
-                else:
-                    MetricHelper(model=eval("TeraMarkZipLzmaPerformance")).add_entry(**d)
+        self.metrics["input_platform"] = platform
+        current_file_name = None
+        final_file_name = None
+        teramark_begin = False
+        for line in logs:
+            compression_ratio_found = False
+            if "Compression-ratio to 1" in line:
+                compression_ratio_found = True
+            m = re.search(r'JPEG Compression/Decompression performance stats (?P<current_file_name>\S+?)(?=#)', line)
+            if m:
+                current_file_name = m.group("current_file_name")
+                final_file_name = current_file_name
+            if "TeraMark Begin" in line:
+                teramark_begin = True
+                continue
+            if "TeraMark End" in line:
+                teramark_begin = False
+                fun_test.test_assert(current_file_name, "Filename detected")
+
+                current_file_name = None
+            if teramark_begin:
+                m = re.search(r'({.*})', line)
+                if m:
+                    fun_test.log(line)
+                    self.match_found = True
+                    j = m.group(1)
+                    try:
+                        d = json.loads(j)
+                    except Exception as ex:
+                        message = "Invalid json for : {}".format(j)
+                        fun_test.critical(message)
+                        raise Exception(message)
+                    self.metrics = {}
+                    self.metrics["input_platform"] = platform
+                    if not compression_ratio_found:
+                        if d["Operation"] in jpeg_operations:
+                            self.metrics["input_operation"] = jpeg_operations[d["Operation"]]
+                        else:
+                            self.metrics["input_operation"] = d["Operation"]
+                        self.metrics["input_count"] = d['Stats']['_count']
+                        self.metrics["input_image"] = final_file_name
+                        # metrics["output_iops"] = d['Stats']['_iops']
+                        # metrics["output_max_latency"] = d['Stats']['_max_latency']
+                        # metrics["output_min_latency"] = d['Stats']['_min_latency']
+                        # metrics["output_average_latency"] = d['Stats']['_avg_latency']
+                        self.metrics["output_average_bandwidth"] = d['Stats']['_avg_bw_gbps']
+                    else:
+                        if d["Operation"] in jpeg_operations:
+                            self.metrics["input_operation"] = jpeg_operations[d["Operation"]]
+                        else:
+                            self.metrics["input_operation"] = d["Operation"]
+                        self.metrics["input_image"] = final_file_name
+                        self.metrics["output_compression_ratio"] = d['Stats']["Compression-ratio to 1"]
+                        self.metrics["output_percentage_savings"] = d['Stats']["PercentageSpaceSaving"]
+
+                    self.status = RESULTS["PASSED"]
+                    d = self.metrics_to_dict(metrics=self.metrics, result=self.status, date_time=date_time)
+                    print("data", d)
+                    self.result["data"].append(d)
+
+        self.result["match_found"] = self.match_found
+        self.result["status"] = self.status == RESULTS["PASSED"]
+        fun_test.log("Result :{}".format(self.result, indent=4))
+        return self.result
+
+
+    def teramark_nu_transit(self, logs, date_time, platform, model_name):
+        self.initialize()
+        self.metrics["input_platform"] = platform
+        nu_transit_flow_types = {"FCP_HNU_HNU": "HNU_HNU_FCP"}
+
+        for file in logs:
+            for line in file:
+                if "flow_type" in line:
+                    if line["flow_type"] in nu_transit_flow_types:
+                        line["flow_type"] = nu_transit_flow_types[line["flow_type"]]
+                        self.match_found = True
+                    self.metrics["input_flow_type"] = line["flow_type"].replace("FPG", "NU")
+                    self.metrics["input_mode"] = line.get("mode", "")
+                    self.metrics["input_version"] = line["version"]
+                    self.metrics["input_frame_size"] = line["frame_size"]
+                    date_time = self.get_time_from_timestamp(line["timestamp"])
+                    self.metrics["output_throughput"] = (float(
+                        line["throughput"]) / 1000) if "throughput" in line and line[
+                        "throughput"] != -1 else -1
+                    self.metrics["output_pps"] = (float(
+                        line["pps"]) / 1000000) if "pps" in line and line[
+                        "pps"] != -1 else -1
+                    self.metrics["output_latency_max"] = line.get("latency_max", -1)
+                    self.metrics["output_latency_min"] = line.get("latency_min", -1)
+                    self.metrics["output_latency_avg"] = line.get("latency_avg", -1)
+                    if model_name == "NuTransitPerformance":
+                        self.metrics["output_latency_P99"] = line.get("latency_P99", -1)
+                        self.metrics["output_latency_P90"] = line.get("latency_P90", -1)
+                        self.metrics["output_latency_P50"] = line.get("latency_P50", -1)
+                    else:
+                        self.metrics["input_half_load_latency"] = line.get("half_load_latency", False)
+                    self.metrics["input_num_flows"] = line.get("num_flows", 512000)
+                    self.metrics["input_offloads"] = line.get("offloads", False)
+                    self.metrics["input_protocol"] = line.get("protocol", "UDP")
+                    self.metrics["output_jitter_max"] = line.get("jitter_max", -1)
+                    self.metrics["output_jitter_min"] = line.get("jitter_min", -1)
+                    self.metrics["output_jitter_avg"] = line.get("jitter_avg", -1)
+                    fun_test.log(
+                        "flow type: {}, latency: {}, bandwidth: {}, frame size: {}, jitters: {}, pps: {}".format(
+                            self.metrics["input_flow_type"], self.metrics["output_latency_avg"],
+                            self.metrics["output_throughput"],
+                            self.metrics["input_frame_size"], self.metrics["output_jitter_avg"],
+                            self.metrics["output_pps"]))
+                    self.status = RESULTS["PASSED"]
+                    d = self.metrics_to_dict(metrics=self.metrics, result=self.status, date_time=date_time)
+                    self.result["data"].append(d)
+                    if date_time.year >= 2019:
+                        metric_model = app_config.get_metric_models()[model_name]
+                        MetricHelper(model=metric_model).add_entry(**d)
+                        self.add_version_to_jenkins_job_id_map(date_time=date_time,
+                                                               version=self.metrics["input_version"])
+
+            self.result["match_found"] = self.match_found
+            self.result["status"] = self.status == RESULTS["PASSED"]
+            fun_test.log("Result :{}".format(self.result))
+            return self.result
+
+
+    def teramark_zip(self, logs, date_time, platform):
+        metrics = collections.OrderedDict()
+        metrics['input_platform'] = platform
+        teramark_begin = False
+        for line in logs:
+            if "TeraMark Begin" in line:
+                teramark_begin = True
+            if "TeraMark End" in line:
+                teramark_begin = False
+            if teramark_begin:
+                m = re.search(
+                    r'{"Type":\s+"(?P<type>\S+)",\s+"Operation":\s+(?P<operation>\S+),\s+"Effort":\s+(?P<effort>\S+),'
+                    r'.*\s+"Duration"\s+:\s+(?P<latency_json>{.*}),\s+"Throughput":\s+(?P<throughput_json>{.*})}', line)
+                if m:
+                    input_type = m.group("type")
+                    input_operation = m.group("operation")
+                    input_effort = int(m.group("effort"))
+                    bandwidth_json = json.loads(m.group("throughput_json"))
+                    output_bandwidth_avg = bandwidth_json['value']
+                    output_bandwidth_avg_unit = bandwidth_json["unit"]
+                    latency_json = json.loads(m.group("latency_json"))
+                    output_latency_avg = latency_json['value']
+                    output_latency_unit = latency_json["unit"]
+
+                    fun_test.log("type: {}, operation: {}, effort: {}, stats {}".format(input_type, input_operation,
+                                                                                        input_effort,
+                                                                                        bandwidth_json))
+                    metrics["input_type"] = input_type
+                    metrics["input_operation"] = input_operation
+                    metrics["input_effort"] = input_effort
+                    metrics["output_bandwidth_avg"] = output_bandwidth_avg
+                    metrics["output_bandwidth_avg_unit"] = output_bandwidth_avg_unit
+                    metrics["output_latency_avg"] = output_latency_avg
+                    metrics["output_latency_avg_unit"] = output_latency_unit
+                    d = self.metrics_to_dict(metrics=metrics, result=fun_test.PASSED, date_time=date_time)
+                    if input_type == "Deflate":
+                        MetricHelper(model=eval("TeraMarkZipDeflatePerformance")).add_entry(**d)
+                    else:
+                        MetricHelper(model=eval("TeraMarkZipLzmaPerformance")).add_entry(**d)
