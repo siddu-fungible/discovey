@@ -320,7 +320,7 @@ class FunTestCase1(FunTestCase):
         fun_test.test_assert(True, "Initial debug stats is saved")
 
         ############# Starting Traffic ################
-        come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
+        self.come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
                            ssh_username=self.fs['come']['mgmt_ssh_username'],
                            ssh_password=self.fs['come']['mgmt_ssh_password'])
 
@@ -330,9 +330,9 @@ class FunTestCase1(FunTestCase):
         fun_test.log("App parameters: {}".format(app_params))
 
         if self.run_le_firewall:
-            self.restart_dpcsh(come_handle)
+            self.restart_dpcsh()
             le_firewall(self.test_duration, self.boot_new_image)
-            self.restart_dpcsh(come_handle)
+            self.restart_dpcsh()
 
         if "fio" in app_params:
             fio_data = app_params["fio"]
@@ -775,11 +775,11 @@ class FunTestCase1(FunTestCase):
         f1_1_uart_file = bmc_handle.get_f1_uart_log_file_name(f1_index=f1_index)
         bmc_handle.command("echo '' > {}".format(f1_1_uart_file))
 
-    def restart_dpcsh(self, come_handle):
+    def restart_dpcsh(self):
         for f1 in self.run_on_f1:
-            dpcsh_pid = come_handle.get_process_id_by_pattern("/nvme{}".format(f1))
+            dpcsh_pid = self.come_handle.get_process_id_by_pattern("/nvme{}".format(f1))
             if dpcsh_pid:
-                come_handle.kill_process(process_id=dpcsh_pid, signal=9)
+                self.come_handle.kill_process(process_id=dpcsh_pid, signal=9)
         self.verify_dpcsh_started()
 
     def verify_dpcsh_started(self):
