@@ -3966,13 +3966,43 @@
                 "children": [
                   {
                     "metric_model_name": "BltVolumePerformance",
-                    "name": "inspur_8132_8k_rand_rw_comp_output_latency",
-                    "label": "Latency"
+                    "name": "inspur_8141_8k_rand_rw_comp_qd32_output_latency",
+                    "label": "Latency, QDepth=32"
                   },
                   {
                     "metric_model_name": "BltVolumePerformance",
-                    "name": "inspur_8132_8k_rand_rw_comp_output_iops",
-                    "label": "IOPS"
+                    "name": "inspur_8141_8k_rand_rw_comp_qd64_output_latency",
+                    "label": "Latency, QDepth=64"
+                  },
+                  {
+                    "metric_model_name": "BltVolumePerformance",
+                    "name": "inspur_8141_8k_rand_rw_comp_qd96_output_latency",
+                    "label": "Latency, QDepth=96"
+                  },
+                  {
+                    "metric_model_name": "BltVolumePerformance",
+                    "name": "inspur_8141_8k_rand_rw_comp_qd128_output_latency",
+                    "label": "Latency, QDepth=128"
+                  },
+                  {
+                    "metric_model_name": "BltVolumePerformance",
+                    "name": "inspur_8141_8k_rand_rw_comp_qd32_output_iops",
+                    "label": "IOPS, QDepth=32"
+                  },
+                  {
+                    "metric_model_name": "BltVolumePerformance",
+                    "name": "inspur_8141_8k_rand_rw_comp_qd64_output_iops",
+                    "label": "IOPS, QDepth=64"
+                  },
+                  {
+                    "metric_model_name": "BltVolumePerformance",
+                    "name": "inspur_8141_8k_rand_rw_comp_qd96_output_iops",
+                    "label": "IOPS, QDepth=96"
+                  },
+                  {
+                    "metric_model_name": "BltVolumePerformance",
+                    "name": "inspur_8141_8k_rand_rw_comp_qd128_output_iops",
+                    "label": "IOPS, QDepth=128"
                   }
                 ]
               },
