@@ -77,7 +77,7 @@ class FunTestCase2(FunTestCase):
 
 if __name__ == "__main__":
     myscript = MyScript()
-    # myscript.add_test_case(FunTestCase1())
+    myscript.add_test_case(FunTestCase1())
     myscript.add_test_case(FunTestCase2())
     myscript.run()
 

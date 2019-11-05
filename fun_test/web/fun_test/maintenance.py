@@ -2136,7 +2136,8 @@ if __name__ == "__main_funos_s1__":
         result = set_internal_name(system_metrics)
         print json.dumps(result)
 
-if __name__ == "__main__":
+
+if __name__ == "__main_crypto_fastpath__":
     model_name = "CryptoFastPathPerformance"
     algorithms = ["AES_GCM", "AES_XTS", "AES_CBC", "SHA_256"]
     packet_sizes = [64, 354, 1500, 4096]
@@ -2167,4 +2168,59 @@ if __name__ == "__main__":
                        peer_ids=[], creator=TEAM_REGRESSION_EMAIL,
                        workspace_ids=[])
     print "created charts for crypto fastpath"
+
+if __name__ == "__main__":
+    internal_names = "inspur_8141_8k_rand_rw_comp_qd"
+    owner_info = "Alagarswamy Devaraj (alagarswamy.devaraj@fungible.com)"
+    source = "https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/storage/pocs/inspur/ec_inspur_fs_teramark_multivolume_comp.py"
+    model_name = "BltVolumePerformance"
+    base_line_date = datetime(year=2019, month=11, day=1, minute=0, hour=0, second=0)
+    qdepths = [32, 64, 96, 128]
+    fio_job_names = ["inspur_8k_random_read_write_50pctcomp_iodepth_", "_vol_8"]
+    output_names = ["Latency", "IOPS"]
+    operations = ["read", "write"]
+    for qdepth in qdepths:
+        for name in output_names:
+            internal_chart_name = internal_names + str(qdepth) + "_output_" + name.lower()
+            if name == "Latency":
+                positive = False
+                y1_axis_title = PerfUnit.UNIT_USECS
+            else:
+                positive = True
+                y1_axis_title = PerfUnit.UNIT_OPS
+            data_sets = []
+            for operation in operations:
+                if positive:
+                    data_set_name = operation + "(8 vols)"
+                    if operation == "read":
+                        output_name = "output_read_iops"
+                    else:
+                        output_name = "output_write_iops"
+                else:
+                    data_set_name = operation + "-avg(8 vols)"
+                    if operation == "read":
+                        output_name = "output_read_avg_latency"
+                    else:
+                        output_name = "output_write_avg_latency"
+
+                one_data_set = {}
+                one_data_set["name"] = data_set_name
+                one_data_set["inputs"] = {"input_platform": FunPlatform.F1, "input_fio_job_name": fio_job_names[0] +
+                                                                                                  str(qdepth) +
+                                                                                                  fio_job_names[1]}
+                one_data_set["output"] = {"name": output_name, "min": 0, "max": -1, "expected": -1, "best": -1, "reference":
+                    -1, "unit": y1_axis_title}
+                data_sets.append(one_data_set)
+            ml.create_leaf(chart_name=name, internal_chart_name=internal_chart_name,
+                           data_sets=data_sets, leaf=True,
+                           description="TBD",
+                           owner_info=owner_info, source=source,
+                           positive=positive, y1_axis_title=y1_axis_title,
+                           visualization_unit=y1_axis_title,
+                           metric_model_name=model_name,
+                           base_line_date=base_line_date,
+                           work_in_progress=False, children=[], jira_ids=[], platform=FunPlatform.F1,
+                           peer_ids=[], creator=TEAM_REGRESSION_EMAIL,
+                           workspace_ids=[])
+    print "created charts for inspur random read write compression"
 
