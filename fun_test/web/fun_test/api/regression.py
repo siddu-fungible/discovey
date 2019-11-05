@@ -214,6 +214,9 @@ def suite_executions(request, id):
             request_json = json.loads(request.body)
             if "disable_schedule" in request_json:
                 suite_execution.disable_schedule = request_json["disable_schedule"]
+                scheduled_suites = SuiteExecution.objects.filter(auto_scheduled_execution_id=int(id), state=JobStatusType.SCHEDULED)
+                for scheduled_suite in scheduled_suites:
+                    scheduled_suite.delete()
             suite_execution.save()
         except ObjectDoesNotExist:
             # TODO
