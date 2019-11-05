@@ -251,6 +251,8 @@ class FunTestCase1(FunTestCase):
                 self.disable_stats = job_inputs["disable_stats"]
             if "boot_new_image" in job_inputs:
                 self.boot_new_image = job_inputs["boot_new_image"]
+            if "end_sleep" in job_inputs:
+                self.end_sleep = job_inputs["end_sleep"]
 
         # Create the files
         self.stats_info = {}
@@ -371,7 +373,7 @@ class FunTestCase1(FunTestCase):
 
         self.come_handle.destroy()
 
-        fun_test.sleep("Waiting for all the things to settle", seconds=180)
+        fun_test.sleep("Waiting for all the things to settle", seconds=self.end_sleep)
 
 
     def capture_data(self, count, heading):
