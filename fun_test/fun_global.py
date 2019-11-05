@@ -194,3 +194,4 @@ class TimeSeriesTypes(Codes):
     LOG = 60
     CHECKPOINT = 80
     STATISTICS = 100
+    ARTIFACT = 200

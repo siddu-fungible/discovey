@@ -14,10 +14,12 @@
   "check_docker": true,
   "expected_dockers": 3,
   "end_sleep": 300,
-  "docker_verify_interval": 20,
   "after_runsc_up_host_connect_interval": 60,
   "check_portal": false,
   "transport_type": "tcp",
+  "api_server_port": 50220,
+  "username": "admin",
+  "password": "password",
   "volume_creation_details": [
     {"capacity": 6442450944,"encrypt": true, "stripe_count" : 6, "vol_type": "VOL_TYPE_BLK_LOCAL_THIN",
       "compression_effort": 0}

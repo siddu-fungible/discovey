@@ -31,8 +31,8 @@ class MyScript(FunTestScript):
         for k, v in config_dict.iteritems():
             setattr(self, k, v)
 
-        f1_0_boot_args = 'cc_huid=3 sku=SKU_FS1600_0 app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303'
-        f1_1_boot_args = 'cc_huid=2 sku=SKU_FS1600_1 app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303'
+        f1_0_boot_args = 'cc_huid=3 sku=SKU_FS1600_0 app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303 --mtracker'
+        f1_1_boot_args = 'cc_huid=2 sku=SKU_FS1600_1 app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303 --mtracker'
 
         if job_inputs:
             if "disable_f1_index" in job_inputs:
@@ -68,6 +68,8 @@ class MyScript(FunTestScript):
             topology = topology_helper.deploy()
             fun_test.test_assert(topology, "Topology deployed")
         self.verify_dpcsh_started()
+        if not self.boot_new_image:
+            self.clear_uart_logs()
         if self.ec_vol:
             self.create_4_et_2_ec_volume()
 
@@ -195,6 +197,27 @@ class MyScript(FunTestScript):
                 fun_test.log(ex)
         return result
 
+
+    def clear_uart_logs(self):
+        result = False
+        try:
+            bmc_handle = Bmc(host_ip=self.fs['bmc']['mgmt_ip'],
+                             ssh_username=self.fs['bmc']['mgmt_ssh_username'],
+                             ssh_password=self.fs['bmc']['mgmt_ssh_password'],
+                             set_term_settings=True,
+                             disable_uart_logger=False)
+            bmc_handle.set_prompt_terminator(r'# $')
+            f1_index = 0
+            f1_0_uart_file = bmc_handle.get_f1_uart_log_file_name(f1_index=f1_index)
+            bmc_handle.command("echo '' > {}".format(f1_0_uart_file))
+            f1_index = 1
+            f1_1_uart_file = bmc_handle.get_f1_uart_log_file_name(f1_index=f1_index)
+            bmc_handle.command("echo '' > {}".format(f1_1_uart_file))
+            result = True
+        except Exception as ex:
+            fun_test.log(ex)
+        fun_test.test_assert(result, "Cleared the uart logs")
+
     def cleanup(self):
         fun_test.log("Script-level cleanup")
 
@@ -228,6 +251,8 @@ class FunTestCase1(FunTestCase):
                 self.disable_stats = job_inputs["disable_stats"]
             if "boot_new_image" in job_inputs:
                 self.boot_new_image = job_inputs["boot_new_image"]
+            if "end_sleep" in job_inputs:
+                self.end_sleep = job_inputs["end_sleep"]
 
         # Create the files
         self.stats_info = {}
@@ -235,8 +260,17 @@ class FunTestCase1(FunTestCase):
         # post_fix_name: "{calculated_}{app_name}_DPCSH_OUTPUT_F1_{f1}_logs.txt"
         # description : "{calculated_}_{app_name}_DPCSH_OUTPUT_F1_{f1}"
         self.stats_info["bmc"] = {"POWER": {"calculated": True}, "DIE_TEMPERATURE": {"calculated": False, "disable":True}}
-        self.stats_info["come"] = {"DEBUG_MEMORY": {}, "CDU": {}, "EQM": {}, "BAM": {"calculated": False, "disable":True}, "DEBUG_VP_UTIL": {"calculated": False}, "LE": {}, "HBM": {"disable":True},
-                                   "EXECUTE_LEAKS": {"calculated": False, "disable": True}, "PC_DMA": {"calculated": True}}
+        self.stats_info["come"] = {"DEBUG_MEMORY": {"disable": True}, "CDU": {}, "EQM": {}, "BAM": {"calculated": False, "disable":True}, "DEBUG_VP_UTIL": {"calculated": False, "disable": True}, "LE": {}, "HBM": {"calculated": True},
+                                   "EXECUTE_LEAKS": {"calculated": False}, "PC_DMA": {"calculated": True}, "DDR":{"calculated": True}}
+        self.stats_info["files"] = {"fio":{"calculated": False}}
+
+        if self.collect_stats:
+            for system in self.stats_info:
+                for stat_name, value in self.stats_info[system].iteritems():
+                    if stat_name in self.collect_stats:
+                        value["disable"] = False
+                    else:
+                        value["disable"] = True
 
         if self.disable_stats:
             for system in self.stats_info:
@@ -258,12 +292,17 @@ class FunTestCase1(FunTestCase):
                     elif system == "come":
                         for f1 in self.run_on_f1:
                             globals()["{}{}_DPCSH_OUTPUT_F1_{}".format(calculated, stat_name,f1)] = fun_test.get_test_case_artifact_file_name(post_fix_name="{}{}_DPCSH_OUTPUT_F1_{}_logs.txt".format(calculated, stat_name, f1))
-                            fun_test.add_auxillary_file(description="{}{}_DPCSH_OUTPUT_F1_{}".format(calculated, stat_name, f1),filename=globals()["{}{}_DPCSH_OUTPUT_F1_{}".format(calculated, stat_name, f1)])
+                            fun_test.add_auxillary_file(description="{}{}_DPCSH_OUTPUT_F1_{}".format(calculated.upper(), stat_name, f1),filename=globals()["{}{}_DPCSH_OUTPUT_F1_{}".format(calculated, stat_name, f1)])
                             setattr(self, "f_{}{}_f1_{}".format(calculated, stat_name, f1),open(globals()["{}{}_DPCSH_OUTPUT_F1_{}".format(calculated, stat_name, f1)],"w+"))
+                    elif system == "files":
+                        for f1 in self.run_on_f1:
+                            globals()["{}_OUTPUT_F1_{}".format(stat_name,f1)] = fun_test.get_test_case_artifact_file_name(post_fix_name="{}_OUTPUT_F1_{}_logs.txt".format(stat_name, f1))
+                            fun_test.add_auxillary_file(description="{}_OUTPUT_F1_{}".format(stat_name, f1),filename=globals()["{}_OUTPUT_F1_{}".format(stat_name, f1)])
+                            setattr(self, "f_{}_f1_{}".format(stat_name, f1),open(globals()["{}_OUTPUT_F1_{}".format(stat_name, f1)], "w+"))
 
         # Traffic
-        self.methods = {"crypto": crypto, "zip": zip_deflate, "rcnvme": rcnvme, "fio": fio}
-        self.threaded_apps = {"busy_loop": "soak_flows_busy_loop_10usecs"}
+        self.methods = {"crypto": crypto, "zip": zip_deflate, "rcnvme": rcnvme}
+        self.threaded_apps = {}
         # self.threaded_apps = {"busy_loop": "soak_flows_busy_loop_10usecs", "memcpy_1MB":"soak_flows_memcpy_1MB_non_coh"}
 
         if self.duration == "1m":
@@ -283,7 +322,7 @@ class FunTestCase1(FunTestCase):
         fun_test.test_assert(True, "Initial debug stats is saved")
 
         ############# Starting Traffic ################
-        come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
+        self.come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
                            ssh_username=self.fs['come']['mgmt_ssh_username'],
                            ssh_password=self.fs['come']['mgmt_ssh_password'])
 
@@ -293,33 +332,49 @@ class FunTestCase1(FunTestCase):
         fun_test.log("App parameters: {}".format(app_params))
 
         if self.run_le_firewall:
+            self.restart_dpcsh()
             le_firewall(self.test_duration, self.boot_new_image)
+            # self.restart_dpcsh()
 
-        thread_map_for_soak_apps = self.start_threaded_apps()
+        if "fio" in app_params:
+            fio_data = app_params["fio"]
+            fio_data["runtime"] += 40
+            fio_thread_map = self.start_fio_as_thread(fio_data)
+
+        # thread_map_for_soak_apps = self.start_threaded_apps()
 
         for app, parameters in app_params.iteritems():
-            parameters["f1"] = 0
-            result = self.methods[app](come_handle, **parameters)
-            fun_test.test_assert(result, "{} traffic started on F1_0".format(app))
-            parameters["f1"] = 1
-            result = self.methods[app](come_handle, **parameters)
-            fun_test.test_assert(result, "{} traffic started on F1_1".format(app))
+            if app == "fio":
+                continue
+            for f1 in self.run_on_f1:
+                parameters["f1"] = f1
+                result = self.methods[app](self.come_handle, **parameters)
+                fun_test.test_assert(result, "{} traffic started on F1_{}".format(app, f1))
 
         ################ During traffic ##################
+        # fun_test.sleep("Wait for traffic to start")
         count = int(self.test_duration / 5)
         heading = "During traffic"
         fun_test.log("Capturing the data {}".format(heading))
         self.capture_data(count=count, heading=heading)
 
+        if "fio" in app_params:
+            self.join_fio_thread(fio_thread_map)
+
         #################### After the traffic ############
         if self.run_le_firewall:
             le_firewall(self.test_duration, self.boot_new_image, True)
-        self.stop_threaded_apps(thread_map_for_soak_apps)
+        # self.stop_threaded_apps(thread_map_for_soak_apps)
 
         count = 3
         heading = "After the traffic"
         fun_test.log("Capturing the data {}".format(heading))
         self.capture_data(count=count, heading=heading)
+
+        self.come_handle.destroy()
+
+        fun_test.sleep("Waiting for all the things to settle", seconds=self.end_sleep)
+
 
     def capture_data(self, count, heading):
         def func_not_found():
@@ -330,6 +385,8 @@ class FunTestCase1(FunTestCase):
         thread_count = 0
         time_in_seconds = 1
         for system in self.stats_info:
+            if system == "files":
+                continue
             for stat_name,value  in self.stats_info[system].iteritems():
                 if value.get("disable", False):
                     fun_test.log("stat: {} has been disabled".format(stat_name))
@@ -380,7 +437,7 @@ class FunTestCase1(FunTestCase):
             one_dataset["time2"] = datetime.datetime.now()
             one_dataset["output2"] = dpcsh_output
             file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
-            difference_dict = stats_calculation.dict_difference(one_dataset, "eqm")
+            difference_dict = stats_calculation.dict_difference(one_dataset, stat_name)
             one_dataset["time"] = datetime.datetime.now()
             one_dataset["output"] = difference_dict
             file_helper.add_data(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
@@ -413,7 +470,7 @@ class FunTestCase1(FunTestCase):
             one_dataset["output2"] = dpcsh_output
             file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
 
-            difference_dict = stats_calculation.dict_difference(one_dataset, "le")
+            difference_dict = stats_calculation.dict_difference(one_dataset, stat_name)
             one_dataset["time"] = datetime.datetime.now()
             one_dataset["output"] = difference_dict
             file_helper.add_data(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
@@ -447,7 +504,7 @@ class FunTestCase1(FunTestCase):
             one_dataset["output2"] = dpcsh_output
             file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
 
-            difference_dict = stats_calculation.dict_difference(one_dataset, "cdu")
+            difference_dict = stats_calculation.dict_difference(one_dataset, stat_name)
             one_dataset["time"] = datetime.datetime.now()
             one_dataset["output"] = difference_dict
             file_helper.add_data(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
@@ -478,7 +535,7 @@ class FunTestCase1(FunTestCase):
             one_dataset["output2"] = dpcsh_output
             file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
 
-            difference_dict = stats_calculation.dict_difference(one_dataset, "pc_dma")
+            difference_dict = stats_calculation.dict_difference(one_dataset, stat_name)
             one_dataset["time"] = datetime.datetime.now()
             one_dataset["output"] = difference_dict
             file_helper.add_data(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
@@ -539,14 +596,50 @@ class FunTestCase1(FunTestCase):
             one_dataset["output2"] = dpcsh_output
             file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
 
-            # div_by_peek_value = stats_calculation.dict_difference(one_dataset, "hbm")
-            # one_dataset["time"] = datetime.datetime.now()
-            # one_dataset["output"] = div_by_peek_value
-            # file_helper.add_data(file_hbm_dif, one_dataset, heading=heading)
+            difference_dict = stats_calculation.dict_difference(one_dataset, stat_name)
+            one_dataset["time"] = datetime.datetime.now()
+            one_dataset["output"] = difference_dict
+            file_helper.add_data(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset,
+                                 heading=heading)
 
             # fun_test.sleep("before next iteration", seconds=self.details["interval"])
 
         come_handle.destroy()
+
+    ############   DDR #############
+    def func_ddr(self, f1, count, heading):
+        stat_name = "DDR"
+        come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
+                           ssh_username=self.fs['come']['mgmt_ssh_username'],
+                           ssh_password=self.fs['come']['mgmt_ssh_password'])
+        for i in range(count):
+            one_dataset = {}
+            dpcsh_output = dpcsh_commands.ddr(come_handle=come_handle, f1=f1)
+            one_dataset["time"] = datetime.datetime.now()
+            one_dataset["output"] = dpcsh_output
+            one_dataset["time1"] = datetime.datetime.now()
+            one_dataset["output1"] = dpcsh_output
+            file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+
+            fun_test.sleep("Before capturing next set of data", seconds=5)
+
+            dpcsh_output = dpcsh_commands.ddr(come_handle=come_handle, f1=f1)
+            one_dataset["time"] = datetime.datetime.now()
+            one_dataset["output"] = dpcsh_output
+            one_dataset["time2"] = datetime.datetime.now()
+            one_dataset["output2"] = dpcsh_output
+            file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+
+            difference_dict = stats_calculation.dict_difference(one_dataset, stat_name)
+            one_dataset["time"] = datetime.datetime.now()
+            one_dataset["output"] = difference_dict
+            file_helper.add_data(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset,
+                                 heading=heading)
+
+            # fun_test.sleep("before next iteration", seconds=self.details["interval"])
+
+        come_handle.destroy()
+
 
     ######## EXECUTE LEAKS ###########
     def func_execute_leaks(self,f1,count, heading):
@@ -554,6 +647,7 @@ class FunTestCase1(FunTestCase):
         come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
                            ssh_username=self.fs['come']['mgmt_ssh_username'],
                            ssh_password=self.fs['come']['mgmt_ssh_password'])
+        count = 1
         for i in range(count):
             one_dataset = {}
             dpcsh_output = dpcsh_commands.execute_leaks(come_handle=come_handle, f1=f1)
@@ -778,7 +872,56 @@ class FunTestCase1(FunTestCase):
             track_app = fun_test.shared_variables["var_{}_f1_{}".format(app, f1)]
             fun_test.sleep("Before next iteration app: {}".format(app))
 
+    def start_fio_as_thread(self,fio_data):
+        fio_thread_map = {}
+        fio_capacity_map = {"f1_0": 26843545600, "f1_1": 32212254720}
+        self.fio_params.update(fio_data)
+        for f1 in self.run_on_f1:
+            try:
+                come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
+                                   ssh_username=self.fs['come']['mgmt_ssh_username'],
+                                   ssh_password=self.fs['come']['mgmt_ssh_password'])
 
+                fetch_nvme = fetch_nvme_device(come_handle, 1, size=fio_capacity_map["f1_{}".format(f1)])
+                if fetch_nvme["status"]:
+                    fun_test.test_assert(True, "{} traffic started on F1_{}".format("fio", f1))
+                    fio_thread_map["{}".format(f1)] = fun_test.execute_thread_after(func=self.func_fio,
+                                                                                           time_in_seconds=5,
+                                                                                           filename=fetch_nvme["nvme_device"],
+                                                                                           come_handle=come_handle,
+                                                                                           f1=f1,
+                                                                                           **self.fio_params)
+                else:
+                    fun_test.critical("Volumes not create on F1: {}".format(f1))
+                come_handle.destroy()
+            except Exception as ex:
+                fun_test.log(ex)
+        return fio_thread_map
+
+    def join_fio_thread(self, thread_map):
+        stat_name = "fio"
+        for f1, thread in thread_map.iteritems():
+            one_dataset = {}
+            fun_test.log("Trying to join fio thread f1: {}".format(f1))
+            fun_test.join_thread(thread)
+            fun_test.test_assert(True,"FIO successfully completed on f1 : {}".format(f1))
+            try:
+                fun_test.sleep("Generating fio output")
+                output = fun_test.shared_variables["fio_output_f1_{}".format(f1)]
+                one_dataset["time"] = datetime.datetime.now()
+                one_dataset["output"] = output
+                file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset)
+            except Exception as ex:
+                fun_test.log(ex)
+
+    def func_fio(self, come_handle, filename, f1,**params):
+        try:
+            fio_output = come_handle.pcie_fio(timeout=params["runtime"] + 100,
+                                              filename=filename,
+                                              **params)
+        except Exception as ex:
+            fun_test.critical(ex)
+        fun_test.shared_variables["fio_output_f1_{}".format(f1)] = fio_output
 
 
 

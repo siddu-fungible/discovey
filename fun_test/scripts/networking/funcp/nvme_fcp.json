@@ -22,6 +22,7 @@
       "timeout": 600,
       "iodepth": 32,
       "prio": 0,
+      "numjobs": 1,
       "cpus_allowed_policy": "split"
     },
     "stats_interval": 10,

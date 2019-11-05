@@ -34,6 +34,19 @@ class MongoDbManager():
     def get_collection(self, collection_name):
         return self.db[collection_name]
 
+    def delete_one(self, collection_name, query):
+        result = None
+        try:
+            collection = self.get_collection(collection_name=collection_name)
+            if collection:
+                collection.delete_one(query)
+                result = True
+        except pymongo.errors.ServerSelectionTimeoutError:
+            raise Exception("ServerSelectionTimeoutError")
+        except Exception as ex:
+            print ("delete_one exception: {}".format(str(ex)))
+        return result
+
     def insert_one(self, collection_name, *args, **kwargs):
         result = None
         try:

@@ -61,7 +61,7 @@
         <div class="card-body">
           <table class="">
             <tr *ngFor="let attribute of attributes">
-              <td class="cell">
+              <td style="margin-right: 20px">
                 <b>{{ attribute.name }}</b>
               </td>
               <ng-container [ngSwitch]="attribute.name">
@@ -100,7 +100,8 @@
                 log</a></td>
             </tr>
             <tr *ngIf="suiteExecution">
-              <td><a href="{{ getSchedulerLogDir(suiteExecution.fields.execution_id) | async }}">Log directory</a>
+              <td><a href="{{ getSchedulerLogDir(suiteExecution.fields.execution_id) | async }}">Log directory </a>
+              <td>(Absolute path: {{ ABSOLUTE_LOG_DIRECTORY + suiteExecution.fields.execution_id }})</td>
             </tr>
             <tr *ngIf="environment">
               <td>Branch_FunOS</td>

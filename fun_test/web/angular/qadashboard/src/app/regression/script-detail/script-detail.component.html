@@ -1,9 +1,11 @@
 <div class="fun-flex-container fun-action-nav">
+  <a class="pseudo-anchor" href="/regression/suite_detail/{{ suiteExecutionId }}">&nbsp;< Back to suite</a>
+  <div class="fun-spacer"></div>
   <span class="script-name">{{ scriptPath }}</span>
   <div class="fun-spacer"></div>
   <button (click)="onContextOptionsClick(contextOptions)" class="fun-button-add">Context options</button>
   <button (click)="viewChartsClick(chartSelectionOptions)" class="fun-button-add">Select charts</button>
-
+  <span class="pseudo-anchor" (click)="openConsoleLogClick()">Console log</span>
   <!--button (click)="testClick()">Test</button-->
   <ng-template #contextOptions let-modal>
     <div class="fun-panel">
@@ -17,13 +19,9 @@
             <span
               class="checkbox-text">ID : {{ availableContext.context_id }} ({{ availableContext.description }})</span>
           </div>
-
         </ng-container>
-
       </div>
-
     </div>
-
   </ng-template>
   <ng-template #chartSelectionOptions let-modal>
     <div class="fun-panel">
@@ -79,10 +77,16 @@
 
 
 <!--app-timeline-control *ngIf="showLogsPanel" [domainMin]="minRelativeTime" [domainMax]="maxRelativeTime" [title]="'Show logs starting from'" [unit]="'s'" (valueChanged)="onTimeLineChanged($event)"></app-timeline-control-->
-<div class="" style="overflow: auto; height: 100%; width: 100%; white-space: nowrap;">
+<div class="" style="overflow: auto; height: 100%; width: 100%;">
   <div class="fun-flex-container" style="align-items: flex-start;">
     <div *ngIf="showTestCasePanel" class="fun-flex-item panel fun-panel" [@show]="showTestCasePanel">
-      <div class="fun-panel-header">Test-cases</div>
+      <div class="fun-panel-header">
+        <span class="fun-panel-header-main-text">Test-cases</span>
+        <label style="margin: auto 20px auto">
+          <input type="checkbox" [(ngModel)]="showFailedTestCases" [checked]="showFailedTestCases"/> Show failed
+        </label>
+
+      </div>
       <div class="fun-panel-body auto-scroll test-case-panel">
         <table class="fun-table">
           <tr>
@@ -92,26 +96,35 @@
           </tr>
           <tr *ngFor="let testCaseExecution of testCaseExecutions; let index=index"
               [ngClass]="{'selected-row': currentTestCaseExecution?.test_case_id === testCaseExecution.test_case_id }">
-            <td>
-                <span [ngClass]="{'pseudo-anchor': testCaseExecution.result !== 'NOT_RUN'}"
-                      (click)="onTestCaseIdClick(index, testCaseExecution.execution_id)">{{ testCaseExecution.test_case_id }}
-                </span>
-            </td>
-            <td>{{ testCaseExecution.summary }}</td>
-            <td><span
-              [ngClass]="{'passed': testCaseExecution.result === 'PASSED', 'failed': testCaseExecution.result === 'FAILED' }">{{ testCaseExecution.result }}</span>
-            </td>
+
+            <ng-container *ngIf="!showFailedTestCases || (showFailedTestCases && (testCaseExecution.result === 'FAILED'))">
+              <td>
+                  <span [ngClass]="{'pseudo-anchor': testCaseExecution.result !== 'NOT_RUN'}"
+                        (click)="onTestCaseIdClick(index, testCaseExecution.execution_id)">{{ testCaseExecution.test_case_id }}
+                  </span>
+              </td>
+              <td>{{ testCaseExecution.summary }}</td>
+              <td><span
+                [ngClass]="{'passed': testCaseExecution.result === 'PASSED', 'failed': testCaseExecution.result === 'FAILED' }">{{ testCaseExecution.result }}</span>
+              </td>
+
+            </ng-container>
+
           </tr>
         </table>
       </div>
     </div>
     <div *ngIf="currentTestCaseExecution" class="fun-flex-item panel fun-panel" [@show]="showCheckpointPanel">
-      <div class="fun-panel-header fun-flex-item fun-flex-container" style="justify-content: space-between">
-        <span>Checkpoints</span>
+      <fun-spinner [status]="checkpointPanelStatus"></fun-spinner>
+      <div class="fun-panel-header fun-flex-item fun-flex-container">
+        <span class="fun-panel-header-main-text">Checkpoints</span>
+        <label style="margin: auto 20px auto">
+          <input type="checkbox" [(ngModel)]="showFailedCheckpoints" [checked]="showFailedCheckpoints"/> Show failed
+        </label>
         <span *ngIf="!showTestCasePanel" (click)="onShowTestCasePanelClick()"
               class="pseudo-anchor">< Show test-cases</span>
       </div>
-      <div class="fun-panel-body checkpoint-panel auto-scroll">
+      <div *ngIf="!checkpointPanelStatus" class="fun-panel-body checkpoint-panel auto-scroll">
         <table class="fun-table">
           <tr>
             <td class="fun-table-header">Time</td>
@@ -124,21 +137,27 @@
           </tr>
           <tr *ngFor="let checkpoint of currentTestCaseExecution?.checkpoints"
               [ngClass]="{'selected-checkpoint-row': currentCheckpointIndex === checkpoint?.data?.checkpoint_index }">
-            <td>
-              {{ checkpoint.relative_epoch_time | number: '1.3-3' }}
-            </td>
-            <td *ngIf="checkpoint.data.checkpoint != 'Start'">
-                <span class="pseudo-anchor"
-                      (click)="onCheckpointClick(currentTestCaseExecution, checkpoint.data.checkpoint_index, checkpoint.data.context_id)">{{ checkpoint.data.checkpoint_index }}
-                </span>
-            </td>
-            <td>{{ checkpoint.data.context_id }}</td>
-            <td>{{ checkpoint.data.checkpoint }}</td>
-            <td><span
-              [ngClass]="{'passed': checkpoint.data.result === 'PASSED', 'failed': checkpoint.data.result === 'FAILED' }">{{ checkpoint.data.result }}</span>
-            </td>
-            <td>{{ checkpoint.data.expected }}</td>
-            <td>{{ checkpoint.data.actual }}</td>
+
+            <ng-container *ngIf="!showFailedCheckpoints || (showFailedCheckpoints && checkpoint.data.result === 'FAILED')">
+
+              <td>
+                {{ checkpoint.relative_epoch_time | number: '1.3-3' }}
+              </td>
+              <td *ngIf="checkpoint.data.checkpoint != 'Start'">
+                  <span class="pseudo-anchor"
+                        (click)="onCheckpointClick(currentTestCaseExecution, checkpoint.data.checkpoint_index, checkpoint.data.context_id)">{{ checkpoint.data.checkpoint_index }}
+                  </span>
+              </td>
+              <td>{{ checkpoint.data.context_id }}</td>
+              <td>{{ checkpoint.data.checkpoint }}</td>
+              <td><span
+                [ngClass]="{'passed': checkpoint.data.result === 'PASSED', 'failed': checkpoint.data.result === 'FAILED' }">{{ checkpoint.data.result }}</span>
+              </td>
+              <td>{{ checkpoint.data.expected }}</td>
+              <td>{{ checkpoint.data.actual }}</td>
+
+            </ng-container>
+
           </tr>
         </table>
       </div>
@@ -183,7 +202,7 @@
                               <small>{{ seriesElement.relative_epoch_time | number: '1.3-3' }}</small>
                             </td>
                             <td>
-                              <pre>{{ seriesElement.data?.log }}</pre>
+                              <pre style="margin: 0">{{ seriesElement.data?.log }}</pre>
                             </td>
                           </ng-container>
                         </ng-container>

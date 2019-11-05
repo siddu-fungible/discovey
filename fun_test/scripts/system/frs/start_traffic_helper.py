@@ -85,29 +85,9 @@ def rcnvme(come_handle,
     return result
 
 
-def fio(come_handle, f1=0, num_jobs=8, run_time=80, iodepth=16):
-    result = False
-    try:
-        cmd = "fio --group_reporting --output-format=json --ioengine=libaio --filename=/dev/nvme{f1}n1" \
-              " --time_based --output-format=json --rw=randread --name=fio_ec_default --prio=0" \
-              " --numjobs={num_jobs} --direct=1 --cpus_allowed=0-7 --bs=4k --runtime={run_time} --iodepth={iodepth}" \
-              " --size=100%".format(f1=f1, num_jobs=num_jobs, run_time=run_time, iodepth=iodepth)
-        come_handle.enter_sudo()
-        come_handle.start_bg_process(cmd, output_file="/tmp/f1_{}_fio_nj{}_io{}_run{}_logs.txt"
-                                     .format(f1, num_jobs, iodepth, run_time))
-        come_handle.exit_sudo()
-        result = True
-
-    except Exception as ex:
-        fun_test.critical(ex)
-    return result
-
 def le_firewall(run_time, new_image, just_kill=False):
     global vm_info
-    if new_image:
-        run_time += 400
-    else:
-        run_time += 200
+    run_time += 400
     vm_info = {}
 
     for vm_number in range(2):
@@ -131,10 +111,9 @@ def le_firewall(run_time, new_image, just_kill=False):
             tmp_run_time = 30
             cmd = '''python run_nu_transit_only.py --inputs '{"speed":"SPEED_100G", "run_time":%s, "initiate":true}' ''' % tmp_run_time
             initiate_or_run_le_firewall(cmd, vm_details)
-            fun_test.sleep("to check if le -firewall has started ono vm: {}".format(vm), seconds=10)
+            fun_test.sleep("to check if le -firewall has started on vm: {}".format(vm), seconds=10)
             running = check_if_le_firewall_is_running(vm_details)
-            if running:
-                fun_test.test_assert(running, "Le initiate started on the VM: {}".format(vm))
+            fun_test.test_assert(running, "Le initiate started on the VM: {}".format(vm))
     if new_image:
         pid_info = {}
         for vm, vm_details in vm_info.iteritems():
@@ -152,7 +131,7 @@ def le_firewall(run_time, new_image, just_kill=False):
         if running:
             fun_test.test_assert(running, "Le started on VM: {}".format(vm))
 
-    fun_test.sleep("For Le-firewall traffic to start", seconds=300)
+    fun_test.sleep("For Le-firewall traffic to start", seconds=200)
 
 
 def kill_le_firewall(vm_details):
@@ -171,13 +150,13 @@ def kill_le_firewall(vm_details):
 
 
 def initiate_or_run_le_firewall(cmd, vm_details):
-    vm_details["handle"].enter_sudo()
+    # vm_details["handle"].enter_sudo()
     vm_details["handle"].command('export WORKSPACE="{}"'.format(vm_details["WORKSPACE"]))
     vm_details["handle"].command('export PYTHONPATH="{}"'.format(vm_details["PYTHONPATH"]))
     vm_details["handle"].command("cd {}".format(vm_details["SCRIPT_PATH"]))
     vm_details["handle"].start_bg_process(cmd)
     vm_details["handle"].command("ps -ef | grep python")
-    vm_details["handle"].exit_sudo()
+    # vm_details["handle"].exit_sudo()
 
 
     # vm_details["handle"].destroy()
@@ -197,12 +176,15 @@ def poll_untill_le_stops(vm_details):
             fun_test.log("Remaining time: {}".format(timer.remaining_time()))
             fun_test.sleep("Before next check", seconds=30)
         else:
+            if timer.elapsed_time() < 100:
+                fun_test.test_assert(False, "Le firewall initiate on vm: {}".format(vm_details["name"]))
             fun_test.log("Le initiated successfully, time taken: {}".format(timer.elapsed_time()))
             break
 
 
 def reset_the_status(vm_detail):
     vm_detail["handle"].command("cd")
+
 
 if __name__ == "__main__":
     le_firewall(60, "")

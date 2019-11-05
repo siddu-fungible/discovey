@@ -82,7 +82,7 @@ class ECVolumeLevelScript(FunTestScript):
             self.bootargs = Fs.DEFAULT_BOOT_ARGS
             self.disable_f1_index = None
             self.f1_in_use = 0
-            self.syslog_level = 2
+            self.syslog = "default"
             self.command_timeout = 5
             self.reboot_timeout = 600
         else:
@@ -116,8 +116,8 @@ class ECVolumeLevelScript(FunTestScript):
             self.update_workspace = job_inputs["update_workspace"]
         if "update_deploy_script" in job_inputs:
             self.update_deploy_script = job_inputs["update_deploy_script"]
-        if "syslog_level" in job_inputs:
-            self.syslog_level = job_inputs["syslog_level"]
+        if "syslog" in job_inputs:
+            self.syslog = job_inputs["syslog"]
         if "num_f1s" in job_inputs:
             self.num_f1s = job_inputs["num_f1s"]
         if "disable_wu_watchdog" in job_inputs:
@@ -315,7 +315,7 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.shared_variables["host_ips"] = self.host_ips
         fun_test.shared_variables["num_f1s"] = self.num_f1s
         fun_test.shared_variables["num_duts"] = self.num_duts
-        fun_test.shared_variables["syslog_level"] = self.syslog_level
+        fun_test.shared_variables["syslog"] = self.syslog
         fun_test.shared_variables["db_log_time"] = self.db_log_time
         fun_test.shared_variables["host_info"] = self.host_info
 
@@ -434,6 +434,9 @@ class ECVolumeLevelTestcase(FunTestCase):
 
         testcase = self.__class__.__name__
 
+        self.testbed_config = fun_test.shared_variables["testbed_config"]
+        self.syslog = fun_test.shared_variables["syslog"]
+
         # Start of benchmarking json file parsing and initializing various variables to run this testcase
         benchmark_parsing = True
         benchmark_file = ""
@@ -458,8 +461,6 @@ class ECVolumeLevelTestcase(FunTestCase):
             self.num_ssd = 1
         # End of benchmarking json file parsing
 
-        self.testbed_config = fun_test.shared_variables["testbed_config"]
-        self.syslog_level = fun_test.shared_variables["syslog_level"]
         num_ssd = self.num_ssd
         fun_test.shared_variables["num_ssd"] = num_ssd
         fun_test.shared_variables["attach_transport"] = self.attach_transport
@@ -697,15 +698,18 @@ class ECVolumeLevelTestcase(FunTestCase):
                     pcap_stopped[host_name] = True
 
             # Setting the syslog level
-            for index, sc_obj in enumerate(self.sc_obj):
-                command_result = sc_obj.poke(props_tree=["params/syslog/level", self.syslog_level], legacy=False,
-                                             command_duration=self.command_timeout)
-                fun_test.test_assert(command_result["status"],
-                                     "Setting syslog level to {} in DUT {}".format(self.syslog_level, index))
-                command_result = sc_obj.peek(props_tree="params/syslog/level", legacy=False,
-                                             command_duration=self.command_timeout)
-                fun_test.test_assert_expected(expected=self.syslog_level, actual=command_result["data"],
-                                              message="Checking syslog level in DUT {}".format(index))
+            if self.syslog != "default":
+                for index, sc_obj in enumerate(self.sc_obj):
+                    command_result = sc_obj.poke(props_tree=["params/syslog/level", self.syslog], legacy=False,
+                                                 command_duration=self.command_timeout)
+                    fun_test.test_assert(command_result["status"],
+                                         "Setting syslog level to {} in DUT {}".format(self.syslog, index))
+                    command_result = sc_obj.peek(props_tree="params/syslog/level", legacy=False,
+                                                 command_duration=self.command_timeout)
+                    fun_test.test_assert_expected(expected=self.syslog, actual=command_result["data"],
+                                                  message="Checking syslog level in DUT {}".format(index))
+            else:
+                fun_test.log("Default syslog level is requested...So not going to modify the syslog settings")
 
             # Executing the FIO command to fill the volume to it's capacity
             if not fun_test.shared_variables["ec"]["warmup_io_completed"] and self.warm_up_traffic:

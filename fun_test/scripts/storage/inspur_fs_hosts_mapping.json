@@ -1,5 +1,5 @@
 {
-  "fs-41": {
+  "fs-116": {
     "workarounds": {
       "enable_funcp": true
     },
@@ -465,14 +465,14 @@
       "mktg-server-14"
     ]
   },
-  "fs-56": {
+  "fs-117": {
     "workarounds": {
       "enable_funcp": true
     },
     "dut_info": {
       "0": {
         "type": "DUT_TYPE_FSU",
-        "dut": "fs-56",
+        "dut": "fs-117",
         "bond_interface_info": {
           "0": {
             "0": {
@@ -524,21 +524,21 @@
               "type": "INTERFACE_TYPE_ETHERNET",
               "switch_info": {
                 "name": "qfx-1",
-                "port": "et-0/0/27"
+                "port": "et-0/0/24"
               }
             },
             "8": {
               "type": "INTERFACE_TYPE_ETHERNET",
               "switch_info": {
                 "name": "qfx-1",
-                "port": "et-0/0/24"
+                "port": "et-0/0/25"
               }
             },
             "12": {
               "type": "INTERFACE_TYPE_ETHERNET",
               "switch_info": {
                 "name": "qfx-1",
-                "port": "et-0/0/25"
+                "port": "et-0/0/27"
               }
             }
           },
@@ -576,7 +576,7 @@
       }
     },
     "host_info": [
-      "mktg-server-14"
+      "mktg-server-11"
     ]
   },
   "fs-inspur": {
@@ -586,7 +586,7 @@
     "dut_info": {
       "0": {
         "type": "DUT_TYPE_FSU",
-        "dut": "fs-41",
+        "dut": "fs-116",
         "bond_interface_info": {
           "0": {
             "0": {
@@ -1002,7 +1002,7 @@
       },
       "4": {
         "type": "DUT_TYPE_FSU",
-        "dut": "fs-56",
+        "dut": "fs-117",
         "bond_interface_info": {
           "0": {
             "0": {

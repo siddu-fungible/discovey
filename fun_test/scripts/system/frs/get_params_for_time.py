@@ -55,10 +55,10 @@ def get(time, crypto_per=100, zip_per=100, rcnvme_per=70, fio_per=100, specific_
                 "70": {"qdepth": 12, "nthreads": 12, "duration": rcnvme_run_time},
             },
             "fio": {
-                "10": {"num_jobs": 8, "iodepth": 1, "run_time": fio_run_time},
-                "35": {"num_jobs": 8, "iodepth": 4, "run_time": fio_run_time},
-                "65": {"num_jobs": 8, "iodepth": 8, "run_time": fio_run_time},
-                "100": {"num_jobs": 8, "iodepth": 16, "run_time": fio_run_time}
+                "10": {"numjobs": 8, "iodepth": 1, "runtime": fio_run_time},
+                "35": {"numjobs": 8, "iodepth": 4, "runtime": fio_run_time},
+                "65": {"numjobs": 8, "iodepth": 8, "runtime": fio_run_time},
+                "100": {"numjobs": 8, "iodepth": 16, "runtime": fio_run_time}
             }
         }
         result = {}

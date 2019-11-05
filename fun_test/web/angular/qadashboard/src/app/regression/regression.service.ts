@@ -9,6 +9,8 @@ import {CommonService} from "../services/common/common.service";
   providedIn: 'root'
 })
 export class RegressionService implements OnInit{
+  CONSOLE_LOG_EXTENSION: string = ".logs.txt";  //TIED to scheduler_helper.py  TODO
+  HTML_LOG_EXTENSION: string = ".html";         //TIED to scheduler_helper.py  TODO
   stateStringMap = { "-200": "UNKNOWN",  // TODO: fetch from the back-end
                    "-100": "ERROR",
                    "-20": "KILLED",
@@ -292,4 +294,27 @@ getPrettyLocalizeTime(t) {
     let url = `/api/v1/regression/scripts`
   }
 
+
+  _getFlatPath(suiteExecutionId, path, logPrefix) {
+    let httpPath = "/static/logs/s_" + suiteExecutionId;
+    let parts = path.split("/");
+    let flat = path;
+    let numParts = parts.length;
+    if (numParts > 2) {
+      flat = parts[numParts - 2] + "_" + parts[numParts - 1];
+    }
+    let s = "";
+    if (logPrefix !== "") {
+      s = logPrefix + "_"
+    }
+    return httpPath + "/" + s + flat.replace(/^\//g, '');
+  }
+
+  getHtmlLogPath(suiteExecutionId, path, logPrefix) {
+    window.open(this._getFlatPath(suiteExecutionId, path, logPrefix) + this.HTML_LOG_EXTENSION);
+  }
+
+  getConsoleLogPath(suiteExecutionId, path, logPrefix) {
+    window.open(this._getFlatPath(suiteExecutionId, path, logPrefix) + this.CONSOLE_LOG_EXTENSION);
+  }
 }

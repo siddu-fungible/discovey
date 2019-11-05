@@ -115,11 +115,12 @@ class BringupSetup(FunTestCase):
         else:
             deploy_setup = True
             fun_test.shared_variables["deploy_setup"] = deploy_setup
+        # Set test_speed to 1 for using single pair of hosts which tests 100G perf
         if "test_speed" in job_inputs:
             roce_speed = job_inputs["test_speed"]
             fun_test.shared_variables["test_speed"] = roce_speed
         else:
-            roce_speed = "all"
+            roce_speed = 0  # Test based on host count
             fun_test.shared_variables["test_speed"] = roce_speed
         if "enable_fcp" in job_inputs:
             enable_fcp = job_inputs["enable_fcp"]
@@ -182,6 +183,8 @@ class BringupSetup(FunTestCase):
             come_obj.sudo_command("iptables -F")
             come_obj.sudo_command("ip6tables -F")
             come_obj.sudo_command("dmesg -c > /dev/null")
+            if "fs-45" in fs_name:
+                come_obj.command("/home/fun/mks/restart_docker_service.sh")
 
             fun_test.log("Getting host details")
             host_dict = {"f1_0": [], "f1_1": []}
@@ -334,6 +337,11 @@ class NicEmulation(FunTestCase):
             for host in ping_dict:
                 test_host_pings(host=host, ips=ping_dict[host], strict=False)
 
+            # Clear dmesg on hosts before starting test
+            for objs in host_objs:
+                for handle in host_objs[objs]:
+                    handle.sudo_command("dmesg -c > /dev/null")
+
         # # Update RDMA Core & perftest on hosts
         # bg_proc_id = {}
         # for obj in host_objs:
@@ -426,13 +434,17 @@ class BwTest(FunTestCase):
         f11_hosts = fun_test.shared_variables["f11_hosts"]
         qp_list = fun_test.shared_variables["qp_list"]
         come_obj = fun_test.shared_variables["come_obj"]
+        roce_speed = fun_test.shared_variables["test_speed"]
         kill_time = 140
         test_case_failure_time = 20
         wait_duration = 5
         test_duration = 60
 
         # Using hosts based on minimum host length
-        total_link_bw = min(fun_test.shared_variables["host_len_f10"], fun_test.shared_variables["host_len_f11"])
+        if not roce_speed:
+            total_link_bw = min(fun_test.shared_variables["host_len_f10"], fun_test.shared_variables["host_len_f11"])
+        else:
+            total_link_bw = 1
         if total_link_bw > 1:
             link_capacity = "200G"
         else:
@@ -529,7 +541,7 @@ class BwTest(FunTestCase):
                 total_values = len(parsed_result)
                 for results in parsed_result:
                     size_bandwidth = float(results[0])
-                    iterations = float(results[1])
+                    iterations = results[1]
                     bw_peak_gbps += float(results[2])
                     avg_bandwidth += float(results[3])
                     msg_rate += float(results[4])
@@ -581,11 +593,16 @@ class LatencyTest(FunTestCase):
         f10_hosts = fun_test.shared_variables["f10_hosts"]
         f11_hosts = fun_test.shared_variables["f11_hosts"]
         qp_list = fun_test.shared_variables["qp_list"]
+        roce_speed = fun_test.shared_variables["test_speed"]
         kill_time = 140
         test_case_failure_time = 20
         wait_duration = 5
+
         # Using hosts based on minimum host length
-        total_link_bw = min(fun_test.shared_variables["host_len_f10"], fun_test.shared_variables["host_len_f11"])
+        if not roce_speed:
+            total_link_bw = min(fun_test.shared_variables["host_len_f10"], fun_test.shared_variables["host_len_f11"])
+        else:
+            total_link_bw = 1
         if total_link_bw > 1:
             link_capacity = "200G"
         else:
@@ -684,7 +701,7 @@ class LatencyTest(FunTestCase):
             row_data_list = []
             total_values = len(parsed_result)
             for results in parsed_result:
-                size_latency = float(results[0])
+                size_latency = results[0]
                 iterations = float(results[1])
                 min_latency = float(results[2])
                 max_latency = float(results[3])

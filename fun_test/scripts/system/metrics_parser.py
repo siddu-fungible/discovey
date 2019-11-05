@@ -13,6 +13,7 @@ from web.fun_test.metrics_models import *
 
 app_config = apps.get_app_config(app_label='fun_test')
 
+
 class MetricParser():
     def parse_it(self, logs, metric_id=None, model_name=None, auto_add_to_db=False, date_time=None,
                  platform=FunPlatform.F1):
@@ -1092,16 +1093,16 @@ class MetricParser():
                     self.metrics['output_encode_latency_min'] = value_json.get('min', -1)
                     self.metrics['output_encode_latency_max'] = value_json.get('max', -1)
                     self.metrics['output_encode_latency_avg'] = value_json.get('avg', -1)
-                    self.metrics['output_encode_latency_min_unit'] =\
-                        self.metrics['output_encode_latency_max_unit'] =\
+                    self.metrics['output_encode_latency_min_unit'] = \
+                        self.metrics['output_encode_latency_max_unit'] = \
                         self.metrics['output_encode_latency_avg_unit'] = value_json.get('unit', PerfUnit.UNIT_NSECS)
 
                 elif metric_name == 'perf_ec_encode_throughput':
                     self.metrics['output_encode_throughput_min'] = value_json.get('min', -1)
                     self.metrics['output_encode_throughput_max'] = value_json.get('max', -1)
                     self.metrics['output_encode_throughput_avg'] = value_json.get('avg', -1)
-                    self.metrics['output_encode_throughput_min_unit'] =\
-                        self.metrics['output_encode_throughput_max_unit'] =\
+                    self.metrics['output_encode_throughput_min_unit'] = \
+                        self.metrics['output_encode_throughput_max_unit'] = \
                         self.metrics['output_encode_throughput_avg_unit'] = value_json.get('unit',
                                                                                            PerfUnit.UNIT_GBITS_PER_SEC)
 
@@ -1109,7 +1110,7 @@ class MetricParser():
                     self.metrics['output_recovery_latency_min'] = value_json.get('min', -1)
                     self.metrics['output_recovery_latency_max'] = value_json.get('max', -1)
                     self.metrics['output_recovery_latency_avg'] = value_json.get('avg', -1)
-                    self.metrics['output_recovery_latency_min_unit'] =\
+                    self.metrics['output_recovery_latency_min_unit'] = \
                         self.metrics['output_recovery_latency_max_unit'] = \
                         self.metrics['output_recovery_latency_avg_unit'] = value_json.get('unit', PerfUnit.UNIT_NSECS)
 
@@ -1117,8 +1118,8 @@ class MetricParser():
                     self.metrics['output_recovery_throughput_min'] = value_json.get('min', -1)
                     self.metrics['output_recovery_throughput_max'] = value_json.get('max', -1)
                     self.metrics['output_recovery_throughput_avg'] = value_json.get('avg', -1)
-                    self.metrics['output_recovery_throughput_min_unit'] =\
-                        self.metrics['output_recovery_throughput_max_unit'] =\
+                    self.metrics['output_recovery_throughput_min_unit'] = \
+                        self.metrics['output_recovery_throughput_max_unit'] = \
                         self.metrics['output_recovery_throughput_avg_unit'] = value_json.get('unit',
                                                                                              PerfUnit.UNIT_GBITS_PER_SEC)
 
@@ -1225,97 +1226,92 @@ class MetricParser():
     def boot_time(self, logs, date_time, platform):
         self.initialize()
         self.metrics["input_platform"] = platform
-        reset_cut_done = False
         for line in logs:
-            if "Reset CUT done!" in line:
-                reset_cut_done = True
+            m = re.search(
+                r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Firmware',
+                line)
+            if m:
                 self.match_found = True
+                output_firmware_boot_time = int(m.group("time")) / 1000.0
+                output_firmware_boot_cycles = int(m.group("cycle"))
+                fun_test.log(
+                    "boot type: Firmware, boot time: {}, boot cycles: {}".format(output_firmware_boot_time,
+                                                                                 output_firmware_boot_cycles))
+                self.metrics["output_firmware_boot_time"] = output_firmware_boot_time
+                self.metrics["output_firmware_boot_time_unit"] = "msecs"
 
-            if reset_cut_done:
-                m = re.search(
-                    r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Firmware',
-                    line)
-                if m:
-                    output_firmware_boot_time = int(m.group("time")) / 1000.0
-                    output_firmware_boot_cycles = int(m.group("cycle"))
-                    fun_test.log(
-                        "boot type: Firmware, boot time: {}, boot cycles: {}".format(output_firmware_boot_time,
-                                                                                     output_firmware_boot_cycles))
-                    self.metrics["output_firmware_boot_time"] = output_firmware_boot_time
-                    self.metrics["output_firmware_boot_time_unit"] = "msecs"
+            m = re.search(
+                r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Flash\s+type\s+detection',
+                line)
+            if m:
+                output_flash_type_boot_time = int(m.group("time")) / 1000.0
+                output_flash_type_boot_cycles = int(m.group("cycle"))
+                fun_test.log("boot type: Flash type detection, boot time: {}, boot cycles: {}".format(
+                    output_flash_type_boot_time,
+                    output_flash_type_boot_cycles))
+                self.metrics["output_flash_type_boot_time"] = output_flash_type_boot_time
+                self.metrics["output_flash_type_boot_time_unit"] = "msecs"
 
-                m = re.search(
-                    r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Flash\s+type\s+detection',
-                    line)
-                if m:
-                    output_flash_type_boot_time = int(m.group("time")) / 1000.0
-                    output_flash_type_boot_cycles = int(m.group("cycle"))
-                    fun_test.log("boot type: Flash type detection, boot time: {}, boot cycles: {}".format(
-                        output_flash_type_boot_time,
-                        output_flash_type_boot_cycles))
-                    self.metrics["output_flash_type_boot_time"] = output_flash_type_boot_time
-                    self.metrics["output_flash_type_boot_time_unit"] = "msecs"
+            m = re.search(
+                r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+EEPROM\s+Loading',
+                line)
+            if m:
+                output_eeprom_boot_time = int(m.group("time")) / 1000.0
+                output_eeprom_boot_cycles = int(m.group("cycle"))
+                fun_test.log(
+                    "boot type: EEPROM Loading, boot time: {}, boot cycles: {}".format(output_eeprom_boot_time,
+                                                                                       output_eeprom_boot_cycles))
+                self.metrics["output_eeprom_boot_time"] = output_eeprom_boot_time
+                self.metrics["output_eeprom_boot_time_unit"] = "msecs"
 
-                m = re.search(
-                    r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+EEPROM\s+Loading',
-                    line)
-                if m:
-                    output_eeprom_boot_time = int(m.group("time")) / 1000.0
-                    output_eeprom_boot_cycles = int(m.group("cycle"))
-                    fun_test.log(
-                        "boot type: EEPROM Loading, boot time: {}, boot cycles: {}".format(output_eeprom_boot_time,
-                                                                                           output_eeprom_boot_cycles))
-                    self.metrics["output_eeprom_boot_time"] = output_eeprom_boot_time
-                    self.metrics["output_eeprom_boot_time_unit"] = "msecs"
+            m = re.search(
+                r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+SBUS\s+Loading',
+                line)
+            if m:
+                output_sbus_boot_time = int(m.group("time")) / 1000.0
+                output_sbus_boot_cycles = int(m.group("cycle"))
+                fun_test.log(
+                    "boot type: SBUS Loading, boot time: {}, boot cycles: {}".format(output_sbus_boot_time,
+                                                                                     output_sbus_boot_cycles))
+                self.metrics["output_sbus_boot_time"] = output_sbus_boot_time
+                self.metrics["output_sbus_boot_time_unit"] = "msecs"
 
-                m = re.search(
-                    r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+SBUS\s+Loading',
-                    line)
-                if m:
-                    output_sbus_boot_time = int(m.group("time")) / 1000.0
-                    output_sbus_boot_cycles = int(m.group("cycle"))
-                    fun_test.log(
-                        "boot type: SBUS Loading, boot time: {}, boot cycles: {}".format(output_sbus_boot_time,
-                                                                                         output_sbus_boot_cycles))
-                    self.metrics["output_sbus_boot_time"] = output_sbus_boot_time
-                    self.metrics["output_sbus_boot_time_unit"] = "msecs"
+            m = re.search(
+                r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Host\s+BOOT',
+                line)
+            if m:
+                output_host_boot_time = int(m.group("time")) / 1000.0
+                output_host_boot_cycles = int(m.group("cycle"))
+                fun_test.log(
+                    "boot type: Host BOOT, boot time: {}, boot cycles: {}".format(output_host_boot_time,
+                                                                                  output_host_boot_cycles))
+                self.metrics["output_host_boot_time"] = output_host_boot_time
+                self.metrics["output_host_boot_time_unit"] = "msecs"
 
-                m = re.search(
-                    r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Host\s+BOOT',
-                    line)
-                if m:
-                    output_host_boot_time = int(m.group("time")) / 1000.0
-                    output_host_boot_cycles = int(m.group("cycle"))
-                    fun_test.log(
-                        "boot type: Host BOOT, boot time: {}, boot cycles: {}".format(output_host_boot_time,
-                                                                                      output_host_boot_cycles))
-                    self.metrics["output_host_boot_time"] = output_host_boot_time
-                    self.metrics["output_host_boot_time_unit"] = "msecs"
+            m = re.search(
+                r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Main\s+Loop',
+                line)
+            if m:
+                output_main_loop_boot_time = int(m.group("time")) / 1000.0
+                output_main_loop_boot_cycles = int(m.group("cycle"))
+                fun_test.log(
+                    "boot type: Main Loop, boot time: {}, boot cycles: {}".format(output_main_loop_boot_time,
+                                                                                  output_main_loop_boot_cycles))
+                self.metrics["output_main_loop_boot_time"] = output_main_loop_boot_time
+                self.metrics["output_main_loop_boot_time_unit"] = "msecs"
 
-                m = re.search(
-                    r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Main\s+Loop',
-                    line)
-                if m:
-                    output_main_loop_boot_time = int(m.group("time")) / 1000.0
-                    output_main_loop_boot_cycles = int(m.group("cycle"))
-                    fun_test.log(
-                        "boot type: Main Loop, boot time: {}, boot cycles: {}".format(output_main_loop_boot_time,
-                                                                                      output_main_loop_boot_cycles))
-                    self.metrics["output_main_loop_boot_time"] = output_main_loop_boot_time
-                    self.metrics["output_main_loop_boot_time_unit"] = "msecs"
-
-                m = re.search(
-                    r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Boot\s+success',
-                    line)
-                if m:
-                    output_boot_success_boot_time = int(m.group("time")) / 1000.0
-                    output_boot_success_boot_cycles = int(m.group("cycle"))
-                    fun_test.log(
-                        "boot type: Boot success, boot time: {}, boot cycles: {}".format(
-                            output_boot_success_boot_time,
-                            output_boot_success_boot_cycles))
-                    self.metrics["output_boot_success_boot_time"] = output_boot_success_boot_time
-                    self.metrics["output_boot_success_boot_time_unit"] = "msecs"
+            m = re.search(
+                r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Boot\s+success',
+                line)
+            if m:
+                output_boot_success_boot_time = int(m.group("time")) / 1000.0
+                output_boot_success_boot_cycles = int(m.group("cycle"))
+                fun_test.log(
+                    "boot type: Boot success, boot time: {}, boot cycles: {}".format(
+                        output_boot_success_boot_time,
+                        output_boot_success_boot_cycles))
+                self.metrics["output_boot_success_boot_time"] = output_boot_success_boot_time
+                self.metrics["output_boot_success_boot_time_unit"] = "msecs"
 
             m = re.search(
                 r'\[(?P<timestamp>.*)\s+\S+\]\s+\[\S+\]\s+all\s+VPs\s+online,\s+sending\s+bootstrap\s+WU',
@@ -1326,7 +1322,8 @@ class MetricParser():
                 fun_test.log(
                     "All VPs online: {}".format(self.metrics["output_all_vps_online"]))
             m = re.search(
-                r'\[(?P<timestamp>.*)\s+\S+\]\s+\[\S+\]\s+Parsing\s+config\s+took\s+(?P<parsing_time>\d+)(?P<parsing_unit>\S+)',
+                r'\[(?P<timestamp>.*)\s+\S+\]\s+\[\S+\]\s+Parsing\s+config\s+took\s+(?P<parsing_time>\S+)('
+                r'?P<parsing_unit>msecs)',
                 line)
             if m:
                 self.metrics["output_parsing_config_end"] = float(m.group("timestamp"))
@@ -1401,6 +1398,7 @@ class MetricParser():
         fun_test.log("Result :{}".format(self.result))
         return self.result
 
+
     def set_crypto_metrics_dict(self, crypto_json, input_app, date_time):
         pkt_size_json = crypto_json["pktsize"]
         ops_json = crypto_json["ops"] if "ops" in crypto_json else None
@@ -1419,6 +1417,7 @@ class MetricParser():
         self.metrics["output_throughput_unit"] = bandwidth_json["units"]
         d = self.metrics_to_dict(metrics=self.metrics, result=self.status, date_time=date_time)
         self.result["data"].append(d)
+
 
     def teramark_crypto(self, logs, date_time, platform, model_name):
         self.initialize()
@@ -1451,6 +1450,7 @@ class MetricParser():
         self.result["status"] = self.status == RESULTS["PASSED"]
         fun_test.log("Result :{}".format(self.result))
         return self.result
+
 
     def teramark_jpeg(self, logs, date_time, platform):
         self.initialize()
@@ -1525,6 +1525,7 @@ class MetricParser():
         fun_test.log("Result :{}".format(self.result, indent=4))
         return self.result
 
+
     def teramark_nu_transit(self, logs, date_time, platform, model_name):
         self.initialize()
         self.metrics["input_platform"] = platform
@@ -1582,6 +1583,7 @@ class MetricParser():
             fun_test.log("Result :{}".format(self.result))
             return self.result
 
+
     def teramark_zip(self, logs, date_time, platform):
         metrics = collections.OrderedDict()
         metrics['input_platform'] = platform
@@ -1621,5 +1623,3 @@ class MetricParser():
                         MetricHelper(model=eval("TeraMarkZipDeflatePerformance")).add_entry(**d)
                     else:
                         MetricHelper(model=eval("TeraMarkZipLzmaPerformance")).add_entry(**d)
-
-

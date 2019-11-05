@@ -1,6 +1,8 @@
 
 from lib.system.fun_test import *
 
+i = 0
+j = 0
 
 class MyScript(FunTestScript):
     def describe(self):

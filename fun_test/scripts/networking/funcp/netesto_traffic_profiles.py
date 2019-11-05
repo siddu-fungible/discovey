@@ -1,3 +1,26 @@
+#
+#
+# total_flows - List of flows in the profile
+# total_duration - Total duration of netesto test
+# Flow arguments:
+# comment - Description of flow
+# test - netperf stream type TCP_RR, TCP_STREAM, TCP_MAERTS etc. More than one stream
+#        can be specified seperated by commas
+# clients - netperf clients mgmt ip
+# servers - netperf server mgmt ip
+# servers_t - netperf server data ip
+# duration - flow duration
+# delay - flow start delay ( from start of test)
+# instances - number of netperf instances
+# rr_size - request reply size
+# burst  - netperf traffic burst size
+# interval - netperf burst interval
+# tos      - netperf tos
+# delay_between_instances - start delay between each instance in the particular flow
+# repeat_interval - interval after which the same flow is repeated. The same flow will be started
+#                   t = delay + repeat_interval
+# repeat_max - Number of times the flow has to be repeated
+
 
 traffic_profile = {}
 traffic_profile['multi_f1_profile'] = {
@@ -81,7 +104,7 @@ traffic_profile['workload_mix'] = {
                "instances" : "4",
                "rr_size"   : "1M,1",
                "delay_between_instances" : "1",
-               "repeat_flow" : "15",
+               "repeat_interval" : "15",
                "repeat_max" : "4",
            },
            "flow3" : {
@@ -94,7 +117,58 @@ traffic_profile['workload_mix'] = {
                "delay"    : "45",
                "instances" : "2",
                "rr_size"   : "800B,1",
-               "repeat_flow": "30",
+               "repeat_interval": "30",
                "repeat_max": "2",
            }
+        }
+
+traffic_profile['rr_incast'] = {
+           "total_flows" : "flow1 flow2",
+           "total_duration" : "80",
+           "netesto_controller" : "mpoc-server01",
+           "flow1" : {
+               "comment" : "5 clients to 1 server incast",
+               "test" : "TCP_RR",
+               "clients" : "mpoc-server44,mpoc-server40,mpoc-server34,mpoc-server45",
+               "servers" : "mpoc-server47",
+               "servers_t" : "mpoc-server47t",
+               "duration" : "60",
+               "delay"    : "10",
+               "instances" : "1",
+               "rr_size"   : "1M,1",
+            },
+           "flow2" : {
+               "comment" : "RR test every 5 seconds",
+               "test" : "TCP_RR",
+               "clients" : "mpoc-server30",
+               "servers" : "mpoc-server47",
+               "servers_t" : "mpoc-server47t",
+               "duration" : "5",
+               "delay"    : "0",
+               "instances" : "1",
+               "rr_size"   : "1B,4000B",
+               "repeat_interval" : "10",
+               "repeat_max" : "5",
+           },
+
+        }
+
+
+traffic_profile['incast_basic'] = {
+           "total_flows" : "flow1",
+           "total_duration" : "60",
+           "netesto_controller" : "mpoc-server01",
+           "flow1" : {
+               "comment" : "5 clients to 1 server incast",
+               "test" : "TCP_RR",
+               "clients" : "mpoc-server30,mpoc-server44,mpoc-server40,mpoc-server34,mpoc-server45",
+               "servers" : "mpoc-server47",
+               "servers_t" : "mpoc-server47t",
+               "duration" : "60",
+               "delay"    : "0",
+               "instances" : "1",
+               "rr_size"   : "1M,1",
+            },
+
+
         }
