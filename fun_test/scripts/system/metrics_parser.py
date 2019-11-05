@@ -1322,7 +1322,8 @@ class MetricParser():
                 fun_test.log(
                     "All VPs online: {}".format(self.metrics["output_all_vps_online"]))
             m = re.search(
-                r'\[(?P<timestamp>.*)\s+\S+\]\s+\[\S+\]\s+Parsing\s+config\s+took\s+(?P<parsing_time>\d+)(?P<parsing_unit>\S+)',
+                r'\[(?P<timestamp>.*)\s+\S+\]\s+\[\S+\]\s+Parsing\s+config\s+took\s+(?P<parsing_time>\S+)('
+                r'?P<parsing_unit>msecs)',
                 line)
             if m:
                 self.metrics["output_parsing_config_end"] = float(m.group("timestamp"))
