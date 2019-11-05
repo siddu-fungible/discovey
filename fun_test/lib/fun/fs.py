@@ -657,7 +657,7 @@ class Bmc(Linux):
         fun_test.simple_assert(expression=len(serial_proxy_ids) == 2,
                                message="2 serial proxies are alive",
                                context=self.context)
-        fun_test.sleep("Wait for serial proxies to be operational", seconds=5)
+        fun_test.sleep("Wait for serial proxies to be operational", seconds=15)
         '''
         uart_listener_script = FUN_TEST_LIB_UTILITIES_DIR + "/{}".format(self.UART_LOG_LISTENER_FILE)
 
