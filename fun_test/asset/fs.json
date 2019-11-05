@@ -972,6 +972,7 @@
       "mgmt_ip": "fs118-come"
     },
     "name": "fs-118",
+    "revision": "2",
     "fpga": {
       "mgmt_ssh_password": "root",
       "mgmt_ssh_username": "root",
