@@ -3185,7 +3185,6 @@ class FunOnDemandTotalTimePerformance(FunModel):
     input_platform = models.TextField(default=FunPlatform.F1)
     input_version = models.CharField(verbose_name="Version", max_length=50, default="")
 
-    input_job_name = models.TextField(default="")
     input_jenkins_build_number = models.IntegerField(verbose_name="Jenkins build number", default=-1)
     input_jenkins_status = models.TextField(default=RESULTS["PASSED"])
     input_lsf_job_id = models.IntegerField(verbose_name="Lsf job id", default=-1)
