@@ -275,7 +275,7 @@ getPrettyLocalizeTime(t) {
     }))
   }
 
-  testCaseTimeSeriesCheckpoints(suiteExecutionId, testCaseExecutionId?: null) {
+  testCaseTimeSeriesCheckpoints(suiteExecutionId, testCaseExecutionId: number = null) {
     let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}`;
     url += `?type=80`;
     if (testCaseExecutionId) {
@@ -285,7 +285,22 @@ getPrettyLocalizeTime(t) {
     return this.apiService.get(url).pipe(switchMap(response => {
       return of(response.data);
     }), catchError (error => {
-      this.loggerService.error("Unable fetch time-series logs");
+      this.loggerService.error("Unable to fetch time-series logs");
+      return throwError(error);
+    }))
+  }
+
+  artifacts(suiteExecutionId, testCaseExecutionId: number = null) {
+    let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}`;
+    let params = [];
+    params.push(["type", 200]);
+    if (testCaseExecutionId) {
+      params.push(["te", testCaseExecutionId]);
+    }
+    return this.apiService.get(url).pipe(switchMap(response => {
+      return of(response.data);
+    }), catchError(error => {
+      this.loggerService.error("Unable to fetch time-series artifacts");
       return throwError(error);
     }))
   }
