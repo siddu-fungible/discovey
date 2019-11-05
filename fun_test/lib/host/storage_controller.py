@@ -233,6 +233,16 @@ class StorageController(NetworkController, DpcshClient):
             fun_test.log("Configuring Compression enabled EC volume with effort: {}, filter: {}".format(
                 ec_info['zip_effort'], ec_info['zip_filter']))
 
+        # Check if encryption has to be enabled for the volume
+        if "encrypt" in ec_info.keys() and ec_info['encrypt']:
+            encryption_enabled = True
+            ec_info['use_lsv'] = True
+            # As there are no default values for key_size and xtweak_size, leaving them as is
+            #ec_info["zip_effort"] = ec_info['zip_effort'] if 'zip_effort' in ec_info.keys() else "ZIP_EFFORT_AUTO"
+            #ec_info['zip_filter'] = ec_info['zip_filter'] if 'zip_filter' in ec_info.keys() else "FILTER_TYPE_DEFLATE"
+            fun_test.log("Configuring encryption enabled EC volume with key_size: {}, xtweak_size: {}".format(
+                ec_info['key_size'], ec_info['xtweak_size']))
+
         ec_info["uuids"] = {}
         ec_info["volume_capacity"] = {}
         ec_info["attach_uuid"] = {}
@@ -330,6 +340,20 @@ class StorageController(NetworkController, DpcshClient):
                                                         zip_effort=ec_info['zip_effort'],
                                                         zip_filter=ec_info['zip_filter'],
                                                         group_id=num+3,
+                                                        command_duration=command_timeout)
+                elif encryption_enabled:
+                    command_result = self.create_volume(type=ec_info["volume_types"]["lsv"],
+                                                        capacity=ec_info["volume_capacity"][num]["lsv"],
+                                                        block_size=ec_info["volume_block"]["lsv"],
+                                                        name="lsv_" + this_uuid[-4:],
+                                                        uuid=this_uuid,
+                                                        group=ec_info["ndata"],
+                                                        jvol_uuid=ec_info["uuids"][num]["jvol"],
+                                                        pvol_id=ec_info["uuids"][num]["ec"],
+                                                        encrypt=ec_info['encrypt'],
+                                                        key_size=ec_info['key_size'],
+                                                        xtweak_size=ec_info['xtweak_size'],
+                                                        group_id=num + 3,
                                                         command_duration=command_timeout)
                 else:
                     command_result = self.create_volume(type=ec_info["volume_types"]["lsv"],
