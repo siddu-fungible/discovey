@@ -947,6 +947,7 @@
       "mgmt_ip": "10.1.105.189"
     },
     "name": "fs-117",
+    "revision": "2",
     "fpga": {
       "mgmt_ssh_password": "root",
       "mgmt_ssh_username": "root",

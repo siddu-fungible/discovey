@@ -182,7 +182,7 @@ class Bmc(Linux):
 
     def __init__(self, disable_f1_index=None,
                  disable_uart_logger=False,
-                 setup_support_files=None,
+                 setup_support_files=True,
                  bundle_upgraded=None,
                  bundle_compatible=None,
                  fs=None,
@@ -634,7 +634,7 @@ class Bmc(Linux):
             self._reset_microcom()
         pyserial_filename = "pyserial-install.tar"
         pyserial_dir = INTEGRATION_DIR + "/tools/platform/bmc/{}".format(pyserial_filename)
-        if self.setup_support_files or True:
+        if self.setup_support_files:
             fun_test.scp(source_file_path=pyserial_dir, target_ip=self.host_ip, target_username=self.ssh_username, target_password=self.ssh_password, target_file_path=self.INSTALL_DIRECTORY)
             fun_test.simple_assert(expression=self.list_files("{}/{}".format(self.INSTALL_DIRECTORY, pyserial_filename)),
                                    message="pyserial copied",
@@ -657,7 +657,7 @@ class Bmc(Linux):
         fun_test.simple_assert(expression=len(serial_proxy_ids) == 2,
                                message="2 serial proxies are alive",
                                context=self.context)
-
+        fun_test.sleep("Wait for serial proxies to be operational", seconds=5)
         '''
         uart_listener_script = FUN_TEST_LIB_UTILITIES_DIR + "/{}".format(self.UART_LOG_LISTENER_FILE)
 
@@ -1530,7 +1530,7 @@ class Fs(object, ToDictMixin):
                  retimer_workaround=None,
                  non_blocking=None,
                  context=None,
-                 setup_bmc_support_files=None,
+                 setup_bmc_support_files=True,
                  apc_info=None,
                  fun_cp_callback=None,
                  skip_funeth_come_power_cycle=None,
@@ -1730,7 +1730,7 @@ class Fs(object, ToDictMixin):
             f1_parameters=None,
             non_blocking=None,
             context=None,
-            setup_bmc_support_files=None,
+            setup_bmc_support_files=True,
             fun_cp_callback=None,
             power_cycle_come=False,
             already_deployed=False,
