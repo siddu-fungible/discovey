@@ -31,8 +31,6 @@ Possible workarounds:
 """
 
 
-
-
 class BootPhases:
     U_BOOT_INIT = "u-boot: init"
     U_BOOT_MICROCOM_STARTED = "u-boot: microcom started"
@@ -67,7 +65,6 @@ class BootPhases:
     FS_BRING_UP_COME_INITIALIZED = "FS_BRING_UP_COME_INITIALIZED"
     FS_BRING_UP_COMPLETE = "FS_BRING_UP_COMPLETE"
     FS_BRING_UP_ERROR = "FS_BRING_UP_ERROR"
-
 
 
 class Fpga(Linux):
@@ -167,6 +164,7 @@ class BmcMaintenanceWorker(Thread):
     def stop(self):
         self.stopped = True
 
+
 class Bmc(Linux):
     # UART_LOG_LISTENER_FILE = "uart_log_listener.py"
     UART_LOG_LISTENER_FILE = "uart_log_listener2.py"
@@ -182,12 +180,12 @@ class Bmc(Linux):
     NUM_F1S = 2
     FUNOS_LOGS_SCRIPT = "/mnt/sdmmc0p1/scripts/funos_logs.sh"
 
-
     def __init__(self, disable_f1_index=None,
                  disable_uart_logger=False,
                  setup_support_files=None,
                  bundle_upgraded=None,
                  bundle_compatible=None,
+                 fs=None,
                  **kwargs):
         super(Bmc, self).__init__(**kwargs)
         self.set_prompt_terminator(r'# $')
@@ -203,7 +201,9 @@ class Bmc(Linux):
         self.hbm_dump_enabled = fun_test.get_job_environment_variable("hbm_dump")
         self.bundle_upgraded = bundle_upgraded
         self.bundle_compatible = bundle_compatible
-
+        self.fs = fs
+        if "fs" in kwargs:
+            self.fs = kwargs.get("fs", None)
 
     def _get_fake_mac(self, index):
         this_ip = socket.gethostbyname(self.host_ip)   #so we can resolve full fqdn/ip-string in dot-decimal
@@ -746,6 +746,12 @@ class Bmc(Linux):
         return artifact_file_name
 
     def cleanup(self):
+        asset_id = "FS"
+        asset_type = AssetType.DUT
+        if self.fs:
+            asset_type = self.fs.get_asset_type()
+            asset_id = self.fs.get_asset_name()
+
         fun_test.sleep(message="Allowing time to generate full report", seconds=30, context=self.context)
         post_processing_error_found = False
         for f1_index in range(self.NUM_F1S):
@@ -767,7 +773,11 @@ class Bmc(Linux):
                 f.seek(0, 0)
                 f.write(self.u_boot_logs[f1_index] + '\n' + content)
             fun_test.add_auxillary_file(description=self._get_context_prefix("F1_{} UART log").format(f1_index),
-                                        filename=artifact_file_name)
+                                        filename=artifact_file_name,
+                                        asset_type=asset_type,
+                                        asset_id=asset_id,
+                                        artifact_category=self.fs.ArtifactCategory.POST_BRING_UP,
+                                        artifact_sub_category=self.fs.ArtifactSubCategory.BMC)
             try:
                 self.post_process_uart_log(f1_index=f1_index, file_name=artifact_file_name)
             except Exception as ex:
@@ -776,7 +786,11 @@ class Bmc(Linux):
 
         if self.context:
             fun_test.add_auxillary_file(description=self._get_context_prefix("bringup"),
-                                        filename=self.context.output_file_path)
+                                        filename=self.context.output_file_path,
+                                        asset_type=asset_type,
+                                        asset_id=asset_id,
+                                        artifact_category=self.fs.ArtifactCategory.BRING_UP,
+                                        artifact_sub_category=self.fs.ArtifactSubCategory.BMC)
 
         try:
             if not self.bundle_compatible:
@@ -789,7 +803,7 @@ class Bmc(Linux):
         for f1_index in range(self.NUM_F1S):
             if self.disable_f1_index is not None and f1_index == self.disable_f1_index:
                 continue
-            fun_test.simple_assert(not post_processing_error_found, "Post-processing failed. Please check for error regex")
+            fun_test.simple_assert(not post_processing_error_found, "Post-processing failed. Please check for error regex", context=self.context)
 
     def post_process_uart_log(self, f1_index, file_name):
         regex_found = None
@@ -918,7 +932,9 @@ class BootupWorker(Thread):
                                              message="Setup nc serial proxy connection",
                                              context=self.context)
                     if fs.tftp_image_path:
-                        if fpga and not fs.bundle_compatible:
+                        if fs.get_bmc()._use_i2c_reset():
+                            fs.get_bmc().reset_f1(f1_index=f1_index)
+                        elif fpga and not fs.bundle_compatible:
                             fpga.reset_f1(f1_index=f1_index)
                         elif fpga and not fs.get_bmc()._use_i2c_reset():
                             fpga.reset_f1(f1_index=f1_index)
@@ -1332,6 +1348,11 @@ class ComE(Linux):
         return s
 
     def cleanup(self):
+        asset_type = "unknown"
+        asset_id = "unknown"
+        if self.fs:
+            asset_type = self.fs.get_asset_type()
+            asset_id = self.fs.get_asset_name()
         try:
             fungible_root = self.command("echo $FUNGIBLE_ROOT")
             fungible_root = fungible_root.strip()
@@ -1352,7 +1373,14 @@ class ComE(Linux):
                                  source_username=self.ssh_username,
                                  source_password=self.ssh_password,
                                  target_file_path=artifact_file_name)
-                    fun_test.add_auxillary_file(description=self._get_context_prefix(base_name), filename=artifact_file_name)
+
+
+                    fun_test.add_auxillary_file(description=self._get_context_prefix(base_name),
+                                                filename=artifact_file_name,
+                                                asset_type=asset_type,
+                                                asset_id=asset_id,
+                                                artifact_category=self.fs.ArtifactCategory.POST_BRING_UP,
+                                                artifact_sub_category=self.fs.ArtifactSubCategory.COME)
 
 
         except Exception as ex:
@@ -1367,7 +1395,12 @@ class ComE(Linux):
                          source_username=self.ssh_username,
                          source_password=self.ssh_password,
                          target_file_path=artifact_file_name)
-            fun_test.add_auxillary_file(description=self._get_context_prefix(base_name), filename=artifact_file_name)
+            fun_test.add_auxillary_file(description=self._get_context_prefix(base_name),
+                                        filename=artifact_file_name,
+                                        asset_type=asset_type,
+                                        asset_id=asset_id,
+                                        artifact_category=self.fs.ArtifactCategory.BRING_UP,
+                                        artifact_sub_category=self.fs.ArtifactSubCategory.COME)
         except Exception as ex:
             fun_test.critical(str(ex))
 
@@ -1384,7 +1417,11 @@ class ComE(Linux):
             artifact_file_name = fun_test.get_test_case_artifact_file_name(self._get_context_prefix("f1_{}_dpc_log.txt".format(f1_index)))
             fun_test.scp(source_file_path=self.get_dpc_log_path(f1_index=f1_index), source_ip=self.host_ip, source_password=self.ssh_password, source_username=self.ssh_username, target_file_path=artifact_file_name)
             fun_test.add_auxillary_file(description=self._get_context_prefix("F1_{} DPC Log").format(f1_index),
-                                        filename=artifact_file_name)
+                                        filename=artifact_file_name,
+                                        asset_type=asset_type,
+                                        asset_id=asset_id,
+                                        artifact_category=self.fs.ArtifactCategory.BRING_UP,
+                                        artifact_sub_category=self.fs.ArtifactSubCategory.COME)
 
 class F1InFs:
     def __init__(self, index, fs, serial_device_path, serial_sbp_device_path):
@@ -1416,6 +1453,16 @@ class F1InFs:
 
 
 class Fs(object, ToDictMixin):
+
+    class ArtifactCategory:
+        BRING_UP = "Bring-up"
+        POST_BRING_UP = "Post bring-up"
+
+    class ArtifactSubCategory:
+        COME = "COME"
+        BMC = "BMC"
+
+
     DEFAULT_BOOT_ARGS = "app=load_mods --dpc-server --dpc-uart --csr-replay --serdesinit --all_100g"
     MIN_U_BOOT_DATE = datetime(year=2019, month=5, day=29)
 
@@ -1752,7 +1799,9 @@ class Fs(object, ToDictMixin):
                                      "Setup nc serial proxy connection")
 
                 self.set_boot_phase(BootPhases.FS_BRING_UP_RESET_F1)
-                if fpga and not self.bundle_compatible:
+                if self.get_bmc()._use_i2c_reset():
+                    self.get_bmc().reset_f1(f1_index=f1_index)
+                elif fpga and not self.bundle_compatible:
                     fpga.reset_f1(f1_index=f1_index)
                 else:
                     bmc = self.get_bmc()
@@ -1879,7 +1928,9 @@ class Fs(object, ToDictMixin):
         fpga = self.get_fpga()
         bmc = self.get_bmc()
         for f1_index, f1 in self.f1s.iteritems():
-            if fpga and not self.bundle_compatible:
+            if bmc._use_i2c_reset():
+                bmc.reset_f1(f1_index=f1_index, keep_low=True)
+            elif fpga and not self.bundle_compatible:
                 fpga.reset_f1(f1_index=f1_index, keep_low=True)
             else:
                 bmc.reset_f1(f1_index=f1_index, keep_low=True)
@@ -1901,7 +1952,8 @@ class Fs(object, ToDictMixin):
                            set_term_settings=True,
                            disable_uart_logger=self.disable_uart_logger,
                            context=self.context,
-                           setup_support_files=self.setup_bmc_support_files)
+                           setup_support_files=self.setup_bmc_support_files,
+                           fs=self)
         if self.bundle_upgraded:
             self.bmc.bundle_upgraded = self.bundle_upgraded
         self.bmc.bundle_compatible = self.bundle_compatible
