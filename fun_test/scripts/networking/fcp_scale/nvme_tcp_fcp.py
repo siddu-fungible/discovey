@@ -13,15 +13,15 @@ from fun_global import PerfUnit, FunPlatform
 
 def add_to_data_base(value_dict):
     unit_dict = {
-        "read_iops_unit": PerfUnit.UNIT_OPS,
-        "read_bw_unit": PerfUnit.UNIT_GBITS_PER_SEC,
-        "read_latency_avg_unit": PerfUnit.UNIT_USECS,
-        "read_latency_50_unit": PerfUnit.UNIT_USECS,
-        "read_latency_90_unit": PerfUnit.UNIT_USECS,
-        "read_latency_95_unit": PerfUnit.UNIT_USECS,
-        "read_latency_99_unit": PerfUnit.UNIT_USECS,
-        "read_latency_9950_unit": PerfUnit.UNIT_USECS,
-        "read_latency_9999_unit": PerfUnit.UNIT_USECS,
+        "iops_unit": PerfUnit.UNIT_OPS,
+        "bw_unit": PerfUnit.UNIT_GBITS_PER_SEC,
+        "latency_avg_unit": PerfUnit.UNIT_USECS,
+        "latency_50_unit": PerfUnit.UNIT_USECS,
+        "latency_90_unit": PerfUnit.UNIT_USECS,
+        "latency_95_unit": PerfUnit.UNIT_USECS,
+        "latency_99_unit": PerfUnit.UNIT_USECS,
+        "latency_9950_unit": PerfUnit.UNIT_USECS,
+        "latency_9999_unit": PerfUnit.UNIT_USECS,
     }
 
     value_dict["date_time"] = get_data_collection_time()
@@ -88,35 +88,12 @@ def get_numa(host_obj):
     return cpu_list
 
 
-class ScriptSetup(FunTestScript):
-    server_key = {}
-
+class BLTVolumePerformanceScript(FunTestScript):
     def describe(self):
-        self.set_test_details(steps="FS details")
-
-    def setup(self):
-        pass
-
-    def cleanup(self):
-        pass
-
-
-class GetSetupDetails(FunTestCase):
-    server_key = {}
-
-    def describe(self):
-        self.set_test_details(id=1,
-                              summary="Bringup FS with control plane",
-                              steps="""
-                              1. BringUP both F1s
-                              2. Bringup FunCP
-                              3. Create MPG Interfaces and assign static IPs
-                              """)
+        self.set_test_details(steps="1. Make sure correct FS system is selected")
 
     def setup(self):
         fun_test.shared_variables["fio"] = {}
-
-    def run(self):
         job_inputs = fun_test.get_job_inputs()
         if not job_inputs:
             job_inputs = {}
@@ -202,10 +179,10 @@ class GetSetupDetails(FunTestCase):
                 fun_test.simple_assert(hosts_dict[hosts]["nvme_device"], "NVMe device on {}".format(hosts))
             hosts_dict[hosts]["cpu_list"] = get_numa(hosts_dict[hosts]["handle"])
             hosts_dict[hosts]["hu_int_name"] = hosts_dict[hosts]["handle"].command(
-                    "ip link ls up | awk '{print $2}' | grep -e '00:f1:1d' -e '00:de:ad' -B 1 | head -1 | tr -d :").strip()
+                "ip link ls up | awk '{print $2}' | grep -e '00:f1:1d' -e '00:de:ad' -B 1 | head -1 | tr -d :").strip()
             hosts_dict[hosts]["hu_int_ip"] = hosts_dict[hosts]["handle"].command(
-                    "ip addr list {} | grep \"inet \" | cut -d\' \' -f6 | cut -d/ -f1".format(
-                        hosts_dict[hosts]["hu_int_name"])).strip()
+                "ip addr list {} | grep \"inet \" | cut -d\' \' -f6 | cut -d/ -f1".format(
+                    hosts_dict[hosts]["hu_int_name"])).strip()
             hosts_dict[hosts]["handle"].disconnect()
 
         fun_test.shared_variables["host_list"] = host_list
@@ -246,12 +223,13 @@ class GetSetupDetails(FunTestCase):
             fun_test.simple_assert(False, "F11 loop-back IP {} is in wrong format".format(f11_storage_loop_ip))
 
         # Parse the json file
-        testcase = self.__class__.__name__
+        # testcase = self.__class__.__name__
+        testcase = "GetSetupDetails"
         testcase_file = fun_test.get_script_name_without_ext() + ".json"
         fun_test.log("Test case file being used: {}".format(testcase_file))
-        fio_test_args = utils.parse_file_to_json(testcase_file)
+        setup_details = utils.parse_file_to_json(testcase_file)
 
-        for k, v in fio_test_args[testcase].iteritems():
+        for k, v in setup_details[testcase].iteritems():
             setattr(self, k, v)
 
         ipcfg_port = self.controller_port
@@ -467,134 +445,18 @@ class GetSetupDetails(FunTestCase):
                 fun_test.sleep("Fio threads started", 15)
                 for x in range(1, len(host_list) + 1):
                     try:
-                            fun_test.log("Joining fio thread {}".format(x))
-                            fun_test.join_thread(fun_test_thread_id=thread_id[x])
-                            fun_test.log("FIO Command Output:")
-                            fun_test.log(fun_test.shared_variables["fio"][x])
-                            fun_test.test_assert(fun_test.shared_variables["fio"][x], "Fio threaded test")
-                            fio_output[x] = {}
-                            fio_output[x] = fun_test.shared_variables["fio"][x]
+                        fun_test.log("Joining fio thread {}".format(x))
+                        fun_test.join_thread(fun_test_thread_id=thread_id[x])
+                        fun_test.log("FIO Command Output:")
+                        fun_test.log(fun_test.shared_variables["fio"][x])
+                        fun_test.test_assert(fun_test.shared_variables["fio"][x], "Fio threaded test")
+                        fio_output[x] = {}
+                        fio_output[x] = fun_test.shared_variables["fio"][x]
                     except Exception as ex:
                         fun_test.critical(str(ex))
                         fun_test.log("FIO Command Output for volume {}:\n {}".format(x, fio_output[x]))
 
         fun_test.sleep("Pre-condition done", 10)
-        # Run read fio test from all hosts
-        wait_time = len(host_list)
-        thread_count = 1
-        thread_id = {}
-        fio_output = {}
-        fio_test = ["read"]
-        host_thread_map = {}
-        for test in fio_test:
-            for hosts in hosts_dict:
-                print "Running {} test on {}".format(test, hosts)
-                host_clone = hosts_dict[hosts]["handle"].clone()
-                temp = hosts_dict[hosts]["handle"].command("hostname")
-                hostname = temp.strip()
-                host_thread_map[thread_count] = hostname
-                thread_id[thread_count] = fun_test.execute_thread_after(time_in_seconds=wait_time,
-                                                                        func=fio_parser,
-                                                                        host_index=thread_count,
-                                                                        arg1=host_clone,
-                                                                        filename=hosts_dict[hosts]["nvme_device"],
-                                                                        rw=test,
-                                                                        name=test + "_" + str(hosts),
-                                                                        cpus_allowed=hosts_dict[hosts]["cpu_list"],
-                                                                        timeout=self.fio_cmd_args["runtime"] * 2,
-                                                                        **self.fio_cmd_args)
-                fun_test.sleep("Fio threadzz", seconds=1)
-                wait_time -= 1
-                thread_count += 1
-            fun_test.sleep("Fio threads started", 10)
-            iops_sum = 0
-            bw_sum = 0
-            for x in range(1, len(host_list) + 1):
-                try:
-                    fun_test.log("Joining fio thread {}".format(x))
-                    fun_test.join_thread(fun_test_thread_id=thread_id[x])
-                    fun_test.log("FIO Command Output:")
-                    fun_test.log(fun_test.shared_variables["fio"][x])
-                    fun_test.test_assert(fun_test.shared_variables["fio"][x], "Fio threaded test")
-                    fio_output[x] = {}
-                    fio_output[x] = fun_test.shared_variables["fio"][x]
-                    iops_sum += fio_output[x]["read"]["iops"]
-                    bw_sum += fio_output[x]["read"]["bw"]
-                except Exception as ex:
-                    fun_test.critical(str(ex))
-                    fun_test.log("FIO Command Output for volume {}:\n {}".format(x, fio_output[x]))
-            for hosts in hosts_dict:
-                hosts_dict[hosts]["handle"].disconnect()
-            print "******************************************************"
-            print "Collective {} test IOP's is {}".format(test, iops_sum)
-            print "******************************************************"
-
-            print fun_test.shared_variables["fio"]
-
-            # Check which host is giving highest latency50 and use that to plot latency
-            fio_latency = fun_test.shared_variables["fio"]
-            max_lat = 0
-            for thread, value in fio_latency.iteritems():
-                if value["read"]["latency50"] > max_lat:
-                    max_lat = value["read"]["latency50"]
-                    host_thread = thread
-                    print "The max is {}".format(max_lat)
-                    print "The host is {}".format(host_thread_map[host_thread])
-
-            print "The final max is {}".format(max_lat)
-            print "The final host is {}".format(host_thread_map[host_thread])
-            read_result_dict = fun_test.shared_variables["fio"][host_thread]["read"]
-            print read_result_dict
-
-            table_data_headers = ["Block_Size", "Volumes" "Read IOPS", "Read bandwidth", "Read latency Avg",
-                                  "Read latency 50", "Read latency 90", "Read latency 95",
-                                  "Read latency 99", "Read latency 99.50", "Read latency 99.99"]
-            table_data_cols = ["read_block_size", "num_vols", "total_read_iops", "total_read_bw", "read_latency_avg",
-                               "read_latency_50", "read_latency_90", "read_latency_95", "read_latency_99",
-                               "read_latency_9950", "read_latency_9999"]
-
-            read_block_size = self.fio_cmd_args["bs"]
-            num_vols = fun_test.shared_variables["num_vols"]
-            total_read_iops = int(round(iops_sum))
-            total_read_bw = bw_sum/125000
-            read_latency_avg = read_result_dict["clatency"]
-            read_latency_50 = read_result_dict["latency50"]
-            read_latency_90 = read_result_dict["latency90"]
-            read_latency_95 = read_result_dict["latency95"]
-            read_latency_99 = read_result_dict["latency99"]
-            read_latency_9950 = read_result_dict["latency9950"]
-            read_latency_9999 = read_result_dict["latency9999"]
-            row_data_list = []
-            table_data_rows = []
-
-            for item in table_data_cols:
-                row_data_list.append(eval(item))
-            table_data_rows.append(row_data_list)
-
-            value_dict = {
-                "test_case": "NVMe/TCP",
-                "volumes": num_vols,
-                "operation": "read",
-                "block_size": read_block_size,
-                "read_iops": total_read_iops,
-                "read_bw": total_read_bw,
-                "read_latency_avg": read_latency_avg,
-                "read_latency_50": read_latency_50,
-                "read_latency_90": read_latency_90,
-                "read_latency_95": read_latency_95,
-                "read_latency_99": read_latency_99,
-                "read_latency_9950": read_latency_9950,
-                "read_latency_9999": read_latency_9999}
-
-            add_to_data_base(value_dict)
-
-            print value_dict
-
-            table_data = {"headers": table_data_headers, "rows": table_data_rows}
-
-        fun_test.add_table(panel_header="NVMe FunTCP FCP Perf",
-                           table_name=self.summary,
-                           table_data=table_data)
 
     def cleanup(self):
         # Cleanup the NVMe setup
@@ -694,7 +556,163 @@ class GetSetupDetails(FunTestCase):
                                 fun_test.simple_assert(command_result["status"], "Deleted BLT")
 
 
+class BLTVolumePerformanceTestcase(FunTestCase):
+    server_key = {}
+
+    def describe(self):
+        self.set_test_details(steps="""
+        1. Deploy the topology. i.e Bring up FS
+        2. Make the Linux instance available for the testcase
+        """)
+
+    def setup(self):
+        pass
+
+    def run(self):
+        testcase = self.__class__.__name__
+        test_method = testcase[3:]
+
+        testcase_file = fun_test.get_script_name_without_ext() + ".json"
+        fun_test.log("Test case file being used: {}".format(testcase_file))
+        setup_details = utils.parse_file_to_json(testcase_file)
+
+        for k, v in setup_details[testcase].iteritems():
+            setattr(self, k, v)
+
+        host_list = fun_test.shared_variables["host_list"]
+        hosts_dict = fun_test.shared_variables["hosts_dict"]
+
+        table_data_headers = ["Operation", "Block_Size", "Num Vols", "IOPs", "BW in Gbps", "Latency Avg", "Latency 50",
+                              "Latency 90", "Latency 95", "Latency 99", "Latency 99.50", "Latency 99.99"]
+        table_data_cols = ["operation", "block_size", "num_vols", "total_iops", "total_bw", "latency_avg", "latency_50",
+                           "latency_90", "latency_95", "latency_99", "latency_9950", "latency_9999"]
+
+        # Run read fio test from all hosts
+        wait_time = len(host_list)
+        thread_count = 1
+        thread_id = {}
+        fio_output = {}
+        host_thread_map = {}
+        fio_test = self.fio_cmd_args["rw"]
+        if "write" in fio_test:
+            fio_result_name = "write"
+        elif "read" in fio_test:
+            fio_result_name = "read"
+        for hosts in hosts_dict:
+            print "Running {} test on {}".format(fio_test, hosts)
+            host_clone = hosts_dict[hosts]["handle"].clone()
+            temp = hosts_dict[hosts]["handle"].command("hostname")
+            hostname = temp.strip()
+            host_thread_map[thread_count] = hostname
+            thread_id[thread_count] = fun_test.execute_thread_after(time_in_seconds=wait_time,
+                                                                    func=fio_parser,
+                                                                    host_index=thread_count,
+                                                                    arg1=host_clone,
+                                                                    filename=hosts_dict[hosts]["nvme_device"],
+                                                                    name=fio_test + "_" + str(hosts),
+                                                                    cpus_allowed=hosts_dict[hosts]["cpu_list"],
+                                                                    timeout=self.fio_cmd_args["runtime"] * 2,
+                                                                    **self.fio_cmd_args)
+            fun_test.sleep("Fio threadzz", seconds=1)
+            wait_time -= 1
+            thread_count += 1
+        fun_test.sleep("Fio threads started", 10)
+        iops_sum = 0
+        bw_sum = 0
+        for x in range(1, len(host_list) + 1):
+            try:
+                fun_test.log("Joining fio thread {}".format(x))
+                fun_test.join_thread(fun_test_thread_id=thread_id[x])
+                fun_test.log("FIO Command Output:")
+                fun_test.log(fun_test.shared_variables["fio"][x])
+                fun_test.test_assert(fun_test.shared_variables["fio"][x], "Fio threaded test")
+                fio_output[x] = {}
+                fio_output[x] = fun_test.shared_variables["fio"][x]
+                iops_sum += fio_output[x][fio_result_name]["iops"]
+                bw_sum += fio_output[x][fio_result_name]["bw"]
+            except Exception as ex:
+                fun_test.critical(str(ex))
+                fun_test.log("FIO Command Output for volume {}:\n {}".format(x, fio_output[x]))
+        for hosts in hosts_dict:
+            hosts_dict[hosts]["handle"].disconnect()
+        print "******************************************************"
+        print "Collective {} test IOP's is {}".format(fio_test, iops_sum)
+        print "******************************************************"
+        print fun_test.shared_variables["fio"]
+        # Check which host is giving highest latency50 and use that to plot latency
+        fio_latency = fun_test.shared_variables["fio"]
+        max_lat = 0
+        for thread, value in fio_latency.iteritems():
+            if value[fio_result_name]["latency50"] > max_lat:
+                max_lat = value[fio_result_name]["latency50"]
+                host_thread = thread
+                print "The max is {}".format(max_lat)
+                print "The host is {}".format(host_thread_map[host_thread])
+        print "The final max is {}".format(max_lat)
+        print "The final host is {}".format(host_thread_map[host_thread])
+        result_dict = fun_test.shared_variables["fio"][host_thread][fio_result_name]
+        print result_dict
+
+        block_size = self.fio_cmd_args["bs"]
+        num_vols = fun_test.shared_variables["num_vols"]
+        total_iops = int(round(iops_sum))
+        total_bw = bw_sum/125000
+        latency_avg = result_dict["clatency"]
+        latency_50 = result_dict["latency50"]
+        latency_90 = result_dict["latency90"]
+        latency_95 = result_dict["latency95"]
+        latency_99 = result_dict["latency99"]
+        latency_9950 = result_dict["latency9950"]
+        latency_9999 = result_dict["latency9999"]
+        row_data_list = []
+        table_data_rows = []
+        for item in table_data_cols:
+            row_data_list.append(eval(item))
+        table_data_rows.append(row_data_list)
+        value_dict = {
+            "test_case": "NVMe/TCP",
+            "volumes": num_vols,
+            "operation": fio_test,
+            "block_size": block_size,
+            "iops": total_iops,
+            "bw": total_bw,
+            "latency_avg": latency_avg,
+            "latency_50": latency_50,
+            "latency_90": latency_90,
+            "latency_95": latency_95,
+            "latency_99": latency_99,
+            "latency_9950": latency_9950,
+            "latency_9999": latency_9999}
+        # add_to_data_base(value_dict)
+        print value_dict
+        table_data = {"headers": table_data_headers, "rows": table_data_rows}
+
+        fun_test.add_table(panel_header="NVMe FunTCP FCP {} Perf".format(fio_test).upper(),
+                           table_name=self.summary,
+                           table_data=table_data)
+
+    def cleanup(self):
+        pass
+
+
+class BLTFioRandWrite(BLTVolumePerformanceTestcase):
+
+    def describe(self):
+        self.set_test_details(id=1,
+                              summary="Random Write performance of BLT volume over NVMe FunTCP FCP",
+                              steps=''' ''')
+
+
+class BLTFioRandRead(BLTVolumePerformanceTestcase):
+
+    def describe(self):
+        self.set_test_details(id=2,
+                              summary="Random Read performance of BLT volume over NVMe FunTCP FCP",
+                              steps='''''')
+
+
 if __name__ == '__main__':
-    ts = ScriptSetup()
-    ts.add_test_case(GetSetupDetails())
+    ts = BLTVolumePerformanceScript()
+    ts.add_test_case(BLTFioRandWrite())
+    ts.add_test_case(BLTFioRandRead())
     ts.run()
