@@ -634,7 +634,7 @@ class Bmc(Linux):
             self._reset_microcom()
         pyserial_filename = "pyserial-install.tar"
         pyserial_dir = INTEGRATION_DIR + "/tools/platform/bmc/{}".format(pyserial_filename)
-        if self.setup_support_files:
+        if self.setup_support_files or True:
             fun_test.scp(source_file_path=pyserial_dir, target_ip=self.host_ip, target_username=self.ssh_username, target_password=self.ssh_password, target_file_path=self.INSTALL_DIRECTORY)
             fun_test.simple_assert(expression=self.list_files("{}/{}".format(self.INSTALL_DIRECTORY, pyserial_filename)),
                                    message="pyserial copied",
