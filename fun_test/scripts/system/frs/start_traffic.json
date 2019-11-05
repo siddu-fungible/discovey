@@ -22,5 +22,6 @@
     "ioengine": "libaio",
     "output-format": "json",
     "cpus_allowed": "0-7"
-  }
+  },
+  "end_sleep": 10
 }
