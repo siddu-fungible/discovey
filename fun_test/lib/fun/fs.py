@@ -364,8 +364,9 @@ class Bmc(Linux):
 
     def _get_boot_args_for_index(self, boot_args, f1_index):
         s = boot_args
-        if not self.bundle_compatible:
+        if not self.bundle_compatible and not (self.fs and self.fs.get_revision() in ["2"]):
             s = "sku=SKU_FS1600_{} ".format(f1_index) + boot_args
+
         if self.hbm_dump_enabled:
             if "cc_huid" not in s:
                 huid = 3
@@ -657,6 +658,7 @@ class Bmc(Linux):
                                message="2 serial proxies are alive",
                                context=self.context)
 
+        '''
         uart_listener_script = FUN_TEST_LIB_UTILITIES_DIR + "/{}".format(self.UART_LOG_LISTENER_FILE)
 
         fun_test.scp(source_file_path=uart_listener_script,
@@ -676,7 +678,7 @@ class Bmc(Linux):
         log_listener_processes = self.get_process_id_by_pattern(self.UART_LOG_LISTENER_FILE, multiple=True)
         for log_listener_process in log_listener_processes:
             self.kill_process(signal=9, process_id=log_listener_process, kill_seconds=2)
-
+        '''
 
     def restart_serial_proxy(self):
         fun_test.log("Restoring serial proxy")
@@ -1534,7 +1536,8 @@ class Fs(object, ToDictMixin):
                  skip_funeth_come_power_cycle=None,
                  bundle_image_parameters=None,
                  spec=None,
-                 already_deployed=None):
+                 already_deployed=None,
+                 revision=None):
         self.spec = spec
         self.bmc_mgmt_ip = bmc_mgmt_ip
         self.bmc_mgmt_ssh_username = bmc_mgmt_ssh_username
@@ -1581,6 +1584,8 @@ class Fs(object, ToDictMixin):
         self.setup_bmc_support_files = setup_bmc_support_files
         self.validate_u_boot_version = True
         disable_u_boot_version_validation = self.get_workaround("disable_u_boot_version_validation")
+        self.revision = self.get_revision()
+
         if disable_u_boot_version_validation is not None:
             self.validate_u_boot_version = not disable_u_boot_version_validation
         self.bootup_worker = None
@@ -1644,6 +1649,12 @@ class Fs(object, ToDictMixin):
 
     def is_u_boot_complete(self):
         return self.u_boot_complete
+
+    def get_revision(self):
+        value = None
+        if self.spec:
+            value = self.spec.get("revision", None)
+        return value
 
     def get_workaround(self, variable):
         value = None
