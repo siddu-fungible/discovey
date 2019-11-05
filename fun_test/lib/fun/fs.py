@@ -429,7 +429,10 @@ class Bmc(Linux):
         return result
 
     def remove_uart_logs(self, f1_index=0):
-        self.command("rm {}".format(self.get_f1_uart_log_file_name(f1_index=f1_index)))
+        if not self.bundle_compatible:
+            self.command("rm {}".format(self.get_f1_uart_log_file_name(f1_index=f1_index)))
+        elif self.bundle_compatible:
+            self.command("echo 'cleared by fs.py' > {}".format(self.get_f1_uart_log_file_name(f1_index=f1_index)))
 
     def reset_f1(self, f1_index=0, keep_low=False):
         # Workaround for cases where autoboot is enabled, but we want to do tftpboot
@@ -765,13 +768,31 @@ class Bmc(Linux):
                          source_password=self.ssh_password,
                          target_file_path=artifact_file_name,
                          timeout=240)
-            mode = "r+"
-            if not os.path.exists(artifact_file_name):
-                mode = "a+"
-            with open(artifact_file_name, mode) as f:
-                content = f.read()
-                f.seek(0, 0)
-                f.write(self.u_boot_logs[f1_index] + '\n' + content)
+            if not self.bundle_compatible:
+                mode = "r+"
+                if not os.path.exists(artifact_file_name):
+                    mode = "a+"
+                with open(artifact_file_name, mode) as f:
+                    content = f.read()
+                    f.seek(0, 0)
+                    f.write(self.u_boot_logs[f1_index] + '\n' + content)
+            elif self.bundle_compatible and self.fs.tftp_image_path:
+                u_boot_artifact_file_name = fun_test.get_test_case_artifact_file_name(
+                    self._get_context_prefix("f1_{}_tftpboot_u_boot_log.txt".format(f1_index)))
+                mode = "r+"
+                if not os.path.exists(u_boot_artifact_file_name):
+                    mode = "a+"
+                with open(u_boot_artifact_file_name, mode) as f:
+                    content = f.read()
+                    f.seek(0, 0)
+                    f.write(self.u_boot_logs[f1_index] + '\n' + content)
+                fun_test.add_auxillary_file(description=self._get_context_prefix("F1_{} tftpboot u-boot log").format(f1_index),
+                                            filename=u_boot_artifact_file_name,
+                                            asset_type=asset_type,
+                                            asset_id=asset_id,
+                                            artifact_category=self.fs.ArtifactCategory.BRING_UP,
+                                            artifact_sub_category=self.fs.ArtifactSubCategory.BMC)
+
             fun_test.add_auxillary_file(description=self._get_context_prefix("F1_{} UART log").format(f1_index),
                                         filename=artifact_file_name,
                                         asset_type=asset_type,
@@ -898,6 +919,10 @@ class BootupWorker(Thread):
                 come = fs.get_come()
                 fun_test.test_assert(come.detect_pfs(), "Detect PFs", context=self.context)
 
+                for f1_index in range(2):
+                    if f1_index == self.fs.disable_f1_index:
+                        continue
+                    bmc.remove_uart_logs(f1_index=f1_index)
                 fun_test.test_assert(expression=come.install_build_setup_script(build_number=build_number, release_train=release_train),
                                      message="Bundle image installed",
                                      context=self.context)
