@@ -2351,11 +2351,11 @@
         "bond_interface_info": {
           "0": {
             "0": {
-              "ip": "15.41.1.2/24",
+              "ip": "15.116.1.2/24",
               "route": [
                 {
                   "network": "15.0.0.0/8",
-                  "gateway": "15.41.1.1"
+                  "gateway": "15.116.1.1"
                 }
               ],
               "type": "INTERFACE_TYPE_ETHERNET_BOND",
@@ -2369,11 +2369,11 @@
           },
           "1": {
             "0": {
-              "ip": "15.41.2.2/24",
+              "ip": "15.116.2.2/24",
               "route": [
                 {
                   "network": "15.0.0.0/8",
-                  "gateway": "15.41.2.1"
+                  "gateway": "15.116.2.1"
                 }
               ],
               "type": "INTERFACE_TYPE_ETHERNET_BOND",
@@ -2705,11 +2705,11 @@
         "bond_interface_info": {
           "0": {
             "0": {
-              "ip": "15.41.1.2/24",
+              "ip": "15.116.1.2/24",
               "route": [
                 {
                   "network": "15.0.0.0/8",
-                  "gateway": "15.41.1.1"
+                  "gateway": "15.116.1.1"
                 }
               ],
               "type": "INTERFACE_TYPE_ETHERNET_BOND",
@@ -2723,11 +2723,11 @@
           },
           "1": {
             "0": {
-              "ip": "15.41.2.2/24",
+              "ip": "15.116.2.2/24",
               "route": [
                 {
                   "network": "15.0.0.0/8",
-                  "gateway": "15.41.2.1"
+                  "gateway": "15.116.2.1"
                 }
               ],
               "type": "INTERFACE_TYPE_ETHERNET_BOND",
