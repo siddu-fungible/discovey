@@ -317,7 +317,7 @@ class FunTestCase1(FunTestCase):
 
     def run(self):
         ############## Before traffic #####################
-        if not self.stats_info["come"]["DEBUG_MEMORY"]["disable"]:
+        if not self.stats_info["come"]["DEBUG_MEMORY"].get("disable", True):
             self.initial_debug_memory_stats = self.get_debug_memory_stats_initially(self.f_DEBUG_MEMORY_f1_0,
                                                                                     self.f_DEBUG_MEMORY_f1_0)
         self.capture_data(count=3, heading="Before starting traffic")
@@ -329,9 +329,9 @@ class FunTestCase1(FunTestCase):
                            ssh_username=self.fs['come']['mgmt_ssh_username'],
                            ssh_password=self.fs['come']['mgmt_ssh_password'])
 
-        app_params = get_params_for_time.get(self.test_duration)
+        app_params = get_params_for_time.get_params(self.test_duration)
         if self.specific_apps:
-            app_params = get_params_for_time.get(self.test_duration, specific_field=self.specific_apps)
+            app_params = get_params_for_time.get_params(self.test_duration, specific_field=self.specific_apps)
         fun_test.log("App parameters: {}".format(app_params))
 
         if self.run_le_firewall:
