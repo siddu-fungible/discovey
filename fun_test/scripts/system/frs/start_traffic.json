@@ -8,6 +8,7 @@
   "ec_vol": false,
   "collect_stats": [],
   "disable_stats": [],
+  "add_boot_arg": "",
   "fio_params": {
     "numjobs": 1,
     "size": "100%",
