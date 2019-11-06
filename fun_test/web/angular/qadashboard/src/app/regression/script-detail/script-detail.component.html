@@ -1,11 +1,12 @@
 <div class="fun-flex-container fun-action-nav">
-  <a class="pseudo-anchor" href="/regression/suite_detail/{{ suiteExecutionId }}">&nbsp;< Back to suite</a>
+  <a class="pseudo-anchor" href="/regression/suite_detail/{{ suiteExecutionId }}">&nbsp; < Back to suite</a>
   <div class="fun-spacer"></div>
   <span class="script-name">{{ scriptPath }}</span>
   <div class="fun-spacer"></div>
-  <button (click)="onContextOptionsClick(contextOptions)" class="fun-button-add">Context options</button>
-  <button (click)="viewChartsClick(chartSelectionOptions)" class="fun-button-add">Select charts</button>
-  <span class="pseudo-anchor" (click)="openConsoleLogClick()">Console log</span>
+  <button (click)="onContextOptionsClick(contextOptions)"><i class="fa fa-columns"></i>&nbsp;Context options</button>
+  <button (click)="viewChartsClick(chartSelectionOptions)"><i class="fa fa-bar-chart"></i>&nbsp;Select charts</button>
+  <button (click)="openConsoleLogClick()"><i class="fa fa-file-text-o"></i>&nbsp;Console log</button>
+  <button (click)="openArtifactsPanelClick()"><i class="fa fa-files-o"></i>&nbsp;More logs</button>
   <!--button (click)="testClick()">Test</button-->
   <ng-template #contextOptions let-modal>
     <div class="fun-panel">

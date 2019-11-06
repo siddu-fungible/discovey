@@ -65,7 +65,7 @@ export class ScriptDetailComponent implements OnInit {
     let ssc = new StatisticsSubCategory();
     ssc.display_name = "BAM";
     ssc.name = "bam";
-    this.selectedStatistics.push({statisticsCategory: sc, statisticsSubCategory: ssc});
+    //this.selectedStatistics.push({statisticsCategory: sc, statisticsSubCategory: ssc});
   }
   suiteExecutionId: number = 10000;
   logPrefix: number = null;
@@ -472,4 +472,13 @@ export class ScriptDetailComponent implements OnInit {
     this.scriptExecutionInfo["current_checkpoint_index"] = this.currentCheckpointIndex;
     this.scriptExecutionInfo = {...this.scriptExecutionInfo};
   }
+
+  openArtifactsPanelClick() {
+    this.regressionService.artifacts(this.suiteExecutionId).subscribe(response => {
+      let i = 0;
+    }, error => {
+      this.loggerService.error("Unable to open artifacts panel");
+    });
+  }
+
 }
