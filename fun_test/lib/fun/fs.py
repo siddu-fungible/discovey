@@ -770,6 +770,7 @@ class Bmc(Linux):
                          source_password=self.ssh_password,
                          target_file_path=artifact_file_name,
                          timeout=240)
+            """
             if not self.bundle_compatible:
                 mode = "r+"
                 if not os.path.exists(artifact_file_name):
@@ -778,7 +779,10 @@ class Bmc(Linux):
                     content = f.read()
                     f.seek(0, 0)
                     f.write(self.u_boot_logs[f1_index] + '\n' + content)
+            
             elif self.bundle_compatible and self.fs.tftp_image_path:
+            """
+            if self.fs.tftp_image_path:
                 u_boot_artifact_file_name = fun_test.get_test_case_artifact_file_name(
                     self._get_context_prefix("f1_{}_tftpboot_u_boot_log.txt".format(f1_index)))
                 mode = "r+"
