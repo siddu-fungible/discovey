@@ -240,8 +240,8 @@ class StorageController(NetworkController, DpcshClient):
             # As there are no default values for key_size and xtweak_size, leaving them as is
             #ec_info["zip_effort"] = ec_info['zip_effort'] if 'zip_effort' in ec_info.keys() else "ZIP_EFFORT_AUTO"
             #ec_info['zip_filter'] = ec_info['zip_filter'] if 'zip_filter' in ec_info.keys() else "FILTER_TYPE_DEFLATE"
-            fun_test.log("Configuring encryption enabled EC volume with key_size: {}, xtweak_size: {}".format(
-                ec_info['key_size'], ec_info['xtweak_size']))
+            fun_test.log("Configuring encryption enabled EC volume with key: {}, xtweak: {}".format(
+                ec_info['key'], ec_info['xtweak']))
 
         ec_info["uuids"] = {}
         ec_info["volume_capacity"] = {}
@@ -351,8 +351,8 @@ class StorageController(NetworkController, DpcshClient):
                                                         jvol_uuid=ec_info["uuids"][num]["jvol"],
                                                         pvol_id=ec_info["uuids"][num]["ec"],
                                                         encrypt=ec_info['encrypt'],
-                                                        key_size=ec_info['key_size'],
-                                                        xtweak_size=ec_info['xtweak_size'],
+                                                        key=ec_info['key'],
+                                                        xtweak=ec_info['xtweak'],
                                                         group_id=num + 3,
                                                         command_duration=command_timeout)
                 else:
