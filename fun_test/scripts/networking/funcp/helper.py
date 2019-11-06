@@ -360,7 +360,7 @@ def local_encrypted_volume_create(storage_controller, vm_dict, uuid, count, xts_
                                               uuid=uuid, name="thin_blk" + str(count),
                                               command_duration=vm_dict["command_timeout"])
     fun_test.log(result)
-    critical_log(result["status"], "Creating volume with uuid {}".format(uuid))
+    critical_log(result["status"], "Creating encrypted volume with uuid {}".format(uuid))
 
 
 def remote_storage_config(storage_controller, vm_dict, vol_uuid, count, ctrl_uuid, local_ip, local_port):
