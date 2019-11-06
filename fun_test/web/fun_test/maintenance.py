@@ -2169,7 +2169,7 @@ if __name__ == "__main_crypto_fastpath__":
                        workspace_ids=[])
     print "created charts for crypto fastpath"
 
-if __name__ == "__main_rand_rw_comp__":
+if __name__ == "__main_random_rw_comp__":
     internal_names = "inspur_8141_8k_rand_rw_comp_qd"
     owner_info = "Alagarswamy Devaraj (alagarswamy.devaraj@fungible.com)"
     source = "https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/storage/pocs/inspur/ec_inspur_fs_teramark_multivolume_comp.py"
@@ -2223,6 +2223,66 @@ if __name__ == "__main_rand_rw_comp__":
                            peer_ids=[], creator=TEAM_REGRESSION_EMAIL,
                            workspace_ids=[])
     print "created charts for inspur random read write compression"
+
+if __name__ == "__main_random_read_write_inspur__":
+    owner_info = "Alagarswamy Devaraj (alagarswamy.devaraj@fungible.com)"
+    source = "https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/storage/pocs/inspur/ec_inspur_fs_teramark_multivolume_comp.py"
+    base_line_date = datetime(year=2019, month=11, day=4, minute=0, hour=0, second=0)
+    model_name = "BltVolumePerformance"
+    qdepths = [32, 64, 96, 128]
+    categories = ["Latency", "IOPS"]
+    fio_job_names = ["inspur_8k_random_", "_50pctcomp_iodepth_", "_vol_8"]
+    internal_names = ["inspur_8141_8k_rand_rd_comp", "inspur_8141_8k_rand_wr_comp"]
+    for internal_name in internal_names:
+        root_chart = ml.create_container(chart_name=internal_name, internal_chart_name=internal_name,
+                        platform=FunPlatform.F1,
+                        owner_info=owner_info,
+                        source=source, base_line_date=base_line_date, workspace_ids=[])
+        for category in categories:
+            if internal_name == "inspur_8141_8k_rand_rd_comp":
+                operation = "read"
+                output_name = "output_read_"
+            else:
+                operation = "write"
+                output_name = "output_write_"
+            if category == "Latency":
+                positive = False
+                y1_axis_title = PerfUnit.UNIT_USECS
+                output_name += "avg_latency"
+                name = operation + "-avg(8 vols)"
+            else:
+                positive = True
+                y1_axis_title = PerfUnit.UNIT_OPS
+                output_name += "iops"
+                name = operation + "(8 vols)"
+            for qdepth in qdepths:
+                internal_chart_name = internal_name + "_qd" + str(qdepth) + "_output_" + category.lower()
+                data_sets = []
+                fio_job_name = fio_job_names[0] + operation + fio_job_names[1] + str(qdepth) + fio_job_names[2]
+                one_data_set = {}
+                one_data_set["name"] = name
+                one_data_set["inputs"] = {"input_platform": FunPlatform.F1,
+                                          "input_fio_job_name": fio_job_name}
+                one_data_set["output"] = {"name": output_name, "min": 0, "max": -1, "expected": -1, "reference": -1,
+                                          "best": -1, "unit": y1_axis_title}
+                data_sets.append(one_data_set)
+                leaf_chart = ml.create_leaf(chart_name=category, internal_chart_name=internal_chart_name,
+                               data_sets=data_sets, leaf=True,
+                               description="TBD",
+                               owner_info=owner_info, source=source,
+                               positive=positive, y1_axis_title=y1_axis_title,
+                               visualization_unit=y1_axis_title,
+                               metric_model_name=model_name,
+                               base_line_date=base_line_date,
+                               work_in_progress=False, children=[], jira_ids=[], platform=FunPlatform.F1,
+                               peer_ids=[], creator=TEAM_REGRESSION_EMAIL,
+                               workspace_ids=[])
+                leaf_chart.fix_children_weights()
+                root_chart.add_child(leaf_chart.metric_id)
+        root_chart.fix_children_weights()
+        final_dict = ml.get_dict(chart=root_chart)
+        print json.dumps(final_dict)
+    print "added charts for random read and random write compression charts for inspur"
 
 if __name__ == "__main__":
     owner_info = "Bertrand Serlet (bertrand.serlet@fungible.com)"

@@ -49,6 +49,14 @@ class MetricsRunTime(models.Model):
     def __str__(self):
         return "{}: {}".format(self.name, self.value)
 
+    @staticmethod
+    def update_value_data(name, value_key, value_data):
+        run_times = MetricsRunTime.objects.filter(name=name)
+        if run_times.exists():
+            run_time = run_times[0]
+            run_time.value[value_key] = value_data
+            run_time.save()
+
 class SchedulingStates:
     ACTIVE = "Active"
     COMPLETED = "Completed"
