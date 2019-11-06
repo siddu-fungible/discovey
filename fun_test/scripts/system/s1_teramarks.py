@@ -195,7 +195,7 @@ class ZipLzmaTeramarkTc(PalladiumTc):
     boot_args = "app=lzma_perf_multi nflows=30 niterations=10 npcs=1 --platforms1"
     tags = "qa_s1_zip_lzma_teramark"
     note = "ZIP lzma teramark app on S1"
-    fun_os_make_flags = ".  "
+    fun_os_make_flags = "XDATA_LISTS=/project/users/ashaikh/qa_test_inputs/zip_inputs/compress_perf_input.list"
     max_duration = 9000
     extra_emails = ["jitendra.lulla@fungible.com"]
 
