@@ -133,6 +133,8 @@ class StripeVolumeLevelScript(FunTestScript):
             self.skip_cleanup = job_inputs["skip_cleanup"]
         else:
             self.skip_cleanup = False
+        if "num_hosts" in job_inputs:
+            self.num_hosts = job_inputs["num_hosts"]
 
         self.num_duts = int(round(float(self.num_f1s) / self.num_f1_per_fs))
         fun_test.log("Num DUTs for current test: {}".format(self.num_duts))

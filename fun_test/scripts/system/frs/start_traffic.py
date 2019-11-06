@@ -13,6 +13,7 @@ from lib.fun import fs
 from scripts.storage.storage_helper import *
 import get_params_for_time
 
+# Environment: --environment={\"test_bed_type\":\"fs-65\",\"tftp_image_path\":\"ranga/funos-f1_ranga.stripped.gz\"} --inputs={\"boot_new_image\":true,\"le_firewall\":true,\"collect_stats\":[\"\"],\"ec_vol\":true}
 
 class MyScript(FunTestScript):
     def describe(self):
@@ -31,9 +32,6 @@ class MyScript(FunTestScript):
         for k, v in config_dict.iteritems():
             setattr(self, k, v)
 
-        f1_0_boot_args = 'cc_huid=3 sku=SKU_FS1600_0 app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303 --mtracker'
-        f1_1_boot_args = 'cc_huid=2 sku=SKU_FS1600_1 app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303 --mtracker'
-
         if job_inputs:
             if "disable_f1_index" in job_inputs:
                 self.disable_f1_index = job_inputs["disable_f1_index"]
@@ -41,6 +39,12 @@ class MyScript(FunTestScript):
                 self.boot_new_image = job_inputs["boot_new_image"]
             if "ec_vol" in job_inputs:
                 self.ec_vol = job_inputs["ec_vol"]
+            if "add_boot_arg" in job_inputs:
+                self.add_boot_arg = job_inputs["add_boot_arg"]
+                self.add_boot_arg = "--" + self.add_boot_arg
+
+        f1_0_boot_args = 'cc_huid=3 sku=SKU_FS1600_0 app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303 %s'%(self.add_boot_arg)
+        f1_1_boot_args = 'cc_huid=2 sku=SKU_FS1600_1 app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303 %s'%(self.add_boot_arg)
 
         topology_helper = TopologyHelper()
         topology_helper.set_dut_parameters(f1_parameters={0: {"boot_args": f1_0_boot_args},
@@ -260,7 +264,7 @@ class FunTestCase1(FunTestCase):
         # post_fix_name: "{calculated_}{app_name}_DPCSH_OUTPUT_F1_{f1}_logs.txt"
         # description : "{calculated_}_{app_name}_DPCSH_OUTPUT_F1_{f1}"
         self.stats_info["bmc"] = {"POWER": {"calculated": True}, "DIE_TEMPERATURE": {"calculated": False, "disable":True}}
-        self.stats_info["come"] = {"DEBUG_MEMORY": {"disable": True}, "CDU": {}, "EQM": {}, "BAM": {"calculated": False, "disable":True}, "DEBUG_VP_UTIL": {"calculated": False, "disable": True}, "LE": {}, "HBM": {"calculated": True},
+        self.stats_info["come"] = {"DEBUG_MEMORY": {}, "CDU": {}, "EQM": {}, "BAM": {"calculated": False, "disable":True}, "DEBUG_VP_UTIL": {"calculated": False, "disable": True}, "LE": {}, "HBM": {"calculated": True},
                                    "EXECUTE_LEAKS": {"calculated": False}, "PC_DMA": {"calculated": True}, "DDR":{"calculated": True}}
         self.stats_info["files"] = {"fio":{"calculated": False}}
 
@@ -314,9 +318,9 @@ class FunTestCase1(FunTestCase):
 
     def run(self):
         ############## Before traffic #####################
-        if not self.stats_info["come"]["DEBUG_MEMORY"]["disable"]:
+        if not self.stats_info["come"]["DEBUG_MEMORY"].get("disable", True):
             self.initial_debug_memory_stats = self.get_debug_memory_stats_initially(self.f_DEBUG_MEMORY_f1_0,
-                                                                                    self.f_DEBUG_MEMORY_f1_0)
+                                                                                    self.f_DEBUG_MEMORY_f1_1)
         self.capture_data(count=3, heading="Before starting traffic")
 
         fun_test.test_assert(True, "Initial debug stats is saved")
@@ -326,9 +330,9 @@ class FunTestCase1(FunTestCase):
                            ssh_username=self.fs['come']['mgmt_ssh_username'],
                            ssh_password=self.fs['come']['mgmt_ssh_password'])
 
-        app_params = get_params_for_time.get(self.test_duration)
+        app_params = get_params_for_time.get_params(self.test_duration)
         if self.specific_apps:
-            app_params = get_params_for_time.get(self.test_duration, specific_field=self.specific_apps)
+            app_params = get_params_for_time.get_params(self.test_duration, specific_field=self.specific_apps)
         fun_test.log("App parameters: {}".format(app_params))
 
         if self.run_le_firewall:
@@ -361,6 +365,8 @@ class FunTestCase1(FunTestCase):
         if "fio" in app_params:
             self.join_fio_thread(fio_thread_map)
 
+        fun_test.sleep("Waiting for all the things to settle", seconds=self.end_sleep)
+
         #################### After the traffic ############
         if self.run_le_firewall:
             le_firewall(self.test_duration, self.boot_new_image, True)
@@ -372,8 +378,6 @@ class FunTestCase1(FunTestCase):
         self.capture_data(count=count, heading=heading)
 
         self.come_handle.destroy()
-
-        fun_test.sleep("Waiting for all the things to settle", seconds=self.end_sleep)
 
 
     def capture_data(self, count, heading):

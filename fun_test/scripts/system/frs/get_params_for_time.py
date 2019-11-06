@@ -1,7 +1,7 @@
 from lib.system.fun_test import *
 
 
-def get(time, crypto_per=100, zip_per=100, rcnvme_per=70, fio_per=100, specific_field=None):
+def get_params(time, crypto_per=100, zip_per=100, rcnvme_per=70, fio_per=100, specific_field=None):
     result = False
     app_params = {}
     try:
