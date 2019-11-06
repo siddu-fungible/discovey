@@ -3186,18 +3186,9 @@ class NvmeFcpPerformance(FunModel):
 
 
 class FunOnDemandTotalTimePerformance(FunModel):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
-    input_platform = models.TextField(default=FunPlatform.F1)
     input_version = models.CharField(verbose_name="Version", max_length=50, default="")
-
-    input_jenkins_build_number = models.IntegerField(verbose_name="Jenkins build number", default=-1)
-    input_jenkins_status = models.TextField(default=RESULTS["PASSED"])
-    input_lsf_job_id = models.IntegerField(verbose_name="Lsf job id", default=-1)
-    input_lsf_status = models.TextField(default=RESULTS["PASSED"])
-    input_boot_args = models.TextField(verbose_name="Boot args", default="")
 
     output_total_time = models.FloatField(verbose_name="Total Time", default=-1)
     output_total_time_unit = models.TextField(default=PerfUnit.UNIT_SECS)

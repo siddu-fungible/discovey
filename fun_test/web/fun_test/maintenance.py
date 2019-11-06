@@ -2296,9 +2296,7 @@ if __name__ == "__main__":
     data_sets = []
     one_data_set = {}
     one_data_set["name"] = "load_mods"
-    one_data_set["inputs"] = {"input_platform": FunPlatform.F1,
-                              "input_boot_args": "app=load_mods",
-                              "status": RESULTS["PASSED"]}
+    one_data_set["inputs"] = {}
     one_data_set["output"] = {"name": "output_total_time", "min": 0, "max": -1, "expected": -1, "reference": -1,
                               "best": -1, "unit": PerfUnit.UNIT_SECS}
     chart = ml.create_leaf(chart_name="Time taken on F1 (app=load_mods)", internal_chart_name="load_mods_time_taken",

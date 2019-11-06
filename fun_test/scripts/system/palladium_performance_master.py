@@ -1024,47 +1024,6 @@ class CryptoFastPathPerformanceTc(PalladiumPerformanceTc):
                               steps="Steps 1")
 
 
-class FunOnDemandTimeTakenPerformanceTc(PalladiumPerformanceTc):
-    def describe(self):
-        self.set_test_details(id=65,
-                              summary="Set build failure details for fun on demand time taken performance",
-                              steps="Steps 1")
-
-    def run(self):
-        try:
-            model = "FunOnDemandTotalTimePerformance"
-            charts = MetricChart.objects.filter(metric_model_name=model)
-            metric_model = app_config.get_metric_models()[model]
-            for chart in charts:
-                status = True
-                data_sets = chart.get_data_sets()
-                for data_set in data_sets:
-                    inputs = data_set["inputs"]
-                    entries = metric_model.objects.filter(**inputs).order_by("-input_date_time")[:1]
-                    if len(entries):
-                        entry = entries.first()
-                        if not entry.status == fun_test.PASSED:
-                            status = False
-                            chart.last_build_status = fun_test.FAILED
-                            chart.last_suite_execution_id = fun_test.get_suite_execution_id()
-                            chart.last_build_date = get_current_time()
-                            chart.last_test_case_id = self.id
-                            chart.save()
-                            break
-                if status:
-                    chart.last_build_status = fun_test.PASSED
-                    chart.last_suite_execution_id = fun_test.get_suite_execution_id()
-                    chart.last_test_case_id = self.id
-                    chart.last_build_date = get_current_time()
-                    chart.save()
-            self.result = fun_test.PASSED
-        except Exception as ex:
-            self.result = fun_test.FAILED
-            fun_test.critical(str(ex))
-
-        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
-
-
 if __name__ == "__main__":
     myscript = MyScript()
 
@@ -1122,6 +1081,5 @@ if __name__ == "__main__":
     myscript.add_test_case(VoltestBlt8PerformanceTc())
     myscript.add_test_case(VoltestBlt12PerformanceTc())
     myscript.add_test_case(CryptoFastPathPerformanceTc())
-    myscript.add_test_case(FunOnDemandTimeTakenPerformanceTc())
 
     myscript.run()

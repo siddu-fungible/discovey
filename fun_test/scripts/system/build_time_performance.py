@@ -1,9 +1,12 @@
 from lib.system.fun_test import *
+from django.apps import apps
 from fun_global import PerfUnit, FunPlatform
 from lib.utilities.jenkins_manager import JenkinsManager
 from lib.host.lsf_status_server import LsfStatusServer
-from web.fun_test.analytics_models_helper import ModelHelper
+from web.fun_test.analytics_models_helper import ModelHelper, get_data_collection_time
+from web.fun_test.metrics_models import MetricChart
 
+app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 
 class MyScript(FunTestScript):
     def describe(self):
@@ -76,7 +79,12 @@ class PalladiumTc(FunTestCase):
 
         try:
             self.build_on_jenkins(jenkins_manager=jenkins_manager, params=params)
+            fun_test.log("Jenkins build number is  {} and the status is {}".format(self.build_number, self.build_success))
+            fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.build_success,
+                                          message="jenkins build successfully completed")
             self.monitor_lsf(lsf_server=lsf_server)
+            fun_test.log("Lsf job id is {} and status is {}".format(self.lsf_job_id, self.lsf_success))
+            fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.lsf_success, message="lsf job successfully completed")
         except Exception as ex:
             fun_test.critical(str(ex))
 
@@ -100,9 +108,7 @@ class PalladiumTc(FunTestCase):
                 if job_result.lower() == "success":
                     self.in_jenkins = False
                     self.build_success = fun_test.PASSED
-                else:
-                    self.build_success = fun_test.FAILED
-                    break
+                break
             fun_test.sleep("waiting for jenkins build", seconds=60)
 
     def monitor_lsf(self, lsf_server):
@@ -116,14 +122,11 @@ class PalladiumTc(FunTestCase):
                             self.in_lsf = False
                             if not job_info["return_code"]:
                                 self.lsf_success = fun_test.PASSED
-                            else:
-                                self.lsf_success = fun_test.FAILED
+                                break
                         else:
-                            self.lsf_success = fun_test.FAILED
                             break
                 fun_test.sleep("waiting for lsf job completion", seconds=60)
-            fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.lsf_success, message="lsf job "
-                                                                                                     "successfully completed")
+
 
 class FunOnDemandBuildTimeTc(PalladiumTc):
     boot_args = "app=load_mods"
@@ -154,22 +157,59 @@ class FunOnDemandBuildTimeTc(PalladiumTc):
             else:
                 status = fun_test.FAILED
 
-            value_dict = {"platform": FunPlatform.F1,
+            value_dict = {"date_time": get_data_collection_time(),
                           "version": fun_test.get_version(),
-                          "jenkins_build_number": self.build_number,
-                          "jenkins_status": self.build_success,
-                          "lsf_job_id": self.lsf_job_id,
-                          "lsf_status": self.lsf_success,
-                          "boot_args": self.boot_args,
                           "total_time": self.total_time_taken}
 
             unit_dict = {"total_time_unit": PerfUnit.UNIT_SECS}
             self.add_to_db(model_name=model_name, value_dict=value_dict, unit_dict=unit_dict, status=status)
+
+class SetFunOnDemandBuildTimeChartStatusTc(PalladiumTc):
+    def describe(self):
+        self.set_test_details(id=2,
+                              summary="Set build failure details for fun on demand time taken performance",
+                              steps="Steps 1")
+
+    def run(self):
+        try:
+            self.result = fun_test.FAILED
+            model = "FunOnDemandTotalTimePerformance"
+            charts = MetricChart.objects.filter(metric_model_name=model)
+            metric_model = app_config.get_metric_models()[model]
+            for chart in charts:
+                status = True
+                data_sets = chart.get_data_sets()
+                for data_set in data_sets:
+                    inputs = data_set["inputs"]
+                    entries = metric_model.objects.filter(**inputs).order_by("-input_date_time")[:1]
+                    if len(entries):
+                        entry = entries.first()
+                        if not entry.status == fun_test.PASSED:
+                            status = False
+                            chart.last_build_status = fun_test.FAILED
+                            chart.last_suite_execution_id = fun_test.get_suite_execution_id()
+                            chart.last_build_date = get_current_time()
+                            chart.last_test_case_id = self.id
+                            chart.save()
+                            break
+                if status:
+                    chart.last_build_status = fun_test.PASSED
+                    chart.last_suite_execution_id = fun_test.get_suite_execution_id()
+                    chart.last_test_case_id = self.id
+                    chart.last_build_date = get_current_time()
+                    chart.save()
+            self.result = fun_test.PASSED
+        except Exception as ex:
+            self.result = fun_test.FAILED
+            fun_test.critical(str(ex))
+
+        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
 if __name__ == "__main__":
     myscript = MyScript()
 
     myscript.add_test_case(FunOnDemandBuildTimeTc())
+    myscript.add_test_case(SetFunOnDemandBuildTimeChartStatusTc())
 
     myscript.run()
