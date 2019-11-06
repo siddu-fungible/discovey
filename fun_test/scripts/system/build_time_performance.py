@@ -33,11 +33,14 @@ class PalladiumTc(FunTestCase):
     hw_version = "Ignored"
     run_target = "F1"
     extra_emails = []
-    build_success = False
-    lsf_success = False
+
+    build_success = fun_test.FAILED
+    lsf_success = fun_test.FAILED
     in_jenkins = True
     in_lsf = True
     timer = None
+    build_number = -1
+    lsf_job_id = -1
 
     def describe(self):
         self.set_test_details(id=0,
@@ -72,40 +75,8 @@ class PalladiumTc(FunTestCase):
                   "HW_MODEL": self.hw_model}
 
         try:
-            queue_item = jenkins_manager.build(params=params, extra_emails=self.extra_emails)
-            self.build_number = jenkins_manager.get_build_number(queue_item=queue_item)
-            while self.in_jenkins and not self.timer.is_expired():
-                job_info = jenkins_manager.get_job_info(build_number=self.build_number)
-                if not job_info["building"]:
-                    job_result = job_info["result"]
-                    if job_result.lower() == "success":
-                        self.in_jenkins = False
-                        self.build_success = True
-                    else:
-                        self.build_success = False
-                        break
-                fun_test.sleep(seconds=60)
-
-            fun_test.test_assert_expected(expected=True, actual=self.build_success, message="jenkins build successfully completed")
-            if not self.in_jenkins:
-                while self.in_lsf and not self.timer.is_expired():
-                    job_info = lsf_server.get_last_job(tag=self.tags)
-                    if job_info and "job_id" in job_info:
-                        self.lsf_job_id = job_info["job_id"]
-                        if "state" in job_info and job_info["state"] == "completed":
-                            if "return_code" in job_info:
-                                self.in_lsf = False
-                                if not job_info["return_code"]:
-                                    self.lsf_success = True
-                                    self.hw_version = job_info["hardware_version"]
-                                else:
-                                    self.lsf_success = False
-                            else:
-                                self.lsf_success = False
-                                break
-                    fun_test.sleep(seconds=60)
-                fun_test.test_assert_expected(expected=True, actual=self.lsf_success, message="lsf job successfully "
-                                                                                        "completed")
+            self.build_on_jenkins(jenkins_manager=jenkins_manager, params=params)
+            self.monitor_lsf(lsf_server=lsf_server)
         except Exception as ex:
             fun_test.critical(str(ex))
 
@@ -119,6 +90,40 @@ class PalladiumTc(FunTestCase):
             fun_test.critical(str(ex))
         print ("used generic helper to add an entry into {}".format(model_name))
 
+    def build_on_jenkins(self, jenkins_manager, params):
+        queue_item = jenkins_manager.build(params=params, extra_emails=self.extra_emails)
+        self.build_number = jenkins_manager.get_build_number(queue_item=queue_item)
+        while self.in_jenkins and not self.timer.is_expired():
+            job_info = jenkins_manager.get_job_info(build_number=self.build_number)
+            if not job_info["building"]:
+                job_result = job_info["result"]
+                if job_result.lower() == "success":
+                    self.in_jenkins = False
+                    self.build_success = fun_test.PASSED
+                else:
+                    self.build_success = fun_test.FAILED
+                    break
+            fun_test.sleep("waiting for jenkins build", seconds=60)
+
+    def monitor_lsf(self, lsf_server):
+        if not self.in_jenkins:
+            while self.in_lsf and not self.timer.is_expired():
+                job_info = lsf_server.get_last_job(tag=self.tags)
+                if job_info and "job_id" in job_info:
+                    self.lsf_job_id = job_info["job_id"]
+                    if "state" in job_info and job_info["state"] == "completed":
+                        if "return_code" in job_info:
+                            self.in_lsf = False
+                            if not job_info["return_code"]:
+                                self.lsf_success = fun_test.PASSED
+                            else:
+                                self.lsf_success = fun_test.FAILED
+                        else:
+                            self.lsf_success = fun_test.FAILED
+                            break
+                fun_test.sleep("waiting for lsf job completion", seconds=60)
+            fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.lsf_success, message="lsf job "
+                                                                                                     "successfully completed")
 
 class FunOnDemandBuildTimeTc(PalladiumTc):
     boot_args = "app=load_mods"
@@ -136,27 +141,30 @@ class FunOnDemandBuildTimeTc(PalladiumTc):
                               """)
 
     def run(self):
-        self.timer = FunTimer(max_time=3600)
-        super(FunOnDemandBuildTimeTc, self).run()
-        self.total_time_taken = self.timer.elapsed_time()
-        model_name = "FunOnDemandTotalTimePerformance"
-        if self.build_success and self.lsf_success:
-            status = fun_test.PASSED
-        else:
-            status = fun_test.FAILED
+        try:
+            self.timer = FunTimer(max_time=3600)
+            super(FunOnDemandBuildTimeTc, self).run()
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        finally:
+            self.total_time_taken = self.timer.elapsed_time()
+            model_name = "FunOnDemandTotalTimePerformance"
+            if self.build_success == fun_test.PASSED and self.lsf_success == fun_test.PASSED:
+                status = fun_test.PASSED
+            else:
+                status = fun_test.FAILED
 
-        value_dict = {"platform": FunPlatform.F1,
-                      "version": fun_test.get_version(),
-                      "jenkins_build_number": self.build_number,
-                      "jenkins_status": self.build_success,
-                      "lsf_job_id": self.lsf_job_id,
-                      "lsf_status": self.lsf_success,
-                      "boot_args": self.boot_args,
-                      "total_time": self.total_time_taken}
+            value_dict = {"platform": FunPlatform.F1,
+                          "version": fun_test.get_version(),
+                          "jenkins_build_number": self.build_number,
+                          "jenkins_status": self.build_success,
+                          "lsf_job_id": self.lsf_job_id,
+                          "lsf_status": self.lsf_success,
+                          "boot_args": self.boot_args,
+                          "total_time": self.total_time_taken}
 
-        unit_dict = {"total_time_unit": PerfUnit.UNIT_SECS}
-
-        self.add_to_db(model_name=model_name, value_dict=value_dict, unit_dict=unit_dict, status=status)
+            unit_dict = {"total_time_unit": PerfUnit.UNIT_SECS}
+            self.add_to_db(model_name=model_name, value_dict=value_dict, unit_dict=unit_dict, status=status)
 
 
 if __name__ == "__main__":

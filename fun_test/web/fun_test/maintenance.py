@@ -2169,7 +2169,7 @@ if __name__ == "__main_crypto_fastpath__":
                        workspace_ids=[])
     print "created charts for crypto fastpath"
 
-if __name__ == "__main__":
+if __name__ == "__main_rand_rw_comp__":
     internal_names = "inspur_8141_8k_rand_rw_comp_qd"
     owner_info = "Alagarswamy Devaraj (alagarswamy.devaraj@fungible.com)"
     source = "https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/storage/pocs/inspur/ec_inspur_fs_teramark_multivolume_comp.py"
@@ -2224,3 +2224,35 @@ if __name__ == "__main__":
                            workspace_ids=[])
     print "created charts for inspur random read write compression"
 
+if __name__ == "__main__":
+    owner_info = "Bertrand Serlet (bertrand.serlet@fungible.com)"
+    source = "Unknown"
+    base_line_date = datetime(year=2019, month=11, day=5, minute=0, hour=0, second=0)
+
+    other_node = ml.create_container(chart_name="Other", internal_chart_name="other_tree",
+                        platform=FunPlatform.F1,
+                        owner_info=owner_info,
+                        source=source, base_line_date=base_line_date, workspace_ids=[])
+    data_sets = []
+    one_data_set = {}
+    one_data_set["name"] = "load_mods"
+    one_data_set["inputs"] = {"input_platform": FunPlatform.F1,
+                              "input_boot_args": "app=load_mods",
+                              "status": RESULTS["PASSED"]}
+    one_data_set["output"] = {"name": "output_total_time", "min": 0, "max": -1, "expected": -1, "reference": -1,
+                              "best": -1, "unit": PerfUnit.UNIT_SECS}
+    chart = ml.create_leaf(chart_name="Time taken on F1 (app=load_mods)", internal_chart_name="load_mods_time_taken",
+                   data_sets=data_sets, leaf=True,
+                   description="TBD",
+                   owner_info=owner_info, source=source,
+                   positive=False, y1_axis_title=PerfUnit.UNIT_SECS,
+                   visualization_unit=PerfUnit.UNIT_SECS,
+                   metric_model_name="FunOnDemandTotalTimePerformance",
+                   base_line_date=base_line_date,
+                   work_in_progress=False, children=[], jira_ids=[], platform=FunPlatform.F1,
+                   peer_ids=[], creator=TEAM_REGRESSION_EMAIL,
+                   workspace_ids=[])
+    chart.fix_children_weights()
+    other_node.add_child(chart.metric_id)
+    other_node.fix_children_weights()
+    print "added other node as a root"
