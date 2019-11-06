@@ -13,6 +13,7 @@ from lib.fun import fs
 from scripts.storage.storage_helper import *
 import get_params_for_time
 
+# Environment: --environment={\"test_bed_type\":\"fs-65\",\"tftp_image_path\":\"ranga/funos-f1_ranga.stripped.gz\"} --inputs={\"boot_new_image\":true,\"le_firewall\":true,\"collect_stats\":[\"\"],\"ec_vol\":true}
 
 class MyScript(FunTestScript):
     def describe(self):
@@ -364,6 +365,8 @@ class FunTestCase1(FunTestCase):
         if "fio" in app_params:
             self.join_fio_thread(fio_thread_map)
 
+        fun_test.sleep("Waiting for all the things to settle", seconds=self.end_sleep)
+
         #################### After the traffic ############
         if self.run_le_firewall:
             le_firewall(self.test_duration, self.boot_new_image, True)
@@ -375,8 +378,6 @@ class FunTestCase1(FunTestCase):
         self.capture_data(count=count, heading=heading)
 
         self.come_handle.destroy()
-
-        fun_test.sleep("Waiting for all the things to settle", seconds=self.end_sleep)
 
 
     def capture_data(self, count, heading):
