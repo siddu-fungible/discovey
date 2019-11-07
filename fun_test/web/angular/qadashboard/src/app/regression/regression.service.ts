@@ -297,6 +297,7 @@ getPrettyLocalizeTime(t) {
     if (testCaseExecutionId) {
       params.push(["te", testCaseExecutionId]);
     }
+    url += this.commonService.queryParamsToString(params);
     return this.apiService.get(url).pipe(switchMap(response => {
       return of(response.data);
     }), catchError(error => {
