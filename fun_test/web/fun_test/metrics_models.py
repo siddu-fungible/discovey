@@ -994,6 +994,8 @@ class AlibabaPerformance(models.Model):
     input_num_threads = models.IntegerField(verbose_name="Threads")
     input_platform = models.TextField(default=FunPlatform.F1)
     input_version = models.CharField(verbose_name="Version", max_length=50, default="")
+    input_encryption = models.BooleanField(default=False)
+
     output_write_iops = models.IntegerField(verbose_name="Write IOPS", default=-1)
     output_read_iops = models.IntegerField(verbose_name="Read IOPS", default=-1)
     output_write_throughput = models.FloatField(verbose_name="Write throughput", default=-1)
