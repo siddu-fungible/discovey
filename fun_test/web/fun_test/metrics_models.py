@@ -242,6 +242,12 @@ class MetricChart(models.Model):
     def get_jira_ids(self):
         return json.loads(self.jira_ids)
 
+    def set_chart_status(self, status, suite_execution_id):
+        self.last_build_status = status
+        self.last_suite_execution_id = suite_execution_id
+        self.last_build_date = get_current_time()
+        self.save()
+
     def add_child(self, child_id):
         children = json.loads(self.children)
         if child_id not in children:

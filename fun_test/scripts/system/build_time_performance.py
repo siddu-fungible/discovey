@@ -96,7 +96,6 @@ class PalladiumTc(FunTestCase):
             generic_helper.set_status(status)
         except Exception as ex:
             fun_test.critical(str(ex))
-        print ("used generic helper to add an entry into {}".format(model_name))
 
     def build_on_jenkins(self, jenkins_manager, params):
         queue_item = jenkins_manager.build(params=params, extra_emails=self.extra_emails)
@@ -152,10 +151,9 @@ class FunOnDemandBuildTimeTc(PalladiumTc):
         finally:
             self.total_time_taken = self.timer.elapsed_time()
             model_name = "FunOnDemandTotalTimePerformance"
+            status = fun_test.FAILED
             if self.build_success == fun_test.PASSED and self.lsf_success == fun_test.PASSED:
                 status = fun_test.PASSED
-            else:
-                status = fun_test.FAILED
 
             value_dict = {"date_time": get_data_collection_time(),
                           "version": fun_test.get_version(),
@@ -186,18 +184,11 @@ class SetFunOnDemandBuildTimeChartStatusTc(PalladiumTc):
                         entry = entries.first()
                         if not entry.status == fun_test.PASSED:
                             status = False
-                            chart.last_build_status = fun_test.FAILED
-                            chart.last_suite_execution_id = fun_test.get_suite_execution_id()
-                            chart.last_build_date = get_current_time()
-                            chart.last_test_case_id = self.id
-                            chart.save()
+                            chart.set_chart_status(status=fun_test.FAILED,
+                                                   suite_execution_id=fun_test.get_suite_execution_id())
                             break
                 if status:
-                    chart.last_build_status = fun_test.PASSED
-                    chart.last_suite_execution_id = fun_test.get_suite_execution_id()
-                    chart.last_test_case_id = self.id
-                    chart.last_build_date = get_current_time()
-                    chart.save()
+                    chart.set_chart_status(status=fun_test.PASSED, suite_execution_id=fun_test.get_suite_execution_id())
             self.result = fun_test.PASSED
         except Exception as ex:
             self.result = fun_test.FAILED
