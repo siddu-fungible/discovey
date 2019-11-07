@@ -21,7 +21,7 @@
   "password": "password",
   "volume_creation_details": [
     {
-      "capacity": 2199023255552,
+      "capacity": 6442450944,
       "encrypt": true,
       "stripe_count": 6,
       "vol_type": "VOL_TYPE_BLK_LOCAL_THIN",
@@ -43,5 +43,8 @@
     "offset": "0kb",
     "aux-path": "/tmp",
     "verify_state_save": 1
+  },
+  "read_fio": {
+
   }
 }

@@ -14,7 +14,8 @@ class DataIntegrityTestcase(ApcPduTestcase):
         # Any additional setup can be added here
 
     def run(self):
-        super(DataIntegrityTestcase, self).run()
+        # super(DataIntegrityTestcase, self).run()
+        self.data_integrity_check()
         # If you change the run
 
     def basic_checks(self):
@@ -36,6 +37,7 @@ class DataIntegrityTestcase(ApcPduTestcase):
             self.connect_the_host_to_volumes()
             self.verify_nvme_connect()
             self.start_fio(required_hosts_list[0], fio_params=self.write_fio, timeout=10000)
+            self.
             self.disconnect_the_hosts()
             self.destoy_host_handles()
 
