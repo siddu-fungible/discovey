@@ -2309,6 +2309,9 @@ def encryption_helper(children, root_chart):
             data_sets = child_chart.get_data_sets()
             for data_set in data_sets:
                 data_set["inputs"]["input_encryption"] = True
+                data_set["output"]["reference"] = -1
+                data_set["output"]["expected"] = -1
+                data_set["output"]["best"] = -1
             leaf_chart = ml.create_leaf(chart_name=child_chart.chart_name,
                                         internal_chart_name=child_chart.internal_chart_name + "_encryption_on",
                                         data_sets=data_sets, leaf=True,
