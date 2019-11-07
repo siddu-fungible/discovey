@@ -738,12 +738,12 @@ class RunFioRds(FunTestCase):
 
         # Compute expected IOPs
         if total_ssd == 1:
-            exp_iops = 650
+            exp_iops = 600
         else:
-            exp_iops = 650 * total_ssd
-        current_read_iops = total_read_iops/1000
-        print "The current read IOPs: {}".format(current_read_iops)
-        print "The expected read IOPs: {}".format(exp_iops)
+            exp_iops = 600 * total_ssd
+        current_read_iops = total_read_iops / 1000
+        fun_test.log("The current read IOPs: {}".format(current_read_iops))
+        fun_test.log("The expected read IOPs: {}".format(exp_iops))
         fun_test.simple_assert(expression=(current_read_iops > exp_iops),
                                message="Expected Read IOPs")
 
