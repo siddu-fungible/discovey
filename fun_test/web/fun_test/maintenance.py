@@ -2224,7 +2224,7 @@ if __name__ == "__main_random_read_comp__":
                            workspace_ids=[])
     print "created charts for inspur random read write compression"
 
-if __name__ == "__main__":
+if __name__ == "__main_temp__":
     owner_info = "Alagarswamy Devaraj (alagarswamy.devaraj@fungible.com)"
     source = "https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/storage/pocs/inspur/ec_inspur_fs_teramark_multivolume_comp.py"
     base_line_date = datetime(year=2019, month=11, day=4, minute=0, hour=0, second=0)
@@ -2284,4 +2284,5 @@ if __name__ == "__main__":
         print json.dumps(final_dict)
     print "added charts for random read and random write compression charts for inspur"
 
-
+if __name__ == "__main__":
+    ml.backup_dags()

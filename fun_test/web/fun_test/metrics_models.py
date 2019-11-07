@@ -2775,8 +2775,7 @@ class MileStoneMarkers(models.Model):
 
 class PerformanceMetricsDag(FunModel):
     date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
-    f1_metrics_dag = JSONField(default=[])
-    s1_metrics_dag = JSONField(default=[])
+    metrics_dag = JSONField(default=[])
 
     def __str__(self):
         s = ""
