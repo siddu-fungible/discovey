@@ -1017,7 +1017,7 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                         io_factor = 2
                         while True:
                             if (int(res_iodepth) / io_factor) <= total_numa_cpus:
-                                global_num_jobs = (int(res_iodepth) / len(nvme_block_device_list)) / io_factor
+                                global_num_jobs = int(int(res_iodepth) / io_factor)
                                 final_fio_iodepth = io_factor
                                 break
                             else:
