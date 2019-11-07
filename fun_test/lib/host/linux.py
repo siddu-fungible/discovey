@@ -2839,12 +2839,15 @@ class Linux(object, ToDictMixin):
             pass
 
     @fun_test.safe
-    def docker(self, ps=True):
+    def docker(self, ps=True, sudo=False):
         result = None
         command = None
         if ps:
             command = "docker ps --format '{{json .}}'"
-        output = self.command(command)
+        if sudo:
+            output = self.sudo_command(command)
+        else:
+            output = self.command(command)
         lines = output.split("\n")
         try:
             result = [json.loads(str(line)) for line in lines]
