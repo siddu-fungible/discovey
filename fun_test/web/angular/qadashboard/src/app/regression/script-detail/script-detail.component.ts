@@ -39,6 +39,7 @@ class ArtifactElement {
   sub_category: string;
   description: string;
   filename: string;
+  link: string;
 }
 
 class Artifact {
@@ -52,7 +53,7 @@ class Artifact {
 class ArtifactTree {
   root = {};
 
-  addArtifact(artifact: Artifact) {
+  addArtifact(artifact: Artifact, staticLogDir: string) {
     if (!this.root.hasOwnProperty(artifact.data.asset_type)) {
       this.root[artifact.data.asset_type] = {};
     }
@@ -65,6 +66,11 @@ class ArtifactTree {
       assetIdEntry[artifact.data.category] = [];
     }
     let categoryEntry = assetIdEntry[artifact.data.category];
+    let parts = artifact.data.filename.split("/");
+    if (parts.length > 0) {
+      artifact.data.link = `${staticLogDir}/${parts[parts.length - 1]}`;
+
+    }
     categoryEntry.push(artifact);
   }
 
@@ -529,7 +535,7 @@ export class ScriptDetailComponent implements OnInit {
 
   _parseArtifacts() {
     this.artifacts.forEach(artifact => {
-      this.artifactTree.addArtifact(artifact);
+      this.artifactTree.addArtifact(artifact, `/static/logs/s_${this.suiteExecutionId}`);
     })
   }
 

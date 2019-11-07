@@ -916,7 +916,7 @@ class BootupWorker(Thread):
 
             fun_test.test_assert(expression=fs.set_f1s(), message="Set F1s", context=self.context)
 
-            if not fs.skip_funeth_come_power_cycle:
+            if not fs.skip_funeth_come_power_cycle and not fs.bundle_image_parameters:
                 fs.set_boot_phase(BootPhases.FS_BRING_UP_FUNETH_UNLOAD_COME_POWER_CYCLE)
                 fun_test.test_assert(expression=fs.funeth_reset(), message="Funeth ComE power-cycle ref: IN-373")
 
@@ -925,7 +925,16 @@ class BootupWorker(Thread):
                 build_number = fs.bundle_image_parameters.get("build_number", 70)  # TODO: Is there a latest?
                 release_train = fs.bundle_image_parameters.get("release_train", "1.0a_aa")
                 come = fs.get_come()
-                fun_test.test_assert(come.detect_pfs(), "Detect PFs", context=self.context)
+                try:
+                    come.detect_pfs()
+                except Exception as ex:
+                    fun_test.add_checkpoint("PFs were not detecting. Doing a full power-cycle now")
+                    fun_test.test_assert(self.fs.apc_power_cycle(), "APC power-cycle complete. Devices are up")
+                    fs.come = None
+                    fs.bmc = None
+                    come = fs.get_come()
+                    come.detect_pfs()
+                    bmc = fs.get_bmc()
 
                 for f1_index in range(2):
                     if f1_index == self.fs.disable_f1_index:
@@ -1091,18 +1100,19 @@ class ComEInitializationWorker(Thread):
         containers = come.docker()
         for expected_container in self.EXPECTED_CONTAINERS:
             found = False
-            for container in containers:
-                container_name = container["Names"]
-                if container_name == expected_container:
-                    found = True
-                    container_is_up = "Up" in container["Status"]
-                    if not container_is_up:
-                        result = False
-                        fun_test.critical("Container {} is not up".format(container_name), context=self.fs.context)
-                        break
-            if not found:
-                fun_test.critical("Container {} was not found".format(expected_container), context=self.fs.context)
-                result = False
+            if containers:
+                for container in containers:
+                    container_name = container["Names"]
+                    if container_name == expected_container:
+                        found = True
+                        container_is_up = "Up" in container["Status"]
+                        if not container_is_up:
+                            result = False
+                            fun_test.critical("Container {} is not up".format(container_name), context=self.fs.context)
+                            break
+                if not found:
+                    fun_test.critical("Container {} was not found".format(expected_container), context=self.fs.context)
+                    result = False
                 break
         return result
 
@@ -1329,7 +1339,6 @@ class ComE(Linux):
 
     def detect_pfs(self):
         devices = self.lspci(grep_filter="1dad")
-        # fun_test.log("CONTEXT: {}".format(self.context))
         fun_test.test_assert(expression=devices, message="PCI devices detected", context=self.context)
 
         f1_index = 0
@@ -1560,7 +1569,14 @@ class Fs(object, ToDictMixin):
         self.tftp_image_path = tftp_image_path
         self.bundle_image_parameters = bundle_image_parameters
         if self.bundle_image_parameters:
-            if int(self.bundle_image_parameters["build_number"]) < 0:
+            bundle_build_number = self.bundle_image_parameters["build_number"]
+            is_number = False
+            try:
+                bundle_build_number = int(bundle_build_number)
+                is_number = True
+            except:
+                pass
+            if is_number and bundle_build_number < 0:
                 fun_test.log("Build number set to -1 so resetting bundle image parameters")
                 self.bundle_image_parameters = None
         self.disable_f1_index = disable_f1_index
@@ -1601,7 +1617,7 @@ class Fs(object, ToDictMixin):
         self.csi_perf_templates = {}
         self.bundle_upgraded = False   # is the bundle upgrade complete?
         self.bundle_compatible = False   # Set this, if we are trying to boot a device with bundle installed already
-        if "bundle_compatible" in spec and spec["bundle_compatible"]:
+        if ("bundle_compatible" in spec and spec["bundle_compatible"]) or (self.bundle_image_parameters):
             self.bundle_compatible = True
             self.skip_funeth_come_power_cycle = True
         self.mpg_ips = spec.get("mpg_ips", [])
@@ -1612,6 +1628,24 @@ class Fs(object, ToDictMixin):
         self.already_deployed = already_deployed
         self.statistics_collectors = {}
         fun_test.register_fs(self)
+
+
+    def reset_device_handles(self):
+        try:
+            if self.bmc:
+                self.bmc.destroy()
+        except:
+            pass
+        try:
+            if self.come:
+                self.come.destroy()
+        except:
+            pass
+        try:
+            if self.fpga:
+                self.fpga.destroy()
+        except:
+            pass
 
     def get_asset_type(self):
         return self.asset_type
@@ -2119,7 +2153,7 @@ class Fs(object, ToDictMixin):
         return result
 
     def apc_power_cycle(self):
-        fun_test.simple_assert(expression=self.apc_info, context=self.context)
+        fun_test.simple_assert(expression=self.apc_info, context=self.context, message="APC info is missing")
         apc_pdu = ApcPdu(context=self.context, **self.apc_info)
         power_cycle_result = apc_pdu.power_cycle(self.apc_info["outlet_number"])
         fun_test.simple_assert(expression=power_cycle_result,
@@ -2129,15 +2163,28 @@ class Fs(object, ToDictMixin):
             apc_pdu.disconnect()
         except:
             pass
+
+        self.reset_device_handles()
+
+        worst_case_uptime = 60 * 10
         fpga = self.get_fpga()
         if fpga:
-            fun_test.test_assert(expression=self.get_fpga().ensure_host_is_up(max_wait_time=120),
+            fun_test.test_assert(expression=fpga.ensure_host_is_up(max_wait_time=120),
                                  context=self.context, message="FPGA reachable after APC power-cycle")
-        fun_test.test_assert(expression=self.get_bmc().ensure_host_is_up(max_wait_time=120),
+            fun_test.simple_assert(fpga.uptime() < worst_case_uptime, "FPGA uptime is less than 10 minutes")
+
+        bmc = self.get_bmc()
+        fun_test.test_assert(expression=bmc.ensure_host_is_up(max_wait_time=120),
                              context=self.context, message="BMC reachable after APC power-cycle")
-        fun_test.test_assert(expression=self.get_come().ensure_host_is_up(max_wait_time=120,
-                                                                          power_cycle=True),
-                                                                          message="ComE reachable after APC power-cycle")
+        fun_test.simple_assert(bmc.uptime() < worst_case_uptime, "BMC uptime is less than 10 minutes")
+
+        fun_test.simple_assert()
+        come = self.get_come()
+        fun_test.test_assert(expression=come.ensure_host_is_up(max_wait_time=180,
+                                                               power_cycle=False), message="ComE reachable after APC power-cycle")
+        fun_test.simple_assert(come.uptime() < worst_case_uptime, "BMC uptime is less than 10 minutes")
+
+
         return True
 
     def get_dpc_client(self, f1_index, auto_disconnect=False, statistics=None):

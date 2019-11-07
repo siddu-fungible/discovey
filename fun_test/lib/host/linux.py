@@ -2854,6 +2854,17 @@ class Linux(object, ToDictMixin):
         return result
 
 
+    @fun_test.safe
+    def uptime(self, use_proc_uptime=True):
+        result = None
+        if use_proc_uptime:
+            output = self.command("cat /proc/uptime")
+            m = re.search(r'(\d+\.\d*)\s', output)
+            if m:
+                result = float(m.group(1))
+
+        return result
+
 class LinuxBackup:
     def __init__(self, linux_obj, source_file_name, backedup_file_name):
         self.linux_obj = linux_obj
@@ -2873,4 +2884,4 @@ class LinuxBackup:
 
 if __name__ == "__main__":
     l = Linux(host_ip="qa-ubuntu-02", ssh_username="auto_admin", ssh_password="fun123")
-    print l.process_exists(process_id=22635)
+    print l.uptime()
