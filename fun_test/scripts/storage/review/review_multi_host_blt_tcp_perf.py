@@ -817,11 +817,13 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                     wait_time = self.num_hosts - index
                     if "multiple_jobs" in self.warm_up_fio_cmd_args:
                         # Adding the allowed CPUs into the fio warmup command
-                        self.warm_up_fio_cmd_args["multiple_jobs"] += "  --cpus_allowed={}".\
-                            format(self.host_info[host_name]["host_numa_cpus"])
+                        # self.warm_up_fio_cmd_args["multiple_jobs"] += "  --cpus_allowed={}".\
+                        #    format(self.host_info[host_name]["host_numa_cpus"])
+                        fio_cpus_allowed_args = " --cpus_allowed={}".format(self.host_info[host_name]["host_numa_cpus"])
                         for id, device in enumerate(self.host_info[host_name]["nvme_block_device_list"]):
                             jobs += " --name=pre-cond-job-{} --filename={}".format(id + 1, device)
-                        warm_up_fio_cmd_args["multiple_jobs"] = self.warm_up_fio_cmd_args["multiple_jobs"] + str(jobs)
+                        warm_up_fio_cmd_args["multiple_jobs"] = self.warm_up_fio_cmd_args["multiple_jobs"] + str(
+                            fio_cpus_allowed_args) + str(jobs)
                         warm_up_fio_cmd_args["timeout"] = self.warm_up_fio_cmd_args["timeout"]
                         # fio_output = self.host_handles[key].pcie_fio(filename="nofile", timeout=self.warm_up_fio_cmd_args["timeout"],
                         #                                    **warm_up_fio_cmd_args)
@@ -1017,7 +1019,7 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                         io_factor = 2
                         while True:
                             if (int(res_iodepth) / io_factor) <= total_numa_cpus:
-                                global_num_jobs = (int(res_iodepth) / len(nvme_block_device_list)) / io_factor
+                                global_num_jobs = int(int(res_iodepth) / io_factor)
                                 final_fio_iodepth = io_factor
                                 break
                             else:

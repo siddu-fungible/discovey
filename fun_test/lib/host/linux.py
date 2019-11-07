@@ -2839,12 +2839,15 @@ class Linux(object, ToDictMixin):
             pass
 
     @fun_test.safe
-    def docker(self, ps=True):
+    def docker(self, ps=True, sudo=False):
         result = None
         command = None
         if ps:
             command = "docker ps --format '{{json .}}'"
-        output = self.command(command)
+        if sudo:
+            output = self.sudo_command(command)
+        else:
+            output = self.command(command)
         lines = output.split("\n")
         try:
             result = [json.loads(str(line)) for line in lines]
@@ -2853,6 +2856,17 @@ class Linux(object, ToDictMixin):
 
         return result
 
+
+    @fun_test.safe
+    def uptime(self, use_proc_uptime=True):
+        result = None
+        if use_proc_uptime:
+            output = self.command("cat /proc/uptime")
+            m = re.search(r'(\d+\.\d*)\s', output)
+            if m:
+                result = float(m.group(1))
+
+        return result
 
 class LinuxBackup:
     def __init__(self, linux_obj, source_file_name, backedup_file_name):
@@ -2873,4 +2887,4 @@ class LinuxBackup:
 
 if __name__ == "__main__":
     l = Linux(host_ip="qa-ubuntu-02", ssh_username="auto_admin", ssh_password="fun123")
-    print l.process_exists(process_id=22635)
+    print l.uptime()

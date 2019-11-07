@@ -729,6 +729,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                         fio_cpus_allowed_args = " --cpus_allowed={}".format(self.host_info[host_name]["host_numa_cpus"])
                         warm_up_fio_cmd_args["multiple_jobs"] = self.warm_up_fio_cmd_args["multiple_jobs"] + str(
                             fio_cpus_allowed_args) + str(jobs)
+                        warm_up_fio_cmd_args["timeout"] = self.warm_up_fio_cmd_args["timeout"]
                         wait_time = self.num_hosts - index
                         host_clone[host_name] = self.host_info[host_name]["handle"].clone()
                         warmup_thread_id[index] = fun_test.execute_thread_after(
@@ -762,6 +763,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                         fio_cpus_allowed_args = " --cpus_allowed={}".format(self.host_info[host_name]["host_numa_cpus"])
                         warm_up_fio_cmd_args["multiple_jobs"] = self.warm_up_fio_cmd_args["multiple_jobs"] + str(
                             fio_cpus_allowed_args) + str(jobs)
+                        warm_up_fio_cmd_args["timeout"] = self.warm_up_fio_cmd_args["timeout"]
                         fio_output = host_handle.pcie_fio(filename="nofile", **warm_up_fio_cmd_args)
                         fun_test.log("FIO Command Output:\n{}".format(fio_output))
                         fun_test.test_assert(fio_output, "Volume warmup on host {}".format(host_name))

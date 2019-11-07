@@ -90,6 +90,20 @@
                    <div class="fun-panel-header">
                      {{ category.key }}
                    </div>
+                   <div class="fun-panel-body">
+                     <table class="fun-table">
+                       <tr>
+                         <td class="fun-table-header">Sub-category</td>
+                         <td class="fun-table-header">Link</td>
+                       </tr>
+                       <tr *ngFor="let record of category.value">
+                         <td>{{ record.data.sub_category }}</td>
+                         <td><a href="{{ record.data.link}}">{{ record.data.description }}</a></td>
+                       </tr>
+
+                     </table>
+
+                   </div>
                 </div>
               </div>
 
