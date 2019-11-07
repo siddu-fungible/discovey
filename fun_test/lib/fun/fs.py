@@ -1097,7 +1097,7 @@ class ComEInitializationWorker(Thread):
     def is_expected_containers_running(self, come):
 
         result = True
-        containers = come.docker()
+        containers = come.docker(sudo=True)
         for expected_container in self.EXPECTED_CONTAINERS:
             found = False
             if containers:
@@ -1114,6 +1114,9 @@ class ComEInitializationWorker(Thread):
                     fun_test.critical("Container {} was not found".format(expected_container), context=self.fs.context)
                     result = False
                 break
+            else:
+                fun_test.critical("No containers are running")
+                result = False
         return result
 
 class ComE(Linux):
