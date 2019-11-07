@@ -1,0 +1,194 @@
+{
+  "fs": {
+    "fs-alibaba-demo": {
+      "fs-name": "fs-45",
+      "hosts": {
+        "cab03-qa-02": "x16",
+        "cab03-qa-06": "x16"
+      },
+      "nu_host": [
+        "cab03-qa-03"
+      ],
+      "hu_host": [
+        "cab03-qa-01"
+      ],
+      "vm_config": {
+        "cab03-qa-02": {
+          "remote_controller_ip": "18.1.1.1",
+          "local_controller_ip": "19.1.1.1",
+          "remote_controller_port": 4420,
+          "local_controller_port": 4420,
+          "dpc_port_local": 40220,
+          "dpc_port_remote": 40221,
+          "ctlid": 0,
+          "huid": 1,
+          "pcie_vfs": 4,
+          "vms": {
+            "cab03-qa-02-vm01": {
+              "hostname": "10.1.105.15",
+              "user": "localadmin",
+              "password": "Precious1*",
+              "data_ip": "18.1.1.3",
+              "ethernet_pci_device": "_01_0",
+              "nvme_pci_device": "_05_0",
+              "fnid": 40,
+              "local_storage": {
+                "blt_vol_capacity": 1600120684544,
+                "blt_vol_block_size": 4096,
+                "rds_vol_capacity": 1600120684544,
+                "rds_vol_block_size": 4096,
+                "command_timeout": 5
+              },
+              "remote_storage": {
+                "blt_vol_capacity": 1600120684544,
+                "blt_vol_block_size": 4096,
+                "command_timeout": 5
+              },
+              "vm_pings": [
+                "30.1.1.2",
+                "18.1.1.1"
+              ]
+            }
+          }
+        },
+        "cab03-qa-06": {
+          "remote_controller_ip": "18.1.1.1",
+          "local_controller_ip": "19.1.1.1",
+          "remote_controller_port": 4420,
+          "local_controller_port": 4420,
+          "dpc_port_local": 40220,
+          "dpc_port_remote": 40221,
+          "ctlid": 0,
+          "huid": 3,
+          "pcie_vfs": 4,
+          "vms": {
+            "cab03-qa-06-vm01": {
+              "hostname": "10.1.105.138",
+              "user": "localadmin",
+              "password": "Precious1*",
+              "data_ip": "18.1.1.4",
+              "ethernet_pci_device": "_01_0",
+              "nvme_pci_device": "_05_0",
+              "fnid": 40,
+              "local_storage": {
+                "blt_vol_capacity": 1600120684544,
+                "blt_vol_block_size": 4096,
+                "rds_vol_capacity": 1600120684544,
+                "rds_vol_block_size": 4096,
+                "command_timeout": 5
+              },
+              "remote_storage": {
+                "blt_vol_capacity": 1600120684544,
+                "blt_vol_block_size": 4096,
+                "command_timeout": 5
+              },
+              "vm_pings": [
+                "30.1.1.2",
+                "18.1.1.1"
+              ]
+            }
+          }
+        }
+      },
+      "mpg_ips": {
+        "static": true,
+        "mpg0": "10.1.105.172",
+        "mpg1": "10.1.105.173"
+      },
+      "cc_pings": {
+        "F1-0": [
+          "1.1.1.1"
+        ],
+        "F1-1": [
+          "1.1.2.1"
+        ]
+      },
+      "host_pings": {
+        "cab03-qa-01": [
+          "18.1.1.1",
+          "30.1.1.2"
+        ]
+      },
+      "abstract_configs": {
+        "F1-0": "alibaba_bmv_configs_f1_0.json",
+        "F1-1": "alibaba_bmv_configs_f1_1.json"
+      },
+      "static_routes": {
+        "F1-0": {
+          "1": {
+            "gateway": "1.1.1.1",
+            "port": "fpg0",
+            "route": "19.1.1.0/24"
+          },
+          "2": {
+            "gateway": "1.1.1.1",
+            "port": "fpg0",
+            "route": "30.1.1.0/24"
+          },
+          "3": {
+            "gateway": "1.1.1.1",
+            "port": "fpg0",
+            "route": "1.1.2.0/24"
+          }
+        },
+        "F1-1": {
+          "1": {
+            "gateway": "1.1.2.1",
+            "port": "fpg0",
+            "route": "18.1.1.0/24"
+          },
+          "2": {
+            "gateway": "1.1.2.1",
+            "port": "fpg0",
+            "route": "30.1.1.0/24"
+          },
+          "3": {
+            "gateway": "1.1.2.1",
+            "port": "fpg0",
+            "route": "1.1.1.0/24"
+          }
+        }
+      }
+    }
+  },
+  "LocalSSDVM": {
+    "command_timeout": 5,
+    "capacity": 1600120684544,
+    "block_size": 4096,
+    "controllers": {},
+    "ip": "18.1.1.1",
+    "port": 4420,
+    "transport": "PCI",
+    "uname": "localadmin",
+    "pwd": "Precious1*",
+    "server": "cab03-qa-02",
+    "server_dict" : {"10.1.105.15": "vm1", "10.1.105.138": "vm2"},
+    "warm_up_traffic": 0,
+    "iter_interval": 5,
+    "num_ssds": 2,
+    "warm_up_fio_cmd_args": {
+      "rw": "randwrite", "bs": "4k", "size": "100%",
+      "iodepth": 18, "numjobs": 1, "thread": "NO_VALUE",
+      "ioengine": "libaio", "direct": 1,
+      "invalidate": 1, "end_fsync": 0, "offset": "0G",
+      "norandommap": "NO_VALUE", "randrepeat": 0,
+      "timeout": 7200
+    },
+    "fio_cmd_args": {
+      "ioengine": "libaio", "direct": 1, "thread": "NO_VALUE",
+      "invalidate": 1, "end_fsync": 0, "offset": "0G",
+      "norandommap": "NO_VALUE", "randrepeat": 0,
+      "runtime": 120, "group_reporting": 1,
+      "timeout": 600
+    },
+    "fio_modes": [
+      "randread", "randwrite"
+    ],
+    "fio_bs": "4k",
+    "fio_jobs_iodepth": ["(1,1)", "(8,1)", "(16,1)", "(16,2)", "(16,4)","(16, 8)", "(16,16)", "(16,32)"],
+    "fio_job_name": {
+      "randread": "ali_bmv_local_f1",
+      "randwrite": "ali_bmv_local_f1"
+    }
+  }
+}
