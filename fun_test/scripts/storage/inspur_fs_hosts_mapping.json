@@ -483,11 +483,11 @@
                 8,
                 12
               ],
-              "ip": "15.56.1.2/24",
+              "ip": "15.117.1.2/24",
               "route": [
                 {
                   "network": "15.0.0.0/8",
-                  "gateway": "15.56.1.1"
+                  "gateway": "15.117.1.1"
                 }
               ]
             }
@@ -501,11 +501,11 @@
                 8,
                 12
               ],
-              "ip": "15.56.2.2/24",
+              "ip": "15.117.2.2/24",
               "route": [
                 {
                   "network": "15.0.0.0/8",
-                  "gateway": "15.56.2.1"
+                  "gateway": "15.117.2.1"
                 }
               ]
             }
@@ -576,7 +576,7 @@
       }
     },
     "host_info": [
-      "mktg-server-11"
+      "cab02-qa-09"
     ]
   },
   "fs-102": {
@@ -690,23 +690,7 @@
       }
     },
     "host_info": [
-      "mktg-server-05",
-      "mktg-server-06",
-      "mktg-server-07",
-      "mktg-server-08",
-      "mktg-server-09",
-      "mktg-server-10",
-      "mktg-server-11",
-      "mktg-server-12",
-      "mktg-server-13",
-      "mktg-server-14",
-      "cab02-qa-01",
-      "cab02-qa-02",
-      "cab02-qa-03",
-      "cab02-qa-04",
-      "cab02-qa-05",
-      "cab02-qa-06",
-      "cab02-qa-07"
+      "cab02-qa-10"
     ]
   },
   "fs-104": {
@@ -820,23 +804,9 @@
       }
     },
     "host_info": [
-      "mktg-server-05",
-      "mktg-server-06",
-      "mktg-server-07",
-      "mktg-server-08",
-      "mktg-server-09",
-      "mktg-server-10",
-      "mktg-server-11",
-      "mktg-server-12",
-      "mktg-server-13",
-      "mktg-server-14",
-      "cab02-qa-01",
-      "cab02-qa-02",
-      "cab02-qa-03",
-      "cab02-qa-04",
-      "cab02-qa-05",
-      "cab02-qa-06",
-      "cab02-qa-07"
+      "cab02-qa-11",
+      "cab02-qa-12",
+      "cab02-qa-13"
     ]
   },
   "fs-inspur": {
@@ -1273,11 +1243,11 @@
                 8,
                 12
               ],
-              "ip": "15.56.1.2/24",
+              "ip": "15.117.1.2/24",
               "route": [
                 {
                   "network": "15.0.0.0/8",
-                  "gateway": "15.56.1.1"
+                  "gateway": "15.117.1.1"
                 }
               ]
             }
@@ -1291,11 +1261,11 @@
                 8,
                 12
               ],
-              "ip": "15.56.2.2/24",
+              "ip": "15.117.2.2/24",
               "route": [
                 {
                   "network": "15.0.0.0/8",
-                  "gateway": "15.56.2.1"
+                  "gateway": "15.117.2.1"
                 }
               ]
             }
