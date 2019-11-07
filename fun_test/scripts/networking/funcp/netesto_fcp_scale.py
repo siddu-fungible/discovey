@@ -150,7 +150,7 @@ def get_netesto_script(test_type='basic'):
 
     ##################
     # Default values
-    SET randDelay=1
+    SET randDelay=0.1
 
     SET burst=0
     SET interval=0
@@ -238,6 +238,7 @@ def netesto_client(host, ssh_username="localadmin", ssh_password="Precious1*"):
     #            INTF=interface[host]))
 
     linux_obj.sudo_command(command="sudo ethtool --coalesce {INTF} rx-usecs 8 tx-usecs 16 rx-frames 64 tx-frames 32 adaptive-rx on".format(INTF=interface[host]))
+
 
 
     #take_tcpdump = False
@@ -472,13 +473,6 @@ if __name__ == '__main__':
     options, args = parser.parse_args()
     if options.usage:
         print '''README:
-            Examples : 
-                ./netesto_fcp_scale.py -t <test profile>
-                    where:
-                    <test profile> : Profile defined in netesto_traffic_profiles.py
-                ./netesto_fcp_scale.py -c -d <duration> -t <test name> --nc <netperf clients> --ns <netesto servers>
-                    <test name> : One of tp_tcp_rr, tp_tcp_stream, tp_tcp_stream_buff_limit, tp_tcp_rr_buff_limit
-            
     		'-t', '--test' default="tp_tcp_rr"
                 '-d', '--duration' default=60
     		'-n', '--instances' default='1', help="No of instances "
