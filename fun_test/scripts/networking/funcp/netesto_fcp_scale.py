@@ -206,7 +206,7 @@ def netesto_client(host, ssh_username="localadmin", ssh_password="Precious1*"):
     linux_obj.sudo_command(command="echo 5 > /proc/sys/net/ipv4/tcp_fin_timeout")
     linux_obj.sudo_command(command="echo 1 > /proc/sys/net/ipv4/tcp_tw_recycle")
     linux_obj.sudo_command(command="echo 1 > /proc/sys/net/ipv4/tcp_tw_reuse")
-
+    linux_obj.sudo_command(command="sudo /etc/init.d/irqbalance stop")
     interface = {
         'mpoc-server30': 'hu3-f0',
         'mpoc-server31': 'hu1-f0',
