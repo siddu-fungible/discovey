@@ -28,18 +28,54 @@ class DataIntegrityTestcase(ApcPduTestcase):
                                                api_server_port=self.api_server_port,
                                                username=self.username,
                                                password=self.password)
-            required_hosts_list = self.verify_and_get_required_hosts_list(self.write_hosts)
+            required_write_hosts_list = self.verify_and_get_required_hosts_list(self.write_hosts)
+            required_read_hosts_list = self.verify_and_get_required_hosts_list(self.read_hosts + 1)
+            self.remove_write_host_from_read_hosts_list(required_write_hosts_list, required_read_hosts_list)
+            self.scp_aux_file(from_host=required_write_hosts_list[0], to_hosts=required_read_hosts_list)
+
             self.pool_uuid = self.get_pool_id()
             self.volume_uuid_details = self.create_vol(self.write_hosts)
-            self.attach_volumes_to_host(required_hosts_list)
+            self.attach_volumes_to_host(required_write_hosts_list)
             self.get_host_handles()
             # self.intialize_the_hosts()
             self.connect_the_host_to_volumes()
             self.verify_nvme_connect()
-            self.start_fio(required_hosts_list[0], fio_params=self.write_fio, timeout=10000)
-            self.
+            self.start_fio_and_verify(fio_params=self.write_fio, host_names_list=required_write_hosts_list)
+            self.start_fio_and_verify(fio_params=self.read_fio, host_names_list=required_write_hosts_list, cd=self.read_fio["aux-path"])
+            required_read_hosts_list = self.verify_and_get_required_hosts_list(self.read_hosts + 1)
+            self.remove_write_host_from_read_hosts_list(required_write_hosts_list, required_read_hosts_list)
+            self.scp_aux_file(from_host=required_write_hosts_list[0], to_hosts=required_read_hosts_list)
             self.disconnect_the_hosts()
             self.destoy_host_handles()
+
+            # We have to reboot now
+
+            self.attach_volumes_to_host(required_read_hosts_list)
+            self.get_host_handles()
+            self.connect_the_host_to_volumes()
+
+            self.disconnect_the_hosts()
+            self.destoy_host_handles()
+
+    def remove_write_host_from_read_hosts_list(self, write_hosts, read_hosts):
+        for write_host in write_hosts:
+            if write_host in read_hosts:
+                read_hosts.remove(write_host)
+
+    def scp_aux_file(self, from_host, to_hosts):
+        file_name = "local-" + self.write_fio["name"] + "-0-verify.state"
+        file_dir = self.write_fio["aux-path"]
+        from_host_info = self.hosts_asset[from_host]
+        for to_host in to_hosts:
+            host_info = self.hosts_asset[to_host]
+            fun_test.scp(source_file_path=file_dir + "/" + file_name,
+                         target_file_path=file_dir + "/",
+                         source_ip=from_host_info['host_ip'],
+                         source_username=from_host_info['ssh_username'],
+                         source_password=from_host_info['ssh_password'],
+                         target_ip=host_info['host_ip'],
+                         target_username=host_info['ssh_username'],
+                         target_password=host_info['ssh_password'])
 
     def cleanup(self):
         super(DataIntegrityTestcase, self).cleanup()

@@ -201,7 +201,7 @@ class ApcPduTestcase(FunTestCase):
                 self.get_host_handles()
             self.connect_the_host_to_volumes()
             self.verify_nvme_connect()
-            self.start_traffic_and_verify()
+            self.start_fio_and_verify(required_hosts_list)
             self.disconnect_the_hosts()
             self.destoy_host_handles()
 
@@ -481,17 +481,17 @@ class ApcPduTestcase(FunTestCase):
         fun_test.test_assert(result, "{} host is connected".format(name))
         return nvme
 
-    def check_traffic(self, host_name):
+    def check_traffic(self, host_name, fio_run_time, interval=10):
         host_info = self.hosts_asset[host_name]
         host_handle = Linux(host_ip=host_info['host_ip'],
                             ssh_username=host_info['ssh_username'],
                             ssh_password=host_info['ssh_password'])
         device = self.host_details[host_name]["nvme"]
         device_name = device.replace("/dev/", '')
-        count = self.fio["runtime"] / 10
-        output_iostat = host_handle.iostat(device=device, interval=10, count=count, background=False)
+        count = fio_run_time / interval
+        output_iostat = host_handle.iostat(device=device, interval=interval, count=count, background=False)
         self.ensure_io_running(device_name, output_iostat, host_name)
-        fun_test.log(host_handle.command("cat /tmp/{}_fio.txt".format(host_name)))
+        # fun_test.log(host_handle.command("cat /tmp/{}_fio.txt".format(host_name)))
 
     @staticmethod
     def ensure_io_running(device, output_iostat, host_name):
@@ -647,33 +647,37 @@ class ApcPduTestcase(FunTestCase):
                                 ssh_password=host_info['ssh_password'])
             self.host_details[host_name]["handle"] = host_handle
 
-
-    def start_traffic_and_verify(self):
+    def start_fio_and_verify(self, fio_params, host_names_list, cd=""):
         thread_details = {}
-        for host_name, host_info in self.host_details.iteritems():
+        for host_name in host_names_list:
             thread_details[host_name] = {}
-            thread_details[host_name]["fio"] = fun_test.execute_thread_after(func=self.start_fio,
-                                                                             time_in_seconds=5,
-                                                                             fio_params=self.fio,
-                                                                             host_name=host_name)
+            run_time = fio_params.get("runtime", 60)
             thread_details[host_name]["check"] = fun_test.execute_thread_after(func=self.check_traffic,
-                                                                               time_in_seconds=20,
+                                                                               time_in_seconds=5,
+                                                                               fio_run_time=run_time,
                                                                                host_name=host_name)
+            thread_details[host_name]["fio"] = fun_test.execute_thread_after(func=self.start_fio,
+                                                                             time_in_seconds=7,
+                                                                             fio_params=fio_params,
+                                                                             host_name=host_name,
+                                                                             run_time=run_time,
+                                                                             cd=cd)
 
-        for host_name in self.host_details:
+        for host_name in host_names_list:
             fun_test.join_thread(thread_details[host_name]["fio"])
             fun_test.join_thread(thread_details[host_name]["check"])
 
-    def start_fio(self, host_name, fio_params, timeout=600):
+    def start_fio(self, host_name, fio_params, run_time, cd):
         host_info = self.hosts_asset[host_name]
         host_handle = Linux(host_ip=host_info['host_ip'],
                             ssh_username=host_info['ssh_username'],
                             ssh_password=host_info['ssh_password'])
-
-        host_handle.pcie_fio(timeout=timeout,
+        if cd:
+            host_handle.enter_sudo()
+            host_handle.command("cd {}".format(cd))
+        host_handle.pcie_fio(timeout=run_time,
                              filename=self.host_details[host_name]["nvme"],
                              **fio_params)
-
 
     def verify_nvme_connect(self):
         for host_name, host_info in self.host_details.iteritems():

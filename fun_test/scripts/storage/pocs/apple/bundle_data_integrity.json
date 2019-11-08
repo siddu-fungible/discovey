@@ -15,6 +15,7 @@
   "check_portal": false,
   "end_sleep": 300,
   "write_hosts": 1,
+  "read_hosts": 1,
   "transport_type": "tcp",
   "api_server_port": 50220,
   "username": "admin",
@@ -45,6 +46,20 @@
     "verify_state_save": 1
   },
   "read_fio": {
-
+    "rw": "read",
+    "bs": "64k",
+    "iodepth": 32,
+    "fill_device": 1,
+    "verify_fatal": 1,
+    "offset": "0kb",
+    "direct": 1,
+    "ioengine": "libaio",
+    "group_reporting": 1,
+    "output-format": "json",
+    "name": "bs_full_write_2tb",
+    "aux-path": "/tmp",
+    "verify_state_load": 1,
+    "do_verify": 1,
+    "verify": "md5"
   }
 }
