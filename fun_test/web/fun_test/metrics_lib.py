@@ -521,7 +521,7 @@ class MetricLib():
         else:
             pmds = PerformanceMetricsDag.objects.all().order_by("-date_time")[:1]
             for pmd in pmds:
-                result = pmd.metrics_dag
+                result = json.loads(pmd.metrics_dag)
         return result
 
     def set_global_cache(self, cache_valid):
