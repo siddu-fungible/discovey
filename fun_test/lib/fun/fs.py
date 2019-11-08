@@ -1556,7 +1556,8 @@ class Fs(object, ToDictMixin):
                  bundle_image_parameters=None,
                  spec=None,
                  already_deployed=None,
-                 revision=None):
+                 revision=None,
+                 fs_parameters=None):
         self.spec = spec
         self.bmc_mgmt_ip = bmc_mgmt_ip
         self.bmc_mgmt_ssh_username = bmc_mgmt_ssh_username
@@ -1572,6 +1573,7 @@ class Fs(object, ToDictMixin):
         self.come = None
         self.tftp_image_path = tftp_image_path
         self.bundle_image_parameters = bundle_image_parameters
+        self.fs_parameters = fs_parameters
         if self.bundle_image_parameters:
             bundle_build_number = self.bundle_image_parameters["build_number"]
             is_number = False
@@ -1630,6 +1632,9 @@ class Fs(object, ToDictMixin):
         self.cleanup_attempted = False
         self.STATISTICS_COLLECTOR_MAP = {self.StatisticsType.BAM: self.bam}
         self.already_deployed = already_deployed
+        if self.fs_parameters:
+            if "already_deployed" in self.fs_parameters:
+                self.already_deployed = self.fs_parameters["already_deployed"]
         self.statistics_collectors = {}
         fun_test.register_fs(self)
 
@@ -1779,7 +1784,8 @@ class Fs(object, ToDictMixin):
             power_cycle_come=False,
             already_deployed=False,
             skip_funeth_come_power_cycle=None,
-            bundle_image_parameters=None):  #TODO
+            bundle_image_parameters=None,
+            fs_parameters=None):  #TODO
         if not fs_spec:
             am = fun_test.get_asset_manager()
             test_bed_type = fun_test.get_job_environment_variable("test_bed_type")
@@ -1840,7 +1846,8 @@ class Fs(object, ToDictMixin):
                   skip_funeth_come_power_cycle=skip_funeth_come_power_cycle,
                   spec=fs_spec,
                   bundle_image_parameters=bundle_image_parameters,
-                  already_deployed=already_deployed)
+                  already_deployed=already_deployed,
+                  fs_parameters=fs_parameters)
         if already_deployed:
             fs_obj.re_initialize()
         return fs_obj
@@ -1946,9 +1953,13 @@ class Fs(object, ToDictMixin):
                 pass
 
         else:
-            self.bootup_worker = BootupWorker(fs=self, power_cycle_come=power_cycle_come, non_blocking=non_blocking, context=self.context)
-            self.bootup_worker.start()
-            fun_test.sleep("Bootup worker start", seconds=3)
+            if not self.already_deployed:
+                self.bootup_worker = BootupWorker(fs=self, power_cycle_come=power_cycle_come, non_blocking=non_blocking, context=self.context)
+                self.bootup_worker.start()
+                fun_test.sleep("Bootup worker start", seconds=3)
+            else:
+                self.boot_phase = BootPhases.FS_BRING_UP_COMPLETE
+                self.come_initialized = True
 
         return True
 

@@ -3233,8 +3233,22 @@
     "dut_info": {
       "0": {
         "type": "DUT_TYPE_FSU",
-        "dut": "fs-118"
+        "dut": "fs-118",
+        "fpg_interface_info": {
+          "0": {
+            "0": {
+              "switch_info": {
+                "name": "qfx-3",
+                "port": "et-0/0/20"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            }
+          }
+        }
       }
-    }
+    },
+    "host_info": [
+      "cab02-qa-10"
+    ]
   }
 }
