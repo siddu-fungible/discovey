@@ -960,6 +960,13 @@ class FunTest:
                                       te=self.current_test_case_execution_id,
                                       data=data)
 
+    def add_time_series_test_case_table(self, data):
+        self.add_time_series_document(collection_name=self.get_time_series_collection_name(),
+                                      epoch_time=get_current_epoch_time(),
+                                      type=TimeSeriesTypes.TEST_CASE_TABLE,
+                                      te=self.current_test_case_execution_id,
+                                      data=data)
+
     def add_time_series_context(self, context):
         try:
             result = self.get_mongo_db_manager().insert_one(collection_name=self.get_time_series_collection_name(),
@@ -1263,6 +1270,9 @@ class FunTest:
     def add_table(self, panel_header, table_name, table_data):
         self.fun_xml_obj.add_collapsible_tab_panel_tables(header=panel_header,
                                                           panel_items={table_name: table_data})
+        if self.time_series_enabled:
+            data = {"panel_header": panel_header, "table_name": table_name, "table_data": table_data}
+            self.add_time_series_test_case_table(data=data)
 
     def _add_xml_trace(self):
         if self.current_test_case_id in self.traces:
