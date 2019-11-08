@@ -2284,7 +2284,6 @@ if __name__ == "__main_random_read_write_inspur_comp___":
         print json.dumps(final_dict)
     print "added charts for random read and random write compression charts for inspur"
 
-
 def create_container(internal_name, chart_name):
     owner_info = "Divya Krishnankutty (divya.krishnankutty@fungible.com)"
     source = "unknown"
@@ -2350,7 +2349,7 @@ if __name__ == "__main_encryption_on_local_ssd__":
         print json.dumps(final_dict)
     print "created encryption on charts for 1SSD and 4SSD"
 
-if __name__ == "__main__":
+if __name__ == "__main_other_tree__":
     owner_info = "Bertrand Serlet (bertrand.serlet@fungible.com)"
     source = "Unknown"
     base_line_date = datetime(year=2019, month=11, day=5, minute=0, hour=0, second=0)
@@ -2379,3 +2378,17 @@ if __name__ == "__main__":
     other_node.add_child(chart.metric_id)
     other_node.fix_children_weights()
     print "added other node as a root"
+
+if __name__ == "__main__":
+    internal_name = "load_mods_time_taken"
+    chart = MetricChart.objects.get(internal_chart_name="load_mods_time_taken")
+    data_sets = chart.get_data_sets()
+    one_data_set = {}
+    one_data_set["name"] = "load_mods"
+    one_data_set["inputs"] = {}
+    one_data_set["output"] = {"name": "output_total_time", "min": 0, "max": -1, "expected": -1, "reference": -1,
+                              "best": -1, "unit": PerfUnit.UNIT_SECS}
+    data_sets.append(one_data_set)
+    chart.data_sets = json.dumps(data_sets)
+    chart.save()
+    ml.backup_dags()

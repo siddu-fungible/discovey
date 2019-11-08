@@ -834,7 +834,7 @@ def dag(request):
     levels = int(request.GET.get("levels", 15))
     is_workspace = request.GET.get('is_workspace', 0)
     # metric ids are used instead of chart names for F1, S1 and all metrics
-    metric_ids = request.GET.get("root_metric_ids", '101,591')  # 101=F1, 122=All Metrics, 591-S1
+    metric_ids = request.GET.get("root_metric_ids", '101,591,1503')  # 101=F1, 1503=other, 591-S1
     if ',' in metric_ids:
         metric_ids = metric_ids.strip().split(',')
     else:

@@ -180,6 +180,7 @@ export class PerformanceComponent implements OnInit {
 
   f1Node: FlatNode = null;
   s1Node: FlatNode = null;
+  otherNode: FlatNode = null;
   allMetricsNode: FlatNode = null;
 
   buildInfo: any = null;
@@ -187,6 +188,7 @@ export class PerformanceComponent implements OnInit {
   lineagesMap: any = {};
   S1: string = "S1";
   F1: string = "F1";
+  OTHER: string = "Other";
 
   allowedGridRows: number = 1;
   showFunMetric: boolean = false;
@@ -439,8 +441,8 @@ export class PerformanceComponent implements OnInit {
   replaceForwardUrl(chartName): string {
     Object.keys(this.urlEncodingReplacementMap).forEach(key => {
       if (chartName.includes(key)) {
-          chartName = chartName.replace(new RegExp(key, "g"), this.urlEncodingReplacementMap[key]);
-        }
+        chartName = chartName.replace(new RegExp(key, "g"), this.urlEncodingReplacementMap[key]);
+      }
     });
     return chartName;
   }
@@ -626,7 +628,7 @@ export class PerformanceComponent implements OnInit {
     let newNode = this.getNodeFromEntry(numMetricId, dagEntry);
     this.addNodeToMap(numMetricId, newNode);
     thisFlatNode = this.getNewFlatNode(newNode, indent);
-    if (newNode.chartName === this.S1 || newNode.chartName === this.F1) {
+    if (newNode.chartName === this.S1 || newNode.chartName === this.F1 || newNode.chartName === this.OTHER) {
       thisFlatNode.hide = false;
       lineage = [];
     }
@@ -635,6 +637,9 @@ export class PerformanceComponent implements OnInit {
     }
     if (newNode.chartName === this.F1) {
       this.f1Node = thisFlatNode;
+    }
+    if (newNode.chartName === this.OTHER) {
+      this.otherNode = thisFlatNode;
     }
     if (this.metricIds && this.viewWorkspaceIds.includes(newNode.metricId)) {
       thisFlatNode.hide = false;
@@ -1010,14 +1015,17 @@ export class PerformanceComponent implements OnInit {
   }
 
   showMetricCharts(flatNode): void {
-    // if (flatNode.node.leaf) {
-    //   this.showAtomicMetric(flatNode);
-    // } else {
-    //   this.showNonAtomicMetric(flatNode);
-    // }
-    if (!this.currentNode || flatNode.node.metricId !== this.currentNode.metricId) {
-      this.showFunMetric = false;
-      this.navigateByQuery(flatNode);
+    if (this.selectMode == SelectMode.ShowMainSite) {
+      if (!this.currentNode || flatNode.node.metricId !== this.currentNode.metricId) {
+        this.showFunMetric = false;
+        this.navigateByQuery(flatNode);
+      }
+    } else {
+      if (flatNode.node.leaf) {
+      this.showAtomicMetric(flatNode);
+    } else {
+      this.showNonAtomicMetric(flatNode);
+    }
     }
   }
 
@@ -1189,6 +1197,9 @@ export class PerformanceComponent implements OnInit {
       result = this._doPathToGuid(this.f1Node, parts);
       if (!result) {
         result = this._doPathToGuid(this.s1Node, parts);
+      }
+      if (!result) {
+        result = this._doPathToGuid(this.otherNode, parts);
       }
       // console.log("Path: " + path + " : guid: " + result + " c: " + this.getFlatNodeByGuid(result).node.chartName);
 
