@@ -9,6 +9,7 @@
   "collect_stats": [],
   "disable_stats": [],
   "add_boot_arg": "",
+  "elasticsearch_config": {"ip": "10.1.20.52", "port": 9200},
   "fio_params": {
     "numjobs": 1,
     "size": "100%",
