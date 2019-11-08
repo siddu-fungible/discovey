@@ -614,7 +614,7 @@ class StorageFsTemplate(object):
         if not include_storage:
             expected_container_count = self.NUM_FS_CONTAINERS
         else:
-            expected_container_count = self.NUM_FS_CONTAINERS
+            expected_container_count = self.NUM_FS_CONTAINERS + 1
         if container_count != expected_container_count:
             fun_test.critical(
                 "{0} Containers should be deployed, Number of container deployed: {1}".format(expected_container_count,
