@@ -255,12 +255,18 @@ class ECVolumeLevelScript(FunTestScript):
             # Rebooting all the hosts in non-blocking mode before the test and getting NUMA cpus
             for host_name in self.host_info:
                 host_handle = self.host_info[host_name]["handle"]
-                if self.override_numa_node["override"]:
-                    host_numa_cpus_filter = host_handle.lscpu(self.override_numa_node["override_node"])
-                    self.host_info[host_name]["host_numa_cpus"] = host_numa_cpus_filter[
-                        self.override_numa_node["override_node"]]
+                if host_name.startswith("cab0"):
+                    if self.override_numa_node["override"]:
+                        host_numa_cpus_filter = host_handle.lscpu("node[01]")
+                        self.host_info[host_name]["host_numa_cpus"] = ",".join(host_numa_cpus_filter.values())
                 else:
-                    self.host_info[host_name]["host_numa_cpus"] = fetch_numa_cpus(host_handle, self.ethernet_adapter)
+                    if self.override_numa_node["override"]:
+                        host_numa_cpus_filter = host_handle.lscpu(self.override_numa_node["override_node"])
+                        self.host_info[host_name]["host_numa_cpus"] = host_numa_cpus_filter[
+                            self.override_numa_node["override_node"]]
+                    else:
+                        self.host_info[host_name]["host_numa_cpus"] = fetch_numa_cpus(host_handle,
+                                                                                      self.ethernet_adapter)
 
                 # Calculating the number of CPUs available in the given numa
                 self.host_info[host_name]["total_numa_cpus"] = 0
