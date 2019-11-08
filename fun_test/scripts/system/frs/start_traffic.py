@@ -12,9 +12,13 @@ import stats_calculation
 from lib.fun import fs
 from scripts.storage.storage_helper import *
 import get_params_for_time
+from collections import deque
+from elasticsearch import helpers
+from elasticsearch import Elasticsearch
 
 # Environment: --environment={\"test_bed_type\":\"fs-65\",\"tftp_image_path\":\"ranga/funos-f1_ranga.stripped.gz\"} --inputs={\"boot_new_image\":true,\"le_firewall\":true,\"collect_stats\":[\"\"],\"ec_vol\":true}
 # inputs: {"run_le_firewall":false,"specific_apps":["ZIP"],"add_to_database":true,"collect_stats":["POWER","DEBUG_MEMORY","LE"],"end_sleep":30}
+
 
 class MyScript(FunTestScript):
     def describe(self):
@@ -258,6 +262,11 @@ class FunTestCase1(FunTestCase):
                 self.boot_new_image = job_inputs["boot_new_image"]
             if "end_sleep" in job_inputs:
                 self.end_sleep = job_inputs["end_sleep"]
+            if "elk_ip" in job_inputs:
+                self.elasticsearch_config["ip"] = job_inputs["ip"]
+
+        # Create the ELK object
+        self.es = Elasticsearch([{'host': '%s' % self.elasticsearch_config["ip"], 'port': '%s' % self.elasticsearch_config["port"]}])
 
         # Create the files
         self.stats_info = {}
@@ -573,7 +582,8 @@ class FunTestCase1(FunTestCase):
             dpcsh_output = dpcsh_commands.debug_vp_utils(come_handle=come_handle, f1=f1)
             one_dataset["time"] = datetime.datetime.now()
             one_dataset["output"] = dpcsh_output
-            fun_test.sleep("before next iteration")
+            self.upload_dpcsh_data_to_elk(dpcsh_data=dpcsh_output, f1=f1)
+            fun_test.sleep("before next iteration", seconds=4)
             file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
         come_handle.destroy()
 
@@ -928,7 +938,99 @@ class FunTestCase1(FunTestCase):
             fun_test.critical(ex)
         fun_test.shared_variables["fio_output_f1_{}".format(f1)] = fio_output
 
+    def upload_dpcsh_data_to_elk(self, dpcsh_data, f1):
+        simplified_dpcsh_data = self.simplify_debug_vp_util(dpcsh_data)
+        data_dict = self.add_basics_req_elk(simplified_dpcsh_data, f1)
+        self.upload_using_multiprocessing(data_dict, self.es_obj)
 
+    def simplify_debug_vp_util(self, dpcsh_data):
+        result = []
+        if dpcsh_data:
+            for cluster in range(8):
+                for core in range(6):
+                    for vp in range(4):
+                        try:
+                            value = dpcsh_data["CCV{}.{}.{}".format(cluster, core, vp)]
+                            one_data_set = {"core": core,
+                                            "cluster": cluster,
+                                            "vp": vp,
+                                            "value": value
+                                            }
+                            print(one_data_set)
+                            result.append(one_data_set)
+                        except:
+                            print ("Data error")
+        return result
+
+    def add_basics_req_elk(self, simplified_dpcsh_data, time_stamp=True, system_name="fs-65", f1=1):
+        utc_time = datetime.datetime.utcnow()
+        time_strf = utc_time.strftime("%Y-%m-%dT%H:%M:%S.%f")
+
+        for each_data_set in simplified_dpcsh_data:
+            if time_stamp:
+                each_data_set["Time"] = time_strf
+            each_data_set["system_name"] = self.fs
+            each_data_set["f1"] = f1
+
+        return simplified_dpcsh_data
+
+    def upload_using_multiprocessing(self, data_dict):
+        if data_dict:
+            for cmd, data_list in data_dict.iteritems():
+                print("Uploading data for command: {}\nData: {}".format(cmd, data_list))
+                index = self.get_index(cmd)
+                doctype = self.doc_type(cmd)
+                upload = self.upload_bulk(index, doctype, data_list)
+
+    def upload_bulk(self, index, doctype, data_list):
+        res = False
+        if data_list:
+            print("Uploadin bulk data for index: {} data: {} count : {}".format(index, data_list[0], len(data_list)))
+            actions = [
+                {
+                    "_index": index,
+                    "_type": doctype,
+                    "_source": each_data
+                }
+                for each_data in data_list
+            ]
+            start = time.time()
+            res = deque(helpers.parallel_bulk(self.es, actions))
+            end = time.time()
+            time_taken = end - start
+            print("Data uploaded for index: {} to es: {} time taken: {} result: {}".format(index, self.es, time_taken,
+                                                                                           res))
+        else:
+            print("NO data present to upload")
+        return res
+
+    def get_index(slf, cmd):
+        if cmd == "peek stats/resource/bam":
+            index = "cmd_peek_stats_resource_bam"
+        elif cmd == "peek storage/devices/nvme":
+            index = "cmd_storage_device_nvme"
+        elif cmd == "debug vp_util":
+            index = "cmd_debug_vp_utils"
+        elif cmd == "peek stats/crypto":
+            index = "cmds_stats_crypto"
+        elif "storage/devices/nvme" in cmd:
+            index = "cmd_storage_device_nvme"
+        else:
+            sec_part = cmd.split(' ')[1]
+            index = "cmd_" + sec_part.replace('/', '_')
+        return index
+
+    def doc_type(self, cmd):
+        if cmd == "debug vp_util":
+            doctype = "ccv_data"
+        elif cmd == "peek stats/resource/bam":
+            doctype = "resource_bam"
+        elif "storage/devices/nvme" in cmd:
+            doctype = "storage_ssd_iops"
+        else:
+            doctype = re.sub(r'[ /]+', '_', cmd)
+
+        return doctype
 
 
 if __name__ == "__main__":
