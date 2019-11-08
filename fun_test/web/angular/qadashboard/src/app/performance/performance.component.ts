@@ -186,9 +186,9 @@ export class PerformanceComponent implements OnInit {
   buildInfo: any = null;
   viewWorkspaceIds: number[] = [];
   lineagesMap: any = {};
-  S1: string = "S1";
-  F1: string = "F1";
-  OTHER: string = "Other";
+  S1: number = 591;
+  F1: number = 101;
+  OTHER: number = 1503;
 
   allowedGridRows: number = 1;
   showFunMetric: boolean = false;
@@ -628,17 +628,17 @@ export class PerformanceComponent implements OnInit {
     let newNode = this.getNodeFromEntry(numMetricId, dagEntry);
     this.addNodeToMap(numMetricId, newNode);
     thisFlatNode = this.getNewFlatNode(newNode, indent);
-    if (newNode.chartName === this.S1 || newNode.chartName === this.F1 || newNode.chartName === this.OTHER) {
+    if (newNode.metricId === this.S1 || newNode.metricId === this.F1 || newNode.metricId === this.OTHER) {
       thisFlatNode.hide = false;
       lineage = [];
     }
-    if (newNode.chartName === this.S1) {
+    if (newNode.metricId === this.S1) {
       this.s1Node = thisFlatNode;
     }
-    if (newNode.chartName === this.F1) {
+    if (newNode.metricId === this.F1) {
       this.f1Node = thisFlatNode;
     }
-    if (newNode.chartName === this.OTHER) {
+    if (newNode.metricId === this.OTHER) {
       this.otherNode = thisFlatNode;
     }
     if (this.metricIds && this.viewWorkspaceIds.includes(newNode.metricId)) {

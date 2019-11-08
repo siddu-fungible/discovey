@@ -7130,13 +7130,20 @@
   {
     "metric_model_name": "MetricContainer",
     "name": "other_tree",
-    "label": "Other",
+    "label": "Misc",
     "children": [
       {
-        "metric_model_name": "FunOnDemandTotalTimePerformance",
-        "name": "load_mods_time_taken",
-        "label": "Time taken (app=load_mods)",
-        "children": []
+        "metric_model_name": "MetricContainer",
+        "name": "other_tree_build",
+        "label": "Build",
+        "children": [
+          {
+            "metric_model_name": "FunOnDemandTotalTimePerformance",
+            "name": "job_execution_time_fun_on_demand",
+            "label": "Job execution time (Fun On Demand)",
+            "children": []
+          }
+        ]
       }
     ]
   }

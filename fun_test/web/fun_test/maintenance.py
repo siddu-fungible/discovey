@@ -2379,7 +2379,7 @@ if __name__ == "__main_other_tree__":
     other_node.fix_children_weights()
     print "added other node as a root"
 
-if __name__ == "__main__":
+if __name__ == "__main_backed_up_dag__":
     internal_name = "load_mods_time_taken"
     chart = MetricChart.objects.get(internal_chart_name="load_mods_time_taken")
     data_sets = chart.get_data_sets()
@@ -2392,3 +2392,15 @@ if __name__ == "__main__":
     chart.data_sets = json.dumps(data_sets)
     chart.save()
     ml.backup_dags()
+
+if __name__ == "__main__":
+    internal_name = "load_mods_time_taken"
+    chart = MetricChart.objects.get(internal_chart_name=internal_name)
+    internal_chart_name = "job_execution_time_fun_on_demand"
+    chart.internal_chart_name = internal_chart_name
+    data_sets = chart.get_data_sets()
+    for data_set in data_sets:
+        data_set["name"] = "app=load_mods,target=F1"
+    chart.data_sets = json.dumps(data_sets)
+    chart.save()
+
