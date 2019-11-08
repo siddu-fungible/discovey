@@ -7126,5 +7126,18 @@
         ]
       }
     ]
+  },
+  {
+    "metric_model_name": "MetricContainer",
+    "name": "other_tree",
+    "label": "Other",
+    "children": [
+      {
+        "metric_model_name": "FunOnDemandTotalTimePerformance",
+        "name": "load_mods_time_taken",
+        "label": "Time taken (app=load_mods)",
+        "children": []
+      }
+    ]
   }
 ]
