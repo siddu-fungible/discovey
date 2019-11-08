@@ -78,8 +78,6 @@ class StripeVolAttachDetachTestScript(FunTestScript):
         if self.testbed_type != "suite-based":
             self.testbed_config = fun_test.get_asset_manager().get_test_bed_spec(self.testbed_type)
             fun_test.log("{} Testbed Config: {}".format(self.testbed_type, self.testbed_config))
-            self.fs_hosts_map = parse_file_to_json(SCRIPTS_DIR + "/storage/pocs/apple/apple_fs_hosts_mapping.json")
-            self.available_hosts = self.fs_hosts_map[self.testbed_type]["host_info"]
             self.full_dut_indexes = [int(i) for i in sorted(self.testbed_config["dut_info"].keys())]
             # Skipping DUTs not required for this test
             self.skip_dut_list = []
@@ -92,9 +90,8 @@ class StripeVolAttachDetachTestScript(FunTestScript):
             self.available_dut_indexes = [int(i) for i in self.available_dut_indexes]
             self.total_available_duts = len(self.available_dut_indexes)
             fun_test.log("Total Available Duts: {}".format(self.total_available_duts))
-            self.topology_helper = TopologyHelper(spec=self.fs_hosts_map[self.testbed_type])
+            self.topology_helper = TopologyHelper()
             # Making topology helper to skip DUTs in this list to initialise
-            self.topology_helper.disable_duts(self.skip_dut_list)
         # Pulling reserved DUTs and Hosts and test bed specific configuration if script is submitted with testbed-type
         # suite-based
         elif self.testbed_type == "suite-based":
@@ -112,15 +109,11 @@ class StripeVolAttachDetachTestScript(FunTestScript):
 
         fun_test.test_assert(expression=self.num_duts <= self.total_available_duts,
                              message="Testbed has enough DUTs")
-
-        # Checking if f1 bringup is with the tftpboot or with the bundle image
-        self.tftp_image_path = fun_test.get_job_environment_variable("tftp_image_path")
-        self.bundle_image_parameters = fun_test.get_job_environment_variable("bundle_image_parameters")
         for dut_index in self.available_dut_indexes:
             self.topology_helper.set_dut_parameters(
                 dut_index=dut_index,
                 f1_parameters={0: {"boot_args": self.bootargs[0]},
-                               1: {"boot_args": self.bootargs[1]}})
+                               1: {"boot_args": self.bootargs[1]}}, fs_parameters={"already_deployed": True})
         self.topology = self.topology_helper.deploy()
         fun_test.test_assert(self.topology, "Topology deployed")
 
@@ -224,22 +217,16 @@ class StripeVolAttachDetachTestScript(FunTestScript):
                 fun_test.critical(str(ex))
 
             self.funcp_obj[index] = StorageFsTemplate(self.come_obj[index])
-            if self.tftp_image_path:
-                self.funcp_spec[index] = self.funcp_obj[index].deploy_funcp_container(
-                    update_deploy_script=self.update_deploy_script, update_workspace=self.update_workspace,
-                    mode=self.funcp_mode, include_storage=True)
+            self.funcp_spec[index] = self.funcp_obj[index].deploy_funcp_container(
+                update_deploy_script=self.update_deploy_script, update_workspace=self.update_workspace,
+                mode=self.funcp_mode, include_storage=True)
 
-                fun_test.test_assert(self.funcp_spec[index]["status"],
-                                     "Starting FunCP docker container in DUT {}".format(index))
-                # self.funcp_spec[index]["container_names"].sort()
-            else:
-                self.funcp_spec[index] = self.funcp_obj[index].get_container_objs()
+            fun_test.test_assert(self.funcp_spec[index]["status"],
+                                 "Starting FunCP docker container in DUT {}".format(index))
             self.funcp_spec[index]["container_names"].sort()
 
             # Ensure that that FPGO interface is up both the docker containers
             for f1_index, container_name in enumerate(self.funcp_spec[index]["container_names"]):
-                if container_name == "run_sc":
-                    continue
                 status = self.funcp_obj[index].container_info[container_name].ifconfig_up_down("fpg0", "up")
                 fun_test.test_assert(status, "FPG0 interface up in {}".format(container_name))
         # Creating storage controller API object for the first DUT in the current setup
@@ -958,7 +945,7 @@ class StripedVolAttachConnDisConnDetachDisconnAfterIO(StripeVolAttachDetachTestC
 if __name__ == "__main__":
     testscript = StripeVolAttachDetachTestScript()
     testscript.add_test_case(StripedVolAttachConnDisConnDetachDisconnDuringIO())
-    testscript.add_test_case(StripedVolAttachConnDisConnDetach())
-    testscript.add_test_case(StripedVolAttachDetach())
-    testscript.add_test_case(StripedVolAttachConnDisConnDetachDisconnAfterIO())
+    # testscript.add_test_case(StripedVolAttachConnDisConnDetach())
+    # testscript.add_test_case(StripedVolAttachDetach())
+    # testscript.add_test_case(StripedVolAttachConnDisConnDetachDisconnAfterIO())
     testscript.run()

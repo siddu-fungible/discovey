@@ -6,7 +6,7 @@ import re
 class ApcPdu():
     PROMPT = "apc>"
 
-    def __init__(self, host_ip, username, password, port=23, context=None):
+    def __init__(self, host_ip, username, password, port=23, context=None, **kwargs):
         self.host_ip = host_ip
         self.username = str(username)
         self.password = str(password)
@@ -14,6 +14,9 @@ class ApcPdu():
         self.port = int(port)
         self.handle = None
         self.context = context
+        self.outlet_number = None
+        if "outlet_number" in kwargs:
+            self.outlet_number = kwargs.get("outlet_number", None)
 
     def _login(self):
         if not self.handle:
@@ -65,22 +68,26 @@ class ApcPdu():
         return self.command("olOff {}".format(outlet_number))
 
     def power_cycle(self, outlet_number):
+        if not outlet_number:
+            outlet_number = self.outlet_number
         result = None
-        try:
-            self.outlet_on(outlet_number=outlet_number)
-        except Exception as ex:
-            fun_test.critical(message=str(ex), context=self.context)
         try:
             self.outlet_off(outlet_number=outlet_number)
         except Exception as ex:
             fun_test.critical(message=str(ex), context=self.context)
+        try:
+            self.outlet_on(outlet_number=outlet_number)
+        except Exception as ex:
+            fun_test.critical(message=str(ex), context=self.context)
         status = self.outlet_status(outlet_number=outlet_number)
-        if re.search(r'Outlet\s+' + outlet_number + r'.*On', status):
+        if re.search(r'Outlet\s+' + str(outlet_number) + r'.*On', status):
             result = True
         return result
 
 if __name__ == "__main__":
     import json
-    d = {"host_ip":"10.1.105.249", "username": "localadmin", "password":"Precious1*"}
+    d = {"host_ip":"cab04-pdu1", "username": "localadmin", "password":"Precious1*"}
     a = ApcPdu(**json.loads(json.dumps(d)))
-    a.outlet_status("1")
+    a.outlet_status("7")
+    a.power_cycle(7)
+    a.outlet_status("7")

@@ -222,11 +222,17 @@ class ECVolumeLevelScript(FunTestScript):
         # Rebooting all the hosts in non-blocking mode before the test and getting NUMA cpus
         for host_name in self.host_info:
             host_handle = self.host_info[host_name]["handle"]
-            if self.override_numa_node["override"]:
-                host_numa_cpus_filter = host_handle.lscpu(self.override_numa_node["override_node"])
-                self.host_info[host_name]["host_numa_cpus"] = host_numa_cpus_filter[self.override_numa_node["override_node"]]
+            if host_name.startswith("cab0"):
+                if self.override_numa_node["override"]:
+                    host_numa_cpus_filter = host_handle.lscpu("node[01]")
+                    self.host_info[host_name]["host_numa_cpus"] = ",".join(host_numa_cpus_filter.values())
             else:
-                self.host_info[host_name]["host_numa_cpus"] = fetch_numa_cpus(host_handle, self.ethernet_adapter)
+                if self.override_numa_node["override"]:
+                    host_numa_cpus_filter = host_handle.lscpu(self.override_numa_node["override_node"])
+                    self.host_info[host_name]["host_numa_cpus"] = host_numa_cpus_filter[
+                        self.override_numa_node["override_node"]]
+                else:
+                    self.host_info[host_name]["host_numa_cpus"] = fetch_numa_cpus(host_handle, self.ethernet_adapter)
 
             # Calculating the number of CPUs available in the given numa
             self.host_info[host_name]["total_numa_cpus"] = 0
@@ -729,6 +735,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                         fio_cpus_allowed_args = " --cpus_allowed={}".format(self.host_info[host_name]["host_numa_cpus"])
                         warm_up_fio_cmd_args["multiple_jobs"] = self.warm_up_fio_cmd_args["multiple_jobs"] + str(
                             fio_cpus_allowed_args) + str(jobs)
+                        warm_up_fio_cmd_args["timeout"] = self.warm_up_fio_cmd_args["timeout"]
                         wait_time = self.num_hosts - index
                         host_clone[host_name] = self.host_info[host_name]["handle"].clone()
                         warmup_thread_id[index] = fun_test.execute_thread_after(
@@ -762,6 +769,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                         fio_cpus_allowed_args = " --cpus_allowed={}".format(self.host_info[host_name]["host_numa_cpus"])
                         warm_up_fio_cmd_args["multiple_jobs"] = self.warm_up_fio_cmd_args["multiple_jobs"] + str(
                             fio_cpus_allowed_args) + str(jobs)
+                        warm_up_fio_cmd_args["timeout"] = self.warm_up_fio_cmd_args["timeout"]
                         fio_output = host_handle.pcie_fio(filename="nofile", **warm_up_fio_cmd_args)
                         fun_test.log("FIO Command Output:\n{}".format(fio_output))
                         fun_test.test_assert(fio_output, "Volume warmup on host {}".format(host_name))

@@ -97,6 +97,9 @@ class RawVolumePerfScript(FunTestScript):
         topology = topology_helper.deploy()
         fun_test.shared_variables["topology"] = topology
         fun_test.test_assert(topology, "Topology deployed")
+        fs = topology.get_dut_instance(index=0)
+        come_obj = fs.get_come()
+        come_obj.command("/home/fun/mks/restart_docker_service.sh")
 
         # Bringup FunCP
 

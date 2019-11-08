@@ -19,7 +19,7 @@ class DataModel {
 class TimeSeriesLog {
   epoch_time: number;
   relative_epoch_time: number;
-  type: string;
+  type: number;
   data: any;
 }
 
@@ -29,6 +29,51 @@ class Checkpoint {
   expected: boolean;
   index: number;
   result: string;
+}
+
+
+class ArtifactElement {
+  asset_id: string;
+  asset_type: string;
+  category: string;
+  sub_category: string;
+  description: string;
+  filename: string;
+  link: string;
+}
+
+class Artifact {
+  epoch_time: number;
+  te: number;
+  type: number;
+  data: ArtifactElement;
+
+}
+
+class ArtifactTree {
+  root = {};
+
+  addArtifact(artifact: Artifact, staticLogDir: string) {
+    if (!this.root.hasOwnProperty(artifact.data.asset_type)) {
+      this.root[artifact.data.asset_type] = {};
+    }
+    let assetTypeEntry = this.root[artifact.data.asset_type];
+    if (!assetTypeEntry.hasOwnProperty(artifact.data.asset_id)) {
+      assetTypeEntry[artifact.data.asset_id] = {};
+    }
+    let assetIdEntry = assetTypeEntry[artifact.data.asset_id];
+    if (!assetIdEntry.hasOwnProperty(artifact.data.category)) {
+      assetIdEntry[artifact.data.category] = [];
+    }
+    let categoryEntry = assetIdEntry[artifact.data.category];
+    let parts = artifact.data.filename.split("/");
+    if (parts.length > 0) {
+      artifact.data.link = `${staticLogDir}/${parts[parts.length - 1]}`;
+
+    }
+    categoryEntry.push(artifact);
+  }
+
 }
 
 @Component({
@@ -50,6 +95,7 @@ export class ScriptDetailComponent implements OnInit {
   driver: Observable<any> = null;
   values = [{data: [{y: 45}, {y: 51}, {y: 73}]}];
   series = [1, 2, 3];
+  artifacts: Artifact [] = null;
 
   constructor(private regressionService: RegressionService,
               private loggerService: LoggerService,
@@ -102,6 +148,9 @@ export class ScriptDetailComponent implements OnInit {
   checkpointPanelStatus: string = null;
   showFailedCheckpoints: boolean = false;
   showFailedTestCases: boolean = false;
+
+  showingArtifactPanel: boolean = false;
+  artifactTree: ArtifactTree = new ArtifactTree();
 
   ngOnInit() {
 
@@ -474,11 +523,20 @@ export class ScriptDetailComponent implements OnInit {
   }
 
   openArtifactsPanelClick() {
+    this.showingArtifactPanel = !this.showingArtifactPanel;
     this.regressionService.artifacts(this.suiteExecutionId).subscribe(response => {
-      let i = 0;
+      this.artifacts = response;
+      this._parseArtifacts();
+
     }, error => {
       this.loggerService.error("Unable to open artifacts panel");
     });
+  }
+
+  _parseArtifacts() {
+    this.artifacts.forEach(artifact => {
+      this.artifactTree.addArtifact(artifact, `/static/logs/s_${this.suiteExecutionId}`);
+    })
   }
 
 }

@@ -3,7 +3,7 @@ from lib.system import utils
 from web.fun_test.analytics_models_helper import ModelHelper, get_data_collection_time
 from lib.topology.topology_helper import TopologyHelper
 from scripts.storage.storage_helper import *
-from collections import OrderedDict
+from collections import OrderedDict, Counter
 from scripts.networking.funcp.helper import *
 from scripts.networking.funeth.sanity import Funeth
 from lib.utilities.funcp_config import *
@@ -12,6 +12,13 @@ from fun_global import PerfUnit, FunPlatform
 '''
 Script to track the performance of various read write combination with multiple (12) local thin block volumes using FIO
 '''
+
+
+def fio_parser(arg1, host_index, **kwargs):
+    fio_output = arg1.pcie_fio(**kwargs)
+    fun_test.shared_variables["fio"][host_index] = fio_output
+    fun_test.simple_assert(fio_output, "Fio test for thread {}".format(host_index))
+    arg1.disconnect()
 
 
 def post_results(value_dict):
@@ -61,31 +68,21 @@ class RawVolumePerfScript(FunTestScript):
 
     def setup(self):
 
-
         self.server_key = fun_test.parse_file_to_json(fun_test.get_script_name_without_ext() + ".json")
         fun_test.shared_variables["server_key"] = self.server_key
 
         global funcp_obj, servers_mode, servers_list, fs_name
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
-        job_inputs = fun_test.get_job_inputs()
         f1_0_boot_args = "app=mdt_test,load_mods cc_huid=3 --dpc-server --all_100g --serial --dpc-uart " \
-                         "retimer=0 --mgmt syslog=5 workload=storage"
+                         "retimer=0,1 --mgmt  syslog=5  workload=storage"
         f1_1_boot_args = "app=mdt_test,load_mods cc_huid=2 --dpc-server --all_100g --serial --dpc-uart " \
-                         "retimer=0 --mgmt syslog=5 workload=storage"
+                         "retimer=0,1 --mgmt  syslog=5  workload=storage"
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
-        if not job_inputs:
-            job_inputs = {}
-        if "skip_warmup" in job_inputs:
-            skip_warmup = job_inputs["skip_warmup"]
-            fun_test.shared_variables["skip_warmup"] = skip_warmup
-        else:
-            fun_test.shared_variables["skip_warmup"] = False
-
-
         # fs_name = "fs-45"
         funcp_obj = FunControlPlaneBringup(fs_name=self.server_key["fs"][fs_name]["fs-name"])
         funcp_obj.cleanup_funcp()
         servers_mode = self.server_key["fs"][fs_name]["hosts"]
+        fun_test.shared_variables["servers_mode"] = servers_mode
         servers_list = []
 
         for server in servers_mode:
@@ -106,6 +103,7 @@ class RawVolumePerfScript(FunTestScript):
         come_obj.command("/home/fun/mks/restart_docker_service.sh")
 
         # Bringup FunCP
+
         fun_test.test_assert(expression=funcp_obj.bringup_funcp(prepare_docker=False), message="Bringup FunCP")
         # Assign MPG IPs from dhcp
         funcp_obj.assign_mpg_ips(static=self.server_key["fs"][fs_name]["mpg_ips"]["static"],
@@ -120,19 +118,6 @@ class RawVolumePerfScript(FunTestScript):
         funcp_obj.funcp_abstract_config(abstract_config_f1_0=abstract_json_file0,
                                         abstract_config_f1_1=abstract_json_file1, workspace="/scratch")
 
-        # Add static routes on Containers
-        funcp_obj.add_routes_on_f1(routes_dict=self.server_key["fs"][fs_name]["static_routes"])
-        fun_test.sleep(message="Waiting before ping tests", seconds=10)
-
-        # Ping QFX from both F1s
-        ping_dict = self.server_key["fs"][fs_name]["cc_pings"]
-        for container in ping_dict:
-            funcp_obj.test_cc_pings_remote_fs(dest_ips=ping_dict[container], docker_name=container)
-
-        # Ping vlan to vlan
-        fs_name = fun_test.get_job_environment_variable('test_bed_type')
-        funcp_obj = FunControlPlaneBringup(fs_name=self.server_key["fs"][fs_name]["fs-name"])
-        funcp_obj.test_cc_pings_fs()
 
         # Check PICe Link on host
         servers_mode = self.server_key["fs"][fs_name]["hosts"]
@@ -144,23 +129,21 @@ class RawVolumePerfScript(FunTestScript):
                 fun_test.add_checkpoint("<b><font color='red'><PCIE link did not come up in %s mode</font></b>"
                                         % servers_mode[server])
 
-        # install drivers on PCIE connected servers
-        tb_config_obj = tb_configs.TBConfigs(str(fs_name) + "2")
-        funeth_obj = Funeth(tb_config_obj)
-        fun_test.shared_variables['funeth_obj'] = funeth_obj
-        setup_hu_host(funeth_obj, update_driver=False, sriov=4, num_queues=4)
+        for server in self.server_key["fs"][fs_name]["vm_config"]:
+            # install drivers on PCIE connected servers
+            tb_config_obj = tb_configs.TBConfigs(str(fs_name) + "2")
+            funeth_obj = Funeth(tb_config_obj)
+            fun_test.shared_variables['funeth_obj'] = funeth_obj
+            setup_hu_host(funeth_obj, update_driver=False, sriov=4, num_queues=4)
 
-        # get ethtool output
-        get_ethtool_on_hu_host(funeth_obj)
+        #get ethtool output
+
+            get_ethtool_on_hu_host(funeth_obj)
         for server in self.server_key["fs"][fs_name]["vm_config"]:
             critical_log(enable_nvme_vfs
                          (host=server,
                           pcie_vfs_count=self.server_key["fs"][fs_name]["vm_config"][server]["pcie_vfs"]),
                          message="NVMe VFs enabled")
-        # Ping hosts
-        ping_dict = self.server_key["fs"][fs_name]["host_pings"]
-        for host in ping_dict:
-            test_host_pings(host=host, ips=ping_dict[host])
 
         # Start VMs
         servers_with_vms = self.server_key["fs"][fs_name]["vm_config"]
@@ -168,7 +151,7 @@ class RawVolumePerfScript(FunTestScript):
         for server in servers_with_vms:
             configure_vms(server_name=server, vm_dict=servers_with_vms[server]["vms"])
 
-        # fun_test.sleep(message="Waiting for VMs to come up", seconds=120)
+            fun_test.sleep(message="Waiting for VMs to come up", seconds=30)
 
     def cleanup(self):
         fun_test.shared_variables["topology"].cleanup()
@@ -208,18 +191,14 @@ class RawVolumeLocalPerfTestcase(FunTestCase):
             i = 1
             # Configure storage controller for DPU 1 (since we are testing SSD on DPU 1)
             storage_controller = StorageController(target_ip=fs_spec['come']['mgmt_ip'],
-                                                   target_port=40221)
-            command_result = storage_controller.ip_cfg(ip=servers_with_vms[server]["local_controller_ip"],
-                                                       port=servers_with_vms[server]["local_controller_port"])
+                                                   target_port=servers_with_vms[server]["dpc_port_remote"])
 
-            fun_test.test_assert(command_result["status"], "Configuring IP {}:{} to storage controller".
-                                 format(servers_with_vms[server]["local_controller_ip"],
-                                        servers_with_vms[server]["local_controller_port"]))
             result_dict = {}
+
 
             for vm in servers_with_vms[server]["vms"]:
                 result_dict[vm] = {}
-                blt_volume_dpu_1 = utils.generate_uuid()
+                blt_volume_dpu_1 = {}
                 controller_dpu_1 = utils.generate_uuid()
                 print("\n")
                 print("==================================")
@@ -244,22 +223,30 @@ class RawVolumeLocalPerfTestcase(FunTestCase):
                 print("Creating Local Volume on DPU 1")
                 print("==============================\n")
 
-                local_volume_create(storage_controller=storage_controller,
-                                    vm_dict=servers_with_vms[server]["vms"][vm]["local_storage"],
-                                    uuid=blt_volume_dpu_1, count=i)
-                result_dict[vm]["blt_volume_dpu_1"] = blt_volume_dpu_1
+                for x in range(1, self.num_ssds + 1, 1):
+                    xts_key = utils.generate_key(length=32)
+                    xts_tweak = utils.generate_key(length=8)
+                    blt_volume_dpu_1[x] = utils.generate_uuid()
+                    local_encrypted_volume_create(storage_controller=storage_controller,
+                                                  vm_dict=servers_with_vms[server]["vms"][vm]["local_storage"],
+                                                  uuid=blt_volume_dpu_1[x], count=x, xts_key=xts_key, xts_tweak=xts_tweak)
+                    result_dict[vm]["blt_volume_dpu_1"] = blt_volume_dpu_1
+
 
                 print("\n")
                 print("===========================================")
                 print("Attach Local Volume to Controller on DPU 1")
                 print("===========================================\n")
                 command_timeout = servers_with_vms[server]["vms"][vm]["local_storage"]["command_timeout"]
-                command_result = storage_controller.attach_volume_to_controller(ctrlr_uuid=controller_dpu_1,
-                                                                                vol_uuid=blt_volume_dpu_1,
+                for x in range(1, self.num_ssds + 1, 1):
+                    command_result = storage_controller.attach_volume_to_controller(ctrlr_uuid=controller_dpu_1,
+                                                                                vol_uuid=blt_volume_dpu_1[x],
                                                                                 ns_id=int(i),
                                                                                 command_duration=command_timeout)
-                fun_test.test_assert(command_result["status"], "Attaching volume {} to controller {}"
-                                     .format(blt_volume_dpu_1, controller_dpu_1))
+                    i += 1
+                    fun_test.test_assert(command_result["status"], "Attaching volume {} to controller {}"
+                                     .format(blt_volume_dpu_1[x], controller_dpu_1))
+
 
                 # Workaround for connecting to the VM via SSH
                 host_obj.sudo_command("sysctl -w net.bridge.bridge-nf-call-iptables=0")
@@ -272,43 +259,81 @@ class RawVolumeLocalPerfTestcase(FunTestCase):
                 # Check if volume exists
                 # TODO: Check for vol
 
-                """
                 # Get the nvme device name from the VMs
-                fun_test.shared_variables["nvme_block_device"] = \
-                    get_nvme_dev(servers_with_vms[server]["vms"][vm]["hostname"])
-                """
-                self.nvme_block_device = "/dev/nvme0n1"
-                fun_test.shared_variables["nvme_block_device"] = self.nvme_block_device
                 fun_test.shared_variables["vol_size"] = \
                     int(servers_with_vms[server]["vms"][vm]["local_storage"]["blt_vol_capacity"])
-                result_dict[vm]["nvme_block_device"] = fun_test.shared_variables["nvme_block_device"]
-
                 self.end_host = Linux(host_ip=servers_with_vms[server]["vms"][vm]["hostname"],
                                       ssh_username="localadmin",
                                       ssh_password="Precious1*")
-                fun_test.shared_variables["end_host_obj"] = self.end_host
+                device = self.end_host.command("sudo nvme list -o normal | awk -F ' ' '{print $1}' | grep -i nvme0"). \
+                    replace("\r", '')
+                self.nvme_block_device = device.replace("\n", ":").rstrip(":")
+                fun_test.shared_variables["nvme_block_device"] = self.nvme_block_device
+                result_dict[vm]["nvme_block_device"] = fun_test.shared_variables["nvme_block_device"]
 
-                # Run warmup
-                skip_warmup = fun_test.shared_variables["skip_warmup"]
-                if not skip_warmup:
-                    if self.warm_up_traffic:
-                        fun_test.log(
-                            "Initial Write IO to volume, this might take long time depending on fio --size provided")
-                        for i in range(0, 2):
-                            fio_output = self.end_host.pcie_fio(filename=self.nvme_block_device,
-                                                                **self.warm_up_fio_cmd_args)
-                            fun_test.test_assert(fio_output, "Pre-populating the volume")
-                            fun_test.log("FIO Command Output:\n{}".format(fio_output))
+        #Run warmup
+        nvmedisk = "/dev/nvme0n"
+        ns_id = 1
+        fun_test.log("Initial Write IO to volume, this might take long time depending on fio --size provided")
+        if self.warm_up_traffic:
+            for index, host in enumerate(self.server_dict):
+                self.end_host = Linux(host_ip=host,
+                                      ssh_username="localadmin",
+                                      ssh_password="Precious1*")
+                counter = 1
+                for i in range(0, 4):
+                    fio_output = self.end_host.pcie_fio(filename=nvmedisk+ str(ns_id),**self.warm_up_fio_cmd_args)
+                    fun_test.test_assert(fio_output, "Pre-populating the volume")
+                    fun_test.log("FIO Command Output:\n{}".format(fio_output))
+                    counter +=1
+                    if i == 1:
+                        ns_id += 1
+                    if i == 3:
+                        counter = 0
+                    if counter == 0:
+                        ns_id = 1
+                        break
+                fun_test.sleep("Sleeping for {} seconds before actual test".format(self.iter_interval),
+                               self.iter_interval)
+        else:
+            thread_id = {}
+            fun_test.shared_variables["fio"] = {}
+            fio_filename = fun_test.shared_variables["nvme_block_device"]
+            servers_mode = fun_test.shared_variables["servers_mode"]
+            for i in range(0, 2):
+                count = 0
+                for vm in servers_mode:
+                #for index, host in enumerate(self.server_dict):
+                    ns_id = 1
+                    nvmedisk = "/dev/nvme0n"
+                    for x in range(0, 2):
+                        vms = servers_with_vms[vm]["vms"]
+                        for each_vm in vms:
+                            self.end_host = Linux(host_ip=servers_with_vms[vm]["vms"][each_vm]["hostname"],
+                                                  ssh_username="localadmin", ssh_password="Precious1*")
+                            fio_filename = nvmedisk + str(ns_id).rstrip()
+                            thread_id[count] = fun_test.execute_thread_after(time_in_seconds=2,
+                                                                             func=fio_parser,
+                                                                             arg1=self.end_host,
+                                                                             host_index=count,
+                                                                             filename=fio_filename,
+                                                                             **self.warm_up_fio_cmd_args)
+                            fun_test.sleep("Fio threadzz", seconds=1)
+                            ns_id += 1
+                            count += 1
 
-                        fun_test.sleep("Sleeping for {} seconds before actual test".format(self.iter_interval),
-                                       self.iter_interval)
+                for x in range(count):
+                    print("I am here")
+                    fun_test.log("Joining fio thread {}".format(x))
+                    fun_test.join_thread(fun_test_thread_id=thread_id[x], sleep_time=1)
+                    fun_test.log("FIO Command Output from {}:\n {}".format(each_vm,
+                                                                           fun_test.shared_variables["fio"][x]))
 
-                    i += 1
+        i += 1
 
     def run(self):
         testcase = self.__class__.__name__
         test_method = testcase[3:]
-
         # Going to run the FIO test for the block size and iodepth combo listed in fio_jobs_iodepth in both write only
         # & read only modes
         fio_result = {}
@@ -320,6 +345,7 @@ class RawVolumeLocalPerfTestcase(FunTestCase):
         initial_stats = {}
         final_stats = {}
         diff_stats = {}
+        fun_test.shared_variables["fio"] = {}
 
         table_data_headers = ["Block Size", "IO Depth", "Numjobs", "Size", "Test", "Operation",
                               "Write IOPS", "Read IOPS", "Write Throughput in MB/s", "Read Throughput in MB/s",
@@ -337,8 +363,6 @@ class RawVolumeLocalPerfTestcase(FunTestCase):
                            "read_99_latency", "read_99_99_latency"]
         table_data_rows = []
 
-        self.end_host = fun_test.shared_variables["end_host_obj"]
-
         for mode in self.fio_modes:
             fio_result[mode] = {}
             internal_result[mode] = {}
@@ -349,13 +373,16 @@ class RawVolumeLocalPerfTestcase(FunTestCase):
             initial_stats[mode] = {}
             final_stats[mode] = {}
             diff_stats[mode] = {}
+            aggr_fio_output = {}
             for combo in self.fio_jobs_iodepth:
+                thread_id = {}
                 tmp = combo.split(',')
                 fio_block_size = self.fio_bs
                 fio_numjobs = tmp[0].strip('() ')
                 fio_iodepth = tmp[1].strip('() ')
                 fio_result[mode][combo] = True
                 internal_result[mode][combo] = True
+                aggr_fio_output[fio_iodepth] = {}
                 value_dict = {}
                 value_dict["test"] = mode
                 value_dict["block_size"] = fio_block_size
@@ -363,38 +390,65 @@ class RawVolumeLocalPerfTestcase(FunTestCase):
                 value_dict["num_threads"] = int(fio_numjobs)
                 file_size_in_gb = fun_test.shared_variables["vol_size"] / 1073741824
                 value_dict["io_size"] = str(file_size_in_gb) + "GB"
-                value_dict["num_ssd"] = 1
-                value_dict["num_volume"] = 1
+                value_dict["num_ssd"] = 4
+                value_dict["num_volume"] = 4
 
                 fun_test.log("Running FIO {} only test for block size: {} using num_jobs: {}, IO depth: {}".
                              format(mode, fio_block_size, fio_numjobs, fio_iodepth))
 
                 cpus_allowed = "0-15"
-
                 fun_test.log("Running FIO...")
-                fio_job_name = "fio_tcp_" + mode + "_" + "blt" + "_" + fio_numjobs + "_" + fio_iodepth + "_" + \
+                fio_job_name = "fio_pcie_" + mode + "_" + "blt" + "_" + fio_numjobs + "_" + fio_iodepth + "_" + \
                                self.fio_job_name[mode]
                 # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
                 fio_output[mode][combo] = {}
                 fio_filename = fun_test.shared_variables["nvme_block_device"]
-                fio_output[mode][combo] = self.end_host.pcie_fio(filename=fio_filename,
-                                                                 numjobs=fio_numjobs,
-                                                                 rw=mode,
-                                                                 bs=fio_block_size,
-                                                                 iodepth=fio_iodepth,
-                                                                 name=fio_job_name,
-                                                                 cpus_allowed=cpus_allowed,
-                                                                 **self.fio_cmd_args)
+                for index, host in enumerate(self.server_dict):
+                    self.host = Linux(host_ip=host, ssh_username=self.uname, ssh_password=self.pwd)
+                    thread_id[index] = fun_test.execute_thread_after(time_in_seconds=10,
+                                                                            func=fio_parser,
+                                                                            arg1=self.host,
+                                                                            host_index=index,
+                                                                            filename=fio_filename,
+                                                                            rw=mode,
+                                                                            numjobs=fio_numjobs,
+                                                                            bs=fio_block_size,
+                                                                            iodepth=fio_iodepth,
+                                                                            name=fio_job_name,
+                                                                            cpus_allowed=cpus_allowed,
+                                                                            **self.fio_cmd_args)
+                    fun_test.sleep("Fio threadzz", seconds=1)
+                fio_output[fio_iodepth] = {}
+                for index, host in enumerate(self.server_dict):
+                    fio_output[fio_iodepth][host] = {}
+                    fun_test.log("Joining fio thread {}".format(index))
+                    fun_test.join_thread(fun_test_thread_id=thread_id[index], sleep_time=1)
+                    fun_test.log("FIO Command Output from {}:\n {}".format(host,
+                                                                           fun_test.shared_variables["fio"][index]))
 
-                fun_test.log("FIO Command Output:")
-                fun_test.log(fio_output[mode][combo])
-                fun_test.test_assert(fio_output[mode][combo], "Fio {} test for numjobs {} & iodepth {}".
-                                     format(mode, fio_numjobs, fio_iodepth))
+                # Summing up the FIO stats from all the hosts
+                for index, host in enumerate(self.server_dict):
+                    fun_test.test_assert(fun_test.shared_variables["fio"][index],
+                                         "FIO {} test with the Block Size {} IO depth {} and Numjobs {} on {}"
+                                         .format(mode, fio_block_size, fio_iodepth, fio_numjobs , host))
+                    for op, stats in fun_test.shared_variables["fio"][index].items():
+                        if op not in aggr_fio_output[fio_iodepth]:
+                            aggr_fio_output[fio_iodepth][op] = {}
+                        aggr_fio_output[fio_iodepth][op] = Counter(aggr_fio_output[fio_iodepth][op]) + \
+                                                       Counter(fun_test.shared_variables["fio"][index][op])
 
+                fun_test.log("Aggregated FIO Command Output:\n{}".format(aggr_fio_output[fio_iodepth]))
                 fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval),
                                self.iter_interval)
+                for op, stats in aggr_fio_output[fio_iodepth].items():
+                    for field, value in stats.items():
+                        if "latency" in field:
+                            #change divide by 2 by number of VMs involved
+                            aggr_fio_output[fio_iodepth][op][field] = int(round(value) / 2)
+                fun_test.log("Processed Aggregated FIO Command Output:\n{}".format(aggr_fio_output[fio_iodepth]))
 
-                for op, stats in fio_output[mode][combo].items():
+                #for op, stats in fio_output[mode][combo].items():
+                for op, stats in aggr_fio_output[fio_iodepth].items():
                     # TODO: "operation" gets overwritten here; Set operation based on mode
                     value_dict["operation"] = op
                     if op == "read":
@@ -447,10 +501,10 @@ class LocalSSDVM(RawVolumeLocalPerfTestcase):
 
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Random Read/Write performance for 1 volumes on TCP "
+                              summary="Random Read/Write performance for 4 volumes on PCIe "
                                       "with different levels of numjobs & iodepth & block size 4K",
                               steps='''
-        1. Create 1 BLT volumes on F1 attached
+        1. Create 4 BLT volumes on F1 attached
         2. Create a storage controller for PCIe and attach above volumes to this controller   
         3. Pass this associated PF to a VM on the PCIe attached host
         4. Run the FIO Random Read & Write test(without verify) for block size of 4k and IO depth from the 
