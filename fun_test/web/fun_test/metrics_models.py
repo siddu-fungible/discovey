@@ -242,6 +242,12 @@ class MetricChart(models.Model):
     def get_jira_ids(self):
         return json.loads(self.jira_ids)
 
+    def set_chart_status(self, status, suite_execution_id):
+        self.last_build_status = status
+        self.last_suite_execution_id = suite_execution_id
+        self.last_build_date = get_current_time()
+        self.save()
+
     def add_child(self, child_id):
         children = json.loads(self.children)
         if child_id not in children:
@@ -3179,6 +3185,21 @@ class NvmeFcpPerformance(FunModel):
     output_write_latency_99_unit = models.TextField(default=PerfUnit.UNIT_USECS)
     output_write_latency_9950_unit = models.TextField(default=PerfUnit.UNIT_USECS)
     output_write_latency_9999_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
+
+
+class FunOnDemandTotalTimePerformance(FunModel):
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_version = models.CharField(verbose_name="Version", max_length=50, default="")
+
+    output_total_time = models.FloatField(verbose_name="Total Time", default=-1)
+    output_total_time_unit = models.TextField(default=PerfUnit.UNIT_SECS)
 
     def __str__(self):
         s = ""
