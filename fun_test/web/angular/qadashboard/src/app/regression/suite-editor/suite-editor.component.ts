@@ -70,6 +70,7 @@ export class SuiteEditorComponent implements OnInit {
   editorPristine: boolean = true;
 
   poolMemberOptions = {}; //{"DUT": ["Default", "With servers", "With SSDs"]};
+  userWantsToSubmit: boolean = false;
 
   constructor(private testBedService: TestBedService,
               private modalService: NgbModal,
@@ -616,4 +617,7 @@ export class SuiteEditorComponent implements OnInit {
     console.log(this.poolMemberOptions[flatName]);
   }
 
+  submitEnter(enter) {
+    this.userWantsToSubmit = enter;
+  }
 }

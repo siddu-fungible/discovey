@@ -1,4 +1,4 @@
-<a routerLink="/regression/suites_view"><< Back to suites </a>
+<a routerLink="/regression/suites_view">&nbsp;< Back to suites </a>
 
 <div class="component" *ngIf="suite">
 
@@ -40,7 +40,7 @@
 
 
   <div *ngIf="!addingScript" style="display: flex; flex-direction: row;">
-    <button class="fun-button-add" (click)="onAddScript()">Add a script</button>
+    <button class="fun-button-add" (click)="onAddScript()">+ Add a script</button>
   </div>
 
 
@@ -229,15 +229,24 @@
   <ng-template #noCustomTestBedSpec>
     <fun-spinner [status]="customTestBedSpecPopulationStatus"></fun-spinner>
     <ng-container *ngIf="!customTestBedSpecPopulationStatus">
-      <button class="fun-button-add" (click)="onAddCustomTestBedSpec(customTestBedSpecModalContent)">Add custom test-bed</button>
+      <span class="pseudo-anchor" (click)="onAddCustomTestBedSpec(customTestBedSpecModalContent)">Customize test-bed options</span>
     </ng-container>
   </ng-template>
 
 
   <!--button (click)="test()">Test</button-->
-  <br>
-  <button [ngClass]="{'fun-button-disabled' : suite?.entries?.length < 1 || !suite?.name }" class="fun-button-submit"
-          (click)="onSubmitSuite()">Submit
-  </button>
+
+   <br>
+  <span (mouseenter)="submitEnter(true)" (mouseover)="submitEnter(true)" (mouseleave)="submitEnter(false)">
+    <button [ngClass]="{'fun-button-disabled' : suite?.entries?.length < 1 || !suite?.name }" class="fun-button-submit"
+            (click)="onSubmitSuite()">Submit
+    </button>
+  </span>
+  <ng-container *ngIf="userWantsToSubmit">
+    <app-messages-panel *ngIf="suite?.entries?.length < 1"
+                              [messages]="['Atleast one script must be selected']" [type]="'INFO'"></app-messages-panel>
+    <app-messages-panel *ngIf="!suite?.name" [messages]="['Please set the suite name']" [type]="'INFO'"></app-messages-panel>
+
+  </ng-container>
 
 </div>

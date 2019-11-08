@@ -925,6 +925,10 @@ class BootupWorker(Thread):
                 fs.set_boot_phase(BootPhases.FS_BRING_UP_INSTALL_BUNDLE)
                 build_number = fs.bundle_image_parameters.get("build_number", 70)  # TODO: Is there a latest?
                 release_train = fs.bundle_image_parameters.get("release_train", "1.0a_aa")
+                fun_test.set_suite_run_time_environment_variable("bundle_image_parameters",
+                                                                 {"release_train": release_train,
+                                                                  "build_number": build_number})
+                fun_test.set_version(version="{}/{}".format(release_train, build_number))
                 come = fs.get_come()
                 try:
                     come.detect_pfs()
@@ -1173,8 +1177,11 @@ class ComE(Linux):
         :return: returns the dochub url with the given build number and release train
                 example: http://dochub.fungible.local/doc/jenkins/apple_fs1600/68/setup_fs1600-68.sh
         """
+        release_prefix = ""
+        if not "master" in release_train:
+            release_prefix = "rel_"
         url = "{}/{}/fs1600/{}/{}".format(DOCHUB_BASE_URL,
-                                          "rel_" + release_train.replace(".", "_"),
+                                          release_prefix + release_train.replace(".", "_"),
                                           build_number,
                                           script_file_name)
 
@@ -1199,8 +1206,11 @@ class ComE(Linux):
         :return: True if the installation succeeded with exit status == 0, else raise an assert
         """
         self.sudo_command("/opt/fungible/cclinux/cclinux_service.sh --stop")
-        parts = release_train.split("_")
-        temp = "{}-{}_{}".format(parts[0], build_number, parts[1])
+        if "master" not in release_train:
+            parts = release_train.split("_")
+            temp = "{}-{}_{}".format(parts[0], build_number, parts[1])
+        else:
+            temp = "bld-{}".format(build_number)
         script_file_name = "setup_fs1600-{}.sh".format(temp)
 
         script_url = self._get_build_script_url(build_number=build_number,
@@ -1213,7 +1223,7 @@ class ComE(Linux):
         self.sudo_command("chmod 777 {}".format(target_file_name))
         self.sudo_command("{} install".format(target_file_name), timeout=500)
         exit_status = self.exit_status()
-        fun_test.test_assert(exit_status == 0, "Bundle install complete")
+        fun_test.test_assert(exit_status == 0, "Bundle install complete. Exit status valid")
         return True
 
 
