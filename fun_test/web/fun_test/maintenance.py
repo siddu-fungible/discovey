@@ -2380,4 +2380,15 @@ if __name__ == "__main_other_tree__":
     print "added other node as a root"
 
 if __name__ == "__main__":
+    internal_name = "load_mods_time_taken"
+    chart = MetricChart.objects.get(internal_chart_name="load_mods_time_taken")
+    data_sets = chart.get_data_sets()
+    one_data_set = {}
+    one_data_set["name"] = "load_mods"
+    one_data_set["inputs"] = {}
+    one_data_set["output"] = {"name": "output_total_time", "min": 0, "max": -1, "expected": -1, "reference": -1,
+                              "best": -1, "unit": PerfUnit.UNIT_SECS}
+    data_sets.append(one_data_set)
+    chart.data_sets = json.dumps(data_sets)
+    chart.save()
     ml.backup_dags()

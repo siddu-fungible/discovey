@@ -441,8 +441,8 @@ export class PerformanceComponent implements OnInit {
   replaceForwardUrl(chartName): string {
     Object.keys(this.urlEncodingReplacementMap).forEach(key => {
       if (chartName.includes(key)) {
-          chartName = chartName.replace(new RegExp(key, "g"), this.urlEncodingReplacementMap[key]);
-        }
+        chartName = chartName.replace(new RegExp(key, "g"), this.urlEncodingReplacementMap[key]);
+      }
     });
     return chartName;
   }
@@ -1015,14 +1015,17 @@ export class PerformanceComponent implements OnInit {
   }
 
   showMetricCharts(flatNode): void {
-    // if (flatNode.node.leaf) {
-    //   this.showAtomicMetric(flatNode);
-    // } else {
-    //   this.showNonAtomicMetric(flatNode);
-    // }
-    if (!this.currentNode || flatNode.node.metricId !== this.currentNode.metricId) {
-      this.showFunMetric = false;
-      this.navigateByQuery(flatNode);
+    if (this.selectMode == SelectMode.ShowMainSite) {
+      if (!this.currentNode || flatNode.node.metricId !== this.currentNode.metricId) {
+        this.showFunMetric = false;
+        this.navigateByQuery(flatNode);
+      }
+    } else {
+      if (flatNode.node.leaf) {
+      this.showAtomicMetric(flatNode);
+    } else {
+      this.showNonAtomicMetric(flatNode);
+    }
     }
   }
 
