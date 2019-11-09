@@ -624,7 +624,7 @@ def script_run_time(request, suite_execution_id, script_id):
 
 @api_safe_json_response
 def release_trains(request):
-    releases = ["1.0a_aa", "1.0a_ab"]
+    releases = ["master", "1.0a_aa", "1.0a_ab"]
     result = None
     if request.method == "GET":
         result = releases
