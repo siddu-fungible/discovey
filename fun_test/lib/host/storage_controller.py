@@ -213,6 +213,7 @@ class StorageController(NetworkController, DpcshClient):
 
         result = True
         compression_enabled = False
+        encryption_enabled = False
         if "ndata" not in ec_info or "nparity" not in ec_info or "capacity" not in ec_info:
             result = False
             fun_test.critical("Mandatory attributes needed for the EC volume creation is missing in ec_info dictionary")
