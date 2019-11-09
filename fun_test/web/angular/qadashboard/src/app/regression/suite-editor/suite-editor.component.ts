@@ -154,7 +154,7 @@ export class SuiteEditorComponent implements OnInit {
   }
 
   refreshAll() {
-    this.customTestBedSpecPopulationStatus = "Refreshing";
+    //this.customTestBedSpecPopulationStatus = "Refreshing";
 
     this.driver.subscribe(response => {
       this.customTestBedSpecForm = this.prepareFormGroup();

@@ -290,7 +290,7 @@ getPrettyLocalizeTime(t) {
     }))
   }
 
-  artifacts(suiteExecutionId, testCaseExecutionId: number = null) {
+  artifacts(suiteExecutionId: number, testCaseExecutionId: number = null) {
     let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}`;
     let params = [];
     params.push(["type", 200]);
@@ -304,6 +304,23 @@ getPrettyLocalizeTime(t) {
       this.loggerService.error("Unable to fetch time-series artifacts");
       return throwError(error);
     }))
+  }
+
+  testCaseTables(suiteExecutionId: number, testCaseExecutionId: number = null) {
+    let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}`;
+    let params = [];
+    params.push(["type", 300]);
+    if (testCaseExecutionId) {
+      params.push(["te", testCaseExecutionId]);
+    }
+    url += this.commonService.queryParamsToString(params);
+    return this.apiService.get(url).pipe(switchMap(response => {
+      return of(response.data);
+    }), catchError(error => {
+      this.loggerService.error("Unable to fetch test-case tables");
+      return throwError(error);
+    }))
+
   }
 
   getRegressionScripts(scriptId=null, scriptPath=null) {
