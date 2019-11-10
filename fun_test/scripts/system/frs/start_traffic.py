@@ -76,9 +76,9 @@ class MyScript(FunTestScript):
         if self.boot_new_image:
             topology = topology_helper.deploy()
             fun_test.test_assert(topology, "Topology deployed")
-        # self.verify_dpcsh_started()
-        # if not self.boot_new_image:
-        #     self.clear_uart_logs()
+        self.verify_dpcsh_started()
+        if not self.boot_new_image:
+            self.clear_uart_logs()
         if self.ec_vol:
             self.create_4_et_2_ec_volume()
 
