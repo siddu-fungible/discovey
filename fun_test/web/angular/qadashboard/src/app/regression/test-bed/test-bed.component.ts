@@ -189,7 +189,7 @@ export class TestBedComponent implements OnInit {
   }
 
   fetchAutomationStatus() {
-    /*
+
     return forkJoin(...this.testBeds.map((testBed) => {
       return this.regressionService.testBedInProgress(testBed.name).pipe(switchMap(response => {
         let numExecutions = -1;
@@ -213,8 +213,8 @@ export class TestBedComponent implements OnInit {
         return of(null);
         }))
       })
-    )*/
-    return of(true);
+    )
+    //return of(true);
   }
 
   setLockPanelHeader(string) {
