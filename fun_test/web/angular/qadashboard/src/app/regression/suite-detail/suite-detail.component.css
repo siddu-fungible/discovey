@@ -21,3 +21,18 @@
   padding: 5px;
   font-size: 14px;
 }
+
+.attribute-table-td {
+  padding: 10px;
+}
+
+.attribute-table-main-text {
+  font-weight: bolder;
+  padding: 5px;
+}
+
+.description {
+  font-size: 87.5%;
+  color: grey;
+  word-break: break-word;
+}

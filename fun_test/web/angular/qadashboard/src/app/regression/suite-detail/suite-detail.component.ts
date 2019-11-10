@@ -44,6 +44,9 @@ export class SuiteDetailComponent implements OnInit, OnDestroy {
   reUseBuildImage: boolean = false;
   reRunScript: string = null;
   refreshTimer: any = null;
+  showingLogPath: boolean = false;
+  showingInputs: boolean = false;
+  showingEnvironment: boolean = false;
   ABSOLUTE_LOG_DIRECTORY = "/project/users/QA/regression/Integration/fun_test/web/static/logs/s_";
 
   constructor(private apiService: ApiService,
@@ -81,7 +84,7 @@ export class SuiteDetailComponent implements OnInit, OnDestroy {
         let ctrl = this;
         this.apiService.get("/regression/suite_execution_attributes/" + this.suiteExecutionId).subscribe(result => {
           self.attributes = result.data;
-          self.attributes.unshift({"name": "Suite execution Id", "value": ctrl.suiteExecutionId});
+          //self.attributes.unshift({"name": "Suite execution Id", "value": ctrl.suiteExecutionId});
           //let ctrl = this;
           this.apiService.get("/regression/suite_execution/" + this.suiteExecutionId).subscribe(function (result) {
             self.suiteExecution = result.data; // TODO: validate
@@ -189,7 +192,6 @@ export class SuiteDetailComponent implements OnInit, OnDestroy {
 
         })
     }
-
   }
 
 
@@ -429,4 +431,21 @@ export class SuiteDetailComponent implements OnInit, OnDestroy {
     }
   }
 
+  getRunningTime() {
+    let endTime = new Date();
+    let startTime = null;
+    if ((this.suiteExecution.fields.state == this.stateMap.IN_PROGRESS) || (this.suiteExecution.fields.state <= this.stateMap.COMPLETED)) {
+      startTime = this.regressionService.convertToLocalTimezone(this.suiteExecution.fields.started_time);
+    }
+    if (this.suiteExecution.fields.state <= this.stateMap.COMPLETED) {
+      endTime = this.regressionService.convertToLocalTimezone(this.suiteExecution.fields.completed_time);
+    }
+    let result = "";
+    if (startTime) {
+      let diffMs = endTime.getTime() - startTime.getTime();
+      result = this.commonService.milliSecondsElapsedToDays(diffMs);
+    }
+    return result;
+    //return
+  }
 }

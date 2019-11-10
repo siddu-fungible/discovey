@@ -83,16 +83,16 @@ export class RegressionService implements OnInit{
     return new Date(epochValue);
   }
 
-getPrettyLocalizeTime(t) {
-  let minutePrefix = '';
-  let localTime = this.convertToLocalTimezone(t);
-  if (localTime.getMinutes() < 10){
-    minutePrefix += '0';
+  getPrettyLocalizeTime(t) {
+    let minutePrefix = '';
+    let localTime = this.convertToLocalTimezone(t);
+    if (localTime.getMinutes() < 10){
+      minutePrefix += '0';
+    }
+    let s = `${localTime.getMonth() + 1}/${localTime.getDate()} ${localTime.getHours()}:${minutePrefix}${localTime.getMinutes()}`;
+    //return this.convertToLocalTimezone(t).toLocaleString().replace(/\..*$/, "");
+    return s;
   }
-  let s = `${localTime.getMonth() + 1}/${localTime.getDate()} ${localTime.getHours()}:${minutePrefix}${localTime.getMinutes()}`;
-  //return this.convertToLocalTimezone(t).toLocaleString().replace(/\..*$/, "");
-  return s;
-}
 
 
   getTestCaseExecution(executionId) {

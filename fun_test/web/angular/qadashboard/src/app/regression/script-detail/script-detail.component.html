@@ -3,11 +3,11 @@
   <div class="fun-spacer"></div>
   <span class="script-name">{{ scriptPath }}</span>
   <div class="fun-spacer"></div>
-  <button (click)="onContextOptionsClick(contextOptions)"><i class="fa fa-columns"></i>&nbsp;Context options</button>
-  <button (click)="viewChartsClick(chartSelectionOptions)"><i class="fa fa-bar-chart"></i>&nbsp;Select charts</button>
-  <button (click)="openConsoleLogClick()"><i class="fa fa-file-text-o"></i>&nbsp;Console log</button>
-  <button (click)="openArtifactsPanelClick()"><i class="fa fa-files-o"></i>&nbsp;More logs</button>
-  <button (click)="openTestCaseTablesPanelClick()"><i class="fa fa-table"></i>&nbsp;Show tables</button>
+  <button class="fun-button-with-icon" (click)="onContextOptionsClick(contextOptions)"><i class="fa fa-columns"></i>&nbsp;Context options</button>
+  <button class="fun-button-with-icon" (click)="viewChartsClick(chartSelectionOptions)"><i class="fa fa-bar-chart"></i>&nbsp;Select charts</button>
+  <button class="fun-button-with-icon" (click)="openConsoleLogClick()"><i class="fa fa-file-text-o"></i>&nbsp;Console log</button>
+  <button class="fun-button-with-icon" (click)="openArtifactsPanelClick()"><i class="fa fa-files-o"></i>&nbsp;More logs</button>
+  <button class="fun-button-with-icon" (click)="openTestCaseTablesPanelClick()"><i class="fa fa-table"></i> Show tables</button>
   <!--button (click)="testClick()">Test</button-->
   <ng-template #contextOptions let-modal>
     <div class="fun-panel">
