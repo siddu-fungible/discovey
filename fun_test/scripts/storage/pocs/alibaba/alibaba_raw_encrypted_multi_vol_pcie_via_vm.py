@@ -43,6 +43,7 @@ def post_results(value_dict):
     value_dict["volume_type"] = "BLT"
     value_dict["platform"] = FunPlatform.F1
     value_dict["version"] = fun_test.get_version()
+    value_dict["encryption"] = True
     model_name = "AlibabaPerformance"
     status = fun_test.PASSED
     try:
