@@ -60,7 +60,7 @@ export class SuitesViewComponent implements OnInit {
       return;
     }
     this.currentPage = page;
-    this.refreshAll();
+    //this.refreshAll();
   }
 
   refreshAll() {
@@ -68,6 +68,7 @@ export class SuitesViewComponent implements OnInit {
     console.log(this.status);
     this.driver.subscribe(response => {
       this.status = null;
+      this.setPage(this.currentPage);
     }, error => {
       this.loggerService.error("Unable to initialize view component");
       this.status = null;
@@ -106,8 +107,9 @@ export class SuitesViewComponent implements OnInit {
   onSearchText(searchText) {
     this.byNameSearchText = searchText;
     //console.log(this.byNameSearchText);
-    //this.refreshAll();
-    this.setPage(1);
+    this.currentPage = 1;
+    this.refreshAll();
+    //this.setPage(1);
   }
 
   onAddSuiteClick() {
