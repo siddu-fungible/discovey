@@ -448,4 +448,14 @@ export class SuiteDetailComponent implements OnInit, OnDestroy {
     return result;
     //return
   }
+
+  onTogglePreserveLogs(preserveLogs) {
+    this.suiteExecution.fields.preserve_logs = !this.suiteExecution.fields.preserve_logs;
+    this.regressionService.preserveLogs(this.suiteExecution.fields.execution_id, this.suiteExecution.fields.preserve_logs).subscribe(response => {
+
+    }, error => {
+      this.logger.error("Unable to modify preserve logs");
+    })
+
+  }
 }

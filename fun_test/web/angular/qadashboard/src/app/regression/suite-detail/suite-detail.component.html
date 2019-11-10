@@ -5,7 +5,9 @@
         <div class="fun-panel-header">
           <span *ngIf="suiteExecution" class="fun-panel-header-main-text">Suite: {{ suiteExecution.fields.suite_type === 'dynamic'? 'Re(' + getReRunOriginalSuitePath(suiteExecution) + ')' : suiteExecution.fields.suite_path }}
             </span>
-          <small>Submitted by: {{  }}</small>
+          <small *ngIf="suiteExecution"><a href="/regression/suite_editor/{{ suiteExecution.fields.suite_id }}">Go to suite</a></small>
+          <small style="float: right" *ngIf="suiteExecution">Submitted by: {{ suiteExecution.fields.submitter_email }}</small>
+
         </div>
         <div class="fun-panel-body">
           <div class="description" *ngIf="suiteExecution && suiteExecution.fields.description && suiteExecution.fields.description.length > 0">
@@ -16,55 +18,11 @@
             <tr>
               <td class="attribute-table-td"><span class="attribute-table-main-text">Job ID </span>{{ suiteExecution.fields.execution_id }}</td>
               <td class="attribute-table-td"><span  class="attribute-table-main-text">State</span> <app-smart-label [value]="stateStringMap[suiteExecution.fields.state]"></app-smart-label>
-                          <span *ngIf="suiteExecution?.fields.state > stateMap.COMPLETED" (click)="killClick(suiteExecution.fields.execution_id)" class="anchor-button pseudo-anchor" style="padding: 5px;"> Kill</span>
+                <span *ngIf="suiteExecution?.fields.state > stateMap.COMPLETED" (click)="killClick(suiteExecution.fields.execution_id)" class="anchor-button pseudo-anchor" style="padding: 5px;"> Kill</span>
               </td>
-              <td class="attribute-table-td">
-                <span class="attribute-table-main-text">Result</span> <app-smart-label [value]="suiteExecution.fields.result"></app-smart-label>
-                 <span
-                  *ngIf="(suiteExecution?.fields.state !== stateMap.IN_PROGRESS) && (suiteExecution?.fields.state !== stateMap.ABORTED)"
-                  (click)="reRunModalOpen(suiteContent)"
-                  class="pseudo-anchor anchor-button" style="padding: 5px">Re-run options
-                </span>
-                <ng-template #suiteContent let-modal>
-                <div class="fun-panel">
-                  <div class="fun-panel-header">
-                    Re-run options
-                    <span *ngIf="reRunScript"> Script: {{ reRunScript }}</span>
-                  </div>
-                  <div class="fun-panel-body">
-                    <div class="re-run-div">
-                      <button (click)="toggleReRunOptions()" class="btn click-button"
-                              [ngClass]="{'btn-primary': reRunOptionsReRunAll, 'btn-outline-primary': !reRunOptionsReRunAll}">
-                        <i class="fa" [ngClass]="{'fa-check': reRunOptionsReRunAll}"></i> Re-run all
-                      </button>
-                    </div>
-                    <div class="re-run-div">
-                      <button (click)="toggleReRunOptions()" class="btn click-button"
-                              [ngClass]="{'btn-primary': reRunOptionsReRunFailed, 'btn-outline-primary': !reRunOptionsReRunFailed}">
-                        <i class="fa" [ngClass]="{'fa-check': reRunOptionsReRunFailed}"></i> Re-run failed
-                      </button>
-                    </div>
-                    <div class="re-run-div" *ngIf="suiteExecution.fields.test_bed_type !== 'simulation'">
-                      <button (click)="togglereUseBuildImage()" class="btn click-button"
-                              [ngClass]="{'btn-primary': reUseBuildImage, 'btn-outline-primary': !reUseBuildImage}"><i
-                        class="fa" [ngClass]="{'fa-check': reUseBuildImage}"></i>Re-use Jenkins build image
-                      </button>
-                      (From the original run)
-                    </div>
-                    <div>
-                    </div>
-
-                    <app-section-horizontal-line></app-section-horizontal-line>
-                    <div style="display: flex; justify-content: flex-end">
-                      <span class="pseudo-anchor" (click)="modal.dismiss('Cross click')">Cancel</span> &nbsp;&nbsp;
-                      <button class="btn btn-success submit-button" (click)="modal.close(suiteExecution)">Submit
-                      </button>
-                    </div>
-                  </div>
-
-                </div>
-
-              </ng-template>
+              <td class="attribute-table-td" *ngIf="suiteExecution">
+                <span class="attribute-table-main-text">Preserve-logs</span>
+                <app-toggle-button [checked]="suiteExecution.fields?.preserve_logs" (changed)="onTogglePreserveLogs($event, preserveLogs)"></app-toggle-button>
               </td>
             </tr>
             <tr>
@@ -76,6 +34,17 @@
               </td>
               <td class="attribute-table-td">
                 <span class="attribute-table-main-text">Running time</span> {{ getRunningTime() }}
+              </td>
+            </tr>
+            <tr>
+              <td class="attribute-table-td">
+                <span class="attribute-table-main-text">Test-bed type</span> {{ suiteExecution?.fields?.test_bed_type }}
+              </td>
+              <td class="attribute-table-td" *ngIf="environment?.BRANCH_FunOS">
+                <span class="attribute-table-main-text">BRANCH_FUNOS</span>{{ environment.BRANCH_FunOS }}
+              </td>
+              <td class="attribute-table-td" *ngIf="environment?.RELEASE_BUILD">
+                <span class="attribute-table-main-text">RELEASE_BUILD</span>{{ environment.RELEASE_BUILD }}
               </td>
             </tr>
             <tr>
@@ -96,9 +65,7 @@
                   Show environment
                 </span>
               </td>
-
             </tr>
-
             <tr *ngIf="showingLogPath" style="background-color: #e7e7e7">
               <td colspan="3">
                 {{ ABSOLUTE_LOG_DIRECTORY + suiteExecution.fields.execution_id }})
@@ -116,14 +83,72 @@
             </tr>
           </table>
 
-          <table class="">
-            <tr *ngIf="environment">
-              <td>Branch_FunOS</td>
-              <td>{{ environment.BRANCH_FunOS }}</td>
+          <div class="attribute-table-td">
+            <span class="attribute-table-main-text">Result</span> <app-smart-label [value]="suiteExecution?.fields?.result"></app-smart-label>
+             <span
+              *ngIf="(suiteExecution?.fields.state !== stateMap.IN_PROGRESS) && (suiteExecution?.fields.state !== stateMap.ABORTED)"
+              (click)="reRunModalOpen(suiteContent)"
+              class="pseudo-anchor anchor-button" style="padding: 5px">Re-run options
+            </span>
+            <ng-template #suiteContent let-modal>
+              <div class="fun-panel">
+                <div class="fun-panel-header">
+                  Re-run options
+                  <span *ngIf="reRunScript"> Script: {{ reRunScript }}</span>
+                </div>
+                <div class="fun-panel-body">
+                  <div class="re-run-div">
+                    <button (click)="toggleReRunOptions()" class="btn click-button"
+                            [ngClass]="{'btn-primary': reRunOptionsReRunAll, 'btn-outline-primary': !reRunOptionsReRunAll}">
+                      <i class="fa" [ngClass]="{'fa-check': reRunOptionsReRunAll}"></i> Re-run all
+                    </button>
+                  </div>
+                  <div class="re-run-div">
+                    <button (click)="toggleReRunOptions()" class="btn click-button"
+                            [ngClass]="{'btn-primary': reRunOptionsReRunFailed, 'btn-outline-primary': !reRunOptionsReRunFailed}">
+                      <i class="fa" [ngClass]="{'fa-check': reRunOptionsReRunFailed}"></i> Re-run failed
+                    </button>
+                  </div>
+                  <div class="re-run-div" *ngIf="suiteExecution?.fields?.test_bed_type !== 'simulation'">
+                    <button (click)="togglereUseBuildImage()" class="btn click-button"
+                            [ngClass]="{'btn-primary': reUseBuildImage, 'btn-outline-primary': !reUseBuildImage}"><i
+                      class="fa" [ngClass]="{'fa-check': reUseBuildImage}"></i>Re-use Jenkins build image
+                    </button>
+                    (From the original run)
+                  </div>
+                  <div>
+                  </div>
+                  <app-section-horizontal-line></app-section-horizontal-line>
+                  <div style="display: flex; justify-content: flex-end">
+                    <span class="pseudo-anchor" (click)="modal.dismiss('Cross click')">Cancel</span> &nbsp;&nbsp;
+                    <button class="btn btn-success submit-button" (click)="modal.close(suiteExecution)">Submit
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </ng-template>
+          </div>
+          <table *ngIf="suiteExecution" class="fun-table" style="margin: 10px">
+            <tr>
+              <td class="fun-table-header">
+                Passed
+              </td>
+              <td class="fun-table-header">
+                Failed
+              </td>
+              <td class="fun-table-header">
+                Not-run
+              </td>
+              <td class="fun-table-header">
+                In-progress
+              </td>
             </tr>
-            <tr *ngIf="environment">
-              <td>RELEASE_BUILD</td>
-              <td>{{ environment.RELEASE_BUILD }}</td>
+            <tr>
+              <td>{{ suiteExecution.num_passed }}</td>
+              <td>{{ suiteExecution.num_failed }}</td>
+              <td>{{ suiteExecution.num_not_run }}</td>
+              <td>{{ suiteExecution.num_in_progress }}</td>
+
             </tr>
           </table>
         </div>
@@ -190,7 +215,7 @@
                 <th class="text-center">Inputs</th>
                 <th class="text-center">Result</th>
                 <th class="text-center">Started At</th>
-                <th class="text-center">HTML</th>
+                <th class="text-center">Report</th>
                 <th class="text-center">Console</th>
                 <th class="text-center">New report <span class="badge badge-warning">Beta</span></th>
                 <!--th class="text-center">Action</th-->

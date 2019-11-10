@@ -217,6 +217,8 @@ def suite_executions(request, id):
                 scheduled_suites = SuiteExecution.objects.filter(auto_scheduled_execution_id=int(id), state=JobStatusType.SCHEDULED)
                 for scheduled_suite in scheduled_suites:
                     scheduled_suite.delete()
+            if "preserve_logs" in request_json:
+                suite_execution.preserve_logs = request_json["preserve_logs"]
             suite_execution.save()
         except ObjectDoesNotExist:
             # TODO
