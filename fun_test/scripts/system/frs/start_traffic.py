@@ -48,8 +48,8 @@ class MyScript(FunTestScript):
                 self.add_boot_arg = job_inputs["add_boot_arg"]
                 self.add_boot_arg = " --" + self.add_boot_arg
 
-        f1_0_boot_args = 'cc_huid=3 sku=SKU_FS1600_0 app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303%s'%(self.add_boot_arg)
-        f1_1_boot_args = 'cc_huid=2 sku=SKU_FS1600_1 app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303%s'%(self.add_boot_arg)
+        f1_0_boot_args = 'cc_huid=3 app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303%s'%(self.add_boot_arg)
+        f1_1_boot_args = 'cc_huid=2 app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303%s'%(self.add_boot_arg)
 
         topology_helper = TopologyHelper()
         topology_helper.set_dut_parameters(f1_parameters={0: {"boot_args": f1_0_boot_args},
@@ -76,9 +76,9 @@ class MyScript(FunTestScript):
         if self.boot_new_image:
             topology = topology_helper.deploy()
             fun_test.test_assert(topology, "Topology deployed")
-        self.verify_dpcsh_started()
-        if not self.boot_new_image:
-            self.clear_uart_logs()
+        # self.verify_dpcsh_started()
+        # if not self.boot_new_image:
+        #     self.clear_uart_logs()
         if self.ec_vol:
             self.create_4_et_2_ec_volume()
 
@@ -274,7 +274,7 @@ class FunTestCase1(FunTestCase):
         # post_fix_name: "{calculated_}{app_name}_DPCSH_OUTPUT_F1_{f1}_logs.txt"
         # description : "{calculated_}_{app_name}_DPCSH_OUTPUT_F1_{f1}"
         self.stats_info["bmc"] = {"POWER": {"calculated": True}, "DIE_TEMPERATURE": {"calculated": False, "disable":True}}
-        self.stats_info["come"] = {"DEBUG_MEMORY": {}, "CDU": {}, "EQM": {}, "BAM": {"calculated": False, "disable":True}, "DEBUG_VP_UTIL": {"calculated": False, "disable": True}, "LE": {}, "HBM": {"calculated": True},
+        self.stats_info["come"] = {"DEBUG_MEMORY": {}, "CDU": {}, "EQM": {}, "BAM": {"calculated": False, "disable":True}, "DEBUG_VP_UTIL": {}, "LE": {}, "HBM": {"calculated": True},
                                    "EXECUTE_LEAKS": {"calculated": False}, "PC_DMA": {"calculated": True}, "DDR":{"calculated": True}}
         self.stats_info["files"] = {"fio":{"calculated": False}}
 
@@ -582,9 +582,13 @@ class FunTestCase1(FunTestCase):
             dpcsh_output = dpcsh_commands.debug_vp_utils(come_handle=come_handle, f1=f1)
             one_dataset["time"] = datetime.datetime.now()
             one_dataset["output"] = dpcsh_output
-            self.upload_dpcsh_data_to_elk(dpcsh_data=dpcsh_output, f1=f1)
-            fun_test.sleep("before next iteration", seconds=4)
             file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+            cal_dpc_out = stats_calculation.filter_dict(one_dataset, stat_name)
+            one_dataset["output"] = cal_dpc_out
+            file_helper.add_data(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+            # self.upload_dpcsh_data_to_elk(dpcsh_data=dpcsh_output, f1=f1)
+            fun_test.sleep("before next iteration", seconds=5)
+
         come_handle.destroy()
 
     ########### HBM ##################
