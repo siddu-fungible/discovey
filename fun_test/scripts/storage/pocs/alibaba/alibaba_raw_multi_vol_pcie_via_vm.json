@@ -37,7 +37,7 @@
                 "blt_vol_block_size": 4096,
                 "rds_vol_capacity": 1600120684544,
                 "rds_vol_block_size": 4096,
-                "command_timeout": 5
+                "command_timeout": 20
               },
               "remote_storage": {
                 "blt_vol_capacity": 1600120684544,
