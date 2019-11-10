@@ -21,7 +21,7 @@
                 <span *ngIf="suiteExecution?.fields.state > stateMap.COMPLETED" (click)="killClick(suiteExecution.fields.execution_id)" class="anchor-button pseudo-anchor" style="padding: 5px;"> Kill</span>
               </td>
               <td class="attribute-table-td" *ngIf="suiteExecution">
-                <span class="attribute-table-main-text">Preserve-logs</span>
+                <span class="attribute-table-main-text">Preserve logs</span>
                 <app-toggle-button [checked]="suiteExecution.fields?.preserve_logs" (changed)="onTogglePreserveLogs($event, preserveLogs)"></app-toggle-button>
               </td>
             </tr>
