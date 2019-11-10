@@ -168,8 +168,8 @@ export class TestBedComponent implements OnInit {
         if (testBed.hasOwnProperty("asset_level_manual_lock_status")) {
           this.assetLevelManualLockStatus[testBed.name] = testBed.asset_level_manual_lock_status;
         }
-        if (response && response.hasOwnProperty("automation_status")) {
-          let automationStatus = response.automation_status;
+        if (testBed && testBed.hasOwnProperty("automation_status")) {
+          let automationStatus = testBed.automation_status;
           if (automationStatus.hasOwnProperty("internal_asset_in_use") && automationStatus.internal_asset_in_use) {
             this.automationStatus[testBed.name] = {numExecutions: 1,
               executionId: automationStatus.internal_asset_in_use_suite_id, assetInUse: automationStatus.internal_asset};
@@ -189,7 +189,7 @@ export class TestBedComponent implements OnInit {
   }
 
   fetchAutomationStatus() {
-
+    /*
     return forkJoin(...this.testBeds.map((testBed) => {
       return this.regressionService.testBedInProgress(testBed.name).pipe(switchMap(response => {
         let numExecutions = -1;
@@ -213,8 +213,8 @@ export class TestBedComponent implements OnInit {
         return of(null);
         }))
       })
-    )
-    //return of(true);
+    )*/
+    return of(true);
   }
 
   setLockPanelHeader(string) {
