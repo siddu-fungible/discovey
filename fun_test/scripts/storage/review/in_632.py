@@ -112,6 +112,19 @@ class BLTVolumePerformanceScript(FunTestScript):
         fs = Fs.get(boot_args=tb_config["dut_info"][0]["bootarg"], disable_f1_index=1)
         fun_test.shared_variables["fs"] = fs
         #Sandip
+        # Pulling reserved DUTs and Hosts and test bed specific configuration if script is submitted with testbed-type
+        # suite-based
+        self.topology_helper = TopologyHelper()
+        self.available_dut_indexes = self.topology_helper.get_available_duts().keys()
+        fun_test.log("Available DUT Indexes: {}".format(self.available_dut_indexes))
+        self.required_hosts = self.topology_helper.get_available_hosts()
+        self.testbed_config = self.topology_helper.spec
+        self.total_available_duts = len(self.available_dut_indexes)
+
+        fun_test.test_assert(expression=self.num_duts <= self.total_available_duts,
+                             message="Testbed has enough DUTs")
+
+
         # Code to collect csi_perf if it's set
         self.csi_perf_enabled = fun_test.get_job_environment_variable("csi_perf")
         fun_test.log("csi_perf_enabled is set as: {} for current run".format(self.csi_perf_enabled))
