@@ -116,10 +116,12 @@ def le_firewall(run_time, new_image, just_kill=False):
             fun_test.test_assert(running, "Le initiate started on the VM: {}".format(vm))
     if new_image:
         pid_info = {}
+        time_in_seconds = 5
         for vm, vm_details in vm_info.iteritems():
             pid_info[vm] = fun_test.execute_thread_after(func=poll_untill_le_stops,
-                                                         time_in_seconds=5,
+                                                         time_in_seconds=time_in_seconds,
                                                          vm_details=vm_details)
+            time_in_seconds +=1
         for vm in vm_info:
             fun_test.join_thread(pid_info[vm])
             fun_test.test_assert(True, "Le initiate completed on the VM: {}".format(vm))

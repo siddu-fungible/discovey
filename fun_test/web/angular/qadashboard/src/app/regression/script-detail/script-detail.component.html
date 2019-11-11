@@ -1,11 +1,13 @@
 <div class="fun-flex-container fun-action-nav">
-  <a class="pseudo-anchor" href="/regression/suite_detail/{{ suiteExecutionId }}">&nbsp;< Back to suite</a>
+  <a class="pseudo-anchor" href="/regression/suite_detail/{{ suiteExecutionId }}">&nbsp; < Back to suite</a>
   <div class="fun-spacer"></div>
   <span class="script-name">{{ scriptPath }}</span>
   <div class="fun-spacer"></div>
-  <button (click)="onContextOptionsClick(contextOptions)" class="fun-button-add">Context options</button>
-  <button (click)="viewChartsClick(chartSelectionOptions)" class="fun-button-add">Select charts</button>
-  <span class="pseudo-anchor" (click)="openConsoleLogClick()">Console log</span>
+  <button class="fun-button-with-icon" (click)="onContextOptionsClick(contextOptions)"><i class="fa fa-columns"></i>&nbsp;Context options</button>
+  <button class="fun-button-with-icon" (click)="viewChartsClick(chartSelectionOptions)"><i class="fa fa-bar-chart"></i>&nbsp;Select charts</button>
+  <button class="fun-button-with-icon" (click)="openConsoleLogClick()"><i class="fa fa-file-text-o"></i>&nbsp;Console log</button>
+  <button class="fun-button-with-icon" (click)="openArtifactsPanelClick()"><i class="fa fa-files-o"></i>&nbsp;More logs</button>
+  <button class="fun-button-with-icon" (click)="openTestCaseTablesPanelClick()"><i class="fa fa-table"></i> Show tables</button>
   <!--button (click)="testClick()">Test</button-->
   <ng-template #contextOptions let-modal>
     <div class="fun-panel">
@@ -66,18 +68,81 @@
   </ng-template>
 </div>
 
-<!--div class="fun-flex-container">
-	<fun-chart style="width: 300px; height: 300px" [mileStones]="mileStoneIndices" [y1AxisPlotLines]="y1AxisPlotLines" [yMax]="yMax" [yMin]="yMin"
-						 [y1Values]="values"
-						 [xValues]="series"
-						 [title]="'BAM stats'"
-						 [xAxisLabel]="'X axis'"
-						 [y1AxisLabel]="'Y axis'"></fun-chart>
-</div-->
-
 
 <!--app-timeline-control *ngIf="showLogsPanel" [domainMin]="minRelativeTime" [domainMax]="maxRelativeTime" [title]="'Show logs starting from'" [unit]="'s'" (valueChanged)="onTimeLineChanged($event)"></app-timeline-control-->
 <div class="" style="overflow: auto; height: 100%; width: 100%;">
+  <div *ngIf="showingArtifactPanel" class="fun-panel panel" [@show]="showingArtifactPanel">
+    <div class="fun-panel-header">
+      Artifacts
+    </div>
+    <div class="fun-panel-body">
+      <ng-container *ngFor="let assetType of artifactTree.root | keyvalue">
+        <div class="fun-panel">
+          <div class="fun-panel-header">
+            {{ assetType.key }}
+          </div>
+          <div class="fun-panel-body">
+            <div *ngFor="let assetId of assetType.value | keyvalue" class="fun-panel">
+              <div class="fun-panel-header">
+                {{ assetId.key }}
+              </div>
+              <div class="fun-panel-body">
+                <div *ngFor="let category of assetId.value | keyvalue" class="fun-panel">
+                   <div class="fun-panel-header">
+                     {{ category.key }}
+                   </div>
+                   <div class="fun-panel-body">
+                     <table class="fun-table">
+                       <tr>
+                         <td class="fun-table-header">Sub-category</td>
+                         <td class="fun-table-header">Link</td>
+                       </tr>
+                       <tr *ngFor="let record of category.value">
+                         <td>{{ record.data.sub_category }}</td>
+                         <td><a href="{{ record.data.link}}">{{ record.data.description }}</a></td>
+                       </tr>
+
+                     </table>
+
+                   </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </ng-container>
+
+    </div>
+
+  </div>
+  <div *ngIf="showingTablesPanel" class="fun-panel panel" [@show]="showingTablesPanel">
+    <div *ngFor="let testCaseTablePanel of testCaseTablePanels | keyvalue" class="fun-panel">
+      <div class="fun-panel-header">
+        {{ testCaseTablePanel.key }}
+      </div>
+      <div *ngFor="let testCaseTable of testCaseTablePanel.value" class="fun-panel-body">
+        <div class="fun-panel">
+          <div class="fun-panel-header">
+            {{ testCaseTable.data.table_name }}
+          </div>
+          <div class="fun-panel-body">
+            <table class="fun-table">
+              <tr>
+                <td class="fun-table-header" *ngFor="let header of testCaseTable.data.table_data.headers">{{ header }}</td>
+              </tr>
+              <tr *ngFor="let row of testCaseTable.data.table_data.rows">
+                <td *ngFor="let rowElement of row">{{ rowElement }}</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+  </div>
+
   <div class="fun-flex-container" style="align-items: flex-start;">
     <div *ngIf="showTestCasePanel" class="fun-flex-item panel fun-panel" [@show]="showTestCasePanel">
       <div class="fun-panel-header">
@@ -97,7 +162,7 @@
           <tr *ngFor="let testCaseExecution of testCaseExecutions; let index=index"
               [ngClass]="{'selected-row': currentTestCaseExecution?.test_case_id === testCaseExecution.test_case_id }">
 
-            <ng-container *ngIf="!showFailedTestCases || (showFailedTestCases && (testCaseExecution.result === 'FAILED'))">
+            <ng-container *ngIf="(!showFailedTestCases || (showFailedTestCases && (testCaseExecution.result === 'FAILED'))) && (testCaseExecution.result !== 'NOT_RUN')">
               <td>
                   <span [ngClass]="{'pseudo-anchor': testCaseExecution.result !== 'NOT_RUN'}"
                         (click)="onTestCaseIdClick(index, testCaseExecution.execution_id)">{{ testCaseExecution.test_case_id }}

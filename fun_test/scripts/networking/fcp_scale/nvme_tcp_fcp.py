@@ -673,16 +673,16 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             "test_case": "NVMe/TCP",
             "volumes": num_vols,
             "operation": fio_test,
-            "block_size": block_size,
-            "iops": total_iops,
-            "bw": total_bw,
-            "latency_avg": latency_avg,
-            "latency_50": latency_50,
-            "latency_90": latency_90,
-            "latency_95": latency_95,
-            "latency_99": latency_99,
-            "latency_9950": latency_9950,
-            "latency_9999": latency_9999}
+            "{}_block_size".format(fio_result_name): block_size,
+            "{}_iops".format(fio_result_name): total_iops,
+            "{}_bw".format(fio_result_name): total_bw,
+            "{}_latency_avg".format(fio_result_name): latency_avg,
+            "{}_latency_50".format(fio_result_name): latency_50,
+            "{}_latency_90".format(fio_result_name): latency_90,
+            "{}_latency_95".format(fio_result_name): latency_95,
+            "{}_latency_99".format(fio_result_name): latency_99,
+            "{}_latency_9950".format(fio_result_name): latency_9950,
+            "{}_latency_9999".format(fio_result_name): latency_9999}
         # add_to_data_base(value_dict)
         print value_dict
         table_data = {"headers": table_data_headers, "rows": table_data_rows}

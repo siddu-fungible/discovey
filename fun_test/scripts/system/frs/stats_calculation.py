@@ -122,3 +122,45 @@ def sum_important_fields_ddr(diff_dict):
     result["qsys_read_requests"] = round(qsys_read_requests, 2)
     result["na_requests"] = round(na_requests, 2)
     return result
+
+def filter_dict(one_dataset, stat_name):
+    result = {}
+    if stat_name == "DEBUG_VP_UTIL":
+        result = filter_out_debug_vp_util(one_dataset)
+    return result
+
+def filter_out_debug_vp_util(one_dataset):
+    dpcsh_data = one_dataset["output"]
+    simplified_output = simplify_debug_vp_util(dpcsh_data)
+    cluster_wise_result = calculate_for_each_cluster(simplified_output)
+    return cluster_wise_result
+
+def simplify_debug_vp_util( dpcsh_data):
+    result = []
+    if dpcsh_data:
+        for cluster in range(8):
+            for core in range(6):
+                for vp in range(4):
+                    try:
+                        value = dpcsh_data["CCV{}.{}.{}".format(cluster, core, vp)]
+                        one_data_set = {"core": core,
+                                        "cluster": cluster,
+                                        "vp": vp,
+                                        "value": value
+                                        }
+                        # print(one_data_set)
+                        result.append(one_data_set)
+                    except:
+                        print ("Data error")
+    return result
+
+def calculate_for_each_cluster(simplified_output):
+    result = {}
+    for one_data in simplified_output:
+        cluster = one_data["cluster"]
+        result.setdefault("cluster{}".format(cluster), 0)
+        result["cluster{}".format(cluster)] += one_data["value"]
+    for each_cluster in result:
+        result[each_cluster] = round(result[each_cluster] / 24.0, 4)
+    result["average_value"] = round(sum(result.values()) / 8, 4)
+    return result
