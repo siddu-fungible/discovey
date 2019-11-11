@@ -379,7 +379,7 @@ class FunTestCase1(FunTestCase):
         if "fio" in app_params:
             self.join_fio_thread(fio_thread_map)
 
-        # fun_test.sleep("Waiting for all the things to settle", seconds=self.end_sleep)
+        fun_test.sleep("Waiting for all the things to settle", seconds=self.end_sleep)
 
         #################### After the traffic ############
         if self.run_le_firewall:
