@@ -18,6 +18,7 @@ from elasticsearch import Elasticsearch
 
 # Environment: --environment={\"test_bed_type\":\"fs-65\",\"tftp_image_path\":\"ranga/funos-f1_ranga.stripped.gz\"} --inputs={\"boot_new_image\":true,\"le_firewall\":true,\"collect_stats\":[\"\"],\"ec_vol\":true}
 # inputs: {"run_le_firewall":false,"specific_apps":["ZIP"],"add_to_database":true,"collect_stats":["POWER","DEBUG_MEMORY","LE"],"end_sleep":30}
+# --environment={\"test_bed_type\":\"fs-65\",\"tftp_image_path\":\"ranga/funos-f1_onkar.stripped.gz\"} --inputs={\"boot_new_image\":false,\"le_firewall\":false,\"collect_stats\":[\"DEBUG_VP_UTIL\",\"POWER\"],\"ec_vol\":false,\"specific_apps\":[\"crypto\"],\"disable_f1_index\":0}
 
 
 class MyScript(FunTestScript):
@@ -238,6 +239,7 @@ class FunTestCase1(FunTestCase):
                               steps="""""")
 
     def setup(self):
+        self.test_start_time = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
         self.run_on_f1 = fun_test.shared_variables["run_on_f1"]
         self.fs = fun_test.shared_variables["fs"]
         job_inputs = fun_test.get_job_inputs()
@@ -325,6 +327,8 @@ class FunTestCase1(FunTestCase):
             self.test_duration = 3600
         elif self.duration == "3h":
             self.test_duration = 10800
+
+
 
     def run(self):
         ############## Before traffic #####################
@@ -586,8 +590,8 @@ class FunTestCase1(FunTestCase):
             cal_dpc_out = stats_calculation.filter_dict(one_dataset, stat_name)
             one_dataset["output"] = cal_dpc_out
             file_helper.add_data(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
-            # self.upload_dpcsh_data_to_elk(dpcsh_data=dpcsh_output, f1=f1)
-            fun_test.sleep("before next iteration", seconds=5)
+            time_taken = self.upload_dpcsh_data_to_elk(dpcsh_data=dpcsh_output, f1=f1, stat_name=stat_name)
+            fun_test.sleep("Before next iteration", seconds=(5-time_taken))
 
         come_handle.destroy()
 
@@ -822,6 +826,7 @@ class FunTestCase1(FunTestCase):
         fun_test.test_assert(True, "DPCSH running")
 
     def cleanup(self):
+        self.test_end_time = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
         if not self.boot_new_image:
             bmc_handle = Bmc(host_ip=self.fs['bmc']['mgmt_ip'],
                              ssh_username=self.fs['bmc']['mgmt_ssh_username'],
@@ -835,6 +840,9 @@ class FunTestCase1(FunTestCase):
             artifact_file_name_f1_1 = bmc_handle.get_uart_log_file(1)
             fun_test.add_auxillary_file(description="DUT_0_fs-65_F1_0 UART Log", filename=artifact_file_name_f1_0)
             fun_test.add_auxillary_file(description="DUT_0_fs-65_F1_1 UART Log", filename=artifact_file_name_f1_1)
+        href = "http://10.1.20.52:5601/app/kibana#/dashboard/a37ce420-9190-11e9-8475-15977467c007?_g=(refreshInterval:(pause:!t,value:0),time:(from:'{}',mode:absolute,to:'{}'))".format(self.test_start_time, self.test_end_time)
+        checkpoint = '<a href="{}" target="_blank">ELK DEBUG MEMORY stats</a>'.format(href)
+        fun_test.add_checkpoint(checkpoint=checkpoint)
 
     def start_threaded_apps(self):
         def func_not_found():
@@ -942,10 +950,11 @@ class FunTestCase1(FunTestCase):
             fun_test.critical(ex)
         fun_test.shared_variables["fio_output_f1_{}".format(f1)] = fio_output
 
-    def upload_dpcsh_data_to_elk(self, dpcsh_data, f1):
+    def upload_dpcsh_data_to_elk(self, dpcsh_data, f1, stat_name):
         simplified_dpcsh_data = self.simplify_debug_vp_util(dpcsh_data)
-        data_dict = self.add_basics_req_elk(simplified_dpcsh_data, f1)
-        self.upload_using_multiprocessing(data_dict, self.es_obj)
+        data_dict = self.add_basics_req_elk(simplified_dpcsh_data, f1=f1)
+        time_taken = self.upload_using_multiprocessing(data_dict, stat_name)
+        return time_taken
 
     def simplify_debug_vp_util(self, dpcsh_data):
         result = []
@@ -960,7 +969,7 @@ class FunTestCase1(FunTestCase):
                                             "vp": vp,
                                             "value": value
                                             }
-                            print(one_data_set)
+                            # print(one_data_set)
                             result.append(one_data_set)
                         except:
                             print ("Data error")
@@ -973,23 +982,23 @@ class FunTestCase1(FunTestCase):
         for each_data_set in simplified_dpcsh_data:
             if time_stamp:
                 each_data_set["Time"] = time_strf
-            each_data_set["system_name"] = self.fs
+            each_data_set["system_name"] = self.fs['name']
             each_data_set["f1"] = f1
 
         return simplified_dpcsh_data
 
-    def upload_using_multiprocessing(self, data_dict):
+    def upload_using_multiprocessing(self, data_dict, stat_name):
         if data_dict:
-            for cmd, data_list in data_dict.iteritems():
-                print("Uploading data for command: {}\nData: {}".format(cmd, data_list))
-                index = self.get_index(cmd)
-                doctype = self.doc_type(cmd)
-                upload = self.upload_bulk(index, doctype, data_list)
+            fun_test.log("Uploading data for command : {}".format(stat_name))
+            index = self.get_index(stat_name)
+            doctype = self.doc_type(stat_name)
+            time_taken = self.upload_bulk(index, doctype, data_dict)
+            return time_taken
 
     def upload_bulk(self, index, doctype, data_list):
         res = False
         if data_list:
-            print("Uploadin bulk data for index: {} data: {} count : {}".format(index, data_list[0], len(data_list)))
+            print("Uploading bulk data for index: {} data: {} count : {}".format(index, data_list[0], len(data_list)))
             actions = [
                 {
                     "_index": index,
@@ -1006,14 +1015,14 @@ class FunTestCase1(FunTestCase):
                                                                                            res))
         else:
             print("NO data present to upload")
-        return res
+        return time_taken
 
-    def get_index(slf, cmd):
+    def get_index(self, cmd):
         if cmd == "peek stats/resource/bam":
             index = "cmd_peek_stats_resource_bam"
         elif cmd == "peek storage/devices/nvme":
             index = "cmd_storage_device_nvme"
-        elif cmd == "debug vp_util":
+        elif cmd == "DEBUG_VP_UTIL":
             index = "cmd_debug_vp_utils"
         elif cmd == "peek stats/crypto":
             index = "cmds_stats_crypto"
@@ -1024,15 +1033,13 @@ class FunTestCase1(FunTestCase):
             index = "cmd_" + sec_part.replace('/', '_')
         return index
 
-    def doc_type(self, cmd):
-        if cmd == "debug vp_util":
+    def doc_type(self, stat_name):
+        if stat_name == "DEBUG_VP_UTIL":
             doctype = "ccv_data"
-        elif cmd == "peek stats/resource/bam":
+        elif stat_name == "peek stats/resource/bam":
             doctype = "resource_bam"
-        elif "storage/devices/nvme" in cmd:
+        elif "storage/devices/nvme" in stat_name:
             doctype = "storage_ssd_iops"
-        else:
-            doctype = re.sub(r'[ /]+', '_', cmd)
 
         return doctype
 
