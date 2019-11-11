@@ -199,3 +199,4 @@ class TimeSeriesTypes(Codes):
     STATISTICS = 100
     ARTIFACT = 200
     TEST_CASE_TABLE = 300
+    REGISTERED_ASSET = 400
