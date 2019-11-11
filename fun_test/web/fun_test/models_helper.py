@@ -659,9 +659,9 @@ def is_suite_in_progress(job_id, test_bed_type):
     result = None
     try:
         s = SuiteExecution.objects.get(execution_id=int(job_id))
-        print ("Checking suite in progress: {}: {}".format(job_id, s.state))
+        # print ("Checking suite in progress: {}: {}".format(job_id, s.state))
         result = s.state >= JobStatusType.IN_PROGRESS
-        print ("Checking suite in progress: {} {}: {}: Result: {}".format(test_bed_type, job_id, s.state, result))
+        # print ("Checking suite in progress: {} {}: {}: Result: {}".format(test_bed_type, job_id, s.state, result))
     except ObjectDoesNotExist:
         pass
     return result
