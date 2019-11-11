@@ -18,6 +18,7 @@ from elasticsearch import Elasticsearch
 
 # Environment: --environment={\"test_bed_type\":\"fs-65\",\"tftp_image_path\":\"ranga/funos-f1_ranga.stripped.gz\"} --inputs={\"boot_new_image\":true,\"le_firewall\":true,\"collect_stats\":[\"\"],\"ec_vol\":true}
 # inputs: {"run_le_firewall":false,"specific_apps":["ZIP"],"add_to_database":true,"collect_stats":["POWER","DEBUG_MEMORY","LE"],"end_sleep":30}
+# --environment={\"test_bed_type\":\"fs-65\",\"tftp_image_path\":\"ranga/funos-f1_onkar.stripped.gz\"} --inputs={\"boot_new_image\":false,\"le_firewall\":false,\"collect_stats\":[\"DEBUG_VP_UTIL\",\"POWER\"],\"ec_vol\":false,\"specific_apps\":[\"crypto\"],\"disable_f1_index\":0}
 
 
 class MyScript(FunTestScript):
@@ -76,9 +77,9 @@ class MyScript(FunTestScript):
         if self.boot_new_image:
             topology = topology_helper.deploy()
             fun_test.test_assert(topology, "Topology deployed")
-        # self.verify_dpcsh_started()
-        # if not self.boot_new_image:
-        #     self.clear_uart_logs()
+        self.verify_dpcsh_started()
+        if not self.boot_new_image:
+            self.clear_uart_logs()
         if self.ec_vol:
             self.create_4_et_2_ec_volume()
 
@@ -238,7 +239,7 @@ class FunTestCase1(FunTestCase):
                               steps="""""")
 
     def setup(self):
-        self.test_start_time = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f")
+        self.test_start_time = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
         self.run_on_f1 = fun_test.shared_variables["run_on_f1"]
         self.fs = fun_test.shared_variables["fs"]
         job_inputs = fun_test.get_job_inputs()
@@ -825,7 +826,7 @@ class FunTestCase1(FunTestCase):
         fun_test.test_assert(True, "DPCSH running")
 
     def cleanup(self):
-        self.test_end_time = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f")
+        self.test_end_time = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
         if not self.boot_new_image:
             bmc_handle = Bmc(host_ip=self.fs['bmc']['mgmt_ip'],
                              ssh_username=self.fs['bmc']['mgmt_ssh_username'],
@@ -840,7 +841,7 @@ class FunTestCase1(FunTestCase):
             fun_test.add_auxillary_file(description="DUT_0_fs-65_F1_0 UART Log", filename=artifact_file_name_f1_0)
             fun_test.add_auxillary_file(description="DUT_0_fs-65_F1_1 UART Log", filename=artifact_file_name_f1_1)
         href = "http://10.1.20.52:5601/app/kibana#/dashboard/a37ce420-9190-11e9-8475-15977467c007?_g=(refreshInterval:(pause:!t,value:0),time:(from:'{}',mode:absolute,to:'{}'))".format(self.test_start_time, self.test_end_time)
-        checkpoint = '<a href="{}" target="_blank">THIS IS IT</a>'.format(href)
+        checkpoint = '<a href="{}" target="_blank">ELK DEBUG MEMORY stats</a>'.format(href)
         fun_test.add_checkpoint(checkpoint=checkpoint)
 
     def start_threaded_apps(self):
