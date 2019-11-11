@@ -6,7 +6,7 @@ from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper
 from fun_settings import REGRESSION_USER, REGRESSION_USER_PASSWORD
 from lib.fun.f1 import F1
 from lib.fun.fs import Fs
-from storage_helper import *
+from scripts.storage_helper import *
 from datetime import datetime
 from lib.templates.storage.fio_performance_helper import FioPerfHelper
 from fun_global import is_production_mode
