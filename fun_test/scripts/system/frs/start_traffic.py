@@ -393,7 +393,6 @@ class FunTestCase1(FunTestCase):
 
         self.come_handle.destroy()
 
-
     def capture_data(self, count, heading):
         def func_not_found():
             print "Function not found"
@@ -587,10 +586,11 @@ class FunTestCase1(FunTestCase):
             one_dataset["time"] = datetime.datetime.now()
             one_dataset["output"] = dpcsh_output
             file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
-            cal_dpc_out = stats_calculation.filter_dict(one_dataset, stat_name)
-            one_dataset["output"] = cal_dpc_out
-            file_helper.add_data(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
-            time_taken = self.upload_dpcsh_data_to_elk(dpcsh_data=dpcsh_output, f1=f1, stat_name=stat_name)
+            if dpcsh_output:
+                cal_dpc_out = stats_calculation.filter_dict(one_dataset, stat_name)
+                one_dataset["output"] = cal_dpc_out
+                file_helper.add_data(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+                time_taken = self.upload_dpcsh_data_to_elk(dpcsh_data=dpcsh_output, f1=f1, stat_name=stat_name)
             fun_test.sleep("Before next iteration", seconds=(5-time_taken))
 
         come_handle.destroy()
@@ -1011,8 +1011,7 @@ class FunTestCase1(FunTestCase):
             res = deque(helpers.parallel_bulk(self.es, actions))
             end = time.time()
             time_taken = end - start
-            print("Data uploaded for index: {} to es: {} time taken: {} result: {}".format(index, self.es, time_taken,
-                                                                                           res))
+            print("Data uploaded for index: {} to es: {} time taken: {} ".format(index, self.es, time_taken))
         else:
             print("NO data present to upload")
         return time_taken
