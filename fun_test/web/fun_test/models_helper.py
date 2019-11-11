@@ -614,8 +614,8 @@ def add_jenkins_job_id_map(jenkins_job_id, fun_sdk_branch, git_commit, software_
 
 def _get_suite_execution_attributes(suite_execution):
     suite_execution_attributes = []
-    # suite_execution_attributes.append({"name": "Job state", "value": suite_execution["fields"]["state"]})
-    # suite_execution_attributes.append({"name": "Result", "value": str(suite_execution["suite_result"])})
+    suite_execution_attributes.append({"name": "Job state", "value": suite_execution["fields"]["state"]})
+    suite_execution_attributes.append({"name": "Result", "value": str(suite_execution["suite_result"])})
     suite_execution_attributes.append({"name": "Version", "value": str(suite_execution["fields"]["version"])})
     # suite_execution_attributes.append(
     #     {"name": "Scheduled Time", "value": str(suite_execution["fields"]["scheduled_time"])})
@@ -623,7 +623,7 @@ def _get_suite_execution_attributes(suite_execution):
     #    {"name": "Started Time", "value": str(suite_execution["fields"]["started_time"])})
     # suite_execution_attributes.append(
     #    {"name": "Completed Time", "value": str(suite_execution["fields"]["completed_time"])})
-    # suite_execution_attributes.append({"name": "Path", "value": str(suite_execution["fields"]["suite_path"])})
+    suite_execution_attributes.append({"name": "Path", "value": str(suite_execution["fields"]["suite_path"])})
     suite_execution_attributes.append({"name": "Passed", "value": suite_execution["num_passed"]})
     suite_execution_attributes.append({"name": "Failed", "value": suite_execution["num_failed"]})
     suite_execution_attributes.append({"name": "Not Run", "value": suite_execution["num_not_run"]})
