@@ -104,6 +104,12 @@ def die_temperature(bmc_handle):
     return output
 
 
+def new_power(bmc_handle):
+    cmd = "/mnt/sdmmc0p1/scripts/new_power.sh"
+    output = bmc_handle.command(cmd)
+    return output
+
+
 if __name__ == "__main__":
     fs = AssetManager().get_fs_by_name("fs-65")
     bmc_handle = Bmc(host_ip=fs['bmc']['mgmt_ip'],

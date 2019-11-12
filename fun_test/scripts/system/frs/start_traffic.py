@@ -1214,7 +1214,7 @@ class FunTestCase1(FunTestCase):
         # TODO: Reset the LE-firewall traffic
 
     def start_fio_traffic(self):
-        pass
+
 
 
 if __name__ == "__main__":
