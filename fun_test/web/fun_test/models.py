@@ -370,13 +370,36 @@ class CatalogTestCaseExecution(models.Model):
     def __str__(self):
         return "{} {} {} {}".format(self.execution_id, self.jira_id, self.engineer, self.test_bed)
 
+
+class ReleaseCatalogExecution(FunModel):
+    release_catalog_id = models.IntegerField()
+    created_date = models.DateTimeField(default=datetime.now)
+    started_date = models.DateTimeField(default=datetime.now)
+    completion_date = models.DateTimeField(null=True, default=None)
+    owner = models.EmailField(null=True, blank=True)
+
+
+class ReleaseCatalogSuiteEntry(FunModel):
+    release_catalog_id = models.IntegerField()
+    suite_id = models.IntegerField()
+
+
+class ReleaseCatalog(FunModel):
+    name = models.TextField(default="TBD")
+    description = models.TextField(default="TBD")
+    created_date = models.DateTimeField(default=datetime.now)
+    modified_date = models.DateTimeField(default=datetime.now)
+
+
 class Module(models.Model):
     name = models.TextField(unique=True)
     verbose_name = models.TextField(default="Verbose name")
 
+
 class SubModules(FunModel):   # Say Module: Networking, sub-module: PSW
     name = models.TextField(unique=True)
     verbose_name = models.TextField(default="Verbose name")
+
 
 class JenkinsJobIdMap(models.Model):
     jenkins_job_id = models.IntegerField()

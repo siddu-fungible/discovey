@@ -32,6 +32,7 @@ import {PerformanceViewWorkspaceComponent} from "./performance/performance-works
 import {SuiteEditorComponent} from "./regression/suite-editor/suite-editor.component";
 import {SuitesViewComponent} from "./regression/suite-editor/suites-view/suites-view.component";
 import {ScriptDetailComponent} from "./regression/script-detail/script-detail.component";
+import {ReleaseCatalogEditorComponent} from "./regression/release-catalog-editor/release-catalog-editor.component";
 
 export function regressionHome(url: UrlSegment[]) {
   return url[0].path.endsWith("regression");
@@ -71,6 +72,7 @@ const routes: Routes = [
   { path: 'performance/atomic/:id/triage', component: TriageComponent},
   { path: 'regression/triaging/:id', component: TriageDetailComponent},
   { path: 'regression/triaging', component: Triage2Component},
+  { path: 'regression/release_catalog_editor', component: ReleaseCatalogEditorComponent},
   { path: 'performance/admin/scores/:metricId', component: ScoresTableComponent},
   { path: 'performance/admin/data/:metricId', component: PerformanceTableComponent},
   { path: 'performance/admin/:mode/:modelName/:metricId', component: CreateChartComponent},
