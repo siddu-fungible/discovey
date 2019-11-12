@@ -70,8 +70,8 @@
       "jvol_size_multiplier": 8,
       "num_volumes": 4,
       "encrypt": true,
-      "key": "000102030405060708090a0b0c0d0e0f000102030405060708090a0b0c0d0e0a",
-      "xtweak": "0001020304050601"
+      "key_size": 32,
+      "xtweak_size": 8
     },
     "num_ssd": 12,
     "command_timeout": 30,
@@ -126,8 +126,8 @@
       "jvol_size_multiplier": 8,
       "num_volumes": 4,
       "encrypt": true,
-      "key": "000102030405060708090a0b0c0d0e0f000102030405060708090a0b0c0d0e0b",
-      "xtweak": "0001020304050602"
+      "key_size": 32,
+      "xtweak_size": 8
     },
     "num_ssd": 12,
     "command_timeout": 30,
@@ -182,8 +182,8 @@
       "jvol_size_multiplier": 8,
       "num_volumes": 4,
       "encrypt": true,
-      "key": "000102030405060708090a0b0c0d0e0f000102030405060708090a0b0c0d0e0c",
-      "xtweak": "0001020304050603"
+      "key_size": 32,
+      "xtweak_size": 8
     },
     "num_ssd": 12,
     "command_timeout": 30,
@@ -238,8 +238,8 @@
       "jvol_size_multiplier": 8,
       "num_volumes": 4,
       "encrypt": true,
-      "key": "000102030405060708090a0b0c0d0e0f000102030405060708090a0b0c0d0e0d",
-      "xtweak": "0001020304050604"
+      "key_size": 32,
+      "xtweak_size": 8
     },
     "num_ssd": 12,
     "command_timeout": 30,
@@ -295,8 +295,8 @@
       "jvol_size_multiplier": 8,
       "num_volumes": 4,
       "encrypt": true,
-      "key": "000102030405060708090a0b0c0d0e0f000102030405060708090a0b0c0d0e0e",
-      "xtweak": "0001020304050605"
+      "key_size": 32,
+      "xtweak_size": 8
     },
     "num_ssd": 12,
     "command_timeout": 30,
@@ -352,8 +352,8 @@
       "jvol_size_multiplier": 8,
       "num_volumes": 4,
       "encrypt": true,
-      "key": "000102030405060708090a0b0c0d0e0f000102030405060708090a0b0c0d0e0f",
-      "xtweak": "0001020304050606"
+      "key_size": 32,
+      "xtweak_size": 8
     },
     "command_timeout": 30,
     "iter_interval": 10,
@@ -403,8 +403,8 @@
       "jvol_size_multiplier": 8,
       "num_volumes": 4,
       "encrypt": true,
-      "key": "000102030405060708090a0b0c0d0e0f000102030405060708090a0b0c0d0e0g",
-      "xtweak": "0001020304050607"
+      "key_size": 32,
+      "xtweak_size": 8
     },
     "command_timeout": 30,
     "iter_interval": 10,
