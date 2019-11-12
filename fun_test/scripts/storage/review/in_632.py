@@ -9,6 +9,7 @@ from lib.fun.fs import Fs
 from scripts.storage.storage_helper import *
 from datetime import datetime
 from lib.templates.storage.fio_performance_helper import FioPerfHelper
+from lib.topology.topology_helper import TopologyHelper
 from fun_global import is_production_mode
 from lib.templates.csi_perf.csi_perf_template import CsiPerfTemplate
 
