@@ -524,6 +524,13 @@ class SchedulerInfo(models.Model):
             result[field.name] = getattr(self, field.name)
         return result
 
+    @staticmethod
+    def get():
+        result = None
+        if SchedulerInfo.objects.count():
+            result = SchedulerInfo.objects.first()
+        return result
+
 class SchedulerDirective(models.Model):
     """
     Stores actions that need to be completed by the scheduler.
