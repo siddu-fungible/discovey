@@ -238,16 +238,15 @@ class StorageController(NetworkController, DpcshClient):
         if "encrypt" in ec_info.keys() and ec_info['encrypt']:
             encryption_enabled = True
             ec_info['use_lsv'] = True
-            # As there are no default values for key_size and xtweak_size, leaving them as is
-            #ec_info["zip_effort"] = ec_info['zip_effort'] if 'zip_effort' in ec_info.keys() else "ZIP_EFFORT_AUTO"
-            #ec_info['zip_filter'] = ec_info['zip_filter'] if 'zip_filter' in ec_info.keys() else "FILTER_TYPE_DEFLATE"
-            fun_test.log("Configuring encryption enabled EC volume with key: {}, xtweak: {}".format(
-                ec_info['key'], ec_info['xtweak']))
+            fun_test.log("Configuring encryption enabled EC volume with key size: {}, xtweak size: {}".format(
+                ec_info['key_size'], ec_info['xtweak_size']))
 
         ec_info["uuids"] = {}
         ec_info["volume_capacity"] = {}
         ec_info["attach_uuid"] = {}
         ec_info["attach_size"] = {}
+        ec_info["key"] = {}
+        ec_info["xtweak"] = {}
 
         for num in xrange(ec_info["num_volumes"]):
             ec_info["uuids"][num] = {}
@@ -343,6 +342,8 @@ class StorageController(NetworkController, DpcshClient):
                                                         group_id=num+3,
                                                         command_duration=command_timeout)
                 elif encryption_enabled:
+                    ec_info["key"] = utils.generate_key(ec_info["key_size"])
+                    ec_info["tweak"] = utils.generate_key(ec_info["xtweak_size"])
                     command_result = self.create_volume(type=ec_info["volume_types"]["lsv"],
                                                         capacity=ec_info["volume_capacity"][num]["lsv"],
                                                         block_size=ec_info["volume_block"]["lsv"],
@@ -356,6 +357,9 @@ class StorageController(NetworkController, DpcshClient):
                                                         xtweak=ec_info['xtweak'],
                                                         group_id=num + 3,
                                                         command_duration=command_timeout)
+                    ec_info["key"][num] = ec_info["key"]
+                    ec_info["tweak"][num] = ec_info["tweak"]
+
                 else:
                     command_result = self.create_volume(type=ec_info["volume_types"]["lsv"],
                                                         capacity=ec_info["volume_capacity"][num]["lsv"],
