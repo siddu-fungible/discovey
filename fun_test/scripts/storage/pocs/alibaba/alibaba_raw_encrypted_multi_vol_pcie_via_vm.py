@@ -324,7 +324,6 @@ class RawVolumeLocalPerfTestcase(FunTestCase):
                             count += 1
 
                 for x in range(count):
-                    print("I am here")
                     fun_test.log("Joining fio thread {}".format(x))
                     fun_test.join_thread(fun_test_thread_id=thread_id[x], sleep_time=1)
                     fun_test.log("FIO Command Output from {}:\n {}".format(each_vm,
