@@ -9,7 +9,6 @@ from lib.fun.fs import Fs
 from scripts.storage.storage_helper import *
 from datetime import datetime
 from lib.templates.storage.fio_performance_helper import FioPerfHelper
-from lib.topology.topology_helper import TopologyHelper
 from fun_global import is_production_mode
 from lib.templates.csi_perf.csi_perf_template import CsiPerfTemplate
 
@@ -113,36 +112,19 @@ class BLTVolumePerformanceScript(FunTestScript):
         fs = Fs.get(boot_args=tb_config["dut_info"][0]["bootarg"], disable_f1_index=1)
         fun_test.shared_variables["fs"] = fs
         #Sandip
-        # Pulling reserved DUTs and Hosts and test bed specific configuration if script is submitted with testbed-type
-        # suite-based
-        self.topology_helper = TopologyHelper()
-        self.available_dut_indexes = self.topology_helper.get_available_duts().keys()
-        fun_test.log("Available DUT Indexes: {}".format(self.available_dut_indexes))
-        self.required_hosts = self.topology_helper.get_available_hosts()
-        self.testbed_config = self.topology_helper.spec
-        self.total_available_duts = len(self.available_dut_indexes)
+        perf_listener_host_name = "poc-server-04"  # figure this out from the topology spec
+        perf_listener_ip = "20.1.1.1"              # figure this out from the topology spec
 
-        fun_test.test_assert(expression=self.num_duts <= self.total_available_duts,
-                             message="Testbed has enough DUTs")
+        test_bed_type = fun_test.get_job_environment_variable("test_bed_type")
+        if test_bed_type == "fs-11":
+            perf_listener_host_name = "poc-server-11"
+        csi_perf_enabled = fun_test.get_job_environment_variable("csi_perf")
+        if csi_perf_enabled:
+            f1_parameters[0]["boot_args"] = f1_parameters[0]["boot_args"] + " --perf csi-local-ip=29.1.1.2 csi-remote-ip={} pdtrace-hbm-size-kb=204800".format(perf_listener_ip)
+            # f1_parameters[1]["boot_args"] = f1_parameters[1]["boot_args"] + " --perf csi-local-ip=29.1.1.2 csi-remote-ip={} pdtrace-hbm-size-kb=204800".format(perf_listener_ip)
 
-
-        # Code to collect csi_perf if it's set
-        self.csi_perf_enabled = fun_test.get_job_environment_variable("csi_perf")
-        fun_test.log("csi_perf_enabled is set as: {} for current run".format(self.csi_perf_enabled))
-        if self.csi_perf_enabled:
-            fun_test.log("testbed_config: {}".format(self.testbed_config))
-            self.csi_f1_ip = self.testbed_config["dut_info"][str(self.available_dut_indexes[0])]["bond_interface_info"]["0"]["0"]["ip"].split('/')[0]
-            fun_test.log("F1 ip used for csi_perf_test: {}".format(self.csi_f1_ip))
-            self.perf_listener_host = self.topology_helper.get_available_perf_listener_hosts()
-            fun_test.log("perf_listener_host used for current test: {}".format(self.perf_listener_host))
-            for self.perf_listener_host_name, csi_perf_host_obj in self.perf_listener_host.iteritems():
-                perf_listner_test_interface = csi_perf_host_obj.get_test_interface(index=0)
-                self.perf_listener_ip = perf_listner_test_interface.ip.split('/')[0]
-                fun_test.log("csi perf listener host ip is: {}".format(self.perf_listener_ip))
-            # adding csi perf bootargs if csi_perf is enabled
-            #  TODO: Modifying bootargs only for F1_0 as csi_perf on F1_1 is not yet fully supported
-            self.bootargs[0] += " --perf csi-local-ip={} csi-remote-ip={} pdtrace-hbm-size-kb={}".format(
-                self.csi_f1_ip, self.perf_listener_ip, self.csi_perf_pdtrace_hbm_size_kb)
+        fun_test.shared_variables["perf_listener_host_name"] = perf_listener_host_name
+        fun_test.shared_variables["perf_listener_ip"] = perf_listener_ip
         #Sandip
 
         fun_test.test_assert(fs.bootup(reboot_bmc=False, power_cycle_come=False), "FS bootup")
@@ -422,28 +404,24 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                 fun_test.log("FIO Command Output:")
                 fun_test.log(fio_output[combo][mode])
                 #Sandip
-                # Starting csi perf stats collection if it's set
-                if self.csi_perf_enabled:
-                    if row_data_dict["iodepth"] in self.csi_perf_iodepth:
+                fs = fun_test.shared_variables["fs"]
+                csi_perf_enabled = fun_test.get_job_environment_variable("csi_perf")
+                perf_listener_host_name = fun_test.shared_variables["perf_listener_host_name"]
+                perf_listener_ip = fun_test.shared_variables["perf_listener_ip"]
+                if csi_perf_enabled:
+                    p = CsiPerfTemplate(perf_collector_host_name=perf_listener_host_name, listener_ip=perf_listener_ip, fs=fs)
+                    p.prepare(f1_index=0)
+                    p.start(f1_index=0)
+                    for i in range(1):
                         try:
-                            fun_test.sleep("for IO to be fully active", 120)
-                            csi_perf_obj = CsiPerfTemplate(perf_collector_host_name=str(self.perf_listener_host_name),
-                                                           listener_ip=self.perf_listener_ip, fs=self.fs[0],
-                                                           listener_port=4420)  # Temp change for testing
-                            csi_perf_obj.prepare(f1_index=0)
-                            csi_perf_obj.start(f1_index=0, dpc_client=self.storage_controller)
-                            fun_test.log("csi perf stats collection is started")
-                            # dpcsh_client = self.fs.get_dpc_client(f1_index=0, auto_disconnect=True)
-                            fun_test.sleep("Allowing CSI performance data to be collected", 300)
-                            csi_perf_obj.stop(f1_index=0, dpc_client=self.storage_controller)
-                            fun_test.log("CSI perf stats collection is done")
+                            dpcsh_client = fs.get_dpc_client(f1_index=0, auto_disconnect=True)
+                            # do some activity
+                            # dpcsh_client.json_execute(verb="peek", data="stats/vppkts", command_duration=10)
+                            dpcsh_client.json_execute(verb="echo", command_duration=10)
+
                         except Exception as ex:
                             fun_test.critical(str(ex))
-                    else:
-                        fun_test.log("Skipping CSI perf collection for current iodepth {}".format(
-                            (int(fio_iodepth) * int(fio_numjobs))))
-                else:
-                    fun_test.log("CSI perf collection is not enabled, hence skipping it for current test")
+                    p.stop(f1_index=0)
                 #Sandip
 
                 # Boosting the fio output with the testbed performance multiplier
