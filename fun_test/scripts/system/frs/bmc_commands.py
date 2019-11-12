@@ -23,7 +23,7 @@ def run_fs_power_script(bmc_handle):
 
 
 def run_f1_power_script(bmc_handle):
-    output = bmc_handle.command(REMOTE_PATH, timeout=3000)
+    output = bmc_handle.command("sh /mnt/sdmmc0p1/scripts/f1_power.sh", timeout=3000)
     power_dict = parse_power_output(output)
     fun_test.log("F1 power: {}".format(power_dict))
     return output, power_dict
@@ -102,7 +102,6 @@ def power_manager(bmc_handle):
 def die_temperature(bmc_handle):
     output = bmc_handle.command("ipmitool -I lanplus -H 10.1.21.0 -U admin -P admin sensor")
     return output
-
 
 
 if __name__ == "__main__":

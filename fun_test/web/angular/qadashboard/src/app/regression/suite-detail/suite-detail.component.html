@@ -1,145 +1,156 @@
 <div class="component">
   <div class="row">
     <div class="col">
-      <div class="card">
-        <div class="card-header">
-          Suite info
-          <span style="display: inline">
-            <ng-template #suiteContent let-modal>
-                <div class="card">
-                  <div class="card-header">
-                    Re-run options
-                    <span *ngIf="reRunScript"> Script: {{ reRunScript }}</span>
-                  </div>
-                  <div class="card-body">
-                    <div class="re-run-div">
-                      <button (click)="toggleReRunOptions()" class="btn click-button"
-                              [ngClass]="{'btn-primary': reRunOptionsReRunAll, 'btn-outline-primary': !reRunOptionsReRunAll}">
-                        <i class="fa" [ngClass]="{'fa-check': reRunOptionsReRunAll}"></i> Re-run all
-                      </button>
-                    </div>
-                    <div class="re-run-div">
-                      <button (click)="toggleReRunOptions()" class="btn click-button"
-                              [ngClass]="{'btn-primary': reRunOptionsReRunFailed, 'btn-outline-primary': !reRunOptionsReRunFailed}">
-                        <i class="fa" [ngClass]="{'fa-check': reRunOptionsReRunFailed}"></i> Re-run failed
-                      </button>
-                    </div>
-                    <div class="re-run-div" *ngIf="suiteExecution.fields.test_bed_type !== 'simulation'">
-                      <button (click)="togglereUseBuildImage()" class="btn click-button"
-                              [ngClass]="{'btn-primary': reUseBuildImage, 'btn-outline-primary': !reUseBuildImage}"><i
-                        class="fa" [ngClass]="{'fa-check': reUseBuildImage}"></i>Re-use Jenkins build image
-                      </button>
-                      (From the original run)
-                    </div>
-                    <div>
-                    </div>
-
-                    <app-section-horizontal-line></app-section-horizontal-line>
-                    <div style="display: flex; justify-content: flex-end">
-                      <span class="pseudo-anchor" (click)="modal.dismiss('Cross click')">Cancel</span> &nbsp;&nbsp;
-                      <button class="btn btn-success submit-button" (click)="modal.close(suiteExecution)">Submit
-                      </button>
-                    </div>
-                  </div>
-
-                </div>
-
-              </ng-template>
-            <span
-              *ngIf="(suiteExecution?.fields.state !== stateMap.IN_PROGRESS) && (suiteExecution?.fields.state !== stateMap.ABORTED)"
-              (click)="reRunModalOpen(suiteContent)"
-              class="anchor-button pseudo-anchor">Re-run options
+      <div class="fun-panel">
+        <div class="fun-panel-header">
+          <span *ngIf="suiteExecution" class="fun-panel-header-main-text">Suite: {{ suiteExecution.fields.suite_type === 'dynamic'? 'Re(' + getReRunOriginalSuitePath(suiteExecution) + ')' : suiteExecution.fields.suite_path }}
             </span>
-          </span>
+          <small *ngIf="suiteExecution"><a href="/regression/suite_editor/{{ suiteExecution.fields.suite_id }}">Go to suite</a></small>
+          <small style="float: right" *ngIf="suiteExecution">Submitted by: {{ suiteExecution.fields.submitter_email }}</small>
 
-
-
-          <span *ngIf="suiteExecution?.fields.state > stateMap.COMPLETED" (click)="killClick(suiteExecution.fields.execution_id)"
-            class="anchor-button pseudo-anchor">Kill
-          </span>
         </div>
-        <div class="card-body">
-          <table class="">
-            <tr *ngFor="let attribute of attributes">
-              <td class="cell">
-                <b>{{ attribute.name }}</b>
+        <div class="fun-panel-body">
+          <div class="description" *ngIf="suiteExecution && suiteExecution.fields.description && suiteExecution.fields.description.length > 0">
+            {{ suiteExecution.fields.description }}
+          </div>
+
+          <table *ngIf="suiteExecution">
+            <tr>
+              <td class="attribute-table-td"><span class="attribute-table-main-text">Job ID </span>{{ suiteExecution.fields.execution_id }}</td>
+              <td class="attribute-table-td"><span  class="attribute-table-main-text">State</span> <app-smart-label [value]="stateStringMap[suiteExecution.fields.state]"></app-smart-label>
+                <span *ngIf="suiteExecution?.fields.state > stateMap.COMPLETED" (click)="killClick(suiteExecution.fields.execution_id)" class="anchor-button pseudo-anchor" style="padding: 5px;"> Kill</span>
               </td>
-              <ng-container [ngSwitch]="attribute.name">
-                <td *ngSwitchCase="'Job state'">
-                  <app-smart-label [value]="stateStringMap[attribute.value]"></app-smart-label>
-                </td>
-                <td *ngSwitchCase="'Result'">
-                  <app-smart-label [value]="attribute.value"></app-smart-label>
-                </td>
-                <td *ngSwitchCase="'Path'">
-                  <ng-container *ngIf="suiteExecution">
-                    {{ suiteExecution.fields.suite_type === 'dynamic'? 'Re(' + getReRunOriginalSuitePath(suiteExecution) + ')' : suiteExecution.fields.suite_path }}
-                  </ng-container>
-                </td>
-                <td *ngSwitchCase="'Completed Time'">
-                  <ng-container *ngIf="suiteExecution && suiteExecution.fields.state <= stateMap.COMPLETED">
-                    {{ attribute.name.includes(' Time')? localizeTime(attribute.value): attribute.value }}
-                  </ng-container>
-                </td>
-                <td *ngSwitchCase="'Started Time'">
-                  <ng-container
-                    *ngIf="suiteExecution && suiteExecution.fields && (suiteExecution.fields.state == stateMap.IN_PROGRESS || suiteExecution.fields.state <= stateMap.COMPLETED)">
-                    {{ attribute.name.includes(' Time')? localizeTime(attribute.value): attribute.value }}
-                  </ng-container>
-                </td>
-
-                <td *ngSwitchDefault>
-                  {{ attribute.name.includes(' Time')? localizeTime(attribute.value): attribute.value }}
-                </td>
-              </ng-container>
-
-
+              <td class="attribute-table-td" *ngIf="suiteExecution">
+                <span class="attribute-table-main-text">Preserve logs</span>
+                <app-toggle-button [checked]="suiteExecution.fields?.preserve_logs" (changed)="onTogglePreserveLogs($event, preserveLogs)"></app-toggle-button>
+              </td>
             </tr>
-            <tr *ngIf="suiteExecution">
-              <td><a href="{{ getSchedulerLog(suiteExecution.fields.execution_id) | async }}">Scheduler
-                log</a></td>
+            <tr>
+              <td class="attribute-table-td" *ngIf="suiteExecution && suiteExecution.fields && (suiteExecution.fields.state == stateMap.IN_PROGRESS || suiteExecution.fields.state <= stateMap.COMPLETED)">
+                <span class="attribute-table-main-text">Started at</span> {{ localizeTime(suiteExecution.fields.started_time) }}
+              </td>
+              <td class="attribute-table-td">
+                <span class="attribute-table-main-text">Completed at</span> {{ localizeTime(suiteExecution.fields.completed_time) }}
+              </td>
+              <td class="attribute-table-td">
+                <span class="attribute-table-main-text">Running time</span> {{ getRunningTime() }}
+              </td>
             </tr>
-            <tr *ngIf="suiteExecution">
-              <td><a href="{{ getSchedulerLogDir(suiteExecution.fields.execution_id) | async }}">Log directory</a>
+            <tr>
+              <td class="attribute-table-td">
+                <span class="attribute-table-main-text">Test-bed type</span> {{ suiteExecution?.fields?.test_bed_type }}
+              </td>
+              <td class="attribute-table-td" *ngIf="environment?.BRANCH_FunOS">
+                <span class="attribute-table-main-text">BRANCH_FUNOS</span>{{ environment.BRANCH_FunOS }}
+              </td>
+              <td class="attribute-table-td" *ngIf="environment?.RELEASE_BUILD">
+                <span class="attribute-table-main-text">RELEASE_BUILD</span>{{ environment.RELEASE_BUILD }}
+              </td>
             </tr>
-            <tr *ngIf="environment">
-              <td>Branch_FunOS</td>
-              <td>{{ environment.BRANCH_FunOS }}</td>
+            <tr>
+              <td class="attribute-table-td" *ngIf="suiteExecution">
+                <span class="attribute-table-main-text">Log directory</span>
+                  <a href="{{ getSchedulerLogDir(suiteExecution.fields.execution_id) | async }}">Link</a>
+                <span style="margin: 0 10px 0" class="pseudo-anchor fun-button-secondary" [ngClass]="{'fun-button-secondary-active' : showingLogPath}" (click)="showingLogPath = !showingLogPath">
+                  Show path
+                </span>
+              </td>
+              <td class="attribute-table-td" *ngIf="(suiteExecution.parsedInputs | keyvalue)?.length">
+                <span class="pseudo-anchor fun-button-secondary" [ngClass]="{'fun-button-secondary-active' : showingInputs}" (click)="showingInputs = !showingInputs">
+                  Show inputs
+                </span>
+              </td>
+              <td class="attribute-table-td" *ngIf="(suiteExecution.parsedEnvironment | keyvalue)?.length">
+                <span class="pseudo-anchor fun-button-secondary" [ngClass]="{'fun-button-secondary-active' : showingEnvironment}" (click)="showingEnvironment = !showingEnvironment">
+                  Show environment
+                </span>
+              </td>
             </tr>
-            <tr *ngIf="environment">
-              <td>RELEASE_BUILD</td>
-              <td>{{ environment.RELEASE_BUILD }}</td>
+            <tr *ngIf="showingLogPath" style="background-color: #e7e7e7">
+              <td colspan="3">
+                {{ ABSOLUTE_LOG_DIRECTORY + suiteExecution.fields.execution_id }})
+              </td>
             </tr>
-            <tr
-              *ngIf="suiteExecution && suiteExecution.fields.description && suiteExecution.fields.description.length > 0">
-              <td>Description</td>
-              <td>{{ suiteExecution.fields.description }}</td>
-            </tr>
-          </table>
-          <ng-container *ngIf="suiteExecution">
-            <div class="pseudo-anchor" (click)="showInputsClick(suiteExecution)">
-              {{ suiteExecution.showingInputs? "Hide": "Show" }} inputs
-            </div>
-            <ng-container *ngIf="suiteExecution.showingInputs">
-              <div><b>Inputs</b></div>
-              <td *ngIf="(suiteExecution.parsedInputs | keyvalue)?.length">
+            <tr *ngIf="showingInputs">
+              <td colspan="3" *ngIf="(suiteExecution.parsedInputs | keyvalue)?.length">
                 <ngx-json-viewer [json]="suiteExecution.parsedInputs" [expanded]="false"></ngx-json-viewer>
               </td>
-            </ng-container>
-          </ng-container>
-
-
-          <ng-container *ngIf="suiteExecution">
-            <div class="pseudo-anchor" (click)="showEnvironmentClick(suiteExecution)">
-              {{ suiteExecution.showingEnvironment? "Hide": "Show" }} environment
-            </div>
-            <ng-container *ngIf="suiteExecution.showingEnvironment">
-              <div><b>Environment</b></div>
-              <td *ngIf="(suiteExecution.parsedEnvironment | keyvalue)?.length">
+            </tr>
+            <tr *ngIf="showingEnvironment">
+               <td colspan="3" *ngIf="(suiteExecution.parsedEnvironment | keyvalue)?.length">
                 <ngx-json-viewer [json]="suiteExecution.parsedEnvironment" [expanded]="false"></ngx-json-viewer>
               </td>
-            </ng-container>
-          </ng-container>
+            </tr>
+          </table>
+
+          <div class="attribute-table-td">
+            <span class="attribute-table-main-text">Result</span> <app-smart-label [value]="suiteExecution?.fields?.result"></app-smart-label>
+             <span
+              *ngIf="(suiteExecution?.fields.state !== stateMap.IN_PROGRESS) && (suiteExecution?.fields.state !== stateMap.ABORTED)"
+              (click)="reRunModalOpen(suiteContent)"
+              class="pseudo-anchor anchor-button" style="padding: 5px">Re-run options
+            </span>
+            <ng-template #suiteContent let-modal>
+              <div class="fun-panel">
+                <div class="fun-panel-header">
+                  Re-run options
+                  <span *ngIf="reRunScript"> Script: {{ reRunScript }}</span>
+                </div>
+                <div class="fun-panel-body">
+                  <div class="re-run-div">
+                    <button (click)="toggleReRunOptions()" class="btn click-button"
+                            [ngClass]="{'btn-primary': reRunOptionsReRunAll, 'btn-outline-primary': !reRunOptionsReRunAll}">
+                      <i class="fa" [ngClass]="{'fa-check': reRunOptionsReRunAll}"></i> Re-run all
+                    </button>
+                  </div>
+                  <div class="re-run-div">
+                    <button (click)="toggleReRunOptions()" class="btn click-button"
+                            [ngClass]="{'btn-primary': reRunOptionsReRunFailed, 'btn-outline-primary': !reRunOptionsReRunFailed}">
+                      <i class="fa" [ngClass]="{'fa-check': reRunOptionsReRunFailed}"></i> Re-run failed
+                    </button>
+                  </div>
+                  <div class="re-run-div" *ngIf="suiteExecution?.fields?.test_bed_type !== 'simulation'">
+                    <button (click)="togglereUseBuildImage()" class="btn click-button"
+                            [ngClass]="{'btn-primary': reUseBuildImage, 'btn-outline-primary': !reUseBuildImage}"><i
+                      class="fa" [ngClass]="{'fa-check': reUseBuildImage}"></i>Re-use Jenkins build image
+                    </button>
+                    (From the original run)
+                  </div>
+                  <div>
+                  </div>
+                  <app-section-horizontal-line></app-section-horizontal-line>
+                  <div style="display: flex; justify-content: flex-end">
+                    <span class="pseudo-anchor" (click)="modal.dismiss('Cross click')">Cancel</span> &nbsp;&nbsp;
+                    <button class="btn btn-success submit-button" (click)="modal.close(suiteExecution)">Submit
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </ng-template>
+          </div>
+          <table *ngIf="suiteExecution" class="fun-table" style="margin: 10px">
+            <tr>
+              <td class="fun-table-header">
+                Passed
+              </td>
+              <td class="fun-table-header">
+                Failed
+              </td>
+              <td class="fun-table-header">
+                Not-run
+              </td>
+              <td class="fun-table-header">
+                In-progress
+              </td>
+            </tr>
+            <tr>
+              <td>{{ suiteExecution.num_passed }}</td>
+              <td>{{ suiteExecution.num_failed }}</td>
+              <td>{{ suiteExecution.num_not_run }}</td>
+              <td>{{ suiteExecution.num_in_progress }}</td>
+
+            </tr>
+          </table>
         </div>
       </div>
 
@@ -156,10 +167,10 @@
               class="text-color-green">Completed: <span
           class="pseudo-anchor">{{ suiteExecution?.reRunInfo?.numCompleted }}</span></span>
         <ng-container *ngIf="suiteExecution.fields.suite_type === 'dynamic'">
-    <span (click)="showDetailsClick(suiteExecution)" *ngIf="suiteExecution?.reRunInfo?.reRunInfo.length > 0">
-      <a href="/regression/suite_detail/{{ suiteExecution?.reRunInfo.reRunInfo[0].original.suite_execution_id }}">Original:
-        {{ suiteExecution?.reRunInfo.reRunInfo[0].original.suite_execution_id }}</a>
-    </span>
+        <span (click)="showDetailsClick(suiteExecution)" *ngIf="suiteExecution?.reRunInfo?.reRunInfo.length > 0">
+          <a href="/regression/suite_detail/{{ suiteExecution?.reRunInfo.reRunInfo[0].original.suite_execution_id }}">Original:
+            {{ suiteExecution?.reRunInfo.reRunInfo[0].original.suite_execution_id }}</a>
+        </span>
         </ng-container>
         <ng-container *ngIf="suiteExecution.showingDetails">
           <app-re-run-panel *ngIf="suiteExecution.reRunInfo" [reRunInfo]="suiteExecution.reRunInfo"></app-re-run-panel>
@@ -175,14 +186,12 @@
 
       <div class="card" *ngFor="let scriptExecutionInfo of scriptExecutionsMap | keyvalue">
         <div class="card card-primary">
-          <div class="card-header"><b>Script: {{ scriptExecutionInfo.key }} </b>
+          <div class="card-header"><b>Script: {{ scriptInfo[scriptExecutionInfo.key]?.script_path }} </b>
             <span
               *ngIf="(suiteExecution?.fields.state !== stateMap.IN_PROGRESS) && (suiteExecution?.fields.state !== stateMap.ABORTED)"
               (click)="reRunModalOpen(suiteContent, scriptExecutionInfo.key)"
               class="anchor-button pseudo-anchor">Re-run options
             </span>
-
-
 
             <ng-container *ngIf="scriptInfo.hasOwnProperty(scriptExecutionInfo.key)">
               <label class="badge badge-history pseudo-anchor" data-placement="top" data-toggle="tooltip"
@@ -190,9 +199,8 @@
             </ng-container>
           </div>
           <div class="card-body">
-
-            <jira-info *ngIf="scriptInfo[scriptExecutionInfo.key]?.pk"
-                       [apiUrl]="'/regression/jiras/' + scriptInfo[scriptExecutionInfo.key].pk">
+            <jira-info *ngIf="scriptInfo[scriptExecutionInfo.key]?.id"
+                       [apiUrl]="'/regression/jiras/' + scriptInfo[scriptExecutionInfo.key].id">
             </jira-info>
 
 
@@ -206,9 +214,10 @@
                 <th class="text-center">Summary</th>
                 <th class="text-center">Inputs</th>
                 <th class="text-center">Result</th>
-                <th class="text-center">Scheduled At</th>
-                <th class="text-center">HTML</th>
+                <th class="text-center">Started At</th>
+                <th class="text-center">Report</th>
                 <th class="text-center">Console</th>
+                <th class="text-center">New report <span class="badge badge-warning">Beta</span></th>
                 <!--th class="text-center">Action</th-->
               </tr>
               </thead>
@@ -247,12 +256,12 @@
                                         (click)="getHtmlLogPath(getLatestRerunSuiteExecutionId(script.value), script.value.script_path, testCaseInfo[getLatestRerunEntry(script.value).re_run_test_case_execution_id].log_prefix)">HTML</span>
                       </li>
                       <li>Original: <span class="pseudo-anchor"
-                                          (click)="getHtmlLogPath(executionId, script.value.script_path, script.value.log_prefix)">HTML</span>
+                                          (click)="getHtmlLogPath(suiteExecutionId, script.value.script_path, script.value.log_prefix)">HTML</span>
                     </ul>
                   </ng-container>
                   <ng-template #NonReRunHtml>
                     <span class="pseudo-anchor"
-                          (click)="getHtmlLogPath(executionId, script.value.script_path, script.value.log_prefix)">HTML</span>
+                          (click)="getHtmlLogPath(suiteExecutionId, script.value.script_path, script.value.log_prefix)">HTML</span>
                   </ng-template>
                 </td>
                 <td>
@@ -262,14 +271,17 @@
                                         (click)="getConsoleLogPath(getLatestRerunSuiteExecutionId(script.value), script.value.script_path, testCaseInfo[getLatestRerunEntry(script.value).re_run_test_case_execution_id].log_prefix)">Console</span>
                       </li>
                       <li>Original: <span class="pseudo-anchor"
-                                          (click)="getConsoleLogPath(executionId, script.value.script_path, script.value.log_prefix)">Console</span>
+                                          (click)="getConsoleLogPath(suiteExecutionId, script.value.script_path, script.value.log_prefix)">Console</span>
                     </ul>
                   </ng-container>
                   <ng-template #NonReRunConsole>
                     <span class="pseudo-anchor"
-                          (click)="getConsoleLogPath(executionId, script.value.script_path, script.value.log_prefix)">Console</span>
+                          (click)="getConsoleLogPath(suiteExecutionId, script.value.script_path, script.value.log_prefix)">Console</span>
 
                   </ng-template>
+                </td>
+                <td>
+                  <a [routerLink]="[getScriptDetailLink(scriptExecutionInfo.key, script.value.execution_id, script.value.log_prefix)]">New report</a>
                 </td>
                 <!--td>
 									<button data-placement="top" data-toggle="tooltip" title="Re-run"

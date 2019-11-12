@@ -3,11 +3,14 @@ import {ApiService} from "../services/api/api.service";
 import {LoggerService} from "../services/logger/logger.service";
 import {catchError, switchMap} from 'rxjs/operators';
 import {forkJoin, observable, Observable, of, throwError} from "rxjs";
+import {CommonService} from "../services/common/common.service";
 
 @Injectable({
   providedIn: 'root'
 })
 export class RegressionService implements OnInit{
+  CONSOLE_LOG_EXTENSION: string = ".logs.txt";  //TIED to scheduler_helper.py  TODO
+  HTML_LOG_EXTENSION: string = ".html";         //TIED to scheduler_helper.py  TODO
   stateStringMap = { "-200": "UNKNOWN",  // TODO: fetch from the back-end
                    "-100": "ERROR",
                    "-20": "KILLED",
@@ -36,7 +39,7 @@ export class RegressionService implements OnInit{
   };
 
   logDir: string = null;
-  constructor(private apiService: ApiService, private loggerService: LoggerService) { }
+  constructor(private apiService: ApiService, private loggerService: LoggerService, private commonService: CommonService) { }
 
   ngOnInit() {
 
@@ -80,16 +83,16 @@ export class RegressionService implements OnInit{
     return new Date(epochValue);
   }
 
-getPrettyLocalizeTime(t) {
-  let minutePrefix = '';
-  let localTime = this.convertToLocalTimezone(t);
-  if (localTime.getMinutes() < 10){
-    minutePrefix += '0';
+  getPrettyLocalizeTime(t) {
+    let minutePrefix = '';
+    let localTime = this.convertToLocalTimezone(t);
+    if (localTime.getMinutes() < 10){
+      minutePrefix += '0';
+    }
+    let s = `${localTime.getMonth() + 1}/${localTime.getDate()} ${localTime.getHours()}:${minutePrefix}${localTime.getMinutes()}`;
+    //return this.convertToLocalTimezone(t).toLocaleString().replace(/\..*$/, "");
+    return s;
   }
-  let s = `${localTime.getMonth() + 1}/${localTime.getDate()} ${localTime.getHours()}:${minutePrefix}${localTime.getMinutes()}`;
-  //return this.convertToLocalTimezone(t).toLocaleString().replace(/\..*$/, "");
-  return s;
-}
 
 
   getTestCaseExecution(executionId) {
@@ -150,6 +153,13 @@ getPrettyLocalizeTime(t) {
     }))
   }
 
+  getScriptInfoById(scriptId) {
+    let url = "/api/v1/regression/scripts/" + scriptId;
+    return this.apiService.get(url).pipe(switchMap(response => {
+      return of(response.data);
+    }))
+  }
+
   killSuite(suiteId) {
     return this.apiService.get("/regression/kill_job/" + suiteId).pipe(switchMap( (response) => {
       let jobId = parseInt(response.data);
@@ -179,6 +189,84 @@ getPrettyLocalizeTime(t) {
     }))
   }
 
+  testCaseExecutions(executionId=null, suiteExecutionId=null, scriptPath=null, logPrefix=null) {
+    let url = "/api/v1/regression/test_case_executions";
+    let queryParams = [];
+    if (suiteExecutionId) {
+      queryParams.push(["suite_execution_id", suiteExecutionId]);
+    }
+    if (scriptPath) {
+      queryParams.push(["script_path", scriptPath]);
+    }
+    if (logPrefix !== null) {
+      queryParams.push(["log_prefix", logPrefix]);
+    }
+    let queryParamString = this.commonService.queryParamsToString(queryParams);
+    url = `${url}${queryParamString}`;
+    return this.apiService.get(url).pipe(switchMap(response => {
+      return of(response.data);
+
+    }), catchError (error => {
+      return throwError(error);
+    }))
+  }
+
+  testCaseTimeSeries(suiteExecutionId, testCaseExecutionId?: number,
+                     checkpointIndex?: number,
+                     minCheckpointIndex?: number,
+                     maxCheckpointIndex?: number,
+                     type?: number,
+                     statisticsType?: number) {
+    let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}`;
+    let params = [];
+    if (checkpointIndex !== null) {
+      params.push(["checkpoint_index", checkpointIndex]);
+    } else {
+      if (minCheckpointIndex !== null) {
+        params.push(["min_checkpoint_index", minCheckpointIndex]);
+      }
+      if (maxCheckpointIndex !== null) {
+        params.push(["max_checkpoint_index", maxCheckpointIndex]);
+      }
+      if (testCaseExecutionId) {
+        params.push(["test_case_execution_id", testCaseExecutionId]);
+      }
+      if (type) {
+        params.push(["type", type]);
+      }
+      if (statisticsType) {
+        params.push(["t", statisticsType]);
+      }
+    }
+    let queryParamString = this.commonService.queryParamsToString(params);
+    if (queryParamString) {
+      url += queryParamString;
+    }
+
+    return this.apiService.get(url).pipe(switchMap(response => {
+      return of(response.data);
+    }), catchError (error => {
+      this.loggerService.error("Unable fetch time-series logs");
+      return throwError(error);
+    }))
+  }
+
+  testCaseTimeSeriesLogs(suiteExecutionId, testCaseExecutionId?: null, checkpointIndex?: null) {
+    let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}`;
+    url += `?type=60`;
+    if (checkpointIndex !== null) {
+      url += `&checkpoint_index=${checkpointIndex}`;
+    }
+    if (testCaseExecutionId) {
+      url += `&test_case_execution_id=${testCaseExecutionId}`;
+    }
+    return this.apiService.get(url).pipe(switchMap(response => {
+      return of(response.data);
+    }), catchError (error => {
+      this.loggerService.error("Unable fetch time-series logs");
+      return throwError(error);
+    }))
+  }
   releaseTrains(): Observable<string[]> {
     return this.apiService.get("/api/v1/regression/release_trains").pipe(switchMap(response => {
       return of(response.data);
@@ -187,4 +275,86 @@ getPrettyLocalizeTime(t) {
     }))
   }
 
+  testCaseTimeSeriesCheckpoints(suiteExecutionId, testCaseExecutionId: number = null) {
+    let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}`;
+    url += `?type=80`;
+    if (testCaseExecutionId) {
+      url += `&test_case_execution_id=${testCaseExecutionId}`;
+    }
+
+    return this.apiService.get(url).pipe(switchMap(response => {
+      return of(response.data);
+    }), catchError (error => {
+      this.loggerService.error("Unable to fetch time-series logs");
+      return throwError(error);
+    }))
+  }
+
+  artifacts(suiteExecutionId: number, testCaseExecutionId: number = null) {
+    let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}`;
+    let params = [];
+    params.push(["type", 200]);
+    if (testCaseExecutionId) {
+      params.push(["te", testCaseExecutionId]);
+    }
+    url += this.commonService.queryParamsToString(params);
+    return this.apiService.get(url).pipe(switchMap(response => {
+      return of(response.data);
+    }), catchError(error => {
+      this.loggerService.error("Unable to fetch time-series artifacts");
+      return throwError(error);
+    }))
+  }
+
+  testCaseTables(suiteExecutionId: number, testCaseExecutionId: number = null) {
+    let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}`;
+    let params = [];
+    params.push(["type", 300]);
+    if (testCaseExecutionId) {
+      params.push(["te", testCaseExecutionId]);
+    }
+    url += this.commonService.queryParamsToString(params);
+    return this.apiService.get(url).pipe(switchMap(response => {
+      return of(response.data);
+    }), catchError(error => {
+      this.loggerService.error("Unable to fetch test-case tables");
+      return throwError(error);
+    }))
+
+  }
+
+  getRegressionScripts(scriptId=null, scriptPath=null) {
+    let url = `/api/v1/regression/scripts`
+  }
+
+
+  _getFlatPath(suiteExecutionId, path, logPrefix) {
+    let httpPath = "/static/logs/s_" + suiteExecutionId;
+    let parts = path.split("/");
+    let flat = path;
+    let numParts = parts.length;
+    if (numParts > 2) {
+      flat = parts[numParts - 2] + "_" + parts[numParts - 1];
+    }
+    let s = "";
+    if (logPrefix !== "") {
+      s = logPrefix + "_"
+    }
+    return httpPath + "/" + s + flat.replace(/^\//g, '');
+  }
+
+  getHtmlLogPath(suiteExecutionId, path, logPrefix) {
+    window.open(this._getFlatPath(suiteExecutionId, path, logPrefix) + this.HTML_LOG_EXTENSION);
+  }
+
+  getConsoleLogPath(suiteExecutionId, path, logPrefix) {
+    window.open(this._getFlatPath(suiteExecutionId, path, logPrefix) + this.CONSOLE_LOG_EXTENSION);
+  }
+
+  preserveLogs(suiteExecutionId, preserveLogs) {
+    let payload = {"preserve_logs": preserveLogs};
+    return this.apiService.put("/api/v1/regression/suite_executions/" + suiteExecutionId, payload).pipe(switchMap(response => {
+      return of(true);
+    }))
+  }
 }

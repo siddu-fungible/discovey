@@ -425,7 +425,7 @@ class Linux(object, ToDictMixin):
                 try:
                     self.handle.expect(self.prompt_terminator, timeout=sync_timeout)
                 except (pexpect.EOF):
-                    self.disconnect()
+                    self.disconnect(self)
                     return self.command(command=command,
                                         sync=sync, timeout=timeout,
                                         custom_prompts=custom_prompts,
@@ -784,13 +784,17 @@ class Linux(object, ToDictMixin):
         self.command("rm -rf %s/" % (directory.strip("/")))
         return True
 
-    def remove_directory(self, directory):
+    def remove_directory(self, directory, sudo=False):
         result = False
         if directory in ["/", "/root"]:
             fun_test.critical("Removing {} is not permitted".format(directory))
             result = True
         else:
-            self.command("rm -rf {}".format(directory))
+            cmd = "rm -rf {}".format(directory)
+            if not sudo:
+                self.command(cmd)
+            else:
+                self.sudo_command(cmd)
         return result
 
     def remove_temp_file(self, file_name):
@@ -889,11 +893,12 @@ class Linux(object, ToDictMixin):
         if job_id is not None:
             job_id = int(job_id)
         if not process_id and not job_id:
-            fun_test.critical(message="Please provide a valid process-id or job-id")
+            fun_test.critical(message="Please provide a valid process-id or job-id", context=self.context)
             return
         if ((process_id < minimum_process_id) and not override) and (not job_id):
             fun_test.critical(
-                message="This API won't kill processes with PID < %d. Use the override switch" % minimum_process_id)
+                message="This API won't kill processes with PID < %d. Use the override switch" % minimum_process_id,
+            context=self.context)
             return
         job_str = ""
         if job_id:
@@ -907,7 +912,7 @@ class Linux(object, ToDictMixin):
         except pexpect.ExceptionPexpect:
             pass
         self.command("")  # This is to ensure that back-ground tasks Exit message is processed before leaving this function
-        fun_test.sleep("Waiting for kill to complete", seconds=kill_seconds)
+        fun_test.sleep("Waiting for kill to complete", seconds=kill_seconds, context=self.context)
 
     def tshark_capture_start(self):
         pass
@@ -1040,7 +1045,7 @@ class Linux(object, ToDictMixin):
         if self.handle:
             self.handle.close()
         self.handle = None
-        fun_test.log("Disconnecting: {}".format(self.spawn_pid))
+        fun_test.log(message="Disconnecting: {}".format(self.spawn_pid), context=self.context)
         return True
 
     def _set_paths(self):
@@ -1293,7 +1298,7 @@ class Linux(object, ToDictMixin):
         sudo_string = ""
         if sudo:
             sudo_string = "sudo "
-        scp_command = "%sscp -P %d %s %s@%s:%s" % (sudo_string, target_port, source_file_path, target_username, target_ip, target_file_path)
+        scp_command = "%sscp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P %d %s %s@%s:%s" % (sudo_string, target_port, source_file_path, target_username, target_ip, target_file_path)
         if not self.handle:
             self._connect()
 
@@ -1873,11 +1878,11 @@ class Linux(object, ToDictMixin):
             # Populating the resultant fio_dict dictionary
             for operation in ["write", "read"]:
                 fio_dict[operation] = {}
-                stat_list = ["bw", "iops", "io_bytes", "runtime", "latency", "clatency", "latency90", "latency95",
-                             "latency99","latency9950", "latency9999"]
+                stat_list = ["bw", "iops", "io_bytes", "runtime", "latency", "clatency", "latency50",
+                             "latency90", "latency95", "latency99", "latency9950", "latency9999"]
                 for stat in stat_list:
-                    if stat not in ("latency", "clatency", "latency90", "latency95", "latency99", "latency9950",
-                                    "latency9999"):
+                    if stat not in ("latency", "clatency", "latency50", "latency90", "latency95",
+                                    "latency99", "latency9950", "latency9999"):
                         fio_dict[operation][stat] = fio_result_dict["jobs"][0][operation][stat]
                     elif stat in ("latency", "clatency"):
                         for key in fio_result_dict["jobs"][0][operation].keys():
@@ -1911,10 +1916,16 @@ class Linux(object, ToDictMixin):
                                     value = int(round(fio_result_dict["jobs"][0][operation][key]["mean"]))
                                     value *= 1000
                                     fio_dict[operation][stat] = value
-                    elif stat in ("latency90", "latency95", "latency99", "latency9950", "latency9999"):
+                    elif stat in ("latency50", "latency90", "latency95", "latency99", "latency9950", "latency9999"):
                         for key in fio_result_dict["jobs"][0][operation].keys():
                             if key == "clat_ns":
                                 for key in fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"].keys():
+                                    if key.startswith("50.00"):
+                                        stat = "latency50"
+                                        value = int(round(
+                                            fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"]["50.000000"]))
+                                        value /= 1000
+                                        fio_dict[operation][stat] = value
                                     if key.startswith("90.00"):
                                         stat = "latency90"
                                         value = int(round(
@@ -2143,13 +2154,13 @@ class Linux(object, ToDictMixin):
         :param max_wait_time: total time to wait before giving
         :return: True, if the host is pingable and ssh'able, else False
         """
-        fun_test.log("Ensuring the host is up: ipmi_details={}, power_cycle={}".format(ipmi_details, power_cycle))
+        fun_test.log("Ensuring the host is up: ipmi_details={}, power_cycle={}".format(ipmi_details, power_cycle), context=self.context)
         service_host_spec = fun_test.get_asset_manager().get_regression_service_host_spec()
         service_host = None
         if service_host_spec:
-            service_host = Linux(**service_host_spec)
+            service_host = Linux(context=self.context, **service_host_spec)
         else:
-            fun_test.log("Regression service host could not be instantiated")
+            fun_test.log("Regression service host could not be instantiated", context=self.context)
         host_is_up = False
         max_reboot_timer = FunTimer(max_time=max_wait_time)
         result = False
@@ -2162,11 +2173,11 @@ class Linux(object, ToDictMixin):
                 #    fun_test.log("Lowered max_reboot_timer as ping is working")
             if ping_result or not service_host:
                 try:
-                    fun_test.log("Attempting SSH")
+                    fun_test.log("Attempting SSH", context=self.context)
                     self.command("pwd")
                     host_is_up = True
                     result = host_is_up
-                    fun_test.log("Host: {} is up".format(str(self)))
+                    fun_test.log("Host: {} is up".format(str(self)), context=self.context)
                     break
                 except Exception as ex:
                     pass
@@ -2459,6 +2470,8 @@ class Linux(object, ToDictMixin):
         try:
             c.handle = None
             c.buffer = None
+            c.context = self.context
+            c.logger = self.logger
             c.prompt_terminator = c.saved_prompt_terminator
         except:
             pass
@@ -2826,12 +2839,15 @@ class Linux(object, ToDictMixin):
             pass
 
     @fun_test.safe
-    def docker(self, ps=True):
+    def docker(self, ps=True, sudo=False):
         result = None
         command = None
         if ps:
             command = "docker ps --format '{{json .}}'"
-        output = self.command(command)
+        if sudo:
+            output = self.sudo_command(command)
+        else:
+            output = self.command(command)
         lines = output.split("\n")
         try:
             result = [json.loads(str(line)) for line in lines]
@@ -2840,6 +2856,17 @@ class Linux(object, ToDictMixin):
 
         return result
 
+
+    @fun_test.safe
+    def uptime(self, use_proc_uptime=True):
+        result = None
+        if use_proc_uptime:
+            output = self.command("cat /proc/uptime")
+            m = re.search(r'(\d+\.\d*)\s', output)
+            if m:
+                result = float(m.group(1))
+
+        return result
 
 class LinuxBackup:
     def __init__(self, linux_obj, source_file_name, backedup_file_name):
@@ -2860,4 +2887,4 @@ class LinuxBackup:
 
 if __name__ == "__main__":
     l = Linux(host_ip="qa-ubuntu-02", ssh_username="auto_admin", ssh_password="fun123")
-    print l.process_exists(process_id=22635)
+    print l.uptime()

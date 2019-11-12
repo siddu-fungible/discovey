@@ -29,7 +29,7 @@ class ScriptSetup(FunTestScript):
         if not f1_index:
             f1_index = 0
         if fun_test.get_job_environment_variable('test_bed_type') == 'fs-7':
-            bootargs = 'app=hw_hsu_test sku=SKU_FS1600_0 --dpc-server --dis-stats --dpc-uart --csr-replay --all_100g --disable-wu-watchdog'
+            bootargs = 'app=load_mods sku=SKU_FS1600_0 --dpc-server --dis-stats --dpc-uart --csr-replay --all_100g --disable-wu-watchdog'
             fs = Fs.get(disable_f1_index=f1_index, boot_args=bootargs)
             fun_test.shared_variables['fs'] = fs
             fun_test.test_assert(fs.bootup(reboot_bmc=False), 'FS bootup')

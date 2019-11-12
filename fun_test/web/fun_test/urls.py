@@ -202,7 +202,7 @@ api_v1_urls = [
     url(r'^regression/suites/?(\d+)?$', regression.suites),
     url(r'^regression/suite_executions/?(.*)?$', regression.suite_executions),
     url(r'^regression/script_infos/?(.*)?$', regression.script_infos),
-    url(r'^regression/scripts$', regression.scripts),
+    url(r'^regression/scripts/?(.*)?$', regression.scripts),
     url(r'^regression/re_run_job$', regression.re_run_job),
     url(r'^regression/assets/?(?:(\S+)/(.*))?$', regression.assets),
     url(r'^regression/asset_types$', regression.asset_types),
@@ -223,7 +223,10 @@ api_v1_urls = [
     url(r'^scheduler/info$', scheduler_api.info),
     url(r'^scheduler/state_types$', scheduler_api.state_types),
     url(r'^regression/test_case_executions/(.*)?$', regression.test_case_executions),
-    url(r'^regression/release_trains$', regression.release_trains)
+    url(r'^regression/test_case_time_series/(\d+)', regression.test_case_time_series),
+    url(r'^regression/release_trains$', regression.release_trains),
+    url(r'^regression/contexts/(\d+)/(\d+)$', regression.contexts),
+    url(r'^regression/script_run_time/(\d+)/(\d+)$', regression.script_run_time)
 ]
 
 site_under_construction = False

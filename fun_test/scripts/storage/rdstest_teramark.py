@@ -1,6 +1,6 @@
 from lib.system.fun_test import *
 from lib.system import utils
-from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper, get_data_collection_time
+from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper, ModelHelper, get_data_collection_time
 from lib.fun.fs import Fs
 import re
 from lib.topology.topology_helper import TopologyHelper
@@ -10,6 +10,10 @@ from scripts.networking.helper import *
 from collections import OrderedDict, Counter
 from lib.templates.csi_perf.csi_perf_template import CsiPerfTemplate
 from lib.host.linux import Linux
+from fun_global import PerfUnit, FunPlatform
+from datetime import datetime
+
+
 
 '''
 Script to run rdstest on F1 from multiple hosts.
@@ -21,6 +25,21 @@ def run_tcpkali(arg1, host_index, **kwargs):
     fun_test.shared_variables["tcpkali"][host_index] = tcpkali_output
     fun_test.simple_assert(tcpkali_output, "tcpkali test for thread {}".format(host_index))
     arg1.disconnect()
+
+def add_to_data_base(value_dict):
+    unit_dict = {"aggregate_bandwidth_unit": PerfUnit.UNIT_MBITS_PER_SEC}
+
+    model_name = "RdsClientPerformance"
+    status = fun_test.PASSED
+    try:
+        generic_helper = ModelHelper(model_name=model_name)
+        generic_helper.set_units(validate=True, **unit_dict)
+        generic_helper.add_entry(**value_dict)
+        generic_helper.set_status(status)
+    except Exception as ex:
+        fun_test.critical(str(ex))
+
+
 
 class ECVolumeLevelScript(FunTestScript):
     def describe(self):
@@ -169,9 +188,8 @@ class ECVolumeLevelScript(FunTestScript):
             self.topology = self.topology_helper.deploy()
             fun_test.test_assert(self.topology, "Topology deployed")
 
-            # Datetime required for daily Dashboard data filter
-            self.db_log_time = get_data_collection_time(tag="ec_inspur_fs_teramark_single_f1")
-            fun_test.log("Data collection time: {}".format(self.db_log_time))
+            self.db_log_time = datetime.now()
+            fun_test.shared_variables["db_log_time"] = self.db_log_time
 
             # Retrieving all Hosts list and filtering required hosts and forming required object lists out of it
             if self.testbed_type != "suite-based":
@@ -426,6 +444,16 @@ class ECVolumeLevelTestcase(FunTestCase):
         test_method = testcase[4:]
         command = 'tcpkali '
 
+        table_data_cols = ["num_hosts", "message_rate", "no_of_connection", "aggbw_in_mbps", "rds_job_name"]
+        table_data_rows = []
+
+        job_inputs = fun_test.get_job_inputs()
+        if not job_inputs:
+            job_inputs = {}
+        if "post_results" in job_inputs:
+            self.post_results = job_inputs["post_results"]
+        fun_test.log("Post results value: {}".format(self.post_results))
+
         if (self.tcpkali_payload):
             command += '-f {} '.format(self.tcpkali_payload)
         else:
@@ -476,19 +504,28 @@ class ECVolumeLevelTestcase(FunTestCase):
         host_clone = {}
         fun_test.shared_variables["tcpkali"] = {}
         self.host_info = fun_test.shared_variables["host_info"]
+        self.db_log_time = fun_test.shared_variables["db_log_time"]
 
         orignal_cmd = command
 
         self.f1_in_use = fun_test.shared_variables["f1_in_use"]
         self.storage_controller = fun_test.shared_variables["sc_obj"][self.f1_in_use]
 
-        headers = ["messagerate", "no of connections per host", "no of hosts", "Aggregate bandwidth"]
+        row_data_dict = {}
+
+        headers = ["num_hosts", "message_rate", "no_of_connection", "aggbw_in_mbps", "rds_job_name"]
+
         for each_m in self.messagerate:
             for each_c in self.totalconnection:
                 aggregate_bw = 0
                 command = orignal_cmd
                 command += '-r {} '.format(each_m)
                 command += '-c {}'.format(each_c)
+
+                row_data_dict['message_rate'] = each_m
+                row_data_dict['no_of_connection'] = each_c
+                row_data_dict['num_hosts'] = len(self.host_info)
+                row_data_dict['rds_job_name'] = "RDS_client_test_{}_hosts_{}_messagerate_{}_noofconn_aggbw".format(len(self.host_info), each_m, each_c)
 
                 # Starting the thread to collect the vp_utils stats and resource_bam stats for the current iteration
                 if start_stats:
@@ -573,10 +610,39 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.log("aggregate bw on all the hosts: {} mbps for  -r {} -c {}".format(aggregate_bw, each_m, each_c))
                 fun_test.sleep("sleep 5 seconds for next iteration", seconds=5)
 
-                data = [each_m, each_c, len(self.host_info), aggregate_bw]
-                table_data = {"headers": headers, "rows": [data]}
-                fun_test.add_table(panel_header="Compression Details", table_name="Compression ratio during warmup", table_data=table_data)
+                row_data_dict['aggbw_in_mbps'] = aggregate_bw
 
+                data = [each_m, each_c, len(self.host_info), aggregate_bw]
+
+                # Building the table raw for this variation
+                row_data_list = []
+                for i in table_data_cols:
+                    if i not in row_data_dict:
+                        row_data_list.append(-1)
+                    else:
+                        row_data_list.append(row_data_dict[i])
+                table_data_rows.append(row_data_list)
+
+                table_data = {"headers": headers, "rows": table_data_rows}
+                fun_test.add_table(panel_header="RDS TEST perf table", table_name="RDS TEST for {} message {} connections and {} no of hosts".format(each_m, each_c, len(self.host_info)), table_data=table_data)
+
+                # Datetime required for daily Dashboard data filter
+                try:
+                    # Building value_dict for dashboard update
+                    value_dict = {
+                        "date_time": self.db_log_time,
+                        "platform": FunPlatform.F1,
+                        "version": fun_test.get_version(),
+                        "num_hosts": len(self.host_info),
+                        "msg_rate": each_m,
+                        "num_connection": each_c,
+                        "aggregate_bandwidth": aggregate_bw
+                        }
+                    if self.post_results:
+                        fun_test.log("Posting results on dashboard")
+                        add_to_data_base(value_dict)
+                except Exception as ex:
+                    fun_test.critical(str(ex))
     def cleanup(self):
         self.stats_obj.stop(self.stats_collect_details)
         self.storage_controller.verbose = True

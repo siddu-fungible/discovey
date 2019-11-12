@@ -13,6 +13,9 @@ DB_ENGINE_TYPE_SQLITE = "DB_ENGINE_TYPE_SQLITE"
 PRIMARY_SETTINGS_FILE = "web.fun_test.settings"
 API_URL = WEB_ROOT_DIR + "/api"
 JINJA_TEMPLATE_DIR = API_URL + "/templates"
+F1_ROOT_ID = 101
+S1_ROOT_ID = 591
+OTHER_ROOT_ID = 1503
 
 
 def initialize_result(failed=False):

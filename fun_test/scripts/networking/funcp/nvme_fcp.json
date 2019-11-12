@@ -1,0 +1,53 @@
+{
+  "GenericParams":
+  {
+    "blt_details":{
+      "capacity": 107374182400,
+      "block_size": 4096
+    },
+    "controller_port":1099,
+    "command_timeout": 5,
+    "precondition_args":{
+      "bs": "128k",
+      "size": "100%",
+      "iodepth": 32,
+      "direct": 1,
+      "prio": 0
+    },
+    "fio_cmd_args": {
+      "bs": 4096,
+      "ioengine": "libaio",
+      "runtime": 120,
+      "direct": 1,
+      "timeout": 600,
+      "iodepth": 32,
+      "prio": 0,
+      "numjobs": 1,
+      "cpus_allowed_policy": "split"
+    },
+    "stats_interval": 10,
+    "stats_collect_details": [
+      {
+        "vp_utils": {
+          "interval": 5
+        }
+      },
+      {
+        "per_vp": {
+          "interval": 5
+        }
+      },
+      {
+        "eqm_stats": {
+          "interval": 5
+        }
+      },
+      {
+        "fcp_stats": {
+          "interval": 5
+        }
+      },
+      {"vppkts_stats":{"interval": 5}}
+    ]
+  }
+}

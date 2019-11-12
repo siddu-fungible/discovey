@@ -19,7 +19,7 @@ class MyScript(FunTestScript):
             fun_test.shared_variables["topology_obj_helper"] = topology_obj_helper
 
         else:
-            boot_args = "app=hw_hsu_test --dpc-uart --dpc-server --csr-replay --all_100g --disable-wu-watchdog"
+            boot_args = "app=load_mods --dpc-uart --dpc-server --csr-replay --all_100g --disable-wu-watchdog"
             rich_inputs = fun_test.get_rich_inputs()
             if rich_inputs:
                 if "boot_args" in rich_inputs:

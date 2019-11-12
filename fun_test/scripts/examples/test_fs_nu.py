@@ -15,8 +15,8 @@ class MyScript(FunTestScript):
     def setup(self):
         fun_test.log("Script-level setup")
         topology_helper = TopologyHelper()
-        f1_parameters = {0: {"boot_args": "app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --disable-wu-watchdog"},
-                         1: {"boot_args": "app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --disable-wu-watchdog"}}
+        f1_parameters = {0: {"boot_args": "app=mdt_test,load_mods workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --disable-wu-watchdog"},
+                         1: {"boot_args": "app=mdt_test,load_mods workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --disable-wu-watchdog"}}
 
         perf_listener_host_name = "poc-server-04"  # figure this out from the topology spec
         perf_listener_ip = "20.1.1.1"              # figure this out from the topology spec

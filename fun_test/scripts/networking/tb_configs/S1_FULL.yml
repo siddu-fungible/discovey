@@ -1,0 +1,43 @@
+router_mac:
+  00:de:ad:be:ef:00
+
+# NU host
+nu:
+  hostname: cadence-pc-3
+  username: user
+  password: Precious1*
+  mgmt_interface: enp10s0
+  namespaces:
+    default:
+      interfaces:
+        - fpg0:
+            mac_addr: fe:dc:ba:55:66:00
+            ipv4_addr: 18.0.0.10
+            ipv4_netmask: 255.255.255.0
+      arps:
+        - ipv4_addr: 18.0.0.1
+          mac_addr: 00:de:ad:be:ef:11
+# HU host
+hu:
+  hostname: cadence-pc-5
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: eth0
+  pf_interface: hu0-f0
+#  vf_interface: hu0-f8
+  namespaces:
+    default:
+      interfaces:
+        - hu0-f0:
+            mac_addr: 00:de:ad:be:ef:11
+            ipv4_addr: 18.0.0.10
+            ipv4_netmask: 255.255.255.0
+      arps:
+        - ipv4_addr: 18.0.0.10
+          mac_addr: fe:dc:ba:55:66:00
+        - ipv4_addr: 18.0.0.11
+          mac_addr: fe:dc:ba:55:66:77
+        - ipv4_addr: 18.0.0.12
+          mac_addr: fe:dc:ba:55:66:02
+        - ipv4_addr: 18.0.0.13
+          mac_addr: fe:dc:ba:55:66:03

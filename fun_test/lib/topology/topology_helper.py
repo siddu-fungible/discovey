@@ -267,11 +267,12 @@ class TopologyHelper:
                 continue
             fun_test.debug("Validating DUT readiness {}".format(dut_index))
             dut_ready = False
-            dut_ready_timer = FunTimer(max_time=300)
+            max_dut_ready_timeout = 500
+            dut_ready_timer = FunTimer(max_time=max_dut_ready_timeout)
             while not dut_ready_timer.is_expired() and not dut_ready:
                 dut_instance = dut_obj.get_instance()
                 dut_ready = dut_instance.is_ready()
-                fun_test.simple_assert(not dut_instance.is_boot_up_error(), "bootup error")
+                fun_test.simple_assert(not dut_instance.is_boot_up_error(), "Bootup error for {}. Max-time: {}".format(dut_instance, max_dut_ready_timeout))
 
                 fun_test.sleep("DUT: {} readiness check. Remaining time: {}".format(dut_index, dut_ready_timer.remaining_time()))
                 dut_instance.post_bootup()
@@ -351,7 +352,7 @@ class TopologyHelper:
             """
             Give up time is function of number of DUTs but for now lets keep it 10 minutes
             """
-            f1_bringup_all_duts_time = 60 * 20
+            f1_bringup_all_duts_time = 60 * 30
             f1_bringup_all_duts_timer = FunTimer(max_time=f1_bringup_all_duts_time)
             fun_test.simple_assert(peer_allocation_duts or simulation_mode_found, "At least one DUT is required")
             while not simulation_mode_found and peer_allocation_duts and not f1_bringup_all_duts_timer.is_expired() and not fun_test.closed:

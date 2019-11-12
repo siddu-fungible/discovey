@@ -51,18 +51,12 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
 
     num_f1 = len(ec_info["storage_controller_list"])
 
-    # If hosting_f1_list is not provided then the first volume will be host in first F1, second volume in second F1 and so on
+    # If hosting_f1_list is not provided then the first volume will be host in first F1, second volume in second F1 and
+    # so on
     if "hosting_f1_list" not in ec_info:
         ec_info["hosting_f1_list"] = [0] * ec_info["num_volumes"]
-        i = 0
-        while i < ec_info["num_volumes"]:
-            j = 0
-            while j < num_f1:
-                if j >= ec_info["num_volumes"]:
-                    break
-                ec_info["hosting_f1_list"][i] = j
-                i += 1
-                j += 1
+        for i in range(ec_info["num_volumes"]):
+            ec_info["hosting_f1_list"][i] = i % num_f1
 
     # Check whether the spread list is given for all the volumes, else copy the one and only available spread to
     # all the volumes
@@ -126,8 +120,8 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
     ec_info["attach_ctlr"] = {}
     ec_info["rds_nsid"] = {}
 
-    # Running counter which can be used whenever an nsid and nqn is needed in the config
-    ns_id = 0
+    # Maintaining separate ns_id for each F1
+    f1_ns_id = [0] * num_f1
     nqn = 0
     for num in xrange(ec_info["num_volumes"]):
         ec_info["uuids"][num] = {}
@@ -138,7 +132,7 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
         ec_info["uuids"][num]["rds"] = []
         ec_info["uuids"][num]["nonrds"] = []
         ec_info["uuids"][num]["ctlr"] = []
-        ec_info["rds_nsid"][num] = {}
+        ec_info["rds_nsid"][num] = []
 
         # Calculating the sizes of all the volumes together creates the EC or LSV on top EC volume
         ec_info["volume_capacity"][num] = {}
@@ -253,8 +247,9 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
                                      format(num, i, vtype, ec_info["volume_types"][vtype],
                                             ec_info["volume_capacity"][num][vtype], sc_index))
                 if sc_index != cur_vol_host_f1:
-                    ns_id += 1
-                    ec_info["rds_nsid"][num][ns_id] = ec_info["f1_ips"][sc_index]
+                    f1_ns_id[sc_index] += 1
+                    ns_id = f1_ns_id[sc_index]
+                    ec_info["rds_nsid"][num].append((ns_id, ec_info["f1_ips"][sc_index]))
                     remote_ip = ec_info["f1_ips"][cur_vol_host_f1]
                     transport = "RDS"
                     command_result = sc.attach_volume_to_controller(
@@ -268,18 +263,15 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
                 plex_num += 1
 
         # Configuring RDS volume in the hosting F1 for all the remote BLTs
-        for cur_ns_id in sorted(ec_info["rds_nsid"][num]):
+        for cur_ns_id, cur_f1_ip in ec_info["rds_nsid"][num]:
             this_uuid = utils.generate_uuid()
             ec_info["uuids"][num]["rds"].append(this_uuid)
             command_result = hosting_sc.create_volume(
                 type="VOL_TYPE_BLK_RDS", capacity=ec_info["volume_capacity"][num]["ndata"],
                 block_size=ec_info["volume_block"]["ndata"], name="RDS" + "_" + this_uuid[-4:], uuid=this_uuid,
-                remote_nsid=cur_ns_id, remote_ip=ec_info["rds_nsid"][num][cur_ns_id], group_id=num+1,
-                command_duration=command_timeout)
+                remote_nsid=cur_ns_id, remote_ip=cur_f1_ip, group_id=num+1, command_duration=command_timeout)
             fun_test.test_assert(command_result["status"], "Creating RDS volume for the remote BLT {} in remote F1 {} "
-                                                           "on DUT {}".format(cur_ns_id,
-                                                                              ec_info["rds_nsid"][num][cur_ns_id],
-                                                                              cur_vol_host_f1))
+                                                           "on DUT {}".format(cur_ns_id, cur_f1_ip, cur_vol_host_f1))
         """
         plex_num = 0
         for sc_index in cur_plex_to_f1_map:
@@ -357,7 +349,8 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
             ec_info["attach_size"][num] = ec_info["volume_capacity"][num]["lsv"]
 
         # Attaching the EC/LSV
-        ns_id += 1
+        f1_ns_id[cur_vol_host_f1] += 1
+        ns_id = f1_ns_id[cur_vol_host_f1]
         ec_info["attach_nsid"][num] = ns_id
         command_result = hosting_sc.attach_volume_to_controller(ctrlr_uuid=ec_info["attach_ctlr"][num],
                                                                 ns_id=ns_id, vol_uuid=ec_info["attach_uuid"][num],
@@ -370,6 +363,7 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
 
     return (result, ec_info)
 
+
 class FunCpDockerContainer(Linux):
     CUSTOM_PROMPT_TERMINATOR = r'# '
 
@@ -378,17 +372,19 @@ class FunCpDockerContainer(Linux):
         self.name = name
 
     def _connect(self):
-        super(FunCpDockerContainer, self)._connect()
-
-        # the below set_prompt_terminator is the temporary workaround of the recent FunCP docker container change
-        # Recently while logging into the docker container it gets logged in as root user
-        self.set_prompt_terminator(self.CUSTOM_PROMPT_TERMINATOR)
-        self.command("docker exec -it {} bash".format(self.name))
-        self.clean()
-        self.set_prompt_terminator(self.CUSTOM_PROMPT_TERMINATOR)
-        self.command("export PS1='{}'".format(self.CUSTOM_PROMPT_TERMINATOR), wait_until_timeout=3,
-                     wait_until=self.CUSTOM_PROMPT_TERMINATOR)
-        return True
+        result = False
+        if (super(FunCpDockerContainer, self)._connect()):
+            # the below set_prompt_terminator is the temporary workaround of the recent FunCP docker container change
+            # Recently while logging into the docker container it gets logged in as root user
+            self.set_prompt_terminator(self.CUSTOM_PROMPT_TERMINATOR)
+            self.command("docker exec -it {} bash".format(self.name))
+            self.clean()
+            self.set_prompt_terminator(self.CUSTOM_PROMPT_TERMINATOR)
+            self.command("export PS1='{}'".format(self.CUSTOM_PROMPT_TERMINATOR), wait_until_timeout=3,
+                         wait_until=self.CUSTOM_PROMPT_TERMINATOR)
+            result = True
+        fun_test.simple_assert(result, "SSH connection to docker host: {}".format(self))
+        return result
 
 
 MODE_END_POINT = "ep"
@@ -421,8 +417,49 @@ class StorageFsTemplate(object):
     def enter_funsdk(self):
         self.come_obj.command("cd {}".format(self.FUNSDK_DIR))
 
+    def get_container_objs(self, stop_run_sc=False, include_storage=True):
+
+        result = {'status': False, 'container_info': {}, 'container_names': []}
+
+        if not self.come_obj.check_ssh():
+            return result
+
+        # Get the WORKSPACE & FUNGIBLE_ROOT environment variable
+        workspace = self.come_obj.command("echo $WORKSPACE")
+        workspace = workspace.strip()
+        if workspace:
+            self.workspace = workspace
+
+        fungible_root = self.come_obj.command("echo $FUNGIBLE_ROOT")
+        fungible_root = fungible_root.strip()
+        if fungible_root:
+            self.fungible_root = fungible_root
+
+        get_containers = self.get_container_names(stop_run_sc=stop_run_sc, include_storage=include_storage)
+        if not get_containers['status']:
+            return result
+
+        result['container_names'] = get_containers['container_name_list']
+        for container_name in get_containers['container_name_list']:
+            container_obj = FunCpDockerContainer(host_ip=self.come_obj.host_ip,
+                                                 ssh_username=self.come_obj.ssh_username,
+                                                 ssh_password=self.come_obj.ssh_password,
+                                                 ssh_port=self.come_obj.ssh_port,
+                                                 name=container_name)
+            """
+            if "0" in container_name:  # based on logic that container names will always be F1-1, F1-0
+                self.F1_0_HANDLE = container_obj
+            else:
+                self.F1_1_HANDLE = container_obj
+            """
+            self.container_info[container_name] = container_obj
+
+        result['container_info'] = self.container_info
+        result['status'] = True
+        return result
+
     def deploy_funcp_container(self, update_deploy_script=True, update_workspace=True, mode=None,
-                               include_storage=False, launch_resp_parse=False):
+                               include_storage=False, stop_run_sc=True, launch_resp_parse=False):
         # check if come is up
         result = {'status': False, 'container_info': {}, 'container_names': []}
         self.mode = mode
@@ -461,6 +498,8 @@ class StorageFsTemplate(object):
                 return result
 
         # get container names.
+        result = self.get_container_objs(stop_run_sc=stop_run_sc, include_storage=include_storage)
+        '''
         get_containers = self.get_container_names(include_storage=include_storage)
         if not get_containers['status']:
             return result
@@ -481,6 +520,8 @@ class StorageFsTemplate(object):
 
         result['container_info'] = self.container_info
         result['status'] = True
+        return result
+        '''
         return result
 
     def update_fundsk(self):
@@ -540,11 +581,11 @@ class StorageFsTemplate(object):
 
         return True if not docker_launch_status else False
 
-    def get_container_names(self, include_storage=False):
+    def get_container_names(self, stop_run_sc=True, include_storage=False):
         result = {'status': False, 'container_name_list': []}
 
         # If SC docker container is not needed, kill the system_health_check.py and stop the run_sc container
-        if not include_storage:
+        if stop_run_sc:
             health_check_pid = self.come_obj.get_process_id_by_pattern("system_health_check.py")
             if health_check_pid:
                 self.come_obj.kill_process(process_id=health_check_pid)
@@ -570,9 +611,13 @@ class StorageFsTemplate(object):
         result['container_name_list'] = self.come_obj.command(cmd, timeout=self.DEFAULT_TIMEOUT).split("\n")
         result['container_name_list'] = [name.strip("\r") for name in result['container_name_list']]
         container_count = len(result['container_name_list'])
-        if container_count != self.NUM_FS_CONTAINERS:
+        if not include_storage:
+            expected_container_count = self.NUM_FS_CONTAINERS
+        else:
+            expected_container_count = self.NUM_FS_CONTAINERS + 1
+        if container_count != expected_container_count:
             fun_test.critical(
-                "{0} Containers should be deployed, Number of container deployed: {1}".format(self.NUM_FS_CONTAINERS,
+                "{0} Containers should be deployed, Number of container deployed: {1}".format(expected_container_count,
                                                                                               container_count))
             return result
         else:

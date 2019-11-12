@@ -30,6 +30,11 @@ class MetricsGlobalSettings(models.Model):
     tolerance_percentage = models.FloatField(default=3.0)
     cache_valid = models.BooleanField(default=True)
 
+    @staticmethod
+    def get_cache_validity():
+        first_record = MetricsGlobalSettings.objects.first()
+        return first_record.cache_valid
+
 class MetricsGlobalSettingsSerializer(ModelSerializer):
 
     class Meta:
@@ -43,6 +48,14 @@ class MetricsRunTime(models.Model):
 
     def __str__(self):
         return "{}: {}".format(self.name, self.value)
+
+    @staticmethod
+    def update_value_data(name, value_key, value_data):
+        run_times = MetricsRunTime.objects.filter(name=name)
+        if run_times.exists():
+            run_time = run_times[0]
+            run_time.value[value_key] = value_data
+            run_time.save()
 
 class SchedulingStates:
     ACTIVE = "Active"
@@ -228,6 +241,12 @@ class MetricChart(models.Model):
 
     def get_jira_ids(self):
         return json.loads(self.jira_ids)
+
+    def set_chart_status(self, status, suite_execution_id):
+        self.last_build_status = status
+        self.last_suite_execution_id = suite_execution_id
+        self.last_build_date = get_current_time()
+        self.save()
 
     def add_child(self, child_id):
         children = json.loads(self.children)
@@ -981,6 +1000,8 @@ class AlibabaPerformance(models.Model):
     input_num_threads = models.IntegerField(verbose_name="Threads")
     input_platform = models.TextField(default=FunPlatform.F1)
     input_version = models.CharField(verbose_name="Version", max_length=50, default="")
+    input_encryption = models.BooleanField(default=False)
+
     output_write_iops = models.IntegerField(verbose_name="Write IOPS", default=-1)
     output_read_iops = models.IntegerField(verbose_name="Read IOPS", default=-1)
     output_write_throughput = models.FloatField(verbose_name="Write throughput", default=-1)
@@ -2319,6 +2340,35 @@ class TeraMarkMultiClusterCryptoPerformance(models.Model):
             s += "{}:{} ".format(key, value)
         return s
 
+class CryptoFastPathPerformance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_app = models.CharField(max_length=30, default="crypto_fast_path")
+    input_algorithm = models.CharField(max_length=30, default="")
+    input_operation = models.CharField(max_length=30, default="")
+    input_pkt_size = models.IntegerField(verbose_name="bytes", default=-1)
+    input_key_size = models.IntegerField(verbose_name="Key Size", default=-1)
+    output_ops_per_sec = models.IntegerField(verbose_name="ops per sec", default=-1)
+    output_throughput = models.FloatField(verbose_name="Throughput", default=-1)
+    output_latency_min = models.IntegerField(verbose_name="Latency min", default=-1)
+    output_latency_avg = models.IntegerField(verbose_name="Latency avg", default=-1)
+    output_latency_max = models.IntegerField(verbose_name="Latency max", default=-1)
+    output_ops_per_sec_unit = models.TextField(default=PerfUnit.UNIT_OPS)
+    output_throughput_unit = models.TextField(default=PerfUnit.UNIT_GBITS_PER_SEC)
+    output_latency_min_unit = models.TextField(default=PerfUnit.UNIT_NSECS)
+    output_latency_avg_unit = models.TextField(default=PerfUnit.UNIT_NSECS)
+    output_latency_max_unit = models.TextField(default=PerfUnit.UNIT_NSECS)
+    input_platform = models.TextField(default=FunPlatform.F1)
+    tag = "analytics"
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
+
 class TeraMarkLookupEnginePerformance(models.Model):
     interpolation_allowed = models.BooleanField(default=False)
     interpolated = models.BooleanField(default=False)
@@ -2731,6 +2781,15 @@ class MileStoneMarkers(models.Model):
             s += "{}:{} ".format(key, value)
         return s
 
+class PerformanceMetricsDag(FunModel):
+    date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    metrics_dag = JSONField(default=[])
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
 
 class ShaxPerformanceSerializer(ModelSerializer):
     input_date_time = serializers.DateTimeField()
@@ -3045,6 +3104,101 @@ class PowerPerformance(FunModel):
     output_fs_power_unit = models.TextField(default=PerfUnit.UNIT_WATT)
     output_f1_0_power_unit = models.TextField(default=PerfUnit.UNIT_WATT)
     output_f1_1_power_unit = models.TextField(default=PerfUnit.UNIT_WATT)
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
+
+
+class RdsClientPerformance(FunModel):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_platform = models.TextField(default=FunPlatform.F1)
+    input_version = models.CharField(verbose_name="Version", max_length=50, default="")
+
+    input_num_hosts = models.IntegerField(verbose_name="Number of hosts", default=-1)
+    input_msg_rate = models.IntegerField(verbose_name="Message rate", default=-1)
+    input_num_connection = models.IntegerField(verbose_name="Number of connections", default=-1)
+    output_aggregate_bandwidth = models.FloatField(verbose_name="Aggregate Bandwidth", default=-1)
+
+    output_aggregate_bandwidth_unit = models.TextField(default=PerfUnit.UNIT_MBITS_PER_SEC)
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
+
+
+class NvmeFcpPerformance(FunModel):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_platform = models.TextField(default=FunPlatform.F1)
+    input_version = models.CharField(verbose_name="Version", max_length=50, default="")
+
+    input_block_size = models.IntegerField(verbose_name="Block size", default=-1)
+    input_test_case = models.TextField(verbose_name="Test case", default="")
+    input_operation = models.TextField(verbose_name="Operation", default="")
+    input_volumes = models.IntegerField(verbose_name="Volumes", default=-1)
+    output_read_iops = models.FloatField(verbose_name="Read IOPS", default=-1)
+    output_read_bw = models.FloatField(verbose_name="Read bandwidth", default=-1)
+    output_read_latency_avg = models.FloatField(verbose_name="Read latency avg", default=-1)
+    output_read_latency_50 = models.FloatField(verbose_name="Read latency 50", default=-1)
+    output_read_latency_90 = models.FloatField(verbose_name="Read latency 90", default=-1)
+    output_read_latency_95 = models.FloatField(verbose_name="Read latency 95", default=-1)
+    output_read_latency_99 = models.FloatField(verbose_name="Read latency 99", default=-1)
+    output_read_latency_9950 = models.FloatField(verbose_name="Read latency 99.50", default=-1)
+    output_read_latency_9999 = models.FloatField(verbose_name="Read latency 99.99", default=-1)
+
+    output_write_bw = models.FloatField(verbose_name="Write bandwidth", default=-1)
+    output_write_latency_avg = models.FloatField(verbose_name="Write latency avg", default=-1)
+    output_write_latency_50 = models.FloatField(verbose_name="Write latency 50", default=-1)
+    output_write_latency_90 = models.FloatField(verbose_name="Write latency 90", default=-1)
+    output_write_latency_95 = models.FloatField(verbose_name="Write latency 95", default=-1)
+    output_write_latency_99 = models.FloatField(verbose_name="Write latency 99", default=-1)
+    output_write_latency_9950 = models.FloatField(verbose_name="Write latency 99.50", default=-1)
+    output_write_latency_9999 = models.FloatField(verbose_name="Write latency 99.99", default=-1)
+
+    output_read_iops_unit = models.TextField(default=PerfUnit.UNIT_OPS)
+    output_read_bw_unit = models.TextField(default=PerfUnit.UNIT_GBITS_PER_SEC)
+    output_read_latency_avg_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_read_latency_50_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_read_latency_90_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_read_latency_95_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_read_latency_99_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_read_latency_9950_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_read_latency_9999_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+
+    output_write_iops_unit = models.TextField(default=PerfUnit.UNIT_OPS)
+    output_write_bw_unit = models.TextField(default=PerfUnit.UNIT_GBITS_PER_SEC)
+    output_write_latency_avg_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_write_latency_50_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_write_latency_90_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_write_latency_95_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_write_latency_99_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_write_latency_9950_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_write_latency_9999_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
+
+
+class FunOnDemandTotalTimePerformance(FunModel):
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_version = models.CharField(verbose_name="Version", max_length=50, default="")
+
+    output_total_time = models.FloatField(verbose_name="Total Time", default=-1)
+    output_total_time_unit = models.TextField(default=PerfUnit.UNIT_SECS)
 
     def __str__(self):
         s = ""

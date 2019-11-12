@@ -8,6 +8,9 @@ from lib.utilities.netcat import Netcat
 from lib.system.utils import ToDictMixin
 from lib.host.apc_pdu import ApcPdu
 from fun_settings import STASH_DIR
+from fun_global import Codes, get_current_epoch_time
+from asset.asset_global import AssetType
+from lib.utilities.statistics_manager import StatisticsCollector, StatisticsCategory
 
 from threading import Thread
 from datetime import datetime
@@ -15,8 +18,9 @@ import re
 import os
 import socket
 
+DOCHUB_FUNGIBLE_LOCAL = "10.1.20.99"
 ERROR_REGEXES = ["MUD_MCI_NON_FATAL_INTR_STAT", "bug_check", "platform_halt: exit status 1"]
-DOCHUB_BASE_URL = "http://dochub.fungible.local/doc/jenkins"
+DOCHUB_BASE_URL = "http://{}/doc/jenkins".format(DOCHUB_FUNGIBLE_LOCAL)
 
 """
 Possible workarounds:
@@ -39,6 +43,7 @@ class BootPhases:
     U_BOOT_SET_SERVER_IP = "u-boot: setenv serverip"
     U_BOOT_SET_BOOT_ARGS = "u-boot: setenv boot args"
     U_BOOT_DHCP = "u-boot: dhcp"
+    U_BOOT_PING = "u-boot: ping tftp server"
     U_BOOT_TFTP_DOWNLOAD = "u-boot: tftp download"
     U_BOOT_UNCOMPRESS_IMAGE = "u-boot: uncompress image"
     U_BOOT_ELF = "u-boot: bootelf"
@@ -61,7 +66,6 @@ class BootPhases:
     FS_BRING_UP_COME_INITIALIZED = "FS_BRING_UP_COME_INITIALIZED"
     FS_BRING_UP_COMPLETE = "FS_BRING_UP_COMPLETE"
     FS_BRING_UP_ERROR = "FS_BRING_UP_ERROR"
-
 
 
 class Fpga(Linux):
@@ -161,6 +165,7 @@ class BmcMaintenanceWorker(Thread):
     def stop(self):
         self.stopped = True
 
+
 class Bmc(Linux):
     # UART_LOG_LISTENER_FILE = "uart_log_listener.py"
     UART_LOG_LISTENER_FILE = "uart_log_listener2.py"
@@ -176,12 +181,12 @@ class Bmc(Linux):
     NUM_F1S = 2
     FUNOS_LOGS_SCRIPT = "/mnt/sdmmc0p1/scripts/funos_logs.sh"
 
-
     def __init__(self, disable_f1_index=None,
                  disable_uart_logger=False,
-                 setup_support_files=None,
+                 setup_support_files=True,
                  bundle_upgraded=None,
                  bundle_compatible=None,
+                 fs=None,
                  **kwargs):
         super(Bmc, self).__init__(**kwargs)
         self.set_prompt_terminator(r'# $')
@@ -197,7 +202,9 @@ class Bmc(Linux):
         self.hbm_dump_enabled = fun_test.get_job_environment_variable("hbm_dump")
         self.bundle_upgraded = bundle_upgraded
         self.bundle_compatible = bundle_compatible
-
+        self.fs = fs
+        if "fs" in kwargs:
+            self.fs = kwargs.get("fs", None)
 
     def _get_fake_mac(self, index):
         this_ip = socket.gethostbyname(self.host_ip)   #so we can resolve full fqdn/ip-string in dot-decimal
@@ -283,7 +290,7 @@ class Bmc(Linux):
                              message="Ensure ComE is reachable before reboot",
                              context=self.context)
 
-        fun_test.log("Rebooting ComE (Graceful)")
+        fun_test.log("Rebooting ComE (Graceful)", context=self.context)
         if not come.was_power_cycled:
             reboot_result = come.reboot(max_wait_time=max_wait_time, non_blocking=non_blocking, ipmi_details=ipmi_details)
             reboot_info_string = "initiated" if non_blocking else "complete"
@@ -300,7 +307,10 @@ class Bmc(Linux):
 
     def set_boot_phase(self, index, phase):
         self.boot_phase = phase
-        fun_test.add_checkpoint(checkpoint="F1_{}: Started boot phase: {}".format(index, phase), context=self.context)
+        result = fun_test.PASSED
+        if phase == BootPhases.FS_BRING_UP_ERROR:
+            result = fun_test.FAILED
+        fun_test.add_checkpoint(checkpoint="F1_{}: Started boot phase: {}".format(index, phase), context=self.context, result=result)
         fun_test.log_section(message="F1_{}:{}".format(index, phase), context=self.context)
 
     def detect_version(self, output):
@@ -355,8 +365,9 @@ class Bmc(Linux):
 
     def _get_boot_args_for_index(self, boot_args, f1_index):
         s = boot_args
-        if not self.bundle_compatible:
+        if not self.bundle_compatible and not (self.fs and self.fs.get_revision() in ["2"]):
             s = "sku=SKU_FS1600_{} ".format(f1_index) + boot_args
+
         if self.hbm_dump_enabled:
             if "cc_huid" not in s:
                 huid = 3
@@ -367,6 +378,8 @@ class Bmc(Linux):
         if csi_cache_miss_enabled:
             if "csi_cache_miss" not in s:
                 s += " --csi-cache-miss"
+        if self.fs.tftp_image_path and self.fs.get_revision() in ["2"]:
+            s += " --disable-syslog-replay"
         return s
 
     def setup_serial_proxy_connection(self, f1_index, auto_boot=False):
@@ -391,7 +404,7 @@ class Bmc(Linux):
 
     def get_preamble(self, f1_index):
         nc = self.nc[f1_index]
-        fun_test.sleep("Reading preamble")
+        fun_test.sleep("Reading preamble", context=self.context)
         nc.stop_reading()
         output = nc.get_buffer()
         fun_test.log(message=output, context=self.context)
@@ -403,12 +416,12 @@ class Bmc(Linux):
         if m:
             try:
                 this_date = datetime.strptime(m.group(1), "%b %d %Y")
-                fun_test.add_checkpoint("u-boot date: {}".format(this_date))
-                fun_test.log("Minimum u-boot build date: {}".format(minimum_date))
-                fun_test.test_assert(this_date >= minimum_date, "Valid u-boot build date")
+                fun_test.add_checkpoint("u-boot date: {}".format(this_date), context=self.context)
+                fun_test.log("Minimum u-boot build date: {}".format(minimum_date), context=self.context)
+                fun_test.test_assert(this_date >= minimum_date, "Valid u-boot build date", context=self.context)
                 result = True
             except Exception as ex:
-                fun_test.critical("Unable to parse u-boot build date")
+                fun_test.critical("Unable to parse u-boot build date", context=self.context)
         return result
 
     def _use_i2c_reset(self):
@@ -420,7 +433,10 @@ class Bmc(Linux):
         return result
 
     def remove_uart_logs(self, f1_index=0):
-        self.command("rm {}".format(self.get_f1_uart_log_file_name(f1_index=f1_index)))
+        if not self.bundle_compatible:
+            self.command("rm {}".format(self.get_f1_uart_log_file_name(f1_index=f1_index)))
+        elif self.bundle_compatible:
+            self.command("echo 'cleared by fs.py' > {}".format(self.get_f1_uart_log_file_name(f1_index=f1_index)))
 
     def reset_f1(self, f1_index=0, keep_low=False):
         # Workaround for cases where autoboot is enabled, but we want to do tftpboot
@@ -538,6 +554,9 @@ class Bmc(Linux):
             self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_DHCP)
             self.u_boot_command(command="dhcp", timeout=15, expected=self.U_BOOT_F1_PROMPT, f1_index=index)
 
+        self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_PING)
+        self.u_boot_command(command="ping {}".format(tftp_server), timeout=15, expected=self.U_BOOT_F1_PROMPT, f1_index=index)
+
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_TFTP_DOWNLOAD)
         output = self.u_boot_command(
             command="tftpboot {} {}:{}".format(tftp_load_address, tftp_server, tftp_image_path), timeout=40,
@@ -547,7 +566,7 @@ class Bmc(Linux):
         if m:
             bytes_transferred = int(m.group(1))
 
-        fun_test.test_assert(bytes_transferred > 1000, "FunOS download size: {}".format(bytes_transferred))
+        fun_test.test_assert(bytes_transferred > 1000, "FunOS download size: {}".format(bytes_transferred), context=self.context)
 
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_UNCOMPRESS_IMAGE)
         output = self.u_boot_command(command="unzip {} {};".format(tftp_load_address, self.ELF_ADDRESS), timeout=10,
@@ -568,7 +587,11 @@ class Bmc(Linux):
                 rich_input_boot_args = True
 
         if not rich_input_boot_args:
-            output = self.u_boot_command(command="bootelf -p {}".format(self.ELF_ADDRESS), timeout=80, f1_index=index, expected="\"this space intentionally left blank.\"")
+            if "load_mods" in boot_args and "hw_hsu_test" not in boot_args:
+                output = self.u_boot_command(command="bootelf -p {}".format(self.ELF_ADDRESS), timeout=80, f1_index=index, expected="FUNOS_INITIALIZED")
+            else:
+                output = self.u_boot_command(command="bootelf -p {}".format(self.ELF_ADDRESS), timeout=80, f1_index=index, expected="\"this space intentionally left blank.\"")
+
         else:
             output = self.u_boot_command(command="bootelf -p {}".format(self.ELF_ADDRESS), timeout=80, f1_index=index, expected="sending a HOST_BOOTED message")
         """
@@ -599,7 +622,7 @@ class Bmc(Linux):
         return result
 
     def _reset_microcom(self):
-        fun_test.log("Resetting microcom and minicom")
+        fun_test.log("Resetting microcom and minicom", context=self.context)
         process_ids = self.get_process_id_by_pattern("microcom", multiple=True)
         for process_id in process_ids:
             self.kill_process(signal=9, process_id=process_id, kill_seconds=2)
@@ -637,7 +660,8 @@ class Bmc(Linux):
         fun_test.simple_assert(expression=len(serial_proxy_ids) == 2,
                                message="2 serial proxies are alive",
                                context=self.context)
-
+        fun_test.sleep("Wait for serial proxies to be operational", seconds=15)
+        '''
         uart_listener_script = FUN_TEST_LIB_UTILITIES_DIR + "/{}".format(self.UART_LOG_LISTENER_FILE)
 
         fun_test.scp(source_file_path=uart_listener_script,
@@ -657,7 +681,7 @@ class Bmc(Linux):
         log_listener_processes = self.get_process_id_by_pattern(self.UART_LOG_LISTENER_FILE, multiple=True)
         for log_listener_process in log_listener_processes:
             self.kill_process(signal=9, process_id=log_listener_process, kill_seconds=2)
-
+        '''
 
     def restart_serial_proxy(self):
         fun_test.log("Restoring serial proxy")
@@ -730,6 +754,12 @@ class Bmc(Linux):
         return artifact_file_name
 
     def cleanup(self):
+        asset_id = "FS"
+        asset_type = AssetType.DUT
+        if self.fs:
+            asset_type = self.fs.get_asset_type()
+            asset_id = self.fs.get_asset_name()
+
         fun_test.sleep(message="Allowing time to generate full report", seconds=30, context=self.context)
         post_processing_error_found = False
         for f1_index in range(self.NUM_F1S):
@@ -743,15 +773,41 @@ class Bmc(Linux):
                          source_password=self.ssh_password,
                          target_file_path=artifact_file_name,
                          timeout=240)
-            mode = "r+"
-            if not os.path.exists(artifact_file_name):
-                mode = "a+"
-            with open(artifact_file_name, mode) as f:
-                content = f.read()
-                f.seek(0, 0)
-                f.write(self.u_boot_logs[f1_index] + '\n' + content)
+            """
+            if not self.bundle_compatible:
+                mode = "r+"
+                if not os.path.exists(artifact_file_name):
+                    mode = "a+"
+                with open(artifact_file_name, mode) as f:
+                    content = f.read()
+                    f.seek(0, 0)
+                    f.write(self.u_boot_logs[f1_index] + '\n' + content)
+            
+            elif self.bundle_compatible and self.fs.tftp_image_path:
+            """
+            if self.fs.tftp_image_path:
+                u_boot_artifact_file_name = fun_test.get_test_case_artifact_file_name(
+                    self._get_context_prefix("f1_{}_tftpboot_u_boot_log.txt".format(f1_index)))
+                mode = "r+"
+                if not os.path.exists(u_boot_artifact_file_name):
+                    mode = "a+"
+                with open(u_boot_artifact_file_name, mode) as f:
+                    content = f.read()
+                    f.seek(0, 0)
+                    f.write(self.u_boot_logs[f1_index] + '\n' + content)
+                fun_test.add_auxillary_file(description=self._get_context_prefix("F1_{} tftpboot u-boot log").format(f1_index),
+                                            filename=u_boot_artifact_file_name,
+                                            asset_type=asset_type,
+                                            asset_id=asset_id,
+                                            artifact_category=self.fs.ArtifactCategory.BRING_UP,
+                                            artifact_sub_category=self.fs.ArtifactSubCategory.BMC)
+
             fun_test.add_auxillary_file(description=self._get_context_prefix("F1_{} UART log").format(f1_index),
-                                        filename=artifact_file_name)
+                                        filename=artifact_file_name,
+                                        asset_type=asset_type,
+                                        asset_id=asset_id,
+                                        artifact_category=self.fs.ArtifactCategory.POST_BRING_UP,
+                                        artifact_sub_category=self.fs.ArtifactSubCategory.BMC)
             try:
                 self.post_process_uart_log(f1_index=f1_index, file_name=artifact_file_name)
             except Exception as ex:
@@ -760,7 +816,11 @@ class Bmc(Linux):
 
         if self.context:
             fun_test.add_auxillary_file(description=self._get_context_prefix("bringup"),
-                                        filename=self.context.output_file_path)
+                                        filename=self.context.output_file_path,
+                                        asset_type=asset_type,
+                                        asset_id=asset_id,
+                                        artifact_category=self.fs.ArtifactCategory.BRING_UP,
+                                        artifact_sub_category=self.fs.ArtifactSubCategory.BMC)
 
         try:
             if not self.bundle_compatible:
@@ -773,7 +833,7 @@ class Bmc(Linux):
         for f1_index in range(self.NUM_F1S):
             if self.disable_f1_index is not None and f1_index == self.disable_f1_index:
                 continue
-            fun_test.simple_assert(not post_processing_error_found, "Post-processing failed. Please check for error regex")
+            fun_test.simple_assert(not post_processing_error_found, "Post-processing failed. Please check for error regex", context=self.context)
 
     def post_process_uart_log(self, f1_index, file_name):
         regex_found = None
@@ -857,7 +917,7 @@ class BootupWorker(Thread):
 
             fun_test.test_assert(expression=fs.set_f1s(), message="Set F1s", context=self.context)
 
-            if not fs.skip_funeth_come_power_cycle:
+            if not fs.skip_funeth_come_power_cycle and not fs.bundle_image_parameters:
                 fs.set_boot_phase(BootPhases.FS_BRING_UP_FUNETH_UNLOAD_COME_POWER_CYCLE)
                 fun_test.test_assert(expression=fs.funeth_reset(), message="Funeth ComE power-cycle ref: IN-373")
 
@@ -865,11 +925,29 @@ class BootupWorker(Thread):
                 fs.set_boot_phase(BootPhases.FS_BRING_UP_INSTALL_BUNDLE)
                 build_number = fs.bundle_image_parameters.get("build_number", 70)  # TODO: Is there a latest?
                 release_train = fs.bundle_image_parameters.get("release_train", "1.0a_aa")
+                fun_test.set_suite_run_time_environment_variable("bundle_image_parameters",
+                                                                 {"release_train": release_train,
+                                                                  "build_number": build_number})
+                fun_test.set_version(version="{}/{}".format(release_train, build_number))
                 come = fs.get_come()
-                fun_test.test_assert(come.detect_pfs(), "Detect PFs")
+                try:
+                    come.detect_pfs()
+                except Exception as ex:
+                    fun_test.add_checkpoint("PFs were not detecting. Doing a full power-cycle now")
+                    fun_test.test_assert(self.fs.apc_power_cycle(), "APC power-cycle complete. Devices are up")
+                    fs.come = None
+                    fs.bmc = None
+                    come = fs.get_come()
+                    come.detect_pfs()
+                    bmc = fs.get_bmc()
 
-                fun_test.test_assert(come.install_build_setup_script(build_number=build_number, release_train=release_train),
-                                     "Bundle image installed")
+                for f1_index in range(2):
+                    if f1_index == self.fs.disable_f1_index:
+                        continue
+                    bmc.remove_uart_logs(f1_index=f1_index)
+                fun_test.test_assert(expression=come.install_build_setup_script(build_number=build_number, release_train=release_train),
+                                     message="Bundle image installed",
+                                     context=self.context)
                 fs.bundle_upgraded = True
                 bmc.bundle_upgraded = True
 
@@ -885,7 +963,7 @@ class BootupWorker(Thread):
 
                 # Wait for BMC to come up
                 bmc = self.fs.get_bmc()
-                fun_test.test_assert(bmc.ensure_host_is_up(), "BMC is up")
+                fun_test.test_assert(expression=bmc.ensure_host_is_up(), message="BMC is up", context=self.context)
 
             if not fs.bundle_image_parameters:
                 fs.set_boot_phase(BootPhases.FS_BRING_UP_U_BOOT)
@@ -895,12 +973,17 @@ class BootupWorker(Thread):
                     if f1_index == fs.disable_f1_index:
                         continue
                     boot_args = fs.boot_args
-                    fun_test.log("Auto-boot: {}".format(fs.is_auto_boot()))
+                    fun_test.log("Auto-boot: {}".format(fs.is_auto_boot()), context=self.context)
                     if fs.tftp_image_path:
-                        fun_test.test_assert(bmc.setup_serial_proxy_connection(f1_index=f1_index, auto_boot=fs.is_auto_boot()),
-                                             "Setup nc serial proxy connection")
+                        fun_test.test_assert(expression=bmc.setup_serial_proxy_connection(f1_index=f1_index, auto_boot=fs.is_auto_boot()),
+                                             message="Setup nc serial proxy connection",
+                                             context=self.context)
                     if fs.tftp_image_path:
-                        if fpga and not fs.bundle_compatible:
+                        if fs.get_bmc()._use_i2c_reset():
+                            fs.get_bmc().reset_f1(f1_index=f1_index)
+                        elif fpga and not fs.bundle_compatible:
+                            fpga.reset_f1(f1_index=f1_index)
+                        elif fpga and not fs.get_bmc()._use_i2c_reset():
                             fpga.reset_f1(f1_index=f1_index)
                         else:
                             fs.get_bmc().reset_f1(f1_index=f1_index)
@@ -915,7 +998,7 @@ class BootupWorker(Thread):
                         if fs.validate_u_boot_version:
                             fun_test.test_assert(
                                 bmc.validate_u_boot_version(output=preamble, minimum_date=fs.MIN_U_BOOT_DATE),
-                                "Validate preamble")
+                                "Validate preamble", context=self.context)
                         fun_test.test_assert(
                             expression=bmc.u_boot_load_image(index=f1_index,
                                                              tftp_image_path=fs.tftp_image_path,
@@ -965,7 +1048,7 @@ class BootupWorker(Thread):
             self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COMPLETE)
 
         except Exception as ex:
-            fun_test.critical(str(ex))
+            fun_test.critical(str(ex) + " FS: {}".format(fs), context=fs.context)
             fs.set_boot_phase(BootPhases.FS_BRING_UP_ERROR)
             raise ex
 
@@ -999,47 +1082,54 @@ class ComEInitializationWorker(Thread):
                 fun_test.test_assert(expression=come.initialize(disable_f1_index=self.fs.disable_f1_index),
                                      message="ComE initialized",
                                      context=self.fs.context)
-                if self.fs.bundle_compatible:
-                    fun_test.sleep(seconds=10, message="Waiting for expected containers")
+                if self.fs.bundle_compatible and not self.fs.tftp_image_path:
+                    fun_test.sleep(seconds=10, message="Waiting for expected containers", context=self.fs.context)
                     expected_containers_running = self.is_expected_containers_running(come)
                     expected_containers_running_timer = FunTimer(max_time=self.CONTAINERS_BRING_UP_TIME_MAX)
 
                     while not expected_containers_running and not expected_containers_running_timer.is_expired():
-                        fun_test.sleep(seconds=10, message="Waiting for expected containers")
+                        fun_test.sleep(seconds=10, message="Waiting for expected containers", context=self.fs.context)
                         expected_containers_running = self.is_expected_containers_running(come)
 
-                    fun_test.test_assert(expected_containers_running, "Expected containers running")
+                    fun_test.test_assert(expected_containers_running, "Expected containers running", context=self.fs.context)
 
                 self.fs.come_initialized = True
         except Exception as ex:
+            fun_test.critical(str(ex) + " FS: {}".format(self.fs), context=self.fs.context)
             self.fs.set_boot_phase(BootPhases.FS_BRING_UP_ERROR)
             raise ex
 
     def is_expected_containers_running(self, come):
 
         result = True
-        containers = come.docker()
+        containers = come.docker(sudo=True)
         for expected_container in self.EXPECTED_CONTAINERS:
             found = False
-            for container in containers:
-                container_name = container["Names"]
-                if container_name == expected_container:
-                    found = True
-                    container_is_up = "Up" in container["Status"]
-                    if not container_is_up:
-                        result = False
-                        fun_test.critical("Container {} is not up".format(container_name))
-                        break
-            if not found:
-                fun_test.critical("Container {} was not found".format(expected_container))
-                result = False
+            if containers:
+                for container in containers:
+                    container_name = container["Names"]
+                    if container_name == expected_container:
+                        found = True
+                        container_is_up = "Up" in container["Status"]
+                        if not container_is_up:
+                            result = False
+                            fun_test.critical("Container {} is not up".format(container_name), context=self.fs.context)
+                            break
+                if not found:
+                    fun_test.critical("Container {} was not found".format(expected_container), context=self.fs.context)
+                    result = False
                 break
+            else:
+                fun_test.critical("No containers are running")
+                result = False
         return result
 
 class ComE(Linux):
     EXPECTED_FUNQ_DEVICE_ID = ["04:00.1", "06:00.1"]
     DEFAULT_DPC_PORT = [40220, 40221]
+    DEFAULT_STATISTICS_DPC_PORT = [45220, 45221]
     DPC_LOG_PATH = "/tmp/f1_{}_dpc.txt"
+    DPC_STATISTICS_LOG_PATH = "/tmp/f1_{}_dpc.txt"
     NUM_F1S = 2
     NVME_CMD_TIMEOUT = 600000
 
@@ -1055,8 +1145,10 @@ class ComE(Linux):
         self.original_context_description = None
         if self.context:
             self.original_context_description = self.context.description
+        self.fs = kwargs.get("fs", None)
         self.hbm_dump_enabled = False
         self.funq_bind_device = {}
+        self.dpc_for_statistics_ready = False
 
 
     def initialize(self, reset=False, disable_f1_index=None):
@@ -1085,8 +1177,11 @@ class ComE(Linux):
         :return: returns the dochub url with the given build number and release train
                 example: http://dochub.fungible.local/doc/jenkins/apple_fs1600/68/setup_fs1600-68.sh
         """
+        release_prefix = ""
+        if not "master" in release_train:
+            release_prefix = "rel_"
         url = "{}/{}/fs1600/{}/{}".format(DOCHUB_BASE_URL,
-                                          "rel_" + release_train.replace(".", "_"),
+                                          release_prefix + release_train.replace(".", "_"),
                                           build_number,
                                           script_file_name)
 
@@ -1111,8 +1206,11 @@ class ComE(Linux):
         :return: True if the installation succeeded with exit status == 0, else raise an assert
         """
         self.sudo_command("/opt/fungible/cclinux/cclinux_service.sh --stop")
-        parts = release_train.split("_")
-        temp = "{}-{}_{}".format(parts[0], build_number, parts[1])
+        if "master" not in release_train:
+            parts = release_train.split("_")
+            temp = "{}-{}_{}".format(parts[0], build_number, parts[1])
+        else:
+            temp = "bld-{}".format(build_number)
         script_file_name = "setup_fs1600-{}.sh".format(temp)
 
         script_url = self._get_build_script_url(build_number=build_number,
@@ -1125,7 +1223,7 @@ class ComE(Linux):
         self.sudo_command("chmod 777 {}".format(target_file_name))
         self.sudo_command("{} install".format(target_file_name), timeout=500)
         exit_status = self.exit_status()
-        fun_test.test_assert(exit_status == 0, "Bundle install complete")
+        fun_test.test_assert(exit_status == 0, "Bundle install complete. Exit status valid")
         return True
 
 
@@ -1136,11 +1234,15 @@ class ComE(Linux):
             bus_number = int(parts[0])
         return bus_number
 
-    def get_dpc_port(self, f1_index):
-        return self.DEFAULT_DPC_PORT[f1_index]
+    def get_dpc_port(self, f1_index, statistics=None):
+        port = self.DEFAULT_DPC_PORT[f1_index]
+        if statistics:
+            port = self.DEFAULT_STATISTICS_DPC_PORT[f1_index]
+        return port
 
     def setup_workspace(self):
         working_directory = "/tmp"
+        fun_test.log("Context: {}".format(self.context))
         self.command("cd {}".format(working_directory))
         self.command("mkdir -p workspace; cd workspace")
         self.command("export WORKSPACE=$PWD")
@@ -1206,7 +1308,7 @@ class ComE(Linux):
         # self.sudo_command("build/posix/bin/funq-setup unbind")
         return True
 
-    def setup_dpc(self):
+    def setup_dpc(self, statistics=None):
 
         # self.command("cd $WORKSPACE/FunControlPlane")
         """
@@ -1230,12 +1332,18 @@ class ComE(Linux):
             nvme_device_index = f1_index
             if len(nvme_devices) == 1:  # if only one nvme device was detected
                 nvme_device_index = 0
-            command = "./dpcsh --pcie_nvme_sock=/dev/nvme{} --nvme_cmd_timeout={} --tcp_proxy={} &> {} &".format(nvme_device_index, self.NVME_CMD_TIMEOUT, self.get_dpc_port(f1_index=f1_index), self.get_dpc_log_path(f1_index=f1_index))
+            command = "./dpcsh --pcie_nvme_sock=/dev/nvme{} --nvme_cmd_timeout={} --tcp_proxy={} &> {} &".format(nvme_device_index,
+                                                                                                                 self.NVME_CMD_TIMEOUT,
+                                                                                                                 self.get_dpc_port(f1_index=f1_index, statistics=statistics),
+                                                                                                                 self.get_dpc_log_path(f1_index=f1_index, statistics=statistics))
             self.sudo_command(command)
 
         fun_test.sleep(message="DPC socket creation", context=self.context)
         self.dpc_ready = True
+        if statistics:
+            self.dpc_for_statistics_ready = True
         return True
+
 
     def is_dpc_running(self):
         pass
@@ -1283,8 +1391,11 @@ class ComE(Linux):
     def is_dpc_ready(self):
         return self.dpc_ready
 
-    def get_dpc_log_path(self, f1_index):
-        return self.DPC_LOG_PATH.format(f1_index)
+    def get_dpc_log_path(self, f1_index, statistics=None):
+        path = self.DPC_LOG_PATH.format(f1_index)
+        if statistics:
+            path = self.DPC_STATISTICS_LOG_PATH(f1_index=f1_index)
+        return path
 
     def _get_context_prefix(self, data):
         s = "{}".format(data)
@@ -1293,6 +1404,11 @@ class ComE(Linux):
         return s
 
     def cleanup(self):
+        asset_type = "unknown"
+        asset_id = "unknown"
+        if self.fs:
+            asset_type = self.fs.get_asset_type()
+            asset_id = self.fs.get_asset_name()
         try:
             fungible_root = self.command("echo $FUNGIBLE_ROOT")
             fungible_root = fungible_root.strip()
@@ -1305,15 +1421,22 @@ class ComE(Linux):
                     artifact_file_name = fun_test.get_test_case_artifact_file_name(
                         self._get_context_prefix(base_name))
 
-                    if not fun_test.is_at_least_one_failed():
-                        if "openr" in file_name.lower():
-                            continue
+                    #if not fun_test.is_at_least_one_failed():
+                    if "openr" in file_name.lower():
+                        continue
                     fun_test.scp(source_ip=self.host_ip,
                                  source_file_path=file_name,
                                  source_username=self.ssh_username,
                                  source_password=self.ssh_password,
                                  target_file_path=artifact_file_name)
-                    fun_test.add_auxillary_file(description=self._get_context_prefix(base_name), filename=artifact_file_name)
+
+
+                    fun_test.add_auxillary_file(description=self._get_context_prefix(base_name),
+                                                filename=artifact_file_name,
+                                                asset_type=asset_type,
+                                                asset_id=asset_id,
+                                                artifact_category=self.fs.ArtifactCategory.POST_BRING_UP,
+                                                artifact_sub_category=self.fs.ArtifactSubCategory.COME)
 
 
         except Exception as ex:
@@ -1328,7 +1451,12 @@ class ComE(Linux):
                          source_username=self.ssh_username,
                          source_password=self.ssh_password,
                          target_file_path=artifact_file_name)
-            fun_test.add_auxillary_file(description=self._get_context_prefix(base_name), filename=artifact_file_name)
+            fun_test.add_auxillary_file(description=self._get_context_prefix(base_name),
+                                        filename=artifact_file_name,
+                                        asset_type=asset_type,
+                                        asset_id=asset_id,
+                                        artifact_category=self.fs.ArtifactCategory.BRING_UP,
+                                        artifact_sub_category=self.fs.ArtifactSubCategory.COME)
         except Exception as ex:
             fun_test.critical(str(ex))
 
@@ -1345,7 +1473,11 @@ class ComE(Linux):
             artifact_file_name = fun_test.get_test_case_artifact_file_name(self._get_context_prefix("f1_{}_dpc_log.txt".format(f1_index)))
             fun_test.scp(source_file_path=self.get_dpc_log_path(f1_index=f1_index), source_ip=self.host_ip, source_password=self.ssh_password, source_username=self.ssh_username, target_file_path=artifact_file_name)
             fun_test.add_auxillary_file(description=self._get_context_prefix("F1_{} DPC Log").format(f1_index),
-                                        filename=artifact_file_name)
+                                        filename=artifact_file_name,
+                                        asset_type=asset_type,
+                                        asset_id=asset_id,
+                                        artifact_category=self.fs.ArtifactCategory.BRING_UP,
+                                        artifact_sub_category=self.fs.ArtifactSubCategory.COME)
 
 class F1InFs:
     def __init__(self, index, fs, serial_device_path, serial_sbp_device_path):
@@ -1355,10 +1487,12 @@ class F1InFs:
         self.serial_sbp_device_path = serial_sbp_device_path
         self.dpc_port = None
 
-    def get_dpc_client(self, auto_disconnect=False):
+    def get_dpc_client(self, auto_disconnect=False, statistics=None):
         come = self.fs.get_come()
         host_ip = come.host_ip
-        dpc_port = come.get_dpc_port(self.index)
+        if statistics and not come.dpc_for_statistics_ready:
+            come.setup_dpc(statistics=True)
+        dpc_port = come.get_dpc_port(self.index, statistics=statistics)
         dpcsh_client = DpcshClient(target_ip=host_ip, target_port=dpc_port, auto_disconnect=auto_disconnect)
         return dpcsh_client
 
@@ -1375,7 +1509,17 @@ class F1InFs:
 
 
 class Fs(object, ToDictMixin):
-    DEFAULT_BOOT_ARGS = "app=hw_hsu_test --dpc-server --dpc-uart --csr-replay --serdesinit --all_100g"
+
+    class ArtifactCategory:
+        BRING_UP = "Bring-up"
+        POST_BRING_UP = "Post bring-up"
+
+    class ArtifactSubCategory:
+        COME = "COME"
+        BMC = "BMC"
+
+
+    DEFAULT_BOOT_ARGS = "app=load_mods --dpc-server --dpc-uart --csr-replay --serdesinit --all_100g"
     MIN_U_BOOT_DATE = datetime(year=2019, month=5, day=29)
 
     TO_DICT_VARS = ["bmc_mgmt_ip",
@@ -1388,6 +1532,12 @@ class Fs(object, ToDictMixin):
                     "come_mgmt_ssh_username",
                     "come_mgmt_ssh_password"]
     NUM_F1S = 2
+
+    class StatisticsType(Codes):
+        BAM = 1000
+
+    STATISTICS_COLLECTOR_MAP = {}
+
 
     def __init__(self,
                  bmc_mgmt_ip,
@@ -1409,12 +1559,15 @@ class Fs(object, ToDictMixin):
                  retimer_workaround=None,
                  non_blocking=None,
                  context=None,
-                 setup_bmc_support_files=None,
+                 setup_bmc_support_files=True,
                  apc_info=None,
                  fun_cp_callback=None,
                  skip_funeth_come_power_cycle=None,
                  bundle_image_parameters=None,
-                 spec=None):
+                 spec=None,
+                 already_deployed=None,
+                 revision=None,
+                 fs_parameters=None):
         self.spec = spec
         self.bmc_mgmt_ip = bmc_mgmt_ip
         self.bmc_mgmt_ssh_username = bmc_mgmt_ssh_username
@@ -1430,8 +1583,16 @@ class Fs(object, ToDictMixin):
         self.come = None
         self.tftp_image_path = tftp_image_path
         self.bundle_image_parameters = bundle_image_parameters
+        self.fs_parameters = fs_parameters
         if self.bundle_image_parameters:
-            if int(self.bundle_image_parameters["build_number"]) < 0:
+            bundle_build_number = self.bundle_image_parameters["build_number"]
+            is_number = False
+            try:
+                bundle_build_number = int(bundle_build_number)
+                is_number = True
+            except:
+                pass
+            if is_number and bundle_build_number < 0:
                 fun_test.log("Build number set to -1 so resetting bundle image parameters")
                 self.bundle_image_parameters = None
         self.disable_f1_index = disable_f1_index
@@ -1451,11 +1612,18 @@ class Fs(object, ToDictMixin):
         self.original_context_description = None
         self.fun_cp_callback = fun_cp_callback
 
+        self.asset_name = "FS"
+        if self.spec:
+            self.asset_name = self.spec.get("name", "FS")
+        self.asset_type = AssetType.DUT
+
         if self.context:
             self.original_context_description = self.context.description
         self.setup_bmc_support_files = setup_bmc_support_files
         self.validate_u_boot_version = True
         disable_u_boot_version_validation = self.get_workaround("disable_u_boot_version_validation")
+        self.revision = self.get_revision()
+
         if disable_u_boot_version_validation is not None:
             self.validate_u_boot_version = not disable_u_boot_version_validation
         self.bootup_worker = None
@@ -1465,14 +1633,66 @@ class Fs(object, ToDictMixin):
         self.csi_perf_templates = {}
         self.bundle_upgraded = False   # is the bundle upgrade complete?
         self.bundle_compatible = False   # Set this, if we are trying to boot a device with bundle installed already
-        if "bundle_compatible" in spec and spec["bundle_compatible"]:
+        if ("bundle_compatible" in spec and spec["bundle_compatible"]) or (self.bundle_image_parameters):
             self.bundle_compatible = True
             self.skip_funeth_come_power_cycle = True
         self.mpg_ips = spec.get("mpg_ips", [])
         # self.auto_boot = auto_boot
         self.bmc_maintenance_threads = []
         self.cleanup_attempted = False
+        self.STATISTICS_COLLECTOR_MAP = {self.StatisticsType.BAM: self.bam}
+        self.already_deployed = already_deployed
+        if self.fs_parameters:
+            if "already_deployed" in self.fs_parameters:
+                self.already_deployed = self.fs_parameters["already_deployed"]
+        self.statistics_collectors = {}
         fun_test.register_fs(self)
+
+
+    def reset_device_handles(self):
+        try:
+            if self.bmc:
+                self.bmc.destroy()
+        except:
+            pass
+        try:
+            if self.come:
+                self.come.destroy()
+        except:
+            pass
+        try:
+            if self.fpga:
+                self.fpga.destroy()
+        except:
+            pass
+
+    def get_asset_type(self):
+        return self.asset_type
+
+    def get_asset_name(self):
+        return self.asset_name
+
+    def start_statistics_collection(self, statistics_type=None):
+        statistics_manager = fun_test.get_statistics_manager()
+        for st, collector_id in self.statistics_collectors.iteritems():
+            if st is not None and st is not statistics_type:
+                continue
+            statistics_manager.start(collector_id=collector_id)
+
+    def stop_statistics_collection(self, statistics_type=None):
+        statistics_manager = fun_test.get_statistics_manager()
+        for st, collector_id in self.statistics_collectors.iteritems():
+            if st is not None and st is not statistics_type:
+                continue
+            statistics_manager.stop(collector_id=collector_id)
+
+    def register_statistics(self, statistics_type):
+        statistics_manager = fun_test.get_statistics_manager()
+        collector = StatisticsCollector(collector=self, category=StatisticsCategory.FS_SYSTEM, type=self.StatisticsType.BAM)
+        self.statistics_collectors[statistics_type] = statistics_manager.register_collector(collector=collector)
+
+    def get_context(self):
+        return self.context
 
     def is_auto_boot(self):
         return False if self.tftp_image_path else True
@@ -1488,6 +1708,12 @@ class Fs(object, ToDictMixin):
 
     def is_u_boot_complete(self):
         return self.u_boot_complete
+
+    def get_revision(self):
+        value = None
+        if self.spec:
+            value = self.spec.get("revision", None)
+        return value
 
     def get_workaround(self, variable):
         value = None
@@ -1563,12 +1789,13 @@ class Fs(object, ToDictMixin):
             f1_parameters=None,
             non_blocking=None,
             context=None,
-            setup_bmc_support_files=None,
+            setup_bmc_support_files=True,
             fun_cp_callback=None,
             power_cycle_come=False,
             already_deployed=False,
             skip_funeth_come_power_cycle=None,
-            bundle_image_parameters=None):  #TODO
+            bundle_image_parameters=None,
+            fs_parameters=None):  #TODO
         if not fs_spec:
             am = fun_test.get_asset_manager()
             test_bed_type = fun_test.get_job_environment_variable("test_bed_type")
@@ -1604,7 +1831,7 @@ class Fs(object, ToDictMixin):
         skip_funeth_come_power_cycle = skip_funeth_come_power_cycle or workarounds.get("skip_funeth_come_power_cycle", None)
 
         apc_info = fs_spec.get("apc_info", None)  # Used for power-cycling the entire FS
-        return Fs(bmc_mgmt_ip=bmc_spec["mgmt_ip"],
+        fs_obj = Fs(bmc_mgmt_ip=bmc_spec["mgmt_ip"],
                   bmc_mgmt_ssh_username=bmc_spec["mgmt_ssh_username"],
                   bmc_mgmt_ssh_password=bmc_spec["mgmt_ssh_password"],
                   fpga_mgmt_ip=fpga_spec["mgmt_ip"],
@@ -1628,7 +1855,12 @@ class Fs(object, ToDictMixin):
                   power_cycle_come=power_cycle_come,
                   skip_funeth_come_power_cycle=skip_funeth_come_power_cycle,
                   spec=fs_spec,
-                  bundle_image_parameters=bundle_image_parameters)
+                  bundle_image_parameters=bundle_image_parameters,
+                  already_deployed=already_deployed,
+                  fs_parameters=fs_parameters)
+        if already_deployed:
+            fs_obj.re_initialize()
+        return fs_obj
 
     def bootup(self, reboot_bmc=False, power_cycle_come=True, non_blocking=False, threaded=False):
         fpga = self.get_fpga()
@@ -1664,7 +1896,9 @@ class Fs(object, ToDictMixin):
                                      "Setup nc serial proxy connection")
 
                 self.set_boot_phase(BootPhases.FS_BRING_UP_RESET_F1)
-                if fpga and not self.bundle_compatible:
+                if self.get_bmc()._use_i2c_reset():
+                    self.get_bmc().reset_f1(f1_index=f1_index)
+                elif fpga and not self.bundle_compatible:
                     fpga.reset_f1(f1_index=f1_index)
                 else:
                     bmc = self.get_bmc()
@@ -1729,9 +1963,13 @@ class Fs(object, ToDictMixin):
                 pass
 
         else:
-            self.bootup_worker = BootupWorker(fs=self, power_cycle_come=power_cycle_come, non_blocking=non_blocking, context=self.context)
-            self.bootup_worker.start()
-            fun_test.sleep("Bootup worker start", seconds=3)
+            if not self.already_deployed:
+                self.bootup_worker = BootupWorker(fs=self, power_cycle_come=power_cycle_come, non_blocking=non_blocking, context=self.context)
+                self.bootup_worker.start()
+                fun_test.sleep("Bootup worker start", seconds=3)
+            else:
+                self.boot_phase = BootPhases.FS_BRING_UP_COMPLETE
+                self.come_initialized = True
 
         return True
 
@@ -1774,7 +2012,8 @@ class Fs(object, ToDictMixin):
 
     def re_initialize(self):
         self.get_bmc(disable_f1_index=self.disable_f1_index)
-        self.bmc.position_support_scripts()
+        if not self.already_deployed:
+            self.bmc.position_support_scripts()
         self.get_fpga()
         self.get_come()
         self.set_f1s()
@@ -1782,15 +2021,17 @@ class Fs(object, ToDictMixin):
         fun_test.test_assert(expression=self.come.ensure_dpc_running(),
                              message="Ensure dpc is running",
                              context=self.context)
-        for f1_index, f1 in self.f1s.iteritems():
-            self.bmc.start_uart_log_listener(f1_index=f1_index)
+        # for f1_index, f1 in self.f1s.iteritems():
+        #    self.bmc.start_uart_log_listener(f1_index=f1_index)
         return True
 
     def funeth_reset(self):
         fpga = self.get_fpga()
         bmc = self.get_bmc()
         for f1_index, f1 in self.f1s.iteritems():
-            if fpga and not self.bundle_compatible:
+            if bmc._use_i2c_reset():
+                bmc.reset_f1(f1_index=f1_index, keep_low=True)
+            elif fpga and not self.bundle_compatible:
                 fpga.reset_f1(f1_index=f1_index, keep_low=True)
             else:
                 bmc.reset_f1(f1_index=f1_index, keep_low=True)
@@ -1812,7 +2053,8 @@ class Fs(object, ToDictMixin):
                            set_term_settings=True,
                            disable_uart_logger=self.disable_uart_logger,
                            context=self.context,
-                           setup_support_files=self.setup_bmc_support_files)
+                           setup_support_files=self.setup_bmc_support_files,
+                           fs=self)
         if self.bundle_upgraded:
             self.bmc.bundle_upgraded = self.bundle_upgraded
         self.bmc.bundle_compatible = self.bundle_compatible
@@ -1836,7 +2078,8 @@ class Fs(object, ToDictMixin):
                              ssh_password=self.come_mgmt_ssh_password,
                              set_term_settings=True,
                              context=self.context,
-                             ipmi_info=self.get_bmc()._get_ipmi_details())
+                             ipmi_info=self.get_bmc()._get_ipmi_details(),
+                             fs=self)
             self.come.disable_f1_index = self.disable_f1_index
         come = self.come
         if clone:
@@ -1847,6 +2090,23 @@ class Fs(object, ToDictMixin):
         self.get_come()
         self.come.initialize(disable_f1_index=self.disable_f1_index)
         return True
+
+    def bam(self, command_duration=2):
+        result = {"status": False}
+        f1_level_result = {}
+        for f1_index in range(self.NUM_F1S):
+            if f1_index == self.disable_f1_index:
+                continue
+            dpc_client = self.get_dpc_client(f1_index=f1_index, auto_disconnect=True, statistics=True)
+            cmd = "stats/resource/bam"
+            dpc_result = dpc_client.json_execute(verb="peek", data=cmd, command_duration=command_duration)
+            if dpc_result["status"]:
+                f1_level_result[f1_index] = dpc_result["data"]
+        result["data"] = f1_level_result
+        if f1_level_result:
+            result["status"] = True
+        # fun_test.log("BAM result: {} {}".format(result, f1_level_result))
+        return result
 
     def bmc_initialize(self):
         bmc = self.get_bmc(disable_f1_index=self.disable_f1_index)
@@ -1918,7 +2178,7 @@ class Fs(object, ToDictMixin):
         return result
 
     def apc_power_cycle(self):
-        fun_test.simple_assert(expression=self.apc_info, context=self.context)
+        fun_test.simple_assert(expression=self.apc_info, context=self.context, message="APC info is missing")
         apc_pdu = ApcPdu(context=self.context, **self.apc_info)
         power_cycle_result = apc_pdu.power_cycle(self.apc_info["outlet_number"])
         fun_test.simple_assert(expression=power_cycle_result,
@@ -1928,20 +2188,33 @@ class Fs(object, ToDictMixin):
             apc_pdu.disconnect()
         except:
             pass
+
+        self.reset_device_handles()
+
+        worst_case_uptime = 60 * 10
         fpga = self.get_fpga()
         if fpga:
-            fun_test.test_assert(expression=self.get_fpga().ensure_host_is_up(max_wait_time=120),
+            fun_test.test_assert(expression=fpga.ensure_host_is_up(max_wait_time=120),
                                  context=self.context, message="FPGA reachable after APC power-cycle")
-        fun_test.test_assert(expression=self.get_bmc().ensure_host_is_up(max_wait_time=120),
+            fun_test.simple_assert(fpga.uptime() < worst_case_uptime, "FPGA uptime is less than 10 minutes")
+
+        bmc = self.get_bmc()
+        fun_test.test_assert(expression=bmc.ensure_host_is_up(max_wait_time=120),
                              context=self.context, message="BMC reachable after APC power-cycle")
-        fun_test.test_assert(expression=self.get_come().ensure_host_is_up(max_wait_time=120,
-                                                                          power_cycle=True),
-                                                                          message="ComE reachable after APC power-cycle")
+        fun_test.simple_assert(bmc.uptime() < worst_case_uptime, "BMC uptime is less than 10 minutes")
+
+        fun_test.simple_assert()
+        come = self.get_come()
+        fun_test.test_assert(expression=come.ensure_host_is_up(max_wait_time=180,
+                                                               power_cycle=False), message="ComE reachable after APC power-cycle")
+        fun_test.simple_assert(come.uptime() < worst_case_uptime, "BMC uptime is less than 10 minutes")
+
+
         return True
 
-    def get_dpc_client(self, f1_index, auto_disconnect=False):
+    def get_dpc_client(self, f1_index, auto_disconnect=False, statistics=None):
         f1 = self.get_f1(index=f1_index)
-        dpc_client = f1.get_dpc_client(auto_disconnect=auto_disconnect)
+        dpc_client = f1.get_dpc_client(auto_disconnect=auto_disconnect, statistics=None)
         return dpc_client
 
     def _get_context_prefix(self, data):
@@ -1953,6 +2226,14 @@ class Fs(object, ToDictMixin):
     def get_uart_log_file(self, f1_index, post_fix=None):
         return self.get_bmc().get_uart_log_file(f1_index=f1_index, post_fix=post_fix)
 
+    def statistics_dispatcher(self, statistics_type, **kwargs):
+        result = {"status": False, "data": None, "epoch_time": get_current_epoch_time()}
+        if statistics_type == self.StatisticsType.BAM:
+            bam_result = self.bam(**kwargs)
+            if bam_result["status"]:
+                result["data"] = bam_result["data"]
+                result["status"] = True
+        return result
 
 if __name__ == "__main2__":
     fs = Fs.get(AssetManager().get_fs_by_name(name="fs-9"), "funos-f1.stripped.gz")

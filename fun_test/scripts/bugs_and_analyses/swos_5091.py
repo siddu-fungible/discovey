@@ -13,7 +13,7 @@ tb_config = {
     "name": "Basic Storage",
     "dut_info": {
         0: {
-            "bootarg": "setenv bootargs app=mdt_test,load_mods,hw_hsu_test --serial sku=SKU_FS1600_0 --all_100g"
+            "bootarg": "setenv bootargs app=mdt_test,load_mods --serial sku=SKU_FS1600_0 --all_100g"
                        " --dpc-server --dpc-uart --csr-replay --nofreeze",
             "f1_ip": "29.1.1.1",
             "tcp_port": 1099,

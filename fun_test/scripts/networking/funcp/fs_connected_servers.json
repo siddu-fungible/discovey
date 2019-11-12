@@ -116,6 +116,59 @@
 
   }
   },
+  "fs-57": {
+       "fs-name":"fs-57",
+    "hosts" : {
+      "cab07-qa-02": "x16",
+      "gpu-server-03": "x16"
+    },
+      "mpg_ips":{
+        "static":true,
+        "mpg0":"10.1.107.153",
+        "mpg1":"10.1.107.154"
+      },
+         "nu_host":{"cab07-qa-04":"14.1.1.2"},
+         "hu_host":{"gpu-server-03":"12.1.1.2", "cab07-qa-02":"13.1.1.2"},
+         "nu_host_data_ip":["14.1.1.2"],
+         "hu_host_data_ip_f1_0":["13.1.1.2"],
+         "hu_host_data_ip_f1_1":["12.1.1.2"],
+       "cc_pings":{
+          "F1-0":["1.1.1.2"],
+          "F1-1":["1.1.1.1"]
+       },
+          "cc_pings_bgp":{
+          "F1-0":["1.1.1.2"],
+          "F1-1":["1.1.1.1"]
+       },
+       "host_pings":{
+         "gpu-server-03":["12.1.1.1", "13.1.1.2", "14.1.1.2"],
+         "cab07-qa-02":["13.1.1.1", "12.1.1.2", "14.1.1.2"]
+       },
+    "abstract_configs":{
+      "F1-0":"fs57_configs_f1_0.json",
+      "F1-1":"fs57_configs_f1_1.json"
+    },
+    "abstract_configs_bgp":{
+      "F1-0":"fs57_configs_bgp_f1_0.json",
+      "F1-1":"fs57_configs_bgp_f1_1.json"
+    },
+      "static_routes": {
+        "F1-0": {
+          "1": {
+            "gateway": "1.1.1.2",
+            "port": "fpg0",
+            "route": "13.1.1.0/24"
+          }
+        },
+        "F1-1": {
+          "1": {
+            "gateway": "1.1.1.1",
+            "port": "fpg4",
+            "route": "12.1.1.0/24"
+          }
+        }
+      }
+  },
     "fs-alibaba-demo": {
             "fs-name":"fs-45",
     "hosts" : {
@@ -689,7 +742,7 @@
           "vm_pings": ["30.1.1.2","19.1.1.1"]
         },
           "cab03-qa-01-vm25":{
-          "hostname":"10.1.105.41",
+          "hostname":"10.1.105.217",
           "user":"localadmin",
           "password":"Precious1*",
           "data_ip": "18.1.1.27",
@@ -709,7 +762,7 @@
           "vm_pings": ["30.1.1.2","19.1.1.1"]
         },
             "cab03-qa-01-vm26":{
-          "hostname":"10.1.105.42",
+          "hostname":"10.1.105.218",
           "user":"localadmin",
           "password":"Precious1*",
           "data_ip": "18.1.1.28",
@@ -729,7 +782,7 @@
           "vm_pings": ["30.1.1.2","19.1.1.1"]
         },
             "cab03-qa-01-vm27":{
-          "hostname":"10.1.105.43",
+          "hostname":"10.1.105.219",
           "user":"localadmin",
           "password":"Precious1*",
           "data_ip": "18.1.1.29",
@@ -749,7 +802,7 @@
           "vm_pings": ["30.1.1.2","19.1.1.1"]
         },
            "cab03-qa-01-vm28":{
-          "hostname":"10.1.105.44",
+          "hostname":"10.1.105.239",
           "user":"localadmin",
           "password":"Precious1*",
           "data_ip": "18.1.1.30",
@@ -769,7 +822,7 @@
           "vm_pings": ["30.1.1.2","19.1.1.1"]
         },
            "cab03-qa-01-vm29":{
-          "hostname":"10.1.105.45",
+          "hostname":"10.1.105.252",
           "user":"localadmin",
           "password":"Precious1*",
           "data_ip": "18.1.1.31",

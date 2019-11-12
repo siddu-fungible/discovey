@@ -1232,6 +1232,112 @@
                 ]
               }
             ]
+          },
+          {
+            "name": "teramarks_storage_fcp",
+            "label": "FCP",
+            "metric_model_name": "MetricContainer",
+            "children": [
+              {
+                "name": "teramarks_storage_fcp_nvme",
+                "label": "NVMe",
+                "metric_model_name": "MetricContainer",
+                "children": [
+                  {
+                    "name": "teramarks_storage_fcp_nvme_iops",
+                    "label": "IOPS",
+                    "metric_model_name": "NvmeFcpPerformance",
+                    "children": []
+                  },
+                  {
+                    "name": "teramarks_storage_fcp_nvme_throughput",
+                    "label": "Throughput",
+                    "metric_model_name": "NvmeFcpPerformance",
+                    "children": []
+                  },
+                  {
+                    "name": "teramarks_storage_fcp_nvme_latency_1vol",
+                    "label": "Latency - 1 Vol(s)",
+                    "metric_model_name": "NvmeFcpPerformance",
+                    "children": []
+                  },
+                  {
+                    "name": "teramarks_storage_fcp_nvme_latency_2vol",
+                    "label": "Latency - 2 Vol(s)",
+                    "metric_model_name": "NvmeFcpPerformance",
+                    "children": []
+                  },
+                  {
+                    "name": "teramarks_storage_fcp_nvme_latency_4vol",
+                    "label": "Latency - 4 Vol(s)",
+                    "metric_model_name": "NvmeFcpPerformance",
+                    "children": []
+                  },
+                  {
+                    "name": "teramarks_storage_fcp_nvme_latency_8vol",
+                    "label": "Latency - 8 Vol(s)",
+                    "metric_model_name": "NvmeFcpPerformance",
+                    "children": []
+                  },
+                  {
+                    "name": "teramarks_storage_fcp_nvme_latency_12vol",
+                    "label": "Latency - 12 Vol(s)",
+                    "metric_model_name": "NvmeFcpPerformance",
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "teramarks_storage_fcp_nvme_tcp",
+                "label": "NVMe/TCP",
+                "metric_model_name": "MetricContainer",
+                "children": [
+                  {
+                    "name": "teramarks_storage_fcp_nvme_tcp_iops",
+                    "label": "IOPS",
+                    "metric_model_name": "NvmeFcpPerformance",
+                    "children": []
+                  },
+                  {
+                    "name": "teramarks_storage_fcp_nvme_tcp_throughput",
+                    "label": "Throughput",
+                    "metric_model_name": "NvmeFcpPerformance",
+                    "children": []
+                  },
+                  {
+                    "name": "teramarks_storage_fcp_nvme_tcp_latency",
+                    "label": "Latency",
+                    "metric_model_name": "NvmeFcpPerformance",
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "teramarks_storage_fcp_nvme_funtcp",
+                "label": "NVMe/FunTCP",
+                "metric_model_name": "MetricContainer",
+                "children": [
+                  {
+                    "name": "teramarks_storage_fcp_nvme_funtcp_iops",
+                    "label": "IOPS",
+                    "metric_model_name": "NvmeFcpPerformance",
+                    "children": []
+                  },
+                  {
+                    "name": "teramarks_storage_fcp_nvme_funtcp_throughput",
+                    "label": "Throughput",
+                    "metric_model_name": "NvmeFcpPerformance",
+                    "children": []
+                  },
+                  {
+                    "name": "teramarks_storage_fcp_nvme_funtcp_latency",
+                    "label": "Latency",
+                    "metric_model_name": "NvmeFcpPerformance",
+                    "children": []
+                  }
+                ]
+              }
+            ]
           }
         ]
       },
@@ -1341,6 +1447,12 @@
             "metric_model_name": "MetricContainer",
             "name": "Crypto api throughput",
             "label": "Crypto API Throughput",
+            "reference": true
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "crypto_fastpath_throughput",
+            "label": "Crypto Fastpath Throughput",
             "reference": true
           },
           {
@@ -1860,6 +1972,38 @@
                     "metric_model_name": "TeraMarkMultiClusterCryptoPerformance",
                     "name": "SHA3_256 Raw Throughput",
                     "label": "SHA3_256",
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "metric_model_name": "MetricContainer",
+                "name": "crypto_fastpath_throughput",
+                "label": "Crypto Fastpath Throughput",
+                "children": [
+                  {
+                    "metric_model_name": "CryptoFastPathPerformance",
+                    "name": "aes_gcm_crypto_fastpath_throughput",
+                    "label": "AES_GCM",
+                    "children": []
+                  },
+                  {
+                    "metric_model_name": "CryptoFastPathPerformance",
+                    "name": "aes_xts_crypto_fastpath_throughput",
+                    "label": "AES_XTS",
+                    "children": []
+                  },
+                  {
+                    "metric_model_name": "CryptoFastPathPerformance",
+                    "name": "aes_cbc_crypto_fastpath_throughput",
+                    "label": "AES_CBC",
+                    "children": []
+                  },
+                  {
+                    "metric_model_name": "CryptoFastPathPerformance",
+                    "name": "sha_256_crypto_fastpath_throughput",
+                    "label": "SHA_256",
+                    "disable": true,
                     "children": []
                   }
                 ]
@@ -3282,6 +3426,25 @@
                     ]
                   }
                 ]
+              },
+              {
+                "metric_model_name": "MetricContainer",
+                "name": "teramark_storage_eds_client",
+                "label": "RDS Client",
+                "children": [
+                  {
+                    "metric_model_name": "MetricContainer",
+                    "name": "teramark_storage_eds_client_2_hosts",
+                    "label": "2 Host(s)",
+                    "children": [
+                      {
+                        "metric_model_name": "RdsClientPerformance",
+                        "name": "rds_client_test_2_hosts_aggbw",
+                        "label": "Aggregate Bandwidth"
+                      }
+                    ]
+                  }
+                ]
               }
             ]
           }
@@ -3841,13 +4004,137 @@
                 "children": [
                   {
                     "metric_model_name": "BltVolumePerformance",
-                    "name": "inspur_8132_8k_rand_rw_comp_output_latency",
-                    "label": "Latency"
+                    "name": "inspur_8141_8k_rand_rw_comp_qd32_output_latency",
+                    "label": "Latency, QDepth=32"
                   },
                   {
                     "metric_model_name": "BltVolumePerformance",
-                    "name": "inspur_8132_8k_rand_rw_comp_output_iops",
-                    "label": "IOPS"
+                    "name": "inspur_8141_8k_rand_rw_comp_qd64_output_latency",
+                    "label": "Latency, QDepth=64"
+                  },
+                  {
+                    "metric_model_name": "BltVolumePerformance",
+                    "name": "inspur_8141_8k_rand_rw_comp_qd96_output_latency",
+                    "label": "Latency, QDepth=96"
+                  },
+                  {
+                    "metric_model_name": "BltVolumePerformance",
+                    "name": "inspur_8141_8k_rand_rw_comp_qd128_output_latency",
+                    "label": "Latency, QDepth=128"
+                  },
+                  {
+                    "metric_model_name": "BltVolumePerformance",
+                    "name": "inspur_8141_8k_rand_rw_comp_qd32_output_iops",
+                    "label": "IOPS, QDepth=32"
+                  },
+                  {
+                    "metric_model_name": "BltVolumePerformance",
+                    "name": "inspur_8141_8k_rand_rw_comp_qd64_output_iops",
+                    "label": "IOPS, QDepth=64"
+                  },
+                  {
+                    "metric_model_name": "BltVolumePerformance",
+                    "name": "inspur_8141_8k_rand_rw_comp_qd96_output_iops",
+                    "label": "IOPS, QDepth=96"
+                  },
+                  {
+                    "metric_model_name": "BltVolumePerformance",
+                    "name": "inspur_8141_8k_rand_rw_comp_qd128_output_iops",
+                    "label": "IOPS, QDepth=128"
+                  }
+                ]
+              },
+              {
+                "metric_model_name": "MetricContainer",
+                "name": "inspur_8141_8k_rand_rd_comp",
+                "label": "8_14_1:8K_RAND_RD_COMP, F1(s)=1",
+                "children": [
+                  {
+                    "metric_model_name": "BltVolumePerformance",
+                    "name": "inspur_8141_8k_rand_rd_comp_qd32_output_latency",
+                    "label": "Latency, QDepth=32"
+                  },
+                  {
+                    "metric_model_name": "BltVolumePerformance",
+                    "name": "inspur_8141_8k_rand_rd_comp_qd64_output_latency",
+                    "label": "Latency, QDepth=64"
+                  },
+                  {
+                    "metric_model_name": "BltVolumePerformance",
+                    "name": "inspur_8141_8k_rand_rd_comp_qd96_output_latency",
+                    "label": "Latency, QDepth=96"
+                  },
+                  {
+                    "metric_model_name": "BltVolumePerformance",
+                    "name": "inspur_8141_8k_rand_rd_comp_qd128_output_latency",
+                    "label": "Latency, QDepth=128"
+                  },
+                  {
+                    "metric_model_name": "BltVolumePerformance",
+                    "name": "inspur_8141_8k_rand_rd_comp_qd32_output_iops",
+                    "label": "IOPS, QDepth=32"
+                  },
+                  {
+                    "metric_model_name": "BltVolumePerformance",
+                    "name": "inspur_8141_8k_rand_rd_comp_qd64_output_iops",
+                    "label": "IOPS, QDepth=64"
+                  },
+                  {
+                    "metric_model_name": "BltVolumePerformance",
+                    "name": "inspur_8141_8k_rand_rd_comp_qd96_output_iops",
+                    "label": "IOPS, QDepth=96"
+                  },
+                  {
+                    "metric_model_name": "BltVolumePerformance",
+                    "name": "inspur_8141_8k_rand_rd_comp_qd128_output_iops",
+                    "label": "IOPS, QDepth=128"
+                  }
+                ]
+              },
+              {
+                "metric_model_name": "MetricContainer",
+                "name": "inspur_8141_8k_rand_wr_comp",
+                "label": "8_14_1:8K_RAND_WR_COMP, F1(s)=1",
+                "children": [
+                  {
+                    "metric_model_name": "BltVolumePerformance",
+                    "name": "inspur_8141_8k_rand_wr_comp_qd32_output_latency",
+                    "label": "Latency, QDepth=32"
+                  },
+                  {
+                    "metric_model_name": "BltVolumePerformance",
+                    "name": "inspur_8141_8k_rand_wr_comp_qd64_output_latency",
+                    "label": "Latency, QDepth=64"
+                  },
+                  {
+                    "metric_model_name": "BltVolumePerformance",
+                    "name": "inspur_8141_8k_rand_wr_comp_qd96_output_latency",
+                    "label": "Latency, QDepth=96"
+                  },
+                  {
+                    "metric_model_name": "BltVolumePerformance",
+                    "name": "inspur_8141_8k_rand_wr_comp_qd128_output_latency",
+                    "label": "Latency, QDepth=128"
+                  },
+                  {
+                    "metric_model_name": "BltVolumePerformance",
+                    "name": "inspur_8141_8k_rand_wr_comp_qd32_output_iops",
+                    "label": "IOPS, QDepth=32"
+                  },
+                  {
+                    "metric_model_name": "BltVolumePerformance",
+                    "name": "inspur_8141_8k_rand_wr_comp_qd64_output_iops",
+                    "label": "IOPS, QDepth=64"
+                  },
+                  {
+                    "metric_model_name": "BltVolumePerformance",
+                    "name": "inspur_8141_8k_rand_wr_comp_qd96_output_iops",
+                    "label": "IOPS, QDepth=96"
+                  },
+                  {
+                    "metric_model_name": "BltVolumePerformance",
+                    "name": "inspur_8141_8k_rand_wr_comp_qd128_output_iops",
+                    "label": "IOPS, QDepth=128"
                   }
                 ]
               },
@@ -5051,7 +5338,7 @@
                           {
                             "metric_model_name": "MetricContainer",
                             "name": "alibaba_bmv_storage_local_ssd_1",
-                            "label": "1 SSD(s)",
+                            "label": "1 SSD (encryption off)",
                             "children": [
                               {
                                 "metric_model_name": "MetricContainer",
@@ -5142,7 +5429,7 @@
                           {
                             "metric_model_name": "MetricContainer",
                             "name": "alibaba_bmv_storage_local_ssd_4",
-                            "label": "4 SSD(s)",
+                            "label": "4 SSD (encryption off)",
                             "children": [
                               {
                                 "name": "alibaba_bmv_storage_local_ssd_4_random_read",
@@ -5156,14 +5443,26 @@
                                     "children": []
                                   },
                                   {
-                                    "name": "bmv_storage_local_ssd_4_random_read_qd32_latency",
-                                    "label": "Latency, Qdepth=32",
+                                    "name": "bmv_storage_local_ssd_4_random_read_qd1_latency",
+                                    "label": "Latency, Qdepth=1",
                                     "metric_model_name": "AlibabaPerformance",
                                     "children": []
                                   },
                                   {
-                                    "name": "bmv_storage_local_ssd_4_random_read_qd1_latency",
-                                    "label": "Latency, Qdepth=1",
+                                    "name": "bmv_storage_local_ssd_4_random_read_qd8_latency",
+                                    "label": "Latency, Qdepth=8",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_4_random_read_qd16_latency",
+                                    "label": "Latency, Qdepth=16",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_4_random_read_qd32_latency",
+                                    "label": "Latency, Qdepth=32",
                                     "metric_model_name": "AlibabaPerformance",
                                     "children": []
                                   },
@@ -5171,7 +5470,8 @@
                                     "name": "bmv_storage_local_ssd_4_random_read_qd1024_latency",
                                     "label": "Latency, Qdepth=1024",
                                     "metric_model_name": "AlibabaPerformance",
-                                    "children": []
+                                    "children": [],
+                                    "disable": true
                                   },
                                   {
                                     "name": "bmv_storage_local_ssd_4_random_read_qd64_latency",
@@ -5205,14 +5505,26 @@
                                     "children": []
                                   },
                                   {
-                                    "name": "bmv_storage_local_ssd_4_random_write_qd32_latency",
-                                    "label": "Latency, Qdepth=32",
+                                    "name": "bmv_storage_local_ssd_4_random_write_qd1_latency",
+                                    "label": "Latency, Qdepth=1",
                                     "metric_model_name": "AlibabaPerformance",
                                     "children": []
                                   },
                                   {
-                                    "name": "bmv_storage_local_ssd_4_random_write_qd1_latency",
-                                    "label": "Latency, Qdepth=1",
+                                    "name": "bmv_storage_local_ssd_4_random_write_qd8_latency",
+                                    "label": "Latency, Qdepth=8",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_4_random_write_qd16_latency",
+                                    "label": "Latency, Qdepth=16",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_4_random_write_qd32_latency",
+                                    "label": "Latency, Qdepth=32",
                                     "metric_model_name": "AlibabaPerformance",
                                     "children": []
                                   },
@@ -5220,7 +5532,8 @@
                                     "name": "bmv_storage_local_ssd_4_random_write_qd1024_latency",
                                     "label": "Latency, Qdepth=1024",
                                     "metric_model_name": "AlibabaPerformance",
-                                    "children": []
+                                    "children": [],
+                                    "disable": true
                                   },
                                   {
                                     "name": "bmv_storage_local_ssd_4_random_write_qd64_latency",
@@ -5236,6 +5549,228 @@
                                   },
                                   {
                                     "name": "bmv_storage_local_ssd_4_random_write_qd256_latency",
+                                    "label": "Latency, Qdepth=256",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          {
+                            "name": "alibaba_bmv_storage_local_ssd_1_encryption_on",
+                            "label": "1 SSD (encryption on)",
+                            "metric_model_name": "MetricContainer",
+                            "children": [
+                              {
+                                "name": "alibaba_bmv_storage_local_ssd_random_read_encryption_on",
+                                "label": "Random Read",
+                                "metric_model_name": "MetricContainer",
+                                "children": [
+                                  {
+                                    "name": "bmv_storage_local_ssd_random_read_iops_encryption_on",
+                                    "label": "IOPS",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_random_read_qd1_latency_encryption_on",
+                                    "label": "Latency, Qdepth=1",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_random_read_qd16_latency_encryption_on",
+                                    "label": "Latency, Qdepth=16",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_random_read_qd32_latency_encryption_on",
+                                    "label": "Latency, Qdepth=32",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_random_read_qd64_latency_encryption_on",
+                                    "label": "Latency, Qdepth=64",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_random_read_qd128_latency_encryption_on",
+                                    "label": "Latency, Qdepth=128",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_random_read_qd256_latency_encryption_on",
+                                    "label": "Latency, Qdepth=256",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  }
+                                ]
+                              },
+                              {
+                                "name": "alibaba_bmv_storage_local_ssd_random_write_encryption_on",
+                                "label": "Random Write",
+                                "metric_model_name": "MetricContainer",
+                                "children": [
+                                  {
+                                    "name": "bmv_storage_local_ssd_random_write_iops_encryption_on",
+                                    "label": "IOPS",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_random_write_qd1_latency_encryption_on",
+                                    "label": "Latency, Qdepth=1",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_random_write_qd16_latency_encryption_on",
+                                    "label": "Latency, Qdepth=16",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_random_write_qd32_latency_encryption_on",
+                                    "label": "Latency, Qdepth=32",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_random_write_qd64_latency_encryption_on",
+                                    "label": "Latency, Qdepth=64",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_random_write_qd128_latency_encryption_on",
+                                    "label": "Latency, Qdepth=128",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_random_write_qd256_latency_encryption_on",
+                                    "label": "Latency, Qdepth=256",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          {
+                            "name": "alibaba_bmv_storage_local_ssd_4_encryption_on",
+                            "label": "4 SSD (encryption on)",
+                            "metric_model_name": "MetricContainer",
+                            "children": [
+                              {
+                                "name": "alibaba_bmv_storage_local_ssd_4_random_read_encryption_on",
+                                "label": "Random Read",
+                                "metric_model_name": "MetricContainer",
+                                "children": [
+                                  {
+                                    "name": "bmv_storage_local_ssd_4_random_read_iops_encryption_on",
+                                    "label": "IOPS",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_4_random_read_qd1_latency_encryption_on",
+                                    "label": "Latency, Qdepth=1",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_4_random_read_qd8_latency_encryption_on",
+                                    "label": "Latency, Qdepth=8",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_4_random_read_qd16_latency_encryption_on",
+                                    "label": "Latency, Qdepth=16",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_4_random_read_qd32_latency_encryption_on",
+                                    "label": "Latency, Qdepth=32",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_4_random_read_qd64_latency_encryption_on",
+                                    "label": "Latency, Qdepth=64",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_4_random_read_qd128_latency_encryption_on",
+                                    "label": "Latency, Qdepth=128",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_4_random_read_qd256_latency_encryption_on",
+                                    "label": "Latency, Qdepth=256",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  }
+                                ]
+                              },
+                              {
+                                "name": "alibaba_bmv_storage_local_ssd_4_random_write_encryption_on",
+                                "label": "Random Write",
+                                "metric_model_name": "MetricContainer",
+                                "children": [
+                                  {
+                                    "name": "bmv_storage_local_ssd_4_random_write_iops_encryption_on",
+                                    "label": "IOPS",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_4_random_write_qd1_latency_encryption_on",
+                                    "label": "Latency, Qdepth=1",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_4_random_write_qd8_latency_encryption_on",
+                                    "label": "Latency, Qdepth=8",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_4_random_write_qd16_latency_encryption_on",
+                                    "label": "Latency, Qdepth=16",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_4_random_write_qd32_latency_encryption_on",
+                                    "label": "Latency, Qdepth=32",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_4_random_write_qd64_latency_encryption_on",
+                                    "label": "Latency, Qdepth=64",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_4_random_write_qd128_latency_encryption_on",
+                                    "label": "Latency, Qdepth=128",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_4_random_write_qd256_latency_encryption_on",
                                     "label": "Latency, Qdepth=256",
                                     "metric_model_name": "AlibabaPerformance",
                                     "children": []
@@ -6037,100 +6572,49 @@
             "label": "Nucleus",
             "children": [
               {
-                "metric_model_name": "AllocSpeedPerformance",
-                "name": "Best time for 1 malloc/free (WU)_S1",
-                "label": "Best time for 1 malloc/free (WU)",
-                "children": []
-              },
-              {
-                "metric_model_name": "AllocSpeedPerformance",
-                "name": "Best time for 1 malloc/free (Threaded)_S1",
-                "label": "Best time for 1 malloc/free (Threaded)",
-                "children": []
-              },
-              {
-                "metric_model_name": "AllocSpeedPerformance",
-                "name": "Best time for 1 malloc/free (Classic)_S1",
-                "label": "Best time for 1 malloc/free (Classic)",
-                "children": []
-              },
-              {
                 "metric_model_name": "WuLatencyAllocStack",
+                "children": [],
                 "name": "WU Latency: Alloc Stack_S1",
-                "label": "WU Latency: Alloc Stack",
-                "children": []
+                "label": "WU Latency: Alloc Stack"
               },
               {
                 "metric_model_name": "WuLatencyUngated",
+                "children": [],
                 "name": "WU Latency: Ungated_S1",
-                "label": "WU Latency: Ungated",
-                "children": []
-              },
-              {
-                "metric_model_name": "BcopyPerformance",
-                "name": "Bcopy: Plain: Avg Bandwidth_S1",
-                "label": "Bcopy: Plain: Avg Bandwidth",
-                "children": []
-              },
-              {
-                "metric_model_name": "BcopyPerformance",
-                "name": "Bcopy: Plain: Avg Latency_S1",
-                "label": "Bcopy: Plain: Avg Latency",
-                "children": []
-              },
-              {
-                "metric_model_name": "BcopyPerformance",
-                "name": "Bcopy: DMA: Avg Bandwidth_S1",
-                "label": "Bcopy: DMA: Avg Bandwidth",
-                "children": []
-              },
-              {
-                "metric_model_name": "BcopyPerformance",
-                "name": "Bcopy: DMA: Avg Latency_S1",
-                "label": "Bcopy: DMA: Avg Latency",
-                "children": []
-              },
-              {
-                "metric_model_name": "BcopyFloodDmaPerformance",
-                "name": "Bcopy: Flood DMA: Avg Bandwidth_S1",
-                "label": "Bcopy: Flood DMA: Avg Bandwidth",
-                "children": []
-              },
-              {
-                "metric_model_name": "BcopyFloodDmaPerformance",
-                "name": "Bcopy: Flood DMA: Avg Latency_S1",
-                "label": "Bcopy: Flood DMA: Avg Latency",
-                "children": []
+                "label": "WU Latency: Ungated"
               },
               {
                 "metric_model_name": "WuDispatchTestPerformance",
+                "children": [],
                 "name": "Average dispatch WU cycles_S1",
-                "label": "Average dispatch WU cycles",
-                "children": []
+                "label": "Average dispatch WU cycles"
               },
               {
                 "metric_model_name": "WuSendSpeedTestPerformance",
+                "children": [],
                 "name": "Average WU send ungated cycles_S1",
-                "label": "Average WU send ungated cycles",
-                "children": []
+                "label": "Average WU send ungated cycles"
               },
               {
-                "metric_model_name": "FunMagentPerformanceTest",
-                "name": "Malloc agent rate_S1",
-                "label": "Malloc agent rate",
-                "children": []
+                "metric_model_name": "SoakFlowsBusyLoop10usecs",
+                "children": [],
+                "name": "soak_flows_busy_loop_10usecs_S1",
+                "label": "Max Busy Loops 10usecs"
               },
               {
-                "metric_model_name": "SoakClassicMallocPerformance",
-                "name": "Soak test for malloc_S1",
-                "label": "Soak test for malloc",
-                "children": []
+                "metric_model_name": "ChannelParallPerformance",
+                "name": "channel_parall_performance_4_8_16_S1",
+                "label": "Channel Parall Speed, N=4,8,16"
               },
               {
-                "metric_model_name": "SoakFunMallocPerformance",
-                "name": "Soak test for fun_malloc_S1",
-                "label": "Soak test for fun_malloc",
-                "children": []
+                "metric_model_name": "ChannelParallPerformance",
+                "name": "channel_parall_performance_100_S1",
+                "label": "Channel Parall Speed, N=100"
+              },
+              {
+                "metric_model_name": "ChannelParallPerformance",
+                "name": "channel_parall_performance_1000_S1",
+                "label": "Channel Parall Speed, N=1000"
               }
             ]
           },
@@ -6232,145 +6716,136 @@
             "label": "MovingBits",
             "children": [
               {
+                "metric_model_name": "SoakFlowsMemcpy1MBNonCoh",
+                "children": [],
+                "name": "soak_flows_dma_memcpy_test_1MB_S1",
+                "label": "Max DMA 1MB"
+              },
+              {
                 "metric_model_name": "SoakDmaMemcpyCoherentPerformance",
+                "children": [],
                 "name": "memcpy_coherent_output_bandwidth_below_4k_S1",
-                "label": "DMA soak memcpy coherent (Below 4K)",
-                "children": [],
-                "disable": true
+                "label": "DMA soak memcpy coherent (Below 4K)"
               },
               {
                 "metric_model_name": "SoakDmaMemcpyCoherentPerformance",
+                "children": [],
                 "name": "memcpy_coherent_output_bandwidth_4k_1mb_S1",
-                "label": "DMA soak memcpy coherent (4K-1MB)",
-                "children": [],
-                "disable": true
+                "label": "DMA soak memcpy coherent (4K-1MB)"
               },
               {
                 "metric_model_name": "SoakDmaMemcpyCoherentPerformance",
+                "children": [],
                 "name": "memcpy_coherent_output_bandwidth_above_1mb_S1",
-                "label": "DMA soak memcpy coherent (Above 1MB)",
-                "children": [],
-                "disable": true
+                "label": "DMA soak memcpy coherent (Above 1MB)"
               },
               {
                 "metric_model_name": "SoakDmaMemcpyNonCoherentPerformance",
+                "children": [],
                 "name": "memcpy_non_coherent_output_bandwidth_64B_2048B_S1",
-                "label": "DMA soak memcpy non coherent (Below 4K)",
-                "children": [],
-                "disable": true
+                "label": "DMA soak memcpy non coherent (Below 4K)"
               },
               {
                 "metric_model_name": "SoakDmaMemcpyNonCoherentPerformance",
+                "children": [],
                 "name": "memcpy_non_coherent_output_bandwidth_4096B_64KB_S1",
-                "label": "DMA soak memcpy non coherent (4K-1MB)",
-                "children": [],
-                "disable": true
+                "label": "DMA soak memcpy non coherent (4K-1MB)"
               },
               {
                 "metric_model_name": "SoakDmaMemcpyNonCoherentPerformance",
-                "name": "memcpy_non_coherent_output_bandwidth_128KB_512KB_S1",
-                "label": "DMA soak memcpy non coherent (Above 1MB)",
                 "children": [],
-                "disable": true
+                "name": "memcpy_non_coherent_output_bandwidth_128KB_512KB_S1",
+                "label": "DMA soak memcpy non coherent (Above 1MB)"
               },
               {
                 "metric_model_name": "SoakDmaMemcpyThresholdPerformance",
+                "children": [],
                 "name": "memcpy_threshold_S1",
-                "label": "DMA memcpy vs. VP memcpy",
-                "children": [],
-                "disable": true
+                "label": "DMA memcpy vs. VP memcpy"
               },
               {
                 "metric_model_name": "SoakDmaMemsetPerformance",
+                "children": [],
                 "name": "memset_output_bandwidth_64B_256B_S1",
-                "label": "DMA soak memset coherent (Below 4K)",
-                "children": [],
-                "disable": true
+                "label": "DMA soak memset coherent (Below 4K)"
               },
               {
                 "metric_model_name": "SoakDmaMemsetPerformance",
+                "children": [],
                 "name": "memset_output_bandwidth_1024B_16KB_S1",
-                "label": "DMA soak memset coherent (4K-1MB)",
-                "children": [],
-                "disable": true
+                "label": "DMA soak memset coherent (4K-1MB)"
               },
               {
                 "metric_model_name": "SoakDmaMemsetPerformance",
+                "children": [],
                 "name": "memset_output_bandwidth_64KB_256KB_S1",
-                "label": "DMA soak memset coherent (Above 1MB)",
-                "children": [],
-                "disable": true
+                "label": "DMA soak memset coherent (Above 1MB)"
               },
               {
                 "metric_model_name": "SoakDmaMemsetPerformance",
+                "children": [],
                 "name": "memset_non_coherent_output_bandwidth_64B_256B_S1",
-                "label": "DMA soak memset non coherent (Below 4K)",
-                "children": [],
-                "disable": true
+                "label": "DMA soak memset non coherent (Below 4K)"
               },
               {
                 "metric_model_name": "SoakDmaMemsetPerformance",
+                "children": [],
                 "name": "memset_non_coherent_output_bandwidth_1024B_16KB_S1",
-                "label": "DMA soak memset non coherent (4K-1MB)",
-                "children": [],
-                "disable": true
+                "label": "DMA soak memset non coherent (4K-1MB)"
               },
               {
                 "metric_model_name": "SoakDmaMemsetPerformance",
+                "children": [],
                 "name": "memset_non_coherent_output_bandwidth_64KB_256KB_S1",
-                "label": "DMA soak memset non coherent (Above 1MB)",
-                "children": [],
-                "disable": true
+                "label": "DMA soak memset non coherent (Above 1MB)"
               },
               {
                 "metric_model_name": "SoakDmaMemsetPerformance",
+                "children": [],
                 "name": "memset_buffer_memory_output_bandwidth_below_4k_S1",
-                "label": "DMA soak memset BM (Below 4K)",
-                "children": [],
-                "disable": true
+                "label": "DMA soak memset BM (Below 4K)"
               },
               {
                 "metric_model_name": "SoakDmaMemsetPerformance",
-                "name": "memset_buffer_memory_output_bandwidth_4k_1mb_S1",
-                "label": "DMA soak memset BM (4K-1MB)",
                 "children": [],
-                "disable": true
+                "name": "memset_buffer_memory_output_bandwidth_4k_1mb_S1",
+                "label": "DMA soak memset BM (4K-1MB)"
               },
               {
                 "metric_model_name": "BcopyPerformance",
+                "children": [],
                 "name": "Bcopy: Plain: Avg Bandwidth_S1",
-                "label": "Bcopy: Plain: Avg Bandwidth",
-                "children": []
+                "label": "Bcopy: Plain: Avg Bandwidth"
               },
               {
                 "metric_model_name": "BcopyPerformance",
+                "children": [],
                 "name": "Bcopy: Plain: Avg Latency_S1",
-                "label": "Bcopy: Plain: Avg Latency",
-                "children": []
+                "label": "Bcopy: Plain: Avg Latency"
               },
               {
                 "metric_model_name": "BcopyPerformance",
+                "children": [],
                 "name": "Bcopy: DMA: Avg Bandwidth_S1",
-                "label": "Bcopy: DMA: Avg Bandwidth",
-                "children": []
+                "label": "Bcopy: DMA: Avg Bandwidth"
               },
               {
                 "metric_model_name": "BcopyPerformance",
+                "children": [],
                 "name": "Bcopy: DMA: Avg Latency_S1",
-                "label": "Bcopy: DMA: Avg Latency",
-                "children": []
+                "label": "Bcopy: DMA: Avg Latency"
               },
               {
                 "metric_model_name": "BcopyFloodDmaPerformance",
+                "children": [],
                 "name": "Bcopy: Flood DMA: Avg Bandwidth_S1",
-                "label": "Bcopy: Flood DMA: Avg Bandwidth",
-                "children": []
+                "label": "Bcopy: Flood DMA: Avg Bandwidth"
               },
               {
                 "metric_model_name": "BcopyFloodDmaPerformance",
+                "children": [],
                 "name": "Bcopy: Flood DMA: Avg Latency_S1",
-                "label": "Bcopy: Flood DMA: Avg Latency",
-                "children": []
+                "label": "Bcopy: Flood DMA: Avg Latency"
               }
             ]
           }
@@ -6585,6 +7060,88 @@
                 "children": []
               }
             ]
+          }
+        ]
+      },
+      {
+        "metric_model_name": "MetricContainer",
+        "name": "System_S1",
+        "label": "System",
+        "children": [
+          {
+            "metric_model_name": "BootTimePerformance",
+            "children": [],
+            "name": "FunOS Boot Timing_S1",
+            "label": "FunOS Boot Timing (SBP view)"
+          },
+          {
+            "metric_model_name": "BootTimePerformance",
+            "children": [],
+            "name": "SBP Boot Timing (Main-loop)_S1",
+            "label": "SBP Boot Timing (Main-loop)"
+          },
+          {
+            "metric_model_name": "BootTimePerformance",
+            "children": [],
+            "name": "SBP Boot Timing (Host-boot)_S1",
+            "label": "SBP Boot Timing (Host-boot)"
+          },
+          {
+            "metric_model_name": "BootTimePerformance",
+            "children": [],
+            "name": "SBP Boot Timing (Pre-host-boot)_S1",
+            "label": "SBP Boot Timing (Pre-host-boot)"
+          },
+          {
+            "metric_model_name": "BootTimePerformance",
+            "children": [],
+            "name": "MMC timings_S1",
+            "label": "MMC Timings"
+          },
+          {
+            "metric_model_name": "BootTimePerformance",
+            "children": [],
+            "name": "ELF load timings_S1",
+            "label": "ELF Load Timings"
+          },
+          {
+            "metric_model_name": "BootTimePerformance",
+            "children": [],
+            "name": "f1_timings_S1",
+            "label": "FunOS Timings"
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "FRS_F1_S1",
+            "label": "FRS",
+            "disable": true,
+            "children": [
+              {
+                "metric_model_name": "PowerPerformance",
+                "name": "system_power_f1_S1",
+                "label": "Power"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "metric_model_name": "MetricContainer",
+    "name": "other_tree",
+    "label": "Misc",
+    "children": [
+      {
+        "metric_model_name": "MetricContainer",
+        "name": "other_tree_build",
+        "label": "Build",
+        "children": [
+          {
+            "metric_model_name": "FunOnDemandTotalTimePerformance",
+            "name": "job_execution_time_fun_on_demand",
+            "label": "Job execution time (Fun On Demand)",
+            "children": []
           }
         ]
       }

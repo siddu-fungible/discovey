@@ -33,6 +33,7 @@ from web.fun_test.analytics_models_helper import MetricChartHelper, BltVolumePer
 from web.fun_test.metrics_models import MetricChartStatus, TeraMarkJpegPerformance
 from web.fun_test.metrics_models import LastMetricId, MileStoneMarkers, BltVolumePerformance
 from web.fun_test.metrics_lib import MetricLib
+from collections import OrderedDict
 
 
 class MetricHelper(object):
@@ -1090,7 +1091,7 @@ if __name__ == "__main_flowtest__":
     data_sets = []
     one_data_set = {}
     one_data_set["inputs"] = {}
-    one_data_set["inputs"]["input_app"] = "hw_hsu_test"
+    one_data_set["inputs"]["input_app"] = "load_mods"
     one_data_set["inputs"]["input_iterations"] = 100000000
     one_data_set["name"] = "100M iterations"
     one_data_set["output"] = {"name": "output_time", 'min': 0, "max": -1, "expected": -1, "reference": None}
@@ -3061,7 +3062,13 @@ def set_internal_name(metrics):
         if "children" in metrics:
             for child in metrics["children"]:
                 set_internal_name(child)
-    return metrics
+    new_metrics = OrderedDict()
+    new_metrics["metric_model_name"] = metrics["metric_model_name"]
+    new_metrics["name"] = metrics["name"]
+    new_metrics["label"] = metrics["label"]
+    if "children" in metrics and len(metrics["children"]) > 0:
+        new_metrics["children"] = metrics["children"]
+    return new_metrics
 
 
 if __name__ == "__main_S1__":

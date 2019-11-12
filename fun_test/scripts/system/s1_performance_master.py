@@ -262,6 +262,80 @@ class TeraMarkMultiClusterCryptoPerformanceS1Tc(TeraMarkMultiClusterCryptoPerfor
                               summary="S1 TeraMark Multi Cluster Crypto Performance Test",
                               steps="Steps 1")
 
+class SoakFlowsMemcpy1MbNonCohPerformanceS1Tc(SoakFlowsMemcpy1MbNonCohPerformanceTc):
+    tag = SOAK_FLOWS_MEMCPY_S1
+    platform = S1
+
+    def describe(self):
+        self.set_test_details(id=25,
+                              summary="S1 soak flows memcpy 1MB non coh performance",
+                              steps="Steps 1")
+
+class ChannelParallPerformanceS1Tc(ChannelParallPerformanceTc):
+    tag = CHANNEL_PARALL_S1
+    platform = S1
+
+    def describe(self):
+        self.set_test_details(id=26,
+                              summary="Channel parall Performance on S1",
+                              steps="Steps 1")
+
+class SoakFlowsBusyLoopPerformanceS1Tc(SoakFlowsBusyLoopPerformanceTc):
+    tag = SOAK_FLOWS_BUSY_LOOP_S1
+    platform = S1
+
+    def describe(self):
+        self.set_test_details(id=27,
+                              summary="soak flows busy loop 10 usecs performance on S1",
+                              steps="Steps 1")
+
+class SoakDmaMemcpyThresholdPerformanceS1Tc(SoakDmaMemcpyThresholdPerformanceTc):
+    tag = SOAK_DMA_MEMCPY_THRESHOLD_S1
+    platform = S1
+
+    def describe(self):
+        self.set_test_details(id=28,
+                              summary="Soak DMA memcpy vs VP memcpy threshold test on S1",
+                              steps="Steps 1")
+
+class SoakDmaMemcpyCohPerformanceS1Tc(SoakDmaMemcpyCohPerformanceTc):
+    tag = SOAK_DMA_MEMCPY_COH_S1
+    platform = S1
+
+    def describe(self):
+        self.set_test_details(id=29,
+                              summary="Soak DMA memcpy coherent Performance Test on S1",
+                              steps="Steps 1")
+
+
+class SoakDmaMemcpyNonCohPerformanceS1Tc(SoakDmaMemcpyNonCohPerformanceTc):
+    tag = SOAK_DMA_MEMCPY_NON_COH_S1
+    platform = S1
+
+    def describe(self):
+        self.set_test_details(id=30,
+                              summary="Soak DMA memcpy Non coherent Performance Test on S1",
+                              steps="Steps 1")
+
+
+class SoakDmaMemsetPerformanceS1Tc(SoakDmaMemsetPerformanceTc):
+    tag = SOAK_DMA_MEMSET_S1
+    platform = S1
+
+    def describe(self):
+        self.set_test_details(id=31,
+                              summary="Soak DMA memset Performance Test on S1",
+                              steps="Steps 1")
+
+class BootTimingPerformanceS1Tc(BootTimingPerformanceTc):
+    tag = BOOT_TIMING_TEST_TAG_S1
+    platform = S1
+
+    def describe(self):
+        self.set_test_details(id=32,
+                              summary="Boot timing Performance Test on S1",
+                              steps="Steps 1")
+
 
 if __name__ == "__main__":
     myscript = MyScript()
@@ -290,5 +364,13 @@ if __name__ == "__main__":
     myscript.add_test_case(TeraMarkDfaPerformanceS1Tc())
     myscript.add_test_case(TeraMarkNfaPerformanceS1Tc())
     myscript.add_test_case(TeraMarkMultiClusterCryptoPerformanceS1Tc())
+    myscript.add_test_case(SoakFlowsMemcpy1MbNonCohPerformanceS1Tc())
+    myscript.add_test_case(ChannelParallPerformanceS1Tc())
+    myscript.add_test_case(SoakFlowsBusyLoopPerformanceS1Tc())
+    myscript.add_test_case(SoakDmaMemcpyCohPerformanceS1Tc())
+    myscript.add_test_case(SoakDmaMemcpyNonCohPerformanceS1Tc())
+    myscript.add_test_case(SoakDmaMemsetPerformanceS1Tc())
+    myscript.add_test_case(SoakDmaMemcpyThresholdPerformanceS1Tc())
+    myscript.add_test_case(BootTimingPerformanceS1Tc())
 
     myscript.run()

@@ -112,6 +112,10 @@ class StripeVolAttachDetachTestScript(FunTestScript):
 
         fun_test.test_assert(expression=self.num_duts <= self.total_available_duts,
                              message="Testbed has enough DUTs")
+
+        # Checking if f1 bringup is with the tftpboot or with the bundle image
+        self.tftp_image_path = fun_test.get_job_environment_variable("tftp_image_path")
+        self.bundle_image_parameters = fun_test.get_job_environment_variable("bundle_image_parameters")
         for dut_index in self.available_dut_indexes:
             self.topology_helper.set_dut_parameters(
                 dut_index=dut_index,
@@ -220,16 +224,22 @@ class StripeVolAttachDetachTestScript(FunTestScript):
                 fun_test.critical(str(ex))
 
             self.funcp_obj[index] = StorageFsTemplate(self.come_obj[index])
-            self.funcp_spec[index] = self.funcp_obj[index].deploy_funcp_container(
-                update_deploy_script=self.update_deploy_script, update_workspace=self.update_workspace,
-                mode=self.funcp_mode, include_storage=True)
+            if self.tftp_image_path:
+                self.funcp_spec[index] = self.funcp_obj[index].deploy_funcp_container(
+                    update_deploy_script=self.update_deploy_script, update_workspace=self.update_workspace,
+                    mode=self.funcp_mode, include_storage=True)
 
-            fun_test.test_assert(self.funcp_spec[index]["status"],
-                                 "Starting FunCP docker container in DUT {}".format(index))
+                fun_test.test_assert(self.funcp_spec[index]["status"],
+                                     "Starting FunCP docker container in DUT {}".format(index))
+                # self.funcp_spec[index]["container_names"].sort()
+            else:
+                self.funcp_spec[index] = self.funcp_obj[index].get_container_objs()
             self.funcp_spec[index]["container_names"].sort()
 
             # Ensure that that FPGO interface is up both the docker containers
             for f1_index, container_name in enumerate(self.funcp_spec[index]["container_names"]):
+                if container_name == "run_sc":
+                    continue
                 status = self.funcp_obj[index].container_info[container_name].ifconfig_up_down("fpg0", "up")
                 fun_test.test_assert(status, "FPG0 interface up in {}".format(container_name))
         # Creating storage controller API object for the first DUT in the current setup

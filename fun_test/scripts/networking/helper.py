@@ -904,8 +904,40 @@ def _format_non_zero_values(list_of_lists):
             del list[index]
     return list_of_lists
 
-def get_vp_util_table_obj(result):
-    master_table_obj = PrettyTable()
+def get_vp_util_filtered_dict(output, cluster_id=None, core_id=None):
+    result = OrderedDict()
+    output_dict = OrderedDict()
+    for key in sorted(output):
+        output_dict[key] = output[key]
+
+    for x in range(0, 6):
+        for y in range(2, 4):
+            if x > 3:
+                z = 0
+                key = 'CCV8.%s.%s' % (x, z)
+                output_dict[key] = 'N/A'
+                z = 1
+                key = 'CCV8.%s.%s' % (x, z)
+                output_dict[key] = 'N/A'
+            key = 'CCV8.%s.%s' % (x, y)
+            output_dict[key] = 'N/A'
+
+    start_key_name = 'CCV'
+    for key, val in output_dict.iteritems():
+        if cluster_id is not None and core_id is not None:
+            key_name = start_key_name + "%s.%s" % (cluster_id, core_id)
+            if key_name in key:
+                result[key] = val
+        elif cluster_id is not None:
+            key_name = start_key_name + "%s" % (cluster_id)
+            if key_name in key:
+                result[key] = val
+        else:
+            result = output_dict
+            break
+    return result
+
+def get_vp_util_parsed_data_dict(result):
     complete_dict = OrderedDict()
     rows_list = ["Cls/Core", "0", "1", "2", "3"]
     for col_name in rows_list:
@@ -922,7 +954,11 @@ def get_vp_util_table_obj(result):
                 if _key == vp_num:
                     complete_dict[_key].append(val)
                     break
+    return complete_dict
 
+
+def get_vp_util_table_obj(complete_dict):
+    master_table_obj = PrettyTable()
     print_keys = complete_dict.keys()
     print_values = complete_dict.values()
     print_values = _format_non_zero_values(print_values)
@@ -931,30 +967,86 @@ def get_vp_util_table_obj(result):
     return master_table_obj
 
 
+def get_normalized_data_vp_data(complete_dict):
+    print_values = complete_dict.values()
+    sum = 0
+    counter = 0
+    for item in print_values:
+        if isinstance(item, list):
+            for val in item:
+                if val.isdigit():
+                    sum += int(val)
+                    counter += 1
+        else:
+            if item.isdigit():
+                sum += int(item)
+                counter += 1
+    if counter == 0:
+        counter = 1
+    return sum / counter
+
+
+def get_vp_util_histogram_table_obj(complete_dict):
+    histo_table_obj = PrettyTable()
+    histo_dict = {'1-10': 0, '11-20': 0, '21-30': 0, '31-40': 0, '41-50': 0, '51-60': 0, '61-70': 0,
+                  '71-80': 0, '81-90': 0, '91-100': 0}
+    final_list = []
+    print_values = complete_dict.values()
+    for inner_list in print_values:
+        final_list.extend(inner_list)
+
+    for val in final_list:
+        if val.isdigit():
+            val = int(val)
+            if val in range(0, 11):
+                if not val == 0:
+                    histo_dict['1-10'] += 1
+            elif val in range(11, 21):
+                histo_dict['11-20'] += 1
+            elif val in range(21, 31):
+                histo_dict['21-30'] += 1
+            elif val in range(31, 41):
+                histo_dict['31-40'] += 1
+            elif val in range(41, 51):
+                histo_dict['41-50'] += 1
+            elif val in range(51, 61):
+                histo_dict['51-60'] += 1
+            elif val in range(61, 71):
+                histo_dict['61-70'] += 1
+            elif val in range(71, 81):
+                histo_dict['71-80'] += 1
+            elif val in range(81, 91):
+                histo_dict['81-90'] += 1
+            else:
+                histo_dict['91-100'] += 1
+    for key in sorted(histo_dict):
+        val = []
+        val.append(histo_dict[key])
+        histo_table_obj.add_column(key, val)
+    return histo_table_obj
+
+
 def populate_vp_util_output_file(network_controller_obj, filename, display_output=False):
     output = False
     try:
         lines = list()
-
-        output_dict = OrderedDict()
         output = network_controller_obj.debug_vp_util()
-        for key in sorted(output):
-            output_dict[key] = output[key]
+        result = get_vp_util_filtered_dict(output=output)
+        complete_dict = get_vp_util_parsed_data_dict(result=result)
 
-        for x in range(0, 6):
-            for y in range(2, 4):
-                if x > 3:
-                    z = 0
-                    key = 'CCV8.%s.%s' % (x, z)
-                    output_dict[key] = 'N/A'
-                    z = 1
-                    key = 'CCV8.%s.%s' % (x, z)
-                    output_dict[key] = 'N/A'
-                key = 'CCV8.%s.%s' % (x, y)
-                output_dict[key] = 'N/A'
+        master_table_obj = get_vp_util_table_obj(complete_dict=complete_dict)
 
-        master_table_obj = get_vp_util_table_obj(result=output_dict)
+        # print normalized data
+        normalized_value = get_normalized_data_vp_data(complete_dict=complete_dict)
+
+        # print histogram
+        histogram_table_obj = get_vp_util_histogram_table_obj(complete_dict=complete_dict)
+
         lines.append("\n########################  %s ########################\n" % str(get_timestamp()))
+        lines.append("Normalized VP Util: {}".format(normalized_value))
+        lines.append("\n\nHistogram table: Num of VPs in util range\n")
+        lines.append(histogram_table_obj.get_string())
+        lines.append('\n\nVP util table obj\n')
         lines.append(master_table_obj.get_string())
         lines.append('\n\n\n')
 
@@ -1140,6 +1232,7 @@ def _get_vp_numbers_from_core_id(core_id):
         print "ERROR: %s" % str(ex)
     return result
 
+
 def get_filtered_dict(output_dict, cluster_id=None, core_id=None, rx=True, tx=True, q=True):
     rx_key_name = 'wus_received'
     tx_key_name = 'wus_sent'
@@ -1217,6 +1310,7 @@ def get_per_vp_dict_table_obj(result, prev_result):
         master_table_obj.add_column(col_name, col_values)
     return master_table_obj
 
+
 def get_required_per_vp_result(output_result):
     result = {}
     for key, val in output_result.iteritems():
@@ -1229,6 +1323,7 @@ def get_required_per_vp_result(output_result):
                 result[key][_key] = _val
             del result[key]['vp_wu_qdepth']
     return result
+
 
 def get_sorted_dict(result):
     sorted_dict = OrderedDict()
@@ -1255,6 +1350,7 @@ def get_sorted_dict(result):
     for key in result_keys:
         sorted_dict[key] = result[key]
     return sorted_dict
+
 
 def populate_per_vp_output_file(per_vp_1, per_vp_2, filename, display_output=False):
     output = False
@@ -1370,6 +1466,7 @@ def run_dpcsh_commands(template_obj, sequencer_handle, network_controller_obj, s
 
     except Exception as ex:
         fun_test.critical(str(ex))
+        fun_test.log_module_filter_disable()
     return True
 
 def populate_stats_file(network_controller_obj, test_time, generic_file_name_part, display_output=False):
@@ -1386,7 +1483,7 @@ def populate_stats_file(network_controller_obj, test_time, generic_file_name_par
         ddr_stats_file = str(version) + "_" + generic_file_name_part + "_ddr.txt"
         cdu_stats_file = str(version) + "_" + generic_file_name_part + "_cdu.txt"
         ca_stats_file = str(version) + "_" + generic_file_name_part + "_ca.txt"
-        
+
         artifact_resource_pc_1_file = fun_test.get_test_case_artifact_file_name(post_fix_name=resource_pc_1_file)
         artifact_resource_pc_2_file = fun_test.get_test_case_artifact_file_name(post_fix_name=resource_pc_2_file)
         artifact_bam_stats_file = fun_test.get_test_case_artifact_file_name(post_fix_name=bam_stats_file)
@@ -1395,7 +1492,7 @@ def populate_stats_file(network_controller_obj, test_time, generic_file_name_par
         artifact_ddr_file = fun_test.get_test_case_artifact_file_name(post_fix_name=ddr_stats_file)
         artifact_cdu_file = fun_test.get_test_case_artifact_file_name(post_fix_name=cdu_stats_file)
         artifact_ca_file = fun_test.get_test_case_artifact_file_name(post_fix_name=ca_stats_file)
-        
+
         start_counter = 0
         while not start_counter == sleep_time_factor:
             fun_test.log_module_filter("random_module")
@@ -1433,9 +1530,10 @@ def populate_stats_file(network_controller_obj, test_time, generic_file_name_par
 
     except Exception as ex:
         fun_test.critical(str(ex))
+        fun_test.log_module_filter_disable()
     return True
 
-
+'''
 def get_resource_bam_table(result):
     table_obj = None
     bam_pool_decode_dict = {
@@ -1467,18 +1565,94 @@ def get_resource_bam_table(result):
     except Exception as ex:
         fun_test.critical(str(ex))
     return table_obj
+'''
 
 
+def _get_max_reference_keys(result, reference_cluster):
+    reference_keys = reference_cluster.keys()
+    num_keys = len(reference_keys)
+    for key, val in result.iteritems():
+        if len(val) > num_keys:
+            reference_keys = val.keys()
+    return reference_keys
+
+def get_resource_bam_table(result):
+
+    while True:
+        try:
+            cmd = "stats/resource/bam"
+            if not result:
+                break
+            reference_keys = _get_max_reference_keys(result['bm_usage_per_cluster'],
+                                                          result['bm_usage_per_cluster']['cluster_0'])
+            gloabl_result = result['bm_usage_global']
+            per_cluster_result = result['bm_usage_per_cluster']
+
+            # Global table object
+            global_table_obj = PrettyTable(['Field Name', 'Counter'])
+            global_table_obj.align = 'l'
+            for key, val in gloabl_result.iteritems():
+                global_table_obj.add_row([key, val])
+
+            # Per cluster table
+            row_list = ['key names']
+            for key in sorted(per_cluster_result.keys()):
+                row_list.append(key[0].upper() + key[-1] + ":" + "%")
+                row_list.append(key[0].upper() + key[-1] + ":" + "col")
+            per_cluster_table_obj = PrettyTable()
+
+            output = OrderedDict()
+            for col_name in row_list:
+                output[col_name] = []
+                if col_name == 'key names':
+                    output[col_name].extend(sorted(reference_keys))
+                else:
+                    cname = col_name.replace('C', 'cluster_')
+                    cluster_name = cname.split(":")[0]
+                    key_name = cname.split(":")[1]
+                    if key_name == '%':
+                        key_name = 'usage_percent'
+                    elif key_name == 'col':
+                        key_name = 'color'
+                    cls_output = per_cluster_result[cluster_name]
+                    for display_key in sorted(reference_keys):
+                        if display_key in cls_output:
+                            if key_name in cls_output[display_key]:
+                                output[col_name].append(cls_output[display_key][key_name])
+                            else:
+                                output[col_name].append(0)
+                        else:
+                            output[col_name].append(0)
+            print_keys = output.keys()
+            print_values = output.values()
+            for col_name, col_values in zip(print_keys, print_values):
+                per_cluster_table_obj.add_column(col_name, col_values)
+
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return global_table_obj, per_cluster_table_obj
+'''
+            prev_global_result = gloabl_result
+            prev_per_cluster_result = per_cluster_result
+            print
+            global_table_obj
+            print
+            per_cluster_table_obj
+            print
+            "\n########################  %s ########################\n" % str(self._get_timestamp())
+            #do_sleep_for_interval()
+'''
 def populate_resource_bam_output_file(network_controller_obj, filename, display_output=False):
     output = False
     try:
         lines = list()
-
         result = network_controller_obj.peek_resource_bam_stats()
-        master_table_obj = get_resource_bam_table(result=result)
-        lines.append("\n########################  %s ########################\n" % str(get_timestamp()))
-        lines.append(master_table_obj.get_string())
-        lines.append('\n\n\n')
+        master_table_obj1,master_table_obj2 = get_resource_bam_table(result=result)
+        tab_obj = [master_table_obj1, master_table_obj2]
+        for i in tab_obj:
+            lines.append("\n########################  %s ########################\n" % str(get_timestamp()))
+            lines.append(i.get_string())
+            lines.append('\n\n\n')
 
         with open(filename, 'a') as f:
             f.writelines(lines)
@@ -1610,3 +1784,9 @@ def get_diff_results(old_result, new_result):
     except Exception as ex:
         fun_test.critical(str(ex))
     return result
+
+
+if __name__ == '__main__':
+    from lib.host.network_controller import NetworkController
+    nw = NetworkController(dpc_server_ip="fs48-come", dpc_server_port=40220)
+    populate_vp_util_output_file(network_controller_obj=nw, filename='output_vp_util.txt')

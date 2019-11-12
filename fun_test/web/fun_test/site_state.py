@@ -9,12 +9,13 @@ from web.fun_test.metrics_models import MetricsGlobalSettings
 from web.fun_test.models import Asset
 from django.apps import apps
 from web.fun_test.metrics_models import MetricChart, LastMetricId
-from web.fun_test.metrics_lib import *
+from web.fun_test.metrics_lib import MetricLib
 import json
 import os
 import traceback
 
 site_state = None
+ml = MetricLib()
 
 SITE_BASE_DATA_FILE = WEB_ROOT_DIR + "/site_base_data.json"
 METRICS_BASE_DATA_FILE = WEB_ROOT_DIR + "/metrics.json"
@@ -111,16 +112,6 @@ class SiteState():
                 m.save()
 
     def _do_register_metric(self, metric):
-
-        all_metrics_chart = None
-        try:
-            all_metrics_chart = MetricChart.objects.get(metric_model_name="MetricContainer",
-                                                        internal_chart_name="All metrics")
-        except ObjectDoesNotExist:
-            all_metrics_chart = MetricChart(metric_model_name="MetricContainer",
-                                            chart_name="All metrics",
-                                            internal_chart_name="All metrics",
-                                            leaf=False, metric_id=LastMetricId.get_next_id())
         m = None
         disable = False
         if "disable" in metric:
@@ -162,15 +153,12 @@ class SiteState():
                     m.children = "[]"
                 except Exception as ex:
                     pass
-                # m.children_weights = "{}"
+
                 m.save()
                 for child in children:
                     c = self._do_register_metric(metric=child)
                     if c:
                         m.add_child(child_id=c.metric_id)
-                        if "metric_model_name" in child and child["metric_model_name"] != "MetricContainer":
-                            all_metrics_chart.add_child(child_id=c.metric_id)
-                            all_metrics_chart.add_child_weight(child_id=c.metric_id, weight=1)
                 m.save()
             if "extensible_references" in metric:
                 references = metric["extensible_references"]
@@ -191,20 +179,9 @@ class SiteState():
     def register_product_metrics(self):
         with open(METRICS_BASE_DATA_FILE, "r") as f:
             metrics = json.load(f)
-            all_metrics_metric = {
-                "metric_model_name": "MetricContainer",
-                "name": "All metrics",
-                "label": "All metrics",
-                "children": [],
-                "weight": 0
-            }
-            self._do_register_metric(metric=all_metrics_metric)
             for metric in metrics:
                 self._do_register_metric(metric=metric)
-                global_setting = MetricsGlobalSettings.objects.first()
-                global_setting.cache_valid = False
-                global_setting.save()
-            ml = MetricLib()
+            ml.set_global_cache(cache_valid=False)
             ml.update_weights_for_wip()
 
     def set_metrics_settings(self):

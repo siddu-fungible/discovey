@@ -69,17 +69,17 @@
     <div *ngIf="!minimal">
       <div *ngIf="leaf">
         <i *ngIf="!editingOwner" class="grey-text">Owner: <span
-          (click)="editingOwner = true">{{ inner.currentOwner }}</span></i>
+          (click)="editingOwner = true">{{ currentOwner }}</span></i>
         <i *ngIf="editingOwner" style="font-size: 95%;">Owner: <input type="text" class="owner-text"
-                                                                      [(ngModel)]="inner.currentOwner">
+                                                                      [(ngModel)]="currentOwner">
           <span><i class="fa fa-check fa-fw tick-color" (click)="submit()"></i></span>
           <span><i class="fa fa-times fa-fw close-color" (click)="editingOwner = false"></i></span></i>
         <span style="float: right;" *ngIf="!editingSource"><i class="grey-text">Source: </i><i class="grey-text"
-                                                                                               *ngIf="inner.currentSource === 'Unknown'">{{ inner.currentSource }}</i>
-          <a *ngIf="inner.currentSource !== 'Unknown'" [routerLink]="" (click)="openSource(inner.currentSource)">{{ getAppName(inner.currentSource) }}</a>&nbsp;
+                                                                                               *ngIf="currentSource === 'Unknown'">{{ currentSource }}</i>
+          <a *ngIf="currentSource !== 'Unknown'" [routerLink]="" (click)="openSource(currentSource)">{{ getAppName(currentSource) }}</a>&nbsp;
           <a (click)="editingSource = true"><i class="fa fa-pencil"></i></a></span>
         <i *ngIf="editingSource" style="font-size: 95%; float: right">Source: <input type="text" class="owner-text"
-                                                                                     [(ngModel)]="inner.currentSource">
+                                                                                     [(ngModel)]="currentSource">
           <span><i class="fa fa-check fa-fw tick-color" (click)="submit()"></i></span>
           <span><i class="fa fa-times fa-fw close-color" (click)="editingSource = false"></i></span></i>
         <br>
@@ -88,10 +88,10 @@
       <div>
         <b>Description: </b><a *ngIf="!editingDescription" (click)="toggleEdit()"><i class="fa fa-pencil"></i></a>
         <br>
-        <div [innerHTML]="inner.currentDescription | safeHtml"></div>
+        <div [innerHTML]="currentDescription | safeHtml"></div>
         <div *ngIf="editingDescription">
           <br>
-          <textarea rows="30" [(ngModel)]="inner.currentDescription" style="min-width: 100%;"></textarea>
+          <textarea rows="30" [(ngModel)]="currentDescription" style="min-width: 100%;"></textarea>
           <button class="btn btn-success" (click)="submit()">Submit</button>
           <a style="padding: 5px;" (click)="toggleEdit()">Cancel</a>
         </div>
@@ -225,10 +225,10 @@
           </table>
           <ng-container *ngIf="leaf">
             <p><input type="checkbox" [checked]="negativeGradient"
-                      [(ngModel)]="inner.negativeGradient">&nbsp;Negative
+                      [(ngModel)]="negativeGradient">&nbsp;Negative
               gradient
             </p>
-            <p><input type="checkbox" [checked]="leaf" [(ngModel)]="inner.leaf">&nbsp;Leaf</p>
+            <p><input type="checkbox" [checked]="leaf" [(ngModel)]="leaf">&nbsp;Leaf</p>
           </ng-container>
           <p class="no-margin"><a target="_blank" href="/admin/fun_test/metricchart/{{ chartInfo.pk }}/change/">Admin
             link</a></p>

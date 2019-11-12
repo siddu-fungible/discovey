@@ -1,7 +1,7 @@
 {
   "GlobalSetup": {
-    "bootargs": ["app=mdt_test,load_mods,hw_hsu_test cc_huid=3 workload=storage --serial --dpc-server --dpc-uart --all_100g --nofreeze",
-      "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 workload=storage --serial --dpc-server --dpc-uart --all_100g --nofreeze"],
+    "bootargs": ["app=mdt_test,load_mods cc_huid=3 workload=storage --serial --dpc-server --dpc-uart --all_100g --nofreeze",
+      "app=mdt_test,load_mods cc_huid=2 workload=storage --serial --dpc-server --dpc-uart --all_100g --nofreeze"],
     "dut_start_index": 2,
     "host_start_index": 1,
     "update_workspace": false,

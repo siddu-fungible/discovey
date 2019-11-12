@@ -34,11 +34,11 @@
               "nvme_pci_device": "pci_0000_af_05_0",
               "fnid": 40,
               "storage": {
-                "blt_vol_capacity": 1600277970944,
+                "blt_vol_capacity": 1600120684544,
                 "blt_vol_block_size": 4096,
-                "rds_vol_capacity": 1600277970944,
+                "rds_vol_capacity": 1600120684544,
                 "rds_vol_block_size": 4096,
-                "command_timeout": 5
+                "command_timeout": 20
               },
               "vm_pings": [
                 "30.1.1.2",

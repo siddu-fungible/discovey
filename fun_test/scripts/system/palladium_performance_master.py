@@ -17,6 +17,7 @@ F1 = FunPlatform.F1
 ALLOC_SPEED_TEST_TAG = "alloc_speed_test"
 SOAK_BCOPY_TEST = "qa_soak_bcopy_test"
 BOOT_TIMING_TEST_TAG = "boot_timing_test"
+BOOT_TIMING_TEST_TAG_S1 = "qa_s1_boot_timing_test"
 VOLTEST_TAG = "voltest_performance"
 TERAMARK_PKE = "pke_teramark"
 TERAMARK_CRYPTO = "crypto_teramark"
@@ -28,9 +29,14 @@ TERAMARK_DFA = "dfa_teramark"
 TERAMARK_NFA = "nfa_teramark"
 TERAMARK_EC = "ec_teramark"
 TERAMARK_JPEG = "jpeg_teramark"
+
 SOAK_DMA_MEMCPY_COH = "soak_funos_memcpy_coh"
 SOAK_DMA_MEMCPY_NON_COH = "soak_funos_memcpy_non_coh"
 SOAK_DMA_MEMSET = "soak_funos_memset"
+SOAK_DMA_MEMCPY_COH_S1 = "qa_s1_soak_funos_memcpy_coh"
+SOAK_DMA_MEMCPY_NON_COH_S1 = "qa_s1_soak_funos_memcpy_non_coh"
+SOAK_DMA_MEMSET_S1 = "qa_s1_soak_funos_memset"
+
 RCNVME_READ = "qa_rcnvme_read"
 RCNVME_RANDOM_READ = "qa_rcnvme_random_read"
 RCNVME_WRITE = "qa_rcnvme_write"
@@ -44,7 +50,9 @@ TERAMARK_CRYPTO_MULTI_TUNNEL = "crypto_multi_tunnel_teramark"
 TLS_1_TUNNEL = "tls_1_tunnel_teramark"
 TLS_32_TUNNEL = "tls_32_tunnel_teramark"
 TLS_64_TUNNEL = "tls_64_tunnel_teramark"
+
 SOAK_DMA_MEMCPY_THRESHOLD = "soak_funos_memcpy_threshold"
+SOAK_DMA_MEMCPY_THRESHOLD_S1 = "qa_s1_soak_funos_memcpy_threshold"
 
 IPSEC_ENC_SINGLE_TUNNEL = "ipsec_enc_single_tunnel_teramark"
 IPSEC_ENC_MULTI_TUNNEL = "ipsec_enc_multi_tunnel_teramark"
@@ -52,9 +60,13 @@ IPSEC_DEC_SINGLE_TUNNEL = "ipsec_dec_single_tunnel_teramark"
 IPSEC_DEC_MULTI_TUNNEL = "ipsec_dec_multi_tunnel_teramark"
 VOLTEST_LSV = "qa_voltest_lsv_performance"
 VOLTEST_LSV_4 = "qa_voltest_lsv_4_performance"
+
 CHANNEL_PARALL = "qa_channel_parall"
+CHANNEL_PARALL_S1 = "qa_s1_channel_parall"
 SOAK_FLOWS_BUSY_LOOP = "qa_soak_flows_busy_loop"
+SOAK_FLOWS_BUSY_LOOP_S1 = "qa_s1_soak_flows_busy_loop"
 SOAK_FLOWS_MEMCPY = "qa_soak_flows_memcpy_non_coh"
+SOAK_FLOWS_MEMCPY_S1 = "qa_s1_soak_flows_memcpy_non_coh"
 
 VOLTEST_BLT_1 = "qa_voltest_blt_performance"
 VOLTEST_BLT_8 = "qa_voltest_blt_8_performance"
@@ -67,6 +79,8 @@ TERAMARK_PKE_S1 = "qa_s1_pke_teramark"
 TERAMARK_DFA_S1 = "qa_s1_dfa_teramark"
 TERAMARK_NFA_S1 = "qa_s1_nfa_teramark"
 TERAMARK_CRYPTO_RAW_S1 = "qa_s1_crypto_teramark"
+
+CRYPTO_FAST_PATH = "qa_crypto_fastpath_teramark"
 
 jpeg_operations = {"Compression throughput": "Compression throughput with Driver",
                    "Decompression throughput": "JPEG Decompress",
@@ -180,18 +194,22 @@ class MyScript(FunTestScript):
 
     def setup(self):
         self.lsf_status_server = LsfStatusServer()
-        tags = [ALLOC_SPEED_TEST_TAG, SOAK_BCOPY_TEST, BOOT_TIMING_TEST_TAG, TERAMARK_PKE, TERAMARK_CRYPTO,
+        tags = [ALLOC_SPEED_TEST_TAG, SOAK_BCOPY_TEST, BOOT_TIMING_TEST_TAG, BOOT_TIMING_TEST_TAG_S1, TERAMARK_PKE,
+                TERAMARK_CRYPTO,
                 TERAMARK_LOOKUP,
                 FLOW_TEST_TAG, F1_FLOW_TEST_TAG, TERAMARK_ZIP, TERAMARK_DFA, TERAMARK_NFA, TERAMARK_EC, TERAMARK_JPEG,
-                SOAK_DMA_MEMCPY_COH,
-                SOAK_DMA_MEMCPY_NON_COH, SOAK_DMA_MEMSET, RCNVME_READ, RCNVME_RANDOM_READ, RCNVME_WRITE,
+                SOAK_DMA_MEMCPY_COH, SOAK_DMA_MEMCPY_COH_S1,
+                SOAK_DMA_MEMCPY_NON_COH, SOAK_DMA_MEMCPY_NON_COH_S1, SOAK_DMA_MEMSET, SOAK_DMA_MEMSET_S1, RCNVME_READ,
+                RCNVME_RANDOM_READ, RCNVME_WRITE,
                 RCNVME_RANDOM_WRITE, RCNVME_READ_ALL,
                 RCNVME_RANDOM_READ_ALL, RCNVME_WRITE_ALL,
-                RCNVME_RANDOM_WRITE_ALL, SOAK_DMA_MEMCPY_THRESHOLD,
+                RCNVME_RANDOM_WRITE_ALL, SOAK_DMA_MEMCPY_THRESHOLD, SOAK_DMA_MEMCPY_THRESHOLD_S1,
                 IPSEC_ENC_SINGLE_TUNNEL, IPSEC_ENC_MULTI_TUNNEL, IPSEC_DEC_MULTI_TUNNEL, IPSEC_DEC_SINGLE_TUNNEL,
-                VOLTEST_LSV, VOLTEST_LSV_4, CHANNEL_PARALL, SOAK_FLOWS_BUSY_LOOP, SOAK_FLOWS_MEMCPY, VOLTEST_BLT_1,
+                VOLTEST_LSV, VOLTEST_LSV_4, CHANNEL_PARALL, CHANNEL_PARALL_S1, SOAK_FLOWS_BUSY_LOOP,
+                SOAK_FLOWS_BUSY_LOOP_S1, SOAK_FLOWS_MEMCPY,
+                SOAK_FLOWS_MEMCPY_S1, VOLTEST_BLT_1,
                 VOLTEST_BLT_8, VOLTEST_BLT_12, TERAMARK_EC_S1, TERAMARK_JPEG_S1, TERAMARK_ZIP_DEFLATE_S1,
-                TERAMARK_ZIP_LZMA_S1, TERAMARK_PKE_S1, TERAMARK_DFA_S1, TERAMARK_NFA_S1, TERAMARK_CRYPTO_RAW_S1]
+                TERAMARK_ZIP_LZMA_S1, TERAMARK_PKE_S1, TERAMARK_DFA_S1, TERAMARK_NFA_S1, TERAMARK_CRYPTO_RAW_S1, CRYPTO_FAST_PATH]
         self.lsf_status_server.workaround(tags=tags)
         fun_test.shared_variables["lsf_status_server"] = self.lsf_status_server
 
@@ -826,6 +844,7 @@ class JuniperTls64TunnelPerformanceTc(JuniperTlsSingleTunnelPerformanceTc):
 class SoakDmaMemcpyThresholdPerformanceTc(PalladiumPerformanceTc):
     tag = SOAK_DMA_MEMCPY_THRESHOLD
     model = "SoakDmaMemcpyThresholdPerformance"
+    platform = F1
 
     def describe(self):
         self.set_test_details(id=48,
@@ -997,6 +1016,17 @@ class VoltestBlt12PerformanceTc(PalladiumPerformanceTc):
                               steps="Steps 1")
 
 
+class CryptoFastPathPerformanceTc(PalladiumPerformanceTc):
+    tag = CRYPTO_FAST_PATH
+    model = "CryptoFastPathPerformance"
+    platform = F1
+
+    def describe(self):
+        self.set_test_details(id=64,
+                              summary="Crypto Fast Path Performance Test",
+                              steps="Steps 1")
+
+
 if __name__ == "__main__":
     myscript = MyScript()
 
@@ -1053,5 +1083,6 @@ if __name__ == "__main__":
     myscript.add_test_case(VoltestBlt1PerformanceTc())
     myscript.add_test_case(VoltestBlt8PerformanceTc())
     myscript.add_test_case(VoltestBlt12PerformanceTc())
+    myscript.add_test_case(CryptoFastPathPerformanceTc())
 
     myscript.run()

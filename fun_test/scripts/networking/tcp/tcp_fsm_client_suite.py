@@ -73,7 +73,7 @@ class ScriptSetup(FunTestScript):
 
     def setup(self):
 
-        f1_1_boot_args = "app=hw_hsu_test rdstype=funtcp cc_huid=2 --csr-replay --dpc-server  --dpc-uart --all_100g " \
+        f1_1_boot_args = "app=load_mods rdstype=funtcp cc_huid=2 --csr-replay --dpc-server  --dpc-uart --all_100g " \
                          "--disable-wu-watchdog module_log=network_unit:CRIT"
 
         topology_t_bed_type = fun_test.get_job_environment_variable('test_bed_type')

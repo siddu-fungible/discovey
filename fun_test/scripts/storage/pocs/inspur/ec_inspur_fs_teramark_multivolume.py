@@ -195,6 +195,9 @@ class ECVolumeLevelScript(FunTestScript):
                 self.bootargs[0] += " --perf csi-local-ip={} csi-remote-ip={} pdtrace-hbm-size-kb={}".format(
                     self.csi_f1_ip, self.perf_listener_ip, self.csi_perf_pdtrace_hbm_size_kb)
 
+            self.tftp_image_path = fun_test.get_job_environment_variable("tftp_image_path")
+            self.bundle_image_parameters = fun_test.get_job_environment_variable("bundle_image_parameters")
+
             for i in range(len(self.bootargs)):
                 self.bootargs[i] += " --mgmt"
                 if self.disable_wu_watchdog:
@@ -255,12 +258,18 @@ class ECVolumeLevelScript(FunTestScript):
             # Rebooting all the hosts in non-blocking mode before the test and getting NUMA cpus
             for host_name in self.host_info:
                 host_handle = self.host_info[host_name]["handle"]
-                if self.override_numa_node["override"]:
-                    host_numa_cpus_filter = host_handle.lscpu(self.override_numa_node["override_node"])
-                    self.host_info[host_name]["host_numa_cpus"] = host_numa_cpus_filter[
-                        self.override_numa_node["override_node"]]
+                if host_name.startswith("cab0"):
+                    if self.override_numa_node["override"]:
+                        host_numa_cpus_filter = host_handle.lscpu("node[01]")
+                        self.host_info[host_name]["host_numa_cpus"] = ",".join(host_numa_cpus_filter.values())
                 else:
-                    self.host_info[host_name]["host_numa_cpus"] = fetch_numa_cpus(host_handle, self.ethernet_adapter)
+                    if self.override_numa_node["override"]:
+                        host_numa_cpus_filter = host_handle.lscpu(self.override_numa_node["override_node"])
+                        self.host_info[host_name]["host_numa_cpus"] = host_numa_cpus_filter[
+                            self.override_numa_node["override_node"]]
+                    else:
+                        self.host_info[host_name]["host_numa_cpus"] = fetch_numa_cpus(host_handle,
+                                                                                      self.ethernet_adapter)
 
                 # Calculating the number of CPUs available in the given numa
                 self.host_info[host_name]["total_numa_cpus"] = 0
@@ -294,13 +303,19 @@ class ECVolumeLevelScript(FunTestScript):
             self.funcp_spec = {}
             for index in xrange(self.num_duts):
                 self.funcp_obj[index] = StorageFsTemplate(self.come_obj[index])
-                self.funcp_spec[index] = self.funcp_obj[index].deploy_funcp_container(
-                    update_deploy_script=self.update_deploy_script, update_workspace=self.update_workspace,
-                    mode=self.funcp_mode)
-                fun_test.test_assert(self.funcp_spec[index]["status"],
-                                     "Starting FunCP docker container in DUT {}".format(index))
+                if self.tftp_image_path:
+                    self.funcp_spec[index] = self.funcp_obj[index].deploy_funcp_container(
+                        update_deploy_script=self.update_deploy_script, update_workspace=self.update_workspace,
+                        mode=self.funcp_mode)
+                    fun_test.test_assert(self.funcp_spec[index]["status"],
+                                         "Starting FunCP docker container in DUT {}".format(index))
+                else:
+                    self.funcp_spec[index] = self.funcp_obj[index].get_container_objs()
                 self.funcp_spec[index]["container_names"].sort()
+
                 for f1_index, container_name in enumerate(self.funcp_spec[index]["container_names"]):
+                    if container_name == "run_sc":
+                        continue
                     bond_interfaces = self.fs_spec[index].get_bond_interfaces(f1_index=f1_index)
                     bond_name = "bond0"
                     bond_ip = bond_interfaces[0].ip
@@ -640,7 +655,12 @@ class ECVolumeLevelTestcase(FunTestCase):
         if "warmup_io_depth" in job_inputs:
             self.warm_up_fio_cmd_args["iodepth"] = job_inputs["warmup_io_depth"]
         if "warmup_size" in job_inputs:
-            self.warm_up_fio_cmd_args["size"] = job_inputs["warmup_size"]
+            self.warm_up_fio_cmd_args["io_size"] = job_inputs["warmup_size"]
+        if "csi_perf_iodepth" in job_inputs:
+            self.csi_perf_iodepth = job_inputs["csi_perf_iodepth"]
+            if not isinstance(self.csi_perf_iodepth, list):
+                self.csi_perf_iodepth = [self.csi_perf_iodepth]
+            self.full_run_iodepth = self.csi_perf_iodepth
         if "post_results" in job_inputs:
             self.post_results = job_inputs["post_results"]
         else:
@@ -1093,7 +1113,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 self.stats_obj = CollectStats(storage_controller=self.storage_controller, sc_lock=self.sc_lock)
                 self.stats_obj.start(file_suffix, self.stats_collect_details)
                 fun_test.log("Different stats collection thread details for the current IO depth {} after starting "
-                             "them:\n{}".format(iodepth,self.stats_collect_details))
+                             "them:\n{}".format(iodepth, self.stats_collect_details))
             else:
                 fun_test.critical("Not starting the vp_utils and resource_bam stats collection because of lack of "
                                   "interval and count details")
@@ -1172,13 +1192,13 @@ class ECVolumeLevelTestcase(FunTestCase):
                 # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
                 fun_test.log("Running FIO {} test with the block size: {} and IO depth: {} Num jobs: {} for the EC".
                              format(row_data_dict["mode"], fio_block_size, fio_iodepth, fio_num_jobs * global_num_jobs))
-                if self.ec_info.get("compress", False):
-                    fio_job_name = "{}_{}pctcomp_iodepth_{}_vol_{}".\
-                        format(self.fio_job_name, self.warm_up_fio_cmd_args["buffer_compress_percentage"],
-                               row_data_dict["iodepth"], self.ec_info["num_volumes"])
                 if self.ec_info["num_volumes"] != 1:
                     fio_job_name = "{}_iodepth_{}_vol_{}".format(self.fio_job_name, row_data_dict["iodepth"],
                                                                  self.ec_info["num_volumes"])
+                    if self.ec_info.get("compress", False):
+                        fio_job_name = "{}_{}pctcomp_iodepth_{}_vol_{}". \
+                            format(self.fio_job_name, self.warm_up_fio_cmd_args["buffer_compress_percentage"],
+                                   row_data_dict["iodepth"], self.ec_info["num_volumes"])
                 else:
                     fio_job_name = "{}_{}".format(self.fio_job_name, row_data_dict["iodepth"])
 
@@ -1212,7 +1232,7 @@ class ECVolumeLevelTestcase(FunTestCase):
             if self.csi_perf_enabled:
                 if row_data_dict["iodepth"] in self.csi_perf_iodepth:
                     try:
-                        fun_test.sleep("for IO to be fully active", 20)
+                        fun_test.sleep("for IO to be fully active", 60)
                         csi_perf_obj = CsiPerfTemplate(perf_collector_host_name=str(self.perf_listener_host_name),
                                                        listener_ip=self.perf_listener_ip, fs=self.fs[0],
                                                        listener_port=4420)  # Temp change for testing

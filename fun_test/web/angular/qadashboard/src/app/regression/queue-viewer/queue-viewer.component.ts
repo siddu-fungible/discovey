@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import {Component, OnDestroy, OnInit} from '@angular/core';
 import {ApiService} from "../../services/api/api.service";
 import {Observable, of, interval, timer} from "rxjs";
 import {switchMap, switchMapTo} from "rxjs/operators";
@@ -32,7 +32,7 @@ class QueueEntry {
   templateUrl: './queue-viewer.component.html',
   styleUrls: ['./queue-viewer.component.css']
 })
-export class QueueViewerComponent implements OnInit {
+export class QueueViewerComponent implements OnInit, OnDestroy {
   priorityCategories = ["high", "normal", "low"];
   priorityRanges: object = {};
   queueOccupancy = {};
@@ -40,6 +40,8 @@ export class QueueViewerComponent implements OnInit {
   normalPriorityQueueOccupancy: QueueEntry[] = [];
   lowPriorityQueueOccupancy: QueueEntry[] = [];
   userMap: any = null;
+  timer: any = null;
+  subscription: any = null;
   constructor(private apiService: ApiService,
               private loggerService: LoggerService,
               private userService: UserService,
@@ -50,7 +52,7 @@ export class QueueViewerComponent implements OnInit {
       this.queueOccupancy[category] = [];
     });
 
-    this.getQueueInfo().subscribe(response => {
+    this.subscription = this.getQueueInfo().subscribe(response => {
     });
 
     this.userService.getUserMap().subscribe(response => {
@@ -72,12 +74,20 @@ export class QueueViewerComponent implements OnInit {
     }).pipe(switchMap(() => {
       return this.getPriorityRanges();
     }), switchMap(()=> {
-      return timer(0, 5000).pipe(switchMap ( () => {
+      this.timer = timer(0, 5000).pipe(switchMap ( () => {
         return this.getCurrentQueueOccupancy();
-      }))
+      }));
+      return this.timer;
     }));
   }
 
+
+  ngOnDestroy() {
+    console.log("Queue viewer destroyed");
+    if (this.subscription) {
+      this.subscription.unsubscribe();
+    }
+  }
 
   getPriorityRanges(): Observable<boolean> {
     return this.apiService.get('/regression/scheduler/queue_priorities').pipe(switchMap((response) => {
@@ -108,20 +118,7 @@ export class QueueViewerComponent implements OnInit {
     let queuedTime = this.commonService.convertEpochToDate(timestamp);
     let currentTime = new Date();
     let diffMs:number = (currentTime.getTime() - queuedTime.getTime());
-    let diffDays = Math.floor(diffMs / 86400000); // days
-    let diffHrs = Math.floor((diffMs % 86400000) / 3600000); // hours
-    let diffMins = Math.round(((diffMs % 86400000) % 3600000) / 60000); // minutes
-    let s = "";
-    if (diffDays) {
-      s = `${diffDays} days `;
-    }
-    if (diffHrs > 0) {
-      s += `${diffHrs} hours `;
-    }
-    s += `${diffMins} mins`;
-
-    return s;
-
+    return this.commonService.milliSecondsElapsedToDays(diffMs);
   }
 
   getCurrentQueueOccupancy(): Observable<boolean> {
