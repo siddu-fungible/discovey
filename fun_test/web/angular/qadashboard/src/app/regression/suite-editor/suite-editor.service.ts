@@ -26,6 +26,7 @@ interface SuiteInterface {
   custom_test_bed_spec: any;
   entries: SuiteEntry[];
   type: SuiteMode;
+  selected: boolean;
 }
 
 
@@ -39,6 +40,7 @@ export class Suite implements SuiteInterface {
   custom_test_bed_spec: any = null;
   entries: SuiteEntry[] = null;
   type: SuiteMode = SuiteMode.SUITE;
+  selected: boolean = false;
 
   constructor(obj?: any) {
     Object.assign(this, obj);

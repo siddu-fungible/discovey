@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, Input, OnInit, EventEmitter, Output} from '@angular/core';
 import {SuiteEditorService, Suite} from "../suite-editor.service";
 import {Observable, of, Subject} from "rxjs";
 import {debounceTime, distinctUntilChanged, switchMap} from "rxjs/operators";
@@ -23,16 +23,19 @@ export class SuitesViewComponent implements OnInit {
   pager: any = {};
   byNameSearchText: string = null;
   status: string = null;
-
+  @Input() multiSelect: boolean = false;
+  @Output() reportSelectedSuites = new EventEmitter<Suite []>();
 
   constructor(private service: SuiteEditorService, private loggerService: LoggerService, private pagerService: PagerService) {
-
 
 
   }
 
 
   ngOnInit() {
+    if (this.multiSelect) {
+      this.RECORDS_PER_PAGE = 20;
+    }
     this.driver =
       of(true).pipe(switchMap(response => {
         return this.service.categories();

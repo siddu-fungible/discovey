@@ -54,6 +54,7 @@
   <fun-spinner [status]="status"></fun-spinner>
   <table class="fun-table">
     <tr>
+      <td class="fun-table-header" *ngIf="multiSelect"></td>
       <td class="fun-table-header">ID</td>
       <td class="fun-table-header">Name</td>
       <td class="fun-table-header">Description</td>
@@ -61,6 +62,7 @@
       <td class="fun-table-header"></td>
     </tr>
     <tr *ngFor="let suite of suites; let suiteIndex=index">
+      <td *ngIf="multiSelect"><input type="checkbox" [checked]="suite.selected" [(ngModel)]="suite.selected"/></td>
       <td>{{ suite.id }}</td>
       <td><a [routerLink]="'/regression/suite_editor/' + suite.id">{{ suite.name }}</a></td>
       <td>
