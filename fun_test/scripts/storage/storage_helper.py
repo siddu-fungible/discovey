@@ -473,7 +473,6 @@ class CollectStats(object):
         vp_util_headers = ["Cluster/Core", "Thread 0", "Thread 1", "Thread 2", "Thread 3"]
         histogram_headers = ["Utilization", "1-10", "11-20", "21-30", "31-40", "41-50", "51-60", "61-70", "71-80",
                              "81-90", "91-100"]
-        histogram_value = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
         try:
             with open(output_file, 'a') as f:
@@ -497,6 +496,7 @@ class CollectStats(object):
                     filtered_vp_util = OrderedDict()
                     num_vps = 0
                     total_vp_utils = 0
+                    histogram_value = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
                     for key, value in sorted(vp_util.iteritems()):
                         cluster_id = key.split(".")[0][3]
                         core_id = key.split(".")[1]
@@ -533,11 +533,11 @@ class CollectStats(object):
 
                     lines.append("\n########################  {} ########################\n".format(time.ctime()))
                     lines.append("Normalized VP Utilization: {}\n".format(int(total_vp_utils / num_vps)))
-                    lines.append("Histogram table(Num of VPs in different utilization range):")
+                    lines.append("Histogram table(Num of VPs in different utilization range):\n")
                     table_data = build_simple_table(data=histogram_data, column_headers=histogram_headers,
                                                     split_values_to_columns=True)
                     lines.append(table_data.get_string())
-                    lines.append("\nPer VP Utilization:")
+                    lines.append("\nPer VP Utilization:\n")
                     table_data = build_simple_table(data=filtered_vp_util, column_headers=vp_util_headers,
                                                     split_values_to_columns=True)
                     lines.append(table_data.get_string())
