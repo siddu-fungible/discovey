@@ -396,15 +396,15 @@ class Rocetools:
             self.host.command("export WORKSPACE={}".format(self.ws))
             cmd_pid = self.host.command(
                 command="cd {} ; EXTRA_CMAKE_FLAGS=-DCMAKE_BUILD_TYPE=Release PALLADIUM=yes ./build.sh".
-                format(rdma_core_path), timeout=600)
+                format(rdma_core_path), timeout=900)
         else:
             self.host.command("export WORKSPACE={}".format(self.ws))
             output = self.host.command(
                 command="cd {} ; EXTRA_CMAKE_FLAGS=-DCMAKE_BUILD_TYPE=RelWithDebInfo PALLADIUM=yes ./build.sh".
-                format(rdma_core_path), timeout=600)
+                format(rdma_core_path), timeout=900)
         self.host.command("export WORKSPACE={}".format(self.ws))
         output = self.host.command(command="cd {} ; ./fungible-build.sh".format(rdma_perf_test_path),
-                                   timeout=600)
+                                   timeout=900)
         self.host.disconnect()
 
     def ibv_devinfo(self):
