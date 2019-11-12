@@ -563,8 +563,9 @@ class TeraMarkZipPerformanceTc(PalladiumPerformanceTc):
     def run(self):
         try:
             fun_test.test_assert(self.validate_job(), "validating job")
-            parsed_result = MetricParser().parse_it(model_name="TeraMarkZip" ,logs=self.lines,
-                                                    auto_add_to_db=False,date_time=self.dt, platform=self.platform)
+            result = MetricParser().parse_it(model_name="TeraMarkZip", logs=self.lines,
+                                                    auto_add_to_db=False, date_time=self.dt, platform=self.platform)
+            fun_test.test_assert(result["match_found"], "Found atleast one entry")
             self.result = fun_test.PASSED
 
         except Exception as ex:
@@ -572,10 +573,12 @@ class TeraMarkZipPerformanceTc(PalladiumPerformanceTc):
 
         set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
                                      test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     git_commit=self.git_commit, model_name="TeraMarkZipDeflatePerformance")
+                                     git_commit=self.git_commit, model_name="TeraMarkZipDeflatePerformance",
+                                     platform=self.platform)
         set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
                                      test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     git_commit=self.git_commit, model_name="TeraMarkZipLzmaPerformance")
+                                     git_commit=self.git_commit, model_name="TeraMarkZipLzmaPerformance",
+                                     platform=self.platform)
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
