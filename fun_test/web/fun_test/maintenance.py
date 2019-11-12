@@ -2393,7 +2393,7 @@ if __name__ == "__main_backed_up_dag__":
     chart.save()
     ml.backup_dags()
 
-if __name__ == "__main__":
+if __name__ == "__main_load_mods__":
     internal_name = "load_mods_time_taken"
     chart = MetricChart.objects.get(internal_chart_name=internal_name)
     internal_chart_name = "job_execution_time_fun_on_demand"
@@ -2403,4 +2403,16 @@ if __name__ == "__main__":
         data_set["name"] = "app=load_mods,target=F1"
     chart.data_sets = json.dumps(data_sets)
     chart.save()
+
+if __name__ == "__main__":
+    model_name = "TeraMarkNfaPerformance"
+    metric_model = app_config.get_metric_models()[model_name]
+    model = "JenkinsJobIdMap"
+    jenkins_model = app_config.get_metric_models()[model]
+    end_date = get_current_time()
+    start_date = end_date - timedelta(days=3)
+    date_range = [start_date, end_date]
+    jenkins_entries = JenkinsJobIdMap.objects.filter(build_date__range=date_range).order_by("build_date")
+    for entry in entries:
+
 

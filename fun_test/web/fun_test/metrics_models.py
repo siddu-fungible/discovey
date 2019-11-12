@@ -2556,6 +2556,7 @@ class TeraMarkNfaPerformance(models.Model):
     output_bandwidth = models.FloatField(verbose_name="Gbps", default=-1)
     output_bandwidth_unit = models.TextField(default="Gbps")
     input_platform = models.TextField(default=FunPlatform.F1)
+    properties = JSONField(default={}, blank=True)
     tag = "analytics"
 
     def __str__(self):
