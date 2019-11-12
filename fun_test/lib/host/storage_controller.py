@@ -342,8 +342,8 @@ class StorageController(NetworkController, DpcshClient):
                                                         group_id=num+3,
                                                         command_duration=command_timeout)
                 elif encryption_enabled:
-                    ec_info["key"] = utils.generate_key(ec_info["key_size"])
-                    ec_info["tweak"] = utils.generate_key(ec_info["xtweak_size"])
+                    ec_info["key"][num] = utils.generate_key(ec_info["key_size"])
+                    ec_info["xtweak"][num] = utils.generate_key(ec_info["xtweak_size"])
                     command_result = self.create_volume(type=ec_info["volume_types"]["lsv"],
                                                         capacity=ec_info["volume_capacity"][num]["lsv"],
                                                         block_size=ec_info["volume_block"]["lsv"],
@@ -353,12 +353,12 @@ class StorageController(NetworkController, DpcshClient):
                                                         jvol_uuid=ec_info["uuids"][num]["jvol"],
                                                         pvol_id=ec_info["uuids"][num]["ec"],
                                                         encrypt=ec_info['encrypt'],
-                                                        key=ec_info['key'],
-                                                        xtweak=ec_info['xtweak'],
+                                                        key=ec_info['key'][num],
+                                                        xtweak=ec_info['xtweak'][num],
                                                         group_id=num + 3,
                                                         command_duration=command_timeout)
-                    ec_info["key"][num] = ec_info["key"]
-                    ec_info["tweak"][num] = ec_info["tweak"]
+                    #ec_info["key"][num] = ec_info["key"]
+                    #ec_info["xtweak"][num] = ec_info["xtweak"]
 
                 else:
                     command_result = self.create_volume(type=ec_info["volume_types"]["lsv"],
