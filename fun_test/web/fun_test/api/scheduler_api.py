@@ -42,3 +42,13 @@ def state_types(request):
     if request.method == "GET":
         result = SchedulerStates().all_strings_to_code()
     return result
+
+
+@csrf_exempt
+@api_safe_json_response
+def online(request):
+    result = False
+    info = SchedulerInfo.get()
+    if info and info.state == SchedulerStates.SCHEDULER_STATE_RUNNING:
+        result = True
+    return result
