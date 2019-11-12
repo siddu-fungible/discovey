@@ -196,6 +196,7 @@ def main():
     logging.info("Environment  : {}".format(environment))
     logging.info("Test-bed type: {}".format(test_bed_type))
     logging.info("Description  : {}".format(description))
+    logging.info("Max run-time: {}".format(max_run_time))
     logging.info("")
 
     if not base_url:
