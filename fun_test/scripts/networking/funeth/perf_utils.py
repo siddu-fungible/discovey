@@ -621,4 +621,4 @@ def collect_funcp_logs(linux_obj, path='/scratch/opt/fungible/logs'):
                      target_file_path=artifact_file_name)
         fun_test.add_auxillary_file(description="{} Log".format(log_file), filename=artifact_file_name)
 
-    linux_obj.command('cd {}; rm *openr*'.format(path))
+    linux_obj.command('rm -rf /scratch/opt/fungible/logs/CC_openr*')
