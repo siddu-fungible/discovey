@@ -357,8 +357,6 @@ class StorageController(NetworkController, DpcshClient):
                                                         xtweak=ec_info['xtweak'][num],
                                                         group_id=num + 3,
                                                         command_duration=command_timeout)
-                    #ec_info["key"][num] = ec_info["key"]
-                    #ec_info["xtweak"][num] = ec_info["xtweak"]
 
                 else:
                     command_result = self.create_volume(type=ec_info["volume_types"]["lsv"],
