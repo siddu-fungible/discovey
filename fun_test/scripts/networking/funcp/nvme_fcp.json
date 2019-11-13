@@ -20,7 +20,7 @@
       "runtime": 120,
       "direct": 1,
       "timeout": 600,
-      "iodepth": 32,
+      "iodepth": 8,
       "prio": 0,
       "numjobs": 1,
       "cpus_allowed_policy": "split"
