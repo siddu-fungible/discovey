@@ -653,7 +653,7 @@ tr.text-center > th {
   padding: 5px;
   border-radius: 2px;
   min-width: 100px;
-  margin: 5px;
+  /*margin: 5px;*/
 }
 
 .fun-button-submit:hover {

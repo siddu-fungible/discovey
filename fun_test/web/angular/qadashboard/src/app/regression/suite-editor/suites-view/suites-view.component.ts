@@ -34,7 +34,7 @@ export class SuitesViewComponent implements OnInit {
 
   ngOnInit() {
     if (this.multiSelect) {
-      this.RECORDS_PER_PAGE = 20;
+      this.RECORDS_PER_PAGE = 10;
     }
     this.driver =
       of(true).pipe(switchMap(response => {
@@ -46,7 +46,10 @@ export class SuitesViewComponent implements OnInit {
         this.suitesCount = suiteCount;
         this.pager = this.pagerService.getPager(this.suitesCount, this.currentPage, this.RECORDS_PER_PAGE);
         return this.service.suites<Suite[]>(null, this.RECORDS_PER_PAGE, this.currentPage, this.selectedCategories, this.byNameSearchText);
-      })).pipe(switchMap(response => {
+      })).pipe(switchMap((response: Suite []) => {
+        console.log(typeof response);
+        console.log(Object.prototype.toString.call(response[0]));
+        response[0].p();
         this.suites = response;
         this.suites.map(suite => {
           suite["dirty"] = false;
@@ -130,6 +133,10 @@ export class SuitesViewComponent implements OnInit {
         this.loggerService.error("Unable to delete suite");
       })
     }
+  }
+
+  onSubmitClick() {
+    this.reportSelectedSuites.emit(this.suites.filter(suite => suite.selected));
   }
 
 }
