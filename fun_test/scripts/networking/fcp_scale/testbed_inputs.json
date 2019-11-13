@@ -10,7 +10,7 @@
                   "fs-51_f1-0":"20.2.11.1","fs-51_f1-1":"20.2.12.1","fs-67_f1-0":"20.2.5.1",
                   "fs-67_f1-1":"20.2.6.1"},
               "host_pings":{"mpoc-server34":["20.2.21.3","20.2.3.3","20.2.1.2", "20.2.19.1", "20.2.20.1", "20.2.6.1"]},
-              "fs_list":["fs-38", "fs-32", "fs-37", "fs-39", "fs-51", "fs-67", "fs-8", "fs-21", "fs-20", "fs-40"],
+              "fs_list":["fs-38", "fs-32", "fs-37", "fs-39", "fs-67", "fs-51",  "fs-8", "fs-21", "fs-20", "fs-40"],
               "fs-38": {
                   "index": 0,
                   "abtract_config_f1_0": "/abstract_config/fcp_scale_fs38-f1-0.json",
@@ -92,9 +92,9 @@
                   "gatewayip": "10.80.4.1",
                   "mpg0":"10.80.4.154",
                   "mpg1":"10.80.4.155",
-                  "bootargs_f1_0": "app=load_mods --serial cc_huid=3 --all_50g --dpc-server --dpc-uart retimer=0,1,2",
+                  "bootargs_f1_0": "app=load_mods --serial cc_huid=3 --all_50g --dpc-server --dpc-uart retimer=0,1",
                   "bootargs_f1_1": "app=load_mods --serial cc_huid=2 --all_50g --dpc-server --dpc-uart retimer=0,1",
-                  "hu_host_list":[{"mpoc-server44": "x16"},{"mpoc-server43": "x16"},{"mpoc-server42": "x8"},
+                  "hu_host_list":[{"mpoc-server44": "x16"},{"mpoc-server43": "x16"},
                       {"mpoc-server41": "x16"}, {"mpoc-server40": "x16"}]
               },
               "fs-21": {
@@ -107,7 +107,7 @@
                   "mpg1":"10.80.4.160",
                   "bootargs_f1_0": "app=load_mods --serial cc_huid=3 --all_50g --dpc-server --dpc-uart retimer=0,1",
                   "bootargs_f1_1": "app=load_mods --serial cc_huid=3 --all_50g --dpc-server --dpc-uart retimer=0,1",
-                  "hu_host_list":[{"mpoc-server47": "x16"}, {"mpoc-server45": "x16"}]
+                  "hu_host_list":[{"mpoc-server47": "x16"}, {"mpoc-server48": "x16"}, {"mpoc-server45": "x16"}]
               },
                "fs-20": {
                   "index": 8,
@@ -133,6 +133,58 @@
                   "bootargs_f1_1": "app=mdt_test,load_mods --serial cc_huid=2 --all_50g --dpc-server --dpc-uart",
                   "hu_host_list":[]
               }
+          },
+         "fs-fcp-scale-networking": {
+              "vlan_ips":{"fs-8_f1-0":"20.2.1.1","fs-8_f1-1":"20.2.2.1","fs-15_f1-0":"20.2.19.1",
+                  "fs-15_f1-1":"20.2.20.1","fs-20_f1-0":"20.2.17.1","fs-20_f1-1":"20.2.18.1",
+                  "fs-21_f1-0":"20.2.3.1","fs-21_f1-1":"20.2.4.1","fs-32_f1-0":"20.2.7.1",
+                  "fs-32_f1-1":"20.2.8.1","fs-37_f1-0":"20.2.9.1","fs-37_f1-1":"20.2.10.1",
+                  "fs-38_f1-0":"20.2.21.1","fs-38_f1-1":"20.2.22.1","fs-39_f1-0":"20.2.13.1",
+                  "fs-39_f1-1":"20.2.14.1","fs-40_f1-0":"20.2.15.1","fs-40_f1-1":"20.2.16.1",
+                  "fs-51_f1-0":"20.2.11.1","fs-51_f1-1":"20.2.12.1","fs-67_f1-0":"20.2.5.1",
+                  "fs-67_f1-1":"20.2.6.1"},
+              "host_pings":{"mpoc-server34":["20.2.21.3","20.2.3.3","20.2.1.2", "20.2.19.1", "20.2.20.1", "20.2.6.1"]},
+              "fs_list":["fs-38", "fs-8", "fs-21"],
+              "fs-38": {
+                  "index": 0,
+                  "abtract_config_f1_0": "/abstract_config/fcp_scale_fs38-f1-0.json",
+                  "abtract_config_f1_1": "/abstract_config/fcp_scale_fs38-f1-1.json",
+                  "prepare_docker":false,
+                  "gatewayip": "10.80.4.1",
+                  "mpg0":"10.80.4.169",
+                  "mpg1":"10.80.4.170",
+                  "bootargs_f1_0": "app=load_mods --serial cc_huid=3 --all_50g --dpc-server --dpc-uart retimer=0,1,2",
+                  "bootargs_f1_1": "app=load_mods --serial cc_huid=2 --all_50g --dpc-server --dpc-uart retimer=0,1",
+                  "hu_host_list":[{"mpoc-server34": "x16"},{"mpoc-server32": "x8"},{"mpoc-server31": "x16"},
+                      {"mpoc-server30": "x16"}]
+              },
+
+              "fs-8": {
+                  "index": 1,
+                  "abtract_config_f1_0": "/abstract_config/fcp_scale_fs8-f1-0.json",
+                  "abtract_config_f1_1": "/abstract_config/fcp_scale_fs8-f1-1.json",
+                  "prepare_docker":false,
+                  "gatewayip": "10.80.4.1",
+                  "mpg0":"10.80.4.154",
+                  "mpg1":"10.80.4.155",
+                  "bootargs_f1_0": "app=load_mods --serial cc_huid=3 --all_50g --dpc-server --dpc-uart retimer=0,1",
+                  "bootargs_f1_1": "app=load_mods --serial cc_huid=2 --all_50g --dpc-server --dpc-uart retimer=0,1",
+                  "hu_host_list":[{"mpoc-server44": "x16"},{"mpoc-server43": "x16"},
+                      {"mpoc-server41": "x16"}, {"mpoc-server40": "x16"}]
+              },
+              "fs-21": {
+                  "index": 2,
+                  "abtract_config_f1_0": "/abstract_config/fcp_scale_fs21-f1-0.json",
+                  "abtract_config_f1_1": "/abstract_config/fcp_scale_fs21-f1-1.json",
+                  "prepare_docker":false,
+                  "gatewayip": "10.80.4.1",
+                  "mpg0":"10.80.4.159",
+                  "mpg1":"10.80.4.160",
+                  "bootargs_f1_0": "app=load_mods --serial cc_huid=3 --all_50g --dpc-server --dpc-uart retimer=0,1",
+                  "bootargs_f1_1": "app=load_mods --serial cc_huid=3 --all_50g --dpc-server --dpc-uart retimer=0,1",
+                  "hu_host_list":[{"mpoc-server47": "x16"}, {"mpoc-server48": "x8"}, {"mpoc-server45": "x16"}]
+              }
+
           }
      }
 }
