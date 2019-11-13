@@ -30,6 +30,14 @@ def lock_cpu_freq(funeth_obj, hu):
     for i in range(1, 5):
         linux_obj.sudo_command(command="cpupower idle-set -d %s" % i)
     linux_obj.sudo_command("cpupower monitor")
+
+
+    linux_obj.sudo_command("/etc/init.d/irqbalance stop")
+    linux_obj.sudo_command("cpupower -c all frequency-set -f 3.4GHz ")
+    linux_obj.sudo_command("for i in {316..331}; do echo 0-9 > /proc/irq/$i/smp_affinity_list; done")
+
+
+
     linux_obj.disconnect()
 
 
@@ -97,7 +105,8 @@ class ScriptSetup(FunTestScript):
         # Removing any funeth driver from COMe and and all the connected server
         threads_list = []
         single_f1 = False
-        if test_bed_type == 'fs-fcp-scale':
+
+        if test_bed_type == 'fs-fcp-scale' or test_bed_type == 'fs-fcp-scale-networking':
             fs_list = testbed_info['fs'][test_bed_type]["fs_list"]
             fs_index = 0
         else:
@@ -201,7 +210,7 @@ class TestHostPCIeLanes(FunTestCase):
         test_bed_type = fun_test.get_job_environment_variable('test_bed_type')
         testbed_info = fun_test.parse_file_to_json(
             fun_test.get_script_parent_directory() + '/testbed_inputs.json')
-        if test_bed_type == 'fs-fcp-scale':
+        if test_bed_type == 'fs-fcp-scale' or test_bed_type == 'fs-fcp-scale-networking':
             fs_list = testbed_info['fs'][test_bed_type]["fs_list"]
         else:
             fs_list = [test_bed_type]
@@ -236,6 +245,11 @@ class BringupPCIeHosts(FunTestCase):
     def setup(self):
         pass
 
+    def tuneHost(self,funeth_obj,hu):
+        funeth_obj.configure_irq_affinity(hu, tx_or_rx='tx', cpu_list=range(0, 20))
+        funeth_obj.configure_irq_affinity(hu, tx_or_rx='rx', cpu_list=range(0, 20))
+        lock_cpu_freq(funeth_obj=funeth_obj, hu=hu)
+
     def run(self):
 
         test_bed_type = fun_test.get_job_environment_variable('test_bed_type')
@@ -246,10 +260,18 @@ class BringupPCIeHosts(FunTestCase):
         setup_hu_host(funeth_obj, update_driver=False, num_queues=8)
 
         fun_test.log("Configure irq affinity")
+        hutune_threads_list = []
         for hu in funeth_obj.hu_hosts:
-            funeth_obj.configure_irq_affinity(hu, tx_or_rx='tx', cpu_list=range(0, 20))
-            funeth_obj.configure_irq_affinity(hu, tx_or_rx='rx', cpu_list=range(0, 20))
-            lock_cpu_freq(funeth_obj=funeth_obj, hu=hu)
+            #funeth_obj.configure_irq_affinity(hu, tx_or_rx='tx', cpu_list=range(0, 20))
+            #funeth_obj.configure_irq_affinity(hu, tx_or_rx='rx', cpu_list=range(0, 20))
+            #lock_cpu_freq(funeth_obj=funeth_obj, hu=hu)
+            hutune_thread_id = fun_test.execute_thread_after(time_in_seconds=1, func=self.tuneHost, funeth_obj=funeth_obj, hu=hu)
+            hutune_threads_list.append(hutune_thread_id)
+
+        for thread_id in hutune_threads_list:
+            fun_test.join_thread(fun_test_thread_id=thread_id, sleep_time=1)
+
+
 
     def cleanup(self):
         pass
@@ -348,14 +370,47 @@ class HuHostPingTest(FunTestCase):
     def cleanup(self):
         pass
 
+class DisableHosts(FunTestCase):
+
+
+    def describe(self):
+        self.set_test_details(id=5, summary="Disable pcie hosts",
+                              steps="""
+                                      1.Disable hosts unnecessary for test
+                                      """)
+
+    def setup(self):
+        pass
+
+
+
+    def run(self):
+        job_inputs = fun_test.get_job_inputs()
+
+        for host in job_inputs['unused_hosts'].split(';'):
+            linux_obj = Linux(host_ip=host, ssh_password="Precious1*", ssh_username="localadmin")
+            linux_obj.sudo_command("echo 1 > /sys/bus/pci/devices/0000\:5e\:00.0/remove")
+            linux_obj.disconnect()
+
+
+        # fun_test.test_assert(expression=x, message="")
+
+    def cleanup(self):
+        pass
+
 
 if __name__ == '__main__':
     ts = ScriptSetup()
     ts.add_test_case(TestHostPCIeLanes())
     test_bed_type = fun_test.get_job_environment_variable('test_bed_type')
-    if test_bed_type == 'fs-fcp-scale':
+    if test_bed_type == 'fs-fcp-scale' or test_bed_type =='fs-fcp-scale-networking':
         ts.add_test_case(BringupPCIeHosts())
         # ts.add_test_case(VlanPingTests())
         ts.add_test_case(HuHostPingTest())
+
+        if 'unused_hosts' in fun_test.get_job_inputs():
+
+            ts.add_test_case(DisableHosts())
+
 
     ts.run()
