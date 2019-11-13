@@ -860,6 +860,8 @@
   },
   {
     "name": "fs-104",
+    "gateway_ip": "10.1.105.1",
+    "bundle_compatible": true,
     "bmc": {
       "mgmt_ssh_password": "superuser",
       "mgmt_ssh_username": "sysadmin",
