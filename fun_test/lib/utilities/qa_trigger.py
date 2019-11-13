@@ -265,7 +265,7 @@ def main():
         exit_code = GENERIC_ERROR_EXIT_CODE
         logging.critical("Suite polling ended with exception: {}".format(str(ex)))
 
-    print "Integration job result is at: {}/suite_detail/{}".format(DEFAULT_BASE_URL, job_id)
+    print "Integration job result is at: {}/regression/suite_detail/{}".format(DEFAULT_BASE_URL, job_id)
     sys.exit(exit_code)
 
 
