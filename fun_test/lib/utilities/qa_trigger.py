@@ -214,7 +214,7 @@ def main():
         logging.info("")
 
     poll_interval_seconds = DEFAULT_POLL_INTERVAL_SECONDS
-
+    job_id = None
     try:
         fun_test_client = FunTestClient(base_url=base_url)
         start_time = time.time()
@@ -265,6 +265,7 @@ def main():
         exit_code = GENERIC_ERROR_EXIT_CODE
         logging.critical("Suite polling ended with exception: {}".format(str(ex)))
 
+    print "Integration job result is at: {}/suite_detail/{}".format(DEFAULT_BASE_URL, job_id)
     sys.exit(exit_code)
 
 
