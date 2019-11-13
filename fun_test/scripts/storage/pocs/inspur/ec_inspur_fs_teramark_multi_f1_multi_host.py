@@ -82,7 +82,7 @@ class ECVolumeLevelScript(FunTestScript):
             self.bootargs = Fs.DEFAULT_BOOT_ARGS
             self.disable_f1_index = None
             self.f1_in_use = 0
-            self.syslog_level = 2
+            self.syslog = "default"
             self.command_timeout = 5
             self.reboot_timeout = 600
         else:
@@ -116,8 +116,8 @@ class ECVolumeLevelScript(FunTestScript):
             self.update_workspace = job_inputs["update_workspace"]
         if "update_deploy_script" in job_inputs:
             self.update_deploy_script = job_inputs["update_deploy_script"]
-        if "syslog_level" in job_inputs:
-            self.syslog_level = job_inputs["syslog_level"]
+        if "syslog" in job_inputs:
+            self.syslog = job_inputs["syslog"]
         if "num_f1s" in job_inputs:
             self.num_f1s = job_inputs["num_f1s"]
         if "disable_wu_watchdog" in job_inputs:
@@ -222,11 +222,17 @@ class ECVolumeLevelScript(FunTestScript):
         # Rebooting all the hosts in non-blocking mode before the test and getting NUMA cpus
         for host_name in self.host_info:
             host_handle = self.host_info[host_name]["handle"]
-            if self.override_numa_node["override"]:
-                host_numa_cpus_filter = host_handle.lscpu(self.override_numa_node["override_node"])
-                self.host_info[host_name]["host_numa_cpus"] = host_numa_cpus_filter[self.override_numa_node["override_node"]]
+            if host_name.startswith("cab0"):
+                if self.override_numa_node["override"]:
+                    host_numa_cpus_filter = host_handle.lscpu("node[01]")
+                    self.host_info[host_name]["host_numa_cpus"] = ",".join(host_numa_cpus_filter.values())
             else:
-                self.host_info[host_name]["host_numa_cpus"] = fetch_numa_cpus(host_handle, self.ethernet_adapter)
+                if self.override_numa_node["override"]:
+                    host_numa_cpus_filter = host_handle.lscpu(self.override_numa_node["override_node"])
+                    self.host_info[host_name]["host_numa_cpus"] = host_numa_cpus_filter[
+                        self.override_numa_node["override_node"]]
+                else:
+                    self.host_info[host_name]["host_numa_cpus"] = fetch_numa_cpus(host_handle, self.ethernet_adapter)
 
             # Calculating the number of CPUs available in the given numa
             self.host_info[host_name]["total_numa_cpus"] = 0
@@ -315,7 +321,7 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.shared_variables["host_ips"] = self.host_ips
         fun_test.shared_variables["num_f1s"] = self.num_f1s
         fun_test.shared_variables["num_duts"] = self.num_duts
-        fun_test.shared_variables["syslog_level"] = self.syslog_level
+        fun_test.shared_variables["syslog"] = self.syslog
         fun_test.shared_variables["db_log_time"] = self.db_log_time
         fun_test.shared_variables["host_info"] = self.host_info
 
@@ -434,6 +440,9 @@ class ECVolumeLevelTestcase(FunTestCase):
 
         testcase = self.__class__.__name__
 
+        self.testbed_config = fun_test.shared_variables["testbed_config"]
+        self.syslog = fun_test.shared_variables["syslog"]
+
         # Start of benchmarking json file parsing and initializing various variables to run this testcase
         benchmark_parsing = True
         benchmark_file = ""
@@ -458,8 +467,6 @@ class ECVolumeLevelTestcase(FunTestCase):
             self.num_ssd = 1
         # End of benchmarking json file parsing
 
-        self.testbed_config = fun_test.shared_variables["testbed_config"]
-        self.syslog_level = fun_test.shared_variables["syslog_level"]
         num_ssd = self.num_ssd
         fun_test.shared_variables["num_ssd"] = num_ssd
         fun_test.shared_variables["attach_transport"] = self.attach_transport
@@ -697,15 +704,18 @@ class ECVolumeLevelTestcase(FunTestCase):
                     pcap_stopped[host_name] = True
 
             # Setting the syslog level
-            for index, sc_obj in enumerate(self.sc_obj):
-                command_result = sc_obj.poke(props_tree=["params/syslog/level", self.syslog_level], legacy=False,
-                                             command_duration=self.command_timeout)
-                fun_test.test_assert(command_result["status"],
-                                     "Setting syslog level to {} in DUT {}".format(self.syslog_level, index))
-                command_result = sc_obj.peek(props_tree="params/syslog/level", legacy=False,
-                                             command_duration=self.command_timeout)
-                fun_test.test_assert_expected(expected=self.syslog_level, actual=command_result["data"],
-                                              message="Checking syslog level in DUT {}".format(index))
+            if self.syslog != "default":
+                for index, sc_obj in enumerate(self.sc_obj):
+                    command_result = sc_obj.poke(props_tree=["params/syslog/level", self.syslog], legacy=False,
+                                                 command_duration=self.command_timeout)
+                    fun_test.test_assert(command_result["status"],
+                                         "Setting syslog level to {} in DUT {}".format(self.syslog, index))
+                    command_result = sc_obj.peek(props_tree="params/syslog/level", legacy=False,
+                                                 command_duration=self.command_timeout)
+                    fun_test.test_assert_expected(expected=self.syslog, actual=command_result["data"],
+                                                  message="Checking syslog level in DUT {}".format(index))
+            else:
+                fun_test.log("Default syslog level is requested...So not going to modify the syslog settings")
 
             # Executing the FIO command to fill the volume to it's capacity
             if not fun_test.shared_variables["ec"]["warmup_io_completed"] and self.warm_up_traffic:
@@ -716,13 +726,21 @@ class ECVolumeLevelTestcase(FunTestCase):
                     aligned_block_size = int((int(actual_block_size / self.num_hosts) + 3) / 4) * 4
                     self.warm_up_fio_cmd_args["bs"] = str(aligned_block_size) + "k"
                     for index, host_name in enumerate(self.host_info):
+                        # Place every volume associated to the server in a separate job, so that all the volumes will
+                        # be warmed up simultaneously
+                        warm_up_fio_cmd_args = {}
+                        jobs = ""
+                        for id, device in enumerate(self.host_info[host_name]["nvme_block_device_list"]):
+                            jobs += " --name=pre-cond-job-{} --filename={}".format(id + 1, device)
+                        fio_cpus_allowed_args = " --cpus_allowed={}".format(self.host_info[host_name]["host_numa_cpus"])
+                        warm_up_fio_cmd_args["multiple_jobs"] = self.warm_up_fio_cmd_args["multiple_jobs"] + str(
+                            fio_cpus_allowed_args) + str(jobs)
+                        warm_up_fio_cmd_args["timeout"] = self.warm_up_fio_cmd_args["timeout"]
                         wait_time = self.num_hosts - index
                         host_clone[host_name] = self.host_info[host_name]["handle"].clone()
                         warmup_thread_id[index] = fun_test.execute_thread_after(
                             time_in_seconds=wait_time, func=fio_parser, arg1=host_clone[host_name], host_index=index,
-                            filename=self.host_info[host_name]["fio_filename"],
-                            cpus_allowed=self.host_info[host_name]["host_numa_cpus"], **self.warm_up_fio_cmd_args)
-
+                            filename="nofile", **warm_up_fio_cmd_args)
                         fun_test.log("Started FIO command to perform sequential write on {}".format(host_name))
                         fun_test.sleep("to start next thread", 1)
 
@@ -742,9 +760,17 @@ class ECVolumeLevelTestcase(FunTestCase):
                 else:
                     for index, host_name in enumerate(self.host_info):
                         host_handle = self.host_info[host_name]["handle"]
-                        fio_output = host_handle.pcie_fio(filename=self.host_info[host_name]["fio_filename"],
-                                                          cpus_allowed=self.host_info[host_name]["host_numa_cpus"],
-                                                          **self.warm_up_fio_cmd_args)
+                        # Place every volume associated to the server in a separate job, so that all the volumes will
+                        # be warmed up simultaneously
+                        warm_up_fio_cmd_args = {}
+                        jobs = ""
+                        for id, device in enumerate(self.host_info[host_name]["nvme_block_device_list"]):
+                            jobs += " --name=pre-cond-job-{} --filename={}".format(id + 1, device)
+                        fio_cpus_allowed_args = " --cpus_allowed={}".format(self.host_info[host_name]["host_numa_cpus"])
+                        warm_up_fio_cmd_args["multiple_jobs"] = self.warm_up_fio_cmd_args["multiple_jobs"] + str(
+                            fio_cpus_allowed_args) + str(jobs)
+                        warm_up_fio_cmd_args["timeout"] = self.warm_up_fio_cmd_args["timeout"]
+                        fio_output = host_handle.pcie_fio(filename="nofile", **warm_up_fio_cmd_args)
                         fun_test.log("FIO Command Output:\n{}".format(fio_output))
                         fun_test.test_assert(fio_output, "Volume warmup on host {}".format(host_name))
 

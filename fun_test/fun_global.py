@@ -26,6 +26,9 @@ RESULTS = {"NOT_RUN": "NOT_RUN",
 def get_current_epoch_time():
     return time.time()
 
+def get_current_epoch_time_in_ms():
+    return time.time() * 1000   # not re-using get_current_epoch_time for efficiency
+
 def get_current_time():
     utc = pytz.utc.localize(datetime.datetime.utcnow())
     return utc.astimezone(pytz.timezone(TIME_ZONE))
@@ -49,7 +52,7 @@ def get_epoch_time_from_datetime(datetime_obj):
 
 def get_datetime_from_epoch_time(epoch_in_milliseconds):
     date_time = datetime.datetime.utcfromtimestamp(epoch_in_milliseconds / 1000.0)
-    return date_time
+    return pytz.utc.localize(date_time)
 
 
 def is_production_mode():
@@ -195,3 +198,5 @@ class TimeSeriesTypes(Codes):
     CHECKPOINT = 80
     STATISTICS = 100
     ARTIFACT = 200
+    TEST_CASE_TABLE = 300
+    REGISTERED_ASSET = 400

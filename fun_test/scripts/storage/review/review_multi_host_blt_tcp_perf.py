@@ -259,12 +259,17 @@ class MultiHostVolumePerformanceScript(FunTestScript):
         # Rebooting all the hosts in non-blocking mode before the test and getting NUMA cpus
         for host_name in self.host_info:
             host_handle = self.host_info[host_name]["handle"]
-            if self.override_numa_node["override"]:
-                host_numa_cpus_filter = host_handle.lscpu(self.override_numa_node["override_node"])
-                self.host_info[host_name]["host_numa_cpus"] = host_numa_cpus_filter[
-                    self.override_numa_node["override_node"]]
+            if host_name.startswith("cab0"):
+                if self.override_numa_node["override"]:
+                    host_numa_cpus_filter = host_handle.lscpu("node[01]")
+                    self.host_info[host_name]["host_numa_cpus"] = ",".join(host_numa_cpus_filter.values())
             else:
-                self.host_info[host_name]["host_numa_cpus"] = fetch_numa_cpus(host_handle, self.ethernet_adapter)
+                if self.override_numa_node["override"]:
+                    host_numa_cpus_filter = host_handle.lscpu(self.override_numa_node["override_node"])
+                    self.host_info[host_name]["host_numa_cpus"] = host_numa_cpus_filter[
+                        self.override_numa_node["override_node"]]
+                else:
+                    self.host_info[host_name]["host_numa_cpus"] = fetch_numa_cpus(host_handle, self.ethernet_adapter)
 
             # Calculating the number of CPUs available in the given numa
             self.host_info[host_name]["total_numa_cpus"] = 0
@@ -817,11 +822,13 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                     wait_time = self.num_hosts - index
                     if "multiple_jobs" in self.warm_up_fio_cmd_args:
                         # Adding the allowed CPUs into the fio warmup command
-                        self.warm_up_fio_cmd_args["multiple_jobs"] += "  --cpus_allowed={}".\
-                            format(self.host_info[host_name]["host_numa_cpus"])
+                        # self.warm_up_fio_cmd_args["multiple_jobs"] += "  --cpus_allowed={}".\
+                        #    format(self.host_info[host_name]["host_numa_cpus"])
+                        fio_cpus_allowed_args = " --cpus_allowed={}".format(self.host_info[host_name]["host_numa_cpus"])
                         for id, device in enumerate(self.host_info[host_name]["nvme_block_device_list"]):
                             jobs += " --name=pre-cond-job-{} --filename={}".format(id + 1, device)
-                        warm_up_fio_cmd_args["multiple_jobs"] = self.warm_up_fio_cmd_args["multiple_jobs"] + str(jobs)
+                        warm_up_fio_cmd_args["multiple_jobs"] = self.warm_up_fio_cmd_args["multiple_jobs"] + str(
+                            fio_cpus_allowed_args) + str(jobs)
                         warm_up_fio_cmd_args["timeout"] = self.warm_up_fio_cmd_args["timeout"]
                         # fio_output = self.host_handles[key].pcie_fio(filename="nofile", timeout=self.warm_up_fio_cmd_args["timeout"],
                         #                                    **warm_up_fio_cmd_args)
@@ -1017,7 +1024,7 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                         io_factor = 2
                         while True:
                             if (int(res_iodepth) / io_factor) <= total_numa_cpus:
-                                global_num_jobs = (int(res_iodepth) / len(nvme_block_device_list)) / io_factor
+                                global_num_jobs = int(int(res_iodepth) / io_factor)
                                 final_fio_iodepth = io_factor
                                 break
                             else:

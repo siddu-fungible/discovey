@@ -62,10 +62,14 @@ class BringupSetup(FunTestCase):
             f11_boot_huid = str(job_inputs["f11_boot_huid"]).strip("[]").replace(" ", "")
         else:
             f11_boot_huid = 1
+        # f1_0_boot_args = "app=mdt_test,load_mods cc_huid=3 --dpc-server --all_100g --serial --dpc-uart " \
+        #                  "retimer={} nvme_boot_huids={} --mgmt".format(f10_retimer, f10_boot_huid)
+        # f1_1_boot_args = "app=mdt_test,load_mods cc_huid=2 --dpc-server --all_100g --serial --dpc-uart " \
+        #                  "retimer={} nvme_boot_huids={} --mgmt".format(f11_retimer, f11_boot_huid)
         f1_0_boot_args = "app=mdt_test,load_mods cc_huid=3 --dpc-server --all_100g --serial --dpc-uart " \
-                         "retimer={} nvme_boot_huids={} --mgmt".format(f10_retimer, f10_boot_huid)
+                         "retimer={} nvme_boot_except_come --mgmt".format(f10_retimer)
         f1_1_boot_args = "app=mdt_test,load_mods cc_huid=2 --dpc-server --all_100g --serial --dpc-uart " \
-                         "retimer={} nvme_boot_huids={} --mgmt".format(f11_retimer, f11_boot_huid)
+                         "retimer={} nvme_boot_except_come --mgmt".format(f11_retimer)
 
         topology_helper = TopologyHelper()
 
@@ -86,7 +90,7 @@ class BringupSetup(FunTestCase):
             deploy_vol = job_inputs["deploy_vol"]
             fun_test.shared_variables["deploy_vol"] = deploy_vol
             if not deploy_vol:
-                f1_0_boot_args = "app=mdt_test,load_mods cc_huid=3 --dpc-server --all_100g --serial " \
+                f1_0_boot_args = "app=load_mods cc_huid=3 --dpc-server --all_100g --serial " \
                                  "--dpc-uart retimer={} nvme_boot_huids={} --mgmt".format(f10_retimer, f10_boot_huid)
                 f1_1_boot_args = "app=load_mods cc_huid=2 --dpc-server --all_100g --serial " \
                                  "--dpc-uart retimer={} nvme_boot_huids={} --mgmt".format(f11_retimer, f11_boot_huid)
@@ -100,7 +104,7 @@ class BringupSetup(FunTestCase):
             print f1_1_boot_args
 
         # Get the HUID's for nvme_boot for F1_0 used during attach of RDS vol to PCIe controller
-        fun_test.shared_variables["f10_huid"] = job_inputs["boot_huid"]
+        fun_test.shared_variables["f10_huid"] = job_inputs["f10_boot_huid"]
 
         if deploy_setup:
             funcp_obj = FunControlPlaneBringup(fs_name=self.server_key["fs"][fs_name]["fs-name"])
@@ -296,7 +300,7 @@ class NicEmulation(FunTestCase):
         fun_test.shared_variables["f10_hosts"] = f10_hosts
         fun_test.shared_variables["f11_hosts"] = f11_hosts
 
-        fun_test.sleep("Setup deployed, starting storage config", 10)
+        fun_test.sleep("Setup deployed, starting storage config", 2)
 
     def cleanup(self):
         pass

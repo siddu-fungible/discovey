@@ -36,6 +36,7 @@ def post_results(value_dict):
     value_dict["volume_type"] = "BLT"
     value_dict["platform"] = FunPlatform.F1
     value_dict["version"] = fun_test.get_version()
+    value_dict["encryption"] = False
     model_name = "AlibabaPerformance"
     status = fun_test.PASSED
     try:
@@ -101,6 +102,9 @@ class RawVolumePerfScript(FunTestScript):
         topology = topology_helper.deploy()
         fun_test.shared_variables["topology"] = topology
         fun_test.test_assert(topology, "Topology deployed")
+        fs = topology.get_dut_instance(index=0)
+        come_obj = fs.get_come()
+        come_obj.command("/home/fun/mks/restart_docker_service.sh")
 
         # Bringup FunCP
         fun_test.test_assert(expression=funcp_obj.bringup_funcp(prepare_docker=False), message="Bringup FunCP")

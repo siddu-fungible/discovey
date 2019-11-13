@@ -470,7 +470,9 @@ class CollectStats(object):
     def collect_vp_utils_stats(self, output_file, interval=10, count=3, non_zero_stats_only=True, threaded=True,
                                chunk=8192, command_timeout=DPCSH_COMMAND_TIMEOUT):
         output = False
-        column_headers = ["Cluster/Core", "Thread 0", "Thread 1", "Thread 2", "Thread 3"]
+        vp_util_headers = ["Cluster/Core", "Thread 0", "Thread 1", "Thread 2", "Thread 3"]
+        histogram_headers = ["Utilization", "1-10", "11-20", "21-30", "31-40", "41-50", "51-60", "61-70", "71-80",
+                             "81-90", "91-100"]
 
         try:
             with open(output_file, 'a') as f:
@@ -492,14 +494,25 @@ class CollectStats(object):
                     # Grouping the output based on its cluster & core level. That is, all the four hardware threads
                     # utilization will be added into a list and assigned to it attribute having its cluster and core
                     filtered_vp_util = OrderedDict()
+                    num_vps = 0
+                    total_vp_utils = 0
+                    histogram_value = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
                     for key, value in sorted(vp_util.iteritems()):
                         cluster_id = key.split(".")[0][3]
                         core_id = key.split(".")[1]
                         new_key = "{}/{}".format(cluster_id, core_id)
                         if new_key not in filtered_vp_util:
                             filtered_vp_util[new_key] = []
-                        filtered_vp_util[new_key].append(_convert_vp_util(value))
+                        norm_value = _convert_vp_util(value)
+                        filtered_vp_util[new_key].append(norm_value)
+                        # Logic to compute the normalized VP utilization and histogram
+                        if int(cluster_id) != 8:
+                            num_vps += 1
+                            total_vp_utils += int(norm_value)
+                            histogram_index = int(norm_value) - 1 if int(norm_value) - 1 >= 0 else 0
+                            histogram_value[histogram_index / 10] += 1
 
+                    histogram_data = {"Number of VPs": histogram_value}
                     # Filling the gap for the central cluster which has only 2 threads in a core
                     for core in range(4):
                         for thread in range(2, 4):
@@ -518,11 +531,17 @@ class CollectStats(object):
                             if delete_key:
                                 del(filtered_vp_util[key])
 
-                    table_data = build_simple_table(data=filtered_vp_util, column_headers=column_headers,
-                                                    split_values_to_columns=True)
                     lines.append("\n########################  {} ########################\n".format(time.ctime()))
+                    lines.append("Normalized VP Utilization: {}\n".format(int(total_vp_utils / num_vps)))
+                    lines.append("Histogram table(Num of VPs in different utilization range):\n")
+                    table_data = build_simple_table(data=histogram_data, column_headers=histogram_headers,
+                                                    split_values_to_columns=True)
                     lines.append(table_data.get_string())
-                    lines.append("\n\n")
+                    lines.append("\nPer VP Utilization:\n")
+                    table_data = build_simple_table(data=filtered_vp_util, column_headers=vp_util_headers,
+                                                    split_values_to_columns=True)
+                    lines.append(table_data.get_string())
+                    lines.append("\n")
                     f.writelines(lines)
                     fun_test.sleep("for the next iteration - VP utils stats collection", seconds=interval)
             output = True

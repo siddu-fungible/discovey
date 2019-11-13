@@ -861,9 +861,9 @@ if __name__ == '__main__':
     ts.add_test_case(LatWriteFcp1500())
     ts.add_test_case(BwWriteFcp9000())
     ts.add_test_case(LatWriteFcp9000())
-    ts.add_test_case(BwWriteNfcp1500())
-    ts.add_test_case(LatWriteNfcp1500())
-    ts.add_test_case(BwWriteNfcp9000())
-    ts.add_test_case(LatWriteNfcp9000())
+    # ts.add_test_case(BwWriteNfcp1500())
+    # ts.add_test_case(LatWriteNfcp1500())
+    # ts.add_test_case(BwWriteNfcp9000())
+    # ts.add_test_case(LatWriteNfcp9000())
 
     ts.run()

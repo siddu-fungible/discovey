@@ -1,6 +1,6 @@
 import os
 import django
-from web.web_global import PRIMARY_SETTINGS_FILE, F1_ROOT_ID, S1_ROOT_ID
+from web.web_global import PRIMARY_SETTINGS_FILE, F1_ROOT_ID, S1_ROOT_ID, OTHER_ROOT_ID
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", PRIMARY_SETTINGS_FILE)
 django.setup()
@@ -377,8 +377,9 @@ class MetricLib():
     def _generate_report(self, workspace_id):
         reports = []
         metrics = InterestedMetrics.objects.filter(workspace_id=workspace_id)
-        for metric in metrics:
-            self._set_report_fields(lineage=metric.lineage, metric_id=metric.metric_id, reports=reports, root=True)
+        if len(metrics):
+            for metric in metrics:
+                self._set_report_fields(lineage=metric.lineage, metric_id=metric.metric_id, reports=reports, root=True)
         return reports
 
     def _set_report_fields(self, lineage, metric_id, reports, root=False):
@@ -455,18 +456,9 @@ class MetricLib():
 
     def backup_dags(self):
         self.set_global_cache(cache_valid=False)
-        metric_ids = [F1_ROOT_ID, S1_ROOT_ID]  # F1, S1 metric id
-        result = {}
-        for metric_id in metric_ids:
-            if metric_id == F1_ROOT_ID:  # F1 metric id
-                dag = "F1"
-            else:
-                dag = "S1"
-            result[dag] = self.fetch_dag(metric_ids=[metric_id], backup=True)
-            print json.dumps(result[dag])
-        f1_dag = result["F1"]
-        s1_dag = result["S1"]
-        PerformanceMetricsDag(f1_metrics_dag=json.dumps(f1_dag), s1_metrics_dag=json.dumps(s1_dag)).save()
+        metric_ids = [F1_ROOT_ID, S1_ROOT_ID, OTHER_ROOT_ID]  # F1, S1, Other metric id
+        result = self.fetch_dag(metric_ids=metric_ids, backup=True)
+        PerformanceMetricsDag(metrics_dag=json.dumps(result)).save()
         print "dag backup successful"
 
     def traverse_dag(self, levels, metric_id, metric_chart_entries, sort_by_name=True):
@@ -530,11 +522,7 @@ class MetricLib():
         else:
             pmds = PerformanceMetricsDag.objects.all().order_by("-date_time")[:1]
             for pmd in pmds:
-                for metric_id in metric_ids:
-                    if int(metric_id) == F1_ROOT_ID:  # 101=F1
-                        result.append(json.loads(pmd.f1_metrics_dag)[0])
-                    if int(metric_id) == S1_ROOT_ID:  # 591-S1
-                        result.append(json.loads(pmd.s1_metrics_dag)[0])
+                result = json.loads(pmd.metrics_dag)
         return result
 
     def set_global_cache(self, cache_valid):

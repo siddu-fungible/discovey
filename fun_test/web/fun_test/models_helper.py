@@ -544,11 +544,6 @@ def _get_suite_executions(execution_id=None,
             elif te_result == RESULTS["IN_PROGRESS"]:
                 num_in_progress += 1
 
-            # if save_test_case_info:
-            #    suite_execution["test_case_info"].append({"script_path": test_case_execution.script_path,
-            #                                              "test_case_id": test_case_execution.test_case_id,
-            #                                              "inputs": test_case_execution.inputs,
-            #                                              "result": test_case_execution.result})
 
         if not finalized:
             if finalize and (num_passed == len(test_case_execution_ids)) and test_case_execution_ids:
@@ -583,10 +578,8 @@ def _get_suite_executions(execution_id=None,
         one_result["num_not_run"] = num_not_run
         one_result["num_in_progress"] = num_in_progress
 
-        one_result["fields"]["scheduled_time"] = str(
-           suite_execution.scheduled_time)
-        one_result["fields"]["submitted_time"] = str(
-            suite_execution.submitted_time)
+        one_result["fields"]["scheduled_time"] = str(suite_execution.scheduled_time)
+        one_result["fields"]["submitted_time"] = str(suite_execution.submitted_time)
         one_result["fields"]["completed_time"] = str(suite_execution.completed_time)
         return_results.append(one_result)
     with transaction.atomic():
@@ -624,18 +617,17 @@ def _get_suite_execution_attributes(suite_execution):
     suite_execution_attributes.append({"name": "Job state", "value": suite_execution["fields"]["state"]})
     suite_execution_attributes.append({"name": "Result", "value": str(suite_execution["suite_result"])})
     suite_execution_attributes.append({"name": "Version", "value": str(suite_execution["fields"]["version"])})
-    suite_execution_attributes.append(
-        {"name": "Scheduled Time", "value": str(suite_execution["fields"]["scheduled_time"])})
-    suite_execution_attributes.append(
-        {"name": "Started Time", "value": str(suite_execution["fields"]["started_time"])})
-    suite_execution_attributes.append(
-        {"name": "Completed Time", "value": str(suite_execution["fields"]["completed_time"])})
+    # suite_execution_attributes.append(
+    #     {"name": "Scheduled Time", "value": str(suite_execution["fields"]["scheduled_time"])})
+    # suite_execution_attributes.append(
+    #    {"name": "Started Time", "value": str(suite_execution["fields"]["started_time"])})
+    # suite_execution_attributes.append(
+    #    {"name": "Completed Time", "value": str(suite_execution["fields"]["completed_time"])})
     suite_execution_attributes.append({"name": "Path", "value": str(suite_execution["fields"]["suite_path"])})
     suite_execution_attributes.append({"name": "Passed", "value": suite_execution["num_passed"]})
     suite_execution_attributes.append({"name": "Failed", "value": suite_execution["num_failed"]})
     suite_execution_attributes.append({"name": "Not Run", "value": suite_execution["num_not_run"]})
     suite_execution_attributes.append({"name": "In Progress", "value": suite_execution["num_in_progress"]})
-    suite_execution_attributes.append({"name": "Skipped", "value": suite_execution["num_skipped"]})
     suite_execution_attributes.append({"name": "Test-bed type", "value": suite_execution["fields"]["test_bed_type"]})
     suite_execution_attributes.append({"name": "Submitter", "value": suite_execution["fields"]["submitter_email"]})
     return suite_execution_attributes
@@ -667,9 +659,9 @@ def is_suite_in_progress(job_id, test_bed_type):
     result = None
     try:
         s = SuiteExecution.objects.get(execution_id=int(job_id))
-        print ("Checking suite in progress: {}: {}".format(job_id, s.state))
+        # print ("Checking suite in progress: {}: {}".format(job_id, s.state))
         result = s.state >= JobStatusType.IN_PROGRESS
-        print ("Checking suite in progress: {} {}: {}: Result: {}".format(test_bed_type, job_id, s.state, result))
+        # print ("Checking suite in progress: {} {}: {}: Result: {}".format(test_bed_type, job_id, s.state, result))
     except ObjectDoesNotExist:
         pass
     return result

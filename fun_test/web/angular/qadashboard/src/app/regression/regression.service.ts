@@ -83,16 +83,16 @@ export class RegressionService implements OnInit{
     return new Date(epochValue);
   }
 
-getPrettyLocalizeTime(t) {
-  let minutePrefix = '';
-  let localTime = this.convertToLocalTimezone(t);
-  if (localTime.getMinutes() < 10){
-    minutePrefix += '0';
+  getPrettyLocalizeTime(t) {
+    let minutePrefix = '';
+    let localTime = this.convertToLocalTimezone(t);
+    if (localTime.getMinutes() < 10){
+      minutePrefix += '0';
+    }
+    let s = `${localTime.getMonth() + 1}/${localTime.getDate()} ${localTime.getHours()}:${minutePrefix}${localTime.getMinutes()}`;
+    //return this.convertToLocalTimezone(t).toLocaleString().replace(/\..*$/, "");
+    return s;
   }
-  let s = `${localTime.getMonth() + 1}/${localTime.getDate()} ${localTime.getHours()}:${minutePrefix}${localTime.getMinutes()}`;
-  //return this.convertToLocalTimezone(t).toLocaleString().replace(/\..*$/, "");
-  return s;
-}
 
 
   getTestCaseExecution(executionId) {
@@ -275,7 +275,7 @@ getPrettyLocalizeTime(t) {
     }))
   }
 
-  testCaseTimeSeriesCheckpoints(suiteExecutionId, testCaseExecutionId?: null) {
+  testCaseTimeSeriesCheckpoints(suiteExecutionId, testCaseExecutionId: number = null) {
     let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}`;
     url += `?type=80`;
     if (testCaseExecutionId) {
@@ -285,9 +285,42 @@ getPrettyLocalizeTime(t) {
     return this.apiService.get(url).pipe(switchMap(response => {
       return of(response.data);
     }), catchError (error => {
-      this.loggerService.error("Unable fetch time-series logs");
+      this.loggerService.error("Unable to fetch time-series logs");
       return throwError(error);
     }))
+  }
+
+  artifacts(suiteExecutionId: number, testCaseExecutionId: number = null) {
+    let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}`;
+    let params = [];
+    params.push(["type", 200]);
+    if (testCaseExecutionId) {
+      params.push(["te", testCaseExecutionId]);
+    }
+    url += this.commonService.queryParamsToString(params);
+    return this.apiService.get(url).pipe(switchMap(response => {
+      return of(response.data);
+    }), catchError(error => {
+      this.loggerService.error("Unable to fetch time-series artifacts");
+      return throwError(error);
+    }))
+  }
+
+  testCaseTables(suiteExecutionId: number, testCaseExecutionId: number = null) {
+    let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}`;
+    let params = [];
+    params.push(["type", 300]);
+    if (testCaseExecutionId) {
+      params.push(["te", testCaseExecutionId]);
+    }
+    url += this.commonService.queryParamsToString(params);
+    return this.apiService.get(url).pipe(switchMap(response => {
+      return of(response.data);
+    }), catchError(error => {
+      this.loggerService.error("Unable to fetch test-case tables");
+      return throwError(error);
+    }))
+
   }
 
   getRegressionScripts(scriptId=null, scriptPath=null) {
@@ -316,5 +349,12 @@ getPrettyLocalizeTime(t) {
 
   getConsoleLogPath(suiteExecutionId, path, logPrefix) {
     window.open(this._getFlatPath(suiteExecutionId, path, logPrefix) + this.CONSOLE_LOG_EXTENSION);
+  }
+
+  preserveLogs(suiteExecutionId, preserveLogs) {
+    let payload = {"preserve_logs": preserveLogs};
+    return this.apiService.put("/api/v1/regression/suite_executions/" + suiteExecutionId, payload).pipe(switchMap(response => {
+      return of(true);
+    }))
   }
 }

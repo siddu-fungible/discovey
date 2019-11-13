@@ -776,6 +776,9 @@ class FunTest:
 
     def register_fs(self, fs):
         self.fss.append(fs)
+        asset_name = fs.get_asset_name()
+        if asset_name and self.time_series_enabled:
+            self.add_time_series_registered_asset(asset_name=asset_name)
 
     def get_topologies(self):
         return self.topologies
@@ -916,6 +919,19 @@ class FunTest:
             self.critical(str(ex))
             self.enable_time_series(enable=False)
 
+    def add_time_series_registered_asset(self, asset_name):
+        try:
+            epoch_time = get_current_epoch_time()
+            data = {"asset_id": asset_name}
+            self.add_time_series_document(collection_name=self.get_time_series_collection_name(),
+                                          epoch_time=epoch_time,
+                                          type=TimeSeriesTypes.REGISTERED_ASSET,
+                                          te=self.current_test_case_execution_id,
+                                          data=data)
+        except Exception as ex:
+            self.critical(str(ex))
+            self.enable_time_series(enable=False)
+
     def add_time_series_artifact(self,
                                  description,
                                  filename,
@@ -957,6 +973,13 @@ class FunTest:
         self.add_time_series_document(collection_name=self.get_time_series_collection_name(),
                                       epoch_time=get_current_epoch_time(),
                                       type=TimeSeriesTypes.CHECKPOINT,
+                                      te=self.current_test_case_execution_id,
+                                      data=data)
+
+    def add_time_series_test_case_table(self, data):
+        self.add_time_series_document(collection_name=self.get_time_series_collection_name(),
+                                      epoch_time=get_current_epoch_time(),
+                                      type=TimeSeriesTypes.TEST_CASE_TABLE,
                                       te=self.current_test_case_execution_id,
                                       data=data)
 
@@ -1263,6 +1286,9 @@ class FunTest:
     def add_table(self, panel_header, table_name, table_data):
         self.fun_xml_obj.add_collapsible_tab_panel_tables(header=panel_header,
                                                           panel_items={table_name: table_data})
+        if self.time_series_enabled:
+            data = {"panel_header": panel_header, "table_name": table_name, "table_data": table_data}
+            self.add_time_series_test_case_table(data=data)
 
     def _add_xml_trace(self):
         if self.current_test_case_id in self.traces:

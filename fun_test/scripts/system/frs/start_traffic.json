@@ -8,6 +8,8 @@
   "ec_vol": false,
   "collect_stats": [],
   "disable_stats": [],
+  "add_boot_arg": "",
+  "elasticsearch_config": {"ip": "10.1.20.52", "port": 9200},
   "fio_params": {
     "numjobs": 1,
     "size": "100%",
@@ -22,5 +24,6 @@
     "ioengine": "libaio",
     "output-format": "json",
     "cpus_allowed": "0-7"
-  }
+  },
+  "end_sleep": 10
 }
