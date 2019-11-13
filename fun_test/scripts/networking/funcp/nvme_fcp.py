@@ -456,16 +456,16 @@ class ConfigureRdsVol(FunTestCase):
             fun_test.log("F11 vlan IP {} is not valid".format(ip))
             fun_test.simple_assert(False, "F11 vlan IP is in wrong format")
 
-        # # Stop udev services on host
-        # service_list = ["systemd-udevd-control.socket", "systemd-udevd-kernel.socket", "systemd-udevd"]
-        # for service in service_list:
-        #     for f10_obj in f10_hosts:
-        #         service_status = f10_obj["handle"].systemctl(service_name=service, action="stop")
-        #         fun_test.simple_assert(service_status, "Stopping {} service on {}".format(service, f10_obj["name"]))
-        #
-        #     for f11_obj in f11_hosts:
-        #         service_status = f11_obj["handle"].systemctl(service_name=service, action="stop")
-        #         fun_test.simple_assert(service_status, "Stopping {} service on {}".format(service, f11_obj["name"]))
+        # Stop udev services on host
+        service_list = ["systemd-udevd-control.socket", "systemd-udevd-kernel.socket", "systemd-udevd"]
+        for service in service_list:
+            for f10_obj in f10_hosts:
+                service_status = f10_obj["handle"].systemctl(service_name=service, action="stop")
+                fun_test.simple_assert(service_status, "Stopping {} service on {}".format(service, f10_obj["name"]))
+
+            for f11_obj in f11_hosts:
+                service_status = f11_obj["handle"].systemctl(service_name=service, action="stop")
+                fun_test.simple_assert(service_status, "Stopping {} service on {}".format(service, f11_obj["name"]))
         
         # Storage Controller Objects
         f10_storage_ctrl_obj = StorageController(target_ip=come_obj.host_ip, target_port=40220)
