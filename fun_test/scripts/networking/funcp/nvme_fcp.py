@@ -584,12 +584,15 @@ class ConfigureRdsVol(FunTestCase):
                     else:
                         f11_ctrl = f11_pcie_ctrl
                         fun_test.log("PCIe controller is HUID 1")
+                else:
+                    f11_ctrl = f11_pcie_ctrl
+                    fun_test.log("PCIe controller is HUID 1")
 
-                    command_result = f11_storage_ctrl_obj.attach_volume_to_controller(vol_uuid=f11_rds_vol[x],
-                                                                                      ctrlr_uuid=f11_ctrl,
-                                                                                      ns_id=x,
-                                                                                      command_duration=command_timeout)
-                    fun_test.simple_assert(command_result["status"], "F1_1 : Attach RDS vol {} to PCIe ctrlr".format(x))
+                command_result = f11_storage_ctrl_obj.attach_volume_to_controller(vol_uuid=f11_rds_vol[x],
+                                                                                  ctrlr_uuid=f11_ctrl,
+                                                                                  ns_id=x,
+                                                                                  command_duration=command_timeout)
+                fun_test.simple_assert(command_result["status"], "F1_1 : Attach RDS vol {} to PCIe ctrlr".format(x))
 
             f10_storage_ctrl_obj.disconnect()
             f11_storage_ctrl_obj.disconnect()
