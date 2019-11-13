@@ -2028,7 +2028,12 @@
       "cab02-qa-10",
       "cab02-qa-11",
       "cab02-qa-12",
-      "cab02-qa-13"
+      "cab02-qa-13",
+      "cab04-qa-01",
+      "cab04-qa-02",
+      "cab04-qa-03",
+      "cab04-qa-04",
+      "cab04-qa-05"
     ],
     "dut_info": {
       "0": {
