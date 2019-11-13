@@ -1585,6 +1585,7 @@ class MetricParser():
 
 
     def teramark_zip(self, logs, date_time, platform):
+        self.initialize()
         metrics = collections.OrderedDict()
         metrics['input_platform'] = platform
         teramark_begin = False

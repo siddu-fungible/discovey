@@ -1,7 +1,7 @@
 {
    "DfaRuntime": {
     "jsons": [
-      "DFA_ONLY.json,"
+      "DFA_ONLY.json"
     ],
     "XDATA_LISTS": "/project/users/QA/regression/data_store/regex/F1/dfa_only_compile/dfa_results/DFA_ONLY.list",
     "description": "F1:testing basic lsu actions for DFA patterns",
