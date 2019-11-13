@@ -835,12 +835,12 @@
     "bmc": {
       "mgmt_ssh_password": "superuser",
       "mgmt_ssh_username": "sysadmin",
-      "mgmt_ip": "10.1.105.86"
+      "mgmt_ip": "10.1.105.236"
     },
     "come": {
       "mgmt_ssh_password": "123",
       "mgmt_ssh_username": "fun",
-      "mgmt_ip": "10.1.105.87"
+      "mgmt_ip": "10.1.105.237"
     },
     "name": "fs-102",
     "mpg_ips": ["10.1.105.88", "10.1.105.89"],
@@ -849,7 +849,7 @@
     "fpga": {
       "mgmt_ssh_password": "root",
       "mgmt_ssh_username": "root",
-      "mgmt_ip": "10.1.105.85"
+      "mgmt_ip": "10.1.105.238"
     },
     "apc_info": {
       "username": "localadmin",
