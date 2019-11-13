@@ -8,7 +8,7 @@ from fun_global import RESULTS
 from dateutil.parser import parse
 from fun_global import FunPlatform, PerfUnit
 from lib.system.fun_test import *
-from web.fun_test.models_helper import add_jenkins_job_id_map
+from web.fun_test.models_helper import add_jenkins_job_id_map, add_job_run_time_properties
 from web.fun_test.metrics_models import *
 
 app_config = apps.get_app_config(app_label='fun_test')
@@ -16,24 +16,27 @@ app_config = apps.get_app_config(app_label='fun_test')
 
 class MetricParser():
     def parse_it(self, logs, metric_id=None, model_name=None, auto_add_to_db=False, date_time=None,
-                 platform=FunPlatform.F1):
+                 platform=FunPlatform.F1, run_time={}):
         result = {}
         if model_name:
-            result = self.regex_by_model(model_name=model_name, logs=logs, date_time=date_time, platform=platform)
+            result = self.regex_by_model(model_name=model_name, logs=logs, date_time=date_time, platform=platform,
+                                         run_time=run_time)
         else:
             if metric_id:
                 chart = MetricChart.objects.get(metric_id=metric_id)
                 model_name = chart.metric_model_name
-                result = self.regex_by_model(model_name=model_name, logs=logs, date_time=date_time, platform=platform)
+                result = self.regex_by_model(model_name=model_name, logs=logs, date_time=date_time,
+                                             platform=platform, run_time=run_time)
 
         if auto_add_to_db:
             if result["data"]:
                 metric_model = app_config.get_metric_models()[model_name]
                 for entry in result["data"]:
-                    MetricHelper(model=metric_model).add_entry(**entry)
+                    run_time_id = add_job_run_time_properties(run_time=run_time)
+                    MetricHelper(model=metric_model).add_entry(run_time=run_time_id, **entry)
         return result
 
-    def regex_by_model(self, model_name, logs, date_time, platform):
+    def regex_by_model(self, model_name, logs, date_time, platform, run_time):
         if "FlowTest" in model_name:
             return self.flow_test(logs=logs, date_time=date_time)
         elif "Dfa" in model_name or "Nfa" in model_name:
@@ -108,9 +111,10 @@ class MetricParser():
         elif "BootTime" in model_name:
             return self.boot_time(logs=logs, date_time=date_time, platform=platform)
         elif "NuTransit" in model_name:
-            return self.teramark_nu_transit(logs=logs, date_time=date_time, platform=platform, model_name=model_name)
+            return self.teramark_nu_transit(logs=logs, date_time=date_time, platform=platform, model_name=model_name,
+                                            run_time=run_time)
         elif "TeraMarkZip" in model_name:
-            return self.teramark_zip(logs=logs, date_time=date_time, platform=platform)
+            return self.teramark_zip(logs=logs, date_time=date_time, platform=platform, run_time=run_time)
         else:
             return {}
 
@@ -1526,7 +1530,7 @@ class MetricParser():
         return self.result
 
 
-    def teramark_nu_transit(self, logs, date_time, platform, model_name):
+    def teramark_nu_transit(self, logs, date_time, platform, model_name, run_time):
         self.initialize()
         self.metrics["input_platform"] = platform
         nu_transit_flow_types = {"FCP_HNU_HNU": "HNU_HNU_FCP"}
@@ -1574,7 +1578,8 @@ class MetricParser():
                     self.result["data"].append(d)
                     if date_time.year >= 2019:
                         metric_model = app_config.get_metric_models()[model_name]
-                        MetricHelper(model=metric_model).add_entry(**d)
+                        run_time_id = add_job_run_time_properties(run_time=run_time)
+                        MetricHelper(model=metric_model).add_entry(run_time=run_time_id, **d)
                         self.add_version_to_jenkins_job_id_map(date_time=date_time,
                                                                version=self.metrics["input_version"])
 
@@ -1584,7 +1589,7 @@ class MetricParser():
             return self.result
 
 
-    def teramark_zip(self, logs, date_time, platform):
+    def teramark_zip(self, logs, date_time, platform, run_time):
         self.initialize()
         metrics = collections.OrderedDict()
         metrics['input_platform'] = platform
@@ -1622,10 +1627,11 @@ class MetricParser():
                     metrics["output_latency_avg_unit"] = output_latency_unit
                     self.status = RESULTS["PASSED"]
                     d = self.metrics_to_dict(metrics=metrics, result=self.status, date_time=date_time)
+                    run_time_id = add_job_run_time_properties(run_time=run_time)
                     if input_type == "Deflate":
-                        MetricHelper(model=eval("TeraMarkZipDeflatePerformance")).add_entry(**d)
+                        MetricHelper(model=eval("TeraMarkZipDeflatePerformance")).add_entry(run_time=run_time_id, **d)
                     else:
-                        MetricHelper(model=eval("TeraMarkZipLzmaPerformance")).add_entry(**d)
+                        MetricHelper(model=eval("TeraMarkZipLzmaPerformance")).add_entry(run_time=run_time_id, **d)
                     self.result["data"].append(d)
         self.result["match_found"] = self.match_found
         self.result["status"] = self.status == RESULTS["PASSED"]

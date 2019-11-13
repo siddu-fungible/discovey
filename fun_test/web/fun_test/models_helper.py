@@ -38,7 +38,8 @@ from web.fun_test.models import (
     TestBed,
     TestCaseInfo,
     Suite,
-    RegresssionScripts
+    RegresssionScripts,
+    JobRunTimeProperties
 )
 
 SUITE_EXECUTION_FILTERS = {"PENDING": "PENDING",
@@ -611,6 +612,12 @@ def add_jenkins_job_id_map(jenkins_job_id, fun_sdk_branch, git_commit, software_
                                 suite_execution_id=suite_execution_id)
         entry.save()
 
+def add_job_run_time_properties(run_time):
+    print "Run time properties {}".format(json.loads(run_time))
+    entry = JenkinsJobIdMap(run_time=run_time)
+    id = entry.id
+    entry.save()
+    return id
 
 def _get_suite_execution_attributes(suite_execution):
     suite_execution_attributes = []

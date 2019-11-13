@@ -4,13 +4,10 @@ from lib.host.lsf_status_server import LsfStatusServer
 from web.fun_test.metrics_models import MetricChart
 from web.fun_test.analytics_models_helper import invalidate_goodness_cache
 
-import re
 from datetime import datetime
 from dateutil.parser import parse
 from scripts.system.metrics_parser import MetricParser
-from django.utils import timezone
-from web.fun_test.models_helper import add_jenkins_job_id_map
-from fun_global import FunPlatform, PerfUnit
+from fun_global import FunPlatform
 
 F1 = FunPlatform.F1
 
@@ -173,18 +170,6 @@ def set_networking_chart_status(platform=FunPlatform.F1):
                 chart.save()
 
 
-def add_version_to_jenkins_job_id_map(date_time, version):
-    suite_execution_id = fun_test.get_suite_execution_id()
-    add_jenkins_job_id_map(jenkins_job_id=0,
-                           fun_sdk_branch="",
-                           git_commit="",
-                           software_date=0,
-                           hardware_version="",
-                           build_properties="", lsf_job_id="",
-                           sdk_version=version, build_date=date_time, suite_execution_id=suite_execution_id,
-                           add_associated_suites=False)
-
-
 class MyScript(FunTestScript):
     def describe(self):
         self.set_test_details(steps=
@@ -210,7 +195,7 @@ class MyScript(FunTestScript):
                 SOAK_FLOWS_MEMCPY_S1, VOLTEST_BLT_1,
                 VOLTEST_BLT_8, VOLTEST_BLT_12, TERAMARK_EC_S1, TERAMARK_JPEG_S1, TERAMARK_ZIP_DEFLATE_S1,
                 TERAMARK_ZIP_LZMA_S1, TERAMARK_PKE_S1, TERAMARK_DFA_S1, TERAMARK_NFA_S1, TERAMARK_CRYPTO_RAW_S1, CRYPTO_FAST_PATH]
-        self.lsf_status_server.workaround(tags=tags)
+        # self.lsf_status_server.workaround(tags=tags)
         fun_test.shared_variables["lsf_status_server"] = self.lsf_status_server
 
     def cleanup(self):
@@ -235,18 +220,16 @@ class PalladiumPerformanceTc(FunTestCase):
         fun_test.test_assert(job_info, "Ensure Job Info exists")
         self.jenkins_job_id = job_info["jenkins_build_number"]
         self.job_id = job_info["job_id"]
-        self.git_commit = job_info["git_commit"]
-        self.git_commit = self.git_commit.replace("https://github.com/fungible-inc/FunOS/commit/", "")
+        git_commit = job_info["git_commit"]
+        self.git_commit = git_commit.replace("https://github.com/fungible-inc/FunOS/commit/", "")
         if validation_required:
             fun_test.test_assert(not job_info["return_code"], "Valid return code")
             fun_test.test_assert("output_text" in job_info, "output_text found in job info: {}".format(self.job_id))
-        lines = job_info["output_text"].split("\n")
-        dt = job_info["date_time"]
-
-        fun_test.test_assert(is_job_from_today(dt), "Last job is from today")
+        self.lines = job_info["output_text"].split("\n")
+        self.dt = job_info["date_time"]
+        self.run_time = job_info["run_time"]
         self.job_info = job_info
-        self.lines = lines
-        self.dt = dt
+        fun_test.test_assert(is_job_from_today(self.dt), "Last job is from today")
 
         return True
 
@@ -273,7 +256,8 @@ class PalladiumPerformanceTc(FunTestCase):
         try:
             fun_test.test_assert(self.validate_job(), "validating job")
             result = MetricParser().parse_it(model_name=self.model, logs=self.lines,
-                                             auto_add_to_db=True, date_time=self.dt, platform=self.platform)
+                                             auto_add_to_db=True, date_time=self.dt, platform=self.platform,
+                                             run_time=self.run_time)
 
             fun_test.test_assert(result["match_found"], "Found atleast one entry")
             self.result = fun_test.PASSED
@@ -441,7 +425,7 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
             self.lines = logs_1 + logs_0
 
             result = MetricParser().parse_it(model_name=self.model, logs=self.lines,
-                                             auto_add_to_db=True, date_time=self.dt, platform=self.platform)
+                                             auto_add_to_db=True, date_time=self.dt, platform=self.platform, run_time=self.run_time)
 
             fun_test.test_assert(result["match_found"], "Found atleast one entry")
             self.result = fun_test.PASSED
@@ -537,7 +521,7 @@ class FlowTestPerformanceTc(PalladiumPerformanceTc):
             lines = self.lsf_status_server.get_human_file(job_id=self.job_id, console_name="PCI Script Output")
             self.lines = lines.split("\n")
             result = MetricParser().parse_it(model_name=self.model, logs=self.lines,
-                                             auto_add_to_db=True, date_time=self.dt, platform=self.platform)
+                                             auto_add_to_db=True, date_time=self.dt, platform=self.platform, run_time=self.run_time)
 
             fun_test.test_assert(result["match_found"], "Found atleast one entry")
             self.result = fun_test.PASSED
@@ -564,7 +548,7 @@ class TeraMarkZipPerformanceTc(PalladiumPerformanceTc):
         try:
             fun_test.test_assert(self.validate_job(), "validating job")
             result = MetricParser().parse_it(model_name="TeraMarkZip", logs=self.lines,
-                                                    auto_add_to_db=False, date_time=self.dt, platform=self.platform)
+                                                    auto_add_to_db=False, date_time=self.dt, platform=self.platform, run_time=self.run_time)
             fun_test.test_assert(result["match_found"], "Found atleast one entry")
             self.result = fun_test.PASSED
 
@@ -1030,59 +1014,59 @@ class CryptoFastPathPerformanceTc(PalladiumPerformanceTc):
 if __name__ == "__main__":
     myscript = MyScript()
 
-    myscript.add_test_case(AllocSpeedPerformanceTc())
-    myscript.add_test_case(BcopyPerformanceTc())
-    myscript.add_test_case(BcopyFloodPerformanceTc())
-    myscript.add_test_case(EcPerformanceTc())
-    myscript.add_test_case(WuDispatchTestPerformanceTc())
-    myscript.add_test_case(WuSendSpeedTestPerformanceTc())
-    myscript.add_test_case(FunMagentPerformanceTestTc())
-    myscript.add_test_case(WuStackSpeedTestPerformanceTc())
-    myscript.add_test_case(SoakFunMallocPerformanceTc())
-    myscript.add_test_case(SoakClassicMallocPerformanceTc())
-    myscript.add_test_case(BootTimingPerformanceTc())
-    myscript.add_test_case(TeraMarkPkeRsaPerformanceTc())
-    myscript.add_test_case(TeraMarkPkeRsa4kPerformanceTc())
-    myscript.add_test_case(TeraMarkPkeEcdh256PerformanceTc())
-    myscript.add_test_case(TeraMarkPkeEcdh25519PerformanceTc())
-    myscript.add_test_case(TeraMarkCryptoPerformanceTc())
-    myscript.add_test_case(TeraMarkLookupEnginePerformanceTc())
-    myscript.add_test_case(FlowTestPerformanceTc())
-    myscript.add_test_case(TeraMarkZipPerformanceTc())
-    myscript.add_test_case(TeraMarkDfaPerformanceTc())
-    myscript.add_test_case(TeraMarkJpegPerformanceTc())
-    myscript.add_test_case(TeraMarkNuTransitPerformanceTc())
-    myscript.add_test_case(PkeX25519TlsSoakPerformanceTc())
-    myscript.add_test_case(PkeP256TlsSoakPerformanceTc())
-    myscript.add_test_case(SoakDmaMemcpyCohPerformanceTc())
-    myscript.add_test_case(SoakDmaMemcpyNonCohPerformanceTc())
-    myscript.add_test_case(SoakDmaMemsetPerformanceTc())
-    myscript.add_test_case(F1FlowTestPerformanceTc())
+    # myscript.add_test_case(AllocSpeedPerformanceTc())
+    # myscript.add_test_case(BcopyPerformanceTc())
+    # myscript.add_test_case(BcopyFloodPerformanceTc())
+    # myscript.add_test_case(EcPerformanceTc())
+    # myscript.add_test_case(WuDispatchTestPerformanceTc())
+    # myscript.add_test_case(WuSendSpeedTestPerformanceTc())
+    # myscript.add_test_case(FunMagentPerformanceTestTc())
+    # myscript.add_test_case(WuStackSpeedTestPerformanceTc())
+    # myscript.add_test_case(SoakFunMallocPerformanceTc())
+    # myscript.add_test_case(SoakClassicMallocPerformanceTc())
+    # myscript.add_test_case(BootTimingPerformanceTc())
+    # myscript.add_test_case(TeraMarkPkeRsaPerformanceTc())
+    # myscript.add_test_case(TeraMarkPkeRsa4kPerformanceTc())
+    # myscript.add_test_case(TeraMarkPkeEcdh256PerformanceTc())
+    # myscript.add_test_case(TeraMarkPkeEcdh25519PerformanceTc())
+    # myscript.add_test_case(TeraMarkCryptoPerformanceTc())
+    # myscript.add_test_case(TeraMarkLookupEnginePerformanceTc())
+    # myscript.add_test_case(FlowTestPerformanceTc())
+    # myscript.add_test_case(TeraMarkZipPerformanceTc())
+    # myscript.add_test_case(TeraMarkDfaPerformanceTc())
+    # myscript.add_test_case(TeraMarkJpegPerformanceTc())
+    # myscript.add_test_case(TeraMarkNuTransitPerformanceTc())
+    # myscript.add_test_case(PkeX25519TlsSoakPerformanceTc())
+    # myscript.add_test_case(PkeP256TlsSoakPerformanceTc())
+    # myscript.add_test_case(SoakDmaMemcpyCohPerformanceTc())
+    # myscript.add_test_case(SoakDmaMemcpyNonCohPerformanceTc())
+    # myscript.add_test_case(SoakDmaMemsetPerformanceTc())
+    # myscript.add_test_case(F1FlowTestPerformanceTc())
     myscript.add_test_case(TeraMarkNfaPerformanceTc())
-    myscript.add_test_case(TeraMarkRcnvmeReadPerformanceTc())
-    myscript.add_test_case(TeraMarkRcnvmeRandomReadPerformanceTc())
-    myscript.add_test_case(TeraMarkRcnvmeWritePerformanceTc())
-    myscript.add_test_case(TeraMarkRcnvmeRandomWritePerformanceTc())
-    myscript.add_test_case(RcnvmeReadAllPerformanceTc())
-    myscript.add_test_case(RcnvmeRandomReadAllPerformanceTc())
-    myscript.add_test_case(RcnvmeWriteAllPerformanceTc())
-    myscript.add_test_case(RcnvmeRandomWriteAllPerformanceTc())
-    myscript.add_test_case(SoakDmaMemcpyThresholdPerformanceTc())
-    myscript.add_test_case(WuLatencyUngatedPerformanceTc())
-    myscript.add_test_case(WuLatencyAllocStackPerformanceTc())
-    myscript.add_test_case(JuniperIpsecEncryptionSingleTunnelPerformanceTc())
-    myscript.add_test_case(JuniperIpsecDecryptionMultiTunnelPerformanceTc())
-    myscript.add_test_case(JuniperIpsecDecryptionSingleTunnelPerformanceTc())
-    myscript.add_test_case(JuniperIpsecEncryptionMultiTunnelPerformanceTc())
-    myscript.add_test_case(SetNetworkingStatusTc())
-    myscript.add_test_case(VoltestLsvPerformanceTc())
-    myscript.add_test_case(VoltestLsv4PerformanceTc())
-    myscript.add_test_case(ChannelParallPerformanceTc())
-    myscript.add_test_case(SoakFlowsBusyLoopPerformanceTc())
-    myscript.add_test_case(SoakFlowsMemcpy1MbNonCohPerformanceTc())
-    myscript.add_test_case(VoltestBlt1PerformanceTc())
-    myscript.add_test_case(VoltestBlt8PerformanceTc())
-    myscript.add_test_case(VoltestBlt12PerformanceTc())
-    myscript.add_test_case(CryptoFastPathPerformanceTc())
+    # myscript.add_test_case(TeraMarkRcnvmeReadPerformanceTc())
+    # myscript.add_test_case(TeraMarkRcnvmeRandomReadPerformanceTc())
+    # myscript.add_test_case(TeraMarkRcnvmeWritePerformanceTc())
+    # myscript.add_test_case(TeraMarkRcnvmeRandomWritePerformanceTc())
+    # myscript.add_test_case(RcnvmeReadAllPerformanceTc())
+    # myscript.add_test_case(RcnvmeRandomReadAllPerformanceTc())
+    # myscript.add_test_case(RcnvmeWriteAllPerformanceTc())
+    # myscript.add_test_case(RcnvmeRandomWriteAllPerformanceTc())
+    # myscript.add_test_case(SoakDmaMemcpyThresholdPerformanceTc())
+    # myscript.add_test_case(WuLatencyUngatedPerformanceTc())
+    # myscript.add_test_case(WuLatencyAllocStackPerformanceTc())
+    # myscript.add_test_case(JuniperIpsecEncryptionSingleTunnelPerformanceTc())
+    # myscript.add_test_case(JuniperIpsecDecryptionMultiTunnelPerformanceTc())
+    # myscript.add_test_case(JuniperIpsecDecryptionSingleTunnelPerformanceTc())
+    # myscript.add_test_case(JuniperIpsecEncryptionMultiTunnelPerformanceTc())
+    # myscript.add_test_case(SetNetworkingStatusTc())
+    # myscript.add_test_case(VoltestLsvPerformanceTc())
+    # myscript.add_test_case(VoltestLsv4PerformanceTc())
+    # myscript.add_test_case(ChannelParallPerformanceTc())
+    # myscript.add_test_case(SoakFlowsBusyLoopPerformanceTc())
+    # myscript.add_test_case(SoakFlowsMemcpy1MbNonCohPerformanceTc())
+    # myscript.add_test_case(VoltestBlt1PerformanceTc())
+    # myscript.add_test_case(VoltestBlt8PerformanceTc())
+    # myscript.add_test_case(VoltestBlt12PerformanceTc())
+    # myscript.add_test_case(CryptoFastPathPerformanceTc())
 
     myscript.run()

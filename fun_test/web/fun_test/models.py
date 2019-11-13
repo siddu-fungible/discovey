@@ -378,6 +378,18 @@ class SubModules(FunModel):   # Say Module: Networking, sub-module: PSW
     name = models.TextField(unique=True)
     verbose_name = models.TextField(default="Verbose name")
 
+
+class JobRunTimeProperties(FunModel):
+    date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    run_time = JSONField(default={}, blank=True)
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
+
+
 class JenkinsJobIdMap(models.Model):
     jenkins_job_id = models.IntegerField()
     fun_sdk_branch = models.TextField(default="")

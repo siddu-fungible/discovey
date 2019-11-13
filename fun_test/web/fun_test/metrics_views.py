@@ -16,7 +16,7 @@ from web.fun_test.metrics_models import LastMetricId, LastTriageId, PerformanceM
 from web.fun_test.metrics_models import AllocSpeedPerformanceSerializer, MetricChartSerializer, EcPerformance, \
     BcopyPerformanceSerializer
 from web.fun_test.metrics_models import BcopyFloodDmaPerformanceSerializer
-from web.fun_test.models import JenkinsJobIdMap, JenkinsJobIdMapSerializer
+from web.fun_test.models import JenkinsJobIdMap, JenkinsJobIdMapSerializer, JobRunTimeProperties
 from web.fun_test.metrics_models import LsvZipCryptoPerformance, LsvZipCryptoPerformanceSerializer
 from web.fun_test.metrics_models import NuTransitPerformance, NuTransitPerformanceSerializer
 from web.fun_test.metrics_models import ShaxPerformanceSerializer
@@ -954,4 +954,17 @@ def get_git_commits(request):
     git_obj = app_config.get_git_manager()
     commits = git_obj.get_commits_between(faulty_commit=faulty_commit, success_commit=success_commit)
     result["commits"] = commits["commits"]
+    return result
+
+
+@csrf_exempt
+@api_safe_json_response
+def get_job_run_time(request):
+    result = {}
+    request_json = json.loads(request.body)
+    id = request_json["id"]
+    entries = JobRunTimeProperties.objects.filter(id=id)
+    if len(entries):
+        entry = entries.first()
+        result = entry.to_dict()
     return result

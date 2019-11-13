@@ -12,6 +12,20 @@ export enum SelectMode {
   ShowAttachDag = 4
 }
 
+interface  JobRunTimeProperties {
+  date_time: any;
+  run_time: any;
+}
+
+export class JobRunTime implements JobRunTimeProperties {
+  date_time: any;
+  run_time: any;
+
+  constructor(obj?: any) {
+    Object.assign(this, obj);
+  }
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -138,6 +152,14 @@ export class PerformanceService {
     payload["metric_id"] = metricId;
     return this.apiService.post("/metrics/chart_info", payload).pipe(switchMap(response => {
       return of(response.data);
+    }));
+  }
+
+  fetchRunTimeProperties(id): any {
+    let payload = {};
+    payload["id"] = id;
+    return this.apiService.post("/metrics/run_time", payload).pipe(switchMap(response => {
+      return of(new JobRunTime(response.data));
     }));
   }
 

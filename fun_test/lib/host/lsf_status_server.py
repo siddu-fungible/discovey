@@ -123,9 +123,11 @@ class LsfStatusServer:
                     job_info = json.loads(response)
                     dt = get_localized_time(completion_date)
                     self.add_palladium_job_info(job_dict=job_dict)
+                    run_time_properties = self.prepare_run_time_properties(job_dict=job_dict)
                     output_text = self.get_human_file(job_id=job_dict["job_id"], console_name=FUNOS_CONSOLE, job_info=job_info)
                     past_job["date_time"] = dt
                     past_job["output_text"] = output_text
+                    past_job["run_time"] = run_time_properties
                 except Exception as ex:
                     fun_test.log("Actual response:" + response)
                     fun_test.critical(str(ex))
@@ -181,14 +183,6 @@ class LsfStatusServer:
         return result
 
     def add_palladium_job_info(self, job_dict):
-        """"
-        try:
-            self.get_job_by_id(job_id=job_info["job_id"])
-            self.get_job_by_id(job_id=job_info["job_id"])
-        except:
-            pass
-
-        """
         result = {}
         if "completion_secs" in job_dict:
             completion_date = self.get_completion_date(job_info=job_dict)
@@ -206,24 +200,29 @@ class LsfStatusServer:
                                    hardware_version=job_dict["hardware_version"],
                                    build_properties=build_properties, lsf_job_id=lsf_id, build_date=completion_date,
                                    suite_execution_id=suite_execution_id, add_associated_suites=False)
-            dt = get_localized_time(completion_date)
-            # response = self.get_job_by_id(job_id=job_info["job_id"])
-            # response = self.get_job_by_id(job_id=job_info["job_id"])
-            """
-            response_dict = {"output_text": "-1"}
-            try:
-                response_dict = json.loads(response)
-                # print(json.dumps(response_dict, indent=4))
-            except Exception as ex:
-                fun_test.log("Actual response:" + response)
-                fun_test.critical(str(ex))
-            """
-
-            # output_text = self.get_human_file(job_id=job_dict["job_id"], console_name=FUNOS_CONSOLE)
-            # result["date_time"] = dt
-            # result["output_text"] = output_text
         else:
             print("XXX ERROR: Completion secs not found in job: {}".format(job_dict["job_id"]))
+        return result
+
+    def prepare_run_time_properties(self, job_dict):
+        result = {}
+        result["lsf_info"] = {}
+        result["jenkins_info"] = {}
+        result["suite_info"] = {}
+        if "completion_secs" in job_dict:
+            lsf_id = job_dict["job_id"]
+            jenkins_url = job_dict["jenkins_url"]
+            build_properties_url = "{}artifact/bld_props.json".format(jenkins_url)
+            build_properties = self._get(url=build_properties_url)
+            suite_execution_id = fun_test.get_suite_execution_id()
+            if build_properties is None:
+                build_properties = {}
+            else:
+                build_properties = json.loads(build_properties)
+            result["lsf_info"] = {"lsf_job_id": lsf_id}
+            result["suite_info"] = {"suite_execution_id": suite_execution_id,
+                                    "associated_suites": []}
+            result["jenkins_info"] = {"build_properties": build_properties}
         return result
 
 

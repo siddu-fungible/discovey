@@ -123,11 +123,13 @@ class MetricHelper(object):
     def clear(self):
         self.model.objects.all().delete()
 
-    def add_entry(self, **kwargs):
+    def add_entry(self, run_time=None, **kwargs):
         inputs = {}
         if "key" in kwargs:
             inputs["key"] = kwargs["key"]
         outputs = {}
+        if run_time:
+            kwargs["run_time"] = run_time
         for key, value in kwargs.iteritems():
             if key.startswith("input_"):
                 inputs[key] = value
@@ -138,6 +140,9 @@ class MetricHelper(object):
             for k, v in outputs.iteritems():
                 if hasattr(o, k):
                     setattr(o, k, v)
+            if run_time:
+                if hasattr(o, "run_time"):
+                    setattr(o, "run_time", run_time)
             save_entry(o)
             return None
         except ObjectDoesNotExist:

@@ -198,20 +198,21 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
 
   showPointDetails(pointInfo): void {
     let self = this;
-    self.pointInfo = [];
-    self.buildProps = [];
-    Object.keys(pointInfo).forEach((key) => {
-      if (key === "Build Properties") {
-        let properties = pointInfo[key];
-        self.buildProps["name"] = key;
-        self.buildProps["value"] = properties;
-      } else {
-        let property = [];
-        property["name"] = key;
-        property["value"] = pointInfo[key];
-        self.pointInfo.push(property);
-      }
-    });
+    // self.pointInfo = [];
+    // self.buildProps = [];
+    // Object.keys(pointInfo).forEach((key) => {
+    //   if (key === "Build Properties") {
+    //     let properties = pointInfo[key];
+    //     self.buildProps["name"] = key;
+    //     self.buildProps["value"] = properties;
+    //   } else {
+    //     let property = [];
+    //     property["name"] = key;
+    //     property["value"] = pointInfo[key];
+    //     self.pointInfo.push(property);
+    //   }
+    // });
+    self.pointInfo = pointInfo;
     self.pointClicked = true;
   }
 
@@ -285,6 +286,10 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
 
   //display details about the points in the chart
   pointDetail(x, y, metaData): any {
+    if (metaData.runTime) {
+      let props = this.performanceService.fetchRunTimeProperties(metaData.runTime);
+      return props;
+    }
     let softwareDate = "Unknown";
     let hardwareVersion = "Unknown";
     let sdkBranch = "Unknown";
@@ -784,7 +789,12 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
               output = this.convertToBaseUnit(outputUnit, output);
               output = this.convertToVisualizationUnit(this.visualizationUnit, output);
               epoch = oneRecord.epoch_time;
-              let result = this.getValidatedData(output, minimum, maximum, epoch);
+              let metaData = {};
+              metaData["epoch"] = epoch;
+              if (oneRecord.hasOwnProperty("run_time")) {
+                metaData["runTime"] = oneRecord.run_time;
+              }
+              let result = this.getValidatedData(output, minimum, maximum, metaData);
               oneChartDataArray.push(result);
               if (this.maxDataPoint === null) {
                 this.maxDataPoint = result.y;
@@ -799,7 +809,9 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
             }
           }
           if (!valueSet) {
-            oneChartDataArray.push(this.getValidatedData(-1, 0, -1, null));
+            let metaData = {};
+            metaData["epoch"] = null;
+            oneChartDataArray.push(this.getValidatedData(-1, 0, -1, metaData));
           }
           if (!seriesDates[seriesDatesIndex]) {
             seriesDates[seriesDatesIndex] = this.commonService.addLeadingZeroesToDate(lastDate).substring(0, 5);
@@ -893,7 +905,9 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       let series = [];
       for (let dateTime of keyList) {
         let score = response.data.scores[dateTime].score;
-        let result = this.getValidatedData(score, thisMinimum, thisMaximum, dateTime);
+        let metaData = {};
+        metaData["epoch"] = dateTime;
+        let result = this.getValidatedData(score, thisMinimum, thisMaximum, metaData);
         values.push(result);
         let pstDate = this.commonService.convertEpochToDate(Number(dateTime) * 1000, this.TIMEZONE);
         let xAxisString = this.commonService.addLeadingZeroesToDate(pstDate).substring(0, 5);
@@ -1223,7 +1237,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
 
 
   //creates the point values for the funchart
-  getValidatedData(data, minimum, maximum, epoch): any {
+  getValidatedData(data, minimum, maximum, metaData): any {
     let result = data;
     if (data < 0) {
       data = null;
@@ -1235,7 +1249,9 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       },
       metaData: {}
     };
-    result.metaData["epoch"] = epoch;
+    if (metaData) {
+      result.metaData = metaData;
+    }
     if (data > maximum && maximum !== -1) {
       result.y = maximum;
       result.marker['symbol'] = "url(/static/media/red-x-png-7.png)";
