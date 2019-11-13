@@ -1,0 +1,46 @@
+<div class="component">
+  <button class="fun-button-add" (click)="addingSuites = !addingSuites">Add suites</button>
+  <app-suites-view [@show]="addingSuites" *ngIf="addingSuites" [multiSelect]="true" (reportSelectedSuites)="suitesSelectedByView($event)"></app-suites-view>
+
+  <div class="fun-panel" *ngIf="selectedSuites.length > 0">
+    <div class="fun-panel-header">
+      Selected suites
+    </div>
+    <div class="fun-panel-body">
+      <table class="fun-table">
+        <tr>
+          <td class="fun-table-header"></td>
+          <td class="fun-table-header">
+            Suited ID
+          </td>
+          <td class="fun-table-header">
+            Name
+          </td>
+          <td class="fun-table-header">
+            Description
+          </td>
+          <td class="fun-table-header">
+            Categories
+          </td>
+        </tr>
+        <tr *ngFor="let selectedSuite of selectedSuites; let index=index">
+          <td>
+            {{ index }}
+          </td>
+          <td>
+            {{ selectedSuite.id }}
+          </td>
+          <td>
+            <a href="/regression/suite_editor/{{ selectedSuite.id }}">{{ selectedSuite.name }}</a>
+          </td>
+          <td>
+            {{ selectedSuite.short_description }}
+          </td>
+          <td>
+            {{ selectedSuite.categories }}
+          </td>
+        </tr>
+      </table>
+    </div>
+  </div>
+</div>
