@@ -94,7 +94,7 @@ class MyScript(FunTestScript):
             interface_name = "qfx"
         if test_bed_type == "fs-6":
             configure_endhost_interface(end_host=end_host, test_network=csr_network["4"], interface_name=interface_name)
-        else
+        else:
             configure_endhost_interface(end_host=end_host, test_network=csr_network["0"], interface_name=interface_name)
 
         fun_test.shared_variables["fs"] = fs
