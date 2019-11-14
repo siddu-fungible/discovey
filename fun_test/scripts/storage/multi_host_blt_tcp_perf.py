@@ -404,6 +404,13 @@ class MultiHostVolumePerformanceScript(FunTestScript):
         fun_test.shared_variables["blt"]["warmup_done"] = False
 
     def cleanup(self):
+        if self.bundle_image_parameters:
+            try:
+                for index in xrange(self.num_duts):
+                    self.come_obj[index].command("sudo systemctl disable init-fs1600")
+            except Exception as ex:
+                fun_test.critical(str(ex))
+
         come_reboot = False
         if "blt" in fun_test.shared_variables and fun_test.shared_variables["blt"]["setup_created"]:
             self.fs = self.fs_objs[0]
