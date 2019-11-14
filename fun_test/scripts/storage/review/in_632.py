@@ -109,23 +109,52 @@ class BLTVolumePerformanceScript(FunTestScript):
         """)
 
     def setup(self):
-        fs = Fs.get(boot_args=tb_config["dut_info"][0]["bootarg"], disable_f1_index=1)
-        fun_test.shared_variables["fs"] = fs
         #Sandip
-        perf_listener_host_name = "poc-server-04"  # figure this out from the topology spec
-        perf_listener_ip = "20.1.1.1"              # figure this out from the topology spec
+        perf_listener_host_name = "poc-server-02"  # figure this out from the topology spec
+        perf_listener_ip = "21.1.1.1"              # figure this out from the topology spec
 
         test_bed_type = fun_test.get_job_environment_variable("test_bed_type")
         if test_bed_type == "fs-11":
             perf_listener_host_name = "poc-server-11"
         csi_perf_enabled = fun_test.get_job_environment_variable("csi_perf")
         if csi_perf_enabled:
-            f1_parameters[0]["boot_args"] = f1_parameters[0]["boot_args"] + " --perf csi-local-ip=29.1.1.2 csi-remote-ip={} pdtrace-hbm-size-kb=204800".format(perf_listener_ip)
+            tb_config["dut_info"][0]["bootarg"] = tb_config["dut_info"][0]["bootarg"] + " --perf csi-local-ip=29.1.1.2 csi-remote-ip={} pdtrace-hbm-size-kb=204800".format(perf_listener_ip)
             # f1_parameters[1]["boot_args"] = f1_parameters[1]["boot_args"] + " --perf csi-local-ip=29.1.1.2 csi-remote-ip={} pdtrace-hbm-size-kb=204800".format(perf_listener_ip)
-
         fun_test.shared_variables["perf_listener_host_name"] = perf_listener_host_name
         fun_test.shared_variables["perf_listener_ip"] = perf_listener_ip
+        csr_network = {
+            "0": {
+                "test_interface_ip": "20.1.1.1/24",
+                "test_interface_mac": "fe:dc:ba:44:66:30",
+                "test_net_route": {
+                    "net": "29.1.1.0/24",
+                    "gw": "20.1.1.2",
+                    "arp": "00:de:ad:be:ef:00"
+                },
+                "f1_loopback_ip": "29.1.1.1"
+            },
+            "4": {
+                "test_interface_ip": "21.1.1.1/24",
+                "test_interface_mac": "fe:dc:ba:44:66:31",
+                "test_net_route": {
+                    "net": "29.1.1.0/24",
+                    "gw": "21.1.1.2",
+                    "arp": "00:de:ad:be:ef:00"
+                },
+                "f1_loopback_ip": "29.1.1.1"
+            }
+        }
+        interface_name = "enp175s0"
+        if test_bed_type == "fs-21":
+            interface_name = end_host.extra_attributes["test_interface_name"]
+        if test_bed_type == "fs-11":
+            interface_name = "qfx"
+        configure_endhost_interface(end_host=perf_listener_host_name, test_network=csr_network["4"], interface_name=interface_name)
+
+
         #Sandip
+        fs = Fs.get(boot_args=tb_config["dut_info"][0]["bootarg"], disable_f1_index=1)
+        fun_test.shared_variables["fs"] = fs
 
         fun_test.test_assert(fs.bootup(reboot_bmc=False, power_cycle_come=False), "FS bootup")
         f1 = fs.get_f1(index=0)
