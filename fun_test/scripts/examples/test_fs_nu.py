@@ -22,7 +22,7 @@ class MyScript(FunTestScript):
         perf_listener_host_name = "poc-server-04"  # figure this out from the topology spec
         perf_listener_ip = "20.1.1.1"  # figure this out from the topology spec
         if test_bed_type == "fs-6":
-            perf_listener_host_name = "poc-server-02"  # figure this out from the topology spec
+            perf_listener_host_name = "poc-server-01"  # figure this out from the topology spec
             perf_listener_ip = "20.1.1.1"              # figure this out from the topology spec
 
         if test_bed_type == "fs-11":
