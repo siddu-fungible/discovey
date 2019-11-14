@@ -790,7 +790,7 @@
     },
     "test_interface_info": {
       "0": {
-        "name": "enp216s0f1",
+        "name": "enp216s0",
         "ip": "15.1.20.2/24",
         "switch_info": {
           "name": "qfx-3",
@@ -810,7 +810,7 @@
     },
     "test_interface_info": {
       "0": {
-        "name": "enp216s0f1",
+        "name": "enp216s0",
         "ip": "15.1.21.2/24",
         "switch_info": {
           "name": "qfx-3",
@@ -830,7 +830,7 @@
     },
     "test_interface_info": {
       "0": {
-        "name": "enp216s0f1",
+        "name": "enp216s0",
         "ip": "15.1.22.2/24",
         "switch_info": {
           "name": "qfx-3",
@@ -850,7 +850,7 @@
     },
     "test_interface_info": {
       "0": {
-        "name": "enp216s0f1",
+        "name": "enp216s0",
         "ip": "15.1.23.2/24",
         "switch_info": {
           "name": "qfx-3",
@@ -870,7 +870,7 @@
     },
     "test_interface_info": {
       "0": {
-        "name": "enp216s0f1",
+        "name": "enp216s0",
         "ip": "15.1.24.2/24",
         "switch_info": {
           "name": "qfx-3",
