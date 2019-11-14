@@ -1812,7 +1812,14 @@ class Fs(object, ToDictMixin):
             if not tftp_image_path:
                 bundle_image_parameters = fun_test.get_build_parameter("bundle_image_parameters")
                 if bundle_image_parameters:
-                    if int(bundle_image_parameters["build_number"]) < 0:
+
+                    is_number = False   # redundant
+                    try:
+                        bundle_build_number = int(bundle_image_parameters["build_number"])
+                        is_number = True
+                    except:
+                        pass
+                    if is_number and int(bundle_image_parameters["build_number"]) < 0:
                         fun_test.log("Build number set to -1 so resetting bundle image parameters")
                         bundle_image_parameters = None
             # fun_test.test_assert(tftp_image_path, "TFTP image path: {}".format(tftp_image_path), context=context)
