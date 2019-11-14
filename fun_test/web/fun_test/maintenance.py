@@ -2,6 +2,7 @@ from web.fun_test.maintenance_old import *
 from dateutil import parser
 from web.fun_test.metrics_lib import MetricLib
 from web.fun_test.models import *
+from django.forms.models import model_to_dict
 
 METRICS_BASE_DATA_FILE = WEB_ROOT_DIR + "/metrics.json"
 ml = MetricLib()
@@ -2413,6 +2414,21 @@ if __name__ == "__main__":
     start_date = end_date - timedelta(days=3)
     date_range = [start_date, end_date]
     jenkins_entries = JenkinsJobIdMap.objects.filter(build_date__range=date_range).order_by("build_date")
-    for entry in entries:
+    for entry in jenkins_entries:
+        build_date = entry.build_date
+        result = {}
+        result["lsf_info"] = {"lsf_job_id": entry.lsf_job_id}
+        result["suite_info"] = {"suite_execution_id": entry.suite_execution_id,
+                                "associated_suites": entry.associated_suites}
+        result["jenkins_info"] = {"build_properties": entry.build_properties}
+        test = JobRunTimeProperties(date_time=build_date, run_time=result)
+        test.save()
+    run_time_entries = JobRunTimeProperties.objects.all()
+    model_entries = metric_model.objects.all()
+    for run_time_entry in run_time_entries:
+        for model_entry in model_entries:
+            if model_entry.input_date_time == run_time_entry.date_time:
+                model_entry.run_time = run_time_entry.id
+                model_entry.save()
 
 

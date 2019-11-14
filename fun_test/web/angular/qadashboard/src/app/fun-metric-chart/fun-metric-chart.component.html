@@ -25,44 +25,44 @@
     <div class="card" *ngIf="pointClicked && leaf">
       <div class="properties-margin">
         <pre>{{ pointInfo }}</pre>
-        <!--<table>-->
-          <!--<tr *ngFor="let point of pointInfo">-->
-            <!--<td class="no-wrap">-->
-              <!--<b>{{ point.name }}:</b>-->
-            <!--</td>-->
-            <!--<td *ngIf="point.name==='Lsf job id'" class="word-break">-->
-              <!--<a [routerLink]="" (click)="openLsfUrl(point.value)">{{ point.value }}</a>-->
-            <!--</td>-->
-            <!--<td *ngIf="point.name==='SDK version'" class="word-break">-->
-              <!--<a [routerLink]="" (click)="openVersionUrl(point.value)">{{ point.value }}</a>-->
-            <!--</td>-->
-            <!--<td *ngIf="point.name==='Suite execution detail'" class="word-break">-->
-              <!--<a [routerLink]="" (click)="openSuiteUrl(point.value)">{{ point.value }}</a>-->
-            <!--</td>-->
-            <!--<td *ngIf="point.name==='Suite log directory'" class="word-break">-->
-              <!--<a [routerLink]="" (click)="openSuiteLog(point.value)">Link</a>-->
-            <!--</td>-->
-            <!--<td *ngIf="point.name==='Associated suites'" class="word-break">-->
-              <!--<a *ngFor="let value of point.value"-->
-                 <!--[routerLink]="" (click)="openSuiteUrl(value)">{{ value }}-->
-              <!--</a>-->
-            <!--</td>-->
-            <!--<td-->
-              <!--*ngIf="point.name!=='Lsf job id' && point.name !=='SDK version' && point.name !== 'Suite execution detail' && point.name !== 'Suite log directory' && point.name !== 'Associated suites'"-->
-              <!--class="word-break">-->
-              <!--{{ point.value }}-->
-            <!--</td>-->
-          <!--</tr>-->
-        <!--</table>-->
-        <!--<a *ngIf="!showBuildProps && buildProps.value" [routerLink]="" (click)="showBuildProps = !showBuildProps">Show-->
-          <!--Build-->
-          <!--Properties</a>-->
-        <!--<a *ngIf="showBuildProps && buildProps.value" [routerLink]="" (click)="showBuildProps = !showBuildProps">Hide-->
-          <!--Build-->
-          <!--Properties</a><br>-->
-        <!--<div style="padding: 4px;" *ngIf="showBuildProps && buildProps">-->
-          <!--<pre>{{ buildProps.value }}</pre>-->
-        <!--</div>-->
+        <table>
+          <tr *ngFor="let point of pointInfo">
+            <td class="no-wrap">
+              <b>{{ point.name }}:</b>
+            </td>
+            <td *ngIf="point.name==='Lsf job id'" class="word-break">
+              <a [routerLink]="" (click)="openLsfUrl(point.value)">{{ point.value }}</a>
+            </td>
+            <td *ngIf="point.name==='SDK version'" class="word-break">
+              <a [routerLink]="" (click)="openVersionUrl(point.value)">{{ point.value }}</a>
+            </td>
+            <td *ngIf="point.name==='Suite execution detail'" class="word-break">
+              <a [routerLink]="" (click)="openSuiteUrl(point.value)">{{ point.value }}</a>
+            </td>
+            <td *ngIf="point.name==='Suite log directory'" class="word-break">
+              <a [routerLink]="" (click)="openSuiteLog(point.value)">Link</a>
+            </td>
+            <td *ngIf="point.name==='Associated suites'" class="word-break">
+              <a *ngFor="let value of point.value"
+                 [routerLink]="" (click)="openSuiteUrl(value)">{{ value }}
+              </a>
+            </td>
+            <td
+              *ngIf="point.name!=='Lsf job id' && point.name !=='SDK version' && point.name !== 'Suite execution detail' && point.name !== 'Suite log directory' && point.name !== 'Associated suites'"
+              class="word-break">
+              {{ point.value }}
+            </td>
+          </tr>
+        </table>
+        <a *ngIf="!showBuildProps && buildProps.value" [routerLink]="" (click)="showBuildProps = !showBuildProps">Show
+          Build
+          Properties</a>
+        <a *ngIf="showBuildProps && buildProps.value" [routerLink]="" (click)="showBuildProps = !showBuildProps">Hide
+          Build
+          Properties</a><br>
+        <div style="padding: 4px;" *ngIf="showBuildProps && buildProps">
+          <pre>{{ buildProps.value }}</pre>
+        </div>
         <cancel-btn-link [text]="'close'" (onClick)="closePointInfo()"></cancel-btn-link>
       </div>
     </div>

@@ -160,6 +160,7 @@ export class PerformanceService {
     payload["id"] = id;
     return this.apiService.post("/metrics/run_time", payload).pipe(switchMap(response => {
       return of(new JobRunTime(response.data));
+      // return of(response.data)
     }));
   }
 

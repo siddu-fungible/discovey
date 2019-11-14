@@ -32,7 +32,7 @@ class MetricParser():
             if result["data"]:
                 metric_model = app_config.get_metric_models()[model_name]
                 for entry in result["data"]:
-                    run_time_id = add_job_run_time_properties(run_time=run_time)
+                    run_time_id = add_job_run_time_properties(run_time=run_time, date_time=date_time)
                     MetricHelper(model=metric_model).add_entry(run_time=run_time_id, **entry)
         return result
 
@@ -1578,7 +1578,7 @@ class MetricParser():
                     self.result["data"].append(d)
                     if date_time.year >= 2019:
                         metric_model = app_config.get_metric_models()[model_name]
-                        run_time_id = add_job_run_time_properties(run_time=run_time)
+                        run_time_id = add_job_run_time_properties(run_time=run_time, date_time=date_time)
                         MetricHelper(model=metric_model).add_entry(run_time=run_time_id, **d)
                         self.add_version_to_jenkins_job_id_map(date_time=date_time,
                                                                version=self.metrics["input_version"])
@@ -1627,7 +1627,7 @@ class MetricParser():
                     metrics["output_latency_avg_unit"] = output_latency_unit
                     self.status = RESULTS["PASSED"]
                     d = self.metrics_to_dict(metrics=metrics, result=self.status, date_time=date_time)
-                    run_time_id = add_job_run_time_properties(run_time=run_time)
+                    run_time_id = add_job_run_time_properties(run_time=run_time, date_time=date_time)
                     if input_type == "Deflate":
                         MetricHelper(model=eval("TeraMarkZipDeflatePerformance")).add_entry(run_time=run_time_id, **d)
                     else:

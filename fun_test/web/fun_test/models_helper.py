@@ -2,6 +2,7 @@ import os, django, json, datetime
 import sys
 import random
 import time
+from lib.system.fun_test import *
 from datetime import datetime, timedelta
 from django.core import paginator
 from fun_global import RESULTS, get_current_time, get_localized_time
@@ -612,12 +613,23 @@ def add_jenkins_job_id_map(jenkins_job_id, fun_sdk_branch, git_commit, software_
                                 suite_execution_id=suite_execution_id)
         entry.save()
 
-def add_job_run_time_properties(run_time):
-    print "Run time properties {}".format(json.loads(run_time))
-    entry = JenkinsJobIdMap(run_time=run_time)
-    id = entry.id
-    entry.save()
-    return id
+def add_job_run_time_properties(run_time, date_time, add_associated_suites=False):
+    try:
+        entry = JobRunTimeProperties.objects.get(date_time=date_time)
+        if add_associated_suites:
+            run_time = entry.run_time
+            suite_run_time = run_time["suite_info"]
+            if fun_test.suite_execution_id != suite_run_time["suite_execution_id"]:
+                suite_run_time["associates_suite"].append(fun_test.suite_execution_id)
+            entry.run_time = run_time
+            entry.save()
+        else:
+            print "Run time properties {}".format(json.dumps(run_time))
+            print "Run time props in DB {}".format(json.dumps(entry.run_time))
+    except ObjectDoesNotExist:
+        entry = JobRunTimeProperties(run_time=run_time, date_time=date_time)
+        entry.save()
+    return entry.id
 
 def _get_suite_execution_attributes(suite_execution):
     suite_execution_attributes = []
