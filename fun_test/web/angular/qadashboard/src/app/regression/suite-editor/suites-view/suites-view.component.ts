@@ -24,6 +24,7 @@ export class SuitesViewComponent implements OnInit {
   byNameSearchText: string = null;
   status: string = null;
   @Input() multiSelect: boolean = false;
+  @Input() selectedSuiteIds: number [] = [];
   @Output() reportSelectedSuites = new EventEmitter<Suite []>();
 
   constructor(private service: SuiteEditorService, private loggerService: LoggerService, private pagerService: PagerService) {
@@ -47,13 +48,16 @@ export class SuitesViewComponent implements OnInit {
         this.pager = this.pagerService.getPager(this.suitesCount, this.currentPage, this.RECORDS_PER_PAGE);
         return this.service.suites<Suite[]>(null, this.RECORDS_PER_PAGE, this.currentPage, this.selectedCategories, this.byNameSearchText);
       })).pipe(switchMap((response: Suite []) => {
-        console.log(typeof response);
-        console.log(Object.prototype.toString.call(response[0]));
-        response[0].p();
+        //console.log(typeof response);
+        //console.log(Object.prototype.toString.call(response[0]));
+        //response[0].p();
         this.suites = response;
         this.suites.map(suite => {
           suite["dirty"] = false;
           suite["originalCategories"] = suite.categories;
+          if (this.selectedSuiteIds.indexOf(suite.id) > -1) {
+            suite.selected = true;
+          }
         });
         return of(true);
       }));

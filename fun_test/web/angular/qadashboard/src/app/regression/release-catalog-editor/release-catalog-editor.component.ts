@@ -1,4 +1,4 @@
-import {Component, Input, OnInit} from '@angular/core';
+import {Component, Input, OnChanges, OnInit} from '@angular/core';
 import {LoggerService} from "../../services/logger/logger.service";
 import {RegressionService} from "../regression.service";
 import {Suite, SuiteEditorService} from "../suite-editor/suite-editor.service";
@@ -13,16 +13,22 @@ import {showAnimation} from "../../animations/generic-animations";
   styleUrls: ['./release-catalog-editor.component.css'],
   animations: [showAnimation]
 })
-export class ReleaseCatalogEditorComponent implements OnInit {
+export class ReleaseCatalogEditorComponent implements OnInit, OnChanges {
   driver: any = null;
   addingSuites: boolean = false;
   selectedSuites: Suite [] = [];
+  selectedSuiteIds: number [] = [];
   constructor(private loggerService: LoggerService,
               private regressionService: RegressionService,
               private suiteEditorService: SuiteEditorService,
               private commonService: CommonService) { }
 
   ngOnInit() {
+    console.log("Re-init release catalog");
+
+  }
+
+  ngOnChanges() {
     this.driver = of(true).pipe(switchMap(response => {
       this.suiteEditorService.suites();
       return of(true);
@@ -41,6 +47,11 @@ export class ReleaseCatalogEditorComponent implements OnInit {
         this.selectedSuites.push(newlySelecteSuite);
       }
     });
+    this.selectedSuiteIds = [];
+    this.selectedSuites.map(selectedSuite => {
+      this.selectedSuiteIds.push(selectedSuite.id);
+    });
+    this.selectedSuiteIds = [...this.selectedSuiteIds];
   }
 
 }
