@@ -154,6 +154,8 @@ class FunOnDemandBuildTimeTc(PalladiumTc):
             status = fun_test.FAILED
             if self.build_success == fun_test.PASSED and self.lsf_success == fun_test.PASSED:
                 status = fun_test.PASSED
+            else:
+                self.total_time_taken = -1
 
             value_dict = {"date_time": get_data_collection_time(),
                           "version": fun_test.get_version(),
