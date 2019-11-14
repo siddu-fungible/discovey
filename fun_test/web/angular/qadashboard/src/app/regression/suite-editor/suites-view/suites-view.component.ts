@@ -6,6 +6,11 @@ import {LoggerService} from "../../../services/logger/logger.service";
 import {PagerService} from "../../../services/pager/pager.service";
 
 
+enum Mode {
+  DEFAULT = 0,
+  SELECTION = 1
+}
+
 @Component({
   selector: 'app-suites-view',
   templateUrl: './suites-view.component.html',
@@ -26,6 +31,8 @@ export class SuitesViewComponent implements OnInit {
   @Input() multiSelect: boolean = false;
   @Input() selectedSuiteIds: number [] = [];
   @Output() reportSelectedSuites = new EventEmitter<Suite []>();
+  Mode = Mode;
+  mode: Mode = Mode.DEFAULT;
 
   constructor(private service: SuiteEditorService, private loggerService: LoggerService, private pagerService: PagerService) {
 
@@ -35,6 +42,7 @@ export class SuitesViewComponent implements OnInit {
 
   ngOnInit() {
     if (this.multiSelect) {
+      this.mode = Mode.SELECTION;
       this.RECORDS_PER_PAGE = 10;
     }
     this.driver =

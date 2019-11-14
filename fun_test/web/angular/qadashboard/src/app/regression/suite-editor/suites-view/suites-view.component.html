@@ -26,7 +26,7 @@
   </div>
 
 
-  <button *ngIf="!multiSelect" class="fun-button-add" (click)="onAddSuiteClick()">Add a suite</button>
+  <button *ngIf="mode === Mode.DEFAULT" class="fun-button-add" (click)="onAddSuiteClick()">Add a suite</button>
   <div class="fun-flex-container">
     <!-- pager -->
     <div id="page-div" *ngIf="pager.pages && pager.pages.length">
@@ -54,12 +54,12 @@
   <fun-spinner [status]="status"></fun-spinner>
   <table class="fun-table">
     <tr>
-      <td class="fun-table-header" *ngIf="multiSelect"></td>
+      <td class="fun-table-header" *ngIf="mode === Mode.DEFAULT"></td>
       <td class="fun-table-header">ID</td>
       <td class="fun-table-header">Name</td>
       <td class="fun-table-header">Description</td>
       <td class="fun-table-header">Categories</td>
-      <td class="fun-table-header"></td>
+      <td class="fun-table-header" *ngIf="multiSelect"></td>
     </tr>
     <tr *ngFor="let suite of suites; let suiteIndex=index">
       <td *ngIf="multiSelect"><input type="checkbox" [checked]="suite.selected" [(ngModel)]="suite.selected"/></td>
@@ -89,7 +89,7 @@
         </div>
 
       </td>
-      <td>
+      <td *ngIf="mode === Mode.DEFAULT">
         <i (click)="onDeleteSuite(suite)" class="fa fa-trash-o" style="font-size:20px; color: red"></i>
       </td>
 
