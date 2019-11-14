@@ -11,6 +11,7 @@ from fun_settings import STASH_DIR
 from fun_global import Codes, get_current_epoch_time
 from asset.asset_global import AssetType
 from lib.utilities.statistics_manager import StatisticsCollector, StatisticsCategory
+from lib.utilities.http import fetch_text_file
 
 from threading import Thread
 from datetime import datetime
@@ -1178,14 +1179,31 @@ class ComE(Linux):
                 example: http://dochub.fungible.local/doc/jenkins/apple_fs1600/68/setup_fs1600-68.sh
         """
         release_prefix = ""
-        if not "master" in release_train:
+        if "master" not in release_train:
             release_prefix = "rel_"
+
         url = "{}/{}/fs1600/{}/{}".format(DOCHUB_BASE_URL,
                                           release_prefix + release_train.replace(".", "_"),
                                           build_number,
                                           script_file_name)
 
         return url
+
+    def _get_build_number_for_latest(self, release_train):
+        release_prefix = ""
+        if "master" not in release_train:
+            release_prefix = "rel_"
+        latest_url = "{}/{}/fs1600/latest/build_info.txt".format(DOCHUB_BASE_URL,
+                                                                 release_prefix + release_train.replace(".", "_"))
+
+        result = None
+        build_info_file_contents = fetch_text_file(url=latest_url)
+        if build_info_file_contents:
+            try:
+                result = int(build_info_file_contents)
+            except Exception as ex:
+                fun_test.critical(str(ex))
+        return result
 
     def _setup_build_script_directory(self):
         """
@@ -1198,6 +1216,9 @@ class ComE(Linux):
         self.command("mkdir -p {}".format(path))
         return path
 
+    def _transform_build_number(self):
+        pass
+
     def install_build_setup_script(self, build_number, release_train="1.0a_aa"):
         """
         install the build setup script downloaded from dochub
@@ -1206,6 +1227,10 @@ class ComE(Linux):
         :return: True if the installation succeeded with exit status == 0, else raise an assert
         """
         self.sudo_command("/opt/fungible/cclinux/cclinux_service.sh --stop")
+
+        if "latest" in build_number:
+            build_number = self._get_build_number_for_latest(release_train=release_train)
+            fun_test.simple_assert(build_number, "Getting latest build number")
         if "master" not in release_train:
             parts = release_train.split("_")
             temp = "{}-{}_{}".format(parts[0], build_number, parts[1])
