@@ -23,7 +23,7 @@ class MyScript(FunTestScript):
         perf_listener_ip = "20.1.1.1"  # figure this out from the topology spec
         if test_bed_type == "fs-6":
             perf_listener_host_name = "poc-server-02"  # figure this out from the topology spec
-            perf_listener_ip = "20.1.1.1"              # figure this out from the topology spec
+            perf_listener_ip = "21.1.1.1"              # figure this out from the topology spec
 
         if test_bed_type == "fs-11":
             perf_listener_host_name = "poc-server-11"
@@ -63,11 +63,11 @@ class MyScript(FunTestScript):
                 "f1_loopback_ip": "29.1.1.1"
             },
             "4": {
-                "test_interface_ip": "20.1.1.1/24",
+                "test_interface_ip": "21.1.1.1/24",
                 "test_interface_mac": "fe:dc:ba:44:66:31",
                 "test_net_route": {
                     "net": "29.1.1.0/24",
-                    "gw": "20.1.1.2",
+                    "gw": "21.1.1.2",
                     "arp": "00:de:ad:be:ef:00"
                 },
                 "f1_loopback_ip": "29.1.1.1"
