@@ -1165,15 +1165,29 @@ class ComE(Linux):
         health_monitor_processes = self.get_process_id_by_pattern(self.HEALTH_MONITOR, multiple=True)
         for health_monitor_process in health_monitor_processes:
             self.kill_process(process_id=health_monitor_process)
-        self.stop_cclinux_service()
-        # self.sudo_command("service docker stop")
-        # self.sudo_command("{}/StorageController/etc/start_sc.sh stop".format(self.FUN_ROOT))
-        # self.sudo_command("rmmod funeth fun_core")
+        try:
+            self.stop_cclinux_service()
+        except:
+            pass
+        try:
+            self.sudo_command("service docker stop")
+        except:
+            pass
+        try:
+            self.sudo_command("{}/StorageController/etc/start_sc.sh stop".format(self.FUN_ROOT))
+        except:
+            pass
+
         containers = self.docker(sudo=True)
         try:
             for container in containers:
                 self.docker(sudo=True, kill_container_id=container['ID'], timeout=120)
             self.sudo_command("service docker stop")
+        except:
+            pass
+
+        try:
+            self.sudo_command("rmmod funeth fun_core")
         except:
             pass
 
