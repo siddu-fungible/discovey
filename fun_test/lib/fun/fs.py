@@ -293,6 +293,11 @@ class Bmc(Linux):
 
         fun_test.log("Rebooting ComE (Graceful)", context=self.context)
         if not come.was_power_cycled:
+            try:
+                come.pre_reboot_cleanup()
+            except Exception as ex:
+                fun_test.critical(str(ex))
+            # reboot_initiated_wait_time = 60 * 3
             reboot_result = come.reboot(max_wait_time=max_wait_time, non_blocking=non_blocking, ipmi_details=ipmi_details)
             reboot_info_string = "initiated" if non_blocking else "complete"
             fun_test.test_assert(expression=reboot_result,
@@ -1083,7 +1088,7 @@ class ComEInitializationWorker(Thread):
                 fun_test.test_assert(expression=come.initialize(disable_f1_index=self.fs.disable_f1_index),
                                      message="ComE initialized",
                                      context=self.fs.context)
-                if self.fs.bundle_compatible and not self.fs.tftp_image_path:
+                if (self.fs.bundle_compatible and not self.fs.tftp_image_path): # or (come.list_files(ComE.BOOT_UP_LOG)):
                     fun_test.sleep(seconds=10, message="Waiting for expected containers", context=self.fs.context)
                     expected_containers_running = self.is_expected_containers_running(come)
                     expected_containers_running_timer = FunTimer(max_time=self.CONTAINERS_BRING_UP_TIME_MAX)
@@ -1140,6 +1145,9 @@ class ComE(Linux):
 
     MAX_HBM_DUMPS = 200
     BUILD_SCRIPT_DOWNLOAD_DIRECTORY = "/tmp/remove_me_build_script"
+    BOOT_UP_LOG = "/var/log/COMe-boot-up.log"
+    FUN_ROOT = "/opt/fungible"
+    HEALTH_MONITOR = "/opt/fungible/etc/DpuHealthMonitor.sh"
 
     def __init__(self, **kwargs):
         super(ComE, self).__init__(**kwargs)
@@ -1150,6 +1158,38 @@ class ComE(Linux):
         self.hbm_dump_enabled = False
         self.funq_bind_device = {}
         self.dpc_for_statistics_ready = False
+
+    def pre_reboot_cleanup(self):
+        fun_test.log("Cleaning up storage controller containers", context=self.context)
+
+        health_monitor_processes = self.get_process_id_by_pattern(self.HEALTH_MONITOR, multiple=True)
+        for health_monitor_process in health_monitor_processes:
+            self.kill_process(process_id=health_monitor_process)
+        try:
+            self.stop_cclinux_service()
+        except:
+            pass
+        try:
+            self.sudo_command("service docker stop")
+        except:
+            pass
+        try:
+            self.sudo_command("{}/StorageController/etc/start_sc.sh stop".format(self.FUN_ROOT))
+        except:
+            pass
+
+        containers = self.docker(sudo=True)
+        try:
+            for container in containers:
+                self.docker(sudo=True, kill_container_id=container['ID'], timeout=120)
+            self.sudo_command("service docker stop")
+        except:
+            pass
+
+        try:
+            self.sudo_command("rmmod funeth fun_core")
+        except:
+            pass
 
 
     def initialize(self, reset=False, disable_f1_index=None):
@@ -1205,6 +1245,10 @@ class ComE(Linux):
                 fun_test.critical(str(ex))
         return result
 
+
+    def stop_cclinux_service(self):
+        self.sudo_command("/opt/fungible/cclinux/cclinux_service.sh --stop")
+
     def _setup_build_script_directory(self):
         """
         Sets up the directory location where the build script such as setup_fs1600-68.sh will be saved for the installation
@@ -1226,9 +1270,8 @@ class ComE(Linux):
         :param release_train: example apple_fs1600
         :return: True if the installation succeeded with exit status == 0, else raise an assert
         """
-        self.sudo_command("/opt/fungible/cclinux/cclinux_service.sh --stop")
-
-        if "latest" in build_number:
+        self.stop_cclinux_service()
+        if type(build_number) == str or type(build_number) == unicode and "latest" in build_number:
             build_number = self._get_build_number_for_latest(release_train=release_train)
             fun_test.simple_assert(build_number, "Getting latest build number")
         if "master" not in release_train:
@@ -2282,6 +2325,8 @@ if __name__ == "__main2__":
 
 
 if __name__ == "__main__":
-    come = ComE(host_ip="fs63-come.fungible.local", ssh_username="fun", ssh_password="123")
-    come.setup_hbm_tools()
+    come = ComE(host_ip="fs118-come.fungible.local", ssh_username="fun", ssh_password="123")
+    output = come.pre_reboot_cleanup()
+    i = 0
+    #come.setup_hbm_tools()
     #print come.setup_tools()
