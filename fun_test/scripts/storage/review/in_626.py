@@ -203,8 +203,8 @@ class MultiHostVolumePerformanceScript(FunTestScript):
         for dut_index in self.available_dut_indexes:
             self.topology_helper.set_dut_parameters(dut_index=dut_index,
                                                     f1_parameters={0: {"boot_args": self.bootargs[0]},
-                                                                   1: {"boot_args": self.bootargs[1]}})
-                                                    #fs_parameters={"already_deployed": True})
+                                                                   1: {"boot_args": self.bootargs[1]}},
+                                                    fs_parameters={"already_deployed": True})
         self.topology = self.topology_helper.deploy()
         fun_test.test_assert(self.topology, "Topology deployed")
 
@@ -724,6 +724,8 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                     fun_test.log("Loading nvme_tcp")
                     host_handle.modprobe("nvme_tcp")
                     host_handle.modprobe("nvme_fabrics")
+
+                fun_test.sleep("After modprobe", seconds=10)
 
                 # host_handle.start_bg_process(command="sudo tcpdump -i enp216s0 -w nvme_connect_auto.pcap")
                 if hasattr(self, "nvme_io_queues") and self.nvme_io_queues != 0:
