@@ -293,10 +293,10 @@ class Bmc(Linux):
 
         fun_test.log("Rebooting ComE (Graceful)", context=self.context)
         if not come.was_power_cycled:
-            # come.sudo_command("service docker stop")
-            # come.sudo_command("rmmod funeth fun_core")
-            come.sudo_command("{}/StorageController/etc/start_sc.sh stop".format(come.FUN_ROOT))
-            come.sudo_command("rmmod funeth fun_core")
+            try:
+                come.pre_reboot_cleanup()
+            except Exception as ex:
+                fun_test.critical(str(ex))
             reboot_initiated_wait_time = 60 * 3
             reboot_result = come.reboot(max_wait_time=max_wait_time, non_blocking=non_blocking, ipmi_details=ipmi_details, reboot_initiated_wait_time=reboot_initiated_wait_time)
             reboot_info_string = "initiated" if non_blocking else "complete"
@@ -1147,6 +1147,7 @@ class ComE(Linux):
     BUILD_SCRIPT_DOWNLOAD_DIRECTORY = "/tmp/remove_me_build_script"
     BOOT_UP_LOG = "/var/log/COMe-boot-up.log"
     FUN_ROOT = "/opt/fungible"
+    HEALTH_MONITOR = "/opt/fungible/etc/DpuHealthMonitor.sh"
 
     def __init__(self, **kwargs):
         super(ComE, self).__init__(**kwargs)
@@ -1157,6 +1158,24 @@ class ComE(Linux):
         self.hbm_dump_enabled = False
         self.funq_bind_device = {}
         self.dpc_for_statistics_ready = False
+
+    def pre_reboot_cleanup(self):
+        fun_test.log("Cleaning up storage controller containers", context=self.context)
+
+        health_monitor_processes = self.get_process_id_by_pattern(self.HEALTH_MONITOR, multiple=True)
+        for health_monitor_process in health_monitor_processes:
+            self.kill_process(process_id=health_monitor_process)
+            
+        # self.sudo_command("service docker stop")
+        self.sudo_command("{}/StorageController/etc/start_sc.sh stop".format(come.FUN_ROOT))
+        # self.sudo_command("rmmod funeth fun_core")
+        containers = self.docker(sudo=True)
+        try:
+            for container in containers:
+                self.docker(sudo=True, kill_container_id=container['ID'], timeout=120)
+            self.sudo_command("service docker stop")
+        except:
+            pass
 
 
     def initialize(self, reset=False, disable_f1_index=None):
@@ -2289,6 +2308,8 @@ if __name__ == "__main2__":
 
 
 if __name__ == "__main__":
-    come = ComE(host_ip="fs63-come.fungible.local", ssh_username="fun", ssh_password="123")
-    come.setup_hbm_tools()
+    come = ComE(host_ip="fs118-come.fungible.local", ssh_username="fun", ssh_password="123")
+    output = come.pre_reboot_cleanup()
+    i = 0
+    #come.setup_hbm_tools()
     #print come.setup_tools()
