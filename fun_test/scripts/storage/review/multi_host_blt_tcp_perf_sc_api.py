@@ -644,11 +644,6 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
             pool_name = self.default_pool if not self.create_pool else self.pool_name
             self.pool_uuid = self.sc_api.get_pool_uuid_by_name(name=pool_name)
 
-            # Configuring controller IP
-            command_result = self.storage_controller.ip_cfg(ip=self.test_network["f1_loopback_ip"])
-            fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "ip_cfg on DUT instance")
-
             # If the number of hosts is less than the number of volumes then expand the host_ips list to equal to
             # number of volumes by repeating the existing entries for the required number of times
             self.final_host_ips = self.host_ips[:]
