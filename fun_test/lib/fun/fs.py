@@ -1165,9 +1165,9 @@ class ComE(Linux):
         health_monitor_processes = self.get_process_id_by_pattern(self.HEALTH_MONITOR, multiple=True)
         for health_monitor_process in health_monitor_processes:
             self.kill_process(process_id=health_monitor_process)
-
+        self.stop_cclinux_service()
         # self.sudo_command("service docker stop")
-        self.sudo_command("{}/StorageController/etc/start_sc.sh stop".format(self.FUN_ROOT))
+        # self.sudo_command("{}/StorageController/etc/start_sc.sh stop".format(self.FUN_ROOT))
         # self.sudo_command("rmmod funeth fun_core")
         containers = self.docker(sudo=True)
         try:
@@ -1231,6 +1231,10 @@ class ComE(Linux):
                 fun_test.critical(str(ex))
         return result
 
+
+    def stop_cclinux_service(self):
+        self.sudo_command("/opt/fungible/cclinux/cclinux_service.sh --stop")
+
     def _setup_build_script_directory(self):
         """
         Sets up the directory location where the build script such as setup_fs1600-68.sh will be saved for the installation
@@ -1252,7 +1256,7 @@ class ComE(Linux):
         :param release_train: example apple_fs1600
         :return: True if the installation succeeded with exit status == 0, else raise an assert
         """
-        self.sudo_command("/opt/fungible/cclinux/cclinux_service.sh --stop")
+        self.stop_cclinux_service()
 
         if "latest" in build_number:
             build_number = self._get_build_number_for_latest(release_train=release_train)
