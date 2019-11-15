@@ -293,7 +293,12 @@ class Bmc(Linux):
 
         fun_test.log("Rebooting ComE (Graceful)", context=self.context)
         if not come.was_power_cycled:
-            reboot_result = come.reboot(max_wait_time=max_wait_time, non_blocking=non_blocking, ipmi_details=ipmi_details)
+            # come.sudo_command("service docker stop")
+            # come.sudo_command("rmmod funeth fun_core")
+            come.sudo_command("{}/StorageController/etc/start_sc.sh stop".format(come.FUN_ROOT))
+            come.sudo_command("rmmod funeth fun_core")
+            reboot_initiated_wait_time = 60 * 3
+            reboot_result = come.reboot(max_wait_time=max_wait_time, non_blocking=non_blocking, ipmi_details=ipmi_details, reboot_initiated_wait_time=reboot_initiated_wait_time)
             reboot_info_string = "initiated" if non_blocking else "complete"
             fun_test.test_assert(expression=reboot_result,
                                  message="ComE reboot {} (Graceful)".format(reboot_info_string),
@@ -1083,7 +1088,7 @@ class ComEInitializationWorker(Thread):
                 fun_test.test_assert(expression=come.initialize(disable_f1_index=self.fs.disable_f1_index),
                                      message="ComE initialized",
                                      context=self.fs.context)
-                if self.fs.bundle_compatible and not self.fs.tftp_image_path:
+                if (self.fs.bundle_compatible and not self.fs.tftp_image_path) or (come.list_files(ComE.BOOT_UP_LOG)):
                     fun_test.sleep(seconds=10, message="Waiting for expected containers", context=self.fs.context)
                     expected_containers_running = self.is_expected_containers_running(come)
                     expected_containers_running_timer = FunTimer(max_time=self.CONTAINERS_BRING_UP_TIME_MAX)
@@ -1140,6 +1145,8 @@ class ComE(Linux):
 
     MAX_HBM_DUMPS = 200
     BUILD_SCRIPT_DOWNLOAD_DIRECTORY = "/tmp/remove_me_build_script"
+    BOOT_UP_LOG = "/var/log/COMe-boot-up.log"
+    FUN_ROOT = "/opt/fungible"
 
     def __init__(self, **kwargs):
         super(ComE, self).__init__(**kwargs)
@@ -1831,6 +1838,9 @@ class Fs(object, ToDictMixin):
             fs_spec = am.get_fs_by_name(dut_name)
             fun_test.simple_assert(fs_spec, "FS spec for {}".format(dut_name), context=context)
 
+        if fs_parameters:
+            if not already_deployed:
+                already_deployed = fs_parameters.get("already_deployed", None)
         if not already_deployed:
             if not tftp_image_path:
                 tftp_image_path = fun_test.get_build_parameter("tftp_image_path")
