@@ -6,7 +6,7 @@ from helper import *
 FPGs = [6, 8, 12, 18]
 SPEEDs = ["brk_4x10g", "brk_4x25g", "brk_2x50g"]
 
-nw_obj = NetworkController('10.1.21.120', 40221)
+nw_obj = NetworkController('10.1.21.120', 42221)
 
 def run_speed_test():
     while True:

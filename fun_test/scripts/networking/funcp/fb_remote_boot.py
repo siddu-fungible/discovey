@@ -338,8 +338,8 @@ class ConfigureRdsVol(FunTestCase):
         total_blt = fun_test.shared_variables["total_blt"]
 
         # Storage Controller Objects
-        f10_storage_ctrl_obj = StorageController(target_ip=come_obj.host_ip, target_port=40220)
-        f11_storage_ctrl_obj = StorageController(target_ip=come_obj.host_ip, target_port=40221)
+        f10_storage_ctrl_obj = StorageController(target_ip=come_obj.host_ip, target_port=42220)
+        f11_storage_ctrl_obj = StorageController(target_ip=come_obj.host_ip, target_port=42221)
 
         # Create IPCFG on F1_0
         command_result = f10_storage_ctrl_obj.ip_cfg(ip=f10_vlan_ip, port=4420)

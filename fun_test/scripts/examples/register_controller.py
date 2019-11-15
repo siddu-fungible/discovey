@@ -19,7 +19,7 @@ class RegisterController(DpcshClient):
     hsu_pwp_core0_csr_test_outl = "hsu_pwp_core0_csr_test_outl"
 
 
-    def __init__(self, dpc_server_ip, dpc_server_port=40221, verbose=True):
+    def __init__(self, dpc_server_ip, dpc_server_port=42221, verbose=True):
         super(RegisterController, self).__init__(mode="register", target_ip=dpc_server_ip, target_port=dpc_server_port,
                                                 verbose=verbose)
         self.server_ip = dpc_server_ip
