@@ -186,13 +186,16 @@ class MultiHostVolumePerformanceScript(FunTestScript):
         #                      message="Testbed has enough DUTs")
 
         fpg_interfaces = self.topology_helper.get_expanded_topology().get_dut(index=0).get_fpg_interfaces(f1_index=0)
-        if fpg_interfaces:
+        bond_interfaces = self.topology_helper.get_expanded_topology().get_dut(index=0).get_bond_interfaces(
+            f1_index=0)
+
+        if not bond_interfaces:
             fun_test.shared_variables["f1_ips"] = [fpg_interfaces[0].ip]
 
         else:
             bond_interfaces = self.topology_helper.get_expanded_topology().get_dut(index=0).get_bond_interfaces(
                 f1_index=0)
-            fun_test.shared_variables["f1_ips"] = [bond_interfaces[0].ip]
+            fun_test.shared_variables["f1_ips"] = [bond_interfaces[0].ip.split("/")[0]]
 
         self.tftp_image_path = fun_test.get_job_environment_variable("tftp_image_path")
         self.bundle_image_parameters = fun_test.get_job_environment_variable("bundle_image_parameters")
@@ -207,7 +210,7 @@ class MultiHostVolumePerformanceScript(FunTestScript):
         for dut_index in self.available_dut_indexes:
             self.topology_helper.set_dut_parameters(dut_index=dut_index,
                                                     f1_parameters={0: {"boot_args": self.bootargs[0]},
-                                                                   1: {"boot_args": self.bootargs[1]}}),
+                                                                   1: {"boot_args": self.bootargs[1]}})
                                                     # fs_parameters={"already_deployed": True})
         self.topology = self.topology_helper.deploy()
         fun_test.test_assert(self.topology, "Topology deployed")
