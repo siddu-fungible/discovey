@@ -1132,7 +1132,7 @@ class ComEInitializationWorker(Thread):
 
 class ComE(Linux):
     EXPECTED_FUNQ_DEVICE_ID = ["04:00.1", "06:00.1"]
-    DEFAULT_DPC_PORT = [40220, 40221]
+    DEFAULT_DPC_PORT = [42220, 42221]
     DEFAULT_STATISTICS_DPC_PORT = [45220, 45221]
     DPC_LOG_PATH = "/tmp/f1_{}_dpc.txt"
     DPC_STATISTICS_LOG_PATH = "/tmp/f1_{}_dpc.txt"
@@ -2095,6 +2095,7 @@ class Fs(object, ToDictMixin):
         self.get_fpga()
         self.get_come()
         self.set_f1s()
+        self.come.setup_dpc()
         self.come.detect_pfs()
         fun_test.test_assert(expression=self.come.ensure_dpc_running(),
                              message="Ensure dpc is running",
