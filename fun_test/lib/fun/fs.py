@@ -1165,9 +1165,9 @@ class ComE(Linux):
         health_monitor_processes = self.get_process_id_by_pattern(self.HEALTH_MONITOR, multiple=True)
         for health_monitor_process in health_monitor_processes:
             self.kill_process(process_id=health_monitor_process)
-            
+
         # self.sudo_command("service docker stop")
-        self.sudo_command("{}/StorageController/etc/start_sc.sh stop".format(come.FUN_ROOT))
+        self.sudo_command("{}/StorageController/etc/start_sc.sh stop".format(self.FUN_ROOT))
         # self.sudo_command("rmmod funeth fun_core")
         containers = self.docker(sudo=True)
         try:
