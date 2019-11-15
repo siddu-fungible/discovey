@@ -21,74 +21,31 @@ from elasticsearch import Elasticsearch
 # inputs: {"run_le_firewall":false,"specific_apps":["ZIP"],"add_to_database":true,"collect_stats":["POWER","DEBUG_MEMORY","LE"],"end_sleep":30}
 # --environment={\"test_bed_type\":\"fs-65\",\"tftp_image_path\":\"ranga/funos-f1_onkar.stripped.gz\"} --inputs={\"boot_new_image\":false,\"le_firewall\":false,\"collect_stats\":[\"DEBUG_VP_UTIL\",\"POWER\"],\"ec_vol\":false,\"specific_apps\":[\"crypto\"],\"disable_f1_index\":0}
 
+RCNVME = "rcnvme"
+FIO = "fio"
+CRYPTO = "crypto"
 
 class MyScript(FunTestScript):
     def describe(self):
         self.set_test_details(steps="""""")
 
-
     def setup(self):
-        fs_name = fun_test.get_job_environment_variable("test_bed_type")
-        job_inputs = fun_test.get_job_inputs()
-        config_file = fun_test.get_script_name_without_ext() + ".json"
-        self.fs = AssetManager().get_fs_by_name(fs_name)
-        fun_test.log(json.dumps(self.fs, indent=4))
-        fun_test.log("Input: {}".format(job_inputs))
-
-        fun_test.log("Config file being used: {}".format(config_file))
-        config_dict = utils.parse_file_to_json(config_file)
-        for k, v in config_dict.iteritems():
-            setattr(self, k, v)
-
-        if job_inputs:
-            if "disable_f1_index" in job_inputs:
-                self.disable_f1_index = job_inputs["disable_f1_index"]
-            if "boot_new_image" in job_inputs:
-                self.boot_new_image = job_inputs["boot_new_image"]
-            if "ec_vol" in job_inputs:
-                self.ec_vol = job_inputs["ec_vol"]
-            if "add_boot_arg" in job_inputs:
-                self.add_boot_arg = job_inputs["add_boot_arg"]
-                self.add_boot_arg = " --" + self.add_boot_arg
-
-        f1_0_boot_args = 'cc_huid=3 app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303%s' % (
-            self.add_boot_arg)
-        f1_1_boot_args = 'cc_huid=2 app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303%s' % (
-            self.add_boot_arg)
-
-        topology_helper = TopologyHelper()
-        topology_helper.set_dut_parameters(f1_parameters={0: {"boot_args": f1_0_boot_args},
-                                                          1: {"boot_args": f1_1_boot_args}},
-                                           skip_funeth_come_power_cycle=True,
-                                           dut_index=0)
-
-        if self.disable_f1_index == 0 or self.disable_f1_index == 1:
-            topology_helper.set_dut_parameters(f1_parameters={0: {"boot_args": f1_0_boot_args},
-                                                              1: {"boot_args": f1_1_boot_args}},
-                                               skip_funeth_come_power_cycle=True,
-                                               dut_index=0,
-                                               disable_f1_index=self.disable_f1_index)
-        if self.disable_f1_index == 0:
-            self.run_on_f1 = [1]
-        elif self.disable_f1_index == 1:
-            self.run_on_f1 = [0]
-        else:
-            self.run_on_f1 = [0, 1]
-
-        self.come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
-                                ssh_username=self.fs['come']['mgmt_ssh_username'],
-                                ssh_password=self.fs['come']['mgmt_ssh_password'])
+        self.initialize_json_data()
+        self.initialize_job_inputs()
+        self.initialize_variables()
         if self.boot_new_image:
-            topology = topology_helper.deploy()
-            fun_test.test_assert(topology, "Topology deployed")
+            self.boot_fs()
         self.verify_dpcsh_started()
-        if not self.boot_new_image:
-            self.clear_uart_logs()
+        # if not self.boot_new_image:
+        #     self.clear_uart_logs()
         if self.ec_vol:
             self.create_4_et_2_ec_volume()
-
         fun_test.shared_variables["run_on_f1"] = self.run_on_f1
         fun_test.shared_variables["fs"] = self.fs
+        self.come_handle.destroy()
+
+    def cleanup(self):
+        fun_test.log("Script-level cleanup")
 
     def verify_dpcsh_started(self):
         for f1 in self.run_on_f1:
@@ -231,8 +188,63 @@ class MyScript(FunTestScript):
             fun_test.log(ex)
         fun_test.test_assert(result, "Cleared the uart logs")
 
-    def cleanup(self):
-        fun_test.log("Script-level cleanup")
+    def initialize_json_data(self):
+        config_file = fun_test.get_script_name_without_ext() + ".json"
+        fun_test.log("Config file being used: {}".format(config_file))
+        config_dict = utils.parse_file_to_json(config_file)
+        for k, v in config_dict.iteritems():
+            setattr(self, k, v)
+
+    def initialize_job_inputs(self):
+        job_inputs = fun_test.get_job_inputs()
+        fun_test.log("Input: {}".format(job_inputs))
+        if job_inputs:
+            if "disable_f1_index" in job_inputs:
+                self.disable_f1_index = job_inputs["disable_f1_index"]
+            if "boot_new_image" in job_inputs:
+                self.boot_new_image = job_inputs["boot_new_image"]
+            if "ec_vol" in job_inputs:
+                self.ec_vol = job_inputs["ec_vol"]
+            if "add_boot_arg" in job_inputs:
+                self.add_boot_arg = job_inputs["add_boot_arg"]
+                self.add_boot_arg = " --" + self.add_boot_arg
+
+    def initialize_variables(self):
+        fs_name = fun_test.get_job_environment_variable("test_bed_type")
+        self.fs = AssetManager().get_fs_by_name(fs_name)
+        fun_test.log(json.dumps(self.fs, indent=4))
+        if self.disable_f1_index == 0:
+            self.run_on_f1 = [1]
+        elif self.disable_f1_index == 1:
+            self.run_on_f1 = [0]
+        else:
+            self.run_on_f1 = [0, 1]
+
+        self.come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
+                                ssh_username=self.fs['come']['mgmt_ssh_username'],
+                                ssh_password=self.fs['come']['mgmt_ssh_password'])
+
+    def boot_fs(self):
+        f1_0_boot_args = 'cc_huid=3 app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303%s' % (
+            self.add_boot_arg)
+        f1_1_boot_args = 'cc_huid=2 app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303%s' % (
+            self.add_boot_arg)
+
+        topology_helper = TopologyHelper()
+        if self.disable_f1_index == 0 or self.disable_f1_index == 1:
+            topology_helper.set_dut_parameters(f1_parameters={0: {"boot_args": f1_0_boot_args},
+                                                              1: {"boot_args": f1_1_boot_args}},
+                                               skip_funeth_come_power_cycle=True,
+                                               dut_index=0,
+                                               disable_f1_index=self.disable_f1_index)
+        else:
+            topology_helper.set_dut_parameters(f1_parameters={0: {"boot_args": f1_0_boot_args},
+                                                              1: {"boot_args": f1_1_boot_args}},
+                                               skip_funeth_come_power_cycle=True,
+                                               dut_index=0)
+
+        topology = topology_helper.deploy()
+        fun_test.test_assert(topology, "Topology deployed")
 
 
 class FunTestCase1(FunTestCase):
@@ -250,8 +262,9 @@ class FunTestCase1(FunTestCase):
         # self.threaded_apps = {"busy_loop": "soak_flows_busy_loop_10usecs", "memcpy_1MB":"soak_flows_memcpy_1MB_non_coh"}
 
     def run(self):
-        self.collects_stats_before_test()
+        # self.collects_stats_before_test()
         self.run_the_traffic()
+        self.collect_stats_after_test()
 
         # fun_test.sleep("Wait for traffic to start")
         count = int(self.duration / 5)
@@ -787,9 +800,10 @@ class FunTestCase1(FunTestCase):
             track_app = fun_test.shared_variables["var_{}_f1_{}".format(app, f1)]
             fun_test.sleep("Before next iteration app: {}".format(app))
 
-    def start_fio_traffic(self, fio_data):
+    def start_fio_traffic(self, percentage=100):
         fio_thread_map = {}
         fio_capacity_map = {"f1_0": 26843545600, "f1_1": 32212254720}
+        fio_data = self.get_parameters_for(FIO, percentage)
         self.fio_params.update(fio_data)
         for f1 in self.run_on_f1:
             try:
@@ -997,14 +1011,12 @@ class FunTestCase1(FunTestCase):
     def initialize_job_inputs(self):
         job_inputs = fun_test.get_job_inputs()
         if job_inputs:
-            if "specific_apps" in job_inputs:
-                self.specific_apps = job_inputs["specific_apps"]
+            if "traffic_profile" in job_inputs:
+                self.traffic_profile = job_inputs["traffic_profile"]
             if "add_to_database" in job_inputs:
                 self.add_to_database = job_inputs["add_to_database"]
             if "duration" in job_inputs:
                 self.duration = job_inputs["duration"]
-            if "run_le_firewall" in job_inputs:
-                self.run_le_firewall = job_inputs["run_le_firewall"]
             if "collect_stats" in job_inputs:
                 self.collect_stats = job_inputs["collect_stats"]
             if "disable_stats" in job_inputs:
@@ -1027,6 +1039,7 @@ class FunTestCase1(FunTestCase):
 
     def initialize_json_data(self):
         config_file = fun_test.get_script_name_without_ext() + ".json"
+        fun_test.log("Config file being used: {}".format(config_file))
         config_dict = utils.parse_file_to_json(config_file)
         for k, v in config_dict.iteritems():
             setattr(self, k, v)
@@ -1084,7 +1097,7 @@ class FunTestCase1(FunTestCase):
                                                                                                           random,
                                                                                                           duration)
 
-            cmd = 'async rcnvme_test{%s}' % json_data
+            cmd = 'async rcnvme_test {%s}' % json_data
             dpcsh_nocli.start_dpcsh_bg(come_handle, cmd, f1)
             result = True
         except Exception as ex:
@@ -1101,21 +1114,46 @@ class FunTestCase1(FunTestCase):
         if not self.stats_info["come"]["DEBUG_MEMORY"].get("disable", True):
             self.initial_debug_memory_stats = self.get_debug_memory_stats_initially(self.f_DEBUG_MEMORY_f1_0, self.f_DEBUG_MEMORY_f1_1)
         self.capture_data(count=3, heading=heading)
-        fun_test.test_assert(True, "Collected inital stats")
+        fun_test.test_assert(True, "Collected initial stats")
 
     def run_the_traffic(self):
-        if "le" in self.traffic_profile:
-            self.restart_dpcsh()
-            self.start_le_firewall(self.duration, self.boot_new_image)
-        if "fio" in self.traffic_profile:
-            self.start_fio_traffic()
-        if "crypto" in self.traffic_profile:
-            self.start_crypto_traffic()
-        if "zip" in self.traffic_profile:
-            self.start_zip_traffic()
-        if "rcnvme" in self.traffic_profile:
-            self.start_rcnvme_traffic()
+        come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
+                           ssh_username=self.fs['come']['mgmt_ssh_username'],
+                           ssh_password=self.fs['come']['mgmt_ssh_password'])
+        for f1 in self.run_on_f1:
+            if "le" in self.traffic_profile:
+                self.restart_dpcsh()
+                self.start_le_firewall(self.duration, self.boot_new_image)
 
+            if RCNVME in self.traffic_profile:
+                self.start_rcnvme_traffic(come_handle, f1, 100)
+
+            if FIO in self.traffic_profile:
+                self.fio_thread_map = self.start_fio_traffic(percentage=100)
+
+            if CRYPTO in self.traffic_profile:
+                self.start_crypto_traffic(come_handle, f1, 100)
+            if "zip" in self.traffic_profile:
+                self.start_zip_traffic()
+        come_handle.destroy()
+
+    def start_rcnvme_traffic(self, come_handle, f1=0, percentage=100):
+        get_parameters = self.get_parameters_for(RCNVME, percentage)
+        self.rcnvme_app(come_handle, f1, **get_parameters)
+
+    def rcnvme_app(self, come_handle, f1=0, all_ctrlrs=True, duration=60, qdepth=12, nthreads=12, test_type='read_only', hbm=True, prealloc=True, iosize=4096, random=True, hsu_rc=True):
+        json_data = {"all_ctrlrs" : all_ctrlrs,
+                     "qdepth": qdepth,
+                     "nthreads": nthreads,
+                     "test_type":test_type,
+                     "hbm" : hbm,
+                     "prealloc":prealloc,
+                     "iosize":iosize,
+                     "random": random,
+                     "duration" : duration,
+                     "hsu_rc": hsu_rc}
+        cmd = 'async rcnvme_test {}'.format(json.dumps(json_data))
+        dpcsh_nocli.start_dpcsh_bg(come_handle, cmd, f1)
 
     def start_le_firewall(self, run_time, new_image, just_kill=False):
         run_time += 400
@@ -1213,8 +1251,60 @@ class FunTestCase1(FunTestCase):
         pass
         # TODO: Reset the LE-firewall traffic
 
-    def start_fio_traffic(self):
+    def get_parameters_for(self, app, percentage=100):
+        result = False
+        if app == RCNVME:
+            rcnvme_run_time = 100
+            perc_dict = {
+                "10": {"qdepth": 4, "nthreads": 1, "duration": rcnvme_run_time},
+                "20": {"qdepth": 6, "nthreads": 1, "duration": rcnvme_run_time},
+                "30": {"qdepth": 4, "nthreads": 2, "duration": rcnvme_run_time},
+                "40": {"qdepth": 6, "nthreads": 2, "duration": rcnvme_run_time},
+                "50": {"qdepth": 8, "nthreads": 2, "duration": rcnvme_run_time},
+                "60": {"qdepth": 8, "nthreads": 4, "duration": rcnvme_run_time},
+                "70": {"qdepth": 12, "nthreads": 12, "duration": rcnvme_run_time},
+                "100": {"qdepth": 16, "nthreads": 16, "duration": rcnvme_run_time},
+            }
+            result = perc_dict[str(percentage)]
+        if app == FIO:
+            fio_run_time = 120
+            perc_dict = {
+                "10": {"numjobs": 8, "iodepth": 1, "runtime": fio_run_time},
+                "35": {"numjobs": 8, "iodepth": 4, "runtime": fio_run_time},
+                "65": {"numjobs": 8, "iodepth": 8, "runtime": fio_run_time},
+                "100": {"numjobs": 8, "iodepth": 16, "runtime": fio_run_time}
+            }
+            result = perc_dict[str(percentage)]
 
+        if app == CRYPTO:
+            crypto_factor = 1
+            perc_dict = {
+                "10": {"vp_iters": 15000000 * crypto_factor, "nvps": 3},
+                "20": {"vp_iters": 15000000 * crypto_factor, "nvps": 13},
+                "30": {"vp_iters": 15000000 * crypto_factor, "nvps": 17},
+                "40": {"vp_iters": 15000000 * crypto_factor, "nvps": 22},
+                "50": {"vp_iters": 15000000 * crypto_factor, "nvps": 25},
+                "60": {"vp_iters": 15000000 * crypto_factor, "nvps": 32},
+                "70": {"vp_iters": 15000000 * crypto_factor, "nvps": 45},
+                "80": {"vp_iters": 10000000 * crypto_factor, "nvps": 55},
+                "90": {"vp_iters": 10000000 * crypto_factor, "nvps": 70},
+                "100": {"vp_iters": 5000000 * crypto_factor, "nvps": 192}
+            }
+            result = perc_dict[str(percentage)]
+
+        return result
+
+    def start_crypto_traffic(self, come_handle, f1, percentage):
+        get_parameters = self.get_parameters_for(CRYPTO, percentage)
+        self.crypto_app(come_handle, f1, **get_parameters)
+
+    def crypto_app(self, come_handle, f1, vp_iters=15000000, nvps=192, src='ddr', dst='ddr'):
+        json_data = {"vp_iters": vp_iters,
+                     "nvps": nvps,
+                     "src": src,
+                     "dst": dst}
+        cmd = 'async crypto_raw_speed {}'.format(json.dumps(json_data))
+        dpcsh_nocli.start_dpcsh_bg(come_handle, cmd, f1)
 
 
 if __name__ == "__main__":
