@@ -16,7 +16,6 @@ from collections import deque
 from elasticsearch import helpers
 from elasticsearch import Elasticsearch
 
-
 # Environment: --environment={\"test_bed_type\":\"fs-65\",\"tftp_image_path\":\"ranga/funos-f1_ranga.stripped.gz\"} --inputs={\"boot_new_image\":true,\"le_firewall\":true,\"collect_stats\":[\"\"],\"ec_vol\":true}
 # inputs: {"run_le_firewall":false,"specific_apps":["ZIP"],"add_to_database":true,"collect_stats":["POWER","DEBUG_MEMORY","LE"],"end_sleep":30}
 # --environment={\"test_bed_type\":\"fs-65\",\"tftp_image_path\":\"ranga/funos-f1_onkar.stripped.gz\"} --inputs={\"boot_new_image\":false,\"le_firewall\":false,\"collect_stats\":[\"DEBUG_VP_UTIL\",\"POWER\"],\"ec_vol\":false,\"specific_apps\":[\"crypto\"],\"disable_f1_index\":0}
@@ -24,6 +23,11 @@ from elasticsearch import Elasticsearch
 RCNVME = "rcnvme"
 FIO = "fio"
 CRYPTO = "crypto"
+ZIP = "zip"
+LE = "le"
+BUSY_LOOP = "busy_loop"
+MEMCPY = "memcpy"
+
 
 class MyScript(FunTestScript):
     def describe(self):
@@ -259,42 +263,22 @@ class FunTestCase1(FunTestCase):
         self.initialize_variables()
         self.create_files_based_on_the_stats()
         self.intialise_handles()
-        # self.threaded_apps = {"busy_loop": "soak_flows_busy_loop_10usecs", "memcpy_1MB":"soak_flows_memcpy_1MB_non_coh"}
 
     def run(self):
-        # self.collects_stats_before_test()
+        self.initial_stats()
+        self.collect_stats(count=3, heading="Before starting traffic")
         self.run_the_traffic()
-        self.collect_stats_after_test()
-
-        # fun_test.sleep("Wait for traffic to start")
         count = int(self.duration / 5)
-        heading = "During traffic"
-        fun_test.log("Capturing the data {}".format(heading))
-        self.capture_data(count=count, heading=heading)
-
-        if "fio" in app_params:
-            self.join_fio_thread(fio_thread_map)
-
-        fun_test.sleep("Waiting for all the things to settle", seconds=self.end_sleep)
-
-        #################### After the traffic ############
-        if self.run_le_firewall:
-            le_firewall(self.duration, self.boot_new_image, True)
-        # self.stop_threaded_apps(thread_map_for_soak_apps)
-
-        count = 3
-        heading = "After the traffic"
-        fun_test.log("Capturing the data {}".format(heading))
-        self.capture_data(count=count, heading=heading)
-
+        self.collect_stats(count=count, heading="During traffic")
+        self.stop_traffic()
+        fun_test.sleep("To traffic to stop", seconds=10)
+        self.collect_stats(count=3, heading="After traffic")
         self.come_handle.destroy()
 
     def func_not_found(self):
         print "Function not found"
 
-    def capture_data(self, count, heading):
-
-
+    def collect_stats(self, count, heading):
         # power stats
         # function name standard format: func_'stats_name'
         thread_map = {}
@@ -779,18 +763,18 @@ class FunTestCase1(FunTestCase):
             fun_test.join_thread(thread)
 
     def busy_loop(self, f1):
-        app = "busy_loop"
+        app = BUSY_LOOP
         come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
                            ssh_username=self.fs['come']['mgmt_ssh_username'],
                            ssh_password=self.fs['come']['mgmt_ssh_password'])
-        track_app = fun_test.shared_variables["var_{}_f1_{}".format(app, f1)]
+        track_app = fun_test.shared_variables["{}_{}".format(app, f1)]
         while track_app:
             dpcsh_out = dpcsh_commands.busy_loop(come_handle, f1)
-            track_app = fun_test.shared_variables["var_{}_f1_{}".format(app, f1)]
+            track_app = fun_test.shared_variables["{}_{}".format(app, f1)]
             fun_test.sleep("Before next iteration app: {}".format(app))
 
     def memcpy_1MB(self, f1):
-        app = "memcpy_1MB"
+        app = MEMCPY
         come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
                            ssh_username=self.fs['come']['mgmt_ssh_username'],
                            ssh_password=self.fs['come']['mgmt_ssh_password'])
@@ -1035,7 +1019,8 @@ class FunTestCase1(FunTestCase):
         self.fs = fun_test.shared_variables["fs"]
         self.es = Elasticsearch(
             [{'host': '%s' % self.elasticsearch_config["ip"], 'port': '%s' % self.elasticsearch_config["port"]}])
-        self.threaded_apps = {}
+        self.busy_loop_thread_map = {}
+        self.memcpy_loop_thread_map = {}
 
     def initialize_json_data(self):
         config_file = fun_test.get_script_name_without_ext() + ".json"
@@ -1109,21 +1094,25 @@ class FunTestCase1(FunTestCase):
                                 ssh_username=self.fs['come']['mgmt_ssh_username'],
                                 ssh_password=self.fs['come']['mgmt_ssh_password'])
 
-    def collects_stats_before_test(self):
-        heading = "Before starting traffic"
+    def initial_stats(self):
         if not self.stats_info["come"]["DEBUG_MEMORY"].get("disable", True):
-            self.initial_debug_memory_stats = self.get_debug_memory_stats_initially(self.f_DEBUG_MEMORY_f1_0, self.f_DEBUG_MEMORY_f1_1)
-        self.capture_data(count=3, heading=heading)
-        fun_test.test_assert(True, "Collected initial stats")
+            self.initial_debug_memory_stats = self.get_debug_memory_stats_initially(self.f_DEBUG_MEMORY_f1_0,
+                                                                                    self.f_DEBUG_MEMORY_f1_1)
 
     def run_the_traffic(self):
         come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
                            ssh_username=self.fs['come']['mgmt_ssh_username'],
                            ssh_password=self.fs['come']['mgmt_ssh_password'])
         for f1 in self.run_on_f1:
-            if "le" in self.traffic_profile:
+            if LE in self.traffic_profile:
                 self.restart_dpcsh()
                 self.start_le_firewall(self.duration, self.boot_new_image)
+
+            if CRYPTO in self.traffic_profile:
+                self.start_crypto_traffic(come_handle, f1, 100)
+
+            if ZIP in self.traffic_profile:
+                self.start_zip_traffic(come_handle, f1, 100)
 
             if RCNVME in self.traffic_profile:
                 self.start_rcnvme_traffic(come_handle, f1, 100)
@@ -1131,26 +1120,34 @@ class FunTestCase1(FunTestCase):
             if FIO in self.traffic_profile:
                 self.fio_thread_map = self.start_fio_traffic(percentage=100)
 
-            if CRYPTO in self.traffic_profile:
-                self.start_crypto_traffic(come_handle, f1, 100)
-            if "zip" in self.traffic_profile:
-                self.start_zip_traffic()
+            if BUSY_LOOP in self.traffic_profile:
+                fun_test.shared_variables["{}_{}".format(BUSY_LOOP, f1)] = True
+                self.busy_loop_thread_map["{}".format(f1)] = fun_test.execute_thread_after(func=self.busy_loop,
+                                                                                           time_in_seconds=5,
+                                                                                           f1=f1)
+            if MEMCPY in self.traffic_profile:
+                fun_test.shared_variables["{}_{}".format(MEMCPY, f1)] = True
+                self.memcpy_loop_thread_map["{}".format(f1)] = fun_test.execute_thread_after(func=self.memcpy_1MB,
+                                                                                           time_in_seconds=5,
+                                                                                           f1=f1)
+
         come_handle.destroy()
 
     def start_rcnvme_traffic(self, come_handle, f1=0, percentage=100):
         get_parameters = self.get_parameters_for(RCNVME, percentage)
         self.rcnvme_app(come_handle, f1, **get_parameters)
 
-    def rcnvme_app(self, come_handle, f1=0, all_ctrlrs=True, duration=60, qdepth=12, nthreads=12, test_type='read_only', hbm=True, prealloc=True, iosize=4096, random=True, hsu_rc=True):
-        json_data = {"all_ctrlrs" : all_ctrlrs,
+    def rcnvme_app(self, come_handle, f1=0, all_ctrlrs=True, duration=60, qdepth=12, nthreads=12, test_type='read_only',
+                   hbm=True, prealloc=True, iosize=4096, random=True, hsu_rc=True):
+        json_data = {"all_ctrlrs": all_ctrlrs,
                      "qdepth": qdepth,
                      "nthreads": nthreads,
-                     "test_type":test_type,
-                     "hbm" : hbm,
-                     "prealloc":prealloc,
-                     "iosize":iosize,
+                     "test_type": test_type,
+                     "hbm": hbm,
+                     "prealloc": prealloc,
+                     "iosize": iosize,
                      "random": random,
-                     "duration" : duration,
+                     "duration": duration,
                      "hsu_rc": hsu_rc}
         cmd = 'async rcnvme_test {}'.format(json.dumps(json_data))
         dpcsh_nocli.start_dpcsh_bg(come_handle, cmd, f1)
@@ -1305,6 +1302,33 @@ class FunTestCase1(FunTestCase):
                      "dst": dst}
         cmd = 'async crypto_raw_speed {}'.format(json.dumps(json_data))
         dpcsh_nocli.start_dpcsh_bg(come_handle, cmd, f1)
+
+    def start_zip_traffic(self, come_handle, f1, percentage):
+        get_parameters = self.get_parameters_for(ZIP, percentage)
+        self.zip_app(come_handle, f1, **get_parameters)
+
+    def zip_app(self, come_handle, f1, compress=True, nflows=7680, niterations=100, max_effort=0, npcs=None):
+        json_data = {"niterations": niterations,
+                     "nflows": nflows,
+                     "max_effort": max_effort,
+                     }
+        if npcs:
+            json_data['npcs'] = npcs
+        cmd = "async deflate_perf_multi {}".format(json.dumps(json_data))
+        dpcsh_nocli.start_dpcsh_bg(come_handle, cmd, f1)
+
+    def stop_traffic(self):
+        if LE in self.traffic_profile:
+            self.start_le_firewall(self.duration, self.boot_new_image, True)
+        for f1 in self.run_on_f1:
+            if FIO in self.traffic_profile:
+                fun_test.join_thread(self.fio_thread_map[f1])
+            if BUSY_LOOP in self.traffic_profile:
+                fun_test.shared_variables["{}_{}".format(BUSY_LOOP, f1)] = False
+                fun_test.join_thread(self.busy_loop_thread_map[f1])
+            if MEMCPY in self.traffic_profile:
+                fun_test.shared_variables["{}_{}".format(MEMCPY, f1)] = False
+                fun_test.join_thread(self.memcpy_loop_thread_map[f1])
 
 
 if __name__ == "__main__":
