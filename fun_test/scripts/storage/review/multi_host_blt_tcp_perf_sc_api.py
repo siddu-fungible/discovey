@@ -187,7 +187,9 @@ class MultiHostVolumePerformanceScript(FunTestScript):
         fun_test.log("csi_perf_enabled is set as: {} for current run".format(self.csi_perf_enabled))
         if self.csi_perf_enabled:
             fun_test.log("testbed_config: {}".format(self.testbed_config))
-            self.csi_f1_ip = self.testbed_config["dut_info"][str(self.available_dut_indexes[0])]["bond_interface_info"]["0"]["0"]["ip"].split('/')[0]
+            self.csi_f1_ip = \
+            self.testbed_config["dut_info"][str(self.available_dut_indexes[0])]["bond_interface_info"]["0"]["0"][
+                "ip"].split('/')[0]
             fun_test.log("F1 ip used for csi_perf_test: {}".format(self.csi_f1_ip))
             self.perf_listener_host = self.topology_helper.get_available_perf_listener_hosts()
             fun_test.log("perf_listener_host used for current test: {}".format(self.perf_listener_host))
@@ -335,36 +337,14 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                 status = self.funcp_obj[index].container_info[container_name].ifconfig_up_down("bond0", "up")
                 fun_test.test_assert(status, "bond0 interface up in {}".format(container_name))
 
-                '''
-                bond_interfaces = self.fs_spec[index].get_bond_interfaces(f1_index=f1_index)
-                bond_name = "bond0"
-                bond_ip = bond_interfaces[0].ip
-                self.f1_ips.append(bond_ip.split('/')[0])
-                slave_interface_list = bond_interfaces[0].fpg_slaves
-                slave_interface_list = [self.fpg_int_prefix + str(i) for i in slave_interface_list]
-                self.funcp_obj[index].configure_bond_interface(container_name=container_name,
-                                                               name=bond_name,
-                                                               ip=bond_ip,
-                                                               slave_interface_list=slave_interface_list)
-                # Configuring route
-                route = self.fs_spec[index].spec["bond_interface_info"][str(f1_index)][str(0)]["route"][0]
-                # self.funcp_obj[index].container_info[container_name].command("hostname")
-                cmd = "sudo ip route add {} via {} dev {}".format(route["network"], route["gateway"], bond_name)
-                route_add_status = self.funcp_obj[index].container_info[container_name].command(cmd)
-                fun_test.test_assert_expected(expected=0,
-                                              actual=self.funcp_obj[index].container_info[
-                                                  container_name].exit_status(),
-                                              message="Configure Static route")
-                '''
-
         # Creating storage controller API object for the first DUT in the current setup
         fun_test.sleep("", 60)
         self.sc_api = StorageControllerApi(api_server_ip=self.come_obj[0].host_ip,
-                                               api_server_port=self.api_server_port,
-                                               username=self.api_server_username,
-                                               password=self.api_server_password)
+                                           api_server_port=self.api_server_port,
+                                           username=self.api_server_username,
+                                           password=self.api_server_password)
         # Getting all the DUTs of the setup
-        nodes = self.sc_api_obj.get_dpu_ids()
+        nodes = self.sc_api.get_dpu_ids()
         fun_test.test_assert(nodes, "Getting UUIDs of all DUTs in the setup")
         for index, node in enumerate(nodes):
             # Extracting the DUT's bond interface details and applying it to FPG0 for now, due to SC bug
@@ -379,7 +359,7 @@ class MultiHostVolumePerformanceScript(FunTestScript):
             fun_test.log(
                 "Current {} node's bond0 is going to be configured with {} IP address with {} subnet mask with"
                 " next hop set to {}".format(node, ip, subnet_mask, next_hop))
-            result = self.sc_api_obj.configure_dataplane_ip(dpu_id=node, interface_name="bond0", ip=ip,
+            result = self.sc_api.configure_dataplane_ip(dpu_id=node, interface_name="bond0", ip=ip,
                                                             subnet_mask=subnet_mask, next_hop=next_hop,
                                                             use_dhcp=False)
             fun_test.log("Dataplane IP configuration result of {}: {}".format(node, result))
@@ -464,8 +444,8 @@ class MultiHostVolumePerformanceScript(FunTestScript):
             try:
                 self.blt_details = fun_test.shared_variables["blt_details"]
                 self.thin_uuid_list = fun_test.shared_variables["thin_uuid"]
-                self.ctrlr_uuid = fun_test.shared_variables["ctrlr_uuid"]
                 self.nqn_list = fun_test.shared_variables["nqn_list"]
+                self.detach_uuid_list = fun_test.shared_variables["detach_uuid_list"]
 
                 # Setting the syslog level back to 6
                 if self.syslog != "default":
@@ -490,26 +470,14 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                 # Detaching and deleting the volume
                 for i, vol_uuid in enumerate(self.thin_uuid_list):
                     num_hosts = len(self.host_info)
-                    ctrlr_index = i % num_hosts
-                    ns_id = (i / num_hosts) + 1
-                    command_result = self.storage_controller.detach_volume_from_controller(
-                        ctrlr_uuid=self.ctrlr_uuid[ctrlr_index], ns_id=ns_id, command_duration=self.command_timeout)
-                    fun_test.test_assert(command_result["status"], "Detaching BLT volume {} from controller {}".
-                                         format(vol_uuid, self.ctrlr_uuid[ctrlr_index]))
+                    # Detaching volume
+                    detach_volume = self.sc_api.detach_volume(port_uuid=self.detach_uuid_list[i])
+                    fun_test.log("Detach volume API response: {}".format(detach_volume))
+                    fun_test.test_assert(detach_volume["status"], "Detach Volume {}".format(self.detach_uuid_list[i]))
 
-                    command_result = self.storage_controller.delete_volume(uuid=vol_uuid,
-                                                                           type=str(self.blt_details['type']),
-                                                                           command_duration=self.command_timeout)
-                    fun_test.test_assert(command_result["status"], "Deleting BLT {} with uuid {} on DUT".
-                                         format(i + 1, vol_uuid))
-
-                # Deleting the controller
-                for index, host_name in enumerate(self.host_info):
-                    command_result = self.storage_controller.delete_controller(ctrlr_uuid=self.ctrlr_uuid[index],
-                                                                               command_duration=self.command_timeout)
-                    fun_test.log(command_result)
-                    fun_test.test_assert(command_result["status"], "Deleting storage controller {}".
-                                         format(self.ctrlr_uuid[index]))
+                    delete_volume = self.sc_api.delete_volume(vol_uuid=self.thin_uuid_list[i])
+                    fun_test.test_assert(delete_volume["status"],
+                                         "Deleting Stripe Vol with uuid {} on DUT".format(self.thin_uuid_list[i]))
             except Exception as ex:
                 fun_test.critical(str(ex))
                 fun_test.log("Clean-up of volumes failed.")
@@ -525,17 +493,6 @@ class MultiHostVolumePerformanceScript(FunTestScript):
         except Exception as ex:
             fun_test.critical(str(ex))
             come_reboot = True
-
-        '''
-        # disabling COMe reboot in cleanup section as, setup bring-up handles it through COMe power-cycle
-        try:
-            if come_reboot:
-                self.fs.fpga_initialize()
-                fun_test.log("Unexpected exit: Rebooting COMe to ensure next script execution won't ged affected")
-                self.fs.come_reset(max_wait_time=self.reboot_timeout)
-        except Exception as ex:
-            fun_test.critical(str(ex))
-        '''
 
         fun_test.log("FS cleanup")
         for fs in fun_test.shared_variables["fs_objs"]:
@@ -718,75 +675,20 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
             # Create BLT's using SC API
             self.thin_uuid_list = []
             for i in range(self.blt_count):
-                create_raw_vol = self.sc_api.create_stripe_volume(pool_uuid=self.pool_uuid, name="stripevol1",
-                                                                     capacity=self.stripe_details["vol_size"],
-                                                                     pvol_type=self.stripe_details["pvol_type"],
-                                                                     stripe_count=self.stripe_details["stripe_count"],
-                                                                     encrypt=self.stripe_details["encrypt"],
-                                                                     allow_expansion=self.stripe_details[
-                                                                         "allow_expansion"],
-                                                                     data_protection=self.stripe_details[
-                                                                         "data_protection"],
-                                                                     compression_effort=self.stripe_details["compress"])
+                create_raw_vol = self.sc_api.create_volume(pool_uuid=self.pool_uuid, name="thin_block" + str(i + 1),
+                                                           capacity=self.blt_details["capacity"],
+                                                           vol_type=self.blt_details["type"],
+                                                           stripe_count=self.blt_details["stripe_count"])
                 fun_test.log("Create stripe volume API response: {}".format(create_raw_vol))
                 fun_test.test_assert(create_raw_vol["status"], "Create BLT {} with uuid {} on DUT".
                                      format(i + 1, create_raw_vol["data"]["uuid"]))
                 self.thin_uuid_list.append(create_raw_vol["data"]["uuid"])
-
-            '''
-            # Create BLT's
-            self.thin_uuid_list = []
-            for i in range(self.blt_count):
-                cur_uuid = utils.generate_uuid()
-                self.thin_uuid_list.append(cur_uuid)
-                command_result = self.storage_controller.create_volume(type=self.blt_details["type"],
-                                                                       capacity=self.blt_details["capacity"],
-                                                                       block_size=self.blt_details["block_size"],
-                                                                       name="thin_block" + str(i + 1), group_id=i+1,
-                                                                       uuid=cur_uuid,
-                                                                       command_duration=self.command_timeout)
-                fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "Create BLT {} with uuid {} on DUT".format(i + 1,
-                                                                                                          cur_uuid))
-            '''
             fun_test.shared_variables["thin_uuid"] = self.thin_uuid_list
 
             # Create one TCP controller per host
             self.nvme_block_device = []
-            self.ctrlr_uuid = []
             self.nqn_list = []
             self.detach_uuid_list = []
-            '''
-            for i in range(0, self.num_hosts):
-                cur_uuid = utils.generate_uuid()
-                self.ctrlr_uuid.append(cur_uuid)
-                nqn = "nqn" + str(i + 1)
-                self.nqn_list.append(nqn)
-                command_result = self.storage_controller.create_controller(ctrlr_uuid=cur_uuid,
-                                                                           transport=self.transport_type.upper(),
-                                                                           remote_ip=self.host_ips[i],nqn=nqn,
-                                                                           port=self.transport_port,
-                                                                           command_duration=self.command_timeout)
-                fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "Creating TCP controller for {} with uuid {} on DUT".
-                                     format(self.host_ips[i], cur_uuid))
-
-            fun_test.shared_variables["ctrlr_uuid"] = self.ctrlr_uuid
-            fun_test.shared_variables["nqn_list"] = self.nqn_list
-
-            # Attach controller to BLTs
-            for i in range(self.blt_count):
-                ctrlr_index = i % self.num_hosts
-                ns_id = (i / self.num_hosts) + 1
-                command_result = self.storage_controller.attach_volume_to_controller(
-                    ctrlr_uuid=self.ctrlr_uuid[ctrlr_index], vol_uuid=self.thin_uuid_list[i],
-                    ns_id=ns_id, command_duration=self.command_timeout)
-                fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "Attaching BLT volume {} to the host {} via controller "
-                                                               "{}".format(self.thin_uuid_list[i],
-                                                                           self.host_ips[ctrlr_index],
-                                                                           self.ctrlr_uuid[ctrlr_index]))
-            '''
 
             # Attach controller to BLTs
             for i in range(self.blt_count):
@@ -801,6 +703,7 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                 self.nqn_list.append(attach_volume["data"]["nqn"])
                 self.detach_uuid_list.append(attach_volume["data"]["uuid"])
 
+            fun_test.shared_variables["detach_uuid_list"] = self.detach_uuid_list
             fun_test.shared_variables["nqn_list"] = self.nqn_list
 
             # Setting the fcp scheduler bandwidth

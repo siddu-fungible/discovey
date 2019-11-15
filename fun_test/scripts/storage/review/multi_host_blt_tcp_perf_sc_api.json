@@ -65,7 +65,8 @@
       "ns_id": 1,
       "type": "VOL_TYPE_BLK_LOCAL_THIN",
       "capacity": 1600277970944,
-      "block_size": 4096
+      "block_size": 4096,
+      "stripe_count": 0
     },
     "create_pool": false,
     "default_pool":"global",
@@ -121,7 +122,8 @@
       "ns_id": 1,
       "type": "VOL_TYPE_BLK_LOCAL_THIN",
       "capacity": 1600277970944,
-      "block_size": 4096
+      "block_size": 4096,
+      "stripe_count": 0
     },
     "create_pool": false,
     "default_pool":"global",
