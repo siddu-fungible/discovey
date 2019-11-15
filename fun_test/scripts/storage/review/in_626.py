@@ -207,6 +207,7 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                                                     # fs_parameters={"already_deployed": True})
         self.topology = self.topology_helper.deploy()
         fun_test.test_assert(self.topology, "Topology deployed")
+        fun_test.sleep(seconds=120, message="Waiting for storage controller API to start")
 
         # Datetime required for daily Dashboard data filter
         self.db_log_time = get_data_collection_time()
@@ -725,7 +726,6 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                     host_handle.modprobe("nvme_tcp")
                     host_handle.modprobe("nvme_fabrics")
 
-                fun_test.sleep("After modprobe", seconds=5)
 
                 # host_handle.start_bg_process(command="sudo tcpdump -i enp216s0 -w nvme_connect_auto.pcap")
                 for i in range(2):
