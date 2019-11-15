@@ -188,19 +188,21 @@ def main():
     max_run_time = args.max_run_time_in_seconds
     test_bed_type = args.test_bed_type
     description = args.description
-    jenkins_build_machine = args.jenkins_build_ma
-    jenkins_workspace = args.j
+    jenkins_build_machine = args.jenkins_build_machine
+    jenkins_workspace = args.jenkins_workspace
 
     logging.info("Input options provided:")
-    logging.info("Suite        : {}".format(suite_name))
-    logging.info("Submitter    : {}".format(submitter_email))
-    logging.info("Emails       : {}".format(emails))
-    logging.info("Tags         : {}".format(tags))
-    logging.info("Base URL     : {}".format(base_url))
-    logging.info("Environment  : {}".format(environment))
-    logging.info("Test-bed type: {}".format(test_bed_type))
-    logging.info("Description  : {}".format(description))
-    logging.info("Max run-time : {}".format(max_run_time))
+    logging.info("Suite                 : {}".format(suite_name))
+    logging.info("Submitter             : {}".format(submitter_email))
+    logging.info("Emails                : {}".format(emails))
+    logging.info("Tags                  : {}".format(tags))
+    logging.info("Base URL              : {}".format(base_url))
+    logging.info("Environment           : {}".format(environment))
+    logging.info("Test-bed type         : {}".format(test_bed_type))
+    logging.info("Description           : {}".format(description))
+    logging.info("Max run-time          : {}".format(max_run_time))
+    logging.info("Jenkins workspace     : {}".format(jenkins_workspace))
+    logging.info("Jenkins build machine : {}".format(jenkins_build_machine))
     logging.info("")
 
     if not base_url:

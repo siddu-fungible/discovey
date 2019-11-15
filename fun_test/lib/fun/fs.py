@@ -297,8 +297,8 @@ class Bmc(Linux):
                 come.pre_reboot_cleanup()
             except Exception as ex:
                 fun_test.critical(str(ex))
-            reboot_initiated_wait_time = 60 * 3
-            reboot_result = come.reboot(max_wait_time=max_wait_time, non_blocking=non_blocking, ipmi_details=ipmi_details, reboot_initiated_wait_time=reboot_initiated_wait_time)
+            # reboot_initiated_wait_time = 60 * 3
+            reboot_result = come.reboot(max_wait_time=max_wait_time, non_blocking=non_blocking, ipmi_details=ipmi_details)
             reboot_info_string = "initiated" if non_blocking else "complete"
             fun_test.test_assert(expression=reboot_result,
                                  message="ComE reboot {} (Graceful)".format(reboot_info_string),
