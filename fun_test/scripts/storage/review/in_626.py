@@ -725,7 +725,7 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                     host_handle.modprobe("nvme_tcp")
                     host_handle.modprobe("nvme_fabrics")
 
-                fun_test.sleep("After modprobe", seconds=10)
+                fun_test.sleep("After modprobe", seconds=30)
 
                 # host_handle.start_bg_process(command="sudo tcpdump -i enp216s0 -w nvme_connect_auto.pcap")
                 if hasattr(self, "nvme_io_queues") and self.nvme_io_queues != 0:
