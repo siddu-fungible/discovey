@@ -2407,17 +2407,22 @@ if __name__ == "__main_load_mods__":
     chart.save()
 
 if __name__ == "__main__":
+    # run_time_entries = JobRunTimeProperties.objects.all()
+    # for entry in run_time_entries:
+    #     entry.delete()
     from django.db import transaction
     transaction.set_autocommit(False)
     model = "JenkinsJobIdMap"
     jenkins_model = app_config.get_metric_models()[model]
     end_date = get_current_time()
-    start_date = end_date - timedelta(days=3)
+    start_date = end_date - timedelta(days=60)
     date_range = [start_date, end_date]
     jenkins_entries = JenkinsJobIdMap.objects.filter(build_date__range=date_range).order_by("build_date")
     for entry in jenkins_entries:
         build_date = entry.build_date
         result = {}
+        if entry.lsf_job_id == "":
+            build_date = timezone.localtime(build_date)
         result["lsf_info"] = {"lsf_job_id": entry.lsf_job_id}
         result["suite_info"] = {"suite_execution_id": entry.suite_execution_id,
                                 "associated_suites": entry.associated_suites}
@@ -2435,13 +2440,12 @@ if __name__ == "__main__":
         for metric_model in metric_models:
             # print "updating the model {}".format(metric_model)
             try:
-                model_entries = metric_models[metric_model].objects.all().order_by("-input_date_time")[:10]
+                model_entries = metric_models[metric_model].objects.all().order_by("-input_date_time")
                 for model_entry in model_entries:
                     model_entry_epoch = get_epoch_time_from_datetime(model_entry.input_date_time)
                     if model_entry_epoch == run_time_epoch:
                         model_entry.run_time = run_time_entry.id
                         model_entry.save()
-                        break
             except Exception as ex:
                 pass
     transaction.commit()

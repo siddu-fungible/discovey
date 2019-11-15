@@ -211,7 +211,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
           return this.performanceService.fetchRunTimeProperties(metaData.runTime);
         }),
         switchMap(response => {
-            self.setPointInfo(response, point);
+          self.setPointInfo(response, point);
           return of(true);
         })
       ).subscribe(response => {
@@ -226,40 +226,49 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     let s = {};
     let self = this;
     if (props) {
-    let jenkinsInfo = props.run_time.jenkins_info;
-    let lsfInfo = props.run_time.lsf_info;
-    let suiteInfo = props.run_time.suite_info;
-    let gitCommit = "Unknown";
-    if (lsfInfo.hasOwnProperty("lsf_job_id")) {
-      let lsfJobId = lsfInfo.lsf_job_id;
-      if (lsfJobId !== "" && lsfJobId !== -1) {
-        s["Lsf job id"] = lsfJobId;
+      let jenkinsInfo = props.run_time.jenkins_info;
+      let lsfInfo = props.run_time.lsf_info;
+      let suiteInfo = props.run_time.suite_info;
+      let gitCommit = "Unknown";
+      if (lsfInfo.hasOwnProperty("lsf_job_id")) {
+        let lsfJobId = lsfInfo.lsf_job_id;
+        if (lsfJobId !== "" && lsfJobId !== -1) {
+          s["Lsf job id"] = lsfJobId;
+        }
+      }
+      if (suiteInfo.hasOwnProperty("suite_execution_id")) {
+        let suiteExecutionId = suiteInfo.suite_execution_id;
+        if (suiteExecutionId !== "" && suiteExecutionId !== -1) {
+          s["Suite execution detail"] = suiteExecutionId;
+          s["Suite log directory"] = suiteExecutionId;
+        }
+      }
+      if (suiteInfo.hasOwnProperty("associated_suites")) {
+        let associatedSuites = suiteInfo.associated_suites;
+        if (associatedSuites.length !== 0) {
+          s["Associated suites"] = associatedSuites;
+        }
+      }
+      if (jenkinsInfo.hasOwnProperty("build_properties")) {
+        if (jenkinsInfo.build_parameters && jenkinsInfo.build_parameters != "") {
+          let buildProperties = JSON.parse(jenkinsInfo.build_properties);
+          let funOsGitCommit = buildProperties["gitHubSha1s"]["FunOS"];
+          if (buildProperties !== "") {
+            s["Build Properties"] = buildProperties;
+          }
+          if (funOsGitCommit != "") {
+            s["Git commit"] = funOsGitCommit;
+          }
+        }
+
+      }
+      if (jenkinsInfo.hasOwnProperty("sdk_version")) {
+        let sdkVersion = jenkinsInfo.sdk_version;
+        if (sdkVersion != "" && sdkVersion != -1) {
+          s["SDK version"] = sdkVersion;
+        }
       }
     }
-    if (suiteInfo.hasOwnProperty("suite_execution_id")) {
-      let suiteExecutionId = suiteInfo.suite_execution_id;
-      if (suiteExecutionId !== "" && suiteExecutionId !== -1) {
-        s["Suite execution detail"] = suiteExecutionId;
-        s["Suite log directory"] = suiteExecutionId;
-      }
-    }
-    if (suiteInfo.hasOwnProperty("associated_suites")) {
-      let associatedSuites = suiteInfo.associated_suites;
-      if (associatedSuites.length !== 0) {
-        s["Associated suites"] = associatedSuites;
-      }
-    }
-    if (jenkinsInfo.hasOwnProperty("build_properties")) {
-      let buildProperties = jenkinsInfo.build_properties;
-      let funOsGitCommit = buildProperties["gitHubSha1s"]["FunOS"];
-      if (buildProperties !== "") {
-        s["Build Properties"] = buildProperties;
-      }
-      if (funOsGitCommit != "") {
-        s["Git commit"] = funOsGitCommit;
-      }
-    }
-  }
 
     let metaData = point["metaData"];
     if (metaData.epoch) {
