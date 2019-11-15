@@ -99,7 +99,7 @@ export class CreateChartComponent implements OnInit, OnChanges {
   describeTable = () => {
     this.inputNames = [];
     var self = this;
-    this.apiService.get("/metrics/describe_table/" + this.modelName).subscribe(function (tableInfo) {
+    this.apiService.get("/metrics/describe_table/" + this.modelName + "?get_choices=1").subscribe(function (tableInfo) {
       self.tableInfo = tableInfo.data;
       Object.keys(self.tableInfo).forEach((field) => {
         let fieldInfo = self.tableInfo[field];

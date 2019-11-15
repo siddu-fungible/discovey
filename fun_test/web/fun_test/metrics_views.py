@@ -69,27 +69,22 @@ def metrics_list(request):
 @csrf_exempt
 @api_safe_json_response
 def describe_table(request, table_name):
-    editing_chart = False
-    try:
-        request_json = json.loads(request.body)
-        if "editing_chart" in request_json:
-            editing_chart = True
-    except:
-        pass
     result = None
+    get_choices = int(request.GET.get("get_choices", 0))
     metric_model = app_config.get_metric_models()[table_name]
     if metric_model:
         fields = metric_model._meta.get_fields()
         payload = OrderedDict()
         for field in fields:
             choices = None
-            verbose_name = "verbose_name"
-            if hasattr(field, "choices"):
-                all_values = metric_model.objects.values(field.column).distinct()
-                choices = []
-                for index, value in enumerate(all_values):
-                    choices.append((index, value[field.column]))
-                choices.append((len(choices), "any"))
+            verbose_name = None
+            if get_choices:
+                if hasattr(field, "choices"):
+                    all_values = metric_model.objects.values(field.column).distinct()
+                    choices = []
+                    for index, value in enumerate(all_values):
+                        choices.append((index, value[field.column]))
+                    choices.append((len(choices), "any"))
             if hasattr(field, "verbose_name"):
                 verbose_name = field.verbose_name
             payload[field.name] = {"choices": choices, "verbose_name": verbose_name}

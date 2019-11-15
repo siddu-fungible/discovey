@@ -624,9 +624,9 @@ def add_job_run_time_properties(run_time, date_time, add_associated_suites=False
                 suite_run_time["associates_suites"] = list(set(suite_run_time["associates_suites"]))
             entry.run_time = entry_run_time
             entry.save()
-        else:
-            print "Run time properties {}".format(json.dumps(run_time))
-            print "Run time props in DB {}".format(json.dumps(entry.run_time))
+        # else:
+            # print "Run time properties {}".format(json.dumps(run_time))
+            # print "Run time props in DB {}".format(json.dumps(entry.run_time))
     except ObjectDoesNotExist:
         entry = JobRunTimeProperties(run_time=run_time, date_time=date_time)
         entry.save()

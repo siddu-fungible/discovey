@@ -1248,7 +1248,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     }
     var self = this;
     if (this.modelName !== 'MetricContainer' && !this.minimal) {
-      return this.apiService.get("/metrics/describe_table/" + this.modelName).subscribe(function (response) {
+      return this.apiService.get("/metrics/describe_table/" + this.modelName + "?get_choices=0").subscribe(function (response) {
         self.tableInfo = response.data;
         self.fetchData(self.id, chartInfo, previewDataSets, self.tableInfo);
       }, error => {
