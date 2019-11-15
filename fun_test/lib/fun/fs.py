@@ -1257,8 +1257,7 @@ class ComE(Linux):
         :return: True if the installation succeeded with exit status == 0, else raise an assert
         """
         self.stop_cclinux_service()
-
-        if "latest" in build_number:
+        if type(build_number) == str or type(build_number) == unicode and "latest" in build_number:
             build_number = self._get_build_number_for_latest(release_train=release_train)
             fun_test.simple_assert(build_number, "Getting latest build number")
         if "master" not in release_train:

@@ -189,6 +189,10 @@ class MultiHostVolumePerformanceScript(FunTestScript):
         if fpg_interfaces:
             fun_test.shared_variables["f1_ips"] = [fpg_interfaces[0].ip]
 
+        else:
+            bond_interfaces = self.topology_helper.get_expanded_topology().get_dut(index=0).get_bond_interfaces(
+                f1_index=0)
+            fun_test.shared_variables["f1_ips"] = [bond_interfaces[0].ip]
 
         self.tftp_image_path = fun_test.get_job_environment_variable("tftp_image_path")
         self.bundle_image_parameters = fun_test.get_job_environment_variable("bundle_image_parameters")
