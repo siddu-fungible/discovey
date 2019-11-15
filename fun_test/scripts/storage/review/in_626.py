@@ -725,21 +725,22 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                     host_handle.modprobe("nvme_tcp")
                     host_handle.modprobe("nvme_fabrics")
 
-                fun_test.sleep("After modprobe", seconds=30)
+                fun_test.sleep("After modprobe", seconds=5)
 
                 # host_handle.start_bg_process(command="sudo tcpdump -i enp216s0 -w nvme_connect_auto.pcap")
-                if hasattr(self, "nvme_io_queues") and self.nvme_io_queues != 0:
-                    command_result = host_handle.sudo_command(
-                        "nvme connect -t {} -a {} -s {} -n {} -i {} -q {}".format(unicode.lower(self.transport_type),
-                                                                                  self.test_network["f1_loopback_ip"],
-                                                                                  self.transport_port, nqn,
-                                                                                  self.nvme_io_queues, host_ip))
-                    fun_test.log(command_result)
-                else:
-                    command_result = host_handle.sudo_command(
-                        "nvme connect -t {} -a {} -s {} -n {} -q {}".format(unicode.lower(self.transport_type),
-                                                                            self.test_network["f1_loopback_ip"],
-                                                                            self.transport_port, nqn, host_ip))
+                for i in range(2):
+                    if hasattr(self, "nvme_io_queues") and self.nvme_io_queues != 0:
+                        command_result = host_handle.sudo_command(
+                            "nvme connect -t {} -a {} -s {} -n {} -i {} -q {}".format(unicode.lower(self.transport_type),
+                                                                                      self.test_network["f1_loopback_ip"],
+                                                                                      self.transport_port, nqn,
+                                                                                      self.nvme_io_queues, host_ip))
+                        fun_test.log(command_result)
+                    else:
+                        command_result = host_handle.sudo_command(
+                            "nvme connect -t {} -a {} -s {} -n {} -q {}".format(unicode.lower(self.transport_type),
+                                                                                self.test_network["f1_loopback_ip"],
+                                                                                self.transport_port, nqn, host_ip))
                     fun_test.log(command_result)
                 fun_test.sleep("Wait for couple of seconds for the volume to be accessible to the host", 5)
                 host_handle.sudo_command("for i in `pgrep tcpdump`;do kill -9 $i;done")
