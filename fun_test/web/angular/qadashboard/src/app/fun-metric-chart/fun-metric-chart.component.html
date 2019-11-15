@@ -24,7 +24,6 @@
     <!--showing clicked point details when selected on a chart-->
     <div class="card" *ngIf="pointClicked && leaf">
       <div class="properties-margin">
-        <pre>{{ pointInfo }}</pre>
         <table>
           <tr *ngFor="let point of pointInfo">
             <td class="no-wrap">
@@ -61,7 +60,7 @@
           Build
           Properties</a><br>
         <div style="padding: 4px;" *ngIf="showBuildProps && buildProps">
-          <pre>{{ buildProps.value }}</pre>
+          <pre>{{ buildProps.value | json }}</pre>
         </div>
         <cancel-btn-link [text]="'close'" (onClick)="closePointInfo()"></cancel-btn-link>
       </div>

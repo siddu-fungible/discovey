@@ -211,8 +211,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
           return this.performanceService.fetchRunTimeProperties(metaData.runTime);
         }),
         switchMap(response => {
-          self.pointInfo = JSON.stringify(response);
-          self.setPointInfo(response, point);
+            self.setPointInfo(response, point);
           return of(true);
         })
       ).subscribe(response => {
@@ -226,20 +225,11 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   setPointInfo(props, point): any {
     let s = {};
     let self = this;
+    if (props) {
     let jenkinsInfo = props.run_time.jenkins_info;
     let lsfInfo = props.run_time.lsf_info;
     let suiteInfo = props.run_time.suite_info;
     let gitCommit = "Unknown";
-    if (jenkinsInfo.hasOwnProperty("build_properties")) {
-      let buildProperties = jenkinsInfo.build_properties;
-      let funOsGitCommit = buildProperties["gitHubSha1s"]["FunOS"];
-      if (buildProperties !== "") {
-        s["Build Properties"] = buildProperties;
-      }
-      if (funOsGitCommit != "") {
-        s["Git commit"] = funOsGitCommit;
-      }
-    }
     if (lsfInfo.hasOwnProperty("lsf_job_id")) {
       let lsfJobId = lsfInfo.lsf_job_id;
       if (lsfJobId !== "" && lsfJobId !== -1) {
@@ -248,7 +238,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     }
     if (suiteInfo.hasOwnProperty("suite_execution_id")) {
       let suiteExecutionId = suiteInfo.suite_execution_id;
-      if (suiteExecutionId !== -1) {
+      if (suiteExecutionId !== "" && suiteExecutionId !== -1) {
         s["Suite execution detail"] = suiteExecutionId;
         s["Suite log directory"] = suiteExecutionId;
       }
@@ -259,8 +249,24 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         s["Associated suites"] = associatedSuites;
       }
     }
+    if (jenkinsInfo.hasOwnProperty("build_properties")) {
+      let buildProperties = jenkinsInfo.build_properties;
+      let funOsGitCommit = buildProperties["gitHubSha1s"]["FunOS"];
+      if (buildProperties !== "") {
+        s["Build Properties"] = buildProperties;
+      }
+      if (funOsGitCommit != "") {
+        s["Git commit"] = funOsGitCommit;
+      }
+    }
+  }
 
-     let metaData = point["metaData"];
+    let metaData = point["metaData"];
+    if (metaData.epoch) {
+      let pstDate = this.commonService.convertEpochToDate(metaData.epoch, this.TIMEZONE);
+      let dateString = this.commonService.addLeadingZeroesToDate(pstDate);
+      s["Date"] = dateString.substring(0, 5);
+    }
     if (metaData.originalValue) {
       s["Value"] = metaData.originalValue;
     } else {
@@ -280,7 +286,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         self.pointInfo.push(property);
       }
     });
-    self.pointClicked = true;
   }
 
   fetchMetricsById(): void {
@@ -353,85 +358,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
 
   //display details about the points in the chart
   pointDetail(x, y, metaData): any {
-    // if (metaData.runTime) {
-    //   let props = {};
-    //   new Observable(observer => {
-    //     observer.next(true);
-    //     observer.complete();
-    //     return () => {
-    //     }
-    //   }).pipe(
-    //     switchMap(response => {
-    //       return this.performanceService.fetchRunTimeProperties(metaData.runTime);
-    //     }),
-    //     switchMap(response => {
-    //       props = response;
-    //       return of(true);
-    //     })
-    //     ).subscribe(response => {
-    //       return props;
-    //   }, error => {
-    //     this.loggerService.error("Unable to fetch pointInfo from runtime metadata");
-    //   });
-    // }
-    // let softwareDate = "Unknown";
-    // let hardwareVersion = "Unknown";
-    // let sdkBranch = "Unknown";
-    // let gitCommit = "Unknown";
-    // //let key = this._getBuildKey(x);
-    // let key = x;
-    // if (metaData.epoch) {
-    //   key = Number(metaData.epoch);
-    // }
-    // let s = {};
-    //
-    // if (this.buildInfo && key in this.buildInfo) {
-    //   softwareDate = this.buildInfo[key]["software_date"];
-    //   hardwareVersion = this.buildInfo[key]["hardware_version"];
-    //   sdkBranch = this.buildInfo[key]["fun_sdk_branch"];
-    //   let buildProperties = this.buildInfo[key]["build_properties"];
-    //   let lsfJobId = this.buildInfo[key]["lsf_job_id"];
-    //   let version = this.buildInfo[key]["sdk_version"];
-    //   let suiteExecutionId = this.buildInfo[key]["suite_execution_id"];
-    //   let associatedSuites = this.buildInfo[key]["associated_suites"];
-    //   if (sdkBranch !== "") {
-    //     s["SDK branch"] = sdkBranch;
-    //   }
-    //   if (lsfJobId !== "") {
-    //     s["Lsf job id"] = lsfJobId;
-    //   }
-    //   if (suiteExecutionId !== -1) {
-    //     s["Suite execution detail"] = suiteExecutionId;
-    //     s["Suite log directory"] = suiteExecutionId;
-    //   }
-    //   if (associatedSuites.length !== 0) {
-    //     s["Associated suites"] = associatedSuites;
-    //   }
-    //   if (Number(softwareDate) > 0) {
-    //     s["Software date"] = softwareDate;
-    //   }
-    //   if (hardwareVersion !== "") {
-    //     s["Hardware version"] = hardwareVersion;
-    //   }
-    //   if (version !== "") {
-    //     s["SDK version"] = "bld_" + version;
-    //   }
-    //   if (this.buildInfo[key]["git_commit"] !== "") {
-    //     s["Git commit"] = this.buildInfo[key]["git_commit"].replace("https://github.com/fungible-inc/FunOS/commit/", "");
-    //   }
-    //   if (buildProperties !== "") {
-    //     s["Build Properties"] = buildProperties;
-    //   }
-    // }
-    // let pstDate = this.commonService.convertEpochToDate(key, this.TIMEZONE);
-    // let dateString = this.commonService.addLeadingZeroesToDate(pstDate);
-    // s["Date"] = dateString.substring(0, 5);
-    // if (metaData.originalValue) {
-    //   s["Value"] = metaData.originalValue;
-    // } else {
-    //   s["Value"] = y;
-    // }
-    // return s;
     let point = {};
     point["x"] = x;
     point["y"] = y;

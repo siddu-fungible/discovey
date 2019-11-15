@@ -1,7 +1,7 @@
 import {Injectable} from '@angular/core';
 import {ApiService} from "../services/api/api.service";
 import {of} from "rxjs";
-import {switchMap} from "rxjs/operators";
+import {isEmpty, switchMap} from "rxjs/operators";
 import {CommonService} from "../services/common/common.service";
 
 export enum SelectMode {
@@ -159,8 +159,10 @@ export class PerformanceService {
     let payload = {};
     payload["id"] = id;
     return this.apiService.post("/metrics/run_time", payload).pipe(switchMap(response => {
-      return of(new JobRunTime(response.data));
-      // return of(response.data)
+      if (Object.keys(response.data).length !== 0) {
+        return of(new JobRunTime(response.data));
+      }
+      return of(null);
     }));
   }
 

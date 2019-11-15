@@ -617,11 +617,12 @@ def add_job_run_time_properties(run_time, date_time, add_associated_suites=False
     try:
         entry = JobRunTimeProperties.objects.get(date_time=date_time)
         if add_associated_suites:
-            run_time = entry.run_time
-            suite_run_time = run_time["suite_info"]
+            entry_run_time = entry.run_time
+            suite_run_time = entry_run_time["suite_info"]
             if fun_test.suite_execution_id != suite_run_time["suite_execution_id"]:
-                suite_run_time["associates_suite"].append(fun_test.suite_execution_id)
-            entry.run_time = run_time
+                suite_run_time["associates_suites"].append(fun_test.suite_execution_id)
+                suite_run_time["associates_suites"] = list(set(suite_run_time["associates_suites"]))
+            entry.run_time = entry_run_time
             entry.save()
         else:
             print "Run time properties {}".format(json.dumps(run_time))

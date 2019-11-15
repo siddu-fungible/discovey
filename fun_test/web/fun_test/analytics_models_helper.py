@@ -19,7 +19,7 @@ from fun_settings import MAIN_WEB_APP
 
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 from lib.system.fun_test import *
-from web.fun_test.models_helper import add_jenkins_job_id_map
+from web.fun_test.models_helper import add_jenkins_job_id_map, add_job_run_time_properties
 from django.utils import timezone
 from dateutil import parser
 from fun_global import PerfUnit, FunPlatform, get_current_epoch_time_in_ms, get_localized_time
@@ -38,14 +38,19 @@ def invalidate_goodness_cache():
         chart.save()
 
 
-def save_entry(entry):
+def save_entry(entry, run_time=None):
     dry_run = fun_test.get_job_environment_variable("dry_run")
     if not dry_run:
+        if run_time and entry.run_time == -1:
+            fun_test.log("Adding runtime properties")
+            date_time = timezone.localtime(entry.input_date_time)
+            run_time_id = add_job_run_time_properties(run_time=run_time, date_time=date_time,
+                                                      add_associated_suites=True)
+            entry.run_time = run_time_id
         entry.save()
     else:
         try:
             fun_test.log("Dry run. Printing potential db entry")
-
             result = {}
             fields = entry._meta.get_fields()
             for field in fields:
@@ -378,7 +383,6 @@ class BltVolumePerformanceHelper(MetricHelper):
             entry.output_read_99_99_latency_unit = read_99_99_latency_unit
             save_entry(entry)
         except ObjectDoesNotExist:
-            fun_test.log("Adding new entry into model using helper")
             one_entry = BltVolumePerformance(input_date_time=date_time,
                                              input_volume_type=volume,
                                              input_test=test,
@@ -418,23 +422,12 @@ class BltVolumePerformanceHelper(MetricHelper):
                                              output_read_95_latency_unit=read_95_latency_unit,
                                              output_read_99_latency_unit=read_99_latency_unit,
                                              output_read_99_99_latency_unit=read_99_99_latency_unit)
-            save_entry(one_entry)
-            try:
-                dry_run = fun_test.get_job_environment_variable("dry_run")
-                if not dry_run:
-                    fun_test.log("Entering the jenkins job id map entry for {} and  {}".format(date_time, version))
-                    completion_date = timezone.localtime(one_entry.input_date_time)
-                    suite_execution_id = fun_test.get_suite_execution_id()
-                    add_jenkins_job_id_map(jenkins_job_id=0,
-                                           fun_sdk_branch="",
-                                           git_commit="",
-                                           software_date=0,
-                                           hardware_version="",
-                                           build_properties="", lsf_job_id="",
-                                           sdk_version=version, build_date=completion_date,
-                                           suite_execution_id=suite_execution_id)
-            except Exception as ex:
-                fun_test.critical(str(ex))
+            result = {}
+            result["lsf_info"] = {}
+            result["suite_info"] = {"suite_execution_id": fun_test.get_suite_execution_id(),
+                                    "associated_suites": []}
+            result["jenkins_info"] = {"sdk_version": version}
+            save_entry(one_entry, run_time=result)
 
 
 class AllocSpeedPerformanceHelper(MetricHelper):
@@ -511,18 +504,6 @@ class ModelHelper(MetricHelper):
                     new_kwargs[key] = value
             try:
                 self.id = super(ModelHelper, self).add_entry(**new_kwargs)
-                if "input_version" in new_kwargs and "input_date_time" in new_kwargs:
-                    date_time = timezone.localtime(new_kwargs["input_date_time"])
-                    version = new_kwargs["input_version"]
-                    suite_execution_id = fun_test.get_suite_execution_id()
-                    add_jenkins_job_id_map(jenkins_job_id=0,
-                                           fun_sdk_branch="",
-                                           git_commit="",
-                                           software_date=0,
-                                           hardware_version="",
-                                           build_properties="", lsf_job_id="",
-                                           sdk_version=version, build_date=date_time,
-                                           suite_execution_id=suite_execution_id)
                 result = True
             except Exception as ex:
                 fun_test.critical(str(ex))
@@ -555,7 +536,12 @@ class ModelHelper(MetricHelper):
                     setattr(m_obj, "status", status)
                 if not self.units:
                     raise Exception('No units provided. Please provide the required units')
-                save_entry(m_obj)
+                result = {}
+                result["lsf_info"] = {}
+                result["suite_info"] = {"suite_execution_id": fun_test.get_suite_execution_id(),
+                                        "associated_suites": []}
+                result["jenkins_info"] = {"sdk_version": m_obj.input_version}
+                save_entry(m_obj, run_time=result)
                 result = True
             else:
                 raise Exception("Set status failed")
