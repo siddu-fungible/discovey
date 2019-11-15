@@ -245,7 +245,10 @@ class ApcPduTestcase(FunTestCase):
         self.wipe_out_cassandra_es_database()
         self.come_handle.enter_sudo()
         self.come_handle.command("cd /opt/fungible/etc")
-        self.come_handle.start_bg_process("bash ResetFs1600.sh")
+        pid = self.come_handle.start_bg_process("bash ResetFs1600.sh")
+        fun_test.log("Checking if the reboot is initiated")
+        rebooted = True if pid else False
+        fun_test.test_assert(rebooted, "Initiate reboot")
         fun_test.sleep("for reset to start", seconds=10)
         fun_test.log("Checking if COMe is down")
         come_down = not (self.come_handle.ensure_host_is_up(max_wait_time=15))
@@ -256,6 +259,7 @@ class ApcPduTestcase(FunTestCase):
         self.come_handle.command("cd /var/opt/fungible")
         self.come_handle.sudo_command("rm -r elasticsearch")
         self.come_handle.sudo_command("rm -r cassandra")
+        fun_test.test_assert(True, "Cleaned database")
 
     @staticmethod
     def match_success(output_message):
