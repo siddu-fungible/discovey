@@ -741,6 +741,7 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                             "nvme connect -t {} -a {} -s {} -n {} -q {}".format(unicode.lower(self.transport_type),
                                                                                 self.test_network["f1_loopback_ip"],
                                                                                 self.transport_port, nqn, host_ip))
+                        fun_test.sleep("Wait for retry nvme connect", seconds=20)
                     fun_test.log(command_result)
                 fun_test.sleep("Wait for couple of seconds for the volume to be accessible to the host", 5)
                 host_handle.sudo_command("for i in `pgrep tcpdump`;do kill -9 $i;done")
