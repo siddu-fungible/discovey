@@ -477,7 +477,7 @@ class MultiHostVolumePerformanceScript(FunTestScript):
 
                     delete_volume = self.sc_api.delete_volume(vol_uuid=self.thin_uuid_list[i])
                     fun_test.test_assert(delete_volume["status"],
-                                         "Deleting Stripe Vol with uuid {} on DUT".format(self.thin_uuid_list[i]))
+                                         "Deleting BLT Vol with uuid {} on DUT".format(self.thin_uuid_list[i]))
             except Exception as ex:
                 fun_test.critical(str(ex))
                 fun_test.log("Clean-up of volumes failed.")
@@ -677,7 +677,7 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                                                            capacity=self.blt_details["capacity"],
                                                            vol_type=self.blt_details["type"],
                                                            stripe_count=self.blt_details["stripe_count"])
-                fun_test.log("Create stripe volume API response: {}".format(create_raw_vol))
+                fun_test.log("Create BLT volume API response: {}".format(create_raw_vol))
                 fun_test.test_assert(create_raw_vol["status"], "Create BLT {} with uuid {} on DUT".
                                      format(i + 1, create_raw_vol["data"]["uuid"]))
                 self.thin_uuid_list.append(create_raw_vol["data"]["uuid"])
