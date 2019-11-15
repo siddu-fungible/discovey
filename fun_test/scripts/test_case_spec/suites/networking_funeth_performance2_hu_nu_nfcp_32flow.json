@@ -1,0 +1,4 @@
+[
+  {"info": {"tags": ["networking-funeth-performance"]}},
+  {"path": "networking/funeth/performance.py", "test_case_ids": [1002], "inputs": {"debug": 1}}
+]
