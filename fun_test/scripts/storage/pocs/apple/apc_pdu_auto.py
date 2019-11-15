@@ -243,17 +243,40 @@ class ApcPduTestcase(FunTestCase):
 
     def reboot_fs1600(self):
         self.wipe_out_cassandra_es_database()
+        come_down = False
+        for i in range(2):
+            self.run_reboot_script()
+            fun_test.log("Checking if COMe is down")
+            come_down = self.ensure_host_is_down(max_wait_time=60)
+            if come_down:
+                break
+        fun_test.test_assert(come_down, "COMe is Down")
+        self.come_handle.destroy()
+
+    def run_reboot_script(self):
         self.come_handle.enter_sudo()
         self.come_handle.command("cd /opt/fungible/etc")
         pid = self.come_handle.start_bg_process("bash ResetFs1600.sh")
         fun_test.log("Checking if the reboot is initiated")
         rebooted = True if pid else False
-        fun_test.test_assert(rebooted, "Initiate reboot")
-        fun_test.sleep("for reset to start", seconds=10)
-        fun_test.log("Checking if COMe is down")
-        come_down = not (self.come_handle.ensure_host_is_up(max_wait_time=15))
-        fun_test.test_assert(come_down, "COMe is Down")
-        self.come_handle.destroy()
+
+    def ensure_host_is_down(self, max_wait_time):
+        service_host_spec = fun_test.get_asset_manager().get_regression_service_host_spec()
+        service_host = None
+        if service_host_spec:
+            service_host = Linux(**service_host_spec)
+        else:
+            fun_test.log("Regression service host could not be instantiated", context=self.context)
+
+        max_down_timer = FunTimer(max_time=max_wait_time)
+        result = False
+        ping_result = True
+        while ping_result and not max_down_timer.is_expired():
+            if service_host and ping_result:
+                ping_result = service_host.ping(dst=self.fs['come']['mgmt_ip'], count=5)
+        if not ping_result:
+            result = True
+        return result
 
     def wipe_out_cassandra_es_database(self):
         self.come_handle.command("cd /var/opt/fungible")
