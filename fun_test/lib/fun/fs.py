@@ -294,6 +294,8 @@ class Bmc(Linux):
         fun_test.log("Rebooting ComE (Graceful)", context=self.context)
         if not come.was_power_cycled:
             # come.sudo_command("service docker stop")
+            # come.sudo_command("rmmod funeth fun_core")
+            come.sudo_command("{}/StorageController/etc/start_sc.sh stop".format(come.FUN_ROOT))
             come.sudo_command("rmmod funeth fun_core")
             reboot_initiated_wait_time = 60 * 3
             reboot_result = come.reboot(max_wait_time=max_wait_time, non_blocking=non_blocking, ipmi_details=ipmi_details, reboot_initiated_wait_time=reboot_initiated_wait_time)
@@ -1144,6 +1146,7 @@ class ComE(Linux):
     MAX_HBM_DUMPS = 200
     BUILD_SCRIPT_DOWNLOAD_DIRECTORY = "/tmp/remove_me_build_script"
     BOOT_UP_LOG = "/var/log/COMe-boot-up.log"
+    FUN_ROOT = "/opt/fungible"
 
     def __init__(self, **kwargs):
         super(ComE, self).__init__(**kwargs)
