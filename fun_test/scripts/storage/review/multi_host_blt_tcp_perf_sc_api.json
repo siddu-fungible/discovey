@@ -51,7 +51,12 @@
         },
         "f1_loopback_ip": "29.1.1.1"
       }
-    }
+    },
+    "api_server_port": 50220,
+    "api_server_username": "admin",
+    "api_server_password": "password",
+    "cleanup_sc_db": true,
+    "sc_db_directories": ["/var/opt/fungible/elasticsearch", "/var/opt/fungible/cassandra"]
   },
   "MultiHostFioRandRead": {
     "num_ssd": 12,
@@ -60,8 +65,12 @@
       "ns_id": 1,
       "type": "VOL_TYPE_BLK_LOCAL_THIN",
       "capacity": 1600277970944,
-      "block_size": 4096
+      "block_size": 4096,
+      "stripe_count": 0
     },
+    "create_pool": false,
+    "default_pool":"global",
+    "pool_name": "pool1",
     "drive_margin": 0,
     "config_fcp_scheduler": {"total_bw" : 400, "fcp_ctl_bw" : 0, "fcp_data_bw": 0},
     "controllers": 1,
@@ -113,8 +122,12 @@
       "ns_id": 1,
       "type": "VOL_TYPE_BLK_LOCAL_THIN",
       "capacity": 1600277970944,
-      "block_size": 4096
+      "block_size": 4096,
+      "stripe_count": 0
     },
+    "create_pool": false,
+    "default_pool":"global",
+    "pool_name": "pool1",
     "drive_margin": 0,
     "config_fcp_scheduler": {"total_bw" : 400, "fcp_ctl_bw" : 0, "fcp_data_bw": 0},
     "controllers": 1,

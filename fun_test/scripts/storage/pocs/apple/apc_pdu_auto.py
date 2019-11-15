@@ -18,15 +18,6 @@ class ApcPduScript(FunTestScript):
     def setup(self):
         pass
 
-    def wipe_out_cassandra_es_database(self):
-        self.come_handle.command("cd /var/opt/fungible")
-        self.come_handle.sudo_command("rm -r elasticsearch")
-        self.come_handle.sudo_command("rm -r cassandra")
-
-    def restart_fs1600(self):
-        self.come_handle.command("cd /opt/fungible/etc")
-        self.come_handle.command("bash ResetFs1600.sh")
-
     def cleanup(self):
         pass
 
@@ -95,8 +86,10 @@ class ApcPduTestcase(FunTestCase):
                 self.after_runsc_up_host_connect_interval = job_inputs["after_runsc_up_host_connect_interval"]
             if "check_portal" in job_inputs:
                 self.check_portal = job_inputs["check_portal"]
-            if "apc_pdu_reboot_machine" in job_inputs:
-                self.apc_pdu_reboot_machine = job_inputs["apc_pdu_reboot_machine"]
+            if "apc_pdu_power_cycle" in job_inputs:
+                self.apc_pdu_power_cycle_test = job_inputs["apc_pdu_power_cycle"]
+            if "reboot_machine_test" in job_inputs:
+                self.reboot_machine_test = job_inputs["reboot_machine_test"]
 
     def run(self):
         '''
@@ -119,8 +112,11 @@ class ApcPduTestcase(FunTestCase):
 
             fun_test.add_checkpoint(checkpoint="ITERATION : {} out of {}".format(pc_no + 1, self.iterations))
 
-            if self.apc_pdu_reboot_machine:
+            if self.reboot_machine_test:
+                self.reboot_fs1600()
+            elif self.apc_pdu_power_cycle_test:
                 self.apc_pdu_reboot()
+
             self.come_handle.destroy()
             self.bmc_handle.destroy()
 
@@ -140,7 +136,7 @@ class ApcPduTestcase(FunTestCase):
             bmc_up = self.bmc_handle.ensure_host_is_up(max_wait_time=600)
             fun_test.test_assert(bmc_up, "BMC is UP")
 
-            if self.apc_pdu_reboot_machine:
+            if self.apc_pdu_power_cycle_test:
                 self.check_come_up_time(expected_minutes=5)
 
             if self.check_docker:
@@ -245,6 +241,49 @@ class ApcPduTestcase(FunTestCase):
 
         return
 
+    def reboot_fs1600(self):
+        self.wipe_out_cassandra_es_database()
+        come_down = False
+        for i in range(2):
+            self.run_reboot_script()
+            fun_test.log("Checking if COMe is down")
+            come_down = self.ensure_host_is_down(max_wait_time=60)
+            if come_down:
+                break
+        fun_test.test_assert(come_down, "COMe is Down")
+        self.come_handle.destroy()
+
+    def run_reboot_script(self):
+        self.come_handle.enter_sudo()
+        self.come_handle.command("cd /opt/fungible/etc")
+        pid = self.come_handle.start_bg_process("bash ResetFs1600.sh")
+        fun_test.log("Checking if the reboot is initiated")
+        rebooted = True if pid else False
+
+    def ensure_host_is_down(self, max_wait_time):
+        service_host_spec = fun_test.get_asset_manager().get_regression_service_host_spec()
+        service_host = None
+        if service_host_spec:
+            service_host = Linux(**service_host_spec)
+        else:
+            fun_test.log("Regression service host could not be instantiated", context=self.context)
+
+        max_down_timer = FunTimer(max_time=max_wait_time)
+        result = False
+        ping_result = True
+        while ping_result and not max_down_timer.is_expired():
+            if service_host and ping_result:
+                ping_result = service_host.ping(dst=self.fs['come']['mgmt_ip'], count=5)
+        if not ping_result:
+            result = True
+        return result
+
+    def wipe_out_cassandra_es_database(self):
+        self.come_handle.command("cd /var/opt/fungible")
+        self.come_handle.sudo_command("rm -r elasticsearch")
+        self.come_handle.sudo_command("rm -r cassandra")
+        fun_test.test_assert(True, "Cleaned database")
+
     @staticmethod
     def match_success(output_message):
         result = False
@@ -264,7 +303,7 @@ class ApcPduTestcase(FunTestCase):
         bdf = '04:00.'
         if f1 == 1:
             bdf = '06:00.'
-            if self.fs_name in ["fs-101", "fs-102", "fs-104"]:
+            if self.fs_name in ["fs-101", "fs-102", "fs-104", "fs-117"]:
                 bdf = '05:00.'
         lspci_output = self.come_handle.command("lspci -d 1dad: | grep {}".format(bdf), timeout=120)
         sections = ['Ethernet controller', 'Non-Volatile', 'Unassigned class', 'encryption device']
@@ -430,7 +469,6 @@ class ApcPduTestcase(FunTestCase):
         lines = output.split("\n")
         lines.pop(0)
         number_of_dockers = len(lines)
-        print ("number_of_dockers: %s" % number_of_dockers)
         return number_of_dockers
 
     def get_hosts_handle(self):

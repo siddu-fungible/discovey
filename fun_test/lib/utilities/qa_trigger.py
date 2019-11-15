@@ -172,9 +172,11 @@ def main():
     parser.add_argument('--base_url', help="Base URL")
     parser.add_argument('--submitter_email', help="Submitter's email address", default=DEFAULT_SUBMITTER_EMAIL)
     parser.add_argument('--environment', help="Custom environment")
-    parser.add_argument('--max_run_time', help="Max run-time", default=60 * 60 * 3)
+    parser.add_argument('--max_run_time_in_seconds', help="Max run-time in seconds", default=60 * 60 * 3)
     parser.add_argument('--test_bed_type', default="fs-6", help="emulation or simulation or fs")
     parser.add_argument('--description', default="Unknown description")
+    parser.add_argument('--jenkins_workspace', default=None, help="Jenkins workspace")
+    parser.add_argument('--jenkins_build_machine', default=None, help="Jenkins build machine")
     args = parser.parse_args()
 
     suite_name = args.suite_name
@@ -183,9 +185,11 @@ def main():
     tags = args.tags
     base_url = args.base_url
     environment = args.environment
-    max_run_time = args.max_run_time
+    max_run_time = args.max_run_time_in_seconds
     test_bed_type = args.test_bed_type
     description = args.description
+    jenkins_build_machine = args.jenkins_build_ma
+    jenkins_workspace = args.j
 
     logging.info("Input options provided:")
     logging.info("Suite        : {}".format(suite_name))
@@ -196,7 +200,7 @@ def main():
     logging.info("Environment  : {}".format(environment))
     logging.info("Test-bed type: {}".format(test_bed_type))
     logging.info("Description  : {}".format(description))
-    logging.info("Max run-time: {}".format(max_run_time))
+    logging.info("Max run-time : {}".format(max_run_time))
     logging.info("")
 
     if not base_url:
@@ -214,7 +218,7 @@ def main():
         logging.info("")
 
     poll_interval_seconds = DEFAULT_POLL_INTERVAL_SECONDS
-
+    job_id = None
     try:
         fun_test_client = FunTestClient(base_url=base_url)
         start_time = time.time()
@@ -265,6 +269,7 @@ def main():
         exit_code = GENERIC_ERROR_EXIT_CODE
         logging.critical("Suite polling ended with exception: {}".format(str(ex)))
 
+    print "Integration job result is at: {}/regression/suite_detail/{}".format(DEFAULT_BASE_URL, job_id)
     sys.exit(exit_code)
 
 

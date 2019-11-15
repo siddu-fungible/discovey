@@ -40,6 +40,9 @@
               <td class="attribute-table-td">
                 <span class="attribute-table-main-text">Test-bed type</span> {{ suiteExecution?.fields?.test_bed_type }}
               </td>
+              <td class="attribute-table-td">
+                <span class="attribute-table-main-text">Version</span> {{ suiteExecution?.fields?.version }}
+              </td>
               <td class="attribute-table-td" *ngIf="environment?.BRANCH_FunOS">
                 <span class="attribute-table-main-text">BRANCH_FUNOS</span>{{ environment.BRANCH_FunOS }}
               </td>
