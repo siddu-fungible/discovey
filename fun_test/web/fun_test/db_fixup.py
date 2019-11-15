@@ -1,6 +1,6 @@
 import django
 import math
-from web.web_global import PRIMARY_SETTINGS_FILE
+from web.web_global import PRIMARY_SETTINGS_FILE, F1_ROOT_ID, S1_ROOT_ID, OTHER_ROOT_ID
 from fun_global import *
 from fun_settings import MAIN_WEB_APP
 from datetime import timedelta
@@ -557,7 +557,7 @@ def convert_to_base_unit(output_value, output_unit):
 
 
 if __name__ == "__main__":
-    chart_names = ["F1", "S1", "All metrics"]
-    for chart_name in chart_names:
-        total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name=chart_name)
+    metric_ids = [F1_ROOT_ID, S1_ROOT_ID, OTHER_ROOT_ID]
+    for metric_id in metric_ids:
+        total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", metric_id=metric_id)
         prepare_status(chart=total_chart, purge_old_status=False, cache_valid=False)
