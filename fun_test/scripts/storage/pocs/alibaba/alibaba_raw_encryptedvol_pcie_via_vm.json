@@ -41,7 +41,7 @@
               "remote_storage": {
                 "blt_vol_capacity": 1600120684544,
                 "blt_vol_block_size": 4096,
-                "command_timeout": 5
+                "command_timeout": 20
               },
               "vm_pings": [
                 "30.1.1.2",

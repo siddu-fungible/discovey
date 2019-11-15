@@ -83,16 +83,16 @@ export class RegressionService implements OnInit{
     return new Date(epochValue);
   }
 
-getPrettyLocalizeTime(t) {
-  let minutePrefix = '';
-  let localTime = this.convertToLocalTimezone(t);
-  if (localTime.getMinutes() < 10){
-    minutePrefix += '0';
+  getPrettyLocalizeTime(t) {
+    let minutePrefix = '';
+    let localTime = this.convertToLocalTimezone(t);
+    if (localTime.getMinutes() < 10){
+      minutePrefix += '0';
+    }
+    let s = `${localTime.getMonth() + 1}/${localTime.getDate()} ${localTime.getHours()}:${minutePrefix}${localTime.getMinutes()}`;
+    //return this.convertToLocalTimezone(t).toLocaleString().replace(/\..*$/, "");
+    return s;
   }
-  let s = `${localTime.getMonth() + 1}/${localTime.getDate()} ${localTime.getHours()}:${minutePrefix}${localTime.getMinutes()}`;
-  //return this.convertToLocalTimezone(t).toLocaleString().replace(/\..*$/, "");
-  return s;
-}
 
 
   getTestCaseExecution(executionId) {
@@ -349,5 +349,12 @@ getPrettyLocalizeTime(t) {
 
   getConsoleLogPath(suiteExecutionId, path, logPrefix) {
     window.open(this._getFlatPath(suiteExecutionId, path, logPrefix) + this.CONSOLE_LOG_EXTENSION);
+  }
+
+  preserveLogs(suiteExecutionId, preserveLogs) {
+    let payload = {"preserve_logs": preserveLogs};
+    return this.apiService.put("/api/v1/regression/suite_executions/" + suiteExecutionId, payload).pipe(switchMap(response => {
+      return of(true);
+    }))
   }
 }

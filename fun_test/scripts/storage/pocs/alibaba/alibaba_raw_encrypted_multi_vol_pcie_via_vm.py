@@ -43,6 +43,7 @@ def post_results(value_dict):
     value_dict["volume_type"] = "BLT"
     value_dict["platform"] = FunPlatform.F1
     value_dict["version"] = fun_test.get_version()
+    value_dict["encryption"] = True
     model_name = "AlibabaPerformance"
     status = fun_test.PASSED
     try:
@@ -323,7 +324,6 @@ class RawVolumeLocalPerfTestcase(FunTestCase):
                             count += 1
 
                 for x in range(count):
-                    print("I am here")
                     fun_test.log("Joining fio thread {}".format(x))
                     fun_test.join_thread(fun_test_thread_id=thread_id[x], sleep_time=1)
                     fun_test.log("FIO Command Output from {}:\n {}".format(each_vm,

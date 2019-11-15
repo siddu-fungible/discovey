@@ -5,7 +5,7 @@ import {switchMap} from "rxjs/operators";
 import {ApiResponse, ApiService} from "../../services/api/api.service";
 import {LoggerService} from "../../services/logger/logger.service";
 import {CommonService} from "../../services/common/common.service";
-import {error} from "util";
+//import {error} from "util";
 import {TestBedService} from "./test-bed.service";
 import {UserService} from "../../services/user/user.service";
 import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
@@ -168,6 +168,19 @@ export class TestBedComponent implements OnInit {
         if (testBed.hasOwnProperty("asset_level_manual_lock_status")) {
           this.assetLevelManualLockStatus[testBed.name] = testBed.asset_level_manual_lock_status;
         }
+        if (testBed && testBed.hasOwnProperty("automation_status")) {
+          let automationStatus = testBed.automation_status;
+          if (automationStatus.hasOwnProperty("internal_asset_in_use") && automationStatus.internal_asset_in_use) {
+            this.automationStatus[testBed.name] = {numExecutions: 1,
+              executionId: automationStatus.internal_asset_in_use_suite_id, assetInUse: automationStatus.internal_asset};
+          } else if (automationStatus.hasOwnProperty("used_by_suite_id")) {
+            this.automationStatus[testBed.name] = {numExecutions: 1, executionId: automationStatus.used_by_suite_id};
+          } else if (automationStatus.hasOwnProperty('suite_info') && automationStatus.suite_info) {
+            this.automationStatus[testBed.name] = {numExecutions: 1, executionId: automationStatus.suite_info.suite_execution_id};
+          }
+
+        }
+
       });
       this.automationStatus = {...this.automationStatus};
 
@@ -176,25 +189,16 @@ export class TestBedComponent implements OnInit {
   }
 
   fetchAutomationStatus() {
+    /*
     return forkJoin(...this.testBeds.map((testBed) => {
       return this.regressionService.testBedInProgress(testBed.name).pipe(switchMap(response => {
         let numExecutions = -1;
         let executionId = -1;
         let manualLock = false;
-        if (testBed.name === 'fs-42') {
-          let i = 0;
-        }
         this.automationStatus[testBed.name] = {numExecutions: numExecutions,
           executionId: executionId,
           manualLock: manualLock};
           if (response && response.hasOwnProperty("automation_status")) {
-            /*
-            let numExecutions = response.length;
-            let executionId = numExecutions;
-            if (numExecutions > 0) {
-              let thisResponse = response[0];
-              executionId = thisResponse.execution_id;
-            }*/
             let automationStatus = response.automation_status;
             if (automationStatus.hasOwnProperty("internal_asset_in_use") && automationStatus.internal_asset_in_use) {
               this.automationStatus[testBed.name] = {numExecutions: 1,
@@ -209,7 +213,8 @@ export class TestBedComponent implements OnInit {
         return of(null);
         }))
       })
-    )
+    )*/
+    return of(true);
   }
 
   setLockPanelHeader(string) {

@@ -1585,6 +1585,7 @@ class MetricParser():
 
 
     def teramark_zip(self, logs, date_time, platform):
+        self.initialize()
         metrics = collections.OrderedDict()
         metrics['input_platform'] = platform
         teramark_begin = False
@@ -1598,6 +1599,7 @@ class MetricParser():
                     r'{"Type":\s+"(?P<type>\S+)",\s+"Operation":\s+(?P<operation>\S+),\s+"Effort":\s+(?P<effort>\S+),'
                     r'.*\s+"Duration"\s+:\s+(?P<latency_json>{.*}),\s+"Throughput":\s+(?P<throughput_json>{.*})}', line)
                 if m:
+                    self.match_found = True
                     input_type = m.group("type")
                     input_operation = m.group("operation")
                     input_effort = int(m.group("effort"))
@@ -1618,8 +1620,14 @@ class MetricParser():
                     metrics["output_bandwidth_avg_unit"] = output_bandwidth_avg_unit
                     metrics["output_latency_avg"] = output_latency_avg
                     metrics["output_latency_avg_unit"] = output_latency_unit
-                    d = self.metrics_to_dict(metrics=metrics, result=fun_test.PASSED, date_time=date_time)
+                    self.status = RESULTS["PASSED"]
+                    d = self.metrics_to_dict(metrics=metrics, result=self.status, date_time=date_time)
                     if input_type == "Deflate":
                         MetricHelper(model=eval("TeraMarkZipDeflatePerformance")).add_entry(**d)
                     else:
                         MetricHelper(model=eval("TeraMarkZipLzmaPerformance")).add_entry(**d)
+                    self.result["data"].append(d)
+        self.result["match_found"] = self.match_found
+        self.result["status"] = self.status == RESULTS["PASSED"]
+        return self.result
+

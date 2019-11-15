@@ -123,10 +123,10 @@ class EcTeramarkTc(PalladiumTc):
 
 
 class DfaTeramarkTc(PalladiumTc):
-    boot_args = "app=dfa_perf_bootstrap rbm-size=1m dfa_perf.pc_mask=1 --bm-profile-regex dfa_perf.nflows=24 dfa_perf.niterations=100 syslog=2"
+    boot_args = "app=dfa_perf_bootstrap rbm-size=1m dfa_perf.pc_mask=1 --bm-profile-regex dfa_perf.nflows=24 dfa_perf.niterations=100 syslog=2 dfa_perf.name=cache_100"
     tags = "qa_s1_dfa_teramark"
     note = "DFA teramark app on S1"
-    fun_os_make_flags = "PM_TESTS=1"
+    fun_os_make_flags = "PM_TESTS=1 XDATA_LISTS=/project/users/QA/regression/data_store/regex/performance/DFA/jenkins.list"
     extra_emails = ["jitendra.lulla@fungible.com", "mahesh.kumar@fungible.com", " indrani.p@fungible.com"]
 
     def describe(self):
