@@ -974,6 +974,9 @@
       "mgmt_ip": "fs118-come"
     },
     "name": "fs-118",
+    "workarounds": {
+      "skip_funeth_come_power_cycle": true
+    },
     "revision": "2",
     "fpga": {
       "mgmt_ssh_password": "root",
