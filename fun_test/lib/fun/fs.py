@@ -1088,7 +1088,7 @@ class ComEInitializationWorker(Thread):
                 fun_test.test_assert(expression=come.initialize(disable_f1_index=self.fs.disable_f1_index),
                                      message="ComE initialized",
                                      context=self.fs.context)
-                if (self.fs.bundle_compatible and not self.fs.tftp_image_path) or (come.list_files(ComE.BOOT_UP_LOG)):
+                if (self.fs.bundle_compatible and not self.fs.tftp_image_path): # or (come.list_files(ComE.BOOT_UP_LOG)):
                     fun_test.sleep(seconds=10, message="Waiting for expected containers", context=self.fs.context)
                     expected_containers_running = self.is_expected_containers_running(come)
                     expected_containers_running_timer = FunTimer(max_time=self.CONTAINERS_BRING_UP_TIME_MAX)
