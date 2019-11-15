@@ -1831,6 +1831,9 @@ class Fs(object, ToDictMixin):
             fs_spec = am.get_fs_by_name(dut_name)
             fun_test.simple_assert(fs_spec, "FS spec for {}".format(dut_name), context=context)
 
+        if fs_parameters:
+            if not already_deployed:
+                already_deployed = fs_parameters.get("already_deployed", None)
         if not already_deployed:
             if not tftp_image_path:
                 tftp_image_path = fun_test.get_build_parameter("tftp_image_path")

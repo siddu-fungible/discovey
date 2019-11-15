@@ -3350,7 +3350,8 @@
                 "name": "qfx-3",
                 "port": "et-0/0/20"
               },
-              "type": "INTERFACE_TYPE_ETHERNET"
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "ip": "15.118.1.2"
             }
           }
         }
