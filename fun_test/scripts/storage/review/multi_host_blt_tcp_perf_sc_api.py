@@ -618,6 +618,9 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
         if "runtime" in job_inputs:
             self.fio_cmd_args["runtime"] = job_inputs["runtime"]
             self.fio_cmd_args["timeout"] = self.fio_cmd_args["runtime"] + 60
+        if "full_runtime" in job_inputs:
+            self.fio_full_run_time = job_inputs["full_runtime"]
+            self.fio_full_run_timeout = self.fio_full_run_time + 60
         if "post_results" in job_inputs:
             self.post_results = job_inputs["post_results"]
         else:
