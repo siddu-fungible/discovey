@@ -203,10 +203,10 @@ class FunControlPlaneBringup:
             linux_obj_come.sudo_command(command="cp -r FunSDK FunSDK_bkp_%s" % d1)
             bkp_dirs = self._get_backup_directory_list(linux_obj_come, '/mnt/keep/FunSDK*')
             fun_test.log(bkp_dirs)
-            self.delete_backup_directory(bkp_dirs)
+            self.delete_backup_directory(linux_obj, bkp_dirs)
             linux_obj_come.sudo_command(command="cd / && tar cf scratch_bkp_%s.tar scratch" % d1, timeout=1200)
             scr_lists = self._get_backup_directory_list(linux_obj_come, '/scratch*')
-            self.delete_backup_directory(scr_lists)
+            self.delete_backup_directory(linux_obj, scr_lists)
             linux_obj_come.sudo_command(command="rm -rf FunSDK")
             git_pull = linux_obj_come.command("git clone git@github.com:fungible-inc/FunSDK-small.git FunSDK",
                                               timeout=120)
