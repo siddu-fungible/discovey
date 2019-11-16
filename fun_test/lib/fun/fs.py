@@ -985,6 +985,7 @@ class BootupWorker(Thread):
                                              message="Setup nc serial proxy connection",
                                              context=self.context)
                     if fs.tftp_image_path:
+                        self.fs.get_come().pre_reboot_cleanup()
                         if fs.get_bmc()._use_i2c_reset():
                             fs.get_bmc().reset_f1(f1_index=f1_index)
                         elif fpga and not fs.bundle_compatible:
@@ -1005,6 +1006,7 @@ class BootupWorker(Thread):
                             fun_test.test_assert(
                                 bmc.validate_u_boot_version(output=preamble, minimum_date=fs.MIN_U_BOOT_DATE),
                                 "Validate preamble", context=self.context)
+
                         fun_test.test_assert(
                             expression=bmc.u_boot_load_image(index=f1_index,
                                                              tftp_image_path=fs.tftp_image_path,
@@ -1169,10 +1171,10 @@ class ComE(Linux):
             self.stop_cclinux_service()
         except:
             pass
-        try:
-            self.sudo_command("service docker stop")
-        except:
-            pass
+        # try:
+        #    self.sudo_command("service docker stop")
+        # except:
+        #    pass
         try:
             self.sudo_command("{}/StorageController/etc/start_sc.sh stop".format(self.FUN_ROOT))
         except:
@@ -1181,7 +1183,8 @@ class ComE(Linux):
         containers = self.docker(sudo=True)
         try:
             for container in containers:
-                self.docker(sudo=True, kill_container_id=container['ID'], timeout=120)
+                if 'cclinux' in container['Names'] or 'run_sc' in container['Names']:
+                    self.docker(sudo=True, kill_container_id=container['ID'], timeout=120)
             self.sudo_command("service docker stop")
         except:
             pass
@@ -1247,7 +1250,7 @@ class ComE(Linux):
 
 
     def stop_cclinux_service(self):
-        self.sudo_command("/opt/fungible/cclinux/cclinux_service.sh --stop")
+        self.sudo_command("/opt/fungible/cclinux/cclinux_service.sh --stop", timeout=120)
 
     def _setup_build_script_directory(self):
         """
@@ -1988,6 +1991,7 @@ class Fs(object, ToDictMixin):
                     fun_test.test_assert(self.bmc.validate_u_boot_version(output=preamble, minimum_date=self.MIN_U_BOOT_DATE), "Validate preamble")
 
                 if self.tftp_image_path:
+                    # self.get_come().pre_reboot_cleanup()
                     fun_test.test_assert(expression=self.bmc.u_boot_load_image(index=f1_index,
                                                                                tftp_image_path=self.tftp_image_path,
                                                                                boot_args=boot_args,
