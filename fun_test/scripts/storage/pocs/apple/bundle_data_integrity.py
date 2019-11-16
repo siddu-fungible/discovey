@@ -19,7 +19,6 @@ class DataIntegrityTestcase(ApcPduTestcase):
     def run(self):
         # super(DataIntegrityTestcase, self).run()
         self.data_integrity_check()
-        # If you change the run
 
     def basic_checks(self):
         # super(DataIntegrityTestcase, self).basic_checks()
@@ -32,10 +31,6 @@ class DataIntegrityTestcase(ApcPduTestcase):
                                                username=self.username,
                                                password=self.password)
             required_write_hosts_list = self.verify_and_get_required_hosts_list(self.write_hosts)
-            # required_read_hosts_list = self.verify_and_get_required_hosts_list(self.read_hosts + 1)
-            # self.remove_write_host_from_read_hosts_list(required_write_hosts_list, required_read_hosts_list)
-            # self.scp_aux_file(from_host=required_write_hosts_list[0], to_hosts=required_read_hosts_list)
-
             self.pool_uuid = self.get_pool_id()
             self.volume_uuid_details = self.create_vol(self.write_hosts)
             self.attach_volumes_to_host(required_write_hosts_list)
@@ -44,7 +39,7 @@ class DataIntegrityTestcase(ApcPduTestcase):
             self.connect_the_host_to_volumes()
             self.verify_nvme_connect()
             self.start_fio_and_verify(fio_params=self.write_fio, host_names_list=required_write_hosts_list)
-            self.start_fio_and_verify(fio_params=self.read_fio, host_names_list=required_write_hosts_list,cd=self.read_fio["aux-path"])
+            self.start_fio_and_verify(fio_params=self.read_fio, host_names_list=required_write_hosts_list, cd=self.read_fio["aux-path"])
             required_read_hosts_list = self.verify_and_get_required_hosts_list(self.read_hosts + 1)
             self.remove_write_host_from_read_hosts_list(required_write_hosts_list, required_read_hosts_list)
             self.scp_aux_file(from_host=required_write_hosts_list[0], to_hosts=required_read_hosts_list)
