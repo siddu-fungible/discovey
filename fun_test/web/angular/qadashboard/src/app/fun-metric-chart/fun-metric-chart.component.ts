@@ -250,17 +250,16 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         }
       }
       if (jenkinsInfo.hasOwnProperty("build_properties")) {
-        if (jenkinsInfo.build_parameters && jenkinsInfo.build_parameters != "") {
-          let buildProperties = JSON.parse(jenkinsInfo.build_properties);
-          let funOsGitCommit = buildProperties["gitHubSha1s"]["FunOS"];
-          if (buildProperties !== "") {
+        if (jenkinsInfo.build_properties && jenkinsInfo.build_properties != "") {
+          let buildProperties = jenkinsInfo.build_properties;
+          if (Object.keys(buildProperties).length !== 0) {
             s["Build Properties"] = buildProperties;
-          }
-          if (funOsGitCommit != "") {
-            s["Git commit"] = funOsGitCommit;
+            let funOsGitCommit = buildProperties["gitHubSha1s"]["FunOS"];
+            if (funOsGitCommit != "") {
+              s["Git commit"] = funOsGitCommit;
+            }
           }
         }
-
       }
       if (jenkinsInfo.hasOwnProperty("sdk_version")) {
         let sdkVersion = jenkinsInfo.sdk_version;
@@ -1248,7 +1247,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     }
     var self = this;
     if (this.modelName !== 'MetricContainer' && !this.minimal) {
-      return this.apiService.get("/metrics/describe_table/" + this.modelName + "?get_choices=0").subscribe(function (response) {
+      return this.apiService.get("/metrics/describe_table/" + this.modelName + "?get_choices=false").subscribe(function (response) {
         self.tableInfo = response.data;
         self.fetchData(self.id, chartInfo, previewDataSets, self.tableInfo);
       }, error => {

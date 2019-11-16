@@ -2416,10 +2416,7 @@ if __name__ == "__main__":
     jenkins_entries = JenkinsJobIdMap.objects.filter(build_date__range=date_range).order_by("-build_date")
     jenkins_job_id_map = {}
     for entry in jenkins_entries:
-        if entry.lsf_job_id == "":
-            epoch = get_epoch_time_from_datetime(timezone.localtime(entry.build_date))
-        else:
-            epoch = get_epoch_time_from_datetime(entry.build_date)
+        epoch = get_epoch_time_from_datetime(entry.build_date)
         jenkins_job_id_map[epoch] = entry
     print "created the jenkins job id map"
     for metric_model in metric_models:
@@ -2433,12 +2430,13 @@ if __name__ == "__main__":
                     entry = jenkins_job_id_map[model_entry_epoch]
                     build_date = entry.build_date
                     result = {}
-                    if entry.lsf_job_id == "":
-                        build_date = timezone.localtime(build_date)
                     result["lsf_info"] = {"lsf_job_id": entry.lsf_job_id}
                     result["suite_info"] = {"suite_execution_id": entry.suite_execution_id,
                                             "associated_suites": entry.associated_suites}
-                    result["jenkins_info"] = {"build_properties": entry.build_properties,
+                    build_properties = {}
+                    if entry.build_properties != "":
+                        build_properties = json.loads(entry.build_properties)
+                    result["jenkins_info"] = {"build_properties": build_properties,
                                               "sdk_version": entry.sdk_version}
                     run_time_id = add_job_run_time_properties(date_time=build_date, run_time=result)
                     model_entry.run_time = run_time_id

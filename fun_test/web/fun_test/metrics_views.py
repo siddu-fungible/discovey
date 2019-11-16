@@ -70,7 +70,7 @@ def metrics_list(request):
 @api_safe_json_response
 def describe_table(request, table_name):
     result = None
-    get_choices = int(request.GET.get("get_choices", 0))
+    get_choices = request.GET.get("get_choices") == "true"
     metric_model = app_config.get_metric_models()[table_name]
     if metric_model:
         fields = metric_model._meta.get_fields()
