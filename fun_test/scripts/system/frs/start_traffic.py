@@ -95,7 +95,7 @@ class MyScript(FunTestScript):
                 self.come_handle.command("cd /scratch/FunSDK/bin/Linux")
                 self.come_handle.command(
                     "./dpcsh --pcie_nvme_sock=/dev/nvme{f1} --nvme_cmd_timeout=600000"
-                    " --tcp_proxy=4022{f1} &> /tmp/f1_{f1}_dpc.txt &".format(f1=f1))
+                    " --tcp_proxy=4222{f1} &> /tmp/f1_{f1}_dpc.txt &".format(f1=f1))
                 self.come_handle.exit_sudo()
                 fun_test.log("Started DPCSH on F1 {}".format(f1))
             else:
@@ -818,7 +818,7 @@ class FunTestCase1(FunTestCase):
                 self.come_handle.command("cd /scratch/FunSDK/bin/Linux")
                 self.come_handle.command(
                     "./dpcsh --pcie_nvme_sock=/dev/nvme{f1} --nvme_cmd_timeout=600000"
-                    " --tcp_proxy=4022{f1} &> /tmp/f1_{f1}_dpc.txt &".format(f1=f1))
+                    " --tcp_proxy=4222{f1} &> /tmp/f1_{f1}_dpc.txt &".format(f1=f1))
                 self.come_handle.exit_sudo()
                 fun_test.log("Started DPCSH on F1 {}".format(f1))
             else:

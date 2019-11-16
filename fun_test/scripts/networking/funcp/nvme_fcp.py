@@ -468,8 +468,8 @@ class ConfigureRdsVol(FunTestCase):
                 fun_test.simple_assert(service_status, "Stopping {} service on {}".format(service, f11_obj["name"]))
         
         # Storage Controller Objects
-        f10_storage_ctrl_obj = StorageController(target_ip=come_obj.host_ip, target_port=40220)
-        f11_storage_ctrl_obj = StorageController(target_ip=come_obj.host_ip, target_port=40221)
+        f10_storage_ctrl_obj = StorageController(target_ip=come_obj.host_ip, target_port=42220)
+        f11_storage_ctrl_obj = StorageController(target_ip=come_obj.host_ip, target_port=42221)
         fun_test.shared_variables["f10_storage_ctrl_obj"] = f10_storage_ctrl_obj
         fun_test.shared_variables["f11_storage_ctrl_obj"] = f11_storage_ctrl_obj
 

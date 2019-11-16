@@ -297,8 +297,8 @@ class Bmc(Linux):
                 come.pre_reboot_cleanup()
             except Exception as ex:
                 fun_test.critical(str(ex))
-            reboot_initiated_wait_time = 60 * 3
-            reboot_result = come.reboot(max_wait_time=max_wait_time, non_blocking=non_blocking, ipmi_details=ipmi_details, reboot_initiated_wait_time=reboot_initiated_wait_time)
+            # reboot_initiated_wait_time = 60 * 3
+            reboot_result = come.reboot(max_wait_time=max_wait_time, non_blocking=non_blocking, ipmi_details=ipmi_details)
             reboot_info_string = "initiated" if non_blocking else "complete"
             fun_test.test_assert(expression=reboot_result,
                                  message="ComE reboot {} (Graceful)".format(reboot_info_string),
@@ -1132,7 +1132,7 @@ class ComEInitializationWorker(Thread):
 
 class ComE(Linux):
     EXPECTED_FUNQ_DEVICE_ID = ["04:00.1", "06:00.1"]
-    DEFAULT_DPC_PORT = [40220, 40221]
+    DEFAULT_DPC_PORT = [42220, 42221]
     DEFAULT_STATISTICS_DPC_PORT = [45220, 45221]
     DPC_LOG_PATH = "/tmp/f1_{}_dpc.txt"
     DPC_STATISTICS_LOG_PATH = "/tmp/f1_{}_dpc.txt"
@@ -1165,15 +1165,29 @@ class ComE(Linux):
         health_monitor_processes = self.get_process_id_by_pattern(self.HEALTH_MONITOR, multiple=True)
         for health_monitor_process in health_monitor_processes:
             self.kill_process(process_id=health_monitor_process)
-        self.stop_cclinux_service()
-        # self.sudo_command("service docker stop")
-        # self.sudo_command("{}/StorageController/etc/start_sc.sh stop".format(self.FUN_ROOT))
-        # self.sudo_command("rmmod funeth fun_core")
+        try:
+            self.stop_cclinux_service()
+        except:
+            pass
+        try:
+            self.sudo_command("service docker stop")
+        except:
+            pass
+        try:
+            self.sudo_command("{}/StorageController/etc/start_sc.sh stop".format(self.FUN_ROOT))
+        except:
+            pass
+
         containers = self.docker(sudo=True)
         try:
             for container in containers:
                 self.docker(sudo=True, kill_container_id=container['ID'], timeout=120)
             self.sudo_command("service docker stop")
+        except:
+            pass
+
+        try:
+            self.sudo_command("rmmod funeth fun_core")
         except:
             pass
 
@@ -2081,6 +2095,7 @@ class Fs(object, ToDictMixin):
         self.get_fpga()
         self.get_come()
         self.set_f1s()
+        self.come.setup_dpc()
         self.come.detect_pfs()
         fun_test.test_assert(expression=self.come.ensure_dpc_running(),
                              message="Ensure dpc is running",

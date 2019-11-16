@@ -14,8 +14,8 @@ def execute_netesto_command_on_controller(netesto_controller):
     netesto_controller.sudo_command(command="./netesto.py -d < fun_scripts/netesto_execute_script", timeout=600)
 
 def get_dpc_stats():
-    nc1 = NetworkController(dpc_server_ip="fs48-come", dpc_server_port=40220, verbose=True)
-    nc2 = NetworkController(dpc_server_ip="fs60-come", dpc_server_port=40220, verbose=True)
+    nc1 = NetworkController(dpc_server_ip="fs48-come", dpc_server_port=42220, verbose=True)
+    nc2 = NetworkController(dpc_server_ip="fs60-come", dpc_server_port=42220, verbose=True)
     t_end = time.time() + 75
     fs48_debug_vp_util = {}
     fs60_debug_vp_util = {}
