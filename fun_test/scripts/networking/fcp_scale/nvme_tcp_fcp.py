@@ -190,8 +190,8 @@ class BLTVolumePerformanceScript(FunTestScript):
 
         storage_fs_come = fun_test.shared_variables["storage_fs"][0].replace("-", "") + "-come"
         storage_fs_come_obj = Linux(host_ip=storage_fs_come, ssh_username="fun", ssh_password="123")
-        target_f10_storage_obj = StorageController(target_ip=storage_fs_come, target_port=40220)
-        target_f11_storage_obj = StorageController(target_ip=storage_fs_come, target_port=40221)
+        target_f10_storage_obj = StorageController(target_ip=storage_fs_come, target_port=42220)
+        target_f11_storage_obj = StorageController(target_ip=storage_fs_come, target_port=42221)
 
         fun_test.shared_variables["target_f10_storage_obj"] = target_f10_storage_obj
         fun_test.shared_variables["target_f11_storage_obj"] = target_f11_storage_obj

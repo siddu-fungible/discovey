@@ -11,6 +11,7 @@ from fun_settings import STASH_DIR
 from fun_global import Codes, get_current_epoch_time
 from asset.asset_global import AssetType
 from lib.utilities.statistics_manager import StatisticsCollector, StatisticsCategory
+from lib.utilities.http import fetch_text_file
 
 from threading import Thread
 from datetime import datetime
@@ -292,6 +293,11 @@ class Bmc(Linux):
 
         fun_test.log("Rebooting ComE (Graceful)", context=self.context)
         if not come.was_power_cycled:
+            try:
+                come.pre_reboot_cleanup()
+            except Exception as ex:
+                fun_test.critical(str(ex))
+            # reboot_initiated_wait_time = 60 * 3
             reboot_result = come.reboot(max_wait_time=max_wait_time, non_blocking=non_blocking, ipmi_details=ipmi_details)
             reboot_info_string = "initiated" if non_blocking else "complete"
             fun_test.test_assert(expression=reboot_result,
@@ -1082,7 +1088,7 @@ class ComEInitializationWorker(Thread):
                 fun_test.test_assert(expression=come.initialize(disable_f1_index=self.fs.disable_f1_index),
                                      message="ComE initialized",
                                      context=self.fs.context)
-                if self.fs.bundle_compatible and not self.fs.tftp_image_path:
+                if (self.fs.bundle_compatible and not self.fs.tftp_image_path): # or (come.list_files(ComE.BOOT_UP_LOG)):
                     fun_test.sleep(seconds=10, message="Waiting for expected containers", context=self.fs.context)
                     expected_containers_running = self.is_expected_containers_running(come)
                     expected_containers_running_timer = FunTimer(max_time=self.CONTAINERS_BRING_UP_TIME_MAX)
@@ -1126,7 +1132,7 @@ class ComEInitializationWorker(Thread):
 
 class ComE(Linux):
     EXPECTED_FUNQ_DEVICE_ID = ["04:00.1", "06:00.1"]
-    DEFAULT_DPC_PORT = [40220, 40221]
+    DEFAULT_DPC_PORT = [42220, 42221]
     DEFAULT_STATISTICS_DPC_PORT = [45220, 45221]
     DPC_LOG_PATH = "/tmp/f1_{}_dpc.txt"
     DPC_STATISTICS_LOG_PATH = "/tmp/f1_{}_dpc.txt"
@@ -1139,6 +1145,9 @@ class ComE(Linux):
 
     MAX_HBM_DUMPS = 200
     BUILD_SCRIPT_DOWNLOAD_DIRECTORY = "/tmp/remove_me_build_script"
+    BOOT_UP_LOG = "/var/log/COMe-boot-up.log"
+    FUN_ROOT = "/opt/fungible"
+    HEALTH_MONITOR = "/opt/fungible/etc/DpuHealthMonitor.sh"
 
     def __init__(self, **kwargs):
         super(ComE, self).__init__(**kwargs)
@@ -1149,6 +1158,38 @@ class ComE(Linux):
         self.hbm_dump_enabled = False
         self.funq_bind_device = {}
         self.dpc_for_statistics_ready = False
+
+    def pre_reboot_cleanup(self):
+        fun_test.log("Cleaning up storage controller containers", context=self.context)
+
+        health_monitor_processes = self.get_process_id_by_pattern(self.HEALTH_MONITOR, multiple=True)
+        for health_monitor_process in health_monitor_processes:
+            self.kill_process(process_id=health_monitor_process)
+        try:
+            self.stop_cclinux_service()
+        except:
+            pass
+        try:
+            self.sudo_command("service docker stop")
+        except:
+            pass
+        try:
+            self.sudo_command("{}/StorageController/etc/start_sc.sh stop".format(self.FUN_ROOT))
+        except:
+            pass
+
+        containers = self.docker(sudo=True)
+        try:
+            for container in containers:
+                self.docker(sudo=True, kill_container_id=container['ID'], timeout=120)
+            self.sudo_command("service docker stop")
+        except:
+            pass
+
+        try:
+            self.sudo_command("rmmod funeth fun_core")
+        except:
+            pass
 
 
     def initialize(self, reset=False, disable_f1_index=None):
@@ -1178,14 +1219,35 @@ class ComE(Linux):
                 example: http://dochub.fungible.local/doc/jenkins/apple_fs1600/68/setup_fs1600-68.sh
         """
         release_prefix = ""
-        if not "master" in release_train:
+        if "master" not in release_train:
             release_prefix = "rel_"
+
         url = "{}/{}/fs1600/{}/{}".format(DOCHUB_BASE_URL,
                                           release_prefix + release_train.replace(".", "_"),
                                           build_number,
                                           script_file_name)
 
         return url
+
+    def _get_build_number_for_latest(self, release_train):
+        release_prefix = ""
+        if "master" not in release_train:
+            release_prefix = "rel_"
+        latest_url = "{}/{}/fs1600/latest/build_info.txt".format(DOCHUB_BASE_URL,
+                                                                 release_prefix + release_train.replace(".", "_"))
+
+        result = None
+        build_info_file_contents = fetch_text_file(url=latest_url)
+        if build_info_file_contents:
+            try:
+                result = int(build_info_file_contents)
+            except Exception as ex:
+                fun_test.critical(str(ex))
+        return result
+
+
+    def stop_cclinux_service(self):
+        self.sudo_command("/opt/fungible/cclinux/cclinux_service.sh --stop")
 
     def _setup_build_script_directory(self):
         """
@@ -1198,6 +1260,9 @@ class ComE(Linux):
         self.command("mkdir -p {}".format(path))
         return path
 
+    def _transform_build_number(self):
+        pass
+
     def install_build_setup_script(self, build_number, release_train="1.0a_aa"):
         """
         install the build setup script downloaded from dochub
@@ -1205,7 +1270,10 @@ class ComE(Linux):
         :param release_train: example apple_fs1600
         :return: True if the installation succeeded with exit status == 0, else raise an assert
         """
-        self.sudo_command("/opt/fungible/cclinux/cclinux_service.sh --stop")
+        self.stop_cclinux_service()
+        if type(build_number) == str or type(build_number) == unicode and "latest" in build_number:
+            build_number = self._get_build_number_for_latest(release_train=release_train)
+            fun_test.simple_assert(build_number, "Getting latest build number")
         if "master" not in release_train:
             parts = release_train.split("_")
             temp = "{}-{}_{}".format(parts[0], build_number, parts[1])
@@ -1806,13 +1874,23 @@ class Fs(object, ToDictMixin):
             fs_spec = am.get_fs_by_name(dut_name)
             fun_test.simple_assert(fs_spec, "FS spec for {}".format(dut_name), context=context)
 
+        if fs_parameters:
+            if not already_deployed:
+                already_deployed = fs_parameters.get("already_deployed", None)
         if not already_deployed:
             if not tftp_image_path:
                 tftp_image_path = fun_test.get_build_parameter("tftp_image_path")
             if not tftp_image_path:
                 bundle_image_parameters = fun_test.get_build_parameter("bundle_image_parameters")
                 if bundle_image_parameters:
-                    if int(bundle_image_parameters["build_number"]) < 0:
+
+                    is_number = False   # redundant
+                    try:
+                        bundle_build_number = int(bundle_image_parameters["build_number"])
+                        is_number = True
+                    except:
+                        pass
+                    if is_number and int(bundle_image_parameters["build_number"]) < 0:
                         fun_test.log("Build number set to -1 so resetting bundle image parameters")
                         bundle_image_parameters = None
             # fun_test.test_assert(tftp_image_path, "TFTP image path: {}".format(tftp_image_path), context=context)
@@ -2017,6 +2095,7 @@ class Fs(object, ToDictMixin):
         self.get_fpga()
         self.get_come()
         self.set_f1s()
+        self.come.setup_dpc()
         self.come.detect_pfs()
         fun_test.test_assert(expression=self.come.ensure_dpc_running(),
                              message="Ensure dpc is running",
@@ -2203,7 +2282,6 @@ class Fs(object, ToDictMixin):
                              context=self.context, message="BMC reachable after APC power-cycle")
         fun_test.simple_assert(bmc.uptime() < worst_case_uptime, "BMC uptime is less than 10 minutes")
 
-        fun_test.simple_assert()
         come = self.get_come()
         fun_test.test_assert(expression=come.ensure_host_is_up(max_wait_time=180,
                                                                power_cycle=False), message="ComE reachable after APC power-cycle")
@@ -2247,6 +2325,8 @@ if __name__ == "__main2__":
 
 
 if __name__ == "__main__":
-    come = ComE(host_ip="fs63-come.fungible.local", ssh_username="fun", ssh_password="123")
-    come.setup_hbm_tools()
+    come = ComE(host_ip="fs118-come.fungible.local", ssh_username="fun", ssh_password="123")
+    output = come.pre_reboot_cleanup()
+    i = 0
+    #come.setup_hbm_tools()
     #print come.setup_tools()

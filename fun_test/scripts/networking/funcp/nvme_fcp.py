@@ -468,8 +468,8 @@ class ConfigureRdsVol(FunTestCase):
                 fun_test.simple_assert(service_status, "Stopping {} service on {}".format(service, f11_obj["name"]))
         
         # Storage Controller Objects
-        f10_storage_ctrl_obj = StorageController(target_ip=come_obj.host_ip, target_port=40220)
-        f11_storage_ctrl_obj = StorageController(target_ip=come_obj.host_ip, target_port=40221)
+        f10_storage_ctrl_obj = StorageController(target_ip=come_obj.host_ip, target_port=42220)
+        f11_storage_ctrl_obj = StorageController(target_ip=come_obj.host_ip, target_port=42221)
         fun_test.shared_variables["f10_storage_ctrl_obj"] = f10_storage_ctrl_obj
         fun_test.shared_variables["f11_storage_ctrl_obj"] = f11_storage_ctrl_obj
 
@@ -586,7 +586,7 @@ class ConfigureRdsVol(FunTestCase):
                         fun_test.log("PCIe controller is HUID 1")
                 else:
                     f11_ctrl = f11_pcie_ctrl
-                    fun_test.log("PCIe controller is HUID 1")
+                    fun_test.log("One one PCIe controller on HUID 1")
 
                 command_result = f11_storage_ctrl_obj.attach_volume_to_controller(vol_uuid=f11_rds_vol[x],
                                                                                   ctrlr_uuid=f11_ctrl,
@@ -646,6 +646,8 @@ class RunFioRds(FunTestCase):
             numjobs_set = True
         else:
             numjobs_set = False
+        if "fio_runtime" in job_inputs:
+            self.fio_cmd_args["runtime"] = job_inputs["fio_runtime"]
 
         if total_ssd == 4:
             host_dict = {}

@@ -75,10 +75,13 @@ class ApcPdu():
             self.outlet_off(outlet_number=outlet_number)
         except Exception as ex:
             fun_test.critical(message=str(ex), context=self.context)
+        fun_test.sleep("After APC off")
         try:
             self.outlet_on(outlet_number=outlet_number)
         except Exception as ex:
             fun_test.critical(message=str(ex), context=self.context)
+        fun_test.sleep("After APC on")
+
         status = self.outlet_status(outlet_number=outlet_number)
         if re.search(r'Outlet\s+' + str(outlet_number) + r'.*On', status):
             result = True

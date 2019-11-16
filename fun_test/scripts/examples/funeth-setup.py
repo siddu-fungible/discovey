@@ -34,15 +34,15 @@ try:
 except (KeyError, ValueError):
     emulation_target = 'f1'
     #DPC_PROXY_IP = '10.1.21.120'
-    #DPC_PROXY_PORT = 40221
+    #DPC_PROXY_PORT = 42221
     #TB = 'SN2'
     #DPC_PROXY_IP = '10.1.40.24'
-    #DPC_PROXY_PORT = 40221
+    #DPC_PROXY_PORT = 42221
     #TB = 'SB5'
     DPC_PROXY_IP = 'fs11-come'
-    DPC_PROXY_PORT = 40220
+    DPC_PROXY_PORT = 42220
     DPC_PROXY_IP2 = 'fs11-come'
-    DPC_PROXY_PORT2 = 40221
+    DPC_PROXY_PORT2 = 42221
     TB = ''.join(fun_test.get_job_environment_variable('test_bed_type').split('-')).upper()
 
 try:

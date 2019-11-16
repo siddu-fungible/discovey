@@ -17,6 +17,7 @@ class MyScript(FunTestScript):
         topology_helper = TopologyHelper()
         f1_parameters = {0: {"boot_args": "app=mdt_test,load_mods workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --disable-wu-watchdog"},
                          1: {"boot_args": "app=mdt_test,load_mods workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --disable-wu-watchdog"}}
+        test_bed_type = fun_test.get_job_environment_variable("test_bed_type")
 
         perf_listener_host_name = "poc-server-04"  # figure this out from the topology spec
         perf_listener_ip = "20.1.1.1"  # figure this out from the topology spec
@@ -24,7 +25,6 @@ class MyScript(FunTestScript):
             perf_listener_host_name = "poc-server-02"  # figure this out from the topology spec
             perf_listener_ip = "21.1.1.1"              # figure this out from the topology spec
 
-        test_bed_type = fun_test.get_job_environment_variable("test_bed_type")
         if test_bed_type == "fs-11":
             perf_listener_host_name = "poc-server-11"
         csi_perf_enabled = fun_test.get_job_environment_variable("csi_perf")
