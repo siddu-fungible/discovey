@@ -454,11 +454,13 @@ class ApcPduTestcase(FunTestCase):
                 fun_test.log("Trying to connect to nvme, Iteration no: {} out of {}".format(iter + 1, retry))
                 nqn = host_info["data"]["nqn"]
                 target_ip = host_info["data"]["ip"]
+                remote_ip = host_info["data"]["remote_ip"]
                 result = host_info["handle"].nvme_connect(target_ip=target_ip,
                                                           nvme_subsystem=nqn,
                                                           nvme_io_queues=16,
                                                           retries=5,
-                                                          timeout=100)
+                                                          timeout=100,
+                                                          hostnqn=remote_ip)
                 if result:
                     break
                 fun_test.sleep("Before next iteration", seconds=10)
@@ -641,11 +643,15 @@ class ApcPduTestcase(FunTestCase):
 
     def get_host_handles(self):
         for host_name in self.host_details:
-            host_info = self.hosts_asset[host_name]
-            host_handle = Linux(host_ip=host_info['host_ip'],
-                                ssh_username=host_info['ssh_username'],
-                                ssh_password=host_info['ssh_password'])
+            host_handle = self.get_host_handle(host_name)
             self.host_details[host_name]["handle"] = host_handle
+
+    def get_host_handle(self, host_name):
+        host_info = self.hosts_asset[host_name]
+        host_handle = Linux(host_ip=host_info['host_ip'],
+                            ssh_username=host_info['ssh_username'],
+                            ssh_password=host_info['ssh_password'])
+        return host_handle
 
     def start_fio_and_verify(self, fio_params, host_names_list, cd=""):
         thread_details = {}
