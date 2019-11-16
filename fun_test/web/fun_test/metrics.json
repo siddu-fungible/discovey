@@ -6553,12 +6553,6 @@
             ]
           }
         ]
-      },
-      {
-        "metric_model_name": "MetricContainer",
-        "name": "f1_fs1600",
-        "label": "FS1600",
-        "children": []
       }
     ]
   },
