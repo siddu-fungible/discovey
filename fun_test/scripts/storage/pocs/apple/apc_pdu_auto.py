@@ -32,6 +32,7 @@ class ApcPduScript(FunTestScript):
 
 
 class ApcPduTestcase(FunTestCase):
+    VOL_NAME = "Stripe"
 
     def describe(self):
         self.set_test_details(id=1,
@@ -426,7 +427,6 @@ class ApcPduTestcase(FunTestCase):
         num_docker = self.docker_ps_a_wrapper(output)
         return num_docker
 
-
     @staticmethod
     def docker_ps_a_wrapper(output):
         # Just a basic function , will have to advance it using regex
@@ -465,7 +465,8 @@ class ApcPduTestcase(FunTestCase):
                     break
                 fun_test.sleep("Before next iteration", seconds=10)
 
-            fun_test.test_assert(result, "Host: {} nqn: {} connected to DataplaneIP: {}".format(host_name, nqn, target_ip))
+            fun_test.test_assert(result,
+                                 "Host: {} nqn: {} connected to DataplaneIP: {}".format(host_name, nqn, target_ip))
 
     @staticmethod
     def get_nvme(hosts_list):
@@ -594,7 +595,7 @@ class ApcPduTestcase(FunTestCase):
         # If there is a need to create the volumes with different params can modify the code easily
         volume_creation_detail = self.volume_creation_details[0]
         for index in range(number_of_vol):
-            volume_creation_detail["name"] = "Stripe{}".format(index + 1)
+            volume_creation_detail["name"] = "{}{}".format(self.VOL_NAME, index + 1)
             response = self.sc_api.create_stripe_volume(pool_uuid=self.pool_uuid,
                                                         name=volume_creation_detail["name"],
                                                         capacity=volume_creation_detail["capacity"],
@@ -626,11 +627,18 @@ class ApcPduTestcase(FunTestCase):
     def attach_volumes_to_host(self, required_hosts_list):
         self.host_details = {}
         # uuid = volume_uuid_details[vol_name]
-        for vol_name, host_name in zip(self.volume_uuid_details, required_hosts_list):
+        for index, host_name in enumerate(required_hosts_list):
+            vol_name = self.VOL_NAME + str(index + 1)
+            if vol_name in self.volume_uuid_details:
+                pass
+            else:
+                if index == 0:
+                    fun_test.critical("No volumes are created")
+                vol_name = self.VOL_NAME + "1"
             host_interface_ip = self.hosts_asset[host_name]["test_interface_info"]["0"]["ip"].split("/")[0]
-            response =  self.sc_api.volume_attach_remote(vol_uuid=self.volume_uuid_details[vol_name],
-                                                         remote_ip=host_interface_ip,
-                                                         transport=self.transport_type.upper())
+            response = self.sc_api.volume_attach_remote(vol_uuid=self.volume_uuid_details[vol_name],
+                                                        remote_ip=host_interface_ip,
+                                                        transport=self.transport_type.upper())
 
             fun_test.log("Volume attach response: {}".format(response))
             message = response["message"]
@@ -706,20 +714,22 @@ class ApcPduTestcase(FunTestCase):
     def disconnect_the_hosts(self):
         for host_name, host_info in self.host_details.iteritems():
             output = host_info["handle"].sudo_command("nvme disconnect -n {nqn}".format(nqn=host_info["data"]["nqn"]))
-            disconnected = True if "disconnected" in output else False
+            disconnected = True if "disconnected 1" in output else False
             fun_test.test_assert(disconnected,
                                  "Host: {} disconnected from {}".format(host_name, host_info["data"]["ip"]))
 
     def delete_volumes(self):
-        try:
-            for vol_name, vol_uuid in self.volume_uuid_details.iteritems():
+        max_retries = 3
+        for vol_name, vol_uuid in self.volume_uuid_details.iteritems():
+            deleted = False
+            for i in range(max_retries):
                 response = self.sc_api.delete_volume(vol_uuid)
                 fun_test.log("Volume delte response: {}".format(response))
                 message = response["message"]
                 deleted = True if message == "volume deletion successful" else False
-                fun_test.test_assert(deleted, "Delete volume :{} ".format(vol_name))
-        except Exception as ex:
-            fun_test.log(ex)
+                if deleted:
+                    break
+            fun_test.test_assert(deleted, "Delete volume :{} ".format(vol_name))
 
     def intialize_the_hosts(self):
         for host_name, host_info in self.host_details.iteritems():
@@ -745,6 +755,7 @@ class ApcPduTestcase(FunTestCase):
     def cleanup(self):
         if self.num_hosts:
             self.delete_volumes()
+
 
 if __name__ == "__main__":
     obj = ApcPduScript()

@@ -15,7 +15,7 @@
   "check_portal": false,
   "end_sleep": 300,
   "write_hosts": 1,
-  "read_hosts": 1,
+  "read_hosts": 2,
   "transport_type": "tcp",
   "api_server_port": 50220,
   "username": "admin",

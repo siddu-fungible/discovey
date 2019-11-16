@@ -2,6 +2,9 @@ from lib.system.fun_test import *
 from apc_pdu_auto import *
 
 
+# --environment={\"test_bed_type\":\"fs-53\"}
+
+
 class DataIntegrityTestcase(ApcPduTestcase):
 
     def describe(self):
@@ -41,14 +44,12 @@ class DataIntegrityTestcase(ApcPduTestcase):
             self.connect_the_host_to_volumes()
             self.verify_nvme_connect()
             self.start_fio_and_verify(fio_params=self.write_fio, host_names_list=required_write_hosts_list)
-            self.start_fio_and_verify(fio_params=self.read_fio, host_names_list=required_write_hosts_list, cd=self.read_fio["aux-path"])
+            self.start_fio_and_verify(fio_params=self.read_fio, host_names_list=required_write_hosts_list,cd=self.read_fio["aux-path"])
             required_read_hosts_list = self.verify_and_get_required_hosts_list(self.read_hosts + 1)
             self.remove_write_host_from_read_hosts_list(required_write_hosts_list, required_read_hosts_list)
             self.scp_aux_file(from_host=required_write_hosts_list[0], to_hosts=required_read_hosts_list)
             self.disconnect_the_hosts()
             self.destoy_host_handles()
-
-
             self.attach_volumes_to_host(required_read_hosts_list)
             self.get_host_handles()
             # self.intialize_the_hosts()
@@ -76,10 +77,9 @@ class DataIntegrityTestcase(ApcPduTestcase):
                                  target_username=host_info['ssh_username'],
                                  target_password=host_info['ssh_password'])
 
-
     def cleanup(self):
         super(DataIntegrityTestcase, self).cleanup()
-        #if required add any addtional cleanup
+        # if required add any addtional cleanup
 
 
 if __name__ == "__main__":
