@@ -2282,7 +2282,6 @@ class Fs(object, ToDictMixin):
                              context=self.context, message="BMC reachable after APC power-cycle")
         fun_test.simple_assert(bmc.uptime() < worst_case_uptime, "BMC uptime is less than 10 minutes")
 
-        fun_test.simple_assert()
         come = self.get_come()
         fun_test.test_assert(expression=come.ensure_host_is_up(max_wait_time=180,
                                                                power_cycle=False), message="ComE reachable after APC power-cycle")
