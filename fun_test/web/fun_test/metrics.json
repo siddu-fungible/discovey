@@ -7146,5 +7146,183 @@
         ]
       }
     ]
+  },
+  {
+    "metric_model_name": "MetricContainer",
+    "name": "fs1600",
+    "label": "FS1600",
+    "children": [
+      {
+        "metric_model_name": "MetricContainer",
+        "name": "fs1600_durable",
+        "label": "Durable",
+        "children": [
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "inspur_single_f1_host",
+            "reference": true,
+            "label": "8_11_1:4K_RAND_RW, F1(s)=1"
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "inspur_single_f1_host_6",
+            "reference": true,
+            "label": "8_11_6:4K_RAND_RW, F1(s)=1"
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "inspur_8112_1024k_seq_w",
+            "reference": true,
+            "label": "8_11_2:1024K_SEQ_RW, F1(s)=1"
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "inspur_8113_mixed_rw",
+            "reference": true,
+            "label": "8_11_3:MIXED_RW, F1(s)=1"
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "inspur_8114_oltp_rw",
+            "reference": true,
+            "label": "8_11_4:OLTP_RW, F1(s)=1"
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "inspur_8115_olap_rw",
+            "reference": true,
+            "label": "8_11_5:OLAP_RW, F1(s)=1"
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "inspur_8131_compression_ratio_benchmarking",
+            "reference": true,
+            "label": "8_13_1:Compression_Benchmark"
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "inspur_8132_8k_rand_rw_comp",
+            "reference": true,
+            "label": "8_14_1:4K_RAND_RW_COMP, F1(s)=1"
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "inspur_8141_8k_rand_rd_comp",
+            "reference": true,
+            "label": "8_14_1:4K_RAND_RD_COMP, F1(s)=1"
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "inspur_8141_8k_rand_wr_comp",
+            "reference": true,
+            "label": "8_14_1:4K_RAND_WR_COMP, F1(s)=1"
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "inspur_871_single_disk_failure",
+            "reference": true,
+            "label": "8_7_1:Single_Disk_Failure"
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "inspur_875_data_reconstruction",
+            "reference": true,
+            "label": "8_7_5:Data_Reconstruction"
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "inspur_8111_8k_rand_rw_6f1",
+            "reference": true,
+            "label": "8_11_1:4K_RAND_RW, F1(s)=6"
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "inspur_8116_8k_rand_rw_6f1",
+            "reference": true,
+            "label": "8_11_6:4K_RAND_RW, F1(s)=6"
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "inspur_8111_8k_rand_rd_1f1",
+            "reference": true,
+            "label": "8_11_1:4K_RAND_RD, F1(s)=1"
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "inspur_8111_8k_rand_wr_1f1",
+            "reference": true,
+            "label": "8_11_1:4K_RAND_WR, F1(s)=1"
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "inspur_8116_8k_rand_rd_1f1",
+            "reference": true,
+            "label": "8_11_6:4K_RAND_RD, F1(s)=1"
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "inspur_8116_8k_rand_wr_1f1",
+            "reference": true,
+            "label": "8_11_6:4K_RAND_WR, F1(s)=1"
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "inspur_8111_8k_rand_rd_f1_6",
+            "reference": true,
+            "label": "8_11_1:4K_RAND_RD, F1(s)=6"
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "inspur_8111_8k_rand_wr_f1_6",
+            "reference": true,
+            "label": "8_11_1:4K_RAND_WR, F1(s)=6"
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "inspur_8116_8k_rand_rd_f1_6",
+            "reference": true,
+            "label": "8_11_6:4K_RAND_RD, F1(s)=6"
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "inspur_8116_8k_rand_wr_f1_6",
+            "reference": true,
+            "label": "8_11_6:4K_RAND_WR, F1(s)=6"
+          }
+        ]
+      },
+      {
+        "metric_model_name": "MetricContainer",
+        "name": "fs1600_raw",
+        "label": "Raw",
+        "children": [
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "fs1600_raw_striped",
+            "label": "Striped",
+            "children": [
+              {
+                "metric_model_name": "MetricContainer",
+                "name": "teramarks_customer_apple_single_writer_reader_tcp",
+                "reference": true,
+                "label": "Single-Reader TCP"
+              },
+              {
+                "metric_model_name": "MetricContainer",
+                "name": "teramarks_customer_apple_single_writer_multiple_reader_tcp",
+                "reference": true,
+                "label": "Multiple-Reader TCP"
+              }
+            ]
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "multi_host_raw_block_nvmetcp",
+            "label": "NVMe/TCP - Multi host",
+            "reference": true
+          }
+        ]
+      }
+    ]
   }
 ]
