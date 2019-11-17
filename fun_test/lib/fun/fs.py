@@ -402,7 +402,7 @@ class Bmc(Linux):
         fun_test.execute_thread_after(0,
                                       nc.read_until,
                                       expected_data=self.U_BOOT_F1_PROMPT,
-                                      timeout=20,
+                                      timeout=30,
                                       write_on_trigger=write_on_trigger)
 
 
@@ -984,6 +984,12 @@ class BootupWorker(Thread):
                         fun_test.test_assert(expression=bmc.setup_serial_proxy_connection(f1_index=f1_index, auto_boot=fs.is_auto_boot()),
                                              message="Setup nc serial proxy connection",
                                              context=self.context)
+
+                    if fs.f1_parameters:
+                        if f1_index in fs.f1_parameters:
+                            if "boot_args" in fs.f1_parameters[f1_index]:
+                                boot_args = fs.f1_parameters[f1_index]["boot_args"]
+
                     if fs.tftp_image_path:
                         self.fs.get_come().pre_reboot_cleanup()
                         if fs.get_bmc()._use_i2c_reset():
@@ -995,14 +1001,12 @@ class BootupWorker(Thread):
                         else:
                             fs.get_bmc().reset_f1(f1_index=f1_index)
 
-                    if fs.f1_parameters:
-                        if f1_index in fs.f1_parameters:
-                            if "boot_args" in fs.f1_parameters[f1_index]:
-                                boot_args = fs.f1_parameters[f1_index]["boot_args"]
+
 
                     if fs.tftp_image_path:
                         preamble = bmc.get_preamble(f1_index=f1_index)
                         if fs.validate_u_boot_version:
+                            fun_test.log("Preamble: {}".format(preamble))
                             fun_test.test_assert(
                                 bmc.validate_u_boot_version(output=preamble, minimum_date=fs.MIN_U_BOOT_DATE),
                                 "Validate preamble", context=self.context)
