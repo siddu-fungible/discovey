@@ -7129,26 +7129,6 @@
   },
   {
     "metric_model_name": "MetricContainer",
-    "name": "other_tree",
-    "label": "Misc",
-    "children": [
-      {
-        "metric_model_name": "MetricContainer",
-        "name": "other_tree_build",
-        "label": "Build",
-        "children": [
-          {
-            "metric_model_name": "FunOnDemandTotalTimePerformance",
-            "name": "job_execution_time_fun_on_demand",
-            "label": "Job execution time (Fun On Demand)",
-            "children": []
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "metric_model_name": "MetricContainer",
     "name": "fs1600",
     "label": "FS1600",
     "children": [
@@ -7320,6 +7300,26 @@
             "name": "multi_host_raw_block_nvmetcp",
             "label": "NVMe/TCP - Multi host",
             "reference": true
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "metric_model_name": "MetricContainer",
+    "name": "other_tree",
+    "label": "Misc",
+    "children": [
+      {
+        "metric_model_name": "MetricContainer",
+        "name": "other_tree_build",
+        "label": "Build",
+        "children": [
+          {
+            "metric_model_name": "FunOnDemandTotalTimePerformance",
+            "name": "job_execution_time_fun_on_demand",
+            "label": "Job execution time (Fun On Demand)",
+            "children": []
           }
         ]
       }
