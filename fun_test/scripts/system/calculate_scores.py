@@ -19,7 +19,7 @@ class PrepareDbTc(FunTestCase):
 
     def run(self):
         # chart_names = [F1, S1]
-        metric_ids = [F1_ROOT_ID, S1_ROOT_ID, OTHER_ROOT_ID]
+        metric_ids = [F1_ROOT_ID, S1_ROOT_ID, OTHER_ROOT_ID, FS1600_ROOT_ID]
         prepare_status_db(metric_ids=metric_ids)
         TimeKeeper.set_time(name=LAST_ANALYTICS_DB_STATUS_UPDATE, time=get_current_time())
 
