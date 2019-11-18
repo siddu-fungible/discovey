@@ -82,6 +82,8 @@ for file in files:
     try:
         s = SuiteExecution.objects.get(execution_id=suite_execution_id)
         if ((get_current_time() - s.completed_time).days > KEEP_SUITE_DAYS) and (s.state != JobStatusType.IN_PROGRESS):
+            if s.preserve_logs:
+                continue
             if not DEBUG:
                 # print s.completed_time
                 tgz_file_name = ARCHIVE_DIRECTORY + "/s_{}.tgz".format(suite_execution_id)

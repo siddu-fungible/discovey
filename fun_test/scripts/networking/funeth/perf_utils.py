@@ -612,6 +612,8 @@ def collect_funcp_logs(linux_obj, path='/scratch/opt/fungible/logs'):
     output = linux_obj.command('cd {}; ls -l *.log'.format(path))
     log_files = re.findall(r'(\S+.log)', output)
     for log_file in log_files:
+        if "openr" in log_file:   # For now we do not have space for 400MB files
+            continue
         artifact_file_name = fun_test.get_test_case_artifact_file_name(
             post_fix_name='{}_{}.txt'.format(linux_obj.host_ip, log_file))
         fun_test.scp(source_ip=linux_obj.host_ip,
@@ -620,3 +622,5 @@ def collect_funcp_logs(linux_obj, path='/scratch/opt/fungible/logs'):
                      source_password=linux_obj.ssh_password,
                      target_file_path=artifact_file_name)
         fun_test.add_auxillary_file(description="{} Log".format(log_file), filename=artifact_file_name)
+
+    linux_obj.command('rm -rf /scratch/opt/fungible/logs/CC_openr*')

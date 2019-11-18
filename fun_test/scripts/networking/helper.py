@@ -1466,6 +1466,7 @@ def run_dpcsh_commands(template_obj, sequencer_handle, network_controller_obj, s
 
     except Exception as ex:
         fun_test.critical(str(ex))
+        fun_test.log_module_filter_disable()
     return True
 
 def populate_stats_file(network_controller_obj, test_time, generic_file_name_part, display_output=False):
@@ -1529,6 +1530,7 @@ def populate_stats_file(network_controller_obj, test_time, generic_file_name_par
 
     except Exception as ex:
         fun_test.critical(str(ex))
+        fun_test.log_module_filter_disable()
     return True
 
 '''
@@ -1786,5 +1788,5 @@ def get_diff_results(old_result, new_result):
 
 if __name__ == '__main__':
     from lib.host.network_controller import NetworkController
-    nw = NetworkController(dpc_server_ip="fs48-come", dpc_server_port=40220)
+    nw = NetworkController(dpc_server_ip="fs48-come", dpc_server_port=42220)
     populate_vp_util_output_file(network_controller_obj=nw, filename='output_vp_util.txt')

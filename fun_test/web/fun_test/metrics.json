@@ -1451,6 +1451,12 @@
           },
           {
             "metric_model_name": "MetricContainer",
+            "name": "crypto_fastpath_throughput",
+            "label": "Crypto Fastpath Throughput",
+            "reference": true
+          },
+          {
+            "metric_model_name": "MetricContainer",
             "name": "Crypto raw throughput",
             "label": "Crypto Raw Throughput",
             "disable": true,
@@ -1966,6 +1972,38 @@
                     "metric_model_name": "TeraMarkMultiClusterCryptoPerformance",
                     "name": "SHA3_256 Raw Throughput",
                     "label": "SHA3_256",
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "metric_model_name": "MetricContainer",
+                "name": "crypto_fastpath_throughput",
+                "label": "Crypto Fastpath Throughput",
+                "children": [
+                  {
+                    "metric_model_name": "CryptoFastPathPerformance",
+                    "name": "aes_gcm_crypto_fastpath_throughput",
+                    "label": "AES_GCM",
+                    "children": []
+                  },
+                  {
+                    "metric_model_name": "CryptoFastPathPerformance",
+                    "name": "aes_xts_crypto_fastpath_throughput",
+                    "label": "AES_XTS",
+                    "children": []
+                  },
+                  {
+                    "metric_model_name": "CryptoFastPathPerformance",
+                    "name": "aes_cbc_crypto_fastpath_throughput",
+                    "label": "AES_CBC",
+                    "children": []
+                  },
+                  {
+                    "metric_model_name": "CryptoFastPathPerformance",
+                    "name": "sha_256_crypto_fastpath_throughput",
+                    "label": "SHA_256",
+                    "disable": true,
                     "children": []
                   }
                 ]
@@ -3722,7 +3760,7 @@
               {
                 "metric_model_name": "MetricContainer",
                 "name": "inspur_single_f1_host",
-                "label": "8_11_1:8K_RAND_RW, F1(s)=1",
+                "label": "8_11_1:4K_RAND_RW, F1(s)=1",
                 "children": [
                   {
                     "metric_model_name": "BltVolumePerformance",
@@ -3770,7 +3808,7 @@
               {
                 "metric_model_name": "MetricContainer",
                 "name": "inspur_single_f1_host_6",
-                "label": "8_11_6:8K_RAND_RW, F1(s)=1",
+                "label": "8_11_6:4K_RAND_RW, F1(s)=1",
                 "children": [
                   {
                     "metric_model_name": "BltVolumePerformance",
@@ -3962,17 +4000,141 @@
               {
                 "metric_model_name": "MetricContainer",
                 "name": "inspur_8132_8k_rand_rw_comp",
-                "label": "8_14_1:8K_RAND_RW_COMP, F1(s)=1",
+                "label": "8_14_1:4K_RAND_RW_COMP, F1(s)=1",
                 "children": [
                   {
                     "metric_model_name": "BltVolumePerformance",
-                    "name": "inspur_8132_8k_rand_rw_comp_output_latency",
-                    "label": "Latency"
+                    "name": "inspur_8141_8k_rand_rw_comp_qd32_output_latency",
+                    "label": "Latency, QDepth=32"
                   },
                   {
                     "metric_model_name": "BltVolumePerformance",
-                    "name": "inspur_8132_8k_rand_rw_comp_output_iops",
-                    "label": "IOPS"
+                    "name": "inspur_8141_8k_rand_rw_comp_qd64_output_latency",
+                    "label": "Latency, QDepth=64"
+                  },
+                  {
+                    "metric_model_name": "BltVolumePerformance",
+                    "name": "inspur_8141_8k_rand_rw_comp_qd96_output_latency",
+                    "label": "Latency, QDepth=96"
+                  },
+                  {
+                    "metric_model_name": "BltVolumePerformance",
+                    "name": "inspur_8141_8k_rand_rw_comp_qd128_output_latency",
+                    "label": "Latency, QDepth=128"
+                  },
+                  {
+                    "metric_model_name": "BltVolumePerformance",
+                    "name": "inspur_8141_8k_rand_rw_comp_qd32_output_iops",
+                    "label": "IOPS, QDepth=32"
+                  },
+                  {
+                    "metric_model_name": "BltVolumePerformance",
+                    "name": "inspur_8141_8k_rand_rw_comp_qd64_output_iops",
+                    "label": "IOPS, QDepth=64"
+                  },
+                  {
+                    "metric_model_name": "BltVolumePerformance",
+                    "name": "inspur_8141_8k_rand_rw_comp_qd96_output_iops",
+                    "label": "IOPS, QDepth=96"
+                  },
+                  {
+                    "metric_model_name": "BltVolumePerformance",
+                    "name": "inspur_8141_8k_rand_rw_comp_qd128_output_iops",
+                    "label": "IOPS, QDepth=128"
+                  }
+                ]
+              },
+              {
+                "metric_model_name": "MetricContainer",
+                "name": "inspur_8141_8k_rand_rd_comp",
+                "label": "8_14_1:4K_RAND_RD_COMP, F1(s)=1",
+                "children": [
+                  {
+                    "metric_model_name": "BltVolumePerformance",
+                    "name": "inspur_8141_8k_rand_rd_comp_qd32_output_latency",
+                    "label": "Latency, QDepth=32"
+                  },
+                  {
+                    "metric_model_name": "BltVolumePerformance",
+                    "name": "inspur_8141_8k_rand_rd_comp_qd64_output_latency",
+                    "label": "Latency, QDepth=64"
+                  },
+                  {
+                    "metric_model_name": "BltVolumePerformance",
+                    "name": "inspur_8141_8k_rand_rd_comp_qd96_output_latency",
+                    "label": "Latency, QDepth=96"
+                  },
+                  {
+                    "metric_model_name": "BltVolumePerformance",
+                    "name": "inspur_8141_8k_rand_rd_comp_qd128_output_latency",
+                    "label": "Latency, QDepth=128"
+                  },
+                  {
+                    "metric_model_name": "BltVolumePerformance",
+                    "name": "inspur_8141_8k_rand_rd_comp_qd32_output_iops",
+                    "label": "IOPS, QDepth=32"
+                  },
+                  {
+                    "metric_model_name": "BltVolumePerformance",
+                    "name": "inspur_8141_8k_rand_rd_comp_qd64_output_iops",
+                    "label": "IOPS, QDepth=64"
+                  },
+                  {
+                    "metric_model_name": "BltVolumePerformance",
+                    "name": "inspur_8141_8k_rand_rd_comp_qd96_output_iops",
+                    "label": "IOPS, QDepth=96"
+                  },
+                  {
+                    "metric_model_name": "BltVolumePerformance",
+                    "name": "inspur_8141_8k_rand_rd_comp_qd128_output_iops",
+                    "label": "IOPS, QDepth=128"
+                  }
+                ]
+              },
+              {
+                "metric_model_name": "MetricContainer",
+                "name": "inspur_8141_8k_rand_wr_comp",
+                "label": "8_14_1:4K_RAND_WR_COMP, F1(s)=1",
+                "children": [
+                  {
+                    "metric_model_name": "BltVolumePerformance",
+                    "name": "inspur_8141_8k_rand_wr_comp_qd32_output_latency",
+                    "label": "Latency, QDepth=32"
+                  },
+                  {
+                    "metric_model_name": "BltVolumePerformance",
+                    "name": "inspur_8141_8k_rand_wr_comp_qd64_output_latency",
+                    "label": "Latency, QDepth=64"
+                  },
+                  {
+                    "metric_model_name": "BltVolumePerformance",
+                    "name": "inspur_8141_8k_rand_wr_comp_qd96_output_latency",
+                    "label": "Latency, QDepth=96"
+                  },
+                  {
+                    "metric_model_name": "BltVolumePerformance",
+                    "name": "inspur_8141_8k_rand_wr_comp_qd128_output_latency",
+                    "label": "Latency, QDepth=128"
+                  },
+                  {
+                    "metric_model_name": "BltVolumePerformance",
+                    "name": "inspur_8141_8k_rand_wr_comp_qd32_output_iops",
+                    "label": "IOPS, QDepth=32"
+                  },
+                  {
+                    "metric_model_name": "BltVolumePerformance",
+                    "name": "inspur_8141_8k_rand_wr_comp_qd64_output_iops",
+                    "label": "IOPS, QDepth=64"
+                  },
+                  {
+                    "metric_model_name": "BltVolumePerformance",
+                    "name": "inspur_8141_8k_rand_wr_comp_qd96_output_iops",
+                    "label": "IOPS, QDepth=96"
+                  },
+                  {
+                    "metric_model_name": "BltVolumePerformance",
+                    "name": "inspur_8141_8k_rand_wr_comp_qd128_output_iops",
+                    "label": "IOPS, QDepth=128"
                   }
                 ]
               },
@@ -4017,7 +4179,7 @@
               {
                 "metric_model_name": "MetricContainer",
                 "name": "inspur_8111_8k_rand_rw_6f1",
-                "label": "8_11_1:8K_RAND_RW, F1(s)=6",
+                "label": "8_11_1:4K_RAND_RW, F1(s)=6",
                 "children": [
                   {
                     "metric_model_name": "BltVolumePerformance",
@@ -4059,7 +4221,7 @@
               {
                 "metric_model_name": "MetricContainer",
                 "name": "inspur_8116_8k_rand_rw_6f1",
-                "label": "8_11_6:8K_RAND_RW, F1(s)=6",
+                "label": "8_11_6:4K_RAND_RW, F1(s)=6",
                 "children": [
                   {
                     "metric_model_name": "BltVolumePerformance",
@@ -4101,7 +4263,7 @@
               {
                 "metric_model_name": "MetricContainer",
                 "name": "inspur_8111_8k_rand_rd_1f1",
-                "label": "8_11_1:8K_RAND_RD, F1(s)=1",
+                "label": "8_11_1:4K_RAND_RD, F1(s)=1",
                 "children": [
                   {
                     "metric_model_name": "BltVolumePerformance",
@@ -4143,7 +4305,7 @@
               {
                 "metric_model_name": "MetricContainer",
                 "name": "inspur_8111_8k_rand_wr_1f1",
-                "label": "8_11_1:8K_RAND_WR, F1(s)=1",
+                "label": "8_11_1:4K_RAND_WR, F1(s)=1",
                 "children": [
                   {
                     "metric_model_name": "BltVolumePerformance",
@@ -4185,7 +4347,7 @@
               {
                 "metric_model_name": "MetricContainer",
                 "name": "inspur_8116_8k_rand_rd_1f1",
-                "label": "8_11_6:8K_RAND_RD, F1(s)=1",
+                "label": "8_11_6:4K_RAND_RD, F1(s)=1",
                 "children": [
                   {
                     "metric_model_name": "BltVolumePerformance",
@@ -4227,7 +4389,7 @@
               {
                 "metric_model_name": "MetricContainer",
                 "name": "inspur_8116_8k_rand_wr_1f1",
-                "label": "8_11_6:8K_RAND_WR, F1(s)=1",
+                "label": "8_11_6:4K_RAND_WR, F1(s)=1",
                 "children": [
                   {
                     "metric_model_name": "BltVolumePerformance",
@@ -4269,7 +4431,7 @@
               {
                 "metric_model_name": "MetricContainer",
                 "name": "inspur_8111_8k_rand_rd_f1_6",
-                "label": "8_11_1:8K_RAND_RD, F1(s)=6",
+                "label": "8_11_1:4K_RAND_RD, F1(s)=6",
                 "children": [
                   {
                     "metric_model_name": "BltVolumePerformance",
@@ -4296,7 +4458,7 @@
               {
                 "metric_model_name": "MetricContainer",
                 "name": "inspur_8111_8k_rand_wr_f1_6",
-                "label": "8_11_1:8K_RAND_WR, F1(s)=6",
+                "label": "8_11_1:4K_RAND_WR, F1(s)=6",
                 "children": [
                   {
                     "metric_model_name": "BltVolumePerformance",
@@ -4323,7 +4485,7 @@
               {
                 "metric_model_name": "MetricContainer",
                 "name": "inspur_8116_8k_rand_rd_f1_6",
-                "label": "8_11_6:8K_RAND_RD, F1(s)=6",
+                "label": "8_11_6:4K_RAND_RD, F1(s)=6",
                 "children": [
                   {
                     "metric_model_name": "BltVolumePerformance",
@@ -4350,7 +4512,7 @@
               {
                 "metric_model_name": "MetricContainer",
                 "name": "inspur_8116_8k_rand_wr_f1_6",
-                "label": "8_11_6:8K_RAND_WR, F1(s)=6",
+                "label": "8_11_6:4K_RAND_WR, F1(s)=6",
                 "children": [
                   {
                     "metric_model_name": "BltVolumePerformance",
@@ -5176,7 +5338,7 @@
                           {
                             "metric_model_name": "MetricContainer",
                             "name": "alibaba_bmv_storage_local_ssd_1",
-                            "label": "1 SSD(s)",
+                            "label": "1 SSD (encryption off)",
                             "children": [
                               {
                                 "metric_model_name": "MetricContainer",
@@ -5267,7 +5429,7 @@
                           {
                             "metric_model_name": "MetricContainer",
                             "name": "alibaba_bmv_storage_local_ssd_4",
-                            "label": "4 SSD(s)",
+                            "label": "4 SSD (encryption off)",
                             "children": [
                               {
                                 "name": "alibaba_bmv_storage_local_ssd_4_random_read",
@@ -5387,6 +5549,228 @@
                                   },
                                   {
                                     "name": "bmv_storage_local_ssd_4_random_write_qd256_latency",
+                                    "label": "Latency, Qdepth=256",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          {
+                            "name": "alibaba_bmv_storage_local_ssd_1_encryption_on",
+                            "label": "1 SSD (encryption on)",
+                            "metric_model_name": "MetricContainer",
+                            "children": [
+                              {
+                                "name": "alibaba_bmv_storage_local_ssd_random_read_encryption_on",
+                                "label": "Random Read",
+                                "metric_model_name": "MetricContainer",
+                                "children": [
+                                  {
+                                    "name": "bmv_storage_local_ssd_random_read_iops_encryption_on",
+                                    "label": "IOPS",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_random_read_qd1_latency_encryption_on",
+                                    "label": "Latency, Qdepth=1",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_random_read_qd16_latency_encryption_on",
+                                    "label": "Latency, Qdepth=16",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_random_read_qd32_latency_encryption_on",
+                                    "label": "Latency, Qdepth=32",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_random_read_qd64_latency_encryption_on",
+                                    "label": "Latency, Qdepth=64",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_random_read_qd128_latency_encryption_on",
+                                    "label": "Latency, Qdepth=128",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_random_read_qd256_latency_encryption_on",
+                                    "label": "Latency, Qdepth=256",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  }
+                                ]
+                              },
+                              {
+                                "name": "alibaba_bmv_storage_local_ssd_random_write_encryption_on",
+                                "label": "Random Write",
+                                "metric_model_name": "MetricContainer",
+                                "children": [
+                                  {
+                                    "name": "bmv_storage_local_ssd_random_write_iops_encryption_on",
+                                    "label": "IOPS",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_random_write_qd1_latency_encryption_on",
+                                    "label": "Latency, Qdepth=1",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_random_write_qd16_latency_encryption_on",
+                                    "label": "Latency, Qdepth=16",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_random_write_qd32_latency_encryption_on",
+                                    "label": "Latency, Qdepth=32",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_random_write_qd64_latency_encryption_on",
+                                    "label": "Latency, Qdepth=64",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_random_write_qd128_latency_encryption_on",
+                                    "label": "Latency, Qdepth=128",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_random_write_qd256_latency_encryption_on",
+                                    "label": "Latency, Qdepth=256",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          {
+                            "name": "alibaba_bmv_storage_local_ssd_4_encryption_on",
+                            "label": "4 SSD (encryption on)",
+                            "metric_model_name": "MetricContainer",
+                            "children": [
+                              {
+                                "name": "alibaba_bmv_storage_local_ssd_4_random_read_encryption_on",
+                                "label": "Random Read",
+                                "metric_model_name": "MetricContainer",
+                                "children": [
+                                  {
+                                    "name": "bmv_storage_local_ssd_4_random_read_iops_encryption_on",
+                                    "label": "IOPS",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_4_random_read_qd1_latency_encryption_on",
+                                    "label": "Latency, Qdepth=1",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_4_random_read_qd8_latency_encryption_on",
+                                    "label": "Latency, Qdepth=8",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_4_random_read_qd16_latency_encryption_on",
+                                    "label": "Latency, Qdepth=16",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_4_random_read_qd32_latency_encryption_on",
+                                    "label": "Latency, Qdepth=32",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_4_random_read_qd64_latency_encryption_on",
+                                    "label": "Latency, Qdepth=64",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_4_random_read_qd128_latency_encryption_on",
+                                    "label": "Latency, Qdepth=128",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_4_random_read_qd256_latency_encryption_on",
+                                    "label": "Latency, Qdepth=256",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  }
+                                ]
+                              },
+                              {
+                                "name": "alibaba_bmv_storage_local_ssd_4_random_write_encryption_on",
+                                "label": "Random Write",
+                                "metric_model_name": "MetricContainer",
+                                "children": [
+                                  {
+                                    "name": "bmv_storage_local_ssd_4_random_write_iops_encryption_on",
+                                    "label": "IOPS",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_4_random_write_qd1_latency_encryption_on",
+                                    "label": "Latency, Qdepth=1",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_4_random_write_qd8_latency_encryption_on",
+                                    "label": "Latency, Qdepth=8",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_4_random_write_qd16_latency_encryption_on",
+                                    "label": "Latency, Qdepth=16",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_4_random_write_qd32_latency_encryption_on",
+                                    "label": "Latency, Qdepth=32",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_4_random_write_qd64_latency_encryption_on",
+                                    "label": "Latency, Qdepth=64",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_4_random_write_qd128_latency_encryption_on",
+                                    "label": "Latency, Qdepth=128",
+                                    "metric_model_name": "AlibabaPerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "name": "bmv_storage_local_ssd_4_random_write_qd256_latency_encryption_on",
                                     "label": "Latency, Qdepth=256",
                                     "metric_model_name": "AlibabaPerformance",
                                     "children": []
@@ -6738,6 +7122,204 @@
                 "label": "Power"
               }
             ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "metric_model_name": "MetricContainer",
+    "name": "fs1600",
+    "label": "FS1600",
+    "children": [
+      {
+        "metric_model_name": "MetricContainer",
+        "name": "fs1600_durable",
+        "label": "Durable",
+        "children": [
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "inspur_single_f1_host",
+            "reference": true,
+            "label": "8_11_1:4K_RAND_RW, F1(s)=1"
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "inspur_single_f1_host_6",
+            "reference": true,
+            "label": "8_11_6:4K_RAND_RW, F1(s)=1"
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "inspur_8112_1024k_seq_w",
+            "reference": true,
+            "label": "8_11_2:1024K_SEQ_RW, F1(s)=1"
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "inspur_8113_mixed_rw",
+            "reference": true,
+            "label": "8_11_3:MIXED_RW, F1(s)=1"
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "inspur_8114_oltp_rw",
+            "reference": true,
+            "label": "8_11_4:OLTP_RW, F1(s)=1"
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "inspur_8115_olap_rw",
+            "reference": true,
+            "label": "8_11_5:OLAP_RW, F1(s)=1"
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "inspur_8131_compression_ratio_benchmarking",
+            "reference": true,
+            "label": "8_13_1:Compression_Benchmark"
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "inspur_8132_8k_rand_rw_comp",
+            "reference": true,
+            "label": "8_14_1:4K_RAND_RW_COMP, F1(s)=1"
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "inspur_8141_8k_rand_rd_comp",
+            "reference": true,
+            "label": "8_14_1:4K_RAND_RD_COMP, F1(s)=1"
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "inspur_8141_8k_rand_wr_comp",
+            "reference": true,
+            "label": "8_14_1:4K_RAND_WR_COMP, F1(s)=1"
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "inspur_871_single_disk_failure",
+            "reference": true,
+            "label": "8_7_1:Single_Disk_Failure"
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "inspur_875_data_reconstruction",
+            "reference": true,
+            "label": "8_7_5:Data_Reconstruction"
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "inspur_8111_8k_rand_rw_6f1",
+            "reference": true,
+            "label": "8_11_1:4K_RAND_RW, F1(s)=6"
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "inspur_8116_8k_rand_rw_6f1",
+            "reference": true,
+            "label": "8_11_6:4K_RAND_RW, F1(s)=6"
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "inspur_8111_8k_rand_rd_1f1",
+            "reference": true,
+            "label": "8_11_1:4K_RAND_RD, F1(s)=1"
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "inspur_8111_8k_rand_wr_1f1",
+            "reference": true,
+            "label": "8_11_1:4K_RAND_WR, F1(s)=1"
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "inspur_8116_8k_rand_rd_1f1",
+            "reference": true,
+            "label": "8_11_6:4K_RAND_RD, F1(s)=1"
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "inspur_8116_8k_rand_wr_1f1",
+            "reference": true,
+            "label": "8_11_6:4K_RAND_WR, F1(s)=1"
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "inspur_8111_8k_rand_rd_f1_6",
+            "reference": true,
+            "label": "8_11_1:4K_RAND_RD, F1(s)=6"
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "inspur_8111_8k_rand_wr_f1_6",
+            "reference": true,
+            "label": "8_11_1:4K_RAND_WR, F1(s)=6"
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "inspur_8116_8k_rand_rd_f1_6",
+            "reference": true,
+            "label": "8_11_6:4K_RAND_RD, F1(s)=6"
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "inspur_8116_8k_rand_wr_f1_6",
+            "reference": true,
+            "label": "8_11_6:4K_RAND_WR, F1(s)=6"
+          }
+        ]
+      },
+      {
+        "metric_model_name": "MetricContainer",
+        "name": "fs1600_raw",
+        "label": "Raw",
+        "children": [
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "fs1600_raw_striped",
+            "label": "Striped",
+            "children": [
+              {
+                "metric_model_name": "MetricContainer",
+                "name": "teramarks_customer_apple_single_writer_reader_tcp",
+                "reference": true,
+                "label": "Single-Reader TCP"
+              },
+              {
+                "metric_model_name": "MetricContainer",
+                "name": "teramarks_customer_apple_single_writer_multiple_reader_tcp",
+                "reference": true,
+                "label": "Multiple-Reader TCP"
+              }
+            ]
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "multi_host_raw_block_nvmetcp",
+            "label": "NVMe/TCP - Multi host",
+            "reference": true
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "metric_model_name": "MetricContainer",
+    "name": "other_tree",
+    "label": "Misc",
+    "children": [
+      {
+        "metric_model_name": "MetricContainer",
+        "name": "other_tree_build",
+        "label": "Build",
+        "children": [
+          {
+            "metric_model_name": "FunOnDemandTotalTimePerformance",
+            "name": "job_execution_time_fun_on_demand",
+            "label": "Job execution time (Fun On Demand)",
+            "children": []
           }
         ]
       }

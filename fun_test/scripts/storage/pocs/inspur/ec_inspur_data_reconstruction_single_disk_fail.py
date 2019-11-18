@@ -188,6 +188,9 @@ class DataReconstructOnDiskFailScript(FunTestScript):
 
         if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
                 self.testbed_config["workarounds"]["enable_funcp"]:
+            self.tftp_image_path = fun_test.get_job_environment_variable("tftp_image_path")
+            self.bundle_image_parameters = fun_test.get_job_environment_variable("bundle_image_parameters")
+
             for i in range(len(self.bootargs)):
                 self.bootargs[i] += " --mgmt"
                 if self.disable_wu_watchdog:
@@ -286,13 +289,18 @@ class DataReconstructOnDiskFailScript(FunTestScript):
             self.funcp_spec = {}
             for index in xrange(self.num_duts):
                 self.funcp_obj[index] = StorageFsTemplate(self.come_obj[index])
-                self.funcp_spec[index] = self.funcp_obj[index].deploy_funcp_container(
-                    update_deploy_script=self.update_deploy_script, update_workspace=self.update_workspace,
-                    mode=self.funcp_mode)
-                fun_test.test_assert(self.funcp_spec[index]["status"],
-                                     "Starting FunCP docker container in DUT {}".format(index))
+                if self.tftp_image_path:
+                    self.funcp_spec[index] = self.funcp_obj[index].deploy_funcp_container(
+                        update_deploy_script=self.update_deploy_script, update_workspace=self.update_workspace,
+                        mode=self.funcp_mode)
+                    fun_test.test_assert(self.funcp_spec[index]["status"],
+                                         "Starting FunCP docker container in DUT {}".format(index))
+                else:
+                    self.funcp_spec[index] = self.funcp_obj[index].get_container_objs()
                 self.funcp_spec[index]["container_names"].sort()
                 for f1_index, container_name in enumerate(self.funcp_spec[index]["container_names"]):
+                    if container_name == "run_sc":
+                        continue
                     bond_interfaces = self.fs_spec[index].get_bond_interfaces(f1_index=f1_index)
                     bond_name = "bond0"
                     bond_ip = bond_interfaces[0].ip
@@ -356,8 +364,14 @@ class DataReconstructOnDiskFailScript(FunTestScript):
 
     def cleanup(self):
 
-        come_reboot = False
+        if self.bundle_image_parameters:
+            try:
+                for index in xrange(self.num_duts):
+                    self.come_obj[index].command("sudo systemctl disable init-fs1600")
+            except Exception as ex:
+                fun_test.critical(str(ex))
 
+        come_reboot = False
         if fun_test.shared_variables["ec"]["setup_created"]:
             if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
                     self.testbed_config["workarounds"]["enable_funcp"]:

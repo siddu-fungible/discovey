@@ -12,6 +12,13 @@ import stats_calculation
 from lib.fun import fs
 from scripts.storage.storage_helper import *
 import get_params_for_time
+from collections import deque
+from elasticsearch import helpers
+from elasticsearch import Elasticsearch
+
+# Environment: --environment={\"test_bed_type\":\"fs-65\",\"tftp_image_path\":\"ranga/funos-f1_ranga.stripped.gz\"} --inputs={\"boot_new_image\":true,\"le_firewall\":true,\"collect_stats\":[\"\"],\"ec_vol\":true}
+# inputs: {"run_le_firewall":false,"specific_apps":["ZIP"],"add_to_database":true,"collect_stats":["POWER","DEBUG_MEMORY","LE"],"end_sleep":30}
+# --environment={\"test_bed_type\":\"fs-65\",\"tftp_image_path\":\"ranga/funos-f1_onkar.stripped.gz\"} --inputs={\"boot_new_image\":false,\"le_firewall\":false,\"collect_stats\":[\"DEBUG_VP_UTIL\",\"POWER\"],\"ec_vol\":false,\"specific_apps\":[\"crypto\"],\"disable_f1_index\":0}
 
 
 class MyScript(FunTestScript):
@@ -31,9 +38,6 @@ class MyScript(FunTestScript):
         for k, v in config_dict.iteritems():
             setattr(self, k, v)
 
-        f1_0_boot_args = 'cc_huid=3 sku=SKU_FS1600_0 app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303'
-        f1_1_boot_args = 'cc_huid=2 sku=SKU_FS1600_1 app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303'
-
         if job_inputs:
             if "disable_f1_index" in job_inputs:
                 self.disable_f1_index = job_inputs["disable_f1_index"]
@@ -41,6 +45,12 @@ class MyScript(FunTestScript):
                 self.boot_new_image = job_inputs["boot_new_image"]
             if "ec_vol" in job_inputs:
                 self.ec_vol = job_inputs["ec_vol"]
+            if "add_boot_arg" in job_inputs:
+                self.add_boot_arg = job_inputs["add_boot_arg"]
+                self.add_boot_arg = " --" + self.add_boot_arg
+
+        f1_0_boot_args = 'cc_huid=3 app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303%s'%(self.add_boot_arg)
+        f1_1_boot_args = 'cc_huid=2 app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303%s'%(self.add_boot_arg)
 
         topology_helper = TopologyHelper()
         topology_helper.set_dut_parameters(f1_parameters={0: {"boot_args": f1_0_boot_args},
@@ -85,7 +95,7 @@ class MyScript(FunTestScript):
                 self.come_handle.command("cd /scratch/FunSDK/bin/Linux")
                 self.come_handle.command(
                     "./dpcsh --pcie_nvme_sock=/dev/nvme{f1} --nvme_cmd_timeout=600000"
-                    " --tcp_proxy=4022{f1} &> /tmp/f1_{f1}_dpc.txt &".format(f1=f1))
+                    " --tcp_proxy=4222{f1} &> /tmp/f1_{f1}_dpc.txt &".format(f1=f1))
                 self.come_handle.exit_sudo()
                 fun_test.log("Started DPCSH on F1 {}".format(f1))
             else:
@@ -229,6 +239,7 @@ class FunTestCase1(FunTestCase):
                               steps="""""")
 
     def setup(self):
+        self.test_start_time = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
         self.run_on_f1 = fun_test.shared_variables["run_on_f1"]
         self.fs = fun_test.shared_variables["fs"]
         job_inputs = fun_test.get_job_inputs()
@@ -251,6 +262,13 @@ class FunTestCase1(FunTestCase):
                 self.disable_stats = job_inputs["disable_stats"]
             if "boot_new_image" in job_inputs:
                 self.boot_new_image = job_inputs["boot_new_image"]
+            if "end_sleep" in job_inputs:
+                self.end_sleep = job_inputs["end_sleep"]
+            if "elk_ip" in job_inputs:
+                self.elasticsearch_config["ip"] = job_inputs["ip"]
+
+        # Create the ELK object
+        self.es = Elasticsearch([{'host': '%s' % self.elasticsearch_config["ip"], 'port': '%s' % self.elasticsearch_config["port"]}])
 
         # Create the files
         self.stats_info = {}
@@ -258,8 +276,8 @@ class FunTestCase1(FunTestCase):
         # post_fix_name: "{calculated_}{app_name}_DPCSH_OUTPUT_F1_{f1}_logs.txt"
         # description : "{calculated_}_{app_name}_DPCSH_OUTPUT_F1_{f1}"
         self.stats_info["bmc"] = {"POWER": {"calculated": True}, "DIE_TEMPERATURE": {"calculated": False, "disable":True}}
-        self.stats_info["come"] = {"DEBUG_MEMORY": {"disable": True}, "CDU": {}, "EQM": {}, "BAM": {"calculated": False, "disable":True}, "DEBUG_VP_UTIL": {"calculated": False, "disable": True}, "LE": {}, "HBM": {"calculated": True},
-                                   "EXECUTE_LEAKS": {"calculated": False, "disable": True}, "PC_DMA": {"calculated": True}, "DDR":{"calculated": True}}
+        self.stats_info["come"] = {"DEBUG_MEMORY": {}, "CDU": {}, "EQM": {}, "BAM": {"calculated": False, "disable":True}, "DEBUG_VP_UTIL": {}, "LE": {}, "HBM": {"calculated": True},
+                                   "EXECUTE_LEAKS": {"calculated": False}, "PC_DMA": {"calculated": True}, "DDR":{"calculated": True}}
         self.stats_info["files"] = {"fio":{"calculated": False}}
 
         if self.collect_stats:
@@ -310,32 +328,36 @@ class FunTestCase1(FunTestCase):
         elif self.duration == "3h":
             self.test_duration = 10800
 
+
+
     def run(self):
         ############## Before traffic #####################
-        if not self.stats_info["come"]["DEBUG_MEMORY"]["disable"]:
+        if not self.stats_info["come"]["DEBUG_MEMORY"].get("disable", True):
             self.initial_debug_memory_stats = self.get_debug_memory_stats_initially(self.f_DEBUG_MEMORY_f1_0,
-                                                                                    self.f_DEBUG_MEMORY_f1_0)
+                                                                                    self.f_DEBUG_MEMORY_f1_1)
         self.capture_data(count=3, heading="Before starting traffic")
 
         fun_test.test_assert(True, "Initial debug stats is saved")
 
         ############# Starting Traffic ################
-        come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
+        self.come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
                            ssh_username=self.fs['come']['mgmt_ssh_username'],
                            ssh_password=self.fs['come']['mgmt_ssh_password'])
 
-        app_params = get_params_for_time.get(self.test_duration)
+        app_params = get_params_for_time.get_params(self.test_duration)
         if self.specific_apps:
-            app_params = get_params_for_time.get(self.test_duration, specific_field=self.specific_apps)
+            app_params = get_params_for_time.get_params(self.test_duration, specific_field=self.specific_apps)
         fun_test.log("App parameters: {}".format(app_params))
+
+        if self.run_le_firewall:
+            self.restart_dpcsh()
+            le_firewall(self.test_duration, self.boot_new_image)
+            # self.restart_dpcsh()
 
         if "fio" in app_params:
             fio_data = app_params["fio"]
-            fio_data["runtime"] += 20
+            fio_data["runtime"] += 40
             fio_thread_map = self.start_fio_as_thread(fio_data)
-
-        if self.run_le_firewall:
-            le_firewall(self.test_duration, self.boot_new_image)
 
         # thread_map_for_soak_apps = self.start_threaded_apps()
 
@@ -344,7 +366,7 @@ class FunTestCase1(FunTestCase):
                 continue
             for f1 in self.run_on_f1:
                 parameters["f1"] = f1
-                result = self.methods[app](come_handle, **parameters)
+                result = self.methods[app](self.come_handle, **parameters)
                 fun_test.test_assert(result, "{} traffic started on F1_{}".format(app, f1))
 
         ################ During traffic ##################
@@ -357,6 +379,8 @@ class FunTestCase1(FunTestCase):
         if "fio" in app_params:
             self.join_fio_thread(fio_thread_map)
 
+        fun_test.sleep("Waiting for all the things to settle", seconds=self.end_sleep)
+
         #################### After the traffic ############
         if self.run_le_firewall:
             le_firewall(self.test_duration, self.boot_new_image, True)
@@ -367,6 +391,7 @@ class FunTestCase1(FunTestCase):
         fun_test.log("Capturing the data {}".format(heading))
         self.capture_data(count=count, heading=heading)
 
+        self.come_handle.destroy()
 
     def capture_data(self, count, heading):
         def func_not_found():
@@ -560,8 +585,14 @@ class FunTestCase1(FunTestCase):
             dpcsh_output = dpcsh_commands.debug_vp_utils(come_handle=come_handle, f1=f1)
             one_dataset["time"] = datetime.datetime.now()
             one_dataset["output"] = dpcsh_output
-            fun_test.sleep("before next iteration")
             file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+            if dpcsh_output:
+                cal_dpc_out = stats_calculation.filter_dict(one_dataset, stat_name)
+                one_dataset["output"] = cal_dpc_out
+                file_helper.add_data(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+                time_taken = self.upload_dpcsh_data_to_elk(dpcsh_data=dpcsh_output, f1=f1, stat_name=stat_name)
+            fun_test.sleep("Before next iteration", seconds=(5-time_taken))
+
         come_handle.destroy()
 
     ########### HBM ##################
@@ -639,6 +670,7 @@ class FunTestCase1(FunTestCase):
         come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
                            ssh_username=self.fs['come']['mgmt_ssh_username'],
                            ssh_password=self.fs['come']['mgmt_ssh_password'])
+        count = 1
         for i in range(count):
             one_dataset = {}
             dpcsh_output = dpcsh_commands.execute_leaks(come_handle=come_handle, f1=f1)
@@ -786,7 +818,7 @@ class FunTestCase1(FunTestCase):
                 self.come_handle.command("cd /scratch/FunSDK/bin/Linux")
                 self.come_handle.command(
                     "./dpcsh --pcie_nvme_sock=/dev/nvme{f1} --nvme_cmd_timeout=600000"
-                    " --tcp_proxy=4022{f1} &> /tmp/f1_{f1}_dpc.txt &".format(f1=f1))
+                    " --tcp_proxy=4222{f1} &> /tmp/f1_{f1}_dpc.txt &".format(f1=f1))
                 self.come_handle.exit_sudo()
                 fun_test.log("Started DPCSH on F1 {}".format(f1))
             else:
@@ -794,6 +826,7 @@ class FunTestCase1(FunTestCase):
         fun_test.test_assert(True, "DPCSH running")
 
     def cleanup(self):
+        self.test_end_time = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
         if not self.boot_new_image:
             bmc_handle = Bmc(host_ip=self.fs['bmc']['mgmt_ip'],
                              ssh_username=self.fs['bmc']['mgmt_ssh_username'],
@@ -807,6 +840,9 @@ class FunTestCase1(FunTestCase):
             artifact_file_name_f1_1 = bmc_handle.get_uart_log_file(1)
             fun_test.add_auxillary_file(description="DUT_0_fs-65_F1_0 UART Log", filename=artifact_file_name_f1_0)
             fun_test.add_auxillary_file(description="DUT_0_fs-65_F1_1 UART Log", filename=artifact_file_name_f1_1)
+        href = "http://10.1.20.52:5601/app/kibana#/dashboard/a37ce420-9190-11e9-8475-15977467c007?_g=(refreshInterval:(pause:!t,value:0),time:(from:'{}',mode:absolute,to:'{}'))".format(self.test_start_time, self.test_end_time)
+        checkpoint = '<a href="{}" target="_blank">ELK DEBUG MEMORY stats</a>'.format(href)
+        fun_test.add_checkpoint(checkpoint=checkpoint)
 
     def start_threaded_apps(self):
         def func_not_found():
@@ -905,7 +941,6 @@ class FunTestCase1(FunTestCase):
             except Exception as ex:
                 fun_test.log(ex)
 
-
     def func_fio(self, come_handle, filename, f1,**params):
         try:
             fio_output = come_handle.pcie_fio(timeout=params["runtime"] + 100,
@@ -914,6 +949,98 @@ class FunTestCase1(FunTestCase):
         except Exception as ex:
             fun_test.critical(ex)
         fun_test.shared_variables["fio_output_f1_{}".format(f1)] = fio_output
+
+    def upload_dpcsh_data_to_elk(self, dpcsh_data, f1, stat_name):
+        simplified_dpcsh_data = self.simplify_debug_vp_util(dpcsh_data)
+        data_dict = self.add_basics_req_elk(simplified_dpcsh_data, f1=f1)
+        time_taken = self.upload_using_multiprocessing(data_dict, stat_name)
+        return time_taken
+
+    def simplify_debug_vp_util(self, dpcsh_data):
+        result = []
+        if dpcsh_data:
+            for cluster in range(8):
+                for core in range(6):
+                    for vp in range(4):
+                        try:
+                            value = dpcsh_data["CCV{}.{}.{}".format(cluster, core, vp)]
+                            one_data_set = {"core": core,
+                                            "cluster": cluster,
+                                            "vp": vp,
+                                            "value": value
+                                            }
+                            # print(one_data_set)
+                            result.append(one_data_set)
+                        except:
+                            print ("Data error")
+        return result
+
+    def add_basics_req_elk(self, simplified_dpcsh_data, time_stamp=True, system_name="fs-65", f1=1):
+        utc_time = datetime.datetime.utcnow()
+        time_strf = utc_time.strftime("%Y-%m-%dT%H:%M:%S.%f")
+
+        for each_data_set in simplified_dpcsh_data:
+            if time_stamp:
+                each_data_set["Time"] = time_strf
+            each_data_set["system_name"] = self.fs['name']
+            each_data_set["f1"] = f1
+
+        return simplified_dpcsh_data
+
+    def upload_using_multiprocessing(self, data_dict, stat_name):
+        if data_dict:
+            fun_test.log("Uploading data for command : {}".format(stat_name))
+            index = self.get_index(stat_name)
+            doctype = self.doc_type(stat_name)
+            time_taken = self.upload_bulk(index, doctype, data_dict)
+            return time_taken
+
+    def upload_bulk(self, index, doctype, data_list):
+        res = False
+        if data_list:
+            print("Uploading bulk data for index: {} data: {} count : {}".format(index, data_list[0], len(data_list)))
+            actions = [
+                {
+                    "_index": index,
+                    "_type": doctype,
+                    "_source": each_data
+                }
+                for each_data in data_list
+            ]
+            start = time.time()
+            res = deque(helpers.parallel_bulk(self.es, actions))
+            end = time.time()
+            time_taken = end - start
+            print("Data uploaded for index: {} to es: {} time taken: {} ".format(index, self.es, time_taken))
+        else:
+            print("NO data present to upload")
+        return time_taken
+
+    def get_index(self, cmd):
+        if cmd == "peek stats/resource/bam":
+            index = "cmd_peek_stats_resource_bam"
+        elif cmd == "peek storage/devices/nvme":
+            index = "cmd_storage_device_nvme"
+        elif cmd == "DEBUG_VP_UTIL":
+            index = "cmd_debug_vp_utils"
+        elif cmd == "peek stats/crypto":
+            index = "cmds_stats_crypto"
+        elif "storage/devices/nvme" in cmd:
+            index = "cmd_storage_device_nvme"
+        else:
+            sec_part = cmd.split(' ')[1]
+            index = "cmd_" + sec_part.replace('/', '_')
+        return index
+
+    def doc_type(self, stat_name):
+        if stat_name == "DEBUG_VP_UTIL":
+            doctype = "ccv_data"
+        elif stat_name == "peek stats/resource/bam":
+            doctype = "resource_bam"
+        elif "storage/devices/nvme" in stat_name:
+            doctype = "storage_ssd_iops"
+
+        return doctype
 
 
 if __name__ == "__main__":

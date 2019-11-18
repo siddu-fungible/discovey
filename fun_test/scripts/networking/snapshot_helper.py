@@ -4,7 +4,7 @@ from lib.utilities.setup_nmtf import *
 
 class SnapshotHelper():
 
-    def __init__(self, dpc_proxy_ip, dpc_proxy_port=40221):
+    def __init__(self, dpc_proxy_ip, dpc_proxy_port=42221):
         self.dpc_client_obj = None
         self.snapshot_obj = None
         self.dpc_proxy_ip = dpc_proxy_ip

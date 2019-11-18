@@ -144,12 +144,17 @@ class StorageControllerApi(object):
 
     def create_volume(self, pool_uuid, name, capacity, stripe_count, vol_type, encrypt=False, allow_expansion=False,
                       data_protection={}, compression_effort=0):
-        url = "{}/pools/{}/volumes".format(self.volume_url, pool_uuid)
+        url = "storage/pools/{}/volumes".format(pool_uuid)
         data = {"name": name,  "capacity": capacity,  "vol_type": vol_type,
                 "encrypt": encrypt, "allow_expansion": allow_expansion, "stripe_count": stripe_count,
                 "data_protection": data_protection, "compression_effort": compression_effort}
         response = self.execute_api('post', url, data=data)
-        return response
+        try:
+            if response.ok:
+                result = response.json()
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
 
     def volume_attach_remote(self, vol_uuid, remote_ip, transport="TCP"):
         result = {"status": False, "data": {}}

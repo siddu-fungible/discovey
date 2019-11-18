@@ -119,6 +119,8 @@ class FunContext:
         if self.fp:
             self.fp.write(data)
 
+    def __str__(self):
+        return "Context: {}".format(self.context_id)
 
 
 class FunTest:
@@ -774,6 +776,9 @@ class FunTest:
 
     def register_fs(self, fs):
         self.fss.append(fs)
+        asset_name = fs.get_asset_name()
+        if asset_name and self.time_series_enabled:
+            self.add_time_series_registered_asset(asset_name=asset_name)
 
     def get_topologies(self):
         return self.topologies
@@ -914,6 +919,40 @@ class FunTest:
             self.critical(str(ex))
             self.enable_time_series(enable=False)
 
+    def add_time_series_registered_asset(self, asset_name):
+        try:
+            epoch_time = get_current_epoch_time()
+            data = {"asset_id": asset_name}
+            self.add_time_series_document(collection_name=self.get_time_series_collection_name(),
+                                          epoch_time=epoch_time,
+                                          type=TimeSeriesTypes.REGISTERED_ASSET,
+                                          te=self.current_test_case_execution_id,
+                                          data=data)
+        except Exception as ex:
+            self.critical(str(ex))
+            self.enable_time_series(enable=False)
+
+    def add_time_series_artifact(self,
+                                 description,
+                                 filename,
+                                 asset_type,
+                                 asset_id,
+                                 category,
+                                 sub_category):
+        epoch_time = get_current_epoch_time()
+        data = {"description": description,
+                "filename": filename,
+                "asset_type": asset_type,
+                "asset_id": asset_id,
+                "category": category,
+                "sub_category": sub_category
+                }
+        self.add_time_series_document(collection_name=self.get_time_series_collection_name(),
+                                      epoch_time=epoch_time,
+                                      type=TimeSeriesTypes.ARTIFACT,
+                                      te=self.current_test_case_execution_id,
+                                      data=data)
+
     def add_time_series_log(self, data, epoch_time=None):
         if not epoch_time:
             epoch_time = get_current_epoch_time()
@@ -934,6 +973,13 @@ class FunTest:
         self.add_time_series_document(collection_name=self.get_time_series_collection_name(),
                                       epoch_time=get_current_epoch_time(),
                                       type=TimeSeriesTypes.CHECKPOINT,
+                                      te=self.current_test_case_execution_id,
+                                      data=data)
+
+    def add_time_series_test_case_table(self, data):
+        self.add_time_series_document(collection_name=self.get_time_series_collection_name(),
+                                      epoch_time=get_current_epoch_time(),
+                                      type=TimeSeriesTypes.TEST_CASE_TABLE,
                                       te=self.current_test_case_execution_id,
                                       data=data)
 
@@ -1150,6 +1196,14 @@ class FunTest:
             self._print_log_green(message=message, calling_module=calling_module, context=context)
             if self.fun_xml_obj:
                 self.fun_xml_obj.log(log=message, newline=True)
+            context_id = 0
+            if context:
+                context_id = context.get_id()
+            if self.time_series_enabled:
+                data = {"checkpoint_index": self.current_time_series_checkpoint,
+                        "log": message.rstrip().lstrip(),
+                        "context_id": context_id}
+                self.add_time_series_log(data=data, epoch_time=get_current_epoch_time())
         time.sleep(seconds)
 
     def safe(self, the_function):
@@ -1232,6 +1286,9 @@ class FunTest:
     def add_table(self, panel_header, table_name, table_data):
         self.fun_xml_obj.add_collapsible_tab_panel_tables(header=panel_header,
                                                           panel_items={table_name: table_data})
+        if self.time_series_enabled:
+            data = {"panel_header": panel_header, "table_name": table_name, "table_data": table_data}
+            self.add_time_series_test_case_table(data=data)
 
     def _add_xml_trace(self):
         if self.current_test_case_id in self.traces:
@@ -1306,7 +1363,7 @@ class FunTest:
                 this_checkpoint = self._get_context_prefix(context=context, message=message)
                 # if self.profiling:
                 #    this_checkpoint = "{:.2f}: {}".format(self.profiling_timer.elapsed_time(), this_checkpoint)
-                self.add_checkpoint(checkpoint=this_checkpoint, expected=expected, actual=actual, result=FunTest.FAILED)
+                self.add_checkpoint(checkpoint=this_checkpoint, expected=expected, actual=actual, result=FunTest.FAILED, context=context)
             self.critical(assert_message, context=context)
             if self.pause_on_failure:
                 pdb.set_trace()
@@ -1446,9 +1503,21 @@ class FunTest:
         '''
         return result
 
-    def add_auxillary_file(self, description, filename):
+    def add_auxillary_file(self, description, filename,
+                           asset_type="general",
+                           asset_id="Unknown",
+                           artifact_category="general",
+                           artifact_sub_category="general"):
         base_name = os.path.basename(filename)
         self.fun_xml_obj.add_auxillary_file(description=description, auxillary_file=base_name)
+
+        if self.time_series_enabled:
+            self.add_time_series_artifact(description=description,
+                                          filename=filename,
+                                          asset_type=asset_type,
+                                          asset_id=asset_id,
+                                          category=artifact_category,
+                                          sub_category=artifact_sub_category)
 
     def send_mail(self, subject, content, to_addresses=["john.abraham@fungible.com"]):
         send_mail(to_addresses=to_addresses, subject=subject, content=content)

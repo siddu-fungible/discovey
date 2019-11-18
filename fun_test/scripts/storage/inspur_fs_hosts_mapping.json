@@ -1,5 +1,5 @@
 {
-  "fs-41": {
+  "fs-116": {
     "workarounds": {
       "enable_funcp": true
     },
@@ -17,11 +17,12 @@
                 8,
                 12
               ],
-              "ip": "15.41.1.2/24",
+              "ip": "15.116.1.2/24",
+              "subnet_mask": "255.255.255.0",
               "route": [
                 {
                   "network": "15.0.0.0/8",
-                  "gateway": "15.41.1.1"
+                  "gateway": "15.116.1.1"
                 }
               ]
             }
@@ -35,11 +36,12 @@
                 8,
                 12
               ],
-              "ip": "15.41.2.2/24",
+              "ip": "15.116.2.2/24",
+              "subnet_mask": "255.255.255.0",
               "route": [
                 {
                   "network": "15.0.0.0/8",
-                  "gateway": "15.41.2.1"
+                  "gateway": "15.116.2.1"
                 }
               ]
             }
@@ -132,6 +134,7 @@
                 12
               ],
               "ip": "15.42.1.2/24",
+              "subnet_mask": "255.255.255.0",
               "route": [
                 {
                   "network": "15.0.0.0/8",
@@ -150,6 +153,7 @@
                 12
               ],
               "ip": "15.42.2.2/24",
+              "subnet_mask": "255.255.255.0",
               "route": [
                 {
                   "network": "15.0.0.0/8",
@@ -247,6 +251,7 @@
                 12
               ],
               "ip": "15.43.1.2/24",
+              "subnet_mask": "255.255.255.0",
               "route": [
                 {
                   "network": "15.0.0.0/8",
@@ -265,6 +270,7 @@
                 12
               ],
               "ip": "15.43.2.2/24",
+              "subnet_mask": "255.255.255.0",
               "route": [
                 {
                   "network": "15.0.0.0/8",
@@ -339,7 +345,7 @@
       }
     },
     "host_info": [
-      "mktg-server-04"
+      "cab04-qa-03"
     ]
   },
   "fs-44": {
@@ -465,14 +471,14 @@
       "mktg-server-14"
     ]
   },
-  "fs-56": {
+  "fs-117": {
     "workarounds": {
       "enable_funcp": true
     },
     "dut_info": {
       "0": {
         "type": "DUT_TYPE_FSU",
-        "dut": "fs-56",
+        "dut": "fs-117",
         "bond_interface_info": {
           "0": {
             "0": {
@@ -483,11 +489,12 @@
                 8,
                 12
               ],
-              "ip": "15.56.1.2/24",
+              "ip": "15.117.1.2/24",
+              "subnet_mask": "255.255.255.0",
               "route": [
                 {
                   "network": "15.0.0.0/8",
-                  "gateway": "15.56.1.1"
+                  "gateway": "15.117.1.1"
                 }
               ]
             }
@@ -501,11 +508,12 @@
                 8,
                 12
               ],
-              "ip": "15.56.2.2/24",
+              "ip": "15.117.2.2/24",
+              "subnet_mask": "255.255.255.0",
               "route": [
                 {
                   "network": "15.0.0.0/8",
-                  "gateway": "15.56.2.1"
+                  "gateway": "15.117.2.1"
                 }
               ]
             }
@@ -524,21 +532,21 @@
               "type": "INTERFACE_TYPE_ETHERNET",
               "switch_info": {
                 "name": "qfx-1",
-                "port": "et-0/0/27"
+                "port": "et-0/0/24"
               }
             },
             "8": {
               "type": "INTERFACE_TYPE_ETHERNET",
               "switch_info": {
                 "name": "qfx-1",
-                "port": "et-0/0/24"
+                "port": "et-0/0/25"
               }
             },
             "12": {
               "type": "INTERFACE_TYPE_ETHERNET",
               "switch_info": {
                 "name": "qfx-1",
-                "port": "et-0/0/25"
+                "port": "et-0/0/27"
               }
             }
           },
@@ -576,17 +584,17 @@
       }
     },
     "host_info": [
-      "mktg-server-14"
+      "cab02-qa-09"
     ]
   },
-  "fs-inspur": {
+  "fs-102": {
     "workarounds": {
       "enable_funcp": true
     },
     "dut_info": {
       "0": {
         "type": "DUT_TYPE_FSU",
-        "dut": "fs-41",
+        "dut": "fs-102",
         "bond_interface_info": {
           "0": {
             "0": {
@@ -597,11 +605,12 @@
                 8,
                 12
               ],
-              "ip": "15.41.1.2/24",
+              "ip": "15.102.1.2/24",
+              "subnet_mask": "255.255.255.0",
               "route": [
                 {
                   "network": "15.0.0.0/8",
-                  "gateway": "15.41.1.1"
+                  "gateway": "15.102.1.1"
                 }
               ]
             }
@@ -615,11 +624,242 @@
                 8,
                 12
               ],
-              "ip": "15.41.2.2/24",
+              "ip": "15.102.2.2/24",
+              "subnet_mask": "255.255.255.0",
               "route": [
                 {
                   "network": "15.0.0.0/8",
-                  "gateway": "15.41.2.1"
+                  "gateway": "15.102.2.1"
+                }
+              ]
+            }
+          }
+        },
+        "fpg_interface_info": {
+          "0": {
+            "0": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "switch_info": {
+                "name": "qfx-3",
+                "port": "et-0/0/17"
+              }
+            },
+            "4": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "switch_info": {
+                "name": "qfx-3",
+                "port": "et-0/0/9"
+              }
+            },
+            "8": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "switch_info": {
+                "name": "qfx-3",
+                "port": "et-0/0/15"
+              }
+            },
+            "12": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "switch_info": {
+                "name": "qfx-3",
+                "port": "et-0/0/20"
+              }
+            }
+          },
+          "1": {
+            "0": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "switch_info": {
+                "name": "qfx-3",
+                "port": "et-0/0/2"
+              }
+            },
+            "4": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "switch_info": {
+                "name": "qfx-3",
+                "port": "et-0/0/3"
+              }
+            },
+            "8": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "switch_info": {
+                "name": "qfx-3",
+                "port": "et-0/0/4"
+              }
+            },
+            "12": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "switch_info": {
+                "name": "qfx-3",
+                "port": "et-0/0/5"
+              }
+            }
+          }
+        }
+      }
+    },
+    "host_info": [
+      "cab02-qa-10"
+    ]
+  },
+  "fs-104": {
+    "workarounds": {
+      "enable_funcp": true
+    },
+    "dut_info": {
+      "0": {
+        "type": "DUT_TYPE_FSU",
+        "dut": "fs-104",
+        "bond_interface_info": {
+          "0": {
+            "0": {
+              "type": "INTERFACE_TYPE_ETHERNET_BOND",
+              "fpg_slaves": [
+                0,
+                4,
+                8,
+                12
+              ],
+              "ip": "15.104.1.2/24",
+              "subnet_mask": "255.255.255.0",
+              "route": [
+                {
+                  "network": "15.0.0.0/8",
+                  "gateway": "15.104.1.1"
+                }
+              ]
+            }
+          },
+          "1": {
+            "0": {
+              "type": "INTERFACE_TYPE_ETHERNET_BOND",
+              "fpg_slaves": [
+                0,
+                4,
+                8,
+                12
+              ],
+              "ip": "15.104.2.2/24",
+              "subnet_mask": "255.255.255.0",
+              "route": [
+                {
+                  "network": "15.0.0.0/8",
+                  "gateway": "15.104.2.1"
+                }
+              ]
+            }
+          }
+        },
+        "fpg_interface_info": {
+          "0": {
+            "0": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "switch_info": {
+                "name": "qfx-3",
+                "port": "et-0/0/30"
+              }
+            },
+            "4": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "switch_info": {
+                "name": "qfx-3",
+                "port": "et-0/0/31"
+              }
+            },
+            "8": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "switch_info": {
+                "name": "qfx-3",
+                "port": "et-0/0/18"
+              }
+            },
+            "12": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "switch_info": {
+                "name": "qfx-3",
+                "port": "et-0/0/21"
+              }
+            }
+          },
+          "1": {
+            "0": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "switch_info": {
+                "name": "qfx-3",
+                "port": "et-0/0/8"
+              }
+            },
+            "4": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "switch_info": {
+                "name": "qfx-3",
+                "port": "et-0/0/12"
+              }
+            },
+            "8": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "switch_info": {
+                "name": "qfx-3",
+                "port": "et-0/0/13"
+              }
+            },
+            "12": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "switch_info": {
+                "name": "qfx-3",
+                "port": "et-0/0/14"
+              }
+            }
+          }
+        }
+      }
+    },
+    "host_info": [
+      "cab02-qa-12"
+    ]
+  },
+  "fs-inspur": {
+    "workarounds": {
+      "enable_funcp": true
+    },
+    "dut_info": {
+      "0": {
+        "type": "DUT_TYPE_FSU",
+        "dut": "fs-116",
+        "bond_interface_info": {
+          "0": {
+            "0": {
+              "type": "INTERFACE_TYPE_ETHERNET_BOND",
+              "fpg_slaves": [
+                0,
+                4,
+                8,
+                12
+              ],
+              "ip": "15.116.1.2/24",
+              "route": [
+                {
+                  "network": "15.0.0.0/8",
+                  "gateway": "15.116.1.1"
+                }
+              ]
+            }
+          },
+          "1": {
+            "0": {
+              "type": "INTERFACE_TYPE_ETHERNET_BOND",
+              "fpg_slaves": [
+                0,
+                4,
+                8,
+                12
+              ],
+              "ip": "15.116.2.2/24",
+              "route": [
+                {
+                  "network": "15.0.0.0/8",
+                  "gateway": "15.116.2.1"
                 }
               ]
             }
@@ -1002,7 +1242,7 @@
       },
       "4": {
         "type": "DUT_TYPE_FSU",
-        "dut": "fs-56",
+        "dut": "fs-117",
         "bond_interface_info": {
           "0": {
             "0": {
@@ -1013,11 +1253,11 @@
                 8,
                 12
               ],
-              "ip": "15.56.1.2/24",
+              "ip": "15.117.1.2/24",
               "route": [
                 {
                   "network": "15.0.0.0/8",
-                  "gateway": "15.56.1.1"
+                  "gateway": "15.117.1.1"
                 }
               ]
             }
@@ -1031,11 +1271,11 @@
                 8,
                 12
               ],
-              "ip": "15.56.2.2/24",
+              "ip": "15.117.2.2/24",
               "route": [
                 {
                   "network": "15.0.0.0/8",
-                  "gateway": "15.56.2.1"
+                  "gateway": "15.117.2.1"
                 }
               ]
             }

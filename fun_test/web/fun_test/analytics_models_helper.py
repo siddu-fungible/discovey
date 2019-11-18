@@ -13,7 +13,7 @@ from web.fun_test.metrics_models import AllocSpeedPerformance, WuLatencyAllocSta
 from web.fun_test.site_state import *
 from web.fun_test.metrics_models import MetricChart, MetricsRunTime
 from web.fun_test.db_fixup import prepare_status
-from fun_global import RESULTS
+from fun_global import RESULTS, get_datetime_from_epoch_time, get_epoch_time_from_datetime
 from dateutil.parser import parse
 from fun_settings import MAIN_WEB_APP
 
@@ -22,7 +22,8 @@ from lib.system.fun_test import *
 from web.fun_test.models_helper import add_jenkins_job_id_map
 from django.utils import timezone
 from dateutil import parser
-from fun_global import PerfUnit, FunPlatform
+from fun_global import PerfUnit, FunPlatform, get_current_epoch_time_in_ms, get_localized_time
+import iso8601
 
 
 def get_time_from_timestamp(timestamp):
@@ -56,40 +57,44 @@ def save_entry(entry):
             fun_test.critical(str(ex))
     return
 
+
 def get_data_collection_time(tag=None):
-    if tag:
-        data_collection_time = get_current_time()
-        if fun_test.suite_execution_id:
-            try:
-                date_time_details = MetricsRunTime.objects.get(name="data_collection_time")
-                value = date_time_details.value
-                if tag in value and value[tag] and "data_collection_time" in value[tag] and is_same_day(
-                        current_time=get_current_time(), data_collection_time=parser.parse(value[tag][
-                                                                                               "data_collection_time"])):
-                    data_collection_time = parser.parse(value[tag]["data_collection_time"])
-                else:
-                    data_collection_time = _update_run_time(date_time_details=date_time_details,
-                                                            value=value, tag=tag)
-            except ObjectDoesNotExist:
-                data_collection_time = _update_run_time(tag=tag)
-        fun_test.log("The returned date time is {}".format(str(data_collection_time)))
-        return data_collection_time
-    else:
-        result = get_current_time()
-        if fun_test.suite_execution_id:
-            result = fun_test.get_stored_environment_variable("data_collection_time")
-            if not result:
-                date_time = get_current_time()
-                fun_test.update_job_environment_variable("data_collection_time", str(date_time))
-                result = date_time
+    key = "data_collection_time"
+    now_epoch = get_current_epoch_time_in_ms()
+    now_time = get_datetime_from_epoch_time(now_epoch)
+    result = now_time
+    if fun_test.suite_execution_id:
+        if tag:
+            date_time_collection_objects = MetricsRunTime.objects.filter(name=key)
+            match_found = False
+            if date_time_collection_objects.exists():
+                value = date_time_collection_objects[0].value
+                epoch_value_in_tag = value.get(tag, None)
+                if epoch_value_in_tag:
+                    date_time_by_tag = get_datetime_from_epoch_time(epoch_value_in_tag)
+                    if is_same_day(date_time_obj_a=now_time, date_time_obj_b=date_time_by_tag):
+                        match_found = True
+                        result = date_time_by_tag
+                if not match_found:
+                    MetricsRunTime.update_value_data(name=key, value_key=tag, value_data=now_epoch)
             else:
-                result = parser.parse(result)
-        return result
+                MetricsRunTime(name=key, value={tag: now_epoch}).save()
+        else:
+            stored_data_collection_time_epoch = fun_test.get_stored_environment_variable(key)
+            if not stored_data_collection_time_epoch:
+                fun_test.update_job_environment_variable(key, get_current_epoch_time_in_ms())
+                stored_data_collection_time_epoch = fun_test.get_stored_environment_variable(key)
+            if type(stored_data_collection_time_epoch) in [str, unicode]:  # For legacy cases only
+                result = iso8601.parse_date(stored_data_collection_time_epoch)
+            else:
+                result = get_datetime_from_epoch_time(stored_data_collection_time_epoch)
+
+    return result
 
 
-def is_same_day(current_time, data_collection_time):
-    return current_time.day == data_collection_time.day and current_time.month == data_collection_time.month and \
-           current_time.year == data_collection_time.year
+def is_same_day(date_time_obj_a, date_time_obj_b):
+    return date_time_obj_a.day == date_time_obj_b.day and date_time_obj_a.month == date_time_obj_b.month and \
+           date_time_obj_a.year == date_time_obj_b.year
 
 
 def _update_run_time(tag, value=None, date_time_details=None):
@@ -565,11 +570,11 @@ class WuLatencyAllocStackHelper(MetricHelper):
         entry = WuLatencyAllocStack
 
 
-def prepare_status_db(chart_names):
+def prepare_status_db(metric_ids):
     cache_valid = MetricsGlobalSettings.get_cache_validity()
     # chart_names = ["F1", "S1", "All metrics"]
-    for chart_name in chart_names:
-        total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name=chart_name)
+    for metric_id in metric_ids:
+        total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", metric_id=metric_id)
         prepare_status(chart=total_chart, purge_old_status=False, cache_valid=cache_valid)
     ml.backup_dags()
     ml.set_global_cache(cache_valid=True)
@@ -879,7 +884,7 @@ if __name__ == "__main__crypto":
             fun_test.critical(str(ex))
         print ("used generic helper to add an entry")
 
-if __name__ == "__main__":
+if __name__ == "__main2__":
     dt = datetime.datetime(year=2019, month=9, day=22, hour=2, minute=12, second=33)
     value_dict = {
         "date_time": dt,
@@ -901,3 +906,11 @@ if __name__ == "__main__":
     except Exception as ex:
         fun_test.critical(str(ex))
     print "used generic helper to add an entry"
+
+if __name__ == "__main__":
+    fun_test.suite_execution_id = 320
+    # print get_data_collection_time(tag="ec_inspur_fs_teramark_multi_f1")
+    a = get_data_collection_time(tag="John1")
+    print a
+
+    print get_epoch_time_from_datetime(a)

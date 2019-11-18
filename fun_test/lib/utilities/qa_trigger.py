@@ -167,35 +167,45 @@ def main():
     exit_code = 0
     parser = argparse.ArgumentParser(description='Trigger and monitor job on Integration team server')
     parser.add_argument('--suite_name', help='Suite name', required=True)
-    parser.add_argument('--emails', help='Email addresses', required=True)
+    parser.add_argument('--extra_emails', help='Email addresses', required=False)
     parser.add_argument('--tags', help='Tags')
     parser.add_argument('--base_url', help="Base URL")
     parser.add_argument('--submitter_email', help="Submitter's email address", default=DEFAULT_SUBMITTER_EMAIL)
     parser.add_argument('--environment', help="Custom environment")
-    parser.add_argument('--max_run_time', help="Max run-time", default=60 * 60 * 3)
-    parser.add_argument('--test_bed_type', default="fs-6", help="emulation or simulation or fs")
+    parser.add_argument('--max_run_time_in_seconds', help="Max run-time in seconds", default=60 * 60)
+    parser.add_argument('--test_bed_type', default="simulation", help="emulation or simulation or FS")
     parser.add_argument('--description', default="Unknown description")
+    parser.add_argument('--jenkins_workspace', default=None, help="Jenkins workspace")
+    parser.add_argument('--jenkins_build_machine', default=None, help="Jenkins build machine")
+    parser.add_argument('--job_url_file', default=None, help="Output file where the job URL will be stored")
     args = parser.parse_args()
 
     suite_name = args.suite_name
-    emails = args.emails
+    emails = args.extra_emails
     submitter_email = args.submitter_email
     tags = args.tags
     base_url = args.base_url
     environment = args.environment
-    max_run_time = args.max_run_time
+    max_run_time = args.max_run_time_in_seconds
     test_bed_type = args.test_bed_type
     description = args.description
+    jenkins_build_machine = args.jenkins_build_machine
+    jenkins_workspace = args.jenkins_workspace
+    job_url_file = args.job_url_file
 
     logging.info("Input options provided:")
-    logging.info("Suite        : {}".format(suite_name))
-    logging.info("Submitter    : {}".format(submitter_email))
-    logging.info("Emails       : {}".format(emails))
-    logging.info("Tags         : {}".format(tags))
-    logging.info("Base URL     : {}".format(base_url))
-    logging.info("Environment  : {}".format(environment))
-    logging.info("Test-bed type: {}".format(test_bed_type))
-    logging.info("Description  : {}".format(description))
+    logging.info("Suite                 : {}".format(suite_name))
+    logging.info("Submitter             : {}".format(submitter_email))
+    logging.info("Extra Emails          : {}".format(emails))
+    logging.info("Tags                  : {}".format(tags))
+    logging.info("Base URL              : {}".format(base_url))
+    logging.info("Environment           : {}".format(environment))
+    logging.info("Test-bed type         : {}".format(test_bed_type))
+    logging.info("Description           : {}".format(description))
+    logging.info("Max run-time          : {}".format(max_run_time))
+    logging.info("Jenkins workspace     : {}".format(jenkins_workspace))
+    logging.info("Jenkins build machine : {}".format(jenkins_build_machine))
+    logging.info("job_url_file          : {}".format(job_url_file))
     logging.info("")
 
     if not base_url:
@@ -213,7 +223,7 @@ def main():
         logging.info("")
 
     poll_interval_seconds = DEFAULT_POLL_INTERVAL_SECONDS
-
+    job_id = None
     try:
         fun_test_client = FunTestClient(base_url=base_url)
         start_time = time.time()
@@ -239,7 +249,7 @@ def main():
                 is_job_completed = job_status["is_completed"]
                 if is_job_completed:
                     break
-
+                print "Sleeping for {} seconds before checking again".format(poll_interval_seconds)
                 time.sleep(poll_interval_seconds)
                 elapsed_time = time.time() - start_time
 
@@ -264,6 +274,13 @@ def main():
         exit_code = GENERIC_ERROR_EXIT_CODE
         logging.critical("Suite polling ended with exception: {}".format(str(ex)))
 
+    job_url = "Unknown URL"
+    if job_id:
+        job_url = "{}/regression/suite_detail/{}".format(base_url, job_id)
+    print "Integration job result is at {}".format(job_url)
+    if job_url_file:
+        with open(job_url_file, "w") as f_out:
+            f_out.write(job_url)
     sys.exit(exit_code)
 
 

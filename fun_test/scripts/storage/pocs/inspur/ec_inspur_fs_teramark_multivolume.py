@@ -195,6 +195,9 @@ class ECVolumeLevelScript(FunTestScript):
                 self.bootargs[0] += " --perf csi-local-ip={} csi-remote-ip={} pdtrace-hbm-size-kb={}".format(
                     self.csi_f1_ip, self.perf_listener_ip, self.csi_perf_pdtrace_hbm_size_kb)
 
+            self.tftp_image_path = fun_test.get_job_environment_variable("tftp_image_path")
+            self.bundle_image_parameters = fun_test.get_job_environment_variable("bundle_image_parameters")
+
             for i in range(len(self.bootargs)):
                 self.bootargs[i] += " --mgmt"
                 if self.disable_wu_watchdog:
@@ -255,12 +258,18 @@ class ECVolumeLevelScript(FunTestScript):
             # Rebooting all the hosts in non-blocking mode before the test and getting NUMA cpus
             for host_name in self.host_info:
                 host_handle = self.host_info[host_name]["handle"]
-                if self.override_numa_node["override"]:
-                    host_numa_cpus_filter = host_handle.lscpu(self.override_numa_node["override_node"])
-                    self.host_info[host_name]["host_numa_cpus"] = host_numa_cpus_filter[
-                        self.override_numa_node["override_node"]]
+                if host_name.startswith("cab0"):
+                    if self.override_numa_node["override"]:
+                        host_numa_cpus_filter = host_handle.lscpu("node[01]")
+                        self.host_info[host_name]["host_numa_cpus"] = ",".join(host_numa_cpus_filter.values())
                 else:
-                    self.host_info[host_name]["host_numa_cpus"] = fetch_numa_cpus(host_handle, self.ethernet_adapter)
+                    if self.override_numa_node["override"]:
+                        host_numa_cpus_filter = host_handle.lscpu(self.override_numa_node["override_node"])
+                        self.host_info[host_name]["host_numa_cpus"] = host_numa_cpus_filter[
+                            self.override_numa_node["override_node"]]
+                    else:
+                        self.host_info[host_name]["host_numa_cpus"] = fetch_numa_cpus(host_handle,
+                                                                                      self.ethernet_adapter)
 
                 # Calculating the number of CPUs available in the given numa
                 self.host_info[host_name]["total_numa_cpus"] = 0
@@ -294,13 +303,19 @@ class ECVolumeLevelScript(FunTestScript):
             self.funcp_spec = {}
             for index in xrange(self.num_duts):
                 self.funcp_obj[index] = StorageFsTemplate(self.come_obj[index])
-                self.funcp_spec[index] = self.funcp_obj[index].deploy_funcp_container(
-                    update_deploy_script=self.update_deploy_script, update_workspace=self.update_workspace,
-                    mode=self.funcp_mode)
-                fun_test.test_assert(self.funcp_spec[index]["status"],
-                                     "Starting FunCP docker container in DUT {}".format(index))
+                if self.tftp_image_path:
+                    self.funcp_spec[index] = self.funcp_obj[index].deploy_funcp_container(
+                        update_deploy_script=self.update_deploy_script, update_workspace=self.update_workspace,
+                        mode=self.funcp_mode)
+                    fun_test.test_assert(self.funcp_spec[index]["status"],
+                                         "Starting FunCP docker container in DUT {}".format(index))
+                else:
+                    self.funcp_spec[index] = self.funcp_obj[index].get_container_objs()
                 self.funcp_spec[index]["container_names"].sort()
+
                 for f1_index, container_name in enumerate(self.funcp_spec[index]["container_names"]):
+                    if container_name == "run_sc":
+                        continue
                     bond_interfaces = self.fs_spec[index].get_bond_interfaces(f1_index=f1_index)
                     bond_name = "bond0"
                     bond_ip = bond_interfaces[0].ip
@@ -496,6 +511,13 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.shared_variables["testbed_config"] = self.testbed_config
 
     def cleanup(self):
+
+        if self.bundle_image_parameters:
+            try:
+                for index in xrange(self.num_duts):
+                    self.come_obj[index].command("sudo systemctl disable init-fs1600")
+            except Exception as ex:
+                fun_test.critical(str(ex))
 
         come_reboot = False
         if fun_test.shared_variables["ec"]["setup_created"]:
@@ -1184,6 +1206,10 @@ class ECVolumeLevelTestcase(FunTestCase):
                         fio_job_name = "{}_{}pctcomp_iodepth_{}_vol_{}". \
                             format(self.fio_job_name, self.warm_up_fio_cmd_args["buffer_compress_percentage"],
                                    row_data_dict["iodepth"], self.ec_info["num_volumes"])
+
+                    if self.ec_info.get("encrypt", False):
+                        fio_job_name = "{}_encryption_keysize_{}_iodepth_{}_vol_{}". \
+                            format(self.fio_job_name,self.ec_info["key_size"],row_data_dict["iodepth"], self.ec_info["num_volumes"])
                 else:
                     fio_job_name = "{}_{}".format(self.fio_job_name, row_data_dict["iodepth"])
 
@@ -1696,6 +1722,6 @@ if __name__ == "__main__":
     ecscript.add_test_case(MixedRandReadWriteIOPS())
     ecscript.add_test_case(SequentialReadWrite1024kBlocks())
     ecscript.add_test_case(RandWrite8kBlocks())
-    # ecscript.add_test_case(OLTPModelReadWriteIOPS())
-    # ecscript.add_test_case(OLAPModelReadWriteIOPS())
+    #ecscript.add_test_case(OLTPModelReadWriteIOPS())
+    #ecscript.add_test_case(OLAPModelReadWriteIOPS())
     ecscript.run()

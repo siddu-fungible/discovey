@@ -40,9 +40,9 @@ except (KeyError, ValueError):
     #DPC_PROXY_PORT = 40221
     #TB = 'SB5'
     DPC_PROXY_IP = 'fs11-come'
-    DPC_PROXY_PORT = 40220
+    DPC_PROXY_PORT = 42220
     DPC_PROXY_IP2 = 'fs11-come'
-    DPC_PROXY_PORT2 = 40221
+    DPC_PROXY_PORT2 = 42221
     TB = ''.join(fun_test.get_job_environment_variable('test_bed_type').split('-')).upper()
 
 try:
@@ -50,7 +50,7 @@ try:
     if inputs:
         enable_tso = (inputs.get('lso', 1) == 1)  # Enable TSO or not
         control_plane = (inputs.get('control_plane', 0) == 1)  # Use control plane or not
-        update_funcp = (inputs.get('update_funcp', 0) == 1)  # Update FunControlPlane binary or not
+        update_funcp = (inputs.get('update_funcp', 1) == 1)  # Update FunControlPlane binary or not
         update_driver = (inputs.get('update_driver', 1) == 1)  # Update driver or not
         hu_host_vm = (inputs.get('hu_host_vm', 0) == 1)  # HU host runs VMs or not
         configure_overlay = (inputs.get('configure_overlay', 0) == 1)  # Enable overlay config or not
@@ -66,7 +66,7 @@ try:
     else:
         enable_tso = True  # default True
         control_plane = False  # default False
-        update_funcp = False  # default True
+        update_funcp = True  # default True
         update_driver = True  # default True
         hu_host_vm = False  # default False
         configure_overlay = False  # default False
@@ -82,7 +82,7 @@ try:
 except:
     enable_tso = True
     control_plane = False
-    update_funcp = False
+    update_funcp = True
     update_driver = True
     hu_host_vm = False
     configure_overlay = False
@@ -382,7 +382,7 @@ class FunethSanity(FunTestScript):
                 if nu_all_clusters:
                     f1_0_boot_args += ' override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]}'
                     f1_1_boot_args += ' override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]}'
-                funcp_setup_obj = FunCPSetup(test_bed_type=test_bed_type, update_funcp=update_funcp)
+                funcp_setup_obj = FunCPSetup(test_bed_type=test_bed_type, update_funcp=False)
                 topology_helper = TopologyHelper()
                 topology_helper.set_dut_parameters(dut_index=0,
                                                    f1_parameters={0: {"boot_args": f1_0_boot_args},

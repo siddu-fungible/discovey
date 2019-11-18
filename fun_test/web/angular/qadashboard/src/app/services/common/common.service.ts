@@ -171,4 +171,20 @@ export class CommonService {
     return queryParamString;
   }
 
+  milliSecondsElapsedToDays(milliSeconds: number) {
+    let diffDays = Math.floor(milliSeconds / 86400000); // days
+    let diffHrs = Math.floor((milliSeconds % 86400000) / 3600000); // hours
+    let diffMins = Math.round(((milliSeconds % 86400000) % 3600000) / 60000); // minutes
+    let s = "";
+    if (diffDays) {
+      s = `${diffDays} days `;
+    }
+    if (diffHrs > 0) {
+      s += `${diffHrs} hours `;
+    }
+    s += `${diffMins} mins`;
+
+    return s;
+  }
+
 }

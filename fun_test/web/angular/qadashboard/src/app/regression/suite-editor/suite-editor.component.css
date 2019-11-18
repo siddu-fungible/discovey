@@ -40,3 +40,6 @@ input[disabled].fun-form-input  {
 }
 
 
+tr td {
+  white-space: nowrap;
+}

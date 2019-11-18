@@ -27,7 +27,7 @@
 		"mtu": 9000,
             "spine_index" : 2,
             "gph_index" : 2,
-            "enable" : true
+            "enable" : false
         },
         {
             "name" : "fpg6",

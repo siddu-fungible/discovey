@@ -169,7 +169,8 @@ class TopologyHelper:
                         interface_index = int(interface_index)
                         dut_interface_obj = dut_obj.add_fpg_interface(index=interface_index,
                                                                       type=interface_info['type'],
-                                                                      f1_index=int(f1_index))
+                                                                      f1_index=int(f1_index),
+                                                                      interface_info=interface_info)
                         if "hosts" in interface_info:
                             dut_interface_obj.add_hosts(num_hosts=interface_info["hosts"], host_info=interface_info["host_info"])
                         elif "dut_info" in interface_info:
