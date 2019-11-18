@@ -181,6 +181,10 @@ class BringupSetup(FunTestCase):
             fun_test.shared_variables["collect_stats"] = job_inputs["collect_stats"]
         else:
             fun_test.shared_variables["collect_stats"] = False
+        if "rds_conn" in job_inputs:
+            fun_test.shared_variables["rds_conn"] = job_inputs["rds_conn"]
+        else:
+            fun_test.shared_variables["rds_conn"] = False
 
         if deploy_setup:
             funcp_obj = FunControlPlaneBringup(fs_name=self.server_key["fs"][fs_name]["fs-name"])
@@ -199,6 +203,11 @@ class BringupSetup(FunTestCase):
             fun_test.shared_variables["topology"] = topology
             fun_test.test_assert(topology, "Topology deployed")
             fs = topology.get_dut_instance(index=0)
+            f10_instance = fs.get_f1(index=0)
+            f11_instance = fs.get_f1(index=1)
+            fun_test.shared_variables["f10_storage_controller"] = f10_instance.get_dpc_storage_controller()
+            fun_test.shared_variables["f11_storage_controller"] = f11_instance.get_dpc_storage_controller()
+
             come_obj = fs.get_come()
             fun_test.shared_variables["come_obj"] = come_obj
             come_obj.sudo_command("netplan apply")
@@ -254,6 +263,10 @@ class BringupSetup(FunTestCase):
             fs_spec = fun_test.get_asset_manager().get_fs_by_name(name=dut_name)
             fs_obj = Fs.get(fs_spec=fs_spec, already_deployed=True)
             come_obj = fs_obj.get_come()
+            f10_instance = fs_obj.get_f1(index=0)
+            f11_instance = fs_obj.get_f1(index=1)
+            fun_test.shared_variables["f10_storage_controller"] = f10_instance.get_dpc_storage_controller()
+            fun_test.shared_variables["f11_storage_controller"] = f11_instance.get_dpc_storage_controller()
             fun_test.shared_variables["come_obj"] = come_obj
 
             fun_test.log("Getting host info")
@@ -468,8 +481,8 @@ class ConfigureRdsVol(FunTestCase):
                 fun_test.simple_assert(service_status, "Stopping {} service on {}".format(service, f11_obj["name"]))
         
         # Storage Controller Objects
-        f10_storage_ctrl_obj = StorageController(target_ip=come_obj.host_ip, target_port=42220)
-        f11_storage_ctrl_obj = StorageController(target_ip=come_obj.host_ip, target_port=42221)
+        f10_storage_ctrl_obj = fun_test.shared_variables["f10_storage_controller"]
+        f11_storage_ctrl_obj = fun_test.shared_variables["f11_storage_controller"]
         fun_test.shared_variables["f10_storage_ctrl_obj"] = f10_storage_ctrl_obj
         fun_test.shared_variables["f11_storage_ctrl_obj"] = f11_storage_ctrl_obj
 
@@ -565,16 +578,33 @@ class ConfigureRdsVol(FunTestCase):
                 # Create RDS volume on F1_1
                 f11_rds_vol[x] = utils.generate_uuid()
                 rds_vol_name = "rds_vol_" + str(x)
-                command_result = f11_storage_ctrl_obj.create_volume(type="VOL_TYPE_BLK_RDS",
-                                                                    capacity=drive_size,
-                                                                    block_size=block_size,
-                                                                    name=rds_vol_name,
-                                                                    uuid=f11_rds_vol[x],
-                                                                    remote_nsid=x,
-                                                                    remote_ip=f10_vlan_ip,
-                                                                    port=controller_port,
-                                                                    command_duration=command_timeout)
-                fun_test.simple_assert(command_result["status"], "F1_1 : Created RDS vol with remote nsid {}".format(x))
+                if fun_test.shared_variables["rds_conn"]:
+                    rds_conn = fun_test.shared_variables["rds_conn"]
+                    command_result = f11_storage_ctrl_obj.create_volume(type="VOL_TYPE_BLK_RDS",
+                                                                        capacity=drive_size,
+                                                                        block_size=block_size,
+                                                                        name=rds_vol_name,
+                                                                        uuid=f11_rds_vol[x],
+                                                                        remote_nsid=x,
+                                                                        remote_ip=f10_vlan_ip,
+                                                                        port=controller_port,
+                                                                        connections=rds_conn,
+                                                                        command_duration=command_timeout)
+                    fun_test.simple_assert(command_result["status"],
+                                           "F1_1 : Created RDS vol using {} connections with remote nsid {}".
+                                           format(rds_conn, x))
+                else:
+                    command_result = f11_storage_ctrl_obj.create_volume(type="VOL_TYPE_BLK_RDS",
+                                                                        capacity=drive_size,
+                                                                        block_size=block_size,
+                                                                        name=rds_vol_name,
+                                                                        uuid=f11_rds_vol[x],
+                                                                        remote_nsid=x,
+                                                                        remote_ip=f10_vlan_ip,
+                                                                        port=controller_port,
+                                                                        command_duration=command_timeout)
+                    fun_test.simple_assert(command_result["status"],
+                                           "F1_1 : Created RDS vol with remote nsid {}".format(x))
 
                 # Attach PCIe controller to host
                 if total_ssd == 4:
@@ -586,7 +616,7 @@ class ConfigureRdsVol(FunTestCase):
                         fun_test.log("PCIe controller is HUID 1")
                 else:
                     f11_ctrl = f11_pcie_ctrl
-                    fun_test.log("One one PCIe controller on HUID 1")
+                    fun_test.log("Only one PCIe controller on HUID 1")
 
                 command_result = f11_storage_ctrl_obj.attach_volume_to_controller(vol_uuid=f11_rds_vol[x],
                                                                                   ctrlr_uuid=f11_ctrl,
