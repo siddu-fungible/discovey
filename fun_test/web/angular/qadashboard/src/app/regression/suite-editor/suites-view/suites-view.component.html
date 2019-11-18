@@ -54,31 +54,38 @@
   <fun-spinner [status]="status"></fun-spinner>
   <table class="fun-table">
     <tr>
-      <td class="fun-table-header" *ngIf="mode === Mode.DEFAULT"></td>
+      <td class="fun-table-header" *ngIf="mode !== Mode.DEFAULT"></td>
       <td class="fun-table-header">ID</td>
       <td class="fun-table-header">Name</td>
       <td class="fun-table-header">Description</td>
       <td class="fun-table-header">Categories</td>
-      <td class="fun-table-header" *ngIf="multiSelect"></td>
+      <td class="fun-table-header" *ngIf="mode === Mode.DEFAULT"></td>
     </tr>
     <tr *ngFor="let suite of suites; let suiteIndex=index">
       <td *ngIf="multiSelect"><input type="checkbox" [checked]="suite.selected" [(ngModel)]="suite.selected"/></td>
       <td>{{ suite.id }}</td>
       <td><a [routerLink]="'/regression/suite_editor/' + suite.id">{{ suite.name }}</a></td>
       <td>
-        <app-textarea-input [hoverHide]="false" [initialValue]="suite?.short_description"
+        <app-textarea-input [hoverHide]="mode !== Mode.DEFAULT" [initialValue]="suite?.short_description"
+                            [editable]="mode === Mode.DEFAULT"
                             (valueChanged)="onShortDescriptionChangedEvent($event, suite)"
                             [numRows]="4"></app-textarea-input>
       </td>
       <td>
         <div style="display: flex">
-          <ng-multiselect-dropdown [placeholder]="'Select'" [data]="availableCategories" [settings]="dropDownSettings"
-                                   [(ngModel)]="suite.categories"
-                                   (onSelect)="suite.dirty = true"
-                                   (onDeSelect)="suite.dirty = true"
-                                   (onSelectAll)="suite.dirty = true"
-                                   (onDeSelectAll)="suite.dirty = true">
-          </ng-multiselect-dropdown>
+          <ng-container *ngIf="!multiSelect">
+            <ng-multiselect-dropdown [placeholder]="'Select'" [data]="availableCategories" [settings]="dropDownSettings"
+                                     [(ngModel)]="suite.categories"
+                                     (onSelect)="suite.dirty = true"
+                                     (onDeSelect)="suite.dirty = true"
+                                     (onSelectAll)="suite.dirty = true"
+                                     (onDeSelectAll)="suite.dirty = true">
+            </ng-multiselect-dropdown>
+          </ng-container>
+          <ng-container *ngIf="multiSelect">
+            {{ suite.categories }}
+          </ng-container>
+
           <div style="padding: 10px">
             <ng-container *ngIf="suite.dirty">
               <span><i class="fa fa-check fa-fw tick-color" (click)="onSubmitCategories(suite)"></i></span>

@@ -44,7 +44,7 @@ export class SuitesViewComponent implements OnInit {
   ngOnInit() {
     if (this.multiSelect) {
       this.mode = Mode.SELECTION;
-      this.RECORDS_PER_PAGE = 10;
+      this.RECORDS_PER_PAGE = 5;
     }
     this.driver =
       of(true).pipe(switchMap(response => {
