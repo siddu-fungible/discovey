@@ -73,6 +73,7 @@ class DataIntegrityTestcase(ApcPduTestcase):
                                  target_password=host_info['ssh_password'])
 
     def cleanup(self):
+        self.num_hosts = self.read_hosts
         super(DataIntegrityTestcase, self).cleanup()
         # if required add any addtional cleanup
 
