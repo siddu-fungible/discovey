@@ -1,6 +1,6 @@
 <div class="component">
+  <span class="fun-attribute-label">Description:</span> <app-textarea-input [initialValue]="releaseCatalog.description" (valueChanged)="catalogDescriptionChanged($event)" [numRows]="1"></app-textarea-input>
   <button *ngIf="!addingSuites" class="fun-button-add" (click)="addingSuites = !addingSuites">Add suites</button>
-
   <ng-container *ngIf="addingSuites">Adding suites ...</ng-container>
   <app-suites-view [@show]="addingSuites"
                    *ngIf="addingSuites"

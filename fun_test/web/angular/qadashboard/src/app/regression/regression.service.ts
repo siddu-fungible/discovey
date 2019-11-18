@@ -5,6 +5,10 @@ import {catchError, switchMap} from 'rxjs/operators';
 import {forkJoin, observable, Observable, of, throwError} from "rxjs";
 import {CommonService} from "../services/common/common.service";
 
+export class ReleaseCatalog {
+  description: string = "Please update";
+}
+
 @Injectable({
   providedIn: 'root'
 })

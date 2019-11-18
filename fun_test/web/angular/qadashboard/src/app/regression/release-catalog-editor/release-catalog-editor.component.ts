@@ -1,6 +1,6 @@
 import {Component, Input, OnChanges, OnInit} from '@angular/core';
 import {LoggerService} from "../../services/logger/logger.service";
-import {RegressionService} from "../regression.service";
+import {RegressionService, ReleaseCatalog} from "../regression.service";
 import {Suite, SuiteEditorService} from "../suite-editor/suite-editor.service";
 import {of} from "rxjs";
 import {switchMap} from "rxjs/operators";
@@ -22,6 +22,8 @@ export class ReleaseCatalogEditorComponent implements OnInit, OnChanges {
               private regressionService: RegressionService,
               private suiteEditorService: SuiteEditorService,
               private commonService: CommonService) { }
+
+  releaseCatalog: ReleaseCatalog = new ReleaseCatalog();
 
   ngOnInit() {
     console.log("Re-init release catalog");
@@ -56,6 +58,10 @@ export class ReleaseCatalogEditorComponent implements OnInit, OnChanges {
       this.selectedSuiteIds.push(selectedSuite.id);
     });
     this.selectedSuiteIds = [...this.selectedSuiteIds];
+  }
+
+  catalogDescriptionChanged(description) {
+
   }
 
 }
