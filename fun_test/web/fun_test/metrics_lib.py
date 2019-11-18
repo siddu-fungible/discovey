@@ -431,7 +431,7 @@ class MetricLib():
 
     def _calculate_percentage(self, current, previous):
         percentage = 0
-        if previous != 0:
+        if previous:
             percent_num = (float(current - previous) / float(previous)) * 100.0
             percentage = round(percent_num, 2)
         return percentage
