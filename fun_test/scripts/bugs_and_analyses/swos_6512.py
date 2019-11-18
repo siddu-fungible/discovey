@@ -189,8 +189,8 @@ class CryptoCore(FunTestCase):
         self.blt_block_size = 4096
         self.blt_uuid = utils.generate_uuid()
         self.command_timeout = 5
-        self.storage_controller = StorageController(target_ip="fs45-come", target_port=40220)
-        self.storage_controller_remote = StorageController(target_ip="fs45-come", target_port=40221)
+        self.storage_controller = StorageController(target_ip="fs45-come", target_port=42220)
+        self.storage_controller_remote = StorageController(target_ip="fs45-come", target_port=42221)
         num_raw_vol = 1
         num_encrypted_vol = 1
         num_rds_vol = 1

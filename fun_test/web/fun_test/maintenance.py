@@ -2406,6 +2406,40 @@ if __name__ == "__main_load_mods__":
     chart.data_sets = json.dumps(data_sets)
     chart.save()
 
+if __name__ == "__main_fs1600__":
+    chart = MetricChart.objects.get(internal_chart_name="f1_fs1600")
+    chart.internal_chart_name = "fs1600"
+    chart.save()
+    inspur_chart = MetricChart.objects.get(metric_id=464)
+    result = []
+    children = inspur_chart.get_children()
+    for child in children:
+        child_chart = MetricChart.objects.get(metric_id=int(child))
+        one_dict = {}
+        one_dict["metric_model_name"] = child_chart.metric_model_name
+        one_dict["name"] = child_chart.internal_chart_name
+        one_dict["label"] = child_chart.chart_name
+        one_dict["reference"] = True
+        result.append(one_dict)
+    print json.dumps(result)
+
+    apple_chart = MetricChart.objects.get(metric_id=431)
+    result = []
+    children = apple_chart.get_children()
+    for child in children:
+        child_chart = MetricChart.objects.get(metric_id=int(child))
+        one_dict = {}
+        one_dict["metric_model_name"] = child_chart.metric_model_name
+        one_dict["name"] = child_chart.internal_chart_name
+        one_dict["label"] = child_chart.chart_name
+        one_dict["reference"] = True
+        result.append(one_dict)
+    print json.dumps(result)
+
+if __name__ == "__main_backup_fs1600__":
+    ml.backup_dags()
+    ml.set_global_cache(cache_valid=True)
+
 if __name__ == "__main__":
     from django.db import transaction
     transaction.set_autocommit(False)
@@ -2445,4 +2479,4 @@ if __name__ == "__main__":
             pass
     transaction.commit()
     transaction.set_autocommit(True)
-
+    

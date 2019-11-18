@@ -474,6 +474,6 @@ class StorageController(NetworkController, DpcshClient):
 
 
 if __name__ == "__main__":
-    sc = StorageController(target_ip="10.1.20.67", target_port=40220)
+    sc = StorageController(target_ip="10.1.20.67", target_port=42220)
     output = sc.command("peek stats")
     sc.print_result(output)

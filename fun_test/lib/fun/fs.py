@@ -402,7 +402,7 @@ class Bmc(Linux):
         fun_test.execute_thread_after(0,
                                       nc.read_until,
                                       expected_data=self.U_BOOT_F1_PROMPT,
-                                      timeout=20,
+                                      timeout=30,
                                       write_on_trigger=write_on_trigger)
 
 
@@ -984,7 +984,14 @@ class BootupWorker(Thread):
                         fun_test.test_assert(expression=bmc.setup_serial_proxy_connection(f1_index=f1_index, auto_boot=fs.is_auto_boot()),
                                              message="Setup nc serial proxy connection",
                                              context=self.context)
+
+                    if fs.f1_parameters:
+                        if f1_index in fs.f1_parameters:
+                            if "boot_args" in fs.f1_parameters[f1_index]:
+                                boot_args = fs.f1_parameters[f1_index]["boot_args"]
+
                     if fs.tftp_image_path:
+                        self.fs.get_come().pre_reboot_cleanup()
                         if fs.get_bmc()._use_i2c_reset():
                             fs.get_bmc().reset_f1(f1_index=f1_index)
                         elif fpga and not fs.bundle_compatible:
@@ -994,17 +1001,16 @@ class BootupWorker(Thread):
                         else:
                             fs.get_bmc().reset_f1(f1_index=f1_index)
 
-                    if fs.f1_parameters:
-                        if f1_index in fs.f1_parameters:
-                            if "boot_args" in fs.f1_parameters[f1_index]:
-                                boot_args = fs.f1_parameters[f1_index]["boot_args"]
+
 
                     if fs.tftp_image_path:
                         preamble = bmc.get_preamble(f1_index=f1_index)
                         if fs.validate_u_boot_version:
+                            fun_test.log("Preamble: {}".format(preamble))
                             fun_test.test_assert(
                                 bmc.validate_u_boot_version(output=preamble, minimum_date=fs.MIN_U_BOOT_DATE),
                                 "Validate preamble", context=self.context)
+
                         fun_test.test_assert(
                             expression=bmc.u_boot_load_image(index=f1_index,
                                                              tftp_image_path=fs.tftp_image_path,
@@ -1132,10 +1138,12 @@ class ComEInitializationWorker(Thread):
 
 class ComE(Linux):
     EXPECTED_FUNQ_DEVICE_ID = ["04:00.1", "06:00.1"]
-    DEFAULT_DPC_PORT = [40220, 40221]
+    DEFAULT_DPC_PORT = [42220, 42221]
     DEFAULT_STATISTICS_DPC_PORT = [45220, 45221]
+    DEFAULT_CSI_PERF_DPC_PORT = [46220, 46221]
     DPC_LOG_PATH = "/tmp/f1_{}_dpc.txt"
-    DPC_STATISTICS_LOG_PATH = "/tmp/f1_{}_dpc.txt"
+    DPC_STATISTICS_LOG_PATH = "/tmp/f1_{}_dpc_statistics.txt"
+    DPC_CSI_PERF_LOG_PATH = "/tmp/f1_{}_dpc_csi_perf.txt"
     NUM_F1S = 2
     NVME_CMD_TIMEOUT = 600000
 
@@ -1158,6 +1166,7 @@ class ComE(Linux):
         self.hbm_dump_enabled = False
         self.funq_bind_device = {}
         self.dpc_for_statistics_ready = False
+        self.dpc_for_csi_perf_ready = False
 
     def pre_reboot_cleanup(self):
         fun_test.log("Cleaning up storage controller containers", context=self.context)
@@ -1169,10 +1178,10 @@ class ComE(Linux):
             self.stop_cclinux_service()
         except:
             pass
-        try:
-            self.sudo_command("service docker stop")
-        except:
-            pass
+        # try:
+        #    self.sudo_command("service docker stop")
+        # except:
+        #    pass
         try:
             self.sudo_command("{}/StorageController/etc/start_sc.sh stop".format(self.FUN_ROOT))
         except:
@@ -1181,7 +1190,8 @@ class ComE(Linux):
         containers = self.docker(sudo=True)
         try:
             for container in containers:
-                self.docker(sudo=True, kill_container_id=container['ID'], timeout=120)
+                if 'cclinux' in container['Names'] or 'run_sc' in container['Names']:
+                    self.docker(sudo=True, kill_container_id=container['ID'], timeout=120)
             self.sudo_command("service docker stop")
         except:
             pass
@@ -1247,7 +1257,7 @@ class ComE(Linux):
 
 
     def stop_cclinux_service(self):
-        self.sudo_command("/opt/fungible/cclinux/cclinux_service.sh --stop")
+        self.sudo_command("/opt/fungible/cclinux/cclinux_service.sh --stop", timeout=120)
 
     def _setup_build_script_directory(self):
         """
@@ -1302,10 +1312,12 @@ class ComE(Linux):
             bus_number = int(parts[0])
         return bus_number
 
-    def get_dpc_port(self, f1_index, statistics=None):
+    def get_dpc_port(self, f1_index, statistics=None, csi_perf=None):
         port = self.DEFAULT_DPC_PORT[f1_index]
         if statistics:
             port = self.DEFAULT_STATISTICS_DPC_PORT[f1_index]
+        if csi_perf:
+            port = self.DEFAULT_CSI_PERF_DPC_PORT[f1_index]
         return port
 
     def setup_workspace(self):
@@ -1376,7 +1388,7 @@ class ComE(Linux):
         # self.sudo_command("build/posix/bin/funq-setup unbind")
         return True
 
-    def setup_dpc(self, statistics=None):
+    def setup_dpc(self, statistics=None, csi_perf=None):
 
         # self.command("cd $WORKSPACE/FunControlPlane")
         """
@@ -1402,7 +1414,7 @@ class ComE(Linux):
                 nvme_device_index = 0
             command = "./dpcsh --pcie_nvme_sock=/dev/nvme{} --nvme_cmd_timeout={} --tcp_proxy={} &> {} &".format(nvme_device_index,
                                                                                                                  self.NVME_CMD_TIMEOUT,
-                                                                                                                 self.get_dpc_port(f1_index=f1_index, statistics=statistics),
+                                                                                                                 self.get_dpc_port(f1_index=f1_index, statistics=statistics, csi_perf=csi_perf),
                                                                                                                  self.get_dpc_log_path(f1_index=f1_index, statistics=statistics))
             self.sudo_command(command)
 
@@ -1410,6 +1422,8 @@ class ComE(Linux):
         self.dpc_ready = True
         if statistics:
             self.dpc_for_statistics_ready = True
+        if csi_perf:
+            self.dpc_for_csi_perf_ready = True
         return True
 
 
@@ -1459,10 +1473,12 @@ class ComE(Linux):
     def is_dpc_ready(self):
         return self.dpc_ready
 
-    def get_dpc_log_path(self, f1_index, statistics=None):
+    def get_dpc_log_path(self, f1_index, statistics=None, csi_perf=None):
         path = self.DPC_LOG_PATH.format(f1_index)
         if statistics:
-            path = self.DPC_STATISTICS_LOG_PATH(f1_index=f1_index)
+            path = self.DPC_STATISTICS_LOG_PATH[f1_index]
+        if csi_perf:
+            path = self.DPC_CSI_PERF_LOG_PATH[f1_index]
         return path
 
     def _get_context_prefix(self, data):
@@ -1555,12 +1571,14 @@ class F1InFs:
         self.serial_sbp_device_path = serial_sbp_device_path
         self.dpc_port = None
 
-    def get_dpc_client(self, auto_disconnect=False, statistics=None):
+    def get_dpc_client(self, auto_disconnect=False, statistics=None, csi_perf=None):
         come = self.fs.get_come()
         host_ip = come.host_ip
         if statistics and not come.dpc_for_statistics_ready:
             come.setup_dpc(statistics=True)
-        dpc_port = come.get_dpc_port(self.index, statistics=statistics)
+        if csi_perf and not come.dpc_for_csi_perf_ready:
+            come.setup_dpc(csi_perf=True)
+        dpc_port = come.get_dpc_port(self.index, statistics=statistics, csi_perf=csi_perf)
         dpcsh_client = DpcshClient(target_ip=host_ip, target_port=dpc_port, auto_disconnect=auto_disconnect)
         return dpcsh_client
 
@@ -1988,6 +2006,7 @@ class Fs(object, ToDictMixin):
                     fun_test.test_assert(self.bmc.validate_u_boot_version(output=preamble, minimum_date=self.MIN_U_BOOT_DATE), "Validate preamble")
 
                 if self.tftp_image_path:
+                    # self.get_come().pre_reboot_cleanup()
                     fun_test.test_assert(expression=self.bmc.u_boot_load_image(index=f1_index,
                                                                                tftp_image_path=self.tftp_image_path,
                                                                                boot_args=boot_args,
@@ -2095,6 +2114,7 @@ class Fs(object, ToDictMixin):
         self.get_fpga()
         self.get_come()
         self.set_f1s()
+        self.come.setup_dpc()
         self.come.detect_pfs()
         fun_test.test_assert(expression=self.come.ensure_dpc_running(),
                              message="Ensure dpc is running",
@@ -2281,7 +2301,6 @@ class Fs(object, ToDictMixin):
                              context=self.context, message="BMC reachable after APC power-cycle")
         fun_test.simple_assert(bmc.uptime() < worst_case_uptime, "BMC uptime is less than 10 minutes")
 
-        fun_test.simple_assert()
         come = self.get_come()
         fun_test.test_assert(expression=come.ensure_host_is_up(max_wait_time=180,
                                                                power_cycle=False), message="ComE reachable after APC power-cycle")
@@ -2290,9 +2309,9 @@ class Fs(object, ToDictMixin):
 
         return True
 
-    def get_dpc_client(self, f1_index, auto_disconnect=False, statistics=None):
+    def get_dpc_client(self, f1_index, auto_disconnect=False, statistics=None, csi_perf=None):
         f1 = self.get_f1(index=f1_index)
-        dpc_client = f1.get_dpc_client(auto_disconnect=auto_disconnect, statistics=None)
+        dpc_client = f1.get_dpc_client(auto_disconnect=auto_disconnect, statistics=statistics, csi_perf=csi_perf)
         return dpc_client
 
     def _get_context_prefix(self, data):

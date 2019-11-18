@@ -210,8 +210,8 @@ class MultiHostVolumePerformanceScript(FunTestScript):
         for dut_index in self.available_dut_indexes:
             self.topology_helper.set_dut_parameters(dut_index=dut_index,
                                                     f1_parameters={0: {"boot_args": self.bootargs[0]},
-                                                                   1: {"boot_args": self.bootargs[1]}})
-                                                    # fs_parameters={"already_deployed": True})
+                                                                   1: {"boot_args": self.bootargs[1]}},
+                                                    fs_parameters={"already_deployed": False})
         self.topology = self.topology_helper.deploy()
         fun_test.test_assert(self.topology, "Topology deployed")
         fun_test.sleep(seconds=120, message="Waiting for storage controller API to start")

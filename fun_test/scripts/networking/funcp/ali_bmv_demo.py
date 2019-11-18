@@ -203,8 +203,8 @@ class StorageConfiguration(FunTestCase):
         self.blt_detach_count = 0
         self.blt_delete_count = 0
 
-        # self.storage_controller_0 = StorageController(target_ip="10.1.105.165", target_port=40220)
-        # self.storage_controller_1 = StorageController(target_ip="10.1.105.165", target_port=40221)
+        # self.storage_controller_0 = StorageController(target_ip="10.1.105.165", target_port=42220)
+        # self.storage_controller_1 = StorageController(target_ip="10.1.105.165", target_port=42221)
         # command_result = self.storage_controller_0.poke(props_tree=["params/syslog/level", 2], legacy=False)
         # fun_test.test_assert(command_result["status"], "Setting syslog level to 2")
         # command_result = self.storage_controller_1.poke(props_tree=["params/syslog/level", 2], legacy=False)

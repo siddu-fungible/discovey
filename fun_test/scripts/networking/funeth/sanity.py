@@ -40,9 +40,9 @@ except (KeyError, ValueError):
     #DPC_PROXY_PORT = 40221
     #TB = 'SB5'
     DPC_PROXY_IP = 'fs11-come'
-    DPC_PROXY_PORT = 40220
+    DPC_PROXY_PORT = 42220
     DPC_PROXY_IP2 = 'fs11-come'
-    DPC_PROXY_PORT2 = 40221
+    DPC_PROXY_PORT2 = 42221
     TB = ''.join(fun_test.get_job_environment_variable('test_bed_type').split('-')).upper()
 
 try:
@@ -382,7 +382,7 @@ class FunethSanity(FunTestScript):
                 if nu_all_clusters:
                     f1_0_boot_args += ' override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]}'
                     f1_1_boot_args += ' override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]}'
-                funcp_setup_obj = FunCPSetup(test_bed_type=test_bed_type, update_funcp=update_funcp)
+                funcp_setup_obj = FunCPSetup(test_bed_type=test_bed_type, update_funcp=False)
                 topology_helper = TopologyHelper()
                 topology_helper.set_dut_parameters(dut_index=0,
                                                    f1_parameters={0: {"boot_args": f1_0_boot_args},

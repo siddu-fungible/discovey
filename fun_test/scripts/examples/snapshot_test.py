@@ -14,7 +14,7 @@ class Setup(FunTestScript):
 
     def setup(self):
         global network_controller_obj
-        network_controller_obj = NetworkController(dpc_server_ip='10.1.21.120', dpc_server_port=40221)
+        network_controller_obj = NetworkController(dpc_server_ip='10.1.21.120', dpc_server_port=42221)
         fun_test.log("Network done1")
 
     def cleanup(self):
@@ -37,7 +37,7 @@ class SnapshotTest(FunTestCase):
         fun_test.log("echo done 1")
 
         network_controller_obj.disconnect()
-        snapshot_obj = SnapshotHelper(dpc_proxy_ip="10.1.21.120", dpc_proxy_port=40221)
+        snapshot_obj = SnapshotHelper(dpc_proxy_ip="10.1.21.120", dpc_proxy_port=42221)
         snapshot_obj.setup_snapshot()
         fun_test.sleep(message="wait for traffic", seconds=10)
         ss = snapshot_obj.run_snapshot()

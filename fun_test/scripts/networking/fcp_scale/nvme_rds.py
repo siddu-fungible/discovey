@@ -168,8 +168,8 @@ class GetSetupDetails(FunTestCase):
         if deploy_setup:
             storage_fs_come = fun_test.shared_variables["storage_fs"][0].replace("-", "") + "-come"
             storage_fs_come_obj = Linux(host_ip=storage_fs_come, ssh_username="fun", ssh_password="123")
-            target_f10_storage_obj = StorageController(target_ip=storage_fs_come, target_port=40220)
-            target_f11_storage_obj = StorageController(target_ip=storage_fs_come, target_port=40221)
+            target_f10_storage_obj = StorageController(target_ip=storage_fs_come, target_port=42220)
+            target_f11_storage_obj = StorageController(target_ip=storage_fs_come, target_port=42221)
 
             # Get loop back IP:
             f10_storage_loop_ip = storage_fs_come_obj.command("docker exec -it F1-0 ifconfig lo:0 | "
@@ -212,8 +212,8 @@ class GetSetupDetails(FunTestCase):
             for fs in fun_test.shared_variables["server_fs"]:
                 print "In server FS"
                 fs_name = fs.replace("-", "") + "-come"
-                f10_storage_obj = StorageController(target_ip=fs_name, target_port=40220)
-                f11_storage_obj = StorageController(target_ip=fs_name, target_port=40221)
+                f10_storage_obj = StorageController(target_ip=fs_name, target_port=42220)
+                f11_storage_obj = StorageController(target_ip=fs_name, target_port=42221)
                 linux_obj = Linux(host_ip=fs_name, ssh_username="fun", ssh_password="123")
                 f10_lo_ip = linux_obj.command("docker exec -it F1-0 ifconfig lo:0 | "
                                               "grep -e 'inet ' | awk -F ' ' '{print $2}'")
