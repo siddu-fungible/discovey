@@ -94,8 +94,10 @@ class ApcPduTestcase(FunTestCase):
                 self.after_runsc_up_host_connect_interval = job_inputs["after_runsc_up_host_connect_interval"]
             if "check_portal" in job_inputs:
                 self.check_portal = job_inputs["check_portal"]
-            if "apc_pdu_reboot_machine" in job_inputs:
-                self.apc_pdu_reboot_machine = job_inputs["apc_pdu_reboot_machine"]
+            if "apc_pdu_power_cycle" in job_inputs:
+                self.apc_pdu_power_cycle_test = job_inputs["apc_pdu_power_cycle"]
+            if "reboot_machine_test" in job_inputs:
+                self.reboot_machine_test = job_inputs["reboot_machine_test"]
 
     def run(self):
         '''
@@ -108,20 +110,16 @@ class ApcPduTestcase(FunTestCase):
 
         for pc_no in range(self.iterations):
             self.pc_no = pc_no
+
+            fun_test.add_checkpoint(checkpoint="ITERATION : {} out of {}".format(pc_no + 1, self.iterations))
+
+            self.reboot_test()
             self.come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
                                     ssh_username=self.fs['come']['mgmt_ssh_username'],
                                     ssh_password=self.fs['come']['mgmt_ssh_password'])
             self.bmc_handle = Bmc(host_ip=self.fs['bmc']['mgmt_ip'],
                                   ssh_username=self.fs['bmc']['mgmt_ssh_username'],
                                   ssh_password=self.fs['bmc']['mgmt_ssh_password'])
-            self.bmc_handle.set_prompt_terminator(r'# $')
-
-            fun_test.add_checkpoint(checkpoint="ITERATION : {} out of {}".format(pc_no + 1, self.iterations))
-
-            if self.apc_pdu_reboot_machine:
-                self.apc_pdu_reboot()
-            self.come_handle.destroy()
-            self.bmc_handle.destroy()
 
             self.basic_checks()
             self.data_integrity_check()
@@ -150,7 +148,7 @@ class ApcPduTestcase(FunTestCase):
         bmc_up = self.bmc_handle.ensure_host_is_up(max_wait_time=600)
         fun_test.test_assert(bmc_up, "BMC is UP")
 
-        if self.apc_pdu_reboot_machine:
+        if self.reboot_machine_test or self.apc_pdu_power_cycle_test:
             self.check_come_up_time(expected_minutes=5)
 
         if self.check_docker:
@@ -206,6 +204,12 @@ class ApcPduTestcase(FunTestCase):
             self.disconnect_the_hosts()
             self.destoy_host_handles()
 
+    def reboot_test(self):
+        if self.reboot_machine_test:
+            self.reboot_fs1600()
+        elif self.apc_pdu_power_cycle_test:
+            self.apc_pdu_reboot()
+
     def apc_pdu_reboot(self):
         '''
         1. check if COMe is up, than power off.
@@ -213,14 +217,17 @@ class ApcPduTestcase(FunTestCase):
         :param come_handle:
         :return:
         '''
+        come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
+                           ssh_username=self.fs['come']['mgmt_ssh_username'],
+                           ssh_password=self.fs['come']['mgmt_ssh_password'])
         try:
             fun_test.log("Iteration no: {} out of {}".format(self.pc_no + 1, self.iterations))
 
             fun_test.log("Checking if COMe is UP")
-            come_up = self.come_handle.ensure_host_is_up()
+            come_up = come_handle.ensure_host_is_up()
             fun_test.add_checkpoint("COMe is UP (before switching off fs outlet)",
                                     self.to_str(come_up), True, come_up)
-            self.come_handle.destroy()
+            come_handle.destroy()
 
             apc_pdu = ApcPdu(host_ip=self.apc_info['host_ip'], username=self.apc_info['username'],
                              password=self.apc_info['password'])
@@ -234,9 +241,9 @@ class ApcPduTestcase(FunTestCase):
             fun_test.sleep(message="Wait for few seconds after switching off fs outlet", seconds=15)
 
             fun_test.log("Checking if COMe is down")
-            come_down = not (self.come_handle.ensure_host_is_up(max_wait_time=15))
+            come_down = not (come_handle.ensure_host_is_up(max_wait_time=15))
             fun_test.test_assert(come_down, "COMe is Down")
-            self.come_handle.destroy()
+            come_handle.destroy()
 
             apc_outlet_on_msg = apc_pdu.outlet_on(self.outlet_no)
             fun_test.log("APC PDU outlet on message {}".format(apc_outlet_on_msg))
@@ -247,7 +254,46 @@ class ApcPduTestcase(FunTestCase):
         except Exception as ex:
             fun_test.critical(ex)
 
+        come_handle.destroy()
+        come_handle.destroy()
         return
+
+    def reboot_fs1600(self):
+        self.wipe_out_cassandra_es_database()
+        come_down = False
+        for i in range(2):
+            self.run_reboot_script()
+            fun_test.log("Checking if COMe is down")
+            come_down = self.ensure_host_is_down(max_wait_time=60)
+            if come_down:
+                break
+        fun_test.test_assert(come_down, "COMe is Down")
+        self.come_handle.destroy()
+
+    def run_reboot_script(self):
+        self.come_handle.enter_sudo()
+        self.come_handle.command("cd /opt/fungible/etc")
+        pid = self.come_handle.start_bg_process("bash ResetFs1600.sh")
+        fun_test.log("Checking if the reboot is initiated")
+        rebooted = True if pid else False
+
+    def ensure_host_is_down(self, max_wait_time):
+        service_host_spec = fun_test.get_asset_manager().get_regression_service_host_spec()
+        service_host = None
+        if service_host_spec:
+            service_host = Linux(**service_host_spec)
+        else:
+            fun_test.log("Regression service host could not be instantiated", context=self.context)
+
+        max_down_timer = FunTimer(max_time=max_wait_time)
+        result = False
+        ping_result = True
+        while ping_result and not max_down_timer.is_expired():
+            if service_host and ping_result:
+                ping_result = service_host.ping(dst=self.fs['come']['mgmt_ip'], count=5)
+        if not ping_result:
+            result = True
+        return result
 
     @staticmethod
     def match_success(output_message):
@@ -661,11 +707,13 @@ class ApcPduTestcase(FunTestCase):
                             ssh_password=host_info['ssh_password'])
         return host_handle
 
-    def start_fio_and_verify(self, fio_params, host_names_list, cd=""):
+    def start_fio_and_verify(self, fio_params, host_names_list, cd="", toggle_read=True):
         thread_details = {}
         for host_name in host_names_list:
             thread_details[host_name] = {}
             run_time = fio_params.get("runtime", 60)
+            if "read" in fio_params["rw"] and toggle_read:
+                fio_params["rw"] = "randread" if fio_params["rw"] == "read" else "read"
             thread_details[host_name]["check"] = fun_test.execute_thread_after(func=self.check_traffic,
                                                                                time_in_seconds=5,
                                                                                fio_run_time=run_time,
@@ -711,10 +759,11 @@ class ApcPduTestcase(FunTestCase):
                                                                                                        host_info["nvme"]
                                                                                                        ))
 
-    def disconnect_the_hosts(self):
+    def disconnect_the_hosts(self, strict=True):
         for host_name, host_info in self.host_details.iteritems():
             output = host_info["handle"].sudo_command("nvme disconnect -n {nqn}".format(nqn=host_info["data"]["nqn"]))
-            disconnected = True if "disconnected 1" in output else False
+            strict_key = " 1" if strict else ""
+            disconnected = True if "disconnected{}".format(strict_key) in output else False
             fun_test.test_assert(disconnected,
                                  "Host: {} disconnected from {}".format(host_name, host_info["data"]["ip"]))
 
@@ -742,6 +791,7 @@ class ApcPduTestcase(FunTestCase):
         self.come_handle.command("cd /var/opt/fungible")
         self.come_handle.sudo_command("rm -r elasticsearch")
         self.come_handle.sudo_command("rm -r cassandra")
+        fun_test.test_assert(True, "Cleaned database")
 
     def restart_fs1600(self):
         self.come_handle.enter_sudo()
