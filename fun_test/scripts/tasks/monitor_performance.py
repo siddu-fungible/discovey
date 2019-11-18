@@ -44,10 +44,10 @@ class EmailPerformanceDrop(PerformanceTc):
                               """)
 
     def run(self):
-        status = fun_test.PASSED
-        workspaces = PerformanceUserWorkspaces.objects.all()
-        for workspace in workspaces:
-            if workspace.subscribe_to_alerts:
+        try:
+            status = fun_test.PASSED
+            workspaces = PerformanceUserWorkspaces.objects.filter(id=2088)
+            for workspace in workspaces:
                 # email = ml._get_email_address(workspace_id=workspace["id"])
                 email_list = []
                 email_list.append(self.regression_email)
@@ -69,6 +69,8 @@ class EmailPerformanceDrop(PerformanceTc):
                     except Exception as ex:
                         status = fun_test.FAILED
                         fun_test.critical(str(ex))
+        except Exception as ex:
+            fun_test.critical(str(ex))
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=status, message="No degraded metrics")
 
 

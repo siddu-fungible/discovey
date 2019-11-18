@@ -405,13 +405,13 @@ class MetricLib():
                     data_set_dict = {}
                     self._set_dict(entries=entries, data_set_dict=data_set_dict, output_name=output_name, name=name)
                     if data_set_dict["today"] and data_set_dict["yesterday"] and data_set_dict["today"] != -1 and \
-                            data_set_dict["yesterday"] != -1:
+                            data_set_dict["yesterday"] != -1 and data_set_dict["yesterday"] != 0:
                         percentage = self._calculate_percentage(current=data_set_dict["today"],
                                                                 previous=data_set_dict[
                                                                     "yesterday"])
                         best_percentage = self._calculate_percentage(current=data_set_dict["today"],
                                                                      previous=data_set["output"]["best"]) if \
-                            data_set["output"]["best"] != -1 else None
+                            data_set["output"]["best"] != -1 and data_set["output"]["best"] != 0 else None
 
                         if chart.positive and percentage < negative_threshold:
                             self._set_percentage(data_set_dict=data_set_dict, report=report, percentage=percentage)
