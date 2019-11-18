@@ -32,7 +32,7 @@ HBM = "HBM"
 EXECUTE_LEAKS = "EXECUTE_LEAKS"
 PC_DMA = "PC_DMA"
 DDR = "DDR"
-
+# APPS
 RCNVME = "rcnvme"
 FIO = "fio"
 CRYPTO = "crypto"
@@ -73,7 +73,7 @@ class MyScript(FunTestScript):
                 self.come_handle.command("cd /scratch/FunSDK/bin/Linux")
                 self.come_handle.command(
                     "./dpcsh --pcie_nvme_sock=/dev/nvme{f1} --nvme_cmd_timeout=600000"
-                    " --tcp_proxy=4022{f1} &> /tmp/f1_{f1}_dpc.txt &".format(f1=f1))
+                    " --tcp_proxy=4222{f1} &> /tmp/f1_{f1}_dpc.txt &".format(f1=f1))
                 self.come_handle.exit_sudo()
                 fun_test.log("Started DPCSH on F1 {}".format(f1))
             else:
@@ -279,19 +279,19 @@ class FunTestCase1(FunTestCase):
 
     def run(self):
         self.initial_stats()
-        self.collect_stats(count=3, heading="Before starting traffic")
+        self.collect_the_stats(count=3, heading="Before starting traffic")
         self.run_the_traffic()
         count = int(self.duration / 5)
-        self.collect_stats(count=count, heading="During traffic")
+        self.collect_the_stats(count=count, heading="During traffic")
         self.stop_traffic()
         fun_test.sleep("To traffic to stop", seconds=10)
-        self.collect_stats(count=3, heading="After traffic")
+        self.collect_the_stats(count=3, heading="After traffic")
         self.come_handle.destroy()
 
     def func_not_found(self):
         print "Function not found"
 
-    def collect_stats(self, count, heading):
+    def collect_the_stats(self, count, heading):
         # power stats
         # function name standard format: func_'stats_name'
         thread_map = {}
@@ -490,7 +490,8 @@ class FunTestCase1(FunTestCase):
                 one_dataset["output"] = cal_dpc_out
                 file_helper.add_data(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset,
                                      heading=heading)
-                time_taken = self.upload_dpcsh_data_to_elk(dpcsh_data=dpcsh_output, f1=f1, stat_name=stat_name)
+                dpcsh_data = self.simplify_debug_vp_util(dpcsh_output)
+                time_taken = self.upload_dpcsh_data_to_elk(dpcsh_data=dpcsh_data, f1=f1, stat_name=stat_name)
             fun_test.sleep("Before next iteration", seconds=(5 - time_taken))
 
         come_handle.destroy()
@@ -594,7 +595,10 @@ class FunTestCase1(FunTestCase):
             file_helper.add_data(getattr(self, "f_{}".format(stat_name)), print_data, heading=heading)
             print_data = {"output": cal_output, "time": time_now}
             file_helper.add_data(getattr(self, "f_calculated_{}".format(stat_name)), print_data, heading=heading)
-            fun_test.sleep("before next iteration", seconds=5)
+            time_taken = 0
+            if self.stats_info["bmc"][stat_name].get("upload_to_es", False):
+                time_taken = self.upload_dpcsh_data_to_elk(dpcsh_data=pro_data, stat_name=stat_name)
+            fun_test.sleep("before next iteration", seconds=5-time_taken)
             if heading == "During traffic" and self.add_to_database:
                 self.add_to_database = False
                 print ("Result : {}".format(pro_data))
@@ -718,7 +722,7 @@ class FunTestCase1(FunTestCase):
                 self.come_handle.command("cd /scratch/FunSDK/bin/Linux")
                 self.come_handle.command(
                     "./dpcsh --pcie_nvme_sock=/dev/nvme{f1} --nvme_cmd_timeout=600000"
-                    " --tcp_proxy=4022{f1} &> /tmp/f1_{f1}_dpc.txt &".format(f1=f1))
+                    " --tcp_proxy=4222{f1} &> /tmp/f1_{f1}_dpc.txt &".format(f1=f1))
                 self.come_handle.exit_sudo()
                 fun_test.log("Started DPCSH on F1 {}".format(f1))
             else:
@@ -849,10 +853,14 @@ class FunTestCase1(FunTestCase):
             fun_test.critical(ex)
         fun_test.shared_variables["fio_output_f1_{}".format(f1)] = fio_output
 
-    def upload_dpcsh_data_to_elk(self, dpcsh_data, f1, stat_name):
-        simplified_dpcsh_data = self.simplify_debug_vp_util(dpcsh_data)
-        data_dict = self.add_basics_req_elk(simplified_dpcsh_data, f1=f1)
-        time_taken = self.upload_using_multiprocessing(data_dict, stat_name)
+    def upload_dpcsh_data_to_elk(self, dpcsh_data, stat_name, f1=None):
+        time_taken = 0
+        data_dict = self.add_basics_req_elk(dpcsh_data, f1=f1)
+        if data_dict:
+            fun_test.log("Uploading data for command : {}".format(stat_name))
+            index = self.get_index(stat_name)
+            doctype = self.doc_type(stat_name)
+            time_taken = self.upload_bulk(index, doctype, data_dict)
         return time_taken
 
     def simplify_debug_vp_util(self, dpcsh_data):
@@ -874,25 +882,16 @@ class FunTestCase1(FunTestCase):
                             print ("Data error")
         return result
 
-    def add_basics_req_elk(self, simplified_dpcsh_data, time_stamp=True, system_name="fs-65", f1=1):
+    def add_basics_req_elk(self, dpcsh_data, f1, time_stamp=True, system_name="fs-65"):
         utc_time = datetime.datetime.utcnow()
         time_strf = utc_time.strftime("%Y-%m-%dT%H:%M:%S.%f")
-
-        for each_data_set in simplified_dpcsh_data:
+        for each_data_set in dpcsh_data:
             if time_stamp:
                 each_data_set["Time"] = time_strf
+            if f1:
+                each_data_set["f1"] = f1
             each_data_set["system_name"] = self.fs['name']
-            each_data_set["f1"] = f1
-
-        return simplified_dpcsh_data
-
-    def upload_using_multiprocessing(self, data_dict, stat_name):
-        if data_dict:
-            fun_test.log("Uploading data for command : {}".format(stat_name))
-            index = self.get_index(stat_name)
-            doctype = self.doc_type(stat_name)
-            time_taken = self.upload_bulk(index, doctype, data_dict)
-            return time_taken
+        return dpcsh_data
 
     def upload_bulk(self, index, doctype, data_list):
         res = False
@@ -947,7 +946,7 @@ class FunTestCase1(FunTestCase):
         # post_fix_name: "{calculated_}{app_name}_OUTPUT"
         # post_fix_name: "{calculated_}{app_name}_DPCSH_OUTPUT_F1_{f1}_logs.txt"
         # description : "{calculated_}_{app_name}_DPCSH_OUTPUT_F1_{f1}"
-        self.stats_info["bmc"] = {POWER: {"calculated": True},
+        self.stats_info["bmc"] = {POWER: {"calculated": True, "upload_to_es": True},
                                   DIE_TEMPERATURE: {"calculated": False, "disable": True}}
         self.stats_info["come"] = {DEBUG_MEMORY: {}, CDU: {}, EQM: {},
                                    BAM: {"calculated": False, "disable": True}, DEBUG_VP_UTIL: {}, "LE": {},
