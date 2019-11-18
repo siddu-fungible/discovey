@@ -377,13 +377,13 @@
     "bmc": {
       "mgmt_ssh_password": "superuser",
       "mgmt_ssh_username": "sysadmin",
-      "mgmt_ip": "10.1.20.170"
+      "mgmt_ip": "10.1.20.126"
     },
     "name": "fs-65",
     "fpga": {
       "mgmt_ssh_password": "root",
       "mgmt_ssh_username": "root",
-      "mgmt_ip": "10.1.20.179"
+      "mgmt_ip": "10.1.20.143"
     },
     "workarounds": {
       "skip_funeth_come_power_cycle": true
