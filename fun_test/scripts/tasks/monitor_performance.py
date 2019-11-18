@@ -46,7 +46,7 @@ class EmailPerformanceDrop(PerformanceTc):
     def run(self):
         try:
             status = fun_test.PASSED
-            workspaces = PerformanceUserWorkspaces.objects.filter(id=2088)
+            workspaces = PerformanceUserWorkspaces.objects.filter(subscribe_to_alerts=True)
             for workspace in workspaces:
                 # email = ml._get_email_address(workspace_id=workspace["id"])
                 email_list = []
