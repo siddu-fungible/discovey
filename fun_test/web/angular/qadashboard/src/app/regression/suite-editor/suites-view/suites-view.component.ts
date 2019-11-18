@@ -31,6 +31,7 @@ export class SuitesViewComponent implements OnInit {
   @Input() multiSelect: boolean = false;
   @Input() selectedSuiteIds: number [] = [];
   @Output() reportSelectedSuites = new EventEmitter<Suite []>();
+  @Output() cancelSelection = new EventEmitter();
   Mode = Mode;
   mode: Mode = Mode.DEFAULT;
 
@@ -151,4 +152,7 @@ export class SuitesViewComponent implements OnInit {
     this.reportSelectedSuites.emit(this.suites.filter(suite => suite.selected));
   }
 
+  onCancelClick() {
+    this.cancelSelection.emit();
+  }
 }

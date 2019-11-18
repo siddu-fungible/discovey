@@ -41,6 +41,10 @@ export class ReleaseCatalogEditorComponent implements OnInit, OnChanges {
     this.addNewlySelectedSuites(newlySelectedSuites);
   }
 
+  cancelSelection() {
+    this.addingSuites = false;
+  }
+
   addNewlySelectedSuites(newlySelectedSuites) {
     newlySelectedSuites.forEach(newlySelecteSuite => {
       if (this.selectedSuites.findIndex(selectedSuite => selectedSuite.id === newlySelecteSuite.id) < 0 ) {

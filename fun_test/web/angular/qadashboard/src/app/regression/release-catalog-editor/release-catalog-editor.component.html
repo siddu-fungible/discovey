@@ -1,6 +1,12 @@
 <div class="component">
-  <button class="fun-button-add" (click)="addingSuites = !addingSuites">Add suites</button>
-  <app-suites-view [@show]="addingSuites" *ngIf="addingSuites" [selectedSuiteIds]="selectedSuiteIds" [multiSelect]="true" (reportSelectedSuites)="suitesSelectedByView($event)"></app-suites-view>
+  <button *ngIf="!addingSuites" class="fun-button-add" (click)="addingSuites = !addingSuites">Add suites</button>
+
+  <ng-container *ngIf="addingSuites">Adding suites ...</ng-container>
+  <app-suites-view [@show]="addingSuites"
+                   *ngIf="addingSuites"
+                   [selectedSuiteIds]="selectedSuiteIds"
+                   [multiSelect]="true"
+                   (reportSelectedSuites)="suitesSelectedByView($event)" (cancelSelection)="cancelSelection()"></app-suites-view>
 
   <div class="fun-panel" *ngIf="selectedSuites.length > 0">
     <div class="fun-panel-header">
