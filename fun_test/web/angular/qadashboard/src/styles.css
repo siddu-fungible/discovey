@@ -775,7 +775,7 @@ label {
 
 .fun-attribute-label {
   font-weight: bold;
-  margin-right: 10px;
+  padding: 5px;
 }
 
 .fun-attribute-section {
@@ -784,7 +784,7 @@ label {
 
 .fun-attribute {
   display: block;
-  margin: 5px;
+  padding: 5px;
 }
 
 .fun-icon {

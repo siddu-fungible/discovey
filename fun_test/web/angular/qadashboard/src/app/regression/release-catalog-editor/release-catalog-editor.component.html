@@ -1,12 +1,25 @@
 <div class="component">
-  <span class="fun-attribute-label">Description:</span> <app-textarea-input [initialValue]="releaseCatalog.description" (valueChanged)="catalogDescriptionChanged($event)" [numRows]="1"></app-textarea-input>
+  <div class="fun-attribute">
+    <span class="fun-attribute-label">Description:</span> <app-textarea-input [initialValue]="releaseCatalog.description" (valueChanged)="catalogDescriptionChanged($event)" [numRows]="1"></app-textarea-input>
+  </div>
   <button *ngIf="!addingSuites" class="fun-button-add" (click)="addingSuites = !addingSuites">Add suites</button>
-  <ng-container *ngIf="addingSuites">Adding suites ...</ng-container>
-  <app-suites-view [@show]="addingSuites"
-                   *ngIf="addingSuites"
-                   [selectedSuiteIds]="selectedSuiteIds"
-                   [multiSelect]="true"
-                   (reportSelectedSuites)="suitesSelectedByView($event)" (cancelSelection)="cancelSelection()"></app-suites-view>
+
+  <ng-container *ngIf="addingSuites">
+    <div class="fun-panel">
+      <div class="fun-panel-header">
+        Adding suites ...
+      </div>
+      <div class="fun-panel-body">
+        <app-suites-view [@show]="addingSuites"
+                     *ngIf="addingSuites"
+                     [selectedSuiteIds]="selectedSuiteIds"
+                     [multiSelect]="true"
+                     (reportSelectedSuites)="suitesSelectedByView($event)" (cancelSelection)="cancelSelection()">
+
+    </app-suites-view>
+      </div>
+    </div>
+  </ng-container>
 
   <div class="fun-panel" *ngIf="selectedSuites.length > 0">
     <div class="fun-panel-header">
