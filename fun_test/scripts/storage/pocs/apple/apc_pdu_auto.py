@@ -9,6 +9,7 @@ from lib.host.linux import Linux
 from collections import OrderedDict
 import requests
 from lib.templates.storage.storage_controller_api import StorageControllerApi
+from lib.topology.topology_helper import TopologyHelper
 
 
 class ApcPduScript(FunTestScript):
@@ -45,8 +46,8 @@ class ApcPduTestcase(FunTestCase):
                               """)
 
     def setup(self):
-        self.fs_name = fun_test.get_job_environment_variable("test_bed_type")
-        self.fs = AssetManager().get_fs_by_name(self.fs_name)
+        self.testbed_type = fun_test.get_job_environment_variable("test_bed_type")
+        self.fs = AssetManager().get_fs_by_name(self.testbed_type)
         self.apc_info = self.fs.get("apc_info", None)
         self.outlet_no = self.apc_info.get("outlet_number", None)
         HOSTS_ASSET = ASSET_DIR + "/hosts.json"
@@ -314,7 +315,7 @@ class ApcPduTestcase(FunTestCase):
         bdf = '04:00.'
         if f1 == 1:
             bdf = '06:00.'
-            if self.fs_name in ["fs-101", "fs-102", "fs-104"]:
+            if self.testbed_type in ["fs-101", "fs-102", "fs-104"]:
                 bdf = '05:00.'
         lspci_output = self.come_handle.command("lspci -d 1dad: | grep {}".format(bdf), timeout=120)
         sections = ['Ethernet controller', 'Non-Volatile', 'Unassigned class', 'encryption device']
@@ -619,8 +620,12 @@ class ApcPduTestcase(FunTestCase):
     def verify_and_get_required_hosts_list(self, num_hosts):
         available_hosts_list = []
         try:
-            self.fs_hosts_map = utils.parse_file_to_json(SCRIPTS_DIR + "/storage/apple_rev2_fs_hosts_mapping.json")
-            available_hosts_list = self.fs_hosts_map[self.fs_name]["host_info"]
+            if self.testbed_type == "suite-based":
+                self.topology_helper = TopologyHelper()
+                available_hosts_list = OrderedDict(self.topology_helper.get_available_hosts())
+            else:
+                self.fs_hosts_map = utils.parse_file_to_json(SCRIPTS_DIR + "/storage/apple_rev2_fs_hosts_mapping.json")
+                available_hosts_list = self.fs_hosts_map[self.testbed_type]["host_info"]
         except Exception as ex:
             fun_test.critical(ex)
         required_hosts_available = True if (len(available_hosts_list) >= num_hosts) else False
