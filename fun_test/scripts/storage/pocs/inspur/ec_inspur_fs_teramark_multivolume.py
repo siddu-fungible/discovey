@@ -1206,6 +1206,10 @@ class ECVolumeLevelTestcase(FunTestCase):
                         fio_job_name = "{}_{}pctcomp_iodepth_{}_vol_{}". \
                             format(self.fio_job_name, self.warm_up_fio_cmd_args["buffer_compress_percentage"],
                                    row_data_dict["iodepth"], self.ec_info["num_volumes"])
+
+                    if self.ec_info.get("encrypt", False):
+                        fio_job_name = "{}_encryption_keysize_{}_iodepth_{}_vol_{}". \
+                            format(self.fio_job_name,self.ec_info["key_size"],row_data_dict["iodepth"], self.ec_info["num_volumes"])
                 else:
                     fio_job_name = "{}_{}".format(self.fio_job_name, row_data_dict["iodepth"])
 
@@ -1718,6 +1722,6 @@ if __name__ == "__main__":
     ecscript.add_test_case(MixedRandReadWriteIOPS())
     ecscript.add_test_case(SequentialReadWrite1024kBlocks())
     ecscript.add_test_case(RandWrite8kBlocks())
-    # ecscript.add_test_case(OLTPModelReadWriteIOPS())
-    # ecscript.add_test_case(OLAPModelReadWriteIOPS())
+    #ecscript.add_test_case(OLTPModelReadWriteIOPS())
+    #ecscript.add_test_case(OLAPModelReadWriteIOPS())
     ecscript.run()

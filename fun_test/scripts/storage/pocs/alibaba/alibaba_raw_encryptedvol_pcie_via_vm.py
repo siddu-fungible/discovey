@@ -209,7 +209,7 @@ class RawVolumeLocalPerfTestcase(FunTestCase):
             i = 1
             # Configure storage controller for DPU 1 (since we are testing SSD on DPU 1)
             storage_controller = StorageController(target_ip=fs_spec['come']['mgmt_ip'],
-                                                   target_port=40221)
+                                                   target_port=42221)
             command_result = storage_controller.ip_cfg(ip=servers_with_vms[server]["local_controller_ip"],
                                                        port=servers_with_vms[server]["local_controller_port"])
 

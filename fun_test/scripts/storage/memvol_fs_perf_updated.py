@@ -50,7 +50,7 @@ tb_config = {
         "ip": "10.1.20.154",
         "user": "fun",
         "passwd": "123",
-        "dpcsh_port": 40220,
+        "dpcsh_port": 42220,
         "dpcsh_tty": "/dev/ttyUSB8"
     },
     "tg_info": {

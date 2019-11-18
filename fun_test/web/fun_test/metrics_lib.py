@@ -1,6 +1,6 @@
 import os
 import django
-from web.web_global import PRIMARY_SETTINGS_FILE, F1_ROOT_ID, S1_ROOT_ID, OTHER_ROOT_ID
+from web.web_global import PRIMARY_SETTINGS_FILE, F1_ROOT_ID, S1_ROOT_ID, OTHER_ROOT_ID, FS1600_ROOT_ID
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", PRIMARY_SETTINGS_FILE)
 django.setup()
@@ -430,8 +430,10 @@ class MetricLib():
                 self._set_report_fields(lineage=lineage, metric_id=int(child), reports=reports, root=False)
 
     def _calculate_percentage(self, current, previous):
-        percent_num = (float(current - previous) / float(previous)) * 100.0
-        percentage = round(percent_num, 2)
+        percentage = 0
+        if previous:
+            percent_num = (float(current - previous) / float(previous)) * 100.0
+            percentage = round(percent_num, 2)
         return percentage
 
     def _set_dict(self, entries, data_set_dict, output_name, name):
@@ -456,7 +458,7 @@ class MetricLib():
 
     def backup_dags(self):
         self.set_global_cache(cache_valid=False)
-        metric_ids = [F1_ROOT_ID, S1_ROOT_ID, OTHER_ROOT_ID]  # F1, S1, Other metric id
+        metric_ids = [F1_ROOT_ID, S1_ROOT_ID, FS1600_ROOT_ID, OTHER_ROOT_ID]  # F1, S1, FS1600, Other metric id
         result = self.fetch_dag(metric_ids=metric_ids, backup=True)
         PerformanceMetricsDag(metrics_dag=json.dumps(result)).save()
         print "dag backup successful"

@@ -1049,7 +1049,7 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                                                        listener_ip=self.perf_listener_ip, fs=self.fs[0],
                                                        listener_port=4420)  # Temp change for testing
                         csi_perf_obj.prepare(f1_index=0)
-                        csi_perf_obj.start(f1_index=0, dpc_client=self.storage_controller)
+                        csi_perf_obj.start(f1_index=0)  #  , dpc_client=self.storage_controller)
                         fun_test.log("csi perf stats collection is started")
                         # dpcsh_client = self.fs.get_dpc_client(f1_index=0, auto_disconnect=True)
                         fun_test.sleep("Allowing CSI performance data to be collected", 300)

@@ -81,7 +81,7 @@ def run_ptf_test(tc, server, timeout, tc_desc):
         dpc_proxy_port = int(job_environment['UART_TCP_PORT_0'])
     except:
         dpc_proxy_ip = '10.1.21.120'
-        dpc_proxy_port = '40221'
+        dpc_proxy_port = '42221'
 
     funcp_obj = fun_test.shared_variables['funcp_obj']
     output = funcp_obj.send_traffic(tc, server=server, dpc_proxy_ip=dpc_proxy_ip, dpc_proxy_port=dpc_proxy_port,

@@ -1,7 +1,7 @@
 from scripts.examples.register_controller import RegisterController
 import sys
 
-rc = RegisterController(dpc_server_ip='10.1.40.22', dpc_server_port=40221, verbose=False)
+rc = RegisterController(dpc_server_ip='10.1.40.22', dpc_server_port=42221, verbose=False)
 while True:
     inst = None
     index = None
