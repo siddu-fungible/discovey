@@ -5,8 +5,14 @@ import {catchError, switchMap} from 'rxjs/operators';
 import {forkJoin, observable, Observable, of, throwError} from "rxjs";
 import {CommonService} from "../services/common/common.service";
 
+
+export class ReleaseCatalogSuite {
+  id: number;
+}
+
 export class ReleaseCatalog {
   description: string = "Please update";
+  suites: ReleaseCatalogSuite [] = [];
 }
 
 @Injectable({

@@ -389,7 +389,7 @@ class ReleaseCatalog(FunModel):
     description = models.TextField(default="TBD")
     created_date = models.DateTimeField(default=datetime.now)
     modified_date = models.DateTimeField(default=datetime.now)
-
+    suites = JSONField(default=[])
 
 class Module(models.Model):
     name = models.TextField(unique=True)

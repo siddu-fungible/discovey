@@ -16,7 +16,7 @@ import {showAnimation} from "../../animations/generic-animations";
 export class ReleaseCatalogEditorComponent implements OnInit, OnChanges {
   driver: any = null;
   addingSuites: boolean = false;
-  selectedSuites: Suite [] = [];
+  //selectedSuites: Suite [] = [];
   selectedSuiteIds: number [] = [];
   constructor(private loggerService: LoggerService,
               private regressionService: RegressionService,
@@ -49,12 +49,12 @@ export class ReleaseCatalogEditorComponent implements OnInit, OnChanges {
 
   addNewlySelectedSuites(newlySelectedSuites) {
     newlySelectedSuites.forEach(newlySelecteSuite => {
-      if (this.selectedSuites.findIndex(selectedSuite => selectedSuite.id === newlySelecteSuite.id) < 0 ) {
-        this.selectedSuites.push(newlySelecteSuite);
+      if (this.releaseCatalog.suites.findIndex(selectedSuite => selectedSuite.id === newlySelecteSuite.id) < 0 ) {
+        this.releaseCatalog.suites.push(newlySelecteSuite);
       }
     });
     this.selectedSuiteIds = [];
-    this.selectedSuites.map(selectedSuite => {
+    this.releaseCatalog.suites.map(selectedSuite => {
       this.selectedSuiteIds.push(selectedSuite.id);
     });
     this.selectedSuiteIds = [...this.selectedSuiteIds];

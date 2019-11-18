@@ -21,7 +21,7 @@
     </div>
   </ng-container>
 
-  <div class="fun-panel" *ngIf="selectedSuites.length > 0">
+  <div class="fun-panel" *ngIf="releaseCatalog.suites.length > 0">
     <div class="fun-panel-header">
       Selected suites
     </div>
@@ -30,7 +30,7 @@
         <tr>
           <td class="fun-table-header"></td>
           <td class="fun-table-header">
-            Suited ID
+            Suite ID
           </td>
           <td class="fun-table-header">
             Name
@@ -42,7 +42,7 @@
             Categories
           </td>
         </tr>
-        <tr *ngFor="let selectedSuite of selectedSuites; let index=index">
+        <tr *ngFor="let selectedSuite of releaseCatalog.suites; let index=index">
           <td>
             {{ index }}
           </td>
