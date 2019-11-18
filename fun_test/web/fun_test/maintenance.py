@@ -2404,7 +2404,7 @@ if __name__ == "__main_load_mods__":
     chart.data_sets = json.dumps(data_sets)
     chart.save()
 
-if __name__ == "__main__":
+if __name__ == "__main_fs1600__":
     chart = MetricChart.objects.get(internal_chart_name="f1_fs1600")
     chart.internal_chart_name = "fs1600"
     chart.save()
@@ -2433,3 +2433,7 @@ if __name__ == "__main__":
         one_dict["reference"] = True
         result.append(one_dict)
     print json.dumps(result)
+
+if __name__ == "__main__":
+    ml.backup_dags()
+    ml.set_global_cache(cache_valid=True)

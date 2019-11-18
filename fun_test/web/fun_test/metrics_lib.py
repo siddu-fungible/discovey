@@ -456,7 +456,7 @@ class MetricLib():
 
     def backup_dags(self):
         self.set_global_cache(cache_valid=False)
-        metric_ids = [F1_ROOT_ID, S1_ROOT_ID, OTHER_ROOT_ID, FS1600_ROOT_ID]  # F1, S1, Other metric id
+        metric_ids = [F1_ROOT_ID, S1_ROOT_ID, FS1600_ROOT_ID, OTHER_ROOT_ID]  # F1, S1, FS1600, Other metric id
         result = self.fetch_dag(metric_ids=metric_ids, backup=True)
         PerformanceMetricsDag(metrics_dag=json.dumps(result)).save()
         print "dag backup successful"
