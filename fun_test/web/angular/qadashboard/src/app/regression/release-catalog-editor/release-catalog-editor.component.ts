@@ -1,11 +1,12 @@
 import {Component, Input, OnChanges, OnInit} from '@angular/core';
 import {LoggerService} from "../../services/logger/logger.service";
-import {RegressionService, ReleaseCatalog} from "../regression.service";
 import {Suite, SuiteEditorService} from "../suite-editor/suite-editor.service";
 import {of} from "rxjs";
 import {switchMap} from "rxjs/operators";
 import {CommonService} from "../../services/common/common.service";
 import {showAnimation} from "../../animations/generic-animations";
+import {ReleaseCatalogSuite, ReleaseCatalog} from "../declarations";
+import {RegressionService} from "../regression.service";
 
 @Component({
   selector: 'app-release-catalog-editor',
@@ -18,6 +19,7 @@ export class ReleaseCatalogEditorComponent implements OnInit, OnChanges {
   addingSuites: boolean = false;
   //selectedSuites: Suite [] = [];
   selectedSuiteIds: number [] = [];
+  suites: {[id: number]: Suite};
   constructor(private loggerService: LoggerService,
               private regressionService: RegressionService,
               private suiteEditorService: SuiteEditorService,
