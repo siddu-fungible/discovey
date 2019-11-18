@@ -1,4 +1,4 @@
-from start_traffic_helper import *
+from lib.host.linux import Linux
 from asset.asset_manager import AssetManager
 from lib.fun.fs import ComE, Bmc
 import bmc_commands
@@ -15,10 +15,23 @@ import get_params_for_time
 from collections import deque
 from elasticsearch import helpers
 from elasticsearch import Elasticsearch
+import dpcsh_nocli
 
 # Environment: --environment={\"test_bed_type\":\"fs-65\",\"tftp_image_path\":\"ranga/funos-f1_ranga.stripped.gz\"} --inputs={\"boot_new_image\":true,\"le_firewall\":true,\"collect_stats\":[\"\"],\"ec_vol\":true}
 # inputs: {"run_le_firewall":false,"specific_apps":["ZIP"],"add_to_database":true,"collect_stats":["POWER","DEBUG_MEMORY","LE"],"end_sleep":30}
 # --environment={\"test_bed_type\":\"fs-65\",\"tftp_image_path\":\"ranga/funos-f1_onkar.stripped.gz\"} --inputs={\"boot_new_image\":false,\"le_firewall\":false,\"collect_stats\":[\"DEBUG_VP_UTIL\",\"POWER\"],\"ec_vol\":false,\"specific_apps\":[\"crypto\"],\"disable_f1_index\":0}
+
+POWER = "POWER"
+DIE_TEMPERATURE = "DIE_TEMPERATURE"
+DEBUG_MEMORY = "DEBUG_MEMORY"
+CDU = "CDU"
+EQM = "EQM"
+BAM = "BAM"
+DEBUG_VP_UTIL = "DEBUG_VP_UTIL"
+HBM = "HBM"
+EXECUTE_LEAKS = "EXECUTE_LEAKS"
+PC_DMA = "PC_DMA"
+DDR = "DDR"
 
 RCNVME = "rcnvme"
 FIO = "fio"
@@ -316,7 +329,7 @@ class FunTestCase1(FunTestCase):
 
     ############# EQM ################
     def func_eqm(self, f1, count, heading):
-        stat_name = "EQM"
+        stat_name = EQM
         come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
                            ssh_username=self.fs['come']['mgmt_ssh_username'],
                            ssh_password=self.fs['come']['mgmt_ssh_password'])
@@ -383,7 +396,7 @@ class FunTestCase1(FunTestCase):
 
     ############# CDU ################
     def func_cdu(self, f1, count, heading):
-        stat_name = "CDU"
+        stat_name = CDU
         come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
                            ssh_username=self.fs['come']['mgmt_ssh_username'],
                            ssh_password=self.fs['come']['mgmt_ssh_password'])
@@ -415,7 +428,7 @@ class FunTestCase1(FunTestCase):
 
     ####### PC DMA #########
     def func_pc_dma(self, count, heading, f1):
-        stat_name = "PC_DMA"
+        stat_name = PC_DMA
         come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
                            ssh_username=self.fs['come']['mgmt_ssh_username'],
                            ssh_password=self.fs['come']['mgmt_ssh_password'])
@@ -447,7 +460,7 @@ class FunTestCase1(FunTestCase):
 
     ############# BAM ################
     def func_bam(self, f1, count, heading):
-        stat_name = "BAM"
+        stat_name = BAM
         come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
                            ssh_username=self.fs['come']['mgmt_ssh_username'],
                            ssh_password=self.fs['come']['mgmt_ssh_password'])
@@ -462,7 +475,7 @@ class FunTestCase1(FunTestCase):
 
     ############### debug vp_utils #######
     def func_debug_vp_util(self, f1, count, heading):
-        stat_name = "DEBUG_VP_UTIL"
+        stat_name = DEBUG_VP_UTIL
         come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
                            ssh_username=self.fs['come']['mgmt_ssh_username'],
                            ssh_password=self.fs['come']['mgmt_ssh_password'])
@@ -484,7 +497,7 @@ class FunTestCase1(FunTestCase):
 
     ########### HBM ##################
     def func_hbm(self, f1, count, heading):
-        stat_name = "HBM"
+        stat_name = HBM
         come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
                            ssh_username=self.fs['come']['mgmt_ssh_username'],
                            ssh_password=self.fs['come']['mgmt_ssh_password'])
@@ -518,7 +531,7 @@ class FunTestCase1(FunTestCase):
 
     ############   DDR #############
     def func_ddr(self, f1, count, heading):
-        stat_name = "DDR"
+        stat_name = DDR
         come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
                            ssh_username=self.fs['come']['mgmt_ssh_username'],
                            ssh_password=self.fs['come']['mgmt_ssh_password'])
@@ -552,7 +565,7 @@ class FunTestCase1(FunTestCase):
 
     ######## EXECUTE LEAKS ###########
     def func_execute_leaks(self, f1, count, heading):
-        stat_name = "EXECUTE_LEAKS"
+        stat_name = EXECUTE_LEAKS
         come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
                            ssh_username=self.fs['come']['mgmt_ssh_username'],
                            ssh_password=self.fs['come']['mgmt_ssh_password'])
@@ -566,7 +579,7 @@ class FunTestCase1(FunTestCase):
 
     ############## power #############
     def func_power(self, count, heading):
-        stat_name = "POWER"
+        stat_name = POWER
         bmc_handle = Bmc(host_ip=self.fs['bmc']['mgmt_ip'],
                          ssh_username=self.fs['bmc']['mgmt_ssh_username'],
                          ssh_password=self.fs['bmc']['mgmt_ssh_password'],
@@ -591,7 +604,7 @@ class FunTestCase1(FunTestCase):
 
     ############ Die temperature #########
     def func_die_temperature(self, count, heading):
-        stat_name = "DIE_TEMPERATURE"
+        stat_name = DIE_TEMPERATURE
         bmc_handle = Bmc(host_ip=self.fs['bmc']['mgmt_ip'],
                          ssh_username=self.fs['bmc']['mgmt_ssh_username'],
                          ssh_password=self.fs['bmc']['mgmt_ssh_password'],
@@ -608,7 +621,7 @@ class FunTestCase1(FunTestCase):
 
     ###########  debug memory ########
     def func_debug_memory(self, f1, count, heading):
-        stat_name = "DEBUG_MEMORY"
+        stat_name = DEBUG_MEMORY
         come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
                            ssh_username=self.fs['come']['mgmt_ssh_username'],
                            ssh_password=self.fs['come']['mgmt_ssh_password'])
@@ -934,13 +947,13 @@ class FunTestCase1(FunTestCase):
         # post_fix_name: "{calculated_}{app_name}_OUTPUT"
         # post_fix_name: "{calculated_}{app_name}_DPCSH_OUTPUT_F1_{f1}_logs.txt"
         # description : "{calculated_}_{app_name}_DPCSH_OUTPUT_F1_{f1}"
-        self.stats_info["bmc"] = {"POWER": {"calculated": True},
-                                  "DIE_TEMPERATURE": {"calculated": False, "disable": True}}
-        self.stats_info["come"] = {"DEBUG_MEMORY": {}, "CDU": {}, "EQM": {},
-                                   "BAM": {"calculated": False, "disable": True}, "DEBUG_VP_UTIL": {}, "LE": {},
-                                   "HBM": {"calculated": True},
-                                   "EXECUTE_LEAKS": {"calculated": False}, "PC_DMA": {"calculated": True},
-                                   "DDR": {"calculated": True}}
+        self.stats_info["bmc"] = {POWER: {"calculated": True},
+                                  DIE_TEMPERATURE: {"calculated": False, "disable": True}}
+        self.stats_info["come"] = {DEBUG_MEMORY: {}, CDU: {}, EQM: {},
+                                   BAM: {"calculated": False, "disable": True}, DEBUG_VP_UTIL: {}, "LE": {},
+                                   HBM: {"calculated": True},
+                                   EXECUTE_LEAKS: {"calculated": False}, PC_DMA: {"calculated": True},
+                                   DDR: {"calculated": True}}
         self.stats_info["files"] = {"fio": {"calculated": False}}
 
         if self.collect_stats:
