@@ -430,8 +430,10 @@ class MetricLib():
                 self._set_report_fields(lineage=lineage, metric_id=int(child), reports=reports, root=False)
 
     def _calculate_percentage(self, current, previous):
-        percent_num = (float(current - previous) / float(previous)) * 100.0
-        percentage = round(percent_num, 2)
+        percentage = 0
+        if previous:
+            percent_num = (float(current - previous) / float(previous)) * 100.0
+            percentage = round(percent_num, 2)
         return percentage
 
     def _set_dict(self, entries, data_set_dict, output_name, name):
