@@ -1140,8 +1140,10 @@ class ComE(Linux):
     EXPECTED_FUNQ_DEVICE_ID = ["04:00.1", "06:00.1"]
     DEFAULT_DPC_PORT = [42220, 42221]
     DEFAULT_STATISTICS_DPC_PORT = [45220, 45221]
+    DEFAULT_CSI_PERF_DPC_PORT = [46220, 46221]
     DPC_LOG_PATH = "/tmp/f1_{}_dpc.txt"
-    DPC_STATISTICS_LOG_PATH = "/tmp/f1_{}_dpc.txt"
+    DPC_STATISTICS_LOG_PATH = "/tmp/f1_{}_dpc_statistics.txt"
+    DPC_CSI_PERF_LOG_PATH = "/tmp/f1_{}_dpc_csi_perf.txt"
     NUM_F1S = 2
     NVME_CMD_TIMEOUT = 600000
 
@@ -1164,6 +1166,7 @@ class ComE(Linux):
         self.hbm_dump_enabled = False
         self.funq_bind_device = {}
         self.dpc_for_statistics_ready = False
+        self.dpc_for_csi_perf_ready = False
 
     def pre_reboot_cleanup(self):
         fun_test.log("Cleaning up storage controller containers", context=self.context)
@@ -1309,10 +1312,12 @@ class ComE(Linux):
             bus_number = int(parts[0])
         return bus_number
 
-    def get_dpc_port(self, f1_index, statistics=None):
+    def get_dpc_port(self, f1_index, statistics=None, csi_perf=None):
         port = self.DEFAULT_DPC_PORT[f1_index]
         if statistics:
             port = self.DEFAULT_STATISTICS_DPC_PORT[f1_index]
+        if csi_perf:
+            port = self.DEFAULT_CSI_PERF_DPC_PORT[f1_index]
         return port
 
     def setup_workspace(self):
@@ -1383,7 +1388,7 @@ class ComE(Linux):
         # self.sudo_command("build/posix/bin/funq-setup unbind")
         return True
 
-    def setup_dpc(self, statistics=None):
+    def setup_dpc(self, statistics=None, csi_perf=None):
 
         # self.command("cd $WORKSPACE/FunControlPlane")
         """
@@ -1409,7 +1414,7 @@ class ComE(Linux):
                 nvme_device_index = 0
             command = "./dpcsh --pcie_nvme_sock=/dev/nvme{} --nvme_cmd_timeout={} --tcp_proxy={} &> {} &".format(nvme_device_index,
                                                                                                                  self.NVME_CMD_TIMEOUT,
-                                                                                                                 self.get_dpc_port(f1_index=f1_index, statistics=statistics),
+                                                                                                                 self.get_dpc_port(f1_index=f1_index, statistics=statistics, csi_perf=csi_perf),
                                                                                                                  self.get_dpc_log_path(f1_index=f1_index, statistics=statistics))
             self.sudo_command(command)
 
@@ -1417,6 +1422,8 @@ class ComE(Linux):
         self.dpc_ready = True
         if statistics:
             self.dpc_for_statistics_ready = True
+        if csi_perf:
+            self.dpc_for_csi_perf_ready = True
         return True
 
 
@@ -1466,10 +1473,12 @@ class ComE(Linux):
     def is_dpc_ready(self):
         return self.dpc_ready
 
-    def get_dpc_log_path(self, f1_index, statistics=None):
+    def get_dpc_log_path(self, f1_index, statistics=None, csi_perf=None):
         path = self.DPC_LOG_PATH.format(f1_index)
         if statistics:
-            path = self.DPC_STATISTICS_LOG_PATH(f1_index=f1_index)
+            path = self.DPC_STATISTICS_LOG_PATH[f1_index]
+        if csi_perf:
+            path = self.DPC_CSI_PERF_LOG_PATH[f1_index]
         return path
 
     def _get_context_prefix(self, data):
@@ -1562,12 +1571,14 @@ class F1InFs:
         self.serial_sbp_device_path = serial_sbp_device_path
         self.dpc_port = None
 
-    def get_dpc_client(self, auto_disconnect=False, statistics=None):
+    def get_dpc_client(self, auto_disconnect=False, statistics=None, csi_perf=None):
         come = self.fs.get_come()
         host_ip = come.host_ip
         if statistics and not come.dpc_for_statistics_ready:
             come.setup_dpc(statistics=True)
-        dpc_port = come.get_dpc_port(self.index, statistics=statistics)
+        if csi_perf and not come.dpc_for_csi_perf_ready:
+            come.setup_dpc(csi_perf=True)
+        dpc_port = come.get_dpc_port(self.index, statistics=statistics, csi_perf=csi_perf)
         dpcsh_client = DpcshClient(target_ip=host_ip, target_port=dpc_port, auto_disconnect=auto_disconnect)
         return dpcsh_client
 
@@ -2298,9 +2309,9 @@ class Fs(object, ToDictMixin):
 
         return True
 
-    def get_dpc_client(self, f1_index, auto_disconnect=False, statistics=None):
+    def get_dpc_client(self, f1_index, auto_disconnect=False, statistics=None, csi_perf=None):
         f1 = self.get_f1(index=f1_index)
-        dpc_client = f1.get_dpc_client(auto_disconnect=auto_disconnect, statistics=None)
+        dpc_client = f1.get_dpc_client(auto_disconnect=auto_disconnect, statistics=statistics, csi_perf=csi_perf)
         return dpc_client
 
     def _get_context_prefix(self, data):
