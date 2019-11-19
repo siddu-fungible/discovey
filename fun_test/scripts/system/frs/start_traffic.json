@@ -1,15 +1,18 @@
 {
-  "duration": "1m",
+  "duration": 60,
+  "traffic_profile": ["zip","crypto","rcnvme","fio"],
   "run_le_firewall": false,
   "boot_new_image": false,
-  "specific_apps": [],
   "add_to_database": false,
   "disable_f1_index": null,
   "ec_vol": false,
   "collect_stats": [],
   "disable_stats": [],
   "add_boot_arg": "",
-  "elasticsearch_config": {"ip": "10.1.20.52", "port": 9200},
+  "elasticsearch_config": {
+    "ip": "10.1.20.52",
+    "port": 9200
+  },
   "fio_params": {
     "numjobs": 1,
     "size": "100%",
@@ -25,5 +28,23 @@
     "output-format": "json",
     "cpus_allowed": "0-7"
   },
-  "end_sleep": 10
+  "end_sleep": 10,
+  "vm_0": {
+    "name": "elk",
+    "host_ip": "10.1.20.52",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "WORKSPACE": "/home/localadmin/Integration",
+    "PYTHONPATH": "/home/localadmin/Integration/fun_test",
+    "SCRIPT_PATH": "/home/localadmin/Integration/fun_test/scripts/power_monitor"
+  },
+  "vm_1": {
+    "name": "onkar_cloned",
+    "host_ip": "10.1.23.228",
+    "ssh_username": "localadmin",
+    "ssh_password": "r00t.!@#",
+    "WORKSPACE": "/home/localadmin/fungible_automation/Integration",
+    "PYTHONPATH": "/home/localadmin/fungible_automation/Integration/fun_test",
+    "SCRIPT_PATH": "/home/localadmin/fungible_automation/Integration/fun_test/scripts/power_monitor"
+  }
 }
