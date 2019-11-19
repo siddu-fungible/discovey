@@ -380,6 +380,7 @@ class ReleaseCatalogExecution(FunModel):
     started_date = models.DateTimeField(default=datetime.now)
     completion_date = models.DateTimeField(null=True, default=None)
     owner = models.EmailField(null=True, blank=True)
+    state = models.IntegerField(default=JobStatusType.UNKNOWN)
 
 
 class ReleaseCatalog(FunModel):
