@@ -2464,14 +2464,15 @@ if __name__ == "__main__":
                     entry = jenkins_job_id_map[model_entry_epoch]
                     build_date = entry.build_date
                     result = {}
-                    result["lsf_info"] = {"lsf_job_id": entry.lsf_job_id}
-                    result["suite_info"] = {"suite_execution_id": entry.suite_execution_id,
-                                            "associated_suites": entry.associated_suites}
+                    lsf_job_id = int(entry.lsf_job_id) if entry.lsf_job_id != "" else -1
+                    result["lsf_job_id"] = lsf_job_id
+                    result["suite_execution_id"] = entry.suite_execution_id
+                    result["jenkins_build_number"] = entry.jenkins_job_id
                     build_properties = {}
                     if entry.build_properties != "":
                         build_properties = json.loads(entry.build_properties)
-                    result["jenkins_info"] = {"build_properties": build_properties,
-                                              "sdk_version": entry.sdk_version}
+                    result["run_time"] = {"build_properties": build_properties,
+                                          "sdk_version": entry.sdk_version}
                     run_time_id = add_job_run_time_properties(date_time=build_date, run_time=result)
                     model_entry.run_time = run_time_id
                     model_entry.save()
@@ -2479,4 +2480,3 @@ if __name__ == "__main__":
             pass
     transaction.commit()
     transaction.set_autocommit(True)
-    

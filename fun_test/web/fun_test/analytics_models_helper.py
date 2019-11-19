@@ -41,11 +41,10 @@ def invalidate_goodness_cache():
 def save_entry(entry, run_time=None):
     dry_run = fun_test.get_job_environment_variable("dry_run")
     if not dry_run:
-        if run_time and entry.run_time == -1:
+        if run_time:
             fun_test.log("Adding runtime properties")
-            date_time = timezone.localtime(entry.input_date_time)
-            run_time_id = add_job_run_time_properties(run_time=run_time, date_time=date_time,
-                                                      add_associated_suites=True)
+            date_time = entry.input_date_time
+            run_time_id = add_job_run_time_properties(run_time=run_time, date_time=date_time)
             entry.run_time = run_time_id
         entry.save()
     else:
@@ -133,8 +132,8 @@ class MetricHelper(object):
         if "key" in kwargs:
             inputs["key"] = kwargs["key"]
         outputs = {}
-        if run_time:
-            kwargs["run_time"] = run_time
+        # if run_time:
+        #     kwargs["run_time"] = run_time
         for key, value in kwargs.iteritems():
             if key.startswith("input_"):
                 inputs[key] = value
@@ -145,14 +144,14 @@ class MetricHelper(object):
             for k, v in outputs.iteritems():
                 if hasattr(o, k):
                     setattr(o, k, v)
-            if run_time:
-                if hasattr(o, "run_time"):
-                    setattr(o, "run_time", run_time)
-            save_entry(o)
+            # if run_time:
+            #     if hasattr(o, "run_time"):
+            #         setattr(o, "run_time", run_time)
+            save_entry(o, run_time=run_time)
             return None
         except ObjectDoesNotExist:
             o = self.model(**kwargs)
-            save_entry(o)
+            save_entry(o, run_time=run_time)
             return o.id
 
     def get_entry(self, **kwargs):
@@ -342,6 +341,12 @@ class BltVolumePerformanceHelper(MetricHelper):
 
             if version == -1:
                 version = str(fun_test.get_version())
+            result = {}
+            result["lsf_job_id"] = -1
+            result["suite_execution_id"] = fun_test.get_suite_execution_id()
+            result["jenkins_build_number"] = -1
+            result["run_time"] = {"build_properties": {},
+                                  "sdk_version": version}
             entry = BltVolumePerformance.objects.get(input_date_time=date_time,
                                                      input_volume_type=volume,
                                                      input_test=test,
@@ -381,7 +386,7 @@ class BltVolumePerformanceHelper(MetricHelper):
             entry.output_read_95_latency_unit = read_95_latency_unit
             entry.output_read_99_latency_unit = read_99_latency_unit
             entry.output_read_99_99_latency_unit = read_99_99_latency_unit
-            save_entry(entry)
+            save_entry(entry, run_time=result)
         except ObjectDoesNotExist:
             one_entry = BltVolumePerformance(input_date_time=date_time,
                                              input_volume_type=volume,
@@ -422,11 +427,6 @@ class BltVolumePerformanceHelper(MetricHelper):
                                              output_read_95_latency_unit=read_95_latency_unit,
                                              output_read_99_latency_unit=read_99_latency_unit,
                                              output_read_99_99_latency_unit=read_99_99_latency_unit)
-            result = {}
-            result["lsf_info"] = {}
-            result["suite_info"] = {"suite_execution_id": fun_test.get_suite_execution_id(),
-                                    "associated_suites": []}
-            result["jenkins_info"] = {"sdk_version": version}
             save_entry(one_entry, run_time=result)
 
 
@@ -537,10 +537,11 @@ class ModelHelper(MetricHelper):
                 if not self.units:
                     raise Exception('No units provided. Please provide the required units')
                 result = {}
-                result["lsf_info"] = {}
-                result["suite_info"] = {"suite_execution_id": fun_test.get_suite_execution_id(),
-                                        "associated_suites": []}
-                result["jenkins_info"] = {"sdk_version": m_obj.input_version}
+                result["lsf_job_id"] = -1
+                result["suite_execution_id"] = fun_test.get_suite_execution_id()
+                result["jenkins_build_number"] = -1
+                result["run_time"] = {"build_properties": {},
+                                      "sdk_version": m_obj.input_version}
                 save_entry(m_obj, run_time=result)
                 result = True
             else:

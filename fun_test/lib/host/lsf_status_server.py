@@ -206,9 +206,6 @@ class LsfStatusServer:
 
     def prepare_run_time_properties(self, job_dict):
         result = {}
-        result["lsf_info"] = {}
-        result["jenkins_info"] = {}
-        result["suite_info"] = {}
         if "completion_secs" in job_dict:
             lsf_id = job_dict["job_id"]
             jenkins_url = job_dict["jenkins_url"]
@@ -219,10 +216,10 @@ class LsfStatusServer:
                 build_properties = {}
             else:
                 build_properties = json.loads(build_properties)
-            result["lsf_info"] = {"lsf_job_id": lsf_id}
-            result["suite_info"] = {"suite_execution_id": suite_execution_id,
-                                    "associated_suites": []}
-            result["jenkins_info"] = {"build_properties": build_properties}
+            result["lsf_job_id"] = lsf_id
+            result["suite_execution_id"] = suite_execution_id
+            result["jenkins_build_number"] = job_dict["jenkins_build_number"]
+            result["run_time"] = {"build_properties": build_properties}
         return result
 
 

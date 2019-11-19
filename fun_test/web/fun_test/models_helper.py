@@ -40,7 +40,7 @@ from web.fun_test.models import (
     TestCaseInfo,
     Suite,
     RegresssionScripts,
-    JobRunTimeProperties
+    JobRunTime
 )
 
 SUITE_EXECUTION_FILTERS = {"PENDING": "PENDING",
@@ -613,22 +613,21 @@ def add_jenkins_job_id_map(jenkins_job_id, fun_sdk_branch, git_commit, software_
                                 suite_execution_id=suite_execution_id)
         entry.save()
 
-def add_job_run_time_properties(run_time, date_time, add_associated_suites=False):
+def add_job_run_time_properties(run_time, date_time):
     try:
-        entry = JobRunTimeProperties.objects.get(date_time=date_time)
-        if add_associated_suites:
-            entry_run_time = entry.run_time
-            suite_run_time = entry_run_time["suite_info"]
-            if fun_test.suite_execution_id != suite_run_time["suite_execution_id"]:
-                suite_run_time["associates_suites"].append(fun_test.suite_execution_id)
-                suite_run_time["associates_suites"] = list(set(suite_run_time["associates_suites"]))
-            entry.run_time = entry_run_time
-            entry.save()
-        # else:
-            # print "Run time properties {}".format(json.dumps(run_time))
-            # print "Run time props in DB {}".format(json.dumps(entry.run_time))
+        lsf_job_id = run_time["lsf_job_id"]
+        if lsf_job_id != -1 or lsf_job_id != "":
+            entry = JobRunTime.objects.get(lsf_job_id=lsf_job_id)
+        else:
+            raise ObjectDoesNotExist
     except ObjectDoesNotExist:
-        entry = JobRunTimeProperties(run_time=run_time, date_time=date_time)
+        jenkins_build_number = run_time["jenkins_build_number"]
+        lsf_job_id = run_time["lsf_job_id"]
+        suite_execution_id = run_time["suite_execution_id"]
+        associated_suites = run_time["associated_suites"]
+        props = run_time["run_time"]
+        entry = JobRunTime(jenkins_build_number=jenkins_build_number, lsf_job_id=lsf_job_id,
+                           suite_execution_id=suite_execution_id, associated_suites=associated_suites, run_time=props, date_time=date_time)
         entry.save()
     return entry.id
 

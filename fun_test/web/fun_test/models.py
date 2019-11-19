@@ -379,9 +379,12 @@ class SubModules(FunModel):   # Say Module: Networking, sub-module: PSW
     verbose_name = models.TextField(default="Verbose name")
 
 
-class JobRunTimeProperties(FunModel):
+class JobRunTime(FunModel):
     date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     run_time = JSONField(default={}, blank=True)
+    lsf_job_id = models.IntegerField(default=None, verbose_name="lsf job id")
+    suite_execution_id = models.IntegerField(default=None, verbose_name="suite execution id")
+    jenkins_build_number = models.IntegerField(default=None, verbose_name="Jenkins Build Number")
 
     def __str__(self):
         s = ""

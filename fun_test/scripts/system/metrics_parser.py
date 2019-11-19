@@ -8,7 +8,7 @@ from fun_global import RESULTS
 from dateutil.parser import parse
 from fun_global import FunPlatform, PerfUnit
 from lib.system.fun_test import *
-from web.fun_test.models_helper import add_jenkins_job_id_map, add_job_run_time_properties
+from web.fun_test.models_helper import add_jenkins_job_id_map
 from web.fun_test.metrics_models import *
 
 app_config = apps.get_app_config(app_label='fun_test')
@@ -32,8 +32,7 @@ class MetricParser():
             if result["data"]:
                 metric_model = app_config.get_metric_models()[model_name]
                 for entry in result["data"]:
-                    run_time_id = add_job_run_time_properties(run_time=run_time, date_time=date_time)
-                    MetricHelper(model=metric_model).add_entry(run_time=run_time_id, **entry)
+                    MetricHelper(model=metric_model).add_entry(run_time=run_time, **entry)
         return result
 
     def regex_by_model(self, model_name, logs, date_time, platform, run_time):
@@ -1578,10 +1577,14 @@ class MetricParser():
                     self.result["data"].append(d)
                     if date_time.year >= 2019:
                         metric_model = app_config.get_metric_models()[model_name]
-                        run_time_id = add_job_run_time_properties(run_time=run_time, date_time=date_time)
-                        MetricHelper(model=metric_model).add_entry(run_time=run_time_id, **d)
-                        self.add_version_to_jenkins_job_id_map(date_time=date_time,
-                                                               version=self.metrics["input_version"])
+                        run_time_props = {}
+                        run_time_props["lsf_job_id"] = -1
+                        run_time_props["suite_execution_id"] = fun_test.get_suite_execution_id()
+                        run_time_props["associated_suites"] = []
+                        run_time_props["jenkins_build_number"] = -1
+                        run_time_props["run_time"] = {"build_properties": {},
+                                                      "sdk_version": self.metrics["input_version"]}
+                        MetricHelper(model=metric_model).add_entry(run_time=run_time_props, **d)
 
             self.result["match_found"] = self.match_found
             self.result["status"] = self.status == RESULTS["PASSED"]
@@ -1627,11 +1630,10 @@ class MetricParser():
                     metrics["output_latency_avg_unit"] = output_latency_unit
                     self.status = RESULTS["PASSED"]
                     d = self.metrics_to_dict(metrics=metrics, result=self.status, date_time=date_time)
-                    run_time_id = add_job_run_time_properties(run_time=run_time, date_time=date_time)
                     if input_type == "Deflate":
-                        MetricHelper(model=eval("TeraMarkZipDeflatePerformance")).add_entry(run_time=run_time_id, **d)
+                        MetricHelper(model=eval("TeraMarkZipDeflatePerformance")).add_entry(run_time=run_time, **d)
                     else:
-                        MetricHelper(model=eval("TeraMarkZipLzmaPerformance")).add_entry(run_time=run_time_id, **d)
+                        MetricHelper(model=eval("TeraMarkZipLzmaPerformance")).add_entry(run_time=run_time, **d)
                     self.result["data"].append(d)
         self.result["match_found"] = self.match_found
         self.result["status"] = self.status == RESULTS["PASSED"]
