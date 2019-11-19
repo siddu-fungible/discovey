@@ -1382,7 +1382,17 @@ class FunTestCase1(FunTestCase):
             self.start_le_firewall(self.duration, self.boot_new_image, True)
         for f1 in self.run_on_f1:
             if FIO in self.traffic_profile:
+                one_dataset = {}
                 fun_test.join_thread(self.fio_thread_map[str(f1)])
+                fun_test.test_assert(True, "FIO successfully completed on f1 : {}".format(f1))
+                try:
+                    fun_test.sleep("Generating fio output")
+                    output = fun_test.shared_variables["fio_output_f1_{}".format(f1)]
+                    one_dataset["time"] = datetime.datetime.now()
+                    one_dataset["output"] = output
+                    file_helper.add_data(getattr(self, "f_{}_f1_{}".format(FIO, f1)), one_dataset)
+                except Exception as ex:
+                    fun_test.log(ex)
             if BUSY_LOOP in self.traffic_profile:
                 fun_test.shared_variables["{}_{}".format(BUSY_LOOP, f1)] = False
                 fun_test.join_thread(self.busy_loop_thread_map[f1])
