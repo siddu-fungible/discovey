@@ -279,14 +279,14 @@ class FunTestCase1(FunTestCase):
 
     def run(self):
         self.initial_stats()
-        # self.collect_the_stats(count=3, heading="Before starting traffic")
+        self.collect_the_stats(count=3, heading="Before starting traffic")
         self.run_the_traffic()
         count = int(self.duration / 5)
         # count = 6
         self.collect_the_stats(count=count, heading="During traffic")
         self.stop_traffic()
         fun_test.sleep("To traffic to stop", seconds=10)
-        # self.collect_the_stats(count=3, heading="After traffic")
+        self.collect_the_stats(count=3, heading="After traffic")
         self.come_handle.destroy()
 
     def func_not_found(self):
