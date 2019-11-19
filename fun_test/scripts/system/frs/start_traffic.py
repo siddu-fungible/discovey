@@ -755,7 +755,7 @@ class FunTestCase1(FunTestCase):
             if system == "files":
                 continue
             for stat_name, value in self.stats_info[system].iteritems():
-                if value.get("disable", False) or value.get("upload_to_es", False):
+                if value.get("disable", False) or (not value.get("upload_to_es", True)):
                     fun_test.log("stat: {} has been disabled".format(stat_name))
                     continue
 
