@@ -29,7 +29,7 @@
               <td class="attribute-table-td" *ngIf="suiteExecution && suiteExecution.fields && (suiteExecution.fields.state == stateMap.IN_PROGRESS || suiteExecution.fields.state <= stateMap.COMPLETED)">
                 <span class="attribute-table-main-text">Started at</span> {{ localizeTime(suiteExecution.fields.started_time) }}
               </td>
-              <td class="attribute-table-td">
+              <td class="attribute-table-td" *ngIf="suiteExecution && suiteExecution.fields && (suiteExecution.fields.state <= stateMap.COMPLETED)">
                 <span class="attribute-table-main-text">Completed at</span> {{ localizeTime(suiteExecution.fields.completed_time) }}
               </td>
               <td class="attribute-table-td">
