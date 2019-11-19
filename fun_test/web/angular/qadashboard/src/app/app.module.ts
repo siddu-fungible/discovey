@@ -94,6 +94,8 @@ import * as d3 from 'd3';
 import { StatisticsContainerComponent } from './statistics/statistics-container/statistics-container.component';
 import { BamComponent } from './statistics/system/bam/bam.component';
 import { ReleaseCatalogEditorComponent } from './regression/release-catalog-editor/release-catalog-editor.component';
+import { ReleasesComponent } from './regression/releases/releases.component';
+import { ReleaseCatalogsComponent } from './regression/release-catalogs/release-catalogs.component';
 
 
 @NgModule({
@@ -170,7 +172,9 @@ import { ReleaseCatalogEditorComponent } from './regression/release-catalog-edit
     TimelineControlComponent,
     StatisticsContainerComponent,
     BamComponent,
-    ReleaseCatalogEditorComponent
+    ReleaseCatalogEditorComponent,
+    ReleasesComponent,
+    ReleaseCatalogsComponent
   ],
   imports: [
     BsDropdownModule,

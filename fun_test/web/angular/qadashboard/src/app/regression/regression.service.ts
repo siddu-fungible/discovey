@@ -5,6 +5,7 @@ import {catchError, switchMap} from 'rxjs/operators';
 import {forkJoin, observable, Observable, of, throwError} from "rxjs";
 import {CommonService} from "../services/common/common.service";
 import {ReleaseCatalogSuite, ReleaseCatalog} from "./declarations";
+import {Suite} from "./suite-editor/suite-editor.service";
 
 
 @Injectable({
@@ -362,10 +363,26 @@ export class RegressionService implements OnInit{
 
 
   createReleaseCatalog(releaseCatalog: ReleaseCatalog) {
-    return this.apiService.post("/api/v1/regression/release_catalog", releaseCatalog).pipe(switchMap(response => {
+    return this.apiService.post("/api/v1/regression/release_catalogs", releaseCatalog).pipe(switchMap(response => {
       return of(true);
     }), catchError(error => {
       this.loggerService.error("Unable to create release catalog");
+      return throwError(error);
+    }))
+  }
+
+
+  getReleaseCatalogs(catalogId: number = null): Observable<ReleaseCatalog[]> {
+    let url = "/api/v1/regression/release_catalogs";
+    if (catalogId) {
+      url += '/' + catalogId;
+    }
+    return this.apiService.get(url).pipe(switchMap(response => {
+      let allCatalogs = response.data;
+      const mappedArray = allCatalogs.map(data => new ReleaseCatalog(allCatalogs));
+      return of(mappedArray);
+    }), catchError(error => {
+      this.loggerService.error("Unable to get release catalogs");
       return throwError(error);
     }))
   }

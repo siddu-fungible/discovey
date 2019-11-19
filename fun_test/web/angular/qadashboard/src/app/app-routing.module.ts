@@ -33,6 +33,8 @@ import {SuiteEditorComponent} from "./regression/suite-editor/suite-editor.compo
 import {SuitesViewComponent} from "./regression/suite-editor/suites-view/suites-view.component";
 import {ScriptDetailComponent} from "./regression/script-detail/script-detail.component";
 import {ReleaseCatalogEditorComponent} from "./regression/release-catalog-editor/release-catalog-editor.component";
+import {ReleasesComponent} from "./regression/releases/releases.component";
+import {ReleaseCatalogsComponent} from "./regression/release-catalogs/release-catalogs.component";
 
 export function regressionHome(url: UrlSegment[]) {
   return url[0].path.endsWith("regression");
@@ -73,6 +75,8 @@ const routes: Routes = [
   { path: 'regression/triaging/:id', component: TriageDetailComponent},
   { path: 'regression/triaging', component: Triage2Component},
   { path: 'regression/release_catalog_editor', component: ReleaseCatalogEditorComponent},
+  { path: 'regression/releases', component: ReleasesComponent},
+  { path: 'regression/release_catalogs', component: ReleaseCatalogsComponent},
   { path: 'performance/admin/scores/:metricId', component: ScoresTableComponent},
   { path: 'performance/admin/data/:metricId', component: PerformanceTableComponent},
   { path: 'performance/admin/:mode/:modelName/:metricId', component: CreateChartComponent},

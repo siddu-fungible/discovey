@@ -227,7 +227,7 @@ api_v1_urls = [
     url(r'^regression/release_trains$', regression.release_trains),
     url(r'^regression/contexts/(\d+)/(\d+)$', regression.contexts),
     url(r'^regression/script_run_time/(\d+)/(\d+)$', regression.script_run_time),
-    url(r'^regression/release_catalog/?(\d+)?$', regression.release_catalog)
+    url(r'^regression/release_catalogs/?(\d+)?$', regression.release_catalogs)
 ]
 
 site_under_construction = False
