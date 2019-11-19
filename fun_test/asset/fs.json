@@ -989,5 +989,33 @@
       "password": "Precious1*",
       "host_ip": "cab04-pdu1"
     }
+  },
+    {
+    "bmc": {
+      "mgmt_ssh_password": "superuser",
+      "mgmt_ssh_username": "sysadmin",
+      "mgmt_ip": "192.168.8.87"
+    },
+    "come": {
+      "mgmt_ssh_password": "123",
+      "mgmt_ssh_username": "fun",
+      "mgmt_ip": "192.168.8.31"
+    },
+    "name": "ifs-01",
+    "workarounds": {
+      "skip_funeth_come_power_cycle": true
+    },
+    "revision": "2",
+    "fpga": {
+      "mgmt_ssh_password": "root",
+      "mgmt_ssh_username": "root",
+      "mgmt_ip": "192.168.8.159"
+    },
+    "apc_info": {
+      "username": "admin",
+      "outlet_number": 8,
+      "password": "Precious1*",
+      "host_ip": "192.168.8.124"
+    }
   }
 ]
