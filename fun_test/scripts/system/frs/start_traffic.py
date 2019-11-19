@@ -52,9 +52,9 @@ class MyScript(FunTestScript):
         self.initialize_variables()
         if self.boot_new_image:
             self.boot_fs()
-        # self.verify_dpcsh_started()
-        # if not self.boot_new_image:
-        #     self.clear_uart_logs()
+        self.verify_dpcsh_started()
+        if not self.boot_new_image:
+            self.clear_uart_logs()
         if self.ec_vol:
             self.create_4_et_2_ec_volume()
         fun_test.shared_variables["run_on_f1"] = self.run_on_f1
@@ -279,9 +279,10 @@ class FunTestCase1(FunTestCase):
 
     def run(self):
         self.initial_stats()
-        # self.collect_the_stats(count=3, heading="Before starting traffic")
+        self.collect_the_stats(count=3, heading="Before starting traffic")
         self.run_the_traffic()
         count = int(self.duration / 5)
+        # count = 6
         self.collect_the_stats(count=count, heading="During traffic")
         self.stop_traffic()
         fun_test.sleep("To traffic to stop", seconds=10)
@@ -484,14 +485,14 @@ class FunTestCase1(FunTestCase):
             dpcsh_output = dpcsh_commands.debug_vp_utils(come_handle=come_handle, f1=f1)
             one_dataset["time"] = datetime.datetime.now()
             one_dataset["output"] = dpcsh_output
-            file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+            time_taken = 0
             if dpcsh_output:
+                file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
                 cal_dpc_out = stats_calculation.filter_dict(one_dataset, stat_name)
                 one_dataset["output"] = cal_dpc_out
                 file_helper.add_data(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset,
                                      heading=heading)
-                time_taken = 0
-                if self.stats_info["bmc"][stat_name].get("upload_to_es", False):
+                if self.stats_info["come"][stat_name].get("upload_to_es", False):
                     dpcsh_data = self.simplify_debug_vp_util(dpcsh_output)
                     time_taken = self.upload_dpcsh_data_to_elk(dpcsh_data=dpcsh_data, f1=f1, stat_name=stat_name)
             fun_test.sleep("Before next iteration", seconds=(5 - time_taken))
@@ -754,7 +755,7 @@ class FunTestCase1(FunTestCase):
             if system == "files":
                 continue
             for stat_name, value in self.stats_info[system].iteritems():
-                if value.get("disable", False) or value.get("upload_to_es", False):
+                if value.get("disable", False) or (not value.get("upload_to_es", True)):
                     fun_test.log("stat: {} has been disabled".format(stat_name))
                     continue
 
@@ -768,6 +769,11 @@ class FunTestCase1(FunTestCase):
                         self.test_start_time, self.test_end_time)
                     checkpoint = '<a href="{}" target="_blank">ELK {} stats</a>'.format(href, stat_name)
                     fun_test.add_checkpoint(checkpoint=checkpoint)
+        href = "http://10.1.20.52:5601/app/kibana#/dashboard/8e6e8330-0a9a-11ea-8475-15977467c007?_g=(refreshInterval:(pause:!t,value:0),time:(from:'{}',mode:absolute,to:'{}'))".format(
+            self.test_start_time, self.test_end_time)
+        checkpoint = '<a href="{}" target="_blank">ELK Overall dashboard</a>'.format(href, stat_name)
+        fun_test.add_checkpoint(checkpoint=checkpoint)
+
 
 
 
@@ -1142,22 +1148,23 @@ class FunTestCase1(FunTestCase):
         come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
                            ssh_username=self.fs['come']['mgmt_ssh_username'],
                            ssh_password=self.fs['come']['mgmt_ssh_password'])
+
+        if LE in self.traffic_profile:
+            self.restart_dpcsh()
+            self.start_le_firewall(self.duration, self.boot_new_image)
+
+        if FIO in self.traffic_profile:
+            self.fio_thread_map = self.start_fio_traffic(percentage=100)
+
         for f1 in self.run_on_f1:
-            if LE in self.traffic_profile:
-                # self.restart_dpcsh()
-                self.start_le_firewall(self.duration, self.boot_new_image)
+            if RCNVME in self.traffic_profile:
+                self.start_rcnvme_traffic(come_handle, f1, 70)
 
             if CRYPTO in self.traffic_profile:
                 self.start_crypto_traffic(come_handle, f1, 100)
 
             if ZIP in self.traffic_profile:
                 self.start_zip_traffic(come_handle, f1, 100)
-
-            if RCNVME in self.traffic_profile:
-                self.start_rcnvme_traffic(come_handle, f1, 100)
-
-            if FIO in self.traffic_profile:
-                self.fio_thread_map = self.start_fio_traffic(percentage=100)
 
             if BUSY_LOOP in self.traffic_profile:
                 fun_test.shared_variables["{}_{}".format(BUSY_LOOP, f1)] = True
@@ -1205,7 +1212,6 @@ class FunTestCase1(FunTestCase):
         if just_kill:
             for vm, vm_details in vm_info.iteritems():
                 self.kill_le_firewall(vm_details)
-
             return
         for vm, vm_details in vm_info.iteritems():
             running = self.check_if_le_firewall_is_running(vm_details)
@@ -1328,7 +1334,21 @@ class FunTestCase1(FunTestCase):
                 "100": {"vp_iters": 5000000 * crypto_factor, "nvps": 192}
             }
             result = perc_dict[str(percentage)]
-
+        if app == ZIP:
+            zip_factor = 1
+            perc_dict = {
+                "10": {"nflows": 6, "niterations": 40000 * zip_factor},
+                "20": {"nflows": 30, "niterations": 40000 * zip_factor},
+                "30": {"nflows": 60, "niterations": 40000 * zip_factor},
+                "40": {"nflows": 70, "niterations": 40000 * zip_factor},
+                "50": {"nflows": 90, "niterations": 40000 * zip_factor},
+                "60": {"nflows": 105, "niterations": 40000 * zip_factor},
+                "70": {"nflows": 120, "niterations": 40000 * zip_factor},
+                "80": {"nflows": 130, "niterations": 40000 * zip_factor},
+                "90": {"nflows": 140, "niterations": 40000 * zip_factor},
+                "100": {"nflows": 7680, "niterations": 500 * zip_factor}
+            }
+            result = perc_dict[str(percentage)]
         return result
 
     def start_crypto_traffic(self, come_handle, f1, percentage):
@@ -1362,7 +1382,7 @@ class FunTestCase1(FunTestCase):
             self.start_le_firewall(self.duration, self.boot_new_image, True)
         for f1 in self.run_on_f1:
             if FIO in self.traffic_profile:
-                fun_test.join_thread(self.fio_thread_map[f1])
+                fun_test.join_thread(self.fio_thread_map[str(f1)])
             if BUSY_LOOP in self.traffic_profile:
                 fun_test.shared_variables["{}_{}".format(BUSY_LOOP, f1)] = False
                 fun_test.join_thread(self.busy_loop_thread_map[f1])
