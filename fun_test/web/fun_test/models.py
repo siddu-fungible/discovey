@@ -379,11 +379,6 @@ class ReleaseCatalogExecution(FunModel):
     owner = models.EmailField(null=True, blank=True)
 
 
-class ReleaseCatalogSuiteEntry(FunModel):
-    release_catalog_id = models.IntegerField()
-    suite_id = models.IntegerField()
-
-
 class ReleaseCatalog(FunModel):
     name = models.TextField(default="TBD")
     description = models.TextField(default="TBD")

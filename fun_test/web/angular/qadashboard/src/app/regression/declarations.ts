@@ -8,6 +8,6 @@ export class ReleaseCatalogSuite {
 
 
 export class ReleaseCatalog {
-  description: string = "Please update";
+  name: string = "Please update";
   suites: ReleaseCatalogSuite [] = [];
 }

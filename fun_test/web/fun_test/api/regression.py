@@ -5,6 +5,7 @@ from web.fun_test.models import TestBed, Asset
 from django.db.models import Q
 from web.fun_test.models import SuiteExecution, TestCaseExecution, TestbedNotificationEmails, LastSuiteExecution
 from web.fun_test.models import ScriptInfo, RegresssionScripts, SuiteReRunInfo, TestCaseInfo
+from web.fun_test.models import ReleaseCatalog
 from scheduler.scheduler_global import SchedulingType
 from scheduler.scheduler_global import SchedulerStates
 from fun_settings import TEAM_REGRESSION_EMAIL, SCRIPTS_DIR
@@ -632,6 +633,19 @@ def release_trains(request):
         result = releases
     return result
 
+
+@csrf_exempt
+@api_safe_json_response
+def release_catalog(request, catalog_id):
+    if request.method == "POST":
+        request_json = json.loads(request.body)
+        request_json["created_date"] = get_current_time()
+        c = ReleaseCatalog(**request_json)
+        c.save()
+        catalog_id = c.id
+    else:
+        pass
+    return catalog_id
 
 if __name__ == "__main__":
     from web.fun_test.django_interactive import *

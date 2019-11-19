@@ -66,8 +66,16 @@ export class ReleaseCatalogEditorComponent implements OnInit, OnChanges {
     this.selectedSuiteIds = [...this.selectedSuiteIds];
   }
 
-  catalogDescriptionChanged(description) {
+  catalogNameChanged(name) {
 
+  }
+
+  submitClick() {
+    this.regressionService.createReleaseCatalog(this.releaseCatalog).subscribe(response => {
+      this.loggerService.success("Submitted release catalog");
+    }, error => {
+      this.loggerService.error("Unable to submit release catalog");
+    })
   }
 
 }

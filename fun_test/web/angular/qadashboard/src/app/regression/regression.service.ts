@@ -359,4 +359,15 @@ export class RegressionService implements OnInit{
       return of(true);
     }))
   }
+
+
+  createReleaseCatalog(releaseCatalog: ReleaseCatalog) {
+    return this.apiService.post("/api/v1/regression/release_catalog", releaseCatalog).pipe(switchMap(response => {
+      return of(true);
+    }), catchError(error => {
+      this.loggerService.error("Unable to create release catalog");
+      return throwError(error);
+    }))
+  }
+
 }
