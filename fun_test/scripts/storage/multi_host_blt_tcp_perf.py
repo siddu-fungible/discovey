@@ -620,8 +620,10 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
             self.post_results = False
         if "csi_perf_iodepth" in job_inputs:
             self.csi_perf_iodepth = job_inputs["csi_perf_iodepth"]
+            self.full_run_iodepth = self.csi_perf_iodepth
         if not isinstance(self.csi_perf_iodepth, list):
             self.csi_perf_iodepth = [self.csi_perf_iodepth]
+            self.full_run_iodepth = self.csi_perf_iodepth
 
         if ("blt" not in fun_test.shared_variables or not fun_test.shared_variables["blt"]["setup_created"]) \
                 and (not fun_test.shared_variables["blt"]["warmup_done"]):

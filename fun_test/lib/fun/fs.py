@@ -20,7 +20,9 @@ import os
 import socket
 
 DOCHUB_FUNGIBLE_LOCAL = "10.1.20.99"
-ERROR_REGEXES = ["MUD_MCI_NON_FATAL_INTR_STAT", "bug_check", "platform_halt: exit status 1"]
+# ERROR_REGEXES = ["MUD_MCI_NON_FATAL_INTR_STAT", "bug_check", "platform_halt: exit status 1"]
+ERROR_REGEXES = ["MUD_MCI_NON_FATAL_INTR_STAT", "bug_check on", "platform_halt: exit status 1", "Assertion failed", "Trap exception"]
+
 DOCHUB_BASE_URL = "http://{}/doc/jenkins".format(DOCHUB_FUNGIBLE_LOCAL)
 
 """
@@ -1007,9 +1009,12 @@ class BootupWorker(Thread):
                         preamble = bmc.get_preamble(f1_index=f1_index)
                         if fs.validate_u_boot_version:
                             fun_test.log("Preamble: {}".format(preamble))
-                            fun_test.test_assert(
-                                bmc.validate_u_boot_version(output=preamble, minimum_date=fs.MIN_U_BOOT_DATE),
-                                "Validate preamble", context=self.context)
+                            try:
+                                fun_test.test_assert(
+                                    bmc.validate_u_boot_version(output=preamble, minimum_date=fs.MIN_U_BOOT_DATE),
+                                    "Validate preamble", context=self.context)
+                            except Exception as ex:
+                                fun_test.critical(ex)
 
                         fun_test.test_assert(
                             expression=bmc.u_boot_load_image(index=f1_index,
