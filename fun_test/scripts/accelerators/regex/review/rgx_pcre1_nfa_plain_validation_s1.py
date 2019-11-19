@@ -63,7 +63,7 @@ class RegExScript(FunTestScript):
 class JuniperNFACustomCompileOnly(FunTestCase):
     def describe(self):
         self.set_test_details(id=4,
-                              summary="F1: PCRE1 patterns compiled with NFA Strategy and (RBM_ONLY,EXM_ONLY,DISTRIBUTED) Memory Allocation",
+                              summary="S1: PCRE1 patterns compiled with NFA Strategy and DEFAULT Memory Allocation",
                               steps="""
                               """)
 
@@ -87,7 +87,7 @@ class JuniperNFACustomCompileOnly(FunTestCase):
         base = "/regex"
         fun_test.log("data store directory: " + DATA_STORE_DIR)
         con1.set_compiler_env(ffac_path)
-        mem_dist = [ "exm", "rbm_exm", "rbm_exm_plr"]
+        mem_dist = ["dflt"]
         for tc in ["pcre1_nfa"]:
             tarball_path = "{}/{}.tgz".format(DATA_STORE_DIR + base, str(tc))
             print ("tarball path is ",tarball_path)
@@ -110,7 +110,7 @@ class JuniperNFACustomCompileOnly(FunTestCase):
             pld_path = "/regex/pcre1_nfa/payloads/"
             #for gtype, en in zip(["dfa", "nfa", "ffa"], ["1", "0", ""]):
             for gtype, en in zip(["nfa"], ["0"]):
-                res_path = "/regex/F1/"+str(tc)+"/" + gtype + "_results/"
+                res_path = "/regex/S1/"+str(tc)+"/" + gtype + "_results/"
                 con1.create_directory(res_path)
                 print ("res_path is ",res_path)
                 #res_path = "/regex/Users/fungible/ws/data_store/regression/" + str(tc) + "/" + gtype + "_results/"
@@ -156,7 +156,7 @@ class JuniperNFACustomCompileOnly(FunTestCase):
                 print ("pat_pld_files are ",pat_pld_files)
                 #exclude_list =[]
                 RegexTemplate.compile_n_validate(con1, mem_dist, pat_path, pld_path, res_path, exp_file_path, pat_pld_files, ["test_950","test_951","test_753","test_956","test_226"],
-                                                en, juniper_style="")
+                                                en, target="s1" ,juniper_style="")
 
                 #RegexTemplate.compile_only(con1, mem_dist, pat_path, res_path, [], en, juniper_style="yes")
 
