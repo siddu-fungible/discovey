@@ -282,6 +282,7 @@ class FunTestCase1(FunTestCase):
         # self.collect_the_stats(count=3, heading="Before starting traffic")
         self.run_the_traffic()
         count = int(self.duration / 5)
+        count = 6
         self.collect_the_stats(count=count, heading="During traffic")
         self.stop_traffic()
         fun_test.sleep("To traffic to stop", seconds=10)
@@ -768,6 +769,11 @@ class FunTestCase1(FunTestCase):
                         self.test_start_time, self.test_end_time)
                     checkpoint = '<a href="{}" target="_blank">ELK {} stats</a>'.format(href, stat_name)
                     fun_test.add_checkpoint(checkpoint=checkpoint)
+        href = "http://10.1.20.52:5601/app/kibana#/dashboard/8e6e8330-0a9a-11ea-8475-15977467c007?_g=(refreshInterval:(pause:!t,value:0),time:(from:'{}',mode:absolute,to:'{}'))".format(
+            self.test_start_time, self.test_end_time)
+        checkpoint = '<a href="{}" target="_blank">ELK Overall dashboard</a>'.format(href, stat_name)
+        fun_test.add_checkpoint(checkpoint=checkpoint)
+
 
 
 
@@ -1205,7 +1211,6 @@ class FunTestCase1(FunTestCase):
         if just_kill:
             for vm, vm_details in vm_info.iteritems():
                 self.kill_le_firewall(vm_details)
-
             return
         for vm, vm_details in vm_info.iteritems():
             running = self.check_if_le_firewall_is_running(vm_details)
@@ -1328,7 +1333,21 @@ class FunTestCase1(FunTestCase):
                 "100": {"vp_iters": 5000000 * crypto_factor, "nvps": 192}
             }
             result = perc_dict[str(percentage)]
-
+        if app == ZIP:
+            zip_factor = 1
+            perc_dict = {
+                "10": {"nflows": 6, "niterations": 40000 * zip_factor},
+                "20": {"nflows": 30, "niterations": 40000 * zip_factor},
+                "30": {"nflows": 60, "niterations": 40000 * zip_factor},
+                "40": {"nflows": 70, "niterations": 40000 * zip_factor},
+                "50": {"nflows": 90, "niterations": 40000 * zip_factor},
+                "60": {"nflows": 105, "niterations": 40000 * zip_factor},
+                "70": {"nflows": 120, "niterations": 40000 * zip_factor},
+                "80": {"nflows": 130, "niterations": 40000 * zip_factor},
+                "90": {"nflows": 140, "niterations": 40000 * zip_factor},
+                "100": {"nflows": 7680, "niterations": 500 * zip_factor}
+            }
+            result = perc_dict[str(percentage)]
         return result
 
     def start_crypto_traffic(self, come_handle, f1, percentage):
