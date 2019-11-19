@@ -238,12 +238,18 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         self.pointInfo["Suite execution id"] = props.suite_execution_id;
         self.pointInfo["Suite log directory"] = props.suite_execution_id;
       }
-      if (props.run_time.sdk_version != "" && props.run_time.sdk_version != -1) {
-        self.pointInfo["SDK version"] = props.sdk_version;
+      if (props.version != "" && props.version != -1) {
+        self.pointInfo["Version"] = props.version;
       }
-      self.buildProps = props.run_time.build_properties;
-      if (self.buildProps.gitHubSha1s.FunOS) {
-        self.pointInfo["Git commit"] = self.buildProps.gitHubSha1s.FunOS;
+      if (props.associated_suites && props.associated_suites.length) {
+        self.pointInfo["Associated suites"] = props.associated_suites;
+      }
+      let buildProperties = props.build_properties;
+      if (buildProperties != {}) {
+        self.buildProps = buildProperties;
+        if (buildProperties.hasOwnProperty("gitHubSha1s")) {
+          self.pointInfo["Git commit"] = self.buildProps.gitHubSha1s.FunOS;
+        }
       }
     }
 

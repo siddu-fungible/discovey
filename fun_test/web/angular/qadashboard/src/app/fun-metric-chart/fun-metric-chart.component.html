@@ -32,7 +32,7 @@
             <td *ngIf="point.key==='LSF job id'" class="word-break">
               <a class="pseudo-anchor" (click)="openLsfUrl(point.value)">{{ point.value }}</a>
             </td>
-            <td *ngIf="point.key==='SDK version'" class="word-break">
+            <td *ngIf="point.key==='Version'" class="word-break">
               <a class="pseudo-anchor" (click)="openVersionUrl(point.value)">{{ point.value }}</a>
             </td>
             <td *ngIf="point.key==='Suite execution id'" class="word-break">
@@ -41,8 +41,13 @@
             <td *ngIf="point.key==='Suite log directory'" class="word-break">
               <a class="pseudo-anchor" (click)="openSuiteLog(point.value)">Link</a>
             </td>
+            <td *ngIf="point.key==='Associated suites'" class="word-break">
+              <a *ngFor="let value of point.value"
+                 class="pseudo-anchor" (click)="openSuiteUrl(value)">{{ value }}
+              </a>
+            </td>
             <td
-              *ngIf="point.key!=='LSF job id' && point.key !=='SDK version' && point.key !== 'Suite execution id' && point.key !== 'Suite log directory'"
+              *ngIf="point.key!=='LSF job id' && point.key !=='Version' && point.key !== 'Suite execution id' && point.key !== 'Suite log directory' && point.key != 'Associated suites'"
               class="word-break">
               {{ point.value }}
             </td>

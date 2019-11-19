@@ -616,7 +616,7 @@ def add_jenkins_job_id_map(jenkins_job_id, fun_sdk_branch, git_commit, software_
 def add_job_run_time_properties(run_time, date_time):
     try:
         lsf_job_id = run_time["lsf_job_id"]
-        if lsf_job_id != -1 or lsf_job_id != "":
+        if lsf_job_id != -1 and lsf_job_id != "":
             entry = JobRunTime.objects.get(lsf_job_id=lsf_job_id)
         else:
             raise ObjectDoesNotExist

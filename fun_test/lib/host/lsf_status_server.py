@@ -122,7 +122,7 @@ class LsfStatusServer:
                     response = self.get_job_by_id(job_id=job_dict["job_id"])
                     job_info = json.loads(response)
                     dt = get_localized_time(completion_date)
-                    self.add_palladium_job_info(job_dict=job_dict)
+                    # self.add_palladium_job_info(job_dict=job_dict)
                     run_time_properties = self.prepare_run_time_properties(job_dict=job_dict)
                     output_text = self.get_human_file(job_id=job_dict["job_id"], console_name=FUNOS_CONSOLE, job_info=job_info)
                     past_job["date_time"] = dt

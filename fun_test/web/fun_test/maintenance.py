@@ -2441,6 +2441,9 @@ if __name__ == "__main_backup_fs1600__":
     ml.set_global_cache(cache_valid=True)
 
 if __name__ == "__main__":
+    # entries = JobRunTime.objects.all()
+    # for entry in entries:
+    #     entry.delete()
     from django.db import transaction
     transaction.set_autocommit(False)
     metric_models = app_config.get_metric_models()
@@ -2467,13 +2470,13 @@ if __name__ == "__main__":
                     lsf_job_id = int(entry.lsf_job_id) if entry.lsf_job_id != "" else -1
                     result["lsf_job_id"] = lsf_job_id
                     result["suite_execution_id"] = entry.suite_execution_id
-                    result["jenkins_build_number"] = entry.jenkins_job_id
+                    result["jenkins_build_number"] = entry.jenkins_job_id if entry.jenkins_job_id else -1
                     build_properties = {}
                     if entry.build_properties != "":
                         build_properties = json.loads(entry.build_properties)
                     result["build_properties"] = build_properties
                     result["version"] = entry.sdk_version
-                    result["asssociated_suites"] = entry.associated_suites
+                    result["associated_suites"] = entry.associated_suites
                     run_time_id = add_job_run_time_properties(date_time=build_date, run_time=result)
                     model_entry.run_time = run_time_id
                     model_entry.save()

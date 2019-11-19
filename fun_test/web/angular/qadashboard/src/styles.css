@@ -336,8 +336,8 @@ input:checked + .slider:before {
 }
 
 .pseudo-anchor {
-  color: #337ab7 !important;
-  font-weight: 500 !important;
+  color: #1f7ed1 !important;
+  font-weight: 400 !important;
 }
 .pseudo-anchor:hover {
   cursor: pointer !important;
