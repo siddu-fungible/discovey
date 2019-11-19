@@ -19,7 +19,7 @@ export class ReleaseCatalogEditorComponent implements OnInit, OnChanges {
   addingSuites: boolean = false;
   //selectedSuites: Suite [] = [];
   selectedSuiteIds: number [] = [];
-  suites: {[id: number]: Suite};
+  suites: {[id: number]: Suite} = {};
   constructor(private loggerService: LoggerService,
               private regressionService: RegressionService,
               private suiteEditorService: SuiteEditorService,
@@ -52,7 +52,11 @@ export class ReleaseCatalogEditorComponent implements OnInit, OnChanges {
   addNewlySelectedSuites(newlySelectedSuites) {
     newlySelectedSuites.forEach(newlySelecteSuite => {
       if (this.releaseCatalog.suites.findIndex(selectedSuite => selectedSuite.id === newlySelecteSuite.id) < 0 ) {
-        this.releaseCatalog.suites.push(newlySelecteSuite);
+        this.releaseCatalog.suites.push(new ReleaseCatalogSuite(newlySelecteSuite.id));
+      }
+
+      if (!this.suites.hasOwnProperty(newlySelecteSuite.id)) {
+        this.suites[newlySelecteSuite.id] = newlySelecteSuite;
       }
     });
     this.selectedSuiteIds = [];

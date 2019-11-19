@@ -50,13 +50,13 @@
             {{ selectedSuite.id }}
           </td>
           <td>
-            <a href="/regression/suite_editor/{{ selectedSuite.id }}">{{ selectedSuite.name }}</a>
+            <a href="/regression/suite_editor/{{ selectedSuite.id }}">{{ suites[selectedSuite.id].name }}</a>
           </td>
           <td>
-            {{ selectedSuite.short_description }}
+            {{ suites[selectedSuite.id].short_description }}
           </td>
           <td>
-            {{ selectedSuite.categories }}
+            {{ suites[selectedSuite.id].categories }}
           </td>
         </tr>
       </table>
