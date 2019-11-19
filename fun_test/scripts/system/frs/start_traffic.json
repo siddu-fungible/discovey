@@ -3,7 +3,6 @@
   "traffic_profile": ["zip","crypto","rcnvme","fio","le", "busy_loop"],
   "run_le_firewall": false,
   "boot_new_image": false,
-  "specific_apps": [],
   "add_to_database": false,
   "disable_f1_index": null,
   "ec_vol": false,

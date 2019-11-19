@@ -52,7 +52,7 @@ class MyScript(FunTestScript):
         self.initialize_variables()
         if self.boot_new_image:
             self.boot_fs()
-        self.verify_dpcsh_started()
+        # self.verify_dpcsh_started()
         # if not self.boot_new_image:
         #     self.clear_uart_logs()
         if self.ec_vol:
@@ -490,8 +490,10 @@ class FunTestCase1(FunTestCase):
                 one_dataset["output"] = cal_dpc_out
                 file_helper.add_data(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset,
                                      heading=heading)
-                dpcsh_data = self.simplify_debug_vp_util(dpcsh_output)
-                time_taken = self.upload_dpcsh_data_to_elk(dpcsh_data=dpcsh_data, f1=f1, stat_name=stat_name)
+                time_taken = 0
+                if self.stats_info["bmc"][stat_name].get("upload_to_es", False):
+                    dpcsh_data = self.simplify_debug_vp_util(dpcsh_output)
+                    time_taken = self.upload_dpcsh_data_to_elk(dpcsh_data=dpcsh_data, f1=f1, stat_name=stat_name)
             fun_test.sleep("Before next iteration", seconds=(5 - time_taken))
 
         come_handle.destroy()
@@ -732,6 +734,7 @@ class FunTestCase1(FunTestCase):
     def cleanup(self):
         self.test_end_time = (datetime.datetime.utcnow() + datetime.timedelta(seconds=60)).strftime(
             "%Y-%m-%dT%H:%M:%SZ")
+        self.add_the_links()
         if not self.boot_new_image:
             bmc_handle = Bmc(host_ip=self.fs['bmc']['mgmt_ip'],
                              ssh_username=self.fs['bmc']['mgmt_ssh_username'],
@@ -745,10 +748,28 @@ class FunTestCase1(FunTestCase):
             artifact_file_name_f1_1 = bmc_handle.get_uart_log_file(1)
             fun_test.add_auxillary_file(description="DUT_0_fs-65_F1_0 UART Log", filename=artifact_file_name_f1_0)
             fun_test.add_auxillary_file(description="DUT_0_fs-65_F1_1 UART Log", filename=artifact_file_name_f1_1)
-        href = "http://10.1.20.52:5601/app/kibana#/dashboard/a37ce420-9190-11e9-8475-15977467c007?_g=(refreshInterval:(pause:!t,value:0),time:(from:'{}',mode:absolute,to:'{}'))".format(
-            self.test_start_time, self.test_end_time)
-        checkpoint = '<a href="{}" target="_blank">ELK DEBUG MEMORY stats</a>'.format(href)
-        fun_test.add_checkpoint(checkpoint=checkpoint)
+
+    def add_the_links(self):
+        for system in self.stats_info:
+            if system == "files":
+                continue
+            for stat_name, value in self.stats_info[system].iteritems():
+                if value.get("disable", False) or value.get("upload_to_es", False):
+                    fun_test.log("stat: {} has been disabled".format(stat_name))
+                    continue
+
+                if stat_name == DEBUG_VP_UTIL:
+                    href = "http://10.1.20.52:5601/app/kibana#/dashboard/a37ce420-9190-11e9-8475-15977467c007?_g=(refreshInterval:(pause:!t,value:0),time:(from:'{}',mode:absolute,to:'{}'))".format(
+                        self.test_start_time, self.test_end_time)
+                    checkpoint = '<a href="{}" target="_blank">ELK {} stats</a>'.format(href, stat_name)
+                    fun_test.add_checkpoint(checkpoint=checkpoint)
+                elif stat_name == POWER:
+                    href = "http://10.1.20.52:5601/app/kibana#/dashboard/240d54d0-9bff-11e9-8475-15977467c007?_g=(refreshInterval:(pause:!t,value:0),time:(from:'{}',mode:absolute,to:'{}'))".format(
+                        self.test_start_time, self.test_end_time)
+                    checkpoint = '<a href="{}" target="_blank">ELK {} stats</a>'.format(href, stat_name)
+                    fun_test.add_checkpoint(checkpoint=checkpoint)
+
+
 
     def start_threaded_apps(self):
         self.required_apps = {}
@@ -885,6 +906,8 @@ class FunTestCase1(FunTestCase):
     def add_basics_req_elk(self, dpcsh_data, f1, time_stamp=True, system_name="fs-65"):
         utc_time = datetime.datetime.utcnow()
         time_strf = utc_time.strftime("%Y-%m-%dT%H:%M:%S.%f")
+        if type(dpcsh_data) is not list:
+            dpcsh_data = [dpcsh_data]
         for each_data_set in dpcsh_data:
             if time_stamp:
                 each_data_set["Time"] = time_strf
@@ -925,6 +948,8 @@ class FunTestCase1(FunTestCase):
             index = "cmds_stats_crypto"
         elif "storage/devices/nvme" in cmd:
             index = "cmd_storage_device_nvme"
+        elif cmd == POWER:
+            index = "cmd_power"
         else:
             sec_part = cmd.split(' ')[1]
             index = "cmd_" + sec_part.replace('/', '_')
@@ -937,6 +962,8 @@ class FunTestCase1(FunTestCase):
             doctype = "resource_bam"
         elif "storage/devices/nvme" in stat_name:
             doctype = "storage_ssd_iops"
+        elif stat_name == POWER:
+            doctype = "power_stats"
 
         return doctype
 
@@ -949,7 +976,7 @@ class FunTestCase1(FunTestCase):
         self.stats_info["bmc"] = {POWER: {"calculated": True, "upload_to_es": True},
                                   DIE_TEMPERATURE: {"calculated": False, "disable": True}}
         self.stats_info["come"] = {DEBUG_MEMORY: {}, CDU: {}, EQM: {},
-                                   BAM: {"calculated": False, "disable": True}, DEBUG_VP_UTIL: {}, "LE": {},
+                                   BAM: {"calculated": False, "disable": True}, DEBUG_VP_UTIL: {"upload_to_es": True}, "LE": {},
                                    HBM: {"calculated": True},
                                    EXECUTE_LEAKS: {"calculated": False}, PC_DMA: {"calculated": True},
                                    DDR: {"calculated": True}}

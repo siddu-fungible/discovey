@@ -92,6 +92,7 @@ def power_manager(bmc_handle):
     result["fs_power"] = fs_cal
     result["f1_0_power"] = f1_cal['F1_0']
     result["f1_1_power"] = f1_cal['F1_1']
+    result["total_f1_power"] = f1_cal['F1_0'] + f1_cal['F1_1']
 
     cal_output = format_the_power_result(fs_cal, f1_cal)
     # print (raw_output)
