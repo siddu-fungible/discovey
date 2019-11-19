@@ -279,7 +279,7 @@ class FunTestCase1(FunTestCase):
 
     def run(self):
         self.initial_stats()
-        self.collect_the_stats(count=3, heading="Before starting traffic")
+        # self.collect_the_stats(count=3, heading="Before starting traffic")
         self.run_the_traffic()
         count = int(self.duration / 5)
         self.collect_the_stats(count=count, heading="During traffic")
@@ -1144,7 +1144,7 @@ class FunTestCase1(FunTestCase):
                            ssh_password=self.fs['come']['mgmt_ssh_password'])
         for f1 in self.run_on_f1:
             if LE in self.traffic_profile:
-                self.restart_dpcsh()
+                # self.restart_dpcsh()
                 self.start_le_firewall(self.duration, self.boot_new_image)
 
             if CRYPTO in self.traffic_profile:
@@ -1196,7 +1196,7 @@ class FunTestCase1(FunTestCase):
         vm_info = {}
 
         for vm_number in range(2):
-            vm = globals()["vm_{}".format(vm_number)]
+            vm = getattr(self, "vm_{}".format(vm_number))
             handle = Linux(host_ip=vm["host_ip"], ssh_username=vm["ssh_username"], ssh_password=vm["ssh_password"])
             vm_info[vm["name"]] = {}
             vm_info[vm["name"]]["handle"] = handle
@@ -1234,6 +1234,7 @@ class FunTestCase1(FunTestCase):
         for vm, vm_details in vm_info.iteritems():
             cmd = '''python run_nu_transit_only.py --inputs '{"speed":"SPEED_100G", "run_time":%s, "initiate":false}' ''' % run_time
             self.initiate_or_run_le_firewall(cmd, vm_details)
+            fun_test.sleep("for le to start", seconds=10)
             running = self.check_if_le_firewall_is_running(vm_details)
             if running:
                 fun_test.test_assert(running, "Le started on VM: {}".format(vm))
