@@ -1,5 +1,4 @@
 import dpcsh_nocli
-import get_handles
 
 
 def debug_memory(come_handle, f1=0):

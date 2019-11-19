@@ -620,8 +620,10 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
             self.post_results = False
         if "csi_perf_iodepth" in job_inputs:
             self.csi_perf_iodepth = job_inputs["csi_perf_iodepth"]
+            self.full_run_iodepth = self.csi_perf_iodepth
         if not isinstance(self.csi_perf_iodepth, list):
             self.csi_perf_iodepth = [self.csi_perf_iodepth]
+            self.full_run_iodepth = self.csi_perf_iodepth
 
         if ("blt" not in fun_test.shared_variables or not fun_test.shared_variables["blt"]["setup_created"]) \
                 and (not fun_test.shared_variables["blt"]["warmup_done"]):
@@ -1049,7 +1051,7 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                                                        listener_ip=self.perf_listener_ip, fs=self.fs[0],
                                                        listener_port=4420)  # Temp change for testing
                         csi_perf_obj.prepare(f1_index=0)
-                        csi_perf_obj.start(f1_index=0, dpc_client=self.storage_controller)
+                        csi_perf_obj.start(f1_index=0)  #  , dpc_client=self.storage_controller)
                         fun_test.log("csi perf stats collection is started")
                         # dpcsh_client = self.fs.get_dpc_client(f1_index=0, auto_disconnect=True)
                         fun_test.sleep("Allowing CSI performance data to be collected", 300)

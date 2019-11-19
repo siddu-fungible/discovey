@@ -53,6 +53,7 @@ def get_params(time, crypto_per=100, zip_per=100, rcnvme_per=70, fio_per=100, sp
                 "50": {"qdepth": 8, "nthreads": 2, "duration": rcnvme_run_time},
                 "60": {"qdepth": 8, "nthreads": 4, "duration": rcnvme_run_time},
                 "70": {"qdepth": 12, "nthreads": 12, "duration": rcnvme_run_time},
+                "100": {"qdepth": 16, "nthreads": 16, "duration": rcnvme_run_time},
             },
             "fio": {
                 "10": {"numjobs": 8, "iodepth": 1, "runtime": fio_run_time},

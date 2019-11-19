@@ -92,6 +92,7 @@ def power_manager(bmc_handle):
     result["fs_power"] = fs_cal
     result["f1_0_power"] = f1_cal['F1_0']
     result["f1_1_power"] = f1_cal['F1_1']
+    result["total_f1_power"] = f1_cal['F1_0'] + f1_cal['F1_1']
 
     cal_output = format_the_power_result(fs_cal, f1_cal)
     # print (raw_output)
@@ -101,6 +102,12 @@ def power_manager(bmc_handle):
 
 def die_temperature(bmc_handle):
     output = bmc_handle.command("ipmitool -I lanplus -H 10.1.21.0 -U admin -P admin sensor")
+    return output
+
+
+def new_power(bmc_handle):
+    cmd = "/mnt/sdmmc0p1/scripts/new_power.sh"
+    output = bmc_handle.command(cmd)
     return output
 
 
