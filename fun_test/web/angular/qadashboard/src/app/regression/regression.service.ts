@@ -379,7 +379,7 @@ export class RegressionService implements OnInit{
     }
     return this.apiService.get(url).pipe(switchMap(response => {
       let allCatalogs = response.data;
-      const mappedArray = allCatalogs.map(data => new ReleaseCatalog(allCatalogs));
+      const mappedArray = allCatalogs.map(data => new ReleaseCatalog(data));
       return of(mappedArray);
     }), catchError(error => {
       this.loggerService.error("Unable to get release catalogs");

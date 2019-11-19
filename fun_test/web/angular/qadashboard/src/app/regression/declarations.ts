@@ -20,7 +20,7 @@ export class ReleaseCatalog {
         } else if (field === "description") {
           this.description = fields["description"];
         } else if (field === "suites") {
-
+          this.suites = fields["suites"].map(suite => new ReleaseCatalogSuite(suite.id));
         } else {
           this[field] = fields[field];
         }
