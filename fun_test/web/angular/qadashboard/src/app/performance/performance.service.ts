@@ -15,11 +15,17 @@ export enum SelectMode {
 interface  JobRunTimeProperties {
   date_time: any;
   run_time: any;
+  lsf_job_id: number;
+  suite_execution_id: number;
+  jenkins_build_number: number;
 }
 
 export class JobRunTime implements JobRunTimeProperties {
   date_time: any;
   run_time: any;
+  lsf_job_id: number;
+  suite_execution_id: number;
+  jenkins_build_number: number;
 
   constructor(obj?: any) {
     Object.assign(this, obj);

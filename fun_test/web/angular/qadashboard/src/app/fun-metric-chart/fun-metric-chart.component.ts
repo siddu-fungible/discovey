@@ -225,47 +225,25 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   setPointInfo(props, point): any {
     let s = {};
     let self = this;
+    self.pointInfo = {};
+    self.buildProps = null;
     if (props) {
-      let jenkinsInfo = props.run_time.jenkins_info;
-      let lsfInfo = props.run_time.lsf_info;
-      let suiteInfo = props.run_time.suite_info;
-      let gitCommit = "Unknown";
-      if (lsfInfo.hasOwnProperty("lsf_job_id")) {
-        let lsfJobId = lsfInfo.lsf_job_id;
-        if (lsfJobId !== "" && lsfJobId !== -1) {
-          s["Lsf job id"] = lsfJobId;
-        }
+      if (props.jenkins_build_number != -1) {
+        self.pointInfo["Jenkins build number"] = props.jenkins_build_number;
       }
-      if (suiteInfo.hasOwnProperty("suite_execution_id")) {
-        let suiteExecutionId = suiteInfo.suite_execution_id;
-        if (suiteExecutionId !== "" && suiteExecutionId !== -1) {
-          s["Suite execution detail"] = suiteExecutionId;
-          s["Suite log directory"] = suiteExecutionId;
-        }
+      if (props.lsf_job_id != -1) {
+        self.pointInfo["LSF job id"] = props.lsf_job_id;
       }
-      if (suiteInfo.hasOwnProperty("associated_suites")) {
-        let associatedSuites = suiteInfo.associated_suites;
-        if (associatedSuites.length !== 0) {
-          s["Associated suites"] = associatedSuites;
-        }
+      if (props.suite_execution_id != -1) {
+        self.pointInfo["Suite execution id"] = props.suite_execution_id;
+        self.pointInfo["Suite log directory"] = props.suite_execution_id;
       }
-      if (jenkinsInfo.hasOwnProperty("build_properties")) {
-        if (jenkinsInfo.build_properties && jenkinsInfo.build_properties != "") {
-          let buildProperties = jenkinsInfo.build_properties;
-          if (Object.keys(buildProperties).length !== 0) {
-            s["Build Properties"] = buildProperties;
-            let funOsGitCommit = buildProperties["gitHubSha1s"]["FunOS"];
-            if (funOsGitCommit != "") {
-              s["Git commit"] = funOsGitCommit;
-            }
-          }
-        }
+      if (props.run_time.sdk_version != "" && props.run_time.sdk_version != -1) {
+        self.pointInfo["SDK version"] = props.sdk_version;
       }
-      if (jenkinsInfo.hasOwnProperty("sdk_version")) {
-        let sdkVersion = jenkinsInfo.sdk_version;
-        if (sdkVersion != "" && sdkVersion != -1) {
-          s["SDK version"] = sdkVersion;
-        }
+      self.buildProps = props.run_time.build_properties;
+      if (self.buildProps.gitHubSha1s.FunOS) {
+        self.pointInfo["Git commit"] = self.buildProps.gitHubSha1s.FunOS;
       }
     }
 
@@ -273,27 +251,13 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     if (metaData.epoch) {
       let pstDate = this.commonService.convertEpochToDate(metaData.epoch, this.TIMEZONE);
       let dateString = this.commonService.addLeadingZeroesToDate(pstDate);
-      s["Date"] = dateString.substring(0, 5);
+      self.pointInfo["Date"] = dateString.substring(0, 5);
     }
     if (metaData.originalValue) {
-      s["Value"] = metaData.originalValue;
+      self.pointInfo["Value"] = metaData.originalValue;
     } else {
-      s["Value"] = point["y"];
+      self.pointInfo["Value"] = point["y"];
     }
-    self.pointInfo = [];
-    self.buildProps = [];
-    Object.keys(s).forEach((key) => {
-      if (key === "Build Properties") {
-        let properties = s[key];
-        self.buildProps["name"] = key;
-        self.buildProps["value"] = properties;
-      } else {
-        let property = [];
-        property["name"] = key;
-        property["value"] = s[key];
-        self.pointInfo.push(property);
-      }
-    });
   }
 
   fetchMetricsById(): void {

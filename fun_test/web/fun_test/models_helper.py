@@ -624,10 +624,9 @@ def add_job_run_time_properties(run_time, date_time):
         jenkins_build_number = run_time["jenkins_build_number"]
         lsf_job_id = run_time["lsf_job_id"]
         suite_execution_id = run_time["suite_execution_id"]
-        associated_suites = run_time["associated_suites"]
         props = run_time["run_time"]
         entry = JobRunTime(jenkins_build_number=jenkins_build_number, lsf_job_id=lsf_job_id,
-                           suite_execution_id=suite_execution_id, associated_suites=associated_suites, run_time=props, date_time=date_time)
+                           suite_execution_id=suite_execution_id, run_time=props, date_time=date_time)
         entry.save()
     return entry.id
 

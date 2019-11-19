@@ -1580,7 +1580,6 @@ class MetricParser():
                         run_time_props = {}
                         run_time_props["lsf_job_id"] = -1
                         run_time_props["suite_execution_id"] = fun_test.get_suite_execution_id()
-                        run_time_props["associated_suites"] = []
                         run_time_props["jenkins_build_number"] = -1
                         run_time_props["run_time"] = {"build_properties": {},
                                                       "sdk_version": self.metrics["input_version"]}

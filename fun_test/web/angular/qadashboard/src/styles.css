@@ -336,11 +336,12 @@ input:checked + .slider:before {
 }
 
 .pseudo-anchor {
-  color: blue;
+  color: #337ab7 !important;
+  font-weight: 500 !important;
 }
 .pseudo-anchor:hover {
-  cursor: pointer;
-  color: black;
+  cursor: pointer !important;
+  color: black !important;
 }
 
 @media all {

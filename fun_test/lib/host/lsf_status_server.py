@@ -219,7 +219,9 @@ class LsfStatusServer:
             result["lsf_job_id"] = lsf_id
             result["suite_execution_id"] = suite_execution_id
             result["jenkins_build_number"] = job_dict["jenkins_build_number"]
-            result["run_time"] = {"build_properties": build_properties}
+            result["build_properties"] =  build_properties
+            result["associated_suites"] = []
+            result["version"] = fun_test.get_version()
         return result
 
 

@@ -25,42 +25,37 @@
     <div class="card" *ngIf="pointClicked && leaf">
       <div class="properties-margin">
         <table>
-          <tr *ngFor="let point of pointInfo">
+          <tr *ngFor="let point of pointInfo | keyvalue">
             <td class="no-wrap">
-              <b>{{ point.name }}:</b>
+              <b>{{ point.key }}:</b>
             </td>
-            <td *ngIf="point.name==='Lsf job id'" class="word-break">
-              <a [routerLink]="" (click)="openLsfUrl(point.value)">{{ point.value }}</a>
+            <td *ngIf="point.key==='LSF job id'" class="word-break">
+              <a class="pseudo-anchor" (click)="openLsfUrl(point.value)">{{ point.value }}</a>
             </td>
-            <td *ngIf="point.name==='SDK version'" class="word-break">
-              <a [routerLink]="" (click)="openVersionUrl(point.value)">{{ point.value }}</a>
+            <td *ngIf="point.key==='SDK version'" class="word-break">
+              <a class="pseudo-anchor" (click)="openVersionUrl(point.value)">{{ point.value }}</a>
             </td>
-            <td *ngIf="point.name==='Suite execution detail'" class="word-break">
-              <a [routerLink]="" (click)="openSuiteUrl(point.value)">{{ point.value }}</a>
+            <td *ngIf="point.key==='Suite execution id'" class="word-break">
+              <a class="pseudo-anchor" (click)="openSuiteUrl(point.value)">{{ point.value }}</a>
             </td>
-            <td *ngIf="point.name==='Suite log directory'" class="word-break">
-              <a [routerLink]="" (click)="openSuiteLog(point.value)">Link</a>
-            </td>
-            <td *ngIf="point.name==='Associated suites'" class="word-break">
-              <a *ngFor="let value of point.value"
-                 [routerLink]="" (click)="openSuiteUrl(value)">{{ value }}
-              </a>
+            <td *ngIf="point.key==='Suite log directory'" class="word-break">
+              <a class="pseudo-anchor" (click)="openSuiteLog(point.value)">Link</a>
             </td>
             <td
-              *ngIf="point.name!=='Lsf job id' && point.name !=='SDK version' && point.name !== 'Suite execution detail' && point.name !== 'Suite log directory' && point.name !== 'Associated suites'"
+              *ngIf="point.key!=='LSF job id' && point.key !=='SDK version' && point.key !== 'Suite execution id' && point.key !== 'Suite log directory'"
               class="word-break">
               {{ point.value }}
             </td>
           </tr>
         </table>
-        <a *ngIf="!showBuildProps && buildProps.value" [routerLink]="" (click)="showBuildProps = !showBuildProps">Show
+        <a *ngIf="!showBuildProps && buildProps" class="pseudo-anchor" (click)="showBuildProps = !showBuildProps">Show
           Build
           Properties</a>
-        <a *ngIf="showBuildProps && buildProps.value" [routerLink]="" (click)="showBuildProps = !showBuildProps">Hide
+        <a *ngIf="showBuildProps && buildProps" class="pseudo-anchor" (click)="showBuildProps = !showBuildProps">Hide
           Build
           Properties</a><br>
         <div style="padding: 4px;" *ngIf="showBuildProps && buildProps">
-          <pre>{{ buildProps.value | json }}</pre>
+          <pre>{{ buildProps | json }}</pre>
         </div>
         <cancel-btn-link [text]="'close'" (onClick)="closePointInfo()"></cancel-btn-link>
       </div>
@@ -76,7 +71,9 @@
           <span><i class="fa fa-times fa-fw close-color" (click)="editingOwner = false"></i></span></i>
         <span style="float: right;" *ngIf="!editingSource"><i class="grey-text">Source: </i><i class="grey-text"
                                                                                                *ngIf="currentSource === 'Unknown'">{{ currentSource }}</i>
-          <a *ngIf="currentSource !== 'Unknown'" [routerLink]="" (click)="openSource(currentSource)">{{ getAppName(currentSource) }}</a>&nbsp;
+          <a *ngIf="currentSource !== 'Unknown'" class="pseudo-anchor" (click)="openSource(currentSource)">{{
+            getAppName(currentSource)
+            }}</a>&nbsp;
           <a (click)="editingSource = true"><i class="fa fa-pencil"></i></a></span>
         <i *ngIf="editingSource" style="font-size: 95%; float: right">Source: <input type="text" class="owner-text"
                                                                                      [(ngModel)]="currentSource">
@@ -99,9 +96,9 @@
       <br>
       <div *ngIf="leaf">
         <b>Show expected values:</b>&nbsp;
-        <a *ngIf="!showAllExpectedValues && showSelect" [routerLink]="" (click)="changeAllExpectedValues()">Select
+        <a *ngIf="!showAllExpectedValues && showSelect" class="pseudo-anchor" (click)="changeAllExpectedValues()">Select
           All</a>
-        <a *ngIf="showAllExpectedValues && showSelect" [routerLink]="" (click)="changeAllExpectedValues()">Deselect
+        <a *ngIf="showAllExpectedValues && showSelect" class="pseudo-anchor" (click)="changeAllExpectedValues()">Deselect
           All</a>
         <table>
           <tr *ngFor="let output of expectedValues">
@@ -139,9 +136,9 @@
     <div *ngIf="!minimal && leaf" style="padding-top: 10px; padding-bottom: 10px;">
       <div *ngIf="!minimal">
         <span class="a-text">
-          <a *ngIf="!showingTable" [routerLink]="" (click)="showTables()">Show Table </a>
-          <a *ngIf="showingTable" [routerLink]="" (click)="showTables()">Hide Table </a>
-          <a [routerLink]="" (click)="showTables()"><span *ngIf="!showingTable" class="arrow-right"></span>
+          <a *ngIf="!showingTable" class="pseudo-anchor" (click)="showTables()">Show Table </a>
+          <a *ngIf="showingTable" class="pseudo-anchor" (click)="showTables()">Hide Table </a>
+          <a class="pseudo-anchor" (click)="showTables()"><span *ngIf="!showingTable" class="arrow-right"></span>
           <span *ngIf="showingTable" class="arrow-down"></span>
           </a>
         </span>
@@ -156,8 +153,8 @@
     <div *ngIf="!minimal" style="padding-top: 10px; padding-bottom: 10px;">
       <div *ngIf="!minimal">
         <span class="a-text">
-          <a [routerLink]="" (click)="showConfigure()">Configure </a>
-          <a [routerLink]="" (click)="showConfigure()"><span *ngIf="!showingConfigure" class="arrow-right"></span>
+          <a class="pseudo-anchor" (click)="showConfigure()">Configure </a>
+          <a class="pseudo-anchor" (click)="showConfigure()"><span *ngIf="!showingConfigure" class="arrow-right"></span>
             <span *ngIf="showingConfigure" class="arrow-down"></span>
           </a>
         </span>
