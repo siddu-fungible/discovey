@@ -2471,8 +2471,9 @@ if __name__ == "__main__":
                     build_properties = {}
                     if entry.build_properties != "":
                         build_properties = json.loads(entry.build_properties)
-                    result["run_time"] = {"build_properties": build_properties,
-                                          "sdk_version": entry.sdk_version}
+                    result["build_properties"] = build_properties
+                    result["version"] = entry.sdk_version
+                    result["asssociated_suites"] = entry.associated_suites
                     run_time_id = add_job_run_time_properties(date_time=build_date, run_time=result)
                     model_entry.run_time = run_time_id
                     model_entry.save()

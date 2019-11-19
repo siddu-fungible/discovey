@@ -338,15 +338,15 @@ class BltVolumePerformanceHelper(MetricHelper):
                   read_99_latency_unit="usecs", read_99_99_latency_unit="usecs", write_99_99_latency_unit="usecs",
                   version=-1):
         try:
-
             if version == -1:
                 version = str(fun_test.get_version())
             result = {}
             result["lsf_job_id"] = -1
             result["suite_execution_id"] = fun_test.get_suite_execution_id()
             result["jenkins_build_number"] = -1
-            result["run_time"] = {"build_properties": {},
-                                  "sdk_version": version}
+            result["build_properties"] = {}
+            result["version"] = version
+            result["associated_suites"] = []
             entry = BltVolumePerformance.objects.get(input_date_time=date_time,
                                                      input_volume_type=volume,
                                                      input_test=test,
@@ -540,8 +540,9 @@ class ModelHelper(MetricHelper):
                 result["lsf_job_id"] = -1
                 result["suite_execution_id"] = fun_test.get_suite_execution_id()
                 result["jenkins_build_number"] = -1
-                result["run_time"] = {"build_properties": {},
-                                      "sdk_version": m_obj.input_version}
+                result["build_properties"] = {},
+                result["version"] = m_obj.input_version
+                result["associated_suites"] = []
                 save_entry(m_obj, run_time=result)
                 result = True
             else:
