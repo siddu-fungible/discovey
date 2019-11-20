@@ -1213,6 +1213,7 @@ class FunTestCase1(FunTestCase):
             for vm, vm_details in vm_info.iteritems():
                 self.kill_le_firewall(vm_details)
             return
+        f1 = 0
         for vm, vm_details in vm_info.iteritems():
             running = self.check_if_le_firewall_is_running(vm_details)
             if running:
@@ -1220,8 +1221,9 @@ class FunTestCase1(FunTestCase):
                 running = False
             if not running and new_image:
                 tmp_run_time = 30
-                cmd = '''python run_nu_transit_only.py --inputs '{"speed":"SPEED_100G", "run_time":%s, "initiate":true}' ''' % tmp_run_time
-                self.initiate_or_run_le_firewall(cmd, vm_details)
+                cmd = '''python run_nu_transit_only.py --inputs '{"speed":"SPEED_100G", "run_time":%s, "initiate":true, "f1": %s}' ''' % (tmp_run_time,f1)
+                self.initiate_or_run_le_firewall(cmd, vm_details, f1)
+                f1 += 1
                 fun_test.sleep("to check if le -firewall has started on vm: {}".format(vm), seconds=10)
                 running = self.check_if_le_firewall_is_running(vm_details)
                 fun_test.test_assert(running, "Le initiate started on the VM: {}".format(vm))
