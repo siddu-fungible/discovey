@@ -1,10 +1,15 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, Input, OnInit, EventEmitter, Output} from '@angular/core';
 import {SuiteEditorService, Suite} from "../suite-editor.service";
 import {Observable, of, Subject} from "rxjs";
 import {debounceTime, distinctUntilChanged, switchMap} from "rxjs/operators";
 import {LoggerService} from "../../../services/logger/logger.service";
 import {PagerService} from "../../../services/pager/pager.service";
 
+
+enum Mode {
+  DEFAULT = 0,
+  SELECTION = 1
+}
 
 @Component({
   selector: 'app-suites-view',
@@ -23,16 +28,24 @@ export class SuitesViewComponent implements OnInit {
   pager: any = {};
   byNameSearchText: string = null;
   status: string = null;
-
+  @Input() multiSelect: boolean = false;
+  @Input() selectedSuiteIds: number [] = [];
+  @Output() reportSelectedSuites = new EventEmitter<Suite []>();
+  @Output() cancelSelection = new EventEmitter();
+  Mode = Mode;
+  mode: Mode = Mode.DEFAULT;
 
   constructor(private service: SuiteEditorService, private loggerService: LoggerService, private pagerService: PagerService) {
-
 
 
   }
 
 
   ngOnInit() {
+    if (this.multiSelect) {
+      this.mode = Mode.SELECTION;
+      this.RECORDS_PER_PAGE = 5;
+    }
     this.driver =
       of(true).pipe(switchMap(response => {
         return this.service.categories();
@@ -43,11 +56,17 @@ export class SuitesViewComponent implements OnInit {
         this.suitesCount = suiteCount;
         this.pager = this.pagerService.getPager(this.suitesCount, this.currentPage, this.RECORDS_PER_PAGE);
         return this.service.suites<Suite[]>(null, this.RECORDS_PER_PAGE, this.currentPage, this.selectedCategories, this.byNameSearchText);
-      })).pipe(switchMap(response => {
+      })).pipe(switchMap((response: Suite []) => {
+        //console.log(typeof response);
+        //console.log(Object.prototype.toString.call(response[0]));
+        //response[0].p();
         this.suites = response;
         this.suites.map(suite => {
           suite["dirty"] = false;
           suite["originalCategories"] = suite.categories;
+          if (this.selectedSuiteIds.indexOf(suite.id) > -1) {
+            suite.selected = true;
+          }
         });
         return of(true);
       }));
@@ -129,4 +148,11 @@ export class SuitesViewComponent implements OnInit {
     }
   }
 
+  onSubmitClick() {
+    this.reportSelectedSuites.emit(this.suites.filter(suite => suite.selected));
+  }
+
+  onCancelClick() {
+    this.cancelSelection.emit();
+  }
 }
