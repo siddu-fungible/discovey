@@ -193,7 +193,7 @@
     "fio_cmd_args": {"multiple_jobs": "--direct=1 --prio=0 --rw=randwrite --ramp_time=10 --cpus_allowed_policy=split --norandommap --randrepeat=0 --cpus_allowed={} --numjobs={} --iodepth={} --bs=4k --io_size={}", "timeout": 150},
     "fio_runtime": 120,
     "fio_run_timeout": 150,
-    "fio_size_timeout": 3600,
+    "fio_size_timeout": 7200,
     "fio_modes": ["randwrite"],
     "fio_iodepth": [32, 64, 96, 128],
     "full_run_iodepth": [16, 32],
