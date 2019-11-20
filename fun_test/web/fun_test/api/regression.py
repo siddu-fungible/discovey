@@ -645,7 +645,11 @@ def release_catalogs(request, catalog_id):
         catalog_objects = ReleaseCatalog.objects.filter(q)
         result = []
         for catalog_object in catalog_objects:
-            result.append(catalog_object.to_dict())
+            if catalog_id:
+                result = catalog_object.to_dict()
+                break
+            else:
+                result.append(catalog_object.to_dict())
 
     if request.method == "POST":
         request_json = json.loads(request.body)
@@ -653,7 +657,14 @@ def release_catalogs(request, catalog_id):
         c = ReleaseCatalog(**request_json)
         c.save()
         result = c.id
-    else:
+    elif request.method == "DELETE":
+        if catalog_id:
+            try:
+                c = ReleaseCatalog.objects.get(id=int(catalog_id))
+                c.delete()
+            except ObjectDoesNotExist:
+                pass
+
         pass
     return result
 

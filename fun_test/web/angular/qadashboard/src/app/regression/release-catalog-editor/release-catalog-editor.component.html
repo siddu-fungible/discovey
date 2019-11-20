@@ -1,67 +1,82 @@
 <div class="component">
-  <div class="fun-attribute">
-    <span class="fun-attribute-label">Name:</span> <app-textarea-input [initialValue]="releaseCatalog.name" (valueChanged)="catalogNameChanged($event)" [numRows]="1"></app-textarea-input>
-  </div>
-  <button *ngIf="!addingSuites" class="fun-button-add" (click)="addingSuites = !addingSuites">Add suites</button>
+  <app-back></app-back>
+  <app-section-header [value]="sectionTitle"></app-section-header>
+  <ng-container *ngIf="releaseCatalog">
+    <div class="fun-attribute">
+      <span class="fun-attribute-label">Name:</span> <app-textarea-input [initialValue]="releaseCatalog.name" (valueChanged)="catalogNameChanged($event)" [numRows]="1"></app-textarea-input>
+    </div>
 
-  <ng-container *ngIf="addingSuites">
-    <div class="fun-panel">
+    <div class="fun-attribute">
+      <span class="fun-attribute-label">Description:</span> <app-textarea-input [initialValue]="releaseCatalog.description" (valueChanged)="catalogDescription($event)" [numRows]="4"></app-textarea-input>
+    </div>
+
+    <button *ngIf="!addingSuites" class="fun-button-add" (click)="addingSuites = !addingSuites">Add suites</button>
+
+    <ng-container *ngIf="addingSuites">
+      <div class="fun-panel">
+        <div class="fun-panel-header">
+          Adding suites ...
+        </div>
+        <div class="fun-panel-body">
+          <app-suites-view [@show]="addingSuites"
+                       *ngIf="addingSuites"
+                       [selectedSuiteIds]="selectedSuiteIds"
+                       [multiSelect]="true"
+                       (reportSelectedSuites)="suitesSelectedByView($event)" (cancelSelection)="cancelSelection()">
+
+          </app-suites-view>
+        </div>
+      </div>
+    </ng-container>
+
+    <div class="fun-panel" *ngIf="releaseCatalog.suites.length > 0">
       <div class="fun-panel-header">
-        Adding suites ...
+        Selected suites
       </div>
       <div class="fun-panel-body">
-        <app-suites-view [@show]="addingSuites"
-                     *ngIf="addingSuites"
-                     [selectedSuiteIds]="selectedSuiteIds"
-                     [multiSelect]="true"
-                     (reportSelectedSuites)="suitesSelectedByView($event)" (cancelSelection)="cancelSelection()">
+        <table class="fun-table">
+          <tr>
+            <td class="fun-table-header"></td>
+            <td class="fun-table-header">
+              Suite ID
+            </td>
+            <td class="fun-table-header">
+              Name
+            </td>
+            <td class="fun-table-header">
+              Description
+            </td>
+            <td class="fun-table-header">
+              Categories
+            </td>
+          </tr>
+          <tr *ngFor="let selectedSuite of releaseCatalog.suites; let index=index">
+            <ng-container *ngIf="selectedSuite">
+              <td>
+              {{ index }}
+            </td>
+              <td>
+                {{ selectedSuite.id }}
+              </td>
+              <td>
+                <a href="/regression/suite_editor/{{ selectedSuite.id }}">{{ suites[selectedSuite.id]?.name }}</a>
+              </td>
+              <td>
+                {{ suites[selectedSuite.id]?.short_description }}
+              </td>
+              <td>
+                {{ suites[selectedSuite.id]?.categories }}
+              </td>
 
-    </app-suites-view>
+            </ng-container>
+
+          </tr>
+        </table>
       </div>
     </div>
+
+    <button *ngIf="changeDetected && !addingSuites" class="fun-button-submit" (click)="submitClick()">Submit</button>
+
   </ng-container>
 
-  <div class="fun-panel" *ngIf="releaseCatalog.suites.length > 0">
-    <div class="fun-panel-header">
-      Selected suites
-    </div>
-    <div class="fun-panel-body">
-      <table class="fun-table">
-        <tr>
-          <td class="fun-table-header"></td>
-          <td class="fun-table-header">
-            Suite ID
-          </td>
-          <td class="fun-table-header">
-            Name
-          </td>
-          <td class="fun-table-header">
-            Description
-          </td>
-          <td class="fun-table-header">
-            Categories
-          </td>
-        </tr>
-        <tr *ngFor="let selectedSuite of releaseCatalog.suites; let index=index">
-          <td>
-            {{ index }}
-          </td>
-          <td>
-            {{ selectedSuite.id }}
-          </td>
-          <td>
-            <a href="/regression/suite_editor/{{ selectedSuite.id }}">{{ suites[selectedSuite.id].name }}</a>
-          </td>
-          <td>
-            {{ suites[selectedSuite.id].short_description }}
-          </td>
-          <td>
-            {{ suites[selectedSuite.id].categories }}
-          </td>
-        </tr>
-      </table>
-    </div>
-  </div>
-
-  <button class="fun-button-submit" (click)="submitClick()">Submit</button>
 </div>
