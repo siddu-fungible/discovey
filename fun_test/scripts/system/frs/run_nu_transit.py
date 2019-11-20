@@ -338,7 +338,7 @@ if __name__ == "__main__":
         if "initiate" in job_inputs:
             initiate = job_inputs["initiate"]
         if "f1" in job_inputs:
-            f1 = job_inputs["initiate"]
+            f1 = job_inputs["f1"]
         if "load" in job_inputs:
             load = job_inputs["load"]
     run_nu_firewall(come_handle, run_time, load, initiate, f1)
