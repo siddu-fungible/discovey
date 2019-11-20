@@ -45,6 +45,6 @@
     "ssh_password": "r00t.!@#",
     "WORKSPACE": "/home/localadmin/fungible_automation/Integration",
     "PYTHONPATH": "/home/localadmin/fungible_automation/Integration/fun_test",
-    "SCRIPT_PATH": "/home/localadmin/fungible_automation/Integration/fun_test/scripts/power_monitor"
+    "SCRIPT_PATH": "/home/localadmin/fungible_automation/Integration/fun_test/scripts/system/frs"
   }
 }
