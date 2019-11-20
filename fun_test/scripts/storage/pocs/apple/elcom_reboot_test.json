@@ -15,5 +15,5 @@
   "check_docker": true,
   "expected_dockers": 3,
   "end_sleep": 300,
-  "check_portal": false,
+  "check_portal": false
 }
