@@ -138,7 +138,8 @@ class ApcPduTestcase(FunTestCase):
                                 ssh_password=self.fs['come']['mgmt_ssh_password'])
         self.bmc_handle = Bmc(host_ip=self.fs['bmc']['mgmt_ip'],
                               ssh_username=self.fs['bmc']['mgmt_ssh_username'],
-                              ssh_password=self.fs['bmc']['mgmt_ssh_password'])
+                              ssh_password=self.fs['bmc']['mgmt_ssh_password'],
+                              bundle_compatible=True)
         self.bmc_handle.set_prompt_terminator(r'# $')
 
         fun_test.log("Checking if COMe is UP")
