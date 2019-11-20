@@ -1,12 +1,13 @@
 <div style="display: inline-flex; align-items: flex-start; flex-direction: column">
   <div [ngClass]="{'hover-cell': hoverHide}">
     <span [innerHtml]="tempValue| safeHtml"></span>&nbsp;
-    <i *ngIf="editable" class="fa fa-pencil" [ngClass]="{'hover-icon': hoverHide}" style="font-size:14px;" (click)="onEdit()"></i>
+    <i *ngIf="editable && !editing" class="fa fa-pencil" [ngClass]="{'hover-icon': hoverHide}" style="font-size:14px;" (click)="onEdit()"></i>
+    <span style="color: red" *ngIf="required && !editing"> * This field is required</span>
   </div>
 
 
   <div *ngIf="editing" style="align-self: stretch">
-    <textarea rows="{{ numRows }}" [(ngModel)]="tempValue" style="width: 100%;"></textarea>
+    <textarea rows="{{ numRows }}" [(ngModel)]="tempValue" style="width: 100%;" [ngClass]="{'focus-text-area': editing }"></textarea>
     <div >
       <span><i class="fa fa-check fa-fw tick-color" (click)="onSubmit()"></i></span>
       <span><i class="fa fa-times fa-fw close-color" (click)="onCancel()"></i></span>
