@@ -1,5 +1,6 @@
 <div class="component">
   <app-back></app-back>
+  <app-section-header [value]="'Creating a new release catalog'"></app-section-header>
   <div class="fun-attribute">
     <span class="fun-attribute-label">Name:</span> <app-textarea-input [initialValue]="releaseCatalog.name" (valueChanged)="catalogNameChanged($event)" [numRows]="1"></app-textarea-input>
   </div>

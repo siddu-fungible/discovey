@@ -97,6 +97,7 @@ import { ReleaseCatalogEditorComponent } from './regression/release-catalog-edit
 import { ReleasesComponent } from './regression/releases/releases.component';
 import { ReleaseCatalogsComponent } from './regression/release-catalogs/release-catalogs.component';
 import { BackComponent } from './ui-elements/back/back.component';
+import { SectionHeaderComponent } from './ui-elements/section-header/section-header.component';
 
 
 @NgModule({
@@ -176,7 +177,8 @@ import { BackComponent } from './ui-elements/back/back.component';
     ReleaseCatalogEditorComponent,
     ReleasesComponent,
     ReleaseCatalogsComponent,
-    BackComponent
+    BackComponent,
+    SectionHeaderComponent
   ],
   imports: [
     BsDropdownModule,
