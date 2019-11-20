@@ -21,6 +21,7 @@ export class ReleaseCatalogEditorComponent implements OnInit, OnChanges {
   //selectedSuites: Suite [] = [];
   selectedSuiteIds: number [] = [];
   suites: {[id: number]: Suite} = {};
+  changeDetected: boolean = false;
   constructor(private loggerService: LoggerService,
               private regressionService: RegressionService,
               private suiteEditorService: SuiteEditorService,
@@ -55,6 +56,7 @@ export class ReleaseCatalogEditorComponent implements OnInit, OnChanges {
     newlySelectedSuites.forEach(newlySelecteSuite => {
       if (this.releaseCatalog.suites.findIndex(selectedSuite => selectedSuite.id === newlySelecteSuite.id) < 0 ) {
         this.releaseCatalog.suites.push(new ReleaseCatalogSuite(newlySelecteSuite.id));
+        this.changeDetected = true;
       }
 
       if (!this.suites.hasOwnProperty(newlySelecteSuite.id)) {
@@ -72,9 +74,14 @@ export class ReleaseCatalogEditorComponent implements OnInit, OnChanges {
 
   }
 
+  catalogDescriptionChanged(name) {
+
+  }
+
   submitClick() {
     this.regressionService.createReleaseCatalog(this.releaseCatalog).subscribe(response => {
       this.loggerService.success("Submitted release catalog");
+      this.changeDetected = false;
     }, error => {
       this.loggerService.error("Unable to submit release catalog");
     })

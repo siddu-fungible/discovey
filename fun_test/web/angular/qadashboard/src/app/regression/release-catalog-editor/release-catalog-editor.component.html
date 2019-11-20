@@ -3,6 +3,11 @@
   <div class="fun-attribute">
     <span class="fun-attribute-label">Name:</span> <app-textarea-input [initialValue]="releaseCatalog.name" (valueChanged)="catalogNameChanged($event)" [numRows]="1"></app-textarea-input>
   </div>
+
+  <div class="fun-attribute">
+    <span class="fun-attribute-label">Description:</span> <app-textarea-input [initialValue]="releaseCatalog.description" (valueChanged)="catalogDescription($event)" [numRows]="4"></app-textarea-input>
+  </div>
+
   <button *ngIf="!addingSuites" class="fun-button-add" (click)="addingSuites = !addingSuites">Add suites</button>
 
   <ng-container *ngIf="addingSuites">
@@ -17,7 +22,7 @@
                      [multiSelect]="true"
                      (reportSelectedSuites)="suitesSelectedByView($event)" (cancelSelection)="cancelSelection()">
 
-    </app-suites-view>
+        </app-suites-view>
       </div>
     </div>
   </ng-container>
@@ -64,5 +69,5 @@
     </div>
   </div>
 
-  <button class="fun-button-submit" (click)="submitClick()">Submit</button>
+  <button *ngIf="changeDetected && !addingSuites" class="fun-button-submit" (click)="submitClick()">Submit</button>
 </div>
