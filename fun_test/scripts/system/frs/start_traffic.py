@@ -41,6 +41,7 @@ LE = "le"
 BUSY_LOOP = "busy_loop"
 MEMCPY = "memcpy"
 
+# --environment={\"test_bed_type\":\"fs-65\",\"tftp_image_path\":\"ranga/funos-f1_onkar.stripped.gz\"} --inputs={\"boot_new_image\":false,\"collect_stats\":[\"POWER\"],\"ec_vol\":false,\"traffic_profile\":[\"rcnvme\"]}
 
 class MyScript(FunTestScript):
     def describe(self):
@@ -357,6 +358,11 @@ class FunTestCase1(FunTestCase):
             file_helper.add_data(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset,
                                  heading=heading)
 
+            if self.stats_info["come"][stat_name].get("upload_to_es", False):
+                dpcsh_data = self.simplify_eqm_stats(difference_dict)
+                time_taken = self.upload_dpcsh_data_to_elk(dpcsh_data=dpcsh_data, f1=f1, stat_name=stat_name)
+
+
             # fun_test.sleep("before next iteration", seconds=self.details["interval"])
 
         come_handle.destroy()
@@ -391,6 +397,10 @@ class FunTestCase1(FunTestCase):
             file_helper.add_data(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset,
                                  heading=heading)
 
+            if self.stats_info["come"][stat_name].get("upload_to_es", False):
+                dpcsh_data = self.simplify_le_stats(difference_dict)
+                time_taken = self.upload_dpcsh_data_to_elk(dpcsh_data=dpcsh_data, f1=f1, stat_name=stat_name)
+
             # fun_test.sleep("before next iteration", seconds=self.details["interval"])
 
         come_handle.destroy()
@@ -424,7 +434,11 @@ class FunTestCase1(FunTestCase):
             one_dataset["output"] = difference_dict
             file_helper.add_data(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset,
                                  heading=heading)
-            # fun_test.sleep("before next iteration", seconds=self.details["interval"])
+
+            if self.stats_info["come"][stat_name].get("upload_to_es", False):
+                dpcsh_data = self.simplify_cdu_stats(difference_dict)
+                time_taken = self.upload_dpcsh_data_to_elk(dpcsh_data=dpcsh_data, f1=f1, stat_name=stat_name)
+
         come_handle.destroy()
 
     ####### PC DMA #########
@@ -456,6 +470,10 @@ class FunTestCase1(FunTestCase):
             one_dataset["output"] = difference_dict
             file_helper.add_data(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset,
                                  heading=heading)
+
+            if self.stats_info["come"][stat_name].get("upload_to_es", False):
+                dpcsh_data = self.simplify_pc_dma_stats(difference_dict)
+                time_taken = self.upload_dpcsh_data_to_elk(dpcsh_data=dpcsh_data, f1=f1, stat_name=stat_name)
             # fun_test.sleep("before next iteration", seconds=self.details["interval"])
         come_handle.destroy()
 
@@ -529,6 +547,10 @@ class FunTestCase1(FunTestCase):
             file_helper.add_data(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset,
                                  heading=heading)
 
+            if self.stats_info["come"][stat_name].get("upload_to_es", False):
+                dpcsh_data = self.simplify_hbm_stats(difference_dict)
+                time_taken = self.upload_dpcsh_data_to_elk(dpcsh_data=dpcsh_data, f1=f1, stat_name=stat_name)
+
             # fun_test.sleep("before next iteration", seconds=self.details["interval"])
 
         come_handle.destroy()
@@ -562,6 +584,10 @@ class FunTestCase1(FunTestCase):
             one_dataset["output"] = difference_dict
             file_helper.add_data(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset,
                                  heading=heading)
+
+            if self.stats_info["come"][stat_name].get("upload_to_es", False):
+                dpcsh_data = self.simplify_ddr_stats(difference_dict)
+                time_taken = self.upload_dpcsh_data_to_elk(dpcsh_data=dpcsh_data, f1=f1, stat_name=stat_name)
 
             # fun_test.sleep("before next iteration", seconds=self.details["interval"])
 
@@ -751,27 +777,27 @@ class FunTestCase1(FunTestCase):
             fun_test.add_auxillary_file(description="DUT_0_fs-65_F1_1 UART Log", filename=artifact_file_name_f1_1)
 
     def add_the_links(self):
-        for system in self.stats_info:
-            if system == "files":
-                continue
-            for stat_name, value in self.stats_info[system].iteritems():
-                if value.get("disable", False) or (not value.get("upload_to_es", True)):
-                    fun_test.log("stat: {} has been disabled".format(stat_name))
-                    continue
-
-                if stat_name == DEBUG_VP_UTIL:
-                    href = "http://10.1.20.52:5601/app/kibana#/dashboard/a37ce420-9190-11e9-8475-15977467c007?_g=(refreshInterval:(pause:!t,value:0),time:(from:'{}',mode:absolute,to:'{}'))".format(
-                        self.test_start_time, self.test_end_time)
-                    checkpoint = '<a href="{}" target="_blank">ELK {} stats</a>'.format(href, stat_name)
-                    fun_test.add_checkpoint(checkpoint=checkpoint)
-                elif stat_name == POWER:
-                    href = "http://10.1.20.52:5601/app/kibana#/dashboard/240d54d0-9bff-11e9-8475-15977467c007?_g=(refreshInterval:(pause:!t,value:0),time:(from:'{}',mode:absolute,to:'{}'))".format(
-                        self.test_start_time, self.test_end_time)
-                    checkpoint = '<a href="{}" target="_blank">ELK {} stats</a>'.format(href, stat_name)
-                    fun_test.add_checkpoint(checkpoint=checkpoint)
+        # for system in self.stats_info:
+        #     if system == "files":
+        #         continue
+        #     for stat_name, value in self.stats_info[system].iteritems():
+        #         if value.get("disable", False) or (not value.get("upload_to_es", True)):
+        #             fun_test.log("stat: {} has been disabled".format(stat_name))
+        #             continue
+        #
+        #         if stat_name == DEBUG_VP_UTIL:
+        #             href = "http://10.1.20.52:5601/app/kibana#/dashboard/a37ce420-9190-11e9-8475-15977467c007?_g=(refreshInterval:(pause:!t,value:0),time:(from:'{}',mode:absolute,to:'{}'))".format(
+        #                 self.test_start_time, self.test_end_time)
+        #             checkpoint = '<a href="{}" target="_blank">ELK {} stats</a>'.format(href, stat_name)
+        #             fun_test.add_checkpoint(checkpoint=checkpoint)
+        #         elif stat_name == POWER:
+        #             href = "http://10.1.20.52:5601/app/kibana#/dashboard/240d54d0-9bff-11e9-8475-15977467c007?_g=(refreshInterval:(pause:!t,value:0),time:(from:'{}',mode:absolute,to:'{}'))".format(
+        #                 self.test_start_time, self.test_end_time)
+        #             checkpoint = '<a href="{}" target="_blank">ELK {} stats</a>'.format(href, stat_name)
+        #             fun_test.add_checkpoint(checkpoint=checkpoint)
         href = "http://10.1.20.52:5601/app/kibana#/dashboard/8e6e8330-0a9a-11ea-8475-15977467c007?_g=(refreshInterval:(pause:!t,value:0),time:(from:'{}',mode:absolute,to:'{}'))".format(
             self.test_start_time, self.test_end_time)
-        checkpoint = '<a href="{}" target="_blank">ELK Overall dashboard</a>'.format(href, stat_name)
+        checkpoint = '<a href="{}" target="_blank">ELK Overall dashboard</a>'.format(href)
         fun_test.add_checkpoint(checkpoint=checkpoint)
 
 
@@ -909,6 +935,69 @@ class FunTestCase1(FunTestCase):
                             print ("Data error")
         return result
 
+    def simplify_eqm_stats(self, dpcsh_data):
+        result = []
+        if dpcsh_data:
+            for k, v in dpcsh_data.iteritems():
+                one_data_set = {"field": k,
+                                "value": v}
+                result.append(one_data_set.copy())
+        return result
+
+    def simplify_cdu_stats(self, dpcsh_data):
+        result = []
+        if dpcsh_data:
+            cdu_cnts = dpcsh_data["cdu_cnts"]
+            for k, v in cdu_cnts.iteritems():
+                one_data_set = {"field": k,
+                                "value": v}
+                result.append(one_data_set.copy())
+        return result
+
+    def simplify_pc_dma_stats(self, dpcsh_data):
+        result = []
+        allow = ["lsn_bm_rd_req_cnt", "lsn_hbm_rd_req_cnt", "lsn_ddr_rd_req_cnt",
+                 "ldn_bm_wr_req_cnt", "ldn_hbm_wr_req_cnt", "ldn_ddr_wr_req_cnt",
+                 ]
+        if dpcsh_data:
+            dma_dmi_stats = dpcsh_data["dma_dmi_stats"]
+            for cluster, fields in dma_dmi_stats.iteritems():
+                for k, v in fields.iteritems():
+                    if k in allow:
+                        one_data_set = {"field": k,
+                                        "value": v,
+                                        "cluster": cluster}
+                        result.append(one_data_set.copy())
+        return result
+
+    def simplify_hbm_stats(self, dpcsh_data):
+        result = []
+        if dpcsh_data:
+            for k, v in dpcsh_data.iteritems():
+                one_data_set = {"field": k,
+                                "value": v}
+                result.append(one_data_set.copy())
+        return result
+
+    def simplify_ddr_stats(self, dpcsh_data):
+        result = []
+        if dpcsh_data:
+            for k, v in dpcsh_data.iteritems():
+                one_data_set = {"field": k,
+                                "value": v}
+                result.append(one_data_set.copy())
+        return result
+
+    def simplify_le_stats(self, dpcsh_data):
+        result = []
+        if dpcsh_data:
+            for k, v in dpcsh_data.iteritems():
+                one_data_set = {"field": k,
+                                "value": v}
+                result.append(one_data_set.copy())
+        return result
+
+
     def add_basics_req_elk(self, dpcsh_data, f1, time_stamp=True, system_name="fs-65"):
         utc_time = datetime.datetime.utcnow()
         time_strf = utc_time.strftime("%Y-%m-%dT%H:%M:%S.%f")
@@ -943,33 +1032,18 @@ class FunTestCase1(FunTestCase):
             print("NO data present to upload")
         return time_taken
 
-    def get_index(self, cmd):
-        if cmd == "peek stats/resource/bam":
-            index = "cmd_peek_stats_resource_bam"
-        elif cmd == "peek storage/devices/nvme":
-            index = "cmd_storage_device_nvme"
-        elif cmd == "DEBUG_VP_UTIL":
+    def get_index(self, stat_name):
+        if stat_name == DEBUG_VP_UTIL:
             index = "cmd_debug_vp_utils"
-        elif cmd == "peek stats/crypto":
-            index = "cmds_stats_crypto"
-        elif "storage/devices/nvme" in cmd:
-            index = "cmd_storage_device_nvme"
-        elif cmd == POWER:
-            index = "cmd_power"
         else:
-            sec_part = cmd.split(' ')[1]
-            index = "cmd_" + sec_part.replace('/', '_')
+            index = "cmd_{}".format(stat_name.lower())
         return index
 
     def doc_type(self, stat_name):
-        if stat_name == "DEBUG_VP_UTIL":
+        if stat_name == DEBUG_VP_UTIL:
             doctype = "ccv_data"
-        elif stat_name == "peek stats/resource/bam":
-            doctype = "resource_bam"
-        elif "storage/devices/nvme" in stat_name:
-            doctype = "storage_ssd_iops"
-        elif stat_name == POWER:
-            doctype = "power_stats"
+        else:
+            doctype = "{}_stats".format(stat_name.lower())
 
         return doctype
 
@@ -981,11 +1055,11 @@ class FunTestCase1(FunTestCase):
         # description : "{calculated_}_{app_name}_DPCSH_OUTPUT_F1_{f1}"
         self.stats_info["bmc"] = {POWER: {"calculated": True, "upload_to_es": True},
                                   DIE_TEMPERATURE: {"calculated": False, "disable": True}}
-        self.stats_info["come"] = {DEBUG_MEMORY: {}, CDU: {}, EQM: {},
-                                   BAM: {"calculated": False, "disable": True}, DEBUG_VP_UTIL: {"upload_to_es": True}, "LE": {},
-                                   HBM: {"calculated": True},
-                                   EXECUTE_LEAKS: {"calculated": False}, PC_DMA: {"calculated": True},
-                                   DDR: {"calculated": True}}
+        self.stats_info["come"] = {DEBUG_MEMORY: {}, CDU: {"upload_to_es": True}, EQM: {"upload_to_es":True},
+                                   BAM: {"calculated": False, "disable": True}, DEBUG_VP_UTIL: {"upload_to_es": True}, "LE": {"upload_to_es":True},
+                                   HBM: {"calculated": True, "upload_to_es":True},
+                                   EXECUTE_LEAKS: {"calculated": False}, PC_DMA: {"calculated": True,"upload_to_es":True},
+                                   DDR: {"calculated": True,"upload_to_es":True}}
         self.stats_info["files"] = {"fio": {"calculated": False}}
 
         if self.collect_stats:
