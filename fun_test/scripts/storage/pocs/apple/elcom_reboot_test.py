@@ -23,8 +23,8 @@ class ElcomRebootTest(ApcPduTestcase):
         # Capture the UART logs also
         artifact_file_name_f1_0 = self.bmc_handle.get_uart_log_file(0, "Iteration_{}".format(self.pc_no))
         artifact_file_name_f1_1 = self.bmc_handle.get_uart_log_file(1, "Iteration_{}".format(self.pc_no))
-        fun_test.add_auxillary_file(description="Iteration {}:  DUT_0_fs-65_F1_0 UART Log", filename=artifact_file_name_f1_0)
-        fun_test.add_auxillary_file(description="Iteration {}:  DUT_0_fs-65_F1_1 UART Log", filename=artifact_file_name_f1_1)
+        fun_test.add_auxillary_file(description="Iteration {}:  DUT_0_fs-65_F1_0 UART Log".format(self.pc_no), filename=artifact_file_name_f1_0)
+        fun_test.add_auxillary_file(description="Iteration {}:  DUT_0_fs-65_F1_1 UART Log".format(self.pc_no), filename=artifact_file_name_f1_1)
 
     def data_integrity_check(self):
         pass
