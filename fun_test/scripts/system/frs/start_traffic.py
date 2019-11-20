@@ -19,7 +19,7 @@ import dpcsh_nocli
 
 # Environment: --environment={\"test_bed_type\":\"fs-65\",\"tftp_image_path\":\"ranga/funos-f1_ranga.stripped.gz\"} --inputs={\"boot_new_image\":true,\"le_firewall\":true,\"collect_stats\":[\"\"],\"ec_vol\":true}
 # inputs: {"run_le_firewall":false,"specific_apps":["ZIP"],"add_to_database":true,"collect_stats":["POWER","DEBUG_MEMORY","LE"],"end_sleep":30}
-# --environment={\"test_bed_type\":\"fs-65\",\"tftp_image_path\":\"ranga/funos-f1_onkar.stripped.gz\"} --inputs={\"boot_new_image\":false,\"le_firewall\":false,\"collect_stats\":[\"DEBUG_VP_UTIL\",\"POWER\"],\"ec_vol\":false,\"specific_apps\":[\"crypto\"],\"disable_f1_index\":0}
+# --environment={\"test_bed_type\":\"fs-65\",\"tftp_image_path\":\"ranga/funos-f1_onkar.stripped.gz\"}
 
 POWER = "POWER"
 DIE_TEMPERATURE = "DIE_TEMPERATURE"
@@ -93,12 +93,13 @@ class MyScript(FunTestScript):
             f1_in_use = [0, 1]
             warm_up_fio_cmd_args = {
                 "bs": "8k",
-                "iodepth": 1,
+                "iodepth": 32,
                 "size": "100%",
                 "rw": "write",
                 "direct": 1,
                 "prio": 0,
-                "timeout": 720
+                "timeout": 720,
+                "numjobs": 8
             }
 
             ec_info_0 = {
