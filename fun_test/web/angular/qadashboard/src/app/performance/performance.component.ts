@@ -183,7 +183,6 @@ export class PerformanceComponent implements OnInit {
   otherNode: FlatNode = null;
   fs1600Node: FlatNode = null;
 
-  buildInfo: any = null;
   viewWorkspaceIds: number[] = [];
   lineagesMap: any = {};
   S1: number = 591;
@@ -232,21 +231,6 @@ export class PerformanceComponent implements OnInit {
       this.miniGridMaxWidth = '25%';
       this.miniGridMaxHeight = '25%';
     }
-    this.buildInfo = null;
-    new Observable(observer => {
-      observer.next(true);
-      observer.complete();
-      return () => {
-      }
-    }).pipe(
-      switchMap(response => {
-        return this.service.fetchBuildInfo();
-      })).subscribe(response => {
-      this.buildInfo = response;
-      console.log("fetched buildInfo");
-    }, error => {
-      this.loggerService.error("Unable to fetch buildInfo");
-    });
     this.fetchDag();
   }
 

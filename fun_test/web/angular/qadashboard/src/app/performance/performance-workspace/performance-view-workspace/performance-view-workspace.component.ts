@@ -16,7 +16,6 @@ import {SelectMode} from "../../performance.service";
   styleUrls: ['./performance-view-workspace.component.css']
 })
 export class PerformanceViewWorkspaceComponent implements OnInit {
-  buildInfo: any = null;
   workspaceName: string = null;
   email: string = null;
   workspace: any = null;
@@ -72,13 +71,9 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
             return of(true);
           }),
           switchMap(response => {
-            return this.performanceService.fetchBuildInfo();
-          }),
-          switchMap(response => {
-            this.buildInfo = response;
             return this.performanceService.metricCharts(null, this.workspace.id);
           }),).subscribe(response => {
-          console.log("fetched workspace and buildInfo from URL");
+          console.log("fetched workspace from URL");
           this.setMetricIds(response);
         }, error => {
           this.loggerService.error("Unable to initialize workspace");

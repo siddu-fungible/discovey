@@ -344,7 +344,7 @@ class BltVolumePerformanceHelper(MetricHelper):
             result["lsf_job_id"] = -1
             result["suite_execution_id"] = fun_test.get_suite_execution_id()
             result["jenkins_build_number"] = -1
-            result["build_properties"] = {}
+            result["build_properties"] = fun_test.get_suite_run_time_environment_variable("bld_props")
             result["version"] = version
             result["associated_suites"] = []
             entry = BltVolumePerformance.objects.get(input_date_time=date_time,
@@ -540,7 +540,7 @@ class ModelHelper(MetricHelper):
                 result["lsf_job_id"] = -1
                 result["suite_execution_id"] = fun_test.get_suite_execution_id()
                 result["jenkins_build_number"] = -1
-                result["build_properties"] = {},
+                result["build_properties"] = fun_test.get_suite_run_time_environment_variable("bld_props")
                 result["version"] = m_obj.input_version
                 result["associated_suites"] = []
                 save_entry(m_obj, run_time=result)

@@ -31,7 +31,6 @@ export class CreateChartComponent implements OnInit, OnChanges {
   currentOwner: string = null;
   currentSource: string = null;
   baseLineDate: string = null;
-  buildInfo: any = null;
   description: string = "TBD";
   owner: string = "unknown";
   source: string = "unknown";
@@ -60,8 +59,6 @@ export class CreateChartComponent implements OnInit, OnChanges {
 
 
     this.describeTable();
-    this.buildInfo = null;
-    this.fetchBuildInfo();
 
   }
 
@@ -87,14 +84,6 @@ export class CreateChartComponent implements OnInit, OnChanges {
       });
   }
 
-  //populates buildInfo
-  fetchBuildInfo(): void {
-    this.apiService.get('/regression/build_to_date_map').subscribe((response) => {
-      this.buildInfo = response.data;
-    }, error => {
-      this.logger.error("regression/build_to_date_map");
-    });
-  }
 
   describeTable = () => {
     this.inputNames = [];

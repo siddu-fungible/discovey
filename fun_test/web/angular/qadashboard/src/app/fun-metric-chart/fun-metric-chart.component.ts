@@ -33,7 +33,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   @Input() minimal: boolean = false;
   @Input() id: number = null;
   @Input() previewDataSets: any = null;
-  @Input() buildInfo: any = null;
   @Input() chartInfo: any = null;
 
   lsfUrl = "http://palladium-jobs.fungible.local:8080/job/";
@@ -159,22 +158,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.formatter = this.xAxisFormatter.bind(this);
     this.tooltip = this.tooltipFormatter.bind(this);
     this.pointClickCallback = this.pointDetail.bind(this);
-    if (!this.buildInfo) {
-      new Observable(observer => {
-        observer.next(true);
-        observer.complete();
-        return () => {
-        }
-      }).pipe(
-        switchMap(response => {
-          return this.performanceService.fetchBuildInfo();
-        })).subscribe(response => {
-        this.buildInfo = response;
-        console.log("fetched buildInfo");
-      }, error => {
-        this.loggerService.error("Unable to fetch buildInfo");
-      });
-    }
     if (!this.id) {
       this.status = null;
       this.fetchNames();
