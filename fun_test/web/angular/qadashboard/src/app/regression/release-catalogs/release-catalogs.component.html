@@ -20,7 +20,7 @@
     <td><small>{{ index }}.</small> {{ catalog.name }}</td>
     <td>{{ catalog.description }}</td>
     <td>{{ catalog.suites.length }}</td>
-    <td><i class="fa fa-trash" style="color: red" (click)="removeCatalog(index)"></i></td>
+    <td><i class="fa fa-pencil" (click)="editCatalog(catalog.id)"></i>&nbsp;<i class="fa fa-trash" style="color: red" (click)="removeCatalog(index)"></i></td>
   </tr>
 
 </table>

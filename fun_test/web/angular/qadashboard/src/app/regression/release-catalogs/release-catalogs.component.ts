@@ -42,11 +42,23 @@ export class ReleaseCatalogsComponent implements OnInit, OnChanges {
 
   removeCatalog(index) {
     if (confirm(`Are you sure, you want to remove ${this.releaseCatalogs[index].name}`)) {
-      this.releaseCatalogs = this.releaseCatalogs.splice(index, 1);
+      this.regressionService.deleteReleaseCatalog(this.releaseCatalogs[index].id).subscribe(response => {
+        this.loggerService.success(`Removed catalog: ${this.releaseCatalogs[index].name}`);
+        this.releaseCatalogs.splice(index, 1);
+      }, error => {
+        this.loggerService.error("Unable to remove catalog");
+      })
+
+
     }
   }
 
   addACatalog() {
     this.router.navigate(['/regression/release_catalog_editor'])
   }
+
+  editCatalog(catalogId) {
+    this.router.navigate(['/regression/release_catalog_editor'], {queryParams: {id: catalogId}});
+  }
+
 }
