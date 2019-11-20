@@ -4,7 +4,7 @@ from scripts.networking.funcp.helper import *
 from scripts.networking.funeth.sanity import Funeth
 from lib.topology.topology_helper import TopologyHelper
 from lib.templates.networking.rdma_tools import Rocetools
-
+from asset.asset_manager import *
 
 class ScriptSetup(FunTestScript):
     server_key = {}
@@ -156,6 +156,10 @@ class BringupSetup(FunTestCase):
             fun_test.shared_variables["topology"] = topology
             fun_test.test_assert(topology, "Topology deployed")
             fs = topology.get_dut_instance(index=0)
+            f10_instance = fs.get_f1(index=0)
+            f11_instance = fs.get_f1(index=1)
+            fun_test.shared_variables["f10_storage_controller"] = f10_instance.get_dpc_storage_controller()
+            fun_test.shared_variables["f11_storage_controller"] = f11_instance.get_dpc_storage_controller()
             come_obj = fs.get_come()
             come_obj.sudo_command("netplan apply")
             come_obj.sudo_command("dmesg -c > /dev/null")
@@ -188,7 +192,6 @@ class BringupSetup(FunTestCase):
                 if result == "2":
                     fun_test.add_checkpoint("<b><font color='red'><PCIE link did not come up in %s mode</font></b>"
                                             % servers_mode[server])
-
             # Bringup FunCP
             fun_test.test_assert(expression=funcp_obj.bringup_funcp(prepare_docker=False), message="Bringup FunCP")
             # Assign MPG IPs from dhcp
@@ -196,6 +199,21 @@ class BringupSetup(FunTestCase):
                                      f1_1_mpg=self.server_key["fs"][fs_name]["mpg_ips"]["mpg1"],
                                      f1_0_mpg=self.server_key["fs"][fs_name]["mpg_ips"]["mpg0"])
         else:
+            # Get COMe object
+            am = AssetManager()
+            th = TopologyHelper(spec=am.get_test_bed_spec(name=fs_name))
+            topology = th.get_expanded_topology()
+            dut = topology.get_dut(index=0)
+            dut_name = dut.get_name()
+            fs_spec = fun_test.get_asset_manager().get_fs_by_name(name=dut_name)
+            fs_obj = Fs.get(fs_spec=fs_spec, already_deployed=True)
+            come_obj = fs_obj.get_come()
+            f10_instance = fs_obj.get_f1(index=0)
+            f11_instance = fs_obj.get_f1(index=1)
+            fun_test.shared_variables["f10_storage_controller"] = f10_instance.get_dpc_storage_controller()
+            fun_test.shared_variables["f11_storage_controller"] = f11_instance.get_dpc_storage_controller()
+            fun_test.shared_variables["come_obj"] = come_obj
+
             fun_test.log("Getting host info")
             host_dict = {"f1_0": [], "f1_1": []}
             temp_host_list = []

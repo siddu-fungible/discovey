@@ -2970,9 +2970,6 @@
         }
       }
     },
-    "host_info": [
-      "cab02-qa-10"
-    ],
     "workarounds": {
       "enable_funcp": true
     }
