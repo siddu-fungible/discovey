@@ -244,7 +244,6 @@ class ApcPduTestcase(FunTestCase):
             fun_test.log("Checking if COMe is down")
             come_down = not (come_handle.ensure_host_is_up(max_wait_time=15))
             fun_test.test_assert(come_down, "COMe is Down")
-            come_handle.destroy()
 
             apc_outlet_on_msg = apc_pdu.outlet_on(self.outlet_no)
             fun_test.log("APC PDU outlet on message {}".format(apc_outlet_on_msg))
@@ -255,8 +254,6 @@ class ApcPduTestcase(FunTestCase):
         except Exception as ex:
             fun_test.critical(ex)
 
-        come_handle.destroy()
-        come_handle.destroy()
         return
 
     def reboot_fs1600(self):
