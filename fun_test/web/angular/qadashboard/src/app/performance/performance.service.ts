@@ -12,7 +12,7 @@ export enum SelectMode {
   ShowAttachDag = 4
 }
 
-interface  MetricRunTimeInterface {
+interface  MetricsDataRunTimeInterface {
   date_time: any;
   build_properties: any;
   lsf_job_id: number;
@@ -22,7 +22,7 @@ interface  MetricRunTimeInterface {
   associated_suites: any;
 }
 
-export class MetricsRunTime implements MetricRunTimeInterface {
+export class MetricsDataRunTime implements MetricsDataRunTimeInterface {
   date_time: any;
   build_properties: any;
   lsf_job_id: number;
@@ -168,9 +168,9 @@ export class PerformanceService {
   getRunTime(id): any {
     let payload = {};
     payload["id"] = id;
-    return this.apiService.post("/metrics/run_time", payload).pipe(switchMap(response => {
+    return this.apiService.post("/metrics/metrics_data_run_time", payload).pipe(switchMap(response => {
       if (response.data) {
-        return of(new MetricsRunTime(response.data));
+        return of(new MetricsDataRunTime(response.data));
       }
       return of(null);
     }));
