@@ -16,6 +16,8 @@ class NuConfigManager(object):
     CHASSIS_TYPE_PHYSICAL = "physical"
     CHASSIS_TYPE_VIRTUAL = "virtual"
     TRAFFIC_GENERATOR_TYPE_SPIRENT = "spirent_traffic_generator"
+    FLOW_DIRECTION_NU_NU_POWER_F1_0 = "NU_NU_POWER_F1_0"
+    FLOW_DIRECTION_NU_NU_POWER_F1_1 = "NU_NU_POWER_F1_1"
     TRANSIT_FLOW_TYPE = "transit_flow"
     CC_FLOW_TYPE = "cc_flow"
     VP_FLOW_TYPE = "vp_flow"
