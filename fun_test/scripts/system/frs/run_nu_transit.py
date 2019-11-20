@@ -324,7 +324,7 @@ def run_nu_firewall(come_handle, run_time=120, load=12, setup_dpc=True, f1=0):
 
 
 if __name__ == "__main__":
-    come_handle = get_come_handle()
+    come_handle = get_come_handle("fs-65")
     #run_time = input("Run time :")
     #load = input("Load :")
     run_time = 120
