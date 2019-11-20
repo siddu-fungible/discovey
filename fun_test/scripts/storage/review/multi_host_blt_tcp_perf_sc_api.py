@@ -260,6 +260,7 @@ class MultiHostVolumePerformanceScript(FunTestScript):
             self.host_handles[host_ip] = host_instance
             self.host_info[host_name]["handle"] = host_instance
 
+        '''
         # Rebooting all the hosts in non-blocking mode before the test and getting NUMA cpus
         for host_name in self.host_info:
             host_handle = self.host_info[host_name]["handle"]
@@ -283,6 +284,7 @@ class MultiHostVolumePerformanceScript(FunTestScript):
             fun_test.log("Rebooting host: {}".format(host_name))
             host_handle.reboot(non_blocking=True)
         fun_test.log("Hosts info: {}".format(self.host_info))
+        '''
 
         # Getting FS, F1 and COMe objects, Storage Controller objects, F1 IPs
         # for all the DUTs going to be used in the test
@@ -308,15 +310,37 @@ class MultiHostVolumePerformanceScript(FunTestScript):
         for index in xrange(self.num_duts):
             # Removing existing db directories for fresh setup
             try:
-                if self.cleanup_sc_db:
-                    for directory in self.sc_db_directories:
-                        if self.come_obj[index].check_file_directory_exists(path=directory):
-                            fun_test.log("Removing Directory {}".format(directory))
-                            self.come_obj[index].sudo_command("rm -rf {}".format(directory))
-                            fun_test.test_assert_expected(actual=self.come_obj[index].exit_status(), expected=0,
-                                                          message="Directory {} is removed".format(directory))
-                        else:
-                            fun_test.log("Directory {} does not exist skipping deletion".format(directory))
+                if self.install == "fresh":
+                    if self.bundle_image_parameters:
+                        path = "{}/{}".format(self.sc_script_dir, self.run_sc_script)
+                        if self.come_obj[index].check_file_directory_exists(path=path):
+                            self.come_obj[index].command("cd {}".format(self.sc_script_dir))
+                            # restarting run_sc with -c option
+                            self.come_obj[index].command("sudo ./{} -c restart".format(self.run_sc_script))
+                            fun_test.test_assert_expected(expected=0, actual=self.come_obj[index].exit_status(),
+                                                          message="run_sc restarted with cleanup")
+                            # check if run_sc container is running
+                            cmd = "docker ps -a --format '{{.Names}}' | grep run_sc"
+                            timer = FunTimer(max_time=self.container_op_timeout)
+                            while not timer.is_expired():
+                                run_sc_name = self.come_obj[index].command(
+                                    cmd, timeout=self.command_timeout).split("\n")[0]
+                                if run_sc_name:
+                                    fun_test.log("run_sc container is up and running")
+                                    break
+                                else:
+                                    fun_test.sleep("for the run_sc docker container to start", 1)
+                    else:
+                        for directory in self.sc_db_directories:
+                            if self.come_obj[index].check_file_directory_exists(path=directory):
+                                fun_test.log("Removing Directory {}".format(directory))
+                                self.come_obj[index].sudo_command("rm -rf {}".format(directory))
+                                fun_test.test_assert_expected(actual=self.come_obj[index].exit_status(), expected=0,
+                                                              message="Directory {} is removed".format(directory))
+                            else:
+                                fun_test.log("Directory {} does not exist skipping deletion".format(directory))
+                else:
+                    fun_test.log("Skipping run_sc restart with cleanup")
             except Exception as ex:
                 fun_test.critical(str(ex))
             self.funcp_obj[index] = StorageFsTemplate(self.come_obj[index])
@@ -627,8 +651,10 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
             self.post_results = False
         if "csi_perf_iodepth" in job_inputs:
             self.csi_perf_iodepth = job_inputs["csi_perf_iodepth"]
+            self.full_run_iodepth = self.csi_perf_iodepth
         if not isinstance(self.csi_perf_iodepth, list):
             self.csi_perf_iodepth = [self.csi_perf_iodepth]
+            self.full_run_iodepth = self.csi_perf_iodepth
 
         if ("blt" not in fun_test.shared_variables or not fun_test.shared_variables["blt"]["setup_created"]) \
                 and (not fun_test.shared_variables["blt"]["warmup_done"]):
