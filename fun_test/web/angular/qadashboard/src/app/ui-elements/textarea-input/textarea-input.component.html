@@ -2,7 +2,7 @@
   <div [ngClass]="{'hover-cell': hoverHide}">
     <span [innerHtml]="tempValue| safeHtml"></span>&nbsp;
     <i *ngIf="editable && !editing" class="fa fa-pencil" [ngClass]="{'hover-icon': hoverHide}" style="font-size:14px;" (click)="onEdit()"></i>
-    <span style="color: red" *ngIf="required && !editing"> * This field is required</span>
+    <span style="color: red" *ngIf="required && !editing && (!tempValue || tempValue === '')"> * This field is required</span>
   </div>
 
 
