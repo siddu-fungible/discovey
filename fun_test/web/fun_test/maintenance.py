@@ -2491,7 +2491,7 @@ if __name__ == "__main_48_vols__":
     print "added 48 vol datasets for random read write"
 
 if __name__ == "__main__":
-    # entries = JobRunTime.objects.all()
+    # entries = MetricsDataRunTime.objects.all()
     # for entry in entries:
     #     entry.delete()
     from django.db import transaction

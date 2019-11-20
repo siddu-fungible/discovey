@@ -22,7 +22,7 @@ interface  MetricRunTimeInterface {
   associated_suites: any;
 }
 
-export class JobRunTime implements MetricRunTimeInterface {
+export class MetricsRunTime implements MetricRunTimeInterface {
   date_time: any;
   build_properties: any;
   lsf_job_id: number;
@@ -170,7 +170,7 @@ export class PerformanceService {
     payload["id"] = id;
     return this.apiService.post("/metrics/run_time", payload).pipe(switchMap(response => {
       if (response.data) {
-        return of(new JobRunTime(response.data));
+        return of(new MetricsRunTime(response.data));
       }
       return of(null);
     }));

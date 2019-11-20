@@ -40,7 +40,7 @@ from web.fun_test.models import (
     TestCaseInfo,
     Suite,
     RegresssionScripts,
-    JobRunTime
+    MetricsDataRunTime
 )
 
 SUITE_EXECUTION_FILTERS = {"PENDING": "PENDING",
@@ -617,7 +617,7 @@ def add_job_run_time_properties(run_time, date_time):
     try:
         lsf_job_id = run_time["lsf_job_id"]
         if lsf_job_id != -1 and lsf_job_id != "":
-            entry = JobRunTime.objects.get(lsf_job_id=lsf_job_id)
+            entry = MetricsDataRunTime.objects.get(lsf_job_id=lsf_job_id)
         else:
             raise ObjectDoesNotExist
     except ObjectDoesNotExist:
@@ -627,7 +627,7 @@ def add_job_run_time_properties(run_time, date_time):
         build_properties = run_time["build_properties"]
         version = run_time["version"]
         associated_suites = run_time["associated_suites"]
-        entry = JobRunTime(jenkins_build_number=jenkins_build_number, lsf_job_id=lsf_job_id,
+        entry = MetricsDataRunTime(jenkins_build_number=jenkins_build_number, lsf_job_id=lsf_job_id,
                            suite_execution_id=suite_execution_id, build_properties=build_properties, version=version,
                            associated_suites=associated_suites, date_time=date_time)
         entry.save()

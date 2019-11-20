@@ -400,7 +400,7 @@ class SubModules(FunModel):   # Say Module: Networking, sub-module: PSW
     verbose_name = models.TextField(default="Verbose name")
 
 
-class JobRunTime(FunModel):
+class MetricsDataRunTime(FunModel):
     date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     build_properties = JSONField(default=None, blank=True)
     lsf_job_id = models.IntegerField(default=None, verbose_name="lsf job id")

@@ -16,7 +16,7 @@ from web.fun_test.metrics_models import LastMetricId, LastTriageId, PerformanceM
 from web.fun_test.metrics_models import AllocSpeedPerformanceSerializer, MetricChartSerializer, EcPerformance, \
     BcopyPerformanceSerializer
 from web.fun_test.metrics_models import BcopyFloodDmaPerformanceSerializer
-from web.fun_test.models import JenkinsJobIdMap, JenkinsJobIdMapSerializer, JobRunTime
+from web.fun_test.models import JenkinsJobIdMap, JenkinsJobIdMapSerializer, MetricsDataRunTime
 from web.fun_test.metrics_models import LsvZipCryptoPerformance, LsvZipCryptoPerformanceSerializer
 from web.fun_test.metrics_models import NuTransitPerformance, NuTransitPerformanceSerializer
 from web.fun_test.metrics_models import ShaxPerformanceSerializer
@@ -958,7 +958,7 @@ def get_job_run_time(request):
     result = None
     request_json = json.loads(request.body)
     id = request_json["id"]
-    entries = JobRunTime.objects.filter(id=id)
+    entries = MetricsDataRunTime.objects.filter(id=id)
     if len(entries):
         entry = entries.first()
         result = entry.to_dict()
