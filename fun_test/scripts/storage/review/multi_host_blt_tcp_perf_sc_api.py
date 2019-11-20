@@ -260,7 +260,6 @@ class MultiHostVolumePerformanceScript(FunTestScript):
             self.host_handles[host_ip] = host_instance
             self.host_info[host_name]["handle"] = host_instance
 
-        '''
         # Rebooting all the hosts in non-blocking mode before the test and getting NUMA cpus
         for host_name in self.host_info:
             host_handle = self.host_info[host_name]["handle"]
@@ -284,7 +283,6 @@ class MultiHostVolumePerformanceScript(FunTestScript):
             fun_test.log("Rebooting host: {}".format(host_name))
             host_handle.reboot(non_blocking=True)
         fun_test.log("Hosts info: {}".format(self.host_info))
-        '''
 
         # Getting FS, F1 and COMe objects, Storage Controller objects, F1 IPs
         # for all the DUTs going to be used in the test
@@ -308,6 +306,7 @@ class MultiHostVolumePerformanceScript(FunTestScript):
         self.funcp_obj = {}
         self.funcp_spec = {}
         for index in xrange(self.num_duts):
+            run_sc_restart_status = False
             # Removing existing db directories for fresh setup
             try:
                 if self.install == "fresh":
@@ -320,16 +319,21 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                             fun_test.test_assert_expected(expected=0, actual=self.come_obj[index].exit_status(),
                                                           message="run_sc restarted with cleanup")
                             # check if run_sc container is running
-                            cmd = "docker ps -a --format '{{.Names}}' | grep run_sc"
-                            timer = FunTimer(max_time=self.container_op_timeout)
+                            run_sc_restart_cmd = "docker ps -a --format '{{.Names}}' | grep run_sc"
+                            timer = FunTimer(max_time=self.container_up_timeout)
                             while not timer.is_expired():
                                 run_sc_name = self.come_obj[index].command(
-                                    cmd, timeout=self.command_timeout).split("\n")[0]
+                                    run_sc_restart_cmd, timeout=self.command_timeout).split("\n")[0]
                                 if run_sc_name:
                                     fun_test.log("run_sc container is up and running")
+                                    run_sc_restart_status = True
                                     break
                                 else:
                                     fun_test.sleep("for the run_sc docker container to start", 1)
+                            else:
+                                fun_test.critical("run_sc container is not restarted within {} seconds after "
+                                                  "cleaning up the DB".format(self.container_up_timeout))
+                                fun_test.test_assert(False, "Cleaning DB and restarting run_sc container")
                     else:
                         for directory in self.sc_db_directories:
                             if self.come_obj[index].check_file_directory_exists(path=directory):
@@ -350,7 +354,6 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                     mode=self.funcp_mode)
                 fun_test.test_assert(self.funcp_spec[index]["status"],
                                      "Starting FunCP docker container in DUT {}".format(index))
-                # self.funcp_spec[index]["container_names"].sort()
             else:
                 self.funcp_spec[index] = self.funcp_obj[index].get_container_objs()
 
@@ -358,11 +361,43 @@ class MultiHostVolumePerformanceScript(FunTestScript):
             for f1_index, container_name in enumerate(self.funcp_spec[index]["container_names"]):
                 if container_name == "run_sc":
                     continue
-                status = self.funcp_obj[index].container_info[container_name].ifconfig_up_down("bond0", "up")
-                fun_test.test_assert(status, "bond0 interface up in {}".format(container_name))
+                bond_interfaces = self.fs_spec[index].get_bond_interfaces(f1_index=f1_index)
+                bond_name = "bond0"
+                bond_ip = bond_interfaces[0].ip
+                self.f1_ips.append(bond_ip.split('/')[0])
+                slave_interface_list = bond_interfaces[0].fpg_slaves
+                slave_interface_list = [self.fpg_int_prefix + str(i) for i in slave_interface_list]
+                self.funcp_obj[index].configure_bond_interface(container_name=container_name, name=bond_name,
+                                                               ip=bond_ip, slave_interface_list=slave_interface_list)
+                # Configuring route
+                route = self.fs_spec[index].spec["bond_interface_info"][str(f1_index)][str(0)]["route"][0]
+                cmd = "sudo ip route add {} via {} dev {}".format(route["network"], route["gateway"], bond_name)
+                route_add_status = self.funcp_obj[index].container_info[container_name].command(cmd)
+                fun_test.test_assert_expected(expected=0,
+                                              actual=self.funcp_obj[index].container_info[
+                                                  container_name].exit_status(),
+                                              message="Configure Static route")
+                # status = self.funcp_obj[index].container_info[container_name].ifconfig_up_down("bond0", "up")
+                # fun_test.test_assert(status, "bond0 interface up in {}".format(container_name))
 
         # Creating storage controller API object for the first DUT in the current setup
         fun_test.sleep("", 60)
+        # Ensuring run_sc is still up and running because after restarting run_sc with cleanup,
+        # chances are that it may die within few seconds after restart
+        timer = FunTimer(max_time=self.container_up_timeout)
+        while not timer.is_expired():
+            run_sc_name = self.come_obj[index].command(
+                run_sc_restart_cmd, timeout=self.command_timeout).split("\n")[0]
+            if run_sc_name:
+                fun_test.log("run_sc container is up and running")
+                break
+            else:
+                fun_test.sleep("for the run_sc docker container to start", 1)
+        else:
+            fun_test.critical("run_sc container is not restarted within {} seconds after "
+                              "cleaning up the DB".format(self.container_up_timeout))
+            fun_test.test_assert(False, "Cleaning DB and restarting run_sc container")
+
         self.sc_api = StorageControllerApi(api_server_ip=self.come_obj[0].host_ip,
                                            api_server_port=self.api_server_port,
                                            username=self.api_server_username,
