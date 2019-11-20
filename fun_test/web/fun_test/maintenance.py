@@ -2434,6 +2434,56 @@ if __name__ == "__main_fs1600__":
         result.append(one_dict)
     print json.dumps(result)
 
-if __name__ == "__main__":
+if __name__ == "__main_fs1600_backup__":
     ml.backup_dags()
     ml.set_global_cache(cache_valid=True)
+
+if __name__ == "__main__":
+    metric_ids = [743, 744, 746, 745, 750, 751, 753, 752]
+    operations = ["read", "write"]
+    fio_job_names = ["inspur_8k_random_read_write_iodepth_", "_f1_6_vol_48"]
+    for metric_id in metric_ids:
+        chart = MetricChart.objects.get(metric_id=metric_id)
+
+        if "QDepth=32" in chart.chart_name:
+            fio_job_name = fio_job_names[0] + str(32) + fio_job_names[1]
+        elif "QDepth=64" in chart.chart_name:
+            fio_job_name = fio_job_names[0] + str(64) + fio_job_names[1]
+        elif "QDepth=96" in chart.chart_name:
+            fio_job_name = fio_job_names[0] + str(96) + fio_job_names[1]
+        elif "QDepth=128" in chart.chart_name:
+            fio_job_name = fio_job_names[0] + str(128) + fio_job_names[1]
+
+        read_data_set = {}
+        if chart.positive:
+            read_data_set["name"] = "read(6 F1s, 48 vols)"
+            output_name = "output_read_iops"
+            unit = PerfUnit.UNIT_OPS
+        else:
+            read_data_set["name"] = "read-avg(6 F1s, 48 vols)"
+            output_name = "output_read_avg_latency"
+            unit = PerfUnit.UNIT_USECS
+        read_data_set["inputs"] = {"input_platform": FunPlatform.F1,
+                                   "input_fio_job_name": fio_job_name}
+        read_data_set["output"] = {"name": output_name, "min": 0, "max": -1, "expected": -1, "best": -1, "reference":
+            -1, "unit": unit}
+
+        write_data_set = {}
+        if chart.positive:
+            write_data_set["name"] = "write(6 F1s, 48 vols)"
+            output_name = "output_write_iops"
+            unit = PerfUnit.UNIT_OPS
+        else:
+            write_data_set["name"] = "write-avg(6 F1s, 48 vols)"
+            output_name = "output_write_avg_latency"
+            unit = PerfUnit.UNIT_USECS
+        write_data_set["inputs"] = {"input_platform": FunPlatform.F1,
+                                   "input_fio_job_name": fio_job_name}
+        write_data_set["output"] = {"name": output_name, "min": 0, "max": -1, "expected": -1, "best": -1, "reference":
+            -1, "unit": unit}
+        data_sets = chart.get_data_sets()
+        data_sets.append(read_data_set)
+        data_sets.append(write_data_set)
+        chart.data_sets = json.dumps(data_sets)
+        chart.save()
+    print "added 48 vol datasets for random read write"
