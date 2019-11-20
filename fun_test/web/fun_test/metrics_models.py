@@ -811,7 +811,6 @@ class Performance1(models.Model):
     output3 = models.CharField(max_length=30, verbose_name="Output 3 description")
     module = models.TextField(default="networking")
     component = models.TextField(default="general")
-    tag = "analytics"
 
 
 class ShaxPerformance(models.Model):
@@ -828,9 +827,6 @@ class ShaxPerformance(models.Model):
     output_avg_throughput = models.FloatField(verbose_name="Average Throughput", default=-1)
     input_effort = models.IntegerField(verbose_name="Effort", default=-1, choices=[[0, 1.0], [1, 1.0], [2, 1.0], [3, 1.0], [4, 1.0], [5, 1.0], [6, 1.0], [7, 1.0], [8, 1.0], [9, 1.0], [10, 1.0], [11, 1.0], [12, 1.0], [13, 1.0], [14, 1.0], [15, 1.0], [16, 1.0], [17, 1.0]])
     output_latency_expected = models.IntegerField(verbose_name="Latency Expected", default=-1)
-    tag = "analytics"
-    interpolation_allowed = models.BooleanField(default=True)
-    interpolated = models.BooleanField(default=False)
     input_platform = models.TextField(default=FunPlatform.F1)
 
 
@@ -842,19 +838,15 @@ class PerformanceBlt(models.Model):
     output1_iops = models.IntegerField(verbose_name="IOPS")
     output2_bw = models.IntegerField(verbose_name="Band-width")
     output3_latency = models.IntegerField(verbose_name="Latency")
-    tag = "analytics"
 
 
 class PerformanceIkv(models.Model):
     key = models.CharField(max_length=30, verbose_name="Build no.")
     input1_put_value_size = models.IntegerField(verbose_name="PUT Value size", choices=[(0, 4096), (1, 8192)])
     output1_put_per_seccond = models.IntegerField(verbose_name="PUTs per second")
-    tag = "analytics"
 
 
 class VolumePerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     key = models.CharField(max_length=30, verbose_name="Build no.")
     input_volume = models.TextField(verbose_name="Volume type", choices=[(0, "BLT"), (1, "EC21")])
     input_test = models.TextField(verbose_name="Test type", choices=[(0, "FioSeqWriteSeqReadOnly")])
@@ -869,7 +861,6 @@ class VolumePerformance(models.Model):
     output_write_latency = models.IntegerField(verbose_name="Write latency uSecs")
     output_read_latency = models.IntegerField(verbose_name="Read latency uSecs")
     input_platform = models.TextField(default=FunPlatform.F1)
-    tag = "analytics"
 
     def __str__(self):
         return "{}:{}:{}:{}:{}:{}:{}:{}".format(self.key,
@@ -886,8 +877,6 @@ class VolumePerformance(models.Model):
 
 
 class VolumePerformanceEmulation(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_volume = models.TextField(verbose_name="Volume type", choices=[(0, "BLT"), (1, "EC21")])
     input_test = models.TextField(verbose_name="Test type", choices=[(0, "FioSeqWriteSeqReadOnly")])
@@ -909,7 +898,6 @@ class VolumePerformanceEmulation(models.Model):
     output_read_95_latency = models.IntegerField(verbose_name="Read 95% latency uSecs", default=-1)
     output_read_99_latency = models.IntegerField(verbose_name="Read 99% latency uSecs", default=-1)
     input_platform = models.TextField(default=FunPlatform.F1)
-    tag = "analytics"
 
     def __str__(self):
         return "{}:{}:{}:{}:{}:{}:{}:{}".format(self.input_date_time,
@@ -926,8 +914,6 @@ class VolumePerformanceEmulation(models.Model):
 
 
 class BltVolumePerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_volume_type = models.TextField(verbose_name="Volume type")
     input_test = models.TextField(verbose_name="Test type")
@@ -968,7 +954,6 @@ class BltVolumePerformance(models.Model):
     output_read_99_latency_unit = models.TextField(default="usecs")
     input_platform = models.TextField(default=FunPlatform.F1)
     input_version = models.CharField(verbose_name="Version", max_length=50, default="")
-    tag = "analytics"
 
     def __str__(self):
         return "{}:{}:{}:{}:{}:{}:{}:{}".format(self.input_date_time,
@@ -985,8 +970,6 @@ class BltVolumePerformance(models.Model):
 
 
 class AlibabaPerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_volume_type = models.TextField(verbose_name="Volume type")
@@ -1032,7 +1015,6 @@ class AlibabaPerformance(models.Model):
     output_read_95_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
     output_read_99_99_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
     output_read_99_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
-    tag = "analytics"
 
     def __str__(self):
         return "{}:{}:{}:{}:{}:{}:{}:{}".format(self.input_date_time,
@@ -1049,8 +1031,6 @@ class AlibabaPerformance(models.Model):
 
 
 class AlibabaBmvRemoteSsdPerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_volume_type = models.TextField(verbose_name="Volume type")
@@ -1094,7 +1074,6 @@ class AlibabaBmvRemoteSsdPerformance(models.Model):
     output_read_95_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
     output_read_99_99_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
     output_read_99_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
-    tag = "analytics"
 
     def __str__(self):
         return "{}:{}:{}:{}:{}:{}:{}:{}".format(self.input_date_time,
@@ -1111,8 +1090,6 @@ class AlibabaBmvRemoteSsdPerformance(models.Model):
 
 
 class InspurZipCompressionRatiosPerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_effort_name = models.TextField(default="")
@@ -1126,8 +1103,6 @@ class InspurZipCompressionRatiosPerformance(models.Model):
 
 
 class AllocSpeedPerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     key = models.CharField(max_length=30, verbose_name="Git tag")
@@ -1143,7 +1118,6 @@ class AllocSpeedPerformance(models.Model):
     output_one_malloc_free_classic_max = models.IntegerField(default=-1, verbose_name="Time in ns (Classic): Max")
     output_one_malloc_free_classic_max_unit = models.TextField(default="nsecs")
     input_platform = models.TextField(default=FunPlatform.F1)
-    tag = "analytics"
 
     def __str__(self):
         return "{}..{}..{}..{}..{}..{}..{}".format(self.key, self.output_one_malloc_free_wu, self.output_one_malloc_free_threaded,
@@ -1152,8 +1126,6 @@ class AllocSpeedPerformance(models.Model):
 
 
 class WuLatencyAllocStack(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     key = models.CharField(max_length=30, verbose_name="Git tag")
@@ -1170,8 +1142,6 @@ class WuLatencyAllocStack(models.Model):
         return "{}..{}..{}..{}".format(self.key, self.output_min, self.output_avg, self.output_max)
 
 class WuLatencyUngated(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     key = models.CharField(max_length=30, verbose_name="Git tag")
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
@@ -1225,8 +1195,6 @@ class GenericSerializer(ModelSerializer):
         pass
 
 class EcPerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_ndata_min = models.IntegerField(verbose_name="ndata min", default=8)
@@ -1267,17 +1235,8 @@ class EcPerformance(models.Model):
     def __str__(self):
         return str(self.__dict__)
 
-    '''
-     min_ndata=8 
-     max_ndata=8 
-     min_nparity=4 
-     max_nparity=4 
-     min_stridelen=4096 max_stridelen=4096 numthreads=1
-    '''
 
 class BcopyPerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_iterations = models.IntegerField(verbose_name="Iterations", default=10)
@@ -1302,8 +1261,6 @@ class BcopyPerformance(models.Model):
 
 
 class BcopyFloodDmaPerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_n = models.IntegerField(verbose_name="N", default=0, choices=[(0, "1"), (1, "2"), (2, "4"), (3, "8"), (4, "16"), (5, "32"), (6, "64")])
@@ -1326,8 +1283,6 @@ class BcopyFloodDmaPerformance(models.Model):
 
 
 class EcVolPerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_app = models.CharField(max_length=20, default="voltest", choices=[(0, "voltest")])
@@ -1391,9 +1346,7 @@ class LsvZipCryptoPerformance(models.Model):
 
 
 class NuTransitPerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
-    interpolated = models.BooleanField(default=False)
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_frame_size = models.IntegerField(verbose_name="Fixed Frame Size Test", choices=[(0, 1500), (1, 1000), (2, 200), (3, 9000), (4, 16380), (5, 64)])
     output_throughput = models.FloatField(verbose_name="Throughput in Gbps")
@@ -1433,9 +1386,7 @@ class NuTransitPerformance(models.Model):
         return s
 
 class HuThroughputPerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
-    interpolated = models.BooleanField(default=False)
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_frame_size = models.IntegerField(verbose_name="Frame Size")
     output_throughput_h2n = models.FloatField(verbose_name="Throughput in Gbps", default=-1)
@@ -1466,9 +1417,7 @@ class HuThroughputPerformance(models.Model):
 
 
 class HuLatencyPerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
-    interpolated = models.BooleanField(default=False)
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_frame_size = models.IntegerField(verbose_name="Frame Size")
     output_latency_avg_h2n = models.FloatField(verbose_name="Latency Avg in us", default=-1)
@@ -1540,9 +1489,7 @@ class HuLatencyPerformance(models.Model):
         return s
 
 class HuLatencyUnderLoadPerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
-    interpolated = models.BooleanField(default=False)
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_frame_size = models.IntegerField(verbose_name="Frame Size")
     output_latency_avg_uload_h2n = models.FloatField(verbose_name="Latency Avg in us", default=-1)
@@ -1615,9 +1562,7 @@ class HuLatencyUnderLoadPerformance(models.Model):
 
 
 class TeraMarkJuniperNetworkingPerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
-    interpolated = models.BooleanField(default=False)
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_frame_size = models.FloatField(verbose_name="Frame Size", default=-1)
     output_throughput = models.FloatField(verbose_name="Throughput in Gbps", default=-1)
@@ -1654,9 +1599,7 @@ class TeraMarkJuniperNetworkingPerformance(models.Model):
 
 
 class TeraMarkFunTcpThroughputPerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
-    interpolated = models.BooleanField(default=False)
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_frame_size = models.FloatField(verbose_name="Frame Size")
     input_mode = models.CharField(verbose_name="Port modes", max_length=20, default="")
@@ -1677,9 +1620,7 @@ class TeraMarkFunTcpThroughputPerformance(models.Model):
         return s
 
 class TeraMarkFunTcpConnectionsPerSecondPerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
-    interpolated = models.BooleanField(default=False)
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_frame_size = models.FloatField(verbose_name="Frame Size")
     output_max_latency = models.FloatField(verbose_name="Max Latency", default=-1)
@@ -1701,9 +1642,7 @@ class TeraMarkFunTcpConnectionsPerSecondPerformance(models.Model):
         return s
 #
 # class TeraMarkFunTcpConcurrentConnectionsPerformance(models.Model):
-#     interpolation_allowed = models.BooleanField(default=False)
 #     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
-#     interpolated = models.BooleanField(default=False)
 #     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
 #     input_frame_size = models.FloatField(verbose_name="Frame Size")
 #     output_throughput = models.FloatField(verbose_name="Throughput in Gbps")
@@ -1736,8 +1675,6 @@ class TeraMarkFunTcpConnectionsPerSecondPerformance(models.Model):
 #         return s
 
 class VoltestPerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_app = models.CharField(max_length=20, default="voltest", choices=[(0, "voltest")])
@@ -1843,8 +1780,6 @@ class VoltestPerformance(models.Model):
         return "{}: {}".format(self.input_date_time, self.output_VOL_TYPE_BLK_LSV_write_Bandwidth_total)
 
 class WuDispatchTestPerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_app = models.CharField(max_length=30, default="dispatch_speed_test", choices=[(0, "dispatch_speed_test")])
@@ -1852,7 +1787,6 @@ class WuDispatchTestPerformance(models.Model):
     output_average = models.IntegerField(verbose_name="Output WU Dispatch Performanmce Test Average", default=-1)
     output_average_unit = models.TextField(default="cycles")
     input_platform = models.TextField(default=FunPlatform.F1)
-    tag = "analytics"
 
     def __str__(self):
         s = ""
@@ -1861,8 +1795,6 @@ class WuDispatchTestPerformance(models.Model):
         return s
 
 class WuSendSpeedTestPerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_app = models.CharField(max_length=30, default="wu_send_speed_test", choices=[(0, "wu_send_speed_test")])
@@ -1870,7 +1802,6 @@ class WuSendSpeedTestPerformance(models.Model):
     output_average = models.IntegerField(verbose_name="Output WU Send Speed Performanmce Test Average", default=-1)
     output_average_unit = models.TextField(default="cycles")
     input_platform = models.TextField(default=FunPlatform.F1)
-    tag = "analytics"
 
     def __str__(self):
         s = ""
@@ -1879,8 +1810,6 @@ class WuSendSpeedTestPerformance(models.Model):
         return s
 
 class SoakFunMallocPerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_app = models.CharField(max_length=30, default="soak_malloc_fun_malloc", choices=[(0, "soak_malloc_fun_malloc")])
@@ -1888,7 +1817,6 @@ class SoakFunMallocPerformance(models.Model):
     output_ops_per_sec = models.IntegerField(verbose_name="Soak Fun Malloc Test ops per sec", default=-1)
     output_ops_per_sec_unit = models.TextField(default="ops")
     input_platform = models.TextField(default=FunPlatform.F1)
-    tag = "analytics"
 
     def __str__(self):
         s = ""
@@ -1897,8 +1825,6 @@ class SoakFunMallocPerformance(models.Model):
         return s
 
 class SoakClassicMallocPerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_app = models.CharField(max_length=30, default="soak_malloc_classic", choices=[(0, "soak_malloc_classic")])
@@ -1906,7 +1832,6 @@ class SoakClassicMallocPerformance(models.Model):
     output_ops_per_sec = models.IntegerField(verbose_name="Soak Classic Malloc Test ops per sec", default=-1)
     output_ops_per_sec_unit = models.TextField(default="ops")
     input_platform = models.TextField(default=FunPlatform.F1)
-    tag = "analytics"
 
     def __str__(self):
         s = ""
@@ -1915,8 +1840,6 @@ class SoakClassicMallocPerformance(models.Model):
         return s
 
 class TeraMarkPkeRsaPerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_app = models.CharField(max_length=30, default="pke_rsa_crt_dec_no_pad_soak", choices=[(0, "pke_rsa_crt_dec_no_pad_soak")])
@@ -1924,7 +1847,6 @@ class TeraMarkPkeRsaPerformance(models.Model):
     output_ops_per_sec = models.IntegerField(verbose_name="ops per sec", default=-1)
     output_ops_per_sec_unit = models.TextField(default="ops")
     input_platform = models.TextField(default=FunPlatform.F1)
-    tag = "analytics"
 
     def __str__(self):
         s = ""
@@ -1933,8 +1855,6 @@ class TeraMarkPkeRsaPerformance(models.Model):
         return s
 
 class TeraMarkPkeRsa4kPerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_app = models.CharField(max_length=50, default="pke_rsa_crt_dec_no_pad_4096_soak", choices=[(0, "pke_rsa_crt_dec_no_pad_4096_soak")])
@@ -1942,7 +1862,6 @@ class TeraMarkPkeRsa4kPerformance(models.Model):
     output_ops_per_sec = models.IntegerField(verbose_name="ops per sec", default=-1)
     output_ops_per_sec_unit = models.TextField(default="ops")
     input_platform = models.TextField(default=FunPlatform.F1)
-    tag = "analytics"
 
     def __str__(self):
         s = ""
@@ -1951,8 +1870,6 @@ class TeraMarkPkeRsa4kPerformance(models.Model):
         return s
 
 class TeraMarkPkeEcdh256Performance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_app = models.CharField(max_length=30, default="pke_ecdh_soak_256", choices=[(0, "pke_ecdh_soak_256")])
@@ -1960,7 +1877,6 @@ class TeraMarkPkeEcdh256Performance(models.Model):
     output_ops_per_sec = models.IntegerField(verbose_name="ops per sec", default=-1)
     output_ops_per_sec_unit = models.TextField(default="ops")
     input_platform = models.TextField(default=FunPlatform.F1)
-    tag = "analytics"
 
     def __str__(self):
         s = ""
@@ -1969,8 +1885,6 @@ class TeraMarkPkeEcdh256Performance(models.Model):
         return s
 
 class TeraMarkPkeEcdh25519Performance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_app = models.CharField(max_length=30, default="pke_ecdh_soak_25519", choices=[(0, "pke_ecdh_soak_25519")])
@@ -1978,7 +1892,6 @@ class TeraMarkPkeEcdh25519Performance(models.Model):
     output_ops_per_sec = models.IntegerField(verbose_name="ops per sec", default=-1)
     output_ops_per_sec_unit = models.TextField(default="ops")
     input_platform = models.TextField(default=FunPlatform.F1)
-    tag = "analytics"
 
     def __str__(self):
         s = ""
@@ -1987,8 +1900,6 @@ class TeraMarkPkeEcdh25519Performance(models.Model):
         return s
 
 class PkeX25519TlsSoakPerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_app = models.CharField(max_length=30, default="pke_x25519_2k_tls_soak", choices=[(0, "pke_x25519_2k_tls_soak")])
@@ -1996,7 +1907,6 @@ class PkeX25519TlsSoakPerformance(models.Model):
     output_ops_per_sec = models.IntegerField(verbose_name="ops/sec", default=-1)
     output_ops_per_sec_unit = models.TextField(default="ops")
     input_platform = models.TextField(default=FunPlatform.F1)
-    tag = "analytics"
 
     def __str__(self):
         s = ""
@@ -2005,8 +1915,6 @@ class PkeX25519TlsSoakPerformance(models.Model):
         return s
 
 class PkeP256TlsSoakPerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_app = models.CharField(max_length=30, default="pke_p256_2k_tls_soak", choices=[(0, "pke_p256_2k_tls_soak")])
@@ -2014,7 +1922,6 @@ class PkeP256TlsSoakPerformance(models.Model):
     output_ops_per_sec = models.IntegerField(verbose_name="ops/sec", default=-1)
     output_ops_per_sec_unit = models.TextField(default="ops")
     input_platform = models.TextField(default=FunPlatform.F1)
-    tag = "analytics"
 
     def __str__(self):
         s = ""
@@ -2023,8 +1930,6 @@ class PkeP256TlsSoakPerformance(models.Model):
         return s
 
 class SoakDmaMemcpyCoherentPerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_size = models.TextField(verbose_name="Size")
@@ -2035,7 +1940,6 @@ class SoakDmaMemcpyCoherentPerformance(models.Model):
     output_bandwidth = models.FloatField(verbose_name="Bandwidth", default=-1)
     input_unit = models.TextField(default="GBps")
     input_platform = models.TextField(default=FunPlatform.F1)
-    tag = "analytics"
 
     def __str__(self):
         s = ""
@@ -2044,8 +1948,6 @@ class SoakDmaMemcpyCoherentPerformance(models.Model):
         return s
 
 class SoakDmaMemcpyNonCoherentPerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_size = models.TextField(verbose_name="Size")
@@ -2056,7 +1958,6 @@ class SoakDmaMemcpyNonCoherentPerformance(models.Model):
     output_bandwidth = models.FloatField(verbose_name="Bandwidth", default=-1)
     input_unit = models.TextField(default="GBps")
     input_platform = models.TextField(default=FunPlatform.F1)
-    tag = "analytics"
 
     def __str__(self):
         s = ""
@@ -2066,15 +1967,12 @@ class SoakDmaMemcpyNonCoherentPerformance(models.Model):
 
 
 class SoakDmaMemcpyThresholdPerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     output_threshold_unit = models.TextField(default="KB")
     input_metric_name = models.TextField(verbose_name="Metric Name", default="")
     output_threshold = models.FloatField(verbose_name="Threshold", default=-1)
     input_platform = models.TextField(default=FunPlatform.F1)
-    tag = "analytics"
 
     def __str__(self):
         s = ""
@@ -2084,8 +1982,6 @@ class SoakDmaMemcpyThresholdPerformance(models.Model):
 
 
 class SoakDmaMemsetPerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_size = models.TextField(verbose_name="Size")
@@ -2098,7 +1994,6 @@ class SoakDmaMemsetPerformance(models.Model):
     output_bandwidth = models.FloatField(verbose_name="Bandwidth", default=-1)
     input_unit = models.TextField(default="GBps")
     input_platform = models.TextField(default=FunPlatform.F1)
-    tag = "analytics"
 
     def __str__(self):
         s = ""
@@ -2108,8 +2003,6 @@ class SoakDmaMemsetPerformance(models.Model):
 
 
 class ChannelParallPerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_platform = models.TextField(default=FunPlatform.F1)
@@ -2119,7 +2012,6 @@ class ChannelParallPerformance(models.Model):
     input_metric_name = models.TextField(default="")
     output_channel_parall_speed = models.BigIntegerField(default=-1)
     output_channel_parall_speed_unit = models.TextField(default=PerfUnit.UNIT_USECS)
-    tag = "analytics"
 
     def __str__(self):
         s = ""
@@ -2129,8 +2021,6 @@ class ChannelParallPerformance(models.Model):
 
 
 class TeraMarkCryptoPerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_app = models.CharField(max_length=30, default="crypto_api_perf")
@@ -2148,7 +2038,6 @@ class TeraMarkCryptoPerformance(models.Model):
     output_latency_avg_unit = models.TextField(default="nsecs")
     output_latency_max_unit = models.TextField(default="nsecs")
     input_platform = models.TextField(default=FunPlatform.F1)
-    tag = "analytics"
 
     def __str__(self):
         s = ""
@@ -2157,8 +2046,6 @@ class TeraMarkCryptoPerformance(models.Model):
         return s
 
 class JuniperCryptoTunnelPerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_test = models.TextField(default="crypto_dp_tunnel")
@@ -2174,7 +2061,6 @@ class JuniperCryptoTunnelPerformance(models.Model):
     output_packets_per_sec_unit = models.TextField(default="Mpps")
     output_throughput_unit = models.TextField(default="Gbps")
     input_platform = models.TextField(default=FunPlatform.F1)
-    tag = "analytics"
 
     def __str__(self):
         s = ""
@@ -2183,8 +2069,6 @@ class JuniperCryptoTunnelPerformance(models.Model):
         return s
 
 class JuniperIpsecEncryptionSingleTunnelPerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_test = models.TextField(default="ipsec_tunnel_throughput")
@@ -2200,7 +2084,6 @@ class JuniperIpsecEncryptionSingleTunnelPerformance(models.Model):
     output_packets_per_sec_unit = models.TextField(default="Mpps")
     output_throughput_unit = models.TextField(default="Gbps")
     input_platform = models.TextField(default=FunPlatform.F1)
-    tag = "analytics"
 
     def __str__(self):
         s = ""
@@ -2209,8 +2092,6 @@ class JuniperIpsecEncryptionSingleTunnelPerformance(models.Model):
         return s
 
 class JuniperIpsecEncryptionMultiTunnelPerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_test = models.TextField(default="ipsec_tunnel_throughput")
@@ -2226,7 +2107,6 @@ class JuniperIpsecEncryptionMultiTunnelPerformance(models.Model):
     output_packets_per_sec_unit = models.TextField(default="Mpps")
     output_throughput_unit = models.TextField(default="Gbps")
     input_platform = models.TextField(default=FunPlatform.F1)
-    tag = "analytics"
 
     def __str__(self):
         s = ""
@@ -2235,8 +2115,6 @@ class JuniperIpsecEncryptionMultiTunnelPerformance(models.Model):
         return s
 
 class JuniperIpsecDecryptionSingleTunnelPerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_test = models.TextField(default="ipsec_tunnel_throughput")
@@ -2252,7 +2130,6 @@ class JuniperIpsecDecryptionSingleTunnelPerformance(models.Model):
     output_packets_per_sec_unit = models.TextField(default="Mpps")
     output_throughput_unit = models.TextField(default="Gbps")
     input_platform = models.TextField(default=FunPlatform.F1)
-    tag = "analytics"
 
     def __str__(self):
         s = ""
@@ -2261,8 +2138,6 @@ class JuniperIpsecDecryptionSingleTunnelPerformance(models.Model):
         return s
 
 class JuniperIpsecDecryptionMultiTunnelPerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_test = models.TextField(default="ipsec_tunnel_throughput")
@@ -2278,7 +2153,6 @@ class JuniperIpsecDecryptionMultiTunnelPerformance(models.Model):
     output_packets_per_sec_unit = models.TextField(default="Mpps")
     output_throughput_unit = models.TextField(default="Gbps")
     input_platform = models.TextField(default=FunPlatform.F1)
-    tag = "analytics"
 
     def __str__(self):
         s = ""
@@ -2287,8 +2161,6 @@ class JuniperIpsecDecryptionMultiTunnelPerformance(models.Model):
         return s
 
 class JuniperTlsTunnelPerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_test = models.TextField(default="crypto_dp_tunnel")
@@ -2304,7 +2176,6 @@ class JuniperTlsTunnelPerformance(models.Model):
     output_packets_per_sec_unit = models.TextField(default="Mpps")
     output_throughput_unit = models.TextField(default="Gbps")
     input_platform = models.TextField(default=FunPlatform.F1)
-    tag = "analytics"
 
     def __str__(self):
         s = ""
@@ -2313,8 +2184,6 @@ class JuniperTlsTunnelPerformance(models.Model):
         return s
 
 class TeraMarkMultiClusterCryptoPerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_app = models.CharField(max_length=30, default="crypto_raw_speed")
@@ -2333,7 +2202,6 @@ class TeraMarkMultiClusterCryptoPerformance(models.Model):
     output_latency_avg_unit = models.TextField(default="nsecs")
     output_latency_max_unit = models.TextField(default="nsecs")
     input_platform = models.TextField(default=FunPlatform.F1)
-    tag = "analytics"
 
     def __str__(self):
         s = ""
@@ -2342,8 +2210,6 @@ class TeraMarkMultiClusterCryptoPerformance(models.Model):
         return s
 
 class CryptoFastPathPerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_app = models.CharField(max_length=30, default="crypto_fast_path")
@@ -2362,7 +2228,6 @@ class CryptoFastPathPerformance(models.Model):
     output_latency_avg_unit = models.TextField(default=PerfUnit.UNIT_NSECS)
     output_latency_max_unit = models.TextField(default=PerfUnit.UNIT_NSECS)
     input_platform = models.TextField(default=FunPlatform.F1)
-    tag = "analytics"
 
     def __str__(self):
         s = ""
@@ -2371,8 +2236,6 @@ class CryptoFastPathPerformance(models.Model):
         return s
 
 class TeraMarkLookupEnginePerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_test = models.CharField(max_length=30, default="le_test_perf", choices=[(0, "le_test_perf")])
@@ -2385,7 +2248,6 @@ class TeraMarkLookupEnginePerformance(models.Model):
     output_lookup_per_sec_max_unit = models.TextField(default="lookups/sec")
     input_operation = models.TextField(default="")
     input_platform = models.TextField(default=FunPlatform.F1)
-    tag = "analytics"
 
     def __str__(self):
         s = ""
@@ -2394,8 +2256,6 @@ class TeraMarkLookupEnginePerformance(models.Model):
         return s
 
 class TeraMarkZipDeflatePerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_type = models.CharField(max_length=30, default="", choices=[(0, "Deflate")])
@@ -2414,7 +2274,6 @@ class TeraMarkZipDeflatePerformance(models.Model):
     output_latency_max_unit = models.TextField(default="nsecs")
     output_iops_unit = models.TextField(default="ops")
     input_platform = models.TextField(default=FunPlatform.F1)
-    tag = "analytics"
 
     def __str__(self):
         s = ""
@@ -2423,8 +2282,6 @@ class TeraMarkZipDeflatePerformance(models.Model):
         return s
 
 class TeraMarkZipLzmaPerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_type = models.CharField(max_length=30, default="", choices=[(0, "LZMA")])
@@ -2443,7 +2300,6 @@ class TeraMarkZipLzmaPerformance(models.Model):
     output_latency_max_unit = models.TextField(default="nsecs")
     output_iops_unit = models.TextField(default="ops")
     input_platform = models.TextField(default=FunPlatform.F1)
-    tag = "analytics"
 
     def __str__(self):
         s = ""
@@ -2452,8 +2308,6 @@ class TeraMarkZipLzmaPerformance(models.Model):
         return s
 
 class TeraMarkRcnvmeReadWritePerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_operation = models.TextField( default="")
@@ -2482,7 +2336,6 @@ class TeraMarkRcnvmeReadWritePerformance(models.Model):
     output_latency_max_unit = models.TextField(default="nsecs")
     output_iops_unit = models.TextField(default="ops")
     input_platform = models.TextField(default=FunPlatform.F1)
-    tag = "analytics"
 
     def __str__(self):
         s = ""
@@ -2491,8 +2344,6 @@ class TeraMarkRcnvmeReadWritePerformance(models.Model):
         return s
 
 class TeraMarkRcnvmeReadWriteAllPerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_operation = models.TextField( default="")
@@ -2521,7 +2372,6 @@ class TeraMarkRcnvmeReadWriteAllPerformance(models.Model):
     output_latency_max_unit = models.TextField(default="nsecs")
     output_iops_unit = models.TextField(default="ops")
     input_platform = models.TextField(default=FunPlatform.F1)
-    tag = "analytics"
 
     def __str__(self):
         s = ""
@@ -2530,8 +2380,6 @@ class TeraMarkRcnvmeReadWriteAllPerformance(models.Model):
         return s
 
 class TeraMarkDfaPerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     output_latency = models.BigIntegerField(verbose_name="nsecs", default=-1)
@@ -2539,7 +2387,6 @@ class TeraMarkDfaPerformance(models.Model):
     output_bandwidth = models.FloatField(verbose_name="Gbps", default=-1)
     output_bandwidth_unit = models.TextField(default="Gbps")
     input_platform = models.TextField(default=FunPlatform.F1)
-    tag = "analytics"
 
     def __str__(self):
         s = ""
@@ -2548,8 +2395,6 @@ class TeraMarkDfaPerformance(models.Model):
         return s
 
 class TeraMarkNfaPerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     output_latency = models.BigIntegerField(verbose_name="nsecs", default=-1)
@@ -2557,7 +2402,6 @@ class TeraMarkNfaPerformance(models.Model):
     output_bandwidth = models.FloatField(verbose_name="Gbps", default=-1)
     output_bandwidth_unit = models.TextField(default="Gbps")
     input_platform = models.TextField(default=FunPlatform.F1)
-    tag = "analytics"
 
     def __str__(self):
         s = ""
@@ -2566,8 +2410,6 @@ class TeraMarkNfaPerformance(models.Model):
         return s
 
 class TeraMarkJpegPerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_operation = models.TextField(verbose_name="Operation")
@@ -2590,7 +2432,6 @@ class TeraMarkJpegPerformance(models.Model):
     output_compression_ratio_unit = models.TextField(default="number")
     output_percentage_savings_unit = models.TextField(default="number")
     input_platform = models.TextField(default=FunPlatform.F1)
-    tag = "analytics"
 
     def __str__(self):
         s = ""
@@ -2599,8 +2440,6 @@ class TeraMarkJpegPerformance(models.Model):
         return s
 
 class FlowTestPerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_app = models.CharField(max_length=30, default="hw_hsu_test", choices=[(0, "hw_hsu_test")])
@@ -2608,7 +2447,6 @@ class FlowTestPerformance(models.Model):
     output_time = models.IntegerField(verbose_name="seconds", default=-1)
     output_time_unit = models.TextField(default="secs")
     input_platform = models.TextField(default=FunPlatform.F1)
-    tag = "analytics"
 
     def __str__(self):
         s = ""
@@ -2617,8 +2455,6 @@ class FlowTestPerformance(models.Model):
         return s
 
 class F1FlowTestPerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_app = models.CharField(max_length=30, default="hw_hsu_test", choices=[(0, "hw_hsu_test")])
@@ -2626,7 +2462,6 @@ class F1FlowTestPerformance(models.Model):
     output_time = models.IntegerField(verbose_name="seconds", default=-1)
     output_time_unit = models.TextField(default="secs")
     input_platform = models.TextField(default=FunPlatform.F1)
-    tag = "analytics"
 
     def __str__(self):
         s = ""
@@ -2635,8 +2470,6 @@ class F1FlowTestPerformance(models.Model):
         return s
 
 class BootTimePerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     output_firmware_boot_time = models.FloatField(verbose_name="Firmware" ,default=-1)
@@ -2670,7 +2503,6 @@ class BootTimePerformance(models.Model):
     output_parsing_config_end_unit = models.TextField(default=PerfUnit.UNIT_SECS)
     output_sending_host_booted_message_unit = models.TextField(default=PerfUnit.UNIT_SECS)
     input_platform = models.TextField(default=FunPlatform.F1)
-    tag = "analytics"
 
     def __str__(self):
         s = ""
@@ -2685,9 +2517,6 @@ class HuRawVolumePerformance(models.Model):
     #input_threads = models.IntegerField(verbose_name="Number of threads", default=-1, choices=[[0, 1.0]])
     input_testbed = models.CharField(max_length=30, verbose_name="Testbed", default="storage1", choices=[(0, "storage1"),(1.0,"storage2"),(2.0, "storagenw")])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
-    tag = "analytics"
-    interpolation_allowed = models.BooleanField(default=True)
-    interpolated = models.BooleanField(default=False)
     input_platform = models.TextField(default=FunPlatform.F1)
 
     def __str__(self):
@@ -2697,8 +2526,6 @@ class HuRawVolumePerformance(models.Model):
         return s
 
 class FunMagentPerformanceTest(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_app = models.CharField(max_length=30, default="fun_magent_perf_test", choices=[(0, "fun_magent_perf_test")])
@@ -2716,8 +2543,6 @@ class FunMagentPerformanceTest(models.Model):
         return s
 
 class WuStackSpeedTestPerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_app = models.CharField(max_length=30, default="wustack_speed_test", choices=[(0, "wustack_speed_test")])
@@ -2726,7 +2551,6 @@ class WuStackSpeedTestPerformance(models.Model):
     output_average = models.IntegerField(verbose_name="Alloc/free cycles average", default=-1)
     output_average_unit = models.TextField(default="cycles")
     input_platform = models.TextField(default=FunPlatform.F1)
-    tag = "analytics"
 
     def __str__(self):
         s = ""
@@ -2735,8 +2559,6 @@ class WuStackSpeedTestPerformance(models.Model):
         return s
 
 class VoltestLsvPerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     output_read_write_iops = models.BigIntegerField(verbose_name="ReadWrite ops per sec", default=-1)
@@ -2744,7 +2566,6 @@ class VoltestLsvPerformance(models.Model):
     output_read_write_bandwidth = models.FloatField(verbose_name="ReadWrite Throughput in Mbps", default=-1)
     output_read_write_bandwidth_unit = models.TextField(default=PerfUnit.UNIT_MBITS_PER_SEC)
     input_platform = models.TextField(default=FunPlatform.F1)
-    tag = "analytics"
 
     def __str__(self):
         s = ""
@@ -2753,8 +2574,6 @@ class VoltestLsvPerformance(models.Model):
         return s
 
 class VoltestLsv4Performance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     output_read_write_iops = models.BigIntegerField(verbose_name="ReadWrite ops per sec", default=-1)
@@ -2762,7 +2581,6 @@ class VoltestLsv4Performance(models.Model):
     output_read_write_bandwidth = models.FloatField(verbose_name="ReadWrite Throughput in Mbps", default=-1)
     output_read_write_bandwidth_unit = models.TextField(default=PerfUnit.UNIT_MBITS_PER_SEC)
     input_platform = models.TextField(default=FunPlatform.F1)
-    tag = "analytics"
 
     def __str__(self):
         s = ""
@@ -2774,7 +2592,6 @@ class MileStoneMarkers(models.Model):
     metric_id = models.IntegerField(default=-1)
     milestone_date = models.DateTimeField(verbose_name="Date", default=datetime.now)
     milestone_name = models.TextField(default="")
-    tag = "analytics"
 
     def __str__(self):
         s = ""
@@ -2845,8 +2662,6 @@ class NuTransitPerformanceSerializer(ModelSerializer):
         fields = "__all__"
 
 class AlibabaRdmaPerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_platform = models.TextField(default=FunPlatform.F1)
@@ -2894,8 +2709,6 @@ class AlibabaRdmaPerformance(models.Model):
 
 
 class SoakFlowsBusyLoop10usecs(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_version = models.CharField(verbose_name="Version", max_length=50, default="")
@@ -2920,8 +2733,6 @@ class SoakFlowsBusyLoop10usecs(models.Model):
 
 
 class SoakFlowsMemcpy1MBNonCoh(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_version = models.CharField(verbose_name="Version", max_length=50, default="")
@@ -2946,8 +2757,6 @@ class SoakFlowsMemcpy1MBNonCoh(models.Model):
 
 
 class VoltestBlt1Performance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_platform = models.TextField(default=FunPlatform.F1)
@@ -2968,8 +2777,6 @@ class VoltestBlt1Performance(models.Model):
 
 
 class VoltestBlt8Performance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_platform = models.TextField(default=FunPlatform.F1)
@@ -2990,8 +2797,6 @@ class VoltestBlt8Performance(models.Model):
 
 
 class VoltestBlt12Performance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_platform = models.TextField(default=FunPlatform.F1)
@@ -3012,8 +2817,6 @@ class VoltestBlt12Performance(models.Model):
 
 
 class InspurSingleDiskFailurePerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_platform = models.TextField(default=FunPlatform.F1)
@@ -3040,8 +2843,6 @@ class InspurSingleDiskFailurePerformance(models.Model):
 
 
 class InspurDataReconstructionPerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_platform = models.TextField(default=FunPlatform.F1)
@@ -3091,8 +2892,6 @@ class InspurDataReconstructionPerformance(models.Model):
 
 
 class PowerPerformance(FunModel):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_platform = models.TextField(default=FunPlatform.F1)
@@ -3114,8 +2913,6 @@ class PowerPerformance(FunModel):
 
 
 class RdsClientPerformance(FunModel):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_platform = models.TextField(default=FunPlatform.F1)
@@ -3136,8 +2933,6 @@ class RdsClientPerformance(FunModel):
 
 
 class NvmeFcpPerformance(FunModel):
-    interpolation_allowed = models.BooleanField(default=False)
-    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_platform = models.TextField(default=FunPlatform.F1)
