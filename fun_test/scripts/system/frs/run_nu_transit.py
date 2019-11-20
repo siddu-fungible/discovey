@@ -330,7 +330,7 @@ if __name__ == "__main__":
     run_time = 120
     initiate = False
     f1 = 0
-    load = 100
+    load = 99.99
     job_inputs = fun_test.get_job_inputs()
     if job_inputs:
         if "run_time" in job_inputs:
