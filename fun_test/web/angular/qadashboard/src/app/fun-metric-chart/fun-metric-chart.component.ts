@@ -184,14 +184,9 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     let self = this;
     if (metaData.runTime) {
       let props = {};
-      new Observable(observer => {
-        observer.next(true);
-        observer.complete();
-        return () => {
-        }
-      }).pipe(
+      of (true).pipe(
         switchMap(response => {
-          return this.performanceService.fetchRunTimeProperties(metaData.runTime);
+          return this.performanceService.getRunTime(metaData.runTime);
         }),
         switchMap(response => {
           self.setPointInfo(response, point);
@@ -211,24 +206,24 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     self.pointInfo = {};
     self.buildProps = null;
     if (props) {
-      if (props.jenkins_build_number != -1) {
+      if (props.jenkins_build_number) {
         self.pointInfo["Jenkins build number"] = props.jenkins_build_number;
       }
-      if (props.lsf_job_id != -1) {
+      if (props.lsf_job_id) {
         self.pointInfo["LSF job id"] = props.lsf_job_id;
       }
-      if (props.suite_execution_id != -1) {
+      if (props.suite_execution_id) {
         self.pointInfo["Suite execution id"] = props.suite_execution_id;
         self.pointInfo["Suite log directory"] = props.suite_execution_id;
       }
-      if (props.version != "" && props.version != -1) {
+      if (props.version) {
         self.pointInfo["Version"] = props.version;
       }
-      if (props.associated_suites && props.associated_suites.length) {
+      if (props.associated_suites) {
         self.pointInfo["Associated suites"] = props.associated_suites;
       }
-      let buildProperties = props.build_properties;
-      if (buildProperties != {}) {
+      if (props.build_properties) {
+        let buildProperties = props.build_properties;
         self.buildProps = buildProperties;
         if (buildProperties.hasOwnProperty("gitHubSha1s")) {
           self.pointInfo["Git commit"] = self.buildProps.gitHubSha1s.FunOS;
@@ -238,9 +233,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
 
     let metaData = point["metaData"];
     if (metaData.epoch) {
-      let pstDate = this.commonService.convertEpochToDate(metaData.epoch, this.TIMEZONE);
-      let dateString = this.commonService.addLeadingZeroesToDate(pstDate);
-      self.pointInfo["Date"] = dateString.substring(0, 5);
+      let shortDate = this.commonService.getShortDateFromEpoch(metaData.epoch, this.TIMEZONE);
+      self.pointInfo["Date"] = shortDate;
     }
     if (metaData.originalValue) {
       self.pointInfo["Value"] = metaData.originalValue;
@@ -388,12 +382,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   // populates chartInfo and fetches metrics data
   fetchInfo(): void {
     if (!this.chartInfo) {
-      new Observable(observer => {
-        observer.next(true);
-        observer.complete();
-        return () => {
-        }
-      }).pipe(
+      of (true).pipe(
         switchMap(response => {
           return this.performanceService.fetchChartInfo(this.id);
         }),
@@ -885,8 +874,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         metaData["epoch"] = dateTime;
         let result = this.getValidatedData(score, thisMinimum, thisMaximum, metaData);
         values.push(result);
-        let pstDate = this.commonService.convertEpochToDate(Number(dateTime) * 1000, this.TIMEZONE);
-        let xAxisString = this.commonService.addLeadingZeroesToDate(pstDate).substring(0, 5);
+        let xAxisString = this.commonService.getShortDateFromEpoch(Number(dateTime) * 1000, this.TIMEZONE);
         series.push(xAxisString);
       }
       this.values = [{data: values, name: "Scores"}];

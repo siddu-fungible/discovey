@@ -2467,16 +2467,22 @@ if __name__ == "__main__":
                     entry = jenkins_job_id_map[model_entry_epoch]
                     build_date = entry.build_date
                     result = {}
-                    lsf_job_id = int(entry.lsf_job_id) if entry.lsf_job_id != "" else -1
-                    result["lsf_job_id"] = lsf_job_id
-                    result["suite_execution_id"] = entry.suite_execution_id
-                    result["jenkins_build_number"] = entry.jenkins_job_id if entry.jenkins_job_id else -1
-                    build_properties = {}
+                    result["lsf_job_id"] = None
+                    if entry.lsf_job_id != "" or entry.lsf_job_id != -1:
+                        result["lsf_job_id"] = int(entry.lsf_job_id)
+
+                    result["suite_execution_id"] = entry.suite_execution_id if entry.suite_execution_id != -1 else None
+                    result["jenkins_build_number"] = entry.jenkins_job_id if entry.jenkins_job_id != -1 else None
+
+                    build_properties = None
                     if entry.build_properties != "":
                         build_properties = json.loads(entry.build_properties)
                     result["build_properties"] = build_properties
-                    result["version"] = entry.sdk_version
-                    result["associated_suites"] = entry.associated_suites
+
+                    result["version"] = None
+                    if entry.sdk_version != "" or entry.sdk_version != -1:
+                        result["version"] = entry.sdk_version
+                    result["associated_suites"] = entry.associated_suites if len(entry.associated_suites) else None
                     run_time_id = add_job_run_time_properties(date_time=build_date, run_time=result)
                     model_entry.run_time = run_time_id
                     model_entry.save()

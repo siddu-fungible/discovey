@@ -12,20 +12,24 @@ export enum SelectMode {
   ShowAttachDag = 4
 }
 
-interface  JobRunTimeProperties {
+interface  MetricRunTimeInterface {
   date_time: any;
-  run_time: any;
+  build_properties: any;
   lsf_job_id: number;
   suite_execution_id: number;
   jenkins_build_number: number;
+  version: any;
+  associated_suites: any;
 }
 
-export class JobRunTime implements JobRunTimeProperties {
+export class JobRunTime implements MetricRunTimeInterface {
   date_time: any;
-  run_time: any;
+  build_properties: any;
   lsf_job_id: number;
   suite_execution_id: number;
   jenkins_build_number: number;
+  version: any;
+  associated_suites: any;
 
   constructor(obj?: any) {
     Object.assign(this, obj);
@@ -161,11 +165,11 @@ export class PerformanceService {
     }));
   }
 
-  fetchRunTimeProperties(id): any {
+  getRunTime(id): any {
     let payload = {};
     payload["id"] = id;
     return this.apiService.post("/metrics/run_time", payload).pipe(switchMap(response => {
-      if (Object.keys(response.data).length !== 0) {
+      if (response.data) {
         return of(new JobRunTime(response.data));
       }
       return of(null);

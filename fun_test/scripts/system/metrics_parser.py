@@ -16,7 +16,7 @@ app_config = apps.get_app_config(app_label='fun_test')
 
 class MetricParser():
     def parse_it(self, logs, metric_id=None, model_name=None, auto_add_to_db=False, date_time=None,
-                 platform=FunPlatform.F1, run_time={}):
+                 platform=FunPlatform.F1, run_time=None):
         result = {}
         if model_name:
             result = self.regex_by_model(model_name=model_name, logs=logs, date_time=date_time, platform=platform,
@@ -110,8 +110,7 @@ class MetricParser():
         elif "BootTime" in model_name:
             return self.boot_time(logs=logs, date_time=date_time, platform=platform)
         elif "NuTransit" in model_name:
-            return self.teramark_nu_transit(logs=logs, date_time=date_time, platform=platform, model_name=model_name,
-                                            run_time=run_time)
+            return self.teramark_nu_transit(logs=logs, platform=platform, model_name=model_name)
         elif "TeraMarkZip" in model_name:
             return self.teramark_zip(logs=logs, date_time=date_time, platform=platform, run_time=run_time)
         else:
@@ -1529,7 +1528,7 @@ class MetricParser():
         return self.result
 
 
-    def teramark_nu_transit(self, logs, date_time, platform, model_name, run_time):
+    def teramark_nu_transit(self, logs, platform, model_name):
         self.initialize()
         self.metrics["input_platform"] = platform
         nu_transit_flow_types = {"FCP_HNU_HNU": "HNU_HNU_FCP"}
@@ -1578,11 +1577,12 @@ class MetricParser():
                     if date_time.year >= 2019:
                         metric_model = app_config.get_metric_models()[model_name]
                         run_time_props = {}
-                        run_time_props["lsf_job_id"] = -1
+                        run_time_props["lsf_job_id"] = None
                         run_time_props["suite_execution_id"] = fun_test.get_suite_execution_id()
-                        run_time_props["jenkins_build_number"] = -1
-                        run_time_props["run_time"] = {"build_properties": {},
-                                                      "sdk_version": self.metrics["input_version"]}
+                        run_time_props["jenkins_build_number"] = None
+                        run_time_props["build_properties"] = None
+                        run_time_props["version"] = self.metrics["input_version"]
+                        run_time_props["associated_suites"] = None
                         MetricHelper(model=metric_model).add_entry(run_time=run_time_props, **d)
 
             self.result["match_found"] = self.match_found

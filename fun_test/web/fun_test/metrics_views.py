@@ -955,7 +955,7 @@ def get_git_commits(request):
 @csrf_exempt
 @api_safe_json_response
 def get_job_run_time(request):
-    result = {}
+    result = None
     request_json = json.loads(request.body)
     id = request_json["id"]
     entries = JobRunTime.objects.filter(id=id)

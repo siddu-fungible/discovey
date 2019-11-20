@@ -341,12 +341,12 @@ class BltVolumePerformanceHelper(MetricHelper):
             if version == -1:
                 version = str(fun_test.get_version())
             result = {}
-            result["lsf_job_id"] = -1
+            result["lsf_job_id"] = None
             result["suite_execution_id"] = fun_test.get_suite_execution_id()
-            result["jenkins_build_number"] = -1
+            result["jenkins_build_number"] = None
             result["build_properties"] = fun_test.get_suite_run_time_environment_variable("bld_props")
             result["version"] = version
-            result["associated_suites"] = []
+            result["associated_suites"] = None
             entry = BltVolumePerformance.objects.get(input_date_time=date_time,
                                                      input_volume_type=volume,
                                                      input_test=test,
@@ -537,12 +537,12 @@ class ModelHelper(MetricHelper):
                 if not self.units:
                     raise Exception('No units provided. Please provide the required units')
                 result = {}
-                result["lsf_job_id"] = -1
+                result["lsf_job_id"] = None
                 result["suite_execution_id"] = fun_test.get_suite_execution_id()
-                result["jenkins_build_number"] = -1
+                result["jenkins_build_number"] = None
                 result["build_properties"] = fun_test.get_suite_run_time_environment_variable("bld_props")
-                result["version"] = m_obj.input_version
-                result["associated_suites"] = []
+                result["version"] = fun_test.get_version()
+                result["associated_suites"] = None
                 save_entry(m_obj, run_time=result)
                 result = True
             else:

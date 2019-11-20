@@ -210,17 +210,19 @@ class LsfStatusServer:
             lsf_id = job_dict["job_id"]
             jenkins_url = job_dict["jenkins_url"]
             build_properties_url = "{}artifact/bld_props.json".format(jenkins_url)
-            build_properties = self._get(url=build_properties_url)
+            try:
+                build_properties = self._get(url=build_properties_url)
+            except Exception as ex:
+                build_properties = None
+                fun_test.critical(str(ex))
             suite_execution_id = fun_test.get_suite_execution_id()
-            if build_properties is None:
-                build_properties = {}
-            else:
+            if build_properties:
                 build_properties = json.loads(build_properties)
             result["lsf_job_id"] = lsf_id
             result["suite_execution_id"] = suite_execution_id
             result["jenkins_build_number"] = job_dict["jenkins_build_number"]
             result["build_properties"] =  build_properties
-            result["associated_suites"] = []
+            result["associated_suites"] = None
             result["version"] = fun_test.get_version()
         return result
 
