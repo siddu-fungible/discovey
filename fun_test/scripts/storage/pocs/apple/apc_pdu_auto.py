@@ -470,7 +470,7 @@ class ApcPduTestcase(FunTestCase):
         return result
 
     def get_docker_count(self):
-        output = self.come_handle.command("docker ps -a")
+        output = self.come_handle.sudo_command("docker ps -a")
         num_docker = self.docker_ps_a_wrapper(output)
         return num_docker
 
