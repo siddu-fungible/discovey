@@ -315,7 +315,7 @@ class ApcPduTestcase(FunTestCase):
         bdf = '04:00.'
         if f1 == 1:
             bdf = '06:00.'
-            if self.testbed_type in ["fs-101", "fs-102", "fs-104"]:
+            if self.testbed_type in ["fs-101", "fs-102", "fs-104", "ifs-01"]:
                 bdf = '05:00.'
         lspci_output = self.come_handle.command("lspci -d 1dad: | grep {}".format(bdf), timeout=120)
         sections = ['Ethernet controller', 'Non-Volatile', 'Unassigned class', 'encryption device']
