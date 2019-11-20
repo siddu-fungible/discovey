@@ -256,7 +256,7 @@
                             </td>
                             <td>
                               <div id="{{ currentTestCaseExecution.test_case_id }}_{{ seriesElement.data?.checkpoint_index }}_{{ seriesElement.data?.context_id }}">
-                                  <span class="checkpoint-span">Checkpoint: {{ seriesElement.data?.checkpoint }}
+                                  <span class="checkpoint-span">Checkpoint: <app-smart-label [value]="seriesElement.data.result"></app-smart-label>&nbsp;{{ seriesElement.data?.checkpoint }}
                                   </span>
                               </div>
                             </td>
