@@ -2434,6 +2434,16 @@ if __name__ == "__main_fs1600__":
         result.append(one_dict)
     print json.dumps(result)
 
-if __name__ == "__main__":
+if __name__ == "__main_fs1600_backup__":
     ml.backup_dags()
     ml.set_global_cache(cache_valid=True)
+
+if __name__ == "__main__":
+    metric_id = 1504
+    chart = MetricChart.objects.get(metric_id=metric_id)
+    data_sets = chart.get_data_sets()
+    for data_set in data_sets:
+        data_set["inputs"]["input_time_taken_for"] = "Fun On Demand trivial job"
+    chart.data_sets = json.dumps(data_sets)
+    chart.save()
+

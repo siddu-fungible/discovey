@@ -1,10 +1,11 @@
 from lib.system.fun_test import *
 from django.apps import apps
-from fun_global import PerfUnit, FunPlatform
+from fun_global import PerfUnit, FunPlatform, FUN_ON_DEMAND_DATABASE
 from lib.utilities.jenkins_manager import JenkinsManager
 from lib.host.lsf_status_server import LsfStatusServer
 from web.fun_test.analytics_models_helper import ModelHelper, get_data_collection_time
 from web.fun_test.metrics_models import MetricChart
+import time, psycopg2
 
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 
@@ -159,14 +160,53 @@ class FunOnDemandBuildTimeTc(PalladiumTc):
 
             value_dict = {"date_time": get_data_collection_time(),
                           "version": fun_test.get_version(),
+                          "time_taken_for": "Fun On Demand trivial job",
                           "total_time": self.total_time_taken}
 
             unit_dict = {"total_time_unit": PerfUnit.UNIT_SECS}
             self.add_to_db(model_name=model_name, value_dict=value_dict, unit_dict=unit_dict, status=status)
 
-class SetFunOnDemandBuildTimeChartStatusTc(PalladiumTc):
+class PrBuildTimeTc(PalladiumTc):
+    since_time = round(time.time()) - 86400
+    params = FUN_ON_DEMAND_DATABASE
+    status = fun_test.FAILED
+    total_time_taken = -1
+
     def describe(self):
         self.set_test_details(id=2,
+                              summary="Poll Jenkins to get time taken for a PR build",
+                              steps="""
+        1. Steps 1
+        2. Steps 2
+        3. Steps 3
+                              """)
+
+    def run(self):
+        try:
+            conn = psycopg2.connect(**self.params)
+            cur = conn.cursor()
+            cur.execute(
+                "SELECT ROUND(AVG(duration_secs)) FROM testepoch WHERE (job = 'funsdk/master' OR job LIKE 'funsdk/pull_request%') AND start_time > " + str(
+                    self.since_time) + " AND step = 'TotalTime' AND build_status LIKE 'Success'")
+            average_time = int(cur.fetchone()[0])
+            self.total_time_taken = average_time
+            self.status = fun_test.PASSED
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        finally:
+            model_name = "FunOnDemandTotalTimePerformance"
+
+            value_dict = {"date_time": get_data_collection_time(),
+                          "version": fun_test.get_version(),
+                          "time_taken_for": "PR build",
+                          "total_time": self.total_time_taken}
+
+            unit_dict = {"total_time_unit": PerfUnit.UNIT_SECS}
+            self.add_to_db(model_name=model_name, value_dict=value_dict, unit_dict=unit_dict, status=self.status)
+
+class SetFunOnDemandBuildTimeChartStatusTc(PalladiumTc):
+    def describe(self):
+        self.set_test_details(id=3,
                               summary="Set build failure details for fun on demand time taken performance",
                               steps="Steps 1")
 
@@ -203,6 +243,7 @@ if __name__ == "__main__":
     myscript = MyScript()
 
     myscript.add_test_case(FunOnDemandBuildTimeTc())
+    myscript.add_test_case(PrBuildTimeTc())
     myscript.add_test_case(SetFunOnDemandBuildTimeChartStatusTc())
 
     myscript.run()

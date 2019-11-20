@@ -23,6 +23,11 @@ RESULTS = {"NOT_RUN": "NOT_RUN",
            "SCHEDULED": "SCHEDULED",
            "ABORTED": "ABORTED"}
 
+FUN_ON_DEMAND_DATABASE = {'host': 'fun-on-demand-01',
+                          'database': 'builddata',
+                          'user': 'builddata_reader',
+                          'password': 'pico80@Lhasa'}
+
 def get_current_epoch_time():
     return time.time()
 
