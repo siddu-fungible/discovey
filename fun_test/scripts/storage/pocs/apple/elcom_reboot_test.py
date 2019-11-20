@@ -1,9 +1,61 @@
-import argparse
-import sys
-import os
-import time
-import pexpect
-import telnetlib
+from apc_pdu_auto import *
+
+
+class ElcomRebootTest(ApcPduTestcase):
+
+    def describe(self):
+        self.set_test_details(id=1,
+                              summary="Reboot test",
+                              steps="""""")
+
+    def setup(self):
+        super(ElcomRebootTest, self).setup()
+
+    def run(self):
+        super(ElcomRebootTest, self).run()
+
+    def data_integrity_check(self):
+        pass
+
+    def apc_pdu_reboot(self):
+        come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
+                           ssh_username=self.fs['come']['mgmt_ssh_username'],
+                           ssh_password=self.fs['come']['mgmt_ssh_password'])
+        fun_test.log("Iteration no: {} out of {}".format(self.pc_no + 1, self.iterations))
+        fun_test.log("Checking if COMe is UP")
+        come_up = come_handle.ensure_host_is_up()
+        fun_test.add_checkpoint("COMe is UP (before switching off fs outlet)",
+                                self.to_str(come_up), True, come_up)
+        come_handle.destroy()
+
+        switch = ElcomPowerSwitch(self.apc_info['host_ip'], self.apc_info['username'], self.apc_info['password'])
+        fun_test.sleep(message="Wait for few seconds after connect with apc power rack", seconds=5)
+        outlet_off_msg = switch.off(str(self.outlet_no))
+        fun_test.log("PDU outlet off mesg {}".format(outlet_off_msg))
+        outlet_off = self.match_success(outlet_off_msg)
+        fun_test.test_assert(outlet_off, "Power down FS")
+
+        fun_test.sleep(message="Wait for few seconds after switching off fs outlet", seconds=15)
+
+        fun_test.log("Checking if COMe is down")
+        come_down = not (come_handle.ensure_host_is_up(max_wait_time=15))
+        fun_test.test_assert(come_down, "COMe is Down")
+        come_handle.destroy()
+
+        outlet_on_msg = switch.on(str(self.outlet_no))
+        fun_test.log("APC PDU outlet on message {}".format(outlet_on_msg))
+        outlet_on = self.match_success(outlet_on_msg)
+        fun_test.test_assert(outlet_on, "Power on FS")
+        switch.close()
+        come_handle.destroy()
+        come_handle.destroy()
+        return
+
+
+
+
+    def cleanup(self):
+        pass
 
 class ElcomPowerSwitch:
     """
@@ -63,9 +115,9 @@ class ElcomPowerSwitch:
         #It seems that we have completed command.
         output =  self.pducon.before
         if output.rfind("OFF") >= 0:
-            print 'Outlet OFF Success'
+            return 'Outlet OFF Success'
         if output.rfind("ON") >= 0:
-            print 'Outlet ON Success'
+            return 'Outlet ON Success'
 
     def off(self, outlet):
         """ Turn the outlet off """
@@ -80,42 +132,8 @@ class ElcomPowerSwitch:
         self.pducon.sendline("bye\r")
         self.pducon.expect("Connection closed")
 
-#API
-def pdu_operation(ip, user, pwd, op, outlet):
-    print('Connecting to a ELCOM PowerSwitch at ip:%s user:%s op:%s outlet:%s'%(ip, user, op, outlet))
-    switch = ElcomPowerSwitch(hostname=ip, userid=user, password=pwd)
-    if op == "off":
-        print("Turning off outlet:%s" % outlet)
-        switch.off(outlet)
-
-    if op == "on":
-        print("Turning on outlet:%s" % outlet)
-        switch.on(outlet)
 
 if __name__ == "__main__":
-    pswd = ""
-    if sys.version_info[:2] == (2, 7):
-        parser = argparse.ArgumentParser(description="option parser")
-        parser.add_argument("-i", action="store", dest="hostip", help="IP address of PDU")
-        parser.add_argument("-u", action="store", dest="username", help="PDU user name")
-        parser.add_argument("-p", action="store", dest="password", help="PDU User password")
-        parser.add_argument("-o", action="store", dest="operation", help="off|on")
-        parser.add_argument("-t", action="store", dest="outlet", help="Outlet Number")
-        args=parser.parse_args()
-        if args.hostip:
-            ip = args.hostip
-        else:
-            logger.debug("PDU needs IP");
-        if args.username:
-            user = args.username
-        if args.password:
-            pswd = args.password
-        if args.operation:
-            op = args.operation
-        if args.outlet:
-            out = args.outlet
-    else:
-        logger.debug("Detected PythonVersion != 2.7. If less than 2.7 Please use 2.7")
-        sys.exit(0)
-    # Do the operation
-    pdu_operation(ip, user, pswd, op, out)
+    obj = ApcPduScript()
+    obj.add_test_case(ElcomRebootTest())
+    obj.run()
