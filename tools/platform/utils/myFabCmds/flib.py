@@ -606,6 +606,15 @@ def imageF(index=0, image=NFSPATH, type='nfs'):
     else:
         child.sendline('{} 0xffffffff99000000 {};'.format(command, image))
         child.expect ('\nf1 # ')
+
+    time.sleep(2)
+    if '.elf' not in image:
+        child.sendline('authfw 0xffffffff99000000;')
+        child.expect ('authentication OK\r\r\nf1 # ')
+    else:
+        child.sendline('echo skipping_authfw;')
+        child.expect ('\nf1 # ')
+
     child.close()
 
 @roles('bmc')
