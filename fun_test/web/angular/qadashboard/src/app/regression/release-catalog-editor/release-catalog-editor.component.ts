@@ -7,6 +7,7 @@ import {CommonService} from "../../services/common/common.service";
 import {showAnimation} from "../../animations/generic-animations";
 import {ReleaseCatalogSuite, ReleaseCatalog} from "../declarations";
 import {RegressionService} from "../regression.service";
+import { Location } from '@angular/common';
 
 @Component({
   selector: 'app-release-catalog-editor',
@@ -23,7 +24,8 @@ export class ReleaseCatalogEditorComponent implements OnInit, OnChanges {
   constructor(private loggerService: LoggerService,
               private regressionService: RegressionService,
               private suiteEditorService: SuiteEditorService,
-              private commonService: CommonService) { }
+              private commonService: CommonService,
+              private location: Location) { }
 
   releaseCatalog: ReleaseCatalog = new ReleaseCatalog();
 
@@ -76,6 +78,10 @@ export class ReleaseCatalogEditorComponent implements OnInit, OnChanges {
     }, error => {
       this.loggerService.error("Unable to submit release catalog");
     })
+  }
+
+  back() {
+    this.location.back();
   }
 
 }

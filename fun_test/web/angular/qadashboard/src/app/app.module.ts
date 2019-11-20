@@ -96,6 +96,7 @@ import { BamComponent } from './statistics/system/bam/bam.component';
 import { ReleaseCatalogEditorComponent } from './regression/release-catalog-editor/release-catalog-editor.component';
 import { ReleasesComponent } from './regression/releases/releases.component';
 import { ReleaseCatalogsComponent } from './regression/release-catalogs/release-catalogs.component';
+import { BackComponent } from './ui-elements/back/back.component';
 
 
 @NgModule({
@@ -174,7 +175,8 @@ import { ReleaseCatalogsComponent } from './regression/release-catalogs/release-
     BamComponent,
     ReleaseCatalogEditorComponent,
     ReleasesComponent,
-    ReleaseCatalogsComponent
+    ReleaseCatalogsComponent,
+    BackComponent
   ],
   imports: [
     BsDropdownModule,
