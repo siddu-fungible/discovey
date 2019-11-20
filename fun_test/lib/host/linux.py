@@ -2269,6 +2269,16 @@ class Linux(object, ToDictMixin):
 
     @fun_test.safe
     def ipmi_power_cycle(self, host, interface="lanplus", user="ADMIN", passwd="ADMIN", interval=10, chassis=True):
+        """
+        result = True
+        chassis_string = "" if not chassis else " chassis"
+        ipmi_cmd = "ipmitool -I {} -H {} -U {} -P {}{} power cycle".format(interface, host, user, passwd, chassis_string)
+        self.command(ipmi_cmd)
+
+        return result
+        """
+
+        
         result = True
         fun_test.log("Host: {}; Interface:{}; User: {}; Passwd: {}; Interval: {}".format(host, interface, user, passwd,
                                                                                          interval))
@@ -2839,20 +2849,24 @@ class Linux(object, ToDictMixin):
             pass
 
     @fun_test.safe
-    def docker(self, ps=True, sudo=False):
+    def docker(self, ps=True, kill_container_id=None, sudo=False, timeout=60):
         result = None
         command = None
         if ps:
             command = "docker ps --format '{{json .}}'"
+        if kill_container_id:
+            command = "docker kill {}".format(kill_container_id)
         if sudo:
-            output = self.sudo_command(command)
+            output = self.sudo_command(command, timeout=timeout)
         else:
-            output = self.command(command)
-        lines = output.split("\n")
-        try:
-            result = [json.loads(str(line)) for line in lines]
-        except Exception as ex:
-            fun_test.critical(str(ex))
+            output = self.command(command, timeout=timeout)
+        if output.strip():
+            lines = output.split("\n")
+            try:
+                if lines:
+                    result = [json.loads(str(line)) for line in lines]
+            except Exception as ex:
+                fun_test.critical(str(ex))
 
         return result
 

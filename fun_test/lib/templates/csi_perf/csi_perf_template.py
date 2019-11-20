@@ -137,7 +137,7 @@ class CsiPerfTemplate():
         self.perf_listener_process_id = self.perf_host.start_bg_process(command, output_file="/tmp/perf_listener_f1_{}.log".format(f1_index))
 
         if not dpc_client:
-            dpc_client = self.fs.get_dpc_client(f1_index=f1_index, auto_disconnect=True)
+            dpc_client = self.fs.get_dpc_client(f1_index=f1_index, auto_disconnect=True, csi_perf=True)
         dpc_client.json_execute(verb="csi", data="reinit", command_duration=4)
         dpc_client.json_execute(verb="csi", data="start", command_duration=4)
         fun_test.add_checkpoint("CSI perf started")
@@ -251,5 +251,5 @@ class CsiPerfTemplate():
         return True
 
 if __name__ == "__main__":
-    p = CsiPerfTemplate(perf_collector_host_name="mktg-server-14", listener_ip="123", fs=None, setup_docker=True)
+    p = CsiPerfTemplate(perf_collector_host_name="poc-server-06", listener_ip="123", fs=None, setup_docker=True)
     p.prepare(f1_index=0)

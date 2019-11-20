@@ -417,8 +417,49 @@ class StorageFsTemplate(object):
     def enter_funsdk(self):
         self.come_obj.command("cd {}".format(self.FUNSDK_DIR))
 
+    def get_container_objs(self, stop_run_sc=False, include_storage=True):
+
+        result = {'status': False, 'container_info': {}, 'container_names': []}
+
+        if not self.come_obj.check_ssh():
+            return result
+
+        # Get the WORKSPACE & FUNGIBLE_ROOT environment variable
+        workspace = self.come_obj.command("echo $WORKSPACE")
+        workspace = workspace.strip()
+        if workspace:
+            self.workspace = workspace
+
+        fungible_root = self.come_obj.command("echo $FUNGIBLE_ROOT")
+        fungible_root = fungible_root.strip()
+        if fungible_root:
+            self.fungible_root = fungible_root
+
+        get_containers = self.get_container_names(stop_run_sc=stop_run_sc, include_storage=include_storage)
+        if not get_containers['status']:
+            return result
+
+        result['container_names'] = get_containers['container_name_list']
+        for container_name in get_containers['container_name_list']:
+            container_obj = FunCpDockerContainer(host_ip=self.come_obj.host_ip,
+                                                 ssh_username=self.come_obj.ssh_username,
+                                                 ssh_password=self.come_obj.ssh_password,
+                                                 ssh_port=self.come_obj.ssh_port,
+                                                 name=container_name)
+            """
+            if "0" in container_name:  # based on logic that container names will always be F1-1, F1-0
+                self.F1_0_HANDLE = container_obj
+            else:
+                self.F1_1_HANDLE = container_obj
+            """
+            self.container_info[container_name] = container_obj
+
+        result['container_info'] = self.container_info
+        result['status'] = True
+        return result
+
     def deploy_funcp_container(self, update_deploy_script=True, update_workspace=True, mode=None,
-                               include_storage=False, launch_resp_parse=False):
+                               include_storage=False, stop_run_sc=True, launch_resp_parse=False):
         # check if come is up
         result = {'status': False, 'container_info': {}, 'container_names': []}
         self.mode = mode
@@ -457,6 +498,8 @@ class StorageFsTemplate(object):
                 return result
 
         # get container names.
+        result = self.get_container_objs(stop_run_sc=stop_run_sc, include_storage=include_storage)
+        '''
         get_containers = self.get_container_names(include_storage=include_storage)
         if not get_containers['status']:
             return result
@@ -477,6 +520,8 @@ class StorageFsTemplate(object):
 
         result['container_info'] = self.container_info
         result['status'] = True
+        return result
+        '''
         return result
 
     def update_fundsk(self):
@@ -536,11 +581,11 @@ class StorageFsTemplate(object):
 
         return True if not docker_launch_status else False
 
-    def get_container_names(self, include_storage=False):
+    def get_container_names(self, stop_run_sc=True, include_storage=False):
         result = {'status': False, 'container_name_list': []}
 
         # If SC docker container is not needed, kill the system_health_check.py and stop the run_sc container
-        if not include_storage:
+        if stop_run_sc:
             health_check_pid = self.come_obj.get_process_id_by_pattern("system_health_check.py")
             if health_check_pid:
                 self.come_obj.kill_process(process_id=health_check_pid)
@@ -566,9 +611,13 @@ class StorageFsTemplate(object):
         result['container_name_list'] = self.come_obj.command(cmd, timeout=self.DEFAULT_TIMEOUT).split("\n")
         result['container_name_list'] = [name.strip("\r") for name in result['container_name_list']]
         container_count = len(result['container_name_list'])
-        if container_count != self.NUM_FS_CONTAINERS:
+        if not include_storage:
+            expected_container_count = self.NUM_FS_CONTAINERS
+        else:
+            expected_container_count = self.NUM_FS_CONTAINERS + 1
+        if container_count != expected_container_count:
             fun_test.critical(
-                "{0} Containers should be deployed, Number of container deployed: {1}".format(self.NUM_FS_CONTAINERS,
+                "{0} Containers should be deployed, Number of container deployed: {1}".format(expected_container_count,
                                                                                               container_count))
             return result
         else:

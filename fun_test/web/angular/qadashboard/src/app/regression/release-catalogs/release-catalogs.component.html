@@ -1,0 +1,27 @@
+<div class="fun-div">
+  <h4>Release catalogs</h4>
+  <app-section-horizontal-line></app-section-horizontal-line>
+  <span class="fun-action-link" (click)="addACatalog()">+ Add a catalog</span>
+  <table class="fun-table-borderless1">
+  <tr>
+    <td class="fun-table-borderless-header">
+      Name
+    </td>
+    <td class="fun-table-borderless-header">
+      Description
+    </td>
+    <td class="fun-table-borderless-header">
+      # Suites
+    </td>
+    <td class="fun-table-borderless-header">
+    </td>
+  </tr>
+  <tr *ngFor="let catalog of releaseCatalogs; let index=index" class="fun-table-borderless-row">
+    <td><small>{{ index }}.</small> {{ catalog.name }}</td>
+    <td>{{ catalog.description }}</td>
+    <td>{{ catalog.suites.length }}</td>
+    <td><i class="fa fa-pencil" (click)="editCatalog(catalog.id)"></i>&nbsp;<i class="fa fa-trash" style="color: red" (click)="removeCatalog(index)"></i></td>
+  </tr>
+
+</table>
+</div>

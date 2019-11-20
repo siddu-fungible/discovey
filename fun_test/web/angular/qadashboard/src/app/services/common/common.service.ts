@@ -1,5 +1,7 @@
 import {Injectable} from '@angular/core';
-import {Observable} from "rxjs";
+import {Observable, of} from "rxjs";
+import {switchMap} from "rxjs/operators";
+import {ActivatedRoute} from "@angular/router";
 
 @Injectable({
   providedIn: 'root'
@@ -8,7 +10,7 @@ export class CommonService {
   newAlert: boolean = false;
   announcementAvailable: boolean = false;
 
-  constructor() {
+  constructor(private route: ActivatedRoute) {
 
   }
 
@@ -169,6 +171,28 @@ export class CommonService {
 
     }
     return queryParamString;
+  }
+
+  milliSecondsElapsedToDays(milliSeconds: number) {
+    let diffDays = Math.floor(milliSeconds / 86400000); // days
+    let diffHrs = Math.floor((milliSeconds % 86400000) / 3600000); // hours
+    let diffMins = Math.round(((milliSeconds % 86400000) % 3600000) / 60000); // minutes
+    let s = "";
+    if (diffDays) {
+      s = `${diffDays} days `;
+    }
+    if (diffHrs > 0) {
+      s += `${diffHrs} hours `;
+    }
+    s += `${diffMins} mins`;
+
+    return s;
+  }
+
+  getRouterQueryParam() {
+    return this.route.queryParams.pipe(switchMap(params => {
+      return of(params);
+    }))
   }
 
 }

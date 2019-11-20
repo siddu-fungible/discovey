@@ -18,7 +18,7 @@ class DutInterface(object, ToDictMixin):
         self.type = type  # pcie, ethernet
         self.dual_interface_index = None
         self.f1_index = f1_index
-        self.ip = None
+        self.ip = kwargs.get("ip", None)
 
     def get_peer_instance(self):
         return self.peer_info
@@ -125,8 +125,9 @@ class Dut(ToDictMixin):
         self.interfaces[index] = dut_interface_obj
         return dut_interface_obj
 
-    def add_fpg_interface(self, index, type, f1_index):
-        dut_interface_obj = DutInterface(index=index, type=type, f1_index=f1_index)
+    def add_fpg_interface(self, index, type, f1_index, interface_info):
+        ip = interface_info.get("ip", None)
+        dut_interface_obj = DutInterface(index=index, type=type, f1_index=f1_index, ip=ip)
         self.fpg_interfaces[f1_index][index] = dut_interface_obj
         return dut_interface_obj
 

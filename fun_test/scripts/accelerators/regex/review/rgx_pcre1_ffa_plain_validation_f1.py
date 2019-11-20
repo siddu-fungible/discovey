@@ -63,7 +63,7 @@ class RegExScript(FunTestScript):
 class JuniperNFACustomCompileOnly(FunTestCase):
     def describe(self):
         self.set_test_details(id=4,
-                              summary="F1: SNORT PATTERNS compiled with FFA Strategy and (RBM_ONLY,EXM_ONLY,DISTRIBUTED) Memory Allocation",
+                              summary="F1: PCRE1 patterns compiled with FFA Strategy and DEFAULT Memory Allocation",
                               steps="""
                               """)
 

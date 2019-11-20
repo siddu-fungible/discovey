@@ -345,12 +345,13 @@ class TrialStateMachine:
                 build_parameters = triage.build_parameters
                 build_parameters["environment"]["build_parameters"]["BRANCH_FunOS"] = self.fun_os_sha
                 tags = ["integration_triage", trial.tag]
-
+                inputs = build_parameters.get("job_inputs", None)
                 integration_job_id = queue_job3(suite_id=build_parameters["suite_id"],
                                                 scheduling_type=SchedulingType.ASAP,
                                                 submitter_email=build_parameters["submitter_email"],
                                                 test_bed_type=build_parameters["test_bed_type"],
                                                 environment=build_parameters["environment"],
+                                                inputs=inputs,
                                                 tags=tags)
             else:
                 jm = JenkinsManager()

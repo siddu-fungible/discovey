@@ -15,6 +15,8 @@ API_URL = WEB_ROOT_DIR + "/api"
 JINJA_TEMPLATE_DIR = API_URL + "/templates"
 F1_ROOT_ID = 101
 S1_ROOT_ID = 591
+OTHER_ROOT_ID = 1503
+FS1600_ROOT_ID = 1506
 
 
 def initialize_result(failed=False):

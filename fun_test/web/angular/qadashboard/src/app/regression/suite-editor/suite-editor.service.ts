@@ -26,6 +26,7 @@ interface SuiteInterface {
   custom_test_bed_spec: any;
   entries: SuiteEntry[];
   type: SuiteMode;
+  selected: boolean;
 }
 
 
@@ -39,11 +40,15 @@ export class Suite implements SuiteInterface {
   custom_test_bed_spec: any = null;
   entries: SuiteEntry[] = null;
   type: SuiteMode = SuiteMode.SUITE;
+  selected: boolean = false;
 
   constructor(obj?: any) {
     Object.assign(this, obj);
   }
 
+  p () {
+    console.log("Hi");
+  }
   addEntry(suiteEntry: SuiteEntry) {
     if (!this.entries) {
       this.entries = [];
@@ -86,7 +91,14 @@ export class SuiteEditorService {
     }
 
     return this.apiService.get(url).pipe(switchMap(response => {
-      return of(response.data);
+      if (getCount) {
+        return of(response.data);
+      } else {
+        //const array = JSON.parse(JSON.stringify(response.data)) as any[];
+        const array = response.data;// as any[];
+        const details = array.map(data => new Suite(data));
+        return of(details);
+      }
     }))
   }
 

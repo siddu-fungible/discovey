@@ -5,6 +5,7 @@ from web.fun_test.models import TestBed, Asset
 from django.db.models import Q
 from web.fun_test.models import SuiteExecution, TestCaseExecution, TestbedNotificationEmails, LastSuiteExecution
 from web.fun_test.models import ScriptInfo, RegresssionScripts, SuiteReRunInfo, TestCaseInfo
+from web.fun_test.models import ReleaseCatalog
 from scheduler.scheduler_global import SchedulingType
 from scheduler.scheduler_global import SchedulerStates
 from fun_settings import TEAM_REGRESSION_EMAIL, SCRIPTS_DIR
@@ -217,6 +218,8 @@ def suite_executions(request, id):
                 scheduled_suites = SuiteExecution.objects.filter(auto_scheduled_execution_id=int(id), state=JobStatusType.SCHEDULED)
                 for scheduled_suite in scheduled_suites:
                     scheduled_suite.delete()
+            if "preserve_logs" in request_json:
+                suite_execution.preserve_logs = request_json["preserve_logs"]
             suite_execution.save()
         except ObjectDoesNotExist:
             # TODO
@@ -418,7 +421,7 @@ def suites(request, id):
                     q &= Q(categories__contains=category)
             search_by_name_text = request.GET.get("search_by_name", None)
             if search_by_name_text:
-                q &= Q(name__contains=search_by_name_text)
+                q &= Q(name__icontains=search_by_name_text)
             all_suites = Suite.objects.filter(q).extra(select={'case_insensitive_name': 'lower(name)'}).order_by('case_insensitive_name')
             if get_count is None:
                 records_per_page = request.GET.get("records_per_page", None)
@@ -624,12 +627,46 @@ def script_run_time(request, suite_execution_id, script_id):
 
 @api_safe_json_response
 def release_trains(request):
-    releases = ["1.0a_aa", "1.0a_ab"]
+    releases = ["master", "1.0a_aa", "1.0a_ab"]
     result = None
     if request.method == "GET":
         result = releases
     return result
 
+
+@csrf_exempt
+@api_safe_json_response
+def release_catalogs(request, catalog_id):
+    result = None
+    if request.method == "GET":
+        q = Q()
+        if catalog_id:
+            q = q & Q(id=int(catalog_id))
+        catalog_objects = ReleaseCatalog.objects.filter(q)
+        result = []
+        for catalog_object in catalog_objects:
+            if catalog_id:
+                result = catalog_object.to_dict()
+                break
+            else:
+                result.append(catalog_object.to_dict())
+
+    if request.method == "POST":
+        request_json = json.loads(request.body)
+        request_json["created_date"] = get_current_time()
+        c = ReleaseCatalog(**request_json)
+        c.save()
+        result = c.id
+    elif request.method == "DELETE":
+        if catalog_id:
+            try:
+                c = ReleaseCatalog.objects.get(id=int(catalog_id))
+                c.delete()
+            except ObjectDoesNotExist:
+                pass
+
+        pass
+    return result
 
 if __name__ == "__main__":
     from web.fun_test.django_interactive import *

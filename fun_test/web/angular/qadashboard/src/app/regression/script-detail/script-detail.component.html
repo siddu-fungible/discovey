@@ -3,10 +3,11 @@
   <div class="fun-spacer"></div>
   <span class="script-name">{{ scriptPath }}</span>
   <div class="fun-spacer"></div>
-  <button (click)="onContextOptionsClick(contextOptions)"><i class="fa fa-columns"></i>&nbsp;Context options</button>
-  <button (click)="viewChartsClick(chartSelectionOptions)"><i class="fa fa-bar-chart"></i>&nbsp;Select charts</button>
-  <button (click)="openConsoleLogClick()"><i class="fa fa-file-text-o"></i>&nbsp;Console log</button>
-  <button (click)="openArtifactsPanelClick()"><i class="fa fa-files-o"></i>&nbsp;More logs</button>
+  <button class="fun-button-with-icon" (click)="onContextOptionsClick(contextOptions)"><i class="fa fa-columns"></i>&nbsp;Context options</button>
+  <button class="fun-button-with-icon" (click)="viewChartsClick(chartSelectionOptions)"><i class="fa fa-bar-chart"></i>&nbsp;Select charts</button>
+  <button class="fun-button-with-icon" (click)="openConsoleLogClick()"><i class="fa fa-file-text-o"></i>&nbsp;Console log</button>
+  <button class="fun-button-with-icon" (click)="openArtifactsPanelClick()"><i class="fa fa-files-o"></i>&nbsp;More logs</button>
+  <button class="fun-button-with-icon" (click)="openTestCaseTablesPanelClick()"><i class="fa fa-table"></i> Show tables</button>
   <!--button (click)="testClick()">Test</button-->
   <ng-template #contextOptions let-modal>
     <div class="fun-panel">
@@ -115,7 +116,32 @@
     </div>
 
   </div>
+  <div *ngIf="showingTablesPanel" class="fun-panel panel" [@show]="showingTablesPanel">
+    <div *ngFor="let testCaseTablePanel of testCaseTablePanels | keyvalue" class="fun-panel">
+      <div class="fun-panel-header">
+        {{ testCaseTablePanel.key }}
+      </div>
+      <div *ngFor="let testCaseTable of testCaseTablePanel.value" class="fun-panel-body">
+        <div class="fun-panel">
+          <div class="fun-panel-header">
+            {{ testCaseTable.data.table_name }}
+          </div>
+          <div class="fun-panel-body">
+            <table class="fun-table">
+              <tr>
+                <td class="fun-table-header" *ngFor="let header of testCaseTable.data.table_data.headers">{{ header }}</td>
+              </tr>
+              <tr *ngFor="let row of testCaseTable.data.table_data.rows">
+                <td *ngFor="let rowElement of row">{{ rowElement }}</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
 
+
+  </div>
 
   <div class="fun-flex-container" style="align-items: flex-start;">
     <div *ngIf="showTestCasePanel" class="fun-flex-item panel fun-panel" [@show]="showTestCasePanel">
@@ -230,7 +256,7 @@
                             </td>
                             <td>
                               <div id="{{ currentTestCaseExecution.test_case_id }}_{{ seriesElement.data?.checkpoint_index }}_{{ seriesElement.data?.context_id }}">
-                                  <span class="checkpoint-span">Checkpoint: {{ seriesElement.data?.checkpoint }}
+                                  <span class="checkpoint-span">Checkpoint: <app-smart-label [value]="seriesElement.data.result"></app-smart-label>&nbsp;{{ seriesElement.data?.checkpoint }}
                                   </span>
                               </div>
                             </td>

@@ -4,6 +4,9 @@ import {LoggerService} from "../services/logger/logger.service";
 import {catchError, switchMap} from 'rxjs/operators';
 import {forkJoin, observable, Observable, of, throwError} from "rxjs";
 import {CommonService} from "../services/common/common.service";
+import {ReleaseCatalogSuite, ReleaseCatalog} from "./declarations";
+import {Suite} from "./suite-editor/suite-editor.service";
+
 
 @Injectable({
   providedIn: 'root'
@@ -83,16 +86,16 @@ export class RegressionService implements OnInit{
     return new Date(epochValue);
   }
 
-getPrettyLocalizeTime(t) {
-  let minutePrefix = '';
-  let localTime = this.convertToLocalTimezone(t);
-  if (localTime.getMinutes() < 10){
-    minutePrefix += '0';
+  getPrettyLocalizeTime(t) {
+    let minutePrefix = '';
+    let localTime = this.convertToLocalTimezone(t);
+    if (localTime.getMinutes() < 10){
+      minutePrefix += '0';
+    }
+    let s = `${localTime.getMonth() + 1}/${localTime.getDate()} ${localTime.getHours()}:${minutePrefix}${localTime.getMinutes()}`;
+    //return this.convertToLocalTimezone(t).toLocaleString().replace(/\..*$/, "");
+    return s;
   }
-  let s = `${localTime.getMonth() + 1}/${localTime.getDate()} ${localTime.getHours()}:${minutePrefix}${localTime.getMinutes()}`;
-  //return this.convertToLocalTimezone(t).toLocaleString().replace(/\..*$/, "");
-  return s;
-}
 
 
   getTestCaseExecution(executionId) {
@@ -290,7 +293,7 @@ getPrettyLocalizeTime(t) {
     }))
   }
 
-  artifacts(suiteExecutionId, testCaseExecutionId: number = null) {
+  artifacts(suiteExecutionId: number, testCaseExecutionId: number = null) {
     let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}`;
     let params = [];
     params.push(["type", 200]);
@@ -304,6 +307,23 @@ getPrettyLocalizeTime(t) {
       this.loggerService.error("Unable to fetch time-series artifacts");
       return throwError(error);
     }))
+  }
+
+  testCaseTables(suiteExecutionId: number, testCaseExecutionId: number = null) {
+    let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}`;
+    let params = [];
+    params.push(["type", 300]);
+    if (testCaseExecutionId) {
+      params.push(["te", testCaseExecutionId]);
+    }
+    url += this.commonService.queryParamsToString(params);
+    return this.apiService.get(url).pipe(switchMap(response => {
+      return of(response.data);
+    }), catchError(error => {
+      this.loggerService.error("Unable to fetch test-case tables");
+      return throwError(error);
+    }))
+
   }
 
   getRegressionScripts(scriptId=null, scriptPath=null) {
@@ -333,4 +353,62 @@ getPrettyLocalizeTime(t) {
   getConsoleLogPath(suiteExecutionId, path, logPrefix) {
     window.open(this._getFlatPath(suiteExecutionId, path, logPrefix) + this.CONSOLE_LOG_EXTENSION);
   }
+
+  preserveLogs(suiteExecutionId, preserveLogs) {
+    let payload = {"preserve_logs": preserveLogs};
+    return this.apiService.put("/api/v1/regression/suite_executions/" + suiteExecutionId, payload).pipe(switchMap(response => {
+      return of(true);
+    }))
+  }
+
+
+  createReleaseCatalog(releaseCatalog: ReleaseCatalog) {
+    return this.apiService.post("/api/v1/regression/release_catalogs", releaseCatalog).pipe(switchMap(response => {
+      return of(true);
+    }), catchError(error => {
+      this.loggerService.error("Unable to create release catalog");
+      return throwError(error);
+    }))
+  }
+
+
+  getReleaseCatalogs(): Observable<ReleaseCatalog[]> {
+    let url = "/api/v1/regression/release_catalogs";
+    return this.apiService.get(url).pipe(switchMap(response => {
+      let allCatalogs = response.data;
+      const mappedArray = allCatalogs.map(data => new ReleaseCatalog(data));
+      return of(mappedArray);
+    }), catchError(error => {
+      this.loggerService.error("Unable to get release catalogs");
+      return throwError(error);
+    }))
+  }
+
+  getReleaseCatalog(catalogId: number): Observable<ReleaseCatalog> {
+    let url = "/api/v1/regression/release_catalogs";
+    if (catalogId) {
+      url += '/' + catalogId;
+    }
+    return this.apiService.get(url).pipe(switchMap(response => {
+      return of(new ReleaseCatalog(response.data));
+    }), catchError(error => {
+      this.loggerService.error("Unable to get release catalog");
+      return throwError(error);
+    }))
+  }
+
+  deleteReleaseCatalog(catalogId: number) {
+    let url = "/api/v1/regression/release_catalogs";
+    if (catalogId) {
+      url += '/' + catalogId;
+    }
+    return this.apiService.delete(url).pipe(switchMap(response => {
+      return of(true);
+    }), catchError(error => {
+      this.loggerService.error("Unable to delete release catalog");
+      return throwError(error);
+    }))
+  }
+
+
 }

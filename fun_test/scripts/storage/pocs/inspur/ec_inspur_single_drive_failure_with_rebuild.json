@@ -51,7 +51,7 @@
     "queue_size": 16,
     "nr_requests": 4,
     "back_pressure": true,
-    "back_pressure_io": {"fio_cmd_args": "sudo fio --group_reporting --output-format=json --ioengine=libaio  --numjobs=1 --direct=1 --prio=0 --rw=write --cpus_allowed_policy=split --norandommap --randrepeat=0 --cpus_allowed=0-19,40-59 --iodepth=8 --bs=4k --time_based --runtime=7200 --name=job0 ", "timeout": 7800},
+    "back_pressure_io": {"fio_cmd_args": "sudo fio --group_reporting --output-format=json --ioengine=libaio  --numjobs=1 --direct=1 --prio=0 --rw=write --cpus_allowed_policy=split --norandommap --randrepeat=0 --iodepth=8 --bs=4k --time_based --runtime=7200 --name=job0 ", "timeout": 7800},
     "nvme_device": "/dev/nvme",
     "mount_path": "/mnt/ssd",
     "trigger_failure": true,

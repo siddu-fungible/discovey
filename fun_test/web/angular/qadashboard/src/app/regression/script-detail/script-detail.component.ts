@@ -50,6 +50,25 @@ class Artifact {
 
 }
 
+class TableData {
+  headers: string [];
+  rows: any [];
+
+}
+
+class TestCaseTableElement {
+  table_data: TableData;
+  table_name: string;
+  panel_header: string;
+}
+
+class TestCaseTable {
+  data: TestCaseTableElement;
+  epoch_time: number;
+  te: number;
+  type: number;
+}
+
 class ArtifactTree {
   root = {};
 
@@ -72,6 +91,10 @@ class ArtifactTree {
 
     }
     categoryEntry.push(artifact);
+  }
+
+  clear() {
+    this.root = {};
   }
 
 }
@@ -151,6 +174,8 @@ export class ScriptDetailComponent implements OnInit {
 
   showingArtifactPanel: boolean = false;
   artifactTree: ArtifactTree = new ArtifactTree();
+  showingTablesPanel: boolean = false;
+  testCaseTablePanels: {[panelHeader: string]: any} = {};
 
   ngOnInit() {
 
@@ -181,6 +206,9 @@ export class ScriptDetailComponent implements OnInit {
 
       });
       this.updateScriptExecutionInfo();
+      return this.regressionService.testCaseTables(this.suiteExecutionId);
+    })).pipe(switchMap(response => {
+      this._parseTestCaseTables(response);
       return of(true);
     }));
 
@@ -201,6 +229,15 @@ export class ScriptDetailComponent implements OnInit {
 
   }
 
+  _parseTestCaseTables(response) {
+    response.forEach(element => {
+      if (!this.testCaseTablePanels.hasOwnProperty(element.data.panel_header)) {
+        this.testCaseTablePanels[element.data.panel_header] = [];
+      }
+      this.testCaseTablePanels[element.data.panel_header].push(element);
+    });
+    return
+  }
 
   refreshAll() {
     this.driver.subscribe(response => {
@@ -534,9 +571,14 @@ export class ScriptDetailComponent implements OnInit {
   }
 
   _parseArtifacts() {
+    this.artifactTree.clear();
     this.artifacts.forEach(artifact => {
       this.artifactTree.addArtifact(artifact, `/static/logs/s_${this.suiteExecutionId}`);
     })
+  }
+
+  openTestCaseTablesPanelClick() {
+    this.showingTablesPanel = !this.showingTablesPanel;
   }
 
 }

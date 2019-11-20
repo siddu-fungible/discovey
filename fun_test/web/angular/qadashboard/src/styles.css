@@ -628,15 +628,15 @@ tr.text-center > th {
 }
 
 .fun-button-add {
-  padding: 5px;
+  padding: 8px 10px 8px;
   border: darkblue 0.5px;
   background-color: #007bff;
   color: white;
   cursor: pointer;
-  min-width: 100px;
+  /*min-width: 100px;*/
   border-radius: .25rem;
   margin: 5px;
-  max-height: 30px;
+  /*max-height: 30px;*/
   vertical-align: middle;
 }
 
@@ -650,12 +650,10 @@ tr.text-center > th {
   color: #fff;
   background-color: #28a745;
   border-color: #28a745;
-  padding: 5px;
+  padding: 8px 10px 8px;
   border-radius: 2px;
-  min-width: 100px;
-  margin: 5px;
-
-
+  /*min-width: 100px;*/
+  /*margin: 5px;*/
 }
 
 .fun-button-submit:hover {
@@ -667,6 +665,24 @@ tr.text-center > th {
   pointer-events: none;
   color: lightgrey;
 }
+
+
+.fun-button-with-icon {
+  background: transparent;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding: 5px;
+  border: none;
+  cursor: pointer;
+  min-width: 100px;
+  border-radius: .25rem;
+  /*margin: 5px;*/
+  max-height: 30px;
+  vertical-align: middle;
+  text-align: center;
+
+}
+
 
 label {
   margin-bottom: unset;
@@ -712,7 +728,7 @@ label {
   border-bottom: solid lightgrey 1px;
   border-left: solid lightgrey 1px;
   border-right: solid lightgrey 1px;
-  width: 100%;
+  /*width: 100%;*/
 
 }
 
@@ -723,6 +739,7 @@ label {
   border-left: solid lightgrey 1px;
   border-right: solid lightgrey 1px;
 }
+
 .fun-table tr td {
   padding: 5px;
   border-top: solid lightgrey 1px;
@@ -730,6 +747,21 @@ label {
   border-left: solid lightgrey 1px;
   border-right: solid lightgrey 1px;
 
+}
+
+.fun-table-borderless {
+  border: 0;
+}
+
+.fun-table-borderless-header {
+  font-weight: bolder;
+  color: lightgrey;
+}
+
+tr.fun-table-borderless-row > td {
+  border-top: 1px solid;
+  border-bottom: 1px solid;
+  padding: 5px;
 }
 
 .fun-panel {
@@ -759,7 +791,7 @@ label {
 
 .fun-attribute-label {
   font-weight: bold;
-  margin-right: 10px;
+  padding: 5px;
 }
 
 .fun-attribute-section {
@@ -768,7 +800,7 @@ label {
 
 .fun-attribute {
   display: block;
-  margin: 5px;
+  padding: 5px;
 }
 
 .fun-icon {
@@ -792,4 +824,9 @@ label {
 .badge-history {
   color: #212529;
   background-color: rgba(255, 185, 7, 0.37);
+}
+
+/* div */
+.fun-div {
+  padding: 10px;
 }

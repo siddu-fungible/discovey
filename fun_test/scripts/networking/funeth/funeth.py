@@ -279,11 +279,13 @@ class Funeth:
 
         result = True
         for hu in self.hu_hosts:
-            self.linux_obj_dict[hu].sudo_command(
-                'cd {0}; insmod fun_core.ko; insmod funeth.ko {1} num_queues={2}'.format(drvdir, " ".join(_modparams), num_queues),
-                timeout=300)
-
-            #fun_test.sleep('Sleep for a while to wait for funeth driver loaded', 5)
+            cmds = [
+                'cd {}'.format(drvdir),
+                'grep -q devlink_register /proc/kallsyms || modprobe devlink',
+                'insmod fun_core.ko',
+                'insmod funeth.ko {}'.format(" ".join(_modparams))
+            ]
+            self.linux_obj_dict[hu].sudo_command(';'.join(cmds), timeout=300)
 
             if cc:
                 pf_intf = 'fpg0'

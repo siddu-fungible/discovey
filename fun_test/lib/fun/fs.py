@@ -11,6 +11,7 @@ from fun_settings import STASH_DIR
 from fun_global import Codes, get_current_epoch_time
 from asset.asset_global import AssetType
 from lib.utilities.statistics_manager import StatisticsCollector, StatisticsCategory
+from lib.utilities.http import fetch_text_file
 
 from threading import Thread
 from datetime import datetime
@@ -19,7 +20,9 @@ import os
 import socket
 
 DOCHUB_FUNGIBLE_LOCAL = "10.1.20.99"
-ERROR_REGEXES = ["MUD_MCI_NON_FATAL_INTR_STAT", "bug_check", "platform_halt: exit status 1"]
+# ERROR_REGEXES = ["MUD_MCI_NON_FATAL_INTR_STAT", "bug_check", "platform_halt: exit status 1"]
+ERROR_REGEXES = ["MUD_MCI_NON_FATAL_INTR_STAT", "bug_check on", "platform_halt: exit status 1", "Assertion failed", "Trap exception"]
+
 DOCHUB_BASE_URL = "http://{}/doc/jenkins".format(DOCHUB_FUNGIBLE_LOCAL)
 
 """
@@ -292,6 +295,11 @@ class Bmc(Linux):
 
         fun_test.log("Rebooting ComE (Graceful)", context=self.context)
         if not come.was_power_cycled:
+            try:
+                come.pre_reboot_cleanup()
+            except Exception as ex:
+                fun_test.critical(str(ex))
+            # reboot_initiated_wait_time = 60 * 3
             reboot_result = come.reboot(max_wait_time=max_wait_time, non_blocking=non_blocking, ipmi_details=ipmi_details)
             reboot_info_string = "initiated" if non_blocking else "complete"
             fun_test.test_assert(expression=reboot_result,
@@ -378,7 +386,7 @@ class Bmc(Linux):
         if csi_cache_miss_enabled:
             if "csi_cache_miss" not in s:
                 s += " --csi-cache-miss"
-        if self.fs.tftp_image_path and self.fs.get_revision() in ["2"]:
+        if self.fs.tftp_image_path:  # do it for rev1 system too and self.fs.get_revision() in ["2"]:
             s += " --disable-syslog-replay"
         return s
 
@@ -396,7 +404,7 @@ class Bmc(Linux):
         fun_test.execute_thread_after(0,
                                       nc.read_until,
                                       expected_data=self.U_BOOT_F1_PROMPT,
-                                      timeout=20,
+                                      timeout=30,
                                       write_on_trigger=write_on_trigger)
 
 
@@ -925,6 +933,10 @@ class BootupWorker(Thread):
                 fs.set_boot_phase(BootPhases.FS_BRING_UP_INSTALL_BUNDLE)
                 build_number = fs.bundle_image_parameters.get("build_number", 70)  # TODO: Is there a latest?
                 release_train = fs.bundle_image_parameters.get("release_train", "1.0a_aa")
+                fun_test.set_suite_run_time_environment_variable("bundle_image_parameters",
+                                                                 {"release_train": release_train,
+                                                                  "build_number": build_number})
+                fun_test.set_version(version="{}/{}".format(release_train, build_number))
                 come = fs.get_come()
                 try:
                     come.detect_pfs()
@@ -974,7 +986,14 @@ class BootupWorker(Thread):
                         fun_test.test_assert(expression=bmc.setup_serial_proxy_connection(f1_index=f1_index, auto_boot=fs.is_auto_boot()),
                                              message="Setup nc serial proxy connection",
                                              context=self.context)
+
+                    if fs.f1_parameters:
+                        if f1_index in fs.f1_parameters:
+                            if "boot_args" in fs.f1_parameters[f1_index]:
+                                boot_args = fs.f1_parameters[f1_index]["boot_args"]
+
                     if fs.tftp_image_path:
+                        self.fs.get_come().pre_reboot_cleanup()
                         if fs.get_bmc()._use_i2c_reset():
                             fs.get_bmc().reset_f1(f1_index=f1_index)
                         elif fpga and not fs.bundle_compatible:
@@ -984,17 +1003,19 @@ class BootupWorker(Thread):
                         else:
                             fs.get_bmc().reset_f1(f1_index=f1_index)
 
-                    if fs.f1_parameters:
-                        if f1_index in fs.f1_parameters:
-                            if "boot_args" in fs.f1_parameters[f1_index]:
-                                boot_args = fs.f1_parameters[f1_index]["boot_args"]
+
 
                     if fs.tftp_image_path:
                         preamble = bmc.get_preamble(f1_index=f1_index)
                         if fs.validate_u_boot_version:
-                            fun_test.test_assert(
-                                bmc.validate_u_boot_version(output=preamble, minimum_date=fs.MIN_U_BOOT_DATE),
-                                "Validate preamble", context=self.context)
+                            fun_test.log("Preamble: {}".format(preamble))
+                            try:
+                                fun_test.test_assert(
+                                    bmc.validate_u_boot_version(output=preamble, minimum_date=fs.MIN_U_BOOT_DATE),
+                                    "Validate preamble", context=self.context)
+                            except Exception as ex:
+                                fun_test.critical(ex)
+
                         fun_test.test_assert(
                             expression=bmc.u_boot_load_image(index=f1_index,
                                                              tftp_image_path=fs.tftp_image_path,
@@ -1078,7 +1099,7 @@ class ComEInitializationWorker(Thread):
                 fun_test.test_assert(expression=come.initialize(disable_f1_index=self.fs.disable_f1_index),
                                      message="ComE initialized",
                                      context=self.fs.context)
-                if self.fs.bundle_compatible and not self.fs.tftp_image_path:
+                if (self.fs.bundle_compatible and not self.fs.tftp_image_path): # or (come.list_files(ComE.BOOT_UP_LOG)):
                     fun_test.sleep(seconds=10, message="Waiting for expected containers", context=self.fs.context)
                     expected_containers_running = self.is_expected_containers_running(come)
                     expected_containers_running_timer = FunTimer(max_time=self.CONTAINERS_BRING_UP_TIME_MAX)
@@ -1122,10 +1143,12 @@ class ComEInitializationWorker(Thread):
 
 class ComE(Linux):
     EXPECTED_FUNQ_DEVICE_ID = ["04:00.1", "06:00.1"]
-    DEFAULT_DPC_PORT = [40220, 40221]
+    DEFAULT_DPC_PORT = [42220, 42221]
     DEFAULT_STATISTICS_DPC_PORT = [45220, 45221]
+    DEFAULT_CSI_PERF_DPC_PORT = [46220, 46221]
     DPC_LOG_PATH = "/tmp/f1_{}_dpc.txt"
-    DPC_STATISTICS_LOG_PATH = "/tmp/f1_{}_dpc.txt"
+    DPC_STATISTICS_LOG_PATH = "/tmp/f1_{}_dpc_statistics.txt"
+    DPC_CSI_PERF_LOG_PATH = "/tmp/f1_{}_dpc_csi_perf.txt"
     NUM_F1S = 2
     NVME_CMD_TIMEOUT = 600000
 
@@ -1135,6 +1158,9 @@ class ComE(Linux):
 
     MAX_HBM_DUMPS = 200
     BUILD_SCRIPT_DOWNLOAD_DIRECTORY = "/tmp/remove_me_build_script"
+    BOOT_UP_LOG = "/var/log/COMe-boot-up.log"
+    FUN_ROOT = "/opt/fungible"
+    HEALTH_MONITOR = "/opt/fungible/etc/DpuHealthMonitor.sh"
 
     def __init__(self, **kwargs):
         super(ComE, self).__init__(**kwargs)
@@ -1145,6 +1171,40 @@ class ComE(Linux):
         self.hbm_dump_enabled = False
         self.funq_bind_device = {}
         self.dpc_for_statistics_ready = False
+        self.dpc_for_csi_perf_ready = False
+
+    def pre_reboot_cleanup(self):
+        fun_test.log("Cleaning up storage controller containers", context=self.context)
+
+        health_monitor_processes = self.get_process_id_by_pattern(self.HEALTH_MONITOR, multiple=True)
+        for health_monitor_process in health_monitor_processes:
+            self.kill_process(process_id=health_monitor_process)
+        try:
+            self.stop_cclinux_service()
+        except:
+            pass
+        # try:
+        #    self.sudo_command("service docker stop")
+        # except:
+        #    pass
+        try:
+            self.sudo_command("{}/StorageController/etc/start_sc.sh stop".format(self.FUN_ROOT))
+        except:
+            pass
+
+        containers = self.docker(sudo=True)
+        try:
+            for container in containers:
+                if 'cclinux' in container['Names'] or 'run_sc' in container['Names']:
+                    self.docker(sudo=True, kill_container_id=container['ID'], timeout=120)
+            self.sudo_command("service docker stop")
+        except:
+            pass
+
+        try:
+            self.sudo_command("rmmod funeth fun_core")
+        except:
+            pass
 
 
     def initialize(self, reset=False, disable_f1_index=None):
@@ -1173,12 +1233,36 @@ class ComE(Linux):
         :return: returns the dochub url with the given build number and release train
                 example: http://dochub.fungible.local/doc/jenkins/apple_fs1600/68/setup_fs1600-68.sh
         """
+        release_prefix = ""
+        if "master" not in release_train:
+            release_prefix = "rel_"
+
         url = "{}/{}/fs1600/{}/{}".format(DOCHUB_BASE_URL,
-                                          "rel_" + release_train.replace(".", "_"),
+                                          release_prefix + release_train.replace(".", "_"),
                                           build_number,
                                           script_file_name)
 
         return url
+
+    def _get_build_number_for_latest(self, release_train):
+        release_prefix = ""
+        if "master" not in release_train:
+            release_prefix = "rel_"
+        latest_url = "{}/{}/fs1600/latest/build_info.txt".format(DOCHUB_BASE_URL,
+                                                                 release_prefix + release_train.replace(".", "_"))
+
+        result = None
+        build_info_file_contents = fetch_text_file(url=latest_url)
+        if build_info_file_contents:
+            try:
+                result = int(build_info_file_contents)
+            except Exception as ex:
+                fun_test.critical(str(ex))
+        return result
+
+
+    def stop_cclinux_service(self):
+        self.sudo_command("/opt/fungible/cclinux/cclinux_service.sh --stop", timeout=120)
 
     def _setup_build_script_directory(self):
         """
@@ -1191,6 +1275,9 @@ class ComE(Linux):
         self.command("mkdir -p {}".format(path))
         return path
 
+    def _transform_build_number(self):
+        pass
+
     def install_build_setup_script(self, build_number, release_train="1.0a_aa"):
         """
         install the build setup script downloaded from dochub
@@ -1198,9 +1285,15 @@ class ComE(Linux):
         :param release_train: example apple_fs1600
         :return: True if the installation succeeded with exit status == 0, else raise an assert
         """
-        self.sudo_command("/opt/fungible/cclinux/cclinux_service.sh --stop")
-        parts = release_train.split("_")
-        temp = "{}-{}_{}".format(parts[0], build_number, parts[1])
+        self.stop_cclinux_service()
+        if type(build_number) == str or type(build_number) == unicode and "latest" in build_number:
+            build_number = self._get_build_number_for_latest(release_train=release_train)
+            fun_test.simple_assert(build_number, "Getting latest build number")
+        if "master" not in release_train:
+            parts = release_train.split("_")
+            temp = "{}-{}_{}".format(parts[0], build_number, parts[1])
+        else:
+            temp = "bld-{}".format(build_number)
         script_file_name = "setup_fs1600-{}.sh".format(temp)
 
         script_url = self._get_build_script_url(build_number=build_number,
@@ -1213,7 +1306,7 @@ class ComE(Linux):
         self.sudo_command("chmod 777 {}".format(target_file_name))
         self.sudo_command("{} install".format(target_file_name), timeout=500)
         exit_status = self.exit_status()
-        fun_test.test_assert(exit_status == 0, "Bundle install complete")
+        fun_test.test_assert(exit_status == 0, "Bundle install complete. Exit status valid")
         return True
 
 
@@ -1224,10 +1317,12 @@ class ComE(Linux):
             bus_number = int(parts[0])
         return bus_number
 
-    def get_dpc_port(self, f1_index, statistics=None):
+    def get_dpc_port(self, f1_index, statistics=None, csi_perf=None):
         port = self.DEFAULT_DPC_PORT[f1_index]
         if statistics:
             port = self.DEFAULT_STATISTICS_DPC_PORT[f1_index]
+        if csi_perf:
+            port = self.DEFAULT_CSI_PERF_DPC_PORT[f1_index]
         return port
 
     def setup_workspace(self):
@@ -1298,7 +1393,7 @@ class ComE(Linux):
         # self.sudo_command("build/posix/bin/funq-setup unbind")
         return True
 
-    def setup_dpc(self, statistics=None):
+    def setup_dpc(self, statistics=None, csi_perf=None):
 
         # self.command("cd $WORKSPACE/FunControlPlane")
         """
@@ -1324,7 +1419,7 @@ class ComE(Linux):
                 nvme_device_index = 0
             command = "./dpcsh --pcie_nvme_sock=/dev/nvme{} --nvme_cmd_timeout={} --tcp_proxy={} &> {} &".format(nvme_device_index,
                                                                                                                  self.NVME_CMD_TIMEOUT,
-                                                                                                                 self.get_dpc_port(f1_index=f1_index, statistics=statistics),
+                                                                                                                 self.get_dpc_port(f1_index=f1_index, statistics=statistics, csi_perf=csi_perf),
                                                                                                                  self.get_dpc_log_path(f1_index=f1_index, statistics=statistics))
             self.sudo_command(command)
 
@@ -1332,6 +1427,8 @@ class ComE(Linux):
         self.dpc_ready = True
         if statistics:
             self.dpc_for_statistics_ready = True
+        if csi_perf:
+            self.dpc_for_csi_perf_ready = True
         return True
 
 
@@ -1381,10 +1478,12 @@ class ComE(Linux):
     def is_dpc_ready(self):
         return self.dpc_ready
 
-    def get_dpc_log_path(self, f1_index, statistics=None):
+    def get_dpc_log_path(self, f1_index, statistics=None, csi_perf=None):
         path = self.DPC_LOG_PATH.format(f1_index)
         if statistics:
-            path = self.DPC_STATISTICS_LOG_PATH(f1_index=f1_index)
+            path = self.DPC_STATISTICS_LOG_PATH[f1_index]
+        if csi_perf:
+            path = self.DPC_CSI_PERF_LOG_PATH[f1_index]
         return path
 
     def _get_context_prefix(self, data):
@@ -1477,12 +1576,14 @@ class F1InFs:
         self.serial_sbp_device_path = serial_sbp_device_path
         self.dpc_port = None
 
-    def get_dpc_client(self, auto_disconnect=False, statistics=None):
+    def get_dpc_client(self, auto_disconnect=False, statistics=None, csi_perf=None):
         come = self.fs.get_come()
         host_ip = come.host_ip
         if statistics and not come.dpc_for_statistics_ready:
             come.setup_dpc(statistics=True)
-        dpc_port = come.get_dpc_port(self.index, statistics=statistics)
+        if csi_perf and not come.dpc_for_csi_perf_ready:
+            come.setup_dpc(csi_perf=True)
+        dpc_port = come.get_dpc_port(self.index, statistics=statistics, csi_perf=csi_perf)
         dpcsh_client = DpcshClient(target_ip=host_ip, target_port=dpc_port, auto_disconnect=auto_disconnect)
         return dpcsh_client
 
@@ -1556,7 +1657,8 @@ class Fs(object, ToDictMixin):
                  bundle_image_parameters=None,
                  spec=None,
                  already_deployed=None,
-                 revision=None):
+                 revision=None,
+                 fs_parameters=None):
         self.spec = spec
         self.bmc_mgmt_ip = bmc_mgmt_ip
         self.bmc_mgmt_ssh_username = bmc_mgmt_ssh_username
@@ -1572,6 +1674,7 @@ class Fs(object, ToDictMixin):
         self.come = None
         self.tftp_image_path = tftp_image_path
         self.bundle_image_parameters = bundle_image_parameters
+        self.fs_parameters = fs_parameters
         if self.bundle_image_parameters:
             bundle_build_number = self.bundle_image_parameters["build_number"]
             is_number = False
@@ -1630,6 +1733,9 @@ class Fs(object, ToDictMixin):
         self.cleanup_attempted = False
         self.STATISTICS_COLLECTOR_MAP = {self.StatisticsType.BAM: self.bam}
         self.already_deployed = already_deployed
+        if self.fs_parameters:
+            if "already_deployed" in self.fs_parameters:
+                self.already_deployed = self.fs_parameters["already_deployed"]
         self.statistics_collectors = {}
         fun_test.register_fs(self)
 
@@ -1779,7 +1885,8 @@ class Fs(object, ToDictMixin):
             power_cycle_come=False,
             already_deployed=False,
             skip_funeth_come_power_cycle=None,
-            bundle_image_parameters=None):  #TODO
+            bundle_image_parameters=None,
+            fs_parameters=None):  #TODO
         if not fs_spec:
             am = fun_test.get_asset_manager()
             test_bed_type = fun_test.get_job_environment_variable("test_bed_type")
@@ -1790,13 +1897,23 @@ class Fs(object, ToDictMixin):
             fs_spec = am.get_fs_by_name(dut_name)
             fun_test.simple_assert(fs_spec, "FS spec for {}".format(dut_name), context=context)
 
+        if fs_parameters:
+            if not already_deployed:
+                already_deployed = fs_parameters.get("already_deployed", None)
         if not already_deployed:
             if not tftp_image_path:
                 tftp_image_path = fun_test.get_build_parameter("tftp_image_path")
             if not tftp_image_path:
                 bundle_image_parameters = fun_test.get_build_parameter("bundle_image_parameters")
                 if bundle_image_parameters:
-                    if int(bundle_image_parameters["build_number"]) < 0:
+
+                    is_number = False   # redundant
+                    try:
+                        bundle_build_number = int(bundle_image_parameters["build_number"])
+                        is_number = True
+                    except:
+                        pass
+                    if is_number and int(bundle_image_parameters["build_number"]) < 0:
                         fun_test.log("Build number set to -1 so resetting bundle image parameters")
                         bundle_image_parameters = None
             # fun_test.test_assert(tftp_image_path, "TFTP image path: {}".format(tftp_image_path), context=context)
@@ -1840,7 +1957,8 @@ class Fs(object, ToDictMixin):
                   skip_funeth_come_power_cycle=skip_funeth_come_power_cycle,
                   spec=fs_spec,
                   bundle_image_parameters=bundle_image_parameters,
-                  already_deployed=already_deployed)
+                  already_deployed=already_deployed,
+                  fs_parameters=fs_parameters)
         if already_deployed:
             fs_obj.re_initialize()
         return fs_obj
@@ -1893,6 +2011,7 @@ class Fs(object, ToDictMixin):
                     fun_test.test_assert(self.bmc.validate_u_boot_version(output=preamble, minimum_date=self.MIN_U_BOOT_DATE), "Validate preamble")
 
                 if self.tftp_image_path:
+                    # self.get_come().pre_reboot_cleanup()
                     fun_test.test_assert(expression=self.bmc.u_boot_load_image(index=f1_index,
                                                                                tftp_image_path=self.tftp_image_path,
                                                                                boot_args=boot_args,
@@ -1946,9 +2065,13 @@ class Fs(object, ToDictMixin):
                 pass
 
         else:
-            self.bootup_worker = BootupWorker(fs=self, power_cycle_come=power_cycle_come, non_blocking=non_blocking, context=self.context)
-            self.bootup_worker.start()
-            fun_test.sleep("Bootup worker start", seconds=3)
+            if not self.already_deployed:
+                self.bootup_worker = BootupWorker(fs=self, power_cycle_come=power_cycle_come, non_blocking=non_blocking, context=self.context)
+                self.bootup_worker.start()
+                fun_test.sleep("Bootup worker start", seconds=3)
+            else:
+                self.boot_phase = BootPhases.FS_BRING_UP_COMPLETE
+                self.come_initialized = True
 
         return True
 
@@ -1996,6 +2119,7 @@ class Fs(object, ToDictMixin):
         self.get_fpga()
         self.get_come()
         self.set_f1s()
+        self.come.setup_dpc()
         self.come.detect_pfs()
         fun_test.test_assert(expression=self.come.ensure_dpc_running(),
                              message="Ensure dpc is running",
@@ -2182,7 +2306,6 @@ class Fs(object, ToDictMixin):
                              context=self.context, message="BMC reachable after APC power-cycle")
         fun_test.simple_assert(bmc.uptime() < worst_case_uptime, "BMC uptime is less than 10 minutes")
 
-        fun_test.simple_assert()
         come = self.get_come()
         fun_test.test_assert(expression=come.ensure_host_is_up(max_wait_time=180,
                                                                power_cycle=False), message="ComE reachable after APC power-cycle")
@@ -2191,9 +2314,9 @@ class Fs(object, ToDictMixin):
 
         return True
 
-    def get_dpc_client(self, f1_index, auto_disconnect=False, statistics=None):
+    def get_dpc_client(self, f1_index, auto_disconnect=False, statistics=None, csi_perf=None):
         f1 = self.get_f1(index=f1_index)
-        dpc_client = f1.get_dpc_client(auto_disconnect=auto_disconnect, statistics=None)
+        dpc_client = f1.get_dpc_client(auto_disconnect=auto_disconnect, statistics=statistics, csi_perf=csi_perf)
         return dpc_client
 
     def _get_context_prefix(self, data):
@@ -2226,6 +2349,8 @@ if __name__ == "__main2__":
 
 
 if __name__ == "__main__":
-    come = ComE(host_ip="fs63-come.fungible.local", ssh_username="fun", ssh_password="123")
-    come.setup_hbm_tools()
+    come = ComE(host_ip="fs118-come.fungible.local", ssh_username="fun", ssh_password="123")
+    output = come.pre_reboot_cleanup()
+    i = 0
+    #come.setup_hbm_tools()
     #print come.setup_tools()

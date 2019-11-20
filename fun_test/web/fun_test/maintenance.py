@@ -2169,7 +2169,7 @@ if __name__ == "__main_crypto_fastpath__":
                        workspace_ids=[])
     print "created charts for crypto fastpath"
 
-if __name__ == "__main_random_read_comp__":
+if __name__ == "__main_random_rw_comp__":
     internal_names = "inspur_8141_8k_rand_rw_comp_qd"
     owner_info = "Alagarswamy Devaraj (alagarswamy.devaraj@fungible.com)"
     source = "https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/storage/pocs/inspur/ec_inspur_fs_teramark_multivolume_comp.py"
@@ -2224,7 +2224,7 @@ if __name__ == "__main_random_read_comp__":
                            workspace_ids=[])
     print "created charts for inspur random read write compression"
 
-if __name__ == "__main__":
+if __name__ == "__main_random_read_write_inspur_comp___":
     owner_info = "Alagarswamy Devaraj (alagarswamy.devaraj@fungible.com)"
     source = "https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/storage/pocs/inspur/ec_inspur_fs_teramark_multivolume_comp.py"
     base_line_date = datetime(year=2019, month=11, day=4, minute=0, hour=0, second=0)
@@ -2284,4 +2284,206 @@ if __name__ == "__main__":
         print json.dumps(final_dict)
     print "added charts for random read and random write compression charts for inspur"
 
+def create_container(internal_name, chart_name):
+    owner_info = "Divya Krishnankutty (divya.krishnankutty@fungible.com)"
+    source = "unknown"
+    base_line_date = datetime(year=2019, month=11, day=5, minute=0, hour=0, second=0)
+    root_chart = ml.create_container(chart_name=chart_name, internal_chart_name=internal_name,
+                                     platform=FunPlatform.F1,
+                                     owner_info=owner_info,
+                                     source=source, base_line_date=base_line_date, workspace_ids=[])
+    return root_chart
 
+def encryption_helper(children, root_chart):
+    owner_info = "Divya Krishnankutty (divya.krishnankutty@fungible.com)"
+    source = "unknown"
+    base_line_date = datetime(year=2019, month=11, day=5, minute=0, hour=0, second=0)
+    for child in children:
+        child_chart = MetricChart.objects.get(metric_id=int(child))
+        if child_chart.leaf:
+            data_sets = child_chart.get_data_sets()
+            for data_set in data_sets:
+                data_set["inputs"]["input_encryption"] = False
+            child_chart.data_sets = json.dumps(data_sets)
+            child_chart.save()
+            data_sets = child_chart.get_data_sets()
+            for data_set in data_sets:
+                data_set["inputs"]["input_encryption"] = True
+                data_set["output"]["reference"] = -1
+                data_set["output"]["expected"] = -1
+                data_set["output"]["best"] = -1
+            leaf_chart = ml.create_leaf(chart_name=child_chart.chart_name,
+                                        internal_chart_name=child_chart.internal_chart_name + "_encryption_on",
+                                        data_sets=data_sets, leaf=True,
+                                        description=child_chart.description,
+                                        owner_info=owner_info, source=source,
+                                        positive=child_chart.positive, y1_axis_title=child_chart.y1_axis_title,
+                                        visualization_unit=child_chart.visualization_unit,
+                                        metric_model_name=child_chart.metric_model_name,
+                                        base_line_date=base_line_date,
+                                        work_in_progress=False, children=[], jira_ids=[], platform=FunPlatform.F1,
+                                        peer_ids=[], creator=TEAM_REGRESSION_EMAIL,
+                                        workspace_ids=[])
+            leaf_chart.fix_children_weights()
+        else:
+            chart_name = child_chart.chart_name
+            leaf_chart = create_container(child_chart.internal_chart_name + "_encryption_on", chart_name)
+            new_children = child_chart.get_children()
+            encryption_helper(new_children, leaf_chart)
+        root_chart.add_child(leaf_chart.metric_id)
+    root_chart.fix_children_weights()
+
+
+if __name__ == "__main_encryption_on_local_ssd__":
+    internal_names = ["alibaba_bmv_storage_local_ssd_1", "alibaba_bmv_storage_local_ssd_4"]
+    for internal_name in internal_names:
+        if "ssd_1" in internal_name:
+            chart_name = "1 SSD (encryption on)"
+        else:
+            chart_name = "4 SSD (encryption on)"
+        root_chart = create_container(internal_name + "_encryption_on", chart_name)
+        chart = MetricChart.objects.get(internal_chart_name=internal_name)
+        children = chart.get_children()
+        encryption_helper(children, root_chart)
+        final_dict = ml.get_dict(chart=root_chart)
+        print json.dumps(final_dict)
+    print "created encryption on charts for 1SSD and 4SSD"
+
+if __name__ == "__main_other_tree__":
+    owner_info = "Bertrand Serlet (bertrand.serlet@fungible.com)"
+    source = "Unknown"
+    base_line_date = datetime(year=2019, month=11, day=5, minute=0, hour=0, second=0)
+    other_node = ml.create_container(chart_name="Other", internal_chart_name="other_tree",
+                        platform=FunPlatform.F1,
+                        owner_info=owner_info,
+                        source=source, base_line_date=base_line_date, workspace_ids=[])
+    data_sets = []
+    one_data_set = {}
+    one_data_set["name"] = "load_mods"
+    one_data_set["inputs"] = {}
+    one_data_set["output"] = {"name": "output_total_time", "min": 0, "max": -1, "expected": -1, "reference": -1,
+                              "best": -1, "unit": PerfUnit.UNIT_SECS}
+    chart = ml.create_leaf(chart_name="Time taken on F1 (app=load_mods)", internal_chart_name="load_mods_time_taken",
+                   data_sets=data_sets, leaf=True,
+                   description="TBD",
+                   owner_info=owner_info, source=source,
+                   positive=False, y1_axis_title=PerfUnit.UNIT_SECS,
+                   visualization_unit=PerfUnit.UNIT_SECS,
+                   metric_model_name="FunOnDemandTotalTimePerformance",
+                   base_line_date=base_line_date,
+                   work_in_progress=False, children=[], jira_ids=[], platform=FunPlatform.F1,
+                   peer_ids=[], creator=TEAM_REGRESSION_EMAIL,
+                   workspace_ids=[])
+    chart.fix_children_weights()
+    other_node.add_child(chart.metric_id)
+    other_node.fix_children_weights()
+    print "added other node as a root"
+
+if __name__ == "__main_backed_up_dag__":
+    internal_name = "load_mods_time_taken"
+    chart = MetricChart.objects.get(internal_chart_name="load_mods_time_taken")
+    data_sets = chart.get_data_sets()
+    one_data_set = {}
+    one_data_set["name"] = "load_mods"
+    one_data_set["inputs"] = {}
+    one_data_set["output"] = {"name": "output_total_time", "min": 0, "max": -1, "expected": -1, "reference": -1,
+                              "best": -1, "unit": PerfUnit.UNIT_SECS}
+    data_sets.append(one_data_set)
+    chart.data_sets = json.dumps(data_sets)
+    chart.save()
+    ml.backup_dags()
+
+if __name__ == "__main_load_mods__":
+    internal_name = "load_mods_time_taken"
+    chart = MetricChart.objects.get(internal_chart_name=internal_name)
+    internal_chart_name = "job_execution_time_fun_on_demand"
+    chart.internal_chart_name = internal_chart_name
+    data_sets = chart.get_data_sets()
+    for data_set in data_sets:
+        data_set["name"] = "app=load_mods,target=F1"
+    chart.data_sets = json.dumps(data_sets)
+    chart.save()
+
+if __name__ == "__main_fs1600__":
+    chart = MetricChart.objects.get(internal_chart_name="f1_fs1600")
+    chart.internal_chart_name = "fs1600"
+    chart.save()
+    inspur_chart = MetricChart.objects.get(metric_id=464)
+    result = []
+    children = inspur_chart.get_children()
+    for child in children:
+        child_chart = MetricChart.objects.get(metric_id=int(child))
+        one_dict = {}
+        one_dict["metric_model_name"] = child_chart.metric_model_name
+        one_dict["name"] = child_chart.internal_chart_name
+        one_dict["label"] = child_chart.chart_name
+        one_dict["reference"] = True
+        result.append(one_dict)
+    print json.dumps(result)
+
+    apple_chart = MetricChart.objects.get(metric_id=431)
+    result = []
+    children = apple_chart.get_children()
+    for child in children:
+        child_chart = MetricChart.objects.get(metric_id=int(child))
+        one_dict = {}
+        one_dict["metric_model_name"] = child_chart.metric_model_name
+        one_dict["name"] = child_chart.internal_chart_name
+        one_dict["label"] = child_chart.chart_name
+        one_dict["reference"] = True
+        result.append(one_dict)
+    print json.dumps(result)
+
+if __name__ == "__main_fs1600_backup__":
+    ml.backup_dags()
+    ml.set_global_cache(cache_valid=True)
+
+if __name__ == "__main__":
+    metric_ids = [743, 744, 746, 745, 750, 751, 753, 752]
+    operations = ["read", "write"]
+    fio_job_names = ["inspur_8k_random_read_write_iodepth_", "_f1_6_vol_48"]
+    for metric_id in metric_ids:
+        chart = MetricChart.objects.get(metric_id=metric_id)
+
+        if "QDepth=32" in chart.chart_name:
+            fio_job_name = fio_job_names[0] + str(32) + fio_job_names[1]
+        elif "QDepth=64" in chart.chart_name:
+            fio_job_name = fio_job_names[0] + str(64) + fio_job_names[1]
+        elif "QDepth=96" in chart.chart_name:
+            fio_job_name = fio_job_names[0] + str(96) + fio_job_names[1]
+        elif "QDepth=128" in chart.chart_name:
+            fio_job_name = fio_job_names[0] + str(128) + fio_job_names[1]
+
+        read_data_set = {}
+        if chart.positive:
+            read_data_set["name"] = "read(6 F1s, 48 vols)"
+            output_name = "output_read_iops"
+            unit = PerfUnit.UNIT_OPS
+        else:
+            read_data_set["name"] = "read-avg(6 F1s, 48 vols)"
+            output_name = "output_read_avg_latency"
+            unit = PerfUnit.UNIT_USECS
+        read_data_set["inputs"] = {"input_platform": FunPlatform.F1,
+                                   "input_fio_job_name": fio_job_name}
+        read_data_set["output"] = {"name": output_name, "min": 0, "max": -1, "expected": -1, "best": -1, "reference":
+            -1, "unit": unit}
+
+        write_data_set = {}
+        if chart.positive:
+            write_data_set["name"] = "write(6 F1s, 48 vols)"
+            output_name = "output_write_iops"
+            unit = PerfUnit.UNIT_OPS
+        else:
+            write_data_set["name"] = "write-avg(6 F1s, 48 vols)"
+            output_name = "output_write_avg_latency"
+            unit = PerfUnit.UNIT_USECS
+        write_data_set["inputs"] = {"input_platform": FunPlatform.F1,
+                                   "input_fio_job_name": fio_job_name}
+        write_data_set["output"] = {"name": output_name, "min": 0, "max": -1, "expected": -1, "best": -1, "reference":
+            -1, "unit": unit}
+        data_sets = chart.get_data_sets()
+        data_sets.append(read_data_set)
+        data_sets.append(write_data_set)
+        chart.data_sets = json.dumps(data_sets)
+        chart.save()
+    print "added 48 vol datasets for random read write"

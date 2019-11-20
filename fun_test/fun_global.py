@@ -198,3 +198,5 @@ class TimeSeriesTypes(Codes):
     CHECKPOINT = 80
     STATISTICS = 100
     ARTIFACT = 200
+    TEST_CASE_TABLE = 300
+    REGISTERED_ASSET = 400

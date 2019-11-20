@@ -1,6 +1,6 @@
 from scripts.examples.register_controller import RegisterController
 
-rc = RegisterController(dpc_server_ip='10.1.40.22', dpc_server_port=40221, verbose=False)
+rc = RegisterController(dpc_server_ip='10.1.40.22', dpc_server_port=42221, verbose=False)
 rc.peek_register(register_name=rc.hsu_pwp_core0_csr_test_in, rinst=0, field="test_in")
 rc.peek_register(register_name=rc.hsu_pwp_core0_csr_tl_pm_event0, rinst=0, field="tl_pm_event")
 rc.peek_register(register_name=rc.hsu_pwp_core0_csr_tl_pm_event1, rinst=0, field="tl_pm_event")

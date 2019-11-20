@@ -1788,5 +1788,5 @@ def get_diff_results(old_result, new_result):
 
 if __name__ == '__main__':
     from lib.host.network_controller import NetworkController
-    nw = NetworkController(dpc_server_ip="fs48-come", dpc_server_port=40220)
+    nw = NetworkController(dpc_server_ip="fs48-come", dpc_server_port=42220)
     populate_vp_util_output_file(network_controller_obj=nw, filename='output_vp_util.txt')

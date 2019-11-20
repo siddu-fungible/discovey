@@ -377,13 +377,13 @@
     "bmc": {
       "mgmt_ssh_password": "superuser",
       "mgmt_ssh_username": "sysadmin",
-      "mgmt_ip": "10.1.20.170"
+      "mgmt_ip": "10.1.20.126"
     },
     "name": "fs-65",
     "fpga": {
       "mgmt_ssh_password": "root",
       "mgmt_ssh_username": "root",
-      "mgmt_ip": "10.1.20.179"
+      "mgmt_ip": "10.1.20.143"
     },
     "workarounds": {
       "skip_funeth_come_power_cycle": true
@@ -835,21 +835,21 @@
     "bmc": {
       "mgmt_ssh_password": "superuser",
       "mgmt_ssh_username": "sysadmin",
-      "mgmt_ip": "10.1.105.86"
+      "mgmt_ip": "10.1.108.236"
     },
     "come": {
       "mgmt_ssh_password": "123",
       "mgmt_ssh_username": "fun",
-      "mgmt_ip": "10.1.105.87"
+      "mgmt_ip": "10.1.108.237"
     },
     "name": "fs-102",
-    "mpg_ips": ["10.1.105.88", "10.1.105.89"],
-    "gateway_ip": "10.1.105.1",
+    "mpg_ips": ["10.1.108.88", "10.1.108.89"],
+    "gateway_ip": "10.1.108.1",
     "bundle_compatible": true,
     "fpga": {
       "mgmt_ssh_password": "root",
       "mgmt_ssh_username": "root",
-      "mgmt_ip": "10.1.105.85"
+      "mgmt_ip": "10.1.108.238"
     },
     "apc_info": {
       "username": "localadmin",
@@ -860,24 +860,26 @@
   },
   {
     "name": "fs-104",
+    "gateway_ip": "10.1.108.1",
+    "bundle_compatible": true,
     "bmc": {
       "mgmt_ssh_password": "superuser",
       "mgmt_ssh_username": "sysadmin",
-      "mgmt_ip": "10.1.105.46"
+      "mgmt_ip": "10.1.108.46"
     },
     "come": {
       "mgmt_ssh_password": "123",
       "mgmt_ssh_username": "fun",
-      "mgmt_ip": "10.1.105.47"
+      "mgmt_ip": "10.1.108.47"
     },
     "mpg_ips": [
-      "10.1.105.99",
-      "10.1.105.100"
+      "10.1.108.99",
+      "10.1.108.100"
     ],
     "fpga": {
       "mgmt_ssh_password": "root",
       "mgmt_ssh_username": "root",
-      "mgmt_ip": "10.1.105.48"
+      "mgmt_ip": "10.1.108.48"
     },
     "apc_info": {
       "username": "localadmin",
@@ -964,19 +966,22 @@
     "bmc": {
       "mgmt_ssh_password": "superuser",
       "mgmt_ssh_username": "sysadmin",
-      "mgmt_ip": "fs118-bmc"
+      "mgmt_ip": "10.1.108.12"
     },
     "come": {
       "mgmt_ssh_password": "123",
       "mgmt_ssh_username": "fun",
-      "mgmt_ip": "fs118-come"
+      "mgmt_ip": "10.1.108.13"
     },
     "name": "fs-118",
+    "workarounds": {
+      "skip_funeth_come_power_cycle": true
+    },
     "revision": "2",
     "fpga": {
       "mgmt_ssh_password": "root",
       "mgmt_ssh_username": "root",
-      "mgmt_ip": "fs118-fpga"
+      "mgmt_ip": "10.1.108.14"
     },
     "apc_info": {
       "username": "localadmin",

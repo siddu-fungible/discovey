@@ -93,6 +93,11 @@ import { TimelineControlComponent } from './visualization/timeline-control/timel
 import * as d3 from 'd3';
 import { StatisticsContainerComponent } from './statistics/statistics-container/statistics-container.component';
 import { BamComponent } from './statistics/system/bam/bam.component';
+import { ReleaseCatalogEditorComponent } from './regression/release-catalog-editor/release-catalog-editor.component';
+import { ReleasesComponent } from './regression/releases/releases.component';
+import { ReleaseCatalogsComponent } from './regression/release-catalogs/release-catalogs.component';
+import { BackComponent } from './ui-elements/back/back.component';
+import { SectionHeaderComponent } from './ui-elements/section-header/section-header.component';
 
 
 @NgModule({
@@ -168,7 +173,12 @@ import { BamComponent } from './statistics/system/bam/bam.component';
     SelectedPipe,
     TimelineControlComponent,
     StatisticsContainerComponent,
-    BamComponent
+    BamComponent,
+    ReleaseCatalogEditorComponent,
+    ReleasesComponent,
+    ReleaseCatalogsComponent,
+    BackComponent,
+    SectionHeaderComponent
   ],
   imports: [
     BsDropdownModule,

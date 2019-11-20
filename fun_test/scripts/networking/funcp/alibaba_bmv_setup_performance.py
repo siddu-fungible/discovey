@@ -77,9 +77,9 @@ class SetupBringup(fs_power_cycle_test.BootF1):
         network_controller_objs = []
 
         network_controller_objs.append(NetworkController(dpc_server_ip=fs_spec['come']['mgmt_ip'],
-                                                   dpc_server_port=40220))
+                                                   dpc_server_port=42220))
         network_controller_objs.append(NetworkController(dpc_server_ip=fs_spec['come']['mgmt_ip'],
-                                                         dpc_server_port=40221))
+                                                         dpc_server_port=42221))
         fun_test.shared_variables['network_controller_objs'] = network_controller_objs
         for nc_obj in network_controller_objs:
             f1 = 'F1_{}'.format(network_controller_objs.index(nc_obj))
@@ -134,9 +134,9 @@ class ScriptSetup2(FunTestScript):
 
         network_controller_objs = []
         network_controller_objs.append(NetworkController(dpc_server_ip='fs45-come',
-                                                         dpc_server_port=40220, verbose=True))
+                                                         dpc_server_port=42220, verbose=True))
         network_controller_objs.append(NetworkController(dpc_server_ip='fs45-come',
-                                                         dpc_server_port=40221, verbose=True))
+                                                         dpc_server_port=42221, verbose=True))
         # network_controller_objs.append(NetworkController(dpc_server_ip='fs60-come',
         #                                                  dpc_server_port=40220, verbose=True))
         # network_controller_objs.append(NetworkController(dpc_server_ip='fs60-come',
