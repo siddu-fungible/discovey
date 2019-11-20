@@ -2518,7 +2518,7 @@ if __name__ == "__main__":
                     build_date = entry.build_date
                     result = {}
                     result["lsf_job_id"] = None
-                    if entry.lsf_job_id != "" or entry.lsf_job_id != -1:
+                    if entry.lsf_job_id != "" and entry.lsf_job_id != -1:
                         result["lsf_job_id"] = int(entry.lsf_job_id)
 
                     result["suite_execution_id"] = entry.suite_execution_id if entry.suite_execution_id != -1 else None
@@ -2530,12 +2530,15 @@ if __name__ == "__main__":
                     result["build_properties"] = build_properties
 
                     result["version"] = None
-                    if entry.sdk_version != "" or entry.sdk_version != -1:
+                    if entry.sdk_version != "" and entry.sdk_version != -1:
                         result["version"] = entry.sdk_version
                     result["associated_suites"] = entry.associated_suites if len(entry.associated_suites) else None
-                    run_time_id = add_job_run_time_properties(date_time=build_date, run_time=result)
-                    model_entry.run_time = run_time_id
-                    model_entry.save()
+                    try:
+                        run_time_id = add_job_run_time_properties(date_time=build_date, run_time=result)
+                        model_entry.run_time = run_time_id
+                        model_entry.save()
+                    except Exception as ex:
+                        print str(ex)
         except Exception as ex:
             pass
     transaction.commit()
