@@ -159,12 +159,11 @@ class FunOnDemandBuildTimeTc(PalladiumTc):
                 self.total_time_taken = -1
 
             value_dict = {"date_time": get_data_collection_time(),
-                          "version": fun_test.get_version(),
-                          "time_taken_for": "Fun On Demand trivial job",
                           "total_time": self.total_time_taken}
 
             unit_dict = {"total_time_unit": PerfUnit.UNIT_SECS}
             self.add_to_db(model_name=model_name, value_dict=value_dict, unit_dict=unit_dict, status=status)
+            fun_test.test_assert_expected(expected=fun_test.PASSED, actual=status, message="Fun On Demand build time status")
 
 class PrBuildTimeTc(PalladiumTc):
     since_time = round(time.time()) - 86400
@@ -194,43 +193,44 @@ class PrBuildTimeTc(PalladiumTc):
         except Exception as ex:
             fun_test.critical(str(ex))
         finally:
-            model_name = "FunOnDemandTotalTimePerformance"
+            model_name = "PrBuildTotalTimePerformance"
 
             value_dict = {"date_time": get_data_collection_time(),
-                          "version": fun_test.get_version(),
-                          "time_taken_for": "PR build",
                           "total_time": self.total_time_taken}
 
             unit_dict = {"total_time_unit": PerfUnit.UNIT_SECS}
             self.add_to_db(model_name=model_name, value_dict=value_dict, unit_dict=unit_dict, status=self.status)
+            fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.status,
+                                          message="Pr build time status")
 
-class SetFunOnDemandBuildTimeChartStatusTc(PalladiumTc):
+class SetBuildTimeChartStatusTc(PalladiumTc):
     def describe(self):
         self.set_test_details(id=3,
-                              summary="Set build failure details for fun on demand time taken performance",
+                              summary="Set build failure details for build time performance",
                               steps="Steps 1")
 
     def run(self):
         try:
             self.result = fun_test.FAILED
-            model = "FunOnDemandTotalTimePerformance"
-            charts = MetricChart.objects.filter(metric_model_name=model)
-            metric_model = app_config.get_metric_models()[model]
-            for chart in charts:
-                status = True
-                data_sets = chart.get_data_sets()
-                for data_set in data_sets:
-                    inputs = data_set["inputs"]
-                    entries = metric_model.objects.filter(**inputs).order_by("-input_date_time")[:1]
-                    if len(entries):
-                        entry = entries.first()
-                        if not entry.status == fun_test.PASSED:
-                            status = False
-                            chart.set_chart_status(status=fun_test.FAILED,
-                                                   suite_execution_id=fun_test.get_suite_execution_id())
-                            break
-                if status:
-                    chart.set_chart_status(status=fun_test.PASSED, suite_execution_id=fun_test.get_suite_execution_id())
+            models = ["FunOnDemandTotalTimePerformance", "PrBuildTotalTimePerformance"]
+            for model in models:
+                charts = MetricChart.objects.filter(metric_model_name=model)
+                metric_model = app_config.get_metric_models()[model]
+                for chart in charts:
+                    status = True
+                    data_sets = chart.get_data_sets()
+                    for data_set in data_sets:
+                        inputs = data_set["inputs"]
+                        entries = metric_model.objects.filter(**inputs).order_by("-input_date_time")[:1]
+                        if len(entries):
+                            entry = entries.first()
+                            if not entry.status == fun_test.PASSED:
+                                status = False
+                                chart.set_chart_status(status=fun_test.FAILED,
+                                                       suite_execution_id=fun_test.get_suite_execution_id())
+                                break
+                    if status:
+                        chart.set_chart_status(status=fun_test.PASSED, suite_execution_id=fun_test.get_suite_execution_id())
             self.result = fun_test.PASSED
         except Exception as ex:
             self.result = fun_test.FAILED
@@ -242,8 +242,8 @@ class SetFunOnDemandBuildTimeChartStatusTc(PalladiumTc):
 if __name__ == "__main__":
     myscript = MyScript()
 
-    myscript.add_test_case(FunOnDemandBuildTimeTc())
+    # myscript.add_test_case(FunOnDemandBuildTimeTc())
     myscript.add_test_case(PrBuildTimeTc())
-    myscript.add_test_case(SetFunOnDemandBuildTimeChartStatusTc())
+    myscript.add_test_case(SetBuildTimeChartStatusTc())
 
     myscript.run()

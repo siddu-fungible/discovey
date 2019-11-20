@@ -2488,12 +2488,3 @@ if __name__ == "__main_48_vols__":
         chart.save()
     print "added 48 vol datasets for random read write"
 
-if __name__ == "__main__":
-    metric_id = 1504
-    chart = MetricChart.objects.get(metric_id=metric_id)
-    data_sets = chart.get_data_sets()
-    for data_set in data_sets:
-        data_set["inputs"]["input_time_taken_for"] = "Fun On Demand trivial job"
-    chart.data_sets = json.dumps(data_sets)
-    chart.save()
-    print "added new filter for existing charts"
