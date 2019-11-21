@@ -1001,7 +1001,7 @@
       "mgmt_ssh_username": "fun",
       "mgmt_ip": "192.168.8.31"
     },
-    "name": "ifs-01",
+    "name": "fs-131",
     "workarounds": {
       "skip_funeth_come_power_cycle": true
     },
