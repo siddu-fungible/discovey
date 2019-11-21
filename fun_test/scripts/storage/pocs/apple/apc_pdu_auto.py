@@ -138,7 +138,8 @@ class ApcPduTestcase(FunTestCase):
                                 ssh_password=self.fs['come']['mgmt_ssh_password'])
         self.bmc_handle = Bmc(host_ip=self.fs['bmc']['mgmt_ip'],
                               ssh_username=self.fs['bmc']['mgmt_ssh_username'],
-                              ssh_password=self.fs['bmc']['mgmt_ssh_password'])
+                              ssh_password=self.fs['bmc']['mgmt_ssh_password'],
+                              bundle_compatible=True)
         self.bmc_handle.set_prompt_terminator(r'# $')
 
         fun_test.log("Checking if COMe is UP")
@@ -312,7 +313,7 @@ class ApcPduTestcase(FunTestCase):
         bdf = '04:00.'
         if f1 == 1:
             bdf = '06:00.'
-            if self.testbed_type in ["fs-101", "fs-102", "fs-104"]:
+            if self.testbed_type in ["fs-101", "fs-102", "fs-104", "fs-131"]:
                 bdf = '05:00.'
         lspci_output = self.come_handle.command("lspci -d 1dad: | grep {}".format(bdf), timeout=120)
         sections = ['Ethernet controller', 'Non-Volatile', 'Unassigned class', 'encryption device']
@@ -469,7 +470,7 @@ class ApcPduTestcase(FunTestCase):
         return result
 
     def get_docker_count(self):
-        output = self.come_handle.command("docker ps -a")
+        output = self.come_handle.sudo_command("docker ps -a")
         num_docker = self.docker_ps_a_wrapper(output)
         return num_docker
 
