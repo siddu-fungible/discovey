@@ -1120,15 +1120,27 @@ class IbWriteScale(FunTestCase):
                 f11_host_test = f11_host_roce.ib_bw_test(test_type=test, size=size, rdma_cm=rdmacm, qpair=qp,
                                                          tx_depth=tx_depth_in_test, server_ip=f10_hosts[0]["ipaddr"],
                                                          duration=30)
+                check_num_qp = True
                 while f10_hosts[0]["handle"].process_exists(process_id=f10_host_test["cmd_pid"]):
                     fun_test.sleep("ib_bw test on f10_host", 2)
                     f10_pid_there += 1
+                    if f10_pid_there == 10:
+                        current_qp = f10_host_roce.qp_check()
+                        if current_qp > 1 and check_num_qp:
+                            if current_qp != qp:
+                                fun_test.critical("Current QP count {} doesn't match test QP count of {}".
+                                                  format(current_qp, qp))
+                                check_num_qp = False
+                                fun_test.add_checkpoint("QP mismatch in test", "FAILED", expected=qp, actual=current_qp)
+                            else:
+                                fun_test.log_section("Num of QP : {}".format(current_qp))
                     if f10_pid_there == 60:
                         f10_hosts[0]["handle"].kill_process(process_id=f10_host_test["cmd_pid"])
                 while f11_hosts[0]["handle"].process_exists(process_id=f11_host_test["cmd_pid"]):
                     fun_test.sleep("ib_bw test on f11_host", 2)
                     f11_pid_there += 1
                     if f11_pid_there == 60:
+
                         f11_hosts[0]["handle"].kill_process(process_id=f11_host_test["cmd_pid"])
                 f10_host_result = f10_host_roce.parse_test_log(f10_host_test["output_file"], tool="ib_bw")
                 f11_host_result = f11_host_roce.parse_test_log(f11_host_test["output_file"], tool="ib_bw",

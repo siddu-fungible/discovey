@@ -16,10 +16,11 @@ from collections import deque
 from elasticsearch import helpers
 from elasticsearch import Elasticsearch
 import dpcsh_nocli
+from scripts.system.metrics_parser import MetricParser
 
 # Environment: --environment={\"test_bed_type\":\"fs-65\",\"tftp_image_path\":\"ranga/funos-f1_ranga.stripped.gz\"} --inputs={\"boot_new_image\":true,\"le_firewall\":true,\"collect_stats\":[\"\"],\"ec_vol\":true}
 # inputs: {"run_le_firewall":false,"specific_apps":["ZIP"],"add_to_database":true,"collect_stats":["POWER","DEBUG_MEMORY","LE"],"end_sleep":30}
-# --environment={\"test_bed_type\":\"fs-65\",\"tftp_image_path\":\"ranga/funos-f1_onkar.stripped.gz\"} --inputs={\"boot_new_image\":false,\"le_firewall\":false,\"collect_stats\":[\"DEBUG_VP_UTIL\",\"POWER\"],\"ec_vol\":false,\"specific_apps\":[\"crypto\"],\"disable_f1_index\":0}
+# --environment={\"test_bed_type\":\"fs-65\",\"tftp_image_path\":\"ranga/funos-f1_onkar.stripped.gz\"}
 
 POWER = "POWER"
 DIE_TEMPERATURE = "DIE_TEMPERATURE"
@@ -40,6 +41,7 @@ ZIP = "zip"
 LE = "le"
 BUSY_LOOP = "busy_loop"
 MEMCPY = "memcpy"
+APPSVALUES = "APPSVALUES"
 
 # --environment={\"test_bed_type\":\"fs-65\",\"tftp_image_path\":\"ranga/funos-f1_onkar.stripped.gz\"} --inputs={\"boot_new_image\":false,\"collect_stats\":[\"POWER\"],\"ec_vol\":false,\"traffic_profile\":[\"rcnvme\"]}
 
@@ -243,9 +245,9 @@ class MyScript(FunTestScript):
                                 ssh_password=self.fs['come']['mgmt_ssh_password'])
 
     def boot_fs(self):
-        f1_0_boot_args = 'cc_huid=3 app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303%s' % (
+        f1_0_boot_args = 'cc_huid=3 app=mdt_test,load_mods workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303%s' % (
             self.add_boot_arg)
-        f1_1_boot_args = 'cc_huid=2 app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303%s' % (
+        f1_1_boot_args = 'cc_huid=2 app=mdt_test,load_mods workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303%s' % (
             self.add_boot_arg)
 
         topology_helper = TopologyHelper()
@@ -773,10 +775,12 @@ class FunTestCase1(FunTestCase):
             # Capture the UART logs also
             artifact_file_name_f1_0 = bmc_handle.get_uart_log_file(0)
             artifact_file_name_f1_1 = bmc_handle.get_uart_log_file(1)
+            self.upload_the_values(artifact_file_name_f1_0, artifact_file_name_f1_1)
             fun_test.add_auxillary_file(description="DUT_0_fs-65_F1_0 UART Log", filename=artifact_file_name_f1_0)
             fun_test.add_auxillary_file(description="DUT_0_fs-65_F1_1 UART Log", filename=artifact_file_name_f1_1)
 
     def add_the_links(self):
+        # Todo: Get the links for each individual app
         # for system in self.stats_info:
         #     if system == "files":
         #         continue
@@ -800,7 +804,87 @@ class FunTestCase1(FunTestCase):
         checkpoint = '<a href="{}" target="_blank">ELK Overall dashboard</a>'.format(href)
         fun_test.add_checkpoint(checkpoint=checkpoint)
 
+    def upload_the_values(self, artifact_file_name_f1_0, artifact_file_name_f1_1):
+        for f1 in self.run_on_f1:
+            if f1 == 0:
+                file_name = artifact_file_name_f1_0
+            else:
+                file_name = artifact_file_name_f1_1
+            lines = open(file_name, "r").readlines()
+            if RCNVME in self.traffic_profile:
+                result = MetricParser().rcnvme(lines, "", "TeraMarkRcnvmeReadWriteAllPerformance")
+                if result['status']:
+                    app = RCNVME
+                    field = "read iops"
+                    value = round(float(result["data"][1]["output_iops"] / 1000000.0), 3)
+                    unit = "M iops"
+                    self.apps_upload_helper(app, field, unit, value, f1)
+            if CRYPTO in self.traffic_profile:
+                result = MetricParser().teramark_crypto(lines, "", "F1", "TeraMarkMultiClusterCryptoPerformance")
+                if result['status']:
+                    app = CRYPTO
+                    field = "throughput"
+                    value = result["data"][0]["output_throughput"]
+                    unit = result["data"][0]["output_throughput_unit"]
+                    self.apps_upload_helper(app, field, unit, value, f1)
 
+            if ZIP in self.traffic_profile:
+                result = self.zip_parser(lines)
+                if result['status']:
+                    app = ZIP
+                    field = "bandwidth"
+                    value = result["data"][0]["output_bandwidth_avg"]
+                    unit = result["data"][0]["output_bandwidth_avg_unit"]
+                    self.apps_upload_helper(app, field, unit, value, f1)
+
+    def zip_parser(self, lines):
+        result = {}
+        result["data"] = []
+        metrics = collections.OrderedDict()
+        teramark_begin = False
+        for line in lines:
+            if "TeraMark Begin" in line:
+                teramark_begin = True
+            if "TeraMark End" in line:
+                teramark_begin = False
+            if teramark_begin:
+                m = re.search(
+                    r'{"Type":\s+"(?P<type>\S+)",\s+"Operation":\s+(?P<operation>\S+),\s+"Effort":\s+(?P<effort>\S+),'
+                    r'.*\s+"Duration"\s+:\s+(?P<latency_json>{.*}),\s+"Throughput":\s+(?P<throughput_json>{.*})}', line)
+                if m:
+                    self.match_found = True
+                    input_type = m.group("type")
+                    input_operation = m.group("operation")
+                    input_effort = int(m.group("effort"))
+                    bandwidth_json = json.loads(m.group("throughput_json"))
+                    output_bandwidth_avg = bandwidth_json['value']
+                    output_bandwidth_avg_unit = bandwidth_json["unit"]
+                    latency_json = json.loads(m.group("latency_json"))
+                    output_latency_avg = latency_json['value']
+                    output_latency_unit = latency_json["unit"]
+
+                    fun_test.log("type: {}, operation: {}, effort: {}, stats {}".format(input_type, input_operation,
+                                                                                        input_effort,
+                                                                                        bandwidth_json))
+                    metrics["input_type"] = input_type
+                    metrics["input_operation"] = input_operation
+                    metrics["input_effort"] = input_effort
+                    metrics["output_bandwidth_avg"] = output_bandwidth_avg
+                    metrics["output_bandwidth_avg_unit"] = output_bandwidth_avg_unit
+                    metrics["output_latency_avg"] = output_latency_avg
+                    metrics["output_latency_avg_unit"] = output_latency_unit
+                    self.status = RESULTS["PASSED"]
+                    result["data"].append(metrics)
+        result["status"] = True
+        return result
+
+    def apps_upload_helper(self, app, field, unit, value, f1):
+        stat_name = APPSVALUES
+        dpcsh_data = {"app": app,
+                      "field": field,
+                      "unit": unit,
+                      "value": value}
+        time_taken = self.upload_dpcsh_data_to_elk(dpcsh_data=dpcsh_data, f1=f1, stat_name=stat_name)
 
 
     def start_threaded_apps(self):
@@ -1006,8 +1090,8 @@ class FunTestCase1(FunTestCase):
         for each_data_set in dpcsh_data:
             if time_stamp:
                 each_data_set["Time"] = time_strf
-            if f1:
-                each_data_set["f1"] = f1
+            if f1 != None:
+                each_data_set["f1"] = "f1_{}".format(f1)
             each_data_set["system_name"] = self.fs['name']
         return dpcsh_data
 

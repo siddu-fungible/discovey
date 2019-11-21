@@ -1,11 +1,9 @@
 
-<button (click)="selectClick()" class="fun-button-add">{{ singleSelectNode? "Modify " + selectionText + " selection": "Select a " + selectionText }}</button>
-<span class="span-selected" *ngIf="singleSelectNode" style="display: inline-block">Selected file: {{ singleSelectNode.scriptPath }}&nbsp;</span>
+<button *ngIf="!singleSelectNode" (click)="selectClick()" class="fun-button-add">{{ "Select a " + selectionText }}</button>
+<span *ngIf="singleSelectNode" style="display: inline-block"><span class="fun-attribute-label">Selected file:</span> {{ singleSelectNode.scriptPath }}&nbsp;</span>
+&nbsp;<span *ngIf="singleSelectNode" class="fun-action-link" (click)="selectClick()">Modify selection</span>
 
 <table class="table" *ngIf="selectionMode">
-  <tr>
-    <th>Path</th>
-  </tr>
   <tr>
     <td>
       <span *ngIf="!refreshingStatus" (click)="onRefreshFiles()" class="fun-action-link">Refresh files</span>

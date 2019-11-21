@@ -1,4 +1,4 @@
-<a style="magin: 20px" routerLink="/regression/suites_view">&nbsp;< Back to suites </a>
+<app-back></app-back>
 
 <div class="component" *ngIf="suite">
   <div class="fun-panel">
@@ -62,23 +62,29 @@
                                  (singleSelectScriptPath)="singleSelectScriptPathEvent($event)"></app-script-selector>
           </div>
 
-          <div class="fun-form-field-container">
-            <label class="fun-form-label">Test-case IDs (in JSON array format. Ex: [2, 3]):</label>
-            <app-json-input [disabled]="!currentScriptPath" (dataChanged)="testCaseIdsChanged($event)"
-                            [numRows]="1"></app-json-input>
-          </div>
+          <ng-container *ngIf="currentScriptPath">
+            <div class="fun-form-field-container">
+              <label class="fun-form-label">Test-case IDs (in JSON array format. Ex: [2, 3]):</label>
+              <app-json-input [disabled]="!currentScriptPath" (dataChanged)="testCaseIdsChanged($event)"
+                              [numRows]="1"></app-json-input>
+            </div>
 
-          <div class="fun-form-field-container">
-            <label class="fun-form-label">Inputs (in JSON dictionary format. Ex: {{ inputsExample }}):</label>
-            <app-json-input [disabled]="!currentScriptPath" (dataChanged)="inputsChanged($event)"
-                            [numRows]="6"></app-json-input>
-          </div>
+            <div class="fun-form-field-container">
+              <label class="fun-form-label">Inputs (in JSON dictionary format. Ex: {{ inputsExample }}):</label>
+              <app-json-input [disabled]="!currentScriptPath" (dataChanged)="inputsChanged($event)"
+                              [numRows]="6"></app-json-input>
+            </div>
+          </ng-container>
+
         </form>
 
-        <span class="fun-cancel-link" (click)="onCancelNewSuiteEntry()">Cancel</span>
-        <button class="fun-button-add" [ngClass]="{'fun-button-disabled': !currentScriptPath}"
-                (click)="onSubmitNewSuiteEntry()">Add
-        </button>
+        <ng-container *ngIf="currentScriptPath">
+          <span class="fun-cancel-link" (click)="onCancelNewSuiteEntry()">Cancel</span>
+          <button class="fun-button-add" [ngClass]="{'fun-button-disabled': !currentScriptPath}"
+                  (click)="onSubmitNewSuiteEntry()">Add this script
+          </button>
+        </ng-container>
+
       </div>
 
 
@@ -234,9 +240,9 @@
     </ng-container>
     <ng-template #noCustomTestBedSpec>
       <fun-spinner [status]="customTestBedSpecPopulationStatus"></fun-spinner>
-      <ng-container *ngIf="!customTestBedSpecPopulationStatus">
-        <span *ngIf="suite?.entries?.length > 0" class="pseudo-anchor" (click)="onAddCustomTestBedSpec(customTestBedSpecModalContent)">Customize test-bed options</span>
-      </ng-container>
+      <div *ngIf="!customTestBedSpecPopulationStatus">
+        <span *ngIf="suite?.entries?.length > 0" class="fun-action-link" (click)="onAddCustomTestBedSpec(customTestBedSpecModalContent)">Customize test-bed options (suite-based)</span>
+      </div>
     </ng-template>
 
 
