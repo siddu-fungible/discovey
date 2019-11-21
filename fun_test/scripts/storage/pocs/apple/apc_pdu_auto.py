@@ -358,6 +358,8 @@ class ApcPduTestcase(FunTestCase):
         if match_output:
             try:
                 result = json.loads(match_output.group('json_output'))
+                if "result" in result:
+                    result = result["result"]
             except:
                 fun_test.log("Unable to parse the output obtained from dpcsh")
         return result
