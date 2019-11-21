@@ -12,7 +12,8 @@
       "size": "100%",
       "iodepth": 32,
       "direct": 1,
-      "prio": 0
+      "prio": 0,
+      "timeout":900
     },
     "fio_cmd_args": {
       "bs": 4096,
