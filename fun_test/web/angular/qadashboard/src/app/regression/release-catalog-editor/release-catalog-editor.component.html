@@ -34,21 +34,22 @@
         Selected suites
       </div>
       <div class="fun-panel-body">
-        <table class="fun-table">
+        <table class="fun-table-borderless">
           <tr>
-            <td class="fun-table-header"></td>
-            <td class="fun-table-header">
+            <td class="fun-table-borderless-header">Index</td>
+            <td class="fun-table-borderless-header">
               Suite ID
             </td>
-            <td class="fun-table-header">
+            <td class="fun-table-borderless-header">
               Name
             </td>
-            <td class="fun-table-header">
+            <td class="fun-table-borderless-header">
               Description
             </td>
-            <td class="fun-table-header">
+            <td class="fun-table-borderless-header">
               Categories
             </td>
+            <td></td>
           </tr>
           <tr *ngFor="let selectedSuite of releaseCatalog.suites; let index=index">
             <ng-container *ngIf="selectedSuite">
@@ -66,6 +67,9 @@
               </td>
               <td>
                 {{ suites[selectedSuite.id]?.categories }}
+              </td>
+              <td>
+                <i (click)="removeSelectedSuite(index)" class="fa fa-trash" style="color: red"></i>
               </td>
 
             </ng-container>

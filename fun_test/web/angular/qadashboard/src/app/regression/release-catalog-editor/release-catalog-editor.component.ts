@@ -149,4 +149,9 @@ export class ReleaseCatalogEditorComponent implements OnInit, OnChanges {
     this.location.back();
   }
 
+  removeSelectedSuite(index) {
+    this.releaseCatalog.suites.splice(index, 1);
+    this.changeDetected = true;
+  }
+
 }
