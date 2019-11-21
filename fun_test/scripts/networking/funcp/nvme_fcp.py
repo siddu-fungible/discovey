@@ -234,6 +234,16 @@ class BringupSetup(FunTestCase):
                                 topology.get_host_instance(dut_index=0, host_index=0, ssd_interface_index=i))
             fun_test.shared_variables["hosts_obj"] = host_dict
 
+            # Check PICe Link on host
+            servers_mode = self.server_key["fs"][fs_name]["hosts"]
+            for server in servers_mode:
+                result = verify_host_pcie_link(hostname=server, mode=servers_mode[server], reboot=False)
+                fun_test.test_assert(expression=(result != "0"), message="Make sure that PCIe links on host %s went up"
+                                                                         % server)
+                if result == "2":
+                    fun_test.add_checkpoint("<b><font color='red'><PCIE link did not come up in %s mode</font></b>"
+                                            % servers_mode[server])
+
             # Bringup FunCP
             print "******** ******** ******** ******** ******** ******** ******** ******** ******** "
             print "Manu, you are using a workaround in funcp_config.py line 201 to prevent timeout"
@@ -244,15 +254,6 @@ class BringupSetup(FunTestCase):
                                      f1_1_mpg=self.server_key["fs"][fs_name]["mpg_ips"]["mpg1"],
                                      f1_0_mpg=self.server_key["fs"][fs_name]["mpg_ips"]["mpg0"])
 
-            # Check PICe Link on host
-            servers_mode = self.server_key["fs"][fs_name]["hosts"]
-            for server in servers_mode:
-                result = verify_host_pcie_link(hostname=server, mode=servers_mode[server], reboot=False)
-                fun_test.test_assert(expression=(result != "0"), message="Make sure that PCIe links on host %s went up"
-                                                                         % server)
-                if result == "2":
-                    fun_test.add_checkpoint("<b><font color='red'><PCIE link did not come up in %s mode</font></b>"
-                                            % servers_mode[server])
         else:
             # Get COMe object
             am = AssetManager()
@@ -588,6 +589,7 @@ class ConfigureRdsVol(FunTestCase):
                                                                         remote_nsid=x,
                                                                         remote_ip=f10_vlan_ip,
                                                                         port=controller_port,
+                                                                        transport="RDS",
                                                                         connections=rds_conn,
                                                                         command_duration=command_timeout)
                     fun_test.simple_assert(command_result["status"],
@@ -689,6 +691,8 @@ class RunFioRds(FunTestCase):
             host_dict[f11_hosts[0]["name"]] = {}
             host_dict[f11_hosts[0]["name"]]["handle"] = f11_hosts[0]["handle"]
             host_dict[f11_hosts[0]["name"]]["nvme_device"] = get_nvme_device(f11_hosts[0]["handle"])
+            if not host_dict[f11_hosts[0]["name"]]["nvme_device"]:
+                fun_test.simple_assert(False, "NVMe device not found")
             host_dict[f11_hosts[0]["name"]]["cpu_list"] = get_numa(f11_hosts[0]["handle"])
 
         if not skip_precondition:
