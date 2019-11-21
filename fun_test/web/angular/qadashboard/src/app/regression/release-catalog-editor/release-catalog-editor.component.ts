@@ -112,11 +112,11 @@ export class ReleaseCatalogEditorComponent implements OnInit, OnChanges {
   }
 
   catalogNameChanged(name) {
-
+    this.releaseCatalog.name = name;
   }
 
-  catalogDescriptionChanged(name) {
-
+  catalogDescriptionChanged(description) {
+    this.releaseCatalog.description = description;
   }
 
   submitClick() {

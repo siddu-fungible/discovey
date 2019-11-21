@@ -629,13 +629,13 @@ tr.text-center > th {
 }
 
 .fun-button-add {
-  padding: 8px 10px 8px;
+  padding: 6px 12px;
   border: darkblue 0.5px;
   background-color: #007bff;
   color: white;
   cursor: pointer;
   /*min-width: 100px;*/
-  border-radius: .25rem;
+  border-radius: 4px;
   margin: 5px;
   /*max-height: 30px;*/
   vertical-align: middle;
@@ -651,8 +651,8 @@ tr.text-center > th {
   color: #fff;
   background-color: #28a745;
   border-color: #28a745;
-  padding: 8px 10px 8px;
-  border-radius: 2px;
+  padding: 6px 12px;
+  border-radius: 4px;
   /*min-width: 100px;*/
   /*margin: 5px;*/
 }

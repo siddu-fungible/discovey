@@ -7,7 +7,7 @@
     </div>
 
     <div class="fun-attribute">
-      <span class="fun-attribute-label">Description:</span> <app-textarea-input [initialValue]="releaseCatalog.description" (valueChanged)="catalogDescription($event)" [numRows]="4"></app-textarea-input>
+      <span class="fun-attribute-label">Description:</span> <app-textarea-input [initialValue]="releaseCatalog.description" (valueChanged)="catalogDescriptionChanged($event)" [numRows]="4"></app-textarea-input>
     </div>
 
     <button *ngIf="!addingSuites" class="fun-button-add" (click)="addingSuites = !addingSuites">Add suites</button>

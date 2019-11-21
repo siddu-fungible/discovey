@@ -12,7 +12,7 @@
     <tr>
       <td class="fun-attribute-label">Suite name:</td>
       <td class="fun-attribute">
-        <app-textarea-input [hoverHide]="false" [initialValue]="suite?.name"
+        <app-textarea-input [hoverHide]="false" [initialValue]="suite?.name" [required]="true"
                             (valueChanged)="onNameChangedEvent($event)"></app-textarea-input>
       </td>
     </tr>
@@ -46,7 +46,7 @@
 
 
     <div *ngIf="!addingScript" style="display: flex; flex-direction: row;">
-      <button class="fun-button-add" (click)="onAddScript()">+ Add a script</button>
+      <span class="fun-action-link" (click)="onAddScript()">+ Add a script</span>
     </div>
 
 
@@ -76,7 +76,7 @@
         </form>
 
         <span class="fun-cancel-link" (click)="onCancelNewSuiteEntry()">Cancel</span>
-        <button class="fun-button-submit" [ngClass]="{'fun-button-disabled': !currentScriptPath}"
+        <button class="fun-button-add" [ngClass]="{'fun-button-disabled': !currentScriptPath}"
                 (click)="onSubmitNewSuiteEntry()">Add
         </button>
       </div>
