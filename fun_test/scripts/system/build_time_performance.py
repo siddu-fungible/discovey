@@ -90,13 +90,16 @@ class PalladiumTc(FunTestCase):
             fun_test.critical(str(ex))
 
     def add_to_db(self, model_name, value_dict, unit_dict, status):
+        result = True
         try:
             generic_helper = ModelHelper(model_name=model_name)
             generic_helper.set_units(validate=True, **unit_dict)
             generic_helper.add_entry(**value_dict)
             generic_helper.set_status(status)
         except Exception as ex:
+            result = False
             fun_test.critical(str(ex))
+        return result
 
     def build_on_jenkins(self, jenkins_manager, params):
         queue_item = jenkins_manager.build(params=params, extra_emails=self.extra_emails)
@@ -162,7 +165,9 @@ class FunOnDemandBuildTimeTc(PalladiumTc):
                           "total_time": self.total_time_taken}
 
             unit_dict = {"total_time_unit": PerfUnit.UNIT_SECS}
-            self.add_to_db(model_name=model_name, value_dict=value_dict, unit_dict=unit_dict, status=status)
+            db_success = self.add_to_db(model_name=model_name, value_dict=value_dict, unit_dict=unit_dict,
+                                        status=status)
+            fun_test.test_assert_expected(expected=True, actual=db_success, message="Db entry successful")
             fun_test.test_assert_expected(expected=fun_test.PASSED, actual=status, message="Fun On Demand build time status")
 
 class PrBuildTimeTc(PalladiumTc):
@@ -202,7 +207,9 @@ class PrBuildTimeTc(PalladiumTc):
                           "total_time": self.total_time_taken}
 
             unit_dict = {"total_time_unit": PerfUnit.UNIT_SECS}
-            self.add_to_db(model_name=model_name, value_dict=value_dict, unit_dict=unit_dict, status=self.status)
+            db_success = self.add_to_db(model_name=model_name, value_dict=value_dict, unit_dict=unit_dict,
+                                   status=self.status)
+            fun_test.test_assert_expected(expected=True, actual=db_success, message="Db entry successful")
             fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.status,
                                           message="Pr build time status")
 
@@ -245,7 +252,7 @@ class SetBuildTimeChartStatusTc(PalladiumTc):
 if __name__ == "__main__":
     myscript = MyScript()
 
-    myscript.add_test_case(FunOnDemandBuildTimeTc())
+    # myscript.add_test_case(FunOnDemandBuildTimeTc())
     myscript.add_test_case(PrBuildTimeTc())
     myscript.add_test_case(SetBuildTimeChartStatusTc())
 

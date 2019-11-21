@@ -3274,6 +3274,7 @@ class FunOnDemandTotalTimePerformance(FunModel):
 
     output_total_time = models.FloatField(verbose_name="Total Time", default=-1)
     output_total_time_unit = models.TextField(default=PerfUnit.UNIT_SECS)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         s = ""

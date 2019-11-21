@@ -23,7 +23,6 @@ RESULTS = {"NOT_RUN": "NOT_RUN",
            "SCHEDULED": "SCHEDULED",
            "ABORTED": "ABORTED"}
 
-
 def get_current_epoch_time():
     return time.time()
 
