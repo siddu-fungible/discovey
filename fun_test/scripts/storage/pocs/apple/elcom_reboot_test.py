@@ -67,6 +67,7 @@ class ElcomRebootTest(ApcPduTestcase):
                        expected_ports_up=None,
                        f1=0):
         self.get_dpcsh_data_for_cmds("port enableall", f1)
+        fun_test.sleep("Before checking port status")
         super(ElcomRebootTest, self).check_nu_ports(expected_ports_up, f1)
 
     def cleanup(self):

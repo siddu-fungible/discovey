@@ -1,8 +1,8 @@
 {
   "iterations": 1,
   "check_storage_controller": false,
-  "check_ssd": false,
-  "check_ports": false,
+  "check_ssd": true,
+  "check_ports": true,
   "expected_ssds_f1_0": 12,
   "expected_ssds_f1_1": 12,
   "expected_nu_ports_f1_0": [],
