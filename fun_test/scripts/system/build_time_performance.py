@@ -5,9 +5,11 @@ from lib.utilities.jenkins_manager import JenkinsManager
 from lib.host.lsf_status_server import LsfStatusServer
 from web.fun_test.analytics_models_helper import ModelHelper, get_data_collection_time
 from web.fun_test.metrics_models import MetricChart
+from web.fun_test.metrics_lib import MetricLib
 import time, psycopg2
 
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
+ml = MetricLib()
 
 class MyScript(FunTestScript):
     def describe(self):
@@ -223,24 +225,7 @@ class SetBuildTimeChartStatusTc(PalladiumTc):
         try:
             self.result = fun_test.FAILED
             models = ["FunOnDemandTotalTimePerformance", "PrBuildTotalTimePerformance"]
-            for model in models:
-                charts = MetricChart.objects.filter(metric_model_name=model)
-                metric_model = app_config.get_metric_models()[model]
-                for chart in charts:
-                    status = True
-                    data_sets = chart.get_data_sets()
-                    for data_set in data_sets:
-                        inputs = data_set["inputs"]
-                        entries = metric_model.objects.filter(**inputs).order_by("-input_date_time")[:1]
-                        if len(entries):
-                            entry = entries.first()
-                            if not entry.status == fun_test.PASSED:
-                                status = False
-                                chart.set_chart_status(status=fun_test.FAILED,
-                                                       suite_execution_id=fun_test.get_suite_execution_id())
-                                break
-                    if status:
-                        chart.set_chart_status(status=fun_test.PASSED, suite_execution_id=fun_test.get_suite_execution_id())
+            ml._set_chart_status(models=models, suite_execution_id=fun_test.get_suite_execution_id())
             self.result = fun_test.PASSED
         except Exception as ex:
             self.result = fun_test.FAILED
