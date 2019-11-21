@@ -48,6 +48,12 @@ def fio_parser(arg1, host_index, **kwargs):
     arg1.disconnect()
 
 
+def tune_host(host_obj):
+    host_obj.sudo_command("/etc/init.d/irqbalance stop")
+    host_obj.sudo_command("iptables -F")
+    host_obj.sudo_command("ip6tables -F")
+
+
 def get_nvme_device(host_obj):
     nvme_list_raw = host_obj.sudo_command("nvme list -o json")
     if "failed to open" in nvme_list_raw.lower():
@@ -686,6 +692,7 @@ class RunFioRds(FunTestCase):
                 host_dict[host["name"]]["handle"] = host["handle"]
                 host_dict[host["name"]]["nvme_device"] = get_nvme_device(host["handle"])
                 host_dict[host["name"]]["cpu_list"] = get_numa(host["handle"])
+                tune_host(host["handle"])
         else:
             host_dict = {}
             host_dict[f11_hosts[0]["name"]] = {}
@@ -694,6 +701,7 @@ class RunFioRds(FunTestCase):
             if not host_dict[f11_hosts[0]["name"]]["nvme_device"]:
                 fun_test.simple_assert(False, "NVMe device not found")
             host_dict[f11_hosts[0]["name"]]["cpu_list"] = get_numa(f11_hosts[0]["handle"])
+            tune_host(f11_hosts[0]["handle"])
 
         if not skip_precondition:
             # Run write test on disk
