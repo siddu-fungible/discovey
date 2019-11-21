@@ -651,7 +651,7 @@ def release_catalogs(request, catalog_id):
             else:
                 result.append(catalog_object.to_dict())
 
-    if request.method == "POST":
+    elif request.method == "POST":
         request_json = json.loads(request.body)
         request_json["created_date"] = get_current_time()
         c = ReleaseCatalog(**request_json)
@@ -666,6 +666,16 @@ def release_catalogs(request, catalog_id):
                 pass
 
         pass
+    elif request.method == "PUT":
+        if catalog_id:
+            try:
+                c = ReleaseCatalog.objects.get(id=int(catalog_id))
+                request_json = json.loads(request.body)
+                for key, value in request_json.iteritems():
+                    setattr(c, key, value)
+                    c.save()
+            except ObjectDoesNotExist:
+                pass
     return result
 
 if __name__ == "__main__":

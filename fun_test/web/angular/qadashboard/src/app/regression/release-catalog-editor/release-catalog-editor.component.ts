@@ -40,12 +40,14 @@ export class ReleaseCatalogEditorComponent implements OnInit, OnChanges {
         this.catalogId = parseInt(this.queryParams.id);
       }
       if (this.catalogId) {
+        this.sectionTitle = "Editing release catalog";
         return this.regressionService.getReleaseCatalog(this.catalogId);
       } else {
         return of(new ReleaseCatalog());
       }
     })).pipe(switchMap(response => {
       this.releaseCatalog = response;
+      this.setSelectedSuiteIds();
       this.fetchSuites();
       return of(true);
     }), catchError(error => {
@@ -104,6 +106,10 @@ export class ReleaseCatalogEditorComponent implements OnInit, OnChanges {
         this.suites[newlySelecteSuite.id] = newlySelecteSuite;
       }
     });
+    this.setSelectedSuiteIds();
+  }
+
+  setSelectedSuiteIds() {
     this.selectedSuiteIds = [];
     this.releaseCatalog.suites.map(selectedSuite => {
       this.selectedSuiteIds.push(selectedSuite.id);
@@ -120,13 +126,23 @@ export class ReleaseCatalogEditorComponent implements OnInit, OnChanges {
   }
 
   submitClick() {
-    this.regressionService.createReleaseCatalog(this.releaseCatalog).subscribe(response => {
-      this.loggerService.success("Submitted release catalog");
-      this.changeDetected = false;
-      this.location.back();
-    }, error => {
-      this.loggerService.error("Unable to submit release catalog");
-    })
+    if (!this.catalogId) {
+      this.regressionService.createReleaseCatalog(this.releaseCatalog).subscribe(response => {
+        this.loggerService.success("Submitted release catalog");
+        this.changeDetected = false;
+        this.location.back();
+      }, error => {
+        this.loggerService.error("Unable to submit release catalog");
+      })
+    } else {
+      this.regressionService.updateReleaseCatalog(this.catalogId, this.releaseCatalog).subscribe(response => {
+        this.loggerService.success("Updated release catalog");
+        this.changeDetected = false;
+      }, error => {
+        this.loggerService.error("Unable to update release catalog");
+      })
+    }
+
   }
 
   back() {
