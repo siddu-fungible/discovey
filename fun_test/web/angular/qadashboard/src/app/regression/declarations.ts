@@ -3,6 +3,9 @@ export class ReleaseCatalogSuite {
   constructor(id: number) {
     this.id = id;
   }
+  toJson() {
+    return {id: this.id};
+  }
 }
 
 export class ReleaseCatalog {
@@ -27,5 +30,13 @@ export class ReleaseCatalog {
         }
       });
     }
+  }
+
+  payloadForUpdate() {
+    let payload = {};
+    payload["name"] = this.name;
+    payload["description"] = this.description;
+    payload["suites"] = this.suites.map(suite => suite.toJson());
+    return payload;
   }
 }
