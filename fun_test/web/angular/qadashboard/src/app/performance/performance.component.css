@@ -222,9 +222,9 @@ sup {
   background-color: #337ab7;
 }
 .highlight {
-  text-decoration: underline;
+  text-decoration: underline !important;
   color: black !important;
-  font-weight: 600;
+  font-weight: 600 !important;
 }
 .right-col {
   height: 100%;

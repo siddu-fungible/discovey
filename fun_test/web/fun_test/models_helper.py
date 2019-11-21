@@ -2,6 +2,7 @@ import os, django, json, datetime
 import sys
 import random
 import time
+from lib.system.fun_test import *
 from datetime import datetime, timedelta
 from django.core import paginator
 from fun_global import RESULTS, get_current_time, get_localized_time
@@ -38,7 +39,8 @@ from web.fun_test.models import (
     TestBed,
     TestCaseInfo,
     Suite,
-    RegresssionScripts
+    RegresssionScripts,
+    MetricsDataRunTime
 )
 
 SUITE_EXECUTION_FILTERS = {"PENDING": "PENDING",
@@ -611,6 +613,25 @@ def add_jenkins_job_id_map(jenkins_job_id, fun_sdk_branch, git_commit, software_
                                 suite_execution_id=suite_execution_id)
         entry.save()
 
+def add_metrics_data_run_time(run_time, date_time):
+    try:
+        lsf_job_id = run_time["lsf_job_id"]
+        if lsf_job_id:
+            entry = MetricsDataRunTime.objects.get(lsf_job_id=lsf_job_id)
+        else:
+            raise ObjectDoesNotExist
+    except ObjectDoesNotExist:
+        jenkins_build_number = run_time["jenkins_build_number"]
+        lsf_job_id = run_time["lsf_job_id"]
+        suite_execution_id = run_time["suite_execution_id"]
+        build_properties = run_time["build_properties"]
+        version = run_time["version"]
+        associated_suites = run_time["associated_suites"]
+        entry = MetricsDataRunTime(jenkins_build_number=jenkins_build_number, lsf_job_id=lsf_job_id,
+                           suite_execution_id=suite_execution_id, build_properties=build_properties, version=version,
+                           associated_suites=associated_suites, date_time=date_time)
+        entry.save()
+    return entry.id
 
 def _get_suite_execution_attributes(suite_execution):
     suite_execution_attributes = []

@@ -10,6 +10,7 @@ export class TextareaInputComponent implements OnInit {
   @Input() numRows: number = 1; // number of rows of the text-area
   @Input() hoverHide: boolean = true; // The pencil shows only if you hover
   @Input() editable: boolean = true;
+  @Input() required: boolean = false;
   tempValue: string = null;
   editing: boolean = false;
   @Output() valueChanged = new EventEmitter<string>();

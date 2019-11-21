@@ -1,0 +1,47 @@
+{
+  "GlobalSetup": {
+    "bootargs": [
+      "app=mdt_test,load_mods,rdstest cc_huid=3 workload=storage --serial --dpc-server --dpc-uart --all_100g --nofreeze --test-exit-fast --server clients=48 qd=256 msgs=1000 delay=100 --noalternatecheck localip=0.0.0.0 remoteip=0.0.0.0 --disable-idle-detection",
+      "app=mdt_test,load_mods,rdstest cc_huid=2 workload=storage --serial --dpc-server --dpc-uart --all_100g --nofreeze --test-exit-fast --server clients=48 qd=256 msgs=1000 delay=100 --noalternatecheck localip=0.0.0.0 remoteip=0.0.0.0  --disable-idle-detection"
+    ],
+    "dut_start_index": 0,
+    "host_start_index": 0,
+    "update_workspace": false,
+    "update_deploy_script": false,
+    "funcp_mode": ["ep", "storage"],
+    "num_f1_per_fs": 2,
+    "num_f1s": 1,
+    "num_hosts": 2,
+    "fpg_int_prefix": "fpg",
+    "disable_f1_index": 0,
+    "f1_in_use": 0,
+    "load_modules": ["nvme", "nvme_tcp"],
+    "huid": 7,
+    "ctlid": 0,
+    "syslog_level": 5,
+    "command_timeout": 5,
+    "reboot_timeout": 600,
+    "ethernet_adapter": "Mellanox",
+    "override_numa_node": {"override": true, "override_node": "NUMA node0 CPU(s)"},
+    "csi_perf_pdtrace_hbm_size_kb": 204800
+  },
+  "rdsteramarktest": {
+    "num_ssd": 12,
+    "command_timeout": 30,
+    "iter_interval": 10,
+    "transport_port": 1099,
+    "tcpkali_payload": "/home/localadmin/nazir/tcpkali-parsifal/m3.bin",
+    "duration": 60,
+    "connecttimeout": "3s",
+    "messagerate": [16, 32],
+    "totalconnection": [16, 32],
+    "huid": 7,
+    "ctlid": 0,
+    "start_stats": true,
+    "mpstat_args": {"interval": 60, "output_file": "/tmp/mpstat.out", "cpu_list": "ALL"},
+    "stats_collect_details": [{"vp_utils": {"interval": 20}}, {"per_vp": {"interval": 20}}, {"resource_bam_args": {"interval": 20}}, {"vppkts_stats": {"interval": 20}}, {"psw_stats": {"interval": 20, "nu": true}}, {"fcp_stats": {"interval": 20, "nu": true}}, {"wro_stats": {"interval": 20, "nu": true}}, {"erp_stats": {"interval": 20, "nu": true}}, {"etp_stats": {"interval": 20, "nu": true}}, {"eqm_stats": {"interval": 20}}, {"hu_stats": {"interval": 20}}, {"ddr_stats": {"interval": 20}}, {"ca_stats": {"interval": 20}}, {"cdu_stats": {"interval": 20}}],
+    "collect_network_stats": false,
+    "csi_perf_iodepth": [64],
+    "cal_amplification": true
+  }
+}

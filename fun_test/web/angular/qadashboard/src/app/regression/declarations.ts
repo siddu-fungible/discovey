@@ -7,8 +7,9 @@ export class ReleaseCatalogSuite {
 
 export class ReleaseCatalog {
   name: string = "Please update";
-  description: string = null;
+  description: string = "Please update";
   suites: ReleaseCatalogSuite [] = [];
+  id: number;
   constructor (fields?: {
       name?: string
       suites?: ReleaseCatalogSuite[]
