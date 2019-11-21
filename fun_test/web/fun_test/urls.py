@@ -164,7 +164,8 @@ metric_urls = [
     url(r'^get_triage_info$', metrics_views.get_triage_info),
     url(r'^get_triage_info_from_commits$', metrics_views.get_triage_info_from_commits),
     url(r'^global_settings', metrics_views.global_settings),
-    url(r'^jiras/(\d+)/?(.*)?$', metrics_views.jiras)
+    url(r'^jiras/(\d+)/?(.*)?$', metrics_views.jiras),
+    url(r'^metrics_data_run_time', metrics_views.metrics_data_run_time)
 ]
 
 test_urls = [

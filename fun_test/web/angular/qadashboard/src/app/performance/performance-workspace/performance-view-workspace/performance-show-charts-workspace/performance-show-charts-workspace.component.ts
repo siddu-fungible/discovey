@@ -7,7 +7,6 @@ import {Component, Input, OnInit} from '@angular/core';
 })
 export class PerformanceShowChartsWorkspaceComponent implements OnInit {
   @Input() workspace: any = null;
-  @Input() buildInfo: any = null;
   pager: any = {};
   pagedItems: any[] = [];
   showPagedItems: boolean = false;
