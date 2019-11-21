@@ -63,11 +63,15 @@ class ElcomRebootTest(ApcPduTestcase):
         come_handle.destroy()
         return
 
-
-
+    def check_nu_ports(self,
+                       expected_ports_up=None,
+                       f1=0):
+        self.get_dpcsh_data_for_cmds("port enableall", f1)
+        super(ElcomRebootTest, self).check_nu_ports(expected_ports_up, f1)
 
     def cleanup(self):
         pass
+
 
 class ElcomPowerSwitch:
     """
