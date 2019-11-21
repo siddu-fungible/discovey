@@ -1079,10 +1079,12 @@ class MetricParser():
     def ec_performance(self, logs, date_time, platform):
         self.initialize()
         self.metrics["input_platform"] = platform
-        if platform == FunPlatform.S1:
-            regex = "EC config\s+\w+\s+\w+:?\s+(?P<value_json>{.*})\s+\[(?P<metric_name>\w+)\]"
-        elif platform == FunPlatform.F1:
+        str_logs = '\n'.join(logs)
+        match_agg = re.search(r"Aggregated", str_logs)
+        if match_agg:
             regex = "Aggregated EC\s+\w+\s+\w+:?\s+(?P<value_json>{.*})\s+\[(?P<metric_name>\w+)\]"
+        else:
+            regex = "EC config\s+\w+\s+\w+:?\s+(?P<value_json>{.*})\s+\[(?P<metric_name>\w+)\]"
 
         for line in logs:
             m = re.search(r'{}'.format(regex), line)
