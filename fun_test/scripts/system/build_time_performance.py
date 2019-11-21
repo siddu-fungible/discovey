@@ -237,7 +237,7 @@ class SetBuildTimeChartStatusTc(PalladiumTc):
 if __name__ == "__main__":
     myscript = MyScript()
 
-    # myscript.add_test_case(FunOnDemandBuildTimeTc())
+    myscript.add_test_case(FunOnDemandBuildTimeTc())
     myscript.add_test_case(PrBuildTimeTc())
     myscript.add_test_case(SetBuildTimeChartStatusTc())
 
