@@ -613,7 +613,7 @@ def add_jenkins_job_id_map(jenkins_job_id, fun_sdk_branch, git_commit, software_
                                 suite_execution_id=suite_execution_id)
         entry.save()
 
-def add_job_run_time_properties(run_time, date_time):
+def add_metrics_data_run_time(run_time, date_time):
     try:
         lsf_job_id = run_time["lsf_job_id"]
         if lsf_job_id:

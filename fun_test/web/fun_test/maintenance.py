@@ -3,7 +3,7 @@ from dateutil import parser
 from web.fun_test.metrics_lib import MetricLib
 from web.fun_test.models import *
 from django.forms.models import model_to_dict
-from web.fun_test.models_helper import add_job_run_time_properties
+from web.fun_test.models_helper import add_metrics_data_run_time
 
 METRICS_BASE_DATA_FILE = WEB_ROOT_DIR + "/metrics.json"
 ml = MetricLib()
@@ -2491,9 +2491,9 @@ if __name__ == "__main_48_vols__":
     print "added 48 vol datasets for random read write"
 
 if __name__ == "__main__":
-    # entries = MetricsDataRunTime.objects.all()
-    # for entry in entries:
-    #     entry.delete()
+    entries = MetricsDataRunTime.objects.all()
+    for entry in entries:
+        entry.delete()
     from django.db import transaction
     transaction.set_autocommit(False)
     metric_models = app_config.get_metric_models()
@@ -2534,8 +2534,8 @@ if __name__ == "__main__":
                         result["version"] = entry.sdk_version
                     result["associated_suites"] = entry.associated_suites if len(entry.associated_suites) else None
                     try:
-                        run_time_id = add_job_run_time_properties(date_time=build_date, run_time=result)
-                        model_entry.run_time = run_time_id
+                        run_time_id = add_metrics_data_run_time(date_time=build_date, run_time=result)
+                        model_entry.run_time_id = run_time_id
                         model_entry.save()
                     except Exception as ex:
                         print str(ex)

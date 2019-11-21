@@ -182,11 +182,11 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   showPointDetails(point): void {
     let metaData = point["metaData"];
     let self = this;
-    if (metaData.runTime) {
+    if (metaData.runTimeId) {
       let props = {};
       of (true).pipe(
         switchMap(response => {
-          return this.performanceService.getRunTime(metaData.runTime);
+          return this.performanceService.getRunTime(metaData.runTimeId);
         }),
         switchMap(response => {
           self.setPointInfo(response, point);
@@ -197,6 +197,9 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       }, error => {
         this.loggerService.error("Unable to fetch pointInfo from runtime metadata");
       });
+    } else {
+      self.setPointInfo(null, point);
+      self.pointClicked = true;
     }
   }
 
@@ -217,7 +220,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         self.pointInfo["Suite log directory"] = props.suite_execution_id;
       }
       if (props.version) {
-        self.pointInfo["Version"] = props.version;
+        self.pointInfo["Version"] = "bld_" + props.version;
       }
       if (props.associated_suites) {
         self.pointInfo["Associated suites"] = props.associated_suites;
@@ -756,8 +759,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
               epoch = oneRecord.epoch_time;
               let metaData = {};
               metaData["epoch"] = epoch;
-              if (oneRecord.hasOwnProperty("run_time")) {
-                metaData["runTime"] = oneRecord.run_time;
+              if (oneRecord.hasOwnProperty("run_time_id")) {
+                metaData["runTimeId"] = oneRecord.run_time_id;
               }
               let result = this.getValidatedData(output, minimum, maximum, metaData);
               oneChartDataArray.push(result);

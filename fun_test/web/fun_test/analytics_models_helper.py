@@ -19,7 +19,7 @@ from fun_settings import MAIN_WEB_APP
 
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 from lib.system.fun_test import *
-from web.fun_test.models_helper import add_jenkins_job_id_map, add_job_run_time_properties
+from web.fun_test.models_helper import add_jenkins_job_id_map, add_metrics_data_run_time
 from django.utils import timezone
 from dateutil import parser
 from fun_global import PerfUnit, FunPlatform, get_current_epoch_time_in_ms, get_localized_time
@@ -45,8 +45,8 @@ def save_entry(entry, run_time=None):
             fun_test.log("Adding runtime properties")
             fun_test.log("Run time props are {}".format(run_time))
             date_time = entry.input_date_time
-            run_time_id = add_job_run_time_properties(run_time=run_time, date_time=date_time)
-            entry.run_time = run_time_id
+            run_time_id = add_metrics_data_run_time(run_time=run_time, date_time=date_time)
+            entry.run_time_id = run_time_id
         entry.save()
     else:
         try:
@@ -62,6 +62,15 @@ def save_entry(entry, run_time=None):
             fun_test.critical(str(ex))
     return
 
+def set_metrics_data_run_time():
+    result = {}
+    result["lsf_job_id"] = None
+    result["suite_execution_id"] = fun_test.get_suite_execution_id()
+    result["jenkins_build_number"] = None
+    result["build_properties"] = fun_test.get_suite_run_time_environment_variable("bld_props")
+    result["version"] = fun_test.get_version()
+    result["associated_suites"] = None
+    return result
 
 def get_data_collection_time(tag=None):
     key = "data_collection_time"
@@ -339,15 +348,7 @@ class BltVolumePerformanceHelper(MetricHelper):
                   read_99_latency_unit="usecs", read_99_99_latency_unit="usecs", write_99_99_latency_unit="usecs",
                   version=-1):
         try:
-            if version == -1:
-                version = str(fun_test.get_version())
-            result = {}
-            result["lsf_job_id"] = None
-            result["suite_execution_id"] = fun_test.get_suite_execution_id()
-            result["jenkins_build_number"] = None
-            result["build_properties"] = fun_test.get_suite_run_time_environment_variable("bld_props")
-            result["version"] = version
-            result["associated_suites"] = None
+            run_time = set_metrics_data_run_time()
             entry = BltVolumePerformance.objects.get(input_date_time=date_time,
                                                      input_volume_type=volume,
                                                      input_test=test,
@@ -387,7 +388,7 @@ class BltVolumePerformanceHelper(MetricHelper):
             entry.output_read_95_latency_unit = read_95_latency_unit
             entry.output_read_99_latency_unit = read_99_latency_unit
             entry.output_read_99_99_latency_unit = read_99_99_latency_unit
-            save_entry(entry, run_time=result)
+            save_entry(entry, run_time=run_time)
         except ObjectDoesNotExist:
             one_entry = BltVolumePerformance(input_date_time=date_time,
                                              input_volume_type=volume,
@@ -428,7 +429,7 @@ class BltVolumePerformanceHelper(MetricHelper):
                                              output_read_95_latency_unit=read_95_latency_unit,
                                              output_read_99_latency_unit=read_99_latency_unit,
                                              output_read_99_99_latency_unit=read_99_99_latency_unit)
-            save_entry(one_entry, run_time=result)
+            save_entry(one_entry, run_time=run_time)
 
 
 class AllocSpeedPerformanceHelper(MetricHelper):
@@ -537,14 +538,8 @@ class ModelHelper(MetricHelper):
                     setattr(m_obj, "status", status)
                 if not self.units:
                     raise Exception('No units provided. Please provide the required units')
-                result = {}
-                result["lsf_job_id"] = None
-                result["suite_execution_id"] = fun_test.get_suite_execution_id()
-                result["jenkins_build_number"] = None
-                result["build_properties"] = fun_test.get_suite_run_time_environment_variable("bld_props")
-                result["version"] = fun_test.get_version()
-                result["associated_suites"] = None
-                save_entry(m_obj, run_time=result)
+                run_time = set_metrics_data_run_time()
+                save_entry(m_obj, run_time=run_time)
                 result = True
             else:
                 raise Exception("Set status failed")
