@@ -93,13 +93,12 @@ class MyScript(FunTestScript):
             f1_in_use = [0, 1]
             warm_up_fio_cmd_args = {
                 "bs": "8k",
-                "iodepth": 32,
+                "iodepth": 1,
                 "size": "100%",
                 "rw": "write",
                 "direct": 1,
                 "prio": 0,
-                "timeout": 720,
-                "numjobs": 8
+                "timeout": 720
             }
 
             ec_info_0 = {
