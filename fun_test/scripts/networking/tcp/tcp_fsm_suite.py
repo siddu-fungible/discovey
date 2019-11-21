@@ -584,7 +584,7 @@ if __name__ == '__main__':
         ts.add_test_case(TcWindowScale())
     if execute_test == 'sanity' or execute_test == 'short_suites' or execute_test == 'tc_flow_control':
         ts.add_test_case(TcFlowControl())
-    if execute_test not in ('sanity', 'tc_syn_recvd', 'tc_out_of_order_data_segments', 'tc_last_ack', 'tc_keepalive_timeout',
+    if execute_test not in ('short_suites', 'sanity', 'tc_syn_recvd', 'tc_out_of_order_data_segments', 'tc_last_ack', 'tc_keepalive_timeout',
                             'tc_established', 'tc_traffic_tests', 'tc_window_scale', 'tc_flow_control'):
         ts.add_test_case(TcOtherTests())
 
