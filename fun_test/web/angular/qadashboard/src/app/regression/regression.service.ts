@@ -372,11 +372,8 @@ export class RegressionService implements OnInit{
   }
 
 
-  getReleaseCatalogs(catalogId: number = null): Observable<ReleaseCatalog[]> {
+  getReleaseCatalogs(): Observable<ReleaseCatalog[]> {
     let url = "/api/v1/regression/release_catalogs";
-    if (catalogId) {
-      url += '/' + catalogId;
-    }
     return this.apiService.get(url).pipe(switchMap(response => {
       let allCatalogs = response.data;
       const mappedArray = allCatalogs.map(data => new ReleaseCatalog(data));
@@ -386,5 +383,32 @@ export class RegressionService implements OnInit{
       return throwError(error);
     }))
   }
+
+  getReleaseCatalog(catalogId: number): Observable<ReleaseCatalog> {
+    let url = "/api/v1/regression/release_catalogs";
+    if (catalogId) {
+      url += '/' + catalogId;
+    }
+    return this.apiService.get(url).pipe(switchMap(response => {
+      return of(new ReleaseCatalog(response.data));
+    }), catchError(error => {
+      this.loggerService.error("Unable to get release catalog");
+      return throwError(error);
+    }))
+  }
+
+  deleteReleaseCatalog(catalogId: number) {
+    let url = "/api/v1/regression/release_catalogs";
+    if (catalogId) {
+      url += '/' + catalogId;
+    }
+    return this.apiService.delete(url).pipe(switchMap(response => {
+      return of(true);
+    }), catchError(error => {
+      this.loggerService.error("Unable to delete release catalog");
+      return throwError(error);
+    }))
+  }
+
 
 }

@@ -16,7 +16,7 @@ from web.fun_test.metrics_models import LastMetricId, LastTriageId, PerformanceM
 from web.fun_test.metrics_models import AllocSpeedPerformanceSerializer, MetricChartSerializer, EcPerformance, \
     BcopyPerformanceSerializer
 from web.fun_test.metrics_models import BcopyFloodDmaPerformanceSerializer
-from web.fun_test.models import JenkinsJobIdMap, JenkinsJobIdMapSerializer
+from web.fun_test.models import JenkinsJobIdMap, JenkinsJobIdMapSerializer, MetricsDataRunTime
 from web.fun_test.metrics_models import LsvZipCryptoPerformance, LsvZipCryptoPerformanceSerializer
 from web.fun_test.metrics_models import NuTransitPerformance, NuTransitPerformanceSerializer
 from web.fun_test.metrics_models import ShaxPerformanceSerializer
@@ -69,27 +69,22 @@ def metrics_list(request):
 @csrf_exempt
 @api_safe_json_response
 def describe_table(request, table_name):
-    editing_chart = False
-    try:
-        request_json = json.loads(request.body)
-        if "editing_chart" in request_json:
-            editing_chart = True
-    except:
-        pass
     result = None
+    get_choices = request.GET.get("get_choices") == "true"
     metric_model = app_config.get_metric_models()[table_name]
     if metric_model:
         fields = metric_model._meta.get_fields()
         payload = OrderedDict()
         for field in fields:
             choices = None
-            verbose_name = "verbose_name"
-            if hasattr(field, "choices"):
-                all_values = metric_model.objects.values(field.column).distinct()
-                choices = []
-                for index, value in enumerate(all_values):
-                    choices.append((index, value[field.column]))
-                choices.append((len(choices), "any"))
+            verbose_name = None
+            if get_choices:
+                if hasattr(field, "choices"):
+                    all_values = metric_model.objects.values(field.column).distinct()
+                    choices = []
+                    for index, value in enumerate(all_values):
+                        choices.append((index, value[field.column]))
+                    choices.append((len(choices), "any"))
             if hasattr(field, "verbose_name"):
                 verbose_name = field.verbose_name
             payload[field.name] = {"choices": choices, "verbose_name": verbose_name}
@@ -954,4 +949,17 @@ def get_git_commits(request):
     git_obj = app_config.get_git_manager()
     commits = git_obj.get_commits_between(faulty_commit=faulty_commit, success_commit=success_commit)
     result["commits"] = commits["commits"]
+    return result
+
+
+@csrf_exempt
+@api_safe_json_response
+def metrics_data_run_time(request):
+    result = None
+    request_json = json.loads(request.body)
+    id = request_json["id"]
+    entries = MetricsDataRunTime.objects.filter(id=id)
+    if len(entries):
+        entry = entries.first()
+        result = entry.to_dict()
     return result

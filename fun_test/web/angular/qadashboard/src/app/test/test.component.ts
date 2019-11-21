@@ -4,7 +4,6 @@ import {Observable, of, forkJoin} from "rxjs";
 import {switchMap} from "rxjs/operators";
 import {ApiResponse, ApiService} from "../services/api/api.service";
 import {CommonService} from "../services/common/common.service";
-import {error} from "util";
 import {TestBedService} from "../regression/test-bed/test-bed.service";
 import {UserService} from "../services/user/user.service";
 import {LoggerService} from "../services/logger/logger.service";
