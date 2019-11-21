@@ -30,7 +30,7 @@
     "command_timeout": 30,
     "iter_interval": 10,
     "transport_port": 1099,
-    "tcpkali_payload": "/home/localadmin/nazir/tcpkali-parsifal/m3_256.bin",
+    "tcpkali_payload": "/home/localadmin/nazir/tcpkali-parsifal/m3.bin",
     "duration": 60,
     "connecttimeout": "3s",
     "messagerate": [16, 24, 32, 40, 48],
