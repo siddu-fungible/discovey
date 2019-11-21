@@ -1,6 +1,6 @@
 from lib.system.fun_test import *
 from django.apps import apps
-from fun_global import PerfUnit, FunPlatform, FUN_ON_DEMAND_DATABASE
+from fun_global import PerfUnit, FunPlatform
 from lib.utilities.jenkins_manager import JenkinsManager
 from lib.host.lsf_status_server import LsfStatusServer
 from web.fun_test.analytics_models_helper import ModelHelper, get_data_collection_time
@@ -167,9 +167,12 @@ class FunOnDemandBuildTimeTc(PalladiumTc):
 
 class PrBuildTimeTc(PalladiumTc):
     since_time = round(time.time()) - 86400
-    params = FUN_ON_DEMAND_DATABASE
     status = fun_test.FAILED
     total_time_taken = -1
+    FUN_ON_DEMAND_DATABASE = {'host': 'fun-on-demand-01',
+                              'database': 'builddata',
+                              'user': 'builddata_reader',
+                              'password': 'pico80@Lhasa'}
 
     def describe(self):
         self.set_test_details(id=2,
@@ -182,7 +185,7 @@ class PrBuildTimeTc(PalladiumTc):
 
     def run(self):
         try:
-            conn = psycopg2.connect(**self.params)
+            conn = psycopg2.connect(**self.FUN_ON_DEMAND_DATABASE)
             cur = conn.cursor()
             cur.execute(
                 "SELECT ROUND(AVG(duration_secs)) FROM testepoch WHERE (job = 'funsdk/master' OR job LIKE 'funsdk/pull_request%') AND start_time > " + str(
@@ -242,7 +245,7 @@ class SetBuildTimeChartStatusTc(PalladiumTc):
 if __name__ == "__main__":
     myscript = MyScript()
 
-    # myscript.add_test_case(FunOnDemandBuildTimeTc())
+    myscript.add_test_case(FunOnDemandBuildTimeTc())
     myscript.add_test_case(PrBuildTimeTc())
     myscript.add_test_case(SetBuildTimeChartStatusTc())
 
