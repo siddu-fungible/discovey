@@ -30,7 +30,6 @@ class ElcomRebootTest(ApcPduTestcase):
         pass
 
     def apc_pdu_reboot(self):
-        return
         come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
                            ssh_username=self.fs['come']['mgmt_ssh_username'],
                            ssh_password=self.fs['come']['mgmt_ssh_password'])
