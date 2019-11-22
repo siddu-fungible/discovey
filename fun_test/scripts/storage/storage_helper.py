@@ -532,7 +532,8 @@ class CollectStats(object):
                                 del(filtered_vp_util[key])
 
                     lines.append("\n########################  {} ########################\n".format(time.ctime()))
-                    lines.append("Normalized VP Utilization: {}\n".format(int(divide(n=total_vp_utils, d=num_vps))))
+                    lines.append("Normalized VP Utilization: {:.2f}\n".format(divide(n=float(total_vp_utils),
+                                                                                     d=num_vps)))
                     lines.append("Histogram table(Num of VPs in different utilization range):\n")
                     table_data = build_simple_table(data=histogram_data, column_headers=histogram_headers,
                                                     split_values_to_columns=True)
