@@ -371,6 +371,18 @@ export class RegressionService implements OnInit{
     }))
   }
 
+  updateReleaseCatalog(catalogId: number, releaseCatalog: ReleaseCatalog) {
+    let url = "/api/v1/regression/release_catalogs";
+    if (catalogId) {
+      url += '/' + catalogId;
+    }
+    return this.apiService.put(url, releaseCatalog.payloadForUpdate()).pipe(switchMap(response => {
+      return of(true);
+    }), catchError(error => {
+      this.loggerService.error("Unable to update release catalog");
+      return throwError(error);
+    }))
+  }
 
   getReleaseCatalogs(): Observable<ReleaseCatalog[]> {
     let url = "/api/v1/regression/release_catalogs";

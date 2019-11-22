@@ -101,6 +101,9 @@ class CleanupOldDirectories(FunTestCase):
         working_directory = "{}/fun_test/management".format(WEB_DIR)
         t.call("python archiver.py", working_directory=working_directory)
 
+    def cleanup(self):
+        pass
+
 class DetectLargeFiles(FunTestCase):
     MAX_FILE_SIZE = "400M"
     def describe(self):
@@ -120,10 +123,12 @@ class DetectLargeFiles(FunTestCase):
         pass
 
 
+
+
 if __name__ == "__main__":
     myscript = MaintenanceScript()
     myscript.add_test_case(ManageSsh())
     myscript.add_test_case(WebBackup())
-    # myscript.add_test_case(CleanupOldDirectories())
+    myscript.add_test_case(CleanupOldDirectories())
     myscript.add_test_case(DetectLargeFiles())
     myscript.run()

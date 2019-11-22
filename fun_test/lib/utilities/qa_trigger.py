@@ -9,7 +9,8 @@ import json
 import time
 import logging
 import httplib
-import time
+import subprocess
+
 
 logging.basicConfig(level=logging.INFO)
 
@@ -28,12 +29,28 @@ PASSED_EXIT_CODE = 0
 FAILED_EXIT_CODE = -1
 GENERIC_ERROR_EXIT_CODE = -111
 
+WORKSPACE_DIRECTORY = "/Users/johnabraham/ws/test_pr"
+FUNOS_RELEASE_STRIPPED_BINARY = "FunOS/build/funos-f1-release.stripped"
+TFTP_SERVER_IP = "qa-ubuntu-02"
+TFTP_SERVER_SSH_USERNAME = "auto_admin"
+
+
+def popen(command, args, shell=None):
+    p = subprocess.Popen([command] + args, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE,
+                         shell=shell)
+    output, err = p.communicate()
+    return_code = p.returncode
+    return return_code, output, err
+
+
+def scp_file(source_file, target_server_ip, target_username, target_file):
+    command = "scp {} {}@{}:{}".format(source_file, target_username, target_server_ip, target_file)
+    return popen(command="scp", args=command.split(" ")[1:])
+
+
 
 class FunTestClient:
-    STATUS_UNKNOWN = "UNKNOWN"
-    STATUS_COMPLETED = "COMPLETED"
-    STATUS_IN_PROGRESS = "IN_PROGRESS"
-    STATUS_QUEUED = "QUEUED"
+
     DEBUG = True
 
     def __init__(self, base_url):
@@ -42,10 +59,11 @@ class FunTestClient:
         self.csrf_token = None
         self.cookies = {}
 
-    def report_error(self, error_message, suite_name):
+    def report_error(self, error_message, suite_name=None):
+        print("ERROR: {}".format(error_message))
         from_address = "john.abraham@fungible.com"
         subject = "FunTest Interface error: %s" % error_message
-        content = "Suite: %s, Error: %s" % (suite_name, error_message)
+        content = "Suite: {}, Error: {}".format(suite_name, error_message)
         # send_mail(from_address=from_address, to_addresses=default_to_addresses, subject=subject, content=content)
         self._write_html(content)
 
@@ -160,6 +178,30 @@ class FunTestClient:
     def get_job_status(self, job_id):
         response = self._do_get(url="/api/v1/regression/suite_executions/{}?is_job_completed=true".format(job_id))
         return response
+
+    def scp_funos_binary(self):
+        result = False
+        source_file = "{}/{}".format(WORKSPACE_DIRECTORY, FUNOS_RELEASE_STRIPPED_BINARY)
+        if os.path.exists(source_file):
+            target_server_ip = TFTP_SERVER_IP
+            target_username = TFTP_SERVER_SSH_USERNAME
+            target_file = "/tmp/"
+
+            return_code, output, err = scp_file(source_file=source_file,
+                                                target_server_ip=target_server_ip,
+                                                target_username=target_username,
+                                                target_file=target_file)
+
+            if return_code == 0:
+                result = True
+                print("SCP FunOS binary was successful")
+            print("SCP: return_code: {}".format(return_code))
+            print("SCP: output: {}".format(output))
+            print("SCP: error: {}".format(err))
+        else:
+            error_message = "Path: {} does not exist".format(source_file)
+            self.report_error(error_message=error_message)
+        return result
 
 
 
