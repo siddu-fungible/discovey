@@ -93,6 +93,7 @@ except:
     cleanup = True
 
 csi_perf_enabled = fun_test.get_job_environment_variable("csi_perf")
+csi_cache_miss_enabled = fun_test.get_job_environment_variable("csi_cache_miss")
 perf_listener_host_name = "poc-server-06"
 perf_listener_ip = "20.1.1.1"
 
@@ -378,7 +379,11 @@ class FunethSanity(FunTestScript):
                     f1_0_boot_args = "app=load_mods cc_huid=3 sku=SKU_FS1600_0 retimer=0,1,2 --all_100g --dpc-uart --dpc-server"
                     f1_1_boot_args = "app=load_mods cc_huid=2 sku=SKU_FS1600_1 retimer=0 --all_100g --dpc-uart --dpc-server"
                 if csi_perf_enabled:
-                    f1_0_boot_args += " --perf csi-local-ip=29.1.1.2 csi-remote-ip={} pdtrace-hbm-size-kb=204800".format(perf_listener_ip)
+                    f1_0_boot_args += " --perf"
+                    f1_0_boot_args += " csi-local-ip=29.1.1.2 csi-remote-ip={} pdtrace-hbm-size-kb=204800".format(perf_listener_ip)
+                elif csi_cache_miss_enabled:
+                    f1_0_boot_args += " --csi-cache-miss"
+                    f1_0_boot_args += " csi	-local-ip=29.1.1.2 csi-remote-ip={} pdtrace-hbm-size-kb=204800".format(perf_listener_ip)
                 if nu_all_clusters:
                     f1_0_boot_args += ' override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]}'
                     f1_1_boot_args += ' override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]}'
@@ -391,8 +396,12 @@ class FunethSanity(FunTestScript):
             else:
                 boot_args = "app=load_mods retimer=0,1 --dpc-uart --dpc-server --csr-replay --all_100g"
                 if csi_perf_enabled:
-                    boot_args += " --perf csi-local-ip=29.1.1.2 csi-remote-ip={} pdtrace-hbm-size-kb=204800".format(perf_listener_ip)
-                if nu_all_clusters:
+                    boot_args += " --perf"
+                    boot_args += " csi-local-ip=29.1.1.2 csi-remote-ip={} pdtrace-hbm-size-kb=204800".format(perf_listener_ip)
+                 elif csi_cache_miss_enabled:
+                    boot_args += " --csi-cache-miss"
+                    boot_args += " csi-local-ip=29.1.1.2 csi-remote-ip={} pdtrace-hbm-size-kb=204800".format(perf_listener_ip)
+               if nu_all_clusters:
                     boot_args += ' override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]}'
                 topology_helper = TopologyHelper()
                 topology_helper.set_dut_parameters(dut_index=0,
@@ -437,7 +446,7 @@ class FunethSanity(FunTestScript):
         fun_test.shared_variables['funeth_obj'] = funeth_obj
 
         # perf
-        if csi_perf_enabled:
+        if csi_perf_enabled or csi_cache_miss_enabled:
             p = CsiPerfTemplate(perf_collector_host_name=perf_listener_host_name, listener_ip=perf_listener_ip, fs=fs)
             p.prepare(f1_index=0)
             self.csi_perf_obj = p
