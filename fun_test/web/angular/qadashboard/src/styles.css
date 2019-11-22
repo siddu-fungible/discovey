@@ -756,13 +756,13 @@ label {
 
 .fun-table-borderless-header {
   font-weight: bolder;
-  color: lightgrey;
+  color: #a9a8a8;
 }
 
 tr.fun-table-borderless-row > td {
   border-top: 1px solid;
   border-bottom: 1px solid;
-  padding: 5px;
+  padding: 10px;
 }
 
 .fun-panel {

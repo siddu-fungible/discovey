@@ -27,6 +27,7 @@ from web.fun_test.api import users
 from web.fun_test.api import regression, triaging, performance
 from web.fun_test.api import site_config
 from web.fun_test.api import scheduler_api
+from web.fun_test.api import daemons
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.views.generic import RedirectView
 from fun_global import is_development_mode
@@ -90,6 +91,10 @@ regression_urls = [
     url(r'^get_networking_artifacts/(.*)$', regression_views.get_networking_artifacts),
     url(r'^(?:\S+)$', views.angular_home)
 
+]
+
+daemon_urls = [
+    url(r'^$', views.angular_home)
 ]
 
 tcm_urls = [
@@ -228,7 +233,8 @@ api_v1_urls = [
     url(r'^regression/release_trains$', regression.release_trains),
     url(r'^regression/contexts/(\d+)/(\d+)$', regression.contexts),
     url(r'^regression/script_run_time/(\d+)/(\d+)$', regression.script_run_time),
-    url(r'^regression/release_catalogs/?(\d+)?$', regression.release_catalogs)
+    url(r'^regression/release_catalogs/?(\d+)?$', regression.release_catalogs),
+    url(r'^daemons/?(\d+)?$', daemons.daemons)
 ]
 
 site_under_construction = False
@@ -245,6 +251,7 @@ if not site_under_construction:
         url(r'^get_script_content', views.get_script_content, name='get_script_content'),
         # url(r'^tools/', include('tools.urls')),
         url(r'^regression/', include(regression_urls)),
+        url(r'^daemons/', include(daemon_urls)),
         url(r'^tcm/', include(tcm_urls)),  # related to test-case manangement
         url(r'^metrics/', include(metric_urls)),  # related to metrics, performance statistics
         # url(r'^triage/', include(triage_urls)),

@@ -35,6 +35,7 @@ import {ScriptDetailComponent} from "./regression/script-detail/script-detail.co
 import {ReleaseCatalogEditorComponent} from "./regression/release-catalog-editor/release-catalog-editor.component";
 import {ReleasesComponent} from "./regression/releases/releases.component";
 import {ReleaseCatalogsComponent} from "./regression/release-catalogs/release-catalogs.component";
+import {DaemonsComponent} from "./daemons/daemons.component";
 
 export function regressionHome(url: UrlSegment[]) {
   return url[0].path.endsWith("regression");
@@ -83,6 +84,7 @@ const routes: Routes = [
   { path: 'performance/admin/:mode/:modelName', component: CreateChartComponent},
   { path: 'performance/admin', component: AdminComponent},
   { path: 'performance/score_table/:metricId', component: ScoresTableComponent},
+  {path: 'daemons', component: DaemonsComponent}
 ];
 
 @NgModule({

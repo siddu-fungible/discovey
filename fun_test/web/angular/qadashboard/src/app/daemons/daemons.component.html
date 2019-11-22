@@ -1,0 +1,13 @@
+<div class="component">
+  <app-section-header [value]="'Services'"></app-section-header>
+  <table class="fun-table-borderless">
+    <tr class="fun-table-borderless-row">
+      <td class="fun-table-borderless-header">Name</td>
+      <td class="fun-table-borderless-header">Last heart-beat</td>
+    </tr>
+    <tr *ngFor="let daemon of daemons" class="fun-table-borderless-row">
+      <td>{{ daemon.name }}</td>
+      <td>{{ getPrettyTime(daemon.heart_beat_time_epoch) }}</td>
+    </tr>
+  </table>
+</div>

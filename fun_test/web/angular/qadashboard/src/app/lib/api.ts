@@ -1,0 +1,67 @@
+import {ApiService} from "../services/api/api.service";
+import {catchError, switchMap} from "rxjs/operators";
+import {of, throwError} from "rxjs";
+import {LoggerService} from "../services/logger/logger.service";
+import {AppModule} from "../app.module";
+
+export abstract class Api {
+  abstract url: string = null;
+  abstract classType: any = null;
+
+  abstract serialize(): any;
+  abstract deSerialize(data: any): any;
+  private apiService: ApiService;
+  private loggerService: LoggerService;
+
+  constructor() {
+    this.apiService = AppModule.injector.get(ApiService);
+    this.loggerService = AppModule.injector.get(LoggerService);
+  }
+
+  protected create(url, payload) {
+    return this.apiService.post(this.url, payload).pipe(switchMap(response => {
+      this.deSerialize(response.data);
+      return of(this);
+    }), catchError(error => {
+      this.loggerService.error(`Unable to create: ${this.constructor.name}`);
+      return throwError(error);
+    }))
+  }
+
+  protected get(url) {
+    return this.apiService.get(this.url).pipe(switchMap(response => {
+      this.deSerialize(response.data);
+      return of(this);
+    }), catchError(error => {
+      this.loggerService.error(`Unable to get: ${this.constructor.name}`);
+      return throwError(error);
+    }))
+  }
+
+  getAll() {
+    return this.apiService.get(this.url).pipe(switchMap(response => {
+      let allObjects = response.data.map(oneEntry => {
+        //let newInstance = new this.constructor();
+        let newInstance = new this.classType();
+        //newInstance.constructor.apply(newInstance, oneEntry);
+        newInstance.deSerialize(oneEntry);
+        return newInstance;
+      });
+      return of(allObjects);
+    }), catchError(error => {
+      this.loggerService.error(`Unable to getAll: ${this.constructor.name}`);
+      return throwError(error);
+    }))
+
+  }
+
+  protected delete() {
+  }
+
+  protected deleteAll() {
+  }
+
+  protected update() {
+  }
+
+}
