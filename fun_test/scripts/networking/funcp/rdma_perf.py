@@ -203,13 +203,6 @@ class BringupSetup(FunTestCase):
                                 topology.get_host_instance(dut_index=0, host_index=0, ssd_interface_index=i))
             fun_test.shared_variables["hosts_obj"] = host_dict
 
-            # Bringup FunCP
-            fun_test.test_assert(expression=funcp_obj.bringup_funcp(prepare_docker=False), message="Bringup FunCP")
-            # Assign MPG IPs from dhcp
-            funcp_obj.assign_mpg_ips(static=self.server_key["fs"][fs_name]["mpg_ips"]["static"],
-                                     f1_1_mpg=self.server_key["fs"][fs_name]["mpg_ips"]["mpg1"],
-                                     f1_0_mpg=self.server_key["fs"][fs_name]["mpg_ips"]["mpg0"])
-
             # Check PICe Link on host
             servers_mode = self.server_key["fs"][fs_name]["hosts"]
             for server in servers_mode:
@@ -219,6 +212,14 @@ class BringupSetup(FunTestCase):
                 if result == "2":
                     fun_test.add_checkpoint("<b><font color='red'><PCIE link did not come up in %s mode</font></b>"
                                             % servers_mode[server])
+
+            # Bringup FunCP
+            fun_test.test_assert(expression=funcp_obj.bringup_funcp(prepare_docker=False), message="Bringup FunCP")
+            # Assign MPG IPs from dhcp
+            funcp_obj.assign_mpg_ips(static=self.server_key["fs"][fs_name]["mpg_ips"]["static"],
+                                     f1_1_mpg=self.server_key["fs"][fs_name]["mpg_ips"]["mpg1"],
+                                     f1_0_mpg=self.server_key["fs"][fs_name]["mpg_ips"]["mpg0"])
+
         else:
             # Get COMe object
             am = AssetManager()
