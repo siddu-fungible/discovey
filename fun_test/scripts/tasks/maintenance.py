@@ -98,9 +98,12 @@ class CleanupOldDirectories(FunTestCase):
 
     def run(self):
         t = TaskTemplate()
-        working_directory = "{}/fun_test/management".format(WEB_DIR)
+        working_direcapptory = "{}/fun_test/management".format(WEB_DIR)
         t.call("python archiver.py", working_directory=working_directory)
 
+    def cleanup(self):
+        pass
+    
 class DetectLargeFiles(FunTestCase):
     MAX_FILE_SIZE = "400M"
     def describe(self):
