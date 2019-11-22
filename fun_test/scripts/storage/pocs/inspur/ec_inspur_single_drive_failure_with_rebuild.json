@@ -23,7 +23,15 @@
     "huid": 7,
     "ctlid": 0,
     "ethernet_adapter": "Mellanox",
-    "override_numa_node": {"override": true, "override_node": "NUMA node0 CPU(s)"}
+    "override_numa_node": {"override": true, "override_node": "NUMA node0 CPU(s)"},
+    "api_server_port": 50220,
+    "api_server_username": "admin",
+    "api_server_password": "password",
+    "install": "fresh",
+    "sc_db_directories": ["/var/opt/fungible/elasticsearch", "/var/opt/fungible/cassandra"],
+    "sc_script_dir": "/opt/fungible/StorageController/etc",
+    "run_sc_script": "start_sc.sh",
+    "container_up_timeout": 60
   },
   "SingleVolumeWithBP": {
     "ec_info": {
