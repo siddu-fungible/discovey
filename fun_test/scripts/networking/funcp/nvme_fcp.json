@@ -8,25 +8,28 @@
     "controller_port":1099,
     "command_timeout": 5,
     "precondition_args":{
-      "bs": "128k",
+      "bs": 4096,
       "size": "100%",
       "iodepth": 32,
       "direct": 1,
       "prio": 0,
-      "timeout":900
+      "invalidate": 1,
+      "timeout":1200
     },
     "fio_cmd_args": {
       "bs": 4096,
       "ioengine": "libaio",
-      "runtime": 60,
+      "runtime": 300,
       "direct": 1,
+      "invalidate": 1,
       "timeout": 600,
+      "randrepeat": 1,
       "iodepth": 8,
       "prio": 0,
       "numjobs": 1,
       "cpus_allowed_policy": "split"
     },
-    "stats_interval": 10,
+    "stats_interval": 5,
     "stats_collect_details": [
       {
         "vp_utils": {

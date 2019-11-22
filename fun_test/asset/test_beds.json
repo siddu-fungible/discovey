@@ -2814,9 +2814,28 @@
             "type": "INTERFACE_TYPE_PCIE",
             "dual": 0
           },
-          "14": {
+          "4": {
             "host_info": {
               "name": "cab03-qa-04"
+            },
+            "type": "INTERFACE_TYPE_PCIE",
+            "hosts": 1
+          },
+          "5": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 4
+          },
+          "6": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 4
+          },
+          "7": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 4
+          },
+          "14": {
+            "host_info": {
+              "name": "mktg15"
             },
             "type": "INTERFACE_TYPE_PCIE",
             "hosts": 1

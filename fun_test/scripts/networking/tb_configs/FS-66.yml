@@ -3,7 +3,7 @@ router_mac:
 
 # HU host
 hu:
-  hostname: cab03-qa-04
+  hostname: mktg15
   username: localadmin
   password: Precious1*
   mgmt_interface: eno1
@@ -35,6 +35,26 @@ hu2:
       interfaces:
         - hu2-f0:
             ipv4_addr: 14.1.1.2
+            ipv4_netmask: 255.255.255.0
+      routes:
+      - prefix: 15.1.1.0/24
+        nexthop: 14.1.1.1
+      - prefix: 30.1.1.0/24
+        nexthop: 14.1.1.1
+
+hu1:
+  hostname: cab03-qa-04
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: eno1
+  pcie_width: 16
+  pf_interface: hu1-f0
+  vf_interface: hu1-f8
+  namespaces:
+    default:
+      interfaces:
+        - hu1-f0:
+            ipv4_addr: 14.1.1.3
             ipv4_netmask: 255.255.255.0
       routes:
       - prefix: 15.1.1.0/24
