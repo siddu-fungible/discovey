@@ -931,6 +931,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                     host_handle = self.host_info[host_name]["handle"]
                     fio_output = host_handle.pcie_fio(filename=self.host_info[host_name]["fio_filename"],
                                                       cpus_allowed=self.host_info[host_name]["host_numa_cpus"],
+                                                      timeout=self.warm_up_fio_cmd_args['timeout']
                                                       **self.warm_up_fio_cmd_args)
                     fun_test.log("FIO Command Output:\n{}".format(fio_output))
                     fun_test.test_assert(fio_output, "Volume warmup on host {}".format(host_name))
