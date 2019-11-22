@@ -637,9 +637,10 @@ export class SubmitJobComponent implements OnInit {
 
   toggleCsiCacheMiss() {
     this.csiCacheMiss = !this.csiCacheMiss;
+    /*
     if (this.csiCacheMiss) {
       this.csiPerf = true;
-    }
+    }*/
   }
 
 }
