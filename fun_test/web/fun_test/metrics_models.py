@@ -954,6 +954,7 @@ class BltVolumePerformance(models.Model):
     output_read_99_latency_unit = models.TextField(default="usecs")
     input_platform = models.TextField(default=FunPlatform.F1)
     input_version = models.CharField(verbose_name="Version", max_length=50, default="")
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         return "{}:{}:{}:{}:{}:{}:{}:{}".format(self.input_date_time,
@@ -985,6 +986,7 @@ class AlibabaPerformance(models.Model):
     input_platform = models.TextField(default=FunPlatform.F1)
     input_version = models.CharField(verbose_name="Version", max_length=50, default="")
     input_encryption = models.BooleanField(default=False)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     output_write_iops = models.IntegerField(verbose_name="Write IOPS", default=-1)
     output_read_iops = models.IntegerField(verbose_name="Read IOPS", default=-1)
@@ -1045,6 +1047,8 @@ class AlibabaBmvRemoteSsdPerformance(models.Model):
     input_num_threads = models.IntegerField(verbose_name="Threads")
     input_platform = models.TextField(default=FunPlatform.F1)
     input_version = models.CharField(verbose_name="Version", max_length=50, default="")
+    run_time_id = models.IntegerField(default=None, null=True)
+
     output_write_iops = models.IntegerField(verbose_name="Write IOPS", default=-1)
     output_read_iops = models.IntegerField(verbose_name="Read IOPS", default=-1)
     output_write_throughput = models.FloatField(verbose_name="Write throughput", default=-1)
@@ -1097,6 +1101,7 @@ class InspurZipCompressionRatiosPerformance(models.Model):
     output_f1_compression_ratio = models.FloatField(verbose_name="F1 Compression Ratio", default=-1)
     output_f1_compression_ratio_unit = models.TextField(default="number")
     input_platform = models.TextField(default=FunPlatform.F1)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         return str(self.__dict__)
@@ -1118,6 +1123,7 @@ class AllocSpeedPerformance(models.Model):
     output_one_malloc_free_classic_max = models.IntegerField(default=-1, verbose_name="Time in ns (Classic): Max")
     output_one_malloc_free_classic_max_unit = models.TextField(default="nsecs")
     input_platform = models.TextField(default=FunPlatform.F1)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         return "{}..{}..{}..{}..{}..{}..{}".format(self.key, self.output_one_malloc_free_wu, self.output_one_malloc_free_threaded,
@@ -1137,6 +1143,7 @@ class WuLatencyAllocStack(models.Model):
     output_avg = models.IntegerField(verbose_name="Avg (ns)")
     output_avg_unit = models.TextField(default="nsecs")
     input_platform = models.TextField(default=FunPlatform.F1)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         return "{}..{}..{}..{}".format(self.key, self.output_min, self.output_avg, self.output_max)
@@ -1153,6 +1160,7 @@ class WuLatencyUngated(models.Model):
     output_avg = models.IntegerField(verbose_name="Avg (ns)")
     output_avg_unit = models.TextField(default="nsecs")
     input_platform = models.TextField(default=FunPlatform.F1)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         return "{}..{}..{}..{}".format(self.key, self.output_min, self.output_avg, self.output_max)
@@ -1181,6 +1189,7 @@ class UnitTestPerformance(models.Model):
     input_git_commit = models.CharField(max_length=100, default="", verbose_name="Git commit")
     input_branch_funsdk = models.CharField(max_length=100, default="", verbose_name="Branch FunSDK")
     input_platform = models.TextField(default=FunPlatform.F1)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         return "{}..{}..{}".format(self.input_software_date, self.output_num_passed, self.output_num_failed)
@@ -1203,6 +1212,7 @@ class EcPerformance(models.Model):
     input_stridelen_min = models.IntegerField(verbose_name="strideline min", default=4096)
     input_stridelen_max = models.IntegerField(verbose_name="strideline max", default=4096)
     input_platform = models.TextField(default=FunPlatform.F1)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     output_encode_latency_min = models.IntegerField(verbose_name="Encode Latency min")
     output_encode_latency_min_unit = models.TextField(default="nsecs")
@@ -1243,6 +1253,8 @@ class BcopyPerformance(models.Model):
     input_coherent = models.TextField(verbose_name="Coherent/Non", default="Coherent", choices=[(0, "Coherent"), (1, "Non-coherent")])
     input_plain = models.TextField(verbose_name="Plain/DMA", default="Plain", choices=[(0, "Plain"), (1, "DMA")])
     input_size = models.IntegerField(verbose_name="Size in KB", choices=[(0, "4"), (1, "8"), (2, "16"), (3, "32"), (4, "64")])
+    run_time_id = models.IntegerField(default=None, null=True)
+
     output_latency_units = models.TextField(verbose_name="Latency units")
     output_latency_min = models.IntegerField(verbose_name="Latency min")
     output_latency_min_unit = models.TextField(default="nsecs")
@@ -1277,6 +1289,7 @@ class BcopyFloodDmaPerformance(models.Model):
     output_average_bandwith_unit = models.TextField(default="Gbps")
     input_average_bandwith_perf_name = models.TextField(verbose_name="Average Bandwidth perf name")
     input_platform = models.TextField(default=FunPlatform.F1)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         return str(self.__dict__)
@@ -1295,6 +1308,7 @@ class EcVolPerformance(models.Model):
     output_ecvol_ec_stats_iops = models.IntegerField(verbose_name="IOPS", default=-1)
     output_ecvol_ec_stats_iops_unit = models.TextField(default="ops")
     input_platform = models.TextField(default=FunPlatform.F1)
+    run_time_id = models.IntegerField(default=None, null=True)
 
 
 class LsvZipCryptoPerformance(models.Model):
@@ -1337,6 +1351,7 @@ class LsvZipCryptoPerformance(models.Model):
     output_lsv_write_avg_op_bw_mbps = models.IntegerField(verbose_name="LSV write: BW avg", default=-1)
     output_lsv_write_total_op_bw_mbps = models.IntegerField(verbose_name="LSV write: BW total", default=-1)
     input_platform = models.TextField(default=FunPlatform.F1)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         s = ""
@@ -1378,6 +1393,7 @@ class NuTransitPerformance(models.Model):
     input_offloads = models.BooleanField(default=False)
     input_protocol = models.TextField(default="UDP")
     input_platform = models.TextField(default=FunPlatform.F1)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         s = ""
@@ -1408,6 +1424,7 @@ class HuThroughputPerformance(models.Model):
     input_protocol = models.TextField(default="TCP")
     input_num_hosts = models.IntegerField(verbose_name="Number of Hosts", default=1)
     input_platform = models.TextField(default=FunPlatform.F1)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         s = ""
@@ -1481,6 +1498,7 @@ class HuLatencyPerformance(models.Model):
     input_protocol = models.TextField(default="TCP")
     input_num_hosts = models.IntegerField(verbose_name="Number of Hosts", default=1)
     input_platform = models.TextField(default=FunPlatform.F1)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         s = ""
@@ -1553,6 +1571,7 @@ class HuLatencyUnderLoadPerformance(models.Model):
     input_protocol = models.TextField(default="TCP")
     input_num_hosts = models.IntegerField(verbose_name="Number of Hosts", default=1)
     input_platform = models.TextField(default=FunPlatform.F1)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         s = ""
@@ -1590,6 +1609,7 @@ class TeraMarkJuniperNetworkingPerformance(models.Model):
     input_half_load_latency = models.BooleanField(default=False)
     input_memory = models.TextField(default="HBM")
     input_platform = models.TextField(default=FunPlatform.F1)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         s = ""
@@ -1611,6 +1631,7 @@ class TeraMarkFunTcpThroughputPerformance(models.Model):
     output_throughput_unit = models.TextField(default="Gbps")
     output_pps_unit = models.TextField(default="Mpps")
     input_platform = models.TextField(default=FunPlatform.F1)
+    run_time_id = models.IntegerField(default=None, null=True)
 
 
     def __str__(self):
@@ -1634,6 +1655,7 @@ class TeraMarkFunTcpConnectionsPerSecondPerformance(models.Model):
     input_flow_type = models.CharField(verbose_name="Flow Type", max_length=50, default="")
     input_cps_type = models.TextField(verbose_name="CPS Type", default="")
     input_platform = models.TextField(default=FunPlatform.F1)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         s = ""
@@ -1775,6 +1797,7 @@ class VoltestPerformance(models.Model):
     output_VOL_TYPE_BLK_EC_read_Bandwidth_avg_unit = models.TextField(default="Mbps")
     output_VOL_TYPE_BLK_EC_read_Bandwidth_total_unit = models.TextField(default="Mbps")
     input_platform = models.TextField(default=FunPlatform.F1)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         return "{}: {}".format(self.input_date_time, self.output_VOL_TYPE_BLK_LSV_write_Bandwidth_total)
@@ -1787,6 +1810,7 @@ class WuDispatchTestPerformance(models.Model):
     output_average = models.IntegerField(verbose_name="Output WU Dispatch Performanmce Test Average", default=-1)
     output_average_unit = models.TextField(default="cycles")
     input_platform = models.TextField(default=FunPlatform.F1)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         s = ""
@@ -1801,7 +1825,7 @@ class WuSendSpeedTestPerformance(models.Model):
     input_metric_name = models.CharField(max_length=40, default="wu_send_ungated_latency_cycles", choices=[(0, "wu_send_ungated_latency_cycles")])
     output_average = models.IntegerField(verbose_name="Output WU Send Speed Performanmce Test Average", default=-1)
     output_average_unit = models.TextField(default="cycles")
-    input_platform = models.TextField(default=FunPlatform.F1)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         s = ""
@@ -1817,6 +1841,7 @@ class SoakFunMallocPerformance(models.Model):
     output_ops_per_sec = models.IntegerField(verbose_name="Soak Fun Malloc Test ops per sec", default=-1)
     output_ops_per_sec_unit = models.TextField(default="ops")
     input_platform = models.TextField(default=FunPlatform.F1)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         s = ""
@@ -1832,6 +1857,7 @@ class SoakClassicMallocPerformance(models.Model):
     output_ops_per_sec = models.IntegerField(verbose_name="Soak Classic Malloc Test ops per sec", default=-1)
     output_ops_per_sec_unit = models.TextField(default="ops")
     input_platform = models.TextField(default=FunPlatform.F1)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         s = ""
@@ -1847,6 +1873,7 @@ class TeraMarkPkeRsaPerformance(models.Model):
     output_ops_per_sec = models.IntegerField(verbose_name="ops per sec", default=-1)
     output_ops_per_sec_unit = models.TextField(default="ops")
     input_platform = models.TextField(default=FunPlatform.F1)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         s = ""
@@ -1862,6 +1889,7 @@ class TeraMarkPkeRsa4kPerformance(models.Model):
     output_ops_per_sec = models.IntegerField(verbose_name="ops per sec", default=-1)
     output_ops_per_sec_unit = models.TextField(default="ops")
     input_platform = models.TextField(default=FunPlatform.F1)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         s = ""
@@ -1877,6 +1905,7 @@ class TeraMarkPkeEcdh256Performance(models.Model):
     output_ops_per_sec = models.IntegerField(verbose_name="ops per sec", default=-1)
     output_ops_per_sec_unit = models.TextField(default="ops")
     input_platform = models.TextField(default=FunPlatform.F1)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         s = ""
@@ -1892,6 +1921,7 @@ class TeraMarkPkeEcdh25519Performance(models.Model):
     output_ops_per_sec = models.IntegerField(verbose_name="ops per sec", default=-1)
     output_ops_per_sec_unit = models.TextField(default="ops")
     input_platform = models.TextField(default=FunPlatform.F1)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         s = ""
@@ -1907,6 +1937,7 @@ class PkeX25519TlsSoakPerformance(models.Model):
     output_ops_per_sec = models.IntegerField(verbose_name="ops/sec", default=-1)
     output_ops_per_sec_unit = models.TextField(default="ops")
     input_platform = models.TextField(default=FunPlatform.F1)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         s = ""
@@ -1922,6 +1953,7 @@ class PkeP256TlsSoakPerformance(models.Model):
     output_ops_per_sec = models.IntegerField(verbose_name="ops/sec", default=-1)
     output_ops_per_sec_unit = models.TextField(default="ops")
     input_platform = models.TextField(default=FunPlatform.F1)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         s = ""
@@ -1940,6 +1972,7 @@ class SoakDmaMemcpyCoherentPerformance(models.Model):
     output_bandwidth = models.FloatField(verbose_name="Bandwidth", default=-1)
     input_unit = models.TextField(default="GBps")
     input_platform = models.TextField(default=FunPlatform.F1)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         s = ""
@@ -1958,6 +1991,7 @@ class SoakDmaMemcpyNonCoherentPerformance(models.Model):
     output_bandwidth = models.FloatField(verbose_name="Bandwidth", default=-1)
     input_unit = models.TextField(default="GBps")
     input_platform = models.TextField(default=FunPlatform.F1)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         s = ""
@@ -1973,6 +2007,7 @@ class SoakDmaMemcpyThresholdPerformance(models.Model):
     input_metric_name = models.TextField(verbose_name="Metric Name", default="")
     output_threshold = models.FloatField(verbose_name="Threshold", default=-1)
     input_platform = models.TextField(default=FunPlatform.F1)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         s = ""
@@ -1994,6 +2029,7 @@ class SoakDmaMemsetPerformance(models.Model):
     output_bandwidth = models.FloatField(verbose_name="Bandwidth", default=-1)
     input_unit = models.TextField(default="GBps")
     input_platform = models.TextField(default=FunPlatform.F1)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         s = ""
@@ -2012,6 +2048,7 @@ class ChannelParallPerformance(models.Model):
     input_metric_name = models.TextField(default="")
     output_channel_parall_speed = models.BigIntegerField(default=-1)
     output_channel_parall_speed_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         s = ""
@@ -2038,6 +2075,7 @@ class TeraMarkCryptoPerformance(models.Model):
     output_latency_avg_unit = models.TextField(default="nsecs")
     output_latency_max_unit = models.TextField(default="nsecs")
     input_platform = models.TextField(default=FunPlatform.F1)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         s = ""
@@ -2061,6 +2099,7 @@ class JuniperCryptoTunnelPerformance(models.Model):
     output_packets_per_sec_unit = models.TextField(default="Mpps")
     output_throughput_unit = models.TextField(default="Gbps")
     input_platform = models.TextField(default=FunPlatform.F1)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         s = ""
@@ -2084,6 +2123,7 @@ class JuniperIpsecEncryptionSingleTunnelPerformance(models.Model):
     output_packets_per_sec_unit = models.TextField(default="Mpps")
     output_throughput_unit = models.TextField(default="Gbps")
     input_platform = models.TextField(default=FunPlatform.F1)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         s = ""
@@ -2107,6 +2147,7 @@ class JuniperIpsecEncryptionMultiTunnelPerformance(models.Model):
     output_packets_per_sec_unit = models.TextField(default="Mpps")
     output_throughput_unit = models.TextField(default="Gbps")
     input_platform = models.TextField(default=FunPlatform.F1)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         s = ""
@@ -2130,6 +2171,7 @@ class JuniperIpsecDecryptionSingleTunnelPerformance(models.Model):
     output_packets_per_sec_unit = models.TextField(default="Mpps")
     output_throughput_unit = models.TextField(default="Gbps")
     input_platform = models.TextField(default=FunPlatform.F1)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         s = ""
@@ -2153,6 +2195,7 @@ class JuniperIpsecDecryptionMultiTunnelPerformance(models.Model):
     output_packets_per_sec_unit = models.TextField(default="Mpps")
     output_throughput_unit = models.TextField(default="Gbps")
     input_platform = models.TextField(default=FunPlatform.F1)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         s = ""
@@ -2176,6 +2219,7 @@ class JuniperTlsTunnelPerformance(models.Model):
     output_packets_per_sec_unit = models.TextField(default="Mpps")
     output_throughput_unit = models.TextField(default="Gbps")
     input_platform = models.TextField(default=FunPlatform.F1)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         s = ""
@@ -2202,6 +2246,7 @@ class TeraMarkMultiClusterCryptoPerformance(models.Model):
     output_latency_avg_unit = models.TextField(default="nsecs")
     output_latency_max_unit = models.TextField(default="nsecs")
     input_platform = models.TextField(default=FunPlatform.F1)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         s = ""
@@ -2228,6 +2273,7 @@ class CryptoFastPathPerformance(models.Model):
     output_latency_avg_unit = models.TextField(default=PerfUnit.UNIT_NSECS)
     output_latency_max_unit = models.TextField(default=PerfUnit.UNIT_NSECS)
     input_platform = models.TextField(default=FunPlatform.F1)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         s = ""
@@ -2248,6 +2294,7 @@ class TeraMarkLookupEnginePerformance(models.Model):
     output_lookup_per_sec_max_unit = models.TextField(default="lookups/sec")
     input_operation = models.TextField(default="")
     input_platform = models.TextField(default=FunPlatform.F1)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         s = ""
@@ -2274,6 +2321,7 @@ class TeraMarkZipDeflatePerformance(models.Model):
     output_latency_max_unit = models.TextField(default="nsecs")
     output_iops_unit = models.TextField(default="ops")
     input_platform = models.TextField(default=FunPlatform.F1)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         s = ""
@@ -2300,6 +2348,7 @@ class TeraMarkZipLzmaPerformance(models.Model):
     output_latency_max_unit = models.TextField(default="nsecs")
     output_iops_unit = models.TextField(default="ops")
     input_platform = models.TextField(default=FunPlatform.F1)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         s = ""
@@ -2336,6 +2385,7 @@ class TeraMarkRcnvmeReadWritePerformance(models.Model):
     output_latency_max_unit = models.TextField(default="nsecs")
     output_iops_unit = models.TextField(default="ops")
     input_platform = models.TextField(default=FunPlatform.F1)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         s = ""
@@ -2372,6 +2422,7 @@ class TeraMarkRcnvmeReadWriteAllPerformance(models.Model):
     output_latency_max_unit = models.TextField(default="nsecs")
     output_iops_unit = models.TextField(default="ops")
     input_platform = models.TextField(default=FunPlatform.F1)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         s = ""
@@ -2387,6 +2438,7 @@ class TeraMarkDfaPerformance(models.Model):
     output_bandwidth = models.FloatField(verbose_name="Gbps", default=-1)
     output_bandwidth_unit = models.TextField(default="Gbps")
     input_platform = models.TextField(default=FunPlatform.F1)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         s = ""
@@ -2402,6 +2454,7 @@ class TeraMarkNfaPerformance(models.Model):
     output_bandwidth = models.FloatField(verbose_name="Gbps", default=-1)
     output_bandwidth_unit = models.TextField(default="Gbps")
     input_platform = models.TextField(default=FunPlatform.F1)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         s = ""
@@ -2432,6 +2485,7 @@ class TeraMarkJpegPerformance(models.Model):
     output_compression_ratio_unit = models.TextField(default="number")
     output_percentage_savings_unit = models.TextField(default="number")
     input_platform = models.TextField(default=FunPlatform.F1)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         s = ""
@@ -2447,6 +2501,7 @@ class FlowTestPerformance(models.Model):
     output_time = models.IntegerField(verbose_name="seconds", default=-1)
     output_time_unit = models.TextField(default="secs")
     input_platform = models.TextField(default=FunPlatform.F1)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         s = ""
@@ -2462,6 +2517,7 @@ class F1FlowTestPerformance(models.Model):
     output_time = models.IntegerField(verbose_name="seconds", default=-1)
     output_time_unit = models.TextField(default="secs")
     input_platform = models.TextField(default=FunPlatform.F1)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         s = ""
@@ -2503,6 +2559,7 @@ class BootTimePerformance(models.Model):
     output_parsing_config_end_unit = models.TextField(default=PerfUnit.UNIT_SECS)
     output_sending_host_booted_message_unit = models.TextField(default=PerfUnit.UNIT_SECS)
     input_platform = models.TextField(default=FunPlatform.F1)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         s = ""
@@ -2518,6 +2575,7 @@ class HuRawVolumePerformance(models.Model):
     input_testbed = models.CharField(max_length=30, verbose_name="Testbed", default="storage1", choices=[(0, "storage1"),(1.0,"storage2"),(2.0, "storagenw")])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_platform = models.TextField(default=FunPlatform.F1)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         s = ""
@@ -2534,6 +2592,7 @@ class FunMagentPerformanceTest(models.Model):
     output_latency = models.IntegerField(verbose_name="KOps/sec", default=-1)
     output_latency_unit = models.TextField(default="Kops")
     input_platform = models.TextField(default=FunPlatform.F1)
+    run_time_id = models.IntegerField(default=None, null=True)
 
 
     def __str__(self):
@@ -2551,6 +2610,7 @@ class WuStackSpeedTestPerformance(models.Model):
     output_average = models.IntegerField(verbose_name="Alloc/free cycles average", default=-1)
     output_average_unit = models.TextField(default="cycles")
     input_platform = models.TextField(default=FunPlatform.F1)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         s = ""
@@ -2566,6 +2626,7 @@ class VoltestLsvPerformance(models.Model):
     output_read_write_bandwidth = models.FloatField(verbose_name="ReadWrite Throughput in Mbps", default=-1)
     output_read_write_bandwidth_unit = models.TextField(default=PerfUnit.UNIT_MBITS_PER_SEC)
     input_platform = models.TextField(default=FunPlatform.F1)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         s = ""
@@ -2581,6 +2642,7 @@ class VoltestLsv4Performance(models.Model):
     output_read_write_bandwidth = models.FloatField(verbose_name="ReadWrite Throughput in Mbps", default=-1)
     output_read_write_bandwidth_unit = models.TextField(default=PerfUnit.UNIT_MBITS_PER_SEC)
     input_platform = models.TextField(default=FunPlatform.F1)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         s = ""
@@ -2703,6 +2765,7 @@ class AlibabaRdmaPerformance(models.Model):
     output_write_bandwidth_unit = models.TextField(default=PerfUnit.UNIT_GBITS_PER_SEC)
     output_read_msg_rate_unit = models.TextField(default=PerfUnit.UNIT_MPPS)
     output_write_msg_rate_unit = models.TextField(default=PerfUnit.UNIT_MPPS)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         return (str(self.__dict__))
@@ -2727,6 +2790,7 @@ class SoakFlowsBusyLoop10usecs(models.Model):
 
     output_busy_loops_value = models.FloatField(verbose_name="maximum number of busy-loops", default=-1)
     output_busy_loops_value_unit = models.TextField(default=PerfUnit.UNIT_OPS)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         return (str(self.__dict__))
@@ -2751,6 +2815,7 @@ class SoakFlowsMemcpy1MBNonCoh(models.Model):
 
     output_dma_memcpy_value = models.FloatField(verbose_name="maximum number of busy-loops", default=-1)
     output_dma_memcpy_value_unit = models.TextField(default=PerfUnit.UNIT_OPS)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         return (str(self.__dict__))
@@ -2774,6 +2839,7 @@ class VoltestBlt1Performance(models.Model):
     output_avg_latency_unit = models.TextField(default=PerfUnit.UNIT_NSECS)
     output_iops_unit = models.TextField(default=PerfUnit.UNIT_OPS)
     output_bandwidth_unit = models.TextField(default=PerfUnit.UNIT_MBITS_PER_SEC)
+    run_time_id = models.IntegerField(default=None, null=True)
 
 
 class VoltestBlt8Performance(models.Model):
@@ -2794,6 +2860,7 @@ class VoltestBlt8Performance(models.Model):
     output_avg_latency_unit = models.TextField(default=PerfUnit.UNIT_NSECS)
     output_iops_unit = models.TextField(default=PerfUnit.UNIT_OPS)
     output_bandwidth_unit = models.TextField(default=PerfUnit.UNIT_MBITS_PER_SEC)
+    run_time_id = models.IntegerField(default=None, null=True)
 
 
 class VoltestBlt12Performance(models.Model):
@@ -2814,6 +2881,7 @@ class VoltestBlt12Performance(models.Model):
     output_avg_latency_unit = models.TextField(default=PerfUnit.UNIT_NSECS)
     output_iops_unit = models.TextField(default=PerfUnit.UNIT_OPS)
     output_bandwidth_unit = models.TextField(default=PerfUnit.UNIT_MBITS_PER_SEC)
+    run_time_id = models.IntegerField(default=None, null=True)
 
 
 class InspurSingleDiskFailurePerformance(models.Model):
@@ -2837,6 +2905,7 @@ class InspurSingleDiskFailurePerformance(models.Model):
     output_copy_time_during_plex_fail_unit = models.TextField(default=PerfUnit.UNIT_SECS)
     output_file_copy_time_during_rebuild_unit = models.TextField(default=PerfUnit.UNIT_SECS)
     output_plex_rebuild_time_unit = models.TextField(default=PerfUnit.UNIT_SECS)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         return (str(self.__dict__))
@@ -2886,6 +2955,7 @@ class InspurDataReconstructionPerformance(models.Model):
     output_read_99_99_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
     output_read_99_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
     output_plex_rebuild_time_unit = models.TextField(default=PerfUnit.UNIT_SECS)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         return (str(self.__dict__))
@@ -2904,6 +2974,7 @@ class PowerPerformance(FunModel):
     output_fs_power_unit = models.TextField(default=PerfUnit.UNIT_WATT)
     output_f1_0_power_unit = models.TextField(default=PerfUnit.UNIT_WATT)
     output_f1_1_power_unit = models.TextField(default=PerfUnit.UNIT_WATT)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         s = ""
@@ -2924,6 +2995,7 @@ class RdsClientPerformance(FunModel):
     output_aggregate_bandwidth = models.FloatField(verbose_name="Aggregate Bandwidth", default=-1)
 
     output_aggregate_bandwidth_unit = models.TextField(default=PerfUnit.UNIT_MBITS_PER_SEC)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         s = ""
@@ -2980,6 +3052,7 @@ class NvmeFcpPerformance(FunModel):
     output_write_latency_99_unit = models.TextField(default=PerfUnit.UNIT_USECS)
     output_write_latency_9950_unit = models.TextField(default=PerfUnit.UNIT_USECS)
     output_write_latency_9999_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         s = ""
@@ -2991,10 +3064,24 @@ class NvmeFcpPerformance(FunModel):
 class FunOnDemandTotalTimePerformance(FunModel):
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
-    input_version = models.CharField(verbose_name="Version", max_length=50, default="")
 
     output_total_time = models.FloatField(verbose_name="Total Time", default=-1)
     output_total_time_unit = models.TextField(default=PerfUnit.UNIT_SECS)
+    run_time_id = models.IntegerField(default=None, null=True)
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
+
+class PrBuildTotalTimePerformance(FunModel):
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+
+    output_total_time = models.FloatField(verbose_name="Total Time", default=-1)
+    output_total_time_unit = models.TextField(default=PerfUnit.UNIT_SECS)
+    run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
         s = ""

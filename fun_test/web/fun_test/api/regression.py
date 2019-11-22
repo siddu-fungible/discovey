@@ -645,16 +645,37 @@ def release_catalogs(request, catalog_id):
         catalog_objects = ReleaseCatalog.objects.filter(q)
         result = []
         for catalog_object in catalog_objects:
-            result.append(catalog_object.to_dict())
+            if catalog_id:
+                result = catalog_object.to_dict()
+                break
+            else:
+                result.append(catalog_object.to_dict())
 
-    if request.method == "POST":
+    elif request.method == "POST":
         request_json = json.loads(request.body)
         request_json["created_date"] = get_current_time()
         c = ReleaseCatalog(**request_json)
         c.save()
         result = c.id
-    else:
+    elif request.method == "DELETE":
+        if catalog_id:
+            try:
+                c = ReleaseCatalog.objects.get(id=int(catalog_id))
+                c.delete()
+            except ObjectDoesNotExist:
+                pass
+
         pass
+    elif request.method == "PUT":
+        if catalog_id:
+            try:
+                c = ReleaseCatalog.objects.get(id=int(catalog_id))
+                request_json = json.loads(request.body)
+                for key, value in request_json.iteritems():
+                    setattr(c, key, value)
+                    c.save()
+            except ObjectDoesNotExist:
+                pass
     return result
 
 if __name__ == "__main__":

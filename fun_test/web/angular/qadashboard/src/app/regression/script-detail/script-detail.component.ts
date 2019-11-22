@@ -93,6 +93,10 @@ class ArtifactTree {
     categoryEntry.push(artifact);
   }
 
+  clear() {
+    this.root = {};
+  }
+
 }
 
 @Component({
@@ -567,6 +571,7 @@ export class ScriptDetailComponent implements OnInit {
   }
 
   _parseArtifacts() {
+    this.artifactTree.clear();
     this.artifacts.forEach(artifact => {
       this.artifactTree.addArtifact(artifact, `/static/logs/s_${this.suiteExecutionId}`);
     })

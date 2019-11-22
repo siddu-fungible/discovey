@@ -5,8 +5,11 @@ from lib.utilities.jenkins_manager import JenkinsManager
 from lib.host.lsf_status_server import LsfStatusServer
 from web.fun_test.analytics_models_helper import ModelHelper, get_data_collection_time
 from web.fun_test.metrics_models import MetricChart
+from web.fun_test.metrics_lib import MetricLib
+import time, psycopg2
 
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
+ml = MetricLib()
 
 class MyScript(FunTestScript):
     def describe(self):
@@ -89,13 +92,16 @@ class PalladiumTc(FunTestCase):
             fun_test.critical(str(ex))
 
     def add_to_db(self, model_name, value_dict, unit_dict, status):
+        result = True
         try:
             generic_helper = ModelHelper(model_name=model_name)
             generic_helper.set_units(validate=True, **unit_dict)
             generic_helper.add_entry(**value_dict)
             generic_helper.set_status(status)
         except Exception as ex:
+            result = False
             fun_test.critical(str(ex))
+        return result
 
     def build_on_jenkins(self, jenkins_manager, params):
         queue_item = jenkins_manager.build(params=params, extra_emails=self.extra_emails)
@@ -158,39 +164,68 @@ class FunOnDemandBuildTimeTc(PalladiumTc):
                 self.total_time_taken = -1
 
             value_dict = {"date_time": get_data_collection_time(),
-                          "version": fun_test.get_version(),
                           "total_time": self.total_time_taken}
 
             unit_dict = {"total_time_unit": PerfUnit.UNIT_SECS}
-            self.add_to_db(model_name=model_name, value_dict=value_dict, unit_dict=unit_dict, status=status)
+            db_success = self.add_to_db(model_name=model_name, value_dict=value_dict, unit_dict=unit_dict,
+                                        status=status)
+            fun_test.test_assert_expected(expected=True, actual=db_success, message="Db entry successful")
+            fun_test.test_assert_expected(expected=fun_test.PASSED, actual=status, message="Fun On Demand build time status")
 
-class SetFunOnDemandBuildTimeChartStatusTc(PalladiumTc):
+class PrBuildTimeTc(PalladiumTc):
+    since_time = round(time.time()) - 86400
+    status = fun_test.FAILED
+    total_time_taken = -1
+    FUN_ON_DEMAND_DATABASE = {'host': 'fun-on-demand-01',
+                              'database': 'builddata',
+                              'user': 'builddata_reader',
+                              'password': 'pico80@Lhasa'}
+
     def describe(self):
         self.set_test_details(id=2,
-                              summary="Set build failure details for fun on demand time taken performance",
+                              summary="Poll Jenkins to get time taken for a PR build",
+                              steps="""
+        1. Steps 1
+        2. Steps 2
+        3. Steps 3
+                              """)
+
+    def run(self):
+        try:
+            conn = psycopg2.connect(**self.FUN_ON_DEMAND_DATABASE)
+            cur = conn.cursor()
+            cur.execute(
+                "SELECT ROUND(AVG(duration_secs)) FROM testepoch WHERE (job = 'funsdk/master' OR job LIKE 'funsdk/pull_request%') AND start_time > " + str(
+                    self.since_time) + " AND step = 'TotalTime' AND build_status LIKE 'Success'")
+            average_time = int(cur.fetchone()[0])
+            self.total_time_taken = average_time
+            self.status = fun_test.PASSED
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        finally:
+            model_name = "PrBuildTotalTimePerformance"
+
+            value_dict = {"date_time": get_data_collection_time(),
+                          "total_time": self.total_time_taken}
+
+            unit_dict = {"total_time_unit": PerfUnit.UNIT_SECS}
+            db_success = self.add_to_db(model_name=model_name, value_dict=value_dict, unit_dict=unit_dict,
+                                   status=self.status)
+            fun_test.test_assert_expected(expected=True, actual=db_success, message="Db entry successful")
+            fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.status,
+                                          message="Pr build time status")
+
+class SetBuildTimeChartStatusTc(PalladiumTc):
+    def describe(self):
+        self.set_test_details(id=3,
+                              summary="Set build failure details for build time performance",
                               steps="Steps 1")
 
     def run(self):
         try:
             self.result = fun_test.FAILED
-            model = "FunOnDemandTotalTimePerformance"
-            charts = MetricChart.objects.filter(metric_model_name=model)
-            metric_model = app_config.get_metric_models()[model]
-            for chart in charts:
-                status = True
-                data_sets = chart.get_data_sets()
-                for data_set in data_sets:
-                    inputs = data_set["inputs"]
-                    entries = metric_model.objects.filter(**inputs).order_by("-input_date_time")[:1]
-                    if len(entries):
-                        entry = entries.first()
-                        if not entry.status == fun_test.PASSED:
-                            status = False
-                            chart.set_chart_status(status=fun_test.FAILED,
-                                                   suite_execution_id=fun_test.get_suite_execution_id())
-                            break
-                if status:
-                    chart.set_chart_status(status=fun_test.PASSED, suite_execution_id=fun_test.get_suite_execution_id())
+            models = ["FunOnDemandTotalTimePerformance", "PrBuildTotalTimePerformance"]
+            ml._set_chart_status(models=models, suite_execution_id=fun_test.get_suite_execution_id())
             self.result = fun_test.PASSED
         except Exception as ex:
             self.result = fun_test.FAILED
@@ -203,6 +238,7 @@ if __name__ == "__main__":
     myscript = MyScript()
 
     myscript.add_test_case(FunOnDemandBuildTimeTc())
-    myscript.add_test_case(SetFunOnDemandBuildTimeChartStatusTc())
+    myscript.add_test_case(PrBuildTimeTc())
+    myscript.add_test_case(SetBuildTimeChartStatusTc())
 
     myscript.run()

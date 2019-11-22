@@ -16,10 +16,11 @@ from collections import deque
 from elasticsearch import helpers
 from elasticsearch import Elasticsearch
 import dpcsh_nocli
+from scripts.system.metrics_parser import MetricParser
 
 # Environment: --environment={\"test_bed_type\":\"fs-65\",\"tftp_image_path\":\"ranga/funos-f1_ranga.stripped.gz\"} --inputs={\"boot_new_image\":true,\"le_firewall\":true,\"collect_stats\":[\"\"],\"ec_vol\":true}
 # inputs: {"run_le_firewall":false,"specific_apps":["ZIP"],"add_to_database":true,"collect_stats":["POWER","DEBUG_MEMORY","LE"],"end_sleep":30}
-# --environment={\"test_bed_type\":\"fs-65\",\"tftp_image_path\":\"ranga/funos-f1_onkar.stripped.gz\"} --inputs={\"boot_new_image\":false,\"le_firewall\":false,\"collect_stats\":[\"DEBUG_VP_UTIL\",\"POWER\"],\"ec_vol\":false,\"specific_apps\":[\"crypto\"],\"disable_f1_index\":0}
+# --environment={\"test_bed_type\":\"fs-65\",\"tftp_image_path\":\"ranga/funos-f1_onkar.stripped.gz\"}
 
 POWER = "POWER"
 DIE_TEMPERATURE = "DIE_TEMPERATURE"
@@ -40,7 +41,9 @@ ZIP = "zip"
 LE = "le"
 BUSY_LOOP = "busy_loop"
 MEMCPY = "memcpy"
+APPSVALUES = "APPSVALUES"
 
+# --environment={\"test_bed_type\":\"fs-65\",\"tftp_image_path\":\"ranga/funos-f1_onkar.stripped.gz\"} --inputs={\"boot_new_image\":false,\"collect_stats\":[\"POWER\"],\"ec_vol\":false,\"traffic_profile\":[\"rcnvme\"]}
 
 class MyScript(FunTestScript):
     def describe(self):
@@ -242,9 +245,9 @@ class MyScript(FunTestScript):
                                 ssh_password=self.fs['come']['mgmt_ssh_password'])
 
     def boot_fs(self):
-        f1_0_boot_args = 'cc_huid=3 app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303%s' % (
+        f1_0_boot_args = 'cc_huid=3 app=mdt_test,load_mods workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303%s' % (
             self.add_boot_arg)
-        f1_1_boot_args = 'cc_huid=2 app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303%s' % (
+        f1_1_boot_args = 'cc_huid=2 app=mdt_test,load_mods workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303%s' % (
             self.add_boot_arg)
 
         topology_helper = TopologyHelper()
@@ -357,6 +360,11 @@ class FunTestCase1(FunTestCase):
             file_helper.add_data(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset,
                                  heading=heading)
 
+            if self.stats_info["come"][stat_name].get("upload_to_es", False):
+                dpcsh_data = self.simplify_eqm_stats(difference_dict)
+                time_taken = self.upload_dpcsh_data_to_elk(dpcsh_data=dpcsh_data, f1=f1, stat_name=stat_name)
+
+
             # fun_test.sleep("before next iteration", seconds=self.details["interval"])
 
         come_handle.destroy()
@@ -391,6 +399,10 @@ class FunTestCase1(FunTestCase):
             file_helper.add_data(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset,
                                  heading=heading)
 
+            if self.stats_info["come"][stat_name].get("upload_to_es", False):
+                dpcsh_data = self.simplify_le_stats(difference_dict)
+                time_taken = self.upload_dpcsh_data_to_elk(dpcsh_data=dpcsh_data, f1=f1, stat_name=stat_name)
+
             # fun_test.sleep("before next iteration", seconds=self.details["interval"])
 
         come_handle.destroy()
@@ -424,7 +436,11 @@ class FunTestCase1(FunTestCase):
             one_dataset["output"] = difference_dict
             file_helper.add_data(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset,
                                  heading=heading)
-            # fun_test.sleep("before next iteration", seconds=self.details["interval"])
+
+            if self.stats_info["come"][stat_name].get("upload_to_es", False):
+                dpcsh_data = self.simplify_cdu_stats(difference_dict)
+                time_taken = self.upload_dpcsh_data_to_elk(dpcsh_data=dpcsh_data, f1=f1, stat_name=stat_name)
+
         come_handle.destroy()
 
     ####### PC DMA #########
@@ -456,6 +472,10 @@ class FunTestCase1(FunTestCase):
             one_dataset["output"] = difference_dict
             file_helper.add_data(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset,
                                  heading=heading)
+
+            if self.stats_info["come"][stat_name].get("upload_to_es", False):
+                dpcsh_data = self.simplify_pc_dma_stats(difference_dict)
+                time_taken = self.upload_dpcsh_data_to_elk(dpcsh_data=dpcsh_data, f1=f1, stat_name=stat_name)
             # fun_test.sleep("before next iteration", seconds=self.details["interval"])
         come_handle.destroy()
 
@@ -529,6 +549,10 @@ class FunTestCase1(FunTestCase):
             file_helper.add_data(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset,
                                  heading=heading)
 
+            if self.stats_info["come"][stat_name].get("upload_to_es", False):
+                dpcsh_data = self.simplify_hbm_stats(difference_dict)
+                time_taken = self.upload_dpcsh_data_to_elk(dpcsh_data=dpcsh_data, f1=f1, stat_name=stat_name)
+
             # fun_test.sleep("before next iteration", seconds=self.details["interval"])
 
         come_handle.destroy()
@@ -562,6 +586,10 @@ class FunTestCase1(FunTestCase):
             one_dataset["output"] = difference_dict
             file_helper.add_data(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset,
                                  heading=heading)
+
+            if self.stats_info["come"][stat_name].get("upload_to_es", False):
+                dpcsh_data = self.simplify_ddr_stats(difference_dict)
+                time_taken = self.upload_dpcsh_data_to_elk(dpcsh_data=dpcsh_data, f1=f1, stat_name=stat_name)
 
             # fun_test.sleep("before next iteration", seconds=self.details["interval"])
 
@@ -747,34 +775,116 @@ class FunTestCase1(FunTestCase):
             # Capture the UART logs also
             artifact_file_name_f1_0 = bmc_handle.get_uart_log_file(0)
             artifact_file_name_f1_1 = bmc_handle.get_uart_log_file(1)
+            self.upload_the_values(artifact_file_name_f1_0, artifact_file_name_f1_1)
             fun_test.add_auxillary_file(description="DUT_0_fs-65_F1_0 UART Log", filename=artifact_file_name_f1_0)
             fun_test.add_auxillary_file(description="DUT_0_fs-65_F1_1 UART Log", filename=artifact_file_name_f1_1)
 
     def add_the_links(self):
-        for system in self.stats_info:
-            if system == "files":
-                continue
-            for stat_name, value in self.stats_info[system].iteritems():
-                if value.get("disable", False) or (not value.get("upload_to_es", True)):
-                    fun_test.log("stat: {} has been disabled".format(stat_name))
-                    continue
-
-                if stat_name == DEBUG_VP_UTIL:
-                    href = "http://10.1.20.52:5601/app/kibana#/dashboard/a37ce420-9190-11e9-8475-15977467c007?_g=(refreshInterval:(pause:!t,value:0),time:(from:'{}',mode:absolute,to:'{}'))".format(
-                        self.test_start_time, self.test_end_time)
-                    checkpoint = '<a href="{}" target="_blank">ELK {} stats</a>'.format(href, stat_name)
-                    fun_test.add_checkpoint(checkpoint=checkpoint)
-                elif stat_name == POWER:
-                    href = "http://10.1.20.52:5601/app/kibana#/dashboard/240d54d0-9bff-11e9-8475-15977467c007?_g=(refreshInterval:(pause:!t,value:0),time:(from:'{}',mode:absolute,to:'{}'))".format(
-                        self.test_start_time, self.test_end_time)
-                    checkpoint = '<a href="{}" target="_blank">ELK {} stats</a>'.format(href, stat_name)
-                    fun_test.add_checkpoint(checkpoint=checkpoint)
+        # Todo: Get the links for each individual app
+        # for system in self.stats_info:
+        #     if system == "files":
+        #         continue
+        #     for stat_name, value in self.stats_info[system].iteritems():
+        #         if value.get("disable", False) or (not value.get("upload_to_es", True)):
+        #             fun_test.log("stat: {} has been disabled".format(stat_name))
+        #             continue
+        #
+        #         if stat_name == DEBUG_VP_UTIL:
+        #             href = "http://10.1.20.52:5601/app/kibana#/dashboard/a37ce420-9190-11e9-8475-15977467c007?_g=(refreshInterval:(pause:!t,value:0),time:(from:'{}',mode:absolute,to:'{}'))".format(
+        #                 self.test_start_time, self.test_end_time)
+        #             checkpoint = '<a href="{}" target="_blank">ELK {} stats</a>'.format(href, stat_name)
+        #             fun_test.add_checkpoint(checkpoint=checkpoint)
+        #         elif stat_name == POWER:
+        #             href = "http://10.1.20.52:5601/app/kibana#/dashboard/240d54d0-9bff-11e9-8475-15977467c007?_g=(refreshInterval:(pause:!t,value:0),time:(from:'{}',mode:absolute,to:'{}'))".format(
+        #                 self.test_start_time, self.test_end_time)
+        #             checkpoint = '<a href="{}" target="_blank">ELK {} stats</a>'.format(href, stat_name)
+        #             fun_test.add_checkpoint(checkpoint=checkpoint)
         href = "http://10.1.20.52:5601/app/kibana#/dashboard/8e6e8330-0a9a-11ea-8475-15977467c007?_g=(refreshInterval:(pause:!t,value:0),time:(from:'{}',mode:absolute,to:'{}'))".format(
             self.test_start_time, self.test_end_time)
-        checkpoint = '<a href="{}" target="_blank">ELK Overall dashboard</a>'.format(href, stat_name)
+        checkpoint = '<a href="{}" target="_blank">ELK Overall dashboard</a>'.format(href)
         fun_test.add_checkpoint(checkpoint=checkpoint)
 
+    def upload_the_values(self, artifact_file_name_f1_0, artifact_file_name_f1_1):
+        for f1 in self.run_on_f1:
+            if f1 == 0:
+                file_name = artifact_file_name_f1_0
+            else:
+                file_name = artifact_file_name_f1_1
+            lines = open(file_name, "r").readlines()
+            if RCNVME in self.traffic_profile:
+                result = MetricParser().rcnvme(lines, "", "TeraMarkRcnvmeReadWriteAllPerformance")
+                if result['status']:
+                    app = RCNVME
+                    field = "read iops"
+                    value = round(float(result["data"][1]["output_iops"] / 1000000.0), 3)
+                    unit = "M iops"
+                    self.apps_upload_helper(app, field, unit, value, f1)
+            if CRYPTO in self.traffic_profile:
+                result = MetricParser().teramark_crypto(lines, "", "F1", "TeraMarkMultiClusterCryptoPerformance")
+                if result['status']:
+                    app = CRYPTO
+                    field = "throughput"
+                    value = result["data"][0]["output_throughput"]
+                    unit = result["data"][0]["output_throughput_unit"]
+                    self.apps_upload_helper(app, field, unit, value, f1)
 
+            if ZIP in self.traffic_profile:
+                result = self.zip_parser(lines)
+                if result['status']:
+                    app = ZIP
+                    field = "bandwidth"
+                    value = result["data"][0]["output_bandwidth_avg"]
+                    unit = result["data"][0]["output_bandwidth_avg_unit"]
+                    self.apps_upload_helper(app, field, unit, value, f1)
+
+    def zip_parser(self, lines):
+        result = {}
+        result["data"] = []
+        metrics = collections.OrderedDict()
+        teramark_begin = False
+        for line in lines:
+            if "TeraMark Begin" in line:
+                teramark_begin = True
+            if "TeraMark End" in line:
+                teramark_begin = False
+            if teramark_begin:
+                m = re.search(
+                    r'{"Type":\s+"(?P<type>\S+)",\s+"Operation":\s+(?P<operation>\S+),\s+"Effort":\s+(?P<effort>\S+),'
+                    r'.*\s+"Duration"\s+:\s+(?P<latency_json>{.*}),\s+"Throughput":\s+(?P<throughput_json>{.*})}', line)
+                if m:
+                    self.match_found = True
+                    input_type = m.group("type")
+                    input_operation = m.group("operation")
+                    input_effort = int(m.group("effort"))
+                    bandwidth_json = json.loads(m.group("throughput_json"))
+                    output_bandwidth_avg = bandwidth_json['value']
+                    output_bandwidth_avg_unit = bandwidth_json["unit"]
+                    latency_json = json.loads(m.group("latency_json"))
+                    output_latency_avg = latency_json['value']
+                    output_latency_unit = latency_json["unit"]
+
+                    fun_test.log("type: {}, operation: {}, effort: {}, stats {}".format(input_type, input_operation,
+                                                                                        input_effort,
+                                                                                        bandwidth_json))
+                    metrics["input_type"] = input_type
+                    metrics["input_operation"] = input_operation
+                    metrics["input_effort"] = input_effort
+                    metrics["output_bandwidth_avg"] = output_bandwidth_avg
+                    metrics["output_bandwidth_avg_unit"] = output_bandwidth_avg_unit
+                    metrics["output_latency_avg"] = output_latency_avg
+                    metrics["output_latency_avg_unit"] = output_latency_unit
+                    self.status = RESULTS["PASSED"]
+                    result["data"].append(metrics)
+        result["status"] = True
+        return result
+
+    def apps_upload_helper(self, app, field, unit, value, f1):
+        stat_name = APPSVALUES
+        dpcsh_data = {"app": app,
+                      "field": field,
+                      "unit": unit,
+                      "value": value}
+        time_taken = self.upload_dpcsh_data_to_elk(dpcsh_data=dpcsh_data, f1=f1, stat_name=stat_name)
 
 
     def start_threaded_apps(self):
@@ -909,6 +1019,69 @@ class FunTestCase1(FunTestCase):
                             print ("Data error")
         return result
 
+    def simplify_eqm_stats(self, dpcsh_data):
+        result = []
+        if dpcsh_data:
+            for k, v in dpcsh_data.iteritems():
+                one_data_set = {"field": k,
+                                "value": v}
+                result.append(one_data_set.copy())
+        return result
+
+    def simplify_cdu_stats(self, dpcsh_data):
+        result = []
+        if dpcsh_data:
+            cdu_cnts = dpcsh_data["cdu_cnts"]
+            for k, v in cdu_cnts.iteritems():
+                one_data_set = {"field": k,
+                                "value": v}
+                result.append(one_data_set.copy())
+        return result
+
+    def simplify_pc_dma_stats(self, dpcsh_data):
+        result = []
+        allow = ["lsn_bm_rd_req_cnt", "lsn_hbm_rd_req_cnt", "lsn_ddr_rd_req_cnt",
+                 "ldn_bm_wr_req_cnt", "ldn_hbm_wr_req_cnt", "ldn_ddr_wr_req_cnt",
+                 ]
+        if dpcsh_data:
+            dma_dmi_stats = dpcsh_data["dma_dmi_stats"]
+            for cluster, fields in dma_dmi_stats.iteritems():
+                for k, v in fields.iteritems():
+                    if k in allow:
+                        one_data_set = {"field": k,
+                                        "value": v,
+                                        "cluster": cluster}
+                        result.append(one_data_set.copy())
+        return result
+
+    def simplify_hbm_stats(self, dpcsh_data):
+        result = []
+        if dpcsh_data:
+            for k, v in dpcsh_data.iteritems():
+                one_data_set = {"field": k,
+                                "value": v}
+                result.append(one_data_set.copy())
+        return result
+
+    def simplify_ddr_stats(self, dpcsh_data):
+        result = []
+        if dpcsh_data:
+            for k, v in dpcsh_data.iteritems():
+                one_data_set = {"field": k,
+                                "value": v}
+                result.append(one_data_set.copy())
+        return result
+
+    def simplify_le_stats(self, dpcsh_data):
+        result = []
+        if dpcsh_data:
+            for k, v in dpcsh_data.iteritems():
+                one_data_set = {"field": k,
+                                "value": v}
+                result.append(one_data_set.copy())
+        return result
+
+
     def add_basics_req_elk(self, dpcsh_data, f1, time_stamp=True, system_name="fs-65"):
         utc_time = datetime.datetime.utcnow()
         time_strf = utc_time.strftime("%Y-%m-%dT%H:%M:%S.%f")
@@ -917,8 +1090,8 @@ class FunTestCase1(FunTestCase):
         for each_data_set in dpcsh_data:
             if time_stamp:
                 each_data_set["Time"] = time_strf
-            if f1:
-                each_data_set["f1"] = f1
+            if f1 != None:
+                each_data_set["f1"] = "f1_{}".format(f1)
             each_data_set["system_name"] = self.fs['name']
         return dpcsh_data
 
@@ -943,33 +1116,18 @@ class FunTestCase1(FunTestCase):
             print("NO data present to upload")
         return time_taken
 
-    def get_index(self, cmd):
-        if cmd == "peek stats/resource/bam":
-            index = "cmd_peek_stats_resource_bam"
-        elif cmd == "peek storage/devices/nvme":
-            index = "cmd_storage_device_nvme"
-        elif cmd == "DEBUG_VP_UTIL":
+    def get_index(self, stat_name):
+        if stat_name == DEBUG_VP_UTIL:
             index = "cmd_debug_vp_utils"
-        elif cmd == "peek stats/crypto":
-            index = "cmds_stats_crypto"
-        elif "storage/devices/nvme" in cmd:
-            index = "cmd_storage_device_nvme"
-        elif cmd == POWER:
-            index = "cmd_power"
         else:
-            sec_part = cmd.split(' ')[1]
-            index = "cmd_" + sec_part.replace('/', '_')
+            index = "cmd_{}".format(stat_name.lower())
         return index
 
     def doc_type(self, stat_name):
-        if stat_name == "DEBUG_VP_UTIL":
+        if stat_name == DEBUG_VP_UTIL:
             doctype = "ccv_data"
-        elif stat_name == "peek stats/resource/bam":
-            doctype = "resource_bam"
-        elif "storage/devices/nvme" in stat_name:
-            doctype = "storage_ssd_iops"
-        elif stat_name == POWER:
-            doctype = "power_stats"
+        else:
+            doctype = "{}_stats".format(stat_name.lower())
 
         return doctype
 
@@ -981,11 +1139,11 @@ class FunTestCase1(FunTestCase):
         # description : "{calculated_}_{app_name}_DPCSH_OUTPUT_F1_{f1}"
         self.stats_info["bmc"] = {POWER: {"calculated": True, "upload_to_es": True},
                                   DIE_TEMPERATURE: {"calculated": False, "disable": True}}
-        self.stats_info["come"] = {DEBUG_MEMORY: {}, CDU: {}, EQM: {},
-                                   BAM: {"calculated": False, "disable": True}, DEBUG_VP_UTIL: {"upload_to_es": True}, "LE": {},
-                                   HBM: {"calculated": True},
-                                   EXECUTE_LEAKS: {"calculated": False}, PC_DMA: {"calculated": True},
-                                   DDR: {"calculated": True}}
+        self.stats_info["come"] = {DEBUG_MEMORY: {}, CDU: {"upload_to_es": True}, EQM: {"upload_to_es":True},
+                                   BAM: {"calculated": False, "disable": True}, DEBUG_VP_UTIL: {"upload_to_es": True}, "LE": {"upload_to_es":True},
+                                   HBM: {"calculated": True, "upload_to_es":True},
+                                   EXECUTE_LEAKS: {"calculated": False}, PC_DMA: {"calculated": True,"upload_to_es":True},
+                                   DDR: {"calculated": True,"upload_to_es":True}}
         self.stats_info["files"] = {"fio": {"calculated": False}}
 
         if self.collect_stats:
@@ -1213,6 +1371,7 @@ class FunTestCase1(FunTestCase):
             for vm, vm_details in vm_info.iteritems():
                 self.kill_le_firewall(vm_details)
             return
+        f1 = 0
         for vm, vm_details in vm_info.iteritems():
             running = self.check_if_le_firewall_is_running(vm_details)
             if running:
@@ -1220,8 +1379,9 @@ class FunTestCase1(FunTestCase):
                 running = False
             if not running and new_image:
                 tmp_run_time = 30
-                cmd = '''python run_nu_transit_only.py --inputs '{"speed":"SPEED_100G", "run_time":%s, "initiate":true}' ''' % tmp_run_time
-                self.initiate_or_run_le_firewall(cmd, vm_details)
+                cmd = '''python run_nu_transit_only.py --inputs '{"speed":"SPEED_100G", "run_time":%s, "initiate":true, "f1": %s}' ''' % (tmp_run_time,f1)
+                self.initiate_or_run_le_firewall(cmd, vm_details, f1)
+                f1 += 1
                 fun_test.sleep("to check if le -firewall has started on vm: {}".format(vm), seconds=10)
                 running = self.check_if_le_firewall_is_running(vm_details)
                 fun_test.test_assert(running, "Le initiate started on the VM: {}".format(vm))
@@ -1382,7 +1542,17 @@ class FunTestCase1(FunTestCase):
             self.start_le_firewall(self.duration, self.boot_new_image, True)
         for f1 in self.run_on_f1:
             if FIO in self.traffic_profile:
+                one_dataset = {}
                 fun_test.join_thread(self.fio_thread_map[str(f1)])
+                fun_test.test_assert(True, "FIO successfully completed on f1 : {}".format(f1))
+                try:
+                    fun_test.sleep("Generating fio output")
+                    output = fun_test.shared_variables["fio_output_f1_{}".format(f1)]
+                    one_dataset["time"] = datetime.datetime.now()
+                    one_dataset["output"] = output
+                    file_helper.add_data(getattr(self, "f_{}_f1_{}".format(FIO, f1)), one_dataset)
+                except Exception as ex:
+                    fun_test.log(ex)
             if BUSY_LOOP in self.traffic_profile:
                 fun_test.shared_variables["{}_{}".format(BUSY_LOOP, f1)] = False
                 fun_test.join_thread(self.busy_loop_thread_map[f1])

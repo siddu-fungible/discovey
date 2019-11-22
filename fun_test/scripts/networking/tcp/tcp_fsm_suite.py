@@ -382,6 +382,51 @@ class TcEstablished(FunTestCase):
         fun_test.test_assert(expression=res, message=key + '=' + value)
         self.linux_obj.disconnect()
 
+class TcCloseWait(FunTestCase):
+
+
+    def describe(self):
+        self.set_test_details(id=7, summary="Test TCP Close Wait State",
+                              steps="""
+                               TCP Close wait cases
+                              """)
+
+    def setup(self):
+        try:
+            self.linux_obj = Linux(host_ip=host_name, ssh_username=host_username, ssh_password=host_passwd)
+
+            self.linux_obj.command("cd " + script_location)
+            self.linux_obj.command("rm -rf " + script_results_file)
+        except Exception as e:
+            fun_test.critical("Error" + e)
+            return False
+    def run(self):
+        try:
+            if subtests == 'all':
+                self.linux_obj.sudo_command("./tcp_functional.py -b fs -p -t tc_close_wait",timeout=script_timeout )
+            else:
+                self.linux_obj.sudo_command(
+                    "./tcp_functional.py -b fs -p -t tc_close_wait --ts " + subtests, timeout=script_timeout )
+            return True
+        except Exception as e:
+            fun_test.critical("Error" + e)
+            return False
+
+    def cleanup(self):
+        results = self.linux_obj.read_file(script_results_file)
+        key = ''
+        value = False
+        m = re.search("(\S+)\s+\|\s+Result\s+:\s+(PASS|FAIL)",results)
+        if m:
+            key = m.group(1)
+            value = m.group(2)
+            if value == "FAIL":
+                res = False
+            else:
+                res = True
+        fun_test.test_assert(expression=res, message=key + '=' + value)
+        self.linux_obj.disconnect()
+
 class TcFlowControl(FunTestCase):
 
 
@@ -531,14 +576,16 @@ if __name__ == '__main__':
         ts.add_test_case(TcKeepAliveTimeout())
     if execute_test == 'sanity' or execute_test == 'tc_established':
         ts.add_test_case(TcEstablished())
+    if execute_test == 'sanity' or execute_test == 'tc_close_wait':
+        ts.add_test_case(TcCloseWait())
     if execute_test == 'sanity' or execute_test == 'short_suites' or execute_test == 'tc_traffic_tests':
         ts.add_test_case(TcTrafficTests())
     if execute_test == 'sanity' or execute_test == 'short_suites' or execute_test == 'tc_window_scale':
         ts.add_test_case(TcWindowScale())
     if execute_test == 'sanity' or execute_test == 'short_suites' or execute_test == 'tc_flow_control':
         ts.add_test_case(TcFlowControl())
-    if execute_test not in ('sanity', 'tc_syn_recvd', 'tc_out_of_order_data_segments', 'tc_last_ack', 'tc_keepalive_timeout',
-                            'tc_established', 'tc_traffic_tests', 'tc_window_scale', 'tc_flow_control'):
+    if execute_test not in ('short_suites', 'sanity', 'tc_syn_recvd', 'tc_out_of_order_data_segments', 'tc_last_ack', 'tc_keepalive_timeout',
+                            'tc_established', 'tc_traffic_tests', 'tc_window_scale', 'tc_flow_control', 'tc_close_wait'):
         ts.add_test_case(TcOtherTests())
 
     ts.run()

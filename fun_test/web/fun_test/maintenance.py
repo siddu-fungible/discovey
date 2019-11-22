@@ -2,6 +2,8 @@ from web.fun_test.maintenance_old import *
 from dateutil import parser
 from web.fun_test.metrics_lib import MetricLib
 from web.fun_test.models import *
+from django.forms.models import model_to_dict
+from web.fun_test.models_helper import add_metrics_data_run_time
 
 METRICS_BASE_DATA_FILE = WEB_ROOT_DIR + "/metrics.json"
 ml = MetricLib()
@@ -2434,6 +2436,110 @@ if __name__ == "__main_fs1600__":
         result.append(one_dict)
     print json.dumps(result)
 
-if __name__ == "__main__":
+if __name__ == "__main_fs1600_backup__":
     ml.backup_dags()
     ml.set_global_cache(cache_valid=True)
+
+if __name__ == "__main_48_vols__":
+    metric_ids = [743, 744, 746, 745, 750, 751, 753, 752]
+    operations = ["read", "write"]
+    fio_job_names = ["inspur_8k_random_read_write_iodepth_", "_f1_6_vol_48"]
+    for metric_id in metric_ids:
+        chart = MetricChart.objects.get(metric_id=metric_id)
+
+        if "QDepth=32" in chart.chart_name:
+            fio_job_name = fio_job_names[0] + str(32) + fio_job_names[1]
+        elif "QDepth=64" in chart.chart_name:
+            fio_job_name = fio_job_names[0] + str(64) + fio_job_names[1]
+        elif "QDepth=96" in chart.chart_name:
+            fio_job_name = fio_job_names[0] + str(96) + fio_job_names[1]
+        elif "QDepth=128" in chart.chart_name:
+            fio_job_name = fio_job_names[0] + str(128) + fio_job_names[1]
+
+        read_data_set = {}
+        if chart.positive:
+            read_data_set["name"] = "read(6 F1s, 48 vols)"
+            output_name = "output_read_iops"
+            unit = PerfUnit.UNIT_OPS
+        else:
+            read_data_set["name"] = "read-avg(6 F1s, 48 vols)"
+            output_name = "output_read_avg_latency"
+            unit = PerfUnit.UNIT_USECS
+        read_data_set["inputs"] = {"input_platform": FunPlatform.F1,
+                                   "input_fio_job_name": fio_job_name}
+        read_data_set["output"] = {"name": output_name, "min": 0, "max": -1, "expected": -1, "best": -1, "reference":
+            -1, "unit": unit}
+
+        write_data_set = {}
+        if chart.positive:
+            write_data_set["name"] = "write(6 F1s, 48 vols)"
+            output_name = "output_write_iops"
+            unit = PerfUnit.UNIT_OPS
+        else:
+            write_data_set["name"] = "write-avg(6 F1s, 48 vols)"
+            output_name = "output_write_avg_latency"
+            unit = PerfUnit.UNIT_USECS
+        write_data_set["inputs"] = {"input_platform": FunPlatform.F1,
+                                    "input_fio_job_name": fio_job_name}
+        write_data_set["output"] = {"name": output_name, "min": 0, "max": -1, "expected": -1, "best": -1, "reference":
+            -1, "unit": unit}
+        data_sets = chart.get_data_sets()
+        data_sets.append(read_data_set)
+        data_sets.append(write_data_set)
+        chart.data_sets = json.dumps(data_sets)
+        chart.save()
+    print "added 48 vol datasets for random read write"
+
+if __name__ == "__main__":
+    entries = MetricsDataRunTime.objects.all()
+    for entry in entries:
+        entry.delete()
+    from django.db import transaction
+    transaction.set_autocommit(False)
+    metric_models = app_config.get_metric_models()
+    end_date = get_current_time()
+    start_date = end_date - timedelta(days=60)
+    date_range = [start_date, end_date]
+    jenkins_entries = JenkinsJobIdMap.objects.filter(build_date__range=date_range).order_by("-build_date")
+    jenkins_job_id_map = {}
+    for entry in jenkins_entries:
+        epoch = get_epoch_time_from_datetime(entry.build_date)
+        jenkins_job_id_map[epoch] = entry
+    print "created the jenkins job id map"
+    for metric_model in metric_models:
+        print "updating the model {}".format(metric_model)
+        try:
+            model_entries = metric_models[metric_model].objects.filter(input_date_time__range=date_range).order_by(
+                "-input_date_time")
+            for model_entry in model_entries:
+                model_entry_epoch = get_epoch_time_from_datetime(model_entry.input_date_time)
+                if model_entry_epoch in jenkins_job_id_map:
+                    entry = jenkins_job_id_map[model_entry_epoch]
+                    build_date = entry.build_date
+                    result = {}
+                    result["lsf_job_id"] = None
+                    if entry.lsf_job_id != "" and entry.lsf_job_id != -1:
+                        result["lsf_job_id"] = int(entry.lsf_job_id)
+
+                    result["suite_execution_id"] = entry.suite_execution_id if entry.suite_execution_id != -1 else None
+                    result["jenkins_build_number"] = entry.jenkins_job_id if entry.jenkins_job_id != -1 else None
+
+                    build_properties = None
+                    if entry.build_properties != "":
+                        build_properties = json.loads(entry.build_properties)
+                    result["build_properties"] = build_properties
+
+                    result["version"] = None
+                    if entry.sdk_version != "" and entry.sdk_version != -1:
+                        result["version"] = entry.sdk_version
+                    result["associated_suites"] = entry.associated_suites if len(entry.associated_suites) else None
+                    try:
+                        run_time_id = add_metrics_data_run_time(date_time=build_date, run_time=result)
+                        model_entry.run_time_id = run_time_id
+                        model_entry.save()
+                    except Exception as ex:
+                        print str(ex)
+        except Exception as ex:
+            pass
+    transaction.commit()
+    transaction.set_autocommit(True)

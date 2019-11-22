@@ -400,6 +400,22 @@ class SubModules(FunModel):   # Say Module: Networking, sub-module: PSW
     verbose_name = models.TextField(default="Verbose name")
 
 
+class MetricsDataRunTime(FunModel):
+    date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    build_properties = JSONField(default=None, null=True, blank=True)
+    lsf_job_id = models.IntegerField(default=None, null=True, verbose_name="lsf job id")
+    suite_execution_id = models.IntegerField(default=None, null=True, verbose_name="suite execution id")
+    jenkins_build_number = models.IntegerField(default=None, null=True, verbose_name="Jenkins Build Number")
+    version = models.TextField(default=None, verbose_name="Version", null=True)
+    associated_suites = JSONField(default=None, blank=True, null=True)
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
+
+
 class JenkinsJobIdMap(models.Model):
     jenkins_job_id = models.IntegerField()
     fun_sdk_branch = models.TextField(default="")

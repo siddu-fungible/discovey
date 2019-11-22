@@ -4,13 +4,10 @@ from lib.host.lsf_status_server import LsfStatusServer
 from web.fun_test.metrics_models import MetricChart
 from web.fun_test.analytics_models_helper import invalidate_goodness_cache
 
-import re
 from datetime import datetime
 from dateutil.parser import parse
 from scripts.system.metrics_parser import MetricParser
-from django.utils import timezone
-from web.fun_test.models_helper import add_jenkins_job_id_map
-from fun_global import FunPlatform, PerfUnit
+from fun_global import FunPlatform
 
 F1 = FunPlatform.F1
 
@@ -173,18 +170,6 @@ def set_networking_chart_status(platform=FunPlatform.F1):
                 chart.save()
 
 
-def add_version_to_jenkins_job_id_map(date_time, version):
-    suite_execution_id = fun_test.get_suite_execution_id()
-    add_jenkins_job_id_map(jenkins_job_id=0,
-                           fun_sdk_branch="",
-                           git_commit="",
-                           software_date=0,
-                           hardware_version="",
-                           build_properties="", lsf_job_id="",
-                           sdk_version=version, build_date=date_time, suite_execution_id=suite_execution_id,
-                           add_associated_suites=False)
-
-
 class MyScript(FunTestScript):
     def describe(self):
         self.set_test_details(steps=
@@ -235,18 +220,16 @@ class PalladiumPerformanceTc(FunTestCase):
         fun_test.test_assert(job_info, "Ensure Job Info exists")
         self.jenkins_job_id = job_info["jenkins_build_number"]
         self.job_id = job_info["job_id"]
-        self.git_commit = job_info["git_commit"]
-        self.git_commit = self.git_commit.replace("https://github.com/fungible-inc/FunOS/commit/", "")
+        git_commit = job_info["git_commit"]
+        self.git_commit = git_commit.replace("https://github.com/fungible-inc/FunOS/commit/", "")
         if validation_required:
             fun_test.test_assert(not job_info["return_code"], "Valid return code")
             fun_test.test_assert("output_text" in job_info, "output_text found in job info: {}".format(self.job_id))
-        lines = job_info["output_text"].split("\n")
-        dt = job_info["date_time"]
-
-        fun_test.test_assert(is_job_from_today(dt), "Last job is from today")
+        self.lines = job_info["output_text"].split("\n")
+        self.dt = job_info["date_time"]
+        self.run_time = job_info["run_time"]
         self.job_info = job_info
-        self.lines = lines
-        self.dt = dt
+        fun_test.test_assert(is_job_from_today(self.dt), "Last job is from today")
 
         return True
 
@@ -273,7 +256,8 @@ class PalladiumPerformanceTc(FunTestCase):
         try:
             fun_test.test_assert(self.validate_job(), "validating job")
             result = MetricParser().parse_it(model_name=self.model, logs=self.lines,
-                                             auto_add_to_db=True, date_time=self.dt, platform=self.platform)
+                                             auto_add_to_db=True, date_time=self.dt, platform=self.platform,
+                                             run_time=self.run_time)
 
             fun_test.test_assert(result["match_found"], "Found atleast one entry")
             self.result = fun_test.PASSED
@@ -441,7 +425,7 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
             self.lines = logs_1 + logs_0
 
             result = MetricParser().parse_it(model_name=self.model, logs=self.lines,
-                                             auto_add_to_db=True, date_time=self.dt, platform=self.platform)
+                                             auto_add_to_db=True, date_time=self.dt, platform=self.platform, run_time=self.run_time)
 
             fun_test.test_assert(result["match_found"], "Found atleast one entry")
             self.result = fun_test.PASSED
@@ -537,7 +521,7 @@ class FlowTestPerformanceTc(PalladiumPerformanceTc):
             lines = self.lsf_status_server.get_human_file(job_id=self.job_id, console_name="PCI Script Output")
             self.lines = lines.split("\n")
             result = MetricParser().parse_it(model_name=self.model, logs=self.lines,
-                                             auto_add_to_db=True, date_time=self.dt, platform=self.platform)
+                                             auto_add_to_db=True, date_time=self.dt, platform=self.platform, run_time=self.run_time)
 
             fun_test.test_assert(result["match_found"], "Found atleast one entry")
             self.result = fun_test.PASSED
@@ -564,7 +548,7 @@ class TeraMarkZipPerformanceTc(PalladiumPerformanceTc):
         try:
             fun_test.test_assert(self.validate_job(), "validating job")
             result = MetricParser().parse_it(model_name="TeraMarkZip", logs=self.lines,
-                                                    auto_add_to_db=False, date_time=self.dt, platform=self.platform)
+                                                    auto_add_to_db=False, date_time=self.dt, platform=self.platform, run_time=self.run_time)
             fun_test.test_assert(result["match_found"], "Found atleast one entry")
             self.result = fun_test.PASSED
 

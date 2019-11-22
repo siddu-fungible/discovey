@@ -732,6 +732,8 @@ def scripts(request):
                      "bugs": [],
                      "test_cases": get_all_test_cases(regression_script.script_path),
                      "baseline_suite_execution_id": regression_script.baseline_suite_execution_id}
+        if "__init__.py" in regression_script.script_path:
+            continue
         script_infos = ScriptInfo.objects.filter(script_id=regression_script.pk)
         for script_info in script_infos:
             new_entry["bugs"].append(script_info.bug)
