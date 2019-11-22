@@ -120,10 +120,12 @@ class DetectLargeFiles(FunTestCase):
         pass
 
 
+
+
 if __name__ == "__main__":
     myscript = MaintenanceScript()
     myscript.add_test_case(ManageSsh())
     myscript.add_test_case(WebBackup())
-    # myscript.add_test_case(CleanupOldDirectories())
+    myscript.add_test_case(CleanupOldDirectories())
     myscript.add_test_case(DetectLargeFiles())
     myscript.run()
