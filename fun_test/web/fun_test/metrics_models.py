@@ -1825,6 +1825,7 @@ class WuSendSpeedTestPerformance(models.Model):
     input_metric_name = models.CharField(max_length=40, default="wu_send_ungated_latency_cycles", choices=[(0, "wu_send_ungated_latency_cycles")])
     output_average = models.IntegerField(verbose_name="Output WU Send Speed Performanmce Test Average", default=-1)
     output_average_unit = models.TextField(default="cycles")
+    input_platform = models.TextField(default=FunPlatform.F1)
     run_time_id = models.IntegerField(default=None, null=True)
 
     def __str__(self):
