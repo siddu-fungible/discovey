@@ -906,7 +906,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                     host_clone[host_name] = self.host_info[host_name]["handle"].clone()
                     warmup_thread_id[index] = fun_test.execute_thread_after(
                         time_in_seconds=wait_time, func=fio_parser, arg1=host_clone[host_name], host_index=index,
-                        filename=self.host_info[host_name]["fio_filename"], timeout=self.warm_up_fio_cmd_args['timeout']
+                        filename=self.host_info[host_name]["fio_filename"],
                         cpus_allowed=self.host_info[host_name]["host_numa_cpus"], **self.warm_up_fio_cmd_args)
 
                     fun_test.log("Started FIO command to perform sequential write on {}".format(host_name))
