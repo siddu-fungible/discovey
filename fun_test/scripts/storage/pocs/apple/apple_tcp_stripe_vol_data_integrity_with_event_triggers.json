@@ -28,7 +28,15 @@
     "iter_interval": 5,
     "create_file_system": false,
     "transport_type": "tcp",
-    "transport_port": 1099
+    "transport_port": 1099,
+    "api_server_port": 50220,
+    "api_server_username": "admin",
+    "api_server_password": "password",
+    "install": "fresh",
+    "sc_db_directories": ["/var/opt/fungible/elasticsearch", "/var/opt/fungible/cassandra"],
+    "sc_script_dir": "/opt/fungible/StorageController/etc",
+    "run_sc_script": "start_sc.sh",
+    "container_up_timeout": 60
   },
   "StripedVolVerifyIO": {
     "syslog_level": 2,
