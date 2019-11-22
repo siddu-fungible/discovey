@@ -48,18 +48,6 @@ def scp_file(source_file, target_server_ip, target_username, target_file):
     return popen(command="scp", args=command.split(" ")[1:])
 
 
-"""
-source_file = "/tmp/6_45_24206721"
-target_server_ip = "qa-ubuntu-02"
-target_username = "auto_admin"
-target_file = "/oioio/"
-
-return_code, output, err = scp_file(source_file=source_file,
-                                    target_server_ip=target_server_ip,
-                                    target_username=target_username,
-                                    target_file=target_file)
-"""
-
 
 class FunTestClient:
 
