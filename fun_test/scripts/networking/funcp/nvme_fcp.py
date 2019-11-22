@@ -186,7 +186,7 @@ class BringupSetup(FunTestCase):
         if "collect_stats" in job_inputs:
             fun_test.shared_variables["collect_stats"] = job_inputs["collect_stats"]
         else:
-            fun_test.shared_variables["collect_stats"] = False
+            fun_test.shared_variables["collect_stats"] = True
         if "rds_conn" in job_inputs:
             fun_test.shared_variables["rds_conn"] = job_inputs["rds_conn"]
         else:
@@ -595,7 +595,7 @@ class ConfigureRdsVol(FunTestCase):
                                                                         remote_nsid=x,
                                                                         remote_ip=f10_vlan_ip,
                                                                         port=controller_port,
-                                                                        transport="RDS",
+                                                                        transport="TCP",
                                                                         connections=rds_conn,
                                                                         command_duration=command_timeout)
                     fun_test.simple_assert(command_result["status"],
@@ -697,9 +697,11 @@ class RunFioRds(FunTestCase):
             host_dict = {}
             host_dict[f11_hosts[0]["name"]] = {}
             host_dict[f11_hosts[0]["name"]]["handle"] = f11_hosts[0]["handle"]
-            host_dict[f11_hosts[0]["name"]]["nvme_device"] = get_nvme_device(f11_hosts[0]["handle"])
-            if not host_dict[f11_hosts[0]["name"]]["nvme_device"]:
+            temp_nvme_devices = get_nvme_device(f11_hosts[0]["handle"])
+            if not temp_nvme_devices:
                 fun_test.simple_assert(False, "NVMe device not found")
+            temp_nvme_dev_list = temp_nvme_devices.split(":")[:total_ssd]
+            host_dict[f11_hosts[0]["name"]]["nvme_device"] = ":".join(temp_nvme_dev_list)
             host_dict[f11_hosts[0]["name"]]["cpu_list"] = get_numa(f11_hosts[0]["handle"])
             tune_host(f11_hosts[0]["handle"])
 
@@ -709,41 +711,37 @@ class RunFioRds(FunTestCase):
             x = 1
             wait_time = total_ssd
             fio_output = {}
-            for host in host_dict:
-                fio_filename = host_dict[host]["nvme_device"]
-                precondition_fio_num_jobs = len(fio_filename.split(":"))
-                host_clone = host_dict[host]["handle"].clone()
-                # thread_id[x] = f11_hosts[0]["handle"].pcie_fio(filename=fio_filename,
-                #                                              rw="write",
-                #                                              numjobs=precondition_fio_num_jobs,
-                #                                              timeout=1200,
-                #                                              **self.precondition_args)
-                thread_id[x] = fun_test.execute_thread_after(time_in_seconds=wait_time,
-                                                             func=fio_parser,
-                                                             host_index=x,
-                                                             arg1=host_clone,
-                                                             filename=fio_filename,
-                                                             numjobs=precondition_fio_num_jobs,
-                                                             rw="write",
-                                                             name="precondition_" + str(host),
-                                                             cpus_allowed=host_dict[host]["cpu_list"],
-                                                             **self.precondition_args)
-                fun_test.sleep("Fio threadzz", seconds=1)
-                wait_time -= 1
-                x += 1
+            for precond_iter in xrange(0, 2):
+                for host in host_dict:
+                    fio_filename = host_dict[host]["nvme_device"]
+                    precondition_fio_num_jobs = len(fio_filename.split(":"))
+                    host_clone = host_dict[host]["handle"].clone()
+                    thread_id[x] = fun_test.execute_thread_after(time_in_seconds=wait_time,
+                                                                 func=fio_parser,
+                                                                 host_index=x,
+                                                                 arg1=host_clone,
+                                                                 filename=fio_filename,
+                                                                 numjobs=precondition_fio_num_jobs,
+                                                                 rw="write",
+                                                                 name="precondition_" + str(host),
+                                                                 cpus_allowed=host_dict[host]["cpu_list"],
+                                                                 **self.precondition_args)
+                    fun_test.sleep("Fio threadzz", seconds=1)
+                    wait_time -= 1
+                    x += 1
 
-            for ids in thread_id:
-                try:
-                    fun_test.log("Joining fio thread {}".format(ids))
-                    fun_test.join_thread(fun_test_thread_id=thread_id[ids])
-                    fun_test.log("FIO Command Output:")
-                    fun_test.log(fun_test.shared_variables["fio"][ids])
-                    fun_test.test_assert(fun_test.shared_variables["fio"][ids], "Fio threaded test")
-                    fio_output[ids] = {}
-                    fio_output[ids] = fun_test.shared_variables["fio"][ids]
-                except Exception as ex:
-                    fun_test.critical(str(ex))
-                    fun_test.log("FIO Command Output for volume {}:\n {}".format(ids, fio_output[ids]))
+                for ids in thread_id:
+                    try:
+                        fun_test.log("Joining fio thread {}".format(ids))
+                        fun_test.join_thread(fun_test_thread_id=thread_id[ids])
+                        fun_test.log("FIO Command Output:")
+                        fun_test.log(fun_test.shared_variables["fio"][ids])
+                        fun_test.test_assert(fun_test.shared_variables["fio"][ids], "Fio threaded test")
+                        fio_output[ids] = {}
+                        fio_output[ids] = fun_test.shared_variables["fio"][ids]
+                    except Exception as ex:
+                        fun_test.critical(str(ex))
+                        fun_test.log("FIO Command Output for volume {}:\n {}".format(ids, fio_output[ids]))
 
             fun_test.sleep("Pre-condition done", 10)
 
@@ -752,7 +750,8 @@ class RunFioRds(FunTestCase):
         {'latency': 4850, 'latency9999': 111673, 'io_bytes': 51883728896, 'latency9950': 63700,
          'latency99': 55836, 'iops': 105531.333833, 'bw': 422125, 'latency90': 16318,
           'runtime': 120030, 'latency95': 30539, 'clatency': 4847}'''
-        test_type = "read"
+
+        test_type = "randread"
         stats_collect_count = self.fio_cmd_args["runtime"] / self.stats_interval
         table_data_rows = []
 
@@ -817,7 +816,7 @@ class RunFioRds(FunTestCase):
                                                          host_index=x,
                                                          arg1=host_clone,
                                                          filename=fio_filename,
-                                                         rw="read",
+                                                         rw="randread",
                                                          name=fio_job_name + str(host),
                                                          cpus_allowed=host_dict[host]["cpu_list"],
                                                          **self.fio_cmd_args)

@@ -29,7 +29,7 @@ class PalladiumTc(FunTestCase):
     hw_model = "S1_Compute"
     max_duration = 900
     release_build = "true"
-    hw_version = "rel_11012019"
+    hw_version = "rel_11152019"
     run_target = "protium_s"
     extra_emails = []
 
@@ -213,7 +213,7 @@ class CryptoCCPSanityTc(PalladiumTc):
     boot_args = "app=crypto_ccp_test"
     tags = "qa_s1_ccp_sanity"
     note = "Crypto ccp accelerator sanity test app"
-    max_duration = 9000
+    max_duration = 900
     extra_emails = ["jitendra.lulla@fungible.com"]
 
     def describe(self):

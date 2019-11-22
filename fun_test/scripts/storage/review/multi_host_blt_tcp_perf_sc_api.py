@@ -469,6 +469,8 @@ class MultiHostVolumePerformanceScript(FunTestScript):
         # Ensuring connectivity from Host to F1's
         for key in self.host_handles:
             for index, ip in enumerate(self.f1_ips):
+                if self.funcp_spec[0]["container_names"][index] == "run_sc":
+                    continue
                 ping_status = self.host_handles[key].ping(dst=ip)
                 fun_test.test_assert(ping_status, "Host {} is able to ping to {}'s bond interface IP {}".
                                      format(key, self.funcp_spec[0]["container_names"][index], ip))
