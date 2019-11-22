@@ -10,6 +10,7 @@ import time
 import logging
 import httplib
 import subprocess
+import random
 
 
 logging.basicConfig(level=logging.INFO)
@@ -27,12 +28,14 @@ DEFAULT_SUBMITTER_EMAIL = "team-regression@fungible.com"
 TIME_OUT_EXIT_CODE = -999
 PASSED_EXIT_CODE = 0
 FAILED_EXIT_CODE = -1
+SCP_FAILED_EXIT_CODE = -110
 GENERIC_ERROR_EXIT_CODE = -111
 
 WORKSPACE_DIRECTORY = "/Users/johnabraham/ws/test_pr"
 FUNOS_RELEASE_STRIPPED_BINARY = "FunOS/build/funos-f1-release.stripped"
 TFTP_SERVER_IP = "qa-ubuntu-02"
 TFTP_SERVER_SSH_USERNAME = "auto_admin"
+TFTP_DIRECTORY = "/tftpboot"
 
 
 def popen(command, args, shell=None):
@@ -46,7 +49,6 @@ def popen(command, args, shell=None):
 def scp_file(source_file, target_server_ip, target_username, target_file):
     command = "scp {} {}@{}:{}".format(source_file, target_username, target_server_ip, target_file)
     return popen(command="scp", args=command.split(" ")[1:])
-
 
 
 class FunTestClient:
@@ -179,13 +181,13 @@ class FunTestClient:
         response = self._do_get(url="/api/v1/regression/suite_executions/{}?is_job_completed=true".format(job_id))
         return response
 
-    def scp_funos_binary(self):
+    def scp_funos_binary(self, target_file_name):
         result = False
         source_file = "{}/{}".format(WORKSPACE_DIRECTORY, FUNOS_RELEASE_STRIPPED_BINARY)
         if os.path.exists(source_file):
             target_server_ip = TFTP_SERVER_IP
             target_username = TFTP_SERVER_SSH_USERNAME
-            target_file = "/tmp/"
+            target_file = "{}/{}".format(TFTP_DIRECTORY, target_file_name)
 
             return_code, output, err = scp_file(source_file=source_file,
                                                 target_server_ip=target_server_ip,
@@ -203,7 +205,20 @@ class FunTestClient:
             self.report_error(error_message=error_message)
         return result
 
+    def position_pre_built_artifacts(self):
+        random_string = ''.join(random.sample('0123456789', 6))
+        target_file_name = "s_pr_{}".format(random_string)
+        scp_result = self.scp_funos_binary(target_file_name=target_file_name)
+        result = None
+        if scp_result:
+            result = {"funos_binary": target_file_name}
+        return result
 
+    def update_environment(self, environment, key, value):
+        if not environment:
+            environment = {}
+        environment[key] = value
+        return environment
 
 def main():
     exit_code = 0
@@ -234,6 +249,9 @@ def main():
     jenkins_build_machine = args.jenkins_build_machine
     jenkins_workspace = args.jenkins_workspace
     job_url_file = args.job_url_file
+    is_pre_built = False
+    if jenkins_workspace:
+        is_pre_built = True
 
     logging.info("Input options provided:")
     logging.info("Suite                 : {}".format(suite_name))
@@ -269,6 +287,17 @@ def main():
     try:
         fun_test_client = FunTestClient(base_url=base_url)
         start_time = time.time()
+
+        if is_pre_built:
+            pre_built_artifacts_positioned = fun_test_client.position_pre_built_artifacts()
+            if not pre_built_artifacts_positioned:
+                exit_code = SCP_FAILED_EXIT_CODE
+                raise Exception("Positioning pre-built artifacts failed")
+            else:
+                environment = fun_test_client.update_environment(environment=environment,
+                                                                 key="pre_built_artifacts",
+                                                                 value=pre_built_artifacts_positioned)
+
         job_id = fun_test_client.submit_job(suite_path=suite_name,
                                             build_url=DEFAULT_BUILD_URL,
                                             tags=tags,
@@ -313,7 +342,8 @@ def main():
         else:
             logging.exception("Job submission failed.")
     except Exception as ex:
-        exit_code = GENERIC_ERROR_EXIT_CODE
+        if not exit_code:
+            exit_code = GENERIC_ERROR_EXIT_CODE
         logging.critical("Suite polling ended with exception: {}".format(str(ex)))
 
     job_url = "Unknown URL"
