@@ -99,6 +99,7 @@ import { ReleaseCatalogsComponent } from './regression/release-catalogs/release-
 import { BackComponent } from './ui-elements/back/back.component';
 import { SectionHeaderComponent } from './ui-elements/section-header/section-header.component';
 import { DaemonsComponent } from './daemons/daemons.component';
+import {setAppInjector} from "./app-injector";
 
 
 @NgModule({
@@ -209,7 +210,9 @@ import { DaemonsComponent } from './daemons/daemons.component';
 export class AppModule {
   static injector: Injector;
   constructor(injector: Injector) {
-    AppModule.injector = injector;
+    //AppModule.injector = injector;
+    setAppInjector(injector);
+
   }
 
 }

@@ -2,7 +2,8 @@ import {ApiService} from "../services/api/api.service";
 import {catchError, switchMap} from "rxjs/operators";
 import {of, throwError} from "rxjs";
 import {LoggerService} from "../services/logger/logger.service";
-import {AppModule} from "../app.module";
+import {AppInjector} from "../app-injector";
+//import {AppModule} from "../app.module";
 
 export abstract class Api {
   abstract url: string = null;
@@ -14,8 +15,9 @@ export abstract class Api {
   private loggerService: LoggerService;
 
   constructor() {
-    this.apiService = AppModule.injector.get(ApiService);
-    this.loggerService = AppModule.injector.get(LoggerService);
+
+    this.apiService = AppInjector.get(ApiService); //AppModule.injector.get(ApiService);
+    this.loggerService =  AppInjector.get(LoggerService); //AppModule.injector.get(LoggerService);
   }
 
   protected create(url, payload) {
