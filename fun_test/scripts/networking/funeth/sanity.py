@@ -397,11 +397,13 @@ class FunethSanity(FunTestScript):
                 boot_args = "app=load_mods retimer=0,1 --dpc-uart --dpc-server --csr-replay --all_100g"
                 if csi_perf_enabled:
                     boot_args += " --perf"
-                    boot_args += " csi-local-ip=29.1.1.2 csi-remote-ip={} pdtrace-hbm-size-kb=204800".format(perf_listener_ip)
-                 elif csi_cache_miss_enabled:
+                    boot_args += " csi-local-ip=29.1.1.2 csi-remote-ip={} pdtrace-hbm-size-kb=204800".format(
+                        perf_listener_ip)
+                elif csi_cache_miss_enabled:
                     boot_args += " --csi-cache-miss"
-                    boot_args += " csi-local-ip=29.1.1.2 csi-remote-ip={} pdtrace-hbm-size-kb=204800".format(perf_listener_ip)
-               if nu_all_clusters:
+                    boot_args += " csi-local-ip=29.1.1.2 csi-remote-ip={} pdtrace-hbm-size-kb=204800".format(
+                        perf_listener_ip)
+                if nu_all_clusters:
                     boot_args += ' override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]}'
                 topology_helper = TopologyHelper()
                 topology_helper.set_dut_parameters(dut_index=0,
