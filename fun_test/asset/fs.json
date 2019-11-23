@@ -974,6 +974,7 @@
       "mgmt_ip": "fs118-come"
     },
     "name": "fs-118",
+    "mpg_ips": ["10.1.108.15", "10.1.108.16"],
     "gateway_ip": "10.1.108.1",
     "workarounds": {
       "skip_funeth_come_power_cycle": true
