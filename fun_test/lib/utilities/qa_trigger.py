@@ -9,7 +9,9 @@ import json
 import time
 import logging
 import httplib
-import time
+import subprocess
+import random
+
 
 logging.basicConfig(level=logging.INFO)
 
@@ -26,14 +28,31 @@ DEFAULT_SUBMITTER_EMAIL = "team-regression@fungible.com"
 TIME_OUT_EXIT_CODE = -999
 PASSED_EXIT_CODE = 0
 FAILED_EXIT_CODE = -1
+SCP_FAILED_EXIT_CODE = -110
 GENERIC_ERROR_EXIT_CODE = -111
+
+WORKSPACE_DIRECTORY = "/Users/johnabraham/ws/test_pr"
+FUNOS_RELEASE_STRIPPED_BINARY = "FunOS/build/funos-f1-release.stripped"
+TFTP_SERVER_IP = "qa-ubuntu-02"
+TFTP_SERVER_SSH_USERNAME = "auto_admin"
+TFTP_DIRECTORY = "/tftpboot"
+
+
+def popen(command, args, shell=None):
+    p = subprocess.Popen([command] + args, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE,
+                         shell=shell)
+    output, err = p.communicate()
+    return_code = p.returncode
+    return return_code, output, err
+
+
+def scp_file(source_file, target_server_ip, target_username, target_file):
+    command = "scp {} {}@{}:{}".format(source_file, target_username, target_server_ip, target_file)
+    return popen(command="scp", args=command.split(" ")[1:])
 
 
 class FunTestClient:
-    STATUS_UNKNOWN = "UNKNOWN"
-    STATUS_COMPLETED = "COMPLETED"
-    STATUS_IN_PROGRESS = "IN_PROGRESS"
-    STATUS_QUEUED = "QUEUED"
+
     DEBUG = True
 
     def __init__(self, base_url):
@@ -42,10 +61,11 @@ class FunTestClient:
         self.csrf_token = None
         self.cookies = {}
 
-    def report_error(self, error_message, suite_name):
+    def report_error(self, error_message, suite_name=None):
+        print("ERROR: {}".format(error_message))
         from_address = "john.abraham@fungible.com"
         subject = "FunTest Interface error: %s" % error_message
-        content = "Suite: %s, Error: %s" % (suite_name, error_message)
+        content = "Suite: {}, Error: {}".format(suite_name, error_message)
         # send_mail(from_address=from_address, to_addresses=default_to_addresses, subject=subject, content=content)
         self._write_html(content)
 
@@ -161,7 +181,44 @@ class FunTestClient:
         response = self._do_get(url="/api/v1/regression/suite_executions/{}?is_job_completed=true".format(job_id))
         return response
 
+    def scp_funos_binary(self, target_file_name):
+        result = False
+        source_file = "{}/{}".format(WORKSPACE_DIRECTORY, FUNOS_RELEASE_STRIPPED_BINARY)
+        if os.path.exists(source_file):
+            target_server_ip = TFTP_SERVER_IP
+            target_username = TFTP_SERVER_SSH_USERNAME
+            target_file = "{}/{}".format(TFTP_DIRECTORY, target_file_name)
 
+            return_code, output, err = scp_file(source_file=source_file,
+                                                target_server_ip=target_server_ip,
+                                                target_username=target_username,
+                                                target_file=target_file)
+
+            if return_code == 0:
+                result = True
+                print("SCP FunOS binary was successful")
+            print("SCP: return_code: {}".format(return_code))
+            print("SCP: output: {}".format(output))
+            print("SCP: error: {}".format(err))
+        else:
+            error_message = "Path: {} does not exist".format(source_file)
+            self.report_error(error_message=error_message)
+        return result
+
+    def position_pre_built_artifacts(self):
+        random_string = ''.join(random.sample('0123456789', 6))
+        target_file_name = "s_pr_{}".format(random_string)
+        scp_result = self.scp_funos_binary(target_file_name=target_file_name)
+        result = None
+        if scp_result:
+            result = {"funos_binary": target_file_name}
+        return result
+
+    def update_environment(self, environment, key, value):
+        if not environment:
+            environment = {}
+        environment[key] = value
+        return environment
 
 def main():
     exit_code = 0
@@ -192,6 +249,9 @@ def main():
     jenkins_build_machine = args.jenkins_build_machine
     jenkins_workspace = args.jenkins_workspace
     job_url_file = args.job_url_file
+    is_pre_built = False
+    if jenkins_workspace:
+        is_pre_built = True
 
     logging.info("Input options provided:")
     logging.info("Suite                 : {}".format(suite_name))
@@ -227,6 +287,17 @@ def main():
     try:
         fun_test_client = FunTestClient(base_url=base_url)
         start_time = time.time()
+
+        if is_pre_built:
+            pre_built_artifacts_positioned = fun_test_client.position_pre_built_artifacts()
+            if not pre_built_artifacts_positioned:
+                exit_code = SCP_FAILED_EXIT_CODE
+                raise Exception("Positioning pre-built artifacts failed")
+            else:
+                environment = fun_test_client.update_environment(environment=environment,
+                                                                 key="pre_built_artifacts",
+                                                                 value=pre_built_artifacts_positioned)
+
         job_id = fun_test_client.submit_job(suite_path=suite_name,
                                             build_url=DEFAULT_BUILD_URL,
                                             tags=tags,
@@ -271,7 +342,8 @@ def main():
         else:
             logging.exception("Job submission failed.")
     except Exception as ex:
-        exit_code = GENERIC_ERROR_EXIT_CODE
+        if not exit_code:
+            exit_code = GENERIC_ERROR_EXIT_CODE
         logging.critical("Suite polling ended with exception: {}".format(str(ex)))
 
     job_url = "Unknown URL"

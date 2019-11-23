@@ -8,9 +8,11 @@ fun_test/scripts/scratch/*.*
 .DS_Store
 fun_test/web/static/logs/scheduler.*
 fun_test/web/static/logs/*log.txt
+fun_test/web/static/logs/*.txt
 fun_test/web/static/logs/s_*
 fun_test/web/static/jobs/archived/*.archived.*
 fun_test/web/dump.rdb
 *idea*/
 fun_test/web/db.sqlite3
 fun_test/web/static/angular/qadashboard
+fun_test/web/fun_test*.bkp.tgz

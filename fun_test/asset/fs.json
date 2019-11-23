@@ -835,21 +835,21 @@
     "bmc": {
       "mgmt_ssh_password": "superuser",
       "mgmt_ssh_username": "sysadmin",
-      "mgmt_ip": "10.1.105.236"
+      "mgmt_ip": "10.1.108.236"
     },
     "come": {
       "mgmt_ssh_password": "123",
       "mgmt_ssh_username": "fun",
-      "mgmt_ip": "10.1.105.237"
+      "mgmt_ip": "10.1.108.237"
     },
     "name": "fs-102",
-    "mpg_ips": ["10.1.105.88", "10.1.105.89"],
-    "gateway_ip": "10.1.105.1",
+    "mpg_ips": ["10.1.108.88", "10.1.108.89"],
+    "gateway_ip": "10.1.108.1",
     "bundle_compatible": true,
     "fpga": {
       "mgmt_ssh_password": "root",
       "mgmt_ssh_username": "root",
-      "mgmt_ip": "10.1.105.238"
+      "mgmt_ip": "10.1.108.238"
     },
     "apc_info": {
       "username": "localadmin",
@@ -860,26 +860,26 @@
   },
   {
     "name": "fs-104",
-    "gateway_ip": "10.1.105.1",
+    "gateway_ip": "10.1.108.1",
     "bundle_compatible": true,
     "bmc": {
       "mgmt_ssh_password": "superuser",
       "mgmt_ssh_username": "sysadmin",
-      "mgmt_ip": "10.1.105.46"
+      "mgmt_ip": "10.1.108.46"
     },
     "come": {
       "mgmt_ssh_password": "123",
       "mgmt_ssh_username": "fun",
-      "mgmt_ip": "10.1.105.47"
+      "mgmt_ip": "10.1.108.47"
     },
     "mpg_ips": [
-      "10.1.105.99",
-      "10.1.105.100"
+      "10.1.108.99",
+      "10.1.108.100"
     ],
     "fpga": {
       "mgmt_ssh_password": "root",
       "mgmt_ssh_username": "root",
-      "mgmt_ip": "10.1.105.48"
+      "mgmt_ip": "10.1.108.48"
     },
     "apc_info": {
       "username": "localadmin",
@@ -974,6 +974,7 @@
       "mgmt_ip": "fs118-come"
     },
     "name": "fs-118",
+    "gateway_ip": "10.1.108.1",
     "workarounds": {
       "skip_funeth_come_power_cycle": true
     },
@@ -988,6 +989,34 @@
       "outlet_number": 7,
       "password": "Precious1*",
       "host_ip": "cab04-pdu1"
+    }
+  },
+    {
+    "bmc": {
+      "mgmt_ssh_password": "superuser",
+      "mgmt_ssh_username": "sysadmin",
+      "mgmt_ip": "192.168.8.87"
+    },
+    "come": {
+      "mgmt_ssh_password": "123",
+      "mgmt_ssh_username": "fun",
+      "mgmt_ip": "192.168.8.31"
+    },
+    "name": "fs-131",
+    "workarounds": {
+      "skip_funeth_come_power_cycle": true
+    },
+    "revision": "2",
+    "fpga": {
+      "mgmt_ssh_password": "root",
+      "mgmt_ssh_username": "root",
+      "mgmt_ip": "192.168.8.159"
+    },
+    "apc_info": {
+      "username": "admin",
+      "outlet_number": 8,
+      "password": "Precious1*",
+      "host_ip": "192.168.8.124"
     }
   }
 ]

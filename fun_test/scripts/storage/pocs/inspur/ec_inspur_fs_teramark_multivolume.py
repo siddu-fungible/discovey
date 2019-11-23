@@ -176,8 +176,11 @@ class ECVolumeLevelScript(FunTestScript):
 
             # Code to collect csi_perf if it's set
             self.csi_perf_enabled = fun_test.get_job_environment_variable("csi_perf")
+            self.csi_cache_miss_enabled = fun_test.get_job_environment_variable("csi_cache_miss")
             fun_test.log("csi_perf_enabled is set as: {} for current run".format(self.csi_perf_enabled))
-            if self.csi_perf_enabled:
+            fun_test.log("csi_cache_miss_enabled is set as: {} for current run".format(self.csi_cache_miss_enabled))
+
+            if self.csi_perf_enabled or self.csi_cache_miss_enabled:
                 fun_test.log("testbed_config: {}".format(self.testbed_config))
                 self.csi_f1_ip = \
                     self.testbed_config["dut_info"][str(self.available_dut_indexes[0])]["bond_interface_info"]["0"][
@@ -192,8 +195,12 @@ class ECVolumeLevelScript(FunTestScript):
                     fun_test.log("csi perf listener host ip is: {}".format(self.perf_listener_ip))
                 # adding csi perf bootargs if csi_perf is enabled
                 #  TODO: Modifying bootargs only for F1_0 as csi_perf on F1_1 is not yet fully supported
-                self.bootargs[0] += " --perf csi-local-ip={} csi-remote-ip={} pdtrace-hbm-size-kb={}".format(
-                    self.csi_f1_ip, self.perf_listener_ip, self.csi_perf_pdtrace_hbm_size_kb)
+                if self.csi_perf_enabled:
+                    self.bootargs[0] += " --perf csi-local-ip={} csi-remote-ip={} pdtrace-hbm-size-kb={}".format(
+                        self.csi_f1_ip, self.perf_listener_ip, self.csi_perf_pdtrace_hbm_size_kb)
+                elif self.csi_cache_miss_enabled:
+                    self.bootargs[0] += " --csi-cache-miss csi-local-ip={} csi-remote-ip={} pdtrace-hbm-size-kb={}".format(
+                        self.csi_f1_ip, self.perf_listener_ip, self.csi_perf_pdtrace_hbm_size_kb)
 
             self.tftp_image_path = fun_test.get_job_environment_variable("tftp_image_path")
             self.bundle_image_parameters = fun_test.get_job_environment_variable("bundle_image_parameters")
@@ -302,6 +309,47 @@ class ECVolumeLevelScript(FunTestScript):
             self.funcp_obj = {}
             self.funcp_spec = {}
             for index in xrange(self.num_duts):
+                run_sc_restart_status = False
+                # Removing existing db directories for fresh setup
+                try:
+                    if self.install == "fresh":
+                        if self.bundle_image_parameters:
+                            path = "{}/{}".format(self.sc_script_dir, self.run_sc_script)
+                            if self.come_obj[index].check_file_directory_exists(path=path):
+                                self.come_obj[index].command("cd {}".format(self.sc_script_dir))
+                                # restarting run_sc with -c option
+                                self.come_obj[index].command("sudo ./{} -c restart".format(self.run_sc_script))
+                                fun_test.test_assert_expected(expected=0, actual=self.come_obj[index].exit_status(),
+                                                              message="run_sc restarted with cleanup")
+                                # check if run_sc container is running
+                                run_sc_restart_cmd = "docker ps -a --format '{{.Names}}' | grep run_sc"
+                                timer = FunTimer(max_time=self.container_up_timeout)
+                                while not timer.is_expired():
+                                    run_sc_name = self.come_obj[index].command(
+                                        run_sc_restart_cmd, timeout=self.command_timeout).split("\n")[0]
+                                    if run_sc_name:
+                                        fun_test.log("run_sc container is up and running")
+                                        run_sc_restart_status = True
+                                        break
+                                    else:
+                                        fun_test.sleep("for the run_sc docker container to start", 1)
+                                else:
+                                    fun_test.critical("run_sc container is not restarted within {} seconds after "
+                                                      "cleaning up the DB".format(self.container_up_timeout))
+                                    fun_test.test_assert(False, "Cleaning DB and restarting run_sc container")
+                        else:
+                            for directory in self.sc_db_directories:
+                                if self.come_obj[index].check_file_directory_exists(path=directory):
+                                    fun_test.log("Removing Directory {}".format(directory))
+                                    self.come_obj[index].sudo_command("rm -rf {}".format(directory))
+                                    fun_test.test_assert_expected(actual=self.come_obj[index].exit_status(), expected=0,
+                                                                  message="Directory {} is removed".format(directory))
+                                else:
+                                    fun_test.log("Directory {} does not exist skipping deletion".format(directory))
+                    else:
+                        fun_test.log("Skipping run_sc restart with cleanup")
+                except Exception as ex:
+                    fun_test.critical(str(ex))
                 self.funcp_obj[index] = StorageFsTemplate(self.come_obj[index])
                 if self.tftp_image_path:
                     self.funcp_spec[index] = self.funcp_obj[index].deploy_funcp_container(
@@ -353,7 +401,8 @@ class ECVolumeLevelScript(FunTestScript):
             fun_test.shared_variables["db_log_time"] = self.db_log_time
             fun_test.shared_variables["host_info"] = self.host_info
             fun_test.shared_variables["csi_perf_enabled"] = self.csi_perf_enabled
-            if self.csi_perf_enabled:
+            fun_test.shared_variables["csi_cache_miss_enabled"] = self.csi_cache_miss_enabled
+            if self.csi_perf_enabled or self.csi_cache_miss_enabled:
                 fun_test.shared_variables["perf_listener_host_name"] = self.perf_listener_host_name
                 fun_test.shared_variables["perf_listener_ip"] = self.perf_listener_ip
 
@@ -387,7 +436,7 @@ class ECVolumeLevelScript(FunTestScript):
                                          format(host_name, self.funcp_spec[0]["container_names"][index], ip))
 
             # Ensuring perf_host is able to ping F1 IP
-            if self.csi_perf_enabled:
+            if self.csi_perf_enabled or self.csi_cache_miss_enabled:
                 # csi_perf_host_instance = csi_perf_host_obj.get_instance()  # TODO: Returning as NoneType
                 csi_perf_host_instance = Linux(host_ip=csi_perf_host_obj.spec["host_ip"],
                                                ssh_username=csi_perf_host_obj.spec["ssh_username"],
@@ -688,7 +737,8 @@ class ECVolumeLevelTestcase(FunTestCase):
             self.num_duts = fun_test.shared_variables["num_duts"]
             self.num_hosts = len(self.host_info)
             self.csi_perf_enabled = fun_test.shared_variables["csi_perf_enabled"]
-            if self.csi_perf_enabled:
+            self.csi_cache_miss_enabled = fun_test.shared_variables["csi_cache_miss_enabled"]
+            if self.csi_perf_enabled or self.csi_cache_miss_enabled:
                 self.perf_listener_host_name = fun_test.shared_variables["perf_listener_host_name"]
                 self.perf_listener_ip = fun_test.shared_variables["perf_listener_ip"]
         elif "workarounds" in self.testbed_config and "csr_replay" in self.testbed_config["workarounds"] and \
@@ -1240,7 +1290,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.log("Time taken to start an FIO job on a host {}: {}".format(host_name, time_taken))
 
             # Starting csi perf stats collection if it's set
-            if self.csi_perf_enabled:
+            if self.csi_perf_enabled or self.csi_cache_miss_enabled:
                 if row_data_dict["iodepth"] in self.csi_perf_iodepth:
                     try:
                         fun_test.sleep("for IO to be fully active", 60)

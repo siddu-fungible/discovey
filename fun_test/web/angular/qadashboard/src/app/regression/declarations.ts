@@ -3,12 +3,16 @@ export class ReleaseCatalogSuite {
   constructor(id: number) {
     this.id = id;
   }
+  toJson() {
+    return {id: this.id};
+  }
 }
 
 export class ReleaseCatalog {
   name: string = "Please update";
-  description: string = null;
+  description: string = "Please update";
   suites: ReleaseCatalogSuite [] = [];
+  id: number;
   constructor (fields?: {
       name?: string
       suites?: ReleaseCatalogSuite[]
@@ -26,5 +30,13 @@ export class ReleaseCatalog {
         }
       });
     }
+  }
+
+  payloadForUpdate() {
+    let payload = {};
+    payload["name"] = this.name;
+    payload["description"] = this.description;
+    payload["suites"] = this.suites.map(suite => suite.toJson());
+    return payload;
   }
 }

@@ -50,9 +50,11 @@ export class ScriptSelectorComponent implements OnInit, OnChanges {
 
   fetchScripts() {
     this.resetState();
+    this.refreshingStatus = "Fetching script info";
     this.apiService.get('/regression/scripts').subscribe(response => {
       this.data = response.data;
       this.parseIt();
+      this.refreshingStatus = null;
     }, error => {
       this.logger.error('/regression/scripts');
     })

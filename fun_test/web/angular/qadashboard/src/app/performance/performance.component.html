@@ -309,7 +309,7 @@
         <div class="closed-section"></div>
         <ng-container *ngIf="showFunMetric">
         <!-- Fun Metric Chart component -->
-        <fun-metric-chart [id]="currentNode.metricId" [buildInfo]="buildInfo"
+        <fun-metric-chart [id]="currentNode.metricId"
                           [chartInfo]="currentNode.chartInfo"></fun-metric-chart>
         </ng-container>
         <div class="closed-section"></div>
@@ -327,7 +327,7 @@
                 <div *ngFor="let node of row" id="grid"
                    [ngStyle]="{'width': miniGridMaxWidth, 'height': miniGridMaxHeight, 'padding': '20px'}">
                 <!-- Fun Metric Chart component -->
-                <fun-metric-chart [id]="node.metricId" [minimal]="'true'" [buildInfo]="buildInfo"></fun-metric-chart>
+                <fun-metric-chart [id]="node.metricId" [minimal]="'true'"></fun-metric-chart>
               </div>
               </ng-container>
             </div>

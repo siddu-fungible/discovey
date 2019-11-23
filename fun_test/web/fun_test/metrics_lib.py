@@ -532,6 +532,26 @@ class MetricLib():
         global_setting.cache_valid = cache_valid
         global_setting.save()
 
+    def _set_chart_status(self, models, suite_execution_id):
+        for model in models:
+            charts = MetricChart.objects.filter(metric_model_name=model)
+            metric_model = app_config.get_metric_models()[model]
+            for chart in charts:
+                status = True
+                data_sets = chart.get_data_sets()
+                for data_set in data_sets:
+                    inputs = data_set["inputs"]
+                    entries = metric_model.objects.filter(**inputs).order_by("-input_date_time")[:1]
+                    if len(entries):
+                        entry = entries.first()
+                        if not entry.status == RESULTS["PASSED"]:
+                            status = False
+                            chart.set_chart_status(status=RESULTS["FAILED"],
+                                                   suite_execution_id=suite_execution_id)
+                            break
+                if status:
+                    chart.set_chart_status(status=RESULTS["PASSED"], suite_execution_id=suite_execution_id)
+
 
 if __name__ == "__main__":
     ml = MetricLib()
