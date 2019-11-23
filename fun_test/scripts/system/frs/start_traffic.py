@@ -3,7 +3,6 @@ from asset.asset_manager import AssetManager
 from lib.fun.fs import ComE, Bmc
 import bmc_commands
 import dpcsh_commands
-import file_helper
 import debug_memory_calculation
 from lib.topology.topology_helper import TopologyHelper
 from fun_global import PerfUnit, FunPlatform
@@ -33,6 +32,8 @@ HBM = "HBM"
 EXECUTE_LEAKS = "EXECUTE_LEAKS"
 PC_DMA = "PC_DMA"
 DDR = "DDR"
+APPSVALUES = "APPSVALUES"
+STORAGE_IOPS = "STORAGE_IOPS"
 # APPS
 RCNVME = "rcnvme"
 FIO = "fio"
@@ -41,7 +42,7 @@ ZIP = "zip"
 LE = "le"
 BUSY_LOOP = "busy_loop"
 MEMCPY = "memcpy"
-APPSVALUES = "APPSVALUES"
+
 
 # --environment={\"test_bed_type\":\"fs-65\",\"tftp_image_path\":\"ranga/funos-f1_onkar.stripped.gz\"} --inputs={\"boot_new_image\":false,\"collect_stats\":[\"POWER\"],\"ec_vol\":false,\"traffic_profile\":[\"rcnvme\"]}
 
@@ -56,8 +57,8 @@ class MyScript(FunTestScript):
         if self.boot_new_image:
             self.boot_fs()
         self.verify_dpcsh_started()
-        if not self.boot_new_image:
-            self.clear_uart_logs()
+        # if not self.boot_new_image:
+        #     self.clear_uart_logs()
         if self.ec_vol:
             self.create_4_et_2_ec_volume()
         fun_test.shared_variables["run_on_f1"] = self.run_on_f1
@@ -267,7 +268,7 @@ class MyScript(FunTestScript):
         fun_test.test_assert(topology, "Topology deployed")
 
 
-class FunTestCase1(FunTestCase):
+class FrsTestCase(FunTestCase):
     def describe(self):
         self.set_test_details(id=1,
                               summary="",
@@ -290,7 +291,6 @@ class FunTestCase1(FunTestCase):
         self.stop_traffic()
         fun_test.sleep("To traffic to stop", seconds=10)
         self.collect_the_stats(count=3, heading="After traffic")
-        self.come_handle.destroy()
 
     def func_not_found(self):
         print "Function not found"
@@ -300,7 +300,7 @@ class FunTestCase1(FunTestCase):
         # function name standard format: func_'stats_name'
         thread_map = {}
         thread_count = 0
-        time_in_seconds = 1
+        time_in_seconds = 5
         for system in self.stats_info:
             if system == "files":
                 continue
@@ -311,40 +311,53 @@ class FunTestCase1(FunTestCase):
                 func_name = "func_{}".format(stat_name.lower())
                 func_def = getattr(self, func_name, self.func_not_found)
                 if system == "bmc":
+                    fun_test.shared_variables["stat_{}".format(stat_name)] = {"run_status": True}
                     thread_map[thread_count] = fun_test.execute_thread_after(func=func_def,
                                                                              time_in_seconds=time_in_seconds,
-                                                                             count=count,
-                                                                             heading=heading)
+                                                                             heading=heading,
+                                                                             stat_name=stat_name)
                 elif system == "come":
                     for f1 in self.run_on_f1:
+                        fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)] = {"run_status": True}
                         thread_map[thread_count] = fun_test.execute_thread_after(func=func_def,
                                                                                  time_in_seconds=time_in_seconds,
-                                                                                 count=count,
                                                                                  heading=heading,
-                                                                                 f1=f1)
+                                                                                 f1=f1,
+                                                                                 stat_name=stat_name)
                 thread_count += 1
                 time_in_seconds += 1
-                if time_in_seconds > 10:
-                    time_in_seconds = 1
                 fun_test.test_assert(True, "Started capturing the {} stats {}".format(stat_name, heading))
 
         for i in range(thread_count):
             fun_test.join_thread(thread_map[i])
 
+    def stats_deco(func):
+        def function_wrapper(self, *args, **kwargs):
+            come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
+                               ssh_username=self.fs['come']['mgmt_ssh_username'],
+                               ssh_password=self.fs['come']['mgmt_ssh_password'])
+            come_handle = self.set_cmd_env_come_handle(come_handle)
+            kwargs["come_handle"] = come_handle
+            kwargs["count"] = 0
+            func(self, **kwargs)
+            come_handle.destroy()
+            return
+        return function_wrapper
+
+
     ############# EQM ################
-    def func_eqm(self, f1, count, heading):
-        stat_name = EQM
-        come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
-                           ssh_username=self.fs['come']['mgmt_ssh_username'],
-                           ssh_password=self.fs['come']['mgmt_ssh_password'])
-        for i in range(count):
+    @stats_deco
+    def func_eqm(self, f1, heading, stat_name, come_handle, count):
+        linker = fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]
+        while linker['run_status']:
+            linker = fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]
             one_dataset = {}
             dpcsh_output = dpcsh_commands.eqm(come_handle=come_handle, f1=f1)
             one_dataset["time"] = datetime.datetime.now()
             one_dataset["output"] = dpcsh_output
             one_dataset["time1"] = datetime.datetime.now()
             one_dataset["output1"] = dpcsh_output
-            file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+            self.add_data_to_file(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
 
             fun_test.sleep("Before capturing next set of data", seconds=5)
 
@@ -353,36 +366,31 @@ class FunTestCase1(FunTestCase):
             one_dataset["output"] = dpcsh_output
             one_dataset["time2"] = datetime.datetime.now()
             one_dataset["output2"] = dpcsh_output
-            file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+            self.add_data_to_file(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
             difference_dict = stats_calculation.dict_difference(one_dataset, stat_name)
             one_dataset["time"] = datetime.datetime.now()
             one_dataset["output"] = difference_dict
-            file_helper.add_data(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset,
-                                 heading=heading)
+            self.add_data_to_file(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset,
+                                  heading=heading)
 
             if self.stats_info["come"][stat_name].get("upload_to_es", False):
                 dpcsh_data = self.simplify_eqm_stats(difference_dict)
                 time_taken = self.upload_dpcsh_data_to_elk(dpcsh_data=dpcsh_data, f1=f1, stat_name=stat_name)
-
-
+            count += 1
+            fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]["count"] = count
             # fun_test.sleep("before next iteration", seconds=self.details["interval"])
 
-        come_handle.destroy()
-
-    ############# LE Firewall #############
-    def func_le(self, f1, count, heading):
-        stat_name = "LE"
-        come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
-                           ssh_username=self.fs['come']['mgmt_ssh_username'],
-                           ssh_password=self.fs['come']['mgmt_ssh_password'])
-        for i in range(count):
+    @stats_deco
+    def func_le(self, f1, heading, stat_name, come_handle, count):
+        linker = fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]
+        while linker['run_status']:
             one_dataset = {}
             dpcsh_output = dpcsh_commands.le(come_handle=come_handle, f1=f1)
             one_dataset["time"] = datetime.datetime.now()
             one_dataset["output"] = dpcsh_output
             one_dataset["time1"] = datetime.datetime.now()
             one_dataset["output1"] = dpcsh_output
-            file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+            self.add_data_to_file(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
 
             fun_test.sleep("Before capturing next set of data", seconds=5)
 
@@ -391,36 +399,32 @@ class FunTestCase1(FunTestCase):
             one_dataset["output"] = dpcsh_output
             one_dataset["time2"] = datetime.datetime.now()
             one_dataset["output2"] = dpcsh_output
-            file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+            self.add_data_to_file(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
 
             difference_dict = stats_calculation.dict_difference(one_dataset, stat_name)
             one_dataset["time"] = datetime.datetime.now()
             one_dataset["output"] = difference_dict
-            file_helper.add_data(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset,
-                                 heading=heading)
+            self.add_data_to_file(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset,
+                                  heading=heading)
 
             if self.stats_info["come"][stat_name].get("upload_to_es", False):
                 dpcsh_data = self.simplify_le_stats(difference_dict)
                 time_taken = self.upload_dpcsh_data_to_elk(dpcsh_data=dpcsh_data, f1=f1, stat_name=stat_name)
-
+            count += 1
+            fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]["count"] = count
             # fun_test.sleep("before next iteration", seconds=self.details["interval"])
 
-        come_handle.destroy()
-
-    ############# CDU ################
-    def func_cdu(self, f1, count, heading):
-        stat_name = CDU
-        come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
-                           ssh_username=self.fs['come']['mgmt_ssh_username'],
-                           ssh_password=self.fs['come']['mgmt_ssh_password'])
-        for i in range(count):
+    @stats_deco
+    def func_cdu(self, f1, count, heading, stat_name, come_handle):
+        linker = fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]
+        while linker["run_status"]:
             one_dataset = {}
             dpcsh_output = dpcsh_commands.cdu(come_handle=come_handle, f1=f1)
             one_dataset["time"] = datetime.datetime.now()
             one_dataset["output"] = dpcsh_output
             one_dataset["time1"] = datetime.datetime.now()
             one_dataset["output1"] = dpcsh_output
-            file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+            self.add_data_to_file(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
 
             fun_test.sleep("Before capturing next set of data", seconds=5)
 
@@ -429,19 +433,20 @@ class FunTestCase1(FunTestCase):
             one_dataset["output"] = dpcsh_output
             one_dataset["time2"] = datetime.datetime.now()
             one_dataset["output2"] = dpcsh_output
-            file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+            self.add_data_to_file(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
 
             difference_dict = stats_calculation.dict_difference(one_dataset, stat_name)
             one_dataset["time"] = datetime.datetime.now()
             one_dataset["output"] = difference_dict
-            file_helper.add_data(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset,
-                                 heading=heading)
+            self.add_data_to_file(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset,
+                                  heading=heading)
 
             if self.stats_info["come"][stat_name].get("upload_to_es", False):
                 dpcsh_data = self.simplify_cdu_stats(difference_dict)
                 time_taken = self.upload_dpcsh_data_to_elk(dpcsh_data=dpcsh_data, f1=f1, stat_name=stat_name)
 
-        come_handle.destroy()
+            count += 1
+            fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]["count"] = count
 
     ####### PC DMA #########
     def func_pc_dma(self, count, heading, f1):
@@ -449,14 +454,15 @@ class FunTestCase1(FunTestCase):
         come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
                            ssh_username=self.fs['come']['mgmt_ssh_username'],
                            ssh_password=self.fs['come']['mgmt_ssh_password'])
-        for i in range(count):
+        come_handle = self.set_cmd_env_come_handle(come_handle)
+        while fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]:
             one_dataset = {}
             dpcsh_output = dpcsh_commands.pc_dma(come_handle=come_handle, f1=f1)
             one_dataset["time"] = datetime.datetime.now()
             one_dataset["output"] = dpcsh_output
             one_dataset["time1"] = datetime.datetime.now()
             one_dataset["output1"] = dpcsh_output
-            file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+            self.add_data_to_file(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
 
             fun_test.sleep("Before capturing next set of data", seconds=5)
 
@@ -465,13 +471,13 @@ class FunTestCase1(FunTestCase):
             one_dataset["output"] = dpcsh_output
             one_dataset["time2"] = datetime.datetime.now()
             one_dataset["output2"] = dpcsh_output
-            file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+            self.add_data_to_file(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
 
             difference_dict = stats_calculation.dict_difference(one_dataset, stat_name)
             one_dataset["time"] = datetime.datetime.now()
             one_dataset["output"] = difference_dict
-            file_helper.add_data(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset,
-                                 heading=heading)
+            self.add_data_to_file(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset,
+                                  heading=heading)
 
             if self.stats_info["come"][stat_name].get("upload_to_es", False):
                 dpcsh_data = self.simplify_pc_dma_stats(difference_dict)
@@ -485,13 +491,14 @@ class FunTestCase1(FunTestCase):
         come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
                            ssh_username=self.fs['come']['mgmt_ssh_username'],
                            ssh_password=self.fs['come']['mgmt_ssh_password'])
-        for i in range(count):
+        come_handle = self.set_cmd_env_come_handle(come_handle)
+        while fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]:
             one_dataset = {}
             dpcsh_output = dpcsh_commands.bam(come_handle=come_handle, f1=f1)
             one_dataset["time"] = datetime.datetime.now()
             one_dataset["output"] = dpcsh_output
             fun_test.sleep("before next iteration")
-            file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+            self.add_data_to_file(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
         come_handle.destroy()
 
     ############### debug vp_utils #######
@@ -500,18 +507,19 @@ class FunTestCase1(FunTestCase):
         come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
                            ssh_username=self.fs['come']['mgmt_ssh_username'],
                            ssh_password=self.fs['come']['mgmt_ssh_password'])
-        for i in range(count):
+        come_handle = self.set_cmd_env_come_handle(come_handle)
+        while fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]:
             one_dataset = {}
             dpcsh_output = dpcsh_commands.debug_vp_utils(come_handle=come_handle, f1=f1)
             one_dataset["time"] = datetime.datetime.now()
             one_dataset["output"] = dpcsh_output
             time_taken = 0
             if dpcsh_output:
-                file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+                self.add_data_to_file(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
                 cal_dpc_out = stats_calculation.filter_dict(one_dataset, stat_name)
                 one_dataset["output"] = cal_dpc_out
-                file_helper.add_data(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset,
-                                     heading=heading)
+                self.add_data_to_file(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset,
+                                      heading=heading)
                 if self.stats_info["come"][stat_name].get("upload_to_es", False):
                     dpcsh_data = self.simplify_debug_vp_util(dpcsh_output)
                     time_taken = self.upload_dpcsh_data_to_elk(dpcsh_data=dpcsh_data, f1=f1, stat_name=stat_name)
@@ -525,14 +533,15 @@ class FunTestCase1(FunTestCase):
         come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
                            ssh_username=self.fs['come']['mgmt_ssh_username'],
                            ssh_password=self.fs['come']['mgmt_ssh_password'])
-        for i in range(count):
+        come_handle = self.set_cmd_env_come_handle(come_handle)
+        while fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]:
             one_dataset = {}
             dpcsh_output = dpcsh_commands.hbm(come_handle=come_handle, f1=f1)
             one_dataset["time"] = datetime.datetime.now()
             one_dataset["output"] = dpcsh_output
             one_dataset["time1"] = datetime.datetime.now()
             one_dataset["output1"] = dpcsh_output
-            file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+            self.add_data_to_file(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
 
             fun_test.sleep("Before capturing next set of data", seconds=5)
 
@@ -541,13 +550,13 @@ class FunTestCase1(FunTestCase):
             one_dataset["output"] = dpcsh_output
             one_dataset["time2"] = datetime.datetime.now()
             one_dataset["output2"] = dpcsh_output
-            file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+            self.add_data_to_file(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
 
             difference_dict = stats_calculation.dict_difference(one_dataset, stat_name)
             one_dataset["time"] = datetime.datetime.now()
             one_dataset["output"] = difference_dict
-            file_helper.add_data(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset,
-                                 heading=heading)
+            self.add_data_to_file(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset,
+                                  heading=heading)
 
             if self.stats_info["come"][stat_name].get("upload_to_es", False):
                 dpcsh_data = self.simplify_hbm_stats(difference_dict)
@@ -563,14 +572,15 @@ class FunTestCase1(FunTestCase):
         come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
                            ssh_username=self.fs['come']['mgmt_ssh_username'],
                            ssh_password=self.fs['come']['mgmt_ssh_password'])
-        for i in range(count):
+        come_handle = self.set_cmd_env_come_handle(come_handle)
+        while fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]:
             one_dataset = {}
             dpcsh_output = dpcsh_commands.ddr(come_handle=come_handle, f1=f1)
             one_dataset["time"] = datetime.datetime.now()
             one_dataset["output"] = dpcsh_output
             one_dataset["time1"] = datetime.datetime.now()
             one_dataset["output1"] = dpcsh_output
-            file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+            self.add_data_to_file(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
 
             fun_test.sleep("Before capturing next set of data", seconds=5)
 
@@ -579,13 +589,13 @@ class FunTestCase1(FunTestCase):
             one_dataset["output"] = dpcsh_output
             one_dataset["time2"] = datetime.datetime.now()
             one_dataset["output2"] = dpcsh_output
-            file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+            self.add_data_to_file(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
 
             difference_dict = stats_calculation.dict_difference(one_dataset, stat_name)
             one_dataset["time"] = datetime.datetime.now()
             one_dataset["output"] = difference_dict
-            file_helper.add_data(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset,
-                                 heading=heading)
+            self.add_data_to_file(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset,
+                                  heading=heading)
 
             if self.stats_info["come"][stat_name].get("upload_to_es", False):
                 dpcsh_data = self.simplify_ddr_stats(difference_dict)
@@ -601,13 +611,14 @@ class FunTestCase1(FunTestCase):
         come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
                            ssh_username=self.fs['come']['mgmt_ssh_username'],
                            ssh_password=self.fs['come']['mgmt_ssh_password'])
+        come_handle = self.set_cmd_env_come_handle(come_handle)
         count = 1
-        for i in range(count):
+        while fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]:
             one_dataset = {}
             dpcsh_output = dpcsh_commands.execute_leaks(come_handle=come_handle, f1=f1)
             one_dataset["time"] = datetime.datetime.now()
             one_dataset["output"] = dpcsh_output
-            file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+            self.add_data_to_file(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
 
     ############## power #############
     def func_power(self, count, heading):
@@ -619,17 +630,17 @@ class FunTestCase1(FunTestCase):
                          disable_uart_logger=False)
         bmc_handle.set_prompt_terminator(r'# $')
 
-        for i in range(count):
+        while fun_test.shared_variables["stat_{}".format(stat_name)]:
             raw_output, cal_output, pro_data = bmc_commands.power_manager(bmc_handle=bmc_handle)
             time_now = datetime.datetime.now()
             print_data = {"output": raw_output, "time": time_now}
-            file_helper.add_data(getattr(self, "f_{}".format(stat_name)), print_data, heading=heading)
+            self.add_data_to_file(getattr(self, "f_{}".format(stat_name)), print_data, heading=heading)
             print_data = {"output": cal_output, "time": time_now}
-            file_helper.add_data(getattr(self, "f_calculated_{}".format(stat_name)), print_data, heading=heading)
+            self.add_data_to_file(getattr(self, "f_calculated_{}".format(stat_name)), print_data, heading=heading)
             time_taken = 0
             if self.stats_info["bmc"][stat_name].get("upload_to_es", False):
                 time_taken = self.upload_dpcsh_data_to_elk(dpcsh_data=pro_data, stat_name=stat_name)
-            fun_test.sleep("before next iteration", seconds=5-time_taken)
+            fun_test.sleep("before next iteration", seconds=5 - time_taken)
             if heading == "During traffic" and self.add_to_database:
                 self.add_to_database = False
                 print ("Result : {}".format(pro_data))
@@ -646,11 +657,11 @@ class FunTestCase1(FunTestCase):
                          set_term_settings=True,
                          disable_uart_logger=False)
         bmc_handle.set_prompt_terminator(r'# $')
-        for i in range(count):
+        while fun_test.shared_variables["stat_{}".format(stat_name)]:
             output = bmc_commands.die_temperature(bmc_handle)
             time_now = datetime.datetime.now()
             print_data = {"output": output, "time": time_now}
-            file_helper.add_data(getattr(self, "f_{}".format(stat_name)), print_data, heading=heading)
+            self.add_data_to_file(getattr(self, "f_{}".format(stat_name)), print_data, heading=heading)
             fun_test.sleep("before next iteration")
         bmc_handle.destroy()
 
@@ -660,13 +671,14 @@ class FunTestCase1(FunTestCase):
         come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
                            ssh_username=self.fs['come']['mgmt_ssh_username'],
                            ssh_password=self.fs['come']['mgmt_ssh_password'])
+        come_handle = self.set_cmd_env_come_handle(come_handle)
         dpcsh_output_list = []
-        for i in range(count):
+        while fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]:
             one_dataset = {}
             dpcsh_output = dpcsh_commands.debug_memory(come_handle=come_handle, f1=f1)
             one_dataset["time"] = datetime.datetime.now()
             one_dataset["output"] = dpcsh_output
-            file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+            self.add_data_to_file(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
 
             differnce_data_set = {}
             difference_output = debug_memory_calculation.debug_difference(self.initial_debug_memory_stats, one_dataset,
@@ -674,11 +686,40 @@ class FunTestCase1(FunTestCase):
             differnce_data_set["output"] = difference_output
             differnce_data_set["time"] = datetime.datetime.now()
             differnce_data_set["time_difference"] = difference_output["time_difference"]
-            file_helper.add_data(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), differnce_data_set,
-                                 heading=heading)
+            self.add_data_to_file(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), differnce_data_set,
+                                  heading=heading)
 
             dpcsh_output_list.append(one_dataset)
             fun_test.sleep("before next iteration", seconds=3)
+
+        come_handle.destroy()
+
+    def func_storage_iops(self, f1, count, heading):
+        stat_name = STORAGE_IOPS
+
+        come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
+                           ssh_username=self.fs['come']['mgmt_ssh_username'],
+                           ssh_password=self.fs['come']['mgmt_ssh_password'])
+        come_handle = self.set_cmd_env_come_handle(come_handle)
+        while fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]:
+            one_dataset = {}
+            dpcsh_output = dpcsh_commands.storage_iops(come_handle=come_handle, f1=f1)
+            one_dataset["time1"] = datetime.datetime.now()
+            one_dataset["output1"] = dpcsh_output
+
+            fun_test.sleep("Before capturing next set of data", seconds=5)
+
+            dpcsh_output = dpcsh_commands.storage_iops(come_handle=come_handle, f1=f1)
+            one_dataset["time2"] = datetime.datetime.now()
+            one_dataset["output2"] = dpcsh_output
+
+            difference_dict = stats_calculation.dict_difference(one_dataset, stat_name)
+            one_dataset["time"] = datetime.datetime.now()
+            one_dataset["output"] = difference_dict
+
+            if self.stats_info["come"][stat_name].get("upload_to_es", False):
+                dpcsh_data = self.simplify_storage_iops_stats(difference_dict)
+                time_taken = self.upload_dpcsh_data_to_elk(dpcsh_data=dpcsh_data, f1=f1, stat_name=stat_name)
 
         come_handle.destroy()
 
@@ -695,12 +736,17 @@ class FunTestCase1(FunTestCase):
             one_dataset["time"] = datetime.datetime.now()
             one_dataset["output"] = dpcsh_output
             if f1 == 0:
-                file_helper.add_data(f_debug_memory_f1_0, one_dataset, heading=heading)
+                self.add_data_to_file(f_debug_memory_f1_0, one_dataset, heading=heading)
             else:
-                file_helper.add_data(f_debug_memory_f1_1, one_dataset, heading=heading)
+                self.add_data_to_file(f_debug_memory_f1_1, one_dataset, heading=heading)
             result["f1_{}".format(f1)] = one_dataset.copy()
         come_handle.destroy()
         return result
+
+    def set_cmd_env_come_handle(self, come_handle):
+        come_handle.enter_sudo()
+        come_handle.command("cd /scratch/FunSDK/bin/Linux")
+        return come_handle
 
     ####### Data Capturing function ############
 
@@ -886,7 +932,6 @@ class FunTestCase1(FunTestCase):
                       "value": value}
         time_taken = self.upload_dpcsh_data_to_elk(dpcsh_data=dpcsh_data, f1=f1, stat_name=stat_name)
 
-
     def start_threaded_apps(self):
         self.required_apps = {}
         if self.specific_apps:
@@ -922,6 +967,8 @@ class FunTestCase1(FunTestCase):
                            ssh_username=self.fs['come']['mgmt_ssh_username'],
                            ssh_password=self.fs['come']['mgmt_ssh_password'])
         track_app = fun_test.shared_variables["{}_{}".format(app, f1)]
+        come_handle = self.set_cmd_env_come_handle(come_handle)
+        fun_test.test_assert(True, "Started BUSY LOOP on F1: {}".format(f1))
         while track_app:
             dpcsh_out = dpcsh_commands.busy_loop(come_handle, f1)
             track_app = fun_test.shared_variables["{}_{}".format(app, f1)]
@@ -933,10 +980,13 @@ class FunTestCase1(FunTestCase):
                            ssh_username=self.fs['come']['mgmt_ssh_username'],
                            ssh_password=self.fs['come']['mgmt_ssh_password'])
         track_app = fun_test.shared_variables["var_{}_f1_{}".format(app, f1)]
+        come_handle = self.set_cmd_env_come_handle(come_handle)
+        fun_test.test_assert(True, "Started MEMCPY on F1: {}".format(f1))
         while track_app:
             dpcsh_out = dpcsh_commands.memcpy_1MB(come_handle, f1)
             track_app = fun_test.shared_variables["var_{}_f1_{}".format(app, f1)]
             fun_test.sleep("Before next iteration app: {}".format(app))
+
 
     def start_fio_traffic(self, percentage=100):
         fio_thread_map = {}
@@ -977,7 +1027,7 @@ class FunTestCase1(FunTestCase):
                 output = fun_test.shared_variables["fio_output_f1_{}".format(f1)]
                 one_dataset["time"] = datetime.datetime.now()
                 one_dataset["output"] = output
-                file_helper.add_data(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset)
+                self.add_data_to_file(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset)
             except Exception as ex:
                 fun_test.log(ex)
 
@@ -1072,6 +1122,17 @@ class FunTestCase1(FunTestCase):
                 result.append(one_data_set.copy())
         return result
 
+    def simplify_storage_iops_stats(self, dpcsh_data):
+        result = []
+        if dpcsh_data:
+            for ssd, value in dpcsh_data.iteritems():
+                for k, v in value.iteritems():
+                    one_data_set = {"ssd": ssd,
+                                    "field": k,
+                                    "value": round(v, 2)}
+                    result.append(one_data_set.copy())
+        return result
+
     def simplify_le_stats(self, dpcsh_data):
         result = []
         if dpcsh_data:
@@ -1080,7 +1141,6 @@ class FunTestCase1(FunTestCase):
                                 "value": v}
                 result.append(one_data_set.copy())
         return result
-
 
     def add_basics_req_elk(self, dpcsh_data, f1, time_stamp=True, system_name="fs-65"):
         utc_time = datetime.datetime.utcnow()
@@ -1139,11 +1199,15 @@ class FunTestCase1(FunTestCase):
         # description : "{calculated_}_{app_name}_DPCSH_OUTPUT_F1_{f1}"
         self.stats_info["bmc"] = {POWER: {"calculated": True, "upload_to_es": True},
                                   DIE_TEMPERATURE: {"calculated": False, "disable": True}}
-        self.stats_info["come"] = {DEBUG_MEMORY: {}, CDU: {"upload_to_es": True}, EQM: {"upload_to_es":True},
-                                   BAM: {"calculated": False, "disable": True}, DEBUG_VP_UTIL: {"upload_to_es": True}, "LE": {"upload_to_es":True},
-                                   HBM: {"calculated": True, "upload_to_es":True},
-                                   EXECUTE_LEAKS: {"calculated": False}, PC_DMA: {"calculated": True,"upload_to_es":True},
-                                   DDR: {"calculated": True,"upload_to_es":True}}
+        self.stats_info["come"] = {DEBUG_MEMORY: {"disable": True}, CDU: {"upload_to_es": True},
+                                   EQM: {"upload_to_es": True},
+                                   BAM: {"calculated": False, "disable": True}, DEBUG_VP_UTIL: {"upload_to_es": True},
+                                   "LE": {"upload_to_es": True},
+                                   HBM: {"calculated": True, "upload_to_es": True},
+                                   EXECUTE_LEAKS: {"calculated": False, "disable": True},
+                                   PC_DMA: {"calculated": True, "upload_to_es": True},
+                                   DDR: {"calculated": True, "upload_to_es": True},
+                                   STORAGE_IOPS: {"upload_to_es": True}}
         self.stats_info["files"] = {"fio": {"calculated": False}}
 
         if self.collect_stats:
@@ -1175,6 +1239,7 @@ class FunTestCase1(FunTestCase):
                                                     filename=globals()["{}{}_OUTPUT".format(calculated, stat_name)])
                         setattr(self, "f_{}{}".format(calculated, stat_name),
                                 open(globals()["{}{}_OUTPUT".format(calculated, stat_name)], "w+"))
+
                     elif system == "come":
                         for f1 in self.run_on_f1:
                             globals()["{}{}_DPCSH_OUTPUT_F1_{}".format(calculated, stat_name,
@@ -1185,6 +1250,7 @@ class FunTestCase1(FunTestCase):
                                 filename=globals()["{}{}_DPCSH_OUTPUT_F1_{}".format(calculated, stat_name, f1)])
                             setattr(self, "f_{}{}_f1_{}".format(calculated, stat_name, f1),
                                     open(globals()["{}{}_DPCSH_OUTPUT_F1_{}".format(calculated, stat_name, f1)], "w+"))
+
                     elif system == "files":
                         for f1 in self.run_on_f1:
                             globals()[
@@ -1224,6 +1290,7 @@ class FunTestCase1(FunTestCase):
             [{'host': '%s' % self.elasticsearch_config["ip"], 'port': '%s' % self.elasticsearch_config["port"]}])
         self.busy_loop_thread_map = {}
         self.memcpy_loop_thread_map = {}
+        self.apps_run_done = {}
 
     def initialize_json_data(self):
         config_file = fun_test.get_script_name_without_ext() + ".json"
@@ -1296,6 +1363,11 @@ class FunTestCase1(FunTestCase):
         self.come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
                                 ssh_username=self.fs['come']['mgmt_ssh_username'],
                                 ssh_password=self.fs['come']['mgmt_ssh_password'])
+        self.bmc_handle = Bmc(host_ip=self.fs['bmc']['mgmt_ip'],
+                              ssh_username=self.fs['bmc']['mgmt_ssh_username'],
+                              ssh_password=self.fs['bmc']['mgmt_ssh_password'],
+                              set_term_settings=True,
+                              disable_uart_logger=False)
 
     def initial_stats(self):
         if not self.stats_info["come"]["DEBUG_MEMORY"].get("disable", True):
@@ -1332,14 +1404,15 @@ class FunTestCase1(FunTestCase):
             if MEMCPY in self.traffic_profile:
                 fun_test.shared_variables["{}_{}".format(MEMCPY, f1)] = True
                 self.memcpy_loop_thread_map["{}".format(f1)] = fun_test.execute_thread_after(func=self.memcpy_1MB,
-                                                                                           time_in_seconds=5,
-                                                                                           f1=f1)
+                                                                                             time_in_seconds=5,
+                                                                                             f1=f1)
 
         come_handle.destroy()
 
     def start_rcnvme_traffic(self, come_handle, f1=0, percentage=100):
         get_parameters = self.get_parameters_for(RCNVME, percentage)
         self.rcnvme_app(come_handle, f1, **get_parameters)
+        fun_test.test_assert(True, "Started RCNVME on F1: {}".format(f1))
 
     def rcnvme_app(self, come_handle, f1=0, all_ctrlrs=True, duration=60, qdepth=12, nthreads=12, test_type='read_only',
                    hbm=True, prealloc=True, iosize=4096, random=True, hsu_rc=True):
@@ -1379,7 +1452,8 @@ class FunTestCase1(FunTestCase):
                 running = False
             if not running and new_image:
                 tmp_run_time = 30
-                cmd = '''python run_nu_transit_only.py --inputs '{"speed":"SPEED_100G", "run_time":%s, "initiate":true, "f1": %s}' ''' % (tmp_run_time,f1)
+                cmd = '''python run_nu_transit_only.py --inputs '{"speed":"SPEED_100G", "run_time":%s, "initiate":true, "f1": %s}' ''' % (
+                    tmp_run_time, f1)
                 self.initiate_or_run_le_firewall(cmd, vm_details, f1)
                 f1 += 1
                 fun_test.sleep("to check if le -firewall has started on vm: {}".format(vm), seconds=10)
@@ -1514,6 +1588,7 @@ class FunTestCase1(FunTestCase):
     def start_crypto_traffic(self, come_handle, f1, percentage):
         get_parameters = self.get_parameters_for(CRYPTO, percentage)
         self.crypto_app(come_handle, f1, **get_parameters)
+        fun_test.test_assert(True, "Started CRYPTO on F1: {}".format(f1))
 
     def crypto_app(self, come_handle, f1, vp_iters=15000000, nvps=192, src='ddr', dst='ddr'):
         json_data = {"vp_iters": vp_iters,
@@ -1526,6 +1601,7 @@ class FunTestCase1(FunTestCase):
     def start_zip_traffic(self, come_handle, f1, percentage):
         get_parameters = self.get_parameters_for(ZIP, percentage)
         self.zip_app(come_handle, f1, **get_parameters)
+        fun_test.test_assert(True, "Started ZIP on F1: {}".format(f1))
 
     def zip_app(self, come_handle, f1, compress=True, nflows=7680, niterations=100, max_effort=0, npcs=None):
         json_data = {"niterations": niterations,
@@ -1550,7 +1626,7 @@ class FunTestCase1(FunTestCase):
                     output = fun_test.shared_variables["fio_output_f1_{}".format(f1)]
                     one_dataset["time"] = datetime.datetime.now()
                     one_dataset["output"] = output
-                    file_helper.add_data(getattr(self, "f_{}_f1_{}".format(FIO, f1)), one_dataset)
+                    self.add_data_to_file(getattr(self, "f_{}_f1_{}".format(FIO, f1)), one_dataset)
                 except Exception as ex:
                     fun_test.log(ex)
             if BUSY_LOOP in self.traffic_profile:
@@ -1560,8 +1636,131 @@ class FunTestCase1(FunTestCase):
                 fun_test.shared_variables["{}_{}".format(MEMCPY, f1)] = False
                 fun_test.join_thread(self.memcpy_loop_thread_map[f1])
 
+    def find_apps_time(self):
+        result = []
+        self.bmc_handle.command("cd /mnt/sdmmc0p1/log")
+        f1 = 0
+        for factor in range(9, 11):
+            one_data_set = {}
+            self.clear_uart_logs()
+            if "crypto" in self.traffic_profile:
+                crypto_parameters = {"vp_iters": 5000000 * factor, "nvps": 192}
+                self.crypto_app(self.come_handle, f1, **crypto_parameters)
+                crypto_done = False
+            else:
+                crypto_done = True
+            if "zip" in self.traffic_profile :
+                zip_parameters = {"nflows": 7680, "niterations": 500 * factor}
+                self.zip_app(self.come_handle, f1, **zip_parameters)
+                zip_done = False
+            else:
+                zip_done = True
+
+            timer = FunTimer(max_time=1200)
+            while not timer.is_expired() and not (crypto_done and zip_done):
+                data = self.bmc_handle.command("cat f1_0_uart_log.txt")
+                match_crypto_end = re.search(r'Connection tore down before async ack sent for crypto_raw_speed', data)
+                match_zip_end = re.search(r'"Operation": Decompress', data)
+                if match_crypto_end and not crypto_done:
+                    time_taken_crypto = round(timer.elapsed_time(), 2)
+                    minutes = round((time_taken_crypto / 60.0), 2)
+                    one_data_set["app"] = "CRYPTO"
+                    one_data_set["time_taken"] = time_taken_crypto
+                    one_data_set["crypto_parameters"] = crypto_parameters
+                    one_data_set["factor"] = factor
+                    result.append(one_data_set)
+                    fun_test.log("Crypto took : {} sec or {} min for parameters: {} ".format(time_taken_crypto, minutes, crypto_parameters))
+                    crypto_done = True
+                if match_zip_end and not zip_done:
+                    fun_test.log("Parsing for ZIP app end logs")
+                    time_taken_zip = round(timer.elapsed_time(), 2)
+                    minutes = round((time_taken_zip / 60.0), 2)
+                    one_data_set["app"] = "ZIP"
+                    one_data_set["time_taken"] = time_taken_zip
+                    one_data_set["zip_parameters"] = zip_parameters
+                    one_data_set["factor"] = factor
+                    result.append(one_data_set)
+                    fun_test.log("Crypto took : {} sec or {} min for parameters: {} ".format(time_taken_zip, minutes, zip_parameters))
+                    zip_done = True
+                fun_test.sleep("waiting before next iteration", seconds=20)
+            fun_test.sleep("Before next crypto run", seconds=30)
+        fun_test.log("Final results: {}".format(result))
+
+    def are_apps_done(self, timer):
+        for f1 in self.run_on_f1:
+            self.apps_run_done.setdefault("crypto_f1_{}".format(f1), False)
+            self.apps_run_done.setdefault("zip_f1_{}".format(f1), False)
+            self.are_apps_done_on_f1(f1, timer)
+        result = True if all(self.apps_run_done.values()) else False
+        return result
+
+    def are_apps_done_on_f1(self, f1, timer):
+        data = self.bmc_handle.command("cat /mnt/sdmmc0p1/log/f1_{}_uart_log.txt".format(f1))
+        if CRYPTO in self.traffic_profile and not self.apps_run_done["crypto_f1_{}".format(f1)]:
+            res = self.is_crypto_done(data=data, f1=f1)
+            if res:
+                self.apps_run_done["crypto_f1_{}".format(f1)] = True
+                time_taken = round(timer.elapsed_time(), 2)
+                fun_test.test_assert(True, "Crypto app completed on F1: {} time taken: {}".format(f1, time_taken))
+        else:
+            self.apps_run_done["crypto_f1_{}".format(f1)] = True
+
+        if ZIP in self.traffic_profile and (not self.apps_run_done["zip_f1_{}".format(f1)]):
+            res = self.is_zip_done(data=data, f1=f1)
+            if res:
+                self.apps_run_done["zip_f1_{}".format(f1)] = True
+                time_taken = round(timer.elapsed_time(), 2)
+                fun_test.test_assert(True, "ZIP app completed on F1: {} time taken: {}".format(f1, time_taken))
+        else:
+            self.apps_run_done["zip_f1_{}".format(f1)] = True
+
+    def is_crypto_done(self, data, f1):
+        result = False
+        fun_test.log("checking if CRYPTO app has ended on F1: {}".format(f1))
+        match_app_end = re.search(r'Connection tore down before async ack sent for crypto_raw_speed', data)
+        if match_app_end:
+            result = True
+        else:
+            fun_test.log("CRYPTO app has not ended on F1: {}".format(f1))
+        return result
+
+    def is_zip_done(self, data, f1):
+        result = False
+        fun_test.log("checking if ZIP app has ended on F1: {}".format(f1))
+        match_app_end = re.search(r'Connection tore down before async ack sent for deflate_perf_multi', data)
+        if match_app_end:
+            result = True
+        else:
+            fun_test.log("ZIP app has not ended on F1: {}".format(f1))
+        return result
+
+    def add_data_to_file(self, f, data, extra_line=False, heading="Result"):
+        if self.upload_to_file:
+            return
+        # for data in data_list:
+        f.write("\n")
+        f.write("-----------------{}------------------".format(heading))
+        f.write('\n')
+        f.write("Time = {}".format(data["time"]))
+        f.write("\n")
+        if "time_difference" in data:
+            f.write("Time difference with the initial stats: {}".format(data["time_difference"]))
+        f.write("\n")
+        if type(data["output"]) is dict:
+            self.add_json_data(f, data["output"])
+        else:
+            f.write(data["output"])
+        f.write("\n")
+        if extra_line:
+            f.write("\n")
+
+
+    def add_json_data(self, f, data):
+        json.dump(data, f, indent=4)
+        f.write("\n")
+
 
 if __name__ == "__main__":
     myscript = MyScript()
-    myscript.add_test_case(FunTestCase1())
+    myscript.add_test_case(FrsTestCase())
     myscript.run()

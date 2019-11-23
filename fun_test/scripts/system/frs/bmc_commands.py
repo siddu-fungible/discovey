@@ -2,7 +2,7 @@ import re
 from lib.fun.fs import ComE, Bmc
 from asset.asset_manager import AssetManager
 from lib.system.fun_test import *
-import file_helper
+
 
 FILENAME = "f1_power.sh"
 REMOTE_PATH = "/tmp/" + FILENAME

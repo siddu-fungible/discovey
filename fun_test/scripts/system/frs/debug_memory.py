@@ -2,7 +2,7 @@ from lib.system.fun_test import *
 from asset.asset_manager import AssetManager
 from lib.fun.fs import ComE
 import dpcsh_commands
-import file_helper
+import self
 import debug_memory_calculation
 
 
@@ -107,7 +107,7 @@ class TestCase1(FunTestCase):
                 differnce_data_set["output"] = difference_output
                 differnce_data_set["time"] = datetime.datetime.now()
                 differnce_data_set["time_difference"] = difference_output["time_difference"]
-                file_helper.add_data(file_difference, differnce_data_set, heading=heading)
+                self.add_data_to_file(file_difference, differnce_data_set, heading=heading)
 
             dpcsh_output_list.append(one_dataset)
             if self.details["interval"] > 1:
@@ -115,7 +115,7 @@ class TestCase1(FunTestCase):
             else:
                 interval = self.details["interval"]
             fun_test.sleep("before next iteration", seconds=interval)
-            file_helper.add_data(file_handler, one_dataset, heading=heading)
+            self.add_data_to_file(file_handler, one_dataset, heading=heading)
 
     def get_debug_memory_stats_initially(self,f_debug_memory_f1_0, f_debug_memory_f1_1):
         result = {}
@@ -129,9 +129,9 @@ class TestCase1(FunTestCase):
             one_dataset["time"] = datetime.datetime.now()
             one_dataset["output"] = dpcsh_output
             if f1 == 0:
-                file_helper.add_data(f_debug_memory_f1_0, one_dataset, heading=heading)
+                self.add_data_to_file(f_debug_memory_f1_0, one_dataset, heading=heading)
             else:
-                file_helper.add_data(f_debug_memory_f1_1, one_dataset, heading=heading)
+                self.add_data_to_file(f_debug_memory_f1_1, one_dataset, heading=heading)
             result["f1_{}".format(f1)] = one_dataset.copy()
         return result
 

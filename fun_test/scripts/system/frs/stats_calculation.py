@@ -31,6 +31,9 @@ def dict_difference(one_data_set, cmd):
     elif cmd == "DDR":
         diff_dict = dict_difference_level_3_div(dict_1, dict_2, time_difference)
         result = sum_important_fields_ddr(diff_dict)
+    elif cmd == "STORAGE_IOPS":
+        diff_dict = dict_difference_level_2_div(dict_1, dict_2, time_difference)
+        result = filter_rcnvme_and_sum(diff_dict)
     return result
 
 
@@ -164,3 +167,19 @@ def calculate_for_each_cluster(simplified_output):
         result[each_cluster] = round(result[each_cluster] / 24.0, 4)
     result["average_value"] = round(sum(result.values()) / 8, 4)
     return result
+
+def filter_rcnvme_and_sum(dpcsh_data):
+    result = {}
+    allow = ["rcnvme_write_count", "rcnvme_read_count"]
+    sum_read_count = 0
+    if dpcsh_data:
+        for ssd, value in dpcsh_data.iteritems():
+            result[ssd] = {}
+            for allowed in allow:
+                result[ssd][allowed] = value[allowed]
+                if allowed == "rcnvme_read_count":
+                    sum_read_count += value[allowed]
+        result["100"] = {}
+        result["100"]["rcnvme_read_count"] = sum_read_count
+    return result
+
