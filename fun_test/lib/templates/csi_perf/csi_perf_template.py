@@ -163,8 +163,13 @@ class CsiPerfTemplate():
                                                                                      self.perf_host.ssh_username,
                                                                                      self.perf_host.ssh_password))
         fun_test.report_message("CSI perf base job directory: {}".format(self.base_job_directory))
-        fun_test.report_message("CSI perf: to process perf: #./process_perf.sh {}".format(self.job_directory))
-        fun_test.report_message("CSI perf: to view perf: #./view_perf.sh {}".format(self.base_job_directory))
+        if not self.csi_cache_miss:
+            fun_test.report_message("CSI perf: to process perf: #./process_perf.sh {}".format(self.job_directory))
+            fun_test.report_message("CSI perf: to view perf: #./view_perf.sh {}".format(self.base_job_directory))
+        else:
+            fun_test.report_message("CSI perf: to process csi cache miss: #./process_cm.sh {}".format(self.job_directory))
+            fun_test.report_message("CSI perf: to view csi perf: open {}/odp/missmap.html".format(self.job_directory))
+
 
     def move_trace_files(self, source_directory, job_directory):
         trace_files = self.perf_host.list_files("{}/trace_cluster*".format(source_directory))
