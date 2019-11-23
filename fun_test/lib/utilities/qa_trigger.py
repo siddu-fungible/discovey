@@ -156,7 +156,9 @@ class FunTestClient:
 
         suite_execution_id = None
         if environment is None:
-            environment = {"test_bed_type": test_bed_type}
+            environment = {}
+        environment["test_bed_type"] = test_bed_type
+
         job_spec = {
             "suite_path": suite_path,
             "build_url": build_url,
