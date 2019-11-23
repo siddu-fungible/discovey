@@ -46,11 +46,17 @@ class MyScript(FunTestScript):
 
         fpg_connected_hosts = topology.get_host_instances_on_fpg_interfaces(dut_index=0, f1_index=0)
         end_host = None
+
+        if test_bed_type == "fs-6":
+            end_host = fpg_connected_hosts["poc-server-01"]["host_obj"]
+
+        """
         for host_ip, host_info in fpg_connected_hosts.iteritems():
             fun_test.log("FPG: Host-IP: {}: host: {} Interfaces: {}".format(host_ip, str(host_info["host_obj"]), str(host_info["interfaces"])))
             end_host = host_info["host_obj"]
             break
-
+        """
+        
         csr_network = {
             "0": {
                 "test_interface_ip": "20.1.1.1/24",
