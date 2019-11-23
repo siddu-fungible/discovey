@@ -50,6 +50,8 @@ class CsiPerfTemplate():
         self.setup_docker = setup_docker
         self.prepare_complete = False
         self.listener_port = listener_port
+        self.csi_cache_miss = fun_test.get_job_environment_variable("csi_cache_miss")
+
 
     def ensure_docker_images_exist(self):
         docker_images_output = self.perf_host.sudo_command("docker images")
@@ -118,6 +120,9 @@ class CsiPerfTemplate():
     def _prepare_directory_structure(self, job_directory):
         self.perf_host.command("mkdir -p {}/odp".format(job_directory))
         self.perf_host.command("mkdir -p {}/odp/trace_dumps".format(job_directory))
+        if self.csi_cache_miss:
+            self.perf_host.command("mkdir -p {}/odp/cache_miss_dumps".format(job_directory))
+
 
     def start(self, f1_index=0, dpc_client=None):
         fun_test.simple_assert(self.prepare_complete, "Please call prepare() before calling start")
@@ -164,7 +169,11 @@ class CsiPerfTemplate():
     def move_trace_files(self, source_directory, job_directory):
         trace_files = self.perf_host.list_files("{}/trace_cluster*".format(source_directory))
         fun_test.test_assert(trace_files, "At least one perf trace file seen")
-        self.perf_host.command("mv {}/trace_cluster* {}/odp/trace_dumps/".format(source_directory, job_directory))
+        if not self.csi_cache_miss:
+            self.perf_host.command("mv {}/trace_cluster* {}/odp/trace_dumps/".format(source_directory, job_directory))
+        else:
+            self.perf_host.command("mv {}/trace_cluster* {}/odp/cache_miss_dumps/".format(source_directory, job_directory))
+
 
     def move_uart_log(self, uart_log_path, f1_index=0):
         target_file_path = "{}/odp/uartout0.{}.txt".format(self.job_directory, f1_index)
