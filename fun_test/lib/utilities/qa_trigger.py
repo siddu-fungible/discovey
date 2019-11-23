@@ -155,6 +155,8 @@ class FunTestClient:
             email_list = [email.strip() for email in email_list.split(",")]
 
         suite_execution_id = None
+        if environment is None:
+            environment = {"test_bed_type": test_bed_type}
         job_spec = {
             "suite_path": suite_path,
             "build_url": build_url,
@@ -165,6 +167,7 @@ class FunTestClient:
             "test_bed_type": test_bed_type,
             "description": description
         }
+
         response = self._do_post(url="/regression/submit_job", data=json.dumps(job_spec))
         if response["status"]:
             suite_execution_id = int(response["data"])
@@ -213,6 +216,7 @@ class FunTestClient:
         result = None
         if scp_result:
             result = {"funos_binary": target_file_name}
+        print("Positioning build artifacts. Result: {}".format(result))
         return result
 
     def update_environment(self, environment, key, value):
