@@ -206,6 +206,7 @@ class FunTestClient:
         return result
 
     def position_pre_built_artifacts(self, jenkins_workspace):
+        print("Positioning build artifacts")
         random_string = ''.join(random.sample('0123456789', 6))
         target_file_name = "s_pr_{}".format(random_string)
         scp_result = self.scp_funos_binary(workspace=jenkins_workspace, target_file_name=target_file_name)
