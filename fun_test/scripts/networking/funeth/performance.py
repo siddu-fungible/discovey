@@ -84,7 +84,7 @@ class FunethPerformance(sanity.FunethSanity):
         driver_bld =  super(FunethPerformance, self).__getattribute__('driver_bld')
         come_linux_obj = super(FunethPerformance, self).__getattribute__('come_linux_obj')
         funeth_obj = super(FunethPerformance, self).__getattribute__('funeth_obj')
-        if sanity.csi_perf_enabled:
+        if sanity.csi_perf_enabled or sanity.csi_cache_miss_enabled:
             csi_perf_obj = super(FunethPerformance, self).__getattribute__('csi_perf_obj')
         else:
             csi_perf_obj = None

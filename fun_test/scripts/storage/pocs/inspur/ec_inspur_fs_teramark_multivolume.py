@@ -302,6 +302,47 @@ class ECVolumeLevelScript(FunTestScript):
             self.funcp_obj = {}
             self.funcp_spec = {}
             for index in xrange(self.num_duts):
+                run_sc_restart_status = False
+                # Removing existing db directories for fresh setup
+                try:
+                    if self.install == "fresh":
+                        if self.bundle_image_parameters:
+                            path = "{}/{}".format(self.sc_script_dir, self.run_sc_script)
+                            if self.come_obj[index].check_file_directory_exists(path=path):
+                                self.come_obj[index].command("cd {}".format(self.sc_script_dir))
+                                # restarting run_sc with -c option
+                                self.come_obj[index].command("sudo ./{} -c restart".format(self.run_sc_script))
+                                fun_test.test_assert_expected(expected=0, actual=self.come_obj[index].exit_status(),
+                                                              message="run_sc restarted with cleanup")
+                                # check if run_sc container is running
+                                run_sc_restart_cmd = "docker ps -a --format '{{.Names}}' | grep run_sc"
+                                timer = FunTimer(max_time=self.container_up_timeout)
+                                while not timer.is_expired():
+                                    run_sc_name = self.come_obj[index].command(
+                                        run_sc_restart_cmd, timeout=self.command_timeout).split("\n")[0]
+                                    if run_sc_name:
+                                        fun_test.log("run_sc container is up and running")
+                                        run_sc_restart_status = True
+                                        break
+                                    else:
+                                        fun_test.sleep("for the run_sc docker container to start", 1)
+                                else:
+                                    fun_test.critical("run_sc container is not restarted within {} seconds after "
+                                                      "cleaning up the DB".format(self.container_up_timeout))
+                                    fun_test.test_assert(False, "Cleaning DB and restarting run_sc container")
+                        else:
+                            for directory in self.sc_db_directories:
+                                if self.come_obj[index].check_file_directory_exists(path=directory):
+                                    fun_test.log("Removing Directory {}".format(directory))
+                                    self.come_obj[index].sudo_command("rm -rf {}".format(directory))
+                                    fun_test.test_assert_expected(actual=self.come_obj[index].exit_status(), expected=0,
+                                                                  message="Directory {} is removed".format(directory))
+                                else:
+                                    fun_test.log("Directory {} does not exist skipping deletion".format(directory))
+                    else:
+                        fun_test.log("Skipping run_sc restart with cleanup")
+                except Exception as ex:
+                    fun_test.critical(str(ex))
                 self.funcp_obj[index] = StorageFsTemplate(self.come_obj[index])
                 if self.tftp_image_path:
                     self.funcp_spec[index] = self.funcp_obj[index].deploy_funcp_container(
@@ -1206,6 +1247,10 @@ class ECVolumeLevelTestcase(FunTestCase):
                         fio_job_name = "{}_{}pctcomp_iodepth_{}_vol_{}". \
                             format(self.fio_job_name, self.warm_up_fio_cmd_args["buffer_compress_percentage"],
                                    row_data_dict["iodepth"], self.ec_info["num_volumes"])
+
+                    if self.ec_info.get("encrypt", False):
+                        fio_job_name = "{}_encryption_keysize_{}_iodepth_{}_vol_{}". \
+                            format(self.fio_job_name,self.ec_info["key_size"],row_data_dict["iodepth"], self.ec_info["num_volumes"])
                 else:
                     fio_job_name = "{}_{}".format(self.fio_job_name, row_data_dict["iodepth"])
 
@@ -1718,6 +1763,6 @@ if __name__ == "__main__":
     ecscript.add_test_case(MixedRandReadWriteIOPS())
     ecscript.add_test_case(SequentialReadWrite1024kBlocks())
     ecscript.add_test_case(RandWrite8kBlocks())
-    # ecscript.add_test_case(OLTPModelReadWriteIOPS())
-    # ecscript.add_test_case(OLAPModelReadWriteIOPS())
+    #ecscript.add_test_case(OLTPModelReadWriteIOPS())
+    #ecscript.add_test_case(OLAPModelReadWriteIOPS())
     ecscript.run()

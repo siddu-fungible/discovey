@@ -213,6 +213,7 @@ class StorageController(NetworkController, DpcshClient):
 
         result = True
         compression_enabled = False
+        encryption_enabled = False
         if "ndata" not in ec_info or "nparity" not in ec_info or "capacity" not in ec_info:
             result = False
             fun_test.critical("Mandatory attributes needed for the EC volume creation is missing in ec_info dictionary")
@@ -233,10 +234,19 @@ class StorageController(NetworkController, DpcshClient):
             fun_test.log("Configuring Compression enabled EC volume with effort: {}, filter: {}".format(
                 ec_info['zip_effort'], ec_info['zip_filter']))
 
+        # Check if encryption has to be enabled for the volume
+        if "encrypt" in ec_info.keys() and ec_info['encrypt']:
+            encryption_enabled = True
+            ec_info['use_lsv'] = True
+            fun_test.log("Configuring encryption enabled EC volume with key size: {}, xtweak size: {}".format(
+                ec_info['key_size'], ec_info['xtweak_size']))
+
         ec_info["uuids"] = {}
         ec_info["volume_capacity"] = {}
         ec_info["attach_uuid"] = {}
         ec_info["attach_size"] = {}
+        ec_info["key"] = {}
+        ec_info["xtweak"] = {}
 
         for num in xrange(ec_info["num_volumes"]):
             ec_info["uuids"][num] = {}
@@ -331,6 +341,23 @@ class StorageController(NetworkController, DpcshClient):
                                                         zip_filter=ec_info['zip_filter'],
                                                         group_id=num+3,
                                                         command_duration=command_timeout)
+                elif encryption_enabled:
+                    ec_info["key"][num] = utils.generate_key(ec_info["key_size"])
+                    ec_info["xtweak"][num] = utils.generate_key(ec_info["xtweak_size"])
+                    command_result = self.create_volume(type=ec_info["volume_types"]["lsv"],
+                                                        capacity=ec_info["volume_capacity"][num]["lsv"],
+                                                        block_size=ec_info["volume_block"]["lsv"],
+                                                        name="lsv_" + this_uuid[-4:],
+                                                        uuid=this_uuid,
+                                                        group=ec_info["ndata"],
+                                                        jvol_uuid=ec_info["uuids"][num]["jvol"],
+                                                        pvol_id=ec_info["uuids"][num]["ec"],
+                                                        encrypt=ec_info['encrypt'],
+                                                        key=ec_info['key'][num],
+                                                        xtweak=ec_info['xtweak'][num],
+                                                        group_id=num + 3,
+                                                        command_duration=command_timeout)
+
                 else:
                     command_result = self.create_volume(type=ec_info["volume_types"]["lsv"],
                                                         capacity=ec_info["volume_capacity"][num]["lsv"],
@@ -447,6 +474,6 @@ class StorageController(NetworkController, DpcshClient):
 
 
 if __name__ == "__main__":
-    sc = StorageController(target_ip="10.1.20.67", target_port=40220)
+    sc = StorageController(target_ip="10.1.20.67", target_port=42220)
     output = sc.command("peek stats")
     sc.print_result(output)

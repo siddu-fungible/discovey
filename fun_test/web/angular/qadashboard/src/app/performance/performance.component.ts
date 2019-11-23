@@ -181,14 +181,14 @@ export class PerformanceComponent implements OnInit {
   f1Node: FlatNode = null;
   s1Node: FlatNode = null;
   otherNode: FlatNode = null;
-  allMetricsNode: FlatNode = null;
+  fs1600Node: FlatNode = null;
 
-  buildInfo: any = null;
   viewWorkspaceIds: number[] = [];
   lineagesMap: any = {};
   S1: number = 591;
   F1: number = 101;
   OTHER: number = 1503;
+  FS1600: number = 1506;
 
   allowedGridRows: number = 1;
   showFunMetric: boolean = false;
@@ -231,21 +231,6 @@ export class PerformanceComponent implements OnInit {
       this.miniGridMaxWidth = '25%';
       this.miniGridMaxHeight = '25%';
     }
-    this.buildInfo = null;
-    new Observable(observer => {
-      observer.next(true);
-      observer.complete();
-      return () => {
-      }
-    }).pipe(
-      switchMap(response => {
-        return this.service.fetchBuildInfo();
-      })).subscribe(response => {
-      this.buildInfo = response;
-      console.log("fetched buildInfo");
-    }, error => {
-      this.loggerService.error("Unable to fetch buildInfo");
-    });
     this.fetchDag();
   }
 
@@ -628,7 +613,7 @@ export class PerformanceComponent implements OnInit {
     let newNode = this.getNodeFromEntry(numMetricId, dagEntry);
     this.addNodeToMap(numMetricId, newNode);
     thisFlatNode = this.getNewFlatNode(newNode, indent);
-    if (newNode.metricId === this.S1 || newNode.metricId === this.F1 || newNode.metricId === this.OTHER) {
+    if (newNode.metricId === this.S1 || newNode.metricId === this.F1 || newNode.metricId === this.OTHER || newNode.metricId === this.FS1600) {
       thisFlatNode.hide = false;
       lineage = [];
     }
@@ -640,6 +625,9 @@ export class PerformanceComponent implements OnInit {
     }
     if (newNode.metricId === this.OTHER) {
       this.otherNode = thisFlatNode;
+    }
+    if (newNode.metricId === this.FS1600) {
+      this.fs1600Node = thisFlatNode;
     }
     if (this.metricIds && this.viewWorkspaceIds.includes(newNode.metricId)) {
       thisFlatNode.hide = false;
@@ -1200,6 +1188,9 @@ export class PerformanceComponent implements OnInit {
       }
       if (!result) {
         result = this._doPathToGuid(this.otherNode, parts);
+      }
+      if (!result) {
+        result = this._doPathToGuid(this.fs1600Node, parts);
       }
       // console.log("Path: " + path + " : guid: " + result + " c: " + this.getFlatNodeByGuid(result).node.chartName);
 

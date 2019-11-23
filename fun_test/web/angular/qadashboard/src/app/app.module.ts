@@ -1,5 +1,5 @@
 import {BrowserModule} from '@angular/platform-browser';
-import {NgModule} from '@angular/core';
+import {Injector, NgModule} from '@angular/core';
 import {MatSortModule} from '@angular/material';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 
@@ -93,6 +93,13 @@ import { TimelineControlComponent } from './visualization/timeline-control/timel
 import * as d3 from 'd3';
 import { StatisticsContainerComponent } from './statistics/statistics-container/statistics-container.component';
 import { BamComponent } from './statistics/system/bam/bam.component';
+import { ReleaseCatalogEditorComponent } from './regression/release-catalog-editor/release-catalog-editor.component';
+import { ReleasesComponent } from './regression/releases/releases.component';
+import { ReleaseCatalogsComponent } from './regression/release-catalogs/release-catalogs.component';
+import { BackComponent } from './ui-elements/back/back.component';
+import { SectionHeaderComponent } from './ui-elements/section-header/section-header.component';
+import { DaemonsComponent } from './daemons/daemons.component';
+import {setAppInjector} from "./app-injector";
 
 
 @NgModule({
@@ -168,7 +175,13 @@ import { BamComponent } from './statistics/system/bam/bam.component';
     SelectedPipe,
     TimelineControlComponent,
     StatisticsContainerComponent,
-    BamComponent
+    BamComponent,
+    ReleaseCatalogEditorComponent,
+    ReleasesComponent,
+    ReleaseCatalogsComponent,
+    BackComponent,
+    SectionHeaderComponent,
+    DaemonsComponent
   ],
   imports: [
     BsDropdownModule,
@@ -195,4 +208,11 @@ import { BamComponent } from './statistics/system/bam/bam.component';
   bootstrap: [AppComponent]
 })
 export class AppModule {
+  static injector: Injector;
+  constructor(injector: Injector) {
+    //AppModule.injector = injector;
+    setAppInjector(injector);
+
+  }
+
 }

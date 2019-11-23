@@ -305,6 +305,47 @@ class MultiHostVolumePerformanceScript(FunTestScript):
         self.funcp_obj = {}
         self.funcp_spec = {}
         for index in xrange(self.num_duts):
+            run_sc_restart_status = False
+            # Removing existing db directories for fresh setup
+            try:
+                if self.install == "fresh":
+                    if self.bundle_image_parameters:
+                        path = "{}/{}".format(self.sc_script_dir, self.run_sc_script)
+                        if self.come_obj[index].check_file_directory_exists(path=path):
+                            self.come_obj[index].command("cd {}".format(self.sc_script_dir))
+                            # restarting run_sc with -c option
+                            self.come_obj[index].command("sudo ./{} -c restart".format(self.run_sc_script))
+                            fun_test.test_assert_expected(expected=0, actual=self.come_obj[index].exit_status(),
+                                                          message="run_sc restarted with cleanup")
+                            # check if run_sc container is running
+                            run_sc_restart_cmd = "docker ps -a --format '{{.Names}}' | grep run_sc"
+                            timer = FunTimer(max_time=self.container_up_timeout)
+                            while not timer.is_expired():
+                                run_sc_name = self.come_obj[index].command(
+                                    run_sc_restart_cmd, timeout=self.command_timeout).split("\n")[0]
+                                if run_sc_name:
+                                    fun_test.log("run_sc container is up and running")
+                                    run_sc_restart_status = True
+                                    break
+                                else:
+                                    fun_test.sleep("for the run_sc docker container to start", 1)
+                            else:
+                                fun_test.critical("run_sc container is not restarted within {} seconds after "
+                                                  "cleaning up the DB".format(self.container_up_timeout))
+                                fun_test.test_assert(False, "Cleaning DB and restarting run_sc container")
+                    else:
+                        for directory in self.sc_db_directories:
+                            if self.come_obj[index].check_file_directory_exists(path=directory):
+                                fun_test.log("Removing Directory {}".format(directory))
+                                self.come_obj[index].sudo_command("rm -rf {}".format(directory))
+                                fun_test.test_assert_expected(actual=self.come_obj[index].exit_status(), expected=0,
+                                                              message="Directory {} is removed".format(directory))
+                            else:
+                                fun_test.log("Directory {} does not exist skipping deletion".format(directory))
+                else:
+                    fun_test.log("Skipping run_sc restart with cleanup")
+            except Exception as ex:
+                fun_test.critical(str(ex))
             self.funcp_obj[index] = StorageFsTemplate(self.come_obj[index])
             if self.tftp_image_path:
                 self.funcp_spec[index] = self.funcp_obj[index].deploy_funcp_container(
@@ -620,8 +661,10 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
             self.post_results = False
         if "csi_perf_iodepth" in job_inputs:
             self.csi_perf_iodepth = job_inputs["csi_perf_iodepth"]
+            self.full_run_iodepth = self.csi_perf_iodepth
         if not isinstance(self.csi_perf_iodepth, list):
             self.csi_perf_iodepth = [self.csi_perf_iodepth]
+            self.full_run_iodepth = self.csi_perf_iodepth
 
         if ("blt" not in fun_test.shared_variables or not fun_test.shared_variables["blt"]["setup_created"]) \
                 and (not fun_test.shared_variables["blt"]["warmup_done"]):
@@ -1049,7 +1092,7 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                                                        listener_ip=self.perf_listener_ip, fs=self.fs[0],
                                                        listener_port=4420)  # Temp change for testing
                         csi_perf_obj.prepare(f1_index=0)
-                        csi_perf_obj.start(f1_index=0, dpc_client=self.storage_controller)
+                        csi_perf_obj.start(f1_index=0)  #  , dpc_client=self.storage_controller)
                         fun_test.log("csi perf stats collection is started")
                         # dpcsh_client = self.fs.get_dpc_client(f1_index=0, auto_disconnect=True)
                         fun_test.sleep("Allowing CSI performance data to be collected", 300)

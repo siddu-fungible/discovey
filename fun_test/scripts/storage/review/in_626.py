@@ -186,9 +186,16 @@ class MultiHostVolumePerformanceScript(FunTestScript):
         #                      message="Testbed has enough DUTs")
 
         fpg_interfaces = self.topology_helper.get_expanded_topology().get_dut(index=0).get_fpg_interfaces(f1_index=0)
-        if fpg_interfaces:
+        bond_interfaces = self.topology_helper.get_expanded_topology().get_dut(index=0).get_bond_interfaces(
+            f1_index=0)
+
+        if not bond_interfaces:
             fun_test.shared_variables["f1_ips"] = [fpg_interfaces[0].ip]
 
+        else:
+            bond_interfaces = self.topology_helper.get_expanded_topology().get_dut(index=0).get_bond_interfaces(
+                f1_index=0)
+            fun_test.shared_variables["f1_ips"] = [bond_interfaces[0].ip.split("/")[0]]
 
         self.tftp_image_path = fun_test.get_job_environment_variable("tftp_image_path")
         self.bundle_image_parameters = fun_test.get_job_environment_variable("bundle_image_parameters")
@@ -203,10 +210,11 @@ class MultiHostVolumePerformanceScript(FunTestScript):
         for dut_index in self.available_dut_indexes:
             self.topology_helper.set_dut_parameters(dut_index=dut_index,
                                                     f1_parameters={0: {"boot_args": self.bootargs[0]},
-                                                                   1: {"boot_args": self.bootargs[1]}}),
-                                                    # fs_parameters={"already_deployed": True})
+                                                                   1: {"boot_args": self.bootargs[1]}},
+                                                    fs_parameters={"already_deployed": False})
         self.topology = self.topology_helper.deploy()
         fun_test.test_assert(self.topology, "Topology deployed")
+        fun_test.sleep(seconds=120, message="Waiting for storage controller API to start")
 
         # Datetime required for daily Dashboard data filter
         self.db_log_time = get_data_collection_time()
@@ -725,21 +733,22 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                     host_handle.modprobe("nvme_tcp")
                     host_handle.modprobe("nvme_fabrics")
 
-                fun_test.sleep("After modprobe", seconds=30)
 
                 # host_handle.start_bg_process(command="sudo tcpdump -i enp216s0 -w nvme_connect_auto.pcap")
-                if hasattr(self, "nvme_io_queues") and self.nvme_io_queues != 0:
-                    command_result = host_handle.sudo_command(
-                        "nvme connect -t {} -a {} -s {} -n {} -i {} -q {}".format(unicode.lower(self.transport_type),
-                                                                                  self.test_network["f1_loopback_ip"],
-                                                                                  self.transport_port, nqn,
-                                                                                  self.nvme_io_queues, host_ip))
-                    fun_test.log(command_result)
-                else:
-                    command_result = host_handle.sudo_command(
-                        "nvme connect -t {} -a {} -s {} -n {} -q {}".format(unicode.lower(self.transport_type),
-                                                                            self.test_network["f1_loopback_ip"],
-                                                                            self.transport_port, nqn, host_ip))
+                for i in range(2):
+                    if hasattr(self, "nvme_io_queues") and self.nvme_io_queues != 0:
+                        command_result = host_handle.sudo_command(
+                            "nvme connect -t {} -a {} -s {} -n {} -i {} -q {}".format(unicode.lower(self.transport_type),
+                                                                                      self.test_network["f1_loopback_ip"],
+                                                                                      self.transport_port, nqn,
+                                                                                      self.nvme_io_queues, host_ip))
+                        fun_test.log(command_result)
+                    else:
+                        command_result = host_handle.sudo_command(
+                            "nvme connect -t {} -a {} -s {} -n {} -q {}".format(unicode.lower(self.transport_type),
+                                                                                self.test_network["f1_loopback_ip"],
+                                                                                self.transport_port, nqn, host_ip))
+                        fun_test.sleep("Wait for retry nvme connect", seconds=20)
                     fun_test.log(command_result)
                 fun_test.sleep("Wait for couple of seconds for the volume to be accessible to the host", 5)
                 host_handle.sudo_command("for i in `pgrep tcpdump`;do kill -9 $i;done")

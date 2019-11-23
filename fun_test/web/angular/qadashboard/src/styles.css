@@ -336,11 +336,12 @@ input:checked + .slider:before {
 }
 
 .pseudo-anchor {
-  color: blue;
+  color: #1f7ed1 !important;
+  font-weight: 400 !important;
 }
 .pseudo-anchor:hover {
-  cursor: pointer;
-  color: black;
+  cursor: pointer !important;
+  color: black !important;
 }
 
 @media all {
@@ -628,15 +629,15 @@ tr.text-center > th {
 }
 
 .fun-button-add {
-  padding: 5px;
+  padding: 6px 12px;
   border: darkblue 0.5px;
   background-color: #007bff;
   color: white;
   cursor: pointer;
-  min-width: 100px;
-  border-radius: .25rem;
+  /*min-width: 100px;*/
+  border-radius: 4px;
   margin: 5px;
-  max-height: 30px;
+  /*max-height: 30px;*/
   vertical-align: middle;
 }
 
@@ -650,10 +651,10 @@ tr.text-center > th {
   color: #fff;
   background-color: #28a745;
   border-color: #28a745;
-  padding: 5px;
-  border-radius: 2px;
-  min-width: 100px;
-  margin: 5px;
+  padding: 6px 12px;
+  border-radius: 4px;
+  /*min-width: 100px;*/
+  /*margin: 5px;*/
 }
 
 .fun-button-submit:hover {
@@ -739,6 +740,7 @@ label {
   border-left: solid lightgrey 1px;
   border-right: solid lightgrey 1px;
 }
+
 .fun-table tr td {
   padding: 5px;
   border-top: solid lightgrey 1px;
@@ -746,6 +748,21 @@ label {
   border-left: solid lightgrey 1px;
   border-right: solid lightgrey 1px;
 
+}
+
+.fun-table-borderless {
+  border: 0;
+}
+
+.fun-table-borderless-header {
+  font-weight: bolder;
+  color: #a9a8a8;
+}
+
+tr.fun-table-borderless-row > td {
+  border-top: 1px solid;
+  border-bottom: 1px solid;
+  padding: 10px;
 }
 
 .fun-panel {
@@ -775,7 +792,7 @@ label {
 
 .fun-attribute-label {
   font-weight: bold;
-  margin-right: 10px;
+  padding: 5px;
 }
 
 .fun-attribute-section {
@@ -784,7 +801,7 @@ label {
 
 .fun-attribute {
   display: block;
-  margin: 5px;
+  padding: 5px;
 }
 
 .fun-icon {
@@ -808,4 +825,9 @@ label {
 .badge-history {
   color: #212529;
   background-color: rgba(255, 185, 7, 0.37);
+}
+
+/* div */
+.fun-div {
+  padding: 10px;
 }

@@ -351,8 +351,8 @@ class CryptoCore(FunTestCase):
         self.blt_block_size = 4096
         self.blt_uuid = utils.generate_uuid()
         self.command_timeout = 5
-        self.storage_controller = StorageController(target_ip=come_obj.host_ip, target_port=40220)
-        self.storage_controller_remote = StorageController(target_ip=come_obj.host_ip, target_port=40221)
+        self.storage_controller = StorageController(target_ip=come_obj.host_ip, target_port=42220)
+        self.storage_controller_remote = StorageController(target_ip=come_obj.host_ip, target_port=42221)
         fun_test.shared_variables["storage_controller"] = self.storage_controller
         fun_test.shared_variables["storage_controller_remote"] = self.storage_controller_remote
 
@@ -375,8 +375,8 @@ class CryptoCore(FunTestCase):
             fun_test.log("F11 vlan IP {} is not valid".format(ip))
             fun_test.simple_assert(False, "F11 vlan IP is in wrong format")
 
-        self.storage_controller = StorageController(target_ip=come_obj.host_ip, target_port=40220)
-        self.storage_controller_remote = StorageController(target_ip=come_obj.host_ip, target_port=40221)
+        self.storage_controller = StorageController(target_ip=come_obj.host_ip, target_port=42220)
+        self.storage_controller_remote = StorageController(target_ip=come_obj.host_ip, target_port=42221)
         if not skip_ctrlr_creation:
             # Create IPCFG on F1_0
             command_result = self.storage_controller.ip_cfg(ip=f10_vlan_ip, port=4420)
