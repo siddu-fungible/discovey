@@ -176,8 +176,11 @@ class ECVolumeLevelScript(FunTestScript):
 
             # Code to collect csi_perf if it's set
             self.csi_perf_enabled = fun_test.get_job_environment_variable("csi_perf")
+            self.csi_cache_miss_enabled = fun_test.get_job_environment_variable("csi_cache_miss")
             fun_test.log("csi_perf_enabled is set as: {} for current run".format(self.csi_perf_enabled))
-            if self.csi_perf_enabled:
+            fun_test.log("csi_cache_miss_enabled is set as: {} for current run".format(self.csi_cache_miss_enabled))
+
+            if self.csi_perf_enabled or self.csi_cache_miss_enabled:
                 fun_test.log("testbed_config: {}".format(self.testbed_config))
                 self.csi_f1_ip = \
                     self.testbed_config["dut_info"][str(self.available_dut_indexes[0])]["bond_interface_info"]["0"][
@@ -192,8 +195,12 @@ class ECVolumeLevelScript(FunTestScript):
                     fun_test.log("csi perf listener host ip is: {}".format(self.perf_listener_ip))
                 # adding csi perf bootargs if csi_perf is enabled
                 #  TODO: Modifying bootargs only for F1_0 as csi_perf on F1_1 is not yet fully supported
-                self.bootargs[0] += " --perf csi-local-ip={} csi-remote-ip={} pdtrace-hbm-size-kb={}".format(
-                    self.csi_f1_ip, self.perf_listener_ip, self.csi_perf_pdtrace_hbm_size_kb)
+                if self.csi_perf_enabled:
+                    self.bootargs[0] += " --perf csi-local-ip={} csi-remote-ip={} pdtrace-hbm-size-kb={}".format(
+                        self.csi_f1_ip, self.perf_listener_ip, self.csi_perf_pdtrace_hbm_size_kb)
+                elif self.csi_cache_miss_enabled:
+                    self.bootargs[0] += " --csi-cache-miss csi-local-ip={} csi-remote-ip={} pdtrace-hbm-size-kb={}".format(
+                        self.csi_f1_ip, self.perf_listener_ip, self.csi_perf_pdtrace_hbm_size_kb)
 
             self.tftp_image_path = fun_test.get_job_environment_variable("tftp_image_path")
             self.bundle_image_parameters = fun_test.get_job_environment_variable("bundle_image_parameters")
@@ -394,7 +401,8 @@ class ECVolumeLevelScript(FunTestScript):
             fun_test.shared_variables["db_log_time"] = self.db_log_time
             fun_test.shared_variables["host_info"] = self.host_info
             fun_test.shared_variables["csi_perf_enabled"] = self.csi_perf_enabled
-            if self.csi_perf_enabled:
+            fun_test.shared_variables["csi_cache_miss_enabled"] = self.csi_cache_miss_enabled
+            if self.csi_perf_enabled or self.csi_cache_miss_enabled:
                 fun_test.shared_variables["perf_listener_host_name"] = self.perf_listener_host_name
                 fun_test.shared_variables["perf_listener_ip"] = self.perf_listener_ip
 
@@ -428,7 +436,7 @@ class ECVolumeLevelScript(FunTestScript):
                                          format(host_name, self.funcp_spec[0]["container_names"][index], ip))
 
             # Ensuring perf_host is able to ping F1 IP
-            if self.csi_perf_enabled:
+            if self.csi_perf_enabled or self.csi_cache_miss_enabled:
                 # csi_perf_host_instance = csi_perf_host_obj.get_instance()  # TODO: Returning as NoneType
                 csi_perf_host_instance = Linux(host_ip=csi_perf_host_obj.spec["host_ip"],
                                                ssh_username=csi_perf_host_obj.spec["ssh_username"],
@@ -729,7 +737,8 @@ class ECVolumeLevelTestcase(FunTestCase):
             self.num_duts = fun_test.shared_variables["num_duts"]
             self.num_hosts = len(self.host_info)
             self.csi_perf_enabled = fun_test.shared_variables["csi_perf_enabled"]
-            if self.csi_perf_enabled:
+            self.csi_cache_miss_enabled = fun_test.shared_variables["csi_cache_miss_enabled"]
+            if self.csi_perf_enabled or self.csi_cache_miss_enabled:
                 self.perf_listener_host_name = fun_test.shared_variables["perf_listener_host_name"]
                 self.perf_listener_ip = fun_test.shared_variables["perf_listener_ip"]
         elif "workarounds" in self.testbed_config and "csr_replay" in self.testbed_config["workarounds"] and \
@@ -1281,7 +1290,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.log("Time taken to start an FIO job on a host {}: {}".format(host_name, time_taken))
 
             # Starting csi perf stats collection if it's set
-            if self.csi_perf_enabled:
+            if self.csi_perf_enabled or self.csi_cache_miss_enabled:
                 if row_data_dict["iodepth"] in self.csi_perf_iodepth:
                     try:
                         fun_test.sleep("for IO to be fully active", 60)
