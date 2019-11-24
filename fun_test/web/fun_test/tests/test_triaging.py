@@ -534,7 +534,7 @@ class TrialStateMachine:
                     if not regex_match_found:
                         trial.regex_match = "No regex match found for {}".format(triage.regex_match_string)
                 else:
-                    suite_execution_result = trial.result
+                    suite_execution_result = suite_execution.result
                     if suite_execution_result != RESULTS["PASSED"]:
                         trial.result = RESULTS["FAILED"]
                     else:
