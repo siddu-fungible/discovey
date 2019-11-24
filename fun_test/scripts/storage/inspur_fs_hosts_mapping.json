@@ -112,7 +112,7 @@
       }
     },
     "host_info": [
-      "cab04-qa-03"
+      "mktg-server-01"
     ]
   },
   "fs-42": {
@@ -228,7 +228,8 @@
       }
     },
     "host_info": [
-        "cab04-qa-03"
+        "mktg-server-02",
+        "mktg-server-03"
     ]
   },
   "fs-43": {
@@ -458,7 +459,16 @@
       }
     },
     "host_info": [
-      "cab04-qa-03"
+      "mktg-server-05",
+      "mktg-server-06",
+      "mktg-server-07",
+      "mktg-server-08",
+      "mktg-server-09",
+      "mktg-server-10",
+      "mktg-server-11",
+      "mktg-server-12",
+      "mktg-server-13",
+      "mktg-server-14"
     ]
   },
   "fs-117": {
@@ -574,7 +584,7 @@
       }
     },
     "host_info": [
-      "cab04-qa-03"
+      "cab02-qa-09"
     ]
   },
   "fs-102": {
@@ -690,7 +700,7 @@
       }
     },
     "host_info": [
-      "cab04-qa-01"
+      "cab02-qa-10"
     ]
   },
   "fs-104": {
