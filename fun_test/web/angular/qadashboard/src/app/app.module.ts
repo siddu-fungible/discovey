@@ -1,5 +1,5 @@
 import {BrowserModule} from '@angular/platform-browser';
-import {NgModule} from '@angular/core';
+import {Injector, NgModule} from '@angular/core';
 import {MatSortModule} from '@angular/material';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 
@@ -98,6 +98,8 @@ import { ReleasesComponent } from './regression/releases/releases.component';
 import { ReleaseCatalogsComponent } from './regression/release-catalogs/release-catalogs.component';
 import { BackComponent } from './ui-elements/back/back.component';
 import { SectionHeaderComponent } from './ui-elements/section-header/section-header.component';
+import { DaemonsComponent } from './daemons/daemons.component';
+import {setAppInjector} from "./app-injector";
 
 
 @NgModule({
@@ -178,7 +180,8 @@ import { SectionHeaderComponent } from './ui-elements/section-header/section-hea
     ReleasesComponent,
     ReleaseCatalogsComponent,
     BackComponent,
-    SectionHeaderComponent
+    SectionHeaderComponent,
+    DaemonsComponent
   ],
   imports: [
     BsDropdownModule,
@@ -205,4 +208,11 @@ import { SectionHeaderComponent } from './ui-elements/section-header/section-hea
   bootstrap: [AppComponent]
 })
 export class AppModule {
+  static injector: Injector;
+  constructor(injector: Injector) {
+    //AppModule.injector = injector;
+    setAppInjector(injector);
+
+  }
+
 }

@@ -155,6 +155,10 @@ class FunTestClient:
             email_list = [email.strip() for email in email_list.split(",")]
 
         suite_execution_id = None
+        if environment is None:
+            environment = {}
+        environment["test_bed_type"] = test_bed_type
+
         job_spec = {
             "suite_path": suite_path,
             "build_url": build_url,
@@ -165,6 +169,7 @@ class FunTestClient:
             "test_bed_type": test_bed_type,
             "description": description
         }
+
         response = self._do_post(url="/regression/submit_job", data=json.dumps(job_spec))
         if response["status"]:
             suite_execution_id = int(response["data"])
@@ -181,9 +186,9 @@ class FunTestClient:
         response = self._do_get(url="/api/v1/regression/suite_executions/{}?is_job_completed=true".format(job_id))
         return response
 
-    def scp_funos_binary(self, target_file_name):
+    def scp_funos_binary(self, workspace, target_file_name):
         result = False
-        source_file = "{}/{}".format(WORKSPACE_DIRECTORY, FUNOS_RELEASE_STRIPPED_BINARY)
+        source_file = "{}/{}".format(workspace, FUNOS_RELEASE_STRIPPED_BINARY)
         if os.path.exists(source_file):
             target_server_ip = TFTP_SERVER_IP
             target_username = TFTP_SERVER_SSH_USERNAME
@@ -205,13 +210,15 @@ class FunTestClient:
             self.report_error(error_message=error_message)
         return result
 
-    def position_pre_built_artifacts(self):
+    def position_pre_built_artifacts(self, jenkins_workspace):
+        print("Positioning build artifacts")
         random_string = ''.join(random.sample('0123456789', 6))
         target_file_name = "s_pr_{}".format(random_string)
-        scp_result = self.scp_funos_binary(target_file_name=target_file_name)
+        scp_result = self.scp_funos_binary(workspace=jenkins_workspace, target_file_name=target_file_name)
         result = None
         if scp_result:
             result = {"funos_binary": target_file_name}
+        print("Positioning build artifacts. Result: {}".format(result))
         return result
 
     def update_environment(self, environment, key, value):
@@ -289,7 +296,7 @@ def main():
         start_time = time.time()
 
         if is_pre_built:
-            pre_built_artifacts_positioned = fun_test_client.position_pre_built_artifacts()
+            pre_built_artifacts_positioned = fun_test_client.position_pre_built_artifacts(jenkins_workspace=jenkins_workspace)
             if not pre_built_artifacts_positioned:
                 exit_code = SCP_FAILED_EXIT_CODE
                 raise Exception("Positioning pre-built artifacts failed")

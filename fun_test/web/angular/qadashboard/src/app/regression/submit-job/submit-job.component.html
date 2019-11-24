@@ -55,7 +55,7 @@
             </tr>
             <tr>
             <td>
-              <label for="from_fun_os_sha">From FunOS commit: </label>
+              <label for="from_fun_os_sha" style="display: block">From FunOS commit: </label><small>Older/Passing</small>
             </td>
             <td>
               <input style="width: 400px" [(ngModel)]="fromFunOsSha" id="from_fun_os_sha">
@@ -63,7 +63,7 @@
           </tr>
             <tr>
             <td>
-              <label  for="to_fun_os_sha">To FunOS commit: </label>
+              <label  for="to_fun_os_sha" style="display: block">To FunOS commit: </label><small>Newer/Failing</small>
             </td>
             <td>
               <input style="width: 400px" [(ngModel)]="toFunOsSha" id="to_fun_os_sha">
@@ -308,7 +308,7 @@
         </tr>
 
         <tr>
-          <td><input (change)="csiPerf = !csiPerf" type="checkbox"
+          <td><input (change)="toggleCsiPerf()" type="checkbox"
                      name="csi-perf"
                      [checked]="csiPerf"> Enable CSI perf
           </td>

@@ -23,7 +23,7 @@ class MyScript(FunTestScript):
 
 class PerformanceTc(FunTestCase):
     workspaces = [{"id": 1912, "extra_email": ["storage-test@fungible.com", "harinadh.saladi@fungible.com"]},
-                     {"id": 2088, "extra_email": ["mohit.saxena@fungible.com", "network-test@fungible.com"]}]
+                  {"id": 2088, "extra_email": ["mohit.saxena@fungible.com", "network-test@fungible.com"]}]
     regression_email = TEAM_REGRESSION_EMAIL
 
     def setup(self):
@@ -56,7 +56,6 @@ class EmailPerformanceDrop(PerformanceTc):
                 reports = ml._generate_report(workspace_id=workspace.id)
                 if len(reports):
                     # print reports
-                    status = fun_test.FAILED
                     date_time = time.strftime("%m/%d/%Y %H:%M")
                     subject = "Performance drop report - " + date_time
                     try:
@@ -70,8 +69,10 @@ class EmailPerformanceDrop(PerformanceTc):
                         status = fun_test.FAILED
                         fun_test.critical(str(ex))
         except Exception as ex:
+            status = fun_test.FAILED
             fun_test.critical(str(ex))
-        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=status, message="No degraded metrics")
+        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=status,
+                                      message="Report generated and sent successfully")
 
 
 if __name__ == "__main__":

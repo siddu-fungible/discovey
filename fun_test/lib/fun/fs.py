@@ -1162,6 +1162,8 @@ class ComE(Linux):
     FUN_ROOT = "/opt/fungible"
     HEALTH_MONITOR = "/opt/fungible/etc/DpuHealthMonitor.sh"
 
+    DPCSH_DIRECTORY = "/tmp/workspace/FunSDK/bin/Linux"  #TODO
+
     def __init__(self, **kwargs):
         super(ComE, self).__init__(**kwargs)
         self.original_context_description = None
@@ -1409,11 +1411,12 @@ class ComE(Linux):
         nvme_devices = self.list_files("/dev/nvme*")
         fun_test.test_assert(expression=nvme_devices, message="At least one NVME device detected", context=self.context)
 
+        self.command("cd {}".format(self.DPCSH_DIRECTORY))
         for f1_index in range(self.NUM_F1S):
             if f1_index == self.disable_f1_index:
                 continue
 
-            self.command("cd $WORKSPACE/FunSDK/bin/Linux")
+            # self.command("cd $WORKSPACE/FunSDK/bin/Linux")
             nvme_device_index = f1_index
             if len(nvme_devices) == 1:  # if only one nvme device was detected
                 nvme_device_index = 0

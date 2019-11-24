@@ -664,8 +664,8 @@ class StripeVolumeTestCase(FunTestCase):
             after_write_eqm = {}
             after_write_eqm = self.storage_controller.peek(props_tree="stats/eqm")
 
-            for field, value in before_write_eqm["data"].items():
-                current_value = after_write_eqm["data"][field]
+            for field, value in before_write_eqm["data"]["eqm_stats"].items():
+                current_value = after_write_eqm["data"]["eqm_stats"][field]
                 if (value != current_value) and (field != "incoming BN msg valid"):
                     stats_delta = current_value - value
                     fun_test.log("Write test : there is a mismatch in {} : {}".format(field, stats_delta))
@@ -893,8 +893,8 @@ class StripeVolumeTestCase(FunTestCase):
             after_read_eqm = {}
             after_read_eqm = self.storage_controller.peek(props_tree="stats/eqm")
 
-            for field, value in before_read_eqm["data"].items():
-                current_value = after_read_eqm["data"][field]
+            for field, value in before_read_eqm["data"]["eqm_stats"].items():
+                current_value = after_read_eqm["data"]["eqm_stats"][field]
                 if (value != current_value) and (field != "incoming BN msg valid"):
                     stats_delta = current_value - value
                     fun_test.log("Read test : there is a mismatch in {} stat, delta : {}".format(field, stats_delta))

@@ -966,14 +966,16 @@
     "bmc": {
       "mgmt_ssh_password": "superuser",
       "mgmt_ssh_username": "sysadmin",
-      "mgmt_ip": "10.1.108.12"
+      "mgmt_ip": "fs118-bmc"
     },
     "come": {
       "mgmt_ssh_password": "123",
       "mgmt_ssh_username": "fun",
-      "mgmt_ip": "10.1.108.13"
+      "mgmt_ip": "fs118-come"
     },
     "name": "fs-118",
+    "mpg_ips": ["10.1.108.15", "10.1.108.16"],
+    "gateway_ip": "10.1.108.1",
     "workarounds": {
       "skip_funeth_come_power_cycle": true
     },
@@ -981,7 +983,7 @@
     "fpga": {
       "mgmt_ssh_password": "root",
       "mgmt_ssh_username": "root",
-      "mgmt_ip": "10.1.108.14"
+      "mgmt_ip": "fs118-fpga"
     },
     "apc_info": {
       "username": "localadmin",
