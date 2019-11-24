@@ -406,7 +406,7 @@ class MultiHostVolumePerformanceScript(FunTestScript):
         fun_test.shared_variables["syslog"] = self.syslog
         fun_test.shared_variables["db_log_time"] = self.db_log_time
         fun_test.shared_variables["csi_perf_enabled"] = self.csi_perf_enabled
-        fun_test.shared_variables["csi_cache_miss"] = self.csi_cache_miss_enabled
+        fun_test.shared_variables["csi_cache_miss_enabled"] = self.csi_cache_miss_enabled
 
         if self.csi_perf_enabled or self.csi_cache_miss_enabled:
             fun_test.shared_variables["perf_listener_host_name"] = self.perf_listener_host_name
