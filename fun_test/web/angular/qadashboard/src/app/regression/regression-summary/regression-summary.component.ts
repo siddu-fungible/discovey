@@ -35,7 +35,7 @@ export class RegressionSummaryComponent implements OnInit {
   availableModules = [];
   testCaseExecutions: any = null;
   scriptInfoMap = {}; // Maps script_path to entry
-  scriptPkToEntry = {};  // Maps script pk to entry
+  scriptIdToEntry = {};  // Maps script id to entry
   numBugs = 0;
   numBugsActive = 0;
   numBugsResolved = 0;
@@ -112,18 +112,18 @@ export class RegressionSummaryComponent implements OnInit {
   }
 
   getAllRegressionJiras() {
-    let scriptPk = null;
-    if (this.queryParameters && this.queryParameters.hasOwnProperty("script_pk")) {
-      scriptPk = this.queryParameters["script_pk"];
+    let scriptId = null;
+    if (this.queryParameters && this.queryParameters.hasOwnProperty("script_id")) {
+      scriptId = this.queryParameters["script_id"];
     }
 
-    return this.regressionService.getScriptInfo(scriptPk).pipe(switchMap(response => {
+    return this.regressionService.getScriptInfo(scriptId).pipe(switchMap(response => {
       this.globalJiraMap = {};
       response.map(item => {
         if (!this.globalJiraMap.hasOwnProperty(item.bug)) {
-          this.globalJiraMap[item.bug] = {scriptPks: []};
+          this.globalJiraMap[item.bug] = {scriptIds: []};
         }
-        this.globalJiraMap[item.bug].scriptPks.push(item.id);
+        this.globalJiraMap[item.bug].scriptIds.push(item.id);
       });
 
       for (let key in this.globalJiraMap) {
@@ -136,8 +136,8 @@ export class RegressionSummaryComponent implements OnInit {
   setContext(item) {
     let s = "";
 
-    item.scriptPks.map(pk => {
-      s += `<a target="_blank" href='/regression/summary?script_pk=${pk}'>` + this.scriptPkToEntry[pk].entry.script_path + "</a>"
+    item.scriptIds.map(id => {
+      s += `<a target="_blank" href='/regression/summary?script_id=${id}'>` + this.scriptIdToEntry[id].entry.script_path + "</a>";
       s += "<br>";
     });
     item["context"] = s;
@@ -145,16 +145,16 @@ export class RegressionSummaryComponent implements OnInit {
   }
 
   clickHistory(scriptPath) {
-    // let url = "/regression/script_history_page/" + this.scriptInfoMap[scriptPath].entry.pk;
-    let url = `/regression/summary?script_pk=${this.scriptInfoMap[scriptPath].entry.pk}`;
+    // let url = "/regression/script_history_page/" + this.scriptInfoMap[scriptPath].entry.id;
+    let url = `/regression/summary?script_id=${this.scriptInfoMap[scriptPath].entry.id}`;
     window.open(url, '_blank');
   }
 
   setFilterData() {
     let filterData = this.initialFilterData;
-    if (this.queryParameters.hasOwnProperty('script_pk')) {
-      let pk = this.queryParameters["script_pk"];
-      let entry = this.scriptPkToEntry[pk].entry;
+    if (this.queryParameters.hasOwnProperty('script_id')) {
+      let id = this.queryParameters["script_id"];
+      let entry = this.scriptIdToEntry[id].entry;
       this.filterData = [{info: entry.script_path, payload: {script_path: entry.script_path}}]
     }
 
@@ -218,10 +218,10 @@ export class RegressionSummaryComponent implements OnInit {
     return this.apiService.get("/regression/scripts").pipe(switchMap(response => {
       response.data.forEach(entry => {
         this.scriptInfoMap[entry.script_path] = {entry: entry};
-        this.scriptPkToEntry[entry.pk] = {entry: entry};
+        this.scriptIdToEntry[entry.id] = {entry: entry};
         if (entry.baseline_suite_execution_id > 0) {
           let payload = {suite_execution_id: entry.baseline_suite_execution_id};
-          return this.apiService.post('/regression/script_execution/' + entry.pk, payload ).subscribe(response => {
+          return this.apiService.post('/regression/script_execution/' + entry.id, payload ).subscribe(response => {
             this.scriptInfoMap[entry.script_path]["baselineResults"] = response.data;
             //return of(true);
           });
@@ -369,9 +369,9 @@ export class RegressionSummaryComponent implements OnInit {
     this.detailedInfo = null;
   }
 
-  scriptPathToPk(scriptPath) {
+  scriptPathToId(scriptPath) {
     try {
-      return this.scriptInfoMap[scriptPath].entry.pk;
+      return this.scriptInfoMap[scriptPath].entry.id;
 
     } catch (err) {
       let i = 0;
@@ -714,7 +714,7 @@ export class RegressionSummaryComponent implements OnInit {
       suiteExecutionId = null;
     }
 
-    this.apiService.post("/regression/script_update/" + this.scriptInfoMap[scriptPath].entry.pk, payload).subscribe(response => {
+    this.apiService.post("/regression/script_update/" + this.scriptInfoMap[scriptPath].entry.id, payload).subscribe(response => {
       this.scriptInfoMap[scriptPath].entry.baseline_suite_execution_id = suiteExecutionId;
       //detailedInfo = {...detailedInfo};
       window.location.reload();

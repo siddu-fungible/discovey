@@ -731,6 +731,7 @@ def scripts(request):
                      "pk": regression_script.pk,
                      "bugs": [],
                      "test_cases": get_all_test_cases(regression_script.script_path),
+                     "id": regression_script.id,
                      "baseline_suite_execution_id": regression_script.baseline_suite_execution_id}
         if "__init__.py" in regression_script.script_path:
             continue
@@ -781,17 +782,17 @@ def script(request):
 
 @csrf_exempt
 @api_safe_json_response
-def script_update(request, pk):
+def script_update(request, id):
     result = None
     request_json = json.loads(request.body)
-    q = Q(pk=pk)
+    q = Q(id=id)
     script = RegresssionScripts.objects.get(q)
     if script:
         if "baseline_suite_execution_id" in request_json:
             script.baseline_suite_execution_id = request_json["baseline_suite_execution_id"]
         script.save()
     else:
-        logging.error("Could not find script with pk: {}".format(pk))
+        logging.error("Could not find script with id: {}".format(id))
 
     return result
 
@@ -955,11 +956,11 @@ def test_case_execution_info(request, test_case_execution_id):
 
 @csrf_exempt
 @api_safe_json_response
-def script_execution(request, pk):
+def script_execution(request, id):
     result = None
     try:
         request_json = json.loads(request.body)
-        r = RegresssionScripts.objects.get(pk=pk)
+        r = RegresssionScripts.objects.get(id=id)
         script_path = r.script_path
         q = Q(script_path=script_path)
         if "suite_execution_id" in request_json:
@@ -971,7 +972,7 @@ def script_execution(request, pk):
             result[test_case_execution.test_case_id] = {"execution_id": test_case_execution.execution_id,
                                                         "result": test_case_execution.result}
     except ObjectDoesNotExist:
-        raise Exception("Script with pk: {} does not exist".format(pk))
+        raise Exception("Script with id: {} does not exist".format(id))
     return result
 
 @csrf_exempt

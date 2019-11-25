@@ -4,8 +4,8 @@ import re
 import math
 import os
 
-LD_LIBRARY_PATH = "$LD_LIBRARY_PATH:/mnt/ws/fungible-rdma-core/build/lib/"
-PATH = "$PATH:/mnt/ws/fungible-rdma-core/build/bin/:/mnt/ws/fungible-perftest/"
+LD_LIBRARY_PATH = "/mnt/ws/fungible-rdma-core/build/lib/:$LD_LIBRARY_PATH"
+PATH = "/mnt/ws/fungible-rdma-core/build/bin/:/mnt/ws/fungible-perftest/:$PATH"
 
 
 class Rocetools:

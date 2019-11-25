@@ -32,12 +32,12 @@
 
 
       <tr class="form-group">
-        <td><label class="control-label col-sm-2" for="from_fun_os_sha">From FunOS commit: </label></td>
+        <td><label class="control-label col-sm-2" for="from_fun_os_sha">From FunOS commit:</label><small>Older/Passing</small></td>
         <td><input style="width: 400px" formControlName="from_fun_os_sha" id="from_fun_os_sha"></td>
       </tr>
 
       <tr class="form-group">
-        <td><label class="control-label col-sm-2" for="to_fun_os_sha">To FunOS commit: </label></td>
+        <td><label class="control-label col-sm-2" for="to_fun_os_sha">To FunOS commit:</label><small style="float: right">Newer/Failing</small></td>
         <td><input style="width: 400px" formControlName="to_fun_os_sha" id="to_fun_os_sha">
           <span *ngIf="!gitShasValid" style="margin-left: 20px">
               <button *ngIf="!validateShasStatus" class="btn btn-primary btn-sm" (click)="validateShas()">Validate
