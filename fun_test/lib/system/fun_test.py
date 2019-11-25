@@ -702,10 +702,13 @@ class FunTest:
             self.statistics_manager = StatisticsManager()
         return self.statistics_manager
 
-    def get_mongo_db_manager(self):
+    def get_mongo_db_manager(self, host=None):
         from lib.utilities.mongo_db_manager import MongoDbManager
         if not self.time_series_manager:
-            self.time_series_manager = MongoDbManager()
+            if host is None:
+                self.time_series_manager = MongoDbManager()
+            else:
+                self.time_series_manager = MongoDbManager(host=host)
         return self.time_series_manager
 
     def parse_string_to_json(self, string):

@@ -76,7 +76,14 @@ class MongoDbManager():
             print ("insert_one exception: {}".format(str(ex)))
         return result
 
+    def collections_count(self):
+        return len(self.get_all_collection_names())
 
+    def get_all_collection_names(self):
+        return self.db.collection_names()
+
+    def drop_collection(self, collection):
+        collection.drop()
 
 if __name__ == "__main2__":
     m = MongoDbManager()
