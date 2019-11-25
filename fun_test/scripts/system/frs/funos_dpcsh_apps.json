@@ -1,6 +1,6 @@
 {
-  "duration": 60,
-  "traffic_profile": ["crypto","zip","rcnvme","fio"],
+  "duration": 600,
+  "traffic_profile": ["zip", "crypto", "fio", "rcnvme"],
   "run_le_firewall": false,
   "boot_new_image": false,
   "add_to_database": false,
