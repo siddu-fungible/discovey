@@ -2,7 +2,7 @@ from lib.system.fun_test import *
 from lib.fun.fs import Fs
 from lib.topology.topology_helper import TopologyHelper
 
-
+fun_test.suite_execution_id = 123457
 class MyScript(FunTestScript):
     def describe(self):
         self.set_test_details(steps=

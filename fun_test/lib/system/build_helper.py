@@ -126,14 +126,14 @@ class BuildHelper():
         return result
 
 
-if __name__ == "__main2__":
-    boot_args = "app=jpeg_perf_test --test-exit-fast"
-    fun_os_make_flags = "XDATA_LISTS=/project/users/ashaikh/qa_test_inputs/jpeg_perf_inputs/perf_input.list"
+if __name__ == "__main__":
+    boot_args = ""
+    fun_os_make_flags = ""
 
-    build_helper = BuildHelper(boot_args=boot_args, fun_os_make_flags=fun_os_make_flags)
+    build_helper = BuildHelper(boot_args=boot_args)
     build_helper.build_emulation_image()
 
 
-if __name__ == "__main__":
+if __name__ == "__main_2__":
     bh = BuildHelper(parameters=None)
     bh.fetch_stable_master()
