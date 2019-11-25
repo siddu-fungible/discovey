@@ -712,6 +712,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       self.allDataSets = response.data;
       if (self.allDataSets.length === 0) {
         this.values = null;
+        this.status = null;
         return;
       }
 
@@ -854,6 +855,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.apiService.post('/metrics/scores', payload).subscribe((response: any) => {
       if (response.data.length === 0) {
         this.values = null;
+        this.status = null;
         return;
       }
       let filterDataSets = [];

@@ -71,6 +71,8 @@ class TestCaseTable {
 
 class ArtifactTree {
   root = {};
+  availableAssetTypes = new Set();
+  availableAssetIds = new Set();
 
   addArtifact(artifact: Artifact, staticLogDir: string) {
     if (!this.root.hasOwnProperty(artifact.data.asset_type)) {
@@ -90,6 +92,8 @@ class ArtifactTree {
       artifact.data.link = `${staticLogDir}/${parts[parts.length - 1]}`;
 
     }
+    this.availableAssetTypes.add(artifact.data.asset_type);
+    this.availableAssetIds.add(artifact.data.asset_id);
     categoryEntry.push(artifact);
   }
 
@@ -119,6 +123,7 @@ export class ScriptDetailComponent implements OnInit {
   values = [{data: [{y: 45}, {y: 51}, {y: 73}]}];
   series = [1, 2, 3];
   artifacts: Artifact [] = null;
+  artifactFilter = {assetType: null, assetId: null};
 
   constructor(private regressionService: RegressionService,
               private loggerService: LoggerService,

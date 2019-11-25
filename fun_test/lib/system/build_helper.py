@@ -13,13 +13,27 @@ class BuildHelper():
                  parameters,
                  max_build_time=60 * 25,
                  job_name="emulation/fun_on_demand",
-                 disable_assertions=None):
+                 pre_built_artifacts=None):
         self.parameters = parameters
         self.max_build_time = max_build_time
         self.jenkins_manager = JenkinsManager(job_name=job_name)
+        self.pre_built_artifacts = pre_built_artifacts
 
     def get_tftp_server(self):
         return Linux(host_ip=TFTP_SERVER_IP, ssh_username=TFTP_SERVER_SSH_USERNAME, ssh_password=TFTP_SERVER_SSH_PASSWORD)
+
+    def position_pre_built_artifacts(self, pre_built_artifacts):
+        filename = pre_built_artifacts["funos_binary"]
+        gz_filename = filename + ".gz"
+        new_gz_filename = "s_{}.gz".format(fun_test.get_suite_execution_id())
+
+        tftp_server = self.get_tftp_server()
+        tftp_server.command("cd {}".format(TFTP_DIRECTORY))
+        fun_test.simple_assert(tftp_server.list_files(TFTP_DIRECTORY + "/" + filename), "Image {} copied to TFTP server".format(filename))
+        tftp_server.command("gzip {}".format(filename))
+        fun_test.simple_assert(tftp_server.list_files(TFTP_DIRECTORY + "/" + gz_filename), "Gz Image ready on TFTP server".format(filename))
+        tftp_server.command("mv {} {}".format(gz_filename, new_gz_filename))
+        return new_gz_filename
 
     def build_emulation_image(self, submitter_email=None):
         result = None

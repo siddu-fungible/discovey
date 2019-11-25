@@ -209,17 +209,45 @@ class StripeVolAttachDetachTestScript(FunTestScript):
         self.funcp_obj = {}
         self.funcp_spec = {}
         for index in xrange(self.num_duts):
+            run_sc_restart_status = False
             # Removing existing db directories for fresh setup
             try:
-                if self.cleanup_sc_db:
-                    for directory in self.sc_db_directories:
-                        if self.come_obj[index].check_file_directory_exists(path=directory):
-                            fun_test.log("Removing Directory {}".format(directory))
-                            self.come_obj[index].sudo_command("rm -rf {}".format(directory))
-                            fun_test.test_assert_expected(actual=self.come_obj[index].exit_status(), expected=0,
-                                                          message="Directory {} is removed".format(directory))
-                        else:
-                            fun_test.log("Directory {} does not exist skipping deletion".format(directory))
+                if self.install == "fresh":
+                    if self.bundle_image_parameters:
+                        path = "{}/{}".format(self.sc_script_dir, self.run_sc_script)
+                        if self.come_obj[index].check_file_directory_exists(path=path):
+                            self.come_obj[index].command("cd {}".format(self.sc_script_dir))
+                            # restarting run_sc with -c option
+                            self.come_obj[index].command("sudo ./{} -c restart".format(self.run_sc_script))
+                            fun_test.test_assert_expected(expected=0, actual=self.come_obj[index].exit_status(),
+                                                          message="run_sc restarted with cleanup")
+                            # check if run_sc container is running
+                            run_sc_restart_cmd = "docker ps -a --format '{{.Names}}' | grep run_sc"
+                            timer = FunTimer(max_time=self.container_up_timeout)
+                            while not timer.is_expired():
+                                run_sc_name = self.come_obj[index].command(
+                                    run_sc_restart_cmd, timeout=self.command_timeout).split("\n")[0]
+                                if run_sc_name:
+                                    fun_test.log("run_sc container is up and running")
+                                    run_sc_restart_status = True
+                                    break
+                                else:
+                                    fun_test.sleep("for the run_sc docker container to start", 1)
+                            else:
+                                fun_test.critical("run_sc container is not restarted within {} seconds after "
+                                                  "cleaning up the DB".format(self.container_up_timeout))
+                                fun_test.test_assert(False, "Cleaning DB and restarting run_sc container")
+                    else:
+                        for directory in self.sc_db_directories:
+                            if self.come_obj[index].check_file_directory_exists(path=directory):
+                                fun_test.log("Removing Directory {}".format(directory))
+                                self.come_obj[index].sudo_command("rm -rf {}".format(directory))
+                                fun_test.test_assert_expected(actual=self.come_obj[index].exit_status(), expected=0,
+                                                              message="Directory {} is removed".format(directory))
+                            else:
+                                fun_test.log("Directory {} does not exist skipping deletion".format(directory))
+                else:
+                    fun_test.log("Skipping run_sc restart with cleanup")
             except Exception as ex:
                 fun_test.critical(str(ex))
 
@@ -240,8 +268,24 @@ class StripeVolAttachDetachTestScript(FunTestScript):
             for f1_index, container_name in enumerate(self.funcp_spec[index]["container_names"]):
                 if container_name == "run_sc":
                     continue
-                status = self.funcp_obj[index].container_info[container_name].ifconfig_up_down("fpg0", "up")
-                fun_test.test_assert(status, "FPG0 interface up in {}".format(container_name))
+                bond_interfaces = self.fs_spec[index].get_bond_interfaces(f1_index=f1_index)
+                bond_name = "bond0"
+                bond_ip = bond_interfaces[0].ip
+                self.f1_ips.append(bond_ip.split('/')[0])
+                slave_interface_list = bond_interfaces[0].fpg_slaves
+                slave_interface_list = [self.fpg_int_prefix + str(i) for i in slave_interface_list]
+                self.funcp_obj[index].configure_bond_interface(container_name=container_name,
+                                                               name=bond_name,
+                                                               ip=bond_ip,
+                                                               slave_interface_list=slave_interface_list)
+                # Configuring route
+                route = self.fs_spec[index].spec["bond_interface_info"][str(f1_index)][str(0)]["route"][0]
+                cmd = "sudo ip route add {} via {} dev {}".format(route["network"], route["gateway"], bond_name)
+                route_add_status = self.funcp_obj[index].container_info[container_name].command(cmd)
+                fun_test.test_assert_expected(expected=0,
+                                              actual=self.funcp_obj[index].container_info[
+                                                  container_name].exit_status(),
+                                              message="Configure Static route")
         # Creating storage controller API object for the first DUT in the current setup
         fun_test.sleep("", 60)
         self.sc_api_obj = StorageControllerApi(api_server_ip=self.come_obj[0].host_ip,
@@ -319,6 +363,13 @@ class StripeVolAttachDetachTestScript(FunTestScript):
                                      format(host_name, self.funcp_spec[0]["container_names"][index], ip))
 
     def cleanup(self):
+
+        if self.bundle_image_parameters:
+            try:
+                for index in xrange(self.num_duts):
+                    self.come_obj[index].command("sudo systemctl disable init-fs1600")
+            except Exception as ex:
+                fun_test.critical(str(ex))
 
         if fun_test.shared_variables["stripe_vol"]["setup_created"]:
             self.stripe_uuid = fun_test.shared_variables["stripe_uuid"]

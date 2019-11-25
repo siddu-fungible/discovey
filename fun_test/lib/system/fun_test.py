@@ -388,6 +388,7 @@ class FunTest:
         tftp_image_path = self.get_job_environment_variable("tftp_image_path")
         with_stable_master = self.get_job_environment_variable("with_stable_master")
         bundle_image_parameters = self.get_job_environment_variable("bundle_image_parameters")
+        pre_built_artifacts = self.get_job_environment_variable("pre_built_artifacts")
 
         if tftp_image_path:
             self.build_parameters["tftp_image_path"] = tftp_image_path
@@ -395,6 +396,8 @@ class FunTest:
             self.build_parameters["bundle_image_parameters"] = bundle_image_parameters
         elif with_stable_master:
             self.build_parameters["with_stable_master"] = with_stable_master
+        elif pre_built_artifacts:
+            self.build_parameters["pre_built_artifacts"] = pre_built_artifacts
         else:
             # Check if it was stored by a previous script
             tftp_image_path = self.get_stored_environment_variable(variable_name="tftp_image_path")
@@ -648,6 +651,15 @@ class FunTest:
         fun_test.log("Updating the tftp-image path: {}".format(self.build_parameters))
         return result
 
+    def position_pre_built_artifacts(self, pre_built_artifacts):
+        from lib.system.build_helper import BuildHelper
+        bh = BuildHelper(parameters=None, pre_built_artifacts=pre_built_artifacts)
+        result = bh.position_pre_built_artifacts(pre_built_artifacts=pre_built_artifacts)
+        if result:
+            self.update_job_environment_variable("tftp_image_path", result)
+        return result
+
+
     def build(self):
         from lib.system.build_helper import BuildHelper
         result = False
@@ -690,10 +702,13 @@ class FunTest:
             self.statistics_manager = StatisticsManager()
         return self.statistics_manager
 
-    def get_mongo_db_manager(self):
+    def get_mongo_db_manager(self, host=None):
         from lib.utilities.mongo_db_manager import MongoDbManager
         if not self.time_series_manager:
-            self.time_series_manager = MongoDbManager()
+            if host is None:
+                self.time_series_manager = MongoDbManager()
+            else:
+                self.time_series_manager = MongoDbManager(host=host)
         return self.time_series_manager
 
     def parse_string_to_json(self, string):
@@ -1768,6 +1783,9 @@ class FunTestScript(object):
 
             if fun_test.build_parameters and "with_stable_master" in fun_test.build_parameters and fun_test.build_parameters["with_stable_master"]:
                 fun_test.test_assert(fun_test.fetch_stable_master(fun_test.build_parameters["with_stable_master"]), "Fetch stable master image from dochub")
+
+            elif fun_test.build_parameters and "pre_built_artifacts" in fun_test.build_parameters:
+                fun_test.simple_assert(fun_test.position_pre_built_artifacts(pre_built_artifacts=fun_test.build_parameters["pre_built_artifacts"]), "Unable to setup pre-built artifacts")
 
             tftp_image_path_provided = "tftp_image_path" in fun_test.build_parameters and fun_test.build_parameters["tftp_image_path"]
             if fun_test.is_with_jenkins_build() and fun_test.suite_execution_id and not tftp_image_path_provided:

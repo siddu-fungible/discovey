@@ -4,6 +4,7 @@ from datetime import timedelta
 from dateutil import parser
 from fun_global import get_current_time
 import re
+import time
 
 class Commit():
     def __init__(self, sha, date):
@@ -24,7 +25,8 @@ class Commit():
 class GitManager:
     BASE_URL = "https://api.github.com"
     ORG = "fungible-inc"
-    TOKEN = "6e7ab48474553bbabceeefde388339204ecd6c0f"
+    #TOKEN = "6e7ab48474553bbabceeefde388339204ecd6c0f"
+    TOKEN = "f7d415ebb9247bb8ba41f77c3f5672cf40d3900e"
 
     def get_funsdk_build_props(self, build_number):
         url = "http://dochub.fungible.local/doc/jenkins/funsdk/{}/bld_props.json".format(build_number)
@@ -103,13 +105,15 @@ class GitManager:
                 results = [x for x in response if x["commit"]["message"].startswith("Merge")]
                 response = [Commit(sha=x["sha"], date=x["commit"]["committer"]["date"]) for x in results]
                 all_commits.extend(response)
+            print("Sleeping for 1 second")
+            time.sleep(1)
         return all_commits
 
 
     def get_commit(self, sha, repository_name="FunOS"):
         result = None
         url = "{}/repos/{}/{}/commits/{}".format(self.BASE_URL, self.ORG, repository_name, sha)
-        r = requests.get(url=url, headers={'Authorization': 'token {}'.format(self.TOKEN)})
+        r = requests.get(url=url, headers={'Authorization': 'token {}'.format(self.TOKEN)}, verify=True)
         if r.status_code == 200:
             result = r.json()
             result = Commit(sha=result["sha"], date=result["commit"]["author"]["date"])
@@ -135,15 +139,17 @@ if __name__ == "__main__":
     from_sha = "a11bab8"
     to_sha = "178b6eb"
 
-    gm.get_bld_tags()
-
     """
+    gm.get_bld_tags()
+    """
+
+
     commits = gm.get_commits_between(from_sha=from_sha, to_sha=to_sha)
     print("Num commits: {}".format(len(commits)))
     for commit in commits:
         print commit.sha, commit.date
-    """
 
 
-s1 = "2019-05-22T21:22:00Z"
-s2 = "2019-05-25T06:22:45Z"
+
+    s1 = "2019-05-22T21:22:00Z"
+    s2 = "2019-05-25T06:22:45Z"

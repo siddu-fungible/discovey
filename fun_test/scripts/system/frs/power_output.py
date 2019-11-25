@@ -2,7 +2,7 @@ from lib.system.fun_test import *
 from asset.asset_manager import AssetManager
 from lib.fun.fs import ComE, Bmc
 import bmc_commands
-import file_helper
+import self
 
 
 class Setup(FunTestScript):
@@ -78,9 +78,9 @@ class TestCase1(FunTestCase):
             raw_output, cal_output, result = bmc_commands.power_manager(bmc_handle=bmc_handle)
             time_now = datetime.datetime.now()
             print_data = {"output": raw_output, "time": time_now}
-            file_helper.add_data(f_power_shell, print_data, heading=heading)
+            self.add_data_to_file(f_power_shell, print_data, heading=heading)
             print_data = {"output": cal_output, "time": time_now}
-            file_helper.add_data(f_power_output, print_data, heading=heading)
+            self.add_data_to_file(f_power_output, print_data, heading=heading)
             fun_test.sleep("before next iteration", seconds=self.details["interval"])
             # file_helper.add_data(f_power_shell, one_dataset, heading="debug memory")
 

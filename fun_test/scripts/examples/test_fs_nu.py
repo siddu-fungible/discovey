@@ -22,8 +22,8 @@ class MyScript(FunTestScript):
         perf_listener_host_name = "poc-server-04"  # figure this out from the topology spec
         perf_listener_ip = "20.1.1.1"  # figure this out from the topology spec
         if test_bed_type == "fs-6":
-            perf_listener_host_name = "poc-server-02"  # figure this out from the topology spec
-            perf_listener_ip = "21.1.1.1"              # figure this out from the topology spec
+            perf_listener_host_name = "poc-server-01"  # figure this out from the topology spec
+            perf_listener_ip = "20.1.1.1"              # figure this out from the topology spec
 
         if test_bed_type == "fs-11":
             perf_listener_host_name = "poc-server-11"
@@ -46,11 +46,17 @@ class MyScript(FunTestScript):
 
         fpg_connected_hosts = topology.get_host_instances_on_fpg_interfaces(dut_index=0, f1_index=0)
         end_host = None
+
+        if test_bed_type == "fs-6":
+            end_host = fpg_connected_hosts["poc-server-01"]["host_obj"]
+
+        """
         for host_ip, host_info in fpg_connected_hosts.iteritems():
             fun_test.log("FPG: Host-IP: {}: host: {} Interfaces: {}".format(host_ip, str(host_info["host_obj"]), str(host_info["interfaces"])))
             end_host = host_info["host_obj"]
             break
-
+        """
+        
         csr_network = {
             "0": {
                 "test_interface_ip": "20.1.1.1/24",
@@ -93,7 +99,7 @@ class MyScript(FunTestScript):
         if test_bed_type == "fs-11":
             interface_name = "qfx"
         if test_bed_type == "fs-6":
-            configure_endhost_interface(end_host=end_host, test_network=csr_network["4"], interface_name=interface_name)
+            configure_endhost_interface(end_host=end_host, test_network=csr_network["0"], interface_name=interface_name)
         else:
             configure_endhost_interface(end_host=end_host, test_network=csr_network["0"], interface_name=interface_name)
 
