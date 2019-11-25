@@ -168,7 +168,7 @@ class RemoveOldCollections(FunTestCase):
                         if s and s.state <= JobStatusType.COMPLETED:
                             completed_time = s.completed_time
                             time_in_the_past = get_current_time() - timedelta(days=self.MAX_DAYS_IN_PAST)
-                            if completed_time < time_in_the_past:
+                            if completed_time < time_in_the_past and not s.preserve_logs:
                                 fun_test.log("Dropping collection {} {} {}".format(collection_name, suite_execution_id, s.completed_time))
                                 collection = mongo.get_collection(collection_name=collection_name)
                                 if collection:
