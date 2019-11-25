@@ -2554,7 +2554,7 @@ if __name__ == "__main__":
     one_data_set["inputs"] = {}
     one_data_set["output"] = {"name": "output_total_time", "min": 0, "max": -1, "expected": -1, "reference": -1,
                               "best": -1, "unit": PerfUnit.UNIT_SECS}
-    ml.create_leaf(chart_name="Job execution time (PR build)", internal_chart_name="job_execution_time_pr_build",
+    ml.create_leaf(chart_name="PR build time", internal_chart_name="pr_build_time",
                            data_sets=data_sets, leaf=True,
                            description="TBD",
                            owner_info=owner_info, source=source,

@@ -7323,8 +7323,8 @@
           },
           {
             "metric_model_name": "PrBuildTotalTimePerformance",
-            "name": "job_execution_time_pr_build",
-            "label": "Job execution time (PR build)",
+            "name": "pr_build_time",
+            "label": "PR build time",
             "children": []
           }
         ]
