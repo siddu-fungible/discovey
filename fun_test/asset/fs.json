@@ -1019,5 +1019,33 @@
       "password": "Precious1*",
       "host_ip": "192.168.8.124"
     }
+  }, {
+    "bmc": {
+      "mgmt_ssh_password": "superuser",
+      "mgmt_ssh_username": "sysadmin",
+      "mgmt_ip": "192.168.8.220"
+    },
+    "come": {
+      "mgmt_ssh_password": "123",
+      "mgmt_ssh_username": "fun",
+      "mgmt_ip": "192.168.8.178"
+    },
+    "name": "fs-133",
+    "workarounds": {
+      "skip_funeth_come_power_cycle": true
+    },
+    "revision": "2",
+    "fpga": {
+      "mgmt_ssh_password": "root",
+      "mgmt_ssh_username": "root",
+      "mgmt_ip": "192.168.8.222"
+    },
+    "apc_info": {
+      "username": "admin",
+      "outlet_number": 1,
+      "password": "Precious1*",
+      "host_ip": "192.168.8.125"
+    }
   }
+
 ]
