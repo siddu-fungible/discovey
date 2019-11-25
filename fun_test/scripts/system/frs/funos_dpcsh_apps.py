@@ -17,7 +17,7 @@ class ParsingFunos(FrsTestCase):
         self.stop_collection_of_stats_for_count(count=1)
         self.run_the_traffic()
         self.start_collecting_stats(heading="During traffic")
-        fun_test.sleep("For the apps to stop", seconds=600)
+        fun_test.sleep("For the apps to stop", seconds=self.duration)
         # timer = FunTimer(max_time=1200)
         # apps_are_done = False
         # while not timer.is_expired():
