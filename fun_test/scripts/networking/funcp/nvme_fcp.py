@@ -26,7 +26,6 @@ def add_to_data_base(value_dict):
 
     value_dict["date_time"] = get_data_collection_time()
     value_dict["version"] = fun_test.get_version()
-    print "HI there, the version is {}".format(value_dict["version"])
     value_dict["platform"] = FunPlatform.F1
     model_name = "NvmeFcpPerformance"
     status = fun_test.PASSED
@@ -80,6 +79,97 @@ def get_nvme_device(host_obj):
     return fio_filename
 
 
+def storage_cleanup(storage_obj, command_timeout=5):
+    # Clean the controllers
+    controller_info = storage_obj.peek("storage/ctrlr/nvme")
+    controller_data = controller_info["data"]
+    for huid, huvalue in controller_data.iteritems():
+        if huid != 7:
+            for cntlid, cntvalue in huvalue.iteritems():
+                for fnid, fnvalue in cntvalue.iteritems():
+                    for key_name, key_value in fnvalue.iteritems():
+                        if key_name.lower() == "name spaces":
+                            if key_value:
+                                volume_nsid_list = []
+                                for list_value in key_value:
+                                    for prop, value in list_value.iteritems():
+                                        if prop.lower() == "uuid":
+                                            volume_uuid = value
+                                        if prop.lower() == "nsid":
+                                            volume_nsid_list.append(value)
+                        if key_name.lower() == "controller uuid":
+                            if key_value:
+                                controller_uuid = key_value
+                                for vol_nsid in volume_nsid_list:
+                                    command_result = storage_obj.detach_volume_from_controller(
+                                        ctrlr_uuid=controller_uuid,
+                                        ns_id=vol_nsid,
+                                        command_duration=command_timeout)
+                                    fun_test.simple_assert(command_result["status"],
+                                                           "Detach controller with uuid {} & nsid {}".
+                                                           format(controller_uuid, vol_nsid))
+                                command_result = storage_obj.delete_controller(ctrlr_uuid=controller_uuid,
+                                                                               command_duration=command_timeout)
+                                fun_test.simple_assert(command_result["status"],
+                                                       "Deleting controller with uuid {}".
+                                                       format(controller_uuid))
+    for huid, huvalue in controller_data.iteritems():
+        if huid == 7:
+            for cntlid, cntvalue in huvalue.iteritems():
+                for fnid, fnvalue in cntvalue.iteritems():
+                    for key_name, key_value in fnvalue.iteritems():
+                        if key_name.lower() == "name spaces":
+                            if key_value:
+                                volume_nsid_list = []
+                                for list_value in key_value:
+                                    for prop, value in list_value.iteritems():
+                                        if prop.lower() == "uuid":
+                                            volume_uuid = value
+                                        if prop.lower() == "nsid":
+                                            volume_nsid_list.append(value)
+                        if key_name.lower() == "controller uuid":
+                            if key_value:
+                                controller_uuid = key_value
+                                for vol_nsid in volume_nsid_list:
+                                    command_result = storage_obj.detach_volume_from_controller(
+                                        ctrlr_uuid=controller_uuid,
+                                        ns_id=vol_nsid,
+                                        command_duration=command_timeout)
+                                    fun_test.simple_assert(command_result["status"],
+                                                           "Detach controller with uuid {} & nsid {}".
+                                                           format(controller_uuid, vol_nsid))
+                                command_result = storage_obj.delete_controller(ctrlr_uuid=controller_uuid,
+                                                                               command_duration=command_timeout)
+                                fun_test.simple_assert(command_result["status"],
+                                                       "Deleting controller with uuid {}".
+                                                       format(controller_uuid))
+
+    # Clean the volumes
+    volume_info = storage_obj.peek("storage/volumes")
+    volume_data = volume_info["data"]
+    for vol_type, vol_data in volume_data.iteritems():
+        if vol_type != "VOL_TYPE_BLK_LOCAL_THIN":
+            for vol_uuid, vol_stats in vol_data.iteritems():
+                if vol_stats:
+                    command_result = storage_obj.delete_volume(type=vol_type, uuid=vol_uuid,
+                                                               command_duration=command_timeout)
+                    fun_test.simple_assert(command_result["status"], "Deleting volume of type {} with uuid {}".
+                                           format(vol_type, vol_uuid))
+
+    for vol_type, vol_data in volume_data.iteritems():
+        if vol_type == "VOL_TYPE_BLK_LOCAL_THIN":
+            for vol_uuid, vol_stats in vol_data.iteritems():
+                if vol_uuid == "drives":
+                    pass
+                else:
+                    if vol_stats:
+                        command_result = storage_obj.delete_volume(type=vol_type, uuid=vol_uuid,
+                                                                   command_duration=command_timeout)
+                        fun_test.simple_assert(command_result["status"], "Deleting volume of type {} with uuid {}".
+                                               format(vol_type, vol_uuid))
+    storage_obj.disconnect()
+
+
 def get_numa(host_obj):
     device_id = host_obj.lspci(grep_filter="1dad")
     if not device_id:
@@ -106,7 +196,10 @@ class ScriptSetup(FunTestScript):
         fun_test.shared_variables["fio"] = {}
 
     def cleanup(self):
-        pass
+        f1_target_storage_obj = fun_test.shared_variables["f1_target_storage_obj"]
+        f1_initiator_storage_obj = fun_test.shared_variables["f1_initiator_storage_obj"]
+        storage_cleanup(f1_initiator_storage_obj)
+        storage_cleanup(f1_target_storage_obj)
 
 
 class BringupSetup(FunTestCase):
@@ -191,6 +284,18 @@ class BringupSetup(FunTestCase):
             fun_test.shared_variables["rds_conn"] = job_inputs["rds_conn"]
         else:
             fun_test.shared_variables["rds_conn"] = False
+        if "f1_target" in job_inputs:
+            fun_test.shared_variables["f1_target"] = job_inputs["f1_target"]
+        else:
+            fun_test.shared_variables["f1_target"] = "f10"
+        if "rds_vol_transport" in job_inputs:
+            fun_test.shared_variables["rds_vol_transport"] = unicode(job_inputs["rds_vol_transport"]).upper()
+        else:
+            fun_test.shared_variables["rds_vol_transport"] = "RDS"
+        if "split_ssd" in job_inputs:
+            fun_test.shared_variables["split_ssd"] = job_inputs["split_ssd"]
+        else:
+            fun_test.shared_variables["split_ssd"] = 0
 
         if deploy_setup:
             funcp_obj = FunControlPlaneBringup(fs_name=self.server_key["fs"][fs_name]["fs-name"])
@@ -251,9 +356,6 @@ class BringupSetup(FunTestCase):
                                             % servers_mode[server])
 
             # Bringup FunCP
-            print "******** ******** ******** ******** ******** ******** ******** ******** ******** "
-            print "Manu, you are using a workaround in funcp_config.py line 201 to prevent timeout"
-            print "******** ******** ******** ******** ******** ******** ******** ******** ******** "
             fun_test.test_assert(expression=funcp_obj.bringup_funcp(prepare_docker=False), message="Bringup FunCP")
             # Assign MPG IPs from dhcp
             funcp_obj.assign_mpg_ips(static=self.server_key["fs"][fs_name]["mpg_ips"]["static"],
@@ -445,7 +547,7 @@ class ConfigureRdsVol(FunTestCase):
         deploy_vol = fun_test.shared_variables["deploy_vol"]
         skip_ctrlr_creation = fun_test.shared_variables["skip_ctrlr_creation"]
         total_ssd = fun_test.shared_variables["total_ssd"]
-
+        split_ssd = fun_test.shared_variables["split_ssd"]
         config_file = fun_test.get_script_name_without_ext() + ".json"
         config_dict = utils.parse_file_to_json(config_file)
 
@@ -476,22 +578,44 @@ class ConfigureRdsVol(FunTestCase):
             fun_test.log("F11 vlan IP {} is not valid".format(ip))
             fun_test.simple_assert(False, "F11 vlan IP is in wrong format")
 
-        # Stop udev services on host
-        service_list = ["systemd-udevd-control.socket", "systemd-udevd-kernel.socket", "systemd-udevd"]
-        for service in service_list:
-            for f10_obj in f10_hosts:
-                service_status = f10_obj["handle"].systemctl(service_name=service, action="stop")
-                fun_test.simple_assert(service_status, "Stopping {} service on {}".format(service, f10_obj["name"]))
-
-            for f11_obj in f11_hosts:
-                service_status = f11_obj["handle"].systemctl(service_name=service, action="stop")
-                fun_test.simple_assert(service_status, "Stopping {} service on {}".format(service, f11_obj["name"]))
-        
         # Storage Controller Objects
         f10_storage_ctrl_obj = fun_test.shared_variables["f10_storage_controller"]
         f11_storage_ctrl_obj = fun_test.shared_variables["f11_storage_controller"]
-        fun_test.shared_variables["f10_storage_ctrl_obj"] = f10_storage_ctrl_obj
-        fun_test.shared_variables["f11_storage_ctrl_obj"] = f11_storage_ctrl_obj
+        f1_target = fun_test.shared_variables["f1_target"]
+        if f1_target == "f10":
+            fun_test.log_section("Target is F10")
+            f1_initiator = "f11"
+            f1_target_storage_obj = f10_storage_ctrl_obj
+            f1_initiator_storage_obj = f11_storage_ctrl_obj
+            fun_test.shared_variables["f1_target_storage_obj"] = f1_target_storage_obj
+            fun_test.shared_variables["f1_initiator_storage_obj"] = f1_initiator_storage_obj
+            target_ip = f10_vlan_ip
+            initiator_ip = f11_vlan_ip
+            hu_id = [1, 3]
+            fun_test.shared_variables["initiator_hosts"] = fun_test.shared_variables["f11_hosts"]
+            # Stop udev services on host
+            service_list = ["systemd-udevd-control.socket", "systemd-udevd-kernel.socket", "systemd-udevd"]
+            for service in service_list:
+                for f11_obj in f11_hosts:
+                    service_status = f11_obj["handle"].systemctl(service_name=service, action="stop")
+                    fun_test.simple_assert(service_status, "Stopping {} service on {}".format(service, f11_obj["name"]))
+        elif f1_target == "f11":
+            fun_test.log_section("Target is F11")
+            f1_initiator = "f10"
+            f1_target_storage_obj = f11_storage_ctrl_obj
+            f1_initiator_storage_obj = f10_storage_ctrl_obj
+            fun_test.shared_variables["f1_target_storage_obj"] = f1_target_storage_obj
+            fun_test.shared_variables["f1_initiator_storage_obj"] = f1_initiator_storage_obj
+            target_ip = f11_vlan_ip
+            initiator_ip = f10_vlan_ip
+            hu_id = [2, 1]
+            fun_test.shared_variables["initiator_hosts"] = fun_test.shared_variables["f10_hosts"]
+            # Stop udev services on host
+            service_list = ["systemd-udevd-control.socket", "systemd-udevd-kernel.socket", "systemd-udevd"]
+            for service in service_list:
+                for f10_obj in f10_hosts:
+                    service_status = f10_obj["handle"].systemctl(service_name=service, action="stop")
+                    fun_test.simple_assert(service_status, "Stopping {} service on {}".format(service, f10_obj["name"]))
 
         if not skip_ctrlr_creation:
             # Create IPCFG on F1_0
@@ -502,48 +626,49 @@ class ConfigureRdsVol(FunTestCase):
             command_result = f11_storage_ctrl_obj.ip_cfg(ip=f11_vlan_ip, port=controller_port)
             fun_test.test_assert(command_result["status"], "ip_cfg on F1_1 COMe")
 
-            # Get list of drives on F1_1
-            drive_dict = f10_storage_ctrl_obj.peek("storage/volumes/VOL_TYPE_BLK_LOCAL_THIN/drives",
-                                                   command_duration=command_timeout)
+            # Get list of drives on target
+            drive_dict = f1_target_storage_obj.peek("storage/volumes/VOL_TYPE_BLK_LOCAL_THIN/drives",
+                                                    command_duration=command_timeout)
             drive_uuid_list = sorted(drive_dict["data"].keys())
-            f10_drive_count = len(drive_uuid_list)
+            target_drive_count = len(drive_uuid_list)
 
-            fun_test.test_assert(expression=(f10_drive_count >= total_ssd),
-                                 message="SSD count on F10 of FS is {}, test requirement : {}".
-                                 format(f10_drive_count, total_ssd))
+            fun_test.test_assert(expression=(target_drive_count >= total_ssd),
+                                 message="SSD count on {} target of FS is {}, test requirement : {}".
+                                 format(f1_target, target_drive_count, total_ssd))
 
-            # Create RDS controller on F1_0
-            f10_rds_ctrl = utils.generate_uuid()
-            command_result = f10_storage_ctrl_obj.create_controller(ctrlr_uuid=f10_rds_ctrl,
-                                                                    transport="RDS",
-                                                                    nqn="nqn1",
-                                                                    port=controller_port,
-                                                                    remote_ip=f11_vlan_ip,
-                                                                    command_duration=command_timeout)
+            # Create RDS controller on target
+            target_rds_ctrl = utils.generate_uuid()
+            command_result = f1_target_storage_obj.create_controller(ctrlr_uuid=target_rds_ctrl,
+                                                                     transport="RDS",
+                                                                     nqn="nqn1",
+                                                                     port=controller_port,
+                                                                     remote_ip=initiator_ip,
+                                                                     command_duration=command_timeout)
             fun_test.simple_assert(command_result["status"],
-                                   "F1_0 : Creation of RDS controller with uuid {}".format(f10_rds_ctrl))
+                                   "{} : Creation of RDS controller with uuid {}".format(f1_target, target_rds_ctrl))
 
         if deploy_vol:
             drive_index = 0
-            f11_rds_vol = {}
+            initiator_rds_vol = {}
             blt_uuid = {}
             for x in xrange(1, total_ssd + 1):
-                # Create BLT on F1_0 on each SSD & attach it to RDS controller
+                # Create BLT on target on each SSD & attach it to RDS controller
                 blt_name = "thin_blt_" + str(x)
                 blt_uuid[x] = utils.generate_uuid()
-                command_result = f10_storage_ctrl_obj.create_volume(type="VOL_TYPE_BLK_LOCAL_THIN",
-                                                                    capacity=drive_size,
-                                                                    block_size=block_size,
-                                                                    name=blt_name,
-                                                                    uuid=blt_uuid[x],
-                                                                    drive_uuid=drive_uuid_list[drive_index].strip(),
-                                                                    command_duration=command_timeout)
-                fun_test.simple_assert(command_result["status"], "Creation of BLT with uuid {} on F10".format(blt_uuid))
+                command_result = f1_target_storage_obj.create_volume(type="VOL_TYPE_BLK_LOCAL_THIN",
+                                                                     capacity=drive_size,
+                                                                     block_size=block_size,
+                                                                     name=blt_name,
+                                                                     uuid=blt_uuid[x],
+                                                                     drive_uuid=drive_uuid_list[drive_index].strip(),
+                                                                     command_duration=command_timeout)
+                fun_test.simple_assert(command_result["status"], "Creation of BLT with uuid {} on {}".format(blt_uuid,
+                                                                                                             f1_target))
                 drive_index += 1
         if not deploy_vol and not skip_ctrlr_creation:
             fun_test.log("Volumes not deployed...")
-            drive_dict = f10_storage_ctrl_obj.peek("storage/volumes/VOL_TYPE_BLK_LOCAL_THIN",
-                                                   command_duration=command_timeout)
+            drive_dict = f1_target_storage_obj.peek("storage/volumes/VOL_TYPE_BLK_LOCAL_THIN",
+                                                    command_duration=command_timeout)
             blt_uuid = {}
             count = 1
             for key in drive_dict["data"]:
@@ -551,89 +676,100 @@ class ConfigureRdsVol(FunTestCase):
                     blt_uuid[count] = key
                     count += 1
             if count == 1:
-                fun_test.test_assert(False, "F1_0 : BLT not found")
+                fun_test.test_assert(False, "{} : BLT not found".format(f1_target))
 
         if not skip_ctrlr_creation:
             # fun_test.sleep("Here", 10)
-            # Create PCIe controller on F1_1
-            f11_pcie_ctrl = utils.generate_uuid()
-            command_result = f11_storage_ctrl_obj.create_controller(transport="PCI",
-                                                                    ctrlr_uuid=f11_pcie_ctrl,
-                                                                    ctlid=0,
-                                                                    huid=1,
-                                                                    fnid=2,
-                                                                    command_duration=command_timeout)
-            fun_test.simple_assert(command_result["status"], "F1_1 : Create PCIe controller")
-            if total_ssd == 4:
-                f11_pcie_ctrl_1 = utils.generate_uuid()
-                command_result = f11_storage_ctrl_obj.create_controller(transport="PCI",
-                                                                        ctrlr_uuid=f11_pcie_ctrl_1,
+            # Create PCIe controller on Initiator
+            initiator_pcie_ctrl = utils.generate_uuid()
+            command_result = f1_initiator_storage_obj.create_controller(transport="PCI",
+                                                                        ctrlr_uuid=initiator_pcie_ctrl,
                                                                         ctlid=0,
-                                                                        huid=3,
+                                                                        huid=hu_id[0],
                                                                         fnid=2,
                                                                         command_duration=command_timeout)
-                fun_test.simple_assert(command_result["status"], "F1_1 : Create PCIe controller on HUID:3")
+            fun_test.simple_assert(command_result["status"], "{} : Create PCIe controller".format(f1_initiator))
+            if total_ssd == 4 or split_ssd:
+                initiator_pcie_ctrl_1 = utils.generate_uuid()
+                command_result = f1_initiator_storage_obj.create_controller(transport="PCI",
+                                                                            ctrlr_uuid=initiator_pcie_ctrl_1,
+                                                                            ctlid=0,
+                                                                            huid=hu_id[1],
+                                                                            fnid=2,
+                                                                            command_duration=command_timeout)
+                fun_test.simple_assert(command_result["status"], "{}: Create PCIe controller on HUID:{}".
+                                       format(f1_initiator, hu_id[1]))
 
             for x in xrange(1, total_ssd + 1):
-                # Attach the BLT volume on F1_0 to RDS controller
-                command_result = f10_storage_ctrl_obj.attach_volume_to_controller(vol_uuid=blt_uuid[x],
-                                                                                  ctrlr_uuid=f10_rds_ctrl,
-                                                                                  ns_id=x,
-                                                                                  command_duration=command_timeout)
-                fun_test.simple_assert(command_result["status"], "F1_0 : Attach thin_blt_{} to RDS ctrl".format(x))
+                # Attach the BLT volume on target to RDS controller
+                command_result = f1_target_storage_obj.attach_volume_to_controller(vol_uuid=blt_uuid[x],
+                                                                                   ctrlr_uuid=target_rds_ctrl,
+                                                                                   ns_id=x,
+                                                                                   command_duration=command_timeout)
+                fun_test.simple_assert(command_result["status"], "{} : Attach thin_blt_{} to RDS ctrl".format(f1_target,
+                                                                                                              x))
 
-                # Create RDS volume on F1_1
-                f11_rds_vol[x] = utils.generate_uuid()
+                # Create RDS volume on initiator
+                initiator_rds_vol[x] = utils.generate_uuid()
                 rds_vol_name = "rds_vol_" + str(x)
                 if fun_test.shared_variables["rds_conn"]:
                     rds_conn = fun_test.shared_variables["rds_conn"]
-                    command_result = f11_storage_ctrl_obj.create_volume(type="VOL_TYPE_BLK_RDS",
-                                                                        capacity=drive_size,
-                                                                        block_size=block_size,
-                                                                        name=rds_vol_name,
-                                                                        uuid=f11_rds_vol[x],
-                                                                        remote_nsid=x,
-                                                                        remote_ip=f10_vlan_ip,
-                                                                        port=controller_port,
-                                                                        transport="TCP",
-                                                                        connections=rds_conn,
-                                                                        command_duration=command_timeout)
+                    rds_vol_transport = fun_test.shared_variables["rds_vol_transport"]
+                    command_result = f1_initiator_storage_obj.create_volume(type="VOL_TYPE_BLK_RDS",
+                                                                            capacity=drive_size,
+                                                                            block_size=block_size,
+                                                                            name=rds_vol_name,
+                                                                            uuid=initiator_rds_vol[x],
+                                                                            remote_nsid=x,
+                                                                            remote_ip=target_ip,
+                                                                            port=controller_port,
+                                                                            transport=rds_vol_transport,
+                                                                            connections=rds_conn,
+                                                                            command_duration=command_timeout)
                     fun_test.simple_assert(command_result["status"],
-                                           "F1_1 : Created RDS vol using {} connections with remote nsid {}".
-                                           format(rds_conn, x))
+                                           "{} : Created RDS vol using {} connections with remote nsid {}".
+                                           format(f1_initiator, rds_conn, x))
                 else:
-                    command_result = f11_storage_ctrl_obj.create_volume(type="VOL_TYPE_BLK_RDS",
-                                                                        capacity=drive_size,
-                                                                        block_size=block_size,
-                                                                        name=rds_vol_name,
-                                                                        uuid=f11_rds_vol[x],
-                                                                        remote_nsid=x,
-                                                                        remote_ip=f10_vlan_ip,
-                                                                        port=controller_port,
-                                                                        command_duration=command_timeout)
+                    command_result = f1_initiator_storage_obj.create_volume(type="VOL_TYPE_BLK_RDS",
+                                                                            capacity=drive_size,
+                                                                            block_size=block_size,
+                                                                            name=rds_vol_name,
+                                                                            uuid=initiator_rds_vol[x],
+                                                                            remote_nsid=x,
+                                                                            remote_ip=target_ip,
+                                                                            port=controller_port,
+                                                                            command_duration=command_timeout)
                     fun_test.simple_assert(command_result["status"],
-                                           "F1_1 : Created RDS vol with remote nsid {}".format(x))
+                                           "{} : Created RDS vol with remote nsid {}".format(f1_initiator, x))
 
                 # Attach PCIe controller to host
                 if total_ssd == 4:
                     if x > 2:
-                        f11_ctrl = f11_pcie_ctrl_1
+                        initiator_ctrl = initiator_pcie_ctrl_1
                         fun_test.log("PCIe controller is HUID 3")
                     else:
-                        f11_ctrl = f11_pcie_ctrl
+                        initiator_ctrl = initiator_pcie_ctrl
+                        fun_test.log("PCIe controller is HUID 1")
+                elif split_ssd:
+                    if x > 1:
+                        initiator_ctrl = initiator_pcie_ctrl_1
+                        fun_test.log("PCIe controller is HUID 3")
+                    else:
+                        initiator_ctrl = initiator_pcie_ctrl
                         fun_test.log("PCIe controller is HUID 1")
                 else:
-                    f11_ctrl = f11_pcie_ctrl
+                    initiator_ctrl = initiator_pcie_ctrl
                     fun_test.log("Only one PCIe controller on HUID 1")
 
-                command_result = f11_storage_ctrl_obj.attach_volume_to_controller(vol_uuid=f11_rds_vol[x],
-                                                                                  ctrlr_uuid=f11_ctrl,
-                                                                                  ns_id=x,
-                                                                                  command_duration=command_timeout)
-                fun_test.simple_assert(command_result["status"], "F1_1 : Attach RDS vol {} to PCIe ctrlr".format(x))
+                command_result = f1_initiator_storage_obj.attach_volume_to_controller(vol_uuid=initiator_rds_vol[x],
+                                                                                      ctrlr_uuid=initiator_ctrl,
+                                                                                      ns_id=x,
+                                                                                      command_duration=command_timeout)
+                fun_test.simple_assert(command_result["status"], "{} : Attach RDS vol {} to PCIe ctrlr".
+                                       format(f1_initiator, x))
 
-            f10_storage_ctrl_obj.disconnect()
-            f11_storage_ctrl_obj.disconnect()
+            f1_initiator_storage_obj.disconnect()
+            f1_target_storage_obj.disconnect()
 
         fun_test.log_section("Storage config done")
 
@@ -655,13 +791,13 @@ class RunFioRds(FunTestCase):
     def run(self):
         global funcp_obj, servers_mode, servers_list, fs_name
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
-        f10_hosts = fun_test.shared_variables["f10_hosts"]
-        f11_hosts = fun_test.shared_variables["f11_hosts"]
+        initiator_hosts = fun_test.shared_variables["initiator_hosts"]
         come_obj = fun_test.shared_variables["come_obj"]
         total_ssd = fun_test.shared_variables["total_ssd"]
-        f10_storage_ctrl_obj = fun_test.shared_variables["f10_storage_ctrl_obj"]
-        f11_storage_ctrl_obj = fun_test.shared_variables["f11_storage_ctrl_obj"]
+        f1_target_storage_obj = fun_test.shared_variables["f1_target_storage_obj"]
+        f1_initiator_storage_obj = fun_test.shared_variables["f1_initiator_storage_obj"]
         skip_precondition = fun_test.shared_variables["skip_precondition"]
+        split_ssd = fun_test.shared_variables["split_ssd"]
         collect_stats = fun_test.shared_variables["collect_stats"]
 
         table_data_headers = ["Block_Size", "IOPs", "BW in Gbps"]
@@ -685,9 +821,9 @@ class RunFioRds(FunTestCase):
         if "fio_runtime" in job_inputs:
             self.fio_cmd_args["runtime"] = job_inputs["fio_runtime"]
 
-        if total_ssd == 4:
+        if total_ssd == 4 or split_ssd:
             host_dict = {}
-            for host in f11_hosts:
+            for host in initiator_hosts:
                 host_dict[host["name"]] = {}
                 host_dict[host["name"]]["handle"] = host["handle"]
                 host_dict[host["name"]]["nvme_device"] = get_nvme_device(host["handle"])
@@ -695,15 +831,15 @@ class RunFioRds(FunTestCase):
                 tune_host(host["handle"])
         else:
             host_dict = {}
-            host_dict[f11_hosts[0]["name"]] = {}
-            host_dict[f11_hosts[0]["name"]]["handle"] = f11_hosts[0]["handle"]
-            temp_nvme_devices = get_nvme_device(f11_hosts[0]["handle"])
+            host_dict[initiator_hosts[0]["name"]] = {}
+            host_dict[initiator_hosts[0]["name"]]["handle"] = initiator_hosts[0]["handle"]
+            temp_nvme_devices = get_nvme_device(initiator_hosts[0]["handle"])
             if not temp_nvme_devices:
                 fun_test.simple_assert(False, "NVMe device not found")
             temp_nvme_dev_list = temp_nvme_devices.split(":")[:total_ssd]
-            host_dict[f11_hosts[0]["name"]]["nvme_device"] = ":".join(temp_nvme_dev_list)
-            host_dict[f11_hosts[0]["name"]]["cpu_list"] = get_numa(f11_hosts[0]["handle"])
-            tune_host(f11_hosts[0]["handle"])
+            host_dict[initiator_hosts[0]["name"]]["nvme_device"] = ":".join(temp_nvme_dev_list)
+            host_dict[initiator_hosts[0]["name"]]["cpu_list"] = get_numa(initiator_hosts[0]["handle"])
+            tune_host(initiator_hosts[0]["handle"])
 
         if not skip_precondition:
             # Run write test on disk
@@ -768,38 +904,37 @@ class RunFioRds(FunTestCase):
 
         # Starting the thread to collect the vp_utils stats and resource_bam stats for the current iteration
         if collect_stats:
-            file_suffix_1 = "ssd_numjobs_{}_iodepth_{}_f10.txt".format(fio_read_jobs, fio_iodepth)
-            file_suffix_2 = "ssd_numjobs_{}_iodepth_{}_f11.txt".format(fio_read_jobs, fio_iodepth)
-            stats_collect_details_f10 = copy.deepcopy(stats_collection_details)
-            stats_collect_details_f11 = copy.deepcopy(stats_collection_details)
+            file_suffix_1 = "ssd_numjobs_{}_iodepth_{}_target.txt".format(fio_read_jobs, fio_iodepth)
+            file_suffix_2 = "ssd_numjobs_{}_iodepth_{}_initiator.txt".format(fio_read_jobs, fio_iodepth)
+            stats_collect_details_target = copy.deepcopy(stats_collection_details)
+            stats_collect_details_initiator = copy.deepcopy(stats_collection_details)
 
-            for index, stat_detail in enumerate(stats_collect_details_f10):
+            # Collect stats from target
+            for index, stat_detail in enumerate(stats_collect_details_target):
                 func = stat_detail.keys()[0]
-                stats_collect_details_f10[index][func]["count"] = stats_collect_count
-            fun_test.log("Different F10 stats collection thread details for the current IO depth {} before starting "
-                         "them:\n{}".format(fio_read_jobs, stats_collect_details_f10))
-            f10_storage_ctrl_obj.verbose = False
-            f10_stats_obj = CollectStats(storage_controller=f10_storage_ctrl_obj)
-            f10_stats_obj.start(file_suffix_1, stats_collect_details_f10)
-            fun_test.log("Different F10 stats collection thread details for the current IO depth {} after starting "
-                         "them:\n{}".format(fio_read_jobs, stats_collect_details_f10))
+                stats_collect_details_target[index][func]["count"] = stats_collect_count
+            fun_test.log("Different target stats collection thread details for the current IO depth {} before starting "
+                         "them:\n{}".format(fio_read_jobs, stats_collect_details_target))
+            f1_target_storage_obj.verbose = False
+            target_stats_obj = CollectStats(storage_controller=f1_target_storage_obj)
+            target_stats_obj.start(file_suffix_1, stats_collect_details_target)
+            fun_test.log("Different target stats collection thread details for the current IO depth {} after starting "
+                         "them:\n{}".format(fio_read_jobs, stats_collect_details_target))
 
-            for index, stat_detail in enumerate(stats_collect_details_f11):
+            # Collect stats from initiator
+            for index, stat_detail in enumerate(stats_collect_details_initiator):
                 func = stat_detail.keys()[0]
-                stats_collect_details_f11[index][func]["count"] = stats_collect_count
-            fun_test.log("Different F11 stats collection thread details for the current IO depth {} before starting "
-                         "them:\n{}".format(fio_read_jobs, stats_collect_details_f11))
-            f11_storage_ctrl_obj.verbose = False
-            f11_stats_obj = CollectStats(storage_controller=f11_storage_ctrl_obj)
-            f11_stats_obj.start(file_suffix_2, stats_collect_details_f11)
-
-            fun_test.log("Different F10 stats collection thread details for the current IO depth {} after starting "
-                         "them:\n{}".format(fio_read_jobs, stats_collect_details_f10))
-            fun_test.log("Different F11 stats collection thread details for the current IO depth {} after starting "
-                         "them:\n{}".format(fio_read_jobs, stats_collect_details_f11))
+                stats_collect_details_initiator[index][func]["count"] = stats_collect_count
+            fun_test.log("Different initiator stats collection thread details for the current IO depth {} "
+                         "before starting them:\n{}".format(fio_read_jobs, stats_collect_details_initiator))
+            f1_initiator_storage_obj.verbose = False
+            initiator_stats_obj = CollectStats(storage_controller=f1_initiator_storage_obj)
+            initiator_stats_obj.start(file_suffix_2, stats_collect_details_initiator)
+            fun_test.log("Different initiator stats collection thread details for the current IO depth {} "
+                         "after starting them:\n{}".format(fio_read_jobs, stats_collect_details_initiator))
         else:
-            f10_storage_ctrl_obj.disconnect()
-            f11_storage_ctrl_obj.disconnect()
+            f1_target_storage_obj.disconnect()
+            f1_initiator_storage_obj.disconnect()
             fun_test.critical("Stats collection disabled")
 
         thread_id = {}
@@ -839,12 +974,12 @@ class RunFioRds(FunTestCase):
                 fun_test.log("FIO read Output for volume {}:\n {}".format(ids, fio_output[ids]))
 
         if collect_stats:
-            f10_stats_obj.stop(stats_collect_details_f10)
-            f11_stats_obj.stop(stats_collect_details_f11)
-            f10_storage_ctrl_obj.verbose = True
-            f11_storage_ctrl_obj.verbose = True
-            f10_storage_ctrl_obj.disconnect()
-            f11_storage_ctrl_obj.disconnect()
+            target_stats_obj.stop(stats_collect_details_target)
+            initiator_stats_obj.stop(stats_collect_details_initiator)
+            f1_target_storage_obj.verbose = True
+            f1_initiator_storage_obj.verbose = True
+            f1_target_storage_obj.disconnect()
+            f1_initiator_storage_obj.disconnect()
 
         read_block_size = self.fio_cmd_args["bs"]
         total_read_iops = iops_sum
@@ -856,9 +991,9 @@ class RunFioRds(FunTestCase):
         table_data = {"headers": table_data_headers, "rows": table_data_rows}
         for x in range(0, 2):
             if x == 0:
-                stats_collect_details = stats_collect_details_f10
+                stats_collect_details = stats_collect_details_target
             elif x == 1:
-                stats_collect_details = stats_collect_details_f11
+                stats_collect_details = stats_collect_details_initiator
 
             for index, value in enumerate(stats_collect_details):
                 for func, arg in value.iteritems():
