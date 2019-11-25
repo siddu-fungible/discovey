@@ -373,13 +373,14 @@ export class SuiteDetailComponent implements OnInit, OnDestroy {
   }
 
   clickHistory(scriptId) {
-    let url = "/regression/script_history_page/" + this.scriptInfo[scriptId].pk;
+    let url = "/regression/script_history_page/" + scriptId;
     window.open(url, '_blank');
   }
 
+  /*
   scriptIdToPk(scriptId) {
     return this.scriptInfo[scriptId].pk;
-  }
+  }*/
 
   killClick() {
     let suiteId = this.suiteExecutionId;
