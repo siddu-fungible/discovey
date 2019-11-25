@@ -49,20 +49,6 @@
 
 }
 
-.fun-spacer {
-  width: 0;
-  border-right: 1px solid #E2E2E2;
-  height: 50px;
-  margin: 0 0.5em;
-}
-
-.fun-action-nav {
-  box-shadow: 0px 4px 4px 0px grey;
-  display: flex;
-  align-items: center;
-
-}
-
 .checkbox-text {
   font-family: Times;
   margin-left: 5px;
