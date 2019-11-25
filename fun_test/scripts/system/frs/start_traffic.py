@@ -977,7 +977,6 @@ class FrsTestCase(FunTestCase):
             track_app = fun_test.shared_variables["var_{}_f1_{}".format(app, f1)]
             fun_test.sleep("Before next iteration app: {}".format(app))
 
-
     def start_fio_traffic(self, percentage=100):
         fio_thread_map = {}
         fio_capacity_map = {"f1_0": 26843545600, "f1_1": 32212254720}
@@ -992,6 +991,7 @@ class FrsTestCase(FunTestCase):
                 fetch_nvme = fetch_nvme_device(come_handle, 1, size=fio_capacity_map["f1_{}".format(f1)])
                 if fetch_nvme["status"]:
                     fun_test.test_assert(True, "{} traffic started on F1_{}".format("fio", f1))
+                    self.fio_params["runtime"] = self.duration + 100
                     fio_thread_map["{}".format(f1)] = fun_test.execute_thread_after(func=self.func_fio,
                                                                                     time_in_seconds=5,
                                                                                     filename=fetch_nvme["nvme_device"],
