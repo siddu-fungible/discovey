@@ -2,7 +2,7 @@
   "duration": 60,
   "traffic_profile": ["crypto","zip","rcnvme"],
   "run_le_firewall": false,
-  "boot_new_image": false,
+  "boot_new_image": true,
   "add_to_database": false,
   "disable_f1_index": null,
   "ec_vol": false,
