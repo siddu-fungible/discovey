@@ -1008,6 +1008,7 @@
       "skip_funeth_come_power_cycle": true
     },
     "revision": "2",
+    "bundle_compatible": true,
     "fpga": {
       "mgmt_ssh_password": "root",
       "mgmt_ssh_username": "root",
@@ -1035,6 +1036,7 @@
       "skip_funeth_come_power_cycle": true
     },
     "revision": "2",
+    "bundle_compatible": true,
     "fpga": {
       "mgmt_ssh_password": "root",
       "mgmt_ssh_username": "root",
