@@ -7320,6 +7320,12 @@
             "name": "job_execution_time_fun_on_demand",
             "label": "Job execution time (Fun On Demand)",
             "children": []
+          },
+          {
+            "metric_model_name": "PrBuildTotalTimePerformance",
+            "name": "job_execution_time_pr_build",
+            "label": "Job execution time (PR build)",
+            "children": []
           }
         ]
       }
