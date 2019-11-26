@@ -18,17 +18,11 @@ python scripts/examples/sanity.py
 ~~~~
 
 
-### Setup with the web-server and databases
-The infrastructure uses the following:
-
-1. PostgreSQL as the SQL RDBMS
-2. Angular 6 for the web framework
-3. Django as the REST API server
-4. MongDB as the NoSQL database
-
+### Basic setup with the web-server and databases
+Please ensure the steps in the Quick-start section have been completed
 
 #### 1. Postgres setup
-##### Ubuntu installation:
+##### Installation on Ubuntu:
 ```
 # sudo apt-get install postgresql
 # update-rc.d postgresql enable
@@ -49,7 +43,7 @@ postgres-# \q
 
 ```
 
-##### Mac installation:
+##### Installation on the Mac:
 ```
 Install Xcode via the Appstore
 
@@ -72,23 +66,14 @@ postgres-# \q
 ```
 
 
-#### 2. Angular 6 installation
-```
-# cd Integration/fun_test/web/angular/qadashboard
-# brew install npm (For Mac only)
-# npm install -g @angular/cli
-# npm install
-
-```
-
-
-#### 3. Django installation
+#### 2. Starting the web-server
 Django will be installed via the instructions mentioned in the Quick-start section
 ````
 # cd /project/users/QA/regression/Integration/fun_test
 # export PYTHONPATH=`pwd`
 # cd web
-# export DEVELOPMENT_MODE=1; python start_development_server
+# export DEVELOPMENT_MODE=1;
 # python web/manage.py migrate --database=default
+# python start_development_server
 ````
 
