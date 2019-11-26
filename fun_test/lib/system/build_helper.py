@@ -43,7 +43,6 @@ class BuildHelper():
         max_tries = 3
         while not build_number and max_tries:
             max_tries -= 1
-            fun_test.log("Parameters {}".format(parameters))
             queue_item = self.jenkins_manager.build(params=parameters, extra_emails=[submitter_email])
             max_wait_for_build_start = 60 * 20
             build_start_timer = FunTimer(max_time=max_wait_for_build_start)
@@ -127,14 +126,14 @@ class BuildHelper():
         return result
 
 
-if __name__ == "__main__":
-    boot_args = ""
-    fun_os_make_flags = ""
+if __name__ == "__main2__":
+    boot_args = "app=jpeg_perf_test --test-exit-fast"
+    fun_os_make_flags = "XDATA_LISTS=/project/users/ashaikh/qa_test_inputs/jpeg_perf_inputs/perf_input.list"
 
-    build_helper = BuildHelper(boot_args=boot_args)
+    build_helper = BuildHelper(boot_args=boot_args, fun_os_make_flags=fun_os_make_flags)
     build_helper.build_emulation_image()
 
 
-if __name__ == "__main_2__":
+if __name__ == "__main__":
     bh = BuildHelper(parameters=None)
     bh.fetch_stable_master()
