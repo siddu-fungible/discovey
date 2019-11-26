@@ -1,5 +1,39 @@
 # Additional notes regarding the regression/production environment
 
+## Initial setup
+All configuration steps below need to be performed with "qa-admin" as the user
+
+### Account settings
+
+~~~~
+# sudo adduser qa-admin sudo
+# echo $PRODUCTION_MODE
+1
+# cat ~/.bash_profile
+if [ -f $HOME/.bashrc ]; then
+        source $HOME/.bashrc
+fi
+
+# export LC_ALL=en_US.UTF-8
+# export LANG=en_US.UTF-8
+qa-admin@qa-ubuntu-01:~$ cat ~/.bashrc
+# export PRODUCTION_MODE=1
+# export PYTHONPATH=/project/users/QA/regression/Integration/fun_test
+~~~~
+
+### iptables
+~~~~
+qa-admin@qa-ubuntu-01:/project/users/QA/regression/Integration/fun_test$  sudo iptables -i enp3s0f0 -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 5000
+~~~~
+
+## SSH settings
+~~~~
+qa-admin@qa-ubuntu-01:~$ grep Client /etc/ssh/sshd_config
+ClientAliveInterval 1200
+ClientAliveCountMax 3
+~~~~
+
+
 ## Postgres settings for the main regression server (Ubuntu only)
 ### Prepare the data-directory
 ~~~~
@@ -26,6 +60,24 @@ Feb 23 07:20:42 qa-ubuntu-01 systemd[1]: Starting PostgreSQL RDBMS...
 Feb 23 07:20:42 qa-ubuntu-01 systemd[1]: Started PostgreSQL RDBMS.
 ~~~~
 
+
+## Starting the scheduler
+- Ensure the web-server was started successfully
+- Ensure that 'ps -ef | grep scheduler_main' does not show any entry
+~~~~
+# cd /project/users/QA/regression/Integration/fun_test
+# export PYTHONPATH=`pwd`
+# export PRODUCTION_MODE=1
+# scheduler/restart_scheduler.sh
+~~~~
+
+## Re-starting the web-server
+~~~~
+# cd /project/users/QA/regression/Integration/fun_test
+# export PYTHONPATH=`pwd`
+# export PRODUCTION_MODE=1
+# ./web/restart_production_server.sh
+~~~~
 
 ## Debugging Postgres
 1. Check /var/log/syslog
@@ -97,4 +149,40 @@ If you encounter EBUSY: resource busy or locked, unlink, too often
 npm cache clean --force"
 npm install
 ~~~~
+
+
+#### Docker setup
+Enable Docker remote API
+~~~~
+qa-admin@qa-ubuntu-01:/project/users/QA/regression/Integration/fun_test$ grep ExecStart /lib/systemd/system/docker.service
+ExecStart=/usr/bin/dockerd -H fd:// -H=tcp://0.0.0.0:4243 $DOCKER_OPTS
+
+systemctl daemon-reload
+sudo service docker restart
+~~~~
+Verify Docker remote API
+~~~~
+qa-admin@qa-ubuntu-01:/project/users/QA/regression/Integration/fun_test$ curl http://127.0.0.1:4243/version
+{"Version":"1.13.1","ApiVersion":"1.26","MinAPIVersion":"1.12","GitCommit":"092cba3","GoVersion":"go1.6.2","Os":"linux","Arch":"amd64","KernelVersion":"4.4.0-87-generic","BuildTime":"2017-11-02T20:40:23.484070968+00:00"}
+~~~~
+
+
+## Data-store
+
+A place to store test-input files that are large.
+Currently, it is set to 'data_store' in the parent directory of the Integration repo.
+Ex: /project/users/QA/regression/data_store
+
+The data-store directory can be accessed using
+```
+from fun_settings import DATA_STORE_DIR
+```
+### Suggestions for the data-store directories layout
+
+```
+data_store/storage
+data_store/networking
+data_store/web_backup (Location of the regression/performance Db backup)
+data_store/job_backup (Location of the regression jobs log that are archived via web/fun_test/management/archiver.py)
+```
 

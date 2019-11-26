@@ -82,7 +82,6 @@ postgres-# \q
 ```
 
 
-
 #### 3. Django installation
 Django will be installed via the instructions mentioned in the Quick-start section
 ````
