@@ -95,7 +95,8 @@ class JenkinsManager():
                 if emails.endswith(","):
                     emails = emails[:-1]
             new_params["EXTRA_EMAIL"] = emails
-
+        fun_test.log("JOb name {}".format(self.job_name))
+        fun_test.log("Jenkins Parameteres {}".format(new_params))
         result = self.jenkins_server.build_job(self.job_name, new_params)
         fun_test.sleep(message="Waiting for build to be queued", seconds=40)
         queue_item = result

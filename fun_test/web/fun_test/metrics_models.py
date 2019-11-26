@@ -3089,3 +3089,17 @@ class PrBuildTotalTimePerformance(FunModel):
         for key, value in self.__dict__.iteritems():
             s += "{}:{} ".format(key, value)
         return s
+
+class IntegrationJobBuildTimePerformance(FunModel):
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+
+    output_total_time = models.FloatField(verbose_name="Total Time", default=-1)
+    output_total_time_unit = models.TextField(default=PerfUnit.UNIT_SECS)
+    run_time_id = models.IntegerField(default=None, null=True)
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s

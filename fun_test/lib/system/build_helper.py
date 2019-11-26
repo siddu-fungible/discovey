@@ -43,6 +43,7 @@ class BuildHelper():
         max_tries = 3
         while not build_number and max_tries:
             max_tries -= 1
+            fun_test.log("Parameters {}".format(parameters))
             queue_item = self.jenkins_manager.build(params=parameters, extra_emails=[submitter_email])
             max_wait_for_build_start = 60 * 20
             build_start_timer = FunTimer(max_time=max_wait_for_build_start)
