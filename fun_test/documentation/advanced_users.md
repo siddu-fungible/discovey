@@ -9,6 +9,19 @@ The following installation notes are meant for users who develop the web front-e
 # npm install
 ```
 
+### MongoDB installation
+```
+# sudo apt-get update
+# echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/4.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-4.0.list
+# sudo apt-get install -y mongodb-org
+# sudo apt-get install -y mongodb-org=4.0.13 mongodb-org-server=4.0.13 mongodb-org-shell=4.0.13 mongodb-org-mongos=4.0.13 mongodb-org-tools=4.0.13
+# qa-admin@qa-ubuntu-01:/etc/apt$ grep bind /etc/mongod.conf
+
+  bindIp: 0.0.0.0
+# sudo systemctl restart mongodb
+# ulimit -n 4096 (For Mac users only)
+```
+
 #### Starting/Re-starting the scheduler
 - Ensure the web-server was started successfully
 ~~~~
