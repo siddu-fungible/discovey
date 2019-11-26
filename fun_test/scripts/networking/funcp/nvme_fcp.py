@@ -55,6 +55,7 @@ def tune_host(host_obj):
 
 def get_nvme_device(host_obj):
     nvme_list_raw = host_obj.sudo_command("nvme list -o json")
+    host_obj.disconnect()
     if "failed to open" in nvme_list_raw.lower():
         nvme_list_raw = nvme_list_raw + "}"
         temp1 = nvme_list_raw.replace('\n', '')
@@ -67,14 +68,17 @@ def get_nvme_device(host_obj):
             nvme_list_raw = nvme_list_raw + "}"
             nvme_list_dict = json.loads(nvme_list_raw, strict=False)
 
-    nvme_device_list = []
-    for device in nvme_list_dict["Devices"]:
-        if "Non-Volatile memory controller: Vendor 0x1dad" in device["ProductName"]:
-            nvme_device_list.append(device["DevicePath"])
-        elif "unknown device" in device["ProductName"].lower() or "null" in device["ProductName"].lower():
-            if not device["ModelNumber"].strip() and not device["SerialNumber"].strip():
+    try:
+        nvme_device_list = []
+        for device in nvme_list_dict["Devices"]:
+            if "Non-Volatile memory controller: Vendor 0x1dad" in device["ProductName"]:
                 nvme_device_list.append(device["DevicePath"])
-    fio_filename = str(':'.join(nvme_device_list))
+            elif "unknown device" in device["ProductName"].lower() or "null" in device["ProductName"].lower():
+                if not device["ModelNumber"].strip() and not device["SerialNumber"].strip():
+                    nvme_device_list.append(device["DevicePath"])
+        fio_filename = str(':'.join(nvme_device_list))
+    except:
+        fio_filename = None
 
     return fio_filename
 
@@ -300,7 +304,6 @@ class BringupSetup(FunTestCase):
             if job_inputs["enable_debug"]:
                 f1_0_boot_args += " module_log=fabrics_target:DEBUG,fabrics_host:DEBUG"
                 f1_1_boot_args += " module_log=fabrics_target:DEBUG,fabrics_host:DEBUG"
-
 
         if deploy_setup:
             funcp_obj = FunControlPlaneBringup(fs_name=self.server_key["fs"][fs_name]["fs-name"])
@@ -598,12 +601,6 @@ class ConfigureRdsVol(FunTestCase):
             initiator_ip = f11_vlan_ip
             hu_id = [1, 3]
             fun_test.shared_variables["initiator_hosts"] = fun_test.shared_variables["f11_hosts"]
-            # Stop udev services on host
-            service_list = ["systemd-udevd-control.socket", "systemd-udevd-kernel.socket", "systemd-udevd"]
-            for service in service_list:
-                for f11_obj in f11_hosts:
-                    service_status = f11_obj["handle"].systemctl(service_name=service, action="stop")
-                    fun_test.simple_assert(service_status, "Stopping {} service on {}".format(service, f11_obj["name"]))
         elif f1_target == "f11":
             fun_test.log_section("Target is F11")
             f1_initiator = "f10"
@@ -615,12 +612,13 @@ class ConfigureRdsVol(FunTestCase):
             initiator_ip = f10_vlan_ip
             hu_id = [2, 1]
             fun_test.shared_variables["initiator_hosts"] = fun_test.shared_variables["f10_hosts"]
-            # Stop udev services on host
-            service_list = ["systemd-udevd-control.socket", "systemd-udevd-kernel.socket", "systemd-udevd"]
-            for service in service_list:
-                for f10_obj in f10_hosts:
-                    service_status = f10_obj["handle"].systemctl(service_name=service, action="stop")
-                    fun_test.simple_assert(service_status, "Stopping {} service on {}".format(service, f10_obj["name"]))
+
+        # Stop udev services on host
+        service_list = ["systemd-udevd-control.socket", "systemd-udevd-kernel.socket", "systemd-udevd"]
+        for service in service_list:
+            for host_obj in fun_test.shared_variables["initiator_hosts"]:
+                service_status = host_obj["handle"].systemctl(service_name=service, action="stop")
+                fun_test.simple_assert(service_status, "Stopping {} service on {}".format(service, host_obj["name"]))
 
         if not skip_ctrlr_creation:
             # Create IPCFG on F1_0
@@ -832,6 +830,10 @@ class RunFioRds(FunTestCase):
                 host_dict[host["name"]] = {}
                 host_dict[host["name"]]["handle"] = host["handle"]
                 host_dict[host["name"]]["nvme_device"] = get_nvme_device(host["handle"])
+                if not host_dict[host["name"]["nvme_device"]]:
+                    host_dict[host["name"]]["handle"].command("dmesg")
+                    fun_test.simple_assert(False, "NVMe device not found on {}".format(host["name"]))
+                host_dict[host["name"]]["handle"].command("dmesg")
                 host_dict[host["name"]]["cpu_list"] = get_numa(host["handle"])
                 tune_host(host["handle"])
         else:
@@ -840,7 +842,9 @@ class RunFioRds(FunTestCase):
             host_dict[initiator_hosts[0]["name"]]["handle"] = initiator_hosts[0]["handle"]
             temp_nvme_devices = get_nvme_device(initiator_hosts[0]["handle"])
             if not temp_nvme_devices:
-                fun_test.simple_assert(False, "NVMe device not found")
+                initiator_hosts[0]["name"]["handle"].command("dmesg")
+                fun_test.simple_assert(False, "NVMe device not found on {}".format(initiator_hosts[0]["name"]))
+            initiator_hosts[0]["name"]["handle"].command("dmesg")
             temp_nvme_dev_list = temp_nvme_devices.split(":")[:total_ssd]
             host_dict[initiator_hosts[0]["name"]]["nvme_device"] = ":".join(temp_nvme_dev_list)
             host_dict[initiator_hosts[0]["name"]]["cpu_list"] = get_numa(initiator_hosts[0]["handle"])
