@@ -5,6 +5,7 @@ from lib.utilities.jenkins_manager import JenkinsManager
 from lib.host.lsf_status_server import LsfStatusServer
 from web.fun_test.analytics_models_helper import ModelHelper, get_data_collection_time
 from web.fun_test.metrics_models import MetricChart
+from web.fun_test.models import Suite
 from web.fun_test.metrics_lib import MetricLib
 from web.fun_test.models_helper import get_suite_execution
 import time, psycopg2
@@ -229,7 +230,8 @@ class IntegrationJobBuildTimePerformanceTc(PalladiumTc):
     def run(self):
         try:
             self.result = fun_test.FAILED
-            self.timer = None
+            self.timer1 = None
+            self.timer2 = None
             test_bed_type = "fs-118"
             time_zone = "PST"
             build_parameters = {"RELEASE_BUILD": True,
@@ -243,7 +245,8 @@ class IntegrationJobBuildTimePerformanceTc(PalladiumTc):
             environment = {"test_bed_type": test_bed_type,
                            "with_jenkins_build": True,
                            "build_parameters": build_parameters}
-            suite_id = 199 #test_fs1600.json
+            suite = Suite.objects.filter(name="test_fs1600.json") #199-test_fs1600.json
+            suite_id = suite.first().id
             emails = ["ashwin.s@fungible.com", "john.abraham@fungible.com"]
             submitter_email = "ashwin.s@fungible.com"
             suite_execution_id = queue_job3(suite_id=suite_id,
@@ -265,18 +268,23 @@ class IntegrationJobBuildTimePerformanceTc(PalladiumTc):
                                 suite_type=SuiteType.STATIC,
                                 rich_inputs=None)
             fun_test.log("The returned suite_execution id is {}".format(suite_execution_id))
-            self.timer = FunTimer(max_time=4000)
-            while not self.timer.is_expired():
+            self.timer1 = FunTimer(max_time=4000)
+            while not self.timer1.is_expired():
                 suite_execution = get_suite_execution(suite_execution_id=suite_execution_id)
                 if suite_execution:
-                    if suite_execution.state <= JobStatusType.COMPLETED:
-                        self.total_time_taken = self.timer.elapsed_time()
+                    if self.timer2 and suite_execution.state <= JobStatusType.COMPLETED:
+                        self.total_time_taken = self.timer2.elapsed_time()
+                        self.result = suite_execution.result
                         fun_test.log("time taken is {}".format(self.total_time_taken))
                         break
-                    elif suite_execution.state == JobStatusType.IN_PROGRESS:
-                        self.timer = FunTimer(max_time=2000)
-                time.sleep(20)
-            if self.total_time_taken != -1:
+                    elif not self.timer2 and suite_execution.state == JobStatusType.IN_PROGRESS:
+                        self.timer2 = FunTimer(max_time=2000)
+                    elif not self.timer2 and suite_execution.state <= JobStatusType.COMPLETED:
+                        break
+                else:
+                    break
+                fun_test.sleep(message="Waiting to poll suite status", seconds=20)
+            if self.total_time_taken != -1 and self.result == fun_test.PASSED:
                 self.status = fun_test.PASSED
         except Exception as ex:
             self.status = fun_test.FAILED
