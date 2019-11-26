@@ -150,7 +150,7 @@ class RemoveOldCollections(FunTestCase):
     MAX_DAYS_IN_PAST = 30
 
     def describe(self):
-        self.set_test_details(id=5, summary="Remove collections older than {} days".format(self.MAX_DAYS_IN_PAST), steps=""" """)
+        self.set_test_details(id=6, summary="Remove collections older than {} days".format(self.MAX_DAYS_IN_PAST), steps=""" """)
 
     def setup(self):
         pass
