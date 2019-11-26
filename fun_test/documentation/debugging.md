@@ -1,78 +1,17 @@
-# Postgres installation notes:
+# Debugging
+## Location of the logs
+The web-server's logs are located under LOGS_DIR/web.log
 
-## Ubuntu installation:
-```
-# sudo apt-get install postgresql
-# update-rc.d postgresql enable
-# service postgresql start
+## Errors in Angular
 
-
-# sudo -u postgres -i
-# psql
-
-psql (9.5.14)
-Type "help" for help.
-
-postgres=# CREATE USER fun_test_user WITH PASSWORD 'fun123';
-CREATE ROLE
-postgres=# CREATE DATABASE fun_test;
-CREATE DATABASE
-postgres-# \q
-
-```
-
-## Mac installation:
-```
-Install Xcode via the Appstore
-
-In a terminal execute the below:
-# brew install postgres
-# brew services start postgresql
-
-
-# psql postgres
-
-psql (9.5.14)
-Type "help" for help.
-
-postgres=# CREATE USER fun_test_user WITH PASSWORD 'fun123';
-CREATE ROLE
-postgres=# CREATE DATABASE fun_test;
-CREATE DATABASE
-postgres-# \q
-
-```
-
-
-## Postgres settings for the main regression server (Ubuntu only)
-### Prepare the data-directory
+If you encounter EBUSY: resource busy or locked, unlink, too often
 ~~~~
-
-# mkdir /project/users/QA/regression/database
-
-qa-admin@qa-ubuntu-01:/project/users/QA/regression/Integration/fun_test$ grep "data_dir"   /etc/postgresql/9.5/main/postgresql.conf
-#data_directory = '/var/lib/postgresql/9.5/main'		# use data in another directory
-data_directory = '/project/users/QA/regression/database/postgresql’
-~~~~
-
-### Start the Postgres service
-~~~~
-qa-admin@qa-ubuntu-01:/project/users/QA/regression/Integration/fun_test$ sudo systemctl stop postgresql
-qa-admin@qa-ubuntu-01:/project/users/QA/regression/Integration/fun_test$ sudo systemctl start postgresql
-qa-admin@qa-ubuntu-01:/project/users/QA/regression/Integration/fun_test$ sudo systemctl status postgresql
-● postgresql.service - PostgreSQL RDBMS
-   Loaded: loaded (/lib/systemd/system/postgresql.service; enabled; vendor preset: enabled)
-   Active: active (exited) since Sat 2019-02-23 07:20:42 PST; 2s ago
-  Process: 27461 ExecStart=/bin/true (code=exited, status=0/SUCCESS)
- Main PID: 27461 (code=exited, status=0/SUCCESS)
-
-Feb 23 07:20:42 qa-ubuntu-01 systemd[1]: Starting PostgreSQL RDBMS...
-Feb 23 07:20:42 qa-ubuntu-01 systemd[1]: Started PostgreSQL RDBMS.
+npm cache clean --force"
+npm install
 ~~~~
 
 
-
-## Debugging postgres
+### Debugging Postgres
 1. Check /var/log/syslog
 2. Run without daemon mode:
     ~~~~
@@ -133,4 +72,3 @@ Feb 23 07:20:42 qa-ubuntu-01 systemd[1]: Started PostgreSQL RDBMS.
        On Ubuntu:
        sudo systemctl stop postgresql
        sudo systemctl start postgresql
-
