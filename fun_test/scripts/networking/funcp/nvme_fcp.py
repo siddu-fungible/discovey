@@ -842,9 +842,9 @@ class RunFioRds(FunTestCase):
             host_dict[initiator_hosts[0]["name"]]["handle"] = initiator_hosts[0]["handle"]
             temp_nvme_devices = get_nvme_device(initiator_hosts[0]["handle"])
             if not temp_nvme_devices:
-                initiator_hosts[0]["name"]["handle"].command("dmesg")
+                initiator_hosts[0]["handle"].command("dmesg")
                 fun_test.simple_assert(False, "NVMe device not found on {}".format(initiator_hosts[0]["name"]))
-            initiator_hosts[0]["name"]["handle"].command("dmesg")
+            initiator_hosts[0]["handle"].command("dmesg")
             temp_nvme_dev_list = temp_nvme_devices.split(":")[:total_ssd]
             host_dict[initiator_hosts[0]["name"]]["nvme_device"] = ":".join(temp_nvme_dev_list)
             host_dict[initiator_hosts[0]["name"]]["cpu_list"] = get_numa(initiator_hosts[0]["handle"])
