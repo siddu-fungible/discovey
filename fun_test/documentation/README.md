@@ -77,3 +77,6 @@ Django will be installed via the instructions mentioned in the Quick-start secti
 # python start_development_server
 ````
 
+
+## Notes for advanced users
+https://github.com/fungible-inc/Integration/blob/master/fun_test/documentation/advanced_users.md
