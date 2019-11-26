@@ -140,7 +140,8 @@ class CheckMongoCollectionCount(FunTestCase):
 
     def run(self):
         m = fun_test.get_mongo_db_manager()
-        fun_test.test_assert(m.collections_count() < self.MAX_COLLECTIONS, "Mongodb collections < {}".format(self.MAX_COLLECTIONS))
+        collection_count = m.collections_count()
+        fun_test.test_assert(collection_count < self.MAX_COLLECTIONS, "Mongodb collections < {}. Actual: {}".format(self.MAX_COLLECTIONS, collection_count))
 
     def cleanup(self):
         pass
