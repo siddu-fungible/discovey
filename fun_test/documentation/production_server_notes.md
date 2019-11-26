@@ -1,48 +1,4 @@
-# Postgres installation notes:
-
-## Ubuntu installation:
-```
-# sudo apt-get install postgresql
-# update-rc.d postgresql enable
-# service postgresql start
-
-
-# sudo -u postgres -i
-# psql
-
-psql (9.5.14)
-Type "help" for help.
-
-postgres=# CREATE USER fun_test_user WITH PASSWORD 'fun123';
-CREATE ROLE
-postgres=# CREATE DATABASE fun_test;
-CREATE DATABASE
-postgres-# \q
-
-```
-
-## Mac installation:
-```
-Install Xcode via the Appstore
-
-In a terminal execute the below:
-# brew install postgres
-# brew services start postgresql
-
-
-# psql postgres
-
-psql (9.5.14)
-Type "help" for help.
-
-postgres=# CREATE USER fun_test_user WITH PASSWORD 'fun123';
-CREATE ROLE
-postgres=# CREATE DATABASE fun_test;
-CREATE DATABASE
-postgres-# \q
-
-```
-
+# Additional notes regarding the regression/production environment
 
 ## Postgres settings for the main regression server (Ubuntu only)
 ### Prepare the data-directory
@@ -71,8 +27,7 @@ Feb 23 07:20:42 qa-ubuntu-01 systemd[1]: Started PostgreSQL RDBMS.
 ~~~~
 
 
-
-## Debugging postgres
+## Debugging Postgres
 1. Check /var/log/syslog
 2. Run without daemon mode:
     ~~~~
@@ -133,4 +88,13 @@ Feb 23 07:20:42 qa-ubuntu-01 systemd[1]: Started PostgreSQL RDBMS.
        On Ubuntu:
        sudo systemctl stop postgresql
        sudo systemctl start postgresql
+
+
+## Errors in Angular
+
+If you encounter EBUSY: resource busy or locked, unlink, too often
+~~~~
+npm cache clean --force"
+npm install
+~~~~
 

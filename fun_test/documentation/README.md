@@ -9,7 +9,7 @@ fun_test has the following layout
 6. stash (A place to store git repositories)
 
 ## Setup
-### Setup without the web-server
+### Quick-start (without the web-server)
 ~~~~
 cd /project/users/QA/regression/Integration/fun_test
 export PYTHONPATH=`pwd`
@@ -19,25 +19,77 @@ python scripts/examples/sanity.py
 
 
 ### Setup with the web-server and databases
-#### Web-server and Postgres setup
-Documentation: https://github.com/fungible-inc/Integration/blob/master/fun_test/web/documentation/README.md
+The infrastructure uses the following:
+
+1. PostgreSQL as the SQL RDBMS
+2. Angular 6 for the web framework
+3. Django as the REST API server
+4. MongDB as the NoSQL database
 
 
-## Data-store
-
-A place to store test-input files that are large.
-Currently, it is set to 'data_store' in the parent directory of the Integration repo.
-Ex: /project/users/QA/regression/data_store
-
-The data-store directory can be accessed using
+#### 1. Postgres setup
+##### Ubuntu installation:
 ```
-from fun_settings import DATA_STORE_DIR
-```
-### Suggestions for the data-store directories layout
+# sudo apt-get install postgresql
+# update-rc.d postgresql enable
+# service postgresql start
+
+
+# sudo -u postgres -i
+# psql
+
+psql (9.5.14)
+Type "help" for help.
+
+postgres=# CREATE USER fun_test_user WITH PASSWORD 'fun123';
+CREATE ROLE
+postgres=# CREATE DATABASE fun_test;
+CREATE DATABASE
+postgres-# \q
 
 ```
-data_store/storage
-data_store/networking
-data_store/web_backup (Location of the regression/performance Db backup)
-data_store/job_backup (Location of the regression jobs log that are archived via web/fun_test/management/archiver.py)
+
+##### Mac installation:
 ```
+Install Xcode via the Appstore
+
+In a terminal execute the below:
+# brew install postgres
+# brew services start postgresql
+
+
+# psql postgres
+
+psql (9.5.14)
+Type "help" for help.
+
+postgres=# CREATE USER fun_test_user WITH PASSWORD 'fun123';
+CREATE ROLE
+postgres=# CREATE DATABASE fun_test;
+CREATE DATABASE
+postgres-# \q
+
+```
+
+
+#### 2. Angular 6 installation
+```
+# cd Integration/fun_test/web/angular/qadashboard
+# brew install npm (For Mac only)
+# npm install -g @angular/cli
+# npm install
+
+```
+
+
+
+#### 3. Django installation
+Django will be installed via the instructions mentioned in the Quick-start section
+````
+# cd /project/users/QA/regression/Integration/fun_test
+# export PYTHONPATH=`pwd`
+# cd web
+# export DEVELOPMENT_MODE=1; python start_development_server
+# python web/manage.py migrate --database=default
+````
+
