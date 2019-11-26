@@ -4,7 +4,7 @@ import {LoggerService} from "../services/logger/logger.service";
 import {catchError, switchMap} from 'rxjs/operators';
 import {forkJoin, observable, Observable, of, throwError} from "rxjs";
 import {CommonService} from "../services/common/common.service";
-import {ReleaseCatalogSuite, ReleaseCatalog} from "./declarations";
+import {ReleaseCatalogSuite, ReleaseCatalog} from "./definitions";
 import {Suite} from "./suite-editor/suite-editor.service";
 
 
