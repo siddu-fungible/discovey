@@ -18,24 +18,9 @@ python scripts/examples/sanity.py
 ~~~~
 
 
-### Setup with the web-server and database
+### Setup with the web-server and databases
 #### Web-server and Postgres setup
 Documentation: https://github.com/fungible-inc/Integration/blob/master/fun_test/web/documentation/README.md
-
-#### Docker setup
-Enable Docker remote API
-~~~~
-qa-admin@qa-ubuntu-01:/project/users/QA/regression/Integration/fun_test$ grep ExecStart /lib/systemd/system/docker.service
-ExecStart=/usr/bin/dockerd -H fd:// -H=tcp://0.0.0.0:4243 $DOCKER_OPTS
-
-systemctl daemon-reload
-sudo service docker restart
-~~~~
-Verify Docker remote API
-~~~~
-qa-admin@qa-ubuntu-01:/project/users/QA/regression/Integration/fun_test$ curl http://127.0.0.1:4243/version
-{"Version":"1.13.1","ApiVersion":"1.26","MinAPIVersion":"1.12","GitCommit":"092cba3","GoVersion":"go1.6.2","Os":"linux","Arch":"amd64","KernelVersion":"4.4.0-87-generic","BuildTime":"2017-11-02T20:40:23.484070968+00:00"}
-~~~~
 
 
 ## Data-store
