@@ -246,46 +246,50 @@ class IntegrationJobBuildTimePerformanceTc(PalladiumTc):
                            "with_jenkins_build": True,
                            "build_parameters": build_parameters}
             suite = Suite.objects.filter(name="test_fs1600.json") #199-test_fs1600.json
-            suite_id = suite.first().id
-            emails = ["ashwin.s@fungible.com", "john.abraham@fungible.com"]
-            submitter_email = "ashwin.s@fungible.com"
-            suite_execution_id = queue_job3(suite_id=suite_id,
-                                build_url=None,
-                                tags=None,
-                                emails=emails,
-                                test_bed_type=test_bed_type,
-                                email_on_fail_only=False,
-                                environment=environment,
-                                scheduling_type=SchedulingType.ASAP,
-                                timezone_string=time_zone,
-                                requested_hour=None,
-                                requested_minute=None,
-                                requested_days=None,
-                                repeat_in_minutes=None,
-                                submitter_email=submitter_email,
-                                inputs=None,
-                                description="",
-                                suite_type=SuiteType.STATIC,
-                                rich_inputs=None)
-            fun_test.log("The returned suite_execution id is {}".format(suite_execution_id))
-            self.timer1 = FunTimer(max_time=4000)
-            while not self.timer1.is_expired():
-                suite_execution = get_suite_execution(suite_execution_id=suite_execution_id)
-                if suite_execution:
-                    if self.timer2 and suite_execution.state <= JobStatusType.COMPLETED:
-                        self.total_time_taken = self.timer2.elapsed_time()
-                        self.result = suite_execution.result
-                        fun_test.log("time taken is {}".format(self.total_time_taken))
+            if len(suite):
+                suite_id = suite.first().id
+                emails = ["ashwin.s@fungible.com", "john.abraham@fungible.com"]
+                submitter_email = "ashwin.s@fungible.com"
+                suite_execution_id = queue_job3(suite_id=suite_id,
+                                    build_url=None,
+                                    tags=None,
+                                    emails=emails,
+                                    test_bed_type=test_bed_type,
+                                    email_on_fail_only=False,
+                                    environment=environment,
+                                    scheduling_type=SchedulingType.ASAP,
+                                    timezone_string=time_zone,
+                                    requested_hour=None,
+                                    requested_minute=None,
+                                    requested_days=None,
+                                    repeat_in_minutes=None,
+                                    submitter_email=submitter_email,
+                                    inputs=None,
+                                    description="",
+                                    suite_type=SuiteType.STATIC,
+                                    rich_inputs=None)
+                fun_test.log("The returned suite_execution id is {}".format(suite_execution_id))
+                self.timer1 = FunTimer(max_time=4000)
+                while not self.timer1.is_expired():
+                    suite_execution = get_suite_execution(suite_execution_id=suite_execution_id)
+                    if suite_execution:
+                        if self.timer2 and suite_execution.state <= JobStatusType.COMPLETED:
+                            self.total_time_taken = self.timer2.elapsed_time()
+                            self.result = suite_execution.result
+                            fun_test.log("time taken is {}".format(self.total_time_taken))
+                            break
+                        elif not self.timer2 and suite_execution.state == JobStatusType.IN_PROGRESS:
+                            self.timer2 = FunTimer(max_time=2000)
+                        elif not self.timer2 and suite_execution.state <= JobStatusType.COMPLETED:
+                            break
+                    else:
                         break
-                    elif not self.timer2 and suite_execution.state == JobStatusType.IN_PROGRESS:
-                        self.timer2 = FunTimer(max_time=2000)
-                    elif not self.timer2 and suite_execution.state <= JobStatusType.COMPLETED:
-                        break
-                else:
-                    break
-                fun_test.sleep(message="Waiting to poll suite status", seconds=20)
-            if self.total_time_taken != -1 and self.result == fun_test.PASSED:
-                self.status = fun_test.PASSED
+                    fun_test.sleep(message="Waiting to poll suite status", seconds=20)
+                fun_test.test_asser
+                if self.total_time_taken != -1 and self.result == fun_test.PASSED:
+                    self.status = fun_test.PASSED
+            else:
+                fun_test.simple_assert()
         except Exception as ex:
             self.status = fun_test.FAILED
             fun_test.critical(str(ex))
@@ -325,9 +329,9 @@ class SetBuildTimeChartStatusTc(PalladiumTc):
 if __name__ == "__main__":
     myscript = MyScript()
 
-    # myscript.add_test_case(FunOnDemandBuildTimeTc())
-    # myscript.add_test_case(PrBuildTimeTc())
+    myscript.add_test_case(FunOnDemandBuildTimeTc())
+    myscript.add_test_case(PrBuildTimeTc())
     myscript.add_test_case(IntegrationJobBuildTimePerformanceTc())
-    # myscript.add_test_case(SetBuildTimeChartStatusTc())
+    myscript.add_test_case(SetBuildTimeChartStatusTc())
 
     myscript.run()
