@@ -258,7 +258,7 @@ class BringupSetup(FunTestCase):
             if enable_fcp:
                 f1_0_boot_args = "app=mdt_test,load_mods cc_huid=3 --dpc-server --all_100g --serial " \
                          "--dpc-uart retimer={} rdstype=fcp --mgmt workload=storage".format(f10_retimer)
-                f1_1_boot_args = "app=load_mods cc_huid=2 --dpc-server --all_100g --serial " \
+                f1_1_boot_args = "app=mdt_test,load_mods cc_huid=2 --dpc-server --all_100g --serial " \
                                  "--dpc-uart retimer={} rdstype=fcp --mgmt workload=storage".format(f11_retimer)
         else:
             fun_test.shared_variables["enable_fcp"] = False
@@ -296,6 +296,11 @@ class BringupSetup(FunTestCase):
             fun_test.shared_variables["split_ssd"] = job_inputs["split_ssd"]
         else:
             fun_test.shared_variables["split_ssd"] = 0
+        if "enable_debug" in job_inputs:
+            if job_inputs["enable_debug"]:
+                f1_0_boot_args += " module_log=fabrics_target:DEBUG,fabrics_host:DEBUG"
+                f1_1_boot_args += " module_log=fabrics_target:DEBUG,fabrics_host:DEBUG"
+
 
         if deploy_setup:
             funcp_obj = FunControlPlaneBringup(fs_name=self.server_key["fs"][fs_name]["fs-name"])
