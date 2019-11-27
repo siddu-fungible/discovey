@@ -1492,20 +1492,16 @@ class FrsTestCase(FunTestCase):
 
         for f1 in self.run_on_f1:
             if RCNVME in self.traffic_profile:
-                if f1 == 0:
-                    p_perc = 40
-                elif f1 == 1:
-                    p_perc = 40
-                self.start_rcnvme_traffic(come_handle, f1, p_perc)
+                self.start_rcnvme_traffic(come_handle, f1, self.traffic_profile[RCNVME]["per"])
 
             if CRYPTO in self.traffic_profile:
-                self.start_crypto_traffic(come_handle, f1, 100)
+                self.start_crypto_traffic(come_handle, f1, self.traffic_profile[CRYPTO]["per"])
 
             if ZIP in self.traffic_profile:
-                self.start_zip_traffic(come_handle, f1, 100)
+                self.start_zip_traffic(come_handle, f1, self.traffic_profile[ZIP]["per"])
 
             if DMA_SPEED in self.traffic_profile:
-                self.start_dma_app(come_handle, f1)
+                self.start_dma_app(come_handle, self.traffic_profile[DMA_SPEED]["per"])
 
             if BUSY_LOOP in self.traffic_profile:
                 fun_test.shared_variables["{}_{}".format(BUSY_LOOP, f1)] = True
@@ -1581,14 +1577,15 @@ class FrsTestCase(FunTestCase):
             for vm in vm_info:
                 fun_test.join_thread(pid_info[vm])
                 fun_test.test_assert(True, "Le initiate completed on the VM: {}".format(vm))
-
+        f1=0
         for vm, vm_details in vm_info.iteritems():
-            cmd = '''python run_nu_transit_only.py --inputs '{"speed":"SPEED_100G", "run_time":%s, "initiate":false, "nu_tr":false}' ''' % run_time
+            cmd = '''python run_nu_transit_only.py --inputs '{"speed":"SPEED_100G", "run_time":%s, "initiate":false, "nu_tr":false, "f1":%s}' ''' % (run_time, f1)
             self.initiate_or_run_le_firewall(cmd, vm_details)
             fun_test.sleep("for le to start", seconds=10)
             running = self.check_if_le_firewall_is_running(vm_details)
             if running:
                 fun_test.test_assert(running, "Le started on VM: {}".format(vm))
+            f1 += 1
 
         fun_test.sleep("For Le-firewall traffic to start", seconds=200)
 
@@ -1772,13 +1769,13 @@ class FrsTestCase(FunTestCase):
         for factor in range(9, 11):
             one_data_set = {}
             self.clear_uart_logs()
-            if "crypto" in self.traffic_profile:
+            if CRYPTO in self.traffic_profile:
                 crypto_parameters = {"vp_iters": 5000000 * factor, "nvps": 192}
                 self.crypto_app(self.come_handle, f1, **crypto_parameters)
                 crypto_done = False
             else:
                 crypto_done = True
-            if "zip" in self.traffic_profile:
+            if ZIP in self.traffic_profile:
                 zip_parameters = {"nflows": 7680, "niterations": 500 * factor}
                 self.zip_app(self.come_handle, f1, **zip_parameters)
                 zip_done = False
