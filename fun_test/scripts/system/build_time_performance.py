@@ -272,6 +272,7 @@ class IntegrationJobBuildTimePerformanceTc(PalladiumTc):
                 self.timer1 = FunTimer(max_time=4000)
                 while not self.timer1.is_expired():
                     suite_execution = get_suite_execution(suite_execution_id=suite_execution_id)
+                    fun_test.simple_assert(suite_execution, "Suite execution")
                     if suite_execution:
                         if self.timer2 and suite_execution.state <= JobStatusType.COMPLETED:
                             self.total_time_taken = self.timer2.elapsed_time()
@@ -281,11 +282,14 @@ class IntegrationJobBuildTimePerformanceTc(PalladiumTc):
                         elif not self.timer2 and suite_execution.state == JobStatusType.IN_PROGRESS:
                             self.timer2 = FunTimer(max_time=2000)
                         elif not self.timer2 and suite_execution.state <= JobStatusType.COMPLETED:
+                            fun_test.log("The job completed too quickly and exited even before the timer could start")
                             break
                     else:
+                        fun_test.log("suite execution object does not exist for the id {}".format(suite_execution_id))
                         break
                     fun_test.sleep(message="Waiting to poll suite status", seconds=20)
-                fun_test.test_asser
+                fun_test.test_assert_expected(expected=True, actual=not self.timer1.is_expired(), message="Checking if "
+                                                                                                       "the time expired")
                 if self.total_time_taken != -1 and self.result == fun_test.PASSED:
                     self.status = fun_test.PASSED
             else:
