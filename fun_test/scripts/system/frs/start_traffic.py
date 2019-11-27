@@ -1501,7 +1501,7 @@ class FrsTestCase(FunTestCase):
                 self.start_zip_traffic(come_handle, f1, self.traffic_profile[ZIP]["per"])
 
             if DMA_SPEED in self.traffic_profile:
-                self.start_dma_app(come_handle, self.traffic_profile[DMA_SPEED]["per"])
+                self.start_dma_app(come_handle, f1)
 
             if BUSY_LOOP in self.traffic_profile:
                 fun_test.shared_variables["{}_{}".format(BUSY_LOOP, f1)] = True
