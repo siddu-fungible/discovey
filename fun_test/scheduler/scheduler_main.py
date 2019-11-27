@@ -653,8 +653,15 @@ class SuiteWorker(Thread):
     def run_next(self):
         if not self.initialized:
             self.initialize()
+        suite_execution = self.get_suite_execution()
+        if suite_execution:
+            if suite_execution.state >= JobStatusType.IN_PROGRESS and ((get_current_time() - suite_execution.started_time).total_seconds() > suite_execution.max_run_time):
+                self.abort_suite(error_message="Max run-time exceeded")
+
         if self.suite_shutdown or self.suite_completed:
             return
+
+
 
         script_item = self.script_items[self.current_script_item_index]
 

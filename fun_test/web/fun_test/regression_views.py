@@ -170,6 +170,7 @@ def submit_job(request):
         description = request_json.get("description", None)
 
         rich_inputs = request_json.get("rich_inputs", None)
+        max_run_time = request_json.get("max_run_time", None)
 
         # if suite_path:
         if suite_id:
@@ -190,7 +191,8 @@ def submit_job(request):
                                 inputs=inputs,
                                 description=description,
                                 suite_type=suite_type,
-                                rich_inputs=rich_inputs)
+                                rich_inputs=rich_inputs,
+                                max_run_time=max_run_time)
         elif script_pk:
             script_path = RegresssionScripts.objects.get(pk=script_pk).script_path
             job_id = queue_job3(script_path=script_path,
@@ -210,7 +212,8 @@ def submit_job(request):
                                 inputs=inputs,
                                 description=description,
                                 suite_type=suite_type,
-                                rich_inputs=rich_inputs)
+                                rich_inputs=rich_inputs,
+                                max_run_time=max_run_time)
         elif dynamic_suite_spec:
             job_id = queue_dynamic_suite(dynamic_suite_spec=dynamic_suite_spec,
                                          emails=emails,
@@ -219,7 +222,8 @@ def submit_job(request):
                                          test_bed_type=test_bed_type,
                                          original_suite_execution_id=original_suite_execution_id,
                                          build_url=build_url,
-                                         submitter_email=submitter_email)
+                                         submitter_email=submitter_email,
+                                         max_run_time=max_run_time)
     if job_id > 0 and submitter_email:
         submitter_user_name = ""
         try:
