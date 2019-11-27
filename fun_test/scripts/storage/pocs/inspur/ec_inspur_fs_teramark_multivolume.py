@@ -310,36 +310,97 @@ class ECVolumeLevelScript(FunTestScript):
             # Bringing up of FunCP docker container if it is needed
             self.funcp_obj = {}
             self.funcp_spec = {}
-            for index in xrange(self.num_duts):
-                run_sc_restart_status = False
-                # Removing existing db directories for fresh setup
-                try:
-                    if self.install == "fresh":
-                        if self.bundle_image_parameters:
-                            path = "{}/{}".format(self.sc_script_dir, self.run_sc_script)
-                            if self.come_obj[index].check_file_directory_exists(path=path):
-                                self.come_obj[index].command("cd {}".format(self.sc_script_dir))
-                                # restarting run_sc with -c option
-                                self.come_obj[index].command("sudo ./{} -c restart".format(self.run_sc_script))
-                                fun_test.test_assert_expected(expected=0, actual=self.come_obj[index].exit_status(),
-                                                              message="run_sc restarted with cleanup")
-                                # check if run_sc container is running
-                                run_sc_status_cmd = "docker ps -a --format '{{.Names}}' | grep run_sc"
-                                timer = FunTimer(max_time=self.container_up_timeout)
-                                while not timer.is_expired():
-                                    run_sc_name = self.come_obj[index].command(
-                                        run_sc_status_cmd, timeout=self.command_timeout).split("\n")[0]
-                                    if run_sc_name:
-                                        fun_test.log("run_sc container is up and running")
-                                        run_sc_restart_status = True
-                                        break
-                                    else:
-                                        fun_test.sleep("for the run_sc docker container to start", 1)
-                                else:
-                                    fun_test.critical("run_sc container is not restarted within {} seconds after "
-                                                      "cleaning up the DB".format(self.container_up_timeout))
-                                    fun_test.test_assert(False, "Cleaning DB and restarting run_sc container")
+            if self.bundle_image_parameters:
+                if self.install == "fresh":
+                    path = "{}/{}".format(self.sc_script_dir, self.run_sc_script)
+                    if self.come_obj[index].check_file_directory_exists(path=path):
+                        self.come_obj[index].command("cd {}".format(self.sc_script_dir))
+                        # restarting run_sc with -c option
+                        self.come_obj[index].command("sudo ./{} -c restart".format(self.run_sc_script))
+                        fun_test.test_assert_expected(expected=0, actual=self.come_obj[index].exit_status(),
+                                                      message="run_sc restarted with cleanup")
+                        # check if run_sc container is running
+                        run_sc_status_cmd = "docker ps -a --format '{{.Names}}' | grep run_sc"
+                        timer = FunTimer(max_time=self.container_up_timeout)
+                        while not timer.is_expired():
+                            run_sc_name = self.come_obj[index].command(
+                                run_sc_status_cmd, timeout=self.command_timeout).split("\n")[0]
+                            if run_sc_name:
+                                fun_test.log("run_sc container is up and running")
+                                run_sc_restart_status = True
+                                break
+                            else:
+                                fun_test.sleep("for the run_sc docker container to start", 1)
                         else:
+                            fun_test.critical("run_sc container is not restarted within {} seconds after "
+                                              "cleaning up the DB".format(self.container_up_timeout))
+                            fun_test.test_assert(False, "Cleaning DB and restarting run_sc container")
+                self.funcp_obj[0] = StorageFsTemplate(self.come_obj[index])
+                self.funcp_spec[index] = self.funcp_obj[index].get_container_objs()
+                self.funcp_spec[index]["container_names"].sort()
+
+                # Ensuring run_sc is still up and running because after restarting run_sc with cleanup,
+                # chances are that it may die within few seconds after restart
+                run_sc_status_cmd = "docker ps -a --format '{{.Names}}' | grep run_sc"
+                run_sc_name = self.come_obj[index].command(
+                    run_sc_status_cmd, timeout=self.command_timeout).split("\n")[0]
+                fun_test.simple_assert(run_sc_name, "Container is up and running: run_sc")
+
+                # Declaring SC API controller
+                sc_api = StorageControllerApi(api_server_ip=self.come_obj[index].host_ip,
+                                              api_server_port=self.api_server_port,
+                                              username=self.api_server_username,
+                                              password=self.api_server_password)
+                self.sc_api.append(sc_api)
+
+                # Polling for API Server status
+                api_server_up_timer = FunTimer(max_time=self.api_server_up_timeout)
+                while not api_server_up_timer.is_expired():
+                    api_server_response = self.sc_api[index].get_api_server_health()
+                    if api_server_response["status"]:
+                        fun_test.log("API server is up and running")
+                        break
+                    else:
+                        fun_test.sleep(" waiting for API server to be up", 10)
+                fun_test.simple_assert(expression=not api_server_up_timer.is_expired(), message="API server is up")
+                # If fresh install, configure dataplane ip as database is cleaned up
+                if self.install == "fresh":
+                    # Getting all the DUTs of the setup
+                    nodes = self.sc_api[index].get_dpu_ids()
+                    fun_test.test_assert(nodes, "Getting UUIDs of all DUTs in the setup")
+                    for node_index, node in enumerate(nodes):
+                        # Extracting the DUT's bond interface details
+                        ip = self.fs_spec[node_index / 2].spec["bond_interface_info"][str(node_index % 2)][str(0)][
+                            "ip"]
+                        ip = ip.split('/')[0]
+                        subnet_mask = self.fs_spec[node_index / 2].spec["bond_interface_info"][
+                            str(node_index % 2)][str(0)]["subnet_mask"]
+                        route = self.fs_spec[node_index / 2].spec["bond_interface_info"][str(node_index % 2)][
+                            str(0)]["route"][0]
+                        next_hop = "{}/{}".format(route["gateway"], route["network"].split("/")[1])
+                        self.f1_ips.append(ip)
+
+                        fun_test.log(
+                            "Current {} node's bond0 is going to be configured with {} IP address with {} "
+                            "subnet mask with next hop set to {}".format(node, ip, subnet_mask, next_hop))
+                        result = self.sc_api[index].configure_dataplane_ip(
+                            dpu_id=node, interface_name="bond0", ip=ip, subnet_mask=subnet_mask, next_hop=next_hop,
+                            use_dhcp=False)
+                        fun_test.log("Dataplane IP configuration result of {}: {}".format(node, result))
+                        fun_test.test_assert(result["status"],
+                                             "Configuring {} DUT with Dataplane IP {}".format(node, ip))
+                else:
+                    # TODO: Retrieve the dataplane IP and validate if dataplane ip is same as bond interface ip
+                    pass
+            elif self.tftp_image_path:
+                # Check the init-fs1600 service is running
+                # If so check all the required dockers are running
+                # else fallback to legacy by disabling the servicing, killing health check and the left over containers
+                for index in xrange(self.num_duts):
+                    run_sc_restart_status = False
+                    # Removing existing db directories for fresh setup
+                    try:
+                        if self.install == "fresh":
                             for directory in self.sc_db_directories:
                                 if self.come_obj[index].check_file_directory_exists(path=directory):
                                     fun_test.log("Removing Directory {}".format(directory))
@@ -348,22 +409,17 @@ class ECVolumeLevelScript(FunTestScript):
                                                                   message="Directory {} is removed".format(directory))
                                 else:
                                     fun_test.log("Directory {} does not exist skipping deletion".format(directory))
-                    else:
-                        fun_test.log("Skipping run_sc restart with cleanup")
-                except Exception as ex:
-                    fun_test.critical(str(ex))
-                self.funcp_obj[index] = StorageFsTemplate(self.come_obj[index])
-                if self.tftp_image_path:
+                        else:
+                            fun_test.log("Skipping run_sc restart with cleanup")
+                    except Exception as ex:
+                        fun_test.critical(str(ex))
+                    self.funcp_obj[index] = StorageFsTemplate(self.come_obj[index])
                     self.funcp_spec[index] = self.funcp_obj[index].deploy_funcp_container(
                         update_deploy_script=self.update_deploy_script, update_workspace=self.update_workspace,
                         mode=self.funcp_mode)
                     fun_test.test_assert(self.funcp_spec[index]["status"],
                                          "Starting FunCP docker container in DUT {}".format(index))
-                else:
-                    self.funcp_spec[index] = self.funcp_obj[index].get_container_objs()
-                self.funcp_spec[index]["container_names"].sort()
-
-                if self.tftp_image_path:
+                    self.funcp_spec[index]["container_names"].sort()
                     for f1_index, container_name in enumerate(self.funcp_spec[index]["container_names"]):
                         if container_name == "run_sc":
                             continue
@@ -385,60 +441,6 @@ class ECVolumeLevelScript(FunTestScript):
                                                       actual=self.funcp_obj[index].container_info[
                                                           container_name].exit_status(),
                                                       message="Configure Static route")
-                else:
-                    # Ensuring run_sc is still up and running because after restarting run_sc with cleanup,
-                    # chances are that it may die within few seconds after restart
-                    run_sc_status_cmd = "docker ps -a --format '{{.Names}}' | grep run_sc"
-                    run_sc_name = self.come_obj[index].command(
-                        run_sc_status_cmd, timeout=self.command_timeout).split("\n")[0]
-                    fun_test.simple_assert(run_sc_name, "Container is up and running: run_sc")
-
-                    # Declaring SC API controller
-                    sc_api = StorageControllerApi(api_server_ip=self.come_obj[index].host_ip,
-                                                  api_server_port=self.api_server_port,
-                                                  username=self.api_server_username,
-                                                  password=self.api_server_password)
-                    self.sc_api.append(sc_api)
-
-                    # Polling for API Server status
-                    api_server_up_timer = FunTimer(max_time=self.api_server_up_timeout)
-                    while not api_server_up_timer.is_expired():
-                        api_server_response = self.sc_api[index].get_api_server_health()
-                        if api_server_response["status"]:
-                            fun_test.log("API server is up and running")
-                            break
-                        else:
-                            fun_test.sleep(" waiting for API server to be up", 10)
-                    fun_test.simple_assert(expression=not api_server_up_timer.is_expired(), message="API server is up")
-                    # If fresh install, configure dataplane ip as database is cleaned up
-                    if self.install == "fresh":
-                        # Getting all the DUTs of the setup
-                        nodes = self.sc_api[index].get_dpu_ids()
-                        fun_test.test_assert(nodes, "Getting UUIDs of all DUTs in the setup")
-                        for node_index, node in enumerate(nodes):
-                            # Extracting the DUT's bond interface details
-                            ip = self.fs_spec[node_index / 2].spec["bond_interface_info"][str(node_index % 2)][str(0)][
-                                "ip"]
-                            ip = ip.split('/')[0]
-                            subnet_mask = self.fs_spec[node_index / 2].spec["bond_interface_info"][
-                                str(node_index % 2)][str(0)]["subnet_mask"]
-                            route = self.fs_spec[node_index / 2].spec["bond_interface_info"][str(node_index % 2)][
-                                str(0)]["route"][0]
-                            next_hop = "{}/{}".format(route["gateway"], route["network"].split("/")[1])
-                            self.f1_ips.append(ip)
-
-                            fun_test.log(
-                                "Current {} node's bond0 is going to be configured with {} IP address with {} "
-                                "subnet mask with next hop set to {}".format(node, ip, subnet_mask, next_hop))
-                            result = self.sc_api[index].configure_dataplane_ip(
-                                dpu_id=node, interface_name="bond0", ip=ip, subnet_mask=subnet_mask, next_hop=next_hop,
-                                use_dhcp=False)
-                            fun_test.log("Dataplane IP configuration result of {}: {}".format(node, result))
-                            fun_test.test_assert(result["status"],
-                                                 "Configuring {} DUT with Dataplane IP {}".format(node, ip))
-                    else:
-                        # TODO: Retrieve the dataplane IP and validate if dataplane ip is same as bond interface ip
-                        pass
 
             # Forming shared variables for defined parameters
             fun_test.shared_variables["f1_in_use"] = self.f1_in_use
