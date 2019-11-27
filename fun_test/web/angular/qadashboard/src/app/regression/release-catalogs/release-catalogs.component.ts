@@ -3,7 +3,7 @@ import {RegressionService} from "../regression.service";
 import {Observable, of} from "rxjs";
 import {switchMap} from "rxjs/operators";
 import {LoggerService} from "../../services/logger/logger.service";
-import {ReleaseCatalog} from "../declarations";
+import {ReleaseCatalog} from "../definitions";
 import {Router} from "@angular/router";
 
 @Component({
