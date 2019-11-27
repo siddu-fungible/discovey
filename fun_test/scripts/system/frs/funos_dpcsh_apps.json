@@ -1,12 +1,12 @@
 {
   "duration": 600,
-  "traffic_profile": [
-    "zip",
-    "crypto",
-    "dma_speed",
-    "rcnvme",
-    "le"
-  ],
+  "traffic_profile": {
+    "zip":{"per": 100},
+    "crypto":  {"per":  100},
+    "dma_speed":  {"per":  100},
+    "rcnvme":  {"per":  90},
+    "le": {"per": 100}
+  },
   "boot_new_image": false,
   "add_to_database": true,
   "disable_f1_index": null,
