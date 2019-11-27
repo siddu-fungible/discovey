@@ -170,7 +170,7 @@ def submit_job(request):
         description = request_json.get("description", None)
 
         rich_inputs = request_json.get("rich_inputs", None)
-        max_run_time = request_json.get("max_run_time", None)
+        max_run_time = request_json.get("max_run_time", 7 * 24 * 3600)
 
         # if suite_path:
         if suite_id:
