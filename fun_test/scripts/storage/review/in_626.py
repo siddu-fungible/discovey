@@ -547,6 +547,9 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
         self.volume_name = self.nvme_block_device.replace("/dev/", "")
 
         self.fs = fun_test.shared_variables["fs_objs"]
+        self.fs.register_statistics(statistics_type=Fs.StatisticsType.BAM)
+        self.fs.start_statistics_collection(statistics_type=Fs.StatisticsType.BAM)
+
         self.come_obj = fun_test.shared_variables["come_obj"]
         self.f1 = fun_test.shared_variables["f1_objs"][0][0]
         self.storage_controller = fun_test.shared_variables["sc_obj"][0]
