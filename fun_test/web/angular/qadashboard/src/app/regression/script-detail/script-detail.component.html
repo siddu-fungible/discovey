@@ -224,14 +224,15 @@
 
             <ng-container
               *ngIf="!showFailedCheckpoints || (showFailedCheckpoints && checkpoint.data.result === 'FAILED')">
-
               <td>
                 {{ checkpoint.relative_epoch_time | number: '1.3-3' }}
               </td>
-              <td *ngIf="checkpoint.data.checkpoint != 'Start'">
-                  <span class="pseudo-anchor"
+              <td nowrap *ngIf="checkpoint.data.checkpoint != 'Start'" align="center">
+                  <span class="fun-action-link" style="display: inline-block"
                         (click)="onCheckpointClick(currentTestCaseExecution, checkpoint.data.checkpoint_index, checkpoint.data.context_id)">{{ checkpoint.data.checkpoint_index }}
                   </span>
+                &nbsp;
+                  <i tooltip [tooltipContentString]="'Logs are not downloaded yet'" placement="right" (click)="onCheckpointClick(currentTestCaseExecution, checkpoint.data.checkpoint_index, checkpoint.data.context_id)" class="fa fa-download" *ngIf="!checkpoint?.timeSeries"></i>
               </td>
               <td>{{ checkpoint.data.context_id }}</td>
               <td>{{ checkpoint.data.checkpoint }}</td>
@@ -240,6 +241,7 @@
               </td>
               <td>{{ checkpoint.data.expected }}</td>
               <td>{{ checkpoint.data.actual }}</td>
+
 
             </ng-container>
 

@@ -388,9 +388,9 @@ export class ScriptDetailComponent implements OnInit {
 
     if (checkpointIndexesToFetch.length > 0) {
       let minCheckpointIndex = checkpointIndexesToFetch[0];
-      if (checkpointIndexesToFetch.length > 1) {
-        minCheckpointIndex = checkpointIndexesToFetch[checkpointIndexesToFetch.length - 2];
-      }
+      /*if (checkpointIndexesToFetch.length > 1) {
+        minCheckpointIndex = checkpointIndexesToFetch[];
+      }*/
       let maxCheckpointIndex = checkpointIndexesToFetch[checkpointIndexesToFetch.length - 1];
       this.status = "Fetching logs";
       return this.regressionService.testCaseTimeSeries(this.suiteExecutionId, testCaseExecution.execution_id, null, minCheckpointIndex, maxCheckpointIndex).pipe(switchMap(response => {
