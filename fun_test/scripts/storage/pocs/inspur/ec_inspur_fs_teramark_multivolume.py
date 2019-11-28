@@ -345,9 +345,9 @@ class ECVolumeLevelScript(FunTestScript):
 
                 # Declaring SC API controller
                 self.sc_api = StorageControllerApi(api_server_ip=self.come_obj[0].host_ip,
-                                              api_server_port=self.api_server_port,
-                                              username=self.api_server_username,
-                                              password=self.api_server_password)
+                                                   api_server_port=self.api_server_port,
+                                                   username=self.api_server_username,
+                                                   password=self.api_server_password)
 
                 # Polling for API Server status
                 api_server_up_timer = FunTimer(max_time=self.api_server_up_timeout)
@@ -398,11 +398,18 @@ class ECVolumeLevelScript(FunTestScript):
                     # If so check all the required dockers are running
                     init_fs1600_service_status = True
                     expected_containers = ['F1-0', 'F1-1', 'run_sc']
-                    container_names = self.funcp_obj[0].get_container_names(
-                        stop_run_sc=False, include_storage=True)['container_name_list']
-                    if all(container in container_names for container in expected_containers):
-                        expected_containers_up = True
-                        fun_test.log("Expected containers are up and running")
+                    container_chk_timer = FunTimer(max_time=(self.container_up_timeout * 2))
+                    while not container_chk_timer.is_expired():
+                        container_names = self.funcp_obj[0].get_container_names(
+                            stop_run_sc=False, include_storage=True)['container_name_list']
+                        if all(container in container_names for container in expected_containers):
+                            expected_containers_up = True
+                            fun_test.log("Expected containers are up and running")
+                            break
+                        else:
+                            fun_test.sleep("waiting for expected containers to show up", 10)
+                    if not container_chk_timer.is_expired():
+                        fun_test.log("Expected containers are not running")
 
                     # Cleaning up DB by restarting run_sc.py script with -c option
                     if "run_sc" in container_names and self.install == "fresh":
@@ -500,9 +507,8 @@ class ECVolumeLevelScript(FunTestScript):
                     else:
                         fun_test.critical("system_health_check.py script is not running")
 
-                    for container in ["F1-0", "F1-1", "run_sc"]:
-                        docker_stop_cmd = "docker stop {}".format(container)
-                        self.come_obj[0].command(docker_stop_cmd)
+                    # Stopping containers and unloading the drivers
+                    self.come_obj[0].command("sudo /opt/fungible/cclinux/cclinux_service.sh --stop")
 
                     # Bring-up the containers
                     for index in xrange(self.num_duts):
