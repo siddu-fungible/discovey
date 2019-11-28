@@ -459,6 +459,7 @@ def init_fs1600_status(come_obj):
         fun_test.critical(str(ex))
     return result
 
+
 def disalbe_init_fs1600(come_obj):
     result = False
     service_name = "init-fs1600.service"
