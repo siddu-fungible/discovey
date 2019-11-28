@@ -447,7 +447,7 @@ def divide(n, d):
 def init_fs1600_status(come_obj):
     result = False
     service_name = "init-fs1600.service"
-    status_cmd = "sudo systemctl status {}".format(service_name)
+    status_cmd = "sudo systemctl status {} --no-pager".format(service_name)
     try:
         status = come_obj.command(status_cmd)
 
