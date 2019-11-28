@@ -227,7 +227,7 @@
               <td>
                 {{ checkpoint.relative_epoch_time | number: '1.3-3' }}
               </td>
-              <td nowrap *ngIf="checkpoint.data.checkpoint != 'Start'">
+              <td nowrap *ngIf="checkpoint.data.checkpoint != 'Start'" align="center">
                   <span class="fun-action-link" style="display: inline-block"
                         (click)="onCheckpointClick(currentTestCaseExecution, checkpoint.data.checkpoint_index, checkpoint.data.context_id)">{{ checkpoint.data.checkpoint_index }}
                   </span>
