@@ -668,14 +668,6 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.shared_variables["testbed_config"] = self.testbed_config
 
     def cleanup(self):
-
-        if self.bundle_image_parameters:
-            try:
-                for index in xrange(self.num_duts):
-                    disalbe_init_fs1600(self.come_obj[index])
-            except Exception as ex:
-                fun_test.critical(str(ex))
-
         come_reboot = False
         if fun_test.shared_variables["ec"]["setup_created"]:
             if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
