@@ -151,29 +151,7 @@ class MultiHostVolumePerformanceScript(FunTestScript):
         # Pulling test bed specific configuration if script is not submitted with testbed-type suite-based
         self.testbed_type = fun_test.get_job_environment_variable("test_bed_type")
         if self.testbed_type != "suite-based":
-            """
-            self.testbed_config = fun_test.get_asset_manager().get_test_bed_spec(self.testbed_type)
-            fun_test.log("{} Testbed Config: {}".format(self.testbed_type, self.testbed_config))
-            # self.fs_hosts_map = utils.parse_file_to_json(SCRIPTS_DIR + "/storage/inspur_fs_hosts_mapping.json"
-            # self.available_hosts = self.fs_hosts_map[self.testbed_type]["host_info"]
-            # self.full_dut_indexes = [int(i) for i in sorted(self.testbed_config["dut_info"].keys())]
-            # Skipping DUTs not required for this test
-            # self.skip_dut_list = []
-            for index in xrange(0, self.dut_start_index):
-                self.skip_dut_list.append(index)
-            for index in xrange(self.dut_start_index + self.num_duts, len(self.full_dut_indexes)):
-                self.skip_dut_list.append(index)
-            fun_test.log("DUTs that will be skipped: {}".format(self.skip_dut_list))
-            self.available_dut_indexes = list(set(self.full_dut_indexes) - set(self.skip_dut_list))
-            self.available_dut_indexes = [int(i) for i in self.available_dut_indexes]
-            self.total_available_duts = len(self.available_dut_indexes)
-            fun_test.log("Total Available Duts: {}".format(self.total_available_duts))
-            """
             self.topology_helper = TopologyHelper()
-
-            pass
-        # Pulling reserved DUTs and Hosts and test bed specific configuration if script is submitted with testbed-type
-        # suite-based
         elif self.testbed_type == "suite-based":
             self.topology_helper = TopologyHelper()
             self.available_dut_indexes = self.topology_helper.get_available_duts().keys()
@@ -220,18 +198,16 @@ class MultiHostVolumePerformanceScript(FunTestScript):
         self.db_log_time = get_data_collection_time()
         fun_test.log("Data collection time: {}".format(self.db_log_time))
 
-        # Retrieving all Hosts list and filtering required hosts and forming required object lists out of it
-        if self.testbed_type != "suite-based":
-            hosts = self.topology.get_hosts()
-            fun_test.log("Available hosts are: {}".format(hosts))
-            required_host_index = []
-            self.required_hosts = OrderedDict()
-            for i in xrange(self.host_start_index, self.host_start_index + self.num_hosts):
-                required_host_index.append(i)
-            fun_test.debug("Host index required for scripts: {}".format(required_host_index))
-            for j, host_name in enumerate(sorted(hosts)):
-                if j in required_host_index:
-                    self.required_hosts[host_name] = hosts[host_name]
+        hosts = self.topology.get_hosts()
+        fun_test.log("Available hosts are: {}".format(hosts))
+        required_host_index = []
+        self.required_hosts = OrderedDict()
+        for i in xrange(self.host_start_index, self.host_start_index + self.num_hosts):
+            required_host_index.append(i)
+        fun_test.debug("Host index required for scripts: {}".format(required_host_index))
+        for j, host_name in enumerate(sorted(hosts)):
+            if j in required_host_index:
+                self.required_hosts[host_name] = hosts[host_name]
         fun_test.log("Hosts that will be used for current test: {}".format(self.required_hosts.keys()))
 
         self.host_info = OrderedDict()
