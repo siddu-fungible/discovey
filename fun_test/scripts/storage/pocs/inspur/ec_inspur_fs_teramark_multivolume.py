@@ -405,7 +405,7 @@ class ECVolumeLevelScript(FunTestScript):
                         fun_test.log("Expected containers are up and running")
 
                     # Cleaning up DB by restarting run_sc.py script with -c option
-                    if self.install == "fresh":
+                    if "run_sc" in container_names and self.install == "fresh":
                         path = "{}/{}".format(self.sc_script_dir, self.run_sc_script)
                         if self.come_obj[0].check_file_directory_exists(path=path):
                             self.come_obj[0].command("cd {}".format(self.sc_script_dir))
@@ -428,6 +428,55 @@ class ECVolumeLevelScript(FunTestScript):
                                 fun_test.critical("run_sc container is not restarted within {} seconds after "
                                                   "cleaning up the DB".format(self.container_up_timeout))
                                 fun_test.test_assert(False, "Cleaning DB and restarting run_sc container")
+
+                        # Declaring SC API controller
+                        self.sc_api = StorageControllerApi(api_server_ip=self.come_obj[0].host_ip,
+                                                           api_server_port=self.api_server_port,
+                                                           username=self.api_server_username,
+                                                           password=self.api_server_password)
+
+                        # Polling for API Server status
+                        api_server_up_timer = FunTimer(max_time=self.api_server_up_timeout)
+                        while not api_server_up_timer.is_expired():
+                            api_server_response = self.sc_api.get_api_server_health()
+                            if api_server_response["status"]:
+                                fun_test.log("API server is up and running")
+                                break
+                            else:
+                                fun_test.sleep(" waiting for API server to be up", 10)
+                        fun_test.simple_assert(expression=not api_server_up_timer.is_expired(),
+                                               message="API server is up")
+                        fun_test.sleep("waiting for API server to be ready", 10)
+
+                        # configure dataplane ip as database is cleaned up
+                        # Getting all the DUTs of the setup
+                        nodes = self.sc_api.get_dpu_ids()
+                        fun_test.test_assert(nodes, "Getting UUIDs of all DUTs in the setup")
+                        for node_index, node in enumerate(nodes):
+                            # Extracting the DUT's bond interface details
+                            ip = \
+                            self.fs_spec[node_index / 2].spec["bond_interface_info"][str(node_index % 2)][
+                                str(0)]["ip"]
+                            ip = ip.split('/')[0]
+                            subnet_mask = self.fs_spec[node_index / 2].spec["bond_interface_info"][
+                                str(node_index % 2)][str(0)]["subnet_mask"]
+                            route = \
+                            self.fs_spec[node_index / 2].spec["bond_interface_info"][str(node_index % 2)][
+                                str(0)]["route"][0]
+                            next_hop = "{}/{}".format(route["gateway"], route["network"].split("/")[1])
+                            self.f1_ips.append(ip)
+
+                            fun_test.log(
+                                "Current {} node's bond0 is going to be configured with {} IP address with {} "
+                                "subnet mask with next hop set to {}".format(node, ip, subnet_mask,
+                                                                             next_hop))
+                            result = self.sc_api.configure_dataplane_ip(
+                                dpu_id=node, interface_name="bond0", ip=ip, subnet_mask=subnet_mask,
+                                next_hop=next_hop,
+                                use_dhcp=False)
+                            fun_test.log("Dataplane IP configuration result of {}: {}".format(node, result))
+                            fun_test.test_assert(result["status"],
+                                                 "Configuring {} DUT with Dataplane IP {}".format(node, ip))
                 if not init_fs1600_service_status or (init_fs1600_service_status and not expected_containers_up):
                     fun_test.log("Expected containers are not up, bringing them up")
                     if init_fs1600_service_status:
