@@ -295,7 +295,7 @@ class BringupSetup(FunTestCase):
         if "rds_vol_transport" in job_inputs:
             fun_test.shared_variables["rds_vol_transport"] = unicode(job_inputs["rds_vol_transport"]).upper()
         else:
-            fun_test.shared_variables["rds_vol_transport"] = "RDS"
+            fun_test.shared_variables["rds_vol_transport"] = False
         if "split_ssd" in job_inputs:
             fun_test.shared_variables["split_ssd"] = job_inputs["split_ssd"]
         else:
@@ -715,7 +715,37 @@ class ConfigureRdsVol(FunTestCase):
                 # Create RDS volume on initiator
                 initiator_rds_vol[x] = utils.generate_uuid()
                 rds_vol_name = "rds_vol_" + str(x)
-                if fun_test.shared_variables["rds_conn"]:
+                if fun_test.shared_variables["rds_conn"] and not fun_test.shared_variables["rds_vol_transport"]:
+                    rds_conn = fun_test.shared_variables["rds_conn"]
+                    command_result = f1_initiator_storage_obj.create_volume(type="VOL_TYPE_BLK_RDS",
+                                                                            capacity=drive_size,
+                                                                            block_size=block_size,
+                                                                            name=rds_vol_name,
+                                                                            uuid=initiator_rds_vol[x],
+                                                                            remote_nsid=x,
+                                                                            remote_ip=target_ip,
+                                                                            port=controller_port,
+                                                                            connections=rds_conn,
+                                                                            command_duration=command_timeout)
+                    fun_test.simple_assert(command_result["status"],
+                                           "{} : Created RDS vol using {} connections with remote nsid {}".
+                                           format(f1_initiator, rds_conn, x))
+                elif fun_test.shared_variables["rds_vol_transport"] and not fun_test.shared_variables["rds_conn"]:
+                    rds_vol_transport = fun_test.shared_variables["rds_vol_transport"]
+                    command_result = f1_initiator_storage_obj.create_volume(type="VOL_TYPE_BLK_RDS",
+                                                                            capacity=drive_size,
+                                                                            block_size=block_size,
+                                                                            name=rds_vol_name,
+                                                                            uuid=initiator_rds_vol[x],
+                                                                            remote_nsid=x,
+                                                                            remote_ip=target_ip,
+                                                                            port=controller_port,
+                                                                            transport=rds_vol_transport,
+                                                                            command_duration=command_timeout)
+                    fun_test.simple_assert(command_result["status"],
+                                           "{} : Created RDS vol using {} transport with remote nsid {}".
+                                           format(f1_initiator, rds_vol_transport, x))
+                elif fun_test.shared_variables["rds_vol_transport"] and fun_test.shared_variables["rds_conn"]:
                     rds_conn = fun_test.shared_variables["rds_conn"]
                     rds_vol_transport = fun_test.shared_variables["rds_vol_transport"]
                     command_result = f1_initiator_storage_obj.create_volume(type="VOL_TYPE_BLK_RDS",
@@ -730,8 +760,9 @@ class ConfigureRdsVol(FunTestCase):
                                                                             connections=rds_conn,
                                                                             command_duration=command_timeout)
                     fun_test.simple_assert(command_result["status"],
-                                           "{} : Created RDS vol using {} connections with remote nsid {}".
-                                           format(f1_initiator, rds_conn, x))
+                                           "{} : Created RDS vol using {} transport : {} connections with "
+                                           "remote nsid {}".
+                                           format(f1_initiator, rds_vol_transport, rds_conn, x))
                 else:
                     command_result = f1_initiator_storage_obj.create_volume(type="VOL_TYPE_BLK_RDS",
                                                                             capacity=drive_size,

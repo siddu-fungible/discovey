@@ -673,6 +673,7 @@ tr.text-center > th {
   -webkit-appearance: none;
   -moz-appearance: none;
   padding: 5px;
+  margin: 5px;
   border: none;
   cursor: pointer;
   min-width: 100px;
@@ -684,6 +685,10 @@ tr.text-center > th {
 
 }
 
+.fun-button-with-icon-selected {
+  background: grey;
+  color: white;
+}
 
 label {
   margin-bottom: unset;

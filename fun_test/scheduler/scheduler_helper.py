@@ -248,7 +248,8 @@ def queue_dynamic_suite(dynamic_suite_spec,
                         environment=None,
                         test_bed_type=None,
                         inputs=None,
-                        build_url=None):
+                        build_url=None,
+                        max_run_time=None):
 
     return queue_job3(dynamic_suite_spec=dynamic_suite_spec,
                       original_suite_execution_id=original_suite_execution_id,
@@ -258,7 +259,8 @@ def queue_dynamic_suite(dynamic_suite_spec,
                       environment=environment,
                       build_url=build_url,
                       submitter_email=submitter_email,
-                      inputs=inputs)
+                      inputs=inputs,
+                      max_run_time=max_run_time)
 
 def is_auto_scheduled(scheduling_type, repeat_in_minutes):
     return (scheduling_type == SchedulingType.TODAY and repeat_in_minutes > 0) or (scheduling_type == SchedulingType.PERIODIC)
@@ -286,7 +288,8 @@ def queue_job3(suite_id=None,
                requested_priority_category=SchedulerJobPriority.NORMAL,
                submitter_email=None,
                description=None,
-               rich_inputs=None):
+               rich_inputs=None,
+               max_run_time=None):
     # time.sleep(0.1)
     result = -1
     if not tags:
@@ -360,6 +363,7 @@ def queue_job3(suite_id=None,
         suite_execution.requested_priority_category = requested_priority_category
         suite_execution.description = description
         suite_execution.rich_inputs = rich_inputs
+        suite_execution.max_run_time = max_run_time
         job_spec_valid, error_message = validate_spec(spec=suite_execution)
         if not job_spec_valid:
             raise SchedulerException("Invalid job spec: {}, Error message: {}".format(suite_execution, error_message))

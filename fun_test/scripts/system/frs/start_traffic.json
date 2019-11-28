@@ -1,15 +1,31 @@
 {
   "duration": 60,
-  "traffic_profile": ["crypto","zip","rcnvme","fio"],
-  "run_le_firewall": false,
+  "traffic_profile": [
+    "zip",
+    "crypto",
+    "dma_speed",
+    "rcnvme",
+    "le"
+  ],
   "boot_new_image": true,
   "add_to_database": false,
   "disable_f1_index": null,
   "ec_vol": false,
-  "collect_stats": ["POWER", "CDU", "EQM", "DEBUG_VP_UTIL", "LE", "HBM", "PC_DMA", "DDR", "STORAGE_IOPS"],
+  "collect_stats": [
+    "POWER",
+    "CDU",
+    "EQM",
+    "DEBUG_VP_UTIL",
+    "LE",
+    "HBM",
+    "PC_DMA",
+    "DDR",
+    "STORAGE_IOPS"
+  ],
   "disable_stats": [],
   "add_boot_arg": "",
   "upload_to_file": false,
+  "stats_interval": 30,
   "elasticsearch_config": {
     "ip": "10.1.20.52",
     "port": 9200

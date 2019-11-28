@@ -1,4 +1,3 @@
-from lib.system.fun_test import *
 from start_traffic import *
 
 
@@ -10,6 +9,7 @@ class ParsingFunos(FrsTestCase):
 
     def setup(self):
         super(ParsingFunos, self).setup()
+        # Any additional setup add it here.
 
     def run(self):
         self.initial_stats()
@@ -17,19 +17,9 @@ class ParsingFunos(FrsTestCase):
         self.stop_collection_of_stats_for_count(count=1)
         self.run_the_traffic()
         self.start_collecting_stats(heading="During traffic")
-        fun_test.sleep("For the apps to stop", seconds=self.duration)
-        # timer = FunTimer(max_time=1200)
-        # apps_are_done = False
-        # while not timer.is_expired():
-        #     apps_are_done = self.are_apps_done(timer)
-        #     if apps_are_done :
-        #         break
-        #     fun_test.sleep("before checking the apps status", seconds=30)
+        fun_test.sleep("For the apps to stop", seconds=self.duration + 20)
+        self.stop_traffic()
         self.stop_collection_of_stats()
-
-    # def create_files_based_on_the_stats(self):
-    #     pass
-
 
 
 if __name__ == "__main__":
