@@ -429,6 +429,15 @@ class ECVolumeLevelScript(FunTestScript):
                                                   "cleaning up the DB".format(self.container_up_timeout))
                                 fun_test.test_assert(False, "Cleaning DB and restarting run_sc container")
 
+                        self.funcp_spec[0] = self.funcp_obj[0].get_container_objs()
+                        self.funcp_spec[0]["container_names"].sort()
+                        # Ensuring run_sc is still up and running because after restarting run_sc with cleanup,
+                        # chances are that it may die within few seconds after restart
+                        run_sc_status_cmd = "docker ps -a --format '{{.Names}}' | grep run_sc"
+                        run_sc_name = \
+                            self.come_obj[0].command(run_sc_status_cmd, timeout=self.command_timeout).split("\n")[0]
+                        fun_test.simple_assert(run_sc_name, "Container is up and running: run_sc")
+
                         # Declaring SC API controller
                         self.sc_api = StorageControllerApi(api_server_ip=self.come_obj[0].host_ip,
                                                            api_server_port=self.api_server_port,
