@@ -397,7 +397,7 @@ class ECVolumeLevelScript(FunTestScript):
                 if init_fs1600_status(self.come_obj[0]):
                     # If so check all the required dockers are running
                     init_fs1600_service_status = True
-                    expected_containers = ['F1_0', 'F1_1', 'run_sc']
+                    expected_containers = ['F1-0', 'F1-1', 'run_sc']
                     container_names = self.funcp_obj[0].get_container_names(
                         stop_run_sc=False, include_storage=True)['container_name_list']
                     if all(container in container_names for container in expected_containers):
