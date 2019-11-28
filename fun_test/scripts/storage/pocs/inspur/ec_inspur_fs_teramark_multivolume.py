@@ -310,8 +310,6 @@ class ECVolumeLevelScript(FunTestScript):
             self.funcp_obj = {}
             self.funcp_spec = {}
             self.funcp_obj[0] = StorageFsTemplate(self.come_obj[0])
-            self.funcp_spec[0] = self.funcp_obj[0].get_container_objs()
-            self.funcp_spec[0]["container_names"].sort()
             if self.bundle_image_parameters:
                 if self.install == "fresh":
                     path = "{}/{}".format(self.sc_script_dir, self.run_sc_script)
@@ -337,6 +335,8 @@ class ECVolumeLevelScript(FunTestScript):
                                               "cleaning up the DB".format(self.container_up_timeout))
                             fun_test.test_assert(False, "Cleaning DB and restarting run_sc container")
 
+                self.funcp_spec[0] = self.funcp_obj[0].get_container_objs()
+                self.funcp_spec[0]["container_names"].sort()
                 # Ensuring run_sc is still up and running because after restarting run_sc with cleanup,
                 # chances are that it may die within few seconds after restart
                 run_sc_status_cmd = "docker ps -a --format '{{.Names}}' | grep run_sc"
@@ -392,69 +392,104 @@ class ECVolumeLevelScript(FunTestScript):
                 # Check the init-fs1600 service is running
                 # If so check all the required dockers are running
                 # else fallback to legacy by disabling the servicing, killing health check and the left over containers
+                expected_containers_up = False
+                init_fs1600_service_status = False
                 if init_fs1600_status(self.come_obj[0]):
                     # If so check all the required dockers are running
+                    init_fs1600_service_status = True
                     expected_containers = ['F1_0', 'F1_1', 'run_sc']
                     container_names = self.funcp_obj[0].get_container_names(
                         stop_run_sc=False, include_storage=True)['container_name_list']
                     if all(container in container_names for container in expected_containers):
+                        expected_containers_up = True
                         fun_test.log("Expected containers are up and running")
-                    else:
-                        fun_test.log("Expected containers are not up, bringing them up")
+
+                    # Cleaning up DB by restarting run_sc.py script with -c option
+                    if self.install == "fresh":
+                        path = "{}/{}".format(self.sc_script_dir, self.run_sc_script)
+                        if self.come_obj[0].check_file_directory_exists(path=path):
+                            self.come_obj[0].command("cd {}".format(self.sc_script_dir))
+                            # restarting run_sc with -c option
+                            self.come_obj[0].command("sudo ./{} -c restart".format(self.run_sc_script))
+                            fun_test.test_assert_expected(expected=0, actual=self.come_obj[0].exit_status(),
+                                                          message="run_sc restarted with cleanup")
+                            # check if run_sc container is running
+                            run_sc_status_cmd = "docker ps -a --format '{{.Names}}' | grep run_sc"
+                            timer = FunTimer(max_time=self.container_up_timeout)
+                            while not timer.is_expired():
+                                run_sc_name = self.come_obj[0].command(
+                                    run_sc_status_cmd, timeout=self.command_timeout).split("\n")[0]
+                                if run_sc_name:
+                                    fun_test.log("run_sc container is up and running")
+                                    break
+                                else:
+                                    fun_test.sleep("for the run_sc docker container to start", 1)
+                            else:
+                                fun_test.critical("run_sc container is not restarted within {} seconds after "
+                                                  "cleaning up the DB".format(self.container_up_timeout))
+                                fun_test.test_assert(False, "Cleaning DB and restarting run_sc container")
+                if not init_fs1600_service_status or (init_fs1600_service_status and not expected_containers_up):
+                    fun_test.log("Expected containers are not up, bringing them up")
+                    if init_fs1600_service_status:
                         # Disable init-fs1600 service
                         fun_test.simple_assert(disalbe_init_fs1600(self.come_obj[0]), "init-fs1600 service is disabled")
+                        init_fs1600_service_status = False
 
-                        # kill run_sc health_check and all containers
-                        containers = self.funcp_obj[0].get_container_names(stop_run_sc=True)
-                        fun_test.simple_assert(container_names['status'],
-                                               "System Health Check service and run_sc container is stopped")
-                        stop_containers = self.funcp_obj[0].stop_container(
-                            container_names=containers['container_name_list'])
-                        fun_test.simple_assert(stop_containers, message="Docker containers are stopped")
+                    # kill run_sc health_check and all containers
+                    health_check_pid = self.come_obj[0].get_process_id_by_pattern("system_health_check.py")
+                    if health_check_pid:
+                        self.come_obj.kill_process(process_id=health_check_pid)
+                    else:
+                        fun_test.critical("system_health_check.py script is not running")
 
-                        # Bring-up the containers
-                        for index in xrange(self.num_duts):
-                            # Removing existing db directories for fresh setup
-                            if self.install == "fresh":
-                                for directory in self.sc_db_directories:
-                                    if self.come_obj[index].check_file_directory_exists(path=directory):
-                                        fun_test.log("Removing Directory {}".format(directory))
-                                        self.come_obj[index].sudo_command("rm -rf {}".format(directory))
-                                        fun_test.test_assert_expected(actual=self.come_obj[index].exit_status(), expected=0,
-                                                                      message="Directory {} is removed".format(directory))
-                                    else:
-                                        fun_test.log("Directory {} does not exist skipping deletion".format(directory))
-                            else:
-                                fun_test.log("Skipping run_sc restart with cleanup")
-                            self.funcp_obj[index] = StorageFsTemplate(self.come_obj[index])
-                            self.funcp_spec[index] = self.funcp_obj[index].deploy_funcp_container(
-                                update_deploy_script=self.update_deploy_script, update_workspace=self.update_workspace,
-                                mode=self.funcp_mode)
-                            fun_test.test_assert(self.funcp_spec[index]["status"],
-                                                 "Starting FunCP docker container in DUT {}".format(index))
-                            self.funcp_spec[index]["container_names"].sort()
-                            for f1_index, container_name in enumerate(self.funcp_spec[index]["container_names"]):
-                                if container_name == "run_sc":
-                                    continue
-                                bond_interfaces = self.fs_spec[index].get_bond_interfaces(f1_index=f1_index)
-                                bond_name = "bond0"
-                                bond_ip = bond_interfaces[0].ip
-                                self.f1_ips.append(bond_ip.split('/')[0])
-                                slave_interface_list = bond_interfaces[0].fpg_slaves
-                                slave_interface_list = [self.fpg_int_prefix + str(i) for i in slave_interface_list]
-                                self.funcp_obj[index].configure_bond_interface(
-                                    container_name=container_name, name=bond_name, ip=bond_ip,
-                                    slave_interface_list=slave_interface_list)
-                                # Configuring route
-                                route = self.fs_spec[index].spec["bond_interface_info"][str(f1_index)][str(0)][
-                                    "route"][0]
-                                cmd = "sudo ip route add {} via {} dev {}".format(route["network"], route["gateway"],
-                                                                                  bond_name)
-                                route_add_status = self.funcp_obj[index].container_info[container_name].command(cmd)
-                                fun_test.test_assert_expected(
-                                    expected=0,
-                                    actual=self.funcp_obj[index].container_info[container_name].exit_status(),
-                                    message="Configure Static route")
+                    for container in ["F1-0", "F1-1", "run_sc"]:
+                        docker_stop_cmd = "docker stop {}".format(container)
+                        self.come_obj[0].command(docker_stop_cmd)
+
+                    # Bring-up the containers
+                    for index in xrange(self.num_duts):
+                        # Removing existing db directories for fresh setup
+                        if self.install == "fresh":
+                            for directory in self.sc_db_directories:
+                                if self.come_obj[index].check_file_directory_exists(path=directory):
+                                    fun_test.log("Removing Directory {}".format(directory))
+                                    self.come_obj[index].sudo_command("rm -rf {}".format(directory))
+                                    fun_test.test_assert_expected(
+                                        actual=self.come_obj[index].exit_status(), expected=0,
+                                        message="Directory {} is removed".format(directory))
+                                else:
+                                    fun_test.log("Directory {} does not exist skipping deletion".format(directory))
+                        else:
+                            fun_test.log("Skipping run_sc restart with cleanup")
+                        self.funcp_obj[index] = StorageFsTemplate(self.come_obj[index])
+                        self.funcp_spec[index] = self.funcp_obj[index].deploy_funcp_container(
+                            update_deploy_script=self.update_deploy_script, update_workspace=self.update_workspace,
+                            mode=self.funcp_mode)
+                        fun_test.test_assert(self.funcp_spec[index]["status"],
+                                             "Starting FunCP docker container in DUT {}".format(index))
+                        self.funcp_spec[index]["container_names"].sort()
+                        for f1_index, container_name in enumerate(self.funcp_spec[index]["container_names"]):
+                            if container_name == "run_sc":
+                                continue
+                            bond_interfaces = self.fs_spec[index].get_bond_interfaces(f1_index=f1_index)
+                            bond_name = "bond0"
+                            bond_ip = bond_interfaces[0].ip
+                            self.f1_ips.append(bond_ip.split('/')[0])
+                            slave_interface_list = bond_interfaces[0].fpg_slaves
+                            slave_interface_list = [self.fpg_int_prefix + str(i) for i in slave_interface_list]
+                            self.funcp_obj[index].configure_bond_interface(
+                                container_name=container_name, name=bond_name, ip=bond_ip,
+                                slave_interface_list=slave_interface_list)
+                            # Configuring route
+                            route = self.fs_spec[index].spec["bond_interface_info"][str(f1_index)][str(0)][
+                                "route"][0]
+                            cmd = "sudo ip route add {} via {} dev {}".format(route["network"], route["gateway"],
+                                                                              bond_name)
+                            route_add_status = self.funcp_obj[index].container_info[container_name].command(cmd)
+                            fun_test.test_assert_expected(
+                                expected=0,
+                                actual=self.funcp_obj[index].container_info[container_name].exit_status(),
+                                message="Configure Static route")
 
             # Forming shared variables for defined parameters
             fun_test.shared_variables["f1_in_use"] = self.f1_in_use
@@ -700,6 +735,7 @@ class ECVolumeLevelScript(FunTestScript):
                 fun_test.critical(str(ex))
                 come_reboot = True
 
+        '''
         if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
                 self.testbed_config["workarounds"]["enable_funcp"]:
             try:
@@ -713,7 +749,7 @@ class ECVolumeLevelScript(FunTestScript):
             except Exception as ex:
                 fun_test.critical(str(ex))
                 come_reboot = True
-        '''
+        
         # disabling COMe reboot in cleanup section as, setup bring-up handles it through COMe power-cycle
         try:
             if come_reboot:
@@ -722,9 +758,9 @@ class ECVolumeLevelScript(FunTestScript):
                 self.fs.come_reset(max_wait_time=self.reboot_timeout)
         except Exception as ex:
             fun_test.critical(str(ex))
-        '''
+        
         self.topology.cleanup()
-
+        '''
 
 class ECVolumeLevelTestcase(FunTestCase):
 
