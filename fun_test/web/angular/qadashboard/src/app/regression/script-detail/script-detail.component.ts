@@ -356,7 +356,7 @@ export class ScriptDetailComponent implements OnInit {
     console.log(checkpointsInConsideration);
 
 
-    let checkpointIndexesToFetch = Array.from(Array(checkpointIndex + 1).keys());
+    let checkpointIndexesToFetch = Array.from(Array(checkpointIndex + 1 + 1).keys());  // fetch logs for one checkpoint before and after
     //checkpointIndexesToFetch = checkpointIndexesToFetch.filter(checkpointIndex => !testCaseExecution.checkpoints[checkpointIndex].hasOwnProperty("timeSeries"));
     let checkpointId = `${testCaseExecution.test_case_id}_${checkpointIndex}_${contextId}`;
 
@@ -380,7 +380,10 @@ export class ScriptDetailComponent implements OnInit {
 
   fetchLogsForCheckpoints(testCaseExecution, checkpointIndexesToFetch, checkpointIndexClicked): Observable<any> {
     checkpointIndexesToFetch = checkpointIndexesToFetch.filter(checkpointIndex => {
-      return !testCaseExecution.checkpoints[checkpointIndex].hasOwnProperty("timeSeries") && ((checkpointIndexClicked === checkpointIndex || ((checkpointIndexClicked - checkpointIndex) === 1)));
+      let difference: number = checkpointIndexClicked - checkpointIndex;
+      if (testCaseExecution.checkpoints.hasOwnProperty(checkpointIndex)) {
+        return !testCaseExecution.checkpoints[checkpointIndex].hasOwnProperty("timeSeries") && ((difference === 0 || (difference === 1) || (difference === -1)));
+      }
     });
 
     if (checkpointIndexesToFetch.length > 0) {
