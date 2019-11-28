@@ -399,7 +399,7 @@ class ECVolumeLevelScript(FunTestScript):
                     init_fs1600_service_status = True
                     expected_containers = ['F1-0', 'F1-1', 'run_sc']
 
-                    container_chk_timer = FunTimer(max_time=self.container_up_timeout)
+                    container_chk_timer = FunTimer(max_time=(self.container_up_timeout * 2))
                     while not container_chk_timer.is_expired():
                         container_names = self.funcp_obj[0].get_container_names(
                             stop_run_sc=False, include_storage=True)['container_name_list']
