@@ -397,7 +397,7 @@ class ECVolumeLevelScript(FunTestScript):
                 if init_fs1600_status(self.come_obj[0]):
                     # If so check all the required dockers are running
                     init_fs1600_service_status = True
-                    expected_containers = ['F1-0', 'F1-1', 'run_cj']
+                    expected_containers = ['F1-0', 'F1-1', 'run_sc']
 
                     container_chk_timer = FunTimer(max_time=(self.container_up_timeout * 2))
                     while not container_chk_timer.is_expired():
