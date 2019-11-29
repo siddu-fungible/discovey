@@ -1423,7 +1423,7 @@ class ComE(Linux):
             command = "./dpcsh --pcie_nvme_sock=/dev/nvme{} --nvme_cmd_timeout={} --tcp_proxy={} &> {} &".format(nvme_device_index,
                                                                                                                  self.NVME_CMD_TIMEOUT,
                                                                                                                  self.get_dpc_port(f1_index=f1_index, statistics=statistics, csi_perf=csi_perf),
-                                                                                                                 self.get_dpc_log_path(f1_index=f1_index, statistics=statistics))
+                                                                                                                 self.get_dpc_log_path(f1_index=f1_index, statistics=statistics, csi_perf=csi_perf))
             self.sudo_command(command)
 
         fun_test.sleep(message="DPC socket creation", context=self.context)
@@ -1484,9 +1484,9 @@ class ComE(Linux):
     def get_dpc_log_path(self, f1_index, statistics=None, csi_perf=None):
         path = self.DPC_LOG_PATH.format(f1_index)
         if statistics:
-            path = self.DPC_STATISTICS_LOG_PATH[f1_index]
+            path = self.DPC_STATISTICS_LOG_PATH.format(f1_index)
         if csi_perf:
-            path = self.DPC_CSI_PERF_LOG_PATH[f1_index]
+            path = self.DPC_CSI_PERF_LOG_PATH.format(f1_index)
         return path
 
     def _get_context_prefix(self, data):

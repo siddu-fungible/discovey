@@ -1,10 +1,9 @@
-<ng-container *ngFor="let statistic of statistics">
-  <div class="fun-panel">
-    <div class="fun-panel-header">
-      {{ statistic.statisticsCategory.display_name }} -- {{ statistic.statisticsSubCategory.display_name }}
-    </div>
-    <app-bam [scriptExecutionInfo]="scriptExecutionInfo" *ngIf="statistic.statisticsCategory.name ==='system' && statistic.statisticsSubCategory.name ==='bam'">
-    </app-bam>
-  </div>
+<div style="padding: 10px">
+  <ng-container *ngFor="let statistic of statistics">
+    <app-section-header [value]="statistic.statisticsCategory.display_name + ' -- ' + statistic.statisticsSubCategory.display_name">
+    </app-section-header>
+      <app-bam [scriptExecutionInfo]="scriptExecutionInfo" *ngIf="statistic.statisticsCategory.name ==='system' && statistic.statisticsSubCategory.name ==='bam'">
+      </app-bam>
+  </ng-container>
+</div>
 
-</ng-container>
