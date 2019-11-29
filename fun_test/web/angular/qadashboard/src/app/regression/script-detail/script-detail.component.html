@@ -85,22 +85,25 @@
   <div *ngIf="showingArtifactPanel" [@show]="showingArtifactPanel" style="padding: 10px">
       <app-section-header [value]="'Artifacts'"></app-section-header>
     <div class="fun-panel-body">
-      <span>Filters:</span>
-      <span class="fun-attribute-label">Asset type:</span>
-      <select [(ngModel)]="artifactFilter.assetType">
-        <option [ngValue]="null">-- ALL --</option>
-        <option *ngFor="let availableAssetType of artifactTree.availableAssetTypes" [ngValue]="availableAssetType">
-          {{ availableAssetType }}
-        </option>
-      </select>
+      <div style="padding: 10px">
+        <span>Filters:</span>
+        <span class="fun-attribute-label">Asset type:</span>
+        <select [(ngModel)]="artifactFilter.assetType">
+          <option [ngValue]="null">-- ALL --</option>
+          <option *ngFor="let availableAssetType of artifactTree.availableAssetTypes" [ngValue]="availableAssetType">
+            {{ availableAssetType }}
+          </option>
+        </select>
 
-      <span class="fun-attribute-label">Asset</span>
-      <select [(ngModel)]="artifactFilter.assetId">
-        <option [ngValue]="null">-- ALL --</option>
-        <option *ngFor="let availableAssetId of artifactTree.availableAssetIds" [ngValue]="availableAssetId">
-          {{ availableAssetId }}
-        </option>
-      </select>
+        <span class="fun-attribute-label">Asset</span>
+        <select [(ngModel)]="artifactFilter.assetId">
+          <option [ngValue]="null">-- ALL --</option>
+          <option *ngFor="let availableAssetId of artifactTree.availableAssetIds" [ngValue]="availableAssetId">
+            {{ availableAssetId }}
+          </option>
+        </select>
+      </div>
+
 
 
       <table class="fun-table">

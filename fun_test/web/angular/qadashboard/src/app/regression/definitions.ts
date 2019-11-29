@@ -42,5 +42,20 @@ export class ReleaseCatalog {
 }
 
 export class RegisteredAsset {
-  
+  asset_id: string;
+  asset_type: string;
+  constructor (fields?: {}) {
+    if (fields) {
+      Object.keys(fields).forEach(field => {
+        if (field === 'asset_id') {
+          this.asset_id = fields["asset_id"];
+        }
+        if (field === 'asset_type') {
+          this.asset_type = fields["asset_type"];
+        }
+      })
+    }
+  }
 }
+
+

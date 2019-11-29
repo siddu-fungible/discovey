@@ -4,7 +4,7 @@ import {LoggerService} from "../services/logger/logger.service";
 import {catchError, switchMap} from 'rxjs/operators';
 import {forkJoin, observable, Observable, of, throwError} from "rxjs";
 import {CommonService} from "../services/common/common.service";
-import {ReleaseCatalogSuite, ReleaseCatalog} from "./definitions";
+import {ReleaseCatalogSuite, ReleaseCatalog, RegisteredAsset} from "./definitions";
 import {Suite} from "./suite-editor/suite-editor.service";
 
 
@@ -427,9 +427,10 @@ export class RegressionService implements OnInit{
     params.push(["type", 400]);
     url += this.commonService.queryParamsToString(params);
     return this.apiService.get(url).pipe(switchMap(response => {
-      return of(response.data);
+      let registeredAssets = response.data.map(asset => new RegisteredAsset(asset));
+      return of(registeredAssets);
     }), catchError(error => {
-      this.loggerService.error("Unable to fetch test-case tables");
+      this.loggerService.error("Unable to fetch registered assets");
       return throwError(error);
     }))
   }

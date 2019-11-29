@@ -9,6 +9,7 @@ import {CommonService} from "../../services/common/common.service";
 import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
 import {ScriptDetailService, ContextInfo, ScriptRunTime} from "./script-detail.service";
 import {StatisticsService, StatisticsCategory, StatisticsSubCategory} from "../../statistics/statistics.service";
+import {RegisteredAsset} from "../definitions";
 
 class DataModel {
   letter: string;
@@ -181,6 +182,7 @@ export class ScriptDetailComponent implements OnInit {
   artifactTree: ArtifactTree = new ArtifactTree();
   showingTablesPanel: boolean = false;
   testCaseTablePanels: {[panelHeader: string]: any} = {};
+  registeredAssets: RegisteredAsset [];
 
   ngOnInit() {
 
@@ -566,6 +568,7 @@ export class ScriptDetailComponent implements OnInit {
     this.scriptExecutionInfo["suite_execution_id"] = this.suiteExecutionId;
     this.scriptExecutionInfo["current_test_case_execution"] = this.currentTestCaseExecution;
     this.scriptExecutionInfo["current_checkpoint_index"] = this.currentCheckpointIndex;
+    this.scriptExecutionInfo["registered_assets"] = this.registeredAssets;
     this.scriptExecutionInfo = {...this.scriptExecutionInfo};
   }
 
