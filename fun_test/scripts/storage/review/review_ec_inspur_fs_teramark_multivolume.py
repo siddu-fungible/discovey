@@ -397,7 +397,7 @@ class ECVolumeLevelScript(FunTestScript):
                 if init_fs1600_status(self.come_obj[0]):
                     # If so check all the required dockers are running
                     init_fs1600_service_status = True
-                    expected_containers = ['F1-0', 'F1-1', 'run_sc']
+                    expected_containers = ['F1-0', 'F1-1', 'run_cj']
 
                     container_chk_timer = FunTimer(max_time=(self.container_up_timeout * 2))
                     while not container_chk_timer.is_expired():
@@ -442,8 +442,8 @@ class ECVolumeLevelScript(FunTestScript):
                             # Ensuring run_sc is still up and running because after restarting run_sc with cleanup,
                             # chances are that it may die within few seconds after restart
                             run_sc_status_cmd = "docker ps -a --format '{{.Names}}' | grep run_sc"
-                            run_sc_name = \
-                            self.come_obj[0].command(run_sc_status_cmd, timeout=self.command_timeout).split("\n")[0]
+                            run_sc_name = self.come_obj[0].command(run_sc_status_cmd,
+                                                                   timeout=self.command_timeout).split("\n")[0]
                             fun_test.simple_assert(run_sc_name, "Container is up and running: run_sc")
 
                             # Declaring SC API controller
