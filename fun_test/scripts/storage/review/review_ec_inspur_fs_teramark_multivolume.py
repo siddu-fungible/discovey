@@ -501,15 +501,15 @@ class ECVolumeLevelScript(FunTestScript):
                         fun_test.simple_assert(disalbe_init_fs1600(self.come_obj[0]), "init-fs1600 service is disabled")
                         init_fs1600_service_status = False
 
+                    # Stopping containers and unloading the drivers
+                    self.come_obj[0].command("sudo /opt/fungible/cclinux/cclinux_service.sh --stop")
+
                     # kill run_sc health_check and all containers
                     health_check_pid = self.come_obj[0].get_process_id_by_pattern("system_health_check.py")
                     if health_check_pid:
                         self.come_obj[0].kill_process(process_id=health_check_pid)
                     else:
                         fun_test.critical("system_health_check.py script is not running")
-
-                    # Stopping containers and unloading the drivers
-                    self.come_obj[0].command("sudo /opt/fungible/cclinux/cclinux_service.sh --stop")
 
                     # Bring-up the containers
                     for index in xrange(self.num_duts):
