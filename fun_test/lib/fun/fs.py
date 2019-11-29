@@ -1308,7 +1308,7 @@ class ComE(Linux):
         self.sudo_command("chmod 777 {}".format(target_file_name))
         self.sudo_command("{} install".format(target_file_name), timeout=500)
         exit_status = self.exit_status()
-        fun_test.test_assert(exit_status == 0, "Bundle install complete. Exit status valid")
+        fun_test.test_assert(exit_status == 0, "Bundle install complete. Exit status valid", context=self.context)
         return True
 
 
