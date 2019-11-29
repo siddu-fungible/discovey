@@ -793,7 +793,7 @@ class FunTest:
         self.fss.append(fs)
         asset_name = fs.get_asset_name()
         if asset_name and self.time_series_enabled:
-            self.add_time_series_registered_asset(asset_name=asset_name)
+            self.add_time_series_registered_asset(asset_name=asset_name, asset_type=AssetType.DUT)
 
     def get_topologies(self):
         return self.topologies
@@ -934,10 +934,11 @@ class FunTest:
             self.critical(str(ex))
             self.enable_time_series(enable=False)
 
-    def add_time_series_registered_asset(self, asset_name):
+    def add_time_series_registered_asset(self, asset_name, asset_type=None):
         try:
             epoch_time = get_current_epoch_time()
-            data = {"asset_id": asset_name}
+            data = {"asset_id": asset_name,
+                    "asset_type": asset_type}
             self.add_time_series_document(collection_name=self.get_time_series_collection_name(),
                                           epoch_time=epoch_time,
                                           type=TimeSeriesTypes.REGISTERED_ASSET,

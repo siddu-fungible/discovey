@@ -330,7 +330,6 @@ export class RegressionService implements OnInit{
     let url = `/api/v1/regression/scripts`
   }
 
-
   _getFlatPath(suiteExecutionId, path, logPrefix) {
     let httpPath = "/static/logs/s_" + suiteExecutionId;
     let parts = path.split("/");
@@ -422,5 +421,17 @@ export class RegressionService implements OnInit{
     }))
   }
 
+  getRegisteredAssets(suiteExecutionId) {
+    let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}`;
+    let params = [];
+    params.push(["type", 400]);
+    url += this.commonService.queryParamsToString(params);
+    return this.apiService.get(url).pipe(switchMap(response => {
+      return of(response.data);
+    }), catchError(error => {
+      this.loggerService.error("Unable to fetch test-case tables");
+      return throwError(error);
+    }))
+  }
 
 }

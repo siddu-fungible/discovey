@@ -40,3 +40,7 @@ export class ReleaseCatalog {
     return payload;
   }
 }
+
+export class RegisteredAsset {
+  
+}
