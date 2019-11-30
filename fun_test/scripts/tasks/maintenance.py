@@ -130,7 +130,7 @@ class DetectLargeFiles(FunTestCase):
 
 
 class CheckMongoCollectionCount(FunTestCase):
-    MAX_COLLECTIONS = 4000
+    MAX_COLLECTIONS = 5000
 
     def describe(self):
         self.set_test_details(id=5, summary="Ensure mongodb collection count is in control", steps=""" """)
