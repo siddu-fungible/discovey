@@ -26,7 +26,7 @@ class StatisticsCollector:
         return self.type
 
     def get_asset_id(self):
-        return
+        return self.asset_id
 
 class StatisticsStorageHandler:
     FILE_TYPE_HANDLER = 10
