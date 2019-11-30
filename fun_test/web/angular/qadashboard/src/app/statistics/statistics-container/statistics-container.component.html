@@ -1,8 +1,17 @@
 <div style="padding: 10px">
   <ng-container *ngFor="let statistic of statistics">
+    <div style="padding: 10px">
+      <span>Filters:</span>
+      <span class="fun-attribute-label">Asset</span>
+      <select [(ngModel)]="selectedAsset">
+        <option *ngFor="let registeredAsset of scriptExecutionInfo.registered_assets" [ngValue]="registeredAsset">
+          {{ registeredAsset.asset_id }}
+        </option>
+      </select>
+    </div>
     <app-section-header [value]="statistic.statisticsCategory.display_name + ' -- ' + statistic.statisticsSubCategory.display_name">
     </app-section-header>
-      <app-bam [scriptExecutionInfo]="scriptExecutionInfo" *ngIf="statistic.statisticsCategory.name ==='system' && statistic.statisticsSubCategory.name ==='bam'">
+      <app-bam [scriptExecutionInfo]="scriptExecutionInfo" *ngIf="selectedAsset && selectedAsset.asset_type === 'DUT' && statistic.statisticsCategory.name ==='system' && statistic.statisticsSubCategory.name ==='bam'">
       </app-bam>
   </ng-container>
 </div>

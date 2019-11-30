@@ -195,6 +195,7 @@ export class ScriptDetailComponent implements OnInit {
       this.scriptPath = response.script_path;
       return this.regressionService.getRegisteredAssets(this.suiteExecutionId);
     })).pipe(switchMap(response => {
+      this.registeredAssets = response;
       return this.service.getContexts(this.suiteExecutionId, this.scriptId);
     })).pipe(switchMap(response => {
       this.availableContexts = response;

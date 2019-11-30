@@ -427,7 +427,7 @@ export class RegressionService implements OnInit{
     params.push(["type", 400]);
     url += this.commonService.queryParamsToString(params);
     return this.apiService.get(url).pipe(switchMap(response => {
-      let registeredAssets = response.data.map(asset => new RegisteredAsset(asset));
+      let registeredAssets = response.data.map(asset => new RegisteredAsset(asset.data));
       return of(registeredAssets);
     }), catchError(error => {
       this.loggerService.error("Unable to fetch registered assets");
