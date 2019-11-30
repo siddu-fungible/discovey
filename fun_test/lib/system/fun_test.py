@@ -1536,6 +1536,14 @@ class FunTest:
                                           sub_category=artifact_sub_category)
 
     def send_mail(self, subject, content, to_addresses=["john.abraham@fungible.com"]):
+        try:
+            if fun_test.suite_execution_id:
+                suite_execution = models_helper.get_suite_execution(suite_execution_id=fun_test.suite_execution_id)
+                if suite_execution:
+                    to_addresses.append(suite_execution.submitter_email)
+                    content += '<br><a href="{}/regression/suite_detail/{}">Suite detail link</a>'.format(get_homepage_url(), fun_test.suite_execution_id)
+        except Exception as ex:
+            self.critical(str(ex))
         send_mail(to_addresses=to_addresses, subject=subject, content=content)
 
     def add_start_checkpoint(self):
