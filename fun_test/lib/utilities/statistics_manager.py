@@ -12,7 +12,7 @@ class StatisticsCategory(Codes):
 
 
 class StatisticsCollector:
-    def __init__(self, collector, category, type, storage_file_handler=None, storage_db_handler=None, **kwargs):
+    def __init__(self, collector, category, type, storage_file_handler=None, storage_db_handler=None, asset_id=None, **kwargs):
         self.collector = collector
         self.category = category
         self.type = type
@@ -20,9 +20,13 @@ class StatisticsCollector:
         self.storage_db_handler = storage_db_handler
         self.kwargs = kwargs
         self.storage_db = True
+        self.asset_id = asset_id
 
     def get_type(self):
         return self.type
+
+    def get_asset_id(self):
+        return
 
 class StatisticsStorageHandler:
     FILE_TYPE_HANDLER = 10
@@ -60,6 +64,7 @@ class CollectorWorker(Thread):
                                             type=TimeSeriesTypes.STATISTICS,
                                             te=fun_test.get_current_test_case_execution_id(),
                                             t=self.collector.get_type(),
+                                            asset_id=self.collector.get_asset_id(),
                                             data=data)
             fun_test.sleep(seconds=self.interval_in_seconds, message="", no_log=True)
 

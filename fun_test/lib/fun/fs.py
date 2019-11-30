@@ -1782,7 +1782,10 @@ class Fs(object, ToDictMixin):
 
     def register_statistics(self, statistics_type):
         statistics_manager = fun_test.get_statistics_manager()
-        collector = StatisticsCollector(collector=self, category=StatisticsCategory.FS_SYSTEM, type=self.StatisticsType.BAM)
+        collector = StatisticsCollector(collector=self,
+                                        category=StatisticsCategory.FS_SYSTEM,
+                                        type=self.StatisticsType.BAM,
+                                        asset_id=self.get_asset_name())
         self.statistics_collectors[statistics_type] = statistics_manager.register_collector(collector=collector)
 
     def get_context(self):
