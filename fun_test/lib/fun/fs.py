@@ -1399,8 +1399,8 @@ class ComE(Linux):
     def setup_dpc(self, statistics=None, csi_perf=None):
         if statistics and self.starting_dpc_for_statistics:
             return True  #TODO: testing only
-
-        self.starting_dpc_for_statistics = True
+        if statistics:   #TODO: testing only
+            self.starting_dpc_for_statistics = True
         # self.command("cd $WORKSPACE/FunControlPlane")
         """
         output = self.sudo_command("build/posix/bin/funq-setup bind")
@@ -2233,7 +2233,10 @@ class Fs(object, ToDictMixin):
             cmd = "vp_util"
             dpc_result = dpc_client.json_execute(verb="debug", data=cmd, command_duration=command_duration)
             if dpc_result["status"]:
-                f1_level_result[f1_index] = dpc_result["data"]
+                raw_data = dpc_result["data"]
+                fixed_data = {key.replace(".", "_"): value for key, value in raw_data.iteritems()}
+                f1_level_result[f1_index] = fixed_data
+
         result["data"] = f1_level_result
         if f1_level_result:
             result["status"] = True

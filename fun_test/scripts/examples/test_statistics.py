@@ -72,6 +72,9 @@ class FunTestCase2(FunTestCase):
         fs = topology.get_dut_instance(index=0)
         fs.register_statistics(statistics_type=Fs.StatisticsType.BAM)
         fs.start_statistics_collection(statistics_type=Fs.StatisticsType.BAM)
+        fs.register_statistics(statistics_type=Fs.StatisticsType.DEBUG_VP_UTIL)
+        fs.start_statistics_collection(statistics_type=Fs.StatisticsType.DEBUG_VP_UTIL)
+
         fun_test.sleep("Waiting for chart data", seconds=120)
         come = fs.get_come()
         come.setup_tools()
