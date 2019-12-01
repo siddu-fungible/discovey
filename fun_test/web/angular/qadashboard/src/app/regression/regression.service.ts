@@ -219,7 +219,8 @@ export class RegressionService implements OnInit{
                      minCheckpointIndex?: number,
                      maxCheckpointIndex?: number,
                      type?: number,
-                     statisticsType?: number) {
+                     statisticsType?: number,
+                     assetId?: string) {
     let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}`;
     let params = [];
     if (checkpointIndex !== null) {
@@ -239,6 +240,9 @@ export class RegressionService implements OnInit{
       }
       if (statisticsType) {
         params.push(["t", statisticsType]);
+      }
+      if (assetId) {
+        params.push(["asset_id", assetId]);
       }
     }
     let queryParamString = this.commonService.queryParamsToString(params);
