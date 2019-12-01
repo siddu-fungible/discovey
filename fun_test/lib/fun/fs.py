@@ -1174,6 +1174,7 @@ class ComE(Linux):
         self.funq_bind_device = {}
         self.dpc_for_statistics_ready = False
         self.dpc_for_csi_perf_ready = False
+        self.starting_dpc_for_statistics = False # Just temporarily while statistics manager is being developed TODO
 
     def pre_reboot_cleanup(self):
         fun_test.log("Cleaning up storage controller containers", context=self.context)
@@ -1396,7 +1397,10 @@ class ComE(Linux):
         return True
 
     def setup_dpc(self, statistics=None, csi_perf=None):
+        if statistics and self.starting_dpc_for_statistics:
+            return True  #TODO: testing only
 
+        self.starting_dpc_for_statistics = True
         # self.command("cd $WORKSPACE/FunControlPlane")
         """
         output = self.sudo_command("build/posix/bin/funq-setup bind")
@@ -1629,6 +1633,8 @@ class Fs(object, ToDictMixin):
 
     class StatisticsType(Codes):
         BAM = 1000
+        DEBUG_VP_UTIL = 1050
+
 
     STATISTICS_COLLECTOR_MAP = {}
 
@@ -2217,6 +2223,23 @@ class Fs(object, ToDictMixin):
         # fun_test.log("BAM result: {} {}".format(result, f1_level_result))
         return result
 
+    def debug_vp_util(self, command_duration=2):
+        result = {"status": False}
+        f1_level_result = {}
+        for f1_index in range(self.NUM_F1S):
+            if f1_index == self.disable_f1_index:
+                continue
+            dpc_client = self.get_dpc_client(f1_index=f1_index, auto_disconnect=True, statistics=True)
+            cmd = "vp_util"
+            dpc_result = dpc_client.json_execute(verb="debug", data=cmd, command_duration=command_duration)
+            if dpc_result["status"]:
+                f1_level_result[f1_index] = dpc_result["data"]
+        result["data"] = f1_level_result
+        if f1_level_result:
+            result["status"] = True
+
+        return result
+
     def bmc_initialize(self):
         bmc = self.get_bmc(disable_f1_index=self.disable_f1_index)
         fun_test.simple_assert(expression=bmc._connect(), message="BMC connected", context=self.context)
@@ -2340,6 +2363,11 @@ class Fs(object, ToDictMixin):
             bam_result = self.bam(**kwargs)
             if bam_result["status"]:
                 result["data"] = bam_result["data"]
+                result["status"] = True
+        if statistics_type == self.StatisticsType.DEBUG_VP_UTIL:
+            debug_vp_result = self.debug_vp_util(**kwargs)
+            if debug_vp_result["status"]:
+                result["data"] = debug_vp_result["data"]
                 result["status"] = True
         return result
 

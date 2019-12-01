@@ -108,15 +108,24 @@ if __name__ == "__main__":
     from asset.asset_manager import AssetManager
 
     asset_manager = AssetManager()
-    fs_spec = asset_manager.get_fs_by_name("fs-102")
+    fs_spec = asset_manager.get_fs_by_name("fs-118")
 
     fs_obj = Fs.get(fs_spec=fs_spec, already_deployed=True, disable_f1_index=1)
-    come_obj = fs_obj.get_come()
-    come_obj.command("date")
-    come_obj.command("ps -ef | grep nvme")
-    fs_obj.bam()
+    #come_obj = fs_obj.get_come()
+    #come_obj.command("date")
+    #come_obj.command("ps -ef | grep nvme")
+    # fs_obj.bam()
+    # fs_obj.debug_vp_util()
+
+
 
     sm = StatisticsManager()
     sc = StatisticsCollector(collector=fs_obj, category=StatisticsCategory.FS_SYSTEM, type=Fs.StatisticsType.BAM)
     collector_id = sm.register_collector(collector=sc)
+    sc = StatisticsCollector(collector=fs_obj, category=StatisticsCategory.FS_SYSTEM, type=Fs.StatisticsType.DEBUG_VP_UTIL)
+    collector_id = sm.register_collector(collector=sc)
+
     sm.start_all()
+
+    # fun_test.sleep(seconds=120, message="just wait")
+
