@@ -8,7 +8,7 @@
     "FIO_SERVER": {"per": 100}
   },
   "boot_new_image": false,
-  "add_to_database": false,
+  "add_to_database": true,
   "disable_f1_index": null,
   "ec_vol": false,
   "upload_to_file": false,

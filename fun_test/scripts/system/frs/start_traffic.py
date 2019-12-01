@@ -1791,7 +1791,7 @@ class FrsTestCase(FunTestCase):
         fun_test.test_assert(True, "Started ZIP on F1: {}".format(f1))
 
     def start_dma_app(self, come_handle, f1):
-        get_parameters = {"dma_mode":1, "num_iter": 2000000}
+        get_parameters = {"dma_mode":1, "num_iter": 1500000}
         self.dma_app(come_handle, f1, **get_parameters)
         fun_test.test_assert(True, "Started DMA SPEED on F1: {}".format(f1))
 
