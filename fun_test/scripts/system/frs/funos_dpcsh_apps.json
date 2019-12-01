@@ -4,13 +4,14 @@
     "zip":{"per": 100},
     "crypto":  {"per":  100},
     "dma_speed":  {"per":  100},
-    "rcnvme":  {"per":  90},
-    "le": {"per": 100}
+    "rcnvme":  {"per":  80},
+    "FIO_SERVER": {"per": 100}
   },
   "boot_new_image": false,
-  "add_to_database": true,
+  "add_to_database": false,
   "disable_f1_index": null,
   "ec_vol": false,
+  "upload_to_file": false,
   "collect_stats": [
     "POWER",
     "CDU",
@@ -63,5 +64,17 @@
     "WORKSPACE": "/home/localadmin/fungible_automation/Integration",
     "PYTHONPATH": "/home/localadmin/fungible_automation/Integration/fun_test",
     "SCRIPT_PATH": "/home/localadmin/fungible_automation/Integration/fun_test/scripts/system/frs"
+  },
+  "fio_vm_details": {
+    "0": {
+      "host_ip": "r9-server01",
+      "ssh_username": "localadmin",
+      "ssh_password": "Precious1*"
+    },
+    "1": {
+      "host_ip": "r9-server02",
+      "ssh_username": "localadmin",
+      "ssh_password": "Precious1*"
+    }
   }
 }

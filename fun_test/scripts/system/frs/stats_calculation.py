@@ -12,8 +12,11 @@ def dict_difference(one_data_set, cmd):
     time_2 = one_data_set["time2"]
     time_difference = (time_2 - time_1).seconds
     if cmd == "EQM":
-        dict_1 = dict_1["eqm_stats"]
-        dict_2 = dict_2["eqm_stats"]
+        try:
+            dict_1 = dict_1["eqm_stats"]
+            dict_2 = dict_2["eqm_stats"]
+        except:
+            pass
         diff_dict = dict_difference_div(dict_1, dict_2, time_difference)
         if diff_dict:
             for field in ["EFI->EQC Enqueue Interface valid", "EQC->EFI Dequeue Interface valid"]:
