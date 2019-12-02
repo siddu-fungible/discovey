@@ -1,36 +1,36 @@
 <ng-container *ngFor="let f1 of fs.f1s; let f1Index=index">
   <h5>F1-{{ f1Index }}</h5>
   <div class="fun-flex-container">
-    <div class="fun-flex-item">
+    <div class="fun-flex-item" *ngIf="f1.clusters[0]['debug_vp_util']">
       <fun-chart [title]="'Cluster-0'" [xAxisLabel]="'Sample'" [y1Values]="f1.clusters[0]['debug_vp_util'].series"></fun-chart>
     </div>
-    <div class="fun-flex-item">
+    <div class="fun-flex-item" *ngIf="f1.clusters[1]['debug_vp_util']">
       <fun-chart [title]="'Cluster-1'" [xAxisLabel]="'Sample'" [y1Values]="f1.clusters[1]['debug_vp_util'].series"></fun-chart>
     </div>
-    <div class="fun-flex-item">
+    <div class="fun-flex-item" *ngIf="f1.clusters[2]['debug_vp_util']">
       <fun-chart [title]="'Cluster-2'" [xAxisLabel]="'Sample'" [y1Values]="f1.clusters[2]['debug_vp_util'].series"></fun-chart>
     </div>
   </div>
   <div class="fun-flex-container">
-    <div class="fun-flex-item">
+    <div class="fun-flex-item" *ngIf="f1.clusters[3]['debug_vp_util']">
       <fun-chart [title]="'Cluster-3'" [xAxisLabel]="'Sample'" [y1Values]="f1.clusters[3]['debug_vp_util'].series"></fun-chart>
     </div>
-    <div class="fun-flex-item">
+    <div class="fun-flex-item" *ngIf="f1.clusters[4]['debug_vp_util']">
       <fun-chart [title]="'Cluster-4'" [xAxisLabel]="'Sample'" [y1Values]="f1.clusters[4]['debug_vp_util'].series"></fun-chart>
     </div>
-    <div class="fun-flex-item">
+    <div class="fun-flex-item" *ngIf="f1.clusters[5]['debug_vp_util']">
       <fun-chart [title]="'Cluster-5'" [xAxisLabel]="'Sample'" [y1Values]="f1.clusters[5]['debug_vp_util'].series"></fun-chart>
     </div>
   </div>
 
   <div class="fun-flex-container">
-    <div class="fun-flex-item">
+    <div class="fun-flex-item" *ngIf="f1.clusters[6]['debug_vp_util']">
       <fun-chart [title]="'Cluster-6'" [xAxisLabel]="'Sample'" [y1Values]="f1.clusters[6]['debug_vp_util'].series"></fun-chart>
     </div>
-    <div class="fun-flex-item">
+    <div class="fun-flex-item" *ngIf="f1.clusters[7]['debug_vp_util']">
       <fun-chart [title]="'Cluster-7'" [xAxisLabel]="'Sample'" [y1Values]="f1.clusters[7]['debug_vp_util'].series"></fun-chart>
     </div>
-    <div class="fun-flex-item">
+    <div class="fun-flex-item" *ngIf="f1.clusters[8]['debug_vp_util']">
       <fun-chart [title]="'Cluster-8'" [xAxisLabel]="'Sample'" [y1Values]="f1.clusters[8]['debug_vp_util'].series"></fun-chart>
     </div>
   </div>
