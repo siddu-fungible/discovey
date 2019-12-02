@@ -12,9 +12,15 @@ def dict_difference(one_data_set, cmd):
     time_2 = one_data_set["time2"]
     time_difference = (time_2 - time_1).seconds
     if cmd == "EQM":
+        try:
+            dict_1 = dict_1["eqm_stats"]
+            dict_2 = dict_2["eqm_stats"]
+        except:
+            pass
         diff_dict = dict_difference_div(dict_1, dict_2, time_difference)
-        for field in ["EFI->EQC Enqueue Interface valid", "EQC->EFI Dequeue Interface valid"]:
-            result[field] = diff_dict[field]
+        if diff_dict:
+            for field in ["EFI->EQC Enqueue Interface valid", "EQC->EFI Dequeue Interface valid"]:
+                result[field] = diff_dict[field]
     elif cmd == "LE":
         # peek_value = 320
         field = "cmh_egress_cnt"
@@ -38,7 +44,7 @@ def dict_difference(one_data_set, cmd):
 
 
 def dict_difference_div(dict_1, dict_2, time_difference):
-    return {x: round((dict_2[x] - dict_1[x]) / float(time_difference), 2)
+    return {x: int(round((dict_2[x] - dict_1[x]) / float(time_difference), 2))
             for x in dict_1 if ((x in dict_2) and (type(dict_2[x]) == int or type(dict_2[x]) == float))}
 
 
@@ -101,9 +107,9 @@ def sum_important_fields_hbm(diff_dict):
                         exec("qsys_{}_requests += value".format(mode))
                     if match_na:
                         na_requests += value
-    result["qsys_write_requests"] = round(qsys_write_requests, 2)
-    result["qsys_read_requests"] = round(qsys_read_requests, 2)
-    result["na_requests"] = round(na_requests, 2)
+    result["qsys_write_requests"] = int(round(qsys_write_requests, 2))
+    result["qsys_read_requests"] = int(round(qsys_read_requests, 2))
+    result["na_requests"] = int(round(na_requests, 2))
     return result
 
 def sum_important_fields_ddr(diff_dict):
@@ -121,9 +127,9 @@ def sum_important_fields_ddr(diff_dict):
                     exec ("qsys_{}_requests += value".format(mode))
                 if match_na:
                     na_requests += value
-    result["qsys_write_requests"] = round(qsys_write_requests, 2)
-    result["qsys_read_requests"] = round(qsys_read_requests, 2)
-    result["na_requests"] = round(na_requests, 2)
+    result["qsys_write_requests"] = int(round(qsys_write_requests, 2))
+    result["qsys_read_requests"] = int(round(qsys_read_requests, 2))
+    result["na_requests"] = int(round(na_requests, 2))
     return result
 
 def filter_dict(one_dataset, stat_name):
@@ -164,8 +170,8 @@ def calculate_for_each_cluster(simplified_output):
         result.setdefault("cluster{}".format(cluster), 0)
         result["cluster{}".format(cluster)] += one_data["value"]
     for each_cluster in result:
-        result[each_cluster] = round(result[each_cluster] / 24.0, 4)
-    result["average_value"] = round(sum(result.values()) / 8, 4)
+        result[each_cluster] = int(round(result[each_cluster] / 24.0, 4))
+    result["average_value"] = int(round(sum(result.values()) / 8, 4))
     return result
 
 def filter_rcnvme_and_sum(dpcsh_data):

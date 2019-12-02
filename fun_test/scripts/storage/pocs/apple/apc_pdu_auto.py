@@ -340,7 +340,9 @@ class ApcPduTestcase(FunTestCase):
         result = False
         try:
             self.come_handle.enter_sudo()
-            self.come_handle.command("cd /opt/fungible/FunSDK/bin/Linux/dpcsh")
+            output = self.come_handle.command("cd /opt/fungible/FunSDK/bin/Linux/dpcsh")
+            if "No such file" in output:
+                self.come_handle.command("cd /tmp/workspace/FunSDK/bin/Linux")
             run_cmd = "./dpcsh --pcie_nvme_sock=/dev/nvme{} --nvme_cmd_timeout=60000 --nocli {}".format(f1, cmd)
             output = self.come_handle.command(run_cmd)
             result = self.parse_dpcsh_output(output)
@@ -397,26 +399,27 @@ class ApcPduTestcase(FunTestCase):
         result = True
         link_status = self.parse_link_status_out(link_status_out, f1=f1, iteration=self.pc_no)
         if link_status:
-            if not expected_port_up:
-                speed = link_status['lport-0']['speed']
-                if speed == "10G":
-                    expected_port_up = {'NU': range(24), 'HNU': []}
-                elif speed == "100G":
-                    expected_port_up = {'NU': [0, 4, 8, 12], 'HNU': []}
-
-            name_xcvr_dict = self.get_name_xcvr(link_status)
-            for field in ['NU', 'HNU']:
-                if expected_port_up[field]:
-                    for port in expected_port_up[field]:
-                        nu_port_name = '{}-FPG-{}'.format(field, port)
-                        if not (nu_port_name in name_xcvr_dict):
-                            return False
-                        if name_xcvr_dict[nu_port_name] == 'ABSENT':
-                            return False
-
+            for port_type, ports_list in expected_port_up.iteritems():
+                for each_port in ports_list:
+                    port_details = self.get_dict_for_port(port_type, each_port, link_status)
+                    if port_details["xcvr"] == "ABSENT":
+                        result = False
+                        break
+                if not result:
+                    break
         else:
             result = False
         return result
+
+    def get_dict_for_port(self, port_type, port, link_status):
+        result = {}
+        for lport, value in link_status.iteritems():
+            if port_type == value.get("type", "") and port == value.get("port", ""):
+                result = value
+                break
+        return result
+
+
 
     @staticmethod
     def parse_link_status_out(link_status_output,
@@ -433,21 +436,24 @@ class ApcPduTestcase(FunTestCase):
                 each_port = each_port.replace(' ', '')
                 try:
                     match_fields = re.search(r'\s?(?P<name>.*)\s+xcvr:(?P<xcvr>\w+)\s+speed:\s+(?P<speed>\w+)\s+'
-                                             r'admin:(?P<admin>[\w ]+)\s+SW:\s+(?P<sw>\d+)\s+HW:\s+(?P<hw>\d+)\s+'
+                                             r'admin:\s{0,10}(?P<admin>[\w ]+)\s+SW:\s+(?P<sw>\d+)\s+HW:\s+(?P<hw>\d+)\s+'
                                              r'LPBK:\s+(?P<lpbk>\d+)\s+FEC:\s+(?P<fec>\d+)', value)
                     if match_fields:
                         one_data_set = {}
                         one_data_set['name'] = match_fields.group('name').replace(' ', '')
+                        if "FPG" in one_data_set['name']:
+                            one_data_set['type'] = "HNU" if "HNU" in one_data_set['name'] else "NU"
+                        one_data_set['port'] = int(re.search(r'\d+', one_data_set['name']).group())
                         one_data_set['xcvr'] = match_fields.group('xcvr')
                         one_data_set['speed'] = match_fields.group('speed')
                         one_data_set['admin'] = match_fields.group('admin')
-                        one_data_set['sw'] = match_fields.group('sw')
-                        one_data_set['hw'] = match_fields.group('hw')
-                        one_data_set['lpbk'] = match_fields.group('lpbk')
-                        one_data_set['fec'] = match_fields.group('fec')
+                        one_data_set['SW'] = int(match_fields.group('sw'))
+                        one_data_set['HW'] = int(match_fields.group('hw'))
+                        one_data_set['LPBK'] = match_fields.group('lpbk')
+                        one_data_set['FEC'] = match_fields.group('fec')
                         table_data_rows.append([one_data_set['name'], one_data_set['xcvr'], one_data_set['speed'],
-                                                one_data_set['admin'], one_data_set['sw'], one_data_set['hw'],
-                                                one_data_set['lpbk'], one_data_set['fec']])
+                                                one_data_set['admin'], one_data_set['SW'], one_data_set['HW'],
+                                                one_data_set['LPBK'], one_data_set['FEC']])
                         result[each_port] = one_data_set
                 except:
                     fun_test.log("Unable to parse the port linkstatus output")

@@ -2544,7 +2544,7 @@ if __name__ == "__main_build_props__":
     transaction.commit()
     transaction.set_autocommit(True)
 
-if __name__ == "__main_pr_build_time__":
+if __name__ == "__main__pr_build_time__":
     owner_info = "Vijay Varkhedi (vijay.varkhedi@fungible.com)"
     source = "https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/system/build_time_performance.py"
     base_line_date = datetime(year=2019, month=11, day=20, minute=0, hour=0, second=0)
@@ -2566,6 +2566,85 @@ if __name__ == "__main_pr_build_time__":
                            peer_ids=[], creator=TEAM_REGRESSION_EMAIL,
                            workspace_ids=[])
     print "created pr build chart"
+
+if __name__ == "__main_blt_volume__":
+    owner_info = "Saravanan Selvam (saravanan.selvam@fungible.com )"
+    source = "TBD"
+    base_line_date = datetime(year=2019, month=11, day=20, minute=0, hour=0, second=0)
+    model_name = "BltVolumePerformance"
+    qdepths = [32, 64, 96, 128]
+    categories = ["Latency", "IOPS"]
+    container_names = ["8_15_1:4k_RAND_RW_ENCRYPTION,F1(s)=1",
+                       "8_15_1:4k_RAND_RD_ENCRYPTION,F1(s)=1",
+                       "8_15_1:4k_RAND_WR_ENCRYPTION,F1(s)=1"]
+    container_charts = []
+    for container_name in container_names:
+        container_chart = ml.create_container(chart_name=container_name,
+                                              internal_chart_name=container_name,
+                                              platform=FunPlatform.F1,
+                                              owner_info=owner_info,
+                                              source=source,
+                                              base_line_date=base_line_date, workspace_ids=[])
+
+        for qdepth in qdepths:
+            operation = "read"
+            if "RW" in container_name:
+                operation = "read_write"
+            if "WR" in container_name:
+                operation = "write"
+            fio_job_name = "inspur_8k_random_{}_encryption_keysize_32_iodepth_{}_vol_8".format(operation, qdepth)
+
+            output_names = ["output_read_iops"]
+            if "read_write" in operation:
+                output_names = ["output_read_iops", "output_write_iops"]
+            if operation == "write":
+                output_names = ["output_write_iops"]
+
+            data_sets = []
+
+            y1_axis_title = PerfUnit.UNIT_OPS
+            positive = True
+
+            for output_name in output_names:
+                one_data_set = {}
+                data_set_name = "{}(8 vols)".format("read")
+                if output_name == "output_write_iops":
+                    data_set_name = "{}(8 vols)".format("write")
+
+                one_data_set["name"] = data_set_name
+                one_data_set["inputs"] = {"input_platform": FunPlatform.F1,
+                                          "input_fio_job_name": fio_job_name}
+
+
+                one_data_set["output"] = {"name": output_name,
+                                          "min": 0,
+                                          "max": -1,
+                                          "expected": -1,
+                                          "reference": -1,
+                                          "best": -1,
+                                          "unit": y1_axis_title}
+                data_sets.append(one_data_set)
+
+            leaf_chart = ml.create_leaf(chart_name="IOPS, QDepth={}".format(qdepth),
+                                        internal_chart_name=fio_job_name,
+                                        data_sets=data_sets,
+                                        leaf=True,
+                                        description="TBD",
+                                        owner_info=owner_info,
+                                        source=source,
+                                        positive=positive, y1_axis_title=y1_axis_title,
+                                        visualization_unit=y1_axis_title,
+                                        metric_model_name=model_name,
+                                        base_line_date=base_line_date,
+                                        work_in_progress=False, children=[], jira_ids=[], platform=FunPlatform.F1,
+                                        peer_ids=[], creator=TEAM_REGRESSION_EMAIL,
+                                        workspace_ids=[])
+            container_chart.fix_children_weights()
+            container_chart.add_child(leaf_chart.metric_id)
+
+        container_charts.append(ml.get_dict(chart=container_chart))
+
+    print json.dumps(container_charts, indent=4)
 
 if __name__ == "__main__":
     owner_info = "Ashwin S (ashwin.s@fungible.com)"

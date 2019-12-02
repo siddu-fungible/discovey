@@ -192,6 +192,7 @@ class SuiteExecution(models.Model):
     is_re_run = models.NullBooleanField(default=False)
     re_run_info = JSONField(default={}, null=True)
     rich_inputs = JSONField(default=None, null=True)
+    max_run_time = models.IntegerField(default=7 * 24 * 3600, null=True)
 
     def __str__(self):
         s = "Suite: {} {} state: {}".format(self.execution_id, self.suite_path, self.state)

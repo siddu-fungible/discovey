@@ -5,7 +5,7 @@ import {of} from "rxjs";
 import {catchError, switchMap} from "rxjs/operators";
 import {CommonService} from "../../services/common/common.service";
 import {showAnimation} from "../../animations/generic-animations";
-import {ReleaseCatalogSuite, ReleaseCatalog} from "../declarations";
+import {ReleaseCatalogSuite, ReleaseCatalog} from "../definitions";
 import {RegressionService} from "../regression.service";
 import { Location } from '@angular/common';
 

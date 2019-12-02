@@ -444,6 +444,36 @@ def divide(n, d):
     return n/d if d else 0
 
 
+def init_fs1600_status(come_obj):
+    result = False
+    service_name = "init-fs1600.service"
+    status_cmd = "sudo systemctl status {} --no-pager".format(service_name)
+    try:
+        status = come_obj.command(status_cmd)
+
+        if status:
+            m = re.search(r'{};\s(\w+)'.format(service_name), status)
+            if m and m.group(1) == "enabled":
+                result = True
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return result
+
+
+def disalbe_init_fs1600(come_obj):
+    result = False
+    service_name = "init-fs1600.service"
+    disable_cmd = "sudo systemctl disable {}".format(service_name)
+    try:
+        come_obj.command(disable_cmd)
+        if not come_obj.exit_status():
+            if not init_fs1600_status(come_obj):
+                result = True
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return result
+
+
 class CollectStats(object):
     def __init__(self, storage_controller, sc_lock=None):
         self.storage_controller = storage_controller

@@ -256,16 +256,21 @@ class BringupSetup(FunTestCase):
             fun_test.shared_variables["deploy_vol"] = deploy_vol
         else:
             fun_test.shared_variables["deploy_vol"] = True
-        if "enable_fcp" in job_inputs:
-            enable_fcp = job_inputs["enable_fcp"]
-            fun_test.shared_variables["enable_fcp"] = enable_fcp
-            if enable_fcp:
+        if "rds_fcp" in job_inputs:
+            rds_fcp = job_inputs["rds_fcp"]
+            fun_test.shared_variables["rds_fcp"] = rds_fcp
+            if rds_fcp:
                 f1_0_boot_args = "app=mdt_test,load_mods cc_huid=3 --dpc-server --all_100g --serial " \
                          "--dpc-uart retimer={} rdstype=fcp --mgmt workload=storage".format(f10_retimer)
                 f1_1_boot_args = "app=mdt_test,load_mods cc_huid=2 --dpc-server --all_100g --serial " \
                                  "--dpc-uart retimer={} rdstype=fcp --mgmt workload=storage".format(f11_retimer)
         else:
-            fun_test.shared_variables["enable_fcp"] = False
+            fun_test.shared_variables["rds_fcp"] = False
+        if "tcp_fcp" in job_inputs:
+            tcp_fcp = job_inputs["tcp_fcp"]
+            fun_test.shared_variables["tcp_fcp"] = tcp_fcp
+        else:
+            fun_test.shared_variables["tcp_fcp"] = False
         if "total_ssd" in job_inputs:
             total_ssd = job_inputs["total_ssd"]
             fun_test.shared_variables["total_ssd"] = total_ssd
@@ -295,7 +300,7 @@ class BringupSetup(FunTestCase):
         if "rds_vol_transport" in job_inputs:
             fun_test.shared_variables["rds_vol_transport"] = unicode(job_inputs["rds_vol_transport"]).upper()
         else:
-            fun_test.shared_variables["rds_vol_transport"] = "RDS"
+            fun_test.shared_variables["rds_vol_transport"] = False
         if "split_ssd" in job_inputs:
             fun_test.shared_variables["split_ssd"] = job_inputs["split_ssd"]
         else:
@@ -437,10 +442,11 @@ class NicEmulation(FunTestCase):
 
     def run(self):
         host_objs = fun_test.shared_variables["hosts_obj"]
-        enable_fcp = fun_test.shared_variables["enable_fcp"]
+        rds_fcp = fun_test.shared_variables["rds_fcp"]
+        tcp_fcp = fun_test.shared_variables["tcp_fcp"]
         come_obj = fun_test.shared_variables["come_obj"]
         abstract_key = ""
-        if enable_fcp:
+        if rds_fcp or tcp_fcp:
             abstract_key = "abstract_configs_bgp"
         else:
             abstract_key = "abstract_configs"
@@ -456,7 +462,7 @@ class NicEmulation(FunTestCase):
             funcp_obj.funcp_abstract_config(abstract_config_f1_0=abstract_json_file0,
                                             abstract_config_f1_1=abstract_json_file1, workspace="/scratch")
 
-            if not enable_fcp:
+            if not rds_fcp or not tcp_fcp:
                 # Add static routes on Containers
                 funcp_obj.add_routes_on_f1(routes_dict=self.server_key["fs"][fs_name]["static_routes"])
 
@@ -464,7 +470,7 @@ class NicEmulation(FunTestCase):
 
             # Ping QFX from both F1s
             ping_dict = self.server_key["fs"][fs_name]["cc_pings"]
-            if enable_fcp:
+            if rds_fcp or tcp_fcp:
                 ping_dict = self.server_key["fs"][fs_name]["cc_pings_bgp"]
 
             for container in ping_dict:
@@ -474,7 +480,7 @@ class NicEmulation(FunTestCase):
             funcp_obj.test_cc_pings_fs()
 
             # Print the tunnel info if its FCP
-            if enable_fcp:
+            if rds_fcp or tcp_fcp:
                 come_obj.sudo_command("echo SELECT 1 > /scratch/opt/fungible/f10_tunnel")
                 come_obj.sudo_command("echo keys *fcp* >> /scratch/opt/fungible/f10_tunnel")
                 come_obj.sudo_command("echo SELECT 1 > /scratch/opt/fungible/f11_tunnel")
@@ -641,8 +647,12 @@ class ConfigureRdsVol(FunTestCase):
 
             # Create RDS controller on target
             target_rds_ctrl = utils.generate_uuid()
+            if fun_test.shared_variables["rds_vol_transport"]:
+                controller_transport = fun_test.shared_variables["rds_vol_transport"]
+            else:
+                controller_transport = "RDS"
             command_result = f1_target_storage_obj.create_controller(ctrlr_uuid=target_rds_ctrl,
-                                                                     transport="RDS",
+                                                                     transport=controller_transport,
                                                                      nqn="nqn1",
                                                                      port=controller_port,
                                                                      remote_ip=initiator_ip,
@@ -715,7 +725,37 @@ class ConfigureRdsVol(FunTestCase):
                 # Create RDS volume on initiator
                 initiator_rds_vol[x] = utils.generate_uuid()
                 rds_vol_name = "rds_vol_" + str(x)
-                if fun_test.shared_variables["rds_conn"]:
+                if fun_test.shared_variables["rds_conn"] and not fun_test.shared_variables["rds_vol_transport"]:
+                    rds_conn = fun_test.shared_variables["rds_conn"]
+                    command_result = f1_initiator_storage_obj.create_volume(type="VOL_TYPE_BLK_RDS",
+                                                                            capacity=drive_size,
+                                                                            block_size=block_size,
+                                                                            name=rds_vol_name,
+                                                                            uuid=initiator_rds_vol[x],
+                                                                            remote_nsid=x,
+                                                                            remote_ip=target_ip,
+                                                                            port=controller_port,
+                                                                            connections=rds_conn,
+                                                                            command_duration=command_timeout)
+                    fun_test.simple_assert(command_result["status"],
+                                           "{} : Created RDS vol using {} connections with remote nsid {}".
+                                           format(f1_initiator, rds_conn, x))
+                elif fun_test.shared_variables["rds_vol_transport"] and not fun_test.shared_variables["rds_conn"]:
+                    rds_vol_transport = fun_test.shared_variables["rds_vol_transport"]
+                    command_result = f1_initiator_storage_obj.create_volume(type="VOL_TYPE_BLK_RDS",
+                                                                            capacity=drive_size,
+                                                                            block_size=block_size,
+                                                                            name=rds_vol_name,
+                                                                            uuid=initiator_rds_vol[x],
+                                                                            remote_nsid=x,
+                                                                            remote_ip=target_ip,
+                                                                            port=controller_port,
+                                                                            transport=rds_vol_transport,
+                                                                            command_duration=command_timeout)
+                    fun_test.simple_assert(command_result["status"],
+                                           "{} : Created RDS vol using {} transport with remote nsid {}".
+                                           format(f1_initiator, rds_vol_transport, x))
+                elif fun_test.shared_variables["rds_vol_transport"] and fun_test.shared_variables["rds_conn"]:
                     rds_conn = fun_test.shared_variables["rds_conn"]
                     rds_vol_transport = fun_test.shared_variables["rds_vol_transport"]
                     command_result = f1_initiator_storage_obj.create_volume(type="VOL_TYPE_BLK_RDS",
@@ -730,8 +770,9 @@ class ConfigureRdsVol(FunTestCase):
                                                                             connections=rds_conn,
                                                                             command_duration=command_timeout)
                     fun_test.simple_assert(command_result["status"],
-                                           "{} : Created RDS vol using {} connections with remote nsid {}".
-                                           format(f1_initiator, rds_conn, x))
+                                           "{} : Created RDS vol using {} transport : {} connections with "
+                                           "remote nsid {}".
+                                           format(f1_initiator, rds_vol_transport, rds_conn, x))
                 else:
                     command_result = f1_initiator_storage_obj.create_volume(type="VOL_TYPE_BLK_RDS",
                                                                             capacity=drive_size,

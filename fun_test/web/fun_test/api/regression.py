@@ -568,6 +568,10 @@ def test_case_time_series(request, suite_execution_id):
         if t is not None:
             query["t"] = int(t)
 
+        asset_id = request.GET.get("asset_id", None)
+        if asset_id is not None:
+            query["asset_id"] = asset_id
+
         epoch_filter = {}
         if start_epoch is not None:
             epoch_filter["$gte"] = start_epoch
