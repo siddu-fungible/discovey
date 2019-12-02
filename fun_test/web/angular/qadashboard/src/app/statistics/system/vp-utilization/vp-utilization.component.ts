@@ -85,6 +85,8 @@ export class VpUtilizationComponent implements OnInit, OnChanges {
       f1.clusters.forEach(cluster => {
         cluster["debug_vp_util"] = {series: []};
         cluster.cores.forEach(core => {
+          let numVps = 0;
+          let sumOfUtilizations = 0;
           core.vps.forEach(vp => {
             let coreIndex = core.index;
             let vpIndex = vp.index;
@@ -96,6 +98,8 @@ export class VpUtilizationComponent implements OnInit, OnChanges {
             uniqueTimestamps.forEach(uniqueTimestamp => {
               if (vp.utilization.hasOwnProperty(uniqueTimestamp)) {
                 data.push(vp.utilization[uniqueTimestamp]);
+                numVps += 1;
+                sumOfUtilizations += vp.utilization[uniqueTimestamp] * 100;
               } else {
                 data.push(-1);
               }
@@ -109,6 +113,38 @@ export class VpUtilizationComponent implements OnInit, OnChanges {
     this.xSeries = uniqueTimestamps;
 
 
+    this.fs.f1s.forEach(f1 => {
+      let histogramData = [];
+      for (let index = 0; index < 10; index++) {
+        let binLow = (index * 10) + 1;
+        let binHigh = (index * 10) + 10;
+        console.log(binLow, binHigh);
+        let binName = `${binLow}-${binHigh}`;
+        let series = {name: binName, data:[]};
+        histogramData.push(series);
+
+      }
+      let currentTimestampIndex = 0;
+      uniqueTimestamps.forEach(timestamp => {
+
+        histogramData.forEach(histogramElement => {
+          histogramElement.data.push(0);
+        });
+        f1.clusters.forEach(cluster => {
+          cluster.cores.forEach(core => {
+            core.vps.forEach(vp => {
+              if (vp.utilization.hasOwnProperty(timestamp)) {
+                let utilization = vp.utilization[timestamp];
+                let floorValue = Math.floor(utilization);
+                histogramData[floorValue].data[currentTimestampIndex] += 1;
+              }
+            })
+          })
+        });
+        currentTimestampIndex += 1;
+      });
+      f1["histogram"] = histogramData;
+    })
   }
 
   ngOnChanges() {
