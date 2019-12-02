@@ -1,5 +1,6 @@
 from web.web_global import api_safe_json_response
 from django.views.decorators.csrf import csrf_exempt
+from scheduler.mq_broker_global import BrokerMessageTypes
 import pika
 import json
 
@@ -19,4 +20,11 @@ def publish(request):
             body = {"message_type": message_type, "message": message}
             channel.basic_publish(exchange='', routing_key=routing_key, body=json.dumps(body))
             connection.close()
+            result = True
+    return result
+
+
+@api_safe_json_response
+def message_types(request):
+    result = BrokerMessageTypes().all_strings_to_code()
     return result

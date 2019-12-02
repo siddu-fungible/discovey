@@ -25,4 +25,15 @@ export class MqBrokerService {
       return throwError(error);
     }))
   }
+
+  getMessageTypes() {
+    let url = "/api/v1/mq_broker/message_types";
+    return this.apiService.get(url).pipe(switchMap(response => {
+      return of(response.data);
+    }), catchError(error => {
+      this.loggerService.error(`Unable to fetch broker message types`, error);
+      return throwError((error));
+    }))
+  }
+
 }
