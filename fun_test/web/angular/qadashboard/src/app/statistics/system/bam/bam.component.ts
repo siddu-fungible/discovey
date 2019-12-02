@@ -15,7 +15,7 @@ export class BamComponent implements OnInit, OnChanges {
   @Input() selectedAsset: RegisteredAsset = null;
   data: any = null;
   parsedData: any = {};
-  suitExecutionId: number = null;
+  suiteExecutionId: number = null;
   bmUsagePerClusterPoolNames: string [] = ["default_alloc_pool", "nu_erp_fcp_pool"];
   bmUsagePerClusterPoolKeys: string [] = ["usage_percent"];
   clusterIndexes = Array.from(Array(8).keys());
@@ -23,7 +23,7 @@ export class BamComponent implements OnInit, OnChanges {
 
   constructor(private regressionService: RegressionService, private loggerService: LoggerService) {
     this.driver = of(true).pipe(switchMap(response => {
-     return this.regressionService.testCaseTimeSeries(this.suitExecutionId,
+     return this.regressionService.testCaseTimeSeries(this.suiteExecutionId,
        null,
        null,
        null,
@@ -85,7 +85,7 @@ export class BamComponent implements OnInit, OnChanges {
 
   ngOnChanges() {
     if (this.scriptExecutionInfo && this.scriptExecutionInfo.suite_execution_id) {
-      this.suitExecutionId = this.scriptExecutionInfo.suite_execution_id;
+      this.suiteExecutionId = this.scriptExecutionInfo.suite_execution_id;
       this.driver.subscribe(response => {
 
       }, error => {

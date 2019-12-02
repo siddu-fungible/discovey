@@ -1790,7 +1790,7 @@ class Fs(object, ToDictMixin):
         statistics_manager = fun_test.get_statistics_manager()
         collector = StatisticsCollector(collector=self,
                                         category=StatisticsCategory.FS_SYSTEM,
-                                        type=self.StatisticsType.BAM,
+                                        type=statistics_type,
                                         asset_id=self.get_asset_name())
         self.statistics_collectors[statistics_type] = statistics_manager.register_collector(collector=collector)
 

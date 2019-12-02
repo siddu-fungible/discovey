@@ -3,9 +3,9 @@
   <h6>F1-{{ f1Index }}</h6>
   <div class="fun-flex-container">
     <ng-container *ngFor="let poolName of bmUsagePerClusterPoolNames">
-    <ng-container *ngFor="let poolKey of bmUsagePerClusterPoolKeys">
-      <fun-chart [title]="poolName + '-' + poolKey" [xAxisLabel]="'Time'" [y1Values]="parsedData[f1Index][poolName][poolKey]"></fun-chart>
+      <ng-container *ngFor="let poolKey of bmUsagePerClusterPoolKeys">
+        <fun-chart [title]="poolName + '-' + poolKey" [xAxisLabel]="'Sample'" [y1Values]="parsedData[f1Index][poolName][poolKey]"></fun-chart>
+      </ng-container>
     </ng-container>
-  </ng-container>
   </div>
 </div>

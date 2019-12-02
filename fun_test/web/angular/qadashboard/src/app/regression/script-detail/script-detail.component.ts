@@ -138,9 +138,13 @@ export class ScriptDetailComponent implements OnInit {
     sc.display_name = "System";
     sc.name = "system";
     let ssc = new StatisticsSubCategory();
-    ssc.display_name = "BAM";
+    /*ssc.display_name = "BAM";
     ssc.name = "bam";
-    //this.selectedStatistics.push({statisticsCategory: sc, statisticsSubCategory: ssc});
+    this.selectedStatistics.push({statisticsCategory: sc, statisticsSubCategory: ssc});*/
+    ssc.display_name = "debug vp_util";
+    ssc.name = "debug_vp_util";
+    this.selectedStatistics.push({statisticsCategory: sc, statisticsSubCategory: ssc});
+
   }
   suiteExecutionId: number = 10000;
   logPrefix: number = null;
@@ -168,7 +172,8 @@ export class ScriptDetailComponent implements OnInit {
   logsAreTruncated: boolean = false;
   viewingCharts: boolean = false;
   statisticsCategories: any [] = [
-    {name: "system", display_name: "System", "sub_categories": [{name: "bam", display_name: "BAM"}]}
+    {name: "system", display_name: "System", sub_categories: [{name: "bam", display_name: "BAM"}]},
+    {name: "system", display_name: "System", sub_categories: [{name: "debug_vp_util", display_name: "debug vp_util"}]}
   ];
   selectedStatisticsCategory = null;
   selectedStatisticsSubCategory = null;
