@@ -20,6 +20,7 @@ export class VpUtilizationComponent implements OnInit, OnChanges {
   suiteExecutionId: number;
   detectedF1Indexes = new Set();
   fs: Fs = new Fs();
+  xSeries: any = null;
 
   constructor(private regressionService: RegressionService, private loggerService: LoggerService) {
     this.driver = of(true).pipe(switchMap(response => {
@@ -44,11 +45,6 @@ export class VpUtilizationComponent implements OnInit, OnChanges {
       let oneRecordData = oneRecord.data;
       Object.keys(oneRecordData).forEach(f1Index => {
         this.detectedF1Indexes.add(f1Index);
-        /*
-        let dataForF1Index = oneRecordData[f1Index];
-        if (!this.parsedData.hasOwnProperty(f1Index)) {
-          this.parsedData[f1Index] = {};
-        }*/
         Object.keys(oneRecordData[f1Index]).forEach(clusterKey => {
           let regex = /CCV(\d+)_(\d+)_(\d+)/;
           let match = regex.exec(clusterKey);
@@ -70,10 +66,56 @@ export class VpUtilizationComponent implements OnInit, OnChanges {
   ngOnInit() {
   }
 
+  prepareChartData() {
+
+    // find unique timestamps
+    let uniqueTimestampsSet = new Set();
+    this.fs.f1s.forEach(f1 => {
+      f1.clusters.forEach(cluster => {
+        cluster.cores.forEach(core => {
+          core.vps.forEach(vp => {
+            Object.keys(vp.utilization).map(timestamp => uniqueTimestampsSet.add(timestamp));
+
+          })
+        })
+      })
+    });
+    let uniqueTimestamps = Array.from(uniqueTimestampsSet.values()).sort();
+    this.fs.f1s.forEach(f1 => {
+      f1.clusters.forEach(cluster => {
+        cluster["debug_vp_util"] = {series: []};
+        cluster.cores.forEach(core => {
+          core.vps.forEach(vp => {
+            let coreIndex = core.index;
+            let vpIndex = vp.index;
+            let name = `${coreIndex}.${vpIndex}`;
+            console.log(name);
+            let oneSeries = {name: name, data: []};
+
+            let data = oneSeries.data;
+            uniqueTimestamps.forEach(uniqueTimestamp => {
+              if (vp.utilization.hasOwnProperty(uniqueTimestamp)) {
+                data.push(vp.utilization[uniqueTimestamp]);
+              } else {
+                data.push(-1);
+              }
+            });
+            cluster["debug_vp_util"].series.push(oneSeries);
+          })
+        })
+      })
+    });
+
+    this.xSeries = uniqueTimestamps;
+
+
+  }
+
   ngOnChanges() {
     if (this.scriptExecutionInfo && this.scriptExecutionInfo.suite_execution_id) {
       this.suiteExecutionId = this.scriptExecutionInfo.suite_execution_id;
       this.driver.subscribe(response => {
+        this.prepareChartData();
 
       }, error => {
         console.log(error.toString());
