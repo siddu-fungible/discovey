@@ -52,6 +52,7 @@ class CollectorWorker(Thread):
         fun_test.log("Starting collector: {}".format(self.collector_id))
         while not fun_test.closed and not self.stopped:
             collector_instance = self.collector.collector
+            fun_test.debug("Running dispatch for {}".format(self.collector_id))
             result = collector_instance.statistics_dispatcher(self.collector.type, **self.collector.kwargs)
             if self.collector.storage_db:
                 # result = self.collector.storage_db_handler(result)
