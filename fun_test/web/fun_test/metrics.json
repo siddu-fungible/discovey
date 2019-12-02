@@ -4535,6 +4535,99 @@
                     "label": "Latency, QDepth=128"
                   }
                 ]
+              },
+              {
+                "name": "8_15_1:4k_RAND_RW_ENCRYPTION,F1(s)=1",
+                "label": "8_15_1:4k_RAND_RW_ENCRYPTION,F1(s)=1",
+                "metric_model_name": "MetricContainer",
+                "children": [
+                  {
+                    "name": "inspur_8k_random_read_write_encryption_keysize_32_iodepth_32_vol_8",
+                    "label": "IOPS, QDepth=32",
+                    "metric_model_name": "BltVolumePerformance",
+                    "children": []
+                  },
+                  {
+                    "name": "inspur_8k_random_read_write_encryption_keysize_32_iodepth_64_vol_8",
+                    "label": "IOPS, QDepth=64",
+                    "metric_model_name": "BltVolumePerformance",
+                    "children": []
+                  },
+                  {
+                    "name": "inspur_8k_random_read_write_encryption_keysize_32_iodepth_96_vol_8",
+                    "label": "IOPS, QDepth=96",
+                    "metric_model_name": "BltVolumePerformance",
+                    "children": []
+                  },
+                  {
+                    "name": "inspur_8k_random_read_write_encryption_keysize_32_iodepth_128_vol_8",
+                    "label": "IOPS, QDepth=128",
+                    "metric_model_name": "BltVolumePerformance",
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "8_15_1:4k_RAND_RD_ENCRYPTION,F1(s)=1",
+                "label": "8_15_1:4k_RAND_RD_ENCRYPTION,F1(s)=1",
+                "metric_model_name": "MetricContainer",
+                "children": [
+                  {
+                    "name": "inspur_8k_random_read_encryption_keysize_32_iodepth_32_vol_8",
+                    "label": "IOPS, QDepth=32",
+                    "metric_model_name": "BltVolumePerformance",
+                    "children": []
+                  },
+                  {
+                    "name": "inspur_8k_random_read_encryption_keysize_32_iodepth_64_vol_8",
+                    "label": "IOPS, QDepth=64",
+                    "metric_model_name": "BltVolumePerformance",
+                    "children": []
+                  },
+                  {
+                    "name": "inspur_8k_random_read_encryption_keysize_32_iodepth_96_vol_8",
+                    "label": "IOPS, QDepth=96",
+                    "metric_model_name": "BltVolumePerformance",
+                    "children": []
+                  },
+                  {
+                    "name": "inspur_8k_random_read_encryption_keysize_32_iodepth_128_vol_8",
+                    "label": "IOPS, QDepth=128",
+                    "metric_model_name": "BltVolumePerformance",
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "8_15_1:4k_RAND_WR_ENCRYPTION,F1(s)=1",
+                "label": "8_15_1:4k_RAND_WR_ENCRYPTION,F1(s)=1",
+                "metric_model_name": "MetricContainer",
+                "children": [
+                  {
+                    "name": "inspur_8k_random_write_encryption_keysize_32_iodepth_32_vol_8",
+                    "label": "IOPS, QDepth=32",
+                    "metric_model_name": "BltVolumePerformance",
+                    "children": []
+                  },
+                  {
+                    "name": "inspur_8k_random_write_encryption_keysize_32_iodepth_64_vol_8",
+                    "label": "IOPS, QDepth=64",
+                    "metric_model_name": "BltVolumePerformance",
+                    "children": []
+                  },
+                  {
+                    "name": "inspur_8k_random_write_encryption_keysize_32_iodepth_96_vol_8",
+                    "label": "IOPS, QDepth=96",
+                    "metric_model_name": "BltVolumePerformance",
+                    "children": []
+                  },
+                  {
+                    "name": "inspur_8k_random_write_encryption_keysize_32_iodepth_128_vol_8",
+                    "label": "IOPS, QDepth=128",
+                    "metric_model_name": "BltVolumePerformance",
+                    "children": []
+                  }
+                ]
               }
             ]
           },
@@ -5952,7 +6045,6 @@
                                   {
                                     "metric_model_name": "HuLatencyUnderLoadPerformance",
                                     "name": "HU_NU_NFCP_8TCP_offloads_disabled_2hosts_output_latency_under_load_underlay",
-
                                     "label": "Latency under load"
                                   }
                                 ]
@@ -6041,7 +6133,6 @@
                                   {
                                     "metric_model_name": "HuLatencyUnderLoadPerformance",
                                     "name": "NU_HU_NFCP_8TCP_offloads_disabled_2hosts_output_latency_under_load_underlay",
-
                                     "label": "Latency under load"
                                   }
                                 ]
@@ -6252,7 +6343,6 @@
                                   {
                                     "metric_model_name": "HuLatencyUnderLoadPerformance",
                                     "name": "HU_HU_NFCP_2f1_8TCP_1H_offloads_enabled_output_latency_under_load_underlay",
-
                                     "label": "Latency under load"
                                   }
                                 ]
@@ -6280,7 +6370,6 @@
                                   {
                                     "metric_model_name": "HuLatencyUnderLoadPerformance",
                                     "name": "HU_HU_NFCP_2f1_8TCP_2H_offloads_enabled_output_latency_under_load_underlay",
-
                                     "label": "Latency under load"
                                   }
                                 ]
@@ -6308,7 +6397,6 @@
                                   {
                                     "metric_model_name": "HuLatencyUnderLoadPerformance",
                                     "name": "HU_HU_NFCP_2f1_1TCP_1H_offloads_enabled_output_latency_under_load_underlay",
-
                                     "label": "Latency under load"
                                   }
                                 ]
@@ -7325,6 +7413,12 @@
             "metric_model_name": "PrBuildTotalTimePerformance",
             "name": "pr_build_time",
             "label": "PR build time",
+            "children": []
+          },
+          {
+            "metric_model_name": "IntegrationJobBuildTimePerformance",
+            "name": "integration_job_run_time",
+            "label": "Integration job run time",
             "children": []
           }
         ]

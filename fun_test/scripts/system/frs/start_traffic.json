@@ -1,15 +1,31 @@
 {
   "duration": 60,
-  "traffic_profile": ["crypto","zip","rcnvme","fio"],
-  "run_le_firewall": false,
+  "traffic_profile": {
+    "zip":{"per": 100},
+    "crypto":  {"per":  100},
+    "dma_speed":  {"per":  100},
+    "rcnvme":  {"per":  90},
+    "FIO_SERVER": {"per": 100}
+  },
   "boot_new_image": true,
   "add_to_database": false,
   "disable_f1_index": null,
   "ec_vol": false,
-  "collect_stats": ["POWER", "CDU", "EQM", "DEBUG_VP_UTIL", "LE", "HBM", "PC_DMA", "DDR", "STORAGE_IOPS"],
+  "collect_stats": [
+    "POWER",
+    "CDU",
+    "EQM",
+    "DEBUG_VP_UTIL",
+    "LE",
+    "HBM",
+    "PC_DMA",
+    "DDR",
+    "STORAGE_IOPS"
+  ],
   "disable_stats": [],
   "add_boot_arg": "",
-  "upload_to_file": false,
+  "upload_to_file": true,
+  "stats_interval": 30,
   "elasticsearch_config": {
     "ip": "10.1.20.52",
     "port": 9200
@@ -21,8 +37,8 @@
     "runtime": 180,
     "group_reporting": 1,
     "time_based": 1,
-    "rw": "randrw",
-    "name": "fio_randrw",
+    "rw": "randread",
+    "name": "fio_randread",
     "direct": 1,
     "bs": "4k",
     "ioengine": "libaio",
@@ -47,5 +63,17 @@
     "WORKSPACE": "/home/localadmin/fungible_automation/Integration",
     "PYTHONPATH": "/home/localadmin/fungible_automation/Integration/fun_test",
     "SCRIPT_PATH": "/home/localadmin/fungible_automation/Integration/fun_test/scripts/system/frs"
+  },
+  "fio_vm_details": {
+    "0": {
+      "host_ip": "r9-server01",
+      "ssh_username": "localadmin",
+      "ssh_password": "Precious1*"
+    },
+    "1": {
+      "host_ip": "r9-server02",
+      "ssh_username": "localadmin",
+      "ssh_password": "Precious1*"
+    }
   }
 }

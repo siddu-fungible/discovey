@@ -53,7 +53,7 @@ def scp_file(source_file, target_server_ip, target_username, target_file):
 
 class FunTestClient:
 
-    DEBUG = True
+    DEBUG = False
 
     def __init__(self, base_url):
         self.base_url = base_url
@@ -143,7 +143,8 @@ class FunTestClient:
                    email_list=None,
                    environment=None,
                    test_bed_type="emulation",
-                   description=""):
+                   description="",
+                   max_run_time=3600 * 2):
         if not tags:
             tags = []
         elif isinstance(tags, str):
@@ -167,7 +168,8 @@ class FunTestClient:
             "submitter_email": submitter_email,
             "environment": environment,
             "test_bed_type": test_bed_type,
-            "description": description
+            "description": description,
+            "max_run_time": max_run_time
         }
 
         response = self._do_post(url="/regression/submit_job", data=json.dumps(job_spec))
@@ -226,6 +228,12 @@ class FunTestClient:
             environment = {}
         environment[key] = value
         return environment
+
+def log_job_status(job_status):
+    logging.info("Job state code: {}".format(job_status["job_state_code"]))
+    logging.info("Job state description: {}".format(job_status["job_state_string"]))
+    logging.info("Message: {}".format(job_status["message"]))
+    logging.info("Result: {}".format(job_status["result"]))
 
 def main():
     exit_code = 0
@@ -312,7 +320,8 @@ def main():
                                             environment=environment,
                                             submitter_email=submitter_email,
                                             description=description,
-                                            test_bed_type=test_bed_type)
+                                            test_bed_type=test_bed_type,
+                                            max_run_time=max_run_time)
 
         job_status = None
         if job_id > 0:
@@ -324,8 +333,10 @@ def main():
                     raise Exception("Invalid job status response: {}".format(json.dumps(response, indent=4)))
                 else:
                     job_status = response["data"]
+                log_job_status(job_status=job_status)
                 is_job_completed = job_status["is_completed"]
                 if is_job_completed:
+                    logging.info("Job has completed")
                     break
                 print "Sleeping for {} seconds before checking again".format(poll_interval_seconds)
                 time.sleep(poll_interval_seconds)
@@ -337,15 +348,15 @@ def main():
                 raise Exception(error_message)
 
             if is_job_completed:
-                logging.info("Job state code: {}".format(job_status["job_state_code"]))
-                logging.info("Job state description: {}".format(job_status["job_state_string"]))
-                logging.info("Message: {}".format(job_status["message"]))
-                logging.info("Result: {}".format(job_status["result"]))
+                log_job_status(job_status=job_status)
 
-                if job_status["result"] == "PASSED":
+                if job_status["result"] == "PASSED" and job_status["job_state_code"] == 10:  # 10 indicated completed
                     exit_code = PASSED_EXIT_CODE
                 else:
                     exit_code = FAILED_EXIT_CODE
+
+            if elapsed_time > max_run_time:
+                logging.exception("Max run-time: {} exceeded".format(max_run_time))
         else:
             logging.exception("Job submission failed.")
     except Exception as ex:

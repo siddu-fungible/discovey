@@ -55,6 +55,7 @@ def tune_host(host_obj):
 
 def get_nvme_device(host_obj):
     nvme_list_raw = host_obj.sudo_command("nvme list -o json")
+    host_obj.disconnect()
     if "failed to open" in nvme_list_raw.lower():
         nvme_list_raw = nvme_list_raw + "}"
         temp1 = nvme_list_raw.replace('\n', '')
@@ -67,14 +68,17 @@ def get_nvme_device(host_obj):
             nvme_list_raw = nvme_list_raw + "}"
             nvme_list_dict = json.loads(nvme_list_raw, strict=False)
 
-    nvme_device_list = []
-    for device in nvme_list_dict["Devices"]:
-        if "Non-Volatile memory controller: Vendor 0x1dad" in device["ProductName"]:
-            nvme_device_list.append(device["DevicePath"])
-        elif "unknown device" in device["ProductName"].lower() or "null" in device["ProductName"].lower():
-            if not device["ModelNumber"].strip() and not device["SerialNumber"].strip():
+    try:
+        nvme_device_list = []
+        for device in nvme_list_dict["Devices"]:
+            if "Non-Volatile memory controller: Vendor 0x1dad" in device["ProductName"]:
                 nvme_device_list.append(device["DevicePath"])
-    fio_filename = str(':'.join(nvme_device_list))
+            elif "unknown device" in device["ProductName"].lower() or "null" in device["ProductName"].lower():
+                if not device["ModelNumber"].strip() and not device["SerialNumber"].strip():
+                    nvme_device_list.append(device["DevicePath"])
+        fio_filename = str(':'.join(nvme_device_list))
+    except:
+        fio_filename = None
 
     return fio_filename
 
@@ -252,16 +256,21 @@ class BringupSetup(FunTestCase):
             fun_test.shared_variables["deploy_vol"] = deploy_vol
         else:
             fun_test.shared_variables["deploy_vol"] = True
-        if "enable_fcp" in job_inputs:
-            enable_fcp = job_inputs["enable_fcp"]
-            fun_test.shared_variables["enable_fcp"] = enable_fcp
-            if enable_fcp:
+        if "rds_fcp" in job_inputs:
+            rds_fcp = job_inputs["rds_fcp"]
+            fun_test.shared_variables["rds_fcp"] = rds_fcp
+            if rds_fcp:
                 f1_0_boot_args = "app=mdt_test,load_mods cc_huid=3 --dpc-server --all_100g --serial " \
                          "--dpc-uart retimer={} rdstype=fcp --mgmt workload=storage".format(f10_retimer)
-                f1_1_boot_args = "app=load_mods cc_huid=2 --dpc-server --all_100g --serial " \
+                f1_1_boot_args = "app=mdt_test,load_mods cc_huid=2 --dpc-server --all_100g --serial " \
                                  "--dpc-uart retimer={} rdstype=fcp --mgmt workload=storage".format(f11_retimer)
         else:
-            fun_test.shared_variables["enable_fcp"] = False
+            fun_test.shared_variables["rds_fcp"] = False
+        if "tcp_fcp" in job_inputs:
+            tcp_fcp = job_inputs["tcp_fcp"]
+            fun_test.shared_variables["tcp_fcp"] = tcp_fcp
+        else:
+            fun_test.shared_variables["tcp_fcp"] = False
         if "total_ssd" in job_inputs:
             total_ssd = job_inputs["total_ssd"]
             fun_test.shared_variables["total_ssd"] = total_ssd
@@ -291,11 +300,15 @@ class BringupSetup(FunTestCase):
         if "rds_vol_transport" in job_inputs:
             fun_test.shared_variables["rds_vol_transport"] = unicode(job_inputs["rds_vol_transport"]).upper()
         else:
-            fun_test.shared_variables["rds_vol_transport"] = "RDS"
+            fun_test.shared_variables["rds_vol_transport"] = False
         if "split_ssd" in job_inputs:
             fun_test.shared_variables["split_ssd"] = job_inputs["split_ssd"]
         else:
             fun_test.shared_variables["split_ssd"] = 0
+        if "enable_debug" in job_inputs:
+            if job_inputs["enable_debug"]:
+                f1_0_boot_args += " module_log=fabrics_target:DEBUG,fabrics_host:DEBUG"
+                f1_1_boot_args += " module_log=fabrics_target:DEBUG,fabrics_host:DEBUG"
 
         if deploy_setup:
             funcp_obj = FunControlPlaneBringup(fs_name=self.server_key["fs"][fs_name]["fs-name"])
@@ -429,10 +442,11 @@ class NicEmulation(FunTestCase):
 
     def run(self):
         host_objs = fun_test.shared_variables["hosts_obj"]
-        enable_fcp = fun_test.shared_variables["enable_fcp"]
+        rds_fcp = fun_test.shared_variables["rds_fcp"]
+        tcp_fcp = fun_test.shared_variables["tcp_fcp"]
         come_obj = fun_test.shared_variables["come_obj"]
         abstract_key = ""
-        if enable_fcp:
+        if rds_fcp or tcp_fcp:
             abstract_key = "abstract_configs_bgp"
         else:
             abstract_key = "abstract_configs"
@@ -448,7 +462,7 @@ class NicEmulation(FunTestCase):
             funcp_obj.funcp_abstract_config(abstract_config_f1_0=abstract_json_file0,
                                             abstract_config_f1_1=abstract_json_file1, workspace="/scratch")
 
-            if not enable_fcp:
+            if not rds_fcp or not tcp_fcp:
                 # Add static routes on Containers
                 funcp_obj.add_routes_on_f1(routes_dict=self.server_key["fs"][fs_name]["static_routes"])
 
@@ -456,7 +470,7 @@ class NicEmulation(FunTestCase):
 
             # Ping QFX from both F1s
             ping_dict = self.server_key["fs"][fs_name]["cc_pings"]
-            if enable_fcp:
+            if rds_fcp or tcp_fcp:
                 ping_dict = self.server_key["fs"][fs_name]["cc_pings_bgp"]
 
             for container in ping_dict:
@@ -466,7 +480,7 @@ class NicEmulation(FunTestCase):
             funcp_obj.test_cc_pings_fs()
 
             # Print the tunnel info if its FCP
-            if enable_fcp:
+            if rds_fcp or tcp_fcp:
                 come_obj.sudo_command("echo SELECT 1 > /scratch/opt/fungible/f10_tunnel")
                 come_obj.sudo_command("echo keys *fcp* >> /scratch/opt/fungible/f10_tunnel")
                 come_obj.sudo_command("echo SELECT 1 > /scratch/opt/fungible/f11_tunnel")
@@ -593,12 +607,6 @@ class ConfigureRdsVol(FunTestCase):
             initiator_ip = f11_vlan_ip
             hu_id = [1, 3]
             fun_test.shared_variables["initiator_hosts"] = fun_test.shared_variables["f11_hosts"]
-            # Stop udev services on host
-            service_list = ["systemd-udevd-control.socket", "systemd-udevd-kernel.socket", "systemd-udevd"]
-            for service in service_list:
-                for f11_obj in f11_hosts:
-                    service_status = f11_obj["handle"].systemctl(service_name=service, action="stop")
-                    fun_test.simple_assert(service_status, "Stopping {} service on {}".format(service, f11_obj["name"]))
         elif f1_target == "f11":
             fun_test.log_section("Target is F11")
             f1_initiator = "f10"
@@ -610,12 +618,13 @@ class ConfigureRdsVol(FunTestCase):
             initiator_ip = f10_vlan_ip
             hu_id = [2, 1]
             fun_test.shared_variables["initiator_hosts"] = fun_test.shared_variables["f10_hosts"]
-            # Stop udev services on host
-            service_list = ["systemd-udevd-control.socket", "systemd-udevd-kernel.socket", "systemd-udevd"]
-            for service in service_list:
-                for f10_obj in f10_hosts:
-                    service_status = f10_obj["handle"].systemctl(service_name=service, action="stop")
-                    fun_test.simple_assert(service_status, "Stopping {} service on {}".format(service, f10_obj["name"]))
+
+        # Stop udev services on host
+        service_list = ["systemd-udevd-control.socket", "systemd-udevd-kernel.socket", "systemd-udevd"]
+        for service in service_list:
+            for host_obj in fun_test.shared_variables["initiator_hosts"]:
+                service_status = host_obj["handle"].systemctl(service_name=service, action="stop")
+                fun_test.simple_assert(service_status, "Stopping {} service on {}".format(service, host_obj["name"]))
 
         if not skip_ctrlr_creation:
             # Create IPCFG on F1_0
@@ -638,8 +647,12 @@ class ConfigureRdsVol(FunTestCase):
 
             # Create RDS controller on target
             target_rds_ctrl = utils.generate_uuid()
+            if fun_test.shared_variables["rds_vol_transport"]:
+                controller_transport = fun_test.shared_variables["rds_vol_transport"]
+            else:
+                controller_transport = "RDS"
             command_result = f1_target_storage_obj.create_controller(ctrlr_uuid=target_rds_ctrl,
-                                                                     transport="RDS",
+                                                                     transport=controller_transport,
                                                                      nqn="nqn1",
                                                                      port=controller_port,
                                                                      remote_ip=initiator_ip,
@@ -712,7 +725,37 @@ class ConfigureRdsVol(FunTestCase):
                 # Create RDS volume on initiator
                 initiator_rds_vol[x] = utils.generate_uuid()
                 rds_vol_name = "rds_vol_" + str(x)
-                if fun_test.shared_variables["rds_conn"]:
+                if fun_test.shared_variables["rds_conn"] and not fun_test.shared_variables["rds_vol_transport"]:
+                    rds_conn = fun_test.shared_variables["rds_conn"]
+                    command_result = f1_initiator_storage_obj.create_volume(type="VOL_TYPE_BLK_RDS",
+                                                                            capacity=drive_size,
+                                                                            block_size=block_size,
+                                                                            name=rds_vol_name,
+                                                                            uuid=initiator_rds_vol[x],
+                                                                            remote_nsid=x,
+                                                                            remote_ip=target_ip,
+                                                                            port=controller_port,
+                                                                            connections=rds_conn,
+                                                                            command_duration=command_timeout)
+                    fun_test.simple_assert(command_result["status"],
+                                           "{} : Created RDS vol using {} connections with remote nsid {}".
+                                           format(f1_initiator, rds_conn, x))
+                elif fun_test.shared_variables["rds_vol_transport"] and not fun_test.shared_variables["rds_conn"]:
+                    rds_vol_transport = fun_test.shared_variables["rds_vol_transport"]
+                    command_result = f1_initiator_storage_obj.create_volume(type="VOL_TYPE_BLK_RDS",
+                                                                            capacity=drive_size,
+                                                                            block_size=block_size,
+                                                                            name=rds_vol_name,
+                                                                            uuid=initiator_rds_vol[x],
+                                                                            remote_nsid=x,
+                                                                            remote_ip=target_ip,
+                                                                            port=controller_port,
+                                                                            transport=rds_vol_transport,
+                                                                            command_duration=command_timeout)
+                    fun_test.simple_assert(command_result["status"],
+                                           "{} : Created RDS vol using {} transport with remote nsid {}".
+                                           format(f1_initiator, rds_vol_transport, x))
+                elif fun_test.shared_variables["rds_vol_transport"] and fun_test.shared_variables["rds_conn"]:
                     rds_conn = fun_test.shared_variables["rds_conn"]
                     rds_vol_transport = fun_test.shared_variables["rds_vol_transport"]
                     command_result = f1_initiator_storage_obj.create_volume(type="VOL_TYPE_BLK_RDS",
@@ -727,8 +770,9 @@ class ConfigureRdsVol(FunTestCase):
                                                                             connections=rds_conn,
                                                                             command_duration=command_timeout)
                     fun_test.simple_assert(command_result["status"],
-                                           "{} : Created RDS vol using {} connections with remote nsid {}".
-                                           format(f1_initiator, rds_conn, x))
+                                           "{} : Created RDS vol using {} transport : {} connections with "
+                                           "remote nsid {}".
+                                           format(f1_initiator, rds_vol_transport, rds_conn, x))
                 else:
                     command_result = f1_initiator_storage_obj.create_volume(type="VOL_TYPE_BLK_RDS",
                                                                             capacity=drive_size,
@@ -827,6 +871,10 @@ class RunFioRds(FunTestCase):
                 host_dict[host["name"]] = {}
                 host_dict[host["name"]]["handle"] = host["handle"]
                 host_dict[host["name"]]["nvme_device"] = get_nvme_device(host["handle"])
+                if not host_dict[host["name"]["nvme_device"]]:
+                    host_dict[host["name"]]["handle"].command("dmesg")
+                    fun_test.simple_assert(False, "NVMe device not found on {}".format(host["name"]))
+                host_dict[host["name"]]["handle"].command("dmesg")
                 host_dict[host["name"]]["cpu_list"] = get_numa(host["handle"])
                 tune_host(host["handle"])
         else:
@@ -835,7 +883,9 @@ class RunFioRds(FunTestCase):
             host_dict[initiator_hosts[0]["name"]]["handle"] = initiator_hosts[0]["handle"]
             temp_nvme_devices = get_nvme_device(initiator_hosts[0]["handle"])
             if not temp_nvme_devices:
-                fun_test.simple_assert(False, "NVMe device not found")
+                initiator_hosts[0]["handle"].command("dmesg")
+                fun_test.simple_assert(False, "NVMe device not found on {}".format(initiator_hosts[0]["name"]))
+            initiator_hosts[0]["handle"].command("dmesg")
             temp_nvme_dev_list = temp_nvme_devices.split(":")[:total_ssd]
             host_dict[initiator_hosts[0]["name"]]["nvme_device"] = ":".join(temp_nvme_dev_list)
             host_dict[initiator_hosts[0]["name"]]["cpu_list"] = get_numa(initiator_hosts[0]["handle"])

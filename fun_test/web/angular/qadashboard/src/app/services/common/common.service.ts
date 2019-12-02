@@ -16,8 +16,13 @@ export class CommonService {
 
   scrollTo(elementId) {
     let element = document.getElementById(elementId);
+    if (element) {
+      element.scrollIntoView({behavior: "smooth", block: "center", inline: "nearest"});
+    } else {
+      console.error(`Trying to scroll to: ${elementId} But element was not found`);
+    }
     //window.scrollTo({left: 0, top: 80, behavior: "smooth"});
-    element.scrollIntoView({behavior: "smooth", block: "center", inline: "nearest"});
+
 
   }
 

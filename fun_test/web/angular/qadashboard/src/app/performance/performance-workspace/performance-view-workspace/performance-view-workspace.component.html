@@ -5,14 +5,15 @@
   <b><span class="script-name">{{ workspace.workspace_name }}</span></b>
   <div class="fun-spacer"></div>
   <button
-    [ngClass]="{'fun-button-with-icon': !showGrids, 'fun-button-with-icon-clicked': showGrids}"
+    [ngClass]="{'fun-button-with-icon': !showGrids, 'fun-button-with-icon-selected': showGrids}"
    *ngIf="workspace.interested_metrics.length > 0"
           (click)="showCharts()"><i class="fa fa-line-chart"></i>&nbsp;Show charts</button>
   <button *ngIf="workspace.interested_metrics.length > 0"
-          [ngClass]="{'fun-button-with-icon': !reportGenerated, 'fun-button-with-icon-clicked': reportGenerated}"
+          [ngClass]="{'fun-button-with-icon': !reportGenerated, 'fun-button-with-icon-selected': reportGenerated}"
           (click)="generateReport()"><i class="fa fa-file-text"></i>&nbsp;Show report</button>
   <button *ngIf="workspaceMetrics.length > 0"
-          [ngClass]="{'fun-button-with-icon': !showDag, 'fun-button-with-icon-clicked': showDag}" (click)="viewDag()"><i
+          [ngClass]="{'fun-button-with-icon': !showDag, 'fun-button-with-icon-selected': showDag}"
+          (click)="viewDag()"><i
     class="fa fa-link"></i>&nbsp;View unattached tree</button>
 </div>
 <div *ngIf="showWorkspace" class="card card-primary">

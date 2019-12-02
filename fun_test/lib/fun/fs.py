@@ -1174,6 +1174,7 @@ class ComE(Linux):
         self.funq_bind_device = {}
         self.dpc_for_statistics_ready = False
         self.dpc_for_csi_perf_ready = False
+        self.starting_dpc_for_statistics = False # Just temporarily while statistics manager is being developed TODO
 
     def pre_reboot_cleanup(self):
         fun_test.log("Cleaning up storage controller containers", context=self.context)
@@ -1308,7 +1309,7 @@ class ComE(Linux):
         self.sudo_command("chmod 777 {}".format(target_file_name))
         self.sudo_command("{} install".format(target_file_name), timeout=500)
         exit_status = self.exit_status()
-        fun_test.test_assert(exit_status == 0, "Bundle install complete. Exit status valid")
+        fun_test.test_assert(exit_status == 0, "Bundle install complete. Exit status valid", context=self.context)
         return True
 
 
@@ -1396,7 +1397,10 @@ class ComE(Linux):
         return True
 
     def setup_dpc(self, statistics=None, csi_perf=None):
-
+        if statistics and self.starting_dpc_for_statistics:
+            return True  #TODO: testing only
+        if statistics:   #TODO: testing only
+            self.starting_dpc_for_statistics = True
         # self.command("cd $WORKSPACE/FunControlPlane")
         """
         output = self.sudo_command("build/posix/bin/funq-setup bind")
@@ -1423,7 +1427,7 @@ class ComE(Linux):
             command = "./dpcsh --pcie_nvme_sock=/dev/nvme{} --nvme_cmd_timeout={} --tcp_proxy={} &> {} &".format(nvme_device_index,
                                                                                                                  self.NVME_CMD_TIMEOUT,
                                                                                                                  self.get_dpc_port(f1_index=f1_index, statistics=statistics, csi_perf=csi_perf),
-                                                                                                                 self.get_dpc_log_path(f1_index=f1_index, statistics=statistics))
+                                                                                                                 self.get_dpc_log_path(f1_index=f1_index, statistics=statistics, csi_perf=csi_perf))
             self.sudo_command(command)
 
         fun_test.sleep(message="DPC socket creation", context=self.context)
@@ -1484,9 +1488,9 @@ class ComE(Linux):
     def get_dpc_log_path(self, f1_index, statistics=None, csi_perf=None):
         path = self.DPC_LOG_PATH.format(f1_index)
         if statistics:
-            path = self.DPC_STATISTICS_LOG_PATH[f1_index]
+            path = self.DPC_STATISTICS_LOG_PATH.format(f1_index)
         if csi_perf:
-            path = self.DPC_CSI_PERF_LOG_PATH[f1_index]
+            path = self.DPC_CSI_PERF_LOG_PATH.format(f1_index)
         return path
 
     def _get_context_prefix(self, data):
@@ -1629,6 +1633,8 @@ class Fs(object, ToDictMixin):
 
     class StatisticsType(Codes):
         BAM = 1000
+        DEBUG_VP_UTIL = 1050
+
 
     STATISTICS_COLLECTOR_MAP = {}
 
@@ -1782,7 +1788,10 @@ class Fs(object, ToDictMixin):
 
     def register_statistics(self, statistics_type):
         statistics_manager = fun_test.get_statistics_manager()
-        collector = StatisticsCollector(collector=self, category=StatisticsCategory.FS_SYSTEM, type=self.StatisticsType.BAM)
+        collector = StatisticsCollector(collector=self,
+                                        category=StatisticsCategory.FS_SYSTEM,
+                                        type=statistics_type,
+                                        asset_id=self.get_asset_name())
         self.statistics_collectors[statistics_type] = statistics_manager.register_collector(collector=collector)
 
     def get_context(self):
@@ -2214,6 +2223,26 @@ class Fs(object, ToDictMixin):
         # fun_test.log("BAM result: {} {}".format(result, f1_level_result))
         return result
 
+    def debug_vp_util(self, command_duration=2):
+        result = {"status": False}
+        f1_level_result = {}
+        for f1_index in range(self.NUM_F1S):
+            if f1_index == self.disable_f1_index:
+                continue
+            dpc_client = self.get_dpc_client(f1_index=f1_index, auto_disconnect=True, statistics=True)
+            cmd = "vp_util"
+            dpc_result = dpc_client.json_execute(verb="debug", data=cmd, command_duration=command_duration)
+            if dpc_result["status"]:
+                raw_data = dpc_result["data"]
+                fixed_data = {key.replace(".", "_"): value for key, value in raw_data.iteritems()}
+                f1_level_result[f1_index] = fixed_data
+
+        result["data"] = f1_level_result
+        if f1_level_result:
+            result["status"] = True
+
+        return result
+
     def bmc_initialize(self):
         bmc = self.get_bmc(disable_f1_index=self.disable_f1_index)
         fun_test.simple_assert(expression=bmc._connect(), message="BMC connected", context=self.context)
@@ -2337,6 +2366,11 @@ class Fs(object, ToDictMixin):
             bam_result = self.bam(**kwargs)
             if bam_result["status"]:
                 result["data"] = bam_result["data"]
+                result["status"] = True
+        if statistics_type == self.StatisticsType.DEBUG_VP_UTIL:
+            debug_vp_result = self.debug_vp_util(**kwargs)
+            if debug_vp_result["status"]:
+                result["data"] = debug_vp_result["data"]
                 result["status"] = True
         return result
 

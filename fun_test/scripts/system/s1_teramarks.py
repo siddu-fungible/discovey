@@ -76,7 +76,7 @@ class CryptoTeramarkTc(PalladiumTc):
     tags = "qa_s1_crypto_teramark"
     max_duration = 2700
     note = "Crypto SEC Regression & TeraMark apps (PC0 Throughput) on S1"
-    fun_os_make_flags = "NDEBUG=1"
+    fun_os_make_flags = "NDEBUG=1 LTO=1"
     extra_emails = ["jitendra.lulla@fungible.com"]
 
     def describe(self):
@@ -94,6 +94,7 @@ class PkeTeramarkTc(PalladiumTc):
     tags = "qa_s1_pke_teramark"
     hw_model = "S1_CUT"
     note = "PKE teramark app on S1"
+    fun_os_make_flags = "NDEBUG=1 LTO=1"
 
     def describe(self):
         self.set_test_details(id=2,
@@ -111,6 +112,7 @@ class EcTeramarkTc(PalladiumTc):
     note = "EC teramark app on S1"
     hw_model = "S1_Compute"
     max_duration = 1800
+    fun_os_make_flags = "NDEBUG=1 LTO=1"
 
     def describe(self):
         self.set_test_details(id=3,
@@ -126,7 +128,7 @@ class DfaTeramarkTc(PalladiumTc):
     boot_args = "app=dfa_perf_bootstrap rbm-size=1m dfa_perf.pc_mask=1 --bm-profile-regex dfa_perf.nflows=24 dfa_perf.niterations=100 syslog=2 dfa_perf.name=cache_100"
     tags = "qa_s1_dfa_teramark"
     note = "DFA teramark app on S1"
-    fun_os_make_flags = "PM_TESTS=1 XDATA_LISTS=/project/users/QA/regression/data_store/regex/performance/DFA/jenkins.list"
+    fun_os_make_flags = "PM_TESTS=1 XDATA_LISTS=/project/users/QA/regression/data_store/regex/performance/DFA/jenkins.list NDEBUG=1 LTO=1"
     extra_emails = ["jitendra.lulla@fungible.com", "mahesh.kumar@fungible.com", " indrani.p@fungible.com"]
 
     def describe(self):
@@ -143,7 +145,7 @@ class NfaTeramarkTc(PalladiumTc):
     boot_args = "app=nfa_perf_bootstrap rbm-size=1m --bm-profile-regex nfa_perf.pc_mask=1 nfa_perf.nflows=140 nfa_perf.niterations=1024 syslog=2 nfa_perf.name=perf0"
     tags = "qa_s1_nfa_teramark"
     note = "NFA teramark app on S1"
-    fun_os_make_flags = "PM_TESTS=1 XDATA_LISTS=/project/users/QA/regression/data_store/regex/performance/NFA/perf0.list"
+    fun_os_make_flags = "PM_TESTS=1 XDATA_LISTS=/project/users/QA/regression/data_store/regex/performance/NFA/perf0.list NDEBUG=1 LTO=1"
     extra_emails = ["jitendra.lulla@fungible.com", "mahesh.kumar@fungible.com", " indrani.p@fungible.com"]
 
     def describe(self):
@@ -160,7 +162,7 @@ class JpegTeramarkTc(PalladiumTc):
     boot_args = "app=jpeg_perf_test"
     tags = "qa_s1_jpeg_teramark"
     note = "JPEG teramark app on S1"
-    fun_os_make_flags = "XDATA_LISTS=/project/users/ashaikh/qa_test_inputs/jpeg_perf_inputs/perf_input.list"
+    fun_os_make_flags = "XDATA_LISTS=/project/users/ashaikh/qa_test_inputs/jpeg_perf_inputs/perf_input.list NDEBUG=1 LTO=1"
     extra_emails = ["jitendra.lulla@fungible.com", "abhishek.dikshit@fungible.com", "hara.bandhakavi@fungible.com"]
 
     def describe(self):
@@ -177,7 +179,7 @@ class ZipDeflateTeramarkTc(PalladiumTc):
     boot_args = "app=deflate_perf_multi nflows=30 niterations=30 npcs=1 --platforms1"
     tags = "qa_s1_zip_deflate_teramark"
     note = "ZIP deflate teramark app on S1"
-    fun_os_make_flags = "XDATA_LISTS=/project/users/ashaikh/qa_test_inputs/zip_inputs/compress_perf_input.list"
+    fun_os_make_flags = "XDATA_LISTS=/project/users/ashaikh/qa_test_inputs/zip_inputs/compress_perf_input.list NDEBUG=1 LTO=1"
     max_duration = 9000
     extra_emails = ["jitendra.lulla@fungible.com"]
 
@@ -195,7 +197,7 @@ class ZipLzmaTeramarkTc(PalladiumTc):
     boot_args = "app=lzma_perf_multi nflows=30 niterations=10 npcs=1 --platforms1"
     tags = "qa_s1_zip_lzma_teramark"
     note = "ZIP lzma teramark app on S1"
-    fun_os_make_flags = "XDATA_LISTS=/project/users/ashaikh/qa_test_inputs/zip_inputs/compress_perf_input.list"
+    fun_os_make_flags = "XDATA_LISTS=/project/users/ashaikh/qa_test_inputs/zip_inputs/compress_perf_input.list NDEBUG=1 LTO=1"
     max_duration = 9000
     extra_emails = ["jitendra.lulla@fungible.com"]
 

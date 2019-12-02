@@ -412,5 +412,12 @@ class Rocetools:
         device_name = temp.strip()
         device_info_raw = self.host.command("ibv_devinfo -d {} -v".format(device_name))
         device_info_list = device_info_raw.replace("\t", "").replace("\r", "").split("\n")
+        device_info_dict = {}
+        for x in device_info_list:
+            try:
+                key, value = x.split(":", 1)
+                device_info_dict[key] = value
+            except:
+                pass
         self.host.disconnect()
-        return device_info_list
+        return device_info_dict
