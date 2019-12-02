@@ -2567,8 +2567,7 @@ if __name__ == "__main__pr_build_time__":
                            workspace_ids=[])
     print "created pr build chart"
 
-
-if __name__ == "__main__":
+if __name__ == "__main_blt_volume__":
     owner_info = "Saravanan Selvam (saravanan.selvam@fungible.com )"
     source = "TBD"
     base_line_date = datetime(year=2019, month=11, day=20, minute=0, hour=0, second=0)
@@ -2647,3 +2646,26 @@ if __name__ == "__main__":
 
     print json.dumps(container_charts, indent=4)
 
+if __name__ == "__main__":
+    owner_info = "Ashwin S (ashwin.s@fungible.com)"
+    source = "https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/system/build_time_performance.py"
+    base_line_date = datetime(year=2019, month=11, day=26, minute=0, hour=0, second=0)
+    data_sets = []
+    one_data_set = {}
+    one_data_set["name"] = "integration job"
+    one_data_set["inputs"] = {}
+    one_data_set["output"] = {"name": "output_total_time", "min": 0, "max": -1, "expected": -1, "reference": -1,
+                              "best": -1, "unit": PerfUnit.UNIT_SECS}
+    data_sets.append(one_data_set)
+    ml.create_leaf(chart_name="Integration job run time", internal_chart_name="integration_job_run_time",
+                           data_sets=data_sets, leaf=True,
+                           description="TBD",
+                           owner_info=owner_info, source=source,
+                           positive=False, y1_axis_title=PerfUnit.UNIT_SECS,
+                           visualization_unit=PerfUnit.UNIT_SECS,
+                           metric_model_name="IntegrationJobBuildTimePerformance",
+                           base_line_date=base_line_date,
+                           work_in_progress=False, children=[], jira_ids=[], platform=FunPlatform.F1,
+                           peer_ids=[], creator=TEAM_REGRESSION_EMAIL,
+                           workspace_ids=[])
+    print "created Integration job run time chart"
