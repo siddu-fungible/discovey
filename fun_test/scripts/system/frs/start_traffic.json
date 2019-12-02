@@ -24,7 +24,7 @@
   ],
   "disable_stats": [],
   "add_boot_arg": "",
-  "upload_to_file": false,
+  "upload_to_file": true,
   "stats_interval": 30,
   "elasticsearch_config": {
     "ip": "10.1.20.52",
