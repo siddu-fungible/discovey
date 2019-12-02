@@ -13,7 +13,11 @@ def publish(request):
 
         connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
         channel = connection.channel()
+        message_type = request_json.get("message_type", None)
+        message = request_json.get("message", None)
 
-        channel.basic_publish(exchange='', routing_key=request_json["routing_key"], body='Hello World!')
+        body = {"message_type": message_type, "message": message}
+
+        channel.basic_publish(exchange='', routing_key=request_json["routing_key"], body=json.dumps(body))
         connection.close()
     return result
