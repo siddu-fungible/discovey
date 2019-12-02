@@ -64,14 +64,18 @@ class FunTestCase2(FunTestCase):
         # fun_test.shared_variables["fs"].cleanup()
 
     def run(self):
-        fun_test.build_parameters["bundle_image_parameters"] = {"release_train": "rel_1_0a_aa", "build_number": -1}
+        # fun_test.build_parameters["bundle_image_parameters"] = {"release_train": "rel_1_0a_aa", "build_number": -1}
         topology_helper = TopologyHelper()
-        topology_helper.set_dut_parameters(dut_index=0, custom_boot_args="app=load_mods --dpc-uart --dpc-server --csr-replay --all_100g")
+        topology_helper.set_dut_parameters(dut_index=0, custom_boot_args="app=load_mods --dpc-uart --dpc-server --csr-replay --all_100g",
+                                           fs_parameters={"already_deployed": True})
         topology = topology_helper.deploy()
         fun_test.test_assert(topology, "Topology deployed")
         fs = topology.get_dut_instance(index=0)
         fs.register_statistics(statistics_type=Fs.StatisticsType.BAM)
         fs.start_statistics_collection(statistics_type=Fs.StatisticsType.BAM)
+        fs.register_statistics(statistics_type=Fs.StatisticsType.DEBUG_VP_UTIL)
+        fs.start_statistics_collection(statistics_type=Fs.StatisticsType.DEBUG_VP_UTIL)
+
         fun_test.sleep("Waiting for chart data", seconds=120)
         come = fs.get_come()
         come.setup_tools()

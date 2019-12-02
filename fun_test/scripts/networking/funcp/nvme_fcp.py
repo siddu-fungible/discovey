@@ -641,8 +641,12 @@ class ConfigureRdsVol(FunTestCase):
 
             # Create RDS controller on target
             target_rds_ctrl = utils.generate_uuid()
+            if fun_test.shared_variables["rds_vol_transport"]:
+                controller_transport = fun_test.shared_variables["rds_vol_transport"]
+            else:
+                controller_transport = "RDS"
             command_result = f1_target_storage_obj.create_controller(ctrlr_uuid=target_rds_ctrl,
-                                                                     transport="RDS",
+                                                                     transport=controller_transport,
                                                                      nqn="nqn1",
                                                                      port=controller_port,
                                                                      remote_ip=initiator_ip,

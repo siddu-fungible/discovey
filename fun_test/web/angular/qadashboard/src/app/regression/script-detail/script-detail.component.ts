@@ -9,6 +9,7 @@ import {CommonService} from "../../services/common/common.service";
 import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
 import {ScriptDetailService, ContextInfo, ScriptRunTime} from "./script-detail.service";
 import {StatisticsService, StatisticsCategory, StatisticsSubCategory} from "../../statistics/statistics.service";
+import {RegisteredAsset} from "../definitions";
 
 class DataModel {
   letter: string;
@@ -137,9 +138,13 @@ export class ScriptDetailComponent implements OnInit {
     sc.display_name = "System";
     sc.name = "system";
     let ssc = new StatisticsSubCategory();
-    ssc.display_name = "BAM";
+    /*ssc.display_name = "BAM";
     ssc.name = "bam";
-    //this.selectedStatistics.push({statisticsCategory: sc, statisticsSubCategory: ssc});
+    this.selectedStatistics.push({statisticsCategory: sc, statisticsSubCategory: ssc});*/
+    ssc.display_name = "debug vp_util";
+    ssc.name = "debug_vp_util";
+    this.selectedStatistics.push({statisticsCategory: sc, statisticsSubCategory: ssc});
+
   }
   suiteExecutionId: number = 10000;
   logPrefix: number = null;
@@ -167,7 +172,8 @@ export class ScriptDetailComponent implements OnInit {
   logsAreTruncated: boolean = false;
   viewingCharts: boolean = false;
   statisticsCategories: any [] = [
-    {name: "system", display_name: "System", "sub_categories": [{name: "bam", display_name: "BAM"}]}
+    {name: "system", display_name: "System", sub_categories: [{name: "bam", display_name: "BAM"}]},
+    {name: "system", display_name: "System", sub_categories: [{name: "debug_vp_util", display_name: "debug vp_util"}]}
   ];
   selectedStatisticsCategory = null;
   selectedStatisticsSubCategory = null;
@@ -181,6 +187,7 @@ export class ScriptDetailComponent implements OnInit {
   artifactTree: ArtifactTree = new ArtifactTree();
   showingTablesPanel: boolean = false;
   testCaseTablePanels: {[panelHeader: string]: any} = {};
+  registeredAssets: RegisteredAsset [];
 
   ngOnInit() {
 
@@ -191,6 +198,9 @@ export class ScriptDetailComponent implements OnInit {
       return this.regressionService.getScriptInfoById(this.scriptId);
     })).pipe(switchMap(response => {
       this.scriptPath = response.script_path;
+      return this.regressionService.getRegisteredAssets(this.suiteExecutionId);
+    })).pipe(switchMap(response => {
+      this.registeredAssets = response;
       return this.service.getContexts(this.suiteExecutionId, this.scriptId);
     })).pipe(switchMap(response => {
       this.availableContexts = response;
@@ -564,6 +574,7 @@ export class ScriptDetailComponent implements OnInit {
     this.scriptExecutionInfo["suite_execution_id"] = this.suiteExecutionId;
     this.scriptExecutionInfo["current_test_case_execution"] = this.currentTestCaseExecution;
     this.scriptExecutionInfo["current_checkpoint_index"] = this.currentCheckpointIndex;
+    this.scriptExecutionInfo["registered_assets"] = this.registeredAssets;
     this.scriptExecutionInfo = {...this.scriptExecutionInfo};
   }
 

@@ -1,4 +1,5 @@
 import {Component, Input, OnChanges, OnInit} from '@angular/core';
+import {RegisteredAsset} from "../../regression/definitions";
 
 @Component({
   selector: 'app-statistics-container',
@@ -8,6 +9,7 @@ import {Component, Input, OnChanges, OnInit} from '@angular/core';
 export class StatisticsContainerComponent implements OnInit, OnChanges {
   @Input() statistics: any [];  // {statisticsCategory: , statisticsSubCategory:}
   @Input() scriptExecutionInfo: any = null;
+  selectedAsset: RegisteredAsset = null;
   constructor() { }
 
   ngOnInit() {
@@ -20,6 +22,11 @@ export class StatisticsContainerComponent implements OnInit, OnChanges {
       let suiteExecutionId = this.scriptExecutionInfo.suite_execution_id;
       console.log(suiteExecutionId);
 
+      if (this.scriptExecutionInfo.hasOwnProperty('registered_assets')) {
+        if (this.scriptExecutionInfo.registered_assets.length > 0) {
+          this.selectedAsset = this.scriptExecutionInfo.registered_assets[0];
+        }
+      }
     }
   }
 
