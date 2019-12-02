@@ -4,3 +4,7 @@
 .hover-cell:hover .hover-icon {
   visibility: visible;
 }
+
+.focus-text-area {
+  border:solid 2px red;
+}

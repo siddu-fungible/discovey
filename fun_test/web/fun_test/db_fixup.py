@@ -1,6 +1,6 @@
 import django
 import math
-from web.web_global import PRIMARY_SETTINGS_FILE
+from web.web_global import PRIMARY_SETTINGS_FILE, F1_ROOT_ID, S1_ROOT_ID, OTHER_ROOT_ID, FS1600_ROOT_ID
 from fun_global import *
 from fun_settings import MAIN_WEB_APP
 from datetime import timedelta
@@ -59,34 +59,6 @@ def get_entries_for_day(model, day, data_set):
     order_by = "-input_date_time"
     result = model.objects.filter(**d).order_by(order_by)
     return result
-
-
-def get_first_record(model, data_set):
-    inputs = data_set["inputs"]
-    d = {}
-    for input_name, input_value in inputs.iteritems():
-        d[input_name] = input_value
-    order_by = "-input_date_time"
-    entries = model.objects.filter(**d).order_by(order_by)
-    i = 0
-
-
-def fixup_reference_values(chart, model, data_set):
-    modified = 0
-    first_record = get_first_record(model=model, data_set=data_set)
-    if not first_record:
-        i = 0
-    else:
-        first_record = first_record[-1]
-        output_name = data_set["output"]["name"]
-        if output_name in first_record:
-            data_set["output"]["reference"] = first_record[output_name]
-            modified = 1
-        j = 0
-        # data_set["reference"] = first_rec
-    # self.data_sets = json.dumps(data_set)
-    # self.save()
-    return modified
 
 
 def interpolate(chart, model, from_date, to_date):
@@ -150,6 +122,7 @@ def prepare_status(chart, cache_valid, purge_old_status=False):
         serialized = MetricChartStatusSerializer(entries, many=True)
         serialized_data = serialized.data[:]
         result["scores"] = {}
+        result["data_sets"] = chart.get_data_sets()
         for element in serialized_data:
             j = dict(element)
             result["scores"][j["date_time"]] = j
@@ -212,6 +185,7 @@ def set_chart_status_details(chart, result):
     chart.penultimate_good_score = result["penultimate_good_score"]
     chart.copied_score = result["copied_score"]
     chart.copied_score_disposition = result["copied_score_disposition"]
+    chart.data_sets = json.dumps(result["data_sets"])
     chart.save()
 
 
@@ -223,6 +197,13 @@ def adjust_timezone_for_day_light_savings(current_date):
 def _is_valid_output(output_value):
     return (output_value != -1 and not math.isinf(output_value))
 
+def _update_best_value(current_value, best_value_dict, chart, data_set):
+    if best_value_dict[data_set["name"]] == -1:
+        best_value_dict[data_set["name"]] = current_value
+    elif (chart.positive and current_value > best_value_dict[data_set["name"]]):
+        best_value_dict[data_set["name"]] = current_value
+    elif (not chart.positive and current_value < best_value_dict[data_set["name"]]):
+        best_value_dict[data_set["name"]] = current_value
 
 def calculate_leaf_scores(cache_valid, chart, result, from_log=False):
     # print "Reached leaf: {}".format(chart.chart_name)
@@ -234,7 +215,7 @@ def calculate_leaf_scores(cache_valid, chart, result, from_log=False):
     valid_dates = []
     current_date = get_rounded_time(from_date)
     model = app_config.get_metric_models()[chart.metric_model_name]
-    if model.objects.first() and model.objects.first().interpolation_allowed:
+    if model.objects.first() and hasattr(model.objects.first(), "interpolation_allowed") and model.objects.first().interpolation_allowed:
         interpolate(model=model, from_date=from_date, to_date=to_date, chart=chart)
 
     last_good_score = 0
@@ -281,6 +262,9 @@ def calculate_leaf_scores(cache_valid, chart, result, from_log=False):
         num_data_sets_with_expected = len(
             data_sets) if num_data_sets_with_expected == 0 else num_data_sets_with_expected
         data_sets = json.loads(chart.data_sets)
+        best_value_dict = {}
+        for data_set in data_sets:
+            best_value_dict[data_set["name"]] = data_set["output"]["best"]
         while current_date <= to_date:
             result["num_degrades"] = 0
             valid_dates.append(current_date)
@@ -295,8 +279,9 @@ def calculate_leaf_scores(cache_valid, chart, result, from_log=False):
                             output_name = data_set["output"]["name"]  # TODO
                             output_unit = output_name + "_unit"
                             reference_value = data_set["output"]["reference"]
-                            get_first_record(model=model, data_set=data_set)
                             output_value = getattr(this_days_record, output_name)
+                            _update_best_value(current_value=output_value, best_value_dict=best_value_dict,
+                                                chart=chart, data_set=data_set)
                             if hasattr(this_days_record, output_unit):
                                 output_unit = getattr(this_days_record, output_unit)
                             else:
@@ -384,9 +369,12 @@ def calculate_leaf_scores(cache_valid, chart, result, from_log=False):
                 result["num_degrades"] = 1
             current_date = current_date + timedelta(days=1)
             current_date = adjust_timezone_for_day_light_savings(current_date)
+        for data_set in data_sets:
+            data_set["output"]["best"] = best_value_dict[data_set["name"]]
         result["scores"] = scores
         result["last_build_status"] = chart.last_build_status == "PASSED"
         result["valid_dates"] = valid_dates
+        result["data_sets"] = data_sets
         if not result["last_build_status"]:
             result["num_build_failed"] = 1
         valid_dates = result["valid_dates"]
@@ -479,6 +467,7 @@ def calculate_container_scores(chart, purge_old_status, cache_valid, result):
     result["scores"] = scores
     result["last_build_status"] = chart.last_build_status == "PASSED"
     result["valid_dates"] = valid_dates
+    result["data_sets"] = chart.get_data_sets()
     if not result["last_build_status"]:
         result["num_build_failed"] = 1
     valid_dates = result["valid_dates"]
@@ -568,7 +557,7 @@ def convert_to_base_unit(output_value, output_unit):
 
 
 if __name__ == "__main__":
-    chart_names = ["F1", "S1", "All metrics"]
-    for chart_name in chart_names:
-        total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name=chart_name)
+    metric_ids = [F1_ROOT_ID, S1_ROOT_ID, OTHER_ROOT_ID, FS1600_ROOT_ID]
+    for metric_id in metric_ids:
+        total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", metric_id=metric_id)
         prepare_status(chart=total_chart, purge_old_status=False, cache_valid=False)

@@ -30,6 +30,7 @@ export class ScriptSelectorComponent implements OnInit, OnChanges {
   selectionMode = false;
   savedSingleSelectNode = null;
   refreshingStatus = null;
+  viewingCharts: boolean = false;
   @Input() resetEvent: any = null;
   @Input() selectionText: string = "file";
   @Output() singleSelectPk: EventEmitter<number> = new EventEmitter();
@@ -49,9 +50,11 @@ export class ScriptSelectorComponent implements OnInit, OnChanges {
 
   fetchScripts() {
     this.resetState();
+    this.refreshingStatus = "Fetching script info";
     this.apiService.get('/regression/scripts').subscribe(response => {
       this.data = response.data;
       this.parseIt();
+      this.refreshingStatus = null;
     }, error => {
       this.logger.error('/regression/scripts');
     })
@@ -192,5 +195,6 @@ export class ScriptSelectorComponent implements OnInit, OnChanges {
       this.fetchScripts();
     }, error => {this.logger.error("Unable to refresh files");})
   }
+
 
 }

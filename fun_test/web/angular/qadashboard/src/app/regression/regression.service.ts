@@ -4,11 +4,16 @@ import {LoggerService} from "../services/logger/logger.service";
 import {catchError, switchMap} from 'rxjs/operators';
 import {forkJoin, observable, Observable, of, throwError} from "rxjs";
 import {CommonService} from "../services/common/common.service";
+import {ReleaseCatalogSuite, ReleaseCatalog, RegisteredAsset} from "./definitions";
+import {Suite} from "./suite-editor/suite-editor.service";
+
 
 @Injectable({
   providedIn: 'root'
 })
 export class RegressionService implements OnInit{
+  CONSOLE_LOG_EXTENSION: string = ".logs.txt";  //TIED to scheduler_helper.py  TODO
+  HTML_LOG_EXTENSION: string = ".html";         //TIED to scheduler_helper.py  TODO
   stateStringMap = { "-200": "UNKNOWN",  // TODO: fetch from the back-end
                    "-100": "ERROR",
                    "-20": "KILLED",
@@ -81,16 +86,16 @@ export class RegressionService implements OnInit{
     return new Date(epochValue);
   }
 
-getPrettyLocalizeTime(t) {
-  let minutePrefix = '';
-  let localTime = this.convertToLocalTimezone(t);
-  if (localTime.getMinutes() < 10){
-    minutePrefix += '0';
+  getPrettyLocalizeTime(t) {
+    let minutePrefix = '';
+    let localTime = this.convertToLocalTimezone(t);
+    if (localTime.getMinutes() < 10){
+      minutePrefix += '0';
+    }
+    let s = `${localTime.getMonth() + 1}/${localTime.getDate()} ${localTime.getHours()}:${minutePrefix}${localTime.getMinutes()}`;
+    //return this.convertToLocalTimezone(t).toLocaleString().replace(/\..*$/, "");
+    return s;
   }
-  let s = `${localTime.getMonth() + 1}/${localTime.getDate()} ${localTime.getHours()}:${minutePrefix}${localTime.getMinutes()}`;
-  //return this.convertToLocalTimezone(t).toLocaleString().replace(/\..*$/, "");
-  return s;
-}
 
 
   getTestCaseExecution(executionId) {
@@ -209,21 +214,58 @@ getPrettyLocalizeTime(t) {
     }))
   }
 
-  testCaseTimeSeries(suiteExecutionId, testCaseExecutionId) {
-    let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}/${testCaseExecutionId}`;
+  testCaseTimeSeries(suiteExecutionId, testCaseExecutionId?: number,
+                     checkpointIndex?: number,
+                     minCheckpointIndex?: number,
+                     maxCheckpointIndex?: number,
+                     type?: number,
+                     statisticsType?: number,
+                     assetId?: string) {
+    let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}`;
+    let params = [];
+    if (checkpointIndex !== null) {
+      params.push(["checkpoint_index", checkpointIndex]);
+    } else {
+      if (minCheckpointIndex !== null) {
+        params.push(["min_checkpoint_index", minCheckpointIndex]);
+      }
+      if (maxCheckpointIndex !== null) {
+        params.push(["max_checkpoint_index", maxCheckpointIndex]);
+      }
+      if (testCaseExecutionId) {
+        params.push(["test_case_execution_id", testCaseExecutionId]);
+      }
+      if (type) {
+        params.push(["type", type]);
+      }
+      if (statisticsType) {
+        params.push(["t", statisticsType]);
+      }
+      if (assetId) {
+        params.push(["asset_id", assetId]);
+      }
+    }
+    let queryParamString = this.commonService.queryParamsToString(params);
+    if (queryParamString) {
+      url += queryParamString;
+    }
+
     return this.apiService.get(url).pipe(switchMap(response => {
       return of(response.data);
     }), catchError (error => {
-      this.loggerService.error("Unable fetch time-series");
+      this.loggerService.error("Unable fetch time-series logs");
       return throwError(error);
     }))
   }
 
-  testCaseTimeSeriesLogs(suiteExecutionId, testCaseExecutionId, checkpointIndex=null) {
-    let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}/${testCaseExecutionId}`;
-    url += `?type=log`;
+  testCaseTimeSeriesLogs(suiteExecutionId, testCaseExecutionId?: null, checkpointIndex?: null) {
+    let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}`;
+    url += `?type=60`;
     if (checkpointIndex !== null) {
       url += `&checkpoint_index=${checkpointIndex}`;
+    }
+    if (testCaseExecutionId) {
+      url += `&test_case_execution_id=${testCaseExecutionId}`;
     }
     return this.apiService.get(url).pipe(switchMap(response => {
       return of(response.data);
@@ -240,19 +282,161 @@ getPrettyLocalizeTime(t) {
     }))
   }
 
-  testCaseTimeSeriesCheckpoints(suiteExecutionId, testCaseExecutionId) {
-    let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}/${testCaseExecutionId}`;
-    url += `?type=checkpoint`;
+  testCaseTimeSeriesCheckpoints(suiteExecutionId, testCaseExecutionId: number = null) {
+    let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}`;
+    url += `?type=80`;
+    if (testCaseExecutionId) {
+      url += `&test_case_execution_id=${testCaseExecutionId}`;
+    }
+
     return this.apiService.get(url).pipe(switchMap(response => {
       return of(response.data);
     }), catchError (error => {
-      this.loggerService.error("Unable fetch time-series logs");
+      this.loggerService.error("Unable to fetch time-series logs");
       return throwError(error);
     }))
   }
 
+  artifacts(suiteExecutionId: number, testCaseExecutionId: number = null) {
+    let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}`;
+    let params = [];
+    params.push(["type", 200]);
+    if (testCaseExecutionId) {
+      params.push(["te", testCaseExecutionId]);
+    }
+    url += this.commonService.queryParamsToString(params);
+    return this.apiService.get(url).pipe(switchMap(response => {
+      return of(response.data);
+    }), catchError(error => {
+      this.loggerService.error("Unable to fetch time-series artifacts");
+      return throwError(error);
+    }))
+  }
+
+  testCaseTables(suiteExecutionId: number, testCaseExecutionId: number = null) {
+    let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}`;
+    let params = [];
+    params.push(["type", 300]);
+    if (testCaseExecutionId) {
+      params.push(["te", testCaseExecutionId]);
+    }
+    url += this.commonService.queryParamsToString(params);
+    return this.apiService.get(url).pipe(switchMap(response => {
+      return of(response.data);
+    }), catchError(error => {
+      this.loggerService.error("Unable to fetch test-case tables");
+      return throwError(error);
+    }))
+
+  }
+
   getRegressionScripts(scriptId=null, scriptPath=null) {
     let url = `/api/v1/regression/scripts`
+  }
+
+  _getFlatPath(suiteExecutionId, path, logPrefix) {
+    let httpPath = "/static/logs/s_" + suiteExecutionId;
+    let parts = path.split("/");
+    let flat = path;
+    let numParts = parts.length;
+    if (numParts > 2) {
+      flat = parts[numParts - 2] + "_" + parts[numParts - 1];
+    }
+    let s = "";
+    if (logPrefix !== "") {
+      s = logPrefix + "_"
+    }
+    return httpPath + "/" + s + flat.replace(/^\//g, '');
+  }
+
+  getHtmlLogPath(suiteExecutionId, path, logPrefix) {
+    window.open(this._getFlatPath(suiteExecutionId, path, logPrefix) + this.HTML_LOG_EXTENSION);
+  }
+
+  getConsoleLogPath(suiteExecutionId, path, logPrefix) {
+    window.open(this._getFlatPath(suiteExecutionId, path, logPrefix) + this.CONSOLE_LOG_EXTENSION);
+  }
+
+  preserveLogs(suiteExecutionId, preserveLogs) {
+    let payload = {"preserve_logs": preserveLogs};
+    return this.apiService.put("/api/v1/regression/suite_executions/" + suiteExecutionId, payload).pipe(switchMap(response => {
+      return of(true);
+    }))
+  }
+
+
+  createReleaseCatalog(releaseCatalog: ReleaseCatalog) {
+    return this.apiService.post("/api/v1/regression/release_catalogs", releaseCatalog).pipe(switchMap(response => {
+      return of(true);
+    }), catchError(error => {
+      this.loggerService.error("Unable to create release catalog");
+      return throwError(error);
+    }))
+  }
+
+  updateReleaseCatalog(catalogId: number, releaseCatalog: ReleaseCatalog) {
+    let url = "/api/v1/regression/release_catalogs";
+    if (catalogId) {
+      url += '/' + catalogId;
+    }
+    return this.apiService.put(url, releaseCatalog.payloadForUpdate()).pipe(switchMap(response => {
+      return of(true);
+    }), catchError(error => {
+      this.loggerService.error("Unable to update release catalog");
+      return throwError(error);
+    }))
+  }
+
+  getReleaseCatalogs(): Observable<ReleaseCatalog[]> {
+    let url = "/api/v1/regression/release_catalogs";
+    return this.apiService.get(url).pipe(switchMap(response => {
+      let allCatalogs = response.data;
+      const mappedArray = allCatalogs.map(data => new ReleaseCatalog(data));
+      return of(mappedArray);
+    }), catchError(error => {
+      this.loggerService.error("Unable to get release catalogs");
+      return throwError(error);
+    }))
+  }
+
+  getReleaseCatalog(catalogId: number): Observable<ReleaseCatalog> {
+    let url = "/api/v1/regression/release_catalogs";
+    if (catalogId) {
+      url += '/' + catalogId;
+    }
+    return this.apiService.get(url).pipe(switchMap(response => {
+      return of(new ReleaseCatalog(response.data));
+    }), catchError(error => {
+      this.loggerService.error("Unable to get release catalog");
+      return throwError(error);
+    }))
+  }
+
+  deleteReleaseCatalog(catalogId: number) {
+    let url = "/api/v1/regression/release_catalogs";
+    if (catalogId) {
+      url += '/' + catalogId;
+    }
+    return this.apiService.delete(url).pipe(switchMap(response => {
+      return of(true);
+    }), catchError(error => {
+      this.loggerService.error("Unable to delete release catalog");
+      return throwError(error);
+    }))
+  }
+
+  getRegisteredAssets(suiteExecutionId) {
+    let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}`;
+    let params = [];
+    params.push(["type", 400]);
+    url += this.commonService.queryParamsToString(params);
+    return this.apiService.get(url).pipe(switchMap(response => {
+      let registeredAssets = response.data.map(asset => new RegisteredAsset(asset.data));
+      return of(registeredAssets);
+    }), catchError(error => {
+      this.loggerService.error("Unable to fetch registered assets");
+      return throwError(error);
+    }))
   }
 
 }

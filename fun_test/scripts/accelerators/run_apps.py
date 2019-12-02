@@ -9,9 +9,9 @@ try:
     emulation_target = str(job_environment['EMULATION_TARGET']).lower()
 except (KeyError, ValueError):
     #DPC_PROXY_IP = '10.1.40.24'
-    #DPC_PROXY_PORT = 40221
+    #DPC_PROXY_PORT = 42221
     # DPC_PROXY_IP = '10.1.20.129'
-    # DPC_PROXY_PORT = 40220
+    # DPC_PROXY_PORT = 42220
     pass
 
 

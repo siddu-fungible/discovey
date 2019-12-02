@@ -1,5 +1,5 @@
 import {BrowserModule} from '@angular/platform-browser';
-import {NgModule} from '@angular/core';
+import {Injector, NgModule} from '@angular/core';
 import {MatSortModule} from '@angular/material';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 
@@ -91,6 +91,16 @@ import { PagerComponent } from './pager/pager.component';
 import { SelectedPipe } from './pipes/selected.pipe';
 import { TimelineControlComponent } from './visualization/timeline-control/timeline-control.component';
 import * as d3 from 'd3';
+import { StatisticsContainerComponent } from './statistics/statistics-container/statistics-container.component';
+import { BamComponent } from './statistics/system/bam/bam.component';
+import { ReleaseCatalogEditorComponent } from './regression/release-catalog-editor/release-catalog-editor.component';
+import { ReleasesComponent } from './regression/releases/releases.component';
+import { ReleaseCatalogsComponent } from './regression/release-catalogs/release-catalogs.component';
+import { BackComponent } from './ui-elements/back/back.component';
+import { SectionHeaderComponent } from './ui-elements/section-header/section-header.component';
+import { DaemonsComponent } from './daemons/daemons.component';
+import {setAppInjector} from "./app-injector";
+import { VpUtilizationComponent } from './statistics/system/vp-utilization/vp-utilization.component';
 
 
 @NgModule({
@@ -164,7 +174,16 @@ import * as d3 from 'd3';
     ScriptDetailComponent,
     PagerComponent,
     SelectedPipe,
-    TimelineControlComponent
+    TimelineControlComponent,
+    StatisticsContainerComponent,
+    BamComponent,
+    ReleaseCatalogEditorComponent,
+    ReleasesComponent,
+    ReleaseCatalogsComponent,
+    BackComponent,
+    SectionHeaderComponent,
+    DaemonsComponent,
+    VpUtilizationComponent
   ],
   imports: [
     BsDropdownModule,
@@ -191,4 +210,11 @@ import * as d3 from 'd3';
   bootstrap: [AppComponent]
 })
 export class AppModule {
+  static injector: Injector;
+  constructor(injector: Injector) {
+    //AppModule.injector = injector;
+    setAppInjector(injector);
+
+  }
+
 }

@@ -16,7 +16,7 @@ from web.fun_test.metrics_models import LastMetricId, LastTriageId, PerformanceM
 from web.fun_test.metrics_models import AllocSpeedPerformanceSerializer, MetricChartSerializer, EcPerformance, \
     BcopyPerformanceSerializer
 from web.fun_test.metrics_models import BcopyFloodDmaPerformanceSerializer
-from web.fun_test.models import JenkinsJobIdMap, JenkinsJobIdMapSerializer
+from web.fun_test.models import JenkinsJobIdMap, JenkinsJobIdMapSerializer, MetricsDataRunTime
 from web.fun_test.metrics_models import LsvZipCryptoPerformance, LsvZipCryptoPerformanceSerializer
 from web.fun_test.metrics_models import NuTransitPerformance, NuTransitPerformanceSerializer
 from web.fun_test.metrics_models import ShaxPerformanceSerializer
@@ -69,27 +69,22 @@ def metrics_list(request):
 @csrf_exempt
 @api_safe_json_response
 def describe_table(request, table_name):
-    editing_chart = False
-    try:
-        request_json = json.loads(request.body)
-        if "editing_chart" in request_json:
-            editing_chart = True
-    except:
-        pass
     result = None
+    get_choices = request.GET.get("get_choices") == "true"
     metric_model = app_config.get_metric_models()[table_name]
     if metric_model:
         fields = metric_model._meta.get_fields()
         payload = OrderedDict()
         for field in fields:
             choices = None
-            verbose_name = "verbose_name"
-            if hasattr(field, "choices"):
-                all_values = metric_model.objects.values(field.column).distinct()
-                choices = []
-                for index, value in enumerate(all_values):
-                    choices.append((index, value[field.column]))
-                choices.append((len(choices), "any"))
+            verbose_name = None
+            if get_choices:
+                if hasattr(field, "choices"):
+                    all_values = metric_model.objects.values(field.column).distinct()
+                    choices = []
+                    for index, value in enumerate(all_values):
+                        choices.append((index, value[field.column]))
+                    choices.append((len(choices), "any"))
             if hasattr(field, "verbose_name"):
                 verbose_name = field.verbose_name
             payload[field.name] = {"choices": choices, "verbose_name": verbose_name}
@@ -142,7 +137,8 @@ def chart_info(request):
                   "pk": chart.pk,
                   "last_good_score": chart.last_good_score,
                   "penultimate_good_score": chart.penultimate_good_score,
-                  "jira_ids": json.loads(chart.jira_ids)}
+                  "jira_ids": json.loads(chart.jira_ids),
+                  "platform": chart.platform}
         for markers in milestones:
             markers_dict[markers.milestone_name] = get_epoch_time_from_datetime(markers.milestone_date)
         result["milestone_markers"] = markers_dict
@@ -336,28 +332,29 @@ def get_past_build_status(request):
     request_json = json.loads(request.body)
     metric_id = int(request_json["metric_id"])
     chart_status_entries = MetricChartStatus.objects.filter(metric_id=metric_id).order_by('-date_time')
-    for entry in chart_status_entries:
-        if entry.build_status == 'PASSED' or entry.copied_score is False:
-            result = {"passed_jenkins_job_id": entry.jenkins_job_id,
-                      "passed_suite_execution_id": entry.suite_execution_id,
-                      "passed_lsf_job_id": entry.lsf_job_id,
-                      "passed_date_time": entry.date_time,
-                      "passed_git_commit": entry.git_commit}
+    if len(chart_status_entries):
+        for entry in chart_status_entries:
+            if entry.build_status == 'PASSED' or entry.copied_score is False:
+                result = {"passed_jenkins_job_id": entry.jenkins_job_id,
+                          "passed_suite_execution_id": entry.suite_execution_id,
+                          "passed_lsf_job_id": entry.lsf_job_id,
+                          "passed_date_time": entry.date_time,
+                          "passed_git_commit": entry.git_commit}
 
-            if previous_entry:
-                result.update({"failed_jenkins_job_id": previous_entry.jenkins_job_id,
-                               "failed_suite_execution_id": previous_entry.suite_execution_id,
-                               "failed_lsf_job_id": previous_entry.lsf_job_id,
-                               "failed_date_time": previous_entry.date_time,
-                               "failed_git_commit": previous_entry.git_commit})
-            return result
-        else:
-            previous_entry = entry
-    result = {"failed_jenkins_job_id": previous_entry.jenkins_job_id,
-              "failed_suite_execution_id": previous_entry.suite_execution_id,
-              "failed_lsf_job_id": previous_entry.lsf_job_id,
-              "failed_date_time": previous_entry.date_time,
-              "failed_git_commit": previous_entry.git_commit}
+                if previous_entry:
+                    result.update({"failed_jenkins_job_id": previous_entry.jenkins_job_id,
+                                   "failed_suite_execution_id": previous_entry.suite_execution_id,
+                                   "failed_lsf_job_id": previous_entry.lsf_job_id,
+                                   "failed_date_time": previous_entry.date_time,
+                                   "failed_git_commit": previous_entry.git_commit})
+                return result
+            else:
+                previous_entry = entry
+        result = {"failed_jenkins_job_id": previous_entry.jenkins_job_id,
+                  "failed_suite_execution_id": previous_entry.suite_execution_id,
+                  "failed_lsf_job_id": previous_entry.lsf_job_id,
+                  "failed_date_time": previous_entry.date_time,
+                  "failed_git_commit": previous_entry.git_commit}
     return result
 
 
@@ -833,7 +830,7 @@ def dag(request):
     levels = int(request.GET.get("levels", 15))
     is_workspace = request.GET.get('is_workspace', 0)
     # metric ids are used instead of chart names for F1, S1 and all metrics
-    metric_ids = request.GET.get("root_metric_ids", '101,591,122')  # 101=F1, 122=All Metrics, 591-S1
+    metric_ids = request.GET.get("root_metric_ids", '101,591,1506,1503')  # 101=F1, 1503=other, 591-S1, 1506-FS1600
     if ',' in metric_ids:
         metric_ids = metric_ids.strip().split(',')
     else:
@@ -952,4 +949,17 @@ def get_git_commits(request):
     git_obj = app_config.get_git_manager()
     commits = git_obj.get_commits_between(faulty_commit=faulty_commit, success_commit=success_commit)
     result["commits"] = commits["commits"]
+    return result
+
+
+@csrf_exempt
+@api_safe_json_response
+def metrics_data_run_time(request):
+    result = None
+    request_json = json.loads(request.body)
+    id = request_json["id"]
+    entries = MetricsDataRunTime.objects.filter(id=id)
+    if len(entries):
+        entry = entries.first()
+        result = entry.to_dict()
     return result

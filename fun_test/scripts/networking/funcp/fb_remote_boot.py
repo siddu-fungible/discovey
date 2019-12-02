@@ -62,10 +62,14 @@ class BringupSetup(FunTestCase):
             f11_boot_huid = str(job_inputs["f11_boot_huid"]).strip("[]").replace(" ", "")
         else:
             f11_boot_huid = 1
-        f1_0_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --dpc-server --all_100g --serial --dpc-uart " \
-                         "retimer={} nvme_boot_huids={} --mgmt".format(f10_retimer, f10_boot_huid)
-        f1_1_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 --dpc-server --all_100g --serial --dpc-uart " \
-                         "retimer={} nvme_boot_huids={} --mgmt".format(f11_retimer, f11_boot_huid)
+        # f1_0_boot_args = "app=mdt_test,load_mods cc_huid=3 --dpc-server --all_100g --serial --dpc-uart " \
+        #                  "retimer={} nvme_boot_huids={} --mgmt".format(f10_retimer, f10_boot_huid)
+        # f1_1_boot_args = "app=mdt_test,load_mods cc_huid=2 --dpc-server --all_100g --serial --dpc-uart " \
+        #                  "retimer={} nvme_boot_huids={} --mgmt".format(f11_retimer, f11_boot_huid)
+        f1_0_boot_args = "app=mdt_test,load_mods cc_huid=3 --dpc-server --all_100g --serial --dpc-uart " \
+                         "retimer={} nvme_boot_except_come --mgmt".format(f10_retimer)
+        f1_1_boot_args = "app=mdt_test,load_mods cc_huid=2 --dpc-server --all_100g --serial --dpc-uart " \
+                         "retimer={} nvme_boot_except_come --mgmt".format(f11_retimer)
 
         topology_helper = TopologyHelper()
 
@@ -86,9 +90,9 @@ class BringupSetup(FunTestCase):
             deploy_vol = job_inputs["deploy_vol"]
             fun_test.shared_variables["deploy_vol"] = deploy_vol
             if not deploy_vol:
-                f1_0_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --dpc-server --all_100g --serial " \
+                f1_0_boot_args = "app=load_mods cc_huid=3 --dpc-server --all_100g --serial " \
                                  "--dpc-uart retimer={} nvme_boot_huids={} --mgmt".format(f10_retimer, f10_boot_huid)
-                f1_1_boot_args = "app=load_mods,hw_hsu_test cc_huid=2 --dpc-server --all_100g --serial " \
+                f1_1_boot_args = "app=load_mods cc_huid=2 --dpc-server --all_100g --serial " \
                                  "--dpc-uart retimer={} nvme_boot_huids={} --mgmt".format(f11_retimer, f11_boot_huid)
                 fun_test.log_section("Volumes are not being deployed, using boot args :")
                 print f1_0_boot_args
@@ -100,7 +104,7 @@ class BringupSetup(FunTestCase):
             print f1_1_boot_args
 
         # Get the HUID's for nvme_boot for F1_0 used during attach of RDS vol to PCIe controller
-        fun_test.shared_variables["f10_huid"] = job_inputs["boot_huid"]
+        fun_test.shared_variables["f10_huid"] = job_inputs["f10_boot_huid"]
 
         if deploy_setup:
             funcp_obj = FunControlPlaneBringup(fs_name=self.server_key["fs"][fs_name]["fs-name"])
@@ -296,7 +300,7 @@ class NicEmulation(FunTestCase):
         fun_test.shared_variables["f10_hosts"] = f10_hosts
         fun_test.shared_variables["f11_hosts"] = f11_hosts
 
-        fun_test.sleep("Setup deployed, starting storage config", 10)
+        fun_test.sleep("Setup deployed, starting storage config", 2)
 
     def cleanup(self):
         pass
@@ -334,8 +338,8 @@ class ConfigureRdsVol(FunTestCase):
         total_blt = fun_test.shared_variables["total_blt"]
 
         # Storage Controller Objects
-        f10_storage_ctrl_obj = StorageController(target_ip=come_obj.host_ip, target_port=40220)
-        f11_storage_ctrl_obj = StorageController(target_ip=come_obj.host_ip, target_port=40221)
+        f10_storage_ctrl_obj = StorageController(target_ip=come_obj.host_ip, target_port=42220)
+        f11_storage_ctrl_obj = StorageController(target_ip=come_obj.host_ip, target_port=42221)
 
         # Create IPCFG on F1_0
         command_result = f10_storage_ctrl_obj.ip_cfg(ip=f10_vlan_ip, port=4420)

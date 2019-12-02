@@ -23,7 +23,7 @@ class MyScript(FunTestScript):
 
 class PerformanceTc(FunTestCase):
     workspaces = [{"id": 1912, "extra_email": ["storage-test@fungible.com", "harinadh.saladi@fungible.com"]},
-                     {"id": 2088, "extra_email": ["mohit.saxena@fungible.com", "network-test@fungible.com"]}]
+                  {"id": 2088, "extra_email": ["mohit.saxena@fungible.com", "network-test@fungible.com"]}]
     regression_email = TEAM_REGRESSION_EMAIL
 
     def setup(self):
@@ -44,10 +44,10 @@ class EmailPerformanceDrop(PerformanceTc):
                               """)
 
     def run(self):
-        status = fun_test.PASSED
-        workspaces = PerformanceUserWorkspaces.objects.all()
-        for workspace in workspaces:
-            if workspace.subscribe_to_alerts:
+        try:
+            status = fun_test.PASSED
+            workspaces = PerformanceUserWorkspaces.objects.filter(subscribe_to_alerts=True)
+            for workspace in workspaces:
                 # email = ml._get_email_address(workspace_id=workspace["id"])
                 email_list = []
                 email_list.append(self.regression_email)
@@ -56,7 +56,6 @@ class EmailPerformanceDrop(PerformanceTc):
                 reports = ml._generate_report(workspace_id=workspace.id)
                 if len(reports):
                     # print reports
-                    status = fun_test.FAILED
                     date_time = time.strftime("%m/%d/%Y %H:%M")
                     subject = "Performance drop report - " + date_time
                     try:
@@ -69,7 +68,11 @@ class EmailPerformanceDrop(PerformanceTc):
                     except Exception as ex:
                         status = fun_test.FAILED
                         fun_test.critical(str(ex))
-        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=status, message="No degraded metrics")
+        except Exception as ex:
+            status = fun_test.FAILED
+            fun_test.critical(str(ex))
+        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=status,
+                                      message="Report generated and sent successfully")
 
 
 if __name__ == "__main__":

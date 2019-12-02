@@ -50,6 +50,8 @@ class CsiPerfTemplate():
         self.setup_docker = setup_docker
         self.prepare_complete = False
         self.listener_port = listener_port
+        self.csi_cache_miss = fun_test.get_job_environment_variable("csi_cache_miss")
+
 
     def ensure_docker_images_exist(self):
         docker_images_output = self.perf_host.sudo_command("docker images")
@@ -118,6 +120,9 @@ class CsiPerfTemplate():
     def _prepare_directory_structure(self, job_directory):
         self.perf_host.command("mkdir -p {}/odp".format(job_directory))
         self.perf_host.command("mkdir -p {}/odp/trace_dumps".format(job_directory))
+        if self.csi_cache_miss:
+            self.perf_host.command("mkdir -p {}/odp/cache_miss_dumps".format(job_directory))
+
 
     def start(self, f1_index=0, dpc_client=None):
         fun_test.simple_assert(self.prepare_complete, "Please call prepare() before calling start")
@@ -137,7 +142,7 @@ class CsiPerfTemplate():
         self.perf_listener_process_id = self.perf_host.start_bg_process(command, output_file="/tmp/perf_listener_f1_{}.log".format(f1_index))
 
         if not dpc_client:
-            dpc_client = self.fs.get_dpc_client(f1_index=f1_index, auto_disconnect=True)
+            dpc_client = self.fs.get_dpc_client(f1_index=f1_index, auto_disconnect=True, csi_perf=True)
         dpc_client.json_execute(verb="csi", data="reinit", command_duration=4)
         dpc_client.json_execute(verb="csi", data="start", command_duration=4)
         fun_test.add_checkpoint("CSI perf started")
@@ -158,13 +163,22 @@ class CsiPerfTemplate():
                                                                                      self.perf_host.ssh_username,
                                                                                      self.perf_host.ssh_password))
         fun_test.report_message("CSI perf base job directory: {}".format(self.base_job_directory))
-        fun_test.report_message("CSI perf: to process perf: #./process_perf.sh {}".format(self.job_directory))
-        fun_test.report_message("CSI perf: to view perf: #./view_perf.sh {}".format(self.base_job_directory))
+        if not self.csi_cache_miss:
+            fun_test.report_message("CSI perf: to process perf: #./process_perf.sh {}".format(self.job_directory))
+            fun_test.report_message("CSI perf: to view perf: #./view_perf.sh {}".format(self.base_job_directory))
+        else:
+            fun_test.report_message("CSI perf: to process csi cache miss: #./process_cm.sh {}".format(self.job_directory))
+            fun_test.report_message("CSI perf: to view csi perf: open {}/odp/missmap.html".format(self.job_directory))
+
 
     def move_trace_files(self, source_directory, job_directory):
         trace_files = self.perf_host.list_files("{}/trace_cluster*".format(source_directory))
         fun_test.test_assert(trace_files, "At least one perf trace file seen")
-        self.perf_host.command("mv {}/trace_cluster* {}/odp/trace_dumps/".format(source_directory, job_directory))
+        if not self.csi_cache_miss:
+            self.perf_host.command("mv {}/trace_cluster* {}/odp/trace_dumps/".format(source_directory, job_directory))
+        else:
+            self.perf_host.command("mv {}/trace_cluster* {}/odp/cache_miss_dumps/".format(source_directory, job_directory))
+
 
     def move_uart_log(self, uart_log_path, f1_index=0):
         target_file_path = "{}/odp/uartout0.{}.txt".format(self.job_directory, f1_index)
@@ -251,5 +265,5 @@ class CsiPerfTemplate():
         return True
 
 if __name__ == "__main__":
-    p = CsiPerfTemplate(perf_collector_host_name="mktg-server-14", listener_ip="123", fs=None, setup_docker=True)
+    p = CsiPerfTemplate(perf_collector_host_name="poc-server-06", listener_ip="123", fs=None, setup_docker=True)
     p.prepare(f1_index=0)

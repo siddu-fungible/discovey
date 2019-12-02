@@ -3,7 +3,7 @@ import {ApiService} from "../services/api/api.service";
 import {LoggerService} from "../services/logger/logger.service";
 import {ActivatedRoute} from "@angular/router";
 import {CommonService} from "../services/common/common.service";
-import {Observable} from "rxjs";
+import {Observable, of} from "rxjs";
 import {switchMap} from "rxjs/operators";
 import {PerformanceService} from "../performance/performance.service";
 
@@ -33,7 +33,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   @Input() minimal: boolean = false;
   @Input() id: number = null;
   @Input() previewDataSets: any = null;
-  @Input() buildInfo: any = null;
+  @Input() chartInfo: any = null;
 
   lsfUrl = "http://palladium-jobs.fungible.local:8080/job/";
   versionUrl = "https://github.com/fungible-inc/FunOS/releases/tag/";
@@ -44,21 +44,20 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   TIMEZONE: string = "America/Los_Angeles";
   daysInPast: number = 60;
   editingDaysInPast: boolean = false;
+  allDataSets: any = null;
 
   status: string = null;
   showingTable: boolean;
   showingConfigure: boolean;
-  chartInfo: any;
   headers: any;
   data: any = {}; //used for fun table
   metricId: number;
   editingDescription: boolean = false;
   editingOwner: boolean = false;
   editingSource: boolean = false;
-  inner: any = {};
-  currentDescription: string;
-  currentOwner: string;
-  currentSource: string;
+  currentDescription: string = "TBD";
+  currentOwner: string = "Unknown";
+  currentSource: string = "Unknown";
   waitTime: number = 0;
   values: any;
   originalValues: any;
@@ -151,38 +150,14 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.daysInPast = 60;
     this.editingDaysInPast = false;
     this.headers = null;
-    this.metricId = -1;
+    this.values = null;
     this.editingDescription = false;
     this.editingOwner = false;
     this.editingSource = false;
-    this.inner = {};
-    this.inner.currentDescription = "TBD";
-    this.inner.currentOwner = "Unknown";
-    this.currentOwner = "Unknown";
-    this.inner.currentSource = "Unknown";
-    this.currentSource = "Unknown";
-    this.currentDescription = "---";
-    this.values = null;
     this.charting = true;
     this.formatter = this.xAxisFormatter.bind(this);
     this.tooltip = this.tooltipFormatter.bind(this);
     this.pointClickCallback = this.pointDetail.bind(this);
-    if (!this.buildInfo) {
-      new Observable(observer => {
-        observer.next(true);
-        observer.complete();
-        return () => {
-        }
-      }).pipe(
-        switchMap(response => {
-          return this.performanceService.fetchBuildInfo();
-        })).subscribe(response => {
-        this.buildInfo = response;
-        console.log("fetched buildInfo");
-      }, error => {
-        this.loggerService.error("Unable to fetch buildInfo");
-      });
-    }
     if (!this.id) {
       this.status = null;
       this.fetchNames();
@@ -204,37 +179,76 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.refreshCharts();
   }
 
-  showPointDetails(pointInfo): void {
+  showPointDetails(point): void {
+    let metaData = point["metaData"];
     let self = this;
-    self.pointInfo = [];
-    self.buildProps = [];
-    Object.keys(pointInfo).forEach((key) => {
-      if (key === "Build Properties") {
-        let properties = pointInfo[key];
-        self.buildProps["name"] = key;
-        self.buildProps["value"] = properties;
-      } else {
-        let property = [];
-        property["name"] = key;
-        property["value"] = pointInfo[key];
-        self.pointInfo.push(property);
+    if (metaData.runTimeId) {
+      let props = {};
+      of (true).pipe(
+        switchMap(response => {
+          return this.performanceService.getRunTime(metaData.runTimeId);
+        }),
+        switchMap(response => {
+          self.setPointInfo(response, point);
+          return of(true);
+        })
+      ).subscribe(response => {
+        self.pointClicked = true;
+      }, error => {
+        this.loggerService.error("Unable to fetch pointInfo from runtime metadata");
+      });
+    } else {
+      self.setPointInfo(null, point);
+      self.pointClicked = true;
+    }
+  }
+
+  setPointInfo(props, point): any {
+    let s = {};
+    let self = this;
+    self.pointInfo = {};
+    self.buildProps = null;
+    if (props) {
+      if (props.jenkins_build_number) {
+        self.pointInfo["Jenkins build number"] = props.jenkins_build_number;
       }
-    });
-    self.pointClicked = true;
+      if (props.lsf_job_id) {
+        self.pointInfo["LSF job id"] = props.lsf_job_id;
+      }
+      if (props.suite_execution_id) {
+        self.pointInfo["Suite execution id"] = props.suite_execution_id;
+        self.pointInfo["Suite log directory"] = props.suite_execution_id;
+      }
+      if (props.version) {
+        self.pointInfo["Version"] = "bld_" + props.version;
+      }
+      if (props.associated_suites) {
+        self.pointInfo["Associated suites"] = props.associated_suites;
+      }
+      if (props.build_properties) {
+        let buildProperties = props.build_properties;
+        self.buildProps = buildProperties;
+        if (buildProperties.hasOwnProperty("gitHubSha1s")) {
+          self.pointInfo["Git commit"] = self.buildProps.gitHubSha1s.FunOS;
+        }
+      }
+    }
+
+    let metaData = point["metaData"];
+    if (metaData.epoch) {
+      let shortDate = this.commonService.getShortDateFromEpoch(metaData.epoch, this.TIMEZONE);
+      self.pointInfo["Date"] = shortDate;
+    }
+    if (metaData.originalValue) {
+      self.pointInfo["Value"] = metaData.originalValue;
+    } else {
+      self.pointInfo["Value"] = point["y"];
+    }
   }
 
   fetchMetricsById(): void {
-    let payload = {};
-    payload["metric_id"] = this.id;
-    this.apiService.post('/metrics/metric_by_id', payload).subscribe((data) => {
-      this.chartName = data.data["chart_name"];
-      this.platform = data.data["platform"];
-      this.modelName = data.data["metric_model_name"];
-      this.setDefault();
-      this.fetchInfo();
-    }, error => {
-      this.loggerService.error("fetching by metric id failed");
-    });
+    this.setDefaults();
+    this.fetchInfo();
   }
 
   //set the chart and model name based in metric id
@@ -302,64 +316,11 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
 
   //display details about the points in the chart
   pointDetail(x, y, metaData): any {
-    let softwareDate = "Unknown";
-    let hardwareVersion = "Unknown";
-    let sdkBranch = "Unknown";
-    let gitCommit = "Unknown";
-    //let key = this._getBuildKey(x);
-    let key = x;
-    if (metaData.epoch) {
-      key = Number(metaData.epoch);
-    }
-    let s = {};
-
-    if (this.buildInfo && key in this.buildInfo) {
-      softwareDate = this.buildInfo[key]["software_date"];
-      hardwareVersion = this.buildInfo[key]["hardware_version"];
-      sdkBranch = this.buildInfo[key]["fun_sdk_branch"];
-      let buildProperties = this.buildInfo[key]["build_properties"];
-      let lsfJobId = this.buildInfo[key]["lsf_job_id"];
-      let version = this.buildInfo[key]["sdk_version"];
-      let suiteExecutionId = this.buildInfo[key]["suite_execution_id"];
-      let associatedSuites = this.buildInfo[key]["associated_suites"];
-      if (sdkBranch !== "") {
-        s["SDK branch"] = sdkBranch;
-      }
-      if (lsfJobId !== "") {
-        s["Lsf job id"] = lsfJobId;
-      }
-      if (suiteExecutionId !== -1) {
-        s["Suite execution detail"] = suiteExecutionId;
-        s["Suite log directory"] = suiteExecutionId;
-      }
-      if (associatedSuites.length !== 0) {
-        s["Associated suites"] = associatedSuites;
-      }
-      if (Number(softwareDate) > 0) {
-        s["Software date"] = softwareDate;
-      }
-      if (hardwareVersion !== "") {
-        s["Hardware version"] = hardwareVersion;
-      }
-      if (version !== "") {
-        s["SDK version"] = "bld_" + version;
-      }
-      if (this.buildInfo[key]["git_commit"] !== "") {
-        s["Git commit"] = this.buildInfo[key]["git_commit"].replace("https://github.com/fungible-inc/FunOS/commit/", "");
-      }
-      if (buildProperties !== "") {
-        s["Build Properties"] = buildProperties;
-      }
-    }
-    let pstDate = this.commonService.convertEpochToDate(key, this.TIMEZONE);
-    let dateString = this.commonService.addLeadingZeroesToDate(pstDate);
-    s["Date"] = dateString.substring(0, 5);
-    if (metaData.originalValue) {
-      s["Value"] = metaData.originalValue;
-    } else {
-      s["Value"] = y;
-    }
-    return s;
+    let point = {};
+    point["x"] = x;
+    point["y"] = y;
+    point["metaData"] = metaData;
+    return point;
   }
 
   _getBuildKey(x): string {
@@ -377,67 +338,76 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     return key;
   }
 
+  setChartDetails(): void {
+    if (this.chartInfo !== null) {
+      this.previewDataSets = this.getPreviewDataSets();
+      if (!this.previewDataSets) {
+        this.loggerService.error("No Preview Datasets");
+        return;
+      }
+      this.chartName = this.chartInfo.chart_name;
+      this.modelName = this.chartInfo.metric_model_name;
+      this.platform = this.chartInfo.platform;
+      this.currentDescription = this.chartInfo.description;
+      this.currentOwner = this.chartInfo.owner_info;
+      this.currentSource = this.chartInfo.source;
+      this.negativeGradient = !this.chartInfo.positive;
+      this.leaf = this.chartInfo.leaf;
+      this.mileStoneMarkers = this.chartInfo.milestone_markers;
+      this.baseLineDate = String(this.chartInfo.base_line_date);
+      this.visualizationUnit = this.chartInfo.visualization_unit;
+      this.changingVizUnit = this.visualizationUnit;
+      this.chart1YaxisTitle = this.chartInfo.y1_axis_title;
+
+      if (this.latency_category.includes(this.visualizationUnit)) {
+        this.category = [...this.latency_category];
+      } else if (this.bandwidth_category.includes(this.visualizationUnit)) {
+        this.category = [...this.bandwidth_category];
+      } else if (this.cycles_category.includes(this.visualizationUnit)) {
+        this.category = [...this.cycles_category];
+      } else if (this.operations_category.includes(this.visualizationUnit)) {
+        this.category = [...this.operations_category];
+      } else if (this.bits_bytes_category.includes(this.visualizationUnit)) {
+        this.category = [...this.bits_bytes_category];
+      } else if (this.ops_category.includes(this.visualizationUnit)) {
+        this.category = [...this.ops_category];
+      } else if (this.packets_per_second_category.includes(this.visualizationUnit)) {
+        this.category = [...this.packets_per_second_category];
+      } else if (this.connections_per_second_category.includes(this.visualizationUnit)) {
+        this.category = [...this.connections_per_second_category];
+      } else if (this.power_category.includes(this.visualizationUnit)) {
+        this.category = [...this.power_category];
+      }
+      this.selectedUnit = this.visualizationUnit;
+    }
+  }
+
   // populates chartInfo and fetches metrics data
   fetchInfo(): void {
-    let payload = {};
-    // payload["metric_model_name"] = this.modelName;
-    // payload["chart_name"] = this.chartName;
-    payload["metric_id"] = this.id;
-    this.apiService.post("/metrics/chart_info", payload).subscribe((response) => {
-      this.chartInfo = response.data;
-      if (this.chartInfo !== null) {
-        this.previewDataSets = this.getPreviewDataSets();
-        if (!this.previewDataSets) {
-          this.loggerService.error("No Preview Datasets");
-          return;
-        }
-        this.currentDescription = this.chartInfo.description;
-        this.inner.currentDescription = this.currentDescription;
-        this.currentOwner = this.chartInfo.owner_info;
-        this.currentSource = this.chartInfo.source;
-        this.inner.currentOwner = this.currentOwner;
-        this.inner.currentSource = this.currentSource;
-        this.negativeGradient = !this.chartInfo.positive;
-        this.inner.negativeGradient = this.negativeGradient;
-        this.leaf = this.chartInfo.leaf;
-        this.inner.leaf = this.leaf;
-        this.mileStoneMarkers = this.chartInfo.milestone_markers;
-        this.baseLineDate = String(this.chartInfo.base_line_date);
-        this.visualizationUnit = this.chartInfo.visualization_unit;
-        this.changingVizUnit = this.visualizationUnit;
-        this.chart1YaxisTitle = this.chartInfo.y1_axis_title;
-
-        if (this.latency_category.includes(this.visualizationUnit)) {
-          this.category = [...this.latency_category];
-        } else if (this.bandwidth_category.includes(this.visualizationUnit)) {
-          this.category = [...this.bandwidth_category];
-        } else if (this.cycles_category.includes(this.visualizationUnit)) {
-          this.category = [...this.cycles_category];
-        } else if (this.operations_category.includes(this.visualizationUnit)) {
-          this.category = [...this.operations_category];
-        } else if (this.bits_bytes_category.includes(this.visualizationUnit)) {
-          this.category = [...this.bits_bytes_category];
-        } else if (this.ops_category.includes(this.visualizationUnit)) {
-          this.category = [...this.ops_category];
-        } else if (this.packets_per_second_category.includes(this.visualizationUnit)) {
-          this.category = [...this.packets_per_second_category];
-        } else if (this.connections_per_second_category.includes(this.visualizationUnit)) {
-          this.category = [...this.connections_per_second_category];
-        } else if (this.power_category.includes(this.visualizationUnit)) {
-          this.category = [...this.power_category];
-        }
-        this.selectedUnit = this.visualizationUnit;
-      }
-      setTimeout(() => {
+    if (!this.chartInfo) {
+      of (true).pipe(
+        switchMap(response => {
+          return this.performanceService.fetchChartInfo(this.id);
+        }),
+        switchMap(response => {
+          this.chartInfo = response;
+          this.setChartDetails();
+          return of(true);
+        })
+      ).subscribe(response => {
         this.fetchMetricsData(this.modelName, this.chartName, this.chartInfo, this.previewDataSets);
-      }, this.waitTime);
-    }, error => {
-      this.loggerService.error("fun_metric_chart: chart_info");
-    });
+        console.log("fetched chartInfo and fetched data");
+      }, error => {
+        this.loggerService.error("Unable to fetch chartInfo in fun metric");
+      });
+    } else {
+      this.setChartDetails();
+      this.fetchMetricsData(this.modelName, this.chartName, this.chartInfo, this.previewDataSets);
+    }
   }
 
   //sets the state of the component to default values
-  setDefault(): void {
+  setDefaults(): void {
     this.timeMode = "all";
     this.mileStoneIndices = {};
     this.showingTable = false;
@@ -542,11 +512,11 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     payload["chart_name"] = this.chartName;
     payload["metric_id"] = this.id;
     payload["data_sets"] = this.previewDataSets;
-    payload["description"] = this.inner.currentDescription;
-    payload["owner_info"] = this.inner.currentOwner;
-    payload["source"] = this.inner.currentSource;
-    payload["negative_gradient"] = this.inner.negativeGradient;
-    payload["leaf"] = this.inner.leaf;
+    payload["description"] = this.currentDescription;
+    payload["owner_info"] = this.currentOwner;
+    payload["source"] = this.currentSource;
+    payload["negative_gradient"] = this.negativeGradient;
+    payload["leaf"] = this.leaf;
     payload["base_line_date"] = this.baseLineDate;
     payload["visualization_unit"] = this.changingVizUnit;
     payload["set_expected"] = this.expectedOperation;
@@ -566,11 +536,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       this.loggerService.error("EditChart: Submit");
     });
 
-  }
-
-  openTriaging(): void {
-    let url = "/performance/atomic/" + this.metricId + "/triage";
-    window.open(url, '_blank');
   }
 
   openSource(url): void {
@@ -742,10 +707,12 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       }
     }
     this.filterDataSets = filterDataSets;
+    let self = this;
     this.apiService.post("/metrics/data", payload).subscribe((response: any) => {
-      let allDataSets = response.data;
-      if (allDataSets.length === 0) {
+      self.allDataSets = response.data;
+      if (self.allDataSets.length === 0) {
         this.values = null;
+        this.status = null;
         return;
       }
 
@@ -769,7 +736,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       this.maxDataPoint = null;
       this.yMax = null;
       let seriesIndex = 0;
-      for (let oneDataSet of allDataSets) {
+      for (let oneDataSet of self.allDataSets) {
         let outputName = this.filterDataSets[seriesIndex].output.name;
         let unit = this.filterDataSets[seriesIndex].output.unit;
         let minimum = this.filterDataSets[seriesIndex].output.min;
@@ -791,7 +758,12 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
               output = this.convertToBaseUnit(outputUnit, output);
               output = this.convertToVisualizationUnit(this.visualizationUnit, output);
               epoch = oneRecord.epoch_time;
-              let result = this.getValidatedData(output, minimum, maximum, epoch);
+              let metaData = {};
+              metaData["epoch"] = epoch;
+              if (oneRecord.hasOwnProperty("run_time_id")) {
+                metaData["runTimeId"] = oneRecord.run_time_id;
+              }
+              let result = this.getValidatedData(output, minimum, maximum, metaData);
               oneChartDataArray.push(result);
               if (this.maxDataPoint === null) {
                 this.maxDataPoint = result.y;
@@ -806,7 +778,9 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
             }
           }
           if (!valueSet) {
-            oneChartDataArray.push(this.getValidatedData(-1, 0, -1, null));
+            let metaData = {};
+            metaData["epoch"] = null;
+            oneChartDataArray.push(this.getValidatedData(-1, 0, -1, metaData));
           }
           if (!seriesDates[seriesDatesIndex]) {
             seriesDates[seriesDatesIndex] = this.commonService.addLeadingZeroesToDate(lastDate).substring(0, 5);
@@ -865,7 +839,9 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       this.setMileStones();
 
       //populating data for show tables
-      this.populateShowTables();
+      if (!this.minimal) {
+        this.populateShowTables();
+      }
 
       this.changeAllExpectedValues();
       this.status = null;
@@ -879,6 +855,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.apiService.post('/metrics/scores', payload).subscribe((response: any) => {
       if (response.data.length === 0) {
         this.values = null;
+        this.status = null;
         return;
       }
       let filterDataSets = [];
@@ -898,10 +875,11 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       let series = [];
       for (let dateTime of keyList) {
         let score = response.data.scores[dateTime].score;
-        let result = this.getValidatedData(score, thisMinimum, thisMaximum, dateTime);
+        let metaData = {};
+        metaData["epoch"] = dateTime;
+        let result = this.getValidatedData(score, thisMinimum, thisMaximum, metaData);
         values.push(result);
-        let pstDate = this.commonService.convertEpochToDate(Number(dateTime) * 1000, this.TIMEZONE);
-        let xAxisString = this.commonService.addLeadingZeroesToDate(pstDate).substring(0, 5);
+        let xAxisString = this.commonService.getShortDateFromEpoch(Number(dateTime) * 1000, this.TIMEZONE);
         series.push(xAxisString);
       }
       this.values = [{data: values, name: "Scores"}];
@@ -951,8 +929,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     let payload = {};
     payload["metric_id"] = this.id;
     payload["preview_data_sets"] = this.filterDataSets;
-    this.apiService.post("/metrics/data_by_model", payload).subscribe((response) => {
-      let dataSet = response.data;
+    for (let dataSet of this.allDataSets) {
       for (let rowData of dataSet) {
         let rowInTable = [];
         Object.keys(self.headers).forEach((key) => {
@@ -969,8 +946,28 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         });
         self.data["rows"][index++] = rowInTable;
       }
-      self.data["totalLength"] = self.data["rows"].length;
-    });
+    }
+    self.data["totalLength"] = self.data["rows"].length;
+    // this.apiService.post("/metrics/data_by_model", payload).subscribe((response) => {
+    //   let dataSet = response.data;
+    //   for (let rowData of dataSet) {
+    //     let rowInTable = [];
+    //     Object.keys(self.headers).forEach((key) => {
+    //       if (self.isFieldRelevant(key)) {
+    //         let value = null;
+    //         if (key == "input_date_time") {
+    //           // value = this.commonService.convertToTimezone(rowData[key], this.TIMEZONE);
+    //           value = rowData["epoch_time"];
+    //         } else {
+    //           value = rowData[key]
+    //         }
+    //         rowInTable.push(value);
+    //       }
+    //     });
+    //     self.data["rows"][index++] = rowInTable;
+    //   }
+    //   self.data["totalLength"] = self.data["rows"].length;
+    // });
   }
 
   convertToBaseUnit(outputUnit, output): any {
@@ -1195,8 +1192,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       return;
     }
     var self = this;
-    if (this.modelName !== 'MetricContainer') {
-      return this.apiService.get("/metrics/describe_table/" + this.modelName).subscribe(function (response) {
+    if (this.modelName !== 'MetricContainer' && !this.minimal) {
+      return this.apiService.get("/metrics/describe_table/" + this.modelName + "?get_choices=false").subscribe(function (response) {
         self.tableInfo = response.data;
         self.fetchData(self.id, chartInfo, previewDataSets, self.tableInfo);
       }, error => {
@@ -1209,7 +1206,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
 
 
   //creates the point values for the funchart
-  getValidatedData(data, minimum, maximum, epoch): any {
+  getValidatedData(data, minimum, maximum, metaData): any {
     let result = data;
     if (data < 0) {
       data = null;
@@ -1221,7 +1218,9 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       },
       metaData: {}
     };
-    result.metaData["epoch"] = epoch;
+    if (metaData) {
+      result.metaData = metaData;
+    }
     if (data > maximum && maximum !== -1) {
       result.y = maximum;
       result.marker['symbol'] = "url(/static/media/red-x-png-7.png)";

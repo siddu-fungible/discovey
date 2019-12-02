@@ -1,12 +1,18 @@
-<a routerLink="/regression/suites_view"><< Back to suites </a>
+<app-back></app-back>
 
 <div class="component" *ngIf="suite">
+  <div class="fun-panel">
+    <div class="fun-panel-header">
+      {{ !suite.name? 'Creating ': 'Editing' }} suite
+    </div>
 
-  <table>
+  </div>
+  <div class="fun-panel-body">
+    <table>
     <tr>
       <td class="fun-attribute-label">Suite name:</td>
       <td class="fun-attribute">
-        <app-textarea-input [hoverHide]="false" [initialValue]="suite?.name"
+        <app-textarea-input [hoverHide]="false" [initialValue]="suite?.name" [required]="true"
                             (valueChanged)="onNameChangedEvent($event)"></app-textarea-input>
       </td>
     </tr>
@@ -39,205 +45,223 @@
   </table>
 
 
-  <div *ngIf="!addingScript" style="display: flex; flex-direction: row;">
-    <button class="fun-button-add" (click)="onAddScript()">Add a script</button>
-  </div>
-
-
-  <div class="fun-panel" *ngIf="addingScript">
-    <div class="fun-panel-header">
-      Adding a script
-    </div>
-    <div class="fun-panel-body">
-      <form class="fun-form">
-
-        <div class="fun-form-field-container">
-          <app-script-selector [selectionText]="'script'"
-                               (singleSelectScriptPath)="singleSelectScriptPathEvent($event)"></app-script-selector>
-        </div>
-
-        <div class="fun-form-field-container">
-          <label class="fun-form-label">Test-case IDs (in JSON array format. Ex: [2, 3]):</label>
-          <app-json-input [disabled]="!currentScriptPath" (dataChanged)="testCaseIdsChanged($event)"
-                          [numRows]="1"></app-json-input>
-        </div>
-
-        <div class="fun-form-field-container">
-          <label class="fun-form-label">Inputs (in JSON dictionary format. Ex: {{ inputsExample }}):</label>
-          <app-json-input [disabled]="!currentScriptPath" (dataChanged)="inputsChanged($event)"
-                          [numRows]="6"></app-json-input>
-        </div>
-      </form>
-
-      <span class="fun-cancel-link" (click)="onCancelNewSuiteEntry()">Cancel</span>
-      <button class="fun-button-submit" [ngClass]="{'fun-button-disabled': !currentScriptPath}"
-              (click)="onSubmitNewSuiteEntry()">Add
-      </button>
+    <div *ngIf="!addingScript" style="display: flex; flex-direction: row;">
+      <span class="fun-action-link" (click)="onAddScript()">+ Add a script</span>
     </div>
 
 
-  </div>
-
-
-  <ng-template #customTestBedSpecModalContent let-modal>
-    <div style="margin: 10px">
-      <div class="modal-header">
-        Adding custom test-bed spec
+    <div class="fun-panel" *ngIf="addingScript">
+      <div class="fun-panel-header">
+        Adding a script
       </div>
-      <div style="display: flex">
-        <form *ngIf="customTestBedSpecForm" class="fun-form" [formGroup]="customTestBedSpecForm">
+      <div class="fun-panel-body">
+        <form class="fun-form">
+
           <div class="fun-form-field-container">
-            <label class="fun-form-label">Select a base test-bed:</label>
-            <select *ngIf="testBeds" formControlName="selectedTestBed" class="fun-form-field">
-              <option [ngValue]="null">-- select --</option>
-              <option [ngValue]="testBed" *ngFor="let testBed of testBeds">{{ testBed.name }}</option>
-            </select>
+            <app-script-selector [selectionText]="'script'"
+                                 (singleSelectScriptPath)="singleSelectScriptPathEvent($event)"></app-script-selector>
           </div>
 
-          <ng-container *ngIf="customTestBedSpecForm.controls.selectedTestBed?.value">
-            <ng-container *ngFor="let flattenedAssetTypeName of flattenedAssetTypeNames">
-              <br>
-              <app-section-horizontal-line [text]="flattenedAssetTypeNameMap[flattenedAssetTypeName].name"></app-section-horizontal-line>
+          <ng-container *ngIf="currentScriptPath">
+            <div class="fun-form-field-container">
+              <label class="fun-form-label">Test-case IDs (in JSON array format. Ex: [2, 3]):</label>
+              <app-json-input [disabled]="!currentScriptPath" (dataChanged)="testCaseIdsChanged($event)"
+                              [numRows]="1"></app-json-input>
+            </div>
 
-              <div class="fun-card">
-                <div class="fun-form-field">
-                  <label class="fun-form-input-field-label" for="{{ _getAssetSelectionKey(flattenedAssetTypeName) }}">
-                    Specify number of
-                    {{ flattenedAssetTypeNameMap[flattenedAssetTypeName].name }}s </label>
-                  <input class="fun-form-input-field fun-form-inline-field"
-                         formControlName="{{ _getAssetSelectionKey(flattenedAssetTypeName) }}"
-                         [checked]="customTestBedSpecForm.controls[_getAssetSelectionKey(flattenedAssetTypeName)].value == CustomAssetSelection.NUM"
-                         type="radio" value="{{ CustomAssetSelection.NUM }}">
-
-                  <label class="fun-form-input-field-label" for="{{ _getAssetSelectionKey(flattenedAssetTypeName) }}">
-                    Specify a list of
-                    {{ flattenedAssetTypeNameMap[flattenedAssetTypeName].name }}s </label>
-                  <input class="fun-form-input-field fun-form-inline-field"
-                         formControlName="{{ _getAssetSelectionKey(flattenedAssetTypeName) }}"
-                         [checked]="customTestBedSpecForm.controls[_getAssetSelectionKey(flattenedAssetTypeName)].value == CustomAssetSelection.SPECIFIC"
-                         type="radio" value="{{ CustomAssetSelection.SPECIFIC }}">
-                </div>
-
-                <ng-container
-                  *ngIf="customTestBedSpecForm.controls[_getAssetSelectionKey(flattenedAssetTypeName)].value == CustomAssetSelection.NUM">
-
-                  <input *ngIf="!_hasPoolMemerOptions(flattenedAssetTypeName); else showPoolMemberOptions" formControlName="{{ _getNumAssetsKey(flattenedAssetTypeName) }}" type="number"
-                         class="fun-form-field fun-form-input">
-                  <ng-template #showPoolMemberOptions>
-                    <div class="fun-form-field">
-                    <ng-container *ngFor="let poolMemberOption of poolMemberOptions[flattenedAssetTypeName]; let index=index">
-                      <label class="fun-form-input-field-label" for="{{ _getPoolMemberSelectionKey(flattenedAssetTypeName)}}">
-                        Type: {{ poolMemberOption }}
-                      </label>
-                      <input formControlName="{{ _getPoolMemberSelectionKey(flattenedAssetTypeName, poolMemberOption)}}" type="number"
-                         class="fun-form-field fun-form-input">
-
-                    </ng-container>
-                    </div>
-                  </ng-template>
-
-
-                </ng-container>
-
-                <ng-container
-                  *ngIf="customTestBedSpecForm.controls[_getAssetSelectionKey(flattenedAssetTypeName)].value == CustomAssetSelection.SPECIFIC">
-                  <ng-multiselect-dropdown [placeholder]="'Select'"
-                                           [data]="filterAssetsBySelectedTestBed(customTestBedSpecForm.controls.selectedTestBed?.value.name, flattenedAssetTypeNameMap[flattenedAssetTypeName].data)"
-                                           formControlName="{{ _getSpecificAssetsKey(flattenedAssetTypeName) }}"
-                                           [settings]="dropDownSettings">
-                  </ng-multiselect-dropdown>
-                </ng-container>
-
-              </div>
-            </ng-container>
-            <span class="fun-cancel-link" (click)="modal.dismiss('Cross click')">Cancel</span>
-            <button [ngClass]="{'fun-button-disabled' : !customTestBedSpecForm.valid}" class="fun-button-add"
-                    (click)="modal.close(true)">Add
-            </button>
-
+            <div class="fun-form-field-container">
+              <label class="fun-form-label">Inputs (in JSON dictionary format. Ex: {{ inputsExample }}):</label>
+              <app-json-input [disabled]="!currentScriptPath" (dataChanged)="inputsChanged($event)"
+                              [numRows]="6"></app-json-input>
+            </div>
           </ng-container>
-          <br>
-          <app-messages-panel *ngIf="customTestBedSpecForm.errors?.errorMessage"
-                              [messages]="[customTestBedSpecForm.errors.errorMessage]" [type]="'INFO'">
-
-          </app-messages-panel>
 
         </form>
 
+        <ng-container *ngIf="currentScriptPath">
+          <span class="fun-cancel-link" (click)="onCancelNewSuiteEntry()">Cancel</span>
+          <button class="fun-button-add" [ngClass]="{'fun-button-disabled': !currentScriptPath}"
+                  (click)="onSubmitNewSuiteEntry()">Add this script
+          </button>
+        </ng-container>
+
       </div>
+
+
     </div>
 
-  </ng-template>
+
+    <ng-template #customTestBedSpecModalContent let-modal>
+      <div style="margin: 10px">
+        <div class="modal-header">
+          Custom test-bed selection options
+        </div>
+        <div style="display: flex">
+          <form *ngIf="customTestBedSpecForm" class="fun-form" [formGroup]="customTestBedSpecForm">
+            <div class="fun-form-field-container">
+              <label class="fun-form-label">Select a base test-bed:</label>
+              <select *ngIf="testBeds" formControlName="selectedTestBed" class="fun-form-field">
+                <option [ngValue]="null">-- select --</option>
+                <option [ngValue]="testBed" *ngFor="let testBed of testBeds">{{ testBed.name }}</option>
+              </select>
+            </div>
+
+            <ng-container *ngIf="customTestBedSpecForm.controls.selectedTestBed?.value">
+              <ng-container *ngFor="let flattenedAssetTypeName of flattenedAssetTypeNames">
+                <br>
+                <app-section-horizontal-line [text]="flattenedAssetTypeNameMap[flattenedAssetTypeName].name"></app-section-horizontal-line>
+
+                <div class="fun-card">
+                  <div class="fun-form-field">
+                    <label class="fun-form-input-field-label" for="{{ _getAssetSelectionKey(flattenedAssetTypeName) }}">
+                      Specify number of
+                      {{ flattenedAssetTypeNameMap[flattenedAssetTypeName].name }}s </label>
+                    <input class="fun-form-input-field fun-form-inline-field"
+                           formControlName="{{ _getAssetSelectionKey(flattenedAssetTypeName) }}"
+                           [checked]="customTestBedSpecForm.controls[_getAssetSelectionKey(flattenedAssetTypeName)].value == CustomAssetSelection.NUM"
+                           type="radio" value="{{ CustomAssetSelection.NUM }}">
+
+                    <label class="fun-form-input-field-label" for="{{ _getAssetSelectionKey(flattenedAssetTypeName) }}">
+                      Specify a list of
+                      {{ flattenedAssetTypeNameMap[flattenedAssetTypeName].name }}s </label>
+                    <input class="fun-form-input-field fun-form-inline-field"
+                           formControlName="{{ _getAssetSelectionKey(flattenedAssetTypeName) }}"
+                           [checked]="customTestBedSpecForm.controls[_getAssetSelectionKey(flattenedAssetTypeName)].value == CustomAssetSelection.SPECIFIC"
+                           type="radio" value="{{ CustomAssetSelection.SPECIFIC }}">
+                  </div>
+
+                  <ng-container
+                    *ngIf="customTestBedSpecForm.controls[_getAssetSelectionKey(flattenedAssetTypeName)].value == CustomAssetSelection.NUM">
+
+                    <input *ngIf="!_hasPoolMemerOptions(flattenedAssetTypeName); else showPoolMemberOptions" formControlName="{{ _getNumAssetsKey(flattenedAssetTypeName) }}" type="number"
+                           class="fun-form-field fun-form-input">
+                    <ng-template #showPoolMemberOptions>
+                      <div class="fun-form-field">
+                      <ng-container *ngFor="let poolMemberOption of poolMemberOptions[flattenedAssetTypeName]; let index=index">
+                        <label class="fun-form-input-field-label" for="{{ _getPoolMemberSelectionKey(flattenedAssetTypeName)}}">
+                          Type: {{ poolMemberOption }}
+                        </label>
+                        <input formControlName="{{ _getPoolMemberSelectionKey(flattenedAssetTypeName, poolMemberOption)}}" type="number"
+                           class="fun-form-field fun-form-input">
+
+                      </ng-container>
+                      </div>
+                    </ng-template>
 
 
-  <ng-container *ngIf="suite && suite.entries?.length > 0">
-    <table class="fun-table">
-      <tr>
-        <td class="fun-table-header">Script</td>
-        <td class="fun-table-header">Inputs</td>
-        <td *ngIf="mode == SuiteMode.SUITE" class="fun-table-header">Test-case IDs</td>
-        <td *ngIf="mode == SuiteMode.SUITE" class="fun-table-header"></td>
-      </tr>
-      <ng-container *ngFor="let suiteEntry of suite.entries; let index=index">
+                  </ng-container>
+
+                  <ng-container
+                    *ngIf="customTestBedSpecForm.controls[_getAssetSelectionKey(flattenedAssetTypeName)].value == CustomAssetSelection.SPECIFIC">
+                    <ng-multiselect-dropdown [placeholder]="'Select'"
+                                             [data]="filterAssetsBySelectedTestBed(customTestBedSpecForm.controls.selectedTestBed?.value.name, flattenedAssetTypeNameMap[flattenedAssetTypeName].data)"
+                                             formControlName="{{ _getSpecificAssetsKey(flattenedAssetTypeName) }}"
+                                             [settings]="dropDownSettings">
+                    </ng-multiselect-dropdown>
+                  </ng-container>
+
+                </div>
+              </ng-container>
+              <span class="fun-cancel-link" (click)="modal.dismiss('Cross click')">Cancel</span>
+              <button [ngClass]="{'fun-button-disabled' : !customTestBedSpecForm.valid}" class="fun-button-add"
+                      (click)="modal.close(true)">Add
+              </button>
+
+            </ng-container>
+            <br>
+            <app-messages-panel *ngIf="customTestBedSpecForm.errors?.errorMessage"
+                                [messages]="[customTestBedSpecForm.errors.errorMessage]" [type]="'INFO'">
+
+            </app-messages-panel>
+
+          </form>
+
+        </div>
+      </div>
+
+    </ng-template>
+
+
+    <ng-container *ngIf="suite && suite.entries?.length > 0">
+      <table class="fun-table">
         <tr>
-          <td>{{ suiteEntry.script_path }}</td>
-          <td *ngIf="mode == SuiteMode.SUITE">{{ suiteEntry.inputs | json }}</td>
-          <td *ngIf="mode == SuiteMode.SUITE">{{ suiteEntry.test_case_ids | json }}</td>
-          <td>
-            <i style="display: inline; color: red" class="fun-icon fa fa-trash" (click)="onDeleteSuiteEntry(index)"></i>
-          </td>
+          <td class="fun-table-header">Script</td>
+          <td class="fun-table-header">Inputs</td>
+          <td *ngIf="mode == SuiteMode.SUITE" class="fun-table-header">Test-case IDs</td>
+          <td *ngIf="mode == SuiteMode.SUITE" class="fun-table-header"></td>
         </tr>
-
-      </ng-container>
-    </table>
-
-  </ng-container>
-
-
-
-  <ng-container *ngIf="mode == SuiteMode.SUITE && customTestBedValidated; else noCustomTestBedSpec">
-    <app-section-horizontal-line [text]="'Custom test-bed spec'"></app-section-horizontal-line>
-    <div style="display: flex">
-      <table>
-        <tr>
-          <td><span class="fun-attribute-label">Base test-bed</span></td>
-          <td>{{ customTestBedValidated.base_test_bed }}</td>
-        </tr>
-        <ng-container *ngFor="let asset_request of customTestBedValidated.asset_request| keyvalue">
+        <ng-container *ngFor="let suiteEntry of suite.entries; let index=index">
           <tr>
-            <td><span class="fun-attribute-label">{{ asset_request.key }}</span></td>
-            <td *ngIf="_hasKey(asset_request.value, 'num')">Num: {{ asset_request.value.num }}
-            </td>
-            <td *ngIf="_hasKey(asset_request.value, 'pool_member_type_options')">
-                {{ _getPoolMemberOptionsString(asset_request.key, asset_request.value.pool_member_type_options)}}
-            </td>
-            <td *ngIf="_hasKey(asset_request.value, 'names')">Specific
-              instances: {{ asset_request.value.names | json }}
+            <td>{{ suiteEntry.script_path }}</td>
+            <td *ngIf="mode == SuiteMode.SUITE">{{ suiteEntry.inputs | json }}</td>
+            <td *ngIf="mode == SuiteMode.SUITE">{{ suiteEntry.test_case_ids | json }}</td>
+            <td>
+              <i style="display: inline; color: red" class="fun-icon fa fa-trash" (click)="onDeleteSuiteEntry(index)"></i>
             </td>
           </tr>
+
         </ng-container>
       </table>
-      <i style="display: inline;" class="fun-icon fa fa-pencil"
-         (click)="onEditCustomTestBedSpec(customTestBedSpecModalContent)"></i>
-      <i style="display: inline; color: red" class="fun-icon fa fa-trash"
-         (click)="onDeleteCustomTestBedSpec(customTestBedSpecModalContent)"></i>
 
-    </div>
-
-
-  </ng-container>
-  <ng-template #noCustomTestBedSpec>
-    <fun-spinner [status]="customTestBedSpecPopulationStatus"></fun-spinner>
-    <ng-container *ngIf="!customTestBedSpecPopulationStatus">
-      <button class="fun-button-add" (click)="onAddCustomTestBedSpec(customTestBedSpecModalContent)">Add custom test-bed</button>
     </ng-container>
-  </ng-template>
 
 
-  <!--button (click)="test()">Test</button-->
-  <br>
-  <button [ngClass]="{'fun-button-disabled' : suite?.entries?.length < 1 || !suite?.name }" class="fun-button-submit"
-          (click)="onSubmitSuite()">Submit
-  </button>
+
+    <ng-container *ngIf="mode == SuiteMode.SUITE && customTestBedValidated; else noCustomTestBedSpec">
+      <app-section-horizontal-line [text]="'Custom test-bed spec'"></app-section-horizontal-line>
+      <div style="display: flex">
+        <table>
+          <tr>
+            <td><span class="fun-attribute-label">Base test-bed</span></td>
+            <td>{{ customTestBedValidated.base_test_bed }}</td>
+          </tr>
+          <ng-container *ngFor="let asset_request of customTestBedValidated.asset_request| keyvalue">
+            <tr>
+              <td><span class="fun-attribute-label">{{ asset_request.key }}</span></td>
+              <td *ngIf="_hasKey(asset_request.value, 'num')">Num: {{ asset_request.value.num }}
+              </td>
+              <td *ngIf="_hasKey(asset_request.value, 'pool_member_type_options')">
+                  {{ _getPoolMemberOptionsString(asset_request.key, asset_request.value.pool_member_type_options)}}
+              </td>
+              <td *ngIf="_hasKey(asset_request.value, 'names')">Specific
+                instances: {{ asset_request.value.names | json }}
+              </td>
+            </tr>
+          </ng-container>
+        </table>
+        <i style="display: inline;" class="fun-icon fa fa-pencil"
+           (click)="onEditCustomTestBedSpec(customTestBedSpecModalContent)"></i>
+        <i style="display: inline; color: red" class="fun-icon fa fa-trash"
+           (click)="onDeleteCustomTestBedSpec(customTestBedSpecModalContent)"></i>
+
+      </div>
+
+
+    </ng-container>
+    <ng-template #noCustomTestBedSpec>
+      <fun-spinner [status]="customTestBedSpecPopulationStatus"></fun-spinner>
+      <div *ngIf="!customTestBedSpecPopulationStatus">
+        <span *ngIf="suite?.entries?.length > 0" class="fun-action-link" (click)="onAddCustomTestBedSpec(customTestBedSpecModalContent)">Customize test-bed options (suite-based)</span>
+      </div>
+    </ng-template>
+
+
+    <!--button (click)="test()">Test</button-->
+
+     <br>
+    <span (mouseenter)="submitEnter(true)" (mouseover)="submitEnter(true)" (mouseleave)="submitEnter(false)">
+      <button [ngClass]="{'fun-button-disabled' : suite?.entries?.length < 1 || !suite?.name }" class="fun-button-submit"
+              (click)="onSubmitSuite()">Submit
+      </button>
+    </span>
+    <ng-container *ngIf="userWantsToSubmit">
+      <app-messages-panel *ngIf="suite?.entries?.length < 1"
+                                [messages]="['Atleast one script must be selected']" [type]="'INFO'"></app-messages-panel>
+      <app-messages-panel *ngIf="!suite?.name" [messages]="['Please set the suite name']" [type]="'INFO'"></app-messages-panel>
+
+    </ng-container>
+
+  </div>
+
 
 </div>

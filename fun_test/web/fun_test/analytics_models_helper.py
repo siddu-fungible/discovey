@@ -13,16 +13,17 @@ from web.fun_test.metrics_models import AllocSpeedPerformance, WuLatencyAllocSta
 from web.fun_test.site_state import *
 from web.fun_test.metrics_models import MetricChart, MetricsRunTime
 from web.fun_test.db_fixup import prepare_status
-from fun_global import RESULTS
+from fun_global import RESULTS, get_datetime_from_epoch_time, get_epoch_time_from_datetime
 from dateutil.parser import parse
 from fun_settings import MAIN_WEB_APP
 
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 from lib.system.fun_test import *
-from web.fun_test.models_helper import add_jenkins_job_id_map
+from web.fun_test.models_helper import add_jenkins_job_id_map, add_metrics_data_run_time
 from django.utils import timezone
 from dateutil import parser
-from fun_global import PerfUnit, FunPlatform
+from fun_global import PerfUnit, FunPlatform, get_current_epoch_time_in_ms, get_localized_time
+import iso8601
 
 
 def get_time_from_timestamp(timestamp):
@@ -37,14 +38,19 @@ def invalidate_goodness_cache():
         chart.save()
 
 
-def save_entry(entry):
+def save_entry(entry, run_time=None):
     dry_run = fun_test.get_job_environment_variable("dry_run")
     if not dry_run:
+        if run_time:
+            fun_test.log("Adding runtime properties")
+            fun_test.log("Run time props are {}".format(run_time))
+            date_time = entry.input_date_time
+            run_time_id = add_metrics_data_run_time(run_time=run_time, date_time=date_time)
+            entry.run_time_id = run_time_id
         entry.save()
     else:
         try:
             fun_test.log("Dry run. Printing potential db entry")
-
             result = {}
             fields = entry._meta.get_fields()
             for field in fields:
@@ -56,40 +62,53 @@ def save_entry(entry):
             fun_test.critical(str(ex))
     return
 
+def set_metrics_data_run_time():
+    result = {}
+    result["lsf_job_id"] = None
+    result["suite_execution_id"] = fun_test.get_suite_execution_id()
+    result["jenkins_build_number"] = None
+    result["build_properties"] = fun_test.get_suite_run_time_environment_variable("bld_props")
+    result["version"] = fun_test.get_version()
+    result["associated_suites"] = None
+    return result
+
 def get_data_collection_time(tag=None):
-    if tag:
-        data_collection_time = get_current_time()
-        if fun_test.suite_execution_id:
-            try:
-                date_time_details = MetricsRunTime.objects.get(name="data_collection_time")
-                value = date_time_details.value
-                if tag in value and value[tag] and "data_collection_time" in value[tag] and is_same_day(
-                        current_time=get_current_time(), data_collection_time=parser.parse(value[tag][
-                                                                                               "data_collection_time"])):
-                    data_collection_time = parser.parse(value[tag]["data_collection_time"])
-                else:
-                    data_collection_time = _update_run_time(date_time_details=date_time_details,
-                                                            value=value, tag=tag)
-            except ObjectDoesNotExist:
-                data_collection_time = _update_run_time(tag=tag)
-        fun_test.log("The returned date time is {}".format(str(data_collection_time)))
-        return data_collection_time
-    else:
-        result = get_current_time()
-        if fun_test.suite_execution_id:
-            result = fun_test.get_stored_environment_variable("data_collection_time")
-            if not result:
-                date_time = get_current_time()
-                fun_test.update_job_environment_variable("data_collection_time", str(date_time))
-                result = date_time
+    key = "data_collection_time"
+    now_epoch = get_current_epoch_time_in_ms()
+    now_time = get_datetime_from_epoch_time(now_epoch)
+    result = now_time
+    if fun_test.suite_execution_id:
+        if tag:
+            date_time_collection_objects = MetricsRunTime.objects.filter(name=key)
+            match_found = False
+            if date_time_collection_objects.exists():
+                value = date_time_collection_objects[0].value
+                epoch_value_in_tag = value.get(tag, None)
+                if epoch_value_in_tag:
+                    date_time_by_tag = get_datetime_from_epoch_time(epoch_value_in_tag)
+                    if is_same_day(date_time_obj_a=now_time, date_time_obj_b=date_time_by_tag):
+                        match_found = True
+                        result = date_time_by_tag
+                if not match_found:
+                    MetricsRunTime.update_value_data(name=key, value_key=tag, value_data=now_epoch)
             else:
-                result = parser.parse(result)
-        return result
+                MetricsRunTime(name=key, value={tag: now_epoch}).save()
+        else:
+            stored_data_collection_time_epoch = fun_test.get_stored_environment_variable(key)
+            if not stored_data_collection_time_epoch:
+                fun_test.update_job_environment_variable(key, get_current_epoch_time_in_ms())
+                stored_data_collection_time_epoch = fun_test.get_stored_environment_variable(key)
+            if type(stored_data_collection_time_epoch) in [str, unicode]:  # For legacy cases only
+                result = iso8601.parse_date(stored_data_collection_time_epoch)
+            else:
+                result = get_datetime_from_epoch_time(stored_data_collection_time_epoch)
+
+    return result
 
 
-def is_same_day(current_time, data_collection_time):
-    return current_time.day == data_collection_time.day and current_time.month == data_collection_time.month and \
-           current_time.year == data_collection_time.year
+def is_same_day(date_time_obj_a, date_time_obj_b):
+    return date_time_obj_a.day == date_time_obj_b.day and date_time_obj_a.month == date_time_obj_b.month and \
+           date_time_obj_a.year == date_time_obj_b.year
 
 
 def _update_run_time(tag, value=None, date_time_details=None):
@@ -118,11 +137,13 @@ class MetricHelper(object):
     def clear(self):
         self.model.objects.all().delete()
 
-    def add_entry(self, **kwargs):
+    def add_entry(self, run_time=None, **kwargs):
         inputs = {}
         if "key" in kwargs:
             inputs["key"] = kwargs["key"]
         outputs = {}
+        # if run_time:
+        #     kwargs["run_time"] = run_time
         for key, value in kwargs.iteritems():
             if key.startswith("input_"):
                 inputs[key] = value
@@ -133,11 +154,14 @@ class MetricHelper(object):
             for k, v in outputs.iteritems():
                 if hasattr(o, k):
                     setattr(o, k, v)
-            save_entry(o)
+            # if run_time:
+            #     if hasattr(o, "run_time"):
+            #         setattr(o, "run_time", run_time)
+            save_entry(o, run_time=run_time)
             return None
         except ObjectDoesNotExist:
             o = self.model(**kwargs)
-            save_entry(o)
+            save_entry(o, run_time=run_time)
             return o.id
 
     def get_entry(self, **kwargs):
@@ -324,9 +348,7 @@ class BltVolumePerformanceHelper(MetricHelper):
                   read_99_latency_unit="usecs", read_99_99_latency_unit="usecs", write_99_99_latency_unit="usecs",
                   version=-1):
         try:
-
-            if version == -1:
-                version = str(fun_test.get_version())
+            run_time = set_metrics_data_run_time()
             entry = BltVolumePerformance.objects.get(input_date_time=date_time,
                                                      input_volume_type=volume,
                                                      input_test=test,
@@ -366,9 +388,8 @@ class BltVolumePerformanceHelper(MetricHelper):
             entry.output_read_95_latency_unit = read_95_latency_unit
             entry.output_read_99_latency_unit = read_99_latency_unit
             entry.output_read_99_99_latency_unit = read_99_99_latency_unit
-            save_entry(entry)
+            save_entry(entry, run_time=run_time)
         except ObjectDoesNotExist:
-            fun_test.log("Adding new entry into model using helper")
             one_entry = BltVolumePerformance(input_date_time=date_time,
                                              input_volume_type=volume,
                                              input_test=test,
@@ -408,23 +429,7 @@ class BltVolumePerformanceHelper(MetricHelper):
                                              output_read_95_latency_unit=read_95_latency_unit,
                                              output_read_99_latency_unit=read_99_latency_unit,
                                              output_read_99_99_latency_unit=read_99_99_latency_unit)
-            save_entry(one_entry)
-            try:
-                dry_run = fun_test.get_job_environment_variable("dry_run")
-                if not dry_run:
-                    fun_test.log("Entering the jenkins job id map entry for {} and  {}".format(date_time, version))
-                    completion_date = timezone.localtime(one_entry.input_date_time)
-                    suite_execution_id = fun_test.get_suite_execution_id()
-                    add_jenkins_job_id_map(jenkins_job_id=0,
-                                           fun_sdk_branch="",
-                                           git_commit="",
-                                           software_date=0,
-                                           hardware_version="",
-                                           build_properties="", lsf_job_id="",
-                                           sdk_version=version, build_date=completion_date,
-                                           suite_execution_id=suite_execution_id)
-            except Exception as ex:
-                fun_test.critical(str(ex))
+            save_entry(one_entry, run_time=run_time)
 
 
 class AllocSpeedPerformanceHelper(MetricHelper):
@@ -501,18 +506,6 @@ class ModelHelper(MetricHelper):
                     new_kwargs[key] = value
             try:
                 self.id = super(ModelHelper, self).add_entry(**new_kwargs)
-                if "input_version" in new_kwargs and "input_date_time" in new_kwargs:
-                    date_time = timezone.localtime(new_kwargs["input_date_time"])
-                    version = new_kwargs["input_version"]
-                    suite_execution_id = fun_test.get_suite_execution_id()
-                    add_jenkins_job_id_map(jenkins_job_id=0,
-                                           fun_sdk_branch="",
-                                           git_commit="",
-                                           software_date=0,
-                                           hardware_version="",
-                                           build_properties="", lsf_job_id="",
-                                           sdk_version=version, build_date=date_time,
-                                           suite_execution_id=suite_execution_id)
                 result = True
             except Exception as ex:
                 fun_test.critical(str(ex))
@@ -545,7 +538,8 @@ class ModelHelper(MetricHelper):
                     setattr(m_obj, "status", status)
                 if not self.units:
                     raise Exception('No units provided. Please provide the required units')
-                save_entry(m_obj)
+                run_time = set_metrics_data_run_time()
+                save_entry(m_obj, run_time=run_time)
                 result = True
             else:
                 raise Exception("Set status failed")
@@ -565,11 +559,11 @@ class WuLatencyAllocStackHelper(MetricHelper):
         entry = WuLatencyAllocStack
 
 
-def prepare_status_db(chart_names):
+def prepare_status_db(metric_ids):
     cache_valid = MetricsGlobalSettings.get_cache_validity()
     # chart_names = ["F1", "S1", "All metrics"]
-    for chart_name in chart_names:
-        total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name=chart_name)
+    for metric_id in metric_ids:
+        total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", metric_id=metric_id)
         prepare_status(chart=total_chart, purge_old_status=False, cache_valid=cache_valid)
     ml.backup_dags()
     ml.set_global_cache(cache_valid=True)
@@ -879,7 +873,7 @@ if __name__ == "__main__crypto":
             fun_test.critical(str(ex))
         print ("used generic helper to add an entry")
 
-if __name__ == "__main__":
+if __name__ == "__main2__":
     dt = datetime.datetime(year=2019, month=9, day=22, hour=2, minute=12, second=33)
     value_dict = {
         "date_time": dt,
@@ -901,3 +895,11 @@ if __name__ == "__main__":
     except Exception as ex:
         fun_test.critical(str(ex))
     print "used generic helper to add an entry"
+
+if __name__ == "__main__":
+    fun_test.suite_execution_id = 320
+    # print get_data_collection_time(tag="ec_inspur_fs_teramark_multi_f1")
+    a = get_data_collection_time(tag="John1")
+    print a
+
+    print get_epoch_time_from_datetime(a)

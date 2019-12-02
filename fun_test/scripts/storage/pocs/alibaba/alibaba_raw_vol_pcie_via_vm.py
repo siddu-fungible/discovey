@@ -36,6 +36,7 @@ def post_results(value_dict):
     value_dict["volume_type"] = "BLT"
     value_dict["platform"] = FunPlatform.F1
     value_dict["version"] = fun_test.get_version()
+    value_dict["encryption"] = False
     model_name = "AlibabaPerformance"
     status = fun_test.PASSED
     try:
@@ -68,9 +69,9 @@ class RawVolumePerfScript(FunTestScript):
         global funcp_obj, servers_mode, servers_list, fs_name
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
         job_inputs = fun_test.get_job_inputs()
-        f1_0_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --dpc-server --all_100g --serial --dpc-uart " \
+        f1_0_boot_args = "app=mdt_test,load_mods cc_huid=3 --dpc-server --all_100g --serial --dpc-uart " \
                          "retimer=0 --mgmt syslog=5 workload=storage"
-        f1_1_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 --dpc-server --all_100g --serial --dpc-uart " \
+        f1_1_boot_args = "app=mdt_test,load_mods cc_huid=2 --dpc-server --all_100g --serial --dpc-uart " \
                          "retimer=0 --mgmt syslog=5 workload=storage"
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
         if not job_inputs:
@@ -101,6 +102,9 @@ class RawVolumePerfScript(FunTestScript):
         topology = topology_helper.deploy()
         fun_test.shared_variables["topology"] = topology
         fun_test.test_assert(topology, "Topology deployed")
+        fs = topology.get_dut_instance(index=0)
+        come_obj = fs.get_come()
+        come_obj.command("/home/fun/mks/restart_docker_service.sh")
 
         # Bringup FunCP
         fun_test.test_assert(expression=funcp_obj.bringup_funcp(prepare_docker=False), message="Bringup FunCP")
@@ -205,7 +209,7 @@ class RawVolumeLocalPerfTestcase(FunTestCase):
             i = 1
             # Configure storage controller for DPU 1 (since we are testing SSD on DPU 1)
             storage_controller = StorageController(target_ip=fs_spec['come']['mgmt_ip'],
-                                                   target_port=40221)
+                                                   target_port=42221)
             command_result = storage_controller.ip_cfg(ip=servers_with_vms[server]["local_controller_ip"],
                                                        port=servers_with_vms[server]["local_controller_port"])
 

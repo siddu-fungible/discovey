@@ -31,9 +31,9 @@ class ScriptSetup(FunTestScript):
                                                       '/fs_connected_servers.json')
         global funcp_obj, servers_mode, servers_list, fs_name
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
-        f1_0_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --dpc-server --all_100g --serial --dpc-uart " \
+        f1_0_boot_args = "app=mdt_test,load_mods cc_huid=3 --dpc-server --all_100g --serial --dpc-uart " \
                          "--dis-stats retimer=0 --mgmt --disable-wu-watchdog"
-        f1_1_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 --dpc-server --all_100g --serial --dpc-uart " \
+        f1_1_boot_args = "app=mdt_test,load_mods cc_huid=2 --dpc-server --all_100g --serial --dpc-uart " \
                          "--dis-stats retimer=0 --mgmt --disable-wu-watchdog"
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
         # fs_name = "fs-45"
@@ -242,12 +242,12 @@ class CreateNamespaceVMs(FunTestCase):
             i = 1
 
             storage_controller = StorageController(target_ip=fs_spec['come']['mgmt_ip'],
-                                                   target_port=40220)
+                                                   target_port=42220)
             result = storage_controller.ip_cfg(ip=servers_with_vms[server]["local_controller_ip"],
                                                port=servers_with_vms[server]["local_controller_port"])
 
             storage_controller_remote = StorageController(target_ip=fs_spec['come']['mgmt_ip'],
-                                                          target_port=40221)
+                                                          target_port=42221)
             result = storage_controller_remote.ip_cfg(ip=servers_with_vms[server]["remote_controller_ip"],
                                                       port=servers_with_vms[server]["remote_controller_port"])
             result_dict = {}
@@ -422,12 +422,12 @@ class LocalNamespace(FunTestCase):
             i = 1
 
             storage_controller = StorageController(target_ip=fs_spec['come']['mgmt_ip'],
-                                                   target_port=40220)
+                                                   target_port=42220)
             # result = storage_controller.ip_cfg(ip=servers_with_vms[server]["local_controller_ip"],
             #                                    port=servers_with_vms[server]["local_controller_port"])
 
             storage_controller_remote = StorageController(target_ip=fs_spec['come']['mgmt_ip'],
-                                                          target_port=40221)
+                                                          target_port=42221)
             # result = storage_controller_remote.ip_cfg(ip=servers_with_vms[server]["remote_controller_ip"],
             #                                           port=servers_with_vms[server]["remote_controller_port"])
             result_dict = {}

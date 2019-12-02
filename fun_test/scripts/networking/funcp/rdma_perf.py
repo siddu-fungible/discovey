@@ -102,10 +102,10 @@ class BringupSetup(FunTestCase):
         else:
             f11_retimer = 0
 
-        f1_0_boot_args = "app=load_mods,hw_hsu_test cc_huid=3 --dpc-server --serial --all_100g --dpc-uart " \
-                         "retimer={} --mgmt syslog=3".format(f10_retimer)
-        f1_1_boot_args = "app=load_mods,hw_hsu_test cc_huid=2 --dpc-server --serial --all_100g --dpc-uart " \
-                         "retimer={} --mgmt syslog=3".format(f11_retimer)
+        f1_0_boot_args = "app=load_mods cc_huid=3 --dpc-server --serial --all_100g --dpc-uart " \
+                         "retimer={} --mgmt".format(f10_retimer)
+        f1_1_boot_args = "app=load_mods cc_huid=2 --dpc-server --serial --all_100g --dpc-uart " \
+                         "retimer={} --mgmt".format(f11_retimer)
 
         topology_helper = TopologyHelper()
 
@@ -115,11 +115,12 @@ class BringupSetup(FunTestCase):
         else:
             deploy_setup = True
             fun_test.shared_variables["deploy_setup"] = deploy_setup
+        # Set test_speed to 1 for using single pair of hosts which tests 100G perf
         if "test_speed" in job_inputs:
             roce_speed = job_inputs["test_speed"]
             fun_test.shared_variables["test_speed"] = roce_speed
         else:
-            roce_speed = "all"
+            roce_speed = 0  # Test based on host count
             fun_test.shared_variables["test_speed"] = roce_speed
         if "enable_fcp" in job_inputs:
             enable_fcp = job_inputs["enable_fcp"]
@@ -134,6 +135,30 @@ class BringupSetup(FunTestCase):
         else:
             qp_list = [1, 2, 4, 8, 16, 32]
             fun_test.shared_variables["qp_list"] = qp_list
+        if "fundrv_branch" in job_inputs:
+            fun_test.shared_variables["fundrv_branch"] = job_inputs["fundrv_branch"]
+        else:
+            fun_test.shared_variables["fundrv_branch"] = None
+        if "fundrv_commit" in job_inputs:
+            fun_test.shared_variables["fundrv_commit"] = job_inputs["fundrv_commit"]
+        else:
+            fun_test.shared_variables["fundrv_commit"] = None
+        if "rdmacore_branch" in job_inputs:
+            fun_test.shared_variables["rdmacore_branch"] = job_inputs["rdmacore_branch"]
+        else:
+            fun_test.shared_variables["rdmacore_branch"] = None
+        if "rdmacore_commit" in job_inputs:
+            fun_test.shared_variables["rdmacore_commit"] = job_inputs["rdmacore_commit"]
+        else:
+            fun_test.shared_variables["rdmacore_commit"] = None
+        if "perftest_branch" in job_inputs:
+            fun_test.shared_variables["perftest_branch"] = job_inputs["perftest_branch"]
+        else:
+            fun_test.shared_variables["perftest_branch"] = None
+        if "perftest_commit" in job_inputs:
+            fun_test.shared_variables["perftest_commit"] = job_inputs["perftest_commit"]
+        else:
+            fun_test.shared_variables["perftest_commit"] = None
 
         if deploy_setup:
             funcp_obj = FunControlPlaneBringup(fs_name=self.server_key["fs"][fs_name]["fs-name"])
@@ -158,6 +183,8 @@ class BringupSetup(FunTestCase):
             come_obj.sudo_command("iptables -F")
             come_obj.sudo_command("ip6tables -F")
             come_obj.sudo_command("dmesg -c > /dev/null")
+            if "fs-45" in fs_name:
+                come_obj.command("/home/fun/mks/restart_docker_service.sh")
 
             fun_test.log("Getting host details")
             host_dict = {"f1_0": [], "f1_1": []}
@@ -176,13 +203,6 @@ class BringupSetup(FunTestCase):
                                 topology.get_host_instance(dut_index=0, host_index=0, ssd_interface_index=i))
             fun_test.shared_variables["hosts_obj"] = host_dict
 
-            # Bringup FunCP
-            fun_test.test_assert(expression=funcp_obj.bringup_funcp(prepare_docker=False), message="Bringup FunCP")
-            # Assign MPG IPs from dhcp
-            funcp_obj.assign_mpg_ips(static=self.server_key["fs"][fs_name]["mpg_ips"]["static"],
-                                     f1_1_mpg=self.server_key["fs"][fs_name]["mpg_ips"]["mpg1"],
-                                     f1_0_mpg=self.server_key["fs"][fs_name]["mpg_ips"]["mpg0"])
-
             # Check PICe Link on host
             servers_mode = self.server_key["fs"][fs_name]["hosts"]
             for server in servers_mode:
@@ -192,6 +212,14 @@ class BringupSetup(FunTestCase):
                 if result == "2":
                     fun_test.add_checkpoint("<b><font color='red'><PCIE link did not come up in %s mode</font></b>"
                                             % servers_mode[server])
+
+            # Bringup FunCP
+            fun_test.test_assert(expression=funcp_obj.bringup_funcp(prepare_docker=False), message="Bringup FunCP")
+            # Assign MPG IPs from dhcp
+            funcp_obj.assign_mpg_ips(static=self.server_key["fs"][fs_name]["mpg_ips"]["static"],
+                                     f1_1_mpg=self.server_key["fs"][fs_name]["mpg_ips"]["mpg1"],
+                                     f1_0_mpg=self.server_key["fs"][fs_name]["mpg_ips"]["mpg0"])
+
         else:
             # Get COMe object
             am = AssetManager()
@@ -292,7 +320,8 @@ class NicEmulation(FunTestCase):
 
             # install drivers on PCIE connected servers
             tb_config_obj = tb_configs.TBConfigs(str(fs_name))
-            funeth_obj = Funeth(tb_config_obj)
+            funeth_obj = Funeth(tb_config_obj, fundrv_branch=fun_test.shared_variables["fundrv_branch"],
+                                fundrv_commit=fun_test.shared_variables["fundrv_commit"])
             fun_test.shared_variables['funeth_obj'] = funeth_obj
             setup_hu_host(funeth_obj, update_driver=True, sriov=0, num_queues=1)
 
@@ -309,33 +338,38 @@ class NicEmulation(FunTestCase):
             for host in ping_dict:
                 test_host_pings(host=host, ips=ping_dict[host], strict=False)
 
-        # Update RDMA Core & perftest on hosts
-        bg_proc_id = {}
-        for obj in host_objs:
-            if obj == "f1_0":
-                host_count = fun_test.shared_variables["host_len_f10"]
-                bg_proc_id[obj] = []
-            elif obj == "f1_1":
-                host_count = fun_test.shared_variables["host_len_f11"]
-                bg_proc_id[obj] = []
-            for x in xrange(0, host_count):
-                update_path = host_objs[obj][x].command("echo $HOME")
-                update_script = update_path.strip() + "/mks/update_rdma.sh"
-                print update_script
-                bg_proc_id[obj].append(host_objs[obj][x].
-                                       start_bg_process("{} build build".format(update_script),
-                                                        timeout=1200))
-        # fun_test.sleep("Building rdma_perf & core", seconds=120)
-        for obj in host_objs:
-            if obj == "f1_0":
-                host_count = fun_test.shared_variables["host_len_f10"]
-            elif obj == "f1_1":
-                host_count = fun_test.shared_variables["host_len_f11"]
-            for x in xrange(0, host_count):
-                for pid in bg_proc_id[obj]:
-                    while host_objs[obj][x].process_exists(process_id=pid):
-                        fun_test.sleep(message="Still building RDMA repo...", seconds=5)
-                host_objs[obj][x].disconnect()
+            # Clear dmesg on hosts before starting test
+            for objs in host_objs:
+                for handle in host_objs[objs]:
+                    handle.sudo_command("dmesg -c > /dev/null")
+
+        # # Update RDMA Core & perftest on hosts
+        # bg_proc_id = {}
+        # for obj in host_objs:
+        #     if obj == "f1_0":
+        #         host_count = fun_test.shared_variables["host_len_f10"]
+        #         bg_proc_id[obj] = []
+        #     elif obj == "f1_1":
+        #         host_count = fun_test.shared_variables["host_len_f11"]
+        #         bg_proc_id[obj] = []
+        #     for x in xrange(0, host_count):
+        #         update_path = host_objs[obj][x].command("echo $HOME")
+        #         update_script = update_path.strip() + "/mks/update_rdma.sh"
+        #         print update_script
+        #         bg_proc_id[obj].append(host_objs[obj][x].
+        #                                start_bg_process("{} build build".format(update_script),
+        #                                                 timeout=1200))
+        # # fun_test.sleep("Building rdma_perf & core", seconds=120)
+        # for obj in host_objs:
+        #     if obj == "f1_0":
+        #         host_count = fun_test.shared_variables["host_len_f10"]
+        #     elif obj == "f1_1":
+        #         host_count = fun_test.shared_variables["host_len_f11"]
+        #     for x in xrange(0, host_count):
+        #         for pid in bg_proc_id[obj]:
+        #             while host_objs[obj][x].process_exists(process_id=pid):
+        #                 fun_test.sleep(message="Still building RDMA repo...", seconds=5)
+        #         host_objs[obj][x].disconnect()
 
         # Create a dict containing F1_0 & F1_1 details
         f10_hosts = []
@@ -365,6 +399,17 @@ class NicEmulation(FunTestCase):
         fun_test.shared_variables["f10_hosts"] = f10_hosts
         fun_test.shared_variables["f11_hosts"] = f11_hosts
 
+        for x in range(0, fun_test.shared_variables["host_len_f10"]):
+            f10_hosts[x]["roce_handle"].build_rdma_repo(rdmacore_branch=fun_test.shared_variables["rdmacore_branch"],
+                                                        rdmacore_commit=fun_test.shared_variables["rdmacore_commit"],
+                                                        perftest_branch=fun_test.shared_variables["perftest_branch"],
+                                                        perftest_commit=fun_test.shared_variables["perftest_commit"])
+        for x in range(0, fun_test.shared_variables["host_len_f11"]):
+            f11_hosts[x]["roce_handle"].build_rdma_repo(rdmacore_branch=fun_test.shared_variables["rdmacore_branch"],
+                                                        rdmacore_commit=fun_test.shared_variables["rdmacore_commit"],
+                                                        perftest_branch=fun_test.shared_variables["perftest_branch"],
+                                                        perftest_commit=fun_test.shared_variables["perftest_commit"])
+
     def cleanup(self):
         pass
 
@@ -390,11 +435,17 @@ class BwTest(FunTestCase):
         f11_hosts = fun_test.shared_variables["f11_hosts"]
         qp_list = fun_test.shared_variables["qp_list"]
         come_obj = fun_test.shared_variables["come_obj"]
+        roce_speed = fun_test.shared_variables["test_speed"]
         kill_time = 140
         test_case_failure_time = 20
+        wait_duration = 5
+        test_duration = 60
 
         # Using hosts based on minimum host length
-        total_link_bw = min(fun_test.shared_variables["host_len_f10"], fun_test.shared_variables["host_len_f11"])
+        if not roce_speed:
+            total_link_bw = min(fun_test.shared_variables["host_len_f10"], fun_test.shared_variables["host_len_f11"])
+        else:
+            total_link_bw = 1
         if total_link_bw > 1:
             link_capacity = "200G"
         else:
@@ -437,7 +488,7 @@ class BwTest(FunTestCase):
                 # Start servers on F1_0
                 for index in range(total_link_bw):
                     f10_server = f10_hosts[index]["roce_handle"].ib_bw_test(test_type=self.rt, perf=True, size=size,
-                                                                            qpair=qp, duration=60,
+                                                                            qpair=qp, duration=test_duration,
                                                                             timeout=300)
                     pid_dict = {f10_hosts[index]["roce_handle"]: f10_server}
                     f10_pid_list.append(pid_dict)
@@ -446,7 +497,7 @@ class BwTest(FunTestCase):
                 # Start clients on F1_1
                 for index in range(total_link_bw):
                     f11_client = f11_hosts[index]["roce_handle"].ib_bw_test(test_type=self.rt, perf=True, size=size,
-                                                                            qpair=qp, duration=60,
+                                                                            qpair=qp, duration=test_duration,
                                                                             server_ip=f10_hosts[index]["ipaddr"],
                                                                             timeout=300)
                     pid_dict = {f11_hosts[index]["roce_handle"]: f11_client}
@@ -461,7 +512,7 @@ class BwTest(FunTestCase):
                     for key, value in handle.items():
                         # key.kill_pid(pid=value["cmd_pid"])
                         while key.process_check(pid=value["cmd_pid"]):
-                            fun_test.sleep(message="Client process still there", seconds=2)
+                            fun_test.sleep(message="Client process still there", seconds=wait_duration)
                         wait_time = test_case_failure_time
                         while key.qp_check() > 1:
                             fun_test.sleep("Client : QP count {}".format(key.qp_check()), seconds=5)
@@ -475,7 +526,7 @@ class BwTest(FunTestCase):
                     for key, value in handle.items():
                         # key.kill_pid(pid=value["cmd_pid"])
                         while key.process_check(pid=value["cmd_pid"]):
-                            fun_test.sleep(message="Server process still there", seconds=2)
+                            fun_test.sleep(message="Server process still there", seconds=wait_duration)
                         wait_time = test_case_failure_time
                         while key.qp_check() > 1:
                             fun_test.sleep("Server : QP count {}".format(key.qp_check()), seconds=5)
@@ -491,7 +542,7 @@ class BwTest(FunTestCase):
                 total_values = len(parsed_result)
                 for results in parsed_result:
                     size_bandwidth = float(results[0])
-                    iterations = float(results[1])
+                    iterations = results[1]
                     bw_peak_gbps += float(results[2])
                     avg_bandwidth += float(results[3])
                     msg_rate += float(results[4])
@@ -543,11 +594,16 @@ class LatencyTest(FunTestCase):
         f10_hosts = fun_test.shared_variables["f10_hosts"]
         f11_hosts = fun_test.shared_variables["f11_hosts"]
         qp_list = fun_test.shared_variables["qp_list"]
+        roce_speed = fun_test.shared_variables["test_speed"]
         kill_time = 140
         test_case_failure_time = 20
+        wait_duration = 5
 
         # Using hosts based on minimum host length
-        total_link_bw = min(fun_test.shared_variables["host_len_f10"], fun_test.shared_variables["host_len_f11"])
+        if not roce_speed:
+            total_link_bw = min(fun_test.shared_variables["host_len_f10"], fun_test.shared_variables["host_len_f11"])
+        else:
+            total_link_bw = 1
         if total_link_bw > 1:
             link_capacity = "200G"
         else:
@@ -615,7 +671,7 @@ class LatencyTest(FunTestCase):
                 for key, value in handle.items():
                     # key.kill_pid(pid=value["cmd_pid"])
                     while key.process_check(pid=value["cmd_pid"]):
-                        fun_test.sleep(message="Client process still there", seconds=2)
+                        fun_test.sleep(message="Client process still there", seconds=wait_duration)
                     wait_time = test_case_failure_time
                     while key.qp_check() > 1:
                         fun_test.sleep("Client : QP count {}".format(key.qp_check()), seconds=5)
@@ -629,7 +685,7 @@ class LatencyTest(FunTestCase):
                 for key, value in handle.items():
                     # key.kill_pid(pid=value["cmd_pid"])
                     while key.process_check(pid=value["cmd_pid"]):
-                        fun_test.sleep(message="Server process still there", seconds=2)
+                        fun_test.sleep(message="Server process still there", seconds=wait_duration)
                     wait_time = test_case_failure_time
                     while key.qp_check() > 1:
                         fun_test.sleep("Server : QP count {}".format(key.qp_check()), seconds=5)
@@ -646,7 +702,7 @@ class LatencyTest(FunTestCase):
             row_data_list = []
             total_values = len(parsed_result)
             for results in parsed_result:
-                size_latency = float(results[0])
+                size_latency = results[0]
                 iterations = float(results[1])
                 min_latency = float(results[2])
                 max_latency = float(results[3])
@@ -806,9 +862,9 @@ if __name__ == '__main__':
     ts.add_test_case(LatWriteFcp1500())
     ts.add_test_case(BwWriteFcp9000())
     ts.add_test_case(LatWriteFcp9000())
-    ts.add_test_case(BwWriteNfcp1500())
-    ts.add_test_case(LatWriteNfcp1500())
-    ts.add_test_case(BwWriteNfcp9000())
-    ts.add_test_case(LatWriteNfcp9000())
+    # ts.add_test_case(BwWriteNfcp1500())
+    # ts.add_test_case(LatWriteNfcp1500())
+    # ts.add_test_case(BwWriteNfcp9000())
+    # ts.add_test_case(LatWriteNfcp9000())
 
     ts.run()

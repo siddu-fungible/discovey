@@ -185,8 +185,12 @@ class MultiHostVolumePerformanceScript(FunTestScript):
 
         # Code to collect csi_perf if it's set
         self.csi_perf_enabled = fun_test.get_job_environment_variable("csi_perf")
+        self.csi_cache_miss_enabled = fun_test.get_job_environment_variable("csi_cache_miss")
+
         fun_test.log("csi_perf_enabled is set as: {} for current run".format(self.csi_perf_enabled))
-        if self.csi_perf_enabled:
+        fun_test.log("csi_cache_miss_enabled is set as: {} for current run".format(self.csi_cache_miss_enabled))
+
+        if self.csi_perf_enabled or self.csi_cache_miss_enabled:
             fun_test.log("testbed_config: {}".format(self.testbed_config))
             self.csi_f1_ip = self.testbed_config["dut_info"][str(self.available_dut_indexes[0])]["bond_interface_info"]["0"]["0"]["ip"].split('/')[0]
             fun_test.log("F1 ip used for csi_perf_test: {}".format(self.csi_f1_ip))
@@ -198,8 +202,15 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                 fun_test.log("csi perf listener host ip is: {}".format(self.perf_listener_ip))
             # adding csi perf bootargs if csi_perf is enabled
             #  TODO: Modifying bootargs only for F1_0 as csi_perf on F1_1 is not yet fully supported
-            self.bootargs[0] += " --perf csi-local-ip={} csi-remote-ip={} pdtrace-hbm-size-kb={}".format(
-                self.csi_f1_ip, self.perf_listener_ip, self.csi_perf_pdtrace_hbm_size_kb)
+            if self.csi_perf_enabled:
+                self.bootargs[0] += " --perf csi-local-ip={} csi-remote-ip={} pdtrace-hbm-size-kb={}".format(
+                    self.csi_f1_ip, self.perf_listener_ip, self.csi_perf_pdtrace_hbm_size_kb)
+            if self.csi_cache_miss_enabled:
+                self.bootargs[0] += " --csi-cache-miss csi-local-ip={} csi-remote-ip={} pdtrace-hbm-size-kb={}".format(
+                    self.csi_f1_ip, self.perf_listener_ip, self.csi_perf_pdtrace_hbm_size_kb)
+
+        self.tftp_image_path = fun_test.get_job_environment_variable("tftp_image_path")
+        self.bundle_image_parameters = fun_test.get_job_environment_variable("bundle_image_parameters")
 
         for i in range(len(self.bootargs)):
             self.bootargs[i] += " --mgmt"
@@ -259,12 +270,17 @@ class MultiHostVolumePerformanceScript(FunTestScript):
         # Rebooting all the hosts in non-blocking mode before the test and getting NUMA cpus
         for host_name in self.host_info:
             host_handle = self.host_info[host_name]["handle"]
-            if self.override_numa_node["override"]:
-                host_numa_cpus_filter = host_handle.lscpu(self.override_numa_node["override_node"])
-                self.host_info[host_name]["host_numa_cpus"] = host_numa_cpus_filter[
-                    self.override_numa_node["override_node"]]
+            if host_name.startswith("cab0"):
+                if self.override_numa_node["override"]:
+                    host_numa_cpus_filter = host_handle.lscpu("node[01]")
+                    self.host_info[host_name]["host_numa_cpus"] = ",".join(host_numa_cpus_filter.values())
             else:
-                self.host_info[host_name]["host_numa_cpus"] = fetch_numa_cpus(host_handle, self.ethernet_adapter)
+                if self.override_numa_node["override"]:
+                    host_numa_cpus_filter = host_handle.lscpu(self.override_numa_node["override_node"])
+                    self.host_info[host_name]["host_numa_cpus"] = host_numa_cpus_filter[
+                        self.override_numa_node["override_node"]]
+                else:
+                    self.host_info[host_name]["host_numa_cpus"] = fetch_numa_cpus(host_handle, self.ethernet_adapter)
 
             # Calculating the number of CPUs available in the given numa
             self.host_info[host_name]["total_numa_cpus"] = 0
@@ -297,14 +313,62 @@ class MultiHostVolumePerformanceScript(FunTestScript):
         self.funcp_obj = {}
         self.funcp_spec = {}
         for index in xrange(self.num_duts):
+            run_sc_restart_status = False
+            # Removing existing db directories for fresh setup
+            try:
+                if self.install == "fresh":
+                    if self.bundle_image_parameters:
+                        path = "{}/{}".format(self.sc_script_dir, self.run_sc_script)
+                        if self.come_obj[index].check_file_directory_exists(path=path):
+                            self.come_obj[index].command("cd {}".format(self.sc_script_dir))
+                            # restarting run_sc with -c option
+                            self.come_obj[index].command("sudo ./{} -c restart".format(self.run_sc_script))
+                            fun_test.test_assert_expected(expected=0, actual=self.come_obj[index].exit_status(),
+                                                          message="run_sc restarted with cleanup")
+                            # check if run_sc container is running
+                            run_sc_restart_cmd = "docker ps -a --format '{{.Names}}' | grep run_sc"
+                            timer = FunTimer(max_time=self.container_up_timeout)
+                            while not timer.is_expired():
+                                run_sc_name = self.come_obj[index].command(
+                                    run_sc_restart_cmd, timeout=self.command_timeout).split("\n")[0]
+                                if run_sc_name:
+                                    fun_test.log("run_sc container is up and running")
+                                    run_sc_restart_status = True
+                                    break
+                                else:
+                                    fun_test.sleep("for the run_sc docker container to start", 1)
+                            else:
+                                fun_test.critical("run_sc container is not restarted within {} seconds after "
+                                                  "cleaning up the DB".format(self.container_up_timeout))
+                                fun_test.test_assert(False, "Cleaning DB and restarting run_sc container")
+                    else:
+                        for directory in self.sc_db_directories:
+                            if self.come_obj[index].check_file_directory_exists(path=directory):
+                                fun_test.log("Removing Directory {}".format(directory))
+                                self.come_obj[index].sudo_command("rm -rf {}".format(directory))
+                                fun_test.test_assert_expected(actual=self.come_obj[index].exit_status(), expected=0,
+                                                              message="Directory {} is removed".format(directory))
+                            else:
+                                fun_test.log("Directory {} does not exist skipping deletion".format(directory))
+                else:
+                    fun_test.log("Skipping run_sc restart with cleanup")
+            except Exception as ex:
+                fun_test.critical(str(ex))
             self.funcp_obj[index] = StorageFsTemplate(self.come_obj[index])
-            self.funcp_spec[index] = self.funcp_obj[index].deploy_funcp_container(
-                update_deploy_script=self.update_deploy_script, update_workspace=self.update_workspace,
-                mode=self.funcp_mode)
-            fun_test.test_assert(self.funcp_spec[index]["status"],
-                                 "Starting FunCP docker container in DUT {}".format(index))
+            if self.tftp_image_path:
+                self.funcp_spec[index] = self.funcp_obj[index].deploy_funcp_container(
+                    update_deploy_script=self.update_deploy_script, update_workspace=self.update_workspace,
+                    mode=self.funcp_mode)
+                fun_test.test_assert(self.funcp_spec[index]["status"],
+                                     "Starting FunCP docker container in DUT {}".format(index))
+                # self.funcp_spec[index]["container_names"].sort()
+            else:
+                self.funcp_spec[index] = self.funcp_obj[index].get_container_objs()
+
             self.funcp_spec[index]["container_names"].sort()
             for f1_index, container_name in enumerate(self.funcp_spec[index]["container_names"]):
+                if container_name == "run_sc":
+                    continue
                 bond_interfaces = self.fs_spec[index].get_bond_interfaces(f1_index=f1_index)
                 bond_name = "bond0"
                 bond_ip = bond_interfaces[0].ip
@@ -342,7 +406,9 @@ class MultiHostVolumePerformanceScript(FunTestScript):
         fun_test.shared_variables["syslog"] = self.syslog
         fun_test.shared_variables["db_log_time"] = self.db_log_time
         fun_test.shared_variables["csi_perf_enabled"] = self.csi_perf_enabled
-        if self.csi_perf_enabled:
+        fun_test.shared_variables["csi_cache_miss_enabled"] = self.csi_cache_miss_enabled
+
+        if self.csi_perf_enabled or self.csi_cache_miss_enabled:
             fun_test.shared_variables["perf_listener_host_name"] = self.perf_listener_host_name
             fun_test.shared_variables["perf_listener_ip"] = self.perf_listener_ip
 
@@ -374,7 +440,7 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                                      format(key, self.funcp_spec[0]["container_names"][index], ip))
 
         # Ensuring perf_host is able to ping F1 IP
-        if self.csi_perf_enabled:
+        if self.csi_perf_enabled or self.csi_cache_miss_enabled:
             # csi_perf_host_instance = csi_perf_host_obj.get_instance()  # TODO: Returning as NoneType
             csi_perf_host_instance = Linux(host_ip=csi_perf_host_obj.spec["host_ip"],
                                            ssh_username=csi_perf_host_obj.spec["ssh_username"],
@@ -389,6 +455,13 @@ class MultiHostVolumePerformanceScript(FunTestScript):
         fun_test.shared_variables["blt"]["warmup_done"] = False
 
     def cleanup(self):
+        if self.bundle_image_parameters:
+            try:
+                for index in xrange(self.num_duts):
+                    self.come_obj[index].command("sudo systemctl disable init-fs1600")
+            except Exception as ex:
+                fun_test.critical(str(ex))
+
         come_reboot = False
         if "blt" in fun_test.shared_variables and fun_test.shared_variables["blt"]["setup_created"]:
             self.fs = self.fs_objs[0]
@@ -562,7 +635,9 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
         self.host_info = fun_test.shared_variables["host_info"]
         self.host_handles = fun_test.shared_variables["host_handles"]
         self.csi_perf_enabled = fun_test.shared_variables["csi_perf_enabled"]
-        if self.csi_perf_enabled:
+        self.csi_cache_miss_enabled = fun_test.shared_variables["csi_cache_miss_enabled"]
+
+        if self.csi_perf_enabled or self.csi_cache_miss_enabled:
             self.perf_listener_host_name = fun_test.shared_variables["perf_listener_host_name"]
             self.perf_listener_ip = fun_test.shared_variables["perf_listener_ip"]
         self.host_ips = fun_test.shared_variables["host_ips"]
@@ -598,8 +673,10 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
             self.post_results = False
         if "csi_perf_iodepth" in job_inputs:
             self.csi_perf_iodepth = job_inputs["csi_perf_iodepth"]
+            self.full_run_iodepth = self.csi_perf_iodepth
         if not isinstance(self.csi_perf_iodepth, list):
             self.csi_perf_iodepth = [self.csi_perf_iodepth]
+            self.full_run_iodepth = self.csi_perf_iodepth
 
         if ("blt" not in fun_test.shared_variables or not fun_test.shared_variables["blt"]["setup_created"]) \
                 and (not fun_test.shared_variables["blt"]["warmup_done"]):
@@ -817,11 +894,13 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                     wait_time = self.num_hosts - index
                     if "multiple_jobs" in self.warm_up_fio_cmd_args:
                         # Adding the allowed CPUs into the fio warmup command
-                        self.warm_up_fio_cmd_args["multiple_jobs"] += "  --cpus_allowed={}".\
-                            format(self.host_info[host_name]["host_numa_cpus"])
+                        # self.warm_up_fio_cmd_args["multiple_jobs"] += "  --cpus_allowed={}".\
+                        #    format(self.host_info[host_name]["host_numa_cpus"])
+                        fio_cpus_allowed_args = " --cpus_allowed={}".format(self.host_info[host_name]["host_numa_cpus"])
                         for id, device in enumerate(self.host_info[host_name]["nvme_block_device_list"]):
                             jobs += " --name=pre-cond-job-{} --filename={}".format(id + 1, device)
-                        warm_up_fio_cmd_args["multiple_jobs"] = self.warm_up_fio_cmd_args["multiple_jobs"] + str(jobs)
+                        warm_up_fio_cmd_args["multiple_jobs"] = self.warm_up_fio_cmd_args["multiple_jobs"] + str(
+                            fio_cpus_allowed_args) + str(jobs)
                         warm_up_fio_cmd_args["timeout"] = self.warm_up_fio_cmd_args["timeout"]
                         # fio_output = self.host_handles[key].pcie_fio(filename="nofile", timeout=self.warm_up_fio_cmd_args["timeout"],
                         #                                    **warm_up_fio_cmd_args)
@@ -1017,7 +1096,7 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
 
             fun_test.sleep("Fio threads started", 10)
             # Starting csi perf stats collection if it's set
-            if self.csi_perf_enabled:
+            if self.csi_perf_enabled or self.csi_cache_miss_enabled:
                 if row_data_dict["iodepth"] in self.csi_perf_iodepth:
                     try:
                         fun_test.sleep("for IO to be fully active", 120)
@@ -1025,7 +1104,7 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                                                        listener_ip=self.perf_listener_ip, fs=self.fs[0],
                                                        listener_port=4420)  # Temp change for testing
                         csi_perf_obj.prepare(f1_index=0)
-                        csi_perf_obj.start(f1_index=0, dpc_client=self.storage_controller)
+                        csi_perf_obj.start(f1_index=0)  #  , dpc_client=self.storage_controller)
                         fun_test.log("csi perf stats collection is started")
                         # dpcsh_client = self.fs.get_dpc_client(f1_index=0, auto_disconnect=True)
                         fun_test.sleep("Allowing CSI performance data to be collected", 300)

@@ -56,9 +56,9 @@ class BringupSetup(FunTestCase):
 
         global funcp_obj, servers_mode, servers_list, fs_name
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
-        f1_0_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --dpc-server --all_100g --serial --dpc-uart " \
+        f1_0_boot_args = "app=mdt_test,load_mods cc_huid=3 --dpc-server --all_100g --serial --dpc-uart " \
                          "retimer=0 --mgmt --disable-wu-watchdog syslog=3 workload=storage"
-        f1_1_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 --dpc-server --all_100g --serial --dpc-uart " \
+        f1_1_boot_args = "app=mdt_test,load_mods cc_huid=2 --dpc-server --all_100g --serial --dpc-uart " \
                          "retimer=0 --mgmt --disable-wu-watchdog syslog=3 workload=storage"
 
         # module_log=tcp:DEBUG,fabrics_host:INFO,rdsvol:INFO
@@ -82,9 +82,9 @@ class BringupSetup(FunTestCase):
             enable_fcp = job_inputs["enable_fcp"]
             fun_test.shared_variables["enable_fcp"] = enable_fcp
             if enable_fcp:
-                f1_0_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --dpc-server --all_100g --serial " \
+                f1_0_boot_args = "app=mdt_test,load_mods cc_huid=3 --dpc-server --all_100g --serial " \
                                  "--dpc-uart retimer=0 rdstype=fcp --mgmt --disable-wu-watchdog syslog=3 workload=storage"
-                f1_1_boot_args = "app=load_mods,hw_hsu_test cc_huid=2 --dpc-server --all_100g --serial " \
+                f1_1_boot_args = "app=load_mods cc_huid=2 --dpc-server --all_100g --serial " \
                                  "--dpc-uart retimer=0 rdstype=fcp --mgmt --disable-wu-watchdog syslog=3 " \
                                  "workload=storage"
         else:
@@ -351,8 +351,8 @@ class CryptoCore(FunTestCase):
         self.blt_block_size = 4096
         self.blt_uuid = utils.generate_uuid()
         self.command_timeout = 5
-        self.storage_controller = StorageController(target_ip=come_obj.host_ip, target_port=40220)
-        self.storage_controller_remote = StorageController(target_ip=come_obj.host_ip, target_port=40221)
+        self.storage_controller = StorageController(target_ip=come_obj.host_ip, target_port=42220)
+        self.storage_controller_remote = StorageController(target_ip=come_obj.host_ip, target_port=42221)
         fun_test.shared_variables["storage_controller"] = self.storage_controller
         fun_test.shared_variables["storage_controller_remote"] = self.storage_controller_remote
 
@@ -375,8 +375,8 @@ class CryptoCore(FunTestCase):
             fun_test.log("F11 vlan IP {} is not valid".format(ip))
             fun_test.simple_assert(False, "F11 vlan IP is in wrong format")
 
-        self.storage_controller = StorageController(target_ip=come_obj.host_ip, target_port=40220)
-        self.storage_controller_remote = StorageController(target_ip=come_obj.host_ip, target_port=40221)
+        self.storage_controller = StorageController(target_ip=come_obj.host_ip, target_port=42220)
+        self.storage_controller_remote = StorageController(target_ip=come_obj.host_ip, target_port=42221)
         if not skip_ctrlr_creation:
             # Create IPCFG on F1_0
             command_result = self.storage_controller.ip_cfg(ip=f10_vlan_ip, port=4420)

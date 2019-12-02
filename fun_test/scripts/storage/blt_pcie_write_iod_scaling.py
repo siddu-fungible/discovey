@@ -18,7 +18,7 @@ tb_config = {
     "name": "Basic Storage",
     "dut_info": {
         0: {
-            "bootarg": "app=mdt_test,load_mods,hw_hsu_test --serial --dpc-server --dpc-uart --csr-replay",
+            "bootarg": "app=mdt_test,load_mods --serial --dpc-server --dpc-uart --csr-replay",
             "huid": 3,
             "ctlid": 2,
             "fnid": 2,

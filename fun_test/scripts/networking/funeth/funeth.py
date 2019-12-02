@@ -124,7 +124,7 @@ class Funeth:
             linux_obj.create_directory(self.ws, sudo=False)
 
             # clone FunSDK, host-drivers, FunOS
-            if self.fundrv_branch or self.fundrv_commit:
+            if self.fundrv_branch or self.fundrv_commit or self.funsdk_commit or self.funsdk_commit:
                 linux_obj.command('cd {}; git clone git@github.com:fungible-inc/fungible-host-drivers.git'.format(self.ws),
                                   timeout=300)
                 if self.fundrv_branch:
@@ -139,7 +139,7 @@ class Funeth:
                 ]
                 linux_obj.command(';'.join(cmds))
 
-            if self.funsdk_branch or self.funsdk_commit:
+            if self.fundrv_branch or self.fundrv_commit or self.funsdk_commit or self.funsdk_commit:
                 linux_obj.command('cd {}; git clone git@github.com:fungible-inc/FunSDK-small.git FunSDK'.format(self.ws),
                                   timeout=300)
                 if self.funsdk_branch:
@@ -157,7 +157,7 @@ class Funeth:
                 ]
                 linux_obj.command(';'.join(cmds))
 
-            if self.fundrv_branch or self.fundrv_commit:
+            if self.fundrv_branch or self.fundrv_commit or self.funsdk_commit or self.funsdk_commit:
                 for pkg in ('hci', 'generator-bin'):
                     output = linux_obj.command(
                         'cd {0}; scripts/bob --sdkup {2} -C {1}/FunSDK-cache'.format(sdkdir, self.ws, pkg))
@@ -279,11 +279,13 @@ class Funeth:
 
         result = True
         for hu in self.hu_hosts:
-            self.linux_obj_dict[hu].sudo_command(
-                'cd {0}; insmod fun_core.ko; insmod funeth.ko {1} num_queues={2}'.format(drvdir, " ".join(_modparams), num_queues),
-                timeout=300)
-
-            #fun_test.sleep('Sleep for a while to wait for funeth driver loaded', 5)
+            cmds = [
+                'cd {}'.format(drvdir),
+                'grep -q devlink_register /proc/kallsyms || modprobe devlink',
+                'insmod fun_core.ko',
+                'insmod funeth.ko {}'.format(" ".join(_modparams))
+            ]
+            self.linux_obj_dict[hu].sudo_command(';'.join(cmds), timeout=300)
 
             if cc:
                 pf_intf = 'fpg0'
@@ -337,7 +339,9 @@ class Funeth:
                 )
 
             cmds.extend(
-                ['ifconfig {} {} netmask {}'.format(intf, ipv4_addr, ipv4_netmask),
+                ['sudo ip link set {} down'.format(intf),
+                 'sudo ip link set {} up'.format(intf),
+                 'ifconfig {} {} netmask {}'.format(intf, ipv4_addr, ipv4_netmask),
                  'ifconfig {} up'.format(intf),
                  #'ifconfig {}'.format(intf),
                 ]

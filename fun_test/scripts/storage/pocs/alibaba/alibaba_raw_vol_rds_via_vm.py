@@ -67,9 +67,9 @@ class RawVolumePerfScript(FunTestScript):
         global funcp_obj, servers_mode, servers_list, fs_name
         job_inputs = fun_test.get_job_inputs()
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
-        f1_0_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --dpc-server --all_100g --serial --dpc-uart " \
+        f1_0_boot_args = "app=mdt_test,load_mods cc_huid=3 --dpc-server --all_100g --serial --dpc-uart " \
                          "retimer=0 --mgmt syslog=5 workload=storage"
-        f1_1_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 --dpc-server --all_100g --serial --dpc-uart " \
+        f1_1_boot_args = "app=mdt_test,load_mods cc_huid=2 --dpc-server --all_100g --serial --dpc-uart " \
                          "retimer=0 --mgmt syslog=5 workload=storage"
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
         if not job_inputs:
@@ -97,6 +97,9 @@ class RawVolumePerfScript(FunTestScript):
         topology = topology_helper.deploy()
         fun_test.shared_variables["topology"] = topology
         fun_test.test_assert(topology, "Topology deployed")
+        fs = topology.get_dut_instance(index=0)
+        come_obj = fs.get_come()
+        come_obj.command("/home/fun/mks/restart_docker_service.sh")
 
         # Bringup FunCP
         fun_test.test_assert(expression=funcp_obj.bringup_funcp(prepare_docker=False), message="Bringup FunCP")

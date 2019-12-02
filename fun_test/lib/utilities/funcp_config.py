@@ -1,3 +1,6 @@
+from operator import itemgetter
+
+
 from lib.system.fun_test import *
 from scripts.networking.nu_config_manager import *
 from lib.host.network_controller import *
@@ -25,11 +28,11 @@ class FunControlPlaneBringup:
         self.boot_args_f1_0 = boot_args_f1_0
         self.boot_args_f1_1 = boot_args_f1_1
         if not boot_args_f1_0:
-            self.boot_args_f1_0 = "app=hw_hsu_test cc_huid=3 --all_100g --dpc-server --dpc-uart " \
+            self.boot_args_f1_0 = "app=load_mods cc_huid=3 --all_100g --dpc-server --dpc-uart " \
                                   "--dis-stats --mgmt"
 
         if not boot_args_f1_1:
-            self.boot_args_f1_1 = "app=hw_hsu_test cc_huid=2 --all_100g --dis-stats --dpc-server " \
+            self.boot_args_f1_1 = "app=load_mods cc_huid=2 --all_100g --dis-stats --dpc-server " \
                                   "--dpc-uart --mgmt"
 
         self.fs_spec = fun_test.get_asset_manager().get_fs_by_name(fs_name)
@@ -198,7 +201,12 @@ class FunControlPlaneBringup:
 
             linux_obj_come.command(command="cd /mnt/keep/")
             linux_obj_come.sudo_command(command="cp -r FunSDK FunSDK_bkp_%s" % d1)
+            bkp_dirs = self._get_backup_directory_list(linux_obj_come, '/mnt/keep/FunSDK*')
+            fun_test.log(bkp_dirs)
+            self.delete_backup_directory(linux_obj_come, bkp_dirs)
             linux_obj_come.sudo_command(command="cd / && tar cf scratch_bkp_%s.tar scratch" % d1, timeout=1200)
+            scr_lists = self._get_backup_directory_list(linux_obj_come, '/scratch*')
+            self.delete_backup_directory(linux_obj_come, scr_lists)
             linux_obj_come.sudo_command(command="rm -rf FunSDK")
             git_pull = linux_obj_come.command("git clone git@github.com:fungible-inc/FunSDK-small.git FunSDK",
                                               timeout=120)
@@ -1222,9 +1230,16 @@ class FunControlPlaneBringup:
         except Exception as ex:
             fun_test.critical(str(ex))
         return fs_per_rack
-
-
-
+    def _get_backup_directory_list(self, linux_obj, path):
+        dir_file_list = linux_obj.list_files(path)
+        dir_list = []
+        for x in dir_file_list:
+            dir_list.append(x.get('filename'))
+        return dir_list
+    def delete_backup_directory(self, linux_obj, dir_list):
+        if len(dir_list) > 2:
+            for bkp_dir in dir_list[:-2]:
+                linux_obj.remove_directory(bkp_dir, sudo=True)
 
 
 

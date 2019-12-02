@@ -653,8 +653,15 @@ class SuiteWorker(Thread):
     def run_next(self):
         if not self.initialized:
             self.initialize()
+        suite_execution = self.get_suite_execution()
+        if suite_execution:
+            if suite_execution.state >= JobStatusType.IN_PROGRESS and ((get_current_time() - suite_execution.started_time).total_seconds() > suite_execution.max_run_time):
+                self.abort_suite(error_message="Max run-time exceeded")
+
         if self.suite_shutdown or self.suite_completed:
             return
+
+
 
         script_item = self.script_items[self.current_script_item_index]
 
@@ -904,7 +911,7 @@ def process_external_requests():
             if scheduler_info.state == SchedulerStates.SCHEDULER_STATE_PAUSED:
                 clear_announcements()
                 set_scheduler_state(SchedulerStates.SCHEDULER_STATE_RUNNING)
-                SchedulerDirective.remove(directive.directive)
+            SchedulerDirective.remove(directive.directive)
     pass
 
 @debug_function
@@ -1105,6 +1112,7 @@ if __name__ == "__main__":
         time.sleep(1)
         set_main_loop_heartbeat()
         scheduler_info = get_scheduler_info()
+        process_external_requests()
         if scheduler_info.state == SchedulerStates.SCHEDULER_STATE_STOPPED:
             scheduler_logger.info("Scheduler Bye bye!")
             run = False
@@ -1113,6 +1121,7 @@ if __name__ == "__main__":
         if scheduler_info.state == SchedulerStates.SCHEDULER_STATE_PAUSED:
             scheduler_logger.info("Scheduler is paused")
             time.sleep(1)
+
             continue
 
         try:
@@ -1120,7 +1129,7 @@ if __name__ == "__main__":
             process_container_suites()
             queue_worker.run()
             scheduler_info = get_scheduler_info()
-            process_external_requests()
+
             cleanup_unused_assets()
             join_suite_workers()
             if (scheduler_info.state != SchedulerStates.SCHEDULER_STATE_STOPPING) and \

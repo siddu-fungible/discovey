@@ -1,11 +1,9 @@
 
-<button (click)="selectClick()" class="fun-button-add">{{ singleSelectNode? "Modify " + selectionText + " selection": "Select a " + selectionText }}</button>
-<span class="span-selected" *ngIf="singleSelectNode" style="display: inline-block">Selected file: {{ singleSelectNode.scriptPath }}&nbsp;</span>
+<button *ngIf="!singleSelectNode" (click)="selectClick()" class="fun-button-add">{{ "Select a " + selectionText }}</button>
+<span *ngIf="singleSelectNode" style="display: inline-block"><span class="fun-attribute-label">Selected file:</span> {{ singleSelectNode.scriptPath }}&nbsp;</span>
+&nbsp;<span *ngIf="singleSelectNode" class="fun-action-link" (click)="selectClick()">Modify selection</span>
 
 <table class="table" *ngIf="selectionMode">
-  <tr>
-    <th>Path</th>
-  </tr>
   <tr>
     <td>
       <span *ngIf="!refreshingStatus" (click)="onRefreshFiles()" class="fun-action-link">Refresh files</span>
@@ -14,11 +12,12 @@
   </tr>
   <tr *ngFor="let node of flatNodes">
     <td *ngIf="node.show">
+
       <span [innerHTML]="getIndentHtml(node) | safeHtml">&nbsp;</span>
       <input *ngIf="node.leaf" type="radio" [checked]="singleSelectNode && singleSelectNode.uId === node.uId"
              (click)="singleSelectClick(node)">
-      {{ node.scriptPath }}
-      &nbsp;
+      <i *ngIf="node.childrenIds.size > 0" class="fa fa-folder" style="color: sandybrown"></i>&nbsp;&nbsp;{{ node.scriptPath }}
+
       <span *ngIf="node.childrenIds.size > 0 && !node.expanded" class="pseudo-anchor" (click)="expand(node)"><span
         class="arrow arrow-right"></span></span> &nbsp;
       <span *ngIf="node.childrenIds.size > 0 && node.expanded" class="pseudo-anchor" (click)="collapse(node)"><span

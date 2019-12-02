@@ -1,5 +1,6 @@
 from lib.system.fun_test import *
 from lib.host.linux import Linux
+fun_test.enable_time_series()
 
 class MyScript(FunTestScript):
     def describe(self):
@@ -30,20 +31,28 @@ class FunTestCase1(FunTestCase):
         fun_test.log("Testcase setup")
         fun_test.sleep("demo", seconds=1)
 
+
     def cleanup(self):
         fun_test.log("Testcase cleanup")
 
     def run(self):
+        for i in range(0, 5):
+            fun_test.log("Sleepy log")
+            fun_test.sleep(message="Eh", seconds=1)
 
-        fun_test.add_checkpoint("Some checkpoint")
+
         for i in range(0, 500):
             fun_test.log("Some log")
+            fun_test.add_checkpoint("Some checkpoint {}".format(i))
 
         fun_test.log("Variable shared across test-cases and the script level: {}".format(fun_test.shared_variables["some_variable"]))
 
         l = Linux(host_ip="qa-ubuntu-02", ssh_username="auto_admin", ssh_password="fun123")
         l.command("date")
         fun_test.test_assert_expected(expected=2, actual=2, message="Some message2")
+        fun_test.log(
+            message="Some log AAA for context: {} start.jkhjkhjkhjkhjkhjkhjjhkkjhkkjhjkhjkhjkhjkhjkhjkhjkhjkhjkhjkhjkhjkhkjjkhjkhkjhjkhkjkhjkhjkhjkhkjhjkhkjhkjhkj end")
+
 
 
 class FunTestCase3(FunTestCase):
@@ -124,13 +133,13 @@ class FunTestCase4(FunTestCase):
         for context in range(3):
             new_context = fun_test.add_context(description="Context_{}".format(context))
             for i in range(0, 500):
-                fun_test.log(message="Some log {} for context: {}".format(i, new_context.get_id()), context=new_context)
+                fun_test.log(message="Some log {} for context: {} start.jkhjkhjkhjkhjkhjkhjkhjkhjkhjkhkjhjkhkjhkjhkj end".format(i, new_context.get_id()), context=new_context)
 
 if __name__ == "__main__":
     myscript = MyScript()
     myscript.add_test_case(FunTestCase1())
     # myscript.add_test_case(FunTestCase2())
     # myscript.add_test_case(FunTestCase3())
-    # myscript.add_test_case(FunTestCase4())
+    myscript.add_test_case(FunTestCase4())
 
     myscript.run()

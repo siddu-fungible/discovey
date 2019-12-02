@@ -193,7 +193,7 @@
               </ng-container>
 
               <jira-info  [ngClass]='{hidden: !scriptInfo.value.showingDetails}'
-                         [apiUrl]="'/regression/jiras/' + scriptPathToPk(scriptInfo.key)"
+                         [apiUrl]="'/regression/jiras/' + scriptPathToId(scriptInfo.key)"
                          (numBugs)="updateNumBugs($event, scriptInfo.value)"
                          (numResolved)="updateNumBugsResolved($event, scriptInfo.value)"
                          (numActive)="updateNumBugsActive($event, scriptInfo.value)">

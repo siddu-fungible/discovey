@@ -82,9 +82,9 @@ class BootF1(FunTestCase):
 
     def run(self):
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
-        f1_0_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --dpc-server --all_100g --serial --dpc-uart " \
+        f1_0_boot_args = "app=mdt_test,load_mods cc_huid=3 --dpc-server --all_100g --serial --dpc-uart " \
                          "retimer=0,1 --mgmt --disable-wu-watchdog syslog=6 workload=storage"
-        f1_1_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 --dpc-server --all_100g --serial --dpc-uart " \
+        f1_1_boot_args = "app=mdt_test,load_mods cc_huid=2 --dpc-server --all_100g --serial --dpc-uart " \
                          "retimer=0,1 --mgmt --disable-wu-watchdog syslog=6 workload=storage"
 
         topology_helper = TopologyHelper()
@@ -205,7 +205,7 @@ class PingTest(FunTestCase):
         print("F1_0 DPC Stats")
         print("================================\n")
         network_controller_obj = NetworkController(dpc_server_ip=fs_spec['come']['mgmt_ip'],
-                                                   dpc_server_port=40220)
+                                                   dpc_server_port=42220)
         network_controller_obj.peek_fpg_port_stats(port_num=0)
         network_controller_obj.peek_fpg_port_stats(port_num=4)
         network_controller_obj.port_link_status()
@@ -215,7 +215,7 @@ class PingTest(FunTestCase):
         print("================================\n")
 
         network_controller_obj = NetworkController(dpc_server_ip=fs_spec['come']['mgmt_ip'],
-                                                   dpc_server_port=40221)
+                                                   dpc_server_port=42221)
         network_controller_obj.peek_fpg_port_stats(port_num=0)
         network_controller_obj.peek_fpg_port_stats(port_num=4)
         network_controller_obj.port_link_status()

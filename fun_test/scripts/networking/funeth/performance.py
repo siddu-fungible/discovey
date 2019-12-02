@@ -18,10 +18,10 @@ if inputs:
 else:
     debug_mode = False
 
-if debug_mode:
-    RESULT_FILE = FUN_TEST_DIR + '/web/static/logs/hu_funeth_performance_data2.json'
-else:
-    RESULT_FILE = FUN_TEST_DIR + '/web/static/logs/hu_funeth_performance_data.json'
+#if debug_mode:
+#    RESULT_FILE = FUN_TEST_DIR + '/web/static/logs/hu_funeth_performance_data2.json'
+#else:
+#    RESULT_FILE = FUN_TEST_DIR + '/web/static/logs/hu_funeth_performance_data.json'
 
 TIMESTAMP = get_data_collection_time()
 
@@ -84,7 +84,7 @@ class FunethPerformance(sanity.FunethSanity):
         driver_bld =  super(FunethPerformance, self).__getattribute__('driver_bld')
         come_linux_obj = super(FunethPerformance, self).__getattribute__('come_linux_obj')
         funeth_obj = super(FunethPerformance, self).__getattribute__('funeth_obj')
-        if sanity.csi_perf_enabled:
+        if sanity.csi_perf_enabled or sanity.csi_cache_miss_enabled:
             csi_perf_obj = super(FunethPerformance, self).__getattribute__('csi_perf_obj')
         else:
             csi_perf_obj = None
@@ -404,13 +404,13 @@ class FunethPerformanceBase(FunTestCase):
         )
         fun_test.log('Final Results:\n{}'.format(pprint.pformat(result)))
 
-        # Update file with result
-        with open(RESULT_FILE) as f:
-            r = json.load(f)
-            r.append(result)
-
-        with open(RESULT_FILE, 'w') as f:
-            json.dump(r, f, indent=4, separators=(',', ': '), sort_keys=True)
+        ## Update file with result
+        #with open(RESULT_FILE) as f:
+        #    r = json.load(f)
+        #    r.append(result)
+        #
+        #with open(RESULT_FILE, 'w') as f:
+        #    json.dump(r, f, indent=4, separators=(',', ': '), sort_keys=True)
 
         fun_test.shared_variables['results'].append(result)
         tc_ids.append(fun_test.current_test_case_id)

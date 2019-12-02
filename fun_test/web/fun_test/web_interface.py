@@ -1,5 +1,5 @@
 from fun_settings import WEB_SERVER_PORT, REGRESSION_SERVER_DOMAIN_NAME
-from fun_global import is_lite_mode, is_production_mode
+from fun_global import is_lite_mode, is_production_mode, Codes
 import socket
 from web.fun_test.models import SiteConfig
 
@@ -43,4 +43,6 @@ def clear_announcements():
         site_config = SiteConfig.objects.first()
         site_config.announcement = ""
         site_config.save()
+
+
 

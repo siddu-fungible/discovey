@@ -1,7 +1,7 @@
 {
   "GlobalSetup": {
-    "bootargs": ["app=mdt_test,load_mods,hw_hsu_test workload=storage cc_huid=3 --serial --disable-wu-watchdog --dpc-server --dpc-uart --mgmt --all_100g --nofreeze",
-                 "app=mdt_test,load_mods,hw_hsu_test workload=storage cc_huid=2 --serial --disable-wu-watchdog --dpc-server --dpc-uart --mgmt --all_100g --nofreeze"],
+    "bootargs": ["app=mdt_test,load_mods workload=storage cc_huid=3 --serial --disable-wu-watchdog --dpc-server --dpc-uart --mgmt --all_100g --nofreeze",
+                 "app=mdt_test,load_mods workload=storage cc_huid=2 --serial --disable-wu-watchdog --dpc-server --dpc-uart --mgmt --all_100g --nofreeze"],
     "dut_start_index": 0,
     "host_start_index": 0,
     "update_workspace": false,
@@ -17,7 +17,15 @@
     "reboot_timeout": 600,
     "nvme_device": "/dev/nvme0",
     "ethernet_adapter": "Mellanox",
-    "override_numa_node": {"override": true, "override_node": "NUMA node0 CPU(s)"}
+    "override_numa_node": {"override": true, "override_node": "NUMA node0 CPU(s)"},
+    "api_server_port": 50220,
+    "api_server_username": "admin",
+    "api_server_password": "password",
+    "install": "fresh",
+    "sc_db_directories": ["/var/opt/fungible/elasticsearch", "/var/opt/fungible/cassandra"],
+    "sc_script_dir": "/opt/fungible/StorageController/etc",
+    "run_sc_script": "start_sc.sh",
+    "container_up_timeout": 60
   },
   "RandReadStripe": {
     "syslog": 2,

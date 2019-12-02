@@ -16,7 +16,6 @@ import {SelectMode} from "../../performance.service";
   styleUrls: ['./performance-view-workspace.component.css']
 })
 export class PerformanceViewWorkspaceComponent implements OnInit {
-  buildInfo: any = null;
   workspaceName: string = null;
   email: string = null;
   workspace: any = null;
@@ -36,7 +35,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
   showDag: boolean = false;
   selectMode: any = SelectMode;
   allMetricIds: number[] = [];
-  interestedMetrics: number[] = [];
+  interestedMetrics: any[] = [];
   SUBJECT_BASE_STRING: string = "Performance status report - ";
   TIMEZONE: string = "America/Los_Angeles";
   flattenedInterestedMetrics: any = [];
@@ -72,13 +71,9 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
             return of(true);
           }),
           switchMap(response => {
-            return this.performanceService.fetchBuildInfo();
-          }),
-          switchMap(response => {
-            this.buildInfo = response;
             return this.performanceService.metricCharts(null, this.workspace.id);
           }),).subscribe(response => {
-          console.log("fetched workspace and buildInfo from URL");
+          console.log("fetched workspace from URL");
           this.setMetricIds(response);
         }, error => {
           this.loggerService.error("Unable to initialize workspace");
@@ -118,7 +113,10 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
     }
     this.interestedMetrics = [];
     for (let metric of this.workspace.interested_metrics) {
-      this.interestedMetrics.push(metric["metric_id"]);
+      let perfMetrics = {};
+      perfMetrics["metric_id"] = metric["metric_id"];
+      perfMetrics["lineage"] = metric["lineage"];
+      this.interestedMetrics.push(perfMetrics);
     }
     this.allMetricIds = this.interestedMetrics.concat(this.workspaceMetrics);
     this.showWorkspace = true;

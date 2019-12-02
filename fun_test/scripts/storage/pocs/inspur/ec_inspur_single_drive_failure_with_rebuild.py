@@ -137,6 +137,9 @@ class ECVolumeLevelScript(FunTestScript):
 
         if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
                 self.testbed_config["workarounds"]["enable_funcp"]:
+            self.tftp_image_path = fun_test.get_job_environment_variable("tftp_image_path")
+            self.bundle_image_parameters = fun_test.get_job_environment_variable("bundle_image_parameters")
+
             for i in range(len(self.bootargs)):
                 self.bootargs[i] += " --mgmt"
                 if self.disable_wu_watchdog:
@@ -211,15 +214,61 @@ class ECVolumeLevelScript(FunTestScript):
             # Bringing up of FunCP docker container if it is needed
             self.funcp_obj = {}
             self.funcp_spec = {}
+            run_sc_restart_status = False
+            # Removing existing db directories for fresh setup
+            try:
+                if self.install == "fresh":
+                    if self.bundle_image_parameters:
+                        path = "{}/{}".format(self.sc_script_dir, self.run_sc_script)
+                        if self.come_obj[index].check_file_directory_exists(path=path):
+                            self.come_obj[index].command("cd {}".format(self.sc_script_dir))
+                            # restarting run_sc with -c option
+                            self.come_obj[index].command("sudo ./{} -c restart".format(self.run_sc_script))
+                            fun_test.test_assert_expected(expected=0, actual=self.come_obj[index].exit_status(),
+                                                          message="run_sc restarted with cleanup")
+                            # check if run_sc container is running
+                            run_sc_restart_cmd = "docker ps -a --format '{{.Names}}' | grep run_sc"
+                            timer = FunTimer(max_time=self.container_up_timeout)
+                            while not timer.is_expired():
+                                run_sc_name = self.come_obj[index].command(
+                                    run_sc_restart_cmd, timeout=self.command_timeout).split("\n")[0]
+                                if run_sc_name:
+                                    fun_test.log("run_sc container is up and running")
+                                    run_sc_restart_status = True
+                                    break
+                                else:
+                                    fun_test.sleep("for the run_sc docker container to start", 1)
+                            else:
+                                fun_test.critical("run_sc container is not restarted within {} seconds after "
+                                                  "cleaning up the DB".format(self.container_up_timeout))
+                                fun_test.test_assert(False, "Cleaning DB and restarting run_sc container")
+                    else:
+                        for directory in self.sc_db_directories:
+                            if self.come_obj[index].check_file_directory_exists(path=directory):
+                                fun_test.log("Removing Directory {}".format(directory))
+                                self.come_obj[index].sudo_command("rm -rf {}".format(directory))
+                                fun_test.test_assert_expected(actual=self.come_obj[index].exit_status(), expected=0,
+                                                              message="Directory {} is removed".format(directory))
+                            else:
+                                fun_test.log("Directory {} does not exist skipping deletion".format(directory))
+                else:
+                    fun_test.log("Skipping run_sc restart with cleanup")
+            except Exception as ex:
+                fun_test.critical(str(ex))
             for index in xrange(self.num_duts):
                 self.funcp_obj[index] = StorageFsTemplate(self.come_obj[index])
-                self.funcp_spec[index] = self.funcp_obj[index].deploy_funcp_container(
-                    update_deploy_script=self.update_deploy_script, update_workspace=self.update_workspace,
-                    mode=self.funcp_mode)
-                fun_test.test_assert(self.funcp_spec[index]["status"],
-                                     "Starting FunCP docker container in DUT {}".format(index))
+                if self.tftp_image_path:
+                    self.funcp_spec[index] = self.funcp_obj[index].deploy_funcp_container(
+                        update_deploy_script=self.update_deploy_script, update_workspace=self.update_workspace,
+                        mode=self.funcp_mode)
+                    fun_test.test_assert(self.funcp_spec[index]["status"],
+                                         "Starting FunCP docker container in DUT {}".format(index))
+                else:
+                    self.funcp_spec[index] = self.funcp_obj[index].get_container_objs()
                 self.funcp_spec[index]["container_names"].sort()
                 for f1_index, container_name in enumerate(self.funcp_spec[index]["container_names"]):
+                    if container_name == "run_sc":
+                        continue
                     bond_interfaces = self.fs_spec[index].get_bond_interfaces(f1_index=f1_index)
                     bond_name = "bond0"
                     bond_ip = bond_interfaces[0].ip
@@ -279,6 +328,13 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.shared_variables["testbed_config"] = self.testbed_config
 
     def cleanup(self):
+        if self.bundle_image_parameters:
+            try:
+                for index in xrange(self.num_duts):
+                    self.come_obj[index].command("sudo systemctl disable init-fs1600")
+            except Exception as ex:
+                fun_test.critical(str(ex))
+
         come_reboot = False
         if fun_test.shared_variables["ec"]["setup_created"]:
             if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
@@ -405,6 +461,8 @@ class ECVolumeLevelTestcase(FunTestCase):
             self.ec_info["num_volumes"] = job_inputs["num_volumes"]
         if "vol_size" in job_inputs:
             self.ec_info["capacity"] = job_inputs["vol_size"]
+            if self.test_file_size > int(self.ec_info["capacity"] / 2):
+                self.test_file_size = int(self.ec_info["capacity"] / 2)
         if "post_results" in job_inputs:
             self.post_results = job_inputs["post_results"]
         else:
@@ -954,7 +1012,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                         device_props_tree = "{}/{}/{}/{}/{}".format("storage", "devices", "nvme", "ssds", fail_device)
                         device_stats = self.storage_controller.peek(device_props_tree)
                         fun_test.simple_assert(device_stats["status"], "Device {} stats command".format(fail_device))
-                        fun_test.test_assert_expected(expected="DEV_FAILED_ERR_INJECT",
+                        fun_test.test_assert_expected(expected="DEV_ERR_INJECT_ENABLED",
                                                       actual=device_stats["data"]["device state"],
                                                       message="Device ID {} is marked as Failed".format(fail_device))
                         ''' Marking drive as failed '''

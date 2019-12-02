@@ -33,6 +33,7 @@ from web.fun_test.analytics_models_helper import MetricChartHelper, BltVolumePer
 from web.fun_test.metrics_models import MetricChartStatus, TeraMarkJpegPerformance
 from web.fun_test.metrics_models import LastMetricId, MileStoneMarkers, BltVolumePerformance
 from web.fun_test.metrics_lib import MetricLib
+from collections import OrderedDict
 
 
 class MetricHelper(object):
@@ -3061,7 +3062,13 @@ def set_internal_name(metrics):
         if "children" in metrics:
             for child in metrics["children"]:
                 set_internal_name(child)
-    return metrics
+    new_metrics = OrderedDict()
+    new_metrics["metric_model_name"] = metrics["metric_model_name"]
+    new_metrics["name"] = metrics["name"]
+    new_metrics["label"] = metrics["label"]
+    if "children" in metrics and len(metrics["children"]) > 0:
+        new_metrics["children"] = metrics["children"]
+    return new_metrics
 
 
 if __name__ == "__main_S1__":

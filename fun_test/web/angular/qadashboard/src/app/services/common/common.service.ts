@@ -1,5 +1,7 @@
 import {Injectable} from '@angular/core';
-import {Observable} from "rxjs";
+import {Observable, of} from "rxjs";
+import {switchMap} from "rxjs/operators";
+import {ActivatedRoute} from "@angular/router";
 
 @Injectable({
   providedIn: 'root'
@@ -8,14 +10,19 @@ export class CommonService {
   newAlert: boolean = false;
   announcementAvailable: boolean = false;
 
-  constructor() {
+  constructor(private route: ActivatedRoute) {
 
   }
 
   scrollTo(elementId) {
     let element = document.getElementById(elementId);
+    if (element) {
+      element.scrollIntoView({behavior: "smooth", block: "center", inline: "nearest"});
+    } else {
+      console.error(`Trying to scroll to: ${elementId} But element was not found`);
+    }
     //window.scrollTo({left: 0, top: 80, behavior: "smooth"});
-    element.scrollIntoView({behavior: "smooth", block: "center", inline: "nearest"});
+
 
   }
 
@@ -71,6 +78,12 @@ export class CommonService {
   convertDateToEpoch(dateTimeObj): Date {
     let epochValue = dateTimeObj.getTime();
     return epochValue;
+  }
+
+  getShortDateFromEpoch(epoch, timezone): string {
+    let pstDate = this.convertEpochToDate(epoch, timezone);
+    let dateString = this.addLeadingZeroesToDate(pstDate);
+    return dateString.substring(0, 5);
   }
 
   isSameDay(d1, d2) {
@@ -169,6 +182,28 @@ export class CommonService {
 
     }
     return queryParamString;
+  }
+
+  milliSecondsElapsedToDays(milliSeconds: number) {
+    let diffDays = Math.floor(milliSeconds / 86400000); // days
+    let diffHrs = Math.floor((milliSeconds % 86400000) / 3600000); // hours
+    let diffMins = Math.round(((milliSeconds % 86400000) % 3600000) / 60000); // minutes
+    let s = "";
+    if (diffDays) {
+      s = `${diffDays} days `;
+    }
+    if (diffHrs > 0) {
+      s += `${diffHrs} hours `;
+    }
+    s += `${diffMins} mins`;
+
+    return s;
+  }
+
+  getRouterQueryParam() {
+    return this.route.queryParams.pipe(switchMap(params => {
+      return of(params);
+    }))
   }
 
 }

@@ -170,6 +170,7 @@ def submit_job(request):
         description = request_json.get("description", None)
 
         rich_inputs = request_json.get("rich_inputs", None)
+        max_run_time = request_json.get("max_run_time", 7 * 24 * 3600)
 
         # if suite_path:
         if suite_id:
@@ -190,7 +191,8 @@ def submit_job(request):
                                 inputs=inputs,
                                 description=description,
                                 suite_type=suite_type,
-                                rich_inputs=rich_inputs)
+                                rich_inputs=rich_inputs,
+                                max_run_time=max_run_time)
         elif script_pk:
             script_path = RegresssionScripts.objects.get(pk=script_pk).script_path
             job_id = queue_job3(script_path=script_path,
@@ -210,7 +212,8 @@ def submit_job(request):
                                 inputs=inputs,
                                 description=description,
                                 suite_type=suite_type,
-                                rich_inputs=rich_inputs)
+                                rich_inputs=rich_inputs,
+                                max_run_time=max_run_time)
         elif dynamic_suite_spec:
             job_id = queue_dynamic_suite(dynamic_suite_spec=dynamic_suite_spec,
                                          emails=emails,
@@ -219,7 +222,8 @@ def submit_job(request):
                                          test_bed_type=test_bed_type,
                                          original_suite_execution_id=original_suite_execution_id,
                                          build_url=build_url,
-                                         submitter_email=submitter_email)
+                                         submitter_email=submitter_email,
+                                         max_run_time=max_run_time)
     if job_id > 0 and submitter_email:
         submitter_user_name = ""
         try:
@@ -731,7 +735,10 @@ def scripts(request):
                      "pk": regression_script.pk,
                      "bugs": [],
                      "test_cases": get_all_test_cases(regression_script.script_path),
+                     "id": regression_script.id,
                      "baseline_suite_execution_id": regression_script.baseline_suite_execution_id}
+        if "__init__.py" in regression_script.script_path:
+            continue
         script_infos = ScriptInfo.objects.filter(script_id=regression_script.pk)
         for script_info in script_infos:
             new_entry["bugs"].append(script_info.bug)
@@ -779,17 +786,17 @@ def script(request):
 
 @csrf_exempt
 @api_safe_json_response
-def script_update(request, pk):
+def script_update(request, id):
     result = None
     request_json = json.loads(request.body)
-    q = Q(pk=pk)
+    q = Q(id=id)
     script = RegresssionScripts.objects.get(q)
     if script:
         if "baseline_suite_execution_id" in request_json:
             script.baseline_suite_execution_id = request_json["baseline_suite_execution_id"]
         script.save()
     else:
-        logging.error("Could not find script with pk: {}".format(pk))
+        logging.error("Could not find script with id: {}".format(id))
 
     return result
 
@@ -953,11 +960,11 @@ def test_case_execution_info(request, test_case_execution_id):
 
 @csrf_exempt
 @api_safe_json_response
-def script_execution(request, pk):
+def script_execution(request, id):
     result = None
     try:
         request_json = json.loads(request.body)
-        r = RegresssionScripts.objects.get(pk=pk)
+        r = RegresssionScripts.objects.get(id=id)
         script_path = r.script_path
         q = Q(script_path=script_path)
         if "suite_execution_id" in request_json:
@@ -969,7 +976,7 @@ def script_execution(request, pk):
             result[test_case_execution.test_case_id] = {"execution_id": test_case_execution.execution_id,
                                                         "result": test_case_execution.result}
     except ObjectDoesNotExist:
-        raise Exception("Script with pk: {} does not exist".format(pk))
+        raise Exception("Script with id: {} does not exist".format(id))
     return result
 
 @csrf_exempt
@@ -1036,7 +1043,7 @@ def git(request):
             command = request_json["command"]
             result = {"pull": None}
             if command == "pull":
-                result["pull"] = subprocess.check_output("git pull", shell=True)
+                result["pull"] = subprocess.check_output("git pull &> /tmp/git.log", shell=True)
             if command == "logs":
                 output = subprocess.check_output("git log -n 10", shell=True)
                 result["logs"] = output

@@ -113,6 +113,7 @@ export class PerformanceShowReportWorkspaceComponent implements OnInit {
     for (let dataSet of dataSets) {
       let temp = {};
       temp["name"] = dataSet["name"];
+      temp["best"] = dataSet["output"]["best"];
       temp["today"] = null;
       temp["yesterday"] = null;
       temp["unit"] = null;
@@ -153,19 +154,34 @@ export class PerformanceShowReportWorkspaceComponent implements OnInit {
       }));
   }
 
+  toggleHistory(dataSet): void {
+    dataSet.show_history = !dataSet.show_history;
+  }
+
   calculatePercentage(dataSets): void {
     for (let dataSet of dataSets) {
       let percentage = "NA";
+      let bestPercentage = "NA";
       if (dataSet["today"] && dataSet["yesterday"]) {
         let today = Number(dataSet["today"]);
         let yesterday = Number(dataSet["yesterday"]);
         let percentNum = (((today - yesterday) / yesterday) * 100);
         percentage = percentNum.toFixed(2) + "%";
         if (percentNum >= 0) {
-          percentage = "+" + percentNum.toFixed(2) + "%";
+          percentage = "+" + percentage;
+        }
+      }
+      if (dataSet["today"] && dataSet["best"] && dataSet["best"] != -1) {
+        let today = Number(dataSet["today"]);
+        let best = Number(dataSet["best"]);
+        let percentNum = (((today - best) / best) * 100);
+        bestPercentage = percentNum.toFixed(2) + "%";
+        if (percentNum >= 0) {
+          bestPercentage = "+" + bestPercentage;
         }
       }
       dataSet["percentage"] = percentage;
+      dataSet["best_percentage"] = bestPercentage;
     }
   }
 

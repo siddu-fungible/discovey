@@ -4,6 +4,7 @@ from scripts.networking.funcp.helper import *
 from scripts.networking.funeth.sanity import Funeth
 from lib.topology.topology_helper import TopologyHelper
 from lib.templates.networking.rdma_tools import Rocetools
+from asset.asset_manager import *
 
 
 class ScriptSetup(FunTestScript):
@@ -25,15 +26,6 @@ class ScriptSetup(FunTestScript):
             f10_hosts[x]["handle"].disconnect()
         for x in xrange(0, f11_host_count):
             f11_hosts[x]["handle"].disconnect()
-
-        # Check if funeth is loaded or else bail out
-        # for obj in host_obj:
-        #     host_obj[obj][0].sudo_command("rmmod funrdma")
-        # fun_test.log("Unload funrdma drivers")
-        # pass
-        # funcp_obj.cleanup_funcp()
-        # for server in servers_mode:
-        #     critical_log(expression=rmmod_funeth_host(hostname=server), message="rmmod funeth on host")
 
 
 class BringupSetup(FunTestCase):
@@ -71,10 +63,10 @@ class BringupSetup(FunTestCase):
         else:
             f11_retimer = 0
 
-        f1_0_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --dpc-server --all_100g --serial --dpc-uart " \
-                         "retimer={} --mgmt syslog=2".format(f10_retimer)
-        f1_1_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 --dpc-server --all_100g --serial --dpc-uart " \
-                         "retimer={} --mgmt syslog=2".format(f11_retimer)
+        f1_0_boot_args = "app=mdt_test,load_mods cc_huid=3 --dpc-server --all_100g --serial --dpc-uart " \
+                         "retimer={} --mgmt".format(f10_retimer)
+        f1_1_boot_args = "app=mdt_test,load_mods cc_huid=2 --dpc-server --all_100g --serial --dpc-uart " \
+                         "retimer={} --mgmt".format(f11_retimer)
 
         topology_helper = TopologyHelper()
         if "deploy_setup" in job_inputs:
@@ -84,8 +76,12 @@ class BringupSetup(FunTestCase):
             deploy_setup = True
             fun_test.shared_variables["deploy_setup"] = deploy_setup
         if "quick_sanity" in job_inputs:
-            quick_sanity = job_inputs["quick_sanity"]
-            fun_test.shared_variables["quick_sanity"] = quick_sanity
+            if job_inputs["quick_sanity"]:
+                fun_test.shared_variables["test_count"] = 30
+            else:
+                fun_test.shared_variables["test_count"] = 200
+        else:
+            fun_test.shared_variables["test_count"] = 200
         ib_bw_tests = []
         if "test_type" in job_inputs:
             ib_bw_tests.append(job_inputs["test_type"])
@@ -99,14 +95,41 @@ class BringupSetup(FunTestCase):
         else:
             enable_fcp = False
             fun_test.shared_variables["enable_fcp"] = enable_fcp
-        if "check_scale" in job_inputs:
-            fun_test.shared_variables["check_scale"] = job_inputs["check_scale"]
-        else:
-            fun_test.shared_variables["check_scale"] = False
         if "qp_list" in job_inputs:
             fun_test.shared_variables["qp_list"] = job_inputs["qp_list"]
         else:
-            fun_test.shared_variables["qp_list"] = [64]
+            fun_test.shared_variables["qp_list"] = [512]
+        if "fundrv_branch" in job_inputs:
+            fun_test.shared_variables["fundrv_branch"] = job_inputs["fundrv_branch"]
+        else:
+            fun_test.shared_variables["fundrv_branch"] = None
+        if "fundrv_commit" in job_inputs:
+            fun_test.shared_variables["fundrv_commit"] = job_inputs["fundrv_commit"]
+        else:
+            fun_test.shared_variables["fundrv_commit"] = None
+        if "rdmacore_branch" in job_inputs:
+            fun_test.shared_variables["rdmacore_branch"] = job_inputs["rdmacore_branch"]
+        else:
+            fun_test.shared_variables["rdmacore_branch"] = None
+        if "rdmacore_commit" in job_inputs:
+            fun_test.shared_variables["rdmacore_commit"] = job_inputs["rdmacore_commit"]
+        else:
+            fun_test.shared_variables["rdmacore_commit"] = None
+        if "perftest_branch" in job_inputs:
+            fun_test.shared_variables["perftest_branch"] = job_inputs["perftest_branch"]
+        else:
+            fun_test.shared_variables["perftest_branch"] = None
+        if "perftest_commit" in job_inputs:
+            fun_test.shared_variables["perftest_commit"] = job_inputs["perftest_commit"]
+        else:
+            fun_test.shared_variables["perftest_commit"] = None
+        if "ping_debug" in job_inputs:
+            if job_inputs["ping_debug"] == 0:
+                fun_test.shared_variables["ping_debug"] = False
+            else:
+                fun_test.shared_variables["ping_debug"] = True
+        else:
+            fun_test.shared_variables["ping_debug"] = True
 
         if deploy_setup:
             funcp_obj = FunControlPlaneBringup(fs_name=self.server_key["fs"][fs_name]["fs-name"])
@@ -125,9 +148,15 @@ class BringupSetup(FunTestCase):
             fun_test.shared_variables["topology"] = topology
             fun_test.test_assert(topology, "Topology deployed")
             fs = topology.get_dut_instance(index=0)
+            f10_instance = fs.get_f1(index=0)
+            f11_instance = fs.get_f1(index=1)
+            fun_test.shared_variables["f10_storage_controller"] = f10_instance.get_dpc_storage_controller()
+            fun_test.shared_variables["f11_storage_controller"] = f11_instance.get_dpc_storage_controller()
             come_obj = fs.get_come()
             come_obj.sudo_command("netplan apply")
             come_obj.sudo_command("dmesg -c > /dev/null")
+            if "fs-45" in fs_name:
+                come_obj.command("/home/fun/mks/restart_docker_service.sh")
 
             fun_test.log("Getting host details")
             host_dict = {"f1_0": [], "f1_1": []}
@@ -155,7 +184,6 @@ class BringupSetup(FunTestCase):
                 if result == "2":
                     fun_test.add_checkpoint("<b><font color='red'><PCIE link did not come up in %s mode</font></b>"
                                             % servers_mode[server])
-
             # Bringup FunCP
             fun_test.test_assert(expression=funcp_obj.bringup_funcp(prepare_docker=False), message="Bringup FunCP")
             # Assign MPG IPs from dhcp
@@ -163,6 +191,21 @@ class BringupSetup(FunTestCase):
                                      f1_1_mpg=self.server_key["fs"][fs_name]["mpg_ips"]["mpg1"],
                                      f1_0_mpg=self.server_key["fs"][fs_name]["mpg_ips"]["mpg0"])
         else:
+            # Get COMe object
+            am = AssetManager()
+            th = TopologyHelper(spec=am.get_test_bed_spec(name=fs_name))
+            topology = th.get_expanded_topology()
+            dut = topology.get_dut(index=0)
+            dut_name = dut.get_name()
+            fs_spec = fun_test.get_asset_manager().get_fs_by_name(name=dut_name)
+            fs_obj = Fs.get(fs_spec=fs_spec, already_deployed=True)
+            come_obj = fs_obj.get_come()
+            f10_instance = fs_obj.get_f1(index=0)
+            f11_instance = fs_obj.get_f1(index=1)
+            fun_test.shared_variables["f10_storage_controller"] = f10_instance.get_dpc_storage_controller()
+            fun_test.shared_variables["f11_storage_controller"] = f11_instance.get_dpc_storage_controller()
+            fun_test.shared_variables["come_obj"] = come_obj
+
             fun_test.log("Getting host info")
             host_dict = {"f1_0": [], "f1_1": []}
             temp_host_list = []
@@ -252,7 +295,8 @@ class NicEmulation(FunTestCase):
 
             # install drivers on PCIE connected servers
             tb_config_obj = tb_configs.TBConfigs(str(fs_name))
-            funeth_obj = Funeth(tb_config_obj)
+            funeth_obj = Funeth(tb_config_obj, fundrv_branch=fun_test.shared_variables["fundrv_branch"],
+                                fundrv_commit=fun_test.shared_variables["fundrv_commit"])
             fun_test.shared_variables['funeth_obj'] = funeth_obj
             setup_hu_host(funeth_obj, update_driver=True, sriov=4, num_queues=1)
 
@@ -269,33 +313,10 @@ class NicEmulation(FunTestCase):
             for host in ping_dict:
                 test_host_pings(host=host, ips=ping_dict[host], strict=False)
 
-        # Update RDMA Core & perftest on hosts
-        bg_proc_id = {}
-        for obj in host_objs:
-            if obj == "f1_0":
-                host_count = fun_test.shared_variables["host_len_f10"]
-                bg_proc_id[obj] = []
-            elif obj == "f1_1":
-                host_count = fun_test.shared_variables["host_len_f11"]
-                bg_proc_id[obj] = []
-            for x in xrange(0, host_count):
-                update_path = host_objs[obj][x].command("echo $HOME")
-                update_script = update_path.strip() + "/mks/update_rdma.sh"
-                print update_script
-                bg_proc_id[obj].append(host_objs[obj][x].
-                                       start_bg_process("{} build build".format(update_script),
-                                                        timeout=1200))
-        # fun_test.sleep("Building rdma_perf & core", seconds=120)
-        for obj in host_objs:
-            if obj == "f1_0":
-                host_count = fun_test.shared_variables["host_len_f10"]
-            elif obj == "f1_1":
-                host_count = fun_test.shared_variables["host_len_f11"]
-            for x in xrange(0, host_count):
-                for pid in bg_proc_id[obj]:
-                    while host_objs[obj][x].process_exists(process_id=pid):
-                        fun_test.sleep(message="Still building RDMA repo...", seconds=5)
-                host_objs[obj][x].disconnect()
+            # Clear dmesg on hosts before starting test
+            for objs in host_objs:
+                for handle in host_objs[objs]:
+                    handle.sudo_command("dmesg -c > /dev/null")
 
         # Create a dict containing F1_0 & F1_1 details
         f10_hosts = []
@@ -328,6 +349,16 @@ class NicEmulation(FunTestCase):
         fun_test.shared_variables["f10_host_roce"] = f10_host_roce
         fun_test.shared_variables["f11_host_roce"] = f11_host_roce
 
+        f10_host_roce.build_rdma_repo(rdmacore_branch=fun_test.shared_variables["rdmacore_branch"],
+                                      rdmacore_commit=fun_test.shared_variables["rdmacore_commit"],
+                                      perftest_branch=fun_test.shared_variables["perftest_branch"],
+                                      perftest_commit=fun_test.shared_variables["perftest_commit"])
+        f11_host_roce.build_rdma_repo(rdmacore_branch=fun_test.shared_variables["rdmacore_branch"],
+                                      rdmacore_commit=fun_test.shared_variables["rdmacore_commit"],
+                                      perftest_branch=fun_test.shared_variables["perftest_branch"],
+                                      perftest_commit=fun_test.shared_variables["perftest_commit"])
+        fun_test.log("Config done")
+
     def cleanup(self):
         pass
 
@@ -356,6 +387,8 @@ class SrpingLoopBack(FunTestCase):
 
         f10_host_roce = fun_test.shared_variables["f10_host_roce"]
         f11_host_roce = fun_test.shared_variables["f11_host_roce"]
+        test_count = fun_test.shared_variables["test_count"]
+        tool_debug = fun_test.shared_variables["ping_debug"]
 
         # Load RDMA modules
         f10_host_roce.rdma_setup()
@@ -383,14 +416,16 @@ class SrpingLoopBack(FunTestCase):
                     io_list.append(size)
                 size = size * 2
 
+        fun_test.log("Running tests for size {}".format(io_list))
+
         for size in io_list:
-            f10_host_server = f10_host_roce.srping_test(size=size, count=10, debug=True, timeout=15)
+            f10_host_server = f10_host_roce.srping_test(size=size, count=test_count, debug=tool_debug, timeout=120)
             fun_test.sleep("Started srping server for size {}".format(size), seconds=1)
-            f10_host_client = f10_host_roce.srping_test(size=size, count=10, debug=True,
-                                                        server_ip=f10_hosts[0]["ipaddr"], timeout=15)
+            f10_host_client = f10_host_roce.srping_test(size=size, count=test_count, debug=tool_debug,
+                                                        server_ip=f10_hosts[0]["ipaddr"], timeout=120)
             while f10_hosts[0]["handle"].process_exists(process_id=f10_host_server["cmd_pid"]):
                 fun_test.sleep("Srping server on f10_host", 2)
-            while f11_hosts[0]["handle"].process_exists(process_id=f10_host_client["cmd_pid"]):
+            while f10_hosts[0]["handle"].process_exists(process_id=f10_host_client["cmd_pid"]):
                 fun_test.sleep("Srping client on f10_host", 2)
             f10_server_result = f10_host_roce.parse_test_log(f10_host_server["output_file"], tool="srping")
             f10_client_result = f10_host_roce.parse_test_log(f10_host_client["output_file"], tool="srping",
@@ -400,17 +435,18 @@ class SrpingLoopBack(FunTestCase):
             fun_test.simple_assert(f10_client_result, "F10_host client result for size {}".format(size))
 
         for size in io_list:
-            f11_host_server = f11_host_roce.srping_test(size=size, count=10, debug=True, timeout=15)
+            f11_host_server = f11_host_roce.srping_test(size=size, count=test_count, debug=tool_debug, timeout=120)
             fun_test.sleep("Started srping server for size {}".format(size), seconds=1)
-            f11_host_client = f11_host_roce.srping_test(size=size, count=10, debug=True,
-                                                        server_ip=f11_hosts[0]["ipaddr"], timeout=15)
+            f11_host_client = f11_host_roce.srping_test(size=size, count=test_count, debug=tool_debug,
+                                                        server_ip=f11_hosts[0]["ipaddr"], timeout=120)
             while f11_hosts[0]["handle"].process_exists(process_id=f11_host_server["cmd_pid"]):
                 fun_test.sleep("Srping server on f11_host", 2)
             while f11_hosts[0]["handle"].process_exists(process_id=f11_host_client["cmd_pid"]):
                 fun_test.sleep("Srping client on f11_host", 2)
-            f11_server_result = f11_host_roce.parse_test_log(f11_host_server["output_file"], tool="srping")
+            f11_server_result = f11_host_roce.parse_test_log(f11_host_server["output_file"], tool="srping",
+                                                             debug=tool_debug)
             f11_client_result = f11_host_roce.parse_test_log(f11_host_client["output_file"], tool="srping",
-                                                             client_cmd=True)
+                                                             debug=tool_debug, client_cmd=True)
             fun_test.simple_assert(f11_server_result, "f11_host server result for size {}".format(size))
             fun_test.simple_assert(f11_client_result, "f11_host client result for size {}".format(size))
 
@@ -445,6 +481,8 @@ class RpingLoopBack(FunTestCase):
 
         f10_host_roce = fun_test.shared_variables["f10_host_roce"]
         f11_host_roce = fun_test.shared_variables["f11_host_roce"]
+        test_count = fun_test.shared_variables["test_count"]
+        tool_debug = fun_test.shared_variables["ping_debug"]
 
         # Load RDMA modules
         f10_host_roce.rdma_setup()
@@ -472,14 +510,16 @@ class RpingLoopBack(FunTestCase):
                     io_list.append(size)
                 size = size * 2
 
+        fun_test.log("Running tests for size {}".format(io_list))
+
         for size in io_list:
-            f10_host_server = f10_host_roce.rping_test(size=size, count=10, debug=True, timeout=15)
+            f10_host_server = f10_host_roce.rping_test(size=size, count=test_count, debug=tool_debug, timeout=120)
             fun_test.sleep("Started Rping server for size {}".format(size), seconds=1)
-            f10_host_client = f10_host_roce.rping_test(size=size, count=10, debug=True,
-                                                       server_ip=f10_hosts[0]["ipaddr"], timeout=15)
+            f10_host_client = f10_host_roce.rping_test(size=size, count=test_count, debug=tool_debug,
+                                                       server_ip=f10_hosts[0]["ipaddr"], timeout=120)
             while f10_hosts[0]["handle"].process_exists(process_id=f10_host_server["cmd_pid"]):
                 fun_test.sleep("Rping server on f10_host", 2)
-            while f11_hosts[0]["handle"].process_exists(process_id=f10_host_client["cmd_pid"]):
+            while f10_hosts[0]["handle"].process_exists(process_id=f10_host_client["cmd_pid"]):
                 fun_test.sleep("Rping client on f10_host", 2)
             f10_server_result = f10_host_roce.parse_test_log(f10_host_server["output_file"], tool="rping")
             f10_client_result = f10_host_roce.parse_test_log(f10_host_client["output_file"], tool="rping",
@@ -488,17 +528,18 @@ class RpingLoopBack(FunTestCase):
             fun_test.simple_assert(f10_client_result, "F10_host client result for size {}".format(size))
 
         for size in io_list:
-            f11_host_server = f11_host_roce.rping_test(size=size, count=10, debug=True, timeout=15)
+            f11_host_server = f11_host_roce.rping_test(size=size, count=test_count, debug=tool_debug, timeout=120)
             fun_test.sleep("Started rping server for size {}".format(size), seconds=1)
-            f11_host_client = f11_host_roce.rping_test(size=size, count=10, debug=True,
-                                                       server_ip=f11_hosts[0]["ipaddr"], timeout=15)
+            f11_host_client = f11_host_roce.rping_test(size=size, count=test_count, debug=tool_debug,
+                                                       server_ip=f11_hosts[0]["ipaddr"], timeout=120)
             while f11_hosts[0]["handle"].process_exists(process_id=f11_host_server["cmd_pid"]):
                 fun_test.sleep("Rping server on f11_host", 2)
             while f11_hosts[0]["handle"].process_exists(process_id=f11_host_client["cmd_pid"]):
                 fun_test.sleep("Rping client on f11_host", 2)
-            f11_server_result = f11_host_roce.parse_test_log(f11_host_server["output_file"], tool="rping")
+            f11_server_result = f11_host_roce.parse_test_log(f11_host_server["output_file"], tool="rping",
+                                                             debug=tool_debug,)
             f11_client_result = f11_host_roce.parse_test_log(f11_host_client["output_file"], tool="rping",
-                                                             client_cmd=True)
+                                                             debug=tool_debug, client_cmd=True)
             fun_test.simple_assert(f11_server_result, "f11_host server result for size {}".format(size))
             fun_test.simple_assert(f11_client_result, "f11_host client result for size {}".format(size))
 
@@ -512,6 +553,7 @@ class RpingLoopBack(FunTestCase):
 class SrpingSeqIoTest(FunTestCase):
     server_key = {}
     random_io = False
+    mtu = 0
 
     def describe(self):
         self.set_test_details(id=5,
@@ -533,6 +575,8 @@ class SrpingSeqIoTest(FunTestCase):
 
         f10_host_roce = fun_test.shared_variables["f10_host_roce"]
         f11_host_roce = fun_test.shared_variables["f11_host_roce"]
+        test_count = fun_test.shared_variables["test_count"]
+        tool_debug = fun_test.shared_variables["ping_debug"]
 
         # Load RDMA modules
         f10_host_roce.rdma_setup()
@@ -541,6 +585,12 @@ class SrpingSeqIoTest(FunTestCase):
         # Kill all RDMA tools
         f10_host_roce.cleanup()
         f11_host_roce.cleanup()
+
+        if self.mtu != 0:
+            f10_hosts[0]["handle"].sudo_command("ifconfig {} mtu {}".format(f10_hosts[0]["iface_name"],
+                                                                            self.mtu))
+            f11_hosts[0]["handle"].sudo_command("ifconfig {} mtu {}".format(f11_hosts[0]["iface_name"],
+                                                                            self.mtu))
 
         if self.random_io:
             test = "Random"
@@ -561,25 +611,30 @@ class SrpingSeqIoTest(FunTestCase):
                 else:
                     io_list.append(size)
                 size = size * 2
+
+        fun_test.log("Running tests for size {}".format(io_list))
+
         f10_pid_there = 0
         f11_pid_there = 0
         for size in io_list:
-            f10_host_test = f10_host_roce.srping_test(size=size, count=10, debug=True)
+            f10_host_test = f10_host_roce.srping_test(size=size, count=test_count, debug=tool_debug)
             fun_test.sleep("Started srping server for size {}".format(size), seconds=1)
-            f11_host_test = f11_host_roce.srping_test(size=size, count=10, debug=True, server_ip=f10_hosts[0]["ipaddr"])
+            f11_host_test = f11_host_roce.srping_test(size=size, count=test_count, debug=tool_debug,
+                                                      server_ip=f10_hosts[0]["ipaddr"])
             while f10_hosts[0]["handle"].process_exists(process_id=f10_host_test["cmd_pid"]):
                 fun_test.sleep("Srping test on f10_host", 2)
                 f10_pid_there += 1  # Counter to check before initiating kill
                 if f10_pid_there == 60:
                     f10_hosts[0]["handle"].kill_process(process_id=f10_host_test["cmd_pid"])
-            while f11_hosts[0]["handle"].process_exists(process_id=f10_host_test["cmd_pid"]):
+            while f11_hosts[0]["handle"].process_exists(process_id=f11_host_test["cmd_pid"]):
                 fun_test.sleep("Srping test on f11_host", 2)
                 f11_pid_there += 1
                 if f11_pid_there == 60:
                     f11_hosts[0]["handle"].kill_process(process_id=f11_host_test["cmd_pid"])
-            f10_host_result = f10_host_roce.parse_test_log(f10_host_test["output_file"], tool="srping")
+            f10_host_result = f10_host_roce.parse_test_log(f10_host_test["output_file"], tool="srping",
+                                                           debug=tool_debug)
             f11_host_result = f11_host_roce.parse_test_log(f11_host_test["output_file"], tool="srping",
-                                                           client_cmd=True)
+                                                           debug=tool_debug, client_cmd=True)
             fun_test.simple_assert(f10_host_result, "F10_host result for size {}".format(size))
             fun_test.simple_assert(f11_host_result, "F11_host result for size {}".format(size))
 
@@ -605,6 +660,7 @@ class SrpingRandIoTest(SrpingSeqIoTest):
 class RpingSeqIoTest(FunTestCase):
     server_key = {}
     random_io = False
+    mtu = 0
 
     def describe(self):
         self.set_test_details(id=7,
@@ -627,6 +683,8 @@ class RpingSeqIoTest(FunTestCase):
 
         f10_host_roce = fun_test.shared_variables["f10_host_roce"]
         f11_host_roce = fun_test.shared_variables["f11_host_roce"]
+        test_count = fun_test.shared_variables["test_count"]
+        tool_debug = fun_test.shared_variables["ping_debug"]
 
         # Load RDMA modules
         f10_host_roce.rdma_setup()
@@ -635,6 +693,12 @@ class RpingSeqIoTest(FunTestCase):
         # Kill all RDMA tools
         f10_host_roce.cleanup()
         f11_host_roce.cleanup()
+
+        if self.mtu != 0:
+            f10_hosts[0]["handle"].sudo_command("ifconfig {} mtu {}".format(f10_hosts[0]["iface_name"],
+                                                                            self.mtu))
+            f11_hosts[0]["handle"].sudo_command("ifconfig {} mtu {}".format(f11_hosts[0]["iface_name"],
+                                                                            self.mtu))
 
         if self.random_io:
             test = "Random"
@@ -655,24 +719,30 @@ class RpingSeqIoTest(FunTestCase):
                 else:
                     io_list.append(size)
                 size = size * 2
+
+        fun_test.log("Running tests for size {}".format(io_list))
+
         f10_pid_there = 0
         f11_pid_there = 0
         for size in io_list:
-            f10_host_test = f10_host_roce.rping_test(size=size, count=10, debug=True)
+            f10_host_test = f10_host_roce.rping_test(size=size, count=test_count, debug=tool_debug)
             fun_test.sleep("Started rping server for size {}".format(size), seconds=1)
-            f11_host_test = f11_host_roce.rping_test(size=size, count=10, debug=True, server_ip=f10_hosts[0]["ipaddr"])
+            f11_host_test = f11_host_roce.rping_test(size=size, count=test_count, debug=tool_debug,
+                                                     server_ip=f10_hosts[0]["ipaddr"])
             while f10_hosts[0]["handle"].process_exists(process_id=f10_host_test["cmd_pid"]):
                 fun_test.sleep("Rping test on f10_host", 2)
                 f10_pid_there += 1
                 if f10_pid_there == 60:
                     f10_hosts[0]["handle"].kill_process(process_id=f10_host_test["cmd_pid"])
-            while f11_hosts[0]["handle"].process_exists(process_id=f10_host_test["cmd_pid"]):
+            while f11_hosts[0]["handle"].process_exists(process_id=f11_host_test["cmd_pid"]):
                 fun_test.sleep("Rping test on f11_host", 2)
                 f11_pid_there += 1
                 if f11_pid_there == 60:
                     f11_hosts[0]["handle"].kill_process(process_id=f11_host_test["cmd_pid"])
-            f10_host_result = f10_host_roce.parse_test_log(f10_host_test["output_file"], tool="rping")
-            f11_host_result = f11_host_roce.parse_test_log(f11_host_test["output_file"], tool="rping", client_cmd=True)
+            f10_host_result = f10_host_roce.parse_test_log(f10_host_test["output_file"], tool="rping",
+                                                           debug=tool_debug)
+            f11_host_result = f11_host_roce.parse_test_log(f11_host_test["output_file"], tool="rping",
+                                                           debug=tool_debug, client_cmd=True)
             fun_test.simple_assert(f10_host_result, "F10_host result for size {}".format(size))
             fun_test.simple_assert(f11_host_result, "F11_host result for size {}".format(size))
 
@@ -700,6 +770,7 @@ class IbBwSeqIoTest(FunTestCase):
     server_key = {}
     random_io = False
     use_rdmacm = False
+    mtu = 0
 
     def describe(self):
         self.set_test_details(id=9,
@@ -732,6 +803,12 @@ class IbBwSeqIoTest(FunTestCase):
         f10_host_roce.cleanup()
         f11_host_roce.cleanup()
 
+        if self.mtu != 0:
+            f10_hosts[0]["handle"].sudo_command("ifconfig {} mtu {}".format(f10_hosts[0]["iface_name"],
+                                                                            self.mtu))
+            f11_hosts[0]["handle"].sudo_command("ifconfig {} mtu {}".format(f11_hosts[0]["iface_name"],
+                                                                            self.mtu))
+
         if self.use_rdmacm:
             rdmacm = True
         else:
@@ -748,7 +825,17 @@ class IbBwSeqIoTest(FunTestCase):
                     break
         else:
             io_type = "Sequential"
-            io_list = ["1", "128", "256", "512", "1024", "2048", "4096"]
+            io_list = []
+            size = 32
+            while size <= 65536:
+                if size == 65536:
+                    io_list.append(65534)
+                else:
+                    io_list.append(size)
+                size = size * 2
+
+        fun_test.log("Running tests for size {}".format(io_list))
+
         f10_pid_there = 0
         f11_pid_there = 0
         for test in test_type_list:
@@ -761,7 +848,7 @@ class IbBwSeqIoTest(FunTestCase):
                     f10_pid_there += 1
                     if f10_pid_there == 60:
                         f10_hosts[0]["handle"].kill_process(process_id=f10_host_test["cmd_pid"])
-                while f11_hosts[0]["handle"].process_exists(process_id=f10_host_test["cmd_pid"]):
+                while f11_hosts[0]["handle"].process_exists(process_id=f11_host_test["cmd_pid"]):
                     fun_test.sleep("ib_bw test on f11_host", 2)
                     f11_pid_there += 1
                     if f11_pid_there == 60:
@@ -824,6 +911,7 @@ class IbLatSeqIoTest(FunTestCase):
     server_key = {}
     random_io = False
     use_rdmacm = False
+    mtu = 0
 
     def describe(self):
         self.set_test_details(id=13,
@@ -856,6 +944,12 @@ class IbLatSeqIoTest(FunTestCase):
         f10_host_roce.cleanup()
         f11_host_roce.cleanup()
 
+        if self.mtu != 0:
+            f10_hosts[0]["handle"].sudo_command("ifconfig {} mtu {}".format(f10_hosts[0]["iface_name"],
+                                                                            self.mtu))
+            f11_hosts[0]["handle"].sudo_command("ifconfig {} mtu {}".format(f11_hosts[0]["iface_name"],
+                                                                            self.mtu))
+
         if self.use_rdmacm:
             rdmacm = True
         else:
@@ -872,7 +966,14 @@ class IbLatSeqIoTest(FunTestCase):
                     break
         else:
             io_type = "Sequential"
-            io_list = ["1", "128", "256", "512", "1024", "2048", "4096"]
+            io_list = []
+            size = 32
+            while size <= 65536:
+                if size == 65536:
+                    io_list.append(65534)
+                else:
+                    io_list.append(size)
+                size = size * 2
 
         f10_pid_there = 0
         f11_pid_there = 0
@@ -948,7 +1049,7 @@ class IbLatRandIoRdmaCm(IbLatSeqIoTest):
 class IbWriteScale(FunTestCase):
     server_key = {}
     random_io = False
-    use_rdmacm = True
+    use_rdmacm = False
 
     def describe(self):
         self.set_test_details(id=17,
@@ -997,25 +1098,68 @@ class IbWriteScale(FunTestCase):
                     break
         else:
             io_type = "Sequential"
-            qp_list = fun_test.shared_variables["qp_list"]
-        f10_pid_there = 0
-        f11_pid_there = 0
+
+        qp_list = fun_test.shared_variables["qp_list"]
+
+        # Get max_cqe to compute tx_depth required for scaling
+        f10_device_info = f10_host_roce.ibv_devinfo()
+        f11_device_info = f11_host_roce.ibv_devinfo()
+        for devinfo in f10_device_info:
+            if "max_cqe" in devinfo:
+                f10_max_cqe = int(devinfo.split(":")[1])
+        for devinfo in f11_device_info:
+            if "max_cqe" in devinfo:
+                f11_max_cqe = int(devinfo.split(":")[1])
+        if f10_max_cqe != f11_max_cqe:
+            max_cqe_in_test = min(f10_max_cqe, f11_max_cqe)
+            fun_test.critical("Max CQE on F10 : {} & F11 : {}".format(f10_max_cqe, f11_max_cqe))
+            fun_test.add_checkpoint("Max CQE mismatch", "FAILED", f10_max_cqe, f11_max_cqe)
+        else:
+            max_cqe_in_test = f10_max_cqe
+        print "The max_cqe is {}".format(max_cqe_in_test)
         size = 1
         for test in test_type_list:
             for qp in qp_list:
+                f10_pid_there = 0
+                f11_pid_there = 0
+                # Compute the tx_depth required for scaling.
+                # Default tx_depth = 128 from ib_write_bw
+                tx_depth_default = 128
+                cq_depth_required = 128 * qp
+
+                # Reduce the tx_depth for scaling and avoid CQ allocation failure
+                if cq_depth_required > max_cqe_in_test:
+                    tx_depth_in_test = max_cqe_in_test / qp
+                else:
+                    tx_depth_in_test = tx_depth_default
+                fun_test.log("Running test with tx_depth {}".format(tx_depth_in_test))
+
                 f10_host_test = f10_host_roce.ib_bw_test(test_type=test, size=size, rdma_cm=rdmacm, qpair=qp,
-                                                         duration=30)
+                                                         tx_depth=tx_depth_in_test, duration=30)
                 f11_host_test = f11_host_roce.ib_bw_test(test_type=test, size=size, rdma_cm=rdmacm, qpair=qp,
-                                                         server_ip=f10_hosts[0]["ipaddr"], duration=30)
+                                                         tx_depth=tx_depth_in_test, server_ip=f10_hosts[0]["ipaddr"],
+                                                         duration=30)
+                check_num_qp = True
                 while f10_hosts[0]["handle"].process_exists(process_id=f10_host_test["cmd_pid"]):
                     fun_test.sleep("ib_bw test on f10_host", 2)
                     f10_pid_there += 1
+                    if f10_pid_there == 10:
+                        current_qp = f10_host_roce.qp_check()
+                        if current_qp > 1 and check_num_qp:
+                            if current_qp != qp:
+                                fun_test.critical("Current QP count {} doesn't match test QP count of {}".
+                                                  format(current_qp, qp))
+                                check_num_qp = False
+                                fun_test.add_checkpoint("QP mismatch in test", "FAILED", expected=qp, actual=current_qp)
+                            else:
+                                fun_test.log_section("Num of QP : {}".format(current_qp))
                     if f10_pid_there == 60:
                         f10_hosts[0]["handle"].kill_process(process_id=f10_host_test["cmd_pid"])
-                while f11_hosts[0]["handle"].process_exists(process_id=f10_host_test["cmd_pid"]):
+                while f11_hosts[0]["handle"].process_exists(process_id=f11_host_test["cmd_pid"]):
                     fun_test.sleep("ib_bw test on f11_host", 2)
                     f11_pid_there += 1
                     if f11_pid_there == 60:
+
                         f11_hosts[0]["handle"].kill_process(process_id=f11_host_test["cmd_pid"])
                 f10_host_result = f10_host_roce.parse_test_log(f10_host_test["output_file"], tool="ib_bw")
                 f11_host_result = f11_host_roce.parse_test_log(f11_host_test["output_file"], tool="ib_bw",
@@ -1030,25 +1174,316 @@ class IbWriteScale(FunTestCase):
         fun_test.shared_variables["f10_host_roce"].cleanup()
 
 
+class SrpingSqIo512MtuTest(SrpingSeqIoTest):
+    mtu = 512
+
+    def describe(self):
+        self.set_test_details(id=18,
+                              summary="SRPING Seq IO Test with 512 MTU",
+                              steps="""
+                                  1. Load funrdma & rdma_ucm driver
+                                  2. Set MTU to 512
+                                  3. Start srping test for different sizes
+                                  """)
+
+
+class SrpingSqIo1024MtuTest(SrpingSeqIoTest):
+    mtu = 1024
+
+    def describe(self):
+        self.set_test_details(id=19,
+                              summary="SRPING Seq IO Test with 1024 MTU",
+                              steps="""
+                                  1. Load funrdma & rdma_ucm driver
+                                  2. Set MTU to 1024
+                                  3. Start srping test for different sizes
+                                  """)
+
+
+class SrpingSqIo2048MtuTest(SrpingSeqIoTest):
+    mtu = 2048
+
+    def describe(self):
+        self.set_test_details(id=19,
+                              summary="SRPING Seq IO Test with 2048 MTU",
+                              steps="""
+                                  1. Load funrdma & rdma_ucm driver
+                                  2. Set MTU to 2048
+                                  3. Start srping test for different sizes
+                                  """)
+
+
+class SrpingSqIo4096MtuTest(SrpingSeqIoTest):
+    mtu = 4096
+
+    def describe(self):
+        self.set_test_details(id=20,
+                              summary="SRPING Seq IO Test with 4096 MTU",
+                              steps="""
+                                  1. Load funrdma & rdma_ucm driver
+                                  2. Set MTU to 4096
+                                  3. Start srping test for different sizes
+                                  """)
+
+
+class SrpingSqIo9000MtuTest(SrpingSeqIoTest):
+    mtu = 9000
+
+    def describe(self):
+        self.set_test_details(id=21,
+                              summary="SRPING Seq IO Test with 9000 MTU",
+                              steps="""
+                                  1. Load funrdma & rdma_ucm driver
+                                  2. Set MTU to 9000
+                                  3. Start srping test for different sizes
+                                  """)
+
+
+class SrpingRandIo512MtuTest(SrpingSeqIoTest):
+    mtu = 512
+    random_io = True
+
+    def describe(self):
+        self.set_test_details(id=22,
+                              summary="SRPING Rand IO Test with 512 MTU",
+                              steps="""
+                                  1. Load funrdma & rdma_ucm driver
+                                  2. Set MTU to 512
+                                  3. Start srping test for different sizes
+                                  """)
+
+
+class SrpingRandIo1024MtuTest(SrpingSeqIoTest):
+    mtu = 1024
+    random_io = True
+
+    def describe(self):
+        self.set_test_details(id=23,
+                              summary="SRPING Rand IO Test with 1024 MTU",
+                              steps="""
+                                  1. Load funrdma & rdma_ucm driver
+                                  2. Set MTU to 1024
+                                  3. Start srping test for different sizes
+                                  """)
+
+
+class SrpingRandIo2048MtuTest(SrpingSeqIoTest):
+    mtu = 2048
+    random_io = True
+
+    def describe(self):
+        self.set_test_details(id=24,
+                              summary="SRPING Rand IO Test with 2048 MTU",
+                              steps="""
+                                  1. Load funrdma & rdma_ucm driver
+                                  2. Set MTU to 2048
+                                  3. Start srping test for different sizes
+                                  """)
+
+
+class SrpingRandIo4096MtuTest(SrpingSeqIoTest):
+    mtu = 4096
+    random_io = True
+
+    def describe(self):
+        self.set_test_details(id=25,
+                              summary="SRPING Rand IO Test with 4096 MTU",
+                              steps="""
+                                  1. Load funrdma & rdma_ucm driver
+                                  2. Set MTU to 4096
+                                  3. Start srping test for different sizes
+                                  """)
+
+
+class SrpingRandIo9000MtuTest(SrpingSeqIoTest):
+    mtu = 9000
+    random_io = True
+
+    def describe(self):
+        self.set_test_details(id=26,
+                              summary="SRPING Rand IO Test with 9000 MTU",
+                              steps="""
+                                  1. Load funrdma & rdma_ucm driver
+                                  2. Set MTU to 9000
+                                  3. Start srping test for different sizes
+                                  """)
+
+
+class IbBwSeqIo512MtuTest(IbBwSeqIoTest):
+    server_key = {}
+    mtu = 512
+
+    def describe(self):
+        self.set_test_details(id=27,
+                              summary="IB_Bw* Seq IO with 512 MTU",
+                              steps="""
+                                  1. Load funrdma & rdma_ucm driver
+                                  2. Start ib_bw test for random sizes
+                                  """)
+
+
+class IbBwSeqIo1024MtuTest(IbBwSeqIoTest):
+    server_key = {}
+    mtu = 1024
+
+    def describe(self):
+        self.set_test_details(id=28,
+                              summary="IB_Bw* Seq IO with 1024 MTU",
+                              steps="""
+                                  1. Load funrdma & rdma_ucm driver
+                                  2. Start ib_bw test for random sizes
+                                  """)
+
+
+class IbBwSeqIo2048MtuTest(IbBwSeqIoTest):
+    server_key = {}
+    mtu = 2048
+
+    def describe(self):
+        self.set_test_details(id=29,
+                              summary="IB_Bw* Seq IO with 2048 MTU",
+                              steps="""
+                                  1. Load funrdma & rdma_ucm driver
+                                  2. Start ib_bw test for random sizes
+                                  """)
+
+
+class IbBwSeqIo4096MtuTest(IbBwSeqIoTest):
+    server_key = {}
+    mtu = 4096
+
+    def describe(self):
+        self.set_test_details(id=30,
+                              summary="IB_Bw* Seq IO with 4096 MTU",
+                              steps="""
+                                  1. Load funrdma & rdma_ucm driver
+                                  2. Start ib_bw test for random sizes
+                                  """)
+
+
+class IbBwSeqIo9000MtuTest(IbBwSeqIoTest):
+    server_key = {}
+    mtu = 9000
+
+    def describe(self):
+        self.set_test_details(id=31,
+                              summary="IB_Bw* Seq IO with 9000 MTU",
+                              steps="""
+                                  1. Load funrdma & rdma_ucm driver
+                                  2. Start ib_bw test for random sizes
+                                  """)
+
+
+class IbBwRandIo512MtuTest(IbBwSeqIoTest):
+    server_key = {}
+    random_io = True
+    mtu = 512
+
+    def describe(self):
+        self.set_test_details(id=32,
+                              summary="IB_BW* Random IO with 512 MTU",
+                              steps="""
+                                  1. Load funrdma & rdma_ucm driver
+                                  2. Start ib_bw test for different sizes
+                                  """)
+
+
+class IbBwRandIo1024MtuTest(IbBwSeqIoTest):
+    server_key = {}
+    random_io = True
+    mtu = 1024
+
+    def describe(self):
+        self.set_test_details(id=33,
+                              summary="IB_BW* Random IO with 1024 MTU",
+                              steps="""
+                                  1. Load funrdma & rdma_ucm driver
+                                  2. Start ib_bw test for different sizes
+                                  """)
+
+
+class IbBwRandIo2048MtuTest(IbBwSeqIoTest):
+    server_key = {}
+    random_io = True
+    mtu = 2048
+
+    def describe(self):
+        self.set_test_details(id=34,
+                              summary="IB_BW* Random IO with 2048 MTU",
+                              steps="""
+                                  1. Load funrdma & rdma_ucm driver
+                                  2. Start ib_bw test for different sizes
+                                  """)
+
+
+class IbBwRandIo4096MtuTest(IbBwSeqIoTest):
+    server_key = {}
+    random_io = True
+    mtu = 4096
+
+    def describe(self):
+        self.set_test_details(id=35,
+                              summary="IB_BW* Random IO with 4096 MTU",
+                              steps="""
+                                  1. Load funrdma & rdma_ucm driver
+                                  2. Start ib_bw test for different sizes
+                                  """)
+
+
+class IbBwRandIo9000MtuTest(IbBwSeqIoTest):
+    server_key = {}
+    random_io = True
+    mtu = 9000
+
+    def describe(self):
+        self.set_test_details(id=36,
+                              summary="IB_BW* Random IO with 9000 MTU",
+                              steps="""
+                                  1. Load funrdma & rdma_ucm driver
+                                  2. Start ib_bw test for different sizes
+                                  """)
+
+
 if __name__ == '__main__':
     ts = ScriptSetup()
     ts.add_test_case(BringupSetup())
     ts.add_test_case(NicEmulation())
-    if not fun_test.shared_variables["check_scale"]:
-        ts.add_test_case(SrpingLoopBack())
-        ts.add_test_case(RpingLoopBack())
-        ts.add_test_case(SrpingSeqIoTest())
-        ts.add_test_case(SrpingRandIoTest())
-        ts.add_test_case(RpingSeqIoTest())
-        ts.add_test_case(RpingRandIoTest())
-        ts.add_test_case(IbBwSeqIoTest())
-        ts.add_test_case(IbBwRandIoTest())
-        ts.add_test_case(IbBwSeqIoRdmaCm())
-        ts.add_test_case(IbBwRandIoRdmaCm())
-        ts.add_test_case(IbLatSeqIoTest())
-        ts.add_test_case(IbLatRandIoTest())
-        ts.add_test_case(IbLatSeqIoRdmaCm())
-        ts.add_test_case(IbLatRandIoRdmaCm())
-    else:
-        ts.add_test_case(IbWriteScale())
+    ts.add_test_case(SrpingLoopBack())
+    ts.add_test_case(RpingLoopBack())
+    ts.add_test_case(SrpingSeqIoTest())
+    ts.add_test_case(SrpingRandIoTest())
+    ts.add_test_case(RpingSeqIoTest())
+    ts.add_test_case(RpingRandIoTest())
+    ts.add_test_case(IbBwSeqIoTest())
+    ts.add_test_case(IbBwRandIoTest())
+    ts.add_test_case(IbBwSeqIoRdmaCm())
+    ts.add_test_case(IbBwRandIoRdmaCm())
+    ts.add_test_case(IbLatSeqIoTest())
+    ts.add_test_case(IbLatRandIoTest())
+    ts.add_test_case(IbLatSeqIoRdmaCm())
+    ts.add_test_case(IbLatRandIoRdmaCm())
+    ts.add_test_case(IbWriteScale())
+    job_input = fun_test.get_job_inputs()
+    if job_input:
+        if job_input.get("full_suite", False):
+            ts.add_test_case(SrpingSqIo512MtuTest())
+            ts.add_test_case(SrpingSqIo1024MtuTest())
+            ts.add_test_case(SrpingSqIo2048MtuTest())
+            ts.add_test_case(SrpingSqIo4096MtuTest())
+            ts.add_test_case(SrpingSqIo9000MtuTest)
+            ts.add_test_case(SrpingRandIo512MtuTest())
+            ts.add_test_case(SrpingRandIo1024MtuTest())
+            ts.add_test_case(SrpingRandIo2048MtuTest())
+            ts.add_test_case(SrpingRandIo4096MtuTest())
+            ts.add_test_case(SrpingRandIo9000MtuTest)
+            ts.add_test_case(IbBwSeqIo512MtuTest())
+            ts.add_test_case(IbBwSeqIo1024MtuTest())
+            ts.add_test_case(IbBwSeqIo2048MtuTest())
+            ts.add_test_case(IbBwSeqIo4096MtuTest())
+            ts.add_test_case(IbBwSeqIo9000MtuTest())
+            ts.add_test_case(IbBwRandIo512MtuTest())
+            ts.add_test_case(IbBwRandIo1024MtuTest())
+            ts.add_test_case(IbBwRandIo2048MtuTest())
+            ts.add_test_case(IbBwRandIo4096MtuTest())
+            ts.add_test_case(IbBwRandIo9000MtuTest())
     ts.run()

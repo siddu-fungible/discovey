@@ -2,15 +2,19 @@ from lib.system.fun_test import *
 import re
 
 
-def get_dpcsh_output(come_handle, cmd, f1=0):
+def get_dpcsh_output(come_handle, cmd, f1=0, env_set=False):
     result = False
     try:
-        come_handle.enter_sudo()
-        come_handle.command("cd /scratch/FunSDK/bin/Linux")
+        if not env_set:
+            come_handle.enter_sudo()
+            come_handle.command("cd /tmp/workspace/FunSDK/bin/Linux")
         run_cmd = "./dpcsh --pcie_nvme_sock=/dev/nvme{} --nvme_cmd_timeout=60000 --nocli {}".format(f1, cmd)
-        output = come_handle.command(run_cmd)
+        output = come_handle.command(run_cmd, timeout=10000)
         result = parse_dpcsh_output(output)
-        come_handle.exit_sudo()
+        if "result" in result:
+            result = result["result"]
+        if not env_set:
+            come_handle.exit_sudo()
     except Exception as ex:
         fun_test.critical(ex)
     return result
@@ -35,7 +39,7 @@ def start_dpcsh_bg(come_handle, cmd, f1=0):
     try:
         print("Command : {}".format(cmd))
         come_handle.enter_sudo()
-        come_handle.command("cd /scratch/FunSDK/bin/Linux")
+        come_handle.command("cd /tmp/workspace/FunSDK/bin/Linux")
         run_cmd = "./dpcsh --pcie_nvme_sock=/dev/nvme{} --nvme_cmd_timeout=60000 --nocli {}".format(f1, cmd)
         pid = come_handle.start_bg_process(run_cmd)
         come_handle.exit_sudo()

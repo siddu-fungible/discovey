@@ -1,7 +1,7 @@
 import {Injectable} from '@angular/core';
 import {ApiService} from "../services/api/api.service";
 import {of} from "rxjs";
-import {switchMap} from "rxjs/operators";
+import {isEmpty, switchMap} from "rxjs/operators";
 import {CommonService} from "../services/common/common.service";
 
 export enum SelectMode {
@@ -10,6 +10,30 @@ export enum SelectMode {
   ShowEditWorkspace = 2,
   ShowViewWorkspace = 3,
   ShowAttachDag = 4
+}
+
+interface  MetricsDataRunTimeInterface {
+  date_time: any;
+  build_properties: any;
+  lsf_job_id: number;
+  suite_execution_id: number;
+  jenkins_build_number: number;
+  version: any;
+  associated_suites: any;
+}
+
+export class MetricsDataRunTime implements MetricsDataRunTimeInterface {
+  date_time: any;
+  build_properties: any;
+  lsf_job_id: number;
+  suite_execution_id: number;
+  jenkins_build_number: number;
+  version: any;
+  associated_suites: any;
+
+  constructor(obj?: any) {
+    Object.assign(this, obj);
+  }
 }
 
 @Injectable({
@@ -138,6 +162,17 @@ export class PerformanceService {
     payload["metric_id"] = metricId;
     return this.apiService.post("/metrics/chart_info", payload).pipe(switchMap(response => {
       return of(response.data);
+    }));
+  }
+
+  getRunTime(id): any {
+    let payload = {};
+    payload["id"] = id;
+    return this.apiService.post("/metrics/metrics_data_run_time", payload).pipe(switchMap(response => {
+      if (response.data) {
+        return of(new MetricsDataRunTime(response.data));
+      }
+      return of(null);
     }));
   }
 

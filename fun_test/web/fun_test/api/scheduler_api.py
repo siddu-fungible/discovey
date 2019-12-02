@@ -35,10 +35,21 @@ def info(request):
         result = SchedulerInfo.objects.first().to_dict()
     return result
 
+
 @csrf_exempt
 @api_safe_json_response
 def state_types(request):
     result = None
     if request.method == "GET":
         result = SchedulerStates().all_strings_to_code()
+    return result
+
+
+@csrf_exempt
+@api_safe_json_response
+def online(request):
+    result = False
+    scheduler_info = SchedulerInfo.get()
+    if scheduler_info and scheduler_info.state == SchedulerStates.SCHEDULER_STATE_RUNNING:
+        result = True
     return result

@@ -1,10 +1,9 @@
 .fun-flex-item {
-  flex-grow: 1;
-  flex-shrink: 1;
-  flex-basis: 0;
+  flex: 1;
+  min-width: auto;
 }
 
-.panel1 {
+.panel {
  margin: 10px;
 }
 
@@ -19,8 +18,6 @@
 .timestamp {
   background-color: rgba(220, 220, 220, 0.64);
 }
-
-
 
 .checkpoint-span {
     background-color: rgba(255, 248, 186, 0.58);
@@ -45,9 +42,9 @@
 
 .script-name {
   /*font-family: Times;*/
-  font-size: 18px;
+  font-size: 14px;
   line-height: 20px;
-  font-weight: 700;
+  /*font-weight: 700;*/
   margin: auto 10px;
 
 }
@@ -60,7 +57,7 @@
 }
 
 .fun-action-nav {
-  box-shadow: 0px 4px 8px 0px grey;
+  box-shadow: 0px 4px 4px 0px grey;
   display: flex;
   align-items: center;
 
@@ -74,3 +71,21 @@
 table {
   border-spacing: 0;
 }
+
+.auto-scroll {
+  overflow: auto;
+  max-width: calc(50vw);
+}
+
+.test-case-panel {
+  height: 400px;
+}
+
+.checkpoint-panel {
+  height: 400px;
+}
+
+.logs-panel {
+  height: calc(60vh);
+}
+

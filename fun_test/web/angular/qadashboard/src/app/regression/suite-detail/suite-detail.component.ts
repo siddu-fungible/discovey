@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import {Component, OnDestroy, OnInit} from '@angular/core';
 import { ApiService}  from "../../services/api/api.service";
 import { ActivatedRoute } from "@angular/router";
 import {ReRunService} from "../re-run.service";
@@ -9,6 +9,7 @@ import {NgbModal, ModalDismissReasons} from '@ng-bootstrap/ng-bootstrap';
 import {UserService} from "../../services/user/user.service";
 import {of} from "rxjs";
 import {catchError, switchMap} from "rxjs/operators";
+import {Title} from "@angular/platform-browser";
 
 
 class Environment {
@@ -22,7 +23,7 @@ class Environment {
   templateUrl: './suite-detail.component.html',
   styleUrls: ['./suite-detail.component.css']
 })
-export class SuiteDetailComponent implements OnInit {
+export class SuiteDetailComponent implements OnInit, OnDestroy {
   logDir: any = null;
   suiteExecutionId: number;
   suiteExecution: any = null;
@@ -37,14 +38,16 @@ export class SuiteDetailComponent implements OnInit {
   stateMap: any = null;
   environment = new Environment();
   driver = null;
-  CONSOLE_LOG_EXTENSION: string = ".logs.txt";  //TIED to scheduler_helper.py  TODO
-  HTML_LOG_EXTENSION: string = ".html";         //TIED to scheduler_helper.py  TODO
     // Re-run options
   reRunOptionsReRunFailed: boolean = false;
   reRunOptionsReRunAll: boolean = true;
   reUseBuildImage: boolean = false;
   reRunScript: string = null;
-
+  refreshTimer: any = null;
+  showingLogPath: boolean = false;
+  showingInputs: boolean = false;
+  showingEnvironment: boolean = false;
+  ABSOLUTE_LOG_DIRECTORY = "/project/users/QA/regression/Integration/fun_test/web/static/logs/s_";
 
   constructor(private apiService: ApiService,
               private route: ActivatedRoute,
@@ -52,9 +55,18 @@ export class SuiteDetailComponent implements OnInit {
               private logger: LoggerService,
               private regressionService: RegressionService,
               private commonService: CommonService,
-              private modalService: NgbModal) {
+              private modalService: NgbModal,
+              private title: Title) {
     this.stateStringMap = this.regressionService.stateStringMap;
     this.stateMap = this.regressionService.stateMap;
+  }
+
+  getHtmlLogPath(suiteExecutionId, path, logPrefix) {
+    this.regressionService.getHtmlLogPath(suiteExecutionId, path, logPrefix);
+  }
+
+  getConsoleLogPath(suiteExecutionId, path, logPrefix) {
+    this.regressionService.getConsoleLogPath(suiteExecutionId, path, logPrefix);
   }
 
   ngOnInit() {
@@ -72,10 +84,13 @@ export class SuiteDetailComponent implements OnInit {
         let ctrl = this;
         this.apiService.get("/regression/suite_execution_attributes/" + this.suiteExecutionId).subscribe(result => {
           self.attributes = result.data;
-          self.attributes.unshift({"name": "Suite execution Id", "value": ctrl.suiteExecutionId});
+          //self.attributes.unshift({"name": "Suite execution Id", "value": ctrl.suiteExecutionId});
           //let ctrl = this;
           this.apiService.get("/regression/suite_execution/" + this.suiteExecutionId).subscribe(function (result) {
             self.suiteExecution = result.data; // TODO: validate
+            if (self.suiteExecution.fields.suite_path) {
+              self.title.setTitle("Suite " + self.suiteExecutionId + ": " + self.suiteExecution.fields.suite_path);
+            }
             ctrl.applyAdditionalAttributes(self.suiteExecution);
             ctrl.getReRunInfo(self.suiteExecution);
 
@@ -130,7 +145,7 @@ export class SuiteDetailComponent implements OnInit {
               });
             }
             if (self.suiteExecution.fields.state >= self.stateMap.SUBMITTED) {
-              setInterval(() => {
+              self.refreshTimer = setInterval(() => {
                 window.location.reload();
               }, 60 * 1000);
             }
@@ -159,15 +174,6 @@ export class SuiteDetailComponent implements OnInit {
   fetchScriptInfo(scriptId, testCaseExecutionId) {
     this.regressionService.getScriptInfoById(scriptId).subscribe(response => {
       this.scriptInfo[scriptId] = response;
-      /*
-      if (Object.keys(this.scriptExecutionsMap).indexOf(scriptId) > -1) {
-        let scriptPathValue = this.scriptExecutionsMap[scriptId];
-
-        if (scriptPathValue && Object.keys(scriptPathValue).indexOf(testCaseExecutionId.toString()) > -1) {
-          this.scriptExecutionsMap[scriptId][testCaseExecutionId]["scriptPk"] = response.pk;
-        }
-      }*/
-
     });
   }
 
@@ -186,7 +192,6 @@ export class SuiteDetailComponent implements OnInit {
 
         })
     }
-
   }
 
 
@@ -232,28 +237,7 @@ export class SuiteDetailComponent implements OnInit {
     return klass;
   }
 
-  _getFlatPath(suiteExecutionId, path, logPrefix) {
-    let httpPath = this.logDir + suiteExecutionId;
-    let parts = path.split("/");
-    let flat = path;
-    let numParts = parts.length;
-    if (numParts > 2) {
-      flat = parts[numParts - 2] + "_" + parts[numParts - 1];
-    }
-    let s = "";
-    if (logPrefix !== "") {
-      s = logPrefix + "_"
-    }
-    return httpPath + "/" + s + flat.replace(/^\//g, '');
-  }
 
-  getHtmlLogPath(suiteExecutionId, path, logPrefix) {
-    window.open(this._getFlatPath(suiteExecutionId, path, logPrefix) + this.HTML_LOG_EXTENSION);
-  }
-
-  getConsoleLogPath(suiteExecutionId, path, logPrefix) {
-    window.open(this._getFlatPath(suiteExecutionId, path, logPrefix) + this.CONSOLE_LOG_EXTENSION);
-  }
 
   applyAdditionalAttributes(item) {
     item["showingDetails"] = false;
@@ -389,13 +373,14 @@ export class SuiteDetailComponent implements OnInit {
   }
 
   clickHistory(scriptId) {
-    let url = "/regression/script_history_page/" + this.scriptInfo[scriptId].pk;
+    let url = "/regression/script_history_page/" + scriptId;
     window.open(url, '_blank');
   }
 
+  /*
   scriptIdToPk(scriptId) {
     return this.scriptInfo[scriptId].pk;
-  }
+  }*/
 
   killClick() {
     let suiteId = this.suiteExecutionId;
@@ -441,5 +426,37 @@ export class SuiteDetailComponent implements OnInit {
     return `/regression/script_detail/${scriptId}/${logPrefix}/${this.suiteExecutionId}`;
   }
 
+  ngOnDestroy() {
+    if (this.refreshTimer) {
+      clearInterval(this.refreshTimer);
+    }
+  }
 
+  getRunningTime() {
+    let endTime = new Date();
+    let startTime = null;
+    if ((this.suiteExecution.fields.state == this.stateMap.IN_PROGRESS) || (this.suiteExecution.fields.state <= this.stateMap.COMPLETED)) {
+      startTime = this.regressionService.convertToLocalTimezone(this.suiteExecution.fields.started_time);
+    }
+    if (this.suiteExecution.fields.state <= this.stateMap.COMPLETED) {
+      endTime = this.regressionService.convertToLocalTimezone(this.suiteExecution.fields.completed_time);
+    }
+    let result = "";
+    if (startTime) {
+      let diffMs = endTime.getTime() - startTime.getTime();
+      result = this.commonService.milliSecondsElapsedToDays(diffMs);
+    }
+    return result;
+    //return
+  }
+
+  onTogglePreserveLogs(preserveLogs) {
+    this.suiteExecution.fields.preserve_logs = !this.suiteExecution.fields.preserve_logs;
+    this.regressionService.preserveLogs(this.suiteExecution.fields.execution_id, this.suiteExecution.fields.preserve_logs).subscribe(response => {
+
+    }, error => {
+      this.logger.error("Unable to modify preserve logs");
+    })
+
+  }
 }

@@ -3,8 +3,8 @@
         "fs-48": {
             "boot_image_f1_0": "cmukherjee/funos-f1.stripped.gz",
             "boot_image_f1_1": "cmukherjee/funos-f1.stripped.gz",
-            "bootargs_f1_0": "app=hw_hsu_test cc_huid=3 --all_100g --dpc-server --dpc-uart retimer=0,1,2",
-            "bootargs_f1_1": "app=hw_hsu_test cc_huid=2 --all_100g --dpc-server --dpc-uart retimer=0",
+            "bootargs_f1_0": "app=load_mods cc_huid=3 --all_100g --dpc-server --dpc-uart retimer=0,1,2",
+            "bootargs_f1_1": "app=load_mods cc_huid=2 --all_100g --dpc-server --dpc-uart retimer=0",
             "gatewayip": "10.1.105.1",
             "abtract_config_f1_0": "/alibaba_fcp_configs_fs48_f1_0.json",
             "abtract_config_f1_1": "/alibaba_fcp_configs_fs48_f1_1.json",
@@ -15,8 +15,8 @@
         "fs-60": {
             "boot_image_f1_0": "cmukherjee/funos-f1.stripped.gz",
             "boot_image_f1_1": "cmukherjee/funos-f1.stripped.gz",
-            "bootargs_f1_0": "app=hw_hsu_test cc_huid=3 --all_100g --dpc-server --dpc-uart retimer=0,1,2",
-            "bootargs_f1_1": "app=hw_hsu_test cc_huid=2 --all_100g --dpc-server --dpc-uart retimer=0",
+            "bootargs_f1_0": "app=load_mods cc_huid=3 --all_100g --dpc-server --dpc-uart retimer=0,1,2",
+            "bootargs_f1_1": "app=load_mods cc_huid=2 --all_100g --dpc-server --dpc-uart retimer=0",
             "gatewayip": "10.1.105.1",
             "abtract_config_f1_0": "/alibaba_fcp_configs_fs60_f1_0.json",
             "abtract_config_f1_1": "/alibaba_fcp_configs_fs60_f1_1.json",

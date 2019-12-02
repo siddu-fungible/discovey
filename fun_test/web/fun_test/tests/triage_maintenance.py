@@ -15,6 +15,6 @@ def set_triage_trial_state(triage_id, state):
         trial.save()
 
 if __name__ == "__main__":
-    triage_id = 110
-    set_triage_trial_state(triage_id=triage_id, state=TriageTrialStates.IN_LSF)
+    triage_id = 155
+    set_triage_trial_state(triage_id=triage_id, state=TriageTrialStates.PREPARING_RESULTS)
     set_triage_state(triage_id=triage_id, state=TriagingStates.IN_PROGRESS)

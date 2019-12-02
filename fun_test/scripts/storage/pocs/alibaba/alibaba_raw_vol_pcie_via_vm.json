@@ -17,8 +17,8 @@
           "local_controller_ip": "19.1.1.1",
           "remote_controller_port": 4420,
           "local_controller_port": 4420,
-          "dpc_port_local": 40221,
-          "dpc_port_remote": 40220,
+          "dpc_port_local": 42221,
+          "dpc_port_remote": 42220,
           "ctlid": 0,
           "huid": 1,
           "pcie_vfs": 4,
@@ -32,14 +32,14 @@
               "nvme_pci_device": "pci_0000_af_05_0",
               "fnid": 40,
               "local_storage": {
-                "blt_vol_capacity": 1600277970944,
+                "blt_vol_capacity": 1600120684544,
                 "blt_vol_block_size": 4096,
-                "rds_vol_capacity": 1600277970944,
+                "rds_vol_capacity": 1600120684544,
                 "rds_vol_block_size": 4096,
-                "command_timeout": 5
+                "command_timeout": 20
               },
               "remote_storage": {
-                "blt_vol_capacity": 1600277970944,
+                "blt_vol_capacity": 1600120684544,
                 "blt_vol_block_size": 4096,
                 "command_timeout": 5
               },
@@ -114,7 +114,7 @@
   },
   "LocalSSDVM": {
     "command_timeout": 5,
-    "capacity": 1600277970944,
+    "capacity": 1600120684544,
     "block_size": 4096,
     "controllers": {},
     "ip": "18.1.1.1",

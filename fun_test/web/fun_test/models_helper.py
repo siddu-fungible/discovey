@@ -2,6 +2,7 @@ import os, django, json, datetime
 import sys
 import random
 import time
+# from lib.system.fun_test import *
 from datetime import datetime, timedelta
 from django.core import paginator
 from fun_global import RESULTS, get_current_time, get_localized_time
@@ -38,7 +39,8 @@ from web.fun_test.models import (
     TestBed,
     TestCaseInfo,
     Suite,
-    RegresssionScripts
+    RegresssionScripts,
+    MetricsDataRunTime
 )
 
 SUITE_EXECUTION_FILTERS = {"PENDING": "PENDING",
@@ -544,11 +546,6 @@ def _get_suite_executions(execution_id=None,
             elif te_result == RESULTS["IN_PROGRESS"]:
                 num_in_progress += 1
 
-            # if save_test_case_info:
-            #    suite_execution["test_case_info"].append({"script_path": test_case_execution.script_path,
-            #                                              "test_case_id": test_case_execution.test_case_id,
-            #                                              "inputs": test_case_execution.inputs,
-            #                                              "result": test_case_execution.result})
 
         if not finalized:
             if finalize and (num_passed == len(test_case_execution_ids)) and test_case_execution_ids:
@@ -583,10 +580,8 @@ def _get_suite_executions(execution_id=None,
         one_result["num_not_run"] = num_not_run
         one_result["num_in_progress"] = num_in_progress
 
-        one_result["fields"]["scheduled_time"] = str(
-           suite_execution.scheduled_time)
-        one_result["fields"]["submitted_time"] = str(
-            suite_execution.submitted_time)
+        one_result["fields"]["scheduled_time"] = str(suite_execution.scheduled_time)
+        one_result["fields"]["submitted_time"] = str(suite_execution.submitted_time)
         one_result["fields"]["completed_time"] = str(suite_execution.completed_time)
         return_results.append(one_result)
     with transaction.atomic():
@@ -618,24 +613,42 @@ def add_jenkins_job_id_map(jenkins_job_id, fun_sdk_branch, git_commit, software_
                                 suite_execution_id=suite_execution_id)
         entry.save()
 
+def add_metrics_data_run_time(run_time, date_time):
+    try:
+        lsf_job_id = run_time["lsf_job_id"]
+        if lsf_job_id:
+            entry = MetricsDataRunTime.objects.get(lsf_job_id=lsf_job_id)
+        else:
+            raise ObjectDoesNotExist
+    except ObjectDoesNotExist:
+        jenkins_build_number = run_time["jenkins_build_number"]
+        lsf_job_id = run_time["lsf_job_id"]
+        suite_execution_id = run_time["suite_execution_id"]
+        build_properties = run_time["build_properties"]
+        version = run_time["version"]
+        associated_suites = run_time["associated_suites"]
+        entry = MetricsDataRunTime(jenkins_build_number=jenkins_build_number, lsf_job_id=lsf_job_id,
+                           suite_execution_id=suite_execution_id, build_properties=build_properties, version=version,
+                           associated_suites=associated_suites, date_time=date_time)
+        entry.save()
+    return entry.id
 
 def _get_suite_execution_attributes(suite_execution):
     suite_execution_attributes = []
     suite_execution_attributes.append({"name": "Job state", "value": suite_execution["fields"]["state"]})
     suite_execution_attributes.append({"name": "Result", "value": str(suite_execution["suite_result"])})
     suite_execution_attributes.append({"name": "Version", "value": str(suite_execution["fields"]["version"])})
-    suite_execution_attributes.append(
-        {"name": "Scheduled Time", "value": str(suite_execution["fields"]["scheduled_time"])})
-    suite_execution_attributes.append(
-        {"name": "Started Time", "value": str(suite_execution["fields"]["started_time"])})
-    suite_execution_attributes.append(
-        {"name": "Completed Time", "value": str(suite_execution["fields"]["completed_time"])})
+    # suite_execution_attributes.append(
+    #     {"name": "Scheduled Time", "value": str(suite_execution["fields"]["scheduled_time"])})
+    # suite_execution_attributes.append(
+    #    {"name": "Started Time", "value": str(suite_execution["fields"]["started_time"])})
+    # suite_execution_attributes.append(
+    #    {"name": "Completed Time", "value": str(suite_execution["fields"]["completed_time"])})
     suite_execution_attributes.append({"name": "Path", "value": str(suite_execution["fields"]["suite_path"])})
     suite_execution_attributes.append({"name": "Passed", "value": suite_execution["num_passed"]})
     suite_execution_attributes.append({"name": "Failed", "value": suite_execution["num_failed"]})
     suite_execution_attributes.append({"name": "Not Run", "value": suite_execution["num_not_run"]})
     suite_execution_attributes.append({"name": "In Progress", "value": suite_execution["num_in_progress"]})
-    suite_execution_attributes.append({"name": "Skipped", "value": suite_execution["num_skipped"]})
     suite_execution_attributes.append({"name": "Test-bed type", "value": suite_execution["fields"]["test_bed_type"]})
     suite_execution_attributes.append({"name": "Submitter", "value": suite_execution["fields"]["submitter_email"]})
     return suite_execution_attributes
@@ -667,9 +680,9 @@ def is_suite_in_progress(job_id, test_bed_type):
     result = None
     try:
         s = SuiteExecution.objects.get(execution_id=int(job_id))
-        print ("Checking suite in progress: {}: {}".format(job_id, s.state))
+        # print ("Checking suite in progress: {}: {}".format(job_id, s.state))
         result = s.state >= JobStatusType.IN_PROGRESS
-        print ("Checking suite in progress: {} {}: {}: Result: {}".format(test_bed_type, job_id, s.state, result))
+        # print ("Checking suite in progress: {} {}: {}: Result: {}".format(test_bed_type, job_id, s.state, result))
     except ObjectDoesNotExist:
         pass
     return result
@@ -698,17 +711,17 @@ def get_log_files(suite_execution_id):
     return log_files
 
 
-def get_fun_test_time_series_collection_name(suite_execution_id, test_case_execution_id):
-    collection_name = "s_{}_{}".format(suite_execution_id, test_case_execution_id)
-    return collection_name
+def get_fun_test_time_series_collection_name(suite_execution_id):
+    return "s_{}".format(suite_execution_id)
 
 
-def get_ts_test_case_context_info_collection_name(suite_execution_id, script_id):
+def get_ts_test_case_context_info_collection_name(suite_execution_id):
     return "s_{}_{}_context_info".format(suite_execution_id, script_id)
 
 
 def get_ts_script_run_time_collection_name(suite_execution_id, script_id):
     return "s_{}_{}_script_run_time".format(suite_execution_id, script_id)
+
 
 def get_script_id(test_case_execution_id):
     result = None

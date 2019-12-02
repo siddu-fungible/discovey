@@ -1,0 +1,117 @@
+#mpoc-server34
+sudo insmod /mnt/ws/fungible-host-drivers/linux/kernel/fun_core.ko
+sudo insmod /mnt/ws/fungible-host-drivers/linux/kernel/funeth.ko
+sudo ethtool -L hu2-f0 tx 8 rx 8; ethtool -l hu2-f0
+sudo ethtool -X hu2-f0 equal 8 hfunc toeplitz; ethtool -x hu2-f0
+ sudo bash
+for i in {0..7}; do cat /sys/class/net/hu2-f0/queues/tx-$i/xps_cpus; done
+  sudo ifconfig hu2-f0 mtu 1500
+sudo ifconfig hu2-f0 20.2.21.2 netmask 255.255.255.0
+sudo ifconfig hu2-f0 up
+ sudo ifconfig hu2-f0
+sudo ip route delete 20.2.0.0/16
+sudo ip route add 20.2.0.0/16 via 20.2.21.1
+sudo ip route
+sudo ip route delete 30.0.0.0/8
+sudo ip route add 30.0.0.0/8 via 20.2.21.1
+  sudo ip route
+
+
+  #mpoc-server30
+cd /mnt/ws/fungible-host-drivers/linux/kernel; insmod fun_core.ko; insmod funeth.ko sriov_test=yes num_queues=8
+ ifconfig hu3-f0
+ sudo ethtool -L hu3-f0 tx 8 rx 8; ethtool -l hu3-f0
+sudo ethtool -X hu3-f0 equal 8 hfunc toeplitz; ethtool -x hu3-f0
+ sudo bash
+ for i in {0..7}; do cat /sys/class/net/hu3-f0/queues/tx-$i/xps_cpus; done
+ sudo ifconfig hu3-f0 mtu 1500
+  sudo ifconfig hu3-f0 20.2.22.3 netmask 255.255.255.0
+  sudo ifconfig hu3-f0 up
+ sudo ifconfig hu3-f0
+ sudo ip route delete 20.2.0.0/16
+ sudo ip route add 20.2.0.0/16 via 20.2.22.1
+ sudo ip route
+sudo ip route delete 30.0.0.0/8
+sudo ip route add 30.0.0.0/8 via 20.2.22.1
+ sudo ip route
+
+
+ #mpoc-server44
+cd /mnt/ws/fungible-host-drivers/linux/kernel; insmod fun_core.ko; insmod funeth.ko sriov_test=yes num_queues=8
+
+ ifconfig hu2-f0
+  sudo ethtool -L hu2-f0 tx 8 rx 8; ethtool -l hu2-f0
+  sudo ethtool -X hu2-f0 equal 8 hfunc toeplitz; ethtool -x hu2-f0
+   sudo bash
+   for i in {0..7}; do cat /sys/class/net/hu2-f0/queues/tx-$i/xps_cpus; done
+  sudo ifconfig hu2-f0 mtu 1500
+   sudo ifconfig hu2-f0 20.2.1.2 netmask 255.255.255.0
+ sudo ifconfig hu2-f0 up
+  sudo ifconfig hu2-f0
+  sudo ip route delete 20.2.0.0/16
+  sudo ip route add 20.2.0.0/16 via 20.2.1.1
+ sudo ip route
+ sudo ip route delete 30.0.0.0/8
+  sudo ip route add 30.0.0.0/8 via 20.2.1.1
+  sudo ip route
+
+  #mpoc-server40
+cd /mnt/ws/fungible-host-drivers/linux/kernel; insmod fun_core.ko; insmod funeth.ko sriov_test=yes num_queues=8
+  ifconfig hu3-f0
+  sudo ethtool -L hu3-f0 tx 8 rx 8; ethtool -l hu3-f0
+  sudo ethtool -X hu3-f0 equal 8 hfunc toeplitz; ethtool -x hu3-f0
+ sudo bash
+ for i in {0..7}; do cat /sys/class/net/hu3-f0/queues/tx-$i/xps_cpus; done
+  sudo ifconfig hu3-f0 mtu 1500
+sudo ifconfig hu3-f0 20.2.2.3 netmask 255.255.255.0
+  sudo ifconfig hu3-f0 up
+sudo ifconfig hu3-f0
+ sudo ip route delete 20.2.0.0/16
+ sudo ip route add 20.2.0.0/16 via 20.2.2.1
+sudo ip route
+ sudo ip route delete 30.0.0.0/8
+ sudo ip route add 30.0.0.0/8 via 20.2.2.1
+ sudo ip route
+ sudo ethtool -i hu3-f0
+
+
+  #mpoc-server47
+cd /mnt/ws/fungible-host-drivers/linux/kernel; insmod fun_core.ko; insmod funeth.ko sriov_test=yes num_queues=8
+  ifconfig hu1-f0
+  sudo ethtool -L hu1-f0 tx 8 rx 8; ethtool -l hu1-f0
+ sudo ethtool -X hu1-f0 equal 8 hfunc toeplitz; ethtool -x hu1-f0
+  sudo bash
+  for i in {0..7}; do cat /sys/class/net/hu1-f0/queues/tx-$i/xps_cpus; done
+  sudo ifconfig hu1-f0 mtu 1500
+  sudo ifconfig hu1-f0 20.2.3.3 netmask 255.255.255.0
+  sudo ifconfig hu1-f0 up
+ sudo ifconfig hu1-f0
+  sudo ip route delete 20.2.0.0/16
+ sudo ip route add 20.2.0.0/16 via 20.2.3.1
+  sudo ip route
+  sudo ip route delete 30.0.0.0/8
+sudo ip route add 30.0.0.0/8 via 20.2.3.1
+sudo ip route
+
+#mpoc-server45
+cd /mnt/ws/fungible-host-drivers/linux/kernel; insmod fun_core.ko; insmod funeth.ko sriov_test=yes num_queues=8
+
+ ifconfig hu3-f0
+  sudo ethtool -L hu3-f0 tx 8 rx 8; ethtool -l hu3-f0
+  sudo ethtool -X hu3-f0 equal 8 hfunc toeplitz; ethtool -x hu3-f0
+   sudo bash
+   for i in {0..7}; do cat /sys/class/net/hu3-f0/queues/tx-$i/xps_cpus; done
+  sudo ifconfig hu3-f0 mtu 1500
+   sudo ifconfig hu3-f0 20.2.4.3 netmask 255.255.255.0
+ sudo ifconfig hu3-f0 up
+  sudo ifconfig hu3-f0
+  sudo ip route delete 20.2.0.0/16
+  sudo ip route add 20.2.0.0/16 via 20.2.4.1
+ sudo ip route
+ sudo ip route delete 30.0.0.0/8
+  sudo ip route add 30.0.0.0/8 via 20.2.4.1
+  sudo ip route
+
+
+  cd /mnt/ws/fungible-host-drivers/linux/kernel; insmod fun_core.ko; insmod funeth.ko sriov_test=yes num_queues=8
+

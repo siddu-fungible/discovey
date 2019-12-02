@@ -34,15 +34,15 @@ try:
 except (KeyError, ValueError):
     emulation_target = 'f1'
     #DPC_PROXY_IP = '10.1.21.120'
-    #DPC_PROXY_PORT = 40221
+    #DPC_PROXY_PORT = 42221
     #TB = 'SN2'
     #DPC_PROXY_IP = '10.1.40.24'
-    #DPC_PROXY_PORT = 40221
+    #DPC_PROXY_PORT = 42221
     #TB = 'SB5'
     DPC_PROXY_IP = 'fs11-come'
-    DPC_PROXY_PORT = 40220
+    DPC_PROXY_PORT = 42220
     DPC_PROXY_IP2 = 'fs11-come'
-    DPC_PROXY_PORT2 = 40221
+    DPC_PROXY_PORT2 = 42221
     TB = ''.join(fun_test.get_job_environment_variable('test_bed_type').split('-')).upper()
 
 try:
@@ -371,24 +371,24 @@ class FunethSanity(FunTestScript):
             TB = ''.join(test_bed_type.split('-')).upper()
             if control_plane:
                 if test_bed_type == 'fs-11':
-                    f1_0_boot_args = "app=hw_hsu_test cc_huid=3 sku=SKU_FS1600_0 retimer=0,1 --all_100g --dpc-uart --dpc-server"
-                    f1_1_boot_args = "app=hw_hsu_test cc_huid=2 sku=SKU_FS1600_1 retimer=0,1 --all_100g --dpc-uart --dpc-server"
+                    f1_0_boot_args = "app=load_mods cc_huid=3 sku=SKU_FS1600_0 retimer=0,1 --all_100g --dpc-uart --dpc-server"
+                    f1_1_boot_args = "app=load_mods cc_huid=2 sku=SKU_FS1600_1 retimer=0,1 --all_100g --dpc-uart --dpc-server"
                 if test_bed_type == 'fs-48':
-                    f1_0_boot_args = "app=hw_hsu_test cc_huid=3 sku=SKU_FS1600_0 retimer=0,1,2 --all_100g --dpc-uart --dpc-server"
-                    f1_1_boot_args = "app=hw_hsu_test cc_huid=2 sku=SKU_FS1600_1 retimer=0 --all_100g --dpc-uart --dpc-server"
+                    f1_0_boot_args = "app=load_mods cc_huid=3 sku=SKU_FS1600_0 retimer=0,1,2 --all_100g --dpc-uart --dpc-server"
+                    f1_1_boot_args = "app=load_mods cc_huid=2 sku=SKU_FS1600_1 retimer=0 --all_100g --dpc-uart --dpc-server"
                 if csi_perf_enabled:
                     f1_0_boot_args += " --perf csi-local-ip=29.1.1.2 csi-remote-ip={} pdtrace-hbm-size-kb=204800".format(perf_listener_ip)
                 if nu_all_clusters:
                     f1_0_boot_args += ' override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]}'
                     f1_1_boot_args += ' override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]}'
-                funcp_setup_obj = FunCPSetup(test_bed_type=test_bed_type, update_funcp=update_funcp)
+                funcp_setup_obj = FunCPSetup(test_bed_type=test_bed_type, update_funcp=False)
                 topology_helper = TopologyHelper()
                 topology_helper.set_dut_parameters(dut_index=0,
                                                    f1_parameters={0: {"boot_args": f1_0_boot_args},
                                                                   1: {"boot_args": f1_1_boot_args}},
                                                    fun_cp_callback=funcp_setup_obj.bringup)
             else:
-                boot_args = "app=hw_hsu_test retimer=0,1 --dpc-uart --dpc-server --csr-replay --all_100g"
+                boot_args = "app=load_mods retimer=0,1 --dpc-uart --dpc-server --csr-replay --all_100g"
                 if csi_perf_enabled:
                     boot_args += " --perf csi-local-ip=29.1.1.2 csi-remote-ip={} pdtrace-hbm-size-kb=204800".format(perf_listener_ip)
                 if nu_all_clusters:
@@ -1015,14 +1015,14 @@ class FunethTestComeReboot(FunTestCase):
 if __name__ == "__main__":
     ts = FunethSanity()
     for tc in (
-            FunethTestNUPingHU,
+            #FunethTestNUPingHU,
             #FunethTestPacketSweep,
             #FunethTestScpNU2HUPF,
             #FunethTestScpNU2HUVF,
             #FunethTestScpHU2NU,
             #FunethTestInterfaceFlapPF,
             #FunethTestInterfaceFlapVF,
-            #FunethTestUnloadDriver,
+            FunethTestUnloadDriver,
             #FunethTestReboot,
             #FunethTestComeReboot,  # TODO: uncomment after SWLINUX-786 is fixed
     ):

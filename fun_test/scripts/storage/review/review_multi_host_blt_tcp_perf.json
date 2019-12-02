@@ -1,8 +1,8 @@
 {
   "GlobalSetup": {
     "bootargs": [
-      "app=mdt_test,load_mods,hw_hsu_test cc_huid=3 workload=storage --serial --memvol --dpc-uart --all_100g --nofreeze",
-      "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 workload=storage --serial --memvol --dpc-uart --all_100g --nofreeze"
+      "app=mdt_test,load_mods cc_huid=3 workload=storage --serial --memvol --dpc-uart --all_100g --nofreeze",
+      "app=mdt_test,load_mods cc_huid=2 workload=storage --serial --memvol --dpc-uart --all_100g --nofreeze"
     ],
     "dut_start_index": 0,
     "host_start_index": 0,
@@ -51,7 +51,16 @@
         },
         "f1_loopback_ip": "29.1.1.1"
       }
-    }
+    },
+    "api_server_port": 50220,
+    "api_server_username": "admin",
+    "api_server_password": "password",
+    "install": "fresh",
+    "sc_db_directories": ["/var/opt/fungible/elasticsearch", "/var/opt/fungible/cassandra"],
+    "sc_script_dir": "/opt/fungible/StorageController/etc",
+    "run_sc_script": "start_sc.sh",
+    "container_up_timeout": 60,
+    "api_server_up_timeout": 90
   },
   "MultiHostFioRandRead": {
     "num_ssd": 12,
@@ -74,7 +83,7 @@
     "iter_interval": 2,
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {
-      "multiple_jobs": "--rw=randwrite --bs=4k --iodepth=16 --numjobs=1 --ioengine=libaio --direct=1 --prio=0 --cpus_allowed_policy=split --size=100%",
+      "multiple_jobs": "--rw=randwrite --bs=4k --iodepth=16 --direct=1 --prio=0 --cpus_allowed_policy=split --size=100%",
       "timeout": 7200
     },
     "fio_cmd_args": {
@@ -127,7 +136,7 @@
     "iter_interval": 2,
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {
-      "multiple_jobs": "--rw=randwrite --bs=4k --iodepth=16 --numjobs=1 --ioengine=libaio --direct=1 --prio=0 --cpus_allowed_policy=split --size=100%",
+      "multiple_jobs": "--rw=randwrite --bs=4k --iodepth=16 --direct=1 --prio=0 --cpus_allowed_policy=split --size=100%",
       "timeout": 7200
     },
     "fio_cmd_args": {

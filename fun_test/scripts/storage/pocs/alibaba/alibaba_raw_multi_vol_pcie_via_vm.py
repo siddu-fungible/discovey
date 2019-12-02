@@ -43,6 +43,7 @@ def post_results(value_dict):
     value_dict["volume_type"] = "BLT"
     value_dict["platform"] = FunPlatform.F1
     value_dict["version"] = fun_test.get_version()
+    value_dict["encryption"] = False
     model_name = "AlibabaPerformance"
     status = fun_test.PASSED
     try:
@@ -73,15 +74,16 @@ class RawVolumePerfScript(FunTestScript):
 
         global funcp_obj, servers_mode, servers_list, fs_name
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
-        f1_0_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --dpc-server --all_100g --serial --dpc-uart " \
+        f1_0_boot_args = "app=mdt_test,load_mods cc_huid=3 --dpc-server --all_100g --serial --dpc-uart " \
                          "retimer=0,1 --mgmt  syslog=5  workload=storage"
-        f1_1_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 --dpc-server --all_100g --serial --dpc-uart " \
+        f1_1_boot_args = "app=mdt_test,load_mods cc_huid=2 --dpc-server --all_100g --serial --dpc-uart " \
                          "retimer=0,1 --mgmt  syslog=5  workload=storage"
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
         # fs_name = "fs-45"
         funcp_obj = FunControlPlaneBringup(fs_name=self.server_key["fs"][fs_name]["fs-name"])
         funcp_obj.cleanup_funcp()
         servers_mode = self.server_key["fs"][fs_name]["hosts"]
+        fun_test.shared_variables["servers_mode"] = servers_mode
         servers_list = []
 
         for server in servers_mode:
@@ -97,6 +99,9 @@ class RawVolumePerfScript(FunTestScript):
         topology = topology_helper.deploy()
         fun_test.shared_variables["topology"] = topology
         fun_test.test_assert(topology, "Topology deployed")
+        fs = topology.get_dut_instance(index=0)
+        come_obj = fs.get_come()
+        come_obj.command("/home/fun/mks/restart_docker_service.sh")
 
         # Bringup FunCP
 
@@ -293,24 +298,34 @@ class RawVolumeLocalPerfTestcase(FunTestCase):
             thread_id = {}
             fun_test.shared_variables["fio"] = {}
             fio_filename = fun_test.shared_variables["nvme_block_device"]
+            servers_mode = fun_test.shared_variables["servers_mode"]
             for i in range(0, 2):
-                for index, host in enumerate(self.server_dict):
-                    self.host = Linux(host_ip=host, ssh_username=self.uname, ssh_password=self.pwd)
-                    thread_id[index] = fun_test.execute_thread_after(time_in_seconds=10,
-                                        func=fio_parser,
-                                        arg1=self.host,
-                                        host_index=index,
-                                        filename=fio_filename,
-                                        **self.warm_up_fio_cmd_args)
-                fun_test.sleep("Fio threadzz", seconds=1)
-                #fio_output[fio_iodepth] = {}
-                for index, host in enumerate(self.server_dict):
-                    #fio_output[fio_iodepth][host] = {}
-                    fun_test.log("Joining fio thread {}".format(index))
-                    fun_test.join_thread(fun_test_thread_id=thread_id[index], sleep_time=1)
-                    fun_test.log("FIO Command Output from {}:\n {}".format(host,
-                                                                       fun_test.shared_variables["fio"][index]))
+                count = 0
+                for vm in servers_mode:
+                    # for index, host in enumerate(self.server_dict):
+                    ns_id = 1
+                    nvmedisk = "/dev/nvme0n"
+                    for x in range(0, 2):
+                        vms = servers_with_vms[vm]["vms"]
+                        for each_vm in vms:
+                            self.end_host = Linux(host_ip=servers_with_vms[vm]["vms"][each_vm]["hostname"],
+                                                  ssh_username="localadmin", ssh_password="Precious1*")
+                            fio_filename = nvmedisk + str(ns_id).rstrip()
+                            thread_id[count] = fun_test.execute_thread_after(time_in_seconds=2,
+                                                                             func=fio_parser,
+                                                                             arg1=self.end_host,
+                                                                             host_index=count,
+                                                                             filename=fio_filename,
+                                                                             **self.warm_up_fio_cmd_args)
+                            fun_test.sleep("Fio threadzz", seconds=1)
+                            ns_id += 1
+                            count += 1
 
+                for x in range(count):
+                    fun_test.log("Joining fio thread {}".format(x))
+                    fun_test.join_thread(fun_test_thread_id=thread_id[x], sleep_time=1)
+                    fun_test.log("FIO Command Output from {}:\n {}".format(each_vm,
+                                                                           fun_test.shared_variables["fio"][x]))
         i += 1
 
     def run(self):

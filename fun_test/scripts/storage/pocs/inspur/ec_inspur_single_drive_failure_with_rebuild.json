@@ -1,7 +1,7 @@
 {
   "GlobalSetup": {
-    "bootargs": ["app=mdt_test,load_mods,hw_hsu_test cc_huid=3 workload=storage --serial --dpc-server --dpc-uart --all_100g --nofreeze",
-      "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 workload=storage --serial --dpc-server --dpc-uart --all_100g --nofreeze"],
+    "bootargs": ["app=mdt_test,load_mods cc_huid=3 workload=storage --serial --dpc-server --dpc-uart --all_100g --nofreeze",
+      "app=mdt_test,load_mods cc_huid=2 workload=storage --serial --dpc-server --dpc-uart --all_100g --nofreeze"],
     "disable_f1_index": 1,
     "f1_in_use": 0,
     // Script won't disturb the syslog level setting, if it is set to "default". If any other level is needed set this config to that level in int format
@@ -23,7 +23,15 @@
     "huid": 7,
     "ctlid": 0,
     "ethernet_adapter": "Mellanox",
-    "override_numa_node": {"override": true, "override_node": "NUMA node0 CPU(s)"}
+    "override_numa_node": {"override": true, "override_node": "NUMA node0 CPU(s)"},
+    "api_server_port": 50220,
+    "api_server_username": "admin",
+    "api_server_password": "password",
+    "install": "fresh",
+    "sc_db_directories": ["/var/opt/fungible/elasticsearch", "/var/opt/fungible/cassandra"],
+    "sc_script_dir": "/opt/fungible/StorageController/etc",
+    "run_sc_script": "start_sc.sh",
+    "container_up_timeout": 60
   },
   "SingleVolumeWithBP": {
     "ec_info": {
@@ -51,7 +59,7 @@
     "queue_size": 16,
     "nr_requests": 4,
     "back_pressure": true,
-    "back_pressure_io": {"fio_cmd_args": "sudo fio --group_reporting --output-format=json --ioengine=libaio  --numjobs=1 --direct=1 --prio=0 --rw=write --cpus_allowed_policy=split --norandommap --randrepeat=0 --cpus_allowed=0-19,40-59 --iodepth=8 --bs=4k --time_based --runtime=7200 --name=job0 ", "timeout": 7800},
+    "back_pressure_io": {"fio_cmd_args": "sudo fio --group_reporting --output-format=json --ioengine=libaio  --numjobs=1 --direct=1 --prio=0 --rw=write --cpus_allowed_policy=split --norandommap --randrepeat=0 --iodepth=8 --bs=4k --time_based --runtime=7200 --name=job0 ", "timeout": 7800},
     "nvme_device": "/dev/nvme",
     "mount_path": "/mnt/ssd",
     "trigger_failure": true,

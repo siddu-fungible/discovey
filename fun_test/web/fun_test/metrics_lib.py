@@ -1,6 +1,6 @@
 import os
 import django
-from web.web_global import PRIMARY_SETTINGS_FILE, F1_ROOT_ID, S1_ROOT_ID
+from web.web_global import PRIMARY_SETTINGS_FILE, F1_ROOT_ID, S1_ROOT_ID, OTHER_ROOT_ID, FS1600_ROOT_ID
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", PRIMARY_SETTINGS_FILE)
 django.setup()
@@ -377,8 +377,9 @@ class MetricLib():
     def _generate_report(self, workspace_id):
         reports = []
         metrics = InterestedMetrics.objects.filter(workspace_id=workspace_id)
-        for metric in metrics:
-            self._set_report_fields(lineage=metric.lineage, metric_id=metric.metric_id, reports=reports, root=True)
+        if len(metrics):
+            for metric in metrics:
+                self._set_report_fields(lineage=metric.lineage, metric_id=metric.metric_id, reports=reports, root=True)
         return reports
 
     def _set_report_fields(self, lineage, metric_id, reports, root=False):
@@ -403,14 +404,23 @@ class MetricLib():
                 if len(entries) == 2:
                     data_set_dict = {}
                     self._set_dict(entries=entries, data_set_dict=data_set_dict, output_name=output_name, name=name)
-                    if data_set_dict["today"] and data_set_dict["yesterday"]:
+                    if data_set_dict["today"] and data_set_dict["yesterday"] and data_set_dict["today"] != -1 and \
+                            data_set_dict["yesterday"] != -1:
                         percentage = self._calculate_percentage(current=data_set_dict["today"],
                                                                 previous=data_set_dict[
                                                                     "yesterday"])
+                        best_percentage = self._calculate_percentage(current=data_set_dict["today"],
+                                                                     previous=data_set["output"]["best"]) if \
+                            data_set["output"]["best"] != -1 else None
+
                         if chart.positive and percentage < negative_threshold:
                             self._set_percentage(data_set_dict=data_set_dict, report=report, percentage=percentage)
                         elif not chart.positive and percentage > positive_threshold:
                             self._set_percentage(data_set_dict=data_set_dict, report=report, percentage=percentage)
+                        elif chart.positive and best_percentage and best_percentage < negative_threshold:
+                            self._set_percentage(data_set_dict=data_set_dict, report=report, percentage=best_percentage)
+                        elif not chart.positive and best_percentage and best_percentage > positive_threshold:
+                            self._set_percentage(data_set_dict=data_set_dict, report=report, percentage=best_percentage)
 
             if len(report["data_sets"]):
                 reports.append(report)
@@ -420,8 +430,10 @@ class MetricLib():
                 self._set_report_fields(lineage=lineage, metric_id=int(child), reports=reports, root=False)
 
     def _calculate_percentage(self, current, previous):
-        percent_num = (float(current - previous) / float(previous)) * 100.0
-        percentage = round(percent_num, 2)
+        percentage = 0
+        if previous:
+            percent_num = (float(current - previous) / float(previous)) * 100.0
+            percentage = round(percent_num, 2)
         return percentage
 
     def _set_dict(self, entries, data_set_dict, output_name, name):
@@ -446,18 +458,9 @@ class MetricLib():
 
     def backup_dags(self):
         self.set_global_cache(cache_valid=False)
-        metric_ids = [F1_ROOT_ID, S1_ROOT_ID] # F1, S1 metric id
-        result = {}
-        for metric_id in metric_ids:
-            if metric_id == F1_ROOT_ID: # F1 metric id
-                dag = "F1"
-            else:
-                dag = "S1"
-            result[dag] = self.fetch_dag(metric_ids=[metric_id], backup=True)
-            print json.dumps(result[dag])
-        f1_dag = result["F1"]
-        s1_dag = result["S1"]
-        PerformanceMetricsDag(f1_metrics_dag=json.dumps(f1_dag), s1_metrics_dag=json.dumps(s1_dag)).save()
+        metric_ids = [F1_ROOT_ID, S1_ROOT_ID, FS1600_ROOT_ID, OTHER_ROOT_ID]  # F1, S1, FS1600, Other metric id
+        result = self.fetch_dag(metric_ids=metric_ids, backup=True)
+        PerformanceMetricsDag(metrics_dag=json.dumps(result)).save()
         print "dag backup successful"
 
     def traverse_dag(self, levels, metric_id, metric_chart_entries, sort_by_name=True):
@@ -501,7 +504,7 @@ class MetricLib():
                     child_chart = MetricChart.objects.get(metric_id=child_id)
                     metric_chart_entries[child_id] = child_chart
                 children_info[child_chart.metric_id] = self.traverse_dag(levels=levels, metric_id=child_chart.metric_id,
-                                                                    metric_chart_entries=metric_chart_entries)
+                                                                         metric_chart_entries=metric_chart_entries)
             if sort_by_name:
                 result["children"] = map(lambda item: item[0],
                                          sorted(children_info.iteritems(), key=lambda d: d[1]['chart_name']))
@@ -517,21 +520,37 @@ class MetricLib():
                 chart = MetricChart.objects.get(metric_id=int(metric_id))
                 metric_chart_entries[chart.metric_id] = chart
                 result.append(self.traverse_dag(levels=levels, metric_id=chart.metric_id, sort_by_name=sort_by_name,
-                                           metric_chart_entries=metric_chart_entries))
+                                                metric_chart_entries=metric_chart_entries))
         else:
             pmds = PerformanceMetricsDag.objects.all().order_by("-date_time")[:1]
             for pmd in pmds:
-                for metric_id in metric_ids:
-                    if int(metric_id) == F1_ROOT_ID:  # 101=F1
-                        result.append(json.loads(pmd.f1_metrics_dag)[0])
-                    if int(metric_id) == S1_ROOT_ID:  # 591-S1
-                        result.append(json.loads(pmd.s1_metrics_dag)[0])
+                result = json.loads(pmd.metrics_dag)
         return result
 
     def set_global_cache(self, cache_valid):
         global_setting = MetricsGlobalSettings.objects.first()
         global_setting.cache_valid = cache_valid
         global_setting.save()
+
+    def _set_chart_status(self, models, suite_execution_id):
+        for model in models:
+            charts = MetricChart.objects.filter(metric_model_name=model)
+            metric_model = app_config.get_metric_models()[model]
+            for chart in charts:
+                status = True
+                data_sets = chart.get_data_sets()
+                for data_set in data_sets:
+                    inputs = data_set["inputs"]
+                    entries = metric_model.objects.filter(**inputs).order_by("-input_date_time")[:1]
+                    if len(entries):
+                        entry = entries.first()
+                        if not entry.status == RESULTS["PASSED"]:
+                            status = False
+                            chart.set_chart_status(status=RESULTS["FAILED"],
+                                                   suite_execution_id=suite_execution_id)
+                            break
+                if status:
+                    chart.set_chart_status(status=RESULTS["PASSED"], suite_execution_id=suite_execution_id)
 
 
 if __name__ == "__main__":

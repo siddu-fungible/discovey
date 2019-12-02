@@ -19,14 +19,14 @@
           "remote_controller_ip": "19.1.1.1",
           "local_controller_port": 4420,
           "remote_controller_port": 4420,
-          "dpc_port_local": 40220,
-          "dpc_port_remote": 40221,
+          "dpc_port_local": 42220,
+          "dpc_port_remote": 42221,
           "ctlid": 0,
           "huid": 2,
           "pcie_vfs": 4,
           "vms": {
             "cab03-qa-01-vm01": {
-              "hostname": "10.1.105.17",
+              "hostname": "10.1.105.15",
               "user": "localadmin",
               "password": "Precious1*",
               "data_ip": "18.1.1.3",
@@ -38,7 +38,7 @@
                 "blt_vol_block_size": 4096,
                 "rds_vol_capacity": 1600120684544,
                 "rds_vol_block_size": 4096,
-                "command_timeout": 5
+                "command_timeout": 20
               },
               "vm_pings": [
                 "30.1.1.2",

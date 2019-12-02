@@ -1,0 +1,52 @@
+{
+  "GetSetupDetails":
+  {
+    "blt_details":
+    {"capacity": 107374182400,
+    "block_size": 4096},
+    "transport_type": "tcp",
+    "nvme_ioq": 16,
+    "controller_port": 1099,
+    "command_timeout": 5,
+    "precondition_args":{
+      "bs": 4096,
+      "size": "100%",
+      "iodepth": 16,
+      "numjobs": 1,
+      "direct": 1,
+      "prio": 0,
+      "invalidate":1,
+      "timeout": 900
+    }
+  },
+  "BLTFioRandWrite":{
+    "fio_cmd_args": {
+      "bs": 4096,
+      "ioengine": "libaio",
+      // "verify": "pattern",
+      // "verify_pattern": "\\\"DEADBEEF\\\"",
+      "rw": "randwrite",
+      "direct": 1,
+      "prio": 0,
+      "iodepth": 16,
+      "runtime": 120,
+      "numjobs": 1,
+      "cpus_allowed_policy": "split"
+    }
+  },
+  "BLTFioRandRead":{
+    "fio_cmd_args": {
+      "bs": 4096,
+      "ioengine": "libaio",
+      // "verify": "pattern",
+      // "verify_pattern": "\\\"DEADBEEF\\\"",
+      "rw": "randread",
+      "direct": 1,
+      "prio": 0,
+      "iodepth": 16,
+      "runtime": 120,
+      "numjobs": 16,
+      "cpus_allowed_policy": "split"
+    }
+  }
+}

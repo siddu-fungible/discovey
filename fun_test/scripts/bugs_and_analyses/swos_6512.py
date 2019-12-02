@@ -46,9 +46,9 @@ class BringupSetup(FunTestCase):
     def run(self):
         global funcp_obj, servers_mode, servers_list, fs_name
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
-        f1_0_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --dpc-server --all_100g --serial --dpc-uart " \
+        f1_0_boot_args = "app=mdt_test,load_mods cc_huid=3 --dpc-server --all_100g --serial --dpc-uart " \
                          "retimer=0 --mgmt --disable-wu-watchdog syslog=6"
-        f1_1_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 --dpc-server --all_100g --serial --dpc-uart " \
+        f1_1_boot_args = "app=mdt_test,load_mods cc_huid=2 --dpc-server --all_100g --serial --dpc-uart " \
                          "retimer=0 --mgmt --disable-wu-watchdog syslog=6"
 
         topology_helper = TopologyHelper()
@@ -189,8 +189,8 @@ class CryptoCore(FunTestCase):
         self.blt_block_size = 4096
         self.blt_uuid = utils.generate_uuid()
         self.command_timeout = 5
-        self.storage_controller = StorageController(target_ip="fs45-come", target_port=40220)
-        self.storage_controller_remote = StorageController(target_ip="fs45-come", target_port=40221)
+        self.storage_controller = StorageController(target_ip="fs45-come", target_port=42220)
+        self.storage_controller_remote = StorageController(target_ip="fs45-come", target_port=42221)
         num_raw_vol = 1
         num_encrypted_vol = 1
         num_rds_vol = 1

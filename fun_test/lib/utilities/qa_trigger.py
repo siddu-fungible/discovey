@@ -9,7 +9,9 @@ import json
 import time
 import logging
 import httplib
-import time
+import subprocess
+import random
+
 
 logging.basicConfig(level=logging.INFO)
 
@@ -26,15 +28,32 @@ DEFAULT_SUBMITTER_EMAIL = "team-regression@fungible.com"
 TIME_OUT_EXIT_CODE = -999
 PASSED_EXIT_CODE = 0
 FAILED_EXIT_CODE = -1
+SCP_FAILED_EXIT_CODE = -110
 GENERIC_ERROR_EXIT_CODE = -111
+
+WORKSPACE_DIRECTORY = "/Users/johnabraham/ws/test_pr"
+FUNOS_RELEASE_STRIPPED_BINARY = "FunOS/build/funos-f1-release.stripped"
+TFTP_SERVER_IP = "qa-ubuntu-02"
+TFTP_SERVER_SSH_USERNAME = "auto_admin"
+TFTP_DIRECTORY = "/tftpboot"
+
+
+def popen(command, args, shell=None):
+    p = subprocess.Popen([command] + args, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE,
+                         shell=shell)
+    output, err = p.communicate()
+    return_code = p.returncode
+    return return_code, output, err
+
+
+def scp_file(source_file, target_server_ip, target_username, target_file):
+    command = "scp {} {}@{}:{}".format(source_file, target_username, target_server_ip, target_file)
+    return popen(command="scp", args=command.split(" ")[1:])
 
 
 class FunTestClient:
-    STATUS_UNKNOWN = "UNKNOWN"
-    STATUS_COMPLETED = "COMPLETED"
-    STATUS_IN_PROGRESS = "IN_PROGRESS"
-    STATUS_QUEUED = "QUEUED"
-    DEBUG = True
+
+    DEBUG = False
 
     def __init__(self, base_url):
         self.base_url = base_url
@@ -42,10 +61,11 @@ class FunTestClient:
         self.csrf_token = None
         self.cookies = {}
 
-    def report_error(self, error_message, suite_name):
+    def report_error(self, error_message, suite_name=None):
+        print("ERROR: {}".format(error_message))
         from_address = "john.abraham@fungible.com"
         subject = "FunTest Interface error: %s" % error_message
-        content = "Suite: %s, Error: %s" % (suite_name, error_message)
+        content = "Suite: {}, Error: {}".format(suite_name, error_message)
         # send_mail(from_address=from_address, to_addresses=default_to_addresses, subject=subject, content=content)
         self._write_html(content)
 
@@ -123,7 +143,8 @@ class FunTestClient:
                    email_list=None,
                    environment=None,
                    test_bed_type="emulation",
-                   description=""):
+                   description="",
+                   max_run_time=3600 * 2):
         if not tags:
             tags = []
         elif isinstance(tags, str):
@@ -135,6 +156,10 @@ class FunTestClient:
             email_list = [email.strip() for email in email_list.split(",")]
 
         suite_execution_id = None
+        if environment is None:
+            environment = {}
+        environment["test_bed_type"] = test_bed_type
+
         job_spec = {
             "suite_path": suite_path,
             "build_url": build_url,
@@ -143,8 +168,10 @@ class FunTestClient:
             "submitter_email": submitter_email,
             "environment": environment,
             "test_bed_type": test_bed_type,
-            "description": description
+            "description": description,
+            "max_run_time": max_run_time
         }
+
         response = self._do_post(url="/regression/submit_job", data=json.dumps(job_spec))
         if response["status"]:
             suite_execution_id = int(response["data"])
@@ -161,41 +188,99 @@ class FunTestClient:
         response = self._do_get(url="/api/v1/regression/suite_executions/{}?is_job_completed=true".format(job_id))
         return response
 
+    def scp_funos_binary(self, workspace, target_file_name):
+        result = False
+        source_file = "{}/{}".format(workspace, FUNOS_RELEASE_STRIPPED_BINARY)
+        if os.path.exists(source_file):
+            target_server_ip = TFTP_SERVER_IP
+            target_username = TFTP_SERVER_SSH_USERNAME
+            target_file = "{}/{}".format(TFTP_DIRECTORY, target_file_name)
 
+            return_code, output, err = scp_file(source_file=source_file,
+                                                target_server_ip=target_server_ip,
+                                                target_username=target_username,
+                                                target_file=target_file)
+
+            if return_code == 0:
+                result = True
+                print("SCP FunOS binary was successful")
+            print("SCP: return_code: {}".format(return_code))
+            print("SCP: output: {}".format(output))
+            print("SCP: error: {}".format(err))
+        else:
+            error_message = "Path: {} does not exist".format(source_file)
+            self.report_error(error_message=error_message)
+        return result
+
+    def position_pre_built_artifacts(self, jenkins_workspace):
+        print("Positioning build artifacts")
+        random_string = ''.join(random.sample('0123456789', 6))
+        target_file_name = "s_pr_{}".format(random_string)
+        scp_result = self.scp_funos_binary(workspace=jenkins_workspace, target_file_name=target_file_name)
+        result = None
+        if scp_result:
+            result = {"funos_binary": target_file_name}
+        print("Positioning build artifacts. Result: {}".format(result))
+        return result
+
+    def update_environment(self, environment, key, value):
+        if not environment:
+            environment = {}
+        environment[key] = value
+        return environment
+
+def log_job_status(job_status):
+    logging.info("Job state code: {}".format(job_status["job_state_code"]))
+    logging.info("Job state description: {}".format(job_status["job_state_string"]))
+    logging.info("Message: {}".format(job_status["message"]))
+    logging.info("Result: {}".format(job_status["result"]))
 
 def main():
     exit_code = 0
     parser = argparse.ArgumentParser(description='Trigger and monitor job on Integration team server')
     parser.add_argument('--suite_name', help='Suite name', required=True)
-    parser.add_argument('--emails', help='Email addresses', required=True)
+    parser.add_argument('--extra_emails', help='Email addresses', required=False)
     parser.add_argument('--tags', help='Tags')
     parser.add_argument('--base_url', help="Base URL")
     parser.add_argument('--submitter_email', help="Submitter's email address", default=DEFAULT_SUBMITTER_EMAIL)
     parser.add_argument('--environment', help="Custom environment")
-    parser.add_argument('--max_run_time', help="Max run-time", default=60 * 60 * 3)
-    parser.add_argument('--test_bed_type', default="fs-6", help="emulation or simulation or fs")
+    parser.add_argument('--max_run_time_in_seconds', help="Max run-time in seconds", default=60 * 60)
+    parser.add_argument('--test_bed_type', default="simulation", help="emulation or simulation or FS")
     parser.add_argument('--description', default="Unknown description")
+    parser.add_argument('--jenkins_workspace', default=None, help="Jenkins workspace")
+    parser.add_argument('--jenkins_build_machine', default=None, help="Jenkins build machine")
+    parser.add_argument('--job_url_file', default=None, help="Output file where the job URL will be stored")
     args = parser.parse_args()
 
     suite_name = args.suite_name
-    emails = args.emails
+    emails = args.extra_emails
     submitter_email = args.submitter_email
     tags = args.tags
     base_url = args.base_url
     environment = args.environment
-    max_run_time = args.max_run_time
+    max_run_time = args.max_run_time_in_seconds
     test_bed_type = args.test_bed_type
     description = args.description
+    jenkins_build_machine = args.jenkins_build_machine
+    jenkins_workspace = args.jenkins_workspace
+    job_url_file = args.job_url_file
+    is_pre_built = False
+    if jenkins_workspace:
+        is_pre_built = True
 
     logging.info("Input options provided:")
-    logging.info("Suite        : {}".format(suite_name))
-    logging.info("Submitter    : {}".format(submitter_email))
-    logging.info("Emails       : {}".format(emails))
-    logging.info("Tags         : {}".format(tags))
-    logging.info("Base URL     : {}".format(base_url))
-    logging.info("Environment  : {}".format(environment))
-    logging.info("Test-bed type: {}".format(test_bed_type))
-    logging.info("Description  : {}".format(description))
+    logging.info("Suite                 : {}".format(suite_name))
+    logging.info("Submitter             : {}".format(submitter_email))
+    logging.info("Extra Emails          : {}".format(emails))
+    logging.info("Tags                  : {}".format(tags))
+    logging.info("Base URL              : {}".format(base_url))
+    logging.info("Environment           : {}".format(environment))
+    logging.info("Test-bed type         : {}".format(test_bed_type))
+    logging.info("Description           : {}".format(description))
+    logging.info("Max run-time          : {}".format(max_run_time))
+    logging.info("Jenkins workspace     : {}".format(jenkins_workspace))
+    logging.info("Jenkins build machine : {}".format(jenkins_build_machine))
+    logging.info("job_url_file          : {}".format(job_url_file))
     logging.info("")
 
     if not base_url:
@@ -213,10 +298,21 @@ def main():
         logging.info("")
 
     poll_interval_seconds = DEFAULT_POLL_INTERVAL_SECONDS
-
+    job_id = None
     try:
         fun_test_client = FunTestClient(base_url=base_url)
         start_time = time.time()
+
+        if is_pre_built:
+            pre_built_artifacts_positioned = fun_test_client.position_pre_built_artifacts(jenkins_workspace=jenkins_workspace)
+            if not pre_built_artifacts_positioned:
+                exit_code = SCP_FAILED_EXIT_CODE
+                raise Exception("Positioning pre-built artifacts failed")
+            else:
+                environment = fun_test_client.update_environment(environment=environment,
+                                                                 key="pre_built_artifacts",
+                                                                 value=pre_built_artifacts_positioned)
+
         job_id = fun_test_client.submit_job(suite_path=suite_name,
                                             build_url=DEFAULT_BUILD_URL,
                                             tags=tags,
@@ -224,7 +320,8 @@ def main():
                                             environment=environment,
                                             submitter_email=submitter_email,
                                             description=description,
-                                            test_bed_type=test_bed_type)
+                                            test_bed_type=test_bed_type,
+                                            max_run_time=max_run_time)
 
         job_status = None
         if job_id > 0:
@@ -236,10 +333,12 @@ def main():
                     raise Exception("Invalid job status response: {}".format(json.dumps(response, indent=4)))
                 else:
                     job_status = response["data"]
+                log_job_status(job_status=job_status)
                 is_job_completed = job_status["is_completed"]
                 if is_job_completed:
+                    logging.info("Job has completed")
                     break
-
+                print "Sleeping for {} seconds before checking again".format(poll_interval_seconds)
                 time.sleep(poll_interval_seconds)
                 elapsed_time = time.time() - start_time
 
@@ -249,21 +348,29 @@ def main():
                 raise Exception(error_message)
 
             if is_job_completed:
-                logging.info("Job state code: {}".format(job_status["job_state_code"]))
-                logging.info("Job state description: {}".format(job_status["job_state_string"]))
-                logging.info("Message: {}".format(job_status["message"]))
-                logging.info("Result: {}".format(job_status["result"]))
+                log_job_status(job_status=job_status)
 
-                if job_status["result"] == "PASSED":
+                if job_status["result"] == "PASSED" and job_status["job_state_code"] == 10:  # 10 indicated completed
                     exit_code = PASSED_EXIT_CODE
                 else:
                     exit_code = FAILED_EXIT_CODE
+
+            if elapsed_time > max_run_time:
+                logging.exception("Max run-time: {} exceeded".format(max_run_time))
         else:
             logging.exception("Job submission failed.")
     except Exception as ex:
-        exit_code = GENERIC_ERROR_EXIT_CODE
+        if not exit_code:
+            exit_code = GENERIC_ERROR_EXIT_CODE
         logging.critical("Suite polling ended with exception: {}".format(str(ex)))
 
+    job_url = "Unknown URL"
+    if job_id:
+        job_url = "{}/regression/suite_detail/{}".format(base_url, job_id)
+    print "Integration job result is at {}".format(job_url)
+    if job_url_file:
+        with open(job_url_file, "w") as f_out:
+            f_out.write(job_url)
     sys.exit(exit_code)
 
 
