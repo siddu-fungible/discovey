@@ -10,7 +10,7 @@
           (click)="showCharts()"><i class="fa fa-line-chart"></i>&nbsp;Show charts</button>
   <button *ngIf="workspace.interested_metrics.length > 0"
           [ngClass]="{'fun-button-with-icon': !reportGenerated, 'fun-button-with-icon-selected': reportGenerated}"
-          (click)="generateReport()"><i class="fa fa-file-text"></i>&nbsp;Show report</button>
+          (click)="generateReport()"><i class="fa fa-file-text-o"></i>&nbsp;Show report</button>
   <button *ngIf="adminMode"
           [ngClass]="{'fun-button-with-icon': !showUnattachedTree, 'fun-button-with-icon-selected': showUnattachedTree}"
           (click)="viewUnattachedTree()"><i
