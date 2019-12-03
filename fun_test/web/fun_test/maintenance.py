@@ -1165,7 +1165,7 @@ if __name__ == "__main_qdepth256__":
         final_dict = ml.get_dict(chart=latency_charts)
         print json.dumps(final_dict, indent=4)
 
-if __name__ == "__main__":
+if __name__ == "__main_attach_dag__":
     dag = {}
     owner_info = "Radhika Naik (radhika.naik@fungible.com)"
     source = "Unknown"
