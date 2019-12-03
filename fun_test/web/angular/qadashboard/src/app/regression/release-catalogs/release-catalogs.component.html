@@ -5,7 +5,6 @@
     <table class="fun-table-borderless">
       <tr>
         <td>
-
         </td>
         <td class="fun-table-borderless-header">
           Name
@@ -20,7 +19,7 @@
         </td>
       </tr>
       <tr *ngFor="let catalog of releaseCatalogs; let index=index" class="fun-table-borderless-row">
-        <td><button class="fun-button-submit" (click)="execute(index)">Execute</button></td>
+        <td><button class="fun-button-submit" (click)="prepareExecutionDetails(index)">Execute</button></td>
 
         <td><small>{{ index }}.</small> {{ catalog.name }}</td>
         <td>{{ catalog.description }}</td>
@@ -34,6 +33,16 @@
   </div>
   <div class="fun-div" *ngIf="preparingCatalogExecution">
     <app-section-header [value]="'Catalog execution details ...'"></app-section-header>
+    <table class="fun-table-borderless">
+      <tr class="fun-table-borderless-row">
+        <td class="fun-table-borderless-header">
+          Suite ID
+        </td>
+        <td class="fun-table-borderless-header">
+          Name
+        </td>
+      </tr>
+    </table>
     <span class="fun-action-link" (click)="preparingCatalogExecution = false">< back</span>
   </div>
 
