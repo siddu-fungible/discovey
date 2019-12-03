@@ -40,7 +40,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
   TIMEZONE: string = "America/Los_Angeles";
   flattenedInterestedMetrics: any = [];
   adminMode: boolean = false;
-  adminWorkspaceIds: any[] = [1480];
+  adminWorkspaceIds: any[] = [1480, 3523]; //1480-ashwin, 3523-ranga workspace id
   detachTree: boolean = false;
 
   constructor(private apiService: ApiService, private commonService: CommonService, private loggerService: LoggerService,
