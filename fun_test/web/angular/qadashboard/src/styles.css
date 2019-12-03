@@ -761,6 +761,7 @@ label {
 
 .fun-table-borderless-header {
   font-weight: bolder;
+  padding: 10px;
   color: #a9a8a8;
 }
 
@@ -768,7 +769,13 @@ tr.fun-table-borderless-row > td {
   border-top: 1px solid;
   border-bottom: 1px solid;
   padding: 10px;
+  text-align: center;
 }
+
+.fun-table-borderless > tbody > tr > td {
+  padding: 10px;
+}
+
 
 .fun-panel {
   border: 1px solid rgba(0,0,0,.125);
