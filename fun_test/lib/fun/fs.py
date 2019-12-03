@@ -49,6 +49,7 @@ class BootPhases:
     U_BOOT_PING = "u-boot: ping tftp server"
     U_BOOT_TFTP_DOWNLOAD = "u-boot: tftp download"
     U_BOOT_UNCOMPRESS_IMAGE = "u-boot: uncompress image"
+    U_BOOT_AUTH = "u-boot: auth"
     U_BOOT_ELF = "u-boot: bootelf"
     U_BOOT_COMPLETE = "u-boot: complete"
 
@@ -178,7 +179,9 @@ class Bmc(Linux):
     INSTALL_DIRECTORY = "/mnt/sdmmc0p1/_install"
     LOG_DIRECTORY = "/mnt/sdmmc0p1/log"
     SERIAL_PROXY_PORTS = [9990, 9991]
-    ELF_ADDRESS = "0xffffffff99000000"
+    TFTP_LOAD_ADDRESS = "0xffffffff91000000"
+    ELF_ADDRESS = "0xa800000020000000"
+
     SERIAL_SPEED_DEFAULT = 1000000
     U_BOOT_F1_PROMPT = "f1 #"
     NUM_F1S = 2
@@ -499,13 +502,14 @@ class Bmc(Linux):
     def u_boot_load_image(self,
                           index,
                           boot_args,
-                          tftp_load_address="0xa800000080000000",
+                          tftp_load_address=TFTP_LOAD_ADDRESS,
                           tftp_server=TFTP_SERVER_IP,
                           tftp_image_path="funos-f1.stripped.gz",
                           gateway_ip=None,
                           mpg_ips=None):
         result = None
 
+        is_signed_image = True if "signed" in tftp_image_path else False
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_INIT)
         self.u_boot_command(command="",
                             timeout=5,
@@ -579,6 +583,7 @@ class Bmc(Linux):
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_UNCOMPRESS_IMAGE)
         output = self.u_boot_command(command="unzip {} {};".format(tftp_load_address, self.ELF_ADDRESS), timeout=10,
                                      f1_index=index, expected=self.U_BOOT_F1_PROMPT)
+
         m = re.search(r'Uncompressed size: (\d+) =', output)
         uncompressed_size = 0
         if m:
@@ -587,6 +592,10 @@ class Bmc(Linux):
                              message="FunOs uncompressed size: {}".format(uncompressed_size),
                              context=self.context)
 
+        if is_signed_image:
+            self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_AUTH)
+            self.u_boot_command(command="auth {};".format(self.ELF_ADDRESS), timeout=10, f1_index=index, expected=self.U_BOOT_F1_PROMPT)
+
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_ELF)
         rich_input_boot_args = False
         rich_inputs = fun_test.get_rich_inputs()
@@ -594,14 +603,21 @@ class Bmc(Linux):
             if "boot_args" in rich_inputs:
                 rich_input_boot_args = True
 
+        load_address = self.ELF_ADDRESS
+        if is_signed_image:
+            load_address = "${loadaddr}"
+
+        # self.u_boot_command(command="setenv loadaddr {}".format(self.ELF_ADDRESS), timeout=80, f1_index=index,
+        #                    expected=self.U_BOOT_F1_PROMPT)
+
         if not rich_input_boot_args:
             if "load_mods" in boot_args and "hw_hsu_test" not in boot_args:
-                output = self.u_boot_command(command="bootelf -p {}".format(self.ELF_ADDRESS), timeout=80, f1_index=index, expected="FUNOS_INITIALIZED")
+                output = self.u_boot_command(command="bootelf -p {}".format(load_address), timeout=80, f1_index=index, expected="FUNOS_INITIALIZED")
             else:
-                output = self.u_boot_command(command="bootelf -p {}".format(self.ELF_ADDRESS), timeout=80, f1_index=index, expected="\"this space intentionally left blank.\"")
+                output = self.u_boot_command(command="bootelf -p {}".format(load_address), timeout=80, f1_index=index, expected="\"this space intentionally left blank.\"")
 
         else:
-            output = self.u_boot_command(command="bootelf -p {}".format(self.ELF_ADDRESS), timeout=80, f1_index=index, expected="sending a HOST_BOOTED message")
+            output = self.u_boot_command(command="bootelf -p {}".format(load_address), timeout=80, f1_index=index, expected="sending a HOST_BOOTED message")
         """
         m = re.search(r'FunSDK Version=(\S+), ', output) # Branch=(\S+)', output)
         if m:

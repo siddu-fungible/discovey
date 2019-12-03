@@ -92,6 +92,7 @@ export class SubmitJobComponent implements OnInit {
   branchFunHw: string = null;
   skipDasmC: boolean = true;
   branchFunTools: string = null;
+  branchFunJenkins: string = null;
   releaseBuild: boolean = true;
 
   selectedScriptPk: number = null;
@@ -426,6 +427,7 @@ export class SubmitJobComponent implements OnInit {
         payload["environment"]["build_parameters"]["SKIP_DASM_C"] = this.skipDasmC;
         payload["environment"]["build_parameters"]["BRANCH_FunTools"] = this.branchFunTools;
         payload["environment"]["build_parameters"]["BRANCH_FunHW"] = this.branchFunHw;
+        payload["environment"]["build_parameters"]["BRANCH_FunJenkins"] = this.branchFunJenkins;
       }
     }
 
@@ -505,6 +507,7 @@ export class SubmitJobComponent implements OnInit {
         payload["environment"]["build_parameters"]["SKIP_DASM_C"] = this.skipDasmC;
         payload["environment"]["build_parameters"]["BRANCH_FunTools"] = this.branchFunTools;
         payload["environment"]["build_parameters"]["BRANCH_FunHW"] = this.branchFunHw;
+        payload["environment"]["build_parameters"]["BRANCH_FunJenkins"] = this.branchFunJenkins;
       }
     }
 
