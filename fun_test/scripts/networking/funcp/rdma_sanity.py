@@ -1104,19 +1104,15 @@ class IbWriteScale(FunTestCase):
         # Get max_cqe to compute tx_depth required for scaling
         f10_device_info = f10_host_roce.ibv_devinfo()
         f11_device_info = f11_host_roce.ibv_devinfo()
-        for devinfo in f10_device_info:
-            if "max_cqe" in devinfo:
-                f10_max_cqe = int(devinfo.split(":")[1])
-        for devinfo in f11_device_info:
-            if "max_cqe" in devinfo:
-                f11_max_cqe = int(devinfo.split(":")[1])
+        f10_max_cqe = int(f10_device_info["max_cqe"])
+        f11_max_cqe = int(f11_device_info["max_cqe"])
         if f10_max_cqe != f11_max_cqe:
             max_cqe_in_test = min(f10_max_cqe, f11_max_cqe)
             fun_test.critical("Max CQE on F10 : {} & F11 : {}".format(f10_max_cqe, f11_max_cqe))
             fun_test.add_checkpoint("Max CQE mismatch", "FAILED", f10_max_cqe, f11_max_cqe)
         else:
             max_cqe_in_test = f10_max_cqe
-        print "The max_cqe is {}".format(max_cqe_in_test)
+        fun_test.log("The max_cqe is {}".format(max_cqe_in_test))
         size = 1
         for test in test_type_list:
             for qp in qp_list:
