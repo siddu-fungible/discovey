@@ -70,6 +70,22 @@ class ElcomRebootTest(ApcPduTestcase):
         fun_test.sleep("Before checking port status", seconds=40)
         super(ElcomRebootTest, self).check_nu_ports(expected_ports_up, f1)
 
+    def validate_link_status_out(self, link_status_out, expected_port_up, f1=0):
+        result = True
+        link_status = self.parse_link_status_out(link_status_out, f1=f1, iteration=self.pc_no)
+        if link_status:
+            for port_type, ports_list in expected_port_up.iteritems():
+                for each_port in ports_list:
+                    port_details = self.get_dict_for_port(port_type, each_port, link_status)
+                    if not (port_details["xcvr"] == "PRESENT" and port_details["SW"] == 1 and port_details["HW"] == 1):
+                        result = False
+                        break
+                if not result:
+                    break
+        else:
+            result = False
+        return result
+
     def cleanup(self):
         pass
 
