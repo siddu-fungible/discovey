@@ -15,10 +15,14 @@ class MyBrokerMessage implements MqBrokerMessage {
   styleUrls: ['./broker-test.component.css']
 })
 export class BrokerTestComponent implements OnInit {
-
+  brokerMessageTypes: any;
   constructor(private brokerService: MqBrokerService) { }
 
   ngOnInit() {
+    this.brokerService.getMessageTypes().subscribe(response => {
+      this.brokerMessageTypes = response;
+      console.log(this.brokerMessageTypes.REGRESSION_CATALOG_EXECUTION);
+    })
   }
 
   publish() {
