@@ -12,7 +12,7 @@ export const showAnimation = trigger('show', [
     ]);
 
 
-export const slideInOutAnimation = trigger('show', [
+export const slideInOutAnimation = trigger('slideInOut', [
 
       transition(':enter', [
         style({transform: 'translateX(-100%)'}),

@@ -5,15 +5,18 @@ import {switchMap} from "rxjs/operators";
 import {LoggerService} from "../../services/logger/logger.service";
 import {ReleaseCatalog} from "../definitions";
 import {Router} from "@angular/router";
+import {slideInOutAnimation} from "../../animations/generic-animations";
 
 @Component({
   selector: 'app-release-catalogs',
   templateUrl: './release-catalogs.component.html',
-  styleUrls: ['./release-catalogs.component.css']
+  styleUrls: ['./release-catalogs.component.css'],
+  animations: [slideInOutAnimation]
 })
 export class ReleaseCatalogsComponent implements OnInit, OnChanges {
   driver: Observable<any> = null;
   releaseCatalogs: ReleaseCatalog[] = null;
+  preparingCatalogExecution: boolean = false;
   constructor(private regressionService: RegressionService,
               private  loggerService: LoggerService,
               private router: Router
@@ -62,7 +65,7 @@ export class ReleaseCatalogsComponent implements OnInit, OnChanges {
   }
 
   execute(index) {
-
+    this.preparingCatalogExecution = true;
   }
 
 }
