@@ -1,1 +1,10 @@
 <button (click)="publish()">Publish</button>
+
+<button (click)="toggle()">Toggle</button>
+
+
+<div class="fun-flex-container">
+  <div class="fun-flex-item" [@show] *ngIf="someBoolean">ABC</div>
+  <div class="fun-flex-item" *ngIf="!someBoolean">DEF</div>
+
+</div>
