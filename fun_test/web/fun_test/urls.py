@@ -209,6 +209,7 @@ api_v1_urls = [
     url(r'^performance/workspaces/(\d+)/interested_metrics$', performance.interested_metrics),
     url(r'^performance/metric_charts/?(\d+)?$', performance.metric_charts),
     url(r'^performance/workspaces', users.workspaces),
+    url(r'^performance/attach_to_dag', performance.attach_to_dag),
     url(r'^regression/test_beds/?(\S+)?$', regression.test_beds),
     url(r'^regression/suites/?(\d+)?$', regression.suites),
     url(r'^regression/suite_executions/?(.*)?$', regression.suite_executions),
