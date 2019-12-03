@@ -4,6 +4,9 @@
   <span class="fun-action-link" (click)="addACatalog()">+ Add a catalog</span>
   <table class="fun-table-borderless1">
   <tr>
+    <td>
+
+    </td>
     <td class="fun-table-borderless-header">
       Name
     </td>
@@ -17,10 +20,14 @@
     </td>
   </tr>
   <tr *ngFor="let catalog of releaseCatalogs; let index=index" class="fun-table-borderless-row">
+    <td><button class="fun-button-submit" (click)="execute(index)">Execute</button></td>
+
     <td><small>{{ index }}.</small> {{ catalog.name }}</td>
     <td>{{ catalog.description }}</td>
     <td>{{ catalog.suites.length }}</td>
-    <td><i class="fa fa-pencil" (click)="editCatalog(catalog.id)"></i>&nbsp;<i class="fa fa-trash" style="color: red" (click)="removeCatalog(index)"></i></td>
+    <td>
+      <i class="fa fa-pencil" (click)="editCatalog(catalog.id)"></i>&nbsp;
+      <i class="fa fa-trash" style="color: red" (click)="removeCatalog(index)"></i></td>
   </tr>
 
 </table>

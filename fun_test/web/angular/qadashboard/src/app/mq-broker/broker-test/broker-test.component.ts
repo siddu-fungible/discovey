@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import {MqBrokerService} from "../mq-broker.service";
 import {MqBrokerMessage} from "../definitions";
+import {animate, animateChild, group, query, state, style, transition, trigger} from "@angular/animations";
+import {slideInOutAnimation} from "../../animations/generic-animations";
 
 
 class MyBrokerMessage implements MqBrokerMessage {
@@ -9,13 +11,15 @@ class MyBrokerMessage implements MqBrokerMessage {
   routing_key: string = "test";
 }
 
+
 @Component({
   selector: 'app-broker-test',
   templateUrl: './broker-test.component.html',
-  styleUrls: ['./broker-test.component.css']
+  styleUrls: ['./broker-test.component.css'], animations: [slideInOutAnimation]
 })
 export class BrokerTestComponent implements OnInit {
   brokerMessageTypes: any;
+  someBoolean: boolean = true;
   constructor(private brokerService: MqBrokerService) { }
 
   ngOnInit() {
@@ -30,5 +34,9 @@ export class BrokerTestComponent implements OnInit {
     this.brokerService.publish(brokerMessage).subscribe(response => {
 
     })
+  }
+
+  toggle() {
+    this.someBoolean = !this.someBoolean;
   }
 }
