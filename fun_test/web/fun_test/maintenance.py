@@ -1177,7 +1177,7 @@ if __name__ == "__main_attach_dag__":
     base_line_date = datetime(year=2019, month=8, day=20, minute=0, hour=0, second=0)
     root_chart = ml.create_container(chart_name=root_node, internal_chart_name=root_node, platform=FunPlatform.F1,
                                      owner_info=owner_info,
-                                     source=source, base_line_date=base_line_date, workspace_ids=[1891])
+                                     source=source, base_line_date=base_line_date, workspace_ids=[1480])
     for type in types:
         type_chart = ml.create_container(chart_name=type, internal_chart_name=type,
                                          platform=FunPlatform.F1,
@@ -1195,7 +1195,8 @@ if __name__ == "__main_attach_dag__":
                                                       owner_info=owner_info,
                                                       source=source, base_line_date=base_line_date, workspace_ids=[])
                 host_chart.add_child(child_id=operation_chart.metric_id)
-                iops_chart = ml.create_leaf(chart_name="IOPS", internal_chart_name="IOPS", data_sets=[], leaf=True,
+                iops_chart = ml.create_leaf(chart_name="IOPS", internal_chart_name=host + operation, data_sets=[],
+                                            leaf=True,
                                             description="TBD",
                                             owner_info=owner_info, source=source,
                                             positive=True, y1_axis_title=PerfUnit.UNIT_OPS,
@@ -1208,7 +1209,7 @@ if __name__ == "__main_attach_dag__":
                 iops_chart.fix_children_weights()
                 operation_chart.add_child(child_id=iops_chart.metric_id)
                 for qdepth in qdepths:
-                    chart_name = "Latency, QDepth=" + str(qdepth)
+                    chart_name = host + operation + "Latency, QDepth=" + str(qdepth)
                     latency_chart = ml.create_leaf(chart_name=chart_name, internal_chart_name=chart_name, data_sets=[],
                                                    leaf=True, description="TBD",
                                                    owner_info=owner_info, source=source,
@@ -2646,7 +2647,7 @@ if __name__ == "__main_blt_volume__":
 
     print json.dumps(container_charts, indent=4)
 
-if __name__ == "__main__":
+if __name__ == "__main_integration_job__":
     owner_info = "Ashwin S (ashwin.s@fungible.com)"
     source = "https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/system/build_time_performance.py"
     base_line_date = datetime(year=2019, month=11, day=26, minute=0, hour=0, second=0)

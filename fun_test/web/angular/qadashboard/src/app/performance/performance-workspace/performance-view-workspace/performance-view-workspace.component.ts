@@ -31,14 +31,17 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
   workspaceURL: string = "/performance/workspace";
   reportGenerated: boolean = false;
   subject: string = null;
-  workspaceMetrics: number[] = [];
-  showDag: boolean = false;
+  workspaceMetrics: any[] = [];
+  showUnattachedTree: boolean = false;
   selectMode: any = SelectMode;
   allMetricIds: number[] = [];
   interestedMetrics: any[] = [];
   SUBJECT_BASE_STRING: string = "Performance status report - ";
   TIMEZONE: string = "America/Los_Angeles";
   flattenedInterestedMetrics: any = [];
+  adminMode: boolean = false;
+  adminWorkspaceIds: any[] = [1480, 3523]; //1480-ashwin, 3523-ranga workspace id
+  detachTree: boolean = false;
 
   constructor(private apiService: ApiService, private commonService: CommonService, private loggerService: LoggerService,
               private route: ActivatedRoute, private router: Router, private location: Location, private title: Title, private performanceService: PerformanceService) {
@@ -46,6 +49,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
 
   ngOnInit() {
     this.title.setTitle("Workspace");
+    this.status = "Loading workspace";
     this.route.params.subscribe(params => {
       if (params['emailId'] && params['name']) {
         this.email = params["emailId"];
@@ -76,9 +80,11 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
           console.log("fetched workspace from URL");
           this.setMetricIds(response);
         }, error => {
+            this.status = null;
           this.loggerService.error("Unable to initialize workspace");
         });
       } else {
+        this.status = null;
         this.loggerService.error("No workspace name and email id")
       }
     });
@@ -95,8 +101,16 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
     }
   }
 
-  viewDag(): void {
-    this.showDag = !this.showDag;
+  viewUnattachedTree(): void {
+    this.showUnattachedTree = !this.showUnattachedTree;
+    this.reportGenerated = false;
+    this.showGrids = false;
+    this.detachTree = false;
+  }
+
+  viewDetachTree(): void {
+    this.detachTree = !this.detachTree;
+    this.showUnattachedTree = false;
     this.reportGenerated = false;
     this.showGrids = false;
   }
@@ -106,10 +120,16 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
   }
 
   setMetricIds(charts): void {
+    if (this.adminWorkspaceIds.includes(this.workspace.id)) {
+       this.adminMode = true;
+     }
     this.allMetricIds = [];
     this.workspaceMetrics = [];
     for (let chart of charts) {
-      this.workspaceMetrics.push(Number(chart.metric_id));
+      let metric = {};
+      metric["metric_id"] = Number(chart.metric_id);
+      metric["lineage"] = null;
+      this.workspaceMetrics.push(metric);
     }
     this.interestedMetrics = [];
     for (let metric of this.workspace.interested_metrics) {
@@ -119,6 +139,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
       this.interestedMetrics.push(perfMetrics);
     }
     this.allMetricIds = this.interestedMetrics.concat(this.workspaceMetrics);
+    this.status = null;
     this.showWorkspace = true;
   }
 
@@ -136,13 +157,15 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
   showReport(): void {
     this.reportGenerated = !this.reportGenerated;
     this.showGrids = false;
-    this.showDag = false;
+    this.showUnattachedTree = false;
+    this.detachTree = false;
   }
 
   showCharts(): void {
     this.showGrids = !this.showGrids;
     this.reportGenerated = false;
-    this.showDag = false;
+    this.showUnattachedTree = false;
+    this.detachTree = false;
   }
 
 }
