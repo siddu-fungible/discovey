@@ -292,8 +292,10 @@ class IntegrationJobBuildTimePerformanceTc(PalladiumTc):
                                                                                                        "the time expired")
                 if self.total_time_taken != -1 and self.result == fun_test.PASSED:
                     self.status = fun_test.PASSED
+                else:
+                    self.total_time_taken = -1
             else:
-                fun_test.simple_assert()
+                fun_test.simple_assert(expression=len(suite) > 0, message="No suites with the given name")
         except Exception as ex:
             self.status = fun_test.FAILED
             fun_test.critical(str(ex))
