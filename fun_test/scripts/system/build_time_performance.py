@@ -245,10 +245,10 @@ class IntegrationJobBuildTimePerformanceTc(PalladiumTc):
             environment = {"test_bed_type": test_bed_type,
                            "with_jenkins_build": True,
                            "build_parameters": build_parameters}
-            suite = Suite.objects.filter(name="test_fs1600.json") #199-test_fs1600.json
-            fun_test.simple_assert(expression=len(suite) > 0, message="No suites with the given name")
-            if len(suite):
-                suite_id = suite.first().id
+            suites = Suite.objects.filter(name="test_fs1600.json") #199-test_fs1600.json
+            fun_test.simple_assert(expression=len(suites) > 0, message="No suites with the given name")
+            if len(suites):
+                suite_id = suites.first().id
                 emails = ["ashwin.s@fungible.com", "john.abraham@fungible.com"]
                 submitter_email = "ashwin.s@fungible.com"
                 suite_execution_id = queue_job3(suite_id=suite_id,
