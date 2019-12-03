@@ -246,6 +246,7 @@ class IntegrationJobBuildTimePerformanceTc(PalladiumTc):
                            "with_jenkins_build": True,
                            "build_parameters": build_parameters}
             suite = Suite.objects.filter(name="test_fs1600.json") #199-test_fs1600.json
+            fun_test.simple_assert(expression=len(suite) > 0, message="No suites with the given name")
             if len(suite):
                 suite_id = suite.first().id
                 emails = ["ashwin.s@fungible.com", "john.abraham@fungible.com"]
@@ -294,8 +295,7 @@ class IntegrationJobBuildTimePerformanceTc(PalladiumTc):
                     self.status = fun_test.PASSED
                 else:
                     self.total_time_taken = -1
-            else:
-                fun_test.simple_assert(expression=len(suite) > 0, message="No suites with the given name")
+
         except Exception as ex:
             self.status = fun_test.FAILED
             fun_test.critical(str(ex))
