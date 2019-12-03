@@ -103,7 +103,10 @@
     </tr>
   </table>
 
-  <span class="fun-cancel-link" (click)="onCancelClick()">Cancel</span>
-  <button *ngIf="multiSelect" class="fun-button-add" (click)="onSubmitClick()">Add</button>
+  <ng-container *ngIf="multiSelect" >
+    <span class="fun-cancel-link" (click)="onCancelClick()">Cancel</span>
+    <button class="fun-button-add" (click)="onSubmitClick()">Add</button>
+  </ng-container>
+
 
 </div>

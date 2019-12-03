@@ -96,7 +96,7 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
   }
 
   viewDag(): void {
-    this.showDag = true;
+    this.showDag = !this.showDag;
     this.reportGenerated = false;
     this.showGrids = false;
   }
@@ -134,13 +134,13 @@ export class PerformanceViewWorkspaceComponent implements OnInit {
   }
 
   showReport(): void {
-    this.reportGenerated = true;
+    this.reportGenerated = !this.reportGenerated;
     this.showGrids = false;
     this.showDag = false;
   }
 
   showCharts(): void {
-    this.showGrids = true;
+    this.showGrids = !this.showGrids;
     this.reportGenerated = false;
     this.showDag = false;
   }

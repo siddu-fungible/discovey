@@ -61,4 +61,8 @@ export class ReleaseCatalogsComponent implements OnInit, OnChanges {
     this.router.navigate(['/regression/release_catalog_editor'], {queryParams: {id: catalogId}});
   }
 
+  execute(index) {
+
+  }
+
 }

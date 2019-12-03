@@ -765,22 +765,25 @@ class FrsTestCase(FunTestCase):
             linker = fun_test.shared_variables["stat_{}".format(stat_name)]
             raw_output, cal_output, pro_data = bmc_commands.power_manager(bmc_handle=bmc_handle)
             time_now = datetime.datetime.now()
-            print_data = {"output": raw_output, "time": time_now}
-            if self.upload_to_file:
-                self.add_data_to_file(getattr(self, "f_{}".format(stat_name)), print_data, heading=heading)
+            raw_data = {"output": raw_output + "\n\n" + cal_output, "time": time_now}
             print_data = {"output": cal_output, "time": time_now}
+
             if self.upload_to_file:
+                self.add_data_to_file(getattr(self, "f_{}".format(stat_name)), raw_data, heading=heading)
                 self.add_data_to_file(getattr(self, "f_calculated_{}".format(stat_name)), print_data, heading=heading)
+
             time_taken = 0
             if self.stats_info["bmc"][stat_name].get("upload_to_es", False):
                 time_taken = self.upload_dpcsh_data_to_elk(dpcsh_data=pro_data, stat_name=stat_name)
+
+            fun_test.shared_variables["stat_{}".format(stat_name)]["count"] += 1
             fun_test.sleep("before next iteration", seconds=self.stats_interval)
             if heading == "During traffic" and self.add_to_database:
                 self.add_to_database = False
                 fun_test.log("Result : {}".format(pro_data))
                 self.add_to_data_base(pro_data)
                 fun_test.log("Data added to the database, Data: {}".format(pro_data))
-            fun_test.shared_variables["stat_{}".format(stat_name)]["count"] += 1
+
 
     @stats_deco_bmc
     def func_die_temperature(self, heading, stat_name, bmc_handle):
@@ -1935,7 +1938,7 @@ class FrsTestCase(FunTestCase):
         return result
 
     def add_data_to_file(self, f, data, extra_line=False, heading="Result"):
-        if self.upload_to_file:
+        if not self.upload_to_file:
             return
         # for data in data_list:
         f.write("\n")

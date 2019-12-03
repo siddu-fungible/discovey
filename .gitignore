@@ -16,3 +16,4 @@ fun_test/web/dump.rdb
 fun_test/web/db.sqlite3
 fun_test/web/static/angular/qadashboard
 fun_test/web/fun_test*.bkp.tgz
+fun_test/web/angular/qadashboard/package-lock.json

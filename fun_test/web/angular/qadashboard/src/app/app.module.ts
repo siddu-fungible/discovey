@@ -100,6 +100,8 @@ import { BackComponent } from './ui-elements/back/back.component';
 import { SectionHeaderComponent } from './ui-elements/section-header/section-header.component';
 import { DaemonsComponent } from './daemons/daemons.component';
 import {setAppInjector} from "./app-injector";
+import { VpUtilizationComponent } from './statistics/system/vp-utilization/vp-utilization.component';
+import { BrokerTestComponent } from './mq-broker/broker-test/broker-test.component';
 
 
 @NgModule({
@@ -181,7 +183,9 @@ import {setAppInjector} from "./app-injector";
     ReleaseCatalogsComponent,
     BackComponent,
     SectionHeaderComponent,
-    DaemonsComponent
+    DaemonsComponent,
+    VpUtilizationComponent,
+    BrokerTestComponent
   ],
   imports: [
     BsDropdownModule,

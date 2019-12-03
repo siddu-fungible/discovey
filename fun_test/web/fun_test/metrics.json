@@ -7806,6 +7806,12 @@
             "name": "pr_build_time",
             "label": "PR build time",
             "children": []
+          },
+          {
+            "metric_model_name": "IntegrationJobBuildTimePerformance",
+            "name": "integration_job_run_time",
+            "label": "Integration job run time",
+            "children": []
           }
         ]
       }
