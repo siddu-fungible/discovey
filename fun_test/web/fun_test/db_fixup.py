@@ -148,6 +148,8 @@ def set_from_to_dates(chart):
     # calculate the from date and to date for fetching the data
     today = datetime.datetime.now(pytz.timezone('US/Pacific'))
     from_date = chart.base_line_date
+    if from_date <= today - timedelta(days=60):
+        from_date = today - timedelta(days=60)
     from_date = adjust_timezone_for_day_light_savings(from_date)
     from_date = get_rounded_time(from_date)
     yesterday = today  # - timedelta(days=0) # Just use today
