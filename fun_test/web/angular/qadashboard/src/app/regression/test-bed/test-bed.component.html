@@ -260,8 +260,8 @@
                     <table style="float:left">
                       <tr>
                         <td class="no-wrap">
-                          <label for="assetSubmitter">Submitter&nbsp;</label>
-                          <select id="assetSubmitter" [(ngModel)]="assetLockInfo.user">
+                          <label for="asset-submitter">Submitter&nbsp;</label>
+                          <select id="asset-submitter" [(ngModel)]="assetLockInfo.user">
                             <option *ngFor="let user of users" [ngValue]="user">{{ user.first_name }} {{ user.last_name }}
                               ({{ user.email }})
                             </option>
