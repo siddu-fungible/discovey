@@ -245,9 +245,10 @@ class IntegrationJobBuildTimePerformanceTc(PalladiumTc):
             environment = {"test_bed_type": test_bed_type,
                            "with_jenkins_build": True,
                            "build_parameters": build_parameters}
-            suite = Suite.objects.filter(name="test_fs1600.json") #199-test_fs1600.json
-            if len(suite):
-                suite_id = suite.first().id
+            suites = Suite.objects.filter(name="test_fs1600.json") #199-test_fs1600.json
+            fun_test.simple_assert(expression=len(suites) > 0, message="No suites with the given name")
+            if len(suites):
+                suite_id = suites.first().id
                 emails = ["ashwin.s@fungible.com", "john.abraham@fungible.com"]
                 submitter_email = "ashwin.s@fungible.com"
                 suite_execution_id = queue_job3(suite_id=suite_id,
@@ -292,8 +293,9 @@ class IntegrationJobBuildTimePerformanceTc(PalladiumTc):
                                                                                                        "the time expired")
                 if self.total_time_taken != -1 and self.result == fun_test.PASSED:
                     self.status = fun_test.PASSED
-            else:
-                fun_test.simple_assert()
+                else:
+                    self.total_time_taken = -1
+
         except Exception as ex:
             self.status = fun_test.FAILED
             fun_test.critical(str(ex))
