@@ -1,6 +1,6 @@
 <!--shows the data for a particular workspace-->
-<div *ngIf="showWorkspace" style="padding-left: 10px" class="fun-flex-container fun-action-nav">
-  <a class="pseudo-anchor" (click)="backToWorkspaces()"><< Back</a>
+<div *ngIf="showWorkspace" class="fun-flex-container fun-action-nav">
+  <app-back></app-back>
   <div class="fun-spacer"></div>
   <b><span class="script-name">{{ workspace.workspace_name }}</span></b>
   <div class="fun-spacer"></div>
@@ -10,34 +10,44 @@
           (click)="showCharts()"><i class="fa fa-line-chart"></i>&nbsp;Show charts</button>
   <button *ngIf="workspace.interested_metrics.length > 0"
           [ngClass]="{'fun-button-with-icon': !reportGenerated, 'fun-button-with-icon-selected': reportGenerated}"
-          (click)="generateReport()"><i class="fa fa-file-text"></i>&nbsp;Show report</button>
-  <button *ngIf="workspaceMetrics.length > 0"
-          [ngClass]="{'fun-button-with-icon': !showDag, 'fun-button-with-icon-selected': showDag}"
-          (click)="viewDag()"><i
-    class="fa fa-link"></i>&nbsp;View unattached tree</button>
+          (click)="generateReport()"><i class="fa fa-file-text-o"></i>&nbsp;Show report</button>
+  <button *ngIf="adminMode"
+          [ngClass]="{'fun-button-with-icon': !showUnattachedTree, 'fun-button-with-icon-selected': showUnattachedTree}"
+          (click)="viewUnattachedTree()"><i
+    class="fa fa-link"></i>&nbsp;Attach to tree</button>
+  <button *ngIf="adminMode"
+          [ngClass]="{'fun-button-with-icon': !detachTree, 'fun-button-with-icon-selected': detachTree}"
+          (click)="viewDetachTree()"><i
+    class="fa fa-chain-broken"></i>&nbsp;Detach from tree</button>
 </div>
-<div *ngIf="showWorkspace" class="card card-primary">
+<div *ngIf="showWorkspace">
   <fun-spinner [status]="status"></fun-spinner>
   <div *ngIf="status === null">
-    <div *ngIf="!reportGenerated && !showGrids && !showDag && workspace.interested_metrics.length > 0" class="card-body">
+    <div
+      *ngIf="!reportGenerated && !showGrids && !showUnattachedTree && !detachTree && workspace.interested_metrics.length > 0">
     <app-performance [selectMode]="selectMode.ShowViewWorkspace" [metricIds]="interestedMetrics"></app-performance>
   </div>
 
   <!--showing reports in the workspace-->
-  <ng-container class="card-body tab-pane" role="tabpanel" *ngIf="reportGenerated">
+  <ng-container *ngIf="reportGenerated">
     <performance-show-report [workspace]="workspace" [flattenedInterestedMetrics]="flattenedInterestedMetrics" [email]="email"
                              [subject]="subject"
                              (reportGenerated)="reportGenerated = false"></performance-show-report>
   </ng-container>
 
   <!--showing charts in the workspace-->
-  <ng-container class="card-body tab-pane" role="tabpanel" *ngIf="showGrids">
+  <ng-container *ngIf="showGrids">
     <performance-show-charts [workspace]="workspace"></performance-show-charts>
   </ng-container>
 
-  <!--showing dag in the view dag of workspace-->
-  <ng-container class="card-body tab-pane" role="tabpanel" *ngIf="showDag && workspaceMetrics.length > 0">
+  <!--showing unattached tree of the workspace-->
+  <ng-container *ngIf="showUnattachedTree && workspaceMetrics.length > 0">
    <app-performance [selectMode]="selectMode.ShowAttachDag" [metricIds]="workspaceMetrics"></app-performance>
+  </ng-container>
+
+    <!--detaching part of the tree from the workspace-->
+  <ng-container *ngIf="detachTree">
+   <app-performance [selectMode]="selectMode.DetachFromTree"></app-performance>
   </ng-container>
   </div>
 </div>

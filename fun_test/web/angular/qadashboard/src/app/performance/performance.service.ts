@@ -9,7 +9,9 @@ export enum SelectMode {
   ShowMainSite = 1,
   ShowEditWorkspace = 2,
   ShowViewWorkspace = 3,
-  ShowAttachDag = 4
+  ShowAttachDag = 4,
+  ShowAttachModal = 5,
+  DetachFromTree = 6
 }
 
 interface  MetricsDataRunTimeInterface {
@@ -175,5 +177,11 @@ export class PerformanceService {
       return of(null);
     }));
   }
+
+  attachToDag(payload): any {
+      return this.apiService.post("/api/v1/performance/attach_to_dag", payload).pipe(switchMap(response => {
+        return of(response.data);
+      }));
+    }
 
 }

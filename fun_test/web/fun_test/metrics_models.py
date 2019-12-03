@@ -255,6 +255,14 @@ class MetricChart(models.Model):
             self.children = json.dumps(children)
             self.save()
 
+    def remove_child(self, child_id):
+         children = json.loads(self.children)
+         for child in children:
+             if int(child) == child_id:
+                 children.remove(child)
+                 self.children = json.dumps(children)
+                 self.save()
+
     def add_child_weight(self, child_id, weight):
         children_weights = json.loads(self.children_weights)
         children_weights = {int(x): y for x, y in children_weights.iteritems()}
