@@ -2665,11 +2665,6 @@ def leaf_recursion(present_dataset, root_chart):
         data_sets = json.loads(chart.data_sets)
         for each_data_set in data_sets:
             inputs = each_data_set["inputs"]
-            inputs["input_hosts"] = 2
-        chart.data_sets = json.dumps(data_sets)
-        chart.save()
-        for each_data_set in data_sets:
-            inputs = each_data_set["inputs"]
             inputs["input_hosts"] = 4
         leaf_chart = ml.create_leaf(chart_name=chart.chart_name, internal_chart_name=new_internal_chart_name,
                                     data_sets=data_sets, leaf=True,
@@ -2725,8 +2720,19 @@ if __name__ == "__main__":
     leaf_recursion(fcp_children, main_chart)
     final_dict = ml.get_dict(chart=main_chart)
     print json.dumps(final_dict, indent=4)
-    rdma_data = AlibabaRdmaPerformance.objects.all()
-    for each_data in rdma_data:
+
+    alirdma_charts = MetricChart.objects.filter(metric_model_name="AlibabaRdmaPerformance")
+    for chart in alirdma_charts:
+        data_sets = json.loads(chart.data_sets)
+        for each_data_set in data_sets:
+            inputs = each_data_set["inputs"]
+            inputs["input_hosts"] = 2
+        chart.data_sets = json.dumps(data_sets)
+        chart.save()
+    print ("Added num hosts 2 as the filter for the Allibaba RDMA charts")
+
+    allibaba_data = AlibabaRdmaPerformance.objects.all()
+    for each_data in allibaba_data:
         each_data.input_hosts = 2
         each_data.save()
-    print("added missing num hosts 2 field")
+    print("Initialized num hosts as 2 in the db")
