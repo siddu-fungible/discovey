@@ -4,6 +4,7 @@ import time, re, os
 import pexpect, sys
 import pprint
 import socket
+import tempfile
 
 from mysetups import *
 
@@ -575,12 +576,30 @@ def dpcshF(index=0, cmd=None):
     with cd(dpcsh_directory):
         return sudo('echo "%s" | ./dpcsh --pcie_nvme_sock=%s' % (cmd, dev))
 
+def _is_file_unsigned(image=NFSPATH, type='nfs'):
+    (server, filename) = image.split(':')
+    (tfd, tname) = tempfile.mkstemp(suffix='.fab')
+    if 'tftp' in type:
+        local('tftp {} -c get {} {}'.format(server, filename, tname))
+    elif 'nfs' in type:
+        local('scp {} {}'.format(filename, tname))
+    else:
+        raise('filetype not supported ...')
+
+    with settings(warn_only=True):
+        o = local('file -z {} | grep ELF && true || false'.format(tname))
+        status = True if o.return_code == 0 else False
+        print ("{} file downloaded - {} seem {} ...".format(type, tname, 'unsigned' if status == True else 'signed'))
+        local('rm -rf {}'.format(tname))
+        return status
 
 @roles('bmc')
 @task
 def imageF(index=0, image=NFSPATH, type='nfs'):
     """ upgrade image of chip[index] over type [nfs|tftp] with provided arguments """
     global child
+
+    unsigned = _is_file_unsigned(image, type)
 
     command = 'nfs' if 'nfs' in type else 'tftpboot'
     child = connectF(index, True)
@@ -608,7 +627,7 @@ def imageF(index=0, image=NFSPATH, type='nfs'):
         child.expect ('\nf1 # ')
 
     time.sleep(2)
-    if '.elf' not in image:
+    if not unsigned:
         child.sendline('authfw 0xffffffff99000000;')
         child.expect ('authentication OK\r\r\nf1 # ')
     else:
