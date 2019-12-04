@@ -51,7 +51,7 @@ class BLTVolumeSanityScript(FunTestScript):
         fs.start_statistics_collection(statistics_type=Fs.StatisticsType.BAM)
         fs.register_statistics(statistics_type=Fs.StatisticsType.DEBUG_VP_UTIL)
         fs.start_statistics_collection(statistics_type=Fs.StatisticsType.DEBUG_VP_UTIL)
-        
+
         end_host = fs.get_come()
         storage_controller = StorageController(target_ip=end_host.host_ip,
                                                target_port=end_host.get_dpc_port(self.f1_in_use))
