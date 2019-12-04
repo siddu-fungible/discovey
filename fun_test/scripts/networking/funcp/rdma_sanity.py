@@ -1155,7 +1155,6 @@ class IbWriteScale(FunTestCase):
                     fun_test.sleep("ib_bw test on f11_host", 2)
                     f11_pid_there += 1
                     if f11_pid_there == 60:
-
                         f11_hosts[0]["handle"].kill_process(process_id=f11_host_test["cmd_pid"])
                 f10_host_result = f10_host_roce.parse_test_log(f10_host_test["output_file"], tool="ib_bw")
                 f11_host_result = f11_host_roce.parse_test_log(f11_host_test["output_file"], tool="ib_bw",
