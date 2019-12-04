@@ -13,7 +13,7 @@ from asset.asset_global import AssetType
 from lib.utilities.statistics_manager import StatisticsCollector, StatisticsCategory
 from lib.utilities.http import fetch_text_file
 
-from threading import Thread
+from threading import Thread, Lock
 from datetime import datetime
 import re
 import os
@@ -1762,6 +1762,7 @@ class Fs(object, ToDictMixin):
             if "already_deployed" in self.fs_parameters:
                 self.already_deployed = self.fs_parameters["already_deployed"]
         self.statistics_collectors = {}
+        self.dpc_statistics_lock = Lock()
         fun_test.register_fs(self)
 
 
@@ -2378,16 +2379,20 @@ class Fs(object, ToDictMixin):
 
     def statistics_dispatcher(self, statistics_type, **kwargs):
         result = {"status": False, "data": None, "epoch_time": get_current_epoch_time()}
-        if statistics_type == self.StatisticsType.BAM:
-            bam_result = self.bam(**kwargs)
-            if bam_result["status"]:
-                result["data"] = bam_result["data"]
-                result["status"] = True
-        if statistics_type == self.StatisticsType.DEBUG_VP_UTIL:
-            debug_vp_result = self.debug_vp_util(**kwargs)
-            if debug_vp_result["status"]:
-                result["data"] = debug_vp_result["data"]
-                result["status"] = True
+        try:
+            self.dpc_statistics_lock.acquire()
+            if statistics_type == self.StatisticsType.BAM:
+                bam_result = self.bam(**kwargs)
+                if bam_result["status"]:
+                    result["data"] = bam_result["data"]
+                    result["status"] = True
+            if statistics_type == self.StatisticsType.DEBUG_VP_UTIL:
+                debug_vp_result = self.debug_vp_util(**kwargs)
+                if debug_vp_result["status"]:
+                    result["data"] = debug_vp_result["data"]
+                    result["status"] = True
+        finally:
+            self.dpc_statistics_lock.release()
         return result
 
 if __name__ == "__main2__":
