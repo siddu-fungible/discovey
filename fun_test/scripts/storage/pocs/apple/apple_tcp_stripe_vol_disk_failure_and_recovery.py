@@ -605,7 +605,7 @@ class StripeVolDiskFailTestCase(FunTestCase):
             test_filename = self.nvme_block_device
         # volume_name = self.nvme_device.replace("/dev/", "") + "n" + str(self.stripe_details["ns_id"])
 
-        fio_size = int(100 / (self.num_hosts - 1))
+        fio_size = int(divide(n=100, d=(self.num_hosts - 1)))
         self.fio_cmd_args1["size"] = "{}{}".format(str(fio_size), "%")
 
         fio_offset_diff = fio_size
