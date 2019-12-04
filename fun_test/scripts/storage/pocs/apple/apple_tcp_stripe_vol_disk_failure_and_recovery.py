@@ -67,7 +67,7 @@ class StripeVolDiskFailTestScript(FunTestScript):
             self.update_deploy_script = job_inputs["update_deploy_script"]
         if "num_hosts" in job_inputs:
             self.num_hosts = job_inputs["num_hosts"]
-        # fun_test.test_assert(expression=self.num_hosts >= 2, message="Test bed has minimum hosts (3) required")
+        fun_test.test_assert(expression=self.num_hosts >= 2, message="Test bed has minimum hosts (3) required")
 
         # Deploying of DUTs
         self.num_duts = int(round(float(self.num_f1s) / self.num_f1_per_fs))
@@ -927,7 +927,7 @@ class StripeVolDiskFailTestCase(FunTestCase):
         else:
             test_filename2 = self.nvme_block_device2
 
-        fio_size = int(100 / (self.num_hosts - 1))
+        fio_size = int(divide(n=100, d=(self.num_hosts - 1)))
         self.fio_cmd_args1["size"] = "{}{}".format(str(fio_size), "%")
         fio_offset_diff = fio_size
 
