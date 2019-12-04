@@ -43,7 +43,7 @@ class DataIntegrityTestcase(ApcPduTestcase):
             self.scp_aux_file(from_host=required_write_hosts_list[0], to_hosts=required_read_hosts_list)
             self.disconnect_the_hosts()
             self.destoy_host_handles()
-            # self.reboot_test()
+            self.reboot_test()
             self.basic_checks()
             fun_test.sleep("Wait for GUI to come up", seconds=80)
             self.attach_volumes_to_host(required_read_hosts_list)
