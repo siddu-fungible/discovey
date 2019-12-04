@@ -769,7 +769,7 @@ tr.fun-table-borderless-row > td {
   border-top: 1px solid;
   border-bottom: 1px solid;
   padding: 10px;
-  text-align: center;
+  /*text-align: center;*/
 }
 
 .fun-table-borderless > tbody > tr > td {
