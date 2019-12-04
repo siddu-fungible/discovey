@@ -18,9 +18,8 @@ class DataIntegrityTestcase(ApcPduTestcase):
 
     def run(self):
         # super(DataIntegrityTestcase, self).run()
-        for pc_no in range(self.iterations):
-            self.pc_no = pc_no
-            self.data_integrity_check()
+        self.pc_no = 0
+        self.data_integrity_check()
 
     def data_integrity_check(self):
         if self.write_hosts:
@@ -28,23 +27,23 @@ class DataIntegrityTestcase(ApcPduTestcase):
                                                api_server_port=self.api_server_port,
                                                username=self.username,
                                                password=self.password)
-            if self.pc_no == 0:
-                required_hosts_list = self.verify_and_get_required_hosts_list(self.write_hosts + self.read_hosts)
-                required_write_hosts_list = required_hosts_list[:self.write_hosts]
-                required_read_hosts_list = required_hosts_list[self.write_hosts:(self.read_hosts + 1):]
-                self.pool_uuid = self.get_pool_id()
-                self.volume_uuid_details = self.create_vol(self.write_hosts)
-                self.attach_volumes_to_host(required_write_hosts_list)
-                self.get_host_handles()
-                self.intialize_the_hosts()
-                self.connect_the_host_to_volumes()
-                self.verify_nvme_connect()
-                self.start_fio_and_verify(fio_params=self.write_fio, host_names_list=required_write_hosts_list)
-                self.start_fio_and_verify(fio_params=self.read_fio, host_names_list=required_write_hosts_list, cd=self.read_fio["aux-path"])
-                self.scp_aux_file(from_host=required_write_hosts_list[0], to_hosts=required_read_hosts_list)
-                self.disconnect_the_hosts()
-                self.destoy_host_handles()
-            self.reboot_test()
+
+            required_hosts_list = self.verify_and_get_required_hosts_list(self.write_hosts + self.read_hosts)
+            required_write_hosts_list = required_hosts_list[:self.write_hosts]
+            required_read_hosts_list = required_hosts_list[self.write_hosts:(self.read_hosts + 1):]
+            self.pool_uuid = self.get_pool_id()
+            self.volume_uuid_details = self.create_vol(self.write_hosts)
+            self.attach_volumes_to_host(required_write_hosts_list)
+            self.get_host_handles()
+            self.intialize_the_hosts()
+            self.connect_the_host_to_volumes()
+            self.verify_nvme_connect()
+            self.start_fio_and_verify(fio_params=self.write_fio, host_names_list=required_write_hosts_list)
+            self.start_fio_and_verify(fio_params=self.read_fio, host_names_list=required_write_hosts_list, cd=self.read_fio["aux-path"])
+            self.scp_aux_file(from_host=required_write_hosts_list[0], to_hosts=required_read_hosts_list)
+            self.disconnect_the_hosts()
+            self.destoy_host_handles()
+            # self.reboot_test()
             self.basic_checks()
             fun_test.sleep("Wait for GUI to come up", seconds=80)
             self.attach_volumes_to_host(required_read_hosts_list)
