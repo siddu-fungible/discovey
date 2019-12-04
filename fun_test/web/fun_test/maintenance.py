@@ -2671,7 +2671,7 @@ if __name__ == "__main_integration_job__":
                            workspace_ids=[])
     print "created Integration job run time chart"
 
-if __name__ == "__main__":
+if __name__ == "__main__inspur_qdepth":
     metric_ids = [1141, 1142]
     vols = [4, 8]
     for metric_id in metric_ids:
@@ -2693,3 +2693,92 @@ if __name__ == "__main__":
         chart.data_sets = json.dumps(data_sets)
         chart.save()
     print "added filters for qdepth 8 and qdepth 16"
+
+def leaf_recursion(present_dataset, root_chart):
+    if type(present_dataset) == list:
+        for i in present_dataset:
+            leaf_recursion(i, root_chart)
+
+    try:
+        base_line_date = datetime(year=2019, month=7, day=15, minute=0, hour=0, second=0)
+        internal_chart_name = present_dataset["name"]
+        chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
+    except:
+        return
+
+    if chart.leaf:
+        new_internal_chart_name = chart.internal_chart_name + "_hosts_4"
+        data_sets = json.loads(chart.data_sets)
+        for each_data_set in data_sets:
+            inputs = each_data_set["inputs"]
+            inputs["input_hosts"] = 4
+        leaf_chart = ml.create_leaf(chart_name=chart.chart_name, internal_chart_name=new_internal_chart_name,
+                                    data_sets=data_sets, leaf=True,
+                                    description="TBD",
+                                    owner_info=chart.owner_info, source=chart.source,
+                                    positive=chart.positive, y1_axis_title=chart.y1_axis_title,
+                                    visualization_unit=chart.y1_axis_title,
+                                    metric_model_name=chart.metric_model_name,
+                                    base_line_date=chart.base_line_date,
+                                    work_in_progress=False, children=[], jira_ids=[], platform=chart.platform,
+                                    peer_ids=[], creator=TEAM_REGRESSION_EMAIL,
+                                    workspace_ids=[])
+        root_chart.add_child(leaf_chart.metric_id)
+        return
+    else:
+        internal_chart_name = internal_chart_name.replace("host", "4host")
+        container = ml.create_container(chart_name=chart.chart_name,
+                                        internal_chart_name=internal_chart_name,
+                                        platform=FunPlatform.F1,
+                                        owner_info=chart.owner_info,
+                                        source=chart.source, base_line_date=base_line_date, workspace_ids=[])
+        root_chart.add_child(container.metric_id)
+        childrens = present_dataset["children"]
+        # final_dict = ml.get_dict(chart=main_chart)
+        # print json.dumps(final_dict, indent=4)
+        leaf_recursion(childrens, container)
+
+
+if __name__ == "__main__":
+    alirdma_charts = MetricChart.objects.filter(metric_model_name="AlibabaRdmaPerformance")
+    for chart in alirdma_charts:
+        data_sets = json.loads(chart.data_sets)
+        for each_data_set in data_sets:
+            inputs = each_data_set["inputs"]
+            inputs["input_hosts"] = 2
+        chart.data_sets = json.dumps(data_sets)
+        chart.save()
+    print ("Added num hosts 2 as the filter for the Allibaba RDMA charts")
+
+    with open(METRICS_BASE_DATA_FILE, "r") as f:
+        metrics = json.load(f)
+        for metric in metrics:
+            if metric["label"] == "F1":
+                f1_metrics = metric["children"]
+                for f1_metric in f1_metrics:
+                    if f1_metric["label"] == "PoCs":
+                        pocs = f1_metric["children"]
+                        for poc in pocs:
+                            if poc["label"] == "Alibaba":
+                                alibaba_childrens = poc["children"]
+                                for alibaba_children in alibaba_childrens:
+                                    if alibaba_children["label"] == "RDMA":
+                                        rdma_childrens = alibaba_children["children"]
+                                        for rdma_children in rdma_childrens:
+                                            if rdma_children["name"] == "alibaba_rdma_host_fcp_2f1":
+                                                fcp_children = rdma_children["children"]
+
+    base_line_date = datetime(year=2019, month=6, day=1, minute=0, hour=0, second=0)
+    main_chart = ml.create_container(chart_name="4 host(s)",
+                                     internal_chart_name="alibaba_rdma_host_fcp_2f1_hosts_4", platform=FunPlatform.F1,
+                                     owner_info="manu.ks@fungible.com",
+                                     source="", base_line_date=base_line_date, workspace_ids=[3523])
+    leaf_recursion(fcp_children, main_chart)
+    final_dict = ml.get_dict(chart=main_chart)
+    print json.dumps(final_dict, indent=4)
+
+    allibaba_data = AlibabaRdmaPerformance.objects.all()
+    for each_data in allibaba_data:
+        each_data.input_hosts = 2
+        each_data.save()
+    print("Initialized num hosts as 2 in the db")
