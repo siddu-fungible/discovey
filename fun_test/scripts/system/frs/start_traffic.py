@@ -66,9 +66,8 @@ class MyScript(FunTestScript):
             if LE in self.traffic_profile:
                 self.restart_dpcsh()
                 self.setup_le_firewall()
-            pass
-        else:
-            self.clear_uart_logs()
+        # else:
+        #     self.clear_uart_logs()
 
         fun_test.shared_variables["run_on_f1"] = self.run_on_f1
         fun_test.shared_variables["fs"] = self.fs
@@ -89,7 +88,9 @@ class MyScript(FunTestScript):
             dpcsh_pid = self.come_handle.get_process_id_by_pattern("/nvme{}".format(f1))
             if not dpcsh_pid:
                 self.come_handle.enter_sudo()
-                self.come_handle.command("cd /scratch/FunSDK/bin/Linux")
+                output = self.come_handle.command("cd /scratch/FunSDK/bin/Linux")
+                if "No such file" in output:
+                    self.come_handle.command("cd /tmp/workspace/FunSDK/bin/Linux")
                 self.come_handle.command(
                     "./dpcsh --pcie_nvme_sock=/dev/nvme{f1} --nvme_cmd_timeout=600000"
                     " --tcp_proxy=4222{f1} &> /tmp/f1_{f1}_dpc.txt &".format(f1=f1))
@@ -1616,7 +1617,7 @@ class FrsTestCase(FunTestCase):
                            ssh_password=self.fs['come']['mgmt_ssh_password'])
 
         if LE in self.traffic_profile:
-            # self.restart_dpcsh()
+            self.restart_dpcsh()
             self.start_le_firewall(self.duration)
 
         if FIO_COME in self.traffic_profile:
