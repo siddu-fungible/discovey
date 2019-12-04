@@ -1,27 +1,66 @@
-<div class="fun-div">
-  <h4>Release catalogs</h4>
-  <app-section-horizontal-line></app-section-horizontal-line>
-  <span class="fun-action-link" (click)="addACatalog()">+ Add a catalog</span>
-  <table class="fun-table-borderless1">
-  <tr>
-    <td class="fun-table-borderless-header">
-      Name
-    </td>
-    <td class="fun-table-borderless-header">
-      Description
-    </td>
-    <td class="fun-table-borderless-header">
-      # Suites
-    </td>
-    <td class="fun-table-borderless-header">
-    </td>
-  </tr>
-  <tr *ngFor="let catalog of releaseCatalogs; let index=index" class="fun-table-borderless-row">
-    <td><small>{{ index }}.</small> {{ catalog.name }}</td>
-    <td>{{ catalog.description }}</td>
-    <td>{{ catalog.suites.length }}</td>
-    <td><i class="fa fa-pencil" (click)="editCatalog(catalog.id)"></i>&nbsp;<i class="fa fa-trash" style="color: red" (click)="removeCatalog(index)"></i></td>
-  </tr>
+<div class="fun-flex-container">
+  <div class="fun-div" [@slideInOut] *ngIf="!preparingCatalogExecution">
+    <app-section-header [value]="'Release catalogs'"></app-section-header>
+    <span class="fun-action-link" (click)="addACatalog()">+ Add a catalog</span>
+    <table class="fun-table-borderless">
+      <tr>
+        <td>
+        </td>
+        <td class="fun-table-borderless-header">
+          Name
+        </td>
+        <td class="fun-table-borderless-header">
+          Description
+        </td>
+        <td class="fun-table-borderless-header">
+          # Suites
+        </td>
+        <td class="fun-table-borderless-header">
+        </td>
+      </tr>
+      <tr *ngFor="let catalog of releaseCatalogs; let index=index" class="fun-table-borderless-row">
+        <td><span class="fun-action-link" (click)="prepareExecutionDetails(index)">Prepare for execution</span></td>
 
-</table>
+        <td><small>{{ index }}.</small> {{ catalog.name }}</td>
+        <td>{{ catalog.description }}</td>
+        <td>{{ catalog.suites.length }}</td>
+        <td>
+          <i class="fa fa-pencil" (click)="editCatalog(catalog.id)"></i>&nbsp;
+          <i class="fa fa-trash" style="color: red" (click)="removeCatalog(index)"></i></td>
+      </tr>
+
+    </table>
+  </div>
+  <div class="fun-div" *ngIf="preparingCatalogExecution">
+    <app-section-header [value]="'Set catalog execution parameters ...'"></app-section-header>
+    <table class="fun-table-borderless">
+      <tr>
+        <td class="fun-table-borderless-header">
+          Suite ID
+        </td>
+        <td class="fun-table-borderless-header">
+          Name
+        </td>
+        <td class="fun-table-borderless-header">
+          Description
+        </td>
+      </tr>
+      <tr class="fun-table-borderless-row" *ngFor="let suiteForExecution of suitesForExecution">
+        <td>
+          {{ suiteForExecution.id }}
+        </td>
+        <td>
+          {{ suiteForExecution.name }}
+        </td>
+        <td>
+          {{ suiteForExecution.short_description }}
+        </td>
+      </tr>
+    </table>
+    <span class="fun-action-link" (click)="preparingCatalogExecution = false">back</span>&nbsp;&nbsp;
+    <button class="fun-button-submit">Execute</button>
+  </div>
+
+
 </div>
+

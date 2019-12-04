@@ -1104,19 +1104,15 @@ class IbWriteScale(FunTestCase):
         # Get max_cqe to compute tx_depth required for scaling
         f10_device_info = f10_host_roce.ibv_devinfo()
         f11_device_info = f11_host_roce.ibv_devinfo()
-        for devinfo in f10_device_info:
-            if "max_cqe" in devinfo:
-                f10_max_cqe = int(devinfo.split(":")[1])
-        for devinfo in f11_device_info:
-            if "max_cqe" in devinfo:
-                f11_max_cqe = int(devinfo.split(":")[1])
+        f10_max_cqe = int(f10_device_info["max_cqe"])
+        f11_max_cqe = int(f11_device_info["max_cqe"])
         if f10_max_cqe != f11_max_cqe:
             max_cqe_in_test = min(f10_max_cqe, f11_max_cqe)
             fun_test.critical("Max CQE on F10 : {} & F11 : {}".format(f10_max_cqe, f11_max_cqe))
             fun_test.add_checkpoint("Max CQE mismatch", "FAILED", f10_max_cqe, f11_max_cqe)
         else:
             max_cqe_in_test = f10_max_cqe
-        print "The max_cqe is {}".format(max_cqe_in_test)
+        fun_test.log("The max_cqe is {}".format(max_cqe_in_test))
         size = 1
         for test in test_type_list:
             for qp in qp_list:
@@ -1159,7 +1155,6 @@ class IbWriteScale(FunTestCase):
                     fun_test.sleep("ib_bw test on f11_host", 2)
                     f11_pid_there += 1
                     if f11_pid_there == 60:
-
                         f11_hosts[0]["handle"].kill_process(process_id=f11_host_test["cmd_pid"])
                 f10_host_result = f10_host_roce.parse_test_log(f10_host_test["output_file"], tool="ib_bw")
                 f11_host_result = f11_host_roce.parse_test_log(f11_host_test["output_file"], tool="ib_bw",
@@ -1204,7 +1199,7 @@ class SrpingSqIo2048MtuTest(SrpingSeqIoTest):
     mtu = 2048
 
     def describe(self):
-        self.set_test_details(id=19,
+        self.set_test_details(id=20,
                               summary="SRPING Seq IO Test with 2048 MTU",
                               steps="""
                                   1. Load funrdma & rdma_ucm driver
@@ -1217,7 +1212,7 @@ class SrpingSqIo4096MtuTest(SrpingSeqIoTest):
     mtu = 4096
 
     def describe(self):
-        self.set_test_details(id=20,
+        self.set_test_details(id=21,
                               summary="SRPING Seq IO Test with 4096 MTU",
                               steps="""
                                   1. Load funrdma & rdma_ucm driver
@@ -1230,7 +1225,7 @@ class SrpingSqIo9000MtuTest(SrpingSeqIoTest):
     mtu = 9000
 
     def describe(self):
-        self.set_test_details(id=21,
+        self.set_test_details(id=22,
                               summary="SRPING Seq IO Test with 9000 MTU",
                               steps="""
                                   1. Load funrdma & rdma_ucm driver
@@ -1244,7 +1239,7 @@ class SrpingRandIo512MtuTest(SrpingSeqIoTest):
     random_io = True
 
     def describe(self):
-        self.set_test_details(id=22,
+        self.set_test_details(id=23,
                               summary="SRPING Rand IO Test with 512 MTU",
                               steps="""
                                   1. Load funrdma & rdma_ucm driver
@@ -1258,7 +1253,7 @@ class SrpingRandIo1024MtuTest(SrpingSeqIoTest):
     random_io = True
 
     def describe(self):
-        self.set_test_details(id=23,
+        self.set_test_details(id=24,
                               summary="SRPING Rand IO Test with 1024 MTU",
                               steps="""
                                   1. Load funrdma & rdma_ucm driver
@@ -1272,7 +1267,7 @@ class SrpingRandIo2048MtuTest(SrpingSeqIoTest):
     random_io = True
 
     def describe(self):
-        self.set_test_details(id=24,
+        self.set_test_details(id=25,
                               summary="SRPING Rand IO Test with 2048 MTU",
                               steps="""
                                   1. Load funrdma & rdma_ucm driver
@@ -1286,7 +1281,7 @@ class SrpingRandIo4096MtuTest(SrpingSeqIoTest):
     random_io = True
 
     def describe(self):
-        self.set_test_details(id=25,
+        self.set_test_details(id=26,
                               summary="SRPING Rand IO Test with 4096 MTU",
                               steps="""
                                   1. Load funrdma & rdma_ucm driver
@@ -1300,7 +1295,7 @@ class SrpingRandIo9000MtuTest(SrpingSeqIoTest):
     random_io = True
 
     def describe(self):
-        self.set_test_details(id=26,
+        self.set_test_details(id=27,
                               summary="SRPING Rand IO Test with 9000 MTU",
                               steps="""
                                   1. Load funrdma & rdma_ucm driver
@@ -1314,7 +1309,7 @@ class IbBwSeqIo512MtuTest(IbBwSeqIoTest):
     mtu = 512
 
     def describe(self):
-        self.set_test_details(id=27,
+        self.set_test_details(id=28,
                               summary="IB_Bw* Seq IO with 512 MTU",
                               steps="""
                                   1. Load funrdma & rdma_ucm driver
@@ -1327,7 +1322,7 @@ class IbBwSeqIo1024MtuTest(IbBwSeqIoTest):
     mtu = 1024
 
     def describe(self):
-        self.set_test_details(id=28,
+        self.set_test_details(id=29,
                               summary="IB_Bw* Seq IO with 1024 MTU",
                               steps="""
                                   1. Load funrdma & rdma_ucm driver
@@ -1340,7 +1335,7 @@ class IbBwSeqIo2048MtuTest(IbBwSeqIoTest):
     mtu = 2048
 
     def describe(self):
-        self.set_test_details(id=29,
+        self.set_test_details(id=30,
                               summary="IB_Bw* Seq IO with 2048 MTU",
                               steps="""
                                   1. Load funrdma & rdma_ucm driver
@@ -1353,7 +1348,7 @@ class IbBwSeqIo4096MtuTest(IbBwSeqIoTest):
     mtu = 4096
 
     def describe(self):
-        self.set_test_details(id=30,
+        self.set_test_details(id=31,
                               summary="IB_Bw* Seq IO with 4096 MTU",
                               steps="""
                                   1. Load funrdma & rdma_ucm driver
@@ -1366,7 +1361,7 @@ class IbBwSeqIo9000MtuTest(IbBwSeqIoTest):
     mtu = 9000
 
     def describe(self):
-        self.set_test_details(id=31,
+        self.set_test_details(id=32,
                               summary="IB_Bw* Seq IO with 9000 MTU",
                               steps="""
                                   1. Load funrdma & rdma_ucm driver
@@ -1380,7 +1375,7 @@ class IbBwRandIo512MtuTest(IbBwSeqIoTest):
     mtu = 512
 
     def describe(self):
-        self.set_test_details(id=32,
+        self.set_test_details(id=33,
                               summary="IB_BW* Random IO with 512 MTU",
                               steps="""
                                   1. Load funrdma & rdma_ucm driver
@@ -1394,7 +1389,7 @@ class IbBwRandIo1024MtuTest(IbBwSeqIoTest):
     mtu = 1024
 
     def describe(self):
-        self.set_test_details(id=33,
+        self.set_test_details(id=34,
                               summary="IB_BW* Random IO with 1024 MTU",
                               steps="""
                                   1. Load funrdma & rdma_ucm driver
@@ -1408,7 +1403,7 @@ class IbBwRandIo2048MtuTest(IbBwSeqIoTest):
     mtu = 2048
 
     def describe(self):
-        self.set_test_details(id=34,
+        self.set_test_details(id=35,
                               summary="IB_BW* Random IO with 2048 MTU",
                               steps="""
                                   1. Load funrdma & rdma_ucm driver
@@ -1422,7 +1417,7 @@ class IbBwRandIo4096MtuTest(IbBwSeqIoTest):
     mtu = 4096
 
     def describe(self):
-        self.set_test_details(id=35,
+        self.set_test_details(id=36,
                               summary="IB_BW* Random IO with 4096 MTU",
                               steps="""
                                   1. Load funrdma & rdma_ucm driver
@@ -1436,7 +1431,7 @@ class IbBwRandIo9000MtuTest(IbBwSeqIoTest):
     mtu = 9000
 
     def describe(self):
-        self.set_test_details(id=36,
+        self.set_test_details(id=37,
                               summary="IB_BW* Random IO with 9000 MTU",
                               steps="""
                                   1. Load funrdma & rdma_ucm driver
@@ -1470,12 +1465,12 @@ if __name__ == '__main__':
             ts.add_test_case(SrpingSqIo1024MtuTest())
             ts.add_test_case(SrpingSqIo2048MtuTest())
             ts.add_test_case(SrpingSqIo4096MtuTest())
-            ts.add_test_case(SrpingSqIo9000MtuTest)
+            ts.add_test_case(SrpingSqIo9000MtuTest())
             ts.add_test_case(SrpingRandIo512MtuTest())
             ts.add_test_case(SrpingRandIo1024MtuTest())
             ts.add_test_case(SrpingRandIo2048MtuTest())
             ts.add_test_case(SrpingRandIo4096MtuTest())
-            ts.add_test_case(SrpingRandIo9000MtuTest)
+            ts.add_test_case(SrpingRandIo9000MtuTest())
             ts.add_test_case(IbBwSeqIo512MtuTest())
             ts.add_test_case(IbBwSeqIo1024MtuTest())
             ts.add_test_case(IbBwSeqIo2048MtuTest())

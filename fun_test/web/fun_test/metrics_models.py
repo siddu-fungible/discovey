@@ -255,6 +255,14 @@ class MetricChart(models.Model):
             self.children = json.dumps(children)
             self.save()
 
+    def remove_child(self, child_id):
+         children = json.loads(self.children)
+         for child in children:
+             if int(child) == child_id:
+                 children.remove(child)
+                 self.children = json.dumps(children)
+                 self.save()
+
     def add_child_weight(self, child_id, weight):
         children_weights = json.loads(self.children_weights)
         children_weights = {int(x): y for x, y in children_weights.iteritems()}
@@ -2736,6 +2744,7 @@ class AlibabaRdmaPerformance(models.Model):
     input_qp = models.IntegerField(verbose_name="QP", default=-1)
     input_fcp = models.BooleanField(default=False)
     input_mtu = models.IntegerField(verbose_name="MTU", default=-1)
+    input_hosts = models.IntegerField(verbose_name="HOSTS", default=-1)
     
     output_read_avg_latency = models.FloatField(verbose_name="read average latency (usec)", default=-1)
     output_write_avg_latency = models.FloatField(verbose_name="write average latency (usec)", default=-1)
@@ -3077,6 +3086,20 @@ class FunOnDemandTotalTimePerformance(FunModel):
         return s
 
 class PrBuildTotalTimePerformance(FunModel):
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+
+    output_total_time = models.FloatField(verbose_name="Total Time", default=-1)
+    output_total_time_unit = models.TextField(default=PerfUnit.UNIT_SECS)
+    run_time_id = models.IntegerField(default=None, null=True)
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
+
+class IntegrationJobBuildTimePerformance(FunModel):
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
 

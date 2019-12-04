@@ -101,6 +101,8 @@ import { SectionHeaderComponent } from './ui-elements/section-header/section-hea
 import { DaemonsComponent } from './daemons/daemons.component';
 import {setAppInjector} from "./app-injector";
 import { VpUtilizationComponent } from './statistics/system/vp-utilization/vp-utilization.component';
+import { BrokerTestComponent } from './mq-broker/broker-test/broker-test.component';
+import { PerformanceAttachDagComponent } from "./performance/performance-workspace/performance-view-workspace/performance-attach-dag/performance-attach-dag.component";
 
 
 @NgModule({
@@ -183,7 +185,9 @@ import { VpUtilizationComponent } from './statistics/system/vp-utilization/vp-ut
     BackComponent,
     SectionHeaderComponent,
     DaemonsComponent,
-    VpUtilizationComponent
+    VpUtilizationComponent,
+    BrokerTestComponent,
+    PerformanceAttachDagComponent
   ],
   imports: [
     BsDropdownModule,

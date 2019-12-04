@@ -289,7 +289,7 @@ def queue_job3(suite_id=None,
                submitter_email=None,
                description=None,
                rich_inputs=None,
-               max_run_time=None):
+               max_run_time=7 * 24 * 3600):
     # time.sleep(0.1)
     result = -1
     if not tags:
