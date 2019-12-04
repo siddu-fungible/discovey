@@ -2670,3 +2670,26 @@ if __name__ == "__main_integration_job__":
                            peer_ids=[], creator=TEAM_REGRESSION_EMAIL,
                            workspace_ids=[])
     print "created Integration job run time chart"
+
+if __name__ == "__main__":
+    metric_ids = [1141, 1142]
+    vols = [4, 8]
+    for metric_id in metric_ids:
+        chart = MetricChart.objects.get(metric_id=metric_id)
+        data_sets = chart.get_data_sets()
+        if "iodepth_8" in chart.internal_chart_name:
+            fio_job_name = "inspur_8k_random_write_iodepth_8_vol_"
+        else:
+            fio_job_name = "inspur_8k_random_write_iodepth_16_vol_"
+        for vol in vols:
+            temp_data_sets = chart.get_data_sets()
+            one_data_set = temp_data_sets[0]
+            one_data_set["inputs"]["input_fio_job_name"] = fio_job_name + str(vol)
+            one_data_set["name"] = "write(" + str(vol) + " vols)"
+            one_data_set["output"]["reference"] = -1
+            one_data_set["output"]["best"] = -1
+            one_data_set["output"]["expected"] = -1
+            data_sets.append(one_data_set)
+        chart.data_sets = json.dumps(data_sets)
+        chart.save()
+    print "added filters for qdepth 8 and qdepth 16"
