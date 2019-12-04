@@ -1,11 +1,12 @@
 import {Component, OnChanges, OnInit} from '@angular/core';
 import {RegressionService} from "../regression.service";
-import {Observable, of} from "rxjs";
+import {forkJoin, Observable, of} from "rxjs";
 import {switchMap} from "rxjs/operators";
 import {LoggerService} from "../../services/logger/logger.service";
 import {ReleaseCatalog} from "../definitions";
 import {Router} from "@angular/router";
 import {slideInOutAnimation} from "../../animations/generic-animations";
+import {Suite, SuiteEditorService} from "../suite-editor/suite-editor.service";
 
 @Component({
   selector: 'app-release-catalogs',
@@ -17,9 +18,11 @@ export class ReleaseCatalogsComponent implements OnInit, OnChanges {
   driver: Observable<any> = null;
   releaseCatalogs: ReleaseCatalog[] = null;
   preparingCatalogExecution: boolean = false;
+  suitesForExecution: Suite [];
   constructor(private regressionService: RegressionService,
               private  loggerService: LoggerService,
-              private router: Router
+              private router: Router,
+              private suiteEditorService: SuiteEditorService
   ) { }
 
   ngOnInit() {
@@ -64,8 +67,32 @@ export class ReleaseCatalogsComponent implements OnInit, OnChanges {
     this.router.navigate(['/regression/release_catalog_editor'], {queryParams: {id: catalogId}});
   }
 
-  execute(index) {
+  compareSuites(suiteA: Suite, suiteB: Suite) {
+    let result: number = 0;
+    if (suiteA.id > suiteB.id) {
+      result = 1;
+    } else if (suiteA.id < suiteB.id) {
+      result = -1;
+    }
+    return result;
+  }
+
+  prepareExecutionDetails(index) {
     this.preparingCatalogExecution = true;
+    let selectedReleaseCatalog = this.releaseCatalogs[index];
+    this.suitesForExecution = [];
+    let allObservables = selectedReleaseCatalog.suites.map((suite) => {
+      return this.suiteEditorService.suite(suite.id).pipe(switchMap(response => {
+        this.suitesForExecution.push(response);
+        return of(true);
+      }))});
+
+    forkJoin(allObservables).subscribe(response => {
+      this.suitesForExecution.sort(this.compareSuites);
+    }, error => {
+      this.loggerService.error(`Unable to get suite ids`, error);
+    });
+
   }
 
 }
