@@ -2783,7 +2783,7 @@ if __name__ == "__main__num_hosts_2":
         each_data.save()
     print("Initialized num hosts as 2 in the db")
 
-if __name__ == "__main__":
+if __name__ == "__main__8_14_1:4K_RAND_WR_COMP":
     owner_info = "Alagarswamy Devaraj (alagarswamy.devaraj@fungible.com)"
     source = "TBD"
     base_line_date = datetime(year=2019, month=12, day=03, minute=0, hour=0, second=1)
@@ -2815,6 +2815,58 @@ if __name__ == "__main__":
                                       "unit": y1_axis_title}
             data_sets.append(one_data_set)
         internal_chart_name = "8_14_1:4K_RAND_WR_COMP," + chart_name + fio_job_name + data_sets[0]["name"]
+        positive = True
+        leaf_chart = ml.create_leaf(chart_name=chart_name,
+                                    internal_chart_name=internal_chart_name,
+                                    data_sets=data_sets,
+                                    leaf=True,
+                                    description="TBD",
+                                    owner_info=owner_info,
+                                    source=source,
+                                    positive=positive, y1_axis_title=y1_axis_title,
+                                    visualization_unit=y1_axis_title,
+                                    metric_model_name=model_name,
+                                    base_line_date=base_line_date,
+                                    work_in_progress=False, children=[], jira_ids=[], platform=FunPlatform.F1,
+                                    peer_ids=[], creator=TEAM_REGRESSION_EMAIL,
+                                    workspace_ids=[])
+        new_charts.append(leaf_chart.get_metrics_json_blob())
+
+    print json.dumps(new_charts, indent=4)
+
+
+if __name__ == "__main__":
+    owner_info = "Alagarswamy Devaraj (alagarswamy.devaraj@fungible.com)"
+    source = "TBD"
+    base_line_date = datetime(year=2019, month=12, day=03, minute=0, hour=0, second=1)
+    model_name = "BltVolumePerformance"
+    qdepths = [8, 16]
+    categories = ["IOPS"]
+
+    new_charts = []
+
+    for qdepth in qdepths:
+        output_names = ["output_write_iops"]
+        data_sets = []
+        y1_axis_title = PerfUnit.UNIT_OPS
+        chart_name = "IOPS, QDepth={}".format(qdepth)
+        for output_name in output_names:
+            one_data_set = {}
+            data_set_name = "{}(8 vols)".format("write")
+            one_data_set["name"] = data_set_name
+            fio_job_name = "inspur_8k_random_write_encryption_keysize_32_iodepth_{}_vol_8".format(qdepth)
+            one_data_set["inputs"] = {"input_platform": FunPlatform.F1,
+                                      "input_fio_job_name": fio_job_name}
+
+            one_data_set["output"] = {"name": output_name,
+                                      "min": 0,
+                                      "max": -1,
+                                      "expected": -1,
+                                      "reference": -1,
+                                      "best": -1,
+                                      "unit": y1_axis_title}
+            data_sets.append(one_data_set)
+        internal_chart_name = "8_15_1:4k_RAND_WR_ENCRYPTION,F1(s)=1 " + chart_name + fio_job_name + data_sets[0]["name"]
         positive = True
         leaf_chart = ml.create_leaf(chart_name=chart_name,
                                     internal_chart_name=internal_chart_name,
