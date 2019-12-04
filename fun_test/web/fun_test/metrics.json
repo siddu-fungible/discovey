@@ -4097,6 +4097,16 @@
                 "label": "8_14_1:4K_RAND_WR_COMP, F1(s)=1",
                 "children": [
                   {
+                      "metric_model_name": "BltVolumePerformance",
+                      "name": "8_14_1:4K_RAND_WR_COMP,IOPS, QDepth=8inspur_8k_random_write_50pctcomp_iodepth_8_vol_8write(8 vols)",
+                      "label": "IOPS, QDepth=8"
+                  },
+                  {
+                      "metric_model_name": "BltVolumePerformance",
+                      "name": "8_14_1:4K_RAND_WR_COMP,IOPS, QDepth=16inspur_8k_random_write_50pctcomp_iodepth_16_vol_8write(8 vols)",
+                      "label": "IOPS, QDepth=16"
+                  },
+                  {
                     "metric_model_name": "BltVolumePerformance",
                     "name": "inspur_8141_8k_rand_wr_comp_qd32_output_latency",
                     "label": "Latency, QDepth=32"

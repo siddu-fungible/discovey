@@ -729,6 +729,10 @@ class MetricChart(models.Model):
             pass
         return result
 
+    def get_metrics_json_blob(self):
+        return {"metric_model_name": self.metric_model_name,
+                "name": self.internal_chart_name,
+                "label": self.chart_name}
 
 class MetricChartSerializer(ModelSerializer):
     class Meta:
