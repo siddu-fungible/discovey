@@ -427,6 +427,8 @@ class FunTest:
                 self.build_parameters["BRANCH_FunTools"] = user_supplied_build_parameters["BRANCH_FunTools"]
             if "BRANCH_FunJenkins" in user_supplied_build_parameters:
                 self.build_parameters["BRANCH_FunJenkins"] = user_supplied_build_parameters["BRANCH_FunJenkins"]
+            if "BRANCH_fungible_host_drivers" in user_supplied_build_parameters:
+                self.build_parameters["BRANCH_fungible_host_drivers"] = user_supplied_build_parameters["BRANCH_fungible_host_drivers"]
 
     def get_build_parameters(self):
         return self.build_parameters
