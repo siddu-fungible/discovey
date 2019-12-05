@@ -41,6 +41,18 @@ export class RegressionService implements OnInit{
     "IN_PROGRESS": 60
   };
 
+  timeSeriesTypes = {
+    "SCRIPT_RUN_TIME" : 10,
+    "CONTEXT_INFO" : 40,
+    "LOG" : 60,
+    "CHECKPOINT" : 80,
+    "STATISTICS" : 100,
+    "ARTIFACT" : 200,
+    "TEST_CASE_TABLE" : 300,
+    "REGISTERED_ASSET" : 400
+  };
+
+
   logDir: string = null;
   constructor(private apiService: ApiService, private loggerService: LoggerService, private commonService: CommonService) { }
 
@@ -260,7 +272,7 @@ export class RegressionService implements OnInit{
 
   testCaseTimeSeriesLogs(suiteExecutionId, testCaseExecutionId?: null, checkpointIndex?: null) {
     let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}`;
-    url += `?type=60`;
+    url += `?type=` + this.timeSeriesTypes.LOG;
     if (checkpointIndex !== null) {
       url += `&checkpoint_index=${checkpointIndex}`;
     }
@@ -284,7 +296,7 @@ export class RegressionService implements OnInit{
 
   testCaseTimeSeriesCheckpoints(suiteExecutionId, testCaseExecutionId: number = null) {
     let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}`;
-    url += `?type=80`;
+    url += `?type=` + this.timeSeriesTypes.CHECKPOINT;
     if (testCaseExecutionId) {
       url += `&test_case_execution_id=${testCaseExecutionId}`;
     }
@@ -300,7 +312,7 @@ export class RegressionService implements OnInit{
   artifacts(suiteExecutionId: number, testCaseExecutionId: number = null) {
     let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}`;
     let params = [];
-    params.push(["type", 200]);
+    params.push(["type", this.timeSeriesTypes.ARTIFACT]);
     if (testCaseExecutionId) {
       params.push(["te", testCaseExecutionId]);
     }
@@ -316,7 +328,7 @@ export class RegressionService implements OnInit{
   testCaseTables(suiteExecutionId: number, testCaseExecutionId: number = null) {
     let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}`;
     let params = [];
-    params.push(["type", 300]);
+    params.push(["type", this.timeSeriesTypes.TEST_CASE_TABLE]);
     if (testCaseExecutionId) {
       params.push(["te", testCaseExecutionId]);
     }
@@ -428,7 +440,7 @@ export class RegressionService implements OnInit{
   getRegisteredAssets(suiteExecutionId) {
     let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}`;
     let params = [];
-    params.push(["type", 400]);
+    params.push(["type", this.timeSeriesTypes.REGISTERED_ASSET]);
     url += this.commonService.queryParamsToString(params);
     return this.apiService.get(url).pipe(switchMap(response => {
       let registeredAssets = response.data.map(asset => new RegisteredAsset(asset.data));
