@@ -32,6 +32,7 @@ packets_per_sec_category = ["pps", "Mpps", "Kpps", "Gpps"]
 connections_per_sec_category = ["cps", "Mcps", "Kcps", "Gcps"]
 power_category = ["W", "kW", "MW", "mW"]
 
+days_in_past = 60
 
 def get_rounded_time(dt):
     rounded_d = dt.replace(year=dt.year, month=dt.month, day=dt.day, hour=hour, minute=minute, second=0, microsecond=0)
@@ -148,8 +149,8 @@ def set_from_to_dates(chart):
     # calculate the from date and to date for fetching the data
     today = datetime.datetime.now(pytz.timezone('US/Pacific'))
     from_date = chart.base_line_date
-    if from_date <= today - timedelta(days=60):
-        from_date = today - timedelta(days=60)
+    if from_date <= today - timedelta(days=days_in_past):
+        from_date = today - timedelta(days=days_in_past)
     from_date = adjust_timezone_for_day_light_savings(from_date)
     from_date = get_rounded_time(from_date)
     yesterday = today  # - timedelta(days=0) # Just use today
