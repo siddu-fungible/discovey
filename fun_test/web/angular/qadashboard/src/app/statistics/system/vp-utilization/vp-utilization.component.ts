@@ -91,7 +91,7 @@ export class VpUtilizationComponent implements OnInit, OnChanges {
             let coreIndex = core.index;
             let vpIndex = vp.index;
             let name = `${coreIndex}.${vpIndex}`;
-            console.log(name);
+            // console.log(name);
             let oneSeries = {name: name, data: []};
 
             let data = oneSeries.data;
@@ -118,7 +118,7 @@ export class VpUtilizationComponent implements OnInit, OnChanges {
       for (let index = 0; index < 10; index++) {
         let binLow = (index * 10) + 1;
         let binHigh = (index * 10) + 10;
-        console.log(binLow, binHigh);
+        // console.log(binLow, binHigh);
         let binName = `${binLow}-${binHigh}`;
         let series = {name: binName, data:[]};
         histogramData.push(series);
