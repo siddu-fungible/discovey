@@ -579,7 +579,7 @@ def dpcshF(index=0, cmd=None):
 def check_file_unsigned(image=TFTPPATH, type='tftp'):
     (server, filename) = image.split(':')
     with settings(warn_only=True):
-        o = run('file -z /tftpboot/{} | grep ELF && true || false'.format(filename))
+        o = run('file -L -z /tftpboot/{} | grep ELF && true || false'.format(filename))
         status = True if o.return_code == 0 else False
         print ("{} file downloaded - {} seem {} ...".format(type, filename, 'unsigned' if status == True else 'signed'))
         return status
