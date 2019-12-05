@@ -740,7 +740,7 @@ class StripeVolDiskFailTestCase(FunTestCase):
                     device_props_tree = "{}/{}/{}/{}/{}".format("storage", "devices", "nvme", "ssds", fail_device)
                     device_stats = self.storage_controller.peek(device_props_tree)
                     fun_test.simple_assert(device_stats["status"], "Device {} stats command".format(fail_device))
-                    fun_test.test_assert_expected(expected="DEV_FAILED_ERR_INJECT",
+                    fun_test.test_assert_expected(expected="DEV_ERR_INJECT_ENABLED",
                                                   actual=device_stats["data"]["device state"],
                                                   message="Device ID {} is marked as Failed".format(fail_device))
                     ''' Marking drive as failed '''

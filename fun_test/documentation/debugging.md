@@ -67,7 +67,22 @@ npm install
     #log_statement_stats = off
     #log_autovacuum_min_duration = -1	# -1 disables, 0 logs all actions and
     ~~~~
-    c. Restart Postgres
+    c. Check number of active connections. It should be around 23
+    ~~~~
+    sudo -u postgres -i
+    postgres@qa-ubuntu-01:~$ psql
+    psql (9.5.13)
+    Type "help" for help.
+
+    postgres=# select count(*) from pg_stat_activity;
+     count 
+    -------
+        20
+    (1 row)
+
+
+    ~~~~
+    d. Restart Postgres
 
        On Ubuntu:
        sudo systemctl stop postgresql

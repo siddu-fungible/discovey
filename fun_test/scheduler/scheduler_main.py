@@ -1029,7 +1029,13 @@ def join_suite_workers():
                 jobs_to_be_removed.append(job_id)
         except Exception as ex:
             traceback.print_exc()
-            send_error_mail(submitter_email=t.submitter_email, job_id=job_id, message="Suite execution error at run_next. Exception: {}".format(str(ex)))
+            submitter_email = TEAM_REGRESSION_EMAIL
+            suite_execution = models_helper.get_suite_execution(suite_execution_id=job_id)
+            if suite_execution:
+                submitter_email = suite_execution.submitter_email
+            send_error_mail(submitter_email=submitter_email,
+                            job_id=job_id,
+                            message="Suite execution error at run_next. Exception: {}".format(str(ex)))
 
     for job_to_be_removed in jobs_to_be_removed:
         if job_to_be_removed in job_id_threads:
