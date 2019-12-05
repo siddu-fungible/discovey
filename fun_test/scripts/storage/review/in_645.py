@@ -459,7 +459,7 @@ class ECVolumeLevelTestcase(FunTestCase):
         else:
             fun_test.test_assert(False, "payload path is not given")
 
-        command += '--latency-first-byte '
+        command += '-e --latency-marker \"\xAE\x12\x01\x03\" '
 
         if (self.duration):
             command += '-T {} '.format(self.duration)

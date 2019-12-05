@@ -4,7 +4,7 @@
       Git
     </div>
     <div class="card-body">
-      <button class="button btn-primary" (click)="gitPull()">Git pull</button>
+      <button *ngIf="!gitPullStatus" class="button btn-primary" (click)="gitPull()">Git pull</button>&nbsp; <fun-spinner [status]="gitPullStatus"></fun-spinner>
       <br>
 
       <ng-container *ngIf="gitPullLog">
