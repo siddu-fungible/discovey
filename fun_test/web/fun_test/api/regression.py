@@ -682,6 +682,14 @@ def release_catalogs(request, catalog_id):
                 pass
     return result
 
+
+@api_safe_json_response
+def time_series_types(request):
+    result = None
+    if request.method == "GET":
+        result = TimeSeriesTypes().all_strings_to_code()
+    return result
+
 if __name__ == "__main__":
     from web.fun_test.django_interactive import *
     print categories(None)

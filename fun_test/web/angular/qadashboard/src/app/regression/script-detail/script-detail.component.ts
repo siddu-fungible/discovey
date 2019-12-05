@@ -189,16 +189,21 @@ export class ScriptDetailComponent implements OnInit {
   testCaseTablePanels: {[panelHeader: string]: any} = {};
   registeredAssets: RegisteredAsset [];
 
+  timeSeriesTypes: any = null;
+
   ngOnInit() {
 
     this.driver = of(true).pipe(switchMap(response => {
+      return this.regressionService.getTimeSeriesTypes();
+    })).pipe(switchMap(response => {
+      this.timeSeriesTypes = response;
       return this.service.getScriptRunTime(this.suiteExecutionId, this.scriptId);
     })).pipe(switchMap(response => {
       this.scriptRunTime = response;
       return this.regressionService.getScriptInfoById(this.scriptId);
     })).pipe(switchMap(response => {
       this.scriptPath = response.script_path;
-      return this.regressionService.getRegisteredAssets(this.suiteExecutionId);
+      return this.regressionService.getRegisteredAssets(this.suiteExecutionId, this.timeSeriesTypes.REGISTERED_ASSET);
     })).pipe(switchMap(response => {
       this.registeredAssets = response;
       return this.service.getContexts(this.suiteExecutionId, this.scriptId);
@@ -221,7 +226,7 @@ export class ScriptDetailComponent implements OnInit {
 
       });
       this.updateScriptExecutionInfo();
-      return this.regressionService.testCaseTables(this.suiteExecutionId);
+      return this.regressionService.testCaseTables(this.suiteExecutionId, this.timeSeriesTypes.TEST_CASE_TABLE);
     })).pipe(switchMap(response => {
       this._parseTestCaseTables(response);
       return of(true);
@@ -293,7 +298,7 @@ export class ScriptDetailComponent implements OnInit {
     if (testCaseExecution.hasOwnProperty("checkpoints") && (testCaseExecution.checkpoints) && (testCaseExecution.checkpoints.length > 0)) {
       return of(true)
     } else {
-      return this.regressionService.testCaseTimeSeriesCheckpoints(suiteExecutionId, testCaseExecution.execution_id).pipe(switchMap(response => {
+      return this.regressionService.testCaseTimeSeriesCheckpoints(suiteExecutionId, this.timeSeriesTypes.CHECKPOINT, testCaseExecution.execution_id).pipe(switchMap(response => {
         if (!testCaseExecution.hasOwnProperty("checkpoints")) {
           testCaseExecution["checkpoints"] = response;
           testCaseExecution["minimum_epoch"] = 0;
@@ -580,7 +585,7 @@ export class ScriptDetailComponent implements OnInit {
 
   openArtifactsPanelClick() {
     this.showingArtifactPanel = !this.showingArtifactPanel;
-    this.regressionService.artifacts(this.suiteExecutionId).subscribe(response => {
+    this.regressionService.artifacts(this.suiteExecutionId, this.timeSeriesTypes.ARTIFACT).subscribe(response => {
       this.artifacts = response;
       this._parseArtifacts();
 

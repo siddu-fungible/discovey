@@ -242,7 +242,8 @@ api_v1_urls = [
     url(r'^regression/release_catalogs/?(\d+)?$', regression.release_catalogs),
     url(r'^daemons/?(\d+)?$', daemons.daemons),
     url(r'^mq_broker/publish$', mq_broker.publish),
-    url(r'^mq_broker/message_types$', mq_broker.message_types)
+    url(r'^mq_broker/message_types$', mq_broker.message_types),
+    url(r'^regression/time_series_types', regression.time_series_types)
 ]
 
 site_under_construction = False
