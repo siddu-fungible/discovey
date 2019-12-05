@@ -542,7 +542,7 @@ def fwupgrade(index=0, flags=False, type=None, image=None, version=None):
 
 
 @roles('come')
-#@task
+@task
 def deploy_dpcsh_install_dependencies():
     with settings(hide('stdout', 'stderr'), warn_only=True):
         o = run('mkdir -p ~/tools/dpudebug')
@@ -574,7 +574,7 @@ def dpcshF(index=0, cmd=None):
     check_dpcsh_install_dependencies()
     dev = '/dev/nvme0' if (index == 0 and '0000:04:00.2' in O) else '/dev/nvme1' if (index == 1 and '0000:06:00.2' in O) else '/dev/null'
     with cd(dpcsh_directory):
-        return sudo('echo "%s" | ./dpcsh --pcie_nvme_sock=%s' % (cmd, dev))
+        return sudo('./dpcsh --pcie_nvme_sock=%s --nvme_cmd_timeout=60000 --nocli %s' % (dev, cmd))
 
 def check_file_unsigned(image=TFTPPATH, type='tftp'):
     (server, filename) = image.split(':')
@@ -669,6 +669,8 @@ def argsF(index=0, bootargs=BOOTARGS):
     child.sendline ('echo connected to chip={} ...'.format(index))
     child.expect ('\nf1 # ')
     child.sendline('setenv bootargs %s' % (bootargs))
+    child.expect ('\nf1 # ')
+    child.sendline('printenv')
     child.expect ('\nf1 # ')
     child.close()
 
