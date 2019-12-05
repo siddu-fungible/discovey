@@ -457,7 +457,7 @@ export class RegressionService implements OnInit {
     return this.apiService.get(url).pipe(switchMap(response => {
       return of(response.data);
     }), catchError(error => {
-      this.loggerService.error("Unable to fetch time series types");
+      this.loggerService.error("Unable to fetch time series types", error);
       return throwError(error);
     }))
   }
