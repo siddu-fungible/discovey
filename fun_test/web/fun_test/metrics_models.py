@@ -729,6 +729,10 @@ class MetricChart(models.Model):
             pass
         return result
 
+    def get_metrics_json_blob(self):
+        return {"metric_model_name": self.metric_model_name,
+                "name": self.internal_chart_name,
+                "label": self.chart_name}
 
 class MetricChartSerializer(ModelSerializer):
     class Meta:
@@ -2744,6 +2748,7 @@ class AlibabaRdmaPerformance(models.Model):
     input_qp = models.IntegerField(verbose_name="QP", default=-1)
     input_fcp = models.BooleanField(default=False)
     input_mtu = models.IntegerField(verbose_name="MTU", default=-1)
+    input_hosts = models.IntegerField(verbose_name="HOSTS", default=-1)
     
     output_read_avg_latency = models.FloatField(verbose_name="read average latency (usec)", default=-1)
     output_write_avg_latency = models.FloatField(verbose_name="write average latency (usec)", default=-1)

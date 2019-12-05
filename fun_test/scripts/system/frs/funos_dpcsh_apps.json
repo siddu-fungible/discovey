@@ -4,7 +4,8 @@
     "zip":{"per": 100},
     "crypto":  {"per":  100},
     "dma_speed":  {"per":  100},
-    "rcnvme":  {"per":  80}
+    "rcnvme":  {"per":  100},
+    "FIO_SERVER": {"per": 100}
   },
   "boot_new_image": false,
   "add_to_database": true,

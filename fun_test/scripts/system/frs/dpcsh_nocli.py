@@ -10,6 +10,8 @@ def get_dpcsh_output(come_handle, cmd, f1=0, env_set=False):
             come_handle.command("cd /tmp/workspace/FunSDK/bin/Linux")
         run_cmd = "./dpcsh --pcie_nvme_sock=/dev/nvme{} --nvme_cmd_timeout=60000 --nocli {}".format(f1, cmd)
         output = come_handle.command(run_cmd, timeout=10000)
+        if "Can't open socket" in output:
+            return False
         result = parse_dpcsh_output(output)
         if "result" in result:
             result = result["result"]

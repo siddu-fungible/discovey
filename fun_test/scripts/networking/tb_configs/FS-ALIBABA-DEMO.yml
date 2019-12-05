@@ -37,7 +37,7 @@ hu2:
       routes:
       - prefix: 18.1.1.0/24
         nexthop: 19.1.1.1
-      - prefix: 20.1.1.0/24
+      - prefix: 30.1.1.0/24
         nexthop: 19.1.1.1
 
 hu3:
@@ -56,7 +56,8 @@ hu3:
       routes:
         - prefix: 18.1.1.0/24
           nexthop: 19.1.1.1
-
+        - prefix: 30.1.1.0/24
+          nexthop: 19.1.1.1
 hu4:
   hostname: cab03-qa-07
   username: localadmin
@@ -72,4 +73,6 @@ hu4:
             ipv4_netmask: 255.255.255.0
       routes:
         - prefix: 19.1.1.0/24
+          nexthop: 18.1.1.1
+        - prefix: 30.1.1.0/24
           nexthop: 18.1.1.1

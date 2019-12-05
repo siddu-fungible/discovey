@@ -94,6 +94,21 @@ class SiteState():
         if fun_test_was_disabled:
             os.environ["DISABLE_FUN_TEST"] = "1"
 
+    def cleanup_assets(self):
+        fun_test_was_disabled = False
+        if "DISABLE_FUN_TEST" in os.environ:
+            fun_test_was_disabled = True
+            del os.environ["DISABLE_FUN_TEST"]
+        from asset.asset_manager import AssetManager
+        am = AssetManager()
+        all_assets = Asset.objects.all()
+        for asset in all_assets:
+            if fun_test_was_disabled:
+                os.environ["DISABLE_FUN_TEST"] = "1"
+                asset_is_valid = am.is_asset_valid(asset_name=asset.name, asset_type=asset.type)
+                if not asset_is_valid:
+                    print asset.name + " is not valid"
+                    asset.delete()
     def register_tags(self):
         for tag in self.site_base_data["tags"]:
             try:
