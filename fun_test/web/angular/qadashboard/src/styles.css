@@ -673,6 +673,7 @@ tr.text-center > th {
   -webkit-appearance: none;
   -moz-appearance: none;
   padding: 5px;
+  margin: 5px;
   border: none;
   cursor: pointer;
   min-width: 100px;
@@ -684,6 +685,10 @@ tr.text-center > th {
 
 }
 
+.fun-button-with-icon-selected {
+  background: grey;
+  color: white;
+}
 
 label {
   margin-bottom: unset;
@@ -756,6 +761,7 @@ label {
 
 .fun-table-borderless-header {
   font-weight: bolder;
+  padding: 10px;
   color: #a9a8a8;
 }
 
@@ -763,7 +769,13 @@ tr.fun-table-borderless-row > td {
   border-top: 1px solid;
   border-bottom: 1px solid;
   padding: 10px;
+  /*text-align: center;*/
 }
+
+.fun-table-borderless > tbody > tr > td {
+  padding: 10px;
+}
+
 
 .fun-panel {
   border: 1px solid rgba(0,0,0,.125);
@@ -823,11 +835,25 @@ tr.fun-table-borderless-row > td {
 }
 
 .badge-history {
-  color: #212529;
+  color: #212529 !important;
   background-color: rgba(255, 185, 7, 0.37);
 }
 
 /* div */
 .fun-div {
   padding: 10px;
+}
+
+.fun-spacer {
+  width: 0;
+  border-right: 1px solid #E2E2E2;
+  height: 50px;
+  margin: 0 0.5em;
+}
+
+.fun-action-nav {
+  box-shadow: 0 4px 4px 0 grey;
+  display: flex;
+  align-items: center;
+
 }

@@ -1,0 +1,20 @@
+<ng-template #openAttachDag let-modal>
+  <div class="modal-header">
+    <h4 class="modal-title" id="modal-attach-dag">Attach DAG</h4>
+    <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+  <div class="modal-body">
+    <div class="card" style="height: auto; justify-content: left">
+      <div class="card-body">
+        <app-performance [selectMode]="selectMode"></app-performance>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <span class="fun-cancel-link" (click)="modal.dismiss('Cancel')">Cancel</span>
+      <button class="fun-button-submit" (click)="addToDag()">Save
+      </button>
+    </div>
+  </div>
+</ng-template>

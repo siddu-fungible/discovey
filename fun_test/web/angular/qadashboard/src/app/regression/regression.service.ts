@@ -4,7 +4,7 @@ import {LoggerService} from "../services/logger/logger.service";
 import {catchError, switchMap} from 'rxjs/operators';
 import {forkJoin, observable, Observable, of, throwError} from "rxjs";
 import {CommonService} from "../services/common/common.service";
-import {ReleaseCatalogSuite, ReleaseCatalog} from "./declarations";
+import {ReleaseCatalogSuite, ReleaseCatalog, RegisteredAsset} from "./definitions";
 import {Suite} from "./suite-editor/suite-editor.service";
 
 
@@ -219,7 +219,8 @@ export class RegressionService implements OnInit{
                      minCheckpointIndex?: number,
                      maxCheckpointIndex?: number,
                      type?: number,
-                     statisticsType?: number) {
+                     statisticsType?: number,
+                     assetId?: string) {
     let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}`;
     let params = [];
     if (checkpointIndex !== null) {
@@ -239,6 +240,9 @@ export class RegressionService implements OnInit{
       }
       if (statisticsType) {
         params.push(["t", statisticsType]);
+      }
+      if (assetId) {
+        params.push(["asset_id", assetId]);
       }
     }
     let queryParamString = this.commonService.queryParamsToString(params);
@@ -329,7 +333,6 @@ export class RegressionService implements OnInit{
   getRegressionScripts(scriptId=null, scriptPath=null) {
     let url = `/api/v1/regression/scripts`
   }
-
 
   _getFlatPath(suiteExecutionId, path, logPrefix) {
     let httpPath = "/static/logs/s_" + suiteExecutionId;
@@ -422,5 +425,18 @@ export class RegressionService implements OnInit{
     }))
   }
 
+  getRegisteredAssets(suiteExecutionId) {
+    let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}`;
+    let params = [];
+    params.push(["type", 400]);
+    url += this.commonService.queryParamsToString(params);
+    return this.apiService.get(url).pipe(switchMap(response => {
+      let registeredAssets = response.data.map(asset => new RegisteredAsset(asset.data));
+      return of(registeredAssets);
+    }), catchError(error => {
+      this.loggerService.error("Unable to fetch registered assets");
+      return throwError(error);
+    }))
+  }
 
 }

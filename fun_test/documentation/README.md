@@ -9,7 +9,7 @@ fun_test has the following layout
 6. stash (A place to store git repositories)
 
 ## Setup
-### Setup without the web-server
+### Quick-start (without the web-server)
 ~~~~
 cd /project/users/QA/regression/Integration/fun_test
 export PYTHONPATH=`pwd`
@@ -18,41 +18,65 @@ python scripts/examples/sanity.py
 ~~~~
 
 
-### Setup with the web-server and database
-#### Web-server and Postgres setup
-Documentation: https://github.com/fungible-inc/Integration/blob/master/fun_test/web/documentation/README.md
+### Basic setup with the web-server and databases
+Please ensure the steps in the Quick-start section have been completed
 
-#### Docker setup
-Enable Docker remote API
-~~~~
-qa-admin@qa-ubuntu-01:/project/users/QA/regression/Integration/fun_test$ grep ExecStart /lib/systemd/system/docker.service
-ExecStart=/usr/bin/dockerd -H fd:// -H=tcp://0.0.0.0:4243 $DOCKER_OPTS
-
-systemctl daemon-reload
-sudo service docker restart
-~~~~
-Verify Docker remote API
-~~~~
-qa-admin@qa-ubuntu-01:/project/users/QA/regression/Integration/fun_test$ curl http://127.0.0.1:4243/version
-{"Version":"1.13.1","ApiVersion":"1.26","MinAPIVersion":"1.12","GitCommit":"092cba3","GoVersion":"go1.6.2","Os":"linux","Arch":"amd64","KernelVersion":"4.4.0-87-generic","BuildTime":"2017-11-02T20:40:23.484070968+00:00"}
-~~~~
-
-
-## Data-store
-
-A place to store test-input files that are large.
-Currently, it is set to 'data_store' in the parent directory of the Integration repo.
-Ex: /project/users/QA/regression/data_store
-
-The data-store directory can be accessed using
+#### 1. Postgres setup
+##### Installation on Ubuntu:
 ```
-from fun_settings import DATA_STORE_DIR
-```
-### Suggestions for the data-store directories layout
+# sudo apt-get install postgresql
+# update-rc.d postgresql enable
+# service postgresql start
+
+
+# sudo -u postgres -i
+# psql
+
+psql (9.5.14)
+Type "help" for help.
+
+postgres=# CREATE USER fun_test_user WITH PASSWORD 'fun123';
+CREATE ROLE
+postgres=# CREATE DATABASE fun_test;
+CREATE DATABASE
+postgres-# \q
 
 ```
-data_store/storage
-data_store/networking
-data_store/web_backup (Location of the regression/performance Db backup)
-data_store/job_backup (Location of the regression jobs log that are archived via web/fun_test/management/archiver.py)
+
+##### Installation on the Mac:
 ```
+Install Xcode via the Appstore
+
+In a terminal execute the below:
+# brew install postgres
+# brew services start postgresql
+
+
+# psql postgres
+
+psql (9.5.14)
+Type "help" for help.
+
+postgres=# CREATE USER fun_test_user WITH PASSWORD 'fun123';
+CREATE ROLE
+postgres=# CREATE DATABASE fun_test;
+CREATE DATABASE
+postgres-# \q
+
+```
+
+
+#### 2. Starting the web-server
+Django will be installed via the instructions mentioned in the Quick-start section
+````
+# cd /project/users/QA/regression/Integration/fun_test
+# export PYTHONPATH=`pwd`
+# cd web
+# export DEVELOPMENT_MODE=1;
+# python web/manage.py migrate --database=default
+# python start_development_server
+````
+
+
+## Notes for advanced users
+https://github.com/fungible-inc/Integration/blob/master/fun_test/documentation/advanced_users.md

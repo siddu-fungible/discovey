@@ -1,5 +1,4 @@
 {
-  "iterations": 100,
   "check_storage_controller": false,
   "check_ssd": false,
   "check_ports": false,

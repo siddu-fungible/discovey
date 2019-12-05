@@ -12,7 +12,7 @@ class StatisticsCategory(Codes):
 
 
 class StatisticsCollector:
-    def __init__(self, collector, category, type, storage_file_handler=None, storage_db_handler=None, **kwargs):
+    def __init__(self, collector, category, type, storage_file_handler=None, storage_db_handler=None, asset_id=None, **kwargs):
         self.collector = collector
         self.category = category
         self.type = type
@@ -20,9 +20,13 @@ class StatisticsCollector:
         self.storage_db_handler = storage_db_handler
         self.kwargs = kwargs
         self.storage_db = True
+        self.asset_id = asset_id
 
     def get_type(self):
         return self.type
+
+    def get_asset_id(self):
+        return self.asset_id
 
 class StatisticsStorageHandler:
     FILE_TYPE_HANDLER = 10
@@ -48,6 +52,7 @@ class CollectorWorker(Thread):
         fun_test.log("Starting collector: {}".format(self.collector_id))
         while not fun_test.closed and not self.stopped:
             collector_instance = self.collector.collector
+            fun_test.debug("Running dispatch for {}".format(self.collector_id))
             result = collector_instance.statistics_dispatcher(self.collector.type, **self.collector.kwargs)
             if self.collector.storage_db:
                 # result = self.collector.storage_db_handler(result)
@@ -60,6 +65,7 @@ class CollectorWorker(Thread):
                                             type=TimeSeriesTypes.STATISTICS,
                                             te=fun_test.get_current_test_case_execution_id(),
                                             t=self.collector.get_type(),
+                                            asset_id=self.collector.get_asset_id(),
                                             data=data)
             fun_test.sleep(seconds=self.interval_in_seconds, message="", no_log=True)
 
@@ -103,15 +109,24 @@ if __name__ == "__main__":
     from asset.asset_manager import AssetManager
 
     asset_manager = AssetManager()
-    fs_spec = asset_manager.get_fs_by_name("fs-102")
+    fs_spec = asset_manager.get_fs_by_name("fs-118")
 
     fs_obj = Fs.get(fs_spec=fs_spec, already_deployed=True, disable_f1_index=1)
-    come_obj = fs_obj.get_come()
-    come_obj.command("date")
-    come_obj.command("ps -ef | grep nvme")
-    fs_obj.bam()
+    #come_obj = fs_obj.get_come()
+    #come_obj.command("date")
+    #come_obj.command("ps -ef | grep nvme")
+    # fs_obj.bam()
+    # fs_obj.debug_vp_util()
+
+
 
     sm = StatisticsManager()
     sc = StatisticsCollector(collector=fs_obj, category=StatisticsCategory.FS_SYSTEM, type=Fs.StatisticsType.BAM)
     collector_id = sm.register_collector(collector=sc)
+    sc = StatisticsCollector(collector=fs_obj, category=StatisticsCategory.FS_SYSTEM, type=Fs.StatisticsType.DEBUG_VP_UTIL)
+    collector_id = sm.register_collector(collector=sc)
+
     sm.start_all()
+
+    # fun_test.sleep(seconds=120, message="just wait")
+

@@ -2882,6 +2882,22 @@ class Linux(object, ToDictMixin):
 
         return result
 
+    @fun_test.safe
+    def file(self, path, mime_type=None):
+        result = None
+        command = "file"
+        if mime_type:
+            command += " --mime-type"
+        command += " {}".format(path)
+        output = self.command(command)
+        if output:
+            result = {}
+            if mime_type:
+                m = re.search(path + ":\s+(\S+)", output)
+                if m:
+                    result["mime_type"] = m.group(1)
+        return result
+
 class LinuxBackup:
     def __init__(self, linux_obj, source_file_name, backedup_file_name):
         self.linux_obj = linux_obj
@@ -2901,4 +2917,4 @@ class LinuxBackup:
 
 if __name__ == "__main__":
     l = Linux(host_ip="qa-ubuntu-02", ssh_username="auto_admin", ssh_password="fun123")
-    print l.uptime()
+    print l.file(path="/tmp/s_signed", mime_type=True)

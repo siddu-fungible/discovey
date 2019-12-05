@@ -54,26 +54,45 @@ export class LoggerService {
     }
   }
 
-  error(args: any) {
+  formatErrorObject(error) {
+    let output = "";
+    if (error.hasOwnProperty('message')) {
+      output += `Message: ${error.message}\n`;
+    }
+    if (error.hasOwnProperty('stack')) {
+      let stackLines = error.stack.split('\n');
+      stackLines.forEach(stackLine => output += `${stackLine}\n`);
+    }
+    return output;
+  }
+
+  error(args: any, errorObject?) {
 
 
     var errback = function(err) { console.log(err.message); };
     StackTrace.get().then((stackFrames) => {
       console.error(args);
       console.error(stackFrames);
+      let message = args;
+      let toasterMessage = message;
+
+      if (errorObject) {
+        if (errorObject.hasOwnProperty('message')) {
+          toasterMessage += ": " + errorObject.message;
+        }
+        message += "\n";
+        message += this.formatErrorObject(errorObject);
+      }
       let toast: Toast = {
         type: 'error',
-        title: args,
+        title: toasterMessage,
         showCloseButton: true,
         timeout: 0
       };
       this.toasterService.pop(toast);
-      if (typeof args === 'object') {
+      let plainLog = new Log(null, message, LogDataType.SIMPLE, AlertLevel.ERROR);
+      this.addLog(plainLog);
 
-      } else {
-        let plainLog = new Log(null, args, LogDataType.SIMPLE, AlertLevel.ERROR);
-        this.addLog(plainLog);
-      }
     }).catch(errback);
 
   }

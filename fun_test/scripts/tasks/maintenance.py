@@ -130,7 +130,7 @@ class DetectLargeFiles(FunTestCase):
 
 
 class CheckMongoCollectionCount(FunTestCase):
-    MAX_COLLECTIONS = 4000
+    MAX_COLLECTIONS = 5000
 
     def describe(self):
         self.set_test_details(id=5, summary="Ensure mongodb collection count is in control", steps=""" """)
@@ -140,7 +140,8 @@ class CheckMongoCollectionCount(FunTestCase):
 
     def run(self):
         m = fun_test.get_mongo_db_manager()
-        fun_test.test_assert(m.collections_count() < self.MAX_COLLECTIONS, "Mongodb collections < {}".format(self.MAX_COLLECTIONS))
+        collection_count = m.collections_count()
+        fun_test.test_assert(collection_count < self.MAX_COLLECTIONS, "Mongodb collections < {}. Actual: {}".format(self.MAX_COLLECTIONS, collection_count))
 
     def cleanup(self):
         pass
@@ -150,7 +151,7 @@ class RemoveOldCollections(FunTestCase):
     MAX_DAYS_IN_PAST = 30
 
     def describe(self):
-        self.set_test_details(id=5, summary="Remove collections older than {} days".format(self.MAX_DAYS_IN_PAST), steps=""" """)
+        self.set_test_details(id=6, summary="Remove collections older than {} days".format(self.MAX_DAYS_IN_PAST), steps=""" """)
 
     def setup(self):
         pass

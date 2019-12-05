@@ -425,6 +425,8 @@ class FunTest:
                 self.build_parameters["BRANCH_FunHW"] = user_supplied_build_parameters["BRANCH_FunHW"]
             if "BRANCH_FunTools" in user_supplied_build_parameters:
                 self.build_parameters["BRANCH_FunTools"] = user_supplied_build_parameters["BRANCH_FunTools"]
+            if "BRANCH_FunJenkins" in user_supplied_build_parameters:
+                self.build_parameters["BRANCH_FunJenkins"] = user_supplied_build_parameters["BRANCH_FunJenkins"]
 
     def get_build_parameters(self):
         return self.build_parameters
@@ -793,7 +795,7 @@ class FunTest:
         self.fss.append(fs)
         asset_name = fs.get_asset_name()
         if asset_name and self.time_series_enabled:
-            self.add_time_series_registered_asset(asset_name=asset_name)
+            self.add_time_series_registered_asset(asset_name=asset_name, asset_type=AssetType.DUT)
 
     def get_topologies(self):
         return self.topologies
@@ -934,10 +936,11 @@ class FunTest:
             self.critical(str(ex))
             self.enable_time_series(enable=False)
 
-    def add_time_series_registered_asset(self, asset_name):
+    def add_time_series_registered_asset(self, asset_name, asset_type=None):
         try:
             epoch_time = get_current_epoch_time()
-            data = {"asset_id": asset_name}
+            data = {"asset_id": asset_name,
+                    "asset_type": asset_type}
             self.add_time_series_document(collection_name=self.get_time_series_collection_name(),
                                           epoch_time=epoch_time,
                                           type=TimeSeriesTypes.REGISTERED_ASSET,
@@ -1535,6 +1538,14 @@ class FunTest:
                                           sub_category=artifact_sub_category)
 
     def send_mail(self, subject, content, to_addresses=["john.abraham@fungible.com"]):
+        try:
+            if fun_test.suite_execution_id:
+                suite_execution = models_helper.get_suite_execution(suite_execution_id=fun_test.suite_execution_id)
+                if suite_execution:
+                    to_addresses.append(suite_execution.submitter_email)
+                    content += '<br><a href="{}/regression/suite_detail/{}">Suite detail link</a>'.format(get_homepage_url(), fun_test.suite_execution_id)
+        except Exception as ex:
+            self.critical(str(ex))
         send_mail(to_addresses=to_addresses, subject=subject, content=content)
 
     def add_start_checkpoint(self):

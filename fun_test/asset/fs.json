@@ -186,7 +186,7 @@
       "mgmt_ssh_username": "sysadmin",
       "mgmt_ip": "10.1.105.154"
     },
-    "name": "fs-42",
+    "name": "fs-121",
     "fpga": {
       "mgmt_ssh_password": "root",
       "mgmt_ssh_username": "root",
@@ -211,7 +211,7 @@
       "mgmt_ssh_username": "sysadmin",
       "mgmt_ip": "10.1.105.157"
     },
-    "name": "fs-43",
+    "name": "fs-122",
     "fpga": {
       "mgmt_ssh_password": "root",
       "mgmt_ssh_username": "root",
@@ -236,7 +236,7 @@
       "mgmt_ssh_username": "sysadmin",
       "mgmt_ip": "10.1.105.160"
     },
-    "name": "fs-44",
+    "name": "fs-123",
     "fpga": {
       "mgmt_ssh_password": "root",
       "mgmt_ssh_username": "root",
@@ -393,6 +393,12 @@
       "mgmt_ssh_password": "123",
       "mgmt_ssh_username": "fun",
       "mgmt_ip": "10.1.20.17"
+    },
+    "apc_info": {
+      "username": "admin",
+      "outlet_number": 6,
+      "password": "Precious1*",
+      "host_ip": "r9-pdu3"
     }
   },
   {

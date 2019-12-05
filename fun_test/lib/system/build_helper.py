@@ -78,17 +78,20 @@ class BuildHelper():
         fun_test.test_assert(image_path, "Image path retrieved")
 
         tftp_server = self.get_tftp_server()
+        file_output = tftp_server.file(path="{}/{}".format(image_path, self.FUN_OS_STRIPPED_IMAGE_NAME), mime_type=True)
         filename = "s_{}_{}".format(fun_test.get_suite_execution_id(), self.FUN_OS_STRIPPED_IMAGE_NAME)
-        gz_filename = filename + ".gz"
+        if file_output and "mime_type" in file_output and "application/octet-stream" in file_output["mime_type"]:
+            filename += ".signed"
+
         tftp_server.command("cd {}".format(TFTP_DIRECTORY))
         tftp_server.command("rm -f {}".format(filename))
-        tftp_server.command("rm -f {}".format(gz_filename))
         tftp_server.command("cp {}/{} {}".format(image_path, self.FUN_OS_STRIPPED_IMAGE_NAME, filename))
         fun_test.simple_assert(tftp_server.list_files(TFTP_DIRECTORY + "/" + filename), "Image {} copied to TFTP server".format(filename))
+
+        gz_filename = filename + ".gz"
+        tftp_server.command("rm -f {}".format(gz_filename))
         tftp_server.command("gzip {}".format(filename))
-
         fun_test.simple_assert(tftp_server.list_files(TFTP_DIRECTORY + "/" + gz_filename), "Gz Image ready on TFTP server".format(filename))
-
         return gz_filename
 
     def fetch_stable_master(self, debug=False, stripped=True):
