@@ -576,6 +576,14 @@ def dpcshF(index=0, cmd=None):
     with cd(dpcsh_directory):
         return sudo('echo "%s" | ./dpcsh --pcie_nvme_sock=%s' % (cmd, dev))
 
+def check_file_unsigned(image=TFTPPATH, type='tftp'):
+    (server, filename) = image.split(':')
+    with settings(warn_only=True):
+        o = run('file -L -z /tftpboot/{} | grep ELF && true || false'.format(filename))
+        status = True if o.return_code == 0 else False
+        print ("{} file downloaded - {} seem {} ...".format(type, filename, 'unsigned' if status == True else 'signed'))
+        return status
+
 def _is_file_unsigned(image=NFSPATH, type='nfs'):
     (server, filename) = image.split(':')
     (tfd, tname) = tempfile.mkstemp(suffix='.fab')
@@ -599,7 +607,8 @@ def imageF(index=0, image=NFSPATH, type='nfs'):
     """ upgrade image of chip[index] over type [nfs|tftp] with provided arguments """
     global child
 
-    unsigned = _is_file_unsigned(image, type)
+    env.passwords.update({'localadmin@{}:22'.format(env.TFTPSERVER) : 'Precious1*'})
+    unsigned = execute(check_file_unsigned, image, type, hosts='localadmin@{}:22'.format(env.TFTPSERVER))
 
     command = 'nfs' if 'nfs' in type else 'tftpboot'
     child = connectF(index, True)
