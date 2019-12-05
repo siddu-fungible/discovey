@@ -3,7 +3,7 @@ from lib.host.dpcsh_client import DpcshClient
 from lib.host.storage_controller import StorageController
 from lib.host.network_controller import NetworkController
 from lib.host.linux import Linux
-from fun_settings import TFTP_SERVER_IP, FUN_TEST_LIB_UTILITIES_DIR, INTEGRATION_DIR
+from fun_settings import TFTP_SERVER_IP, INTEGRATION_DIR
 from lib.utilities.netcat import Netcat
 from lib.system.utils import ToDictMixin
 from lib.host.apc_pdu import ApcPdu
@@ -21,7 +21,11 @@ import socket
 
 DOCHUB_FUNGIBLE_LOCAL = "10.1.20.99"
 # ERROR_REGEXES = ["MUD_MCI_NON_FATAL_INTR_STAT", "bug_check", "platform_halt: exit status 1"]
-ERROR_REGEXES = ["MUD_MCI_NON_FATAL_INTR_STAT", "bug_check on", "platform_halt: exit status 1", "Assertion failed", "Trap exception"]
+ERROR_REGEXES = ["MUD_MCI_NON_FATAL_INTR_STAT",
+                 "bug_check on",
+                 "platform_halt: exit status 1",
+                 "Assertion failed",
+                 "Trap exception"]
 
 DOCHUB_BASE_URL = "http://{}/doc/jenkins".format(DOCHUB_FUNGIBLE_LOCAL)
 
@@ -1188,8 +1192,6 @@ class ComE(Linux):
         self.fs = kwargs.get("fs", None)
         self.hbm_dump_enabled = False
         self.funq_bind_device = {}
-        self.dpc_for_statistics_ready = False
-        self.dpc_for_csi_perf_ready = False
         self.starting_dpc_for_statistics = False # Just temporarily while statistics manager is being developed TODO
 
     def pre_reboot_cleanup(self):
@@ -1237,6 +1239,9 @@ class ComE(Linux):
         fun_test.test_assert(expression=self.detect_pfs(), message="Fungible PFs detected", context=self.context)
         fun_test.test_assert(expression=self.setup_dpc(), message="Setup DPC", context=self.context)
         fun_test.test_assert(expression=self.is_dpc_ready(), message="DPC ready", context=self.context)
+        if self.fs.statistics_enabled:
+            fun_test.test_assert(expression=self.setup_dpc(statistics=True), message="Setup DPC for statistics", context=self.context)
+
         self.hbm_dump_enabled = fun_test.get_job_environment_variable("hbm_dump")
         if self.hbm_dump_enabled:
             fun_test.test_assert(self.setup_hbm_tools(), "HBM tools and dump directory ready")
@@ -1417,15 +1422,6 @@ class ComE(Linux):
             return True  #TODO: testing only
         if statistics:   #TODO: testing only
             self.starting_dpc_for_statistics = True
-        # self.command("cd $WORKSPACE/FunControlPlane")
-        """
-        output = self.sudo_command("build/posix/bin/funq-setup bind")
-        for f1_index in range(self.NUM_F1S):
-            if f1_index == self.disable_f1_index:
-                continue
-            fun_test.test_assert("Binding {}".format(self.funq_bind_device[f1_index]) in output,
-                                 "Bound to {}".format(self.funq_bind_device[f1_index]))
-        """
         self.modprobe("nvme")
         fun_test.sleep(message="After modprobe", seconds=5, context=self.context)
         nvme_devices = self.list_files("/dev/nvme*")
@@ -1448,10 +1444,6 @@ class ComE(Linux):
 
         fun_test.sleep(message="DPC socket creation", context=self.context)
         self.dpc_ready = True
-        if statistics:
-            self.dpc_for_statistics_ready = True
-        if csi_perf:
-            self.dpc_for_csi_perf_ready = True
         return True
 
 
@@ -1598,14 +1590,18 @@ class F1InFs:
         self.serial_device_path = serial_device_path
         self.serial_sbp_device_path = serial_sbp_device_path
         self.dpc_port = None
+        self.dpc_for_statistics_ready = False
+        self.dpc_for_csi_perf_ready = False
 
     def get_dpc_client(self, auto_disconnect=False, statistics=None, csi_perf=None):
         come = self.fs.get_come()
         host_ip = come.host_ip
-        if statistics and not come.dpc_for_statistics_ready:
+        if statistics and not self.dpc_for_statistics_ready:
             come.setup_dpc(statistics=True)
-        if csi_perf and not come.dpc_for_csi_perf_ready:
+            self.dpc_for_statistics_ready = True
+        if csi_perf and not self.dpc_for_csi_perf_ready:
             come.setup_dpc(csi_perf=True)
+            self.dpc_for_csi_perf_ready = True
         dpc_port = come.get_dpc_port(self.index, statistics=statistics, csi_perf=csi_perf)
         dpcsh_client = DpcshClient(target_ip=host_ip, target_port=dpc_port, auto_disconnect=auto_disconnect)
         return dpcsh_client
@@ -1651,8 +1647,6 @@ class Fs(object, ToDictMixin):
         BAM = 1000
         DEBUG_VP_UTIL = 1050
 
-
-    STATISTICS_COLLECTOR_MAP = {}
 
 
     def __init__(self,
@@ -1756,15 +1750,17 @@ class Fs(object, ToDictMixin):
         # self.auto_boot = auto_boot
         self.bmc_maintenance_threads = []
         self.cleanup_attempted = False
-        self.STATISTICS_COLLECTOR_MAP = {self.StatisticsType.BAM: self.bam}
         self.already_deployed = already_deployed
         if self.fs_parameters:
             if "already_deployed" in self.fs_parameters:
                 self.already_deployed = self.fs_parameters["already_deployed"]
         self.statistics_collectors = {}
         self.dpc_statistics_lock = Lock()
+        self.statistics_enabled = False
         fun_test.register_fs(self)
 
+    def enable_statistics(self, enable):
+        self.statistics_enabled = enable
 
     def reset_device_handles(self):
         try:
@@ -2149,6 +2145,8 @@ class Fs(object, ToDictMixin):
         self.get_come()
         self.set_f1s()
         self.come.setup_dpc()
+        if self.statistics_enabled:
+            self.come.setup_dpc(statistics=True)
         self.come.detect_pfs()
         fun_test.test_assert(expression=self.come.ensure_dpc_running(),
                              message="Ensure dpc is running",
