@@ -187,6 +187,7 @@
       "mgmt_ip": "10.1.105.154"
     },
     "name": "fs-121",
+    "revision": "2",
     "fpga": {
       "mgmt_ssh_password": "root",
       "mgmt_ssh_username": "root",
@@ -212,6 +213,7 @@
       "mgmt_ip": "10.1.105.157"
     },
     "name": "fs-122",
+    "revision": "2",
     "fpga": {
       "mgmt_ssh_password": "root",
       "mgmt_ssh_username": "root",
@@ -237,6 +239,7 @@
       "mgmt_ip": "10.1.105.160"
     },
     "name": "fs-123",
+    "revision": "2",
     "fpga": {
       "mgmt_ssh_password": "root",
       "mgmt_ssh_username": "root",
@@ -849,6 +852,7 @@
       "mgmt_ip": "10.1.108.237"
     },
     "name": "fs-102",
+    "revision": "2",
     "mpg_ips": ["10.1.108.88", "10.1.108.89"],
     "gateway_ip": "10.1.108.1",
     "bundle_compatible": true,
@@ -866,6 +870,7 @@
   },
   {
     "name": "fs-104",
+    "revision": "2",
     "gateway_ip": "10.1.108.1",
     "bundle_compatible": true,
     "bmc": {
@@ -980,12 +985,12 @@
       "mgmt_ip": "fs118-come"
     },
     "name": "fs-118",
+    "revision": "2",
     "mpg_ips": ["10.1.108.15", "10.1.108.16"],
     "gateway_ip": "10.1.108.1",
     "workarounds": {
       "skip_funeth_come_power_cycle": true
     },
-    "revision": "2",
     "fpga": {
       "mgmt_ssh_password": "root",
       "mgmt_ssh_username": "root",
