@@ -107,6 +107,7 @@ data_directory = '/project/users/QA/regression/database/postgresql’
 ~~~~
 
 #### Prepare logging
+~~~~
 qa-admin@qa-ubuntu-01:~$ grep log /etc/postgresql/9.5/main/postgresql.conf | egrep "(log_statement|log_directory|log_filename|logging_collector|log_min_error)"
 					# requires logging_collector to be on.
 logging_collector = on		# Enable capturing of stderr and csvlog
@@ -116,7 +117,7 @@ log_filename = 'postgresql-%Y-%m-%d_%H%M%S.log'	# log file name pattern,
 log_min_error_statement = error	# values in order of decreasing detail:
 log_statement = 'all'			# none, ddl, mod, all
 #log_statement_stats = off
-
+~~~~
 
 #### Start the Postgres service
 ~~~~
