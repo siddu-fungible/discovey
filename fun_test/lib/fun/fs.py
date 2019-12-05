@@ -1754,9 +1754,13 @@ class Fs(object, ToDictMixin):
         if self.fs_parameters:
             if "already_deployed" in self.fs_parameters:
                 self.already_deployed = self.fs_parameters["already_deployed"]
+
         self.statistics_collectors = {}
         self.dpc_statistics_lock = Lock()
         self.statistics_enabled = False
+        if self.fs_parameters:
+            if "statistics_enabled" in self.fs_parameters:
+                self.statistics_enabled = self.fs_parameters["statistics_enabled"]
         fun_test.register_fs(self)
 
     def enable_statistics(self, enable):
