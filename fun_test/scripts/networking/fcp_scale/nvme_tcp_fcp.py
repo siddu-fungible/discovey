@@ -292,7 +292,7 @@ class BLTVolumePerformanceScript(FunTestScript):
                 diff_ssd_count = total_avail_ssd - f10_ssd_count
                 for x in range(0, diff_ssd_count):
                     f11_blt_uuid[x] = utils.generate_uuid()
-                    command_result = target_f10_storage_obj.create_volume(type="VOL_TYPE_BLK_LOCAL_THIN",
+                    command_result = target_f11_storage_obj.create_volume(type="VOL_TYPE_BLK_LOCAL_THIN",
                                                                           capacity=blt_capacity,
                                                                           block_size=blt_blk_size,
                                                                           name="f11_thin_block_" + str(x),
