@@ -33,12 +33,28 @@
   </div>
   <div class="fun-div" *ngIf="preparingCatalogExecution">
     <app-section-header [value]="'Set catalog execution parameters ...'"></app-section-header>
-    <label for="owner">Owner:&nbsp;</label>
-    <select id="owner" [(ngModel)]="selectedUser">
-      <option *ngFor="let user of users" [ngValue]="user">{{ user.first_name }} {{ user.last_name }}
-        ({{ user.email }})
-      </option>
-    </select>
+    <table>
+      <tr>
+        <td class="fun-attribute-label">Owner</td>
+        <td>
+          <select id="owner" [(ngModel)]="selectedUser">
+            <option *ngFor="let user of users" [ngValue]="user">{{ user.first_name }} {{ user.last_name }}
+              ({{ user.email }})
+            </option>
+          </select>
+        </td>
+      </tr>
+      <tr>
+        <td class="fun-attribute-label">
+          Description
+        </td>
+        <td>
+          <app-textarea-input [numRows]="1" [hoverHide]="false" (valueChanged)="setExecutionDescription($event)" [initialValue]="releaseCatalogExecution.description"></app-textarea-input>
+        </td>
+      </tr>
+
+    </table>
+
 
     <table class="fun-table-borderless">
       <tr>

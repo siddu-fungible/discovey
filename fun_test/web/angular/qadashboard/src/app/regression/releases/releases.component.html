@@ -1,16 +1,13 @@
 <app-section-header>Releases</app-section-header>
 <div class="fun-div">
-  <table class="fun-table-borderless">
-    <tr>
-      <td class="fun-table-borderless-header">ID</td>
-      <td class="fun-table-borderless-header">Owner</td>
+  <app-section-header [value]="'Releases'"></app-section-header>
+  <ng-container *ngFor="let execution of releaseCatalogExecutions">
 
-    </tr>
-    <tr *ngFor="let execution of releaseCatalogExecutions">
-      <td>{{ execution.id }}</td>
-      <td>{{ execution.owner }}</td>
-    </tr>
-  </table>
+    <h6>{{ execution.description }}</h6>
+    <app-section-horizontal-line></app-section-horizontal-line>
+    <small>Owner: {{ execution.owner }}</small>
+  </ng-container>
+
 </div>
 
 <a href="/regression/release_catalogs">Go to release catalogs</a>

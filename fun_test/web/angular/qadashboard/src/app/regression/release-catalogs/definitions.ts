@@ -10,6 +10,7 @@ export class ReleaseCatalogExecution extends Api {
   owner: string;
   state: number;
   release_catalog_id: number;
+  description: string = "TBD";
 
   deSerialize(data: any) {
     if (data.hasOwnProperty('id')) {
@@ -33,13 +34,17 @@ export class ReleaseCatalogExecution extends Api {
     if (data.hasOwnProperty('release_catalog_id')) {
       this.release_catalog_id = data.release_catalog_id;
     }
+    if (data.hasOwnProperty('description')) {
+      this.description = data.description;
+    }
   }
 
   serialize() {
     return {
       owner: this.owner,
       state: this.state,
-      release_catalog_id: this.release_catalog_id
+      release_catalog_id: this.release_catalog_id,
+      description: this.description
     }
   }
 

@@ -382,6 +382,8 @@ class ReleaseCatalogExecution(FunModel):
     completion_date = models.DateTimeField(null=True, default=None)
     owner = models.EmailField(null=True, blank=True)
     state = models.IntegerField(default=JobStatusType.UNKNOWN)
+    description = models.TextField(default="TBD")
+
 
 
 class ReleaseCatalog(FunModel):

@@ -19,6 +19,7 @@ import {UserService} from "../../services/user/user.service";
 export class ReleaseCatalogsComponent implements OnInit, OnChanges {
   driver: Observable<any> = null;
   releaseCatalogs: ReleaseCatalog[] = null;
+  releaseCatalogExecution: ReleaseCatalogExecution = new ReleaseCatalogExecution();
   preparingCatalogExecution: boolean = false;
   suitesForExecution: Suite [];
   selectedReleaseCatalog: ReleaseCatalog = null;
@@ -105,17 +106,20 @@ export class ReleaseCatalogsComponent implements OnInit, OnChanges {
   }
 
   execute() {
-    let rce: ReleaseCatalogExecution = new ReleaseCatalogExecution();
     if (!this.selectedUser) {
       return alert("Please select a user");
     }
-    rce.owner = this.selectedUser.email;
-    rce.release_catalog_id = this.selectedReleaseCatalog.id;
-    rce.create(rce.url, rce.serialize()).subscribe(rceResponse => {
+    this.releaseCatalogExecution.owner = this.selectedUser.email;
+    this.releaseCatalogExecution.release_catalog_id = this.selectedReleaseCatalog.id;
+    this.releaseCatalogExecution.create(this.releaseCatalogExecution.url, this.releaseCatalogExecution.serialize()).subscribe(rceResponse => {
       this.loggerService.success(`Created catalog execution: ${rceResponse.id}`);
     }, error => {
       this.loggerService.error(`Unable to execute catalog`, error);
     })
+  }
+
+  setExecutionDescription(description) {
+    this.releaseCatalogExecution.description = description;
   }
 
 
