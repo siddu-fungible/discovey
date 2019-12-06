@@ -402,8 +402,9 @@ class Bmc(Linux):
         uart_log_file_name = self.get_f1_uart_log_file_name(f1_index)
         if not self.bundle_compatible:
             self.command("rm -f {}".format(uart_log_file_name))
-
+        fun_test.log("Netcat: open {}:{}".format(self.host_ip, self.SERIAL_PROXY_PORTS[f1_index]))
         self.nc[f1_index] = Netcat(ip=self.host_ip, port=self.SERIAL_PROXY_PORTS[f1_index])
+
         nc = self.nc[f1_index]
         write_on_trigger = None
         if not auto_boot:
