@@ -20,27 +20,27 @@ export abstract class Api {
     this.loggerService =  AppInjector.get(LoggerService); //AppModule.injector.get(LoggerService);
   }
 
-  protected create(url, payload) {
+  public create(url, payload) {
     return this.apiService.post(this.url, payload).pipe(switchMap(response => {
       this.deSerialize(response.data);
       return of(this);
     }), catchError(error => {
-      this.loggerService.error(`Unable to create: ${this.constructor.name}`);
+      this.loggerService.error(`Unable to create: ${this.constructor.name}`, error);
       return throwError(error);
     }))
   }
 
-  protected get(url) {
+  public get(url) {
     return this.apiService.get(this.url).pipe(switchMap(response => {
       this.deSerialize(response.data);
       return of(this);
     }), catchError(error => {
-      this.loggerService.error(`Unable to get: ${this.constructor.name}`);
+      this.loggerService.error(`Unable to get: ${this.constructor.name}`, error);
       return throwError(error);
     }))
   }
 
-  getAll() {
+  public getAll() {
     return this.apiService.get(this.url).pipe(switchMap(response => {
       let allObjects = response.data.map(oneEntry => {
         //let newInstance = new this.constructor();
@@ -51,19 +51,19 @@ export abstract class Api {
       });
       return of(allObjects);
     }), catchError(error => {
-      this.loggerService.error(`Unable to getAll: ${this.constructor.name}`);
+      this.loggerService.error(`Unable to getAll: ${this.constructor.name}`, error);
       return throwError(error);
     }))
 
   }
 
-  protected delete() {
+  public delete() {
   }
 
-  protected deleteAll() {
+  public deleteAll() {
   }
 
-  protected update() {
+  public update() {
   }
 
 }

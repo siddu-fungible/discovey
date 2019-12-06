@@ -240,6 +240,7 @@ api_v1_urls = [
     url(r'^regression/contexts/(\d+)/(\d+)$', regression.contexts),
     url(r'^regression/script_run_time/(\d+)/(\d+)$', regression.script_run_time),
     url(r'^regression/release_catalogs/?(\d+)?$', regression.release_catalogs),
+    url(r'^regression/release_catalog_executions/?(\d+)?$', regression.release_catalog_executions),
     url(r'^daemons/?(\d+)?$', daemons.daemons),
     url(r'^mq_broker/publish$', mq_broker.publish),
     url(r'^mq_broker/message_types$', mq_broker.message_types),

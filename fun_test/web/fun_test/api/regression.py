@@ -32,6 +32,7 @@ from django.apps import apps
 from bson import json_util
 from web.fun_test.models_helper import get_script_id
 from fun_global import TimeSeriesTypes
+from web.fun_test.models import ReleaseCatalogExecution
 
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 
@@ -688,6 +689,27 @@ def time_series_types(request):
     result = None
     if request.method == "GET":
         result = TimeSeriesTypes().all_strings_to_code()
+    return result
+
+@csrf_exempt
+@api_safe_json_response
+def release_catalog_executions(request, id):
+    result = None
+    if request.method == "POST":
+        request_json = json.loads(request.body)
+        execution = ReleaseCatalogExecution(**request_json)
+        execution.save()
+        result = execution.id
+    if request.method == "GET":
+        q = Q()
+        if id:
+            q = q & Q(id=int(id))
+        executions = ReleaseCatalogExecution.objects.filter(q)
+        if executions.count():
+            if not id:
+                result = map(lambda x: x.to_dict(), executions)
+            else:
+                result = executions[0].to_dict()
     return result
 
 if __name__ == "__main__":
