@@ -572,7 +572,7 @@ def dpcshF(index=0, cmd=None):
     #if index == 1 and '0000:06:00.2' not in O:
     #    sys.exit("Fungible DPU#1 control function is NOT discovered ...")
     check_dpcsh_install_dependencies()
-    dev = '/dev/nvme0' if (index == 0 and '0000:04:00.2' in O) else '/dev/nvme1' if (index == 1 and '0000:06:00.2' in O) else '/dev/null'
+    dev = '/dev/nvme0' if (int(index) == 0 and '0000:04:00.2' in O) else '/dev/nvme1' if (int(index) == 1 and '0000:06:00.2' in O) else '/dev/null'
     with cd(dpcsh_directory):
         return sudo('./dpcsh --pcie_nvme_sock=%s --nvme_cmd_timeout=60000 --nocli %s' % (dev, cmd))
 
