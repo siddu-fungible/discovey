@@ -527,14 +527,27 @@ class BLTVolumePerformanceScript(FunTestScript):
             for host in fun_test.shared_variables["host_list"]:
                 try:
                     nvme_device = hosts_dict[host]["nvme_device"]
-                    temp = nvme_device.split("/")[-1]
-                    temp1 = re.search('nvme(.[0-9]*)', temp)
-                    nvme_disconnect_device = temp1.group()
-                    hosts_dict[host]["handle"].sudo_command("nvme disconnect -d {}".format(nvme_disconnect_device))
-                    nvme_dev_output = get_nvme_device(hosts_dict[host]["handle"])
-                    if nvme_dev_output:
-                        fun_test.critical(False, "NVMe disconnect failed on {}".format(host))
-                        hosts_dict[host]["handle"].disconnect()
+                    if ":" in nvme_device:
+                        nvme_device_list = nvme_device.split(":")
+                        for nvme_dev in nvme_device_list:
+                            temp = nvme_dev.split("/")[-1]
+                            temp1 = re.search('nvme(.[0-9]*)', temp)
+                            nvme_disconnect_device = temp1.group()
+                            hosts_dict[host]["handle"].sudo_command(
+                                "nvme disconnect -d {}".format(nvme_disconnect_device))
+                        nvme_dev_output = get_nvme_device(hosts_dict[host]["handle"])
+                        if nvme_dev_output:
+                            fun_test.critical(False, "NVMe disconnect failed on {}".format(host))
+                            hosts_dict[host]["handle"].disconnect()
+                    else:
+                        temp = nvme_device.split("/")[-1]
+                        temp1 = re.search('nvme(.[0-9]*)', temp)
+                        nvme_disconnect_device = temp1.group()
+                        hosts_dict[host]["handle"].sudo_command("nvme disconnect -d {}".format(nvme_disconnect_device))
+                        nvme_dev_output = get_nvme_device(hosts_dict[host]["handle"])
+                        if nvme_dev_output:
+                            fun_test.critical(False, "NVMe disconnect failed on {}".format(host))
+                            hosts_dict[host]["handle"].disconnect()
                 except:
                     pass
 
@@ -695,7 +708,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
         print "The final host is {}".format(host_thread_map[host_thread])
         result_dict = fun_test.shared_variables["fio"][host_thread][fio_result_name]
         print result_dict
-
+        operation = fio_test
         block_size = self.fio_cmd_args["bs"]
         num_vols = fun_test.shared_variables["num_vols"]
         total_iops = int(round(iops_sum))
