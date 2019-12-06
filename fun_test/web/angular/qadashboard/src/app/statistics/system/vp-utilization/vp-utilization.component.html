@@ -1,4 +1,17 @@
-<h4>VP utilization distribution</h4>
+<span style="font-size: 1.5rem">VP utilization distribution
+  <i class="fa fa-table" aria-hidden="true" (click)="showVpUtilization()"></i></span>
+<table *ngIf="showVpUtilizationDistribution" class="fun-table">
+  <tr>
+    <td class="fun-table-header">Datetime</td>
+    <td class="fun-table-header">F1-0</td>
+    <td class="fun-table-header">F1-1</td>
+  </tr>
+  <tr *ngFor="let d of data">
+    <td>{{ d.date_time }}</td>
+    <td><pre>{{ d.data["0"] | json | slice:0:10 }}<span class="fun-action-link">...expand</span></pre></td>
+    <td><pre>{{ d.data["1"] | json | slice:0:10 }}</pre></td>
+  </tr>
+</table>
 <div class="fun-flex-container">
   <ng-container *ngFor="let f1 of fs.f1s; let f1Index=index">
     <div class="fun-flex-item">
@@ -11,7 +24,8 @@
 </div>
 <app-section-horizontal-line></app-section-horizontal-line>
 
-<h4>VP utilization by cluster</h4>
+<span style="font-size: 1.5rem">VP utilization by cluster
+  <i class="fa fa-table" aria-hidden="true" (click)="showVpUtilization()"></i></span>
 <ng-container *ngFor="let f1 of fs.f1s; let f1Index=index">
   <h5>F1-{{ f1Index }}</h5>
   <div class="fun-flex-container">

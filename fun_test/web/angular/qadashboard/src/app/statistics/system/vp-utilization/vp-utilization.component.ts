@@ -5,6 +5,7 @@ import {LoggerService} from "../../../services/logger/logger.service";
 import {of} from "rxjs";
 import {switchMap} from "rxjs/operators";
 import {Fs} from "../../../hosts/fs";
+import {CommonService} from "../../../services/common/common.service";
 
 @Component({
   selector: 'app-vp-utilization',
@@ -21,8 +22,11 @@ export class VpUtilizationComponent implements OnInit, OnChanges {
   detectedF1Indexes = new Set();
   fs: Fs = new Fs();
   xSeries: any = null;
+  showVpUtilizationDistribution: boolean = false;
+  showVpUtilizationByCluster: boolean = false;
+  TIMEZONE: string = "America/Los_Angeles";
 
-  constructor(private regressionService: RegressionService, private loggerService: LoggerService) {
+  constructor(private regressionService: RegressionService, private loggerService: LoggerService, private commonService: CommonService) {
     this.driver = of(true).pipe(switchMap(response => {
      return this.regressionService.testCaseTimeSeries(this.suiteExecutionId,
        null,
@@ -42,6 +46,8 @@ export class VpUtilizationComponent implements OnInit, OnChanges {
 
   parseData(data) {
     this.data.forEach(oneRecord => {
+      let dateTime = this.commonService.convertEpochToDate(oneRecord.epoch_time, this.TIMEZONE);
+      oneRecord["date_time"] = dateTime;
       let oneRecordData = oneRecord.data;
       Object.keys(oneRecordData).forEach(f1Index => {
         this.detectedF1Indexes.add(f1Index);
@@ -158,6 +164,14 @@ export class VpUtilizationComponent implements OnInit, OnChanges {
         this.loggerService.error(`Unable to fetch data`, error);
       })
     }
+  }
+
+  showVpUtilization(): void {
+    this.showVpUtilizationDistribution = !this.showVpUtilizationDistribution;
+  }
+
+  expandString(stringValue): void {
+
   }
 
 }
