@@ -1600,10 +1600,13 @@ class F1InFs:
 
     def get_dpc_client(self, auto_disconnect=False, statistics=None, csi_perf=None):
         come = self.fs.get_come()
+        if statistics:
+            come = self.fs.get_come(clone=True)
         host_ip = come.host_ip
         if statistics and not self.dpc_for_statistics_ready:
             come.setup_dpc(statistics=True)
             self.dpc_for_statistics_ready = True
+            come.disconnect()
         if csi_perf and not self.dpc_for_csi_perf_ready:
             come.setup_dpc(csi_perf=True)
             self.dpc_for_csi_perf_ready = True
