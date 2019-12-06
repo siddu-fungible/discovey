@@ -7,6 +7,8 @@ import {ReleaseCatalog} from "../definitions";
 import {Router} from "@angular/router";
 import {slideInOutAnimation} from "../../animations/generic-animations";
 import {Suite, SuiteEditorService} from "../suite-editor/suite-editor.service";
+import {ReleaseCatalogExecution} from "./definitions";
+import {UserService} from "../../services/user/user.service";
 
 @Component({
   selector: 'app-release-catalogs',
@@ -19,14 +21,21 @@ export class ReleaseCatalogsComponent implements OnInit, OnChanges {
   releaseCatalogs: ReleaseCatalog[] = null;
   preparingCatalogExecution: boolean = false;
   suitesForExecution: Suite [];
+  selectedReleaseCatalog: ReleaseCatalog = null;
+  users = null;
+  selectedUser = null;
   constructor(private regressionService: RegressionService,
-              private  loggerService: LoggerService,
+              private loggerService: LoggerService,
               private router: Router,
-              private suiteEditorService: SuiteEditorService
+              private suiteEditorService: SuiteEditorService,
+              private userService: UserService
   ) { }
 
   ngOnInit() {
     this.driver = of(true).pipe(switchMap(response => {
+      return this.userService.users();
+    })).pipe(switchMap(response => {
+      this.users = response;
       return this.regressionService.getReleaseCatalogs();
     })).pipe(switchMap(response => {
       this.releaseCatalogs = response;
@@ -79,9 +88,9 @@ export class ReleaseCatalogsComponent implements OnInit, OnChanges {
 
   prepareExecutionDetails(index) {
     this.preparingCatalogExecution = true;
-    let selectedReleaseCatalog = this.releaseCatalogs[index];
+    this.selectedReleaseCatalog = this.releaseCatalogs[index];
     this.suitesForExecution = [];
-    let allObservables = selectedReleaseCatalog.suites.map((suite) => {
+    let allObservables = this.selectedReleaseCatalog.suites.map((suite) => {
       return this.suiteEditorService.suite(suite.id).pipe(switchMap(response => {
         this.suitesForExecution.push(response);
         return of(true);
@@ -94,5 +103,20 @@ export class ReleaseCatalogsComponent implements OnInit, OnChanges {
     });
 
   }
+
+  execute() {
+    let rce: ReleaseCatalogExecution = new ReleaseCatalogExecution();
+    if (!this.selectedUser) {
+      return alert("Please select a user");
+    }
+    rce.owner = this.selectedUser.email;
+    rce.release_catalog_id = this.selectedReleaseCatalog.id;
+    rce.create(rce.url, rce.serialize()).subscribe(rceResponse => {
+      this.loggerService.success(`Created catalog execution: ${rceResponse.id}`);
+    }, error => {
+      this.loggerService.error(`Unable to execute catalog`, error);
+    })
+  }
+
 
 }

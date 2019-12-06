@@ -1271,8 +1271,12 @@ class FunTest:
     def close(self):
         for timer in self.fun_test_timers:
             fun_test.log("Waiting for active timers to stop")
-            while timer.is_alive():
+            max_wait_time = 5 * 60
+            max_timer_wait_timer = FunTimer(max_time=max_wait_time)
+            while timer.is_alive() and not max_timer_wait_timer.is_expired():
                 time.sleep(1)
+            if max_timer_wait_timer.is_expired():
+                fun_test.log("Max wait {} for active timers expired".format(max_wait_time))
 
         threads_to_check = []
         for fun_test_thread_id, thread_info in self.fun_test_threads.iteritems():
