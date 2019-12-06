@@ -22,7 +22,7 @@
   "password": "password",
   "volume_creation_details": [
     {
-      "capacity": 6442450944,
+      "capacity": 32212254720,
       "encrypt": true,
       "stripe_count": 6,
       "vol_type": "VOL_TYPE_BLK_LOCAL_THIN",
