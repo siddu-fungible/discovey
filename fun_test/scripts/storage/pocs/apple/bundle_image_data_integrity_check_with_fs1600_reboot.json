@@ -24,8 +24,17 @@
     {
       "capacity": 32212254720,
       "encrypt": true,
+      "stripe_count": 0,
+      "pvol_type": "VOL_TYPE_BLK_EC",
+      "allow_expansion": true,
+      "data_protection": {"num_failed_disks": 2, "num_redundant_dpus": 0},
+      "compression_effort": 8
+    },
+    {
+      "capacity": 32212254720,
+      "encrypt": true,
       "stripe_count": 6,
-      "vol_type": "VOL_TYPE_BLK_LOCAL_THIN",
+      "pvol_type": "VOL_TYPE_BLK_LOCAL_THIN",
       "compression_effort": 0
     }
   ],
