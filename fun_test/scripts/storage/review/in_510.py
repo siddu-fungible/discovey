@@ -41,7 +41,8 @@ class BLTVolumeSanityScript(FunTestScript):
 
         topology_helper = TopologyHelper()
         topology_helper.set_dut_parameters(dut_index=0, custom_boot_args=self.bootargs,
-                                           disable_f1_index=self.disable_f1_index)
+                                           disable_f1_index=self.disable_f1_index,
+                                           fs_parameters={"statistics_enabled": True})
         fun_test.shared_variables['topology'] = topology_helper.expanded_topology
         topology = topology_helper.deploy()
         fun_test.test_assert(topology, "Topology deployed")

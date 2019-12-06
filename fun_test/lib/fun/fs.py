@@ -402,8 +402,9 @@ class Bmc(Linux):
         uart_log_file_name = self.get_f1_uart_log_file_name(f1_index)
         if not self.bundle_compatible:
             self.command("rm -f {}".format(uart_log_file_name))
-
+        fun_test.log("Netcat: open {}:{}".format(self.host_ip, self.SERIAL_PROXY_PORTS[f1_index]))
         self.nc[f1_index] = Netcat(ip=self.host_ip, port=self.SERIAL_PROXY_PORTS[f1_index])
+
         nc = self.nc[f1_index]
         write_on_trigger = None
         if not auto_boot:
@@ -515,10 +516,12 @@ class Bmc(Linux):
 
         is_signed_image = True if "signed" in tftp_image_path else False
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_INIT)
+        """
         self.u_boot_command(command="",
                             timeout=5,
                             expected=self.U_BOOT_F1_PROMPT,
                             f1_index=index)
+        """
 
         if not self.bundle_compatible:
             self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_SET_NO_AUTOLOAD)
@@ -1029,12 +1032,14 @@ class BootupWorker(Thread):
                         preamble = bmc.get_preamble(f1_index=f1_index)
                         if fs.validate_u_boot_version:
                             fun_test.log("Preamble: {}".format(preamble))
+                            """
                             try:
                                 fun_test.test_assert(
                                     bmc.validate_u_boot_version(output=preamble, minimum_date=fs.MIN_U_BOOT_DATE),
                                     "Validate preamble", context=self.context)
                             except Exception as ex:
                                 fun_test.critical(ex)
+                            """
 
                         fun_test.test_assert(
                             expression=bmc.u_boot_load_image(index=f1_index,

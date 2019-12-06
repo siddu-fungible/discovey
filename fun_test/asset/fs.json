@@ -42,7 +42,7 @@
     "bmc": {
       "mgmt_ssh_password": "superuser",
       "mgmt_ssh_username": "sysadmin",
-      "mgmt_ip": "10.1.20.153"
+      "mgmt_ip": "10.1.21.0"
     },
     "come": {
       "mgmt_ssh_password": "123",
