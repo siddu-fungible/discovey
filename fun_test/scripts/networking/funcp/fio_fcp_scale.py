@@ -203,6 +203,7 @@ class BLTVolumePerformanceScript(FunTestScript):
 
         # Setup controller and volumes on all storage FS
         for storage_fs in fun_test.shared_variables["storage_fs"]:
+            fun_test.log(" ### Configuring FS {} ####".format(storage_fs))
             fun_test.shared_variables[storage_fs] = {}
 
 
@@ -260,6 +261,7 @@ class BLTVolumePerformanceScript(FunTestScript):
         f11_ssd_uuid_list = {}
 
         for storage_fs in fun_test.shared_variables["storage_fs"]:
+            fun_test.log(" ### Configuring FS {} ####".format(storage_fs))
             # Create storage listener
             if ipconfig:
                 command_result = target_f10_storage_obj[storage_fs].ip_cfg(ip=f10_storage_loop_ip[storage_fs], port=ipcfg_port)
@@ -292,31 +294,36 @@ class BLTVolumePerformanceScript(FunTestScript):
                 f11_ssd_count = 1
                 f10_blt_uuid = {}
                 f11_blt_uuid = {}
-                f10_blt_uuid[storage_fs] = []
-                f11_blt_uuid[storage_fs] = []
+                f10_blt_uuid[storage_fs] = {}
+                f11_blt_uuid[storage_fs] = {}
 
-                for x in range(0, f10_ssd_count):
-                    f10_blt_uuid[storage_fs].append(utils.generate_uuid())
-                    print "F10_blt_uuid " + str(f10_blt_uuid[storage_fs])
-                    print "X is " + str(x) + " UUID is " + str(f10_blt_uuid[storage_fs][x])
-                    command_result = target_f10_storage_obj[storage_fs].create_volume(type="VOL_TYPE_BLK_LOCAL_THIN",
-                                                                                      capacity=blt_capacity,
-                                                                                      block_size=blt_blk_size,
-                                                                                      name="f10_thin_block_" + str(x),
-                                                                                      uuid=f10_blt_uuid[storage_fs][x],
-                                                                                      drive_uuid=f10_ssd_uuid_list[storage_fs][x],
-                                                                                      command_duration=command_timeout)
-                    fun_test.test_assert(command_result["status"], "Creation of BLT_{} on F10".format(x))
-                for x in range(0, f11_ssd_count):
-                    f11_blt_uuid[storage_fs].append(utils.generate_uuid())
-                    command_result = target_f11_storage_obj[storage_fs].create_volume(type="VOL_TYPE_BLK_LOCAL_THIN",
-                                                                          capacity=blt_capacity,
-                                                                          block_size=blt_blk_size,
-                                                                          name="f11_thin_block_" + str(x),
-                                                                          uuid=f11_blt_uuid[storage_fs][x],
-                                                                          drive_uuid=f11_ssd_uuid_list[storage_fs][x],
-                                                                          command_duration=command_timeout)
-                    fun_test.test_assert(command_result["status"], "Creation of BLT_{} on F11".format(x))
+                for host in host_list:
+                    f10_blt_uuid[storage_fs][host] = []
+                    f11_blt_uuid[storage_fs][host] = []
+                    for x in range(0, f10_ssd_count):
+
+
+                        f10_blt_uuid[storage_fs][host].append(utils.generate_uuid())
+                        print "F10_blt_uuid " + str(f10_blt_uuid[storage_fs])
+                        #print "X is " + str(x) + " UUID is " + str(f10_blt_uuid[storage_fs][x])
+                        command_result = target_f10_storage_obj[storage_fs].create_volume(type="VOL_TYPE_BLK_LOCAL_THIN",
+                                                                                          capacity=blt_capacity,
+                                                                                          block_size=blt_blk_size,
+                                                                                          name="f10_thin_block_" + str(x),
+                                                                                          uuid=f10_blt_uuid[storage_fs][host][0],
+                                                                                          drive_uuid=f10_ssd_uuid_list[storage_fs][x],
+                                                                                          command_duration=command_timeout)
+                        fun_test.test_assert(command_result["status"], "Creation of BLT_{} on F10".format(x))
+                    for x in range(0, f11_ssd_count):
+                        f11_blt_uuid[storage_fs][host].append(utils.generate_uuid())
+                        command_result = target_f11_storage_obj[storage_fs].create_volume(type="VOL_TYPE_BLK_LOCAL_THIN",
+                                                                              capacity=blt_capacity,
+                                                                              block_size=blt_blk_size,
+                                                                              name="f11_thin_block_" + str(x),
+                                                                              uuid=f11_blt_uuid[storage_fs][host][0],
+                                                                              drive_uuid=f11_ssd_uuid_list[storage_fs][x],
+                                                                              command_duration=command_timeout)
+                        fun_test.test_assert(command_result["status"], "Creation of BLT_{} on F11".format(x))
 
 
 
@@ -361,7 +368,7 @@ class BLTVolumePerformanceScript(FunTestScript):
             f11_nqn = {}
             nsid = 1
             for storage_fs in fun_test.shared_variables["storage_fs"]:
-
+                fun_test.log(" ### Configuring FS {} ####".format(storage_fs))
                 for x in host_list:
                     if 0:
                         if index > 11 and using_f11:
@@ -412,7 +419,7 @@ class BLTVolumePerformanceScript(FunTestScript):
                     # Attach volumes to the controller
                     command_result = target_f10_storage_obj[storage_fs].attach_volume_to_controller(ctrlr_uuid=f10_controller[storage_fs][x],
                                                                              ns_id=nsid,
-                                                                             vol_uuid=f10_blt_uuid[storage_fs][0],
+                                                                             vol_uuid=f10_blt_uuid[storage_fs][x][0],
                                                                              command_duration=command_timeout)
                     fun_test.test_assert(command_result["status"], "F1-0 Attach BLT {} to remote {}".
                                          format(uuid_index, remote_ip))
@@ -421,7 +428,7 @@ class BLTVolumePerformanceScript(FunTestScript):
 
                     command_result = target_f11_storage_obj[storage_fs].attach_volume_to_controller(ctrlr_uuid=f11_controller[storage_fs][x],
                                                                              ns_id=nsid,
-                                                                             vol_uuid=f11_blt_uuid[storage_fs][0],
+                                                                             vol_uuid=f11_blt_uuid[storage_fs][x][0],
                                                                              command_duration=command_timeout)
                     fun_test.test_assert(command_result["status"], "F1-1 Attach BLT {} to remote {}".
                                          format(uuid_index, remote_ip))
@@ -654,12 +661,16 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             fio_result_name = "write"
         elif "read" in fio_test:
             fio_result_name = "read"
+        print "Hosts_dict is " + str(hosts_dict)
+        one_host = hosts_dict.keys()[0]
+        self.fio_cmd_args["numjobs"] = self.fio_cmd_args["numjobs"] * len(hosts_dict[one_host]["nvme_device"].split(':'))
         for hosts in hosts_dict:
             print "Running {} test on {}".format(fio_test, hosts)
             host_clone = hosts_dict[hosts]["handle"].clone()
             temp = hosts_dict[hosts]["handle"].command("hostname")
             hostname = temp.strip()
             host_thread_map[thread_count] = hostname
+
             thread_id[thread_count] = fun_test.execute_thread_after(time_in_seconds=wait_time,
                                                                     func=fio_parser,
                                                                     host_index=thread_count,
