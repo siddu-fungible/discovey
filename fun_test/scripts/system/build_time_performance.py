@@ -197,7 +197,8 @@ class PrBuildTimeTc(PalladiumTc):
             conn = psycopg2.connect(**self.FUN_ON_DEMAND_DATABASE)
             cur = conn.cursor()
             cur.execute(
-                "SELECT ROUND(AVG(duration_secs)) FROM buildTimes WHERE (job = 'funsdk/master' OR job LIKE 'funsdk/pull_request%') AND start_time > " + str(
+                "SELECT ROUND(AVG(duration_secs)) FROM \"buildTimes\" WHERE (job = 'funsdk/master' OR job LIKE "
+                "'funsdk/pull_request%') AND start_time > " + str(
                     self.since_time) + " AND step = 'TotalTime' AND build_status LIKE 'Success'")
             average_time = int(cur.fetchone()[0])
             self.total_time_taken = average_time
