@@ -180,6 +180,8 @@ class BLTVolumePerformanceScript(FunTestScript):
             hosts_dict[hosts]["cpu_list"] = get_numa(hosts_dict[hosts]["handle"])
             hosts_dict[hosts]["hu_int_name"] = hosts_dict[hosts]["handle"].command(
                 "ip link ls up | awk '{print $2}' | grep -e '00:f1:1d' -e '00:de:ad' -B 1 | head -1 | tr -d :").strip()
+            if not hosts_dict[hosts]["hu_int_name"]:
+                fun_test.simple_assert(False, "Interface not found on {}".format(hosts))
             hosts_dict[hosts]["hu_int_ip"] = hosts_dict[hosts]["handle"].command(
                 "ip addr list {} | grep \"inet \" | cut -d\' \' -f6 | cut -d/ -f1".format(
                     hosts_dict[hosts]["hu_int_name"])).strip()

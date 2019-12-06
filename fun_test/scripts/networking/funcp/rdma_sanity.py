@@ -818,7 +818,7 @@ class IbBwSeqIoTest(FunTestCase):
             io_type = "Random"
             io_list = []
             while True:
-                rand_num = random.randint(1, 524288)
+                rand_num = random.randint(1, 2097152)
                 if rand_num not in io_list:
                     io_list.append(rand_num)
                 if len(io_list) == 16:
@@ -959,7 +959,7 @@ class IbLatSeqIoTest(FunTestCase):
             io_type = "Random"
             io_list = []
             while True:
-                rand_num = random.randint(1, 524288)
+                rand_num = random.randint(1, 2097152)
                 if rand_num not in io_list:
                     io_list.append(rand_num)
                 if len(io_list) == 16:
