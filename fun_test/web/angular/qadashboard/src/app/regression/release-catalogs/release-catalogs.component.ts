@@ -19,6 +19,7 @@ export class ReleaseCatalogsComponent implements OnInit, OnChanges {
   releaseCatalogs: ReleaseCatalog[] = null;
   preparingCatalogExecution: boolean = false;
   suitesForExecution: Suite [];
+  selectedReleaseCatalog: ReleaseCatalog = null;
   constructor(private regressionService: RegressionService,
               private  loggerService: LoggerService,
               private router: Router,
@@ -79,9 +80,9 @@ export class ReleaseCatalogsComponent implements OnInit, OnChanges {
 
   prepareExecutionDetails(index) {
     this.preparingCatalogExecution = true;
-    let selectedReleaseCatalog = this.releaseCatalogs[index];
+    this.selectedReleaseCatalog = this.releaseCatalogs[index];
     this.suitesForExecution = [];
-    let allObservables = selectedReleaseCatalog.suites.map((suite) => {
+    let allObservables = this.selectedReleaseCatalog.suites.map((suite) => {
       return this.suiteEditorService.suite(suite.id).pipe(switchMap(response => {
         this.suitesForExecution.push(response);
         return of(true);
@@ -93,6 +94,12 @@ export class ReleaseCatalogsComponent implements OnInit, OnChanges {
       this.loggerService.error(`Unable to get suite ids`, error);
     });
 
+  }
+
+  execute() {
+    // From the selected catalog
+    // 1. get list of suite IDs
+    // 2. post Release catalog execution
   }
 
 }

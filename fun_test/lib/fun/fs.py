@@ -515,10 +515,12 @@ class Bmc(Linux):
 
         is_signed_image = True if "signed" in tftp_image_path else False
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_INIT)
+        """
         self.u_boot_command(command="",
                             timeout=5,
                             expected=self.U_BOOT_F1_PROMPT,
                             f1_index=index)
+        """
 
         if not self.bundle_compatible:
             self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_SET_NO_AUTOLOAD)
@@ -1029,12 +1031,14 @@ class BootupWorker(Thread):
                         preamble = bmc.get_preamble(f1_index=f1_index)
                         if fs.validate_u_boot_version:
                             fun_test.log("Preamble: {}".format(preamble))
+                            """
                             try:
                                 fun_test.test_assert(
                                     bmc.validate_u_boot_version(output=preamble, minimum_date=fs.MIN_U_BOOT_DATE),
                                     "Validate preamble", context=self.context)
                             except Exception as ex:
                                 fun_test.critical(ex)
+                            """
 
                         fun_test.test_assert(
                             expression=bmc.u_boot_load_image(index=f1_index,
