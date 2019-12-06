@@ -4,7 +4,6 @@ import os
 sys.path.append('/workspace/Integration/fun_test')
 from lib.system.fun_test import *
 from lib.host.linux import Linux
-import pandas as pd
 from StringIO import StringIO
 import random
 
@@ -13,7 +12,8 @@ controller = 'mpoc-server01'
 hosts = []
 
 #for i in range(30,49):
-for i in [ '03', '04', '05', '06']:
+lst = ['30', '31', '32', '33', '34', '40', '41', '42', '43', '44', '45', '46', '47', '48']
+for i in lst:
     hosts.append('mpoc-server' + str(i))
 
 #hosts.append(controller)
@@ -96,6 +96,15 @@ interface = {
 'mpoc-server06' : 'enp216s0',
 }
 for host in hosts:
+    try:
+        netesto_controller = Linux(host_ip=host, ssh_username="localadmin", ssh_password="Precious1*")
+        output = netesto_controller.command("uname -a")
+        fw.writelines("Host: " + host + '\n')
+        fw.writelines(output + '\n')
+        fw.writelines("#-----------------------#\n")
+    except:
+        print "ERROR during setup of host " + str(host)
+
     if 0:
 
         try:
@@ -150,7 +159,7 @@ for host in hosts:
         except:
             print "ERROR during setup of host " + str(host)
 
-    if 1:
+    if 0:
         try:
             netesto_controller = Linux(host_ip=host, ssh_username="localadmin", ssh_password="Precious1*")
             #netesto_controller.sudo_command("cp /etc/hosts /etc/hosts.bak")
@@ -163,7 +172,7 @@ for host in hosts:
         except:
             print "ERROR during setup of host " + str(host)
 
-    if 1:
+    if 0:
         try:
             netesto_controller = Linux(host_ip=host, ssh_username="localadmin", ssh_password="Precious1*")
             packages = ['openssh-server', 'sysstat', 'bc', 'ethtool', 'dc', 'tcpdump', 'python']
@@ -220,6 +229,10 @@ for host in hosts:
                 print "ERROR during setup of host " + str(host)
 
 fw.close()
+fr = open('interface_info', 'r')
+for line in fr.readlines():
+    print line
+fr.close()
 
 # Host: mpoc-server30
 # eno1 10.80.2.130
