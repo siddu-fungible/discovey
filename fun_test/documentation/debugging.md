@@ -87,3 +87,13 @@ npm install
        On Ubuntu:
        sudo systemctl stop postgresql
        sudo systemctl start postgresql
+       
+### Debugging git
+We use 'git pull' on the regression server. From time to time git pull slows down. Do the following
+~~~~
+git remote prune origin
+git gc --prune=now
+git fetch --prune
+git fetch --all
+git pull
+~~~~
