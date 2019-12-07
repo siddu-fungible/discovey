@@ -1,11 +1,12 @@
 <app-section-header>Releases</app-section-header>
 <div class="fun-div">
   <app-section-header [value]="'Releases'"></app-section-header>
-  <ng-container *ngFor="let execution of releaseCatalogExecutions">
+  <ng-container *ngFor="let execution of releaseCatalogExecutions; let index = index">
 
-    <h6>{{ execution.description }}</h6>
-    <app-section-horizontal-line></app-section-horizontal-line>
+    <h6>{{ index }}. {{ execution.description }}</h6>
     <small>Owner: {{ execution.owner }}</small>
+    <app-section-horizontal-line></app-section-horizontal-line>
+
   </ng-container>
 
 </div>

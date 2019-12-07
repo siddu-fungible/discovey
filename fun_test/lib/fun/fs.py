@@ -146,13 +146,17 @@ class BmcMaintenanceWorker(Thread):
                             bmc.command("echo 'Archived' > {}".format(file_name))
                             bmc.list_files(file_name)
 
-                            artifact_file_name = fun_test.get_test_case_artifact_file_name("{}_{}_{}_archived.tgz".format(self.context, f1_index, self.archive_index))
+                            artifact_file_name = fun_test.get_test_case_artifact_file_name(
+                                "{}_{}_{}_archived.tgz".format(self.context, f1_index, self.archive_index))
                             fun_test.scp(source_ip=bmc.host_ip,
                                          source_file_path=archive_file_name,
                                          source_username=bmc.ssh_username,
                                          source_password=bmc.ssh_password,
                                          target_file_path=artifact_file_name)
-                            fun_test.add_auxillary_file(description="{}_f1_{}_{}".format(self.context, f1_index, self.archive_index), filename=artifact_file_name)
+                            fun_test.add_auxillary_file(description="{}_f1_{}_{}".format(self.context,
+                                                                                         f1_index,
+                                                                                         self.archive_index),
+                                                        filename=artifact_file_name)
                             bmc.command("rm {}".format(archive_file_name))
                             bmc.command("echo 'Archived' > {}".format(file_name))
 
@@ -1766,13 +1770,19 @@ class Fs(object, ToDictMixin):
         self.statistics_collectors = {}
         self.dpc_statistics_lock = Lock()
         self.statistics_enabled = False
+
         if self.fs_parameters:
             if "statistics_enabled" in self.fs_parameters:
                 self.statistics_enabled = self.fs_parameters["statistics_enabled"]
+        self.register_all_statistics()
         fun_test.register_fs(self)
 
     def enable_statistics(self, enable):
         self.statistics_enabled = enable
+
+    def register_all_statistics(self):
+        self.register_statistics(statistics_type=Fs.StatisticsType.BAM)
+        self.register_statistics(statistics_type=Fs.StatisticsType.DEBUG_VP_UTIL)
 
     def reset_device_handles(self):
         try:
