@@ -186,6 +186,9 @@
       "mgmt_ssh_username": "sysadmin",
       "mgmt_ip": "10.1.105.154"
     },
+    "workarounds": {
+      "skip_funeth_come_power_cycle": true
+    },
     "name": "fs-121",
     "revision": "2",
     "fpga": {

@@ -417,7 +417,8 @@ class Bmc(Linux):
                                       nc.read_until,
                                       expected_data=self.U_BOOT_F1_PROMPT,
                                       timeout=30,
-                                      write_on_trigger=write_on_trigger)
+                                      write_on_trigger=write_on_trigger,
+                                      read_buffer=20)
 
 
         return True
@@ -520,12 +521,12 @@ class Bmc(Linux):
 
         is_signed_image = True if "signed" in tftp_image_path else False
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_INIT)
-        """
+
         self.u_boot_command(command="",
                             timeout=5,
                             expected=self.U_BOOT_F1_PROMPT,
                             f1_index=index)
-        """
+
 
         if not self.bundle_compatible:
             self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_SET_NO_AUTOLOAD)
