@@ -1756,7 +1756,7 @@ class Fs(object, ToDictMixin):
         self.csi_perf_templates = {}
         self.bundle_upgraded = False   # is the bundle upgrade complete?
         self.bundle_compatible = False   # Set this, if we are trying to boot a device with bundle installed already
-        if ("bundle_compatible" in spec and spec["bundle_compatible"]) or (self.bundle_image_parameters):
+        if ("bundle_compatible" in spec and spec["bundle_compatible"]) or (self.bundle_image_parameters) or (self.get_revision() in ["2"]):
             self.bundle_compatible = True
             self.skip_funeth_come_power_cycle = True
         self.mpg_ips = spec.get("mpg_ips", [])
