@@ -92,9 +92,9 @@
                   "gatewayip": "10.80.4.1",
                   "mpg0":"10.80.4.154",
                   "mpg1":"10.80.4.155",
-                  "bootargs_f1_0": "app=load_mods --serial cc_huid=3 --all_50g --dpc-server --dpc-uart retimer=0,1",
+                  "bootargs_f1_0": "app=load_mods --serial cc_huid=3 --all_50g --dpc-server --dpc-uart retimer=0,1,2",
                   "bootargs_f1_1": "app=load_mods --serial cc_huid=2 --all_50g --dpc-server --dpc-uart retimer=0,1",
-                  "hu_host_list":[{"mpoc-server44": "x16"},{"mpoc-server43": "x16"},
+                  "hu_host_list":[{"mpoc-server44": "x16"},{"mpoc-server43": "x16"},{"mpoc-server42": "x8"},
                       {"mpoc-server41": "x16"}, {"mpoc-server40": "x16"}]
               },
               "fs-21": {
