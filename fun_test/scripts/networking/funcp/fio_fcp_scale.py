@@ -88,6 +88,97 @@ def get_numa(host_obj):
     return cpu_list
 
 
+def storage_cleanup(storage_obj, command_timeout=5):
+    # Clean the controllers
+    controller_info = storage_obj.peek("storage/ctrlr/nvme")
+    controller_data = controller_info["data"]
+    for huid, huvalue in controller_data.iteritems():
+        if huid != 7:
+            for cntlid, cntvalue in huvalue.iteritems():
+                for fnid, fnvalue in cntvalue.iteritems():
+                    for key_name, key_value in fnvalue.iteritems():
+                        if key_name.lower() == "name spaces":
+                            if key_value:
+                                volume_nsid_list = []
+                                for list_value in key_value:
+                                    for prop, value in list_value.iteritems():
+                                        if prop.lower() == "uuid":
+                                            volume_uuid = value
+                                        if prop.lower() == "nsid":
+                                            volume_nsid_list.append(value)
+                        if key_name.lower() == "controller uuid":
+                            if key_value:
+                                controller_uuid = key_value
+                                for vol_nsid in volume_nsid_list:
+                                    command_result = storage_obj.detach_volume_from_controller(
+                                        ctrlr_uuid=controller_uuid,
+                                        ns_id=vol_nsid,
+                                        command_duration=command_timeout)
+                                    fun_test.simple_assert(command_result["status"],
+                                                           "Detach controller with uuid {} & nsid {}".
+                                                           format(controller_uuid, vol_nsid))
+                                command_result = storage_obj.delete_controller(ctrlr_uuid=controller_uuid,
+                                                                               command_duration=command_timeout)
+                                fun_test.simple_assert(command_result["status"],
+                                                       "Deleting controller with uuid {}".
+                                                       format(controller_uuid))
+    for huid, huvalue in controller_data.iteritems():
+        if huid == 7:
+            for cntlid, cntvalue in huvalue.iteritems():
+                for fnid, fnvalue in cntvalue.iteritems():
+                    for key_name, key_value in fnvalue.iteritems():
+                        if key_name.lower() == "name spaces":
+                            if key_value:
+                                volume_nsid_list = []
+                                for list_value in key_value:
+                                    for prop, value in list_value.iteritems():
+                                        if prop.lower() == "uuid":
+                                            volume_uuid = value
+                                        if prop.lower() == "nsid":
+                                            volume_nsid_list.append(value)
+                        if key_name.lower() == "controller uuid":
+                            if key_value:
+                                controller_uuid = key_value
+                                for vol_nsid in volume_nsid_list:
+                                    command_result = storage_obj.detach_volume_from_controller(
+                                        ctrlr_uuid=controller_uuid,
+                                        ns_id=vol_nsid,
+                                        command_duration=command_timeout)
+                                    fun_test.simple_assert(command_result["status"],
+                                                           "Detach controller with uuid {} & nsid {}".
+                                                           format(controller_uuid, vol_nsid))
+                                command_result = storage_obj.delete_controller(ctrlr_uuid=controller_uuid,
+                                                                               command_duration=command_timeout)
+                                fun_test.simple_assert(command_result["status"],
+                                                       "Deleting controller with uuid {}".
+                                                       format(controller_uuid))
+
+    # Clean the volumes
+    volume_info = storage_obj.peek("storage/volumes")
+    volume_data = volume_info["data"]
+    for vol_type, vol_data in volume_data.iteritems():
+        if vol_type != "VOL_TYPE_BLK_LOCAL_THIN":
+            for vol_uuid, vol_stats in vol_data.iteritems():
+                if vol_stats:
+                    command_result = storage_obj.delete_volume(type=vol_type, uuid=vol_uuid,
+                                                               command_duration=command_timeout)
+                    fun_test.simple_assert(command_result["status"], "Deleting volume of type {} with uuid {}".
+                                           format(vol_type, vol_uuid))
+
+    for vol_type, vol_data in volume_data.iteritems():
+        if vol_type == "VOL_TYPE_BLK_LOCAL_THIN":
+            for vol_uuid, vol_stats in vol_data.iteritems():
+                if vol_uuid == "drives":
+                    pass
+                else:
+                    if vol_stats:
+                        command_result = storage_obj.delete_volume(type=vol_type, uuid=vol_uuid,
+                                                                   command_duration=command_timeout)
+                        fun_test.simple_assert(command_result["status"], "Deleting volume of type {} with uuid {}".
+                                               format(vol_type, vol_uuid))
+    storage_obj.disconnect()
+
+
 class BLTVolumePerformanceScript(FunTestScript):
     def describe(self):
         self.set_test_details(steps="1. Make sure correct FS system is selected")
@@ -560,63 +651,7 @@ class BLTVolumePerformanceScript(FunTestScript):
 
             for storage_fs in fun_test.shared_variables["storage_fs"]:
                 for storage_obj in [fun_test.shared_variables[storage_fs]["target_f10_storage_obj"],fun_test.shared_variables[storage_fs]["target_f11_storage_obj"]]:
-                    remove_controller = False
-
-
-                    controller_info = storage_obj.peek("storage/ctrlr", command_duration=5)
-                    for i in controller_info["data"].keys():
-                        for j in controller_info["data"][i].keys():
-                            for k in controller_info["data"][i][j].keys():
-                                for l in controller_info["data"][i][j][k].keys():
-                                    for key, value in controller_info["data"][i][j][k][l].items():
-                                        if key.lower() == "name spaces":
-                                            if value:
-                                                for x in value:
-                                                    for y, z in x.items():
-                                                        if y.lower() == "nsid":
-                                                            nsid = z
-                                                            print "Got nsid" + str(nsid)
-                                            else:
-                                                # Remove the controller
-                                                remove_controller = True
-                                        if key.lower() == "controller uuid":
-                                            if value:
-                                                controller_uuid = value
-                                                print controller_uuid
-
-                                            try:
-                                                command_result = storage_obj.detach_volume_from_controller(
-                                                    ctrlr_uuid=controller_uuid,
-                                                    ns_id=nsid,
-                                                    command_duration=5)
-                                                fun_test.simple_assert(command_result["status"],
-                                                                       "Detached from nsid {}".format(nsid))
-                                            except:
-                                                print "No nsid found in name spaces"
-
-                                            if remove_controller:
-                                                command_result = storage_obj.delete_controller(
-                                                    ctrlr_uuid=controller_uuid,
-                                                    command_duration=5)
-                                                fun_test.simple_assert(command_result["status"], "Deleted the controller")
-                    storage_obj.disconnect()
-
-            if fun_test.shared_variables["cleanup_blt"]:
-                for storage_fs in fun_test.shared_variables["storage_fs"]:
-                    for storage_obj in [fun_test.shared_variables[storage_fs]["target_f10_storage_obj"],
-                                        fun_test.shared_variables[storage_fs]["target_f11_storage_obj"]]:
-                        remove_controller = True
-
-
-                        volume_info = storage_obj.peek("storage/volumes/VOL_TYPE_BLK_LOCAL_THIN",
-                                                       command_duration=5)
-                        for key, value in volume_info["data"].items():
-                            if key.lower() != "drives":
-                                if value:
-                                    command_result = storage_obj.delete_volume(type="VOL_TYPE_BLK_LOCAL_THIN",
-                                                                                          uuid=key,
-                                                                                          command_duration=5)
-                                    fun_test.simple_assert(command_result["status"], "Deleted BLT")
+                    storage_cleanup(storage_obj)
 
 
 class BLTVolumePerformanceTestcase(FunTestCase):
@@ -659,12 +694,17 @@ class BLTVolumePerformanceTestcase(FunTestCase):
         fio_test = self.fio_cmd_args["rw"]
         if "write" in fio_test:
             fio_result_name = "write"
+            numjobs_set = True
         elif "read" in fio_test:
             fio_result_name = "read"
         print "Hosts_dict is " + str(hosts_dict)
         one_host = hosts_dict.keys()[0]
         self.fio_cmd_args["numjobs"] = self.fio_cmd_args["numjobs"] * len(hosts_dict[one_host]["nvme_device"].split(':'))
         for hosts in hosts_dict:
+            if "write" in fio_test and numjobs_set:
+                self.fio_cmd_args["numjobs"] = \
+                    self.fio_cmd_args["numjobs"] * len(hosts_dict[hosts]["nvme_device"].split(":"))
+                numjobs_set = False
             print "Running {} test on {}".format(fio_test, hosts)
             host_clone = hosts_dict[hosts]["handle"].clone()
             temp = hosts_dict[hosts]["handle"].command("hostname")
