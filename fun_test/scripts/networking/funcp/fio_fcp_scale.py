@@ -259,6 +259,8 @@ class BLTVolumePerformanceScript(FunTestScript):
         nvme_io_queues = self.nvme_ioq
         f10_ssd_uuid_list = {}
         f11_ssd_uuid_list = {}
+        f10_blt_uuid = {}
+        f11_blt_uuid = {}
 
         for storage_fs in fun_test.shared_variables["storage_fs"]:
             fun_test.log(" ### Configuring FS {} ####".format(storage_fs))
@@ -292,8 +294,7 @@ class BLTVolumePerformanceScript(FunTestScript):
                 # Configure volumes on storage_fs
                 f10_ssd_count = 1
                 f11_ssd_count = 1
-                f10_blt_uuid = {}
-                f11_blt_uuid = {}
+
                 f10_blt_uuid[storage_fs] = {}
                 f11_blt_uuid[storage_fs] = {}
 
@@ -415,7 +416,9 @@ class BLTVolumePerformanceScript(FunTestScript):
                                          format(x, remote_ip))
 
                     index += 1
-
+                    print "Storage FS is %s , x is %s , f10_blt_uuid array is %s" %(str(storage_fs),str(x),str(f10_blt_uuid))
+                    print "Storage FS is %s , x is %s , f10_blt_uuid array is %s" % (
+                    str(storage_fs), str(x), str(f11_blt_uuid))
                     # Attach volumes to the controller
                     command_result = target_f10_storage_obj[storage_fs].attach_volume_to_controller(ctrlr_uuid=f10_controller[storage_fs][x],
                                                                              ns_id=nsid,
