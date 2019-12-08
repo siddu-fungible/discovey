@@ -1891,9 +1891,8 @@ class Fs(object, ToDictMixin):
 
     def cleanup(self):
         self.cleanup_attempted = True
-
-        self.get_bmc().cleanup()
         self.get_come().cleanup()
+        self.get_bmc().cleanup()
 
         try:
             for maintenance_thread in self.bmc_maintenance_threads:
