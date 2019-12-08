@@ -695,7 +695,9 @@ def time_series_types(request):
 def job_status_types(request):
     result = None
     if request.method == "GET":
-        result = JobStatusType().all_codes_to_string()
+        result = {}
+        result["string_code_map"] = JobStatusType().all_strings_to_code()
+        result["code_description_map"] = JobStatusType().get_code_to_description_map()
     return result
 
 @csrf_exempt

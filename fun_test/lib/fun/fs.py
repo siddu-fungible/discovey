@@ -162,7 +162,8 @@ class BmcMaintenanceWorker(Thread):
 
                             self.archive_index += 1
                             if self.archive_index > self.MAX_ARCHIVES:
-                                fun_test.critical("Max archives: {} exceeded. Resetting micrcocom".format(self.MAX_ARCHIVES))
+                                fun_test.critical(
+                                    "Max archives: {} exceeded. Resetting micrcocom".format(self.MAX_ARCHIVES))
                                 bmc._reset_microcom()
                 fun_test.sleep(message="BMC Maintenance", seconds=self.FREQUENCY)
                 bmc.disconnect()
@@ -221,7 +222,7 @@ class Bmc(Linux):
             self.fs = kwargs.get("fs", None)
 
     def _get_fake_mac(self, index):
-        this_ip = socket.gethostbyname(self.host_ip)   #so we can resolve full fqdn/ip-string in dot-decimal
+        this_ip = socket.gethostbyname(self.host_ip)  # so we can resolve full fqdn/ip-string in dot-decimal
         a, b, c, d = this_ip.split('.')
         return ':'.join(['02'] + ['1d', 'ad', "%02x" % int(c), "%02x" % int(d)] + ["%02x" % int(index)])
 
@@ -311,7 +312,9 @@ class Bmc(Linux):
             except Exception as ex:
                 fun_test.critical(str(ex))
             # reboot_initiated_wait_time = 60 * 3
-            reboot_result = come.reboot(max_wait_time=max_wait_time, non_blocking=non_blocking, ipmi_details=ipmi_details)
+            reboot_result = come.reboot(max_wait_time=max_wait_time,
+                                        non_blocking=non_blocking,
+                                        ipmi_details=ipmi_details)
             reboot_info_string = "initiated" if non_blocking else "complete"
             fun_test.test_assert(expression=reboot_result,
                                  message="ComE reboot {} (Graceful)".format(reboot_info_string),
