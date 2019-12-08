@@ -198,6 +198,8 @@ class RemoveOldImagesOnTftpServer(FunTestCase):
         service_host.command("cd {}".format(TFTP_DIRECTORY))
         service_host.command("find . -type f -name 's_*gz' -mtime +30 -exec rm {} \;")
 
+    def cleanup(self):
+        pass
 
 if __name__ == "__main__":
     myscript = MaintenanceScript()
