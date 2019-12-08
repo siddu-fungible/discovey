@@ -168,6 +168,9 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.test_assert(expression=self.num_duts <= self.total_available_duts,
                              message="Testbed has enough DUTs")
 
+        self.tftp_image_path = fun_test.get_job_environment_variable("tftp_image_path")
+        self.bundle_image_parameters = fun_test.get_job_environment_variable("bundle_image_parameters")
+
         for i in range(len(self.bootargs)):
             self.bootargs[i] += " --mgmt"
             if self.disable_wu_watchdog:
@@ -268,11 +271,213 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.shared_variables["funcp_deploy"] = {}
         for index in xrange(self.num_duts):
             self.funcp_obj[index] = StorageFsTemplate(self.come_obj[index])
-            deploy_thread_id[index] = fun_test.execute_thread_after(time_in_seconds=1, obj=self.funcp_obj[index],
-                                                                    func=deploy_funcp_container, fs_index=index,
-                                                                    update_deploy_script=self.update_deploy_script,
-                                                                    update_workspace=self.update_workspace,
-                                                                    mode=self.funcp_mode)
+            if self.bundle_image_parameters:
+                fun_test.log("Bundle image installation")
+                if self.install == "fresh":
+                    # For fresh install, cleanup cassandra DB by restarting run_sc container with cleanup
+                    fun_test.log("Bundle Image boot: It's a fresh install. Cleaning up the database")
+                    path = "{}/{}".format(self.sc_script_dir, self.run_sc_script)
+                    if self.come_obj[index].check_file_directory_exists(path=path):
+                        self.come_obj[index].command("cd {}".format(self.sc_script_dir))
+                        # Restarting run_sc with -c option
+                        self.come_obj[index].command("sudo ./{} -c restart".format(self.run_sc_script))
+                        fun_test.test_assert_expected(
+                            expected=0, actual=self.come_obj[index].exit_status(),
+                            message="Bundle Image boot: Fresh Install: run_sc: restarted with cleanup")
+                        # Check if run_sc container is running
+                        run_sc_status_cmd = "docker ps -a --format '{{.Names}}' | grep run_sc"
+                        timer = FunTimer(max_time=self.container_up_timeout)
+                        while not timer.is_expired():
+                            run_sc_name = self.come_obj[index].command(
+                                run_sc_status_cmd, timeout=self.command_timeout).split("\n")[0]
+                            if run_sc_name:
+                                fun_test.log("Bundle Image boot: Fresh Install: run_sc: Container is up and running")
+                                break
+                            else:
+                                fun_test.sleep("for the run_sc docker container to start", 1)
+                        else:
+                            fun_test.critical(
+                                "Bundle Image boot: Fresh Install: run_sc container is not restarted within {} seconds "
+                                "after cleaning up the DB".format(self.container_up_timeout))
+                            fun_test.test_assert(
+                                False, "Bundle Image boot: Fresh Install: Cleaning DB and restarting run_sc container")
+
+                self.funcp_spec[index] = self.funcp_obj[index].get_container_objs()
+                self.funcp_spec[index]["container_names"].sort()
+            elif self.tftp_image_path:
+                fun_test.log("TFTP image installation")
+                # Check the init-fs1600 service is running
+                # If so check all the required dockers are running
+                # else fallback to legacy by disabling the servicing, killing health check and the left over containers
+                expected_containers_up = False
+                init_fs1600_service_status = False
+                if init_fs1600_status(self.come_obj[index]):
+                    fun_test.log("TFTP image boot: init-fs1600 service status: enabled")
+                    # init-fs1600 service is enabled, checking if all the required containers are running
+                    init_fs1600_service_status = True
+                    expected_containers = ['F1-0', 'F1-1']
+                    container_chk_timer = FunTimer(max_time=(self.container_up_timeout * 2))
+                    while not container_chk_timer.is_expired():
+                        container_names = self.funcp_obj[index].get_container_names(
+                            stop_run_sc=False, include_storage=True)['container_name_list']
+                        if all(container in container_names for container in expected_containers):
+                            expected_containers_up = True
+                            fun_test.log("TFTP image boot: init-fs1600 enabled: Expected containers are up and running")
+                            break
+                        else:
+                            fun_test.sleep(
+                                "TFTP image boot: init-fs1600 enabled: waiting for expected containers to show up", 10)
+                    if container_chk_timer.is_expired():
+                        fun_test.log("TFTP image boot: init-fs1600 enabled: Expected containers are not running")
+                    else:
+                        # Cleaning up DB by restarting run_sc.py script with -c option
+                        if "run_sc" in container_names and self.install == "fresh":
+                            fun_test.log(
+                                "TFTP image boot: init-fs1600 enabled: It's a fresh install. Cleaning up the database")
+                            path = "{}/{}".format(self.sc_script_dir, self.run_sc_script)
+                            if self.come_obj[index].check_file_directory_exists(path=path):
+                                self.come_obj[index].command("cd {}".format(self.sc_script_dir))
+                                # restarting run_sc with -c option
+                                self.come_obj[index].command("sudo ./{} -c restart".format(self.run_sc_script))
+                                fun_test.test_assert_expected(
+                                    expected=0, actual=self.come_obj[index].exit_status(),
+                                    message="TFTP Image boot: init-fs1600 enabled: Fresh Install: run_sc: "
+                                            "restarted with cleanup")
+                                # Check if run_sc container is up and running
+                                run_sc_status_cmd = "docker ps -a --format '{{.Names}}' | grep run_sc"
+                                timer = FunTimer(max_time=self.container_up_timeout)
+                                while not timer.is_expired():
+                                    run_sc_name = self.come_obj[index].command(
+                                        run_sc_status_cmd, timeout=self.command_timeout).split("\n")[0]
+                                    if run_sc_name:
+                                        fun_test.log("TFTP Image boot: init-fs1600 enabled: Fresh Install: run_sc: "
+                                                     "Container is up and running")
+                                        break
+                                    else:
+                                        fun_test.sleep("for the run_sc docker container to start", 1)
+                                else:
+                                    # This check is not needed for now, because we are not going to use SC API for this
+                                    # multi F1 script
+                                    pass
+                                    """
+                                    fun_test.critical(
+                                        "TFTP Image boot: init-fs1600 enabled: Fresh Install: run_sc container is not "
+                                        "restarted within {} seconds after cleaning up the DB".format(
+                                            self.container_up_timeout))
+                                    fun_test.test_assert(False, "TFTP Image boot: init-fs1600 enabled: Fresh Install: "
+                                                                "Cleaning DB and restarting run_sc container")
+                                    """
+                                self.funcp_spec[index] = self.funcp_obj[index].get_container_objs()
+                                self.funcp_spec[index]["container_names"].sort()
+
+                                # The below section of inherent bond interface configuration via SC dataplane IP
+                                # address configuration API is not needed for this script
+                                """
+                                # Ensuring run_sc is still up and running because after restarting run_sc with cleanup,
+                                # chances are that it may die within few seconds after restart
+                                run_sc_status_cmd = "docker ps -a --format '{{.Names}}' | grep run_sc"
+                                run_sc_name = self.come_obj[0].command(run_sc_status_cmd,
+                                                                       timeout=self.command_timeout).split("\n")[0]
+                                fun_test.simple_assert(run_sc_name, "TFTP Image boot: init-fs1600 enabled: run_sc: "
+                                                                    "Container is up and running")
+
+                                # Declaring SC API controller
+                                self.sc_api = StorageControllerApi(api_server_ip=self.come_obj[0].host_ip,
+                                                                   api_server_port=self.api_server_port,
+                                                                   username=self.api_server_username,
+                                                                   password=self.api_server_password)
+
+                                # Polling for API Server status
+                                api_server_up_timer = FunTimer(max_time=self.api_server_up_timeout)
+                                while not api_server_up_timer.is_expired():
+                                    api_server_response = self.sc_api.get_api_server_health()
+                                    if api_server_response["status"]:
+                                        fun_test.log(
+                                            "TFTP Image boot: init-fs1600 enabled: API server is up and running")
+                                        break
+                                    else:
+                                        fun_test.sleep(" waiting for API server to be up", 10)
+                                fun_test.simple_assert(expression=not api_server_up_timer.is_expired(),
+                                                       message="TFTP Image boot: init-fs1600 enabled: API server is up")
+                                fun_test.sleep(
+                                    "TFTP Image boot: init-fs1600 enabled: waiting for API server to be ready", 10)
+
+                                # Configure dataplane ip as database is cleaned up
+                                # Getting all the DUTs of the setup
+                                nodes = self.sc_api.get_dpu_ids()
+                                fun_test.test_assert(nodes,
+                                                     "TFTP Image boot: init-fs1600 enabled: Getting UUIDs of all DUTs "
+                                                     "in the setup")
+                                for node_index, node in enumerate(nodes):
+                                    # Extracting the DUT's bond interface details
+                                    ip = \
+                                    self.fs_spec[node_index / 2].spec["bond_interface_info"][str(node_index % 2)][
+                                        str(0)]["ip"]
+                                    ip = ip.split('/')[0]
+                                    subnet_mask = self.fs_spec[node_index / 2].spec["bond_interface_info"][
+                                        str(node_index % 2)][str(0)]["subnet_mask"]
+                                    route = \
+                                    self.fs_spec[node_index / 2].spec["bond_interface_info"][str(node_index % 2)][
+                                        str(0)]["route"][0]
+                                    next_hop = "{}/{}".format(route["gateway"], route["network"].split("/")[1])
+                                    self.f1_ips.append(ip)
+
+                                    fun_test.log(
+                                        "TFTP Image boot: init-fs1600 enabled: Current {} node's bond0 is going to be "
+                                        "configured with {} IP address with {} subnet mask with next hop set to {}".
+                                            format(node, ip, subnet_mask, next_hop))
+                                    result = self.sc_api.configure_dataplane_ip(
+                                        dpu_id=node, interface_name="bond0", ip=ip, subnet_mask=subnet_mask,
+                                        next_hop=next_hop,
+                                        use_dhcp=False)
+                                    fun_test.log("TFTP Image boot: init-fs1600 enabled: Dataplane IP configuration "
+                                                 "result of {}: {}".format(node, result))
+                                    fun_test.test_assert(result["status"],
+                                                         "TFTP Image boot: init-fs1600 enabled: Configuring {} DUT "
+                                                         "with Dataplane IP {}".format(node, ip))
+                                """
+                if not init_fs1600_service_status or (init_fs1600_service_status and not expected_containers_up):
+                    fun_test.log("TFTP Image boot: Expected containers are not up, bringing up containers")
+                    if init_fs1600_service_status:
+                        # Disable init-fs1600 service
+                        fun_test.simple_assert(disalbe_init_fs1600(self.come_obj[index]),
+                                               "TFTP Image boot: init-fs1600 service is disabled")
+                        init_fs1600_service_status = False
+
+                    # Stopping containers and unloading the drivers
+                    self.come_obj[index].command("sudo /opt/fungible/cclinux/cclinux_service.sh --stop")
+
+                    # kill run_sc health_check and all containers
+                    health_check_pid = self.come_obj[index].get_process_id_by_pattern("system_health_check.py")
+                    if health_check_pid:
+                        self.come_obj[index].kill_process(process_id=health_check_pid)
+                    else:
+                        fun_test.critical("TFTP Image boot: init-fs1600 disabled:"
+                                          "system_health_check.py script is not running\n")
+
+                    # Bring-up the containers
+                    # Removing existing db directories for fresh setup
+                    if self.install == "fresh":
+                        for directory in self.sc_db_directories:
+                            if self.come_obj[index].check_file_directory_exists(path=directory):
+                                fun_test.log("TFTP Image boot: init-fs1600 disabled: Fresh Install: "
+                                             "Removing Directory {}".format(directory))
+                                self.come_obj[index].sudo_command("rm -rf {}".format(directory))
+                                fun_test.test_assert_expected(
+                                    actual=self.come_obj[index].exit_status(), expected=0,
+                                    message="TFTP Image boot: init-fs1600 disabled: Fresh Install: "
+                                            "Directory {} is removed".format(directory))
+                            else:
+                                fun_test.log("TFTP Image boot: init-fs1600 disabled: Fresh Install: "
+                                             "Directory {} does not exist skipping deletion".format(directory))
+                    else:
+                        fun_test.log("TFTP Image boot: init-fs1600 disabled: Fresh Install: "
+                                     "Skipping run_sc restart with cleanup")
+
+                    deploy_thread_id[index] = fun_test.execute_thread_after(
+                        time_in_seconds=1, obj=self.funcp_obj[index], func=deploy_funcp_container, fs_index=index,
+                        update_deploy_script=self.update_deploy_script, update_workspace=self.update_workspace,
+                        mode=self.funcp_mode)
         fun_test.log("Deploy Thread IDs: {}".format(deploy_thread_id))
         for index in xrange(self.num_duts):
             try:
