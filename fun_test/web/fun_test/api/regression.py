@@ -691,6 +691,13 @@ def time_series_types(request):
         result = TimeSeriesTypes().all_strings_to_code()
     return result
 
+@api_safe_json_response
+def job_status_types(request):
+    result = None
+    if request.method == "GET":
+        result = JobStatusType().all_codes_to_string()
+    return result
+
 @csrf_exempt
 @api_safe_json_response
 def release_catalog_executions(request, id):
