@@ -376,13 +376,13 @@ class ECVolumeLevelScript(FunTestScript):
                                 # Ensuring run_sc is still up and running because after restarting run_sc with cleanup,
                                 # chances are that it may die within few seconds after restart
                                 run_sc_status_cmd = "docker ps -a --format '{{.Names}}' | grep run_sc"
-                                run_sc_name = self.come_obj[0].command(run_sc_status_cmd,
+                                run_sc_name = self.come_obj[index].command(run_sc_status_cmd,
                                                                        timeout=self.command_timeout).split("\n")[0]
                                 fun_test.simple_assert(run_sc_name, "TFTP Image boot: init-fs1600 enabled: run_sc: "
                                                                     "Container is up and running")
 
                                 # Declaring SC API controller
-                                self.sc_api = StorageControllerApi(api_server_ip=self.come_obj[0].host_ip,
+                                self.sc_api = StorageControllerApi(api_server_ip=self.come_obj[index].host_ip,
                                                                    api_server_port=self.api_server_port,
                                                                    username=self.api_server_username,
                                                                    password=self.api_server_password)
