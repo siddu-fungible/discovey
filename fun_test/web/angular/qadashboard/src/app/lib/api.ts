@@ -3,7 +3,6 @@ import {catchError, switchMap} from "rxjs/operators";
 import {of, throwError} from "rxjs";
 import {LoggerService} from "../services/logger/logger.service";
 import {AppInjector} from "../app-injector";
-//import {AppModule} from "../app.module";
 
 export abstract class Api {
   abstract url: string = null;
@@ -16,8 +15,8 @@ export abstract class Api {
 
   constructor() {
 
-    this.apiService = AppInjector.get(ApiService); //AppModule.injector.get(ApiService);
-    this.loggerService =  AppInjector.get(LoggerService); //AppModule.injector.get(LoggerService);
+    this.apiService = AppInjector.get(ApiService);
+    this.loggerService =  AppInjector.get(LoggerService);
   }
 
   public create(url, payload) {
@@ -66,4 +65,32 @@ export abstract class Api {
   public update() {
   }
 
+}
+
+export class ApiType {
+  private apiService: ApiService;
+  private loggerService: LoggerService;
+  descriptionMap: {[code: number]: string} = {};
+  url: string = null;
+
+  constructor() {
+    this.apiService = AppInjector.get(ApiService);
+    this.loggerService = AppInjector.get(LoggerService);
+  }
+
+
+  public get(url: string) {
+    this.url = url;
+    return this.apiService.get(this.url).pipe(switchMap(response => {
+      let data = response.data;
+      let stringCodeMap = data["string_code_map"];
+      let descriptionMap = data["code_description_map"];
+      Object.keys(stringCodeMap).forEach(key => this[key] = stringCodeMap[key]);
+      Object.keys(descriptionMap).forEach(key => this.descriptionMap[key] = descriptionMap[key]);
+      return of(this);
+    }), catchError(error => {
+      this.loggerService.error(`Unable to get ApiType: ${this.url}`, error);
+      return throwError(error);
+    }))
+  }
 }

@@ -44,7 +44,7 @@ class QueueOperations:
     DELETE = "delete"
 
 
-class JobStatusType:
+class JobStatusType(Codes):
     UNKNOWN = -40
     ERROR = -30
     KILLED = -20
