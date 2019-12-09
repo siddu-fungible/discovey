@@ -52,7 +52,7 @@ class FunModel(models.Model):
             value = getattr(self, field.name)
             result[field.name] = value
             if type(value) == datetime:
-                result[field.name + "_epoch"] = get_epoch_time_from_datetime(value)
+                result[field.name + "_timestamp"] = get_epoch_time_from_datetime(value)
         return result
 
 class TimeKeeper(models.Model):
@@ -382,6 +382,8 @@ class ReleaseCatalogExecution(FunModel):
     completion_date = models.DateTimeField(null=True, default=None)
     owner = models.EmailField(null=True, blank=True)
     state = models.IntegerField(default=JobStatusType.UNKNOWN)
+    description = models.TextField(default="TBD")
+
 
 
 class ReleaseCatalog(FunModel):

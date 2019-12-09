@@ -93,7 +93,7 @@ class BringupSetup(FunTestCase):
             enable_fcp = job_inputs["enable_fcp"]
             fun_test.shared_variables["enable_fcp"] = enable_fcp
         else:
-            enable_fcp = False
+            enable_fcp = True
             fun_test.shared_variables["enable_fcp"] = enable_fcp
         if "qp_list" in job_inputs:
             fun_test.shared_variables["qp_list"] = job_inputs["qp_list"]
@@ -844,12 +844,13 @@ class IbBwSeqIoTest(FunTestCase):
                 f11_host_test = f11_host_roce.ib_bw_test(test_type=test, size=size, rdma_cm=rdmacm,
                                                          server_ip=f10_hosts[0]["ipaddr"])
                 while f10_hosts[0]["handle"].process_exists(process_id=f10_host_test["cmd_pid"]):
-                    fun_test.sleep("ib_bw test on f10_host", 2)
+                    # sleep for 5 seconds as it takes longer time to run for larger IO
+                    fun_test.sleep("ib_bw test on f10_host", 5)
                     f10_pid_there += 1
                     if f10_pid_there == 60:
                         f10_hosts[0]["handle"].kill_process(process_id=f10_host_test["cmd_pid"])
                 while f11_hosts[0]["handle"].process_exists(process_id=f11_host_test["cmd_pid"]):
-                    fun_test.sleep("ib_bw test on f11_host", 2)
+                    fun_test.sleep("ib_bw test on f11_host", 5)
                     f11_pid_there += 1
                     if f11_pid_there == 60:
                         f11_hosts[0]["handle"].kill_process(process_id=f11_host_test["cmd_pid"])
@@ -983,12 +984,13 @@ class IbLatSeqIoTest(FunTestCase):
                 f11_host_test = f11_host_roce.ib_lat_test(test_type=test, size=size, rdma_cm=rdmacm,
                                                           server_ip=f10_hosts[0]["ipaddr"])
                 while f10_hosts[0]["handle"].process_exists(process_id=f10_host_test["cmd_pid"]):
-                    fun_test.sleep("ib_lat test on f10_host", 2)
+                    # sleep for 5 seconds as ib_write_lat takes longer time to run for larger IO
+                    fun_test.sleep("ib_lat test on f10_host", 5)
                     f10_pid_there += 1
                     if f10_pid_there == 60:
                         f10_hosts[0]["handle"].kill_process(process_id=f10_host_test["cmd_pid"])
                 while f11_hosts[0]["handle"].process_exists(process_id=f11_host_test["cmd_pid"]):
-                    fun_test.sleep("ib_lat test on f11_host", 2)
+                    fun_test.sleep("ib_lat test on f11_host", 5)
                     f11_pid_there += 1
                     if f11_pid_there == 60:
                         f11_hosts[0]["handle"].kill_process(process_id=f11_host_test["cmd_pid"])

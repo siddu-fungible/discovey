@@ -48,9 +48,7 @@ class BLTVolumeSanityScript(FunTestScript):
         fun_test.test_assert(topology, "Topology deployed")
 
         fs = topology.get_dut_instance(index=0)
-        fs.register_statistics(statistics_type=Fs.StatisticsType.BAM)
         fs.start_statistics_collection(statistics_type=Fs.StatisticsType.BAM)
-        fs.register_statistics(statistics_type=Fs.StatisticsType.DEBUG_VP_UTIL)
         fs.start_statistics_collection(statistics_type=Fs.StatisticsType.DEBUG_VP_UTIL)
 
         end_host = fs.get_come()

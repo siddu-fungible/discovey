@@ -146,19 +146,24 @@ class BmcMaintenanceWorker(Thread):
                             bmc.command("echo 'Archived' > {}".format(file_name))
                             bmc.list_files(file_name)
 
-                            artifact_file_name = fun_test.get_test_case_artifact_file_name("{}_{}_{}_archived.tgz".format(self.context, f1_index, self.archive_index))
+                            artifact_file_name = fun_test.get_test_case_artifact_file_name(
+                                "{}_{}_{}_archived.tgz".format(self.context, f1_index, self.archive_index))
                             fun_test.scp(source_ip=bmc.host_ip,
                                          source_file_path=archive_file_name,
                                          source_username=bmc.ssh_username,
                                          source_password=bmc.ssh_password,
                                          target_file_path=artifact_file_name)
-                            fun_test.add_auxillary_file(description="{}_f1_{}_{}".format(self.context, f1_index, self.archive_index), filename=artifact_file_name)
+                            fun_test.add_auxillary_file(description="{}_f1_{}_{}".format(self.context,
+                                                                                         f1_index,
+                                                                                         self.archive_index),
+                                                        filename=artifact_file_name)
                             bmc.command("rm {}".format(archive_file_name))
                             bmc.command("echo 'Archived' > {}".format(file_name))
 
                             self.archive_index += 1
                             if self.archive_index > self.MAX_ARCHIVES:
-                                fun_test.critical("Max archives: {} exceeded. Resetting micrcocom".format(self.MAX_ARCHIVES))
+                                fun_test.critical(
+                                    "Max archives: {} exceeded. Resetting micrcocom".format(self.MAX_ARCHIVES))
                                 bmc._reset_microcom()
                 fun_test.sleep(message="BMC Maintenance", seconds=self.FREQUENCY)
                 bmc.disconnect()
@@ -217,10 +222,9 @@ class Bmc(Linux):
             self.fs = kwargs.get("fs", None)
 
     def _get_fake_mac(self, index):
-        this_ip = socket.gethostbyname(self.host_ip)   #so we can resolve full fqdn/ip-string in dot-decimal
+        this_ip = socket.gethostbyname(self.host_ip)  # so we can resolve full fqdn/ip-string in dot-decimal
         a, b, c, d = this_ip.split('.')
         return ':'.join(['02'] + ['1d', 'ad', "%02x" % int(c), "%02x" % int(d)] + ["%02x" % int(index)])
-
 
     @fun_test.safe
     def ping(self,
@@ -307,7 +311,9 @@ class Bmc(Linux):
             except Exception as ex:
                 fun_test.critical(str(ex))
             # reboot_initiated_wait_time = 60 * 3
-            reboot_result = come.reboot(max_wait_time=max_wait_time, non_blocking=non_blocking, ipmi_details=ipmi_details)
+            reboot_result = come.reboot(max_wait_time=max_wait_time,
+                                        non_blocking=non_blocking,
+                                        ipmi_details=ipmi_details)
             reboot_info_string = "initiated" if non_blocking else "complete"
             fun_test.test_assert(expression=reboot_result,
                                  message="ComE reboot {} (Graceful)".format(reboot_info_string),
@@ -330,7 +336,7 @@ class Bmc(Linux):
 
     def detect_version(self, output):
         try:
-            m = re.search(r'FunSDK Version=(\S+), ', output) # Branch=(\S+)', output)
+            m = re.search(r'FunSDK.*Version=(\S+), ', output)  # Branch=(\S+)', output)
             if m:
                 version = m.group(1)
                 fun_test.add_checkpoint(checkpoint="SDK Version: {}".format(version), context=self.context)
@@ -413,7 +419,8 @@ class Bmc(Linux):
                                       nc.read_until,
                                       expected_data=self.U_BOOT_F1_PROMPT,
                                       timeout=30,
-                                      write_on_trigger=write_on_trigger)
+                                      write_on_trigger=write_on_trigger,
+                                      read_buffer=20)
 
 
         return True
@@ -516,12 +523,12 @@ class Bmc(Linux):
 
         is_signed_image = True if "signed" in tftp_image_path else False
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_INIT)
-        """
+
         self.u_boot_command(command="",
                             timeout=5,
                             expected=self.U_BOOT_F1_PROMPT,
                             f1_index=index)
-        """
+
 
         if not self.bundle_compatible:
             self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_SET_NO_AUTOLOAD)
@@ -1246,7 +1253,7 @@ class ComE(Linux):
         fun_test.test_assert(expression=self.is_dpc_ready(), message="DPC ready", context=self.context)
         if self.fs.statistics_enabled:
             fun_test.test_assert(expression=self.setup_dpc(statistics=True), message="Setup DPC for statistics", context=self.context)
-
+            self.fs.dpc_for_statistics_ready = True
         self.hbm_dump_enabled = fun_test.get_job_environment_variable("hbm_dump")
         if self.hbm_dump_enabled:
             fun_test.test_assert(self.setup_hbm_tools(), "HBM tools and dump directory ready")
@@ -1595,18 +1602,20 @@ class F1InFs:
         self.serial_device_path = serial_device_path
         self.serial_sbp_device_path = serial_sbp_device_path
         self.dpc_port = None
-        self.dpc_for_statistics_ready = False
-        self.dpc_for_csi_perf_ready = False
+
 
     def get_dpc_client(self, auto_disconnect=False, statistics=None, csi_perf=None):
         come = self.fs.get_come()
+        if statistics or csi_perf:
+            come = self.fs.get_come(clone=True)
         host_ip = come.host_ip
-        if statistics and not self.dpc_for_statistics_ready:
+        if statistics and not self.fs.dpc_for_statistics_ready:
             come.setup_dpc(statistics=True)
-            self.dpc_for_statistics_ready = True
-        if csi_perf and not self.dpc_for_csi_perf_ready:
+            self.fs.dpc_for_statistics_ready = True
+            come.disconnect()
+        if csi_perf and not self.fs.dpc_for_csi_perf_ready:
             come.setup_dpc(csi_perf=True)
-            self.dpc_for_csi_perf_ready = True
+            self.fs.dpc_for_csi_perf_ready = True
         dpc_port = come.get_dpc_port(self.index, statistics=statistics, csi_perf=csi_perf)
         dpcsh_client = DpcshClient(target_ip=host_ip, target_port=dpc_port, auto_disconnect=auto_disconnect)
         return dpcsh_client
@@ -1748,7 +1757,7 @@ class Fs(object, ToDictMixin):
         self.csi_perf_templates = {}
         self.bundle_upgraded = False   # is the bundle upgrade complete?
         self.bundle_compatible = False   # Set this, if we are trying to boot a device with bundle installed already
-        if ("bundle_compatible" in spec and spec["bundle_compatible"]) or (self.bundle_image_parameters):
+        if ("bundle_compatible" in spec and spec["bundle_compatible"]) or (self.bundle_image_parameters) or (self.get_revision() in ["2"]):
             self.bundle_compatible = True
             self.skip_funeth_come_power_cycle = True
         self.mpg_ips = spec.get("mpg_ips", [])
@@ -1762,14 +1771,22 @@ class Fs(object, ToDictMixin):
 
         self.statistics_collectors = {}
         self.dpc_statistics_lock = Lock()
-        self.statistics_enabled = False
+        self.statistics_enabled = True
+
         if self.fs_parameters:
             if "statistics_enabled" in self.fs_parameters:
                 self.statistics_enabled = self.fs_parameters["statistics_enabled"]
+        self.register_all_statistics()
+        self.dpc_for_statistics_ready = False
+        self.dpc_for_csi_perf_ready = False
         fun_test.register_fs(self)
 
     def enable_statistics(self, enable):
         self.statistics_enabled = enable
+
+    def register_all_statistics(self):
+        self.register_statistics(statistics_type=Fs.StatisticsType.BAM)
+        self.register_statistics(statistics_type=Fs.StatisticsType.DEBUG_VP_UTIL)
 
     def reset_device_handles(self):
         try:
@@ -1873,9 +1890,8 @@ class Fs(object, ToDictMixin):
 
     def cleanup(self):
         self.cleanup_attempted = True
-
-        self.get_bmc().cleanup()
         self.get_come().cleanup()
+        self.get_bmc().cleanup()
 
         try:
             for maintenance_thread in self.bmc_maintenance_threads:
@@ -2154,14 +2170,16 @@ class Fs(object, ToDictMixin):
         self.get_come()
         self.set_f1s()
         self.come.setup_dpc()
-        if self.statistics_enabled:
-            self.come.setup_dpc(statistics=True)
+
+
         self.come.detect_pfs()
         fun_test.test_assert(expression=self.come.ensure_dpc_running(),
                              message="Ensure dpc is running",
                              context=self.context)
-        # for f1_index, f1 in self.f1s.iteritems():
-        #    self.bmc.start_uart_log_listener(f1_index=f1_index)
+        if self.statistics_enabled:
+            if not self.dpc_for_statistics_ready:
+                self.come.setup_dpc(statistics=True)
+                self.dpc_for_statistics_ready = True
         return True
 
     def funeth_reset(self):
@@ -2386,20 +2404,21 @@ class Fs(object, ToDictMixin):
 
     def statistics_dispatcher(self, statistics_type, **kwargs):
         result = {"status": False, "data": None, "epoch_time": get_current_epoch_time()}
-        try:
-            self.dpc_statistics_lock.acquire()
-            if statistics_type == self.StatisticsType.BAM:
-                bam_result = self.bam(**kwargs)
-                if bam_result["status"]:
-                    result["data"] = bam_result["data"]
-                    result["status"] = True
-            if statistics_type == self.StatisticsType.DEBUG_VP_UTIL:
-                debug_vp_result = self.debug_vp_util(**kwargs)
-                if debug_vp_result["status"]:
-                    result["data"] = debug_vp_result["data"]
-                    result["status"] = True
-        finally:
-            self.dpc_statistics_lock.release()
+        if self.statistics_enabled:
+            try:
+                self.dpc_statistics_lock.acquire()
+                if statistics_type == self.StatisticsType.BAM:
+                    bam_result = self.bam(**kwargs)
+                    if bam_result["status"]:
+                        result["data"] = bam_result["data"]
+                        result["status"] = True
+                if statistics_type == self.StatisticsType.DEBUG_VP_UTIL:
+                    debug_vp_result = self.debug_vp_util(**kwargs)
+                    if debug_vp_result["status"]:
+                        result["data"] = debug_vp_result["data"]
+                        result["status"] = True
+            finally:
+                self.dpc_statistics_lock.release()
         return result
 
 if __name__ == "__main2__":

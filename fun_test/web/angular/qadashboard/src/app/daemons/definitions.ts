@@ -7,7 +7,7 @@ export class Daemon extends Api {
   daemon_id: number;
   id: number;
   heart_beat_time: string;
-  heart_beat_time_epoch: number;
+  heart_beat_time_timestamp: number;
 
   serialize(): any {
 
@@ -26,8 +26,8 @@ export class Daemon extends Api {
       this.heart_beat_time = data.heart_beat_time;
     }
 
-    if (data.hasOwnProperty('heart_beat_time_epoch')) {
-      this.heart_beat_time_epoch = data.heart_beat_time_epoch;
+    if (data.hasOwnProperty('heart_beat_time_timestamp')) {
+      this.heart_beat_time_timestamp = data.heart_beat_time_timestamp;
     }
   }
 }

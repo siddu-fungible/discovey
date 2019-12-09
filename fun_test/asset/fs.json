@@ -55,7 +55,7 @@
     "fpga": {
       "mgmt_ssh_password": "root",
       "mgmt_ssh_username": "root",
-      "mgmt_ip": "10.1.20.29"
+      "mgmt_ip": "10.1.21.20"
     },
     "name": "fs-6"
   },
@@ -185,6 +185,9 @@
       "mgmt_ssh_password": "superuser",
       "mgmt_ssh_username": "sysadmin",
       "mgmt_ip": "10.1.105.154"
+    },
+    "workarounds": {
+      "skip_funeth_come_power_cycle": true
     },
     "name": "fs-121",
     "revision": "2",

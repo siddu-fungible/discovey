@@ -12,7 +12,7 @@ npm install
 
 
 ### Debugging Postgres
-1. Check /var/log/syslog
+1. Check /var/log/syslog and /var/lib/postgresql/9.5/main/pg_log/
 2. Run without daemon mode:
     ~~~~
     /usr/lib/postgresql/9.5/bin/postgres -d 3 -D /project/users/QA/regression/database/postgresql/9.5/main  -c config_file=/etc/postgresql/9.5/main/postgresql.conf

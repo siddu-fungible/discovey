@@ -7,6 +7,8 @@ import {ReleaseCatalog} from "../definitions";
 import {Router} from "@angular/router";
 import {slideInOutAnimation} from "../../animations/generic-animations";
 import {Suite, SuiteEditorService} from "../suite-editor/suite-editor.service";
+import {ReleaseCatalogExecution} from "./definitions";
+import {UserService} from "../../services/user/user.service";
 
 @Component({
   selector: 'app-release-catalogs',
@@ -17,17 +19,24 @@ import {Suite, SuiteEditorService} from "../suite-editor/suite-editor.service";
 export class ReleaseCatalogsComponent implements OnInit, OnChanges {
   driver: Observable<any> = null;
   releaseCatalogs: ReleaseCatalog[] = null;
+  releaseCatalogExecution: ReleaseCatalogExecution = new ReleaseCatalogExecution();
   preparingCatalogExecution: boolean = false;
   suitesForExecution: Suite [];
   selectedReleaseCatalog: ReleaseCatalog = null;
+  users = null;
+  selectedUser = null;
   constructor(private regressionService: RegressionService,
-              private  loggerService: LoggerService,
+              private loggerService: LoggerService,
               private router: Router,
-              private suiteEditorService: SuiteEditorService
+              private suiteEditorService: SuiteEditorService,
+              private userService: UserService
   ) { }
 
   ngOnInit() {
     this.driver = of(true).pipe(switchMap(response => {
+      return this.userService.users();
+    })).pipe(switchMap(response => {
+      this.users = response;
       return this.regressionService.getReleaseCatalogs();
     })).pipe(switchMap(response => {
       this.releaseCatalogs = response;
@@ -97,9 +106,21 @@ export class ReleaseCatalogsComponent implements OnInit, OnChanges {
   }
 
   execute() {
-    // From the selected catalog
-    // 1. get list of suite IDs
-    // 2. post Release catalog execution
+    if (!this.selectedUser) {
+      return alert("Please select a user");
+    }
+    this.releaseCatalogExecution.owner = this.selectedUser.email;
+    this.releaseCatalogExecution.release_catalog_id = this.selectedReleaseCatalog.id;
+    this.releaseCatalogExecution.create(this.releaseCatalogExecution.url, this.releaseCatalogExecution.serialize()).subscribe(rceResponse => {
+      this.loggerService.success(`Created catalog execution: ${rceResponse.id}`);
+    }, error => {
+      this.loggerService.error(`Unable to execute catalog`, error);
+    })
   }
+
+  setExecutionDescription(description) {
+    this.releaseCatalogExecution.description = description;
+  }
+
 
 }
