@@ -587,14 +587,14 @@
       "cab02-qa-09"
     ]
   },
-  "fs-102": {
+  "fs-144": {
     "workarounds": {
       "enable_funcp": true
     },
     "dut_info": {
       "0": {
         "type": "DUT_TYPE_FSU",
-        "dut": "fs-102",
+        "dut": "fs-144",
         "bond_interface_info": {
           "0": {
             "0": {
@@ -641,7 +641,7 @@
               "type": "INTERFACE_TYPE_ETHERNET",
               "switch_info": {
                 "name": "qfx-3",
-                "port": "et-0/0/17"
+                "port": "et-0/0/20"
               }
             },
             "4": {
@@ -662,7 +662,7 @@
               "type": "INTERFACE_TYPE_ETHERNET",
               "switch_info": {
                 "name": "qfx-3",
-                "port": "et-0/0/20"
+                "port": "et-0/0/17"
               }
             }
           },
