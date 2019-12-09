@@ -6,11 +6,13 @@ import {of} from "rxjs";
 import {switchMap} from "rxjs/operators";
 import {Fs} from "../../../hosts/fs";
 import {CommonService} from "../../../services/common/common.service";
+import {slideInOutAnimation, showAnimation} from "../../../animations/generic-animations";
 
 @Component({
   selector: 'app-vp-utilization',
   templateUrl: './vp-utilization.component.html',
-  styleUrls: ['./vp-utilization.component.css']
+  styleUrls: ['./vp-utilization.component.css'],
+  animations: [slideInOutAnimation, showAnimation]
 })
 export class VpUtilizationComponent implements OnInit, OnChanges {
   @Input() scriptExecutionInfo: any = null;
@@ -22,9 +24,10 @@ export class VpUtilizationComponent implements OnInit, OnChanges {
   detectedF1Indexes = new Set();
   fs: Fs = new Fs();
   xSeries: any = null;
-  showVpUtilizationDistribution: boolean = false;
-  showVpUtilizationByCluster: boolean = false;
   TIMEZONE: string = "America/Los_Angeles";
+  tableHeaders: any = null;
+  tableData: any = null;
+  showCharts: boolean = false;
 
   constructor(private regressionService: RegressionService, private loggerService: LoggerService, private commonService: CommonService) {
     this.driver = of(true).pipe(switchMap(response => {
@@ -38,19 +41,31 @@ export class VpUtilizationComponent implements OnInit, OnChanges {
 
     })).pipe(switchMap(response => {
       this.data = response;
+      this.prepareTableHeaders();
       this.parseData(this.data);
       return of(true);
     }));
 
   }
 
+  prepareTableHeaders(): void {
+    this.tableHeaders = [];
+    this.tableHeaders.push("Datetime");
+    this.tableHeaders.push("Value");
+  }
+
   parseData(data) {
+    this.tableData = {};
+    this.tableData[0] = [];
+    this.tableData[1] = [];
     this.data.forEach(oneRecord => {
-      let dateTime = this.commonService.convertEpochToDate(oneRecord.epoch_time, this.TIMEZONE);
-      oneRecord["date_time"] = dateTime;
+      let dateTime = this.commonService.getShortDateTimeFromEpoch(oneRecord.epoch_time * 1000, this.TIMEZONE);
       let oneRecordData = oneRecord.data;
       Object.keys(oneRecordData).forEach(f1Index => {
         this.detectedF1Indexes.add(f1Index);
+        let record = [];
+        record.push(dateTime);
+        record.push(oneRecordData[f1Index]);
         Object.keys(oneRecordData[f1Index]).forEach(clusterKey => {
           let regex = /CCV(\d+)_(\d+)_(\d+)/;
           let match = regex.exec(clusterKey);
@@ -61,9 +76,8 @@ export class VpUtilizationComponent implements OnInit, OnChanges {
             //console.log("Done");
             this.fs.addDebugVpUtil(parseInt(f1Index), clusterIndex, coreIndex, vpIndex, oneRecord.epoch_time, oneRecordData[f1Index][clusterKey]);
           }
-
         });
-        let j = 0;
+        this.tableData[f1Index].push(record);
 
       });
     });
@@ -158,20 +172,13 @@ export class VpUtilizationComponent implements OnInit, OnChanges {
       this.suiteExecutionId = this.scriptExecutionInfo.suite_execution_id;
       this.driver.subscribe(response => {
         this.prepareChartData();
+        this.showCharts = true;
 
       }, error => {
         console.log(error.toString());
         this.loggerService.error(`Unable to fetch data`, error);
       })
     }
-  }
-
-  showVpUtilization(): void {
-    this.showVpUtilizationDistribution = !this.showVpUtilizationDistribution;
-  }
-
-  expandString(stringValue): void {
-
   }
 
 }

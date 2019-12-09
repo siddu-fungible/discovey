@@ -1,0 +1,21 @@
+<table class="fun-table">
+  <tr>
+    <td *ngFor="let header of tableHeaders" class="fun-table-header">{{ header }}</td>
+  </tr>
+  <tr *ngFor="let data of filteredTableData">
+    <td *ngFor="let d of data">
+          <span *ngIf="d.showSliced">{{ d.slicedValue
+            }}<span class="fun-action-link" (click)="expandSlicedString(d)">...expand</span></span>
+      <ng-container *ngIf="isString(d.originalValue)">
+            <span *ngIf="!d.showSliced && d.originalValue.length > 64">{{ d.originalValue }}<span
+              class="fun-action-link" (click)="expandSlicedString(d)">...hide</span></span>
+        <span *ngIf="!d.showSliced && d.originalValue.length <= 64">{{ d.originalValue }}</span>
+      </ng-container>
+      <ng-container *ngIf="!isString(d.originalValue)">
+            <span *ngIf="!d.showSliced"><pre>{{ d.originalValue | json }}</pre><span
+              class="fun-action-link" (click)="expandSlicedString(d)">...hide</span></span>
+      </ng-container>
+
+    </td>
+  </tr>
+</table>
