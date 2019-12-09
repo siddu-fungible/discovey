@@ -121,6 +121,10 @@ class ApcPduTestcase(FunTestCase):
             self.bmc_handle = Bmc(host_ip=self.fs['bmc']['mgmt_ip'],
                                   ssh_username=self.fs['bmc']['mgmt_ssh_username'],
                                   ssh_password=self.fs['bmc']['mgmt_ssh_password'])
+            self.bmc_handle.set_prompt_terminator(r'# $')
+            self.fpga_handle = Fpga(host_ip=self.fs['fpga']['mgmt_ip'],
+                                    ssh_username=self.fs['fpga']['mgmt_ssh_username'],
+                                    ssh_password=self.fs['fpga']['mgmt_ssh_password'])
 
             self.basic_checks()
             self.data_integrity_check()
@@ -654,14 +658,7 @@ class ApcPduTestcase(FunTestCase):
         for index in range(number_of_vol):
             volume_creation_detail["name"] = "{}{}".format(self.VOL_NAME, index + 1)
             response = self.sc_api.create_stripe_volume(pool_uuid=self.pool_uuid,
-                                                        name=volume_creation_detail["name"],
-                                                        capacity=volume_creation_detail["capacity"],
-                                                        pvol_type=volume_creation_detail["vol_type"],
-                                                        stripe_count=volume_creation_detail["stripe_count"],
-                                                        encrypt=volume_creation_detail["encrypt"],
-                                                        allow_expansion=False,
-                                                        data_protection={},
-                                                        compression_effort=volume_creation_detail["compression_effort"])
+                                                        **volume_creation_detail)
 
             if response["status"]:
                 message = response['message']
