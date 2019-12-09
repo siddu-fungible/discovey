@@ -226,7 +226,6 @@ class Bmc(Linux):
         a, b, c, d = this_ip.split('.')
         return ':'.join(['02'] + ['1d', 'ad', "%02x" % int(c), "%02x" % int(d)] + ["%02x" % int(index)])
 
-
     @fun_test.safe
     def ping(self,
              dst,
@@ -337,7 +336,7 @@ class Bmc(Linux):
 
     def detect_version(self, output):
         try:
-            m = re.search(r'FunSDK Version=(\S+), ', output) # Branch=(\S+)', output)
+            m = re.search(r'FunSDK.*Version=(\S+), ', output)  # Branch=(\S+)', output)
             if m:
                 version = m.group(1)
                 fun_test.add_checkpoint(checkpoint="SDK Version: {}".format(version), context=self.context)
