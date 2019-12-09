@@ -56,12 +56,18 @@ class MyScript(FunTestScript):
         self.initialize_job_inputs()
         self.initialize_variables()
         if self.boot_new_image:
+            if FIO_SERVER in self.traffic_profile:
+                self.reboot_servers()
             self.boot_fs()
             self.verify_dpcsh_started()
-            self.create_vol_and_attach()
-            self.connect_the_volume_to_host()
-        else:
-            self.clear_uart_logs()
+            if FIO_SERVER in self.traffic_profile:
+                self.create_vol_and_attach()
+                self.connect_the_volume_to_host()
+            if LE in self.traffic_profile:
+                self.restart_dpcsh()
+                self.setup_le_firewall()
+        # else:
+        #     self.clear_uart_logs()
 
         fun_test.shared_variables["run_on_f1"] = self.run_on_f1
         fun_test.shared_variables["fs"] = self.fs
@@ -70,13 +76,21 @@ class MyScript(FunTestScript):
     def cleanup(self):
         fun_test.log("Script-level cleanup")
 
+    def reboot_servers(self):
+        for f1 in self.run_on_f1:
+            host_handle = self.get_host_handle(f1)
+            host_handle.reboot()
+            # host_handle.disconnect()
+
     def verify_dpcsh_started(self):
         for f1 in self.run_on_f1:
             fun_test.log("Verifying if the DPCSH has started on F1 {}".format(f1))
             dpcsh_pid = self.come_handle.get_process_id_by_pattern("/nvme{}".format(f1))
             if not dpcsh_pid:
                 self.come_handle.enter_sudo()
-                self.come_handle.command("cd /scratch/FunSDK/bin/Linux")
+                output = self.come_handle.command("cd /scratch/FunSDK/bin/Linux")
+                if "No such file" in output:
+                    self.come_handle.command("cd /tmp/workspace/FunSDK/bin/Linux")
                 self.come_handle.command(
                     "./dpcsh --pcie_nvme_sock=/dev/nvme{f1} --nvme_cmd_timeout=600000"
                     " --tcp_proxy=4222{f1} &> /tmp/f1_{f1}_dpc.txt &".format(f1=f1))
@@ -85,6 +99,79 @@ class MyScript(FunTestScript):
             else:
                 fun_test.log("Dpcsh is already running for F1 {}".format(f1))
         fun_test.test_assert(True, "DPCSH running")
+
+    def setup_le_firewall(self):
+        vm_info = {}
+        for f1 in self.run_on_f1:
+            vm = self.le_vm_details[str(f1)]
+            handle = Linux(host_ip=vm["host_ip"], ssh_username=vm["ssh_username"], ssh_password=vm["ssh_password"])
+            vm_info[vm["name"]] = {}
+            vm_info[vm["name"]]["handle"] = handle
+            vm_info[vm["name"]].update(vm)
+            vm_info[vm["name"]]["f1"] = f1
+
+        for vm, vm_details in vm_info.iteritems():
+            self.kill_le_firewall(vm_details)
+
+        le_thread_map = {}
+        for vm, vm_details in vm_info.iteritems():
+            fun_test.log("Initiating Le firewall traffic on f1: {} from VM: {}".format(vm_details["f1"], vm))
+            le_thread_map[vm] = fun_test.execute_thread_after(func=self.initiate_le_firewall,
+                                                              time_in_seconds=5,
+                                                              vm_details=vm_details)
+
+        for vm, vm_details in vm_info.iteritems():
+            fun_test.join_thread(le_thread_map[vm])
+            if fun_test.shared_variables["le_firewall_status_{}".format(vm_details["f1"])]:
+                fun_test.log("Le-firewall successfully initiated on the f1: {} VM: {}".format(vm_details["f1"], vm))
+            else:
+                fun_test.test_assert(False, "Le-firewall failed to initialize")
+
+    def restart_dpcsh(self):
+        for f1 in self.run_on_f1:
+            dpcsh_pid = self.come_handle.get_process_id_by_pattern("/nvme{}".format(f1))
+            if dpcsh_pid:
+                self.come_handle.kill_process(process_id=dpcsh_pid, signal=9)
+        self.verify_dpcsh_started()
+
+    def initiate_le_firewall(self, vm_details):
+        tmp_run_time = 30
+        fun_test.shared_variables["le_firewall_status_{}".format(vm_details["f1"])] = True
+        cmd = '''python run_nu_transit_only.py --inputs '{"speed":"SPEED_100G", "run_time":%s, "load": %s,"initiate":true, "f1": %s}' ''' % (
+            tmp_run_time, self.traffic_profile[LE]["per"], vm_details["f1"])
+        if vm_details["f1"] == 1:
+            vm_details["handle"].enter_sudo()
+        vm_details["handle"].command('export WORKSPACE="{}"'.format(vm_details["WORKSPACE"]))
+        vm_details["handle"].command('export PYTHONPATH="{}"'.format(vm_details["PYTHONPATH"]))
+        vm_details["handle"].command("cd {}".format(vm_details["SCRIPT_PATH"]))
+        start = time.time()
+        output = vm_details["handle"].command(cmd, timeout=600)
+        time_taken = time.time() - start
+        vm_details["handle"].destroy()
+        result = True
+        if "CRITICAL" in output or time_taken < 100:
+            result = False
+            fun_test.shared_variables["le_firewall_status_{}".format(vm_details["f1"])] = False
+        fun_test.test_assert(result, "Le initiate started on the VM: {}".format(vm_details["name"]))
+
+    def kill_le_firewall(self, vm_details):
+        result = False
+        try:
+            pid = self.check_if_le_firewall_is_running(vm_details)
+            if pid:
+                vm_details["handle"].kill_process(pid, signal=9)
+                fun_test.log("Process killed successfully on the VM : {}".format(vm_details["name"]))
+            else:
+                fun_test.log("The process is not running")
+            result = True
+        except Exception as ex:
+            fun_test.log(ex)
+        return result
+
+    def check_if_le_firewall_is_running(self, vm_detail):
+        process_id = vm_detail["handle"].get_process_id_by_pattern("run_nu_transit_only.py")
+        result = process_id if process_id else False
+        return result
 
     def create_4_et_2_ec_volume(self):
         for f1 in self.run_on_f1:
@@ -420,6 +507,7 @@ class FrsTestCase(FunTestCase):
         self.stats_thread_map = {}
         thread_count = 0
         time_in_seconds = 5
+        fun_test.shared_variables["stat_collection_threads_status"] = True
         for system in self.stats_info:
             if system == "files":
                 continue
@@ -447,7 +535,7 @@ class FrsTestCase(FunTestCase):
                 thread_count += 1
                 time_in_seconds += 1
                 fun_test.test_assert(True, "Started capturing the {} stats {}".format(stat_name, heading))
-        fun_test.sleep("For apps too start", seconds=time_in_seconds)
+        fun_test.sleep("For stats to start", seconds=time_in_seconds)
 
         # for i in range(thread_count):
         #     fun_test.join_thread(self.stats_thread_map[i])
@@ -462,10 +550,18 @@ class FrsTestCase(FunTestCase):
             f1 = kwargs["f1"]
             heading = kwargs["heading"]
             kwargs["come_handle"] = come_handle
-            func(self, **kwargs)
-            fun_test.test_assert(True, "Stats collected for stat :{} on f1 :{} {}".format(stat_name,
-                                                                                          f1,
-                                                                                          heading))
+
+            linker = fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]
+            while linker['run_status'] and fun_test.shared_variables["stat_collection_threads_status"]:
+                try:
+                    func(self, **kwargs)
+                except:
+                    fun_test.shared_variables["stat_collection_threads_status"] = False
+                    break
+            fun_test.test_assert(fun_test.shared_variables["stat_collection_threads_status"],
+                                 "Stats collected for stat :{} on f1 :{} {}".format(stat_name,
+                                                                                    f1,
+                                                                                    heading))
             come_handle.destroy()
             return
 
@@ -482,371 +578,351 @@ class FrsTestCase(FunTestCase):
             stat_name = kwargs["stat_name"]
             heading = kwargs["heading"]
             kwargs["bmc_handle"] = bmc_handle
-            func(self, **kwargs)
+
+            linker = fun_test.shared_variables["stat_{}".format(stat_name)]
+            while linker["run_status"] and fun_test.shared_variables["stat_collection_threads_status"]:
+                try:
+                    func(self, **kwargs)
+                except Exception as ex:
+                    fun_test.log(ex)
+                    fun_test.shared_variables["stat_collection_threads_status"] = False
+                    break
             bmc_handle.destroy()
-            fun_test.test_assert(True, "Stats collected for stat :{} {}".format(stat_name, heading))
+            fun_test.test_assert(fun_test.shared_variables["stat_collection_threads_status"], "Stats collected for stat :{} {}".format(stat_name, heading))
             return
 
         return function_wrapper
 
     @stats_deco
     def func_eqm(self, f1, heading, stat_name, come_handle):
+        fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]["count"] += 1
         linker = fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]
-        while linker['run_status']:
-            fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]["count"] += 1
-            linker = fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]
-            one_dataset = {}
-            dpcsh_output = dpcsh_commands.eqm(come_handle=come_handle, f1=f1)
-            one_dataset["time"] = datetime.datetime.now()
-            one_dataset["output"] = dpcsh_output
-            one_dataset["time1"] = datetime.datetime.now()
-            one_dataset["output1"] = dpcsh_output
-            self.add_data_to_file(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+        one_dataset = {}
+        dpcsh_output = dpcsh_commands.eqm(come_handle=come_handle, f1=f1)
+        one_dataset["time"] = datetime.datetime.now()
+        one_dataset["output"] = dpcsh_output
+        one_dataset["time1"] = datetime.datetime.now()
+        one_dataset["output1"] = dpcsh_output
+        self.add_data_to_file(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
 
-            fun_test.sleep("Before capturing next set of data", seconds=5)
+        fun_test.sleep("Before capturing next set of data", seconds=5)
 
-            dpcsh_output = dpcsh_commands.eqm(come_handle=come_handle, f1=f1)
-            one_dataset["time"] = datetime.datetime.now()
-            one_dataset["output"] = dpcsh_output
-            one_dataset["time2"] = datetime.datetime.now()
-            one_dataset["output2"] = dpcsh_output
-            self.add_data_to_file(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
-            difference_dict = stats_calculation.dict_difference(one_dataset, stat_name)
-            one_dataset["time"] = datetime.datetime.now()
-            one_dataset["output"] = difference_dict
-            self.add_data_to_file(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset,
-                                  heading=heading)
+        dpcsh_output = dpcsh_commands.eqm(come_handle=come_handle, f1=f1)
+        one_dataset["time"] = datetime.datetime.now()
+        one_dataset["output"] = dpcsh_output
+        one_dataset["time2"] = datetime.datetime.now()
+        one_dataset["output2"] = dpcsh_output
+        self.add_data_to_file(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+        difference_dict = stats_calculation.dict_difference(one_dataset, stat_name)
+        one_dataset["time"] = datetime.datetime.now()
+        one_dataset["output"] = difference_dict
+        self.add_data_to_file(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset,
+                              heading=heading)
 
-            if self.stats_info["come"][stat_name].get("upload_to_es", False):
-                dpcsh_data = self.simplify_eqm_stats(difference_dict)
-                time_taken = self.upload_dpcsh_data_to_elk(dpcsh_data=dpcsh_data, f1=f1, stat_name=stat_name)
+        if self.stats_info["come"][stat_name].get("upload_to_es", False):
+            dpcsh_data = self.simplify_eqm_stats(difference_dict)
+            time_taken = self.upload_dpcsh_data_to_elk(dpcsh_data=dpcsh_data, f1=f1, stat_name=stat_name)
 
-            fun_test.sleep("before next iteration", seconds=self.stats_interval)
+        fun_test.sleep("before next iteration", seconds=self.stats_interval)
 
     @stats_deco
     def func_le(self, f1, heading, stat_name, come_handle):
-        linker = fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]
-        while linker['run_status']:
-            one_dataset = {}
-            dpcsh_output = dpcsh_commands.le(come_handle=come_handle, f1=f1)
-            one_dataset["time"] = datetime.datetime.now()
-            one_dataset["output"] = dpcsh_output
-            one_dataset["time1"] = datetime.datetime.now()
-            one_dataset["output1"] = dpcsh_output
-            self.add_data_to_file(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+        one_dataset = {}
+        dpcsh_output = dpcsh_commands.le(come_handle=come_handle, f1=f1)
+        one_dataset["time"] = datetime.datetime.now()
+        one_dataset["output"] = dpcsh_output
+        one_dataset["time1"] = datetime.datetime.now()
+        one_dataset["output1"] = dpcsh_output
+        self.add_data_to_file(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
 
-            fun_test.sleep("Before capturing next set of data", seconds=5)
+        fun_test.sleep("Before capturing next set of data", seconds=5)
 
-            dpcsh_output = dpcsh_commands.le(come_handle=come_handle, f1=f1)
-            one_dataset["time"] = datetime.datetime.now()
-            one_dataset["output"] = dpcsh_output
-            one_dataset["time2"] = datetime.datetime.now()
-            one_dataset["output2"] = dpcsh_output
-            self.add_data_to_file(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+        dpcsh_output = dpcsh_commands.le(come_handle=come_handle, f1=f1)
+        one_dataset["time"] = datetime.datetime.now()
+        one_dataset["output"] = dpcsh_output
+        one_dataset["time2"] = datetime.datetime.now()
+        one_dataset["output2"] = dpcsh_output
+        self.add_data_to_file(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
 
-            difference_dict = stats_calculation.dict_difference(one_dataset, stat_name)
-            one_dataset["time"] = datetime.datetime.now()
-            one_dataset["output"] = difference_dict
-            self.add_data_to_file(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset,
-                                  heading=heading)
+        difference_dict = stats_calculation.dict_difference(one_dataset, stat_name)
+        one_dataset["time"] = datetime.datetime.now()
+        one_dataset["output"] = difference_dict
+        self.add_data_to_file(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset,
+                              heading=heading)
 
-            if self.stats_info["come"][stat_name].get("upload_to_es", False):
-                dpcsh_data = self.simplify_le_stats(difference_dict)
-                time_taken = self.upload_dpcsh_data_to_elk(dpcsh_data=dpcsh_data, f1=f1, stat_name=stat_name)
-            fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]["count"] += 1
-            # fun_test.sleep("before next iteration", seconds=self.details["interval"])
-            fun_test.sleep("before next iteration", seconds=self.stats_interval)
+        if self.stats_info["come"][stat_name].get("upload_to_es", False):
+            dpcsh_data = self.simplify_le_stats(difference_dict)
+            time_taken = self.upload_dpcsh_data_to_elk(dpcsh_data=dpcsh_data, f1=f1, stat_name=stat_name)
+        fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]["count"] += 1
+        # fun_test.sleep("before next iteration", seconds=self.details["interval"])
+        fun_test.sleep("before next iteration", seconds=self.stats_interval)
 
     @stats_deco
     def func_cdu(self, f1, heading, stat_name, come_handle):
-        linker = fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]
-        while linker["run_status"]:
-            one_dataset = {}
-            dpcsh_output = dpcsh_commands.cdu(come_handle=come_handle, f1=f1)
-            one_dataset["time"] = datetime.datetime.now()
-            one_dataset["output"] = dpcsh_output
-            one_dataset["time1"] = datetime.datetime.now()
-            one_dataset["output1"] = dpcsh_output
-            self.add_data_to_file(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+        one_dataset = {}
+        dpcsh_output = dpcsh_commands.cdu(come_handle=come_handle, f1=f1)
+        one_dataset["time"] = datetime.datetime.now()
+        one_dataset["output"] = dpcsh_output
+        one_dataset["time1"] = datetime.datetime.now()
+        one_dataset["output1"] = dpcsh_output
+        self.add_data_to_file(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
 
-            fun_test.sleep("Before capturing next set of data", seconds=5)
+        fun_test.sleep("Before capturing next set of data", seconds=5)
 
-            dpcsh_output = dpcsh_commands.cdu(come_handle=come_handle, f1=f1)
-            one_dataset["time"] = datetime.datetime.now()
-            one_dataset["output"] = dpcsh_output
-            one_dataset["time2"] = datetime.datetime.now()
-            one_dataset["output2"] = dpcsh_output
-            self.add_data_to_file(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+        dpcsh_output = dpcsh_commands.cdu(come_handle=come_handle, f1=f1)
+        one_dataset["time"] = datetime.datetime.now()
+        one_dataset["output"] = dpcsh_output
+        one_dataset["time2"] = datetime.datetime.now()
+        one_dataset["output2"] = dpcsh_output
+        self.add_data_to_file(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
 
-            difference_dict = stats_calculation.dict_difference(one_dataset, stat_name)
-            one_dataset["time"] = datetime.datetime.now()
-            one_dataset["output"] = difference_dict
-            self.add_data_to_file(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset,
-                                  heading=heading)
+        difference_dict = stats_calculation.dict_difference(one_dataset, stat_name)
+        one_dataset["time"] = datetime.datetime.now()
+        one_dataset["output"] = difference_dict
+        self.add_data_to_file(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset,
+                              heading=heading)
 
-            if self.stats_info["come"][stat_name].get("upload_to_es", False):
-                dpcsh_data = self.simplify_cdu_stats(difference_dict)
-                time_taken = self.upload_dpcsh_data_to_elk(dpcsh_data=dpcsh_data, f1=f1, stat_name=stat_name)
+        if self.stats_info["come"][stat_name].get("upload_to_es", False):
+            dpcsh_data = self.simplify_cdu_stats(difference_dict)
+            time_taken = self.upload_dpcsh_data_to_elk(dpcsh_data=dpcsh_data, f1=f1, stat_name=stat_name)
 
-            fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]["count"] += 1
-            fun_test.sleep("before next iteration", seconds=self.stats_interval)
+        fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]["count"] += 1
+        fun_test.sleep("before next iteration", seconds=self.stats_interval)
 
     @stats_deco
     def func_pc_dma(self, f1, heading, stat_name, come_handle):
         linker = fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]
-        while linker['run_status']:
-            linker = fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]
-            one_dataset = {}
-            dpcsh_output = dpcsh_commands.pc_dma(come_handle=come_handle, f1=f1)
-            one_dataset["time"] = datetime.datetime.now()
-            one_dataset["output"] = dpcsh_output
-            one_dataset["time1"] = datetime.datetime.now()
-            one_dataset["output1"] = dpcsh_output
-            self.add_data_to_file(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+        one_dataset = {}
+        dpcsh_output = dpcsh_commands.pc_dma(come_handle=come_handle, f1=f1)
+        one_dataset["time"] = datetime.datetime.now()
+        one_dataset["output"] = dpcsh_output
+        one_dataset["time1"] = datetime.datetime.now()
+        one_dataset["output1"] = dpcsh_output
+        self.add_data_to_file(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
 
-            fun_test.sleep("Before capturing next set of data", seconds=5)
+        fun_test.sleep("Before capturing next set of data", seconds=5)
 
-            dpcsh_output = dpcsh_commands.pc_dma(come_handle=come_handle, f1=f1)
-            one_dataset["time"] = datetime.datetime.now()
-            one_dataset["output"] = dpcsh_output
-            one_dataset["time2"] = datetime.datetime.now()
-            one_dataset["output2"] = dpcsh_output
-            self.add_data_to_file(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+        dpcsh_output = dpcsh_commands.pc_dma(come_handle=come_handle, f1=f1)
+        one_dataset["time"] = datetime.datetime.now()
+        one_dataset["output"] = dpcsh_output
+        one_dataset["time2"] = datetime.datetime.now()
+        one_dataset["output2"] = dpcsh_output
+        self.add_data_to_file(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
 
-            difference_dict = stats_calculation.dict_difference(one_dataset, stat_name)
-            one_dataset["time"] = datetime.datetime.now()
-            one_dataset["output"] = difference_dict
-            self.add_data_to_file(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset,
-                                  heading=heading)
+        difference_dict = stats_calculation.dict_difference(one_dataset, stat_name)
+        one_dataset["time"] = datetime.datetime.now()
+        one_dataset["output"] = difference_dict
+        self.add_data_to_file(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset,
+                              heading=heading)
 
-            if self.stats_info["come"][stat_name].get("upload_to_es", False):
-                dpcsh_data = self.simplify_pc_dma_stats(difference_dict)
-                time_taken = self.upload_dpcsh_data_to_elk(dpcsh_data=dpcsh_data, f1=f1, stat_name=stat_name)
+        if self.stats_info["come"][stat_name].get("upload_to_es", False):
+            dpcsh_data = self.simplify_pc_dma_stats(difference_dict)
+            time_taken = self.upload_dpcsh_data_to_elk(dpcsh_data=dpcsh_data, f1=f1, stat_name=stat_name)
 
-            fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]["count"] += 1
-            fun_test.sleep("before next iteration", seconds=self.stats_interval)
+        fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]["count"] += 1
+        fun_test.sleep("before next iteration", seconds=self.stats_interval)
 
     @stats_deco
     def func_bam(self, f1, heading, stat_name, come_handle):
         linker = fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]
-        while linker['run_status']:
-            linker = fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]
-            one_dataset = {}
-            dpcsh_output = dpcsh_commands.bam(come_handle=come_handle, f1=f1)
-            one_dataset["time"] = datetime.datetime.now()
-            one_dataset["output"] = dpcsh_output
-            fun_test.sleep("before next iteration", seconds=self.stats_interval)
-            self.add_data_to_file(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
-            fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]["count"] += 1
+        one_dataset = {}
+        dpcsh_output = dpcsh_commands.bam(come_handle=come_handle, f1=f1)
+        one_dataset["time"] = datetime.datetime.now()
+        one_dataset["output"] = dpcsh_output
+        fun_test.sleep("before next iteration", seconds=self.stats_interval)
+        self.add_data_to_file(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+        fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]["count"] += 1
 
     @stats_deco
     def func_debug_vp_util(self, f1, heading, stat_name, come_handle):
         linker = fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]
-        while linker["run_status"]:
-            linker = fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]
-            one_dataset = {}
-            dpcsh_output = dpcsh_commands.debug_vp_utils(come_handle=come_handle, f1=f1)
-            one_dataset["time"] = datetime.datetime.now()
-            one_dataset["output"] = dpcsh_output
-            time_taken = 0
-            if dpcsh_output:
-                if self.upload_to_file:
-                    self.add_data_to_file(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
-                cal_dpc_out = stats_calculation.filter_dict(one_dataset, stat_name)
-                one_dataset["output"] = cal_dpc_out
-                if self.upload_to_file:
-                    self.add_data_to_file(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset,
-                                          heading=heading)
-                if self.stats_info["come"][stat_name].get("upload_to_es", False):
-                    # dpcsh_data = self.simplify_debug_vp_util(dpcsh_output)
-                    dpcsh_data = self.simplify_debug_vp_util_core_utilisation(dpcsh_output)
-                    time_taken = self.upload_dpcsh_data_to_elk(dpcsh_data=dpcsh_data, f1=f1, stat_name=stat_name + "_PER_CLUSTER")
-            fun_test.sleep("Before next iteration", seconds=self.stats_interval)
+        one_dataset = {}
+        dpcsh_output = dpcsh_commands.debug_vp_utils(come_handle=come_handle, f1=f1)
+        one_dataset["time"] = datetime.datetime.now()
+        one_dataset["output"] = dpcsh_output
+        time_taken = 0
+        if dpcsh_output:
+            if self.upload_to_file:
+                self.add_data_to_file(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+            cal_dpc_out = stats_calculation.filter_dict(one_dataset, stat_name)
+            one_dataset["output"] = cal_dpc_out
+            if self.upload_to_file:
+                self.add_data_to_file(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset,
+                                      heading=heading)
+            if self.stats_info["come"][stat_name].get("upload_to_es", False):
+                # dpcsh_data = self.simplify_debug_vp_util(dpcsh_output)
+                dpcsh_data = self.simplify_debug_vp_util_core_utilisation(dpcsh_output)
+                time_taken = self.upload_dpcsh_data_to_elk(dpcsh_data=dpcsh_data, f1=f1, stat_name=stat_name + "_PER_CLUSTER")
+        fun_test.sleep("Before next iteration", seconds=self.stats_interval)
 
-            fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]["count"] += 1
+        fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]["count"] += 1
 
     @stats_deco
     def func_hbm(self, f1, heading, stat_name, come_handle):
         linker = fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]
-        while linker['run_status']:
-            linker = fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]
-            one_dataset = {}
-            dpcsh_output = dpcsh_commands.hbm(come_handle=come_handle, f1=f1)
-            one_dataset["time"] = datetime.datetime.now()
-            one_dataset["output"] = dpcsh_output
-            one_dataset["time1"] = datetime.datetime.now()
-            one_dataset["output1"] = dpcsh_output
-            if self.upload_to_file:
-                self.add_data_to_file(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+        one_dataset = {}
+        dpcsh_output = dpcsh_commands.hbm(come_handle=come_handle, f1=f1)
+        one_dataset["time"] = datetime.datetime.now()
+        one_dataset["output"] = dpcsh_output
+        one_dataset["time1"] = datetime.datetime.now()
+        one_dataset["output1"] = dpcsh_output
+        if self.upload_to_file:
+            self.add_data_to_file(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
 
-            fun_test.sleep("Before capturing next set of data", seconds=5)
+        fun_test.sleep("Before capturing next set of data", seconds=5)
 
-            dpcsh_output = dpcsh_commands.hbm(come_handle=come_handle, f1=f1)
-            one_dataset["time"] = datetime.datetime.now()
-            one_dataset["output"] = dpcsh_output
-            one_dataset["time2"] = datetime.datetime.now()
-            one_dataset["output2"] = dpcsh_output
-            if self.upload_to_file:
-                self.add_data_to_file(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+        dpcsh_output = dpcsh_commands.hbm(come_handle=come_handle, f1=f1)
+        one_dataset["time"] = datetime.datetime.now()
+        one_dataset["output"] = dpcsh_output
+        one_dataset["time2"] = datetime.datetime.now()
+        one_dataset["output2"] = dpcsh_output
+        if self.upload_to_file:
+            self.add_data_to_file(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
 
-            difference_dict = stats_calculation.dict_difference(one_dataset, stat_name)
-            one_dataset["time"] = datetime.datetime.now()
-            one_dataset["output"] = difference_dict
-            if self.upload_to_file:
-                self.add_data_to_file(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset,
-                                      heading=heading)
+        difference_dict = stats_calculation.dict_difference(one_dataset, stat_name)
+        one_dataset["time"] = datetime.datetime.now()
+        one_dataset["output"] = difference_dict
+        if self.upload_to_file:
+            self.add_data_to_file(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset,
+                                  heading=heading)
 
-            if self.stats_info["come"][stat_name].get("upload_to_es", False):
-                dpcsh_data = self.simplify_hbm_stats(difference_dict)
-                time_taken = self.upload_dpcsh_data_to_elk(dpcsh_data=dpcsh_data, f1=f1, stat_name=stat_name)
+        if self.stats_info["come"][stat_name].get("upload_to_es", False):
+            dpcsh_data = self.simplify_hbm_stats(difference_dict)
+            time_taken = self.upload_dpcsh_data_to_elk(dpcsh_data=dpcsh_data, f1=f1, stat_name=stat_name)
 
-            # fun_test.sleep("before next iteration", seconds=self.details["interval"])
+        # fun_test.sleep("before next iteration", seconds=self.details["interval"])
 
-            fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]["count"] += 1
-            fun_test.sleep("before next iteration", seconds=self.stats_interval)
+        fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]["count"] += 1
+        fun_test.sleep("before next iteration", seconds=self.stats_interval)
 
     @stats_deco
     def func_ddr(self, f1, heading, stat_name, come_handle):
         linker = fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]
-        while linker['run_status']:
-            linker = fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]
-            one_dataset = {}
-            dpcsh_output = dpcsh_commands.ddr(come_handle=come_handle, f1=f1)
-            one_dataset["time"] = datetime.datetime.now()
-            one_dataset["output"] = dpcsh_output
-            one_dataset["time1"] = datetime.datetime.now()
-            one_dataset["output1"] = dpcsh_output
-            if self.upload_to_file:
-                self.add_data_to_file(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+        one_dataset = {}
+        dpcsh_output = dpcsh_commands.ddr(come_handle=come_handle, f1=f1)
+        one_dataset["time"] = datetime.datetime.now()
+        one_dataset["output"] = dpcsh_output
+        one_dataset["time1"] = datetime.datetime.now()
+        one_dataset["output1"] = dpcsh_output
+        if self.upload_to_file:
+            self.add_data_to_file(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
 
-            fun_test.sleep("Before capturing next set of data", seconds=5)
+        fun_test.sleep("Before capturing next set of data", seconds=5)
 
-            dpcsh_output = dpcsh_commands.ddr(come_handle=come_handle, f1=f1)
-            one_dataset["time"] = datetime.datetime.now()
-            one_dataset["output"] = dpcsh_output
-            one_dataset["time2"] = datetime.datetime.now()
-            one_dataset["output2"] = dpcsh_output
-            if self.upload_to_file:
-                self.add_data_to_file(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+        dpcsh_output = dpcsh_commands.ddr(come_handle=come_handle, f1=f1)
+        one_dataset["time"] = datetime.datetime.now()
+        one_dataset["output"] = dpcsh_output
+        one_dataset["time2"] = datetime.datetime.now()
+        one_dataset["output2"] = dpcsh_output
+        if self.upload_to_file:
+            self.add_data_to_file(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
 
-            difference_dict = stats_calculation.dict_difference(one_dataset, stat_name)
-            one_dataset["time"] = datetime.datetime.now()
-            one_dataset["output"] = difference_dict
-            if self.upload_to_file:
-                self.add_data_to_file(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset,
-                                      heading=heading)
+        difference_dict = stats_calculation.dict_difference(one_dataset, stat_name)
+        one_dataset["time"] = datetime.datetime.now()
+        one_dataset["output"] = difference_dict
+        if self.upload_to_file:
+            self.add_data_to_file(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), one_dataset,
+                                  heading=heading)
 
-            if self.stats_info["come"][stat_name].get("upload_to_es", False):
-                dpcsh_data = self.simplify_ddr_stats(difference_dict)
-                time_taken = self.upload_dpcsh_data_to_elk(dpcsh_data=dpcsh_data, f1=f1, stat_name=stat_name)
+        if self.stats_info["come"][stat_name].get("upload_to_es", False):
+            dpcsh_data = self.simplify_ddr_stats(difference_dict)
+            time_taken = self.upload_dpcsh_data_to_elk(dpcsh_data=dpcsh_data, f1=f1, stat_name=stat_name)
 
-            # fun_test.sleep("before next iteration", seconds=self.details["interval"])
-            fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]["count"] += 1
-            fun_test.sleep("before next iteration", seconds=self.stats_interval)
+        # fun_test.sleep("before next iteration", seconds=self.details["interval"])
+        fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]["count"] += 1
+        fun_test.sleep("before next iteration", seconds=self.stats_interval)
 
     @stats_deco
     def func_execute_leaks(self, f1, heading, stat_name, come_handle):
         linker = fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]
-        while linker["run_status"]:
-            linker = fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]
-            one_dataset = {}
-            dpcsh_output = dpcsh_commands.execute_leaks(come_handle=come_handle, f1=f1)
-            one_dataset["time"] = datetime.datetime.now()
-            one_dataset["output"] = dpcsh_output
-            if self.upload_to_file:
-                self.add_data_to_file(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
-            fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]["count"] += 1
-            fun_test.sleep("before next iteration", seconds=10)
+        one_dataset = {}
+        dpcsh_output = dpcsh_commands.execute_leaks(come_handle=come_handle, f1=f1)
+        one_dataset["time"] = datetime.datetime.now()
+        one_dataset["output"] = dpcsh_output
+        if self.upload_to_file:
+            self.add_data_to_file(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+        fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]["count"] += 1
+        fun_test.sleep("before next iteration", seconds=10)
 
     @stats_deco_bmc
     def func_power(self, heading, stat_name, bmc_handle):
         linker = fun_test.shared_variables["stat_{}".format(stat_name)]
-        while linker["run_status"]:
-            linker = fun_test.shared_variables["stat_{}".format(stat_name)]
-            raw_output, cal_output, pro_data = bmc_commands.power_manager(bmc_handle=bmc_handle)
-            time_now = datetime.datetime.now()
-            print_data = {"output": raw_output, "time": time_now}
-            if self.upload_to_file:
-                self.add_data_to_file(getattr(self, "f_{}".format(stat_name)), print_data, heading=heading)
-            print_data = {"output": cal_output, "time": time_now}
-            if self.upload_to_file:
-                self.add_data_to_file(getattr(self, "f_calculated_{}".format(stat_name)), print_data, heading=heading)
-            time_taken = 0
-            if self.stats_info["bmc"][stat_name].get("upload_to_es", False):
-                time_taken = self.upload_dpcsh_data_to_elk(dpcsh_data=pro_data, stat_name=stat_name)
-            fun_test.sleep("before next iteration", seconds=self.stats_interval)
-            if heading == "During traffic" and self.add_to_database:
-                self.add_to_database = False
-                fun_test.log("Result : {}".format(pro_data))
-                self.add_to_data_base(pro_data)
-                fun_test.log("Data added to the database, Data: {}".format(pro_data))
-            fun_test.shared_variables["stat_{}".format(stat_name)]["count"] += 1
+        raw_output, cal_output, pro_data = bmc_commands.power_manager(bmc_handle=bmc_handle)
+        time_now = datetime.datetime.now()
+        raw_data = {"output": raw_output, "time": time_now}
+        print_data = {"output": cal_output, "time": time_now}
+        if self.upload_to_file:
+            self.add_data_to_file(getattr(self, "f_{}".format(stat_name)), raw_data, heading=heading)
+            self.add_data_to_file(getattr(self, "f_calculated_{}".format(stat_name)), print_data, heading=heading)
+        time_taken = 0
+        if self.stats_info["bmc"][stat_name].get("upload_to_es", False):
+            time_taken = self.upload_dpcsh_data_to_elk(dpcsh_data=pro_data, stat_name=stat_name)
+        fun_test.sleep("before next iteration", seconds=self.stats_interval)
+        if heading == "During traffic" and self.add_to_database:
+            self.add_to_database = False
+            fun_test.log("Result : {}".format(pro_data))
+            self.add_to_data_base(pro_data)
+            fun_test.log("Data added to the database, Data: {}".format(pro_data))
+        fun_test.shared_variables["stat_{}".format(stat_name)]["count"] += 1
 
     @stats_deco_bmc
     def func_die_temperature(self, heading, stat_name, bmc_handle):
         linker = fun_test.shared_variables["stat_{}".format(stat_name)]
-        while linker['run_status']:
-            linker = fun_test.shared_variables["stat_{}".format(stat_name)]
-            output = bmc_commands.die_temperature(bmc_handle)
-            time_now = datetime.datetime.now()
-            print_data = {"output": output, "time": time_now}
-            if self.upload_to_file:
-                self.add_data_to_file(getattr(self, "f_{}".format(stat_name)), print_data, heading=heading)
-            fun_test.sleep("before next iteration")
-            fun_test.shared_variables["stat_{}".format(stat_name)]["count"] += 1
+        output = bmc_commands.die_temperature(bmc_handle)
+        time_now = datetime.datetime.now()
+        print_data = {"output": output, "time": time_now}
+        if self.upload_to_file:
+            self.add_data_to_file(getattr(self, "f_{}".format(stat_name)), print_data, heading=heading)
+        fun_test.sleep("before next iteration")
+        fun_test.shared_variables["stat_{}".format(stat_name)]["count"] += 1
 
     @stats_deco
     def func_debug_memory(self, f1, heading, stat_name, come_handle):
         linker = fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]
-        dpcsh_output_list = []
-        while linker['run_status']:
-            linker = fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]
-            one_dataset = {}
-            dpcsh_output = dpcsh_commands.debug_memory(come_handle=come_handle, f1=f1)
-            one_dataset["time"] = datetime.datetime.now()
-            one_dataset["output"] = dpcsh_output
-            if self.upload_to_file:
-                self.add_data_to_file(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
+        one_dataset = {}
+        dpcsh_output = dpcsh_commands.debug_memory(come_handle=come_handle, f1=f1)
+        one_dataset["time"] = datetime.datetime.now()
+        one_dataset["output"] = dpcsh_output
+        if self.upload_to_file:
+            self.add_data_to_file(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
 
-            differnce_data_set = {}
-            difference_output = debug_memory_calculation.debug_difference(self.initial_debug_memory_stats, one_dataset,
-                                                                          f1=f1)
-            differnce_data_set["output"] = difference_output
-            differnce_data_set["time"] = datetime.datetime.now()
-            differnce_data_set["time_difference"] = difference_output["time_difference"]
-            if self.upload_to_file:
-                self.add_data_to_file(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), differnce_data_set,
-                                      heading=heading)
+        differnce_data_set = {}
+        difference_output = debug_memory_calculation.debug_difference(self.initial_debug_memory_stats, one_dataset,
+                                                                      f1=f1)
+        differnce_data_set["output"] = difference_output
+        differnce_data_set["time"] = datetime.datetime.now()
+        differnce_data_set["time_difference"] = difference_output["time_difference"]
+        if self.upload_to_file:
+            self.add_data_to_file(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), differnce_data_set,
+                                  heading=heading)
 
-            dpcsh_output_list.append(one_dataset)
-            fun_test.sleep("before next iteration", seconds=3)
-            fun_test.shared_variables["stat_{}".format(stat_name)]["count"] += 1
+        # dpcsh_output_list.append(one_dataset)
+        fun_test.sleep("before next iteration", seconds=3)
+        fun_test.shared_variables["stat_{}".format(stat_name)]["count"] += 1
 
     @stats_deco
     def func_storage_iops(self, f1, heading, stat_name, come_handle):
         linker = fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]
-        while linker['run_status']:
-            linker = fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]
-            one_dataset = {}
-            dpcsh_output = dpcsh_commands.storage_iops(come_handle=come_handle, f1=f1)
-            one_dataset["time1"] = datetime.datetime.now()
-            one_dataset["output1"] = dpcsh_output
+        one_dataset = {}
+        dpcsh_output = dpcsh_commands.storage_iops(come_handle=come_handle, f1=f1)
+        one_dataset["time1"] = datetime.datetime.now()
+        one_dataset["output1"] = dpcsh_output
 
-            fun_test.sleep("Before capturing next set of data", seconds=5)
+        fun_test.sleep("Before capturing next set of data", seconds=5)
 
-            dpcsh_output = dpcsh_commands.storage_iops(come_handle=come_handle, f1=f1)
-            one_dataset["time2"] = datetime.datetime.now()
-            one_dataset["output2"] = dpcsh_output
+        dpcsh_output = dpcsh_commands.storage_iops(come_handle=come_handle, f1=f1)
+        one_dataset["time2"] = datetime.datetime.now()
+        one_dataset["output2"] = dpcsh_output
 
-            difference_dict = stats_calculation.dict_difference(one_dataset, stat_name)
-            one_dataset["time"] = datetime.datetime.now()
-            one_dataset["output"] = difference_dict
+        difference_dict = stats_calculation.dict_difference(one_dataset, stat_name)
+        one_dataset["time"] = datetime.datetime.now()
+        one_dataset["output"] = difference_dict
 
-            if self.stats_info["come"][stat_name].get("upload_to_es", False):
-                dpcsh_data = self.simplify_storage_iops_stats(difference_dict)
-                time_taken = self.upload_dpcsh_data_to_elk(dpcsh_data=dpcsh_data, f1=f1, stat_name=stat_name)
-            fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]["count"] += 1
-            fun_test.sleep("before next iteration", seconds=self.stats_interval)
+        if self.stats_info["come"][stat_name].get("upload_to_es", False):
+            dpcsh_data = self.simplify_storage_iops_stats(difference_dict)
+            time_taken = self.upload_dpcsh_data_to_elk(dpcsh_data=dpcsh_data, f1=f1, stat_name=stat_name)
+        fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]["count"] += 1
+        fun_test.sleep("before next iteration", seconds=self.stats_interval)
 
     ########## MUD ###################
     def get_debug_memory_stats_initially(self, f_debug_memory_f1_0, f_debug_memory_f1_1):
@@ -1530,7 +1606,7 @@ class FrsTestCase(FunTestCase):
 
         if LE in self.traffic_profile:
             self.restart_dpcsh()
-            self.start_le_firewall(self.duration, self.boot_new_image)
+            self.start_le_firewall(self.duration)
 
         if FIO_COME in self.traffic_profile:
             self.fio_thread_map = self.start_fio_traffic(percentage=100)
@@ -1606,57 +1682,31 @@ class FrsTestCase(FunTestCase):
         cmd = 'async rcnvme_test {}'.format(json.dumps(json_data))
         dpcsh_nocli.start_dpcsh_bg(come_handle, cmd, f1)
 
-    def start_le_firewall(self, run_time, new_image, just_kill=False):
+    def start_le_firewall(self, run_time, just_kill=False):
         run_time += 400
         vm_info = {}
 
-        for vm_number in range(2):
-            vm = getattr(self, "vm_{}".format(vm_number))
+        for f1 in self.run_on_f1:
+            vm = self.le_vm_details[str(f1)]
             handle = Linux(host_ip=vm["host_ip"], ssh_username=vm["ssh_username"], ssh_password=vm["ssh_password"])
             vm_info[vm["name"]] = {}
             vm_info[vm["name"]]["handle"] = handle
             vm_info[vm["name"]].update(vm)
+            vm_info[vm["name"]]["f1"] = f1
 
         if just_kill:
             for vm, vm_details in vm_info.iteritems():
                 self.kill_le_firewall(vm_details)
             return
-        f1 = 0
-        for vm, vm_details in vm_info.iteritems():
-            running = self.check_if_le_firewall_is_running(vm_details)
-            if running:
-                self.kill_le_firewall(vm_details)
-                running = False
-            if not running and new_image:
-                tmp_run_time = 30
-                cmd = '''python run_nu_transit_only.py --inputs '{"speed":"SPEED_100G", "run_time":%s, "initiate":true, "f1": %s}' ''' % (
-                    tmp_run_time, f1)
-                self.initiate_or_run_le_firewall(cmd, vm_details, f1)
-                f1 += 1
-                fun_test.sleep("to check if le -firewall has started on vm: {}".format(vm), seconds=10)
-                running = self.check_if_le_firewall_is_running(vm_details)
-                fun_test.test_assert(running, "Le initiate started on the VM: {}".format(vm))
-        if new_image:
-            pid_info = {}
-            time_in_seconds = 5
-            for vm, vm_details in vm_info.iteritems():
-                pid_info[vm] = fun_test.execute_thread_after(func=self.poll_untill_le_stops,
-                                                             time_in_seconds=time_in_seconds,
-                                                             vm_details=vm_details)
-                time_in_seconds += 1
-            for vm in vm_info:
-                fun_test.join_thread(pid_info[vm])
-                fun_test.test_assert(True, "Le initiate completed on the VM: {}".format(vm))
-        f1=0
-        for vm, vm_details in vm_info.iteritems():
-            cmd = '''python run_nu_transit_only.py --inputs '{"speed":"SPEED_100G", "run_time":%s, "initiate":false, "nu_tr":false, "f1":%s}' ''' % (run_time, f1)
-            self.initiate_or_run_le_firewall(cmd, vm_details)
-            fun_test.sleep("for le to start", seconds=10)
-            running = self.check_if_le_firewall_is_running(vm_details)
-            if running:
-                fun_test.test_assert(running, "Le started on VM: {}".format(vm))
-            f1 += 1
 
+        for vm, vm_details in vm_info.iteritems():
+            cmd = '''python run_nu_transit_only.py --inputs '{"speed":"SPEED_100G", "run_time":%s, "initiate":false, "nu_tr":false, "f1":%s}' ''' % (run_time, vm_details["f1"])
+            self.start_le_firewall_traffic(cmd, vm_details)
+            fun_test.sleep("for le to start")
+            running = self.check_if_le_firewall_is_running(vm_details)
+            if not running:
+                fun_test.test_assert(running, "Le started on VM: {}".format(vm))
+            vm_details["handle"].destroy()
         fun_test.sleep("For Le-firewall traffic to start", seconds=200)
 
     def kill_le_firewall(self, vm_details):
@@ -1673,16 +1723,15 @@ class FrsTestCase(FunTestCase):
             fun_test.log(ex)
         return result
 
-    def initiate_or_run_le_firewall(self, cmd, vm_details):
-        # vm_details["handle"].enter_sudo()
+    def start_le_firewall_traffic(self, cmd, vm_details):
+        if vm_details["f1"] == 1:
+            vm_details["handle"].enter_sudo()
         vm_details["handle"].command('export WORKSPACE="{}"'.format(vm_details["WORKSPACE"]))
         vm_details["handle"].command('export PYTHONPATH="{}"'.format(vm_details["PYTHONPATH"]))
         vm_details["handle"].command("cd {}".format(vm_details["SCRIPT_PATH"]))
         vm_details["handle"].start_bg_process(cmd)
+        fun_test.sleep("Wait for the Le to start")
         vm_details["handle"].command("ps -ef | grep python")
-        # vm_details["handle"].exit_sudo()
-
-        # vm_details["handle"].destroy()
 
     def check_if_le_firewall_is_running(self, vm_detail):
         process_id = vm_detail["handle"].get_process_id_by_pattern("run_nu_transit_only.py")
@@ -1985,7 +2034,7 @@ class FrsTestCase(FunTestCase):
                         app_result["{}_f1_{}".format(stat_name, f1)] = False
 
         are_all_apps_done = all(app_result.values())
-        while not are_all_apps_done:
+        while not are_all_apps_done and fun_test.shared_variables["stat_collection_threads_status"]:
             for system, system_value in self.stats_info.iteritems():
                 for stat_name, stat_value in system_value.iteritems():
                     if stat_value.get("disable", False):
@@ -2009,6 +2058,9 @@ class FrsTestCase(FunTestCase):
 
         for thread_name, thread_id in self.stats_thread_map.iteritems():
             fun_test.join_thread(thread_id)
+
+        if not fun_test.shared_variables["stat_collection_threads_status"]:
+            fun_test.test_assert(False, "Stats collection has failed: Mainly because of DPCSH failure")
 
 
 if __name__ == "__main__":

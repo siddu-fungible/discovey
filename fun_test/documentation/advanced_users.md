@@ -106,6 +106,19 @@ qa-admin@qa-ubuntu-01:/project/users/QA/regression/Integration/fun_test$ grep "d
 data_directory = '/project/users/QA/regression/database/postgresql’
 ~~~~
 
+#### Prepare logging
+~~~~
+qa-admin@qa-ubuntu-01:~$ grep log /etc/postgresql/9.5/main/postgresql.conf | egrep "(log_statement|log_directory|log_filename|logging_collector|log_min_error)"
+					# requires logging_collector to be on.
+logging_collector = on		# Enable capturing of stderr and csvlog
+# These are only used if logging_collector is on:
+log_directory = 'pg_log'		# directory where log files are written,
+log_filename = 'postgresql-%Y-%m-%d_%H%M%S.log'	# log file name pattern,
+log_min_error_statement = error	# values in order of decreasing detail:
+log_statement = 'all'			# none, ddl, mod, all
+#log_statement_stats = off
+~~~~
+
 #### Start the Postgres service
 ~~~~
 qa-admin@qa-ubuntu-01:/project/users/QA/regression/Integration/fun_test$ sudo systemctl stop postgresql
@@ -120,6 +133,8 @@ qa-admin@qa-ubuntu-01:/project/users/QA/regression/Integration/fun_test$ sudo sy
 Feb 23 07:20:42 qa-ubuntu-01 systemd[1]: Starting PostgreSQL RDBMS...
 Feb 23 07:20:42 qa-ubuntu-01 systemd[1]: Started PostgreSQL RDBMS.
 ~~~~
+
+
 
 
 ### Re-starting the web-server

@@ -124,7 +124,7 @@ class Rocetools:
 
         fun_test.debug(cmd_pid)
 
-    def ib_bw_test(self, test_type, server_ip=None, timeout=60, **kwargs):
+    def ib_bw_test(self, test_type, server_ip=None, timeout=120, **kwargs):
         self.host.command("export LD_LIBRARY_PATH={}".format(LD_LIBRARY_PATH))
         self.host.command("export PATH={}".format(PATH))
 
@@ -185,7 +185,7 @@ class Rocetools:
             fun_test.simple_assert(False, "{} process not seen".format(tool))
         return result_dict
 
-    def ib_lat_test(self, test_type, server_ip=None, timeout=60, **kwargs):
+    def ib_lat_test(self, test_type, server_ip=None, timeout=120, **kwargs):
         self.host.command("export LD_LIBRARY_PATH={}".format(LD_LIBRARY_PATH))
         self.host.command("export PATH={}".format(PATH))
 
@@ -412,5 +412,12 @@ class Rocetools:
         device_name = temp.strip()
         device_info_raw = self.host.command("ibv_devinfo -d {} -v".format(device_name))
         device_info_list = device_info_raw.replace("\t", "").replace("\r", "").split("\n")
+        device_info_dict = {}
+        for x in device_info_list:
+            try:
+                key, value = x.split(":", 1)
+                device_info_dict[key] = value
+            except:
+                pass
         self.host.disconnect()
-        return device_info_list
+        return device_info_dict

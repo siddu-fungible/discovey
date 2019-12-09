@@ -5,7 +5,8 @@
     "crypto":  {"per":  100},
     "dma_speed":  {"per":  100},
     "rcnvme":  {"per":  90},
-    "FIO_SERVER": {"per": 100}
+    "FIO_SERVER": {"per": 100},
+    "le": {"per": 99.99}
   },
   "boot_new_image": true,
   "add_to_database": false,
@@ -24,7 +25,7 @@
   ],
   "disable_stats": [],
   "add_boot_arg": "",
-  "upload_to_file": false,
+  "upload_to_file": true,
   "stats_interval": 30,
   "elasticsearch_config": {
     "ip": "10.1.20.52",
@@ -46,23 +47,25 @@
     "cpus_allowed": "0-7"
   },
   "end_sleep": 10,
-  "vm_0": {
-    "name": "elk",
-    "host_ip": "10.1.20.52",
-    "ssh_username": "localadmin",
-    "ssh_password": "Precious1*",
-    "WORKSPACE": "/home/localadmin/Integration",
-    "PYTHONPATH": "/home/localadmin/Integration/fun_test",
-    "SCRIPT_PATH": "/home/localadmin/Integration/fun_test/scripts/system/frs"
-  },
-  "vm_1": {
-    "name": "onkar_cloned",
-    "host_ip": "10.1.23.228",
-    "ssh_username": "localadmin",
-    "ssh_password": "r00t.!@#",
-    "WORKSPACE": "/home/localadmin/fungible_automation/Integration",
-    "PYTHONPATH": "/home/localadmin/fungible_automation/Integration/fun_test",
-    "SCRIPT_PATH": "/home/localadmin/fungible_automation/Integration/fun_test/scripts/system/frs"
+  "le_vm_details": {
+    "0": {
+      "name": "elk",
+      "host_ip": "10.1.20.52",
+      "ssh_username": "localadmin",
+      "ssh_password": "Precious1*",
+      "WORKSPACE": "/home/localadmin/Integration",
+      "PYTHONPATH": "/home/localadmin/Integration/fun_test",
+      "SCRIPT_PATH": "/home/localadmin/Integration/fun_test/scripts/system/frs"
+    },
+    "1": {
+      "name": "onkar_cloned",
+      "host_ip": "10.1.23.228",
+      "ssh_username": "localadmin",
+      "ssh_password": "r00t.!@#",
+      "WORKSPACE": "/home/localadmin/fungible_automation/Integration",
+      "PYTHONPATH": "/home/localadmin/fungible_automation/Integration/fun_test",
+      "SCRIPT_PATH": "/home/localadmin/fungible_automation/Integration/fun_test/scripts/system/frs"
+    }
   },
   "fio_vm_details": {
     "0": {

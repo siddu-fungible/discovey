@@ -5,7 +5,9 @@ from lib.utilities.jenkins_manager import JenkinsManager
 from lib.host.lsf_status_server import LsfStatusServer
 from web.fun_test.analytics_models_helper import ModelHelper, get_data_collection_time
 from web.fun_test.metrics_models import MetricChart
+from web.fun_test.models import Suite
 from web.fun_test.metrics_lib import MetricLib
+from web.fun_test.models_helper import get_suite_execution
 import time, psycopg2
 
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
@@ -176,8 +178,8 @@ class PrBuildTimeTc(PalladiumTc):
     since_time = round(time.time()) - 86400
     status = fun_test.FAILED
     total_time_taken = -1
-    FUN_ON_DEMAND_DATABASE = {'host': 'fun-on-demand-01',
-                              'database': 'builddata',
+    FUN_ON_DEMAND_DATABASE = {'host': 'grafana.fungible.local',
+                              'database': 'buildData',
                               'user': 'builddata_reader',
                               'password': 'pico80@Lhasa'}
 
@@ -195,7 +197,8 @@ class PrBuildTimeTc(PalladiumTc):
             conn = psycopg2.connect(**self.FUN_ON_DEMAND_DATABASE)
             cur = conn.cursor()
             cur.execute(
-                "SELECT ROUND(AVG(duration_secs)) FROM testepoch WHERE (job = 'funsdk/master' OR job LIKE 'funsdk/pull_request%') AND start_time > " + str(
+                "SELECT ROUND(AVG(duration_secs)) FROM \"buildTimes\" WHERE (job = 'funsdk/master' OR job LIKE "
+                "'funsdk/pull_request%') AND start_time > " + str(
                     self.since_time) + " AND step = 'TotalTime' AND build_status LIKE 'Success'")
             average_time = int(cur.fetchone()[0])
             self.total_time_taken = average_time
@@ -215,16 +218,112 @@ class PrBuildTimeTc(PalladiumTc):
             fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.status,
                                           message="Pr build time status")
 
-class SetBuildTimeChartStatusTc(PalladiumTc):
+
+class IntegrationJobBuildTimePerformanceTc(PalladiumTc):
+    total_time_taken = -1
+    status = fun_test.FAILED
+
     def describe(self):
         self.set_test_details(id=3,
+                              summary="Calculate the time taken for integration job submission",
+                              steps="Steps 1")
+
+    def run(self):
+        try:
+            self.result = fun_test.FAILED
+            self.timer1 = None
+            self.timer2 = None
+            test_bed_type = "fs-118"
+            time_zone = "PST"
+            build_parameters = {"RELEASE_BUILD": True,
+                                "SKIP_DASM_C": True,
+                                "BRANCH_FunHW": None,
+                                "FUNOS_MAKEFLAGS": None,
+                                "BRANCH_FunSDK": None,
+                                "BRANCH_FunControlPlane": None,
+                                "BRANCH_FunTools": None,
+                                "BRANCH_FunOS": None}
+            environment = {"test_bed_type": test_bed_type,
+                           "with_jenkins_build": True,
+                           "build_parameters": build_parameters}
+            suites = Suite.objects.filter(name="test_fs1600.json") #199-test_fs1600.json
+            fun_test.simple_assert(expression=len(suites) > 0, message="No suites with the given name")
+            if len(suites):
+                suite_id = suites.first().id
+                emails = ["ashwin.s@fungible.com", "john.abraham@fungible.com"]
+                submitter_email = "ashwin.s@fungible.com"
+                suite_execution_id = queue_job3(suite_id=suite_id,
+                                    build_url=None,
+                                    tags=None,
+                                    emails=emails,
+                                    test_bed_type=test_bed_type,
+                                    email_on_fail_only=False,
+                                    environment=environment,
+                                    scheduling_type=SchedulingType.ASAP,
+                                    timezone_string=time_zone,
+                                    requested_hour=None,
+                                    requested_minute=None,
+                                    requested_days=None,
+                                    repeat_in_minutes=None,
+                                    submitter_email=submitter_email,
+                                    inputs=None,
+                                    description="",
+                                    suite_type=SuiteType.STATIC,
+                                    rich_inputs=None)
+                fun_test.log("The returned suite_execution id is {}".format(suite_execution_id))
+                self.timer1 = FunTimer(max_time=4000)
+                while not self.timer1.is_expired():
+                    suite_execution = get_suite_execution(suite_execution_id=suite_execution_id)
+                    fun_test.simple_assert(suite_execution, "Suite execution")
+                    if suite_execution:
+                        if self.timer2 and suite_execution.state <= JobStatusType.COMPLETED:
+                            self.total_time_taken = self.timer2.elapsed_time()
+                            self.result = suite_execution.result
+                            fun_test.log("time taken is {}".format(self.total_time_taken))
+                            break
+                        elif not self.timer2 and suite_execution.state == JobStatusType.IN_PROGRESS:
+                            self.timer2 = FunTimer(max_time=2000)
+                        elif not self.timer2 and suite_execution.state <= JobStatusType.COMPLETED:
+                            fun_test.log("The job completed too quickly and exited even before the timer could start")
+                            break
+                    else:
+                        fun_test.log("suite execution object does not exist for the id {}".format(suite_execution_id))
+                        break
+                    fun_test.sleep(message="Waiting to poll suite status", seconds=20)
+                fun_test.test_assert_expected(expected=True, actual=not self.timer1.is_expired(), message="Checking if "
+                                                                                                       "the time expired")
+                if self.total_time_taken != -1 and self.result == fun_test.PASSED:
+                    self.status = fun_test.PASSED
+                else:
+                    self.total_time_taken = -1
+
+        except Exception as ex:
+            self.status = fun_test.FAILED
+            fun_test.critical(str(ex))
+        finally:
+            model_name = "IntegrationJobBuildTimePerformance"
+
+            value_dict = {"date_time": get_data_collection_time(),
+                          "total_time": self.total_time_taken}
+
+            unit_dict = {"total_time_unit": PerfUnit.UNIT_SECS}
+            db_success = self.add_to_db(model_name=model_name, value_dict=value_dict, unit_dict=unit_dict,
+                                        status=self.status)
+            fun_test.test_assert_expected(expected=True, actual=db_success, message="Db entry successful")
+            fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.status,
+                                          message="Integration job submission status")
+
+
+class SetBuildTimeChartStatusTc(PalladiumTc):
+    def describe(self):
+        self.set_test_details(id=4,
                               summary="Set build failure details for build time performance",
                               steps="Steps 1")
 
     def run(self):
         try:
             self.result = fun_test.FAILED
-            models = ["FunOnDemandTotalTimePerformance", "PrBuildTotalTimePerformance"]
+            models = ["FunOnDemandTotalTimePerformance", "PrBuildTotalTimePerformance", "IntegrationJobBuildTimePerformance"]
             ml._set_chart_status(models=models, suite_execution_id=fun_test.get_suite_execution_id())
             self.result = fun_test.PASSED
         except Exception as ex:
@@ -239,6 +338,7 @@ if __name__ == "__main__":
 
     myscript.add_test_case(FunOnDemandBuildTimeTc())
     myscript.add_test_case(PrBuildTimeTc())
+    myscript.add_test_case(IntegrationJobBuildTimePerformanceTc())
     myscript.add_test_case(SetBuildTimeChartStatusTc())
 
     myscript.run()

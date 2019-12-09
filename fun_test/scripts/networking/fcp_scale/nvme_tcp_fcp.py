@@ -180,6 +180,8 @@ class BLTVolumePerformanceScript(FunTestScript):
             hosts_dict[hosts]["cpu_list"] = get_numa(hosts_dict[hosts]["handle"])
             hosts_dict[hosts]["hu_int_name"] = hosts_dict[hosts]["handle"].command(
                 "ip link ls up | awk '{print $2}' | grep -e '00:f1:1d' -e '00:de:ad' -B 1 | head -1 | tr -d :").strip()
+            if not hosts_dict[hosts]["hu_int_name"]:
+                fun_test.simple_assert(False, "Interface not found on {}".format(hosts))
             hosts_dict[hosts]["hu_int_ip"] = hosts_dict[hosts]["handle"].command(
                 "ip addr list {} | grep \"inet \" | cut -d\' \' -f6 | cut -d/ -f1".format(
                     hosts_dict[hosts]["hu_int_name"])).strip()
@@ -290,7 +292,7 @@ class BLTVolumePerformanceScript(FunTestScript):
                 diff_ssd_count = total_avail_ssd - f10_ssd_count
                 for x in range(0, diff_ssd_count):
                     f11_blt_uuid[x] = utils.generate_uuid()
-                    command_result = target_f10_storage_obj.create_volume(type="VOL_TYPE_BLK_LOCAL_THIN",
+                    command_result = target_f11_storage_obj.create_volume(type="VOL_TYPE_BLK_LOCAL_THIN",
                                                                           capacity=blt_capacity,
                                                                           block_size=blt_blk_size,
                                                                           name="f11_thin_block_" + str(x),

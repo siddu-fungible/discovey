@@ -10,3 +10,15 @@ export const showAnimation = trigger('show', [
       ]),
       state('*', style({ opacity: 1.0 })),
     ]);
+
+
+export const slideInOutAnimation = trigger('slideInOut', [
+
+      transition(':enter', [
+        style({transform: 'translateX(-100%)'}),
+        animate('500ms ease-in-out', style({transform: 'translateX(0%)'}))
+      ]),
+      transition(':leave', [
+        animate('500ms ease-in-out', style({transform: 'translateX(-100%)'}))
+      ])
+    ]);

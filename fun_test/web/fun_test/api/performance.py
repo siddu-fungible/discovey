@@ -5,6 +5,9 @@ from jinja2 import Environment, FileSystemLoader, Template
 from web.fun_test.models import InterestedMetrics
 from django.db.models import Q
 from web.web_global import JINJA_TEMPLATE_DIR
+from web.fun_test.metrics_lib import MetricLib
+
+ml = MetricLib()
 
 
 @csrf_exempt
@@ -185,6 +188,7 @@ def interested_metrics(request, workspace_id=None):
             entry.delete()
     return result
 
+
 def _set_interested_metrics(metric):
     metric_id = metric["metric_id"]
     metric["children"] = []
@@ -225,4 +229,35 @@ def metric_charts(request, metric_id=None):
             chart_dict = {}
             chart_dict["metric_id"] = chart.metric_id
             result.append(chart_dict)
+    return result
+
+
+@csrf_exempt
+@api_safe_json_response
+def attach_to_dag(request):
+    result = None
+    if request.method == "POST":
+        request_json = json.loads(request.body)
+        attach_id = int(request_json["attach_id"])
+        original_metric_id = int(request_json["original_metric_id"])
+        try:
+            mc = MetricChart.objects.get(metric_id=original_metric_id)
+            ml.set_global_cache(False)
+            mc.add_child(child_id=attach_id)
+            mc.fix_children_weights()
+            result = mc.to_dict()
+        except:
+            pass
+    elif request.method == "DELETE":
+        attached_id = request.GET.get("attached_metric_id", None)
+        original_metric_id = request.GET.get("original_metric_id", None)
+        if attached_id and original_metric_id:
+            try:
+                mc = MetricChart.objects.get(metric_id=int(original_metric_id))
+                ml.set_global_cache(False)
+                mc.remove_child(child_id=int(attached_id))
+                mc.fix_children_weights()
+                result = mc.to_dict()
+            except:
+                pass
     return result

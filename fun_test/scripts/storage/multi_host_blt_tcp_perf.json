@@ -59,7 +59,8 @@
     "sc_db_directories": ["/var/opt/fungible/elasticsearch", "/var/opt/fungible/cassandra"],
     "sc_script_dir": "/opt/fungible/StorageController/etc",
     "run_sc_script": "start_sc.sh",
-    "container_up_timeout": 60
+    "container_up_timeout": 60,
+    "api_server_up_timeout": 90
   },
   "MultiHostFioRandRead": {
     "num_ssd": 12,
@@ -81,6 +82,7 @@
     "command_timeout": 30,
     "iter_interval": 2,
     "warm_up_traffic": 1,
+    "warm_up_count": 1,
     "warm_up_fio_cmd_args": {
       "multiple_jobs": "--rw=randwrite --bs=4k --iodepth=16 --direct=1 --prio=0 --cpus_allowed_policy=split --size=100%",
       "timeout": 7200
@@ -134,6 +136,7 @@
     "command_timeout": 30,
     "iter_interval": 2,
     "warm_up_traffic": 1,
+    "warm_up_count": 1,
     "warm_up_fio_cmd_args": {
       "multiple_jobs": "--rw=randwrite --bs=4k --iodepth=16 --direct=1 --prio=0 --cpus_allowed_policy=split --size=100%",
       "timeout": 7200

@@ -1,5 +1,7 @@
-import {Broker} from "../broker/definitions";
+import {MqBrokerMessage} from "../mq-broker/definitions";
 
-class RegressionCatalogExecutionBroker implements Broker {
+class RegressionCatalogExecutionBrokerMessage implements MqBrokerMessage {
   routing_key = "RegressionCatalogExecutionBroker";
+  message_type = 0;
+  message = 0;
 }

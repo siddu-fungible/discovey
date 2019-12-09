@@ -7,32 +7,33 @@ import {CommonService} from "../services/common/common.service";
 import {ReleaseCatalogSuite, ReleaseCatalog, RegisteredAsset} from "./definitions";
 import {Suite} from "./suite-editor/suite-editor.service";
 
-
 @Injectable({
   providedIn: 'root'
 })
-export class RegressionService implements OnInit{
+export class RegressionService implements OnInit {
   CONSOLE_LOG_EXTENSION: string = ".logs.txt";  //TIED to scheduler_helper.py  TODO
   HTML_LOG_EXTENSION: string = ".html";         //TIED to scheduler_helper.py  TODO
-  stateStringMap = { "-200": "UNKNOWN",  // TODO: fetch from the back-end
-                   "-100": "ERROR",
-                   "-20": "KILLED",
-                   "-10": "ABORTED",
-                   "10": "COMPLETED",
-                   "20": "AUTO_SCHEDULED",
-                   "30": "SUBMITTED",
-                   "40": "SCHEDULED",
-                   "50": "QUEUED",
-                   "60": "IN_PROGRESS",
-                   "ALL": "ALL"};
+  stateStringMap = {
+    "-200": "UNKNOWN",  // TODO: fetch from the back-end
+    "-100": "ERROR",
+    "-20": "KILLED",
+    "-10": "ABORTED",
+    "10": "COMPLETED",
+    "20": "AUTO_SCHEDULED",
+    "30": "SUBMITTED",
+    "40": "SCHEDULED",
+    "50": "QUEUED",
+    "60": "IN_PROGRESS",
+    "ALL": "ALL"
+  };
 
 
   stateMap = {
     "ALL": "ALL",
     "UNKNOWN": "-200",  // TODO: fetch from the back-end
-    "ERROR" : -100,
-    "KILLED" : -20,
-    "ABORTED" : -10,
+    "ERROR": -100,
+    "KILLED": -20,
+    "ABORTED": -10,
     "COMPLETED": 10,
     "AUTO_SCHEDULED": 20,
     "SUBMITTED": 30,
@@ -41,18 +42,20 @@ export class RegressionService implements OnInit{
     "IN_PROGRESS": 60
   };
 
+
   logDir: string = null;
-  constructor(private apiService: ApiService, private loggerService: LoggerService, private commonService: CommonService) { }
+
+  constructor(private apiService: ApiService, private loggerService: LoggerService, private commonService: CommonService) {
+  }
 
   ngOnInit() {
 
   }
 
 
-
   fetchLogDir() {
     if (!this.logDir) {
-      return this.apiService.get("/regression/log_path").pipe(switchMap(response=> {
+      return this.apiService.get("/regression/log_path").pipe(switchMap(response => {
         return of(response.data);
       }), error => {
         return of("/static/logs/s_");
@@ -64,16 +67,20 @@ export class RegressionService implements OnInit{
   }
 
   getSchedulerLog(suiteId) {
-    return new Observable(observer => {observer.next("ok");}).pipe(switchMap(() => {
+    return new Observable(observer => {
+      observer.next("ok");
+    }).pipe(switchMap(() => {
       return this.fetchLogDir();
     }), switchMap(logDir => {
-        return of(logDir + suiteId + "/scheduler.log.txt");
-      }));
+      return of(logDir + suiteId + "/scheduler.log.txt");
+    }));
 
   }
 
   getSchedulerLogDir(suiteId) {
-    return new Observable(observer => {observer.next("ok");}).pipe(switchMap(() => {
+    return new Observable(observer => {
+      observer.next("ok");
+    }).pipe(switchMap(() => {
       return this.fetchLogDir();
     }), switchMap(logDir => {
       return of("/regression/static_serve_log_directory/" + suiteId);
@@ -89,7 +96,7 @@ export class RegressionService implements OnInit{
   getPrettyLocalizeTime(t) {
     let minutePrefix = '';
     let localTime = this.convertToLocalTimezone(t);
-    if (localTime.getMinutes() < 10){
+    if (localTime.getMinutes() < 10) {
       minutePrefix += '0';
     }
     let s = `${localTime.getMonth() + 1}/${localTime.getDate()} ${localTime.getHours()}:${minutePrefix}${localTime.getMinutes()}`;
@@ -151,7 +158,7 @@ export class RegressionService implements OnInit{
     if (scriptPk) {
       url += "/" + scriptPk;
     }
-    return this.apiService.get(url).pipe(switchMap (response => {
+    return this.apiService.get(url).pipe(switchMap(response => {
       return of(response.data);
     }))
   }
@@ -164,7 +171,7 @@ export class RegressionService implements OnInit{
   }
 
   killSuite(suiteId) {
-    return this.apiService.get("/regression/kill_job/" + suiteId).pipe(switchMap( (response) => {
+    return this.apiService.get("/regression/kill_job/" + suiteId).pipe(switchMap((response) => {
       let jobId = parseInt(response.data);
       return of(jobId);
       //window.location.href = "/regression/";
@@ -192,7 +199,7 @@ export class RegressionService implements OnInit{
     }))
   }
 
-  testCaseExecutions(executionId=null, suiteExecutionId=null, scriptPath=null, logPrefix=null) {
+  testCaseExecutions(executionId = null, suiteExecutionId = null, scriptPath = null, logPrefix = null) {
     let url = "/api/v1/regression/test_case_executions";
     let queryParams = [];
     if (suiteExecutionId) {
@@ -209,7 +216,7 @@ export class RegressionService implements OnInit{
     return this.apiService.get(url).pipe(switchMap(response => {
       return of(response.data);
 
-    }), catchError (error => {
+    }), catchError(error => {
       return throwError(error);
     }))
   }
@@ -252,15 +259,16 @@ export class RegressionService implements OnInit{
 
     return this.apiService.get(url).pipe(switchMap(response => {
       return of(response.data);
-    }), catchError (error => {
+    }), catchError(error => {
       this.loggerService.error("Unable fetch time-series logs");
       return throwError(error);
     }))
   }
 
-  testCaseTimeSeriesLogs(suiteExecutionId, testCaseExecutionId?: null, checkpointIndex?: null) {
+  testCaseTimeSeriesLogs(suiteExecutionId, type: number, testCaseExecutionId?: null, checkpointIndex?: null) {
     let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}`;
-    url += `?type=60`;
+    // url += `?type=` + this.timeSeriesTypes.LOG;
+    url += `?type=` + type;
     if (checkpointIndex !== null) {
       url += `&checkpoint_index=${checkpointIndex}`;
     }
@@ -269,11 +277,12 @@ export class RegressionService implements OnInit{
     }
     return this.apiService.get(url).pipe(switchMap(response => {
       return of(response.data);
-    }), catchError (error => {
+    }), catchError(error => {
       this.loggerService.error("Unable fetch time-series logs");
       return throwError(error);
     }))
   }
+
   releaseTrains(): Observable<string[]> {
     return this.apiService.get("/api/v1/regression/release_trains").pipe(switchMap(response => {
       return of(response.data);
@@ -282,25 +291,27 @@ export class RegressionService implements OnInit{
     }))
   }
 
-  testCaseTimeSeriesCheckpoints(suiteExecutionId, testCaseExecutionId: number = null) {
+  testCaseTimeSeriesCheckpoints(suiteExecutionId, type: number, testCaseExecutionId: number = null) {
     let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}`;
-    url += `?type=80`;
+    // url += `?type=` + this.timeSeriesTypes.CHECKPOINT;
+    url += `?type=` + type;
     if (testCaseExecutionId) {
       url += `&test_case_execution_id=${testCaseExecutionId}`;
     }
 
     return this.apiService.get(url).pipe(switchMap(response => {
       return of(response.data);
-    }), catchError (error => {
+    }), catchError(error => {
       this.loggerService.error("Unable to fetch time-series logs");
       return throwError(error);
     }))
   }
 
-  artifacts(suiteExecutionId: number, testCaseExecutionId: number = null) {
+  artifacts(suiteExecutionId: number, type: number, testCaseExecutionId: number = null) {
     let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}`;
     let params = [];
-    params.push(["type", 200]);
+    // params.push(["type", this.timeSeriesTypes.ARTIFACT]);
+    params.push(["type", type]);
     if (testCaseExecutionId) {
       params.push(["te", testCaseExecutionId]);
     }
@@ -313,10 +324,11 @@ export class RegressionService implements OnInit{
     }))
   }
 
-  testCaseTables(suiteExecutionId: number, testCaseExecutionId: number = null) {
+  testCaseTables(suiteExecutionId: number, type: number, testCaseExecutionId: number = null) {
     let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}`;
     let params = [];
-    params.push(["type", 300]);
+    // params.push(["type", this.timeSeriesTypes.TEST_CASE_TABLE]);
+    params.push(["type", type]);
     if (testCaseExecutionId) {
       params.push(["te", testCaseExecutionId]);
     }
@@ -330,7 +342,7 @@ export class RegressionService implements OnInit{
 
   }
 
-  getRegressionScripts(scriptId=null, scriptPath=null) {
+  getRegressionScripts(scriptId = null, scriptPath = null) {
     let url = `/api/v1/regression/scripts`
   }
 
@@ -425,16 +437,27 @@ export class RegressionService implements OnInit{
     }))
   }
 
-  getRegisteredAssets(suiteExecutionId) {
+  getRegisteredAssets(suiteExecutionId, type: number) {
     let url = `/api/v1/regression/test_case_time_series/${suiteExecutionId}`;
     let params = [];
-    params.push(["type", 400]);
+    // params.push(["type", this.timeSeriesTypes.REGISTERED_ASSET]);
+    params.push(["type", type]);
     url += this.commonService.queryParamsToString(params);
     return this.apiService.get(url).pipe(switchMap(response => {
       let registeredAssets = response.data.map(asset => new RegisteredAsset(asset.data));
       return of(registeredAssets);
     }), catchError(error => {
       this.loggerService.error("Unable to fetch registered assets");
+      return throwError(error);
+    }))
+  }
+
+  getTimeSeriesTypes() {
+    let url = "/api/v1/regression/time_series_types";
+    return this.apiService.get(url).pipe(switchMap(response => {
+      return of(response.data);
+    }), catchError(error => {
+      this.loggerService.error("Unable to fetch time series types", error);
       return throwError(error);
     }))
   }

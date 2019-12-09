@@ -407,10 +407,9 @@ if __name__ == '__main__':
         ts.add_test_case(BringupPCIeHosts())
         # ts.add_test_case(VlanPingTests())
         ts.add_test_case(HuHostPingTest())
-
-        if 'unused_hosts' in fun_test.get_job_inputs():
-
-            ts.add_test_case(DisableHosts())
+        if fun_test.get_job_inputs() is not None:
+           if 'unused_hosts' in fun_test.get_job_inputs():
+               ts.add_test_case(DisableHosts())
 
 
     ts.run()

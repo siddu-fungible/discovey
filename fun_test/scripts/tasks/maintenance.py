@@ -1,11 +1,13 @@
 from lib.system.fun_test import *
 from lib.templates.tasks.tasks_template import TaskTemplate
 from web.fun_test.models_helper import get_suite_execution
+from lib.host.linux import Linux
 import subprocess
 import re
 from scheduler.scheduler_global import JobStatusType
 from datetime import timedelta
 from fun_global import get_current_time
+from fun_settings import TFTP_DIRECTORY
 
 
 class MaintenanceScript(FunTestScript):
@@ -180,6 +182,25 @@ class RemoveOldCollections(FunTestCase):
         pass
 
 
+class RemoveOldImagesOnTftpServer(FunTestCase):
+    MAX_DAYS_IN_PAST = 30
+
+    def describe(self):
+        self.set_test_details(id=7, summary="Remove old images from tftp server".format(self.MAX_DAYS_IN_PAST), steps=""" """)
+
+    def setup(self):
+        pass
+
+    def run(self):
+        service_host_spec = fun_test.get_asset_manager().get_regression_service_host_spec()
+        fun_test.simple_assert(service_host_spec, "Service host spec")
+        service_host = Linux(**service_host_spec)
+        service_host.command("cd {}".format(TFTP_DIRECTORY))
+        service_host.command("find . -type f -name 's_*gz' -mtime +30 -exec rm {} \;")
+
+    def cleanup(self):
+        pass
+
 if __name__ == "__main__":
     myscript = MaintenanceScript()
     myscript.add_test_case(ManageSsh())
@@ -188,4 +209,5 @@ if __name__ == "__main__":
     myscript.add_test_case(DetectLargeFiles())
     myscript.add_test_case(CheckMongoCollectionCount())
     myscript.add_test_case(RemoveOldCollections())
+    myscript.add_test_case(RemoveOldImagesOnTftpServer())
     myscript.run()
