@@ -124,7 +124,7 @@ class Rocetools:
 
         fun_test.debug(cmd_pid)
 
-    def ib_bw_test(self, test_type, server_ip=None, timeout=60, **kwargs):
+    def ib_bw_test(self, test_type, server_ip=None, timeout=120, **kwargs):
         self.host.command("export LD_LIBRARY_PATH={}".format(LD_LIBRARY_PATH))
         self.host.command("export PATH={}".format(PATH))
 
@@ -185,7 +185,7 @@ class Rocetools:
             fun_test.simple_assert(False, "{} process not seen".format(tool))
         return result_dict
 
-    def ib_lat_test(self, test_type, server_ip=None, timeout=60, **kwargs):
+    def ib_lat_test(self, test_type, server_ip=None, timeout=120, **kwargs):
         self.host.command("export LD_LIBRARY_PATH={}".format(LD_LIBRARY_PATH))
         self.host.command("export PATH={}".format(PATH))
 
