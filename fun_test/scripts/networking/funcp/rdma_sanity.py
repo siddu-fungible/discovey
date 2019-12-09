@@ -93,7 +93,7 @@ class BringupSetup(FunTestCase):
             enable_fcp = job_inputs["enable_fcp"]
             fun_test.shared_variables["enable_fcp"] = enable_fcp
         else:
-            enable_fcp = False
+            enable_fcp = True
             fun_test.shared_variables["enable_fcp"] = enable_fcp
         if "qp_list" in job_inputs:
             fun_test.shared_variables["qp_list"] = job_inputs["qp_list"]
