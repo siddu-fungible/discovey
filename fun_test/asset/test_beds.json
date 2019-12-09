@@ -2572,7 +2572,7 @@
       },
       "5": {
         "type": "DUT_TYPE_FSU",
-        "dut": "fs-102",
+        "dut": "fs-144",
         "bond_interface_info": {
           "0": {
             "0": {
@@ -2618,7 +2618,7 @@
             "0": {
               "switch_info": {
                 "name": "qfx-3",
-                "port": "et-0/0/17"
+                "port": "et-0/0/20"
               },
               "type": "INTERFACE_TYPE_ETHERNET"
             },
@@ -2639,7 +2639,7 @@
             "12": {
               "switch_info": {
                 "name": "qfx-3",
-                "port": "et-0/0/20"
+                "port": "et-0/0/17"
               },
               "type": "INTERFACE_TYPE_ETHERNET"
             }
@@ -2881,11 +2881,11 @@
       }
     }
   },
-  "fs-102": {
+  "fs-144": {
     "dut_info": {
       "0": {
         "type": "DUT_TYPE_FSU",
-        "dut": "fs-102",
+        "dut": "fs-144",
         "bond_interface_info": {
           "0": {
             "0": {
@@ -2930,7 +2930,7 @@
             "0": {
               "switch_info": {
                 "name": "qfx-3",
-                "port": "et-0/0/17"
+                "port": "et-0/0/20"
               },
               "type": "INTERFACE_TYPE_ETHERNET"
             },
@@ -2951,7 +2951,7 @@
             "12": {
               "switch_info": {
                 "name": "qfx-3",
-                "port": "et-0/0/20"
+                "port": "et-0/0/17"
               },
               "type": "INTERFACE_TYPE_ETHERNET"
             }
