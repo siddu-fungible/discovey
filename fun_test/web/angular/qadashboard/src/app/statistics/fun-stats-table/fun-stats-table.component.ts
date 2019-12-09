@@ -20,11 +20,11 @@ export class FunStatsTableComponent implements OnInit {
       let oneRecord = [];
       for (let value of record) {
         let oneValue = {};
-        let newValue = "";
+        let newValue = value;
+        oneValue["stringType"] = true;
         if (typeof value !== 'string') {
           newValue = JSON.stringify(value);
-        } else {
-          newValue = value;
+          oneValue["stringType"] = false;
         }
         if (newValue.length > this.characterLimit) {
           oneValue["originalValue"] = value;

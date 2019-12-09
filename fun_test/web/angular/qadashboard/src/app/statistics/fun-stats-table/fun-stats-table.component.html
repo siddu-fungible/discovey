@@ -6,12 +6,12 @@
     <td *ngFor="let d of data">
           <span *ngIf="d.showSliced">{{ d.slicedValue
             }}<span class="fun-action-link" (click)="expandSlicedString(d)">...expand</span></span>
-      <ng-container *ngIf="isString(d.originalValue)">
-            <span *ngIf="!d.showSliced && d.originalValue.length > 64">{{ d.originalValue }}<span
+      <ng-container *ngIf="d.stringType">
+            <span *ngIf="!d.showSliced && d.originalValue.length > characterLimit">{{ d.originalValue }}<span
               class="fun-action-link" (click)="expandSlicedString(d)">...hide</span></span>
-        <span *ngIf="!d.showSliced && d.originalValue.length <= 64">{{ d.originalValue }}</span>
+        <span *ngIf="!d.showSliced && d.originalValue.length <= characterLimit">{{ d.originalValue }}</span>
       </ng-container>
-      <ng-container *ngIf="!isString(d.originalValue)">
+      <ng-container *ngIf="!d.stringType">
             <span *ngIf="!d.showSliced"><pre>{{ d.originalValue | json }}</pre><span
               class="fun-action-link" (click)="expandSlicedString(d)">...hide</span></span>
       </ng-container>
