@@ -849,6 +849,8 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
             self.nvme_io_queues = job_inputs["nvme_io_queues"]
         if "warm_up_traffic" in job_inputs:
             self.warm_up_traffic = job_inputs["warm_up_traffic"]
+        if "warm_up_count" in job_inputs:
+            self.warm_up_count = job_inputs["warm_up_count"]
         if "runtime" in job_inputs:
             self.fio_cmd_args["runtime"] = job_inputs["runtime"]
             self.fio_cmd_args["timeout"] = self.fio_cmd_args["runtime"] + 60
@@ -863,8 +865,7 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
             self.csi_perf_iodepth = [self.csi_perf_iodepth]
             self.full_run_iodepth = self.csi_perf_iodepth
 
-        if ("blt" not in fun_test.shared_variables or not fun_test.shared_variables["blt"]["setup_created"]) \
-                and (not fun_test.shared_variables["blt"]["warmup_done"]):
+        if ("blt" not in fun_test.shared_variables or not fun_test.shared_variables["blt"]["setup_created"]):
             fun_test.shared_variables["blt"] = {}
             fun_test.shared_variables["blt"]["setup_created"] = False
             fun_test.shared_variables["blt"]["warmup_done"] = False
@@ -1061,70 +1062,74 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
 
             fun_test.shared_variables["blt"]["setup_created"] = True
 
-            thread_id = {}
-            end_host_thread = {}
-
+        if not fun_test.shared_variables["blt"]["warmup_done"]:
             # Pre-conditioning the volume (one time task)
             if self.warm_up_traffic:
+                total_warmup_done = 0
                 # self.nvme_block_device_str = ':'.join(self.nvme_block_device)
                 # fun_test.shared_variables["nvme_block_device_str"] = self.nvme_block_device_str
-                fio_output = {}
-                for index, host_name in enumerate(self.host_info):
-                    fun_test.log("Initial Write IO to volume, this might take long time depending on fio --size "
-                                 "provided")
-                    warm_up_fio_cmd_args = {}
-                    jobs = ""
-                    fio_output[index] = {}
-                    end_host_thread[index] = self.host_info[host_name]["handle"].clone()
-                    wait_time = self.num_hosts - index
-                    if "multiple_jobs" in self.warm_up_fio_cmd_args:
-                        # Adding the allowed CPUs into the fio warmup command
-                        # self.warm_up_fio_cmd_args["multiple_jobs"] += "  --cpus_allowed={}".\
-                        #    format(self.host_info[host_name]["host_numa_cpus"])
-                        fio_cpus_allowed_args = " --cpus_allowed={}".format(self.host_info[host_name]["host_numa_cpus"])
-                        for id, device in enumerate(self.host_info[host_name]["nvme_block_device_list"]):
-                            jobs += " --name=pre-cond-job-{} --filename={}".format(id + 1, device)
-                        warm_up_fio_cmd_args["multiple_jobs"] = self.warm_up_fio_cmd_args["multiple_jobs"] + str(
-                            fio_cpus_allowed_args) + str(jobs)
-                        warm_up_fio_cmd_args["timeout"] = self.warm_up_fio_cmd_args["timeout"]
-                        # fio_output = self.host_handles[key].pcie_fio(filename="nofile", timeout=self.warm_up_fio_cmd_args["timeout"],
-                        #                                    **warm_up_fio_cmd_args)
-                        thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
-                                                                         func=fio_parser,
-                                                                         arg1=end_host_thread[index],
-                                                                         host_index=index,
-                                                                         filename="nofile",
-                                                                         **warm_up_fio_cmd_args)
-                    else:
-                        # Adding the allowed CPUs into the fio warmup command
-                        self.warm_up_fio_cmd_args["cpus_allowed"] = self.host_info[host_name]["host_numa_cpus"]
-                        # fio_output = self.host_handles[key].pcie_fio(filename=self.nvme_block_device_str, **self.warm_up_fio_cmd_args)
-                        filename = self.host_info[host_name]["fio_filename"]
-                        thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
-                                                                         func=fio_parser,
-                                                                         arg1=end_host_thread[index],
-                                                                         host_index=index,
-                                                                         filename=filename,
-                                                                         **self.warm_up_fio_cmd_args)
+                for count in range(self.warm_up_count):
+                    fun_test.log("Starting Volume Warmup: Round {}".format(count + 1))
+                    thread_id = {}
+                    end_host_thread = {}
+                    fio_output = {}
+                    for index, host_name in enumerate(self.host_info):
+                        fun_test.log("Initial Write IO to volume, this might take long time depending on fio --size "
+                                     "provided")
+                        warm_up_fio_cmd_args = {}
+                        jobs = ""
+                        fio_output[index] = {}
+                        end_host_thread[index] = self.host_info[host_name]["handle"].clone()
+                        wait_time = self.num_hosts - index
+                        if "multiple_jobs" in self.warm_up_fio_cmd_args:
+                            # Adding the allowed CPUs into the fio warmup command
+                            # self.warm_up_fio_cmd_args["multiple_jobs"] += "  --cpus_allowed={}".\
+                            #    format(self.host_info[host_name]["host_numa_cpus"])
+                            fio_cpus_allowed_args = " --cpus_allowed={}".format(self.host_info[host_name]["host_numa_cpus"])
+                            for id, device in enumerate(self.host_info[host_name]["nvme_block_device_list"]):
+                                jobs += " --name=pre-cond-job-{} --filename={}".format(id + 1, device)
+                            warm_up_fio_cmd_args["multiple_jobs"] = self.warm_up_fio_cmd_args["multiple_jobs"] + str(
+                                fio_cpus_allowed_args) + str(jobs)
+                            warm_up_fio_cmd_args["timeout"] = self.warm_up_fio_cmd_args["timeout"]
+                            # fio_output = self.host_handles[key].pcie_fio(filename="nofile", timeout=self.warm_up_fio_cmd_args["timeout"],
+                            #                                    **warm_up_fio_cmd_args)
+                            thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
+                                                                             func=fio_parser,
+                                                                             arg1=end_host_thread[index],
+                                                                             host_index=index,
+                                                                             filename="nofile",
+                                                                             **warm_up_fio_cmd_args)
+                        else:
+                            # Adding the allowed CPUs into the fio warmup command
+                            self.warm_up_fio_cmd_args["cpus_allowed"] = self.host_info[host_name]["host_numa_cpus"]
+                            # fio_output = self.host_handles[key].pcie_fio(filename=self.nvme_block_device_str, **self.warm_up_fio_cmd_args)
+                            filename = self.host_info[host_name]["fio_filename"]
+                            thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
+                                                                             func=fio_parser,
+                                                                             arg1=end_host_thread[index],
+                                                                             host_index=index,
+                                                                             filename=filename,
+                                                                             **self.warm_up_fio_cmd_args)
 
-                    fun_test.sleep("Fio threadzz", seconds=1)
+                        fun_test.sleep("Fio threadzz", seconds=1)
 
-                fun_test.sleep("Fio threads started", 10)
-                try:
+                    fun_test.sleep("Fio threads started", 10)
                     for index, host_name in enumerate(self.host_info):
                         fun_test.log("Joining fio thread {}".format(index))
                         fun_test.join_thread(fun_test_thread_id=thread_id[index])
                         fun_test.log("FIO Command Output:")
                         fun_test.log(fun_test.shared_variables["fio"][index])
-                        fun_test.test_assert(fun_test.shared_variables["fio"][index], "Volume warmup on host {}".
-                                             format(host_name))
+                        fun_test.test_assert(fun_test.shared_variables["fio"][index], "Volume warmup on host {} - "
+                                                                                      "Round {}".format(host_name,
+                                                                                                        count + 1))
                         fio_output[index] = {}
                         fio_output[index] = fun_test.shared_variables["fio"][index]
+                        total_warmup_done += 1
                         fun_test.shared_variables["blt"]["warmup_done"] = True
-                except Exception as ex:
-                    fun_test.log("Fio warmup failed")
-                    fun_test.critical(str(ex))
 
+                if total_warmup_done == len(self.host_info) * self.warm_up_count:
+                    fun_test.shared_variables["blt"]["warmup_done"] = True
+                    fun_test.log("Successfully completed {} round(s) of volume warmup".format(self.warm_up_count))
                 fun_test.sleep("Sleeping for {} seconds before actual test".format(self.iter_interval),
                                self.iter_interval)
 
@@ -1165,6 +1170,12 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
         if "io_depth" in job_inputs:
             self.fio_jobs_iodepth = job_inputs["io_depth"]
             fun_test.log("Overrided fio_jobs_iodepth: {}".format(self.fio_jobs_iodepth))
+            # In case for the given IO depths if the expected_fio_result dictionary don't have the expected values, then
+            # add that IO depth into the expected_fio_result dictionary by setting its value equal to the one set to
+            # its first attribute
+            for combo in self.fio_jobs_iodepth:
+                if combo not in self.expected_fio_result:
+                    self.expected_fio_result[combo] = self.expected_fio_result.keys()[0]
 
         if not isinstance(self.fio_jobs_iodepth, list):
             self.fio_jobs_iodepth = [self.fio_jobs_iodepth]
@@ -1481,5 +1492,5 @@ if __name__ == "__main__":
 
     bltscript = MultiHostVolumePerformanceScript()
     bltscript.add_test_case(MultiHostFioRandRead())
-    bltscript.add_test_case(MultiHostFioRandWrite())
+    # bltscript.add_test_case(MultiHostFioRandWrite())
     bltscript.run()
