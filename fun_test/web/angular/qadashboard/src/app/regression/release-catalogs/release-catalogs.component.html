@@ -19,7 +19,7 @@
         </td>
       </tr>
       <tr *ngFor="let catalog of releaseCatalogs; let index=index" class="fun-table-borderless-row">
-        <td><span class="fun-action-link" (click)="prepareExecutionDetails(index)">Prepare for execution</span></td>
+        <td><span class="fun-action-link" (click)="prepareRelease(index)">Prepare a release</span></td>
 
         <td><small>{{ index }}.</small> {{ catalog.name }}</td>
         <td>{{ catalog.description }}</td>
@@ -32,7 +32,7 @@
     </table>
   </div>
   <div class="fun-div" *ngIf="preparingCatalogExecution">
-    <app-section-header [value]="'Set catalog execution parameters ...'"></app-section-header>
+    <app-section-header [value]="'Prepare release parameters ...'"></app-section-header>
     <table>
       <tr>
         <td class="fun-attribute-label">Owner</td>
@@ -80,15 +80,15 @@
           Description
         </td>
       </tr>
-      <tr class="fun-table-borderless-row" *ngFor="let suiteForExecution of suitesForExecution">
+      <tr class="fun-table-borderless-row" *ngFor="let suiteExecution of releaseCatalogExecution.suiteExecutions">
         <td>
-          {{ suiteForExecution.id }}
+          {{ suiteExecution.suite_id }}
         </td>
         <td>
-          {{ suiteForExecution.name }}
+          {{ suiteExecution.suite_details.name }}
         </td>
         <td>
-          {{ suiteForExecution.short_description }}
+          {{ suiteExecution.suite_details.short_description }}
         </td>
       </tr>
     </table>

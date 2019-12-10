@@ -33,7 +33,7 @@ from bson import json_util
 from web.fun_test.models_helper import get_script_id
 from fun_global import TimeSeriesTypes
 from web.fun_test.models import ReleaseCatalogExecution
-
+import time, datetime
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 
 @csrf_exempt
@@ -43,11 +43,15 @@ def test_beds(request, id):
     from asset.asset_manager import AssetManager
     am = AssetManager()
     if request.method == "GET":
+        minimal = request.GET.get("minimal", False)
+
         if not id:
             valid_test_beds = am.get_valid_test_beds()
+
             all_test_beds = TestBed.objects.all().order_by('name')
             all_test_beds = [x for x in all_test_beds if x.name in valid_test_beds]
             result = []
+
             for test_bed in all_test_beds:
                 t = {"name": test_bed.name,
                      "description": test_bed.description,
@@ -56,16 +60,20 @@ def test_beds(request, id):
                      "manual_lock": test_bed.manual_lock,
                      "manual_lock_expiry_time": str(test_bed.manual_lock_expiry_time),
                      "manual_lock_submitter": test_bed.manual_lock_submitter}
-                if not test_bed.manual_lock:
-                    asset_level_manual_locked, error_message, manual_lock_user, assets_required = am.check_test_bed_manual_locked(
-                        test_bed_name=test_bed.name)
-                    t["asset_level_manual_lock_status"] = {"asset_level_manual_locked": asset_level_manual_locked,
-                                                           "error_message": error_message,
-                                                           "asset_level_manual_lock_user": manual_lock_user}
-                test_bed_availability = am.get_test_bed_availability(test_bed_type=test_bed.name)
-                t["automation_status"] = test_bed_availability
-                result.append(t)
+                if not minimal:
+                    if not test_bed.manual_lock:
+                        asset_level_manual_locked, error_message, manual_lock_user, assets_required = am.check_test_bed_manual_locked(
+                            test_bed_name=test_bed.name)
 
+                        t["asset_level_manual_lock_status"] = {"asset_level_manual_locked": asset_level_manual_locked,
+                                                               "error_message": error_message,
+                                                               "asset_level_manual_lock_user": manual_lock_user}
+
+                    test_bed_availability = am.get_test_bed_availability(test_bed_type=test_bed.name)
+
+                    t["automation_status"] = test_bed_availability
+
+                result.append(t)
 
         else:
             t = TestBed.objects.get(name=id)

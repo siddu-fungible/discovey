@@ -435,7 +435,8 @@ class Bmc(Linux):
 
     def validate_u_boot_version(self, output, minimum_date):
         result = False
-        m = re.search("U-Boot\s+\S+\s+\((.*)\s+-", output)  # Based on U-Boot 2017.01-00000-bld_6654 (May 29 2019 - 05:38:02 +0000)
+        m = re.search("U-Boot\s+\S+\s+\((.*)\s+-", output)
+        # Based on U-Boot 2017.01-00000-bld_6654 (May 29 2019 - 05:38:02 +0000)
         if m:
             try:
                 this_date = datetime.strptime(m.group(1), "%b %d %Y")
@@ -528,7 +529,6 @@ class Bmc(Linux):
                             timeout=5,
                             expected=self.U_BOOT_F1_PROMPT,
                             f1_index=index)
-
 
         if not self.bundle_compatible:
             self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_SET_NO_AUTOLOAD)

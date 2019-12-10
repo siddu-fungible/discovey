@@ -12,7 +12,7 @@ LOG_FORMAT = ('%(levelname) -10s %(asctime)s %(name) -30s %(funcName) '
 LOGGER = logging.getLogger(__name__)
 
 
-class ExampleConsumer(object):
+class NonBlockingSelectConsumer(object):
     """This is an example consumer that will handle unexpected interactions
     with RabbitMQ such as channel and connection closures.
 
@@ -404,7 +404,7 @@ class ReconnectingExampleConsumer(object):
     def __init__(self, amqp_url):
         self._reconnect_delay = 0
         self._amqp_url = amqp_url
-        self._consumer = ExampleConsumer(self._amqp_url)
+        self._consumer = NonBlockingSelectConsumer(self._amqp_url)
 
     def run(self):
         while True:
@@ -421,7 +421,7 @@ class ReconnectingExampleConsumer(object):
             reconnect_delay = self._get_reconnect_delay()
             LOGGER.info('Reconnecting after %d seconds', reconnect_delay)
             time.sleep(reconnect_delay)
-            self._consumer = ExampleConsumer(self._amqp_url)
+            self._consumer = NonBlockingSelectConsumer(self._amqp_url)
 
     def _get_reconnect_delay(self):
         if self._consumer.was_consuming:

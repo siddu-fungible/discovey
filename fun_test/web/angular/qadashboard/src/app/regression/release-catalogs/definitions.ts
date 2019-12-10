@@ -1,4 +1,22 @@
 import {Api} from "../../lib/api";
+import {Suite} from "../suite-editor/suite-editor.service";
+
+export class ReleaseSuiteExecution {
+  suite_id: number;
+  test_bed_name: string;
+  suite_details: Suite;
+
+  constructor(props) {
+    this.suite_id = props.suite_id;
+    if (props.hasOwnProperty('test_bed_name')) {
+      this.test_bed_name = props
+    }
+    this.suite_details = props.suite_details;
+  }
+  serialize() {
+    return {suite_id: this.suite_id, test_bed_name: this.test_bed_name};
+  }
+}
 
 export class ReleaseCatalogExecution extends Api {
   classType = ReleaseCatalogExecution;
@@ -14,6 +32,7 @@ export class ReleaseCatalogExecution extends Api {
   recurring: boolean = true;
   release_train: string = "master";
   master_execution_id: number = null;
+  suiteExecutions: ReleaseSuiteExecution [] = [];
 
   /*
   deSerialize(data: any) {
@@ -54,7 +73,8 @@ export class ReleaseCatalogExecution extends Api {
       release_catalog_id: this.release_catalog_id,
       description: this.description,
       recurring: this.recurring,
-      release_train: this.release_train
+      release_train: this.release_train,
+      suite_executions: this.suiteExecutions.map(suiteElement => suiteElement.serialize())
     }
   }
 
