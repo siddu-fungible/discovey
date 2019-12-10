@@ -121,6 +121,16 @@ class AssetManager:
         return result
 
     @fun_test.safe
+    def get_all_fs_spec(self):
+        fs_json = self.FS_SPEC
+        json_spec = parse_file_to_json(file_name=fs_json)
+        result = []
+        for fs_spec in json_spec:
+            result.append(fs_spec)
+        return result
+
+
+    @fun_test.safe
     def check_test_bed_manual_locked(self, test_bed_name):
         assets_required = self.get_assets_required(test_bed_name=test_bed_name)
         return self.check_assets_are_manual_locked(assets_required=assets_required)

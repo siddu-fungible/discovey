@@ -342,6 +342,13 @@ def resetF(index=0):
 
 @roles('bmc')
 @task
+def get_fs_rev():
+    """ get FS1600 platform revision """
+    with settings( hide('stderr', 'running'), warn_only=True ):
+        run("cd /mnt/sdmmc0p1/scripts && gpiotool 8 --get-data | grep High >/dev/null 2>&1 && echo FS1600_REV2 || echo FS1600_REV1")
+
+@roles('bmc')
+@task
 def check_serial_sockets():
     """ check if tcp sockets are running to replay serial interfaces /dev/ttySD """
     with settings( hide('stderr', 'running'), warn_only=True ):
@@ -718,7 +725,7 @@ def redfish_power():
         local(rfcmd)
 
 @roles('bmc')
-#@task
+@task
 def redfish_thermals():
     """ get thermal sensor information via redfish  """
     with prefix('source ~/py3venv/bin/activate'):
@@ -727,7 +734,7 @@ def redfish_thermals():
         local(rfcmd)
 
 @roles('bmc')
-#@task
+@task
 def redfish_fans():
     """ get fan sensor information via redfish  """
     with prefix('source ~/py3venv/bin/activate'):

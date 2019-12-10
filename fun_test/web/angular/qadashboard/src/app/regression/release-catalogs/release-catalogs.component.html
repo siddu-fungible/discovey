@@ -19,7 +19,7 @@
         </td>
       </tr>
       <tr *ngFor="let catalog of releaseCatalogs; let index=index" class="fun-table-borderless-row">
-        <td><span class="fun-action-link" (click)="prepareExecutionDetails(index)">Prepare for execution</span></td>
+        <td><span class="fun-action-link" (click)="prepareRelease(index)">Prepare a release</span></td>
 
         <td><small>{{ index }}.</small> {{ catalog.name }}</td>
         <td>{{ catalog.description }}</td>
@@ -32,13 +32,13 @@
     </table>
   </div>
   <div class="fun-div" *ngIf="preparingCatalogExecution">
-    <app-section-header [value]="'Set catalog execution parameters ...'"></app-section-header>
+    <app-section-header [value]="'Prepare release parameters ...'"></app-section-header>
     <table>
       <tr>
         <td class="fun-attribute-label">Owner</td>
         <td>
-          <select id="owner" [(ngModel)]="selectedUser">
-            <option *ngFor="let user of users" [ngValue]="user">{{ user.first_name }} {{ user.last_name }}
+          <select id="owner" [(ngModel)]="releaseCatalogExecution.owner">
+            <option *ngFor="let user of users" [ngValue]="user.email">{{ user.first_name }} {{ user.last_name }}
               ({{ user.email }})
             </option>
           </select>
@@ -55,6 +55,18 @@
 
     </table>
 
+    <label class="fun-attribute-label" for="release-select">Select a release: </label>
+    <select id="release-select" [(ngModel)]="releaseCatalogExecution.release_train">
+      <option></option>
+      <option [ngValue]="releaseTrain" *ngFor="let releaseTrain of releaseTrains">
+      {{ releaseTrain }}
+      </option>
+    </select>
+
+    &nbsp;
+    <input [(ngModel)]="releaseCatalogExecution.recurring" type="checkbox"
+                     name="recurring"
+                     [checked]="releaseCatalogExecution.recurring"> Recurring
 
     <table class="fun-table-borderless">
       <tr>
@@ -68,15 +80,15 @@
           Description
         </td>
       </tr>
-      <tr class="fun-table-borderless-row" *ngFor="let suiteForExecution of suitesForExecution">
+      <tr class="fun-table-borderless-row" *ngFor="let suiteExecution of releaseCatalogExecution.suiteExecutions">
         <td>
-          {{ suiteForExecution.id }}
+          {{ suiteExecution.suite_id }}
         </td>
         <td>
-          {{ suiteForExecution.name }}
+          {{ suiteExecution.suite_details.name }}
         </td>
         <td>
-          {{ suiteForExecution.short_description }}
+          {{ suiteExecution.suite_details.short_description }}
         </td>
       </tr>
     </table>

@@ -130,6 +130,10 @@ class BringupSetup(FunTestCase):
                 fun_test.shared_variables["ping_debug"] = True
         else:
             fun_test.shared_variables["ping_debug"] = True
+        if "update_funcp" in job_inputs:
+            update_funcp = job_inputs["update_funcp"]
+        else:
+            update_funcp = False
 
         if deploy_setup:
             funcp_obj = FunControlPlaneBringup(fs_name=self.server_key["fs"][fs_name]["fs-name"])
@@ -185,7 +189,8 @@ class BringupSetup(FunTestCase):
                     fun_test.add_checkpoint("<b><font color='red'><PCIE link did not come up in %s mode</font></b>"
                                             % servers_mode[server])
             # Bringup FunCP
-            fun_test.test_assert(expression=funcp_obj.bringup_funcp(prepare_docker=False), message="Bringup FunCP")
+            fun_test.test_assert(expression=funcp_obj.bringup_funcp(prepare_docker=update_funcp),
+                                 message="Bringup FunCP")
             # Assign MPG IPs from dhcp
             funcp_obj.assign_mpg_ips(static=self.server_key["fs"][fs_name]["mpg_ips"]["static"],
                                      f1_1_mpg=self.server_key["fs"][fs_name]["mpg_ips"]["mpg1"],
@@ -614,13 +619,13 @@ class SrpingSeqIoTest(FunTestCase):
 
         fun_test.log("Running tests for size {}".format(io_list))
 
-        f10_pid_there = 0
-        f11_pid_there = 0
         for size in io_list:
             f10_host_test = f10_host_roce.srping_test(size=size, count=test_count, debug=tool_debug)
             fun_test.sleep("Started srping server for size {}".format(size), seconds=1)
             f11_host_test = f11_host_roce.srping_test(size=size, count=test_count, debug=tool_debug,
                                                       server_ip=f10_hosts[0]["ipaddr"])
+            f10_pid_there = 0
+            f11_pid_there = 0
             while f10_hosts[0]["handle"].process_exists(process_id=f10_host_test["cmd_pid"]):
                 fun_test.sleep("Srping test on f10_host", 2)
                 f10_pid_there += 1  # Counter to check before initiating kill
@@ -722,13 +727,13 @@ class RpingSeqIoTest(FunTestCase):
 
         fun_test.log("Running tests for size {}".format(io_list))
 
-        f10_pid_there = 0
-        f11_pid_there = 0
         for size in io_list:
             f10_host_test = f10_host_roce.rping_test(size=size, count=test_count, debug=tool_debug)
             fun_test.sleep("Started rping server for size {}".format(size), seconds=1)
             f11_host_test = f11_host_roce.rping_test(size=size, count=test_count, debug=tool_debug,
                                                      server_ip=f10_hosts[0]["ipaddr"])
+            f10_pid_there = 0
+            f11_pid_there = 0
             while f10_hosts[0]["handle"].process_exists(process_id=f10_host_test["cmd_pid"]):
                 fun_test.sleep("Rping test on f10_host", 2)
                 f10_pid_there += 1
@@ -836,13 +841,13 @@ class IbBwSeqIoTest(FunTestCase):
 
         fun_test.log("Running tests for size {}".format(io_list))
 
-        f10_pid_there = 0
-        f11_pid_there = 0
         for test in test_type_list:
             for size in io_list:
                 f10_host_test = f10_host_roce.ib_bw_test(test_type=test, size=size, rdma_cm=rdmacm)
                 f11_host_test = f11_host_roce.ib_bw_test(test_type=test, size=size, rdma_cm=rdmacm,
                                                          server_ip=f10_hosts[0]["ipaddr"])
+                f10_pid_there = 0
+                f11_pid_there = 0
                 while f10_hosts[0]["handle"].process_exists(process_id=f10_host_test["cmd_pid"]):
                     # sleep for 5 seconds as it takes longer time to run for larger IO
                     fun_test.sleep("ib_bw test on f10_host", 5)
@@ -976,13 +981,13 @@ class IbLatSeqIoTest(FunTestCase):
                     io_list.append(size)
                 size = size * 2
 
-        f10_pid_there = 0
-        f11_pid_there = 0
         for test in test_type_list:
             for size in io_list:
                 f10_host_test = f10_host_roce.ib_lat_test(test_type=test, size=size, rdma_cm=rdmacm)
                 f11_host_test = f11_host_roce.ib_lat_test(test_type=test, size=size, rdma_cm=rdmacm,
                                                           server_ip=f10_hosts[0]["ipaddr"])
+                f10_pid_there = 0
+                f11_pid_there = 0
                 while f10_hosts[0]["handle"].process_exists(process_id=f10_host_test["cmd_pid"]):
                     # sleep for 5 seconds as ib_write_lat takes longer time to run for larger IO
                     fun_test.sleep("ib_lat test on f10_host", 5)

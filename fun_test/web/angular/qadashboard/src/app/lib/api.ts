@@ -9,7 +9,12 @@ export abstract class Api {
   abstract classType: any = null;
 
   abstract serialize(): any;
-  abstract deSerialize(data: any): any;
+  public deSerialize(data: any): any {
+    Object.keys(data).forEach(key => {
+      this[key] = data[key];
+    });
+    return this;
+  }
   private apiService: ApiService;
   private loggerService: LoggerService;
 

@@ -383,6 +383,10 @@ class ReleaseCatalogExecution(FunModel):
     owner = models.EmailField(null=True, blank=True)
     state = models.IntegerField(default=JobStatusType.UNKNOWN)
     description = models.TextField(default="TBD")
+    recurring = models.BooleanField(default=True)
+    release_train = models.TextField(default="master", null=True)
+    master_execution_id = models.IntegerField(default=None, null=True)
+    suite_executions = JSONField(default=None, null=True)
 
 
 
