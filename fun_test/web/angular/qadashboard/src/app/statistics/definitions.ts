@@ -1,5 +1,8 @@
+import {timestamp} from "rxjs/operators";
+
 export class FunTimeSeries {
   name: string = null;
+  // data: {[timestamp: number]: any} = {};
   data: any[] = [];
   constructor(name: string, data: any[]) {
     this.name = name;
@@ -13,8 +16,11 @@ export class FunTimeSeries {
 
 export class FunTimeSeriesCollection {
   title: string = null;
+  // name: string = null;
   xAxisLabel: string = null;
   y1AxisLabel: string  = null;
+  // unit: string = null;
+  // collection: FunTimeSeries[] = [];
   xValues: any[] = [];
   y1Values: FunTimeSeries[] = [];
   y2AxisLabel: string = null;

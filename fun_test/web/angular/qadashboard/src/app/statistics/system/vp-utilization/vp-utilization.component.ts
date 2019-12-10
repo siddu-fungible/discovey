@@ -24,6 +24,8 @@ export class VpUtilizationComponent implements OnInit, OnChanges {
   suiteExecutionId: number;
   detectedF1Indexes = new Set();
   fs: Fs = new Fs();
+  maxChartsPerRow: number = 3;
+
   xSeries: any = null;
   TIMEZONE: string = "America/Los_Angeles";
   tableHeaders: any = null;
@@ -107,8 +109,13 @@ export class VpUtilizationComponent implements OnInit, OnChanges {
     this.fs.f1s.forEach(f1 => {
       f1.clusters.forEach(cluster => {
         cluster["debug_vp_util"] = {series: []};
-        cluster["tableHeaders"] = ["Datetime", "Value"];
+        cluster["tableHeaders"] = ["Datetime"];
         cluster["tableData"] = [];
+        let dataSet = {};
+        uniqueTimestamps.forEach(uniqueTimestamp => {
+          let dateTime = this.commonService.getShortDateTimeFromEpoch(uniqueTimestamp * 1000, this.TIMEZONE);
+          dataSet[dateTime] = [];
+        });
         let index = cluster.index;
         let funTimeSeriesCollection = new FunTimeSeriesCollection("Cluster-" + index, "Sample", "%", null,[]);
         cluster.cores.forEach(core => {
@@ -120,18 +127,20 @@ export class VpUtilizationComponent implements OnInit, OnChanges {
             let name = `${coreIndex}.${vpIndex}`;
             // console.log(name);
             let oneSeries = new FunTimeSeries(name, []);
-
+            cluster["tableHeaders"].push(name);
             let data = oneSeries.data;
             uniqueTimestamps.forEach(uniqueTimestamp => {
                let dateTime = this.commonService.getShortDateTimeFromEpoch(uniqueTimestamp * 1000, this.TIMEZONE);
               if (vp.utilization.hasOwnProperty(uniqueTimestamp)) {
                 data.push(vp.utilization[uniqueTimestamp]);
-                cluster["tableData"].push([dateTime, vp.utilization[uniqueTimestamp]]);
+                // cluster["tableData"].push([dateTime, vp.utilization[uniqueTimestamp]]);
                 numVps += 1;
                 sumOfUtilizations += vp.utilization[uniqueTimestamp] * 100;
+                dataSet[dateTime].push(vp.utilization[uniqueTimestamp]);
               } else {
                 data.push(-1);
-                cluster["tableData"].push([dateTime, -1]);
+                // cluster["tableData"].push([dateTime, -1]);
+                dataSet[dateTime].push(-1);
               }
             });
             cluster["debug_vp_util"].series.push(oneSeries);
@@ -139,8 +148,15 @@ export class VpUtilizationComponent implements OnInit, OnChanges {
         });
         funTimeSeriesCollection.y1Values = cluster["debug_vp_util"].series;
         cluster["funTimeSeries"] = funTimeSeriesCollection;
+        Object.keys(dataSet).forEach(date => {
+          let temp = [];
+          temp.push(date);
+          let result = temp.concat(dataSet[date]);
+          cluster["tableData"].push(result);
+        });
       });
     });
+
 
     this.xSeries = uniqueTimestamps;
 

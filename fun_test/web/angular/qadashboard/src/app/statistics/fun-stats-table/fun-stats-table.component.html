@@ -8,11 +8,12 @@
             }}<span class="fun-action-link" (click)="expandSlicedString(d)">...expand</span></span>
       <ng-container *ngIf="d.stringType">
             <span *ngIf="!d.showSliced">{{ d.originalValue }}<span
-              *ngIf="d.originalValue.length > characterLimit" class="fun-action-link" (click)="expandSlicedString(d)">...hide</span></span>
+              *ngIf="d.originalStringValue.length > characterLimit" class="fun-action-link"
+              (click)="expandSlicedString(d)">...hide</span></span>
       </ng-container>
       <ng-container *ngIf="!d.stringType">
             <span *ngIf="!d.showSliced"><pre>{{ d.originalValue | json
-              }}</pre><span *ngIf="d.originalValue.length > characterLimit"
+              }}</pre><span *ngIf="d.originalStringValue.length > characterLimit"
               class="fun-action-link" (click)="expandSlicedString(d)">...hide</span></span>
       </ng-container>
 

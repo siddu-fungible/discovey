@@ -26,6 +26,7 @@ export class FunStatsTableComponent implements OnInit {
           newValue = JSON.stringify(value);
           oneValue["stringType"] = false;
         }
+        oneValue["originalStringValue"] = newValue;
         if (newValue.length > this.characterLimit) {
           oneValue["originalValue"] = value;
           oneValue["slicedValue"] = newValue.slice(0, this.characterLimit);
