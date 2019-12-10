@@ -741,6 +741,9 @@ class Bmc(Linux):
 
     def initialize(self, reset=False):
         self.command("mkdir -p {}".format("{}".format(self.LOG_DIRECTORY)))
+        self.command("cd {}".format(self.SCRIPT_DIRECTORY))
+        self.command('gpiotool 8 --get-data | grep High >/dev/null 2>&1 && echo FS1600_REV2 || echo FS1600_REV1')
+
         return True
 
     def reset_come(self):
