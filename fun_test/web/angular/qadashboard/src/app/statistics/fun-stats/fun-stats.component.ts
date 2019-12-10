@@ -9,22 +9,28 @@ import {slideInOutAnimation,showAnimation} from "../../animations/generic-animat
 })
 export class FunStatsComponent implements OnInit {
 
-  @Input() title: string = null;
-  @Input() xAxisLabel: string = null;
-  @Input() y1AxisLabel: string = null;
-  @Input() y2AxisLabel: string = null;
-  @Input() xValues: any = null;
-  @Input() y1Values: any = null;
-  @Input() y2Values: any = null;
+  title: string = null;
+  xAxisLabel: string = null;
+  y1AxisLabel: string = null;
+  y2AxisLabel: string = null;
+  xValues: any = null;
+  y1Values: any = null;
+  y2Values: any = null;
+
   @Input() tableHeaders: any[] = [];
   @Input() tableData: any[] = [];
+  @Input() data: any = {};
 
   showTable: boolean = false;
-
 
   constructor() { }
 
   ngOnInit() {
+    this.title = this.data.title;
+    this.xAxisLabel = this.data.xAxisLabel;
+    this.y1AxisLabel = this.data.y1AxisLabel;
+    this.y1Values = this.data.y1Values;
+    this.xValues = this.data.xValues;
   }
 
   showTables(): void {

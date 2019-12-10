@@ -5,6 +5,7 @@ import {LoggerService} from "../../../services/logger/logger.service";
 import {of} from "rxjs";
 import {switchMap} from "rxjs/operators";
 import {Fs} from "../../../hosts/fs";
+import {FunTimeSeries, FunTimeSeriesCollection} from "../../definitions";
 import {CommonService} from "../../../services/common/common.service";
 import {slideInOutAnimation, showAnimation} from "../../../animations/generic-animations";
 
@@ -28,6 +29,8 @@ export class VpUtilizationComponent implements OnInit, OnChanges {
   tableHeaders: any = null;
   tableData: any = null;
   showCharts: boolean = false;
+  funStatsSeries: FunTimeSeriesCollection[] = [];
+  y1Values: FunTimeSeries[] = [];
 
   constructor(private regressionService: RegressionService, private loggerService: LoggerService, private commonService: CommonService) {
     this.driver = of(true).pipe(switchMap(response => {
@@ -104,6 +107,10 @@ export class VpUtilizationComponent implements OnInit, OnChanges {
     this.fs.f1s.forEach(f1 => {
       f1.clusters.forEach(cluster => {
         cluster["debug_vp_util"] = {series: []};
+        cluster["tableHeaders"] = ["Datetime", "Value"];
+        cluster["tableData"] = [];
+        let index = cluster.index;
+        let funTimeSeriesCollection = new FunTimeSeriesCollection("Cluster-" + index, "Sample", "%", null,[]);
         cluster.cores.forEach(core => {
           let numVps = 0;
           let sumOfUtilizations = 0;
@@ -112,22 +119,27 @@ export class VpUtilizationComponent implements OnInit, OnChanges {
             let vpIndex = vp.index;
             let name = `${coreIndex}.${vpIndex}`;
             // console.log(name);
-            let oneSeries = {name: name, data: []};
+            let oneSeries = new FunTimeSeries(name, []);
 
             let data = oneSeries.data;
             uniqueTimestamps.forEach(uniqueTimestamp => {
+               let dateTime = this.commonService.getShortDateTimeFromEpoch(uniqueTimestamp * 1000, this.TIMEZONE);
               if (vp.utilization.hasOwnProperty(uniqueTimestamp)) {
                 data.push(vp.utilization[uniqueTimestamp]);
+                cluster["tableData"].push([dateTime, vp.utilization[uniqueTimestamp]]);
                 numVps += 1;
                 sumOfUtilizations += vp.utilization[uniqueTimestamp] * 100;
               } else {
                 data.push(-1);
+                cluster["tableData"].push([dateTime, -1]);
               }
             });
             cluster["debug_vp_util"].series.push(oneSeries);
           })
-        })
-      })
+        });
+        funTimeSeriesCollection.y1Values = cluster["debug_vp_util"].series;
+        cluster["funTimeSeries"] = funTimeSeriesCollection;
+      });
     });
 
     this.xSeries = uniqueTimestamps;
@@ -135,14 +147,16 @@ export class VpUtilizationComponent implements OnInit, OnChanges {
 
     this.fs.f1s.forEach(f1 => {
       let histogramData = [];
+      let funTimeSeriesCollection = new FunTimeSeriesCollection("VP utilization distribution (Range of percentages)", "Sample", "Number" +
+        " of VPs", null,[]);
       for (let index = 0; index < 10; index++) {
         let binLow = (index * 10) + 1;
         let binHigh = (index * 10) + 10;
         // console.log(binLow, binHigh);
         let binName = `${binLow}-${binHigh}`;
         let series = {name: binName, data:[]};
-        histogramData.push(series);
-
+        let y1Values = new FunTimeSeries(binName, []);
+        histogramData.push(y1Values);
       }
       let currentTimestampIndex = 0;
       uniqueTimestamps.forEach(timestamp => {
@@ -162,9 +176,13 @@ export class VpUtilizationComponent implements OnInit, OnChanges {
           })
         });
         currentTimestampIndex += 1;
+
       });
+
       f1["histogram"] = histogramData;
-    })
+      funTimeSeriesCollection.y1Values = histogramData;
+      f1["funTimeSeries"] = funTimeSeriesCollection;
+    });
   }
 
   ngOnChanges() {
