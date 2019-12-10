@@ -25,6 +25,7 @@ export class ReleaseCatalogsComponent implements OnInit, OnChanges {
   selectedReleaseCatalog: ReleaseCatalog = null;
   users = null;
   selectedUser = null;
+  releaseTrains: string [] = [];
   constructor(private regressionService: RegressionService,
               private loggerService: LoggerService,
               private router: Router,
@@ -37,6 +38,9 @@ export class ReleaseCatalogsComponent implements OnInit, OnChanges {
       return this.userService.users();
     })).pipe(switchMap(response => {
       this.users = response;
+      return this.regressionService.releaseTrains();
+    })).pipe(switchMap(response => {
+      this.releaseTrains = response;
       return this.regressionService.getReleaseCatalogs();
     })).pipe(switchMap(response => {
       this.releaseCatalogs = response;
@@ -106,10 +110,9 @@ export class ReleaseCatalogsComponent implements OnInit, OnChanges {
   }
 
   execute() {
-    if (!this.selectedUser) {
+    if (!this.releaseCatalogExecution.owner) {
       return alert("Please select a user");
     }
-    this.releaseCatalogExecution.owner = this.selectedUser.email;
     this.releaseCatalogExecution.release_catalog_id = this.selectedReleaseCatalog.id;
     this.releaseCatalogExecution.create(this.releaseCatalogExecution.url, this.releaseCatalogExecution.serialize()).subscribe(rceResponse => {
       this.loggerService.success(`Created catalog execution: ${rceResponse.id}`);

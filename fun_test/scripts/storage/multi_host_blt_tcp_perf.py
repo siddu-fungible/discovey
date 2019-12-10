@@ -1175,7 +1175,8 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
             # its first attribute
             for combo in self.fio_jobs_iodepth:
                 if combo not in self.expected_fio_result:
-                    self.expected_fio_result[combo] = self.expected_fio_result.keys()[0]
+                    first_combo = sorted(self.expected_fio_result.keys())[0]
+                    self.expected_fio_result[combo] = self.expected_fio_result[first_combo]
 
         if not isinstance(self.fio_jobs_iodepth, list):
             self.fio_jobs_iodepth = [self.fio_jobs_iodepth]

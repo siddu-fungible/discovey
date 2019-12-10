@@ -6,6 +6,7 @@
     <h6 style="display: inline-block">{{ index }}. {{ execution.description }}</h6>
     &nbsp;&nbsp;State: <app-smart-label [value]="jobStatusType.descriptionMap[execution.state]"></app-smart-label>
     <div>
+      <small>Release: {{ execution.release_train }}</small>&nbsp;
       <small>Owner: {{ execution.owner }}</small>
     </div>
     <app-section-horizontal-line></app-section-horizontal-line>

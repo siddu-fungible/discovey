@@ -37,8 +37,8 @@
       <tr>
         <td class="fun-attribute-label">Owner</td>
         <td>
-          <select id="owner" [(ngModel)]="selectedUser">
-            <option *ngFor="let user of users" [ngValue]="user">{{ user.first_name }} {{ user.last_name }}
+          <select id="owner" [(ngModel)]="releaseCatalogExecution.owner">
+            <option *ngFor="let user of users" [ngValue]="user.email">{{ user.first_name }} {{ user.last_name }}
               ({{ user.email }})
             </option>
           </select>
@@ -55,6 +55,18 @@
 
     </table>
 
+    <label class="fun-attribute-label" for="release-select">Select a release: </label>
+    <select id="release-select" [(ngModel)]="releaseCatalogExecution.release_train">
+      <option></option>
+      <option [ngValue]="releaseTrain" *ngFor="let releaseTrain of releaseTrains">
+      {{ releaseTrain }}
+      </option>
+    </select>
+
+    &nbsp;
+    <input [(ngModel)]="releaseCatalogExecution.recurring" type="checkbox"
+                     name="recurring"
+                     [checked]="releaseCatalogExecution.recurring"> Recurring
 
     <table class="fun-table-borderless">
       <tr>
