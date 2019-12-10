@@ -266,6 +266,7 @@ class ECVolumeLevelScript(FunTestScript):
 
         # Bringing up of FunCP docker container if it is needed
         deploy_thread_id = {}
+        deploy_thread_started = False
         self.funcp_obj = {}
         self.funcp_spec = {}
         fun_test.shared_variables["funcp_deploy"] = {}
@@ -478,24 +479,31 @@ class ECVolumeLevelScript(FunTestScript):
                         time_in_seconds=1, obj=self.funcp_obj[index], func=deploy_funcp_container, fs_index=index,
                         update_deploy_script=self.update_deploy_script, update_workspace=self.update_workspace,
                         mode=self.funcp_mode)
-        fun_test.log("Deploy Thread IDs: {}".format(deploy_thread_id))
-        for index in xrange(self.num_duts):
-            try:
-                fun_test.log("Joining deploy thread for DUT {}".format(index))
-                fun_test.join_thread(fun_test_thread_id=deploy_thread_id[index], sleep_time=1)
-                fun_test.log("Deploy Output from DUT {}:\n {}".format(index,
-                                                                      fun_test.shared_variables["funcp_deploy"][index]))
-            except Exception as ex:
-                fun_test.log("Deploy Output from DUT {}:\n {}".format(index,
-                                                                      fun_test.shared_variables["funcp_deploy"][index]))
-                fun_test.critical(str(ex))
-            self.funcp_spec[index] = fun_test.shared_variables["funcp_deploy"][index]
-            fun_test.test_assert(self.funcp_spec[index]["status"],
-                                 "Starting FunCP docker container in DUT {}".format(index))
-            self.funcp_spec[index]["container_names"].sort()
+                    deploy_thread_started = True
 
+        if deploy_thread_started:
+            fun_test.log("Deploy Thread IDs: {}".format(deploy_thread_id))
+            for index in xrange(self.num_duts):
+                try:
+                    fun_test.log("Joining deploy thread for DUT {}".format(index))
+                    fun_test.join_thread(fun_test_thread_id=deploy_thread_id[index], sleep_time=1)
+                    fun_test.log("Deploy Output from DUT {}:\n {}".format(index,
+                                                                          fun_test.shared_variables["funcp_deploy"][index]))
+                except Exception as ex:
+                    fun_test.log("Deploy Output from DUT {}:\n {}".format(index,
+                                                                          fun_test.shared_variables["funcp_deploy"][index]))
+                    fun_test.critical(str(ex))
+                self.funcp_spec[index] = fun_test.shared_variables["funcp_deploy"][index]
+                fun_test.test_assert(self.funcp_spec[index]["status"],
+                                     "Starting FunCP docker container in DUT {}".format(index))
+                self.funcp_spec[index]["container_names"].sort()
+
+        fun_test.log("FS Spec before configuring bond interface: {}".format(self.fs_spec))
+        fun_test.log("FunCP Spec before configuring bond interface: {}".format(self.funcp_spec))
         for index in xrange(self.num_duts):
             for f1_index, container_name in enumerate(self.funcp_spec[index]["container_names"]):
+                if container_name == "run_sc":
+                    continue
                 bond_interfaces = self.fs_spec[index].get_bond_interfaces(f1_index=f1_index)
                 bond_name = "bond0"
                 bond_ip = bond_interfaces[0].ip
