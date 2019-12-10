@@ -174,6 +174,8 @@ class Codes:
             value = getattr(self, non_callable_attribute)
             self.string_to_code_map[non_callable_attribute] = value
 
+        self.code_to_description_map = {}
+
     def code_to_string(self, code):
         return self.code_to_string_map.get(code, "Unknown")
 
@@ -190,6 +192,14 @@ class Codes:
             result.append(value)
         return result
 
+    def get_code_to_description_map(self):
+        result = {}
+        attributes = self.non_callable_attributes
+        for attribute in attributes:
+            value = getattr(self, attribute)
+            if type(value) is int:
+                result[value] = attribute
+        return result
 
 class TimeSeriesTypes(Codes):
     SCRIPT_RUN_TIME = 10

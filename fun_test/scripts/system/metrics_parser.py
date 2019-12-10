@@ -1605,7 +1605,7 @@ class MetricParser():
                 teramark_begin = False
             if teramark_begin:
                 m = re.search(
-                    r'{"Type":\s+"(?P<type>\S+)",\s+"Operation":\s+(?P<operation>\S+),\s+"Effort":\s+(?P<effort>\S+),'
+                    r'{"Type":\s+"(?P<type>\S+)",.*?\s+"Operation":\s+(?P<operation>\S+),\s+"Effort":\s+(?P<effort>\S+),'
                     r'.*\s+"Duration"\s+:\s+(?P<latency_json>{.*}),\s+"Throughput":\s+(?P<throughput_json>{.*})}', line)
                 if m:
                     self.match_found = True

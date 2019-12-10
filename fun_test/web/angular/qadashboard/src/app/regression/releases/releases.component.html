@@ -3,12 +3,16 @@
   <app-section-header [value]="'Releases'"></app-section-header>
   <ng-container *ngFor="let execution of releaseCatalogExecutions; let index = index">
 
-    <h6>{{ index }}. {{ execution.description }}</h6>
-    <small>Owner: {{ execution.owner }}</small>
+    <h6 style="display: inline-block">{{ index }}. {{ execution.description }}</h6>
+    &nbsp;&nbsp;State: <app-smart-label [value]="jobStatusType.descriptionMap[execution.state]"></app-smart-label>
+    <div>
+      <small>Release: {{ execution.release_train }}</small>&nbsp;
+      <small>Owner: {{ execution.owner }}</small>
+    </div>
     <app-section-horizontal-line></app-section-horizontal-line>
 
   </ng-container>
 
-</div>
+</div>fs
 
 <a href="/regression/release_catalogs">Go to release catalogs</a>

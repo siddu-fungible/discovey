@@ -159,6 +159,10 @@ class BringupSetup(FunTestCase):
             fun_test.shared_variables["perftest_commit"] = job_inputs["perftest_commit"]
         else:
             fun_test.shared_variables["perftest_commit"] = None
+        if "update_funcp" in job_inputs:
+            update_funcp = job_inputs["update_funcp"]
+        else:
+            update_funcp = False
 
         if deploy_setup:
             funcp_obj = FunControlPlaneBringup(fs_name=self.server_key["fs"][fs_name]["fs-name"])
@@ -214,7 +218,8 @@ class BringupSetup(FunTestCase):
                                             % servers_mode[server])
 
             # Bringup FunCP
-            fun_test.test_assert(expression=funcp_obj.bringup_funcp(prepare_docker=False), message="Bringup FunCP")
+            fun_test.test_assert(expression=funcp_obj.bringup_funcp(prepare_docker=update_funcp),
+                                 message="Bringup FunCP")
             # Assign MPG IPs from dhcp
             funcp_obj.assign_mpg_ips(static=self.server_key["fs"][fs_name]["mpg_ips"]["static"],
                                      f1_1_mpg=self.server_key["fs"][fs_name]["mpg_ips"]["mpg1"],
