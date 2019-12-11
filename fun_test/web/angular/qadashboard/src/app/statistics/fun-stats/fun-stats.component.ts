@@ -17,8 +17,8 @@ export class FunStatsComponent implements OnInit {
   y1Values: any = null;
   y2Values: any = null;
 
-  @Input() tableHeaders: any[] = [];
-  @Input() tableData: any[] = [];
+  tableHeaders: any[] = [];
+  tableData: any[] = [];
   @Input() data: any = {};
 
   showTable: boolean = false;
