@@ -19,7 +19,7 @@
         </td>
       </tr>
       <tr *ngFor="let catalog of releaseCatalogs; let index=index" class="fun-table-borderless-row">
-        <td><span class="fun-action-link" (click)="prepareExecutionDetails(index)">Prepare for execution</span></td>
+        <td><span class="fun-action-link" (click)="prepareRelease(index)">Prepare a release</span></td>
 
         <td><small>{{ index }}.</small> {{ catalog.name }}</td>
         <td>{{ catalog.description }}</td>
@@ -32,7 +32,7 @@
     </table>
   </div>
   <div class="fun-div" *ngIf="preparingCatalogExecution">
-    <app-section-header [value]="'Set catalog execution parameters ...'"></app-section-header>
+    <app-section-header [value]="'Prepare release parameters ...'"></app-section-header>
     <table>
       <tr>
         <td class="fun-attribute-label">Owner</td>
@@ -77,24 +77,33 @@
           Name
         </td>
         <td class="fun-table-borderless-header">
+          Test-bed
+        </td>
+        <td class="fun-table-borderless-header">
           Description
         </td>
       </tr>
-      <tr class="fun-table-borderless-row" *ngFor="let suiteForExecution of suitesForExecution">
+      <tr class="fun-table-borderless-row" *ngFor="let suiteExecution of releaseCatalogExecution.suiteExecutions">
         <td>
-          {{ suiteForExecution.id }}
+          {{ suiteExecution.suite_id }}
         </td>
         <td>
-          {{ suiteForExecution.name }}
+          {{ suiteExecution.suite_details.name }}
         </td>
         <td>
-          {{ suiteForExecution.short_description }}
+          <select id="test-bed" [(ngModel)]="suiteExecution.test_bed_name">
+            <option *ngFor="let testBed of testBeds" [ngValue]="testBed.name">{{ testBed.name }}
+            </option>
+          </select>
+        </td>
+        <td>
+          {{ suiteExecution.suite_details.short_description }}
         </td>
       </tr>
     </table>
     <div class="fun-div">
       <span class="fun-action-link" (click)="preparingCatalogExecution = false">back</span>&nbsp;&nbsp;
-      <button class="fun-button-submit" (click)="execute()">Execute</button>
+      <button class="fun-button-submit" (click)="createRelease()">Create release</button>
     </div>
 
   </div>

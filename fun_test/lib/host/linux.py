@@ -99,7 +99,7 @@ class Linux(object, ToDictMixin):
     DEBUG_LOG_FILE = "/tmp/linux_debug.txt"
 
     def __init__(self,
-                 host_ip,
+                 host_ip=None,
                  ssh_username="jabraham",
                  ssh_password="fun123",
                  ssh_port=SSH_PORT_DEFAULT,

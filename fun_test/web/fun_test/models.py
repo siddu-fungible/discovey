@@ -386,6 +386,7 @@ class ReleaseCatalogExecution(FunModel):
     recurring = models.BooleanField(default=True)
     release_train = models.TextField(default="master", null=True)
     master_execution_id = models.IntegerField(default=None, null=True)
+    suite_executions = JSONField(default=None, null=True)
 
 
 

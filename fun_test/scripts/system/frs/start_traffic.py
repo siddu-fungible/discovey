@@ -318,6 +318,8 @@ class MyScript(FunTestScript):
             if "add_boot_arg" in job_inputs:
                 self.add_boot_arg = job_inputs["add_boot_arg"]
                 self.add_boot_arg = " --" + self.add_boot_arg
+            if "traffic_profile" in job_inputs:
+                self.traffic_profile = job_inputs["traffic_profile"]
 
     def initialize_variables(self):
         fs_name = fun_test.get_job_environment_variable("test_bed_type")
@@ -1600,6 +1602,7 @@ class FrsTestCase(FunTestCase):
                                                                                     self.f_DEBUG_MEMORY_f1_1)
 
     def run_the_traffic(self):
+        fun_test.log("Starting the dpcsh apps")
         come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
                            ssh_username=self.fs['come']['mgmt_ssh_username'],
                            ssh_password=self.fs['come']['mgmt_ssh_password'])
@@ -2056,11 +2059,11 @@ class FrsTestCase(FunTestCase):
             are_all_apps_done = all(app_result.values())
             fun_test.sleep("Before checking the count iteration")
 
-        for thread_name, thread_id in self.stats_thread_map.iteritems():
-            fun_test.join_thread(thread_id)
-
         if not fun_test.shared_variables["stat_collection_threads_status"]:
             fun_test.test_assert(False, "Stats collection has failed: Mainly because of DPCSH failure")
+
+        for thread_name, thread_id in self.stats_thread_map.iteritems():
+            fun_test.join_thread(thread_id)
 
 
 if __name__ == "__main__":
