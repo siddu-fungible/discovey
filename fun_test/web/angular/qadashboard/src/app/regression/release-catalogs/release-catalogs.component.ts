@@ -114,13 +114,14 @@ export class ReleaseCatalogsComponent implements OnInit, OnChanges {
 
   }
 
-  execute() {
+  createRelease() {
     if (!this.releaseCatalogExecution.owner) {
       return alert("Please select a user");
     }
     this.releaseCatalogExecution.release_catalog_id = this.selectedReleaseCatalog.id;
     this.releaseCatalogExecution.create(this.releaseCatalogExecution.url, this.releaseCatalogExecution.serialize()).subscribe(rceResponse => {
       this.loggerService.success(`Created catalog execution: ${rceResponse.id}`);
+      this.router.navigateByUrl(`/regression/release_detail/${rceResponse.id}`);
     }, error => {
       this.loggerService.error(`Unable to execute catalog`, error);
     })
