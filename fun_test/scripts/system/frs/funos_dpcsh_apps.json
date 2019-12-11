@@ -21,7 +21,8 @@
     "HBM",
     "PC_DMA",
     "DDR",
-    "STORAGE_IOPS"
+    "STORAGE_IOPS",
+    "DEBUG_MEMORY"
   ],
   "disable_stats": [],
   "add_boot_arg": "",
