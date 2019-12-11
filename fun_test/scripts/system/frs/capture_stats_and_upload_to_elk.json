@@ -1,0 +1,15 @@
+{
+  "duration": 10,
+  "disable_f1_index": 1,
+  "upload_to_file": true,
+  "collect_stats": [
+    "DEBUG_MEMORY"
+  ],
+  "stats_interval": 30,
+  "disable_stats": [],
+  "elasticsearch_config": {
+    "ip": "10.1.20.52",
+    "port": 9200
+  },
+  "boot_new_image": false
+}
