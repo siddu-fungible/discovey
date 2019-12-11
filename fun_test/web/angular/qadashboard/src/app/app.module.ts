@@ -103,6 +103,7 @@ import {setAppInjector} from "./app-injector";
 import { VpUtilizationComponent } from './statistics/system/vp-utilization/vp-utilization.component';
 import { BrokerTestComponent } from './mq-broker/broker-test/broker-test.component';
 import { PerformanceAttachDagComponent } from "./performance/performance-workspace/performance-view-workspace/performance-attach-dag/performance-attach-dag.component";
+import { ReleaseDetailComponent } from './regression/release-detail/release-detail.component';
 import { FunStatsComponent } from './statistics/fun-stats/fun-stats.component';
 import { FunStatsTableComponent } from './statistics/fun-stats-table/fun-stats-table.component';
 
@@ -190,6 +191,7 @@ import { FunStatsTableComponent } from './statistics/fun-stats-table/fun-stats-t
     VpUtilizationComponent,
     BrokerTestComponent,
     PerformanceAttachDagComponent,
+    ReleaseDetailComponent,
     FunStatsComponent,
     FunStatsTableComponent
   ],

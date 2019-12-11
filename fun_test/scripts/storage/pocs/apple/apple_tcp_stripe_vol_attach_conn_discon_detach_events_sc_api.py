@@ -363,14 +363,6 @@ class StripeVolAttachDetachTestScript(FunTestScript):
                                      format(host_name, self.funcp_spec[0]["container_names"][index], ip))
 
     def cleanup(self):
-
-        if self.bundle_image_parameters:
-            try:
-                for index in xrange(self.num_duts):
-                    self.come_obj[index].command("sudo systemctl disable init-fs1600")
-            except Exception as ex:
-                fun_test.critical(str(ex))
-
         if fun_test.shared_variables["stripe_vol"]["setup_created"]:
             self.stripe_uuid = fun_test.shared_variables["stripe_uuid"]
             self.detach_uuid = fun_test.shared_variables["detach_uuid"]

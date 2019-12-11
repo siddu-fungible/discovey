@@ -1,7 +1,7 @@
 {
   "GlobalSetup": {
-    "bootargs": ["app=mdt_test,load_mods workload=storage cc_huid=3 --serial --disable-wu-watchdog --dpc-server --dpc-uart --mgmt --all_100g --nofreeze",
-                 "app=mdt_test,load_mods workload=storage cc_huid=2 --serial --disable-wu-watchdog --dpc-server --dpc-uart --mgmt --all_100g --nofreeze"],
+    "bootargs": ["app=mdt_test,load_mods workload=storage cc_huid=3 --serial --dpc-server --dpc-uart --mgmt --all_100g --nofreeze",
+                 "app=mdt_test,load_mods workload=storage cc_huid=2 --serial --dpc-server --dpc-uart --mgmt --all_100g --nofreeze"],
     "dut_start_index": 0,
     "host_start_index": 0,
     "update_workspace": false,
@@ -25,7 +25,8 @@
     "sc_db_directories": ["/var/opt/fungible/elasticsearch", "/var/opt/fungible/cassandra"],
     "sc_script_dir": "/opt/fungible/StorageController/etc",
     "run_sc_script": "start_sc.sh",
-    "container_up_timeout": 60
+    "container_up_timeout": 60,
+    "api_server_up_timeout": 90
   },
   "RandReadStripe": {
     "syslog": 2,

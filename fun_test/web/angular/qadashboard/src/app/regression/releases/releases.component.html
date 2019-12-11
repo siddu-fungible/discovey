@@ -3,7 +3,7 @@
   <app-section-header [value]="'Releases'"></app-section-header>
   <ng-container *ngFor="let execution of releaseCatalogExecutions; let index = index">
 
-    <h6 style="display: inline-block">{{ index }}. {{ execution.description }}</h6>
+    <h6 style="display: inline-block">{{ index }}. <a href="/regression/release_detail/{{ execution.id }}">{{ execution.description }}</a></h6>
     &nbsp;&nbsp;State: <app-smart-label [value]="jobStatusType.descriptionMap[execution.state]"></app-smart-label>
     <div>
       <small>Release: {{ execution.release_train }}</small>&nbsp;

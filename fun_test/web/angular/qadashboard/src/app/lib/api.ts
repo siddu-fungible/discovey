@@ -25,7 +25,7 @@ export abstract class Api {
   }
 
   public create(url, payload) {
-    return this.apiService.post(this.url, payload).pipe(switchMap(response => {
+    return this.apiService.post(url, payload).pipe(switchMap(response => {
       this.deSerialize(response.data);
       return of(this);
     }), catchError(error => {
@@ -34,8 +34,16 @@ export abstract class Api {
     }))
   }
 
+  public getUrl(params) {
+    let url = this.url;
+    if (params.hasOwnProperty('execution_id')) {
+      url = `${url}/${params.execution_id}`;
+    }
+    return url;
+  }
+
   public get(url) {
-    return this.apiService.get(this.url).pipe(switchMap(response => {
+    return this.apiService.get(url).pipe(switchMap(response => {
       this.deSerialize(response.data);
       return of(this);
     }), catchError(error => {

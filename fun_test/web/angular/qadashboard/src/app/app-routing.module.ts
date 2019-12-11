@@ -37,6 +37,7 @@ import {ReleasesComponent} from "./regression/releases/releases.component";
 import {ReleaseCatalogsComponent} from "./regression/release-catalogs/release-catalogs.component";
 import {DaemonsComponent} from "./daemons/daemons.component";
 import {BrokerTestComponent} from "./mq-broker/broker-test/broker-test.component";
+import {ReleaseDetailComponent} from "./regression/release-detail/release-detail.component";
 
 export function regressionHome(url: UrlSegment[]) {
   return url[0].path.endsWith("regression");
@@ -79,6 +80,7 @@ const routes: Routes = [
   { path: 'regression/release_catalog_editor', component: ReleaseCatalogEditorComponent},
   { path: 'regression/releases', component: ReleasesComponent},
   { path: 'regression/release_catalogs', component: ReleaseCatalogsComponent},
+  { path: 'regression/release_detail/:executionId', component: ReleaseDetailComponent},
   { path: 'performance/admin/scores/:metricId', component: ScoresTableComponent},
   { path: 'performance/admin/data/:metricId', component: PerformanceTableComponent},
   { path: 'performance/admin/:mode/:modelName/:metricId', component: CreateChartComponent},

@@ -318,6 +318,8 @@ class MyScript(FunTestScript):
             if "add_boot_arg" in job_inputs:
                 self.add_boot_arg = job_inputs["add_boot_arg"]
                 self.add_boot_arg = " --" + self.add_boot_arg
+            if "traffic_profile" in job_inputs:
+                self.traffic_profile = job_inputs["traffic_profile"]
 
     def initialize_variables(self):
         fs_name = fun_test.get_job_environment_variable("test_bed_type")
@@ -886,19 +888,12 @@ class FrsTestCase(FunTestCase):
         if self.upload_to_file:
             self.add_data_to_file(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
 
-        differnce_data_set = {}
-        difference_output = debug_memory_calculation.debug_difference(self.initial_debug_memory_stats, one_dataset,
-                                                                      f1=f1)
-        differnce_data_set["output"] = difference_output
-        differnce_data_set["time"] = datetime.datetime.now()
-        differnce_data_set["time_difference"] = difference_output["time_difference"]
-        if self.upload_to_file:
-            self.add_data_to_file(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), differnce_data_set,
-                                  heading=heading)
+        if self.stats_info["come"][stat_name].get("upload_to_es", False):
+            dpcsh_data = self.simplify_debug_memory_stats(dpcsh_output)
+            time_taken = self.upload_dpcsh_data_to_elk(dpcsh_data=dpcsh_data, f1=f1, stat_name=stat_name)
 
-        # dpcsh_output_list.append(one_dataset)
-        fun_test.sleep("before next iteration", seconds=3)
-        fun_test.shared_variables["stat_{}".format(stat_name)]["count"] += 1
+        fun_test.sleep("before next iteration", seconds=self.stats_interval)
+        fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]["count"] += 1
 
     @stats_deco
     def func_storage_iops(self, f1, heading, stat_name, come_handle):
@@ -947,7 +942,9 @@ class FrsTestCase(FunTestCase):
 
     def set_cmd_env_come_handle(self, come_handle):
         come_handle.enter_sudo()
-        come_handle.command("cd /tmp/workspace/FunSDK/bin/Linux")
+        output = come_handle.command("cd /tmp/workspace/FunSDK/bin/Linux")
+        if "No such file" in output:
+            come_handle.command("cd /opt/fungible/FunSDK/bin/Linux/dpcsh")
         return come_handle
 
     ####### Data Capturing function ############
@@ -1013,20 +1010,23 @@ class FrsTestCase(FunTestCase):
             "%Y-%m-%dT%H:%M:%SZ")
         self.add_the_links()
         if not self.boot_new_image:
-            bmc_handle = Bmc(host_ip=self.fs['bmc']['mgmt_ip'],
-                             ssh_username=self.fs['bmc']['mgmt_ssh_username'],
-                             ssh_password=self.fs['bmc']['mgmt_ssh_password'],
-                             set_term_settings=True,
-                             disable_uart_logger=False,
-                             bundle_compatible=False)
-            bmc_handle.set_prompt_terminator(r'# $')
-            # bmc_handle.cleanup()
-            # Capture the UART logs also
-            artifact_file_name_f1_0 = bmc_handle.get_uart_log_file(0)
-            artifact_file_name_f1_1 = bmc_handle.get_uart_log_file(1)
-            self.upload_the_values(artifact_file_name_f1_0, artifact_file_name_f1_1)
-            fun_test.add_auxillary_file(description="DUT_0_fs-65_F1_0 UART Log", filename=artifact_file_name_f1_0)
-            fun_test.add_auxillary_file(description="DUT_0_fs-65_F1_1 UART Log", filename=artifact_file_name_f1_1)
+            try:
+                bmc_handle = Bmc(host_ip=self.fs['bmc']['mgmt_ip'],
+                                 ssh_username=self.fs['bmc']['mgmt_ssh_username'],
+                                 ssh_password=self.fs['bmc']['mgmt_ssh_password'],
+                                 set_term_settings=True,
+                                 disable_uart_logger=False,
+                                 bundle_compatible=False)
+                bmc_handle.set_prompt_terminator(r'# $')
+                # bmc_handle.cleanup()
+                # Capture the UART logs also
+                artifact_file_name_f1_0 = bmc_handle.get_uart_log_file(0)
+                artifact_file_name_f1_1 = bmc_handle.get_uart_log_file(1)
+                self.upload_the_values(artifact_file_name_f1_0, artifact_file_name_f1_1)
+                fun_test.add_auxillary_file(description="DUT_0_fs-65_F1_0 UART Log", filename=artifact_file_name_f1_0)
+                fun_test.add_auxillary_file(description="DUT_0_fs-65_F1_1 UART Log", filename=artifact_file_name_f1_1)
+            except:
+                fun_test.log("Its a bundle issue")
 
     def add_the_links(self):
         # Todo: Get the links for each individual app
@@ -1347,6 +1347,19 @@ class FrsTestCase(FunTestCase):
                 result.append(one_data_set.copy())
         return result
 
+    def simplify_debug_memory_stats(self, dpcsh_data):
+        result = []
+        if dpcsh_data:
+            coh_cached = dpcsh_data["coherent"]["num_in_use_minus_cached"]
+            one_data_set = {"field": "coherent_num_in_use_minus_cached",
+                            "value": coh_cached}
+            result.append(one_data_set.copy())
+            non_coh_cached = dpcsh_data["non_coh"]["num_in_use_minus_cached"]
+            one_data_set = {"field": "non_coh_num_in_use_minus_cached",
+                            "value": non_coh_cached}
+            result.append(one_data_set.copy())
+        return result
+
     def simplify_storage_iops_stats(self, dpcsh_data):
         result = []
         if dpcsh_data:
@@ -1424,7 +1437,7 @@ class FrsTestCase(FunTestCase):
         # description : "{calculated_}_{app_name}_DPCSH_OUTPUT_F1_{f1}"
         self.stats_info["bmc"] = {POWER: {"calculated": True, "upload_to_es": True},
                                   DIE_TEMPERATURE: {"calculated": False, "disable": True}}
-        self.stats_info["come"] = {DEBUG_MEMORY: {"disable": True}, CDU: {"upload_to_es": True},
+        self.stats_info["come"] = {DEBUG_MEMORY: {"upload_to_es":True}, CDU: {"upload_to_es": True},
                                    EQM: {"upload_to_es": True},
                                    BAM: {"calculated": False, "disable": True}, DEBUG_VP_UTIL: {"upload_to_es": True},
                                    "LE": {"upload_to_es": True},
@@ -1505,12 +1518,23 @@ class FrsTestCase(FunTestCase):
                 self.end_sleep = job_inputs["end_sleep"]
             if "elk_ip" in job_inputs:
                 self.elasticsearch_config["ip"] = job_inputs["ip"]
+            if "upload_to_file" in job_inputs:
+                self.upload_to_file["ip"] = job_inputs["upload_to_file"]
+
 
     def initialize_variables(self):
+        fs_name = fun_test.get_job_environment_variable("test_bed_type")
+        self.fs = AssetManager().get_fs_by_name(fs_name)
+        fun_test.log(json.dumps(self.fs, indent=4))
+        if self.disable_f1_index == 0:
+            self.run_on_f1 = [1]
+        elif self.disable_f1_index == 1:
+            self.run_on_f1 = [0]
+        else:
+            self.run_on_f1 = [0, 1]
+
         self.test_start_time = (datetime.datetime.utcnow() - datetime.timedelta(seconds=60)).strftime(
             "%Y-%m-%dT%H:%M:%SZ")
-        self.run_on_f1 = fun_test.shared_variables["run_on_f1"]
-        self.fs = fun_test.shared_variables["fs"]
         self.es = Elasticsearch(
             [{'host': '%s' % self.elasticsearch_config["ip"], 'port': '%s' % self.elasticsearch_config["port"]}])
         self.busy_loop_thread_map = {}
@@ -1595,11 +1619,13 @@ class FrsTestCase(FunTestCase):
                               disable_uart_logger=False)
 
     def initial_stats(self):
+        return
         if not self.stats_info["come"]["DEBUG_MEMORY"].get("disable", True):
             self.initial_debug_memory_stats = self.get_debug_memory_stats_initially(self.f_DEBUG_MEMORY_f1_0,
                                                                                     self.f_DEBUG_MEMORY_f1_1)
 
     def run_the_traffic(self):
+        fun_test.log("Starting the dpcsh apps")
         come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
                            ssh_username=self.fs['come']['mgmt_ssh_username'],
                            ssh_password=self.fs['come']['mgmt_ssh_password'])
@@ -2017,6 +2043,7 @@ class FrsTestCase(FunTestCase):
                 if system == "come":
                     for f1 in self.run_on_f1:
                         fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]["run_status"] = False
+                        fun_test.log("Sent a signal to stop the stat: {}".format(stat_name))
 
         for thread_name, thread_id in self.stats_thread_map.iteritems():
             fun_test.join_thread(thread_id)
@@ -2056,11 +2083,11 @@ class FrsTestCase(FunTestCase):
             are_all_apps_done = all(app_result.values())
             fun_test.sleep("Before checking the count iteration")
 
-        for thread_name, thread_id in self.stats_thread_map.iteritems():
-            fun_test.join_thread(thread_id)
-
         if not fun_test.shared_variables["stat_collection_threads_status"]:
             fun_test.test_assert(False, "Stats collection has failed: Mainly because of DPCSH failure")
+
+        for thread_name, thread_id in self.stats_thread_map.iteritems():
+            fun_test.join_thread(thread_id)
 
 
 if __name__ == "__main__":

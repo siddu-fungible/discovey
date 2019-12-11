@@ -4,7 +4,7 @@ import dpcsh_nocli
 def debug_memory(come_handle, f1=0):
     cmd = "debug memory"
     dpcsh_output = dpcsh_nocli.get_dpcsh_output(come_handle, cmd, f1, env_set=True)
-    print(dpcsh_output)
+    # print(dpcsh_output)
     return dpcsh_output
 
 
