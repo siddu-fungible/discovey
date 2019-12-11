@@ -1,6 +1,6 @@
 <div class="fun-flex-container">
   <div class="fun-div" [@slideInOut] *ngIf="!preparingCatalogExecution">
-    <app-section-header [value]="'Release catalogs'"></app-section-header>
+    <app-section-header [title]="'Release catalogs'"></app-section-header>
     <span class="fun-action-link" (click)="addACatalog()">+ Add a catalog</span>
     <table class="fun-table-borderless">
       <tr>
@@ -32,7 +32,7 @@
     </table>
   </div>
   <div class="fun-div" *ngIf="preparingCatalogExecution">
-    <app-section-header [value]="'Prepare release parameters ...'"></app-section-header>
+    <app-section-header [title]="'Prepare release parameters ...'"></app-section-header>
     <table>
       <tr>
         <td class="fun-attribute-label">Owner</td>

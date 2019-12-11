@@ -1,6 +1,6 @@
 <div class="component">
   <app-back></app-back>
-  <app-section-header [value]="sectionTitle"></app-section-header>
+  <app-section-header [title]="sectionTitle"></app-section-header>
   <ng-container *ngIf="releaseCatalog">
     <div class="fun-attribute">
       <span class="fun-attribute-label">Name:</span> <app-textarea-input [initialValue]="releaseCatalog.name" (valueChanged)="catalogNameChanged($event)" [numRows]="1"></app-textarea-input>
