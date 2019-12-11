@@ -318,6 +318,8 @@ class MyScript(FunTestScript):
             if "add_boot_arg" in job_inputs:
                 self.add_boot_arg = job_inputs["add_boot_arg"]
                 self.add_boot_arg = " --" + self.add_boot_arg
+            if "traffic_profile" in job_inputs:
+                self.traffic_profile = job_inputs["traffic_profile"]
 
     def initialize_variables(self):
         fs_name = fun_test.get_job_environment_variable("test_bed_type")
