@@ -31,7 +31,8 @@
     "sc_db_directories": ["/var/opt/fungible/elasticsearch", "/var/opt/fungible/cassandra"],
     "sc_script_dir": "/opt/fungible/StorageController/etc",
     "run_sc_script": "start_sc.sh",
-    "container_up_timeout": 60
+    "container_up_timeout": 60,
+    "api_server_up_timeout": 90
   },
   "SingleVolumeWithBP": {
     "ec_info": {
